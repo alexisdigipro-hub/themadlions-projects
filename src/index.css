@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #151311;
+  --color-ink-2: #1c1916;
+  --color-ink-3: #24201c;
+  --color-ink-4: #2e2925;
+  --color-line: #3a342e;
+  --color-line-2: #4a423a;
+  --color-paper: #ece6da;
+  --color-paper-2: #c9c1b3;
+  --color-mute: #8f8677;
+  --color-lion: #d9a441;
+  --color-lion-2: #f0c467;
+  --color-ok: #7fb069;
+  --color-warn: #e08e45;
+  --color-bad: #d95f4b;
+  /* stripboard convention */
+  --color-strip-intday: #f3efe4;
+  --color-strip-extday: #f2d45c;
+  --color-strip-intnight: #6fa8dc;
+  --color-strip-extnight: #7fc98a;
+  --font-display: "Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif;
+  --font-sans: "Instrument Sans", system-ui, sans-serif;
+  --font-script: "Courier Prime", "Courier New", monospace;
+}
+
+html { color-scheme: dark; }
+body {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+h1, h2, h3, .display { font-family: var(--font-display); letter-spacing: -0.01em; }
+input, select, textarea, button { font: inherit; color: inherit; }
+::selection { background: rgba(217,164,65,.35); }
+* { scrollbar-width: thin; scrollbar-color: var(--color-line-2) transparent; }
+:focus-visible { outline: 2px solid var(--color-lion); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+.field {
+  @apply w-full bg-ink-2 border border-line rounded-md px-3 py-2 text-[15px] placeholder:text-mute focus:border-lion focus:outline-none;
+}
+.btn {
+  @apply inline-flex items-center gap-2 rounded-md px-3.5 py-2 text-[14px] font-medium border border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed select-none;
+}
+.btn-primary { @apply bg-lion text-ink hover:bg-lion-2; }
+.btn-ghost { @apply bg-transparent border-line hover:bg-ink-3 text-paper; }
+.btn-danger { @apply bg-transparent border-line text-bad hover:bg-bad/10; }
+.btn-sm { @apply px-2.5 py-1.5 text-[13px]; }
+.panel { @apply bg-ink-2 border border-line rounded-lg; }
+.script { font-family: var(--font-script); white-space: pre-wrap; line-height: 1.45; }
+.print-only { display: none; }
+@media print {
+  body { background: white; color: black; }
+  .no-print { display: none !important; }
+  .print-only { display: block; }
+  .panel { border-color: #999; background: white; }
+}
