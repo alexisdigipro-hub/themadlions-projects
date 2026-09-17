@@ -172,6 +172,15 @@ export default function Settings() {
           </section>
         )}
 
+        <section className="panel">
+          <h2>Transcription</h2>
+          <p className="muted small">Lyrics and timings from the song file with OpenAI Whisper, in the Music tab of music video projects. About $0.006 per minute of audio. The key stays in this browser.</p>
+          <Field label="OpenAI API key">
+            <Input type="password" value={state.settings.openaiKey || ''} onChange={(e) => update((s) => { s.settings.openaiKey = e.target.value.trim(); return s })} placeholder="sk-…" autoComplete="off" />
+          </Field>
+          {state.settings.openaiKey && <p className="small under">Key saved on this device.</p>}
+        </section>
+
         {isAdmin && (
           <section className="panel">
             <h2>Google Maps</h2>
