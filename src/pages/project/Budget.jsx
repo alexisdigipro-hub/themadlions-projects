@@ -25,6 +25,26 @@ export function budgetTotals(project) {
   return { est, act, cont, total: est + cont, currency: b.currency || 'EUR', lines: b.lines.length }
 }
 
+export function CapBar({ cap, total, spent, cur }) {
+  const pct = Math.min(100, Math.round((total / cap) * 100))
+  const spentPct = Math.min(100, Math.round((spent / cap) * 100))
+  const over = total > cap
+  const tone = over ? 'over' : pct >= 90 ? 'warn' : 'ok'
+  return (
+    <div className={`capbar ${tone}`}>
+      <div className="capbar-head">
+        <strong>{over ? `${money(total - cap, cur)} over the cap` : `${money(cap - total, cur)} left of ${money(cap, cur)}`}</strong>
+        <span className="muted">{Math.round((total / cap) * 100)}% committed{spent ? ` · ${spentPct}% spent` : ''}</span>
+      </div>
+      <div className="capbar-track">
+        <div className="capbar-fill" style={{ width: `${pct}%` }} />
+        {spent > 0 && <div className="capbar-spent" style={{ width: `${spentPct}%` }} />}
+        <div className="capbar-mark" style={{ left: '90%' }} title="90%" />
+      </div>
+    </div>
+  )
+}
+
 export default function Budget() {
   const { project, edit, canEdit } = useProject()
   const toast = useToast()
@@ -46,6 +66,13 @@ export default function Budget() {
 
   const save = () => {
     if (!draft.description.trim()) return toast('Describe the line.', 'error')
+    if (budget.cap) {
+      const others = budget.lines.filter((l) => l.id !== draft.id).reduce((a, l) => a + lineEstimate(l), 0)
+      const newEst = others + lineEstimate(draft)
+      const newTotal = newEst + Math.round(newEst * (Number(budget.contingencyPct || 0) / 100))
+      if (newTotal > Number(budget.cap) && t.total <= Number(budget.cap)) toast(`Careful: this line takes the budget ${money(newTotal - Number(budget.cap), cur)} over the cap.`, 'error')
+      else if (newTotal > Number(budget.cap)) toast(`Budget is ${money(newTotal - Number(budget.cap), cur)} over the cap.`, 'error')
+    }
     edit((p) => {
       p.budget = p.budget || { lines: [], contingencyPct: 10, currency: 'EUR' }
       const i = p.budget.lines.findIndex((l) => l.id === draft.id)
@@ -91,6 +118,12 @@ export default function Budget() {
         </div>
       </div>
 
+      {budget.cap ? (
+        <CapBar cap={Number(budget.cap)} total={t.total} spent={t.act} cur={cur} />
+      ) : editable ? (
+        <p className="notice no-print">Set a budget cap below and the top sheet shows how much of it is committed and what is left.</p>
+      ) : null}
+
       {editable && (
         <div className="budget-meta no-print">
           <Field label="Currency">
@@ -99,7 +132,7 @@ export default function Budget() {
           <Field label="Contingency %">
             <Input type="number" min="0" max="50" value={budget.contingencyPct ?? 10} onChange={(e) => setMeta('contingencyPct', Number(e.target.value))} />
           </Field>
-          <Field label="Client budget / cap" hint="Optional. Shown against the total.">
+          <Field label="Budget cap (do not exceed)" hint="Total you agreed with the client or set yourself.">
             <Input type="number" min="0" value={budget.cap || ''} onChange={(e) => setMeta('cap', e.target.value === '' ? '' : Number(e.target.value))} placeholder="45000" />
           </Field>
         </div>

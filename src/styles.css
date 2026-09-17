@@ -1933,3 +1933,17 @@ input[type=file].input { padding: 8px; }
 /* ---------- text size (Settings) ---------- */
 html[data-text-size='compact'] .content, html[data-text-size='compact'] .sidebar, html[data-text-size='compact'] .topbar, html[data-text-size='compact'] .modal { zoom: 0.92; }
 html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, html[data-text-size='large'] .topbar, html[data-text-size='large'] .modal { zoom: 1.1; }
+
+/* ---------- budget cap ---------- */
+.capbar { background: var(--panel); border: 1px solid var(--line-soft); border-left: 4px solid var(--ok); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 14px; }
+.capbar.warn { border-left-color: var(--amber); }
+.capbar.over { border-left-color: var(--danger); }
+.capbar-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 8px; }
+.capbar.over .capbar-head strong { color: var(--danger); }
+.capbar.warn .capbar-head strong { color: var(--amber); }
+.capbar-track { position: relative; height: 12px; background: var(--raised); border-radius: 999px; overflow: hidden; }
+.capbar-fill { position: absolute; inset: 0 auto 0 0; background: var(--ok); border-radius: 999px; transition: width .3s; }
+.capbar.warn .capbar-fill { background: var(--amber); }
+.capbar.over .capbar-fill { background: var(--danger); }
+.capbar-spent { position: absolute; inset: 3px auto 3px 0; background: rgba(0,0,0,.35); border-radius: 999px; }
+.capbar-mark { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,.35); }

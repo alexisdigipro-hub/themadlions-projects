@@ -45,7 +45,17 @@ export default function Overview() {
         <Stat label="Unscheduled scenes" value={unscheduled} />
         <Stat label="Locations" value={project.locations.length} />
         <Stat label="Cast / crew" value={`${cast} / ${crew}`} />
-        <Stat label="Budget" value={bt.lines ? money(bt.total, bt.currency) : '–'} note={bt.act ? `${money(bt.act, bt.currency)} spent` : bt.lines ? `${bt.lines} lines` : 'No budget yet'} />
+        <Stat
+          label="Budget"
+          value={bt.lines ? money(bt.total, bt.currency) : '–'}
+          note={
+            project.budget?.cap
+              ? bt.total > Number(project.budget.cap)
+                ? `${money(bt.total - Number(project.budget.cap), bt.currency)} over the ${money(project.budget.cap, bt.currency)} cap`
+                : `${money(Number(project.budget.cap) - bt.total, bt.currency)} left of ${money(project.budget.cap, bt.currency)}`
+              : bt.act ? `${money(bt.act, bt.currency)} spent` : bt.lines ? `${bt.lines} lines` : 'No budget yet'
+          }
+        />
         <Stat label="Shot" value={rs.daysReported ? `${rs.scenesDone}/${rs.scenesTotal}` : '–'} note={rs.daysReported ? `${formatPages(rs.pagesShot)} pages · ${rs.daysReported} days reported` : 'No reports yet'} />
         <Stat label="Open tasks" value={openTasks} />
       </div>
