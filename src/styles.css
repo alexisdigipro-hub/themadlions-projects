@@ -2051,10 +2051,10 @@ html[data-theme='light'] .chip.on { background: var(--text); color: #fff; border
 html[data-theme='light'] .tabs { border-bottom-color: var(--line-soft); }
 html[data-theme='light'] .strip-num { color: var(--text); }
 html[data-theme='light'] .sheet { box-shadow: var(--shadow); }
-.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
-.swatch { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: 999px; padding: 5px 12px 5px 6px; cursor: pointer; font-size: 14px; }
-.swatch span { width: 18px; height: 18px; border-radius: 50%; background: var(--sw); display: inline-block; }
-.swatch.on { border-color: var(--text); box-shadow: 0 0 0 2px var(--panel), 0 0 0 3px var(--text); }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.field .swatches button.swatch { display: flex; align-items: center; gap: 10px; width: 100%; height: 40px; padding: 0 12px; border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: var(--radius); cursor: pointer; font: inherit; font-size: 14px; text-align: left; white-space: nowrap; }
+.field .swatches button.swatch .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--sw); flex: none; display: block; }
+.field .swatches button.swatch.on { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); font-weight: 600; }
 
 /* ---------- call sheet, StudioBinder-style layout ---------- */
 .sheet.cs { background: #fff; color: #1f2430; padding: 34px 38px; max-width: 980px; box-shadow: var(--shadow); }
