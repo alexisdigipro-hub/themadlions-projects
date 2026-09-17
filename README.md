@@ -11,8 +11,12 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Script import: PDF, Word (.docx), Final Draft (.fdx), Fountain, plain text, or paste. Pages files: export to PDF first
 - Scene detection in English and Greek (INT./EXT., ΕΣΩΤ./ΕΞΩΤ., DAY/NIGHT, ΜΕΡΑ/ΝΥΧΤΑ), characters, page eighths
 - AI breakdown with Claude: props, wardrobe, vehicles, SFX, extras, flags per scene, plus reports by character, location and element. CSV export
+- Shot list per scene: size, angle, movement, gear, lens, camera, storyboard frames, list and board views, CSV and print
 - Stripboard schedule: shoot days, scene assignment, industry strip colours, unscheduled pool
-- Call sheets generated per shoot day, printable to PDF
+- Day Out of Days for cast (SW / W / WF / SWF / H) computed from the stripboard
+- Call sheets generated per shoot day with sunrise, sunset, golden hour and a fetched weather forecast (open-meteo, no key), printable to PDF
+- Script sides per shoot day, printable
+- Tasks per project with assignee, department, due date, priority, and a cross-project Tasks page (mine / everyone, overdue / today / this week)
 - Production calendar (per project and across projects) with shoot days mirrored automatically, ICS export
 - Locations with Google Maps embed, directions, script set linking
 - Cast & crew with character casting and call offsets

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { uid, useStore } from '../../lib/store.jsx'
+import { coordsFromText } from '../../lib/sun.js'
 
 const TYPES = ['Studio', 'Interior', 'Exterior', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
 
@@ -166,6 +167,16 @@ export default function Locations() {
             </div>
             <Field label="Address" hint="Anything Google Maps can find: street, landmark or coordinates.">
               <Input value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} />
+            </Field>
+            <Field label="Coordinates" hint="Optional. Paste a Google Maps link or lat, lon. Used for sunrise, sunset and weather on the call sheet.">
+              <Input
+                value={draft.lat && draft.lon ? `${draft.lat}, ${draft.lon}` : draft.coordsText || ''}
+                onChange={(e) => {
+                  const c = coordsFromText(e.target.value)
+                  setDraft({ ...draft, coordsText: e.target.value, lat: c ? c.lat : '', lon: c ? c.lon : '' })
+                }}
+                placeholder="37.9838, 23.7275 or https://maps.google.com/…"
+              />
             </Field>
             <div className="row-2">
               <Field label="Contact">

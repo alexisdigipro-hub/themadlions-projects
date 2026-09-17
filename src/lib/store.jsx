@@ -17,8 +17,10 @@ export const MODULES = [
   { key: 'projects', label: 'Projects' },
   { key: 'script', label: 'Script' },
   { key: 'breakdown', label: 'Breakdown' },
+  { key: 'shots', label: 'Shot list' },
   { key: 'schedule', label: 'Schedule' },
   { key: 'callsheets', label: 'Call sheets' },
+  { key: 'tasks', label: 'Tasks' },
   { key: 'calendar', label: 'Calendar' },
   { key: 'locations', label: 'Locations' },
   { key: 'contacts', label: 'Cast & crew' },
@@ -82,6 +84,8 @@ export function emptyProject(partial = {}) {
     shootingDays: [],
     locations: [],
     contacts: [],
+    shots: [],
+    tasks: [],
     breakdownStatus: 'none',
     ...partial,
   }
@@ -94,6 +98,9 @@ const adapter = {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (!raw) return null
       const parsed = JSON.parse(raw)
+      // migrations: new modules and fields added after the first release
+      parsed.projects = (parsed.projects || []).map((p) => ({ shots: [], tasks: [], ...p }))
+      parsed.users = (parsed.users || []).map((u) => ({ ...u, permissions: { ...defaultPermissions(u.role === 'admin' ? 'edit' : 'view'), ...(u.permissions || {}) } }))
       return { ...emptyState(), ...parsed, settings: { ...emptyState().settings, ...(parsed.settings || {}) } }
     } catch {
       return null

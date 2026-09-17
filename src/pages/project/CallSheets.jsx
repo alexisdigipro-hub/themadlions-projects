@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Empty, Field, Textarea } from '../../components/ui.jsx'
+import { Button, Empty, Field, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { formatPages } from '../../lib/breakdown.js'
 import { fmtLong } from '../../lib/dates.js'
+import { ATHENS, coordsFromText, forecast, geocode, sunTimes } from '../../lib/sun.js'
 
 function addMinutes(hhmm, mins) {
   if (!hhmm) return ''
@@ -18,6 +19,9 @@ export default function CallSheets() {
   const { project, edit, canEdit } = useProject()
   const days = [...project.shootingDays].sort((a, b) => a.date.localeCompare(b.date))
   const [sel, setSel] = useState(days[0]?.id || '')
+  const [mode, setMode] = useState('sheet') // sheet | sides
+  const [busy, setBusy] = useState(false)
+  const toast = useToast()
   const day = days.find((d) => d.id === sel) || days[0]
   const editable = canEdit('callsheets')
 
@@ -46,6 +50,28 @@ export default function CallSheets() {
     if (d) d.callSheet = { ...(d.callSheet || {}), [k]: v }
   })
 
+  // sun and weather for the day's location (falls back to the city in the address, then Athens)
+  const coords = (loc?.lat && loc?.lon) ? { lat: Number(loc.lat), lon: Number(loc.lon) } : coordsFromText(loc?.address) || null
+  const sun = sunTimes(day.date, coords?.lat ?? ATHENS.lat, coords?.lon ?? ATHENS.lon)
+  const wx = sheet.forecast
+  const fetchWeather = async () => {
+    setBusy(true)
+    try {
+      let c = coords
+      if (!c && loc?.address) {
+        const city = loc.address.split(',').map((x) => x.trim()).filter(Boolean).slice(-2, -1)[0] || loc.address
+        c = await geocode(city)
+      }
+      c = c || ATHENS
+      const f = await forecast(day.date, c.lat, c.lon)
+      setSheet('forecast', { ...f, place: c.name || loc?.name || 'location' })
+    } catch (e) {
+      toast(e.message, 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="callsheets">
       <div className="toolbar no-print">
@@ -57,13 +83,36 @@ export default function CallSheets() {
           ))}
         </div>
         <div className="toolbar-actions">
+          <div className="segmented small">
+            <button className={mode === 'sheet' ? 'on' : ''} onClick={() => setMode('sheet')}>Call sheet</button>
+            <button className={mode === 'sides' ? 'on' : ''} onClick={() => setMode('sides')}>Sides</button>
+          </div>
           <Button variant="primary" onClick={() => window.print()}>
             Print / Save PDF
           </Button>
         </div>
       </div>
 
-      <article className="sheet">
+      {mode === 'sides' && (
+        <article className="sheet sides">
+          <header className="sheet-head">
+            <div>
+              <div className="sheet-brand">{project.producer || 'THEMADLIONS'}</div>
+              <h1>{project.title}</h1>
+              <div className="muted">Sides · Day {days.indexOf(day) + 1} · {fmtLong(day.date)} · {scenes.length} scenes · {formatPages(scenes.reduce((a, s) => a + (s.eighths || 0), 0))} pages</div>
+            </div>
+          </header>
+          {!scenes.length && <p className="muted">No scenes assigned to this day.</p>}
+          {scenes.map((s) => (
+            <section key={s.id} className="side-scene">
+              <div className="script script-heading">{s.number}. {s.heading}</div>
+              <div className="script">{s.body}</div>
+            </section>
+          ))}
+        </article>
+      )}
+
+      <article className="sheet" hidden={mode !== 'sheet'}>
         <header className="sheet-head">
           <div>
             <div className="sheet-brand">{project.producer || 'THEMADLIONS'}</div>
@@ -107,11 +156,31 @@ export default function CallSheets() {
             {!crew.length && <span className="muted">Add crew in Cast & crew.</span>}
           </section>
           <section>
-            <h3>Weather & sunrise</h3>
-            {editable ? (
-              <Textarea rows={3} value={sheet.weather || ''} onChange={(e) => setSheet('weather', e.target.value)} placeholder="e.g. 24°C, clear. Sunrise 07:12, sunset 19:40. Hospital: Evangelismos, Ypsilantou 45." />
+            <h3>Sun & weather</h3>
+            {sun && (
+              <div className="sun-row">
+                <span>Sunrise <strong>{wx?.sunrise || sun.sunrise}</strong></span>
+                <span>Sunset <strong>{wx?.sunset || sun.sunset}</strong></span>
+                <span className="muted small">Golden hour until {sun.goldenAmEnd}, from {sun.goldenPmStart}</span>
+              </div>
+            )}
+            {wx ? (
+              <div className="wx">
+                <strong>{wx.summary}</strong> · {wx.tmin}° to {wx.tmax}°C{wx.rain != null ? ` · rain ${wx.rain}%` : ''} · wind {wx.wind} km/h
+                <div className="muted small">{wx.place} · forecast from open-meteo</div>
+              </div>
             ) : (
-              <div>{sheet.weather || '–'}</div>
+              <div className="muted small">No forecast fetched yet.</div>
+            )}
+            {editable && (
+              <div className="no-print">
+                <Button size="sm" onClick={fetchWeather} disabled={busy}>{busy ? 'Fetching…' : wx ? 'Refresh forecast' : 'Fetch forecast'}</Button>
+              </div>
+            )}
+            {editable ? (
+              <Textarea rows={2} value={sheet.weather || ''} onChange={(e) => setSheet('weather', e.target.value)} placeholder="Nearest hospital, safety notes…" />
+            ) : (
+              sheet.weather && <div>{sheet.weather}</div>
             )}
           </section>
         </div>

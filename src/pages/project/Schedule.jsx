@@ -4,6 +4,7 @@ import { useProject } from '../Project.jsx'
 import { today, uid, useStore } from '../../lib/store.jsx'
 import { formatPages, stripColor } from '../../lib/breakdown.js'
 import { addDays, fmtDate } from '../../lib/dates.js'
+import Dood from '../../components/Dood.jsx'
 
 const emptyDay = (date) => ({ id: uid(), date, unit: 'Main unit', callTime: '07:00', wrapTime: '19:00', locationId: '', notes: '', sceneIds: [] })
 
@@ -13,6 +14,7 @@ export default function Schedule() {
   const toast = useToast()
   const [draft, setDraft] = useState(null)
   const [pick, setPick] = useState(null) // dayId to add scenes to
+  const [view, setView] = useState('board') // board | dood
   const editable = canEdit('schedule')
 
   const days = [...project.shootingDays].sort((a, b) => a.date.localeCompare(b.date))
@@ -99,18 +101,31 @@ export default function Schedule() {
             {project.scenes.length - unscheduled.length} of {project.scenes.length} scenes scheduled
           </span>
         </div>
-        {editable && (
-          <div className="toolbar-actions">
+        <div className="toolbar-actions">
+          <div className="segmented small">
+            <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}>Stripboard</button>
+            <button className={view === 'dood' ? 'on' : ''} onClick={() => setView('dood')}>Day out of days</button>
+          </div>
+          {view === 'dood' && days.length > 0 && (
+            <Button variant="ghost" onClick={() => window.print()}>Print</Button>
+          )}
+          {editable && view === 'board' && (
             <Button variant="primary" onClick={() => setDraft(emptyDay(days.length ? addDays(days[days.length - 1].date, 1) : project.startDate || today()))}>
               Add shoot day
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {project.scenes.length === 0 && <Empty title="No scenes to schedule">Run the breakdown first so the strips appear here.</Empty>}
 
-      <div className="board">
+      {view === 'dood' && (
+        <div className="dood-wrap">
+          <Dood project={project} />
+        </div>
+      )}
+
+      <div className="board" hidden={view !== 'board'}>
         {days.map((d) => {
           const loc = project.locations.find((l) => l.id === d.locationId)
           return (

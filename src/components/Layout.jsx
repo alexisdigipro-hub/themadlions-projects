@@ -23,6 +23,7 @@ export default function Layout() {
   const items = [
     { to: '/', label: 'Projects', end: true, show: can(user, 'projects') },
     { to: '/calendar', label: 'Calendar', show: can(user, 'calendar') },
+    { to: '/tasks', label: 'Tasks', show: can(user, 'tasks') },
     { to: '/team', label: 'Team', show: user?.role === 'admin' },
     { to: '/settings', label: 'Settings', show: true },
   ].filter((i) => i.show)

@@ -17,6 +17,9 @@ import ProjectCalendar from './pages/project/Calendar.jsx'
 import Locations from './pages/project/Locations.jsx'
 import People from './pages/project/People.jsx'
 import Notes from './pages/project/Notes.jsx'
+import Shots from './pages/project/Shots.jsx'
+import Tasks from './pages/project/Tasks.jsx'
+import TasksAll from './pages/TasksAll.jsx'
 
 function RequireUser() {
   const user = useCurrentUser()
@@ -39,13 +42,16 @@ export default function App() {
               <Route element={<Layout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="calendar" element={<CalendarAll />} />
+                <Route path="tasks" element={<TasksAll />} />
                 <Route path="team" element={<Team />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="p/:id" element={<Project />}>
                   <Route index element={<Overview />} />
                   <Route path="script" element={<Script />} />
                   <Route path="breakdown" element={<Breakdown />} />
+                  <Route path="shots" element={<Shots />} />
                   <Route path="schedule" element={<Schedule />} />
+                  <Route path="tasks" element={<Tasks />} />
                   <Route path="callsheets" element={<CallSheets />} />
                   <Route path="calendar" element={<ProjectCalendar />} />
                   <Route path="locations" element={<Locations />} />
