@@ -1,3 +1,4 @@
+import { Navigate } from 'react-router-dom'
 import { PageHead } from '../components/ui.jsx'
 import { useCurrentUser, useStore } from '../lib/store.jsx'
 import { WorkLogTable, entryTotals, money2 } from '../components/WorkLog.jsx'
@@ -5,6 +6,7 @@ import { WorkLogTable, entryTotals, money2 } from '../components/WorkLog.jsx'
 export default function MyWork() {
   const { state } = useStore()
   const user = useCurrentUser()
+  if (user?.role === 'admin') return <Navigate to="/finance" replace />
   const mine = (state.worklog || []).filter((e) => e.userId === user?.id)
   const t = entryTotals(mine)
   return (

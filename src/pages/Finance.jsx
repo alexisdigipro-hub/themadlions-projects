@@ -449,7 +449,7 @@ function TeamWork() {
   const [year, setYear] = useState(String(new Date().getFullYear()))
   const log = state.worklog || []
   const years = [...new Set([String(new Date().getFullYear()), ...log.map((e) => (e.date || '').slice(0, 4)).filter(Boolean)])].sort().reverse()
-  const members = state.users.filter((u) => u.active !== false)
+  const members = state.users.filter((u) => u.active !== false && u.role !== 'admin')
   const rows = members.map((u) => ({ u, t: entryTotals(log.filter((e) => e.userId === u.id && (e.date || '').startsWith(year))), allT: entryTotals(log.filter((e) => e.userId === u.id)) }))
     .sort((a, b) => b.t.total - a.t.total || a.u.name.localeCompare(b.u.name))
   const all = entryTotals(log.filter((e) => (e.date || '').startsWith(year)))
