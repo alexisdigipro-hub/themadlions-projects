@@ -4,7 +4,8 @@ import { Badge, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, u
 import { useProject } from '../Project.jsx'
 import { ELEMENT_CATEGORIES, useStore } from '../../lib/store.jsx'
 import { formatPages, keywordHints, parseScript, stripColor } from '../../lib/breakdown.js'
-import { aiBreakdown } from '../../lib/ai.js'
+import { aiBreakdown, aiDocumentBreakdown } from '../../lib/ai.js'
+import { uid } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import { revisionHex } from '../../lib/diff.js'
 
@@ -17,7 +18,70 @@ export default function Breakdown() {
   const [open, setOpen] = useState(null)
   const [progress, setProgress] = useState(null)
   const [view, setView] = useState('scenes')
+  const [doc, setDoc] = useState(null) // { files, notes, useText, wantShots, mode }
+  const [docBusy, setDocBusy] = useState('')
   const editable = canEdit('breakdown')
+  const concept = project.concept
+
+  const runDocument = async () => {
+    if (!state.settings.aiKey) return toast('Add your Anthropic API key in Settings first.', 'error')
+    const files = doc.files || []
+    if (!files.length && !(doc.useText && project.script.text)) return toast('Add a PDF, images or text first.', 'error')
+    setDocBusy('Preparing…')
+    try {
+      const res = await aiDocumentBreakdown({
+        settings: state.settings,
+        category: project.category,
+        text: doc.useText ? project.script.text : '',
+        files,
+        notes: doc.notes,
+        wantShots: doc.wantShots,
+        onProgress: setDocBusy,
+      })
+      if (!res.setups.length) throw new Error('The AI returned no setups. Try adding a short description in the notes field.')
+      edit((p) => {
+        const scenes = res.setups.map((st, i) => ({
+          id: uid(), number: st.number || String(i + 1), heading: st.heading, intExt: st.intExt, location: st.location, timeOfDay: st.timeOfDay,
+          synopsis: st.synopsis, body: st.body, look: st.look, durationHint: st.durationHint, eighths: 4, characters: st.characters,
+          elements: st.elements, elementsSource: 'ai', flags: st.flags, notes: '', dayId: '', order: i, source: 'document',
+        }))
+        if (doc.mode === 'replace') {
+          p.scenes = scenes
+          p.shootingDays.forEach((d) => (d.sceneIds = []))
+          p.shots = []
+        } else {
+          const start = p.scenes.length
+          scenes.forEach((sc, i) => { sc.number = String(start + i + 1); sc.order = start + i })
+          p.scenes = [...p.scenes, ...scenes]
+        }
+        if (doc.wantShots) {
+          p.shots = p.shots || []
+          res.setups.forEach((st, i) => {
+            const scene = scenes[i]
+            st.shots.forEach((sh, k) => p.shots.push({ id: uid(), sceneId: scene.id, number: `${scene.number}${String.fromCharCode(65 + (k % 26))}`, size: sh.size, angle: 'Eye level', movement: sh.movement, lens: '', camera: 'A', fps: '25', gear: /drone/i.test(sh.movement) ? 'Drone' : /handheld/i.test(sh.movement) ? 'Handheld' : /steadicam/i.test(sh.movement) ? 'Steadicam' : 'Tripod', description: sh.description, subject: '', audio: '', duration: '', status: 'planned', notes: '', frame: '', frameUrl: '' }))
+          })
+        }
+        p.concept = { title: res.title, summary: res.summary, locations: res.locations, talent: res.talent, notes: res.notes, source: files.map((f) => f.name).join(', ') || 'script text', at: new Date().toISOString() }
+        p.breakdownStatus = 'ai'
+        if (!p.script.text && doc.useText === false) p.script = { ...p.script, docType: 'document' }
+      })
+      setDoc(null)
+      toast(`${res.setups.length} setups created from the document${doc.wantShots ? ', with a draft shot list' : ''}`, 'ok')
+    } catch (e) {
+      toast(e.message, 'error')
+    } finally {
+      setDocBusy('')
+    }
+  }
+  const addConceptLocations = () => {
+    if (!concept?.locations?.length) return
+    edit((p) => {
+      concept.locations.forEach((l) => {
+        if (!p.locations.some((x) => x.name.toLowerCase() === l.name.toLowerCase())) p.locations.push({ id: uid(), name: l.name, address: '', type: 'Other', notes: l.notes, contact: '', phone: '', sceneLocations: [] })
+      })
+    })
+    toast('Locations added to the Locations tab', 'ok')
+  }
 
   const runRules = () => {
     if (!project.script.text) return toast('Import a script first.', 'error')
@@ -152,6 +216,9 @@ export default function Breakdown() {
             <Button variant="primary" onClick={runAI} disabled={!!progress}>
               {progress ? `AI tagging ${progress.done}/${progress.total}` : 'AI breakdown'}
             </Button>
+            <Button onClick={() => setDoc({ files: [], notes: '', useText: !!project.script.text && parseScript(project.script.text).scenes.length < 2, wantShots: project.category !== 'Feature Film', mode: project.scenes.length ? 'append' : 'replace' })}>
+              From treatment / moodboard
+            </Button>
             {project.scenes.length > 0 && (
               <Button variant="ghost" onClick={exportCSV}>
                 Export CSV
@@ -172,9 +239,39 @@ export default function Breakdown() {
         </p>
       )}
 
+      {concept && (
+        <section className="panel concept">
+          <div className="panel-head">
+            <h2>{concept.title || 'Concept'} <span className="muted small">from {concept.source}</span></h2>
+            {editable && <Confirm label="Remove notes" onConfirm={() => edit((p) => delete p.concept)} />}
+          </div>
+          {concept.summary && <p>{concept.summary}</p>}
+          <div className="concept-grid">
+            {concept.talent?.length > 0 && (
+              <div>
+                <h3>Talent</h3>
+                <ul className="plain">{concept.talent.map((t, i) => <li key={i}><strong>{t.role}</strong>{t.count > 1 ? ` ×${t.count}` : ''}{t.notes ? <span className="muted"> · {t.notes}</span> : null}</li>)}</ul>
+              </div>
+            )}
+            {concept.locations?.length > 0 && (
+              <div>
+                <h3>Locations {editable && <button className="link small" onClick={addConceptLocations}>Add to Locations</button>}</h3>
+                <ul className="plain">{concept.locations.map((l, i) => <li key={i}><strong>{l.name}</strong>{l.notes ? <span className="muted"> · {l.notes}</span> : null}</li>)}</ul>
+              </div>
+            )}
+            {concept.notes?.length > 0 && (
+              <div>
+                <h3>Producer notes</h3>
+                <ul className="plain">{concept.notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {project.scenes.length === 0 ? (
         <Empty title="No scenes yet">
-          {project.script.text ? 'Detect scenes to build the list from the headings, then run the AI breakdown to tag props, wardrobe, vehicles and everything else per scene.' : 'Import a script first, then come back here.'}
+          {project.script.text ? 'Detect scenes to build the list from the headings, then run the AI breakdown to tag props, wardrobe, vehicles and everything else per scene.' : 'Import a screenplay in Script, or use "From treatment / moodboard" to let the AI turn a concept, director\'s treatment or moodboard (PDF, images, text) into setups with their materials.'}
         </Empty>
       ) : (
         <>
@@ -283,6 +380,35 @@ export default function Breakdown() {
       )}
 
       <SceneModal key={open?.id || 'none'} scene={open} onClose={() => setOpen(null)} editable={editable} project={project} edit={edit} />
+      <Modal open={!!doc} title="Breakdown from a treatment, concept or moodboard" onClose={() => !docBusy && setDoc(null)}
+        footer={<><Button variant="ghost" onClick={() => setDoc(null)} disabled={!!docBusy}>Cancel</Button><Button variant="primary" onClick={runDocument} disabled={!!docBusy}>{docBusy || 'Run AI breakdown'}</Button></>}>
+        {doc && (
+          <div className="stack">
+            <p className="small muted">Works with a director's treatment, a concept in plain words, a PDF moodboard with images, or a set of reference photos. The AI groups everything into shootable setups with location, time of day, talent, wardrobe, props, art, effects and equipment.</p>
+            <Field label="Files" hint="PDF (with text and images), JPG / PNG, DOCX, TXT. Several at once is fine.">
+              <input type="file" multiple accept=".pdf,.docx,.txt,.md,image/*" className="input" onChange={(e) => setDoc({ ...doc, files: Array.from(e.target.files || []) })} />
+            </Field>
+            {doc.files?.length > 0 && <div className="small muted">{doc.files.map((f) => f.name).join(', ')}</div>}
+            {project.script.text && (
+              <label className="check">
+                <input type="checkbox" checked={doc.useText} onChange={(e) => setDoc({ ...doc, useText: e.target.checked })} />
+                Also use the text in the Script tab ({(project.script.text.match(/\S+/g) || []).length} words)
+              </label>
+            )}
+            <Field label="Notes for the AI (optional)"><Textarea rows={2} value={doc.notes} onChange={(e) => setDoc({ ...doc, notes: e.target.value })} placeholder="e.g. one shooting day, artist plus 4 dancers, budget is tight, no drone" /></Field>
+            <label className="check">
+              <input type="checkbox" checked={doc.wantShots} onChange={(e) => setDoc({ ...doc, wantShots: e.target.checked })} />
+              Also draft a first shot list per setup
+            </label>
+            {project.scenes.length > 0 && (
+              <Field label="Existing scenes">
+                <Select value={doc.mode} onChange={(e) => setDoc({ ...doc, mode: e.target.value })} options={[['append', 'Keep them and add the new setups after'], ['replace', 'Replace them (schedule and shots are reset)']]} />
+              </Field>
+            )}
+            <p className="fineprint">Cost: roughly 0.05 to 0.30 € per document with Claude Sonnet, more for long moodboards with many pages.</p>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

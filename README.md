@@ -11,6 +11,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Script import: PDF, Word (.docx), Final Draft (.fdx), Fountain, plain text, or paste. Pages files: export to PDF first
 - Script revisions: every new upload or edited save keeps the previous version with its revision colour (White, Blue, Pink, Yellow, Green…), side-by-side compare, restore. Re-running scene detection matches scenes by heading so breakdown tags, shots and schedule survive, and changed scenes are flagged on the strips
 - Scene detection in English and Greek (INT./EXT., ΕΣΩΤ./ΕΞΩΤ., DAY/NIGHT, ΜΕΡΑ/ΝΥΧΤΑ), characters, page eighths
+- Treatment, concept and moodboard breakdown: upload a director's treatment, a concept in plain words, a PDF moodboard with images or reference photos; Claude groups the material into shootable setups (location, time of day, talent, wardrobe, props, art, effects, equipment, look, time estimate), lists locations, talent and producer notes, and can draft a first shot list. Built for music videos and commercials that never had a screenplay
 - AI breakdown with Claude: props, wardrobe, vehicles, SFX, extras, flags per scene, plus reports by character, location and element. CSV export
 - Shot list per scene: size, angle, movement, gear, lens, camera, storyboard frames, list and board views, CSV and print
 - Stripboard schedule: shoot days, scene assignment, industry strip colours, unscheduled pool

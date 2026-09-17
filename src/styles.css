@@ -1924,3 +1924,8 @@ p .diff-del { color: var(--danger); }
 .lib-pick li.on { border-color: var(--accent); background: rgba(200,80,63,.08); }
 .lib-pick .grow { flex: 1; min-width: 0; }
 .lib-badge { font-size: 11px; color: var(--muted); border: 1px solid var(--line-soft); border-radius: 999px; padding: 1px 7px; margin-left: 6px; vertical-align: middle; }
+.concept { margin-bottom: 18px; }
+.concept-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 8px; }
+.concept-grid h3 { margin: 0 0 6px; font-size: 14px; display: flex; gap: 8px; align-items: baseline; }
+ul.plain { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13.5px; }
+input[type=file].input { padding: 8px; }
