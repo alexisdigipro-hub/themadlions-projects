@@ -42,6 +42,7 @@ export const EVENT_TYPES = [
   { key: 'meeting', label: 'Meeting', color: '#6C9BD1' },
   { key: 'post', label: 'Post', color: '#4FB3BF' },
   { key: 'delivery', label: 'Delivery', color: '#9AA0A6' },
+  { key: 'unavailable', label: 'Not available', color: '#6B7280' },
 ]
 
 export const ELEMENT_CATEGORIES = [

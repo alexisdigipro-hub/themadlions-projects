@@ -8,6 +8,7 @@ export default function CalendarView({ projectId = null, title }) {
   const user = useCurrentUser()
   const toast = useToast()
   const editable = can(user, 'calendar', 'edit')
+  const canEditDraft = (d) => editable || (d?.type === 'unavailable' && (!d.createdBy || d.createdBy === user?.id))
   const now = new Date()
   const [ym, setYm] = useState({ y: now.getFullYear(), m: now.getMonth() })
   const [draft, setDraft] = useState(null)
@@ -29,7 +30,13 @@ export default function CalendarView({ projectId = null, title }) {
   )
   const byDate = useMemo(() => {
     const m = {}
-    for (const e of events) (m[e.date] = m[e.date] || []).push(e)
+    const addDay = (iso, n) => { const d = new Date(iso + 'T00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
+    for (const e of events) {
+      if (e.endDate && e.endDate > e.date) {
+        let d = e.date, guard = 0
+        while (d <= e.endDate && guard < 60) { (m[d] = m[d] || []).push(e); d = addDay(d, 1); guard += 1 }
+      } else (m[e.date] = m[e.date] || []).push(e)
+    }
     for (const k in m) m[k].sort((a, b) => (a.start || '').localeCompare(b.start || ''))
     return m
   }, [events])
@@ -39,13 +46,16 @@ export default function CalendarView({ projectId = null, title }) {
     const d = new Date(ym.y, ym.m + n, 1)
     setYm({ y: d.getFullYear(), m: d.getMonth() })
   }
-  const newEvent = (date) => ({ id: uid(), projectId: projectId || projects[0]?.id || '', type: 'prep', title: '', date, start: '', end: '', locationText: '', notes: '', isNew: true })
+  const newEvent = (date, type = 'prep') => ({ id: uid(), projectId: type === 'unavailable' ? '' : projectId || projects[0]?.id || '', type, title: type === 'unavailable' ? `${user?.name || 'Someone'} not available` : '', date, endDate: '', start: '', end: '', locationText: '', notes: '', createdBy: user?.id || '', createdByName: user?.name || '', isNew: true })
+  // anyone signed in can mark their own days off, even with view-only calendar rights (server permitting)
+  const canMarkOff = !!user
 
   const save = () => {
     if (!draft.title.trim()) return toast('Give the event a title.', 'error')
+    if (draft.endDate && draft.endDate < draft.date) return toast('End date is before the start.', 'error')
     update((s) => {
       const i = s.events.findIndex((e) => e.id === draft.id)
-      const { isNew, ...ev } = draft
+      const { isNew, ...ev } = { ...draft, createdBy: draft.createdBy || user?.id || '', createdByName: draft.createdByName || user?.name || '' }
       if (i >= 0) s.events[i] = { ...s.events[i], ...ev }
       else s.events.push(ev)
       return s
@@ -98,6 +108,11 @@ export default function CalendarView({ projectId = null, title }) {
           <Button variant="ghost" onClick={() => download(`${title || 'calendar'}.ics`, buildICS(events, title), 'text/calendar')}>
             Export .ics
           </Button>
+          {canMarkOff && (
+            <Button variant="ghost" onClick={() => setDraft(newEvent(today(), 'unavailable'))}>
+              Not available
+            </Button>
+          )}
           {editable && (
             <Button variant="primary" onClick={() => setDraft(newEvent(today()))}>
               Add event
@@ -106,7 +121,7 @@ export default function CalendarView({ projectId = null, title }) {
         </div>
       </div>
 
-      <div className="cal-layout">
+      <div className="cal-layout stacked">
         <div className="cal-grid" role="grid">
           {weekdayShort().map((d) => (
             <div key={d} className="cal-dow">
@@ -137,7 +152,7 @@ export default function CalendarView({ projectId = null, title }) {
                       title={`${e.title}${e.start ? ` · ${e.start}` : ''}`}
                     >
                       {e.start && <small>{e.start}</small>}
-                      {e.title}
+                      {e.type === 'unavailable' ? <><small>✕</small>{e.createdByName || e.title}</> : e.title}
                     </button>
                   ))}
                   {evs.length > 3 && <span className="cal-more">+{evs.length - 3}</span>}
@@ -148,6 +163,8 @@ export default function CalendarView({ projectId = null, title }) {
         </div>
 
         <aside className="cal-side">
+          <div className="cal-side-cols">
+          <div>
           <h3>Next up</h3>
           {upcoming.length === 0 ? (
             <p className="muted small">Nothing scheduled ahead.</p>
@@ -165,6 +182,26 @@ export default function CalendarView({ projectId = null, title }) {
               ))}
             </ul>
           )}
+          </div>
+          <div>
+            <h3>Not available</h3>
+            {(() => {
+              const off = events.filter((e) => e.type === 'unavailable' && (e.endDate || e.date) >= today()).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 12)
+              return off.length ? (
+                <ul className="event-list">
+                  {off.map((e) => (
+                    <li key={e.id}>
+                      <span className="dot" style={{ background: typeOf('unavailable').color }} />
+                      <span className="ev-date">{fmtDate(e.date)}{e.endDate && e.endDate > e.date ? ` – ${fmtDate(e.endDate)}` : ''}</span>
+                      <button className="ev-title link" onClick={() => setDraft({ ...e })}>{e.createdByName || e.title}</button>
+                      {e.notes && <span className="muted small">{e.notes}</span>}
+                    </li>
+                  ))}
+                </ul>
+              ) : <p className="muted small">Nobody has marked days off. Use "Not available" above to add yours.</p>
+            })()}
+          </div>
+          </div>
           <div className="legend">
             {EVENT_TYPES.map((t) => (
               <span key={t.key}>
@@ -180,7 +217,7 @@ export default function CalendarView({ projectId = null, title }) {
         title={draft?.isNew ? 'New event' : 'Event'}
         onClose={() => setDraft(null)}
         footer={
-          editable ? (
+          canEditDraft(draft) ? (
             <>
               {!draft?.isNew && <Confirm onConfirm={() => remove(draft.id)} />}
               <span className="spacer" />
@@ -200,15 +237,16 @@ export default function CalendarView({ projectId = null, title }) {
       >
         {draft && (
           <div className="stack">
+            {draft.createdByName && <p className="muted small">Added by {draft.createdByName}</p>}
             <Field label="Title">
-              <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} autoFocus disabled={!editable} />
+              <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} autoFocus disabled={!canEditDraft(draft)} />
             </Field>
             <div className="row-2">
               <Field label="Type">
-                <Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={EVENT_TYPES.map((t) => [t.key, t.label])} disabled={!editable} />
+                <Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={EVENT_TYPES.map((t) => [t.key, t.label])} disabled={!canEditDraft(draft)} />
               </Field>
               <Field label="Project">
-                <Select value={draft.projectId || ''} onChange={(e) => setDraft({ ...draft, projectId: e.target.value })} disabled={!editable || !!projectId}>
+                <Select value={draft.projectId || ''} onChange={(e) => setDraft({ ...draft, projectId: e.target.value })} disabled={!canEditDraft(draft) || !!projectId}>
                   <option value="">No project</option>
                   {projects.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -219,21 +257,26 @@ export default function CalendarView({ projectId = null, title }) {
               </Field>
             </div>
             <div className="row-3">
-              <Field label="Date">
-                <Input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} disabled={!editable} />
+              <Field label={draft.type === 'unavailable' ? 'From' : 'Date'}>
+                <Input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} disabled={!canEditDraft(draft)} />
               </Field>
+              {draft.type === 'unavailable' ? (
+                <Field label="To (optional)">
+                  <Input type="date" value={draft.endDate || ''} onChange={(e) => setDraft({ ...draft, endDate: e.target.value })} disabled={!canEditDraft(draft)} />
+                </Field>
+              ) : null}
               <Field label="Start">
-                <Input type="time" value={draft.start} onChange={(e) => setDraft({ ...draft, start: e.target.value })} disabled={!editable} />
+                <Input type="time" value={draft.start} onChange={(e) => setDraft({ ...draft, start: e.target.value })} disabled={!canEditDraft(draft)} />
               </Field>
               <Field label="End">
-                <Input type="time" value={draft.end} onChange={(e) => setDraft({ ...draft, end: e.target.value })} disabled={!editable} />
+                <Input type="time" value={draft.end} onChange={(e) => setDraft({ ...draft, end: e.target.value })} disabled={!canEditDraft(draft)} />
               </Field>
             </div>
             <Field label="Location">
-              <Input value={draft.locationText} onChange={(e) => setDraft({ ...draft, locationText: e.target.value })} disabled={!editable} />
+              <Input value={draft.locationText} onChange={(e) => setDraft({ ...draft, locationText: e.target.value })} disabled={!canEditDraft(draft)} />
             </Field>
             <Field label="Notes">
-              <Textarea rows={3} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} disabled={!editable} />
+              <Textarea rows={3} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} disabled={!canEditDraft(draft)} />
             </Field>
             {draft.sourceDayId && <p className="fineprint">This event mirrors a shoot day from the schedule. Change the date there to keep them in sync.</p>}
           </div>
