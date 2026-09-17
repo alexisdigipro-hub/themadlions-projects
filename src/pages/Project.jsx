@@ -19,6 +19,7 @@ export default function Project() {
 
   const tabs = [
     { to: '', label: 'Overview', end: true, key: 'projects', icon: 'overview' },
+    ...(project.category === 'Music Video' ? [{ to: 'music', label: 'Music', key: 'music', icon: 'music' }] : []),
     { to: 'script', label: 'Script', key: 'script', icon: 'script' },
     { to: 'breakdown', label: 'Breakdown', key: 'breakdown', icon: 'breakdown' },
     { to: 'shots', label: 'Shot list', key: 'shots', icon: 'shots' },

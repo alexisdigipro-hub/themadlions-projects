@@ -6,6 +6,7 @@ import { ELEMENT_CATEGORIES, useStore } from '../../lib/store.jsx'
 import { formatPages, keywordHints, parseScript, stripColor } from '../../lib/breakdown.js'
 import { aiBreakdown, aiDocumentBreakdown } from '../../lib/ai.js'
 import { uid } from '../../lib/store.jsx'
+import { songMapText } from '../../lib/audio.js'
 import { download } from '../../lib/dates.js'
 import { revisionHex } from '../../lib/diff.js'
 
@@ -32,7 +33,7 @@ export default function Breakdown() {
       const res = await aiDocumentBreakdown({
         settings: state.settings,
         category: project.category,
-        text: doc.useText ? project.script.text : '',
+        text: [doc.useText ? project.script.text : '', (project.music?.sections || []).length ? `SONG MAP (music video):\n${songMapText(project.music, project.scenes)}` : ''].filter(Boolean).join('\n\n'),
         files,
         notes: doc.notes,
         wantShots: doc.wantShots,
@@ -42,7 +43,7 @@ export default function Breakdown() {
       edit((p) => {
         const scenes = res.setups.map((st, i) => ({
           id: uid(), number: st.number || String(i + 1), heading: st.heading, intExt: st.intExt, location: st.location, timeOfDay: st.timeOfDay,
-          synopsis: st.synopsis, body: st.body, look: st.look, durationHint: st.durationHint, eighths: 4, characters: st.characters,
+          synopsis: st.synopsis, body: st.body, look: st.look, durationHint: st.durationHint, songSection: st.songSection || '', eighths: 4, characters: st.characters,
           elements: st.elements, elementsSource: 'ai', flags: st.flags, notes: '', dayId: '', order: i, source: 'document',
         }))
         if (doc.mode === 'replace') {
@@ -59,6 +60,15 @@ export default function Breakdown() {
           res.setups.forEach((st, i) => {
             const scene = scenes[i]
             st.shots.forEach((sh, k) => p.shots.push({ id: uid(), sceneId: scene.id, number: `${scene.number}${String.fromCharCode(65 + (k % 26))}`, size: sh.size, angle: 'Eye level', movement: sh.movement, lens: '', camera: 'A', fps: '25', gear: /drone/i.test(sh.movement) ? 'Drone' : /handheld/i.test(sh.movement) ? 'Handheld' : /steadicam/i.test(sh.movement) ? 'Steadicam' : 'Tripod', description: sh.description, subject: '', audio: '', duration: '', status: 'planned', notes: '', frame: '', frameUrl: '' }))
+          })
+        }
+        // link setups to song sections named in song_section
+        if (p.music?.sections?.length) {
+          scenes.forEach((sc) => {
+            if (!sc.songSection) return
+            p.music.sections.forEach((sec) => {
+              if (sc.songSection.toLowerCase().includes(sec.name.toLowerCase())) sec.sceneIds = [...new Set([...(sec.sceneIds || []), sc.id])]
+            })
           })
         }
         p.concept = { title: res.title, summary: res.summary, locations: res.locations, talent: res.talent, notes: res.notes, source: files.map((f) => f.name).join(', ') || 'script text', at: new Date().toISOString() }
@@ -293,7 +303,7 @@ export default function Breakdown() {
                     <small>{s.timeOfDay}</small>
                   </span>
                   <span className="strip-main">
-                    <span className="strip-loc">{s.location || s.heading}{s.shot ? <span className="strip-done" title="Shot"> ✓</span> : null}</span>
+                    <span className="strip-loc">{s.location || s.heading}{s.shot ? <span className="strip-done" title="Shot"> ✓</span> : null}{(project.music?.sections || []).filter((sec) => (sec.sceneIds || []).includes(s.id)).map((sec) => <span key={sec.id} className="song-badge" title="Song section">♪ {sec.name}</span>)}</span>
                     <span className="strip-syn">{s.synopsis}</span>
                   </span>
                   <span className="strip-chars">{s.characters.slice(0, 4).join(', ')}{s.characters.length > 4 ? ` +${s.characters.length - 4}` : ''}</span>

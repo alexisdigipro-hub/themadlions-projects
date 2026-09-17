@@ -27,6 +27,7 @@ import Budget from './pages/project/Budget.jsx'
 import Reports from './pages/project/Reports.jsx'
 import Gear from './pages/project/Gear.jsx'
 import Post from './pages/project/Post.jsx'
+import Music from './pages/project/Music.jsx'
 
 function Loading() {
   return (
@@ -71,6 +72,7 @@ export default function App() {
                 <Route path="settings" element={<Settings />} />
                 <Route path="p/:id" element={<Project />}>
                   <Route index element={<Overview />} />
+                  <Route path="music" element={<Music />} />
                   <Route path="script" element={<Script />} />
                   <Route path="breakdown" element={<Breakdown />} />
                   <Route path="shots" element={<Shots />} />

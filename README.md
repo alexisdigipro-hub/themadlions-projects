@@ -9,6 +9,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 
 - Projects in four categories: Feature Film, Music Video, Advertise, Editing
 - Script import: PDF, Word (.docx), Final Draft (.fdx), Fountain, plain text, or paste. Pages files: export to PDF first
+- Music tab (Music Video projects only): upload the song (MP3, M4A, WAV, private Supabase bucket), waveform player drawn in the browser with click-to-seek and section loops, several versions (master, playback, instrumental), and a song map: sections (intro, verses, choruses) with start and end times, lyrics, notes and the setups from the breakdown that cover each one; paste the whole lyric to create sections at once, mark times while the song plays, export the map for the editor. The AI treatment breakdown reads the song map and links setups to sections
 - Script revisions: every new upload or edited save keeps the previous version with its revision colour (White, Blue, Pink, Yellow, Green…), side-by-side compare, restore. Re-running scene detection matches scenes by heading so breakdown tags, shots and schedule survive, and changed scenes are flagged on the strips
 - Scene detection in English and Greek (INT./EXT., ΕΣΩΤ./ΕΞΩΤ., DAY/NIGHT, ΜΕΡΑ/ΝΥΧΤΑ), characters, page eighths
 - Treatment, concept and moodboard breakdown: upload a director's treatment, a concept in plain words, a PDF moodboard with images or reference photos; Claude groups the material into shootable setups (location, time of day, talent, wardrobe, props, art, effects, equipment, look, time estimate), lists locations, talent and producer notes, and can draft a first shot list. Built for music videos and commercials that never had a screenplay
@@ -59,7 +60,7 @@ Settings → AI breakdown → paste an Anthropic API key. It is stored only in t
 ## Phase 2: Supabase (team logins, one shared database)
 
 1. Create a project at supabase.com (region Frankfurt).
-2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run. Then the same with `supabase/storage.sql` (photo bucket) `supabase/library.sql` (company library), `supabase/todos.sql` (general tasks) and `supabase/finance.sql` (administrators-only finance).
+2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run. Then the same with `supabase/storage.sql` (photo bucket) `supabase/library.sql` (company library), `supabase/todos.sql` (general tasks), `supabase/audio.sql` (song files) and `supabase/finance.sql` (administrators-only finance).
 3. Authentication → Providers → Email: keep it enabled; turn **Confirm email** off if you want teammates to sign in immediately.
 4. Project Settings → API: copy the Project URL and the publishable (anon) key into `src/lib/supabaseConfig.js`, commit, push. The site rebuilds in remote mode.
 5. Open the site, create your account. The first account becomes the administrator and the workspace is created automatically.

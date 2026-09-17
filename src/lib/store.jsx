@@ -16,6 +16,7 @@ export const STATUSES = ['Development', 'Pre-production', 'Production', 'Post-pr
 
 export const MODULES = [
   { key: 'projects', label: 'Projects' },
+  { key: 'music', label: 'Music' },
   { key: 'script', label: 'Script' },
   { key: 'breakdown', label: 'Breakdown' },
   { key: 'shots', label: 'Shot list' },
@@ -99,6 +100,7 @@ export function emptyProject(partial = {}) {
     vendors: [],
     post: { cuts: [], deliverables: [] },
     scriptVersions: [],
+    music: { tracks: [], activeTrackId: '', sections: [], notes: '' },
     breakdownStatus: 'none',
     ...partial,
   }
