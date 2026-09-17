@@ -90,6 +90,26 @@ export function TaskModal({ draft, setDraft, onSave, onClose, people }) {
   )
 }
 
+export function DeptChips({ tasks, dept, setDept, filter = 'open' }) {
+  const counts = {}
+  tasks.forEach((t) => {
+    const openish = filter === 'all' ? true : filter === 'done' ? t.status === 'done' : t.status !== 'done'
+    if (!openish) return
+    counts[t.dept || 'Other'] = (counts[t.dept || 'Other'] || 0) + 1
+  })
+  const depts = [...TASK_DEPTS, ...Object.keys(counts).filter((d) => !TASK_DEPTS.includes(d))].filter((d) => counts[d])
+  if (!depts.length) return null
+  const total = Object.values(counts).reduce((a, b) => a + b, 0)
+  return (
+    <div className="chips dept-chips">
+      <button type="button" className={`chip ${!dept ? 'on' : ''}`} onClick={() => setDept('')}>All <small>{total}</small></button>
+      {depts.map((d) => (
+        <button key={d} type="button" className={`chip ${dept === d ? 'on' : ''}`} onClick={() => setDept(dept === d ? '' : d)}>{d} <small>{counts[d]}</small></button>
+      ))}
+    </div>
+  )
+}
+
 export default function Tasks() {
   const { project, edit, canEdit } = useProject()
   const { state } = useStore()
@@ -141,12 +161,13 @@ export default function Tasks() {
               <button key={k} className={filter === k ? 'on' : ''} onClick={() => setFilter(k)}>{l}</button>
             ))}
           </div>
-          <Select value={dept} onChange={(e) => setDept(e.target.value)} options={[['', 'All departments'], ...TASK_DEPTS.map((d) => [d, d])]} />
           {editable && (
             <Button variant="primary" onClick={() => setDraft(emptyTask({ projectId: project.id }))}>Add task</Button>
           )}
         </div>
       </div>
+
+      {tasks.length > 0 && <DeptChips tasks={tasks} dept={dept} setDept={setDept} filter={filter} />}
 
       {!tasks.length ? (
         <Empty title="No tasks yet">Permits, casting calls, gear pickups, client approvals. Assign each one to a person with a due date and it shows up on their Tasks page.</Empty>

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { PageHead, Select, useToast } from '../components/ui.jsx'
 import { can, today, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
-import { TaskList, TaskModal } from './project/Tasks.jsx'
+import { DeptChips, TaskList, TaskModal } from './project/Tasks.jsx'
 
 export default function TasksAll() {
   const { state, updateProject } = useStore()
@@ -9,6 +9,8 @@ export default function TasksAll() {
   const toast = useToast()
   const [who, setWho] = useState('me') // me | all
   const [status, setStatus] = useState('open')
+  const [dept, setDept] = useState('')
+  const [proj, setProj] = useState('')
   const [draft, setDraft] = useState(null)
   const editable = can(user, 'tasks', 'edit')
 
@@ -18,8 +20,9 @@ export default function TasksAll() {
   const mine = (t) => !t.assignee || t.assignee.trim().toLowerCase() === (user?.name || '').trim().toLowerCase()
   const t0 = today()
 
-  const shown = all
-    .filter((t) => (who === 'me' ? mine(t) : true))
+  const base = all.filter((t) => (who === 'me' ? mine(t) : true)).filter((t) => (proj ? t.projectId === proj : true))
+  const shown = base
+    .filter((t) => (dept ? (t.dept || 'Other') === dept : true))
     .filter((t) => (status === 'all' ? true : status === 'done' ? t.status === 'done' : t.status !== 'done'))
     .sort((a, b) => (a.due || '9').localeCompare(b.due || '9'))
 
@@ -69,8 +72,10 @@ export default function TasksAll() {
           <button className={who === 'me' ? 'on' : ''} onClick={() => setWho('me')}>Mine</button>
           <button className={who === 'all' ? 'on' : ''} onClick={() => setWho('all')}>Everyone</button>
         </div>
+        <Select value={proj} onChange={(e) => setProj(e.target.value)} options={[['', 'All projects'], ...projects.map((p) => [p.id, p.title])]} />
         <Select value={status} onChange={(e) => setStatus(e.target.value)} options={[['open', 'Open'], ['done', 'Done'], ['all', 'All']]} />
       </PageHead>
+      {base.length > 0 && <DeptChips tasks={base} dept={dept} setDept={setDept} filter={status} />}
 
       {!shown.length ? (
         <p className="muted">Nothing to do. Tasks are created inside each project, in the Tasks tab.</p>
