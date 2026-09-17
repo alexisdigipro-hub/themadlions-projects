@@ -3,6 +3,7 @@ import { Button, Confirm, Field, Input, PageHead, useToast } from '../components
 import { uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { remote, supabase } from '../lib/supabase.js'
 import { fmtDate } from '../lib/dates.js'
+import { SendNoticeModal, SentNotices } from '../components/Notices.jsx'
 
 export const CHAT_READ_KEY = 'tml_chat_read'
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
@@ -15,6 +16,8 @@ export default function Chat() {
   const toast = useToast()
   const [text, setText] = useState('')
   const [showTg, setShowTg] = useState(false)
+  const [notice, setNotice] = useState(false)
+  const [showSent, setShowSent] = useState(false)
   const endRef = useRef(null)
   const chat = state.chat || []
   const isAdmin = user?.role === 'admin'
@@ -56,7 +59,11 @@ export default function Chat() {
     <div className="chat-page">
       <PageHead title="Team chat" sub={`${state.users.filter((u) => u.active !== false).length} in the team${chat.some((m) => m.source === 'telegram') ? ' · mirrored with Telegram' : ''}`}>
         {isAdmin && <Button variant="ghost" onClick={() => setShowTg((v) => !v)}>{showTg ? 'Hide Telegram' : 'Telegram'}</Button>}
+        {isAdmin && <Button variant="ghost" onClick={() => setShowSent((v) => !v)}>{showSent ? 'Hide notices' : 'Sent notices'}</Button>}
+        {isAdmin && <Button variant="primary" onClick={() => setNotice(true)}>Send notice</Button>}
       </PageHead>
+      <SendNoticeModal open={notice} onClose={() => setNotice(false)} />
+      {showSent && isAdmin && <div className="panel chat-tg"><div className="panel-head"><h2>Notices</h2></div><SentNotices /></div>}
 
       {showTg && isAdmin && <TelegramPanel onDone={() => setShowTg(false)} />}
 

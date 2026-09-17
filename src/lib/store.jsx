@@ -70,6 +70,7 @@ export function emptyState() {
     library: { contacts: [], locations: [] },
     todos: [],
     chat: [],
+    notices: [],
     finance: { transactions: [], recurring: [], settings: { currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 } },
     settings: { aiProvider: 'anthropic', aiKey: '', aiModel: 'claude-sonnet-4-6', mapsKey: '' },
   }
@@ -190,7 +191,7 @@ export function StoreProvider({ children }) {
   }, [])
 
   const loadAll = useCallback(async (ws) => {
-    const [w, m, p, e, inv, lib, fin, msg] = await Promise.all([
+    const [w, m, p, e, inv, lib, fin, msg, ntc] = await Promise.all([
       supabase.from('workspaces').select('*').eq('id', ws).single(),
       supabase.from('members').select('*').eq('workspace_id', ws),
       supabase.from('projects').select('id, data').eq('workspace_id', ws),
@@ -199,6 +200,7 @@ export function StoreProvider({ children }) {
       supabase.from('library').select('id, kind, data').eq('workspace_id', ws),
       supabase.from('finance').select('id, kind, data').eq('workspace_id', ws),
       supabase.from('messages').select('id, user_id, user_name, text, source, created_at').eq('workspace_id', ws).order('created_at', { ascending: true }).limit(500),
+      supabase.from('notices').select('id, data').eq('workspace_id', ws),
     ])
     if (w.error) throw w.error
     const libRows = lib.error ? [] : lib.data || [] // library table may not exist yet (library.sql not run)
@@ -206,6 +208,7 @@ export function StoreProvider({ children }) {
     const finRows = fin.error ? [] : fin.data || [] // admins only; members get nothing (RLS) or the table is missing
     const finSettings = finRows.find((r) => r.kind === 'settings')?.data || {}
     const msgRows = msg.error ? [] : msg.data || [] // chat table may not exist yet (chat.sql not run)
+    const ntcRows = ntc.error ? [] : ntc.data || [] // notices table may not exist yet (notices.sql not run)
     if (msg.error) console.warn('chat not available yet:', msg.error.message)
     const next = {
       ...emptyState(),
@@ -219,6 +222,7 @@ export function StoreProvider({ children }) {
       },
       todos: libRows.filter((r) => r.kind === 'task').map((r) => ({ ...r.data, id: r.id })),
       chat: msgRows.map(rowToMessage),
+      notices: ntcRows.map((r) => ({ ...r.data, id: r.id })),
       finance: {
         transactions: finRows.filter((r) => r.kind === 'tx').map((r) => ({ ...r.data, id: r.id })),
         recurring: finRows.filter((r) => r.kind === 'recurring').map((r) => ({ ...r.data, id: r.id })),
@@ -326,6 +330,20 @@ export function StoreProvider({ children }) {
             lib[key] = lib[key].some((x) => x.id === item.id) ? lib[key].map((x) => (x.id === item.id ? item : x)) : [...lib[key], item]
           }
           const next = { ...s, library: lib }
+          prevRef.current = next
+          return next
+        })
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notices', filter: `workspace_id=eq.${ws}` }, (payload) => {
+        setState((s) => {
+          let notices
+          if (payload.eventType === 'DELETE') notices = (s.notices || []).filter((n) => n.id !== payload.old.id)
+          else {
+            if (payload.new.updated_by === authUser?.id && myWrites.current.has(payload.new.id)) return s
+            const n = { ...payload.new.data, id: payload.new.id }
+            notices = (s.notices || []).some((x) => x.id === n.id) ? s.notices.map((x) => (x.id === n.id ? n : x)) : [...(s.notices || []), n]
+          }
+          const next = { ...s, notices }
           prevRef.current = next
           return next
         })
@@ -453,6 +471,25 @@ export function StoreProvider({ children }) {
         }, 0),
       )
     })
+    {
+      const before = Object.fromEntries((prev.notices || []).map((n) => [n.id, n]))
+      ;(next.notices || []).forEach((n) => {
+        if (before[n.id] && JSON.stringify(before[n.id]) === JSON.stringify(n)) return
+        myWrites.current.add(n.id)
+        schedule('n:' + n.id, async () => {
+          const { error } = await supabase.from('notices').upsert({ id: n.id, workspace_id: ws, from_id: n.fromId || null, recipients: n.to === 'all' ? ['all'] : n.to, data: n })
+          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/notices.sql in the SQL editor to enable notices.' : error.message)
+          setTimeout(() => myWrites.current.delete(n.id), 4000)
+        }, 300)
+      })
+      const ids = new Set((next.notices || []).map((n) => n.id))
+      Object.values(before).filter((n) => !ids.has(n.id)).forEach((n) =>
+        schedule('nd:' + n.id, async () => {
+          const { error } = await supabase.from('notices').delete().eq('id', n.id)
+          if (error) throw error
+        }, 0),
+      )
+    }
     {
       const before = new Set((prev.chat || []).map((m) => m.id))
       ;(next.chat || []).filter((m) => !before.has(m.id)).forEach((m) => {

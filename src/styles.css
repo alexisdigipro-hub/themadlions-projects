@@ -2347,3 +2347,11 @@ html[data-theme='light'] .chat-box { border-color: transparent; }
   .chat-box { min-height: calc(100vh - 150px - var(--tabbar-h)); }
   .chat-compose { padding: 8px 10px; }
 }
+
+/* ---------- notices ---------- */
+.notice-pop .notice-body { font-size: 17px; line-height: 1.5; white-space: pre-wrap; margin: 0 0 10px; }
+.notice-to { display: flex; flex-wrap: wrap; gap: 6px; }
+.notice-list li.notice-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
+.notice-list li.notice-row:last-child { border-bottom: 0; }
+.notice-acks { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; font-size: 13px; color: var(--muted); }
+.notice-acks .ack.on { color: var(--ok, #2e9e5b); font-weight: 600; }

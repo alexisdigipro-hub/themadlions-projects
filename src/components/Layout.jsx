@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { can, useCurrentUser, useStore } from '../lib/store.jsx'
 import { Icon } from './icons.jsx'
+import { NoticePopup } from './Notices.jsx'
 
 function Logo({ name, subtitle }) {
   return (
@@ -93,6 +94,7 @@ export default function Layout() {
       <main className="content">
         <Outlet />
       </main>
+      <NoticePopup />
 
       <nav className="tabbar" aria-label="Main">
         {[
