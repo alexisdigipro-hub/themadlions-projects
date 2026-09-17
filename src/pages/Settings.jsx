@@ -12,6 +12,12 @@ export default function Settings() {
   const [ws, setWs] = useState(state.workspace)
   const [ai, setAi] = useState(state.settings)
   const [testing, setTesting] = useState(false)
+  const [textSize, setTextSize] = useState(() => localStorage.getItem('tml_text_size') || 'normal')
+  const applyTextSize = (v) => {
+    setTextSize(v)
+    localStorage.setItem('tml_text_size', v)
+    document.documentElement.dataset.textSize = v
+  }
   const isAdmin = me?.role === 'admin'
 
   const saveWs = () => {
@@ -65,6 +71,17 @@ export default function Settings() {
     <>
       <PageHead title="Settings" />
       <div className="cols">
+        <section className="panel">
+          <h2>Display</h2>
+          <Field label="Text size" hint="Saved on this device only.">
+            <div className="segmented small">
+              {[['compact', 'Compact'], ['normal', 'Normal'], ['large', 'Large']].map(([v, l]) => (
+                <button key={v} className={textSize === v ? 'on' : ''} onClick={() => applyTextSize(v)}>{l}</button>
+              ))}
+            </div>
+          </Field>
+        </section>
+
         <section className="panel">
           <h2>Storage</h2>
           {mode === 'remote' ? (
