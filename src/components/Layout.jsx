@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { can, useCurrentUser, useStore } from '../lib/store.jsx'
 import { Icon } from './icons.jsx'
 
@@ -20,14 +20,21 @@ export default function Layout() {
   const user = useCurrentUser()
   const nav = useNavigate()
   const [open, setOpen] = useState(false)
+  const [readAt, setReadAt] = useState(() => localStorage.getItem('tml_chat_read') || '')
+  useEffect(() => {
+    const h = () => setReadAt(localStorage.getItem('tml_chat_read') || '')
+    window.addEventListener('tml-chat-read', h)
+    return () => window.removeEventListener('tml-chat-read', h)
+  }, [])
+  const unread = (state.chat || []).filter((m) => m.createdAt > readAt && m.userId !== user?.id).length
 
   const items = [
     { to: '/home', label: 'Home', show: true, icon: 'home' },
     { to: '/', label: 'Projects', end: true, show: can(user, 'projects'), icon: 'projects' },
     { to: '/calendar', label: 'Calendar', show: can(user, 'calendar'), icon: 'calendar' },
     { to: '/tasks', label: 'Tasks', show: can(user, 'tasks'), icon: 'tasks' },
-    { to: '/people', label: 'People', show: can(user, 'contacts'), icon: 'people' },
-    { to: '/locations', label: 'Locations', show: can(user, 'locations'), icon: 'locations' },
+    { to: '/chat', label: 'Chat', show: true, icon: 'chat', badge: unread },
+    { to: '/database', label: 'Database', show: can(user, 'contacts') || can(user, 'locations'), icon: 'database' },
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance' },
     { to: '/team', label: 'Team', show: user?.role === 'admin', icon: 'team' },
     { to: '/settings', label: 'Settings', show: true, icon: 'settings' },
@@ -59,6 +66,7 @@ export default function Layout() {
             <NavLink key={i.to} to={i.to} end={i.end} onClick={close} className={({ isActive }) => (isActive ? 'active' : '')}>
               <span className="nav-ico">{Icon[i.icon]?.()}</span>
               {i.label}
+              {i.badge > 0 && <span className="nav-badge">{i.badge}</span>}
             </NavLink>
           ))}
         </nav>

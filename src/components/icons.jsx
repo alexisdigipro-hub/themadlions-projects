@@ -18,6 +18,8 @@ export const Icon = {
   locations: () => (
     <svg {...base}><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" /><circle cx="12" cy="10" r="2.5" /></svg>
   ),
+  database: () => (<svg {...base}><ellipse cx="12" cy="5.5" rx="8" ry="3" /><path d="M4 5.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /><path d="M4 11.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /></svg>),
+  chat: () => (<svg {...base}><path d="M4 5h16v11H9l-5 4z" /><path d="M8 9h8M8 12.5h5" /></svg>),
   finance: () => (
     <svg {...base}><path d="M3 17l5-5 4 4 5-6 4 3" /><path d="M3 21h18M3 3v18" /></svg>
   ),

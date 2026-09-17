@@ -10,12 +10,13 @@ const DEPTS = ['Cast', 'Production', 'Direction', 'Camera', 'Lighting', 'Grip', 
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 const emptyPerson = (kind) => ({ id: uid(), kind, name: '', phone: '', email: '', dept: kind === 'cast' ? 'Cast' : 'Production', role: '', agent: '', agentPhone: '', notes: '', photos: [], tags: [], createdAt: new Date().toISOString() })
 
-export default function PeopleAll() {
+export default function PeopleAll({ embedded = false, kind: kindProp } = {}) {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
   const editable = can(user, 'contacts', 'edit')
-  const [kind, setKind] = useState('cast')
+  const [kindState, setKind] = useState('cast')
+  const kind = kindProp || kindState
   const [q, setQ] = useState('')
   const [dept, setDept] = useState('')
   const [draft, setDraft] = useState(null)
@@ -75,15 +76,20 @@ export default function PeopleAll() {
 
   return (
     <div>
-      <PageHead title="People" sub={`${people.filter((p) => p.kind === 'cast').length} cast · ${people.filter((p) => p.kind === 'crew').length} crew in the company library`}>
-        {editable && unlinked > 0 && <Button variant="ghost" onClick={collect}>Collect {unlinked} from projects</Button>}
-        {editable && <Button variant="primary" onClick={() => setDraft(emptyPerson(kind))}>Add {kind}</Button>}
-      </PageHead>
+      {!embedded && (
+        <PageHead title="People" sub={`${people.filter((p) => p.kind === 'cast').length} cast · ${people.filter((p) => p.kind === 'crew').length} crew in the company library`}>
+          {editable && unlinked > 0 && <Button variant="ghost" onClick={collect}>Collect {unlinked} from projects</Button>}
+          {editable && <Button variant="primary" onClick={() => setDraft(emptyPerson(kind))}>Add {kind}</Button>}
+        </PageHead>
+      )}
       <div className="toolbar">
-        <div className="segmented">
-          <button className={kind === 'cast' ? 'on' : ''} onClick={() => setKind('cast')}>Cast</button>
-          <button className={kind === 'crew' ? 'on' : ''} onClick={() => setKind('crew')}>Crew</button>
-        </div>
+        {!embedded && (
+          <div className="segmented">
+            <button className={kind === 'cast' ? 'on' : ''} onClick={() => setKind('cast')}>Cast</button>
+            <button className={kind === 'crew' ? 'on' : ''} onClick={() => setKind('crew')}>Crew</button>
+          </div>
+        )}
+        {embedded && <span className="muted">{list.length} {kind}{unlinked > 0 && editable ? ` · ` : ''}{unlinked > 0 && editable && <button className="link" onClick={collect}>collect {unlinked} from projects</button>}</span>}
         <div className="toolbar-actions">
           <div className="segmented small">
             <button className={view === 'cards' ? 'on' : ''} onClick={() => pickView('cards')}>Cards</button>
@@ -91,11 +97,12 @@ export default function PeopleAll() {
           </div>
           <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, role, phone, agent…" />
           <Select value={dept} onChange={(e) => setDept(e.target.value)} options={[['', 'All departments'], ...DEPTS.map((d) => [d, d])]} />
+          {embedded && editable && <Button variant="primary" onClick={() => setDraft(emptyPerson(kind))}>Add {kind}</Button>}
         </div>
       </div>
 
       {!list.length ? (
-        <Empty title={people.length ? 'No matches' : 'The library is empty'}>
+        <Empty title={people.length ? 'No matches' : 'The database is empty'}>
           {people.length ? 'Try another search.' : 'People you add inside a project land here automatically, so the next project can pick them from the list. You can also add them directly.'}
         </Empty>
       ) : view === 'table' ? (

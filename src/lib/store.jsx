@@ -69,6 +69,7 @@ export function emptyState() {
     events: [],
     library: { contacts: [], locations: [] },
     todos: [],
+    chat: [],
     finance: { transactions: [], recurring: [], settings: { currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 } },
     settings: { aiProvider: 'anthropic', aiKey: '', aiModel: 'claude-sonnet-4-6', mapsKey: '' },
   }
@@ -138,6 +139,8 @@ function migrate(parsed) {
   return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), recurring: parsed.finance?.recurring || [], settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}) } }
 }
 
+const rowToMessage = (r) => ({ id: r.id, userId: r.user_id || '', userName: r.user_name || '', text: r.text || '', source: r.source || 'app', createdAt: r.created_at })
+
 /* ---------- context ---------- */
 const StoreCtx = createContext(null)
 const AI_KEY = 'tml_ai_key_v1' // in remote mode the AI key stays in this browser only
@@ -185,7 +188,7 @@ export function StoreProvider({ children }) {
   }, [])
 
   const loadAll = useCallback(async (ws) => {
-    const [w, m, p, e, inv, lib, fin] = await Promise.all([
+    const [w, m, p, e, inv, lib, fin, msg] = await Promise.all([
       supabase.from('workspaces').select('*').eq('id', ws).single(),
       supabase.from('members').select('*').eq('workspace_id', ws),
       supabase.from('projects').select('id, data').eq('workspace_id', ws),
@@ -193,12 +196,15 @@ export function StoreProvider({ children }) {
       supabase.from('invites').select('*').eq('workspace_id', ws),
       supabase.from('library').select('id, kind, data').eq('workspace_id', ws),
       supabase.from('finance').select('id, kind, data').eq('workspace_id', ws),
+      supabase.from('messages').select('id, user_id, user_name, text, source, created_at').eq('workspace_id', ws).order('created_at', { ascending: true }).limit(500),
     ])
     if (w.error) throw w.error
     const libRows = lib.error ? [] : lib.data || [] // library table may not exist yet (library.sql not run)
     if (lib.error) console.warn('library not available yet:', lib.error.message)
     const finRows = fin.error ? [] : fin.data || [] // admins only; members get nothing (RLS) or the table is missing
     const finSettings = finRows.find((r) => r.kind === 'settings')?.data || {}
+    const msgRows = msg.error ? [] : msg.data || [] // chat table may not exist yet (chat.sql not run)
+    if (msg.error) console.warn('chat not available yet:', msg.error.message)
     const next = {
       ...emptyState(),
       workspace: { name: w.data.name, subtitle: w.data.subtitle, createdAt: w.data.created_at, id: ws },
@@ -210,6 +216,7 @@ export function StoreProvider({ children }) {
         locations: libRows.filter((r) => r.kind === 'location').map((r) => ({ ...r.data, id: r.id })),
       },
       todos: libRows.filter((r) => r.kind === 'task').map((r) => ({ ...r.data, id: r.id })),
+      chat: msgRows.map(rowToMessage),
       finance: {
         transactions: finRows.filter((r) => r.kind === 'tx').map((r) => ({ ...r.data, id: r.id })),
         recurring: finRows.filter((r) => r.kind === 'recurring').map((r) => ({ ...r.data, id: r.id })),
@@ -317,6 +324,19 @@ export function StoreProvider({ children }) {
             lib[key] = lib[key].some((x) => x.id === item.id) ? lib[key].map((x) => (x.id === item.id ? item : x)) : [...lib[key], item]
           }
           const next = { ...s, library: lib }
+          prevRef.current = next
+          return next
+        })
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `workspace_id=eq.${ws}` }, (payload) => {
+        setState((s) => {
+          let chat
+          if (payload.eventType === 'DELETE') chat = (s.chat || []).filter((m) => m.id !== payload.old.id)
+          else {
+            const m = rowToMessage(payload.new)
+            chat = (s.chat || []).some((x) => x.id === m.id) ? s.chat.map((x) => (x.id === m.id ? m : x)) : [...(s.chat || []), m]
+          }
+          const next = { ...s, chat }
           prevRef.current = next
           return next
         })
@@ -431,6 +451,24 @@ export function StoreProvider({ children }) {
         }, 0),
       )
     })
+    {
+      const before = new Set((prev.chat || []).map((m) => m.id))
+      ;(next.chat || []).filter((m) => !before.has(m.id)).forEach((m) => {
+        myWrites.current.add(m.id)
+        schedule('m:' + m.id, async () => {
+          const { error } = await supabase.from('messages').insert({ id: m.id, workspace_id: ws, user_id: authUser?.id || null, user_name: m.userName, text: m.text, source: m.source || 'app', created_at: m.createdAt })
+          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/chat.sql in the SQL editor to enable the team chat.' : error.message)
+          setTimeout(() => myWrites.current.delete(m.id), 4000)
+        }, 0)
+      })
+      const after = new Set((next.chat || []).map((m) => m.id))
+      ;(prev.chat || []).filter((m) => !after.has(m.id)).forEach((m) =>
+        schedule('md:' + m.id, async () => {
+          const { error } = await supabase.from('messages').delete().eq('id', m.id)
+          if (error) throw error
+        }, 0),
+      )
+    }
     {
       const before = Object.fromEntries((prev.finance?.transactions || []).map((t) => [t.id, t]))
       const after = next.finance?.transactions || []

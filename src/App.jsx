@@ -20,8 +20,8 @@ import Notes from './pages/project/Notes.jsx'
 import Shots from './pages/project/Shots.jsx'
 import Tasks from './pages/project/Tasks.jsx'
 import TasksAll from './pages/TasksAll.jsx'
-import PeopleAll from './pages/PeopleAll.jsx'
-import LocationsAll from './pages/LocationsAll.jsx'
+import Database from './pages/Database.jsx'
+import Chat from './pages/Chat.jsx'
 import Finance from './pages/Finance.jsx'
 import Home from './pages/Home.jsx'
 import Budget from './pages/project/Budget.jsx'
@@ -66,8 +66,11 @@ export default function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="calendar" element={<CalendarAll />} />
                 <Route path="tasks" element={<TasksAll />} />
-                <Route path="people" element={<PeopleAll />} />
-                <Route path="locations" element={<LocationsAll />} />
+                <Route path="chat" element={<Chat />} />
+                <Route path="database/:tab" element={<Database />} />
+                <Route path="database" element={<Navigate to="/database/locations" replace />} />
+                <Route path="people" element={<Navigate to="/database/cast" replace />} />
+                <Route path="locations" element={<Navigate to="/database/locations" replace />} />
                 <Route path="finance" element={<Finance />} />
                 <Route path="home" element={<Home />} />
                 <Route path="team" element={<Team />} />

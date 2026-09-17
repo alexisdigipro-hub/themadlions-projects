@@ -13,7 +13,7 @@ function mapSrc(address, key) {
   return key ? `https://www.google.com/maps/embed/v1/place?key=${key}&q=${q}` : `https://www.google.com/maps?q=${q}&output=embed`
 }
 
-export default function LocationsAll() {
+export default function LocationsAll({ embedded = false } = {}) {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
@@ -73,19 +73,23 @@ export default function LocationsAll() {
 
   return (
     <div>
-      <PageHead title="Locations" sub={`${locs.length} locations in the company library`}>
-        {editable && unlinked > 0 && <Button variant="ghost" onClick={collect}>Collect {unlinked} from projects</Button>}
-        {editable && <Button variant="primary" onClick={() => setDraft(emptyLoc())}>Add location</Button>}
-      </PageHead>
+      {!embedded && (
+        <PageHead title="Locations" sub={`${locs.length} locations in the company library`}>
+          {editable && unlinked > 0 && <Button variant="ghost" onClick={collect}>Collect {unlinked} from projects</Button>}
+          {editable && <Button variant="primary" onClick={() => setDraft(emptyLoc())}>Add location</Button>}
+        </PageHead>
+      )}
       <div className="toolbar">
+        {embedded && <span className="muted">{list.length} location{list.length === 1 ? '' : 's'}{unlinked > 0 && editable ? ` · ` : ''}{unlinked > 0 && editable && <button className="link" onClick={collect}>collect {unlinked} from projects</button>}</span>}
         <div className="toolbar-actions">
           <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, address, notes…" />
           <Select value={type} onChange={(e) => setType(e.target.value)} options={[['', 'All types'], ...TYPES.map((t) => [t, t])]} />
+          {embedded && editable && <Button variant="primary" onClick={() => setDraft(emptyLoc())}>Add location</Button>}
         </div>
       </div>
 
       {!list.length ? (
-        <Empty title={locs.length ? 'No matches' : 'The library is empty'}>
+        <Empty title={locs.length ? 'No matches' : 'The database is empty'}>
           {locs.length ? 'Try another search.' : 'Locations you add inside a project land here automatically. Scouted places you have not used yet can be added directly.'}
         </Empty>
       ) : (
