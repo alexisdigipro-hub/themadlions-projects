@@ -10,18 +10,29 @@ const LEVELS = [
 ]
 
 export default function Team() {
-  const { state, update } = useStore()
+  const { state, update, mode, invites, invite, removeInvite } = useStore()
   const me = useCurrentUser()
   const toast = useToast()
   const [draft, setDraft] = useState(null)
+  const remote = mode === 'remote'
 
   if (me?.role !== 'admin') return <Navigate to="/" replace />
 
-  const save = () => {
+  const save = async () => {
     const em = draft.email.trim().toLowerCase()
     if (!draft.name.trim() || !em) return toast('Name and email are required.', 'error')
     if (state.users.some((u) => u.email === em && u.id !== draft.id)) return toast('That email is already in the team.', 'error')
-    if (draft.isNew && draft.password.length < 4) return toast('Give them a temporary password of at least 4 characters.', 'error')
+    if (remote && draft.isNew) {
+      try {
+        await invite({ ...draft, email: em })
+        toast('Invite saved. Ask them to create an account with that email.', 'ok')
+        setDraft(null)
+      } catch (e) {
+        toast(e.message, 'error')
+      }
+      return
+    }
+    if (!remote && draft.isNew && draft.password.length < 4) return toast('Give them a temporary password of at least 4 characters.', 'error')
     update((s) => {
       const { isNew, ...u } = draft
       u.email = em
@@ -108,8 +119,33 @@ export default function Team() {
           ))}
         </tbody>
       </table>
+      {remote && invites.length > 0 && (
+        <>
+          <h3 className="section-title">Waiting to sign up</h3>
+          <table className="table">
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Role</th><th /></tr>
+            </thead>
+            <tbody>
+              {invites.map((i) => (
+                <tr key={i.id}>
+                  <td>{i.name}</td>
+                  <td>{i.email}</td>
+                  <td><Badge>{i.role}</Badge></td>
+                  <td className="row-actions">
+                    <Confirm label="Remove" onConfirm={() => removeInvite(i.id).catch((e) => toast(e.message, 'error'))} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
       <p className="fineprint">
-        Phase 1 accounts live in this browser only; give teammates their login when the Supabase backend is connected. {admins === 1 && 'You are the only administrator.'}
+        {remote
+          ? 'Teammates create their own password when they sign up with the email you added here. Permissions take effect the moment they sign in.'
+          : 'Local mode accounts live in this browser only; team login across devices arrives with the Supabase backend.'}{' '}
+        {admins === 1 && 'You are the only administrator.'}
       </p>
 
       <Modal
@@ -139,9 +175,15 @@ export default function Team() {
               </Field>
             </div>
             <div className="row-2">
-              <Field label={draft.isNew ? 'Temporary password' : 'New password (leave blank to keep)'}>
-                <Input type="text" value={draft.password} onChange={(e) => setDraft({ ...draft, password: e.target.value })} />
-              </Field>
+              {remote ? (
+                <Field label="Password" hint={draft.isNew ? 'They choose it themselves when they sign up.' : 'They can change it from the sign-in page (Forgot password).'}>
+                  <Input type="text" value="" disabled placeholder="Set by the teammate" />
+                </Field>
+              ) : (
+                <Field label={draft.isNew ? 'Temporary password' : 'New password (leave blank to keep)'}>
+                  <Input type="text" value={draft.password} onChange={(e) => setDraft({ ...draft, password: e.target.value })} />
+                </Field>
+              )}
               <Field label="Role">
                 <Select
                   value={draft.role}

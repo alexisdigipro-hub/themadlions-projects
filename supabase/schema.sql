@@ -1,21 +1,23 @@
--- THEMADLIONS Projects · Phase 2 schema
--- Paste into Supabase > SQL editor > New query > Run.
--- Auth is handled by Supabase Auth (email + Google). Every table is protected by RLS.
+-- THEMADLIONS Projects · Phase 2 schema (document model)
+-- Paste the whole file into Supabase > SQL Editor > New query > Run. Safe to run more than once.
+--
+-- Design: each project is stored as one JSON document (same shape the app already uses),
+-- so every module works unchanged. Membership, project access and edit rights are enforced
+-- by Row Level Security; per-module view/edit levels are applied by the app.
 
-create extension if not exists "pgcrypto";
+create extension if not exists pgcrypto;
 
--- One workspace (The Mad Lions). Multi-workspace is possible later.
 create table if not exists workspaces (
   id uuid primary key default gen_random_uuid(),
   name text not null default 'THEMADLIONS',
   subtitle text not null default 'Projects',
+  settings jsonb not null default '{}'::jsonb,
   created_at timestamptz default now()
 );
 
--- Membership + permissions. permissions is {module: 'none'|'view'|'edit'}, project_access is 'all' or an array of project ids.
 create table if not exists members (
-  workspace_id uuid references workspaces(id) on delete cascade,
-  user_id uuid references auth.users(id) on delete cascade,
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
   name text,
   email text,
   role text not null default 'member' check (role in ('admin','member')),
@@ -26,140 +28,157 @@ create table if not exists members (
   primary key (workspace_id, user_id)
 );
 
-create table if not exists projects (
+create table if not exists invites (
   id uuid primary key default gen_random_uuid(),
-  workspace_id uuid references workspaces(id) on delete cascade,
-  title text not null,
-  category text not null check (category in ('Feature Film','Music Video','Advertise','Editing')),
-  status text not null default 'Development',
-  client text, director text, producer text,
-  start_date date, end_date date,
-  notes text, production_notes text,
-  color text default '#C8503F',
-  script_text text, script_file_name text, script_format text, script_imported_at timestamptz,
-  breakdown_status text default 'none',
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  email text not null,
+  name text,
+  role text not null default 'member' check (role in ('admin','member')),
+  permissions jsonb not null default '{}'::jsonb,
+  project_access jsonb not null default '"all"'::jsonb,
   created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  unique (workspace_id, email)
 );
 
-create table if not exists scenes (
-  id uuid primary key default gen_random_uuid(),
-  project_id uuid references projects(id) on delete cascade,
-  number text, heading text, int_ext text, location text, time_of_day text,
-  synopsis text, body text, eighths int default 1,
-  characters jsonb default '[]'::jsonb,
-  elements jsonb default '{}'::jsonb,
-  flags jsonb default '[]'::jsonb,
-  notes text,
-  day_id uuid,
-  sort_order int default 0
-);
-
-create table if not exists shooting_days (
-  id uuid primary key default gen_random_uuid(),
-  project_id uuid references projects(id) on delete cascade,
-  date date not null, unit text default 'Main unit',
-  call_time time, wrap_time time,
-  location_id uuid, notes text,
-  scene_ids jsonb default '[]'::jsonb,
-  call_sheet jsonb default '{}'::jsonb
-);
-
-create table if not exists locations (
-  id uuid primary key default gen_random_uuid(),
-  project_id uuid references projects(id) on delete cascade,
-  name text not null, address text, type text, notes text, contact text, phone text,
-  scene_locations jsonb default '[]'::jsonb
-);
-
-create table if not exists contacts (
-  id uuid primary key default gen_random_uuid(),
-  project_id uuid references projects(id) on delete cascade,
-  kind text check (kind in ('cast','crew')),
-  name text not null, character text, dept text, role text, phone text, email text,
-  call_offset int default 0
-);
-
-create table if not exists links (
-  id uuid primary key default gen_random_uuid(),
-  project_id uuid references projects(id) on delete cascade,
-  title text not null, url text not null, kind text, note text
+create table if not exists projects (
+  id text primary key,
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  data jsonb not null,
+  updated_at timestamptz default now(),
+  updated_by uuid
 );
 
 create table if not exists events (
-  id uuid primary key default gen_random_uuid(),
-  workspace_id uuid references workspaces(id) on delete cascade,
-  project_id uuid references projects(id) on delete cascade,
-  source_day_id uuid,
-  type text not null default 'prep',
-  title text not null, date date not null,
-  start_time time, end_time time,
-  location_text text, notes text,
-  created_by uuid references auth.users(id)
+  id text primary key,
+  workspace_id uuid not null references workspaces(id) on delete cascade,
+  project_id text,
+  data jsonb not null,
+  updated_at timestamptz default now(),
+  updated_by uuid
 );
 
--- Script files live in Storage bucket "scripts" (private). Path: {project_id}/{filename}.
-
--- ---------- helpers ----------
-create or replace function my_member(ws uuid) returns members
-language sql stable security definer as $$
-  select * from members where workspace_id = ws and user_id = auth.uid() and active limit 1
+-- ---------- helpers (security definer breaks RLS recursion on members) ----------
+create or replace function my_ws() returns uuid
+language sql stable security definer set search_path = public as $$
+  select workspace_id from members where user_id = auth.uid() and active limit 1
 $$;
 
-create or replace function can_view_project(pid uuid) returns boolean
-language sql stable security definer as $$
-  select exists (
-    select 1 from projects p join members m on m.workspace_id = p.workspace_id
-    where p.id = pid and m.user_id = auth.uid() and m.active
-      and (m.role = 'admin' or m.project_access = '"all"'::jsonb or m.project_access ? pid::text)
-  )
+create or replace function is_admin() returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((select role = 'admin' from members where user_id = auth.uid() and active limit 1), false)
 $$;
 
-create or replace function can_edit_module(pid uuid, module text) returns boolean
-language sql stable security definer as $$
-  select exists (
-    select 1 from projects p join members m on m.workspace_id = p.workspace_id
-    where p.id = pid and m.user_id = auth.uid() and m.active
-      and (m.role = 'admin' or (
-        (m.project_access = '"all"'::jsonb or m.project_access ? pid::text)
-        and m.permissions ->> module = 'edit'))
-  )
+create or replace function can_view_project(pid text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((
+    select role = 'admin' or project_access = '"all"'::jsonb or project_access ? pid
+    from members where user_id = auth.uid() and active limit 1
+  ), false)
 $$;
 
--- ---------- RLS ----------
+create or replace function can_edit_any() returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((
+    select role = 'admin' or exists (select 1 from jsonb_each_text(permissions) where value = 'edit')
+    from members where user_id = auth.uid() and active limit 1
+  ), false)
+$$;
+
+create or replace function can_edit_project(pid text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select can_view_project(pid) and can_edit_any()
+$$;
+
+-- First sign-in: creates the workspace for the very first user (who becomes admin),
+-- or turns a pending invite into a membership. Returns the membership row or null.
+create or replace function bootstrap(p_name text default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  uid uuid := auth.uid();
+  em text;
+  ws uuid;
+  m members;
+  inv invites;
+begin
+  if uid is null then raise exception 'Not signed in'; end if;
+  select * into m from members where user_id = uid limit 1;
+  if found then return to_jsonb(m); end if;
+  select lower(email) into em from auth.users where id = uid;
+  select * into inv from invites where lower(email) = em limit 1;
+  if found then
+    insert into members (workspace_id, user_id, name, email, role, permissions, project_access)
+    values (inv.workspace_id, uid, coalesce(nullif(p_name, ''), inv.name, split_part(em, '@', 1)), em, inv.role, inv.permissions, inv.project_access)
+    returning * into m;
+    delete from invites where id = inv.id;
+    return to_jsonb(m);
+  end if;
+  if not exists (select 1 from workspaces) then
+    insert into workspaces (name) values ('THEMADLIONS') returning id into ws;
+    insert into members (workspace_id, user_id, name, email, role, permissions, project_access)
+    values (ws, uid, coalesce(nullif(p_name, ''), split_part(em, '@', 1)), em, 'admin', '{}'::jsonb, '"all"'::jsonb)
+    returning * into m;
+    return to_jsonb(m);
+  end if;
+  return null;
+end $$;
+
+create or replace function touch_updated_at() returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  new.updated_by = auth.uid();
+  return new;
+end $$;
+drop trigger if exists projects_touch on projects;
+create trigger projects_touch before insert or update on projects for each row execute function touch_updated_at();
+drop trigger if exists events_touch on events;
+create trigger events_touch before insert or update on events for each row execute function touch_updated_at();
+
+-- ---------- row level security ----------
 alter table workspaces enable row level security;
 alter table members enable row level security;
+alter table invites enable row level security;
 alter table projects enable row level security;
-alter table scenes enable row level security;
-alter table shooting_days enable row level security;
-alter table locations enable row level security;
-alter table contacts enable row level security;
-alter table links enable row level security;
 alter table events enable row level security;
 
-create policy "members see their workspace" on workspaces for select using (exists (select 1 from members m where m.workspace_id = id and m.user_id = auth.uid()));
-create policy "admins edit workspace" on workspaces for update using (exists (select 1 from members m where m.workspace_id = id and m.user_id = auth.uid() and m.role = 'admin'));
+drop policy if exists ws_select on workspaces;
+drop policy if exists ws_update on workspaces;
+create policy ws_select on workspaces for select using (id = my_ws());
+create policy ws_update on workspaces for update using (is_admin() and id = my_ws());
 
-create policy "members see members" on members for select using (exists (select 1 from members m where m.workspace_id = members.workspace_id and m.user_id = auth.uid()));
-create policy "admins manage members" on members for all using (exists (select 1 from members m where m.workspace_id = members.workspace_id and m.user_id = auth.uid() and m.role = 'admin'));
+drop policy if exists members_select on members;
+drop policy if exists members_admin on members;
+create policy members_select on members for select using (workspace_id = my_ws());
+create policy members_admin on members for all using (is_admin() and workspace_id = my_ws()) with check (is_admin() and workspace_id = my_ws());
 
-create policy "view projects" on projects for select using (can_view_project(id));
-create policy "edit projects" on projects for update using (can_edit_module(id, 'projects'));
-create policy "create projects" on projects for insert with check (exists (select 1 from members m where m.workspace_id = projects.workspace_id and m.user_id = auth.uid() and (m.role = 'admin' or m.permissions ->> 'projects' = 'edit')));
-create policy "delete projects" on projects for delete using (can_edit_module(id, 'projects'));
+drop policy if exists invites_admin on invites;
+create policy invites_admin on invites for all using (is_admin() and workspace_id = my_ws()) with check (is_admin() and workspace_id = my_ws());
 
-create policy "view scenes" on scenes for select using (can_view_project(project_id));
-create policy "edit scenes" on scenes for all using (can_edit_module(project_id, 'breakdown')) with check (can_edit_module(project_id, 'breakdown'));
-create policy "view days" on shooting_days for select using (can_view_project(project_id));
-create policy "edit days" on shooting_days for all using (can_edit_module(project_id, 'schedule')) with check (can_edit_module(project_id, 'schedule'));
-create policy "view locations" on locations for select using (can_view_project(project_id));
-create policy "edit locations" on locations for all using (can_edit_module(project_id, 'locations')) with check (can_edit_module(project_id, 'locations'));
-create policy "view contacts" on contacts for select using (can_view_project(project_id));
-create policy "edit contacts" on contacts for all using (can_edit_module(project_id, 'contacts')) with check (can_edit_module(project_id, 'contacts'));
-create policy "view links" on links for select using (can_view_project(project_id));
-create policy "edit links" on links for all using (can_edit_module(project_id, 'files')) with check (can_edit_module(project_id, 'files'));
-create policy "view events" on events for select using (project_id is null or can_view_project(project_id));
-create policy "edit events" on events for all using (project_id is null or can_edit_module(project_id, 'calendar')) with check (project_id is null or can_edit_module(project_id, 'calendar'));
+drop policy if exists projects_select on projects;
+drop policy if exists projects_insert on projects;
+drop policy if exists projects_update on projects;
+drop policy if exists projects_delete on projects;
+create policy projects_select on projects for select using (workspace_id = my_ws() and can_view_project(id));
+create policy projects_insert on projects for insert with check (workspace_id = my_ws() and can_edit_any());
+create policy projects_update on projects for update using (workspace_id = my_ws() and can_edit_project(id));
+create policy projects_delete on projects for delete using (workspace_id = my_ws() and is_admin());
 
--- Edge Function "breakdown" (Deno) will hold ANTHROPIC_API_KEY as a secret and
--- accept {scenes:[...]} from the browser, so the key never ships to clients.
+drop policy if exists events_select on events;
+drop policy if exists events_write on events;
+create policy events_select on events for select using (workspace_id = my_ws() and (project_id is null or can_view_project(project_id)));
+create policy events_write on events for all
+  using (workspace_id = my_ws() and (project_id is null and can_edit_any() or can_edit_project(project_id)))
+  with check (workspace_id = my_ws() and (project_id is null and can_edit_any() or can_edit_project(project_id)));
+
+-- live updates for everyone with the app open
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'projects') then
+    alter publication supabase_realtime add table projects;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'events') then
+    alter publication supabase_realtime add table events;
+  end if;
+  if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'members') then
+    alter publication supabase_realtime add table members;
+  end if;
+end $$;

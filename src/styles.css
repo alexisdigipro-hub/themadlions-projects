@@ -1841,3 +1841,5 @@ code {
   .report-times { grid-template-columns: repeat(2, 1fr); }
   .budget-totals { min-width: 0; width: 100%; }
 }
+.login-links { display: flex; gap: 16px; margin-top: 12px; }
+.section-title { margin: 24px 0 8px; font-size: 15px; }

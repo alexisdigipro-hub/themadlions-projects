@@ -1,7 +1,7 @@
 import { HashRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
 import { ToastProvider } from './components/ui.jsx'
-import { StoreProvider, useCurrentUser } from './lib/store.jsx'
+import { StoreProvider, useCurrentUser, useStore } from './lib/store.jsx'
 import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import CalendarAll from './pages/CalendarAll.jsx'
@@ -23,13 +23,27 @@ import TasksAll from './pages/TasksAll.jsx'
 import Budget from './pages/project/Budget.jsx'
 import Reports from './pages/project/Reports.jsx'
 
+function Loading() {
+  return (
+    <div className="login">
+      <div className="login-card">
+        <p className="muted">Loading your workspace…</p>
+      </div>
+    </div>
+  )
+}
+
 function RequireUser() {
   const user = useCurrentUser()
+  const { ready } = useStore()
+  if (!ready) return <Loading />
   return user ? <Outlet /> : <Navigate to="/login" replace />
 }
 
 function LoginGate() {
   const user = useCurrentUser()
+  const { ready } = useStore()
+  if (!ready) return <Loading />
   return user ? <Navigate to="/" replace /> : <Login />
 }
 

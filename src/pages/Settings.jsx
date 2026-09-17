@@ -5,7 +5,7 @@ import { testKey } from '../lib/ai.js'
 import { download } from '../lib/dates.js'
 
 export default function Settings() {
-  const { state, update, replaceState, logout } = useStore()
+  const { state, update, replaceState, logout, mode, syncError, localBackup } = useStore()
   const me = useCurrentUser()
   const toast = useToast()
   const fileRef = useRef()
@@ -40,6 +40,12 @@ export default function Settings() {
     }
   }
 
+  const localData = mode === 'remote' ? localBackup() : null
+  const importLocal = () => {
+    if (!localData) return
+    replaceState({ ...state, projects: [...state.projects.filter((p) => !localData.projects.some((q) => q.id === p.id)), ...localData.projects], events: [...state.events.filter((e) => !localData.events.some((q) => q.id === e.id)), ...localData.events] })
+    toast(`Imported ${localData.projects.length} projects from this browser`, 'ok')
+  }
   const backup = () => download(`themadlions-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(state, null, 2), 'application/json')
   const restore = async (file) => {
     if (!file) return
@@ -59,6 +65,25 @@ export default function Settings() {
     <>
       <PageHead title="Settings" />
       <div className="cols">
+        <section className="panel">
+          <h2>Storage</h2>
+          {mode === 'remote' ? (
+            <>
+              <p className="muted small">Connected to Supabase. Everything you change is saved to the team database within a second and appears live for everyone who is signed in.</p>
+              {syncError && <div className="error">Last save failed: {syncError}</div>}
+              {isAdmin && localData?.projects?.length > 0 && (
+                <div className="stack">
+                  <p className="small">This browser still holds {localData.projects.length} project{localData.projects.length === 1 ? '' : 's'} from local mode.</p>
+                  <div className="row-actions">
+                    <Button onClick={importLocal}>Import them into the team workspace</Button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="muted small">Local mode: everything lives in this browser. Use Backup below before clearing browser data or switching devices.</p>
+          )}
+        </section>
         {isAdmin && (
           <section className="panel">
             <h2>Workspace</h2>

@@ -46,11 +46,16 @@ Routing uses hash URLs (`/#/p/...`) so it works on Pages without server rewrites
 
 Settings → AI breakdown → paste an Anthropic API key. It is stored only in that browser and calls the API directly. In Phase 2 the key moves to a Supabase Edge Function.
 
-## Phase 2 plan
+## Phase 2: Supabase (team logins, one shared database)
 
-1. Create a Supabase project, run `supabase/schema.sql` in the SQL editor.
-2. Enable Email and Google providers in Authentication.
-3. Create a private Storage bucket `scripts`.
-4. Add an Edge Function `breakdown` holding `ANTHROPIC_API_KEY`.
-5. Replace the localStorage adapter in `src/lib/store.jsx` with the Supabase adapter and add `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` as repository secrets for the workflow.
-6. Import each user's JSON backup once.
+1. Create a project at supabase.com (region Frankfurt).
+2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run.
+3. Authentication → Providers → Email: keep it enabled; turn **Confirm email** off if you want teammates to sign in immediately.
+4. Project Settings → API: copy the Project URL and the publishable (anon) key into `src/lib/supabaseConfig.js`, commit, push. The site rebuilds in remote mode.
+5. Open the site, create your account. The first account becomes the administrator and the workspace is created automatically.
+6. Settings → Storage → "Import them into the team workspace" moves the projects from this browser's local mode into the database.
+7. Team → Add teammate: enter their email and permissions. They create an account with that email and land straight in the workspace.
+
+Data model: each project is one JSON document (`projects.data`), events one row each, members and invites per workspace. Row Level Security enforces workspace membership, per-project access and edit rights; per-module view/edit levels are applied by the app. Live updates come through Supabase Realtime.
+
+The AI key stays in each browser (Settings) for now; moving it into a Supabase Edge Function is the next step.
