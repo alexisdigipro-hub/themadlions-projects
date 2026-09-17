@@ -71,7 +71,6 @@ export default function CallSheets() {
     try {
       const keyCrew = crew.filter((c) => /1st AD|assistant director|production manager|UPM|line producer|DoP|photography|producer/i.test(c.role || '')).slice(0, 5).map((c) => ({ role: c.role, name: c.name, phone: c.phone }))
       if (project.producer) keyCrew.unshift({ role: 'Producer', name: project.producer })
-      if (project.director) keyCrew.unshift({ role: 'Director', name: project.director })
       const data = {
         project: { title: project.title, color: project.color, cover: project.coverThumb || '', category: project.category },
         company: { name: state.workspace.name, address: state.settings.companyAddress || '' },
@@ -80,7 +79,7 @@ export default function CallSheets() {
         wx: wx ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
         sun: sun ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,
         loc: loc ? { name: loc.name, address: loc.address, contact: loc.contact, phone: loc.phone } : null,
-        scenes: scenes.map((s) => ({ number: s.number, intExt: s.intExt, location: s.location, timeOfDay: s.timeOfDay, synopsis: s.synopsis, characters: s.characters, pages: formatPages(s.eighths) })),
+        scenes: scenes.map((s) => ({ intExt: s.intExt, location: s.location, timeOfDay: s.timeOfDay, from: sceneTime(s.id).from, to: sceneTime(s.id).to })),
         cast: castRows.map((r) => ({ character: r.character, name: r.actor?.name || '', phone: r.actor?.phone || '', call: r.call, photo: r.actor?.photos?.[0]?.thumb || '' })),
         crew: crewRows.map((c) => ({ name: c.name, role: c.role || c.dept, phone: c.phone || '', call: c.call, photo: c.photos?.[0]?.thumb || '' })),
         blocks: (day.blocks || []).map((b) => ({ time: b.time, end: b.end, item: b.item, owner: b.owner, notes: b.notes })),
@@ -92,6 +91,14 @@ export default function CallSheets() {
       setShare({ error: e.message })
     }
   }
+
+  const sceneTime = (id) => (sheet.sceneTimes || {})[id] || { from: '', to: '' }
+  const setSceneTime = (id, k, v) => edit((p) => {
+    const d = p.shootingDays.find((x) => x.id === day.id)
+    if (!d) return
+    d.callSheet = d.callSheet || {}
+    d.callSheet.sceneTimes = { ...(d.callSheet.sceneTimes || {}), [id]: { ...((d.callSheet.sceneTimes || {})[id] || { from: '', to: '' }), [k]: v } }
+  })
 
   const setSheet = (k, v) => edit((p) => {
     const d = p.shootingDays.find((x) => x.id === day.id)
@@ -228,7 +235,6 @@ export default function CallSheets() {
             {state.settings.companyAddress && <div className="muted small cs-addr">{state.settings.companyAddress}</div>}
             <dl className="cs-kv">
               {project.producer && (<><dt>Producer</dt><dd>{project.producer}</dd></>)}
-              {project.director && (<><dt>Director</dt><dd>{project.director}</dd></>)}
               {crew.filter((c) => /1st AD|assistant director|production manager|UPM|line producer|DoP|photography/i.test(c.role || '')).slice(0, 4).map((c) => (
                 <span key={c.id} className="cs-kv-row"><dt>{c.role}</dt><dd>{c.name}{c.phone ? <span className="muted"> {c.phone}</span> : null}</dd></span>
               ))}
@@ -320,30 +326,32 @@ export default function CallSheets() {
           <table className="table">
             <thead>
               <tr>
-                <th>Sc.</th>
+                <th>Time</th>
                 <th>I/E</th>
                 <th>Set</th>
                 <th>D/N</th>
                 <th>Description</th>
                 <th>Cast</th>
-                <th>Pgs</th>
               </tr>
             </thead>
             <tbody>
               {scenes.map((s) => (
                 <tr key={s.id}>
-                  <td>{s.number}</td>
+                  <td className="nowrap cs-scene-time">
+                    {editable ? (
+                      <span className="cs-range"><input className="cs-time" value={sceneTime(s.id).from} placeholder="09:00" onChange={(e) => setSceneTime(s.id, 'from', e.target.value)} /> – <input className="cs-time" value={sceneTime(s.id).to} placeholder="11:00" onChange={(e) => setSceneTime(s.id, 'to', e.target.value)} /></span>
+                    ) : sceneTime(s.id).from || sceneTime(s.id).to ? `${sceneTime(s.id).from}${sceneTime(s.id).to ? ` – ${sceneTime(s.id).to}` : ''}` : <span className="muted">–</span>}
+                  </td>
                   <td>{s.intExt}</td>
                   <td>{s.location}</td>
                   <td>{s.timeOfDay}</td>
                   <td>{s.synopsis}</td>
                   <td>{s.characters.join(', ')}</td>
-                  <td>{formatPages(s.eighths)}</td>
                 </tr>
               ))}
               {!scenes.length && (
                 <tr>
-                  <td colSpan={7} className="muted">
+                  <td colSpan={6} className="muted">
                     No scenes assigned to this day.
                   </td>
                 </tr>

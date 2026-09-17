@@ -99,17 +99,12 @@ export default function PublicCallSheet() {
 
       {d.scenes?.length > 0 && (
         <section className="pub-card">
-          <h2>Scenes</h2>
+          <h2>Sets</h2>
           <ul className="pub-scenes">
             {d.scenes.map((s, i) => (
               <li key={i}>
-                <span className="pub-sc">{s.number}</span>
-                <div className="grow">
-                  <strong>{[s.intExt, s.location, s.timeOfDay].filter(Boolean).join(' · ')}</strong>
-                  {s.synopsis && <div className="small">{s.synopsis}</div>}
-                  {s.characters?.length > 0 && <div className="muted small">{s.characters.join(', ')}</div>}
-                </div>
-                {s.pages && <span className="muted small">{s.pages}</span>}
+                <span className="pub-sc pub-sc-time">{s.from || s.to ? `${s.from || ''}${s.to ? ` – ${s.to}` : ''}` : '–'}</span>
+                <div className="grow"><strong>{[s.intExt, s.location, s.timeOfDay].filter(Boolean).join(' · ')}</strong></div>
               </li>
             ))}
           </ul>

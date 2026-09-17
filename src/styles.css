@@ -2482,3 +2482,8 @@ a.drive-item-title:hover { text-decoration: underline; }
 .pub-foot { text-align: center; padding: 20px 12px 0; }
 .pub a { color: inherit; }
 html[data-public='1'] body { background: var(--bg); }
+
+.cs-range { display: inline-flex; align-items: center; gap: 4px; }
+.cs-range .cs-time { width: 58px; }
+.pub-sc-time { min-width: 96px; font-size: 14px; }
+@media print { .cs-scene-time input { border: 0; padding: 0; width: 50px; } }
