@@ -21,7 +21,17 @@ export function projectProgress(p) {
   const hasDoc = !!(p.script?.text || (p.concept && scenes.length) || (isMv && (p.music?.sections || []).length))
 
   let stages
-  if (p.category === 'Editing') {
+  if (p.category === 'Events') {
+    const withBlocks = days.length ? days.filter((d) => (d.blocks || []).length).length / days.length : 0
+    stages = [
+      { key: 'brief', label: 'Brief and budget', weight: 15, done: clamp(((p.notes || p.concept) ? 0.5 : 0) + budgetDone * 0.5), to: 'budget' },
+      { key: 'venue', label: 'Venue set', weight: 15, done: clamp(locDone), to: 'locations' },
+      { key: 'crew', label: 'Crew and talent', weight: 15, done: (p.contacts || []).length ? 1 : 0, to: 'people' },
+      { key: 'ros', label: 'Run of show', weight: 20, done: clamp(withBlocks), to: 'schedule' },
+      { key: 'event', label: 'Event days done', weight: 20, done: days.length ? clamp(reported / days.length) : 0, to: 'reports' },
+      { key: 'post', label: 'Recap and deliverables', weight: 15, done: clamp(cutStage * 0.4 + delivDone * 0.6), to: 'post' },
+    ]
+  } else if (p.category === 'Editing') {
     stages = [
       { key: 'brief', label: 'Brief and materials in', weight: 10, done: hasDoc || (p.files || []).length > 0 ? 1 : 0, to: 'notes' },
       { key: 'cut', label: 'First cut', weight: 25, done: cuts.length ? 1 : 0, to: 'post' },

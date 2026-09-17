@@ -42,10 +42,12 @@ export default function CallSheets() {
   const scenes = day.sceneIds.map((id) => sceneById[id]).filter(Boolean)
   const loc = project.locations.find((l) => l.id === day.locationId)
   const chars = [...new Set(scenes.flatMap((s) => s.characters))]
-  const castRows = chars.map((c) => {
-    const actor = project.contacts.find((x) => x.kind === 'cast' && x.character?.toUpperCase() === c.toUpperCase())
-    return { character: c, actor, call: addMinutes(day.callTime, actor?.callOffset ?? 0) }
-  })
+  const castRows = project.category === 'Events'
+    ? project.contacts.filter((x) => x.kind === 'cast').map((actor) => ({ character: actor.character || actor.role || 'Talent', actor, call: addMinutes(day.callTime, actor.callOffset ?? 0) }))
+    : chars.map((c) => {
+        const actor = project.contacts.find((x) => x.kind === 'cast' && x.character?.toUpperCase() === c.toUpperCase())
+        return { character: c, actor, call: addMinutes(day.callTime, actor?.callOffset ?? 0) }
+      })
   const crew = project.contacts.filter((c) => c.kind === 'crew')
   const departments = {}
   for (const s of scenes) for (const [cat, items] of Object.entries(s.elements || {})) departments[cat] = [...new Set([...(departments[cat] || []), ...items])]
@@ -98,10 +100,12 @@ export default function CallSheets() {
           ))}
         </div>
         <div className="toolbar-actions">
-          <div className="segmented small">
-            <button className={mode === 'sheet' ? 'on' : ''} onClick={() => setMode('sheet')}>Call sheet</button>
-            <button className={mode === 'sides' ? 'on' : ''} onClick={() => setMode('sides')}>Sides</button>
-          </div>
+          {project.category !== 'Events' && (
+            <div className="segmented small">
+              <button className={mode === 'sheet' ? 'on' : ''} onClick={() => setMode('sheet')}>Call sheet</button>
+              <button className={mode === 'sides' ? 'on' : ''} onClick={() => setMode('sides')}>Sides</button>
+            </div>
+          )}
           <Button onClick={() => setSend(true)}>Send message</Button>
           <Button variant="primary" onClick={() => window.print()}>
             Print / Save PDF
@@ -248,7 +252,22 @@ export default function CallSheets() {
           {wx && <div className="muted small no-print">{wx.place} · forecast from open-meteo · {editable && <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'refresh'}</button>}</div>}
         </section>
 
-        <section>
+        {project.category === 'Events' && (
+          <section>
+            <h3>Run of show</h3>
+            <table className="table">
+              <thead><tr><th>Time</th><th>Block</th><th>Owner</th><th>Notes</th></tr></thead>
+              <tbody>
+                {(day.blocks || []).map((b) => (
+                  <tr key={b.id}><td className="nowrap">{b.time}{b.end ? ` – ${b.end}` : ''}</td><td><strong>{b.item}</strong></td><td>{b.owner}</td><td className="small">{b.notes}</td></tr>
+                ))}
+                {!(day.blocks || []).length && <tr><td colSpan={4} className="muted">No run of show yet. Build it in the Run of show tab.</td></tr>}
+              </tbody>
+            </table>
+          </section>
+        )}
+
+        <section hidden={project.category === 'Events'}>
           <h3>Scenes</h3>
           <table className="table">
             <thead>
@@ -285,8 +304,8 @@ export default function CallSheets() {
           </table>
         </section>
 
-        <section>
-          <h3>Cast</h3>
+        <section hidden={project.category === 'Events' && !project.contacts.some((c) => c.kind === 'cast')}>
+          <h3>{project.category === 'Events' ? 'Talent' : 'Cast'}</h3>
           <table className="table">
             <thead>
               <tr>

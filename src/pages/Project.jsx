@@ -20,10 +20,12 @@ export default function Project() {
   const tabs = [
     { to: '', label: 'Overview', end: true, key: 'projects', icon: 'overview' },
     ...(project.category === 'Music Video' ? [{ to: 'music', label: 'Music', key: 'music', icon: 'music' }] : []),
-    { to: 'script', label: 'Script', key: 'script', icon: 'script' },
-    { to: 'breakdown', label: 'Breakdown', key: 'breakdown', icon: 'breakdown' },
-    { to: 'shots', label: 'Shot list', key: 'shots', icon: 'shots' },
-    { to: 'schedule', label: 'Schedule', key: 'schedule', icon: 'schedule' },
+    ...(project.category === 'Events' ? [] : [
+      { to: 'script', label: 'Script', key: 'script', icon: 'script' },
+      { to: 'breakdown', label: 'Breakdown', key: 'breakdown', icon: 'breakdown' },
+      { to: 'shots', label: 'Shot list', key: 'shots', icon: 'shots' },
+    ]),
+    { to: 'schedule', label: project.category === 'Events' ? 'Run of show' : 'Schedule', key: 'schedule', icon: 'schedule' },
     { to: 'callsheets', label: 'Call sheets', key: 'callsheets', icon: 'callsheets' },
     { to: 'tasks', label: 'Tasks', key: 'tasks', icon: 'tasks' },
     { to: 'reports', label: 'Reports', key: 'reports', icon: 'reports' },
@@ -32,7 +34,7 @@ export default function Project() {
     { to: 'post', label: 'Post', key: 'post', icon: 'post' },
     { to: 'calendar', label: 'Calendar', key: 'calendar', icon: 'calendar' },
     { to: 'locations', label: 'Locations', key: 'locations', icon: 'locations' },
-    { to: 'people', label: 'Cast & crew', key: 'contacts', icon: 'people' },
+    { to: 'people', label: project.category === 'Events' ? 'Crew & talent' : 'Cast & crew', key: 'contacts', icon: 'people' },
     { to: 'notes', label: 'Files & notes', key: 'files', icon: 'notes' },
   ].filter((t) => can(user, t.key))
 

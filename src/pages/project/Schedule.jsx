@@ -8,7 +8,15 @@ import Dood from '../../components/Dood.jsx'
 
 const emptyDay = (date) => ({ id: uid(), date, unit: 'Main unit', callTime: '07:00', wrapTime: '19:00', locationId: '', notes: '', sceneIds: [] })
 
+import RunOfShow from './RunOfShow.jsx'
+
 export default function Schedule() {
+  const ctx = useProject()
+  if (ctx.project.category === 'Events') return <RunOfShow />
+  return <StripboardSchedule />
+}
+
+function StripboardSchedule() {
   const { project, edit, canEdit } = useProject()
   const { update } = useStore()
   const toast = useToast()

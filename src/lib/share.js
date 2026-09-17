@@ -42,6 +42,11 @@ export function callSheetText({ project, day, dayIndex, dayCount, scenes, loc, c
   if (sun) L.push(`Sunrise ${sun.sunrise} · Sunset ${sun.sunset}`)
   if (sheet?.forecast) L.push(`Weather: ${sheet.forecast.summary}, ${sheet.forecast.tmin}° to ${sheet.forecast.tmax}°C${sheet.forecast.rain != null ? `, rain ${sheet.forecast.rain}%` : ''}`)
   L.push('')
+  if ((day.blocks || []).length) {
+    L.push('*Run of show*')
+    day.blocks.forEach((b) => L.push(`${b.time}${b.end ? `–${b.end}` : ''} ${b.item}${b.owner ? ` · ${b.owner}` : ''}`))
+    L.push('')
+  }
   if (scenes.length) {
     L.push('*Scenes*')
     scenes.forEach((s) => L.push(`${s.number}. ${s.intExt} ${s.location || s.heading}${s.timeOfDay ? ` · ${s.timeOfDay}` : ''} · ${formatPages(s.eighths)} pg${s.characters?.length ? ` · ${s.characters.join(', ')}` : ''}`))
