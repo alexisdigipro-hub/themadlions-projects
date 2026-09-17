@@ -87,6 +87,12 @@ export default function Script() {
   }
   const removeVersion = (id) => edit((p) => (p.scriptVersions = (p.scriptVersions || []).filter((v) => v.id !== id)))
 
+  const transcriptText = () => {
+    const t = project.music?.transcript
+    if (!t) return ''
+    if (t.segments?.length) return t.segments.map((sg) => `[${Math.floor(sg.start / 60)}:${String(Math.floor(sg.start % 60)).padStart(2, '0')}] ${sg.text}`).join('\n')
+    return t.text || ''
+  }
   const cmpVersion = versions.find((v) => v.id === compare)
   const diff = useMemo(() => (cmpVersion ? diffLines(cmpVersion.text, project.script.text) : null), [cmpVersion, project.script.text])
   const shown = versions.find((v) => v.id === show)
@@ -135,6 +141,19 @@ export default function Script() {
           )}
         </div>
       </div>
+
+      {project.category === 'Music Video' && project.music?.transcript?.text && view === 'script' && (
+        <section className="panel transcript">
+          <div className="panel-head">
+            <h2>Transcript from the audio <span className="muted small">Whisper · {project.music.transcript.language || 'auto'} · {fmtDate((project.music.transcript.at || '').slice(0, 10))}</span></h2>
+            <div className="row-actions">
+              <Button size="sm" variant="ghost" onClick={() => navigator.clipboard?.writeText(transcriptText()).then(() => toast('Copied', 'ok'))}>Copy</Button>
+              {editable && <Button size="sm" onClick={() => { setText(transcriptText()); setEditing(true); setView('script') }}>Use as script text</Button>}
+            </div>
+          </div>
+          <pre className="script transcript-text">{transcriptText()}</pre>
+        </section>
+      )}
 
       {view === 'revisions' ? (
         <div className="revisions">

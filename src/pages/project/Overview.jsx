@@ -8,6 +8,9 @@ import { formatPages } from '../../lib/breakdown.js'
 import { fmtDate, fmtLong } from '../../lib/dates.js'
 import { budgetTotals, money } from './Budget.jsx'
 import { reportSummary } from './Reports.jsx'
+import { projectProgress } from '../../lib/progress.js'
+import { compress } from '../../lib/photos.js'
+import { useRef } from 'react'
 
 export default function Overview() {
   const { project, edit, canEdit } = useProject()
@@ -28,17 +31,46 @@ export default function Overview() {
   const rs = reportSummary(project)
   const openTasks = (project.tasks || []).filter((t) => t.status !== 'done').length
 
-  const steps = [
-    { done: !!project.script.text, label: 'Import the script', to: 'script' },
-    { done: project.scenes.length > 0, label: 'Run the breakdown', to: 'breakdown' },
-    { done: project.locations.length > 0, label: 'Add locations', to: 'locations' },
-    { done: project.contacts.length > 0, label: 'Add cast and crew', to: 'people' },
-    { done: project.shootingDays.length > 0, label: 'Build the shooting schedule', to: 'schedule' },
-    { done: project.shootingDays.length > 0 && unscheduled === 0 && project.scenes.length > 0, label: 'Schedule every scene', to: 'schedule' },
-  ]
+  const { pct, stages } = projectProgress(project)
+  const coverRef = useRef()
+  const setCover = async (file) => {
+    if (!file) return
+    try {
+      const c = await compress(file, { max: 1200, quality: 0.8, thumb: 640 })
+      edit((p) => { p.coverThumb = c.thumb })
+    } catch (e) { /* ignored */ }
+  }
 
   return (
     <div className="overview">
+      <section className="panel progress">
+        <div className="progress-head">
+          <div className="progress-cover">
+            {project.coverThumb ? <img src={project.coverThumb} alt="" /> : <span className="progress-cover-empty" style={{ background: project.color }} />}
+            {canEdit('projects') && (
+              <>
+                <input ref={coverRef} type="file" accept="image/*" hidden onChange={(e) => setCover(e.target.files?.[0])} />
+                <button className="link small" onClick={() => coverRef.current?.click()}>{project.coverThumb ? 'Change cover' : 'Add cover'}</button>
+              </>
+            )}
+          </div>
+          <div className="progress-main">
+            <div className="progress-top"><strong>{pct}% done</strong><span className="muted small">{project.status}{project.endDate ? ` · delivery ${fmtDate(project.endDate)}` : ''}</span></div>
+            <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
+            <ul className="stages">
+              {stages.map((st) => (
+                <li key={st.key} className={st.done >= 1 ? 'done' : st.done > 0 ? 'part' : ''}>
+                  <Link to={`../${st.to}`}>
+                    <span className="stage-dot" />
+                    <span className="stage-label">{st.label}</span>
+                    <span className="stage-pct muted small">{st.done >= 1 ? '✓' : st.done > 0 ? `${Math.round(st.done * 100)}%` : ''}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
       <div className="stats">
         <Stat label="Scenes" value={project.scenes.length} note={project.scenes.length ? `${formatPages(eighths)} pages` : 'No breakdown yet'} />
         <Stat label="Shoot days" value={project.shootingDays.length} note={nextShoot ? `Next ${fmtDate(nextShoot.date)}` : 'None scheduled'} />
@@ -63,20 +95,13 @@ export default function Overview() {
       <div className="cols">
         <section className="panel">
           <div className="panel-head">
-            <h2>Where this project stands</h2>
+            <h2>Details</h2>
             {canEdit('projects') && (
               <Button size="sm" variant="ghost" onClick={() => setDraft({ ...project })}>
                 Edit details
               </Button>
             )}
           </div>
-          <ul className="checklist">
-            {steps.map((s) => (
-              <li key={s.label} className={s.done ? 'done' : ''}>
-                <Link to={s.to}>{s.label}</Link>
-              </li>
-            ))}
-          </ul>
           <dl className="details">
             {project.client && (
               <>

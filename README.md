@@ -18,6 +18,8 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Stripboard schedule: shoot days, scene assignment, industry strip colours, unscheduled pool
 - Day Out of Days for cast (SW / W / WF / SWF / H) computed from the stripboard
 - Send message: the call sheet as a WhatsApp-ready message (whole sheet for the group, or a personal message per cast and crew member with only their call time and location), mail with everyone in Bcc, or copy. WhatsApp links on cast and crew cards
+- Project cover image (compressed, stored in the project) shown on the dashboard card, the project header, the Overview and the call sheet; Overview progress bar with weighted stages per category (script, breakdown, budget, cast, locations, shot list, schedule, shoot days reported, post and delivery; Editing projects use cut, approval and deliverables), each stage linking to its tab; dashboard cards carry a thin progress bar
+- Transcript from the audio shown in the Script tab of music video projects, with copy and "use as script text"
 - Light and dark themes with four accent colours (Settings → Display, per device); the light theme is the default
 - Call sheets laid out like a professional call sheet: company block with producer, director and key crew, big general crew call with a one-line message, day and date with weather, sunrise and sunset, shooting call / lunch / wrap, a pinned note everyone reads, and a location grid with set location, parking and nearest hospital
 - Call sheets generated per shoot day with sunrise, sunset, golden hour and a fetched weather forecast (open-meteo, no key), printable to PDF

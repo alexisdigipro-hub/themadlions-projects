@@ -94,7 +94,7 @@ export default function Settings() {
             </div>
           </Field>
           <Field label="Accent colour">
-            <div className="swatches">
+            <div className="accent-swatches">
               {[['amber', '#c9932f', 'Lion amber'], ['red', '#c8503f', 'Red'], ['slate', '#3f5578', 'Slate blue'], ['ink', '#1f2430', 'Ink']].map(([v, c, l]) => (
                 <button key={v} className={`swatch ${accent === v ? 'on' : ''}`} style={{ '--sw': c }} onClick={() => applyAccent(v)} title={l}><span className="dot" />{l}</button>
               ))}

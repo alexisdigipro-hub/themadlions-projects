@@ -190,12 +190,13 @@ export default function Music() {
             if (sp && target) { target.start = sp.start; target.end = sp.end; hit += 1 }
           })
         })
+        setMusic((m) => { m.transcript = { text: res.text, language: res.language, segments: res.segments, at: new Date().toISOString() } })
         toast(`Timed ${hit} of ${sections.length} sections from the vocal. Check the ones left unchanged.`, hit ? 'ok' : 'error')
       } else {
         const groups = groupSegments(res.segments)
         setMusic((m) => {
           m.sections = groups.map((g, i) => ({ id: uid(), name: SECTION_NAMES[i] || `Part ${i + 1}`, start: g.start, end: g.end, lyrics: g.lyrics, sceneIds: [], notes: '' }))
-          m.transcript = { text: res.text, language: res.language, at: new Date().toISOString() }
+          m.transcript = { text: res.text, language: res.language, segments: res.segments, at: new Date().toISOString() }
         })
         toast(`${groups.length} sections from the vocal (${res.language || 'auto'}). Rename them and fix any misheard words.`, 'ok')
       }

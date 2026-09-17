@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { Badge, Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { CATEGORIES, STATUSES, can, emptyProject, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
+import { projectProgress } from '../lib/progress.js'
+import { compress } from '../lib/photos.js'
 
 const COLORS = ['#C8503F', '#D9A441', '#5B9E7A', '#6C9BD1', '#B07FD1', '#E08A5A', '#4FB3BF', '#9AA0A6']
 
@@ -40,9 +42,16 @@ export function ProjectForm({ value, onChange }) {
       <Field label="Notes">
         <Textarea rows={3} value={value.notes} onChange={set('notes')} />
       </Field>
+      <Field label="Cover image" hint="Key art or a still. Compressed and stored small.">
+        <div className="cover-pick">
+          {value.coverThumb && <img src={value.coverThumb} alt="" />}
+          <input type="file" accept="image/*" className="input" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; try { const c = await compress(f, { max: 1200, quality: 0.8, thumb: 640 }); onChange({ ...value, coverThumb: c.thumb }) } catch {} }} />
+          {value.coverThumb && <button type="button" className="link small" onClick={() => onChange({ ...value, coverThumb: '' })}>Remove</button>}
+        </div>
+      </Field>
       <div className="field">
         <span className="field-label">Colour</span>
-        <div className="swatches">
+        <div className="swatches color-swatches">
           {COLORS.map((c) => (
             <button
               key={c}
@@ -116,10 +125,11 @@ export default function Dashboard() {
         <div className="project-grid">
           {projects.map((p) => (
             <Link key={p.id} to={`/p/${p.id}`} className="project-card" style={{ '--pc': p.color }}>
-              <div className="project-cover">
-                <span className="slate-bar" />
+              <div className={`project-cover ${p.coverThumb ? 'has-img' : ''}`}>
+                {p.coverThumb ? <img src={p.coverThumb} alt="" /> : <span className="slate-bar" />}
                 <span className="project-cat">{p.category}</span>
               </div>
+              <div className="project-progress" title={`${projectProgress(p).pct}% done`}><span style={{ width: `${projectProgress(p).pct}%` }} /></div>
               <div className="project-body">
                 <h3>{p.title}</h3>
                 <div className="project-meta">

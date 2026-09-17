@@ -52,6 +52,7 @@ export default function Project() {
           Projects
         </Link>
         <div className="project-title">
+          {project.coverThumb && <img className="project-head-cover" src={project.coverThumb} alt="" />}
           <h1>{project.title}</h1>
           <div className="project-meta">
             <Badge>{project.category}</Badge>
