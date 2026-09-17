@@ -4,6 +4,8 @@ import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import { useCurrentUser, useStore } from '../../lib/store.jsx'
+import PaymentModal from '../../components/PaymentModal.jsx'
+import { lineBalance, lineEstimate, linePaid } from '../../lib/budget.js'
 
 export const BUDGET_GROUPS = [
   ['Above the line', ['Story & rights', 'Producer', 'Director', 'Cast', 'Casting']],
@@ -15,7 +17,7 @@ const CATEGORIES = BUDGET_GROUPS.flatMap(([, cats]) => cats)
 const UNITS = ['flat', 'day', 'week', 'hour', 'unit', 'km', 'person']
 
 export const emptyLine = () => ({ id: uid(), category: 'Camera', description: '', qty: 1, unit: 'day', rate: 0, estimate: '', actual: '', vendor: '', notes: '' })
-export const lineEstimate = (l) => (l.estimate !== '' && l.estimate != null ? Number(l.estimate) : Number(l.qty || 0) * Number(l.rate || 0))
+export { lineEstimate }
 export const money = (n, cur = 'EUR') => new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(Number(n) || 0)
 
 export function budgetTotals(project) {
@@ -57,6 +59,7 @@ export default function Budget() {
   const finOut = finTx.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.net || 0), 0)
   const budget = project.budget || { lines: [], contingencyPct: 10, currency: 'EUR' }
   const [draft, setDraft] = useState(null)
+  const [pay, setPay] = useState(null) // line
   const [filter, setFilter] = useState('')
   const cur = budget.currency || 'EUR'
 
@@ -180,7 +183,7 @@ export default function Budget() {
               <table className="table budget-table">
                 <thead>
                   <tr>
-                    <th>Category</th><th>Description</th><th className="num">Qty</th><th>Unit</th><th className="num">Rate</th><th className="num">Estimate</th><th className="num">Actual</th><th className="num">Var.</th>{editable && <th className="no-print" />}
+                    <th>Category</th><th>Description</th><th className="num">Qty</th><th>Unit</th><th className="num">Rate</th><th className="num">Estimate</th><th className="num">Paid</th><th className="num">Balance</th><th className="num">Var.</th>{editable && <th className="no-print" />}
                   </tr>
                 </thead>
                 <tbody>
@@ -192,10 +195,12 @@ export default function Budget() {
                       <td>{l.estimate !== '' && l.estimate != null ? 'flat' : l.unit}</td>
                       <td className="num">{l.estimate !== '' && l.estimate != null ? '' : money(l.rate, cur)}</td>
                       <td className="num">{money(lineEstimate(l), cur)}</td>
-                      <td className="num">{l.actual !== '' && l.actual != null ? money(l.actual, cur) : ''}</td>
-                      <td className="num">{variance(lineEstimate(l), Number(l.actual || 0))}</td>
+                      <td className="num">{l.payments?.length ? money(linePaid(l), cur) : l.actual !== '' && l.actual != null ? money(l.actual, cur) : ''}</td>
+                      <td className={`num ${l.payments?.length && lineBalance(l) > 0 ? 'over' : ''}`}>{l.payments?.length ? (lineBalance(l) > 0 ? money(lineBalance(l), cur) : <span className="under">settled</span>) : ''}</td>
+                      <td className="num">{l.payments?.length && lineBalance(l) > 0 ? '' : variance(lineEstimate(l), Number(l.actual || 0))}</td>
                       {editable && (
                         <td className="row-actions no-print">
+                          {me?.role === 'admin' && lineEstimate(l) > 0 && lineBalance(l) > 0 && <button onClick={() => setPay(l)}>Pay</button>}
                           <button onClick={() => setDraft({ ...l })}>Edit</button>
                           <Confirm onConfirm={() => remove(l.id)} label="Delete">×</Confirm>
                         </td>
@@ -217,6 +222,7 @@ export default function Budget() {
         </article>
       )}
 
+      {pay && <PaymentModal project={project} line={budget.lines.find((l) => l.id === pay.id) || pay} onClose={() => setPay(null)} />}
       {draft && (
         <Modal
           open
@@ -247,7 +253,11 @@ export default function Budget() {
           </div>
           <div className="row-2">
             <Field label="Flat estimate" hint="Leave empty to use quantity × rate."><Input type="number" min="0" value={draft.estimate} onChange={(e) => setDraft({ ...draft, estimate: e.target.value })} /></Field>
-            <Field label="Actual spent" hint="Fill in as invoices arrive."><Input type="number" min="0" value={draft.actual} onChange={(e) => setDraft({ ...draft, actual: e.target.value })} /></Field>
+            {draft.payments?.length ? (
+              <Field label="Paid" hint={`${draft.payments.length} payment${draft.payments.length === 1 ? '' : 's'} recorded in Finance.`}><Input value={money(linePaid(draft), cur)} disabled /></Field>
+            ) : (
+              <Field label="Actual spent" hint="Or record payments from Finance."><Input type="number" min="0" value={draft.actual} onChange={(e) => setDraft({ ...draft, actual: e.target.value })} /></Field>
+            )}
           </div>
           <div className="muted small">Line estimate: <strong>{money(lineEstimate(draft), cur)}</strong></div>
           <Field label="Notes"><Textarea rows={2} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>

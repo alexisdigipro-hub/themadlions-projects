@@ -4,6 +4,8 @@ import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea
 import { uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { DOCS, EXPENSE_CATS, FREQ, INCOME_CATS, METHODS, TX_STATUS, duePeriods, emptyRecurring, emptyTx, generateFromRecurring, grossOf, matchTx, money, summarize, vatOf, yearOf } from '../lib/finance.js'
 import { download, fmtDate } from '../lib/dates.js'
+import PaymentModal from '../components/PaymentModal.jsx'
+import { lineBalance, lineEstimate, linePaid } from '../lib/budget.js'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const BUDGET_CAT = {
@@ -25,6 +27,10 @@ export default function Finance() {
   const [f, setF] = useState({ q: '', type: '', project: '', status: '', doc: '', month: '' })
   const [settings, setSettings] = useState(fin.settings)
   const [rdraft, setRdraft] = useState(null)
+  const [pay, setPay] = useState(null) // { project, line }
+  const commitments = state.projects.flatMap((p) => (p.budget?.lines || []).filter((l) => lineEstimate(l) > 0 && l.category !== 'Contingency' && !l.txId).map((l) => ({ project: p, line: l, agreed: lineEstimate(l), paid: linePaid(l), balance: lineBalance(l) })))
+  const openCommitments = commitments.filter((c) => c.balance > 0 && c.project.status !== 'Delivered').sort((a, b) => b.balance - a.balance)
+  const committed = openCommitments.reduce((a, c) => a + c.balance, 0)
   const recurring = fin.recurring || []
   const due = recurring.map((r) => ({ r, periods: duePeriods(r) })).filter((x) => x.periods.length)
   const dueCount = due.reduce((a, x) => a + x.periods.length, 0)
@@ -82,8 +88,17 @@ export default function Finance() {
       const i = s.finance.transactions.findIndex((t) => t.id === tx.id)
       if (i >= 0) s.finance.transactions[i] = tx
       else s.finance.transactions.push(tx)
-      // mirror expenses into the project budget actuals
-      if (tx.projectId && tx.type === 'expense' && tx.syncBudget !== false) {
+      // payment against an agreed budget line
+      if (tx.projectId && tx.type === 'expense' && tx.budgetLineId) {
+        const p = s.projects.find((x) => x.id === tx.projectId)
+        const line = p?.budget?.lines?.find((l) => l.id === tx.budgetLineId)
+        if (line) {
+          line.payments = [...(line.payments || []).filter((x) => x.txId !== tx.id), { txId: tx.id, date: tx.date, amount: tx.net }]
+          line.actual = linePaid(line)
+        }
+      }
+      // mirror other expenses into the project budget as new actuals
+      if (tx.projectId && tx.type === 'expense' && !tx.budgetLineId && tx.syncBudget !== false) {
         const p = s.projects.find((x) => x.id === tx.projectId)
         if (p) {
           p.budget = p.budget || { lines: [], contingencyPct: 10, currency: 'EUR', cap: '' }
@@ -100,7 +115,13 @@ export default function Finance() {
   }
   const remove = (tx) => update((s) => {
     s.finance.transactions = s.finance.transactions.filter((t) => t.id !== tx.id)
-    s.projects.forEach((p) => { if (p.budget?.lines) p.budget.lines = p.budget.lines.filter((l) => l.txId !== tx.id) })
+    s.projects.forEach((p) => {
+      if (!p.budget?.lines) return
+      p.budget.lines = p.budget.lines.filter((l) => l.txId !== tx.id)
+      p.budget.lines.forEach((l) => {
+        if (l.payments?.some((x) => x.txId === tx.id)) { l.payments = l.payments.filter((x) => x.txId !== tx.id); l.actual = linePaid(l) }
+      })
+    })
     return s
   })
   const setStatus = (tx, status) => update((s) => {
@@ -167,8 +188,8 @@ export default function Finance() {
             </div>
             <div className="fin-card">
               <div className="fin-label">We owe</div>
-              <div className="fin-value">{money(S.weOwe, cur)}</div>
-              <div className="fin-sub">{S.weOweCount} bill{S.weOweCount === 1 ? '' : 's'} to pay (gross)</div>
+              <div className="fin-value">{money(S.weOwe + committed, cur)}</div>
+              <div className="fin-sub">{money(S.weOwe, cur)} in {S.weOweCount} bill{S.weOweCount === 1 ? '' : 's'} (gross) · {money(committed, cur)} still owed to crew & vendors on {openCommitments.length} budget line{openCommitments.length === 1 ? '' : 's'} (net)</div>
             </div>
             <div className="fin-card">
               <div className="fin-label">This month</div>
@@ -193,6 +214,30 @@ export default function Finance() {
             </div>
             <div className="legend small muted"><span className="sw in" /> income <span className="sw out" /> expense</div>
           </section>
+
+          {openCommitments.length > 0 && (
+            <section className="panel">
+              <div className="panel-head"><h2>Owed to crew & vendors</h2><span className="muted small">from project budgets · agreed minus paid</span></div>
+              <div className="table-wrap">
+                <table className="table fin-table">
+                  <thead><tr><th>Project</th><th>Line</th><th>Payee</th><th className="num">Agreed</th><th className="num">Paid</th><th className="num">Balance</th><th /></tr></thead>
+                  <tbody>
+                    {openCommitments.map((c) => (
+                      <tr key={c.line.id}>
+                        <td className="small">{c.project.title}</td>
+                        <td><strong>{c.line.description}</strong><div className="muted small">{c.line.category}</div></td>
+                        <td className="small">{c.line.vendor}</td>
+                        <td className="num">{money(c.agreed, cur)}</td>
+                        <td className="num">{c.paid ? money(c.paid, cur) : ''}</td>
+                        <td className="num over">{money(c.balance, cur)}</td>
+                        <td className="row-actions"><button onClick={() => setPay({ project: c.project, line: c.line })}>Record payment</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
 
           {!fin.transactions.length ? (
             <Empty title="No transactions yet">Start with this year's invoices and the big expenses: crew, rentals, rent, salaries. Tie project costs to their project and the profit per project appears by itself.</Empty>
@@ -316,6 +361,7 @@ export default function Finance() {
         </section>
       )}
 
+      {pay && <PaymentModal project={pay.project} line={pay.line} onClose={() => setPay(null)} />}
       {rdraft && (
         <Modal open title={recurring.some((r) => r.id === rdraft.id) ? 'Edit recurring item' : 'New recurring item'} onClose={() => setRdraft(null)}
           footer={<><Button variant="ghost" onClick={() => setRdraft(null)}>Cancel</Button><Button variant="primary" onClick={saveRecurring}>Save</Button></>}>
@@ -380,7 +426,10 @@ export default function Finance() {
               <Field label="Document link"><Input value={draft.docLink} onChange={(e) => setDraft({ ...draft, docLink: e.target.value })} placeholder="Drive, email" /></Field>
             </div>
             {draft.type === 'expense' && draft.projectId && (
-              <label className="check"><input type="checkbox" checked={draft.syncBudget !== false} onChange={(e) => setDraft({ ...draft, syncBudget: e.target.checked })} /> Show as an actual cost in the project budget</label>
+              <Field label="Budget line" hint="Pay against an agreed line (advance or balance), or add it as a new cost.">
+                <Select value={draft.budgetLineId || ''} onChange={(e) => setDraft({ ...draft, budgetLineId: e.target.value, syncBudget: !e.target.value })}
+                  options={[['', 'New cost in the budget'], ...((state.projects.find((p) => p.id === draft.projectId)?.budget?.lines || []).filter((l) => !l.txId).map((l) => [l.id, `${l.description} · ${money(lineEstimate(l), cur)} agreed${linePaid(l) ? `, ${money(linePaid(l), cur)} paid` : ''}`]))]} />
+              </Field>
             )}
             <Field label="Notes"><Textarea rows={2} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>
           </div>
