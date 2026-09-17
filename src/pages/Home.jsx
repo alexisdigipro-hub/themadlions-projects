@@ -33,7 +33,7 @@ export default function Home() {
     .concat(state.events.filter((e) => e.date >= t0 && e.date <= t7 && e.type !== 'shoot').map((e) => ({ e, p: projects.find((x) => x.id === e.projectId) })))
     .sort((a, b) => (a.d?.date || a.e?.date).localeCompare(b.d?.date || b.e?.date))
   const typeOf = (k) => EVENT_TYPES.find((t) => t.key === k) || EVENT_TYPES[0]
-  const calItems = projects.flatMap((p) => p.shootingDays.map((d) => ({ date: d.date, time: d.callTime, color: p.color, title: p.title, sub: `${p.category === 'Events' ? 'event day' : 'shoot day'} · call ${d.callTime}`, to: `/p/${p.id}/callsheets` })))
+  const calItems = projects.flatMap((p) => p.shootingDays.map((d) => ({ date: d.date, time: d.callTime, color: p.color, title: p.title, sub: `${p.category === 'Event' ? 'event day' : 'shoot day'} · call ${d.callTime}`, to: `/p/${p.id}/callsheets` })))
     .concat(state.events.filter((e) => e.type !== 'shoot' && (!e.projectId || projects.some((x) => x.id === e.projectId))).map((e) => {
       const p = projects.find((x) => x.id === e.projectId)
       return { date: e.date, endDate: e.endDate, time: e.start, color: p?.color || typeOf(e.type).color, title: e.title, sub: [typeOf(e.type).label, p?.title, e.start].filter(Boolean).join(' · '), to: p ? `/p/${p.id}/calendar` : '/calendar' }

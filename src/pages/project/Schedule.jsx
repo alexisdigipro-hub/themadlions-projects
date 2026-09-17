@@ -12,7 +12,7 @@ import RunOfShow from './RunOfShow.jsx'
 
 export default function Schedule() {
   const ctx = useProject()
-  if (ctx.project.category === 'Events') return <RunOfShow />
+  if (ctx.project.category === 'Event') return <RunOfShow />
   return <StripboardSchedule />
 }
 

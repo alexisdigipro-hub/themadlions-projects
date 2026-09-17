@@ -42,7 +42,7 @@ export default function CallSheets() {
   const scenes = day.sceneIds.map((id) => sceneById[id]).filter(Boolean)
   const loc = project.locations.find((l) => l.id === day.locationId)
   const chars = [...new Set(scenes.flatMap((s) => s.characters))]
-  const castRows = project.category === 'Events'
+  const castRows = project.category === 'Event'
     ? project.contacts.filter((x) => x.kind === 'cast').map((actor) => ({ character: actor.character || actor.role || 'Talent', actor, call: addMinutes(day.callTime, actor.callOffset ?? 0) }))
     : chars.map((c) => {
         const actor = project.contacts.find((x) => x.kind === 'cast' && x.character?.toUpperCase() === c.toUpperCase())
@@ -100,7 +100,7 @@ export default function CallSheets() {
           ))}
         </div>
         <div className="toolbar-actions">
-          {project.category !== 'Events' && (
+          {project.category !== 'Event' && (
             <div className="segmented small">
               <button className={mode === 'sheet' ? 'on' : ''} onClick={() => setMode('sheet')}>Call sheet</button>
               <button className={mode === 'sides' ? 'on' : ''} onClick={() => setMode('sides')}>Sides</button>
@@ -252,7 +252,7 @@ export default function CallSheets() {
           {wx && <div className="muted small no-print">{wx.place} · forecast from open-meteo · {editable && <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'refresh'}</button>}</div>}
         </section>
 
-        {project.category === 'Events' && (
+        {project.category === 'Event' && (
           <section>
             <h3>Run of show</h3>
             <table className="table">
@@ -267,7 +267,7 @@ export default function CallSheets() {
           </section>
         )}
 
-        <section hidden={project.category === 'Events'}>
+        <section hidden={project.category === 'Event'}>
           <h3>Scenes</h3>
           <table className="table">
             <thead>
@@ -304,8 +304,8 @@ export default function CallSheets() {
           </table>
         </section>
 
-        <section hidden={project.category === 'Events' && !project.contacts.some((c) => c.kind === 'cast')}>
-          <h3>{project.category === 'Events' ? 'Talent' : 'Cast'}</h3>
+        <section hidden={project.category === 'Event' && !project.contacts.some((c) => c.kind === 'cast')}>
+          <h3>{project.category === 'Event' ? 'Talent' : 'Cast'}</h3>
           <table className="table">
             <thead>
               <tr>

@@ -7,9 +7,9 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 
 ## What is inside
 
-- Projects in four categories: Feature Film, Music Video, Advertise, Editing
+- Projects in six categories: Music Video, Event, Editing, Ad, Visuals, IV
 - Script import: PDF, Word (.docx), Final Draft (.fdx), Fountain, plain text, or paste. Pages files: export to PDF first
-- Events category: no script, breakdown or shot list; the Schedule tab becomes a Run of show (event days with timed blocks and owners, standard blocks from load-in to load-out), call sheets show the run of show and talent calls, and progress counts venue, crew, run of show, event days and recap deliverables
+- Event category: no script, breakdown or shot list; the Schedule tab becomes a Run of show (event days with timed blocks and owners, standard blocks from load-in to load-out), call sheets show the run of show and talent calls, and progress counts venue, crew, run of show, event days and recap deliverables
 - Music tab (Music Video projects only): upload the song (MP3, M4A, WAV, private Supabase bucket), waveform player drawn in the browser with click-to-seek and section loops, several versions (master, playback, instrumental), and a song map: sections (intro, verses, choruses) with start and end times, lyrics, notes and the setups from the breakdown that cover each one; paste the whole lyric to create sections at once, mark times while the song plays, export the map for the editor. Lyrics from the audio with OpenAI Whisper (own key in Settings): either writes the lyrics and creates sections at the pauses, or only times the sections you already pasted by matching what it heard. The AI treatment breakdown reads the song map and links setups to sections
 - Script revisions: every new upload or edited save keeps the previous version with its revision colour (White, Blue, Pink, Yellow, Green…), side-by-side compare, restore. Re-running scene detection matches scenes by heading so breakdown tags, shots and schedule survive, and changed scenes are flagged on the strips
 - Scene detection in English and Greek (INT./EXT., ΕΣΩΤ./ΕΞΩΤ., DAY/NIGHT, ΜΕΡΑ/ΝΥΧΤΑ), characters, page eighths

@@ -226,7 +226,7 @@ export default function Breakdown() {
             <Button variant="primary" onClick={runAI} disabled={!!progress}>
               {progress ? `AI tagging ${progress.done}/${progress.total}` : 'AI breakdown'}
             </Button>
-            <Button onClick={() => setDoc({ files: [], notes: '', useText: !!project.script.text && parseScript(project.script.text).scenes.length < 2, wantShots: project.category !== 'Feature Film', mode: project.scenes.length ? 'append' : 'replace' })}>
+            <Button onClick={() => setDoc({ files: [], notes: '', useText: !!project.script.text && parseScript(project.script.text).scenes.length < 2, wantShots: project.category !== 'Visuals', mode: project.scenes.length ? 'append' : 'replace' })}>
               From treatment / moodboard
             </Button>
             {project.scenes.length > 0 && (

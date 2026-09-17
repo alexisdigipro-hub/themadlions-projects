@@ -21,7 +21,7 @@ export function projectProgress(p) {
   const hasDoc = !!(p.script?.text || (p.concept && scenes.length) || (isMv && (p.music?.sections || []).length))
 
   let stages
-  if (p.category === 'Events') {
+  if (p.category === 'Event') {
     const withBlocks = days.length ? days.filter((d) => (d.blocks || []).length).length / days.length : 0
     stages = [
       { key: 'brief', label: 'Brief and budget', weight: 15, done: clamp(((p.notes || p.concept) ? 0.5 : 0) + budgetDone * 0.5), to: 'budget' },

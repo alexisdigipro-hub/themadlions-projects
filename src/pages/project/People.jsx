@@ -74,7 +74,7 @@ export default function People() {
       <div className="toolbar">
         <div className="segmented">
           <button className={tab === 'cast' ? 'on' : ''} onClick={() => setTab('cast')}>
-            {project.category === 'Events' ? 'Talent' : 'Cast'} <small>{project.contacts.filter((c) => c.kind === 'cast').length}</small>
+            {project.category === 'Event' ? 'Talent' : 'Cast'} <small>{project.contacts.filter((c) => c.kind === 'cast').length}</small>
           </button>
           <button className={tab === 'crew' ? 'on' : ''} onClick={() => setTab('crew')}>
             Crew <small>{project.contacts.filter((c) => c.kind === 'crew').length}</small>
@@ -95,7 +95,7 @@ export default function People() {
           )}
           {editable && (
             <Button variant="primary" onClick={() => setDraft({ id: uid(), kind: tab, name: '', character: '', dept: tab === 'cast' ? 'Cast' : 'Production', role: '', phone: '', email: '', callOffset: 0, saveToLibrary: true })}>
-              Add {tab === 'cast' && project.category === 'Events' ? 'talent' : tab}
+              Add {tab === 'cast' && project.category === 'Event' ? 'talent' : tab}
             </Button>
           )}
         </div>

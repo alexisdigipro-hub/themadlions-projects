@@ -11,7 +11,7 @@ import { remote, supabase } from './supabase.js'
 export const STORAGE_KEY = 'tml_projects_v1'
 export const SESSION_KEY = 'tml_session_v1'
 
-export const CATEGORIES = ['Music Video', 'Events', 'Editing', 'Advertise', 'Feature Film']
+export const CATEGORIES = ['Music Video', 'Event', 'Editing', 'Ad', 'Visuals', 'IV']
 export const STATUSES = ['Development', 'Pre-production', 'Production', 'Post-production', 'Delivered', 'On hold']
 
 export const MODULES = [
@@ -79,7 +79,7 @@ export function emptyProject(partial = {}) {
   return {
     id: uid(),
     title: 'Untitled project',
-    category: 'Feature Film',
+    category: 'Music Video',
     status: 'Development',
     client: '',
     director: '',
@@ -129,7 +129,9 @@ const adapter = {
   },
 }
 
+const OLD_CATEGORIES = { Events: 'Event', 'Feature Film': 'Visuals', Advertise: 'Ad' }
 export function migrateProject(p) {
+  if (OLD_CATEGORIES[p.category]) p = { ...p, category: OLD_CATEGORIES[p.category] }
   return { shots: [], tasks: [], budget: { lines: [], contingencyPct: 10, currency: 'EUR', cap: '' }, gear: [], vendors: [], post: { cuts: [], deliverables: [] }, scriptVersions: [], ...p }
 }
 function migrate(parsed) {
@@ -666,7 +668,7 @@ export function visibleProjects(state, user) {
 export function sampleProject() {
   const p = emptyProject({
     title: 'Fourteen',
-    category: 'Feature Film',
+    category: 'Visuals',
     status: 'Pre-production',
     director: 'Alex Konstantinidis',
     producer: 'The Mad Lions',

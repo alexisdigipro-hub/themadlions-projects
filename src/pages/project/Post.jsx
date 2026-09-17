@@ -7,11 +7,12 @@ import { fmtDate } from '../../lib/dates.js'
 const CUT_STATUS = [['internal', 'Internal'], ['review', 'Client review'], ['notes', 'Notes received'], ['approved', 'Approved'], ['locked', 'Picture lock']]
 const DELIV_STATUS = [['todo', 'To do'], ['progress', 'In progress'], ['review', 'Client review'], ['approved', 'Approved'], ['delivered', 'Delivered']]
 const DELIV_PRESETS = {
-  'Feature Film': ['DCP 2K 24fps', 'ProRes 4444 master', 'H.264 screener', 'Stereo & 5.1 mixes', 'Subtitles EN (SRT)', 'Trailer', 'Key art & stills'],
+  Visuals: ['Master ProRes 4444', 'LED wall loop 16:9', 'Vertical 9:16', 'H.264 review', 'Stills & key art'],
+  IV: ['Master ProRes', 'H.264 review', 'Social cutdowns', 'Clean version'],
   'Music Video': ['Master 4K 25fps ProRes', 'YouTube H.264 4K', 'Instagram 9:16 60s', 'TikTok 9:16', 'Clean version', 'Thumbnail'],
-  Advertise: ['TV master 25fps (Rec.709)', 'YouTube 16:9 H.264', 'Instagram 1:1', 'Stories 9:16', '15s cutdown', '6s bumper', 'Clean feed without supers'],
+  Ad: ['TV master 25fps (Rec.709)', 'YouTube 16:9 H.264', 'Instagram 1:1', 'Stories 9:16', '15s cutdown', '6s bumper', 'Clean feed without supers'],
   Editing: ['Master ProRes', 'H.264 review', 'Social cutdowns', 'Clean version'],
-  Events: ['Aftermovie 16:9', 'Social recap 9:16', 'Photo selection', 'Speaker clips', 'Live recording master'],
+  Event: ['Aftermovie 16:9', 'Social recap 9:16', 'Photo selection', 'Speaker clips', 'Live recording master'],
 }
 const emptyCut = () => ({ id: uid(), name: '', date: today(), link: '', status: 'internal', notes: '' })
 const emptyDeliv = () => ({ id: uid(), name: '', format: '', due: '', owner: '', status: 'todo', link: '', notes: '' })
