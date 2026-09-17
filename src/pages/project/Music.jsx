@@ -5,6 +5,8 @@ import { uid } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import { SECTION_NAMES, analyze, deleteTrack, fmtTime, fmtTimeMs, parseTime, songMapText, trackUrl, uploadTrack } from '../../lib/audio.js'
 import { remote } from '../../lib/supabase.js'
+import { useStore } from '../../lib/store.jsx'
+import { alignBlocks, groupSegments, transcribe } from '../../lib/transcribe.js'
 
 const TRACK_KINDS = [['master', 'Master'], ['playback', 'Playback'], ['instrumental', 'Instrumental'], ['demo', 'Demo'], ['other', 'Other']]
 const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: '' })
@@ -57,8 +59,12 @@ function Waveform({ peaks = [], duration = 0, time = 0, sections = [], onSeek, a
 
 export default function Music() {
   const { project, edit, canEdit } = useProject()
+  const { state } = useStore()
   const toast = useToast()
   const editable = canEdit('music')
+  const lastFile = useRef(null) // the file just uploaded, reused for transcription without re-downloading
+  const [tr, setTr] = useState(null) // { mode: 'new' | 'align', language }
+  const [trBusy, setTrBusy] = useState('')
   const music = { ...emptyMusic(), ...(project.music || {}) }
   const track = music.tracks.find((t) => t.id === music.activeTrackId) || music.tracks[0]
   const audioRef = useRef()
@@ -106,6 +112,7 @@ export default function Music() {
     setBusy('Analysing waveform…')
     try {
       const { peaks, duration } = await analyze(file)
+      lastFile.current = file
       const id = uid()
       setBusy('Uploading…')
       const { path, ext } = await uploadTrack({ projectId: project.id, id, file })
@@ -160,6 +167,46 @@ export default function Music() {
   }
   const exportMap = () => download(`${project.title} - song map.txt`, songMapText(music, project.scenes))
 
+  const getAudioFile = async () => {
+    if (lastFile.current) return lastFile.current
+    if (!url) throw new Error('No audio to transcribe.')
+    const blob = await (await fetch(url)).blob()
+    return new File([blob], `${track.name}.${track.ext || 'mp3'}`, { type: blob.type || 'audio/mpeg' })
+  }
+  const runTranscribe = async () => {
+    setTrBusy('Sending the song to Whisper…')
+    try {
+      const file = await getAudioFile()
+      const prompt = sections.map((x) => x.lyrics).filter(Boolean).join('\n').slice(0, 600)
+      const res = await transcribe({ apiKey: state.settings.openaiKey, file, language: tr.language, prompt })
+      if (!res.segments.length) throw new Error('Whisper heard nothing usable. Is the vocal audible?')
+      if (tr.mode === 'align' && sections.length) {
+        const spans = alignBlocks(sections.map((x) => x.lyrics || x.name), res.segments)
+        let hit = 0
+        setMusic((m) => {
+          sections.forEach((x, i) => {
+            const sp = spans[i]
+            const target = m.sections.find((y) => y.id === x.id)
+            if (sp && target) { target.start = sp.start; target.end = sp.end; hit += 1 }
+          })
+        })
+        toast(`Timed ${hit} of ${sections.length} sections from the vocal. Check the ones left unchanged.`, hit ? 'ok' : 'error')
+      } else {
+        const groups = groupSegments(res.segments)
+        setMusic((m) => {
+          m.sections = groups.map((g, i) => ({ id: uid(), name: SECTION_NAMES[i] || `Part ${i + 1}`, start: g.start, end: g.end, lyrics: g.lyrics, sceneIds: [], notes: '' }))
+          m.transcript = { text: res.text, language: res.language, at: new Date().toISOString() }
+        })
+        toast(`${groups.length} sections from the vocal (${res.language || 'auto'}). Rename them and fix any misheard words.`, 'ok')
+      }
+      setTr(null)
+    } catch (e) {
+      toast(e.message, 'error')
+    } finally {
+      setTrBusy('')
+    }
+  }
+
   return (
     <div className="music">
       <div className="toolbar">
@@ -212,6 +259,7 @@ export default function Music() {
         {editable && (
           <div className="toolbar-actions">
             {!sections.length && <Button variant="ghost" onClick={() => setPaste({ text: '' })}>Paste full lyrics</Button>}
+            {track && <Button variant="ghost" onClick={() => setTr({ mode: sections.length ? 'align' : 'new', language: '' })} disabled={!!trBusy}>{trBusy || (sections.length ? 'Time sections from vocal' : 'Lyrics from audio')}</Button>}
             <Button variant="primary" onClick={addSection}>Add section</Button>
           </div>
         )}
@@ -272,6 +320,26 @@ export default function Music() {
               {!project.scenes.length && <div className="muted small">No setups yet. Run the breakdown from the treatment first.</div>}
             </Field>
             <Field label="Notes"><Input value={draft.notes || ''} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} placeholder="Performance to camera, playback at 100%, slow motion 50fps" /></Field>
+          </div>
+        </Modal>
+      )}
+
+      {tr && (
+        <Modal open title={tr.mode === 'align' ? 'Time the sections from the vocal' : 'Lyrics from the audio'} onClose={() => !trBusy && setTr(null)}
+          footer={<><Button variant="ghost" onClick={() => setTr(null)} disabled={!!trBusy}>Cancel</Button><Button variant="primary" onClick={runTranscribe} disabled={!!trBusy || !state.settings.openaiKey}>{trBusy || 'Run Whisper'}</Button></>}>
+          <div className="stack">
+            {!state.settings.openaiKey && <p className="notice">Add your OpenAI API key in Settings, Transcription, first.</p>}
+            <p className="small muted">
+              {tr.mode === 'align'
+                ? 'Whisper listens to the song and the app matches what it heard to your sections, setting each start and end time. Lyrics are not changed.'
+                : 'Whisper listens to the song and writes the lyrics in timed phrases; the app groups them into sections wherever the voice pauses. Expect a few misheard words in dense mixes.'}
+            </p>
+            <div className="row-2">
+              <Field label="Language"><Select value={tr.language} onChange={(e) => setTr({ ...tr, language: e.target.value })} options={[['', 'Detect automatically'], ['el', 'Greek'], ['en', 'English'], ['es', 'Spanish'], ['fr', 'French'], ['it', 'Italian']]} /></Field>
+              <Field label="Mode"><Select value={tr.mode} onChange={(e) => setTr({ ...tr, mode: e.target.value })} options={[['new', 'Write lyrics and sections'], ['align', 'Only time my existing sections']]} /></Field>
+            </div>
+            {tr.mode === 'new' && sections.length > 0 && <p className="notice">This replaces the {sections.length} sections you have. Choose "Only time my existing sections" to keep them.</p>}
+            <p className="fineprint">About $0.006 per minute of audio. Files over 25 MB are refused by Whisper: upload an MP3 version.</p>
           </div>
         </Modal>
       )}

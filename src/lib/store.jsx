@@ -140,6 +140,7 @@ function migrate(parsed) {
 /* ---------- context ---------- */
 const StoreCtx = createContext(null)
 const AI_KEY = 'tml_ai_key_v1' // in remote mode the AI key stays in this browser only
+const OAI_KEY = 'tml_openai_key_v1'
 
 const memberToUser = (m) => ({
   id: m.user_id,
@@ -213,7 +214,7 @@ export function StoreProvider({ children }) {
         recurring: finRows.filter((r) => r.kind === 'recurring').map((r) => ({ ...r.data, id: r.id })),
         settings: { ...emptyState().finance.settings, ...finSettings },
       },
-      settings: { ...emptyState().settings, ...(w.data.settings || {}), aiKey: localStorage.getItem(AI_KEY) || '' },
+      settings: { ...emptyState().settings, ...(w.data.settings || {}), aiKey: localStorage.getItem(AI_KEY) || '', openaiKey: localStorage.getItem(OAI_KEY) || '' },
     }
     setInvites(inv.data || [])
     prevRef.current = next
@@ -483,9 +484,10 @@ export function StoreProvider({ children }) {
       }, 0)
     })
     const wsChanged = JSON.stringify(prev.workspace) !== JSON.stringify(next.workspace)
-    const { aiKey: pk, ...prevSettings } = prev.settings
-    const { aiKey: nk, ...nextSettings } = next.settings
+    const { aiKey: pk, openaiKey: pok, ...prevSettings } = prev.settings
+    const { aiKey: nk, openaiKey: nok, ...nextSettings } = next.settings
     if (nk !== pk) localStorage.setItem(AI_KEY, nk || '')
+    if (nok !== pok) localStorage.setItem(OAI_KEY, nok || '')
     if (wsChanged || JSON.stringify(prevSettings) !== JSON.stringify(nextSettings)) {
       schedule('ws', async () => {
         const { error } = await supabase.from('workspaces').update({ name: next.workspace.name, subtitle: next.workspace.subtitle, settings: nextSettings }).eq('id', ws)
