@@ -20,6 +20,8 @@ import Notes from './pages/project/Notes.jsx'
 import Shots from './pages/project/Shots.jsx'
 import Tasks from './pages/project/Tasks.jsx'
 import TasksAll from './pages/TasksAll.jsx'
+import PeopleAll from './pages/PeopleAll.jsx'
+import LocationsAll from './pages/LocationsAll.jsx'
 import Budget from './pages/project/Budget.jsx'
 import Reports from './pages/project/Reports.jsx'
 import Gear from './pages/project/Gear.jsx'
@@ -61,6 +63,8 @@ export default function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="calendar" element={<CalendarAll />} />
                 <Route path="tasks" element={<TasksAll />} />
+                <Route path="people" element={<PeopleAll />} />
+                <Route path="locations" element={<LocationsAll />} />
                 <Route path="team" element={<Team />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="p/:id" element={<Project />}>

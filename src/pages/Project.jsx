@@ -1,6 +1,7 @@
 import { Link, NavLink, Navigate, Outlet, useOutletContext, useParams } from 'react-router-dom'
 import { Badge } from '../components/ui.jsx'
 import { can, canAccessProject, useCurrentUser, useStore } from '../lib/store.jsx'
+import { hydrateProject } from '../lib/library.js'
 
 export function useProject() {
   return useOutletContext()
@@ -8,9 +9,10 @@ export function useProject() {
 
 export default function Project() {
   const { id } = useParams()
-  const { state, updateProject } = useStore()
+  const { state, updateProject, update } = useStore()
   const user = useCurrentUser()
-  const project = state.projects.find((p) => p.id === id)
+  const raw = state.projects.find((p) => p.id === id)
+  const project = raw ? hydrateProject(raw, state.library) : null
 
   if (!project || !canAccessProject(user, id)) return <Navigate to="/" replace />
 
@@ -37,6 +39,8 @@ export default function Project() {
     user,
     edit: (fn) => updateProject(project.id, fn),
     canEdit: (key) => can(user, key, 'edit'),
+    library: state.library,
+    editLibrary: (fn) => update((s) => { fn(s.library); return s }),
   }
 
   return (

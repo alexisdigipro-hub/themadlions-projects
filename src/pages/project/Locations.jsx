@@ -4,6 +4,7 @@ import { useProject } from '../Project.jsx'
 import { uid, useStore } from '../../lib/store.jsx'
 import { coordsFromText } from '../../lib/sun.js'
 import PhotoGrid from '../../components/PhotoGrid.jsx'
+import { locationToLibrary, matchText, sharedLocation } from '../../lib/library.js'
 
 const TYPES = ['Studio', 'Interior', 'Exterior', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
 
@@ -14,10 +15,25 @@ function mapSrc(address, key) {
 }
 
 export default function Locations() {
-  const { project, edit, canEdit } = useProject()
+  const { project, edit, canEdit, library, editLibrary } = useProject()
   const { state } = useStore()
   const toast = useToast()
   const [draft, setDraft] = useState(null)
+  const [pick, setPick] = useState(null)
+  const inLibrary = new Set(project.locations.map((l) => l.libraryId).filter(Boolean))
+  const libChoices = (library?.locations || []).filter((l) => !inLibrary.has(l.id)).filter((l) => matchText(pick?.q, l.name, l.address, l.type, (l.tags || []).join(' ')))
+  const addFromLibrary = () => {
+    const chosen = libChoices.filter((l) => pick.sel.includes(l.id))
+    if (!chosen.length) return
+    const first = chosen[0]?.id
+    let newId = ''
+    edit((p) => {
+      chosen.forEach((l) => { const id = uid(); if (l.id === first) newId = id; p.locations.push({ id, libraryId: l.id, ...sharedLocation(l), sceneLocations: [] }) })
+    })
+    setSelected(newId)
+    setPick(null)
+    toast(`${chosen.length} added from the library`, 'ok')
+  }
   const [selected, setSelected] = useState(project.locations[0]?.id || '')
   const editable = canEdit('locations')
   const loc = project.locations.find((l) => l.id === selected) || project.locations[0]
@@ -26,14 +42,28 @@ export default function Locations() {
 
   const save = () => {
     if (!draft.name.trim()) return toast('Name the location.', 'error')
+    const { saveToLibrary, ...l } = draft
+    let libraryId = l.libraryId
+    if (libraryId) {
+      editLibrary((lib) => { const x = lib.locations.find((y) => y.id === libraryId); if (x) Object.assign(x, sharedLocation(l)) })
+    } else if (saveToLibrary) {
+      const entry = locationToLibrary(l)
+      libraryId = entry.id
+      editLibrary((lib) => lib.locations.push(entry))
+    }
     edit((p) => {
-      const i = p.locations.findIndex((l) => l.id === draft.id)
-      if (i >= 0) p.locations[i] = draft
-      else p.locations.push(draft)
+      const item = { ...l, libraryId }
+      const i = p.locations.findIndex((x) => x.id === l.id)
+      if (i >= 0) p.locations[i] = item
+      else p.locations.push(item)
     })
-    setSelected(draft.id)
+    setSelected(l.id)
     setDraft(null)
-    toast('Location saved', 'ok')
+    toast(libraryId ? 'Location saved (shared in the company library)' : 'Location saved', 'ok')
+  }
+  const setLocPhotos = (loc, photos) => {
+    if (loc.libraryId) editLibrary((lib) => { const x = lib.locations.find((y) => y.id === loc.libraryId); if (x) x.photos = photos })
+    else edit((p) => { const x = p.locations.find((y) => y.id === loc.id); if (x) x.photos = photos })
   }
 
   const scriptSets = [...new Set(project.scenes.map((s) => s.location).filter(Boolean))]
@@ -47,7 +77,8 @@ export default function Locations() {
         </div>
         {editable && (
           <div className="toolbar-actions">
-            <Button variant="primary" onClick={() => setDraft({ id: uid(), name: '', address: '', type: 'Interior', notes: '', contact: '', phone: '', sceneLocations: [] })}>
+            {(library?.locations || []).length > 0 && <Button onClick={() => setPick({ q: '', sel: [] })}>From library</Button>}
+            <Button variant="primary" onClick={() => setDraft({ id: uid(), name: '', address: '', type: 'Interior', notes: '', contact: '', phone: '', sceneLocations: [], saveToLibrary: true })}>
               Add location
             </Button>
           </div>
@@ -82,7 +113,7 @@ export default function Locations() {
               )}
               <div className="loc-info">
                 <div className="panel-head">
-                  <h2>{loc.name}</h2>
+                  <h2>{loc.name}{loc.libraryId && <span className="lib-badge" title="Shared in the company library">library</span>}</h2>
                   <div className="row-actions">
                     {loc.address && (
                       <a className="btn btn-ghost btn-sm" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.address)}`} target="_blank" rel="noreferrer">
@@ -138,13 +169,10 @@ export default function Locations() {
                 )}
                 <PhotoGrid
                   photos={loc.photos || []}
-                  projectId={project.id}
-                  ownerId={loc.id}
+                  projectId={loc.libraryId ? 'library' : project.id}
+                  ownerId={loc.libraryId || loc.id}
                   editable={editable}
-                  onChange={(photos) => edit((p) => {
-                    const l = p.locations.find((x) => x.id === loc.id)
-                    if (l) l.photos = photos
-                  })}
+                  onChange={(photos) => setLocPhotos(loc, photos)}
                 />
               </div>
             </div>
@@ -218,9 +246,38 @@ export default function Locations() {
                 </div>
               </div>
             )}
+            {draft.libraryId ? (
+              <p className="fineprint">Name, address, type, contact, coordinates, notes and photos are shared from the company library. Changes here update every project. Script sets belong to this project.</p>
+            ) : (
+              <label className="check">
+                <input type="checkbox" checked={draft.saveToLibrary !== false} onChange={(e) => setDraft({ ...draft, saveToLibrary: e.target.checked })} />
+                Also keep in the company library for future projects
+              </label>
+            )}
             <Field label="Notes">
               <Textarea rows={3} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} placeholder="Access, parking, power, permits, noise, neighbours" />
             </Field>
+          </div>
+        )}
+      </Modal>
+      <Modal open={!!pick} title="Add locations from the library" onClose={() => setPick(null)}
+        footer={<><Button variant="ghost" onClick={() => setPick(null)}>Cancel</Button><Button variant="primary" disabled={!pick?.sel.length} onClick={addFromLibrary}>Add {pick?.sel.length || ''}</Button></>}>
+        {pick && (
+          <div className="stack">
+            <Input autoFocus value={pick.q} onChange={(e) => setPick({ ...pick, q: e.target.value })} placeholder="Search…" />
+            <ul className="lib-pick">
+              {libChoices.map((l) => {
+                const on = pick.sel.includes(l.id)
+                return (
+                  <li key={l.id} className={on ? 'on' : ''} onClick={() => setPick({ ...pick, sel: on ? pick.sel.filter((x) => x !== l.id) : [...pick.sel, l.id] })}>
+                    {l.photos?.[0]?.thumb ? <img className="avatar-img" src={l.photos[0].thumb} alt="" /> : null}
+                    <span className="grow"><strong>{l.name}</strong><div className="muted small">{[l.type, l.address].filter(Boolean).join(' · ')}</div></span>
+                    <input type="checkbox" checked={on} readOnly />
+                  </li>
+                )
+              })}
+              {!libChoices.length && <li className="muted">Every matching location is already in this project.</li>}
+            </ul>
           </div>
         )}
       </Modal>

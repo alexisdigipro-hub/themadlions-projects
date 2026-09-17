@@ -4,24 +4,38 @@ import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import PhotoGrid from '../../components/PhotoGrid.jsx'
+import { contactToLibrary, matchText, sharedContact } from '../../lib/library.js'
 
 const DEPTS = ['Production', 'Direction', 'Camera', 'Lighting', 'Grip', 'Sound', 'Art', 'Costume', 'Makeup & hair', 'Locations', 'Post', 'Transport', 'Catering', 'Other']
 
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 
 export default function People() {
-  const { project, edit, canEdit } = useProject()
+  const { project, edit, canEdit, library, editLibrary } = useProject()
   const toast = useToast()
   const [draft, setDraft] = useState(null)
+  const [pick, setPick] = useState(null) // { q, sel, character }
   const [tab, setTab] = useState('cast')
   const [view, setView] = useState('cards')
   const [photosFor, setPhotosFor] = useState(null) // contact id
   const editable = canEdit('contacts')
   const photoTarget = project.contacts.find((c) => c.id === photosFor)
-  const setPhotos = (id, photos) => edit((p) => {
-    const c = p.contacts.find((x) => x.id === id)
-    if (c) c.photos = photos
-  })
+  const setPhotos = (id, photos) => {
+    const c = project.contacts.find((x) => x.id === id)
+    if (c?.libraryId) editLibrary((lib) => { const l = lib.contacts.find((x) => x.id === c.libraryId); if (l) l.photos = photos })
+    else edit((p) => { const x = p.contacts.find((y) => y.id === id); if (x) x.photos = photos })
+  }
+  const inLibrary = new Set(project.contacts.map((c) => c.libraryId).filter(Boolean))
+  const libChoices = (library?.contacts || []).filter((c) => c.kind === tab && !inLibrary.has(c.id)).filter((c) => matchText(pick?.q, c.name, c.role, c.dept, c.phone, c.email, (c.tags || []).join(' ')))
+  const addFromLibrary = () => {
+    const chosen = libChoices.filter((c) => pick.sel.includes(c.id))
+    if (!chosen.length) return
+    edit((p) => {
+      chosen.forEach((c) => p.contacts.push({ id: uid(), kind: tab, libraryId: c.id, ...sharedContact(c), character: chosen.length === 1 && tab === 'cast' ? (pick.character || '').toUpperCase() : '', dept: tab === 'cast' ? 'Cast' : c.dept, role: c.role || '', callOffset: 0 }))
+    })
+    setPick(null)
+    toast(`${chosen.length} added from the library`, 'ok')
+  }
 
   const list = project.contacts.filter((c) => c.kind === tab)
   const characters = [...new Set(project.scenes.flatMap((s) => s.characters))]
@@ -29,13 +43,24 @@ export default function People() {
 
   const save = () => {
     if (!draft.name.trim()) return toast('Add a name.', 'error')
+    const { saveToLibrary, ...c } = draft
+    let libraryId = c.libraryId
+    if (libraryId) {
+      // shared fields live in the library
+      editLibrary((lib) => { const l = lib.contacts.find((x) => x.id === libraryId); if (l) Object.assign(l, sharedContact(c)) })
+    } else if (saveToLibrary) {
+      const entry = contactToLibrary(c)
+      libraryId = entry.id
+      editLibrary((lib) => lib.contacts.push(entry))
+    }
     edit((p) => {
-      const i = p.contacts.findIndex((c) => c.id === draft.id)
-      if (i >= 0) p.contacts[i] = draft
-      else p.contacts.push(draft)
+      const item = { ...c, libraryId }
+      const i = p.contacts.findIndex((x) => x.id === c.id)
+      if (i >= 0) p.contacts[i] = item
+      else p.contacts.push(item)
     })
     setDraft(null)
-    toast('Saved', 'ok')
+    toast(libraryId ? 'Saved (shared in the company library)' : 'Saved', 'ok')
   }
 
   const exportCSV = () => {
@@ -64,8 +89,11 @@ export default function People() {
               Export CSV
             </Button>
           )}
+          {editable && (library?.contacts || []).some((c) => c.kind === tab) && (
+            <Button onClick={() => setPick({ q: '', sel: [], character: uncast[0] || '' })}>From library</Button>
+          )}
           {editable && (
-            <Button variant="primary" onClick={() => setDraft({ id: uid(), kind: tab, name: '', character: '', dept: tab === 'cast' ? 'Cast' : 'Production', role: '', phone: '', email: '', callOffset: 0 })}>
+            <Button variant="primary" onClick={() => setDraft({ id: uid(), kind: tab, name: '', character: '', dept: tab === 'cast' ? 'Cast' : 'Production', role: '', phone: '', email: '', callOffset: 0, saveToLibrary: true })}>
               Add {tab}
             </Button>
           )}
@@ -76,7 +104,7 @@ export default function People() {
         <p className="notice">
           Not cast yet: {uncast.join(', ')}.{' '}
           {editable && (
-            <button className="link" onClick={() => setDraft({ id: uid(), kind: 'cast', name: '', character: uncast[0], dept: 'Cast', role: '', phone: '', email: '', callOffset: 0 })}>
+            <button className="link" onClick={() => setDraft({ id: uid(), kind: 'cast', name: '', character: uncast[0], dept: 'Cast', role: '', phone: '', email: '', callOffset: 0, saveToLibrary: true })}>
               Cast {uncast[0]}
             </button>
           )}
@@ -96,7 +124,7 @@ export default function People() {
                 {c.photos?.length > 1 && <span className="person-count">{c.photos.length}</span>}
               </button>
               <div className="person-body">
-                <strong>{c.name}</strong>
+                <strong>{c.name}{c.libraryId && <span className="lib-badge" title="Shared in the company library">library</span>}</strong>
                 <div className="small">{tab === 'cast' ? (c.character ? <span className="person-char">{c.character}</span> : <span className="muted">No character</span>) : c.dept}{c.role ? ` · ${c.role}` : ''}</div>
                 <div className="small muted person-contact">
                   {c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}
@@ -217,6 +245,44 @@ export default function People() {
             <Field label="Notes" hint={draft.kind === 'cast' ? 'Sizes, allergies, availability, dietary needs.' : 'Availability, own gear, dietary needs.'}>
               <Input value={draft.notes || ''} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} />
             </Field>
+            {draft.libraryId ? (
+              <p className="fineprint">Name, phone, email, agent, photos and notes are shared from the company library. Changing them here updates every project. Character, role and call offset belong to this project only.</p>
+            ) : (
+              <label className="check">
+                <input type="checkbox" checked={draft.saveToLibrary !== false} onChange={(e) => setDraft({ ...draft, saveToLibrary: e.target.checked })} />
+                Also keep in the company library for future projects
+              </label>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!pick} title={`Add ${tab} from the library`} onClose={() => setPick(null)}
+        footer={<><Button variant="ghost" onClick={() => setPick(null)}>Cancel</Button><Button variant="primary" disabled={!pick?.sel.length} onClick={addFromLibrary}>Add {pick?.sel.length || ''}</Button></>}>
+        {pick && (
+          <div className="stack">
+            <Input autoFocus value={pick.q} onChange={(e) => setPick({ ...pick, q: e.target.value })} placeholder="Search…" />
+            {tab === 'cast' && pick.sel.length === 1 && (
+              <Field label="Character" hint="For the selected actor.">
+                <Input list="chars" value={pick.character} onChange={(e) => setPick({ ...pick, character: e.target.value.toUpperCase() })} />
+              </Field>
+            )}
+            <ul className="lib-pick">
+              {libChoices.map((c) => {
+                const on = pick.sel.includes(c.id)
+                return (
+                  <li key={c.id} className={on ? 'on' : ''} onClick={() => setPick({ ...pick, sel: on ? pick.sel.filter((x) => x !== c.id) : [...pick.sel, c.id] })}>
+                    <span className="avatar">{c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}</span>
+                    <span className="grow">
+                      <strong>{c.name}</strong>
+                      <div className="muted small">{[c.kind === 'cast' ? c.role : `${c.dept}${c.role ? ` · ${c.role}` : ''}`, c.phone].filter(Boolean).join(' · ')}</div>
+                    </span>
+                    <input type="checkbox" checked={on} readOnly />
+                  </li>
+                )
+              })}
+              {!libChoices.length && <li className="muted">Everyone matching is already in this project.</li>}
+            </ul>
           </div>
         )}
       </Modal>
@@ -226,8 +292,8 @@ export default function People() {
           <PhotoGrid
             title={photoTarget.kind === 'cast' ? 'Headshots & looks' : 'Photos'}
             photos={photoTarget.photos || []}
-            projectId={project.id}
-            ownerId={photoTarget.id}
+            projectId={photoTarget.libraryId ? 'library' : project.id}
+            ownerId={photoTarget.libraryId || photoTarget.id}
             editable={editable}
             onChange={(photos) => setPhotos(photoTarget.id, photos)}
           />

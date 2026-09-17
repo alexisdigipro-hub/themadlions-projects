@@ -11,12 +11,11 @@ drop policy if exists photos_select on storage.objects;
 drop policy if exists photos_insert on storage.objects;
 drop policy if exists photos_update on storage.objects;
 drop policy if exists photos_delete on storage.objects;
-
 create policy photos_select on storage.objects for select
-  using (bucket_id = 'photos' and can_view_project(split_part(name, '/', 1)));
+  using (bucket_id = 'photos' and ((split_part(name, '/', 1) = 'library' and my_ws() is not null) or can_view_project(split_part(name, '/', 1))));
 create policy photos_insert on storage.objects for insert
-  with check (bucket_id = 'photos' and can_edit_project(split_part(name, '/', 1)));
+  with check (bucket_id = 'photos' and ((split_part(name, '/', 1) = 'library' and can_edit_any()) or can_edit_project(split_part(name, '/', 1))));
 create policy photos_update on storage.objects for update
-  using (bucket_id = 'photos' and can_edit_project(split_part(name, '/', 1)));
+  using (bucket_id = 'photos' and ((split_part(name, '/', 1) = 'library' and can_edit_any()) or can_edit_project(split_part(name, '/', 1))));
 create policy photos_delete on storage.objects for delete
-  using (bucket_id = 'photos' and can_edit_project(split_part(name, '/', 1)));
+  using (bucket_id = 'photos' and ((split_part(name, '/', 1) = 'library' and can_edit_any()) or can_edit_project(split_part(name, '/', 1))));

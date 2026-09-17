@@ -24,6 +24,8 @@ export default function Layout() {
     { to: '/', label: 'Projects', end: true, show: can(user, 'projects') },
     { to: '/calendar', label: 'Calendar', show: can(user, 'calendar') },
     { to: '/tasks', label: 'Tasks', show: can(user, 'tasks') },
+    { to: '/people', label: 'People', show: can(user, 'contacts') },
+    { to: '/locations', label: 'Locations', show: can(user, 'locations') },
     { to: '/team', label: 'Team', show: user?.role === 'admin' },
     { to: '/settings', label: 'Settings', show: true },
   ].filter((i) => i.show)

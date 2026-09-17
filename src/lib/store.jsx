@@ -65,6 +65,7 @@ export function emptyState() {
     users: [],
     projects: [],
     events: [],
+    library: { contacts: [], locations: [] },
     settings: { aiProvider: 'anthropic', aiKey: '', aiModel: 'claude-sonnet-4-6', mapsKey: '' },
   }
 }
@@ -129,7 +130,7 @@ function migrate(parsed) {
   // migrations: new modules and fields added after the first release
   parsed.projects = (parsed.projects || []).map(migrateProject)
   parsed.users = (parsed.users || []).map((u) => ({ ...u, permissions: { ...defaultPermissions(u.role === 'admin' ? 'edit' : 'view'), ...(u.permissions || {}) } }))
-  return { ...emptyState(), ...parsed, settings: { ...emptyState().settings, ...(parsed.settings || {}) } }
+  return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], ...(parsed.library || {}) }, settings: { ...emptyState().settings, ...(parsed.settings || {}) } }
 }
 
 /* ---------- context ---------- */
@@ -178,20 +179,27 @@ export function StoreProvider({ children }) {
   }, [])
 
   const loadAll = useCallback(async (ws) => {
-    const [w, m, p, e, inv] = await Promise.all([
+    const [w, m, p, e, inv, lib] = await Promise.all([
       supabase.from('workspaces').select('*').eq('id', ws).single(),
       supabase.from('members').select('*').eq('workspace_id', ws),
       supabase.from('projects').select('id, data').eq('workspace_id', ws),
       supabase.from('events').select('id, data').eq('workspace_id', ws),
       supabase.from('invites').select('*').eq('workspace_id', ws),
+      supabase.from('library').select('id, kind, data').eq('workspace_id', ws),
     ])
     if (w.error) throw w.error
+    const libRows = lib.error ? [] : lib.data || [] // library table may not exist yet (library.sql not run)
+    if (lib.error) console.warn('library not available yet:', lib.error.message)
     const next = {
       ...emptyState(),
       workspace: { name: w.data.name, subtitle: w.data.subtitle, createdAt: w.data.created_at, id: ws },
       users: (m.data || []).map(memberToUser),
       projects: (p.data || []).map((r) => migrateProject({ ...r.data, id: r.id })).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || '')),
       events: (e.data || []).map((r) => ({ ...r.data, id: r.id })),
+      library: {
+        contacts: libRows.filter((r) => r.kind === 'contact').map((r) => ({ ...r.data, id: r.id })),
+        locations: libRows.filter((r) => r.kind === 'location').map((r) => ({ ...r.data, id: r.id })),
+      },
       settings: { ...emptyState().settings, ...(w.data.settings || {}), aiKey: localStorage.getItem(AI_KEY) || '' },
     }
     setInvites(inv.data || [])
@@ -270,6 +278,21 @@ export function StoreProvider({ children }) {
           return next
         })
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'library', filter: `workspace_id=eq.${ws}` }, (payload) => {
+        setState((s) => {
+          const key = (payload.new?.kind || payload.old?.kind) === 'location' ? 'locations' : 'contacts'
+          const lib = { ...s.library }
+          if (payload.eventType === 'DELETE') lib[key] = lib[key].filter((x) => x.id !== payload.old.id)
+          else {
+            if (payload.new.updated_by === authUser?.id && myWrites.current.has(payload.new.id)) return s
+            const item = { ...payload.new.data, id: payload.new.id }
+            lib[key] = lib[key].some((x) => x.id === item.id) ? lib[key].map((x) => (x.id === item.id ? item : x)) : [...lib[key], item]
+          }
+          const next = { ...s, library: lib }
+          prevRef.current = next
+          return next
+        })
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'members', filter: `workspace_id=eq.${ws}` }, async () => {
         const { data } = await supabase.from('members').select('*').eq('workspace_id', ws)
         if (data) setState((s) => {
@@ -336,6 +359,26 @@ export function StoreProvider({ children }) {
         if (error) throw error
       }, 0),
     )
+    ;[['contacts', 'contact'], ['locations', 'location']].forEach(([key, kind]) => {
+      const before = Object.fromEntries((prev.library?.[key] || []).map((x) => [x.id, x]))
+      const after = next.library?.[key] || []
+      after.forEach((x) => {
+        if (before[x.id] && JSON.stringify(before[x.id]) === JSON.stringify(x)) return
+        myWrites.current.add(x.id)
+        schedule('l:' + x.id, async () => {
+          const { error } = await supabase.from('library').upsert({ id: x.id, workspace_id: ws, kind, data: x })
+          if (error) throw new Error(error.message.includes('library') && error.code === '42P01' ? 'Run supabase/library.sql in the SQL editor to enable the company library.' : error.message)
+          setTimeout(() => myWrites.current.delete(x.id), 4000)
+        })
+      })
+      const ids = new Set(after.map((x) => x.id))
+      Object.values(before).filter((x) => !ids.has(x.id)).forEach((x) =>
+        schedule('ld:' + x.id, async () => {
+          const { error } = await supabase.from('library').delete().eq('id', x.id)
+          if (error) throw error
+        }, 0),
+      )
+    })
     const prevU = Object.fromEntries(prev.users.map((u) => [u.id, u]))
     next.users.forEach((u) => {
       if (prevU[u.id] && JSON.stringify(prevU[u.id]) === JSON.stringify(u)) return
@@ -378,7 +421,7 @@ export function StoreProvider({ children }) {
       const next = migrate({ ...nextState })
       if (remote) {
         // import projects and events; users and workspace stay as they are on the server
-        update((s) => ({ ...s, projects: next.projects, events: next.events }))
+        update((s) => ({ ...s, projects: next.projects, events: next.events, library: { contacts: [...s.library.contacts.filter((c) => !next.library.contacts.some((x) => x.id === c.id)), ...next.library.contacts], locations: [...s.library.locations.filter((c) => !next.library.locations.some((x) => x.id === c.id)), ...next.library.locations] } }))
       } else setState(next)
     }
     const auth = remote
