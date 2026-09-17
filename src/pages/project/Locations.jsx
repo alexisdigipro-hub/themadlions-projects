@@ -3,6 +3,7 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast
 import { useProject } from '../Project.jsx'
 import { uid, useStore } from '../../lib/store.jsx'
 import { coordsFromText } from '../../lib/sun.js'
+import PhotoGrid from '../../components/PhotoGrid.jsx'
 
 const TYPES = ['Studio', 'Interior', 'Exterior', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
 
@@ -61,6 +62,7 @@ export default function Locations() {
             {project.locations.map((l) => (
               <li key={l.id}>
                 <button className={`loc-item ${loc?.id === l.id ? 'on' : ''}`} onClick={() => setSelected(l.id)}>
+                  {l.photos?.[0]?.thumb && <img className="loc-thumb" src={l.photos[0].thumb} alt="" />}
                   <strong>{l.name}</strong>
                   <span className="muted small">
                     {l.type}
@@ -134,6 +136,16 @@ export default function Locations() {
                 {scenesAt(loc).length > 0 && (
                   <p className="small muted">Scenes here: {scenesAt(loc).map((s) => s.number).join(', ')}</p>
                 )}
+                <PhotoGrid
+                  photos={loc.photos || []}
+                  projectId={project.id}
+                  ownerId={loc.id}
+                  editable={editable}
+                  onChange={(photos) => edit((p) => {
+                    const l = p.locations.find((x) => x.id === loc.id)
+                    if (l) l.photos = photos
+                  })}
+                />
               </div>
             </div>
           )}

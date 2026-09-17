@@ -23,7 +23,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Post: cuts with review links and approval status (internal / client review / notes / approved / picture lock) and a deliverables list with specs, owners, due dates and standard presets per project category
 - Tasks per project with assignee, department, due date, priority, and a cross-project Tasks page (mine / everyone, overdue / today / this week)
 - Production calendar (per project and across projects) with shoot days mirrored automatically, ICS export
-- Locations with Google Maps embed, directions, script set linking
+- Locations with Google Maps embed, directions, script set linking, coordinates for sun and weather, and photo galleries (compressed in the browser to 1600px JPEG, stored in a private Supabase bucket with signed links, thumbnails in the project document)
 - Cast & crew with character casting and call offsets
 - Files & notes: links to Drive, Frame.io, contracts, permits
 - Team: administrators set per user, per module permissions (none / view / edit) and per project access
@@ -52,7 +52,7 @@ Settings → AI breakdown → paste an Anthropic API key. It is stored only in t
 ## Phase 2: Supabase (team logins, one shared database)
 
 1. Create a project at supabase.com (region Frankfurt).
-2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run.
+2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run. Then the same with `supabase/storage.sql` (photo bucket).
 3. Authentication → Providers → Email: keep it enabled; turn **Confirm email** off if you want teammates to sign in immediately.
 4. Project Settings → API: copy the Project URL and the publishable (anon) key into `src/lib/supabaseConfig.js`, commit, push. The site rebuilds in remote mode.
 5. Open the site, create your account. The first account becomes the administrator and the workspace is created automatically.
