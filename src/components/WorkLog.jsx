@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from './ui.jsx'
 import { today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { download, fmtDate } from '../lib/dates.js'
@@ -26,6 +26,7 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
   const [year, setYear] = useState(years.includes(thisYear) || !years.length ? thisYear : years[0])
   const [draft, setDraft] = useState(null)
   const [filter, setFilter] = useState('all')
+  const fileRef = useRef(null)
   const list = all.filter((e) => (e.date || '').startsWith(year)).filter((e) => filter === 'all' || (filter === 'paid' ? e.status === 'paid' : e.status !== 'paid'))
   const yearList = all.filter((e) => (e.date || '').startsWith(year))
   const tot = entryTotals(yearList)
@@ -61,6 +62,40 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
     return s
   })
   const remove = (id) => update((s) => { s.worklog = (s.worklog || []).filter((x) => x.id !== id); return s })
+  const importCsv = async (file) => {
+    if (!file) return
+    const text = await file.text()
+    const rows = parseCsv(text)
+    if (rows.length < 2) return toast('The file looks empty.', 'error')
+    const head = rows[0].map((h) => h.trim().toLowerCase())
+    const col = (...names) => head.findIndex((h) => names.includes(h))
+    const iStatus = col('status', 'progress'), iClient = col('client'), iDesc = col('description'), iPend = col('pending', 'payment'), iPaid = col('paid', 'payed'), iAmt = col('amount'), iDate = col('date', 'shooting date'), iPaidOn = col('paid on'), iMethod = col('method'), iNotes = col('notes', 'σημειώσεις')
+    if (iClient < 0 && iDesc < 0) return toast('Need at least a Client or Description column.', 'error')
+    const num = (v) => Number(String(v || '').replace(/[€\s]/g, '').replace(/\.(?=\d{3}(,|$))/g, '').replace(',', '.')) || 0
+    const iso = (v) => {
+      v = String(v || '').trim()
+      if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v
+      const m = v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/)
+      if (!m) return ''
+      const y = m[3].length === 2 ? `20${m[3]}` : m[3]
+      return `${y}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`
+    }
+    const entries = []
+    for (const r of rows.slice(1)) {
+      const client = (r[iClient] || '').trim(), description = (r[iDesc] || '').trim()
+      if (!client && !description) continue
+      const paidAmt = iPaid >= 0 ? num(r[iPaid]) : 0, pendAmt = iPend >= 0 ? num(r[iPend]) : 0
+      const statusText = (r[iStatus] || '').trim().toLowerCase()
+      const paid = statusText === 'paid' || statusText === 'payed' || (!statusText && paidAmt > 0)
+      const amount = iAmt >= 0 ? num(r[iAmt]) : paid ? paidAmt : pendAmt || paidAmt
+      const date = iso(r[iDate]) || today()
+      entries.push({ ...emptyEntry(userId), client, description, amount, status: paid ? 'paid' : 'pending', date, paidDate: paid ? iso(r[iPaidOn]) || date : '', method: (r[iMethod] || '').trim() || (paid ? 'Cash' : ''), notes: (r[iNotes] || '').trim() })
+    }
+    if (!entries.length) return toast('No rows found.', 'error')
+    update((s) => { s.worklog = [...(s.worklog || []), ...entries]; return s })
+    toast(`Imported ${entries.length} job${entries.length === 1 ? '' : 's'}`, 'ok')
+    if (fileRef.current) fileRef.current.value = ''
+  }
   const exportCsv = () => {
     const rows = [['Status', 'Client', 'Description', 'Pending', 'Paid', 'Date', 'Paid on', 'Method', 'Notes']]
     ;[...yearList].sort((a, b) => (a.date || '').localeCompare(b.date || '')).forEach((e) => rows.push([e.status === 'paid' ? 'Paid' : 'Pending', e.client, e.description, e.status === 'paid' ? '' : e.amount, e.status === 'paid' ? e.amount : '', e.date, e.paidDate, e.method, e.notes]))
@@ -85,6 +120,7 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
             {[['all', 'All'], ['pending', 'Pending'], ['paid', 'Paid']].map(([k, l]) => <button key={k} className={filter === k ? 'on' : ''} onClick={() => setFilter(k)}>{l}</button>)}
           </div>
           {yearList.length > 0 && <Button variant="ghost" onClick={exportCsv}>CSV</Button>}
+          {editable && <><input ref={fileRef} type="file" accept=".csv,text/csv" hidden onChange={(e) => importCsv(e.target.files?.[0])} /><Button variant="ghost" onClick={() => fileRef.current?.click()} title="Columns: Status, Client, Description, Pending, Paid (or Amount), Date, Paid on, Method, Notes">Import CSV</Button></>}
           {editable && <Button variant="primary" onClick={() => setDraft(emptyEntry(userId))}>Add job</Button>}
         </div>
       </div>
@@ -146,4 +182,22 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
       </Modal>
     </div>
   )
+}
+
+function parseCsv(text) {
+  const rows = []
+  let row = [], cell = '', q = false
+  const t = text.replace(/^\ufeff/, '')
+  for (let i = 0; i < t.length; i++) {
+    const c = t[i]
+    if (q) {
+      if (c === '"') { if (t[i + 1] === '"') { cell += '"'; i++ } else q = false }
+      else cell += c
+    } else if (c === '"') q = true
+    else if (c === ',' || c === ';') { row.push(cell); cell = '' }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && t[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = '' }
+    else cell += c
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row) }
+  return rows.filter((r) => r.some((x) => x.trim() !== ''))
 }
