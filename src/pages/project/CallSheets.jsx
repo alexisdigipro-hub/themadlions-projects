@@ -5,6 +5,8 @@ import { useProject } from '../Project.jsx'
 import { formatPages } from '../../lib/breakdown.js'
 import { fmtLong } from '../../lib/dates.js'
 import { ATHENS, coordsFromText, forecast, geocode, sunTimes } from '../../lib/sun.js'
+import { callSheetText, mailLink, personalCallText, waLink, waShareLink } from '../../lib/share.js'
+import { Modal } from '../../components/ui.jsx'
 
 function addMinutes(hhmm, mins) {
   if (!hhmm) return ''
@@ -21,6 +23,7 @@ export default function CallSheets() {
   const [sel, setSel] = useState(days[0]?.id || '')
   const [mode, setMode] = useState('sheet') // sheet | sides
   const [busy, setBusy] = useState(false)
+  const [send, setSend] = useState(false)
   const toast = useToast()
   const day = days.find((d) => d.id === sel) || days[0]
   const editable = canEdit('callsheets')
@@ -45,6 +48,16 @@ export default function CallSheets() {
   const departments = {}
   for (const s of scenes) for (const [cat, items] of Object.entries(s.elements || {})) departments[cat] = [...new Set([...(departments[cat] || []), ...items])]
   const sheet = day.callSheet || {}
+  const dayIndex = days.indexOf(day)
+  const crewRows = crew.map((c) => ({ ...c, call: addMinutes(day.callTime, c.callOffset ?? 0) }))
+  const fullText = callSheetText({ project, day, dayIndex, dayCount: days.length, scenes, loc, cast: castRows, crew: crewRows, sheet })
+  const people = [...castRows.filter((r) => r.actor).map((r) => ({ ...r.actor, call: r.call, character: r.character, scenes: scenes.filter((s) => s.characters?.includes(r.character)) })), ...crewRows.map((c) => ({ ...c, scenes }))]
+  const personal = (pp) => personalCallText({ project, day, dayIndex, loc, person: pp, call: pp.call, scenes: pp.scenes })
+  const emails = people.map((pp) => pp.email).filter(Boolean)
+  const subject = `${project.title} · Call sheet Day ${dayIndex + 1} · ${day.date} · call ${day.callTime}`
+  const copy = async (text) => {
+    try { await navigator.clipboard.writeText(text); toast('Copied', 'ok') } catch { toast('Could not copy', 'error') }
+  }
   const setSheet = (k, v) => edit((p) => {
     const d = p.shootingDays.find((x) => x.id === day.id)
     if (d) d.callSheet = { ...(d.callSheet || {}), [k]: v }
@@ -87,11 +100,53 @@ export default function CallSheets() {
             <button className={mode === 'sheet' ? 'on' : ''} onClick={() => setMode('sheet')}>Call sheet</button>
             <button className={mode === 'sides' ? 'on' : ''} onClick={() => setMode('sides')}>Sides</button>
           </div>
+          <Button onClick={() => setSend(true)}>Send message</Button>
           <Button variant="primary" onClick={() => window.print()}>
             Print / Save PDF
           </Button>
         </div>
       </div>
+
+      <Modal open={send} wide title={`Send call sheet · Day ${dayIndex + 1}`} onClose={() => setSend(false)}>
+        <div className="stack">
+          <div className="send-row">
+            <div>
+              <strong>Whole call sheet</strong>
+              <div className="muted small">One message with call, location, scenes, cast and crew calls. Paste it in the project group or send to anyone.</div>
+            </div>
+            <div className="row-actions">
+              <a className="btn btn-primary btn-sm" href={waShareLink(fullText)} target="_blank" rel="noreferrer">WhatsApp</a>
+              <a className="btn btn-ghost btn-sm" href={mailLink({ bcc: emails, subject, body: fullText.replace(/\*/g, '') })}>Mail{emails.length ? ` (${emails.length})` : ''}</a>
+              <Button size="sm" variant="ghost" onClick={() => copy(fullText)}>Copy</Button>
+            </div>
+          </div>
+          <p className="fineprint">The PDF is not attached automatically: use Print / Save PDF and add it to the message if you want it. Mail opens your mail app with everyone in Bcc.</p>
+          <div className="panel-head"><h3>Personal messages</h3><span className="muted small">Each one gets only their own call time</span></div>
+          <table className="table send-table">
+            <thead><tr><th>Name</th><th>Role</th><th>Call</th><th>Phone</th><th /></tr></thead>
+            <tbody>
+              {people.map((pp) => (
+                <tr key={pp.id}>
+                  <td className="person-cell">{pp.photos?.[0]?.thumb && <img className="avatar-img" src={pp.photos[0].thumb} alt="" />}<strong>{pp.name}</strong></td>
+                  <td className="small">{pp.kind === 'cast' ? pp.character : pp.role || pp.dept}</td>
+                  <td>{pp.call}</td>
+                  <td className="small">{pp.phone || <span className="muted">no phone</span>}</td>
+                  <td className="row-actions">
+                    {pp.phone && <a className="btn btn-primary btn-sm" href={waLink(pp.phone, personal(pp))} target="_blank" rel="noreferrer">WhatsApp</a>}
+                    {pp.email && <a className="btn btn-ghost btn-sm" href={mailLink({ to: [pp.email], subject, body: personal(pp).replace(/\*/g, '') })}>Mail</a>}
+                    <button onClick={() => copy(personal(pp))}>Copy</button>
+                  </td>
+                </tr>
+              ))}
+              {!people.length && <tr><td colSpan={5} className="muted">Assign scenes and cast people first.</td></tr>}
+            </tbody>
+          </table>
+          <details className="send-preview">
+            <summary className="small muted">Preview the group message</summary>
+            <pre className="script small">{fullText}</pre>
+          </details>
+        </div>
+      </Modal>
 
       {mode === 'sides' && (
         <article className="sheet sides">

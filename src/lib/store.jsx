@@ -66,6 +66,7 @@ export function emptyState() {
     projects: [],
     events: [],
     library: { contacts: [], locations: [] },
+    todos: [],
     finance: { transactions: [], recurring: [], settings: { currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 } },
     settings: { aiProvider: 'anthropic', aiKey: '', aiModel: 'claude-sonnet-4-6', mapsKey: '' },
   }
@@ -204,6 +205,7 @@ export function StoreProvider({ children }) {
         contacts: libRows.filter((r) => r.kind === 'contact').map((r) => ({ ...r.data, id: r.id })),
         locations: libRows.filter((r) => r.kind === 'location').map((r) => ({ ...r.data, id: r.id })),
       },
+      todos: libRows.filter((r) => r.kind === 'task').map((r) => ({ ...r.data, id: r.id })),
       finance: {
         transactions: finRows.filter((r) => r.kind === 'tx').map((r) => ({ ...r.data, id: r.id })),
         recurring: finRows.filter((r) => r.kind === 'recurring').map((r) => ({ ...r.data, id: r.id })),
@@ -289,7 +291,20 @@ export function StoreProvider({ children }) {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'library', filter: `workspace_id=eq.${ws}` }, (payload) => {
         setState((s) => {
-          const key = (payload.new?.kind || payload.old?.kind) === 'location' ? 'locations' : 'contacts'
+          const kind = payload.new?.kind || payload.old?.kind
+          if (kind === 'task') {
+            let todos
+            if (payload.eventType === 'DELETE') todos = s.todos.filter((t) => t.id !== payload.old.id)
+            else {
+              if (payload.new.updated_by === authUser?.id && myWrites.current.has(payload.new.id)) return s
+              const t = { ...payload.new.data, id: payload.new.id }
+              todos = s.todos.some((x) => x.id === t.id) ? s.todos.map((x) => (x.id === t.id ? t : x)) : [...s.todos, t]
+            }
+            const next = { ...s, todos }
+            prevRef.current = next
+            return next
+          }
+          const key = kind === 'location' ? 'locations' : 'contacts'
           const lib = { ...s.library }
           if (payload.eventType === 'DELETE') lib[key] = lib[key].filter((x) => x.id !== payload.old.id)
           else {
@@ -392,15 +407,15 @@ export function StoreProvider({ children }) {
         if (error) throw error
       }, 0),
     )
-    ;[['contacts', 'contact'], ['locations', 'location']].forEach(([key, kind]) => {
-      const before = Object.fromEntries((prev.library?.[key] || []).map((x) => [x.id, x]))
-      const after = next.library?.[key] || []
+    ;[['contacts', 'contact'], ['locations', 'location'], ['todos', 'task']].forEach(([key, kind]) => {
+      const before = Object.fromEntries(((kind === 'task' ? prev.todos : prev.library?.[key]) || []).map((x) => [x.id, x]))
+      const after = (kind === 'task' ? next.todos : next.library?.[key]) || []
       after.forEach((x) => {
         if (before[x.id] && JSON.stringify(before[x.id]) === JSON.stringify(x)) return
         myWrites.current.add(x.id)
         schedule('l:' + x.id, async () => {
           const { error } = await supabase.from('library').upsert({ id: x.id, workspace_id: ws, kind, data: x })
-          if (error) throw new Error(error.message.includes('library') && error.code === '42P01' ? 'Run supabase/library.sql in the SQL editor to enable the company library.' : error.message)
+          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/library.sql in the SQL editor to enable the company library.' : error.code === '23514' ? 'Run supabase/todos.sql in the SQL editor to enable general tasks.' : error.message)
           setTimeout(() => myWrites.current.delete(x.id), 4000)
         })
       })

@@ -38,7 +38,7 @@ export function TaskList({ tasks, onEdit, onStatus, onDelete, editable, showProj
                 {t.status === 'doing' && <span className="pill doing">in progress</span>}
               </div>
               <div className="task-meta muted small">
-                {showProject && projectsById?.[t.projectId] && <span className="task-proj" style={{ '--pc': projectsById[t.projectId].color }}>{projectsById[t.projectId].title}</span>}
+                {showProject && (projectsById?.[t.projectId] ? <span className="task-proj" style={{ '--pc': projectsById[t.projectId].color }}>{projectsById[t.projectId].title}</span> : <span className="task-proj" style={{ '--pc': 'var(--muted)' }}>General</span>)}
                 <span>{t.dept}</span>
                 {t.assignee && <span>{t.assignee}</span>}
                 {t.due && <span className={late ? 'late' : ''}>{late ? 'Overdue · ' : 'Due '}{fmtDate(t.due)}</span>}

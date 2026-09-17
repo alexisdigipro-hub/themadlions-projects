@@ -4,11 +4,14 @@
 create table if not exists library (
   id text primary key,
   workspace_id uuid not null references workspaces(id) on delete cascade,
-  kind text not null check (kind in ('contact', 'location')),
+  kind text not null check (kind in ('contact', 'location', 'task')),
   data jsonb not null,
   updated_at timestamptz default now(),
   updated_by uuid
 );
+
+alter table library drop constraint if exists library_kind_check;
+alter table library add constraint library_kind_check check (kind in ('contact', 'location', 'task'));
 
 drop trigger if exists library_touch on library;
 create trigger library_touch before insert or update on library for each row execute function touch_updated_at();

@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { PageHead, Select, useToast } from '../components/ui.jsx'
 import { can, today, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
-import { DeptChips, TaskList, TaskModal } from './project/Tasks.jsx'
+import { DeptChips, TaskList, TaskModal, emptyTask } from './project/Tasks.jsx'
+import { Button } from '../components/ui.jsx'
 
 export default function TasksAll() {
-  const { state, updateProject } = useStore()
+  const { state, updateProject, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
   const [who, setWho] = useState('me') // me | all
@@ -12,15 +13,18 @@ export default function TasksAll() {
   const [dept, setDept] = useState('')
   const [proj, setProj] = useState('')
   const [draft, setDraft] = useState(null)
-  const editable = can(user, 'tasks', 'edit')
 
   const projects = visibleProjects(state, user)
   const projectsById = Object.fromEntries(projects.map((p) => [p.id, p]))
-  const all = projects.flatMap((p) => (p.tasks || []).map((t) => ({ ...t, projectId: p.id })))
+  const editable = can(user, 'tasks', 'edit')
+  const all = [
+    ...projects.flatMap((p) => (p.tasks || []).map((t) => ({ ...t, projectId: p.id }))),
+    ...(state.todos || []).map((t) => ({ ...t, projectId: '' })),
+  ]
   const mine = (t) => !t.assignee || t.assignee.trim().toLowerCase() === (user?.name || '').trim().toLowerCase()
   const t0 = today()
 
-  const base = all.filter((t) => (who === 'me' ? mine(t) : true)).filter((t) => (proj ? t.projectId === proj : true))
+  const base = all.filter((t) => (who === 'me' ? mine(t) : true)).filter((t) => (proj === 'general' ? !t.projectId : proj ? t.projectId === proj : true))
   const shown = base
     .filter((t) => (dept ? (t.dept || 'Other') === dept : true))
     .filter((t) => (status === 'all' ? true : status === 'done' ? t.status === 'done' : t.status !== 'done'))
@@ -43,16 +47,28 @@ export default function TasksAll() {
 
   const people = [...new Set([...state.users.map((u) => u.name), ...projects.flatMap((p) => p.contacts.map((c) => c.name))])].filter(Boolean)
 
-  const persist = (t, fn) => updateProject(t.projectId, (p) => {
-    p.tasks = p.tasks || []
-    const x = p.tasks.find((y) => y.id === t.id)
-    if (x) fn(x, p)
-  })
+  const persist = (t, fn) => {
+    if (!t.projectId) return update((s) => { const x = s.todos.find((y) => y.id === t.id); if (x) fn(x); return s })
+    updateProject(t.projectId, (p) => {
+      p.tasks = p.tasks || []
+      const x = p.tasks.find((y) => y.id === t.id)
+      if (x) fn(x, p)
+    })
+  }
   const setTaskStatus = (t, s) => persist(t, (x) => { x.status = s; x.doneAt = s === 'done' ? new Date().toISOString() : '' })
-  const remove = (t) => updateProject(t.projectId, (p) => (p.tasks = (p.tasks || []).filter((y) => y.id !== t.id)))
+  const remove = (t) => (t.projectId ? updateProject(t.projectId, (p) => (p.tasks = (p.tasks || []).filter((y) => y.id !== t.id))) : update((s) => { s.todos = s.todos.filter((y) => y.id !== t.id); return s }))
   const save = () => {
     if (!draft.title.trim()) return toast('Give the task a title.', 'error')
-    persist(draft, (x) => Object.assign(x, draft, { doneAt: draft.status === 'done' ? draft.doneAt || new Date().toISOString() : '' }))
+    const done = { doneAt: draft.status === 'done' ? draft.doneAt || new Date().toISOString() : '' }
+    if (!draft.projectId) {
+      update((s) => {
+        const i = s.todos.findIndex((y) => y.id === draft.id)
+        const { projectId, ...t } = { ...draft, ...done }
+        if (i >= 0) s.todos[i] = t
+        else s.todos.push(t)
+        return s
+      })
+    } else persist(draft, (x) => Object.assign(x, draft, done))
     setDraft(null)
     toast('Task saved', 'ok')
   }
@@ -77,14 +93,13 @@ export default function TasksAll() {
             <button key={k} className={status === k ? 'on' : ''} onClick={() => setStatus(k)}>{l}</button>
           ))}
         </div>
-        {projects.length > 1 && (
-          <Select className="compact" value={proj} onChange={(e) => setProj(e.target.value)} options={[['', 'All projects'], ...projects.map((p) => [p.id, p.title])]} />
-        )}
+        <Select className="compact" value={proj} onChange={(e) => setProj(e.target.value)} options={[['', 'Everything'], ['general', 'General only'], ...projects.map((p) => [p.id, p.title])]} />
+        {editable && <Button variant="primary" onClick={() => setDraft(emptyTask({ projectId: '', dept: 'Other' }))}>Add task</Button>}
       </PageHead>
       {base.length > 0 && <DeptChips tasks={base} dept={dept} setDept={setDept} filter={status} />}
 
       {!shown.length ? (
-        <p className="muted">Nothing to do. Tasks are created inside each project, in the Tasks tab.</p>
+        <p className="muted">Nothing to do. Add a general task here, or project tasks inside each project's Tasks tab.</p>
       ) : (
         <>
           <Section title="Overdue" items={groups.overdue} />

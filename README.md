@@ -16,12 +16,14 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Shot list per scene: size, angle, movement, gear, lens, camera, storyboard frames, list and board views, CSV and print
 - Stripboard schedule: shoot days, scene assignment, industry strip colours, unscheduled pool
 - Day Out of Days for cast (SW / W / WF / SWF / H) computed from the stripboard
+- Send message: the call sheet as a WhatsApp-ready message (whole sheet for the group, or a personal message per cast and crew member with only their call time and location), mail with everyone in Bcc, or copy. WhatsApp links on cast and crew cards
 - Call sheets generated per shoot day with sunrise, sunset, golden hour and a fetched weather forecast (open-meteo, no key), printable to PDF
 - Script sides per shoot day, printable
 - Budget top sheet: lines by category (above the line, production, post, other), quantity × rate or flat estimates, actuals and variance, contingency, client cap, CSV and print
 - Daily production reports per shoot day: times, scenes completed / partial / pickups, setups, on-set counts, weather, incidents, pages shot to date and ahead / behind
 - Equipment and vendors: items by category with vendor, rate, days, pickup and return dates, status (needed / quoted / booked / out / returned), CSV, one-click sync of booked items into the budget
 - Post: cuts with review links and approval status (internal / client review / notes / approved / picture lock) and a deliverables list with specs, owners, due dates and standard presets per project category
+- General tasks (to-dos outside any project) on the Tasks page, alongside project tasks
 - Tasks per project with assignee, department, due date, priority, and a cross-project Tasks page (mine / everyone, overdue / today / this week)
 - Production calendar (per project and across projects) with shoot days mirrored automatically, ICS export
 - Locations with Google Maps embed, directions, script set linking, coordinates for sun and weather, and photo galleries (compressed in the browser to 1600px JPEG, stored in a private Supabase bucket with signed links, thumbnails in the project document)
@@ -55,7 +57,7 @@ Settings → AI breakdown → paste an Anthropic API key. It is stored only in t
 ## Phase 2: Supabase (team logins, one shared database)
 
 1. Create a project at supabase.com (region Frankfurt).
-2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run. Then the same with `supabase/storage.sql` (photo bucket) `supabase/library.sql` (company library) and `supabase/finance.sql` (administrators-only finance).
+2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run. Then the same with `supabase/storage.sql` (photo bucket) `supabase/library.sql` (company library), `supabase/todos.sql` (general tasks) and `supabase/finance.sql` (administrators-only finance).
 3. Authentication → Providers → Email: keep it enabled; turn **Confirm email** off if you want teammates to sign in immediately.
 4. Project Settings → API: copy the Project URL and the publishable (anon) key into `src/lib/supabaseConfig.js`, commit, push. The site rebuilds in remote mode.
 5. Open the site, create your account. The first account becomes the administrator and the workspace is created automatically.
