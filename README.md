@@ -18,6 +18,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Shot list per scene: size, angle, movement, gear, lens, camera, storyboard frames, list and board views, CSV and print
 - Stripboard schedule: shoot days, scene assignment, industry strip colours, unscheduled pool
 - Day Out of Days for cast (SW / W / WF / SWF / H) computed from the stripboard
+- Share link: one tap turns the day's call sheet into a public link that opens on any phone without login, laid out for mobile (big call time, location with directions, pinned note, everyone's call, scenes). Department requirements stay private. Sharing again after edits refreshes the same link
 - Send message: the call sheet as a WhatsApp-ready message (whole sheet for the group, or a personal message per cast and crew member with only their call time and location), mail with everyone in Bcc, or copy. WhatsApp links on cast and crew cards
 - Project cover image (compressed, stored in the project) shown on the dashboard card, the project header, the Overview and the call sheet; Overview progress bar with weighted stages per category (script, breakdown, budget, cast, locations, shot list, schedule, shoot days reported, post and delivery; Editing projects use cut, approval and deliverables), each stage linking to its tab; dashboard cards carry a thin progress bar
 - Transcript from the audio shown in the Script tab of music video projects, with copy and "use as script text"
@@ -69,7 +70,7 @@ Settings → AI breakdown → paste an Anthropic API key. It is stored only in t
 ## Phase 2: Supabase (team logins, one shared database)
 
 1. Create a project at supabase.com (region Frankfurt).
-2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run. Then the same with `supabase/storage.sql` (photo bucket) `supabase/library.sql` (company library), `supabase/todos.sql` (general tasks), `supabase/audio.sql` (song files), `supabase/files.sql` (project files), `supabase/finance.sql` (administrators-only finance) `supabase/chat.sql` (team chat) `supabase/notices.sql` (notices) `supabase/worklog.sql` (personal work logs) and `supabase/drives.sql` (drives archive).
+2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run. Then the same with `supabase/storage.sql` (photo bucket) `supabase/library.sql` (company library), `supabase/todos.sql` (general tasks), `supabase/audio.sql` (song files), `supabase/files.sql` (project files), `supabase/finance.sql` (administrators-only finance) `supabase/chat.sql` (team chat) `supabase/notices.sql` (notices) `supabase/worklog.sql` (personal work logs), `supabase/drives.sql` (drives archive) and `supabase/shares.sql` (public call sheet links).
 3. Authentication → Providers → Email: keep it enabled; turn **Confirm email** off if you want teammates to sign in immediately.
 4. Project Settings → API: copy the Project URL and the publishable (anon) key into `src/lib/supabaseConfig.js`, commit, push. The site rebuilds in remote mode.
 5. Open the site, create your account. The first account becomes the administrator and the workspace is created automatically.

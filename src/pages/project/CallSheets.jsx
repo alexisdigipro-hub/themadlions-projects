@@ -8,6 +8,8 @@ import { fmtLong } from '../../lib/dates.js'
 import { ATHENS, coordsFromText, forecast, geocode, sunTimes } from '../../lib/sun.js'
 import { callSheetText, mailLink, personalCallText, waLink, waShareLink } from '../../lib/share.js'
 import { Modal } from '../../components/ui.jsx'
+import { publishShare } from '../../lib/shares.js'
+import { useCurrentUser } from '../../lib/store.jsx'
 
 function addMinutes(hhmm, mins) {
   if (!hhmm) return ''
@@ -26,6 +28,8 @@ export default function CallSheets() {
   const [mode, setMode] = useState('sheet') // sheet | sides
   const [busy, setBusy] = useState(false)
   const [send, setSend] = useState(false)
+  const [share, setShare] = useState(null) // { url } | { busy } | { error }
+  const user = useCurrentUser()
   const toast = useToast()
   const day = days.find((d) => d.id === sel) || days[0]
   const editable = canEdit('callsheets')
@@ -62,6 +66,33 @@ export default function CallSheets() {
   const copy = async (text) => {
     try { await navigator.clipboard.writeText(text); toast('Copied', 'ok') } catch { toast('Could not copy', 'error') }
   }
+  const makeShare = async () => {
+    setShare({ busy: true })
+    try {
+      const keyCrew = crew.filter((c) => /1st AD|assistant director|production manager|UPM|line producer|DoP|photography|producer/i.test(c.role || '')).slice(0, 5).map((c) => ({ role: c.role, name: c.name, phone: c.phone }))
+      if (project.producer) keyCrew.unshift({ role: 'Producer', name: project.producer })
+      if (project.director) keyCrew.unshift({ role: 'Director', name: project.director })
+      const data = {
+        project: { title: project.title, color: project.color, cover: project.coverThumb || '', category: project.category },
+        company: { name: state.workspace.name, address: state.settings.companyAddress || '' },
+        day: { index: dayIndex + 1, count: days.length, date: day.date, callTime: day.callTime, wrapTime: day.wrapTime },
+        sheet: { tagline: sheet.tagline || '', notes: sheet.notes || '', shootingCall: sheet.shootingCall || '', lunch: sheet.lunch || '', parking: sheet.parking || '', hospital: sheet.weather || '' },
+        wx: wx ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
+        sun: sun ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,
+        loc: loc ? { name: loc.name, address: loc.address, contact: loc.contact, phone: loc.phone } : null,
+        scenes: scenes.map((s) => ({ number: s.number, intExt: s.intExt, location: s.location, timeOfDay: s.timeOfDay, synopsis: s.synopsis, characters: s.characters, pages: formatPages(s.eighths) })),
+        cast: castRows.map((r) => ({ character: r.character, name: r.actor?.name || '', phone: r.actor?.phone || '', call: r.call, photo: r.actor?.photos?.[0]?.thumb || '' })),
+        crew: crewRows.map((c) => ({ name: c.name, role: c.role || c.dept, phone: c.phone || '', call: c.call, photo: c.photos?.[0]?.thumb || '' })),
+        blocks: (day.blocks || []).map((b) => ({ time: b.time, end: b.end, item: b.item, owner: b.owner, notes: b.notes })),
+        keyCrew,
+      }
+      const url = await publishShare({ workspaceId: state.workspace.id, kind: 'callsheet', ref: `callsheet:${project.id}:${day.id}`, data, userId: user?.id })
+      setShare({ url })
+    } catch (e) {
+      setShare({ error: e.message })
+    }
+  }
+
   const setSheet = (k, v) => edit((p) => {
     const d = p.shootingDays.find((x) => x.id === day.id)
     if (d) d.callSheet = { ...(d.callSheet || {}), [k]: v }
@@ -106,12 +137,29 @@ export default function CallSheets() {
               <button className={mode === 'sides' ? 'on' : ''} onClick={() => setMode('sides')}>Sides</button>
             </div>
           )}
+          <Button onClick={makeShare}>Share link</Button>
           <Button onClick={() => setSend(true)}>Send message</Button>
           <Button variant="primary" onClick={() => window.print()}>
             Print / Save PDF
           </Button>
         </div>
       </div>
+
+      <Modal open={!!share} title={`Share call sheet · Day ${dayIndex + 1}`} onClose={() => setShare(null)}>
+        {share?.busy && <p className="muted">Preparing the link…</p>}
+        {share?.error && <p className="error">{share.error}</p>}
+        {share?.url && (
+          <div className="stack">
+            <p className="small muted">Anyone with this link sees the call sheet on their phone, no login needed: call times, location with directions, the pinned note, cast and crew calls and scenes. Department requirements and budgets stay inside the app. Sharing again after you edit refreshes the same link.</p>
+            <div className="share-link"><input className="input" readOnly value={share.url} onFocus={(e) => e.target.select()} /><Button variant="ghost" onClick={() => copy(share.url)}>Copy</Button></div>
+            <div className="row-actions wrap">
+              <a className="btn btn-primary" href={waShareLink(`${project.title} · Call sheet Day ${dayIndex + 1} · ${day.date} · call ${day.callTime}\n${share.url}`)} target="_blank" rel="noreferrer">Send on WhatsApp</a>
+              <a className="btn btn-ghost" href={mailLink({ bcc: emails, subject, body: `${subject}\n\n${share.url}` })}>Mail</a>
+              {navigator.share && <Button variant="ghost" onClick={() => navigator.share({ title: subject, url: share.url }).catch(() => {})}>Share…</Button>}
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal open={send} wide title={`Send call sheet · Day ${dayIndex + 1}`} onClose={() => setSend(false)}>
         <div className="stack">

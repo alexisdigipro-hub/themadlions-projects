@@ -24,6 +24,7 @@ import Database from './pages/Database.jsx'
 import Chat from './pages/Chat.jsx'
 import MyWork from './pages/MyWork.jsx'
 import Drives from './pages/Drives.jsx'
+import PublicCallSheet from './pages/PublicCallSheet.jsx'
 import Finance from './pages/Finance.jsx'
 import Home from './pages/Home.jsx'
 import Budget from './pages/project/Budget.jsx'
@@ -63,6 +64,7 @@ export default function App() {
         <HashRouter>
           <Routes>
             <Route path="/login" element={<LoginGate />} />
+            <Route path="/s/:token" element={<PublicCallSheet />} />
             <Route element={<RequireUser />}>
               <Route element={<Layout />}>
                 <Route index element={<Dashboard />} />
