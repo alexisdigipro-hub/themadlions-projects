@@ -237,7 +237,10 @@ export default function CallSheets() {
               {castRows.map((r) => (
                 <tr key={r.character}>
                   <td>{r.character}</td>
-                  <td>{r.actor?.name || <span className="muted">Not cast</span>}</td>
+                  <td className="person-cell">
+                    {r.actor?.photos?.[0]?.thumb && <img className="avatar-img" src={r.actor.photos[0].thumb} alt="" />}
+                    {r.actor?.name || <span className="muted">Not cast</span>}
+                  </td>
                   <td>{r.actor?.phone || ''}</td>
                   <td>{r.call}</td>
                 </tr>

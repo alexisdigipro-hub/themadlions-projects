@@ -24,7 +24,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Tasks per project with assignee, department, due date, priority, and a cross-project Tasks page (mine / everyone, overdue / today / this week)
 - Production calendar (per project and across projects) with shoot days mirrored automatically, ICS export
 - Locations with Google Maps embed, directions, script set linking, coordinates for sun and weather, and photo galleries (compressed in the browser to 1600px JPEG, stored in a private Supabase bucket with signed links, thumbnails in the project document)
-- Cast & crew with character casting and call offsets
+- Cast & crew as headshot cards or a table, with character casting, call offsets, agent and notes, per-person photo galleries (headshots and looks), and the headshot printed on the call sheet
 - Files & notes: links to Drive, Frame.io, contracts, permits
 - Team: administrators set per user, per module permissions (none / view / edit) and per project access
 - Backup and restore as JSON

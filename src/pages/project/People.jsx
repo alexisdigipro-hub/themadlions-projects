@@ -3,15 +3,25 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, useToast } from '.
 import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
+import PhotoGrid from '../../components/PhotoGrid.jsx'
 
 const DEPTS = ['Production', 'Direction', 'Camera', 'Lighting', 'Grip', 'Sound', 'Art', 'Costume', 'Makeup & hair', 'Locations', 'Post', 'Transport', 'Catering', 'Other']
+
+const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 
 export default function People() {
   const { project, edit, canEdit } = useProject()
   const toast = useToast()
   const [draft, setDraft] = useState(null)
   const [tab, setTab] = useState('cast')
+  const [view, setView] = useState('cards')
+  const [photosFor, setPhotosFor] = useState(null) // contact id
   const editable = canEdit('contacts')
+  const photoTarget = project.contacts.find((c) => c.id === photosFor)
+  const setPhotos = (id, photos) => edit((p) => {
+    const c = p.contacts.find((x) => x.id === id)
+    if (c) c.photos = photos
+  })
 
   const list = project.contacts.filter((c) => c.kind === tab)
   const characters = [...new Set(project.scenes.flatMap((s) => s.characters))]
@@ -45,6 +55,10 @@ export default function People() {
           </button>
         </div>
         <div className="toolbar-actions">
+          <div className="segmented small">
+            <button className={view === 'cards' ? 'on' : ''} onClick={() => setView('cards')}>Cards</button>
+            <button className={view === 'table' ? 'on' : ''} onClick={() => setView('table')}>Table</button>
+          </div>
           {project.contacts.length > 0 && (
             <Button variant="ghost" onClick={exportCSV}>
               Export CSV
@@ -73,6 +87,34 @@ export default function People() {
         <Empty title={tab === 'cast' ? 'No cast yet' : 'No crew yet'}>
           {tab === 'cast' ? 'Link actors to the characters from the breakdown so call sheets fill themselves.' : 'Add heads of department first. They appear on every call sheet.'}
         </Empty>
+      ) : view === 'cards' ? (
+        <div className="people-grid">
+          {list.map((c) => (
+            <article key={c.id} className="person">
+              <button className="person-photo" onClick={() => setPhotosFor(c.id)} aria-label="Photos">
+                {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(c.name)}</span>}
+                {c.photos?.length > 1 && <span className="person-count">{c.photos.length}</span>}
+              </button>
+              <div className="person-body">
+                <strong>{c.name}</strong>
+                <div className="small">{tab === 'cast' ? (c.character ? <span className="person-char">{c.character}</span> : <span className="muted">No character</span>) : c.dept}{c.role ? ` · ${c.role}` : ''}</div>
+                <div className="small muted person-contact">
+                  {c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}
+                  {c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}
+                </div>
+                {c.agent && <div className="small muted">Agent: {c.agent}{c.agentPhone ? ` · ${c.agentPhone}` : ''}</div>}
+                {c.notes && <div className="small muted person-notes">{c.notes}</div>}
+              </div>
+              {editable && (
+                <div className="row-actions person-actions">
+                  <button onClick={() => setPhotosFor(c.id)}>Photos</button>
+                  <button onClick={() => setDraft({ ...c })}>Edit</button>
+                  <Confirm onConfirm={() => edit((p) => (p.contacts = p.contacts.filter((x) => x.id !== c.id)))} label="Delete">×</Confirm>
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
       ) : (
         <table className="table">
           <thead>
@@ -89,7 +131,10 @@ export default function People() {
           <tbody>
             {list.map((c) => (
               <tr key={c.id}>
-                <td>
+                <td className="person-cell">
+                  <button className="avatar" onClick={() => setPhotosFor(c.id)} aria-label="Photos">
+                    {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}
+                  </button>
                   <strong>{c.name}</strong>
                 </td>
                 <td>{tab === 'cast' ? c.character : c.dept}</td>
@@ -159,7 +204,33 @@ export default function People() {
             <Field label="Call time offset (minutes from general call)" hint="Negative for earlier, e.g. -60 for makeup.">
               <Input type="number" value={draft.callOffset ?? 0} onChange={(e) => setDraft({ ...draft, callOffset: Number(e.target.value) || 0 })} />
             </Field>
+            {draft.kind === 'cast' && (
+              <div className="row-2">
+                <Field label="Agent / agency">
+                  <Input value={draft.agent || ''} onChange={(e) => setDraft({ ...draft, agent: e.target.value })} />
+                </Field>
+                <Field label="Agent phone">
+                  <Input value={draft.agentPhone || ''} onChange={(e) => setDraft({ ...draft, agentPhone: e.target.value })} />
+                </Field>
+              </div>
+            )}
+            <Field label="Notes" hint={draft.kind === 'cast' ? 'Sizes, allergies, availability, dietary needs.' : 'Availability, own gear, dietary needs.'}>
+              <Input value={draft.notes || ''} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} />
+            </Field>
           </div>
+        )}
+      </Modal>
+
+      <Modal open={!!photoTarget} wide title={photoTarget ? `Photos · ${photoTarget.name}` : ''} onClose={() => setPhotosFor(null)}>
+        {photoTarget && (
+          <PhotoGrid
+            title={photoTarget.kind === 'cast' ? 'Headshots & looks' : 'Photos'}
+            photos={photoTarget.photos || []}
+            projectId={project.id}
+            ownerId={photoTarget.id}
+            editable={editable}
+            onChange={(photos) => setPhotos(photoTarget.id, photos)}
+          />
         )}
       </Modal>
     </div>
