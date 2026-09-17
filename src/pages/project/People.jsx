@@ -128,8 +128,9 @@ export default function People() {
                 <strong>{c.name}{c.libraryId && <span className="lib-badge" title="Shared in the company library">library</span>}</strong>
                 <div className="small">{tab === 'cast' ? (c.character ? <span className="person-char">{c.character}</span> : <span className="muted">No character</span>) : c.dept}{c.role ? ` · ${c.role}` : ''}</div>
                 <div className="small muted person-contact">
-                  {c.phone && <span><a href={`tel:${c.phone}`}>{c.phone}</a> · <a href={waLink(c.phone, `Hi ${c.name.split(' ')[0]}, `)} target="_blank" rel="noreferrer">WhatsApp</a></span>}
-                  {c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}
+                  {c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}
+                  {c.phone && <a href={waLink(c.phone, `Hi ${c.name.split(' ')[0]}, `)} target="_blank" rel="noreferrer">WhatsApp</a>}
+                  {c.email && <a href={`mailto:${c.email}`} title={c.email}>Mail</a>}
                 </div>
                 {c.agent && <div className="small muted">Agent: {c.agent}{c.agentPhone ? ` · ${c.agentPhone}` : ''}</div>}
                 {c.notes && <div className="small muted person-notes">{c.notes}</div>}

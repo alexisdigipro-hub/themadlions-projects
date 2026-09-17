@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { PageHead } from '../components/ui.jsx'
-import { CATEGORIES, STATUSES, today, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { CATEGORIES, EVENT_TYPES, STATUSES, today, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import MiniCalendar from '../components/MiniCalendar.jsx'
 import { projectProgress } from '../lib/progress.js'
 import { budgetTotals, money } from './project/Budget.jsx'
 import { summarize } from '../lib/finance.js'
@@ -13,7 +14,7 @@ export default function Home() {
   const user = useCurrentUser()
   const projects = visibleProjects(state, user)
   const isAdmin = user?.role === 'admin'
-  const t0 = today(), t7 = addDaysISO(7), t30 = addDaysISO(30)
+  const t0 = today(), t7 = addDaysISO(7)
 
   const active = projects.filter((p) => !['Delivered', 'On hold'].includes(p.status))
   const rows = projects
@@ -31,7 +32,12 @@ export default function Home() {
   const week = projects.flatMap((p) => p.shootingDays.filter((d) => d.date >= t0 && d.date <= t7).map((d) => ({ p, d })))
     .concat(state.events.filter((e) => e.date >= t0 && e.date <= t7 && e.type !== 'shoot').map((e) => ({ e, p: projects.find((x) => x.id === e.projectId) })))
     .sort((a, b) => (a.d?.date || a.e?.date).localeCompare(b.d?.date || b.e?.date))
-  const month = projects.flatMap((p) => p.shootingDays.filter((d) => d.date > t7 && d.date <= t30)).length
+  const typeOf = (k) => EVENT_TYPES.find((t) => t.key === k) || EVENT_TYPES[0]
+  const calItems = projects.flatMap((p) => p.shootingDays.map((d) => ({ date: d.date, time: d.callTime, color: p.color, title: p.title, sub: `${p.category === 'Events' ? 'event day' : 'shoot day'} · call ${d.callTime}`, to: `/p/${p.id}/callsheets` })))
+    .concat(state.events.filter((e) => e.type !== 'shoot' && (!e.projectId || projects.some((x) => x.id === e.projectId))).map((e) => {
+      const p = projects.find((x) => x.id === e.projectId)
+      return { date: e.date, endDate: e.endDate, time: e.start, color: p?.color || typeOf(e.type).color, title: e.title, sub: [typeOf(e.type).label, p?.title, e.start].filter(Boolean).join(' · '), to: p ? `/p/${p.id}/calendar` : '/calendar' }
+    }))
   const overdueTasks = [...projects.flatMap((p) => (p.tasks || []).map((t) => ({ ...t, p }))), ...(state.todos || [])].filter((t) => t.status !== 'done' && t.due && t.due < t0)
   const mine = (t) => !t.assignee || t.assignee.trim().toLowerCase() === (user?.name || '').trim().toLowerCase()
   const dueSoon = [...projects.flatMap((p) => (p.tasks || []).map((t) => ({ ...t, p }))), ...(state.todos || [])].filter((t) => t.status !== 'done' && t.due && t.due >= t0 && t.due <= t7 && mine(t))
@@ -48,21 +54,8 @@ export default function Home() {
 
       <div className="home-grid">
         <section className="panel">
-          <div className="panel-head"><h2>This week</h2><Link className="link small" to="/calendar">Calendar</Link></div>
-          {!week.length ? <p className="muted small">Nothing scheduled in the next 7 days{month ? `, ${month} shoot day${month === 1 ? '' : 's'} later this month` : ''}.</p> : (
-            <ul className="plain home-week">
-              {week.map((w, i) => (
-                <li key={i}>
-                  <span className="home-date">{fmtDate(w.d?.date || w.e?.date, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                  {w.d ? (
-                    <Link to={`/p/${w.p.id}/callsheets`} style={{ '--pc': w.p.color }}><span className="dot" />{w.p.title} · {w.p.category === 'Events' ? 'event day' : 'shoot day'} · call {w.d.callTime}</Link>
-                  ) : (
-                    <span><span className="dot" style={{ '--pc': w.p?.color || 'var(--muted)' }} />{w.e.title}{w.p ? ` · ${w.p.title}` : ''}</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+          <div className="panel-head"><h2>Calendar</h2><Link className="link small" to="/calendar">Full calendar</Link></div>
+          <MiniCalendar items={calItems} />
         </section>
 
         <section className="panel">

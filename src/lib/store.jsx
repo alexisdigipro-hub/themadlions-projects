@@ -11,7 +11,7 @@ import { remote, supabase } from './supabase.js'
 export const STORAGE_KEY = 'tml_projects_v1'
 export const SESSION_KEY = 'tml_session_v1'
 
-export const CATEGORIES = ['Feature Film', 'Music Video', 'Advertise', 'Editing', 'Events']
+export const CATEGORIES = ['Music Video', 'Events', 'Editing', 'Advertise', 'Feature Film']
 export const STATUSES = ['Development', 'Pre-production', 'Production', 'Post-production', 'Delivered', 'On hold']
 
 export const MODULES = [

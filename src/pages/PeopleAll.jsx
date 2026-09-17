@@ -4,6 +4,7 @@ import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, useToast
 import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
+import { waLink } from '../lib/share.js'
 
 const DEPTS = ['Cast', 'Production', 'Direction', 'Camera', 'Lighting', 'Grip', 'Sound', 'Art', 'Costume', 'Makeup & hair', 'Locations', 'Post', 'Transport', 'Catering', 'Other']
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
@@ -132,7 +133,8 @@ export default function PeopleAll() {
                   <div className="small">{c.kind === 'cast' ? c.role || <span className="muted">Actor</span> : `${c.dept}${c.role ? ` · ${c.role}` : ''}`}</div>
                   <div className="small muted person-contact">
                     {c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}
-                    {c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}
+                    {c.phone && <a href={waLink(c.phone, `Hi ${c.name.split(' ')[0]}, `)} target="_blank" rel="noreferrer">WhatsApp</a>}
+                    {c.email && <a href={`mailto:${c.email}`} title={c.email}>Mail</a>}
                   </div>
                   {c.agent && <div className="small muted">Agent: {c.agent}{c.agentPhone ? ` · ${c.agentPhone}` : ''}</div>}
                   {c.notes && <div className="small muted person-notes">{c.notes}</div>}
