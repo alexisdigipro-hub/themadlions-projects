@@ -24,6 +24,8 @@ export const MODULES = [
   { key: 'tasks', label: 'Tasks' },
   { key: 'reports', label: 'Reports' },
   { key: 'budget', label: 'Budget' },
+  { key: 'gear', label: 'Equipment' },
+  { key: 'post', label: 'Post' },
   { key: 'calendar', label: 'Calendar' },
   { key: 'locations', label: 'Locations' },
   { key: 'contacts', label: 'Cast & crew' },
@@ -90,6 +92,10 @@ export function emptyProject(partial = {}) {
     shots: [],
     tasks: [],
     budget: { lines: [], contingencyPct: 10, currency: 'EUR', cap: '' },
+    gear: [],
+    vendors: [],
+    post: { cuts: [], deliverables: [] },
+    scriptVersions: [],
     breakdownStatus: 'none',
     ...partial,
   }
@@ -117,7 +123,7 @@ const adapter = {
 }
 
 export function migrateProject(p) {
-  return { shots: [], tasks: [], budget: { lines: [], contingencyPct: 10, currency: 'EUR', cap: '' }, ...p }
+  return { shots: [], tasks: [], budget: { lines: [], contingencyPct: 10, currency: 'EUR', cap: '' }, gear: [], vendors: [], post: { cuts: [], deliverables: [] }, scriptVersions: [], ...p }
 }
 function migrate(parsed) {
   // migrations: new modules and fields added after the first release

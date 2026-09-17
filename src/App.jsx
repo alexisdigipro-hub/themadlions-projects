@@ -22,6 +22,8 @@ import Tasks from './pages/project/Tasks.jsx'
 import TasksAll from './pages/TasksAll.jsx'
 import Budget from './pages/project/Budget.jsx'
 import Reports from './pages/project/Reports.jsx'
+import Gear from './pages/project/Gear.jsx'
+import Post from './pages/project/Post.jsx'
 
 function Loading() {
   return (
@@ -70,6 +72,8 @@ export default function App() {
                   <Route path="tasks" element={<Tasks />} />
                   <Route path="reports" element={<Reports />} />
                   <Route path="budget" element={<Budget />} />
+                  <Route path="gear" element={<Gear />} />
+                  <Route path="post" element={<Post />} />
                   <Route path="callsheets" element={<CallSheets />} />
                   <Route path="calendar" element={<ProjectCalendar />} />
                   <Route path="locations" element={<Locations />} />

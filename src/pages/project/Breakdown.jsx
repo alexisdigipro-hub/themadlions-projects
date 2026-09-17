@@ -6,6 +6,7 @@ import { ELEMENT_CATEGORIES, useStore } from '../../lib/store.jsx'
 import { formatPages, parseScript, stripColor } from '../../lib/breakdown.js'
 import { aiBreakdown } from '../../lib/ai.js'
 import { download } from '../../lib/dates.js'
+import { revisionHex } from '../../lib/diff.js'
 
 const TIMES = ['', 'DAY', 'NIGHT', 'DAWN', 'DUSK', 'CONTINUOUS']
 
@@ -22,12 +23,42 @@ export default function Breakdown() {
     if (!project.script.text) return toast('Import a script first.', 'error')
     const res = parseScript(project.script.text)
     if (!res.scenes.length) return toast('No scene headings found. Check the script uses INT./EXT. or ΕΣΩΤ./ΕΞΩΤ. headings.', 'error')
+    let kept = 0, changed = 0
     edit((p) => {
-      p.scenes = res.scenes
-      p.shootingDays.forEach((d) => (d.sceneIds = []))
-      p.breakdownStatus = 'rules'
+      // Re-detection after a revision: match scenes by heading so breakdown tags,
+      // shots and schedule survive. Scenes whose text changed get flagged.
+      const norm = (h) => (h || '').toUpperCase().replace(/^\d+[A-Z]?[.)]?\s+/, '').replace(/\s+/g, ' ').trim()
+      const pool = [...p.scenes]
+      const rev = p.script.revision || 'White'
+      const merged = res.scenes.map((n) => {
+        const i = pool.findIndex((o) => norm(o.heading) === norm(n.heading))
+        if (i === -1) return { ...n, revisedIn: p.scenes.length ? rev : '' }
+        const o = pool.splice(i, 1)[0]
+        kept += 1
+        const textChanged = (o.body || '').trim() !== (n.body || '').trim()
+        if (textChanged) changed += 1
+        return {
+          ...n,
+          id: o.id,
+          number: o.number && !/^\d+$/.test(o.number) ? o.number : n.number,
+          elements: o.elements || {},
+          flags: o.flags || [],
+          notes: o.notes || '',
+          dayId: o.dayId || '',
+          shot: o.shot,
+          synopsis: p.breakdownStatus === 'ai' && !textChanged ? o.synopsis : n.synopsis,
+          eighths: textChanged ? n.eighths : o.eighths,
+          characters: textChanged ? n.characters : [...new Set([...(o.characters || []), ...n.characters])],
+          revisedIn: textChanged ? rev : o.revisedIn || '',
+        }
+      })
+      const ids = new Set(merged.map((s) => s.id))
+      p.shootingDays.forEach((d) => (d.sceneIds = d.sceneIds.filter((id) => ids.has(id))))
+      p.shots = (p.shots || []).filter((sh) => ids.has(sh.sceneId))
+      p.scenes = merged
+      if (!p.breakdownStatus || p.breakdownStatus === 'none') p.breakdownStatus = 'rules'
     })
-    toast(`${res.scenes.length} scenes, ${res.characters.length} characters found`, 'ok')
+    toast(kept ? `${res.scenes.length} scenes · ${kept} matched · ${changed} changed · ${res.scenes.length - kept} new` : `${res.scenes.length} scenes, ${res.characters.length} characters found`, 'ok')
   }
 
   const runAI = async () => {
@@ -153,13 +184,13 @@ export default function Breakdown() {
             <div className="strips">
               {project.scenes.map((s) => (
                 <button key={s.id} className={`strip ${stripColor(s)}`} onClick={() => setOpen({ ...s })}>
-                  <span className="strip-num">{s.number}</span>
+                  <span className="strip-num">{s.number}{s.revisedIn && s.revisedIn !== 'White' ? <i className="rev-mark" title={`Changed in the ${s.revisedIn} revision`} style={{ background: revisionHex(s.revisedIn) }} /> : null}</span>
                   <span className="strip-ie">
                     {s.intExt}
                     <small>{s.timeOfDay}</small>
                   </span>
                   <span className="strip-main">
-                    <span className="strip-loc">{s.location || s.heading}</span>
+                    <span className="strip-loc">{s.location || s.heading}{s.shot ? <span className="strip-done" title="Shot"> ✓</span> : null}</span>
                     <span className="strip-syn">{s.synopsis}</span>
                   </span>
                   <span className="strip-chars">{s.characters.slice(0, 4).join(', ')}{s.characters.length > 4 ? ` +${s.characters.length - 4}` : ''}</span>
