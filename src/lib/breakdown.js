@@ -9,12 +9,14 @@ import { uid } from './store.jsx'
 const HEADING_RE =
   /^\s*(?:(\d+[A-Z]?)[\.\)]?\s+)?((?:INT|EXT|INT\.?\s*\/\s*EXT|I\/E|ΕΣΩΤ|ΕΞΩΤ|ΕΣ|ΕΞ|ΕΣΩΤ\.?\s*\/\s*ΕΞΩΤ)\.?)\s*[\-–—:\s]\s*(.+?)\s*$/iu
 
+const B0 = '(?<![\\p{L}\\p{N}])', B1 = '(?![\\p{L}\\p{N}])'
+const uw = (words) => new RegExp(B0 + '(' + words + ')' + B1, 'iu')
 const TIME_WORDS = [
-  ['DAY', /\b(DAY|ΜΕΡΑ|ΗΜΕΡΑ|MORNING|ΠΡΩΙ|AFTERNOON|ΑΠΟΓΕΥΜΑ|ΜΕΣΗΜΕΡΙ)\b/iu],
-  ['NIGHT', /\b(NIGHT|ΝΥΧΤΑ|ΒΡΑΔΥ|EVENING)\b/iu],
-  ['DAWN', /\b(DAWN|ΞΗΜΕΡΩΜΑ|ΑΥΓΗ|SUNRISE)\b/iu],
-  ['DUSK', /\b(DUSK|ΣΟΥΡΟΥΠΟ|SUNSET|ΗΛΙΟΒΑΣΙΛΕΜΑ|MAGIC HOUR)\b/iu],
-  ['CONTINUOUS', /\b(CONTINUOUS|ΣΥΝΕΧΕΙΑ|ΣΥΝΕΧΟΜΕΝΟ|LATER|ΑΡΓΟΤΕΡΑ|SAME|MOMENTS LATER)\b/iu],
+  ['DAY', uw('DAY|ΜΕΡΑ|ΗΜΕΡΑ|MORNING|ΠΡΩΙ|AFTERNOON|ΑΠΟΓΕΥΜΑ|ΜΕΣΗΜΕΡΙ')],
+  ['NIGHT', uw('NIGHT|ΝΥΧΤΑ|ΝΥΧΤΑ|ΒΡΑΔΥ|EVENING')],
+  ['DAWN', uw('DAWN|ΞΗΜΕΡΩΜΑ|ΑΥΓΗ|SUNRISE|ΧΑΡΑΜΑΤΑ')],
+  ['DUSK', uw('DUSK|ΣΟΥΡΟΥΠΟ|SUNSET|ΗΛΙΟΒΑΣΙΛΕΜΑ|MAGIC HOUR|ΔΕΙΛΙΝΟ')],
+  ['CONTINUOUS', uw('CONTINUOUS|ΣΥΝΕΧΕΙΑ|ΣΥΝΕΧΟΜΕΝΟ|LATER|ΑΡΓΟΤΕΡΑ|SAME|MOMENTS LATER|ΛΙΓΟ ΑΡΓΟΤΕΡΑ')],
 ]
 
 const CHAR_STRIP_RE = /\s*\((V\.?O\.?|O\.?S\.?|O\.?C\.?|CONT'?D|ΣΥΝ\.?|ΣΥΝΕΧΕΙΑ|OFF|ON PHONE|ΤΗΛ\.?|ΦΩΝΗ)\)\s*/giu
@@ -35,6 +37,19 @@ function normalizeIntExt(raw) {
 function detectTime(text) {
   for (const [key, re] of TIME_WORDS) if (re.test(text)) return key
   return ''
+}
+
+// "ΕΛΕΝΗ: Πού είσαι;" / "Ελένη:" / "ELENI (V.O.):"  -> name before the colon
+const COLON_CUE_RE = /^\s*([A-Za-zΑ-Ωα-ωΆ-ώΪΫϊϋΐΰ][A-Za-zΑ-Ωα-ωΆ-ώΪΫϊϋΐΰ'’\.\- ]{0,30}?)(\s*\([^)]{1,20}\))?\s*:\s*(\S.*)?$/u
+
+export function colonCue(line) {
+  const m = line.match(COLON_CUE_RE)
+  if (!m) return null
+  const name = cleanCharacterName(m[1])
+  if (!name || name.length < 2 || name.length > 30) return null
+  if (isHeading(line) || TRANSITION_RE.test(name)) return null
+  if (/^(ΣΗΜ|ΣΗΜΕΙΩΣΗ|NOTE|ΤΙΤΛΟΣ|TITLE|ΜΟΥΣΙΚΗ|MUSIC|ΣΚΗΝΗ|SCENE|ΤΕΛΟΣ|END|ΚΑΜΕΡΑ|CAMERA|ΦΩΝΗ|VOICE|ΗΧΟΣ|SOUND)$/iu.test(name)) return null
+  return name.toLocaleUpperCase('el-GR')
 }
 
 function looksLikeCharacterCue(line, next) {
@@ -67,10 +82,10 @@ export function parseScript(text) {
     const chars = []
     for (let i = 0; i < current.lines.length; i++) {
       const l = current.lines[i]
-      if (looksLikeCharacterCue(l, current.lines[i + 1])) {
-        const name = cleanCharacterName(l)
-        if (name && name.length > 1 && !chars.includes(name)) chars.push(name)
-      }
+      let name = ''
+      if (looksLikeCharacterCue(l, current.lines[i + 1])) name = cleanCharacterName(l)
+      else name = colonCue(l) || ''
+      if (name && name.length > 1 && !chars.includes(name)) chars.push(name)
     }
     const nonEmpty = current.lines.filter((l) => l.trim()).length
     const eighths = Math.max(1, Math.round((nonEmpty / 52) * 8))
@@ -101,7 +116,7 @@ export function parseScript(text) {
       const timeOfDay = detectTime(rest)
       let location = parts.length > 1 ? parts.slice(0, -1).join(' - ') : rest
       if (parts.length > 1 && !detectTime(parts[parts.length - 1])) location = rest
-      location = location.replace(/\s*[\-–—]\s*(DAY|NIGHT|ΜΕΡΑ|ΝΥΧΤΑ|ΗΜΕΡΑ|ΒΡΑΔΥ|CONTINUOUS|ΣΥΝΕΧΕΙΑ|DAWN|DUSK|LATER|ΑΡΓΟΤΕΡΑ)\b.*$/iu, '').trim()
+      location = location.replace(/\s*[\-–—]\s*(DAY|NIGHT|ΜΕΡΑ|ΝΥΧΤΑ|ΗΜΕΡΑ|ΒΡΑΔΥ|CONTINUOUS|ΣΥΝΕΧΕΙΑ|DAWN|DUSK|LATER|ΑΡΓΟΤΕΡΑ|ΞΗΜΕΡΩΜΑ|ΣΟΥΡΟΥΠΟ|ΑΥΓΗ|ΠΡΩΙ|ΑΠΟΓΕΥΜΑ|ΜΕΣΗΜΕΡΙ|ΔΕΙΛΙΝΟ)(?![\p{L}\p{N}]).*$/iu, '').trim()
       current = {
         number: m[1] || '',
         heading: line.trim(),
@@ -140,6 +155,31 @@ function firstSentence(body) {
     .replace(/\s+/g, ' ')
   const m = action.match(/^(.{20,180}?[\.\!\?;])(\s|$)/)
   return (m ? m[1] : action.slice(0, 160)).trim()
+}
+
+// Keyword hints: a first pass at elements without AI. English and Greek stems.
+const HINTS = [
+  ['Props', uw('gun|pistol|rifle|knife|phone|mobile|laptop|bottle|glass|cigarette|letter|envelope|suitcase|bag|keys?|money|cash|camera|radio|flare|map|book|photo|ring|watch|umbrella|όπλ\\p{L}*|πιστόλ\\p{L}*|μαχαίρ\\p{L}*|τηλέφων\\p{L}*|κινητ\\p{L}*|λάπτοπ|μπουκάλ\\p{L}*|ποτήρ\\p{L}*|τσιγάρ\\p{L}*|γράμμα|φάκελ\\p{L}*|βαλίτσ\\p{L}*|τσάντ\\p{L}*|κλειδι\\p{L}*|λεφτά|χρήματα|κάμερ\\p{L}*|ραδιόφων\\p{L}*|χάρτ\\p{L}*|βιβλί\\p{L}*|φωτογραφί\\p{L}*|δαχτυλίδ\\p{L}*|ρολό\\p{L}*|ομπρέλ\\p{L}*')],
+  ['Vehicles', uw('car|taxi|truck|van|bus|motorbike|motorcycle|bike|scooter|boat|helicopter|train|SUV|jeep|αυτοκίνητ\\p{L}*|αμάξ\\p{L}*|ταξί|φορτηγ\\p{L}*|βαν|λεωφορεί\\p{L}*|μηχαν[ήη]ς?|μοτοσικλέτ\\p{L}*|ποδήλατ\\p{L}*|σκούτερ|βάρκ\\p{L}*|καΐκ\\p{L}*|ελικόπτερ\\p{L}*|τρέν\\p{L}*|τζιπ')],
+  ['Animals', uw('dog|cat|horse|bird|pigeon|goat|sheep|donkey|σκύλ\\p{L}*|σκυλί|γάτ\\p{L}*|άλογ\\p{L}*|πουλ\\p{L}*|περιστέρ\\p{L}*|κατσίκ\\p{L}*|πρόβατ\\p{L}*|γάιδαρ\\p{L}*|γαϊδούρ\\p{L}*')],
+  ['Extras', uw('crowd|passers-?by|pedestrians|customers|guests|patrons|waiters?|police(men)?|soldiers|students|audience|κόσμος|πλήθος|περαστικ\\p{L}*|πελάτ\\p{L}*|καλεσμέν\\p{L}*|θαμών\\p{L}*|σερβιτόρ\\p{L}*|αστυνομικ\\p{L}*|στρατιώτ\\p{L}*|μαθητ\\p{L}*|κοινό')],
+  ['Special effects', uw('rain|fire|smoke|explosion|fog|snow|wind|sparks|blood|storm|βροχ\\p{L}*|φωτιά|φλόγ\\p{L}*|καπν\\p{L}*|έκρηξ\\p{L}*|ομίχλ\\p{L}*|χιόν\\p{L}*|άνεμ\\p{L}*|αέρας|σπίθ\\p{L}*|αίμα|καταιγίδ\\p{L}*|θάλασσ\\p{L}*')],
+  ['Stunts', uw('fight|punch|falls?|crash|chase|shoot(s|ing)?|fires? (the|a) gun|jumps? (off|from)|καβγ\\p{L}*|γροθι\\p{L}*|πέφτ\\p{L}*|πέσιμ\\p{L}*|τρακάρ\\p{L}*|σύγκρουσ\\p{L}*|κυνηγητ\\p{L}*|πυροβολ\\p{L}*|πηδ\\p{L}*')],
+  ['Makeup & hair', uw('wound|scar|bruise|bleeding|blood|tattoo|beard|wig|τραύμα|πληγ\\p{L}*|ουλ\\p{L}*|μελανι\\p{L}*|αιμορραγ\\p{L}*|τατουάζ|γενειάδ\\p{L}*|μούσι|περούκ\\p{L}*')],
+  ['Wardrobe', uw('uniform|suit|wedding dress|costume|coat|jacket|helmet|mask|hoodie|soaked|wet clothes|στολ[ήη]\\p{L}*|κοστούμ\\p{L}*|νυφικ\\p{L}*|παλτ\\p{L}*|μπουφάν|κράνος|μάσκ\\p{L}*|φούτερ|μουσκεμέν\\p{L}*|βρεγμέν\\p{L}*')],
+  ['Sound', uw('radio|music|song|playback|siren|phone rings?|thunder|ραδιόφων\\p{L}*|μουσικ\\p{L}*|τραγούδ\\p{L}*|σειρήν\\p{L}*|χτυπάει το (τηλέφωνο|κινητό)|βροντ\\p{L}*')],
+  ['Camera & grip', uw('drone|slow motion|aerial|underwater|handheld|steadicam|pov|ντρόουν|αργή κίνηση|εναέρι\\p{L}*|υποβρύχι\\p{L}*')],
+]
+export function keywordHints(body) {
+  const out = {}
+  for (const [cat, re] of HINTS) {
+    const found = new Set()
+    const g = new RegExp(re.source, re.flags.includes('g') ? re.flags : re.flags + 'g')
+    let m
+    while ((m = g.exec(body)) && found.size < 8) found.add(m[0].trim().toLowerCase())
+    if (found.size) out[cat] = [...found]
+  }
+  return out
 }
 
 export function formatPages(eighths) {

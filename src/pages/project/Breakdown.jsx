@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Badge, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { ELEMENT_CATEGORIES, useStore } from '../../lib/store.jsx'
-import { formatPages, parseScript, stripColor } from '../../lib/breakdown.js'
+import { formatPages, keywordHints, parseScript, stripColor } from '../../lib/breakdown.js'
 import { aiBreakdown } from '../../lib/ai.js'
 import { download } from '../../lib/dates.js'
 import { revisionHex } from '../../lib/diff.js'
@@ -32,7 +32,7 @@ export default function Breakdown() {
       const rev = p.script.revision || 'White'
       const merged = res.scenes.map((n) => {
         const i = pool.findIndex((o) => norm(o.heading) === norm(n.heading))
-        if (i === -1) return { ...n, revisedIn: p.scenes.length ? rev : '' }
+        if (i === -1) return { ...n, elements: keywordHints(n.body), elementsSource: 'hints', revisedIn: p.scenes.length ? rev : '' }
         const o = pool.splice(i, 1)[0]
         kept += 1
         const textChanged = (o.body || '').trim() !== (n.body || '').trim()
@@ -41,7 +41,8 @@ export default function Breakdown() {
           ...n,
           id: o.id,
           number: o.number && !/^\d+$/.test(o.number) ? o.number : n.number,
-          elements: o.elements || {},
+          elements: Object.keys(o.elements || {}).length ? o.elements : keywordHints(n.body),
+          elementsSource: Object.keys(o.elements || {}).length ? o.elementsSource : 'hints',
           flags: o.flags || [],
           notes: o.notes || '',
           dayId: o.dayId || '',
@@ -162,7 +163,12 @@ export default function Breakdown() {
 
       {!state.settings.aiKey && editable && (
         <p className="notice">
-          The AI breakdown needs an Anthropic API key. Add it in <Link to="/settings">Settings</Link>. Scene detection works without it.
+          Without an Anthropic API key you get scene detection, characters and keyword hints. The full element breakdown (props, wardrobe, vehicles, extras, effects per scene) is done by the AI pass: add the key in <Link to="/settings">Settings</Link>.
+        </p>
+      )}
+      {project.scenes.length > 0 && project.scenes.every((s) => !s.characters?.length) && editable && (
+        <p className="notice">
+          No characters were found. Character names are detected when they stand alone in capitals above the dialogue, or as <em>NAME:</em> before the line. If your script uses another layout, open a scene and add the characters by hand, or send the file to have the detection adjusted.
         </p>
       )}
 
