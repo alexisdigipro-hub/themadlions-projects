@@ -6,6 +6,7 @@ import { DOCS, EXPENSE_CATS, FREQ, INCOME_CATS, METHODS, TX_STATUS, duePeriods, 
 import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid } from '../lib/budget.js'
+import { WorkLogTable, entryTotals, money2 } from '../components/WorkLog.jsx'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const BUDGET_CAT = {
@@ -157,7 +158,7 @@ export default function Finance() {
     <div className="finance">
       <PageHead title="Finance" sub="Administrators only. Company and projects together, net amounts unless stated.">
         <div className="segmented small">
-          {[['overview', 'Overview'], ['transactions', 'Transactions'], ['recurring', `Recurring${dueCount ? ` (${dueCount} due)` : ''}`], ['settings', 'Settings']].map(([k, l]) => (
+          {[['overview', 'Overview'], ['transactions', 'Transactions'], ['recurring', `Recurring${dueCount ? ` (${dueCount} due)` : ''}`], ['team', 'Team work'], ['settings', 'Settings']].map(([k, l]) => (
             <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
         </div>
@@ -303,6 +304,8 @@ export default function Finance() {
         </>
       )}
 
+      {tab === 'team' && <TeamWork />}
+
       {tab === 'recurring' && (
         <>
           <div className="toolbar">
@@ -434,6 +437,52 @@ export default function Finance() {
             <Field label="Notes"><Textarea rows={2} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>
           </div>
         </Modal>
+      )}
+    </div>
+  )
+}
+
+
+function TeamWork() {
+  const { state } = useStore()
+  const [who, setWho] = useState('')
+  const [year, setYear] = useState(String(new Date().getFullYear()))
+  const log = state.worklog || []
+  const years = [...new Set([String(new Date().getFullYear()), ...log.map((e) => (e.date || '').slice(0, 4)).filter(Boolean)])].sort().reverse()
+  const members = state.users.filter((u) => u.active !== false)
+  const rows = members.map((u) => ({ u, t: entryTotals(log.filter((e) => e.userId === u.id && (e.date || '').startsWith(year))), allT: entryTotals(log.filter((e) => e.userId === u.id)) }))
+    .sort((a, b) => b.t.total - a.t.total || a.u.name.localeCompare(b.u.name))
+  const all = entryTotals(log.filter((e) => (e.date || '').startsWith(year)))
+  const sel = members.find((u) => u.id === who)
+  const max = Math.max(1, ...rows.map((r) => r.t.total))
+  return (
+    <div className="teamwork">
+      <div className="fin-hero">
+        <div className="fin-card neg"><div className="fin-label">Owed to the team</div><div className="fin-value">{money2(all.pending)}</div><div className="muted small">{all.open} unpaid job{all.open === 1 ? '' : 's'} in {year}</div></div>
+        <div className="fin-card pos"><div className="fin-label">Paid to the team</div><div className="fin-value">{money2(all.paid)}</div><div className="muted small">in {year}</div></div>
+        <div className="fin-card"><div className="fin-label">Total {year}</div><div className="fin-value">{money2(all.total)}</div><div className="muted small">{all.jobs} job{all.jobs === 1 ? '' : 's'} logged</div></div>
+        <div className="fin-card"><div className="fin-label">People logging</div><div className="fin-value">{rows.filter((r) => r.t.jobs).length}</div><div className="muted small">of {members.length} in the team</div></div>
+      </div>
+      <div className="toolbar">
+        <div className="segmented small">{years.map((y) => <button key={y} className={year === y ? 'on' : ''} onClick={() => setYear(y)}>{y}</button>)}</div>
+        <p className="muted small">Each member keeps their own list under My work. Here you see everyone, and you can mark jobs as paid on their behalf.</p>
+      </div>
+      <div className="tw-grid">
+        {rows.map(({ u, t, allT }) => (
+          <button key={u.id} className={`tw-card ${who === u.id ? 'on' : ''}`} onClick={() => setWho(who === u.id ? '' : u.id)}>
+            <div className="tw-head"><strong>{u.name}</strong><span className="muted small">{t.jobs} job{t.jobs === 1 ? '' : 's'}</span></div>
+            <div className="tw-bar"><span className="paid" style={{ width: `${(t.paid / max) * 100}%` }} /><span className="pend" style={{ width: `${(t.pending / max) * 100}%` }} /></div>
+            <div className="tw-nums"><span className="pend">{money2(t.pending)} pending</span><span className="paid">{money2(t.paid)} paid</span></div>
+            {allT.pending > t.pending && <div className="muted small">plus {money2(allT.pending - t.pending)} pending from other years</div>}
+          </button>
+        ))}
+        {!members.length && <p className="muted">No teammates yet.</p>}
+      </div>
+      {sel && (
+        <section className="panel tw-detail">
+          <div className="panel-head"><h2>{sel.name}</h2><button className="link small" onClick={() => setWho('')}>Close</button></div>
+          <WorkLogTable userId={sel.id} editable showHero={false} compact />
+        </section>
       )}
     </div>
   )

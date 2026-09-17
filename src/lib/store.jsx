@@ -71,6 +71,7 @@ export function emptyState() {
     todos: [],
     chat: [],
     notices: [],
+    worklog: [],
     finance: { transactions: [], recurring: [], settings: { currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 } },
     settings: { aiProvider: 'anthropic', aiKey: '', aiModel: 'claude-sonnet-4-6', mapsKey: '' },
   }
@@ -191,7 +192,7 @@ export function StoreProvider({ children }) {
   }, [])
 
   const loadAll = useCallback(async (ws) => {
-    const [w, m, p, e, inv, lib, fin, msg, ntc] = await Promise.all([
+    const [w, m, p, e, inv, lib, fin, msg, ntc, wl] = await Promise.all([
       supabase.from('workspaces').select('*').eq('id', ws).single(),
       supabase.from('members').select('*').eq('workspace_id', ws),
       supabase.from('projects').select('id, data').eq('workspace_id', ws),
@@ -201,6 +202,7 @@ export function StoreProvider({ children }) {
       supabase.from('finance').select('id, kind, data').eq('workspace_id', ws),
       supabase.from('messages').select('id, user_id, user_name, text, source, created_at').eq('workspace_id', ws).order('created_at', { ascending: true }).limit(500),
       supabase.from('notices').select('id, data').eq('workspace_id', ws),
+      supabase.from('worklog').select('id, user_id, data').eq('workspace_id', ws),
     ])
     if (w.error) throw w.error
     const libRows = lib.error ? [] : lib.data || [] // library table may not exist yet (library.sql not run)
@@ -209,6 +211,7 @@ export function StoreProvider({ children }) {
     const finSettings = finRows.find((r) => r.kind === 'settings')?.data || {}
     const msgRows = msg.error ? [] : msg.data || [] // chat table may not exist yet (chat.sql not run)
     const ntcRows = ntc.error ? [] : ntc.data || [] // notices table may not exist yet (notices.sql not run)
+    const wlRows = wl.error ? [] : wl.data || [] // worklog table may not exist yet (worklog.sql not run)
     if (msg.error) console.warn('chat not available yet:', msg.error.message)
     const next = {
       ...emptyState(),
@@ -223,6 +226,7 @@ export function StoreProvider({ children }) {
       todos: libRows.filter((r) => r.kind === 'task').map((r) => ({ ...r.data, id: r.id })),
       chat: msgRows.map(rowToMessage),
       notices: ntcRows.map((r) => ({ ...r.data, id: r.id })),
+      worklog: wlRows.map((r) => ({ ...r.data, id: r.id, userId: r.user_id })),
       finance: {
         transactions: finRows.filter((r) => r.kind === 'tx').map((r) => ({ ...r.data, id: r.id })),
         recurring: finRows.filter((r) => r.kind === 'recurring').map((r) => ({ ...r.data, id: r.id })),
@@ -330,6 +334,20 @@ export function StoreProvider({ children }) {
             lib[key] = lib[key].some((x) => x.id === item.id) ? lib[key].map((x) => (x.id === item.id ? item : x)) : [...lib[key], item]
           }
           const next = { ...s, library: lib }
+          prevRef.current = next
+          return next
+        })
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'worklog', filter: `workspace_id=eq.${ws}` }, (payload) => {
+        setState((s) => {
+          let worklog
+          if (payload.eventType === 'DELETE') worklog = (s.worklog || []).filter((n) => n.id !== payload.old.id)
+          else {
+            if (payload.new.updated_by === authUser?.id && myWrites.current.has(payload.new.id)) return s
+            const n = { ...payload.new.data, id: payload.new.id, userId: payload.new.user_id }
+            worklog = (s.worklog || []).some((x) => x.id === n.id) ? s.worklog.map((x) => (x.id === n.id ? n : x)) : [...(s.worklog || []), n]
+          }
+          const next = { ...s, worklog }
           prevRef.current = next
           return next
         })
@@ -471,6 +489,25 @@ export function StoreProvider({ children }) {
         }, 0),
       )
     })
+    {
+      const before = Object.fromEntries((prev.worklog || []).map((n) => [n.id, n]))
+      ;(next.worklog || []).forEach((n) => {
+        if (before[n.id] && JSON.stringify(before[n.id]) === JSON.stringify(n)) return
+        myWrites.current.add(n.id)
+        schedule('w:' + n.id, async () => {
+          const { error } = await supabase.from('worklog').upsert({ id: n.id, workspace_id: ws, user_id: n.userId, data: n })
+          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/worklog.sql in the SQL editor to enable My work.' : error.message)
+          setTimeout(() => myWrites.current.delete(n.id), 4000)
+        })
+      })
+      const ids = new Set((next.worklog || []).map((n) => n.id))
+      Object.values(before).filter((n) => !ids.has(n.id)).forEach((n) =>
+        schedule('wd:' + n.id, async () => {
+          const { error } = await supabase.from('worklog').delete().eq('id', n.id)
+          if (error) throw error
+        }, 0),
+      )
+    }
     {
       const before = Object.fromEntries((prev.notices || []).map((n) => [n.id, n]))
       ;(next.notices || []).forEach((n) => {

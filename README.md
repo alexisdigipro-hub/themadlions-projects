@@ -35,7 +35,8 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Tasks per project with assignee, department, due date, priority, and a cross-project Tasks page (mine / everyone, overdue / today / this week)
 - Production calendar (per project and across projects) with shoot days mirrored automatically, ICS export
 - Locations with Google Maps embed, directions, script set linking, coordinates for sun and weather, and photo galleries (compressed in the browser to 1600px JPEG, stored in a private Supabase bucket with signed links, thumbnails in the project document)
-- Team chat in the sidebar: one room for the whole team, live for everyone with the app open, unread badge. Administrators can connect a Telegram group so app messages land in the group and (with the small Edge Function in `supabase/functions/telegram-webhook`) group messages land in the app
+- Team chat in the sidebar: one room for the whole team, live for everyone with the app open, unread badge.
+- My work: every member keeps their own list of jobs (client, description, amount, shooting date, paid or pending, how and when it was paid, notes), grouped by month with yearly totals and CSV export. Only they and the administrators see it; administrators get the whole team under Finance → Team work with what is owed to each person
 - Notices: administrators send a pop-up message to the whole team or to chosen people (Chat → Send notice). It appears on their screen as soon as they open the app and stays until they tap Got it; the sender sees who confirmed and when
 - Company database: Database in the sidebar with Locations, Crew and Cast tabs. Projects pick from the library or add to it automatically; shared fields (name, phone, email, agent, photos, address, notes) are edited once and update everywhere, while character, role, call offset and script sets stay per project. "Collect from projects" pulls existing entries in
 - Cast & crew as headshot cards or a table, with character casting, call offsets, agent and notes, per-person photo galleries (headshots and looks), and the headshot printed on the call sheet
@@ -67,7 +68,7 @@ Settings → AI breakdown → paste an Anthropic API key. It is stored only in t
 ## Phase 2: Supabase (team logins, one shared database)
 
 1. Create a project at supabase.com (region Frankfurt).
-2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run. Then the same with `supabase/storage.sql` (photo bucket) `supabase/library.sql` (company library), `supabase/todos.sql` (general tasks), `supabase/audio.sql` (song files), `supabase/files.sql` (project files), `supabase/finance.sql` (administrators-only finance) `supabase/chat.sql` (team chat) and `supabase/notices.sql` (notices).
+2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run. Then the same with `supabase/storage.sql` (photo bucket) `supabase/library.sql` (company library), `supabase/todos.sql` (general tasks), `supabase/audio.sql` (song files), `supabase/files.sql` (project files), `supabase/finance.sql` (administrators-only finance) `supabase/chat.sql` (team chat) `supabase/notices.sql` (notices) and `supabase/worklog.sql` (personal work logs).
 3. Authentication → Providers → Email: keep it enabled; turn **Confirm email** off if you want teammates to sign in immediately.
 4. Project Settings → API: copy the Project URL and the publishable (anon) key into `src/lib/supabaseConfig.js`, commit, push. The site rebuilds in remote mode.
 5. Open the site, create your account. The first account becomes the administrator and the workspace is created automatically.
