@@ -93,6 +93,24 @@ export default function Layout() {
       <main className="content">
         <Outlet />
       </main>
+
+      <nav className="tabbar" aria-label="Main">
+        {[
+          { to: '/home', label: 'Home', icon: 'home' },
+          { to: '/', label: 'Projects', icon: 'projects', end: true },
+          { to: '/calendar', label: 'Calendar', icon: 'calendar' },
+          { to: '/chat', label: 'Chat', icon: 'chat', badge: unread },
+        ].map((i) => (
+          <NavLink key={i.to} to={i.to} end={i.end} onClick={close} className={({ isActive }) => (isActive ? 'active' : '')}>
+            <span className="tab-ico-wrap">{Icon[i.icon]?.()}{i.badge > 0 && <span className="nav-badge">{i.badge}</span>}</span>
+            {i.label}
+          </NavLink>
+        ))}
+        <button className={open ? 'active' : ''} onClick={() => setOpen((o) => !o)}>
+          <span className="tab-ico-wrap">{Icon.more?.()}</span>
+          More
+        </button>
+      </nav>
     </div>
   )
 }

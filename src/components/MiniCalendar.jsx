@@ -6,7 +6,7 @@ import { fmtDate, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
 const addDay = (iso, n) => { const d = new Date(iso + 'T00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
 
 // items: { date, endDate?, color, title, sub?, to? }
-export default function MiniCalendar({ items = [] }) {
+export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLabel = 'Add event', large = false }) {
   const t0 = today()
   const now = new Date()
   const [ym, setYm] = useState({ y: now.getFullYear(), m: now.getMonth() })
@@ -31,7 +31,7 @@ export default function MiniCalendar({ items = [] }) {
   const selIsToday = sel === t0
 
   return (
-    <div className="mini-cal">
+    <div className={`mini-cal ${large ? 'large' : ''}`}>
       <div className="mini-cal-nav">
         <button className="link" onClick={() => shift(-1)} aria-label="Previous month">‹</button>
         <button className="mini-cal-month" onClick={goToday} title="Back to today">{monthLabel(ym.y, ym.m)}</button>
@@ -59,13 +59,16 @@ export default function MiniCalendar({ items = [] }) {
         })}
       </div>
       <div className="mini-cal-list">
-        <div className="mini-cal-sel">{selIsToday ? 'Today' : fmtDate(sel, { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+        <div className="mini-cal-sel">
+          <span>{selIsToday ? 'Today' : fmtDate(sel, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+          {onAddDay && <button className="link small" onClick={() => onAddDay(sel)}>{addLabel}</button>}
+        </div>
         {!dayItems.length ? <p className="muted small">Nothing on this day.</p> : (
           <ul className="plain">
             {dayItems.map((it, i) => (
               <li key={i}>
                 <span className="dot" style={{ '--pc': it.color }} />
-                {it.to ? <Link to={it.to}>{it.title}</Link> : <span>{it.title}</span>}
+                {onItemClick && it.ev ? <button className="link mini-cal-item" onClick={() => onItemClick(it.ev)}>{it.title}</button> : it.to ? <Link to={it.to}>{it.title}</Link> : <span>{it.title}</span>}
                 {it.sub && <span className="muted small">{it.sub}</span>}
               </li>
             ))}

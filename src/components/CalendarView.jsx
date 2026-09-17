@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Button, Confirm, Field, Input, Modal, Select, Textarea, useToast } from './ui.jsx'
+import { Button, Confirm, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from './ui.jsx'
+import MiniCalendar from './MiniCalendar.jsx'
 import { EVENT_TYPES, can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { buildICS, download, fmtDate, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
 
@@ -14,6 +15,7 @@ export default function CalendarView({ projectId = null, title }) {
   const [draft, setDraft] = useState(null)
   const [typeFilter, setTypeFilter] = useState('all')
   const [projFilter, setProjFilter] = useState('all')
+  const mobile = useIsMobile()
 
   const projects = visibleProjects(state, user)
   const allowedIds = new Set(projects.map((p) => p.id))
@@ -122,6 +124,17 @@ export default function CalendarView({ projectId = null, title }) {
       </div>
 
       <div className="cal-layout stacked">
+        {mobile ? (
+          <div className="panel cal-mobile">
+            <MiniCalendar
+              large
+              items={events.map((e) => ({ date: e.date, endDate: e.endDate, time: e.start, color: typeOf(e.type).color, title: e.type === 'unavailable' ? `${e.createdByName || e.title} not available` : e.title, sub: [e.start, !projectId && e.projectId ? projName(e.projectId) : '', e.type !== 'unavailable' ? typeOf(e.type).label : ''].filter(Boolean).join(' · '), ev: e }))}
+              onItemClick={(e) => setDraft({ ...e })}
+              onAddDay={editable ? (d) => setDraft(newEvent(d)) : canMarkOff ? (d) => setDraft(newEvent(d, 'unavailable')) : null}
+              addLabel={editable ? 'Add event' : 'Not available'}
+            />
+          </div>
+        ) : (
         <div className="cal-grid" role="grid">
           {weekdayShort().map((d) => (
             <div key={d} className="cal-dow">
@@ -161,6 +174,7 @@ export default function CalendarView({ projectId = null, title }) {
             )
           })}
         </div>
+        )}
 
         <aside className="cal-side">
           <div className="cal-side-cols">

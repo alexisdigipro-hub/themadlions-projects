@@ -2282,3 +2282,67 @@ html[data-theme='light'] .chat-box { border-color: transparent; }
 .chat-steps code { font-size: 13px; background: var(--raised); padding: 1px 5px; border-radius: 4px; }
 .chat-webhook { margin-top: 10px; word-break: break-all; }
 @media (max-width: 820px) { .chat-msg { max-width: 92%; } .chat-scroll { max-height: none; } }
+
+/* ---------- mobile app layer (nothing here touches desktop) ---------- */
+.tabbar { display: none; }
+@media (max-width: 820px) {
+  :root { --tabbar-h: 62px; }
+  .tabbar { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 38; background: var(--panel); border-top: 1px solid var(--line-soft); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 16px rgba(0,0,0,.06); }
+  .tabbar a, .tabbar button { display: flex; flex-direction: column; align-items: center; gap: 3px; font: inherit; font-size: 11.5px; font-weight: 600; color: var(--muted); text-decoration: none; background: none; border: 0; padding: 4px 0; border-radius: 10px; }
+  .tabbar a.active, .tabbar button.active { color: var(--accent); }
+  .tabbar svg { width: 22px; height: 22px; }
+  .tab-ico-wrap { position: relative; display: grid; place-items: center; width: 34px; height: 24px; }
+  .tab-ico-wrap .nav-badge { position: absolute; top: -6px; right: -4px; min-width: 16px; height: 16px; font-size: 10px; padding: 0 4px; margin: 0; }
+  .content { padding-bottom: calc(var(--tabbar-h) + 20px + env(safe-area-inset-bottom)); }
+  .sidebar { z-index: 45; }
+  .topbar .topbar-user { display: none; }
+
+  /* page heads and toolbars, denser */
+  .page-head h1 { font-size: 24px; }
+  .page-sub { font-size: 14px; }
+  .toolbar { gap: 8px; }
+  .toolbar .btn, .page-head .btn { padding: 7px 12px; font-size: 14px; }
+  .toolbar .input, .toolbar select, .toolbar .select, .page-head .input { font-size: 14px; padding: 7px 10px; }
+  .segmented button { padding: 6px 10px; font-size: 14px; }
+
+  /* projects: chips in one scrolling row, 3 cards per row */
+  .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; margin-bottom: 12px; -webkit-overflow-scrolling: touch; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chips .chip { flex: 0 0 auto; padding: 4px 10px; font-size: 13px; }
+  .chips .chip small { font-size: 11px; }
+  .project-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .project-card { border-radius: 12px; }
+  .project-cat { font-size: 10.5px; }
+  .project-cover.has-img .project-cat { left: 6px; bottom: 5px; padding: 1px 6px; }
+  .project-body { padding: 8px 8px 9px; gap: 4px; }
+  .project-body h3 { font-size: 13.5px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .project-card .project-meta { font-size: 11.5px; gap: 4px; }
+  .project-card .project-meta .badge { padding: 1px 6px; font-size: 10.5px; }
+  .project-card .project-meta > span:not(.badge) { display: none; }
+  .project-foot { display: none; }
+  .project-tools { display: none; }
+
+  /* calendar: compact month */
+  .calendar .cal-nav { display: none; }
+  .calendar .toolbar-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .calendar .toolbar-actions .btn { width: 100%; }
+  .cal-mobile { padding: 12px 10px; }
+  .mini-cal.large .mini-cal-cell { min-height: 46px; padding: 5px 0 4px; }
+  .mini-cal.large .mini-cal-day { font-size: 15px; width: 28px; height: 28px; }
+  .mini-cal.large .mini-cal-dots { height: 6px; gap: 3px; }
+  .mini-cal.large .mini-cal-dots i { width: 6px; height: 6px; }
+  .mini-cal.large .mini-cal-month { font-size: 17px; }
+  .mini-cal.large .mini-cal-list li { padding: 6px 0; border-bottom: 1px solid var(--line-soft); }
+  .mini-cal.large .mini-cal-list li:last-child { border-bottom: 0; }
+  .mini-cal-sel { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .mini-cal-item { font: inherit; font-weight: 600; color: var(--text); background: none; border: 0; padding: 0; text-decoration: none; text-align: left; }
+
+  /* project workspace header, tighter */
+  .project-head h1 { font-size: 22px; }
+  .tabs a { padding: 8px 10px; font-size: 14.5px; }
+
+  /* chat sits above the tab bar */
+  .chat-page { min-height: 0; }
+  .chat-box { min-height: calc(100vh - 150px - var(--tabbar-h)); }
+  .chat-compose { padding: 8px 10px; }
+}

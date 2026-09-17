@@ -89,7 +89,7 @@ export default function Chat() {
           <div ref={endRef} />
         </div>
         <div className="chat-compose">
-          <textarea className="input" rows={1} value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKey} placeholder="Write to the team… Enter to send, Shift+Enter for a new line" />
+          <textarea className="input" rows={1} value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKey} placeholder="Write to the team…" title="Enter to send, Shift+Enter for a new line" />
           <Button variant="primary" onClick={send} disabled={!text.trim()}>Send</Button>
         </div>
       </div>

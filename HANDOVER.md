@@ -26,5 +26,8 @@ Projects (5 categories in this order: Music Video, Events, Editing, Advertise, F
 - Import of the old finance Google Sheet as history (needs a CSV from Alex).
 - Move AI keys server-side (Edge Function) so teammates share them.
 
+## Mobile layer
+Everything under 820px lives in the last block of src/styles.css ("mobile app layer") plus useIsMobile() in ui.jsx: bottom tab bar (Home, Projects, Calendar, Chat, More opens the sidebar), 3 project cards per row with chips in one scrolling row, the Calendar page swaps the big grid for the MiniCalendar (dots + day list, tap a day to add). Alex wants desktop untouched when changing mobile.
+
 ## Conventions
 UI text in English; Alex talks in Greek; no em dashes in replies to him. Test with Playwright against `npx vite preview --outDir dist-local` (see /tmp flow scripts pattern in past work: create workspace, add sample project, drive the UI). Keep everything in src/styles.css; theme via html[data-theme] and html[data-accent].
