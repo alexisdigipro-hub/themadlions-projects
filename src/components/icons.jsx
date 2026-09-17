@@ -17,6 +17,9 @@ export const Icon = {
   locations: () => (
     <svg {...base}><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z" /><circle cx="12" cy="10" r="2.5" /></svg>
   ),
+  finance: () => (
+    <svg {...base}><path d="M3 17l5-5 4 4 5-6 4 3" /><path d="M3 21h18M3 3v18" /></svg>
+  ),
   team: () => (
     <svg {...base}><circle cx="12" cy="7.5" r="3.5" /><path d="M5 20c.6-4 3.4-6 7-6s6.4 2 7 6" /><path d="M17.5 4.5l1 1 2-2" /></svg>
   ),

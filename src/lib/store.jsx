@@ -66,6 +66,7 @@ export function emptyState() {
     projects: [],
     events: [],
     library: { contacts: [], locations: [] },
+    finance: { transactions: [], settings: { currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 } },
     settings: { aiProvider: 'anthropic', aiKey: '', aiModel: 'claude-sonnet-4-6', mapsKey: '' },
   }
 }
@@ -130,7 +131,7 @@ function migrate(parsed) {
   // migrations: new modules and fields added after the first release
   parsed.projects = (parsed.projects || []).map(migrateProject)
   parsed.users = (parsed.users || []).map((u) => ({ ...u, permissions: { ...defaultPermissions(u.role === 'admin' ? 'edit' : 'view'), ...(u.permissions || {}) } }))
-  return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], ...(parsed.library || {}) }, settings: { ...emptyState().settings, ...(parsed.settings || {}) } }
+  return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}) } }
 }
 
 /* ---------- context ---------- */
@@ -179,17 +180,20 @@ export function StoreProvider({ children }) {
   }, [])
 
   const loadAll = useCallback(async (ws) => {
-    const [w, m, p, e, inv, lib] = await Promise.all([
+    const [w, m, p, e, inv, lib, fin] = await Promise.all([
       supabase.from('workspaces').select('*').eq('id', ws).single(),
       supabase.from('members').select('*').eq('workspace_id', ws),
       supabase.from('projects').select('id, data').eq('workspace_id', ws),
       supabase.from('events').select('id, data').eq('workspace_id', ws),
       supabase.from('invites').select('*').eq('workspace_id', ws),
       supabase.from('library').select('id, kind, data').eq('workspace_id', ws),
+      supabase.from('finance').select('id, kind, data').eq('workspace_id', ws),
     ])
     if (w.error) throw w.error
     const libRows = lib.error ? [] : lib.data || [] // library table may not exist yet (library.sql not run)
     if (lib.error) console.warn('library not available yet:', lib.error.message)
+    const finRows = fin.error ? [] : fin.data || [] // admins only; members get nothing (RLS) or the table is missing
+    const finSettings = finRows.find((r) => r.kind === 'settings')?.data || {}
     const next = {
       ...emptyState(),
       workspace: { name: w.data.name, subtitle: w.data.subtitle, createdAt: w.data.created_at, id: ws },
@@ -199,6 +203,10 @@ export function StoreProvider({ children }) {
       library: {
         contacts: libRows.filter((r) => r.kind === 'contact').map((r) => ({ ...r.data, id: r.id })),
         locations: libRows.filter((r) => r.kind === 'location').map((r) => ({ ...r.data, id: r.id })),
+      },
+      finance: {
+        transactions: finRows.filter((r) => r.kind === 'tx').map((r) => ({ ...r.data, id: r.id })),
+        settings: { ...emptyState().finance.settings, ...finSettings },
       },
       settings: { ...emptyState().settings, ...(w.data.settings || {}), aiKey: localStorage.getItem(AI_KEY) || '' },
     }
@@ -293,6 +301,23 @@ export function StoreProvider({ children }) {
           return next
         })
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'finance', filter: `workspace_id=eq.${ws}` }, (payload) => {
+        setState((s) => {
+          const fin = { ...s.finance }
+          const kind = payload.new?.kind || payload.old?.kind
+          if (kind === 'settings') {
+            if (payload.eventType !== 'DELETE') fin.settings = { ...fin.settings, ...payload.new.data }
+          } else if (payload.eventType === 'DELETE') fin.transactions = fin.transactions.filter((t) => t.id !== payload.old.id)
+          else {
+            if (payload.new.updated_by === authUser?.id && myWrites.current.has(payload.new.id)) return s
+            const tx = { ...payload.new.data, id: payload.new.id }
+            fin.transactions = fin.transactions.some((t) => t.id === tx.id) ? fin.transactions.map((t) => (t.id === tx.id ? tx : t)) : [...fin.transactions, tx]
+          }
+          const next = { ...s, finance: fin }
+          prevRef.current = next
+          return next
+        })
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'members', filter: `workspace_id=eq.${ws}` }, async () => {
         const { data } = await supabase.from('members').select('*').eq('workspace_id', ws)
         if (data) setState((s) => {
@@ -379,6 +404,32 @@ export function StoreProvider({ children }) {
         }, 0),
       )
     })
+    {
+      const before = Object.fromEntries((prev.finance?.transactions || []).map((t) => [t.id, t]))
+      const after = next.finance?.transactions || []
+      after.forEach((t) => {
+        if (before[t.id] && JSON.stringify(before[t.id]) === JSON.stringify(t)) return
+        myWrites.current.add(t.id)
+        schedule('f:' + t.id, async () => {
+          const { error } = await supabase.from('finance').upsert({ id: t.id, workspace_id: ws, kind: 'tx', data: t })
+          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/finance.sql in the SQL editor to enable Finance.' : error.message)
+          setTimeout(() => myWrites.current.delete(t.id), 4000)
+        })
+      })
+      const ids = new Set(after.map((t) => t.id))
+      Object.values(before).filter((t) => !ids.has(t.id)).forEach((t) =>
+        schedule('fd:' + t.id, async () => {
+          const { error } = await supabase.from('finance').delete().eq('id', t.id)
+          if (error) throw error
+        }, 0),
+      )
+      if (JSON.stringify(prev.finance?.settings) !== JSON.stringify(next.finance?.settings)) {
+        schedule('fs', async () => {
+          const { error } = await supabase.from('finance').upsert({ id: 'settings:' + ws, workspace_id: ws, kind: 'settings', data: next.finance.settings })
+          if (error) throw error
+        })
+      }
+    }
     const prevU = Object.fromEntries(prev.users.map((u) => [u.id, u]))
     next.users.forEach((u) => {
       if (prevU[u.id] && JSON.stringify(prevU[u.id]) === JSON.stringify(u)) return

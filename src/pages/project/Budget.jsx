@@ -3,6 +3,7 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast
 import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
+import { useCurrentUser, useStore } from '../../lib/store.jsx'
 
 export const BUDGET_GROUPS = [
   ['Above the line', ['Story & rights', 'Producer', 'Director', 'Cast', 'Casting']],
@@ -47,8 +48,13 @@ export function CapBar({ cap, total, spent, cur }) {
 
 export default function Budget() {
   const { project, edit, canEdit } = useProject()
+  const { state } = useStore()
+  const me = useCurrentUser()
   const toast = useToast()
   const editable = canEdit('budget')
+  const finTx = me?.role === 'admin' ? (state.finance?.transactions || []).filter((t) => t.projectId === project.id) : []
+  const finIn = finTx.filter((t) => t.type === 'income' && t.status !== 'quoted').reduce((a, t) => a + Number(t.net || 0), 0)
+  const finOut = finTx.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.net || 0), 0)
   const budget = project.budget || { lines: [], contingencyPct: 10, currency: 'EUR' }
   const [draft, setDraft] = useState(null)
   const [filter, setFilter] = useState('')
@@ -118,6 +124,14 @@ export default function Budget() {
         </div>
       </div>
 
+      {me?.role === 'admin' && finTx.length > 0 && (
+        <div className="pl-strip no-print">
+          <span><span className="muted">Invoiced</span> <strong>{money(finIn, cur)}</strong></span>
+          <span><span className="muted">Costs booked</span> <strong>{money(finOut, cur)}</strong></span>
+          <span><span className="muted">Profit</span> <strong className={finIn - finOut < 0 ? 'over' : 'under'}>{money(finIn - finOut, cur)}</strong>{finIn ? <span className="muted"> · {Math.round(((finIn - finOut) / finIn) * 100)}%</span> : null}</span>
+          <span className="muted small">from Finance, administrators only</span>
+        </div>
+      )}
       {budget.cap ? (
         <CapBar cap={Number(budget.cap)} total={t.total} spent={t.act} cur={cur} />
       ) : editable ? (

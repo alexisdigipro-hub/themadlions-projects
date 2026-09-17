@@ -27,6 +27,7 @@ export default function Layout() {
     { to: '/tasks', label: 'Tasks', show: can(user, 'tasks'), icon: 'tasks' },
     { to: '/people', label: 'People', show: can(user, 'contacts'), icon: 'people' },
     { to: '/locations', label: 'Locations', show: can(user, 'locations'), icon: 'locations' },
+    { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance' },
     { to: '/team', label: 'Team', show: user?.role === 'admin', icon: 'team' },
     { to: '/settings', label: 'Settings', show: true, icon: 'settings' },
   ].filter((i) => i.show)

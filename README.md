@@ -28,6 +28,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Company library: People and Locations live outside projects (sidebar). Projects pick from the library or add to it automatically; shared fields (name, phone, email, agent, photos, address, notes) are edited once and update everywhere, while character, role, call offset and script sets stay per project. "Collect from projects" pulls existing entries in
 - Cast & crew as headshot cards or a table, with character casting, call offsets, agent and notes, per-person photo galleries (headshots and looks), and the headshot printed on the call sheet
 - Files & notes: links to Drive, Frame.io, contracts, permits
+- Finance (administrators only, own table with admin-only Row Level Security): income and expenses for the company and per project, net / VAT / gross, document type (invoice, receipt, none), status (quoted, invoiced, to pay, paid), payment method; overview with profit for the year and estimated income tax, owed to us / we owe, this month, month-by-month bars, VAT balance, breakdowns by project (margin), client, category and project type; CSV export for the accountant. Project expenses mirror into the project budget as actuals; the project Budget page shows invoiced vs booked costs to administrators
 - Team: administrators set per user, per module permissions (none / view / edit) and per project access
 - Backup and restore as JSON
 
@@ -54,7 +55,7 @@ Settings → AI breakdown → paste an Anthropic API key. It is stored only in t
 ## Phase 2: Supabase (team logins, one shared database)
 
 1. Create a project at supabase.com (region Frankfurt).
-2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run. Then the same with `supabase/storage.sql` (photo bucket) and `supabase/library.sql` (company library).
+2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run. Then the same with `supabase/storage.sql` (photo bucket) `supabase/library.sql` (company library) and `supabase/finance.sql` (administrators-only finance).
 3. Authentication → Providers → Email: keep it enabled; turn **Confirm email** off if you want teammates to sign in immediately.
 4. Project Settings → API: copy the Project URL and the publishable (anon) key into `src/lib/supabaseConfig.js`, commit, push. The site rebuilds in remote mode.
 5. Open the site, create your account. The first account becomes the administrator and the workspace is created automatically.

@@ -1965,3 +1965,30 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
   background-position: calc(100% - 13px) 55%, calc(100% - 8px) 55%;
 }
 .toolbar-actions .input.search, .page-actions .input.search { padding: 6px 10px; font-size: 14px; width: 200px; min-height: 0; }
+
+/* ---------- finance ---------- */
+.fin-hero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+.fin-card { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); padding: 14px 16px; }
+.fin-card.pos { border-top: 3px solid var(--ok); }
+.fin-card.neg { border-top: 3px solid var(--danger); }
+.fin-label { color: var(--muted); font-size: 13.5px; }
+.fin-value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin: 2px 0; font-variant-numeric: tabular-nums; }
+.fin-sub { color: var(--muted); font-size: 13px; }
+.fin-months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; align-items: end; height: 170px; margin-top: 8px; }
+.fin-month { display: flex; flex-direction: column; align-items: center; height: 100%; }
+.fin-bars { flex: 1; width: 100%; display: flex; gap: 2px; align-items: flex-end; justify-content: center; }
+.fin-bar { width: 40%; border-radius: 3px 3px 0 0; min-height: 2px; }
+.fin-bar.in { background: var(--ok); }
+.fin-bar.out { background: var(--accent); }
+.fin-month-label { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.fin-month-net { font-variant-numeric: tabular-nums; }
+.legend { margin-top: 8px; display: flex; gap: 6px; align-items: center; }
+.legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.legend .sw.in { background: var(--ok); } .legend .sw.out { background: var(--accent); }
+.fin-table td:first-child { max-width: 220px; }
+.fin-list .nowrap { white-space: nowrap; }
+.tx-income td:nth-child(5) { color: var(--ok); }
+.fin-settings { max-width: 720px; }
+.pl-strip { display: flex; flex-wrap: wrap; gap: 8px 22px; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); padding: 10px 14px; margin-bottom: 12px; align-items: baseline; }
+@media (max-width: 1000px) { .fin-hero { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 820px) { .fin-months { gap: 3px; height: 140px; } .fin-month-net { display: none; } .fin-month-label { font-size: 10px; } }
