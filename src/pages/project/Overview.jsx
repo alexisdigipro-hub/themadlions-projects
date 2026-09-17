@@ -6,6 +6,8 @@ import { useProject } from '../Project.jsx'
 import { EVENT_TYPES, today, useStore } from '../../lib/store.jsx'
 import { formatPages } from '../../lib/breakdown.js'
 import { fmtDate, fmtLong } from '../../lib/dates.js'
+import { budgetTotals, money } from './Budget.jsx'
+import { reportSummary } from './Reports.jsx'
 
 export default function Overview() {
   const { project, edit, canEdit } = useProject()
@@ -22,6 +24,9 @@ export default function Overview() {
   const unscheduled = project.scenes.filter((s) => !s.dayId).length
   const cast = project.contacts.filter((c) => c.kind === 'cast').length
   const crew = project.contacts.filter((c) => c.kind === 'crew').length
+  const bt = budgetTotals(project)
+  const rs = reportSummary(project)
+  const openTasks = (project.tasks || []).filter((t) => t.status !== 'done').length
 
   const steps = [
     { done: !!project.script.text, label: 'Import the script', to: 'script' },
@@ -40,6 +45,9 @@ export default function Overview() {
         <Stat label="Unscheduled scenes" value={unscheduled} />
         <Stat label="Locations" value={project.locations.length} />
         <Stat label="Cast / crew" value={`${cast} / ${crew}`} />
+        <Stat label="Budget" value={bt.lines ? money(bt.total, bt.currency) : '–'} note={bt.act ? `${money(bt.act, bt.currency)} spent` : bt.lines ? `${bt.lines} lines` : 'No budget yet'} />
+        <Stat label="Shot" value={rs.daysReported ? `${rs.scenesDone}/${rs.scenesTotal}` : '–'} note={rs.daysReported ? `${formatPages(rs.pagesShot)} pages · ${rs.daysReported} days reported` : 'No reports yet'} />
+        <Stat label="Open tasks" value={openTasks} />
       </div>
 
       <div className="cols">

@@ -16,6 +16,8 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Day Out of Days for cast (SW / W / WF / SWF / H) computed from the stripboard
 - Call sheets generated per shoot day with sunrise, sunset, golden hour and a fetched weather forecast (open-meteo, no key), printable to PDF
 - Script sides per shoot day, printable
+- Budget top sheet: lines by category (above the line, production, post, other), quantity × rate or flat estimates, actuals and variance, contingency, client cap, CSV and print
+- Daily production reports per shoot day: times, scenes completed / partial / pickups, setups, on-set counts, weather, incidents, pages shot to date and ahead / behind
 - Tasks per project with assignee, department, due date, priority, and a cross-project Tasks page (mine / everyone, overdue / today / this week)
 - Production calendar (per project and across projects) with shoot days mirrored automatically, ICS export
 - Locations with Google Maps embed, directions, script set linking

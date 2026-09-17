@@ -1812,3 +1812,32 @@ code {
   .desk-only { display: none !important; }
   .mob-only { display: block; }
 }
+
+/* ---------- budget ---------- */
+.budget-meta { display: grid; grid-template-columns: 140px 140px 220px; gap: 12px; margin-bottom: 14px; }
+.topsheet .budget-group { margin-top: 18px; }
+.budget-group-head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line-soft); padding-bottom: 4px; margin-bottom: 4px; }
+.budget-group-head h3 { margin: 0; }
+.budget-group-head span { font-weight: 600; }
+.table .num, .table td.num, .table th.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.budget-totals { margin-top: 18px; width: auto; margin-left: auto; min-width: 360px; }
+.budget-totals td { padding: 6px 12px; }
+.budget-totals tr.grand td { font-weight: 700; font-size: 16px; border-top: 2px solid currentColor; }
+.over { color: var(--danger); font-weight: 600; }
+.under { color: var(--ok); font-weight: 600; }
+.sheet .over { color: #b8382b; }
+.sheet .under { color: #2f7a52; }
+
+/* ---------- production report ---------- */
+.report-times { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+.report .field { margin-bottom: 0; }
+.input.tiny-num { width: 64px; padding: 3px 6px; }
+.report .table .input { padding: 4px 8px; font-size: 13px; }
+.sheet .input, .sheet .select { background: #fff; color: #111; border-color: #cfc9bd; }
+.sheet .field-label { color: #555; }
+
+@media (max-width: 820px) {
+  .budget-meta { grid-template-columns: 1fr 1fr; }
+  .report-times { grid-template-columns: repeat(2, 1fr); }
+  .budget-totals { min-width: 0; width: 100%; }
+}

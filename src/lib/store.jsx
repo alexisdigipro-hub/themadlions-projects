@@ -21,6 +21,8 @@ export const MODULES = [
   { key: 'schedule', label: 'Schedule' },
   { key: 'callsheets', label: 'Call sheets' },
   { key: 'tasks', label: 'Tasks' },
+  { key: 'reports', label: 'Reports' },
+  { key: 'budget', label: 'Budget' },
   { key: 'calendar', label: 'Calendar' },
   { key: 'locations', label: 'Locations' },
   { key: 'contacts', label: 'Cast & crew' },
@@ -86,6 +88,7 @@ export function emptyProject(partial = {}) {
     contacts: [],
     shots: [],
     tasks: [],
+    budget: { lines: [], contingencyPct: 10, currency: 'EUR', cap: '' },
     breakdownStatus: 'none',
     ...partial,
   }
@@ -99,7 +102,7 @@ const adapter = {
       if (!raw) return null
       const parsed = JSON.parse(raw)
       // migrations: new modules and fields added after the first release
-      parsed.projects = (parsed.projects || []).map((p) => ({ shots: [], tasks: [], ...p }))
+      parsed.projects = (parsed.projects || []).map((p) => ({ shots: [], tasks: [], budget: { lines: [], contingencyPct: 10, currency: 'EUR', cap: '' }, ...p }))
       parsed.users = (parsed.users || []).map((u) => ({ ...u, permissions: { ...defaultPermissions(u.role === 'admin' ? 'edit' : 'view'), ...(u.permissions || {}) } }))
       return { ...emptyState(), ...parsed, settings: { ...emptyState().settings, ...(parsed.settings || {}) } }
     } catch {

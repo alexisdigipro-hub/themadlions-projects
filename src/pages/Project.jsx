@@ -22,6 +22,8 @@ export default function Project() {
     { to: 'schedule', label: 'Schedule', key: 'schedule' },
     { to: 'callsheets', label: 'Call sheets', key: 'callsheets' },
     { to: 'tasks', label: 'Tasks', key: 'tasks' },
+    { to: 'reports', label: 'Reports', key: 'reports' },
+    { to: 'budget', label: 'Budget', key: 'budget' },
     { to: 'calendar', label: 'Calendar', key: 'calendar' },
     { to: 'locations', label: 'Locations', key: 'locations' },
     { to: 'people', label: 'Cast & crew', key: 'contacts' },

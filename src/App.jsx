@@ -20,6 +20,8 @@ import Notes from './pages/project/Notes.jsx'
 import Shots from './pages/project/Shots.jsx'
 import Tasks from './pages/project/Tasks.jsx'
 import TasksAll from './pages/TasksAll.jsx'
+import Budget from './pages/project/Budget.jsx'
+import Reports from './pages/project/Reports.jsx'
 
 function RequireUser() {
   const user = useCurrentUser()
@@ -52,6 +54,8 @@ export default function App() {
                   <Route path="shots" element={<Shots />} />
                   <Route path="schedule" element={<Schedule />} />
                   <Route path="tasks" element={<Tasks />} />
+                  <Route path="reports" element={<Reports />} />
+                  <Route path="budget" element={<Budget />} />
                   <Route path="callsheets" element={<CallSheets />} />
                   <Route path="calendar" element={<ProjectCalendar />} />
                   <Route path="locations" element={<Locations />} />
