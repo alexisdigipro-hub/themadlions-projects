@@ -31,6 +31,7 @@ export const MODULES = [
   { key: 'locations', label: 'Locations' },
   { key: 'contacts', label: 'Cast & crew' },
   { key: 'files', label: 'Files & notes' },
+  { key: 'drives', label: 'Drives archive' },
 ]
 
 export const EVENT_TYPES = [
@@ -67,7 +68,7 @@ export function emptyState() {
     users: [],
     projects: [],
     events: [],
-    library: { contacts: [], locations: [] },
+    library: { contacts: [], locations: [], drives: [] },
     todos: [],
     chat: [],
     notices: [],
@@ -140,7 +141,7 @@ function migrate(parsed) {
   // migrations: new modules and fields added after the first release
   parsed.projects = (parsed.projects || []).map(migrateProject)
   parsed.users = (parsed.users || []).map((u) => ({ ...u, permissions: { ...defaultPermissions(u.role === 'admin' ? 'edit' : 'view'), ...(u.permissions || {}) } }))
-  return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), recurring: parsed.finance?.recurring || [], settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}) } }
+  return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], drives: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), recurring: parsed.finance?.recurring || [], settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}) } }
 }
 
 const rowToMessage = (r) => ({ id: r.id, userId: r.user_id || '', userName: r.user_name || '', text: r.text || '', source: r.source || 'app', createdAt: r.created_at })
@@ -222,6 +223,7 @@ export function StoreProvider({ children }) {
       library: {
         contacts: libRows.filter((r) => r.kind === 'contact').map((r) => ({ ...r.data, id: r.id })),
         locations: libRows.filter((r) => r.kind === 'location').map((r) => ({ ...r.data, id: r.id })),
+        drives: libRows.filter((r) => r.kind === 'drive').map((r) => ({ ...r.data, id: r.id })),
       },
       todos: libRows.filter((r) => r.kind === 'task').map((r) => ({ ...r.data, id: r.id })),
       chat: msgRows.map(rowToMessage),
@@ -325,8 +327,9 @@ export function StoreProvider({ children }) {
             prevRef.current = next
             return next
           }
-          const key = kind === 'location' ? 'locations' : 'contacts'
+          const key = kind === 'location' ? 'locations' : kind === 'drive' ? 'drives' : 'contacts'
           const lib = { ...s.library }
+          lib[key] = lib[key] || []
           if (payload.eventType === 'DELETE') lib[key] = lib[key].filter((x) => x.id !== payload.old.id)
           else {
             if (payload.new.updated_by === authUser?.id && myWrites.current.has(payload.new.id)) return s
@@ -469,7 +472,7 @@ export function StoreProvider({ children }) {
         if (error) throw error
       }, 0),
     )
-    ;[['contacts', 'contact'], ['locations', 'location'], ['todos', 'task']].forEach(([key, kind]) => {
+    ;[['contacts', 'contact'], ['locations', 'location'], ['drives', 'drive'], ['todos', 'task']].forEach(([key, kind]) => {
       const before = Object.fromEntries(((kind === 'task' ? prev.todos : prev.library?.[key]) || []).map((x) => [x.id, x]))
       const after = (kind === 'task' ? next.todos : next.library?.[key]) || []
       after.forEach((x) => {
@@ -477,7 +480,7 @@ export function StoreProvider({ children }) {
         myWrites.current.add(x.id)
         schedule('l:' + x.id, async () => {
           const { error } = await supabase.from('library').upsert({ id: x.id, workspace_id: ws, kind, data: x })
-          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/library.sql in the SQL editor to enable the company library.' : error.code === '23514' ? 'Run supabase/todos.sql in the SQL editor to enable general tasks.' : error.message)
+          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/library.sql in the SQL editor to enable the company library.' : error.code === '23514' ? (kind === 'drive' ? 'Run supabase/drives.sql in the SQL editor to enable the drives archive.' : 'Run supabase/todos.sql in the SQL editor to enable general tasks.') : error.message)
           setTimeout(() => myWrites.current.delete(x.id), 4000)
         })
       })
@@ -590,6 +593,15 @@ export function StoreProvider({ children }) {
       }
     }
     const prevU = Object.fromEntries(prev.users.map((u) => [u.id, u]))
+    {
+      const nextU = new Set(next.users.map((u) => u.id))
+      prev.users.filter((u) => !nextU.has(u.id)).forEach((u) =>
+        schedule('ud:' + u.id, async () => {
+          const { error } = await supabase.from('members').delete().eq('workspace_id', ws).eq('user_id', u.id)
+          if (error) throw error
+        }, 0),
+      )
+    }
     next.users.forEach((u) => {
       if (prevU[u.id] && JSON.stringify(prevU[u.id]) === JSON.stringify(u)) return
       if (!prevU[u.id]) return // new members arrive through invites, not here

@@ -102,6 +102,18 @@ export default function Team() {
                 <Button size="sm" variant="ghost" onClick={() => setDraft({ ...u, password: '' })}>
                   Edit
                 </Button>
+                {u.id !== me.id && u.active === false && (
+                  <Confirm
+                    label="Remove"
+                    onConfirm={() => {
+                      update((s) => {
+                        s.users = s.users.filter((y) => y.id !== u.id)
+                        return s
+                      })
+                      toast(`${u.name} removed from the team`)
+                    }}
+                  />
+                )}
                 {u.id !== me.id && (
                   <Confirm
                     label={u.active === false ? 'Reactivate' : 'Deactivate'}
