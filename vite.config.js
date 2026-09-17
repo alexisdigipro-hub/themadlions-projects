@@ -1,10 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 
-// base './' keeps the build relative so it works on GitHub Pages at any repo name.
+// base './' keeps asset paths relative, so the build works on GitHub Pages under any repository name.
 export default defineConfig({
   base: './',
-  plugins: [react(), tailwindcss()],
+  plugins: [react()],
   build: { outDir: 'dist', chunkSizeWarningLimit: 1500 },
 })
