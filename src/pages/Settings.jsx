@@ -13,6 +13,10 @@ export default function Settings() {
   const [ai, setAi] = useState(state.settings)
   const [testing, setTesting] = useState(false)
   const [textSize, setTextSize] = useState(() => localStorage.getItem('tml_text_size') || 'normal')
+  const [theme, setTheme] = useState(() => localStorage.getItem('tml_theme') || 'light')
+  const [accent, setAccent] = useState(() => localStorage.getItem('tml_accent') || 'amber')
+  const applyTheme = (v) => { setTheme(v); localStorage.setItem('tml_theme', v); document.documentElement.dataset.theme = v }
+  const applyAccent = (v) => { setAccent(v); localStorage.setItem('tml_accent', v); document.documentElement.dataset.accent = v }
   const applyTextSize = (v) => {
     setTextSize(v)
     localStorage.setItem('tml_text_size', v)
@@ -71,9 +75,32 @@ export default function Settings() {
     <>
       <PageHead title="Settings" />
       <div className="cols">
+        {isAdmin && (
+          <section className="panel">
+            <h2>Company</h2>
+            <Field label="Address on call sheets" hint="Shown under the company name on every call sheet.">
+              <Input value={state.settings.companyAddress || ''} onChange={(e) => update((s) => { s.settings.companyAddress = e.target.value; return s })} placeholder="Πειραιώς 260, Ταύρος 177 78 · +30 210 000 0000" />
+            </Field>
+          </section>
+        )}
+
         <section className="panel">
           <h2>Display</h2>
-          <Field label="Text size" hint="Saved on this device only.">
+          <Field label="Theme">
+            <div className="segmented small">
+              {[['light', 'Light'], ['dark', 'Dark']].map(([v, l]) => (
+                <button key={v} className={theme === v ? 'on' : ''} onClick={() => applyTheme(v)}>{l}</button>
+              ))}
+            </div>
+          </Field>
+          <Field label="Accent colour">
+            <div className="swatches">
+              {[['amber', '#c9932f', 'Lion amber'], ['red', '#c8503f', 'Red'], ['slate', '#3f5578', 'Slate blue'], ['ink', '#1f2430', 'Ink']].map(([v, c, l]) => (
+                <button key={v} className={`swatch ${accent === v ? 'on' : ''}`} style={{ '--sw': c }} onClick={() => applyAccent(v)} title={l}><span /> {l}</button>
+              ))}
+            </div>
+          </Field>
+          <Field label="Text size" hint="Display settings are saved on this device only.">
             <div className="segmented small">
               {[['compact', 'Compact'], ['normal', 'Normal'], ['large', 'Large']].map(([v, l]) => (
                 <button key={v} className={textSize === v ? 'on' : ''} onClick={() => applyTextSize(v)}>{l}</button>

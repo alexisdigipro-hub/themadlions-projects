@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Empty, Field, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
+import { useStore } from '../../lib/store.jsx'
 import { formatPages } from '../../lib/breakdown.js'
 import { fmtLong } from '../../lib/dates.js'
 import { ATHENS, coordsFromText, forecast, geocode, sunTimes } from '../../lib/sun.js'
@@ -19,6 +20,7 @@ function addMinutes(hhmm, mins) {
 
 export default function CallSheets() {
   const { project, edit, canEdit } = useProject()
+  const { state } = useStore()
   const days = [...project.shootingDays].sort((a, b) => a.date.localeCompare(b.date))
   const [sel, setSel] = useState(days[0]?.id || '')
   const [mode, setMode] = useState('sheet') // sheet | sides
@@ -167,78 +169,84 @@ export default function CallSheets() {
         </article>
       )}
 
-      <article className="sheet" hidden={mode !== 'sheet'}>
-        <header className="sheet-head">
-          <div>
-            <div className="sheet-brand">{project.producer || 'THEMADLIONS'}</div>
-            <h1>{project.title}</h1>
-            <div className="muted">
-              Call sheet · Day {days.indexOf(day) + 1} of {days.length} · {day.unit}
-            </div>
+      <article className="sheet cs" hidden={mode !== 'sheet'}>
+        <header className="cs-head">
+          <div className="cs-company">
+            <div className="cs-brand"><span className="cs-mark" />{state.workspace.name}</div>
+            {state.settings.companyAddress && <div className="muted small cs-addr">{state.settings.companyAddress}</div>}
+            <dl className="cs-kv">
+              {project.producer && (<><dt>Producer</dt><dd>{project.producer}</dd></>)}
+              {project.director && (<><dt>Director</dt><dd>{project.director}</dd></>)}
+              {crew.filter((c) => /1st AD|assistant director|production manager|UPM|line producer|DoP|photography/i.test(c.role || '')).slice(0, 4).map((c) => (
+                <span key={c.id} className="cs-kv-row"><dt>{c.role}</dt><dd>{c.name}{c.phone ? <span className="muted"> {c.phone}</span> : null}</dd></span>
+              ))}
+            </dl>
           </div>
-          <div className="sheet-call">
-            <div className="sheet-call-label">General call</div>
-            <div className="sheet-call-time">{day.callTime}</div>
-            <div className="muted">{fmtLong(day.date)}</div>
-            <div className="muted">Est. wrap {day.wrapTime}</div>
+          <div className="cs-center">
+            {project.coverThumb ? <img className="cs-key" src={project.coverThumb} alt="" /> : null}
+            <h1>{project.title}</h1>
+            <div className="cs-call-label">General crew call</div>
+            <div className="cs-call-time">{day.callTime}</div>
+            {editable ? (
+              <textarea className="cs-tagline" rows={3} value={sheet.tagline || ''} onChange={(e) => setSheet('tagline', e.target.value)} placeholder="One line for everyone: safety first, bring a jacket, no smoking on set." />
+            ) : sheet.tagline ? <p className="cs-tagline-text">{sheet.tagline}</p> : null}
+          </div>
+          <div className="cs-side">
+            <div className="cs-day">Day {dayIndex + 1} of {days.length}</div>
+            <div className="cs-date">{new Date(day.date + 'T00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })}</div>
+            <div className="cs-wx">
+              {wx ? (
+                <>
+                  <div className="cs-temp"><span className="cs-sun-ico">☀</span> {wx.tmax}° <span className="muted">/ {wx.tmin}°</span></div>
+                  <div className="muted small"><em>{wx.summary}{wx.rain != null ? `, rain ${wx.rain}%` : ''}</em></div>
+                </>
+              ) : (
+                <div className="muted small no-print">No forecast yet{editable ? <> · <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'fetch'}</button></> : null}</div>
+              )}
+              {sun && <div className="small"><strong>Sunrise</strong> {wx?.sunrise || sun.sunrise} · <strong>Sunset</strong> {wx?.sunset || sun.sunset}</div>}
+            </div>
+            <dl className="cs-times">
+              <dt>Shooting call</dt><dd>{editable ? <input className="cs-time" value={sheet.shootingCall ?? ''} placeholder={day.callTime} onChange={(e) => setSheet('shootingCall', e.target.value)} /> : sheet.shootingCall || day.callTime}</dd>
+              <dt>Lunch</dt><dd>{editable ? <input className="cs-time" value={sheet.lunch ?? ''} placeholder="13:00" onChange={(e) => setSheet('lunch', e.target.value)} /> : sheet.lunch || ''}</dd>
+              <dt>Est. wrap</dt><dd>{day.wrapTime}</dd>
+            </dl>
           </div>
         </header>
 
-        <div className="sheet-grid">
-          <section>
-            <h3>Location</h3>
-            {loc ? (
-              <>
-                <strong>{loc.name}</strong>
-                <div>{loc.address}</div>
-                {loc.notes && <div className="muted small">{loc.notes}</div>}
-                <a className="link no-print" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.address)}`} target="_blank" rel="noreferrer">
-                  Open in Google Maps
-                </a>
-              </>
-            ) : (
-              <span className="muted">Set the location on the shoot day.</span>
-            )}
-          </section>
-          <section>
-            <h3>Key contacts</h3>
-            {project.director && <div>Director: {project.director}</div>}
-            {crew.slice(0, 6).map((c) => (
-              <div key={c.id}>
-                {c.role || c.dept}: {c.name} {c.phone && <span className="muted">{c.phone}</span>}
-              </div>
-            ))}
-            {!crew.length && <span className="muted">Add crew in Cast & crew.</span>}
-          </section>
-          <section>
-            <h3>Sun & weather</h3>
-            {sun && (
-              <div className="sun-row">
-                <span>Sunrise <strong>{wx?.sunrise || sun.sunrise}</strong></span>
-                <span>Sunset <strong>{wx?.sunset || sun.sunset}</strong></span>
-                <span className="muted small">Golden hour until {sun.goldenAmEnd}, from {sun.goldenPmStart}</span>
-              </div>
-            )}
-            {wx ? (
-              <div className="wx">
-                <strong>{wx.summary}</strong> · {wx.tmin}° to {wx.tmax}°C{wx.rain != null ? ` · rain ${wx.rain}%` : ''} · wind {wx.wind} km/h
-                <div className="muted small">{wx.place} · forecast from open-meteo</div>
-              </div>
-            ) : (
-              <div className="muted small">No forecast fetched yet.</div>
-            )}
-            {editable && (
-              <div className="no-print">
-                <Button size="sm" onClick={fetchWeather} disabled={busy}>{busy ? 'Fetching…' : wx ? 'Refresh forecast' : 'Fetch forecast'}</Button>
-              </div>
-            )}
+        {(sheet.notes || editable) && (
+          <div className="cs-note">
+            <span className="cs-pin">📌</span>
             {editable ? (
-              <Textarea rows={2} value={sheet.weather || ''} onChange={(e) => setSheet('weather', e.target.value)} placeholder="Nearest hospital, safety notes…" />
-            ) : (
-              sheet.weather && <div>{sheet.weather}</div>
-            )}
-          </section>
-        </div>
+              <textarea rows={2} value={sheet.notes || ''} onChange={(e) => setSheet('notes', e.target.value)} placeholder="Parking, catering, safety, permits, transport. Everyone reads this one." />
+            ) : <p>{sheet.notes}</p>}
+          </div>
+        )}
+
+        <section>
+          <h3>Location</h3>
+          <div className="cs-locgrid">
+            <div>
+              <div className="cs-loc-h">Set location</div>
+              {loc ? (
+                <>
+                  <strong className="cs-loc-name">{loc.name}</strong>
+                  <div>{loc.address}</div>
+                  {loc.phone && <div className="muted small">{loc.contact ? `${loc.contact} · ` : ''}{loc.phone}</div>}
+                  <a className="link no-print small" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.address)}`} target="_blank" rel="noreferrer">Open in Google Maps</a>
+                </>
+              ) : <span className="muted">Set the location on the shoot day.</span>}
+            </div>
+            <div>
+              <div className="cs-loc-h">Parking</div>
+              {editable ? <textarea rows={3} value={sheet.parking || ''} onChange={(e) => setSheet('parking', e.target.value)} placeholder="Where, how many cars, who unloads where" /> : <div>{sheet.parking || '–'}</div>}
+            </div>
+            <div>
+              <div className="cs-loc-h">Nearest hospital</div>
+              {editable ? <textarea rows={3} value={sheet.weather || ''} onChange={(e) => setSheet('weather', e.target.value)} placeholder="Name, address, phone" /> : <div>{sheet.weather || '–'}</div>}
+            </div>
+          </div>
+          {wx && <div className="muted small no-print">{wx.place} · forecast from open-meteo · {editable && <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'refresh'}</button>}</div>}
+        </section>
 
         <section>
           <h3>Scenes</h3>
@@ -333,16 +341,6 @@ export default function CallSheets() {
           </div>
         </section>
 
-        <section>
-          <h3>Notes</h3>
-          {editable ? (
-            <Field>
-              <Textarea rows={4} value={sheet.notes || day.notes || ''} onChange={(e) => setSheet('notes', e.target.value)} placeholder="Parking, catering, safety, permits, transport…" />
-            </Field>
-          ) : (
-            <div>{sheet.notes || day.notes || '–'}</div>
-          )}
-        </section>
         {editable && (
           <p className="fineprint no-print">Edits here are saved automatically to this day's call sheet.</p>
         )}
