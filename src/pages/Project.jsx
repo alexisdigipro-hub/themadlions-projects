@@ -2,6 +2,7 @@ import { Link, NavLink, Navigate, Outlet, useOutletContext, useParams } from 're
 import { Badge } from '../components/ui.jsx'
 import { can, canAccessProject, useCurrentUser, useStore } from '../lib/store.jsx'
 import { hydrateProject } from '../lib/library.js'
+import { Icon } from '../components/icons.jsx'
 
 export function useProject() {
   return useOutletContext()
@@ -17,21 +18,21 @@ export default function Project() {
   if (!project || !canAccessProject(user, id)) return <Navigate to="/" replace />
 
   const tabs = [
-    { to: '', label: 'Overview', end: true, key: 'projects' },
-    { to: 'script', label: 'Script', key: 'script' },
-    { to: 'breakdown', label: 'Breakdown', key: 'breakdown' },
-    { to: 'shots', label: 'Shot list', key: 'shots' },
-    { to: 'schedule', label: 'Schedule', key: 'schedule' },
-    { to: 'callsheets', label: 'Call sheets', key: 'callsheets' },
-    { to: 'tasks', label: 'Tasks', key: 'tasks' },
-    { to: 'reports', label: 'Reports', key: 'reports' },
-    { to: 'budget', label: 'Budget', key: 'budget' },
-    { to: 'gear', label: 'Equipment', key: 'gear' },
-    { to: 'post', label: 'Post', key: 'post' },
-    { to: 'calendar', label: 'Calendar', key: 'calendar' },
-    { to: 'locations', label: 'Locations', key: 'locations' },
-    { to: 'people', label: 'Cast & crew', key: 'contacts' },
-    { to: 'notes', label: 'Files & notes', key: 'files' },
+    { to: '', label: 'Overview', end: true, key: 'projects', icon: 'overview' },
+    { to: 'script', label: 'Script', key: 'script', icon: 'script' },
+    { to: 'breakdown', label: 'Breakdown', key: 'breakdown', icon: 'breakdown' },
+    { to: 'shots', label: 'Shot list', key: 'shots', icon: 'shots' },
+    { to: 'schedule', label: 'Schedule', key: 'schedule', icon: 'schedule' },
+    { to: 'callsheets', label: 'Call sheets', key: 'callsheets', icon: 'callsheets' },
+    { to: 'tasks', label: 'Tasks', key: 'tasks', icon: 'tasks' },
+    { to: 'reports', label: 'Reports', key: 'reports', icon: 'reports' },
+    { to: 'budget', label: 'Budget', key: 'budget', icon: 'budget' },
+    { to: 'gear', label: 'Equipment', key: 'gear', icon: 'gear' },
+    { to: 'post', label: 'Post', key: 'post', icon: 'post' },
+    { to: 'calendar', label: 'Calendar', key: 'calendar', icon: 'calendar' },
+    { to: 'locations', label: 'Locations', key: 'locations', icon: 'locations' },
+    { to: 'people', label: 'Cast & crew', key: 'contacts', icon: 'people' },
+    { to: 'notes', label: 'Files & notes', key: 'files', icon: 'notes' },
   ].filter((t) => can(user, t.key))
 
   const ctx = {
@@ -61,6 +62,7 @@ export default function Project() {
       <nav className="tabs">
         {tabs.map((t) => (
           <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')}>
+            <span className="tab-ico">{Icon[t.icon]?.()}</span>
             {t.label}
           </NavLink>
         ))}

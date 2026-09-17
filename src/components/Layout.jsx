@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { can, useCurrentUser, useStore } from '../lib/store.jsx'
+import { Icon } from './icons.jsx'
 
 function Logo({ name, subtitle }) {
   return (
@@ -21,13 +22,13 @@ export default function Layout() {
   const [open, setOpen] = useState(false)
 
   const items = [
-    { to: '/', label: 'Projects', end: true, show: can(user, 'projects') },
-    { to: '/calendar', label: 'Calendar', show: can(user, 'calendar') },
-    { to: '/tasks', label: 'Tasks', show: can(user, 'tasks') },
-    { to: '/people', label: 'People', show: can(user, 'contacts') },
-    { to: '/locations', label: 'Locations', show: can(user, 'locations') },
-    { to: '/team', label: 'Team', show: user?.role === 'admin' },
-    { to: '/settings', label: 'Settings', show: true },
+    { to: '/', label: 'Projects', end: true, show: can(user, 'projects'), icon: 'projects' },
+    { to: '/calendar', label: 'Calendar', show: can(user, 'calendar'), icon: 'calendar' },
+    { to: '/tasks', label: 'Tasks', show: can(user, 'tasks'), icon: 'tasks' },
+    { to: '/people', label: 'People', show: can(user, 'contacts'), icon: 'people' },
+    { to: '/locations', label: 'Locations', show: can(user, 'locations'), icon: 'locations' },
+    { to: '/team', label: 'Team', show: user?.role === 'admin', icon: 'team' },
+    { to: '/settings', label: 'Settings', show: true, icon: 'settings' },
   ].filter((i) => i.show)
 
   const close = () => setOpen(false)
@@ -54,6 +55,7 @@ export default function Layout() {
         <nav className="sidenav">
           {items.map((i) => (
             <NavLink key={i.to} to={i.to} end={i.end} onClick={close} className={({ isActive }) => (isActive ? 'active' : '')}>
+              <span className="nav-ico">{Icon[i.icon]?.()}</span>
               {i.label}
             </NavLink>
           ))}

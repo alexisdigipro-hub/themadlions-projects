@@ -1947,3 +1947,11 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 .capbar.over .capbar-fill { background: var(--danger); }
 .capbar-spent { position: absolute; inset: 3px auto 3px 0; background: rgba(0,0,0,.35); border-radius: 999px; }
 .capbar-mark { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,.35); }
+.sidenav a { display: flex; align-items: center; gap: 10px; }
+.nav-ico { display: inline-flex; width: 18px; height: 18px; color: var(--muted); flex: none; }
+.sidenav a:hover .nav-ico, .sidenav a.active .nav-ico { color: var(--accent); }
+.tabs a { display: inline-flex; align-items: center; gap: 6px; }
+.tab-ico { display: inline-flex; width: 15px; height: 15px; opacity: .7; }
+.tab-ico svg { width: 15px; height: 15px; }
+.tabs a.active .tab-ico { opacity: 1; color: var(--accent); }
+@media (max-width: 820px) { .tab-ico { display: none; } }
