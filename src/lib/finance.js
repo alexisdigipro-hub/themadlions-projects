@@ -71,3 +71,41 @@ export const matchTx = (t, q) => {
   if (!s) return true
   return [t.description, t.party, t.category, t.docNumber, t.notes].some((f) => (f || '').toLowerCase().includes(s))
 }
+
+/* ---------- recurring ---------- */
+export const FREQ = [['monthly', 'Every month'], ['quarterly', 'Every 3 months'], ['yearly', 'Every year']]
+export const emptyRecurring = (partial = {}) => ({
+  id: uid(), type: 'expense', description: '', party: '', category: 'Office rent', projectId: '', net: '', vatPct: 24, doc: 'invoice', method: 'Bank',
+  frequency: 'monthly', day: 1, start: new Date().toISOString().slice(0, 7), end: '', active: true, lastGenerated: '', notes: '', ...partial,
+})
+const addMonths = (ymStr, n) => {
+  const [y, m] = ymStr.split('-').map(Number)
+  const d = new Date(y, m - 1 + n, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+const step = (f) => (f === 'yearly' ? 12 : f === 'quarterly' ? 3 : 1)
+// periods (YYYY-MM) a template still owes, up to and including the current month
+export function duePeriods(r, now = new Date()) {
+  if (!r.active || !r.start) return []
+  const cur = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const out = []
+  let p = r.lastGenerated ? addMonths(r.lastGenerated, step(r.frequency)) : r.start
+  if (p < r.start) p = r.start
+  let guard = 0
+  while (p <= cur && (!r.end || p <= r.end) && guard < 120) {
+    out.push(p)
+    p = addMonths(p, step(r.frequency))
+    guard += 1
+  }
+  return out
+}
+export function generateFromRecurring(r, periods) {
+  return periods.map((ym) => {
+    const [y, m] = ym.split('-').map(Number)
+    const last = new Date(y, m, 0).getDate()
+    const day = Math.min(Math.max(1, Number(r.day) || 1), last)
+    const date = `${ym}-${String(day).padStart(2, '0')}`
+    const label = r.frequency === 'monthly' ? new Date(y, m - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }) : ym
+    return emptyTx(r.type, { date, projectId: r.projectId, category: r.category, description: `${r.description} · ${label}`, party: r.party, net: Number(r.net) || 0, vatPct: Number(r.vatPct) || 0, doc: r.doc, method: r.method, status: r.type === 'income' ? 'invoiced' : 'pending', recurringId: r.id, notes: r.notes || '' })
+  })
+}

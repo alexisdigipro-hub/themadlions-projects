@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { uid, useCurrentUser, useStore } from '../lib/store.jsx'
-import { DOCS, EXPENSE_CATS, INCOME_CATS, METHODS, TX_STATUS, emptyTx, grossOf, matchTx, money, summarize, vatOf, yearOf } from '../lib/finance.js'
+import { DOCS, EXPENSE_CATS, FREQ, INCOME_CATS, METHODS, TX_STATUS, duePeriods, emptyRecurring, emptyTx, generateFromRecurring, grossOf, matchTx, money, summarize, vatOf, yearOf } from '../lib/finance.js'
 import { download, fmtDate } from '../lib/dates.js'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -24,8 +24,41 @@ export default function Finance() {
   const [draft, setDraft] = useState(null)
   const [f, setF] = useState({ q: '', type: '', project: '', status: '', doc: '', month: '' })
   const [settings, setSettings] = useState(fin.settings)
+  const [rdraft, setRdraft] = useState(null)
+  const recurring = fin.recurring || []
+  const due = recurring.map((r) => ({ r, periods: duePeriods(r) })).filter((x) => x.periods.length)
+  const dueCount = due.reduce((a, x) => a + x.periods.length, 0)
 
   if (me?.role !== 'admin') return <Navigate to="/" replace />
+
+  const generateDue = () => {
+    if (!due.length) return
+    const n = dueCount
+    update((s) => {
+      due.forEach(({ r, periods }) => {
+        s.finance.transactions.push(...generateFromRecurring(r, periods))
+        const t = s.finance.recurring.find((x) => x.id === r.id)
+        if (t) t.lastGenerated = periods[periods.length - 1]
+      })
+      return s
+    })
+    toast(`${n} transaction${n === 1 ? '' : 's'} booked from recurring items`, 'ok')
+  }
+  const saveRecurring = () => {
+    if (!rdraft.description.trim()) return toast('Describe the recurring item.', 'error')
+    if (!Number(rdraft.net)) return toast('Enter the net amount.', 'error')
+    update((s) => {
+      s.finance.recurring = s.finance.recurring || []
+      const i = s.finance.recurring.findIndex((r) => r.id === rdraft.id)
+      const r = { ...rdraft, net: Number(rdraft.net), vatPct: Number(rdraft.vatPct) || 0, day: Number(rdraft.day) || 1 }
+      if (i >= 0) s.finance.recurring[i] = r
+      else s.finance.recurring.push(r)
+      return s
+    })
+    setRdraft(null)
+    toast('Recurring item saved', 'ok')
+  }
+  const monthlyLoad = recurring.filter((r) => r.active).reduce((a, r) => a + (r.type === 'expense' ? 1 : -1) * Number(r.net || 0) / (r.frequency === 'yearly' ? 12 : r.frequency === 'quarterly' ? 3 : 1), 0)
 
   const S = summarize(fin.transactions, { year, projects: state.projects })
   const taxEst = Math.max(0, Math.round(S.profit * (Number(fin.settings.taxRate || 0) / 100)))
@@ -103,7 +136,7 @@ export default function Finance() {
     <div className="finance">
       <PageHead title="Finance" sub="Administrators only. Company and projects together, net amounts unless stated.">
         <div className="segmented small">
-          {[['overview', 'Overview'], ['transactions', 'Transactions'], ['settings', 'Settings']].map(([k, l]) => (
+          {[['overview', 'Overview'], ['transactions', 'Transactions'], ['recurring', `Recurring${dueCount ? ` (${dueCount} due)` : ''}`], ['settings', 'Settings']].map(([k, l]) => (
             <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
         </div>
@@ -111,6 +144,13 @@ export default function Finance() {
         <Button variant="ghost" onClick={() => setDraft(emptyTx('income', { vatPct: fin.settings.vatDefault }))}>Add income</Button>
         <Button variant="primary" onClick={() => setDraft(emptyTx('expense', { vatPct: fin.settings.vatDefault }))}>Add expense</Button>
       </PageHead>
+
+      {dueCount > 0 && tab !== 'recurring' && (
+        <p className="notice fin-due">
+          {dueCount} recurring item{dueCount === 1 ? '' : 's'} due (rent, salaries, subscriptions) not yet booked.
+          <button className="link" onClick={generateDue}>Book them now</button>
+        </p>
+      )}
 
       {tab === 'overview' && (
         <>
@@ -206,6 +246,7 @@ export default function Finance() {
                       <td className="row-actions">
                         <button onClick={() => setDraft({ ...t })}>Edit</button>
                         <button onClick={() => setDraft({ ...t, id: uid(), date: new Date().toISOString().slice(0, 10), status: t.type === 'income' ? 'invoiced' : 'pending', paidOn: '', docNumber: '' })}>Copy</button>
+                        {!t.recurringId && <button onClick={() => setRdraft(emptyRecurring({ type: t.type, description: t.description, party: t.party, category: t.category, projectId: t.projectId, net: t.net, vatPct: t.vatPct, doc: t.doc, method: t.method, day: Number(t.date.slice(8, 10)) || 1, start: t.date.slice(0, 7), lastGenerated: t.date.slice(0, 7) }))}>Repeat</button>}
                         <Confirm onConfirm={() => remove(t)} label="Delete">×</Confirm>
                       </td>
                     </tr>
@@ -214,6 +255,51 @@ export default function Finance() {
               </table>
             </div>
           )}
+        </>
+      )}
+
+      {tab === 'recurring' && (
+        <>
+          <div className="toolbar">
+            <div className="toolbar-info">
+              <strong>{recurring.filter((r) => r.active).length} active</strong>
+              <span className="muted">≈ {money(Math.abs(monthlyLoad), cur)} net {monthlyLoad >= 0 ? 'out' : 'in'} per month{dueCount ? ` · ${dueCount} due` : ''}</span>
+            </div>
+            <div className="toolbar-actions">
+              {dueCount > 0 && <Button variant="primary" onClick={generateDue}>Book {dueCount} due</Button>}
+              <Button variant={dueCount ? 'ghost' : 'primary'} onClick={() => setRdraft(emptyRecurring({ vatPct: fin.settings.vatDefault }))}>Add recurring</Button>
+            </div>
+          </div>
+          {!recurring.length ? (
+            <Empty title="No recurring items yet">Rent, salaries, insurance, software subscriptions, retainers you invoice every month. Add them once; each month you book them with one click and they land in Transactions as "to pay" or "invoiced".</Empty>
+          ) : (
+            <table className="table">
+              <thead><tr><th>Item</th><th>Every</th><th>Day</th><th className="num">Net</th><th className="num">Gross</th><th>Project</th><th>Last booked</th><th>Next</th><th /></tr></thead>
+              <tbody>
+                {recurring.map((r) => {
+                  const periods = duePeriods(r)
+                  return (
+                    <tr key={r.id} className={r.active ? '' : 'dim'}>
+                      <td><strong>{r.description}</strong><div className="muted small">{r.type === 'income' ? 'Income' : 'Expense'} · {r.category}{r.party ? ` · ${r.party}` : ''}</div></td>
+                      <td className="small">{FREQ.find(([v]) => v === r.frequency)?.[1]}</td>
+                      <td className="small">{r.day}</td>
+                      <td className={`num ${r.type === 'income' ? 'under' : ''}`}>{money(r.net, cur)}</td>
+                      <td className="num">{money(grossOf(r), cur)}</td>
+                      <td className="small">{pName(r.projectId) || <span className="muted">Company</span>}</td>
+                      <td className="small">{r.lastGenerated || <span className="muted">never</span>}</td>
+                      <td className="small">{!r.active ? <span className="muted">paused</span> : periods.length ? <span className="late">{periods.length} due</span> : r.end && r.lastGenerated >= r.end ? <span className="muted">ended</span> : 'up to date'}</td>
+                      <td className="row-actions">
+                        <button onClick={() => setRdraft({ ...r })}>Edit</button>
+                        <button onClick={() => update((s) => { const x = s.finance.recurring.find((y) => y.id === r.id); if (x) x.active = !x.active; return s })}>{r.active ? 'Pause' : 'Resume'}</button>
+                        <Confirm onConfirm={() => update((s) => { s.finance.recurring = s.finance.recurring.filter((y) => y.id !== r.id); return s })} label="Delete">×</Confirm>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )}
+          <p className="fineprint">Booked items are normal transactions: edit the amount or mark them paid in Transactions. Deleting a recurring item keeps what was already booked.</p>
         </>
       )}
 
@@ -228,6 +314,39 @@ export default function Finance() {
           <div className="row-actions"><Button variant="primary" onClick={saveSettings}>Save</Button></div>
           <p className="fineprint">Finance is stored in its own table that only administrators can read. Expenses tied to a project also appear as actuals in that project's budget.</p>
         </section>
+      )}
+
+      {rdraft && (
+        <Modal open title={recurring.some((r) => r.id === rdraft.id) ? 'Edit recurring item' : 'New recurring item'} onClose={() => setRdraft(null)}
+          footer={<><Button variant="ghost" onClick={() => setRdraft(null)}>Cancel</Button><Button variant="primary" onClick={saveRecurring}>Save</Button></>}>
+          <div className="stack">
+            <div className="segmented small">
+              <button className={rdraft.type === 'expense' ? 'on' : ''} onClick={() => setRdraft({ ...rdraft, type: 'expense', category: EXPENSE_CATS.includes(rdraft.category) ? rdraft.category : 'Office rent' })}>Expense</button>
+              <button className={rdraft.type === 'income' ? 'on' : ''} onClick={() => setRdraft({ ...rdraft, type: 'income', category: INCOME_CATS.includes(rdraft.category) ? rdraft.category : 'Consulting' })}>Income</button>
+            </div>
+            <Field label="Description"><Input autoFocus value={rdraft.description} onChange={(e) => setRdraft({ ...rdraft, description: e.target.value })} placeholder={rdraft.type === 'expense' ? 'Office rent, Adobe subscription, Editor salary' : 'Monthly retainer'} /></Field>
+            <div className="row-3">
+              <Field label="Category"><Select value={rdraft.category} onChange={(e) => setRdraft({ ...rdraft, category: e.target.value })} options={rdraft.type === 'income' ? INCOME_CATS : EXPENSE_CATS} /></Field>
+              <Field label={rdraft.type === 'income' ? 'Client' : 'Vendor / payee'}><Input value={rdraft.party} onChange={(e) => setRdraft({ ...rdraft, party: e.target.value })} /></Field>
+              <Field label="Project"><Select value={rdraft.projectId} onChange={(e) => setRdraft({ ...rdraft, projectId: e.target.value })} options={[['', 'Company (no project)'], ...state.projects.map((p) => [p.id, p.title])]} /></Field>
+            </div>
+            <div className="row-3">
+              <Field label={`Net (${cur})`}><Input type="number" min="0" step="0.01" value={rdraft.net} onChange={(e) => setRdraft({ ...rdraft, net: e.target.value })} /></Field>
+              <Field label="VAT %"><Input type="number" min="0" max="30" value={rdraft.vatPct} onChange={(e) => setRdraft({ ...rdraft, vatPct: e.target.value })} /></Field>
+              <Field label="Document"><Select value={rdraft.doc} onChange={(e) => setRdraft({ ...rdraft, doc: e.target.value, vatPct: e.target.value === 'none' ? 0 : rdraft.vatPct })} options={DOCS} /></Field>
+            </div>
+            <div className="row-3">
+              <Field label="Every"><Select value={rdraft.frequency} onChange={(e) => setRdraft({ ...rdraft, frequency: e.target.value })} options={FREQ} /></Field>
+              <Field label="Day of month"><Input type="number" min="1" max="31" value={rdraft.day} onChange={(e) => setRdraft({ ...rdraft, day: e.target.value })} /></Field>
+              <Field label="Payment method"><Select value={rdraft.method} onChange={(e) => setRdraft({ ...rdraft, method: e.target.value })} options={METHODS} /></Field>
+            </div>
+            <div className="row-2">
+              <Field label="First month" hint="Months before this are not booked."><Input type="month" value={rdraft.start} onChange={(e) => setRdraft({ ...rdraft, start: e.target.value })} /></Field>
+              <Field label="Last month (optional)"><Input type="month" value={rdraft.end} onChange={(e) => setRdraft({ ...rdraft, end: e.target.value })} /></Field>
+            </div>
+            <Field label="Notes"><Input value={rdraft.notes} onChange={(e) => setRdraft({ ...rdraft, notes: e.target.value })} /></Field>
+          </div>
+        </Modal>
       )}
 
       {draft && (

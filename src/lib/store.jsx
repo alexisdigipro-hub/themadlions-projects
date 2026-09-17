@@ -66,7 +66,7 @@ export function emptyState() {
     projects: [],
     events: [],
     library: { contacts: [], locations: [] },
-    finance: { transactions: [], settings: { currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 } },
+    finance: { transactions: [], recurring: [], settings: { currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 } },
     settings: { aiProvider: 'anthropic', aiKey: '', aiModel: 'claude-sonnet-4-6', mapsKey: '' },
   }
 }
@@ -131,7 +131,7 @@ function migrate(parsed) {
   // migrations: new modules and fields added after the first release
   parsed.projects = (parsed.projects || []).map(migrateProject)
   parsed.users = (parsed.users || []).map((u) => ({ ...u, permissions: { ...defaultPermissions(u.role === 'admin' ? 'edit' : 'view'), ...(u.permissions || {}) } }))
-  return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}) } }
+  return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), recurring: parsed.finance?.recurring || [], settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}) } }
 }
 
 /* ---------- context ---------- */
@@ -206,6 +206,7 @@ export function StoreProvider({ children }) {
       },
       finance: {
         transactions: finRows.filter((r) => r.kind === 'tx').map((r) => ({ ...r.data, id: r.id })),
+        recurring: finRows.filter((r) => r.kind === 'recurring').map((r) => ({ ...r.data, id: r.id })),
         settings: { ...emptyState().finance.settings, ...finSettings },
       },
       settings: { ...emptyState().settings, ...(w.data.settings || {}), aiKey: localStorage.getItem(AI_KEY) || '' },
@@ -307,6 +308,13 @@ export function StoreProvider({ children }) {
           const kind = payload.new?.kind || payload.old?.kind
           if (kind === 'settings') {
             if (payload.eventType !== 'DELETE') fin.settings = { ...fin.settings, ...payload.new.data }
+          } else if (kind === 'recurring') {
+            if (payload.eventType === 'DELETE') fin.recurring = (fin.recurring || []).filter((t) => t.id !== payload.old.id)
+            else {
+              if (payload.new.updated_by === authUser?.id && myWrites.current.has(payload.new.id)) return s
+              const r = { ...payload.new.data, id: payload.new.id }
+              fin.recurring = (fin.recurring || []).some((t) => t.id === r.id) ? fin.recurring.map((t) => (t.id === r.id ? r : t)) : [...(fin.recurring || []), r]
+            }
           } else if (payload.eventType === 'DELETE') fin.transactions = fin.transactions.filter((t) => t.id !== payload.old.id)
           else {
             if (payload.new.updated_by === authUser?.id && myWrites.current.has(payload.new.id)) return s
@@ -420,6 +428,24 @@ export function StoreProvider({ children }) {
       Object.values(before).filter((t) => !ids.has(t.id)).forEach((t) =>
         schedule('fd:' + t.id, async () => {
           const { error } = await supabase.from('finance').delete().eq('id', t.id)
+          if (error) throw error
+        }, 0),
+      )
+      const rBefore = Object.fromEntries((prev.finance?.recurring || []).map((t) => [t.id, t]))
+      const rAfter = next.finance?.recurring || []
+      rAfter.forEach((r) => {
+        if (rBefore[r.id] && JSON.stringify(rBefore[r.id]) === JSON.stringify(r)) return
+        myWrites.current.add(r.id)
+        schedule('fr:' + r.id, async () => {
+          const { error } = await supabase.from('finance').upsert({ id: r.id, workspace_id: ws, kind: 'recurring', data: r })
+          if (error) throw error
+          setTimeout(() => myWrites.current.delete(r.id), 4000)
+        })
+      })
+      const rIds = new Set(rAfter.map((r) => r.id))
+      Object.values(rBefore).filter((r) => !rIds.has(r.id)).forEach((r) =>
+        schedule('frd:' + r.id, async () => {
+          const { error } = await supabase.from('finance').delete().eq('id', r.id)
           if (error) throw error
         }, 0),
       )
