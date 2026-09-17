@@ -72,8 +72,14 @@ export default function TasksAll() {
           <button className={who === 'me' ? 'on' : ''} onClick={() => setWho('me')}>Mine</button>
           <button className={who === 'all' ? 'on' : ''} onClick={() => setWho('all')}>Everyone</button>
         </div>
-        <Select value={proj} onChange={(e) => setProj(e.target.value)} options={[['', 'All projects'], ...projects.map((p) => [p.id, p.title])]} />
-        <Select value={status} onChange={(e) => setStatus(e.target.value)} options={[['open', 'Open'], ['done', 'Done'], ['all', 'All']]} />
+        <div className="segmented small">
+          {[['open', 'Open'], ['done', 'Done'], ['all', 'All']].map(([k, l]) => (
+            <button key={k} className={status === k ? 'on' : ''} onClick={() => setStatus(k)}>{l}</button>
+          ))}
+        </div>
+        {projects.length > 1 && (
+          <Select className="compact" value={proj} onChange={(e) => setProj(e.target.value)} options={[['', 'All projects'], ...projects.map((p) => [p.id, p.title])]} />
+        )}
       </PageHead>
       {base.length > 0 && <DeptChips tasks={base} dept={dept} setDept={setDept} filter={status} />}
 

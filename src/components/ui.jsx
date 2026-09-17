@@ -22,9 +22,9 @@ export function Textarea(props) {
   return <textarea className="input textarea" {...props} />
 }
 
-export function Select({ options, children, ...props }) {
+export function Select({ options, children, className = '', ...props }) {
   return (
-    <select className="input select" {...props}>
+    <select className={`input select ${className}`} {...props}>
       {options
         ? options.map((o) => {
             const [v, l] = Array.isArray(o) ? o : [o, o]
