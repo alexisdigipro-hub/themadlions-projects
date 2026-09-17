@@ -19,6 +19,8 @@ export default function PeopleAll() {
   const [dept, setDept] = useState('')
   const [draft, setDraft] = useState(null)
   const [photosFor, setPhotosFor] = useState(null)
+  const [view, setView] = useState(() => localStorage.getItem('tml_people_view') || 'cards')
+  const pickView = (v) => { setView(v); localStorage.setItem('tml_people_view', v) }
   const people = state.library.contacts
   const projects = visibleProjects(state, user)
 
@@ -82,6 +84,10 @@ export default function PeopleAll() {
           <button className={kind === 'crew' ? 'on' : ''} onClick={() => setKind('crew')}>Crew</button>
         </div>
         <div className="toolbar-actions">
+          <div className="segmented small">
+            <button className={view === 'cards' ? 'on' : ''} onClick={() => pickView('cards')}>Cards</button>
+            <button className={view === 'table' ? 'on' : ''} onClick={() => pickView('table')}>List</button>
+          </div>
           <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, role, phone, agent…" />
           <Select value={dept} onChange={(e) => setDept(e.target.value)} options={[['', 'All departments'], ...DEPTS.map((d) => [d, d])]} />
         </div>
@@ -91,8 +97,28 @@ export default function PeopleAll() {
         <Empty title={people.length ? 'No matches' : 'The library is empty'}>
           {people.length ? 'Try another search.' : 'People you add inside a project land here automatically, so the next project can pick them from the list. You can also add them directly.'}
         </Empty>
+      ) : view === 'table' ? (
+        <table className="table people-table">
+          <thead><tr><th /><th>Name</th><th>{kind === 'cast' ? 'Type' : 'Department · role'}</th><th>Phone</th><th>Email</th><th>Projects</th>{editable && <th />}</tr></thead>
+          <tbody>
+            {list.map((c) => {
+              const used = contactProjects(projects, c.id)
+              return (
+                <tr key={c.id}>
+                  <td><button className="avatar" onClick={() => setPhotosFor(c.id)} aria-label="Photos">{c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}</button></td>
+                  <td><strong>{c.name}</strong>{c.agent && <div className="muted small">Agent: {c.agent}</div>}</td>
+                  <td className="small">{c.kind === 'cast' ? c.role : `${c.dept}${c.role ? ` · ${c.role}` : ''}`}</td>
+                  <td className="small">{c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</td>
+                  <td className="small">{c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</td>
+                  <td className="small person-projects">{used.map((p) => <Link key={p.id} to={`/p/${p.id}/people`} style={{ '--pc': p.color }}>{p.title}</Link>)}</td>
+                  {editable && <td className="row-actions"><button onClick={() => setDraft({ ...c })}>Edit</button><Confirm onConfirm={() => remove(c)} label="Delete">×</Confirm></td>}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       ) : (
-        <div className="people-grid">
+        <div className="people-grid compact">
           {list.map((c) => {
             const used = contactProjects(projects, c.id)
             return (

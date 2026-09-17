@@ -1,0 +1,130 @@
+import { Link } from 'react-router-dom'
+import { PageHead } from '../components/ui.jsx'
+import { CATEGORIES, STATUSES, today, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { projectProgress } from '../lib/progress.js'
+import { budgetTotals, money } from './project/Budget.jsx'
+import { summarize } from '../lib/finance.js'
+import { fmtDate } from '../lib/dates.js'
+
+const addDaysISO = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
+
+export default function Home() {
+  const { state } = useStore()
+  const user = useCurrentUser()
+  const projects = visibleProjects(state, user)
+  const isAdmin = user?.role === 'admin'
+  const t0 = today(), t7 = addDaysISO(7), t30 = addDaysISO(30)
+
+  const active = projects.filter((p) => !['Delivered', 'On hold'].includes(p.status))
+  const rows = projects
+    .map((p) => {
+      const pr = projectProgress(p)
+      const days = [...p.shootingDays].sort((a, b) => a.date.localeCompare(b.date))
+      const next = days.find((d) => d.date >= t0)
+      const open = (p.tasks || []).filter((t) => t.status !== 'done')
+      const overdue = open.filter((t) => t.due && t.due < t0).length
+      const bt = budgetTotals(p)
+      return { p, pct: pr.pct, next, open: open.length, overdue, bt, cap: Number(p.budget?.cap) || 0 }
+    })
+    .sort((a, b) => (a.p.status === 'Delivered') - (b.p.status === 'Delivered') || (a.next?.date || '9').localeCompare(b.next?.date || '9') || b.pct - a.pct)
+
+  const week = projects.flatMap((p) => p.shootingDays.filter((d) => d.date >= t0 && d.date <= t7).map((d) => ({ p, d })))
+    .concat(state.events.filter((e) => e.date >= t0 && e.date <= t7 && e.type !== 'shoot').map((e) => ({ e, p: projects.find((x) => x.id === e.projectId) })))
+    .sort((a, b) => (a.d?.date || a.e?.date).localeCompare(b.d?.date || b.e?.date))
+  const month = projects.flatMap((p) => p.shootingDays.filter((d) => d.date > t7 && d.date <= t30)).length
+  const overdueTasks = [...projects.flatMap((p) => (p.tasks || []).map((t) => ({ ...t, p }))), ...(state.todos || [])].filter((t) => t.status !== 'done' && t.due && t.due < t0)
+  const mine = (t) => !t.assignee || t.assignee.trim().toLowerCase() === (user?.name || '').trim().toLowerCase()
+  const dueSoon = [...projects.flatMap((p) => (p.tasks || []).map((t) => ({ ...t, p }))), ...(state.todos || [])].filter((t) => t.status !== 'done' && t.due && t.due >= t0 && t.due <= t7 && mine(t))
+  const byStatus = STATUSES.map((st) => [st, projects.filter((p) => p.status === st).length]).filter(([, n]) => n)
+  const byCat = CATEGORIES.map((c) => [c, projects.filter((p) => p.category === c).length]).filter(([, n]) => n)
+  const overCap = rows.filter((r) => r.cap && r.bt.total > r.cap)
+  const fin = isAdmin ? summarize(state.finance?.transactions || [], { year: new Date().getFullYear(), projects: state.projects }) : null
+  const cur = state.finance?.settings?.currency || 'EUR'
+  const totalBudget = active.reduce((a, p) => a + budgetTotals(p).total, 0)
+
+  return (
+    <div className="home">
+      <PageHead title={`Hello ${(user?.name || '').split(' ')[0]}`} sub={`${active.length} active project${active.length === 1 ? '' : 's'} · ${week.length} thing${week.length === 1 ? '' : 's'} this week · ${overdueTasks.length} overdue task${overdueTasks.length === 1 ? '' : 's'}`} />
+
+      <div className="home-grid">
+        <section className="panel">
+          <div className="panel-head"><h2>This week</h2><Link className="link small" to="/calendar">Calendar</Link></div>
+          {!week.length ? <p className="muted small">Nothing scheduled in the next 7 days{month ? `, ${month} shoot day${month === 1 ? '' : 's'} later this month` : ''}.</p> : (
+            <ul className="plain home-week">
+              {week.map((w, i) => (
+                <li key={i}>
+                  <span className="home-date">{fmtDate(w.d?.date || w.e?.date, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                  {w.d ? (
+                    <Link to={`/p/${w.p.id}/callsheets`} style={{ '--pc': w.p.color }}><span className="dot" />{w.p.title} · {w.p.category === 'Events' ? 'event day' : 'shoot day'} · call {w.d.callTime}</Link>
+                  ) : (
+                    <span><span className="dot" style={{ '--pc': w.p?.color || 'var(--muted)' }} />{w.e.title}{w.p ? ` · ${w.p.title}` : ''}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="panel">
+          <div className="panel-head"><h2>Needs attention</h2><Link className="link small" to="/tasks">Tasks</Link></div>
+          <ul className="plain home-alerts">
+            {overdueTasks.slice(0, 6).map((t) => <li key={t.id} className="late">Overdue: {t.title}{t.p ? ` · ${t.p.title}` : ''}</li>)}
+            {overCap.map((r) => <li key={r.p.id} className="late">Budget over cap: {r.p.title} ({money(r.bt.total - r.cap, r.p.budget?.currency || 'EUR')} over)</li>)}
+            {dueSoon.slice(0, 5).map((t) => <li key={t.id}>Due {fmtDate(t.due)}: {t.title}</li>)}
+            {isAdmin && fin && fin.owedCount > 0 && <li>{fin.owedCount} unpaid invoice{fin.owedCount === 1 ? '' : 's'} · {money(fin.owedToUs, cur)} owed to us</li>}
+            {!overdueTasks.length && !overCap.length && !dueSoon.length && !(isAdmin && fin?.owedCount) && <li className="muted">All clear.</li>}
+          </ul>
+        </section>
+      </div>
+
+      <section className="panel">
+        <div className="panel-head"><h2>Projects</h2><Link className="link small" to="/">All projects</Link></div>
+        {!rows.length ? <p className="muted">No projects yet.</p> : (
+          <div className="table-wrap">
+            <table className="table home-projects">
+              <thead><tr><th>Project</th><th>Status</th><th>Progress</th><th>Next day</th><th className="num">Open tasks</th><th className="num">Budget</th></tr></thead>
+              <tbody>
+                {rows.map(({ p, pct, next, open, overdue, bt, cap }) => (
+                  <tr key={p.id} className={p.status === 'Delivered' ? 'dim' : ''}>
+                    <td className="person-cell">
+                      {p.coverThumb ? <img className="avatar-img sq" src={p.coverThumb} alt="" /> : <span className="dot" style={{ '--pc': p.color }} />}
+                      <span><Link to={`/p/${p.id}`}><strong>{p.title}</strong></Link><div className="muted small">{p.category}{p.client ? ` · ${p.client}` : ''}</div></span>
+                    </td>
+                    <td className="small">{p.status}</td>
+                    <td><div className="mini-progress" title={`${pct}%`}><span style={{ width: `${pct}%`, background: p.color }} /></div><span className="small muted">{pct}%</span></td>
+                    <td className="small">{next ? `${fmtDate(next.date)} · ${next.callTime}` : <span className="muted">–</span>}</td>
+                    <td className={`num ${overdue ? 'late' : ''}`}>{open}{overdue ? ` (${overdue} late)` : ''}</td>
+                    <td className={`num small ${cap && bt.total > cap ? 'over' : ''}`}>{bt.lines ? `${money(bt.total, bt.currency)}${cap ? ` / ${money(cap, bt.currency)}` : ''}` : <span className="muted">–</span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <div className="home-grid">
+        <section className="panel">
+          <h2>By status</h2>
+          <ul className="plain bars">{byStatus.map(([k, n]) => <li key={k}><span>{k}</span><span className="bar"><span style={{ width: `${(n / projects.length) * 100}%` }} /></span><span className="num">{n}</span></li>)}</ul>
+        </section>
+        <section className="panel">
+          <h2>By type</h2>
+          <ul className="plain bars">{byCat.map(([k, n]) => <li key={k}><span>{k}</span><span className="bar"><span style={{ width: `${(n / projects.length) * 100}%` }} /></span><span className="num">{n}</span></li>)}</ul>
+          <p className="muted small">Active budgets total {money(totalBudget, cur)}.</p>
+        </section>
+        {isAdmin && fin && (
+          <section className="panel">
+            <div className="panel-head"><h2>Finance {new Date().getFullYear()}</h2><Link className="link small" to="/finance">Finance</Link></div>
+            <dl className="details">
+              <dt>Profit</dt><dd className={fin.profit < 0 ? 'over' : 'under'}>{money(fin.profit, cur)}</dd>
+              <dt>Owed to us</dt><dd>{money(fin.owedToUs, cur)}</dd>
+              <dt>We owe</dt><dd>{money(fin.weOwe, cur)}</dd>
+              <dt>This month</dt><dd>{money(fin.monthIn - fin.monthOut, cur)}</dd>
+            </dl>
+          </section>
+        )}
+      </div>
+    </div>
+  )
+}

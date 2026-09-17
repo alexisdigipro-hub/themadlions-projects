@@ -22,6 +22,7 @@ export default function Layout() {
   const [open, setOpen] = useState(false)
 
   const items = [
+    { to: '/home', label: 'Home', show: true, icon: 'home' },
     { to: '/', label: 'Projects', end: true, show: can(user, 'projects'), icon: 'projects' },
     { to: '/calendar', label: 'Calendar', show: can(user, 'calendar'), icon: 'calendar' },
     { to: '/tasks', label: 'Tasks', show: can(user, 'tasks'), icon: 'tasks' },

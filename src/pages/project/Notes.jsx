@@ -2,6 +2,10 @@ import { useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
+import { useRef } from 'react'
+import { deleteFile, fileIcon, fileUrl, fmtBytes, uploadFile } from '../../lib/files.js'
+import { fmtDate } from '../../lib/dates.js'
+import { remote } from '../../lib/supabase.js'
 
 const KINDS = ['Google Drive', 'Google Doc', 'Google Sheet', 'Frame.io', 'Reference', 'Contract', 'Permit', 'Other']
 
@@ -12,6 +16,36 @@ export default function Notes() {
   const [notes, setNotes] = useState(project.productionNotes || '')
   const editable = canEdit('files')
   const links = project.links || []
+  const files = project.files || []
+  const fileRef = useRef()
+  const [busy, setBusy] = useState('')
+  const [folder, setFolder] = useState(project.cloudFolder || '')
+  const addFiles = async (list) => {
+    const arr = Array.from(list || [])
+    if (!arr.length) return
+    for (let i = 0; i < arr.length; i++) {
+      const f = arr[i]
+      setBusy(`${i + 1}/${arr.length} ${f.name}`)
+      try {
+        const id = uid()
+        const { path } = await uploadFile({ projectId: project.id, id, file: f })
+        edit((p) => { p.files = [...(p.files || []), { id, name: f.name, path, type: f.type, bytes: f.size, addedAt: new Date().toISOString(), note: '' }] })
+      } catch (e) {
+        toast(e.message, 'error')
+      }
+    }
+    setBusy('')
+    if (fileRef.current) fileRef.current.value = ''
+  }
+  const open = async (f, download = false) => {
+    const u = await fileUrl(f, download)
+    if (!u) return toast('Could not open the file.', 'error')
+    window.open(u, '_blank')
+  }
+  const removeFile = async (f) => {
+    await deleteFile(f.path).catch(() => {})
+    edit((p) => (p.files = (p.files || []).filter((x) => x.id !== f.id)))
+  }
 
   const save = () => {
     if (!draft.title.trim() || !draft.url.trim()) return toast('Title and link are both needed.', 'error')
@@ -29,14 +63,54 @@ export default function Notes() {
     <div className="cols">
       <section className="panel">
         <div className="panel-head">
-          <h2>Files & links</h2>
+          <h2>Files</h2>
+          {editable && (
+            <>
+              <input ref={fileRef} type="file" multiple hidden onChange={(e) => addFiles(e.target.files)} />
+              <Button size="sm" variant="primary" onClick={() => fileRef.current?.click()} disabled={!!busy}>{busy || 'Upload files'}</Button>
+            </>
+          )}
+        </div>
+        <p className="muted small">Documents, contracts, treatments, references, small videos. Up to 50 MB per file{remote ? '' : ' (local mode: this session only)'}. Footage and masters stay in the cloud folder below.</p>
+        {!files.length ? (
+          <Empty title="No files yet" />
+        ) : (
+          <ul className="file-list">
+            {files.map((f) => (
+              <li key={f.id}>
+                <span className="file-ico">{fileIcon(f.name, f.type)}</span>
+                <span className="grow">
+                  <strong>{f.name}</strong>
+                  <div className="muted small">{fmtBytes(f.bytes || 0)} · {fmtDate((f.addedAt || '').slice(0, 10))}{f.note ? ` · ${f.note}` : ''}</div>
+                </span>
+                <span className="row-actions">
+                  <button onClick={() => open(f)}>Open</button>
+                  <button onClick={() => open(f, true)}>Download</button>
+                  {editable && <Confirm onConfirm={() => removeFile(f)} label="Delete">×</Confirm>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="cloud-folder">
+          <Field label="Cloud folder" hint="pCloud, Google Drive or Dropbox folder with the footage and masters for this project.">
+            <div className="row-actions">
+              <Input value={folder} onChange={(e) => setFolder(e.target.value)} onBlur={() => edit((p) => (p.cloudFolder = folder.trim()))} placeholder="https://my.pcloud.com/…" disabled={!editable} />
+              {project.cloudFolder && <a className="btn btn-ghost btn-sm" href={project.cloudFolder} target="_blank" rel="noreferrer">Open</a>}
+            </div>
+          </Field>
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="panel-head">
+          <h2>Links</h2>
           {editable && (
             <Button size="sm" variant="primary" onClick={() => setDraft({ id: uid(), title: '', url: '', kind: 'Google Drive', note: '' })}>
               Add link
             </Button>
           )}
         </div>
-        <p className="muted small">Phase 1 keeps files where they already live (Drive, Frame.io, Dropbox) and links to them. Uploads arrive with the Supabase backend.</p>
         {links.length === 0 ? (
           <Empty title="No files linked" />
         ) : (

@@ -17,7 +17,7 @@ export default function People() {
   const [draft, setDraft] = useState(null)
   const [pick, setPick] = useState(null) // { q, sel, character }
   const [tab, setTab] = useState('cast')
-  const [view, setView] = useState('cards')
+  const [view, setView] = useState(() => localStorage.getItem('tml_people_view') || 'cards')
   const [photosFor, setPhotosFor] = useState(null) // contact id
   const editable = canEdit('contacts')
   const photoTarget = project.contacts.find((c) => c.id === photosFor)
@@ -82,8 +82,8 @@ export default function People() {
         </div>
         <div className="toolbar-actions">
           <div className="segmented small">
-            <button className={view === 'cards' ? 'on' : ''} onClick={() => setView('cards')}>Cards</button>
-            <button className={view === 'table' ? 'on' : ''} onClick={() => setView('table')}>Table</button>
+            <button className={view === 'cards' ? 'on' : ''} onClick={() => { setView('cards'); localStorage.setItem('tml_people_view', 'cards') }}>Cards</button>
+            <button className={view === 'table' ? 'on' : ''} onClick={() => { setView('table'); localStorage.setItem('tml_people_view', 'table') }}>List</button>
           </div>
           {project.contacts.length > 0 && (
             <Button variant="ghost" onClick={exportCSV}>
@@ -117,7 +117,7 @@ export default function People() {
           {tab === 'cast' ? 'Link actors to the characters from the breakdown so call sheets fill themselves.' : 'Add heads of department first. They appear on every call sheet.'}
         </Empty>
       ) : view === 'cards' ? (
-        <div className="people-grid">
+        <div className="people-grid compact">
           {list.map((c) => (
             <article key={c.id} className="person">
               <button className="person-photo" onClick={() => setPhotosFor(c.id)} aria-label="Photos">

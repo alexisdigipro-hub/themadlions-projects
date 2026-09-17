@@ -21,6 +21,8 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Send message: the call sheet as a WhatsApp-ready message (whole sheet for the group, or a personal message per cast and crew member with only their call time and location), mail with everyone in Bcc, or copy. WhatsApp links on cast and crew cards
 - Project cover image (compressed, stored in the project) shown on the dashboard card, the project header, the Overview and the call sheet; Overview progress bar with weighted stages per category (script, breakdown, budget, cast, locations, shot list, schedule, shoot days reported, post and delivery; Editing projects use cut, approval and deliverables), each stage linking to its tab; dashboard cards carry a thin progress bar
 - Transcript from the audio shown in the Script tab of music video projects, with copy and "use as script text"
+- Home: this week (shoot and event days, calendar items), needs attention (overdue tasks, budgets over cap, unpaid invoices for admins), all projects with progress, next day, open tasks and budget vs cap, counts by status and type, finance snapshot for admins
+- Project files: uploads to a private Supabase bucket (50 MB per file on the free plan) with open and download, plus a cloud folder link per project (pCloud, Drive, Dropbox) for footage and masters
 - Light and dark themes with four accent colours (Settings → Display, per device); the light theme is the default
 - Call sheets laid out like a professional call sheet: company block with producer, director and key crew, big general crew call with a one-line message, day and date with weather, sunrise and sunset, shooting call / lunch / wrap, a pinned note everyone reads, and a location grid with set location, parking and nearest hospital
 - Call sheets generated per shoot day with sunrise, sunset, golden hour and a fetched weather forecast (open-meteo, no key), printable to PDF
@@ -63,7 +65,7 @@ Settings → AI breakdown → paste an Anthropic API key. It is stored only in t
 ## Phase 2: Supabase (team logins, one shared database)
 
 1. Create a project at supabase.com (region Frankfurt).
-2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run. Then the same with `supabase/storage.sql` (photo bucket) `supabase/library.sql` (company library), `supabase/todos.sql` (general tasks), `supabase/audio.sql` (song files) and `supabase/finance.sql` (administrators-only finance).
+2. SQL Editor → New query → paste all of `supabase/schema.sql` → Run. Then the same with `supabase/storage.sql` (photo bucket) `supabase/library.sql` (company library), `supabase/todos.sql` (general tasks), `supabase/audio.sql` (song files), `supabase/files.sql` (project files) and `supabase/finance.sql` (administrators-only finance).
 3. Authentication → Providers → Email: keep it enabled; turn **Confirm email** off if you want teammates to sign in immediately.
 4. Project Settings → API: copy the Project URL and the publishable (anon) key into `src/lib/supabaseConfig.js`, commit, push. The site rebuilds in remote mode.
 5. Open the site, create your account. The first account becomes the administrator and the workspace is created automatically.
