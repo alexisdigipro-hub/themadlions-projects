@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
-import { CATEGORIES, DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, sampleProject, uid, useCurrentUser, useStore } from '../lib/store.jsx'
+import { CATEGORIES, DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, sampleProject, today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { projectProgress } from '../lib/progress.js'
 import { remote, supabase } from '../lib/supabase.js'
 
@@ -87,7 +87,7 @@ export default function Settings() {
     replaceState({ ...state, projects: [...state.projects.filter((p) => !localData.projects.some((q) => q.id === p.id)), ...localData.projects], events: [...state.events.filter((e) => !localData.events.some((q) => q.id === e.id)), ...localData.events] })
     toast(`Imported ${localData.projects.length} projects from this browser`, 'ok')
   }
-  const backup = () => download(`themadlions-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(state, null, 2), 'application/json')
+  const backup = () => download(`themadlions-backup-${today()}.json`, JSON.stringify(state, null, 2), 'application/json')
   const restore = async (file) => {
     if (!file) return
     try {

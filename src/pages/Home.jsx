@@ -5,10 +5,9 @@ import { EVENT_TYPES, today, unavailableOn, useCurrentUser, useStore, visiblePro
 import MiniCalendar from '../components/MiniCalendar.jsx'
 import { projectProgress } from '../lib/progress.js'
 import { budgetTotals, money } from './project/Budget.jsx'
-import { fmtDate } from '../lib/dates.js'
+import { addDays, fmtDate } from '../lib/dates.js'
 import { initialsOf } from './Profile.jsx'
 
-const addDaysISO = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
 
 /* Home is a list of blocks the person can reorder. The order is a personal, per-device
    preference, so it lives in localStorage next to the theme and the text size rather than in
@@ -45,7 +44,7 @@ export default function Home() {
   const { state } = useStore()
   const user = useCurrentUser()
   const projects = visibleProjects(state, user)
-  const t0 = today(), t7 = addDaysISO(7)
+  const t0 = today(), t7 = addDays(t0, 7)
   // The team strip follows whichever day is picked in the mini calendar below it.
   const [day, setDay] = useState(t0)
   const team = state.users.filter((u) => u.active !== false)

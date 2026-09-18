@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Confirm, Field, Input, PageHead, useToast } from '../components/ui.jsx'
-import { canSendNotices, uid, useCurrentUser, useStore } from '../lib/store.jsx'
-import { fmtDate } from '../lib/dates.js'
+import { canSendNotices, today as todayISO, uid, useCurrentUser, useStore } from '../lib/store.jsx'
+import { addDays, fmtDate } from '../lib/dates.js'
 import { SendNoticeModal, SentNotices, sendAutoNotice, teamExcept } from '../components/Notices.jsx'
 
 export const CHAT_READ_KEY = 'tml_chat_read'
@@ -59,9 +59,8 @@ export default function Chat() {
   const remove = (id) => update((s) => { s.chat = (s.chat || []).filter((m) => m.id !== id); return s })
   const onKey = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }
   const dayLabel = (d) => {
-    const today = new Date().toISOString().slice(0, 10)
-    const y = new Date(); y.setDate(y.getDate() - 1)
-    return d === today ? 'Today' : d === y.toISOString().slice(0, 10) ? 'Yesterday' : fmtDate(d, { weekday: 'long', day: 'numeric', month: 'long' })
+    const t0 = todayISO()
+    return d === t0 ? 'Today' : d === addDays(t0, -1) ? 'Yesterday' : fmtDate(d, { weekday: 'long', day: 'numeric', month: 'long' })
   }
 
   return (

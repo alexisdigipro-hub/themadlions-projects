@@ -1,4 +1,4 @@
-import { uid } from './store.jsx'
+import { today, uid } from './store.jsx'
 
 export const INCOME_CATS = ['Production fee', 'Post-production fee', 'Directing fee', 'Equipment rental out', 'Licensing & rights', 'Studio rental', 'Consulting', 'Other income']
 export const EXPENSE_CATS = ['Crew', 'Cast', 'Equipment rental', 'Equipment purchase', 'Locations & permits', 'Art & props', 'Wardrobe & makeup', 'Transport', 'Catering', 'Post-production', 'Music & rights', 'Insurance', 'Office rent', 'Salaries', 'Software & subscriptions', 'Marketing', 'Accounting & legal', 'Taxes & fees', 'Bank charges', 'Travel', 'Other expense']
@@ -12,7 +12,7 @@ export const METHODS = ['Bank', 'Cash', 'Card', 'Other']
 export const defaultFinanceSettings = () => ({ currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 })
 
 export const emptyTx = (type = 'expense', partial = {}) => ({
-  id: uid(), type, date: new Date().toISOString().slice(0, 10), projectId: '', category: type === 'income' ? 'Production fee' : 'Crew',
+  id: uid(), type, date: today(), projectId: '', category: type === 'income' ? 'Production fee' : 'Crew',
   description: '', party: '', net: '', vatPct: 24, status: type === 'income' ? 'invoiced' : 'pending', doc: 'invoice', docNumber: '', docLink: '',
   method: 'Bank', paidOn: '', notes: '', syncBudget: true, createdAt: new Date().toISOString(), ...partial,
 })

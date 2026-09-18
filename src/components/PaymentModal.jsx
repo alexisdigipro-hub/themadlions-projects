@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button, Field, Input, Modal, Select, useToast } from './ui.jsx'
-import { uid, useStore } from '../lib/store.jsx'
+import { today, uid, useStore } from '../lib/store.jsx'
 import { DOCS, METHODS, emptyTx, money } from '../lib/finance.js'
 import { lineBalance, lineEstimate, linePaid } from '../lib/budget.js'
 
@@ -35,7 +35,7 @@ export default function PaymentModal({ project, line, onClose }) {
   const toast = useToast()
   const cur = project.budget?.currency || 'EUR'
   const balance = lineBalance(line)
-  const [f, setF] = useState({ amount: balance || lineEstimate(line), date: new Date().toISOString().slice(0, 10), method: 'Bank', doc: 'invoice', docNumber: '', note: balance && balance < lineEstimate(line) ? 'balance' : '', vatPct: state.finance.settings.vatDefault ?? 24 })
+  const [f, setF] = useState({ amount: balance || lineEstimate(line), date: today(), method: 'Bank', doc: 'invoice', docNumber: '', note: balance && balance < lineEstimate(line) ? 'balance' : '', vatPct: state.finance.settings.vatDefault ?? 24 })
   const save = () => {
     if (!Number(f.amount)) return toast('Enter the amount.', 'error')
     update((s) => { recordPayment(s, { projectId: project.id, lineId: line.id, ...f }); return s })
