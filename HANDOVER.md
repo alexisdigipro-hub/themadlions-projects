@@ -8,7 +8,7 @@ Web-based film production app for The Mad Lions (Alex Konstantinidis, Athens). R
 - Repo: https://github.com/alexisdigipro-hub/themadlions-projects (owner: alexisdigipro-hub)
 - Live: https://alexisdigipro-hub.github.io/themadlions-projects/ (auto-deploys on push to main via .github/workflows/deploy.yml, ~40 s)
 - Supabase project: https://naibamqexcqnqhbbqafa.supabase.co (publishable key in src/lib/supabaseConfig.js; build with VITE_LOCAL_MODE=1 for a local-storage build used in tests)
-- Pushing needs a GitHub token (classic, scopes repo + workflow) from Alex; pass it as a Basic auth header on git push, never commit it.
+- Work continues in Claude Code (since 18 Sep 2026), see CLAUDE.md. Local sessions push to main with Alex's own git login; cloud sessions push a branch and Alex merges the PR. No GitHub tokens in chats, ever.
 
 ## Architecture in one paragraph
 Every project is one JSON document (projects.data). Events, library (people, locations, general tasks), finance (admin-only) and members are their own tables. src/lib/store.jsx holds the whole state, persists to localStorage in local mode or syncs diffs to Supabase (debounced upserts, realtime merges). Pages call `update(fn)` / `updateProject(id, fn)` and mutate a draft. Permissions: per user, per module, view/edit, plus project access; RLS enforces membership, project access and edit rights.
