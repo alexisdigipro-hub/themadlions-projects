@@ -1,17 +1,20 @@
-name: Deploy to GitHub Pages
+name: Build and deploy to GitHub Pages
 
+# Pushes to main build and then go live.
+# Pull requests into main only build, so a broken commit is caught before it is merged.
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
+# One run per branch or pull request. A pull request build never cancels a live deploy.
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -26,11 +29,18 @@ jobs:
       - run: npm ci
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
         with:
           path: dist
+
   deploy:
+    # Only main goes live. A pull request stops after the build above.
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
