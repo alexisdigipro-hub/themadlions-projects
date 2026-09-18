@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { CATEGORIES, DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, sampleProject, uid, useCurrentUser, useStore } from '../lib/store.jsx'
-import { projectProgress, stageKeysFor } from '../lib/progress.js'
+import { projectProgress } from '../lib/progress.js'
+import { remote, supabase } from '../lib/supabase.js'
 
 import { testKey } from '../lib/ai.js'
 import { download } from '../lib/dates.js'
@@ -339,6 +340,13 @@ export default function Settings() {
           </section>
         )}
 
+        {isAdmin && (
+          <section className="panel" data-tab="data">
+            <h2>Activity</h2>
+            <p className="small muted">Who changed what, newest first. Project edits are grouped per person and project every few seconds. Kept for 180 days.</p>
+            {tab === 'data' && <ActivityLog />}
+          </section>
+        )}
         <section className="panel" data-tab="data">
           <h2>Your data</h2>
           <p className="muted small">
@@ -417,6 +425,42 @@ function ProgressSettings({ state, setSetting }) {
         <Button variant="ghost" onClick={addCustom}>Add</Button>
       </div>
       <p className="small muted">Weights are relative: a stage weighing 25 counts 2.5 times a stage weighing 10.</p>
+    </div>
+  )
+}
+
+
+function ActivityLog() {
+  const { state } = useStore()
+  const [rows, setRows] = useState(null)
+  const [err, setErr] = useState('')
+  const [filter, setFilter] = useState('')
+  useEffect(() => {
+    if (!remote) { setRows([]); return }
+    supabase.from('activity').select('*').eq('workspace_id', state.workspace.id).order('created_at', { ascending: false }).limit(200).then(({ data, error }) => {
+      if (error) setErr(error.code === '42P01' ? 'Run supabase/activity.sql in the Supabase SQL editor to start logging.' : error.message)
+      setRows(data || [])
+    })
+  }, [state.workspace.id])
+  if (!remote) return <p className="muted small">Available with the team workspace on Supabase.</p>
+  if (err) return <p className="error small">{err}</p>
+  if (!rows) return <p className="muted small">Loading…</p>
+  const list = rows.filter((r) => !filter.trim() || [r.user_name, r.target_name, r.detail, r.action].join(' ').toLowerCase().includes(filter.trim().toLowerCase()))
+  const verb = (r) => ({ created: 'created', updated: 'edited', deleted: 'deleted', locked: 'locked', unlocked: 'unlocked', removed: 'removed' })[r.action] || r.action
+  const when = (iso) => new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  return (
+    <div className="stack">
+      <Input className="input" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter by person, project or section" />
+      {!list.length ? <p className="muted small">Nothing logged yet.</p> : (
+        <ul className="plain act-list">
+          {list.map((r) => (
+            <li key={r.id}>
+              <span className="act-when muted small">{when(r.created_at)}</span>
+              <span className="act-text"><strong>{r.user_name || 'Someone'}</strong> {verb(r)} {r.target} <strong>{r.target_name}</strong>{r.detail ? <span className="muted"> · {r.detail}</span> : null}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

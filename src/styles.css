@@ -2544,3 +2544,8 @@ html[data-public='1'] body { background: var(--bg); }
 .segmented.wrap { flex-wrap: wrap; }
 .stage-manual { font: inherit; background: none; border: 0; padding: 0; cursor: pointer; display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; color: inherit; }
 .stage-manual:disabled { cursor: default; }
+
+.act-list { max-height: 480px; overflow-y: auto; }
+.act-list li { display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line-soft); font-size: 14px; }
+.act-list li:first-child { border-top: 0; }
+.act-when { white-space: nowrap; }

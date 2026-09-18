@@ -454,6 +454,21 @@ export function StoreProvider({ children }) {
       }
     }, delay)
   }
+  const actBuf = useRef({}) // key -> { row, keys:Set, timer }
+  const logActivity = (row, mergeKey, key) => {
+    if (!remote || !membership) return
+    const base = { workspace_id: membership.workspace_id, user_id: authUser?.id || null, user_name: membership.name || authUser?.email || '' }
+    if (!mergeKey) { supabase.from('activity').insert({ ...base, ...row }).then(({ error }) => { if (error && error.code !== '42P01') console.warn('activity:', error.message) }); return }
+    const b = actBuf.current[mergeKey] || { row, keys: new Set(), timer: null }
+    if (key) b.keys.add(key)
+    clearTimeout(b.timer)
+    b.timer = setTimeout(() => {
+      delete actBuf.current[mergeKey]
+      supabase.from('activity').insert({ ...base, ...b.row, detail: [...b.keys].join(', ') }).then(({ error }) => { if (error && error.code !== '42P01') console.warn('activity:', error.message) })
+    }, 4000)
+    actBuf.current[mergeKey] = b
+  }
+  const PROJECT_KEYS = { title: 'title', status: 'status', category: 'category', client: 'client', director: 'director', producer: 'producer', startDate: 'dates', endDate: 'dates', color: 'colour', coverThumb: 'cover', notes: 'notes', concept: 'concept', script: 'script', scriptVersions: 'script versions', scenes: 'breakdown', shots: 'shot list', shootingDays: 'schedule / call sheets', contacts: 'cast & crew', locations: 'locations', tasks: 'tasks', budget: 'budget', gear: 'equipment', vendors: 'vendors', post: 'post', files: 'files', music: 'music', frozen: 'lock', customStages: 'progress stages' }
   const syncDiff = (prev, next) => {
     if (!remote || !membership) return
     const ws = membership.workspace_id
@@ -461,6 +476,9 @@ export function StoreProvider({ children }) {
     next.projects.forEach((p) => {
       const before = prevP[p.id]
       if (before && JSON.stringify(before) === JSON.stringify(p)) return
+      if (!before) logActivity({ action: 'created', target: 'project', target_name: p.title, project_id: p.id })
+      else if (before.frozen !== p.frozen) logActivity({ action: p.frozen ? 'locked' : 'unlocked', target: 'project', target_name: p.title, project_id: p.id })
+      else Object.keys(PROJECT_KEYS).filter((k) => JSON.stringify(before[k]) !== JSON.stringify(p[k])).forEach((k) => logActivity({ action: 'updated', target: 'project', target_name: p.title, project_id: p.id }, 'p:' + p.id, PROJECT_KEYS[k]))
       myWrites.current.add(p.id)
       schedule('p:' + p.id, async () => {
         const { error } = await supabase.from('projects').upsert({ id: p.id, workspace_id: ws, data: p })
@@ -471,6 +489,7 @@ export function StoreProvider({ children }) {
     const nextIds = new Set(next.projects.map((p) => p.id))
     prev.projects.filter((p) => !nextIds.has(p.id)).forEach((p) =>
       schedule('pd:' + p.id, async () => {
+        logActivity({ action: 'deleted', target: 'project', target_name: p.title, project_id: p.id })
         const { error } = await supabase.from('projects').delete().eq('id', p.id)
         if (error) throw error
       }, 0),
@@ -478,6 +497,7 @@ export function StoreProvider({ children }) {
     const prevE = Object.fromEntries(prev.events.map((e) => [e.id, e]))
     next.events.forEach((e) => {
       if (prevE[e.id] && JSON.stringify(prevE[e.id]) === JSON.stringify(e)) return
+      logActivity({ action: prevE[e.id] ? 'updated' : 'created', target: 'event', target_name: e.title || e.type, project_id: e.projectId || null })
       myWrites.current.add(e.id)
       schedule('e:' + e.id, async () => {
         const { error } = await supabase.from('events').upsert({ id: e.id, workspace_id: ws, project_id: e.projectId || null, data: e })
@@ -617,6 +637,7 @@ export function StoreProvider({ children }) {
       const nextU = new Set(next.users.map((u) => u.id))
       prev.users.filter((u) => !nextU.has(u.id)).forEach((u) =>
         schedule('ud:' + u.id, async () => {
+          logActivity({ action: 'removed', target: 'member', target_name: u.name })
           const { error } = await supabase.from('members').delete().eq('workspace_id', ws).eq('user_id', u.id)
           if (error) throw error
         }, 0),
