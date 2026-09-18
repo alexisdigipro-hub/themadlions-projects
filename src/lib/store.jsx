@@ -94,8 +94,26 @@ export function emptyState() {
       weekStart: 'monday', // 'monday' | 'sunday'
       defaultCategory: 'Music Video',
       noticeVibrate: true,
+      greekHolidays: true, // show Greek public holidays in the calendars
+      aiLanguage: 'greek', // 'greek' | 'english'  (language the AI writes its breakdown in)
+      projectCodePrefix: 'TML', // project codes look like TML-2026-001; empty string turns codes off
+      // Emergency numbers printed on every call sheet. Editable in Settings > Call sheets.
+      emergency: [{ id: 'ekab', label: 'Ambulance (ΕΚΑΒ)', number: '166' }, { id: 'fire', label: 'Fire brigade', number: '199' }],
+      productionContacts: [], // [{ id, role, name, phone }] auto-filled into every call sheet
+      autoNotice: { taskAssigned: true, chatMessage: true }, // which events pop a notice
     },
   }
+}
+
+/* Next project code for this year, e.g. TML-2026-004. Derived from the codes already in
+   use instead of a stored counter, so two people creating projects at once cannot collide
+   on a stale number. An empty prefix in Settings turns codes off. */
+export function nextProjectCode(state, year = new Date().getFullYear()) {
+  const prefix = (state?.settings?.projectCodePrefix ?? 'TML').trim()
+  if (!prefix) return ''
+  const re = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-${year}-(\\d+)$`, 'i')
+  const used = (state?.projects || []).map((p) => re.exec(p.code || '')).filter(Boolean).map((m) => Number(m[1]))
+  return `${prefix}-${year}-${String(Math.max(0, ...used) + 1).padStart(3, '0')}`
 }
 
 export function emptyProject(partial = {}) {
@@ -110,6 +128,7 @@ export function emptyProject(partial = {}) {
     startDate: '',
     endDate: '',
     notes: '',
+    code: '', // TML-2026-001, filled in by nextProjectCode() when the project is created
     color: '#C8503F',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

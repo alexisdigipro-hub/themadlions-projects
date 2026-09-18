@@ -83,3 +83,43 @@ export function download(filename, content, type = 'text/plain') {
   a.remove()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
+
+/* ---------- Greek public holidays ---------- */
+
+// Orthodox Easter, Meeus Julian algorithm shifted onto the Gregorian calendar.
+// Verified against 2023-2030. The drift is 13 days until 2100.
+export function orthodoxEaster(year) {
+  const a = year % 4, b = year % 7, c = year % 19
+  const d = (19 * c + 15) % 30
+  const e = (2 * a + 4 * b - d + 34) % 7
+  const month = Math.floor((d + e + 114) / 31)
+  const day = ((d + e + 114) % 31) + 1
+  return toISODate(new Date(Date.UTC(year, month - 1, day) + (year < 2100 ? 13 : 14) * 86400000))
+}
+
+// The days Greece does not work. Movable ones hang off Easter.
+export function greekHolidays(year) {
+  const easter = orthodoxEaster(year)
+  const off = (n) => addDays(easter, n)
+  return {
+    [`${year}-01-01`]: 'New Year',
+    [`${year}-01-06`]: 'Epiphany',
+    [off(-48)]: 'Clean Monday',
+    [`${year}-03-25`]: 'Independence Day',
+    [off(-2)]: 'Good Friday',
+    [easter]: 'Easter Sunday',
+    [off(1)]: 'Easter Monday',
+    [`${year}-05-01`]: 'Labour Day',
+    [off(50)]: 'Holy Spirit Monday',
+    [`${year}-08-15`]: 'Assumption',
+    [`${year}-10-28`]: 'Ohi Day',
+    [`${year}-12-25`]: 'Christmas',
+    [`${year}-12-26`]: 'Boxing Day',
+  }
+}
+
+// Holiday name for one date, or '' when it is an ordinary day.
+export function holidayName(iso, on = true) {
+  if (!on || !/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) return ''
+  return greekHolidays(Number(iso.slice(0, 4)))[iso] || ''
+}

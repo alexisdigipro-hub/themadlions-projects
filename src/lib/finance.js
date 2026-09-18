@@ -23,8 +23,21 @@ export const money = (n, cur = 'EUR') => new Intl.NumberFormat('en-GB', { style:
 export const ym = (d) => (d || '').slice(0, 7)
 export const yearOf = (d) => Number((d || '').slice(0, 4))
 
-export function summarize(txs, { year, projects = [] } = {}) {
-  const inYear = year ? txs.filter((t) => yearOf(t.date) === year) : txs
+/* Which financial year a date belongs to. With a start month of 1 (the Greek default) this is
+   just the calendar year. With any other start month, everything before it counts as the
+   previous financial year, so a year that starts in April puts March 2027 in FY 2026. */
+export const fiscalYearOf = (d, startMonth = 1) => {
+  const y = yearOf(d)
+  if (!y) return 0
+  const m = Number((d || '').slice(5, 7)) || 1
+  return Number(startMonth) > 1 && m < Number(startMonth) ? y - 1 : y
+}
+
+/* Label for a financial year: "2026" when it follows the calendar, "2026/27" when it does not. */
+export const fiscalYearLabel = (y, startMonth = 1) => (Number(startMonth) > 1 ? `${y}/${String((y + 1) % 100).padStart(2, '0')}` : String(y))
+
+export function summarize(txs, { year, projects = [], fiscalStart = 1 } = {}) {
+  const inYear = year ? txs.filter((t) => fiscalYearOf(t.date, fiscalStart) === year) : txs
   const inc = inYear.filter((t) => t.type === 'income' && t.status !== 'quoted')
   const exp = inYear.filter((t) => t.type === 'expense')
   const sum = (l, f = (t) => Number(t.net || 0)) => l.reduce((a, t) => a + f(t), 0)

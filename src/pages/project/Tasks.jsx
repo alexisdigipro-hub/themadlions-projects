@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
-import { departmentsOf, today, uid, useStore } from '../../lib/store.jsx'
+import { departmentsOf, today, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
+import { sendAutoNotice, userByName } from '../../components/Notices.jsx'
 import { fmtDate } from '../../lib/dates.js'
 
 export const TASK_STATUS = [
@@ -116,7 +117,8 @@ export function DeptChips({ tasks, dept, setDept, filter = 'open' }) {
 
 export default function Tasks() {
   const { project, edit, canEdit } = useProject()
-  const { state } = useStore()
+  const { state, update } = useStore()
+  const me = useCurrentUser()
   const toast = useToast()
   const editable = canEdit('tasks')
   const [draft, setDraft] = useState(null)
@@ -126,6 +128,19 @@ export default function Tasks() {
 
   const people = useMemo(() => [...new Set([...state.users.map((u) => u.name), ...project.contacts.map((c) => c.name)])].filter(Boolean), [state.users, project.contacts])
 
+  // Tell the assignee, but only when the task actually lands on someone new, and never yourself.
+  const notifyAssignee = (next, before, where) => {
+    if (!next.assignee || next.assignee === before?.assignee || next.status === 'done') return
+    const target = userByName(state, next.assignee)
+    if (!target || target.id === me?.id) return
+    sendAutoNotice(update, {
+      kind: 'taskAssigned', key: `task:${next.id}`,
+      fromId: me?.id, fromName: me?.name, to: [target.id],
+      title: 'New task for you',
+      body: [next.title, where, next.due ? `due ${next.due}` : ''].filter(Boolean).join(' · '),
+    })
+  }
+
   const shown = tasks
     .filter((t) => (filter === 'all' ? true : filter === 'done' ? t.status === 'done' : t.status !== 'done'))
     .filter((t) => (dept ? t.dept === dept : true))
@@ -133,6 +148,7 @@ export default function Tasks() {
 
   const save = () => {
     if (!draft.title.trim()) return toast('Give the task a title.', 'error')
+    const before = tasks.find((t) => t.id === draft.id)
     edit((p) => {
       p.tasks = p.tasks || []
       const i = p.tasks.findIndex((t) => t.id === draft.id)
@@ -140,6 +156,7 @@ export default function Tasks() {
       if (i >= 0) p.tasks[i] = next
       else p.tasks.push(next)
     })
+    notifyAssignee(draft, before, project.title)
     setDraft(null)
     toast('Task saved', 'ok')
   }

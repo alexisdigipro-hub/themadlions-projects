@@ -3,6 +3,7 @@ import { PageHead, Select, useToast } from '../components/ui.jsx'
 import { can, today, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { DeptChips, TaskList, TaskModal, emptyTask } from './project/Tasks.jsx'
 import { Button } from '../components/ui.jsx'
+import { sendAutoNotice, userByName } from '../components/Notices.jsx'
 
 export default function TasksAll() {
   const { state, updateProject, update } = useStore()
@@ -60,6 +61,17 @@ export default function TasksAll() {
   const save = () => {
     if (!draft.title.trim()) return toast('Give the task a title.', 'error')
     const done = { doneAt: draft.status === 'done' ? draft.doneAt || new Date().toISOString() : '' }
+    const before = all.find((t) => t.id === draft.id)
+    // Handing a task to someone else from this page tells them, exactly as it does inside a project.
+    const target = draft.assignee && draft.assignee !== before?.assignee && draft.status !== 'done' ? userByName(state, draft.assignee) : undefined
+    if (target && target.id !== user?.id) {
+      sendAutoNotice(update, {
+        kind: 'taskAssigned', key: `task:${draft.id}`,
+        fromId: user?.id, fromName: user?.name, to: [target.id],
+        title: 'New task for you',
+        body: [draft.title, projectsById[draft.projectId]?.title, draft.due ? `due ${draft.due}` : ''].filter(Boolean).join(' · '),
+      })
+    }
     if (!draft.projectId) {
       update((s) => {
         const i = s.todos.findIndex((y) => y.id === draft.id)

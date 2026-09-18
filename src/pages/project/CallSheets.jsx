@@ -35,6 +35,9 @@ export default function CallSheets() {
   const toast = useToast()
   const day = days.find((d) => d.id === sel) || days[0]
   const editable = canEdit('callsheets')
+  // Printed on every call sheet and carried into the shared link. Both live in Settings.
+  const emergency = (state.settings.emergency || []).filter((n) => n && n.number)
+  const prodContacts = (state.settings.productionContacts || []).filter((c) => c && (c.role || c.name))
   // Default lunch time: the day's call plus the company default. Declared after `day`, which it reads.
   const lunchDefault = (() => { const m = /^(\d{1,2}):(\d{2})$/.exec(day?.callTime || ''); if (!m || !csd.lunchAfterHours) return ''; const t = (Number(m[1]) * 60 + Number(m[2]) + Number(csd.lunchAfterHours) * 60) % 1440; return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}` })()
 
@@ -89,6 +92,8 @@ export default function CallSheets() {
         crew: crewRows.map((c) => ({ name: c.name, role: c.role || c.dept, phone: c.phone || '', call: c.call, photo: c.photos?.[0]?.thumb || '' })),
         blocks: (day.blocks || []).map((b) => ({ time: b.time, end: b.end, item: b.item, owner: b.owner, notes: b.notes })),
         keyCrew,
+        emergency,
+        prodContacts,
       }
       const url = await publishShare({ workspaceId: state.workspace.id, kind: 'callsheet', ref: `callsheet:${project.id}:${day.id}`, data, userId: user?.id })
       setShare({ url })
@@ -309,6 +314,26 @@ export default function CallSheets() {
             </div>
           </div>
           {wx && <div className="muted small no-print">{wx.place} · forecast from open-meteo · {editable && <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'refresh'}</button>}</div>}
+          {(emergency.length > 0 || prodContacts.length > 0) && (
+            <div className="cs-safety">
+              {emergency.length > 0 && (
+                <div className="cs-emergency">
+                  <div className="cs-loc-h">Emergency</div>
+                  <ul className="plain">
+                    {emergency.map((n) => <li key={n.id}><span>{n.label}</span><a href={`tel:${n.number}`}>{n.number}</a></li>)}
+                  </ul>
+                </div>
+              )}
+              {prodContacts.length > 0 && (
+                <div className="cs-prodcontacts">
+                  <div className="cs-loc-h">Production</div>
+                  <ul className="plain">
+                    {prodContacts.map((c) => <li key={c.id}><span>{c.role}{c.name ? ` · ${c.name}` : ''}</span>{c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
         {project.category === 'Event' && (

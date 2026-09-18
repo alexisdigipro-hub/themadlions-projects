@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Field, Input, PageHead, useToast } from '../components/ui.jsx'
 import { canSendNotices, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
-import { SendNoticeModal, SentNotices } from '../components/Notices.jsx'
+import { SendNoticeModal, SentNotices, sendAutoNotice, teamExcept } from '../components/Notices.jsx'
 
 export const CHAT_READ_KEY = 'tml_chat_read'
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
@@ -44,6 +44,12 @@ export default function Chat() {
     if (!t) return
     const m = { id: uid(), userId: user?.id || '', userName: user?.name || 'Someone', text: t, source: 'app', createdAt: new Date().toISOString() }
     update((s) => { s.chat = [...(s.chat || []), m]; return s })
+    // One pop-up per sender, counting up, so a busy shooting day does not become a wall of modals.
+    sendAutoNotice(update, {
+      kind: 'chatMessage', key: `chat:${user?.id || ''}`, count: true,
+      fromId: user?.id, fromName: user?.name, to: teamExcept(state, user?.id),
+      title: `Message from ${user?.name || 'the team'}`, body: t.slice(0, 200),
+    })
     setText('')
   }
   const remove = (id) => update((s) => { s.chat = (s.chat || []).filter((m) => m.id !== id); return s })

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge, Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
-import { CATEGORIES, STATUSES, can, emptyProject, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { CATEGORIES, STATUSES, can, emptyProject, nextProjectCode, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
 import { projectProgress } from '../lib/progress.js'
 import { compress } from '../lib/photos.js'
@@ -79,7 +79,7 @@ export default function Dashboard() {
 
   const projects = visibleProjects(state, user)
     .filter((p) => filter === 'All' || p.category === filter)
-    .filter((p) => !q || p.title.toLowerCase().includes(q.toLowerCase()) || (p.client || '').toLowerCase().includes(q.toLowerCase()))
+    .filter((p) => !q || [p.title, p.client, p.code].some((v) => (v || '').toLowerCase().includes(q.toLowerCase())))
     .sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''))
 
   const save = () => {
@@ -87,7 +87,7 @@ export default function Dashboard() {
     update((s) => {
       const i = s.projects.findIndex((p) => p.id === draft.id)
       if (i >= 0) s.projects[i] = { ...s.projects[i], ...draft, updatedAt: new Date().toISOString() }
-      else s.projects.push(emptyProject(draft))
+      else s.projects.push(emptyProject({ ...draft, code: draft.code || nextProjectCode(s) }))
       return s
     })
     toast(draft.isNew ? 'Project created' : 'Project saved', 'ok')
@@ -134,6 +134,7 @@ export default function Dashboard() {
                 <h3>{p.title}</h3>
                 <div className="project-meta">
                   <Badge>{p.status}</Badge>
+                  {p.code && <span className="project-code">{p.code}</span>}
                   {p.client && <span>{p.client}</span>}
                 </div>
                 <div className="project-foot">

@@ -157,6 +157,34 @@ export default function Settings() {
 
         {isAdmin && (
           <section className="panel" data-tab="callsheets">
+            <h2>Emergency numbers</h2>
+            <p className="small muted">Printed on every call sheet and on the public link, so nobody has to look them up on set. Tap to dial on a phone.</p>
+            <RowList
+              rows={state.settings.emergency || []}
+              onChange={(rows) => setSetting('emergency', rows)}
+              fields={[{ k: 'label', placeholder: 'Ambulance (ΕΚΑΒ)' }, { k: 'number', placeholder: '166', inputMode: 'tel' }]}
+              addLabel="Add a number"
+              empty="No emergency numbers. Nothing will be printed on the call sheets."
+            />
+          </section>
+        )}
+
+        {isAdmin && (
+          <section className="panel" data-tab="callsheets">
+            <h2>Production contacts</h2>
+            <p className="small muted">The people who are the same on every shoot. They appear under Production on every call sheet and on the public link, above the key crew picked from that project.</p>
+            <RowList
+              rows={state.settings.productionContacts || []}
+              onChange={(rows) => setSetting('productionContacts', rows)}
+              fields={[{ k: 'role', placeholder: '1st AD' }, { k: 'name', placeholder: 'Name' }, { k: 'phone', placeholder: '+30 69…', inputMode: 'tel' }]}
+              addLabel="Add a contact"
+              empty="None yet. Call sheets will show only the key crew of each project."
+            />
+          </section>
+        )}
+
+        {isAdmin && (
+          <section className="panel" data-tab="callsheets">
             <h2>Share links</h2>
             <Field label="Public call sheet links expire" hint="Counted from the shooting day. Expired links show a short 'this call sheet has expired' page. Sharing again always refreshes the link.">
               <Select value={String(state.settings.shareExpiryDays || 0)} onChange={(e) => setSetting('shareExpiryDays', Number(e.target.value))} options={[['0', 'Never'], ['1', 'The day after the shoot'], ['3', '3 days after the shoot'], ['7', 'A week after the shoot'], ['30', 'A month after the shoot']]} />
@@ -186,6 +214,12 @@ export default function Settings() {
               <Field label="Who sees phone numbers and emails of cast and crew" hint="Applies inside the app (project Cast & crew, Database). Call sheets and shared links keep showing the numbers they need.">
                 <Select value={state.settings.phoneVisibility || 'everyone'} onChange={(e) => setSetting('phoneVisibility', e.target.value)} options={[['everyone', 'Everyone in the team'], ['admins', 'Administrators only']]} />
               </Field>
+              <Field label="Pop up a notice when a task is assigned to me" hint="The person who assigns it is the sender, so they see the confirmation. Nothing is sent when you assign a task to yourself.">
+                <Select value={state.settings.autoNotice?.taskAssigned === false ? 'no' : 'yes'} onChange={(e) => setSetting('autoNotice', { ...(state.settings.autoNotice || {}), taskAssigned: e.target.value === 'yes' })} options={[['yes', 'Yes'], ['no', 'No']]} />
+              </Field>
+              <Field label="Pop up a notice for a new chat message" hint="Messages from the same person collapse into one pop-up that counts them, so a shooting day does not become a wall of modals.">
+                <Select value={state.settings.autoNotice?.chatMessage === false ? 'no' : 'yes'} onChange={(e) => setSetting('autoNotice', { ...(state.settings.autoNotice || {}), chatMessage: e.target.value === 'yes' })} options={[['yes', 'Yes'], ['no', 'No']]} />
+              </Field>
               <Field label="Notices vibrate on phones">
                 <Select value={state.settings.noticeVibrate === false ? 'no' : 'yes'} onChange={(e) => setSetting('noticeVibrate', e.target.value === 'yes')} options={[['yes', 'Yes'], ['no', 'No']]} />
               </Field>
@@ -199,6 +233,9 @@ export default function Settings() {
         {isAdmin && (
           <section className="panel" data-tab="calendar">
             <h2>Calendar</h2>
+            <Field label="Show Greek public holidays" hint="New Year, Epiphany, Clean Monday, 25 March, Good Friday, Easter, Easter Monday, 1 May, Holy Spirit Monday, 15 August, 28 October, Christmas and 26 December. The movable ones follow Orthodox Easter.">
+              <Select value={state.settings.greekHolidays === false ? 'no' : 'yes'} onChange={(e) => setSetting('greekHolidays', e.target.value === 'yes')} options={[['yes', 'Yes'], ['no', 'No']]} />
+            </Field>
             <Field label="Week starts on">
               <Select value={state.settings.weekStart || 'monday'} onChange={(e) => setSetting('weekStart', e.target.value)} options={[['monday', 'Monday'], ['sunday', 'Sunday']]} />
             </Field>
@@ -208,6 +245,9 @@ export default function Settings() {
           <section className="panel" data-tab="calendar">
             <h2>Projects</h2>
             <div className="stack">
+              <Field label="Project code prefix" hint="New projects get a code like TML-2026-001, counted per year. Leave it empty to stop giving out codes. Existing projects keep whatever they have.">
+                <Input value={state.settings.projectCodePrefix ?? 'TML'} onChange={(e) => setSetting('projectCodePrefix', e.target.value)} placeholder="TML" />
+              </Field>
               <Field label="Category for a new project" hint="What New project is set to before you change it.">
                 <Select value={state.settings.defaultCategory || 'Music Video'} onChange={(e) => setSetting('defaultCategory', e.target.value)} options={CATEGORIES} />
               </Field>
@@ -298,6 +338,9 @@ export default function Settings() {
             <div className="stack">
               <Field label="Anthropic API key">
                 <Input type="password" value={ai.aiKey} onChange={(e) => setAi({ ...ai, aiKey: e.target.value })} placeholder="sk-ant-…" autoComplete="off" />
+              </Field>
+              <Field label="Language the AI writes in" hint="Applies to the scene breakdown and the treatment breakdown: synopses, headings, element names and flags. Character and brand names are always kept as written.">
+                <Select value={state.settings.aiLanguage === 'english' ? 'english' : 'greek'} onChange={(e) => setSetting('aiLanguage', e.target.value)} options={[['greek', 'Greek'], ['english', 'English']]} />
               </Field>
               <Field label="Model" hint="Any current Claude model id works. Sonnet is the sweet spot for cost and quality on breakdowns.">
                 <Input value={ai.aiModel} onChange={(e) => setAi({ ...ai, aiModel: e.target.value })} />
@@ -461,6 +504,26 @@ function ActivityLog() {
           ))}
         </ul>
       )}
+    </div>
+  )
+}
+
+/* A short editable list of rows, used for the emergency numbers and the standing production
+   contacts. Rows are saved as you type; the Remove button drops one, Add appends a blank. */
+function RowList({ rows, onChange, fields, addLabel, empty }) {
+  const set = (id, k, v) => onChange(rows.map((r) => (r.id === id ? { ...r, [k]: v } : r)))
+  return (
+    <div className="rowlist">
+      {rows.map((r) => (
+        <div key={r.id} className="rowlist-row">
+          {fields.map((f) => (
+            <Input key={f.k} value={r[f.k] || ''} placeholder={f.placeholder} inputMode={f.inputMode} onChange={(e) => set(r.id, f.k, e.target.value)} />
+          ))}
+          <button className="link small" onClick={() => onChange(rows.filter((x) => x.id !== r.id))}>Remove</button>
+        </div>
+      ))}
+      {!rows.length && <p className="muted small">{empty}</p>}
+      <Button variant="ghost" onClick={() => onChange([...rows, { id: uid(), ...Object.fromEntries(fields.map((f) => [f.k, ''])) }])}>{addLabel}</Button>
     </div>
   )
 }

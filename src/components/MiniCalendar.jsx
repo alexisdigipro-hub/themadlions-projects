@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { today, useStore } from '../lib/store.jsx'
-import { fmtDate, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
+import { fmtDate, holidayName, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
 
 const addDay = (iso, n) => { const d = new Date(iso + 'T00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
 
@@ -26,6 +26,7 @@ export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLab
   }, [items])
 
   const grid = monthGrid(ym.y, ym.m, state.settings?.weekStart)
+  const holiday = (iso) => holidayName(iso, state.settings?.greekHolidays !== false)
   const shift = (n) => { const d = new Date(ym.y, ym.m + n, 1); setYm({ y: d.getFullYear(), m: d.getMonth() }) }
   const goToday = () => { setYm({ y: now.getFullYear(), m: now.getMonth() }); setSel(t0) }
   const dayItems = byDate[sel] || []
@@ -45,9 +46,10 @@ export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLab
           return (
             <button
               key={d.iso}
-              className={`mini-cal-cell ${d.inMonth ? '' : 'dim'} ${d.iso === t0 ? 'today' : ''} ${d.iso === sel ? 'sel' : ''} ${d.weekend ? 'weekend' : ''}`}
+              className={`mini-cal-cell ${d.inMonth ? '' : 'dim'} ${d.iso === t0 ? 'today' : ''} ${d.iso === sel ? 'sel' : ''} ${d.weekend ? 'weekend' : ''} ${holiday(d.iso) ? 'holiday' : ''}`}
               onClick={() => setSel(d.iso)}
-              aria-label={fmtDate(d.iso, { weekday: 'long', day: 'numeric', month: 'long' })}
+              title={holiday(d.iso) || undefined}
+              aria-label={`${fmtDate(d.iso, { weekday: 'long', day: 'numeric', month: 'long' })}${holiday(d.iso) ? `, ${holiday(d.iso)}` : ''}`}
             >
               <span className="mini-cal-day">{Number(d.iso.slice(8))}</span>
               {its.length > 0 && (

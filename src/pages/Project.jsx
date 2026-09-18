@@ -59,6 +59,7 @@ export default function Project() {
           <div className="project-meta">
             <Badge>{project.category}</Badge>
             <Badge>{project.status}</Badge>
+            {project.code && <span className="project-code">{project.code}</span>}
             {project.director && <span className="muted">Dir. {project.director}</span>}
           </div>
         </div>

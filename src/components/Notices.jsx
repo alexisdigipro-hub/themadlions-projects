@@ -7,6 +7,40 @@ const when = (iso) => `${fmtDate((iso || '').slice(0, 10), { day: 'numeric', mon
 export const noticeIsForMe = (n, user) => !!user && n.fromId !== user.id && (n.to === 'all' || (Array.isArray(n.to) && n.to.includes(user.id)))
 export const pendingForMe = (notices, user) => (notices || []).filter((n) => noticeIsForMe(n, user) && !n.acks?.[user.id]).sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))
 
+/* Automatic notices: the app raising one on its own instead of a person writing it.
+   They are ordinary notices, so the database rule still holds that the sender is whoever
+   caused it, the one who assigned the task or wrote the message, never the app.
+   `key` collapses a repeat into the notice still waiting to be read, so twenty chat
+   messages arrive as one pop-up that says twenty, not twenty pop-ups. A notice the
+   recipient already confirmed is never reused; the next event starts a fresh one. */
+export function sendAutoNotice(update, { kind, key = '', fromId, fromName = '', to = [], title, body, count = false }) {
+  if (!fromId || !to.length || !body) return
+  update((s) => {
+    if ((s.settings?.autoNotice || {})[kind] === false) return s // absent means on, which is what Settings shows
+    const list = s.notices || []
+    const open = key && list.find((n) => n.auto === kind && n.key === key && n.fromId === fromId && !Object.keys(n.acks || {}).length)
+    if (open) {
+      open.count = count ? (open.count || 1) + 1 : 1
+      open.title = title
+      open.body = open.count > 1 ? `${open.count} new · latest: ${body}` : body
+      open.to = to
+      open.createdAt = new Date().toISOString()
+      return s
+    }
+    s.notices = [...list, { id: uid(), title, body, fromId, fromName, to, acks: {}, auto: kind, key, count: 1, createdAt: new Date().toISOString() }]
+    return s
+  })
+}
+
+/* Everyone who should hear about something, excluding whoever caused it. */
+export const teamExcept = (state, userId) => state.users.filter((u) => u.active !== false && u.id !== userId).map((u) => u.id)
+
+/* Match a free-typed assignee name back to a teammate, so the task can reach them. */
+export const userByName = (state, name) => {
+  const n = (name || '').trim().toLowerCase()
+  return n ? state.users.find((u) => u.active !== false && (u.name || '').trim().toLowerCase() === n) : undefined
+}
+
 /* Shown by the Layout: one unacknowledged notice at a time, oldest first */
 export function NoticePopup() {
   const { state, update } = useStore()
