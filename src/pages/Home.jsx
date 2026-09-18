@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PageHead } from '../components/ui.jsx'
+import { Button, PageHead } from '../components/ui.jsx'
 import { CATEGORIES, EVENT_TYPES, STATUSES, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import MiniCalendar from '../components/MiniCalendar.jsx'
 import { projectProgress } from '../lib/progress.js'
@@ -10,6 +10,37 @@ import { fmtDate } from '../lib/dates.js'
 import { initialsOf } from './Profile.jsx'
 
 const addDaysISO = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
+
+/* Home is a list of blocks the person can reorder. The order is a personal, per-device
+   preference, so it lives in localStorage next to the theme and the text size rather than in
+   the workspace, where it would follow everyone around. */
+const ORDER_KEY = 'tml_home_order'
+const BLOCK_NAMES = { team: 'Team', calendar: 'Calendar', attention: 'Needs attention', projects: 'Projects', status: 'By status', types: 'By type', finance: 'Finance' }
+const DEFAULT_ORDER = ['team', 'calendar', 'attention', 'projects', 'status', 'types', 'finance']
+
+/* A saved order can be stale: blocks may have been added or removed since it was written, and
+   the value can be anything at all if storage was tampered with. Keep what is still known, in
+   the saved order, then append whatever is new so a future block never disappears. */
+export function readHomeOrder(raw) {
+  let saved = []
+  try { saved = JSON.parse(raw || '[]') } catch { saved = [] }
+  if (!Array.isArray(saved)) saved = []
+  const known = saved.filter((k) => typeof k === 'string' && DEFAULT_ORDER.includes(k))
+  const seen = new Set()
+  const unique = known.filter((k) => (seen.has(k) ? false : seen.add(k)))
+  return [...unique, ...DEFAULT_ORDER.filter((k) => !seen.has(k))]
+}
+
+/* Move one block to where another one sits, keeping everything else in place. */
+export function reorder(order, from, to) {
+  if (from === to) return order
+  const i = order.indexOf(from), j = order.indexOf(to)
+  if (i < 0 || j < 0) return order
+  const next = [...order]
+  next.splice(i, 1)
+  next.splice(j, 0, from)
+  return next
+}
 
 export default function Home() {
   const { state } = useStore()
@@ -54,12 +85,23 @@ export default function Home() {
   const cur = state.finance?.settings?.currency || 'EUR'
   const totalBudget = active.reduce((a, p) => a + budgetTotals(p).total, 0)
 
-  return (
-    <div className="home">
-      <PageHead title={`Hello ${(user?.name || '').split(' ')[0]}`} sub={`${active.length} active project${active.length === 1 ? '' : 's'} · ${week.length} thing${week.length === 1 ? '' : 's'} this week · ${overdueTasks.length} overdue task${overdueTasks.length === 1 ? '' : 's'}`} />
+  const [order, setOrder] = useState(() => readHomeOrder(localStorage.getItem(ORDER_KEY)))
+  const [arranging, setArranging] = useState(false)
+  const dragKey = useRef(null)
+  useEffect(() => { try { localStorage.setItem(ORDER_KEY, JSON.stringify(order)) } catch {} }, [order])
+  const nudge = (key, dir) => setOrder((o) => {
+    const i = o.indexOf(key), j = i + dir
+    if (i < 0 || j < 0 || j >= o.length) return o
+    const next = [...o]
+    ;[next[i], next[j]] = [next[j], next[i]]
+    return next
+  })
 
-      {team.length > 0 && (
-        <section className="panel team-strip-panel">
+  const blocks = {
+    team: team.length > 0 && {
+      wide: true,
+      body: (
+        <>
           <div className="team-strip-head muted small">
             {day === t0 ? 'Today' : fmtDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}
             {away.size > 0 ? ` · ${away.size} not available` : ' · everyone available'}
@@ -85,16 +127,20 @@ export default function Home() {
               )
             })}
           </div>
-        </section>
-      )}
-
-      <div className="home-grid">
-        <section className="panel">
+        </>
+      ),
+    },
+    calendar: {
+      body: (
+        <>
           <div className="panel-head"><h2>Calendar</h2><Link className="link small" to="/calendar">Full calendar</Link></div>
           <MiniCalendar items={calItems} onSelect={setDay} />
-        </section>
-
-        <section className="panel">
+        </>
+      ),
+    },
+    attention: {
+      body: (
+        <>
           <div className="panel-head"><h2>Needs attention</h2><Link className="link small" to="/tasks">Tasks</Link></div>
           <ul className="plain home-alerts">
             {overdueTasks.slice(0, 6).map((t) => <li key={t.id} className="late">Overdue: {t.title}{t.p ? ` · ${t.p.title}` : ''}</li>)}
@@ -103,56 +149,107 @@ export default function Home() {
             {isAdmin && fin && fin.owedCount > 0 && <li>{fin.owedCount} unpaid invoice{fin.owedCount === 1 ? '' : 's'} · {money(fin.owedToUs, cur)} owed to us</li>}
             {!overdueTasks.length && !overCap.length && !dueSoon.length && !(isAdmin && fin?.owedCount) && <li className="muted">All clear.</li>}
           </ul>
-        </section>
-      </div>
-
-      <section className="panel">
-        <div className="panel-head"><h2>Projects</h2><Link className="link small" to="/">All projects</Link></div>
-        {!rows.length ? <p className="muted">No projects yet.</p> : (
-          <div className="table-wrap">
-            <table className="table home-projects">
-              <thead><tr><th>Project</th><th>Status</th><th>Progress</th><th>Next day</th><th className="num">Open tasks</th><th className="num">Budget</th></tr></thead>
-              <tbody>
-                {rows.map(({ p, pct, next, open, overdue, bt, cap }) => (
-                  <tr key={p.id} className={p.status === 'Delivered' ? 'dim' : ''}>
-                    <td className="person-cell">
-                      {p.coverThumb ? <img className="avatar-img sq" src={p.coverThumb} alt="" /> : <span className="dot" style={{ '--pc': p.color }} />}
-                      <span><Link to={`/p/${p.id}`}><strong>{p.title}</strong></Link><div className="muted small">{p.category}{p.client ? ` · ${p.client}` : ''}</div></span>
-                    </td>
-                    <td className="small">{p.status}</td>
-                    <td><div className="mini-progress" title={`${pct}%`}><span style={{ width: `${pct}%`, background: p.color }} /></div><span className="small muted">{pct}%</span></td>
-                    <td className="small">{next ? `${fmtDate(next.date)} · ${next.callTime}` : <span className="muted">–</span>}</td>
-                    <td className={`num ${overdue ? 'late' : ''}`}>{open}{overdue ? ` (${overdue} late)` : ''}</td>
-                    <td className={`num small ${cap && bt.total > cap ? 'over' : ''}`}>{bt.lines ? `${money(bt.total, bt.currency)}${cap ? ` / ${money(cap, bt.currency)}` : ''}` : <span className="muted">–</span>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      <div className="home-grid">
-        <section className="panel">
+        </>
+      ),
+    },
+    projects: {
+      wide: true,
+      body: (
+        <>
+          <div className="panel-head"><h2>Projects</h2><Link className="link small" to="/">All projects</Link></div>
+          {!rows.length ? <p className="muted">No projects yet.</p> : (
+            <div className="table-wrap">
+              <table className="table home-projects">
+                <thead><tr><th>Project</th><th>Status</th><th>Progress</th><th>Next day</th><th className="num">Open tasks</th><th className="num">Budget</th></tr></thead>
+                <tbody>
+                  {rows.map(({ p, pct, next, open, overdue, bt, cap }) => (
+                    <tr key={p.id} className={p.status === 'Delivered' ? 'dim' : ''}>
+                      <td className="person-cell">
+                        {p.coverThumb ? <img className="avatar-img sq" src={p.coverThumb} alt="" /> : <span className="dot" style={{ '--pc': p.color }} />}
+                        <span><Link to={`/p/${p.id}`}><strong>{p.title}</strong></Link><div className="muted small">{p.category}{p.client ? ` · ${p.client}` : ''}</div></span>
+                      </td>
+                      <td className="small">{p.status}</td>
+                      <td><div className="mini-progress" title={`${pct}%`}><span style={{ width: `${pct}%`, background: p.color }} /></div><span className="small muted">{pct}%</span></td>
+                      <td className="small">{next ? `${fmtDate(next.date)} · ${next.callTime}` : <span className="muted">–</span>}</td>
+                      <td className={`num ${overdue ? 'late' : ''}`}>{open}{overdue ? ` (${overdue} late)` : ''}</td>
+                      <td className={`num small ${cap && bt.total > cap ? 'over' : ''}`}>{bt.lines ? `${money(bt.total, bt.currency)}${cap ? ` / ${money(cap, bt.currency)}` : ''}` : <span className="muted">–</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      ),
+    },
+    status: {
+      body: (
+        <>
           <h2>By status</h2>
           <ul className="plain bars">{byStatus.map(([k, n]) => <li key={k}><span>{k}</span><span className="bar"><span style={{ width: `${(n / projects.length) * 100}%` }} /></span><span className="num">{n}</span></li>)}</ul>
-        </section>
-        <section className="panel">
+        </>
+      ),
+    },
+    types: {
+      body: (
+        <>
           <h2>By type</h2>
           <ul className="plain bars">{byCat.map(([k, n]) => <li key={k}><span>{k}</span><span className="bar"><span style={{ width: `${(n / projects.length) * 100}%` }} /></span><span className="num">{n}</span></li>)}</ul>
           <p className="muted small">Active budgets total {money(totalBudget, cur)}.</p>
-        </section>
-        {isAdmin && fin && (
-          <section className="panel">
-            <div className="panel-head"><h2>Finance {new Date().getFullYear()}</h2><Link className="link small" to="/finance">Finance</Link></div>
-            <dl className="details">
-              <dt>Profit</dt><dd className={fin.profit < 0 ? 'over' : 'under'}>{money(fin.profit, cur)}</dd>
-              <dt>Owed to us</dt><dd>{money(fin.owedToUs, cur)}</dd>
-              <dt>We owe</dt><dd>{money(fin.weOwe, cur)}</dd>
-              <dt>This month</dt><dd>{money(fin.monthIn - fin.monthOut, cur)}</dd>
-            </dl>
+        </>
+      ),
+    },
+    finance: (isAdmin && fin) && {
+      body: (
+        <>
+          <div className="panel-head"><h2>Finance {new Date().getFullYear()}</h2><Link className="link small" to="/finance">Finance</Link></div>
+          <dl className="details">
+            <dt>Profit</dt><dd className={fin.profit < 0 ? 'over' : 'under'}>{money(fin.profit, cur)}</dd>
+            <dt>Owed to us</dt><dd>{money(fin.owedToUs, cur)}</dd>
+            <dt>We owe</dt><dd>{money(fin.weOwe, cur)}</dd>
+            <dt>This month</dt><dd>{money(fin.monthIn - fin.monthOut, cur)}</dd>
+          </dl>
+        </>
+      ),
+    },
+  }
+  const visible = order.filter((k) => blocks[k])
+
+  return (
+    <div className="home">
+      <PageHead title={`Hello ${(user?.name || '').split(' ')[0]}`} sub={`${active.length} active project${active.length === 1 ? '' : 's'} · ${week.length} thing${week.length === 1 ? '' : 's'} this week · ${overdueTasks.length} overdue task${overdueTasks.length === 1 ? '' : 's'}`}>
+        {arranging && <button className="link small" onClick={() => setOrder(DEFAULT_ORDER)}>Reset order</button>}
+        <Button variant={arranging ? 'primary' : 'ghost'} onClick={() => setArranging((v) => !v)}>{arranging ? 'Done' : 'Arrange'}</Button>
+      </PageHead>
+
+      {arranging && <p className="muted small home-arrange-hint">Drag a block, or use the arrows, to put it where you want it. The order is saved on this device only.</p>}
+
+      <div className={`home-blocks ${arranging ? 'arranging' : ''}`}>
+        {visible.map((key, i) => (
+          <section
+            key={key}
+            className={`panel home-block ${blocks[key].wide ? 'wide' : ''}`}
+            draggable={arranging}
+            onDragStart={arranging ? () => { dragKey.current = key } : undefined}
+            onDragEnd={arranging ? () => { dragKey.current = null } : undefined}
+            onDragOver={arranging ? (e) => {
+              e.preventDefault()
+              if (dragKey.current && dragKey.current !== key) setOrder((o) => reorder(o, dragKey.current, key))
+            } : undefined}
+            onDrop={arranging ? (e) => e.preventDefault() : undefined}
+          >
+            {arranging && (
+              <div className="home-block-bar">
+                <span className="home-block-name">⠿ {BLOCK_NAMES[key] || key}</span>
+                <span className="home-block-moves">
+                  <button className="link small" onClick={() => nudge(key, -1)} disabled={i === 0} aria-label={`Move ${BLOCK_NAMES[key]} up`}>↑</button>
+                  <button className="link small" onClick={() => nudge(key, 1)} disabled={i === visible.length - 1} aria-label={`Move ${BLOCK_NAMES[key]} down`}>↓</button>
+                </span>
+              </div>
+            )}
+            {blocks[key].body}
           </section>
-        )}
+        ))}
       </div>
     </div>
   )
