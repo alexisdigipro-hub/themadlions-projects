@@ -6,12 +6,14 @@ import { fmtDate, holidayName, monthGrid, monthLabel, weekdayShort } from '../li
 const addDay = (iso, n) => { const d = new Date(iso + 'T00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
 
 // items: { date, endDate?, color, title, sub?, to? }
-export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLabel = 'Add event', large = false }) {
+export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLabel = 'Add event', large = false, onSelect }) {
   const { state } = useStore()
   const t0 = today()
   const now = new Date()
   const [ym, setYm] = useState({ y: now.getFullYear(), m: now.getMonth() })
   const [sel, setSel] = useState(t0)
+  // Parents can follow the picked day (Home greys out whoever is away on it).
+  const pick = (iso) => { setSel(iso); onSelect?.(iso) }
 
   const byDate = useMemo(() => {
     const m = {}
@@ -28,7 +30,7 @@ export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLab
   const grid = monthGrid(ym.y, ym.m, state.settings?.weekStart)
   const holiday = (iso) => holidayName(iso, state.settings?.greekHolidays !== false)
   const shift = (n) => { const d = new Date(ym.y, ym.m + n, 1); setYm({ y: d.getFullYear(), m: d.getMonth() }) }
-  const goToday = () => { setYm({ y: now.getFullYear(), m: now.getMonth() }); setSel(t0) }
+  const goToday = () => { setYm({ y: now.getFullYear(), m: now.getMonth() }); pick(t0) }
   const dayItems = byDate[sel] || []
   const selIsToday = sel === t0
 
@@ -47,7 +49,7 @@ export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLab
             <button
               key={d.iso}
               className={`mini-cal-cell ${d.inMonth ? '' : 'dim'} ${d.iso === t0 ? 'today' : ''} ${d.iso === sel ? 'sel' : ''} ${d.weekend ? 'weekend' : ''} ${holiday(d.iso) ? 'holiday' : ''}`}
-              onClick={() => setSel(d.iso)}
+              onClick={() => pick(d.iso)}
               title={holiday(d.iso) || undefined}
               aria-label={`${fmtDate(d.iso, { weekday: 'long', day: 'numeric', month: 'long' })}${holiday(d.iso) ? `, ${holiday(d.iso)}` : ''}`}
             >

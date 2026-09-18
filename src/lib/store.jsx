@@ -60,6 +60,15 @@ export const today = () => {
 export const DEFAULT_DEPARTMENTS = ['Production', 'Direction', 'Camera', 'Lighting', 'Grip', 'Sound', 'Art', 'Costume', 'Makeup & hair', 'Locations', 'Casting', 'Post', 'Transport', 'Catering', 'Client', 'Other']
 export const departmentsOf = (state) => (state.settings?.departments?.length ? state.settings.departments : DEFAULT_DEPARTMENTS)
 export const callsheetDefaults = (state) => ({ callTime: '07:00', wrapTime: '19:00', lunchAfterHours: 6, hospital: '', parking: '', tagline: '', footer: '', castOffset: 0, crewOffset: 0, showWeather: true, showSun: true, ...(state.settings?.callsheet || {}) })
+/* Who marked themselves not available on a given day. Days off are ordinary calendar events
+   of type 'unavailable', stamped with the id of whoever created them, and they can span a
+   range, so a single date has to fall inside date..endDate. */
+export const unavailableOn = (events, iso) => new Set(
+  (events || [])
+    .filter((e) => e.type === 'unavailable' && e.date && e.date <= iso && (e.endDate || e.date) >= iso)
+    .map((e) => e.createdBy)
+    .filter(Boolean),
+)
 export const canSendNotices = (state, user) => !!user && user.role === 'admin'
 export const canSeeContacts = (state, user) => !!user && (user.role === 'admin' || (state.settings?.phoneVisibility || 'everyone') === 'everyone')
 
