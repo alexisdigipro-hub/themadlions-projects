@@ -66,7 +66,9 @@ export const callsheetDefaults = (state) => ({ callTime: '07:00', wrapTime: '19:
 export const unavailableOn = (events, iso) => new Set(
   (events || [])
     .filter((e) => e.type === 'unavailable' && e.date && e.date <= iso && (e.endDate || e.date) >= iso)
-    .map((e) => e.createdBy)
+    // personId is who the day off is for; days off written before administrators set them for
+    // other people carry only createdBy, which was the same person.
+    .map((e) => e.personId || e.createdBy)
     .filter(Boolean),
 )
 export const canSendNotices = (state, user) => !!user && user.role === 'admin'
