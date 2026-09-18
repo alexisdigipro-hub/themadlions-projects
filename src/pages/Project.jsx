@@ -35,6 +35,7 @@ export default function Project() {
     { to: 'calendar', label: 'Calendar', key: 'calendar', icon: 'calendar' },
     { to: 'locations', label: 'Locations', key: 'locations', icon: 'locations' },
     { to: 'people', label: project.category === 'Event' ? 'Crew & talent' : 'Cast & crew', key: 'contacts', icon: 'people' },
+    { to: 'whiteboard', label: 'Whiteboard', key: 'files', icon: 'notes' },
     { to: 'notes', label: 'Files & notes', key: 'files', icon: 'notes' },
   ].filter((t) => can(user, t.key))
 
