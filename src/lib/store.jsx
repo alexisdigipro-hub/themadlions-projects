@@ -198,6 +198,7 @@ const memberToUser = (m) => ({
   permissions: { ...defaultPermissions(m.role === 'admin' ? 'edit' : 'view'), ...(m.permissions || {}) },
   projectAccess: m.project_access === 'all' || m.project_access === '"all"' ? 'all' : m.project_access,
   active: m.active !== false,
+  profile: m.profile || {}, // { photo, thumb, position, dept, phone, bio, birthday, showPhone }
   createdAt: m.created_at,
 })
 
@@ -666,8 +667,17 @@ export function StoreProvider({ children }) {
       if (prevU[u.id] && JSON.stringify(prevU[u.id]) === JSON.stringify(u)) return
       if (!prevU[u.id]) return // new members arrive through invites, not here
       schedule('u:' + u.id, async () => {
-        const { error } = await supabase.from('members').update({ name: u.name, role: u.role, permissions: u.permissions, project_access: u.projectAccess === 'all' ? 'all' : u.projectAccess, active: u.active !== false }).eq('workspace_id', ws).eq('user_id', u.id)
-        if (error) throw error
+        // Only an administrator may write a member row, because it carries role, permissions and
+        // project access. So a member editing their own profile goes through set_my_profile(),
+        // which touches the profile column of their own row and nothing else. Letting them update
+        // the row directly would also let them make themselves an administrator.
+        if (u.id === membership.user_id && membership.role !== 'admin') {
+          const { error } = await supabase.rpc('set_my_profile', { p: u.profile || {} })
+          if (error) throw new Error(error.code === '42883' || error.code === 'PGRST202' ? 'Run supabase/profiles.sql in the SQL editor to enable profiles.' : error.message)
+          return
+        }
+        const { error } = await supabase.from('members').update({ name: u.name, role: u.role, permissions: u.permissions, project_access: u.projectAccess === 'all' ? 'all' : u.projectAccess, active: u.active !== false, profile: u.profile || {} }).eq('workspace_id', ws).eq('user_id', u.id)
+        if (error) throw new Error(error.code === '42703' ? 'Run supabase/profiles.sql in the SQL editor to enable profiles.' : error.message)
       }, 0)
     })
     const wsChanged = JSON.stringify(prev.workspace) !== JSON.stringify(next.workspace)

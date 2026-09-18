@@ -36,6 +36,7 @@ export default function Layout() {
     { to: '/tasks', label: 'Tasks', show: can(user, 'tasks'), icon: 'tasks' },
     { to: '/chat', label: 'Chat', show: true, icon: 'chat', badge: unread },
     { to: '/mywork', label: 'My work', show: user?.role !== 'admin', icon: 'mywork' },
+    { to: '/me', label: 'My profile', show: true, icon: 'team' },
     { to: '/database', label: 'Database', show: can(user, 'contacts') || can(user, 'locations'), icon: 'database' },
     { to: '/drives', label: 'Drives', show: can(user, 'drives'), icon: 'drives' },
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance' },

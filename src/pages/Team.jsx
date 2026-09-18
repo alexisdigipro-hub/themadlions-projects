@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { Badge, Button, Confirm, Field, Input, Modal, PageHead, Select, useToast } from '../components/ui.jsx'
 import { MODULES, defaultPermissions, uid, useCurrentUser, useStore } from '../lib/store.jsx'
+import { initialsOf } from './Profile.jsx'
 
 const LEVELS = [
   ['none', 'No access'],
@@ -83,7 +84,10 @@ export default function Team() {
           {state.users.map((u) => (
             <tr key={u.id} className={u.active === false ? 'dim' : ''}>
               <td>
-                <strong>{u.name}</strong>
+                <Link className="team-name" to={u.id === me.id ? '/me' : `/u/${u.id}`}>
+                  {u.profile?.thumb ? <img className="team-avatar" src={u.profile.thumb} alt="" /> : <span className="team-avatar initials">{initialsOf(u.name)}</span>}
+                  <strong>{u.name}</strong>
+                </Link>
                 {u.id === me.id && <span className="muted small"> (you)</span>}
               </td>
               <td>{u.email}</td>

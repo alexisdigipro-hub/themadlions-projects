@@ -23,6 +23,7 @@ import TasksAll from './pages/TasksAll.jsx'
 import Database from './pages/Database.jsx'
 import Chat from './pages/Chat.jsx'
 import MyWork from './pages/MyWork.jsx'
+import Profile from './pages/Profile.jsx'
 import Drives from './pages/Drives.jsx'
 import PublicCallSheet from './pages/PublicCallSheet.jsx'
 import Finance from './pages/Finance.jsx'
@@ -72,6 +73,8 @@ export default function App() {
                 <Route path="tasks" element={<TasksAll />} />
                 <Route path="chat" element={<Chat />} />
                 <Route path="mywork" element={<MyWork />} />
+                <Route path="me" element={<Profile mine />} />
+                <Route path="u/:id" element={<Profile />} />
                 <Route path="drives" element={<Drives />} />
                 <Route path="database/:tab" element={<Database />} />
                 <Route path="database" element={<Navigate to="/database/locations" replace />} />
