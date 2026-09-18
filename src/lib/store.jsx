@@ -217,7 +217,11 @@ export function StoreProvider({ children }) {
   const [state, setState] = useState(() => (remote ? emptyState() : adapter.load() || emptyState()))
   const [sessionId, setSessionId] = useState(() => (remote ? '' : localStorage.getItem(SESSION_KEY) || ''))
   const [ready, setReady] = useState(!remote)
-  const [authUser, setAuthUser] = useState(null)
+  // undefined = we have not looked yet, null = definitely signed out, object = signed in.
+  // Starting at null made the app decide "signed out" on the very first render, before
+  // getSession() had a chance to restore the stored session, which threw people to the
+  // login page every time they opened the app.
+  const [authUser, setAuthUser] = useState(undefined)
   const [membership, setMembership] = useState(undefined) // undefined = unknown, null = no access
   const [invites, setInvites] = useState([])
   const [syncError, setSyncError] = useState('')
@@ -238,8 +242,14 @@ export function StoreProvider({ children }) {
   /* remote mode: auth */
   useEffect(() => {
     if (!remote) return
-    supabase.auth.getSession().then(({ data }) => setAuthUser(data.session?.user || null))
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setAuthUser(session?.user || null))
+    supabase.auth.getSession().then(({ data }) => setAuthUser(data.session?.user || null)).catch(() => setAuthUser(null))
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      // A session on any event means still signed in. Only a real sign-out signs out: a
+      // refresh that fails once on a bad connection must not throw the person to the login
+      // page while their refresh token is still perfectly good.
+      if (session?.user) return setAuthUser(session.user)
+      if (event === 'SIGNED_OUT') return setAuthUser(null)
+    })
     return () => sub.subscription.unsubscribe()
   }, [])
 
