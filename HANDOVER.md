@@ -31,6 +31,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (18 Sep 2026)
+- Commits pushed from outside this chat on 18 Sep ("Add files via upload"): Breakdown gained a paste-a-treatment panel (paste text straight into the page and run the AI breakdown), Shots gained manual setups from the rail and quick-add shots under a scene, small TasksAll tweak. Merged, builds clean.
 - SQL files Alex still has to confirm he ran: notices.sql, worklog.sql, drives.sql, shares.sql, activity.sql (chat.sql is confirmed). If a feature complains, that is why.
 - Team signups: Confirm email is now OFF in Supabase Auth. Members must be added in Team with the exact email they registered with, then they reopen the app.
 - Elias Karatzogiannis: elias-2026.csv was prepared for import into his My work (Finance > Team work > his card > Import CSV); not confirmed imported.
