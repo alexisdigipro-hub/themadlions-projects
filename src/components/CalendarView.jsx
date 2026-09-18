@@ -9,7 +9,11 @@ export default function CalendarView({ projectId = null, title }) {
   const user = useCurrentUser()
   const toast = useToast()
   const editable = can(user, 'calendar', 'edit')
-  const canEditDraft = (d) => editable || (d?.type === 'unavailable' && (!d.createdBy || d.createdBy === user?.id))
+  // Days off are an administrator's call now: they set them for whoever is away, not each
+  // person for themselves. Everything else still follows the calendar edit permission.
+  const isAdmin = user?.role === 'admin'
+  const canEditDraft = (d) => (d?.type === 'unavailable' ? isAdmin : editable)
+  const team = state.users.filter((u) => u.active !== false)
   const now = new Date()
   const [ym, setYm] = useState({ y: now.getFullYear(), m: now.getMonth() })
   const [draft, setDraft] = useState(null)
@@ -49,16 +53,19 @@ export default function CalendarView({ projectId = null, title }) {
     const d = new Date(ym.y, ym.m + n, 1)
     setYm({ y: d.getFullYear(), m: d.getMonth() })
   }
-  const newEvent = (date, type = 'prep') => ({ id: uid(), projectId: type === 'unavailable' ? '' : projectId || projects[0]?.id || '', type, title: type === 'unavailable' ? `${user?.name || 'Someone'} not available` : '', date, endDate: '', start: '', end: '', locationText: '', notes: '', createdBy: user?.id || '', createdByName: user?.name || '', isNew: true })
-  // anyone signed in can mark their own days off, even with view-only calendar rights (server permitting)
-  const canMarkOff = !!user
+  // personId is who the day off belongs to; createdBy stays who wrote it down. Older days off
+  // have no personId, so everything that reads one falls back to createdBy.
+  const newEvent = (date, type = 'prep') => ({ id: uid(), projectId: type === 'unavailable' ? '' : projectId || projects[0]?.id || '', type, title: '', date, endDate: '', start: '', end: '', locationText: '', notes: '', personId: '', personName: '', createdBy: user?.id || '', createdByName: user?.name || '', isNew: true })
+  const canMarkOff = isAdmin
+  const personLabel = (e) => e.personName || e.createdByName || e.title
 
   const save = () => {
-    if (!draft.title.trim()) return toast('Give the event a title.', 'error')
+    if (draft.type === 'unavailable' && !draft.personId) return toast('Pick who is not available.', 'error')
+    if (draft.type !== 'unavailable' && !draft.title.trim()) return toast('Give the event a title.', 'error')
     if (draft.endDate && draft.endDate < draft.date) return toast('End date is before the start.', 'error')
     update((s) => {
       const i = s.events.findIndex((e) => e.id === draft.id)
-      const { isNew, ...ev } = { ...draft, createdBy: draft.createdBy || user?.id || '', createdByName: draft.createdByName || user?.name || '' }
+      const { isNew, ...ev } = { ...draft, title: draft.type === 'unavailable' ? `${draft.personName || 'Someone'} not available` : draft.title, createdBy: draft.createdBy || user?.id || '', createdByName: draft.createdByName || user?.name || '' }
       if (i >= 0) s.events[i] = { ...s.events[i], ...ev }
       else s.events.push(ev)
       return s
@@ -129,7 +136,7 @@ export default function CalendarView({ projectId = null, title }) {
           <div className="panel cal-mobile">
             <MiniCalendar
               large
-              items={events.map((e) => ({ date: e.date, endDate: e.endDate, time: e.start, color: typeOf(e.type).color, title: e.type === 'unavailable' ? `${e.createdByName || e.title} not available` : e.title, sub: [e.start, !projectId && e.projectId ? projName(e.projectId) : '', e.type !== 'unavailable' ? typeOf(e.type).label : ''].filter(Boolean).join(' · '), ev: e }))}
+              items={events.map((e) => ({ date: e.date, endDate: e.endDate, time: e.start, color: typeOf(e.type).color, title: e.type === 'unavailable' ? `${personLabel(e)} not available` : e.title, sub: [e.start, !projectId && e.projectId ? projName(e.projectId) : '', e.type !== 'unavailable' ? typeOf(e.type).label : ''].filter(Boolean).join(' · '), ev: e }))}
               onItemClick={(e) => setDraft({ ...e })}
               onAddDay={editable ? (d) => setDraft(newEvent(d)) : canMarkOff ? (d) => setDraft(newEvent(d, 'unavailable')) : null}
               addLabel={editable ? 'Add event' : 'Not available'}
@@ -169,7 +176,7 @@ export default function CalendarView({ projectId = null, title }) {
                       title={`${e.title}${e.start ? ` · ${e.start}` : ''}`}
                     >
                       {e.start && <small>{e.start}</small>}
-                      {e.type === 'unavailable' ? <><small>✕</small>{e.createdByName || e.title}</> : e.title}
+                      {e.type === 'unavailable' ? <><small>✕</small>{personLabel(e)}</> : e.title}
                     </button>
                   ))}
                   {evs.length > 3 && <span className="cal-more">+{evs.length - 3}</span>}
@@ -211,7 +218,7 @@ export default function CalendarView({ projectId = null, title }) {
                     <li key={e.id}>
                       <span className="dot" style={{ background: typeOf('unavailable').color }} />
                       <span className="ev-date">{fmtDate(e.date)}{e.endDate && e.endDate > e.date ? ` – ${fmtDate(e.endDate)}` : ''}</span>
-                      <button className="ev-title link" onClick={() => setDraft({ ...e })}>{e.createdByName || e.title}</button>
+                      <button className="ev-title link" onClick={() => setDraft({ ...e })}>{personLabel(e)}</button>
                       {e.notes && <span className="muted small">{e.notes}</span>}
                     </li>
                   ))}
@@ -256,12 +263,23 @@ export default function CalendarView({ projectId = null, title }) {
         {draft && (
           <div className="stack">
             {draft.createdByName && <p className="muted small">Added by {draft.createdByName}</p>}
-            <Field label="Title">
-              <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} autoFocus disabled={!canEditDraft(draft)} />
-            </Field>
+            {draft.type === 'unavailable' ? (
+              <Field label="Who is not available" hint="Their photo goes grey on Home for these days.">
+                <Select
+                  value={draft.personId || ''}
+                  onChange={(e) => setDraft({ ...draft, personId: e.target.value, personName: team.find((u) => u.id === e.target.value)?.name || '' })}
+                  options={[['', 'Pick a person'], ...team.map((u) => [u.id, u.name])]}
+                  disabled={!canEditDraft(draft)}
+                />
+              </Field>
+            ) : (
+              <Field label="Title">
+                <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} autoFocus disabled={!canEditDraft(draft)} />
+              </Field>
+            )}
             <div className="row-2">
               <Field label="Type">
-                <Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={EVENT_TYPES.map((t) => [t.key, t.label])} disabled={!canEditDraft(draft)} />
+                <Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={EVENT_TYPES.filter((t) => t.key !== 'unavailable' || isAdmin).map((t) => [t.key, t.label])} disabled={!canEditDraft(draft)} />
               </Field>
               <Field label="Project">
                 <Select value={draft.projectId || ''} onChange={(e) => setDraft({ ...draft, projectId: e.target.value })} disabled={!canEditDraft(draft) || !!projectId}>
