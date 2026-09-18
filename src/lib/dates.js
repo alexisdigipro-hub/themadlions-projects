@@ -94,7 +94,10 @@ export function orthodoxEaster(year) {
   const e = (2 * a + 4 * b - d + 34) % 7
   const month = Math.floor((d + e + 114) / 31)
   const day = ((d + e + 114) % 31) + 1
-  return toISODate(new Date(Date.UTC(year, month - 1, day) + (year < 2100 ? 13 : 14) * 86400000))
+  // Read back in UTC, not local time: toISODate() reads local fields, which lands a day early
+  // for anyone west of Greenwich and would move every movable holiday with it.
+  const easter = new Date(Date.UTC(year, month - 1, day) + (year < 2100 ? 13 : 14) * 86400000)
+  return `${easter.getUTCFullYear()}-${pad(easter.getUTCMonth() + 1)}-${pad(easter.getUTCDate())}`
 }
 
 // The days Greece does not work. Movable ones hang off Easter.

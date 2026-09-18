@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
-import { uid, useCurrentUser, useStore } from '../lib/store.jsx'
+import { today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { DOCS, EXPENSE_CATS, FREQ, INCOME_CATS, METHODS, TX_STATUS, duePeriods, emptyRecurring, emptyTx, fiscalYearLabel, fiscalYearOf, generateFromRecurring, grossOf, matchTx, money, summarize, vatOf } from '../lib/finance.js'
 import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
@@ -131,7 +131,7 @@ export default function Finance() {
   })
   const setStatus = (tx, status) => update((s) => {
     const t = s.finance.transactions.find((x) => x.id === tx.id)
-    if (t) { t.status = status; if (status === 'paid' && !t.paidOn) t.paidOn = new Date().toISOString().slice(0, 10) }
+    if (t) { t.status = status; if (status === 'paid' && !t.paidOn) t.paidOn = today() }
     return s
   })
   const saveSettings = () => {
@@ -295,7 +295,7 @@ export default function Finance() {
                       </td>
                       <td className="row-actions">
                         <button onClick={() => setDraft({ ...t })}>Edit</button>
-                        <button onClick={() => setDraft({ ...t, id: uid(), date: new Date().toISOString().slice(0, 10), status: t.type === 'income' ? 'invoiced' : 'pending', paidOn: '', docNumber: '' })}>Copy</button>
+                        <button onClick={() => setDraft({ ...t, id: uid(), date: today(), status: t.type === 'income' ? 'invoiced' : 'pending', paidOn: '', docNumber: '' })}>Copy</button>
                         {!t.recurringId && <button onClick={() => setRdraft(emptyRecurring({ type: t.type, description: t.description, party: t.party, category: t.category, projectId: t.projectId, net: t.net, vatPct: t.vatPct, doc: t.doc, method: t.method, day: Number(t.date.slice(8, 10)) || 1, start: t.date.slice(0, 7), lastGenerated: t.date.slice(0, 7) }))}>Repeat</button>}
                         <Confirm onConfirm={() => remove(t)} label="Delete">×</Confirm>
                       </td>

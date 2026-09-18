@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Button, Confirm, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from './ui.jsx'
 import MiniCalendar from './MiniCalendar.jsx'
 import { EVENT_TYPES, can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
-import { buildICS, download, fmtDate, holidayName, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
+import { addDays, buildICS, download, fmtDate, holidayName, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
 
 export default function CalendarView({ projectId = null, title }) {
   const { state, update } = useStore()
@@ -36,11 +36,10 @@ export default function CalendarView({ projectId = null, title }) {
   )
   const byDate = useMemo(() => {
     const m = {}
-    const addDay = (iso, n) => { const d = new Date(iso + 'T00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
     for (const e of events) {
       if (e.endDate && e.endDate > e.date) {
         let d = e.date, guard = 0
-        while (d <= e.endDate && guard < 60) { (m[d] = m[d] || []).push(e); d = addDay(d, 1); guard += 1 }
+        while (d <= e.endDate && guard < 60) { (m[d] = m[d] || []).push(e); d = addDays(d, 1); guard += 1 }
       } else (m[e.date] = m[e.date] || []).push(e)
     }
     for (const k in m) m[k].sort((a, b) => (a.start || '').localeCompare(b.start || ''))

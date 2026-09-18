@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { today, useStore } from '../lib/store.jsx'
-import { fmtDate, holidayName, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
+import { addDays, fmtDate, holidayName, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
 
-const addDay = (iso, n) => { const d = new Date(iso + 'T00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
 
 // items: { date, endDate?, color, title, sub?, to? }
 export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLabel = 'Add event', large = false, onSelect }) {
@@ -20,7 +19,7 @@ export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLab
     for (const it of items) {
       if (it.endDate && it.endDate > it.date) {
         let d = it.date, guard = 0
-        while (d <= it.endDate && guard < 60) { (m[d] = m[d] || []).push(it); d = addDay(d, 1); guard += 1 }
+        while (d <= it.endDate && guard < 60) { (m[d] = m[d] || []).push(it); d = addDays(d, 1); guard += 1 }
       } else (m[it.date] = m[it.date] || []).push(it)
     }
     for (const k in m) m[k].sort((a, b) => (a.time || '').localeCompare(b.time || ''))
