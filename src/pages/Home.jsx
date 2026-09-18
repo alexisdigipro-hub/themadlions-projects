@@ -49,6 +49,20 @@ export default function Home() {
   const [day, setDay] = useState(t0)
   const team = state.users.filter((u) => u.active !== false)
   const away = unavailableOn(state.events, day)
+  // On a phone the faces are capped at two rows so they never push the calendar and the
+  // projects off the screen. We measure rather than guess how many fit, because that depends
+  // on the width of the phone, and only offer the button when there is really more to see.
+  const stripRef = useRef(null)
+  const [allFaces, setAllFaces] = useState(false)
+  const [facesHidden, setFacesHidden] = useState(false)
+  useEffect(() => {
+    const el = stripRef.current
+    if (!el) return
+    const check = () => setFacesHidden(el.scrollHeight - el.clientHeight > 4)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [team.length, allFaces, day])
 
   const active = projects.filter((p) => !['Delivered', 'On hold'].includes(p.status))
   const rows = projects
@@ -93,11 +107,18 @@ export default function Home() {
       body: (
         <>
           <div className="team-strip-head muted small">
-            {day === t0 ? 'Today' : fmtDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}
-            {away.size > 0 ? ` · ${away.size} not available` : ' · everyone available'}
-            {' · pick a day in the calendar below'}
+            <span>
+              {day === t0 ? 'Today' : fmtDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}
+              {away.size > 0 ? ` · ${away.size} not available` : ' · everyone available'}
+              {' · pick a day in the calendar below'}
+            </span>
+            {(facesHidden || allFaces) && (
+              <button className="link small team-strip-more" onClick={() => setAllFaces((v) => !v)}>
+                {allFaces ? 'Show less' : `Show all ${team.length}`}
+              </button>
+            )}
           </div>
-          <div className="team-strip">
+          <div className={`team-strip ${allFaces ? 'all' : ''}`} ref={stripRef}>
             {team.map((u) => {
               const off = away.has(u.id)
               return (
