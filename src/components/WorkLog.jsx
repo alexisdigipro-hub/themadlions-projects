@@ -15,6 +15,30 @@ export function entryTotals(list) {
 }
 export const yearsOf = (list) => [...new Set(list.map((e) => (e.date || '').slice(0, 4)).filter(Boolean))].sort().reverse()
 
+/* How long an unpaid job has been waiting, counted from the day it was worked. */
+export const daysWaiting = (entry, from = today()) => {
+  const d = (entry?.date || '').slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return 0
+  return Math.max(0, Math.round((Date.parse(from) - Date.parse(d)) / 86400000))
+}
+
+/* Three buckets, so the debt that has waited longest is obvious without reading dates. */
+export const AGE_BUCKETS = [
+  { key: 'fresh', label: 'Up to 30 days' },
+  { key: 'warn', label: '31 to 60 days' },
+  { key: 'late', label: 'Over 60 days' },
+]
+export const ageBucket = (days) => (days <= 30 ? 'fresh' : days <= 60 ? 'warn' : 'late')
+
+/* Flip one job between paid and pending. Shared so Team work and My work behave the same. */
+export const togglePaidEntry = (update, id) => update((s) => {
+  const x = (s.worklog || []).find((y) => y.id === id)
+  if (!x) return s
+  if (x.status === 'paid') { x.status = 'pending'; x.paidDate = '' }
+  else { x.status = 'paid'; x.paidDate = today() }
+  return s
+})
+
 /* Table of one person's jobs for one year, grouped by month. editable = may add / edit / delete. */
 export function WorkLogTable({ userId, editable, showHero = true, compact = false }) {
   const { state, update } = useStore()
@@ -55,12 +79,7 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
     if (!years.includes(e.date.slice(0, 4))) setYear(e.date.slice(0, 4))
     setDraft(null)
   }
-  const togglePaid = (e) => update((s) => {
-    const x = (s.worklog || []).find((y) => y.id === e.id)
-    if (!x) return s
-    if (x.status === 'paid') { x.status = 'pending'; x.paidDate = '' } else { x.status = 'paid'; x.paidDate = today() }
-    return s
-  })
+  const togglePaid = (e) => togglePaidEntry(update, e.id)
   const remove = (id) => update((s) => { s.worklog = (s.worklog || []).filter((x) => x.id !== id); return s })
   const importCsv = async (file) => {
     if (!file) return
