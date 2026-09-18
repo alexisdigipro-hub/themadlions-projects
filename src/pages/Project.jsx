@@ -4,6 +4,10 @@ import { can, canAccessProject, useCurrentUser, useStore } from '../lib/store.js
 import { hydrateProject } from '../lib/library.js'
 import { Icon } from '../components/icons.jsx'
 
+// The brainstorm whiteboard is built and working but Alex does not need it yet, so the tab is
+// hidden. The page itself still lives at /p/<id>/whiteboard. Flip this to true to bring it back.
+const SHOW_WHITEBOARD = false
+
 export function useProject() {
   return useOutletContext()
 }
@@ -35,7 +39,7 @@ export default function Project() {
     { to: 'calendar', label: 'Calendar', key: 'calendar', icon: 'calendar' },
     { to: 'locations', label: 'Locations', key: 'locations', icon: 'locations' },
     { to: 'people', label: project.category === 'Event' ? 'Crew & talent' : 'Cast & crew', key: 'contacts', icon: 'people' },
-    { to: 'whiteboard', label: 'Whiteboard', key: 'files', icon: 'notes' },
+    ...(SHOW_WHITEBOARD ? [{ to: 'whiteboard', label: 'Whiteboard', key: 'files', icon: 'notes' }] : []),
     { to: 'notes', label: 'Files & notes', key: 'files', icon: 'notes' },
   ].filter((t) => can(user, t.key))
 
