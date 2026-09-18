@@ -31,11 +31,12 @@ export default function CallSheets() {
   const [share, setShare] = useState(null) // { url } | { busy } | { error }
   const user = useCurrentUser()
   const csd = callsheetDefaults(state)
-  const lunchDefault = (() => { const m = /^(\d{1,2}):(\d{2})$/.exec(day.callTime || ''); if (!m || !csd.lunchAfterHours) return ''; const t = (Number(m[1]) * 60 + Number(m[2]) + Number(csd.lunchAfterHours) * 60) % 1440; return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}` })()
   const canShare = true
   const toast = useToast()
   const day = days.find((d) => d.id === sel) || days[0]
   const editable = canEdit('callsheets')
+  // Default lunch time: the day's call plus the company default. Declared after `day`, which it reads.
+  const lunchDefault = (() => { const m = /^(\d{1,2}):(\d{2})$/.exec(day?.callTime || ''); if (!m || !csd.lunchAfterHours) return ''; const t = (Number(m[1]) * 60 + Number(m[2]) + Number(csd.lunchAfterHours) * 60) % 1440; return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}` })()
 
   if (!days.length) {
     return (
