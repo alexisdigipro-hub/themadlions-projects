@@ -19,24 +19,28 @@ export default function Breakdown() {
   const [open, setOpen] = useState(null)
   const [progress, setProgress] = useState(null)
   const [view, setView] = useState('scenes')
-  const [doc, setDoc] = useState(null) // { files, notes, useText, wantShots, mode }
+  const [doc, setDoc] = useState(null) // { files, notes, useText, wantShots, mode, paste }
   const [docBusy, setDocBusy] = useState('')
+  const [paste, setPaste] = useState('') // text pasted straight into the page
+  const [pasteOpen, setPasteOpen] = useState(false)
+  const [pasteOpts, setPasteOpts] = useState({ wantShots: true, mode: 'append' })
   const editable = canEdit('breakdown')
   const concept = project.concept
 
-  const runDocument = async () => {
+  const runDocument = async (d = doc) => {
     if (!state.settings.aiKey) return toast('Add your Anthropic API key in Settings first.', 'error')
-    const files = doc.files || []
-    if (!files.length && !(doc.useText && project.script.text)) return toast('Add a PDF, images or text first.', 'error')
+    const files = d.files || []
+    const pasted = (d.paste || '').trim()
+    if (!files.length && !pasted && !(d.useText && project.script.text)) return toast('Paste some text, or add a PDF or images first.', 'error')
     setDocBusy('Preparing…')
     try {
       const res = await aiDocumentBreakdown({
         settings: state.settings,
         category: project.category,
-        text: [doc.useText ? project.script.text : '', (project.music?.sections || []).length ? `SONG MAP (music video):\n${songMapText(project.music, project.scenes)}` : ''].filter(Boolean).join('\n\n'),
+        text: [pasted, d.useText ? project.script.text : '', (project.music?.sections || []).length ? `SONG MAP (music video):\n${songMapText(project.music, project.scenes)}` : ''].filter(Boolean).join('\n\n'),
         files,
-        notes: doc.notes,
-        wantShots: doc.wantShots,
+        notes: d.notes,
+        wantShots: d.wantShots,
         onProgress: setDocBusy,
       })
       if (!res.setups.length) throw new Error('The AI returned no setups. Try adding a short description in the notes field.')
@@ -46,7 +50,7 @@ export default function Breakdown() {
           synopsis: st.synopsis, body: st.body, look: st.look, durationHint: st.durationHint, songSection: st.songSection || '', eighths: 4, characters: st.characters,
           elements: st.elements, elementsSource: 'ai', flags: st.flags, notes: '', dayId: '', order: i, source: 'document',
         }))
-        if (doc.mode === 'replace') {
+        if (d.mode === 'replace') {
           p.scenes = scenes
           p.shootingDays.forEach((d) => (d.sceneIds = []))
           p.shots = []
@@ -55,7 +59,7 @@ export default function Breakdown() {
           scenes.forEach((sc, i) => { sc.number = String(start + i + 1); sc.order = start + i })
           p.scenes = [...p.scenes, ...scenes]
         }
-        if (doc.wantShots) {
+        if (d.wantShots) {
           p.shots = p.shots || []
           res.setups.forEach((st, i) => {
             const scene = scenes[i]
@@ -71,12 +75,13 @@ export default function Breakdown() {
             })
           })
         }
-        p.concept = { title: res.title, summary: res.summary, locations: res.locations, talent: res.talent, notes: res.notes, source: files.map((f) => f.name).join(', ') || 'script text', at: new Date().toISOString() }
+        p.concept = { title: res.title, summary: res.summary, locations: res.locations, talent: res.talent, notes: res.notes, source: files.map((f) => f.name).join(', ') || (pasted ? 'pasted text' : 'script text'), at: new Date().toISOString() }
         p.breakdownStatus = 'ai'
-        if (!p.script.text && doc.useText === false) p.script = { ...p.script, docType: 'document' }
+        if (!p.script.text && d.useText === false) p.script = { ...p.script, docType: 'document' }
       })
       setDoc(null)
-      toast(`${res.setups.length} setups created from the document${doc.wantShots ? ', with a draft shot list' : ''}`, 'ok')
+      if (pasted && !files.length) { setPaste(''); setPasteOpen(false) }
+      toast(`${res.setups.length} setups created from the ${pasted && !files.length ? 'text' : 'document'}${d.wantShots ? ', with a draft shot list' : ''}`, 'ok')
     } catch (e) {
       toast(e.message, 'error')
     } finally {
@@ -226,7 +231,10 @@ export default function Breakdown() {
             <Button variant="primary" onClick={runAI} disabled={!!progress}>
               {progress ? `AI tagging ${progress.done}/${progress.total}` : 'AI breakdown'}
             </Button>
-            <Button onClick={() => setDoc({ files: [], notes: '', useText: !!project.script.text && parseScript(project.script.text).scenes.length < 2, wantShots: project.category !== 'Visuals', mode: project.scenes.length ? 'append' : 'replace' })}>
+            <Button onClick={() => setPasteOpen((v) => !v)} disabled={!!docBusy}>
+              {pasteOpen ? 'Hide paste box' : 'Paste text'}
+            </Button>
+            <Button onClick={() => setDoc({ files: [], notes: '', paste: '', useText: !!project.script.text && parseScript(project.script.text).scenes.length < 2, wantShots: project.category !== 'Visuals', mode: project.scenes.length ? 'append' : 'replace' })}>
               From treatment / moodboard
             </Button>
             {project.scenes.length > 0 && (
@@ -247,6 +255,39 @@ export default function Breakdown() {
         <p className="notice">
           No characters were found. Character names are detected when they stand alone in capitals above the dialogue, or as <em>NAME:</em> before the line. If your script uses another layout, open a scene and add the characters by hand, or send the file to have the detection adjusted.
         </p>
+      )}
+
+      {pasteOpen && editable && (
+        <section className="panel paste-panel">
+          <div className="panel-head">
+            <h2>Paste text</h2>
+            <span className="muted small">Treatment, concept, scene list, notes. The AI turns it into setups with their materials.</span>
+          </div>
+          <Textarea
+            rows={8}
+            value={paste}
+            onChange={(e) => setPaste(e.target.value)}
+            placeholder={'Paste here.\n\nWorks with a director\'s treatment, a concept in plain words, a scene list, or notes: "Day 1, rooftop at sunset, the artist alone, black coat, wind machine…"'}
+          />
+          <div className="paste-actions">
+            <label className="check">
+              <input type="checkbox" checked={pasteOpts.wantShots} onChange={(e) => setPasteOpts({ ...pasteOpts, wantShots: e.target.checked })} />
+              Also draft a first shot list
+            </label>
+            {project.scenes.length > 0 && (
+              <Select
+                value={pasteOpts.mode}
+                onChange={(e) => setPasteOpts({ ...pasteOpts, mode: e.target.value })}
+                options={[['append', 'Add after the existing scenes'], ['replace', 'Replace the existing scenes']]}
+              />
+            )}
+            <span className="spacer" />
+            <span className="muted small">{(paste.match(/\S+/g) || []).length} words</span>
+            <Button variant="primary" disabled={!!docBusy || !paste.trim()} onClick={() => runDocument({ files: [], notes: '', paste, useText: false, wantShots: pasteOpts.wantShots, mode: project.scenes.length ? pasteOpts.mode : 'replace' })}>
+              {docBusy || 'AI breakdown'}
+            </Button>
+          </div>
+        </section>
       )}
 
       {concept && (
@@ -280,8 +321,13 @@ export default function Breakdown() {
       )}
 
       {project.scenes.length === 0 ? (
-        <Empty title="No scenes yet">
-          {project.script.text ? 'Detect scenes to build the list from the headings, then run the AI breakdown to tag props, wardrobe, vehicles and everything else per scene.' : 'Import a screenplay in Script, or use "From treatment / moodboard" to let the AI turn a concept, director\'s treatment or moodboard (PDF, images, text) into setups with their materials.'}
+        <Empty
+          title="No scenes yet"
+          action={editable && !pasteOpen && <Button variant="primary" onClick={() => setPasteOpen(true)}>Paste text</Button>}
+        >
+          {project.script.text
+            ? 'Detect scenes to build the list from the headings, then run the AI breakdown to tag props, wardrobe, vehicles and everything else per scene.'
+            : 'Import a screenplay in Script, paste the text straight in here, or use "From treatment / moodboard" for a concept, treatment or moodboard (PDF, images).'}
         </Empty>
       ) : (
         <>
@@ -391,7 +437,7 @@ export default function Breakdown() {
 
       <SceneModal key={open?.id || 'none'} scene={open} onClose={() => setOpen(null)} editable={editable} project={project} edit={edit} />
       <Modal open={!!doc} title="Breakdown from a treatment, concept or moodboard" onClose={() => !docBusy && setDoc(null)}
-        footer={<><Button variant="ghost" onClick={() => setDoc(null)} disabled={!!docBusy}>Cancel</Button><Button variant="primary" onClick={runDocument} disabled={!!docBusy}>{docBusy || 'Run AI breakdown'}</Button></>}>
+        footer={<><Button variant="ghost" onClick={() => setDoc(null)} disabled={!!docBusy}>Cancel</Button><Button variant="primary" onClick={() => runDocument(doc)} disabled={!!docBusy}>{docBusy || 'Run AI breakdown'}</Button></>}>
         {doc && (
           <div className="stack">
             <p className="small muted">Works with a director's treatment, a concept in plain words, a PDF moodboard with images, or a set of reference photos. The AI groups everything into shootable setups with location, time of day, talent, wardrobe, props, art, effects and equipment.</p>
@@ -399,6 +445,9 @@ export default function Breakdown() {
               <input type="file" multiple accept=".pdf,.docx,.txt,.md,image/*" className="input" onChange={(e) => setDoc({ ...doc, files: Array.from(e.target.files || []) })} />
             </Field>
             {doc.files?.length > 0 && <div className="small muted">{doc.files.map((f) => f.name).join(', ')}</div>}
+            <Field label="Or paste the text here" hint="A treatment, a concept, a scene list, notes from a meeting. Files and pasted text can be used together.">
+              <Textarea rows={5} value={doc.paste || ''} onChange={(e) => setDoc({ ...doc, paste: e.target.value })} placeholder="Paste the treatment or the concept…" />
+            </Field>
             {project.script.text && (
               <label className="check">
                 <input type="checkbox" checked={doc.useText} onChange={(e) => setDoc({ ...doc, useText: e.target.checked })} />
