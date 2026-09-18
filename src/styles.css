@@ -2242,9 +2242,8 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 .cal-layout.stacked { grid-template-columns: 1fr; }
 .cal-layout.stacked .cal-cell { min-height: 112px; }
 .cal-layout.stacked .cal-side { width: auto; }
-.cal-side-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .cal-ev[style*="#6B7280"] { opacity: .9; }
-@media (max-width: 820px) { .cal-side-cols { grid-template-columns: 1fr; } .cal-layout.stacked .cal-cell { min-height: 64px; } }
+@media (max-width: 820px) { .cal-layout.stacked .cal-cell { min-height: 64px; } }
 
 /* ---------- home mini calendar ---------- */
 .mini-cal { display: flex; flex-direction: column; gap: 8px; }
@@ -2473,13 +2472,28 @@ html[data-theme='light'] .tw-card { border-color: transparent; }
 .team-chip.off .team-chip-name { color: var(--muted); text-decoration: line-through; }
 .team-chip-off { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; font-weight: 700; color: var(--danger); background: color-mix(in srgb, var(--panel) 45%, transparent); }
 @media (max-width: 820px) {
-  .team-strip { gap: 12px; padding: 10px 12px 14px; }
+  /* On a phone the faces go on one scrolling line instead of wrapping into a wall, and they
+     shrink so the strip costs a single row rather than half the screen before the content. */
+  .team-strip { flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding: 10px 12px 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .team-strip::-webkit-scrollbar { display: none; }
   .team-strip-head { padding: 10px 12px 0; }
-  .team-chip { width: 88px; }
-  .team-chip-photo { width: 80px; height: 80px; }
-  .team-chip-initials { font-size: 26px; }
-  .team-chip-off { font-size: 30px; }
-  .team-chip-name { font-size: 12px; }
+  .team-chip { width: 56px; flex: 0 0 auto; gap: 4px; }
+  .team-chip-photo { width: 52px; height: 52px; }
+  .team-chip-initials { font-size: 17px; }
+  .team-chip-off { font-size: 21px; }
+  .team-chip-name { font-size: 11px; }
+
+  /* The blocks stop competing for height: on one column there is nothing to match. */
+  .home-block { display: block; }
+  .home-table-wrap { max-height: none; overflow-x: auto; }
+
+  /* Six columns do not fit a phone. Keep the project, when it shoots next and what is open;
+     status, progress and budget are a tap away on the project itself. */
+  .home-projects thead th:nth-child(2), .home-projects tbody td:nth-child(2),
+  .home-projects thead th:nth-child(3), .home-projects tbody td:nth-child(3),
+  .home-projects thead th:nth-child(6), .home-projects tbody td:nth-child(6) { display: none; }
+  .home-projects td:first-child { min-width: 0; }
+  .home-projects td, .home-projects th { padding-left: 8px; padding-right: 8px; }
 }
 .chat-who a { color: inherit; }
 @media (max-width: 820px) {
