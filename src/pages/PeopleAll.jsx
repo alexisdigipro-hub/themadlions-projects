@@ -1,17 +1,17 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, useToast } from '../components/ui.jsx'
-import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { can, departmentsOf, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
 import { waLink } from '../lib/share.js'
 
-const DEPTS = ['Cast', 'Production', 'Direction', 'Camera', 'Lighting', 'Grip', 'Sound', 'Art', 'Costume', 'Makeup & hair', 'Locations', 'Post', 'Transport', 'Catering', 'Other']
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 const emptyPerson = (kind) => ({ id: uid(), kind, name: '', phone: '', email: '', dept: kind === 'cast' ? 'Cast' : 'Production', role: '', agent: '', agentPhone: '', notes: '', photos: [], tags: [], createdAt: new Date().toISOString() })
 
 export default function PeopleAll({ embedded = false, kind: kindProp } = {}) {
   const { state, update } = useStore()
+  const DEPTS = ['Cast', ...departmentsOf(state)]
   const user = useCurrentUser()
   const toast = useToast()
   const editable = can(user, 'contacts', 'edit')

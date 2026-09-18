@@ -4,10 +4,10 @@ import { can, useCurrentUser, useStore } from '../lib/store.jsx'
 import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
 
-function Logo({ name, subtitle }) {
+function Logo({ name, subtitle, logo }) {
   return (
     <div className="logo">
-      <span className="logo-mark" aria-hidden="true" />
+      {logo ? <img className="logo-img" src={logo} alt="" /> : <span className="logo-mark" aria-hidden="true" />}
       <span className="logo-text">
         <strong>{name}</strong>
         <em>{subtitle}</em>
@@ -51,7 +51,7 @@ export default function Layout() {
         <button className="icon-btn menu-btn" aria-label="Menu" onClick={() => setOpen((o) => !o)}>
           <span className="burger" />
         </button>
-        <Logo name={state.workspace.name} subtitle={state.workspace.subtitle} />
+        <Logo name={state.workspace.name} subtitle={state.workspace.subtitle} logo={state.settings?.logo} />
         <div className="topbar-user">
           <span className="user-chip">
             {user?.name}
@@ -62,7 +62,7 @@ export default function Layout() {
 
       <aside className={`sidebar ${open ? 'open' : ''}`}>
         <div className="sidebar-logo">
-          <Logo name={state.workspace.name} subtitle={state.workspace.subtitle} />
+          <Logo name={state.workspace.name} subtitle={state.workspace.subtitle} logo={state.settings?.logo} />
         </div>
         <nav className="sidenav">
           {items.map((i) => (

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
-import { today, uid, useStore } from '../../lib/store.jsx'
+import { departmentsOf, today, uid, useStore } from '../../lib/store.jsx'
 import { fmtDate } from '../../lib/dates.js'
 
 export const TASK_STATUS = [
@@ -59,6 +59,8 @@ export function TaskList({ tasks, onEdit, onStatus, onDelete, editable, showProj
 }
 
 export function TaskModal({ draft, setDraft, onSave, onClose, people }) {
+  const { state } = useStore()
+  const TASK_DEPTS = [...new Set([...departmentsOf(state), 'Legal'])]
   const set = (k, v) => setDraft({ ...draft, [k]: v })
   return (
     <Modal
@@ -91,13 +93,15 @@ export function TaskModal({ draft, setDraft, onSave, onClose, people }) {
 }
 
 export function DeptChips({ tasks, dept, setDept, filter = 'open' }) {
+  const { state } = useStore()
   const counts = {}
   tasks.forEach((t) => {
     const openish = filter === 'all' ? true : filter === 'done' ? t.status === 'done' : t.status !== 'done'
     if (!openish) return
     counts[t.dept || 'Other'] = (counts[t.dept || 'Other'] || 0) + 1
   })
-  const depts = [...TASK_DEPTS, ...Object.keys(counts).filter((d) => !TASK_DEPTS.includes(d))].filter((d) => counts[d])
+  const DEPTS = departmentsOf(state)
+  const depts = [...DEPTS, ...Object.keys(counts).filter((d) => !DEPTS.includes(d))].filter((d) => counts[d])
   if (!depts.length) return null
   const total = Object.values(counts).reduce((a, b) => a + b, 0)
   return (

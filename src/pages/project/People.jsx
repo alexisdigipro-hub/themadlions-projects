@@ -1,18 +1,19 @@
 import { useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
-import { uid } from '../../lib/store.jsx'
+import { departmentsOf, uid, useStore } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import PhotoGrid from '../../components/PhotoGrid.jsx'
 import { contactToLibrary, matchText, sharedContact } from '../../lib/library.js'
 import { waLink } from '../../lib/share.js'
 
-const DEPTS = ['Production', 'Direction', 'Camera', 'Lighting', 'Grip', 'Sound', 'Art', 'Costume', 'Makeup & hair', 'Locations', 'Post', 'Transport', 'Catering', 'Other']
 
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 
 export default function People() {
   const { project, edit, canEdit, library, editLibrary } = useProject()
+  const { state } = useStore()
+  const DEPTS = departmentsOf(state)
   const toast = useToast()
   const [draft, setDraft] = useState(null)
   const [pick, setPick] = useState(null) // { q, sel, character }

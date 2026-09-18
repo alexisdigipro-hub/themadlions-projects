@@ -51,7 +51,7 @@ export default function Team() {
     email: '',
     password: '',
     role: 'member',
-    permissions: { ...defaultPermissions('view'), projects: 'view' },
+    permissions: { ...defaultPermissions(state.settings?.newMemberLevel || 'view'), projects: 'view', drives: 'none' },
     projectAccess: 'all',
     active: true,
     createdAt: new Date().toISOString(),

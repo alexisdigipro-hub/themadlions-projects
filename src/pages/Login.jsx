@@ -6,7 +6,7 @@ import { defaultPermissions, sampleProject, uid, useStore } from '../lib/store.j
 function Logo({ state }) {
   return (
     <div className="logo login-logo">
-      <span className="logo-mark" aria-hidden="true" />
+      {state.settings?.logo ? <img className="logo-img" src={state.settings.logo} alt="" /> : <span className="logo-mark" aria-hidden="true" />}
       <span className="logo-text">
         <strong>{state.workspace.name}</strong>
         <em>{state.workspace.subtitle}</em>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Field, Input, PageHead, useToast } from '../components/ui.jsx'
-import { uid, useCurrentUser, useStore } from '../lib/store.jsx'
+import { canSendNotices, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
 import { SendNoticeModal, SentNotices } from '../components/Notices.jsx'
 
@@ -19,6 +19,7 @@ export default function Chat() {
   const endRef = useRef(null)
   const chat = state.chat || []
   const isAdmin = user?.role === 'admin'
+  const canNotice = canSendNotices(state, user)
 
   const groups = useMemo(() => {
     const out = []
@@ -56,11 +57,11 @@ export default function Chat() {
   return (
     <div className="chat-page">
       <PageHead title="Team chat" sub={`${state.users.filter((u) => u.active !== false).length} in the team`}>
-        {isAdmin && <Button variant="ghost" onClick={() => setShowSent((v) => !v)}>{showSent ? 'Hide notices' : 'Sent notices'}</Button>}
-        {isAdmin && <Button variant="primary" onClick={() => setNotice(true)}>Send notice</Button>}
+        {canNotice && <Button variant="ghost" onClick={() => setShowSent((v) => !v)}>{showSent ? 'Hide notices' : 'Sent notices'}</Button>}
+        {canNotice && <Button variant="primary" onClick={() => setNotice(true)}>Send notice</Button>}
       </PageHead>
       <SendNoticeModal open={notice} onClose={() => setNotice(false)} />
-      {showSent && isAdmin && <div className="panel chat-tg"><div className="panel-head"><h2>Notices</h2></div><SentNotices /></div>}
+      {showSent && canNotice && <div className="panel chat-tg"><div className="panel-head"><h2>Notices</h2></div><SentNotices /></div>}
 
       <div className="chat-box">
         <div className="chat-scroll">

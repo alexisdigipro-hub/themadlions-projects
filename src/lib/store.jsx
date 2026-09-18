@@ -57,6 +57,11 @@ export const today = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+export const DEFAULT_DEPARTMENTS = ['Production', 'Direction', 'Camera', 'Lighting', 'Grip', 'Sound', 'Art', 'Costume', 'Makeup & hair', 'Locations', 'Casting', 'Post', 'Transport', 'Catering', 'Client', 'Other']
+export const departmentsOf = (state) => (state.settings?.departments?.length ? state.settings.departments : DEFAULT_DEPARTMENTS)
+export const callsheetDefaults = (state) => ({ callTime: '07:00', wrapTime: '19:00', lunchAfterHours: 6, hospital: '', parking: '', tagline: '', footer: '', ...(state.settings?.callsheet || {}) })
+export const canSendNotices = (state, user) => !!user && (user.role === 'admin' || (state.settings?.noticeSenders === 'editors' && can(user, 'callsheets', 'edit')))
+
 export function defaultPermissions(level = 'view') {
   return Object.fromEntries(MODULES.map((m) => [m.key, level]))
 }
@@ -74,7 +79,14 @@ export function emptyState() {
     notices: [],
     worklog: [],
     finance: { transactions: [], recurring: [], settings: { currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 } },
-    settings: { aiProvider: 'anthropic', aiKey: '', aiModel: 'claude-sonnet-4-6', mapsKey: '' },
+    settings: {
+      aiProvider: 'anthropic', aiKey: '', aiModel: 'claude-sonnet-4-6', mapsKey: '',
+      logo: '', // data URL, square-ish, max 256px
+      callsheet: { callTime: '07:00', wrapTime: '19:00', lunchAfterHours: 6, hospital: '', parking: '', tagline: '', footer: '' },
+      departments: DEFAULT_DEPARTMENTS,
+      noticeSenders: 'admins', // 'admins' | 'editors'  (who can send notices and share call sheet links)
+      newMemberLevel: 'view', // 'none' | 'view' | 'edit'  (default permissions when adding a teammate)
+    },
   }
 }
 
@@ -141,7 +153,7 @@ function migrate(parsed) {
   // migrations: new modules and fields added after the first release
   parsed.projects = (parsed.projects || []).map(migrateProject)
   parsed.users = (parsed.users || []).map((u) => ({ ...u, permissions: { ...defaultPermissions(u.role === 'admin' ? 'edit' : 'view'), ...(u.permissions || {}) } }))
-  return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], drives: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), recurring: parsed.finance?.recurring || [], settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}) } }
+  return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], drives: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), recurring: parsed.finance?.recurring || [], settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}), callsheet: { ...emptyState().settings.callsheet, ...(parsed.settings?.callsheet || {}) } } }
 }
 
 const rowToMessage = (r) => ({ id: r.id, userId: r.user_id || '', userName: r.user_name || '', text: r.text || '', source: r.source || 'app', createdAt: r.created_at })

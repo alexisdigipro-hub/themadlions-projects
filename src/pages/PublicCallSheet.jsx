@@ -28,7 +28,7 @@ export default function PublicCallSheet() {
       <header className="pub-hero" style={{ '--pc': d.project.color || '#C8503F' }}>
         {d.project.cover && <img className="pub-cover" src={d.project.cover} alt="" />}
         <div className="pub-hero-body">
-          <div className="pub-company">{d.company?.name || 'THEMADLIONS'}</div>
+          <div className="pub-company">{d.company?.logo && <img src={d.company.logo} alt="" />}{d.company?.name || 'THEMADLIONS'}</div>
           <h1>{d.project.title}</h1>
           <div className="pub-day">Day {d.day.index} of {d.day.count} · {fmt(d.day.date)}</div>
         </div>
@@ -121,6 +121,7 @@ export default function PublicCallSheet() {
         </section>
       )}
 
+      {d.sheet.footer && <p className="pub-footer">{d.sheet.footer}</p>}
       <footer className="pub-foot muted small">Updated {new Date(share.updated_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · THEMADLIONS Projects</footer>
     </div>
   )

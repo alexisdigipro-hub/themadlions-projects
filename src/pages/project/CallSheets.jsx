@@ -9,7 +9,7 @@ import { ATHENS, coordsFromText, forecast, geocode, sunTimes } from '../../lib/s
 import { callSheetText, mailLink, personalCallText, waLink, waShareLink } from '../../lib/share.js'
 import { Modal } from '../../components/ui.jsx'
 import { publishShare } from '../../lib/shares.js'
-import { useCurrentUser } from '../../lib/store.jsx'
+import { callsheetDefaults, canSendNotices, useCurrentUser } from '../../lib/store.jsx'
 
 function addMinutes(hhmm, mins) {
   if (!hhmm) return ''
@@ -30,6 +30,9 @@ export default function CallSheets() {
   const [send, setSend] = useState(false)
   const [share, setShare] = useState(null) // { url } | { busy } | { error }
   const user = useCurrentUser()
+  const csd = callsheetDefaults(state)
+  const lunchDefault = (() => { const m = /^(\d{1,2}):(\d{2})$/.exec(day.callTime || ''); if (!m || !csd.lunchAfterHours) return ''; const t = (Number(m[1]) * 60 + Number(m[2]) + Number(csd.lunchAfterHours) * 60) % 1440; return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}` })()
+  const canShare = canSendNotices(state, user)
   const toast = useToast()
   const day = days.find((d) => d.id === sel) || days[0]
   const editable = canEdit('callsheets')
@@ -73,9 +76,9 @@ export default function CallSheets() {
       if (project.producer) keyCrew.unshift({ role: 'Producer', name: project.producer })
       const data = {
         project: { title: project.title, color: project.color, cover: project.coverThumb || '', category: project.category },
-        company: { name: state.workspace.name, address: state.settings.companyAddress || '' },
+        company: { name: state.workspace.name, address: state.settings.companyAddress || '', logo: state.settings.logo || '' },
         day: { index: dayIndex + 1, count: days.length, date: day.date, callTime: day.callTime, wrapTime: day.wrapTime },
-        sheet: { tagline: sheet.tagline || '', notes: sheet.notes || '', shootingCall: sheet.shootingCall || '', lunch: sheet.lunch || '', parking: sheet.parking || '', hospital: sheet.weather || '' },
+        sheet: { tagline: sheet.tagline || csd.tagline || '', notes: sheet.notes || '', shootingCall: sheet.shootingCall || '', lunch: sheet.lunch || lunchDefault, parking: sheet.parking || csd.parking || '', hospital: sheet.weather || csd.hospital || '', footer: csd.footer || '' },
         wx: wx ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
         sun: sun ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,
         loc: loc ? { name: loc.name, address: loc.address, contact: loc.contact, phone: loc.phone } : null,
@@ -144,7 +147,7 @@ export default function CallSheets() {
               <button className={mode === 'sides' ? 'on' : ''} onClick={() => setMode('sides')}>Sides</button>
             </div>
           )}
-          <Button onClick={makeShare}>Share link</Button>
+          {canShare && <Button onClick={makeShare}>Share link</Button>}
           <Button onClick={() => setSend(true)}>Send message</Button>
           <Button variant="primary" onClick={() => window.print()}>
             Print / Save PDF
@@ -231,7 +234,7 @@ export default function CallSheets() {
       <article className="sheet cs" hidden={mode !== 'sheet'}>
         <header className="cs-head">
           <div className="cs-company">
-            <div className="cs-brand"><span className="cs-mark" />{state.workspace.name}</div>
+            <div className="cs-brand">{state.settings.logo ? <img className="cs-logo" src={state.settings.logo} alt="" /> : <span className="cs-mark" />}{state.workspace.name}</div>
             {state.settings.companyAddress && <div className="muted small cs-addr">{state.settings.companyAddress}</div>}
             <dl className="cs-kv">
               {project.producer && (<><dt>Producer</dt><dd>{project.producer}</dd></>)}
@@ -246,8 +249,8 @@ export default function CallSheets() {
             <div className="cs-call-label">General crew call</div>
             <div className="cs-call-time">{day.callTime}</div>
             {editable ? (
-              <textarea className="cs-tagline" rows={3} value={sheet.tagline || ''} onChange={(e) => setSheet('tagline', e.target.value)} placeholder="One line for everyone: safety first, bring a jacket, no smoking on set." />
-            ) : sheet.tagline ? <p className="cs-tagline-text">{sheet.tagline}</p> : null}
+              <textarea className="cs-tagline" rows={3} value={sheet.tagline || ''} onChange={(e) => setSheet('tagline', e.target.value)} placeholder={csd.tagline || 'One line for everyone: safety first, bring a jacket, no smoking on set.'} />
+            ) : (sheet.tagline || csd.tagline) ? <p className="cs-tagline-text">{sheet.tagline || csd.tagline}</p> : null}
           </div>
           <div className="cs-side">
             <div className="cs-day">Day {dayIndex + 1} of {days.length}</div>
@@ -265,7 +268,7 @@ export default function CallSheets() {
             </div>
             <dl className="cs-times">
               <dt>Shooting call</dt><dd>{editable ? <input className="cs-time" value={sheet.shootingCall ?? ''} placeholder={day.callTime} onChange={(e) => setSheet('shootingCall', e.target.value)} /> : sheet.shootingCall || day.callTime}</dd>
-              <dt>Lunch</dt><dd>{editable ? <input className="cs-time" value={sheet.lunch ?? ''} placeholder="13:00" onChange={(e) => setSheet('lunch', e.target.value)} /> : sheet.lunch || ''}</dd>
+              <dt>Lunch</dt><dd>{editable ? <input className="cs-time" value={sheet.lunch ?? ''} placeholder={lunchDefault || '13:00'} onChange={(e) => setSheet('lunch', e.target.value)} /> : sheet.lunch || lunchDefault || ''}</dd>
               <dt>Est. wrap</dt><dd>{day.wrapTime}</dd>
             </dl>
           </div>
@@ -296,11 +299,11 @@ export default function CallSheets() {
             </div>
             <div>
               <div className="cs-loc-h">Parking</div>
-              {editable ? <textarea rows={3} value={sheet.parking || ''} onChange={(e) => setSheet('parking', e.target.value)} placeholder="Where, how many cars, who unloads where" /> : <div>{sheet.parking || '–'}</div>}
+              {editable ? <textarea rows={3} value={sheet.parking || ''} onChange={(e) => setSheet('parking', e.target.value)} placeholder={csd.parking || 'Where, how many cars, who unloads where'} /> : <div>{sheet.parking || csd.parking || '–'}</div>}
             </div>
             <div>
               <div className="cs-loc-h">Nearest hospital</div>
-              {editable ? <textarea rows={3} value={sheet.weather || ''} onChange={(e) => setSheet('weather', e.target.value)} placeholder="Name, address, phone" /> : <div>{sheet.weather || '–'}</div>}
+              {editable ? <textarea rows={3} value={sheet.weather || ''} onChange={(e) => setSheet('weather', e.target.value)} placeholder={csd.hospital || 'Name, address, phone'} /> : <div>{sheet.weather || csd.hospital || '–'}</div>}
             </div>
           </div>
           {wx && <div className="muted small no-print">{wx.place} · forecast from open-meteo · {editable && <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'refresh'}</button>}</div>}
@@ -416,6 +419,7 @@ export default function CallSheets() {
           </div>
         </section>
 
+        {csd.footer && <p className="cs-footer">{csd.footer}</p>}
         {editable && (
           <p className="fineprint no-print">Edits here are saved automatically to this day's call sheet.</p>
         )}

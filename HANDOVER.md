@@ -26,6 +26,8 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Call sheet Share link: Call sheets > Share link publishes a snapshot (no department requirements, no budget) to the shares table and gives a public URL /#/s/<token> that opens without login on a mobile-first page (PublicCallSheet.jsx: big call, times, weather, pinned note, location with Directions, cast+crew calls with name search, scenes, production contacts). Same link per day, re-sharing refreshes it. Anonymous read goes through the share_get() function only.
 
+- Settings (admin): company logo (data URL in settings.logo, resized to 320px; shown in sidebar, login, call sheet header, shared link), call sheet defaults (settings.callsheet: crew call, wrap, lunch N hours after call, tagline, parking, hospital, footer; new shooting days and empty call sheet fields fall back to them), editable department list (settings.departments, used by crew, database, tasks via departmentsOf()), team rules (settings.noticeSenders admins|editors controls Send notice and Share link via canSendNotices(); settings.newMemberLevel sets the default permission level for new teammates). Still planned from the same list: activity log, share-link expiry, phone visibility, project freeze, progress stages per category, notification rules.
+
 ## Not done / ideas discussed
 - Call sheet delivery with confirmation (email via Resend Edge Function, WhatsApp Business API; Alex dropped Telegram). Currently Send message opens WhatsApp/mail with prefilled text, and Share link gives a public page.
 - Chat: no push notifications yet (only the sidebar badge while the app is open).

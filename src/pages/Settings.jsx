@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
-import { Button, Confirm, Field, Input, PageHead, useToast } from '../components/ui.jsx'
-import { STORAGE_KEY, sampleProject, useCurrentUser, useStore } from '../lib/store.jsx'
+import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
+import { DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, departmentsOf, sampleProject, useCurrentUser, useStore } from '../lib/store.jsx'
 import { testKey } from '../lib/ai.js'
 import { download } from '../lib/dates.js'
 
@@ -23,6 +23,29 @@ export default function Settings() {
     document.documentElement.dataset.textSize = v
   }
   const isAdmin = me?.role === 'admin'
+  const logoRef = useRef()
+  const [cs, setCs] = useState(() => callsheetDefaults(state))
+  const [depts, setDepts] = useState(() => departmentsOf(state).join('\n'))
+  const setSetting = (k, v) => update((s) => { s.settings = { ...s.settings, [k]: v }; return s })
+  const pickLogo = async (file) => {
+    if (!file) return
+    try {
+      const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file) })
+      const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url })
+      const max = 320, k = Math.min(1, max / Math.max(img.width, img.height))
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k)
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height)
+      setSetting('logo', c.toDataURL(file.type === 'image/png' || file.type === 'image/svg+xml' ? 'image/png' : 'image/jpeg', 0.9))
+      toast('Logo saved. It shows in the sidebar, the login page, call sheets and shared links.', 'ok')
+    } catch { toast('Could not read that image.', 'error') }
+    finally { if (logoRef.current) logoRef.current.value = '' }
+  }
+  const saveCs = () => { setSetting('callsheet', { ...cs, lunchAfterHours: Number(cs.lunchAfterHours) || 0 }); toast('Call sheet defaults saved', 'ok') }
+  const saveDepts = () => {
+    const list = [...new Set(depts.split('\n').map((x) => x.trim()).filter(Boolean))]
+    if (!list.length) return toast('Keep at least one department.', 'error')
+    setSetting('departments', list); toast(`${list.length} departments saved`, 'ok')
+  }
 
   const saveWs = () => {
     update((s) => {
@@ -78,9 +101,64 @@ export default function Settings() {
         {isAdmin && (
           <section className="panel">
             <h2>Company</h2>
+            <Field label="Logo" hint="PNG or JPG, square works best. Shown in the sidebar, on the login page, on call sheets and on shared call sheet links.">
+              <div className="logo-row">
+                {state.settings.logo ? <img className="logo-preview" src={state.settings.logo} alt="" /> : <span className="logo-mark logo-preview-mark" />}
+                <input ref={logoRef} type="file" accept="image/*" hidden onChange={(e) => pickLogo(e.target.files?.[0])} />
+                <Button variant="ghost" onClick={() => logoRef.current?.click()}>{state.settings.logo ? 'Change' : 'Upload logo'}</Button>
+                {state.settings.logo && <button className="link small" onClick={() => setSetting('logo', '')}>Remove</button>}
+              </div>
+            </Field>
             <Field label="Address on call sheets" hint="Shown under the company name on every call sheet.">
               <Input value={state.settings.companyAddress || ''} onChange={(e) => update((s) => { s.settings.companyAddress = e.target.value; return s })} placeholder="Πειραιώς 260, Ταύρος 177 78 · +30 210 000 0000" />
             </Field>
+          </section>
+        )}
+
+        {isAdmin && (
+          <section className="panel">
+            <h2>Call sheet defaults</h2>
+            <p className="small muted">Used for every new shooting day and wherever a call sheet field is left empty. Each day can still override them.</p>
+            <div className="stack">
+              <div className="row-3">
+                <Field label="Crew call"><Input value={cs.callTime} onChange={(e) => setCs({ ...cs, callTime: e.target.value })} placeholder="07:00" /></Field>
+                <Field label="Est. wrap"><Input value={cs.wrapTime} onChange={(e) => setCs({ ...cs, wrapTime: e.target.value })} placeholder="19:00" /></Field>
+                <Field label="Lunch, hours after call"><Input type="number" min={0} max={12} step={0.5} value={cs.lunchAfterHours} onChange={(e) => setCs({ ...cs, lunchAfterHours: e.target.value })} /></Field>
+              </div>
+              <Field label="Standard line for everyone (tagline)"><Input value={cs.tagline} onChange={(e) => setCs({ ...cs, tagline: e.target.value })} placeholder="Safety first. No photos on set without permission." /></Field>
+              <div className="row-2">
+                <Field label="Default parking note"><Textarea rows={2} value={cs.parking} onChange={(e) => setCs({ ...cs, parking: e.target.value })} /></Field>
+                <Field label="Default nearest hospital"><Textarea rows={2} value={cs.hospital} onChange={(e) => setCs({ ...cs, hospital: e.target.value })} placeholder="Name, address, phone" /></Field>
+              </div>
+              <Field label="Footer on every call sheet" hint="Also shown at the bottom of shared links."><Input value={cs.footer} onChange={(e) => setCs({ ...cs, footer: e.target.value })} placeholder="Παραγωγή The Mad Lions · production@themadlions.com · +30 69…" /></Field>
+              <div className="row-actions"><Button variant="primary" onClick={saveCs}>Save defaults</Button></div>
+            </div>
+          </section>
+        )}
+
+        {isAdmin && (
+          <section className="panel">
+            <h2>Departments</h2>
+            <p className="small muted">One per line, in the order you want them in menus. Used for crew, the contacts database and tasks. Existing people keep their department even if you remove it from the list.</p>
+            <Textarea rows={8} value={depts} onChange={(e) => setDepts(e.target.value)} />
+            <div className="row-actions">
+              <Button variant="primary" onClick={saveDepts}>Save departments</Button>
+              <button className="link small" onClick={() => setDepts(DEFAULT_DEPARTMENTS.join('\n'))}>Reset to standard list</button>
+            </div>
+          </section>
+        )}
+
+        {isAdmin && (
+          <section className="panel">
+            <h2>Team rules</h2>
+            <div className="stack">
+              <Field label="Who can send notices and share call sheet links">
+                <Select value={state.settings.noticeSenders || 'admins'} onChange={(e) => setSetting('noticeSenders', e.target.value)} options={[['admins', 'Administrators only'], ['editors', 'Administrators and anyone who can edit call sheets']]} />
+              </Field>
+              <Field label="Default access for a new teammate" hint="What every module starts at when you add someone. Drives archive always starts at none.">
+                <Select value={state.settings.newMemberLevel || 'view'} onChange={(e) => setSetting('newMemberLevel', e.target.value)} options={[['none', 'Nothing until you set it'], ['view', 'Can view'], ['edit', 'Can edit']]} />
+              </Field>
+            </div>
           </section>
         )}
 

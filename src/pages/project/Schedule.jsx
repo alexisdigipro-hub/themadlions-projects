@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
-import { today, uid, useStore } from '../../lib/store.jsx'
+import { callsheetDefaults, today, uid, useStore } from '../../lib/store.jsx'
 import { formatPages, stripColor } from '../../lib/breakdown.js'
 import { addDays, fmtDate } from '../../lib/dates.js'
 import Dood from '../../components/Dood.jsx'
 
-const emptyDay = (date) => ({ id: uid(), date, unit: 'Main unit', callTime: '07:00', wrapTime: '19:00', locationId: '', notes: '', sceneIds: [] })
+const emptyDay = (date, d = {}) => ({ id: uid(), date, unit: 'Main unit', callTime: d.callTime || '07:00', wrapTime: d.wrapTime || '19:00', locationId: '', notes: '', sceneIds: [] })
 
 import RunOfShow from './RunOfShow.jsx'
 
@@ -18,7 +18,7 @@ export default function Schedule() {
 
 function StripboardSchedule() {
   const { project, edit, canEdit } = useProject()
-  const { update } = useStore()
+  const { update, state } = useStore()
   const toast = useToast()
   const [draft, setDraft] = useState(null)
   const [pick, setPick] = useState(null) // dayId to add scenes to
@@ -118,7 +118,7 @@ function StripboardSchedule() {
             <Button variant="ghost" onClick={() => window.print()}>Print</Button>
           )}
           {editable && view === 'board' && (
-            <Button variant="primary" onClick={() => setDraft(emptyDay(days.length ? addDays(days[days.length - 1].date, 1) : project.startDate || today()))}>
+            <Button variant="primary" onClick={() => setDraft(emptyDay(days.length ? addDays(days[days.length - 1].date, 1) : project.startDate || today(), callsheetDefaults(state)))}>
               Add shoot day
             </Button>
           )}
