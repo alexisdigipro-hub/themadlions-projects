@@ -30,6 +30,14 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (18 Sep 2026)
+- SQL files Alex still has to confirm he ran: notices.sql, worklog.sql, drives.sql, shares.sql, activity.sql (chat.sql is confirmed). If a feature complains, that is why.
+- Team signups: Confirm email is now OFF in Supabase Auth. Members must be added in Team with the exact email they registered with, then they reopen the app.
+- Elias Karatzogiannis: elias-2026.csv was prepared for import into his My work (Finance > Team work > his card > Import CSV); not confirmed imported.
+- Categories: "Ad" was Alex's "Add" (confirmed as Ad in practice); "IV" still not explained by Alex, currently behaves like Ad and sits last.
+- Next thing Alex asked about: an iOS-style UI theme (third theme next to Light/Dark: SF-like font, grouped lists, borderless buttons, toggles, segmented controls, large titles, Back button; call sheet print view stays as is). Not started. Open question: keep amber accent or go iOS blue.
+- Also discussed, not built: Presentation tab inside projects from Alex's template (he has not sent it), production sheet view in Breakdown (Google Sheet-style scene x character grid; agreed useful, not started), admin password reset, automatic notices, PWA install + push.
+
 ## Not done / ideas discussed
 - Call sheet delivery with confirmation (email via Resend Edge Function, WhatsApp Business API; Alex dropped Telegram). Currently Send message opens WhatsApp/mail with prefilled text, and Share link gives a public page.
 - Chat: no push notifications yet (only the sidebar badge while the app is open).
