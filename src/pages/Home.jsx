@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, PageHead } from '../components/ui.jsx'
-import { CATEGORIES, EVENT_TYPES, STATUSES, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { EVENT_TYPES, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import MiniCalendar from '../components/MiniCalendar.jsx'
 import { projectProgress } from '../lib/progress.js'
 import { budgetTotals, money } from './project/Budget.jsx'
-import { summarize } from '../lib/finance.js'
 import { fmtDate } from '../lib/dates.js'
 import { initialsOf } from './Profile.jsx'
 
@@ -15,8 +14,8 @@ const addDaysISO = (n) => { const d = new Date(); d.setDate(d.getDate() + n); re
    preference, so it lives in localStorage next to the theme and the text size rather than in
    the workspace, where it would follow everyone around. */
 const ORDER_KEY = 'tml_home_order'
-const BLOCK_NAMES = { team: 'Team', calendar: 'Calendar', attention: 'Needs attention', projects: 'Projects', status: 'By status', types: 'By type', finance: 'Finance' }
-const DEFAULT_ORDER = ['team', 'calendar', 'attention', 'projects', 'status', 'types', 'finance']
+const BLOCK_NAMES = { team: 'Team', projects: 'Projects', calendar: 'Calendar' }
+const DEFAULT_ORDER = ['team', 'projects', 'calendar']
 
 /* A saved order can be stale: blocks may have been added or removed since it was written, and
    the value can be anything at all if storage was tampered with. Keep what is still known, in
@@ -46,7 +45,6 @@ export default function Home() {
   const { state } = useStore()
   const user = useCurrentUser()
   const projects = visibleProjects(state, user)
-  const isAdmin = user?.role === 'admin'
   const t0 = today(), t7 = addDaysISO(7)
   // The team strip follows whichever day is picked in the mini calendar below it.
   const [day, setDay] = useState(t0)
@@ -75,15 +73,8 @@ export default function Home() {
       const p = projects.find((x) => x.id === e.projectId)
       return { date: e.date, endDate: e.endDate, time: e.start, color: p?.color || typeOf(e.type).color, title: e.title, sub: [typeOf(e.type).label, p?.title, e.start].filter(Boolean).join(' · '), to: p ? `/p/${p.id}/calendar` : '/calendar' }
     }))
+  // The page head still counts overdue tasks, so that one stays.
   const overdueTasks = [...projects.flatMap((p) => (p.tasks || []).map((t) => ({ ...t, p }))), ...(state.todos || [])].filter((t) => t.status !== 'done' && t.due && t.due < t0)
-  const mine = (t) => !t.assignee || t.assignee.trim().toLowerCase() === (user?.name || '').trim().toLowerCase()
-  const dueSoon = [...projects.flatMap((p) => (p.tasks || []).map((t) => ({ ...t, p }))), ...(state.todos || [])].filter((t) => t.status !== 'done' && t.due && t.due >= t0 && t.due <= t7 && mine(t))
-  const byStatus = STATUSES.map((st) => [st, projects.filter((p) => p.status === st).length]).filter(([, n]) => n)
-  const byCat = CATEGORIES.map((c) => [c, projects.filter((p) => p.category === c).length]).filter(([, n]) => n)
-  const overCap = rows.filter((r) => r.cap && r.bt.total > r.cap)
-  const fin = isAdmin ? summarize(state.finance?.transactions || [], { year: new Date().getFullYear(), projects: state.projects }) : null
-  const cur = state.finance?.settings?.currency || 'EUR'
-  const totalBudget = active.reduce((a, p) => a + budgetTotals(p).total, 0)
 
   const [order, setOrder] = useState(() => readHomeOrder(localStorage.getItem(ORDER_KEY)))
   const [arranging, setArranging] = useState(false)
@@ -138,27 +129,12 @@ export default function Home() {
         </>
       ),
     },
-    attention: {
-      body: (
-        <>
-          <div className="panel-head"><h2>Needs attention</h2><Link className="link small" to="/tasks">Tasks</Link></div>
-          <ul className="plain home-alerts">
-            {overdueTasks.slice(0, 6).map((t) => <li key={t.id} className="late">Overdue: {t.title}{t.p ? ` · ${t.p.title}` : ''}</li>)}
-            {overCap.map((r) => <li key={r.p.id} className="late">Budget over cap: {r.p.title} ({money(r.bt.total - r.cap, r.p.budget?.currency || 'EUR')} over)</li>)}
-            {dueSoon.slice(0, 5).map((t) => <li key={t.id}>Due {fmtDate(t.due)}: {t.title}</li>)}
-            {isAdmin && fin && fin.owedCount > 0 && <li>{fin.owedCount} unpaid invoice{fin.owedCount === 1 ? '' : 's'} · {money(fin.owedToUs, cur)} owed to us</li>}
-            {!overdueTasks.length && !overCap.length && !dueSoon.length && !(isAdmin && fin?.owedCount) && <li className="muted">All clear.</li>}
-          </ul>
-        </>
-      ),
-    },
     projects: {
-      wide: true,
       body: (
         <>
           <div className="panel-head"><h2>Projects</h2><Link className="link small" to="/">All projects</Link></div>
           {!rows.length ? <p className="muted">No projects yet.</p> : (
-            <div className="table-wrap">
+            <div className="table-wrap home-table-wrap">
               <table className="table home-projects">
                 <thead><tr><th>Project</th><th>Status</th><th>Progress</th><th>Next day</th><th className="num">Open tasks</th><th className="num">Budget</th></tr></thead>
                 <tbody>
@@ -179,36 +155,6 @@ export default function Home() {
               </table>
             </div>
           )}
-        </>
-      ),
-    },
-    status: {
-      body: (
-        <>
-          <h2>By status</h2>
-          <ul className="plain bars">{byStatus.map(([k, n]) => <li key={k}><span>{k}</span><span className="bar"><span style={{ width: `${(n / projects.length) * 100}%` }} /></span><span className="num">{n}</span></li>)}</ul>
-        </>
-      ),
-    },
-    types: {
-      body: (
-        <>
-          <h2>By type</h2>
-          <ul className="plain bars">{byCat.map(([k, n]) => <li key={k}><span>{k}</span><span className="bar"><span style={{ width: `${(n / projects.length) * 100}%` }} /></span><span className="num">{n}</span></li>)}</ul>
-          <p className="muted small">Active budgets total {money(totalBudget, cur)}.</p>
-        </>
-      ),
-    },
-    finance: (isAdmin && fin) && {
-      body: (
-        <>
-          <div className="panel-head"><h2>Finance {new Date().getFullYear()}</h2><Link className="link small" to="/finance">Finance</Link></div>
-          <dl className="details">
-            <dt>Profit</dt><dd className={fin.profit < 0 ? 'over' : 'under'}>{money(fin.profit, cur)}</dd>
-            <dt>Owed to us</dt><dd>{money(fin.owedToUs, cur)}</dd>
-            <dt>We owe</dt><dd>{money(fin.weOwe, cur)}</dd>
-            <dt>This month</dt><dd>{money(fin.monthIn - fin.monthOut, cur)}</dd>
-          </dl>
         </>
       ),
     },
