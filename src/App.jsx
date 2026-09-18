@@ -17,6 +17,7 @@ import ProjectCalendar from './pages/project/Calendar.jsx'
 import Locations from './pages/project/Locations.jsx'
 import People from './pages/project/People.jsx'
 import Notes from './pages/project/Notes.jsx'
+import Whiteboard from './pages/project/Whiteboard.jsx'
 import Shots from './pages/project/Shots.jsx'
 import Tasks from './pages/project/Tasks.jsx'
 import TasksAll from './pages/TasksAll.jsx'
@@ -100,6 +101,7 @@ export default function App() {
                   <Route path="calendar" element={<ProjectCalendar />} />
                   <Route path="locations" element={<Locations />} />
                   <Route path="people" element={<People />} />
+                  <Route path="whiteboard" element={<Whiteboard />} />
                   <Route path="notes" element={<Notes />} />
                 </Route>
               </Route>
