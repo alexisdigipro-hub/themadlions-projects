@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { uid, useCurrentUser, useStore } from '../lib/store.jsx'
-import { DOCS, EXPENSE_CATS, FREQ, INCOME_CATS, METHODS, TX_STATUS, duePeriods, emptyRecurring, emptyTx, generateFromRecurring, grossOf, matchTx, money, summarize, vatOf, yearOf } from '../lib/finance.js'
+import { DOCS, EXPENSE_CATS, FREQ, INCOME_CATS, METHODS, TX_STATUS, duePeriods, emptyRecurring, emptyTx, fiscalYearLabel, fiscalYearOf, generateFromRecurring, grossOf, matchTx, money, summarize, vatOf } from '../lib/finance.js'
 import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid } from '../lib/budget.js'
@@ -21,7 +21,11 @@ export default function Finance() {
   const toast = useToast()
   const fin = state.finance
   const cur = fin.settings.currency || 'EUR'
-  const years = useMemo(() => [...new Set(fin.transactions.map((t) => yearOf(t.date)).filter(Boolean))].sort((a, b) => b - a), [fin.transactions])
+  // The financial year can start in a month other than January (Finance settings), so every
+  // year grouping on this page goes through fiscalYearOf rather than slicing the date.
+  const fiscalStart = Number(fin.settings.fiscalYearStart) || 1
+  const fyLabel = (y) => fiscalYearLabel(y, fiscalStart)
+  const years = useMemo(() => [...new Set(fin.transactions.map((t) => fiscalYearOf(t.date, fiscalStart)).filter(Boolean))].sort((a, b) => b - a), [fin.transactions, fiscalStart])
   const [year, setYear] = useState(years[0] || new Date().getFullYear())
   const [tab, setTab] = useState('overview') // overview | transactions | settings
   const [draft, setDraft] = useState(null)
@@ -67,12 +71,12 @@ export default function Finance() {
   }
   const monthlyLoad = recurring.filter((r) => r.active).reduce((a, r) => a + (r.type === 'expense' ? 1 : -1) * Number(r.net || 0) / (r.frequency === 'yearly' ? 12 : r.frequency === 'quarterly' ? 3 : 1), 0)
 
-  const S = summarize(fin.transactions, { year, projects: state.projects })
+  const S = summarize(fin.transactions, { year, projects: state.projects, fiscalStart })
   const taxEst = Math.max(0, Math.round(S.profit * (Number(fin.settings.taxRate || 0) / 100)))
   const maxMonth = Math.max(1, ...S.months.map((m) => Math.max(m.income, m.expense)))
 
   const listed = fin.transactions
-    .filter((t) => yearOf(t.date) === year)
+    .filter((t) => fiscalYearOf(t.date, fiscalStart) === year)
     .filter((t) => (f.type ? t.type === f.type : true))
     .filter((t) => (f.project ? t.projectId === f.project : true))
     .filter((t) => (f.status ? t.status === f.status : true))
@@ -131,7 +135,7 @@ export default function Finance() {
     return s
   })
   const saveSettings = () => {
-    update((s) => { s.finance.settings = { ...s.finance.settings, ...settings, vatDefault: Number(settings.vatDefault) || 0, taxRate: Number(settings.taxRate) || 0 }; return s })
+    update((s) => { s.finance.settings = { ...s.finance.settings, ...settings, vatDefault: Number(settings.vatDefault) || 0, taxRate: Number(settings.taxRate) || 0, fiscalYearStart: Number(settings.fiscalYearStart) || 1 }; return s })
     toast('Finance settings saved', 'ok')
   }
   const exportCSV = () => {
@@ -162,7 +166,7 @@ export default function Finance() {
             <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
         </div>
-        <Select className="compact" value={year} onChange={(e) => setYear(Number(e.target.value))} options={[...new Set([...years, new Date().getFullYear()])].sort((a, b) => b - a).map((y) => [y, String(y)])} />
+        <Select className="compact" value={year} onChange={(e) => setYear(Number(e.target.value))} options={[...new Set([...years, new Date().getFullYear()])].sort((a, b) => b - a).map((y) => [y, fyLabel(y)])} />
         <Button variant="ghost" onClick={() => setDraft(emptyTx('income', { vatPct: fin.settings.vatDefault }))}>Add income</Button>
         <Button variant="primary" onClick={() => setDraft(emptyTx('expense', { vatPct: fin.settings.vatDefault }))}>Add expense</Button>
       </PageHead>
@@ -358,6 +362,12 @@ export default function Finance() {
             <Field label="Currency"><Select value={settings.currency} onChange={(e) => setSettings({ ...settings, currency: e.target.value })} options={['EUR', 'USD', 'GBP']} /></Field>
             <Field label="Default VAT %"><Input type="number" min="0" max="30" value={settings.vatDefault} onChange={(e) => setSettings({ ...settings, vatDefault: e.target.value })} /></Field>
             <Field label="Income tax estimate %" hint="Applied to the year's profit for the estimate on the overview."><Input type="number" min="0" max="60" value={settings.taxRate} onChange={(e) => setSettings({ ...settings, taxRate: e.target.value })} /></Field>
+          </div>
+          <div className="row-2">
+            <Field label="Financial year starts in" hint="January for a Greek company, which is the default. Change it only if you close the books on another month; every year total and year tab on this page follows it.">
+              <Select value={String(settings.fiscalYearStart ?? 1)} onChange={(e) => setSettings({ ...settings, fiscalYearStart: Number(e.target.value) })} options={MONTHS.map((m, i) => [String(i + 1), m])} />
+            </Field>
+            <div />
           </div>
           <div className="row-actions"><Button variant="primary" onClick={saveSettings}>Save</Button></div>
           <p className="fineprint">Finance is stored in its own table that only administrators can read. Expenses tied to a project also appear as actuals in that project's budget.</p>

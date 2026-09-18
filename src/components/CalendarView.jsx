@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Button, Confirm, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from './ui.jsx'
 import MiniCalendar from './MiniCalendar.jsx'
 import { EVENT_TYPES, can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
-import { buildICS, download, fmtDate, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
+import { buildICS, download, fmtDate, holidayName, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
 
 export default function CalendarView({ projectId = null, title }) {
   const { state, update } = useStore()
@@ -44,6 +44,7 @@ export default function CalendarView({ projectId = null, title }) {
   }, [events])
 
   const grid = monthGrid(ym.y, ym.m, state.settings?.weekStart)
+  const holiday = (iso) => holidayName(iso, state.settings?.greekHolidays !== false)
   const shift = (n) => {
     const d = new Date(ym.y, ym.m + n, 1)
     setYm({ y: d.getFullYear(), m: d.getMonth() })
@@ -144,14 +145,17 @@ export default function CalendarView({ projectId = null, title }) {
           {grid.map((cell) => {
             const evs = byDate[cell.iso] || []
             const isToday = cell.iso === today()
+            const hol = holiday(cell.iso)
             return (
               <div
                 key={cell.iso}
-                className={`cal-cell ${cell.inMonth ? '' : 'dim'} ${isToday ? 'today' : ''} ${cell.dow >= 5 ? 'weekend' : ''}`}
+                className={`cal-cell ${cell.inMonth ? '' : 'dim'} ${isToday ? 'today' : ''} ${cell.dow >= 5 ? 'weekend' : ''} ${hol ? 'holiday' : ''}`}
                 onClick={() => editable && setDraft(newEvent(cell.iso))}
                 role="gridcell"
+                title={hol || undefined}
               >
                 <span className="cal-day">{Number(cell.iso.slice(-2))}</span>
+                {hol && <span className="cal-holiday">{hol}</span>}
                 <div className="cal-events">
                   {evs.slice(0, 3).map((e) => (
                     <button

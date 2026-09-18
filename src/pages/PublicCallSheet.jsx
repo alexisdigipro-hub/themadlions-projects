@@ -112,13 +112,23 @@ export default function PublicCallSheet() {
         </section>
       )}
 
-      {d.keyCrew?.length > 0 && (
+      {(d.keyCrew?.length > 0 || d.prodContacts?.length > 0) && (
         <section className="pub-card">
           <h2>Production</h2>
           <ul className="pub-kv">
-            {d.keyCrew.map((k, i) => <li key={i}><span className="muted">{k.role}</span><span>{k.name}{k.phone ? <> · <a href={`tel:${k.phone}`}>{k.phone}</a></> : null}</span></li>)}
+            {(d.prodContacts || []).map((c, i) => <li key={`pc${i}`}><span className="muted">{c.role}</span><span>{c.name}{c.phone ? <> · <a href={`tel:${c.phone}`}>{c.phone}</a></> : null}</span></li>)}
+            {(d.keyCrew || []).map((k, i) => <li key={i}><span className="muted">{k.role}</span><span>{k.name}{k.phone ? <> · <a href={`tel:${k.phone}`}>{k.phone}</a></> : null}</span></li>)}
           </ul>
           {d.company?.address && <p className="muted small">{d.company.name} · {d.company.address}</p>}
+        </section>
+      )}
+
+      {d.emergency?.length > 0 && (
+        <section className="pub-card pub-emergency">
+          <h2>Emergency</h2>
+          <ul className="pub-kv">
+            {d.emergency.map((n, i) => <li key={i}><span className="muted">{n.label}</span><a href={`tel:${n.number}`}>{n.number}</a></li>)}
+          </ul>
         </section>
       )}
 
