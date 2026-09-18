@@ -9,7 +9,7 @@ import { ATHENS, coordsFromText, forecast, geocode, sunTimes } from '../../lib/s
 import { callSheetText, mailLink, personalCallText, waLink, waShareLink } from '../../lib/share.js'
 import { Modal } from '../../components/ui.jsx'
 import { publishShare } from '../../lib/shares.js'
-import { callsheetDefaults, canSendNotices, useCurrentUser } from '../../lib/store.jsx'
+import { callsheetDefaults, useCurrentUser } from '../../lib/store.jsx'
 
 function addMinutes(hhmm, mins) {
   if (!hhmm) return ''
@@ -32,7 +32,7 @@ export default function CallSheets() {
   const user = useCurrentUser()
   const csd = callsheetDefaults(state)
   const lunchDefault = (() => { const m = /^(\d{1,2}):(\d{2})$/.exec(day.callTime || ''); if (!m || !csd.lunchAfterHours) return ''; const t = (Number(m[1]) * 60 + Number(m[2]) + Number(csd.lunchAfterHours) * 60) % 1440; return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}` })()
-  const canShare = canSendNotices(state, user)
+  const canShare = true
   const toast = useToast()
   const day = days.find((d) => d.id === sel) || days[0]
   const editable = canEdit('callsheets')
@@ -78,6 +78,7 @@ export default function CallSheets() {
         project: { title: project.title, color: project.color, cover: project.coverThumb || '', category: project.category },
         company: { name: state.workspace.name, address: state.settings.companyAddress || '', logo: state.settings.logo || '' },
         day: { index: dayIndex + 1, count: days.length, date: day.date, callTime: day.callTime, wrapTime: day.wrapTime },
+        expiresAt: Number(state.settings.shareExpiryDays) > 0 ? new Date(new Date(day.date + 'T23:59:59').getTime() + Number(state.settings.shareExpiryDays) * 86400000).toISOString() : '',
         sheet: { tagline: sheet.tagline || csd.tagline || '', notes: sheet.notes || '', shootingCall: sheet.shootingCall || '', lunch: sheet.lunch || lunchDefault, parking: sheet.parking || csd.parking || '', hospital: sheet.weather || csd.hospital || '', footer: csd.footer || '' },
         wx: wx ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
         sun: sun ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,

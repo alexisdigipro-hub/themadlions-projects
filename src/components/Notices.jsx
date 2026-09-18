@@ -13,7 +13,7 @@ export function NoticePopup() {
   const user = useCurrentUser()
   const pending = pendingForMe(state.notices, user)
   const n = pending[0]
-  useEffect(() => { if (n && navigator.vibrate) navigator.vibrate(120) }, [n?.id])
+  useEffect(() => { if (n && navigator.vibrate && state.settings?.noticeVibrate !== false) navigator.vibrate(120) }, [n?.id])
   if (!n) return null
   const ack = () => update((s) => {
     const x = (s.notices || []).find((y) => y.id === n.id)

@@ -99,7 +99,7 @@ export default function Dashboard() {
       <PageHead title="Projects" sub={`${projects.length} of ${visibleProjects(state, user).length} shown`}>
         <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="input search" />
         {canEdit && (
-          <Button variant="primary" onClick={() => setDraft({ ...emptyProject(), isNew: true })}>
+          <Button variant="primary" onClick={() => setDraft({ ...emptyProject(), category: state.settings?.defaultCategory || 'Music Video', isNew: true })}>
             New project
           </Button>
         )}
@@ -117,7 +117,7 @@ export default function Dashboard() {
       {projects.length === 0 ? (
         <Empty
           title={state.projects.length ? 'Nothing matches' : 'No projects yet'}
-          action={canEdit && !state.projects.length && <Button variant="primary" onClick={() => setDraft({ ...emptyProject(), isNew: true })}>Create the first project</Button>}
+          action={canEdit && !state.projects.length && <Button variant="primary" onClick={() => setDraft({ ...emptyProject(), category: state.settings?.defaultCategory || 'Music Video', isNew: true })}>Create the first project</Button>}
         >
           {state.projects.length ? 'Try another category or search term.' : 'A project holds the script, breakdown, schedule, call sheets, locations and people.'}
         </Empty>

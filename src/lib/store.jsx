@@ -60,7 +60,8 @@ export const today = () => {
 export const DEFAULT_DEPARTMENTS = ['Production', 'Direction', 'Camera', 'Lighting', 'Grip', 'Sound', 'Art', 'Costume', 'Makeup & hair', 'Locations', 'Casting', 'Post', 'Transport', 'Catering', 'Client', 'Other']
 export const departmentsOf = (state) => (state.settings?.departments?.length ? state.settings.departments : DEFAULT_DEPARTMENTS)
 export const callsheetDefaults = (state) => ({ callTime: '07:00', wrapTime: '19:00', lunchAfterHours: 6, hospital: '', parking: '', tagline: '', footer: '', ...(state.settings?.callsheet || {}) })
-export const canSendNotices = (state, user) => !!user && (user.role === 'admin' || (state.settings?.noticeSenders === 'editors' && can(user, 'callsheets', 'edit')))
+export const canSendNotices = (state, user) => !!user && user.role === 'admin'
+export const canSeeContacts = (state, user) => !!user && (user.role === 'admin' || (state.settings?.phoneVisibility || 'everyone') === 'everyone')
 
 export function defaultPermissions(level = 'view') {
   return Object.fromEntries(MODULES.map((m) => [m.key, level]))
@@ -84,8 +85,12 @@ export function emptyState() {
       logo: '', // data URL, square-ish, max 256px
       callsheet: { callTime: '07:00', wrapTime: '19:00', lunchAfterHours: 6, hospital: '', parking: '', tagline: '', footer: '' },
       departments: DEFAULT_DEPARTMENTS,
-      noticeSenders: 'admins', // 'admins' | 'editors'  (who can send notices and share call sheet links)
       newMemberLevel: 'view', // 'none' | 'view' | 'edit'  (default permissions when adding a teammate)
+      phoneVisibility: 'everyone', // 'everyone' | 'admins'  (who sees phone numbers and emails of cast and crew)
+      shareExpiryDays: 0, // public call sheet links stop working this many days after the shooting day; 0 = never
+      weekStart: 'monday', // 'monday' | 'sunday'
+      defaultCategory: 'Music Video',
+      noticeVibrate: true,
     },
   }
 }

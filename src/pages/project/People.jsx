@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
-import { departmentsOf, uid, useStore } from '../../lib/store.jsx'
+import { canSeeContacts, departmentsOf, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import PhotoGrid from '../../components/PhotoGrid.jsx'
 import { contactToLibrary, matchText, sharedContact } from '../../lib/library.js'
@@ -14,6 +14,7 @@ export default function People() {
   const { project, edit, canEdit, library, editLibrary } = useProject()
   const { state } = useStore()
   const DEPTS = departmentsOf(state)
+  const showContacts = canSeeContacts(state, useCurrentUser())
   const toast = useToast()
   const [draft, setDraft] = useState(null)
   const [pick, setPick] = useState(null) // { q, sel, character }
@@ -129,9 +130,9 @@ export default function People() {
                 <strong>{c.name}{c.libraryId && <span className="lib-badge" title="Shared in the company library">library</span>}</strong>
                 <div className="small">{tab === 'cast' ? (c.character ? <span className="person-char">{c.character}</span> : <span className="muted">No character</span>) : c.dept}{c.role ? ` · ${c.role}` : ''}</div>
                 <div className="small muted person-contact">
-                  {c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}
-                  {c.phone && <a href={waLink(c.phone, `Hi ${c.name.split(' ')[0]}, `)} target="_blank" rel="noreferrer">WhatsApp</a>}
-                  {c.email && <a href={`mailto:${c.email}`} title={c.email}>Mail</a>}
+                  {showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}
+                  {showContacts && c.phone && <a href={waLink(c.phone, `Hi ${c.name.split(' ')[0]}, `)} target="_blank" rel="noreferrer">WhatsApp</a>}
+                  {showContacts && c.email && <a href={`mailto:${c.email}`} title={c.email}>Mail</a>}
                 </div>
                 {c.agent && <div className="small muted">Agent: {c.agent}{c.agentPhone ? ` · ${c.agentPhone}` : ''}</div>}
                 {c.notes && <div className="small muted person-notes">{c.notes}</div>}
@@ -170,8 +171,8 @@ export default function People() {
                 </td>
                 <td>{tab === 'cast' ? c.character : c.dept}</td>
                 <td>{c.role}</td>
-                <td>{c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</td>
-                <td>{c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</td>
+                <td>{showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</td>
+                <td>{showContacts && c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</td>
                 <td className="muted">{c.callOffset ? `${c.callOffset > 0 ? '+' : ''}${c.callOffset} min` : 'General'}</td>
                 {editable && (
                   <td className="row-actions">

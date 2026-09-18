@@ -43,7 +43,7 @@ export default function CalendarView({ projectId = null, title }) {
     return m
   }, [events])
 
-  const grid = monthGrid(ym.y, ym.m)
+  const grid = monthGrid(ym.y, ym.m, state.settings?.weekStart)
   const shift = (n) => {
     const d = new Date(ym.y, ym.m + n, 1)
     setYm({ y: d.getFullYear(), m: d.getMonth() })
@@ -136,7 +136,7 @@ export default function CalendarView({ projectId = null, title }) {
           </div>
         ) : (
         <div className="cal-grid" role="grid">
-          {weekdayShort().map((d) => (
+          {weekdayShort(state.settings?.weekStart).map((d) => (
             <div key={d} className="cal-dow">
               {d}
             </div>

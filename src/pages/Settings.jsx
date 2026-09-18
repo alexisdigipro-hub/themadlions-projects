@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
-import { DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, departmentsOf, sampleProject, useCurrentUser, useStore } from '../lib/store.jsx'
+import { CATEGORIES, DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, departmentsOf, sampleProject, useCurrentUser, useStore } from '../lib/store.jsx'
 import { testKey } from '../lib/ai.js'
 import { download } from '../lib/dates.js'
 
@@ -23,6 +23,11 @@ export default function Settings() {
     document.documentElement.dataset.textSize = v
   }
   const isAdmin = me?.role === 'admin'
+  const TABS = [
+    ['company', 'Company', true], ['callsheets', 'Call sheets', true], ['team', 'Team', true], ['calendar', 'Calendar & projects', true],
+    ['display', 'Display', false], ['integrations', 'Integrations', false], ['data', 'Data', false],
+  ].filter(([, , admin]) => !admin || isAdmin)
+  const [tab, setTab] = useState(() => (isAdmin ? 'company' : 'display'))
   const logoRef = useRef()
   const [cs, setCs] = useState(() => callsheetDefaults(state))
   const [depts, setDepts] = useState(() => departmentsOf(state).join('\n'))
@@ -97,9 +102,12 @@ export default function Settings() {
   return (
     <>
       <PageHead title="Settings" />
-      <div className="cols">
+      <nav className="tabs settings-tabs">
+        {TABS.map(([k, l]) => <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>)}
+      </nav>
+      <div className="cols settings-cols" data-active={tab}>
         {isAdmin && (
-          <section className="panel">
+          <section className="panel" data-tab="company">
             <h2>Company</h2>
             <Field label="Logo" hint="PNG or JPG, square works best. Shown in the sidebar, on the login page, on call sheets and on shared call sheet links.">
               <div className="logo-row">
@@ -116,7 +124,7 @@ export default function Settings() {
         )}
 
         {isAdmin && (
-          <section className="panel">
+          <section className="panel" data-tab="callsheets">
             <h2>Call sheet defaults</h2>
             <p className="small muted">Used for every new shooting day and wherever a call sheet field is left empty. Each day can still override them.</p>
             <div className="stack">
@@ -137,7 +145,16 @@ export default function Settings() {
         )}
 
         {isAdmin && (
-          <section className="panel">
+          <section className="panel" data-tab="callsheets">
+            <h2>Share links</h2>
+            <Field label="Public call sheet links expire" hint="Counted from the shooting day. Expired links show a short 'this call sheet has expired' page. Sharing again always refreshes the link.">
+              <Select value={String(state.settings.shareExpiryDays || 0)} onChange={(e) => setSetting('shareExpiryDays', Number(e.target.value))} options={[['0', 'Never'], ['1', 'The day after the shoot'], ['3', '3 days after the shoot'], ['7', 'A week after the shoot'], ['30', 'A month after the shoot']]} />
+            </Field>
+          </section>
+        )}
+
+        {isAdmin && (
+          <section className="panel" data-tab="team">
             <h2>Departments</h2>
             <p className="small muted">One per line, in the order you want them in menus. Used for crew, the contacts database and tasks. Existing people keep their department even if you remove it from the list.</p>
             <Textarea rows={8} value={depts} onChange={(e) => setDepts(e.target.value)} />
@@ -149,20 +166,40 @@ export default function Settings() {
         )}
 
         {isAdmin && (
-          <section className="panel">
+          <section className="panel" data-tab="team">
             <h2>Team rules</h2>
             <div className="stack">
-              <Field label="Who can send notices and share call sheet links">
-                <Select value={state.settings.noticeSenders || 'admins'} onChange={(e) => setSetting('noticeSenders', e.target.value)} options={[['admins', 'Administrators only'], ['editors', 'Administrators and anyone who can edit call sheets']]} />
-              </Field>
-              <Field label="Default access for a new teammate" hint="What every module starts at when you add someone. Drives archive always starts at none.">
+              <Field label="Default access for a new teammate" hint="What every module starts at when you add someone. Drives archive always starts at none. Notices are always administrators only; call sheet share links are open to everyone who can see call sheets.">
                 <Select value={state.settings.newMemberLevel || 'view'} onChange={(e) => setSetting('newMemberLevel', e.target.value)} options={[['none', 'Nothing until you set it'], ['view', 'Can view'], ['edit', 'Can edit']]} />
+              </Field>
+              <Field label="Who sees phone numbers and emails of cast and crew" hint="Applies inside the app (project Cast & crew, Database). Call sheets and shared links keep showing the numbers they need.">
+                <Select value={state.settings.phoneVisibility || 'everyone'} onChange={(e) => setSetting('phoneVisibility', e.target.value)} options={[['everyone', 'Everyone in the team'], ['admins', 'Administrators only']]} />
+              </Field>
+              <Field label="Notices vibrate on phones">
+                <Select value={state.settings.noticeVibrate === false ? 'no' : 'yes'} onChange={(e) => setSetting('noticeVibrate', e.target.value === 'yes')} options={[['yes', 'Yes'], ['no', 'No']]} />
               </Field>
             </div>
           </section>
         )}
 
-        <section className="panel">
+        {isAdmin && (
+          <section className="panel" data-tab="calendar">
+            <h2>Calendar</h2>
+            <Field label="Week starts on">
+              <Select value={state.settings.weekStart || 'monday'} onChange={(e) => setSetting('weekStart', e.target.value)} options={[['monday', 'Monday'], ['sunday', 'Sunday']]} />
+            </Field>
+          </section>
+        )}
+        {isAdmin && (
+          <section className="panel" data-tab="calendar">
+            <h2>Projects</h2>
+            <Field label="Category for a new project" hint="What New project is set to before you change it.">
+              <Select value={state.settings.defaultCategory || 'Music Video'} onChange={(e) => setSetting('defaultCategory', e.target.value)} options={CATEGORIES} />
+            </Field>
+          </section>
+        )}
+
+        <section className="panel" data-tab="display">
           <h2>Display</h2>
           <Field label="Theme">
             <div className="segmented small">
@@ -187,7 +224,7 @@ export default function Settings() {
           </Field>
         </section>
 
-        <section className="panel">
+        <section className="panel" data-tab="data">
           <h2>Storage</h2>
           {mode === 'remote' ? (
             <>
@@ -207,7 +244,7 @@ export default function Settings() {
           )}
         </section>
         {isAdmin && (
-          <section className="panel">
+          <section className="panel" data-tab="company">
             <h2>Workspace</h2>
             <div className="stack">
               <Field label="Name">
@@ -226,7 +263,7 @@ export default function Settings() {
         )}
 
         {isAdmin && (
-          <section className="panel">
+          <section className="panel" data-tab="integrations">
             <h2>AI breakdown</h2>
             <p className="muted small">
               Phase 1 calls Anthropic directly from this browser with your key. The key is saved only in this browser. When the Supabase backend is connected the key moves to the server.
@@ -250,7 +287,7 @@ export default function Settings() {
           </section>
         )}
 
-        <section className="panel">
+        <section className="panel" data-tab="integrations">
           <h2>Transcription</h2>
           <p className="muted small">Lyrics and timings from the song file with OpenAI Whisper, in the Music tab of music video projects. About $0.006 per minute of audio. The key stays in this browser.</p>
           <Field label="OpenAI API key">
@@ -260,7 +297,7 @@ export default function Settings() {
         </section>
 
         {isAdmin && (
-          <section className="panel">
+          <section className="panel" data-tab="integrations">
             <h2>Google Maps</h2>
             <p className="muted small">Maps work without a key using the public embed. Add a Maps Embed API key for a cleaner map with no watermark; restrict it to your GitHub Pages domain.</p>
             <div className="stack">
@@ -276,7 +313,7 @@ export default function Settings() {
           </section>
         )}
 
-        <section className="panel">
+        <section className="panel" data-tab="data">
           <h2>Your data</h2>
           <p className="muted small">
             Everything is stored in this browser under <code>{STORAGE_KEY}</code>. Download a backup before clearing browser data, and use it to move to the online database later.

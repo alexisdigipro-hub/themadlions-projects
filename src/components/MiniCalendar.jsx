@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { today } from '../lib/store.jsx'
+import { today, useStore } from '../lib/store.jsx'
 import { fmtDate, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
 
 const addDay = (iso, n) => { const d = new Date(iso + 'T00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
 
 // items: { date, endDate?, color, title, sub?, to? }
 export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLabel = 'Add event', large = false }) {
+  const { state } = useStore()
   const t0 = today()
   const now = new Date()
   const [ym, setYm] = useState({ y: now.getFullYear(), m: now.getMonth() })
@@ -24,7 +25,7 @@ export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLab
     return m
   }, [items])
 
-  const grid = monthGrid(ym.y, ym.m)
+  const grid = monthGrid(ym.y, ym.m, state.settings?.weekStart)
   const shift = (n) => { const d = new Date(ym.y, ym.m + n, 1); setYm({ y: d.getFullYear(), m: d.getMonth() }) }
   const goToday = () => { setYm({ y: now.getFullYear(), m: now.getMonth() }); setSel(t0) }
   const dayItems = byDate[sel] || []
@@ -38,13 +39,13 @@ export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLab
         <button className="link" onClick={() => shift(1)} aria-label="Next month">›</button>
       </div>
       <div className="mini-cal-grid">
-        {weekdayShort().map((d) => <span key={d} className="mini-cal-dow">{d[0]}</span>)}
+        {weekdayShort(state.settings?.weekStart).map((d) => <span key={d} className="mini-cal-dow">{d[0]}</span>)}
         {grid.map((d) => {
           const its = byDate[d.iso] || []
           return (
             <button
               key={d.iso}
-              className={`mini-cal-cell ${d.inMonth ? '' : 'dim'} ${d.iso === t0 ? 'today' : ''} ${d.iso === sel ? 'sel' : ''} ${d.dow >= 5 ? 'weekend' : ''}`}
+              className={`mini-cal-cell ${d.inMonth ? '' : 'dim'} ${d.iso === t0 ? 'today' : ''} ${d.iso === sel ? 'sel' : ''} ${d.weekend ? 'weekend' : ''}`}
               onClick={() => setSel(d.iso)}
               aria-label={fmtDate(d.iso, { weekday: 'long', day: 'numeric', month: 'long' })}
             >

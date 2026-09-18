@@ -15,6 +15,7 @@ export default function PublicCallSheet() {
   }, [token])
 
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading call sheet…</p></div>
+  if (share?.data?.expiresAt && new Date(share.data.expiresAt) < new Date()) return <div className="pub"><div className="pub-card"><h1>This call sheet has expired</h1><p className="muted">The shooting day has passed. Ask the production for the current one.</p></div></div>
   if (!share || share.kind !== 'callsheet') return <div className="pub"><div className="pub-card"><h1>This link has expired</h1><p className="muted">Ask the production for a fresh link.</p></div></div>
 
   const d = share.data

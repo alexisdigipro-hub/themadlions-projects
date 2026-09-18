@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, useToast } from '../components/ui.jsx'
-import { can, departmentsOf, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
 import { waLink } from '../lib/share.js'
@@ -13,6 +13,7 @@ export default function PeopleAll({ embedded = false, kind: kindProp } = {}) {
   const { state, update } = useStore()
   const DEPTS = ['Cast', ...departmentsOf(state)]
   const user = useCurrentUser()
+  const showContacts = canSeeContacts(state, user)
   const toast = useToast()
   const editable = can(user, 'contacts', 'edit')
   const [kindState, setKind] = useState('cast')
@@ -116,8 +117,8 @@ export default function PeopleAll({ embedded = false, kind: kindProp } = {}) {
                   <td><button className="avatar" onClick={() => setPhotosFor(c.id)} aria-label="Photos">{c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}</button></td>
                   <td><strong>{c.name}</strong>{c.agent && <div className="muted small">Agent: {c.agent}</div>}</td>
                   <td className="small">{c.kind === 'cast' ? c.role : `${c.dept}${c.role ? ` · ${c.role}` : ''}`}</td>
-                  <td className="small">{c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</td>
-                  <td className="small">{c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</td>
+                  <td className="small">{showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</td>
+                  <td className="small">{showContacts && c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</td>
                   <td className="small person-projects">{used.map((p) => <Link key={p.id} to={`/p/${p.id}/people`} style={{ '--pc': p.color }}>{p.title}</Link>)}</td>
                   {editable && <td className="row-actions"><button onClick={() => setDraft({ ...c })}>Edit</button><Confirm onConfirm={() => remove(c)} label="Delete">×</Confirm></td>}
                 </tr>
@@ -139,9 +140,9 @@ export default function PeopleAll({ embedded = false, kind: kindProp } = {}) {
                   <strong>{c.name}</strong>
                   <div className="small">{c.kind === 'cast' ? c.role || <span className="muted">Actor</span> : `${c.dept}${c.role ? ` · ${c.role}` : ''}`}</div>
                   <div className="small muted person-contact">
-                    {c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}
-                    {c.phone && <a href={waLink(c.phone, `Hi ${c.name.split(' ')[0]}, `)} target="_blank" rel="noreferrer">WhatsApp</a>}
-                    {c.email && <a href={`mailto:${c.email}`} title={c.email}>Mail</a>}
+                    {showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}
+                    {showContacts && c.phone && <a href={waLink(c.phone, `Hi ${c.name.split(' ')[0]}, `)} target="_blank" rel="noreferrer">WhatsApp</a>}
+                    {showContacts && c.email && <a href={`mailto:${c.email}`} title={c.email}>Mail</a>}
                   </div>
                   {c.agent && <div className="small muted">Agent: {c.agent}{c.agentPhone ? ` · ${c.agentPhone}` : ''}</div>}
                   {c.notes && <div className="small muted person-notes">{c.notes}</div>}

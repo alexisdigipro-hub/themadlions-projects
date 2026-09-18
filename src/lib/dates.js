@@ -27,14 +27,16 @@ export function fmtLong(iso) {
 }
 
 /** Returns 6 weeks x 7 days grid starting on Monday for the month containing `iso`. */
-export function monthGrid(year, month) {
+export function monthGrid(year, month, weekStart = 'monday') {
+  const shift = weekStart === 'sunday' ? 0 : 6
   const first = new Date(year, month, 1)
-  const startOffset = (first.getDay() + 6) % 7 // Monday = 0
+  const startOffset = (first.getDay() + shift) % 7
   const start = new Date(year, month, 1 - startOffset)
   const days = []
   for (let i = 0; i < 42; i++) {
     const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)
-    days.push({ iso: toISODate(d), inMonth: d.getMonth() === month, dow: (d.getDay() + 6) % 7 })
+    // dow: 5 and 6 are always the weekend columns' indices for Monday start; for Sunday start weekend is 0 and 6
+    days.push({ iso: toISODate(d), inMonth: d.getMonth() === month, dow: (d.getDay() + shift) % 7, weekend: d.getDay() === 0 || d.getDay() === 6 })
   }
   return days
 }
@@ -43,8 +45,8 @@ export function monthLabel(year, month) {
   return new Date(year, month, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 }
 
-export function weekdayShort() {
-  return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+export function weekdayShort(weekStart = 'monday') {
+  return weekStart === 'sunday' ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 }
 
 export function buildICS(events, calName = 'THEMADLIONS') {
