@@ -8,7 +8,7 @@ export default function TasksAll() {
   const { state, updateProject, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
-  const [who, setWho] = useState('me') // me | all
+  const [who, setWho] = useState('all') // all | me — opens on Everyone
   const [status, setStatus] = useState('open')
   const [dept, setDept] = useState('')
   const [proj, setProj] = useState('')
@@ -85,8 +85,8 @@ export default function TasksAll() {
     <div>
       <PageHead title="Tasks" sub={`${all.filter((t) => t.status !== 'done').length} open across ${projects.length} projects`}>
         <div className="segmented small">
-          <button className={who === 'me' ? 'on' : ''} onClick={() => setWho('me')}>Mine</button>
           <button className={who === 'all' ? 'on' : ''} onClick={() => setWho('all')}>Everyone</button>
+          <button className={who === 'me' ? 'on' : ''} onClick={() => setWho('me')}>Mine</button>
         </div>
         <div className="segmented small">
           {[['open', 'Open'], ['done', 'Done'], ['all', 'All']].map(([k, l]) => (
