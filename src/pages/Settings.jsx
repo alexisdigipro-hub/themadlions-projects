@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
 import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
-import { CATEGORIES, DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, departmentsOf, sampleProject, useCurrentUser, useStore } from '../lib/store.jsx'
+import { CATEGORIES, DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, sampleProject, uid, useCurrentUser, useStore } from '../lib/store.jsx'
+import { projectProgress, stageKeysFor } from '../lib/progress.js'
+
 import { testKey } from '../lib/ai.js'
 import { download } from '../lib/dates.js'
 
@@ -45,7 +47,7 @@ export default function Settings() {
     } catch { toast('Could not read that image.', 'error') }
     finally { if (logoRef.current) logoRef.current.value = '' }
   }
-  const saveCs = () => { setSetting('callsheet', { ...cs, lunchAfterHours: Number(cs.lunchAfterHours) || 0 }); toast('Call sheet defaults saved', 'ok') }
+  const saveCs = () => { setSetting('callsheet', { ...cs, lunchAfterHours: Number(cs.lunchAfterHours) || 0, castOffset: Number(cs.castOffset) || 0, crewOffset: Number(cs.crewOffset) || 0 }); toast('Call sheet defaults saved', 'ok') }
   const saveDepts = () => {
     const list = [...new Set(depts.split('\n').map((x) => x.trim()).filter(Boolean))]
     if (!list.length) return toast('Keep at least one department.', 'error')
@@ -139,6 +141,14 @@ export default function Settings() {
                 <Field label="Default nearest hospital"><Textarea rows={2} value={cs.hospital} onChange={(e) => setCs({ ...cs, hospital: e.target.value })} placeholder="Name, address, phone" /></Field>
               </div>
               <Field label="Footer on every call sheet" hint="Also shown at the bottom of shared links."><Input value={cs.footer} onChange={(e) => setCs({ ...cs, footer: e.target.value })} placeholder="Παραγωγή The Mad Lions · production@themadlions.com · +30 69…" /></Field>
+              <div className="row-2">
+                <Field label="Cast call, minutes vs crew call" hint="Negative = earlier (makeup), positive = later. Applied to every new cast member, editable per person."><Input type="number" step={15} value={cs.castOffset ?? 0} onChange={(e) => setCs({ ...cs, castOffset: e.target.value })} /></Field>
+                <Field label="Crew call, minutes vs crew call"><Input type="number" step={15} value={cs.crewOffset ?? 0} onChange={(e) => setCs({ ...cs, crewOffset: e.target.value })} /></Field>
+              </div>
+              <div className="row-2">
+                <Field label="Weather on call sheets"><Select value={cs.showWeather === false ? 'no' : 'yes'} onChange={(e) => setCs({ ...cs, showWeather: e.target.value === 'yes' })} options={[['yes', 'Show forecast'], ['no', 'Hide']]} /></Field>
+                <Field label="Sunrise and sunset"><Select value={cs.showSun === false ? 'no' : 'yes'} onChange={(e) => setCs({ ...cs, showSun: e.target.value === 'yes' })} options={[['yes', 'Show'], ['no', 'Hide']]} /></Field>
+              </div>
               <div className="row-actions"><Button variant="primary" onClick={saveCs}>Save defaults</Button></div>
             </div>
           </section>
@@ -178,6 +188,9 @@ export default function Settings() {
               <Field label="Notices vibrate on phones">
                 <Select value={state.settings.noticeVibrate === false ? 'no' : 'yes'} onChange={(e) => setSetting('noticeVibrate', e.target.value === 'yes')} options={[['yes', 'Yes'], ['no', 'No']]} />
               </Field>
+              <div className="row-actions">
+                <Button variant="ghost" onClick={() => { update((s) => { s.notices = [...(s.notices || []), { id: uid(), title: 'Test notice', body: 'This is how a notice looks on your screen. Tap Got it to close it.', fromId: '', fromName: me?.name || 'Settings', to: [me?.id], acks: {}, createdAt: new Date().toISOString() }]; return s }) }}>Send myself a test notice</Button>
+              </div>
             </div>
           </section>
         )}
@@ -193,9 +206,22 @@ export default function Settings() {
         {isAdmin && (
           <section className="panel" data-tab="calendar">
             <h2>Projects</h2>
-            <Field label="Category for a new project" hint="What New project is set to before you change it.">
-              <Select value={state.settings.defaultCategory || 'Music Video'} onChange={(e) => setSetting('defaultCategory', e.target.value)} options={CATEGORIES} />
-            </Field>
+            <div className="stack">
+              <Field label="Category for a new project" hint="What New project is set to before you change it.">
+                <Select value={state.settings.defaultCategory || 'Music Video'} onChange={(e) => setSetting('defaultCategory', e.target.value)} options={CATEGORIES} />
+              </Field>
+              <div className="row-2">
+                <Field label="Budget currency for new projects"><Select value={state.settings.budgetCurrency || 'EUR'} onChange={(e) => setSetting('budgetCurrency', e.target.value)} options={[['EUR', 'EUR €'], ['USD', 'USD $'], ['GBP', 'GBP £']]} /></Field>
+                <Field label="Budget contingency % for new projects"><Input type="number" min={0} max={50} value={state.settings.budgetContingency ?? 10} onChange={(e) => setSetting('budgetContingency', Number(e.target.value) || 0)} /></Field>
+              </div>
+            </div>
+          </section>
+        )}
+        {isAdmin && (
+          <section className="panel" data-tab="calendar">
+            <h2>Progress stages</h2>
+            <p className="small muted">What counts towards the "% done" of a project, per category. Untick a stage you never do, change its weight, or add your own manual stages that get ticked on the project Overview.</p>
+            <ProgressSettings state={state} setSetting={setSetting} />
           </section>
         )}
 
@@ -355,5 +381,42 @@ export default function Settings() {
         </section>
       </div>
     </>
+  )
+}
+
+
+function ProgressSettings({ state, setSetting }) {
+  const [cat, setCat] = useState(CATEGORIES[0])
+  const conf = state.settings.progress?.[cat] || {}
+  const sample = { ...emptyProject(), category: cat, scenes: [], shootingDays: [], contacts: [], locations: [] }
+  const base = projectProgress(sample, {}).stages
+  const save = (next) => setSetting('progress', { ...(state.settings.progress || {}), [cat]: next })
+  const toggle = (key) => { const off = new Set(conf.off || []); off.has(key) ? off.delete(key) : off.add(key); save({ ...conf, off: [...off] }) }
+  const weight = (key, w) => save({ ...conf, weights: { ...(conf.weights || {}), [key]: Number(w) || 0 } })
+  const [label, setLabel] = useState('')
+  const addCustom = () => { if (!label.trim()) return; save({ ...conf, custom: [...(conf.custom || []), { key: uid(), label: label.trim(), weight: 10 }] }); setLabel('') }
+  const removeCustom = (k) => save({ ...conf, custom: (conf.custom || []).filter((c) => c.key !== k) })
+  const customWeight = (k, w) => save({ ...conf, custom: (conf.custom || []).map((c) => (c.key === k ? { ...c, weight: Number(w) || 0 } : c)) })
+  return (
+    <div className="stack">
+      <div className="segmented small wrap">{CATEGORIES.map((c) => <button key={c} className={cat === c ? 'on' : ''} onClick={() => setCat(c)}>{c}</button>)}</div>
+      <ul className="plain prog-list">
+        {base.map((st) => (
+          <li key={st.key}>
+            <label className="prog-row"><input type="checkbox" checked={!(conf.off || []).includes(st.key)} onChange={() => toggle(st.key)} /><span className="grow">{st.label}</span><input className="input sm" type="number" min={0} max={100} value={conf.weights?.[st.key] ?? st.weight} onChange={(e) => weight(st.key, e.target.value)} title="Weight" /></label>
+          </li>
+        ))}
+        {(conf.custom || []).map((c) => (
+          <li key={c.key}>
+            <div className="prog-row"><span className="badge">manual</span><span className="grow">{c.label}</span><input className="input sm" type="number" min={0} max={100} value={c.weight} onChange={(e) => customWeight(c.key, e.target.value)} /><button className="link small" onClick={() => removeCustom(c.key)}>×</button></div>
+          </li>
+        ))}
+      </ul>
+      <div className="row-actions">
+        <Input className="input" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Add a manual stage, e.g. Client sign-off" onKeyDown={(e) => e.key === 'Enter' && addCustom()} />
+        <Button variant="ghost" onClick={addCustom}>Add</Button>
+      </div>
+      <p className="small muted">Weights are relative: a stage weighing 25 counts 2.5 times a stage weighing 10.</p>
+    </div>
   )
 }

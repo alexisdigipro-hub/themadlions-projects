@@ -14,6 +14,7 @@ export default function Drives() {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
+  const isAdmin = user?.role === 'admin'
   if (!can(user, 'drives')) return <Navigate to="/home" replace />
   const editable = can(user, 'drives', 'edit')
   const drives = state.library.drives || []
@@ -26,11 +27,26 @@ export default function Drives() {
     if (!q.trim()) return drives
     return drives.filter((d) => matchText(q, d.name, d.where, d.notes) || (d.items || []).some((it) => matchText(q, it.title, it.notes, projects.find((p) => p.id === it.projectId)?.title)))
   }, [drives, q, projects])
+  const order = state.settings?.driveSeriesOrder || []
   const groups = useMemo(() => {
     const m = {}
     for (const d of filtered) (m[seriesOf(d)] = m[seriesOf(d)] || []).push(d)
-    return Object.entries(m).map(([k, v]) => [k, v.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))]).sort((a, b) => a[0].localeCompare(b[0]))
-  }, [filtered])
+    const rank = (k) => { const i = order.indexOf(k); return i === -1 ? 1000 : i }
+    return Object.entries(m).map(([k, v]) => [k, v.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[0].localeCompare(b[0]))
+  }, [filtered, order])
+  const allSeries = useMemo(() => {
+    const set = [...new Set(drives.map(seriesOf))]
+    const rank = (k) => { const i = order.indexOf(k); return i === -1 ? 1000 : i }
+    return set.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+  }, [drives, order])
+  const moveSeries = (k, dir) => update((s) => {
+    const cur = [...allSeries]
+    const i = cur.indexOf(k), j = i + dir
+    if (i < 0 || j < 0 || j >= cur.length) return s
+    ;[cur[i], cur[j]] = [cur[j], cur[i]]
+    s.settings = { ...s.settings, driveSeriesOrder: cur }
+    return s
+  })
   const hit = (it) => q.trim() && matchText(q, it.title, it.notes, projects.find((p) => p.id === it.projectId)?.title)
   const totalItems = drives.reduce((a, d) => a + (d.items || []).length, 0)
 
@@ -71,7 +87,7 @@ export default function Drives() {
   const projTitle = (id) => projects.find((p) => p.id === id)?.title
 
   return (
-    <div className="drives">
+    <div className="drives wide-page">
       <PageHead title="Drives archive" sub={`${drives.length} disk${drives.length === 1 ? '' : 's'} · ${totalItems} project${totalItems === 1 ? '' : 's'} archived · ${drives.filter((d) => d.status === 'empty').length} empty`}>
         {editable && <Button variant="primary" onClick={() => setDraft(emptyDrive())}>Add disk</Button>}
       </PageHead>
@@ -89,7 +105,15 @@ export default function Drives() {
       ) : (
         groups.map(([series, list]) => (
           <section key={series} className="drive-series">
-            <h2 className="drive-series-title">{series} <span className="muted small">{list.length}</span></h2>
+            <h2 className="drive-series-title">
+              {series} <span className="muted small">{list.length}</span>
+              {editable && !q && (
+                <span className="drive-series-move">
+                  <button className="link" onClick={() => moveSeries(series, -1)} disabled={allSeries.indexOf(series) === 0} title="Move up">▲</button>
+                  <button className="link" onClick={() => moveSeries(series, 1)} disabled={allSeries.indexOf(series) === allSeries.length - 1} title="Move down">▼</button>
+                </span>
+              )}
+            </h2>
             <div className="drive-grid">
               {list.map((d) => (
                 <article key={d.id} className={`drive st-${d.status || 'inuse'}`}>
@@ -119,9 +143,9 @@ export default function Drives() {
                   {d.notes && <p className="small muted drive-notes">{d.notes}</p>}
                   {editable && (
                     <footer className="drive-foot">
-                      <button className="link small" onClick={() => setItem({ driveId: d.id, ...emptyItem() })}>Add project</button>
+                      <button className="link small" onClick={() => setItem({ driveId: d.id, ...emptyItem() })}>+ Add</button>
                       <span className="grow" />
-                      <button className="link small" onClick={() => setDraft({ ...d })}>Edit disk</button>
+                      <button className="link small" onClick={() => setDraft({ ...d })}>Edit</button>
                       <Confirm onConfirm={() => removeDrive(d.id)} label="Delete disk">×</Confirm>
                     </footer>
                   )}

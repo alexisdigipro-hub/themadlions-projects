@@ -80,8 +80,8 @@ export default function CallSheets() {
         day: { index: dayIndex + 1, count: days.length, date: day.date, callTime: day.callTime, wrapTime: day.wrapTime },
         expiresAt: Number(state.settings.shareExpiryDays) > 0 ? new Date(new Date(day.date + 'T23:59:59').getTime() + Number(state.settings.shareExpiryDays) * 86400000).toISOString() : '',
         sheet: { tagline: sheet.tagline || csd.tagline || '', notes: sheet.notes || '', shootingCall: sheet.shootingCall || '', lunch: sheet.lunch || lunchDefault, parking: sheet.parking || csd.parking || '', hospital: sheet.weather || csd.hospital || '', footer: csd.footer || '' },
-        wx: wx ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
-        sun: sun ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,
+        wx: wx && csd.showWeather !== false ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
+        sun: sun && csd.showSun !== false ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,
         loc: loc ? { name: loc.name, address: loc.address, contact: loc.contact, phone: loc.phone } : null,
         scenes: scenes.map((s) => ({ location: s.location, heading: s.heading, from: sceneTime(s.id).from, to: sceneTime(s.id).to })),
         cast: castRows.map((r) => ({ character: r.character, name: r.actor?.name || '', phone: r.actor?.phone || '', call: r.call, photo: r.actor?.photos?.[0]?.thumb || '' })),
@@ -257,7 +257,7 @@ export default function CallSheets() {
             <div className="cs-day">Day {dayIndex + 1} of {days.length}</div>
             <div className="cs-date">{new Date(day.date + 'T00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })}</div>
             <div className="cs-wx">
-              {wx ? (
+              {csd.showWeather === false ? null : wx ? (
                 <>
                   <div className="cs-temp"><span className="cs-sun-ico">☀</span> {wx.tmax}° <span className="muted">/ {wx.tmin}°</span></div>
                   <div className="muted small"><em>{wx.summary}{wx.rain != null ? `, rain ${wx.rain}%` : ''}</em></div>
@@ -265,7 +265,7 @@ export default function CallSheets() {
               ) : (
                 <div className="muted small no-print">No forecast yet{editable ? <> · <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'fetch'}</button></> : null}</div>
               )}
-              {sun && <div className="small"><strong>Sunrise</strong> {wx?.sunrise || sun.sunrise} · <strong>Sunset</strong> {wx?.sunset || sun.sunset}</div>}
+              {csd.showSun !== false && sun && <div className="small"><strong>Sunrise</strong> {wx?.sunrise || sun.sunrise} · <strong>Sunset</strong> {wx?.sunset || sun.sunset}</div>}
             </div>
             <dl className="cs-times">
               <dt>Shooting call</dt><dd>{editable ? <input className="cs-time" value={sheet.shootingCall ?? ''} placeholder={day.callTime} onChange={(e) => setSheet('shootingCall', e.target.value)} /> : sheet.shootingCall || day.callTime}</dd>

@@ -19,7 +19,7 @@ export default function Home() {
   const active = projects.filter((p) => !['Delivered', 'On hold'].includes(p.status))
   const rows = projects
     .map((p) => {
-      const pr = projectProgress(p)
+      const pr = projectProgress(p, state.settings)
       const days = [...p.shootingDays].sort((a, b) => a.date.localeCompare(b.date))
       const next = days.find((d) => d.date >= t0)
       const open = (p.tasks || []).filter((t) => t.status !== 'done')

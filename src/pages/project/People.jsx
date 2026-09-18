@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
-import { canSeeContacts, departmentsOf, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
+import { callsheetDefaults, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import PhotoGrid from '../../components/PhotoGrid.jsx'
 import { contactToLibrary, matchText, sharedContact } from '../../lib/library.js'
@@ -14,6 +14,7 @@ export default function People() {
   const { project, edit, canEdit, library, editLibrary } = useProject()
   const { state } = useStore()
   const DEPTS = departmentsOf(state)
+  const csd = callsheetDefaults(state)
   const showContacts = canSeeContacts(state, useCurrentUser())
   const toast = useToast()
   const [draft, setDraft] = useState(null)
@@ -34,7 +35,7 @@ export default function People() {
     const chosen = libChoices.filter((c) => pick.sel.includes(c.id))
     if (!chosen.length) return
     edit((p) => {
-      chosen.forEach((c) => p.contacts.push({ id: uid(), kind: tab, libraryId: c.id, ...sharedContact(c), character: chosen.length === 1 && tab === 'cast' ? (pick.character || '').toUpperCase() : '', dept: tab === 'cast' ? 'Cast' : c.dept, role: c.role || '', callOffset: 0 }))
+      chosen.forEach((c) => p.contacts.push({ id: uid(), kind: tab, libraryId: c.id, ...sharedContact(c), character: chosen.length === 1 && tab === 'cast' ? (pick.character || '').toUpperCase() : '', dept: tab === 'cast' ? 'Cast' : c.dept, role: c.role || '', callOffset: Number(csd[tab === 'cast' ? 'castOffset' : 'crewOffset'] || 0) }))
     })
     setPick(null)
     toast(`${chosen.length} added from the library`, 'ok')
@@ -96,7 +97,7 @@ export default function People() {
             <Button onClick={() => setPick({ q: '', sel: [], character: uncast[0] || '' })}>From library</Button>
           )}
           {editable && (
-            <Button variant="primary" onClick={() => setDraft({ id: uid(), kind: tab, name: '', character: '', dept: tab === 'cast' ? 'Cast' : 'Production', role: '', phone: '', email: '', callOffset: 0, saveToLibrary: true })}>
+            <Button variant="primary" onClick={() => setDraft({ id: uid(), kind: tab, name: '', character: '', dept: tab === 'cast' ? 'Cast' : 'Production', role: '', phone: '', email: '', callOffset: Number(csd[tab === 'cast' ? 'castOffset' : 'crewOffset'] || 0), saveToLibrary: true })}>
               Add {tab === 'cast' && project.category === 'Event' ? 'talent' : tab}
             </Button>
           )}

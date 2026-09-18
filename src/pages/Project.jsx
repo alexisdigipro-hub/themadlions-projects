@@ -42,7 +42,7 @@ export default function Project() {
     project,
     user,
     edit: (fn) => updateProject(project.id, fn),
-    canEdit: (key) => can(user, key, 'edit'),
+    canEdit: (key) => can(user, key, 'edit') && (!project.frozen || user?.role === 'admin'),
     library: state.library,
     editLibrary: (fn) => update((s) => { fn(s.library); return s }),
   }

@@ -3,7 +3,14 @@ import { lineEstimate } from './budget.js'
 const clamp = (n) => Math.max(0, Math.min(1, n))
 
 /* Weighted stages per project category. Each stage returns 0..1. */
-export function projectProgress(p) {
+export const PROGRESS_STAGE_KEYS = {
+  Event: ['brief', 'venue', 'crew', 'ros', 'event', 'post'],
+  Editing: ['brief', 'cut', 'approve', 'deliver'],
+  default: ['doc', 'breakdown', 'budget', 'cast', 'locations', 'shots', 'schedule', 'shoot', 'post'],
+}
+export const stageKeysFor = (category) => PROGRESS_STAGE_KEYS[category] || PROGRESS_STAGE_KEYS.default
+
+export function projectProgress(p, settings) {
   const scenes = p.scenes || []
   const days = p.shootingDays || []
   const scheduled = scenes.filter((s) => days.some((d) => d.sceneIds.includes(s.id))).length
@@ -51,6 +58,13 @@ export function projectProgress(p) {
       { key: 'post', label: 'Post and delivery', weight: 15, done: clamp(cutStage * 0.5 + delivDone * 0.5), to: 'post' },
     ]
   }
+  // settings.progress[category] = { off: [keys], weights: {key: n}, custom: [{ key, label, weight }] }
+  const conf = settings?.progress?.[p.category]
+  if (conf) {
+    stages = stages.filter((s) => !(conf.off || []).includes(s.key)).map((s) => ({ ...s, weight: conf.weights?.[s.key] ?? s.weight }))
+    ;(conf.custom || []).forEach((c) => stages.push({ key: 'custom:' + c.key, label: c.label, weight: c.weight || 10, done: p.customStages?.[c.key] ? 1 : 0, manual: true, to: '' }))
+  }
+  if (!stages.length) return { pct: 0, stages: [] }
   if (p.status === 'Delivered') return { pct: 100, stages: stages.map((s) => ({ ...s, done: 1 })) }
   const total = stages.reduce((a, s) => a + s.weight, 0)
   const pct = Math.round(stages.reduce((a, s) => a + s.weight * s.done, 0) / total * 100)

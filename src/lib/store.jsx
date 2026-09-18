@@ -59,7 +59,7 @@ export const today = () => {
 
 export const DEFAULT_DEPARTMENTS = ['Production', 'Direction', 'Camera', 'Lighting', 'Grip', 'Sound', 'Art', 'Costume', 'Makeup & hair', 'Locations', 'Casting', 'Post', 'Transport', 'Catering', 'Client', 'Other']
 export const departmentsOf = (state) => (state.settings?.departments?.length ? state.settings.departments : DEFAULT_DEPARTMENTS)
-export const callsheetDefaults = (state) => ({ callTime: '07:00', wrapTime: '19:00', lunchAfterHours: 6, hospital: '', parking: '', tagline: '', footer: '', ...(state.settings?.callsheet || {}) })
+export const callsheetDefaults = (state) => ({ callTime: '07:00', wrapTime: '19:00', lunchAfterHours: 6, hospital: '', parking: '', tagline: '', footer: '', castOffset: 0, crewOffset: 0, showWeather: true, showSun: true, ...(state.settings?.callsheet || {}) })
 export const canSendNotices = (state, user) => !!user && user.role === 'admin'
 export const canSeeContacts = (state, user) => !!user && (user.role === 'admin' || (state.settings?.phoneVisibility || 'everyone') === 'everyone')
 
@@ -83,7 +83,10 @@ export function emptyState() {
     settings: {
       aiProvider: 'anthropic', aiKey: '', aiModel: 'claude-sonnet-4-6', mapsKey: '',
       logo: '', // data URL, square-ish, max 256px
-      callsheet: { callTime: '07:00', wrapTime: '19:00', lunchAfterHours: 6, hospital: '', parking: '', tagline: '', footer: '' },
+      callsheet: { callTime: '07:00', wrapTime: '19:00', lunchAfterHours: 6, hospital: '', parking: '', tagline: '', footer: '', castOffset: 0, crewOffset: 0, showWeather: true, showSun: true },
+      budgetCurrency: 'EUR', budgetContingency: 10,
+      progress: {}, // per category overrides, see progress.js
+      driveSeriesOrder: [],
       departments: DEFAULT_DEPARTMENTS,
       newMemberLevel: 'view', // 'none' | 'view' | 'edit'  (default permissions when adding a teammate)
       phoneVisibility: 'everyone', // 'everyone' | 'admins'  (who sees phone numbers and emails of cast and crew)

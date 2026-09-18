@@ -13,7 +13,7 @@ import { compress } from '../../lib/photos.js'
 import { useRef } from 'react'
 
 export default function Overview() {
-  const { project, edit, canEdit } = useProject()
+  const { project, edit, canEdit, user } = useProject()
   const { state } = useStore()
   const toast = useToast()
   const [draft, setDraft] = useState(null)
@@ -31,7 +31,7 @@ export default function Overview() {
   const rs = reportSummary(project)
   const openTasks = (project.tasks || []).filter((t) => t.status !== 'done').length
 
-  const { pct, stages } = projectProgress(project)
+  const { pct, stages } = projectProgress(project, state.settings)
   const coverRef = useRef()
   const setCover = async (file) => {
     if (!file) return
@@ -55,16 +55,26 @@ export default function Overview() {
             )}
           </div>
           <div className="progress-main">
-            <div className="progress-top"><strong>{pct}% done</strong><span className="muted small">{project.status}{project.endDate ? ` · delivery ${fmtDate(project.endDate)}` : ''}</span></div>
+            <div className="progress-top"><strong>{pct}% done</strong><span className="muted small">{project.status}{project.endDate ? ` · delivery ${fmtDate(project.endDate)}` : ''}{project.frozen ? ' · 🔒 locked' : ''}</span>
+              {user?.role === 'admin' && <button className="link small" onClick={() => { edit((p) => { p.frozen = !p.frozen }); toast(project.frozen ? 'Project unlocked, the team can edit again' : 'Project locked: only administrators can change it now', 'ok') }}>{project.frozen ? 'Unlock' : 'Lock project'}</button>}
+            </div>
             <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
             <ul className="stages">
               {stages.map((st) => (
                 <li key={st.key} className={st.done >= 1 ? 'done' : st.done > 0 ? 'part' : ''}>
-                  <Link to={`../${st.to}`}>
-                    <span className="stage-dot" />
-                    <span className="stage-label">{st.label}</span>
-                    <span className="stage-pct muted small">{st.done >= 1 ? '✓' : st.done > 0 ? `${Math.round(st.done * 100)}%` : ''}</span>
-                  </Link>
+                  {st.manual ? (
+                    <button className="stage-manual" disabled={!canEdit('projects')} onClick={() => edit((p) => { const k = st.key.slice(7); p.customStages = { ...(p.customStages || {}), [k]: !p.customStages?.[k] } })}>
+                      <span className="stage-dot" />
+                      <span className="stage-label">{st.label}</span>
+                      <span className="stage-pct muted small">{st.done >= 1 ? '✓' : 'tap when done'}</span>
+                    </button>
+                  ) : (
+                    <Link to={`../${st.to}`}>
+                      <span className="stage-dot" />
+                      <span className="stage-label">{st.label}</span>
+                      <span className="stage-pct muted small">{st.done >= 1 ? '✓' : st.done > 0 ? `${Math.round(st.done * 100)}%` : ''}</span>
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
