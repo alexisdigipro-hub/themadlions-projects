@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Button, Confirm, Field, Input, PageHead, useToast } from '../components/ui.jsx'
 import { canSendNotices, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
@@ -38,6 +39,9 @@ export default function Chat() {
     if (latest) localStorage.setItem(CHAT_READ_KEY, latest)
     window.dispatchEvent(new Event('tml-chat-read'))
   }, [chat.length])
+
+  // Profile photo of whoever wrote a message, so the thread shows faces once people fill theirs in.
+  const photoOf = (userId) => state.users.find((u) => u.id === userId)?.profile?.thumb || ''
 
   const send = () => {
     const t = text.trim()
@@ -81,9 +85,15 @@ export default function Chat() {
                 const cont = prev && prev.userId === m.userId && prev.userName === m.userName && prev.source === m.source && new Date(m.createdAt) - new Date(prev.createdAt) < 5 * 60 * 1000
                 return (
                   <div key={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''}`}>
-                    {!mine && <span className="chat-avatar">{!cont && initials(m.userName)}</span>}
+                    {!mine && (
+                      <span className="chat-avatar">
+                        {!cont && (photoOf(m.userId) ? <img src={photoOf(m.userId)} alt="" /> : initials(m.userName))}
+                      </span>
+                    )}
                     <div className="chat-bubble-wrap">
-                      {!cont && !mine && <div className="chat-who">{m.userName}</div>}
+                      {!cont && !mine && (
+                        <div className="chat-who">{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>
+                      )}
                       <div className="chat-bubble">
                         {m.text}
                         <span className="chat-time">{timeOf(m.createdAt)}</span>
