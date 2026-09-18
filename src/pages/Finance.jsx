@@ -6,7 +6,7 @@ import { DOCS, EXPENSE_CATS, FREQ, INCOME_CATS, METHODS, TX_STATUS, duePeriods, 
 import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid } from '../lib/budget.js'
-import { WorkLogTable, entryTotals, money2 } from '../components/WorkLog.jsx'
+import { AGE_BUCKETS, WorkLogTable, ageBucket, daysWaiting, entryTotals, money2, togglePaidEntry } from '../components/WorkLog.jsx'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const BUDGET_CAT = {
@@ -444,24 +444,98 @@ export default function Finance() {
 
 
 function TeamWork() {
-  const { state } = useStore()
+  const { state, update } = useStore()
   const [who, setWho] = useState('')
   const [year, setYear] = useState(String(new Date().getFullYear()))
+  const [allOwed, setAllOwed] = useState(false)
   const log = state.worklog || []
   const years = [...new Set([String(new Date().getFullYear()), ...log.map((e) => (e.date || '').slice(0, 4)).filter(Boolean)])].sort().reverse()
-  const members = state.users.filter((u) => u.active !== false && u.role !== 'admin')
-  const rows = members.map((u) => ({ u, t: entryTotals(log.filter((e) => e.userId === u.id && (e.date || '').startsWith(year))), allT: entryTotals(log.filter((e) => e.userId === u.id)) }))
+
+  // Everyone who can appear here: the active team, plus anyone who still has jobs logged
+  // but has since left, been deactivated or become an administrator. Without that second
+  // group their money counted in the totals above with no card to open below, and the
+  // figures on this page did not add up.
+  const people = useMemo(() => {
+    const team = state.users.filter((u) => u.active !== false && u.role !== 'admin')
+    const out = [...team]
+    const seen = new Set(team.map((u) => u.id))
+    for (const e of log) {
+      const id = e.userId || ''
+      if (seen.has(id)) continue
+      seen.add(id)
+      const known = state.users.find((u) => u.id === id)
+      out.push({ id, name: known?.name || (id ? 'Former teammate' : 'Not assigned'), gone: true })
+    }
+    return out
+  }, [state.users, log])
+
+  const rows = people
+    .map((u) => ({ u, t: entryTotals(log.filter((e) => (e.userId || '') === u.id && (e.date || '').startsWith(year))), allT: entryTotals(log.filter((e) => (e.userId || '') === u.id)) }))
     .sort((a, b) => b.t.total - a.t.total || a.u.name.localeCompare(b.u.name))
-  const all = entryTotals(log.filter((e) => (e.date || '').startsWith(year)))
-  const sel = members.find((u) => u.id === who)
+  // Counts exactly the people listed below, so the hero and the cards always agree.
+  const all = entryTotals(rows.flatMap((r) => log.filter((e) => (e.userId || '') === r.u.id && (e.date || '').startsWith(year))))
+  const sel = people.find((u) => u.id === who)
   const max = Math.max(1, ...rows.map((r) => r.t.total))
+
+  // Money owed is money owed whatever year it was earned in, so this list ignores the year tabs.
+  const owed = useMemo(() => log
+    .filter((e) => e.status !== 'paid')
+    .map((e) => ({ e, days: daysWaiting(e), name: people.find((u) => u.id === (e.userId || ''))?.name || 'Someone' }))
+    .sort((a, b) => b.days - a.days || a.name.localeCompare(b.name)), [log, people])
+  const aging = owed.reduce((acc, o) => { acc[ageBucket(o.days)] += Number(o.e.amount) || 0; return acc }, { fresh: 0, warn: 0, late: 0 })
+  const owedTotal = owed.reduce((a, o) => a + (Number(o.e.amount) || 0), 0)
+
   return (
     <div className="teamwork">
+      <section className="panel tw-owed">
+        <div className="panel-head">
+          <h2>Owed right now</h2>
+          <span className="muted small">Every unpaid job across all years, the one that has waited longest first. The year tabs below do not change this list.</span>
+        </div>
+        {!owed.length ? (
+          <p className="muted small tw-owed-empty">Nothing outstanding. Everyone is paid up.</p>
+        ) : (
+          <>
+            <div className="tw-aging">
+              {AGE_BUCKETS.map((b) => (
+                <div key={b.key} className={`tw-age ${b.key}`}>
+                  <span className="tw-age-label">{b.label}</span>
+                  <strong>{money2(aging[b.key])}</strong>
+                </div>
+              ))}
+              <div className="tw-age total">
+                <span className="tw-age-label">All unpaid</span>
+                <strong>{money2(owedTotal)}</strong>
+              </div>
+            </div>
+            <ul className="plain tw-owed-list">
+              {(allOwed ? owed : owed.slice(0, 8)).map(({ e, days, name }) => (
+                <li key={e.id} className={`tw-owed-row ${ageBucket(days)}`}>
+                  <span className="tw-age-dot" aria-hidden="true" />
+                  <div className="tw-owed-main">
+                    <strong>{name}</strong>
+                    <span className="tw-owed-desc">{[e.client, e.description].filter(Boolean).join(' · ') || <span className="muted">No description</span>}</span>
+                    <span className="muted small">{fmtDate(e.date, { day: 'numeric', month: 'short', year: 'numeric' })} · waiting {days} day{days === 1 ? '' : 's'}</span>
+                  </div>
+                  <div className="tw-owed-amount">{money2(e.amount)}</div>
+                  <Button size="sm" variant="ghost" onClick={() => togglePaidEntry(update, e.id)}>Mark paid</Button>
+                </li>
+              ))}
+            </ul>
+            {owed.length > 8 && (
+              <button className="link small tw-owed-more" onClick={() => setAllOwed((v) => !v)}>
+                {allOwed ? 'Show less' : `Show all ${owed.length} unpaid jobs`}
+              </button>
+            )}
+          </>
+        )}
+      </section>
+
       <div className="fin-hero">
-        <div className="fin-card neg"><div className="fin-label">Owed to the team</div><div className="fin-value">{money2(all.pending)}</div><div className="muted small">{all.open} unpaid job{all.open === 1 ? '' : 's'} in {year}</div></div>
+        <div className="fin-card neg"><div className="fin-label">Owed in {year}</div><div className="fin-value">{money2(all.pending)}</div><div className="muted small">{all.open} unpaid job{all.open === 1 ? '' : 's'}</div></div>
         <div className="fin-card pos"><div className="fin-label">Paid to the team</div><div className="fin-value">{money2(all.paid)}</div><div className="muted small">in {year}</div></div>
         <div className="fin-card"><div className="fin-label">Total {year}</div><div className="fin-value">{money2(all.total)}</div><div className="muted small">{all.jobs} job{all.jobs === 1 ? '' : 's'} logged</div></div>
-        <div className="fin-card"><div className="fin-label">People logging</div><div className="fin-value">{rows.filter((r) => r.t.jobs).length}</div><div className="muted small">of {members.length} in the team</div></div>
+        <div className="fin-card"><div className="fin-label">People logging</div><div className="fin-value">{rows.filter((r) => r.t.jobs).length}</div><div className="muted small">of {people.length} with a work log</div></div>
       </div>
       <div className="toolbar">
         <div className="segmented small">{years.map((y) => <button key={y} className={year === y ? 'on' : ''} onClick={() => setYear(y)}>{y}</button>)}</div>
@@ -471,12 +545,19 @@ function TeamWork() {
         {rows.map(({ u, t, allT }) => (
           <button key={u.id} className={`tw-card ${who === u.id ? 'on' : ''}`} onClick={() => setWho(who === u.id ? '' : u.id)}>
             <div className="tw-head"><strong>{u.name}</strong><span className="muted small">{t.jobs} job{t.jobs === 1 ? '' : 's'}</span></div>
-            <div className="tw-bar"><span className="paid" style={{ width: `${(t.paid / max) * 100}%` }} /><span className="pend" style={{ width: `${(t.pending / max) * 100}%` }} /></div>
+            {/* Bar length compares this person with the biggest earner of the year; the split inside is their own paid vs pending. */}
+            <div className="tw-bar" title={`${money2(t.total)} of ${money2(max)}, the most anyone logged in ${year}`}>
+              <div className="tw-bar-fill" style={{ width: `${(t.total / max) * 100}%` }}>
+                {t.paid > 0 && <span className="paid" style={{ flexGrow: t.paid }} />}
+                {t.pending > 0 && <span className="pend" style={{ flexGrow: t.pending }} />}
+              </div>
+            </div>
             <div className="tw-nums"><span className="pend">{money2(t.pending)} pending</span><span className="paid">{money2(t.paid)} paid</span></div>
+            {u.gone && <div className="muted small">not in the active team any more</div>}
             {allT.pending > t.pending && <div className="muted small">plus {money2(allT.pending - t.pending)} pending from other years</div>}
           </button>
         ))}
-        {!members.length && <p className="muted">No teammates yet.</p>}
+        {!people.length && <p className="muted">No teammates yet.</p>}
       </div>
       {sel && (
         <section className="panel tw-detail">
