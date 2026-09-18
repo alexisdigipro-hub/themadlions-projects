@@ -2549,3 +2549,17 @@ html[data-public='1'] body { background: var(--bg); }
 .act-list li { display: grid; grid-template-columns: 110px 1fr; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line-soft); font-size: 14px; }
 .act-list li:first-child { border-top: 0; }
 .act-when { white-space: nowrap; }
+
+/* Shot list built by hand: add setups from the rail, quick-add shots under a scene */
+.scene-rail .rail-add button { color: var(--pc); font-weight: 600; justify-content: flex-start; display: block; }
+.shots-scene-head .inline-title { display: inline-block; width: auto; min-width: 220px; vertical-align: baseline; }
+.quick-add { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.quick-add .input { flex: 1 1 260px; }
+
+/* Breakdown: paste a treatment or notes straight into the page */
+.paste-panel .textarea, .paste-panel textarea { width: 100%; }
+.paste-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+@media (max-width: 720px) {
+  .quick-add .input, .paste-actions .btn { width: 100%; }
+  .paste-actions { gap: 10px; }
+}
