@@ -1,11 +1,13 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHead } from '../components/ui.jsx'
-import { CATEGORIES, EVENT_TYPES, STATUSES, today, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { CATEGORIES, EVENT_TYPES, STATUSES, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import MiniCalendar from '../components/MiniCalendar.jsx'
 import { projectProgress } from '../lib/progress.js'
 import { budgetTotals, money } from './project/Budget.jsx'
 import { summarize } from '../lib/finance.js'
 import { fmtDate } from '../lib/dates.js'
+import { initialsOf } from './Profile.jsx'
 
 const addDaysISO = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
 
@@ -15,6 +17,10 @@ export default function Home() {
   const projects = visibleProjects(state, user)
   const isAdmin = user?.role === 'admin'
   const t0 = today(), t7 = addDaysISO(7)
+  // The team strip follows whichever day is picked in the mini calendar below it.
+  const [day, setDay] = useState(t0)
+  const team = state.users.filter((u) => u.active !== false)
+  const away = unavailableOn(state.events, day)
 
   const active = projects.filter((p) => !['Delivered', 'On hold'].includes(p.status))
   const rows = projects
@@ -52,10 +58,42 @@ export default function Home() {
     <div className="home">
       <PageHead title={`Hello ${(user?.name || '').split(' ')[0]}`} sub={`${active.length} active project${active.length === 1 ? '' : 's'} · ${week.length} thing${week.length === 1 ? '' : 's'} this week · ${overdueTasks.length} overdue task${overdueTasks.length === 1 ? '' : 's'}`} />
 
+      {team.length > 0 && (
+        <section className="panel team-strip-panel">
+          <div className="panel-head">
+            <h2>The team</h2>
+            <span className="muted small">
+              {day === t0 ? 'Today' : fmtDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}
+              {away.size > 0 ? ` · ${away.size} not available` : ' · everyone available'}
+              {' · pick a day in the calendar below'}
+            </span>
+          </div>
+          <div className="team-strip">
+            {team.map((u) => {
+              const off = away.has(u.id)
+              return (
+                <Link
+                  key={u.id}
+                  to={u.id === user?.id ? '/me' : `/u/${u.id}`}
+                  className={`team-chip ${off ? 'off' : ''}`}
+                  title={`${u.name}${u.profile?.position ? ` · ${u.profile.position}` : ''}${off ? ' · not available' : ''}`}
+                >
+                  <span className="team-chip-photo">
+                    {u.profile?.thumb ? <img src={u.profile.thumb} alt="" /> : <span className="team-chip-initials">{initialsOf(u.name)}</span>}
+                    {off && <span className="team-chip-off" aria-hidden="true">✕</span>}
+                  </span>
+                  <span className="team-chip-name">{(u.name || '').split(' ')[0]}</span>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
       <div className="home-grid">
         <section className="panel">
           <div className="panel-head"><h2>Calendar</h2><Link className="link small" to="/calendar">Full calendar</Link></div>
-          <MiniCalendar items={calItems} />
+          <MiniCalendar items={calItems} onSelect={setDay} />
         </section>
 
         <section className="panel">
