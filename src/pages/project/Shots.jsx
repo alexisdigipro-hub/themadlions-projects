@@ -44,6 +44,13 @@ const nextLetter = (existing) => {
   return String(existing.length + 1)
 }
 
+// A setup built by hand in the shot list, with no script or breakdown behind it.
+const manualScene = (n) => ({
+  id: uid(), number: String(n), heading: `SETUP ${n}`, intExt: 'EXT', location: '', timeOfDay: '',
+  synopsis: '', body: '', characters: [], elements: {}, flags: [], notes: '', dayId: '', eighths: 4,
+  order: n - 1, source: 'manual',
+})
+
 export default function Shots() {
   const { project, edit, canEdit } = useProject()
   const toast = useToast()
@@ -52,7 +59,25 @@ export default function Shots() {
   const [sceneId, setSceneId] = useState(project.scenes[0]?.id || '')
   const [draft, setDraft] = useState(null)
   const [view, setView] = useState('list') // list | board
+  const [quick, setQuick] = useState('')
   const scene = project.scenes.find((s) => s.id === sceneId) || project.scenes[0]
+
+  // Build a shot list from nothing: add setups by hand, no breakdown needed.
+  const addScene = () => {
+    const s = manualScene((project.scenes?.length || 0) + 1)
+    edit((p) => {
+      p.scenes = [...(p.scenes || []), s]
+      if (!p.breakdownStatus || p.breakdownStatus === 'none') p.breakdownStatus = 'manual'
+    })
+    setSceneId(s.id)
+    return s
+  }
+  const renameScene = (v) => edit((p) => {
+    const s = p.scenes.find((x) => x.id === scene.id)
+    if (!s) return
+    s.location = v
+    s.heading = v ? v.toUpperCase() : `SETUP ${s.number}`
+  })
   const sceneShots = useMemo(() => shots.filter((s) => s.sceneId === scene?.id), [shots, scene])
   const countBy = useMemo(() => {
     const m = {}
@@ -62,8 +87,14 @@ export default function Shots() {
 
   if (!project.scenes.length) {
     return (
-      <Empty title="No scenes to plan shots for">
-        Run scene detection in <Link to="../breakdown">Breakdown</Link> first. Shots are planned per scene.
+      <Empty
+        title="No shot list yet"
+        action={editable && <Button variant="primary" onClick={addScene}>Add first setup</Button>}
+      >
+        <>
+          Start it by hand: add a setup and put its shots under it. Or build the setups automatically from a script,
+          a treatment or pasted text in <Link to="../breakdown">Breakdown</Link>.
+        </>
       </Empty>
     )
   }
@@ -78,6 +109,17 @@ export default function Shots() {
     })
     setDraft(null)
     toast('Shot saved', 'ok')
+  }
+  // Type a line, press Enter, the shot is in the list. Details can be filled in later.
+  const quickAdd = () => {
+    const v = quick.trim()
+    if (!v) return
+    edit((p) => {
+      p.shots = p.shots || []
+      const existing = p.shots.filter((s) => s.sceneId === scene.id)
+      p.shots.push({ ...emptyShot(scene.id, `${scene.number}${nextLetter(existing)}`), description: v })
+    })
+    setQuick('')
   }
   const remove = (id) => edit((p) => (p.shots = (p.shots || []).filter((s) => s.id !== id)))
   const duplicate = (s) => edit((p) => {
@@ -127,6 +169,7 @@ export default function Shots() {
           {shots.length > 0 && (
             <Button variant="ghost" onClick={() => window.print()}>Print</Button>
           )}
+          {editable && <Button onClick={addScene}>Add setup</Button>}
           {editable && (
             <Button variant="primary" onClick={() => setDraft(emptyShot(scene.id, `${scene.number}${nextLetter(sceneShots)}`))}>
               Add shot
@@ -146,13 +189,32 @@ export default function Shots() {
               </button>
             </li>
           ))}
+          {editable && (
+            <li className="rail-add">
+              <button onClick={addScene}>+ Add setup</button>
+            </li>
+          )}
         </ul>
 
         <div className="shots-main">
           <div className="shots-scene-head">
-            <h2>
-              Sc. {scene.number} <span className="muted">{scene.heading}</span>
-            </h2>
+            {editable && scene.source === 'manual' ? (
+              <h2>
+                Sc. {scene.number}{' '}
+                <Input
+                  key={scene.id}
+                  className="input sm inline-title"
+                  defaultValue={scene.location}
+                  placeholder="Name this setup"
+                  onBlur={(e) => renameScene(e.target.value.trim())}
+                  onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
+                />
+              </h2>
+            ) : (
+              <h2>
+                Sc. {scene.number} <span className="muted">{scene.heading}</span>
+              </h2>
+            )}
             <span className="muted small">{scene.synopsis}</span>
             {sceneShots.length > 0 && (
               <span className="muted small">{done}/{sceneShots.length} shot</span>
@@ -244,6 +306,19 @@ export default function Shots() {
                   </figcaption>
                 </figure>
               ))}
+            </div>
+          )}
+
+          {editable && view === 'list' && (
+            <div className="quick-add no-print">
+              <Input
+                value={quick}
+                placeholder="Quick add: describe the shot, press Enter"
+                onChange={(e) => setQuick(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && quickAdd()}
+              />
+              <Button onClick={quickAdd}>Add</Button>
+              <span className="muted small">or use Add shot for size, lens, movement and a storyboard frame</span>
             </div>
           )}
         </div>
