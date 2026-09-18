@@ -104,7 +104,7 @@ export default function PublicCallSheet() {
             {d.scenes.map((s, i) => (
               <li key={i}>
                 <span className="pub-sc pub-sc-time">{s.from || s.to ? `${s.from || ''}${s.to ? ` – ${s.to}` : ''}` : '–'}</span>
-                <div className="grow"><strong>{[s.intExt, s.location, s.timeOfDay].filter(Boolean).join(' · ')}</strong></div>
+                <div className="grow"><strong>{s.location || s.heading || 'Set'}</strong></div>
               </li>
             ))}
           </ul>

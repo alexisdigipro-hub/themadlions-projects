@@ -79,7 +79,7 @@ export default function CallSheets() {
         wx: wx ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
         sun: sun ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,
         loc: loc ? { name: loc.name, address: loc.address, contact: loc.contact, phone: loc.phone } : null,
-        scenes: scenes.map((s) => ({ intExt: s.intExt, location: s.location, timeOfDay: s.timeOfDay, from: sceneTime(s.id).from, to: sceneTime(s.id).to })),
+        scenes: scenes.map((s) => ({ location: s.location, heading: s.heading, from: sceneTime(s.id).from, to: sceneTime(s.id).to })),
         cast: castRows.map((r) => ({ character: r.character, name: r.actor?.name || '', phone: r.actor?.phone || '', call: r.call, photo: r.actor?.photos?.[0]?.thumb || '' })),
         crew: crewRows.map((c) => ({ name: c.name, role: c.role || c.dept, phone: c.phone || '', call: c.call, photo: c.photos?.[0]?.thumb || '' })),
         blocks: (day.blocks || []).map((b) => ({ time: b.time, end: b.end, item: b.item, owner: b.owner, notes: b.notes })),

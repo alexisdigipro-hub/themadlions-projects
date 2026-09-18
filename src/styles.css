@@ -2501,3 +2501,8 @@ html[data-public='1'] body { background: var(--bg); }
   .modal-foot { position: sticky; bottom: 0; background: var(--panel); padding-bottom: calc(12px + env(safe-area-inset-bottom)); flex-wrap: wrap; z-index: 1; }
   .modal-foot .btn { flex: 1 1 auto; justify-content: center; }
 }
+
+.chip-x { background: none; border: 0; color: inherit; font: inherit; margin-left: 4px; cursor: pointer; opacity: .7; padding: 0; }
+.chip-x:hover { opacity: 1; }
+.scene-text { margin-top: 12px; }
+.input.sm { padding: 3px 8px; font-size: 13px; width: 150px; }

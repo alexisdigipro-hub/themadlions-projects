@@ -517,13 +517,17 @@ function SceneModal({ scene, onClose, editable, project, edit }) {
           <Field label="Notes for departments">
             <Textarea rows={2} value={draft.notes || ''} onChange={set('notes')} disabled={!editable} />
           </Field>
-          {draft.flags?.length > 0 && (
-            <div className="chips-static">
-              {draft.flags.map((f) => (
-                <Badge key={f} color="#D9A441">
-                  {f}
-                </Badge>
-              ))}
+          {(draft.flags?.length > 0 || editable) && (
+            <div className="field">
+              <span className="field-label">Flags</span>
+              <div className="chips-static">
+                {(draft.flags || []).map((f) => (
+                  <Badge key={f} color="#D9A441">
+                    {f}{editable && <button className="chip-x" onClick={() => setDraft({ ...draft, flags: draft.flags.filter((x) => x !== f) })} aria-label="Remove">×</button>}
+                  </Badge>
+                ))}
+                {editable && <Input className="input sm" placeholder="Add flag, Enter" onKeyDown={(e) => { if (e.key === 'Enter' && e.target.value.trim()) { setDraft({ ...draft, flags: [...new Set([...(draft.flags || []), e.target.value.trim()])] }); e.target.value = '' } }} />}
+              </div>
             </div>
           )}
           <div className="field">
@@ -587,7 +591,19 @@ function SceneModal({ scene, onClose, editable, project, edit }) {
             )}
           </div>
         </div>
-        <pre className="script-view compact">{draft.heading + '\n\n' + (draft.body || '')}</pre>
+        {editable && draft.source === 'document' ? (
+          <div className="stack scene-text">
+            <Field label="Heading"><Input value={draft.heading || ''} onChange={set('heading')} /></Field>
+            <Field label="What we see and what must happen"><Textarea rows={6} value={draft.body || ''} onChange={set('body')} /></Field>
+            <Field label="Look (light, colour, camera, mood)"><Textarea rows={3} value={draft.look || ''} onChange={set('look')} /></Field>
+            <div className="row-2">
+              <Field label="Shooting time estimate"><Input value={draft.durationHint || ''} onChange={set('durationHint')} placeholder="3 hours, half day…" /></Field>
+              <Field label="Song section"><Input value={draft.songSection || ''} onChange={set('songSection')} placeholder="Chorus 1, Bridge…" /></Field>
+            </div>
+          </div>
+        ) : (
+          <pre className="script-view compact">{draft.heading + '\n\n' + (draft.body || '') + (draft.look ? '\n\nLOOK: ' + draft.look : '')}</pre>
+        )}
       </div>
     </Modal>
   )

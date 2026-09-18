@@ -7,7 +7,7 @@ import { ELEMENT_CATEGORIES } from './store.jsx'
   so the key never leaves the server.
 */
 
-const SYSTEM = `You are a film production script breakdown assistant working for a Greek production company. You read screenplay scenes (English or Greek) and return a production breakdown as strict JSON. Never invent elements that are not in the text. Keep item names short (1-4 words) and in the language of the script. Return JSON only, no markdown fences, no commentary.`
+const SYSTEM = `You are a film production script breakdown assistant working for a Greek production company. You read screenplay scenes (English or Greek) and return a production breakdown as strict JSON. Never invent elements that are not in the text. Write every text you produce (synopsis, element names, flags) in Greek, whatever language the script is in; keep character names and proper nouns exactly as written in the script. Keep item names short (1-4 words). Return JSON only, no markdown fences, no commentary.`
 
 function buildPrompt(scenes) {
   const cats = ELEMENT_CATEGORIES.filter((c) => c !== 'Notes').map((c) => `"${c}"`).join(', ')
@@ -19,11 +19,11 @@ For each scene return:
 - "int_ext": "INT" | "EXT" | "INT/EXT"
 - "location": the set/location name from the heading
 - "time_of_day": "DAY" | "NIGHT" | "DAWN" | "DUSK" | "CONTINUOUS" | ""
-- "synopsis": one sentence, max 25 words, same language as the script
+- "synopsis": one sentence in Greek, max 25 words
 - "characters": speaking characters, uppercase names exactly as written
 - "elements": object whose keys are only from [${cats}] and values are arrays of short strings found in the scene. Only include keys that have items. "Cast" must list non-speaking named characters; "Extras" for crowds/background.
 - "eighths": integer estimate of page length in eighths of a page (1 page = 8)
-- "flags": array of short scheduling notes (e.g. "night exterior", "child actor", "water", "weapon", "vehicle stunt") or []
+- "flags": array of short scheduling notes in Greek (e.g. "νυχτερινό εξωτερικό", "παιδί ηθοποιός", "νερό", "όπλο", "stunt με όχημα") or []
 
 Return exactly: {"scenes":[...]}
 
@@ -111,7 +111,7 @@ export async function testKey(settings) {
 
 /* ---------- treatments, concepts and moodboards ---------- */
 
-const DOC_SYSTEM = `You are a line producer and first assistant director at a Greek production company. You read treatments, concepts, director's notes and moodboards (text, PDF pages, images) for music videos, commercials and films, and turn them into a shootable production breakdown as strict JSON. Group what must be shot into setups (a setup = one location and time of day, one continuous shooting situation). Be concrete and practical. Do not invent things that are not in the material, but do name what the images clearly show (wardrobe, props, lighting, locations). Keep item names short (1-4 words), in the language of the document (Greek stays Greek), character and talent names in uppercase. Return JSON only, no markdown fences, no commentary.`
+const DOC_SYSTEM = `You are a line producer and first assistant director at a Greek production company. You read treatments, concepts, director's notes and moodboards (text, PDF pages, images) for music videos, commercials and films, and turn them into a shootable production breakdown as strict JSON. Group what must be shot into setups (a setup = one location and time of day, one continuous shooting situation). Be concrete and practical. Do not invent things that are not in the material, but do name what the images clearly show (wardrobe, props, lighting, locations). Write everything you produce (title, summary, headings, synopsis, description, look, duration hints, element names, flags, shot descriptions) in Greek, whatever language the material is in; keep artist, character and brand names as written, uppercase for characters and talent. Keep item names short (1-4 words). Return JSON only, no markdown fences, no commentary.`
 
 function docPrompt({ category, notes, wantShots }) {
   const cats = ELEMENT_CATEGORIES.filter((c) => c !== 'Notes').map((c) => `"${c}"`).join(', ')
@@ -124,7 +124,7 @@ Read everything attached (text and images) and return exactly this JSON:
   "setups": [
     {
       "number": "1",
-      "heading": "LOCATION · TIME · WHAT HAPPENS (max 8 words, uppercase)",
+      "heading": "ΤΟΠΟΘΕΣΙΑ · ΩΡΑ · ΤΙ ΓΙΝΕΤΑΙ (Greek, max 8 words, uppercase)",
       "int_ext": "INT" | "EXT" | "INT/EXT",
       "location": "location or set as described",
       "time_of_day": "DAY" | "NIGHT" | "DAWN" | "DUSK" | "",
@@ -135,7 +135,7 @@ Read everything attached (text and images) and return exactly this JSON:
       "song_section": "if a SONG MAP is provided: which section(s) this setup covers, e.g. 'Chorus 1, Chorus 2', else ''",
       "characters": ["ARTIST", "GIRL"],
       "elements": { "Cast": [], "Extras": [], "Props": [], "Set dressing": [], "Wardrobe": [], "Makeup & hair": [], "Vehicles": [], "Animals": [], "Stunts": [], "Special effects": [], "VFX": [], "Sound": [], "Camera & grip": [], "Special equipment": [] },
-      "flags": ["night exterior", "water", "drone permit", "minors", "crowd"]${wantShots ? `,
+      "flags": ["νυχτερινό εξωτερικό", "νερό", "άδεια drone", "ανήλικοι", "πλήθος"]${wantShots ? `,
       "shots": [{ "size": "WS|MS|CU|ECU|OTS|POV|Insert|Establishing", "movement": "Static|Handheld|Steadicam|Dolly|Drone|Crane|Push in|Pull out|Pan|Tilt", "description": "one sentence" }]` : ''}
     }
   ],
