@@ -60,13 +60,10 @@ export default function Home() {
 
       {team.length > 0 && (
         <section className="panel team-strip-panel">
-          <div className="panel-head">
-            <h2>The team</h2>
-            <span className="muted small">
-              {day === t0 ? 'Today' : fmtDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}
-              {away.size > 0 ? ` · ${away.size} not available` : ' · everyone available'}
-              {' · pick a day in the calendar below'}
-            </span>
+          <div className="team-strip-head muted small">
+            {day === t0 ? 'Today' : fmtDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}
+            {away.size > 0 ? ` · ${away.size} not available` : ' · everyone available'}
+            {' · pick a day in the calendar below'}
           </div>
           <div className="team-strip">
             {team.map((u) => {
@@ -79,7 +76,8 @@ export default function Home() {
                   title={`${u.name}${u.profile?.position ? ` · ${u.profile.position}` : ''}${off ? ' · not available' : ''}`}
                 >
                   <span className="team-chip-photo">
-                    {u.profile?.thumb ? <img src={u.profile.thumb} alt="" /> : <span className="team-chip-initials">{initialsOf(u.name)}</span>}
+                    {/* the 320px photo, not the 96px thumb: these faces are large and would look soft on a retina screen */}
+                    {(u.profile?.photo || u.profile?.thumb) ? <img src={u.profile.photo || u.profile.thumb} alt="" /> : <span className="team-chip-initials">{initialsOf(u.name)}</span>}
                     {off && <span className="team-chip-off" aria-hidden="true">✕</span>}
                   </span>
                   <span className="team-chip-name">{(u.name || '').split(' ')[0]}</span>
