@@ -80,7 +80,6 @@ export default function CalendarView({ projectId = null, title }) {
     setDraft(null)
   }
 
-  const upcoming = events.filter((e) => e.date >= today()).sort((a, b) => a.date.localeCompare(b.date) || (a.start || '').localeCompare(b.start || '')).slice(0, 10)
   const typeOf = (k) => EVENT_TYPES.find((t) => t.key === k) || EVENT_TYPES[0]
   const projName = (id) => state.projects.find((p) => p.id === id)?.title || ''
 
@@ -187,45 +186,6 @@ export default function CalendarView({ projectId = null, title }) {
         )}
 
         <aside className="cal-side">
-          <div className="cal-side-cols">
-          <div>
-          <h3>Next up</h3>
-          {upcoming.length === 0 ? (
-            <p className="muted small">Nothing scheduled ahead.</p>
-          ) : (
-            <ul className="event-list">
-              {upcoming.map((e) => (
-                <li key={e.id}>
-                  <span className="dot" style={{ background: typeOf(e.type).color }} />
-                  <span className="ev-date">{fmtDate(e.date)}</span>
-                  <button className="ev-title link" onClick={() => setDraft({ ...e })}>
-                    {e.title}
-                  </button>
-                  {!projectId && e.projectId && <span className="muted small">{projName(e.projectId)}</span>}
-                </li>
-              ))}
-            </ul>
-          )}
-          </div>
-          <div>
-            <h3>Not available</h3>
-            {(() => {
-              const off = events.filter((e) => e.type === 'unavailable' && (e.endDate || e.date) >= today()).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 12)
-              return off.length ? (
-                <ul className="event-list">
-                  {off.map((e) => (
-                    <li key={e.id}>
-                      <span className="dot" style={{ background: typeOf('unavailable').color }} />
-                      <span className="ev-date">{fmtDate(e.date)}{e.endDate && e.endDate > e.date ? ` – ${fmtDate(e.endDate)}` : ''}</span>
-                      <button className="ev-title link" onClick={() => setDraft({ ...e })}>{personLabel(e)}</button>
-                      {e.notes && <span className="muted small">{e.notes}</span>}
-                    </li>
-                  ))}
-                </ul>
-              ) : <p className="muted small">Nobody has marked days off. Use "Not available" above to add yours.</p>
-            })()}
-          </div>
-          </div>
           <div className="legend">
             {EVENT_TYPES.map((t) => (
               <span key={t.key}>
