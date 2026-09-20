@@ -23,3 +23,6 @@ language sql stable security definer set search_path = public as $$
   select jsonb_build_object('kind', kind, 'data', data, 'updated_at', updated_at) from shares where token = p_token
 $$;
 grant execute on function share_get(text) to anon, authenticated;
+
+-- Note: supabase/share_access.sql replaces the shares_members policy above with a narrower one,
+-- so that only members with the Share permission can send delivery links. Run it after this file.

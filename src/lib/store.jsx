@@ -32,6 +32,7 @@ export const MODULES = [
   { key: 'contacts', label: 'Cast & crew' },
   { key: 'files', label: 'Files & notes' },
   { key: 'drives', label: 'Drives archive' },
+  { key: 'share', label: 'Share' },
 ]
 
 export const EVENT_TYPES = [

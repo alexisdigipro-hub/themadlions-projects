@@ -24,8 +24,8 @@ export default function Deliveries() {
   const { state } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
-  if (!can(user, 'post')) return <Navigate to="/home" replace />
-  const editable = can(user, 'post', 'edit')
+  if (!can(user, 'share')) return <Navigate to="/home" replace />
+  const editable = can(user, 'share', 'edit')
   const projects = visibleProjects(state, user)
   const [rows, setRows] = useState(undefined) // undefined = loading
   const [error, setError] = useState('')
