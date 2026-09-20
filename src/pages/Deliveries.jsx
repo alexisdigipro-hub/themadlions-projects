@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
-import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
-import { deliveryUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, tokenOf } from '../lib/shares.js'
+import { STATUSES, can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { deliveryUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, statusUrl, tokenOf } from '../lib/shares.js'
 import { fmtDate, toISODate } from '../lib/dates.js'
 
 export const STAGES = [
@@ -28,6 +28,11 @@ const emptyDelivery = () => ({
   credits: [], deliverables: [], contactName: '', contactEmail: '', contactPhone: '',
 })
 
+const emptyStatus = () => ({
+  id: uid(), projectId: '', title: '', client: '', headline: '', note: '',
+  next: [], needs: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '',
+})
+
 export default function Deliveries() {
   const { state } = useStore()
   const user = useCurrentUser()
@@ -40,6 +45,7 @@ export default function Deliveries() {
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
   const [filter, setFilter] = useState('delivery')
+  const [sdraft, setSdraft] = useState(null)
 
   const reload = () => {
     if (!state.workspace?.id) return setRows([])
@@ -128,28 +134,86 @@ export default function Deliveries() {
   const all = useMemo(() => (rows || []).map((r) => {
     const d = r.data || {}
     const isDelivery = r.kind === 'delivery'
+    const isStatus = r.kind === 'status'
     const day = d.day || {}
     return {
       ...r,
       isDelivery,
-      url: isDelivery ? deliveryUrl(r.token) : shareUrl(r.token),
+      isStatus,
+      url: isDelivery ? deliveryUrl(r.token) : isStatus ? statusUrl(r.token) : shareUrl(r.token),
       shut: !!r.closed || (!!r.expires_at && r.expires_at < today),
       answers: Array.isArray(r.responses) ? r.responses : [],
-      badge: isDelivery ? stageLabel(d.stage) : 'Call sheet',
-      badgeClass: isDelivery ? `s-${d.stage}` : 's-callsheet',
-      name: isDelivery ? d.title : (d.project?.title || 'Call sheet'),
-      version: isDelivery ? d.version : (day.index ? `Day ${day.index}${day.count ? ` of ${day.count}` : ''}` : ''),
+      badge: isDelivery ? stageLabel(d.stage) : isStatus ? 'Status' : 'Call sheet',
+      badgeClass: isDelivery ? `s-${d.stage}` : isStatus ? 's-status' : 's-callsheet',
+      name: isDelivery || isStatus ? d.title : (d.project?.title || 'Call sheet'),
+      version: isDelivery ? d.version : isStatus ? '' : (day.index ? `Day ${day.index}${day.count ? ` of ${day.count}` : ''}` : ''),
       sub: isDelivery
         ? [d.client, projTitle(d.projectId), d.sentAt ? `sent ${fmtDate(d.sentAt.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''].filter(Boolean).join(' · ')
-        : [day.date ? fmtDate(day.date, { weekday: 'short', day: 'numeric', month: 'short' }) : '', day.callTime ? `call ${day.callTime}` : ''].filter(Boolean).join(' · '),
+        : isStatus
+          ? [d.client, d.headline].filter(Boolean).join(' · ')
+          : [day.date ? fmtDate(day.date, { weekday: 'short', day: 'numeric', month: 'short' }) : '', day.callTime ? `call ${day.callTime}` : ''].filter(Boolean).join(' · '),
     }
   }), [rows, state.projects])
-  const list = useMemo(() => (filter === 'all' ? all : all.filter((r) => (filter === 'delivery' ? r.isDelivery : !r.isDelivery))), [all, filter])
-  const counts = { all: all.length, delivery: all.filter((r) => r.isDelivery).length, callsheet: all.filter((r) => !r.isDelivery).length }
+  const list = useMemo(() => (filter === 'all' ? all : all.filter((r) => r.kind === filter)), [all, filter])
+  const counts = { all: all.length, delivery: all.filter((r) => r.isDelivery).length, status: all.filter((r) => r.isStatus).length, callsheet: all.filter((r) => r.kind === 'callsheet').length }
   // These two only exist once the matching SQL file has been run, so say so rather than hiding the gap.
   const sample = all[0]
   const noReplies = !!sample && sample.responses === undefined
   const noTracking = !!sample && sample.opens === undefined
+
+  const startStatus = () => setSdraft(emptyStatus())
+  /* A status page is one per project and keeps the same link, so opening an existing one means
+     editing it rather than starting again. */
+  const openStatus = (r) => {
+    const d = r.data || {}
+    setSdraft({
+      id: d.projectId || uid(), projectId: d.projectId || '', title: d.title || '', client: d.client || '',
+      headline: d.headline || '', note: d.note || '', next: d.next || [], needs: d.needs || [],
+      contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
+      pageCloses: r.expires_at || '',
+    })
+  }
+  const pickStatusProject = (projectId) => {
+    const p = state.projects.find((x) => x.id === projectId)
+    setSdraft((d) => ({
+      ...d, projectId,
+      title: d.title || p?.title || '',
+      client: d.client || p?.client || '',
+      headline: d.headline || p?.status || '',
+    }))
+  }
+  const setS = (k, v) => setSdraft((d) => ({ ...d, [k]: v }))
+
+  const publishStatus = async () => {
+    if (!sdraft.title.trim()) return toast('Give it a title, or pick a project.', 'error')
+    setBusy(true)
+    try {
+      const cs = state.settings.callsheet || {}
+      const data = {
+        title: sdraft.title.trim(),
+        client: sdraft.client.trim(),
+        projectId: sdraft.projectId,
+        headline: sdraft.headline.trim(),
+        note: sdraft.note.trim(),
+        next: sdraft.next.filter((x) => x.what),
+        needs: sdraft.needs.filter((x) => x.what),
+        company: { name: state.workspace.name, logo: state.settings.logo || '', footer: cs.footer || '' },
+        contact: { name: sdraft.contactName.trim(), email: sdraft.contactEmail.trim(), phone: sdraft.contactPhone.trim() },
+      }
+      const ref = `status:${sdraft.projectId || sdraft.id}`
+      const url = await publishShare({ workspaceId: state.workspace.id, kind: 'status', ref, data, userId: user?.id })
+      await reopenQuietly({ workspaceId: state.workspace.id, ref })
+      try { await setShareState({ workspaceId: state.workspace.id, ref, expiresAt: sdraft.pageCloses }) } catch (e) { toast(e.message, 'error') }
+      await navigator.clipboard.writeText(statusUrl(tokenOf(url))).catch(() => {})
+      toast('Status page published, link copied', 'ok')
+      setSdraft(null)
+      reload()
+    } catch (e) {
+      toast(e.message, 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const setShut = async (r, shut) => {
     try {
@@ -162,6 +226,7 @@ export default function Deliveries() {
   return (
     <div className="deliveries">
       <PageHead title="Share" sub="Every link you have sent out of the building, and what happened to it">
+        {editable && <Button variant="ghost" onClick={startStatus}>New status page</Button>}
         {editable && <Button variant="primary" onClick={startNew}>New delivery</Button>}
       </PageHead>
 
@@ -170,7 +235,7 @@ export default function Deliveries() {
       {noTracking && <p className="muted small">Run <b>supabase/share_track.sql</b> in Supabase to see whether a link was opened, and to close one.</p>}
 
       <div className="chips">
-        {[['delivery', 'Deliveries'], ['callsheet', 'Call sheets'], ['all', 'Everything']].map(([k, label]) => (
+        {[['delivery', 'Deliveries'], ['status', 'Status pages'], ['callsheet', 'Call sheets'], ['all', 'Everything']].map(([k, label]) => (
           <button key={k} className={`chip ${filter === k ? 'on' : ''}`} onClick={() => setFilter(k)}>
             {label}
             <small>{counts[k]}</small>
@@ -217,6 +282,7 @@ export default function Deliveries() {
                   <button className="link small" onClick={() => copy(r.url, 'Link')}>Copy link</button>
                   {r.isDelivery && <button className="link small" onClick={() => copy(mailText(r), 'Message')}>Copy for email</button>}
                   <a className="link small" href={r.url} target="_blank" rel="noreferrer">Open</a>
+                  {editable && r.isStatus && <button className="link small" onClick={() => openStatus(r)}>Update</button>}
                   {editable && r.opens !== undefined && (
                     <button className="link small" onClick={() => setShut(r, !r.shut)}>{r.shut ? 'Reopen' : 'Close'}</button>
                   )}
@@ -281,11 +347,51 @@ export default function Deliveries() {
           </div>
         )}
       </Modal>
+
+      <Modal open={!!sdraft} title="Status page for the client" wide onClose={() => !busy && setSdraft(null)}
+        footer={<><Button variant="ghost" onClick={() => setSdraft(null)} disabled={busy}>Cancel</Button><Button variant="primary" onClick={publishStatus} disabled={busy}>{busy ? 'Publishing…' : 'Publish and copy link'}</Button></>}>
+        {sdraft && (
+          <div className="stack">
+            <p className="muted small">One page per project that you keep updating. The link never changes, so the client can keep it and always see where the job stands.</p>
+            <div className="row-2">
+              <Field label="Project" hint="Fills in the title, the client and the stage."><Select value={sdraft.projectId} onChange={(e) => pickStatusProject(e.target.value)} options={[['', 'Not in the app'], ...projects.map((p) => [p.id, p.title])]} /></Field>
+              <Field label="Where we are" hint="One line, big on the page."><Select value={sdraft.headline} onChange={(e) => setS('headline', e.target.value)} options={[['', 'Pick one'], ...STATUSES.map((x) => [x, x])]} /></Field>
+            </div>
+            <div className="row-2">
+              <Field label="Title"><Input value={sdraft.title} onChange={(e) => setS('title', e.target.value)} /></Field>
+              <Field label="Client / artist"><Input value={sdraft.client} onChange={(e) => setS('client', e.target.value)} /></Field>
+            </div>
+            <Field label="Your note" hint="What has happened since the last time they looked."><Textarea rows={3} value={sdraft.note} onChange={(e) => setS('note', e.target.value)} /></Field>
+            <RowEditor
+              label="What happens next"
+              hint="The steps on your side, with a date when there is one."
+              rows={sdraft.next}
+              onChange={(v) => setS('next', v)}
+              fields={[{ k: 'what', placeholder: 'Colour grade' }, { k: 'when', placeholder: '2026-10-05', type: 'date' }]}
+              addLabel="Add a step"
+            />
+            <RowEditor
+              label="What we need from you"
+              hint="So it is written down instead of chased on the phone."
+              rows={sdraft.needs}
+              onChange={(v) => setS('needs', v)}
+              fields={[{ k: 'what', placeholder: 'Approve the music' }, { k: 'when', placeholder: '2026-10-01', type: 'date' }]}
+              addLabel="Add something"
+            />
+            <div className="row-3">
+              <Field label="Who they ask"><Input value={sdraft.contactName} onChange={(e) => setS('contactName', e.target.value)} placeholder={user?.name || 'Name'} /></Field>
+              <Field label="Email"><Input value={sdraft.contactEmail} onChange={(e) => setS('contactEmail', e.target.value)} /></Field>
+              <Field label="Phone"><Input value={sdraft.contactPhone} onChange={(e) => setS('contactPhone', e.target.value)} /></Field>
+            </div>
+            <Field label="Close this page on" hint="Leave empty to keep it open until you close it by hand."><Input type="date" value={sdraft.pageCloses} onChange={(e) => setS('pageCloses', e.target.value)} /></Field>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
 
-/* A short editable list, used for the credits and the files on a final delivery. */
+/* A short editable list: the credits and files on a delivery, the steps on a status page. */
 function RowEditor({ label, hint, rows, onChange, fields, addLabel }) {
   const set = (i, k, v) => onChange(rows.map((r, j) => (j === i ? { ...r, [k]: v } : r)))
   return (
@@ -294,7 +400,7 @@ function RowEditor({ label, hint, rows, onChange, fields, addLabel }) {
       <div className="rowlist">
         {rows.map((r, i) => (
           <div key={i} className="rowlist-row">
-            {fields.map((f) => <Input key={f.k} value={r[f.k] || ''} placeholder={f.placeholder} onChange={(e) => set(i, f.k, e.target.value)} />)}
+            {fields.map((f) => <Input key={f.k} type={f.type || 'text'} value={r[f.k] || ''} placeholder={f.placeholder} onChange={(e) => set(i, f.k, e.target.value)} />)}
             <button className="link small" onClick={() => onChange(rows.filter((_, j) => j !== i))}>Remove</button>
           </div>
         ))}

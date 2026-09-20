@@ -2487,6 +2487,7 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .deliv-stage.s-treatment { background: color-mix(in srgb, #B07FD1 18%, transparent); color: #8a55ad; }
 .deliv-stage.s-lookbook { background: color-mix(in srgb, #5B9E7A 18%, transparent); color: #46805f; }
 .deliv-stage.s-callsheet { background: color-mix(in srgb, var(--muted) 16%, transparent); color: var(--muted); }
+.deliv-stage.s-status { background: color-mix(in srgb, #6C9BD1 18%, transparent); color: #4a7cb0; }
 .deliv-opens { margin-top: 2px; }
 .deliv-shut { color: var(--danger); margin-right: 8px; }
 .deliv-row.is-shut strong,
@@ -2524,6 +2525,9 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .dlv-credits > div { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: baseline; }
 .dlv-credits dt { text-align: right; color: var(--muted); font-size: 13.5px; }
 .dlv-credits dd { margin: 0; font-weight: 600; }
+.dlv-headline { margin: 24px 0 0; font-size: 20px; font-weight: 600; }
+.dlv-steps li { padding: 9px 0; border-top: 1px solid var(--line-soft); font-size: 14.5px; }
+.dlv-steps li:first-child { border-top: 0; }
 .dlv-files li { padding: 7px 0; border-top: 1px solid var(--line-soft); font-size: 14.5px; }
 .dlv-files li:first-child { border-top: 0; }
 .dlv-reply { text-align: center; }

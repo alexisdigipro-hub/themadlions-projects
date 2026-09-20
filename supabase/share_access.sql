@@ -3,9 +3,11 @@
 -- Safe to run more than once. Run it again any time you re-run shares.sql, because that file
 -- recreates the old wide-open policy.
 --
--- Share is its own permission module now. A member sees and sends delivery links only when their
--- Share permission is view or edit (administrators always can). Call sheet links are untouched:
--- they keep working for every member exactly as before.
+-- Share is its own permission module now. A member sees and sends the pages made from the Share
+-- screen (delivery pages, client status pages) only when their Share permission is view or edit
+-- (administrators always can). Call sheet links are untouched: they are made from inside the
+-- shooting day and keep working for every member exactly as before, so the rule is written as
+-- "call sheets are open, everything else needs Share" rather than naming one kind.
 
 -- the level a member has on one module, as text: 'none' | 'view' | 'edit' (administrators: 'edit')
 create or replace function my_perm(p_module text) returns text
@@ -27,14 +29,14 @@ drop policy if exists shares_edit on shares;
 drop policy if exists shares_gone on shares;
 
 create policy shares_read on shares for select
-  using (workspace_id = my_ws() and (kind <> 'delivery' or my_perm('share') <> 'none'));
+  using (workspace_id = my_ws() and (kind = 'callsheet' or my_perm('share') <> 'none'));
 
 create policy shares_new on shares for insert
-  with check (workspace_id = my_ws() and (kind <> 'delivery' or my_perm('share') = 'edit'));
+  with check (workspace_id = my_ws() and (kind = 'callsheet' or my_perm('share') = 'edit'));
 
 create policy shares_edit on shares for update
-  using (workspace_id = my_ws() and (kind <> 'delivery' or my_perm('share') = 'edit'))
-  with check (workspace_id = my_ws() and (kind <> 'delivery' or my_perm('share') = 'edit'));
+  using (workspace_id = my_ws() and (kind = 'callsheet' or my_perm('share') = 'edit'))
+  with check (workspace_id = my_ws() and (kind = 'callsheet' or my_perm('share') = 'edit'));
 
 create policy shares_gone on shares for delete
-  using (workspace_id = my_ws() and (kind <> 'delivery' or my_perm('share') = 'edit'));
+  using (workspace_id = my_ws() and (kind = 'callsheet' or my_perm('share') = 'edit'));
