@@ -1,8 +1,9 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { can, useCurrentUser, useStore } from '../lib/store.jsx'
+import { useEffect, useRef, useState } from 'react'
+import { can, useCurrentUser, useStore, whenMs } from '../lib/store.jsx'
 import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
+import { useToast } from './ui.jsx'
 
 function Logo({ name, subtitle, logo }) {
   return (
@@ -17,7 +18,7 @@ function Logo({ name, subtitle, logo }) {
 }
 
 export default function Layout() {
-  const { state, logout, viewAs, setViewAs } = useStore()
+  const { state, logout, viewAs, setViewAs, replies } = useStore()
   const user = useCurrentUser()
   const nav = useNavigate()
   const [open, setOpen] = useState(false)
@@ -29,6 +30,31 @@ export default function Layout() {
   }, [])
   const unread = (state.chat || []).filter((m) => m.createdAt > readAt && m.userId !== user?.id).length
 
+  /* Answers left by clients on delivery pages. Same idea as the chat badge: what came in since the
+     last time the Share page was opened. */
+  const [shareReadAt, setShareReadAt] = useState(() => localStorage.getItem('tml_share_read') || '')
+  useEffect(() => {
+    const h = () => setShareReadAt(localStorage.getItem('tml_share_read') || '')
+    window.addEventListener('tml-share-read', h)
+    return () => window.removeEventListener('tml-share-read', h)
+  }, [])
+  const mayShare = can(user, 'share')
+  const newReplies = mayShare ? (replies || []).filter((r) => whenMs(r.at) > whenMs(shareReadAt)).length : 0
+
+  // A reply landing while the app is open says so at once, rather than waiting to be found.
+  const toast = useToast()
+  const lastReply = useRef(null)
+  useEffect(() => {
+    const latest = replies?.length ? whenMs(replies[replies.length - 1].at) : 0
+    if (lastReply.current === null) { lastReply.current = latest; return } // first load is not news
+    if (mayShare && latest > lastReply.current) {
+      const r = replies[replies.length - 1]
+      const what = r.status === 'approved' ? 'approved the cut' : r.status === 'changes' ? 'asked for changes' : 'answered'
+      toast(`${r.name || 'A client'} ${what}`, r.status === 'approved' ? 'ok' : undefined)
+    }
+    lastReply.current = latest
+  }, [replies, mayShare])
+
   const items = [
     { to: '/home', label: 'Home', show: true, icon: 'home' },
     { to: '/', label: 'Projects', end: true, show: can(user, 'projects'), icon: 'projects' },
@@ -38,7 +64,7 @@ export default function Layout() {
     { to: '/mywork', label: 'My work', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: can(user, 'contacts') || can(user, 'locations'), icon: 'database' },
     { to: '/drives', label: 'Drives', show: can(user, 'drives'), icon: 'drives' },
-    { to: '/share', label: 'Share', show: can(user, 'share'), icon: 'post' },
+    { to: '/share', label: 'Share', show: mayShare, icon: 'post', badge: newReplies },
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance' },
     { to: '/team', label: 'Team', show: user?.role === 'admin', icon: 'team' },
     // second to last on purpose: Settings is always shown, so My profile always sits just above it

@@ -233,6 +233,9 @@ const memberToUser = (m) => ({
 })
 
 const VIEW_AS_KEY = 'tml_view_as'
+/* Postgres writes a timestamp as ...+00:00 and the browser writes ...Z, so the two never compare
+   correctly as text. Everything that asks "is this newer than that" goes through here. */
+export const whenMs = (v) => { const n = Date.parse(v || ''); return Number.isFinite(n) ? n : 0 }
 
 export function StoreProvider({ children }) {
   const [state, setState] = useState(() => (remote ? emptyState() : adapter.load() || emptyState()))
@@ -249,6 +252,8 @@ export function StoreProvider({ children }) {
   // "View as": an administrator looking at the app through someone else's permissions. It lives in
   // sessionStorage, so closing the tab ends it and it never follows anyone to another device.
   const [viewAs, setViewAs] = useState(() => { try { return sessionStorage.getItem(VIEW_AS_KEY) || '' } catch { return '' } })
+  // Every answer a client has left on a delivery page, oldest first.
+  const [replies, setReplies] = useState([])
   const prevRef = useRef(state)
   const timers = useRef({})
   const myWrites = useRef(new Set())
@@ -256,6 +261,34 @@ export function StoreProvider({ children }) {
   useEffect(() => {
     try { viewAs ? sessionStorage.setItem(VIEW_AS_KEY, viewAs) : sessionStorage.removeItem(VIEW_AS_KEY) } catch { /* private window */ }
   }, [viewAs])
+
+  /* Clients answer through share_respond(), which writes straight to the database and never touches
+     this app's state, so the only way to know is to ask. Asked every minute and a half rather than
+     pushed: it is a handful of short rows, and for someone who does not have the app open the real
+     answer is a notification on the phone, which is its own piece of work. */
+  const mayShare = !!membership && (membership.role === 'admin' || ['view', 'edit'].includes(membership.permissions?.share))
+  useEffect(() => {
+    const ws = membership?.workspace_id
+    if (!remote || !mayShare || !ws) { setReplies([]); return }
+    let stop = false
+    const read = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return
+      // No error message on purpose: the responses column only exists once deliveries.sql has been
+      // run, and a missing badge is better than a warning on every page.
+      const { data, error } = await supabase.from('shares').select('token, responses').eq('workspace_id', ws).eq('kind', 'delivery')
+      if (stop || error) return
+      const out = []
+      for (const row of data || []) {
+        for (const r of Array.isArray(row.responses) ? row.responses : []) out.push({ ...r, token: row.token })
+      }
+      out.sort((a, b) => whenMs(a.at) - whenMs(b.at))
+      setReplies(out)
+    }
+    read()
+    const timer = setInterval(read, 90000)
+    document.addEventListener('visibilitychange', read)
+    return () => { stop = true; clearInterval(timer); document.removeEventListener('visibilitychange', read) }
+  }, [mayShare, membership?.workspace_id])
 
   /* local mode persistence */
   useEffect(() => {
@@ -833,6 +866,7 @@ export function StoreProvider({ children }) {
       syncError,
       viewAs,
       setViewAs,
+      replies,
       auth,
       invite,
       removeInvite,
@@ -840,7 +874,7 @@ export function StoreProvider({ children }) {
       login: (id) => setSessionId(id),
       logout: () => { setViewAs(''); return remote ? auth.signOut() : setSessionId('') },
     }
-  }, [state, sessionId, ready, authUser, membership, invites, syncError, viewAs])
+  }, [state, sessionId, ready, authUser, membership, invites, syncError, viewAs, replies])
 
   return <StoreCtx.Provider value={api}>{children}</StoreCtx.Provider>
 }

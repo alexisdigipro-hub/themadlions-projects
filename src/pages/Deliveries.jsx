@@ -52,6 +52,13 @@ export default function Deliveries() {
     listShares(state.workspace.id).then(setRows).catch((e) => { setError(e.message); setRows([]) })
   }
   useEffect(reload, [state.workspace?.id])
+  /* Opening this page counts as having seen the clients' answers, which clears the badge in the
+     sidebar. Marked once the rows are actually on screen, not on mount. */
+  useEffect(() => {
+    if (rows === undefined) return
+    localStorage.setItem('tml_share_read', new Date().toISOString())
+    window.dispatchEvent(new Event('tml-share-read'))
+  }, [rows])
 
   const projTitle = (id) => projects.find((p) => p.id === id)?.title || ''
   // The credits and the deliverables are already in the project, so this offers them rather
