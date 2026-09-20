@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
-import { STATUSES, can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { STATUSES, can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
 import { deliveryUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, statusUrl, tokenOf } from '../lib/shares.js'
 import { fmtDate, toISODate } from '../lib/dates.js'
 
@@ -25,7 +25,7 @@ const RESPONSE = { approved: 'Approved', changes: 'Changes asked', seen: 'Seen' 
 const emptyDelivery = () => ({
   id: uid(), projectId: '', stage: 'rough', version: '', title: '', client: '',
   link: '', linkLabel: '', password: '', linkExpires: '', pageCloses: '', note: '', feedbackBy: '',
-  credits: [], deliverables: [], contactName: '', contactEmail: '', contactPhone: '',
+  credits: [], deliverables: [], recipients: [], contactName: '', contactEmail: '', contactPhone: '',
 })
 
 const emptyStatus = () => ({
@@ -110,16 +110,29 @@ export default function Deliveries() {
         contact: { name: draft.contactName.trim(), email: draft.contactEmail.trim(), phone: draft.contactPhone.trim() },
         sentAt: new Date().toISOString(),
       }
+      /* One page per person when names are given, so an answer carries a name you can trust and you
+         can see who has not opened it yet. No names means one page for everybody, as before. */
       const ref = `delivery:${draft.id}`
-      const url = await publishShare({ workspaceId: state.workspace.id, kind: 'delivery', ref, data, userId: user?.id })
+      const people = draft.recipients.filter((p) => (p.name || '').trim())
+      const targets = people.length
+        ? people.map((p, i) => ({ ref: `${ref}:r${i + 1}`, recipient: { name: p.name.trim(), email: (p.email || '').trim() } }))
+        : [{ ref, recipient: null }]
+      let firstUrl = ''
+      for (const t of targets) {
+        const url = await publishShare({ workspaceId: state.workspace.id, kind: 'delivery', ref: t.ref, data: { ...data, recipient: t.recipient }, userId: user?.id })
+        if (!firstUrl) firstUrl = url
+      }
       await reopenQuietly({ workspaceId: state.workspace.id, ref })
       if (draft.pageCloses) {
-        // the page is published either way; only the closing date can fail, and it says why
+        // the pages are published either way; only the closing date can fail, and it says why
         try { await setShareState({ workspaceId: state.workspace.id, ref, expiresAt: draft.pageCloses }) } catch (e) { toast(e.message, 'error') }
       }
-      const token = tokenOf(url)
-      await navigator.clipboard.writeText(deliveryUrl(token)).catch(() => {})
-      toast('Delivery page published, link copied', 'ok')
+      if (targets.length === 1) {
+        await navigator.clipboard.writeText(deliveryUrl(tokenOf(firstUrl))).catch(() => {})
+        toast('Delivery page published, link copied', 'ok')
+      } else {
+        toast(`${targets.length} pages published, one per person. Copy each link from the list.`, 'ok')
+      }
       setDraft(null)
       reload()
     } catch (e) {
@@ -161,8 +174,31 @@ export default function Deliveries() {
           : [day.date ? fmtDate(day.date, { weekday: 'short', day: 'numeric', month: 'short' }) : '', day.callTime ? `call ${day.callTime}` : ''].filter(Boolean).join(' · '),
     }
   }), [rows, state.projects])
-  const list = useMemo(() => (filter === 'all' ? all : all.filter((r) => r.kind === filter)), [all, filter])
-  const counts = { all: all.length, delivery: all.filter((r) => r.isDelivery).length, status: all.filter((r) => r.isStatus).length, callsheet: all.filter((r) => r.kind === 'callsheet').length }
+  /* A delivery sent to five people is five rows in the table but one thing on this page, so the rows
+     are grouped back together by the part of the ref before the recipient. */
+  const groups = useMemo(() => {
+    const m = new Map()
+    for (const r of all) {
+      const key = r.isDelivery ? r.ref.split(':').slice(0, 2).join(':') : r.ref
+      if (!m.has(key)) m.set(key, { key, rows: [] })
+      m.get(key).rows.push(r)
+    }
+    return [...m.values()].map((g) => {
+      const head = g.rows[0]
+      // r1, r2, r3: the order they were typed in, not the order they were last touched.
+      const named = g.rows.filter((r) => r.data?.recipient?.name).sort((a, b) => a.ref.localeCompare(b.ref, 'en', { numeric: true }))
+      return {
+        ...g,
+        head,
+        people: named.length ? named : [],
+        shut: g.rows.every((r) => r.shut),
+        // whenMs, not text: the two timestamp formats never compare correctly as strings.
+        answers: g.rows.flatMap((r) => r.answers).sort((a, b) => whenMs(a.at) - whenMs(b.at)),
+      }
+    })
+  }, [all])
+  const list = useMemo(() => (filter === 'all' ? groups : groups.filter((g) => g.head.kind === filter)), [groups, filter])
+  const counts = { all: groups.length, delivery: groups.filter((g) => g.head.isDelivery).length, status: groups.filter((g) => g.head.isStatus).length, callsheet: groups.filter((g) => g.head.kind === 'callsheet').length }
   // These two only exist once the matching SQL file has been run, so say so rather than hiding the gap.
   const sample = all[0]
   const noReplies = !!sample && sample.responses === undefined
@@ -222,9 +258,9 @@ export default function Deliveries() {
     }
   }
 
-  const setShut = async (r, shut) => {
+  const setShut = async (ref, shut, one = false) => {
     try {
-      await setShareState({ workspaceId: state.workspace.id, ref: r.ref, closed: shut })
+      await setShareState({ workspaceId: state.workspace.id, ref, closed: shut, one })
       toast(shut ? 'Link closed' : 'Link open again', 'ok')
       reload()
     } catch (e) { toast(e.message, 'error') }
@@ -260,40 +296,67 @@ export default function Deliveries() {
         </Empty>
       ) : (
         <ul className="plain deliv-list">
-          {list.map((r) => {
-            const last = r.answers[r.answers.length - 1]
+          {list.map((g) => {
+            const r = g.head
+            const last = g.answers[g.answers.length - 1]
+            const one = !g.people.length
             return (
-              <li key={r.token} className={`deliv-row${r.shut ? ' is-shut' : ''}`}>
+              <li key={g.key} className={`deliv-row${g.shut ? ' is-shut' : ''}`}>
                 <span className={`deliv-stage ${r.badgeClass}`}>{r.badge}</span>
                 <div className="grow">
                   <strong>{r.name}{r.version ? <span className="muted"> · {r.version}</span> : null}</strong>
                   <div className="small muted">{r.sub}</div>
-                  {(r.shut || r.opens !== undefined) && (
+                  {one && (g.shut || r.opens !== undefined) && (
                     <div className="small muted deliv-opens">
-                      {r.shut && <b className="deliv-shut">Closed</b>}
+                      {g.shut && <b className="deliv-shut">Closed</b>}
                       {r.opens === undefined ? null
                         : r.opens > 0 ? <>Opened {r.opens} {r.opens === 1 ? 'time' : 'times'}{r.opened_at ? `, last ${fmtDate(r.opened_at.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''}</>
                         : <>Not opened yet</>}
                       {r.expires_at && !r.closed ? ` · closes ${fmtDate(r.expires_at, { day: 'numeric', month: 'short' })}` : ''}
                     </div>
                   )}
-                  {last && (
+                  {one && last && (
                     <div className={`small deliv-answer ${last.status}`}>
                       {RESPONSE[last.status] || 'Seen'}{last.name ? ` · ${last.name}` : ''}
                       {last.note ? ` · “${last.note}”` : ''}
-                      {r.answers.length > 1 ? ` · ${r.answers.length} replies` : ''}
+                      {g.answers.length > 1 ? ` · ${g.answers.length} replies` : ''}
                     </div>
+                  )}
+
+                  {!one && (
+                    <ul className="plain deliv-people">
+                      {g.people.map((p) => {
+                        const a = p.answers[p.answers.length - 1]
+                        return (
+                          <li key={p.token}>
+                            <b>{p.data.recipient.name}</b>
+                            <span className="muted small">
+                              {p.shut ? ' · closed' : ''}
+                              {p.opens === undefined ? '' : p.opens > 0 ? ` · opened ${p.opens}×` : ' · not opened'}
+                            </span>
+                            {a && <span className={`small deliv-answer ${a.status}`}> · {RESPONSE[a.status] || 'Seen'}{a.note ? ` “${a.note}”` : ''}</span>}
+                            <span className="deliv-person-tools">
+                              <button className="link small" onClick={() => copy(p.url, 'Link')}>Copy link</button>
+                              <a className="link small" href={p.url} target="_blank" rel="noreferrer">Open</a>
+                              {editable && p.opens !== undefined && (
+                                <button className="link small" onClick={() => setShut(p.ref, !p.shut, true)}>{p.shut ? 'Reopen' : 'Close'}</button>
+                              )}
+                            </span>
+                          </li>
+                        )
+                      })}
+                    </ul>
                   )}
                 </div>
                 <div className="deliv-tools">
-                  <button className="link small" onClick={() => copy(r.url, 'Link')}>Copy link</button>
-                  {r.isDelivery && <button className="link small" onClick={() => copy(mailText(r), 'Message')}>Copy for email</button>}
-                  <a className="link small" href={r.url} target="_blank" rel="noreferrer">Open</a>
+                  {one && <button className="link small" onClick={() => copy(r.url, 'Link')}>Copy link</button>}
+                  {one && r.isDelivery && <button className="link small" onClick={() => copy(mailText(r), 'Message')}>Copy for email</button>}
+                  {one && <a className="link small" href={r.url} target="_blank" rel="noreferrer">Open</a>}
                   {editable && r.isStatus && <button className="link small" onClick={() => openStatus(r)}>Update</button>}
                   {editable && r.opens !== undefined && (
-                    <button className="link small" onClick={() => setShut(r, !r.shut)}>{r.shut ? 'Reopen' : 'Close'}</button>
+                    <button className="link small" onClick={() => setShut(g.key, !g.shut)}>{g.shut ? 'Reopen all' : one ? 'Close' : 'Close all'}</button>
                   )}
-                  {editable && <Confirm onConfirm={async () => { await removeShare({ workspaceId: state.workspace.id, ref: r.ref }); reload() }} label="Delete">×</Confirm>}
+                  {editable && <Confirm onConfirm={async () => { await removeShare({ workspaceId: state.workspace.id, ref: g.key }); reload() }} label="Delete">×</Confirm>}
                 </div>
               </li>
             )
@@ -330,6 +393,15 @@ export default function Deliveries() {
               <Field label="Email"><Input value={draft.contactEmail} onChange={(e) => setD('contactEmail', e.target.value)} /></Field>
               <Field label="Phone"><Input value={draft.contactPhone} onChange={(e) => setD('contactPhone', e.target.value)} /></Field>
             </div>
+
+            <RowEditor
+              label="Send it to"
+              hint="Leave empty for one link for everybody. Add names and each person gets their own page, so you can see who opened it and who approved, without taking their word for it."
+              rows={draft.recipients}
+              onChange={(v) => setD('recipients', v)}
+              fields={[{ k: 'name', placeholder: 'Maria Vlachou' }, { k: 'email', placeholder: 'maria@client.gr' }]}
+              addLabel="Add a person"
+            />
 
             {draft.stage === 'files' && (
               <>

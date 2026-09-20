@@ -2492,6 +2492,10 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .deliv-shut { color: var(--danger); margin-right: 8px; }
 .deliv-row.is-shut strong,
 .deliv-row.is-shut .deliv-stage { opacity: .55; }
+.deliv-people { margin-top: 6px; display: flex; flex-direction: column; gap: 2px; }
+.deliv-people li { display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; font-size: 14px; padding: 3px 0; }
+.deliv-people li b { font-weight: 600; }
+.deliv-person-tools { display: inline-flex; gap: 8px; margin-left: auto; padding-left: 12px; }
 .deliv-answer.approved { color: var(--ok); font-weight: 600; }
 .deliv-answer.changes { color: #b0711c; font-weight: 600; }
 /* Without this the middle column does not expand, so the buttons sit glued to the title
@@ -2528,6 +2532,7 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .dlv-credits > div { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: baseline; }
 .dlv-credits dt { text-align: right; color: var(--muted); font-size: 13.5px; }
 .dlv-credits dd { margin: 0; font-weight: 600; }
+.dlv-for { margin: 6px 0 0; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .dlv-headline { margin: 24px 0 0; font-size: 20px; font-weight: 600; }
 .dlv-steps li { padding: 9px 0; border-top: 1px solid var(--line-soft); font-size: 14.5px; }
 .dlv-steps li:first-child { border-top: 0; }
