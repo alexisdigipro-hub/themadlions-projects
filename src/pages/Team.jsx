@@ -52,7 +52,7 @@ export default function Team() {
     email: '',
     password: '',
     role: 'member',
-    permissions: { ...defaultPermissions(state.settings?.newMemberLevel || 'view'), projects: 'view', drives: 'none' },
+    permissions: { ...defaultPermissions(state.settings?.newMemberLevel || 'view'), projects: 'view', drives: 'none', share: 'none' },
     projectAccess: 'all',
     active: true,
     createdAt: new Date().toISOString(),
