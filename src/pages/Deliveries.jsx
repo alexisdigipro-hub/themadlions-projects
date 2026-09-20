@@ -397,22 +397,20 @@ export default function Deliveries() {
                 <div className="grow">
                   <strong>{r.name}{r.version ? <span className="muted"> · {r.version}</span> : null}</strong>
                   <div className="small muted">{r.sub}</div>
-                  {one && (g.shut || r.opens !== undefined) && (
-                    <div className="small muted deliv-opens">
-                      {g.shut && <b className="deliv-shut">Closed</b>}
+                  {/* one strip of small tags instead of three grey lines that all looked the same */}
+                  {one && (g.shut || r.opens !== undefined || last) && (
+                    <div className="deliv-tags">
+                      {g.shut && <span className="deliv-tag t-shut">Closed</span>}
                       {r.opens === undefined ? null
-                        : r.opens > 0 ? <>Opened {r.opens} {r.opens === 1 ? 'time' : 'times'}{r.opened_at ? `, last ${fmtDate(r.opened_at.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''}</>
-                        : <>Not opened yet</>}
-                      {r.expires_at && !r.closed ? ` · closes ${fmtDate(r.expires_at, { day: 'numeric', month: 'short' })}` : ''}
+                        : r.opens > 0
+                          ? <span className="deliv-tag">Opened {r.opens}&#215;{r.opened_at ? ` · ${fmtDate(r.opened_at.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''}</span>
+                          : <span className="deliv-tag t-quiet">Not opened</span>}
+                      {r.expires_at && !r.closed && <span className="deliv-tag t-quiet">Closes {fmtDate(r.expires_at, { day: 'numeric', month: 'short' })}</span>}
+                      {last && <span className={`deliv-tag t-${last.status}`}>{RESPONSE[last.status] || 'Seen'}{last.name ? ` · ${last.name}` : ''}</span>}
+                      {g.answers.length > 1 && <span className="deliv-tag t-quiet">{g.answers.length} replies</span>}
                     </div>
                   )}
-                  {one && last && (
-                    <div className={`small deliv-answer ${last.status}`}>
-                      {RESPONSE[last.status] || 'Seen'}{last.name ? ` · ${last.name}` : ''}
-                      {last.note ? ` · “${last.note}”` : ''}
-                      {g.answers.length > 1 ? ` · ${g.answers.length} replies` : ''}
-                    </div>
-                  )}
+                  {one && last?.note && <p className="deliv-quote">&#8220;{last.note}&#8221;</p>}
 
                   {!one && (
                     <ul className="plain deliv-people">
@@ -421,16 +419,17 @@ export default function Deliveries() {
                         return (
                           <li key={p.token}>
                             <b>{p.data.recipient.name}</b>
-                            <span className="muted small">
-                              {p.shut ? ' · closed' : ''}
-                              {p.opens === undefined ? '' : p.opens > 0 ? ` · opened ${p.opens}×` : ' · not opened'}
+                            <span className="deliv-tags">
+                              {p.shut && <span className="deliv-tag t-shut">Closed</span>}
+                              {p.opens === undefined ? null
+                                : p.opens > 0 ? <span className="deliv-tag">Opened {p.opens}&#215;</span> : <span className="deliv-tag t-quiet">Not opened</span>}
+                              {a && <span className={`deliv-tag t-${a.status}`}>{RESPONSE[a.status] || 'Seen'}</span>}
                             </span>
-                            {a && <span className={`small deliv-answer ${a.status}`}> · {RESPONSE[a.status] || 'Seen'}{a.note ? ` “${a.note}”` : ''}</span>}
                             <span className="deliv-person-tools">
-                              <button className="link small" onClick={() => copy(p.url, 'Link')}>Copy link</button>
-                              <a className="link small" href={p.url} target="_blank" rel="noreferrer">Open</a>
+                              <button className="deliv-tool" onClick={() => copy(p.url, 'Link')}>Copy link</button>
+                              <a className="deliv-tool" href={p.url} target="_blank" rel="noreferrer">Open</a>
                               {editable && p.opens !== undefined && (
-                                <button className="link small" onClick={() => setShut(p.ref, !p.shut, true)}>{p.shut ? 'Reopen' : 'Close'}</button>
+                                <button className="deliv-tool" onClick={() => setShut(p.ref, !p.shut, true)}>{p.shut ? 'Reopen' : 'Close'}</button>
                               )}
                             </span>
                           </li>
@@ -440,15 +439,15 @@ export default function Deliveries() {
                   )}
                 </div>
                 <div className="deliv-tools">
-                  {one && <button className="link small" onClick={() => copy(r.url, 'Link')}>Copy link</button>}
-                  {one && r.isDelivery && <button className="link small" onClick={() => copy(mailText(r), 'Message')}>Copy for email</button>}
-                  {one && <a className="link small" href={r.url} target="_blank" rel="noreferrer">Open</a>}
-                  {editable && r.isStatus && <button className="link small" onClick={() => openStatus(r)}>Update</button>}
-                  {editable && isAdmin && r.isEstimate && one && <button className="link small" onClick={() => openEstimate(r)}>Update</button>}
+                  {one && <button className="deliv-tool" onClick={() => copy(r.url, 'Link')}>Copy link</button>}
+                  {one && r.isDelivery && <button className="deliv-tool" onClick={() => copy(mailText(r), 'Message')}>Copy for email</button>}
+                  {one && <a className="deliv-tool" href={r.url} target="_blank" rel="noreferrer">Open</a>}
+                  {editable && r.isStatus && <button className="deliv-tool" onClick={() => openStatus(r)}>Update</button>}
+                  {editable && isAdmin && r.isEstimate && one && <button className="deliv-tool" onClick={() => openEstimate(r)}>Update</button>}
                   {editable && r.opens !== undefined && (
-                    <button className="link small" onClick={() => setShut(g.key, !g.shut)}>{g.shut ? 'Reopen all' : one ? 'Close' : 'Close all'}</button>
+                    <button className="deliv-tool" onClick={() => setShut(g.key, !g.shut)}>{g.shut ? 'Reopen all' : one ? 'Close' : 'Close all'}</button>
                   )}
-                  {editable && <Confirm onConfirm={async () => { await removeShare({ workspaceId: state.workspace.id, ref: g.key }); reload() }} label="Delete">×</Confirm>}
+                  {editable && <Confirm className="deliv-tool deliv-tool-x" onConfirm={async () => { await removeShare({ workspaceId: state.workspace.id, ref: g.key }); reload() }} label="Delete">Delete</Confirm>}
                 </div>
               </li>
             )
