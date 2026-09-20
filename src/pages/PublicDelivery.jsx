@@ -16,7 +16,11 @@ export default function PublicDelivery() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-public', '1')
-    fetchShare(token).then((r) => setShare(r || null)).catch(() => setShare(null))
+    fetchShare(token).then((r) => {
+      setShare(r || null)
+      // A page made for one person already knows the name, so the reply form does not ask for it again.
+      if (r?.data?.recipient?.name) setName(r.data.recipient.name)
+    }).catch(() => setShare(null))
     return () => document.documentElement.removeAttribute('data-public')
   }, [token])
 
@@ -52,6 +56,7 @@ export default function PublicDelivery() {
         <div className="dlv-stage">{stageLabel(d.stage)}{d.version ? ` · ${d.version}` : ''}</div>
         <h1 className="dlv-title">{d.title}</h1>
         {d.client && <p className="dlv-client">{d.client}</p>}
+        {d.recipient?.name && <p className="dlv-for">For {d.recipient.name}</p>}
 
         <a className="dlv-btn" href={d.link} target="_blank" rel="noreferrer">
           {stageAction(d.stage)}

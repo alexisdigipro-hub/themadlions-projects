@@ -19,9 +19,13 @@ export async function publishShare({ workspaceId, kind, ref, data, userId }) {
   return shareUrl(t)
 }
 
+/* A delivery sent to several people is several rows, `delivery:<id>` plus `delivery:<id>:r1` and so
+   on, so deleting or closing one means the whole family: the row itself and anything under it. */
+const family = (q, ref) => q.or(`ref.eq.${ref},ref.like.${ref}:%`)
+
 export async function removeShare({ workspaceId, ref }) {
   if (!remote) return
-  await supabase.from('shares').delete().eq('workspace_id', workspaceId).eq('ref', ref)
+  await family(supabase.from('shares').delete().eq('workspace_id', workspaceId), ref)
 }
 
 export async function fetchShare(t) {
@@ -49,13 +53,14 @@ export async function listShares(workspaceId) {
 }
 
 /* Closing a link, reopening it, or giving it a date to close itself. */
-export async function setShareState({ workspaceId, ref, closed, expiresAt }) {
+export async function setShareState({ workspaceId, ref, closed, expiresAt, one = false }) {
   if (!remote) return
   const patch = {}
   if (closed !== undefined) patch.closed = !!closed
   if (expiresAt !== undefined) patch.expires_at = expiresAt || null
   if (!Object.keys(patch).length) return
-  const { error } = await supabase.from('shares').update(patch).eq('workspace_id', workspaceId).eq('ref', ref)
+  const base = supabase.from('shares').update(patch).eq('workspace_id', workspaceId)
+  const { error } = await (one ? base.eq('ref', ref) : family(base, ref))
   if (error) throw new Error(error.code === '42703' ? 'Run supabase/share_track.sql in the Supabase SQL editor to close and reopen links.' : error.message)
 }
 
