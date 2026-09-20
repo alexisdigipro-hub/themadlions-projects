@@ -3,11 +3,11 @@
 -- Safe to run more than once. Run it again any time you re-run shares.sql, because that file
 -- recreates the old wide-open policy.
 --
--- Share is its own permission module now. A member sees and sends the pages made from the Share
--- screen (delivery pages, client status pages) only when their Share permission is view or edit
--- (administrators always can). Call sheet links are untouched: they are made from inside the
--- shooting day and keep working for every member exactly as before, so the rule is written as
--- "call sheets are open, everything else needs Share" rather than naming one kind.
+-- Three levels, decided per kind of page:
+--   call sheets  : every member, as before. They are made from inside the shooting day.
+--   estimates    : administrators only. A cost estimation is money, like Finance.
+--   everything else (deliveries, status pages, and anything added later): needs the Share
+--                  permission, so a new kind of page is covered by default rather than escaping.
 
 -- the level a member has on one module, as text: 'none' | 'view' | 'edit' (administrators: 'edit')
 create or replace function my_perm(p_module text) returns text
@@ -29,14 +29,31 @@ drop policy if exists shares_edit on shares;
 drop policy if exists shares_gone on shares;
 
 create policy shares_read on shares for select
-  using (workspace_id = my_ws() and (kind = 'callsheet' or my_perm('share') <> 'none'));
+  using (workspace_id = my_ws() and case kind
+    when 'callsheet' then true
+    when 'estimate' then is_admin()
+    else my_perm('share') <> 'none' end);
 
 create policy shares_new on shares for insert
-  with check (workspace_id = my_ws() and (kind = 'callsheet' or my_perm('share') = 'edit'));
+  with check (workspace_id = my_ws() and case kind
+    when 'callsheet' then true
+    when 'estimate' then is_admin()
+    else my_perm('share') = 'edit' end);
 
 create policy shares_edit on shares for update
-  using (workspace_id = my_ws() and (kind = 'callsheet' or my_perm('share') = 'edit'))
-  with check (workspace_id = my_ws() and (kind = 'callsheet' or my_perm('share') = 'edit'));
+  using (workspace_id = my_ws() and case kind
+    when 'callsheet' then true
+    when 'estimate' then is_admin()
+    else my_perm('share') = 'edit' end)
+  with check (workspace_id = my_ws() and case kind
+    when 'callsheet' then true
+    when 'estimate' then is_admin()
+    else my_perm('share') = 'edit' end);
 
 create policy shares_gone on shares for delete
-  using (workspace_id = my_ws() and (kind = 'callsheet' or my_perm('share') = 'edit'));
+  using (workspace_id = my_ws() and case kind
+    when 'callsheet' then true
+    when 'estimate' then is_admin()
+    else my_perm('share') = 'edit' end);
+
+-- share_get stays SECURITY DEFINER, so a client opening the link is unaffected by any of this.
