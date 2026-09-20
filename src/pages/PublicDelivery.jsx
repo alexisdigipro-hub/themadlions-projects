@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { fetchShare, respondToDelivery } from '../lib/shares.js'
-import { stageLabel } from './Deliveries.jsx'
+import { stageAction, stageLabel } from './Deliveries.jsx'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
@@ -21,6 +21,9 @@ export default function PublicDelivery() {
   }, [token])
 
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading…</p></div>
+  if (share?.closed) {
+    return <div className="pub"><div className="pub-card"><h1>This link is closed</h1><p className="muted">The production has closed this page. Ask them for a fresh one.</p></div></div>
+  }
   if (!share || share.kind !== 'delivery') {
     return <div className="pub"><div className="pub-card"><h1>This link has expired</h1><p className="muted">Ask the production for a fresh one.</p></div></div>
   }
@@ -51,7 +54,7 @@ export default function PublicDelivery() {
         {d.client && <p className="dlv-client">{d.client}</p>}
 
         <a className="dlv-btn" href={d.link} target="_blank" rel="noreferrer">
-          {d.stage === 'files' ? 'Download the files' : 'Watch the cut'}
+          {stageAction(d.stage)}
         </a>
         <p className="dlv-under">
           {[d.linkLabel, d.linkExpires ? `available until ${fmt(d.linkExpires)}` : ''].filter(Boolean).join(' · ')}

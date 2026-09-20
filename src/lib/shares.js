@@ -3,6 +3,7 @@ import { remote, supabase } from './supabase.js'
 const token = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, '0')).join('')
 export const shareUrl = (t) => `${location.origin}${location.pathname}#/s/${t}`
 export const deliveryUrl = (t) => `${location.origin}${location.pathname}#/d/${t}`
+export const statusUrl = (t) => `${location.origin}${location.pathname}#/ps/${t}`
 /* publishShare hands back a /s/ url; a delivery needs the token out of it to build its own. */
 export const tokenOf = (url) => String(url || '').split('/').filter(Boolean).pop() || ''
 
@@ -30,20 +31,42 @@ export async function fetchShare(t) {
   return data
 }
 
-/* Every delivery page the team has published, newest first. Members read the shares table
-   directly; only the client's replies come through a function. */
-export async function listDeliveries(workspaceId) {
+/* Every public link the team has published, newest first: delivery pages and call sheet pages
+   together, because Alex wanted one place that shows what is out there. Members read the shares
+   table directly; only the client's replies come through a function.
+   select('*') on purpose: opens, closed and responses only exist once the matching SQL file has
+   been run, and asking for them by name would fail the whole query instead of just missing them. */
+export async function listShares(workspaceId) {
   if (!remote) return []
   const { data, error } = await supabase
     .from('shares')
-    .select('token, ref, data, responses, created_at, updated_at')
+    .select('*')
     .eq('workspace_id', workspaceId)
-    .eq('kind', 'delivery')
     .order('updated_at', { ascending: false })
   if (error && error.code === '42P01') throw new Error('Run supabase/shares.sql in the Supabase SQL editor to enable share links.')
-  if (error && error.code === '42703') throw new Error('Run supabase/deliveries.sql in the Supabase SQL editor to enable delivery pages.')
   if (error) throw error
   return data || []
+}
+
+/* Closing a link, reopening it, or giving it a date to close itself. */
+export async function setShareState({ workspaceId, ref, closed, expiresAt }) {
+  if (!remote) return
+  const patch = {}
+  if (closed !== undefined) patch.closed = !!closed
+  if (expiresAt !== undefined) patch.expires_at = expiresAt || null
+  if (!Object.keys(patch).length) return
+  const { error } = await supabase.from('shares').update(patch).eq('workspace_id', workspaceId).eq('ref', ref)
+  if (error) throw new Error(error.code === '42703' ? 'Run supabase/share_track.sql in the Supabase SQL editor to close and reopen links.' : error.message)
+}
+
+/* Publishing again means the link should work again. Quiet on purpose: if share_track.sql has not
+   been run there is no closed column to clear, and that must not break publishing. */
+export async function reopenQuietly({ workspaceId, ref }) {
+  try {
+    await setShareState({ workspaceId, ref, closed: false })
+  } catch {
+    /* no closed column yet, nothing to reopen */
+  }
 }
 
 /* The client approving or asking for changes. The only write anyone without an account can make. */

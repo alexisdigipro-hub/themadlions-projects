@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { remote, supabase } from './supabase.js'
+import { toISODate } from './dates.js'
 
 /*
   Data layer.
@@ -34,6 +35,20 @@ export const MODULES = [
   { key: 'drives', label: 'Drives archive' },
   { key: 'share', label: 'Share' },
 ]
+
+/* Ready-made permission sets, so a new person is one click instead of eighteen dropdowns.
+   Whatever a preset does not name is 'none'. Finance stays administrators only, whatever is set here. */
+export const ROLE_PRESETS = [
+  ['Producer', { projects: 'edit', calendar: 'edit', tasks: 'edit', schedule: 'edit', callsheets: 'edit', contacts: 'edit', locations: 'edit', files: 'edit', reports: 'view', budget: 'view', gear: 'view', drives: 'view', script: 'view', breakdown: 'view', shots: 'view', music: 'view', post: 'view', share: 'edit' }],
+  ['Director', { projects: 'view', script: 'edit', breakdown: 'edit', shots: 'edit', music: 'edit', files: 'edit', tasks: 'edit', calendar: 'view', schedule: 'view', callsheets: 'view', contacts: 'view', locations: 'view', gear: 'view', reports: 'view', post: 'view', drives: 'view', share: 'view' }],
+  ['Editor', { projects: 'view', post: 'edit', files: 'edit', drives: 'edit', music: 'view', calendar: 'view', tasks: 'edit', share: 'view' }],
+  ['1st AD', { projects: 'view', schedule: 'edit', callsheets: 'edit', tasks: 'edit', calendar: 'edit', contacts: 'edit', locations: 'edit', breakdown: 'view', shots: 'view', gear: 'view', files: 'view' }],
+  ['Crew', { projects: 'view', callsheets: 'view', calendar: 'view', tasks: 'view' }],
+  ['Accountant', { projects: 'view', budget: 'edit', gear: 'view', reports: 'view', files: 'view' }],
+]
+export function presetPermissions(preset) {
+  return Object.fromEntries(MODULES.map((m) => [m.key, preset[m.key] || 'none']))
+}
 
 export const EVENT_TYPES = [
   { key: 'shoot', label: 'Shoot day', color: '#C8503F' },
@@ -207,12 +222,17 @@ const memberToUser = (m) => ({
   name: m.name || m.email,
   email: m.email,
   role: m.role,
-  permissions: { ...defaultPermissions(m.role === 'admin' ? 'edit' : 'view'), ...(m.permissions || {}) },
+  // 'none' and not 'view': this fills in only the modules a member's stored row has never heard of,
+  // which in practice means whatever module was added after they joined. Filling those with view
+  // handed every new part of the app to everyone the day it shipped.
+  permissions: { ...defaultPermissions(m.role === 'admin' ? 'edit' : 'none'), ...(m.permissions || {}) },
   projectAccess: m.project_access === 'all' || m.project_access === '"all"' ? 'all' : m.project_access,
   active: m.active !== false,
   profile: m.profile || {}, // { photo, thumb, position, dept, phone, bio, birthday, showPhone }
   createdAt: m.created_at,
 })
+
+const VIEW_AS_KEY = 'tml_view_as'
 
 export function StoreProvider({ children }) {
   const [state, setState] = useState(() => (remote ? emptyState() : adapter.load() || emptyState()))
@@ -226,9 +246,16 @@ export function StoreProvider({ children }) {
   const [membership, setMembership] = useState(undefined) // undefined = unknown, null = no access
   const [invites, setInvites] = useState([])
   const [syncError, setSyncError] = useState('')
+  // "View as": an administrator looking at the app through someone else's permissions. It lives in
+  // sessionStorage, so closing the tab ends it and it never follows anyone to another device.
+  const [viewAs, setViewAs] = useState(() => { try { return sessionStorage.getItem(VIEW_AS_KEY) || '' } catch { return '' } })
   const prevRef = useRef(state)
   const timers = useRef({})
   const myWrites = useRef(new Set())
+
+  useEffect(() => {
+    try { viewAs ? sessionStorage.setItem(VIEW_AS_KEY, viewAs) : sessionStorage.removeItem(VIEW_AS_KEY) } catch { /* private window */ }
+  }, [viewAs])
 
   /* local mode persistence */
   useEffect(() => {
@@ -716,8 +743,10 @@ export function StoreProvider({ children }) {
   }
 
   const api = useMemo(() => {
+    // Looking as someone else is a preview and nothing more. Every write is stopped here rather
+    // than in each page, so nothing can be saved, posted or logged under their name by accident.
     const update = (fn) =>
-      setState((s) => {
+      viewAs ? undefined : setState((s) => {
         const next = fn(structuredClone(s))
         syncDiff(prevRef.current, next)
         prevRef.current = next
@@ -733,6 +762,7 @@ export function StoreProvider({ children }) {
         return s
       })
     const replaceState = (nextState) => {
+      if (viewAs) return
       const next = migrate({ ...nextState })
       if (remote) {
         // import projects and events; users and workspace stay as they are on the server
@@ -801,14 +831,16 @@ export function StoreProvider({ children }) {
       membership,
       invites,
       syncError,
+      viewAs,
+      setViewAs,
       auth,
       invite,
       removeInvite,
       localBackup,
       login: (id) => setSessionId(id),
-      logout: () => (remote ? auth.signOut() : setSessionId('')),
+      logout: () => { setViewAs(''); return remote ? auth.signOut() : setSessionId('') },
     }
-  }, [state, sessionId, ready, authUser, membership, invites, syncError])
+  }, [state, sessionId, ready, authUser, membership, invites, syncError, viewAs])
 
   return <StoreCtx.Provider value={api}>{children}</StoreCtx.Provider>
 }
@@ -818,14 +850,31 @@ export function useStore() {
 }
 
 export function useCurrentUser() {
-  const { state, sessionId } = useStore()
-  return state.users.find((u) => u.id === sessionId && u.active !== false) || null
+  const { state, sessionId, viewAs } = useStore()
+  const me = state.users.find((u) => u.id === sessionId && u.active !== false) || null
+  if (!viewAs || viewAs === sessionId || me?.role !== 'admin') return me
+  const them = state.users.find((u) => u.id === viewAs)
+  if (!them) return me
+  /* A preview, never a hand-over. Their role drops to member and every 'edit' becomes 'view', so the
+     screen shows exactly what they see while nothing on it can be used to write. The store refuses
+     writes as well, so the two together make the session read-only. */
+  const permissions = Object.fromEntries(Object.entries(them.permissions || {}).map(([k, v]) => [k, v === 'edit' ? 'view' : v]))
+  return { ...them, role: 'member', permissions, viewingAs: them.name || 'this member' }
 }
 
 /* ---------- permissions ---------- */
+/* Access given until a date, for the freelancer who is on one job. The day after, every module
+   reads as none and no project is reachable, without anyone having to remember to take it away.
+   Administrators are never cut off this way, so nobody can lock the owner out of his own app. */
+export function accessEnded(user) {
+  const until = user?.permissions?.accessUntil
+  return !!user && user.role !== 'admin' && !!until && until < toISODate(new Date())
+}
+
 export function can(user, moduleKey, level = 'view') {
   if (!user) return false
   if (user.role === 'admin') return true
+  if (accessEnded(user)) return false
   const has = user.permissions?.[moduleKey] || 'none'
   if (level === 'view') return has === 'view' || has === 'edit'
   return has === 'edit'
@@ -834,6 +883,7 @@ export function can(user, moduleKey, level = 'view') {
 export function canAccessProject(user, projectId) {
   if (!user) return false
   if (user.role === 'admin') return true
+  if (accessEnded(user)) return false
   if (user.projectAccess === 'all') return true
   return Array.isArray(user.projectAccess) && user.projectAccess.includes(projectId)
 }

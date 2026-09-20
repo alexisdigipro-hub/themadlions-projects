@@ -26,3 +26,6 @@ grant execute on function share_get(text) to anon, authenticated;
 
 -- Note: supabase/share_access.sql replaces the shares_members policy above with a narrower one,
 -- so that only members with the Share permission can send delivery links. Run it after this file.
+
+-- Note: supabase/share_track.sql replaces share_get above with one that counts openings and
+-- honours a closed or expired link. Run it after this file.

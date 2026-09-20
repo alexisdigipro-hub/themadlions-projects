@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Badge, Button, Confirm, Field, Input, Modal, PageHead, Select, useToast } from '../components/ui.jsx'
-import { MODULES, defaultPermissions, uid, useCurrentUser, useStore } from '../lib/store.jsx'
+import { MODULES, ROLE_PRESETS, accessEnded, defaultPermissions, presetPermissions, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { initialsOf } from './Profile.jsx'
 
 const LEVELS = [
@@ -11,9 +11,10 @@ const LEVELS = [
 ]
 
 export default function Team() {
-  const { state, update, mode, invites, invite, removeInvite } = useStore()
+  const { state, update, mode, invites, invite, removeInvite, setViewAs } = useStore()
   const me = useCurrentUser()
   const toast = useToast()
+  const nav = useNavigate()
   const [draft, setDraft] = useState(null)
   const remote = mode === 'remote'
 
@@ -92,7 +93,9 @@ export default function Team() {
               </td>
               <td>{u.email}</td>
               <td>
-                <Badge color={u.role === 'admin' ? '#C8503F' : undefined}>{u.active === false ? 'deactivated' : u.role}</Badge>
+                <Badge color={u.role === 'admin' ? '#C8503F' : accessEnded(u) ? '#d8564a' : undefined}>
+                  {u.active === false ? 'deactivated' : accessEnded(u) ? 'access ended' : u.role}
+                </Badge>
               </td>
               <td className="small">{u.role === 'admin' || u.projectAccess === 'all' ? 'All' : `${(u.projectAccess || []).length} selected`}</td>
               <td className="small muted">
@@ -106,6 +109,11 @@ export default function Team() {
                 <Button size="sm" variant="ghost" onClick={() => setDraft({ ...u, password: '' })}>
                   Edit
                 </Button>
+                {u.id !== me.id && u.active !== false && u.role !== 'admin' && (
+                  <Button size="sm" variant="ghost" onClick={() => { setViewAs(u.id); nav('/home') }}>
+                    View as
+                  </Button>
+                )}
                 {u.id !== me.id && u.active === false && (
                   <Confirm
                     label="Remove"
@@ -232,6 +240,22 @@ export default function Team() {
                   </div>
                 )}
 
+                <Field label="Access until" hint="For someone who is here for one job. The day after, every module reads as no access until you clear the date. Leave empty for no end.">
+                  <Input type="date" value={draft.permissions?.accessUntil || ''} onChange={(e) => setDraft({ ...draft, permissions: { ...draft.permissions, accessUntil: e.target.value } })} />
+                </Field>
+
+                <div className="field">
+                  <span className="field-label">Start from a role</span>
+                  <div className="chips">
+                    {ROLE_PRESETS.map(([label, perms]) => (
+                      <button key={label} type="button" className="chip" onClick={() => setDraft({ ...draft, permissions: { ...presetPermissions(perms), accessUntil: draft.permissions?.accessUntil || '' } })}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  <span className="field-hint">Fills the list below. Change whatever you want afterwards.</span>
+                </div>
+
                 <div className="field">
                   <span className="field-label">What they can do in each module</span>
                   <div className="perm-grid">
@@ -249,13 +273,13 @@ export default function Team() {
                     ))}
                   </div>
                   <div className="row-actions">
-                    <button className="link" onClick={() => setDraft({ ...draft, permissions: defaultPermissions('view') })}>
+                    <button className="link" onClick={() => setDraft({ ...draft, permissions: { ...defaultPermissions('view'), accessUntil: draft.permissions?.accessUntil || '' } })}>
                       All view
                     </button>
-                    <button className="link" onClick={() => setDraft({ ...draft, permissions: defaultPermissions('edit') })}>
+                    <button className="link" onClick={() => setDraft({ ...draft, permissions: { ...defaultPermissions('edit'), accessUntil: draft.permissions?.accessUntil || '' } })}>
                       All edit
                     </button>
-                    <button className="link" onClick={() => setDraft({ ...draft, permissions: defaultPermissions('none') })}>
+                    <button className="link" onClick={() => setDraft({ ...draft, permissions: { ...defaultPermissions('none'), accessUntil: draft.permissions?.accessUntil || '' } })}>
                       Clear
                     </button>
                   </div>

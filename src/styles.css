@@ -2458,6 +2458,40 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .deliv-stage.s-prefinal { background: color-mix(in srgb, #6C9BD1 18%, transparent); color: #4a7cb0; }
 .deliv-stage.s-final { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
 .deliv-stage.s-files { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.viewas-bar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+}
+.viewas-bar button {
+  font: inherit;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, .6);
+  background: transparent;
+  color: #fff;
+  border-radius: 999px;
+  padding: 3px 14px;
+  cursor: pointer;
+}
+.viewas-bar button:hover { background: rgba(255, 255, 255, .16); }
+.deliv-stage.s-treatment { background: color-mix(in srgb, #B07FD1 18%, transparent); color: #8a55ad; }
+.deliv-stage.s-lookbook { background: color-mix(in srgb, #5B9E7A 18%, transparent); color: #46805f; }
+.deliv-stage.s-callsheet { background: color-mix(in srgb, var(--muted) 16%, transparent); color: var(--muted); }
+.deliv-stage.s-status { background: color-mix(in srgb, #6C9BD1 18%, transparent); color: #4a7cb0; }
+.deliv-opens { margin-top: 2px; }
+.deliv-shut { color: var(--danger); margin-right: 8px; }
+.deliv-row.is-shut strong,
+.deliv-row.is-shut .deliv-stage { opacity: .55; }
 .deliv-answer.approved { color: var(--ok); font-weight: 600; }
 .deliv-answer.changes { color: #b0711c; font-weight: 600; }
 .deliv-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
@@ -2491,6 +2525,9 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .dlv-credits > div { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: baseline; }
 .dlv-credits dt { text-align: right; color: var(--muted); font-size: 13.5px; }
 .dlv-credits dd { margin: 0; font-weight: 600; }
+.dlv-headline { margin: 24px 0 0; font-size: 20px; font-weight: 600; }
+.dlv-steps li { padding: 9px 0; border-top: 1px solid var(--line-soft); font-size: 14.5px; }
+.dlv-steps li:first-child { border-top: 0; }
 .dlv-files li { padding: 7px 0; border-top: 1px solid var(--line-soft); font-size: 14.5px; }
 .dlv-files li:first-child { border-top: 0; }
 .dlv-reply { text-align: center; }
