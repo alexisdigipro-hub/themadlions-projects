@@ -15,6 +15,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Scene detection in English and Greek (INT./EXT., ΕΣΩΤ./ΕΞΩΤ., DAY/NIGHT, ΜΕΡΑ/ΝΥΧΤΑ), characters, page eighths
 - Treatment, concept and moodboard breakdown: upload a director's treatment, a concept in plain words, a PDF moodboard with images or reference photos; Claude groups the material into shootable setups (location, time of day, talent, wardrobe, props, art, effects, equipment, look, time estimate), lists locations, talent and producer notes, and can draft a first shot list. Built for music videos and commercials that never had a screenplay
 - AI breakdown with Claude: props, wardrobe, vehicles, SFX, extras, flags per scene, plus reports by character, location and element. CSV export
+- Production sheet (Breakdown > Sheet): the grid you used to rebuild by hand in a spreadsheet. Scenes down the page, characters across it, a dot where someone plays. Group the scenes by **set**, by **shooting day**, by **day or night**, or leave them in script order; each group shows its scene count and page total, and the bottom row says how many scenes each person is in. The scene and set columns stay pinned while you scroll sideways. Download .csv to open it in Google Sheets or print it
 - Shot list per scene: size, angle, movement, gear, lens, camera, storyboard frames, list and board views, CSV and print
 - Stripboard schedule: shoot days, scene assignment, industry strip colours, unscheduled pool
 - Day Out of Days for cast (SW / W / WF / SWF / H) computed from the stripboard

@@ -19,6 +19,7 @@ export default function Breakdown() {
   const [open, setOpen] = useState(null)
   const [progress, setProgress] = useState(null)
   const [view, setView] = useState('scenes')
+  const [groupBy, setGroupBy] = useState('set')
   const [doc, setDoc] = useState(null) // { files, notes, useText, wantShots, mode, paste }
   const [docBusy, setDocBusy] = useState('')
   const [paste, setPaste] = useState('') // text pasted straight into the page
@@ -195,6 +196,63 @@ export default function Breakdown() {
     return { chars: sortObj(chars), locs: sortObj(locs), els: Object.entries(els).map(([cat, o]) => [cat, sortObj(o)]) }
   }, [project.scenes])
 
+  /* The production sheet: scenes down the page, characters across it. Grouping is the whole point.
+     On a board you want everything that happens in one set together, not the order the script tells
+     it in, which is why this was being redone by hand in a spreadsheet. */
+  const sheet = useMemo(() => {
+    const chars = summary.chars.map(([name]) => name)
+    const days = [...(project.shootingDays || [])].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+    const dayLabel = new Map(days.map((d, i) => [d.id, `Day ${i + 1}${d.date ? ` · ${d.date}` : ''}`]))
+    const keyOf = (sc) => {
+      if (groupBy === 'set') return sc.location || 'No set'
+      if (groupBy === 'day') return dayLabel.get(sc.dayId) || 'Not scheduled yet'
+      if (groupBy === 'dn') return sc.timeOfDay || 'No time of day'
+      return ''
+    }
+    const order = new Map()
+    const map = new Map()
+    for (const sc of project.scenes) {
+      const k = keyOf(sc)
+      if (!map.has(k)) { map.set(k, []); order.set(k, order.size) }
+      map.get(k).push(sc)
+    }
+    let groups = [...map.entries()].map(([label, rows]) => ({
+      label,
+      rows,
+      eighths: rows.reduce((a, x) => a + (x.eighths || 0), 0),
+    }))
+    // Whatever has no group of its own belongs at the bottom, not wherever the script first hit it.
+    if (groupBy !== 'none') {
+      const loose = (g) => /^(No set|Not scheduled yet|No time of day)$/.test(g.label)
+      groups = [...groups.filter((g) => !loose(g)), ...groups.filter(loose)]
+    }
+    if (groupBy === 'day') {
+      const rank = new Map([...dayLabel.values()].map((l, i) => [l, i]))
+      groups.sort((a, b) => (rank.get(a.label) ?? 9999) - (rank.get(b.label) ?? 9999))
+    }
+    const per = chars.map((c) => project.scenes.filter((sc) => (sc.characters || []).includes(c)).length)
+    return { chars, groups, per, dayLabel }
+  }, [project.scenes, project.shootingDays, summary.chars, groupBy])
+
+  const sheetCsv = () => {
+    const q = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`
+    const head = ['Group', 'Scene', 'INT/EXT', 'Set', 'D/N', 'Pages', 'Day', ...sheet.chars]
+    const lines = [head.map(q).join(',')]
+    for (const g of sheet.groups) {
+      for (const sc of g.rows) {
+        lines.push([
+          g.label, sc.number, sc.intExt || '', sc.location || '', sc.timeOfDay || '',
+          formatPages(sc.eighths), sheet.dayLabel.get(sc.dayId) || '',
+          ...sheet.chars.map((c) => ((sc.characters || []).includes(c) ? 'X' : '')),
+        ].map(q).join(','))
+      }
+    }
+    lines.push(['Scenes each', '', '', '', '', '', '', ...sheet.per].map(q).join(','))
+    // BOM first, or Excel opens Greek names as gibberish.
+    download(`${project.title || 'production'}-sheet.csv`, '\ufeff' + lines.join('\r\n'), 'text/csv')
+  }
+
+
   const exportCSV = () => {
     const head = ['Scene', 'INT/EXT', 'Location', 'Time', 'Pages', 'Characters', ...ELEMENT_CATEGORIES, 'Synopsis']
     const rows = project.scenes.map((s) => [
@@ -332,7 +390,7 @@ export default function Breakdown() {
       ) : (
         <>
           <div className="segmented">
-            {['scenes', 'characters', 'elements'].map((v) => (
+            {['scenes', 'characters', 'elements', 'sheet'].map((v) => (
               <button key={v} className={view === v ? 'on' : ''} onClick={() => setView(v)}>
                 {v[0].toUpperCase() + v.slice(1)}
               </button>
@@ -409,6 +467,69 @@ export default function Breakdown() {
                 </table>
               </section>
             </div>
+          )}
+
+          {view === 'sheet' && (
+            sheet.chars.length === 0 ? (
+              <Empty title="No characters yet">Detect scenes first, or run the AI breakdown. The sheet is built from who appears in each scene.</Empty>
+            ) : (
+              <section className="panel prod-panel">
+                <div className="panel-head">
+                  <h2>Production sheet <span className="muted small">{project.scenes.length} scenes · {sheet.chars.length} characters</span></h2>
+                  <div className="row-actions">
+                    <Select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} options={[['set', 'Group by set'], ['day', 'Group by shooting day'], ['dn', 'Group by day / night'], ['none', 'Script order']]} />
+                    <Button variant="ghost" onClick={sheetCsv}>Download .csv</Button>
+                  </div>
+                </div>
+                <div className="prod-scroll">
+                  <table className="prod-sheet">
+                    <thead>
+                      <tr>
+                        <th className="prod-sc">Sc.</th>
+                        <th className="prod-set">Set</th>
+                        <th>D/N</th>
+                        <th>Pages</th>
+                        {sheet.chars.map((c) => <th key={c} className="prod-char"><span>{c}</span></th>)}
+                      </tr>
+                    </thead>
+                    {sheet.groups.map((g) => (
+                      <tbody key={g.label || 'all'}>
+                        {groupBy !== 'none' && (
+                          <tr className="prod-group">
+                            <th colSpan={4 + sheet.chars.length}>
+                              {/* sticky inside the row, so the group name stays readable when the
+                                  table is scrolled right to reach the far characters */}
+                              <span className="prod-glabel">
+                                {g.label} <span className="muted">· {g.rows.length} {g.rows.length === 1 ? 'scene' : 'scenes'} · {formatPages(g.eighths)}</span>
+                              </span>
+                            </th>
+                          </tr>
+                        )}
+                        {g.rows.map((sc) => (
+                          <tr key={sc.id}>
+                            <td className="prod-sc">{sc.number}</td>
+                            <td className="prod-set">{[sc.intExt, sc.location || sc.heading].filter(Boolean).join(' ')}</td>
+                            <td>{sc.timeOfDay}</td>
+                            <td>{formatPages(sc.eighths)}</td>
+                            {sheet.chars.map((c) => (
+                              <td key={c} className={(sc.characters || []).includes(c) ? 'on' : ''}>
+                                {(sc.characters || []).includes(c) ? '\u25cf' : ''}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    ))}
+                    <tfoot>
+                      <tr>
+                        <th className="prod-sc" colSpan={4}>Scenes each</th>
+                        {sheet.per.map((n, i) => <th key={sheet.chars[i]}>{n}</th>)}
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </section>
+            )
           )}
 
           {view === 'elements' &&
