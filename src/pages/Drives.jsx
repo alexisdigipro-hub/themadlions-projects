@@ -10,6 +10,22 @@ const emptyDrive = () => ({ id: uid(), name: '', series: '', capacity: '', free:
 const emptyItem = () => ({ id: uid(), title: '', projectId: '', size: '', date: '', notes: '' })
 const seriesOf = (d) => d.series || d.name.replace(/[\s\d(].*$/, '').toUpperCase() || 'Other'
 
+/* Capacity and free space are typed by hand ("4 TB", "1,5 TB", "904 GB"), so the fullness bar
+   only appears when both of them can actually be read. Anything unparseable just stays text. */
+export const parseSize = (s) => {
+  const m = /^\s*([\d.,]+)\s*(tb|gb|mb|t|g|m)?b?\s*$/i.exec(String(s || ''))
+  if (!m) return 0
+  const n = Number(m[1].replace(',', '.'))
+  if (!Number.isFinite(n) || n <= 0) return 0
+  const u = (m[2] || 'gb').toLowerCase()
+  return n * (u.startsWith('t') ? 1024 : u.startsWith('m') ? 1 / 1024 : 1)
+}
+export const fullness = (capacity, free) => {
+  const c = parseSize(capacity)
+  if (!c || !String(free || '').trim()) return null // no free space typed in means we do not know
+  return Math.min(100, Math.max(0, Math.round(((c - parseSize(free)) / c) * 100)))
+}
+
 export default function Drives() {
   const { state, update } = useStore()
   const user = useCurrentUser()
@@ -22,6 +38,7 @@ export default function Drives() {
   const [q, setQ] = useState('')
   const [draft, setDraft] = useState(null)
   const [item, setItem] = useState(null) // { driveId, ...item }
+  const [openId, setOpenId] = useState('') // the disk whose contents are open below the shelf
 
   const filtered = useMemo(() => {
     if (!q.trim()) return drives
@@ -47,7 +64,21 @@ export default function Drives() {
     s.settings = { ...s.settings, driveSeriesOrder: cur }
     return s
   })
-  const hit = (it) => q.trim() && matchText(q, it.title, it.notes, projects.find((p) => p.id === it.projectId)?.title)
+  const searching = !!q.trim()
+  // Searching is a different question from browsing: you are not asking what is on the shelf,
+  // you are asking which disk holds one thing. So it answers with the things, not the shelf.
+  const results = useMemo(() => {
+    if (!searching) return []
+    const out = []
+    for (const d of drives) {
+      for (const it of d.items || []) {
+        if (matchText(q, it.title, it.notes, projects.find((p) => p.id === it.projectId)?.title, d.name, d.where)) out.push({ d, it })
+      }
+    }
+    return out.sort((a, b) => a.d.name.localeCompare(b.d.name, undefined, { numeric: true }) || (a.it.title || '').localeCompare(b.it.title || ''))
+  }, [drives, q, projects, searching])
+  const diskHits = useMemo(() => (searching ? drives.filter((d) => matchText(q, d.name, d.where, d.notes)) : []), [drives, q, searching])
+  const openDisk = (id) => { setQ(''); setOpenId(id) }
   const totalItems = drives.reduce((a, d) => a + (d.items || []).length, 0)
 
   const saveDrive = () => {
@@ -86,6 +117,64 @@ export default function Drives() {
   })
   const projTitle = (id) => projects.find((p) => p.id === id)?.title
 
+  const openedDisk = drives.find((d) => d.id === openId)
+
+  const itemRow = (d, it) => (
+    <li key={it.id} className="drive-row">
+      <div className="grow">
+        {it.projectId && projTitle(it.projectId)
+          ? <Link to={`/p/${it.projectId}`} className="drive-item-title">{it.title || projTitle(it.projectId)}</Link>
+          : <span className="drive-item-title">{it.title}</span>}
+        {(it.size || it.date || it.notes) && <div className="small muted">{[it.size, it.date, it.notes].filter(Boolean).join(' · ')}</div>}
+      </div>
+      {editable && (
+        <span className="drive-item-tools">
+          <button className="link small" onClick={() => setItem({ driveId: d.id, ...it })}>Edit</button>
+          <Confirm onConfirm={() => removeItem(d.id, it.id)} label="Remove">×</Confirm>
+        </span>
+      )}
+    </li>
+  )
+
+  const contents = (d) => (
+    <section className="panel drive-open">
+      <div className="panel-head drive-open-head">
+        <h2>{d.name}</h2>
+        <span className="muted small">
+          {[d.capacity, d.free ? `${d.free} free` : '', d.where, `${(d.items || []).length} project${(d.items || []).length === 1 ? '' : 's'}`].filter(Boolean).join(' · ')}
+        </span>
+        <span className="grow" />
+        {editable && <button className="link small" onClick={() => setItem({ driveId: d.id, ...emptyItem() })}>Add project</button>}
+        {editable && <button className="link small" onClick={() => setDraft({ ...d })}>Edit disk</button>}
+        {editable && <Confirm onConfirm={() => { removeDrive(d.id); setOpenId('') }} label="Delete disk">×</Confirm>}
+        <button className="link small" onClick={() => setOpenId('')}>Close</button>
+      </div>
+      {d.notes && <p className="small muted drive-open-notes">{d.notes}</p>}
+      {(d.items || []).length
+        ? <ul className="plain drive-rows">{d.items.map((it) => itemRow(d, it))}</ul>
+        : <p className="muted drive-open-empty">Nothing listed on this disk yet.{editable ? ' Use Add project above.' : ''}</p>}
+    </section>
+  )
+
+  const card = (d) => {
+    const pct = fullness(d.capacity, d.free)
+    const n = (d.items || []).length
+    return (
+      <button key={d.id} className={`drive st-${d.status || 'inuse'} ${openId === d.id ? 'on' : ''}`} onClick={() => setOpenId(openId === d.id ? '' : d.id)}>
+        <header className="drive-head">
+          <div className="drive-icon" aria-hidden="true"><span /></div>
+          <strong className="grow">{d.name}</strong>
+          <span className={`drive-status ${d.status || 'inuse'}`}>{statusLabel(d.status)}</span>
+        </header>
+        {pct !== null && (
+          <div className="drive-bar" title={`${pct}% full`}><span style={{ width: `${pct}%` }} /></div>
+        )}
+        <div className="drive-meta small muted">{[d.capacity, d.free ? `${d.free} free` : '', d.where].filter(Boolean).join(' · ') || 'No details yet'}</div>
+        <div className="drive-count">{n ? `${n} project${n === 1 ? '' : 's'}` : 'Empty'}</div>
+      </button>
+    )
+  }
+
   return (
     <div className="drives wide-page">
       <PageHead title="Drives archive" sub={`${drives.length} disk${drives.length === 1 ? '' : 's'} · ${totalItems} project${totalItems === 1 ? '' : 's'} archived · ${drives.filter((d) => d.status === 'empty').length} empty`}>
@@ -93,65 +182,54 @@ export default function Drives() {
       </PageHead>
       <div className="toolbar">
         <Input className="input search drives-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Which disk has… (project, artist, note)" />
-        {q && <span className="muted small">{filtered.length} disk{filtered.length === 1 ? '' : 's'} match</span>}
+        {searching && <span className="muted small">{results.length} result{results.length === 1 ? '' : 's'}</span>}
       </div>
 
       {!drives.length ? (
         <Empty title="No disks yet" action={editable && <Button variant="primary" onClick={() => setDraft(emptyDrive())}>Add the first disk</Button>}>
           Add every hard disk and SSD (LION 01, SIMBA 02, TML 05…) and list which projects live on each one. Then anyone can search "where is the Sabanis clip" and get the disk.
         </Empty>
-      ) : !filtered.length ? (
-        <Empty title="Not on any disk">Nothing matches "{q}". Check the spelling or the project name.</Empty>
+      ) : searching ? (
+        <>
+          {diskHits.length > 0 && (
+            <div className="drive-hits">
+              <span className="muted small">Disks:</span>
+              {diskHits.map((d) => <button key={d.id} className="chip" onClick={() => openDisk(d.id)}>{d.name}</button>)}
+            </div>
+          )}
+          {!results.length ? (
+            <Empty title="Not on any disk">Nothing matches "{q}". Check the spelling or the project name.</Empty>
+          ) : (
+            <ul className="plain drive-results">
+              {results.map(({ d, it }) => (
+                <li key={`${d.id}:${it.id}`} className="drive-result">
+                  <div className="grow">
+                    {it.projectId && projTitle(it.projectId)
+                      ? <Link to={`/p/${it.projectId}`} className="drive-item-title">{it.title || projTitle(it.projectId)}</Link>
+                      : <span className="drive-item-title">{it.title}</span>}
+                    {(it.size || it.date || it.notes) && <div className="small muted">{[it.size, it.date, it.notes].filter(Boolean).join(' · ')}</div>}
+                  </div>
+                  <button className="drive-result-disk" onClick={() => openDisk(d.id)} title="Open this disk">{d.name}</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       ) : (
         groups.map(([series, list]) => (
           <section key={series} className="drive-series">
             <h2 className="drive-series-title">
               {series} <span className="muted small">{list.length}</span>
-              {editable && !q && (
+              {editable && (
                 <span className="drive-series-move">
                   <button className="link" onClick={() => moveSeries(series, -1)} disabled={allSeries.indexOf(series) === 0} title="Move up">▲</button>
                   <button className="link" onClick={() => moveSeries(series, 1)} disabled={allSeries.indexOf(series) === allSeries.length - 1} title="Move down">▼</button>
                 </span>
               )}
             </h2>
-            <div className="drive-grid">
-              {list.map((d) => (
-                <article key={d.id} className={`drive st-${d.status || 'inuse'}`}>
-                  <header className="drive-head">
-                    <div className="drive-icon" aria-hidden="true"><span /></div>
-                    <div className="grow">
-                      <strong>{d.name}</strong>
-                      <div className="small muted">{[d.capacity, d.free ? `${d.free} free` : '', d.where].filter(Boolean).join(' · ')}</div>
-                    </div>
-                    <span className={`drive-status ${d.status || 'inuse'}`}>{statusLabel(d.status)}</span>
-                  </header>
-                  {(d.items || []).length ? (
-                    <ul className="plain drive-items">
-                      {d.items.map((it) => (
-                        <li key={it.id} className={hit(it) ? 'hit' : ''}>
-                          <div className="grow">
-                            {it.projectId && projTitle(it.projectId) ? <Link to={`/p/${it.projectId}`} className="drive-item-title">{it.title || projTitle(it.projectId)}</Link> : <span className="drive-item-title">{it.title}</span>}
-                            {(it.size || it.date || it.notes) && <div className="small muted">{[it.size, it.date, it.notes].filter(Boolean).join(' · ')}</div>}
-                          </div>
-                          {editable && <span className="drive-item-tools"><button className="link small" onClick={() => setItem({ driveId: d.id, ...it })}>Edit</button><Confirm onConfirm={() => removeItem(d.id, it.id)} label="Remove">×</Confirm></span>}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="drive-empty muted">EMPTY</p>
-                  )}
-                  {d.notes && <p className="small muted drive-notes">{d.notes}</p>}
-                  {editable && (
-                    <footer className="drive-foot">
-                      <button className="link small" onClick={() => setItem({ driveId: d.id, ...emptyItem() })}>+ Add</button>
-                      <span className="grow" />
-                      <button className="link small" onClick={() => setDraft({ ...d })}>Edit</button>
-                      <Confirm onConfirm={() => removeDrive(d.id)} label="Delete disk">×</Confirm>
-                    </footer>
-                  )}
-                </article>
-              ))}
-            </div>
+            <div className="drive-grid">{list.map(card)}</div>
+            {/* the open disk sits under its own row of the shelf, not at the bottom of the page */}
+            {openedDisk && list.some((d) => d.id === openedDisk.id) && contents(openedDisk)}
           </section>
         ))
       )}
