@@ -46,6 +46,7 @@ Read this first; the detail behind each line is in the pull request that carried
 
 ### Share, as it stands
 One page in the sidebar holding every public link the company has out, with a filter: Deliveries, Estimates (administrators only), Status pages, Call sheets, Everything. Per link: whether it was opened and when, Close and Reopen, a date to close itself, Copy link, Copy for email, Delete.
+A row reads as a title, one muted line, then a strip of small tags (`.deliv-tag`) carrying opened / closing / the answer, with the client's words quoted under a rule. The actions are quiet borderless buttons (`.deliv-tool`) that only light up on hover, and Delete only goes red when pointed at. `.plain li` carries a bottom border, so `.deliv-row` and the people rows switch it off rather than stacking two lines.
 - **Deliveries** (kind `delivery`): rough cut, prefinal, final cut, final files, treatment, lookbook. Credits and file list pre-filled from the project. The client presses Approve or Ask for changes.
 - **Cost estimations** (kind `estimate`): his own cost lines, added and removed freely, grouped by a heading with a subtotal each, then discount, VAT, total, valid until, payment terms. The client presses Accept. **Administrators only**, in the app and in the database, because it is money. The arithmetic is in src/lib/estimate.js so the form and the client's page cannot disagree.
 - **Status pages** (kind `status`): one living page per project, same link forever, updated in place.
