@@ -2494,6 +2494,9 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .deliv-row.is-shut .deliv-stage { opacity: .55; }
 .deliv-answer.approved { color: var(--ok); font-weight: 600; }
 .deliv-answer.changes { color: #b0711c; font-weight: 600; }
+/* Without this the middle column does not expand, so the buttons sit glued to the title
+   instead of at the right edge of the row. .grow is only ever defined per component. */
+.deliv-row .grow { flex: 1; min-width: 0; }
 .deliv-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 @media (max-width: 820px) {
   .deliv-list li.deliv-row { flex-wrap: wrap; padding: 12px; }
