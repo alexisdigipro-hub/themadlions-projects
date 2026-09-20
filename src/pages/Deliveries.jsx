@@ -2,21 +2,29 @@ import { useEffect, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
-import { deliveryUrl, listDeliveries, publishShare, removeShare, tokenOf } from '../lib/shares.js'
-import { fmtDate } from '../lib/dates.js'
+import { deliveryUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, tokenOf } from '../lib/shares.js'
+import { fmtDate, toISODate } from '../lib/dates.js'
 
 export const STAGES = [
   ['rough', 'Rough cut'],
   ['prefinal', 'Prefinal'],
   ['final', 'Final cut'],
   ['files', 'Final files'],
+  ['treatment', 'Treatment'],
+  ['lookbook', 'Lookbook'],
 ]
+/* What the big button says. A treatment is read, a cut is watched, files are downloaded. */
+export const stageAction = (k) =>
+  k === 'files' ? 'Download the files'
+  : k === 'treatment' ? 'Read the treatment'
+  : k === 'lookbook' ? 'Open the lookbook'
+  : 'Watch the cut'
 export const stageLabel = (k) => STAGES.find((s) => s[0] === k)?.[1] || 'Rough cut'
 const RESPONSE = { approved: 'Approved', changes: 'Changes asked', seen: 'Seen' }
 
 const emptyDelivery = () => ({
   id: uid(), projectId: '', stage: 'rough', version: '', title: '', client: '',
-  link: '', linkLabel: '', password: '', linkExpires: '', note: '', feedbackBy: '',
+  link: '', linkLabel: '', password: '', linkExpires: '', pageCloses: '', note: '', feedbackBy: '',
   credits: [], deliverables: [], contactName: '', contactEmail: '', contactPhone: '',
 })
 
@@ -31,10 +39,11 @@ export default function Deliveries() {
   const [error, setError] = useState('')
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [filter, setFilter] = useState('delivery')
 
   const reload = () => {
     if (!state.workspace?.id) return setRows([])
-    listDeliveries(state.workspace.id).then(setRows).catch((e) => { setError(e.message); setRows([]) })
+    listShares(state.workspace.id).then(setRows).catch((e) => { setError(e.message); setRows([]) })
   }
   useEffect(reload, [state.workspace?.id])
 
@@ -88,7 +97,13 @@ export default function Deliveries() {
         contact: { name: draft.contactName.trim(), email: draft.contactEmail.trim(), phone: draft.contactPhone.trim() },
         sentAt: new Date().toISOString(),
       }
-      const url = await publishShare({ workspaceId: state.workspace.id, kind: 'delivery', ref: `delivery:${draft.id}`, data, userId: user?.id })
+      const ref = `delivery:${draft.id}`
+      const url = await publishShare({ workspaceId: state.workspace.id, kind: 'delivery', ref, data, userId: user?.id })
+      await reopenQuietly({ workspaceId: state.workspace.id, ref })
+      if (draft.pageCloses) {
+        // the page is published either way; only the closing date can fail, and it says why
+        try { await setShareState({ workspaceId: state.workspace.id, ref, expiresAt: draft.pageCloses }) } catch (e) { toast(e.message, 'error') }
+      }
       const token = tokenOf(url)
       await navigator.clipboard.writeText(deliveryUrl(token)).catch(() => {})
       toast('Delivery page published, link copied', 'ok')
@@ -109,39 +124,87 @@ export default function Deliveries() {
     return `${d.title}${d.version ? ` · ${d.version}` : ''} — ${stageLabel(d.stage)}\n\n${deliveryUrl(r.token)}\n\n${state.workspace.name}`
   }
 
-  const list = useMemo(() => (rows || []).map((r) => ({
-    ...r,
-    answers: Array.isArray(r.responses) ? r.responses : [],
-  })), [rows])
+  const today = toISODate(new Date()) // local date, not UTC: a link must not look closed a day early
+  const all = useMemo(() => (rows || []).map((r) => {
+    const d = r.data || {}
+    const isDelivery = r.kind === 'delivery'
+    const day = d.day || {}
+    return {
+      ...r,
+      isDelivery,
+      url: isDelivery ? deliveryUrl(r.token) : shareUrl(r.token),
+      shut: !!r.closed || (!!r.expires_at && r.expires_at < today),
+      answers: Array.isArray(r.responses) ? r.responses : [],
+      badge: isDelivery ? stageLabel(d.stage) : 'Call sheet',
+      badgeClass: isDelivery ? `s-${d.stage}` : 's-callsheet',
+      name: isDelivery ? d.title : (d.project?.title || 'Call sheet'),
+      version: isDelivery ? d.version : (day.index ? `Day ${day.index}${day.count ? ` of ${day.count}` : ''}` : ''),
+      sub: isDelivery
+        ? [d.client, projTitle(d.projectId), d.sentAt ? `sent ${fmtDate(d.sentAt.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''].filter(Boolean).join(' · ')
+        : [day.date ? fmtDate(day.date, { weekday: 'short', day: 'numeric', month: 'short' }) : '', day.callTime ? `call ${day.callTime}` : ''].filter(Boolean).join(' · '),
+    }
+  }), [rows, state.projects])
+  const list = useMemo(() => (filter === 'all' ? all : all.filter((r) => (filter === 'delivery' ? r.isDelivery : !r.isDelivery))), [all, filter])
+  const counts = { all: all.length, delivery: all.filter((r) => r.isDelivery).length, callsheet: all.filter((r) => !r.isDelivery).length }
+  // These two only exist once the matching SQL file has been run, so say so rather than hiding the gap.
+  const sample = all[0]
+  const noReplies = !!sample && sample.responses === undefined
+  const noTracking = !!sample && sample.opens === undefined
+
+  const setShut = async (r, shut) => {
+    try {
+      await setShareState({ workspaceId: state.workspace.id, ref: r.ref, closed: shut })
+      toast(shut ? 'Link closed' : 'Link open again', 'ok')
+      reload()
+    } catch (e) { toast(e.message, 'error') }
+  }
 
   return (
     <div className="deliveries">
-      <PageHead title="Share" sub="Send a cut or the final files as a page with your logo, instead of a bare link">
+      <PageHead title="Share" sub="Every link you have sent out of the building, and what happened to it">
         {editable && <Button variant="primary" onClick={startNew}>New delivery</Button>}
       </PageHead>
 
       {error && <p className="muted small">{error}</p>}
+      {noReplies && <p className="muted small">Run <b>supabase/deliveries.sql</b> in Supabase to collect the clients' answers.</p>}
+      {noTracking && <p className="muted small">Run <b>supabase/share_track.sql</b> in Supabase to see whether a link was opened, and to close one.</p>}
+
+      <div className="chips">
+        {[['delivery', 'Deliveries'], ['callsheet', 'Call sheets'], ['all', 'Everything']].map(([k, label]) => (
+          <button key={k} className={`chip ${filter === k ? 'on' : ''}`} onClick={() => setFilter(k)}>
+            {label}
+            <small>{counts[k]}</small>
+          </button>
+        ))}
+      </div>
 
       {rows === undefined ? (
         <p className="muted">Loading…</p>
       ) : !list.length ? (
-        <Empty title="Nothing sent yet" action={editable && <Button variant="primary" onClick={startNew}>Send the first one</Button>}>
-          Paste the link you already made on SwissTransfer or WeTransfer, choose the stage, and the app gives you a page
-          with your logo to send instead. The client opens it, downloads, and can approve or ask for changes right there.
+        <Empty title={filter === 'callsheet' ? 'No call sheet links yet' : 'Nothing sent yet'} action={editable && filter !== 'callsheet' && <Button variant="primary" onClick={startNew}>Send the first one</Button>}>
+          {filter === 'callsheet'
+            ? 'Call sheet links are made from the day itself, inside the project. They show up here so you can see what is still open and close it when the shoot is over.'
+            : 'Paste the link you already made on SwissTransfer or WeTransfer, choose the stage, and the app gives you a page with your logo to send instead. The client opens it, downloads, and can approve or ask for changes right there.'}
         </Empty>
       ) : (
         <ul className="plain deliv-list">
           {list.map((r) => {
-            const d = r.data
             const last = r.answers[r.answers.length - 1]
             return (
-              <li key={r.token} className="deliv-row">
-                <span className={`deliv-stage s-${d.stage}`}>{stageLabel(d.stage)}</span>
+              <li key={r.token} className={`deliv-row${r.shut ? ' is-shut' : ''}`}>
+                <span className={`deliv-stage ${r.badgeClass}`}>{r.badge}</span>
                 <div className="grow">
-                  <strong>{d.title}{d.version ? <span className="muted"> · {d.version}</span> : null}</strong>
-                  <div className="small muted">
-                    {[d.client, projTitle(d.projectId), d.sentAt ? `sent ${fmtDate(d.sentAt.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''].filter(Boolean).join(' · ')}
-                  </div>
+                  <strong>{r.name}{r.version ? <span className="muted"> · {r.version}</span> : null}</strong>
+                  <div className="small muted">{r.sub}</div>
+                  {(r.shut || r.opens !== undefined) && (
+                    <div className="small muted deliv-opens">
+                      {r.shut && <b className="deliv-shut">Closed</b>}
+                      {r.opens === undefined ? null
+                        : r.opens > 0 ? <>Opened {r.opens} {r.opens === 1 ? 'time' : 'times'}{r.opened_at ? `, last ${fmtDate(r.opened_at.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''}</>
+                        : <>Not opened yet</>}
+                      {r.expires_at && !r.closed ? ` · closes ${fmtDate(r.expires_at, { day: 'numeric', month: 'short' })}` : ''}
+                    </div>
+                  )}
                   {last && (
                     <div className={`small deliv-answer ${last.status}`}>
                       {RESPONSE[last.status] || 'Seen'}{last.name ? ` · ${last.name}` : ''}
@@ -151,9 +214,12 @@ export default function Deliveries() {
                   )}
                 </div>
                 <div className="deliv-tools">
-                  <button className="link small" onClick={() => copy(deliveryUrl(r.token), 'Link')}>Copy link</button>
-                  <button className="link small" onClick={() => copy(mailText(r), 'Message')}>Copy for email</button>
-                  <a className="link small" href={deliveryUrl(r.token)} target="_blank" rel="noreferrer">Open</a>
+                  <button className="link small" onClick={() => copy(r.url, 'Link')}>Copy link</button>
+                  {r.isDelivery && <button className="link small" onClick={() => copy(mailText(r), 'Message')}>Copy for email</button>}
+                  <a className="link small" href={r.url} target="_blank" rel="noreferrer">Open</a>
+                  {editable && r.opens !== undefined && (
+                    <button className="link small" onClick={() => setShut(r, !r.shut)}>{r.shut ? 'Reopen' : 'Close'}</button>
+                  )}
                   {editable && <Confirm onConfirm={async () => { await removeShare({ workspaceId: state.workspace.id, ref: r.ref }); reload() }} label="Delete">×</Confirm>}
                 </div>
               </li>
@@ -181,6 +247,7 @@ export default function Deliveries() {
               <Field label="Password on the transfer"><Input value={draft.password} onChange={(e) => setD('password', e.target.value)} placeholder="Leave empty if none" /></Field>
               <Field label="The transfer expires"><Input type="date" value={draft.linkExpires} onChange={(e) => setD('linkExpires', e.target.value)} /></Field>
             </div>
+            <Field label="Close this page on" hint="After this date the link stops working and says so. Leave empty to keep it open until you close it by hand."><Input type="date" value={draft.pageCloses} onChange={(e) => setD('pageCloses', e.target.value)} /></Field>
             <Field label="Your note" hint="What changed, what to look at, what is still missing."><Textarea rows={3} value={draft.note} onChange={(e) => setD('note', e.target.value)} /></Field>
             <div className="row-2">
               <Field label="Answer by" hint="Shown on the page so it is not forgotten."><Input type="date" value={draft.feedbackBy} onChange={(e) => setD('feedbackBy', e.target.value)} /></Field>

@@ -2458,6 +2458,13 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .deliv-stage.s-prefinal { background: color-mix(in srgb, #6C9BD1 18%, transparent); color: #4a7cb0; }
 .deliv-stage.s-final { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
 .deliv-stage.s-files { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.deliv-stage.s-treatment { background: color-mix(in srgb, #B07FD1 18%, transparent); color: #8a55ad; }
+.deliv-stage.s-lookbook { background: color-mix(in srgb, #5B9E7A 18%, transparent); color: #46805f; }
+.deliv-stage.s-callsheet { background: color-mix(in srgb, var(--muted) 16%, transparent); color: var(--muted); }
+.deliv-opens { margin-top: 2px; }
+.deliv-shut { color: var(--danger); margin-right: 8px; }
+.deliv-row.is-shut strong,
+.deliv-row.is-shut .deliv-stage { opacity: .55; }
 .deliv-answer.approved { color: var(--ok); font-weight: 600; }
 .deliv-answer.changes { color: #b0711c; font-weight: 600; }
 .deliv-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
