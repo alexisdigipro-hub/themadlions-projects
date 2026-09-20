@@ -2584,22 +2584,44 @@ html[data-theme='light'] .tw-card { border-color: transparent; }
 .toolbar .drives-search { width: 100%; max-width: 460px; }
 .drive-series { margin-bottom: 18px; }
 .drive-series-title { font-size: 15px; margin: 0 0 8px; letter-spacing: .04em; color: var(--muted); display: flex; gap: 8px; align-items: baseline; }
-.drive-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
-@media (max-width: 1280px) { .drive-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-@media (max-width: 1000px) { .drive-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.drive-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1100px) { .drive-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 820px) { .drive-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .drive-series-move { display: inline-flex; gap: 2px; margin-left: 6px; }
 .drive-series-move .link { font-size: 11px; text-decoration: none; padding: 0 4px; }
 .drive-series-move .link:disabled { opacity: .3; }
-.drive .drive-head strong { font-size: 14.5px; white-space: nowrap; }
-.drive { padding: 10px 12px; }
-.drive-icon { width: 26px; height: 26px; border-radius: 6px; }
-.drive-icon::before { width: 16px; height: 10px; }
-.drive-icon span { right: 5px; bottom: 8px; width: 3px; height: 3px; }
-.drive-head { gap: 8px; }
-.drive-foot .link { text-decoration: none; white-space: nowrap; }
-.drive-foot > button:last-child, .drive-foot .btn { padding: 2px 6px; font-size: 12px; }
 .drive { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow); }
 html[data-theme='light'] .drive { border-color: transparent; }
+/* The card is the shelf: what the disk is, how full, how much is on it. Nothing else.
+   The contents moved into the panel below, where there is room to read them. */
+.drive { font: inherit; text-align: left; color: var(--text); cursor: pointer; width: 100%; }
+.drive:hover { border-color: var(--accent); }
+.drive.on { box-shadow: inset 0 0 0 2px var(--accent), var(--shadow); }
+.drive-head strong { font-size: 17px; letter-spacing: .03em; }
+.drive-bar { height: 6px; border-radius: 999px; background: var(--raised); overflow: hidden; }
+.drive-bar span { display: block; height: 100%; background: var(--ok); border-radius: 999px; }
+.drive.st-full .drive-bar span { background: var(--danger); }
+.drive.st-offline .drive-bar span { background: #D9A441; }
+.drive-meta { min-height: 18px; }
+.drive-count { font-size: 13px; font-weight: 700; color: var(--muted); }
+
+/* The open disk: full width, normal sized text, room for size, date and notes. */
+.drive-open { margin: 10px 0 4px; padding: 0 0 6px; }
+.drive-open-head { flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--line-soft); }
+.drive-open-head h2 { font-size: 18px; letter-spacing: .03em; }
+.drive-open-notes { margin: 10px 16px 0; }
+.drive-open-empty { margin: 14px 16px; }
+.drive-rows li.drive-row, .drive-results li.drive-result { display: flex; gap: 12px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--line-soft); }
+.drive-rows li.drive-row:first-child { border-top: 0; }
+.drive-row .drive-item-title, .drive-result .drive-item-title { font-size: 15.5px; }
+
+/* Search answers with the things, not the shelf, so each row says which disk it is on. */
+.drive-hits { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+.drive-results { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); }
+html[data-theme='light'] .drive-results { border-color: transparent; }
+.drive-result:first-child { border-top: 0; }
+.drive-result-disk { font: inherit; font-size: 13px; font-weight: 700; letter-spacing: .03em; white-space: nowrap; border: 1px solid var(--line); background: var(--raised); color: var(--text); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.drive-result-disk:hover { border-color: var(--accent); color: var(--accent); }
 .drive-head { display: flex; gap: 10px; align-items: center; }
 .drive-head strong { font-size: 16px; letter-spacing: .02em; }
 .drive-icon { width: 34px; height: 34px; border-radius: 8px; background: var(--raised); display: grid; place-items: center; flex: none; position: relative; }
@@ -2612,17 +2634,11 @@ html[data-theme='light'] .drive { border-color: transparent; }
 .drive-status.inuse { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
 .drive-status.full { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
 .drive-status.offline { background: color-mix(in srgb, #D9A441 18%, transparent); color: #b0711c; }
-.drive-items li { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-top: 1px solid var(--line-soft); }
-.drive-items li.hit { background: color-mix(in srgb, var(--accent) 12%, transparent); margin: 0 -8px; padding: 6px 8px; border-radius: 6px; border-top-color: transparent; }
 .drive-item-title { font-weight: 600; color: var(--text); text-decoration: none; font-size: 14.5px; }
 a.drive-item-title:hover { text-decoration: underline; }
-.drive-item-tools { display: flex; gap: 4px; align-items: center; opacity: 0; }
-.drive-items li:hover .drive-item-tools { opacity: 1; }
-.drive-empty { margin: 4px 0; font-weight: 700; letter-spacing: .08em; font-size: 13px; }
+.drive-item-tools { display: flex; gap: 4px; align-items: center; }
 .drive-notes { margin: 0; }
-.drive-foot { display: flex; gap: 8px; align-items: center; border-top: 1px solid var(--line-soft); padding-top: 8px; margin-top: auto; }
-@media (max-width: 820px) { .drive-item-tools { opacity: 1; } .drive-grid { grid-template-columns: 1fr; } }
-@media (hover: none) { .drive-item-tools { opacity: 1; } }
+@media (max-width: 560px) { .drive-grid { grid-template-columns: 1fr; } .drive-open-head { padding: 10px 12px; } .drive-rows li.drive-row, .drive-results li.drive-result { padding: 10px 12px; } }
 
 /* ---------- public call sheet (share link) ---------- */
 .share-link { display: flex; gap: 8px; }
