@@ -32,3 +32,6 @@ grant execute on function share_respond(text, text, text, text) to anon, authent
 
 -- share_get stays read-only and deliberately does NOT return responses, so one client can never
 -- read what another client wrote on the same link. The team reads them from the table itself.
+
+-- Note: supabase/estimates.sql replaces share_respond above with one that also accepts a cost
+-- estimation page. Run it after this file.
