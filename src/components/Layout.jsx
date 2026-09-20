@@ -17,7 +17,7 @@ function Logo({ name, subtitle, logo }) {
 }
 
 export default function Layout() {
-  const { state, logout } = useStore()
+  const { state, logout, viewAs, setViewAs } = useStore()
   const user = useCurrentUser()
   const nav = useNavigate()
   const [open, setOpen] = useState(false)
@@ -50,6 +50,12 @@ export default function Layout() {
 
   return (
     <div className="shell">
+      {viewAs && (
+        <div className="viewas-bar" role="status">
+          <span>You are looking at the app as <b>{user?.name || 'someone else'}</b>. Nothing can be changed while you do.</span>
+          <button type="button" onClick={() => { setViewAs(''); nav('/team') }}>Stop</button>
+        </div>
+      )}
       <header className="topbar">
         <button className="icon-btn menu-btn" aria-label="Menu" onClick={() => setOpen((o) => !o)}>
           <span className="burger" />

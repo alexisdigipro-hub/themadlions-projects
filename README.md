@@ -55,7 +55,11 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Cast & crew as headshot cards or a table, with character casting, call offsets, agent and notes, per-person photo galleries (headshots and looks), and the headshot printed on the call sheet
 - Files & notes: links to Drive, Frame.io, contracts, permits
 - Finance (administrators only, own table with admin-only Row Level Security): income and expenses for the company and per project, net / VAT / gross, document type (invoice, receipt, none), status (quoted, invoiced, to pay, paid), payment method; overview with profit for the year and estimated income tax, owed to us / we owe, this month, month-by-month bars, VAT balance, breakdowns by project (margin), client, category and project type; CSV export for the accountant. Recurring items (rent, salaries, subscriptions, retainers) monthly / quarterly / yearly, booked with one click when due, with a reminder on the overview. Budget lines are commitments: Finance lists what is still owed to crew and vendors (agreed minus paid) and payments, advances included, are recorded from Finance or from the project budget, landing as paid expenses linked to the line; other project expenses mirror into the budget as actuals; the project Budget page shows invoiced vs booked costs to administrators
-- Team: administrators set per user, per module permissions (none / view / edit) and per project access
+- Team: administrators set per user, per module permissions (none / view / edit) and per project access.
+  - **Start from a role**: Producer, Director, Editor, 1st AD, Crew or Accountant fills the whole list in one click, and you change what you want afterwards.
+  - **Access until**: for someone who is here for one job. The day after that date every module reads as no access and no project is reachable, until you clear the date. Administrators are never cut off this way.
+  - **View as**: look at the app exactly as one of your people sees it, with a red bar at the top and a Stop button. It is a preview only: nothing can be saved, posted or logged while you are wearing their face.
+  - A module added to the app after someone joined starts at no access for them, rather than being handed out to everyone the day it ships.
 - Backup and restore as JSON
 
 ## Run locally

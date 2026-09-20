@@ -2458,6 +2458,32 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .deliv-stage.s-prefinal { background: color-mix(in srgb, #6C9BD1 18%, transparent); color: #4a7cb0; }
 .deliv-stage.s-final { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
 .deliv-stage.s-files { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.viewas-bar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+}
+.viewas-bar button {
+  font: inherit;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, .6);
+  background: transparent;
+  color: #fff;
+  border-radius: 999px;
+  padding: 3px 14px;
+  cursor: pointer;
+}
+.viewas-bar button:hover { background: rgba(255, 255, 255, .16); }
 .deliv-stage.s-treatment { background: color-mix(in srgb, #B07FD1 18%, transparent); color: #8a55ad; }
 .deliv-stage.s-lookbook { background: color-mix(in srgb, #5B9E7A 18%, transparent); color: #46805f; }
 .deliv-stage.s-callsheet { background: color-mix(in srgb, var(--muted) 16%, transparent); color: var(--muted); }
