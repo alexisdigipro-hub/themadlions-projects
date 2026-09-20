@@ -46,6 +46,8 @@ export default function Deliveries() {
   const toast = useToast()
   if (!can(user, 'share')) return <Navigate to="/home" replace />
   const editable = can(user, 'share', 'edit')
+  // A cost estimation is money, so it follows Finance rather than the Share permission.
+  const isAdmin = user?.role === 'admin'
   const projects = visibleProjects(state, user)
   const [rows, setRows] = useState(undefined) // undefined = loading
   const [error, setError] = useState('')
@@ -191,6 +193,7 @@ export default function Deliveries() {
   const groups = useMemo(() => {
     const m = new Map()
     for (const r of all) {
+      if (r.isEstimate && !isAdmin) continue
       const key = r.isDelivery || r.isEstimate ? r.ref.split(':').slice(0, 2).join(':') : r.ref
       if (!m.has(key)) m.set(key, { key, rows: [] })
       m.get(key).rows.push(r)
@@ -208,8 +211,10 @@ export default function Deliveries() {
         answers: g.rows.flatMap((r) => r.answers).sort((a, b) => whenMs(a.at) - whenMs(b.at)),
       }
     })
-  }, [all])
-  const list = useMemo(() => (filter === 'all' ? groups : groups.filter((g) => g.head.kind === filter)), [groups, filter])
+  }, [all, isAdmin])
+  const tabs = [['delivery', 'Deliveries'], ...(isAdmin ? [['estimate', 'Estimates']] : []), ['status', 'Status pages'], ['callsheet', 'Call sheets'], ['all', 'Everything']]
+  const shown = tabs.some(([k]) => k === filter) ? filter : 'delivery'
+  const list = useMemo(() => (shown === 'all' ? groups : groups.filter((g) => g.head.kind === shown)), [groups, shown])
   const counts = { all: groups.length, delivery: groups.filter((g) => g.head.isDelivery).length, estimate: groups.filter((g) => g.head.isEstimate).length, status: groups.filter((g) => g.head.isStatus).length, callsheet: groups.filter((g) => g.head.kind === 'callsheet').length }
   // These two only exist once the matching SQL file has been run, so say so rather than hiding the gap.
   const sample = all[0]
@@ -354,7 +359,7 @@ export default function Deliveries() {
   return (
     <div className="deliveries">
       <PageHead title="Share" sub="Every link you have sent out of the building, and what happened to it">
-        {editable && <Button variant="ghost" onClick={startEstimate}>New cost estimation</Button>}
+        {editable && isAdmin && <Button variant="ghost" onClick={startEstimate}>New cost estimation</Button>}
         {editable && <Button variant="ghost" onClick={startStatus}>New status page</Button>}
         {editable && <Button variant="primary" onClick={startNew}>New delivery</Button>}
       </PageHead>
@@ -364,8 +369,8 @@ export default function Deliveries() {
       {noTracking && <p className="muted small">Run <b>supabase/share_track.sql</b> in Supabase to see whether a link was opened, and to close one.</p>}
 
       <div className="chips">
-        {[['delivery', 'Deliveries'], ['estimate', 'Estimates'], ['status', 'Status pages'], ['callsheet', 'Call sheets'], ['all', 'Everything']].map(([k, label]) => (
-          <button key={k} className={`chip ${filter === k ? 'on' : ''}`} onClick={() => setFilter(k)}>
+        {tabs.map(([k, label]) => (
+          <button key={k} className={`chip ${shown === k ? 'on' : ''}`} onClick={() => setFilter(k)}>
             {label}
             <small>{counts[k]}</small>
           </button>
@@ -375,8 +380,8 @@ export default function Deliveries() {
       {rows === undefined ? (
         <p className="muted">Loading…</p>
       ) : !list.length ? (
-        <Empty title={filter === 'callsheet' ? 'No call sheet links yet' : 'Nothing sent yet'} action={editable && filter !== 'callsheet' && <Button variant="primary" onClick={startNew}>Send the first one</Button>}>
-          {filter === 'callsheet'
+        <Empty title={shown === 'callsheet' ? 'No call sheet links yet' : 'Nothing sent yet'} action={editable && shown !== 'callsheet' && <Button variant="primary" onClick={startNew}>Send the first one</Button>}>
+          {shown === 'callsheet'
             ? 'Call sheet links are made from the day itself, inside the project. They show up here so you can see what is still open and close it when the shoot is over.'
             : 'Paste the link you already made on SwissTransfer or WeTransfer, choose the stage, and the app gives you a page with your logo to send instead. The client opens it, downloads, and can approve or ask for changes right there.'}
         </Empty>
@@ -439,7 +444,7 @@ export default function Deliveries() {
                   {one && r.isDelivery && <button className="link small" onClick={() => copy(mailText(r), 'Message')}>Copy for email</button>}
                   {one && <a className="link small" href={r.url} target="_blank" rel="noreferrer">Open</a>}
                   {editable && r.isStatus && <button className="link small" onClick={() => openStatus(r)}>Update</button>}
-                  {editable && r.isEstimate && one && <button className="link small" onClick={() => openEstimate(r)}>Update</button>}
+                  {editable && isAdmin && r.isEstimate && one && <button className="link small" onClick={() => openEstimate(r)}>Update</button>}
                   {editable && r.opens !== undefined && (
                     <button className="link small" onClick={() => setShut(g.key, !g.shut)}>{g.shut ? 'Reopen all' : one ? 'Close' : 'Close all'}</button>
                   )}
