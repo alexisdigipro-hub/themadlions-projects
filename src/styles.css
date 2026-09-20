@@ -2313,6 +2313,27 @@ html[data-theme='light'] .chat-box { border-color: transparent; }
 .chat-tg { margin-bottom: 14px; }
 @media (max-width: 820px) { .chat-msg { max-width: 92%; } .chat-scroll { max-height: none; } }
 
+
+/* ---------- production sheet (Breakdown > Sheet) ---------- */
+.prod-panel .panel-head { flex-wrap: wrap; gap: 10px; }
+.prod-panel .panel-head .row-actions { display: flex; gap: 8px; align-items: center; }
+.prod-scroll { overflow: auto; max-height: 72vh; border: 1px solid var(--line-soft); border-radius: 10px; }
+.prod-sheet { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; font-size: 13px; }
+.prod-sheet th,
+.prod-sheet td { background: var(--panel); border-bottom: 1px solid var(--line-soft); border-right: 1px solid var(--line-soft); padding: 5px 8px; text-align: center; white-space: nowrap; }
+.prod-sheet thead th { position: sticky; top: 0; z-index: 3; background: var(--raised); font-weight: 700; }
+.prod-sheet .prod-sc { position: sticky; left: 0; z-index: 2; width: 52px; min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
+.prod-sheet .prod-set { position: sticky; left: 52px; z-index: 2; text-align: left; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+.prod-sheet thead .prod-sc,
+.prod-sheet thead .prod-set { z-index: 4; }
+.prod-sheet .prod-char { height: 128px; min-width: 28px; vertical-align: bottom; padding: 6px 2px; }
+.prod-sheet .prod-char span { writing-mode: vertical-rl; transform: rotate(180deg); display: inline-block; font-weight: 600; }
+.prod-sheet td.on { color: var(--accent); font-size: 15px; line-height: 1; }
+.prod-sheet tr.prod-group th { background: var(--raised); text-align: left; padding: 8px 10px; border-top: 2px solid var(--line); }
+.prod-glabel { position: sticky; left: 10px; display: inline-block; font-weight: 700; }
+.prod-sheet tfoot th { position: sticky; bottom: 0; z-index: 3; background: var(--raised); }
+.prod-sheet tfoot .prod-sc { z-index: 4; text-align: right; }
+
 /* ---------- mobile app layer (nothing here touches desktop) ---------- */
 .tabbar { display: none; }
 @media (max-width: 820px) {
@@ -2815,6 +2836,10 @@ html[data-public='1'] body { background: var(--bg); }
   .modal-body { overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1 1 auto; min-height: 0; padding: 14px; }
   .modal-foot { position: sticky; bottom: 0; background: var(--panel); padding-bottom: calc(12px + env(safe-area-inset-bottom)); flex-wrap: wrap; z-index: 1; }
   .modal-foot .btn { flex: 1 1 auto; justify-content: center; }
+  /* production sheet */
+  .prod-scroll { max-height: 64vh; }
+  .prod-sheet .prod-set { max-width: 130px; }
+
 }
 
 .chip-x { background: none; border: 0; color: inherit; font: inherit; margin-left: 4px; cursor: pointer; opacity: .7; padding: 0; }
