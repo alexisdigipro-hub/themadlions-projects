@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { STATUSES, can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
-import { deliveryUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, statusUrl, tokenOf } from '../lib/shares.js'
+import { deliveryUrl, estimateUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, statusUrl, tokenOf } from '../lib/shares.js'
+import { amount, estimateTotals, lineAmount } from '../lib/estimate.js'
 import { fmtDate, toISODate } from '../lib/dates.js'
 
 export const STAGES = [
@@ -33,6 +34,12 @@ const emptyStatus = () => ({
   next: [], needs: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '',
 })
 
+const emptyEstimate = () => ({
+  id: uid(), projectId: '', version: '', title: '', client: '', intro: '',
+  lines: [], discount: '', vatPct: '', validUntil: '', terms: '',
+  recipients: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '',
+})
+
 export default function Deliveries() {
   const { state } = useStore()
   const user = useCurrentUser()
@@ -46,6 +53,7 @@ export default function Deliveries() {
   const [busy, setBusy] = useState(false)
   const [filter, setFilter] = useState('delivery')
   const [sdraft, setSdraft] = useState(null)
+  const [edraft, setEdraft] = useState(null)
 
   const reload = () => {
     if (!state.workspace?.id) return setRows([])
@@ -155,23 +163,27 @@ export default function Deliveries() {
     const d = r.data || {}
     const isDelivery = r.kind === 'delivery'
     const isStatus = r.kind === 'status'
+    const isEstimate = r.kind === 'estimate'
     const day = d.day || {}
     return {
       ...r,
       isDelivery,
       isStatus,
-      url: isDelivery ? deliveryUrl(r.token) : isStatus ? statusUrl(r.token) : shareUrl(r.token),
+      isEstimate,
+      url: isDelivery ? deliveryUrl(r.token) : isStatus ? statusUrl(r.token) : isEstimate ? estimateUrl(r.token) : shareUrl(r.token),
       shut: !!r.closed || (!!r.expires_at && r.expires_at < today),
       answers: Array.isArray(r.responses) ? r.responses : [],
-      badge: isDelivery ? stageLabel(d.stage) : isStatus ? 'Status' : 'Call sheet',
-      badgeClass: isDelivery ? `s-${d.stage}` : isStatus ? 's-status' : 's-callsheet',
-      name: isDelivery || isStatus ? d.title : (d.project?.title || 'Call sheet'),
-      version: isDelivery ? d.version : isStatus ? '' : (day.index ? `Day ${day.index}${day.count ? ` of ${day.count}` : ''}` : ''),
+      badge: isDelivery ? stageLabel(d.stage) : isStatus ? 'Status' : isEstimate ? 'Estimate' : 'Call sheet',
+      badgeClass: isDelivery ? `s-${d.stage}` : isStatus ? 's-status' : isEstimate ? 's-estimate' : 's-callsheet',
+      name: isDelivery || isStatus || isEstimate ? d.title : (d.project?.title || 'Call sheet'),
+      version: isDelivery || isEstimate ? d.version : isStatus ? '' : (day.index ? `Day ${day.index}${day.count ? ` of ${day.count}` : ''}` : ''),
       sub: isDelivery
         ? [d.client, projTitle(d.projectId), d.sentAt ? `sent ${fmtDate(d.sentAt.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''].filter(Boolean).join(' · ')
         : isStatus
           ? [d.client, d.headline].filter(Boolean).join(' · ')
-          : [day.date ? fmtDate(day.date, { weekday: 'short', day: 'numeric', month: 'short' }) : '', day.callTime ? `call ${day.callTime}` : ''].filter(Boolean).join(' · '),
+          : isEstimate
+            ? [d.client, amount(estimateTotals(d).total, d.currency), d.validUntil ? `valid until ${fmtDate(d.validUntil, { day: 'numeric', month: 'short' })}` : ''].filter(Boolean).join(' · ')
+            : [day.date ? fmtDate(day.date, { weekday: 'short', day: 'numeric', month: 'short' }) : '', day.callTime ? `call ${day.callTime}` : ''].filter(Boolean).join(' · '),
     }
   }), [rows, state.projects])
   /* A delivery sent to five people is five rows in the table but one thing on this page, so the rows
@@ -179,7 +191,7 @@ export default function Deliveries() {
   const groups = useMemo(() => {
     const m = new Map()
     for (const r of all) {
-      const key = r.isDelivery ? r.ref.split(':').slice(0, 2).join(':') : r.ref
+      const key = r.isDelivery || r.isEstimate ? r.ref.split(':').slice(0, 2).join(':') : r.ref
       if (!m.has(key)) m.set(key, { key, rows: [] })
       m.get(key).rows.push(r)
     }
@@ -198,7 +210,7 @@ export default function Deliveries() {
     })
   }, [all])
   const list = useMemo(() => (filter === 'all' ? groups : groups.filter((g) => g.head.kind === filter)), [groups, filter])
-  const counts = { all: groups.length, delivery: groups.filter((g) => g.head.isDelivery).length, status: groups.filter((g) => g.head.isStatus).length, callsheet: groups.filter((g) => g.head.kind === 'callsheet').length }
+  const counts = { all: groups.length, delivery: groups.filter((g) => g.head.isDelivery).length, estimate: groups.filter((g) => g.head.isEstimate).length, status: groups.filter((g) => g.head.isStatus).length, callsheet: groups.filter((g) => g.head.kind === 'callsheet').length }
   // These two only exist once the matching SQL file has been run, so say so rather than hiding the gap.
   const sample = all[0]
   const noReplies = !!sample && sample.responses === undefined
@@ -258,6 +270,79 @@ export default function Deliveries() {
     }
   }
 
+  const startEstimate = () => setEdraft({ ...emptyEstimate(), vatPct: String(state.finance?.settings?.vatDefault ?? 24) })
+  /* An estimate keeps its link while it is reworked, so opening one means editing it. */
+  const openEstimate = (r) => {
+    const d = r.data || {}
+    setEdraft({
+      id: (r.ref.split(':')[1]) || uid(), projectId: d.projectId || '', version: d.version || '',
+      title: d.title || '', client: d.client || '', intro: d.intro || '',
+      lines: d.lines || [], discount: d.discount ? String(d.discount) : '', vatPct: d.vatPct != null ? String(d.vatPct) : '',
+      validUntil: d.validUntil || '', terms: d.terms || '',
+      recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
+      contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
+      pageCloses: r.expires_at || '',
+    })
+  }
+  const pickEstimateProject = (projectId) => {
+    const p = state.projects.find((x) => x.id === projectId)
+    // Title, client and nothing else. The project's budget is a different thing and stays out of this.
+    setEdraft((d) => ({ ...d, projectId, title: d.title || p?.title || '', client: d.client || p?.client || '' }))
+  }
+  const setE = (k, v) => setEdraft((d) => ({ ...d, [k]: v }))
+
+  const publishEstimate = async () => {
+    if (!edraft.title.trim()) return toast('Give it a title, or pick a project.', 'error')
+    if (!edraft.lines.some((l) => (l.what || '').trim())) return toast('Add at least one cost line.', 'error')
+    setBusy(true)
+    try {
+      const cs = state.settings.callsheet || {}
+      const data = {
+        title: edraft.title.trim(),
+        client: edraft.client.trim(),
+        version: edraft.version.trim(),
+        projectId: edraft.projectId,
+        intro: edraft.intro.trim(),
+        lines: edraft.lines.filter((l) => (l.what || '').trim()).map((l) => ({
+          group: (l.group || '').trim(), what: l.what.trim(), unit: (l.unit || '').trim(),
+          qty: Number(l.qty) || 1, price: Number(l.price) || 0,
+        })),
+        discount: Number(edraft.discount) || 0,
+        vatPct: Number(edraft.vatPct) || 0,
+        validUntil: edraft.validUntil,
+        terms: edraft.terms.trim(),
+        currency: state.finance?.settings?.currency || 'EUR',
+        company: { name: state.workspace.name, logo: state.settings.logo || '', footer: cs.footer || '' },
+        contact: { name: edraft.contactName.trim(), email: edraft.contactEmail.trim(), phone: edraft.contactPhone.trim() },
+        sentAt: new Date().toISOString(),
+      }
+      const ref = `estimate:${edraft.id}`
+      const people = edraft.recipients.filter((p) => (p.name || '').trim())
+      const targets = people.length
+        ? people.map((p, i) => ({ ref: `${ref}:r${i + 1}`, recipient: { name: p.name.trim(), email: (p.email || '').trim() } }))
+        : [{ ref, recipient: null }]
+      let firstUrl = ''
+      for (const t of targets) {
+        const url = await publishShare({ workspaceId: state.workspace.id, kind: 'estimate', ref: t.ref, data: { ...data, recipient: t.recipient }, userId: user?.id })
+        if (!firstUrl) firstUrl = url
+      }
+      await reopenQuietly({ workspaceId: state.workspace.id, ref })
+      try { await setShareState({ workspaceId: state.workspace.id, ref, expiresAt: edraft.pageCloses }) } catch (e) { toast(e.message, 'error') }
+      if (targets.length === 1) {
+        await navigator.clipboard.writeText(estimateUrl(tokenOf(firstUrl))).catch(() => {})
+        toast('Cost estimation published, link copied', 'ok')
+      } else {
+        toast(`${targets.length} pages published, one per person. Copy each link from the list.`, 'ok')
+      }
+      setEdraft(null)
+      reload()
+    } catch (e) {
+      toast(e.message, 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const setShut = async (ref, shut, one = false) => {
     try {
       await setShareState({ workspaceId: state.workspace.id, ref, closed: shut, one })
@@ -269,6 +354,7 @@ export default function Deliveries() {
   return (
     <div className="deliveries">
       <PageHead title="Share" sub="Every link you have sent out of the building, and what happened to it">
+        {editable && <Button variant="ghost" onClick={startEstimate}>New cost estimation</Button>}
         {editable && <Button variant="ghost" onClick={startStatus}>New status page</Button>}
         {editable && <Button variant="primary" onClick={startNew}>New delivery</Button>}
       </PageHead>
@@ -278,7 +364,7 @@ export default function Deliveries() {
       {noTracking && <p className="muted small">Run <b>supabase/share_track.sql</b> in Supabase to see whether a link was opened, and to close one.</p>}
 
       <div className="chips">
-        {[['delivery', 'Deliveries'], ['status', 'Status pages'], ['callsheet', 'Call sheets'], ['all', 'Everything']].map(([k, label]) => (
+        {[['delivery', 'Deliveries'], ['estimate', 'Estimates'], ['status', 'Status pages'], ['callsheet', 'Call sheets'], ['all', 'Everything']].map(([k, label]) => (
           <button key={k} className={`chip ${filter === k ? 'on' : ''}`} onClick={() => setFilter(k)}>
             {label}
             <small>{counts[k]}</small>
@@ -353,6 +439,7 @@ export default function Deliveries() {
                   {one && r.isDelivery && <button className="link small" onClick={() => copy(mailText(r), 'Message')}>Copy for email</button>}
                   {one && <a className="link small" href={r.url} target="_blank" rel="noreferrer">Open</a>}
                   {editable && r.isStatus && <button className="link small" onClick={() => openStatus(r)}>Update</button>}
+                  {editable && r.isEstimate && one && <button className="link small" onClick={() => openEstimate(r)}>Update</button>}
                   {editable && r.opens !== undefined && (
                     <button className="link small" onClick={() => setShut(g.key, !g.shut)}>{g.shut ? 'Reopen all' : one ? 'Close' : 'Close all'}</button>
                   )}
@@ -466,6 +553,92 @@ export default function Deliveries() {
           </div>
         )}
       </Modal>
+
+      <Modal open={!!edraft} title="Cost estimation" wide onClose={() => !busy && setEdraft(null)}
+        footer={<><Button variant="ghost" onClick={() => setEdraft(null)} disabled={busy}>Cancel</Button><Button variant="primary" onClick={publishEstimate} disabled={busy}>{busy ? 'Publishing…' : 'Publish and copy link'}</Button></>}>
+        {edraft && (
+          <div className="stack">
+            <p className="muted small">Your own costs, typed here. Picking a project only fills in the title and the client; the project&#39;s budget is a separate thing and stays out of this.</p>
+            <div className="row-3">
+              <Field label="Project" hint="Only the title and the client."><Select value={edraft.projectId} onChange={(e) => pickEstimateProject(e.target.value)} options={[['', 'Not in the app'], ...projects.map((p) => [p.id, p.title])]} /></Field>
+              <Field label="Title"><Input value={edraft.title} onChange={(e) => setE('title', e.target.value)} placeholder="Northwind Summer Film" /></Field>
+              <Field label="Version" hint="v1, v2…"><Input value={edraft.version} onChange={(e) => setE('version', e.target.value)} placeholder="v1" /></Field>
+            </div>
+            <Field label="Client"><Input value={edraft.client} onChange={(e) => setE('client', e.target.value)} /></Field>
+            <Field label="Opening note" hint="What the estimate covers, in a line or two."><Textarea rows={2} value={edraft.intro} onChange={(e) => setE('intro', e.target.value)} /></Field>
+
+            <LineEditor
+              rows={edraft.lines}
+              onChange={(v) => setE('lines', v)}
+              cur={state.finance?.settings?.currency || 'EUR'}
+              discount={edraft.discount}
+              vatPct={edraft.vatPct}
+            />
+
+            <div className="row-3">
+              <Field label="Discount" hint="An amount, not a percentage."><Input type="number" min="0" step="0.01" value={edraft.discount} onChange={(e) => setE('discount', e.target.value)} placeholder="0" /></Field>
+              <Field label="VAT %"><Input type="number" min="0" max="99" value={edraft.vatPct} onChange={(e) => setE('vatPct', e.target.value)} /></Field>
+              <Field label="Valid until"><Input type="date" value={edraft.validUntil} onChange={(e) => setE('validUntil', e.target.value)} /></Field>
+            </div>
+            <Field label="Payment terms" hint="Shown under the total."><Textarea rows={2} value={edraft.terms} onChange={(e) => setE('terms', e.target.value)} placeholder="50% on signature, 50% on delivery. Travel outside Attica billed separately." /></Field>
+
+            <RowEditor
+              label="Send it to"
+              hint="Leave empty for one link for everybody. Add names and each person gets their own page."
+              rows={edraft.recipients}
+              onChange={(v) => setE('recipients', v)}
+              fields={[{ k: 'name', placeholder: 'Maria Vlachou' }, { k: 'email', placeholder: 'maria@client.gr' }]}
+              addLabel="Add a person"
+            />
+
+            <div className="row-3">
+              <Field label="Who they ask"><Input value={edraft.contactName} onChange={(e) => setE('contactName', e.target.value)} placeholder={user?.name || 'Name'} /></Field>
+              <Field label="Email"><Input value={edraft.contactEmail} onChange={(e) => setE('contactEmail', e.target.value)} /></Field>
+              <Field label="Phone"><Input value={edraft.contactPhone} onChange={(e) => setE('contactPhone', e.target.value)} /></Field>
+            </div>
+            <Field label="Close this page on" hint="Leave empty to keep it open until you close it by hand."><Input type="date" value={edraft.pageCloses} onChange={(e) => setE('pageCloses', e.target.value)} /></Field>
+          </div>
+        )}
+      </Modal>
+    </div>
+  )
+}
+
+/* The cost lines. Add one, remove one, and the total underneath moves as you type. */
+function LineEditor({ rows, onChange, cur, discount, vatPct }) {
+  const set = (i, k, v) => onChange(rows.map((r, j) => (j === i ? { ...r, [k]: v } : r)))
+  const add = () => onChange([...rows, { group: rows[rows.length - 1]?.group || '', what: '', qty: 1, unit: '', price: '' }])
+  const t = estimateTotals({ lines: rows, discount, vatPct })
+  return (
+    <div className="field">
+      <span className="field-label">Costs</span>
+      <div className="est-edit">
+        <div className="est-edit-head">
+          <span>Heading</span><span>What</span><span>Qty</span><span>Unit</span><span>Price</span><span>Amount</span><span />
+        </div>
+        {rows.map((r, i) => (
+          <div key={i} className="est-edit-row">
+            <Input value={r.group || ''} placeholder="Shooting" onChange={(e) => set(i, 'group', e.target.value)} />
+            <Input value={r.what || ''} placeholder="Camera crew" onChange={(e) => set(i, 'what', e.target.value)} />
+            <Input type="number" min="0" step="0.5" value={r.qty ?? ''} onChange={(e) => set(i, 'qty', e.target.value)} />
+            <Input value={r.unit || ''} placeholder="days" onChange={(e) => set(i, 'unit', e.target.value)} />
+            <Input type="number" min="0" step="0.01" value={r.price ?? ''} placeholder="0" onChange={(e) => set(i, 'price', e.target.value)} />
+            <span className="est-edit-amt">{amount(lineAmount(r), cur)}</span>
+            <button className="link small" onClick={() => onChange(rows.filter((_, j) => j !== i))}>Remove</button>
+          </div>
+        ))}
+        {!rows.length && <p className="muted small">No costs yet.</p>}
+        <div className="est-edit-foot">
+          <Button variant="ghost" onClick={add}>Add a cost</Button>
+          <span className="muted small">
+            Subtotal {amount(t.subtotal, cur)}
+            {t.discount > 0 ? ` · discount ${amount(t.discount, cur)}` : ''}
+            {t.vatPct > 0 ? ` · VAT ${t.vatPct}% ${amount(t.vat, cur)}` : ''}
+          </span>
+          <b className="est-edit-total">{amount(t.total, cur)}</b>
+        </div>
+      </div>
+      <span className="field-hint">Leave the heading empty to keep a line loose. Lines with the same heading are grouped together on the page, with their own subtotal.</span>
     </div>
   )
 }

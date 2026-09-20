@@ -4,6 +4,7 @@ const token = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) =
 export const shareUrl = (t) => `${location.origin}${location.pathname}#/s/${t}`
 export const deliveryUrl = (t) => `${location.origin}${location.pathname}#/d/${t}`
 export const statusUrl = (t) => `${location.origin}${location.pathname}#/ps/${t}`
+export const estimateUrl = (t) => `${location.origin}${location.pathname}#/e/${t}`
 /* publishShare hands back a /s/ url; a delivery needs the token out of it to build its own. */
 export const tokenOf = (url) => String(url || '').split('/').filter(Boolean).pop() || ''
 
