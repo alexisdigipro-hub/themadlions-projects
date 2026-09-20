@@ -51,17 +51,44 @@ export function weekdayShort(weekStart = 'monday') {
 
 export function buildICS(events, calName = 'THEMADLIONS') {
   const esc = (s = '') => String(s).replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;')
+  /* RFC 5545 allows 75 octets per line, and a Greek letter is two of them, so folding has to count
+     bytes and never split a character. A long note used to go out as one very long line, which some
+     calendars refuse to import. Continuation lines start with a space, which counts towards the 75. */
+  const enc = new TextEncoder()
+  const fold = (line) => {
+    if (enc.encode(line).length <= 75) return line
+    const out = []
+    let cur = ''
+    let bytes = 0
+    for (const ch of line) {
+      const n = enc.encode(ch).length
+      if (bytes + n > 75) { out.push(cur); cur = ' '; bytes = 1 }
+      cur += ch
+      bytes += n
+    }
+    out.push(cur)
+    return out.join('\r\n')
+  }
+  const ymd = (iso) => iso.replace(/-/g, '')
+  const hm = (t) => `${t.replace(':', '')}00`
+
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//THEMADLIONS//Projects//EN', `X-WR-CALNAME:${esc(calName)}`]
   for (const e of events) {
-    const date = e.date.replace(/-/g, '')
+    if (!e?.date) continue
+    // A shoot from the 19th to the 22nd is one event over four days, not four events.
+    const last = e.endDate && e.endDate > e.date ? e.endDate : e.date
     lines.push('BEGIN:VEVENT')
     lines.push(`UID:${e.id}@themadlions`)
     lines.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}Z`)
     if (e.start) {
-      lines.push(`DTSTART:${date}T${e.start.replace(':', '')}00`)
-      lines.push(`DTEND:${date}T${(e.end || e.start).replace(':', '')}00`)
+      // No timezone on purpose: a call time is a wall clock time and should read the same everywhere.
+      const endTime = last === e.date && (!e.end || e.end < e.start) ? e.start : (e.end || e.start)
+      lines.push(`DTSTART:${ymd(e.date)}T${hm(e.start)}`)
+      lines.push(`DTEND:${ymd(last)}T${hm(endTime)}`)
     } else {
-      lines.push(`DTSTART;VALUE=DATE:${date}`)
+      // On an all day event DTEND is the first day NOT included, so it is the day after the last one.
+      lines.push(`DTSTART;VALUE=DATE:${ymd(e.date)}`)
+      lines.push(`DTEND;VALUE=DATE:${ymd(addDays(last, 1))}`)
     }
     lines.push(`SUMMARY:${esc(e.title)}`)
     if (e.locationText) lines.push(`LOCATION:${esc(e.locationText)}`)
@@ -69,7 +96,7 @@ export function buildICS(events, calName = 'THEMADLIONS') {
     lines.push('END:VEVENT')
   }
   lines.push('END:VCALENDAR')
-  return lines.join('\r\n')
+  return lines.map(fold).join('\r\n')
 }
 
 export function download(filename, content, type = 'text/plain') {
