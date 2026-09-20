@@ -27,6 +27,8 @@ import MyWork from './pages/MyWork.jsx'
 import Profile from './pages/Profile.jsx'
 import Drives from './pages/Drives.jsx'
 import PublicCallSheet from './pages/PublicCallSheet.jsx'
+import PublicDelivery from './pages/PublicDelivery.jsx'
+import Deliveries from './pages/Deliveries.jsx'
 import Finance from './pages/Finance.jsx'
 import Home from './pages/Home.jsx'
 import Budget from './pages/project/Budget.jsx'
@@ -67,6 +69,7 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginGate />} />
             <Route path="/s/:token" element={<PublicCallSheet />} />
+            <Route path="/d/:token" element={<PublicDelivery />} />
             <Route element={<RequireUser />}>
               <Route element={<Layout />}>
                 <Route index element={<Dashboard />} />
@@ -77,6 +80,7 @@ export default function App() {
                 <Route path="me" element={<Profile mine />} />
                 <Route path="u/:id" element={<Profile />} />
                 <Route path="drives" element={<Drives />} />
+                <Route path="share" element={<Deliveries />} />
                 <Route path="database/:tab" element={<Database />} />
                 <Route path="database" element={<Navigate to="/database/locations" replace />} />
                 <Route path="people" element={<Navigate to="/database/cast" replace />} />

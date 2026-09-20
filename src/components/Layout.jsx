@@ -38,6 +38,7 @@ export default function Layout() {
     { to: '/mywork', label: 'My work', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: can(user, 'contacts') || can(user, 'locations'), icon: 'database' },
     { to: '/drives', label: 'Drives', show: can(user, 'drives'), icon: 'drives' },
+    { to: '/share', label: 'Share', show: can(user, 'post'), icon: 'post' },
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance' },
     { to: '/team', label: 'Team', show: user?.role === 'admin', icon: 'team' },
     // second to last on purpose: Settings is always shown, so My profile always sits just above it
