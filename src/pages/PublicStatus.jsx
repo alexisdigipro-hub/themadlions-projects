@@ -28,17 +28,23 @@ export default function PublicStatus() {
   return (
     <div className="pub dlv">
       <div className="dlv-sheet">
-        <header className="dlv-top">
+        <header className="dlv-band dlv-top">
           {d.company?.logo && <img className="dlv-logo" src={d.company.logo} alt="" />}
           <div className="dlv-company">{d.company?.name || 'THEMADLIONS'}</div>
         </header>
 
-        <div className="dlv-stage">Where we are</div>
-        <h1 className="dlv-title">{d.title}</h1>
-        {d.client && <p className="dlv-client">{d.client}</p>}
+        <section className="dlv-band dlv-hero">
+          <div className="dlv-stage">Where we are</div>
+          <h1 className="dlv-title">{d.title}</h1>
+          {d.client && <p className="dlv-client">{d.client}</p>}
+          {d.headline && <p className="dlv-headline">{d.headline}</p>}
+        </section>
 
-        {d.headline && <p className="dlv-headline">{d.headline}</p>}
-        {d.note && <p className="dlv-note">{d.note}</p>}
+        {d.note && (
+          <section className="dlv-band dlv-say">
+            <p className="dlv-note">{d.note}</p>
+          </section>
+        )}
 
         {d.next?.length > 0 && (
           <section className="dlv-block">
@@ -62,15 +68,17 @@ export default function PublicStatus() {
           </section>
         )}
 
-        {(d.contact?.name || d.contact?.email || d.contact?.phone) && (
-          <p className="dlv-contact">
-            {d.contact.name}
-            {d.contact.email && <> · <a href={`mailto:${d.contact.email}`}>{d.contact.email}</a></>}
-            {d.contact.phone && <> · <a href={`tel:${d.contact.phone}`}>{d.contact.phone}</a></>}
-          </p>
-        )}
-        {updated && <p className="dlv-foot">Last updated {updated}</p>}
-        {d.company?.footer && <p className="dlv-foot">{d.company.footer}</p>}
+        <footer className="dlv-band dlv-end">
+          {(d.contact?.name || d.contact?.email || d.contact?.phone) && (
+            <p className="dlv-contact">
+              {d.contact.name}
+              {d.contact.email && <> · <a href={`mailto:${d.contact.email}`}>{d.contact.email}</a></>}
+              {d.contact.phone && <> · <a href={`tel:${d.contact.phone}`}>{d.contact.phone}</a></>}
+            </p>
+          )}
+          {updated && <p className="dlv-foot">Last updated {updated}</p>}
+          {d.company?.footer && <p className="dlv-foot">{d.company.footer}</p>}
+        </footer>
       </div>
     </div>
   )
