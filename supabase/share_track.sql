@@ -36,3 +36,6 @@ grant execute on function share_get(text) to anon, authenticated;
 -- Note: share_respond (supabase/deliveries.sql) is deliberately left alone here, so that the two
 -- files can be run in either order. A closed page never shows the reply form, because share_get
 -- hands it nothing to show.
+
+-- Note: supabase/share_pin.sql replaces share_get with one that also checks an access code.
+-- Run it after this file.

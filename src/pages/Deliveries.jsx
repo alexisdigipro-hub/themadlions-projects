@@ -26,18 +26,18 @@ const RESPONSE = { approved: 'Approved', changes: 'Changes asked', seen: 'Seen' 
 const emptyDelivery = () => ({
   id: uid(), projectId: '', stage: 'rough', version: '', title: '', client: '',
   link: '', linkLabel: '', password: '', linkExpires: '', pageCloses: '', note: '', feedbackBy: '',
-  credits: [], deliverables: [], recipients: [], contactName: '', contactEmail: '', contactPhone: '',
+  credits: [], deliverables: [], recipients: [], contactName: '', contactEmail: '', contactPhone: '', pin: '',
 })
 
 const emptyStatus = () => ({
   id: uid(), projectId: '', title: '', client: '', headline: '', note: '',
-  next: [], needs: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '',
+  next: [], needs: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '', pin: '',
 })
 
 const emptyEstimate = () => ({
   id: uid(), projectId: '', version: '', title: '', client: '', intro: '',
   lines: [], discount: '', vatPct: '', validUntil: '', terms: '',
-  recipients: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '',
+  recipients: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '', pin: '',
 })
 
 export default function Deliveries() {
@@ -136,6 +136,7 @@ export default function Deliveries() {
       if (draft.pageCloses) {
         // the pages are published either way; only the closing date can fail, and it says why
         try { await setShareState({ workspaceId: state.workspace.id, ref, expiresAt: draft.pageCloses }) } catch (e) { toast(e.message, 'error') }
+      if (draft.pin.trim()) { try { await setShareState({ workspaceId: state.workspace.id, ref, pin: draft.pin }) } catch (e) { toast(e.message, 'error') } }
       }
       if (targets.length === 1) {
         await navigator.clipboard.writeText(deliveryUrl(tokenOf(firstUrl))).catch(() => {})
@@ -231,6 +232,7 @@ export default function Deliveries() {
       headline: d.headline || '', note: d.note || '', next: d.next || [], needs: d.needs || [],
       contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
       pageCloses: r.expires_at || '',
+      pin: r.pin || '',
     })
   }
   const pickStatusProject = (projectId) => {
@@ -264,6 +266,7 @@ export default function Deliveries() {
       const url = await publishShare({ workspaceId: state.workspace.id, kind: 'status', ref, data, userId: user?.id })
       await reopenQuietly({ workspaceId: state.workspace.id, ref })
       try { await setShareState({ workspaceId: state.workspace.id, ref, expiresAt: sdraft.pageCloses }) } catch (e) { toast(e.message, 'error') }
+      if (sdraft.pin.trim()) { try { await setShareState({ workspaceId: state.workspace.id, ref, pin: sdraft.pin }) } catch (e) { toast(e.message, 'error') } }
       await navigator.clipboard.writeText(statusUrl(tokenOf(url))).catch(() => {})
       toast('Status page published, link copied', 'ok')
       setSdraft(null)
@@ -287,6 +290,7 @@ export default function Deliveries() {
       recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
       contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
       pageCloses: r.expires_at || '',
+      pin: r.pin || '',
     })
   }
   const pickEstimateProject = (projectId) => {
@@ -333,6 +337,7 @@ export default function Deliveries() {
       }
       await reopenQuietly({ workspaceId: state.workspace.id, ref })
       try { await setShareState({ workspaceId: state.workspace.id, ref, expiresAt: edraft.pageCloses }) } catch (e) { toast(e.message, 'error') }
+      if (edraft.pin.trim()) { try { await setShareState({ workspaceId: state.workspace.id, ref, pin: edraft.pin }) } catch (e) { toast(e.message, 'error') } }
       if (targets.length === 1) {
         await navigator.clipboard.writeText(estimateUrl(tokenOf(firstUrl))).catch(() => {})
         toast('Cost estimation published, link copied', 'ok')
@@ -406,6 +411,7 @@ export default function Deliveries() {
                           ? <span className="deliv-tag">Opened {r.opens}&#215;{r.opened_at ? ` · ${fmtDate(r.opened_at.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''}</span>
                           : <span className="deliv-tag t-quiet">Not opened</span>}
                       {r.expires_at && !r.closed && <span className="deliv-tag t-quiet">Closes {fmtDate(r.expires_at, { day: 'numeric', month: 'short' })}</span>}
+                      {r.pin && <span className="deliv-tag t-quiet">Code {r.pin}</span>}
                       {last && <span className={`deliv-tag t-${last.status}`}>{RESPONSE[last.status] || 'Seen'}{last.name ? ` · ${last.name}` : ''}</span>}
                       {g.answers.length > 1 && <span className="deliv-tag t-quiet">{g.answers.length} replies</span>}
                     </div>
@@ -474,7 +480,10 @@ export default function Deliveries() {
               <Field label="Password on the transfer"><Input value={draft.password} onChange={(e) => setD('password', e.target.value)} placeholder="Leave empty if none" /></Field>
               <Field label="The transfer expires"><Input type="date" value={draft.linkExpires} onChange={(e) => setD('linkExpires', e.target.value)} /></Field>
             </div>
-            <Field label="Close this page on" hint="After this date the link stops working and says so. Leave empty to keep it open until you close it by hand."><Input type="date" value={draft.pageCloses} onChange={(e) => setD('pageCloses', e.target.value)} /></Field>
+            <div className="row-2">
+              <Field label="Close this page on" hint="After this date the link stops working and says so. Leave empty to keep it open until you close it by hand."><Input type="date" value={draft.pageCloses} onChange={(e) => setD('pageCloses', e.target.value)} /></Field>
+              <Field label="Access code" hint="Optional. Six digits or a word. The page shows nothing without it, so send it separately from the link."><Input value={draft.pin} onChange={(e) => setD('pin', e.target.value)} placeholder="482913" /></Field>
+            </div>
             <Field label="Your note" hint="What changed, what to look at, what is still missing."><Textarea rows={3} value={draft.note} onChange={(e) => setD('note', e.target.value)} /></Field>
             <div className="row-2">
               <Field label="Answer by" hint="Shown on the page so it is not forgotten."><Input type="date" value={draft.feedbackBy} onChange={(e) => setD('feedbackBy', e.target.value)} /></Field>
@@ -553,7 +562,10 @@ export default function Deliveries() {
               <Field label="Email"><Input value={sdraft.contactEmail} onChange={(e) => setS('contactEmail', e.target.value)} /></Field>
               <Field label="Phone"><Input value={sdraft.contactPhone} onChange={(e) => setS('contactPhone', e.target.value)} /></Field>
             </div>
-            <Field label="Close this page on" hint="Leave empty to keep it open until you close it by hand."><Input type="date" value={sdraft.pageCloses} onChange={(e) => setS('pageCloses', e.target.value)} /></Field>
+            <div className="row-2">
+              <Field label="Close this page on" hint="Leave empty to keep it open until you close it by hand."><Input type="date" value={sdraft.pageCloses} onChange={(e) => setS('pageCloses', e.target.value)} /></Field>
+              <Field label="Access code" hint="Optional. Six digits or a word. The page shows nothing without it, so send it separately from the link."><Input value={sdraft.pin} onChange={(e) => setS('pin', e.target.value)} placeholder="482913" /></Field>
+            </div>
           </div>
         )}
       </Modal>
@@ -600,7 +612,10 @@ export default function Deliveries() {
               <Field label="Email"><Input value={edraft.contactEmail} onChange={(e) => setE('contactEmail', e.target.value)} /></Field>
               <Field label="Phone"><Input value={edraft.contactPhone} onChange={(e) => setE('contactPhone', e.target.value)} /></Field>
             </div>
-            <Field label="Close this page on" hint="Leave empty to keep it open until you close it by hand."><Input type="date" value={edraft.pageCloses} onChange={(e) => setE('pageCloses', e.target.value)} /></Field>
+            <div className="row-2">
+              <Field label="Close this page on" hint="Leave empty to keep it open until you close it by hand."><Input type="date" value={edraft.pageCloses} onChange={(e) => setE('pageCloses', e.target.value)} /></Field>
+              <Field label="Access code" hint="Optional. Six digits or a word. The page shows nothing without it, so send it separately from the link."><Input value={edraft.pin} onChange={(e) => setE('pin', e.target.value)} placeholder="482913" /></Field>
+            </div>
           </div>
         )}
       </Modal>

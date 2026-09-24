@@ -189,6 +189,9 @@ export default function Settings() {
             <Field label="Public call sheet links expire" hint="Counted from the shooting day. Expired links show a short 'this call sheet has expired' page. Sharing again always refreshes the link.">
               <Select value={String(state.settings.shareExpiryDays || 0)} onChange={(e) => setSetting('shareExpiryDays', Number(e.target.value))} options={[['0', 'Never'], ['1', 'The day after the shoot'], ['3', '3 days after the shoot'], ['7', 'A week after the shoot'], ['30', 'A month after the shoot']]} />
             </Field>
+            <Field label="Ask for a code on call sheet links" hint="The link carries everyone's phone number, and links get forwarded. With this on, each call sheet link gets a six digit code that you send separately; without it the page shows nothing. Crew type it once per phone.">
+              <Select value={state.settings.sharePin ? 'yes' : 'no'} onChange={(e) => setSetting('sharePin', e.target.value === 'yes')} options={[['no', 'No, the link is enough'], ['yes', 'Yes, link plus a code']]} />
+            </Field>
           </section>
         )}
 

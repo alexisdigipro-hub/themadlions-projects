@@ -8,7 +8,7 @@ import { fmtLong } from '../../lib/dates.js'
 import { ATHENS, coordsFromText, forecast, geocode, sunTimes } from '../../lib/sun.js'
 import { callSheetText, mailLink, personalCallText, waLink, waShareLink } from '../../lib/share.js'
 import { Modal } from '../../components/ui.jsx'
-import { publishShare } from '../../lib/shares.js'
+import { ensurePin, publishShare } from '../../lib/shares.js'
 import { callsheetDefaults, useCurrentUser } from '../../lib/store.jsx'
 
 function addMinutes(hhmm, mins) {
@@ -95,8 +95,15 @@ export default function CallSheets() {
         emergency,
         prodContacts,
       }
-      const url = await publishShare({ workspaceId: state.workspace.id, kind: 'callsheet', ref: `callsheet:${project.id}:${day.id}`, data, userId: user?.id })
-      setShare({ url })
+      const ref = `callsheet:${project.id}:${day.id}`
+      const url = await publishShare({ workspaceId: state.workspace.id, kind: 'callsheet', ref, data, userId: user?.id })
+      // The code stays the same across re-shares of the same day, so crew are not asked twice.
+      let pin = ''
+      let pinError = ''
+      if (state.settings.sharePin) {
+        try { pin = await ensurePin({ workspaceId: state.workspace.id, ref }) } catch (e) { pinError = e.message }
+      }
+      setShare({ url, pin, pinError })
     } catch (e) {
       setShare({ error: e.message })
     }
@@ -169,9 +176,13 @@ export default function CallSheets() {
           <div className="stack">
             <p className="small muted">Anyone with this link sees the call sheet on their phone, no login needed: call times, location with directions, the pinned note, cast and crew calls and scenes. Department requirements and budgets stay inside the app. Sharing again after you edit refreshes the same link.</p>
             <div className="share-link"><input className="input" readOnly value={share.url} onFocus={(e) => e.target.select()} /><Button variant="ghost" onClick={() => copy(share.url)}>Copy</Button></div>
+            {share.pin && (
+              <p className="share-pin">Access code <b>{share.pin}</b> <span className="muted small">· the page shows nothing without it. It goes out with the link below.</span></p>
+            )}
+            {share.pinError && <p className="error small">{share.pinError}</p>}
             <div className="row-actions wrap">
-              <a className="btn btn-primary" href={waShareLink(`${project.title} · Call sheet Day ${dayIndex + 1} · ${day.date} · call ${day.callTime}\n${share.url}`)} target="_blank" rel="noreferrer">Send on WhatsApp</a>
-              <a className="btn btn-ghost" href={mailLink({ bcc: emails, subject, body: `${subject}\n\n${share.url}` })}>Mail</a>
+              <a className="btn btn-primary" href={waShareLink(`${project.title} · Call sheet Day ${dayIndex + 1} · ${day.date} · call ${day.callTime}\n${share.url}${share.pin ? `\nCode: ${share.pin}` : ''}`)} target="_blank" rel="noreferrer">Send on WhatsApp</a>
+              <a className="btn btn-ghost" href={mailLink({ bcc: emails, subject, body: `${subject}\n\n${share.url}${share.pin ? `\nCode: ${share.pin}` : ''}` })}>Mail</a>
               {navigator.share && <Button variant="ghost" onClick={() => navigator.share({ title: subject, url: share.url }).catch(() => {})}>Share…</Button>}
             </div>
           </div>
