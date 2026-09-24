@@ -1,21 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { fetchShare } from '../lib/shares.js'
+import { PinGate, usePublicShare } from '../components/PublicGate.jsx'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
 export default function PublicCallSheet() {
   const { token } = useParams()
-  const [share, setShare] = useState(undefined)
+  const { share, tryPin, pinErr } = usePublicShare(token)
   const [q, setQ] = useState('')
-  useEffect(() => {
-    document.documentElement.setAttribute('data-public', '1')
-    fetchShare(token).then((r) => setShare(r || null)).catch(() => setShare(null))
-    return () => document.documentElement.removeAttribute('data-public')
-  }, [token])
 
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading call sheet…</p></div>
   if (share?.closed) return <div className="pub"><div className="pub-card"><h1>This link is closed</h1><p className="muted">The production has closed this call sheet. Ask them for the current one.</p></div></div>
+  if (share?.locked) return <PinGate onTry={tryPin} err={pinErr} what="the call sheet" />
   if (share?.data?.expiresAt && new Date(share.data.expiresAt) < new Date()) return <div className="pub"><div className="pub-card"><h1>This call sheet has expired</h1><p className="muted">The shooting day has passed. Ask the production for the current one.</p></div></div>
   if (!share || share.kind !== 'callsheet') return <div className="pub"><div className="pub-card"><h1>This link has expired</h1><p className="muted">Ask the production for a fresh link.</p></div></div>
 

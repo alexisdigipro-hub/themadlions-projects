@@ -1,23 +1,17 @@
-import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { fetchShare } from '../lib/shares.js'
+import { PinGate, usePublicShare } from '../components/PublicGate.jsx'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
 export default function PublicStatus() {
   const { token } = useParams()
-  const [share, setShare] = useState(undefined)
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-public', '1')
-    fetchShare(token).then((r) => setShare(r || null)).catch(() => setShare(null))
-    return () => document.documentElement.removeAttribute('data-public')
-  }, [token])
+  const { share, tryPin, pinErr } = usePublicShare(token)
 
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading…</p></div>
   if (share?.closed) {
     return <div className="pub"><div className="pub-card"><h1>This link is closed</h1><p className="muted">The production has closed this page. Ask them for a fresh one.</p></div></div>
   }
+  if (share?.locked) return <PinGate onTry={tryPin} err={pinErr} what="this page" />
   if (!share || share.kind !== 'status') {
     return <div className="pub"><div className="pub-card"><h1>This link has expired</h1><p className="muted">Ask the production for a fresh one.</p></div></div>
   }

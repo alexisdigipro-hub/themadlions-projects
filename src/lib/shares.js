@@ -29,11 +29,27 @@ export async function removeShare({ workspaceId, ref }) {
   await family(supabase.from('shares').delete().eq('workspace_id', workspaceId), ref)
 }
 
-export async function fetchShare(t) {
+export async function fetchShare(t, pin = '') {
   if (!remote) throw new Error('Not available in this mode.')
-  const { data, error } = await supabase.rpc('share_get', { p_token: t })
+  let { data, error } = await supabase.rpc('share_get', pin ? { p_token: t, p_pin: pin } : { p_token: t })
+  // Before share_pin.sql has been run the function takes one argument, and asking with two is
+  // refused. Ask again the old way rather than showing a dead page.
+  if (error && pin && (error.code === 'PGRST202' || error.code === '42883')) ({ data, error } = await supabase.rpc('share_get', { p_token: t }))
   if (error) throw error
   return data
+}
+
+/* Six digits from the browser's random source, never from Math.random. */
+export const newPin = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => String(b % 10)).join('')
+
+/* The code already on a link, or a fresh one written to it. Members read the column directly. */
+export async function ensurePin({ workspaceId, ref }) {
+  const { data, error } = await supabase.from('shares').select('pin').eq('workspace_id', workspaceId).eq('ref', ref).maybeSingle()
+  if (error) throw new Error(error.code === '42703' ? 'Run supabase/share_pin.sql in the Supabase SQL editor to put a code on links.' : error.message)
+  if (data?.pin) return data.pin
+  const pin = newPin()
+  await setShareState({ workspaceId, ref, pin, one: true })
+  return pin
 }
 
 /* Every public link the team has published, newest first: delivery pages and call sheet pages
@@ -54,15 +70,19 @@ export async function listShares(workspaceId) {
 }
 
 /* Closing a link, reopening it, or giving it a date to close itself. */
-export async function setShareState({ workspaceId, ref, closed, expiresAt, one = false }) {
+export async function setShareState({ workspaceId, ref, closed, expiresAt, pin, one = false }) {
   if (!remote) return
   const patch = {}
   if (closed !== undefined) patch.closed = !!closed
   if (expiresAt !== undefined) patch.expires_at = expiresAt || null
+  if (pin !== undefined) patch.pin = String(pin || '').trim() || null
   if (!Object.keys(patch).length) return
   const base = supabase.from('shares').update(patch).eq('workspace_id', workspaceId)
   const { error } = await (one ? base.eq('ref', ref) : family(base, ref))
-  if (error) throw new Error(error.code === '42703' ? 'Run supabase/share_track.sql in the Supabase SQL editor to close and reopen links.' : error.message)
+  if (error) {
+    const file = pin !== undefined ? 'share_pin.sql' : 'share_track.sql'
+    throw new Error(error.code === '42703' ? `Run supabase/${file} in the Supabase SQL editor first.` : error.message)
+  }
 }
 
 /* Publishing again means the link should work again. Quiet on purpose: if share_track.sql has not

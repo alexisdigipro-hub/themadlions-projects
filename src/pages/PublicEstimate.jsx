@@ -1,32 +1,30 @@
 import { Fragment, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { fetchShare, respondToDelivery } from '../lib/shares.js'
+import { respondToDelivery } from '../lib/shares.js'
+import { PinGate, usePublicShare } from '../components/PublicGate.jsx'
 import { amount, estimateTotals, groupLines, lineAmount } from '../lib/estimate.js'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
 export default function PublicEstimate() {
   const { token } = useParams()
-  const [share, setShare] = useState(undefined)
+  const { share, tryPin, pinErr } = usePublicShare(token)
   const [name, setName] = useState('')
   const [note, setNote] = useState('')
   const [sent, setSent] = useState('')
   const [busy, setBusy] = useState('')
   const [err, setErr] = useState('')
 
+  // A page made for one person already knows the name, so the reply form does not ask for it again.
   useEffect(() => {
-    document.documentElement.setAttribute('data-public', '1')
-    fetchShare(token).then((r) => {
-      setShare(r || null)
-      if (r?.data?.recipient?.name) setName(r.data.recipient.name)
-    }).catch(() => setShare(null))
-    return () => document.documentElement.removeAttribute('data-public')
-  }, [token])
+    if (share?.data?.recipient?.name) setName(share.data.recipient.name)
+  }, [share])
 
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading…</p></div>
   if (share?.closed) {
     return <div className="pub"><div className="pub-card"><h1>This link is closed</h1><p className="muted">The production has closed this page. Ask them for a fresh one.</p></div></div>
   }
+  if (share?.locked) return <PinGate onTry={tryPin} err={pinErr} what="this page" />
   if (!share || share.kind !== 'estimate') {
     return <div className="pub"><div className="pub-card"><h1>This link has expired</h1><p className="muted">Ask the production for a fresh one.</p></div></div>
   }

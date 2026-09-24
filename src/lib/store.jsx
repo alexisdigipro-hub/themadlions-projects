@@ -659,8 +659,16 @@ export function StoreProvider({ children }) {
         if (before[n.id] && JSON.stringify(before[n.id]) === JSON.stringify(n)) return
         myWrites.current.add(n.id)
         schedule('n:' + n.id, async () => {
-          const { error } = await supabase.from('notices').upsert({ id: n.id, workspace_id: ws, from_id: n.fromId || null, recipients: n.to === 'all' ? ['all'] : n.to, data: n })
-          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/notices.sql in the SQL editor to enable notices.' : error.message)
+          // A recipient may only say "Got it", and that goes through ack_notice(), which can write
+          // nothing but their own acknowledgement. Only the sender and administrators write the row.
+          const mine = !!n.fromId && n.fromId === authUser?.id
+          if (!mine && membership?.role !== 'admin') {
+            const { error } = await supabase.rpc('ack_notice', { p_id: n.id })
+            if (error) throw new Error(error.code === '42883' || error.code === 'PGRST202' ? 'Run supabase/notices_ack.sql in the SQL editor.' : error.message)
+          } else {
+            const { error } = await supabase.from('notices').upsert({ id: n.id, workspace_id: ws, from_id: n.fromId || null, recipients: n.to === 'all' ? ['all'] : n.to, data: n })
+            if (error) throw new Error(error.code === '42P01' ? 'Run supabase/notices.sql in the SQL editor to enable notices.' : error.message)
+          }
           setTimeout(() => myWrites.current.delete(n.id), 4000)
         }, 300)
       })
