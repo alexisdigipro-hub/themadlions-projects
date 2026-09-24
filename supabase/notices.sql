@@ -37,3 +37,6 @@ begin
     alter publication supabase_realtime add table notices;
   end if;
 end $$;
+
+-- Note: supabase/notices_ack.sql narrows notices_update to the sender and administrators and
+-- moves "Got it" into ack_notice(). Run it after this file.
