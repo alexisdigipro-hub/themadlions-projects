@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Small: My work job form fills from the project
+Alex: "put the projects in the entry so that when a project exists it takes the name, the date". In `WorkLogTable`'s Add job form the Project select moved to the first row; `fillFromProject()` and `projectWorkDate()` in WorkLog.jsx fill client, description and date, touching only fields that are empty or still hold the previous project's fill. Tested in node (9 cases). The same could be done in the Finance transaction form; not asked, not done.
+
 ### Small: the budget line dialog is the wide one on desktop
 Alex found the "New budget line" dialog cramped. It now passes `wide` to Modal (960px instead of 560px). Phones are untouched: the mobile layer already makes every dialog full width.
 
