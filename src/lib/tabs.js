@@ -32,3 +32,18 @@ export function projectTabs(project) {
 export function tabHidden(project, to) {
   return Array.isArray(project?.hiddenTabs) && project.hiddenTabs.includes(to)
 }
+
+/* Every tab a project of this category could hide: all but Overview. A new project starts with
+   this list, so it opens with Overview alone and the rest are switched on one by one. */
+export function allHideable(project) {
+  return projectTabs(project).filter((t) => !t.fixed).map((t) => t.to)
+}
+
+/* When the category changes, tabs that only exist in the new category (Music for a music video,
+   Script for anything but an event) start hidden too, so nothing appears unasked. */
+export function hiddenAfterCategory(project, nextCategory) {
+  const before = new Set(projectTabs(project).map((t) => t.to))
+  const hidden = new Set(Array.isArray(project?.hiddenTabs) ? project.hiddenTabs : [])
+  for (const t of projectTabs({ ...project, category: nextCategory })) if (!before.has(t.to) && !t.fixed) hidden.add(t.to)
+  return [...hidden]
+}
