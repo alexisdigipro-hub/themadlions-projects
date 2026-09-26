@@ -5,14 +5,30 @@ import { CATEGORIES, STATUSES, can, emptyProject, nextProjectCode, useCurrentUse
 import { fmtDate } from '../lib/dates.js'
 import { projectProgress } from '../lib/progress.js'
 import { compress } from '../lib/photos.js'
-import { projectTabs } from '../lib/tabs.js'
+import { allHideable, hiddenAfterCategory, projectTabs } from '../lib/tabs.js'
+
+/* The row of tab chips: on = shown, struck through = hidden, Overview fixed. Used by the project
+   form and by the strip on the Overview, so switching a tab on is one tap either way. */
+export function TabPicker({ project, onChange }) {
+  const hidden = Array.isArray(project.hiddenTabs) ? project.hiddenTabs : []
+  const toggle = (to) => onChange(hidden.includes(to) ? hidden.filter((t) => t !== to) : [...hidden, to])
+  return (
+    <div className="tab-pick">
+      {projectTabs(project).map((t) => (
+        <button key={t.to} type="button" className={`chip ${hidden.includes(t.to) ? '' : 'on'}`} disabled={t.fixed} aria-pressed={!hidden.includes(t.to)} onClick={() => toggle(t.to)}>
+          {t.label}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 const COLORS = ['#C8503F', '#D9A441', '#5B9E7A', '#6C9BD1', '#B07FD1', '#E08A5A', '#4FB3BF', '#9AA0A6']
 
 export function ProjectForm({ value, onChange }) {
   const set = (k) => (e) => onChange({ ...value, [k]: e.target.value })
-  const hidden = Array.isArray(value.hiddenTabs) ? value.hiddenTabs : []
-  const toggleTab = (to) => onChange({ ...value, hiddenTabs: hidden.includes(to) ? hidden.filter((t) => t !== to) : [...hidden, to] })
+  // a category switch can bring new tabs (Music, Script…); they start hidden, like everything else
+  const setCategory = (e) => onChange({ ...value, category: e.target.value, hiddenTabs: hiddenAfterCategory(value, e.target.value) })
   return (
     <div className="stack">
       <Field label="Title">
@@ -20,7 +36,7 @@ export function ProjectForm({ value, onChange }) {
       </Field>
       <div className="row-2">
         <Field label="Category">
-          <Select value={value.category} onChange={set('category')} options={CATEGORIES} />
+          <Select value={value.category} onChange={setCategory} options={CATEGORIES} />
         </Field>
         <Field label="Status">
           <Select value={value.status} onChange={set('status')} options={STATUSES} />
@@ -52,21 +68,8 @@ export function ProjectForm({ value, onChange }) {
           {value.coverThumb && <button type="button" className="link small" onClick={() => onChange({ ...value, coverThumb: '' })}>Remove</button>}
         </div>
       </Field>
-      <Field label="Tabs" hint="Only the tabs this project needs. Overview always stays. Nothing is deleted, a hidden tab keeps its data.">
-        <div className="tab-pick">
-          {projectTabs(value).map((t) => (
-            <button
-              key={t.to}
-              type="button"
-              className={`chip ${hidden.includes(t.to) ? '' : 'on'}`}
-              disabled={t.fixed}
-              aria-pressed={!hidden.includes(t.to)}
-              onClick={() => toggleTab(t.to)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+      <Field label="Tabs" hint="A new project starts with Overview alone. Tap the tabs it needs; tap again to hide one. Nothing is deleted, a hidden tab keeps its data.">
+        <TabPicker project={value} onChange={(hiddenTabs) => onChange({ ...value, hiddenTabs })} />
       </Field>
       <div className="field">
         <span className="field-label">Colour</span>
@@ -95,6 +98,11 @@ export default function Dashboard() {
   const [filter, setFilter] = useState('All')
   const [q, setQ] = useState('')
   const canEdit = can(user, 'projects', 'edit')
+  // a new project: the workspace defaults, and every tab but Overview switched off (Alex's call)
+  const freshProject = () => {
+    const base = { ...emptyProject(), category: state.settings?.defaultCategory || 'Music Video', budget: { lines: [], contingencyPct: Number(state.settings?.budgetContingency ?? 10), currency: state.settings?.budgetCurrency || 'EUR', cap: '' }, isNew: true }
+    return { ...base, hiddenTabs: allHideable(base) }
+  }
 
   const projects = visibleProjects(state, user)
     .filter((p) => filter === 'All' || p.category === filter)
@@ -118,7 +126,7 @@ export default function Dashboard() {
       <PageHead title="Projects" sub={`${projects.length} of ${visibleProjects(state, user).length} shown`}>
         <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="input search" />
         {canEdit && (
-          <Button variant="primary" onClick={() => setDraft({ ...emptyProject(), category: state.settings?.defaultCategory || 'Music Video', budget: { lines: [], contingencyPct: Number(state.settings?.budgetContingency ?? 10), currency: state.settings?.budgetCurrency || 'EUR', cap: '' }, isNew: true })}>
+          <Button variant="primary" onClick={() => setDraft(freshProject())}>
             New project
           </Button>
         )}
@@ -136,7 +144,7 @@ export default function Dashboard() {
       {projects.length === 0 ? (
         <Empty
           title={state.projects.length ? 'Nothing matches' : 'No projects yet'}
-          action={canEdit && !state.projects.length && <Button variant="primary" onClick={() => setDraft({ ...emptyProject(), category: state.settings?.defaultCategory || 'Music Video', budget: { lines: [], contingencyPct: Number(state.settings?.budgetContingency ?? 10), currency: state.settings?.budgetCurrency || 'EUR', cap: '' }, isNew: true })}>Create the first project</Button>}
+          action={canEdit && !state.projects.length && <Button variant="primary" onClick={() => setDraft(freshProject())}>Create the first project</Button>}
         >
           {state.projects.length ? 'Try another category or search term.' : 'A project holds the script, breakdown, schedule, call sheets, locations and people.'}
         </Empty>

@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### New projects open with Overview alone
+Alex: "when you open a new project only the Overview tab should exist, and I switch on the ones I want." `freshProject()` in Dashboard.jsx (both New project buttons) sets `hiddenTabs = allHideable(project)`. `hiddenAfterCategory()` in src/lib/tabs.js adds the tabs a category switch brings in, so they start hidden too (form only). The chips moved into `TabPicker` (exported from Dashboard.jsx) and now also sit in a strip at the top of the Overview (`.ov-tabs`, for anyone with projects = edit), so switching a tab on is one tap without opening Edit details. Existing projects are untouched: still a hide-list, nothing stored means every tab.
+
 ### Small: a lilac accent
 Fifth accent in Settings > Display: `data-accent='lilac'`, #7a5ec7 on light with white text, #a78fe0 on dark with dark text. Same mechanism as the other four (localStorage `tml_accent`, applied in main.jsx).
 
