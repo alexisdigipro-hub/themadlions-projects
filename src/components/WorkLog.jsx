@@ -30,6 +30,31 @@ export const AGE_BUCKETS = [
 ]
 export const ageBucket = (days) => (days <= 30 ? 'fresh' : days <= 60 ? 'warn' : 'late')
 
+/* The shooting day a job most likely belongs to: the latest day already shot, else the first one
+   coming, else the project's start date. Days are YYYY-MM-DD, so plain string order works. */
+export function projectWorkDate(p, from = today()) {
+  const days = (p?.shootingDays || []).map((d) => d.date).filter(Boolean).sort()
+  const past = days.filter((d) => d <= from)
+  return past[past.length - 1] || days[0] || p?.startDate || ''
+}
+
+/* Choosing a project in the job form fills the client, the description and the date from it.
+   Only fields that are empty, or still hold what the previous project filled in, are touched:
+   what the person typed by hand stays. Clearing the project keeps everything as it is. */
+export function fillFromProject(draft, projects, projectId) {
+  const prev = projects.find((p) => p.id === draft.projectId)
+  const next = projects.find((p) => p.id === projectId)
+  const out = { ...draft, projectId }
+  if (!next) return out
+  const free = (val, was) => !val || (prev && val === was)
+  const prevClient = prev ? prev.client || prev.title : ''
+  if (free(draft.client, prevClient)) out.client = next.client || next.title
+  if (free(draft.description, prev?.title)) out.description = next.title
+  const prevDate = prev ? projectWorkDate(prev) : ''
+  if (!draft.date || draft.date === today() || (prev && draft.date === prevDate)) out.date = projectWorkDate(next) || draft.date
+  return out
+}
+
 /* Flip one job between paid and pending. Shared so Team work and My work behave the same. */
 export const togglePaidEntry = (update, id) => update((s) => {
   const x = (s.worklog || []).find((y) => y.id === id)
@@ -180,13 +205,15 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
         {draft && (
           <div className="stack">
             <div className="row-2">
-              <Field label="Client / artist"><Input value={draft.client} onChange={(e) => setDraft({ ...draft, client: e.target.value })} placeholder="Καίτη Γαρμπή" autoFocus /></Field>
-              <Field label="Shooting date"><Input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
+              <Field label="Project (optional)" hint="Pick one and the client, the description and the shooting date fill in from it.">
+                <Select value={draft.projectId || ''} onChange={(e) => setDraft(fillFromProject(draft, projects, e.target.value))} options={[['', 'Not linked'], ...projects.map((p) => [p.id, p.title])]} autoFocus />
+              </Field>
+              <Field label="Client / artist"><Input value={draft.client} onChange={(e) => setDraft({ ...draft, client: e.target.value })} placeholder="Καίτη Γαρμπή" /></Field>
             </div>
             <Field label="Description"><Input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder="Song title, spot, live, intro…" /></Field>
             <div className="row-2">
+              <Field label="Shooting date"><Input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
               <Field label="Amount (€)"><Input type="number" inputMode="decimal" value={draft.amount} onChange={(e) => setDraft({ ...draft, amount: e.target.value })} placeholder="150" /></Field>
-              <Field label="Project (optional)"><Select value={draft.projectId || ''} onChange={(e) => setDraft({ ...draft, projectId: e.target.value })} options={[['', 'Not linked'], ...projects.map((p) => [p.id, p.title])]} /></Field>
             </div>
             <div className="row-2">
               <Field label="Status"><Select value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value })} options={[['pending', 'Pending'], ['paid', 'Paid']]} /></Field>
