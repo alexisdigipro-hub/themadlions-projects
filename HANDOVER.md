@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Small: the budget line takes the project's shooting day
+Alex expected the project name and date in the budget line form ("it does not show me the projects"). The line is inside a project, so there is no project select; instead, picking a team member now fills Work date from `projectWorkDate(project)` (latest day shot, else first coming, else start date) unless a date is set, and the hint under Work date spells out how the job will read in their My work: "<project title> · <description>" on <date>.
+
 ### Small: one amount per budget line
 Alex: "Flat estimate and Actual spent I do not need; whoever it is, we enter one amount." The line form is now Category, Paid to, Work date or Vendor, Description, **Amount**, Notes. Amount is stored in `estimate`; qty is set to 1, unit to flat, rate to 0 on the first edit. Old qty × rate lines keep their total (`lineEstimate()` still reads them) and show it in the field. Actual only comes from payments now (Finance or Pay). Table columns: Category, Description, Amount, Paid, Balance. CSV follows. The Var. column and the `variance()` helper are gone.
 

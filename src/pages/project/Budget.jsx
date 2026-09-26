@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
-import { download } from '../../lib/dates.js'
+import { download, fmtDate } from '../../lib/dates.js'
+import { projectWorkDate } from '../../components/WorkLog.jsx'
 import { useCurrentUser, useStore } from '../../lib/store.jsx'
 import PaymentModal from '../../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog, dropLineWorklog } from '../../lib/budget.js'
@@ -255,11 +256,12 @@ export default function Budget() {
               </select>
             </Field>
             <Field label="Paid to" hint={draft.memberId ? 'A team member: this line goes into their My work, and turns to paid when you pay it.' : ''}>
-              <Select value={draft.memberId || ''} onChange={(e) => setDraft({ ...draft, memberId: e.target.value })} options={[['', 'Someone outside the team'], ...team.map((u) => [u.id, teamLabel(u)])]} />
+              {/* picking a member also takes the project's shooting day as the work date, unless one is set already */}
+              <Select value={draft.memberId || ''} onChange={(e) => setDraft({ ...draft, memberId: e.target.value, date: draft.date || (e.target.value ? projectWorkDate(project) : '') })} options={[['', 'Someone outside the team'], ...team.map((u) => [u.id, teamLabel(u)])]} />
             </Field>
           </div>
           {draft.memberId ? (
-            <Field label="Work date" hint="The day My work files this job under. Leave empty for today."><Input type="date" value={draft.date || ''} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
+            <Field label="Work date" hint={`From the project's shooting days. Goes into ${team.find((u) => u.id === draft.memberId)?.name || 'their'} My work as "${project.title}${draft.description ? ` · ${draft.description}` : ''}"${draft.date ? ` on ${fmtDate(draft.date)}` : ', dated today'}.`}><Input type="date" value={draft.date || ''} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
           ) : (
             <Field label="Vendor / payee"><Input value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} placeholder="Optional" /></Field>
           )}
