@@ -2,6 +2,7 @@ import { Link, NavLink, Navigate, Outlet, useOutletContext, useParams } from 're
 import { Badge } from '../components/ui.jsx'
 import { can, canAccessProject, useCurrentUser, useStore } from '../lib/store.jsx'
 import { hydrateProject } from '../lib/library.js'
+import { projectTabs, tabHidden } from '../lib/tabs.js'
 import { Icon } from '../components/icons.jsx'
 
 // The brainstorm whiteboard is built and working but Alex does not need it yet, so the tab is
@@ -21,27 +22,13 @@ export default function Project() {
 
   if (!project || !canAccessProject(user, id)) return <Navigate to="/" replace />
 
+  // The full list lives in src/lib/tabs.js. Two filters: what this person may see, then what
+  // this project chose to show (Edit details > Tabs). A hidden tab's page still answers its URL,
+  // so an old link keeps working; it just has no tab.
   const tabs = [
-    { to: '', label: 'Overview', end: true, key: 'projects', icon: 'overview' },
-    ...(project.category === 'Music Video' ? [{ to: 'music', label: 'Music', key: 'music', icon: 'music' }] : []),
-    ...(project.category === 'Event' ? [] : [
-      { to: 'script', label: 'Script', key: 'script', icon: 'script' },
-      { to: 'breakdown', label: 'Breakdown', key: 'breakdown', icon: 'breakdown' },
-      { to: 'shots', label: 'Shot list', key: 'shots', icon: 'shots' },
-    ]),
-    { to: 'schedule', label: project.category === 'Event' ? 'Run of show' : 'Schedule', key: 'schedule', icon: 'schedule' },
-    { to: 'callsheets', label: 'Call sheets', key: 'callsheets', icon: 'callsheets' },
-    { to: 'tasks', label: 'Tasks', key: 'tasks', icon: 'tasks' },
-    { to: 'reports', label: 'Reports', key: 'reports', icon: 'reports' },
-    { to: 'budget', label: 'Budget', key: 'budget', icon: 'budget' },
-    { to: 'gear', label: 'Equipment', key: 'gear', icon: 'gear' },
-    { to: 'post', label: 'Post', key: 'post', icon: 'post' },
-    { to: 'calendar', label: 'Calendar', key: 'calendar', icon: 'calendar' },
-    { to: 'locations', label: 'Locations', key: 'locations', icon: 'locations' },
-    { to: 'people', label: project.category === 'Event' ? 'Crew & talent' : 'Cast & crew', key: 'contacts', icon: 'people' },
+    ...projectTabs(project),
     ...(SHOW_WHITEBOARD ? [{ to: 'whiteboard', label: 'Whiteboard', key: 'files', icon: 'notes' }] : []),
-    { to: 'notes', label: 'Files & notes', key: 'files', icon: 'notes' },
-  ].filter((t) => can(user, t.key))
+  ].filter((t) => can(user, t.key) && !tabHidden(project, t.to))
 
   const ctx = {
     project,

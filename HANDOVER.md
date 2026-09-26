@@ -36,12 +36,15 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
-## Where we stopped (20 Sep 2026)
+## Where we stopped (26 Sep 2026)
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Last change: tabs per project
+Alex asked to switch off the tabs a project does not use. `project.hiddenTabs` holds the route names it hides (a hide-list, so old projects and any tab added later show everything). The one tab list is `projectTabs()` in src/lib/tabs.js, used by the tab bar in Project.jsx and by the Tabs chips in `ProjectForm` (Dashboard.jsx, reached from Overview > Edit details). Overview is `fixed` and cannot be hidden. A hidden tab's page still answers its URL. Progress stages on the Overview still count and link to hidden tabs; left alone on purpose, ask Alex if a hidden Budget should also drop out of the progress bar. No SQL: it is a key inside the project document.
+
 ### Alex still has to do
-- Run in Supabase, in this order: **estimates.sql**, **share_access.sql** again (it changed when estimates became administrators only), then **share_pin.sql** and **notices_ack.sql** from the security pass. Everything before that is confirmed run, since the Share page reported no missing columns after his own test.
+- Run in Supabase, in this order: **estimates.sql**, **share_access.sql** again (it changed when estimates became administrators only), then **share_pin.sql** and **notices_ack.sql** from the security pass. Everything before that is confirmed run, since the Share page reported no missing columns after his own test. PR #34 (security pass) is merged; the two SQL files from it are still unconfirmed.
 - Never confirmed run, from older work: notices.sql, worklog.sql, drives.sql, activity.sql. If a feature complains, that is why.
 - Delete the two test deliveries he made while checking the Share page.
 - **registry.npmjs.org is still blocked** on the Alexkayne cloud environment, so `npm ci` and `npm run build` cannot run in a cloud session. The GitHub Actions build on each pull request is the only real build check. He was asked to open it and has not.

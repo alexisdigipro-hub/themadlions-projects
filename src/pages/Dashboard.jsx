@@ -5,11 +5,14 @@ import { CATEGORIES, STATUSES, can, emptyProject, nextProjectCode, useCurrentUse
 import { fmtDate } from '../lib/dates.js'
 import { projectProgress } from '../lib/progress.js'
 import { compress } from '../lib/photos.js'
+import { projectTabs } from '../lib/tabs.js'
 
 const COLORS = ['#C8503F', '#D9A441', '#5B9E7A', '#6C9BD1', '#B07FD1', '#E08A5A', '#4FB3BF', '#9AA0A6']
 
 export function ProjectForm({ value, onChange }) {
   const set = (k) => (e) => onChange({ ...value, [k]: e.target.value })
+  const hidden = Array.isArray(value.hiddenTabs) ? value.hiddenTabs : []
+  const toggleTab = (to) => onChange({ ...value, hiddenTabs: hidden.includes(to) ? hidden.filter((t) => t !== to) : [...hidden, to] })
   return (
     <div className="stack">
       <Field label="Title">
@@ -47,6 +50,22 @@ export function ProjectForm({ value, onChange }) {
           {value.coverThumb && <img src={value.coverThumb} alt="" />}
           <input type="file" accept="image/*" className="input" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; try { const c = await compress(f, { max: 1200, quality: 0.8, thumb: 640 }); onChange({ ...value, coverThumb: c.thumb }) } catch {} }} />
           {value.coverThumb && <button type="button" className="link small" onClick={() => onChange({ ...value, coverThumb: '' })}>Remove</button>}
+        </div>
+      </Field>
+      <Field label="Tabs" hint="Only the tabs this project needs. Overview always stays. Nothing is deleted, a hidden tab keeps its data.">
+        <div className="tab-pick">
+          {projectTabs(value).map((t) => (
+            <button
+              key={t.to}
+              type="button"
+              className={`chip ${hidden.includes(t.to) ? '' : 'on'}`}
+              disabled={t.fixed}
+              aria-pressed={!hidden.includes(t.to)}
+              onClick={() => toggleTab(t.to)}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
       </Field>
       <div className="field">
