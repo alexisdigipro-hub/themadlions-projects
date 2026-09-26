@@ -46,6 +46,27 @@ export function syncLineWorklog(s, project, line) {
   else s.worklog.push(next)
 }
 
+/* The budget line that already pays this person on this project, if the production entered one. */
+export function findMemberLine(project, userId) {
+  return (project?.budget?.lines || []).find((l) => l.memberId && l.memberId === userId) || null
+}
+
+/* The other direction: a job someone entered in their own My work becomes a budget line on the
+   project, paid to them. Category: their department when it is one of the budget categories,
+   else Production staff, else the first category there is. */
+export function budgetLineFromJob(job, user, categories = []) {
+  const dept = user?.profile?.dept || ''
+  const category = categories.includes(dept) ? dept : categories.includes('Production staff') ? 'Production staff' : categories[0] || 'Production staff'
+  return {
+    id: uid(), category,
+    description: job.description || (user?.profile?.position || user?.name || 'Fee'),
+    qty: 1, unit: 'flat', rate: 0,
+    estimate: Number(job.amount) || 0, actual: '',
+    vendor: user?.name || '', memberId: job.userId, date: job.date || '',
+    notes: 'From My work',
+  }
+}
+
 export function dropLineWorklog(s, lineId) {
   if (!s.worklog) return
   s.worklog = s.worklog.filter((e) => e.budgetLineId !== lineId)

@@ -1,7 +1,10 @@
 import { useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from './ui.jsx'
-import { today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { download, fmtDate } from '../lib/dates.js'
+import { remote, supabase } from '../lib/supabase.js'
+import { budgetLineFromJob, findMemberLine, lineEstimate, linePaid, lineBalance } from '../lib/budget.js'
+import { budgetCategories } from '../lib/budgetCats.js'
 
 export const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 export const money2 = (n, cur = 'EUR') => new Intl.NumberFormat('el-GR', { style: 'currency', currency: cur, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0)
@@ -103,6 +106,41 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
     })
     if (!years.includes(e.date.slice(0, 4))) setYear(e.date.slice(0, 4))
     setDraft(null)
+    claimBudget(e)
+  }
+  /* A job on a project puts the person's fee into that project's budget, unless the production
+     already entered a line paying them. Someone with Budget = edit writes the project directly;
+     anyone else goes through claim_budget_line(), which can add one line for themself and
+     nothing more. The job is then linked to the line, so a payment turns it to paid. */
+  const owner = state.users.find((u) => u.id === userId) || me
+  const claimBudget = async (job) => {
+    if (!job.projectId || job.budgetLineId || !(Number(job.amount) > 0)) return
+    const project = state.projects.find((p) => p.id === job.projectId)
+    if (!project) return
+    if (findMemberLine(project, job.userId)) return
+    const line = budgetLineFromJob(job, owner, budgetCategories(state.settings))
+    const link = (lineId) => update((s) => { const x = (s.worklog || []).find((y) => y.id === job.id); if (x) x.budgetLineId = lineId; return s })
+    const direct = !remote || can(me, 'budget', 'edit')
+    if (direct) {
+      update((s) => {
+        const p = s.projects.find((x) => x.id === job.projectId)
+        if (!p) return s
+        p.budget = p.budget || { lines: [], contingencyPct: 10, currency: 'EUR' }
+        if (!findMemberLine(p, job.userId)) { p.budget.lines.push(line); p.updatedAt = new Date().toISOString() }
+        const x = (s.worklog || []).find((y) => y.id === job.id)
+        if (x) x.budgetLineId = line.id
+        return s
+      })
+      toast(`Added to the ${project.title} budget`, 'ok')
+      return
+    }
+    if (job.userId !== me?.id) return // an administrator editing someone else's job took the direct path above
+    const { data, error } = await supabase.rpc('claim_budget_line', { p_project: job.projectId, p_line: line })
+    if (error) {
+      toast(error.code === 'PGRST202' || error.code === '42883' ? 'The production has to run supabase/worklog_budget.sql before a job can reach the budget.' : error.message, 'error')
+      return
+    }
+    if (data) { link(data); toast(`Added to the ${project.title} budget`, 'ok') }
   }
   const togglePaid = (e) => togglePaidEntry(update, e.id)
   const remove = (id) => update((s) => { s.worklog = (s.worklog || []).filter((x) => x.id !== id); return s })
@@ -205,7 +243,14 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
         {draft && (
           <div className="stack">
             <div className="row-2">
-              <Field label="Project (optional)" hint="Pick one and the client, the description and the shooting date fill in from it.">
+              <Field label="Project (optional)" hint={(() => {
+                const p = draft.projectId ? state.projects.find((x) => x.id === draft.projectId) : null
+                const l = p ? findMemberLine(p, userId) : null
+                if (l && draft.budgetLineId === l.id) return 'This job is the fee the production entered in the budget.'
+                if (l) return `Your fee on this project is already in its budget: ${money2(lineEstimate(l))}${linePaid(l) ? `, ${money2(linePaid(l))} paid` : ''}${lineBalance(l) === 0 && linePaid(l) ? ', settled' : ''}. This job will not be added again.`
+                if (p) return 'Saving puts this amount into the project budget as your fee.'
+                return 'Pick one and the client, the description and the shooting date fill in from it.'
+              })()}>
                 <Select value={draft.projectId || ''} onChange={(e) => setDraft(fillFromProject(draft, projects, e.target.value))} options={[['', 'Not linked'], ...projects.map((p) => [p.id, p.title])]} autoFocus />
               </Field>
               <Field label="Client / artist"><Input value={draft.client} onChange={(e) => setDraft({ ...draft, client: e.target.value })} placeholder="Καίτη Γαρμπή" /></Field>
