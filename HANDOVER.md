@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Small: a lilac accent
+Fifth accent in Settings > Display: `data-accent='lilac'`, #7a5ec7 on light with white text, #a78fe0 on dark with dark text. Same mechanism as the other four (localStorage `tml_accent`, applied in main.jsx).
+
 ### Weekly backups inside Supabase
 Alex asked for a weekly backup after learning the free plan keeps none. Done without any credential leaving Supabase: supabase/backups.sql adds a `backups` table, `snapshot_workspace()` (every table with a workspace_id, row by row, as jsonb, tables read only if they exist), `make_backup()` (keeps the last 12 per workspace), `backup_all()` (one per workspace) scheduled with pg_cron every Monday 03:00 UTC, and `make_backup_now()` for an administrator. RLS: admins read their own workspace's rows, nobody writes from the app. The file takes a first snapshot when run. Settings > Data > Weekly backups (`BackupsPanel`) lists them, Back up now, Download; `snapshotToState()` in src/lib/backups.js turns a row into the shape the existing Restore button reads (projects, events, library are what `replaceState` puts back; users, finance, worklog, notices, shares ride along in the file for a hand restore). Not a GitHub Actions job on purpose: that would need the database password as a secret and would leave the dump where the repo's readers can fetch it.
 

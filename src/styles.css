@@ -53,6 +53,10 @@ html[data-accent='amber'] { --accent: #c9932f; --accent-ink: #1c1608; }
 html[data-accent='red'] { --accent: #c8503f; --accent-ink: #ffffff; }
 html[data-accent='slate'] { --accent: #3f5578; --accent-ink: #ffffff; }
 html[data-accent='ink'] { --accent: #1f2430; --accent-ink: #ffffff; }
+/* lilac: a shade deeper on the light theme so white text stays readable on buttons, a shade
+   lighter on the dark theme so it still reads as lilac against the dark panels */
+html[data-accent='lilac'] { --accent: #7a5ec7; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='lilac'] { --accent: #a78fe0; --accent-ink: #1a1530; }
 html[data-theme='light'][data-accent='ink'] { --accent: #1f2430; }
 html[data-theme='dark'][data-accent='ink'] { --accent: #ece9e2; --accent-ink: #17181c; }
 

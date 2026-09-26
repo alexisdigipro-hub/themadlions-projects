@@ -30,7 +30,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Transcript from the audio shown in the Script tab of music video projects, with copy and "use as script text"
 - Home: this week (shoot and event days, calendar items), needs attention (overdue tasks, budgets over cap, unpaid invoices for admins), all projects with progress, next day, open tasks and budget vs cap, counts by status and type, finance snapshot for admins
 - Project files: uploads to a private Supabase bucket (50 MB per file on the free plan) with open and download, plus a cloud folder link per project (pCloud, Drive, Dropbox) for footage and masters
-- Light and dark themes with four accent colours (Settings → Display, per device); the light theme is the default
+- Light and dark themes with five accent colours (Lion amber, Red, Slate blue, Lilac, Ink; Settings → Display, per device); the light theme is the default
 - Call sheets laid out like a professional call sheet: company block with producer, director and key crew, big general crew call with a one-line message, day and date with weather, sunrise and sunset, shooting call / lunch / wrap, a pinned note everyone reads, and a location grid with set location, parking and nearest hospital
 - Call sheets generated per shoot day with sunrise, sunset, golden hour and a fetched weather forecast (open-meteo, no key), printable to PDF
 - Script sides per shoot day, printable
