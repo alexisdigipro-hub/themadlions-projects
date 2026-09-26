@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Modal, Stat, useToast } from '../../components/ui.jsx'
-import { ProjectForm, TabPicker } from '../Dashboard.jsx'
+import { ProjectForm } from '../Dashboard.jsx'
 import { useProject } from '../Project.jsx'
 import { EVENT_TYPES, today, useStore } from '../../lib/store.jsx'
 import { formatPages } from '../../lib/breakdown.js'
@@ -43,12 +43,6 @@ export default function Overview() {
 
   return (
     <div className="overview">
-      {canEdit('projects') && (
-        <section className="ov-tabs no-print">
-          <span className="ov-tabs-label">Tabs</span>
-          <TabPicker project={project} onChange={(hiddenTabs) => edit((p) => { p.hiddenTabs = hiddenTabs })} />
-        </section>
-      )}
       <section className="panel progress">
         <div className="progress-head">
           <div className="progress-cover">
