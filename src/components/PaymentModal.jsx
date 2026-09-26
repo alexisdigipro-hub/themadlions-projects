@@ -3,16 +3,7 @@ import { Button, Field, Input, Modal, Select, useToast } from './ui.jsx'
 import { today, uid, useStore } from '../lib/store.jsx'
 import { DOCS, METHODS, emptyTx, money } from '../lib/finance.js'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
-
-// budget category -> finance expense category
-export const FIN_CAT = {
-  'Production staff': 'Crew', Camera: 'Crew', Lighting: 'Crew', Grip: 'Crew', Sound: 'Crew', Producer: 'Crew', Director: 'Crew', Extras: 'Cast', Cast: 'Cast', Casting: 'Cast',
-  'Equipment rental': 'Equipment rental', Studio: 'Locations & permits', Locations: 'Locations & permits', 'Art & set': 'Art & props', Props: 'Art & props',
-  Wardrobe: 'Wardrobe & makeup', 'Makeup & hair': 'Wardrobe & makeup', Transport: 'Transport', Catering: 'Catering', 'Production office': 'Office rent',
-  'Travel & accommodation': 'Travel', Editing: 'Post-production', Color: 'Post-production', 'Sound post': 'Post-production', VFX: 'Post-production',
-  'Titles & graphics': 'Post-production', Deliverables: 'Post-production', Subtitles: 'Post-production', Music: 'Music & rights', 'Story & rights': 'Music & rights',
-  Insurance: 'Insurance', 'Legal & accounting': 'Accounting & legal', Marketing: 'Marketing', 'Festival & distribution': 'Marketing',
-}
+import { finCatFor } from '../lib/budgetCats.js'
 
 
 /* Records a payment against a project budget line: creates the Finance expense and updates the line. */
@@ -21,7 +12,7 @@ export function recordPayment(s, { projectId, lineId, amount, date, method, doc,
   const line = p?.budget?.lines?.find((l) => l.id === lineId)
   if (!p || !line) return null
   const tx = emptyTx('expense', {
-    date, projectId, category: FIN_CAT[line.category] || 'Other expense', description: `${line.description}${note ? ` · ${note}` : ''}`, party: line.vendor || '',
+    date, projectId, category: finCatFor(s.settings, line.category), description: `${line.description}${note ? ` · ${note}` : ''}`, party: line.vendor || '',
     net: Number(amount), vatPct: Number(vatPct) || 0, status: 'paid', paidOn: date, doc, docNumber, method, budgetLineId: line.id, syncBudget: false,
   })
   s.finance.transactions.push(tx)

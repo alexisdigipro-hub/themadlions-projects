@@ -2922,12 +2922,37 @@ html[data-public='1'] body { background: var(--bg); }
 .settings-tabs button { font: inherit; background: none; border: 0; cursor: pointer; color: var(--muted); padding: 10px 14px; border-bottom: 2px solid transparent; font-size: 15px; font-weight: 600; }
 .settings-tabs button.active { color: var(--text); border-bottom-color: var(--accent); }
 .settings-cols > section[data-tab] { display: none; }
-.settings-cols[data-active='company'] > section[data-tab='company'], .settings-cols[data-active='callsheets'] > section[data-tab='callsheets'], .settings-cols[data-active='team'] > section[data-tab='team'], .settings-cols[data-active='calendar'] > section[data-tab='calendar'], .settings-cols[data-active='display'] > section[data-tab='display'], .settings-cols[data-active='integrations'] > section[data-tab='integrations'], .settings-cols[data-active='data'] > section[data-tab='data'] { display: block; }
+.settings-cols[data-active='company'] > section[data-tab='company'], .settings-cols[data-active='callsheets'] > section[data-tab='callsheets'], .settings-cols[data-active='team'] > section[data-tab='team'], .settings-cols[data-active='calendar'] > section[data-tab='calendar'], .settings-cols[data-active='budget'] > section[data-tab='budget'], .settings-cols[data-active='display'] > section[data-tab='display'], .settings-cols[data-active='integrations'] > section[data-tab='integrations'], .settings-cols[data-active='data'] > section[data-tab='data'] { display: block; }
 
 .prog-list li { padding: 4px 0; }
 .prog-row { display: flex; align-items: center; gap: 10px; }
 .prog-row .grow { flex: 1; }
 .prog-row .input.sm { width: 64px; }
+
+/* settings > budget categories */
+.bcat { display: flex; flex-direction: column; gap: 18px; }
+.bcat-group { border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 10px 12px 12px; }
+.bcat-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.bcat-head .bcat-name { font-weight: 700; flex: 1; min-width: 0; }
+.bcat-list li { border-bottom: 0; padding: 0; }
+.bcat-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 190px) auto auto auto; gap: 6px; align-items: center; padding: 3px 0; }
+.bcat-row .input, .bcat-row .select { min-width: 0; }
+.bcat-btn { font: inherit; background: none; border: 1px solid var(--line-soft); border-radius: 6px; color: var(--muted); width: 28px; height: 28px; cursor: pointer; line-height: 1; }
+.bcat-btn:hover:not(:disabled) { color: var(--text); border-color: var(--muted); }
+.bcat-btn:disabled { opacity: .35; cursor: default; }
+.bcat-x:hover:not(:disabled) { color: var(--danger, #c0392b); border-color: currentColor; }
+.bcat-move { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; background: var(--raised); border-radius: var(--radius); font-size: 14px; }
+.bcat-move .select { width: auto; }
+.bcat-add { display: flex; gap: 6px; align-items: center; margin-top: 8px; }
+.bcat-add .input { flex: 1; min-width: 0; }
+.bcat-add-group { margin-top: 0; }
+.bcat-add-group .grow { flex: 1; }
+@media (max-width: 820px) {
+  /* name on its own row, then the Finance column with the three buttons */
+  .bcat-row { grid-template-columns: minmax(0, 1fr) auto auto auto; row-gap: 4px; padding: 6px 0; border-bottom: 1px solid var(--line-soft); }
+  .bcat-row > input.input { grid-column: 1 / -1; }
+  .bcat-list li:last-child .bcat-row, .bcat-row:last-child { border-bottom: 0; }
+}
 .segmented.wrap { flex-wrap: wrap; }
 .stage-manual { font: inherit; background: none; border: 0; padding: 0; cursor: pointer; display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; color: inherit; }
 .stage-manual:disabled { cursor: default; }

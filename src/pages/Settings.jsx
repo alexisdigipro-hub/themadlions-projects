@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { CATEGORIES, DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, sampleProject, today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { projectProgress } from '../lib/progress.js'
+import { EXPENSE_CATS } from '../lib/finance.js'
+import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/budgetCats.js'
 import { remote, supabase } from '../lib/supabase.js'
 
 import { testKey } from '../lib/ai.js'
@@ -27,7 +29,7 @@ export default function Settings() {
   }
   const isAdmin = me?.role === 'admin'
   const TABS = [
-    ['company', 'Company', true], ['callsheets', 'Call sheets', true], ['team', 'Team', true], ['calendar', 'Calendar & projects', true],
+    ['company', 'Company', true], ['callsheets', 'Call sheets', true], ['team', 'Team', true], ['calendar', 'Calendar & projects', true], ['budget', 'Budget', true],
     ['display', 'Display', false], ['integrations', 'Integrations', false], ['data', 'Data', false],
   ].filter(([, , admin]) => !admin || isAdmin)
   const [tab, setTab] = useState(() => (isAdmin ? 'company' : 'display'))
@@ -269,6 +271,14 @@ export default function Settings() {
           </section>
         )}
 
+        {isAdmin && (
+          <section className="panel" data-tab="budget">
+            <h2>Budget categories</h2>
+            <p className="small muted">What a budget line can be filed under, in groups, the same for every project. Click a name to rename it: every line already filed under it follows. A category with lines on it cannot be removed until you say where those lines go. The Finance column is where a payment on that category lands in Finance.</p>
+            <BudgetCategoriesSettings state={state} update={update} toast={toast} />
+          </section>
+        )}
+
         <section className="panel" data-tab="display">
           <h2>Display</h2>
           <Field label="Theme">
@@ -438,6 +448,120 @@ export default function Settings() {
   )
 }
 
+
+/* Settings > Budget: the groups and categories a budget line is filed under. Renames migrate every
+   project's lines (renameCategory); a removal with lines on it first asks where they go (moveLines). */
+function BudgetCategoriesSettings({ state, update, toast }) {
+  const groups = budgetGroups(state.settings)
+  const all = groups.flatMap((g) => g.cats.map((c) => c.name))
+  const [newCat, setNewCat] = useState({}) // group index -> text
+  const [newGroup, setNewGroup] = useState('')
+  const [moving, setMoving] = useState(null) // { cat, to, uses }
+  const save = (next) => update((s) => { s.settings = { ...s.settings, budgetCategories: next }; return s })
+  const taken = (name, except) => all.some((c) => c !== except && c.toLowerCase() === name.toLowerCase())
+  const swap = (arr, i, j) => {
+    if (j < 0 || j >= arr.length) return arr
+    const a = [...arr]
+    const t = a[i]; a[i] = a[j]; a[j] = t
+    return a
+  }
+
+  const renameGroup = (gi, name) => {
+    const v = name.trim()
+    if (!v || v === groups[gi].name) return
+    if (groups.some((g, i) => i !== gi && g.name.toLowerCase() === v.toLowerCase())) return toast('There is already a group with that name.', 'error')
+    save(groups.map((g, i) => (i === gi ? { ...g, name: v } : g)))
+  }
+  const removeGroup = (gi) => {
+    if (groups[gi].cats.length) return toast('Empty the group first: move or remove its categories.', 'error')
+    save(groups.filter((_, i) => i !== gi))
+  }
+  const addGroup = () => {
+    const v = newGroup.trim()
+    if (!v) return
+    if (groups.some((g) => g.name.toLowerCase() === v.toLowerCase())) return toast('There is already a group with that name.', 'error')
+    save([...groups, { name: v, cats: [] }]); setNewGroup('')
+  }
+  const renameCat = (from, to) => {
+    const v = to.trim()
+    if (!v || v === from) return
+    if (taken(v, from)) return toast(`"${v}" already exists.`, 'error')
+    let n = 0
+    update((s) => { n = renameCategory(s, from, v); return s })
+    toast(n ? `Renamed, and ${n} budget line${n === 1 ? '' : 's'} moved with it` : 'Renamed', 'ok')
+  }
+  const setFin = (gi, ci, fin) => save(groups.map((g, i) => (i === gi ? { ...g, cats: g.cats.map((c, j) => (j === ci ? { ...c, fin } : c)) } : g)))
+  const moveCat = (gi, ci, dir) => save(groups.map((g, i) => (i === gi ? { ...g, cats: swap(g.cats, ci, ci + dir) } : g)))
+  const addCat = (gi) => {
+    const v = (newCat[gi] || '').trim()
+    if (!v) return
+    if (taken(v)) return toast(`"${v}" already exists.`, 'error')
+    save(groups.map((g, i) => (i === gi ? { ...g, cats: [...g.cats, { name: v, fin: 'Other expense' }] } : g)))
+    setNewCat({ ...newCat, [gi]: '' })
+  }
+  const askRemove = (cat) => {
+    const uses = categoryUses(state, cat)
+    if (!uses.lines) return removeCat(cat)
+    const other = all.filter((c) => c !== cat)
+    if (!other.length) return toast('Add another category first, so the lines have somewhere to go.', 'error')
+    setMoving({ cat, to: other[0], uses })
+  }
+  const removeCat = (cat, to) => {
+    let n = 0
+    update((s) => {
+      if (to) n = moveLines(s, cat, to)
+      s.settings = { ...s.settings, budgetCategories: budgetGroups(s.settings).map((g) => ({ ...g, cats: g.cats.filter((c) => c.name !== cat) })) }
+      return s
+    })
+    setMoving(null)
+    toast(n ? `Removed, ${n} line${n === 1 ? '' : 's'} moved to ${to}` : 'Removed', 'ok')
+  }
+  const reset = () => { save(null); toast('Standard categories are back. Lines under a category that no longer exists show as Unlisted in the budget.', 'ok') }
+
+  return (
+    <div className="bcat">
+      {groups.map((g, gi) => (
+        <div className="bcat-group" key={g.name}>
+          <div className="bcat-head">
+            <input className="input bcat-name" defaultValue={g.name} onBlur={(e) => renameGroup(gi, e.target.value)} onKeyDown={(e) => e.key === 'Enter' && e.target.blur()} aria-label="Group name" />
+            <button className="bcat-btn" title="Move up" disabled={gi === 0} onClick={() => save(swap(groups, gi, gi - 1))}>↑</button>
+            <button className="bcat-btn" title="Move down" disabled={gi === groups.length - 1} onClick={() => save(swap(groups, gi, gi + 1))}>↓</button>
+            <button className="bcat-btn bcat-x" title={g.cats.length ? 'Empty the group first' : 'Remove group'} disabled={!!g.cats.length} onClick={() => removeGroup(gi)}>×</button>
+          </div>
+          <ul className="plain bcat-list">
+            {g.cats.map((c, ci) => (
+              <li key={c.name} className="bcat-row">
+                <input className="input" defaultValue={c.name} onBlur={(e) => { if (e.target.value.trim() !== c.name) { const v = e.target.value; e.target.value = c.name; renameCat(c.name, v) } }} onKeyDown={(e) => e.key === 'Enter' && e.target.blur()} aria-label="Category name" />
+                <Select value={c.fin || 'Other expense'} onChange={(e) => setFin(gi, ci, e.target.value)} options={EXPENSE_CATS} aria-label="Finance column" />
+                <button className="bcat-btn" title="Move up" disabled={ci === 0} onClick={() => moveCat(gi, ci, -1)}>↑</button>
+                <button className="bcat-btn" title="Move down" disabled={ci === g.cats.length - 1} onClick={() => moveCat(gi, ci, 1)}>↓</button>
+                <button className="bcat-btn bcat-x" title="Remove" onClick={() => askRemove(c.name)}>×</button>
+                {moving?.cat === c.name && (
+                  <div className="bcat-move">
+                    <span>{moving.uses.lines} line{moving.uses.lines === 1 ? '' : 's'} in {moving.uses.projects} project{moving.uses.projects === 1 ? '' : 's'} use it. Move them to</span>
+                    <Select value={moving.to} onChange={(e) => setMoving({ ...moving, to: e.target.value })} options={all.filter((x) => x !== c.name)} />
+                    <Button size="sm" variant="primary" onClick={() => removeCat(c.name, moving.to)}>Move and remove</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setMoving(null)}>Cancel</Button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+          <div className="bcat-add">
+            <Input value={newCat[gi] || ''} onChange={(e) => setNewCat({ ...newCat, [gi]: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && addCat(gi)} placeholder={`New category in ${g.name}`} />
+            <Button size="sm" variant="ghost" onClick={() => addCat(gi)}>Add</Button>
+          </div>
+        </div>
+      ))}
+      <div className="bcat-add bcat-add-group">
+        <Input value={newGroup} onChange={(e) => setNewGroup(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addGroup()} placeholder="New group" />
+        <Button size="sm" variant="ghost" onClick={addGroup}>Add group</Button>
+        <span className="grow" />
+        <Confirm onConfirm={reset} label="Reset to standard">Reset to standard</Confirm>
+      </div>
+    </div>
+  )
+}
 
 function ProgressSettings({ state, setSetting }) {
   const [cat, setCat] = useState(CATEGORIES[0])

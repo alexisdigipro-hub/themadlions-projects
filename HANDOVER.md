@@ -40,7 +40,14 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
-### Last change: a budget line paid to a team member lands in their My work
+### Last change: budget categories editable in Settings
+Alex asked to rename, remove and add the budget categories. Same list for every project (he did not ask for per-project-type lists; offered, unanswered).
+- src/lib/budgetCats.js: `DEFAULT_GROUPS` (the old hard-coded groups, each category now carrying `fin`, the Finance expense column it maps to, which used to be `FIN_CAT` in PaymentModal.jsx and `BUDGET_CAT` in Finance.jsx, both gone). `budgetGroups(settings)` = `settings.budgetCategories` or the standard list, always a fresh copy. `groupPairs(settings, lines)` adds an "Unlisted" group for lines whose category left the list. `finCatFor`, `budgetCatForFin`, `categoryUses`, `moveLines`, `renameCategory` (list + every project's lines).
+- Budget.jsx reads `groupPairs(state.settings, budget.lines)`; the line form's select also offers the line's own category when it is unlisted, so an old line can still be saved.
+- Settings > Budget (`BudgetCategoriesSettings` in Settings.jsx, admins): rename on blur, Finance column select, up/down, remove (with the "move N lines to …" step when in use), add category per group, add group, remove empty group, Reset to standard (stores null, so the default returns).
+- No SQL: it lives in workspaces.settings like everything else in Settings.
+
+### A budget line paid to a team member lands in their My work
 Alex: "where I enter a budget line I want the users directly with their details, and straight into each one's My work". Done, kept simple, net amounts only.
 - Budget line gains `memberId` (a member's user id) and `date` (work date). `vendor` is set to the member's name on save so Finance, CSV and print keep reading it. The form shows **Paid to** (team, with position from the profile) and, for a member, **Work date**; for an outsider the old Vendor / payee text.
 - `syncLineWorklog(s, project, line)` in src/lib/budget.js is the one place that mirrors a line into `worklog`: one job per line, linked by `budgetLineId`. Called from Budget save/remove (which now go through `update()` because they touch the worklog too), from `recordPayment()` in PaymentModal.jsx, and from Finance save/remove where payments are attached or detached. Payments now carry `method` so the job can say how it was paid.

@@ -6,14 +6,10 @@ import { DOCS, EXPENSE_CATS, FREQ, INCOME_CATS, METHODS, TX_STATUS, duePeriods, 
 import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
+import { budgetCatForFin } from '../lib/budgetCats.js'
 import { AGE_BUCKETS, WorkLogTable, ageBucket, daysWaiting, entryTotals, money2, togglePaidEntry } from '../components/WorkLog.jsx'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-const BUDGET_CAT = {
-  Crew: 'Production staff', Cast: 'Cast', 'Equipment rental': 'Equipment rental', 'Equipment purchase': 'Equipment rental', 'Locations & permits': 'Locations',
-  'Art & props': 'Art & set', 'Wardrobe & makeup': 'Wardrobe', Transport: 'Transport', Catering: 'Catering', 'Post-production': 'Editing', 'Music & rights': 'Music',
-  Insurance: 'Insurance', 'Accounting & legal': 'Legal & accounting', Marketing: 'Marketing', Travel: 'Travel & accommodation',
-}
 
 export default function Finance() {
   const { state, update } = useStore()
@@ -109,7 +105,7 @@ export default function Finance() {
         if (p) {
           p.budget = p.budget || { lines: [], contingencyPct: 10, currency: 'EUR', cap: '' }
           const existing = p.budget.lines.find((l) => l.txId === tx.id)
-          const line = { id: existing?.id || uid(), txId: tx.id, category: BUDGET_CAT[tx.category] || 'Misc', description: tx.description, qty: 1, unit: 'flat', rate: 0, estimate: existing?.estimate ?? '', actual: tx.net, vendor: tx.party, notes: existing?.notes || 'From Finance' }
+          const line = { id: existing?.id || uid(), txId: tx.id, category: budgetCatForFin(s.settings, tx.category), description: tx.description, qty: 1, unit: 'flat', rate: 0, estimate: existing?.estimate ?? '', actual: tx.net, vendor: tx.party, notes: existing?.notes || 'From Finance' }
           if (existing) Object.assign(existing, line)
           else p.budget.lines.push(line)
         }
