@@ -10,12 +10,12 @@ import { groupPairs } from '../../lib/budgetCats.js'
 
 // The categories and their groups live in Settings > Budget (src/lib/budgetCats.js holds the
 // standard list and the helpers). The page reads them through groupPairs() below.
-const UNITS = ['flat', 'day', 'week', 'hour', 'unit', 'km', 'person']
-
 // memberId: a team member this line pays; the line is then mirrored into their My work (see
 // syncLineWorklog). vendor keeps the name so Finance, CSV and print read the same as before.
 // date: the day the work is done, which is the date My work files the job under.
-export const emptyLine = () => ({ id: uid(), category: 'Camera', description: '', qty: 1, unit: 'day', rate: 0, estimate: '', actual: '', vendor: '', memberId: '', date: '', notes: '' })
+// estimate: the one amount of the line. qty / unit / rate stay in the data for lines made before
+// the form went down to one amount; lineEstimate() still reads them.
+export const emptyLine = () => ({ id: uid(), category: 'Camera', description: '', qty: 1, unit: 'flat', rate: 0, estimate: '', actual: '', vendor: '', memberId: '', date: '', notes: '' })
 export { lineEstimate }
 export const money = (n, cur = 'EUR') => new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(Number(n) || 0)
 
@@ -116,17 +116,11 @@ export default function Budget() {
     p.budget[k] = v
   })
   const exportCSV = () => {
-    const head = ['Group', 'Category', 'Description', 'Qty', 'Unit', 'Rate', 'Estimate', 'Actual', 'Vendor', 'Notes']
-    const rows = BUDGET_GROUPS.flatMap(([g, cats]) => budget.lines.filter((l) => cats.includes(l.category)).map((l) => [g, l.category, l.description, l.qty, l.unit, l.rate, lineEstimate(l), l.actual, l.vendor, l.notes]))
-    rows.push([], ['', '', 'Subtotal', '', '', '', t.est, t.act], ['', '', `Contingency ${budget.contingencyPct}%`, '', '', '', t.cont], ['', '', 'Total', '', '', '', t.total])
+    const head = ['Group', 'Category', 'Description', 'Amount', 'Paid', 'Paid to', 'Notes']
+    const rows = BUDGET_GROUPS.flatMap(([g, cats]) => budget.lines.filter((l) => cats.includes(l.category)).map((l) => [g, l.category, l.description, lineEstimate(l), l.payments?.length ? linePaid(l) : l.actual, l.vendor, l.notes]))
+    rows.push([], ['', '', 'Subtotal', t.est, t.act], ['', '', `Contingency ${budget.contingencyPct}%`, t.cont], ['', '', 'Total', t.total])
     const csv = [head, ...rows].map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n')
     download(`${project.title} - budget.csv`, csv, 'text/csv')
-  }
-
-  const variance = (est, act) => {
-    if (!act) return null
-    const d = act - est
-    return <span className={d > 0 ? 'over' : 'under'}>{d > 0 ? '+' : ''}{money(d, cur)}</span>
   }
 
   return (
@@ -175,7 +169,7 @@ export default function Budget() {
       )}
 
       {!budget.lines.length ? (
-        <Empty title="No budget lines yet">Start with the big blocks: crew day rates, camera and lighting packages, locations, post. Estimates come from quantity times rate, or type a flat estimate.</Empty>
+        <Empty title="No budget lines yet">Start with the big blocks: crew, camera and lighting packages, locations, post. One amount per line.</Empty>
       ) : (
         <article className="sheet topsheet">
           <header className="sheet-head">
@@ -202,7 +196,7 @@ export default function Budget() {
               <table className="table budget-table">
                 <thead>
                   <tr>
-                    <th>Category</th><th>Description</th><th className="num">Qty</th><th>Unit</th><th className="num">Rate</th><th className="num">Estimate</th><th className="num">Paid</th><th className="num">Balance</th><th className="num">Var.</th>{editable && <th className="no-print" />}
+                    <th>Category</th><th>Description</th><th className="num">Amount</th><th className="num">Paid</th><th className="num">Balance</th>{editable && <th className="no-print" />}
                   </tr>
                 </thead>
                 <tbody>
@@ -210,13 +204,9 @@ export default function Budget() {
                     <tr key={l.id}>
                       <td>{l.category}</td>
                       <td>{l.description}{l.vendor && <span className="muted small"> · {l.vendor}{l.memberId ? ' (team)' : ''}</span>}{l.notes && <div className="muted small">{l.notes}</div>}</td>
-                      <td className="num">{l.estimate !== '' && l.estimate != null ? '' : l.qty}</td>
-                      <td>{l.estimate !== '' && l.estimate != null ? 'flat' : l.unit}</td>
-                      <td className="num">{l.estimate !== '' && l.estimate != null ? '' : money(l.rate, cur)}</td>
                       <td className="num">{money(lineEstimate(l), cur)}</td>
-                      <td className="num">{l.payments?.length ? money(linePaid(l), cur) : l.actual !== '' && l.actual != null ? money(l.actual, cur) : ''}</td>
+                      <td className="num">{l.payments?.length ? money(linePaid(l), cur) : l.actual !== '' && l.actual != null && Number(l.actual) ? money(l.actual, cur) : ''}</td>
                       <td className={`num ${l.payments?.length && lineBalance(l) > 0 ? 'over' : ''}`}>{l.payments?.length ? (lineBalance(l) > 0 ? money(lineBalance(l), cur) : <span className="under">settled</span>) : ''}</td>
-                      <td className="num">{l.payments?.length && lineBalance(l) > 0 ? '' : variance(lineEstimate(l), Number(l.actual || 0))}</td>
                       {editable && (
                         <td className="row-actions no-print">
                           {me?.role === 'admin' && lineEstimate(l) > 0 && lineBalance(l) > 0 && <button onClick={() => setPay(l)}>Pay</button>}
@@ -235,7 +225,7 @@ export default function Budget() {
             <tbody>
               <tr><td>Subtotal</td><td className="num">{money(t.est, cur)}</td><td className="num">{t.act ? money(t.act, cur) : ''}</td></tr>
               <tr><td>Contingency {budget.contingencyPct || 0}%</td><td className="num">{money(t.cont, cur)}</td><td /></tr>
-              <tr className="grand"><td>Total</td><td className="num">{money(t.total, cur)}</td><td className="num">{t.act ? variance(t.total, t.act) : ''}</td></tr>
+              <tr className="grand"><td>Total</td><td className="num">{money(t.total, cur)}</td><td className="num">{t.act ? <span className={t.act > t.total ? 'over' : 'muted'}>{money(t.act, cur)} paid</span> : ''}</td></tr>
             </tbody>
           </table>
         </article>
@@ -274,20 +264,10 @@ export default function Budget() {
             <Field label="Vendor / payee"><Input value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} placeholder="Optional" /></Field>
           )}
           <Field label="Description"><Input autoFocus value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder="DoP, Alexa Mini LF package, rooftop permit" /></Field>
-          <div className="row-3">
-            <Field label="Quantity"><Input type="number" min="0" step="0.5" value={draft.qty} onChange={(e) => setDraft({ ...draft, qty: e.target.value })} /></Field>
-            <Field label="Unit"><Select value={draft.unit} onChange={(e) => setDraft({ ...draft, unit: e.target.value })} options={UNITS} /></Field>
-            <Field label={`Rate (${cur})`}><Input type="number" min="0" value={draft.rate} onChange={(e) => setDraft({ ...draft, rate: e.target.value })} /></Field>
-          </div>
-          <div className="row-2">
-            <Field label="Flat estimate" hint="Leave empty to use quantity × rate."><Input type="number" min="0" value={draft.estimate} onChange={(e) => setDraft({ ...draft, estimate: e.target.value })} /></Field>
-            {draft.payments?.length ? (
-              <Field label="Paid" hint={`${draft.payments.length} payment${draft.payments.length === 1 ? '' : 's'} recorded in Finance.`}><Input value={money(linePaid(draft), cur)} disabled /></Field>
-            ) : (
-              <Field label="Actual spent" hint="Or record payments from Finance."><Input type="number" min="0" value={draft.actual} onChange={(e) => setDraft({ ...draft, actual: e.target.value })} /></Field>
-            )}
-          </div>
-          <div className="muted small">Line estimate: <strong>{money(lineEstimate(draft), cur)}</strong></div>
+          {/* One amount per line, Alex's call. An old line made as quantity × rate shows its total here and is saved as that total. */}
+          <Field label={`Amount (${cur})`} hint={draft.payments?.length ? `${money(linePaid(draft), cur)} paid so far, ${draft.payments.length} payment${draft.payments.length === 1 ? '' : 's'} recorded in Finance.` : 'What this costs. Payments are recorded from Finance or with Pay on the line.'}>
+            <Input type="number" min="0" step="0.01" value={draft.estimate === '' || draft.estimate == null ? (lineEstimate(draft) || '') : draft.estimate} onChange={(e) => setDraft({ ...draft, estimate: e.target.value, qty: 1, unit: 'flat', rate: 0 })} placeholder="800" />
+          </Field>
           <Field label="Notes"><Textarea rows={2} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>
         </Modal>
       )}

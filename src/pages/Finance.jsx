@@ -6,8 +6,8 @@ import { DOCS, EXPENSE_CATS, FREQ, INCOME_CATS, METHODS, TX_STATUS, duePeriods, 
 import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
-import { budgetCatForFin } from '../lib/budgetCats.js'
-import { AGE_BUCKETS, WorkLogTable, ageBucket, daysWaiting, entryTotals, money2, togglePaidEntry } from '../components/WorkLog.jsx'
+import { budgetCatForFin, finCatFor } from '../lib/budgetCats.js'
+import { AGE_BUCKETS, WorkLogTable, ageBucket, daysWaiting, entryTotals, money2, projectWorkDate, togglePaidEntry } from '../components/WorkLog.jsx'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -81,6 +81,36 @@ export default function Finance() {
     .filter((t) => matchTx(t, f.q))
     .sort((a, b) => b.date.localeCompare(a.date))
 
+  /* Picking a project in the transaction form fills what the project knows. Only fields that are
+     empty, or still hold the previous project's fill, are touched: typed text stays. */
+  const pickProject = (d, projectId) => {
+    const prev = state.projects.find((p) => p.id === d.projectId)
+    const next = state.projects.find((p) => p.id === projectId)
+    const out = { ...d, projectId, budgetLineId: '', syncBudget: true }
+    if (!next) return out
+    const free = (val, was) => !val || (prev && val === was)
+    if (d.type === 'income') {
+      if (free(d.party, prev ? prev.client || prev.title : '')) out.party = next.client || next.title
+      if (free(d.description, prev?.title)) out.description = next.title
+    }
+    if (!d.date || d.date === today() || (prev && d.date === projectWorkDate(prev))) out.date = projectWorkDate(next) || d.date
+    return out
+  }
+  /* Picking a budget line fills the expense from the line: what it is, who is paid, which Finance
+     column, and the open balance as the amount. */
+  const pickLine = (d, lineId) => {
+    const p = state.projects.find((x) => x.id === d.projectId)
+    const prevLine = p?.budget?.lines?.find((l) => l.id === d.budgetLineId)
+    const line = p?.budget?.lines?.find((l) => l.id === lineId)
+    const out = { ...d, budgetLineId: lineId, syncBudget: !lineId }
+    if (!line) return out
+    const free = (val, was) => !val || (prevLine && val === was)
+    if (free(d.description, prevLine?.description)) out.description = line.description
+    if (free(d.party, prevLine?.vendor)) out.party = line.vendor || ''
+    if (free(d.net, prevLine ? String(lineBalance(prevLine)) : '') || Number(d.net) === 0) out.net = String(lineBalance(line) || lineEstimate(line))
+    out.category = finCatFor(state.settings, line.category)
+    return out
+  }
   const save = () => {
     if (!draft.description.trim()) return toast('Describe the transaction.', 'error')
     if (!Number(draft.net)) return toast('Enter the net amount.', 'error')
@@ -413,12 +443,20 @@ export default function Finance() {
               <button className={draft.type === 'income' ? 'on' : ''} onClick={() => setDraft({ ...draft, type: 'income', category: INCOME_CATS.includes(draft.category) ? draft.category : 'Production fee', status: 'invoiced' })}>Income</button>
               <button className={draft.type === 'expense' ? 'on' : ''} onClick={() => setDraft({ ...draft, type: 'expense', category: EXPENSE_CATS.includes(draft.category) ? draft.category : 'Crew', status: 'pending' })}>Expense</button>
             </div>
-            <Field label="Description"><Input autoFocus value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder={draft.type === 'income' ? 'Production fee, 50% advance' : 'DoP, 3 days'} /></Field>
             <div className="row-3">
+              <Field label="Project" hint={draft.type === 'income' ? 'Fills the client and the description.' : 'Then pick the budget line below to fill the rest.'}>
+                <Select autoFocus value={draft.projectId} onChange={(e) => setDraft(pickProject(draft, e.target.value))} options={[['', 'Company (no project)'], ...state.projects.map((p) => [p.id, p.title])]} />
+              </Field>
               <Field label="Date"><Input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
-              <Field label="Project"><Select value={draft.projectId} onChange={(e) => setDraft({ ...draft, projectId: e.target.value })} options={[['', 'Company (no project)'], ...state.projects.map((p) => [p.id, p.title])]} /></Field>
               <Field label="Category"><Select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} options={draft.type === 'income' ? INCOME_CATS : EXPENSE_CATS} /></Field>
             </div>
+            {draft.type === 'expense' && draft.projectId && (
+              <Field label="Budget line" hint="Pay against an agreed line (advance or balance), or add it as a new cost. Picking a line fills the description, the payee, the category and the open balance.">
+                <Select value={draft.budgetLineId || ''} onChange={(e) => setDraft(pickLine(draft, e.target.value))}
+                  options={[['', 'New cost in the budget'], ...((state.projects.find((p) => p.id === draft.projectId)?.budget?.lines || []).filter((l) => !l.txId).map((l) => [l.id, `${l.description} · ${money(lineEstimate(l), cur)} agreed${linePaid(l) ? `, ${money(linePaid(l), cur)} paid` : ''}`]))]} />
+              </Field>
+            )}
+            <Field label="Description"><Input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder={draft.type === 'income' ? 'Production fee, 50% advance' : 'DoP, 3 days'} /></Field>
             <Field label={draft.type === 'income' ? 'Client' : 'Vendor / payee'}><Input value={draft.party} onChange={(e) => setDraft({ ...draft, party: e.target.value })} /></Field>
             <div className="row-3">
               <Field label={`Net (${cur})`}><Input type="number" min="0" step="0.01" value={draft.net} onChange={(e) => setDraft({ ...draft, net: e.target.value })} /></Field>
@@ -435,12 +473,6 @@ export default function Finance() {
               <Field label="Paid on"><Input type="date" value={draft.paidOn} onChange={(e) => setDraft({ ...draft, paidOn: e.target.value })} /></Field>
               <Field label="Document link"><Input value={draft.docLink} onChange={(e) => setDraft({ ...draft, docLink: e.target.value })} placeholder="Drive, email" /></Field>
             </div>
-            {draft.type === 'expense' && draft.projectId && (
-              <Field label="Budget line" hint="Pay against an agreed line (advance or balance), or add it as a new cost.">
-                <Select value={draft.budgetLineId || ''} onChange={(e) => setDraft({ ...draft, budgetLineId: e.target.value, syncBudget: !e.target.value })}
-                  options={[['', 'New cost in the budget'], ...((state.projects.find((p) => p.id === draft.projectId)?.budget?.lines || []).filter((l) => !l.txId).map((l) => [l.id, `${l.description} · ${money(lineEstimate(l), cur)} agreed${linePaid(l) ? `, ${money(linePaid(l), cur)} paid` : ''}`]))]} />
-              </Field>
-            )}
             <Field label="Notes"><Textarea rows={2} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>
           </div>
         </Modal>

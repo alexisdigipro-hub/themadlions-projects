@@ -40,6 +40,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Small: one amount per budget line
+Alex: "Flat estimate and Actual spent I do not need; whoever it is, we enter one amount." The line form is now Category, Paid to, Work date or Vendor, Description, **Amount**, Notes. Amount is stored in `estimate`; qty is set to 1, unit to flat, rate to 0 on the first edit. Old qty × rate lines keep their total (`lineEstimate()` still reads them) and show it in the field. Actual only comes from payments now (Finance or Pay). Table columns: Category, Description, Amount, Paid, Balance. CSV follows. The Var. column and the `variance()` helper are gone.
+
+### Small: Finance form fills from the project and the budget line
+Same idea as My work, on Alex's yes. Project is the first field. `pickProject()`: an income takes client and description from the project; any type takes the project's work date when the date is still today. `pickLine()`: an expense against a budget line takes description, payee, Finance category (`finCatFor`) and the open balance as net. Both touch only empty fields or ones still holding the previous fill.
+
 ### Small: My work job form fills from the project
 Alex: "put the projects in the entry so that when a project exists it takes the name, the date". In `WorkLogTable`'s Add job form the Project select moved to the first row; `fillFromProject()` and `projectWorkDate()` in WorkLog.jsx fill client, description and date, touching only fields that are empty or still hold the previous project's fill. Tested in node (9 cases). The same could be done in the Finance transaction form; not asked, not done.
 
