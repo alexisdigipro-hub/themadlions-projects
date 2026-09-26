@@ -33,7 +33,8 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Call sheets laid out like a professional call sheet: company block with producer, director and key crew, big general crew call with a one-line message, day and date with weather, sunrise and sunset, shooting call / lunch / wrap, a pinned note everyone reads, and a location grid with set location, parking and nearest hospital
 - Call sheets generated per shoot day with sunrise, sunset, golden hour and a fetched weather forecast (open-meteo, no key), printable to PDF
 - Script sides per shoot day, printable
-- Budget top sheet: lines by category (above the line, production, post, other), quantity × rate or flat estimates, actuals and variance, contingency, client cap, CSV and print
+- Budget top sheet: lines by category (above the line, production, post, other), one amount per line, paid and balance from the payments recorded in Finance, contingency, client cap, CSV and print
+- Finance, New income or expense: **Project** comes first. On an income it fills the client and the description from the project; on an expense, pick the **budget line** and it fills the description, the payee, the Finance category and the open balance as the net amount. What you typed by hand stays
 - Daily production reports per shoot day: times, scenes completed / partial / pickups, setups, on-set counts, weather, incidents, pages shot to date and ahead / behind
 - Equipment and vendors: items by category with vendor, rate, days, pickup and return dates, status (needed / quoted / booked / out / returned), CSV, one-click sync of booked items into the budget
 - Post: cuts with review links and approval status (internal / client review / notes / approved / picture lock) and a deliverables list with specs, owners, due dates and standard presets per project category
