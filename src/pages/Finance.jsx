@@ -5,7 +5,7 @@ import { today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { DOCS, EXPENSE_CATS, FREQ, INCOME_CATS, METHODS, TX_STATUS, duePeriods, emptyRecurring, emptyTx, fiscalYearLabel, fiscalYearOf, generateFromRecurring, grossOf, matchTx, money, summarize, vatOf } from '../lib/finance.js'
 import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
-import { lineBalance, lineEstimate, linePaid } from '../lib/budget.js'
+import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
 import { AGE_BUCKETS, WorkLogTable, ageBucket, daysWaiting, entryTotals, money2, togglePaidEntry } from '../components/WorkLog.jsx'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -98,8 +98,9 @@ export default function Finance() {
         const p = s.projects.find((x) => x.id === tx.projectId)
         const line = p?.budget?.lines?.find((l) => l.id === tx.budgetLineId)
         if (line) {
-          line.payments = [...(line.payments || []).filter((x) => x.txId !== tx.id), { txId: tx.id, date: tx.date, amount: tx.net }]
+          line.payments = [...(line.payments || []).filter((x) => x.txId !== tx.id), { txId: tx.id, date: tx.date, amount: tx.net, method: tx.method }]
           line.actual = linePaid(line)
+          syncLineWorklog(s, p, line)
         }
       }
       // mirror other expenses into the project budget as new actuals
@@ -124,7 +125,7 @@ export default function Finance() {
       if (!p.budget?.lines) return
       p.budget.lines = p.budget.lines.filter((l) => l.txId !== tx.id)
       p.budget.lines.forEach((l) => {
-        if (l.payments?.some((x) => x.txId === tx.id)) { l.payments = l.payments.filter((x) => x.txId !== tx.id); l.actual = linePaid(l) }
+        if (l.payments?.some((x) => x.txId === tx.id)) { l.payments = l.payments.filter((x) => x.txId !== tx.id); l.actual = linePaid(l); syncLineWorklog(s, p, l) }
       })
     })
     return s

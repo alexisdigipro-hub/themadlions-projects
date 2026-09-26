@@ -640,16 +640,27 @@ export function StoreProvider({ children }) {
       ;(next.worklog || []).forEach((n) => {
         if (before[n.id] && JSON.stringify(before[n.id]) === JSON.stringify(n)) return
         myWrites.current.add(n.id)
+        // A budget line paid to a colleague writes a job into THEIR My work. RLS only lets a
+        // person write their own rows (or an administrator anyone's), so a non-admin with Budget
+        // edit goes through assign_worklog(), which accepts nothing but a budget-linked job.
+        const forOther = (x) => !!x.budgetLineId && x.userId !== authUser?.id && membership?.role !== 'admin'
         schedule('w:' + n.id, async () => {
-          const { error } = await supabase.from('worklog').upsert({ id: n.id, workspace_id: ws, user_id: n.userId, data: n })
-          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/worklog.sql in the SQL editor to enable My work.' : error.message)
+          const { error } = forOther(n)
+            ? await supabase.rpc('assign_worklog', { p_id: n.id, p_user: n.userId, p_data: n })
+            : await supabase.from('worklog').upsert({ id: n.id, workspace_id: ws, user_id: n.userId, data: n })
+          if (error) {
+            if (error.code === '42P01') throw new Error('Run supabase/worklog.sql in the SQL editor to enable My work.')
+            if (forOther(n) && (error.code === 'PGRST202' || error.code === '42883')) throw new Error('Run supabase/worklog_assign.sql so a budget line can reach a colleague\'s My work.')
+            throw new Error(error.message)
+          }
           setTimeout(() => myWrites.current.delete(n.id), 4000)
         })
       })
       const ids = new Set((next.worklog || []).map((n) => n.id))
       Object.values(before).filter((n) => !ids.has(n.id)).forEach((n) =>
         schedule('wd:' + n.id, async () => {
-          const { error } = await supabase.from('worklog').delete().eq('id', n.id)
+          const other = !!n.budgetLineId && n.userId !== authUser?.id && membership?.role !== 'admin'
+          const { error } = other ? await supabase.rpc('unassign_worklog', { p_id: n.id }) : await supabase.from('worklog').delete().eq('id', n.id)
           if (error) throw error
         }, 0),
       )
