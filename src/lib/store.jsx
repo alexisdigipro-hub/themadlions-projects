@@ -173,6 +173,7 @@ export function emptyProject(partial = {}) {
     scriptVersions: [],
     music: { tracks: [], activeTrackId: '', sections: [], notes: '' },
     breakdownStatus: 'none',
+    hiddenTabs: [], // route names of the tabs this project does not show, see src/lib/tabs.js
     ...partial,
   }
 }
@@ -570,7 +571,7 @@ export function StoreProvider({ children }) {
     }, 4000)
     actBuf.current[mergeKey] = b
   }
-  const PROJECT_KEYS = { title: 'title', status: 'status', category: 'category', client: 'client', director: 'director', producer: 'producer', startDate: 'dates', endDate: 'dates', color: 'colour', coverThumb: 'cover', notes: 'notes', concept: 'concept', script: 'script', scriptVersions: 'script versions', scenes: 'breakdown', shots: 'shot list', shootingDays: 'schedule / call sheets', contacts: 'cast & crew', locations: 'locations', tasks: 'tasks', budget: 'budget', gear: 'equipment', vendors: 'vendors', post: 'post', files: 'files', music: 'music', frozen: 'lock', customStages: 'progress stages' }
+  const PROJECT_KEYS = { title: 'title', status: 'status', category: 'category', client: 'client', director: 'director', producer: 'producer', startDate: 'dates', endDate: 'dates', color: 'colour', coverThumb: 'cover', notes: 'notes', concept: 'concept', script: 'script', scriptVersions: 'script versions', scenes: 'breakdown', shots: 'shot list', shootingDays: 'schedule / call sheets', contacts: 'cast & crew', locations: 'locations', tasks: 'tasks', budget: 'budget', gear: 'equipment', vendors: 'vendors', post: 'post', files: 'files', music: 'music', frozen: 'lock', customStages: 'progress stages', hiddenTabs: 'tabs' }
   const syncDiff = (prev, next) => {
     if (!remote || !membership) return
     const ws = membership.workspace_id

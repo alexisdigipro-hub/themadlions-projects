@@ -2384,6 +2384,12 @@ html[data-theme='light'] .chat-box { border-color: transparent; }
 .prod-sheet tfoot th { position: sticky; bottom: 0; z-index: 3; background: var(--raised); }
 .prod-sheet tfoot .prod-sc { z-index: 4; text-align: right; }
 
+/* ---------- project form: which tabs this project shows ---------- */
+.tab-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.tab-pick .chip { font-size: 14px; padding: 4px 10px; }
+.tab-pick .chip:not(.on) { text-decoration: line-through; opacity: .75; }
+.tab-pick .chip:disabled { cursor: default; opacity: 1; }
+
 /* ---------- mobile app layer (nothing here touches desktop) ---------- */
 .tabbar { display: none; }
 @media (max-width: 820px) {
