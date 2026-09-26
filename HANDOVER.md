@@ -40,7 +40,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
-### Last change: budget categories editable in Settings
+### Small: the budget line dialog is the wide one on desktop
+Alex found the "New budget line" dialog cramped. It now passes `wide` to Modal (960px instead of 560px). Phones are untouched: the mobile layer already makes every dialog full width.
+
+### Budget categories editable in Settings
 Alex asked to rename, remove and add the budget categories. Same list for every project (he did not ask for per-project-type lists; offered, unanswered).
 - src/lib/budgetCats.js: `DEFAULT_GROUPS` (the old hard-coded groups, each category now carrying `fin`, the Finance expense column it maps to, which used to be `FIN_CAT` in PaymentModal.jsx and `BUDGET_CAT` in Finance.jsx, both gone). `budgetGroups(settings)` = `settings.budgetCategories` or the standard list, always a fresh copy. `groupPairs(settings, lines)` adds an "Unlisted" group for lines whose category left the list. `finCatFor`, `budgetCatForFin`, `categoryUses`, `moveLines`, `renameCategory` (list + every project's lines).
 - Budget.jsx reads `groupPairs(state.settings, budget.lines)`; the line form's select also offers the line's own category when it is unlisted, so an old line can still be saved.

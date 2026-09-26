@@ -245,6 +245,7 @@ export default function Budget() {
       {draft && (
         <Modal
           open
+          wide
           title={budget.lines.some((l) => l.id === draft.id) ? 'Edit budget line' : 'New budget line'}
           onClose={() => setDraft(null)}
           footer={
