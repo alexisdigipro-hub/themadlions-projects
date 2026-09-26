@@ -163,7 +163,7 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
                       <div className="wl-main">
                         <strong>{e.client || <span className="muted">No client</span>}</strong>
                         <span className="wl-desc">{e.description}</span>
-                        <span className="wl-meta muted small">{fmtDate(e.date, { day: 'numeric', month: 'short' })}{e.status === 'paid' && e.paidDate ? ` · ${e.method || 'paid'} ${fmtDate(e.paidDate, { day: 'numeric', month: 'short' })}` : ''}{e.notes ? ` · ${e.notes}` : ''}</span>
+                        <span className="wl-meta muted small">{fmtDate(e.date, { day: 'numeric', month: 'short' })}{e.status === 'paid' && e.paidDate ? ` · ${e.method || 'paid'} ${fmtDate(e.paidDate, { day: 'numeric', month: 'short' })}` : ''}{e.notes ? ` · ${e.notes}` : ''}{e.budgetLineId ? ' · from the project budget' : ''}</span>
                       </div>
                       <div className={`wl-amount ${e.status === 'paid' ? 'paid' : 'pend'}`}>{money2(e.amount)}</div>
                       {editable && <div className="wl-actions"><button className="link small" onClick={() => setDraft({ ...e })}>Edit</button><Confirm onConfirm={() => remove(e.id)} label="Delete">×</Confirm></div>}

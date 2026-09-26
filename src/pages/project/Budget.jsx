@@ -5,7 +5,7 @@ import { uid } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import { useCurrentUser, useStore } from '../../lib/store.jsx'
 import PaymentModal from '../../components/PaymentModal.jsx'
-import { lineBalance, lineEstimate, linePaid } from '../../lib/budget.js'
+import { lineBalance, lineEstimate, linePaid, syncLineWorklog, dropLineWorklog } from '../../lib/budget.js'
 
 export const BUDGET_GROUPS = [
   ['Above the line', ['Story & rights', 'Producer', 'Director', 'Cast', 'Casting']],
@@ -16,7 +16,10 @@ export const BUDGET_GROUPS = [
 const CATEGORIES = BUDGET_GROUPS.flatMap(([, cats]) => cats)
 const UNITS = ['flat', 'day', 'week', 'hour', 'unit', 'km', 'person']
 
-export const emptyLine = () => ({ id: uid(), category: 'Camera', description: '', qty: 1, unit: 'day', rate: 0, estimate: '', actual: '', vendor: '', notes: '' })
+// memberId: a team member this line pays; the line is then mirrored into their My work (see
+// syncLineWorklog). vendor keeps the name so Finance, CSV and print read the same as before.
+// date: the day the work is done, which is the date My work files the job under.
+export const emptyLine = () => ({ id: uid(), category: 'Camera', description: '', qty: 1, unit: 'day', rate: 0, estimate: '', actual: '', vendor: '', memberId: '', date: '', notes: '' })
 export { lineEstimate }
 export const money = (n, cur = 'EUR') => new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(Number(n) || 0)
 
@@ -50,8 +53,10 @@ export function CapBar({ cap, total, spent, cur }) {
 
 export default function Budget() {
   const { project, edit, canEdit } = useProject()
-  const { state } = useStore()
+  const { state, update } = useStore()
   const me = useCurrentUser()
+  const team = (state.users || []).filter((u) => u.active !== false)
+  const teamLabel = (u) => `${u.name}${u.profile?.position ? ` · ${u.profile.position}` : ''}`
   const toast = useToast()
   const editable = canEdit('budget')
   const finTx = me?.role === 'admin' ? (state.finance?.transactions || []).filter((t) => t.projectId === project.id) : []
@@ -82,16 +87,31 @@ export default function Budget() {
       if (newTotal > Number(budget.cap) && t.total <= Number(budget.cap)) toast(`Careful: this line takes the budget ${money(newTotal - Number(budget.cap), cur)} over the cap.`, 'error')
       else if (newTotal > Number(budget.cap)) toast(`Budget is ${money(newTotal - Number(budget.cap), cur)} over the cap.`, 'error')
     }
-    edit((p) => {
+    // The whole state, not just the project: a line paid to a team member also writes their My work.
+    const who = team.find((u) => u.id === draft.memberId)
+    const line = { ...draft, vendor: who ? who.name : draft.vendor }
+    update((s) => {
+      const p = s.projects.find((x) => x.id === project.id)
+      if (!p) return s
       p.budget = p.budget || { lines: [], contingencyPct: 10, currency: 'EUR' }
-      const i = p.budget.lines.findIndex((l) => l.id === draft.id)
-      if (i >= 0) p.budget.lines[i] = draft
-      else p.budget.lines.push(draft)
+      const i = p.budget.lines.findIndex((l) => l.id === line.id)
+      if (i >= 0) p.budget.lines[i] = line
+      else p.budget.lines.push(line)
+      p.updatedAt = new Date().toISOString()
+      syncLineWorklog(s, p, line)
+      return s
     })
     setDraft(null)
-    toast('Line saved', 'ok')
+    toast(who ? `Line saved, and it is now in ${who.name}'s My work` : 'Line saved', 'ok')
   }
-  const remove = (id) => edit((p) => (p.budget.lines = p.budget.lines.filter((l) => l.id !== id)))
+  const remove = (id) => update((s) => {
+    const p = s.projects.find((x) => x.id === project.id)
+    if (!p?.budget) return s
+    p.budget.lines = p.budget.lines.filter((l) => l.id !== id)
+    p.updatedAt = new Date().toISOString()
+    dropLineWorklog(s, id)
+    return s
+  })
   const setMeta = (k, v) => edit((p) => {
     p.budget = p.budget || { lines: [], contingencyPct: 10, currency: 'EUR' }
     p.budget[k] = v
@@ -190,7 +210,7 @@ export default function Budget() {
                   {g.lines.map((l) => (
                     <tr key={l.id}>
                       <td>{l.category}</td>
-                      <td>{l.description}{l.vendor && <span className="muted small"> · {l.vendor}</span>}{l.notes && <div className="muted small">{l.notes}</div>}</td>
+                      <td>{l.description}{l.vendor && <span className="muted small"> · {l.vendor}{l.memberId ? ' (team)' : ''}</span>}{l.notes && <div className="muted small">{l.notes}</div>}</td>
                       <td className="num">{l.estimate !== '' && l.estimate != null ? '' : l.qty}</td>
                       <td>{l.estimate !== '' && l.estimate != null ? 'flat' : l.unit}</td>
                       <td className="num">{l.estimate !== '' && l.estimate != null ? '' : money(l.rate, cur)}</td>
@@ -243,8 +263,15 @@ export default function Budget() {
                 ))}
               </select>
             </Field>
-            <Field label="Vendor / payee"><Input value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} placeholder="Optional" /></Field>
+            <Field label="Paid to" hint={draft.memberId ? 'A team member: this line goes into their My work, and turns to paid when you pay it.' : ''}>
+              <Select value={draft.memberId || ''} onChange={(e) => setDraft({ ...draft, memberId: e.target.value })} options={[['', 'Someone outside the team'], ...team.map((u) => [u.id, teamLabel(u)])]} />
+            </Field>
           </div>
+          {draft.memberId ? (
+            <Field label="Work date" hint="The day My work files this job under. Leave empty for today."><Input type="date" value={draft.date || ''} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
+          ) : (
+            <Field label="Vendor / payee"><Input value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} placeholder="Optional" /></Field>
+          )}
           <Field label="Description"><Input autoFocus value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder="DoP, Alexa Mini LF package, rooftop permit" /></Field>
           <div className="row-3">
             <Field label="Quantity"><Input type="number" min="0" step="0.5" value={draft.qty} onChange={(e) => setDraft({ ...draft, qty: e.target.value })} /></Field>

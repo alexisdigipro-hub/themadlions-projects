@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Button, Field, Input, Modal, Select, useToast } from './ui.jsx'
 import { today, uid, useStore } from '../lib/store.jsx'
 import { DOCS, METHODS, emptyTx, money } from '../lib/finance.js'
-import { lineBalance, lineEstimate, linePaid } from '../lib/budget.js'
+import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
 
 // budget category -> finance expense category
 export const FIN_CAT = {
@@ -25,8 +25,9 @@ export function recordPayment(s, { projectId, lineId, amount, date, method, doc,
     net: Number(amount), vatPct: Number(vatPct) || 0, status: 'paid', paidOn: date, doc, docNumber, method, budgetLineId: line.id, syncBudget: false,
   })
   s.finance.transactions.push(tx)
-  line.payments = [...(line.payments || []), { txId: tx.id, date, amount: Number(amount) }]
+  line.payments = [...(line.payments || []), { txId: tx.id, date, amount: Number(amount), method }]
   line.actual = linePaid(line)
+  syncLineWorklog(s, p, line) // a team member's My work turns to paid when the line is settled
   return tx
 }
 
