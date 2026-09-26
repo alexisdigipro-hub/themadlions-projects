@@ -6,14 +6,10 @@ import { download } from '../../lib/dates.js'
 import { useCurrentUser, useStore } from '../../lib/store.jsx'
 import PaymentModal from '../../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog, dropLineWorklog } from '../../lib/budget.js'
+import { groupPairs } from '../../lib/budgetCats.js'
 
-export const BUDGET_GROUPS = [
-  ['Above the line', ['Story & rights', 'Producer', 'Director', 'Cast', 'Casting']],
-  ['Production', ['Production staff', 'Extras', 'Camera', 'Lighting', 'Grip', 'Sound', 'Art & set', 'Props', 'Wardrobe', 'Makeup & hair', 'Locations', 'Studio', 'Transport', 'Catering', 'Equipment rental', 'Production office', 'Travel & accommodation']],
-  ['Post-production', ['Editing', 'Color', 'Sound post', 'Music', 'VFX', 'Titles & graphics', 'Deliverables', 'Subtitles']],
-  ['Other', ['Insurance', 'Legal & accounting', 'Marketing', 'Festival & distribution', 'Contingency', 'Misc']],
-]
-const CATEGORIES = BUDGET_GROUPS.flatMap(([, cats]) => cats)
+// The categories and their groups live in Settings > Budget (src/lib/budgetCats.js holds the
+// standard list and the helpers). The page reads them through groupPairs() below.
 const UNITS = ['flat', 'day', 'week', 'hour', 'unit', 'km', 'person']
 
 // memberId: a team member this line pays; the line is then mirrored into their My work (see
@@ -67,6 +63,9 @@ export default function Budget() {
   const [pay, setPay] = useState(null) // line
   const [filter, setFilter] = useState('')
   const cur = budget.currency || 'EUR'
+  // groups from Settings, plus an "Unlisted" group for lines whose category was removed there
+  const BUDGET_GROUPS = useMemo(() => groupPairs(state.settings, budget.lines), [state.settings, budget.lines])
+  const CATEGORIES = BUDGET_GROUPS.flatMap(([, cats]) => cats)
 
   const groups = useMemo(() => {
     return BUDGET_GROUPS.map(([name, cats]) => {
@@ -75,7 +74,7 @@ export default function Budget() {
       const act = lines.reduce((a, l) => a + Number(l.actual || 0), 0)
       return { name, lines, est, act }
     }).filter((g) => g.lines.length)
-  }, [budget.lines, filter])
+  }, [BUDGET_GROUPS, budget.lines, filter])
   const t = budgetTotals(project)
 
   const save = () => {
@@ -143,7 +142,7 @@ export default function Budget() {
           <Select value={filter} onChange={(e) => setFilter(e.target.value)} options={[['', 'All categories'], ...CATEGORIES.map((c) => [c, c])]} />
           {budget.lines.length > 0 && <Button variant="ghost" onClick={exportCSV}>Export CSV</Button>}
           {budget.lines.length > 0 && <Button variant="ghost" onClick={() => window.print()}>Print</Button>}
-          {editable && <Button variant="primary" onClick={() => setDraft(emptyLine())}>Add line</Button>}
+          {editable && <Button variant="primary" onClick={() => setDraft({ ...emptyLine(), category: CATEGORIES.includes('Camera') ? 'Camera' : CATEGORIES[0] || '' })}>Add line</Button>}
         </div>
       </div>
 
@@ -261,6 +260,7 @@ export default function Budget() {
                 {BUDGET_GROUPS.map(([g, cats]) => (
                   <optgroup key={g} label={g}>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</optgroup>
                 ))}
+                {draft.category && !CATEGORIES.includes(draft.category) && <option value={draft.category}>{draft.category} (unlisted)</option>}
               </select>
             </Field>
             <Field label="Paid to" hint={draft.memberId ? 'A team member: this line goes into their My work, and turns to paid when you pay it.' : ''}>
