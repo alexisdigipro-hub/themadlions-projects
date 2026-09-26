@@ -4,6 +4,7 @@ import { CATEGORIES, DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, depart
 import { projectProgress } from '../lib/progress.js'
 import { EXPENSE_CATS } from '../lib/finance.js'
 import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/budgetCats.js'
+import { fmtBytes, snapshotSummary, snapshotToState } from '../lib/backups.js'
 import { remote, supabase } from '../lib/supabase.js'
 
 import { testKey } from '../lib/ai.js'
@@ -403,6 +404,13 @@ export default function Settings() {
             {tab === 'data' && <ActivityLog />}
           </section>
         )}
+        {isAdmin && remote && (
+          <section className="panel" data-tab="data">
+            <h2>Weekly backups</h2>
+            <p className="muted small">The database takes a snapshot of the whole workspace every Monday at 06:00 and keeps the last twelve. Download one to keep a copy on your own disk; the Restore button below reads it. Needs <code>supabase/backups.sql</code> run once.</p>
+            <BackupsPanel toast={toast} />
+          </section>
+        )}
         <section className="panel" data-tab="data">
           <h2>Your data</h2>
           <p className="muted small">
@@ -448,6 +456,62 @@ export default function Settings() {
   )
 }
 
+
+/* Settings > Data > Weekly backups: the snapshots supabase/backups.sql keeps, with Back up now
+   and a Download per row. The download is converted to the app's own backup shape, so the
+   Restore button next to it accepts it. */
+function BackupsPanel({ toast }) {
+  const [list, setList] = useState(undefined) // undefined = loading, null = table missing
+  const [busy, setBusy] = useState('')
+  const load = async () => {
+    const { data, error } = await supabase.from('backups').select('id, taken_at, note, bytes').order('taken_at', { ascending: false }).limit(12)
+    if (error) { setList(null); return }
+    setList(data || [])
+  }
+  useEffect(() => { load() }, [])
+  const now = async () => {
+    setBusy('now')
+    try {
+      const { error } = await supabase.rpc('make_backup_now')
+      if (error) throw new Error(error.code === 'PGRST202' || error.code === '42883' ? 'Run supabase/backups.sql first.' : error.message)
+      await load()
+      toast('Snapshot taken', 'ok')
+    } catch (e) { toast(e.message, 'error') } finally { setBusy('') }
+  }
+  const get = async (row) => {
+    setBusy(String(row.id))
+    try {
+      const { data, error } = await supabase.from('backups').select('data').eq('id', row.id).single()
+      if (error) throw new Error(error.message)
+      const state = snapshotToState(data.data)
+      download(`themadlions-backup-${(row.taken_at || '').slice(0, 10)}.json`, JSON.stringify(state, null, 2), 'application/json')
+      toast(`Downloaded: ${snapshotSummary(data.data)}`, 'ok')
+    } catch (e) { toast(e.message, 'error') } finally { setBusy('') }
+  }
+  if (list === undefined) return <p className="muted small">Loading…</p>
+  if (list === null) return <p className="notice">No backups table yet. Run <code>supabase/backups.sql</code> in the Supabase SQL editor once; it also takes the first snapshot.</p>
+  return (
+    <div className="stack">
+      <div className="row-actions wrap">
+        <Button onClick={now} disabled={!!busy}>{busy === 'now' ? 'Taking a snapshot…' : 'Back up now'}</Button>
+      </div>
+      {list.length === 0 ? (
+        <p className="muted small">No snapshots yet. The first one comes Monday, or press Back up now.</p>
+      ) : (
+        <ul className="plain bk-list">
+          {list.map((b) => (
+            <li key={b.id} className="bk-row">
+              <span className="bk-when">{new Date(b.taken_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+              <span className="muted small">{b.note === 'weekly' ? 'weekly' : 'by hand'} · {fmtBytes(b.bytes)}</span>
+              <span className="grow" />
+              <Button size="sm" variant="ghost" onClick={() => get(b)} disabled={!!busy}>{busy === String(b.id) ? 'Preparing…' : 'Download'}</Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
 
 /* Settings > Budget: the groups and categories a budget line is filed under. Renames migrate every
    project's lines (renameCategory); a removal with lines on it first asks where they go (moveLines). */

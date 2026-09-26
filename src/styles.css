@@ -2929,6 +2929,13 @@ html[data-public='1'] body { background: var(--bg); }
 .prog-row .grow { flex: 1; }
 .prog-row .input.sm { width: 64px; }
 
+/* settings > data > weekly backups */
+.bk-list li { border-bottom: 1px solid var(--line-soft); padding: 0; }
+.bk-list li:last-child { border-bottom: 0; }
+.bk-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+.bk-row .grow { flex: 1; }
+.bk-when { font-weight: 600; }
+
 /* settings > budget categories */
 .bcat { display: flex; flex-direction: column; gap: 18px; }
 .bcat-group { border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 10px 12px 12px; }
