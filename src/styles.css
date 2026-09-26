@@ -2389,11 +2389,7 @@ html[data-theme='light'] .chat-box { border-color: transparent; }
 .prod-sheet tfoot .prod-sc { z-index: 4; text-align: right; }
 
 /* ---------- project form: which tabs this project shows ---------- */
-.tab-pick { display: flex; flex-wrap: wrap; gap: 6px; }
-/* the same chips on the Overview, one quiet row above the progress panel */
-.ov-tabs { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
-.ov-tabs-label { font-size: 12.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); padding-top: 6px; white-space: nowrap; }
-.tab-pick .chip { font-size: 14px; padding: 4px 10px; }
+.tab-pick { display: flex; flex-wrap: wrap; gap: 6px; }.tab-pick .chip { font-size: 14px; padding: 4px 10px; }
 .tab-pick .chip:not(.on) { text-decoration: line-through; opacity: .75; }
 .tab-pick .chip:disabled { cursor: default; opacity: 1; }
 
