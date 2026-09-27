@@ -1468,10 +1468,15 @@ code {
   height: 8px;
   border-radius: 50%;
 }
-/* the calendar's own legend (event types, below the desktop grid): names and dots 60% bigger,
-   with real room between entries. Desktop only already, the mobile calendar never renders it. */
-.cal-side .legend { gap: 14px 24px; font-size: 22px; }
-.cal-side .legend i { width: 13px; height: 13px; }
+/* the calendar's own legend (event types, below the desktop grid), now a row of filter buttons:
+   framed like buttons, evenly spread edge to edge, and clicking one filters the calendar to that
+   type (the "on" one, tinted in its own colour). Text ended up 30% smaller than the plain-text
+   version that came before (22px -> 15px). Desktop only, the mobile calendar never renders it. */
+.cal-legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.cal-legend-btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border: 1px solid var(--line-soft); border-radius: var(--radius); background: var(--panel); color: var(--muted); font: inherit; font-size: 15px; white-space: nowrap; cursor: pointer; }
+.cal-legend-btn:hover { background: var(--raised); color: var(--text); }
+.cal-legend-btn i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.cal-legend-btn.on { background: color-mix(in srgb, var(--ev) 20%, var(--panel)); border-color: var(--ev); color: var(--text); }
 
 /* ---------- locations ---------- */
 .loc-layout {
@@ -2313,7 +2318,7 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 
 /* ---------- calendar: panel below the grid ---------- */
 .cal-layout.stacked { grid-template-columns: 1fr; }
-.cal-layout.stacked .cal-cell { min-height: 134px; } /* +20% on desktop (Alex); the phone rule below is untouched */
+.cal-layout.stacked .cal-cell { min-height: 154px; } /* +20% then +15% more on desktop (Alex, the legend freed up room); the phone rule below is untouched */
 .cal-layout.stacked .cal-side { width: auto; }
 .cal-ev[style*="#6B7280"] { opacity: .9; }
 @media (max-width: 820px) { .cal-layout.stacked .cal-cell { min-height: 64px; } }

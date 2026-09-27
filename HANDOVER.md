@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Calendar legend is now a row of filter buttons, grid 15% taller again (27 Sep, morning)
+Alex, after seeing the enlarged plain-text legend: "make the letters 30% smaller after all, but let's do it differently, boxed like buttons, that also work as buttons that show the matching thing on the calendar, and lined up edge to edge, evenly." `.cal-legend` / `.cal-legend-btn` replace the plain `<span>` legend: framed buttons (border, radius, background), one CSS grid row (`repeat(auto-fit, minmax(0, 1fr))`) so they span the full width evenly whatever their count; text 15px, about 30% smaller than the enlarged 22px version. Clicking one calls the same `setTypeFilter` the "All types" dropdown uses, so the two stay in sync, and the active one is tinted in its own colour (`.on`, using `--ev`). "Now that it freed up more room, the calendar can grow another 15% downward": `.cal-layout.stacked .cal-cell` min-height 134px → 154px. Rendered at 1440 px; the legend row measures edge to edge inside its panel, the cell measures 154px.
+
 ### Calendar page: renamed, export moved, legend grown (27 Sep, morning)
 Alex, four small asks on the top-level Calendar page:
 - **Export .ics** moved off that page's toolbar into Settings > Calendar (exports every event on every project you can see, workspace-wide, as one file); a project's own Calendar tab keeps its own Export .ics, unchanged, since that one exports just that project.
