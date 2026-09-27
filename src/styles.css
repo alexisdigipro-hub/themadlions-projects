@@ -19,7 +19,7 @@
   --radius-lg: 10px;
   --font: 'Sofia Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: 'Courier Prime', 'Courier New', Courier, monospace;
-  --sidebar: 232px;
+  --sidebar: 255px; /* +10% on desktop (Alex); mobile keeps its own 260px in the phone drawer */
   --pc: var(--accent);
   --shadow: none;
   --shadow-lg: 0 18px 50px rgba(0, 0, 0, 0.5);
