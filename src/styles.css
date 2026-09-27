@@ -57,6 +57,17 @@ html[data-accent='ink'] { --accent: #1f2430; --accent-ink: #ffffff; }
    lighter on the dark theme so it still reads as lilac against the dark panels */
 html[data-accent='lilac'] { --accent: #7a5ec7; --accent-ink: #ffffff; }
 html[data-theme='dark'][data-accent='lilac'] { --accent: #a78fe0; --accent-ink: #1a1530; }
+/* five more accents (Alex): each a deeper tone on light and a lighter one on dark, with matching ink */
+html[data-accent='green'] { --accent: #3f8f5f; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='green'] { --accent: #6cc48f; --accent-ink: #0f2318; }
+html[data-accent='teal'] { --accent: #2b8a93; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='teal'] { --accent: #5fc3cb; --accent-ink: #0c2426; }
+html[data-accent='blue'] { --accent: #3b7dd8; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='blue'] { --accent: #7fb0f0; --accent-ink: #0e1b2e; }
+html[data-accent='rose'] { --accent: #c4547f; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='rose'] { --accent: #e592b4; --accent-ink: #2e1220; }
+html[data-accent='orange'] { --accent: #d9762b; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='orange'] { --accent: #f0a45f; --accent-ink: #2a1706; }
 html[data-theme='light'][data-accent='ink'] { --accent: #1f2430; }
 html[data-theme='dark'][data-accent='ink'] { --accent: #ece9e2; --accent-ink: #17181c; }
 
@@ -2079,6 +2090,12 @@ html[data-theme='light'] .sheet { box-shadow: var(--shadow); }
 .accent-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 .field .accent-swatches button.swatch { display: flex; align-items: center; gap: 10px; width: 100%; height: 40px; padding: 0 12px; border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: var(--radius); cursor: pointer; font: inherit; font-size: 15px; text-align: left; white-space: nowrap; }
 .field .accent-swatches button.swatch .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--sw); flex: none; display: block; }
+/* Settings > Display > Typeface: each card set in its own face, hover fetches it, the chosen one is outlined */
+.font-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.font-swatch { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; padding: 9px 12px; border: 1px solid var(--line); background: var(--panel); color: var(--text); border-radius: var(--radius); cursor: pointer; text-align: left; }
+.font-swatch.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.font-swatch-name { font-size: 15px; font-weight: 600; }
+.font-swatch-sample { font-size: 13.5px; color: var(--muted); }
 .field .accent-swatches button.swatch.on { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); font-weight: 600; }
 
 /* ---------- call sheet, StudioBinder-style layout ---------- */
@@ -2297,8 +2314,8 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
    accent-tinted bubbles of your own on the right, a tail on the first bubble of a run, the time
    inside the bubble, and a round send button. Colours come from the theme and the accent so the
    chat follows Settings > Display like everything else. */
-:root { --wa-wall: #e5ddd5; --wa-dots: rgba(0, 0, 0, .05); --wa-in: #ffffff; --wa-out: color-mix(in srgb, var(--accent) 16%, #ffffff); --wa-time: #667781; --wa-quote: rgba(0, 0, 0, .06); }
-html[data-theme='dark'] { --wa-wall: #0f171d; --wa-dots: rgba(255, 255, 255, .04); --wa-in: #202c33; --wa-out: color-mix(in srgb, var(--accent) 38%, #1f2c34); --wa-time: rgba(255, 255, 255, .55); --wa-quote: rgba(0, 0, 0, .22); }
+:root { --wa-wall: #e5ddd5; --wa-dots: rgba(0, 0, 0, .05); --wa-in: #ffffff; --wa-out: color-mix(in srgb, var(--accent) 24%, #ffffff); --wa-time: #667781; --wa-quote: rgba(0, 0, 0, .06); }
+html[data-theme='dark'] { --wa-wall: #0f171d; --wa-dots: rgba(255, 255, 255, .04); --wa-in: #202c33; --wa-out: color-mix(in srgb, var(--accent) 48%, #1f2c34); --wa-time: rgba(255, 255, 255, .55); --wa-quote: rgba(0, 0, 0, .22); }
 .chat-box { flex: 1; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; min-height: 420px; }
 html[data-theme='light'] .chat-box { border-color: transparent; }
 .chat-scroll { flex: 1; overflow-y: auto; padding: 12px 6%; display: flex; flex-direction: column; gap: 2px; max-height: calc(100vh - 260px); background-color: var(--panel); }
@@ -2314,10 +2331,10 @@ html[data-theme='light'] .chat-box { border-color: transparent; }
 .chat-box[data-bubbles='classic'] .chat-msg.mine .chat-file, .chat-box[data-bubbles='classic'] .chat-msg.mine .chat-att-wait { background: rgba(255, 255, 255, .18); }
 .chat-box[data-bubbles='classic'] .chat-bubble::before { display: none; }
 .chat-box[data-bubbles='classic'] .chat-msg:not(.cont) .chat-bubble, .chat-box[data-bubbles='classic'] .chat-msg.mine:not(.cont) .chat-bubble { border-top-left-radius: 16px; border-top-right-radius: 16px; }
-/* Telegram: rounder bubbles, the tail at the bottom of the last bubble of a run, Telegram's own
-   colours (light: white and pale green; dark: navy and steel blue, white text). */
-.chat-box[data-bubbles='telegram'] { --wa-in: #ffffff; --wa-out: #effdde; --wa-wall: #d6e4ed; --wa-dots: rgba(0, 0, 0, .05); --wa-time: #6c7883; }
-html[data-theme='dark'] .chat-box[data-bubbles='telegram'] { --wa-in: #182533; --wa-out: #2b5278; --wa-wall: #0e1621; --wa-dots: rgba(255, 255, 255, .04); --wa-time: rgba(255, 255, 255, .55); --wa-quote: rgba(255, 255, 255, .1); }
+/* Telegram: rounder bubbles, the tail at the bottom of the last bubble of a run. Your own bubbles
+   and the soft wallpaper take the accent from Settings > Display (Alex), not Telegram's green. */
+.chat-box[data-bubbles='telegram'] { --wa-in: #ffffff; --wa-out: color-mix(in srgb, var(--accent) 24%, #ffffff); --wa-wall: color-mix(in srgb, var(--accent) 9%, #e6ebef); --wa-dots: rgba(0, 0, 0, .05); --wa-time: #6c7883; }
+html[data-theme='dark'] .chat-box[data-bubbles='telegram'] { --wa-in: #182533; --wa-out: color-mix(in srgb, var(--accent) 50%, #1c2733); --wa-wall: color-mix(in srgb, var(--accent) 10%, #0e1621); --wa-dots: rgba(255, 255, 255, .04); --wa-time: rgba(255, 255, 255, .55); --wa-quote: rgba(255, 255, 255, .1); }
 html[data-theme='dark'] .chat-box[data-bubbles='telegram'] .chat-bubble { color: #fff; }
 .chat-box[data-bubbles='telegram'] .chat-bubble { border-radius: 14px; padding: 6px 10px 7px 11px; }
 .chat-box[data-bubbles='telegram'] .chat-msg:not(.cont) .chat-bubble, .chat-box[data-bubbles='telegram'] .chat-msg.mine:not(.cont) .chat-bubble { border-top-left-radius: 14px; border-top-right-radius: 14px; }
