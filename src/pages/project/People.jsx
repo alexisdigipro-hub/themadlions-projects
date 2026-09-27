@@ -164,11 +164,13 @@ export default function People() {
           <tbody>
             {list.map((c) => (
               <tr key={c.id}>
-                <td className="person-cell">
-                  <button className="avatar" onClick={() => setPhotosFor(c.id)} aria-label="Photos">
-                    {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}
-                  </button>
-                  <strong>{c.name}</strong>
+                <td>
+                  <div className="person-cell">
+                    <button className="avatar" onClick={() => setPhotosFor(c.id)} aria-label="Photos">
+                      {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}
+                    </button>
+                    <strong>{c.name}</strong>
+                  </div>
                 </td>
                 <td>{tab === 'cast' ? c.character : c.dept}</td>
                 <td>{c.role}</td>

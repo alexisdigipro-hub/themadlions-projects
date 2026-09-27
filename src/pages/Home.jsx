@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, PageHead } from '../components/ui.jsx'
+import { Button, PageHead, useIsMobile } from '../components/ui.jsx'
 import { EVENT_TYPES, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import MiniCalendar from '../components/MiniCalendar.jsx'
 import { projectProgress } from '../lib/progress.js'
@@ -43,6 +43,7 @@ export function reorder(order, from, to) {
 export default function Home() {
   const { state } = useStore()
   const user = useCurrentUser()
+  const mobile = useIsMobile()
   const projects = visibleProjects(state, user)
   const t0 = today(), t7 = addDays(t0, 7)
   // The team strip follows whichever day is picked in the mini calendar below it.
@@ -160,9 +161,17 @@ export default function Home() {
                 <tbody>
                   {rows.map(({ p, pct, next, open, overdue, bt, cap }) => (
                     <tr key={p.id} className={p.status === 'Delivered' ? 'dim' : ''}>
-                      <td className="person-cell">
-                        {p.coverThumb ? <img className="avatar-img sq" src={p.coverThumb} alt="" /> : <span className="dot" style={{ '--pc': p.color }} />}
-                        <span><Link to={`/p/${p.id}`}><strong>{p.title}</strong></Link><div className="muted small">{p.category}{p.client ? ` · ${p.client}` : ''}</div></span>
+                      <td>
+                        {/* the flex row lives on a div inside the cell: a td that is itself display:flex leaves the table and swallows the row's width on a phone */}
+                        <div className="person-cell">
+                          {p.coverThumb ? <img className="avatar-img sq" src={p.coverThumb} alt="" /> : <span className="dot" style={{ '--pc': p.color }} />}
+                          <span>
+                            <Link to={`/p/${p.id}`}><strong>{p.title}</strong></Link>
+                            <div className="muted small">{p.category}{p.client ? ` · ${p.client}` : ''}</div>
+                            {/* on a phone the columns are gone: the next day and the open tasks go under the title */}
+                            {mobile && <div className={`small home-next ${overdue ? 'late' : ''}`}>{next ? `${fmtDate(next.date)} · ${next.callTime}` : 'No day planned'}{open ? ` · ${open} open${overdue ? ` (${overdue} late)` : ''}` : ''}</div>}
+                          </span>
+                        </div>
                       </td>
                       <td className="small">{p.status}</td>
                       <td><div className="mini-progress" title={`${pct}%`}><span style={{ width: `${pct}%`, background: p.color }} /></div><span className="small muted">{pct}%</span></td>
