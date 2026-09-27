@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { CATEGORIES, DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, sampleProject, today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { projectProgress } from '../lib/progress.js'
-import { EXPENSE_CATS } from '../lib/finance.js'
+import { expenseCats } from '../lib/finance.js'
 import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/budgetCats.js'
 import { fmtBytes, snapshotSummary, snapshotToState } from '../lib/backups.js'
 import { authorizeUrl, clearOauth, pcloudPing, redirectUri, takeOauth } from '../lib/pcloud.js'
@@ -631,7 +631,7 @@ function BudgetCategoriesSettings({ state, update, toast }) {
             {g.cats.map((c, ci) => (
               <li key={c.name} className="bcat-row">
                 <input className="input" defaultValue={c.name} onBlur={(e) => { if (e.target.value.trim() !== c.name) { const v = e.target.value; e.target.value = c.name; renameCat(c.name, v) } }} onKeyDown={(e) => e.key === 'Enter' && e.target.blur()} aria-label="Category name" />
-                <Select value={c.fin || 'Other expense'} onChange={(e) => setFin(gi, ci, e.target.value)} options={EXPENSE_CATS} aria-label="Finance column" />
+                <Select value={c.fin || 'Other expense'} onChange={(e) => setFin(gi, ci, e.target.value)} options={[...new Set([...expenseCats(state.finance?.settings), ...(c.fin ? [c.fin] : [])])]} aria-label="Finance column" />
                 <button className="bcat-btn" title="Move up" disabled={ci === 0} onClick={() => moveCat(gi, ci, -1)}>↑</button>
                 <button className="bcat-btn" title="Move down" disabled={ci === g.cats.length - 1} onClick={() => moveCat(gi, ci, 1)}>↓</button>
                 <button className="bcat-btn bcat-x" title="Remove" onClick={() => askRemove(c.name)}>×</button>
