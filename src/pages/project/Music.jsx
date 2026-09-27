@@ -180,6 +180,25 @@ export default function Music() {
     const blob = await (await fetch(url)).blob()
     return new File([blob], `${track.name}.${track.ext || 'mp3'}`, { type: blob.type || 'audio/mpeg' })
   }
+  /* Saves the stored file to the device with its own name. A blob link, not the signed URL
+     itself, so the browser downloads instead of opening a player tab. */
+  const [saving, setSaving] = useState(false)
+  const downloadAudio = async () => {
+    if (!url) return
+    setSaving(true)
+    try {
+      const blob = await (await fetch(url)).blob()
+      const href = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = href; a.download = `${track.name}.${track.ext || 'mp3'}`
+      document.body.appendChild(a); a.click(); a.remove()
+      setTimeout(() => URL.revokeObjectURL(href), 10000)
+    } catch (e) {
+      toast(e.message, 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
   const runTranscribe = async () => {
     setTrBusy('Sending the song to Whisper…')
     try {
@@ -248,6 +267,7 @@ export default function Music() {
             <span className="player-now">{current ? <><span className="muted">now:</span> <strong>{current.name}</strong></> : null}</span>
             <div className="row-actions">
               {loop && <Button size="sm" variant="ghost" onClick={() => setLoop(null)}>Stop loop</Button>}
+              <Button size="sm" variant="ghost" onClick={downloadAudio} disabled={saving || !url} title="Save the audio file to this device">{saving ? 'Preparing…' : 'Download'}</Button>
               {editable && <Confirm label="Remove track" onConfirm={() => removeTrack(track)} />}
             </div>
           </div>
