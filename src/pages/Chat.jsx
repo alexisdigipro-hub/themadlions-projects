@@ -177,14 +177,15 @@ function RoomList({ activeId }) {
         {!shown.length && <p className="muted small chat-rooms-empty">{folder.custom ? 'This folder is empty. Add conversations to it under Folders.' : 'Nothing here yet.'}</p>}
         {shown.map((r) => {
           const last = C.lastMessage(state.chat, r.id)
-          const preview = last ? `${last.userId === user?.id ? 'You' : (last.userName || '').split(' ')[0]}: ${last.text || (last.attachments?.length ? (isImage(last.attachments[0]) ? 'Photo' : last.attachments[0].name) : '')}` : r.sub
+          // the company room shows its name alone, a project room its category; groups and people show the last message
+          const preview = r.kind === 'team' ? '' : r.kind === 'project' ? r.sub : last ? `${last.userId === user?.id ? 'You' : (last.userName || '').split(' ')[0]}: ${last.text || (last.attachments?.length ? (isImage(last.attachments[0]) ? 'Photo' : last.attachments[0].name) : '')}` : r.sub
           const n = unread[r.id] || 0
           return (
             <button key={r.id} type="button" className={`chat-room-item ${r.id === activeId ? 'active' : ''}`} onClick={() => nav(`/chat/${encodeURIComponent(r.id)}`)} disabled={legacy && r.kind !== 'team'}>
               <RoomAvatar room={r} />
               <span className="chat-rmain">
                 <span className="chat-rtop"><strong>{r.name}</strong><small>{listTime(last?.createdAt)}</small></span>
-                <span className="chat-rbottom"><span className="chat-rprev">{preview}</span>{n > 0 && <span className="chat-rbadge">{n}</span>}</span>
+                {(preview || n > 0) && <span className="chat-rbottom"><span className="chat-rprev">{preview}</span>{n > 0 && <span className="chat-rbadge">{n}</span>}</span>}
               </span>
             </button>
           )
