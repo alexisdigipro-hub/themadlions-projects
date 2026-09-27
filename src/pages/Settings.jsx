@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
-import { CATEGORIES, DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, sampleProject, today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
+import { CATEGORIES, DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, sampleProject, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { projectProgress } from '../lib/progress.js'
 import { expenseCats } from '../lib/finance.js'
 import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/budgetCats.js'
@@ -12,7 +12,7 @@ import { remote, supabase } from '../lib/supabase.js'
 
 import { testKey } from '../lib/ai.js'
 import { checkOpenAIKey } from '../lib/transcribe.js'
-import { download } from '../lib/dates.js'
+import { buildICS, download } from '../lib/dates.js'
 
 export default function Settings() {
   const { state, update, replaceState, logout, mode, syncError, localBackup } = useStore()
@@ -250,6 +250,18 @@ export default function Settings() {
             </Field>
             <Field label="Week starts on">
               <Select value={state.settings.weekStart || 'monday'} onChange={(e) => setSetting('weekStart', e.target.value)} options={[['monday', 'Monday'], ['sunday', 'Sunday']]} />
+            </Field>
+            <Field label="Export" hint="Every event on every project you can see, plus days off, as one .ics file for your phone or desktop calendar app.">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  const ids = new Set(visibleProjects(state, me).map((p) => p.id))
+                  const events = state.events.filter((e) => !e.projectId || ids.has(e.projectId))
+                  download(`${state.workspace.name || 'calendar'}.ics`, buildICS(events, state.workspace.name), 'text/calendar')
+                }}
+              >
+                Export .ics
+              </Button>
             </Field>
           </section>
         )}

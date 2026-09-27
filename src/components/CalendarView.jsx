@@ -113,9 +113,13 @@ export default function CalendarView({ projectId = null, title }) {
               ))}
             </Select>
           )}
-          <Button variant="ghost" onClick={() => download(`${title || 'calendar'}.ics`, buildICS(events, title), 'text/calendar')}>
-            Export .ics
-          </Button>
+          {/* on the top-level Calendar page this moved to Settings > Calendar (Alex); a project's
+              own Calendar tab keeps it here, it is that project's own export */}
+          {projectId && (
+            <Button variant="ghost" onClick={() => download(`${title || 'calendar'}.ics`, buildICS(events, title), 'text/calendar')}>
+              Export .ics
+            </Button>
+          )}
           {canMarkOff && (
             <Button variant="ghost" onClick={() => setDraft(newEvent(today(), 'unavailable'))}>
               Not available

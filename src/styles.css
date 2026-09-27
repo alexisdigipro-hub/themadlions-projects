@@ -1468,6 +1468,10 @@ code {
   height: 8px;
   border-radius: 50%;
 }
+/* the calendar's own legend (event types, below the desktop grid): names and dots 60% bigger,
+   with real room between entries. Desktop only already, the mobile calendar never renders it. */
+.cal-side .legend { gap: 14px 24px; font-size: 22px; }
+.cal-side .legend i { width: 13px; height: 13px; }
 
 /* ---------- locations ---------- */
 .loc-layout {
@@ -2309,7 +2313,7 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 
 /* ---------- calendar: panel below the grid ---------- */
 .cal-layout.stacked { grid-template-columns: 1fr; }
-.cal-layout.stacked .cal-cell { min-height: 112px; }
+.cal-layout.stacked .cal-cell { min-height: 134px; } /* +20% on desktop (Alex); the phone rule below is untouched */
 .cal-layout.stacked .cal-side { width: auto; }
 .cal-ev[style*="#6B7280"] { opacity: .9; }
 @media (max-width: 820px) { .cal-layout.stacked .cal-cell { min-height: 64px; } }

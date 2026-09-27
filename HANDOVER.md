@@ -40,6 +40,18 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Calendar page: renamed, export moved, legend grown (27 Sep, morning)
+Alex, four small asks on the top-level Calendar page:
+- **Export .ics** moved off that page's toolbar into Settings > Calendar (exports every event on every project you can see, workspace-wide, as one file); a project's own Calendar tab keeps its own Export .ics, unchanged, since that one exports just that project.
+- Removed the subtitle "Every project you have access to, on one board".
+- Renamed "Production calendar" to **THEMADLIONS CALENDAR**, MAD in bold.
+- The legend of event types under the desktop grid (colour dot + name) is 60% bigger with real gaps between entries (`.cal-side .legend`); it already only renders on desktop, the phone calendar uses the day list instead.
+
+Rendered at 1440 px.
+
+### Calendar grid 20% taller on desktop (27 Sep, morning)
+Alex: "στο calendar, μπορεί να μεγαλώσει κι άλλο σε ύψος κατά 20%." `.cal-layout.stacked .cal-cell` min-height 112px → 134px; this is the one calendar grid shared by the top-level Calendar page and every project's Calendar tab. The phone rule (64px) is untouched. Rendered at 1440 px, cell measures 134px.
+
 ### Sidebar 10% wider on desktop (27 Sep, morning)
 Alex: "μεγάλωσε την πλαινή μπάρα μενού κατά 10% σε desktop." The one `--sidebar` CSS variable (232px → 255px) that sets the desktop grid column; the phone drawer has its own fixed 260px and is untouched. Rendered at 1440 px.
 
