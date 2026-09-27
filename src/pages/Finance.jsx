@@ -95,7 +95,15 @@ export default function Finance() {
   const monthlyLoad = recurring.filter((r) => r.active).reduce((a, r) => a + (r.type === 'expense' ? 1 : -1) * Number(r.net || 0) / (r.frequency === 'yearly' ? 12 : r.frequency === 'quarterly' ? 3 : 1), 0)
 
   const S = summarize(fin.transactions, { year, projects: state.projects, fiscalStart })
-  const taxEst = Math.max(0, Math.round(S.profit * (Number(fin.settings.taxRate || 0) / 100)))
+  // The year's profit counts the client budgets not yet invoiced as income and the budget lines
+  // still owed as expense (Alex: "shouldn't it go into the profit?"), so a project reads the same
+  // on the Overview as in its own Budget. The tax estimate follows that profit.
+  const expInYear = expectedRows.filter((r) => fiscalYearOf(r.date, fiscalStart) === year).reduce((a, r) => a + r.net, 0)
+  const owedInYear = owedRows.filter((r) => fiscalYearOf(r.date, fiscalStart) === year).reduce((a, r) => a + r.net, 0)
+  const incomeAll = S.income + expInYear
+  const expenseAll = S.expense + owedInYear
+  const profitAll = incomeAll - expenseAll
+  const taxEst = Math.max(0, Math.round(profitAll * (Number(fin.settings.taxRate || 0) / 100)))
   const maxMonth = Math.max(1, ...S.months.map((m) => Math.max(m.income, m.expense)))
 
   const listed = fin.transactions
@@ -269,10 +277,10 @@ export default function Finance() {
       {tab === 'overview' && (
         <>
           <div className="fin-hero">
-            <div className={`fin-card ${S.profit < 0 ? 'neg' : 'pos'}`}>
+            <div className={`fin-card ${profitAll < 0 ? 'neg' : 'pos'}`}>
               <div className="fin-label">Profit {year}</div>
-              <div className="fin-value">{money(S.profit, cur)}</div>
-              <div className="fin-sub">{money(S.income, cur)} in · {money(S.expense, cur)} out · est. tax {money(taxEst, cur)} ({fin.settings.taxRate}%) · after tax {money(S.profit - taxEst, cur)}</div>
+              <div className="fin-value">{money(profitAll, cur)}</div>
+              <div className="fin-sub">{money(incomeAll, cur)} in{expInYear ? ` (${money(expInYear, cur)} client budgets to invoice)` : ''} · {money(expenseAll, cur)} out{owedInYear ? ` (${money(owedInYear, cur)} still owed on budget lines)` : ''} · est. tax {money(taxEst, cur)} ({fin.settings.taxRate}%) · after tax {money(profitAll - taxEst, cur)}</div>
             </div>
             <div className="fin-card">
               <div className="fin-label">Owed to us</div>
