@@ -5,6 +5,7 @@ import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
 import { useToast } from './ui.jsx'
 import { loadRead, totalUnread, unreadByRoom } from '../lib/chat.js'
+import { chime, loadChatPrefs } from '../lib/chatPrefs.js'
 
 function Logo({ name, subtitle, logo }) {
   return (
@@ -31,6 +32,20 @@ export default function Layout() {
   }, [])
   // every room this person is in, so a group or a direct message counts as much as the team room
   const unread = totalUnread(unreadByRoom(state, user, readMap))
+  // Settings > Chat > Sound: a short tone when a message from someone else arrives and its room
+  // is not the one on screen (or the app is in another tab). First load is not news.
+  const seenChat = useRef(null)
+  useEffect(() => {
+    const list = state.chat || []
+    const latest = list.reduce((a, m) => (whenMs(m.createdAt) > a ? whenMs(m.createdAt) : a), 0)
+    if (seenChat.current === null) { seenChat.current = latest; return }
+    if (latest > seenChat.current) {
+      const fresh = list.filter((m) => whenMs(m.createdAt) > seenChat.current && m.userId && m.userId !== user?.id)
+      const openRoom = decodeURIComponent((window.location.hash.match(/#\/chat\/([^?]+)/) || [])[1] || (window.location.hash.startsWith('#/chat') ? 'team' : ''))
+      if (fresh.some((m) => document.hidden || (m.chatId || 'team') !== openRoom) && loadChatPrefs().sound) chime()
+    }
+    seenChat.current = latest
+  }, [state.chat])
 
   /* Answers left by clients on delivery pages. Same idea as the chat badge: what came in since the
      last time the Share page was opened. */

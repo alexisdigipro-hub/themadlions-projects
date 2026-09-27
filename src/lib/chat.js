@@ -52,7 +52,8 @@ export function roomsFor(state, user) {
   const out = [{ id: TEAM, kind: 'team', name: teamName, sub: `${users.filter((u) => u.active !== false).length} people`, initials: initialsOf(teamName) }]
   for (const p of visibleProjects(state, user)) {
     if (tabHidden(p, 'chat')) continue
-    out.push({ id: projectRoom(p.id), kind: 'project', name: p.title, sub: p.category, projectId: p.id, color: p.color, initials: initialsOf(p.title) })
+    // the project's cover is the room's picture, its colour the fallback behind the initials
+    out.push({ id: projectRoom(p.id), kind: 'project', name: p.title, sub: p.category, projectId: p.id, color: p.color, photo: p.coverThumb || '', initials: initialsOf(p.title) })
   }
   for (const c of state.chats || []) {
     if (!Array.isArray(c.members) || !c.members.includes(user.id)) continue
