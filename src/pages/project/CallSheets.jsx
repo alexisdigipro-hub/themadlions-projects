@@ -209,7 +209,7 @@ export default function CallSheets() {
             <tbody>
               {people.map((pp) => (
                 <tr key={pp.id}>
-                  <td className="person-cell">{pp.photos?.[0]?.thumb && <img className="avatar-img" src={pp.photos[0].thumb} alt="" />}<strong>{pp.name}</strong></td>
+                  <td><div className="person-cell">{pp.photos?.[0]?.thumb && <img className="avatar-img" src={pp.photos[0].thumb} alt="" />}<strong>{pp.name}</strong></div></td>
                   <td className="small">{pp.kind === 'cast' ? pp.character : pp.role || pp.dept}</td>
                   <td>{pp.call}</td>
                   <td className="small">{pp.phone || <span className="muted">no phone</span>}</td>
@@ -416,9 +416,11 @@ export default function CallSheets() {
               {castRows.map((r) => (
                 <tr key={r.character}>
                   <td>{r.character}</td>
-                  <td className="person-cell">
-                    {r.actor?.photos?.[0]?.thumb && <img className="avatar-img" src={r.actor.photos[0].thumb} alt="" />}
-                    {r.actor?.name || <span className="muted">Not cast</span>}
+                  <td>
+                    <div className="person-cell">
+                      {r.actor?.photos?.[0]?.thumb && <img className="avatar-img" src={r.actor.photos[0].thumb} alt="" />}
+                      {r.actor?.name || <span className="muted">Not cast</span>}
+                    </div>
                   </td>
                   <td>{r.actor?.phone || ''}</td>
                   <td>{r.call}</td>
