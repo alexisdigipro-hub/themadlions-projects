@@ -190,11 +190,20 @@ export default function CalendarView({ projectId = null, title }) {
         )}
 
         <aside className="cal-side">
-          <div className="legend">
+          {/* the legend doubles as a filter: click a type to show only it on the grid above, click it
+              again for all types. Same state the "All types" dropdown uses, so the two stay in sync. */}
+          <div className="cal-legend">
             {EVENT_TYPES.map((t) => (
-              <span key={t.key}>
+              <button
+                key={t.key}
+                type="button"
+                className={`cal-legend-btn ${typeFilter === t.key ? 'on' : ''}`}
+                style={{ '--ev': t.color }}
+                onClick={() => setTypeFilter((f) => (f === t.key ? 'all' : t.key))}
+                title={`Show only ${t.label}`}
+              >
                 <i style={{ background: t.color }} /> {t.label}
-              </span>
+              </button>
             ))}
           </div>
         </aside>
