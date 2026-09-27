@@ -110,12 +110,13 @@ export default function Dashboard() {
     .filter((p) => filter === 'All' || p.category === filter)
     .filter((p) => !q || [p.title, p.client, p.code].some((v) => (v || '').toLowerCase().includes(q.toLowerCase())))
     .sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''))
-  // Delivered projects leave the main grid (Alex): they sit under it, grey and small, behind a
-  // toggle that remembers whether it was open on this device.
+  // Delivered projects leave the main grid (Alex): a "Delivered" chip at the end of the category
+  // row, in the inverse colour of the others, shows them alone, grey until hovered.
+  const [showDelivered, setShowDelivered] = useState(false)
   const active = projects.filter((p) => p.status !== 'Delivered')
   const closed = projects.filter((p) => p.status === 'Delivered')
-  const [showClosed, setShowClosed] = useState(() => { try { return localStorage.getItem('tml_closed_open') === '1' } catch { return false } })
-  const toggleClosed = () => setShowClosed((v) => { try { localStorage.setItem('tml_closed_open', v ? '0' : '1') } catch {} return !v })
+  const shown = showDelivered ? closed : active
+  const liveAll = state.projects.filter((p) => p.status !== 'Delivered')
 
   const save = () => {
     if (!draft.title.trim()) return toast('Give the project a title.', 'error')
@@ -129,8 +130,8 @@ export default function Dashboard() {
     setDraft(null)
   }
 
-  const card = (p, small) => (
-    <Link key={p.id} to={`/p/${p.id}`} className={`project-card ${small ? 'closed' : ''}`} style={{ '--pc': p.color }}>
+  const card = (p, grey) => (
+    <Link key={p.id} to={`/p/${p.id}`} className={`project-card ${grey ? 'grey' : ''}`} style={{ '--pc': p.color }}>
       <div className={`project-cover ${p.coverThumb ? 'has-img' : ''}`}>
         {p.coverThumb ? <img src={p.coverThumb} alt="" /> : <span className="slate-bar" />}
         <span className="project-cat">{p.category}</span>
@@ -171,7 +172,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageHead title="Projects" sub={`${active.length} active${closed.length ? ` · ${closed.length} delivered` : ''} · ${projects.length} of ${visibleProjects(state, user).length} shown`}>
+      <PageHead title="Projects" sub={showDelivered ? `${closed.length} delivered` : `${active.length} active${closed.length ? ` · ${closed.length} delivered` : ''}`}>
         <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="input search" />
         {canEdit && (
           <Button variant="primary" onClick={() => setDraft(freshProject())}>
@@ -184,30 +185,24 @@ export default function Dashboard() {
         {['All', ...CATEGORIES].map((c) => (
           <button key={c} className={`chip ${filter === c ? 'on' : ''}`} onClick={() => setFilter(c)}>
             {c}
-            <small>{c === 'All' ? state.projects.length : state.projects.filter((p) => p.category === c).length}</small>
+            <small>{(showDelivered ? state.projects.filter((p) => p.status === 'Delivered') : liveAll).filter((p) => c === 'All' || p.category === c).length}</small>
           </button>
         ))}
+        <button className={`chip neg ${showDelivered ? 'on' : ''}`} onClick={() => setShowDelivered((v) => !v)} aria-pressed={showDelivered} title="Delivered projects">
+          Delivered
+          <small>{state.projects.filter((p) => p.status === 'Delivered').length}</small>
+        </button>
       </div>
 
-      {projects.length === 0 ? (
+      {shown.length === 0 ? (
         <Empty
-          title={state.projects.length ? 'Nothing matches' : 'No projects yet'}
+          title={showDelivered ? 'No delivered projects here' : state.projects.length ? 'Nothing matches' : 'No projects yet'}
           action={canEdit && !state.projects.length && <Button variant="primary" onClick={() => setDraft(freshProject())}>Create the first project</Button>}
         >
-          {state.projects.length ? 'Try another category or search term.' : 'A project holds the script, breakdown, schedule, call sheets, locations and people.'}
+          {showDelivered ? 'A project moves here when its status is set to Delivered.' : state.projects.length ? 'Try another category or search term.' : 'A project holds the script, breakdown, schedule, call sheets, locations and people.'}
         </Empty>
       ) : (
-        <>
-          {active.length > 0 && <div className="project-grid">{active.map((p) => card(p, false))}</div>}
-          {closed.length > 0 && (
-            <section className="closed-projects">
-              <button type="button" className="closed-toggle" onClick={toggleClosed} aria-expanded={showClosed}>
-                <span className="closed-caret">{showClosed ? '▾' : '▸'}</span> Delivered <small>{closed.length}</small>
-              </button>
-              {showClosed && <div className="project-grid compact">{closed.map((p) => card(p, true))}</div>}
-            </section>
-          )}
-        </>
+        <div className="project-grid">{shown.map((p) => card(p, showDelivered))}</div>
       )}
 
       <Modal
