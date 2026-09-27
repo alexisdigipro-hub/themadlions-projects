@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Typeface picker (27 Sep, night)
+Alex: "more fonts in settings, maybe from Google Fonts, and settings to change fonts." src/lib/fonts.js: `FONTS` (15 families, every one with Greek coverage so mixed call sheets stay one face; two serifs), `applyFont(id)` sets `--font` on the root and stores `tml_font`, `ensureFontLoaded(id)` appends the Google Fonts stylesheet once (Sofia Sans is in index.html already), `currentFont()`. main.jsx applies it at start-up with the theme. Settings > Display > Typeface: cards set in their own face (hover or focus fetches the font, so nothing loads until looked at), chosen card outlined in the accent. Per device, like theme and accent. Not done: a separate face for headings or the mono face (Courier Prime stays for scripts).
+
 ### Bubbles follow the accent; ten accents (27 Sep, night)
 Alex: "the bubbles should take the accent colour that is set" and "add more accent colours". Own bubbles in the WhatsApp and Telegram styles are `color-mix` of the accent (24% on light, 48 to 50% on dark) and the Telegram soft wallpaper is a faint accent tint too; Classic was already the full accent. Five accents join amber, red, slate, lilac and ink: green (Forest), teal, blue (Ocean), rose, orange, each with a light and a dark tone and its own `--accent-ink` (styles.css next to lilac; swatches in Settings > Display).
 

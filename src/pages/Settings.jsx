@@ -7,6 +7,7 @@ import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/bu
 import { fmtBytes, snapshotSummary, snapshotToState } from '../lib/backups.js'
 import { authorizeUrl, clearOauth, pcloudPing, redirectUri, takeOauth } from '../lib/pcloud.js'
 import { CHAT_DEFAULTS, chime, loadChatPrefs, saveChatPrefs } from '../lib/chatPrefs.js'
+import { FONTS, applyFont, currentFont, ensureFontLoaded } from '../lib/fonts.js'
 import { remote, supabase } from '../lib/supabase.js'
 
 import { testKey } from '../lib/ai.js'
@@ -24,6 +25,8 @@ export default function Settings() {
   const [textSize, setTextSize] = useState(() => localStorage.getItem('tml_text_size') || 'normal')
   const [theme, setTheme] = useState(() => localStorage.getItem('tml_theme') || 'light')
   const [accent, setAccent] = useState(() => localStorage.getItem('tml_accent') || 'amber')
+  const [font, setFont] = useState(currentFont)
+  const pickFont = (id) => setFont(applyFont(id))
   const applyTheme = (v) => { setTheme(v); localStorage.setItem('tml_theme', v); document.documentElement.dataset.theme = v }
   const applyAccent = (v) => { setAccent(v); localStorage.setItem('tml_accent', v); document.documentElement.dataset.accent = v }
   const applyTextSize = (v) => {
@@ -299,6 +302,18 @@ export default function Settings() {
               ))}
             </div>
           </Field>
+          <div className="field">
+            <span className="field-label">Typeface</span>
+            <div className="font-swatches">
+              {FONTS.map((f) => (
+                <button key={f.id} type="button" className={`font-swatch ${font === f.id ? 'on' : ''}`} style={{ fontFamily: `${f.family}, ${f.serif ? 'Georgia, serif' : 'system-ui, sans-serif'}` }} onClick={() => pickFont(f.id)} onMouseEnter={() => ensureFontLoaded(f.id)} onFocus={() => ensureFontLoaded(f.id)} title={f.label}>
+                  <span className="font-swatch-name">{f.label}</span>
+                  <span className="font-swatch-sample">Καλημέρα, call at 06:30</span>
+                </button>
+              ))}
+            </div>
+            <span className="field-hint">All of these cover Greek, so a call sheet in both languages reads as one face. A font is fetched from Google Fonts when you hover or pick it; your choice is kept on this device.</span>
+          </div>
           <Field label="Text size" hint="Display settings are saved on this device only.">
             <div className="segmented small">
               {[['compact', 'Compact'], ['normal', 'Normal'], ['large', 'Large']].map(([v, l]) => (
