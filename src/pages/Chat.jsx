@@ -110,7 +110,7 @@ export function ProjectChat() {
   const { project } = useProject()
   const { state } = useStore()
   const user = useCurrentUser()
-  const room = C.roomOf(state, user, C.projectRoom(project.id)) || { id: C.projectRoom(project.id), kind: 'project', name: project.title, sub: project.category, projectId: project.id, color: project.color, initials: 'P' }
+  const room = C.roomOf(state, user, C.projectRoom(project.id)) || { id: C.projectRoom(project.id), kind: 'project', name: project.title, sub: project.category, projectId: project.id, color: project.color, photo: project.coverThumb || '', initials: 'P' }
   return (
     <div className="chat-page chat-embedded">
       <ChatRoom room={room} embedded />
