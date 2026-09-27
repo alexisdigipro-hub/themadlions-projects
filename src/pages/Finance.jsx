@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
-import { DOCS, EXPENSE_CATS, FREQ, INCOME_CATS, METHODS, TX_STATUS, duePeriods, emptyRecurring, emptyTx, fiscalYearLabel, fiscalYearOf, generateFromRecurring, grossOf, matchTx, money, summarize, vatOf } from '../lib/finance.js'
+import { DOCS, FREQ, METHODS, TX_STATUS, catsFor, duePeriods, emptyRecurring, emptyTx, expenseCats, financeCategoryUses, fiscalYearLabel, fiscalYearOf, generateFromRecurring, grossOf, incomeCats, matchTx, money, renameFinanceCategory, summarize, vatOf } from '../lib/finance.js'
 import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
@@ -218,7 +218,8 @@ export default function Finance() {
     return s
   })
   const saveSettings = () => {
-    update((s) => { s.finance.settings = { ...s.finance.settings, ...settings, vatDefault: Number(settings.vatDefault) || 0, taxRate: Number(settings.taxRate) || 0, fiscalYearStart: Number(settings.fiscalYearStart) || 1 }; return s })
+    // only the four fields of this form: the category lists below save on their own and must not be overwritten by this copy
+    update((s) => { s.finance.settings = { ...s.finance.settings, currency: settings.currency, vatDefault: Number(settings.vatDefault) || 0, taxRate: Number(settings.taxRate) || 0, fiscalYearStart: Number(settings.fiscalYearStart) || 1 }; return s })
     toast('Finance settings saved', 'ok')
   }
   const exportCSV = () => {
@@ -501,6 +502,13 @@ export default function Finance() {
           <p className="fineprint">Finance is stored in its own table that only administrators can read. Expenses tied to a project also appear as actuals in that project's budget.</p>
         </section>
       )}
+      {tab === 'settings' && (
+        <section className="panel fin-settings">
+          <h2>Income &amp; expense categories</h2>
+          <p className="muted small">The lists the Income and Expense forms offer. Click a name to rename it and every transaction and recurring item already filed under it follows; for an expense column, the budget categories that land in it follow too (Settings &gt; Budget). A category with transactions on it asks where they go before it disappears. Changes save at once.</p>
+          <FinanceCategories toast={toast} />
+        </section>
+      )}
 
       {pay && <PaymentModal project={pay.project} line={pay.line} onClose={() => setPay(null)} />}
       {rdraft && (
@@ -508,12 +516,12 @@ export default function Finance() {
           footer={<><Button variant="ghost" onClick={() => setRdraft(null)}>Cancel</Button><Button variant="primary" onClick={saveRecurring}>Save</Button></>}>
           <div className="stack">
             <div className="segmented small">
-              <button className={rdraft.type === 'expense' ? 'on' : ''} onClick={() => setRdraft({ ...rdraft, type: 'expense', category: EXPENSE_CATS.includes(rdraft.category) ? rdraft.category : 'Office rent' })}>Expense</button>
-              <button className={rdraft.type === 'income' ? 'on' : ''} onClick={() => setRdraft({ ...rdraft, type: 'income', category: INCOME_CATS.includes(rdraft.category) ? rdraft.category : 'Consulting' })}>Income</button>
+              <button className={rdraft.type === 'expense' ? 'on' : ''} onClick={() => setRdraft({ ...rdraft, type: 'expense', category: expenseCats(fin.settings).includes(rdraft.category) ? rdraft.category : (expenseCats(fin.settings).includes('Office rent') ? 'Office rent' : expenseCats(fin.settings)[0]) })}>Expense</button>
+              <button className={rdraft.type === 'income' ? 'on' : ''} onClick={() => setRdraft({ ...rdraft, type: 'income', category: incomeCats(fin.settings).includes(rdraft.category) ? rdraft.category : (incomeCats(fin.settings).includes('Consulting') ? 'Consulting' : incomeCats(fin.settings)[0]) })}>Income</button>
             </div>
             <Field label="Description"><Input autoFocus value={rdraft.description} onChange={(e) => setRdraft({ ...rdraft, description: e.target.value })} placeholder={rdraft.type === 'expense' ? 'Office rent, Adobe subscription, Editor salary' : 'Monthly retainer'} /></Field>
             <div className="row-3">
-              <Field label="Category"><Select value={rdraft.category} onChange={(e) => setRdraft({ ...rdraft, category: e.target.value })} options={rdraft.type === 'income' ? INCOME_CATS : EXPENSE_CATS} /></Field>
+              <Field label="Category"><Select value={rdraft.category} onChange={(e) => setRdraft({ ...rdraft, category: e.target.value })} options={catsFor(fin.settings, rdraft.type)} /></Field>
               <Field label={rdraft.type === 'income' ? 'Client' : 'Vendor / payee'}><Input value={rdraft.party} onChange={(e) => setRdraft({ ...rdraft, party: e.target.value })} /></Field>
               <Field label="Project"><Select value={rdraft.projectId} onChange={(e) => setRdraft({ ...rdraft, projectId: e.target.value })} options={[['', 'Company (no project)'], ...state.projects.map((p) => [p.id, p.title])]} /></Field>
             </div>
@@ -541,15 +549,15 @@ export default function Finance() {
           footer={<><Button variant="ghost" onClick={() => setDraft(null)}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></>}>
           <div className="stack">
             <div className="segmented small">
-              <button className={draft.type === 'income' ? 'on' : ''} onClick={() => setDraft({ ...draft, type: 'income', category: INCOME_CATS.includes(draft.category) ? draft.category : 'Production fee', status: 'invoiced' })}>Income</button>
-              <button className={draft.type === 'expense' ? 'on' : ''} onClick={() => setDraft({ ...draft, type: 'expense', category: EXPENSE_CATS.includes(draft.category) ? draft.category : 'Crew', status: 'pending' })}>Expense</button>
+              <button className={draft.type === 'income' ? 'on' : ''} onClick={() => setDraft({ ...draft, type: 'income', category: incomeCats(fin.settings).includes(draft.category) ? draft.category : incomeCats(fin.settings)[0], status: 'invoiced' })}>Income</button>
+              <button className={draft.type === 'expense' ? 'on' : ''} onClick={() => setDraft({ ...draft, type: 'expense', category: expenseCats(fin.settings).includes(draft.category) ? draft.category : expenseCats(fin.settings)[0], status: 'pending' })}>Expense</button>
             </div>
             <div className="row-3">
               <Field label="Project" hint={draft.type === 'income' ? 'Fills the client and the description.' : 'Then pick the budget line below to fill the rest.'}>
                 <Select autoFocus value={draft.projectId} onChange={(e) => setDraft(pickProject(draft, e.target.value))} options={[['', 'Company (no project)'], ...state.projects.map((p) => [p.id, p.title])]} />
               </Field>
               <Field label="Date"><Input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
-              <Field label="Category"><Select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} options={draft.type === 'income' ? INCOME_CATS : EXPENSE_CATS} /></Field>
+              <Field label="Category"><Select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} options={catsFor(fin.settings, draft.type)} /></Field>
             </div>
             {draft.type === 'expense' && draft.projectId && (
               <Field label="Budget line" hint={(() => {
@@ -714,6 +722,94 @@ function TeamWork() {
           <WorkLogTable userId={sel.id} editable showHero={false} compact />
         </section>
       )}
+    </div>
+  )
+}
+
+
+/* Finance > Settings > Income & expense categories: two editable lists. */
+function FinanceCategories({ toast }) {
+  const { state, update } = useStore()
+  const fs = state.finance.settings
+  const [adding, setAdding] = useState({ income: '', expense: '' })
+  const [moving, setMoving] = useState(null) // { type, cat, to }
+  const lists = { income: incomeCats(fs), expense: expenseCats(fs) }
+  const keyOf = (type) => (type === 'income' ? 'incomeCats' : 'expenseCats')
+  const setList = (type, next) => update((s) => { s.finance.settings = { ...s.finance.settings, [keyOf(type)]: next }; return s })
+  const rename = (type, from, e) => {
+    const to = e.target.value.trim()
+    if (!to || to === from) { e.target.value = from; return }
+    const uses = financeCategoryUses(state, type, from)
+    update((s) => { renameFinanceCategory(s, type, from, to); return s })
+    toast(lists[type].includes(to) ? `Merged "${from}" into "${to}"${uses.total ? `, ${uses.total} item${uses.total === 1 ? '' : 's'} moved` : ''}` : `Renamed "${from}" to "${to}"${uses.total ? `, ${uses.total} item${uses.total === 1 ? '' : 's'} follow` : ''}`, 'ok')
+  }
+  const move = (type, i, dir) => {
+    const l = [...lists[type]]
+    const j = i + dir
+    if (j < 0 || j >= l.length) return
+    ;[l[i], l[j]] = [l[j], l[i]]
+    setList(type, l)
+  }
+  const askRemove = (type, cat) => {
+    const uses = financeCategoryUses(state, type, cat)
+    if (lists[type].length <= 1) return toast('Keep at least one category.', 'error')
+    if (!uses.total) return setList(type, lists[type].filter((c) => c !== cat))
+    setMoving({ type, cat, to: lists[type].find((c) => c !== cat), uses })
+  }
+  const confirmRemove = () => {
+    const { type, cat, to } = moving
+    update((s) => { renameFinanceCategory(s, type, cat, to); return s })
+    toast(`"${cat}" removed, its ${moving.uses.total} item${moving.uses.total === 1 ? '' : 's'} moved to "${to}"`, 'ok')
+    setMoving(null)
+  }
+  const add = (type) => {
+    const v = (adding[type] || '').trim()
+    if (!v) return
+    if (lists[type].some((c) => c.toLowerCase() === v.toLowerCase())) return toast('That category already exists.', 'error')
+    setList(type, [...lists[type], v])
+    setAdding({ ...adding, [type]: '' })
+  }
+  const reset = () => { update((s) => { const { incomeCats: _a, expenseCats: _b, ...rest } = s.finance.settings; s.finance.settings = rest; return s }); toast('Categories back to standard', 'ok') }
+  const renderCol = (type, title) => (
+    <div className="bcat-group">
+      <div className="bcat-head"><span className="bcat-name">{title}</span><span className="muted small">{lists[type].length}</span></div>
+      <ul className="plain bcat-list">
+        {lists[type].map((c, i) => {
+          const uses = financeCategoryUses(state, type, c)
+          return (
+            <li key={c}>
+              <div className="bcat-row fcat-row">
+                <input className="input" defaultValue={c} onBlur={(e) => rename(type, c, e)} onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }} aria-label="Category name" />
+                <span className="muted small nowrap">{uses.total ? `${uses.total} item${uses.total === 1 ? '' : 's'}` : ''}</span>
+                <button type="button" className="bcat-btn" onClick={() => move(type, i, -1)} disabled={i === 0} aria-label="Move up">↑</button>
+                <button type="button" className="bcat-btn" onClick={() => move(type, i, 1)} disabled={i === lists[type].length - 1} aria-label="Move down">↓</button>
+                <button type="button" className="bcat-btn bcat-x" onClick={() => askRemove(type, c)} aria-label="Remove">×</button>
+                {moving && moving.type === type && moving.cat === c && (
+                  <div className="bcat-move">
+                    <span>{moving.uses.total} item{moving.uses.total === 1 ? '' : 's'} use it. Move them to</span>
+                    <Select value={moving.to} onChange={(e) => setMoving({ ...moving, to: e.target.value })} options={lists[type].filter((x) => x !== c)} />
+                    <Button size="sm" variant="primary" onClick={confirmRemove}>Move and remove</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setMoving(null)}>Cancel</Button>
+                  </div>
+                )}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+      <div className="row-actions">
+        <Input value={adding[type]} onChange={(e) => setAdding({ ...adding, [type]: e.target.value })} onKeyDown={(e) => { if (e.key === 'Enter') add(type) }} placeholder={type === 'income' ? 'New income category' : 'New expense category'} />
+        <Button size="sm" onClick={() => add(type)}>Add</Button>
+      </div>
+    </div>
+  )
+  return (
+    <div className="stack">
+      <div className="cols fcat-cols">
+        {renderCol('income', 'Income')}
+        {renderCol('expense', 'Expense')}
+      </div>
+      <div className="row-actions"><Button variant="ghost" onClick={reset}>Reset to standard</Button></div>
     </div>
   )
 }

@@ -3132,6 +3132,8 @@ html[data-public='1'] body { background: var(--bg); }
 .bcat-btn:hover:not(:disabled) { color: var(--text); border-color: var(--muted); }
 .bcat-btn:disabled { opacity: .35; cursor: default; }
 .bcat-x:hover:not(:disabled) { color: var(--danger, #c0392b); border-color: currentColor; }
+.fcat-row { grid-template-columns: minmax(0, 1fr) auto auto auto auto; }
+.fcat-cols { align-items: start; }
 .bcat-move { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; background: var(--raised); border-radius: var(--radius); font-size: 14px; }
 .bcat-move .select { width: auto; }
 .bcat-add { display: flex; gap: 6px; align-items: center; margin-top: 8px; }

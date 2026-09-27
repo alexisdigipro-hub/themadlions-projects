@@ -2,6 +2,34 @@ import { today, uid } from './store.jsx'
 
 export const INCOME_CATS = ['Production fee', 'Post-production fee', 'Directing fee', 'Equipment rental out', 'Licensing & rights', 'Studio rental', 'Consulting', 'Other income']
 export const EXPENSE_CATS = ['Crew', 'Cast', 'Equipment rental', 'Equipment purchase', 'Locations & permits', 'Art & props', 'Wardrobe & makeup', 'Transport', 'Catering', 'Post-production', 'Music & rights', 'Insurance', 'Office rent', 'Salaries', 'Software & subscriptions', 'Marketing', 'Accounting & legal', 'Taxes & fees', 'Bank charges', 'Travel', 'Other expense']
+/* The lists in use: Finance > Settings > Categories can rename, reorder, add and remove; the
+   built-in lists above are the defaults and what Reset brings back. */
+export const incomeCats = (settings) => (Array.isArray(settings?.incomeCats) && settings.incomeCats.length ? settings.incomeCats : INCOME_CATS)
+export const expenseCats = (settings) => (Array.isArray(settings?.expenseCats) && settings.expenseCats.length ? settings.expenseCats : EXPENSE_CATS)
+export const catsFor = (settings, type) => (type === 'income' ? incomeCats(settings) : expenseCats(settings))
+
+/* How many transactions and recurring items file under a category. */
+export function financeCategoryUses(s, type, cat) {
+  const tx = (s.finance?.transactions || []).filter((t) => t.type === type && t.category === cat).length
+  const rec = (s.finance?.recurring || []).filter((r) => r.type === type && r.category === cat).length
+  return { tx, rec, total: tx + rec }
+}
+
+/* Renames a category everywhere it is written: the list, transactions, recurring items and, for
+   an expense column, the budget categories that map to it (Settings > Budget). `to` may be an
+   existing category, which merges `from` into it. */
+export function renameFinanceCategory(s, type, from, to) {
+  const key = type === 'income' ? 'incomeCats' : 'expenseCats'
+  const list = catsFor(s.finance.settings, type)
+  const next = list.includes(to) ? list.filter((c) => c !== from) : list.map((c) => (c === from ? to : c))
+  s.finance.settings = { ...s.finance.settings, [key]: next }
+  ;(s.finance.transactions || []).forEach((t) => { if (t.type === type && t.category === from) t.category = to })
+  ;(s.finance.recurring || []).forEach((r) => { if (r.type === type && r.category === from) r.category = to })
+  if (type === 'expense' && Array.isArray(s.settings?.budgetCategories)) {
+    s.settings = { ...s.settings, budgetCategories: s.settings.budgetCategories.map((g) => ({ ...g, cats: (g.cats || []).map((c) => (c.fin === from ? { ...c, fin: to } : c)) })) }
+  }
+}
+
 export const TX_STATUS = {
   income: [['quoted', 'Quoted'], ['invoiced', 'Invoiced'], ['paid', 'Paid']],
   expense: [['pending', 'To pay'], ['paid', 'Paid']],
