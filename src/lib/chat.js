@@ -47,7 +47,9 @@ const initialsOf = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map
 export function roomsFor(state, user) {
   if (!user) return []
   const users = state.users || []
-  const out = [{ id: TEAM, kind: 'team', name: 'Team', sub: `${users.filter((u) => u.active !== false).length} people`, initials: 'T' }]
+  // the whole-team room carries the company name from Settings > Company (THEMADLIONS)
+  const teamName = (state.workspace?.name || '').trim() || 'Team'
+  const out = [{ id: TEAM, kind: 'team', name: teamName, sub: `${users.filter((u) => u.active !== false).length} people`, initials: initialsOf(teamName) }]
   for (const p of visibleProjects(state, user)) {
     if (tabHidden(p, 'chat')) continue
     out.push({ id: projectRoom(p.id), kind: 'project', name: p.title, sub: p.category, projectId: p.id, color: p.color, initials: initialsOf(p.title) })

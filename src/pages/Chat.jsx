@@ -37,7 +37,7 @@ const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 /* pCloud folder for a room's files: a project's room under the project, the rest under Chat. */
 function chatFolder(state, room) {
   if (room.kind === 'project') return [state.projects.find((p) => p.id === room.projectId)?.title || room.name, 'Chat']
-  if (room.kind === 'team') return ['Chat', 'Team']
+  if (room.kind === 'team') return ['Chat', room.name]
   if (room.kind === 'group') return ['Chat', room.name]
   const names = (room.members || []).map((id) => state.users.find((u) => u.id === id)?.name || '?').sort()
   return ['Chat', 'Direct', names.join(' & ')]
