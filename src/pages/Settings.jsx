@@ -830,7 +830,7 @@ function ChatSettings({ toast }) {
   return (
     <div className="stack">
       <ChatRow label="Background behind the messages" hint="None keeps the panel colour. Soft is a warm tint (dark in the dark theme). Dots adds the WhatsApp-style pattern."><ChatSeg value={p.wallpaper} onPick={(v) => set('wallpaper', v)} options={[['none', 'None'], ['soft', 'Soft'], ['dots', 'Dots']]} /></ChatRow>
-      <ChatRow label="Bubbles" hint="WhatsApp: tails, your messages tinted with the accent. Classic: rounded, your messages in the full accent colour with white text."><ChatSeg value={p.bubbles} onPick={(v) => set('bubbles', v)} options={[['whatsapp', 'WhatsApp'], ['classic', 'Classic']]} /></ChatRow>
+      <ChatRow label="Bubbles" hint="WhatsApp: tails at the top, your messages tinted with the accent. Telegram: rounder bubbles with the tail at the bottom, Telegram's own green and blue. Classic: rounded, your messages in the full accent colour."><ChatSeg value={p.bubbles} onPick={(v) => set('bubbles', v)} options={[['whatsapp', 'WhatsApp'], ['telegram', 'Telegram'], ['classic', 'Classic']]} /></ChatRow>
       <ChatRow label="Text size in messages"><ChatSeg value={p.size} onPick={(v) => set('size', v)} options={[['small', 'Small'], ['normal', 'Normal'], ['large', 'Large']]} /></ChatRow>
       <ChatRow label="Spacing"><ChatSeg value={p.density} onPick={(v) => set('density', v)} options={[['comfortable', 'Comfortable'], ['compact', 'Compact']]} /></ChatRow>
       <ChatRow label="Enter key" hint="With Send, Shift+Enter makes a new line. With New line, Cmd+Enter (Ctrl+Enter on Windows) sends."><ChatSeg value={p.enterSends} onPick={(v) => set('enterSends', v)} options={[[true, 'Sends the message'], [false, 'New line']]} /></ChatRow>

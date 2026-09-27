@@ -3,7 +3,7 @@
 export const CHAT_PREFS_KEY = 'tml_chat_prefs'
 export const CHAT_DEFAULTS = {
   wallpaper: 'none', // 'none' | 'soft' | 'dots'
-  bubbles: 'whatsapp', // 'whatsapp' (tails, own bubbles tinted) | 'classic' (round, own bubbles in the accent)
+  bubbles: 'whatsapp', // 'whatsapp' (top tails, own bubbles tinted) | 'telegram' (bottom tails, Telegram colours) | 'classic' (round, own bubbles in the accent)
   size: 'normal', // 'small' | 'normal' | 'large'
   density: 'comfortable', // 'comfortable' | 'compact'
   enterSends: true, // Enter sends, Shift+Enter breaks the line; off: Enter breaks, Cmd/Ctrl+Enter sends

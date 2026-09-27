@@ -2314,6 +2314,27 @@ html[data-theme='light'] .chat-box { border-color: transparent; }
 .chat-box[data-bubbles='classic'] .chat-msg.mine .chat-file, .chat-box[data-bubbles='classic'] .chat-msg.mine .chat-att-wait { background: rgba(255, 255, 255, .18); }
 .chat-box[data-bubbles='classic'] .chat-bubble::before { display: none; }
 .chat-box[data-bubbles='classic'] .chat-msg:not(.cont) .chat-bubble, .chat-box[data-bubbles='classic'] .chat-msg.mine:not(.cont) .chat-bubble { border-top-left-radius: 16px; border-top-right-radius: 16px; }
+/* Telegram: rounder bubbles, the tail at the bottom of the last bubble of a run, Telegram's own
+   colours (light: white and pale green; dark: navy and steel blue, white text). */
+.chat-box[data-bubbles='telegram'] { --wa-in: #ffffff; --wa-out: #effdde; --wa-wall: #d6e4ed; --wa-dots: rgba(0, 0, 0, .05); --wa-time: #6c7883; }
+html[data-theme='dark'] .chat-box[data-bubbles='telegram'] { --wa-in: #182533; --wa-out: #2b5278; --wa-wall: #0e1621; --wa-dots: rgba(255, 255, 255, .04); --wa-time: rgba(255, 255, 255, .55); --wa-quote: rgba(255, 255, 255, .1); }
+html[data-theme='dark'] .chat-box[data-bubbles='telegram'] .chat-bubble { color: #fff; }
+.chat-box[data-bubbles='telegram'] .chat-bubble { border-radius: 14px; padding: 6px 10px 7px 11px; }
+.chat-box[data-bubbles='telegram'] .chat-msg:not(.cont) .chat-bubble, .chat-box[data-bubbles='telegram'] .chat-msg.mine:not(.cont) .chat-bubble { border-top-left-radius: 14px; border-top-right-radius: 14px; }
+.chat-box[data-bubbles='telegram'] .chat-bubble::before { display: none; }
+.chat-box[data-bubbles='telegram'] .chat-msg.last .chat-bubble { border-bottom-left-radius: 0; }
+.chat-box[data-bubbles='telegram'] .chat-msg.mine.last .chat-bubble { border-bottom-left-radius: 14px; border-bottom-right-radius: 0; }
+.chat-box[data-bubbles='telegram'] .chat-msg.last .chat-bubble::after { content: ''; position: absolute; bottom: 0; left: -8px; width: 0; height: 0; border-style: solid; border-width: 0 0 8px 8px; border-color: transparent transparent var(--wa-in) transparent; }
+.chat-box[data-bubbles='telegram'] .chat-msg.mine.last .chat-bubble::after { left: auto; right: -8px; border-width: 0 8px 8px 0; border-color: transparent transparent var(--wa-out) transparent; }
+.chat-box[data-bubbles='telegram'] .chat-msg { align-items: flex-end; }
+.chat-box[data-bubbles='telegram'] .chat-avatar { align-self: flex-end; }
+.chat-box[data-bubbles='telegram'] .chat-msg:not(.last) .chat-avatar { visibility: hidden; }
+.chat-box[data-bubbles='telegram'] .chat-msg.cont .chat-avatar { visibility: hidden; }
+.chat-box[data-bubbles='telegram'] .chat-msg.last .chat-avatar { visibility: visible; }
+.chat-box[data-bubbles='telegram'] .chat-quote { border-radius: 4px; }
+.chat-box[data-bubbles='telegram'] .chat-send { border-radius: 50%; }
+.chat-box[data-bubbles='telegram'] .chat-day-label span { border-radius: 999px; background: rgba(0, 0, 0, .25); color: #fff; box-shadow: none; }
+.chat-box[data-bubbles='telegram'][data-wall='none'] .chat-day-label span { background: var(--raised); color: var(--muted); }
 .chat-box[data-size='small'] .chat-bubble { font-size: 14px; }
 .chat-box[data-size='large'] .chat-bubble { font-size: 17.5px; }
 .chat-box[data-density='compact'] .chat-msg { margin-top: 5px; }

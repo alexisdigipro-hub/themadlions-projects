@@ -518,11 +518,14 @@ function ChatRoom({ room, embedded, onBack }) {
             <div className="chat-day-label"><span>{dayLabel(g.day)}</span></div>
             {g.items.map((m, i) => {
               const mine = m.userId && m.userId === user?.id
-              const prev = g.items[i - 1]
-              const cont = prev && prev.userId === m.userId && prev.userName === m.userName && new Date(m.createdAt) - new Date(prev.createdAt) < 5 * 60 * 1000
+              // a run: same person, less than five minutes apart. First of a run carries the top tail
+              // (WhatsApp), last of a run the bottom tail (Telegram).
+              const follows = (a, b) => !!a && a.userId === b.userId && a.userName === b.userName && new Date(b.createdAt) - new Date(a.createdAt) < 5 * 60 * 1000
+              const cont = follows(g.items[i - 1], m)
+              const last = !g.items[i + 1] || !follows(m, g.items[i + 1])
               const quoted = m.replyTo ? byId[m.replyTo] : null
               return (
-                <div key={m.id} data-msg={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''}`}>
+                <div key={m.id} data-msg={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${last ? 'last' : ''}`}>
                   {!mine && room.kind !== 'direct' && prefs.avatars && (
                     <span className="chat-avatar">
                       {!cont && (photoOf(m.userId) ? <img src={photoOf(m.userId)} alt="" /> : (m.userName || '').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase())}
