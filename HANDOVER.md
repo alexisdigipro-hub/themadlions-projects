@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### We owe counts the team's My work too (27 Sep, night)
+Alex: "shouldn't We owe on the Finance overview also count the remaining My work amounts?" `teamJobs` in Finance.jsx: pending jobs of everyone with an amount and no `budgetLineId` (the tied ones are already in the open budget lines), their total added to the We owe tile with its own clause, and the year's slice (`teamOwedInYear`, by job date) into `expenseAll`, so the Profit tile and the tile agree. Same rule as the Team work tab, which was already counting them as owed.
+
 ### Finance categories editable (27 Sep, night)
 Alex: "a setting somewhere for the categories of the income & expense tab." Finance > Settings > Income & expense categories (`FinanceCategories` in Finance.jsx): the lists live in `finance.settings.incomeCats` / `expenseCats` (admin-only finance table, synced with the rest of the settings row); `incomeCats()`, `expenseCats()`, `catsFor()` in src/lib/finance.js fall back to the built-in `INCOME_CATS` / `EXPENSE_CATS`, so nothing changes until someone edits. `renameFinanceCategory(s, type, from, to)` renames or merges and rewrites transactions, recurring items and, for an expense column, the `fin` of budget categories in `settings.budgetCategories`; `financeCategoryUses()` counts. Remove with items asks for a target (same pattern as Settings > Budget). The Finance settings Save now writes only its four fields, so it cannot overwrite the lists with a stale copy. The columns are rendered by a plain function, not an inner component (an inner component remounted on every keystroke and dropped focus, the bug that bit the chat settings). Node test covers fallback, rename in place, merge, and the budget mapping following.
 
