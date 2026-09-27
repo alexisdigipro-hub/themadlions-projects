@@ -95,7 +95,7 @@ export default function TasksAll() {
 
   return (
     <div>
-      <PageHead title="Tasks" sub={`${all.filter((t) => t.status !== 'done').length} open across ${projects.length} projects`}>
+      <PageHead title="ToDo Tasks" sub={`${all.filter((t) => t.status !== 'done').length} open across ${projects.length} projects`}>
         <div className="segmented small">
           <button className={who === 'all' ? 'on' : ''} onClick={() => setWho('all')}>Everyone</button>
           <button className={who === 'me' ? 'on' : ''} onClick={() => setWho('me')}>Mine</button>
