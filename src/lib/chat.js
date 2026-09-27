@@ -43,6 +43,9 @@ export function markRead(roomId, iso) {
 
 const initialsOf = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 
+/* Taken out of a project's conversation by an administrator (project.chatExcluded). Administrators never are. */
+export const chatExcluded = (project, user) => !!user && user.role !== 'admin' && Array.isArray(project?.chatExcluded) && project.chatExcluded.includes(user.id)
+
 /* Every room this person belongs to, as the list shows them. Order: team, projects, groups, people. */
 export function roomsFor(state, user) {
   if (!user) return []
@@ -51,7 +54,7 @@ export function roomsFor(state, user) {
   const teamName = (state.workspace?.name || '').trim() || 'Team'
   const out = [{ id: TEAM, kind: 'team', name: teamName, sub: `${users.filter((u) => u.active !== false).length} people`, initials: initialsOf(teamName) }]
   for (const p of visibleProjects(state, user)) {
-    if (tabHidden(p, 'chat')) continue
+    if (tabHidden(p, 'chat') || chatExcluded(p, user)) continue
     // the project's cover is the room's picture, its colour the fallback behind the initials
     out.push({ id: projectRoom(p.id), kind: 'project', name: p.title, sub: p.category, projectId: p.id, color: p.color, photo: p.coverThumb || '', initials: initialsOf(p.title) })
   }
@@ -86,7 +89,10 @@ export function roomOf(state, user, id) {
 export function roomRecipients(state, room, senderId) {
   const active = (state.users || []).filter((u) => u.active !== false && u.id !== senderId)
   if (!room || room.kind === 'team') return active.map((u) => u.id)
-  if (room.kind === 'project') return active.filter((u) => canAccessProject(u, room.projectId)).map((u) => u.id)
+  if (room.kind === 'project') {
+    const project = (state.projects || []).find((p) => p.id === room.projectId)
+    return active.filter((u) => canAccessProject(u, room.projectId) && !chatExcluded(project, u)).map((u) => u.id)
+  }
   return active.filter((u) => (room.members || []).includes(u.id)).map((u) => u.id)
 }
 

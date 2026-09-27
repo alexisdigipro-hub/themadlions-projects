@@ -803,29 +803,44 @@ function PcloudPanel({ toast }) {
 }
 
 
-/* Settings > Chat: personal, per device, like theme and text size. */
+/* Settings > Chat: personal, per device, like theme and text size. A plain div around each row,
+   not the Field label: a label re-dispatches a click to its first button in some browsers, which
+   snapped the choice back to the first option. */
+function ChatRow({ label, hint, children }) {
+  return (
+    <div className="field">
+      <span className="field-label">{label}</span>
+      {children}
+      {hint && <span className="field-hint">{hint}</span>}
+    </div>
+  )
+}
+function ChatSeg({ value, options, onPick }) {
+  return (
+    <div className="segmented small">
+      {options.map(([v, l]) => (
+        <button key={String(v)} type="button" className={value === v ? 'on' : ''} aria-pressed={value === v} onClick={(e) => { e.preventDefault(); e.stopPropagation(); onPick(v) }}>{l}</button>
+      ))}
+    </div>
+  )
+}
 function ChatSettings({ toast }) {
   const [p, setP] = useState(loadChatPrefs)
   const set = (k, v) => setP(saveChatPrefs({ [k]: v }))
-  const Seg = ({ k, options }) => (
-    <div className="segmented small">
-      {options.map(([v, l]) => <button key={String(v)} type="button" className={p[k] === v ? 'on' : ''} onClick={() => set(k, v)}>{l}</button>)}
-    </div>
-  )
   return (
     <div className="stack">
-      <Field label="Background behind the messages" hint="None keeps the panel colour. Soft is a warm tint (dark in the dark theme). Dots adds the WhatsApp-style pattern."><Seg k="wallpaper" options={[['none', 'None'], ['soft', 'Soft'], ['dots', 'Dots']]} /></Field>
-      <Field label="Bubbles" hint="WhatsApp: tails, your messages tinted with the accent. Classic: rounded, your messages in the full accent colour with white text."><Seg k="bubbles" options={[['whatsapp', 'WhatsApp'], ['classic', 'Classic']]} /></Field>
-      <Field label="Text size in messages"><Seg k="size" options={[['small', 'Small'], ['normal', 'Normal'], ['large', 'Large']]} /></Field>
-      <Field label="Spacing"><Seg k="density" options={[['comfortable', 'Comfortable'], ['compact', 'Compact']]} /></Field>
-      <Field label="Enter key" hint="With Send, Shift+Enter makes a new line. With New line, Cmd+Enter (Ctrl+Enter on Windows) sends."><Seg k="enterSends" options={[[true, 'Sends the message'], [false, 'New line']]} /></Field>
-      <Field label="Faces next to messages in groups and rooms"><Seg k="avatars" options={[[true, 'Show'], [false, 'Hide']]} /></Field>
-      <Field label="Sound when a message arrives" hint="Plays when someone else writes while you are in another room, page or tab. Never for your own messages.">
+      <ChatRow label="Background behind the messages" hint="None keeps the panel colour. Soft is a warm tint (dark in the dark theme). Dots adds the WhatsApp-style pattern."><ChatSeg value={p.wallpaper} onPick={(v) => set('wallpaper', v)} options={[['none', 'None'], ['soft', 'Soft'], ['dots', 'Dots']]} /></ChatRow>
+      <ChatRow label="Bubbles" hint="WhatsApp: tails at the top, your messages tinted with the accent. Telegram: rounder bubbles with the tail at the bottom, Telegram's own green and blue. Classic: rounded, your messages in the full accent colour."><ChatSeg value={p.bubbles} onPick={(v) => set('bubbles', v)} options={[['whatsapp', 'WhatsApp'], ['telegram', 'Telegram'], ['classic', 'Classic']]} /></ChatRow>
+      <ChatRow label="Text size in messages"><ChatSeg value={p.size} onPick={(v) => set('size', v)} options={[['small', 'Small'], ['normal', 'Normal'], ['large', 'Large']]} /></ChatRow>
+      <ChatRow label="Spacing"><ChatSeg value={p.density} onPick={(v) => set('density', v)} options={[['comfortable', 'Comfortable'], ['compact', 'Compact']]} /></ChatRow>
+      <ChatRow label="Enter key" hint="With Send, Shift+Enter makes a new line. With New line, Cmd+Enter (Ctrl+Enter on Windows) sends."><ChatSeg value={p.enterSends} onPick={(v) => set('enterSends', v)} options={[[true, 'Sends the message'], [false, 'New line']]} /></ChatRow>
+      <ChatRow label="Faces next to messages in groups and rooms"><ChatSeg value={p.avatars} onPick={(v) => set('avatars', v)} options={[[true, 'Show'], [false, 'Hide']]} /></ChatRow>
+      <ChatRow label="Sound when a message arrives" hint="Plays when someone else writes while you are in another room, page or tab. Never for your own messages.">
         <div className="row-actions">
-          <Seg k="sound" options={[[true, 'On'], [false, 'Off']]} />
+          <ChatSeg value={p.sound} onPick={(v) => set('sound', v)} options={[[true, 'On'], [false, 'Off']]} />
           <Button size="sm" variant="ghost" onClick={chime}>Play it</Button>
         </div>
-      </Field>
+      </ChatRow>
       <div className="row-actions">
         <Button variant="ghost" onClick={() => { setP(saveChatPrefs({ ...CHAT_DEFAULTS })); toast('Chat settings back to standard', 'ok') }}>Back to standard</Button>
       </div>
