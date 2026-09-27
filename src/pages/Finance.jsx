@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { DOCS, EXPENSE_CATS, FREQ, INCOME_CATS, METHODS, TX_STATUS, duePeriods, emptyRecurring, emptyTx, fiscalYearLabel, fiscalYearOf, generateFromRecurring, grossOf, matchTx, money, summarize, vatOf } from '../lib/finance.js'
@@ -7,7 +7,7 @@ import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
 import { budgetCatForFin, finCatFor } from '../lib/budgetCats.js'
-import { AGE_BUCKETS, WorkLogTable, ageBucket, daysWaiting, entryTotals, money2, projectWorkDate, togglePaidEntry } from '../components/WorkLog.jsx'
+import { AGE_BUCKETS, WorkLogTable, ageBucket, daysWaiting, entryTotals, lineOfJob, money2, projectWorkDate, togglePaidEntry } from '../components/WorkLog.jsx'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -30,8 +30,22 @@ export default function Finance() {
   const [rdraft, setRdraft] = useState(null)
   const [pay, setPay] = useState(null) // { project, line }
   const commitments = state.projects.flatMap((p) => (p.budget?.lines || []).filter((l) => lineEstimate(l) > 0 && l.category !== 'Contingency' && !l.txId).map((l) => ({ project: p, line: l, agreed: lineEstimate(l), paid: linePaid(l), balance: lineBalance(l) })))
-  const openCommitments = commitments.filter((c) => c.balance > 0 && c.project.status !== 'Delivered').sort((a, b) => b.balance - a.balance)
+  // every budget line with money still owed, whatever the project's status: a delivered project
+  // with an unpaid fee is exactly what Finance must not lose sight of
+  const openCommitments = commitments.filter((c) => c.balance > 0).sort((a, b) => b.balance - a.balance)
   const committed = openCommitments.reduce((a, c) => a + c.balance, 0)
+  /* Alex: "the fees we put in a project's budget should reach Finance." Each open line reads as an
+     expense still to pay in the Transactions list and as Owed in the per-project table. Nothing is
+     copied: the row is the line itself, so recording a payment (which does create a transaction)
+     shrinks or removes it by itself. */
+  const owedRows = openCommitments.map((c) => ({
+    id: `owed:${c.line.id}`, owed: true, type: 'expense', status: 'pending', doc: 'none', vatPct: 0,
+    date: c.line.date || projectWorkDate(c.project) || today(),
+    description: c.line.description || c.line.category, party: (c.line.memberId && state.users.find((u) => u.id === c.line.memberId)?.name) || c.line.vendor || '',
+    projectId: c.project.id, category: finCatFor(state.settings, c.line.category), net: c.balance, agreed: c.agreed, paid: c.paid, project: c.project, line: c.line,
+  }))
+  const owedByProject = {}
+  openCommitments.forEach((c) => { owedByProject[c.project.title] = (owedByProject[c.project.title] || 0) + c.balance })
   const recurring = fin.recurring || []
   const due = recurring.map((r) => ({ r, periods: duePeriods(r) })).filter((x) => x.periods.length)
   const dueCount = due.reduce((a, x) => a + x.periods.length, 0)
@@ -80,6 +94,17 @@ export default function Finance() {
     .filter((t) => (f.month ? t.date.slice(5, 7) === f.month : true))
     .filter((t) => matchTx(t, f.q))
     .sort((a, b) => b.date.localeCompare(a.date))
+  // open budget lines pass the same filters (they are expenses to pay with no document) and sit among the transactions by date
+  const listedOwed = owedRows
+    .filter((t) => fiscalYearOf(t.date, fiscalStart) === year)
+    .filter((t) => (f.type ? f.type === 'expense' : true))
+    .filter((t) => (f.project ? t.projectId === f.project : true))
+    .filter((t) => (f.status ? f.status === 'pending' : true))
+    .filter((t) => (f.doc ? f.doc === 'none' : true))
+    .filter((t) => (f.month ? t.date.slice(5, 7) === f.month : true))
+    .filter((t) => matchTx(t, f.q))
+  const listedAll = [...listed, ...listedOwed].sort((a, b) => b.date.localeCompare(a.date))
+  const listedOwedTotal = listedOwed.reduce((a, t) => a + Number(t.net || 0), 0)
 
   /* Picking a project in the transaction form fills what the project knows. Only fields that are
      empty, or still hold the previous project's fill, are touched: typed text stays. */
@@ -174,16 +199,23 @@ export default function Finance() {
   }
 
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
-  const Table = ({ rows, label }) => (
+  const Table = ({ rows, label, owed }) => (
     <table className="table fin-table">
-      <thead><tr><th>{label}</th><th className="num">Income</th><th className="num">Expense</th><th className="num">Profit</th><th className="num">Margin</th></tr></thead>
+      <thead><tr><th>{label}</th><th className="num">Income</th><th className="num">Expense</th>{owed && <th className="num" title="Still owed on the project's budget lines (agreed minus paid), not yet booked">Owed</th>}<th className="num">{owed ? 'After owed' : 'Profit'}</th><th className="num">Margin</th></tr></thead>
       <tbody>
-        {rows.map((r) => (
-          <tr key={r.key}><td>{r.key}</td><td className="num">{r.income ? money(r.income, cur) : ''}</td><td className="num">{r.expense ? money(r.expense, cur) : ''}</td><td className={`num ${r.profit < 0 ? 'over' : ''}`}>{money(r.profit, cur)}</td><td className="num muted">{r.margin != null ? `${r.margin}%` : ''}</td></tr>
-        ))}
+        {rows.map((r) => {
+          const o = owed ? owed[r.key] || 0 : 0
+          const profit = r.profit - o
+          const margin = owed ? (r.income ? Math.round((profit / r.income) * 100) : null) : r.margin
+          return (
+            <tr key={r.key}><td>{r.key}</td><td className="num">{r.income ? money(r.income, cur) : ''}</td><td className="num">{r.expense ? money(r.expense, cur) : ''}</td>{owed && <td className="num over">{o ? money(o, cur) : ''}</td>}<td className={`num ${profit < 0 ? 'over' : ''}`}>{money(profit, cur)}</td><td className="num muted">{margin != null ? `${margin}%` : ''}</td></tr>
+          )
+        })}
       </tbody>
     </table>
   )
+  // projects with money owed but no transaction yet still get a row in the per-project table
+  const byProjectRows = [...S.byProject, ...Object.keys(owedByProject).filter((k) => !S.byProject.some((r) => r.key === k)).map((k) => ({ key: k, income: 0, expense: 0, profit: 0, margin: null }))]
 
   return (
     <div className="finance">
@@ -275,7 +307,7 @@ export default function Finance() {
             <Empty title="No transactions yet">Start with this year's invoices and the big expenses: crew, rentals, rent, salaries. Tie project costs to their project and the profit per project appears by itself.</Empty>
           ) : (
             <div className="cols">
-              <section className="panel"><h2>By project</h2><Table rows={S.byProject} label="Project" /></section>
+              <section className="panel"><h2>By project</h2><Table rows={byProjectRows} label="Project" owed={owedByProject} /></section>
               <section className="panel"><h2>By client</h2><Table rows={S.byClient} label="Client" /></section>
               <section className="panel"><h2>By category</h2><Table rows={S.byCategory} label="Category" /></section>
               <section className="panel"><h2>By project type</h2><Table rows={S.byType} label="Type" /></section>
@@ -287,7 +319,7 @@ export default function Finance() {
       {tab === 'transactions' && (
         <>
           <div className="toolbar">
-            <div className="toolbar-info"><strong>{listed.length} transactions</strong><span className="muted">{money(listed.filter((t) => t.type === 'income').reduce((a, t) => a + Number(t.net), 0), cur)} in · {money(listed.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.net), 0), cur)} out (net)</span></div>
+            <div className="toolbar-info"><strong>{listed.length} transactions{listedOwed.length ? ` · ${listedOwed.length} owed from budgets` : ''}</strong><span className="muted">{money(listed.filter((t) => t.type === 'income').reduce((a, t) => a + Number(t.net), 0), cur)} in · {money(listed.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.net), 0), cur)} out (net){listedOwed.length ? ` · ${money(listedOwedTotal, cur)} still owed on budget lines` : ''}</span></div>
             <div className="toolbar-actions">
               <Input className="input search" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} placeholder="Search…" />
               <Select value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })} options={[['', 'Income & expense'], ['income', 'Income'], ['expense', 'Expense']]} />
@@ -298,14 +330,30 @@ export default function Finance() {
               <Button variant="ghost" onClick={exportCSV}>Export CSV</Button>
             </div>
           </div>
-          {!listed.length ? (
+          {!listedAll.length ? (
             <Empty title="Nothing here">Add a transaction or change the filters.</Empty>
           ) : (
             <div className="table-wrap">
               <table className="table fin-list">
                 <thead><tr><th>Date</th><th>Description</th><th>Project</th><th>Category</th><th className="num">Net</th><th className="num">VAT</th><th className="num">Gross</th><th>Doc</th><th>Status</th><th /></tr></thead>
                 <tbody>
-                  {listed.map((t) => (
+                  {listedAll.map((t) => t.owed ? (
+                    <tr key={t.id} className="tx-expense tx-owed">
+                      <td className="nowrap">{fmtDate(t.date, { day: 'numeric', month: 'short' })}</td>
+                      <td><strong>{t.description}</strong><div className="muted small">{t.party}{t.party ? ' · ' : ''}from the project budget{t.paid ? ` · ${money(t.paid, cur)} of ${money(t.agreed, cur)} paid` : ''}</div></td>
+                      <td className="small">{t.project.title}</td>
+                      <td className="small">{t.category}</td>
+                      <td className="num">−{money(t.net, cur)}</td>
+                      <td className="num muted" />
+                      <td className="num">{money(t.net, cur)}</td>
+                      <td className="small muted">—</td>
+                      <td><span className="tx-owed-badge">Owed · budget</span></td>
+                      <td className="row-actions">
+                        <button onClick={() => setPay({ project: t.project, line: t.line })}>Record payment</button>
+                        <Link className="btn btn-ghost btn-sm" to={`/p/${t.project.id}/budget`}>Budget</Link>
+                      </td>
+                    </tr>
+                  ) : (
                     <tr key={t.id} className={`tx-${t.type}`}>
                       <td className="nowrap">{fmtDate(t.date, { day: 'numeric', month: 'short' })}</td>
                       <td><strong>{t.description}</strong>{t.party && <div className="muted small">{t.party}{t.docNumber ? ` · ${t.docNumber}` : ''}</div>}</td>
@@ -451,7 +499,12 @@ export default function Finance() {
               <Field label="Category"><Select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} options={draft.type === 'income' ? INCOME_CATS : EXPENSE_CATS} /></Field>
             </div>
             {draft.type === 'expense' && draft.projectId && (
-              <Field label="Budget line" hint="Pay against an agreed line (advance or balance), or add it as a new cost. Picking a line fills the description, the payee, the category and the open balance.">
+              <Field label="Budget line" hint={(() => {
+                const open = (state.projects.find((p) => p.id === draft.projectId)?.budget?.lines || []).filter((l) => !l.txId && lineBalance(l) > 0)
+                return !draft.budgetLineId && open.length
+                  ? `${open.length} budget line${open.length === 1 ? ' is' : 's are'} still owed on this project. Pick the one this payment settles, so it is not counted twice (once here, once as owed).`
+                  : 'Pay against an agreed line (advance or balance), or add it as a new cost. Picking a line fills the description, the payee, the category and the open balance.'
+              })()}>
                 <Select value={draft.budgetLineId || ''} onChange={(e) => setDraft(pickLine(draft, e.target.value))}
                   options={[['', 'New cost in the budget'], ...((state.projects.find((p) => p.id === draft.projectId)?.budget?.lines || []).filter((l) => !l.txId).map((l) => [l.id, `${l.description} · ${money(lineEstimate(l), cur)} agreed${linePaid(l) ? `, ${money(linePaid(l), cur)} paid` : ''}`]))]} />
               </Field>
@@ -487,6 +540,7 @@ function TeamWork() {
   const [who, setWho] = useState('')
   const [year, setYear] = useState(String(new Date().getFullYear()))
   const [allOwed, setAllOwed] = useState(false)
+  const [pay, setPay] = useState(null) // a budget-tied job is settled through the Pay dialog, which writes Finance, the budget and the job at once
   const log = state.worklog || []
   const years = [...new Set([String(new Date().getFullYear()), ...log.map((e) => (e.date || '').slice(0, 4)).filter(Boolean)])].sort().reverse()
 
@@ -526,6 +580,7 @@ function TeamWork() {
 
   return (
     <div className="teamwork">
+      {pay && <PaymentModal project={pay.project} line={pay.line} onClose={() => setPay(null)} />}
       <section className="panel tw-owed">
         <div className="panel-head">
           <h2>Owed right now</h2>
@@ -557,7 +612,9 @@ function TeamWork() {
                     <span className="muted small">{fmtDate(e.date, { day: 'numeric', month: 'short', year: 'numeric' })} · waiting {days} day{days === 1 ? '' : 's'}</span>
                   </div>
                   <div className="tw-owed-amount">{money2(e.amount)}</div>
-                  <Button size="sm" variant="ghost" onClick={() => togglePaidEntry(update, e.id)}>Mark paid</Button>
+                  {e.budgetLineId
+                    ? <Button size="sm" variant="ghost" onClick={() => { const t = lineOfJob(state, e); if (t) setPay(t) }} title="From a project budget: record the payment and Finance, the budget and this job agree">Record payment</Button>
+                    : <Button size="sm" variant="ghost" onClick={() => togglePaidEntry(update, e.id)}>Mark paid</Button>}
                 </li>
               ))}
             </ul>

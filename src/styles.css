@@ -2056,6 +2056,9 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 .fin-table td:first-child { max-width: 220px; }
 .fin-list .nowrap { white-space: nowrap; }
 .tx-income td:nth-child(5) { color: var(--ok); }
+/* an open budget line shown among the transactions: not booked yet, so a tinted row and a badge instead of a status select */
+.tx-owed td { background: color-mix(in srgb, var(--amber) 9%, transparent); }
+.tx-owed-badge { display: inline-block; font-size: 12.5px; font-weight: 600; color: var(--amber); border: 1px solid color-mix(in srgb, var(--amber) 55%, transparent); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
 .fin-settings { max-width: 720px; }
 .pl-strip { display: flex; flex-wrap: wrap; gap: 8px 22px; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); padding: 10px 14px; margin-bottom: 12px; align-items: baseline; }
 @media (max-width: 1000px) { .fin-hero { grid-template-columns: repeat(2, 1fr); } }

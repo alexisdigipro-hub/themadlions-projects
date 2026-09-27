@@ -3,8 +3,9 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast
 import { can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { download, fmtDate } from '../lib/dates.js'
 import { remote, supabase } from '../lib/supabase.js'
-import { budgetLineFromJob, findMemberLine, lineEstimate, linePaid, lineBalance } from '../lib/budget.js'
+import { budgetLineFromJob, findMemberLine, lineEstimate, linePaid, lineBalance, syncLineWorklog } from '../lib/budget.js'
 import { budgetCategories } from '../lib/budgetCats.js'
+import PaymentModal from './PaymentModal.jsx'
 
 export const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 export const money2 = (n, cur = 'EUR') => new Intl.NumberFormat('el-GR', { style: 'currency', currency: cur, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0)
@@ -62,10 +63,20 @@ export function fillFromProject(draft, projects, projectId) {
 export const togglePaidEntry = (update, id) => update((s) => {
   const x = (s.worklog || []).find((y) => y.id === id)
   if (!x) return s
+  // a job that comes from a project budget is paid by recording the payment (Finance or the
+  // budget's Pay), never by hand: one entry, and Finance, the budget and My work agree
+  if (x.budgetLineId) return s
   if (x.status === 'paid') { x.status = 'pending'; x.paidDate = '' }
   else { x.status = 'paid'; x.paidDate = today() }
   return s
 })
+/* The project and budget line a job is tied to, for the Pay dialog. */
+export const lineOfJob = (state, job) => {
+  if (!job?.budgetLineId) return null
+  const project = (state.projects || []).find((p) => p.id === job.projectId) || (state.projects || []).find((p) => (p.budget?.lines || []).some((l) => l.id === job.budgetLineId))
+  const line = project?.budget?.lines?.find((l) => l.id === job.budgetLineId)
+  return project && line ? { project, line } : null
+}
 
 /* Table of one person's jobs for one year, grouped by month. editable = may add / edit / delete. */
 export function WorkLogTable({ userId, editable, showHero = true, compact = false }) {
@@ -97,13 +108,29 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
     if (!draft.client.trim() && !draft.description.trim()) return toast('Add a client or a description.', 'error')
     if (!draft.date) return toast('Pick the date.', 'error')
     const e = { ...draft, amount: Number(draft.amount) || 0, paidDate: draft.status === 'paid' ? draft.paidDate || today() : '' }
+    // No double entries (Alex): if the production already pays this person on the project, the
+    // fee is already a job in this list (the budget line keeps it). A second job on the same
+    // project is refused; a job that arrives before the line's own job is tied to the line instead.
+    let tieTo = null
+    if (e.projectId && !e.budgetLineId) {
+      const project = state.projects.find((p) => p.id === e.projectId)
+      const l = project ? findMemberLine(project, userId) : null
+      if (l) {
+        const twin = (state.worklog || []).find((x) => x.budgetLineId === l.id && x.id !== e.id)
+        if (twin) return toast(`This project already pays you ${money2(lineEstimate(l))} from its budget, and that job is in your list${twin.description ? ` ("${twin.description}")` : ''}. Edit that one instead of adding a second.`, 'error')
+        tieTo = { project, line: l }
+        e.budgetLineId = l.id
+      }
+    }
     update((s) => {
       s.worklog = s.worklog || []
       const i = s.worklog.findIndex((x) => x.id === e.id)
       if (i >= 0) s.worklog[i] = e
       else s.worklog.push(e)
+      if (tieTo) { const p = s.projects.find((x) => x.id === tieTo.project.id); const l = p?.budget?.lines?.find((x) => x.id === tieTo.line.id); if (p && l) syncLineWorklog(s, p, l) }
       return s
     })
+    if (tieTo) toast(`Tied to the fee the production entered in the ${tieTo.project.title} budget.`, 'ok')
     if (!years.includes(e.date.slice(0, 4))) setYear(e.date.slice(0, 4))
     setDraft(null)
     claimBudget(e)
@@ -142,7 +169,16 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
     }
     if (data) { link(data); toast(`Added to the ${project.title} budget`, 'ok') }
   }
-  const togglePaid = (e) => togglePaidEntry(update, e.id)
+  const [pay, setPay] = useState(null) // { project, line } for a job that comes from a budget
+  // A budget-tied job is settled by recording the payment: administrators get the Pay dialog
+  // here; the member sees the status change when the production records it.
+  const togglePaid = (e) => {
+    if (!e.budgetLineId) return togglePaidEntry(update, e.id)
+    if (e.status === 'paid') return toast('Settled from Finance. To reopen it, delete the payment there.', 'error')
+    const tied = lineOfJob(state, e)
+    if (me?.role === 'admin' && tied) setPay(tied)
+    else toast('This fee is paid by the production: it turns to Paid when they record the payment.', 'error')
+  }
   const remove = (id) => update((s) => { s.worklog = (s.worklog || []).filter((x) => x.id !== id); return s })
   const importCsv = async (file) => {
     if (!file) return
@@ -186,6 +222,7 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
 
   return (
     <div className="wl">
+      {pay && <PaymentModal project={pay.project} line={pay.line} onClose={() => setPay(null)} />}
       {showHero && (
         <div className="wl-hero">
           <div className="wl-card pend"><span className="wl-label">Pending</span><strong>{money2(tot.pending)}</strong><small>{tot.open} job{tot.open === 1 ? '' : 's'} unpaid</small></div>
@@ -222,7 +259,7 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
                 <ul className="plain wl-list">
                   {items.map((e) => (
                     <li key={e.id} className={`wl-row ${e.status === 'paid' ? 'is-paid' : 'is-pending'}`}>
-                      <button className={`wl-status ${e.status === 'paid' ? 'paid' : 'pend'}`} onClick={() => editable && togglePaid(e)} disabled={!editable} title={editable ? (e.status === 'paid' ? 'Mark as pending' : 'Mark as paid') : ''}>{e.status === 'paid' ? 'Paid' : 'Pending'}</button>
+                      <button className={`wl-status ${e.status === 'paid' ? 'paid' : 'pend'}`} onClick={() => editable && togglePaid(e)} disabled={!editable} title={!editable ? '' : e.budgetLineId ? (e.status === 'paid' ? 'Settled from Finance' : me?.role === 'admin' ? 'Record the payment' : 'Paid by the production when they record the payment') : e.status === 'paid' ? 'Mark as pending' : 'Mark as paid'}>{e.status === 'paid' ? 'Paid' : 'Pending'}</button>
                       <div className="wl-main">
                         <strong>{e.client || <span className="muted">No client</span>}</strong>
                         <span className="wl-desc">{e.description}</span>
