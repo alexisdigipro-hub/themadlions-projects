@@ -3,7 +3,7 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast
 import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
-import { SECTION_NAMES, analyze, deleteTrack, fmtTime, fmtTimeMs, parseTime, songMapText, trackUrl, uploadTrack } from '../../lib/audio.js'
+import { SECTION_NAMES, analyze, deleteTrack, fmtTime, fmtTimeMs, parseTime, songMapText, trackUrl, uploadTrack, lastTrackError } from '../../lib/audio.js'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { remote } from '../../lib/supabase.js'
 import { useStore } from '../../lib/store.jsx'
@@ -177,7 +177,7 @@ export default function Music() {
   const getAudioFile = async () => {
     // the file just uploaded is reused only for the track it belongs to, not for whichever is active now
     if (lastFile.current && lastFile.current.trackId === track?.id) return lastFile.current.file
-    if (!url) throw new Error('No audio to transcribe.')
+    if (!url) throw new Error(`Could not get the song from storage. ${lastTrackError || 'Reload the page and try again.'}`)
     let res
     try {
       res = await fetch(url)
@@ -269,6 +269,7 @@ export default function Music() {
         <section className="panel player">
           <audio ref={audioRef} src={url} preload="metadata" />
           <Waveform peaks={track.peaks} duration={track.duration} time={time} sections={sections} onSeek={seek} active={current?.id} />
+          {remote && !url && lastTrackError && <p className="small" style={{ color: 'var(--danger)', margin: '0 0 8px' }}>{lastTrackError}</p>}
           <div className="player-bar">
             <button className="play" onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
             <span className="player-time">{fmtTimeMs(time)} <span className="muted">/ {fmtTime(track.duration)}</span></span>
