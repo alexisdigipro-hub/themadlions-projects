@@ -46,6 +46,19 @@ export default function Finance() {
   }))
   const owedByProject = {}
   openCommitments.forEach((c) => { owedByProject[c.project.title] = (owedByProject[c.project.title] || 0) + c.balance })
+  /* And the income side (Alex: "but where is the income?"): the client budget set on the project
+     (Budget > cap) is what the client pays. Whatever of it is not yet quoted, invoiced or paid in
+     Finance reads as expected income, with Invoice ready to turn it into the real thing. */
+  const expectedRows = state.projects.map((p) => {
+    const cap = Number(p.budget?.cap) || 0
+    if (!cap) return null
+    const recorded = fin.transactions.filter((t) => t.type === 'income' && t.projectId === p.id).reduce((a, t) => a + Number(t.net || 0), 0)
+    const remaining = cap - recorded
+    if (remaining <= 0) return null
+    return { id: `expected:${p.id}`, expected: true, type: 'income', status: 'quoted', doc: 'none', vatPct: 0, date: projectWorkDate(p) || today(), description: `${p.title}: client budget`, party: p.client || '', projectId: p.id, category: 'Production fee', net: remaining, cap, recorded, project: p }
+  }).filter(Boolean)
+  const expectedByProject = {}
+  expectedRows.forEach((r) => { expectedByProject[r.project.title] = r.net })
   const recurring = fin.recurring || []
   const due = recurring.map((r) => ({ r, periods: duePeriods(r) })).filter((x) => x.periods.length)
   const dueCount = due.reduce((a, x) => a + x.periods.length, 0)
@@ -103,8 +116,18 @@ export default function Finance() {
     .filter((t) => (f.doc ? f.doc === 'none' : true))
     .filter((t) => (f.month ? t.date.slice(5, 7) === f.month : true))
     .filter((t) => matchTx(t, f.q))
-  const listedAll = [...listed, ...listedOwed].sort((a, b) => b.date.localeCompare(a.date))
+  const listedExpected = expectedRows
+    .filter((t) => fiscalYearOf(t.date, fiscalStart) === year)
+    .filter((t) => (f.type ? f.type === 'income' : true))
+    .filter((t) => (f.project ? t.projectId === f.project : true))
+    .filter((t) => (f.status ? f.status === 'quoted' : true))
+    .filter((t) => (f.doc ? f.doc === 'none' : true))
+    .filter((t) => (f.month ? t.date.slice(5, 7) === f.month : true))
+    .filter((t) => matchTx(t, f.q))
+  const listedAll = [...listed, ...listedOwed, ...listedExpected].sort((a, b) => b.date.localeCompare(a.date))
   const listedOwedTotal = listedOwed.reduce((a, t) => a + Number(t.net || 0), 0)
+  const listedExpectedTotal = listedExpected.reduce((a, t) => a + Number(t.net || 0), 0)
+  const invoiceExpected = (r) => setDraft(emptyTx('income', { projectId: r.projectId, party: r.party || r.project.title, description: r.project.title, net: r.net, vatPct: fin.settings.vatDefault, status: 'invoiced', date: today() }))
 
   /* Picking a project in the transaction form fills what the project knows. Only fields that are
      empty, or still hold the previous project's fill, are touched: typed text stays. */
@@ -199,23 +222,28 @@ export default function Finance() {
   }
 
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
-  const Table = ({ rows, label, owed }) => (
+  // With `owed` and `expected` (the per-project table) the columns read Income · Expected ·
+  // Expense · Owed · Forecast: what the year looks like once the client pays the rest of the
+  // budget and the crew is paid what they are owed. The other tables keep booked figures only.
+  const Table = ({ rows, label, owed, expected }) => (
     <table className="table fin-table">
-      <thead><tr><th>{label}</th><th className="num">Income</th><th className="num">Expense</th>{owed && <th className="num" title="Still owed on the project's budget lines (agreed minus paid), not yet booked">Owed</th>}<th className="num">{owed ? 'After owed' : 'Profit'}</th><th className="num">Margin</th></tr></thead>
+      <thead><tr><th>{label}</th><th className="num">Income</th>{expected && <th className="num" title="Client budget on the project not yet quoted, invoiced or paid">Expected</th>}<th className="num">Expense</th>{owed && <th className="num" title="Still owed on the project's budget lines (agreed minus paid), not yet booked">Owed</th>}<th className="num">{owed ? 'Forecast' : 'Profit'}</th><th className="num">Margin</th></tr></thead>
       <tbody>
         {rows.map((r) => {
           const o = owed ? owed[r.key] || 0 : 0
-          const profit = r.profit - o
-          const margin = owed ? (r.income ? Math.round((profit / r.income) * 100) : null) : r.margin
+          const x = expected ? expected[r.key] || 0 : 0
+          const profit = r.profit + x - o
+          const base = r.income + x
+          const margin = owed || expected ? (base ? Math.round((profit / base) * 100) : null) : r.margin
           return (
-            <tr key={r.key}><td>{r.key}</td><td className="num">{r.income ? money(r.income, cur) : ''}</td><td className="num">{r.expense ? money(r.expense, cur) : ''}</td>{owed && <td className="num over">{o ? money(o, cur) : ''}</td>}<td className={`num ${profit < 0 ? 'over' : ''}`}>{money(profit, cur)}</td><td className="num muted">{margin != null ? `${margin}%` : ''}</td></tr>
+            <tr key={r.key}><td>{r.key}</td><td className="num">{r.income ? money(r.income, cur) : ''}</td>{expected && <td className="num under">{x ? money(x, cur) : ''}</td>}<td className="num">{r.expense ? money(r.expense, cur) : ''}</td>{owed && <td className="num over">{o ? money(o, cur) : ''}</td>}<td className={`num ${profit < 0 ? 'over' : ''}`}>{money(profit, cur)}</td><td className="num muted">{margin != null ? `${margin}%` : ''}</td></tr>
           )
         })}
       </tbody>
     </table>
   )
-  // projects with money owed but no transaction yet still get a row in the per-project table
-  const byProjectRows = [...S.byProject, ...Object.keys(owedByProject).filter((k) => !S.byProject.some((r) => r.key === k)).map((k) => ({ key: k, income: 0, expense: 0, profit: 0, margin: null }))]
+  // projects with money owed or expected but no transaction yet still get a row in the per-project table
+  const byProjectRows = [...S.byProject, ...[...new Set([...Object.keys(owedByProject), ...Object.keys(expectedByProject)])].filter((k) => !S.byProject.some((r) => r.key === k)).map((k) => ({ key: k, income: 0, expense: 0, profit: 0, margin: null }))]
 
   return (
     <div className="finance">
@@ -307,7 +335,7 @@ export default function Finance() {
             <Empty title="No transactions yet">Start with this year's invoices and the big expenses: crew, rentals, rent, salaries. Tie project costs to their project and the profit per project appears by itself.</Empty>
           ) : (
             <div className="cols">
-              <section className="panel"><h2>By project</h2><Table rows={byProjectRows} label="Project" owed={owedByProject} /></section>
+              <section className="panel"><h2>By project</h2><Table rows={byProjectRows} label="Project" owed={owedByProject} expected={expectedByProject} /></section>
               <section className="panel"><h2>By client</h2><Table rows={S.byClient} label="Client" /></section>
               <section className="panel"><h2>By category</h2><Table rows={S.byCategory} label="Category" /></section>
               <section className="panel"><h2>By project type</h2><Table rows={S.byType} label="Type" /></section>
@@ -319,7 +347,7 @@ export default function Finance() {
       {tab === 'transactions' && (
         <>
           <div className="toolbar">
-            <div className="toolbar-info"><strong>{listed.length} transactions{listedOwed.length ? ` · ${listedOwed.length} owed from budgets` : ''}</strong><span className="muted">{money(listed.filter((t) => t.type === 'income').reduce((a, t) => a + Number(t.net), 0), cur)} in · {money(listed.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.net), 0), cur)} out (net){listedOwed.length ? ` · ${money(listedOwedTotal, cur)} still owed on budget lines` : ''}</span></div>
+            <div className="toolbar-info"><strong>{listed.length} transactions{listedOwed.length ? ` · ${listedOwed.length} owed from budgets` : ''}{listedExpected.length ? ` · ${listedExpected.length} expected from clients` : ''}</strong><span className="muted">{money(listed.filter((t) => t.type === 'income').reduce((a, t) => a + Number(t.net), 0), cur)} in · {money(listed.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.net), 0), cur)} out (net){listedExpected.length ? ` · ${money(listedExpectedTotal, cur)} still to invoice on client budgets` : ''}{listedOwed.length ? ` · ${money(listedOwedTotal, cur)} still owed on budget lines` : ''}</span></div>
             <div className="toolbar-actions">
               <Input className="input search" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} placeholder="Search…" />
               <Select value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })} options={[['', 'Income & expense'], ['income', 'Income'], ['expense', 'Expense']]} />
@@ -337,7 +365,23 @@ export default function Finance() {
               <table className="table fin-list">
                 <thead><tr><th>Date</th><th>Description</th><th>Project</th><th>Category</th><th className="num">Net</th><th className="num">VAT</th><th className="num">Gross</th><th>Doc</th><th>Status</th><th /></tr></thead>
                 <tbody>
-                  {listedAll.map((t) => t.owed ? (
+                  {listedAll.map((t) => t.expected ? (
+                    <tr key={t.id} className="tx-income tx-expected">
+                      <td className="nowrap">{fmtDate(t.date, { day: 'numeric', month: 'short' })}</td>
+                      <td><strong>{t.description}</strong><div className="muted small">{t.party}{t.party ? ' · ' : ''}{money(t.cap, cur)} client budget{t.recorded ? `, ${money(t.recorded, cur)} already in Finance` : ''}</div></td>
+                      <td className="small">{t.project.title}</td>
+                      <td className="small">{t.category}</td>
+                      <td className="num under">+{money(t.net, cur)}</td>
+                      <td className="num muted" />
+                      <td className="num">{money(t.net, cur)}</td>
+                      <td className="small muted">—</td>
+                      <td><span className="tx-owed-badge in">Expected · client budget</span></td>
+                      <td className="row-actions">
+                        <button onClick={() => invoiceExpected(t)}>Invoice</button>
+                        <Link className="btn btn-ghost btn-sm" to={`/p/${t.project.id}/budget`}>Budget</Link>
+                      </td>
+                    </tr>
+                  ) : t.owed ? (
                     <tr key={t.id} className="tx-expense tx-owed">
                       <td className="nowrap">{fmtDate(t.date, { day: 'numeric', month: 'short' })}</td>
                       <td><strong>{t.description}</strong><div className="muted small">{t.party}{t.party ? ' · ' : ''}from the project budget{t.paid ? ` · ${money(t.paid, cur)} of ${money(t.agreed, cur)} paid` : ''}</div></td>

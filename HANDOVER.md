@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### The income side: the client budget as expected income (27 Sep, night)
+Alex, after the owed rows: "yes, but where is the income?" The project's client budget (`project.budget.cap`, the cap on the Budget page) is what the client pays. Finance.jsx `expectedRows`: per project with a cap, cap minus every income transaction already on the project (quoted, invoiced or paid, so a quote entered in Finance is not counted twice) is a virtual income row "Expected · client budget" (green tint, `.tx-expected`), with **Invoice** (opens the income form filled: project, client, title, remaining amount, VAT default, status invoiced, today) and a Budget link. The By project table now reads Income · Expected · Expense · Owed · Forecast · Margin (forecast = income + expected − expense − owed; margin on income + expected); other breakdown tables keep booked figures. The toolbar counts and totals them. Nothing stored: set or change the cap on the project and the row follows; invoice it and it shrinks.
+
 ### One entry, everywhere: Budget, Finance, My work, Team work (27 Sep, night)
 Alex: "check that everything talks to everything, even the users' My work, so we do not make double entries." Audit of the flows and what was closed:
 - Budget line paid to a member → their My work job (`syncLineWorklog`): already there. Payment recorded (Finance, budget Pay) → paid transaction + line payment + job paid: already there. Finance expense attached to a line, or deleted: already kept the line and the job in step.
