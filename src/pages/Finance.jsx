@@ -109,6 +109,9 @@ export default function Finance() {
   const expenseAll = S.expense + owedInYear + teamOwedInYear
   const profitAll = incomeAll - expenseAll
   const taxEst = Math.max(0, Math.round(profitAll * (Number(fin.settings.taxRate || 0) / 100)))
+  const prevS = summarize(fin.transactions, { year: year - 1, projects: state.projects, fiscalStart })
+  const hasPrev = fin.transactions.some((t) => fiscalYearOf(t.date, fiscalStart) === year - 1)
+  const vsPrev = hasPrev ? (prevS.profit ? Math.round(((S.profit - prevS.profit) / Math.abs(prevS.profit)) * 100) : null) : null
   const maxMonth = Math.max(1, ...S.months.map((m) => Math.max(m.income, m.expense)))
 
   const listed = fin.transactions
@@ -236,27 +239,6 @@ export default function Finance() {
   }
 
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
-  // In the per-project table (with `owed` and `expected`) the client budget counts as the
-  // project's income from the moment it is set (Alex: "treat it as income"), the part not yet
-  // invoiced noted under it; Profit is that income minus expenses minus what is still owed on
-  // budget lines. The other tables keep booked figures only.
-  const Table = ({ rows, label, owed, expected }) => (
-    <table className="table fin-table">
-      <thead><tr><th>{label}</th><th className="num">Income</th><th className="num">Expense</th>{owed && <th className="num" title="Still owed on the project's budget lines (agreed minus paid), not yet booked">Owed</th>}<th className="num">Profit</th><th className="num">Margin</th></tr></thead>
-      <tbody>
-        {rows.map((r) => {
-          const o = owed ? owed[r.key] || 0 : 0
-          const x = expected ? expected[r.key] || 0 : 0
-          const income = r.income + x
-          const profit = income - r.expense - o
-          const margin = owed || expected ? (income ? Math.round((profit / income) * 100) : null) : r.margin
-          return (
-            <tr key={r.key}><td>{r.key}</td><td className="num">{income ? money(income, cur) : ''}{x ? <div className="muted small">{money(x, cur)} to invoice</div> : null}</td><td className="num">{r.expense ? money(r.expense, cur) : ''}</td>{owed && <td className="num over">{o ? money(o, cur) : ''}</td>}<td className={`num ${profit < 0 ? 'over' : ''}`}>{money(profit, cur)}</td><td className="num muted">{margin != null ? `${margin}%` : ''}</td></tr>
-          )
-        })}
-      </tbody>
-    </table>
-  )
   // projects with money owed or expected but no transaction yet still get a row in the per-project table
   const byProjectRows = [...S.byProject, ...[...new Set([...Object.keys(owedByProject), ...Object.keys(expectedByProject)])].filter((k) => !S.byProject.some((r) => r.key === k)).map((k) => ({ key: k, income: 0, expense: 0, profit: 0, margin: null }))]
 
@@ -286,7 +268,7 @@ export default function Finance() {
             <div className={`fin-card ${profitAll < 0 ? 'neg' : 'pos'}`}>
               <div className="fin-label">Profit {year}</div>
               <div className="fin-value">{money(profitAll, cur)}</div>
-              <div className="fin-sub">{money(incomeAll, cur)} in{expInYear ? ` (${money(expInYear, cur)} client budgets to invoice)` : ''} · {money(expenseAll, cur)} out{owedInYear || teamOwedInYear ? ` (${[owedInYear ? `${money(owedInYear, cur)} still owed on budget lines` : '', teamOwedInYear ? `${money(teamOwedInYear, cur)} on My work jobs outside a budget` : ''].filter(Boolean).join(', ')})` : ''} · est. tax {money(taxEst, cur)} ({fin.settings.taxRate}%) · after tax {money(profitAll - taxEst, cur)}</div>
+              <div className="fin-sub">{money(incomeAll, cur)} in{expInYear ? ` (${money(expInYear, cur)} client budgets to invoice)` : ''} · {money(expenseAll, cur)} out{owedInYear || teamOwedInYear ? ` (${[owedInYear ? `${money(owedInYear, cur)} still owed on budget lines` : '', teamOwedInYear ? `${money(teamOwedInYear, cur)} on My work jobs outside a budget` : ''].filter(Boolean).join(', ')})` : ''} · est. tax {money(taxEst, cur)} ({fin.settings.taxRate}%) · after tax {money(profitAll - taxEst, cur)}{hasPrev ? ` · booked profit ${money(S.profit, cur)} vs ${money(prevS.profit, cur)} in ${fyLabel(year - 1)}${vsPrev != null ? ` (${vsPrev >= 0 ? '+' : ''}${vsPrev}%)` : ''}` : ''}</div>
             </div>
             <div className="fin-card">
               <div className="fin-label">Owed to us</div>
@@ -350,10 +332,25 @@ export default function Finance() {
             <Empty title="No transactions yet">Start with this year's invoices and the big expenses: crew, rentals, rent, salaries. Tie project costs to their project and the profit per project appears by itself.</Empty>
           ) : (
             <div className="cols">
-              <section className="panel"><h2>By project</h2><Table rows={byProjectRows} label="Project" owed={owedByProject} expected={expectedByProject} /></section>
-              <section className="panel"><h2>By client</h2><Table rows={S.byClient} label="Client" /></section>
-              <section className="panel"><h2>By category</h2><Table rows={S.byCategory} label="Category" /></section>
-              <section className="panel"><h2>By project type</h2><Table rows={S.byType} label="Type" /></section>
+              <section className="panel"><h2>By project</h2><BreakdownTable rows={byProjectRows} label="Project" cur={cur} owed={owedByProject} expected={expectedByProject} /></section>
+              <section className="panel"><h2>By client</h2><BreakdownTable rows={S.byClient} label="Client" cur={cur} outstanding /></section>
+              <section className="panel"><h2>By category</h2><BreakdownTable rows={S.byCategory} label="Category" cur={cur} /></section>
+              <section className="panel"><h2>By project type</h2><BreakdownTable rows={S.byType} label="Type" cur={cur} /></section>
+              <section className="panel">
+                <h2>By quarter</h2>
+                <p className="muted small">Booked figures per calendar quarter of {year}, with the VAT you charged and the VAT you paid: the balance is what the quarterly return settles.</p>
+                <div className="table-wrap">
+                  <table className="table fin-table">
+                    <thead><tr><th>Quarter</th><th className="num">Income</th><th className="num">Expense</th><th className="num">Profit</th><th className="num">VAT charged</th><th className="num">VAT paid</th><th className="num">VAT balance</th></tr></thead>
+                    <tbody>
+                      {S.quarters.map((q) => (
+                        <tr key={q.key} className={q.count ? '' : 'muted'}><td>{q.key}</td><td className="num">{q.income ? money(q.income, cur) : ''}</td><td className="num">{q.expense ? money(q.expense, cur) : ''}</td><td className={`num ${q.profit < 0 ? 'over' : ''}`}>{q.count ? money(q.profit, cur) : ''}</td><td className="num">{q.vatIn ? money(q.vatIn, cur) : ''}</td><td className="num">{q.vatOut ? money(q.vatOut, cur) : ''}</td><td className={`num ${q.vatBalance > 0 ? 'over' : q.vatBalance < 0 ? 'under' : ''}`}>{q.count ? money(q.vatBalance, cur) : ''}</td></tr>
+                      ))}
+                      <tr className="fin-total"><td>Year</td><td className="num">{money(S.income, cur)}</td><td className="num">{money(S.expense, cur)}</td><td className={`num ${S.profit < 0 ? 'over' : ''}`}>{money(S.profit, cur)}</td><td className="num">{money(S.vatIn, cur)}</td><td className="num">{money(S.vatOut, cur)}</td><td className={`num ${S.vatBalance > 0 ? 'over' : S.vatBalance < 0 ? 'under' : ''}`}>{money(S.vatBalance, cur)}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
             </div>
           )}
         </>
@@ -815,6 +812,92 @@ function FinanceCategories({ toast }) {
         {renderCol('expense', 'Expense')}
       </div>
       <div className="row-actions"><Button variant="ghost" onClick={reset}>Reset to standard</Button></div>
+    </div>
+  )
+}
+
+
+/* The breakdown tables on the Overview: click a heading to sort (again for the other way), a
+   totals row at the bottom, each row's share of the year's income or expenses, and how many
+   transactions it holds. The project table also counts client budgets as income and what is
+   still owed on budget lines; the client table shows what is invoiced and not yet paid. */
+function BreakdownTable({ rows, label, cur, owed, expected, outstanding }) {
+  const [sort, setSort] = useState({ key: 'income', dir: -1 })
+  const withDerived = rows.map((r) => {
+    const o = owed ? owed[r.key] || 0 : 0
+    const x = expected ? expected[r.key] || 0 : 0
+    const income = r.income + x
+    const profit = income - r.expense - o
+    const margin = income ? Math.round((profit / income) * 100) : null
+    return { ...r, income, toInvoice: x, owedAmt: o, profit, margin }
+  })
+  const totIncome = withDerived.reduce((a, r) => a + r.income, 0)
+  const totExpense = withDerived.reduce((a, r) => a + r.expense, 0)
+  const totOwed = withDerived.reduce((a, r) => a + r.owedAmt, 0)
+  const totProfit = totIncome - totExpense - totOwed
+  const totCount = withDerived.reduce((a, r) => a + (r.count || 0), 0)
+  const totOut = withDerived.reduce((a, r) => a + (r.outstanding || 0), 0)
+  const share = (r) => (r.income ? (totIncome ? Math.round((r.income / totIncome) * 100) : 0) : totExpense ? Math.round((r.expense / totExpense) * 100) : 0)
+  const shareLabel = (r) => (r.income ? 'of income' : 'of expenses')
+  const sorted = [...withDerived].sort((a, b) => {
+    const va = sort.key === 'key' ? a.key : sort.key === 'share' ? share(a) : a[sort.key] ?? -Infinity
+    const vb = sort.key === 'key' ? b.key : sort.key === 'share' ? share(b) : b[sort.key] ?? -Infinity
+    if (sort.key === 'key') return sort.dir * String(va).localeCompare(String(vb), 'el')
+    return sort.dir * ((va === null ? -Infinity : va) - (vb === null ? -Infinity : vb))
+  })
+  const click = (key) => setSort((s) => (s.key === key ? { key, dir: -s.dir } : { key, dir: key === 'key' ? 1 : -1 }))
+  // a render function, not an inner component, so the headings are not remounted on every sort
+  const th = (k, text, num = true) => (
+    <th key={k} className={`${num ? 'num' : ''} sortable ${sort.key === k ? 'on' : ''}`} onClick={() => click(k)} title="Sort by this column" aria-sort={sort.key === k ? (sort.dir > 0 ? 'ascending' : 'descending') : 'none'}>
+      {text}{sort.key === k ? <span className="sort-arrow">{sort.dir > 0 ? '↑' : '↓'}</span> : null}
+    </th>
+  )
+  const cols = { owed: !!owed, outstanding: !!outstanding }
+  return (
+    <div className="table-wrap">
+      <table className="table fin-table fin-breakdown">
+        <thead>
+          <tr>
+            {th('key', label, false)}
+            {th('count', '#')}
+            {th('income', 'Income')}
+            {cols.outstanding && th('outstanding', 'Outstanding')}
+            {th('expense', 'Expense')}
+            {cols.owed && th('owedAmt', 'Owed')}
+            {th('profit', 'Profit')}
+            {th('margin', 'Margin')}
+            {th('share', 'Share')}
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((r) => (
+            <tr key={r.key}>
+              <td>{r.key}</td>
+              <td className="num muted">{r.count || ''}</td>
+              <td className="num">{r.income ? money(r.income, cur) : ''}{r.toInvoice ? <div className="muted small">{money(r.toInvoice, cur)} to invoice</div> : null}</td>
+              {cols.outstanding && <td className="num over">{r.outstanding ? money(r.outstanding, cur) : ''}</td>}
+              <td className="num">{r.expense ? money(r.expense, cur) : ''}</td>
+              {cols.owed && <td className="num over">{r.owedAmt ? money(r.owedAmt, cur) : ''}</td>}
+              <td className={`num ${r.profit < 0 ? 'over' : ''}`}>{money(r.profit, cur)}</td>
+              <td className="num muted">{r.margin != null ? `${r.margin}%` : ''}</td>
+              <td className="num muted" title={shareLabel(r)}>{r.income || r.expense ? `${share(r)}%` : ''}</td>
+            </tr>
+          ))}
+          {sorted.length > 1 && (
+            <tr className="fin-total">
+              <td>Total</td>
+              <td className="num muted">{totCount || ''}</td>
+              <td className="num">{money(totIncome, cur)}</td>
+              {cols.outstanding && <td className="num over">{totOut ? money(totOut, cur) : ''}</td>}
+              <td className="num">{money(totExpense, cur)}</td>
+              {cols.owed && <td className="num over">{totOwed ? money(totOwed, cur) : ''}</td>}
+              <td className={`num ${totProfit < 0 ? 'over' : ''}`}>{money(totProfit, cur)}</td>
+              <td className="num muted">{totIncome ? `${Math.round((totProfit / totIncome) * 100)}%` : ''}</td>
+              <td />
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   )
 }

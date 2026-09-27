@@ -85,12 +85,16 @@ export function summarize(txs, { year, projects = [], fiscalStart = 1 } = {}) {
     const l = inYear.filter((t) => ym(t.date) === key)
     return { key, income: sum(l.filter((t) => t.type === 'income' && t.status !== 'quoted')), expense: sum(l.filter((t) => t.type === 'expense')) }
   })
+  // every breakdown row also carries how many transactions it holds and what of its income is
+  // invoiced but not yet paid (gross), for the Outstanding column of the client table
   const byKey = (list, keyFn) => {
     const m = {}
     list.forEach((t) => {
       const k = keyFn(t) || 'Unassigned'
-      m[k] = m[k] || { income: 0, expense: 0 }
+      m[k] = m[k] || { income: 0, expense: 0, count: 0, outstanding: 0 }
       m[k][t.type === 'income' ? 'income' : 'expense'] += Number(t.net || 0)
+      m[k].count += 1
+      if (t.type === 'income' && t.status === 'invoiced') m[k].outstanding += grossOf(t)
     })
     return Object.entries(m).map(([k, v]) => ({ key: k, ...v, profit: v.income - v.expense, margin: v.income ? Math.round(((v.income - v.expense) / v.income) * 100) : null })).sort((a, b) => b.income - a.income)
   }
@@ -99,8 +103,16 @@ export function summarize(txs, { year, projects = [], fiscalStart = 1 } = {}) {
   const byClient = byKey(inc, (t) => t.party)
   const byCategory = byKey([...inc, ...exp], (t) => t.category)
   const byType = byKey([...inc, ...exp], (t) => (t.projectId ? pById[t.projectId]?.category || 'Other' : 'Company'))
+  // quarters of the calendar year shown, with VAT in and out: what the quarterly VAT return asks
+  const quarters = [0, 1, 2, 3].map((qi) => {
+    const l = inYear.filter((t) => { const mth = Number((t.date || '').slice(5, 7)); return mth >= qi * 3 + 1 && mth <= qi * 3 + 3 })
+    const qi_ = l.filter((t) => t.type === 'income' && t.status !== 'quoted')
+    const qe = l.filter((t) => t.type === 'expense')
+    const income = sum(qi_), expense = sum(qe), vIn = sum(qi_, vatOf), vOut = sum(qe, vatOf)
+    return { key: `Q${qi + 1}`, income, expense, profit: income - expense, vatIn: vIn, vatOut: vOut, vatBalance: vIn - vOut, count: l.length }
+  })
   return {
-    income, expense, profit, vatIn, vatOut, vatBalance: vatIn - vatOut,
+    income, expense, profit, vatIn, vatOut, vatBalance: vatIn - vatOut, quarters,
     owedToUs: sum(owedToUs, grossOf), owedCount: owedToUs.length, weOwe: sum(weOwe, grossOf), weOweCount: weOwe.length,
     monthIn, monthOut, months, byProject, byClient, byCategory, byType,
     quoted: sum(inYear.filter((t) => t.type === 'income' && t.status === 'quoted')),
