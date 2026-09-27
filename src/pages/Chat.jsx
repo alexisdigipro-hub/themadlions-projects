@@ -177,8 +177,9 @@ function RoomList({ activeId }) {
         {!shown.length && <p className="muted small chat-rooms-empty">{folder.custom ? 'This folder is empty. Add conversations to it under Folders.' : 'Nothing here yet.'}</p>}
         {shown.map((r) => {
           const last = C.lastMessage(state.chat, r.id)
-          // the company room shows its name alone, a project room its category; groups and people show the last message
-          const preview = r.kind === 'team' ? '' : r.kind === 'project' ? r.sub : last ? `${last.userId === user?.id ? 'You' : (last.userName || '').split(' ')[0]}: ${last.text || (last.attachments?.length ? (isImage(last.attachments[0]) ? 'Photo' : last.attachments[0].name) : '')}` : r.sub
+          // never the last message (Alex): the company room shows its name alone, a project room its
+          // category, a group its member count, a person their position
+          const preview = r.kind === 'team' ? '' : r.sub
           const n = unread[r.id] || 0
           return (
             <button key={r.id} type="button" className={`chat-room-item ${r.id === activeId ? 'active' : ''}`} onClick={() => nav(`/chat/${encodeURIComponent(r.id)}`)} disabled={legacy && r.kind !== 'team'}>
