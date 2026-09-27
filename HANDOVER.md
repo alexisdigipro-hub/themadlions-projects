@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Lyrics from audio: "failed", made to say what failed
+Alex hit "failed" on Lyrics from audio; the toast was the browser's bare "Failed to fetch". Now each of the two network steps has its own message: downloading the song from storage (network, or an expired signed link, with the status) and reaching OpenAI (network, ad blocker or VPN), and 401 / 429 from OpenAI say key or credit. Found and fixed on the way: `lastFile` (the file just uploaded, reused so transcription does not re-download) was reused for whichever track was active, so uploading A and transcribing B would have sent A; it now carries the track id. Root cause of Alex's failure still unknown until he reports the new message.
+
 ### Small: Download button on the player
 Alex: "a download button where the audio is." `downloadAudio()` in Music.jsx fetches the signed URL as a blob and clicks a blob link named `<track name>.<ext>`, so the browser saves the file instead of opening a player tab (a plain link to a signed Supabase URL would play it). Everyone who can see the tab gets the button; Remove stays behind the edit permission.
 

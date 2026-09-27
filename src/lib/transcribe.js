@@ -12,10 +12,19 @@ export async function transcribe({ apiKey, file, language = '', prompt = '' }) {
   fd.append('timestamp_granularities[]', 'segment')
   if (language) fd.append('language', language)
   if (prompt) fd.append('prompt', prompt.slice(0, 800))
-  const res = await fetch('https://api.openai.com/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${apiKey}` }, body: fd })
+  let res
+  try {
+    res = await fetch('https://api.openai.com/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${apiKey}` }, body: fd })
+  } catch (e) {
+    // a TypeError here is the browser saying it never got an answer: no network, a VPN or an
+    // ad blocker that stops api.openai.com, or a corporate proxy. Not the key, not the file.
+    throw new Error(`Could not reach OpenAI (${e.message}). Check the connection, and switch off any ad blocker or VPN for this site, then try again.`)
+  }
   if (!res.ok) {
     let msg = `OpenAI ${res.status}`
     try { msg += `: ${(await res.json()).error?.message || ''}` } catch {}
+    if (res.status === 401) msg += ' (the key in Settings is wrong or was revoked)'
+    if (res.status === 429) msg += ' (no credit left on the OpenAI account, or too many requests)'
     throw new Error(msg)
   }
   const data = await res.json()
