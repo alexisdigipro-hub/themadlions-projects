@@ -2070,6 +2070,10 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 .fin-table th.sortable:hover { color: var(--text); }
 .fin-table th.sortable.on { color: var(--text); }
 .sort-arrow { margin-left: 3px; font-size: 11px; }
+.fin-breakdowns { display: flex; flex-direction: column; gap: 10px; }
+.fin-sortbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.fin-sortbar-label { font-weight: 600; font-size: 14.5px; }
+.fin-sortbar .select { width: auto; min-width: 150px; }
 .fin-table tr.fin-total td { border-top: 2px solid var(--line); font-weight: 700; }
 .fin-table tr.fin-total td.muted { font-weight: 500; }
 .fin-table tr.muted td { color: var(--muted); }

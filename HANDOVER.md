@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Finance overview: a visible Sort by (27 Sep, morning)
+Alex, after #66 went live: "the sort by still hasn't happened." The sort lived only in the clickable column headings, which he did not read as controls. Now one `bdSort` state in Finance.jsx feeds every `BreakdownTable` (props `sort`, `onSort`; the table no longer keeps its own state), and a `.fin-sortbar` above the grid shows a Select (`BD_SORTS`: Income, Expense, Profit, Margin, Share, Outstanding, Owed, Transactions, Name) and a High to low / Low to high button, so picking one re-sorts all four tables together; a heading click changes the same state. Rendered at 1400 and 390 px.
+
 ### Finance overview panels no longer touch (27 Sep, morning)
 Alex sent a screenshot: "the boards ride on each other." The Overview's tiles, Month by month, Owed to crew & vendors and the breakdown grid were sibling elements with no spacing between them (only the tiles carried a margin). The whole Overview now sits in `.fin-overview`, a column with a 16 px gap; the tiles' own margin is cancelled inside it and kept on the Team work tab, which reuses `.fin-hero`. Rendered with the real CSS at 1400 px.
 
