@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Delivered projects under the grid, small and grey (27 Sep, night)
+Alex: "on the Projects tab, closed projects should go grey, move to the bottom and be about three times smaller, or suggest something." Done as a section under the live grid: `closed` = status Delivered; a `closed-toggle` button "Delivered · N" (state in localStorage `tml_closed_open`, closed by default) reveals a `.project-grid.compact` (128 px columns on desktop, 4 per row on phones, about a third of the area) of the same cards with `.closed`: grayscale and dimmed, colour back on hover or focus, foot and progress hidden, two-line title. The card markup moved into a `card(p, small)` render function used by both grids. The page heading reads "N active · M delivered". Rendered with the real CSS at 1280 and 390 px. Category chips and search still count and filter across both.
+
 ### We owe counts the team's My work too (27 Sep, night)
 Alex: "shouldn't We owe on the Finance overview also count the remaining My work amounts?" `teamJobs` in Finance.jsx: pending jobs of everyone with an amount and no `budgetLineId` (the tied ones are already in the open budget lines), their total added to the We owe tile with its own clause, and the year's slice (`teamOwedInYear`, by job date) into `expenseAll`, so the Profit tile and the tile agree. Same rule as the Team work tab, which was already counting them as owed.
 
