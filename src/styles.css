@@ -2899,18 +2899,8 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
   .home-block { display: block; }
   .home-table-wrap { max-height: none; overflow-x: auto; }
 
-  /* Six columns do not fit a phone: one column, the project, with its next day and open tasks
-     written under the title (Home.jsx adds that line on phones); status, progress and budget
-     are a tap away on the project itself. */
-  .home-projects thead th:not(:first-child), .home-projects tbody td:not(:first-child) { display: none; }
-  .home-projects td:first-child { min-width: 0; }
-  .home-projects td, .home-projects th { padding-left: 8px; padding-right: 8px; }
-  /* A real table again: the generic phone rule turns .table into a sideways-scrolling block with
-     nowrap text, which left only the title on screen and pushed the whole page wider. */
-  .home-projects { display: table; white-space: normal; overflow: visible; }
-  .home-projects thead { display: none; }
-  .home-next { margin-top: 3px; color: var(--text); }
-  .home-next.late { color: var(--danger); }
+  /* The Projects block itself stays off the phone (Home.jsx drops it): six columns never fit,
+     and the Projects tab in the bar is one tap away. */
 }
 .chat-who a { color: inherit; }
 @media (max-width: 820px) {

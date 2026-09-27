@@ -165,12 +165,7 @@ export default function Home() {
                         {/* the flex row lives on a div inside the cell: a td that is itself display:flex leaves the table and swallows the row's width on a phone */}
                         <div className="person-cell">
                           {p.coverThumb ? <img className="avatar-img sq" src={p.coverThumb} alt="" /> : <span className="dot" style={{ '--pc': p.color }} />}
-                          <span>
-                            <Link to={`/p/${p.id}`}><strong>{p.title}</strong></Link>
-                            <div className="muted small">{p.category}{p.client ? ` · ${p.client}` : ''}</div>
-                            {/* on a phone the columns are gone: the next day and the open tasks go under the title */}
-                            {mobile && <div className={`small home-next ${overdue ? 'late' : ''}`}>{next ? `${fmtDate(next.date)} · ${next.callTime}` : 'No day planned'}{open ? ` · ${open} open${overdue ? ` (${overdue} late)` : ''}` : ''}</div>}
-                          </span>
+                          <span><Link to={`/p/${p.id}`}><strong>{p.title}</strong></Link><div className="muted small">{p.category}{p.client ? ` · ${p.client}` : ''}</div></span>
                         </div>
                       </td>
                       <td className="small">{p.status}</td>
@@ -188,7 +183,8 @@ export default function Home() {
       ),
     },
   }
-  const visible = order.filter((k) => blocks[k])
+  // on a phone the Projects block stays out (Alex): the Projects tab in the bar is one tap away
+  const visible = order.filter((k) => blocks[k] && !(mobile && k === 'projects'))
 
   return (
     <div className="home">
