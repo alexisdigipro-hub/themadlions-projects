@@ -22,7 +22,7 @@ import Shots from './pages/project/Shots.jsx'
 import Tasks from './pages/project/Tasks.jsx'
 import TasksAll from './pages/TasksAll.jsx'
 import Database from './pages/Database.jsx'
-import Chat from './pages/Chat.jsx'
+import Chat, { ProjectChat } from './pages/Chat.jsx'
 import MyWork from './pages/MyWork.jsx'
 import Profile from './pages/Profile.jsx'
 import Drives from './pages/Drives.jsx'
@@ -80,6 +80,7 @@ export default function App() {
                 <Route path="calendar" element={<CalendarAll />} />
                 <Route path="tasks" element={<TasksAll />} />
                 <Route path="chat" element={<Chat />} />
+                <Route path="chat/:room" element={<Chat />} />
                 <Route path="mywork" element={<MyWork />} />
                 <Route path="me" element={<Profile mine />} />
                 <Route path="u/:id" element={<Profile />} />
@@ -95,6 +96,7 @@ export default function App() {
                 <Route path="settings" element={<Settings />} />
                 <Route path="p/:id" element={<Project />}>
                   <Route index element={<Overview />} />
+                  <Route path="chat" element={<ProjectChat />} />
                   <Route path="music" element={<Music />} />
                   <Route path="script" element={<Script />} />
                   <Route path="breakdown" element={<Breakdown />} />

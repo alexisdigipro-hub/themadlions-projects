@@ -104,6 +104,8 @@ export function emptyState() {
     library: { contacts: [], locations: [], drives: [] },
     todos: [],
     chat: [],
+    chats: [], // groups and direct conversations (rooms); team and project rooms are derived
+    chatRooms: true, // false when chat_rooms.sql has not been run yet (remote mode)
     notices: [],
     worklog: [],
     finance: { transactions: [], recurring: [], settings: { currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 } },
@@ -211,7 +213,11 @@ function migrate(parsed) {
   return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], drives: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), recurring: parsed.finance?.recurring || [], settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}), callsheet: { ...emptyState().settings.callsheet, ...(parsed.settings?.callsheet || {}) } } }
 }
 
-const rowToMessage = (r) => ({ id: r.id, userId: r.user_id || '', userName: r.user_name || '', text: r.text || '', source: r.source || 'app', createdAt: r.created_at })
+const rowToMessage = (r) => ({
+  id: r.id, userId: r.user_id || '', userName: r.user_name || '', text: r.text || '', source: r.source || 'app', createdAt: r.created_at,
+  chatId: r.chat_id || 'team', replyTo: r.reply_to || '', editedAt: r.edited_at || '', attachments: Array.isArray(r.attachments) ? r.attachments : [], mentions: Array.isArray(r.mentions) ? r.mentions : [],
+})
+const rowToChat = (r) => ({ id: r.id, kind: r.kind, name: r.name || '', members: Array.isArray(r.members) ? r.members : [], createdBy: r.created_by || '', createdAt: r.created_at })
 
 /* ---------- context ---------- */
 const StoreCtx = createContext(null)
@@ -316,7 +322,7 @@ export function StoreProvider({ children }) {
   }, [])
 
   const loadAll = useCallback(async (ws) => {
-    const [w, m, p, e, inv, lib, fin, msg, ntc, wl] = await Promise.all([
+    const [w, m, p, e, inv, lib, fin, msg, ntc, wl, rooms] = await Promise.all([
       supabase.from('workspaces').select('*').eq('id', ws).single(),
       supabase.from('members').select('*').eq('workspace_id', ws),
       supabase.from('projects').select('id, data').eq('workspace_id', ws),
@@ -324,9 +330,11 @@ export function StoreProvider({ children }) {
       supabase.from('invites').select('*').eq('workspace_id', ws),
       supabase.from('library').select('id, kind, data').eq('workspace_id', ws),
       supabase.from('finance').select('id, kind, data').eq('workspace_id', ws),
-      supabase.from('messages').select('id, user_id, user_name, text, source, created_at').eq('workspace_id', ws).order('created_at', { ascending: true }).limit(500),
+      // '*' so the select works before and after chat_rooms.sql; newest 2000 across every room
+      supabase.from('messages').select('*').eq('workspace_id', ws).order('created_at', { ascending: false }).limit(2000),
       supabase.from('notices').select('id, data').eq('workspace_id', ws),
       supabase.from('worklog').select('id, user_id, data').eq('workspace_id', ws),
+      supabase.from('chats').select('*').eq('workspace_id', ws),
     ])
     if (w.error) throw w.error
     const libRows = lib.error ? [] : lib.data || [] // library table may not exist yet (library.sql not run)
@@ -337,6 +345,8 @@ export function StoreProvider({ children }) {
     const ntcRows = ntc.error ? [] : ntc.data || [] // notices table may not exist yet (notices.sql not run)
     const wlRows = wl.error ? [] : wl.data || [] // worklog table may not exist yet (worklog.sql not run)
     if (msg.error) console.warn('chat not available yet:', msg.error.message)
+    const roomRows = rooms.error ? [] : rooms.data || [] // chats table may not exist yet (chat_rooms.sql not run)
+    if (rooms.error) console.warn('chat rooms not available yet:', rooms.error.message)
     const next = {
       ...emptyState(),
       workspace: { name: w.data.name, subtitle: w.data.subtitle, createdAt: w.data.created_at, id: ws },
@@ -349,7 +359,9 @@ export function StoreProvider({ children }) {
         drives: libRows.filter((r) => r.kind === 'drive').map((r) => ({ ...r.data, id: r.id })),
       },
       todos: libRows.filter((r) => r.kind === 'task').map((r) => ({ ...r.data, id: r.id })),
-      chat: msgRows.map(rowToMessage),
+      chat: msgRows.map(rowToMessage).reverse(),
+      chats: roomRows.map(rowToChat),
+      chatRooms: !rooms.error,
       notices: ntcRows.map((r) => ({ ...r.data, id: r.id })),
       worklog: wlRows.map((r) => ({ ...r.data, id: r.id, userId: r.user_id })),
       finance: {
@@ -505,6 +517,19 @@ export function StoreProvider({ children }) {
           return next
         })
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chats', filter: `workspace_id=eq.${ws}` }, (payload) => {
+        setState((s) => {
+          let chats
+          if (payload.eventType === 'DELETE') chats = (s.chats || []).filter((c) => c.id !== payload.old.id)
+          else {
+            const c = rowToChat(payload.new)
+            chats = (s.chats || []).some((x) => x.id === c.id) ? s.chats.map((x) => (x.id === c.id ? c : x)) : [...(s.chats || []), c]
+          }
+          const next = { ...s, chats }
+          prevRef.current = next
+          return next
+        })
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'finance', filter: `workspace_id=eq.${ws}` }, (payload) => {
         setState((s) => {
           const fin = { ...s.finance }
@@ -571,7 +596,7 @@ export function StoreProvider({ children }) {
     }, 4000)
     actBuf.current[mergeKey] = b
   }
-  const PROJECT_KEYS = { title: 'title', status: 'status', category: 'category', client: 'client', director: 'director', producer: 'producer', startDate: 'dates', endDate: 'dates', color: 'colour', coverThumb: 'cover', notes: 'notes', concept: 'concept', script: 'script', scriptVersions: 'script versions', scenes: 'breakdown', shots: 'shot list', shootingDays: 'schedule / call sheets', contacts: 'cast & crew', locations: 'locations', tasks: 'tasks', budget: 'budget', gear: 'equipment', vendors: 'vendors', post: 'post', files: 'files', music: 'music', frozen: 'lock', customStages: 'progress stages', hiddenTabs: 'tabs' }
+  const PROJECT_KEYS = { title: 'title', status: 'status', category: 'category', client: 'client', director: 'director', producer: 'producer', startDate: 'dates', endDate: 'dates', color: 'colour', coverThumb: 'cover', notes: 'notes', concept: 'concept', script: 'script', scriptVersions: 'script versions', scenes: 'breakdown', shots: 'shot list', shootingDays: 'schedule / call sheets', contacts: 'cast & crew', locations: 'locations', tasks: 'tasks', budget: 'budget', gear: 'equipment', vendors: 'vendors', post: 'post', files: 'files', music: 'music', frozen: 'lock', customStages: 'progress stages', hiddenTabs: 'tabs', shownTabs: 'tabs' }
   const syncDiff = (prev, next) => {
     if (!remote || !membership) return
     const ws = membership.workspace_id
@@ -693,12 +718,44 @@ export function StoreProvider({ children }) {
       )
     }
     {
-      const before = new Set((prev.chat || []).map((m) => m.id))
-      ;(next.chat || []).filter((m) => !before.has(m.id)).forEach((m) => {
+      // rooms: groups (administrators) and direct conversations (either side opens one)
+      const before = Object.fromEntries((prev.chats || []).map((c) => [c.id, c]))
+      ;(next.chats || []).forEach((c) => {
+        if (before[c.id] && JSON.stringify(before[c.id]) === JSON.stringify(c)) return
+        myWrites.current.add(c.id)
+        schedule('c:' + c.id, async () => {
+          // a direct conversation the other side opened at the same moment is the same row: keep theirs
+          const { error } = await supabase.from('chats').upsert({ id: c.id, workspace_id: ws, kind: c.kind, name: c.name || '', members: c.members || [], created_by: c.createdBy || authUser?.id || null }, c.kind === 'direct' ? { ignoreDuplicates: true } : undefined)
+          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/chat_rooms.sql in the SQL editor to enable chat rooms.' : error.message)
+          setTimeout(() => myWrites.current.delete(c.id), 4000)
+        }, 0)
+      })
+      const ids = new Set((next.chats || []).map((c) => c.id))
+      Object.values(before).filter((c) => !ids.has(c.id)).forEach((c) =>
+        schedule('cd:' + c.id, async () => {
+          const { error } = await supabase.from('chats').delete().eq('id', c.id)
+          if (error) throw error
+        }, 0),
+      )
+    }
+    {
+      const before = Object.fromEntries((prev.chat || []).map((m) => [m.id, m]))
+      const roomsReady = next.chatRooms !== false
+      ;(next.chat || []).forEach((m) => {
+        const was = before[m.id]
+        if (was && JSON.stringify(was) === JSON.stringify(m)) return
         myWrites.current.add(m.id)
         schedule('m:' + m.id, async () => {
-          const { error } = await supabase.from('messages').insert({ id: m.id, workspace_id: ws, user_id: authUser?.id || null, user_name: m.userName, text: m.text, source: m.source || 'app', created_at: m.createdAt })
-          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/chat.sql in the SQL editor to enable the team chat.' : error.message)
+          if (was) {
+            // only the writer's own text and attachments change after the fact (edit, or a file removed)
+            const { error } = await supabase.from('messages').update({ text: m.text, edited_at: m.editedAt || null, attachments: m.attachments || [] }).eq('id', m.id)
+            if (error) throw new Error(error.message)
+          } else {
+            const row = { id: m.id, workspace_id: ws, user_id: authUser?.id || null, user_name: m.userName, text: m.text, source: m.source || 'app', created_at: m.createdAt }
+            if (roomsReady) Object.assign(row, { chat_id: m.chatId || 'team', reply_to: m.replyTo || null, attachments: m.attachments || [], mentions: m.mentions || [] })
+            const { error } = await supabase.from('messages').insert(row)
+            if (error) throw new Error(error.code === '42P01' ? 'Run supabase/chat.sql in the SQL editor to enable the team chat.' : error.code === '42703' ? 'Run supabase/chat_rooms.sql in the SQL editor to enable chat rooms.' : error.message)
+          }
           setTimeout(() => myWrites.current.delete(m.id), 4000)
         }, 0)
       })
