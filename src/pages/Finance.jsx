@@ -222,21 +222,22 @@ export default function Finance() {
   }
 
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
-  // With `owed` and `expected` (the per-project table) the columns read Income · Expected ·
-  // Expense · Owed · Forecast: what the year looks like once the client pays the rest of the
-  // budget and the crew is paid what they are owed. The other tables keep booked figures only.
+  // In the per-project table (with `owed` and `expected`) the client budget counts as the
+  // project's income from the moment it is set (Alex: "treat it as income"), the part not yet
+  // invoiced noted under it; Profit is that income minus expenses minus what is still owed on
+  // budget lines. The other tables keep booked figures only.
   const Table = ({ rows, label, owed, expected }) => (
     <table className="table fin-table">
-      <thead><tr><th>{label}</th><th className="num">Income</th>{expected && <th className="num" title="Client budget on the project not yet quoted, invoiced or paid">Expected</th>}<th className="num">Expense</th>{owed && <th className="num" title="Still owed on the project's budget lines (agreed minus paid), not yet booked">Owed</th>}<th className="num">{owed ? 'Forecast' : 'Profit'}</th><th className="num">Margin</th></tr></thead>
+      <thead><tr><th>{label}</th><th className="num">Income</th><th className="num">Expense</th>{owed && <th className="num" title="Still owed on the project's budget lines (agreed minus paid), not yet booked">Owed</th>}<th className="num">Profit</th><th className="num">Margin</th></tr></thead>
       <tbody>
         {rows.map((r) => {
           const o = owed ? owed[r.key] || 0 : 0
           const x = expected ? expected[r.key] || 0 : 0
-          const profit = r.profit + x - o
-          const base = r.income + x
-          const margin = owed || expected ? (base ? Math.round((profit / base) * 100) : null) : r.margin
+          const income = r.income + x
+          const profit = income - r.expense - o
+          const margin = owed || expected ? (income ? Math.round((profit / income) * 100) : null) : r.margin
           return (
-            <tr key={r.key}><td>{r.key}</td><td className="num">{r.income ? money(r.income, cur) : ''}</td>{expected && <td className="num under">{x ? money(x, cur) : ''}</td>}<td className="num">{r.expense ? money(r.expense, cur) : ''}</td>{owed && <td className="num over">{o ? money(o, cur) : ''}</td>}<td className={`num ${profit < 0 ? 'over' : ''}`}>{money(profit, cur)}</td><td className="num muted">{margin != null ? `${margin}%` : ''}</td></tr>
+            <tr key={r.key}><td>{r.key}</td><td className="num">{income ? money(income, cur) : ''}{x ? <div className="muted small">{money(x, cur)} to invoice</div> : null}</td><td className="num">{r.expense ? money(r.expense, cur) : ''}</td>{owed && <td className="num over">{o ? money(o, cur) : ''}</td>}<td className={`num ${profit < 0 ? 'over' : ''}`}>{money(profit, cur)}</td><td className="num muted">{margin != null ? `${margin}%` : ''}</td></tr>
           )
         })}
       </tbody>
@@ -276,7 +277,7 @@ export default function Finance() {
             <div className="fin-card">
               <div className="fin-label">Owed to us</div>
               <div className="fin-value">{money(S.owedToUs, cur)}</div>
-              <div className="fin-sub">{S.owedCount} unpaid invoice{S.owedCount === 1 ? '' : 's'} (gross){S.quoted ? ` · ${money(S.quoted, cur)} quoted, not yet invoiced` : ''}</div>
+              <div className="fin-sub">{S.owedCount} unpaid invoice{S.owedCount === 1 ? '' : 's'} (gross){S.quoted ? ` · ${money(S.quoted, cur)} quoted, not yet invoiced` : ''}{expectedRows.length ? ` · ${money(expectedRows.reduce((a, r) => a + r.net, 0), cur)} of client budgets still to invoice on ${expectedRows.length} project${expectedRows.length === 1 ? '' : 's'}` : ''}</div>
             </div>
             <div className="fin-card">
               <div className="fin-label">We owe</div>
