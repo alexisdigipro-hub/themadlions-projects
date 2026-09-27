@@ -6,7 +6,7 @@ import { coordsFromText } from '../../lib/sun.js'
 import PhotoGrid from '../../components/PhotoGrid.jsx'
 import { locationToLibrary, matchText, sharedLocation } from '../../lib/library.js'
 
-const TYPES = ['Studio', 'Interior', 'Exterior', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
+const TYPES = ['Studio', 'Interior', 'Exterior', 'INT. & EXT.', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
 
 function mapSrc(address, key) {
   const q = encodeURIComponent(address)
