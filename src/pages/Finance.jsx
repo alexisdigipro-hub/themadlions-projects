@@ -7,7 +7,7 @@ import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
 import { budgetCatForFin, finCatFor } from '../lib/budgetCats.js'
-import { AGE_BUCKETS, WorkLogTable, ageBucket, daysWaiting, entryTotals, money2, projectWorkDate, togglePaidEntry } from '../components/WorkLog.jsx'
+import { AGE_BUCKETS, WorkLogTable, ageBucket, daysWaiting, entryTotals, lineOfJob, money2, projectWorkDate, togglePaidEntry } from '../components/WorkLog.jsx'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -499,7 +499,12 @@ export default function Finance() {
               <Field label="Category"><Select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} options={draft.type === 'income' ? INCOME_CATS : EXPENSE_CATS} /></Field>
             </div>
             {draft.type === 'expense' && draft.projectId && (
-              <Field label="Budget line" hint="Pay against an agreed line (advance or balance), or add it as a new cost. Picking a line fills the description, the payee, the category and the open balance.">
+              <Field label="Budget line" hint={(() => {
+                const open = (state.projects.find((p) => p.id === draft.projectId)?.budget?.lines || []).filter((l) => !l.txId && lineBalance(l) > 0)
+                return !draft.budgetLineId && open.length
+                  ? `${open.length} budget line${open.length === 1 ? ' is' : 's are'} still owed on this project. Pick the one this payment settles, so it is not counted twice (once here, once as owed).`
+                  : 'Pay against an agreed line (advance or balance), or add it as a new cost. Picking a line fills the description, the payee, the category and the open balance.'
+              })()}>
                 <Select value={draft.budgetLineId || ''} onChange={(e) => setDraft(pickLine(draft, e.target.value))}
                   options={[['', 'New cost in the budget'], ...((state.projects.find((p) => p.id === draft.projectId)?.budget?.lines || []).filter((l) => !l.txId).map((l) => [l.id, `${l.description} · ${money(lineEstimate(l), cur)} agreed${linePaid(l) ? `, ${money(linePaid(l), cur)} paid` : ''}`]))]} />
               </Field>
@@ -535,6 +540,7 @@ function TeamWork() {
   const [who, setWho] = useState('')
   const [year, setYear] = useState(String(new Date().getFullYear()))
   const [allOwed, setAllOwed] = useState(false)
+  const [pay, setPay] = useState(null) // a budget-tied job is settled through the Pay dialog, which writes Finance, the budget and the job at once
   const log = state.worklog || []
   const years = [...new Set([String(new Date().getFullYear()), ...log.map((e) => (e.date || '').slice(0, 4)).filter(Boolean)])].sort().reverse()
 
@@ -574,6 +580,7 @@ function TeamWork() {
 
   return (
     <div className="teamwork">
+      {pay && <PaymentModal project={pay.project} line={pay.line} onClose={() => setPay(null)} />}
       <section className="panel tw-owed">
         <div className="panel-head">
           <h2>Owed right now</h2>
@@ -605,7 +612,9 @@ function TeamWork() {
                     <span className="muted small">{fmtDate(e.date, { day: 'numeric', month: 'short', year: 'numeric' })} · waiting {days} day{days === 1 ? '' : 's'}</span>
                   </div>
                   <div className="tw-owed-amount">{money2(e.amount)}</div>
-                  <Button size="sm" variant="ghost" onClick={() => togglePaidEntry(update, e.id)}>Mark paid</Button>
+                  {e.budgetLineId
+                    ? <Button size="sm" variant="ghost" onClick={() => { const t = lineOfJob(state, e); if (t) setPay(t) }} title="From a project budget: record the payment and Finance, the budget and this job agree">Record payment</Button>
+                    : <Button size="sm" variant="ghost" onClick={() => togglePaidEntry(update, e.id)}>Mark paid</Button>}
                 </li>
               ))}
             </ul>
