@@ -12,6 +12,9 @@ export async function transcribe({ apiKey, file, language = '', prompt = '' }) {
   fd.append('timestamp_granularities[]', 'segment')
   if (language) fd.append('language', language)
   if (prompt) fd.append('prompt', prompt.slice(0, 800))
+  // A refused key makes OpenAI drop the upload mid-way, which browsers report as a network
+  // failure. One tiny request first turns that into a plain answer before 5 MB go up the wire.
+  if ((await probe(apiKey)) === 'auth') throw new Error(KEY_REFUSED)
   let res
   try {
     res = await fetch('https://api.openai.com/v1/audio/transcriptions', { method: 'POST', headers: { Authorization: `Bearer ${apiKey}` }, body: fd })
@@ -23,7 +26,7 @@ export async function transcribe({ apiKey, file, language = '', prompt = '' }) {
     // proxy limit); if it fails too, every call with a key is blocked from this device.
     const small = await probe(apiKey)
     if (small === 'ok') throw new Error(`OpenAI answers this browser, but the upload of the song never arrived (${e.message}). Something on this device or network stops large requests to api.openai.com: an ad blocker or content filter (AdGuard, uBlock, NextDNS), a VPN, or a proxy. Try from a phone on mobile data to confirm.`)
-    if (small === 'auth') throw new Error('The key in Settings is wrong or was revoked (OpenAI refused it), and the upload itself did not get through either.')
+    if (small === 'auth') throw new Error(KEY_REFUSED)
     throw new Error(`Could not reach OpenAI at all from this browser (${e.message}). Check the connection, and switch off any ad blocker or VPN for this site, then try again.`)
   }
   if (!res.ok) {
@@ -36,6 +39,17 @@ export async function transcribe({ apiKey, file, language = '', prompt = '' }) {
   const data = await res.json()
   const segments = (data.segments || []).map((s) => ({ start: Math.round(s.start * 10) / 10, end: Math.round(s.end * 10) / 10, text: (s.text || '').trim() })).filter((s) => s.text)
   return { text: data.text || '', language: data.language || language, segments }
+}
+
+const KEY_REFUSED = 'OpenAI refused the key in Settings (wrong, revoked, or from another account). Make a new one at platform.openai.com/api-keys and paste it in Settings > Integrations > Transcription.'
+
+/* Settings > Test key: what OpenAI says about the key, in one line. */
+export async function checkOpenAIKey(apiKey) {
+  if (!apiKey) throw new Error('Paste the key first.')
+  const r = await probe(apiKey)
+  if (r === 'auth') throw new Error(KEY_REFUSED)
+  if (r === 'blocked') throw new Error('Could not reach OpenAI from this browser. Check the connection, and switch off any ad blocker or VPN for this site.')
+  return 'The key works. OpenAI answered.'
 }
 
 /* One small authenticated GET: 'ok' when OpenAI answers 200, 'auth' on 401, 'blocked' when the browser gets nothing. */

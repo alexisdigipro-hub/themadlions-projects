@@ -9,6 +9,7 @@ import { authorizeUrl, clearOauth, pcloudPing, redirectUri, takeOauth } from '..
 import { remote, supabase } from '../lib/supabase.js'
 
 import { testKey } from '../lib/ai.js'
+import { checkOpenAIKey } from '../lib/transcribe.js'
 import { download } from '../lib/dates.js'
 
 export default function Settings() {
@@ -376,7 +377,10 @@ export default function Settings() {
           <h2>Transcription</h2>
           <p className="muted small">Lyrics and timings from the song file with OpenAI Whisper, in the Music tab of music video projects. About $0.006 per minute of audio. The key stays in this browser.</p>
           <Field label="OpenAI API key">
-            <Input type="password" value={state.settings.openaiKey || ''} onChange={(e) => update((s) => { s.settings.openaiKey = e.target.value.trim(); return s })} placeholder="sk-…" autoComplete="off" />
+            <div className="row-actions">
+              <Input type="password" value={state.settings.openaiKey || ''} onChange={(e) => update((s) => { s.settings.openaiKey = e.target.value.trim(); return s })} placeholder="sk-…" autoComplete="off" />
+              <Button onClick={() => checkOpenAIKey(state.settings.openaiKey).then((m) => toast(m, 'ok')).catch((e) => toast(e.message, 'error'))} disabled={!state.settings.openaiKey}>Test key</Button>
+            </div>
           </Field>
           {state.settings.openaiKey && <p className="small under">Key saved on this device.</p>}
         </section>
