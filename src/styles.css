@@ -2340,7 +2340,7 @@ html[data-theme='light'] .chat-box { border-color: transparent; }
 .btn.disabled { opacity: .5; pointer-events: none; }
 
 /* ---------- chat rooms (Telegram-style list + room) ---------- */
-.chat2 { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 14px; height: calc(100vh - 140px); min-height: 480px; }
+.chat2 { display: grid; grid-template-columns: 384px minmax(0, 1fr); gap: 14px; height: calc(100vh - 140px); min-height: 480px; }
 .chat2 .chat-box, .chat-embedded .chat-box { min-height: 0; height: 100%; }
 .chat2 .chat-scroll, .chat-embedded .chat-scroll { max-height: none; }
 .chat-embedded { height: calc(100vh - 300px); min-height: 460px; }
