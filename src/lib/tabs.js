@@ -9,6 +9,8 @@ export function projectTabs(project) {
   const cat = project?.category
   return [
     { to: '', label: 'Overview', end: true, key: 'projects', icon: 'overview', fixed: true },
+    // opt-in: off until Edit details > Tabs switches it on, on old projects too (they store no hide-list)
+    { to: 'chat', label: 'Chat', key: 'projects', icon: 'chat', optIn: true },
     ...(cat === 'Music Video' ? [{ to: 'music', label: 'Music', key: 'music', icon: 'music' }] : []),
     ...(cat === 'Event' ? [] : [
       { to: 'script', label: 'Script', key: 'script', icon: 'script' },
@@ -29,14 +31,28 @@ export function projectTabs(project) {
   ]
 }
 
+const OPT_IN = new Set(['chat'])
 export function tabHidden(project, to) {
-  return Array.isArray(project?.hiddenTabs) && project.hiddenTabs.includes(to)
+  if (Array.isArray(project?.hiddenTabs) && project.hiddenTabs.includes(to)) return true
+  // an opt-in tab is hidden unless the project lists it in `shownTabs`, so it never appears unasked
+  if (OPT_IN.has(to)) return !(Array.isArray(project?.shownTabs) && project.shownTabs.includes(to))
+  return false
+}
+
+/* The change to store when a tab chip is toggled: opt-in tabs live in shownTabs, the rest in hiddenTabs. */
+export function toggleTab(project, to) {
+  if (OPT_IN.has(to)) {
+    const shown = Array.isArray(project?.shownTabs) ? project.shownTabs : []
+    return { shownTabs: shown.includes(to) ? shown.filter((t) => t !== to) : [...shown, to] }
+  }
+  const hidden = Array.isArray(project?.hiddenTabs) ? project.hiddenTabs : []
+  return { hiddenTabs: hidden.includes(to) ? hidden.filter((t) => t !== to) : [...hidden, to] }
 }
 
 /* Every tab a project of this category could hide: all but Overview. A new project starts with
    this list, so it opens with Overview alone and the rest are switched on one by one. */
 export function allHideable(project) {
-  return projectTabs(project).filter((t) => !t.fixed).map((t) => t.to)
+  return projectTabs(project).filter((t) => !t.fixed && !t.optIn).map((t) => t.to)
 }
 
 /* When the category changes, tabs that only exist in the new category (Music for a music video,
@@ -44,6 +60,6 @@ export function allHideable(project) {
 export function hiddenAfterCategory(project, nextCategory) {
   const before = new Set(projectTabs(project).map((t) => t.to))
   const hidden = new Set(Array.isArray(project?.hiddenTabs) ? project.hiddenTabs : [])
-  for (const t of projectTabs({ ...project, category: nextCategory })) if (!before.has(t.to) && !t.fixed) hidden.add(t.to)
+  for (const t of projectTabs({ ...project, category: nextCategory })) if (!before.has(t.to) && !t.fixed && !t.optIn) hidden.add(t.to)
   return [...hidden]
 }

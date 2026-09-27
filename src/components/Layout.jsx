@@ -4,6 +4,7 @@ import { can, useCurrentUser, useStore, whenMs } from '../lib/store.jsx'
 import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
 import { useToast } from './ui.jsx'
+import { loadRead, totalUnread, unreadByRoom } from '../lib/chat.js'
 
 function Logo({ name, subtitle, logo }) {
   return (
@@ -22,13 +23,14 @@ export default function Layout() {
   const user = useCurrentUser()
   const nav = useNavigate()
   const [open, setOpen] = useState(false)
-  const [readAt, setReadAt] = useState(() => localStorage.getItem('tml_chat_read') || '')
+  const [readMap, setReadMap] = useState(loadRead)
   useEffect(() => {
-    const h = () => setReadAt(localStorage.getItem('tml_chat_read') || '')
+    const h = () => setReadMap(loadRead())
     window.addEventListener('tml-chat-read', h)
     return () => window.removeEventListener('tml-chat-read', h)
   }, [])
-  const unread = (state.chat || []).filter((m) => m.createdAt > readAt && m.userId !== user?.id).length
+  // every room this person is in, so a group or a direct message counts as much as the team room
+  const unread = totalUnread(unreadByRoom(state, user, readMap))
 
   /* Answers left by clients on delivery pages. Same idea as the chat badge: what came in since the
      last time the Share page was opened. */

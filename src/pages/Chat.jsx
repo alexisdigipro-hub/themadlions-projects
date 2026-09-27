@@ -1,116 +1,537 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Button, Confirm, Field, Input, PageHead, useToast } from '../components/ui.jsx'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Button, Confirm, Field, Input, Modal, useIsMobile, useToast } from '../components/ui.jsx'
 import { canSendNotices, today as todayISO, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { addDays, fmtDate } from '../lib/dates.js'
-import { SendNoticeModal, SentNotices, sendAutoNotice, teamExcept } from '../components/Notices.jsx'
+import { SendNoticeModal, SentNotices, sendAutoNotice } from '../components/Notices.jsx'
+import { deleteFile, fileIcon, fileUrl, fmtBytes, uploadFile } from '../lib/files.js'
+import { compress } from '../lib/photos.js'
+import { useProject } from './Project.jsx'
+import * as C from '../lib/chat.js'
 
-export const CHAT_READ_KEY = 'tml_chat_read'
-const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
+/*
+  Chat, Telegram-style. Left: the rooms (team, one per project that switched it on, groups made
+  by administrators, direct conversations), under folder tabs the person makes for themselves.
+  Right: the room, with replies, edits, photos and files, and @mentions. On a phone the two are
+  separate screens. The same room component is the Chat tab inside a project.
+*/
+
 const timeOf = (iso) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 const dayOf = (iso) => (iso || '').slice(0, 10)
+const dayLabel = (d) => {
+  const t0 = todayISO()
+  return d === t0 ? 'Today' : d === addDays(t0, -1) ? 'Yesterday' : fmtDate(d, { weekday: 'long', day: 'numeric', month: 'long' })
+}
+const listTime = (iso) => {
+  if (!iso) return ''
+  const d = dayOf(iso)
+  return d === todayISO() ? timeOf(iso) : fmtDate(d, { day: 'numeric', month: 'short' })
+}
+const isImage = (a) => (a?.type || '').startsWith('image/')
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
+/* Signed links for attachments, remembered for the session so a long thread does not ask the server once per picture. */
+const urlCache = new Map()
+function useAttachmentUrl(a) {
+  const [url, setUrl] = useState(() => urlCache.get(a?.id)?.url || '')
+  useEffect(() => {
+    if (!a) return
+    const hit = urlCache.get(a.id)
+    if (hit && hit.until > Date.now()) { setUrl(hit.url); return }
+    let on = true
+    fileUrl(a).then((u) => { if (!on) return; if (u) urlCache.set(a.id, { url: u, until: Date.now() + 50 * 60 * 1000 }); setUrl(u || '') })
+    return () => { on = false }
+  }, [a?.id])
+  return url
+}
+
+function RoomAvatar({ room, size = 42 }) {
+  const style = { width: size, height: size, ...(room.color ? { '--rc': room.color } : {}) }
+  return (
+    <span className={`chat-ravatar ${room.kind}`} style={style}>
+      {room.photo ? <img src={room.photo} alt="" /> : room.initials || '?'}
+    </span>
+  )
+}
+
+/* ---------- the page ---------- */
 export default function Chat() {
+  const { room: roomParam } = useParams()
+  const { state } = useStore()
+  const user = useCurrentUser()
+  const mobile = useIsMobile()
+  const nav = useNavigate()
+  const active = roomParam || (mobile ? '' : C.TEAM)
+  const room = active ? C.roomOf(state, user, active) : null
+  useEffect(() => { if (roomParam && !room) nav('/chat', { replace: true }) }, [roomParam, !!room])
+  return (
+    <div className={`chat-page chat2 ${active ? 'has-room' : ''}`}>
+      {(!mobile || !active) && <RoomList activeId={active} />}
+      {(!mobile || active) && (room ? <ChatRoom key={room.id} room={room} onBack={mobile ? () => nav('/chat') : undefined} /> : <div className="chat-box chat-none muted">Pick a conversation</div>)}
+    </div>
+  )
+}
+
+/* The Chat tab inside a project: the project's room, nothing else around it. */
+export function ProjectChat() {
+  const { project } = useProject()
+  const { state } = useStore()
+  const user = useCurrentUser()
+  const room = C.roomOf(state, user, C.projectRoom(project.id)) || { id: C.projectRoom(project.id), kind: 'project', name: project.title, sub: project.category, projectId: project.id, color: project.color, initials: 'P' }
+  return (
+    <div className="chat-page chat-embedded">
+      <ChatRoom room={room} embedded />
+    </div>
+  )
+}
+
+/* ---------- the list ---------- */
+function RoomList({ activeId }) {
+  const { state } = useStore()
+  const user = useCurrentUser()
+  const nav = useNavigate()
+  const isAdmin = user?.role === 'admin'
+  const canNotice = canSendNotices(state, user)
+  const [folderId, setFolderId] = useState(() => { try { return localStorage.getItem('tml_chat_folder') || 'all' } catch { return 'all' } })
+  const [q, setQ] = useState('')
+  const [readMap, setReadMap] = useState(C.loadRead)
+  const [group, setGroup] = useState(null) // null | 'new' | chat row
+  const [direct, setDirect] = useState(false)
+  const [folders, setFolders] = useState(false)
+  const [notice, setNotice] = useState(false)
+  const [sent, setSent] = useState(false)
+  useEffect(() => {
+    const h = () => setReadMap(C.loadRead())
+    window.addEventListener('tml-chat-read', h)
+    return () => window.removeEventListener('tml-chat-read', h)
+  }, [])
+  useEffect(() => { try { localStorage.setItem('tml_chat_folder', folderId) } catch {} }, [folderId])
+
+  const rooms = useMemo(() => C.roomsFor(state, user), [state.users, state.projects, state.chats, user])
+  const unread = useMemo(() => C.unreadByRoom(state, user, readMap, rooms), [state.chat, rooms, readMap, user])
+  const allFolders = C.foldersFor(user)
+  const folder = allFolders.find((f) => f.id === folderId) || allFolders[0]
+  const shown = useMemo(() => {
+    const inFolder = C.roomsInFolder(folder, rooms)
+    const needle = q.trim().toLowerCase()
+    return C.sortRooms(needle ? inFolder.filter((r) => r.name.toLowerCase().includes(needle)) : inFolder, state.chat)
+  }, [folder, rooms, q, state.chat])
+  const folderUnread = (f) => C.totalUnread(Object.fromEntries(C.roomsInFolder(f, rooms).map((r) => [r.id, unread[r.id] || 0])))
+  const legacy = state.chatRooms === false
+
+  return (
+    <aside className="chat-list">
+      <div className="chat-list-head">
+        <h1>Chat</h1>
+        <Button size="sm" variant="ghost" onClick={() => setDirect(true)} title="Write to one person">+ Message</Button>
+        {isAdmin && <Button size="sm" variant="primary" onClick={() => setGroup('new')} title="A group of chosen people">+ Group</Button>}
+      </div>
+      {legacy && <p className="chat-legacy">Rooms are not switched on yet: run supabase/chat_rooms.sql in the SQL editor. Until then only the team room works.</p>}
+      <div className="chat-folders" role="tablist">
+        {allFolders.map((f) => {
+          const n = folderUnread(f)
+          return (
+            <button key={f.id} type="button" role="tab" aria-selected={f.id === folder.id} className={f.id === folder.id ? 'on' : ''} onClick={() => setFolderId(f.id)}>
+              {f.name}{n > 0 && <span className="chat-fbadge">{n}</span>}
+            </button>
+          )
+        })}
+        <button type="button" className="chat-folders-edit" onClick={() => setFolders(true)} title="Your folders">Folders…</button>
+      </div>
+      <div className="chat-search"><Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" /></div>
+      <div className="chat-rooms">
+        {!shown.length && <p className="muted small chat-rooms-empty">{folder.custom ? 'This folder is empty. Add conversations to it under Folders.' : 'Nothing here yet.'}</p>}
+        {shown.map((r) => {
+          const last = C.lastMessage(state.chat, r.id)
+          const preview = last ? `${last.userId === user?.id ? 'You' : (last.userName || '').split(' ')[0]}: ${last.text || (last.attachments?.length ? (isImage(last.attachments[0]) ? 'Photo' : last.attachments[0].name) : '')}` : r.sub
+          const n = unread[r.id] || 0
+          return (
+            <button key={r.id} type="button" className={`chat-room-item ${r.id === activeId ? 'active' : ''}`} onClick={() => nav(`/chat/${encodeURIComponent(r.id)}`)} disabled={legacy && r.kind !== 'team'}>
+              <RoomAvatar room={r} />
+              <span className="chat-rmain">
+                <span className="chat-rtop"><strong>{r.name}</strong><small>{listTime(last?.createdAt)}</small></span>
+                <span className="chat-rbottom"><span className="chat-rprev">{preview}</span>{n > 0 && <span className="chat-rbadge">{n}</span>}</span>
+              </span>
+            </button>
+          )
+        })}
+      </div>
+      {canNotice && (
+        <div className="chat-list-foot">
+          <Button size="sm" variant="ghost" onClick={() => setSent(true)}>Sent notices</Button>
+          <Button size="sm" variant="ghost" onClick={() => setNotice(true)}>Send notice</Button>
+        </div>
+      )}
+      <GroupModal open={!!group} group={group === 'new' ? null : group} onClose={() => setGroup(null)} onSaved={(id) => { setGroup(null); nav(`/chat/${encodeURIComponent(id)}`) }} />
+      <DirectModal open={direct} onClose={() => setDirect(false)} onPick={(id) => { setDirect(false); nav(`/chat/${encodeURIComponent(id)}`) }} />
+      <FoldersModal open={folders} onClose={() => setFolders(false)} rooms={rooms} />
+      <SendNoticeModal open={notice} onClose={() => setNotice(false)} />
+      <Modal open={sent} title="Sent notices" onClose={() => setSent(false)} wide>{sent && <SentNotices />}</Modal>
+    </aside>
+  )
+}
+
+/* Administrators make a group: a name and the people in it. The maker is always a member. */
+function GroupModal({ open, group, onClose, onSaved }) {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
-  const [text, setText] = useState('')
-  const [notice, setNotice] = useState(false)
-  const [showSent, setShowSent] = useState(false)
-  const endRef = useRef(null)
-  const chat = state.chat || []
+  const [name, setName] = useState('')
+  const [members, setMembers] = useState([])
+  useEffect(() => { if (open) { setName(group?.name || ''); setMembers(group?.members || [user?.id].filter(Boolean)) } }, [open, group?.id])
+  const people = state.users.filter((u) => u.active !== false)
+  const toggle = (id) => setMembers((m) => (id === user?.id ? m : m.includes(id) ? m.filter((x) => x !== id) : [...m, id]))
+  const save = () => {
+    const n = name.trim()
+    if (!n) return toast('Give the group a name.', 'error')
+    if (members.length < 2) return toast('Pick at least one other person.', 'error')
+    const id = group?.id || uid()
+    update((s) => {
+      const list = s.chats || []
+      const i = list.findIndex((c) => c.id === id)
+      const row = { id, kind: 'group', name: n, members, createdBy: group?.createdBy || user?.id || '', createdAt: group?.createdAt || new Date().toISOString() }
+      s.chats = i >= 0 ? list.map((c) => (c.id === id ? row : c)) : [...list, row]
+      return s
+    })
+    toast(group ? 'Group updated' : 'Group created', 'ok')
+    onSaved(id)
+  }
+  const remove = () => {
+    update((s) => { s.chats = (s.chats || []).filter((c) => c.id !== group.id); s.chat = (s.chat || []).filter((m) => C.messageRoom(m) !== group.id); return s })
+    toast('Group deleted', 'ok')
+    onClose()
+  }
+  return (
+    <Modal open={open} title={group ? 'Edit group' : 'New group'} onClose={onClose} footer={<>{group && <Confirm onConfirm={remove} label="Delete group">Delete group</Confirm>}<span className="grow" /><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save}>{group ? 'Save' : 'Create'}</Button></>}>
+      <div className="stack">
+        <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Camera crew" autoFocus /></Field>
+        <div className="field">
+          <span className="field-label">Members</span>
+          <div className="chips-static">
+            {people.map((p) => <button key={p.id} type="button" className={`chip ${members.includes(p.id) ? 'on' : ''}`} onClick={() => toggle(p.id)} disabled={p.id === user?.id}>{p.name}{p.id === user?.id ? <small>you</small> : null}</button>)}
+          </div>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+/* One person to write to. The conversation row is made when the first message is sent. */
+function DirectModal({ open, onClose, onPick }) {
+  const { state } = useStore()
+  const user = useCurrentUser()
+  const [q, setQ] = useState('')
+  useEffect(() => { if (open) setQ('') }, [open])
+  const people = state.users.filter((u) => u.active !== false && u.id !== user?.id && (!q.trim() || (u.name || '').toLowerCase().includes(q.trim().toLowerCase())))
+  return (
+    <Modal open={open} title="New message" onClose={onClose}>
+      <div className="stack">
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search the team" autoFocus />
+        {!people.length && <p className="muted small">Nobody else in the team yet.</p>}
+        <ul className="plain chat-people">
+          {people.map((p) => (
+            <li key={p.id}>
+              <button type="button" className="chat-room-item" onClick={() => onPick(C.directRoom(user.id, p.id))}>
+                <RoomAvatar room={{ kind: 'direct', photo: p.profile?.thumb || '', initials: (p.name || '?').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase() }} size={36} />
+                <span className="chat-rmain"><strong>{p.name}</strong><span className="chat-rprev">{p.profile?.position || p.profile?.dept || ''}</span></span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </Modal>
+  )
+}
+
+/* The person's own folders: a name and the conversations inside. Saved in their profile, so they follow them to any device. */
+function FoldersModal({ open, onClose, rooms }) {
+  const { state, update } = useStore()
+  const user = useCurrentUser()
+  const toast = useToast()
+  const [list, setList] = useState([])
+  useEffect(() => { if (open) setList((Array.isArray(user?.profile?.chatFolders) ? user.profile.chatFolders : []).map((f) => ({ ...f, rooms: [...(f.rooms || [])] }))) }, [open])
+  const patch = (id, fn) => setList((l) => l.map((f) => (f.id === id ? fn({ ...f }) : f)))
+  const toggle = (id, roomId) => patch(id, (f) => ({ ...f, rooms: f.rooms.includes(roomId) ? f.rooms.filter((r) => r !== roomId) : [...f.rooms, roomId] }))
+  const save = () => {
+    const clean = list.map((f) => ({ id: f.id, name: (f.name || '').trim(), rooms: f.rooms })).filter((f) => f.name)
+    update((s) => {
+      const u = s.users.find((x) => x.id === user?.id)
+      if (u) u.profile = { ...(u.profile || {}), chatFolders: clean }
+      return s
+    })
+    toast('Folders saved', 'ok')
+    onClose()
+  }
+  return (
+    <Modal open={open} title="Your folders" onClose={onClose} footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></>}>
+      <div className="stack">
+        <p className="small muted">All, Projects, Groups and People are always there. Your own folders are yours alone: pick a name and the conversations that go in it.</p>
+        {list.map((f) => (
+          <div key={f.id} className="chat-folder-edit">
+            <div className="row-actions">
+              <Input value={f.name} onChange={(e) => patch(f.id, (x) => ({ ...x, name: e.target.value }))} placeholder="Folder name" />
+              <Button size="sm" variant="ghost" onClick={() => setList((l) => l.filter((x) => x.id !== f.id))} title="Remove folder">×</Button>
+            </div>
+            <div className="chips-static">
+              {rooms.map((r) => <button key={r.id} type="button" className={`chip ${f.rooms.includes(r.id) ? 'on' : ''}`} onClick={() => toggle(f.id, r.id)}>{r.name}</button>)}
+            </div>
+          </div>
+        ))}
+        <Button variant="ghost" onClick={() => setList((l) => [...l, { id: uid(), name: '', rooms: [] }])}>+ Add folder</Button>
+      </div>
+    </Modal>
+  )
+}
+
+/* ---------- one room ---------- */
+function ChatRoom({ room, embedded, onBack }) {
+  const { state, update } = useStore()
+  const user = useCurrentUser()
+  const toast = useToast()
   const isAdmin = user?.role === 'admin'
-  const canNotice = canSendNotices(state, user)
+  const roomId = room.id
+  const msgs = useMemo(() => C.messagesIn(state.chat, roomId), [state.chat, roomId])
+  const [text, setText] = useState('')
+  const [replyTo, setReplyTo] = useState(null)
+  const [editing, setEditing] = useState(null)
+  const [pending, setPending] = useState([]) // files chosen, not sent yet
+  const [busy, setBusy] = useState('')
+  const [caret, setCaret] = useState(0)
+  const [editGroup, setEditGroup] = useState(false)
+  const endRef = useRef(null)
+  const scrollRef = useRef(null)
+  const inputRef = useRef(null)
+  const fileRef = useRef(null)
+  const byId = useMemo(() => Object.fromEntries((state.chat || []).map((m) => [m.id, m])), [state.chat])
+  const photoOf = (userId) => state.users.find((u) => u.id === userId)?.profile?.thumb || ''
+  const nameRe = useMemo(() => {
+    const names = state.users.filter((u) => u.active !== false && u.name).flatMap((u) => [u.name.trim(), u.name.trim().split(/\s+/)[0]]).filter((n) => n.length > 1)
+    const uniq = [...new Set(names)].sort((a, b) => b.length - a.length).map(escapeRe)
+    return uniq.length ? new RegExp(`(@(?:${uniq.join('|')}))(?![\\p{L}\\p{N}])`, 'giu') : null
+  }, [state.users])
 
   const groups = useMemo(() => {
     const out = []
     let last = null
-    for (const m of [...chat].sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))) {
+    for (const m of msgs) {
       const d = dayOf(m.createdAt)
       if (!last || last.day !== d) { last = { day: d, items: [] }; out.push(last) }
       last.items.push(m)
     }
     return out
-  }, [chat])
+  }, [msgs])
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' })
-    const latest = chat.reduce((a, m) => (m.createdAt > a ? m.createdAt : a), '')
-    if (latest) localStorage.setItem(CHAT_READ_KEY, latest)
-    window.dispatchEvent(new Event('tml-chat-read'))
-  }, [chat.length])
+    const latest = msgs.reduce((a, m) => (m.createdAt > a ? m.createdAt : a), '')
+    if (latest) C.markRead(roomId, latest)
+  }, [msgs.length, roomId])
 
-  // Profile photo of whoever wrote a message, so the thread shows faces once people fill theirs in.
-  const photoOf = (userId) => state.users.find((u) => u.id === userId)?.profile?.thumb || ''
+  const mention = C.mentionQuery(text, caret)
+  const mentionHits = mention ? state.users.filter((u) => u.active !== false && u.id !== user?.id && (u.name || '').toLowerCase().includes(mention.q.toLowerCase())).slice(0, 6) : []
+  const pickMention = (u) => {
+    const before = text.slice(0, mention.at)
+    const after = text.slice(caret)
+    const next = `${before}@${u.name} ${after}`
+    setText(next)
+    const pos = before.length + u.name.length + 2
+    setCaret(pos)
+    requestAnimationFrame(() => { inputRef.current?.focus(); inputRef.current?.setSelectionRange(pos, pos) })
+  }
 
-  const send = () => {
+  const addFiles = (list) => {
+    const arr = Array.from(list || []).filter((f) => f.size <= 50 * 1024 * 1024)
+    if (arr.length < (list?.length || 0)) toast('Files over 50 MB were left out.', 'error')
+    setPending((p) => [...p, ...arr])
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  const send = async () => {
     const t = text.trim()
-    if (!t) return
-    const m = { id: uid(), userId: user?.id || '', userName: user?.name || 'Someone', text: t, source: 'app', createdAt: new Date().toISOString() }
-    update((s) => { s.chat = [...(s.chat || []), m]; return s })
-    // One pop-up per sender, counting up, so a busy shooting day does not become a wall of modals.
-    sendAutoNotice(update, {
-      kind: 'chatMessage', key: `chat:${user?.id || ''}`, count: true,
-      fromId: user?.id, fromName: user?.name, to: teamExcept(state, user?.id),
-      title: `Message from ${user?.name || 'the team'}`, body: t.slice(0, 200),
+    if (editing) {
+      if (!t) return
+      update((s) => {
+        const m = (s.chat || []).find((x) => x.id === editing.id)
+        if (m && m.text !== t) { m.text = t; m.editedAt = new Date().toISOString(); m.mentions = C.parseMentions(t, s.users) }
+        return s
+      })
+      setEditing(null); setText(''); return
+    }
+    if (!t && !pending.length) return
+    const id = uid()
+    const attachments = []
+    if (pending.length) {
+      setBusy('Uploading…')
+      try {
+        for (let i = 0; i < pending.length; i++) {
+          let f = pending[i]
+          setBusy(`Uploading ${i + 1}/${pending.length}…`)
+          let w, h
+          if (f.type.startsWith('image/') && !/gif$/i.test(f.type)) {
+            const c = await compress(f, { max: 1600, quality: 0.82 })
+            w = c.w; h = c.h
+            f = new File([c.blob], f.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' })
+          }
+          const attId = uid()
+          const { path } = await uploadFile({ projectId: C.roomFolder(roomId), id: attId, file: f })
+          attachments.push({ id: attId, name: f.name, type: f.type, bytes: f.size, path, ...(w ? { w, h } : {}) })
+        }
+      } catch (e) {
+        setBusy('')
+        return toast(e.message, 'error')
+      }
+      setBusy('')
+    }
+    const mentions = C.parseMentions(t, state.users).filter((x) => x !== user?.id)
+    const m = { id, chatId: roomId, userId: user?.id || '', userName: user?.name || 'Someone', text: t, source: 'app', createdAt: new Date().toISOString(), replyTo: replyTo?.id || '', editedAt: '', attachments, mentions }
+    update((s) => {
+      if (room.unsaved && !(s.chats || []).some((c) => c.id === roomId)) s.chats = [...(s.chats || []), { id: roomId, kind: 'direct', name: '', members: room.members, createdBy: user?.id || '', createdAt: new Date().toISOString() }]
+      s.chat = [...(s.chat || []), m]
+      return s
     })
-    setText('')
+    const recipients = C.roomRecipients(state, room, user?.id)
+    const where = room.kind === 'team' ? '' : ` in ${room.name}`
+    const body = t || (attachments.length ? (isImage(attachments[0]) ? 'Sent a photo' : `Sent ${attachments[0].name}`) : '')
+    // One pop-up per sender and room, counting up, so a busy shooting day does not become a wall of modals.
+    sendAutoNotice(update, { kind: 'chatMessage', key: `chat:${roomId}:${user?.id || ''}`, count: true, fromId: user?.id, fromName: user?.name, to: recipients.filter((r) => !mentions.includes(r)), title: `Message from ${user?.name || 'the team'}${where}`, body: body.slice(0, 200) })
+    // A mention always reaches the person named, even when they switched chat pop-ups off.
+    if (mentions.length) sendAutoNotice(update, { kind: 'chatMention', key: `mention:${id}`, fromId: user?.id, fromName: user?.name, to: mentions.filter((x) => recipients.includes(x)), title: `${user?.name || 'Someone'} mentioned you${where}`, body: body.slice(0, 200) })
+    setText(''); setPending([]); setReplyTo(null); setCaret(0)
   }
-  const remove = (id) => update((s) => { s.chat = (s.chat || []).filter((m) => m.id !== id); return s })
-  const onKey = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }
-  const dayLabel = (d) => {
-    const t0 = todayISO()
-    return d === t0 ? 'Today' : d === addDays(t0, -1) ? 'Yesterday' : fmtDate(d, { weekday: 'long', day: 'numeric', month: 'long' })
+
+  const remove = (m) => {
+    ;(m.attachments || []).forEach((a) => deleteFile(a.path).catch(() => {}))
+    update((s) => { s.chat = (s.chat || []).filter((x) => x.id !== m.id); return s })
   }
+  const startEdit = (m) => { setEditing(m); setReplyTo(null); setText(m.text); requestAnimationFrame(() => inputRef.current?.focus()) }
+  const startReply = (m) => { setReplyTo(m); setEditing(null); requestAnimationFrame(() => inputRef.current?.focus()) }
+  const cancelBar = () => { setEditing(null); setReplyTo(null); if (editing) setText('') }
+  const jumpTo = (id) => {
+    const el = scrollRef.current?.querySelector(`[data-msg="${id}"]`)
+    if (!el) return
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1200)
+  }
+  const onKey = (e) => {
+    if (e.key === 'Escape' && (editing || replyTo)) { e.preventDefault(); cancelBar(); return }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      if (mention && mentionHits.length) pickMention(mentionHits[0])
+      else send()
+    }
+  }
+  const renderText = (t) => {
+    if (!nameRe || !t.includes('@')) return t
+    const parts = t.split(nameRe)
+    return parts.map((p, i) => (i % 2 ? <b key={i} className="mention">{p}</b> : p))
+  }
+  const groupRow = room.kind === 'group' ? (state.chats || []).find((c) => c.id === roomId) : null
+  const membersOf = room.kind === 'team' ? state.users.filter((u) => u.active !== false) : room.kind === 'project' ? C.roomRecipients(state, room, '').map((id) => state.users.find((u) => u.id === id)).filter(Boolean) : (room.members || []).map((id) => state.users.find((u) => u.id === id)).filter(Boolean)
 
   return (
-    <div className="chat-page">
-      <PageHead title="Team chat" sub={`${state.users.filter((u) => u.active !== false).length} in the team`}>
-        {canNotice && <Button variant="ghost" onClick={() => setShowSent((v) => !v)}>{showSent ? 'Hide notices' : 'Sent notices'}</Button>}
-        {canNotice && <Button variant="primary" onClick={() => setNotice(true)}>Send notice</Button>}
-      </PageHead>
-      <SendNoticeModal open={notice} onClose={() => setNotice(false)} />
-      {showSent && canNotice && <div className="panel chat-tg"><div className="panel-head"><h2>Notices</h2></div><SentNotices /></div>}
-
-      <div className="chat-box">
-        <div className="chat-scroll">
-          {!chat.length && <p className="muted chat-empty">No messages yet. Say hi to the team.</p>}
-          {groups.map((g) => (
-            <div key={g.day} className="chat-day">
-              <div className="chat-day-label"><span>{dayLabel(g.day)}</span></div>
-              {g.items.map((m, i) => {
-                const mine = m.userId && m.userId === user?.id
-                const prev = g.items[i - 1]
-                const cont = prev && prev.userId === m.userId && prev.userName === m.userName && prev.source === m.source && new Date(m.createdAt) - new Date(prev.createdAt) < 5 * 60 * 1000
-                return (
-                  <div key={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''}`}>
-                    {!mine && (
-                      <span className="chat-avatar">
-                        {!cont && (photoOf(m.userId) ? <img src={photoOf(m.userId)} alt="" /> : initials(m.userName))}
-                      </span>
-                    )}
-                    <div className="chat-bubble-wrap">
-                      {!cont && !mine && (
-                        <div className="chat-who">{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>
-                      )}
-                      <div className="chat-bubble">
-                        {m.text}
-                        <span className="chat-time">{timeOf(m.createdAt)}</span>
-                      </div>
-                    </div>
-                    {(mine || isAdmin) && <Confirm onConfirm={() => remove(m.id)} label="Delete message">×</Confirm>}
-                  </div>
-                )
-              })}
-            </div>
-          ))}
-          <div ref={endRef} />
+    <div className="chat-box">
+      <div className="chat-head">
+        {onBack && <button type="button" className="icon-btn chat-back" onClick={onBack} aria-label="Back">‹</button>}
+        <RoomAvatar room={room} size={36} />
+        <div className="chat-head-main">
+          <strong>{room.name}</strong>
+          <span className="small muted" title={membersOf.map((u) => u.name).join(', ')}>
+            {room.kind === 'direct' ? room.sub || 'Direct message' : `${membersOf.length} ${membersOf.length === 1 ? 'person' : 'people'}`}
+          </span>
         </div>
+        {room.kind === 'project' && !embedded && <Link className="btn btn-ghost btn-sm" to={`/p/${room.projectId}`}>Open project</Link>}
+        {room.kind === 'direct' && room.otherId && <Link className="btn btn-ghost btn-sm" to={`/u/${room.otherId}`}>Profile</Link>}
+        {room.kind === 'group' && isAdmin && groupRow && <Button size="sm" variant="ghost" onClick={() => setEditGroup(true)}>Edit group</Button>}
+      </div>
+      <div className="chat-scroll" ref={scrollRef}>
+        {!msgs.length && <p className="muted chat-empty">{room.kind === 'team' ? 'No messages yet. Say hi to the team.' : room.kind === 'direct' ? `No messages with ${room.name} yet.` : 'No messages yet.'}</p>}
+        {groups.map((g) => (
+          <div key={g.day} className="chat-day">
+            <div className="chat-day-label"><span>{dayLabel(g.day)}</span></div>
+            {g.items.map((m, i) => {
+              const mine = m.userId && m.userId === user?.id
+              const prev = g.items[i - 1]
+              const cont = prev && prev.userId === m.userId && prev.userName === m.userName && new Date(m.createdAt) - new Date(prev.createdAt) < 5 * 60 * 1000
+              const quoted = m.replyTo ? byId[m.replyTo] : null
+              return (
+                <div key={m.id} data-msg={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''}`}>
+                  {!mine && (
+                    <span className="chat-avatar">
+                      {!cont && (photoOf(m.userId) ? <img src={photoOf(m.userId)} alt="" /> : (m.userName || '').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase())}
+                    </span>
+                  )}
+                  <div className="chat-bubble-wrap">
+                    {!cont && !mine && <div className="chat-who">{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>}
+                    <div className="chat-bubble">
+                      {m.replyTo && (
+                        <div className="chat-quote" onClick={() => quoted && jumpTo(quoted.id)} role={quoted ? 'button' : undefined}>
+                          {quoted ? <><b>{quoted.userId === user?.id ? 'You' : quoted.userName}</b><span>{quoted.text || (quoted.attachments?.length ? (isImage(quoted.attachments[0]) ? 'Photo' : quoted.attachments[0].name) : '')}</span></> : <span>Message deleted</span>}
+                        </div>
+                      )}
+                      {(m.attachments || []).map((a) => <Attachment key={a.id} a={a} />)}
+                      {m.text && <span className="chat-text">{renderText(m.text)}</span>}
+                      {m.editedAt && <span className="chat-edited">edited</span>}
+                      <span className="chat-time">{timeOf(m.createdAt)}</span>
+                    </div>
+                  </div>
+                  <span className="chat-msg-actions">
+                    <button type="button" className="icon-btn" title="Reply" onClick={() => startReply(m)}>↩</button>
+                    {mine && <button type="button" className="icon-btn" title="Edit" onClick={() => startEdit(m)}>✎</button>}
+                    {(mine || isAdmin) && <Confirm onConfirm={() => remove(m)} label="Delete message">×</Confirm>}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        ))}
+        <div ref={endRef} />
+      </div>
+      {state.chatRooms === false && room.kind !== 'team' ? (
+        <p className="chat-legacy">This room needs supabase/chat_rooms.sql to be run in the SQL editor first.</p>
+      ) : (
+      <div className="chat-compose-wrap">
+        {(replyTo || editing) && (
+          <div className="chat-bar">
+            <span className="grow">{editing ? <>Editing your message</> : <>Replying to <b>{replyTo.userId === user?.id ? 'yourself' : replyTo.userName}</b>: {(replyTo.text || 'attachment').slice(0, 80)}</>}</span>
+            <button type="button" className="icon-btn" onClick={cancelBar} aria-label="Cancel">×</button>
+          </div>
+        )}
+        {pending.length > 0 && (
+          <div className="chat-pending">
+            {pending.map((f, i) => <span key={i} className="chip on">{fileIcon(f.name, f.type)} {f.name} <small>{fmtBytes(f.size)}</small><button type="button" className="chip-x" onClick={() => setPending((p) => p.filter((_, j) => j !== i))} aria-label="Remove">×</button></span>)}
+          </div>
+        )}
         <div className="chat-compose">
-          <textarea className="input" rows={1} value={text} onChange={(e) => setText(e.target.value)} onKeyDown={onKey} placeholder="Write to the team…" title="Enter to send, Shift+Enter for a new line" />
-          <Button variant="primary" onClick={send} disabled={!text.trim()}>Send</Button>
+          {mention && mentionHits.length > 0 && (
+            <div className="chat-mention-pick">
+              {mentionHits.map((u) => <button key={u.id} type="button" onMouseDown={(e) => { e.preventDefault(); pickMention(u) }}>@{u.name}<small>{u.profile?.position || ''}</small></button>)}
+            </div>
+          )}
+          <input ref={fileRef} type="file" multiple hidden onChange={(e) => addFiles(e.target.files)} />
+          {!editing && <button type="button" className="icon-btn chat-attach" title="Photo or file" onClick={() => fileRef.current?.click()} disabled={!!busy}>📎</button>}
+          <textarea ref={inputRef} className="input" rows={1} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder={room.kind === 'direct' ? `Write to ${room.name}…` : 'Write a message… (@name to mention)'} title="Enter to send, Shift+Enter for a new line" disabled={!!busy} />
+          <Button variant="primary" onClick={send} disabled={!!busy || (!text.trim() && !pending.length)}>{busy || (editing ? 'Save' : 'Send')}</Button>
         </div>
       </div>
+      )}
+      {groupRow && <GroupModal open={editGroup} group={groupRow} onClose={() => setEditGroup(false)} onSaved={() => setEditGroup(false)} />}
     </div>
+  )
+}
+
+function Attachment({ a }) {
+  const url = useAttachmentUrl(a)
+  if (isImage(a)) {
+    return (
+      <a className="chat-att" href={url || undefined} target="_blank" rel="noreferrer" title={a.name}>
+        {url ? <img className="chat-att-img" src={url} alt={a.name} style={a.w && a.h ? { aspectRatio: `${a.w} / ${a.h}` } : undefined} loading="lazy" /> : <span className="chat-att-img chat-att-wait">…</span>}
+      </a>
+    )
+  }
+  return (
+    <a className="chat-file" href={url || undefined} target="_blank" rel="noreferrer">
+      <span className="file-ico">{fileIcon(a.name, a.type)}</span>
+      <span className="chat-file-main"><strong>{a.name}</strong><small>{fmtBytes(a.bytes || 0)}</small></span>
+    </a>
   )
 }

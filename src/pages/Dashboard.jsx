@@ -5,20 +5,22 @@ import { CATEGORIES, STATUSES, can, emptyProject, nextProjectCode, useCurrentUse
 import { fmtDate } from '../lib/dates.js'
 import { projectProgress } from '../lib/progress.js'
 import { compress } from '../lib/photos.js'
-import { allHideable, hiddenAfterCategory, projectTabs } from '../lib/tabs.js'
+import { allHideable, hiddenAfterCategory, projectTabs, tabHidden, toggleTab } from '../lib/tabs.js'
 
 /* The row of tab chips: on = shown, struck through = hidden, Overview fixed. Used by the project
    form and by the strip on the Overview, so switching a tab on is one tap either way. */
 export function TabPicker({ project, onChange }) {
-  const hidden = Array.isArray(project.hiddenTabs) ? project.hiddenTabs : []
-  const toggle = (to) => onChange(hidden.includes(to) ? hidden.filter((t) => t !== to) : [...hidden, to])
+  // onChange gets the fields to store: { hiddenTabs } or, for an opt-in tab such as Chat, { shownTabs }
   return (
     <div className="tab-pick">
-      {projectTabs(project).map((t) => (
-        <button key={t.to} type="button" className={`chip ${hidden.includes(t.to) ? '' : 'on'}`} disabled={t.fixed} aria-pressed={!hidden.includes(t.to)} onClick={() => toggle(t.to)}>
-          {t.label}
-        </button>
-      ))}
+      {projectTabs(project).map((t) => {
+        const on = !tabHidden(project, t.to)
+        return (
+          <button key={t.to} type="button" className={`chip ${on ? 'on' : ''}`} disabled={t.fixed} aria-pressed={on} onClick={() => onChange(toggleTab(project, t.to))}>
+            {t.label}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -69,7 +71,7 @@ export function ProjectForm({ value, onChange }) {
         </div>
       </Field>
       <Field label="Tabs" hint="A new project starts with Overview alone. Tap the tabs it needs; tap again to hide one. Nothing is deleted, a hidden tab keeps its data.">
-        <TabPicker project={value} onChange={(hiddenTabs) => onChange({ ...value, hiddenTabs })} />
+        <TabPicker project={value} onChange={(patch) => onChange({ ...value, ...patch })} />
       </Field>
       <div className="field">
         <span className="field-label">Colour</span>
