@@ -56,13 +56,26 @@ export async function deleteTrack(path) {
   await supabase.storage.from(BUCKET).remove([path])
 }
 const cache = new Map()
+/* Why the last trackUrl() came back empty, for the page to show instead of a silent blank player. */
+export let lastTrackError = ''
 export async function trackUrl(track) {
   if (!track) return ''
   if (!remote) return sessionUrls.get(track.id) || ''
+  if (!track.path) { lastTrackError = 'This track has no stored file. Remove it and upload the song again.'; return '' }
   const c = cache.get(track.path)
   if (c && c.exp > Date.now()) return c.url
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(track.path, 3600 * 3)
-  if (error || !data?.signedUrl) return ''
+  let data, error
+  try {
+    ;({ data, error } = await supabase.storage.from(BUCKET).createSignedUrl(track.path, 3600 * 3))
+  } catch (e) {
+    error = e
+  }
+  if (error || !data?.signedUrl) {
+    const msg = error?.message || 'no link came back'
+    lastTrackError = /not found|object/i.test(msg) ? `The file is missing from storage (${msg}).` : /jwt|token|auth|401|403|row-level|permission/i.test(msg) ? `Storage refused the request (${msg}). Sign out and in again.` : `Storage did not answer (${msg}). Check the connection and reload.`
+    return ''
+  }
+  lastTrackError = ''
   cache.set(track.path, { url: data.signedUrl, exp: Date.now() + 170 * 60 * 1000 })
   return data.signedUrl
 }

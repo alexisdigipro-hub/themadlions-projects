@@ -29,6 +29,9 @@ const listTime = (iso) => {
   return d === todayISO() ? timeOf(iso) : fmtDate(d, { day: 'numeric', month: 'short' })
 }
 const isImage = (a) => (a?.type || '').startsWith('image/')
+/* A colour per sender for their name inside group bubbles, stable for the same person. */
+const SENDER_HUES = [14, 36, 95, 160, 200, 230, 275, 320]
+const senderHue = (id) => { let h = 0; for (const c of String(id || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0; return SENDER_HUES[h % SENDER_HUES.length] }
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 /* pCloud folder for a room's files: a project's room under the project, the rest under Chat. */
@@ -474,14 +477,14 @@ function ChatRoom({ room, embedded, onBack }) {
               const quoted = m.replyTo ? byId[m.replyTo] : null
               return (
                 <div key={m.id} data-msg={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''}`}>
-                  {!mine && (
+                  {!mine && room.kind !== 'direct' && (
                     <span className="chat-avatar">
                       {!cont && (photoOf(m.userId) ? <img src={photoOf(m.userId)} alt="" /> : (m.userName || '').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase())}
                     </span>
                   )}
                   <div className="chat-bubble-wrap">
-                    {!cont && !mine && <div className="chat-who">{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>}
                     <div className="chat-bubble">
+                      {!cont && !mine && room.kind !== 'direct' && <div className="chat-who" style={{ '--who': `hsl(${senderHue(m.userId)} 55% 42%)` }}>{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>}
                       {m.replyTo && (
                         <div className="chat-quote" onClick={() => quoted && jumpTo(quoted.id)} role={quoted ? 'button' : undefined}>
                           {quoted ? <><b>{quoted.userId === user?.id ? 'You' : quoted.userName}</b><span>{quoted.text || (quoted.attachments?.length ? (isImage(quoted.attachments[0]) ? 'Photo' : quoted.attachments[0].name) : '')}</span></> : <span>Message deleted</span>}
@@ -528,9 +531,12 @@ function ChatRoom({ room, embedded, onBack }) {
           )}
           <input ref={fileRef} type="file" multiple hidden onChange={(e) => addFiles(e.target.files)} />
           {!editing && <button type="button" className="icon-btn chat-attach" title="Photo or file" onClick={() => fileRef.current?.click()} disabled={!!busy}>📎</button>}
-          <textarea ref={inputRef} className="input" rows={1} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder={room.kind === 'direct' ? `Write to ${room.name}…` : 'Write a message… (@name to mention)'} title="Enter to send, Shift+Enter for a new line" disabled={!!busy} />
-          <Button variant="primary" onClick={send} disabled={!!busy || (!text.trim() && !pending.length)}>{busy || (editing ? 'Save' : 'Send')}</Button>
+          <textarea ref={inputRef} className="input" rows={1} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Message" title="Enter to send, Shift+Enter for a new line. @name mentions someone" disabled={!!busy} />
+          <button type="button" className="chat-send" onClick={send} disabled={!!busy || (!text.trim() && !pending.length)} title={editing ? 'Save (Enter)' : 'Send (Enter)'} aria-label={editing ? 'Save' : 'Send'}>
+            {busy ? '…' : editing ? '✓' : <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4l17.4-7.5c.8-.4.8-1.5 0-1.8L3.4 3.6c-.7-.3-1.4.3-1.3 1l1.2 5.7c.1.4.4.7.8.7l9.4 1-9.4 1c-.4 0-.7.3-.8.7L2.1 19.4c-.1.7.6 1.3 1.3 1z" /></svg>}
+          </button>
         </div>
+        {busy && <div className="chat-bar chat-busy">{busy}</div>}
       </div>
       )}
       {groupRow && <GroupModal open={editGroup} group={groupRow} onClose={() => setEditGroup(false)} onSaved={() => setEditGroup(false)} />}
