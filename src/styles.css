@@ -2309,7 +2309,7 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 
 /* ---------- calendar: panel below the grid ---------- */
 .cal-layout.stacked { grid-template-columns: 1fr; }
-.cal-layout.stacked .cal-cell { min-height: 112px; }
+.cal-layout.stacked .cal-cell { min-height: 134px; } /* +20% on desktop (Alex); the phone rule below is untouched */
 .cal-layout.stacked .cal-side { width: auto; }
 .cal-ev[style*="#6B7280"] { opacity: .9; }
 @media (max-width: 820px) { .cal-layout.stacked .cal-cell { min-height: 64px; } }

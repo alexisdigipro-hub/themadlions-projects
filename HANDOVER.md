@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Calendar grid 20% taller on desktop (27 Sep, morning)
+Alex: "στο calendar, μπορεί να μεγαλώσει κι άλλο σε ύψος κατά 20%." `.cal-layout.stacked .cal-cell` min-height 112px → 134px; this is the one calendar grid shared by the top-level Calendar page and every project's Calendar tab. The phone rule (64px) is untouched. Rendered at 1440 px, cell measures 134px.
+
 ### Sidebar 10% wider on desktop (27 Sep, morning)
 Alex: "μεγάλωσε την πλαινή μπάρα μενού κατά 10% σε desktop." The one `--sidebar` CSS variable (232px → 255px) that sets the desktop grid column; the phone drawer has its own fixed 260px and is untouched. Rendered at 1440 px.
 
