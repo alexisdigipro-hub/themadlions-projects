@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Small: Download button on the player
+Alex: "a download button where the audio is." `downloadAudio()` in Music.jsx fetches the signed URL as a blob and clicks a blob link named `<track name>.<ext>`, so the browser saves the file instead of opening a player tab (a plain link to a signed Supabase URL would play it). Everyone who can see the tab gets the button; Remove stays behind the edit permission.
+
 ### WAV to MP3 on upload, in the browser
 Alex: "when I upload a WAV, make it MP3 so the big file is not stored." src/lib/mp3.js: `needsEncoding(file)` (wav, aiff, flac, caf by name or mime), `loadLame()` (a script tag for `public/vendor/lamejs/lame.min.js`, once), `encodeMp3(channels, sampleRate, {lame, kbps, onProgress})` (pure apart from the encoder object, 1152-sample frames, yields every 200 frames so the page breathes and the percentage moves; tested in node), `toMp3(file, onProgress)` (decodeAudioData then encode, returns a File named .mp3). Music.jsx `onFile` converts before analyse and upload and says "Converting to MP3… 43%"; the toast reports the size before and after. lamejs 1.2.1 is vendored unmodified with its LICENSE, not in package.json, because `npm ci` cannot run here to refresh the lockfile and because the LGPL wants it as a separate file anyway; it is copied from the zhuker/lamejs repository (the CDNs are blocked from this environment). Not done: a Web Worker; on a phone a 4-minute song takes maybe half a minute with the page still usable.
 
