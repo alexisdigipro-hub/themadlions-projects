@@ -110,6 +110,12 @@ export default function Dashboard() {
     .filter((p) => filter === 'All' || p.category === filter)
     .filter((p) => !q || [p.title, p.client, p.code].some((v) => (v || '').toLowerCase().includes(q.toLowerCase())))
     .sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''))
+  // Delivered projects leave the main grid (Alex): they sit under it, grey and small, behind a
+  // toggle that remembers whether it was open on this device.
+  const active = projects.filter((p) => p.status !== 'Delivered')
+  const closed = projects.filter((p) => p.status === 'Delivered')
+  const [showClosed, setShowClosed] = useState(() => { try { return localStorage.getItem('tml_closed_open') === '1' } catch { return false } })
+  const toggleClosed = () => setShowClosed((v) => { try { localStorage.setItem('tml_closed_open', v ? '0' : '1') } catch {} return !v })
 
   const save = () => {
     if (!draft.title.trim()) return toast('Give the project a title.', 'error')
@@ -123,9 +129,49 @@ export default function Dashboard() {
     setDraft(null)
   }
 
+  const card = (p, small) => (
+    <Link key={p.id} to={`/p/${p.id}`} className={`project-card ${small ? 'closed' : ''}`} style={{ '--pc': p.color }}>
+      <div className={`project-cover ${p.coverThumb ? 'has-img' : ''}`}>
+        {p.coverThumb ? <img src={p.coverThumb} alt="" /> : <span className="slate-bar" />}
+        <span className="project-cat">{p.category}</span>
+      </div>
+      <div className="project-progress" title={`${projectProgress(p, state.settings).pct}% done`}><span style={{ width: `${projectProgress(p, state.settings).pct}%` }} /></div>
+      <div className="project-body">
+        <h3>{p.title}</h3>
+        <div className="project-meta">
+          <Badge>{p.status}</Badge>
+          {p.code && <span className="project-code">{p.code}</span>}
+          {p.client && <span>{p.client}</span>}
+        </div>
+        <div className="project-foot">
+          <span>{p.scenes.length} scenes</span>
+          <span>{p.shootingDays.length} shoot days</span>
+          {p.startDate && <span>{fmtDate(p.startDate)}</span>}
+        </div>
+      </div>
+      {canEdit && (
+        <div className="project-tools" onClick={(e) => e.preventDefault()}>
+          <button className="link" onClick={() => setDraft({ ...p })}>
+            Edit
+          </button>
+          <Confirm
+            onConfirm={() => {
+              update((s) => {
+                s.projects = s.projects.filter((x) => x.id !== p.id)
+                s.events = s.events.filter((e) => e.projectId !== p.id)
+                return s
+              })
+              toast('Project deleted')
+            }}
+          />
+        </div>
+      )}
+    </Link>
+  )
+
   return (
     <>
-      <PageHead title="Projects" sub={`${projects.length} of ${visibleProjects(state, user).length} shown`}>
+      <PageHead title="Projects" sub={`${active.length} active${closed.length ? ` · ${closed.length} delivered` : ''} · ${projects.length} of ${visibleProjects(state, user).length} shown`}>
         <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="input search" />
         {canEdit && (
           <Button variant="primary" onClick={() => setDraft(freshProject())}>
@@ -151,47 +197,17 @@ export default function Dashboard() {
           {state.projects.length ? 'Try another category or search term.' : 'A project holds the script, breakdown, schedule, call sheets, locations and people.'}
         </Empty>
       ) : (
-        <div className="project-grid">
-          {projects.map((p) => (
-            <Link key={p.id} to={`/p/${p.id}`} className="project-card" style={{ '--pc': p.color }}>
-              <div className={`project-cover ${p.coverThumb ? 'has-img' : ''}`}>
-                {p.coverThumb ? <img src={p.coverThumb} alt="" /> : <span className="slate-bar" />}
-                <span className="project-cat">{p.category}</span>
-              </div>
-              <div className="project-progress" title={`${projectProgress(p, state.settings).pct}% done`}><span style={{ width: `${projectProgress(p, state.settings).pct}%` }} /></div>
-              <div className="project-body">
-                <h3>{p.title}</h3>
-                <div className="project-meta">
-                  <Badge>{p.status}</Badge>
-                  {p.code && <span className="project-code">{p.code}</span>}
-                  {p.client && <span>{p.client}</span>}
-                </div>
-                <div className="project-foot">
-                  <span>{p.scenes.length} scenes</span>
-                  <span>{p.shootingDays.length} shoot days</span>
-                  {p.startDate && <span>{fmtDate(p.startDate)}</span>}
-                </div>
-              </div>
-              {canEdit && (
-                <div className="project-tools" onClick={(e) => e.preventDefault()}>
-                  <button className="link" onClick={() => setDraft({ ...p })}>
-                    Edit
-                  </button>
-                  <Confirm
-                    onConfirm={() => {
-                      update((s) => {
-                        s.projects = s.projects.filter((x) => x.id !== p.id)
-                        s.events = s.events.filter((e) => e.projectId !== p.id)
-                        return s
-                      })
-                      toast('Project deleted')
-                    }}
-                  />
-                </div>
-              )}
-            </Link>
-          ))}
-        </div>
+        <>
+          {active.length > 0 && <div className="project-grid">{active.map((p) => card(p, false))}</div>}
+          {closed.length > 0 && (
+            <section className="closed-projects">
+              <button type="button" className="closed-toggle" onClick={toggleClosed} aria-expanded={showClosed}>
+                <span className="closed-caret">{showClosed ? '▾' : '▸'}</span> Delivered <small>{closed.length}</small>
+              </button>
+              {showClosed && <div className="project-grid compact">{closed.map((p) => card(p, true))}</div>}
+            </section>
+          )}
+        </>
       )}
 
       <Modal
