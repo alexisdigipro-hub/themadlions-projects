@@ -5,6 +5,7 @@ import { projectProgress } from '../lib/progress.js'
 import { EXPENSE_CATS } from '../lib/finance.js'
 import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/budgetCats.js'
 import { fmtBytes, snapshotSummary, snapshotToState } from '../lib/backups.js'
+import { authorizeUrl, clearOauth, pcloudPing, redirectUri, takeOauth } from '../lib/pcloud.js'
 import { remote, supabase } from '../lib/supabase.js'
 
 import { testKey } from '../lib/ai.js'
@@ -380,6 +381,14 @@ export default function Settings() {
           {state.settings.openaiKey && <p className="small under">Key saved on this device.</p>}
         </section>
 
+        {isAdmin && remote && (
+          <section className="panel" data-tab="integrations">
+            <h2>File storage</h2>
+            <p className="muted small">Where the files people upload go: project Files & notes and chat attachments. The built-in storage is 1 GB on the free plan. Your own pCloud has no such limit, keeps everything in folders you can open from the Finder, and stays private: the app asks a small function inside Supabase, which holds the pCloud key and checks the same permissions the database enforces.</p>
+            <PcloudPanel toast={toast} />
+          </section>
+        )}
+
         {isAdmin && (
           <section className="panel" data-tab="integrations">
             <h2>Google Maps</h2>
@@ -715,6 +724,69 @@ function RowList({ rows, onChange, fields, addLabel, empty }) {
       ))}
       {!rows.length && <p className="muted small">{empty}</p>}
       <Button variant="ghost" onClick={() => onChange([...rows, { id: uid(), ...Object.fromEntries(fields.map((f) => [f.k, ''])) }])}>{addLabel}</Button>
+    </div>
+  )
+}
+
+
+/* Settings > Integrations > File storage: the switch, the pCloud connection and its test. */
+function PcloudPanel({ toast }) {
+  const { state, update } = useStore()
+  const [oauth, setOauth] = useState(takeOauth)
+  const [testing, setTesting] = useState(false)
+  const [result, setResult] = useState(null)
+  const set = (k, v) => update((s) => { s.settings = { ...s.settings, [k]: v }; return s })
+  const clientId = state.settings.pcloudClientId || ''
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(oauth.token); toast('Token copied', 'ok') } catch { toast('Select the token and copy it by hand.', 'error') }
+  }
+  const test = async () => {
+    setTesting(true)
+    setResult(null)
+    try {
+      const r = await pcloudPing()
+      setResult(r)
+      toast(`Connected as ${r.email}`, 'ok')
+    } catch (e) {
+      setResult({ error: e.message })
+    }
+    setTesting(false)
+  }
+  const gb = (n) => `${(n / 1073741824).toFixed(1)} GB`
+  return (
+    <div className="stack">
+      <Field label="Uploaded files go to">
+        <Select value={state.settings.storage === 'pcloud' ? 'pcloud' : 'supabase'} onChange={(e) => set('storage', e.target.value)} options={[['supabase', 'Built-in storage (Supabase)'], ['pcloud', 'The company pCloud (through the pcloud function)']]} />
+      </Field>
+      <p className="small muted">Files already uploaded stay where they are and keep opening. Switch to pCloud only after the test below says Connected.</p>
+      <ol className="small muted pc-steps">
+        <li>At <a href="https://docs.pcloud.com/my_apps/" target="_blank" rel="noreferrer">docs.pcloud.com/my_apps</a> make an app named TML HUB with this redirect URI: <code>{redirectUri()}</code>. Copy its Client ID here.</li>
+        <li>Connect pCloud below, allow, and you come back here with a token. Copy it.</li>
+        <li>In Supabase: Edge Functions → Secrets → add <code>PCLOUD_TOKEN</code> (the token), <code>PCLOUD_HOST</code> (eapi.pcloud.com for a European account) and <code>PCLOUD_ROOT</code> (/TML HUB).</li>
+        <li>In Supabase: Edge Functions → Deploy a new function → via Editor, name <code>pcloud</code>, paste <code>supabase/functions/pcloud/index.ts</code>, Deploy.</li>
+        <li>Test connection, then switch the setting above to pCloud.</li>
+      </ol>
+      <Field label="pCloud Client ID">
+        <div className="row-actions">
+          <Input value={clientId} onChange={(e) => set('pcloudClientId', e.target.value.trim())} placeholder="From docs.pcloud.com/my_apps" autoComplete="off" />
+          <a className={`btn btn-primary ${clientId ? '' : 'disabled'}`} href={clientId ? authorizeUrl(clientId) : undefined} onClick={(e) => { if (!clientId) e.preventDefault() }}>Connect pCloud</a>
+        </div>
+      </Field>
+      {oauth?.token && (
+        <div className="pc-token">
+          <p className="small"><b>pCloud sent back a token.</b> Copy it into the function's secrets as <code>PCLOUD_TOKEN</code>{oauth.locationid === '2' ? <>, with <code>PCLOUD_HOST</code> = eapi.pcloud.com (European account)</> : oauth.locationid === '1' ? <>, with <code>PCLOUD_HOST</code> = api.pcloud.com (US account)</> : null}. It is shown once and is not saved anywhere in the app.</p>
+          <div className="row-actions">
+            <Input value={oauth.token} readOnly onFocus={(e) => e.target.select()} />
+            <Button variant="primary" onClick={copy}>Copy</Button>
+            <Button variant="ghost" onClick={() => { clearOauth(); setOauth(null) }}>Done, hide it</Button>
+          </div>
+        </div>
+      )}
+      <div className="row-actions">
+        <Button onClick={test} disabled={testing}>{testing ? 'Testing…' : 'Test connection'}</Button>
+        {result?.ok && <span className="small under">Connected as {result.email} · {result.host} · folder {result.root} · {gb(result.used)} of {gb(result.quota)} used</span>}
+        {result?.error && <span className="small" style={{ color: 'var(--danger)' }}>{result.error}</span>}
+      </div>
     </div>
   )
 }
