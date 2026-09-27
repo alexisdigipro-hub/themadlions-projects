@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### A location type for both interior and exterior (27 Sep, morning)
+Alex: "στην καταχώρηση του location θέλω να προσθέσεις στον τύπο και ένα INT. & EXT." Added to the one `TYPES` list both places keep it (Database > Locations and a project's own Locations tab): Studio, Interior, Exterior, **INT. & EXT.**, Office, Base camp, Parking, Hospital, Other. Shows up in the Type field when adding or editing a location, and in the type filter on Database > Locations.
+
 ### Team work: the owed list dropped, cards down to the essentials (27 Sep, morning)
 Alex: "βγάλε το log με τα transactions, τα κόκκινα, δεν το χρειάζομαι· άσε τα στατιστικά, κάνε 'Owed right now' -> 'Owed Right Now', κράτα το Up to 30 days μέχρι το all unpaid· τα από κάτω βγάλ' τα." Then: "πιο κάτω τα ονόματα κάν' τα πιο κουμπιά, μέσα στο πλαίσιό τους μόνο: το όνομα, το συνολικό ποσό, η γραμμή πράσινο/κίτρινο, και τα ποσά pending και paid."
 - **Owed Right Now** (renamed, title case): the job-by-job list under the four totals is gone (`tw-owed-list` and its "Show all N unpaid jobs" toggle, `Record payment` / `Mark paid` buttons and all); the four totals (Up to 30 days, 31 to 60, Over 60, All unpaid) stay, computed the same way. Marking a job paid or recording its payment is still there, on the job itself in a person's opened card (`WorkLogTable`, unchanged).

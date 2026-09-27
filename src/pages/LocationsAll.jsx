@@ -6,7 +6,7 @@ import { locationProjects, locationToLibrary, matchText } from '../lib/library.j
 import { coordsFromText } from '../lib/sun.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
 
-const TYPES = ['Studio', 'Interior', 'Exterior', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
+const TYPES = ['Studio', 'Interior', 'Exterior', 'INT. & EXT.', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
 const emptyLoc = () => ({ id: uid(), name: '', address: '', type: 'Interior', notes: '', contact: '', phone: '', lat: '', lon: '', coordsText: '', photos: [], tags: [], createdAt: new Date().toISOString() })
 function mapSrc(address, key) {
   const q = encodeURIComponent(address)
