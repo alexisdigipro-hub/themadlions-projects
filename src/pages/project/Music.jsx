@@ -4,6 +4,7 @@ import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import { SECTION_NAMES, analyze, deleteTrack, fmtTime, fmtTimeMs, parseTime, songMapText, trackUrl, uploadTrack } from '../../lib/audio.js'
+import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { remote } from '../../lib/supabase.js'
 import { useStore } from '../../lib/store.jsx'
 import { alignBlocks, groupSegments, transcribe } from '../../lib/transcribe.js'
@@ -109,8 +110,14 @@ export default function Music() {
 
   const onFile = async (file) => {
     if (!file) return
-    setBusy('Analysing waveform…')
+    const original = file
     try {
+      // a WAV (or AIFF, FLAC) is turned into an MP3 here, on this device, so only the small file goes up
+      if (needsEncoding(file)) {
+        setBusy('Converting to MP3… 0%')
+        file = await toMp3(file, (p) => setBusy(`Converting to MP3… ${Math.round(p * 100)}%`))
+      }
+      setBusy('Analysing waveform…')
       const { peaks, duration } = await analyze(file)
       lastFile.current = file
       const id = uid()
@@ -120,7 +127,7 @@ export default function Music() {
         m.tracks.push({ id, name: file.name.replace(/\.[^.]+$/, ''), path, ext, duration, peaks, bytes: file.size, kind: m.tracks.length ? 'other' : 'master', addedAt: new Date().toISOString() })
         m.activeTrackId = id
       })
-      toast(`${file.name} added · ${fmtTime(duration)}`, 'ok')
+      toast(original !== file ? `${original.name} converted to MP3 (${Math.round(original.size / 1048576)} MB → ${(file.size / 1048576).toFixed(1)} MB) and added · ${fmtTime(duration)}` : `${file.name} added · ${fmtTime(duration)}`, 'ok')
     } catch (e) {
       toast(e.message, 'error')
     } finally {
@@ -252,7 +259,7 @@ export default function Music() {
           )}
         </section>
       ) : (
-        <Empty title="Upload the song">MP3, M4A or WAV. The waveform is drawn here, then you mark the sections (intro, verses, choruses) with their times and lyrics, and tie each one to the setups that will cover it.</Empty>
+        <Empty title="Upload the song">MP3, M4A or WAV. A WAV is converted to MP3 on this device first, so only the small file is stored. The waveform is drawn here, then you mark the sections (intro, verses, choruses) with their times and lyrics, and tie each one to the setups that will cover it.</Empty>
       )}
 
       <div className="toolbar">
@@ -340,7 +347,7 @@ export default function Music() {
               <Field label="Mode"><Select value={tr.mode} onChange={(e) => setTr({ ...tr, mode: e.target.value })} options={[['new', 'Write lyrics and sections'], ['align', 'Only time my existing sections']]} /></Field>
             </div>
             {tr.mode === 'new' && sections.length > 0 && <p className="notice">This replaces the {sections.length} sections you have. Choose "Only time my existing sections" to keep them.</p>}
-            <p className="fineprint">About $0.006 per minute of audio. Files over 25 MB are refused by Whisper: upload an MP3 version.</p>
+            <p className="fineprint">About $0.006 per minute of audio. Files over 25 MB are refused by Whisper; a WAV is converted to MP3 on upload, so this only bites on very long songs.</p>
           </div>
         </Modal>
       )}
