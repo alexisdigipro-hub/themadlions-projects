@@ -40,6 +40,14 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Team work: all-time totals on the cards, per-year breakdown and more stats when you open one (27 Sep, morning)
+Alex: "εξέλιξέ το Team work, θέλω κι άλλες αναλύσεις. Αρχικά κάθε κουμπί ατόμου να γράφει το σύνολο όλων των χρόνων, και μέσα να έχει σύνολα ανά χρόνο (pending & paid), και γενικά κι άλλα στατιστικά, ψάξτο." Three pieces:
+- **The card itself**: the big number (`.tw-total`) and the paid/pending bar now come from `allT` (all years) instead of the selected year, so cards rank by lifetime total and stay in the same order whichever year tab is picked; a small line underneath keeps the selected year's total and adds the average per job.
+- **Per-year table**: opening a card (new `TeamMemberDetail` in Finance.jsx, replacing the bare `WorkLogTable`) shows a Year / Jobs / Pending / Paid / Total table (`entryTotalsByYear`, new in WorkLog.jsx) with an "All years" total row, above the usual job-by-job list.
+- **More statistics**, in a `Stat` row above that table: average per job, average time from job date to marked paid (`avgDaysToPay`, new — only counts jobs with both a date and a paid date), their biggest client or project by amount (`topClientOf`, new), and their oldest unpaid job with its date, when they have one.
+
+Rendered with the real stylesheet at 1400 and 390 px.
+
 ### Tasks page renamed (27 Sep, morning)
 Alex: "στα tasks κάνε τον τίτλο ToDo Tasks." The heading on the top-level Tasks page (`src/pages/TasksAll.jsx`), "Tasks" → "ToDo Tasks"; the sidebar tab keeps saying "Tasks".
 
