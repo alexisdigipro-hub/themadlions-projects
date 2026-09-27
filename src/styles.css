@@ -2951,17 +2951,6 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .tw-age.warn strong { color: #b0711c; }
 .tw-age.late strong { color: var(--danger); }
 .tw-age.total { background: var(--raised); }
-.tw-owed-list li.tw-owed-row { display: grid; grid-template-columns: 10px 1fr auto auto; gap: 12px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--line-soft); }
-.tw-owed-list li.tw-owed-row:first-child { border-top: 0; }
-.tw-age-dot { width: 10px; height: 10px; border-radius: 999px; background: var(--ok); }
-.tw-owed-row.warn .tw-age-dot { background: #D9A441; }
-.tw-owed-row.late .tw-age-dot { background: var(--danger); }
-.tw-owed-main { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
-.tw-owed-main strong { font-size: 15.5px; }
-.tw-owed-desc { font-size: 14.5px; }
-.tw-owed-amount { font-weight: 700; font-size: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; color: #b0711c; }
-.tw-owed-row.late .tw-owed-amount { color: var(--danger); }
-.tw-owed-more { display: block; padding: 10px 16px; border-top: 1px solid var(--line-soft); width: 100%; text-align: left; }
 @media (max-width: 820px) {
   .wl-hero { grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .wl-card { padding: 10px; }
@@ -2973,9 +2962,6 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
   .tw-aging { grid-template-columns: repeat(2, 1fr); }
   .tw-age { padding: 9px 12px; }
   .tw-age strong { font-size: 16px; }
-  .tw-owed-list li.tw-owed-row { grid-template-columns: 10px 1fr auto; padding: 10px 12px; row-gap: 6px; }
-  .tw-owed-row .btn { grid-column: 2 / -1; justify-self: end; }
-  .tw-owed-more { padding: 10px 12px; }
 }
 
 /* ---------- drives archive ---------- */

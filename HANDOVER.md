@@ -40,6 +40,17 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Team work: the owed list dropped, cards down to the essentials (27 Sep, morning)
+Alex: "βγάλε το log με τα transactions, τα κόκκινα, δεν το χρειάζομαι· άσε τα στατιστικά, κάνε 'Owed right now' -> 'Owed Right Now', κράτα το Up to 30 days μέχρι το all unpaid· τα από κάτω βγάλ' τα." Then: "πιο κάτω τα ονόματα κάν' τα πιο κουμπιά, μέσα στο πλαίσιό τους μόνο: το όνομα, το συνολικό ποσό, η γραμμή πράσινο/κίτρινο, και τα ποσά pending και paid."
+- **Owed Right Now** (renamed, title case): the job-by-job list under the four totals is gone (`tw-owed-list` and its "Show all N unpaid jobs" toggle, `Record payment` / `Mark paid` buttons and all); the four totals (Up to 30 days, 31 to 60, Over 60, All unpaid) stay, computed the same way. Marking a job paid or recording its payment is still there, on the job itself in a person's opened card (`WorkLogTable`, unchanged).
+- **Person cards**: down to the name, the all-time total, the paid/pending bar and the two amounts; dropped the job count, the "not in the active team any more" note and the small "€X in {year} · avg €Y / job" line added the same morning. Opening a card still shows everything else (year-by-year table, average per job, average time to pay, biggest client, oldest unpaid job).
+- Dead code that only served the removed list went with it: `allOwed`/`pay` state, `lineOfJob`/`togglePaidEntry` imports, `.tw-owed-row`/`.tw-owed-main`/`.tw-owed-desc`/`.tw-owed-amount`/`.tw-age-dot`/`.tw-owed-more` CSS.
+
+Rendered with the real stylesheet at 1400 and 390 px.
+
+### Tags fields: the comma now sticks (27 Sep, morning)
+Alex: "στο database, στα locations, στο edit, δεν βάζει κόμμα στα tags." Root cause: the Tags field's displayed text was `tags.join(', ')`, recomputed from the array on every keystroke; typing a comma made it split-trim-filter to an array with no empty entry, which immediately re-joined to text with the comma gone, so React reset the input a beat after you typed it. New `TagsInput` (ui.jsx) keeps what you are actually typing as its own state and only reports the parsed array upward, so the comma (and any trailing space inside a tag, which had the same problem) stays. Same fix in the two places with this exact pattern: Database > Locations and Database > People / Cast. Verified with a standalone simulation of the old and new keystroke-by-keystroke behaviour (old: typing "sea view, free parking, rooftop" collapses to one merged word; new: keeps it verbatim and parses all three tags).
+
 ### Team work: all-time totals on the cards, per-year breakdown and more stats when you open one (27 Sep, morning)
 Alex: "εξέλιξέ το Team work, θέλω κι άλλες αναλύσεις. Αρχικά κάθε κουμπί ατόμου να γράφει το σύνολο όλων των χρόνων, και μέσα να έχει σύνολα ανά χρόνο (pending & paid), και γενικά κι άλλα στατιστικά, ψάξτο." Three pieces:
 - **The card itself**: the big number (`.tw-total`) and the paid/pending bar now come from `allT` (all years) instead of the selected year, so cards rank by lifetime total and stay in the same order whichever year tab is picked; a small line underneath keeps the selected year's total and adds the average per job.
