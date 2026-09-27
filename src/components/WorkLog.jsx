@@ -19,11 +19,33 @@ export function entryTotals(list) {
 }
 export const yearsOf = (list) => [...new Set(list.map((e) => (e.date || '').slice(0, 4)).filter(Boolean))].sort().reverse()
 
+/* One person's totals broken down by year, newest first: for Team work's per-person detail. */
+export const entryTotalsByYear = (list) => yearsOf(list).map((year) => ({ year, ...entryTotals(list.filter((e) => (e.date || '').startsWith(year))) }))
+
+/* The client (or, lacking one, the description) this person has billed the most, all statuses,
+   all years: Team work's per-person stats. null when there is nothing to rank. */
+export function topClientOf(list) {
+  const byClient = {}
+  for (const e of list) {
+    const k = e.client || e.description || 'No client'
+    byClient[k] = (byClient[k] || 0) + (Number(e.amount) || 0)
+  }
+  const sorted = Object.entries(byClient).sort((a, b) => b[1] - a[1])
+  return sorted.length ? { name: sorted[0][0], amount: sorted[0][1] } : null
+}
+
 /* How long an unpaid job has been waiting, counted from the day it was worked. */
 export const daysWaiting = (entry, from = today()) => {
   const d = (entry?.date || '').slice(0, 10)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return 0
   return Math.max(0, Math.round((Date.parse(from) - Date.parse(d)) / 86400000))
+}
+
+/* Average days between the day a job was worked and the day it was marked paid, over jobs that
+   have both a date and a paid date. null when nothing qualifies yet (Team work's per-person stats). */
+export function avgDaysToPay(list) {
+  const lags = list.filter((e) => e.status === 'paid' && e.date && e.paidDate).map((e) => daysWaiting(e, e.paidDate)).filter((d) => d >= 0)
+  return lags.length ? Math.round(lags.reduce((a, d) => a + d, 0) / lags.length) : null
 }
 
 /* Three buckets, so the debt that has waited longest is obvious without reading dates. */

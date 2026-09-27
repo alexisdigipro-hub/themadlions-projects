@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Stat, Textarea, useToast } from '../components/ui.jsx'
 import { today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { DOCS, FREQ, METHODS, TX_STATUS, catsFor, duePeriods, emptyRecurring, emptyTx, expenseCats, financeCategoryUses, fiscalYearLabel, fiscalYearOf, generateFromRecurring, grossOf, incomeCats, matchTx, money, renameFinanceCategory, summarize, vatOf } from '../lib/finance.js'
 import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
 import { budgetCatForFin, finCatFor } from '../lib/budgetCats.js'
-import { AGE_BUCKETS, WorkLogTable, ageBucket, daysWaiting, entryTotals, lineOfJob, money2, projectWorkDate, togglePaidEntry } from '../components/WorkLog.jsx'
+import { AGE_BUCKETS, WorkLogTable, ageBucket, avgDaysToPay, daysWaiting, entryTotals, entryTotalsByYear, lineOfJob, money2, projectWorkDate, togglePaidEntry, topClientOf } from '../components/WorkLog.jsx'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -638,11 +638,13 @@ function TeamWork() {
 
   const rows = people
     .map((u) => ({ u, t: entryTotals(log.filter((e) => (e.userId || '') === u.id && (e.date || '').startsWith(year))), allT: entryTotals(log.filter((e) => (e.userId || '') === u.id)) }))
-    .sort((a, b) => b.t.total - a.t.total || a.u.name.localeCompare(b.u.name))
+    // ranked by their all-time total, which is what the card itself now leads with (Alex)
+    .sort((a, b) => b.allT.total - a.allT.total || a.u.name.localeCompare(b.u.name))
   // Counts exactly the people listed below, so the hero and the cards always agree.
   const all = entryTotals(rows.flatMap((r) => log.filter((e) => (e.userId || '') === r.u.id && (e.date || '').startsWith(year))))
   const sel = people.find((u) => u.id === who)
-  const max = Math.max(1, ...rows.map((r) => r.t.total))
+  const selLog = sel ? log.filter((e) => (e.userId || '') === sel.id) : []
+  const max = Math.max(1, ...rows.map((r) => r.allT.total))
 
   // Money owed is money owed whatever year it was earned in, so this list ignores the year tabs.
   const owed = useMemo(() => log
@@ -714,28 +716,75 @@ function TeamWork() {
       <div className="tw-grid">
         {rows.map(({ u, t, allT }) => (
           <button key={u.id} className={`tw-card ${who === u.id ? 'on' : ''}`} onClick={() => setWho(who === u.id ? '' : u.id)}>
-            <div className="tw-head"><strong>{u.name}</strong><span className="muted small">{t.jobs} job{t.jobs === 1 ? '' : 's'}</span></div>
-            {/* Bar length compares this person with the biggest earner of the year; the split inside is their own paid vs pending. */}
-            <div className="tw-bar" title={`${money2(t.total)} of ${money2(max)}, the most anyone logged in ${year}`}>
-              <div className="tw-bar-fill" style={{ width: `${(t.total / max) * 100}%` }}>
-                {t.paid > 0 && <span className="paid" style={{ flexGrow: t.paid }} />}
-                {t.pending > 0 && <span className="pend" style={{ flexGrow: t.pending }} />}
+            <div className="tw-head"><strong>{u.name}</strong><span className="muted small">{allT.jobs} job{allT.jobs === 1 ? '' : 's'}, all time</span></div>
+            {/* The headline is the all-time total (Alex): open a card and the years underneath break it down. */}
+            <div className="tw-total">{money2(allT.total)}</div>
+            <div className="tw-bar" title={`${money2(allT.total)} of ${money2(max)}, the most anyone has logged`}>
+              <div className="tw-bar-fill" style={{ width: `${(allT.total / max) * 100}%` }}>
+                {allT.paid > 0 && <span className="paid" style={{ flexGrow: allT.paid }} />}
+                {allT.pending > 0 && <span className="pend" style={{ flexGrow: allT.pending }} />}
               </div>
             </div>
-            <div className="tw-nums"><span className="pend">{money2(t.pending)} pending</span><span className="paid">{money2(t.paid)} paid</span></div>
+            <div className="tw-nums"><span className="pend">{money2(allT.pending)} pending</span><span className="paid">{money2(allT.paid)} paid</span></div>
+            <div className="muted small">{money2(t.total)} in {year}{allT.jobs ? ` · avg ${money2(allT.total / allT.jobs)} / job` : ''}</div>
             {u.gone && <div className="muted small">not in the active team any more</div>}
-            {allT.pending > t.pending && <div className="muted small">plus {money2(allT.pending - t.pending)} pending from other years</div>}
           </button>
         ))}
         {!people.length && <p className="muted">No teammates yet.</p>}
       </div>
-      {sel && (
-        <section className="panel tw-detail">
-          <div className="panel-head"><h2>{sel.name}</h2><button className="link small" onClick={() => setWho('')}>Close</button></div>
-          <WorkLogTable userId={sel.id} editable showHero={false} compact />
-        </section>
-      )}
+      {sel && <TeamMemberDetail person={sel} log={selLog} onClose={() => setWho('')} />}
     </div>
+  )
+}
+
+/* One teammate's numbers: a year-by-year total (pending & paid, Alex's ask), then a few more
+   statistics worth having (average per job, average time to get paid, their biggest client, their
+   oldest unpaid job), then their usual job-by-job table. */
+function TeamMemberDetail({ person, log, onClose }) {
+  const byYear = entryTotalsByYear(log)
+  const allT = entryTotals(log)
+  const avgLag = avgDaysToPay(log)
+  const top = topClientOf(log)
+  const unpaid = log.filter((e) => e.status !== 'paid')
+  const oldest = unpaid.length ? unpaid.reduce((a, e) => (daysWaiting(e) > daysWaiting(a) ? e : a)) : null
+
+  return (
+    <section className="panel tw-detail">
+      <div className="panel-head"><h2>{person.name}</h2><button className="link small" onClick={onClose}>Close</button></div>
+      <div className="stats">
+        <Stat label="All-time total" value={money2(allT.total)} note={`${allT.jobs} job${allT.jobs === 1 ? '' : 's'}`} />
+        <Stat label="Average per job" value={allT.jobs ? money2(allT.total / allT.jobs) : '—'} />
+        <Stat label="Average time to pay" value={avgLag != null ? `${avgLag} day${avgLag === 1 ? '' : 's'}` : '—'} note={avgLag != null ? 'from job date to marked paid' : 'no paid job has a paid date yet'} />
+        <Stat label="Biggest client" value={top ? top.name : '—'} note={top ? money2(top.amount) : ''} />
+        {oldest && <Stat label="Oldest unpaid job" value={`${daysWaiting(oldest)} day${daysWaiting(oldest) === 1 ? '' : 's'}`} note={fmtDate(oldest.date)} />}
+      </div>
+      {byYear.length > 1 && (
+        <div className="table-wrap">
+          <table className="table fin-table">
+            <thead><tr><th>Year</th><th className="num">Jobs</th><th className="num">Pending</th><th className="num">Paid</th><th className="num">Total</th></tr></thead>
+            <tbody>
+              {byYear.map((y) => (
+                <tr key={y.year}>
+                  <td>{y.year}</td>
+                  <td className="num muted">{y.jobs}</td>
+                  <td className="num over">{y.pending ? money2(y.pending) : ''}</td>
+                  <td className="num">{y.paid ? money2(y.paid) : ''}</td>
+                  <td className="num">{money2(y.total)}</td>
+                </tr>
+              ))}
+              <tr className="fin-total">
+                <td>All years</td>
+                <td className="num muted">{allT.jobs}</td>
+                <td className="num over">{allT.pending ? money2(allT.pending) : ''}</td>
+                <td className="num">{allT.paid ? money2(allT.paid) : ''}</td>
+                <td className="num">{money2(allT.total)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+      <WorkLogTable userId={person.id} editable showHero={false} compact />
+    </section>
   )
 }
 
