@@ -7,6 +7,7 @@ import { SendNoticeModal, SentNotices, sendAutoNotice } from '../components/Noti
 import { deleteFile, fileIcon, fileUrl, fmtBytes, uploadFile } from '../lib/files.js'
 import { compress } from '../lib/photos.js'
 import { pcloudOn } from '../lib/pcloud.js'
+import { loadChatPrefs } from '../lib/chatPrefs.js'
 import { useProject } from './Project.jsx'
 import * as C from '../lib/chat.js'
 
@@ -41,6 +42,17 @@ function chatFolder(state, room) {
   if (room.kind === 'group') return ['Chat', room.name]
   const names = (room.members || []).map((id) => state.users.find((u) => u.id === id)?.name || '?').sort()
   return ['Chat', 'Direct', names.join(' & ')]
+}
+
+/* Settings > Chat, live: the page re-reads them when Settings saves. */
+function useChatPrefs() {
+  const [prefs, setPrefs] = useState(loadChatPrefs)
+  useEffect(() => {
+    const h = () => setPrefs(loadChatPrefs())
+    window.addEventListener('tml-chat-prefs', h)
+    return () => window.removeEventListener('tml-chat-prefs', h)
+  }, [])
+  return prefs
 }
 
 /* Signed links for attachments, remembered for the session so a long thread does not ask the server once per picture. */
@@ -311,6 +323,7 @@ function ChatRoom({ room, embedded, onBack }) {
   const toast = useToast()
   const isAdmin = user?.role === 'admin'
   const roomId = room.id
+  const prefs = useChatPrefs()
   const msgs = useMemo(() => C.messagesIn(state.chat, roomId), [state.chat, roomId])
   const [text, setText] = useState('')
   const [replyTo, setReplyTo] = useState(null)
@@ -436,11 +449,11 @@ function ChatRoom({ room, embedded, onBack }) {
   }
   const onKey = (e) => {
     if (e.key === 'Escape' && (editing || replyTo)) { e.preventDefault(); cancelBar(); return }
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      if (mention && mentionHits.length) pickMention(mentionHits[0])
-      else send()
-    }
+    if (e.key !== 'Enter') return
+    if (mention && mentionHits.length && !e.shiftKey) { e.preventDefault(); pickMention(mentionHits[0]); return }
+    // Settings > Chat: Enter sends (Shift+Enter for a new line), or Enter breaks the line and Cmd/Ctrl+Enter sends
+    const sends = prefs.enterSends ? !e.shiftKey : e.metaKey || e.ctrlKey
+    if (sends) { e.preventDefault(); send() }
   }
   const renderText = (t) => {
     if (!nameRe || !t.includes('@')) return t
@@ -451,7 +464,7 @@ function ChatRoom({ room, embedded, onBack }) {
   const membersOf = room.kind === 'team' ? state.users.filter((u) => u.active !== false) : room.kind === 'project' ? C.roomRecipients(state, room, '').map((id) => state.users.find((u) => u.id === id)).filter(Boolean) : (room.members || []).map((id) => state.users.find((u) => u.id === id)).filter(Boolean)
 
   return (
-    <div className="chat-box">
+    <div className="chat-box" data-wall={prefs.wallpaper} data-bubbles={prefs.bubbles} data-size={prefs.size} data-density={prefs.density}>
       <div className="chat-head">
         {onBack && <button type="button" className="icon-btn chat-back" onClick={onBack} aria-label="Back">‹</button>}
         <RoomAvatar room={room} size={36} />
@@ -477,7 +490,7 @@ function ChatRoom({ room, embedded, onBack }) {
               const quoted = m.replyTo ? byId[m.replyTo] : null
               return (
                 <div key={m.id} data-msg={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''}`}>
-                  {!mine && room.kind !== 'direct' && (
+                  {!mine && room.kind !== 'direct' && prefs.avatars && (
                     <span className="chat-avatar">
                       {!cont && (photoOf(m.userId) ? <img src={photoOf(m.userId)} alt="" /> : (m.userName || '').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase())}
                     </span>
@@ -531,7 +544,7 @@ function ChatRoom({ room, embedded, onBack }) {
           )}
           <input ref={fileRef} type="file" multiple hidden onChange={(e) => addFiles(e.target.files)} />
           {!editing && <button type="button" className="icon-btn chat-attach" title="Photo or file" onClick={() => fileRef.current?.click()} disabled={!!busy}>📎</button>}
-          <textarea ref={inputRef} className="input" rows={1} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Message" title="Enter to send, Shift+Enter for a new line. @name mentions someone" disabled={!!busy} />
+          <textarea ref={inputRef} className="input" rows={1} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Message" title={prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. @name mentions someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. @name mentions someone'} disabled={!!busy} />
           <button type="button" className="chat-send" onClick={send} disabled={!!busy || (!text.trim() && !pending.length)} title={editing ? 'Save (Enter)' : 'Send (Enter)'} aria-label={editing ? 'Save' : 'Send'}>
             {busy ? '…' : editing ? '✓' : <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4l17.4-7.5c.8-.4.8-1.5 0-1.8L3.4 3.6c-.7-.3-1.4.3-1.3 1l1.2 5.7c.1.4.4.7.8.7l9.4 1-9.4 1c-.4 0-.7.3-.8.7L2.1 19.4c-.1.7.6 1.3 1.3 1z" /></svg>}
           </button>

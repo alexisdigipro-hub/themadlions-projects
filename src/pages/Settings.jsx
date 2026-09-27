@@ -6,6 +6,7 @@ import { EXPENSE_CATS } from '../lib/finance.js'
 import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/budgetCats.js'
 import { fmtBytes, snapshotSummary, snapshotToState } from '../lib/backups.js'
 import { authorizeUrl, clearOauth, pcloudPing, redirectUri, takeOauth } from '../lib/pcloud.js'
+import { CHAT_DEFAULTS, chime, loadChatPrefs, saveChatPrefs } from '../lib/chatPrefs.js'
 import { remote, supabase } from '../lib/supabase.js'
 
 import { testKey } from '../lib/ai.js'
@@ -33,7 +34,7 @@ export default function Settings() {
   const isAdmin = me?.role === 'admin'
   const TABS = [
     ['company', 'Company', true], ['callsheets', 'Call sheets', true], ['team', 'Team', true], ['calendar', 'Calendar & projects', true], ['budget', 'Budget', true],
-    ['display', 'Display', false], ['integrations', 'Integrations', false], ['data', 'Data', false],
+    ['display', 'Display', false], ['chat', 'Chat', false], ['integrations', 'Integrations', false], ['data', 'Data', false],
   ].filter(([, , admin]) => !admin || isAdmin)
   const [tab, setTab] = useState(() => (isAdmin ? 'company' : 'display'))
   const logoRef = useRef()
@@ -372,6 +373,12 @@ export default function Settings() {
             </div>
           </section>
         )}
+
+        <section className="panel" data-tab="chat">
+          <h2>Chat</h2>
+          <p className="muted small">How the chat looks and behaves for you, on this device. Everyone sets their own; nothing here changes what others see. Who gets a pop-up notice for a chat message is under Team.</p>
+          <ChatSettings toast={toast} />
+        </section>
 
         <section className="panel" data-tab="integrations">
           <h2>Transcription</h2>
@@ -790,6 +797,37 @@ function PcloudPanel({ toast }) {
         <Button onClick={test} disabled={testing}>{testing ? 'Testing…' : 'Test connection'}</Button>
         {result?.ok && <span className="small under">Connected as {result.email} · {result.host} · folder {result.root} · {gb(result.used)} of {gb(result.quota)} used</span>}
         {result?.error && <span className="small" style={{ color: 'var(--danger)' }}>{result.error}</span>}
+      </div>
+    </div>
+  )
+}
+
+
+/* Settings > Chat: personal, per device, like theme and text size. */
+function ChatSettings({ toast }) {
+  const [p, setP] = useState(loadChatPrefs)
+  const set = (k, v) => setP(saveChatPrefs({ [k]: v }))
+  const Seg = ({ k, options }) => (
+    <div className="segmented small">
+      {options.map(([v, l]) => <button key={String(v)} type="button" className={p[k] === v ? 'on' : ''} onClick={() => set(k, v)}>{l}</button>)}
+    </div>
+  )
+  return (
+    <div className="stack">
+      <Field label="Background behind the messages" hint="None keeps the panel colour. Soft is a warm tint (dark in the dark theme). Dots adds the WhatsApp-style pattern."><Seg k="wallpaper" options={[['none', 'None'], ['soft', 'Soft'], ['dots', 'Dots']]} /></Field>
+      <Field label="Bubbles" hint="WhatsApp: tails, your messages tinted with the accent. Classic: rounded, your messages in the full accent colour with white text."><Seg k="bubbles" options={[['whatsapp', 'WhatsApp'], ['classic', 'Classic']]} /></Field>
+      <Field label="Text size in messages"><Seg k="size" options={[['small', 'Small'], ['normal', 'Normal'], ['large', 'Large']]} /></Field>
+      <Field label="Spacing"><Seg k="density" options={[['comfortable', 'Comfortable'], ['compact', 'Compact']]} /></Field>
+      <Field label="Enter key" hint="With Send, Shift+Enter makes a new line. With New line, Cmd+Enter (Ctrl+Enter on Windows) sends."><Seg k="enterSends" options={[[true, 'Sends the message'], [false, 'New line']]} /></Field>
+      <Field label="Faces next to messages in groups and rooms"><Seg k="avatars" options={[[true, 'Show'], [false, 'Hide']]} /></Field>
+      <Field label="Sound when a message arrives" hint="Plays when someone else writes while you are in another room, page or tab. Never for your own messages.">
+        <div className="row-actions">
+          <Seg k="sound" options={[[true, 'On'], [false, 'Off']]} />
+          <Button size="sm" variant="ghost" onClick={chime}>Play it</Button>
+        </div>
+      </Field>
+      <div className="row-actions">
+        <Button variant="ghost" onClick={() => { setP(saveChatPrefs({ ...CHAT_DEFAULTS })); toast('Chat settings back to standard', 'ok') }}>Back to standard</Button>
       </div>
     </div>
   )

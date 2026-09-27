@@ -1,0 +1,51 @@
+// How the chat looks and behaves for this person, on this device (like theme and text size):
+// Settings > Chat. Kept in localStorage; the chat page listens for changes.
+export const CHAT_PREFS_KEY = 'tml_chat_prefs'
+export const CHAT_DEFAULTS = {
+  wallpaper: 'none', // 'none' | 'soft' | 'dots'
+  bubbles: 'whatsapp', // 'whatsapp' (tails, own bubbles tinted) | 'classic' (round, own bubbles in the accent)
+  size: 'normal', // 'small' | 'normal' | 'large'
+  density: 'comfortable', // 'comfortable' | 'compact'
+  enterSends: true, // Enter sends, Shift+Enter breaks the line; off: Enter breaks, Cmd/Ctrl+Enter sends
+  avatars: true, // faces next to other people's messages in groups and rooms
+  sound: true, // a short tone when a message arrives from someone else while you are elsewhere
+}
+export function loadChatPrefs() {
+  try {
+    const raw = localStorage.getItem(CHAT_PREFS_KEY)
+    return { ...CHAT_DEFAULTS, ...(raw ? JSON.parse(raw) : {}) }
+  } catch {
+    return { ...CHAT_DEFAULTS }
+  }
+}
+export function saveChatPrefs(patch) {
+  const next = { ...loadChatPrefs(), ...patch }
+  try { localStorage.setItem(CHAT_PREFS_KEY, JSON.stringify(next)) } catch {}
+  window.dispatchEvent(new Event('tml-chat-prefs'))
+  return next
+}
+
+/* A short, soft two-note tone, made on the spot so no sound file is needed. Silent when the
+   browser has not yet allowed audio (before the first click) or the tone cannot play. */
+let ctx = null
+export function chime() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext
+    if (!Ctx) return
+    ctx = ctx || new Ctx()
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {})
+    const t0 = ctx.currentTime
+    ;[[880, 0], [1174.7, 0.12]].forEach(([freq, at]) => {
+      const o = ctx.createOscillator()
+      const g = ctx.createGain()
+      o.type = 'sine'
+      o.frequency.value = freq
+      g.gain.setValueAtTime(0.0001, t0 + at)
+      g.gain.exponentialRampToValueAtTime(0.18, t0 + at + 0.015)
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + at + 0.22)
+      o.connect(g).connect(ctx.destination)
+      o.start(t0 + at)
+      o.stop(t0 + at + 0.25)
+    })
+  } catch {}
+}
