@@ -346,7 +346,7 @@ export default function Finance() {
                 <section className="panel"><h2>By client</h2><BreakdownTable rows={S.byClient} label="Client" cur={cur} outstanding sort={bdSort} onSort={bdSortBy} /></section>
                 <section className="panel"><h2>By category</h2><BreakdownTable rows={S.byCategory} label="Category" cur={cur} sort={bdSort} onSort={bdSortBy} /></section>
                 <section className="panel"><h2>By project type</h2><BreakdownTable rows={S.byType} label="Type" cur={cur} sort={bdSort} onSort={bdSortBy} /></section>
-                <section className="panel">
+                <section className="panel fin-quarter">
                   <h2>By quarter</h2>
                   <p className="muted small">Booked figures per calendar quarter of {year}, with the VAT you charged and the VAT you paid: the balance is what the quarterly return settles.</p>
                   <div className="table-wrap">
