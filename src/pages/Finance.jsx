@@ -263,7 +263,7 @@ export default function Finance() {
       )}
 
       {tab === 'overview' && (
-        <>
+        <div className="fin-overview">
           <div className="fin-hero">
             <div className={`fin-card ${profitAll < 0 ? 'neg' : 'pos'}`}>
               <div className="fin-label">Profit {year}</div>
@@ -353,7 +353,7 @@ export default function Finance() {
               </section>
             </div>
           )}
-        </>
+        </div>
       )}
 
       {tab === 'transactions' && (

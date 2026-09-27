@@ -2043,6 +2043,9 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 .toolbar-actions .input.search, .page-actions .input.search { padding: 6px 10px; font-size: 15px; width: 200px; min-height: 0; }
 
 /* ---------- finance ---------- */
+/* the Overview stacks its tiles, chart and tables with one clear gap between them */
+.fin-overview { display: flex; flex-direction: column; gap: 16px; }
+.fin-overview .fin-hero { margin-bottom: 0; }
 .fin-hero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
 .fin-card { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); padding: 14px 16px; }
 .fin-card.pos { border-top: 3px solid var(--ok); }

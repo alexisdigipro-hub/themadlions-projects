@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Finance overview panels no longer touch (27 Sep, morning)
+Alex sent a screenshot: "the boards ride on each other." The Overview's tiles, Month by month, Owed to crew & vendors and the breakdown grid were sibling elements with no spacing between them (only the tiles carried a margin). The whole Overview now sits in `.fin-overview`, a column with a 16 px gap; the tiles' own margin is cancelled inside it and kept on the Team work tab, which reuses `.fin-hero`. Rendered with the real CSS at 1400 px.
+
 ### Delivered projects under the grid, small and grey (27 Sep, night)
 Alex: "on the Projects tab, closed projects should go grey, move to the bottom and be about three times smaller, or suggest something." First done as a small grey section under the grid; Alex then asked for it "next to the categories but in the inverse colour", so: `showDelivered` state and a `.chip.neg` "Delivered · N" at the end of the chips row (filled with the text colour, accent when on, pushed to the right with margin-left auto on desktop); on, the grid shows only Delivered projects (category chips and search still apply, their counts follow what is shown) as `.project-card.grey` (grayscale, dimmed, colour back on hover or focus) at normal size; off, only live projects. The card markup lives in a `card(p, grey)` render function. Heading "N active · M delivered", or "M delivered" when the chip is on. Rendered with the real CSS at 1280 and 390 px.
 
