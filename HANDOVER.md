@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Tags fields: the comma now sticks (27 Sep, morning)
+Alex: "στο database, στα locations, στο edit, δεν βάζει κόμμα στα tags." Root cause: the Tags field's displayed text was `tags.join(', ')`, recomputed from the array on every keystroke; typing a comma made it split-trim-filter to an array with no empty entry, which immediately re-joined to text with the comma gone, so React reset the input a beat after you typed it. New `TagsInput` (ui.jsx) keeps what you are actually typing as its own state and only reports the parsed array upward, so the comma (and any trailing space inside a tag, which had the same problem) stays. Same fix in the two places with this exact pattern: Database > Locations and Database > People / Cast. Verified with a standalone simulation of the old and new keystroke-by-keystroke behaviour (old: typing "sea view, free parking, rooftop" collapses to one merged word; new: keeps it verbatim and parses all three tags).
+
 ### Team work: all-time totals on the cards, per-year breakdown and more stats when you open one (27 Sep, morning)
 Alex: "εξέλιξέ το Team work, θέλω κι άλλες αναλύσεις. Αρχικά κάθε κουμπί ατόμου να γράφει το σύνολο όλων των χρόνων, και μέσα να έχει σύνολα ανά χρόνο (pending & paid), και γενικά κι άλλα στατιστικά, ψάξτο." Three pieces:
 - **The card itself**: the big number (`.tw-total`) and the paid/pending bar now come from `allT` (all years) instead of the selected year, so cards rank by lifetime total and stay in the same order whichever year tab is picked; a small line underneath keeps the selected year's total and adds the average per job.

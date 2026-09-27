@@ -22,6 +22,26 @@ export function Textarea(props) {
   return <textarea className="input textarea" {...props} />
 }
 
+/* A comma-separated list (tags, aliases…) stored as an array. A plain Input whose value is
+   `tags.join(', ')`, recomputed from the array on every keystroke, erases the comma the moment
+   you type it: "sea view," parses to ["sea view"], which redisplays as "sea view", so the comma
+   never sticks. This keeps what you are typing as its own state and only reports the parsed
+   array upward; give it `key={record.id}` where you use it, so opening a different record starts
+   the text fresh instead of keeping the previous one's. */
+export function TagsInput({ value, onChange, ...props }) {
+  const [text, setText] = useState((value || []).join(', '))
+  return (
+    <Input
+      {...props}
+      value={text}
+      onChange={(e) => {
+        setText(e.target.value)
+        onChange(e.target.value.split(',').map((x) => x.trim()).filter(Boolean))
+      }}
+    />
+  )
+}
+
 export function Select({ options, children, className = '', ...props }) {
   return (
     <select className={`input select ${className}`} {...props}>

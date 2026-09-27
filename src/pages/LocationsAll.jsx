@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, TagsInput, Textarea, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { locationProjects, locationToLibrary, matchText } from '../lib/library.js'
 import { coordsFromText } from '../lib/sun.js'
@@ -155,7 +155,7 @@ export default function LocationsAll({ embedded = false } = {}) {
               <Field label="Phone"><Input value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} /></Field>
             </div>
             <Field label="Notes"><Textarea rows={3} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} placeholder="Permits, parking, power, noise, best hours, fees" /></Field>
-            <Field label="Tags" hint="Comma separated: rooftop, sea view, free parking"><Input value={(draft.tags || []).join(', ')} onChange={(e) => setDraft({ ...draft, tags: e.target.value.split(',').map((x) => x.trim()).filter(Boolean) })} /></Field>
+            <Field label="Tags" hint="Comma separated: rooftop, sea view, free parking"><TagsInput key={draft.id} value={draft.tags} onChange={(tags) => setDraft({ ...draft, tags })} /></Field>
           </div>
         )}
       </Modal>

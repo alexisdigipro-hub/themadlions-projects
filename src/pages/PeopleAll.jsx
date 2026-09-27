@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, TagsInput, useToast } from '../components/ui.jsx'
 import { can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
@@ -183,7 +183,7 @@ export default function PeopleAll({ embedded = false, kind: kindProp } = {}) {
               </div>
             )}
             <Field label="Notes"><Input value={draft.notes || ''} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} placeholder="Sizes, languages, own gear, rates" /></Field>
-            <Field label="Tags" hint="Comma separated, for searching: stunt, driver, speaks french"><Input value={(draft.tags || []).join(', ')} onChange={(e) => setDraft({ ...draft, tags: e.target.value.split(',').map((x) => x.trim()).filter(Boolean) })} /></Field>
+            <Field label="Tags" hint="Comma separated, for searching: stunt, driver, speaks french"><TagsInput key={draft.id} value={draft.tags} onChange={(tags) => setDraft({ ...draft, tags })} /></Field>
           </div>
         )}
       </Modal>
