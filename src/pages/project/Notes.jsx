@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
-import { uid } from '../../lib/store.jsx'
+import { uid, useStore } from '../../lib/store.jsx'
+import { pcloudOn, projectFolder } from '../../lib/pcloud.js'
 import { useRef } from 'react'
 import { deleteFile, fileIcon, fileUrl, fmtBytes, uploadFile } from '../../lib/files.js'
 import { fmtDate } from '../../lib/dates.js'
@@ -11,6 +12,7 @@ const KINDS = ['Google Drive', 'Google Doc', 'Google Sheet', 'Frame.io', 'Refere
 
 export default function Notes() {
   const { project, edit, canEdit } = useProject()
+  const { state } = useStore()
   const toast = useToast()
   const [draft, setDraft] = useState(null)
   const [notes, setNotes] = useState(project.productionNotes || '')
@@ -28,8 +30,9 @@ export default function Notes() {
       setBusy(`${i + 1}/${arr.length} ${f.name}`)
       try {
         const id = uid()
-        const { path } = await uploadFile({ projectId: project.id, id, file: f })
-        edit((p) => { p.files = [...(p.files || []), { id, name: f.name, path, type: f.type, bytes: f.size, addedAt: new Date().toISOString(), note: '' }] })
+        const pcloud = pcloudOn(state.settings) ? { folder: projectFolder(project, 'Files'), scope: { kind: 'project', id: project.id } } : null
+        const { path, fileid, scope } = await uploadFile({ projectId: project.id, id, file: f, pcloud })
+        edit((p) => { p.files = [...(p.files || []), { id, name: f.name, path, ...(fileid ? { fileid, scope } : {}), type: f.type, bytes: f.size, addedAt: new Date().toISOString(), note: '' }] })
       } catch (e) {
         toast(e.message, 'error')
       }
@@ -43,7 +46,7 @@ export default function Notes() {
     window.open(u, '_blank')
   }
   const removeFile = async (f) => {
-    await deleteFile(f.path).catch(() => {})
+    await deleteFile(f).catch(() => {})
     edit((p) => (p.files = (p.files || []).filter((x) => x.id !== f.id)))
   }
 
@@ -71,7 +74,7 @@ export default function Notes() {
             </>
           )}
         </div>
-        <p className="muted small">Documents, contracts, treatments, references, small videos. Up to 50 MB per file{remote ? '' : ' (local mode: this session only)'}. Footage and masters stay in the cloud folder below.</p>
+        <p className="muted small">Documents, contracts, treatments, references, small videos. Up to 50 MB per file{remote ? '' : ' (local mode: this session only)'}.{pcloudOn(state.settings) ? ' Stored in the company pCloud.' : ''} Footage and masters stay in the cloud folder below.</p>
         {!files.length ? (
           <Empty title="No files yet" />
         ) : (

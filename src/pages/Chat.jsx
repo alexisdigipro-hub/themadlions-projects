@@ -6,6 +6,7 @@ import { addDays, fmtDate } from '../lib/dates.js'
 import { SendNoticeModal, SentNotices, sendAutoNotice } from '../components/Notices.jsx'
 import { deleteFile, fileIcon, fileUrl, fmtBytes, uploadFile } from '../lib/files.js'
 import { compress } from '../lib/photos.js'
+import { pcloudOn } from '../lib/pcloud.js'
 import { useProject } from './Project.jsx'
 import * as C from '../lib/chat.js'
 
@@ -30,6 +31,15 @@ const listTime = (iso) => {
 const isImage = (a) => (a?.type || '').startsWith('image/')
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
+/* pCloud folder for a room's files: a project's room under the project, the rest under Chat. */
+function chatFolder(state, room) {
+  if (room.kind === 'project') return [state.projects.find((p) => p.id === room.projectId)?.title || room.name, 'Chat']
+  if (room.kind === 'team') return ['Chat', 'Team']
+  if (room.kind === 'group') return ['Chat', room.name]
+  const names = (room.members || []).map((id) => state.users.find((u) => u.id === id)?.name || '?').sort()
+  return ['Chat', 'Direct', names.join(' & ')]
+}
+
 /* Signed links for attachments, remembered for the session so a long thread does not ask the server once per picture. */
 const urlCache = new Map()
 function useAttachmentUrl(a) {
@@ -39,7 +49,15 @@ function useAttachmentUrl(a) {
     const hit = urlCache.get(a.id)
     if (hit && hit.until > Date.now()) { setUrl(hit.url); return }
     let on = true
-    fileUrl(a).then((u) => { if (!on) return; if (u) urlCache.set(a.id, { url: u, until: Date.now() + 50 * 60 * 1000 }); setUrl(u || '') })
+    // a pCloud link is refused until the message row that names the file is written, which can
+    // be a moment after the bubble appears, so ask again a few times before giving up
+    const ask = (left) => fileUrl(a).then((u) => {
+      if (!on) return
+      if (u) { urlCache.set(a.id, { url: u, until: Date.now() + 50 * 60 * 1000 }); setUrl(u) }
+      else if (a.fileid && left > 0) setTimeout(() => ask(left - 1), 1500)
+      else setUrl('')
+    })
+    ask(4)
     return () => { on = false }
   }, [a?.id])
   return url
@@ -373,8 +391,9 @@ function ChatRoom({ room, embedded, onBack }) {
             f = new File([c.blob], f.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' })
           }
           const attId = uid()
-          const { path } = await uploadFile({ projectId: C.roomFolder(roomId), id: attId, file: f })
-          attachments.push({ id: attId, name: f.name, type: f.type, bytes: f.size, path, ...(w ? { w, h } : {}) })
+          const pcloud = pcloudOn(state.settings) ? { folder: chatFolder(state, room), scope: { kind: 'chat', id: roomId } } : null
+          const { path, fileid, scope } = await uploadFile({ projectId: C.roomFolder(roomId), id: attId, file: f, pcloud })
+          attachments.push({ id: attId, name: f.name, type: f.type, bytes: f.size, path, ...(fileid ? { fileid, scope } : {}), ...(w ? { w, h } : {}) })
         }
       } catch (e) {
         setBusy('')
@@ -400,7 +419,7 @@ function ChatRoom({ room, embedded, onBack }) {
   }
 
   const remove = (m) => {
-    ;(m.attachments || []).forEach((a) => deleteFile(a.path).catch(() => {}))
+    ;(m.attachments || []).forEach((a) => deleteFile(a).catch(() => {}))
     update((s) => { s.chat = (s.chat || []).filter((x) => x.id !== m.id); return s })
   }
   const startEdit = (m) => { setEditing(m); setReplyTo(null); setText(m.text); requestAnimationFrame(() => inputRef.current?.focus()) }
