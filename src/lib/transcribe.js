@@ -18,7 +18,13 @@ export async function transcribe({ apiKey, file, language = '', prompt = '' }) {
   } catch (e) {
     // a TypeError here is the browser saying it never got an answer: no network, a VPN or an
     // ad blocker that stops api.openai.com, or a corporate proxy. Not the key, not the file.
-    throw new Error(`Could not reach OpenAI (${e.message}). Check the connection, and switch off any ad blocker or VPN for this site, then try again.`)
+    // A second, tiny request with the same key tells the two cases apart: if that one gets
+    // through, only the upload is being stopped (a filter on big or third-party POSTs, or a
+    // proxy limit); if it fails too, every call with a key is blocked from this device.
+    const small = await probe(apiKey)
+    if (small === 'ok') throw new Error(`OpenAI answers this browser, but the upload of the song never arrived (${e.message}). Something on this device or network stops large requests to api.openai.com: an ad blocker or content filter (AdGuard, uBlock, NextDNS), a VPN, or a proxy. Try from a phone on mobile data to confirm.`)
+    if (small === 'auth') throw new Error('The key in Settings is wrong or was revoked (OpenAI refused it), and the upload itself did not get through either.')
+    throw new Error(`Could not reach OpenAI at all from this browser (${e.message}). Check the connection, and switch off any ad blocker or VPN for this site, then try again.`)
   }
   if (!res.ok) {
     let msg = `OpenAI ${res.status}`
@@ -30,6 +36,16 @@ export async function transcribe({ apiKey, file, language = '', prompt = '' }) {
   const data = await res.json()
   const segments = (data.segments || []).map((s) => ({ start: Math.round(s.start * 10) / 10, end: Math.round(s.end * 10) / 10, text: (s.text || '').trim() })).filter((s) => s.text)
   return { text: data.text || '', language: data.language || language, segments }
+}
+
+/* One small authenticated GET: 'ok' when OpenAI answers 200, 'auth' on 401, 'blocked' when the browser gets nothing. */
+async function probe(apiKey) {
+  try {
+    const r = await fetch('https://api.openai.com/v1/models/whisper-1', { headers: { Authorization: `Bearer ${apiKey}` } })
+    return r.status === 401 ? 'auth' : r.ok ? 'ok' : 'ok'
+  } catch {
+    return 'blocked'
+  }
 }
 
 /* Group timed phrases into sections wherever the voice pauses for longer than `gap` seconds. */
