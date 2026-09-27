@@ -119,8 +119,8 @@ export default function Music() {
       }
       setBusy('Analysing waveform…')
       const { peaks, duration } = await analyze(file)
-      lastFile.current = file
       const id = uid()
+      lastFile.current = { file, trackId: id }
       setBusy('Uploading…')
       const { path, ext } = await uploadTrack({ projectId: project.id, id, file })
       setMusic((m) => {
@@ -175,9 +175,17 @@ export default function Music() {
   const exportMap = () => download(`${project.title} - song map.txt`, songMapText(music, project.scenes))
 
   const getAudioFile = async () => {
-    if (lastFile.current) return lastFile.current
+    // the file just uploaded is reused only for the track it belongs to, not for whichever is active now
+    if (lastFile.current && lastFile.current.trackId === track?.id) return lastFile.current.file
     if (!url) throw new Error('No audio to transcribe.')
-    const blob = await (await fetch(url)).blob()
+    let res
+    try {
+      res = await fetch(url)
+    } catch (e) {
+      throw new Error(`Could not download the song from storage (${e.message}). Check the connection and try again.`)
+    }
+    if (!res.ok) throw new Error(`Could not download the song from storage (${res.status}). Reload the page and try again; the link may have expired.`)
+    const blob = await res.blob()
     return new File([blob], `${track.name}.${track.ext || 'mp3'}`, { type: blob.type || 'audio/mpeg' })
   }
   /* Saves the stored file to the device with its own name. A blob link, not the signed URL
