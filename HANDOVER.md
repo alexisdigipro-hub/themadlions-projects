@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Sidebar 10% wider on desktop (27 Sep, morning)
+Alex: "μεγάλωσε την πλαινή μπάρα μενού κατά 10% σε desktop." The one `--sidebar` CSS variable (232px → 255px) that sets the desktop grid column; the phone drawer has its own fixed 260px and is untouched. Rendered at 1440 px.
+
 ### Home on a phone fits the screen (27 Sep, morning)
 Alex sent two phone screenshots: "the overview on mobile is wrong, it needs a proper layout": every block ran off the right edge (the Next day column, Saturday and Sunday of the calendar, the last face). Root cause, reproduced with a static mock of the real CSS at 390 px (blocks measured 610 px wide): the generic phone rule at the 820 px breakpoint turns every `.table` into `display: block; white-space: nowrap; overflow-x: auto`, and the Home projects table's first cell was itself `display: flex` (`td.person-cell`), so the row's min-content ran to about 570 px; the `.home-blocks` phone track was a bare `1fr` (minimum auto), so that width became the width of every block. Fixes: `.home-blocks` on phones is `minmax(0, 1fr)`; the flex row moved from the `td` onto a `div.person-cell` inside it (also in project People and the call sheet cast tables, same pattern, desktop unchanged); a one-column phone version of the projects table was built first, then Alex: "in the mobile version just take out the projects tab", so Home.jsx (useIsMobile) drops the `projects` block from `visible` on phones (the Projects tab in the bar covers it) and the phone-only table rules went again. Rendered at 390 and 1280 px; the phone page measures exactly the viewport.
 
