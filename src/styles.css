@@ -2400,6 +2400,9 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 .chat-list-foot { display: flex; gap: 6px; justify-content: flex-end; padding: 8px 10px; border-top: 1px solid var(--line-soft); }
 .chat-people { display: flex; flex-direction: column; }
 .chat-people .chat-room-item { border-radius: var(--radius); border-bottom: 0; }
+.chat-member { display: flex; align-items: center; gap: 12px; padding: 8px 4px; border-bottom: 1px solid var(--line-soft); }
+.chat-member:last-child { border-bottom: 0; }
+.chat-member.out .chat-rmain { opacity: .55; }
 .chat-folder-edit { border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 10px; display: flex; flex-direction: column; gap: 8px; }
 .chat-folder-edit .chips-static { margin: 0; }
 .chat-folder-edit .row-actions { display: flex; gap: 6px; }

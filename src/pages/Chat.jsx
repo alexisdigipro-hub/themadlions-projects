@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button, Confirm, Field, Input, Modal, useIsMobile, useToast } from '../components/ui.jsx'
-import { canSendNotices, today as todayISO, uid, useCurrentUser, useStore } from '../lib/store.jsx'
+import { canAccessProject, canSendNotices, today as todayISO, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { addDays, fmtDate } from '../lib/dates.js'
 import { SendNoticeModal, SentNotices, sendAutoNotice } from '../components/Notices.jsx'
 import { deleteFile, fileIcon, fileUrl, fmtBytes, uploadFile } from '../lib/files.js'
@@ -110,6 +110,7 @@ export function ProjectChat() {
   const { project } = useProject()
   const { state } = useStore()
   const user = useCurrentUser()
+  if (C.chatExcluded(project, user)) return <p className="muted">You are not in this project's conversation.</p>
   const room = C.roomOf(state, user, C.projectRoom(project.id)) || { id: C.projectRoom(project.id), kind: 'project', name: project.title, sub: project.category, projectId: project.id, color: project.color, photo: project.coverThumb || '', initials: 'P' }
   return (
     <div className="chat-page chat-embedded">
@@ -316,6 +317,36 @@ function FoldersModal({ open, onClose, rooms }) {
   )
 }
 
+/* Who is in a project's conversation: everyone with access to the project, minus the people an
+   administrator took out (project.chatExcluded). Administrators are always in. */
+function ProjectMembersModal({ open, projectId, onClose }) {
+  const { state, updateProject } = useStore()
+  const project = state.projects.find((p) => p.id === projectId)
+  if (!project) return null
+  const excluded = Array.isArray(project.chatExcluded) ? project.chatExcluded : []
+  const people = state.users.filter((u) => u.active !== false && canAccessProject(u, projectId))
+  const toggle = (id) => updateProject(projectId, (p) => { const cur = Array.isArray(p.chatExcluded) ? p.chatExcluded : []; p.chatExcluded = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] })
+  return (
+    <Modal open={open} title={`Members · ${project.title}`} onClose={onClose} footer={<Button variant="primary" onClick={onClose}>Done</Button>}>
+      <div className="stack">
+        <p className="small muted">Everyone who can see the project is in its conversation. Take someone out and the room disappears from their Chat and from the project's tabs; the database stops handing them its messages. Put them back any time. Administrators are always in.</p>
+        <ul className="plain chat-people">
+          {people.map((p) => {
+            const out = excluded.includes(p.id) && p.role !== 'admin'
+            return (
+              <li key={p.id} className={`chat-member ${out ? 'out' : ''}`}>
+                <RoomAvatar room={{ kind: 'direct', photo: p.profile?.thumb || '', initials: (p.name || '?').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase() }} size={36} />
+                <span className="chat-rmain"><strong>{p.name}</strong><span className="chat-rprev">{p.role === 'admin' ? 'Administrator, always in' : out ? 'Not in this conversation' : p.profile?.position || 'In the conversation'}</span></span>
+                {p.role !== 'admin' && <Button size="sm" variant={out ? 'primary' : 'ghost'} onClick={() => toggle(p.id)}>{out ? 'Put back' : 'Remove'}</Button>}
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    </Modal>
+  )
+}
+
 /* ---------- one room ---------- */
 function ChatRoom({ room, embedded, onBack }) {
   const { state, update } = useStore()
@@ -332,6 +363,7 @@ function ChatRoom({ room, embedded, onBack }) {
   const [busy, setBusy] = useState('')
   const [caret, setCaret] = useState(0)
   const [editGroup, setEditGroup] = useState(false)
+  const [editMembers, setEditMembers] = useState(false)
   const endRef = useRef(null)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
@@ -474,6 +506,7 @@ function ChatRoom({ room, embedded, onBack }) {
             {room.kind === 'direct' ? room.sub || 'Direct message' : `${membersOf.length} ${membersOf.length === 1 ? 'person' : 'people'}`}
           </span>
         </div>
+        {room.kind === 'project' && isAdmin && <Button size="sm" variant="ghost" onClick={() => setEditMembers(true)}>Members</Button>}
         {room.kind === 'project' && !embedded && <Link className="btn btn-ghost btn-sm" to={`/p/${room.projectId}`}>Open project</Link>}
         {room.kind === 'direct' && room.otherId && <Link className="btn btn-ghost btn-sm" to={`/u/${room.otherId}`}>Profile</Link>}
         {room.kind === 'group' && isAdmin && groupRow && <Button size="sm" variant="ghost" onClick={() => setEditGroup(true)}>Edit group</Button>}
@@ -553,6 +586,7 @@ function ChatRoom({ room, embedded, onBack }) {
       </div>
       )}
       {groupRow && <GroupModal open={editGroup} group={groupRow} onClose={() => setEditGroup(false)} onSaved={() => setEditGroup(false)} />}
+      {room.kind === 'project' && isAdmin && <ProjectMembersModal open={editMembers} projectId={room.projectId} onClose={() => setEditMembers(false)} />}
     </div>
   )
 }

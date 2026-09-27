@@ -3,6 +3,7 @@ import { Badge } from '../components/ui.jsx'
 import { can, canAccessProject, useCurrentUser, useStore } from '../lib/store.jsx'
 import { hydrateProject } from '../lib/library.js'
 import { projectTabs, tabHidden } from '../lib/tabs.js'
+import { chatExcluded } from '../lib/chat.js'
 import { Icon } from '../components/icons.jsx'
 
 // The brainstorm whiteboard is built and working but Alex does not need it yet, so the tab is
@@ -28,7 +29,7 @@ export default function Project() {
   const tabs = [
     ...projectTabs(project),
     ...(SHOW_WHITEBOARD ? [{ to: 'whiteboard', label: 'Whiteboard', key: 'files', icon: 'notes' }] : []),
-  ].filter((t) => can(user, t.key) && !tabHidden(project, t.to))
+  ].filter((t) => can(user, t.key) && !tabHidden(project, t.to) && !(t.to === 'chat' && chatExcluded(project, user)))
 
   const ctx = {
     project,
