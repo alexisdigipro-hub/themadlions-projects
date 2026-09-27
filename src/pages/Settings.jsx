@@ -294,7 +294,7 @@ export default function Settings() {
           </Field>
           <Field label="Accent colour">
             <div className="accent-swatches">
-              {[['amber', '#c9932f', 'Lion amber'], ['red', '#c8503f', 'Red'], ['slate', '#3f5578', 'Slate blue'], ['lilac', '#7a5ec7', 'Lilac'], ['ink', '#1f2430', 'Ink']].map(([v, c, l]) => (
+              {[['amber', '#c9932f', 'Lion amber'], ['red', '#c8503f', 'Red'], ['slate', '#3f5578', 'Slate blue'], ['lilac', '#7a5ec7', 'Lilac'], ['green', '#3f8f5f', 'Forest'], ['teal', '#2b8a93', 'Teal'], ['blue', '#3b7dd8', 'Ocean'], ['rose', '#c4547f', 'Rose'], ['orange', '#d9762b', 'Orange'], ['ink', '#1f2430', 'Ink']].map(([v, c, l]) => (
                 <button key={v} className={`swatch ${accent === v ? 'on' : ''}`} style={{ '--sw': c }} onClick={() => applyAccent(v)} title={l}><span className="dot" />{l}</button>
               ))}
             </div>
