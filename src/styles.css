@@ -1468,6 +1468,10 @@ code {
   height: 8px;
   border-radius: 50%;
 }
+/* the calendar's own legend (event types, below the desktop grid): names and dots 60% bigger,
+   with real room between entries. Desktop only already, the mobile calendar never renders it. */
+.cal-side .legend { gap: 14px 24px; font-size: 22px; }
+.cal-side .legend i { width: 13px; height: 13px; }
 
 /* ---------- locations ---------- */
 .loc-layout {

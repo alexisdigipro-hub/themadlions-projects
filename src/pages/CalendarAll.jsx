@@ -6,7 +6,7 @@ export default function CalendarAll() {
   const { state } = useStore()
   return (
     <>
-      <PageHead title="Production calendar" sub="Every project you have access to, on one board" />
+      <PageHead title={<>THE<strong>MAD</strong>LIONS CALENDAR</>} />
       <CalendarView title={state.workspace.name} />
     </>
   )
