@@ -413,6 +413,10 @@ export default function Deliveries() {
             const r = g.head
             const last = g.answers[g.answers.length - 1]
             const one = !g.people.length
+            // Update reopens one row's worth of fields into the form: fine for no name at all or
+            // exactly one, but a delivery sent to several named people is several rows and there
+            // is nowhere for more than one of them to go back into a single form.
+            const singleTarget = g.people.length <= 1
             return (
               <li key={g.key} className={`deliv-row${g.shut ? ' is-shut' : ''}`}>
                 <span className={`deliv-stage ${r.badgeClass}`}>{r.badge}</span>
@@ -465,9 +469,9 @@ export default function Deliveries() {
                   {one && <button className="deliv-tool" onClick={() => copy(r.url, 'Link')}>Copy link</button>}
                   {one && r.isDelivery && <button className="deliv-tool" onClick={() => copy(mailText(r), 'Message')}>Copy for email</button>}
                   {one && <a className="deliv-tool" href={r.url} target="_blank" rel="noreferrer">Open</a>}
-                  {editable && r.isDelivery && one && <button className="deliv-tool" onClick={() => openDelivery(r)}>Update</button>}
+                  {editable && r.isDelivery && singleTarget && <button className="deliv-tool" onClick={() => openDelivery(r)}>Update</button>}
                   {editable && r.isStatus && <button className="deliv-tool" onClick={() => openStatus(r)}>Update</button>}
-                  {editable && isAdmin && r.isEstimate && one && <button className="deliv-tool" onClick={() => openEstimate(r)}>Update</button>}
+                  {editable && isAdmin && r.isEstimate && singleTarget && <button className="deliv-tool" onClick={() => openEstimate(r)}>Update</button>}
                   {editable && r.opens !== undefined && (
                     <button className="deliv-tool" onClick={() => setShut(g.key, !g.shut)}>{g.shut ? 'Reopen all' : one ? 'Close' : 'Close all'}</button>
                   )}
