@@ -314,7 +314,7 @@ export default function Deliveries() {
         intro: edraft.intro.trim(),
         lines: edraft.lines.filter((l) => (l.what || '').trim()).map((l) => ({
           group: (l.group || '').trim(), what: l.what.trim(), unit: (l.unit || '').trim(),
-          qty: Number(l.qty) || 1, price: Number(l.price) || 0,
+          qty: Number(l.qty) || 1, price: Number(l.price) || 0, advance: !!l.advance,
         })),
         discount: Number(edraft.discount) || 0,
         vatPct: Number(edraft.vatPct) || 0,
