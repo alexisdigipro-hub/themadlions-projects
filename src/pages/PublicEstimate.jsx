@@ -91,17 +91,15 @@ export default function PublicEstimate() {
               {/* a Fragment with a key, not <>, because a bare fragment cannot carry one */}
               {groups.map((g, gi) => (
                 <Fragment key={g.label || `g${gi}`}>
-                  {g.label && <tr className="est-head"><th colSpan={3}>{g.label}</th></tr>}
+                  {g.label && <tr className="est-head"><th colSpan={2}>{g.label}</th></tr>}
                   {g.rows.map((l, i) => (
                     <tr key={i}>
                       <td>{l.what}</td>
-                      {/* how the number was reached, so nothing looks plucked out of the air */}
-                      <td className="est-qty">{Number(l.qty) > 1 || l.unit ? `${Number(l.qty) || 1}${l.unit ? ` ${l.unit}` : ''} · ${amount(l.price, cur)}` : ''}</td>
                       <td className="est-amt">{amount(lineAmount(l), cur)}</td>
                     </tr>
                   ))}
                   {g.label && g.rows.length > 1 && (
-                    <tr className="est-sub"><td colSpan={2}>Subtotal</td><td className="est-amt">{amount(g.sum, cur)}</td></tr>
+                    <tr className="est-sub"><td>Subtotal</td><td className="est-amt">{amount(g.sum, cur)}</td></tr>
                   )}
                 </Fragment>
               ))}

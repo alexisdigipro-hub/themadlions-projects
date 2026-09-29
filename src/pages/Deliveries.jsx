@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { STATUSES, can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
 import { deliveryUrl, estimateUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, statusUrl, tokenOf } from '../lib/shares.js'
-import { amount, estimateTotals, lineAmount } from '../lib/estimate.js'
+import { amount, estimateTotals } from '../lib/estimate.js'
 import { fmtDate, toISODate } from '../lib/dates.js'
 
 export const STAGES = [
@@ -575,10 +575,9 @@ export default function Deliveries() {
         {edraft && (
           <div className="stack">
             <p className="muted small">Your own costs, typed here. Picking a project only fills in the title and the client; the project&#39;s budget is a separate thing and stays out of this.</p>
-            <div className="row-3">
+            <div className="row-2">
               <Field label="Project" hint="Only the title and the client."><Select value={edraft.projectId} onChange={(e) => pickEstimateProject(e.target.value)} options={[['', 'Not in the app'], ...projects.map((p) => [p.id, p.title])]} /></Field>
               <Field label="Title"><Input value={edraft.title} onChange={(e) => setE('title', e.target.value)} placeholder="Northwind Summer Film" /></Field>
-              <Field label="Version" hint="v1, v2…"><Input value={edraft.version} onChange={(e) => setE('version', e.target.value)} placeholder="v1" /></Field>
             </div>
             <Field label="Client"><Input value={edraft.client} onChange={(e) => setE('client', e.target.value)} /></Field>
             <Field label="Opening note" hint="What the estimate covers, in a line or two."><Textarea rows={2} value={edraft.intro} onChange={(e) => setE('intro', e.target.value)} /></Field>
@@ -625,7 +624,9 @@ export default function Deliveries() {
 
 /* The cost lines. Add one, remove one, and the total underneath moves as you type. */
 function LineEditor({ rows, onChange, cur, discount, vatPct }) {
-  const set = (i, k, v) => onChange(rows.map((r, j) => (j === i ? { ...r, [k]: v } : r)))
+  // No more quantity or unit (Alex): every line is just what it is and what it costs, so qty is
+  // pinned to 1 the moment a line is touched here, whatever it was carrying from before.
+  const set = (i, k, v) => onChange(rows.map((r, j) => (j === i ? { ...r, [k]: v, qty: 1, unit: '' } : r)))
   const add = () => onChange([...rows, { group: rows[rows.length - 1]?.group || '', what: '', qty: 1, unit: '', price: '' }])
   // Reorder by swapping with a neighbour: same move Home's blocks use, so a line's place on the
   // printed estimate (and which group it visually sits under) is something you can set by hand.
@@ -642,16 +643,13 @@ function LineEditor({ rows, onChange, cur, discount, vatPct }) {
       <span className="field-label">Costs</span>
       <div className="est-edit">
         <div className="est-edit-head">
-          <span>Heading</span><span>What</span><span>Qty</span><span>Unit</span><span>Price</span><span>Amount</span><span />
+          <span>Heading</span><span>What</span><span>Amount</span><span />
         </div>
         {rows.map((r, i) => (
           <div key={i} className="est-edit-row">
             <Input value={r.group || ''} placeholder="Shooting" onChange={(e) => set(i, 'group', e.target.value)} />
             <Input value={r.what || ''} placeholder="Camera crew" onChange={(e) => set(i, 'what', e.target.value)} />
-            <Input type="number" min="0" step="0.5" value={r.qty ?? ''} onChange={(e) => set(i, 'qty', e.target.value)} />
-            <Input value={r.unit || ''} placeholder="days" onChange={(e) => set(i, 'unit', e.target.value)} />
             <Input type="number" min="0" step="0.01" value={r.price ?? ''} placeholder="0" onChange={(e) => set(i, 'price', e.target.value)} />
-            <span className="est-edit-amt">{amount(lineAmount(r), cur)}</span>
             <span className="est-edit-actions">
               <button className="link small" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move this cost up">↑</button>
               <button className="link small" onClick={() => move(i, 1)} disabled={i === rows.length - 1} aria-label="Move this cost down">↓</button>
