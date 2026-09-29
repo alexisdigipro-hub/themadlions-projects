@@ -245,7 +245,11 @@ export function renderPages(d, t, groups, cur) {
 
   // ---- valid until / terms ----
   if (d.validUntil || d.terms) {
-    ensure(60)
+    // Terms & Notes reads a size up and bold (Alex): measured up front, so the space reserved
+    // below (ensure) actually covers however many lines that turns into.
+    ctx.font = `700 23px ${font}`
+    const termsLines = d.terms ? wrapText(ctx, d.terms, CONTENT_W * 0.75) : []
+    ensure(10 + 24 + (d.validUntil ? 20 : 0) + termsLines.length * 30)
     y += 10
     hr()
     y += 24
@@ -261,8 +265,8 @@ export function renderPages(d, t, groups, cur) {
     }
     if (d.terms) {
       ctx.fillStyle = MUTED
-      ctx.font = `400 11.5px ${font}`
-      for (const l of wrapText(ctx, d.terms, CONTENT_W * 0.75)) { ctx.fillText(l, PAGE_W / 2, y); y += 16 }
+      ctx.font = `700 23px ${font}`
+      for (const l of termsLines) { ctx.fillText(l, PAGE_W / 2, y); y += 30 }
     }
     ctx.textAlign = 'left'
   }
