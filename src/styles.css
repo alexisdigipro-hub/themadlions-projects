@@ -2557,11 +2557,17 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 /* the form Alex fills in */
 .est-edit { border: 1px solid var(--line-soft); border-radius: 12px; padding: 12px; background: var(--raised); }
 .est-edit-head,
-.est-edit-row { display: grid; grid-template-columns: 1.1fr 1.7fr 72px 84px 104px 112px 72px; gap: 8px; align-items: center; }
+.est-edit-row { display: grid; grid-template-columns: 1.1fr 1.7fr 72px 84px 104px 112px 116px; gap: 8px; align-items: center; }
 .est-edit-head { font-size: 11.5px; color: var(--muted); padding: 0 2px 6px; }
 .est-edit-row { margin-bottom: 8px; }
 .est-edit-row .input { width: 100%; box-sizing: border-box; }
 .est-edit-amt { text-align: right; font-variant-numeric: tabular-nums; font-size: 14px; }
+/* Move up/down swaps a cost line with its neighbour, same arrows as Home's block order, so where
+   it prints (and which group it visually sits under) is something you can set by hand. */
+.est-edit-actions { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.est-edit-actions button { font-size: 15px; line-height: 1; }
+.est-edit-actions button:disabled { opacity: .3; cursor: default; }
+.est-edit-actions button:last-child { font-size: 13px; }
 .est-edit-foot { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-top: 6px; border-top: 1px solid var(--line-soft); }
 .est-edit-foot .muted { margin-left: auto; }
 .est-edit-total { font-size: 18px; font-variant-numeric: tabular-nums; }
