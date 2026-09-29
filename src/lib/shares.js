@@ -1,11 +1,10 @@
 import { remote, supabase } from './supabase.js'
 
-// Letters and digits pack more randomness per character than hex, so the same strength of link
-// (still effectively unguessable — every link is the only thing standing between an outsider and
-// that page, PIN or no PIN) comes out shorter: 17 characters here read about as safe as the 24 hex
-// characters this replaced.
+// Letters and digits pack more randomness per character than hex. 12 of them is still 10^21+
+// guesses to land on one by chance — nobody is brute-forcing that through a live web request,
+// PIN or no PIN — while reading noticeably shorter than the 24 hex characters this replaced.
 const TOKEN_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-const token = () => Array.from(crypto.getRandomValues(new Uint8Array(17)), (b) => TOKEN_CHARS[b % TOKEN_CHARS.length]).join('')
+const token = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => TOKEN_CHARS[b % TOKEN_CHARS.length]).join('')
 export const shareUrl = (t) => `${location.origin}${location.pathname}#/s/${t}`
 export const deliveryUrl = (t) => `${location.origin}${location.pathname}#/d/${t}`
 export const statusUrl = (t) => `${location.origin}${location.pathname}#/ps/${t}`
