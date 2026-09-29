@@ -40,6 +40,16 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Cost estimation link: wider on desktop, Send Feedback, Download PDF (29 Sep)
+Alex: "το link με το estimation θέλω να είναι πιο φαρδύ όλο το πλάτος για desktop, βγάλε το Ask For Changes και κάν' το Send Feedback, και δίπλα του θέλω να μπορεί κάποιος να το κατεβάζει σε PDF, σε μορφή για desktop πιο φαρδιά και απλωμένη."
+- **Wider on desktop only**: the estimate page shares its narrow "one column, centred" layout (`.pub.dlv` / `.dlv-sheet`) with the Delivery and Status pages, so the width change is scoped to a new `dlv-estimate` class on this page alone, at `min-width: 821px` (matching the app's own mobile breakpoint): 660px → 1100px outer, 620px → 1040px sheet. Phones untouched.
+- **Send Feedback**: renamed from "Ask for changes"; still writes the same `changes` response status, so the admin side (Share list) is unaffected.
+- **Download PDF**: a plain `window.print()` button next to Send Feedback. No new dependency: a print stylesheet for these pages already existed (`.pub.dlv` and `.dlv-sheet` go `max-width: none` under `@media print`, the reply form hides), so printing already came out wide and spread out, exactly what Alex asked for the PDF; the button just surfaces it. Also sets `document.title` to the estimate's own title while the page is open, so "Save as PDF" suggests a real filename instead of the app's.
+
+Rendered with the real stylesheet at 1440 px and 390 px.
+
+
+
 ### Cost estimation: reorder the cost lines (29 Sep)
 Alex: "στο Cost Estimation, όταν φτιάχνεις καινούργια καταχώρηση, εκεί που βάζεις τα cost, θέλω αυτά να μπορείς να τα μετακινείς πάνω κάτω σαν σειρά." `LineEditor` (Deliveries.jsx, the Cost estimation modal's cost table) gets a `move(i, dir)` that swaps a line with its neighbour, same pattern as Home's block-arrange arrows: ↑ ↓ next to Remove, disabled at the top and bottom row. This is what decides which line prints first, and inside a shared heading, which one leads its group. Rendered with the real stylesheet at 1400 and 390 px.
 

@@ -2855,6 +2855,13 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
   .dlv-credits dt { text-align: center; }
   .dlv-actions .dlv-btn { width: 100%; }
 }
+/* The estimate link only (Alex): noticeably wider on desktop than the narrow, centred delivery
+   and status pages it shares this layout with. Phones are untouched, they were never the width
+   problem. */
+@media (min-width: 821px) {
+  .pub.dlv-estimate { max-width: 1100px; }
+  .dlv-estimate .dlv-sheet { max-width: 1040px; }
+}
 
 /* ---------- brainstorm whiteboard ---------- */
 .wb-bar { flex-wrap: wrap; }
