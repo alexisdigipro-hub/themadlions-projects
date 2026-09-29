@@ -23,9 +23,10 @@ const MARGIN = 50
 const CONTENT_W = PAGE_W - MARGIN * 2
 const SCALE = 2 // canvas px per pt: about 144dpi, crisp enough to read comfortably when printed
 
-const INK = '#15171c'
-const MUTED = '#6b7280'
-const LINE = '#e4e4e7'
+const BG = '#17181c'
+const INK = '#ece9e2'
+const MUTED = '#9b9a94'
+const LINE = '#33363e'
 const ACCENT = '#C8503F'
 
 /* One line, shortened with an ellipsis if it would not fit — for the running header, where the
@@ -79,7 +80,7 @@ export function renderPages(d, t, groups, cur) {
     canvas.height = Math.round(PAGE_H * SCALE)
     ctx = canvas.getContext('2d')
     ctx.scale(SCALE, SCALE)
-    ctx.fillStyle = '#fff'
+    ctx.fillStyle = BG
     ctx.fillRect(0, 0, PAGE_W, PAGE_H)
     ctx.textBaseline = 'alphabetic'
     pages.push({ canvas, width: canvas.width, height: canvas.height })
@@ -200,6 +201,10 @@ export function renderPages(d, t, groups, cur) {
       ctx.fillText(amount(g.sum, cur), AMT_X, y)
       ctx.textAlign = 'left'
       y += 20
+    } else {
+      // No subtotal line to create a gap: the row border just drawn sits only 2pt above `y`,
+      // close enough to touch the next group's heading without a little breathing room here.
+      y += 12
     }
   }
 
@@ -230,7 +235,7 @@ export function renderPages(d, t, groups, cur) {
     ctx.textAlign = 'center'
     if (d.validUntil) {
       const expired = d.validUntil < new Date().toISOString().slice(0, 10)
-      ctx.fillStyle = expired ? '#b3261e' : MUTED
+      ctx.fillStyle = expired ? '#d8564a' : MUTED
       ctx.font = `400 12px ${font}`
       const label = expired ? 'This estimate ran out on ' : 'Valid until '
       const dateStr = new Date(`${d.validUntil}T00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
