@@ -627,6 +627,15 @@ export default function Deliveries() {
 function LineEditor({ rows, onChange, cur, discount, vatPct }) {
   const set = (i, k, v) => onChange(rows.map((r, j) => (j === i ? { ...r, [k]: v } : r)))
   const add = () => onChange([...rows, { group: rows[rows.length - 1]?.group || '', what: '', qty: 1, unit: '', price: '' }])
+  // Reorder by swapping with a neighbour: same move Home's blocks use, so a line's place on the
+  // printed estimate (and which group it visually sits under) is something you can set by hand.
+  const move = (i, dir) => {
+    const j = i + dir
+    if (j < 0 || j >= rows.length) return
+    const next = [...rows]
+    ;[next[i], next[j]] = [next[j], next[i]]
+    onChange(next)
+  }
   const t = estimateTotals({ lines: rows, discount, vatPct })
   return (
     <div className="field">
@@ -643,7 +652,11 @@ function LineEditor({ rows, onChange, cur, discount, vatPct }) {
             <Input value={r.unit || ''} placeholder="days" onChange={(e) => set(i, 'unit', e.target.value)} />
             <Input type="number" min="0" step="0.01" value={r.price ?? ''} placeholder="0" onChange={(e) => set(i, 'price', e.target.value)} />
             <span className="est-edit-amt">{amount(lineAmount(r), cur)}</span>
-            <button className="link small" onClick={() => onChange(rows.filter((_, j) => j !== i))}>Remove</button>
+            <span className="est-edit-actions">
+              <button className="link small" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move this cost up">↑</button>
+              <button className="link small" onClick={() => move(i, 1)} disabled={i === rows.length - 1} aria-label="Move this cost down">↓</button>
+              <button className="link small" onClick={() => onChange(rows.filter((_, j) => j !== i))}>Remove</button>
+            </span>
           </div>
         ))}
         {!rows.length && <p className="muted small">No costs yet.</p>}

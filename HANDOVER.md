@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Cost estimation: reorder the cost lines (29 Sep)
+Alex: "στο Cost Estimation, όταν φτιάχνεις καινούργια καταχώρηση, εκεί που βάζεις τα cost, θέλω αυτά να μπορείς να τα μετακινείς πάνω κάτω σαν σειρά." `LineEditor` (Deliveries.jsx, the Cost estimation modal's cost table) gets a `move(i, dir)` that swaps a line with its neighbour, same pattern as Home's block-arrange arrows: ↑ ↓ next to Remove, disabled at the top and bottom row. This is what decides which line prints first, and inside a shared heading, which one leads its group. Rendered with the real stylesheet at 1400 and 390 px.
+
 ### A location type for both interior and exterior (27 Sep, morning)
 Alex: "στην καταχώρηση του location θέλω να προσθέσεις στον τύπο και ένα INT. & EXT." Added to the one `TYPES` list both places keep it (Database > Locations and a project's own Locations tab): Studio, Interior, Exterior, **INT. & EXT.**, Office, Base camp, Parking, Hospital, Other. Shows up in the Type field when adding or editing a location, and in the type filter on Database > Locations.
 
