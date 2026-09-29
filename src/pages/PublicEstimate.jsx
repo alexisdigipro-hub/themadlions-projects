@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { respondToDelivery } from '../lib/shares.js'
 import { PinGate, usePublicShare } from '../components/PublicGate.jsx'
 import { amount, estimateTotals, groupLines, lineAmount } from '../lib/estimate.js'
+import { downloadEstimatePdf } from '../lib/estimatePdf.js'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
@@ -14,13 +15,14 @@ export default function PublicEstimate() {
   const [sent, setSent] = useState('')
   const [busy, setBusy] = useState('')
   const [err, setErr] = useState('')
+  const [pdfBusy, setPdfBusy] = useState(false)
 
   // A page made for one person already knows the name, so the reply form does not ask for it again.
   useEffect(() => {
     if (share?.data?.recipient?.name) setName(share.data.recipient.name)
   }, [share])
 
-  // So "Save as PDF" from the browser's print dialog suggests a real filename, not the app's own title.
+  // Also used if someone prints the page by hand (Ctrl+P): a real filename instead of the app's own.
   useEffect(() => {
     const d = share?.data
     if (d?.title) document.title = `${d.title}${d.version ? ` ${d.version}` : ''} — cost estimate`
@@ -50,6 +52,19 @@ export default function PublicEstimate() {
       setErr(e.message)
     } finally {
       setBusy('')
+    }
+  }
+
+  // Drawn onto a canvas and wrapped in a hand-written PDF, so this saves the file straight away —
+  // no print dialog for the client to find "Save as PDF" in themselves.
+  const savePdf = async () => {
+    setPdfBusy(true); setErr('')
+    try {
+      await downloadEstimatePdf(d, t, groups, cur, `${d.title || 'estimate'}${d.version ? ` ${d.version}` : ''}.pdf`)
+    } catch (e) {
+      setErr(e.message || 'Could not make the PDF. Try again.')
+    } finally {
+      setPdfBusy(false)
     }
   }
 
@@ -128,7 +143,7 @@ export default function PublicEstimate() {
               <textarea id="est-note" className="dlv-input dlv-area" rows={4} value={note} onChange={(e) => setNote(e.target.value)} />
               <div className="dlv-actions">
                 <button className="dlv-btn ghost" onClick={() => reply('changes')} disabled={!!busy}>{busy === 'changes' ? 'Sending…' : 'Send Feedback'}</button>
-                <button type="button" className="dlv-btn ghost" onClick={() => window.print()}>Download PDF</button>
+                <button type="button" className="dlv-btn ghost" onClick={savePdf} disabled={pdfBusy}>{pdfBusy ? 'Preparing…' : 'Download PDF'}</button>
                 <button className="dlv-btn" onClick={() => reply('approved')} disabled={!!busy}>{busy === 'approved' ? 'Sending…' : 'Accept'}</button>
               </div>
               {err && <p className="dlv-err">{err}</p>}
