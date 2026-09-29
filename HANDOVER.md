@@ -40,6 +40,11 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Cost estimation: no quantity, no unit, no version (29 Sep)
+Alex: "βγάλε το Quantity, και το Day [το Unit πεδίο]. Βγάλε και το Version από πάνω." A cost line now has only a heading, a description and one amount (`LineEditor` in Deliveries.jsx: 4 columns instead of 6, `est-edit` grid narrower to match); the amount input writes straight to `line.price` with `qty` pinned to 1 and `unit` cleared the moment any field on that line is touched, whatever it was carrying before. `estimateTotals`/`groupLines`/`lineAmount` in `lib/estimate.js` are untouched, since `lineAmount = qty × price` already equals the amount typed once qty is 1 — nothing downstream (totals, the public page, the PDF) needed to change its math. The "2 days · €300.00" detail that used to sit next to a line's amount is gone from both the public page's table and the PDF, which also frees up width for the description column. The Version field (top of the Cost estimation form, next to Project and Title) is gone too; existing display logic (the "· v1" next to the title, the PDF's own heading) was already conditional on it being set, so nothing breaks, new estimates just never show one.
+
+Rendered with the real stylesheet at 1400 and 390 px, and the PDF re-checked in real headless Chromium the same way as before.
+
 ### Cost estimation link: wider on desktop, Send Feedback, Download PDF (29 Sep)
 Alex: "το link με το estimation θέλω να είναι πιο φαρδύ όλο το πλάτος για desktop, βγάλε το Ask For Changes και κάν' το Send Feedback, και δίπλα του θέλω να μπορεί κάποιος να το κατεβάζει σε PDF, σε μορφή για desktop πιο φαρδιά και απλωμένη."
 - **Wider on desktop only**: the estimate page shares its narrow "one column, centred" layout (`.pub.dlv` / `.dlv-sheet`) with the Delivery and Status pages, so the width change is scoped to a new `dlv-estimate` class on this page alone, at `min-width: 821px` (matching the app's own mobile breakpoint): 660px → 1100px outer, 620px → 1040px sheet. Phones untouched.

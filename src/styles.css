@@ -2543,7 +2543,6 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 .est-table .est-head th { padding: 18px 0 8px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); text-align: left; }
 .est-table tr:first-child .est-head th,
 .est-table .est-head:first-child th { padding-top: 0; }
-.est-qty { color: var(--muted); font-size: 13px; text-align: right; white-space: nowrap; padding-left: 16px !important; }
 .est-amt { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; padding-left: 20px !important; }
 .est-sub td { color: var(--muted); font-size: 13px; border-bottom: 0; padding-top: 6px; }
 .est-totals { margin: 22px 0 0 auto; border-collapse: collapse; font-size: 14.5px; min-width: 240px; }
@@ -2557,11 +2556,10 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 /* the form Alex fills in */
 .est-edit { border: 1px solid var(--line-soft); border-radius: 12px; padding: 12px; background: var(--raised); }
 .est-edit-head,
-.est-edit-row { display: grid; grid-template-columns: 1.1fr 1.7fr 72px 84px 104px 112px 116px; gap: 8px; align-items: center; }
+.est-edit-row { display: grid; grid-template-columns: 1.2fr 2.4fr 130px 116px; gap: 8px; align-items: center; }
 .est-edit-head { font-size: 11.5px; color: var(--muted); padding: 0 2px 6px; }
 .est-edit-row { margin-bottom: 8px; }
 .est-edit-row .input { width: 100%; box-sizing: border-box; }
-.est-edit-amt { text-align: right; font-variant-numeric: tabular-nums; font-size: 14px; }
 /* Move up/down swaps a cost line with its neighbour, same arrows as Home's block order, so where
    it prints (and which group it visually sits under) is something you can set by hand. */
 .est-edit-actions { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
@@ -3109,7 +3107,6 @@ html[data-public='1'] body { background: var(--bg); }
   .est-edit-head { display: none; }
   .est-edit-row { grid-template-columns: 1fr 1fr; gap: 6px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--line-soft); }
   .est-edit-row .input:nth-child(2) { grid-column: 1 / -1; }
-  .est-edit-amt { text-align: left; font-weight: 600; }
   .est-edit-foot .muted { margin-left: 0; width: 100%; }
   /* production sheet */
   .prod-scroll { max-height: 64vh; }

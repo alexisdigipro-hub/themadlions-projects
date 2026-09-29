@@ -153,14 +153,10 @@ export function renderPages(d, t, groups, cur) {
   ctx.fillText('WHAT IT COVERS', MARGIN, y)
   y += 20
 
-  // Three right-anchored columns, each with its own reserved width, so a long description can
-  // never run under the qty/price detail next to it (amounts are short and tabular, but a
-  // description is free text and gets whatever is left).
+  // Two columns: the description gets whatever is left of the amount's own reserved width.
   const AMT_X = PAGE_W - MARGIN
-  const AMT_COL_W = 85
-  const QTY_X = AMT_X - AMT_COL_W - 14
-  const QTY_COL_W = 120
-  const WHAT_W = (QTY_X - QTY_COL_W) - MARGIN - 16
+  const AMT_COL_W = 90
+  const WHAT_W = (AMT_X - AMT_COL_W) - MARGIN - 16
 
   for (const g of groups) {
     if (g.label) {
@@ -181,14 +177,6 @@ export function renderPages(d, t, groups, cur) {
       ctx.textAlign = 'left'
       let ly = rowTop
       for (const wl of whatLines) { ctx.fillText(wl, MARGIN, ly); ly += 16 }
-      const qty = Number(l.qty) || 0
-      const detail = qty > 1 || l.unit ? `${qty}${l.unit ? ` ${l.unit}` : ''} · ${amount(l.price, cur)}` : ''
-      if (detail) {
-        ctx.fillStyle = MUTED
-        ctx.font = `400 11px ${font}`
-        ctx.textAlign = 'right'
-        ctx.fillText(detail, QTY_X, rowTop)
-      }
       ctx.fillStyle = INK
       ctx.font = `400 12.5px ${font}`
       ctx.textAlign = 'right'
