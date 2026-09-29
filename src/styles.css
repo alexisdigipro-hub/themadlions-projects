@@ -2557,7 +2557,7 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 .est-advance-box { display: flex; flex-direction: column; gap: 4px; text-align: left; }
 .est-advance-label { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .est-advance-amt { font-size: 21px; font-weight: 700; color: var(--amber); font-variant-numeric: tabular-nums; }
-.est-terms { margin-top: 18px; font-size: 13.5px; color: var(--muted); }
+.est-terms { margin-top: 18px; font-size: 27px; font-weight: 700; color: var(--muted); }
 .dlv-by.est-expired { border-color: var(--danger); color: var(--danger); }
 
 /* the form Alex fills in */
