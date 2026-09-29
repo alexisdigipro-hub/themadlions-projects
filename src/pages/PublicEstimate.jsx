@@ -20,6 +20,12 @@ export default function PublicEstimate() {
     if (share?.data?.recipient?.name) setName(share.data.recipient.name)
   }, [share])
 
+  // So "Save as PDF" from the browser's print dialog suggests a real filename, not the app's own title.
+  useEffect(() => {
+    const d = share?.data
+    if (d?.title) document.title = `${d.title}${d.version ? ` ${d.version}` : ''} — cost estimate`
+  }, [share])
+
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading…</p></div>
   if (share?.closed) {
     return <div className="pub"><div className="pub-card"><h1>This link is closed</h1><p className="muted">The production has closed this page. Ask them for a fresh one.</p></div></div>
@@ -48,7 +54,7 @@ export default function PublicEstimate() {
   }
 
   return (
-    <div className="pub dlv">
+    <div className="pub dlv dlv-estimate">
       <div className="dlv-sheet">
         <header className="dlv-band dlv-top">
           {d.company?.logo && <img className="dlv-logo" src={d.company.logo} alt="" />}
@@ -121,7 +127,8 @@ export default function PublicEstimate() {
               <label className="dlv-lbl" htmlFor="est-note">Questions or changes</label>
               <textarea id="est-note" className="dlv-input dlv-area" rows={4} value={note} onChange={(e) => setNote(e.target.value)} />
               <div className="dlv-actions">
-                <button className="dlv-btn ghost" onClick={() => reply('changes')} disabled={!!busy}>{busy === 'changes' ? 'Sending…' : 'Ask for changes'}</button>
+                <button className="dlv-btn ghost" onClick={() => reply('changes')} disabled={!!busy}>{busy === 'changes' ? 'Sending…' : 'Send Feedback'}</button>
+                <button type="button" className="dlv-btn ghost" onClick={() => window.print()}>Download PDF</button>
                 <button className="dlv-btn" onClick={() => reply('approved')} disabled={!!busy}>{busy === 'approved' ? 'Sending…' : 'Accept'}</button>
               </div>
               {err && <p className="dlv-err">{err}</p>}
