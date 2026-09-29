@@ -93,8 +93,8 @@ export default function PublicEstimate() {
                 <Fragment key={g.label || `g${gi}`}>
                   {g.label && <tr className="est-head"><th colSpan={2}>{g.label}</th></tr>}
                   {g.rows.map((l, i) => (
-                    <tr key={i}>
-                      <td>{l.what}</td>
+                    <tr key={i} className={l.advance ? 'est-advance' : undefined}>
+                      <td className="est-what">{l.what}</td>
                       <td className="est-amt">{amount(lineAmount(l), cur)}</td>
                     </tr>
                   ))}
@@ -106,14 +106,22 @@ export default function PublicEstimate() {
             </tbody>
           </table>
 
-          <table className="est-totals">
-            <tbody>
-              <tr><td>Subtotal</td><td className="est-amt">{amount(t.subtotal, cur)}</td></tr>
-              {t.discount > 0 && <tr><td>Discount</td><td className="est-amt">&minus; {amount(t.discount, cur)}</td></tr>}
-              {t.vatPct > 0 && <tr><td>VAT {t.vatPct}%</td><td className="est-amt">{amount(t.vat, cur)}</td></tr>}
-              <tr className="est-total"><td>Total</td><td className="est-amt">{amount(t.total, cur)}</td></tr>
-            </tbody>
-          </table>
+          <div className="est-totals-row">
+            {t.advance > 0 && (
+              <div className="est-advance-box">
+                <span className="est-advance-label">Advance</span>
+                <span className="est-advance-amt">{amount(t.advance, cur)}</span>
+              </div>
+            )}
+            <table className="est-totals">
+              <tbody>
+                <tr><td>Clean cost</td><td className="est-amt">{amount(t.subtotal, cur)}</td></tr>
+                {t.discount > 0 && <tr><td>Discount</td><td className="est-amt">&minus; {amount(t.discount, cur)}</td></tr>}
+                {t.vatPct > 0 && <tr><td>VAT {t.vatPct}%</td><td className="est-amt">{amount(t.vat, cur)}</td></tr>}
+                <tr className="est-total"><td>Total</td><td className="est-amt">{amount(t.total, cur)}</td></tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
         {(d.validUntil || d.terms) && (

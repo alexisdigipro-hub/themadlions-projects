@@ -11,7 +11,10 @@ export function estimateTotals(d = {}) {
   const net = subtotal - discount
   const vatPct = Math.max(Number(d.vatPct) || 0, 0)
   const vat = (net * vatPct) / 100
-  return { lines, subtotal, discount, net, vatPct, vat, total: net + vat }
+  // Lines marked as part of the advance payment (Alex picks them by hand); shown as their own
+  // sum next to the totals, not folded into any of the numbers above.
+  const advance = lines.filter((l) => l.advance).reduce((a, l) => a + lineAmount(l), 0)
+  return { lines, subtotal, discount, net, vatPct, vat, total: net + vat, advance }
 }
 
 /* Lines in the order they were typed, kept under the heading they were given. Anything with no

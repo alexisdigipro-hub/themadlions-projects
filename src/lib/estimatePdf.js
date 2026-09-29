@@ -28,6 +28,9 @@ const INK = '#ece9e2'
 const MUTED = '#9b9a94'
 const LINE = '#33363e'
 const ACCENT = '#C8503F'
+// A second, fixed accent for lines marked as part of the advance payment — the same var used on
+// the web page (--amber), which unlike --accent never changes with the viewer's theme.
+const AMBER = '#d9a441'
 
 /* One line, shortened with an ellipsis if it would not fit — for the running header, where the
    title sits next to "Page N" and never gets to wrap. */
@@ -169,16 +172,18 @@ export function renderPages(d, t, groups, cur) {
       y += 18
     }
     for (const l of g.rows) {
-      ctx.font = `400 12.5px ${font}`
+      // Descriptions read a size up from the rest of the table (Alex: bigger letters here).
+      ctx.font = `400 14.5px ${font}`
       const whatLines = wrapText(ctx, l.what, WHAT_W)
-      const rowH = Math.max(20, whatLines.length * 16 + 6)
+      const rowH = Math.max(22, whatLines.length * 18 + 6)
       ensure(rowH)
       const rowTop = y
-      ctx.fillStyle = INK
+      // A line ticked as Advance in the editor gets the same fixed amber used on the web page.
+      ctx.fillStyle = l.advance ? AMBER : INK
       ctx.textAlign = 'left'
       let ly = rowTop
-      for (const wl of whatLines) { ctx.fillText(wl, MARGIN, ly); ly += 16 }
-      ctx.fillStyle = INK
+      for (const wl of whatLines) { ctx.fillText(wl, MARGIN, ly); ly += 18 }
+      ctx.fillStyle = l.advance ? AMBER : INK
       ctx.font = `400 12.5px ${font}`
       ctx.textAlign = 'right'
       ctx.fillText(amount(lineAmount(l), cur), AMT_X, rowTop)
@@ -211,7 +216,19 @@ export function renderPages(d, t, groups, cur) {
   // ---- totals ----
   ensure(110)
   y += 14
-  const totLines = [['Subtotal', amount(t.subtotal, cur), false]]
+  const totalsTop = y
+  if (t.advance > 0) {
+    // Sits to the left of the totals block, roughly level with its top row (Alex: below the
+    // table, but on the left, not folded into the right-aligned totals themselves).
+    ctx.textAlign = 'left'
+    ctx.fillStyle = MUTED
+    ctx.font = `700 10px ${font}`
+    ctx.fillText('ADVANCE', MARGIN, totalsTop)
+    ctx.fillStyle = AMBER
+    ctx.font = `700 18px ${font}`
+    ctx.fillText(amount(t.advance, cur), MARGIN, totalsTop + 23)
+  }
+  const totLines = [['Clean cost', amount(t.subtotal, cur), false]]
   if (t.discount > 0) totLines.push(['Discount', `− ${amount(t.discount, cur)}`, false])
   if (t.vatPct > 0) totLines.push([`VAT ${t.vatPct}%`, amount(t.vat, cur), false])
   totLines.push(['Total', amount(t.total, cur), true])

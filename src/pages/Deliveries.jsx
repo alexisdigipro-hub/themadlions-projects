@@ -643,13 +643,17 @@ function LineEditor({ rows, onChange, cur, discount, vatPct }) {
       <span className="field-label">Costs</span>
       <div className="est-edit">
         <div className="est-edit-head">
-          <span>Heading</span><span>What</span><span>Amount</span><span />
+          <span>Heading</span><span>What</span><span>Amount</span><span>Advance</span><span />
         </div>
         {rows.map((r, i) => (
           <div key={i} className="est-edit-row">
             <Input value={r.group || ''} placeholder="Shooting" onChange={(e) => set(i, 'group', e.target.value)} />
             <Input value={r.what || ''} placeholder="Camera crew" onChange={(e) => set(i, 'what', e.target.value)} />
             <Input type="number" min="0" step="0.01" value={r.price ?? ''} placeholder="0" onChange={(e) => set(i, 'price', e.target.value)} />
+            <label className="est-edit-adv" title="Part of the advance payment">
+              <input type="checkbox" checked={!!r.advance} onChange={() => set(i, 'advance', !r.advance)} />
+              <span>Advance</span>
+            </label>
             <span className="est-edit-actions">
               <button className="link small" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move this cost up">↑</button>
               <button className="link small" onClick={() => move(i, 1)} disabled={i === rows.length - 1} aria-label="Move this cost down">↓</button>
@@ -661,14 +665,15 @@ function LineEditor({ rows, onChange, cur, discount, vatPct }) {
         <div className="est-edit-foot">
           <Button variant="ghost" onClick={add}>Add a cost</Button>
           <span className="muted small">
-            Subtotal {amount(t.subtotal, cur)}
+            Clean cost {amount(t.subtotal, cur)}
             {t.discount > 0 ? ` · discount ${amount(t.discount, cur)}` : ''}
             {t.vatPct > 0 ? ` · VAT ${t.vatPct}% ${amount(t.vat, cur)}` : ''}
+            {t.advance > 0 ? ` · advance ${amount(t.advance, cur)}` : ''}
           </span>
           <b className="est-edit-total">{amount(t.total, cur)}</b>
         </div>
       </div>
-      <span className="field-hint">Leave the heading empty to keep a line loose. Lines with the same heading are grouped together on the page, with their own subtotal.</span>
+      <span className="field-hint">Leave the heading empty to keep a line loose. Lines with the same heading are grouped together on the page, with their own subtotal. Tick Advance for the lines that make up the advance payment; they show in a different colour and their own sum next to the totals.</span>
     </div>
   )
 }
