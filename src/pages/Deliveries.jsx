@@ -83,6 +83,23 @@ export default function Deliveries() {
   }
 
   const startNew = () => setDraft(emptyDelivery())
+  /* A delivery keeps its link while it is reworked, so opening an existing one (same as a status
+     page or an estimate) means editing it rather than starting a fresh page and losing the old
+     link. Only offered for a single-page delivery (see the Update button below): a delivery sent
+     to several named people has one row per person and this only has room to load one back. */
+  const openDelivery = (r) => {
+    const d = r.data || {}
+    setDraft({
+      id: (r.ref.split(':')[1]) || uid(), projectId: d.projectId || '', stage: d.stage || 'rough',
+      version: d.version || '', title: d.title || '', client: d.client || '',
+      link: d.link || '', linkLabel: d.linkLabel || '', password: d.password || '', linkExpires: d.linkExpires || '',
+      pageCloses: r.expires_at || '', note: d.note || '', feedbackBy: d.feedbackBy || '',
+      credits: d.credits || [], deliverables: d.deliverables || [],
+      recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
+      contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
+      pin: r.pin || '',
+    })
+  }
   const pickProject = (projectId) => {
     const p = state.projects.find((x) => x.id === projectId)
     setDraft((d) => ({
@@ -448,6 +465,7 @@ export default function Deliveries() {
                   {one && <button className="deliv-tool" onClick={() => copy(r.url, 'Link')}>Copy link</button>}
                   {one && r.isDelivery && <button className="deliv-tool" onClick={() => copy(mailText(r), 'Message')}>Copy for email</button>}
                   {one && <a className="deliv-tool" href={r.url} target="_blank" rel="noreferrer">Open</a>}
+                  {editable && r.isDelivery && one && <button className="deliv-tool" onClick={() => openDelivery(r)}>Update</button>}
                   {editable && r.isStatus && <button className="deliv-tool" onClick={() => openStatus(r)}>Update</button>}
                   {editable && isAdmin && r.isEstimate && one && <button className="deliv-tool" onClick={() => openEstimate(r)}>Update</button>}
                   {editable && r.opens !== undefined && (
@@ -461,7 +479,7 @@ export default function Deliveries() {
         </ul>
       )}
 
-      <Modal open={!!draft} title="New delivery" wide onClose={() => !busy && setDraft(null)}
+      <Modal open={!!draft} title="Delivery page for the client" wide onClose={() => !busy && setDraft(null)}
         footer={<><Button variant="ghost" onClick={() => setDraft(null)} disabled={busy}>Cancel</Button><Button variant="primary" onClick={publish} disabled={busy}>{busy ? 'Publishing…' : 'Publish and copy link'}</Button></>}>
         {draft && (
           <div className="stack">

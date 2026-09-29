@@ -40,6 +40,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Deliveries can be edited after they're sent (29 Sep)
+Alex: "στα Share, τα deliveries θέλω να μπορώ να τα επεξεργάζομαι από όταν θα έχει φτιαχτεί η καταχώρηση." A delivery could only be created once; a status page and a cost estimation already had an **Update** button on their row that reopens the same form pre-filled and republishes to the exact same link (`ref` stays `delivery:<id>`, so `publishShare` updates the existing row instead of making a new one). Deliveries now have the same **Update** button, same rule as an estimate's: only on a plain link sent to nobody in particular (`one`), not a delivery sent to several named people, since only a single set of fields comes back from one row and there is nowhere for several people's names to go. The modal's title changed from "New delivery" to "Delivery page for the client" since it now opens for both.
+
+Not tested against the real running app (build is blocked in this sandbox, see the earlier PDF-colours entry); traced by hand against `openStatus`/`openEstimate`, the two working examples of exactly this pattern, field by field.
 ### Payment terms & Notes: renamed, twice the size, bold (29 Sep)
 Alex: "κάνε το Payment terms σε Payment terms & Notes, μεγάλωσε τα γράμματα 100% και να είναι Bold εκεί μέσα." Field renamed in the Cost estimation form (Deliveries.jsx); the text itself is unchanged, still one free-text box. On the client's page (`.est-terms` in styles.css) and in the PDF (`estimatePdf.js`) the text under Valid until now prints at double the old size and bold (13.5px → 27px on the page, 11.5px → 23px in the PDF). In the PDF this text can now run several lines for a longer note, so the space reserved for it (`ensure`) is worked out from the actual wrapped line count instead of a fixed guess, so a long note pushes cleanly onto a new page instead of running past the bottom margin — checked in real headless Chromium with a four-sentence note that does exactly that.
 
