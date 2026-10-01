@@ -1,6 +1,6 @@
 /* Invoice -> a formal A4 PDF, drawn on a canvas (so Greek and Cyrillic render from the browser's
    own fonts) and wrapped in the same hand-written PDF container the estimate uses. Modern layout:
-   letterhead, light "Invoice" title with number/date, accent total card, payment box. The
+   letterhead, light "Invoice" title with number/date, light grey total card, payment box. The
    stamp/signature is a PNG Alex uploads; it sits above the provider's signature line. */
 import { buildPdf, canvasToJpegBytes } from './estimatePdf.js'
 import { amountInWords, invoiceTotals, lineNet, money, moneyBgn } from './invoice.js'
@@ -16,6 +16,7 @@ const MUTED = '#6b7078'
 const LINE = '#e6e4df'
 const ACCENT = '#C8503F'
 const SHADE = '#f6f5f2'
+const CARD = '#eeedea'
 
 // The site's own typeface (Sofia Sans), so the invoice matches the app. We wait for it to load
 // before drawing; if it is somehow missing, the stack falls back cleanly.
@@ -182,17 +183,17 @@ export async function renderInvoice(inv) {
   for (const l of wrap(ctx, `In words: ${amountInWords(t.total, cur)}`, leftW)) { ctx.fillText(l, MARGIN, ny); ny += 13 }
   if (t.vatPct === 0 && inv.vatNote) { for (const l of wrap(ctx, inv.vatNote, leftW)) { ctx.fillText(l, MARGIN, ny); ny += 13 } }
   if (inv.notes) { ny += 4; for (const l of wrap(ctx, inv.notes, leftW)) { ctx.fillText(l, MARGIN, ny); ny += 13 } }
-  // the card
+  // the card: light grey with dark text (Alex: not red)
   const cardH = showBgn ? 62 : 54
-  ctx.fillStyle = ACCENT
+  ctx.fillStyle = CARD
   roundRect(ctx, cardX, y - 6, cardW, cardH, 8); ctx.fill()
   ctx.textAlign = 'left'
-  ctx.fillStyle = 'rgba(255,255,255,0.82)'; ctx.font = `700 8px ${FONT}`
+  ctx.fillStyle = MUTED; ctx.font = `700 8px ${FONT}`
   ctx.fillText('TOTAL DUE', cardX + 16, y + 12)
-  ctx.fillStyle = '#ffffff'; ctx.font = `800 20px ${FONT}`
+  ctx.fillStyle = INK; ctx.font = `800 20px ${FONT}`
   ctx.fillText(money(t.total, cur), cardX + 16, y + 36)
   if (showBgn) {
-    ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = `400 8.5px ${FONT}`
+    ctx.fillStyle = MUTED; ctx.font = `400 8.5px ${FONT}`
     ctx.fillText(`${moneyBgn(t.totalBgn)}  ·  rate ${inv.exchangeRate}`, cardX + 16, y + 50)
   }
   y = Math.max(y - 6 + cardH, ny) + 22
