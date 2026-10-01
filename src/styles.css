@@ -1903,6 +1903,18 @@ code {
 /* The budget top sheet fills the page width, unlike the narrower call/status sheets that share
    the .sheet base (Alex). */
 .topsheet { max-width: none; }
+/* ...and follows the app theme instead of the paper-white look the printable sheets keep (Alex).
+   Overrides every hardcoded colour .sheet sets, scoped to the budget top sheet only. */
+.topsheet { background: var(--panel); color: var(--text); border: 1px solid var(--line-soft); }
+.topsheet h1 { color: var(--text); }
+.topsheet h3 { color: var(--muted); border-bottom-color: var(--line); }
+.topsheet .muted { color: var(--muted); }
+.topsheet .sheet-head { border-bottom-color: var(--line); }
+.topsheet .sheet-call-label { color: var(--muted); }
+.topsheet .table th, .topsheet .table td { border-color: var(--line-soft); }
+.topsheet .table th { color: var(--muted); }
+.topsheet .input { background: var(--raised); color: var(--text); border-color: var(--line); }
+.topsheet .link { color: var(--accent); }
 .topsheet .budget-group { margin-top: 18px; }
 .budget-group-head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line-soft); padding-bottom: 4px; margin-bottom: 4px; }
 .budget-group-head h3 { margin: 0; }
