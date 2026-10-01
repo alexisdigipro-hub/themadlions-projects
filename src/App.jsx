@@ -35,7 +35,6 @@ import Finance from './pages/Finance.jsx'
 import Home from './pages/Home.jsx'
 import Budget from './pages/project/Budget.jsx'
 import Reports from './pages/project/Reports.jsx'
-import Gear from './pages/project/Gear.jsx'
 import Post from './pages/project/Post.jsx'
 import Music from './pages/project/Music.jsx'
 
@@ -106,7 +105,8 @@ export default function App() {
                   <Route path="tasks" element={<Tasks />} />
                   <Route path="reports" element={<Reports />} />
                   <Route path="budget" element={<Budget />} />
-                  <Route path="gear" element={<Gear />} />
+                  {/* Equipment is now a section inside People (Project Database); keep old links alive */}
+                  <Route path="gear" element={<Navigate to="../people" replace />} />
                   <Route path="post" element={<Post />} />
                   <Route path="callsheets" element={<CallSheets />} />
                   <Route path="calendar" element={<ProjectCalendar />} />

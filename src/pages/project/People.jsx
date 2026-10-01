@@ -7,6 +7,7 @@ import PhotoGrid from '../../components/PhotoGrid.jsx'
 import { contactToLibrary, matchText, sharedContact } from '../../lib/library.js'
 import { waLink } from '../../lib/share.js'
 import Locations from './Locations.jsx'
+import Gear from './Gear.jsx'
 
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 
@@ -210,6 +211,7 @@ export default function People() {
       {group('crew')}
       <section className="people-section"><Locations /></section>
       {group('cast')}
+      <section className="people-section"><Gear /></section>
 
       <Modal
         open={!!draft}

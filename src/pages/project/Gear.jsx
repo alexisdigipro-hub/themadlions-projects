@@ -81,7 +81,7 @@ export default function Gear() {
     <div className="gear">
       <div className="toolbar">
         <div className="toolbar-info">
-          <strong>{gear.length} items · {money(total)}</strong>
+          <strong>Equipment</strong> <span className="muted">{gear.length} items · {money(total)}</span>
           <span className="muted">{byStatus('needed')} needed · {byStatus('quoted')} quoted · {byStatus('booked')} booked · {byStatus('out')} out</span>
         </div>
         <div className="toolbar-actions">

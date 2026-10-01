@@ -7,6 +7,7 @@ import PhotoGrid from '../../components/PhotoGrid.jsx'
 import { locationToLibrary, matchText, sharedLocation } from '../../lib/library.js'
 
 const TYPES = ['Studio', 'Interior', 'Exterior', 'INT. & EXT.', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
+const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 
 function mapSrc(address, key) {
   const q = encodeURIComponent(address)
@@ -14,37 +15,35 @@ function mapSrc(address, key) {
   return `https://www.google.com/maps?q=${q}&output=embed`
 }
 
+/* A section of the project's Database page (People.jsx). Kept compact: a small card grid here,
+   same look as the Crew/Cast cards; the map, directions and full detail sit behind a click in a
+   modal instead of an always-open side panel, so this section doesn't dominate the page. */
 export default function Locations() {
   const { project, edit, canEdit, library, editLibrary } = useProject()
   const { state } = useStore()
   const toast = useToast()
   const [draft, setDraft] = useState(null)
-  const [pick, setPick] = useState(null)
+  const [pick, setPick] = useState(null) // { q, sel }
+  const [detailFor, setDetailFor] = useState('')
+  const editable = canEdit('locations')
   const inLibrary = new Set(project.locations.map((l) => l.libraryId).filter(Boolean))
   const libChoices = (library?.locations || []).filter((l) => !inLibrary.has(l.id)).filter((l) => matchText(pick?.q, l.name, l.address, l.type, (l.tags || []).join(' ')))
   const addFromLibrary = () => {
     const chosen = libChoices.filter((l) => pick.sel.includes(l.id))
     if (!chosen.length) return
-    const first = chosen[0]?.id
-    let newId = ''
     edit((p) => {
-      chosen.forEach((l) => { const id = uid(); if (l.id === first) newId = id; p.locations.push({ id, libraryId: l.id, ...sharedLocation(l), sceneLocations: [] }) })
+      chosen.forEach((l) => p.locations.push({ id: uid(), libraryId: l.id, ...sharedLocation(l), sceneLocations: [] }))
     })
-    setSelected(newId)
     setPick(null)
     toast(`${chosen.length} added from the library`, 'ok')
   }
-  const [selected, setSelected] = useState(project.locations[0]?.id || '')
-  const editable = canEdit('locations')
-  const loc = project.locations.find((l) => l.id === selected) || project.locations[0]
-
-  const scenesAt = (l) => project.scenes.filter((s) => l.sceneLocations?.includes(s.location) || (s.location && l.name && s.location.toUpperCase() === l.name.toUpperCase()))
-
+  const scenesAt = (l) => project.scenes.filter((s) => s.location && l.sceneLocations?.includes(s.location))
   const save = () => {
     if (!draft.name.trim()) return toast('Name the location.', 'error')
-    const { saveToLibrary, ...l } = draft
+    const { saveToLibrary, coordsText, ...l } = draft
     let libraryId = l.libraryId
     if (libraryId) {
+      // shared fields live in the library
       editLibrary((lib) => { const x = lib.locations.find((y) => y.id === libraryId); if (x) Object.assign(x, sharedLocation(l)) })
     } else if (saveToLibrary) {
       const entry = locationToLibrary(l)
@@ -57,7 +56,6 @@ export default function Locations() {
       if (i >= 0) p.locations[i] = item
       else p.locations.push(item)
     })
-    setSelected(l.id)
     setDraft(null)
     toast(libraryId ? 'Location saved (shared in the company library)' : 'Location saved', 'ok')
   }
@@ -67,17 +65,17 @@ export default function Locations() {
   }
 
   const scriptSets = [...new Set(project.scenes.map((s) => s.location).filter(Boolean))]
+  const detail = project.locations.find((l) => l.id === detailFor)
 
   return (
-    <div className="locations">
+    <>
       <div className="toolbar">
         <div className="toolbar-info">
-          <strong>{project.locations.length} locations</strong>
-          {scriptSets.length > 0 && <span className="muted">{scriptSets.length} sets in the script</span>}
+          <strong>Locations</strong> <span className="muted">{project.locations.length}</span>
         </div>
         {editable && (
           <div className="toolbar-actions">
-            {(library?.locations || []).length > 0 && <Button onClick={() => setPick({ q: '', sel: [] })}>From library</Button>}
+            {(library?.locations || []).length > 0 && <Button variant="ghost" onClick={() => setPick({ q: '', sel: [] })}>From library</Button>}
             <Button variant="primary" onClick={() => setDraft({ id: uid(), name: '', address: '', type: 'Interior', notes: '', contact: '', phone: '', sceneLocations: [], saveToLibrary: true })}>
               Add location
             </Button>
@@ -88,97 +86,90 @@ export default function Locations() {
       {project.locations.length === 0 ? (
         <Empty title="No locations yet">Add the studio, real locations, base camp and the nearest hospital. Each one gets a map and goes on the call sheet.</Empty>
       ) : (
-        <div className="loc-layout">
-          <ul className="loc-list">
-            {project.locations.map((l) => (
-              <li key={l.id}>
-                <button className={`loc-item ${loc?.id === l.id ? 'on' : ''}`} onClick={() => setSelected(l.id)}>
-                  {l.photos?.[0]?.thumb && <img className="loc-thumb" src={l.photos[0].thumb} alt="" />}
-                  <strong>{l.name}</strong>
-                  <span className="muted small">
-                    {l.type}
-                    {l.address ? ` · ${l.address}` : ''}
-                  </span>
-                  {scenesAt(l).length > 0 && <span className="small">{scenesAt(l).length} scenes</span>}
-                </button>
-              </li>
-            ))}
-          </ul>
-          {loc && (
-            <div className="loc-detail">
-              {loc.address ? (
-                <iframe className="map" title={loc.name} src={mapSrc(loc.address, state.settings.mapsKey)} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
-              ) : (
-                <div className="map map-empty muted">Add an address to see the map.</div>
-              )}
-              <div className="loc-info">
-                <div className="panel-head">
-                  <h2>{loc.name}{loc.libraryId && <span className="lib-badge" title="Shared in the company library">library</span>}</h2>
-                  <div className="row-actions">
-                    {loc.address && (
-                      <a className="btn btn-ghost btn-sm" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.address)}`} target="_blank" rel="noreferrer">
-                        Open in Maps
-                      </a>
-                    )}
-                    {loc.address && (
-                      <a className="btn btn-ghost btn-sm" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(loc.address)}`} target="_blank" rel="noreferrer">
-                        Directions
-                      </a>
-                    )}
-                    {editable && (
-                      <>
-                        <Button size="sm" onClick={() => setDraft({ sceneLocations: [], ...loc })}>
-                          Edit
-                        </Button>
-                        <Confirm
-                          onConfirm={() => {
-                            edit((p) => {
-                              p.locations = p.locations.filter((x) => x.id !== loc.id)
-                              p.shootingDays.forEach((d) => d.locationId === loc.id && (d.locationId = ''))
-                            })
-                            setSelected('')
-                          }}
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-                <dl className="details">
-                  <dt>Type</dt>
-                  <dd>{loc.type}</dd>
-                  <dt>Address</dt>
-                  <dd>{loc.address || '–'}</dd>
-                  {loc.contact && (
-                    <>
-                      <dt>Contact</dt>
-                      <dd>
-                        {loc.contact} {loc.phone && <a href={`tel:${loc.phone}`}>{loc.phone}</a>}
-                      </dd>
-                    </>
-                  )}
-                  {loc.sceneLocations?.length > 0 && (
-                    <>
-                      <dt>Script sets</dt>
-                      <dd>{loc.sceneLocations.join(', ')}</dd>
-                    </>
-                  )}
-                </dl>
-                {loc.notes && <p className="notes-text">{loc.notes}</p>}
-                {scenesAt(loc).length > 0 && (
-                  <p className="small muted">Scenes here: {scenesAt(loc).map((s) => s.number).join(', ')}</p>
-                )}
-                <PhotoGrid
-                  photos={loc.photos || []}
-                  projectId={loc.libraryId ? 'library' : project.id}
-                  ownerId={loc.libraryId || loc.id}
-                  editable={editable}
-                  onChange={(photos) => setLocPhotos(loc, photos)}
-                />
+        <div className="people-grid compact">
+          {project.locations.map((l) => (
+            <article key={l.id} className="person loc-card" onClick={() => setDetailFor(l.id)} role="button" tabIndex={0}>
+              <div className="person-photo" aria-hidden="true">
+                {l.photos?.[0]?.thumb ? <img src={l.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(l.name) || '📍'}</span>}
               </div>
-            </div>
-          )}
+              <div className="person-body">
+                <strong>{l.name}{l.libraryId && <span className="lib-badge" title="Shared in the company library">library</span>}</strong>
+                <div className="small muted">{[l.type, l.address].filter(Boolean).join(' · ') || 'No address yet'}</div>
+                {scenesAt(l).length > 0 && <div className="small muted">{scenesAt(l).length} scenes</div>}
+              </div>
+            </article>
+          ))}
         </div>
       )}
+
+      <Modal open={!!detail} wide title={detail?.name || ''} onClose={() => setDetailFor('')}>
+        {detail && (
+          <div className="stack">
+            {detail.address ? (
+              <iframe className="map" title={detail.name} src={mapSrc(detail.address, state.settings.mapsKey)} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
+            ) : (
+              <div className="map map-empty muted">Add an address to see the map.</div>
+            )}
+            <div className="row-actions">
+              {detail.address && (
+                <a className="btn btn-ghost btn-sm" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(detail.address)}`} target="_blank" rel="noreferrer">
+                  Open in Maps
+                </a>
+              )}
+              {detail.address && (
+                <a className="btn btn-ghost btn-sm" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(detail.address)}`} target="_blank" rel="noreferrer">
+                  Directions
+                </a>
+              )}
+              {editable && (
+                <>
+                  <Button size="sm" onClick={() => { const d = detail; setDetailFor(''); setDraft({ sceneLocations: [], ...d }) }}>
+                    Edit
+                  </Button>
+                  <Confirm
+                    onConfirm={() => {
+                      edit((p) => {
+                        p.locations = p.locations.filter((x) => x.id !== detail.id)
+                        p.shootingDays.forEach((d) => d.locationId === detail.id && (d.locationId = ''))
+                      })
+                      setDetailFor('')
+                    }}
+                  />
+                </>
+              )}
+            </div>
+            <dl className="details">
+              <dt>Type</dt>
+              <dd>{detail.type}</dd>
+              <dt>Address</dt>
+              <dd>{detail.address || '–'}</dd>
+              {detail.contact && (
+                <>
+                  <dt>Contact</dt>
+                  <dd>
+                    {detail.contact} {detail.phone && <a href={`tel:${detail.phone}`}>{detail.phone}</a>}
+                  </dd>
+                </>
+              )}
+              {detail.sceneLocations?.length > 0 && (
+                <>
+                  <dt>Script sets</dt>
+                  <dd>{detail.sceneLocations.join(', ')}</dd>
+                </>
+              )}
+            </dl>
+            {detail.notes && <p className="notes-text">{detail.notes}</p>}
+            {scenesAt(detail).length > 0 && <p className="small muted">Scenes here: {scenesAt(detail).map((s) => s.number).join(', ')}</p>}
+            <PhotoGrid
+              photos={detail.photos || []}
+              projectId={detail.libraryId ? 'library' : project.id}
+              ownerId={detail.libraryId || detail.id}
+              editable={editable}
+              onChange={(photos) => setLocPhotos(detail, photos)}
+            />
+          </div>
+        )}
+      </Modal>
 
       <Modal
         open={!!draft}
@@ -281,6 +272,6 @@ export default function Locations() {
           </div>
         )}
       </Modal>
-    </div>
+    </>
   )
 }
