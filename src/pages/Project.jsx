@@ -29,7 +29,7 @@ export default function Project() {
   const tabs = [
     ...projectTabs(project),
     ...(SHOW_WHITEBOARD ? [{ to: 'whiteboard', label: 'Whiteboard', key: 'files', icon: 'notes' }] : []),
-  ].filter((t) => can(user, t.key) && !tabHidden(project, t.to) && !(t.to === 'chat' && chatExcluded(project, user)))
+  ].filter((t) => (Array.isArray(t.key) ? t.key.some((k) => can(user, k)) : can(user, t.key)) && !tabHidden(project, t.to) && !(t.to === 'chat' && chatExcluded(project, user)))
 
   const ctx = {
     project,

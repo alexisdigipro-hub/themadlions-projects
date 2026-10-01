@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { callsheetDefaults, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
@@ -6,6 +7,7 @@ import { download } from '../../lib/dates.js'
 import PhotoGrid from '../../components/PhotoGrid.jsx'
 import { contactToLibrary, matchText, sharedContact } from '../../lib/library.js'
 import { waLink } from '../../lib/share.js'
+import Locations from './Locations.jsx'
 
 
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
@@ -19,7 +21,9 @@ export default function People() {
   const toast = useToast()
   const [draft, setDraft] = useState(null)
   const [pick, setPick] = useState(null) // { q, sel, character }
-  const [tab, setTab] = useState('cast')
+  const [searchParams] = useSearchParams()
+  const initialTab = searchParams.get('tab')
+  const [tab, setTab] = useState(['crew', 'locations', 'cast'].includes(initialTab) ? initialTab : 'crew')
   const [view, setView] = useState(() => localStorage.getItem('tml_people_view') || 'cards')
   const [photosFor, setPhotosFor] = useState(null) // contact id
   const editable = canEdit('contacts')
@@ -76,33 +80,40 @@ export default function People() {
     <div>
       <div className="toolbar">
         <div className="segmented">
-          <button className={tab === 'cast' ? 'on' : ''} onClick={() => setTab('cast')}>
-            {project.category === 'Event' ? 'Talent' : 'Cast'} <small>{project.contacts.filter((c) => c.kind === 'cast').length}</small>
-          </button>
           <button className={tab === 'crew' ? 'on' : ''} onClick={() => setTab('crew')}>
             Crew <small>{project.contacts.filter((c) => c.kind === 'crew').length}</small>
           </button>
+          <button className={tab === 'locations' ? 'on' : ''} onClick={() => setTab('locations')}>
+            Locations <small>{project.locations.length}</small>
+          </button>
+          <button className={tab === 'cast' ? 'on' : ''} onClick={() => setTab('cast')}>
+            {project.category === 'Event' ? 'Talent' : 'Cast'} <small>{project.contacts.filter((c) => c.kind === 'cast').length}</small>
+          </button>
         </div>
-        <div className="toolbar-actions">
-          <div className="segmented small">
-            <button className={view === 'cards' ? 'on' : ''} onClick={() => { setView('cards'); localStorage.setItem('tml_people_view', 'cards') }}>Cards</button>
-            <button className={view === 'table' ? 'on' : ''} onClick={() => { setView('table'); localStorage.setItem('tml_people_view', 'table') }}>List</button>
+        {tab !== 'locations' && (
+          <div className="toolbar-actions">
+            <div className="segmented small">
+              <button className={view === 'cards' ? 'on' : ''} onClick={() => { setView('cards'); localStorage.setItem('tml_people_view', 'cards') }}>Cards</button>
+              <button className={view === 'table' ? 'on' : ''} onClick={() => { setView('table'); localStorage.setItem('tml_people_view', 'table') }}>List</button>
+            </div>
+            {project.contacts.length > 0 && (
+              <Button variant="ghost" onClick={exportCSV}>
+                Export CSV
+              </Button>
+            )}
+            {editable && (library?.contacts || []).some((c) => c.kind === tab) && (
+              <Button onClick={() => setPick({ q: '', sel: [], character: uncast[0] || '' })}>From library</Button>
+            )}
+            {editable && (
+              <Button variant="primary" onClick={() => setDraft({ id: uid(), kind: tab, name: '', character: '', dept: tab === 'cast' ? 'Cast' : 'Production', role: '', phone: '', email: '', callOffset: Number(csd[tab === 'cast' ? 'castOffset' : 'crewOffset'] || 0), saveToLibrary: true })}>
+                Add {tab === 'cast' && project.category === 'Event' ? 'talent' : tab}
+              </Button>
+            )}
           </div>
-          {project.contacts.length > 0 && (
-            <Button variant="ghost" onClick={exportCSV}>
-              Export CSV
-            </Button>
-          )}
-          {editable && (library?.contacts || []).some((c) => c.kind === tab) && (
-            <Button onClick={() => setPick({ q: '', sel: [], character: uncast[0] || '' })}>From library</Button>
-          )}
-          {editable && (
-            <Button variant="primary" onClick={() => setDraft({ id: uid(), kind: tab, name: '', character: '', dept: tab === 'cast' ? 'Cast' : 'Production', role: '', phone: '', email: '', callOffset: Number(csd[tab === 'cast' ? 'castOffset' : 'crewOffset'] || 0), saveToLibrary: true })}>
-              Add {tab === 'cast' && project.category === 'Event' ? 'talent' : tab}
-            </Button>
-          )}
-        </div>
+        )}
       </div>
+
+      {tab === 'locations' ? <Locations /> : null}
 
       {tab === 'cast' && uncast.length > 0 && (
         <p className="notice">
@@ -115,7 +126,7 @@ export default function People() {
         </p>
       )}
 
-      {list.length === 0 ? (
+      {tab !== 'locations' && (list.length === 0 ? (
         <Empty title={tab === 'cast' ? 'No cast yet' : 'No crew yet'}>
           {tab === 'cast' ? 'Link actors to the characters from the breakdown so call sheets fill themselves.' : 'Add heads of department first. They appear on every call sheet.'}
         </Empty>
@@ -189,7 +200,7 @@ export default function People() {
             ))}
           </tbody>
         </table>
-      )}
+      ))}
 
       <Modal
         open={!!draft}
