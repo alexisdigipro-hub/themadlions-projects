@@ -36,9 +36,15 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
-## Where we stopped (27 Sep 2026)
+## Where we stopped (1 Oct 2026)
 
 Read this first; the detail behind each line is in the pull request that carried it.
+
+### Invoices: dropped the mailto email, added a public Share link with preview (1 Oct)
+Alex: "άστο αυτό με το email ... φτιάξε μου να φτιάχνει ένα link να το στέλνω, και μέσα στο link να βλέπουνε σε μικρογραφία το τιμολόγιο και να λέει download." The "Email" button (which only opened a plain-text mailto draft) is gone. **Share link** instead reuses the existing public-share machinery (`src/lib/shares.js` `publishShare`, same system behind call sheets and cost estimations): it writes a snapshot of the invoice to the `shares` table (kind `'invoice'`, ref `invoice:<id>`) and gives back `#/inv/<token>`, copied to the clipboard automatically and shown in a small modal to copy again. Re-sharing the same invoice reuses the same token/link (so an old link stays valid, now showing the refreshed data) instead of minting a new one each time.
+- **New page** `src/pages/PublicInvoice.jsx`, route `/inv/:token` in `App.jsx` (public, outside `RequireUser`, same pattern as `/e/:token` PublicEstimate). No login. Renders the invoice with the existing canvas drawer (`renderInvoice`) and shows it as a JPEG preview image ("in miniature"), with the total and a **Download PDF** button under it that calls the existing `downloadInvoicePdf`.
+- `invoicePdf.js`: `getInvoiceEmailTemplate` removed (no longer used anywhere). Added `invoiceFilename(inv)`, the `#405 Invoice - Client (Project).pdf` naming pulled out of `Invoices.jsx` into a shared helper so the toolbar download and the public page's download produce the exact same filename.
+- Nothing new to run in Supabase: this reuses `shares.sql` / `share_access.sql`, already required for call sheets and estimates. If Alex ever sees "Run supabase/shares.sql" when pressing Share link, that file (listed above) is the one missing.
 
 ### Invoice PDF: new "Modern" design (1 Oct)
 Alex: "Θέλω το pdf να έχει άλλο ui πιο φρέσκο." Two prototypes were rendered (A Modern, B Editorial); A is now live in `src/lib/invoicePdf.js` `renderInvoice`, B kept only as an image shown to Alex. Layout: letterhead centred (or company name + address in text when none), big light "Invoice" title left with INVOICE NO / DATE (small label over value) right, BILLED BY / BILLED TO with accent labels, ruled table (DESCRIPTION / AMOUNT (EUR) / AMOUNT (BGN)) with "project · date" as one muted sub-line, Net/VAT rows only when VAT > 0, a light grey rounded **TOTAL DUE** card with dark text (BGN + rate inside; Alex asked for grey instead of red), in-words / VAT note / notes to its left, a rounded light **payment box** (Bank / BIC / IBAN side by side), stamp above the Provider signature line at the foot, thin accent bar along the bottom. Data, letterhead, stamp, BGN all unchanged. Open: if Alex prefers B (dark table header, numbered rows, big black total) or a mix, swap the layout in `renderInvoice`.
