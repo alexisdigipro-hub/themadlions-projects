@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from './ui.jsx'
 import { useStore } from '../lib/store.jsx'
 import { INVOICE_STATUS, amountInWords, defaultInvoiceProfile, emptyClient, emptyInvoice, emptyService, invoiceNumberText, invoiceTotals, money, moneyBgn } from '../lib/invoice.js'
-import { downloadInvoicePdf } from '../lib/invoicePdf.js'
+import { downloadInvoicePdf, previewInvoicePdf, getInvoiceEmailTemplate } from '../lib/invoicePdf.js'
 
 const profileOf = (state) => ({ ...defaultInvoiceProfile(), ...(state.finance.settings.invoiceProfile || {}) })
 const clientsOf = (state) => state.finance.settings.invoiceClients || []
@@ -20,6 +20,9 @@ export function InvoicesTab() {
   const [draft, setDraft] = useState(null)
   const [isNew, setIsNew] = useState(false)
   const [panel, setPanel] = useState('') // '' | 'profile' | 'clients' | 'services'
+  const [emailPanel, setEmailPanel] = useState(null) // null or the invoice being emailed
+  const [emailTo, setEmailTo] = useState('')
+  const [emailSubject, setEmailSubject] = useState('')
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
 
   const logo = state.settings.logo || ''
@@ -59,6 +62,26 @@ export function InvoicesTab() {
     const filename = project ? `#${lastThree} Invoice - ${client} (${project}).pdf` : `#${lastThree} Invoice - ${client}.pdf`
     try { await downloadInvoicePdf(withStamp, filename) } catch (e) { toast(e.message || 'Could not make the PDF.', 'error') }
   }
+  const preview = async (inv) => {
+    const withStamp = { ...inv, company: { ...inv.company, stamp: inv.company?.stamp || profile.stamp, logo: inv.company?.logo || logo, headerImage: inv.company?.headerImage || profile.headerImage } }
+    try { await previewInvoicePdf(withStamp) } catch (e) { toast(e.message || 'Could not preview the PDF.', 'error') }
+  }
+  const openEmailDialog = (inv) => {
+    setEmailPanel(inv)
+    setEmailTo(inv.recipient?.email || '')
+    setEmailSubject(`Invoice #${inv.number || ''}`)
+  }
+  const sendEmail = () => {
+    if (!emailTo.trim()) return toast('Add recipient email.', 'error')
+    const htmlBody = getInvoiceEmailTemplate(emailPanel)
+    const mailtoLink = `mailto:${emailTo}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent('Please see the email content below. For the PDF, save and attach the downloaded invoice file.')}`
+    window.location.href = mailtoLink
+    setEmailPanel(null)
+  }
+  const copyEmailTemplate = () => {
+    const htmlBody = getInvoiceEmailTemplate(emailPanel)
+    navigator.clipboard.writeText(htmlBody).then(() => toast('Email template copied to clipboard.', 'ok')).catch(() => toast('Could not copy.', 'error'))
+  }
 
   return (
     <>
@@ -97,7 +120,9 @@ export function InvoicesTab() {
                   <td><span className={`inv-badge s-${inv.status}`}>{INVOICE_STATUS.find(([v]) => v === inv.status)?.[1] || 'Draft'}</span></td>
                   <td className="row-actions">
                     <button onClick={() => edit(inv)}>Edit</button>
+                    <button onClick={() => preview(inv)}>Preview</button>
                     <button onClick={() => download(inv)}>PDF</button>
+                    <button onClick={() => openEmailDialog(inv)}>Email</button>
                     <button onClick={() => duplicate(inv)}>Duplicate</button>
                     <Confirm onConfirm={() => remove(inv.id)} label="Delete">×</Confirm>
                   </td>
@@ -118,6 +143,16 @@ export function InvoicesTab() {
       </Modal>
       <Modal open={panel === 'services'} title="Services" wide onClose={() => setPanel('')}>
         <ServicesManager />
+      </Modal>
+      <Modal open={!!emailPanel} title={`Email Invoice #${emailPanel?.number || ''}`} onClose={() => setEmailPanel(null)}>
+        <Field label="Send to"><Input type="email" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} placeholder="client@example.com" autoFocus /></Field>
+        <Field label="Subject"><Input value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} /></Field>
+        <p className="muted small" style={{ marginBottom: '20px' }}>A beautiful HTML email template is ready. You can:</p>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <Button variant="ghost" onClick={() => setEmailPanel(null)}>Cancel</Button>
+          <Button variant="ghost" onClick={copyEmailTemplate}>Copy Template</Button>
+          <Button variant="primary" onClick={sendEmail}>Open Mail Client</Button>
+        </div>
       </Modal>
     </>
   )
