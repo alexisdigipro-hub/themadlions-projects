@@ -15,6 +15,8 @@ const INK = '#15171c'
 const MUTED = '#5b6168'
 const LINE = '#d7d7da'
 const HEAD = '#111318'
+const ACCENT = '#C8503F'
+const SHADE = '#f4f2ee'
 
 const FONT = 'system-ui, -apple-system, "Segoe UI", Arial, sans-serif'
 
@@ -46,6 +48,8 @@ export async function renderInvoice(inv) {
   const cur = inv.currency || 'EUR'
   const stamp = co.stamp ? await loadImage(co.stamp) : null
 
+  const logo = co.logo ? await loadImage(co.logo) : null
+
   const canvas = document.createElement('canvas')
   canvas.width = Math.round(PAGE_W * SCALE)
   canvas.height = Math.round(PAGE_H * SCALE)
@@ -53,35 +57,48 @@ export async function renderInvoice(inv) {
   ctx.scale(SCALE, SCALE)
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, PAGE_W, PAGE_H)
+  // thin accent band across the very top
+  ctx.fillStyle = ACCENT
+  ctx.fillRect(0, 0, PAGE_W, 5)
   ctx.textBaseline = 'alphabetic'
 
   let y = MARGIN + 6
+  let nameX = MARGIN
+  // optional company logo top-left; the name sits to its right
+  if (logo) {
+    const h = 40, w = logo.width * (h / logo.height)
+    ctx.drawImage(logo, MARGIN, MARGIN - 4, Math.min(w, 120), h)
+    nameX = MARGIN + Math.min(w, 120) + 14
+  }
 
   // ---- header: company left, INVOICE # / date right ----
   // The invoice number block sits top-right; the company name wraps within the space left of it so
   // a long name never runs underneath it.
   ctx.textAlign = 'right'
+  ctx.fillStyle = ACCENT
+  ctx.font = `800 14px ${FONT}`
+  ctx.fillText('INVOICE', PAGE_W - MARGIN, MARGIN + 4)
   ctx.fillStyle = HEAD
-  ctx.font = `700 13px ${FONT}`
-  ctx.fillText(`INVOICE #${inv.number || ''}`, PAGE_W - MARGIN, MARGIN + 6)
+  ctx.font = `700 11px ${FONT}`
+  ctx.fillText(`#${inv.number || ''}`, PAGE_W - MARGIN, MARGIN + 20)
   ctx.fillStyle = MUTED
   ctx.font = `400 10px ${FONT}`
   const dateStr = inv.date ? new Date(`${inv.date}T00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''
-  ctx.fillText(`Date: ${dateStr}`, PAGE_W - MARGIN, MARGIN + 24)
+  ctx.fillText(`Date: ${dateStr}`, PAGE_W - MARGIN, MARGIN + 36)
 
   ctx.textAlign = 'left'
   ctx.fillStyle = HEAD
   ctx.font = `800 15px ${FONT}`
-  const nameW = CONTENT_W - 170 // keep clear of the invoice-number block
-  for (const l of wrap(ctx, co.name || 'THE MAD LIONS FILM PRODUCTION HOUSE', nameW)) { ctx.fillText(l, MARGIN, y); y += 18 }
+  const nameW = PAGE_W - MARGIN - 150 - nameX // keep clear of the invoice-number block
+  for (const l of wrap(ctx, co.name || 'THE MAD LIONS FILM PRODUCTION HOUSE', nameW)) { ctx.fillText(l, nameX, y); y += 18 }
   ctx.fillStyle = MUTED
   ctx.font = `400 9.5px ${FONT}`
   y += 1
-  for (const l of wrap(ctx, co.providerAddress || '', CONTENT_W * 0.6)) { ctx.fillText(l, MARGIN, y); y += 12 }
-  if (co.web) { ctx.fillText(co.web, MARGIN, y); y += 12 }
+  for (const l of wrap(ctx, co.providerAddress || '', CONTENT_W * 0.55)) { ctx.fillText(l, nameX, y); y += 12 }
+  if (co.web) { ctx.fillText(co.web, nameX, y); y += 12 }
 
   y = Math.max(y, MARGIN + 54) + 8
-  ctx.strokeStyle = LINE; ctx.lineWidth = 1
+  ctx.strokeStyle = ACCENT; ctx.lineWidth = 2
   ctx.beginPath(); ctx.moveTo(MARGIN, y); ctx.lineTo(PAGE_W - MARGIN, y); ctx.stroke()
   y += 22
 
@@ -124,18 +141,19 @@ export async function renderInvoice(inv) {
   const unitX = netX - netColW - 6
   const descW = unitX - unitColW - descX - 10
 
+  // shaded header strip for the table
+  ctx.fillStyle = SHADE
+  ctx.fillRect(MARGIN, y - 11, CONTENT_W, 20)
   ctx.fillStyle = MUTED
   ctx.font = `700 8px ${FONT}`
   ctx.textAlign = 'left'
-  ctx.fillText('QTY', qtyX, y)
+  ctx.fillText('QTY', qtyX + 4, y)
   ctx.fillText('DESCRIPTION', descX, y)
   ctx.textAlign = 'right'
   ctx.fillText('UNIT', unitX, y)
   ctx.fillText('NET', netX, y)
   ctx.fillText(showBgn ? 'TOTAL (EUR)' : 'TOTAL', totX, y)
   if (showBgn) ctx.fillText('TOTAL (BGN)', bgnX, y)
-  y += 8
-  ctx.strokeStyle = LINE; ctx.beginPath(); ctx.moveTo(MARGIN, y); ctx.lineTo(PAGE_W - MARGIN, y); ctx.stroke()
   y += 16
 
   for (const l of t.lines) {
@@ -160,14 +178,15 @@ export async function renderInvoice(inv) {
   y += 12
   const labelX = amtRight - 210
   const totalRow = (label, val, bold) => {
-    ctx.font = bold ? `700 13px ${FONT}` : `400 10.5px ${FONT}`
+    if (bold) { ctx.fillStyle = SHADE; ctx.fillRect(labelX - 12, y - 14, amtRight - labelX + 12, 26) }
+    ctx.font = bold ? `800 14px ${FONT}` : `400 10.5px ${FONT}`
     ctx.fillStyle = bold ? INK : MUTED
     ctx.textAlign = 'left'
     ctx.fillText(label, labelX, y)
-    ctx.fillStyle = INK
+    ctx.fillStyle = bold ? ACCENT : INK
     ctx.textAlign = 'right'
     ctx.fillText(val, amtRight, y)
-    y += bold ? 22 : 17
+    y += bold ? 26 : 17
   }
   totalRow('Net', money(t.net, cur))
   if (t.vatPct > 0) totalRow(`VAT ${t.vatPct}%`, money(t.vat, cur))

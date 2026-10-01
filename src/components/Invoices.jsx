@@ -1,24 +1,29 @@
 import { useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from './ui.jsx'
 import { useStore } from '../lib/store.jsx'
-import { INVOICE_STATUS, amountInWords, defaultInvoiceProfile, emptyInvoice, invoiceNumberText, invoiceTotals, lineNet, money, moneyBgn } from '../lib/invoice.js'
+import { INVOICE_STATUS, amountInWords, defaultInvoiceProfile, emptyClient, emptyInvoice, emptyService, invoiceNumberText, invoiceTotals, lineNet, money, moneyBgn } from '../lib/invoice.js'
 import { downloadInvoicePdf } from '../lib/invoicePdf.js'
 
 const profileOf = (state) => ({ ...defaultInvoiceProfile(), ...(state.finance.settings.invoiceProfile || {}) })
+const clientsOf = (state) => state.finance.settings.invoiceClients || []
+const servicesOf = (state) => state.finance.settings.invoiceServices || []
 
-/* Finance > Invoices: the list, the New button and the editor. Invoices live in finance.invoices;
-   each one freezes a copy of the company profile when saved, so an old invoice never changes if the
-   profile does. */
+/* Finance > Invoices: the list, the New button, the editor, and three small managers reachable
+   from the toolbar — the company profile + stamp, the saved clients, and the saved services. */
 export function InvoicesTab() {
   const { state, update } = useStore()
   const toast = useToast()
   const profile = profileOf(state)
+  const clients = clientsOf(state)
+  const services = servicesOf(state)
   const invoices = useMemo(() => [...(state.finance.invoices || [])].sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.number || '').localeCompare(a.number || '')), [state.finance.invoices])
   const [draft, setDraft] = useState(null)
   const [isNew, setIsNew] = useState(false)
+  const [panel, setPanel] = useState('') // '' | 'profile' | 'clients' | 'services'
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
 
-  const startNew = () => { setDraft(emptyInvoice(profile)); setIsNew(true) }
+  const logo = state.settings.logo || ''
+  const startNew = () => { const inv = emptyInvoice(profile); inv.company.logo = logo; setDraft(inv); setIsNew(true) }
   const edit = (inv) => { setDraft(JSON.parse(JSON.stringify(inv))); setIsNew(false) }
   const duplicate = (inv) => {
     const copy = { ...JSON.parse(JSON.stringify(inv)), id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()), number: invoiceNumberText(profile), date: new Date().toISOString().slice(0, 10), status: 'draft' }
@@ -33,7 +38,6 @@ export function InvoicesTab() {
       const i = list.findIndex((x) => x.id === inv.id)
       if (i >= 0) list[i] = inv
       else list.push(inv)
-      // a new invoice that used the running number advances it, so the next one is unique
       if (isNew && inv.number === invoiceNumberText(s.finance.settings.invoiceProfile || profile)) {
         const p = { ...defaultInvoiceProfile(), ...(s.finance.settings.invoiceProfile || {}) }
         s.finance.settings = { ...s.finance.settings, invoiceProfile: { ...p, nextNumber: (Number(p.nextNumber) || 0) + 1 } }
@@ -44,8 +48,11 @@ export function InvoicesTab() {
     setDraft(null)
   }
   const remove = (id) => update((s) => { s.finance.invoices = (s.finance.invoices || []).filter((x) => x.id !== id); return s })
+  // The stamp is applied to every invoice: an invoice made before a stamp was uploaded still gets
+  // the current one when it prints, so Alex can upload once and it shows on all of them.
   const download = async (inv) => {
-    try { await downloadInvoicePdf(inv, `invoice-${inv.number || ''}.pdf`) } catch (e) { toast(e.message || 'Could not make the PDF.', 'error') }
+    const withStamp = { ...inv, company: { ...inv.company, stamp: inv.company?.stamp || profile.stamp, logo: inv.company?.logo || logo } }
+    try { await downloadInvoicePdf(withStamp, `invoice-${inv.number || ''}.pdf`) } catch (e) { toast(e.message || 'Could not make the PDF.', 'error') }
   }
 
   return (
@@ -53,15 +60,22 @@ export function InvoicesTab() {
       <div className="toolbar">
         <div className="toolbar-info">
           <strong>{invoices.length} invoice{invoices.length === 1 ? '' : 's'}</strong>
-          <span className="muted">next #{invoiceNumberText(profile)}</span>
+          <span className="muted">next #{invoiceNumberText(profile)}{!profile.stamp ? ' · no stamp yet' : ''}</span>
         </div>
         <div className="toolbar-actions">
+          <Button variant="ghost" onClick={() => setPanel('clients')}>Clients</Button>
+          <Button variant="ghost" onClick={() => setPanel('services')}>Services</Button>
+          <Button variant="ghost" onClick={() => setPanel('profile')}>Company &amp; stamp</Button>
           <Button variant="primary" onClick={startNew}>New invoice</Button>
         </div>
       </div>
 
+      {!profile.stamp && (
+        <p className="notice">No stamp &amp; signature uploaded yet. Add it once in <button className="link" onClick={() => setPanel('profile')}>Company &amp; stamp</button> and it prints on every invoice.</p>
+      )}
+
       {!invoices.length ? (
-        <Empty title="No invoices yet">Build an invoice with your company details, the client, the services and amounts. It saves here and downloads as a PDF with your stamp and signature. Set your company details and upload the stamp once in Settings below.</Empty>
+        <Empty title="No invoices yet">Set your company details and upload the stamp once in <b>Company &amp; stamp</b>, add your <b>Clients</b> and <b>Services</b> so they drop in ready, then build an invoice. It downloads as a PDF with your stamp and signature.</Empty>
       ) : (
         <table className="table">
           <thead><tr><th>Number</th><th>Date</th><th>Recipient</th><th>Project</th><th className="num">Total</th><th>Status</th><th /></tr></thead>
@@ -89,12 +103,22 @@ export function InvoicesTab() {
         </table>
       )}
 
-      <InvoiceEditor draft={draft} isNew={isNew} projects={state.projects} onChange={setDraft} onClose={() => setDraft(null)} onSave={save} onDownload={download} />
+      <InvoiceEditor draft={draft} isNew={isNew} projects={state.projects} clients={clients} services={services} onChange={setDraft} onClose={() => setDraft(null)} onSave={save} onDownload={download} />
+
+      <Modal open={panel === 'profile'} title="Company & stamp" wide onClose={() => setPanel('')}>
+        <InvoiceProfileForm onDone={() => setPanel('')} />
+      </Modal>
+      <Modal open={panel === 'clients'} title="Clients" wide onClose={() => setPanel('')}>
+        <ClientsManager />
+      </Modal>
+      <Modal open={panel === 'services'} title="Services" wide onClose={() => setPanel('')}>
+        <ServicesManager />
+      </Modal>
     </>
   )
 }
 
-function InvoiceEditor({ draft, isNew, projects, onChange, onClose, onSave, onDownload }) {
+function InvoiceEditor({ draft, isNew, projects, clients, services, onChange, onClose, onSave, onDownload }) {
   if (!draft) return null
   const t = invoiceTotals(draft)
   const set = (k, v) => onChange({ ...draft, [k]: v })
@@ -105,6 +129,19 @@ function InvoiceEditor({ draft, isNew, projects, onChange, onClose, onSave, onDo
   const pickProject = (id) => {
     const p = projects.find((x) => x.id === id)
     onChange({ ...draft, projectId: id, recipient: { ...draft.recipient, name: draft.recipient.name || p?.client || '' } })
+  }
+  const pickClient = (id) => {
+    const c = clients.find((x) => x.id === id)
+    if (!c) return
+    onChange({ ...draft, clientId: id, recipient: { name: c.name, address: c.address, vatNo: c.vatNo } })
+  }
+  const addService = (id) => {
+    const s = services.find((x) => x.id === id)
+    if (!s) return
+    const line = { qty: Number(s.qty) || 1, description: s.description || s.name, unitPrice: s.unitPrice }
+    // if the only line is still empty, replace it; otherwise append
+    const empty = draft.lines.length === 1 && !(draft.lines[0].description || '').trim() && !Number(draft.lines[0].unitPrice)
+    onChange({ ...draft, lines: empty ? [line] : [...draft.lines, line] })
   }
   const cur = draft.currency || 'EUR'
 
@@ -118,20 +155,27 @@ function InvoiceEditor({ draft, isNew, projects, onChange, onClose, onSave, onDo
           <Field label="Status"><Select value={draft.status} onChange={(e) => set('status', e.target.value)} options={INVOICE_STATUS} /></Field>
         </div>
 
+        <div className="row-2">
+          <Field label="Pick a saved client" hint="Fills the recipient below. Manage the list from the Clients button.">
+            <Select value={draft.clientId || ''} onChange={(e) => pickClient(e.target.value)}>
+              <option value="">{clients.length ? 'Choose a client…' : 'No saved clients yet'}</option>
+              {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </Select>
+          </Field>
+          <Field label="Link to project (optional)">
+            <Select value={draft.projectId || ''} onChange={(e) => pickProject(e.target.value)}>
+              <option value="">No project</option>
+              {projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+            </Select>
+          </Field>
+        </div>
+
         <Field label="Recipient (bill to)">
           <Input value={draft.recipient?.name || ''} onChange={(e) => setR('name', e.target.value)} placeholder="Client company name" />
         </Field>
         <div className="row-2">
           <Field label="Recipient address"><Textarea rows={2} value={draft.recipient?.address || ''} onChange={(e) => setR('address', e.target.value)} placeholder="Street, city, postcode, country" /></Field>
-          <div className="stack">
-            <Field label="Recipient VAT No"><Input value={draft.recipient?.vatNo || ''} onChange={(e) => setR('vatNo', e.target.value)} placeholder="EL…" /></Field>
-            <Field label="Link to project (optional)">
-              <Select value={draft.projectId || ''} onChange={(e) => pickProject(e.target.value)}>
-                <option value="">No project</option>
-                {projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
-              </Select>
-            </Field>
-          </div>
+          <Field label="Recipient VAT No"><Input value={draft.recipient?.vatNo || ''} onChange={(e) => setR('vatNo', e.target.value)} placeholder="EL…" /></Field>
         </div>
 
         <div className="field">
@@ -149,6 +193,12 @@ function InvoiceEditor({ draft, isNew, projects, onChange, onClose, onSave, onDo
             ))}
             <div className="inv-edit-foot">
               <Button variant="ghost" onClick={addLine}>Add a line</Button>
+              {!!services.length && (
+                <Select className="compact" value="" onChange={(e) => { addService(e.target.value); e.target.value = '' }}>
+                  <option value="">Add a saved service…</option>
+                  {services.map((s) => <option key={s.id} value={s.id}>{s.name}{s.unitPrice ? ` · ${money(s.unitPrice, cur)}` : ''}</option>)}
+                </Select>
+              )}
               <span className="muted small">In words: {amountInWords(t.total, cur)}</span>
               <b className="inv-edit-total">{money(t.total, cur)}</b>
             </div>
@@ -171,14 +221,15 @@ function InvoiceEditor({ draft, isNew, projects, onChange, onClose, onSave, onDo
         )}
         <Field label="Notes (optional)"><Textarea rows={2} value={draft.notes || ''} onChange={(e) => set('notes', e.target.value)} /></Field>
 
-        <p className="fineprint">Your company details, bank and stamp come from Finance &gt; Settings. A copy is frozen onto this invoice when you save, so changing them later does not alter invoices already made.</p>
+        <p className="fineprint">Your company details, bank and stamp come from Company &amp; stamp. A copy is frozen onto this invoice when you save, so changing them later does not alter invoices already made.</p>
       </div>
     </Modal>
   )
 }
 
-/* Finance > Settings: the company profile every invoice starts from, plus the stamp/signature PNG. */
-export function InvoiceProfileSettings() {
+/* The company profile + stamp. Shown both as a Finance > Settings section and inside a modal from
+   the Invoices toolbar, so the stamp upload is easy to find. */
+export function InvoiceProfileForm({ onDone }) {
   const { state, update } = useStore()
   const toast = useToast()
   const [p, setP] = useState(() => profileOf(state))
@@ -187,6 +238,7 @@ export function InvoiceProfileSettings() {
   const saveProfile = () => {
     update((s) => { s.finance.settings = { ...s.finance.settings, invoiceProfile: { ...p, nextNumber: Number(p.nextNumber) || 0, exchangeRate: Number(p.exchangeRate) || 0 } }; return s })
     toast('Invoice profile saved', 'ok')
+    onDone && onDone()
   }
   const pickStamp = async (file) => {
     if (!file) return
@@ -196,17 +248,22 @@ export function InvoiceProfileSettings() {
       const max = 600, k = Math.min(1, max / Math.max(img.width, img.height))
       const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k)
       c.getContext('2d').drawImage(img, 0, 0, c.width, c.height)
-      // PNG keeps transparency so the stamp sits over the signature line cleanly
       set('stamp', c.toDataURL('image/png'))
-      toast('Stamp saved. Remember to Save the profile.', 'ok')
+      toast('Stamp loaded. Press Save to keep it.', 'ok')
     } catch { toast('Could not read that image.', 'error') }
     finally { if (stampRef.current) stampRef.current.value = '' }
   }
-
   return (
-    <section className="panel fin-settings">
-      <h2>Invoice profile</h2>
+    <div className="stack">
       <p className="muted small">Your company's own side of every invoice, filled in once. A copy is frozen onto each invoice when you save it.</p>
+      <Field label="Stamp & signature (PNG)" hint="A transparent PNG with your stamp and signature together. It prints in the Provider signature box of every invoice.">
+        <div className="logo-row">
+          {p.stamp ? <img className="logo-preview" src={p.stamp} alt="" /> : <span className="muted small">No stamp yet</span>}
+          <input ref={stampRef} type="file" accept="image/*" hidden onChange={(e) => pickStamp(e.target.files?.[0])} />
+          <Button variant="ghost" onClick={() => stampRef.current?.click()}>{p.stamp ? 'Change' : 'Upload stamp'}</Button>
+          {p.stamp && <button className="link small" onClick={() => set('stamp', '')}>Remove</button>}
+        </div>
+      </Field>
       <div className="row-2">
         <Field label="Company name (header)"><Input value={p.companyName} onChange={(e) => set('companyName', e.target.value)} /></Field>
         <Field label="Website"><Input value={p.web} onChange={(e) => set('web', e.target.value)} /></Field>
@@ -232,15 +289,114 @@ export function InvoiceProfileSettings() {
         <div />
       </div>
       <Field label="Reason for not charging VAT" hint="Shown on invoices where VAT is 0."><Input value={p.vatNote} onChange={(e) => set('vatNote', e.target.value)} /></Field>
-      <Field label="Stamp & signature (PNG)" hint="A transparent PNG with your stamp and signature. It prints in the Provider signature box.">
-        <div className="logo-row">
-          {p.stamp ? <img className="logo-preview" src={p.stamp} alt="" /> : <span className="muted small">No stamp yet</span>}
-          <input ref={stampRef} type="file" accept="image/*" hidden onChange={(e) => pickStamp(e.target.files?.[0])} />
-          <Button variant="ghost" onClick={() => stampRef.current?.click()}>{p.stamp ? 'Change' : 'Upload stamp'}</Button>
-          {p.stamp && <button className="link small" onClick={() => set('stamp', '')}>Remove</button>}
-        </div>
-      </Field>
-      <div className="row-actions"><Button variant="primary" onClick={saveProfile}>Save invoice profile</Button></div>
+      <div className="row-actions"><Button variant="primary" onClick={saveProfile}>Save</Button></div>
+    </div>
+  )
+}
+
+export function InvoiceProfileSettings() {
+  return (
+    <section className="panel fin-settings">
+      <h2>Invoice profile</h2>
+      <InvoiceProfileForm />
     </section>
+  )
+}
+
+/* Saved clients — a card per client, picked into an invoice from the editor. */
+function ClientsManager() {
+  const { state, update } = useStore()
+  const toast = useToast()
+  const clients = clientsOf(state)
+  const [d, setD] = useState(null)
+  const set = (k, v) => setD((o) => ({ ...o, [k]: v }))
+  const save = () => {
+    if (!d.name.trim()) return toast('Give the client a name.', 'error')
+    update((s) => {
+      const list = s.finance.settings.invoiceClients ? [...s.finance.settings.invoiceClients] : []
+      const i = list.findIndex((x) => x.id === d.id)
+      if (i >= 0) list[i] = d; else list.push(d)
+      s.finance.settings = { ...s.finance.settings, invoiceClients: list }
+      return s
+    })
+    toast('Client saved', 'ok'); setD(null)
+  }
+  const remove = (id) => update((s) => { s.finance.settings = { ...s.finance.settings, invoiceClients: (s.finance.settings.invoiceClients || []).filter((x) => x.id !== id) }; return s })
+  return (
+    <div className="stack">
+      {!clients.length && !d && <p className="muted small">No clients yet. Add one and it drops into any invoice from the editor.</p>}
+      {!d && (
+        <>
+          {clients.map((c) => (
+            <div key={c.id} className="inv-card">
+              <div><strong>{c.name}</strong><div className="muted small">{[c.vatNo && `VAT ${c.vatNo}`, c.email, c.phone].filter(Boolean).join(' · ')}</div>{c.address && <div className="muted small">{c.address}</div>}</div>
+              <div className="row-actions"><button onClick={() => setD({ ...c })}>Edit</button><Confirm onConfirm={() => remove(c.id)} label="Delete">×</Confirm></div>
+            </div>
+          ))}
+          <div className="row-actions"><Button variant="primary" onClick={() => setD(emptyClient())}>Add a client</Button></div>
+        </>
+      )}
+      {d && (
+        <>
+          <Field label="Client name"><Input value={d.name} onChange={(e) => set('name', e.target.value)} autoFocus /></Field>
+          <Field label="Address"><Textarea rows={2} value={d.address} onChange={(e) => set('address', e.target.value)} /></Field>
+          <div className="row-3">
+            <Field label="VAT No"><Input value={d.vatNo} onChange={(e) => set('vatNo', e.target.value)} /></Field>
+            <Field label="Email"><Input value={d.email} onChange={(e) => set('email', e.target.value)} /></Field>
+            <Field label="Phone"><Input value={d.phone} onChange={(e) => set('phone', e.target.value)} /></Field>
+          </div>
+          <Field label="Notes"><Textarea rows={2} value={d.notes} onChange={(e) => set('notes', e.target.value)} /></Field>
+          <div className="row-actions"><Button variant="ghost" onClick={() => setD(null)}>Cancel</Button><Button variant="primary" onClick={save}>Save client</Button></div>
+        </>
+      )}
+    </div>
+  )
+}
+
+/* Saved services — a name, a default description and unit price that drop in as an invoice line. */
+function ServicesManager() {
+  const { state, update } = useStore()
+  const toast = useToast()
+  const services = servicesOf(state)
+  const [d, setD] = useState(null)
+  const set = (k, v) => setD((o) => ({ ...o, [k]: v }))
+  const save = () => {
+    if (!d.name.trim()) return toast('Give the service a name.', 'error')
+    update((s) => {
+      const list = s.finance.settings.invoiceServices ? [...s.finance.settings.invoiceServices] : []
+      const i = list.findIndex((x) => x.id === d.id)
+      if (i >= 0) list[i] = d; else list.push(d)
+      s.finance.settings = { ...s.finance.settings, invoiceServices: list }
+      return s
+    })
+    toast('Service saved', 'ok'); setD(null)
+  }
+  const remove = (id) => update((s) => { s.finance.settings = { ...s.finance.settings, invoiceServices: (s.finance.settings.invoiceServices || []).filter((x) => x.id !== id) }; return s })
+  return (
+    <div className="stack">
+      {!services.length && !d && <p className="muted small">No services yet. Save the ones you invoice often and pick them in the editor.</p>}
+      {!d && (
+        <>
+          {services.map((sv) => (
+            <div key={sv.id} className="inv-card">
+              <div><strong>{sv.name}</strong>{sv.unitPrice ? <span className="muted"> · {money(sv.unitPrice)}</span> : null}{sv.description && <div className="muted small">{sv.description}</div>}</div>
+              <div className="row-actions"><button onClick={() => setD({ ...sv })}>Edit</button><Confirm onConfirm={() => remove(sv.id)} label="Delete">×</Confirm></div>
+            </div>
+          ))}
+          <div className="row-actions"><Button variant="primary" onClick={() => setD(emptyService())}>Add a service</Button></div>
+        </>
+      )}
+      {d && (
+        <>
+          <Field label="Service name" hint="Short label for the picker."><Input value={d.name} onChange={(e) => set('name', e.target.value)} autoFocus placeholder="Video edit & color" /></Field>
+          <Field label="Description on the invoice"><Textarea rows={2} value={d.description} onChange={(e) => set('description', e.target.value)} placeholder="VIDEO EDIT & COLOR CORRECTION – …" /></Field>
+          <div className="row-2">
+            <Field label="Default unit price"><Input type="number" min="0" step="0.01" value={d.unitPrice} onChange={(e) => set('unitPrice', e.target.value)} /></Field>
+            <Field label="Default quantity"><Input type="number" min="0" step="1" value={d.qty} onChange={(e) => set('qty', e.target.value)} /></Field>
+          </div>
+          <div className="row-actions"><Button variant="ghost" onClick={() => setD(null)}>Cancel</Button><Button variant="primary" onClick={save}>Save service</Button></div>
+        </>
+      )}
+    </div>
   )
 }
