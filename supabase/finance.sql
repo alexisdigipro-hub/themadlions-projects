@@ -5,15 +5,15 @@
 create table if not exists finance (
   id text primary key,
   workspace_id uuid not null references workspaces(id) on delete cascade,
-  kind text not null check (kind in ('tx', 'settings', 'recurring')),
+  kind text not null check (kind in ('tx', 'settings', 'recurring', 'invoice')),
   data jsonb not null,
   updated_at timestamptz default now(),
   updated_by uuid
 );
 
--- existing installs: widen the kind check to include recurring templates
+-- existing installs: widen the kind check to include recurring templates and invoices
 alter table finance drop constraint if exists finance_kind_check;
-alter table finance add constraint finance_kind_check check (kind in ('tx', 'settings', 'recurring'));
+alter table finance add constraint finance_kind_check check (kind in ('tx', 'settings', 'recurring', 'invoice'));
 
 drop trigger if exists finance_touch on finance;
 create trigger finance_touch before insert or update on finance for each row execute function touch_updated_at();

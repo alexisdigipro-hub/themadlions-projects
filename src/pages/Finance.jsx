@@ -8,6 +8,7 @@ import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
 import { budgetCatForFin, finCatFor } from '../lib/budgetCats.js'
 import { AGE_BUCKETS, WorkLogTable, ageBucket, avgDaysToPay, daysWaiting, entryTotals, entryTotalsByYear, money2, projectWorkDate, topClientOf } from '../components/WorkLog.jsx'
+import { InvoiceProfileSettings, InvoicesTab } from '../components/Invoices.jsx'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -249,7 +250,7 @@ export default function Finance() {
     <div className="finance">
       <PageHead title="Finance" sub="Administrators only. Company and projects together, net amounts unless stated.">
         <div className="segmented small">
-          {[['overview', 'Overview'], ['transactions', 'Transactions'], ['recurring', `Recurring${dueCount ? ` (${dueCount} due)` : ''}`], ['team', 'Team work'], ['settings', 'Settings']].map(([k, l]) => (
+          {[['overview', 'Overview'], ['transactions', 'Transactions'], ['invoices', 'Invoices'], ['recurring', `Recurring${dueCount ? ` (${dueCount} due)` : ''}`], ['team', 'Team work'], ['settings', 'Settings']].map(([k, l]) => (
             <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
         </div>
@@ -452,6 +453,8 @@ export default function Finance() {
 
       {tab === 'team' && <TeamWork />}
 
+      {tab === 'invoices' && <InvoicesTab />}
+
       {tab === 'recurring' && (
         <>
           <div className="toolbar">
@@ -515,6 +518,7 @@ export default function Finance() {
           <p className="fineprint">Finance is stored in its own table that only administrators can read. Expenses tied to a project also appear as actuals in that project's budget.</p>
         </section>
       )}
+      {tab === 'settings' && <InvoiceProfileSettings />}
       {tab === 'settings' && (
         <section className="panel fin-settings">
           <h2>Income &amp; expense categories</h2>
