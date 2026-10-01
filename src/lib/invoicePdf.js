@@ -261,88 +261,11 @@ export async function previewInvoicePdf(inv) {
   window.open(url, '_blank')
 }
 
-export function getInvoiceEmailTemplate(inv) {
-  const t = invoiceTotals(inv)
-  const co = inv.company || {}
-  const cur = inv.currency || 'EUR'
-  const client = inv.recipient?.name || 'Client'
-  const showBgn = inv.showBgn && Number(inv.exchangeRate) > 0
-
-  const linesHtml = t.lines.map(l => `
-    <tr>
-      <td style="padding: 12px; border-bottom: 1px solid #e6e4df;">${l.description || ''}</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e6e4df; text-align: right;">${money(lineNet(l), cur)}</td>
-      ${showBgn ? `<td style="padding: 12px; border-bottom: 1px solid #e6e4df; text-align: right;">${moneyBgn(lineNet(l) * Number(inv.exchangeRate))}</td>` : ''}
-    </tr>
-  `).join('')
-
-  const totalHtml = `
-    <tr>
-      <td style="padding: 12px; font-weight: bold;">Total</td>
-      <td style="padding: 12px; text-align: right; font-weight: bold; color: #C8503F;">${money(t.total, cur)}</td>
-      ${showBgn ? `<td style="padding: 12px; text-align: right; font-weight: bold;">${moneyBgn(t.totalBgn)}</td>` : ''}
-    </tr>
-  `
-
-  const headerHtml = `
-    <tr style="background-color: #f6f5f2;">
-      <th style="padding: 12px; text-align: left; font-weight: bold; color: #16181d;">Description</th>
-      <th style="padding: 12px; text-align: right; font-weight: bold; color: #16181d;">${cur}</th>
-      ${showBgn ? `<th style="padding: 12px; text-align: right; font-weight: bold; color: #16181d;">BGN</th>` : ''}
-    </tr>
-  `
-
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Invoice #${inv.number || ''}</title>
-</head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #16181d; line-height: 1.6;">
-  <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-    <div style="margin-bottom: 40px;">
-      <h1 style="margin: 0 0 20px 0; font-size: 24px; color: #C8503F;">Invoice #${inv.number || ''}</h1>
-      <p style="margin: 0; color: #6b7078; font-size: 14px;">Date: ${new Date(inv.date || '').toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</p>
-    </div>
-
-    <div style="margin-bottom: 30px; padding: 20px; background-color: #f6f5f2; border-radius: 8px;">
-      <p style="margin: 0 0 10px 0;"><strong>From:</strong></p>
-      <p style="margin: 0;">${co.providerName || 'The Mad Lions'}</p>
-      <p style="margin: 5px 0 0 0; color: #6b7078; font-size: 14px;">${co.providerAddress || ''}</p>
-    </div>
-
-    <div style="margin-bottom: 30px; padding: 20px; background-color: #f6f5f2; border-radius: 8px;">
-      <p style="margin: 0 0 10px 0;"><strong>Bill To:</strong></p>
-      <p style="margin: 0;">${client}</p>
-      <p style="margin: 5px 0 0 0; color: #6b7078; font-size: 14px;">${inv.recipient?.address || ''}</p>
-    </div>
-
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-      <thead>
-        ${headerHtml}
-      </thead>
-      <tbody>
-        ${linesHtml}
-        ${totalHtml}
-      </tbody>
-    </table>
-
-    <div style="padding: 20px; background-color: #f6f5f2; border-radius: 8px; margin-bottom: 30px;">
-      <p style="margin: 0 0 10px 0;"><strong>Payment Details:</strong></p>
-      <p style="margin: 5px 0; color: #6b7078; font-size: 14px;">
-        Bank: ${co.bankName || ''}<br>
-        BIC/SWIFT: ${co.bankBic || ''}<br>
-        IBAN: ${co.bankIban || ''}
-      </p>
-    </div>
-
-    <p style="margin: 0; color: #6b7078; font-size: 13px; text-align: center;">
-      Please find the invoice PDF attached. If you have any questions, feel free to reach out.
-    </p>
-  </div>
-</body>
-</html>
-  `
+// #405 Invoice - Panik Records (Giannis Fakinos).pdf — used both for the toolbar download and the
+// public share page, so the client's downloaded file is named the same way Alex's own copy is.
+export function invoiceFilename(inv) {
+  const lastThree = String(inv.number || '').slice(-3)
+  const client = inv.recipient?.name || 'Invoice'
+  const project = inv.lines?.find((l) => (l.project || '').trim())?.project || ''
+  return project ? `#${lastThree} Invoice - ${client} (${project}).pdf` : `#${lastThree} Invoice - ${client}.pdf`
 }

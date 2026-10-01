@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from './ui.jsx'
-import { useStore } from '../lib/store.jsx'
+import { useCurrentUser, useStore } from '../lib/store.jsx'
 import { INVOICE_STATUS, amountInWords, defaultInvoiceProfile, emptyClient, emptyInvoice, emptyService, invoiceNumberText, invoiceTotals, money, moneyBgn } from '../lib/invoice.js'
-import { downloadInvoicePdf, previewInvoicePdf, getInvoiceEmailTemplate } from '../lib/invoicePdf.js'
+import { downloadInvoicePdf, invoiceFilename, previewInvoicePdf } from '../lib/invoicePdf.js'
+import { invoiceUrl, publishShare, tokenOf } from '../lib/shares.js'
 
 const profileOf = (state) => ({ ...defaultInvoiceProfile(), ...(state.finance.settings.invoiceProfile || {}) })
 const clientsOf = (state) => state.finance.settings.invoiceClients || []
@@ -12,6 +13,7 @@ const servicesOf = (state) => state.finance.settings.invoiceServices || []
    from the toolbar — the company profile + stamp, the saved clients, and the saved services. */
 export function InvoicesTab() {
   const { state, update } = useStore()
+  const user = useCurrentUser()
   const toast = useToast()
   const profile = profileOf(state)
   const clients = clientsOf(state)
@@ -20,9 +22,8 @@ export function InvoicesTab() {
   const [draft, setDraft] = useState(null)
   const [isNew, setIsNew] = useState(false)
   const [panel, setPanel] = useState('') // '' | 'profile' | 'clients' | 'services'
-  const [emailPanel, setEmailPanel] = useState(null) // null or the invoice being emailed
-  const [emailTo, setEmailTo] = useState('')
-  const [emailSubject, setEmailSubject] = useState('')
+  const [sharePanel, setSharePanel] = useState(null) // null or { inv, url }
+  const [shareBusy, setShareBusy] = useState(false)
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
 
   const logo = state.settings.logo || ''
@@ -53,38 +54,29 @@ export function InvoicesTab() {
   const remove = (id) => update((s) => { s.finance.invoices = (s.finance.invoices || []).filter((x) => x.id !== id); return s })
   // The stamp is applied to every invoice: an invoice made before a stamp was uploaded still gets
   // the current one when it prints, so Alex can upload once and it shows on all of them.
+  const withCompany = (inv) => ({ ...inv, company: { ...inv.company, stamp: inv.company?.stamp || profile.stamp, logo: inv.company?.logo || logo, headerImage: inv.company?.headerImage || profile.headerImage } })
   const download = async (inv) => {
-    const withStamp = { ...inv, company: { ...inv.company, stamp: inv.company?.stamp || profile.stamp, logo: inv.company?.logo || logo, headerImage: inv.company?.headerImage || profile.headerImage } }
-    // Filename: #405 Invoice - Panik Records (Giannis Fakinos)
-    const lastThree = String(inv.number || '').slice(-3)
-    const client = inv.recipient?.name || 'Invoice'
-    const project = inv.lines?.find((l) => (l.project || '').trim())?.project || ''
-    const filename = project ? `#${lastThree} Invoice - ${client} (${project}).pdf` : `#${lastThree} Invoice - ${client}.pdf`
-    try { await downloadInvoicePdf(withStamp, filename) } catch (e) { toast(e.message || 'Could not make the PDF.', 'error') }
+    const withStamp = withCompany(inv)
+    try { await downloadInvoicePdf(withStamp, invoiceFilename(withStamp)) } catch (e) { toast(e.message || 'Could not make the PDF.', 'error') }
   }
   const preview = async (inv) => {
-    const withStamp = { ...inv, company: { ...inv.company, stamp: inv.company?.stamp || profile.stamp, logo: inv.company?.logo || logo, headerImage: inv.company?.headerImage || profile.headerImage } }
-    try { await previewInvoicePdf(withStamp) } catch (e) { toast(e.message || 'Could not preview the PDF.', 'error') }
+    try { await previewInvoicePdf(withCompany(inv)) } catch (e) { toast(e.message || 'Could not preview the PDF.', 'error') }
   }
-  const openEmailDialog = (inv) => {
-    setEmailPanel(inv)
-    setEmailTo(inv.recipient?.email || '')
-    setEmailSubject(`Invoice #${inv.number || ''}`)
-  }
-  const sendEmail = () => {
-    if (!emailTo.trim()) return toast('Add recipient email.', 'error')
-    const htmlBody = getInvoiceEmailTemplate(emailPanel)
-    const mailtoLink = `mailto:${emailTo}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent('Please see the email content below. For the PDF, save and attach the downloaded invoice file.')}`
-    const a = document.createElement('a')
-    a.href = mailtoLink
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    setEmailPanel(null)
-  }
-  const copyEmailTemplate = () => {
-    const htmlBody = getInvoiceEmailTemplate(emailPanel)
-    navigator.clipboard.writeText(htmlBody).then(() => toast('Email template copied to clipboard.', 'ok')).catch(() => toast('Could not copy.', 'error'))
+  // A public link with a live preview and a Download PDF button, the same one every time this
+  // invoice is shared again (publishShare reuses the token for the same ref).
+  const shareInvoice = async (inv) => {
+    setShareBusy(true)
+    try {
+      const url = await publishShare({ workspaceId: state.workspace.id, kind: 'invoice', ref: `invoice:${inv.id}`, data: withCompany(inv), userId: user?.id })
+      const link = invoiceUrl(tokenOf(url))
+      await navigator.clipboard.writeText(link).catch(() => {})
+      setSharePanel({ inv, url: link })
+      toast('Link ready, copied to clipboard', 'ok')
+    } catch (e) {
+      toast(e.message || 'Could not create the link.', 'error')
+    } finally {
+      setShareBusy(false)
+    }
   }
 
   return (
@@ -126,7 +118,7 @@ export function InvoicesTab() {
                     <button onClick={() => edit(inv)}>Edit</button>
                     <button onClick={() => preview(inv)}>Preview</button>
                     <button onClick={() => download(inv)}>PDF</button>
-                    <button onClick={() => openEmailDialog(inv)}>Email</button>
+                    <button onClick={() => shareInvoice(inv)} disabled={shareBusy}>Share link</button>
                     <button onClick={() => duplicate(inv)}>Duplicate</button>
                     <Confirm onConfirm={() => remove(inv.id)} label="Delete">×</Confirm>
                   </td>
@@ -148,14 +140,12 @@ export function InvoicesTab() {
       <Modal open={panel === 'services'} title="Services" wide onClose={() => setPanel('')}>
         <ServicesManager />
       </Modal>
-      <Modal open={!!emailPanel} title={`Email Invoice #${emailPanel?.number || ''}`} onClose={() => setEmailPanel(null)}>
-        <Field label="Send to"><Input type="email" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} placeholder="client@example.com" autoFocus /></Field>
-        <Field label="Subject"><Input value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} /></Field>
-        <p className="muted small" style={{ marginBottom: '20px' }}>A beautiful HTML email template is ready. You can:</p>
+      <Modal open={!!sharePanel} title={`Share Invoice #${sharePanel?.inv?.number || ''}`} onClose={() => setSharePanel(null)}>
+        <p className="muted small">Send this link to the client. It opens a page with a preview of the invoice and a Download PDF button, no login needed. Sharing again gives the same link, refreshed with the invoice's current details.</p>
+        <Field label="Link"><Input value={sharePanel?.url || ''} readOnly onFocus={(e) => e.target.select()} /></Field>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <Button variant="ghost" onClick={() => setEmailPanel(null)}>Cancel</Button>
-          <Button variant="ghost" onClick={copyEmailTemplate}>Copy Template</Button>
-          <Button variant="primary" onClick={sendEmail}>Open Mail Client</Button>
+          <Button variant="ghost" onClick={() => setSharePanel(null)}>Close</Button>
+          <Button variant="primary" onClick={() => navigator.clipboard.writeText(sharePanel.url).then(() => toast('Link copied', 'ok')).catch(() => toast('Could not copy.', 'error'))}>Copy link</Button>
         </div>
       </Modal>
     </>

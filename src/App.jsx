@@ -31,6 +31,7 @@ import PublicDelivery from './pages/PublicDelivery.jsx'
 import Deliveries from './pages/Deliveries.jsx'
 import PublicStatus from './pages/PublicStatus.jsx'
 import PublicEstimate from './pages/PublicEstimate.jsx'
+import PublicInvoice from './pages/PublicInvoice.jsx'
 import Finance from './pages/Finance.jsx'
 import Home from './pages/Home.jsx'
 import Budget from './pages/project/Budget.jsx'
@@ -74,6 +75,7 @@ export default function App() {
             <Route path="/d/:token" element={<PublicDelivery />} />
             <Route path="/ps/:token" element={<PublicStatus />} />
             <Route path="/e/:token" element={<PublicEstimate />} />
+            <Route path="/inv/:token" element={<PublicInvoice />} />
             <Route element={<RequireUser />}>
               <Route element={<Layout />}>
                 <Route index element={<Dashboard />} />
