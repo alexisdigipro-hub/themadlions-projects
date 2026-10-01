@@ -2557,9 +2557,10 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 .est-advance-box { display: flex; flex-direction: column; gap: 4px; text-align: left; }
 .est-advance-label { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .est-advance-amt { font-size: 21px; font-weight: 700; color: var(--amber); font-variant-numeric: tabular-nums; }
-/* Same size as a cost line's description, bold, and spread the full width of the sheet instead
-   of the narrow centred column the other notes use (Alex). */
-.est-terms { margin-top: 18px; font-size: 14.5px; font-weight: 700; color: var(--muted); max-width: none; }
+/* Same size as a cost line's description, bold, and spread the full width of the sheet, justified
+   edge to edge, instead of the narrow centred column the other notes use (Alex). The parent
+   selector is needed to beat .dlv-note's own max-width, which is defined later in this file. */
+.dlv-say .est-terms { margin-top: 18px; font-size: 14.5px; font-weight: 700; color: var(--muted); max-width: none; text-align: justify; }
 .dlv-by.est-expired { border-color: var(--danger); color: var(--danger); }
 
 /* the form Alex fills in */

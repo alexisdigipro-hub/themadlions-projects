@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Payment terms & Notes: actually fills the width now (1 Oct)
+Alex, with a screenshot still showing a narrow centred block: "Θέλω αυτό το σημείο να γεμίσει δεξιά αριστερά." The previous step's `.est-terms { max-width: none }` was being overridden by `.dlv-note { max-width: 430px }`, which is defined later in styles.css at equal specificity, so the element (class `dlv-note est-terms`) kept the 430px cap. Fixed by raising specificity to `.dlv-say .est-terms` (it always sits inside the `.dlv-say` band) and adding `text-align: justify` so the text fills edge to edge. In the PDF the terms lines are now left-aligned at `MARGIN` across the full `CONTENT_W` instead of centred. Both re-checked in real headless Chromium.
+
 ### Payment terms & Notes: same size as the costs, bold, full width (1 Oct)
 Alex, reversing the shrink below: "Βλακεία σου είπα, κάντα όσο είναι τα costs, αλλά bold. Και άνοιξε το πάχος που φαίνονται τα γράμματα να μπορούν να απλώσουνε δεξιά και αριστερά." So the terms text is now the same size as a cost line's description (14.5px, 16.5px on the estimate's desktop width, matching `.est-what`), still bold, and spread the full width instead of the narrow centred `.dlv-note` column: on the page `.est-terms` overrides `max-width: none` (dlv-note caps it at 430px), in the PDF `wrapText` uses the full `CONTENT_W` instead of `CONTENT_W * 0.75`. Line height in the PDF 11 → 19 to match the bigger text. Supersedes the "70% smaller" step from earlier the same day. Re-checked in real headless Chromium.
 
