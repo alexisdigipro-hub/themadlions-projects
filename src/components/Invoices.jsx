@@ -52,7 +52,12 @@ export function InvoicesTab() {
   // the current one when it prints, so Alex can upload once and it shows on all of them.
   const download = async (inv) => {
     const withStamp = { ...inv, company: { ...inv.company, stamp: inv.company?.stamp || profile.stamp, logo: inv.company?.logo || logo, headerImage: inv.company?.headerImage || profile.headerImage } }
-    try { await downloadInvoicePdf(withStamp, `invoice-${inv.number || ''}.pdf`) } catch (e) { toast(e.message || 'Could not make the PDF.', 'error') }
+    // Filename: #405 Invoice - Panik Records (Giannis Fakinos)
+    const lastThree = String(inv.number || '').slice(-3)
+    const client = inv.recipient?.name || 'Invoice'
+    const project = inv.lines?.find((l) => (l.project || '').trim())?.project || ''
+    const filename = project ? `#${lastThree} Invoice - ${client} (${project}).pdf` : `#${lastThree} Invoice - ${client}.pdf`
+    try { await downloadInvoicePdf(withStamp, filename) } catch (e) { toast(e.message || 'Could not make the PDF.', 'error') }
   }
 
   return (
