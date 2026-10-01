@@ -18,8 +18,8 @@ export const defaultInvoiceProfile = () => ({
   currency: 'EUR',
   showBgn: true,
   exchangeRate: 1.95583, // BGN per 1 EUR, fixed peg
-  nextNumber: 406, // shown as a long number; the sample's last was #...405
-  numberPrefix: '10000004',
+  nextNumber: 407, // shown as a long number; prefix + nextNumber = 1000000407
+  numberPrefix: '1000000',
   stamp: '', // a PNG data URL (stamp + signature), uploaded in Finance > Settings
   headerImage: '', // optional letterhead PNG (logo + details); when set it replaces the text header
 })
