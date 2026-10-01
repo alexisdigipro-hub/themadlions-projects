@@ -40,8 +40,8 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
-### Payment terms & Notes: 70% smaller (1 Oct)
-Alex: "Θέλω να μικρύνεις τα γράμματα κατά 70%." This is the text under Valid until, on the client's page and in the PDF, which two days ago he had asked to double and make bold. Now down to 30% of that enlarged size (a 70% reduction): page `.est-terms` 27px → 8px, PDF 23px → 7px with line height 30 → 11. Still bold. Re-checked the PDF in real headless Chromium: small bold block at the bottom, fits cleanly.
+### Payment terms & Notes: same size as the costs, bold, full width (1 Oct)
+Alex, reversing the shrink below: "Βλακεία σου είπα, κάντα όσο είναι τα costs, αλλά bold. Και άνοιξε το πάχος που φαίνονται τα γράμματα να μπορούν να απλώσουνε δεξιά και αριστερά." So the terms text is now the same size as a cost line's description (14.5px, 16.5px on the estimate's desktop width, matching `.est-what`), still bold, and spread the full width instead of the narrow centred `.dlv-note` column: on the page `.est-terms` overrides `max-width: none` (dlv-note caps it at 430px), in the PDF `wrapText` uses the full `CONTENT_W` instead of `CONTENT_W * 0.75`. Line height in the PDF 11 → 19 to match the bigger text. Supersedes the "70% smaller" step from earlier the same day. Re-checked in real headless Chromium.
 
 ### Google Calendar, connected both ways (29 Sep) — needs setup, not yet tested live
 Alex: "Μπορούμε να συνδέσουμε ένα συγκεκριμένο ημερολόγιο της Google;" Asked which of two shapes he wanted (a one-way subscribe link, simple, no Google credentials needed, vs full two-way sync, bigger, needs Alex to create a Google Cloud OAuth app) — he picked **full two-way sync**.
