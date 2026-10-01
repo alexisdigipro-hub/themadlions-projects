@@ -18,7 +18,9 @@ const HEAD = '#111318'
 const ACCENT = '#C8503F'
 const SHADE = '#f4f2ee'
 
-const FONT = 'system-ui, -apple-system, "Segoe UI", Arial, sans-serif'
+// The site's own typeface (Sofia Sans), so the invoice matches the app. We wait for it to load
+// before drawing; if it is somehow missing, the stack falls back cleanly.
+const FONT = "'Sofia Sans', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif"
 
 function wrap(ctx, text, maxW) {
   const words = String(text || '').split(/\s+/).filter(Boolean)
@@ -47,8 +49,10 @@ export async function renderInvoice(inv) {
   const co = inv.company || {}
   const cur = inv.currency || 'EUR'
   const stamp = co.stamp ? await loadImage(co.stamp) : null
-
   const logo = co.logo ? await loadImage(co.logo) : null
+  const header = co.headerImage ? await loadImage(co.headerImage) : null
+  // make sure the site font is ready before any text is measured or drawn
+  try { if (document.fonts) { await document.fonts.load(`700 15px 'Sofia Sans'`); await document.fonts.load(`400 10px 'Sofia Sans'`); await document.fonts.ready } } catch {}
 
   const canvas = document.createElement('canvas')
   canvas.width = Math.round(PAGE_W * SCALE)
@@ -57,47 +61,47 @@ export async function renderInvoice(inv) {
   ctx.scale(SCALE, SCALE)
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, PAGE_W, PAGE_H)
-  // thin accent band across the very top
-  ctx.fillStyle = ACCENT
-  ctx.fillRect(0, 0, PAGE_W, 5)
   ctx.textBaseline = 'alphabetic'
 
+  const amtRight = PAGE_W - MARGIN
+  const dateDM = (iso) => (iso ? new Date(`${iso}T00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '')
   let y = MARGIN + 6
-  let nameX = MARGIN
-  // optional company logo top-left; the name sits to its right
-  if (logo) {
-    const h = 40, w = logo.width * (h / logo.height)
-    ctx.drawImage(logo, MARGIN, MARGIN - 4, Math.min(w, 120), h)
-    nameX = MARGIN + Math.min(w, 120) + 14
+
+  if (header) {
+    // a letterhead image (logo + company details), centred and full width, replacing the text header
+    const w = Math.min(CONTENT_W, header.width), h = header.width ? w * (header.height / header.width) : 90
+    const drawH = Math.min(h, 150)
+    const drawW = header.height ? drawH * (header.width / header.height) : w
+    ctx.drawImage(header, (PAGE_W - Math.min(drawW, CONTENT_W)) / 2, MARGIN - 6, Math.min(drawW, CONTENT_W), drawH)
+    y = MARGIN - 6 + drawH + 14
+    // invoice number + date, centred under the letterhead
+    ctx.textAlign = 'center'
+    ctx.fillStyle = ACCENT; ctx.font = `800 13px ${FONT}`
+    ctx.fillText(`INVOICE #${inv.number || ''}`, PAGE_W / 2, y); y += 15
+    ctx.fillStyle = MUTED; ctx.font = `400 10px ${FONT}`
+    ctx.fillText(`Date: ${dateDM(inv.date)}`, PAGE_W / 2, y); y += 10
+    ctx.textAlign = 'left'
+  } else {
+    // text header: optional logo top-left, company name + address, invoice number top-right
+    ctx.fillStyle = ACCENT; ctx.fillRect(0, 0, PAGE_W, 5)
+    let nameX = MARGIN
+    if (logo) { const h = 40, w = logo.width * (h / logo.height); ctx.drawImage(logo, MARGIN, MARGIN - 4, Math.min(w, 120), h); nameX = MARGIN + Math.min(w, 120) + 14 }
+    ctx.textAlign = 'right'
+    ctx.fillStyle = ACCENT; ctx.font = `800 14px ${FONT}`
+    ctx.fillText('INVOICE', amtRight, MARGIN + 4)
+    ctx.fillStyle = HEAD; ctx.font = `700 11px ${FONT}`
+    ctx.fillText(`#${inv.number || ''}`, amtRight, MARGIN + 20)
+    ctx.fillStyle = MUTED; ctx.font = `400 10px ${FONT}`
+    ctx.fillText(`Date: ${dateDM(inv.date)}`, amtRight, MARGIN + 36)
+    ctx.textAlign = 'left'
+    ctx.fillStyle = HEAD; ctx.font = `800 15px ${FONT}`
+    for (const l of wrap(ctx, co.name || 'THE MAD LIONS FILM PRODUCTION HOUSE', PAGE_W - MARGIN - 150 - nameX)) { ctx.fillText(l, nameX, y); y += 18 }
+    ctx.fillStyle = MUTED; ctx.font = `400 9.5px ${FONT}`; y += 1
+    for (const l of wrap(ctx, co.providerAddress || '', CONTENT_W * 0.55)) { ctx.fillText(l, nameX, y); y += 12 }
+    if (co.web) { ctx.fillText(co.web, nameX, y); y += 12 }
+    y = Math.max(y, MARGIN + 54) + 8
   }
 
-  // ---- header: company left, INVOICE # / date right ----
-  // The invoice number block sits top-right; the company name wraps within the space left of it so
-  // a long name never runs underneath it.
-  ctx.textAlign = 'right'
-  ctx.fillStyle = ACCENT
-  ctx.font = `800 14px ${FONT}`
-  ctx.fillText('INVOICE', PAGE_W - MARGIN, MARGIN + 4)
-  ctx.fillStyle = HEAD
-  ctx.font = `700 11px ${FONT}`
-  ctx.fillText(`#${inv.number || ''}`, PAGE_W - MARGIN, MARGIN + 20)
-  ctx.fillStyle = MUTED
-  ctx.font = `400 10px ${FONT}`
-  const dateStr = inv.date ? new Date(`${inv.date}T00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''
-  ctx.fillText(`Date: ${dateStr}`, PAGE_W - MARGIN, MARGIN + 36)
-
-  ctx.textAlign = 'left'
-  ctx.fillStyle = HEAD
-  ctx.font = `800 15px ${FONT}`
-  const nameW = PAGE_W - MARGIN - 150 - nameX // keep clear of the invoice-number block
-  for (const l of wrap(ctx, co.name || 'THE MAD LIONS FILM PRODUCTION HOUSE', nameW)) { ctx.fillText(l, nameX, y); y += 18 }
-  ctx.fillStyle = MUTED
-  ctx.font = `400 9.5px ${FONT}`
-  y += 1
-  for (const l of wrap(ctx, co.providerAddress || '', CONTENT_W * 0.55)) { ctx.fillText(l, nameX, y); y += 12 }
-  if (co.web) { ctx.fillText(co.web, nameX, y); y += 12 }
-
-  y = Math.max(y, MARGIN + 54) + 8
   ctx.strokeStyle = ACCENT; ctx.lineWidth = 2
   ctx.beginPath(); ctx.moveTo(MARGIN, y); ctx.lineTo(PAGE_W - MARGIN, y); ctx.stroke()
   y += 22
@@ -109,11 +113,11 @@ export async function renderInvoice(inv) {
   const party = (x, label, name, address, vatNo) => {
     let yy = partyTop
     ctx.textAlign = 'left'
-    ctx.fillStyle = MUTED
+    ctx.fillStyle = ACCENT
     ctx.font = `700 8.5px ${FONT}`
     ctx.fillText(label.toUpperCase(), x, yy); yy += 15
     ctx.fillStyle = INK
-    ctx.font = `700 11px ${FONT}`
+    ctx.font = `700 11.5px ${FONT}`
     for (const l of wrap(ctx, name, colW)) { ctx.fillText(l, x, yy); yy += 14 }
     ctx.fillStyle = MUTED
     ctx.font = `400 9.5px ${FONT}`
@@ -123,80 +127,63 @@ export async function renderInvoice(inv) {
   }
   const yL = party(MARGIN, 'Provider', co.providerName || '', co.providerAddress || '', co.providerVatNo || '')
   const yR = party(colR, 'Recipient', inv.recipient?.name || '', inv.recipient?.address || '', inv.recipient?.vatNo || '')
-  y = Math.max(yL, yR) + 18
+  y = Math.max(yL, yR) + 20
 
-  // ---- line table ----
+  // ---- line table: Description | Amount (EUR) | Amount (BGN). No quantity column (Alex). ----
   const showBgn = inv.showBgn && Number(inv.exchangeRate) > 0
-  // columns: Qty | Description | Unit price | Net | (Total BGN) — EUR amounts are the spine
-  const qtyX = MARGIN
-  const amtRight = PAGE_W - MARGIN
-  const totalColW = 78
-  const netColW = 78
-  const bgnColW = showBgn ? 92 : 0
-  const unitColW = 74
-  const descX = qtyX + 34
+  const bgnColW = showBgn ? 110 : 0
   const bgnX = amtRight
-  const totX = showBgn ? bgnX - bgnColW - 10 : amtRight
-  const netX = totX - totalColW - 6
-  const unitX = netX - netColW - 6
-  const descW = unitX - unitColW - descX - 10
+  const eurX = showBgn ? bgnX - bgnColW - 12 : amtRight
+  const descX = MARGIN
+  const descW = eurX - 120 - descX
 
-  // shaded header strip for the table
   ctx.fillStyle = SHADE
   ctx.fillRect(MARGIN, y - 11, CONTENT_W, 20)
   ctx.fillStyle = MUTED
   ctx.font = `700 8px ${FONT}`
   ctx.textAlign = 'left'
-  ctx.fillText('QTY', qtyX + 4, y)
-  ctx.fillText('DESCRIPTION', descX, y)
+  ctx.fillText('DESCRIPTION', descX + 4, y)
   ctx.textAlign = 'right'
-  ctx.fillText('UNIT', unitX, y)
-  ctx.fillText('NET', netX, y)
-  ctx.fillText(showBgn ? 'TOTAL (EUR)' : 'TOTAL', totX, y)
-  if (showBgn) ctx.fillText('TOTAL (BGN)', bgnX, y)
+  ctx.fillText(showBgn ? 'AMOUNT (EUR)' : 'AMOUNT', eurX, y)
+  if (showBgn) ctx.fillText('AMOUNT (BGN)', bgnX, y)
   y += 16
 
   for (const l of t.lines) {
     ctx.fillStyle = INK
-    ctx.font = `400 10px ${FONT}`
+    ctx.font = `600 10.5px ${FONT}`
     ctx.textAlign = 'left'
     const descLines = wrap(ctx, l.description || '', descW)
     const rowTop = y
-    ctx.fillText(String(l.qty ?? ''), qtyX, rowTop)
     let ly = rowTop
-    for (const dl of descLines) { ctx.fillText(dl, descX, ly); ly += 13 }
-    if ((l.project || '').trim()) {
-      ctx.fillStyle = MUTED
-      ctx.font = `400 9px ${FONT}`
-      for (const pl of wrap(ctx, `Project: ${l.project}`, descW)) { ctx.fillText(pl, descX, ly); ly += 12 }
-      ctx.fillStyle = INK
-      ctx.font = `400 10px ${FONT}`
-    }
+    for (const dl of descLines) { ctx.fillText(dl, descX + 4, ly); ly += 13 }
+    ctx.font = `400 9px ${FONT}`
+    ctx.fillStyle = MUTED
+    if ((l.project || '').trim()) { for (const pl of wrap(ctx, `Project: ${l.project}`, descW)) { ctx.fillText(pl, descX + 4, ly); ly += 11 } }
+    if ((l.date || '').trim()) { ctx.fillText(`Date: ${dateDM(l.date)}`, descX + 4, ly); ly += 11 }
+    ctx.fillStyle = INK
+    ctx.font = `400 10.5px ${FONT}`
     ctx.textAlign = 'right'
-    ctx.fillText(money(l.unitPrice || 0, cur), unitX, rowTop)
-    ctx.fillText(money(lineNet(l), cur), netX, rowTop)
-    ctx.fillText(money(lineNet(l), cur), totX, rowTop)
+    ctx.fillText(money(lineNet(l), cur), eurX, rowTop)
     if (showBgn) ctx.fillText(moneyBgn(lineNet(l) * Number(inv.exchangeRate)), bgnX, rowTop)
-    y = Math.max(rowTop + 16, ly + 3)
-    ctx.strokeStyle = '#ececee'; ctx.beginPath(); ctx.moveTo(MARGIN, y - 4); ctx.lineTo(PAGE_W - MARGIN, y - 4); ctx.stroke()
+    y = Math.max(rowTop + 18, ly + 4)
+    ctx.strokeStyle = '#ececee'; ctx.beginPath(); ctx.moveTo(MARGIN, y - 5); ctx.lineTo(PAGE_W - MARGIN, y - 5); ctx.stroke()
   }
 
   // ---- totals ----
   y += 12
-  const labelX = amtRight - 210
+  const labelX = amtRight - 230
   const totalRow = (label, val, bold) => {
-    if (bold) { ctx.fillStyle = SHADE; ctx.fillRect(labelX - 12, y - 14, amtRight - labelX + 12, 26) }
-    ctx.font = bold ? `800 14px ${FONT}` : `400 10.5px ${FONT}`
+    if (bold) { ctx.fillStyle = SHADE; ctx.fillRect(labelX - 12, y - 15, amtRight - labelX + 24, 28) }
+    ctx.font = bold ? `800 15px ${FONT}` : `400 10.5px ${FONT}`
     ctx.fillStyle = bold ? INK : MUTED
     ctx.textAlign = 'left'
     ctx.fillText(label, labelX, y)
     ctx.fillStyle = bold ? ACCENT : INK
     ctx.textAlign = 'right'
     ctx.fillText(val, amtRight, y)
-    y += bold ? 26 : 17
+    y += bold ? 27 : 17
   }
-  totalRow('Net', money(t.net, cur))
-  if (t.vatPct > 0) totalRow(`VAT ${t.vatPct}%`, money(t.vat, cur))
+  if (t.vatPct > 0) { totalRow('Net', money(t.net, cur)); totalRow(`VAT ${t.vatPct}%`, money(t.vat, cur)) }
   totalRow('Total', money(t.total, cur), true)
   if (showBgn) { ctx.fillStyle = MUTED; ctx.font = `400 9.5px ${FONT}`; ctx.textAlign = 'right'; ctx.fillText(`${moneyBgn(t.totalBgn)}  ·  rate ${inv.exchangeRate}`, amtRight, y); y += 16 }
 

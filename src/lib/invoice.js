@@ -21,6 +21,7 @@ export const defaultInvoiceProfile = () => ({
   nextNumber: 406, // shown as a long number; the sample's last was #...405
   numberPrefix: '10000004',
   stamp: '', // a PNG data URL (stamp + signature), uploaded in Finance > Settings
+  headerImage: '', // optional letterhead PNG (logo + details); when set it replaces the text header
 })
 
 const prof = (p = {}) => ({ ...defaultInvoiceProfile(), ...p })
@@ -45,14 +46,18 @@ export const emptyInvoice = (profile = {}) => {
     vatPct: 0,
     vatNote: p.vatNote || '',
     recipient: { name: '', address: '', vatNo: '' },
-    lines: [{ qty: 1, description: '', unitPrice: '' }],
+    lines: [{ description: '', project: '', date: '', unitPrice: '' }],
     notes: '',
     // frozen copy of the company's own side, so an old invoice never changes when the profile does
-    company: { name: p.companyName, web: p.web, providerName: p.providerName, providerAddress: p.providerAddress, providerVatNo: p.providerVatNo, bankName: p.bankName, bankBic: p.bankBic, bankIban: p.bankIban, stamp: p.stamp || '' },
+    company: { name: p.companyName, web: p.web, providerName: p.providerName, providerAddress: p.providerAddress, providerVatNo: p.providerVatNo, bankName: p.bankName, bankBic: p.bankBic, bankIban: p.bankIban, stamp: p.stamp || '', headerImage: p.headerImage || '' },
   }
 }
 
-export const lineNet = (l) => (Number(l.qty) || 0) * (Number(l.unitPrice) || 0)
+// No quantity any more (Alex): a line is just an amount. Older invoices with a qty keep using it.
+export const lineNet = (l) => {
+  const q = l.qty === undefined || l.qty === null || l.qty === '' ? 1 : (Number(l.qty) || 0)
+  return q * (Number(l.unitPrice) || 0)
+}
 
 export function invoiceTotals(inv = {}) {
   const lines = (inv.lines || []).filter((l) => (l.description || '').trim() || lineNet(l))

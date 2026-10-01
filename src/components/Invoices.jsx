@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from './ui.jsx'
 import { useStore } from '../lib/store.jsx'
-import { INVOICE_STATUS, amountInWords, defaultInvoiceProfile, emptyClient, emptyInvoice, emptyService, invoiceNumberText, invoiceTotals, lineNet, money, moneyBgn } from '../lib/invoice.js'
+import { INVOICE_STATUS, amountInWords, defaultInvoiceProfile, emptyClient, emptyInvoice, emptyService, invoiceNumberText, invoiceTotals, money, moneyBgn } from '../lib/invoice.js'
 import { downloadInvoicePdf } from '../lib/invoicePdf.js'
 
 const profileOf = (state) => ({ ...defaultInvoiceProfile(), ...(state.finance.settings.invoiceProfile || {}) })
@@ -51,7 +51,7 @@ export function InvoicesTab() {
   // The stamp is applied to every invoice: an invoice made before a stamp was uploaded still gets
   // the current one when it prints, so Alex can upload once and it shows on all of them.
   const download = async (inv) => {
-    const withStamp = { ...inv, company: { ...inv.company, stamp: inv.company?.stamp || profile.stamp, logo: inv.company?.logo || logo } }
+    const withStamp = { ...inv, company: { ...inv.company, stamp: inv.company?.stamp || profile.stamp, logo: inv.company?.logo || logo, headerImage: inv.company?.headerImage || profile.headerImage } }
     try { await downloadInvoicePdf(withStamp, `invoice-${inv.number || ''}.pdf`) } catch (e) { toast(e.message || 'Could not make the PDF.', 'error') }
   }
 
@@ -124,7 +124,7 @@ function InvoiceEditor({ draft, isNew, projects, clients, services, onChange, on
   const set = (k, v) => onChange({ ...draft, [k]: v })
   const setR = (k, v) => onChange({ ...draft, recipient: { ...draft.recipient, [k]: v } })
   const setLine = (i, k, v) => onChange({ ...draft, lines: draft.lines.map((l, j) => (j === i ? { ...l, [k]: v } : l)) })
-  const addLine = () => onChange({ ...draft, lines: [...draft.lines, { qty: 1, description: '', unitPrice: '' }] })
+  const addLine = () => onChange({ ...draft, lines: [...draft.lines, { description: '', project: '', date: '', unitPrice: '' }] })
   const rmLine = (i) => onChange({ ...draft, lines: draft.lines.filter((_, j) => j !== i) })
   const pickProject = (id) => {
     const p = projects.find((x) => x.id === id)
@@ -138,7 +138,7 @@ function InvoiceEditor({ draft, isNew, projects, clients, services, onChange, on
   const addService = (id) => {
     const s = services.find((x) => x.id === id)
     if (!s) return
-    const line = { qty: Number(s.qty) || 1, description: s.description || s.name, unitPrice: s.unitPrice }
+    const line = { description: s.description || s.name, project: '', date: '', unitPrice: s.unitPrice }
     // if the only line is still empty, replace it; otherwise append
     const empty = draft.lines.length === 1 && !(draft.lines[0].description || '').trim() && !Number(draft.lines[0].unitPrice)
     onChange({ ...draft, lines: empty ? [line] : [...draft.lines, line] })
@@ -181,14 +181,13 @@ function InvoiceEditor({ draft, isNew, projects, clients, services, onChange, on
         <div className="field">
           <span className="field-label">Services</span>
           <div className="inv-edit">
-            <div className="inv-edit-head"><span>Qty</span><span>Description</span><span>Project</span><span>Unit price</span><span>Net</span><span /></div>
+            <div className="inv-edit-head"><span>Description</span><span>Project</span><span>Date</span><span>Amount</span><span /></div>
             {draft.lines.map((l, i) => (
               <div key={i} className="inv-edit-row">
-                <Input type="number" min="0" step="1" value={l.qty ?? ''} onChange={(e) => setLine(i, 'qty', e.target.value)} />
                 <Input value={l.description || ''} onChange={(e) => setLine(i, 'description', e.target.value)} placeholder="VIDEO EDIT & COLOR CORRECTION" />
                 <Input value={l.project || ''} onChange={(e) => setLine(i, 'project', e.target.value)} placeholder="Project / song" list="inv-project-list" />
+                <Input type="date" value={l.date || ''} onChange={(e) => setLine(i, 'date', e.target.value)} title="Shoot day (optional)" />
                 <Input type="number" min="0" step="0.01" value={l.unitPrice ?? ''} onChange={(e) => setLine(i, 'unitPrice', e.target.value)} placeholder="0" />
-                <span className="inv-edit-net">{money(lineNet(l), cur)}</span>
                 <button className="link small" onClick={() => rmLine(i)} disabled={draft.lines.length === 1}>Remove</button>
               </div>
             ))}
@@ -236,6 +235,7 @@ export function InvoiceProfileForm({ onDone }) {
   const toast = useToast()
   const [p, setP] = useState(() => profileOf(state))
   const stampRef = useRef()
+  const headerRef = useRef()
   const set = (k, v) => setP((o) => ({ ...o, [k]: v }))
   const saveProfile = () => {
     update((s) => { s.finance.settings = { ...s.finance.settings, invoiceProfile: { ...p, nextNumber: Number(p.nextNumber) || 0, exchangeRate: Number(p.exchangeRate) || 0 } }; return s })
@@ -255,9 +255,30 @@ export function InvoiceProfileForm({ onDone }) {
     } catch { toast('Could not read that image.', 'error') }
     finally { if (stampRef.current) stampRef.current.value = '' }
   }
+  const pickHeader = async (file) => {
+    if (!file) return
+    try {
+      const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file) })
+      const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url })
+      const max = 1400, k = Math.min(1, max / Math.max(img.width, img.height))
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k)
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height)
+      set('headerImage', c.toDataURL('image/png'))
+      toast('Header loaded. Press Save to keep it.', 'ok')
+    } catch { toast('Could not read that image.', 'error') }
+    finally { if (headerRef.current) headerRef.current.value = '' }
+  }
   return (
     <div className="stack">
       <p className="muted small">Your company's own side of every invoice, filled in once. A copy is frozen onto each invoice when you save it.</p>
+      <Field label="Header / letterhead (PNG)" hint="Your logo with the company details, as one image. When set it prints centred at the top of every invoice instead of the plain text header.">
+        <div className="logo-row">
+          {p.headerImage ? <img className="logo-preview" style={{ width: 'auto', maxWidth: 220, height: 'auto' }} src={p.headerImage} alt="" /> : <span className="muted small">No header yet</span>}
+          <input ref={headerRef} type="file" accept="image/*" hidden onChange={(e) => pickHeader(e.target.files?.[0])} />
+          <Button variant="ghost" onClick={() => headerRef.current?.click()}>{p.headerImage ? 'Change' : 'Upload header'}</Button>
+          {p.headerImage && <button className="link small" onClick={() => set('headerImage', '')}>Remove</button>}
+        </div>
+      </Field>
       <Field label="Stamp & signature (PNG)" hint="A transparent PNG with your stamp and signature together. It prints in the Provider signature box of every invoice.">
         <div className="logo-row">
           {p.stamp ? <img className="logo-preview" src={p.stamp} alt="" /> : <span className="muted small">No stamp yet</span>}

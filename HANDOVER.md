@@ -40,6 +40,14 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Invoices: letterhead header, no quantity, per-line date, site font, fresher PDF (1 Oct)
+Alex: wanted the logo+details header like the image he sent, Quantity gone, a clean date (shoot day) inside each line, the site's font, and a fresher look.
+- **Letterhead header**: new **Header / letterhead (PNG)** upload in Company & stamp (`profile.headerImage`, frozen onto each invoice, applied to all at download via the fallback). When set, the PDF draws it centred full-width at the top with the INVOICE #/date centred under it, instead of the text header. No header set → the previous logo + text header.
+- **No Quantity**: removed the Qty column from the editor and the PDF. `lineNet` now treats a missing qty as 1 (old invoices with a qty still compute correctly). The PDF table is simplified to **Description | Amount (EUR) | Amount (BGN)** (unit/net/total collapsed into one amount since there's no quantity).
+- **Per-line Date**: each line has an optional Date field (the shoot day); it prints as a muted "Date: dd/mm/yyyy" sub-line under the description, next to the Project sub-line.
+- **Site font**: the PDF now renders in **Sofia Sans** (the app's typeface), awaiting `document.fonts.ready` before drawing.
+- **Fresher layout**: accent-coloured PROVIDER/RECIPIENT labels, heavier line descriptions, cleaner single-amount table, tidier totals. Net/VAT rows only show when VAT > 0.
+
 ### Invoices: a Project field per service line (1 Oct)
 Alex: "στο service δίπλα θέλω να βάζω και το όνομα του Project." Each invoice line now has a **Project** field next to the description (a text input with a datalist of the app's project titles for quick pick, but free text so he can type anything). It prints on the PDF as a muted "Project: …" sub-line under that line's description. Free-form per line, so one invoice can bill several projects. Editor grid went from 5 to 6 columns.
 
