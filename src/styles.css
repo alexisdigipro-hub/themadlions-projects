@@ -2021,6 +2021,9 @@ p .diff-del { color: var(--danger); }
 .lightbox-bar { width: 100%; max-width: 1100px; display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--text); padding-top: 10px; flex-wrap: wrap; }
 
 /* ---------- people cards ---------- */
+/* Project Database: Crew, Locations and Cast stacked as sections on one page instead of tabs. */
+.people-section { margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid var(--line-soft); }
+.people-section:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
 .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
 .person { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); overflow: hidden; display: flex; flex-direction: column; }
 .person-photo { display: block; width: 100%; aspect-ratio: 4 / 5; background: var(--raised); border: 0; padding: 0; cursor: pointer; position: relative; color: var(--muted); }
