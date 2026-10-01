@@ -165,6 +165,13 @@ export async function renderInvoice(inv) {
     ctx.fillText(String(l.qty ?? ''), qtyX, rowTop)
     let ly = rowTop
     for (const dl of descLines) { ctx.fillText(dl, descX, ly); ly += 13 }
+    if ((l.project || '').trim()) {
+      ctx.fillStyle = MUTED
+      ctx.font = `400 9px ${FONT}`
+      for (const pl of wrap(ctx, `Project: ${l.project}`, descW)) { ctx.fillText(pl, descX, ly); ly += 12 }
+      ctx.fillStyle = INK
+      ctx.font = `400 10px ${FONT}`
+    }
     ctx.textAlign = 'right'
     ctx.fillText(money(l.unitPrice || 0, cur), unitX, rowTop)
     ctx.fillText(money(lineNet(l), cur), netX, rowTop)

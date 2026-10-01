@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Invoices: a Project field per service line (1 Oct)
+Alex: "στο service δίπλα θέλω να βάζω και το όνομα του Project." Each invoice line now has a **Project** field next to the description (a text input with a datalist of the app's project titles for quick pick, but free text so he can type anything). It prints on the PDF as a muted "Project: …" sub-line under that line's description. Free-form per line, so one invoice can bill several projects. Editor grid went from 5 to 6 columns.
+
 ### Invoices: clients, services, easier stamp, nicer PDF (1 Oct)
 Alex, after the first invoice build: couldn't find the stamp upload, wanted it once-for-all invoices, wanted the PDF to look like his sample but with nicer UI, and wanted a client card and a services catalog that auto-fill an invoice. Done:
 - **Stamp discoverable + applies to all**: the Invoices toolbar now has **Company & stamp**, **Clients**, **Services** buttons (modals), so the stamp upload is right there, with a yellow notice on the tab when no stamp is set yet. The stamp (and the company logo from Settings) is applied at download time to every invoice — even ones made before the stamp was uploaded — via a fallback in `download()` (`inv.company.stamp || profile.stamp`), so uploading once covers all.

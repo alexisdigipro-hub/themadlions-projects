@@ -181,16 +181,18 @@ function InvoiceEditor({ draft, isNew, projects, clients, services, onChange, on
         <div className="field">
           <span className="field-label">Services</span>
           <div className="inv-edit">
-            <div className="inv-edit-head"><span>Qty</span><span>Description</span><span>Unit price</span><span>Net</span><span /></div>
+            <div className="inv-edit-head"><span>Qty</span><span>Description</span><span>Project</span><span>Unit price</span><span>Net</span><span /></div>
             {draft.lines.map((l, i) => (
               <div key={i} className="inv-edit-row">
                 <Input type="number" min="0" step="1" value={l.qty ?? ''} onChange={(e) => setLine(i, 'qty', e.target.value)} />
-                <Input value={l.description || ''} onChange={(e) => setLine(i, 'description', e.target.value)} placeholder="VIDEO EDIT & COLOR CORRECTION – …" />
+                <Input value={l.description || ''} onChange={(e) => setLine(i, 'description', e.target.value)} placeholder="VIDEO EDIT & COLOR CORRECTION" />
+                <Input value={l.project || ''} onChange={(e) => setLine(i, 'project', e.target.value)} placeholder="Project / song" list="inv-project-list" />
                 <Input type="number" min="0" step="0.01" value={l.unitPrice ?? ''} onChange={(e) => setLine(i, 'unitPrice', e.target.value)} placeholder="0" />
                 <span className="inv-edit-net">{money(lineNet(l), cur)}</span>
                 <button className="link small" onClick={() => rmLine(i)} disabled={draft.lines.length === 1}>Remove</button>
               </div>
             ))}
+            <datalist id="inv-project-list">{projects.map((p) => <option key={p.id} value={p.title} />)}</datalist>
             <div className="inv-edit-foot">
               <Button variant="ghost" onClick={addLine}>Add a line</Button>
               {!!services.length && (
