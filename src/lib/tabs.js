@@ -22,10 +22,9 @@ export function projectTabs(project) {
     { to: 'tasks', label: 'Tasks', key: 'tasks', icon: 'tasks' },
     { to: 'reports', label: 'Reports', key: 'reports', icon: 'reports' },
     { to: 'budget', label: 'Budget', key: 'budget', icon: 'budget' },
-    { to: 'gear', label: 'Equipment', key: 'gear', icon: 'gear' },
     { to: 'post', label: 'Post', key: 'post', icon: 'post' },
     { to: 'calendar', label: 'Calendar', key: 'calendar', icon: 'calendar' },
-    { to: 'people', label: 'Project Database', key: ['contacts', 'locations'], icon: 'people' },
+    { to: 'people', label: 'Project Database', key: ['contacts', 'locations', 'gear'], icon: 'people' },
     { to: 'notes', label: 'Files & notes', key: 'files', icon: 'notes' },
   ]
 }
