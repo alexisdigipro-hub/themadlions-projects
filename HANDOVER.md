@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Budget top sheet fills the page width (1 Oct)
+Alex: "Το λευκό πλαίσιο με το budget να γεμίσει την σελίδα δεξιά αριστερά." The budget top sheet (`<article className="sheet topsheet">` in project/Budget.jsx) was capped at the shared `.sheet { max-width: 900px }`. Added `.topsheet { max-width: none }` so only the budget sheet fills the content width; the call sheet, status and other `.sheet` users keep their narrower width. Mobile untouched (the `.sheet` mobile rule only changes padding).
+
 ### Payment terms & Notes: centred, but still full width (1 Oct)
 Alex, after the justify change: "Θέλω ωστόσο να είναι κεντραρισμένα τα κείμενα." So `text-align` back to `center` (from `justify`) on `.dlv-say .est-terms`, keeping `max-width: none` so it still uses the full width — the lines wrap across the whole sheet and each line is centred, rather than the old narrow 430px column. PDF terms back to centred at `PAGE_W / 2` (from left-aligned), still wrapping at the full `CONTENT_W`.
 
