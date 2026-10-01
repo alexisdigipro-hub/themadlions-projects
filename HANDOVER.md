@@ -40,6 +40,14 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Invoices: clients, services, easier stamp, nicer PDF (1 Oct)
+Alex, after the first invoice build: couldn't find the stamp upload, wanted it once-for-all invoices, wanted the PDF to look like his sample but with nicer UI, and wanted a client card and a services catalog that auto-fill an invoice. Done:
+- **Stamp discoverable + applies to all**: the Invoices toolbar now has **Company & stamp**, **Clients**, **Services** buttons (modals), so the stamp upload is right there, with a yellow notice on the tab when no stamp is set yet. The stamp (and the company logo from Settings) is applied at download time to every invoice — even ones made before the stamp was uploaded — via a fallback in `download()` (`inv.company.stamp || profile.stamp`), so uploading once covers all.
+- **Clients** (καρτέλα πελάτη): saved in `finance.settings.invoiceClients` (array; no new table). Name, address, VAT, email, phone, notes. In the editor, "Pick a saved client" fills the recipient.
+- **Services** (έτοιμες υπηρεσίες): saved in `finance.settings.invoiceServices`. Name, invoice description, default unit price + qty. In the editor, "Add a saved service…" drops a line in ready (replaces the first empty line, else appends).
+- **Nicer PDF**: accent band across the top, optional company logo top-left, accent "INVOICE" label, accent rule under the header, shaded table-header strip, shaded Total row with the amount in the accent colour. Same formal white A4, re-checked in real headless Chromium with logo + stamp.
+- No new SQL beyond the earlier finance.sql re-run (clients/services are just more keys in the finance settings blob, which already syncs).
+
 ### Finance → Invoices: a real invoice builder (1 Oct) — needs supabase/finance.sql re-run
 Alex sent a sample invoice PDF (Panik Records / Sabanis) and asked for a Finance tab where he builds invoices, "more advanced, better, more correct", with a slot for a stamp/signature PNG he supplies. Built:
 - **New files**: `src/lib/invoice.js` (data model, totals, amount-in-words in English, the default company profile taken from the sample), `src/lib/invoicePdf.js` (a formal white A4 drawn on canvas and wrapped with the estimate's `buildPdf`/`canvasToJpegBytes`, so Greek + Cyrillic render), `src/components/Invoices.jsx` (the `InvoicesTab` list+editor and the `InvoiceProfileSettings` panel). Finance.jsx gains an "Invoices" tab and mounts the profile panel in Settings.

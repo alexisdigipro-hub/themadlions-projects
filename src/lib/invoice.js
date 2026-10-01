@@ -103,3 +103,10 @@ export function amountInWords(n, currency = 'EUR') {
 }
 
 export const INVOICE_STATUS = [['draft', 'Draft'], ['sent', 'Sent'], ['paid', 'Paid']]
+
+const rid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()))
+
+/* Saved clients and services live in finance.settings (invoiceClients / invoiceServices) so they
+   sync like the rest of Finance and need no new table. Picking one fills the invoice. */
+export const emptyClient = () => ({ id: rid(), name: '', address: '', vatNo: '', email: '', phone: '', notes: '' })
+export const emptyService = () => ({ id: rid(), name: '', description: '', unitPrice: '', qty: 1 })
