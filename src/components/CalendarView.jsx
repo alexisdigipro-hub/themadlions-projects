@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button, Confirm, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from './ui.jsx'
 import MiniCalendar from './MiniCalendar.jsx'
 import { EVENT_TYPES, can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { addDays, buildICS, download, fmtDate, holidayName, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
+import { gcalDelete, gcalOn, gcalPull, gcalUpsert, reconcilePulledEvents } from '../lib/googleCalendar.js'
 
 export default function CalendarView({ projectId = null, title }) {
   const { state, update } = useStore()
@@ -20,6 +21,9 @@ export default function CalendarView({ projectId = null, title }) {
   const [typeFilter, setTypeFilter] = useState('all')
   const [projFilter, setProjFilter] = useState('all')
   const mobile = useIsMobile()
+  const [syncing, setSyncing] = useState(false)
+  const synced = gcalOn(state.settings)
+  const calendarId = state.settings.googleCalendarId
 
   const projects = visibleProjects(state, user)
   const allowedIds = new Set(projects.map((p) => p.id))
@@ -62,23 +66,51 @@ export default function CalendarView({ projectId = null, title }) {
     if (draft.type === 'unavailable' && !draft.personId) return toast('Pick who is not available.', 'error')
     if (draft.type !== 'unavailable' && !draft.title.trim()) return toast('Give the event a title.', 'error')
     if (draft.endDate && draft.endDate < draft.date) return toast('End date is before the start.', 'error')
+    const { isNew, ...ev } = { ...draft, title: draft.type === 'unavailable' ? `${draft.personName || 'Someone'} not available` : draft.title, createdBy: draft.createdBy || user?.id || '', createdByName: draft.createdByName || user?.name || '' }
     update((s) => {
-      const i = s.events.findIndex((e) => e.id === draft.id)
-      const { isNew, ...ev } = { ...draft, title: draft.type === 'unavailable' ? `${draft.personName || 'Someone'} not available` : draft.title, createdBy: draft.createdBy || user?.id || '', createdByName: draft.createdByName || user?.name || '' }
+      const i = s.events.findIndex((e) => e.id === ev.id)
       if (i >= 0) s.events[i] = { ...s.events[i], ...ev }
       else s.events.push(ev)
       return s
     })
     toast(draft.isNew ? 'Event added' : 'Event saved', 'ok')
     setDraft(null)
+    // Days off stay internal scheduling, not something to push onto a calendar other people see.
+    if (synced && ev.type !== 'unavailable') {
+      gcalUpsert({ calendarId, event: ev })
+        .then((r) => { if (r.googleEventId !== ev.googleEventId) update((s) => { const i = s.events.findIndex((e) => e.id === ev.id); if (i >= 0) s.events[i] = { ...s.events[i], googleEventId: r.googleEventId }; return s }) })
+        .catch((e) => toast(`Not synced to Google Calendar: ${e.message}`, 'error'))
+    }
   }
   const remove = (id) => {
+    const ev = state.events.find((e) => e.id === id)
     update((s) => {
       s.events = s.events.filter((e) => e.id !== id)
       return s
     })
     setDraft(null)
+    if (synced && ev?.googleEventId) {
+      gcalDelete({ calendarId, googleEventId: ev.googleEventId }).catch((e) => toast(`Not removed from Google Calendar: ${e.message}`, 'error'))
+    }
   }
+  const pull = () => {
+    setSyncing(true)
+    const now = new Date()
+    const timeMin = new Date(now.getTime() - 90 * 86400000).toISOString()
+    const timeMax = new Date(now.getTime() + 400 * 86400000).toISOString()
+    gcalPull({ calendarId, timeMin, timeMax })
+      .then((r) => {
+        update((s) => { s.events = reconcilePulledEvents(s.events, r.events); return s })
+      })
+      .catch((e) => toast(`Could not sync from Google Calendar: ${e.message}`, 'error'))
+      .finally(() => setSyncing(false))
+  }
+  // The workspace's own Calendar page keeps the shared connection fresh on its own; a project's
+  // calendar tab shows the same underlying events without re-pulling for every project opened.
+  useEffect(() => {
+    if (synced && !projectId) pull()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [synced, calendarId])
 
   const typeOf = (k) => EVENT_TYPES.find((t) => t.key === k) || EVENT_TYPES[0]
   const projName = (id) => state.projects.find((p) => p.id === id)?.title || ''
@@ -118,6 +150,11 @@ export default function CalendarView({ projectId = null, title }) {
           {projectId && (
             <Button variant="ghost" onClick={() => download(`${title || 'calendar'}.ics`, buildICS(events, title), 'text/calendar')}>
               Export .ics
+            </Button>
+          )}
+          {synced && !projectId && (
+            <Button variant="ghost" onClick={pull} disabled={syncing}>
+              {syncing ? 'Syncing…' : 'Sync now'}
             </Button>
           )}
           {canMarkOff && (
@@ -251,7 +288,7 @@ export default function CalendarView({ projectId = null, title }) {
             )}
             <div className="row-2">
               <Field label="Type">
-                <Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={EVENT_TYPES.filter((t) => t.key !== 'unavailable' || isAdmin).map((t) => [t.key, t.label])} disabled={!canEditDraft(draft)} />
+                <Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={EVENT_TYPES.filter((t) => (t.key !== 'google' || draft.type === 'google') && (t.key !== 'unavailable' || isAdmin)).map((t) => [t.key, t.label])} disabled={!canEditDraft(draft)} />
               </Field>
               <Field label="Project">
                 <Select value={draft.projectId || ''} onChange={(e) => setDraft({ ...draft, projectId: e.target.value })} disabled={!canEditDraft(draft) || !!projectId}>
@@ -287,6 +324,7 @@ export default function CalendarView({ projectId = null, title }) {
               <Textarea rows={3} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} disabled={!canEditDraft(draft)} />
             </Field>
             {draft.sourceDayId && <p className="fineprint">This event mirrors a shoot day from the schedule. Change the date there to keep them in sync.</p>}
+            {draft.type === 'google' && draft.googleEventId && <p className="fineprint">Synced with Google Calendar. A change here is pushed there, and the other way round next time the page syncs.</p>}
           </div>
         )}
       </Modal>
