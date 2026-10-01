@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Payment terms & Notes: centred, but still full width (1 Oct)
+Alex, after the justify change: "Θέλω ωστόσο να είναι κεντραρισμένα τα κείμενα." So `text-align` back to `center` (from `justify`) on `.dlv-say .est-terms`, keeping `max-width: none` so it still uses the full width — the lines wrap across the whole sheet and each line is centred, rather than the old narrow 430px column. PDF terms back to centred at `PAGE_W / 2` (from left-aligned), still wrapping at the full `CONTENT_W`.
+
 ### Payment terms & Notes: actually fills the width now (1 Oct)
 Alex, with a screenshot still showing a narrow centred block: "Θέλω αυτό το σημείο να γεμίσει δεξιά αριστερά." The previous step's `.est-terms { max-width: none }` was being overridden by `.dlv-note { max-width: 430px }`, which is defined later in styles.css at equal specificity, so the element (class `dlv-note est-terms`) kept the 430px cap. Fixed by raising specificity to `.dlv-say .est-terms` (it always sits inside the `.dlv-say` band) and adding `text-align: justify` so the text fills edge to edge. In the PDF the terms lines are now left-aligned at `MARGIN` across the full `CONTENT_W` instead of centred. Both re-checked in real headless Chromium.
 

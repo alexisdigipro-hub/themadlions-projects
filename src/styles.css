@@ -2560,7 +2560,7 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 /* Same size as a cost line's description, bold, and spread the full width of the sheet, justified
    edge to edge, instead of the narrow centred column the other notes use (Alex). The parent
    selector is needed to beat .dlv-note's own max-width, which is defined later in this file. */
-.dlv-say .est-terms { margin-top: 18px; font-size: 14.5px; font-weight: 700; color: var(--muted); max-width: none; text-align: justify; }
+.dlv-say .est-terms { margin-top: 18px; font-size: 14.5px; font-weight: 700; color: var(--muted); max-width: none; text-align: center; }
 .dlv-by.est-expired { border-color: var(--danger); color: var(--danger); }
 
 /* the form Alex fills in */
