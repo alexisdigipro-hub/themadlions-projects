@@ -266,10 +266,8 @@ export function renderPages(d, t, groups, cur) {
     if (d.terms) {
       ctx.fillStyle = MUTED
       ctx.font = `700 14.5px ${font}`
-      // Left-aligned across the full content width, so it fills edge to edge rather than sitting
-      // as a narrow centred block (Alex).
-      ctx.textAlign = 'left'
-      for (const l of termsLines) { ctx.fillText(l, MARGIN, y); y += 19 }
+      // Centred, but wrapping across the full content width (Alex).
+      for (const l of termsLines) { ctx.fillText(l, PAGE_W / 2, y); y += 19 }
     }
     ctx.textAlign = 'left'
   }
