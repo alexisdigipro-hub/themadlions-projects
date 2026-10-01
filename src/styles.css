@@ -1900,6 +1900,9 @@ code {
 
 /* ---------- budget ---------- */
 .budget-meta { display: grid; grid-template-columns: 140px 140px 220px; gap: 12px; margin-bottom: 14px; }
+/* The budget top sheet fills the page width, unlike the narrower call/status sheets that share
+   the .sheet base (Alex). */
+.topsheet { max-width: none; }
 .topsheet .budget-group { margin-top: 18px; }
 .budget-group-head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line-soft); padding-bottom: 4px; margin-bottom: 4px; }
 .budget-group-head h3 { margin: 0; }
