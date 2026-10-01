@@ -25,8 +25,7 @@ export function projectTabs(project) {
     { to: 'gear', label: 'Equipment', key: 'gear', icon: 'gear' },
     { to: 'post', label: 'Post', key: 'post', icon: 'post' },
     { to: 'calendar', label: 'Calendar', key: 'calendar', icon: 'calendar' },
-    { to: 'locations', label: 'Locations', key: 'locations', icon: 'locations' },
-    { to: 'people', label: cat === 'Event' ? 'Crew & talent' : 'Cast & crew', key: 'contacts', icon: 'people' },
+    { to: 'people', label: cat === 'Event' ? 'Crew, Locations & Talent' : 'Crew, Locations & Cast', key: ['contacts', 'locations'], icon: 'people' },
     { to: 'notes', label: 'Files & notes', key: 'files', icon: 'notes' },
   ]
 }

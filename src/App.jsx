@@ -14,7 +14,6 @@ import Breakdown from './pages/project/Breakdown.jsx'
 import Schedule from './pages/project/Schedule.jsx'
 import CallSheets from './pages/project/CallSheets.jsx'
 import ProjectCalendar from './pages/project/Calendar.jsx'
-import Locations from './pages/project/Locations.jsx'
 import People from './pages/project/People.jsx'
 import Notes from './pages/project/Notes.jsx'
 import Whiteboard from './pages/project/Whiteboard.jsx'
@@ -111,7 +110,8 @@ export default function App() {
                   <Route path="post" element={<Post />} />
                   <Route path="callsheets" element={<CallSheets />} />
                   <Route path="calendar" element={<ProjectCalendar />} />
-                  <Route path="locations" element={<Locations />} />
+                  {/* Locations is now a sub-tab inside People (Crew, Locations & Cast); keep old links alive */}
+                  <Route path="locations" element={<Navigate to="../people?tab=locations" replace />} />
                   <Route path="people" element={<People />} />
                   <Route path="whiteboard" element={<Whiteboard />} />
                   <Route path="notes" element={<Notes />} />

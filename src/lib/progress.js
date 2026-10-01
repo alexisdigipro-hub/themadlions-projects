@@ -32,7 +32,7 @@ export function projectProgress(p, settings) {
     const withBlocks = days.length ? days.filter((d) => (d.blocks || []).length).length / days.length : 0
     stages = [
       { key: 'brief', label: 'Brief and budget', weight: 15, done: clamp(((p.notes || p.concept) ? 0.5 : 0) + budgetDone * 0.5), to: 'budget' },
-      { key: 'venue', label: 'Venue set', weight: 15, done: clamp(locDone), to: 'locations' },
+      { key: 'venue', label: 'Venue set', weight: 15, done: clamp(locDone), to: 'people?tab=locations' },
       { key: 'crew', label: 'Crew and talent', weight: 15, done: (p.contacts || []).length ? 1 : 0, to: 'people' },
       { key: 'ros', label: 'Run of show', weight: 20, done: clamp(withBlocks), to: 'schedule' },
       { key: 'event', label: 'Event days done', weight: 20, done: days.length ? clamp(reported / days.length) : 0, to: 'reports' },
@@ -51,7 +51,7 @@ export function projectProgress(p, settings) {
       { key: 'breakdown', label: 'Breakdown', weight: 10, done: scenes.length ? (p.breakdownStatus === 'ai' ? 1 : 0.7) : 0, to: 'breakdown' },
       { key: 'budget', label: 'Budget', weight: 6, done: budgetDone, to: 'budget' },
       { key: 'cast', label: 'Cast attached', weight: 8, done: chars.length ? castDone : (p.contacts || []).some((c) => c.kind === 'cast') ? 1 : 0, to: 'people' },
-      { key: 'locations', label: 'Locations set', weight: 8, done: clamp(locDone), to: 'locations' },
+      { key: 'locations', label: 'Locations set', weight: 8, done: clamp(locDone), to: 'people?tab=locations' },
       { key: 'shots', label: 'Shot list', weight: 8, done: clamp(shotsScenes), to: 'shots' },
       { key: 'schedule', label: 'Schedule', weight: 12, done: scenes.length ? clamp(scheduled / scenes.length) : days.length ? 1 : 0, to: 'schedule' },
       { key: 'shoot', label: 'Shoot', weight: 25, done: days.length ? clamp(reported / days.length) : 0, to: 'reports' },

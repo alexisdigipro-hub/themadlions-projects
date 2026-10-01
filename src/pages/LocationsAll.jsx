@@ -127,7 +127,7 @@ export default function LocationsAll({ embedded = false } = {}) {
                   {loc.contact && (<><dt>Contact</dt><dd>{loc.contact} {loc.phone && <a href={`tel:${loc.phone}`}>{loc.phone}</a>}</dd></>)}
                   <dt>Used in</dt>
                   <dd>
-                    {locationProjects(projects, loc.id).length ? locationProjects(projects, loc.id).map((p) => <Link key={p.id} className="proj-link" to={`/p/${p.id}/locations`} style={{ '--pc': p.color }}>{p.title}</Link>) : <span className="muted">No project yet</span>}
+                    {locationProjects(projects, loc.id).length ? locationProjects(projects, loc.id).map((p) => <Link key={p.id} className="proj-link" to={`/p/${p.id}/people?tab=locations`} style={{ '--pc': p.color }}>{p.title}</Link>) : <span className="muted">No project yet</span>}
                   </dd>
                 </dl>
                 {loc.notes && <p className="notes-text">{loc.notes}</p>}
