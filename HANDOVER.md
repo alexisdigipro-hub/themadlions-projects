@@ -40,8 +40,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
-### Budget top sheet fills the page width (1 Oct)
-Alex: "Το λευκό πλαίσιο με το budget να γεμίσει την σελίδα δεξιά αριστερά." The budget top sheet (`<article className="sheet topsheet">` in project/Budget.jsx) was capped at the shared `.sheet { max-width: 900px }`. Added `.topsheet { max-width: none }` so only the budget sheet fills the content width; the call sheet, status and other `.sheet` users keep their narrower width. Mobile untouched (the `.sheet` mobile rule only changes padding).
+### Budget top sheet: fills the width and follows the theme (1 Oct)
+Alex: "Το λευκό πλαίσιο με το budget να γεμίσει την σελίδα δεξιά αριστερά." then "γιατί είναι λευκό, να πιάνει το theme." Two changes to the budget top sheet (`<article className="sheet topsheet">` in project/Budget.jsx):
+- **Width**: was capped at the shared `.sheet { max-width: 900px }`. Added `.topsheet { max-width: none }` so only the budget sheet fills the content width; the call sheet, status and other `.sheet` users keep their narrower width. Mobile untouched (the `.sheet` mobile rule only changes padding).
+- **Theme**: `.sheet` is deliberately a paper-white block (`background #f4f1ea; color #1b1b1b` etc) because call sheets print on paper. Alex wanted the budget one to match the dark app instead. Added `.topsheet` overrides for every hardcoded colour `.sheet` sets — background/text/border to `--panel`/`--text`/`--line-soft`, the head rule, h1/h3/muted, the table th/td borders and header colour, inputs, and the link colour — all scoped to `.topsheet` so the printable sheets stay paper-white. The `.over`/`.under` (red/green cap figures) read fine on dark and were left. Checked in dark theme in real headless Chromium.
 
 ### Payment terms & Notes: centred, but still full width (1 Oct)
 Alex, after the justify change: "Θέλω ωστόσο να είναι κεντραρισμένα τα κείμενα." So `text-align` back to `center` (from `justify`) on `.dlv-say .est-terms`, keeping `max-width: none` so it still uses the full width — the lines wrap across the whole sheet and each line is centred, rather than the old narrow 430px column. PDF terms back to centred at `PAGE_W / 2` (from left-aligned), still wrapping at the full `CONTENT_W`.
