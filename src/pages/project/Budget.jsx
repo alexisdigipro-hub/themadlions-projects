@@ -12,11 +12,13 @@ import { groupPairs } from '../../lib/budgetCats.js'
 // The categories and their groups live in Settings > Budget (src/lib/budgetCats.js holds the
 // standard list and the helpers). The page reads them through groupPairs() below.
 // memberId: a team member this line pays; the line is then mirrored into their My work (see
-// syncLineWorklog). vendor keeps the name so Finance, CSV and print read the same as before.
-// date: the day the work is done, which is the date My work files the job under.
-// estimate: the one amount of the line. qty / unit / rate stay in the data for lines made before
-// the form went down to one amount; lineEstimate() still reads them.
-export const emptyLine = () => ({ id: uid(), category: 'Camera', description: '', qty: 1, unit: 'flat', rate: 0, estimate: '', actual: '', vendor: '', memberId: '', date: '', notes: '' })
+// syncLineWorklog). contactId / locationId: this project's own cast, crew or location (no app
+// account, so no My work entry) — picking one just locks vendor to their current name. vendor
+// keeps the name so Finance, CSV and print read the same as before, and is still free text when
+// none of the three is picked. date: the day the work is done, which is the date My work files
+// the job under. estimate: the one amount of the line. qty / unit / rate stay in the data for
+// lines made before the form went down to one amount; lineEstimate() still reads them.
+export const emptyLine = () => ({ id: uid(), category: 'Camera', description: '', qty: 1, unit: 'flat', rate: 0, estimate: '', actual: '', vendor: '', memberId: '', contactId: '', locationId: '', date: '', notes: '' })
 export { lineEstimate }
 export const money = (n, cur = 'EUR') => new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(Number(n) || 0)
 
@@ -54,6 +56,12 @@ export default function Budget() {
   const me = useCurrentUser()
   const team = (state.users || []).filter((u) => u.active !== false)
   const teamLabel = (u) => `${u.name}${u.profile?.position ? ` · ${u.profile.position}` : ''}`
+  const cast = (project.contacts || []).filter((c) => c.kind === 'cast')
+  const crew = (project.contacts || []).filter((c) => c.kind === 'crew')
+  const locations = project.locations || []
+  const contactLabel = (c) => `${c.name}${c.role ? ` · ${c.role}` : c.character ? ` · ${c.character}` : ''}`
+  const locationLabel = (l) => `${l.name}${l.type ? ` · ${l.type}` : ''}`
+  const contactKind = (id) => (project.contacts || []).find((c) => c.id === id)?.kind
   const toast = useToast()
   const editable = canEdit('budget')
   const finTx = me?.role === 'admin' ? (state.finance?.transactions || []).filter((t) => t.projectId === project.id) : []
@@ -89,7 +97,9 @@ export default function Budget() {
     }
     // The whole state, not just the project: a line paid to a team member also writes their My work.
     const who = team.find((u) => u.id === draft.memberId)
-    const line = { ...draft, vendor: who ? who.name : draft.vendor }
+    const contact = draft.contactId ? (project.contacts || []).find((c) => c.id === draft.contactId) : null
+    const loc = draft.locationId ? locations.find((l) => l.id === draft.locationId) : null
+    const line = { ...draft, vendor: who ? who.name : contact ? contact.name : loc ? loc.name : draft.vendor }
     update((s) => {
       const p = s.projects.find((x) => x.id === project.id)
       if (!p) return s
@@ -102,7 +112,7 @@ export default function Budget() {
       return s
     })
     setDraft(null)
-    toast(who ? `Line saved, and it is now in ${who.name}'s My work` : 'Line saved', 'ok')
+    toast(who ? `Line saved, and it is now in ${who.name}'s My work` : contact || loc ? `Line saved, linked to ${(contact || loc).name}` : 'Line saved', 'ok')
   }
   const remove = (id) => update((s) => {
     const p = s.projects.find((x) => x.id === project.id)
@@ -204,7 +214,7 @@ export default function Budget() {
                   {g.lines.map((l) => (
                     <tr key={l.id}>
                       <td>{l.category}</td>
-                      <td>{l.description}{l.vendor && <span className="muted small"> · {l.vendor}{l.memberId ? ' (team)' : ''}</span>}{l.notes && <div className="muted small">{l.notes}</div>}</td>
+                      <td>{l.description}{l.vendor && <span className="muted small"> · {l.vendor}{l.memberId ? ' (team)' : l.contactId ? ` (${contactKind(l.contactId) || 'crew'})` : l.locationId ? ' (location)' : ''}</span>}{l.notes && <div className="muted small">{l.notes}</div>}</td>
                       <td className="num">{money(lineEstimate(l), cur)}</td>
                       <td className="num">{l.payments?.length ? money(linePaid(l), cur) : l.actual !== '' && l.actual != null && Number(l.actual) ? money(l.actual, cur) : ''}</td>
                       <td className={`num ${l.payments?.length && lineBalance(l) > 0 ? 'over' : ''}`}>{l.payments?.length ? (lineBalance(l) > 0 ? money(lineBalance(l), cur) : <span className="under">settled</span>) : ''}</td>
@@ -255,16 +265,39 @@ export default function Budget() {
                 {draft.category && !CATEGORIES.includes(draft.category) && <option value={draft.category}>{draft.category} (unlisted)</option>}
               </select>
             </Field>
-            <Field label="Paid to" hint={draft.memberId ? 'A team member: this line goes into their My work, and turns to paid when you pay it.' : ''}>
+            <Field label="Paid to" hint={
+              draft.memberId ? 'A team member: this line goes into their My work, and turns to paid when you pay it.'
+                : draft.contactId ? 'This project\'s own cast/crew: the vendor name follows if you rename them.'
+                : draft.locationId ? 'This project\'s own location: the vendor name follows if you rename it.'
+                : ''
+            }>
               {/* picking a member also takes the project's shooting day as the work date, unless one is set already */}
-              <Select value={draft.memberId || ''} onChange={(e) => setDraft({ ...draft, memberId: e.target.value, date: draft.date || (e.target.value ? projectWorkDate(project) : '') })} options={[['', 'Someone outside the team'], ...team.map((u) => [u.id, teamLabel(u)])]} />
+              <Select
+                value={draft.memberId ? `member:${draft.memberId}` : draft.contactId ? `contact:${draft.contactId}` : draft.locationId ? `location:${draft.locationId}` : ''}
+                onChange={(e) => {
+                  const [kind, id] = e.target.value.split(':')
+                  setDraft({
+                    ...draft,
+                    memberId: kind === 'member' ? id : '',
+                    contactId: kind === 'contact' ? id : '',
+                    locationId: kind === 'location' ? id : '',
+                    date: draft.date || (kind === 'member' ? projectWorkDate(project) : draft.date),
+                  })
+                }}
+              >
+                <option value="">Someone outside the team</option>
+                <optgroup label="Team">{team.map((u) => <option key={u.id} value={`member:${u.id}`}>{teamLabel(u)}</option>)}</optgroup>
+                {!!cast.length && <optgroup label="Cast">{cast.map((c) => <option key={c.id} value={`contact:${c.id}`}>{contactLabel(c)}</option>)}</optgroup>}
+                {!!crew.length && <optgroup label="Crew">{crew.map((c) => <option key={c.id} value={`contact:${c.id}`}>{contactLabel(c)}</option>)}</optgroup>}
+                {!!locations.length && <optgroup label="Locations">{locations.map((l) => <option key={l.id} value={`location:${l.id}`}>{locationLabel(l)}</option>)}</optgroup>}
+              </Select>
             </Field>
           </div>
           {draft.memberId ? (
             <Field label="Work date" hint={`From the project's shooting days. Goes into ${team.find((u) => u.id === draft.memberId)?.name || 'their'} My work as "${project.title}${draft.description ? ` · ${draft.description}` : ''}"${draft.date ? ` on ${fmtDate(draft.date)}` : ', dated today'}.`}><Input type="date" value={draft.date || ''} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
-          ) : (
+          ) : !draft.contactId && !draft.locationId ? (
             <Field label="Vendor / payee"><Input value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} placeholder="Optional" /></Field>
-          )}
+          ) : null}
           <Field label="Description"><Input autoFocus value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder="DoP, Alexa Mini LF package, rooftop permit" /></Field>
           {/* One amount per line, Alex's call. An old line made as quantity × rate shows its total here and is saved as that total. */}
           <Field label={`Amount (${cur})`} hint={draft.payments?.length ? `${money(linePaid(draft), cur)} paid so far, ${draft.payments.length} payment${draft.payments.length === 1 ? '' : 's'} recorded in Finance.` : 'What this costs. Payments are recorded from Finance or with Pay on the line.'}>
