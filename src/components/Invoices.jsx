@@ -75,7 +75,11 @@ export function InvoicesTab() {
     if (!emailTo.trim()) return toast('Add recipient email.', 'error')
     const htmlBody = getInvoiceEmailTemplate(emailPanel)
     const mailtoLink = `mailto:${emailTo}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent('Please see the email content below. For the PDF, save and attach the downloaded invoice file.')}`
-    window.location.href = mailtoLink
+    const a = document.createElement('a')
+    a.href = mailtoLink
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
     setEmailPanel(null)
   }
   const copyEmailTemplate = () => {
