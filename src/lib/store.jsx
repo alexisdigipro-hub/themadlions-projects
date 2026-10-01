@@ -109,7 +109,7 @@ export function emptyState() {
     chatRooms: true, // false when chat_rooms.sql has not been run yet (remote mode)
     notices: [],
     worklog: [],
-    finance: { transactions: [], recurring: [], settings: { currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 } },
+    finance: { transactions: [], recurring: [], invoices: [], settings: { currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 } },
     settings: {
       aiProvider: 'anthropic', aiKey: '', aiModel: 'claude-sonnet-4-6', mapsKey: '',
       logo: '', // data URL, square-ish, max 256px
@@ -211,7 +211,7 @@ function migrate(parsed) {
   // migrations: new modules and fields added after the first release
   parsed.projects = (parsed.projects || []).map(migrateProject)
   parsed.users = (parsed.users || []).map((u) => ({ ...u, permissions: { ...defaultPermissions(u.role === 'admin' ? 'edit' : 'view'), ...(u.permissions || {}) } }))
-  return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], drives: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), recurring: parsed.finance?.recurring || [], settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}), callsheet: { ...emptyState().settings.callsheet, ...(parsed.settings?.callsheet || {}) } } }
+  return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], drives: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), recurring: parsed.finance?.recurring || [], invoices: parsed.finance?.invoices || [], settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}), callsheet: { ...emptyState().settings.callsheet, ...(parsed.settings?.callsheet || {}) } } }
 }
 
 const rowToMessage = (r) => ({
@@ -368,6 +368,7 @@ export function StoreProvider({ children }) {
       finance: {
         transactions: finRows.filter((r) => r.kind === 'tx').map((r) => ({ ...r.data, id: r.id })),
         recurring: finRows.filter((r) => r.kind === 'recurring').map((r) => ({ ...r.data, id: r.id })),
+        invoices: finRows.filter((r) => r.kind === 'invoice').map((r) => ({ ...r.data, id: r.id })),
         settings: { ...emptyState().finance.settings, ...finSettings },
       },
       settings: { ...emptyState().settings, ...(w.data.settings || {}), aiKey: localStorage.getItem(AI_KEY) || '', openaiKey: localStorage.getItem(OAI_KEY) || '' },
@@ -543,6 +544,13 @@ export function StoreProvider({ children }) {
               if (payload.new.updated_by === authUser?.id && myWrites.current.has(payload.new.id)) return s
               const r = { ...payload.new.data, id: payload.new.id }
               fin.recurring = (fin.recurring || []).some((t) => t.id === r.id) ? fin.recurring.map((t) => (t.id === r.id ? r : t)) : [...(fin.recurring || []), r]
+            }
+          } else if (kind === 'invoice') {
+            if (payload.eventType === 'DELETE') fin.invoices = (fin.invoices || []).filter((t) => t.id !== payload.old.id)
+            else {
+              if (payload.new.updated_by === authUser?.id && myWrites.current.has(payload.new.id)) return s
+              const v = { ...payload.new.data, id: payload.new.id }
+              fin.invoices = (fin.invoices || []).some((t) => t.id === v.id) ? fin.invoices.map((t) => (t.id === v.id ? v : t)) : [...(fin.invoices || []), v]
             }
           } else if (payload.eventType === 'DELETE') fin.transactions = fin.transactions.filter((t) => t.id !== payload.old.id)
           else {
@@ -802,6 +810,24 @@ export function StoreProvider({ children }) {
       Object.values(rBefore).filter((r) => !rIds.has(r.id)).forEach((r) =>
         schedule('frd:' + r.id, async () => {
           const { error } = await supabase.from('finance').delete().eq('id', r.id)
+          if (error) throw error
+        }, 0),
+      )
+      const iBefore = Object.fromEntries((prev.finance?.invoices || []).map((t) => [t.id, t]))
+      const iAfter = next.finance?.invoices || []
+      iAfter.forEach((v) => {
+        if (iBefore[v.id] && JSON.stringify(iBefore[v.id]) === JSON.stringify(v)) return
+        myWrites.current.add(v.id)
+        schedule('fi:' + v.id, async () => {
+          const { error } = await supabase.from('finance').upsert({ id: v.id, workspace_id: ws, kind: 'invoice', data: v })
+          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/finance.sql in the SQL editor to enable Finance.' : error.message)
+          setTimeout(() => myWrites.current.delete(v.id), 4000)
+        })
+      })
+      const iIds = new Set(iAfter.map((v) => v.id))
+      Object.values(iBefore).filter((v) => !iIds.has(v.id)).forEach((v) =>
+        schedule('fid:' + v.id, async () => {
+          const { error } = await supabase.from('finance').delete().eq('id', v.id)
           if (error) throw error
         }, 0),
       )
