@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { callsheetDefaults, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
@@ -9,9 +8,12 @@ import { contactToLibrary, matchText, sharedContact } from '../../lib/library.js
 import { waLink } from '../../lib/share.js'
 import Locations from './Locations.jsx'
 
-
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 
+/* Project Database: one page, three sections in order (Crew, Locations, Cast) instead of tabs
+   you switch between — Alex wanted everything visible at once, just grouped. Crew and Cast share
+   one Add/Edit modal and one "from library" modal, told apart by draft.kind / pick.kind rather
+   than a single page-wide tab, since both sections are on screen together now. */
 export default function People() {
   const { project, edit, canEdit, library, editLibrary } = useProject()
   const { state } = useStore()
@@ -19,11 +21,8 @@ export default function People() {
   const csd = callsheetDefaults(state)
   const showContacts = canSeeContacts(state, useCurrentUser())
   const toast = useToast()
-  const [draft, setDraft] = useState(null)
-  const [pick, setPick] = useState(null) // { q, sel, character }
-  const [searchParams] = useSearchParams()
-  const initialTab = searchParams.get('tab')
-  const [tab, setTab] = useState(['crew', 'locations', 'cast'].includes(initialTab) ? initialTab : 'crew')
+  const [draft, setDraft] = useState(null) // the contact being added/edited; draft.kind is 'cast' | 'crew'
+  const [pick, setPick] = useState(null) // { kind, q, sel, character }
   const [view, setView] = useState(() => localStorage.getItem('tml_people_view') || 'cards')
   const [photosFor, setPhotosFor] = useState(null) // contact id
   const editable = canEdit('contacts')
@@ -34,18 +33,18 @@ export default function People() {
     else edit((p) => { const x = p.contacts.find((y) => y.id === id); if (x) x.photos = photos })
   }
   const inLibrary = new Set(project.contacts.map((c) => c.libraryId).filter(Boolean))
-  const libChoices = (library?.contacts || []).filter((c) => c.kind === tab && !inLibrary.has(c.id)).filter((c) => matchText(pick?.q, c.name, c.role, c.dept, c.phone, c.email, (c.tags || []).join(' ')))
+  const libChoices = pick ? (library?.contacts || []).filter((c) => c.kind === pick.kind && !inLibrary.has(c.id)).filter((c) => matchText(pick.q, c.name, c.role, c.dept, c.phone, c.email, (c.tags || []).join(' '))) : []
   const addFromLibrary = () => {
     const chosen = libChoices.filter((c) => pick.sel.includes(c.id))
     if (!chosen.length) return
+    const kind = pick.kind
     edit((p) => {
-      chosen.forEach((c) => p.contacts.push({ id: uid(), kind: tab, libraryId: c.id, ...sharedContact(c), character: chosen.length === 1 && tab === 'cast' ? (pick.character || '').toUpperCase() : '', dept: tab === 'cast' ? 'Cast' : c.dept, role: c.role || '', callOffset: Number(csd[tab === 'cast' ? 'castOffset' : 'crewOffset'] || 0) }))
+      chosen.forEach((c) => p.contacts.push({ id: uid(), kind, libraryId: c.id, ...sharedContact(c), character: chosen.length === 1 && kind === 'cast' ? (pick.character || '').toUpperCase() : '', dept: kind === 'cast' ? 'Cast' : c.dept, role: c.role || '', callOffset: Number(csd[kind === 'cast' ? 'castOffset' : 'crewOffset'] || 0) }))
     })
     setPick(null)
     toast(`${chosen.length} added from the library`, 'ok')
   }
 
-  const list = project.contacts.filter((c) => c.kind === tab)
   const characters = [...new Set(project.scenes.flatMap((s) => s.characters))]
   const uncast = characters.filter((c) => !project.contacts.some((x) => x.kind === 'cast' && x.character?.toUpperCase() === c.toUpperCase()))
 
@@ -73,134 +72,144 @@ export default function People() {
 
   const exportCSV = () => {
     const rows = [['Kind', 'Name', 'Character', 'Department', 'Role', 'Phone', 'Email', 'Call offset (min)'], ...project.contacts.map((c) => [c.kind, c.name, c.character, c.dept, c.role, c.phone, c.email, c.callOffset ?? 0])]
-    download(`${project.title} - contacts.csv`, '\uFEFF' + rows.map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n'), 'text/csv')
+    download(`${project.title} - contacts.csv`, '﻿' + rows.map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n'), 'text/csv')
+  }
+
+  const startDraft = (kind) => setDraft({ id: uid(), kind, name: '', character: kind === 'cast' ? (uncast[0] || '') : '', dept: kind === 'cast' ? 'Cast' : 'Production', role: '', phone: '', email: '', callOffset: Number(csd[kind === 'cast' ? 'castOffset' : 'crewOffset'] || 0), saveToLibrary: true })
+
+  const group = (kind) => {
+    const list = project.contacts.filter((c) => c.kind === kind)
+    const label = kind === 'cast' ? (project.category === 'Event' ? 'Talent' : 'Cast') : 'Crew'
+    return (
+      <section className="people-section">
+        <div className="toolbar">
+          <div className="toolbar-info">
+            <strong>{label}</strong> <span className="muted">{list.length}</span>
+          </div>
+          {editable && (
+            <div className="toolbar-actions">
+              {(library?.contacts || []).some((c) => c.kind === kind) && (
+                <Button variant="ghost" onClick={() => setPick({ kind, q: '', sel: [], character: uncast[0] || '' })}>From library</Button>
+              )}
+              <Button variant="primary" onClick={() => startDraft(kind)}>
+                Add {kind === 'cast' && project.category === 'Event' ? 'talent' : kind}
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {kind === 'cast' && uncast.length > 0 && (
+          <p className="notice">
+            Not cast yet: {uncast.join(', ')}.{' '}
+            {editable && (
+              <button className="link" onClick={() => setDraft({ id: uid(), kind: 'cast', name: '', character: uncast[0], dept: 'Cast', role: '', phone: '', email: '', callOffset: 0, saveToLibrary: true })}>
+                Cast {uncast[0]}
+              </button>
+            )}
+          </p>
+        )}
+
+        {list.length === 0 ? (
+          <Empty title={kind === 'cast' ? 'No cast yet' : 'No crew yet'}>
+            {kind === 'cast' ? 'Link actors to the characters from the breakdown so call sheets fill themselves.' : 'Add heads of department first. They appear on every call sheet.'}
+          </Empty>
+        ) : view === 'cards' ? (
+          <div className="people-grid compact">
+            {list.map((c) => (
+              <article key={c.id} className="person">
+                <button className="person-photo" onClick={() => setPhotosFor(c.id)} aria-label="Photos">
+                  {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(c.name)}</span>}
+                  {c.photos?.length > 1 && <span className="person-count">{c.photos.length}</span>}
+                </button>
+                <div className="person-body">
+                  <strong>{c.name}{c.libraryId && <span className="lib-badge" title="Shared in the company library">library</span>}</strong>
+                  <div className="small">{kind === 'cast' ? (c.character ? <span className="person-char">{c.character}</span> : <span className="muted">No character</span>) : c.dept}{c.role ? ` · ${c.role}` : ''}</div>
+                  <div className="small muted person-contact">
+                    {showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}
+                    {showContacts && c.phone && <a href={waLink(c.phone, `Hi ${c.name.split(' ')[0]}, `)} target="_blank" rel="noreferrer">WhatsApp</a>}
+                    {showContacts && c.email && <a href={`mailto:${c.email}`} title={c.email}>Mail</a>}
+                  </div>
+                  {c.agent && <div className="small muted">Agent: {c.agent}{c.agentPhone ? ` · ${c.agentPhone}` : ''}</div>}
+                  {c.notes && <div className="small muted person-notes">{c.notes}</div>}
+                </div>
+                {editable && (
+                  <div className="row-actions person-actions">
+                    <button onClick={() => setPhotosFor(c.id)}>Photos</button>
+                    <button onClick={() => setDraft({ ...c })}>Edit</button>
+                    <Confirm onConfirm={() => edit((p) => (p.contacts = p.contacts.filter((x) => x.id !== c.id)))} label="Delete">×</Confirm>
+                  </div>
+                )}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                {kind === 'cast' ? <th>Character</th> : <th>Department</th>}
+                <th>Role</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Call</th>
+                {editable && <th />}
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((c) => (
+                <tr key={c.id}>
+                  <td>
+                    <div className="person-cell">
+                      <button className="avatar" onClick={() => setPhotosFor(c.id)} aria-label="Photos">
+                        {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}
+                      </button>
+                      <strong>{c.name}</strong>
+                    </div>
+                  </td>
+                  <td>{kind === 'cast' ? c.character : c.dept}</td>
+                  <td>{c.role}</td>
+                  <td>{showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</td>
+                  <td>{showContacts && c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</td>
+                  <td className="muted">{c.callOffset ? `${c.callOffset > 0 ? '+' : ''}${c.callOffset} min` : 'General'}</td>
+                  {editable && (
+                    <td className="row-actions">
+                      <Button size="sm" variant="ghost" onClick={() => setDraft({ ...c })}>
+                        Edit
+                      </Button>
+                      <Confirm onConfirm={() => edit((p) => (p.contacts = p.contacts.filter((x) => x.id !== c.id)))} />
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+    )
   }
 
   return (
-    <div>
+    <div className="people-db">
       <div className="toolbar">
-        <div className="segmented">
-          <button className={tab === 'crew' ? 'on' : ''} onClick={() => setTab('crew')}>
-            Crew <small>{project.contacts.filter((c) => c.kind === 'crew').length}</small>
-          </button>
-          <button className={tab === 'locations' ? 'on' : ''} onClick={() => setTab('locations')}>
-            Locations <small>{project.locations.length}</small>
-          </button>
-          <button className={tab === 'cast' ? 'on' : ''} onClick={() => setTab('cast')}>
-            {project.category === 'Event' ? 'Talent' : 'Cast'} <small>{project.contacts.filter((c) => c.kind === 'cast').length}</small>
-          </button>
+        <div className="toolbar-info">
+          <strong>Project Database</strong>
         </div>
-        {tab !== 'locations' && (
-          <div className="toolbar-actions">
-            <div className="segmented small">
-              <button className={view === 'cards' ? 'on' : ''} onClick={() => { setView('cards'); localStorage.setItem('tml_people_view', 'cards') }}>Cards</button>
-              <button className={view === 'table' ? 'on' : ''} onClick={() => { setView('table'); localStorage.setItem('tml_people_view', 'table') }}>List</button>
-            </div>
-            {project.contacts.length > 0 && (
-              <Button variant="ghost" onClick={exportCSV}>
-                Export CSV
-              </Button>
-            )}
-            {editable && (library?.contacts || []).some((c) => c.kind === tab) && (
-              <Button onClick={() => setPick({ q: '', sel: [], character: uncast[0] || '' })}>From library</Button>
-            )}
-            {editable && (
-              <Button variant="primary" onClick={() => setDraft({ id: uid(), kind: tab, name: '', character: '', dept: tab === 'cast' ? 'Cast' : 'Production', role: '', phone: '', email: '', callOffset: Number(csd[tab === 'cast' ? 'castOffset' : 'crewOffset'] || 0), saveToLibrary: true })}>
-                Add {tab === 'cast' && project.category === 'Event' ? 'talent' : tab}
-              </Button>
-            )}
+        <div className="toolbar-actions">
+          <div className="segmented small">
+            <button className={view === 'cards' ? 'on' : ''} onClick={() => { setView('cards'); localStorage.setItem('tml_people_view', 'cards') }}>Cards</button>
+            <button className={view === 'table' ? 'on' : ''} onClick={() => { setView('table'); localStorage.setItem('tml_people_view', 'table') }}>List</button>
           </div>
-        )}
+          {project.contacts.length > 0 && (
+            <Button variant="ghost" onClick={exportCSV}>
+              Export CSV
+            </Button>
+          )}
+        </div>
       </div>
 
-      {tab === 'locations' ? <Locations /> : null}
-
-      {tab === 'cast' && uncast.length > 0 && (
-        <p className="notice">
-          Not cast yet: {uncast.join(', ')}.{' '}
-          {editable && (
-            <button className="link" onClick={() => setDraft({ id: uid(), kind: 'cast', name: '', character: uncast[0], dept: 'Cast', role: '', phone: '', email: '', callOffset: 0, saveToLibrary: true })}>
-              Cast {uncast[0]}
-            </button>
-          )}
-        </p>
-      )}
-
-      {tab !== 'locations' && (list.length === 0 ? (
-        <Empty title={tab === 'cast' ? 'No cast yet' : 'No crew yet'}>
-          {tab === 'cast' ? 'Link actors to the characters from the breakdown so call sheets fill themselves.' : 'Add heads of department first. They appear on every call sheet.'}
-        </Empty>
-      ) : view === 'cards' ? (
-        <div className="people-grid compact">
-          {list.map((c) => (
-            <article key={c.id} className="person">
-              <button className="person-photo" onClick={() => setPhotosFor(c.id)} aria-label="Photos">
-                {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(c.name)}</span>}
-                {c.photos?.length > 1 && <span className="person-count">{c.photos.length}</span>}
-              </button>
-              <div className="person-body">
-                <strong>{c.name}{c.libraryId && <span className="lib-badge" title="Shared in the company library">library</span>}</strong>
-                <div className="small">{tab === 'cast' ? (c.character ? <span className="person-char">{c.character}</span> : <span className="muted">No character</span>) : c.dept}{c.role ? ` · ${c.role}` : ''}</div>
-                <div className="small muted person-contact">
-                  {showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}
-                  {showContacts && c.phone && <a href={waLink(c.phone, `Hi ${c.name.split(' ')[0]}, `)} target="_blank" rel="noreferrer">WhatsApp</a>}
-                  {showContacts && c.email && <a href={`mailto:${c.email}`} title={c.email}>Mail</a>}
-                </div>
-                {c.agent && <div className="small muted">Agent: {c.agent}{c.agentPhone ? ` · ${c.agentPhone}` : ''}</div>}
-                {c.notes && <div className="small muted person-notes">{c.notes}</div>}
-              </div>
-              {editable && (
-                <div className="row-actions person-actions">
-                  <button onClick={() => setPhotosFor(c.id)}>Photos</button>
-                  <button onClick={() => setDraft({ ...c })}>Edit</button>
-                  <Confirm onConfirm={() => edit((p) => (p.contacts = p.contacts.filter((x) => x.id !== c.id)))} label="Delete">×</Confirm>
-                </div>
-              )}
-            </article>
-          ))}
-        </div>
-      ) : (
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              {tab === 'cast' ? <th>Character</th> : <th>Department</th>}
-              <th>Role</th>
-              <th>Phone</th>
-              <th>Email</th>
-              <th>Call</th>
-              {editable && <th />}
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((c) => (
-              <tr key={c.id}>
-                <td>
-                  <div className="person-cell">
-                    <button className="avatar" onClick={() => setPhotosFor(c.id)} aria-label="Photos">
-                      {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}
-                    </button>
-                    <strong>{c.name}</strong>
-                  </div>
-                </td>
-                <td>{tab === 'cast' ? c.character : c.dept}</td>
-                <td>{c.role}</td>
-                <td>{showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</td>
-                <td>{showContacts && c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</td>
-                <td className="muted">{c.callOffset ? `${c.callOffset > 0 ? '+' : ''}${c.callOffset} min` : 'General'}</td>
-                {editable && (
-                  <td className="row-actions">
-                    <Button size="sm" variant="ghost" onClick={() => setDraft({ ...c })}>
-                      Edit
-                    </Button>
-                    <Confirm onConfirm={() => edit((p) => (p.contacts = p.contacts.filter((x) => x.id !== c.id)))} />
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ))}
+      {group('crew')}
+      <section className="people-section"><Locations /></section>
+      {group('cast')}
 
       <Modal
         open={!!draft}
@@ -275,12 +284,12 @@ export default function People() {
         )}
       </Modal>
 
-      <Modal open={!!pick} title={`Add ${tab} from the library`} onClose={() => setPick(null)}
+      <Modal open={!!pick} title={`Add ${pick?.kind || ''} from the library`} onClose={() => setPick(null)}
         footer={<><Button variant="ghost" onClick={() => setPick(null)}>Cancel</Button><Button variant="primary" disabled={!pick?.sel.length} onClick={addFromLibrary}>Add {pick?.sel.length || ''}</Button></>}>
         {pick && (
           <div className="stack">
             <Input autoFocus value={pick.q} onChange={(e) => setPick({ ...pick, q: e.target.value })} placeholder="Search…" />
-            {tab === 'cast' && pick.sel.length === 1 && (
+            {pick.kind === 'cast' && pick.sel.length === 1 && (
               <Field label="Character" hint="For the selected actor.">
                 <Input list="chars" value={pick.character} onChange={(e) => setPick({ ...pick, character: e.target.value.toUpperCase() })} />
               </Field>
