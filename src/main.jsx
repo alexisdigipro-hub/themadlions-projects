@@ -15,6 +15,17 @@ try {
   }
 } catch {}
 
+// Back from "Connect Google Calendar": Google puts the code in the query string (?code=…), ahead
+// of the hash route, since its redirect lands on the bare app URL. Same parking spot, then on to
+// Settings to exchange it.
+try {
+  const q = new URLSearchParams(window.location.search || '')
+  if (q.get('code')) {
+    sessionStorage.setItem('tml_google_oauth', JSON.stringify({ code: q.get('code') }))
+    history.replaceState(null, '', window.location.pathname + '#/settings')
+  }
+} catch {}
+
 try {
   document.documentElement.dataset.textSize = localStorage.getItem('tml_text_size') || 'normal'
   document.documentElement.dataset.theme = localStorage.getItem('tml_theme') || 'light'

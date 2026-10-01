@@ -6,6 +6,7 @@ import { expenseCats } from '../lib/finance.js'
 import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/budgetCats.js'
 import { fmtBytes, snapshotSummary, snapshotToState } from '../lib/backups.js'
 import { authorizeUrl, clearOauth, pcloudPing, redirectUri, takeOauth } from '../lib/pcloud.js'
+import { authorizeUrl as gcalAuthorizeUrl, clearOauthCode, gcalCalendars, gcalConnect, redirectUri as gcalRedirectUri, takeOauthCode } from '../lib/googleCalendar.js'
 import { CHAT_DEFAULTS, chime, loadChatPrefs, saveChatPrefs } from '../lib/chatPrefs.js'
 import { FONTS, applyFont, currentFont, ensureFontLoaded } from '../lib/fonts.js'
 import { remote, supabase } from '../lib/supabase.js'
@@ -427,6 +428,14 @@ export default function Settings() {
           </section>
         )}
 
+        {isAdmin && remote && (
+          <section className="panel" data-tab="integrations">
+            <h2>Google Calendar</h2>
+            <p className="muted small">Connects one specific Google Calendar to this workspace: events made here (shoot days, prep, everything on the Calendar page) are pushed there, and events made straight in that Google Calendar show up here too. One shared connection for everyone, the same shape as pCloud: a small function inside Supabase holds the credential, no browser ever sees it except once, when you first connect.</p>
+            <GoogleCalendarPanel toast={toast} />
+          </section>
+        )}
+
         {isAdmin && (
           <section className="panel" data-tab="integrations">
             <h2>Google Maps</h2>
@@ -829,6 +838,89 @@ function PcloudPanel({ toast }) {
   )
 }
 
+/* Settings > Integrations > Google Calendar: connect once (code exchanged for a refresh token,
+   shown once for copying into the function's secrets, same spirit as pCloud's token), then pick
+   which of that account's calendars this workspace talks to. */
+function GoogleCalendarPanel({ toast }) {
+  const { state, update } = useStore()
+  const [code] = useState(takeOauthCode)
+  const [exchanging, setExchanging] = useState(false)
+  const [refreshToken, setRefreshToken] = useState('')
+  const [testing, setTesting] = useState(false)
+  const [calendars, setCalendars] = useState(null)
+  const [error, setError] = useState('')
+  const set = (k, v) => update((s) => { s.settings = { ...s.settings, [k]: v }; return s })
+  const clientId = state.settings.googleClientId || ''
+  const calendarId = state.settings.googleCalendarId || ''
+
+  useEffect(() => {
+    if (!code?.code) return
+    setExchanging(true)
+    gcalConnect(code.code, gcalRedirectUri())
+      .then((r) => setRefreshToken(r.refreshToken))
+      .catch((e) => toast(e.message, 'error'))
+      .finally(() => { setExchanging(false); clearOauthCode() })
+    // once, for the code this page loaded with
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const copy = async (text) => {
+    try { await navigator.clipboard.writeText(text); toast('Copied', 'ok') } catch { toast('Select it and copy by hand.', 'error') }
+  }
+  const test = async () => {
+    setTesting(true)
+    setError('')
+    try {
+      const r = await gcalCalendars()
+      setCalendars(r.calendars)
+      toast(`${r.calendars.length} calendars found`, 'ok')
+    } catch (e) {
+      setError(e.message)
+      setCalendars(null)
+    }
+    setTesting(false)
+  }
+
+  return (
+    <div className="stack">
+      <ol className="small muted pc-steps">
+        <li>At <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer">console.cloud.google.com/apis/credentials</a>, make a project if you don't have one, enable the <b>Google Calendar API</b>, then create an OAuth Client ID of type <b>Web application</b> with this authorized redirect URI: <code>{gcalRedirectUri()}</code>. Copy its Client ID here.</li>
+        <li>On the <b>OAuth consent screen</b> for that project, add your own Google account under Test users. Google will warn "unverified app" when you connect below — expected for an app only you use, click Advanced → Go to (app name) to carry on.</li>
+        <li>In Supabase: Edge Functions → Secrets → add <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code> (both from the same credential).</li>
+        <li>In Supabase: Edge Functions → Deploy a new function → via Editor, name <code>google-calendar</code>, paste <code>supabase/functions/google-calendar/index.ts</code>, Deploy.</li>
+        <li>Connect below, allow access, and you come back here with a refresh token. Copy it into the function's secrets as <code>GOOGLE_REFRESH_TOKEN</code>.</li>
+        <li>Test connection, pick which calendar below, and that's it — events start syncing both ways.</li>
+      </ol>
+      <Field label="Google Client ID">
+        <div className="row-actions">
+          <Input value={clientId} onChange={(e) => set('googleClientId', e.target.value.trim())} placeholder="…apps.googleusercontent.com" autoComplete="off" />
+          <a className={`btn btn-primary ${clientId ? '' : 'disabled'}`} href={clientId ? gcalAuthorizeUrl(clientId) : undefined} onClick={(e) => { if (!clientId) e.preventDefault() }}>Connect Google Calendar</a>
+        </div>
+      </Field>
+      {exchanging && <p className="small muted">Exchanging the code with Google…</p>}
+      {refreshToken && (
+        <div className="pc-token">
+          <p className="small"><b>Google sent back a refresh token.</b> Copy it into the function's secrets as <code>GOOGLE_REFRESH_TOKEN</code>. It is shown once and is not saved anywhere in the app.</p>
+          <div className="row-actions">
+            <Input value={refreshToken} readOnly onFocus={(e) => e.target.select()} />
+            <Button variant="primary" onClick={() => copy(refreshToken)}>Copy</Button>
+            <Button variant="ghost" onClick={() => setRefreshToken('')}>Done, hide it</Button>
+          </div>
+        </div>
+      )}
+      <div className="row-actions">
+        <Button onClick={test} disabled={testing}>{testing ? 'Testing…' : 'Test connection'}</Button>
+        {error && <span className="small" style={{ color: 'var(--danger)' }}>{error}</span>}
+      </div>
+      {calendars && (
+        <Field label="Calendar" hint="Which of that account's calendars this workspace reads from and writes to.">
+          <Select value={calendarId} onChange={(e) => set('googleCalendarId', e.target.value)} options={[['', 'Pick a calendar'], ...calendars.map((c) => [c.id, c.summary + (c.primary ? ' (primary)' : '')])]} />
+        </Field>
+      )}
+      {calendarId && !calendars && <p className="small under">Connected to a calendar already. Test connection to change it.</p>}
+    </div>
+  )
+}
 
 /* Settings > Chat: personal, per device, like theme and text size. A plain div around each row,
    not the Field label: a label re-dispatches a click to its first button in some browsers, which
