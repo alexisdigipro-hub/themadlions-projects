@@ -1,8 +1,0 @@
-<!doctype html><html><head><meta charset="utf-8"></head><body><div id="out"></div>
-<script type="module">
-import { renderPages } from '/src/lib/estimatePdf.js'
-import { estimateTotals, groupLines } from '/src/lib/estimate.js'
-const d = { title:'Μακρόπουλος', client:'Client', currency:'EUR', vatPct:24, validUntil:'2026-12-31', terms:'Προκαταβολή 50% ( 6000 ευρώ ) Που αφορά : Casting , Extra Equipment , Location Fee, Props , Διατροφή , Απρόοπτα , Κατασκευαστικό. Εξόφληση στις 150 μέρες.', contact:{name:'Alex'}, company:{name:'THEMADLIONS'}, lines:[{group:'Shooting',what:'Camera crew',qty:1,price:5000}] }
-const t=estimateTotals(d); const pages=renderPages(d,t,groupLines(t.lines),'EUR')
-const div=document.getElementById('out'); pages.forEach((p,i)=>div.dataset['page'+(i+1)+'Png']=p.canvas.toDataURL('image/png'))
-</script></body></html>
