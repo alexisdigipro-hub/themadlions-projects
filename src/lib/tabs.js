@@ -16,8 +16,8 @@ export function projectTabs(project) {
       { to: 'script', label: 'Script & Breakdown', key: 'script', icon: 'script' },
       { to: 'shots', label: 'Shot list', key: 'shots', icon: 'shots' },
     ]),
-    { to: 'schedule', label: cat === 'Event' ? 'Run of show' : 'Schedule', key: 'schedule', icon: 'schedule' },
-    { to: 'callsheets', label: 'Call sheets', key: 'callsheets', icon: 'callsheets' },
+    // Call sheets is framed inside Schedule now (its own permission still gates that section)
+    { to: 'schedule', label: cat === 'Event' ? 'Run of show & Sheets' : 'Schedule & Sheets', key: 'schedule', icon: 'schedule' },
     // opt-in: Alex doesn't use Reports day to day; switch it on per project from Edit details > Tabs
     { to: 'reports', label: 'Reports', key: 'reports', icon: 'reports', optIn: true },
     { to: 'budget', label: 'Budget', key: 'budget', icon: 'budget' },
