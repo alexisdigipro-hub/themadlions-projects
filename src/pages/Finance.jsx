@@ -47,19 +47,19 @@ export default function Finance() {
   }))
   const owedByProject = {}
   openCommitments.forEach((c) => { owedByProject[c.project.title] = (owedByProject[c.project.title] || 0) + c.balance })
-  /* And the income side (Alex: "but where is the income?"): the client budget set on the project
-     (Budget > cap) is what the client pays. Whatever of it is not yet quoted, invoiced or paid in
-     Finance reads as expected income, with Invoice ready to turn it into the real thing. */
+  /* And the income side (Alex: "but where is the income?", then "I don't want it 'expected', the
+     project's Budget already counts as income"): the Budget set on the project is what the client
+     pays, booked as income straight away. Whatever of it is not yet recorded as a real transaction
+     reads as this project's remaining income, folded into every total below exactly like a real
+     one (see the summarize() call), not shown apart or needing an extra step first. */
   const expectedRows = state.projects.map((p) => {
     const cap = Number(p.budget?.cap) || 0
     if (!cap) return null
     const recorded = fin.transactions.filter((t) => t.type === 'income' && t.projectId === p.id).reduce((a, t) => a + Number(t.net || 0), 0)
     const remaining = cap - recorded
     if (remaining <= 0) return null
-    return { id: `expected:${p.id}`, expected: true, type: 'income', status: 'quoted', doc: 'none', vatPct: 0, date: projectWorkDate(p) || today(), description: `${p.title}: client budget`, party: p.client || '', projectId: p.id, category: 'Production fee', net: remaining, cap, recorded, project: p }
+    return { id: `expected:${p.id}`, expected: true, type: 'income', status: 'invoiced', doc: 'none', vatPct: 0, date: projectWorkDate(p) || today(), description: `${p.title}: budget`, party: p.client || '', projectId: p.id, category: 'Production fee', net: remaining, cap, recorded, project: p }
   }).filter(Boolean)
-  const expectedByProject = {}
-  expectedRows.forEach((r) => { expectedByProject[r.project.title] = r.net })
   const recurring = fin.recurring || []
   const due = recurring.map((r) => ({ r, periods: duePeriods(r) })).filter((x) => x.periods.length)
   const dueCount = due.reduce((a, x) => a + x.periods.length, 0)
@@ -95,10 +95,10 @@ export default function Finance() {
   }
   const monthlyLoad = recurring.filter((r) => r.active).reduce((a, r) => a + (r.type === 'expense' ? 1 : -1) * Number(r.net || 0) / (r.frequency === 'yearly' ? 12 : r.frequency === 'quarterly' ? 3 : 1), 0)
 
-  const S = summarize(fin.transactions, { year, projects: state.projects, fiscalStart })
-  // The year's profit counts the client budgets not yet invoiced as income and the budget lines
-  // still owed as expense (Alex: "shouldn't it go into the profit?"), so a project reads the same
-  // on the Overview as in its own Budget. The tax estimate follows that profit.
+  // expectedRows (each project's remaining Budget) is merged straight into the real transactions
+  // here, so it is real income everywhere below: this year's income, the monthly bars, and every
+  // By project / client / category / type breakdown, not just the Profit tile.
+  const S = summarize([...fin.transactions, ...expectedRows], { year, projects: state.projects, fiscalStart })
   const expInYear = expectedRows.filter((r) => fiscalYearOf(r.date, fiscalStart) === year).reduce((a, r) => a + r.net, 0)
   const owedInYear = owedRows.filter((r) => fiscalYearOf(r.date, fiscalStart) === year).reduce((a, r) => a + r.net, 0)
   // Pending jobs in the team's My work that are not tied to a budget line (those are counted with
@@ -106,7 +106,7 @@ export default function Finance() {
   const teamJobs = (state.worklog || []).filter((e) => e.status !== 'paid' && !e.budgetLineId && Number(e.amount) > 0)
   const teamOwed = teamJobs.reduce((a, e) => a + Number(e.amount || 0), 0)
   const teamOwedInYear = teamJobs.filter((e) => fiscalYearOf(e.date, fiscalStart) === year).reduce((a, e) => a + Number(e.amount || 0), 0)
-  const incomeAll = S.income + expInYear
+  const incomeAll = S.income
   const expenseAll = S.expense + owedInYear + teamOwedInYear
   const profitAll = incomeAll - expenseAll
   const taxEst = Math.max(0, Math.round(profitAll * (Number(fin.settings.taxRate || 0) / 100)))
@@ -137,7 +137,7 @@ export default function Finance() {
     .filter((t) => fiscalYearOf(t.date, fiscalStart) === year)
     .filter((t) => (f.type ? f.type === 'income' : true))
     .filter((t) => (f.project ? t.projectId === f.project : true))
-    .filter((t) => (f.status ? f.status === 'quoted' : true))
+    .filter((t) => (f.status ? f.status === 'invoiced' : true))
     .filter((t) => (f.doc ? f.doc === 'none' : true))
     .filter((t) => (f.month ? t.date.slice(5, 7) === f.month : true))
     .filter((t) => matchTx(t, f.q))
@@ -240,11 +240,12 @@ export default function Finance() {
   }
 
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
-  // projects with money owed or expected but no transaction yet still get a row in the per-project table
+  // a project with money still owed on a budget line but no transaction yet still gets a row in
+  // the per-project table (an expected-income-only project is already in S.byProject, merged above)
   // one Sort by for every breakdown table (Alex wanted it visible, not only in the headings)
   const [bdSort, setBdSort] = useState({ key: 'income', dir: -1 })
   const bdSortBy = (key) => setBdSort((o) => (o.key === key ? { key, dir: -o.dir } : { key, dir: key === 'key' ? 1 : -1 }))
-  const byProjectRows = [...S.byProject, ...[...new Set([...Object.keys(owedByProject), ...Object.keys(expectedByProject)])].filter((k) => !S.byProject.some((r) => r.key === k)).map((k) => ({ key: k, income: 0, expense: 0, profit: 0, margin: null }))]
+  const byProjectRows = [...S.byProject, ...Object.keys(owedByProject).filter((k) => !S.byProject.some((r) => r.key === k)).map((k) => ({ key: k, income: 0, expense: 0, profit: 0, margin: null }))]
 
   return (
     <div className="finance">
@@ -277,7 +278,7 @@ export default function Finance() {
             <div className="fin-card">
               <div className="fin-label">Owed to us</div>
               <div className="fin-value">{money(S.owedToUs, cur)}</div>
-              <div className="fin-sub">{S.owedCount} unpaid invoice{S.owedCount === 1 ? '' : 's'} (gross){S.quoted ? ` · ${money(S.quoted, cur)} quoted, not yet invoiced` : ''}{expectedRows.length ? ` · ${money(expectedRows.reduce((a, r) => a + r.net, 0), cur)} of client budgets still to invoice on ${expectedRows.length} project${expectedRows.length === 1 ? '' : 's'}` : ''}</div>
+              <div className="fin-sub">{S.owedCount} unpaid invoice{S.owedCount === 1 ? '' : 's'} (gross){S.quoted ? ` · ${money(S.quoted, cur)} quoted, not yet invoiced` : ''}</div>
             </div>
             <div className="fin-card">
               <div className="fin-label">We owe</div>
@@ -343,7 +344,7 @@ export default function Finance() {
                 <span className="muted small">applies to every table below · clicking a column heading works too</span>
               </div>
               <div className="cols">
-                <section className="panel"><h2>By project</h2><BreakdownTable rows={byProjectRows} label="Project" cur={cur} owed={owedByProject} expected={expectedByProject} sort={bdSort} onSort={bdSortBy} /></section>
+                <section className="panel"><h2>By project</h2><BreakdownTable rows={byProjectRows} label="Project" cur={cur} owed={owedByProject} sort={bdSort} onSort={bdSortBy} /></section>
                 <section className="panel"><h2>By client</h2><BreakdownTable rows={S.byClient} label="Client" cur={cur} outstanding sort={bdSort} onSort={bdSortBy} /></section>
                 <section className="panel"><h2>By category</h2><BreakdownTable rows={S.byCategory} label="Category" cur={cur} sort={bdSort} onSort={bdSortBy} /></section>
                 <section className="panel"><h2>By project type</h2><BreakdownTable rows={S.byType} label="Type" cur={cur} sort={bdSort} onSort={bdSortBy} /></section>
@@ -371,7 +372,7 @@ export default function Finance() {
       {tab === 'transactions' && (
         <>
           <div className="toolbar">
-            <div className="toolbar-info"><strong>{listed.length} transactions{listedOwed.length ? ` · ${listedOwed.length} owed from budgets` : ''}{listedExpected.length ? ` · ${listedExpected.length} expected from clients` : ''}</strong><span className="muted">{money(listed.filter((t) => t.type === 'income').reduce((a, t) => a + Number(t.net), 0), cur)} in · {money(listed.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.net), 0), cur)} out (net){listedExpected.length ? ` · ${money(listedExpectedTotal, cur)} still to invoice on client budgets` : ''}{listedOwed.length ? ` · ${money(listedOwedTotal, cur)} still owed on budget lines` : ''}</span></div>
+            <div className="toolbar-info"><strong>{listed.length + listedExpected.length} transactions{listedOwed.length ? ` · ${listedOwed.length} owed from budgets` : ''}</strong><span className="muted">{money(listed.filter((t) => t.type === 'income').reduce((a, t) => a + Number(t.net), 0) + listedExpectedTotal, cur)} in · {money(listed.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.net), 0), cur)} out (net){listedOwed.length ? ` · ${money(listedOwedTotal, cur)} still owed on budget lines` : ''}</span></div>
             <div className="toolbar-actions">
               <Input className="input search" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} placeholder="Search…" />
               <Select value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })} options={[['', 'Income & expense'], ['income', 'Income'], ['expense', 'Expense']]} />
@@ -390,16 +391,16 @@ export default function Finance() {
                 <thead><tr><th>Date</th><th>Description</th><th>Project</th><th>Category</th><th className="num">Net</th><th className="num">VAT</th><th className="num">Gross</th><th>Doc</th><th>Status</th><th /></tr></thead>
                 <tbody>
                   {listedAll.map((t) => t.expected ? (
-                    <tr key={t.id} className="tx-income tx-expected">
+                    <tr key={t.id} className="tx-income">
                       <td className="nowrap">{fmtDate(t.date, { day: 'numeric', month: 'short' })}</td>
-                      <td><strong>{t.description}</strong><div className="muted small">{t.party}{t.party ? ' · ' : ''}{money(t.cap, cur)} client budget{t.recorded ? `, ${money(t.recorded, cur)} already in Finance` : ''}</div></td>
+                      <td><strong>{t.description}</strong>{t.party && <div className="muted small">{t.party}</div>}</td>
                       <td className="small">{t.project.title}</td>
                       <td className="small">{t.category}</td>
                       <td className="num under">+{money(t.net, cur)}</td>
                       <td className="num muted" />
                       <td className="num">{money(t.net, cur)}</td>
                       <td className="small muted">—</td>
-                      <td><span className="tx-owed-badge in">Expected · client budget</span></td>
+                      <td className="small">Invoiced</td>
                       <td className="row-actions">
                         <button onClick={() => invoiceExpected(t)}>Invoice</button>
                         <Link className="btn btn-ghost btn-sm" to={`/p/${t.project.id}/budget`}>Budget</Link>
