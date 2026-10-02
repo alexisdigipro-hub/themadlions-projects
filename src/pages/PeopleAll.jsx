@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, TagsInput, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, useToast } from '../components/ui.jsx'
 import { can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
@@ -9,15 +9,13 @@ import { waLink } from '../lib/share.js'
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 const emptyPerson = (kind) => ({ id: uid(), kind, name: '', phone: '', email: '', dept: kind === 'cast' ? 'Cast' : 'Production', role: '', agent: '', agentPhone: '', notes: '', photos: [], tags: [], createdAt: new Date().toISOString() })
 
-export default function PeopleAll({ embedded = false, kind: kindProp } = {}) {
+export default function PeopleAll({ kind }) {
   const { state, update } = useStore()
   const DEPTS = ['Cast', ...departmentsOf(state)]
   const user = useCurrentUser()
   const showContacts = canSeeContacts(state, user)
   const toast = useToast()
   const editable = can(user, 'contacts', 'edit')
-  const [kindState, setKind] = useState('cast')
-  const kind = kindProp || kindState
   const [q, setQ] = useState('')
   const [dept, setDept] = useState('')
   const [draft, setDraft] = useState(null)
@@ -76,21 +74,12 @@ export default function PeopleAll({ embedded = false, kind: kindProp } = {}) {
   }
 
   return (
-    <div>
-      {!embedded && (
-        <PageHead title="People" sub={`${people.filter((p) => p.kind === 'cast').length} cast · ${people.filter((p) => p.kind === 'crew').length} crew in the company library`}>
-          {editable && unlinked > 0 && <Button variant="ghost" onClick={collect}>Collect {unlinked} from projects</Button>}
-          {editable && <Button variant="primary" onClick={() => setDraft(emptyPerson(kind))}>Add {kind}</Button>}
-        </PageHead>
-      )}
+    <section className="panel db-card">
       <div className="toolbar">
-        {!embedded && (
-          <div className="segmented">
-            <button className={kind === 'cast' ? 'on' : ''} onClick={() => setKind('cast')}>Cast</button>
-            <button className={kind === 'crew' ? 'on' : ''} onClick={() => setKind('crew')}>Crew</button>
-          </div>
-        )}
-        {embedded && <span className="muted">{list.length} {kind}{unlinked > 0 && editable ? ` · ` : ''}{unlinked > 0 && editable && <button className="link" onClick={collect}>collect {unlinked} from projects</button>}</span>}
+        <div className="toolbar-info">
+          <strong>{kind === 'cast' ? 'Cast' : 'Crew'}</strong> <span className="muted">{list.length}</span>
+          {unlinked > 0 && editable && <> · <button className="link" onClick={collect}>collect {unlinked} from projects</button></>}
+        </div>
         <div className="toolbar-actions">
           <div className="segmented small">
             <button className={view === 'cards' ? 'on' : ''} onClick={() => pickView('cards')}>Cards</button>
@@ -98,7 +87,7 @@ export default function PeopleAll({ embedded = false, kind: kindProp } = {}) {
           </div>
           <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, role, phone, agent…" />
           <Select value={dept} onChange={(e) => setDept(e.target.value)} options={[['', 'All departments'], ...DEPTS.map((d) => [d, d])]} />
-          {embedded && editable && <Button variant="primary" onClick={() => setDraft(emptyPerson(kind))}>Add {kind}</Button>}
+          {editable && <Button variant="primary" onClick={() => setDraft(emptyPerson(kind))}>Add {kind}</Button>}
         </div>
       </div>
 
@@ -191,6 +180,6 @@ export default function PeopleAll({ embedded = false, kind: kindProp } = {}) {
       <Modal open={!!target} wide title={target ? `Photos · ${target.name}` : ''} onClose={() => setPhotosFor(null)}>
         {target && <PhotoGrid title={target.kind === 'cast' ? 'Headshots & looks' : 'Photos'} photos={target.photos || []} projectId="library" ownerId={target.id} editable={editable} onChange={(photos) => setPhotos(target.id, photos)} />}
       </Modal>
-    </div>
+    </section>
   )
 }

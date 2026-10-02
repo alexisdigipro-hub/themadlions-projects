@@ -33,9 +33,9 @@ export default function Database() {
         ))}
       </nav>
       <div className="tab-body">
-        {tab === 'locations' && <LocationsAll embedded />}
-        {tab === 'crew' && <PeopleAll embedded kind="crew" />}
-        {tab === 'cast' && <PeopleAll embedded kind="cast" />}
+        {tab === 'locations' && <LocationsAll />}
+        {tab === 'crew' && <PeopleAll kind="crew" />}
+        {tab === 'cast' && <PeopleAll kind="cast" />}
       </div>
     </div>
   )
