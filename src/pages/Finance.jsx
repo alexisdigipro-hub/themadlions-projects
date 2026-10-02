@@ -341,29 +341,9 @@ export default function Finance() {
                 <span className="fin-sortbar-label">Sort by</span>
                 <Select value={bdSort.key} onChange={(e) => setBdSort({ key: e.target.value, dir: e.target.value === 'key' ? 1 : -1 })} options={BD_SORTS} aria-label="Sort every table by" />
                 <Button size="sm" onClick={() => setBdSort((o) => ({ ...o, dir: -o.dir }))} title="Flip the order">{bdSort.dir > 0 ? 'Low to high ↑' : 'High to low ↓'}</Button>
-                <span className="muted small">applies to every table below · clicking a column heading works too</span>
+                <span className="muted small">applies to the table below · clicking a column heading works too</span>
               </div>
-              <div className="cols">
-                <section className="panel"><h2>By project</h2><BreakdownTable rows={byProjectRows} label="Project" cur={cur} owed={owedByProject} sort={bdSort} onSort={bdSortBy} /></section>
-                <section className="panel"><h2>By client</h2><BreakdownTable rows={S.byClient} label="Client" cur={cur} outstanding sort={bdSort} onSort={bdSortBy} /></section>
-                <section className="panel"><h2>By category</h2><BreakdownTable rows={S.byCategory} label="Category" cur={cur} sort={bdSort} onSort={bdSortBy} /></section>
-                <section className="panel"><h2>By project type</h2><BreakdownTable rows={S.byType} label="Type" cur={cur} sort={bdSort} onSort={bdSortBy} /></section>
-                <section className="panel fin-quarter">
-                  <h2>By quarter</h2>
-                  <p className="muted small">Booked figures per calendar quarter of {year}, with the VAT you charged and the VAT you paid: the balance is what the quarterly return settles.</p>
-                  <div className="table-wrap">
-                    <table className="table fin-table">
-                      <thead><tr><th>Quarter</th><th className="num">Income</th><th className="num">Expense</th><th className="num">Profit</th><th className="num">VAT charged</th><th className="num">VAT paid</th><th className="num">VAT balance</th></tr></thead>
-                      <tbody>
-                        {S.quarters.map((q) => (
-                          <tr key={q.key} className={q.count ? '' : 'muted'}><td>{q.key}</td><td className="num">{q.income ? money(q.income, cur) : ''}</td><td className="num">{q.expense ? money(q.expense, cur) : ''}</td><td className={`num ${q.profit < 0 ? 'over' : ''}`}>{q.count ? money(q.profit, cur) : ''}</td><td className="num">{q.vatIn ? money(q.vatIn, cur) : ''}</td><td className="num">{q.vatOut ? money(q.vatOut, cur) : ''}</td><td className={`num ${q.vatBalance > 0 ? 'over' : q.vatBalance < 0 ? 'under' : ''}`}>{q.count ? money(q.vatBalance, cur) : ''}</td></tr>
-                        ))}
-                        <tr className="fin-total"><td>Year</td><td className="num">{money(S.income, cur)}</td><td className="num">{money(S.expense, cur)}</td><td className={`num ${S.profit < 0 ? 'over' : ''}`}>{money(S.profit, cur)}</td><td className="num">{money(S.vatIn, cur)}</td><td className="num">{money(S.vatOut, cur)}</td><td className={`num ${S.vatBalance > 0 ? 'over' : S.vatBalance < 0 ? 'under' : ''}`}>{money(S.vatBalance, cur)}</td></tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-              </div>
+              <section className="panel"><h2>By project</h2><BreakdownTable rows={byProjectRows} label="Project" cur={cur} owed={owedByProject} sort={bdSort} onSort={bdSortBy} /></section>
             </div>
           )}
         </div>
