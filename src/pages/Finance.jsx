@@ -314,6 +314,20 @@ export default function Finance() {
             <div className="legend small muted"><span className="sw in" /> income <span className="sw out" /> expense</div>
           </section>
 
+          {!fin.transactions.length ? (
+            <Empty title="No transactions yet">Start with this year's invoices and the big expenses: crew, rentals, rent, salaries. Tie project costs to their project and the profit per project appears by itself.</Empty>
+          ) : (
+            <div className="fin-breakdowns">
+              <div className="fin-sortbar">
+                <span className="fin-sortbar-label">Sort by</span>
+                <Select value={bdSort.key} onChange={(e) => setBdSort({ key: e.target.value, dir: e.target.value === 'key' ? 1 : -1 })} options={BD_SORTS} aria-label="Sort every table by" />
+                <Button size="sm" onClick={() => setBdSort((o) => ({ ...o, dir: -o.dir }))} title="Flip the order">{bdSort.dir > 0 ? 'Low to high ↑' : 'High to low ↓'}</Button>
+                <span className="muted small">applies to the table below · clicking a column heading works too</span>
+              </div>
+              <section className="panel"><h2>By project</h2><BreakdownTable rows={byProjectRows} label="Project" cur={cur} owed={owedByProject} sort={bdSort} onSort={bdSortBy} /></section>
+            </div>
+          )}
+
           {openCommitments.length > 0 && (
             <section className="panel">
               <div className="panel-head"><h2>Owed to crew & vendors</h2><span className="muted small">from project budgets · agreed minus paid</span></div>
@@ -336,20 +350,6 @@ export default function Finance() {
                 </table>
               </div>
             </section>
-          )}
-
-          {!fin.transactions.length ? (
-            <Empty title="No transactions yet">Start with this year's invoices and the big expenses: crew, rentals, rent, salaries. Tie project costs to their project and the profit per project appears by itself.</Empty>
-          ) : (
-            <div className="fin-breakdowns">
-              <div className="fin-sortbar">
-                <span className="fin-sortbar-label">Sort by</span>
-                <Select value={bdSort.key} onChange={(e) => setBdSort({ key: e.target.value, dir: e.target.value === 'key' ? 1 : -1 })} options={BD_SORTS} aria-label="Sort every table by" />
-                <Button size="sm" onClick={() => setBdSort((o) => ({ ...o, dir: -o.dir }))} title="Flip the order">{bdSort.dir > 0 ? 'Low to high ↑' : 'High to low ↓'}</Button>
-                <span className="muted small">applies to the table below · clicking a column heading works too</span>
-              </div>
-              <section className="panel"><h2>By project</h2><BreakdownTable rows={byProjectRows} label="Project" cur={cur} owed={owedByProject} sort={bdSort} onSort={bdSortBy} /></section>
-            </div>
           )}
         </div>
       )}
