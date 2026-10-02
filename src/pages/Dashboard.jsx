@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Badge, Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
+import { Badge, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../components/ui.jsx'
 import { CATEGORIES, STATUSES, can, emptyProject, nextProjectCode, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
 import { projectProgress } from '../lib/progress.js'
@@ -191,15 +191,6 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageHead>
-        <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="input search" />
-        {canEdit && (
-          <Button variant="primary" onClick={() => setDraft(freshProject())}>
-            New project
-          </Button>
-        )}
-      </PageHead>
-
       {team.length > 0 && (
         <section className="panel" style={{ marginBottom: 20 }}>
           <div className="team-strip-head muted small">
@@ -231,17 +222,27 @@ export default function Dashboard() {
         </section>
       )}
 
-      <div className="chips">
-        {['All', ...CATEGORIES].map((c) => (
-          <button key={c} className={`chip ${filter === c ? 'on' : ''}`} onClick={() => setFilter(c)}>
-            {c}
-            <small>{(showDelivered ? state.projects.filter((p) => p.status === 'Delivered') : liveAll).filter((p) => c === 'All' || p.category === c).length}</small>
+      <div className="toolbar">
+        <div className="chips">
+          {['All', ...CATEGORIES].map((c) => (
+            <button key={c} className={`chip ${filter === c ? 'on' : ''}`} onClick={() => setFilter(c)}>
+              {c}
+              <small>{(showDelivered ? state.projects.filter((p) => p.status === 'Delivered') : liveAll).filter((p) => c === 'All' || p.category === c).length}</small>
+            </button>
+          ))}
+          <button className={`chip neg ${showDelivered ? 'on' : ''}`} onClick={() => setShowDelivered((v) => !v)} aria-pressed={showDelivered} title="Delivered projects">
+            Delivered
+            <small>{state.projects.filter((p) => p.status === 'Delivered').length}</small>
           </button>
-        ))}
-        <button className={`chip neg ${showDelivered ? 'on' : ''}`} onClick={() => setShowDelivered((v) => !v)} aria-pressed={showDelivered} title="Delivered projects">
-          Delivered
-          <small>{state.projects.filter((p) => p.status === 'Delivered').length}</small>
-        </button>
+        </div>
+        <div className="toolbar-actions">
+          <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="input search" />
+          {canEdit && (
+            <Button variant="primary" onClick={() => setDraft(freshProject())}>
+              New project
+            </Button>
+          )}
+        </div>
       </div>
 
       {shown.length === 0 ? (
