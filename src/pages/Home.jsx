@@ -85,7 +85,7 @@ export default function Home() {
   const calItems = projects.flatMap((p) => p.shootingDays.map((d) => ({ date: d.date, time: d.callTime, color: p.color, title: p.title, sub: `${p.category === 'Event' ? 'event day' : 'shoot day'} · call ${d.callTime}`, to: `/p/${p.id}/callsheets` })))
     .concat(state.events.filter((e) => e.type !== 'shoot' && (!e.projectId || projects.some((x) => x.id === e.projectId))).map((e) => {
       const p = projects.find((x) => x.id === e.projectId)
-      return { date: e.date, endDate: e.endDate, time: e.start, color: p?.color || typeOf(e.type).color, title: e.title, sub: [typeOf(e.type).label, p?.title, e.start].filter(Boolean).join(' · '), to: p ? `/p/${p.id}/calendar` : '/calendar' }
+      return { date: e.date, endDate: e.endDate, time: e.start, color: p?.color || typeOf(e.type).color, title: e.title, sub: [typeOf(e.type).label, p?.title, e.start].filter(Boolean).join(' · '), to: '/calendar' }
     }))
   // The page head still counts overdue tasks, so that one stays.
   const overdueTasks = [...projects.flatMap((p) => (p.tasks || []).map((t) => ({ ...t, p }))), ...(state.todos || [])].filter((t) => t.status !== 'done' && t.due && t.due < t0)

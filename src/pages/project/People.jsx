@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
-import { callsheetDefaults, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
+import { callsheetDefaults, can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import PhotoGrid from '../../components/PhotoGrid.jsx'
 import { contactToLibrary, matchText, sharedContact } from '../../lib/library.js'
@@ -16,7 +16,7 @@ const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((
    one Add/Edit modal and one "from library" modal, told apart by draft.kind / pick.kind rather
    than a single page-wide tab, since both sections are on screen together now. */
 export default function People() {
-  const { project, edit, canEdit, library, editLibrary } = useProject()
+  const { project, edit, canEdit, library, editLibrary, user } = useProject()
   const { state } = useStore()
   const DEPTS = departmentsOf(state)
   const csd = callsheetDefaults(state)
@@ -82,7 +82,7 @@ export default function People() {
     const list = project.contacts.filter((c) => c.kind === kind)
     const label = kind === 'cast' ? (project.category === 'Event' ? 'Talent' : 'Cast') : 'Crew'
     return (
-      <section className="people-section">
+      <section className="panel db-card">
         <div className="toolbar">
           <div className="toolbar-info">
             <strong>{label}</strong> <span className="muted">{list.length}</span>
@@ -208,10 +208,14 @@ export default function People() {
         </div>
       </div>
 
-      {group('crew')}
-      <section className="people-section"><Locations /></section>
-      {group('cast')}
-      <section className="people-section"><Gear /></section>
+      {can(user, 'contacts') && (
+        <div className="cols db-grid">
+          {group('crew')}
+          {group('cast')}
+        </div>
+      )}
+      {can(user, 'locations') && <section className="panel db-card"><Locations /></section>}
+      {can(user, 'gear') && <section className="panel db-card"><Gear /></section>}
 
       <Modal
         open={!!draft}
