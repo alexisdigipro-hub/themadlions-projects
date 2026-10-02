@@ -18,7 +18,6 @@ import People from './pages/project/People.jsx'
 import Notes from './pages/project/Notes.jsx'
 import Whiteboard from './pages/project/Whiteboard.jsx'
 import Shots from './pages/project/Shots.jsx'
-import Tasks from './pages/project/Tasks.jsx'
 import TasksAll from './pages/TasksAll.jsx'
 import Database from './pages/Database.jsx'
 import Chat, { ProjectChat } from './pages/Chat.jsx'
@@ -36,7 +35,6 @@ import Home from './pages/Home.jsx'
 import Budget from './pages/project/Budget.jsx'
 import Reports from './pages/project/Reports.jsx'
 import Post from './pages/project/Post.jsx'
-import Music from './pages/project/Music.jsx'
 
 function Loading() {
   return (
@@ -97,12 +95,14 @@ export default function App() {
                 <Route path="p/:id" element={<Project />}>
                   <Route index element={<Overview />} />
                   <Route path="chat" element={<ProjectChat />} />
-                  <Route path="music" element={<Music />} />
+                  {/* The song map moved into Script (a music video's "script" is the song) */}
+                  <Route path="music" element={<Navigate to="../script" replace />} />
                   <Route path="script" element={<Script />} />
                   <Route path="breakdown" element={<Breakdown />} />
                   <Route path="shots" element={<Shots />} />
                   <Route path="schedule" element={<Schedule />} />
-                  <Route path="tasks" element={<Tasks />} />
+                  {/* Tasks is now on Overview */}
+                  <Route path="tasks" element={<Navigate to=".." replace />} />
                   <Route path="reports" element={<Reports />} />
                   <Route path="budget" element={<Budget />} />
                   {/* Equipment is now a section inside People (Project Database); keep old links alive */}
