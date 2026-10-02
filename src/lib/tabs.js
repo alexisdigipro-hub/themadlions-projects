@@ -24,7 +24,7 @@ export function projectTabs(project) {
     // opt-in: Alex doesn't use Post day to day; switch it on per project from Edit details > Tabs
     { to: 'post', label: 'Post', key: 'post', icon: 'post', optIn: true },
     { to: 'people', label: 'Project Database', key: ['contacts', 'locations', 'gear'], icon: 'people' },
-    { to: 'notes', label: 'Files & notes', key: 'files', icon: 'notes' },
+    // Files & notes is framed on Overview now (its own permission still gates that section)
   ]
 }
 

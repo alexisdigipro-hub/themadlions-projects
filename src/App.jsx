@@ -12,7 +12,6 @@ import Overview from './pages/project/Overview.jsx'
 import Script from './pages/project/Script.jsx'
 import Schedule from './pages/project/Schedule.jsx'
 import People from './pages/project/People.jsx'
-import Notes from './pages/project/Notes.jsx'
 import Whiteboard from './pages/project/Whiteboard.jsx'
 import Shots from './pages/project/Shots.jsx'
 import TasksAll from './pages/TasksAll.jsx'
@@ -122,7 +121,8 @@ export default function App() {
                   <Route path="locations" element={<Navigate to="../people?tab=locations" replace />} />
                   <Route path="people" element={<People />} />
                   <Route path="whiteboard" element={<Whiteboard />} />
-                  <Route path="notes" element={<Notes />} />
+                  {/* Files & notes is now framed on Overview */}
+                  <Route path="notes" element={<Navigate to=".." replace />} />
                 </Route>
               </Route>
             </Route>

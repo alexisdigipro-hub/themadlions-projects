@@ -40,7 +40,7 @@ export function projectProgress(p, settings) {
     ]
   } else if (p.category === 'Editing') {
     stages = [
-      { key: 'brief', label: 'Brief and materials in', weight: 10, done: hasDoc || (p.files || []).length > 0 ? 1 : 0, to: 'notes' },
+      { key: 'brief', label: 'Brief and materials in', weight: 10, done: hasDoc || (p.files || []).length > 0 ? 1 : 0, to: '' },
       { key: 'cut', label: 'First cut', weight: 25, done: cuts.length ? 1 : 0, to: 'post' },
       { key: 'approve', label: 'Client approval', weight: 30, done: cutStage, to: 'post' },
       { key: 'deliver', label: 'Deliverables out', weight: 35, done: delivDone, to: 'post' },
