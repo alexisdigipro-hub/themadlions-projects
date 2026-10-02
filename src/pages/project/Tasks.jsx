@@ -12,6 +12,7 @@ export const TASK_STATUS = [
   ['done', 'Done'],
 ]
 export const PRIORITIES = ['low', 'normal', 'high', 'urgent']
+const PRIORITY_OPTIONS = PRIORITIES.map((p) => [p, p.toUpperCase()])
 export const TASK_DEPTS = ['Production', 'Direction', 'Camera', 'Lighting', 'Sound', 'Art', 'Wardrobe', 'Makeup & hair', 'Locations', 'Casting', 'Post', 'Client', 'Legal', 'Other']
 
 export const emptyTask = (partial = {}) => ({
@@ -82,10 +83,10 @@ export function TaskModal({ draft, setDraft, onSave, onClose, people }) {
           <datalist id="task-people">{people.map((p) => <option key={p} value={p} />)}</datalist>
         </Field>
         <Field label="Department"><Select value={draft.dept} onChange={(e) => set('dept', e.target.value)} options={TASK_DEPTS} /></Field>
-        <Field label="Due"><Input type="date" value={draft.due} onChange={(e) => set('due', e.target.value)} /></Field>
+        <Field label="Deadline"><Input type="date" value={draft.due} onChange={(e) => set('due', e.target.value)} /></Field>
       </div>
       <div className="row-2">
-        <Field label="Priority"><Select value={draft.priority} onChange={(e) => set('priority', e.target.value)} options={PRIORITIES} /></Field>
+        <Field label="Priority"><Select value={draft.priority} onChange={(e) => set('priority', e.target.value)} options={PRIORITY_OPTIONS} /></Field>
         <Field label="Status"><Select value={draft.status} onChange={(e) => set('status', e.target.value)} options={TASK_STATUS} /></Field>
       </div>
       <Field label="Notes"><Textarea rows={3} value={draft.notes} onChange={(e) => set('notes', e.target.value)} /></Field>
