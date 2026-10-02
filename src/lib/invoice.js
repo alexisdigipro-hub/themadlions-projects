@@ -38,6 +38,7 @@ export const emptyInvoice = (profile = {}) => {
     id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
     number: invoiceNumberText(p),
     date: new Date().toISOString().slice(0, 10),
+    dueDate: '',
     projectId: '',
     status: 'draft', // draft | sent | paid
     currency: p.currency || 'EUR',

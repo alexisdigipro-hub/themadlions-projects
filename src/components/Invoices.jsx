@@ -4,6 +4,7 @@ import { useCurrentUser, useStore } from '../lib/store.jsx'
 import { INVOICE_STATUS, amountInWords, defaultInvoiceProfile, emptyClient, emptyInvoice, emptyService, invoiceNumberText, invoiceTotals, money, moneyBgn } from '../lib/invoice.js'
 import { downloadInvoicePdf, invoiceFilename, previewInvoicePdf } from '../lib/invoicePdf.js'
 import { invoiceUrl, publishShare, tokenOf } from '../lib/shares.js'
+import { addDays, fmtDate } from '../lib/dates.js'
 
 const profileOf = (state) => ({ ...defaultInvoiceProfile(), ...(state.finance.settings.invoiceProfile || {}) })
 const clientsOf = (state) => state.finance.settings.invoiceClients || []
@@ -19,6 +20,12 @@ export function InvoicesTab() {
   const clients = clientsOf(state)
   const services = servicesOf(state)
   const invoices = useMemo(() => [...(state.finance.invoices || [])].sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.number || '').localeCompare(a.number || '')), [state.finance.invoices])
+  // A reminder once an unpaid invoice's payment date is within a week, or already past — same
+  // spirit as the recurring-items-due banner, so Alex sees it without opening each invoice.
+  const today = new Date().toISOString().slice(0, 10)
+  const dueSoon = useMemo(() => invoices
+    .filter((inv) => inv.dueDate && inv.status !== 'paid' && inv.dueDate <= addDays(today, 7))
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate)), [invoices, today])
   const [draft, setDraft] = useState(null)
   const [isNew, setIsNew] = useState(false)
   const [panel, setPanel] = useState('') // '' | 'profile' | 'clients' | 'services'
@@ -98,11 +105,24 @@ export function InvoicesTab() {
         <p className="notice">No stamp &amp; signature uploaded yet. Add it once in <button className="link" onClick={() => setPanel('profile')}>Company &amp; stamp</button> and it prints on every invoice.</p>
       )}
 
+      {!!dueSoon.length && (
+        <p className="notice">
+          {dueSoon.length} invoice{dueSoon.length === 1 ? '' : 's'} with payment coming up or overdue:{' '}
+          {dueSoon.map((inv, i) => (
+            <span key={inv.id}>
+              {i > 0 && ', '}
+              <button className="link" onClick={() => edit(inv)}>#{inv.number} {inv.recipient?.name}</button>{' '}
+              {inv.dueDate < today ? <span className="over">overdue since {fmtDate(inv.dueDate)}</span> : <span>due {fmtDate(inv.dueDate)}</span>}
+            </span>
+          ))}
+        </p>
+      )}
+
       {!invoices.length ? (
         <Empty title="No invoices yet">Set your company details and upload the stamp once in <b>Company &amp; stamp</b>, add your <b>Clients</b> and <b>Services</b> so they drop in ready, then build an invoice. It downloads as a PDF with your stamp and signature.</Empty>
       ) : (
         <table className="table">
-          <thead><tr><th>Number</th><th>Date</th><th>Recipient</th><th>Project</th><th className="num">Total</th><th>Status</th><th /></tr></thead>
+          <thead><tr><th>Number</th><th>Date</th><th>Due</th><th>Recipient</th><th>Project</th><th className="num">Total</th><th>Status</th><th /></tr></thead>
           <tbody>
             {invoices.map((inv) => {
               const t = invoiceTotals(inv)
@@ -110,6 +130,7 @@ export function InvoicesTab() {
                 <tr key={inv.id}>
                   <td><strong>{inv.number}</strong></td>
                   <td className="small">{inv.date}</td>
+                  <td className={`small ${inv.dueDate && inv.status !== 'paid' && inv.dueDate < today ? 'over' : ''}`}>{inv.dueDate ? fmtDate(inv.dueDate) : <span className="muted">—</span>}</td>
                   <td>{inv.recipient?.name}</td>
                   <td className="small">{pName(inv.projectId) || <span className="muted">—</span>}</td>
                   <td className="num">{money(t.total, inv.currency)}</td>
@@ -188,6 +209,9 @@ function InvoiceEditor({ draft, isNew, projects, clients, services, onChange, on
           <Field label="Date"><Input type="date" value={draft.date} onChange={(e) => set('date', e.target.value)} /></Field>
           <Field label="Status"><Select value={draft.status} onChange={(e) => set('status', e.target.value)} options={INVOICE_STATUS} /></Field>
         </div>
+        <Field label="Payment due (optional)" hint="When the client is expected to pay. Shows a reminder on the Invoices list as the date gets close, until it is marked Paid.">
+          <Input type="date" value={draft.dueDate || ''} onChange={(e) => set('dueDate', e.target.value)} />
+        </Field>
 
         <div className="row-2">
           <Field label="Pick a saved client" hint="Fills the recipient below. Manage the list from the Clients button.">
