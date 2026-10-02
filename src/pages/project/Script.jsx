@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { ACCEPTED, extractText } from '../../lib/scriptImport.js'
@@ -8,6 +7,7 @@ import { download, fmtDate } from '../../lib/dates.js'
 import { can, uid } from '../../lib/store.jsx'
 import { diffLines, hunks, nextRevisionColor, revisionHex } from '../../lib/diff.js'
 import Music from './Music.jsx'
+import Breakdown from './Breakdown.jsx'
 
 /* Saves the current script as a revision before replacing it. Colours follow the
    industry order: White, Blue, Pink, Yellow, Green, Goldenrod, Buff, Salmon, Cherry… */
@@ -100,6 +100,7 @@ export default function Script() {
 
   return (
     <div className="script-page">
+      <section className="panel">
       <div className="toolbar">
         <div className="toolbar-info">
           {project.script.fileName ? (
@@ -136,9 +137,6 @@ export default function Script() {
           )}
           {project.script.text && (
             <Button variant="ghost" onClick={() => download(`${project.title} - ${current}.txt`, project.script.text)}>Download .txt</Button>
-          )}
-          {project.script.text && (
-            <Link className="btn btn-primary btn-md" to="../breakdown">Go to breakdown</Link>
           )}
         </div>
       </div>
@@ -217,12 +215,21 @@ export default function Script() {
           Upload a PDF, Word (.docx), Final Draft (.fdx), Fountain or plain text file, or paste the text. Pages files should be exported to PDF first.
         </Empty>
       )}
+      </section>
+
+      {/* Breakdown used to be its own tab; it's framed here as its own card, same as Script
+          above, so scenes/elements sit right under the text they come from. */}
+      {can(user, 'breakdown') && (
+        <section className="panel">
+          <Breakdown />
+        </section>
+      )}
 
       {/* The song map (lyrics, timed sections, Whisper transcription) lives here now — a music
           video's "script" is the song, so it belongs next to the treatment text above. The simple
           upload-and-listen player for the same track is on Overview. */}
       {project.category === 'Music Video' && can(user, 'music') && (
-        <section className="page-section">
+        <section className="panel">
           <Music />
         </section>
       )}

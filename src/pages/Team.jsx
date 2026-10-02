@@ -110,7 +110,7 @@ export default function Team() {
                   Edit
                 </Button>
                 {u.id !== me.id && u.active !== false && u.role !== 'admin' && (
-                  <Button size="sm" variant="ghost" onClick={() => { setViewAs(u.id); nav('/home') }}>
+                  <Button size="sm" variant="ghost" onClick={() => { setViewAs(u.id); nav('/') }}>
                     View as
                   </Button>
                 )}

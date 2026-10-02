@@ -31,7 +31,7 @@ export default function Drives() {
   const user = useCurrentUser()
   const toast = useToast()
   const isAdmin = user?.role === 'admin'
-  if (!can(user, 'drives')) return <Navigate to="/home" replace />
+  if (!can(user, 'drives')) return <Navigate to="/" replace />
   const editable = can(user, 'drives', 'edit')
   const drives = state.library.drives || []
   const projects = visibleProjects(state, user)

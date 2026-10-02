@@ -11,9 +11,9 @@ export function projectTabs(project) {
     // Overview carries the project's own Tasks, and the song player for a Music Video, so both
     // modules stay reachable (gated on their own permission) without a tab of their own.
     { to: '', label: 'Overview', end: true, key: 'projects', icon: 'overview', fixed: true },
+    // Breakdown is framed inside Script now (its own permission still gates that section)
     ...(cat === 'Event' ? [] : [
-      { to: 'script', label: 'Script', key: 'script', icon: 'script' },
-      { to: 'breakdown', label: 'Breakdown', key: 'breakdown', icon: 'breakdown' },
+      { to: 'script', label: 'Script & Breakdown', key: 'script', icon: 'script' },
       { to: 'shots', label: 'Shot list', key: 'shots', icon: 'shots' },
     ]),
     { to: 'schedule', label: cat === 'Event' ? 'Run of show' : 'Schedule', key: 'schedule', icon: 'schedule' },

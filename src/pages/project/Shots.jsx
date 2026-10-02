@@ -93,7 +93,7 @@ export default function Shots() {
       >
         <>
           Start it by hand: add a setup and put its shots under it. Or build the setups automatically from a script,
-          a treatment or pasted text in <Link to="../breakdown">Breakdown</Link>.
+          a treatment or pasted text in <Link to="../script">Script &amp; Breakdown</Link>.
         </>
       </Empty>
     )

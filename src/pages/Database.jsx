@@ -16,7 +16,7 @@ export default function Database() {
   const { state } = useStore()
   const user = useCurrentUser()
   const tabs = TABS.filter((t) => can(user, t.perm))
-  if (!tabs.length) return <Navigate to="/home" replace />
+  if (!tabs.length) return <Navigate to="/" replace />
   if (!tabs.some((t) => t.key === tab)) return <Navigate to={`/database/${tabs[0].key}`} replace />
   const lib = state.library
   const sub = `${lib.locations.length} locations · ${lib.contacts.filter((c) => c.kind === 'crew').length} crew · ${lib.contacts.filter((c) => c.kind === 'cast').length} cast in the company database`

@@ -73,8 +73,7 @@ export default function Layout() {
   }, [replies, mayShare])
 
   const items = [
-    { to: '/home', label: 'Home', show: true, icon: 'home' },
-    { to: '/', label: 'Projects', end: true, show: can(user, 'projects'), icon: 'projects' },
+    { to: '/', label: 'Home', end: true, show: can(user, 'projects'), icon: 'home' },
     { to: '/calendar', label: 'Calendar', show: can(user, 'calendar'), icon: 'calendar' },
     { to: '/tasks', label: 'Tasks', show: can(user, 'tasks'), icon: 'tasks' },
     { to: '/chat', label: 'Chat', show: true, icon: 'chat', badge: unread },
@@ -152,8 +151,7 @@ export default function Layout() {
 
       <nav className="tabbar" aria-label="Main">
         {[
-          { to: '/home', label: 'Home', icon: 'home' },
-          { to: '/', label: 'Projects', icon: 'projects', end: true },
+          { to: '/', label: 'Home', icon: 'home', end: true },
           { to: '/calendar', label: 'Calendar', icon: 'calendar' },
           { to: '/chat', label: 'Chat', icon: 'chat', badge: unread },
         ].map((i) => (

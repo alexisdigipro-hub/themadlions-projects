@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge, Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
-import { CATEGORIES, STATUSES, can, emptyProject, nextProjectCode, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { CATEGORIES, STATUSES, can, emptyProject, nextProjectCode, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
 import { projectProgress } from '../lib/progress.js'
 import { compress } from '../lib/photos.js'
 import { allHideable, hiddenAfterCategory, projectTabs, tabHidden, toggleTab } from '../lib/tabs.js'
+import { initialsOf } from './Profile.jsx'
 
 /* The row of tab chips: on = shown, struck through = hidden, Overview fixed. Used by the project
    form and by the strip on the Overview, so switching a tab on is one tap either way. */
@@ -100,6 +101,24 @@ export default function Dashboard() {
   const [filter, setFilter] = useState('All')
   const [q, setQ] = useState('')
   const canEdit = can(user, 'projects', 'edit')
+
+  // Who's around today: moved here from the old Home page, right above the project list. Alex
+  // uses the calendar day-picker (the global Calendar in the sidebar) to see another day's roster.
+  const t0 = today()
+  const team = (state.users || []).filter((u) => u.active !== false)
+  const away = unavailableOn(state.events, t0)
+  const stripRef = useRef(null)
+  const [allFaces, setAllFaces] = useState(false)
+  const [facesHidden, setFacesHidden] = useState(false)
+  useEffect(() => {
+    const el = stripRef.current
+    if (!el) return
+    const check = () => setFacesHidden(el.scrollHeight - el.clientHeight > 4)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [team.length, allFaces])
+
   // a new project: the workspace defaults, and every tab but Overview switched off (Alex's call)
   const freshProject = () => {
     const base = { ...emptyProject(), category: state.settings?.defaultCategory || 'Music Video', budget: { lines: [], contingencyPct: Number(state.settings?.budgetContingency ?? 10), currency: state.settings?.budgetCurrency || 'EUR', cap: '' }, isNew: true }
@@ -180,6 +199,42 @@ export default function Dashboard() {
           </Button>
         )}
       </PageHead>
+
+      {team.length > 0 && (
+        <section className="panel" style={{ marginBottom: 20 }}>
+          <div className="team-strip-head muted small">
+            <span>
+              Today
+              {away.size > 0 ? ` · ${away.size} not available` : ' · everyone available'}
+              {' · see another day on the Calendar'}
+            </span>
+            {(facesHidden || allFaces) && (
+              <button className="link small team-strip-more" onClick={() => setAllFaces((v) => !v)}>
+                {allFaces ? 'Show less' : `Show all ${team.length}`}
+              </button>
+            )}
+          </div>
+          <div className={`team-strip ${allFaces ? 'all' : ''}`} ref={stripRef}>
+            {team.map((u) => {
+              const off = away.has(u.id)
+              return (
+                <Link
+                  key={u.id}
+                  to={u.id === user?.id ? '/me' : `/u/${u.id}`}
+                  className={`team-chip ${off ? 'off' : ''}`}
+                  title={`${u.name}${u.profile?.position ? ` · ${u.profile.position}` : ''}${off ? ' · not available' : ''}`}
+                >
+                  <span className="team-chip-photo">
+                    {(u.profile?.photo || u.profile?.thumb) ? <img src={u.profile.photo || u.profile.thumb} alt="" /> : <span className="team-chip-initials">{initialsOf(u.name)}</span>}
+                    {off && <span className="team-chip-off" aria-hidden="true">✕</span>}
+                  </span>
+                  <span className="team-chip-name">{(u.name || '').split(' ')[0]}</span>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       <div className="chips">
         {['All', ...CATEGORIES].map((c) => (
