@@ -157,7 +157,7 @@ export function PageHead({ title, sub, children }) {
   return (
     <div className="page-head">
       <div>
-        {title && <h1>{title}</h1>}
+        <h1>{title}</h1>
         {sub && <p className="page-sub">{sub}</p>}
       </div>
       {children && <div className="page-actions">{children}</div>}
