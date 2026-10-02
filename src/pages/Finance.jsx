@@ -249,7 +249,7 @@ export default function Finance() {
 
   return (
     <div className="finance">
-      <PageHead title="Finance" sub="Administrators only. Company and projects together, net amounts unless stated.">
+      <PageHead title="Finance">
         <div className="segmented small">
           {[['overview', 'Overview'], ['transactions', 'Transactions'], ['invoices', 'Invoices'], ['recurring', `Recurring${dueCount ? ` (${dueCount} due)` : ''}`], ['team', 'Team work'], ['settings', 'Settings']].map(([k, l]) => (
             <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>
@@ -270,6 +270,11 @@ export default function Finance() {
       {tab === 'overview' && (
         <div className="fin-overview">
           <div className="fin-hero">
+            <div className="fin-card">
+              <div className="fin-label">Turnover {year}</div>
+              <div className="fin-value">{money(incomeAll, cur)}</div>
+              <div className="fin-sub">{expInYear ? `${money(incomeAll - expInYear, cur)} booked · ${money(expInYear, cur)} from client budgets still to invoice` : 'all booked'}</div>
+            </div>
             <div className={`fin-card ${profitAll < 0 ? 'neg' : 'pos'}`}>
               <div className="fin-label">Profit {year}</div>
               <div className="fin-value">{money(profitAll, cur)}</div>
