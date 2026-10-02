@@ -1,54 +1,17 @@
 import { useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
-import { uid, useStore } from '../../lib/store.jsx'
-import { pcloudOn, projectFolder } from '../../lib/pcloud.js'
-import { useRef } from 'react'
-import { deleteFile, fileIcon, fileUrl, fmtBytes, uploadFile } from '../../lib/files.js'
-import { fmtDate } from '../../lib/dates.js'
-import { remote } from '../../lib/supabase.js'
+import { uid } from '../../lib/store.jsx'
 
 const KINDS = ['Google Drive', 'Google Doc', 'Google Sheet', 'Frame.io', 'Reference', 'Contract', 'Permit', 'Other']
 
 export default function Notes() {
   const { project, edit, canEdit } = useProject()
-  const { state } = useStore()
   const toast = useToast()
   const [draft, setDraft] = useState(null)
   const [notes, setNotes] = useState(project.productionNotes || '')
   const editable = canEdit('files')
   const links = project.links || []
-  const files = project.files || []
-  const fileRef = useRef()
-  const [busy, setBusy] = useState('')
-  const [folder, setFolder] = useState(project.cloudFolder || '')
-  const addFiles = async (list) => {
-    const arr = Array.from(list || [])
-    if (!arr.length) return
-    for (let i = 0; i < arr.length; i++) {
-      const f = arr[i]
-      setBusy(`${i + 1}/${arr.length} ${f.name}`)
-      try {
-        const id = uid()
-        const pcloud = pcloudOn(state.settings) ? { folder: projectFolder(project, 'Files'), scope: { kind: 'project', id: project.id } } : null
-        const { path, fileid, scope } = await uploadFile({ projectId: project.id, id, file: f, pcloud })
-        edit((p) => { p.files = [...(p.files || []), { id, name: f.name, path, ...(fileid ? { fileid, scope } : {}), type: f.type, bytes: f.size, addedAt: new Date().toISOString(), note: '' }] })
-      } catch (e) {
-        toast(e.message, 'error')
-      }
-    }
-    setBusy('')
-    if (fileRef.current) fileRef.current.value = ''
-  }
-  const open = async (f, download = false) => {
-    const u = await fileUrl(f, download)
-    if (!u) return toast('Could not open the file.', 'error')
-    window.open(u, '_blank')
-  }
-  const removeFile = async (f) => {
-    await deleteFile(f).catch(() => {})
-    edit((p) => (p.files = (p.files || []).filter((x) => x.id !== f.id)))
-  }
 
   const save = () => {
     if (!draft.title.trim() || !draft.url.trim()) return toast('Title and link are both needed.', 'error')
@@ -64,47 +27,6 @@ export default function Notes() {
 
   return (
     <div className="cols">
-      <section className="panel">
-        <div className="panel-head">
-          <h2>Files</h2>
-          {editable && (
-            <>
-              <input ref={fileRef} type="file" multiple hidden onChange={(e) => addFiles(e.target.files)} />
-              <Button size="sm" variant="primary" onClick={() => fileRef.current?.click()} disabled={!!busy}>{busy || 'Upload files'}</Button>
-            </>
-          )}
-        </div>
-        <p className="muted small">Documents, contracts, treatments, references, small videos. Up to 50 MB per file{remote ? '' : ' (local mode: this session only)'}.{pcloudOn(state.settings) ? ' Stored in the company pCloud.' : ''} Footage and masters stay in the cloud folder below.</p>
-        {!files.length ? (
-          <Empty title="No files yet" />
-        ) : (
-          <ul className="file-list">
-            {files.map((f) => (
-              <li key={f.id}>
-                <span className="file-ico">{fileIcon(f.name, f.type)}</span>
-                <span className="grow">
-                  <strong>{f.name}</strong>
-                  <div className="muted small">{fmtBytes(f.bytes || 0)} · {fmtDate((f.addedAt || '').slice(0, 10))}{f.note ? ` · ${f.note}` : ''}</div>
-                </span>
-                <span className="row-actions">
-                  <button onClick={() => open(f)}>Open</button>
-                  <button onClick={() => open(f, true)}>Download</button>
-                  {editable && <Confirm onConfirm={() => removeFile(f)} label="Delete">×</Confirm>}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-        <div className="cloud-folder">
-          <Field label="Cloud folder" hint="pCloud, Google Drive or Dropbox folder with the footage and masters for this project.">
-            <div className="row-actions">
-              <Input value={folder} onChange={(e) => setFolder(e.target.value)} onBlur={() => edit((p) => (p.cloudFolder = folder.trim()))} placeholder="https://my.pcloud.com/…" disabled={!editable} />
-              {project.cloudFolder && <a className="btn btn-ghost btn-sm" href={project.cloudFolder} target="_blank" rel="noreferrer">Open</a>}
-            </div>
-          </Field>
-        </div>
-      </section>
-
       <section className="panel">
         <div className="panel-head">
           <h2>Links</h2>
