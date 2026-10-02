@@ -1,35 +1,102 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Modal, Stat, useToast } from '../../components/ui.jsx'
+import { Button, Modal, useToast } from '../../components/ui.jsx'
 import { ProjectForm } from '../Dashboard.jsx'
 import { useProject } from '../Project.jsx'
-import { EVENT_TYPES, today, useStore } from '../../lib/store.jsx'
-import { formatPages } from '../../lib/breakdown.js'
+import { can, uid, useStore } from '../../lib/store.jsx'
 import { fmtDate, fmtLong } from '../../lib/dates.js'
-import { budgetTotals, money } from './Budget.jsx'
-import { reportSummary } from './Reports.jsx'
 import { projectProgress } from '../../lib/progress.js'
 import { compress } from '../../lib/photos.js'
-import { useRef } from 'react'
+import { analyze, fmtTime, trackUrl, uploadTrack } from '../../lib/audio.js'
+import { needsEncoding, toMp3 } from '../../lib/mp3.js'
+import { remote } from '../../lib/supabase.js'
+import Tasks from './Tasks.jsx'
+
+const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: '' })
+
+/* Just a track to upload and listen to, here on Overview — no waveform, sections or lyrics, that
+   full editor lives on the Script tab now. Writes to the same project.music.tracks the Script
+   page's song map reads, so a track added here shows up there too, and the other way round. */
+function SongPlayer({ project, edit, editable }) {
+  const toast = useToast()
+  const music = { ...emptyMusic(), ...(project.music || {}) }
+  const track = music.tracks.find((t) => t.id === music.activeTrackId) || music.tracks[0]
+  const fileRef = useRef()
+  const [url, setUrl] = useState('')
+  const [busy, setBusy] = useState('')
+
+  useEffect(() => {
+    let alive = true
+    trackUrl(track).then((u) => alive && setUrl(u))
+    return () => { alive = false }
+  }, [track?.id, track?.path])
+
+  const setMusic = (fn) => edit((p) => { p.music = { ...emptyMusic(), ...(p.music || {}) }; fn(p.music) })
+
+  const onFile = async (file) => {
+    if (!file) return
+    const original = file
+    try {
+      if (needsEncoding(file)) {
+        setBusy('Converting to MP3… 0%')
+        file = await toMp3(file, (pct) => setBusy(`Converting to MP3… ${Math.round(pct * 100)}%`))
+      }
+      setBusy('Analysing…')
+      const { peaks, duration } = await analyze(file)
+      const id = uid()
+      setBusy('Uploading…')
+      const { path, ext } = await uploadTrack({ projectId: project.id, id, file })
+      setMusic((m) => {
+        m.tracks.push({ id, name: file.name.replace(/\.[^.]+$/, ''), path, ext, duration, peaks, bytes: file.size, kind: m.tracks.length ? 'other' : 'master', addedAt: new Date().toISOString() })
+        m.activeTrackId = id
+      })
+      toast(original !== file ? `${original.name} converted and added · ${fmtTime(duration)}` : `${file.name} added · ${fmtTime(duration)}`, 'ok')
+    } catch (e) {
+      toast(e.message, 'error')
+    } finally {
+      setBusy('')
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  return (
+    <section className="panel">
+      <div className="panel-head">
+        <h2>Song</h2>
+        {editable && (
+          <>
+            <input ref={fileRef} type="file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac" hidden onChange={(e) => onFile(e.target.files?.[0])} />
+            <Button size="sm" variant="ghost" onClick={() => fileRef.current?.click()} disabled={!!busy}>
+              {busy || (track ? 'Add version' : 'Upload song')}
+            </Button>
+          </>
+        )}
+      </div>
+      {!track ? (
+        <p className="muted small">Upload the song to listen to it here. Full lyrics, sections and timing live on the Script tab.</p>
+      ) : (
+        <div className="stack">
+          {!remote && <p className="notice small">Local mode: the audio plays for this session only.</p>}
+          {music.tracks.length > 1 && (
+            <select className="input select compact" value={track.id} onChange={(e) => setMusic((m) => (m.activeTrackId = e.target.value))}>
+              {music.tracks.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          )}
+          <audio controls src={url} style={{ width: '100%' }} />
+          <span className="muted small">{track.name} · {fmtTime(track.duration)}</span>
+        </div>
+      )}
+    </section>
+  )
+}
 
 export default function Overview() {
   const { project, edit, canEdit, user } = useProject()
   const { state } = useStore()
   const toast = useToast()
   const [draft, setDraft] = useState(null)
-
-  const eighths = project.scenes.reduce((a, s) => a + (s.eighths || 0), 0)
-  const upcoming = state.events
-    .filter((e) => e.projectId === project.id && e.date >= today())
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(0, 6)
-  const nextShoot = [...project.shootingDays].filter((d) => d.date >= today()).sort((a, b) => a.date.localeCompare(b.date))[0]
-  const unscheduled = project.scenes.filter((s) => !s.dayId).length
-  const cast = project.contacts.filter((c) => c.kind === 'cast').length
-  const crew = project.contacts.filter((c) => c.kind === 'crew').length
-  const bt = budgetTotals(project)
-  const rs = reportSummary(project)
-  const openTasks = (project.tasks || []).filter((t) => t.status !== 'done').length
 
   const { pct, stages } = projectProgress(project, state.settings)
   const coverRef = useRef()
@@ -55,8 +122,20 @@ export default function Overview() {
             )}
           </div>
           <div className="progress-main">
-            <div className="progress-top"><strong>{pct}% done</strong><span className="muted small">{project.status}{project.endDate ? ` · delivery ${fmtDate(project.endDate)}` : ''}{project.frozen ? ' · 🔒 locked' : ''}</span>
-              {user?.role === 'admin' && <button className="link small" onClick={() => { edit((p) => { p.frozen = !p.frozen }); toast(project.frozen ? 'Project unlocked, the team can edit again' : 'Project locked: only administrators can change it now', 'ok') }}>{project.frozen ? 'Unlock' : 'Lock project'}</button>}
+            <div className="progress-top">
+              <span>
+                <strong>{pct}% done</strong> <span className="muted small">{project.status}{project.endDate ? ` · delivery ${fmtDate(project.endDate)}` : ''}{project.frozen ? ' · 🔒 locked' : ''}</span>
+              </span>
+              <span className="row-actions">
+                {canEdit('projects') && (
+                  <button className="link small" onClick={() => setDraft({ ...project })}>Edit details</button>
+                )}
+                {user?.role === 'admin' && (
+                  <button className="link small" onClick={() => { edit((p) => { p.frozen = !p.frozen }); toast(project.frozen ? 'Project unlocked, the team can edit again' : 'Project locked: only administrators can change it now', 'ok') }}>
+                    {project.frozen ? 'Unlock' : 'Lock project'}
+                  </button>
+                )}
+              </span>
             </div>
             <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
             <ul className="stages">
@@ -78,101 +157,54 @@ export default function Overview() {
                 </li>
               ))}
             </ul>
+            {(project.client || project.director || project.producer || project.startDate || project.endDate || project.notes) && (
+              <div className="progress-details">
+                <dl className="details">
+                  {project.client && (
+                    <>
+                      <dt>Client</dt>
+                      <dd>{project.client}</dd>
+                    </>
+                  )}
+                  {project.director && (
+                    <>
+                      <dt>Director</dt>
+                      <dd>{project.director}</dd>
+                    </>
+                  )}
+                  {project.producer && (
+                    <>
+                      <dt>Producer</dt>
+                      <dd>{project.producer}</dd>
+                    </>
+                  )}
+                  {project.startDate && (
+                    <>
+                      <dt>Start</dt>
+                      <dd>{fmtLong(project.startDate)}</dd>
+                    </>
+                  )}
+                  {project.endDate && (
+                    <>
+                      <dt>Delivery</dt>
+                      <dd>{fmtLong(project.endDate)}</dd>
+                    </>
+                  )}
+                </dl>
+                {project.notes && <p className="notes-text">{project.notes}</p>}
+              </div>
+            )}
           </div>
         </div>
       </section>
-      <div className="stats">
-        <Stat label="Scenes" value={project.scenes.length} note={project.scenes.length ? `${formatPages(eighths)} pages` : 'No breakdown yet'} />
-        <Stat label="Shoot days" value={project.shootingDays.length} note={nextShoot ? `Next ${fmtDate(nextShoot.date)}` : 'None scheduled'} />
-        <Stat label="Unscheduled scenes" value={unscheduled} />
-        <Stat label="Locations" value={project.locations.length} />
-        <Stat label="Cast / crew" value={`${cast} / ${crew}`} />
-        <Stat
-          label="Budget"
-          value={bt.lines ? money(bt.total, bt.currency) : '–'}
-          note={
-            project.budget?.cap
-              ? bt.total > Number(project.budget.cap)
-                ? `${money(bt.total - Number(project.budget.cap), bt.currency)} over the ${money(project.budget.cap, bt.currency)} cap`
-                : `${money(Number(project.budget.cap) - bt.total, bt.currency)} left of ${money(project.budget.cap, bt.currency)}`
-              : bt.act ? `${money(bt.act, bt.currency)} spent` : bt.lines ? `${bt.lines} lines` : 'No budget yet'
-          }
-        />
-        <Stat label="Shot" value={rs.daysReported ? `${rs.scenesDone}/${rs.scenesTotal}` : '–'} note={rs.daysReported ? `${formatPages(rs.pagesShot)} pages · ${rs.daysReported} days reported` : 'No reports yet'} />
-        <Stat label="Open tasks" value={openTasks} />
-      </div>
 
-      <div className="cols">
-        <section className="panel">
-          <div className="panel-head">
-            <h2>Details</h2>
-            {canEdit('projects') && (
-              <Button size="sm" variant="ghost" onClick={() => setDraft({ ...project })}>
-                Edit details
-              </Button>
-            )}
-          </div>
-          <dl className="details">
-            {project.client && (
-              <>
-                <dt>Client</dt>
-                <dd>{project.client}</dd>
-              </>
-            )}
-            {project.director && (
-              <>
-                <dt>Director</dt>
-                <dd>{project.director}</dd>
-              </>
-            )}
-            {project.producer && (
-              <>
-                <dt>Producer</dt>
-                <dd>{project.producer}</dd>
-              </>
-            )}
-            {project.startDate && (
-              <>
-                <dt>Start</dt>
-                <dd>{fmtLong(project.startDate)}</dd>
-              </>
-            )}
-            {project.endDate && (
-              <>
-                <dt>Delivery</dt>
-                <dd>{fmtLong(project.endDate)}</dd>
-              </>
-            )}
-          </dl>
-          {project.notes && <p className="notes-text">{project.notes}</p>}
-        </section>
+      {project.category === 'Music Video' && can(user, 'music') && <SongPlayer project={project} edit={edit} editable={canEdit('music')} />}
 
+      {can(user, 'tasks') && (
         <section className="panel">
-          <div className="panel-head">
-            <h2>Coming up</h2>
-            <Link to="calendar" className="link">
-              Calendar
-            </Link>
-          </div>
-          {upcoming.length === 0 ? (
-            <p className="muted">Nothing on the calendar for this project yet.</p>
-          ) : (
-            <ul className="event-list">
-              {upcoming.map((e) => {
-                const t = EVENT_TYPES.find((x) => x.key === e.type) || EVENT_TYPES[0]
-                return (
-                  <li key={e.id}>
-                    <span className="dot" style={{ background: t.color }} />
-                    <span className="ev-date">{fmtDate(e.date)}</span>
-                    <span className="ev-title">{e.title}</span>
-                    {e.start && <span className="muted">{e.start}</span>}
-                  </li>
-                )
-              })}
-            </ul>
-          )}
+          <Tasks />
         </section>
-      </div>
+      )}
 
       <Modal
         open={!!draft}
