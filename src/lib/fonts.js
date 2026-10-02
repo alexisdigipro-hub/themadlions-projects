@@ -13,6 +13,7 @@ export const FONTS = [
   { id: 'firasans', label: 'Fira Sans', family: "'Fira Sans'", google: 'Fira+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400' },
   { id: 'ubuntu', label: 'Ubuntu', family: "'Ubuntu'", google: 'Ubuntu:ital,wght@0,400;0,500;0,700;1,400' },
   { id: 'manrope', label: 'Manrope', family: "'Manrope'", google: 'Manrope:wght@400;500;600;700' },
+  { id: 'nunito', label: 'Nunito', family: "'Nunito'", google: 'Nunito:ital,wght@0,400;0,500;0,600;0,700;1,400' },
   { id: 'commissioner', label: 'Commissioner', family: "'Commissioner'", google: 'Commissioner:wght@400;500;600;700' },
   { id: 'alegreyasans', label: 'Alegreya Sans', family: "'Alegreya Sans'", google: 'Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400' },
   { id: 'exo2', label: 'Exo 2', family: "'Exo 2'", google: 'Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400' },
