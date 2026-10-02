@@ -191,7 +191,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageHead title="Projects" sub={showDelivered ? `${closed.length} delivered` : `${active.length} active${closed.length ? ` · ${closed.length} delivered` : ''}`}>
+      <PageHead>
         <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="input search" />
         {canEdit && (
           <Button variant="primary" onClick={() => setDraft(freshProject())}>
@@ -203,11 +203,6 @@ export default function Dashboard() {
       {team.length > 0 && (
         <section className="panel" style={{ marginBottom: 20 }}>
           <div className="team-strip-head muted small">
-            <span>
-              Today
-              {away.size > 0 ? ` · ${away.size} not available` : ' · everyone available'}
-              {' · see another day on the Calendar'}
-            </span>
             {(facesHidden || allFaces) && (
               <button className="link small team-strip-more" onClick={() => setAllFaces((v) => !v)}>
                 {allFaces ? 'Show less' : `Show all ${team.length}`}
