@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
-import { download, fmtDate } from '../../lib/dates.js'
+import { fmtDate } from '../../lib/dates.js'
 import { projectWorkDate } from '../../components/WorkLog.jsx'
 import { useCurrentUser, useStore } from '../../lib/store.jsx'
 import PaymentModal from '../../components/PaymentModal.jsx'
@@ -70,7 +70,6 @@ export default function Budget() {
   const budget = project.budget || { lines: [], contingencyPct: 10, currency: 'EUR' }
   const [draft, setDraft] = useState(null)
   const [pay, setPay] = useState(null) // line
-  const [filter, setFilter] = useState('')
   const cur = budget.currency || 'EUR'
   // groups from Settings, plus an "Unlisted" group for lines whose category was removed there
   const BUDGET_GROUPS = useMemo(() => groupPairs(state.settings, budget.lines), [state.settings, budget.lines])
@@ -78,12 +77,12 @@ export default function Budget() {
 
   const groups = useMemo(() => {
     return BUDGET_GROUPS.map(([name, cats]) => {
-      const lines = budget.lines.filter((l) => cats.includes(l.category) && (!filter || l.category === filter))
+      const lines = budget.lines.filter((l) => cats.includes(l.category))
       const est = lines.reduce((a, l) => a + lineEstimate(l), 0)
       const act = lines.reduce((a, l) => a + Number(l.actual || 0), 0)
       return { name, lines, est, act }
     }).filter((g) => g.lines.length)
-  }, [BUDGET_GROUPS, budget.lines, filter])
+  }, [BUDGET_GROUPS, budget.lines])
   const t = budgetTotals(project)
 
   const save = () => {
@@ -126,14 +125,6 @@ export default function Budget() {
     p.budget = p.budget || { lines: [], contingencyPct: 10, currency: 'EUR' }
     p.budget[k] = v
   })
-  const exportCSV = () => {
-    const head = ['Group', 'Category', 'Description', 'Amount', 'Paid', 'Paid to', 'Notes']
-    const rows = BUDGET_GROUPS.flatMap(([g, cats]) => budget.lines.filter((l) => cats.includes(l.category)).map((l) => [g, l.category, l.description, lineEstimate(l), l.payments?.length ? linePaid(l) : l.actual, l.vendor, l.notes]))
-    rows.push([], ['', '', 'Subtotal', t.est, t.act], ['', '', `Contingency ${budget.contingencyPct}%`, t.cont], ['', '', 'Total', t.total])
-    const csv = [head, ...rows].map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n')
-    download(`${project.title} - budget.csv`, csv, 'text/csv')
-  }
-
   return (
     <div className="budget">
       <div className="toolbar no-print">
@@ -144,9 +135,6 @@ export default function Budget() {
           </span>
         </div>
         <div className="toolbar-actions">
-          <Select value={filter} onChange={(e) => setFilter(e.target.value)} options={[['', 'All categories'], ...CATEGORIES.map((c) => [c, c])]} />
-          {budget.lines.length > 0 && <Button variant="ghost" onClick={exportCSV}>Export CSV</Button>}
-          {budget.lines.length > 0 && <Button variant="ghost" onClick={() => window.print()}>Print</Button>}
           {editable && <Button variant="primary" onClick={() => setDraft({ ...emptyLine(), category: CATEGORIES.includes('Camera') ? 'Camera' : CATEGORIES[0] || '' })}>Add line</Button>}
         </div>
       </div>
@@ -173,7 +161,7 @@ export default function Budget() {
           <Field label="Contingency %">
             <Input type="number" min="0" max="50" value={budget.contingencyPct ?? 10} onChange={(e) => setMeta('contingencyPct', Number(e.target.value))} />
           </Field>
-          <Field label="Budget cap (do not exceed)" hint="Total you agreed with the client or set yourself.">
+          <Field label="Budget" hint="Total you agreed with the client or set yourself.">
             <Input type="number" min="0" value={budget.cap || ''} onChange={(e) => setMeta('cap', e.target.value === '' ? '' : Number(e.target.value))} placeholder="45000" />
           </Field>
         </div>
