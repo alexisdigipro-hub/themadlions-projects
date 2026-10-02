@@ -48,7 +48,7 @@ export function projectProgress(p, settings) {
   } else {
     stages = [
       { key: 'doc', label: isMv ? 'Song and treatment in' : 'Script or treatment in', weight: 8, done: hasDoc ? 1 : 0, to: 'script' },
-      { key: 'breakdown', label: 'Breakdown', weight: 10, done: scenes.length ? (p.breakdownStatus === 'ai' ? 1 : 0.7) : 0, to: 'breakdown' },
+      { key: 'breakdown', label: 'Breakdown', weight: 10, done: scenes.length ? (p.breakdownStatus === 'ai' ? 1 : 0.7) : 0, to: 'script' },
       { key: 'budget', label: 'Budget', weight: 6, done: budgetDone, to: 'budget' },
       { key: 'cast', label: 'Cast attached', weight: 8, done: chars.length ? castDone : (p.contacts || []).some((c) => c.kind === 'cast') ? 1 : 0, to: 'people' },
       { key: 'locations', label: 'Locations set', weight: 8, done: clamp(locDone), to: 'people?tab=locations' },

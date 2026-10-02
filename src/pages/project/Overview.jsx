@@ -4,7 +4,7 @@ import { Button, Modal, useToast } from '../../components/ui.jsx'
 import { ProjectForm } from '../Dashboard.jsx'
 import { useProject } from '../Project.jsx'
 import { can, uid, useStore } from '../../lib/store.jsx'
-import { fmtDate, fmtLong } from '../../lib/dates.js'
+import { fmtDate } from '../../lib/dates.js'
 import { projectProgress } from '../../lib/progress.js'
 import { compress } from '../../lib/photos.js'
 import { analyze, fmtTime, fmtTimeMs, trackUrl, uploadTrack } from '../../lib/audio.js'
@@ -180,43 +180,6 @@ export default function Overview() {
                 </li>
               ))}
             </ul>
-            {(project.client || project.director || project.producer || project.startDate || project.endDate || project.notes) && (
-              <div className="progress-details">
-                <dl className="details">
-                  {project.client && (
-                    <>
-                      <dt>Client</dt>
-                      <dd>{project.client}</dd>
-                    </>
-                  )}
-                  {project.director && (
-                    <>
-                      <dt>Director</dt>
-                      <dd>{project.director}</dd>
-                    </>
-                  )}
-                  {project.producer && (
-                    <>
-                      <dt>Producer</dt>
-                      <dd>{project.producer}</dd>
-                    </>
-                  )}
-                  {project.startDate && (
-                    <>
-                      <dt>Start</dt>
-                      <dd>{fmtLong(project.startDate)}</dd>
-                    </>
-                  )}
-                  {project.endDate && (
-                    <>
-                      <dt>Delivery</dt>
-                      <dd>{fmtLong(project.endDate)}</dd>
-                    </>
-                  )}
-                </dl>
-                {project.notes && <p className="notes-text">{project.notes}</p>}
-              </div>
-            )}
           </div>
         </div>
       </section>

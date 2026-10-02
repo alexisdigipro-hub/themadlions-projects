@@ -10,7 +10,6 @@ import Settings from './pages/Settings.jsx'
 import Project, { useProject } from './pages/Project.jsx'
 import Overview from './pages/project/Overview.jsx'
 import Script from './pages/project/Script.jsx'
-import Breakdown from './pages/project/Breakdown.jsx'
 import Schedule from './pages/project/Schedule.jsx'
 import CallSheets from './pages/project/CallSheets.jsx'
 import People from './pages/project/People.jsx'
@@ -30,7 +29,6 @@ import PublicStatus from './pages/PublicStatus.jsx'
 import PublicEstimate from './pages/PublicEstimate.jsx'
 import PublicInvoice from './pages/PublicInvoice.jsx'
 import Finance from './pages/Finance.jsx'
-import Home from './pages/Home.jsx'
 import Budget from './pages/project/Budget.jsx'
 import Reports from './pages/project/Reports.jsx'
 import Post from './pages/project/Post.jsx'
@@ -95,7 +93,8 @@ export default function App() {
                 <Route path="people" element={<Navigate to="/database/cast" replace />} />
                 <Route path="locations" element={<Navigate to="/database/locations" replace />} />
                 <Route path="finance" element={<Finance />} />
-                <Route path="home" element={<Home />} />
+                {/* Home and Projects are the same page now; keep old bookmarks alive */}
+                <Route path="home" element={<Navigate to="/" replace />} />
                 <Route path="team" element={<Team />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="p/:id" element={<Project />}>
@@ -105,7 +104,8 @@ export default function App() {
                   {/* The song map moved into Script (a music video's "script" is the song) */}
                   <Route path="music" element={<Navigate to="../script" replace />} />
                   <Route path="script" element={<Script />} />
-                  <Route path="breakdown" element={<Breakdown />} />
+                  {/* Breakdown is now framed inside Script */}
+                  <Route path="breakdown" element={<Navigate to="../script" replace />} />
                   <Route path="shots" element={<Shots />} />
                   <Route path="schedule" element={<Schedule />} />
                   {/* Tasks is now on Overview */}

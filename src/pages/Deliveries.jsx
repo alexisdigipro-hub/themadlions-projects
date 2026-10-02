@@ -44,7 +44,7 @@ export default function Deliveries() {
   const { state } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
-  if (!can(user, 'share')) return <Navigate to="/home" replace />
+  if (!can(user, 'share')) return <Navigate to="/" replace />
   const editable = can(user, 'share', 'edit')
   // A cost estimation is money, so it follows Finance rather than the Share permission.
   const isAdmin = user?.role === 'admin'
