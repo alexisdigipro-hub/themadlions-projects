@@ -11,7 +11,6 @@ import Project, { useProject } from './pages/Project.jsx'
 import Overview from './pages/project/Overview.jsx'
 import Script from './pages/project/Script.jsx'
 import Schedule from './pages/project/Schedule.jsx'
-import CallSheets from './pages/project/CallSheets.jsx'
 import People from './pages/project/People.jsx'
 import Notes from './pages/project/Notes.jsx'
 import Whiteboard from './pages/project/Whiteboard.jsx'
@@ -115,7 +114,8 @@ export default function App() {
                   {/* Equipment is now a section inside People (Project Database); keep old links alive */}
                   <Route path="gear" element={<Navigate to="../people" replace />} />
                   <Route path="post" element={<Post />} />
-                  <Route path="callsheets" element={<CallSheets />} />
+                  {/* Call sheets is now framed inside Schedule */}
+                  <Route path="callsheets" element={<Navigate to="../schedule" replace />} />
                   {/* The project calendar is gone; the global Calendar in the sidebar covers it */}
                   <Route path="calendar" element={<Navigate to=".." replace />} />
                   {/* Locations is now a sub-tab inside People (Crew, Locations & Cast); keep old links alive */}

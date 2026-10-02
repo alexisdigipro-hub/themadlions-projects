@@ -1,19 +1,33 @@
 import { useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
-import { callsheetDefaults, today, uid, useStore } from '../../lib/store.jsx'
+import { callsheetDefaults, can, today, uid, useStore } from '../../lib/store.jsx'
 import { formatPages, stripColor } from '../../lib/breakdown.js'
 import { addDays, fmtDate } from '../../lib/dates.js'
 import Dood from '../../components/Dood.jsx'
+import RunOfShow from './RunOfShow.jsx'
+import CallSheets from './CallSheets.jsx'
 
 const emptyDay = (date, d = {}) => ({ id: uid(), date, unit: 'Main unit', callTime: d.callTime || '07:00', wrapTime: d.wrapTime || '19:00', locationId: '', notes: '', sceneIds: [] })
 
-import RunOfShow from './RunOfShow.jsx'
-
+/* Schedule & Sheets: the stripboard (or Run of show for an Event) and Call sheets, each framed as
+   its own card — Call sheets used to be a separate tab, merged in here since both are about the
+   shoot days. Stacked full-width rather than side by side: a call sheet is a printable page-wide
+   layout and a stripboard table is wide too, neither fits comfortably in half the screen. */
 export default function Schedule() {
-  const ctx = useProject()
-  if (ctx.project.category === 'Event') return <RunOfShow />
-  return <StripboardSchedule />
+  const { project, user } = useProject()
+  return (
+    <div className="schedule-sheets">
+      <section className="panel">
+        {project.category === 'Event' ? <RunOfShow /> : <StripboardSchedule />}
+      </section>
+      {can(user, 'callsheets') && (
+        <section className="panel">
+          <CallSheets />
+        </section>
+      )}
+    </div>
+  )
 }
 
 function StripboardSchedule() {
