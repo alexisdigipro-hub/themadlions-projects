@@ -36,9 +36,24 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
-## Where we stopped (1 Oct 2026)
+## Where we stopped (2 Oct 2026)
 
 Read this first; the detail behind each line is in the pull request that carried it.
+
+### Project tabs reorganised into fewer, framed pages (2 Oct)
+Alex: "θέλω να δεις όλα τα tabs ... και να τα οργανώσεις έτσι με πλαίσιωμα" (review every tab and give them all the same boxed/"framed" look), done one step at a time over several PRs that day:
+- **Project Database** (`people` route, `People.jsx`): Locations, Crew and Cast are one tab now, each its own framed card; **Equipment** (the old Gear tab) joined them later. Old `/locations`, `/gear`, `/people?tab=locations` links still work (redirect into the right sub-tab).
+- **Overview reworked**: no more stats cards or "Coming up". Overview now carries, top to bottom: the progress panel, the **Song player** (Music Video only, full waveform like the Script tab's, upload/add version), **Tasks** (framed), and **Files & Notes** (framed, see below). A Client/Director/Start/Delivery details block was added then explicitly removed again on Alex's direct feedback, it's gone for good.
+- **Script & Breakdown**: Breakdown is framed inside the Script tab now. Old `/breakdown` redirects to `/script`.
+- **Schedule & Sheets**: Call sheets are framed inside Schedule now, stacked (not side by side in columns, both are wide tables and don't fit next to each other). Old `/callsheets` redirects to `/schedule`.
+- **Files & Notes folded into Overview**: the tab is gone. Files (upload/list/delete), Links and Production notes all render on Overview now, below Tasks, in the same framed/columns layout Files & Notes already had. Old `/notes` links redirect to Overview. The Editing-category progress stage "Brief and materials in" now links to Overview instead of the old tab.
+- **Removed or hidden entirely**: the project's own Calendar tab is gone (the sidebar Calendar already covers every project); the project's own Chat tab is gone (the room is the same one in the sidebar Chat, old links redirect there); **Post** and **Reports** are opt-in now, off by default, switch them on per project from Edit details → Tabs.
+- **Home merged into Projects**: the old separate Home page is gone. The sidebar tab is renamed **Home** but opens the Projects page; only the team strip ("Today · everyone available / N not available · see another day on the Calendar") moved there, the rest of old Home (Arrange, Needs attention, the Calendar block) was deleted, not kept anywhere.
+- **"Delivered" filter chip**: was pushed to the far right of the category row by a stray `margin-left: auto`; now sits right next to the last category chip (IV), as asked.
+- **Edit Task modal**: the date field is now labelled **Deadline** (was Due). **Priority** shows LOW / NORMAL / HIGH / URGENT in the dropdown; the stored value is still lowercase so sorting and the urgent/high pill badges keep working unchanged. (Department names are editable already, in Settings → Team → Departments, nothing new needed there.)
+
+None of this needed a Supabase run, it's all UI/navigation. README.md's tab list and Home description are updated to match. Not build-tested in this sandbox (registry.npmjs.org still blocked here, see the earlier PDF entries); checked by hand, route by route and brace by brace.
+
 
 ### Invoices: dropped the mailto email, added a public Share link with preview (1 Oct)
 Alex: "άστο αυτό με το email ... φτιάξε μου να φτιάχνει ένα link να το στέλνω, και μέσα στο link να βλέπουνε σε μικρογραφία το τιμολόγιο και να λέει download." The "Email" button (which only opened a plain-text mailto draft) is gone. **Share link** instead reuses the existing public-share machinery (`src/lib/shares.js` `publishShare`, same system behind call sheets and cost estimations): it writes a snapshot of the invoice to the `shares` table (kind `'invoice'`, ref `invoice:<id>`) and gives back `#/inv/<token>`, copied to the clipboard automatically and shown in a small modal to copy again. Re-sharing the same invoice reuses the same token/link (so an old link stays valid, now showing the refreshed data) instead of minting a new one each time.
