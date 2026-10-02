@@ -7,7 +7,7 @@ import Dashboard from './pages/Dashboard.jsx'
 import CalendarAll from './pages/CalendarAll.jsx'
 import Team from './pages/Team.jsx'
 import Settings from './pages/Settings.jsx'
-import Project from './pages/Project.jsx'
+import Project, { useProject } from './pages/Project.jsx'
 import Overview from './pages/project/Overview.jsx'
 import Script from './pages/project/Script.jsx'
 import Breakdown from './pages/project/Breakdown.jsx'
@@ -19,7 +19,7 @@ import Whiteboard from './pages/project/Whiteboard.jsx'
 import Shots from './pages/project/Shots.jsx'
 import TasksAll from './pages/TasksAll.jsx'
 import Database from './pages/Database.jsx'
-import Chat, { ProjectChat } from './pages/Chat.jsx'
+import Chat from './pages/Chat.jsx'
 import MyWork from './pages/MyWork.jsx'
 import Profile from './pages/Profile.jsx'
 import Drives from './pages/Drives.jsx'
@@ -50,6 +50,13 @@ function RequireUser() {
   const { ready } = useStore()
   if (!ready) return <Loading />
   return user ? <Outlet /> : <Navigate to="/login" replace />
+}
+
+// The project's own Chat tab is gone (its room already lives in the sidebar's Chat), but an old
+// link should still land on that same room rather than a dead page.
+function ProjectChatRedirect() {
+  const { project } = useProject()
+  return <Navigate to={`/chat/p:${project.id}`} replace />
 }
 
 function LoginGate() {
@@ -93,7 +100,8 @@ export default function App() {
                 <Route path="settings" element={<Settings />} />
                 <Route path="p/:id" element={<Project />}>
                   <Route index element={<Overview />} />
-                  <Route path="chat" element={<ProjectChat />} />
+                  {/* The project's own Chat tab is gone; the same room lives in the sidebar's Chat */}
+                  <Route path="chat" element={<ProjectChatRedirect />} />
                   {/* The song map moved into Script (a music video's "script" is the song) */}
                   <Route path="music" element={<Navigate to="../script" replace />} />
                   <Route path="script" element={<Script />} />
