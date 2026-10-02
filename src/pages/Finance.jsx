@@ -9,6 +9,7 @@ import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/bud
 import { budgetCatForFin, finCatFor } from '../lib/budgetCats.js'
 import { AGE_BUCKETS, WorkLogTable, ageBucket, avgDaysToPay, daysWaiting, entryTotals, entryTotalsByYear, money2, projectWorkDate, topClientOf } from '../components/WorkLog.jsx'
 import { InvoiceProfileSettings, InvoicesTab } from '../components/Invoices.jsx'
+import { invoiceTotals } from '../lib/invoice.js'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -174,6 +175,24 @@ export default function Finance() {
     if (free(d.party, prevLine?.vendor)) out.party = line.vendor || ''
     if (free(d.net, prevLine ? String(lineBalance(prevLine)) : '') || Number(d.net) === 0) out.net = String(lineBalance(line) || lineEstimate(line))
     out.category = finCatFor(state.settings, line.category)
+    return out
+  }
+  // Invoices already sent (Finance > Invoices) that an income transaction can link to, so the
+  // amount and recipient are not typed twice. One already linked to a transaction drops off the
+  // list for every other transaction, the same way a budget line does once paid against.
+  const invoiceOptions = (fin.invoices || []).filter((inv) => inv.status === 'invoiced' && (inv.id === draft?.invoiceId || !fin.transactions.some((t) => t.invoiceId === inv.id && t.id !== draft?.id)))
+  const pickInvoice = (d, invoiceId) => {
+    const inv = (fin.invoices || []).find((x) => x.id === invoiceId)
+    const out = { ...d, invoiceId }
+    if (!inv) return out
+    const t = invoiceTotals(inv)
+    out.projectId = inv.projectId || d.projectId
+    out.description = inv.lines?.[0]?.description || `Invoice #${inv.number}`
+    out.party = inv.recipient?.name || d.party
+    out.net = String(t.net)
+    out.vatPct = inv.vatPct || 0
+    out.doc = 'invoice'
+    out.docNumber = inv.number
     return out
   }
   const save = () => {
@@ -562,6 +581,12 @@ export default function Finance() {
               <Field label="Date"><Input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
               <Field label="Category"><Select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} options={catsFor(fin.settings, draft.type)} /></Field>
             </div>
+            {draft.type === 'income' && !!invoiceOptions.length && (
+              <Field label="From invoice (optional)" hint="Picking one fills the client, the amount and the invoice number, so nothing is typed twice. Only invoices marked Invoiced, not already linked to another transaction, show here.">
+                <Select value={draft.invoiceId || ''} onChange={(e) => setDraft(pickInvoice(draft, e.target.value))}
+                  options={[['', 'Type it in manually'], ...invoiceOptions.map((inv) => [inv.id, `#${inv.number} · ${inv.recipient?.name || 'No recipient'} · ${money(invoiceTotals(inv).net, inv.currency)}`])]} />
+              </Field>
+            )}
             {draft.type === 'expense' && draft.projectId && (
               <Field label="Budget line" hint={(() => {
                 const open = (state.projects.find((p) => p.id === draft.projectId)?.budget?.lines || []).filter((l) => !l.txId && lineBalance(l) > 0)
