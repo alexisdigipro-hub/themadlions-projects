@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, TagsInput, Textarea, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, Textarea, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { locationProjects, locationToLibrary, matchText } from '../lib/library.js'
 import { coordsFromText } from '../lib/sun.js'
@@ -13,14 +13,17 @@ function mapSrc(address, key) {
   return key ? `https://www.google.com/maps/embed/v1/place?key=${key}&q=${q}` : `https://www.google.com/maps?q=${q}&output=embed`
 }
 
-export default function LocationsAll({ embedded = false } = {}) {
+/* Database > Locations. A compact card grid, the same look as Crew and Cast, with the map and
+   full detail behind a click in a modal instead of an always-open split pane — fits one database
+   section among the others instead of taking the whole page over. */
+export default function LocationsAll() {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
   const editable = can(user, 'locations', 'edit')
   const [q, setQ] = useState('')
   const [type, setType] = useState('')
-  const [selected, setSelected] = useState('')
+  const [detailFor, setDetailFor] = useState('')
   const [draft, setDraft] = useState(null)
   const locs = state.library.locations
   const projects = visibleProjects(state, user)
@@ -28,7 +31,7 @@ export default function LocationsAll({ embedded = false } = {}) {
     .filter((l) => (type ? l.type === type : true))
     .filter((l) => matchText(q, l.name, l.address, l.type, l.contact, l.notes, (l.tags || []).join(' ')))
     .sort((a, b) => a.name.localeCompare(b.name))
-  const loc = locs.find((l) => l.id === selected) || list[0]
+  const detail = locs.find((l) => l.id === detailFor)
 
   const save = () => {
     if (!draft.name.trim()) return toast('Name the location.', 'error')
@@ -38,15 +41,18 @@ export default function LocationsAll({ embedded = false } = {}) {
       else s.library.locations.push(draft)
       return s
     })
-    setSelected(draft.id)
+    setDetailFor(draft.id)
     setDraft(null)
     toast('Saved to the library', 'ok')
   }
-  const remove = (l) => update((s) => {
-    s.projects.forEach((pr) => pr.locations.forEach((x) => x.libraryId === l.id && delete x.libraryId))
-    s.library.locations = s.library.locations.filter((x) => x.id !== l.id)
-    return s
-  })
+  const remove = (l) => {
+    update((s) => {
+      s.projects.forEach((pr) => pr.locations.forEach((x) => x.libraryId === l.id && delete x.libraryId))
+      s.library.locations = s.library.locations.filter((x) => x.id !== l.id)
+      return s
+    })
+    setDetailFor('')
+  }
   const setPhotos = (id, photos) => update((s) => {
     const l = s.library.locations.find((x) => x.id === id)
     if (l) l.photos = photos
@@ -72,19 +78,16 @@ export default function LocationsAll({ embedded = false } = {}) {
   }
 
   return (
-    <div>
-      {!embedded && (
-        <PageHead title="Locations" sub={`${locs.length} locations in the company library`}>
-          {editable && unlinked > 0 && <Button variant="ghost" onClick={collect}>Collect {unlinked} from projects</Button>}
-          {editable && <Button variant="primary" onClick={() => setDraft(emptyLoc())}>Add location</Button>}
-        </PageHead>
-      )}
+    <section className="panel db-card">
       <div className="toolbar">
-        {embedded && <span className="muted">{list.length} location{list.length === 1 ? '' : 's'}{unlinked > 0 && editable ? ` · ` : ''}{unlinked > 0 && editable && <button className="link" onClick={collect}>collect {unlinked} from projects</button>}</span>}
+        <div className="toolbar-info">
+          <strong>Locations</strong> <span className="muted">{locs.length}</span>
+        </div>
         <div className="toolbar-actions">
           <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, address, notes…" />
           <Select value={type} onChange={(e) => setType(e.target.value)} options={[['', 'All types'], ...TYPES.map((t) => [t, t])]} />
-          {embedded && editable && <Button variant="primary" onClick={() => setDraft(emptyLoc())}>Add location</Button>}
+          {editable && unlinked > 0 && <Button variant="ghost" onClick={collect}>Collect {unlinked} from projects</Button>}
+          {editable && <Button variant="primary" onClick={() => setDraft(emptyLoc())}>Add location</Button>}
         </div>
       </div>
 
@@ -93,50 +96,50 @@ export default function LocationsAll({ embedded = false } = {}) {
           {locs.length ? 'Try another search.' : 'Locations you add inside a project land here automatically. Scouted places you have not used yet can be added directly.'}
         </Empty>
       ) : (
-        <div className="loc-layout">
-          <ul className="loc-list">
-            {list.map((l) => (
-              <li key={l.id}>
-                <button className={`loc-item ${loc?.id === l.id ? 'on' : ''}`} onClick={() => setSelected(l.id)}>
-                  {l.photos?.[0]?.thumb && <img className="loc-thumb" src={l.photos[0].thumb} alt="" />}
-                  <strong>{l.name}</strong>
-                  <span className="muted small">{l.type}{l.address ? ` · ${l.address}` : ''}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          {loc && (
-            <div className="loc-detail">
-              {loc.address ? (
-                <iframe className="map" title={loc.name} src={mapSrc(loc.address, state.settings.mapsKey)} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
-              ) : (
-                <div className="map map-empty muted">Add an address to see the map.</div>
-              )}
-              <div className="loc-info">
-                <div className="panel-head">
-                  <h2>{loc.name}</h2>
-                  <div className="row-actions">
-                    {loc.address && <a className="btn btn-ghost btn-sm" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.address)}`} target="_blank" rel="noreferrer">Open in Maps</a>}
-                    {editable && <Button size="sm" onClick={() => setDraft({ ...loc })}>Edit</Button>}
-                    {editable && <Confirm onConfirm={() => { remove(loc); setSelected('') }} />}
-                  </div>
-                </div>
-                <dl className="details">
-                  <dt>Type</dt><dd>{loc.type}</dd>
-                  <dt>Address</dt><dd>{loc.address || '–'}</dd>
-                  {loc.contact && (<><dt>Contact</dt><dd>{loc.contact} {loc.phone && <a href={`tel:${loc.phone}`}>{loc.phone}</a>}</dd></>)}
-                  <dt>Used in</dt>
-                  <dd>
-                    {locationProjects(projects, loc.id).length ? locationProjects(projects, loc.id).map((p) => <Link key={p.id} className="proj-link" to={`/p/${p.id}/people?tab=locations`} style={{ '--pc': p.color }}>{p.title}</Link>) : <span className="muted">No project yet</span>}
-                  </dd>
-                </dl>
-                {loc.notes && <p className="notes-text">{loc.notes}</p>}
-                <PhotoGrid photos={loc.photos || []} projectId="library" ownerId={loc.id} editable={editable} onChange={(photos) => setPhotos(loc.id, photos)} />
+        <div className="people-grid compact">
+          {list.map((l) => (
+            <article key={l.id} className="person loc-card" onClick={() => setDetailFor(l.id)} role="button" tabIndex={0}>
+              <div className="person-photo" aria-hidden="true">
+                {l.photos?.[0]?.thumb ? <img src={l.photos[0].thumb} alt="" /> : <span className="person-initials">📍</span>}
               </div>
-            </div>
-          )}
+              <div className="person-body">
+                <strong>{l.name}</strong>
+                <div className="small muted">{[l.type, l.address].filter(Boolean).join(' · ') || 'No address yet'}</div>
+                {locationProjects(projects, l.id).length > 0 && <div className="small muted">{locationProjects(projects, l.id).length} project{locationProjects(projects, l.id).length === 1 ? '' : 's'}</div>}
+              </div>
+            </article>
+          ))}
         </div>
       )}
+
+      <Modal open={!!detail} wide title={detail?.name || ''} onClose={() => setDetailFor('')}>
+        {detail && (
+          <div className="stack">
+            {detail.address ? (
+              <iframe className="map" title={detail.name} src={mapSrc(detail.address, state.settings.mapsKey)} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
+            ) : (
+              <div className="map map-empty muted">Add an address to see the map.</div>
+            )}
+            <div className="row-actions">
+              {detail.address && <a className="btn btn-ghost btn-sm" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(detail.address)}`} target="_blank" rel="noreferrer">Open in Maps</a>}
+              {detail.address && <a className="btn btn-ghost btn-sm" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(detail.address)}`} target="_blank" rel="noreferrer">Directions</a>}
+              {editable && <Button size="sm" onClick={() => { const d = detail; setDetailFor(''); setDraft({ ...d }) }}>Edit</Button>}
+              {editable && <Confirm onConfirm={() => remove(detail)} />}
+            </div>
+            <dl className="details">
+              <dt>Type</dt><dd>{detail.type}</dd>
+              <dt>Address</dt><dd>{detail.address || '–'}</dd>
+              {detail.contact && (<><dt>Contact</dt><dd>{detail.contact} {detail.phone && <a href={`tel:${detail.phone}`}>{detail.phone}</a>}</dd></>)}
+              <dt>Used in</dt>
+              <dd>
+                {locationProjects(projects, detail.id).length ? locationProjects(projects, detail.id).map((p) => <Link key={p.id} className="proj-link" to={`/p/${p.id}/people?tab=locations`} style={{ '--pc': p.color }}>{p.title}</Link>) : <span className="muted">No project yet</span>}
+              </dd>
+            </dl>
+            {detail.notes && <p className="notes-text">{detail.notes}</p>}
+            <PhotoGrid photos={detail.photos || []} projectId="library" ownerId={detail.id} editable={editable} onChange={(photos) => setPhotos(detail.id, photos)} />
+          </div>
+        )}
+      </Modal>
 
       <Modal open={!!draft} title={draft && locs.some((l) => l.id === draft.id) ? 'Edit location' : 'New location'} onClose={() => setDraft(null)}
         footer={<><Button variant="ghost" onClick={() => setDraft(null)}>Cancel</Button><Button variant="primary" onClick={save}>Save location</Button></>}>
@@ -159,6 +162,6 @@ export default function LocationsAll({ embedded = false } = {}) {
           </div>
         )}
       </Modal>
-    </div>
+    </section>
   )
 }
