@@ -185,15 +185,15 @@ export default function Overview() {
         </div>
       </section>
 
-      {project.category === 'Music Video' && can(user, 'music') && <SongPlayer project={project} edit={edit} editable={canEdit('music')} />}
-
       {can(user, 'tasks') && (
         <section className="panel">
           <Tasks />
         </section>
       )}
 
-      {/* Files & Notes used to be its own tab; files, links and production notes all moved here */}
+      {project.category === 'Music Video' && can(user, 'music') && <SongPlayer project={project} edit={edit} editable={canEdit('music')} />}
+
+      {/* Files & Notes used to be its own tab; links and production notes moved here, Files was dropped */}
       {can(user, 'files') && <Notes />}
 
       <Modal
