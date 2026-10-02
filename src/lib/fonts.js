@@ -17,8 +17,12 @@ export const FONTS = [
   { id: 'commissioner', label: 'Commissioner', family: "'Commissioner'", google: 'Commissioner:wght@400;500;600;700' },
   { id: 'alegreyasans', label: 'Alegreya Sans', family: "'Alegreya Sans'", google: 'Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400' },
   { id: 'exo2', label: 'Exo 2', family: "'Exo 2'", google: 'Exo+2:ital,wght@0,400;0,500;0,600;0,700;1,400' },
+  { id: 'rubik', label: 'Rubik', family: "'Rubik'", google: 'Rubik:ital,wght@0,400;0,500;0,600;0,700;1,400' },
+  { id: 'arimo', label: 'Arimo', family: "'Arimo'", google: 'Arimo:ital,wght@0,400;0,500;0,600;0,700;1,400' },
   { id: 'robotoslab', label: 'Roboto Slab', family: "'Roboto Slab'", google: 'Roboto+Slab:wght@400;500;600;700', serif: true },
   { id: 'literata', label: 'Literata', family: "'Literata'", google: 'Literata:ital,wght@0,400;0,500;0,600;0,700;1,400', serif: true },
+  { id: 'notoserif', label: 'Noto Serif', family: "'Noto Serif'", google: 'Noto+Serif:ital,wght@0,400;0,500;0,600;0,700;1,400', serif: true },
+  { id: 'tinos', label: 'Tinos', family: "'Tinos'", google: 'Tinos:ital,wght@0,400;0,700;1,400', serif: true },
 ]
 export const FONT_KEY = 'tml_font'
 const FALLBACK = "system-ui, -apple-system, 'Segoe UI', sans-serif"
