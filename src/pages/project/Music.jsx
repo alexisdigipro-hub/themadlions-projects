@@ -12,8 +12,9 @@ import { alignBlocks, groupSegments, transcribe } from '../../lib/transcribe.js'
 const TRACK_KINDS = [['master', 'Master'], ['playback', 'Playback'], ['instrumental', 'Instrumental'], ['demo', 'Demo'], ['other', 'Other']]
 const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: '' })
 
-/* Waveform drawn from stored peaks; click or drag to seek. */
-function Waveform({ peaks = [], duration = 0, time = 0, sections = [], onSeek, active }) {
+/* Waveform drawn from stored peaks; click or drag to seek. Exported so the simple Overview
+   player can show the same nice waveform without its own canvas-drawing code. */
+export function Waveform({ peaks = [], duration = 0, time = 0, sections = [], onSeek, active }) {
   const ref = useRef()
   useEffect(() => {
     const c = ref.current

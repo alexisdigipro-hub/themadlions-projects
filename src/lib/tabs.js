@@ -11,8 +11,6 @@ export function projectTabs(project) {
     // Overview carries the project's own Tasks, and the song player for a Music Video, so both
     // modules stay reachable (gated on their own permission) without a tab of their own.
     { to: '', label: 'Overview', end: true, key: 'projects', icon: 'overview', fixed: true },
-    // opt-in: off until Edit details > Tabs switches it on, on old projects too (they store no hide-list)
-    { to: 'chat', label: 'Chat', key: 'projects', icon: 'chat', optIn: true },
     ...(cat === 'Event' ? [] : [
       { to: 'script', label: 'Script', key: 'script', icon: 'script' },
       { to: 'breakdown', label: 'Breakdown', key: 'breakdown', icon: 'breakdown' },
@@ -20,7 +18,8 @@ export function projectTabs(project) {
     ]),
     { to: 'schedule', label: cat === 'Event' ? 'Run of show' : 'Schedule', key: 'schedule', icon: 'schedule' },
     { to: 'callsheets', label: 'Call sheets', key: 'callsheets', icon: 'callsheets' },
-    { to: 'reports', label: 'Reports', key: 'reports', icon: 'reports' },
+    // opt-in: Alex doesn't use Reports day to day; switch it on per project from Edit details > Tabs
+    { to: 'reports', label: 'Reports', key: 'reports', icon: 'reports', optIn: true },
     { to: 'budget', label: 'Budget', key: 'budget', icon: 'budget' },
     // opt-in: Alex doesn't use Post day to day; switch it on per project from Edit details > Tabs
     { to: 'post', label: 'Post', key: 'post', icon: 'post', optIn: true },
@@ -29,7 +28,7 @@ export function projectTabs(project) {
   ]
 }
 
-const OPT_IN = new Set(['chat', 'post'])
+const OPT_IN = new Set(['reports', 'post'])
 export function tabHidden(project, to) {
   if (Array.isArray(project?.hiddenTabs) && project.hiddenTabs.includes(to)) return true
   // an opt-in tab is hidden unless the project lists it in `shownTabs`, so it never appears unasked

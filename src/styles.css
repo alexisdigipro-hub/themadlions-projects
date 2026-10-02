@@ -2276,7 +2276,7 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 .project-head-cover { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; float: left; margin-right: 12px; }
 .cover-pick { display: grid; grid-template-columns: 120px 1fr auto; gap: 10px; align-items: center; }
 .cover-pick img { width: 120px; aspect-ratio: 16 / 10; object-fit: cover; border-radius: var(--radius); }
-.progress { margin-bottom: 16px; }
+.overview { display: flex; flex-direction: column; gap: 20px; }
 .progress-head { display: grid; grid-template-columns: 180px 1fr; gap: 18px; align-items: start; }
 .progress-cover img, .progress-cover-empty { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: var(--radius); display: block; }
 .progress-cover .link { display: inline-block; margin-top: 6px; }

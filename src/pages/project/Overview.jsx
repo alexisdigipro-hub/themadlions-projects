@@ -7,23 +7,30 @@ import { can, uid, useStore } from '../../lib/store.jsx'
 import { fmtDate, fmtLong } from '../../lib/dates.js'
 import { projectProgress } from '../../lib/progress.js'
 import { compress } from '../../lib/photos.js'
-import { analyze, fmtTime, trackUrl, uploadTrack } from '../../lib/audio.js'
+import { analyze, fmtTime, fmtTimeMs, trackUrl, uploadTrack } from '../../lib/audio.js'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { remote } from '../../lib/supabase.js'
 import Tasks from './Tasks.jsx'
+import { Waveform } from './Music.jsx'
 
 const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: '' })
 
-/* Just a track to upload and listen to, here on Overview — no waveform, sections or lyrics, that
-   full editor lives on the Script tab now. Writes to the same project.music.tracks the Script
-   page's song map reads, so a track added here shows up there too, and the other way round. */
+/* A track to upload and listen to, here on Overview, with the same waveform as the full editor —
+   just no sections/lyrics editing, that lives on the Script tab now. Writes to the same
+   project.music.tracks the Script page's song map reads, so a track added here shows up there
+   too, and the other way round. */
 function SongPlayer({ project, edit, editable }) {
   const toast = useToast()
   const music = { ...emptyMusic(), ...(project.music || {}) }
   const track = music.tracks.find((t) => t.id === music.activeTrackId) || music.tracks[0]
+  const sections = music.sections || []
   const fileRef = useRef()
+  const audioRef = useRef()
   const [url, setUrl] = useState('')
   const [busy, setBusy] = useState('')
+  const [time, setTime] = useState(0)
+  const [playing, setPlaying] = useState(false)
+  const current = sections.find((s) => time >= s.start && time < s.end)
 
   useEffect(() => {
     let alive = true
@@ -31,7 +38,18 @@ function SongPlayer({ project, edit, editable }) {
     return () => { alive = false }
   }, [track?.id, track?.path])
 
+  useEffect(() => {
+    const a = audioRef.current
+    if (!a) return
+    const onTime = () => setTime(a.currentTime)
+    const onPlay = () => setPlaying(true), onPause = () => setPlaying(false)
+    a.addEventListener('timeupdate', onTime); a.addEventListener('play', onPlay); a.addEventListener('pause', onPause); a.addEventListener('ended', onPause)
+    return () => { a.removeEventListener('timeupdate', onTime); a.removeEventListener('play', onPlay); a.removeEventListener('pause', onPause); a.removeEventListener('ended', onPause) }
+  }, [url])
+
   const setMusic = (fn) => edit((p) => { p.music = { ...emptyMusic(), ...(p.music || {}) }; fn(p.music) })
+  const seek = (t) => { if (audioRef.current) { audioRef.current.currentTime = t; setTime(t) } }
+  const toggle = () => { const a = audioRef.current; if (!a) return; a.paused ? a.play() : a.pause() }
 
   const onFile = async (file) => {
     if (!file) return
@@ -84,8 +102,13 @@ function SongPlayer({ project, edit, editable }) {
               ))}
             </select>
           )}
-          <audio controls src={url} style={{ width: '100%' }} />
-          <span className="muted small">{track.name} · {fmtTime(track.duration)}</span>
+          <audio ref={audioRef} src={url} preload="metadata" />
+          <Waveform peaks={track.peaks} duration={track.duration} time={time} sections={sections} onSeek={seek} active={current?.id} />
+          <div className="player-bar">
+            <button className="play" onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
+            <span className="player-time">{fmtTimeMs(time)} <span className="muted">/ {fmtTime(track.duration)}</span></span>
+            <span className="player-now">{current ? <><span className="muted">now:</span> <strong>{current.name}</strong></> : null}</span>
+          </div>
         </div>
       )}
     </section>
