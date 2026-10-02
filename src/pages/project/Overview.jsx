@@ -12,6 +12,7 @@ import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { remote } from '../../lib/supabase.js'
 import Tasks from './Tasks.jsx'
 import { Waveform } from './Music.jsx'
+import Notes from './Notes.jsx'
 
 const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: '' })
 
@@ -191,6 +192,9 @@ export default function Overview() {
           <Tasks />
         </section>
       )}
+
+      {/* Files & Notes used to be its own tab; files, links and production notes all moved here */}
+      {can(user, 'files') && <Notes />}
 
       <Modal
         open={!!draft}
