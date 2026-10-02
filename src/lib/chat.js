@@ -56,7 +56,7 @@ export function roomsFor(state, user) {
   for (const p of visibleProjects(state, user)) {
     if (tabHidden(p, 'chat') || chatExcluded(p, user)) continue
     // the project's cover is the room's picture, its colour the fallback behind the initials
-    out.push({ id: projectRoom(p.id), kind: 'project', name: p.title, sub: p.category, projectId: p.id, color: p.color, photo: p.coverThumb || '', initials: initialsOf(p.title) })
+    out.push({ id: projectRoom(p.id), kind: 'project', name: p.title, sub: p.category, projectId: p.id, color: p.color, photo: p.coverThumb || '', initials: initialsOf(p.title), archived: p.status === 'Delivered' })
   }
   for (const c of state.chats || []) {
     if (!Array.isArray(c.members) || !c.members.includes(user.id)) continue
@@ -114,20 +114,25 @@ export function unreadByRoom(state, user, readMap, rooms = roomsFor(state, user)
 }
 export const totalUnread = (counts) => Object.values(counts || {}).reduce((a, b) => a + b, 0)
 
-/* Folders: the built-in four plus the person's own (profile.chatFolders = [{ id, name, rooms }]). */
+/* Folders: the built-in five plus the person's own (profile.chatFolders = [{ id, name, rooms }]).
+   A delivered project's room is archived (see roomsFor): it drops out of All and Projects, and
+   only shows up under Archived, so a closed project stops cluttering the everyday list. */
 export const BUILTIN_FOLDERS = [
   { id: 'all', name: 'All' },
   { id: 'projects', name: 'Projects', kind: 'project' },
   { id: 'groups', name: 'Groups', kind: 'group' },
   { id: 'direct', name: 'People', kind: 'direct' },
+  { id: 'archived', name: 'Archived' },
 ]
 export function foldersFor(user) {
   const own = Array.isArray(user?.profile?.chatFolders) ? user.profile.chatFolders : []
   return [...BUILTIN_FOLDERS, ...own.filter((f) => f && f.id && f.name).map((f) => ({ id: f.id, name: f.name, rooms: Array.isArray(f.rooms) ? f.rooms : [], custom: true }))]
 }
 export function roomsInFolder(folder, rooms) {
-  if (!folder || folder.id === 'all') return rooms
-  if (folder.kind) return rooms.filter((r) => r.kind === folder.kind)
+  if (!folder) return rooms
+  if (folder.id === 'archived') return rooms.filter((r) => r.archived)
+  if (folder.id === 'all') return rooms.filter((r) => !r.archived)
+  if (folder.kind) return rooms.filter((r) => r.kind === folder.kind && !r.archived)
   const set = new Set(folder.rooms || [])
   return rooms.filter((r) => set.has(r.id))
 }

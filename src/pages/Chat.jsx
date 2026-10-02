@@ -301,7 +301,7 @@ function FoldersModal({ open, onClose, rooms }) {
   return (
     <Modal open={open} title="Your folders" onClose={onClose} footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></>}>
       <div className="stack">
-        <p className="small muted">All, Projects, Groups and People are always there. Your own folders are yours alone: pick a name and the conversations that go in it.</p>
+        <p className="small muted">All, Projects, Groups, People and Archived are always there. Your own folders are yours alone: pick a name and the conversations that go in it.</p>
         {list.map((f) => (
           <div key={f.id} className="chat-folder-edit">
             <div className="row-actions">
