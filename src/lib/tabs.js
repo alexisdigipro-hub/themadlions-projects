@@ -22,14 +22,14 @@ export function projectTabs(project) {
     { to: 'callsheets', label: 'Call sheets', key: 'callsheets', icon: 'callsheets' },
     { to: 'reports', label: 'Reports', key: 'reports', icon: 'reports' },
     { to: 'budget', label: 'Budget', key: 'budget', icon: 'budget' },
-    { to: 'post', label: 'Post', key: 'post', icon: 'post' },
-    { to: 'calendar', label: 'Calendar', key: 'calendar', icon: 'calendar' },
+    // opt-in: Alex doesn't use Post day to day; switch it on per project from Edit details > Tabs
+    { to: 'post', label: 'Post', key: 'post', icon: 'post', optIn: true },
     { to: 'people', label: 'Project Database', key: ['contacts', 'locations', 'gear'], icon: 'people' },
     { to: 'notes', label: 'Files & notes', key: 'files', icon: 'notes' },
   ]
 }
 
-const OPT_IN = new Set(['chat'])
+const OPT_IN = new Set(['chat', 'post'])
 export function tabHidden(project, to) {
   if (Array.isArray(project?.hiddenTabs) && project.hiddenTabs.includes(to)) return true
   // an opt-in tab is hidden unless the project lists it in `shownTabs`, so it never appears unasked
