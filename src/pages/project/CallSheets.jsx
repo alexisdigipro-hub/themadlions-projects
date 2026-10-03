@@ -8,7 +8,9 @@ import { fmtLong } from '../../lib/dates.js'
 import { ATHENS, coordsFromText, forecast, geocode, sunTimes } from '../../lib/sun.js'
 import { callSheetText, mailLink, personalCallText, waLink, waShareLink } from '../../lib/share.js'
 import { Modal } from '../../components/ui.jsx'
-import { ensurePin, publishShare } from '../../lib/shares.js'
+import { ensurePin, publishShare, shareUrl } from '../../lib/shares.js'
+import LinkName from '../../components/LinkName.jsx'
+import { nameParts } from '../../lib/projectName.js'
 import { callsheetDefaults, uid, useCurrentUser } from '../../lib/store.jsx'
 import CallSheetDesigner from '../../components/CallSheetDesigner.jsx'
 import { CallSheetLinkView } from '../PublicCallSheet.jsx'
@@ -166,7 +168,7 @@ export default function CallSheets() {
       if (state.settings.sharePin) {
         try { pin = await ensurePin({ workspaceId: state.workspace.id, ref }) } catch (e) { pinError = e.message }
       }
-      setShare({ url, pin, pinError })
+      setShare({ url, pin, pinError, ref })
     } catch (e) {
       setShare({ error: e.message })
     }
@@ -486,6 +488,13 @@ export default function CallSheets() {
           <div className="stack">
             <p className="small muted">Anyone with this link sees the call sheet on their phone, no login needed: call times, location with directions, the pinned note, cast and crew calls and scenes. Department requirements and budgets stay inside the app. Sharing again after you edit refreshes the same link.</p>
             <div className="share-link"><input className="input" readOnly value={share.url} onFocus={(e) => e.target.select()} /><Button variant="ghost" onClick={() => copy(share.url)}>Copy</Button></div>
+            <LinkName
+              key={share.ref}
+              workspaceId={state.workspace.id} shareRef={share.ref} url={share.url} makeUrl={shareUrl}
+              suggestion={`${nameParts(project).shortTitle || project.title} day ${dayIndex + 1}`}
+              hasCode={!!share.pin}
+              onRenamed={(url) => { setShare({ ...share, url }); toast('Link renamed', 'ok') }}
+            />
             {share.pin && (
               <p className="share-pin">Access code <b>{share.pin}</b> <span className="muted small">· the page shows nothing without it. It goes out with the link below.</span></p>
             )}

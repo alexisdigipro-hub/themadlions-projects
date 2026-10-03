@@ -60,6 +60,32 @@ export async function ensurePin({ workspaceId, ref }) {
   return pin
 }
 
+/* A link name typed by hand, made safe for an address: Greek written in Latin letters, lower case,
+   spaces to dashes, nothing else. "Χάρτινες Αγάπες Day 1" becomes "xartines-agapes-day-1". */
+const GREEK = { α: 'a', β: 'v', γ: 'g', δ: 'd', ε: 'e', ζ: 'z', η: 'i', θ: 'th', ι: 'i', κ: 'k', λ: 'l', μ: 'm', ν: 'n', ξ: 'ks', ο: 'o', π: 'p', ρ: 'r', σ: 's', ς: 's', τ: 't', υ: 'y', φ: 'f', χ: 'x', ψ: 'ps', ω: 'o' }
+export const cleanSlug = (v) => String(v || '')
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .replace(/ου/g, 'ou')
+  .replace(/[α-ω]/g, (c) => GREEK[c] || '')
+  .replace(/&/g, ' and ')
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-+|-+$/g, '')
+  .slice(0, 60)
+
+/* Gives a published link a name of your own: the row keeps everything (data, code, opens, replies),
+   only its address changes, so the old address stops working. Names are shared by every workspace,
+   so one already taken anywhere is refused by the database. */
+export async function renameShare({ workspaceId, ref, name }) {
+  if (!remote) throw new Error('Share links need the team workspace on Supabase.')
+  const t = cleanSlug(name)
+  if (t.length < 3) throw new Error('Use at least 3 letters or numbers.')
+  const { data, error } = await supabase.from('shares').update({ token: t }).eq('workspace_id', workspaceId).eq('ref', ref).select('token')
+  if (error) throw new Error(error.code === '23505' ? 'That name is already used by another link. Try another one.' : error.message)
+  if (!data?.length) throw new Error('Share the link first, then name it.')
+  return t
+}
+
 /* Every public link the team has published, newest first: delivery pages and call sheet pages
    together, because Alex wanted one place that shows what is out there. Members read the shares
    table directly; only the client's replies come through a function.

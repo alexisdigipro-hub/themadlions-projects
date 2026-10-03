@@ -5,6 +5,8 @@ import { useProject } from '../Project.jsx'
 import { can, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import { publishShare, shotlistUrl, tokenOf } from '../../lib/shares.js'
+import LinkName from '../../components/LinkName.jsx'
+import { nameParts } from '../../lib/projectName.js'
 import { mailLink, waShareLink } from '../../lib/share.js'
 import ShotListDesigner from '../../components/ShotListDesigner.jsx'
 import ShotDay from '../../components/ShotDay.jsx'
@@ -236,7 +238,7 @@ export default function Shots() {
         ref = `shotlist:${project.id}`
       }
       const url = await publishShare({ workspaceId: state.workspace.id, kind: 'shotlist', ref, data, userId: user?.id })
-      setShare({ url: shotlistUrl(tokenOf(url)), what })
+      setShare({ url: shotlistUrl(tokenOf(url)), what, ref })
     } catch (e) {
       setShare({ error: e.message })
     }
@@ -295,6 +297,13 @@ export default function Shots() {
               {' '}Sharing again after changes refreshes the same link.
             </p>
             <div className="share-link"><input className="input" readOnly value={share.url} onFocus={(e) => e.target.select()} /><Button variant="ghost" onClick={() => copy(share.url)}>Copy</Button></div>
+            <LinkName
+              key={share.ref}
+              workspaceId={state.workspace.id} shareRef={share.ref} url={share.url} makeUrl={shotlistUrl}
+              suggestion={`${nameParts(project).shortTitle || project.title} shots`}
+              hasCode
+              onRenamed={(url) => { setShare({ ...share, url }); toast('Link renamed', 'ok') }}
+            />
             <div className="row-actions wrap">
               <a className="btn btn-primary" href={waShareLink(`${project.title} · Shot list\n${share.url}`)} target="_blank" rel="noreferrer">Send on WhatsApp</a>
               <a className="btn btn-ghost" href={mailLink({ subject: `${project.title} · Shot list`, body: share.url })}>Mail</a>

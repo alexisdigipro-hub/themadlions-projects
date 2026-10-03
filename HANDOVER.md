@@ -40,6 +40,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Link names, dark text in call sheet fields (4 Oct)
+Alex asked whether the share link can be short and say what he wants; options given (own name at the end, own domain ~10-15€/year, shortener), he chose the free one: own name at the end. `renameShare()` in shares.js updates the row's `token` (primary key, no foreign keys point at it; RLS update policy covers it, a taken name fails with 23505 → friendly message). `cleanSlug()` writes Greek in Latin letters (ου→ou, χ→x, ξ→ks), lower case, dashes, max 60. UI `src/components/LinkName.jsx` under the link in the call sheet and shot list share dialogs. Open idea if he ever wants it: own domain + BrowserRouter with a 404.html redirect for `madlions.gr/s/<name>`, plus the new URL in Supabase Auth redirect URLs.
+Also: `.cs-time` and the location textareas had no text colour, so on the dark app theme their typed text was white on the light field (Alex: time written but not visible). Both now use #1f2430.
+
 ### Call sheet Program section (4 Oct)
 Alex: a section "just like Scenes", called PROGRAM, on the mobile link too, time and description all typed by hand. New block `program` in callsheetLayout.js BLOCKS (after `schedule`); rows on `day.callSheet.program [{id, from, to, what}]`. normalizeLayout now inserts a built-in block missing from a saved layout right after its predecessor in BLOCKS instead of at the end. Link payload `program` (only filled rows); PublicCallSheet renders it like Sets (`.pub-program`). Also goes into the WhatsApp text as the first extra section. No SQL.
 
