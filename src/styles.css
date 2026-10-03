@@ -1882,7 +1882,6 @@ code {
 }
 
 /* ---------- budget ---------- */
-.budget-meta { display: grid; grid-template-columns: 140px 140px 220px; gap: 12px; margin-bottom: 14px; }
 /* The budget top sheet fills the page width, unlike the narrower call/status sheets that share
    the .sheet base (Alex). */
 .topsheet { max-width: none; }
@@ -1920,7 +1919,6 @@ code {
 .sheet .field-label { color: #555; }
 
 @media (max-width: 820px) {
-  .budget-meta { grid-template-columns: 1fr 1fr; }
   .report-times { grid-template-columns: repeat(2, 1fr); }
   .budget-totals { min-width: 0; width: 100%; }
 }
@@ -2029,18 +2027,27 @@ html[data-text-size='compact'] .content, html[data-text-size='compact'] .sidebar
 html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, html[data-text-size='large'] .topbar, html[data-text-size='large'] .modal { zoom: 1.1; }
 
 /* ---------- budget cap ---------- */
-.capbar { background: var(--panel); border: 1px solid var(--line-soft); border-left: 4px solid var(--ok); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 14px; }
-.capbar.warn { border-left-color: var(--amber); }
-.capbar.over { border-left-color: var(--danger); }
-.capbar-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 8px; }
-.capbar.over .capbar-head strong { color: var(--danger); }
-.capbar.warn .capbar-head strong { color: var(--amber); }
-.capbar-track { position: relative; height: 12px; background: var(--raised); border-radius: 999px; overflow: hidden; }
-.capbar-fill { position: absolute; inset: 0 auto 0 0; background: var(--ok); border-radius: 999px; transition: width .3s; }
-.capbar.warn .capbar-fill { background: var(--amber); }
-.capbar.over .capbar-fill { background: var(--danger); }
-.capbar-spent { position: absolute; inset: 3px auto 3px 0; background: rgba(0,0,0,.35); border-radius: 999px; }
-.capbar-mark { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--muted); opacity: .6; }
+/* Budget tab: the project's Budget amount, edited in place, with what is committed, paid and left */
+.budget-card { margin-bottom: 16px; padding: 18px 20px; }
+.budget-card-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px 32px; flex-wrap: wrap; }
+.budget-card-main { display: flex; flex-direction: column; gap: 4px; }
+.budget-card-label { display: block; font-size: 12.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.budget-card-field { display: inline-flex; align-items: baseline; gap: 4px; border-bottom: 2px solid var(--line); padding-bottom: 2px; transition: border-color .15s; cursor: text; }
+.budget-card-field:focus-within { border-bottom-color: var(--accent); }
+.budget-card-cur, .budget-card-amount { font-size: 32px; font-weight: 700; line-height: 1.1; }
+.budget-card-cur { color: var(--muted); }
+.budget-card-field input { width: 7.5ch; background: transparent; border: 0; outline: 0; padding: 0; color: var(--text); font: inherit; font-size: 32px; font-weight: 700; line-height: 1.1; -moz-appearance: textfield; }
+.budget-card-field input::-webkit-outer-spin-button, .budget-card-field input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.budget-card-stats { display: flex; gap: 28px; flex-wrap: wrap; }
+.budget-card-stats strong { display: block; font-size: 19px; margin-top: 2px; }
+.budget-card.ok .budget-card-left { color: var(--ok); }
+.budget-card.warn .budget-card-left { color: var(--amber); }
+.budget-card.over .budget-card-left { color: var(--danger); }
+.budget-card-bar { position: relative; height: 10px; margin-top: 16px; background: var(--raised); border-radius: 999px; overflow: hidden; }
+.budget-card-fill { position: absolute; inset: 0 auto 0 0; background: var(--ok); border-radius: 999px; transition: width .3s; }
+.budget-card.warn .budget-card-fill { background: var(--amber); }
+.budget-card.over .budget-card-fill { background: var(--danger); }
+.budget-card-spent { position: absolute; inset: 3px auto 3px 0; background: rgba(0,0,0,.35); border-radius: 999px; }
 .sidenav a { display: flex; align-items: center; gap: 10px; }
 .nav-ico { display: inline-flex; width: 18px; height: 18px; color: var(--muted); flex: none; }
 .sidenav a:hover .nav-ico, .sidenav a.active .nav-ico { color: var(--accent); }
@@ -2111,8 +2118,8 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 
 
 /* ---------- light theme refinements ---------- */
-.panel, .card, .fin-card, .task, .person, .frip, .frame, .shot-card, .capbar, .cut, .strip, .day-card, .project-card, .send-row, .concept, .modal { box-shadow: var(--shadow); }
-html[data-theme='light'] .panel, html[data-theme='light'] .fin-card, html[data-theme='light'] .task, html[data-theme='light'] .person, html[data-theme='light'] .frame, html[data-theme='light'] .shot-card, html[data-theme='light'] .capbar, html[data-theme='light'] .cut, html[data-theme='light'] .day-card, html[data-theme='light'] .project-card, html[data-theme='light'] .concept { border-color: transparent; }
+.panel, .card, .fin-card, .task, .person, .frip, .frame, .shot-card, .cut, .strip, .day-card, .project-card, .send-row, .concept, .modal { box-shadow: var(--shadow); }
+html[data-theme='light'] .panel, html[data-theme='light'] .fin-card, html[data-theme='light'] .task, html[data-theme='light'] .person, html[data-theme='light'] .frame, html[data-theme='light'] .shot-card, html[data-theme='light'] .cut, html[data-theme='light'] .day-card, html[data-theme='light'] .project-card, html[data-theme='light'] .concept { border-color: transparent; }
 html[data-theme='light'] .modal { box-shadow: var(--shadow-lg); }
 html[data-theme='light'] .sidenav a.active { background: var(--raised); }
 html[data-theme='light'] .logo-mark { background: var(--accent); border-color: var(--accent); }

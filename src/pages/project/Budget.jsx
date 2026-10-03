@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
@@ -22,31 +22,60 @@ export const emptyLine = () => ({ id: uid(), category: 'Camera', description: ''
 export { lineEstimate }
 export const money = (n, cur = 'EUR') => new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(Number(n) || 0)
 
+// Contingency and currency are gone from the page (Alex: euros only, no contingency), so a
+// project's total is simply the sum of its lines, whatever an old project still stores.
 export function budgetTotals(project) {
-  const b = project.budget || { lines: [], contingencyPct: 10, currency: 'EUR' }
+  const b = project.budget || { lines: [] }
   const est = b.lines.reduce((a, l) => a + lineEstimate(l), 0)
   const act = b.lines.reduce((a, l) => a + Number(l.actual || 0), 0)
-  const cont = Math.round(est * (Number(b.contingencyPct || 0) / 100))
-  return { est, act, cont, total: est + cont, currency: b.currency || 'EUR', lines: b.lines.length }
+  return { est, act, total: est, lines: b.lines.length }
 }
 
-export function CapBar({ cap, total, spent, cur }) {
-  const pct = Math.min(100, Math.round((total / cap) * 100))
-  const spentPct = Math.min(100, Math.round((spent / cap) * 100))
-  const over = total > cap
-  const tone = over ? 'over' : pct >= 90 ? 'warn' : 'ok'
+/* The project's Budget (what the client pays) as one card: the amount itself, editable in
+   place, and under it how much of it the lines already commit and how much is paid out. */
+function BudgetCard({ cap, total, spent, editable, onCap }) {
+  const [val, setVal] = useState(cap ? String(cap) : '')
+  useEffect(() => { setVal(cap ? String(cap) : '') }, [cap])
+  const commit = () => {
+    const n = val.trim() === '' ? '' : Number(val)
+    if (n !== '' && Number.isNaN(n)) return setVal(cap ? String(cap) : '')
+    if (n !== (cap || '')) onCap(n)
+  }
+  const pct = cap ? Math.min(100, Math.round((total / cap) * 100)) : 0
+  const spentPct = cap ? Math.min(100, Math.round((spent / cap) * 100)) : 0
+  const over = cap && total > cap
+  const tone = !cap ? '' : over ? 'over' : pct >= 90 ? 'warn' : 'ok'
   return (
-    <div className={`capbar ${tone}`}>
-      <div className="capbar-head">
-        <strong>{over ? `${money(total - cap, cur)} over the cap` : `${money(cap - total, cur)} left of ${money(cap, cur)}`}</strong>
-        <span className="muted">{Math.round((total / cap) * 100)}% committed{spent ? ` · ${spentPct}% spent` : ''}</span>
+    <section className={`panel budget-card no-print ${tone}`}>
+      <div className="budget-card-row">
+        <div className="budget-card-main">
+          <span className="budget-card-label">Budget</span>
+          {editable ? (
+            <label className="budget-card-field">
+              <span className="budget-card-cur">€</span>
+              <input type="number" min="0" inputMode="decimal" value={val} placeholder="0" onChange={(e) => setVal(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }} />
+            </label>
+          ) : (
+            <span className="budget-card-amount">{cap ? money(cap) : '—'}</span>
+          )}
+        </div>
+        {cap ? (
+          <div className="budget-card-stats">
+            <div><span className="budget-card-label">Committed</span><strong>{money(total)}</strong></div>
+            <div><span className="budget-card-label">Paid</span><strong>{money(spent)}</strong></div>
+            <div><span className="budget-card-label">{over ? 'Over by' : 'Left'}</span><strong className="budget-card-left">{money(Math.abs(cap - total))}</strong></div>
+          </div>
+        ) : (
+          <span className="muted small">Set the amount and you see what the lines commit and what is left.</span>
+        )}
       </div>
-      <div className="capbar-track">
-        <div className="capbar-fill" style={{ width: `${pct}%` }} />
-        {spent > 0 && <div className="capbar-spent" style={{ width: `${spentPct}%` }} />}
-        <div className="capbar-mark" style={{ left: '90%' }} title="90%" />
-      </div>
-    </div>
+      {cap ? (
+        <div className="budget-card-bar" title={`${pct}% committed${spent ? ` · ${spentPct}% paid` : ''}`}>
+          <div className="budget-card-fill" style={{ width: `${pct}%` }} />
+          {spent > 0 && <div className="budget-card-spent" style={{ width: `${spentPct}%` }} />}
+        </div>
+      ) : null}
+    </section>
   )
 }
 
@@ -67,10 +96,10 @@ export default function Budget() {
   const finTx = me?.role === 'admin' ? (state.finance?.transactions || []).filter((t) => t.projectId === project.id) : []
   const finIn = finTx.filter((t) => t.type === 'income' && t.status !== 'quoted').reduce((a, t) => a + Number(t.net || 0), 0)
   const finOut = finTx.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.net || 0), 0)
-  const budget = project.budget || { lines: [], contingencyPct: 10, currency: 'EUR' }
+  const budget = project.budget || { lines: [] }
   const [draft, setDraft] = useState(null)
   const [pay, setPay] = useState(null) // line
-  const cur = budget.currency || 'EUR'
+  const cur = 'EUR'
   // groups from Settings, plus an "Unlisted" group for lines whose category was removed there
   const BUDGET_GROUPS = useMemo(() => groupPairs(state.settings, budget.lines), [state.settings, budget.lines])
   const CATEGORIES = BUDGET_GROUPS.flatMap(([, cats]) => cats)
@@ -89,8 +118,7 @@ export default function Budget() {
     if (!draft.description.trim()) return toast('Describe the line.', 'error')
     if (budget.cap) {
       const others = budget.lines.filter((l) => l.id !== draft.id).reduce((a, l) => a + lineEstimate(l), 0)
-      const newEst = others + lineEstimate(draft)
-      const newTotal = newEst + Math.round(newEst * (Number(budget.contingencyPct || 0) / 100))
+      const newTotal = others + lineEstimate(draft)
       if (newTotal > Number(budget.cap) && t.total <= Number(budget.cap)) toast(`Careful: this line takes the budget ${money(newTotal - Number(budget.cap), cur)} over the cap.`, 'error')
       else if (newTotal > Number(budget.cap)) toast(`Budget is ${money(newTotal - Number(budget.cap), cur)} over the cap.`, 'error')
     }
@@ -102,7 +130,7 @@ export default function Budget() {
     update((s) => {
       const p = s.projects.find((x) => x.id === project.id)
       if (!p) return s
-      p.budget = p.budget || { lines: [], contingencyPct: 10, currency: 'EUR' }
+      p.budget = p.budget || { lines: [] }
       const i = p.budget.lines.findIndex((l) => l.id === line.id)
       if (i >= 0) p.budget.lines[i] = line
       else p.budget.lines.push(line)
@@ -121,18 +149,15 @@ export default function Budget() {
     dropLineWorklog(s, id)
     return s
   })
-  const setMeta = (k, v) => edit((p) => {
-    p.budget = p.budget || { lines: [], contingencyPct: 10, currency: 'EUR' }
-    p.budget[k] = v
+  const setCap = (v) => edit((p) => {
+    p.budget = p.budget || { lines: [] }
+    p.budget.cap = v
   })
   return (
     <div className="budget">
       <div className="toolbar no-print">
         <div className="toolbar-info">
           <strong>{money(t.total, cur)} total</strong>
-          <span className="muted">
-            {money(t.est, cur)} estimated + {budget.contingencyPct || 0}% contingency · {t.act ? `${money(t.act, cur)} spent` : 'nothing spent yet'}
-          </span>
         </div>
         <div className="toolbar-actions">
           {editable && <Button variant="primary" onClick={() => setDraft({ ...emptyLine(), category: CATEGORIES.includes('Camera') ? 'Camera' : CATEGORIES[0] || '' })}>Add line</Button>}
@@ -144,28 +169,10 @@ export default function Budget() {
           <span><span className="muted">Invoiced</span> <strong>{money(finIn, cur)}</strong></span>
           <span><span className="muted">Costs booked</span> <strong>{money(finOut, cur)}</strong></span>
           <span><span className="muted">Profit</span> <strong className={finIn - finOut < 0 ? 'over' : 'under'}>{money(finIn - finOut, cur)}</strong>{finIn ? <span className="muted"> · {Math.round(((finIn - finOut) / finIn) * 100)}%</span> : null}</span>
-          <span className="muted small">from Finance, administrators only</span>
         </div>
       )}
-      {budget.cap ? (
-        <CapBar cap={Number(budget.cap)} total={t.total} spent={t.act} cur={cur} />
-      ) : editable ? (
-        <p className="notice no-print">Set a budget cap below and the top sheet shows how much of it is committed and what is left.</p>
-      ) : null}
 
-      {editable && (
-        <div className="budget-meta no-print">
-          <Field label="Currency">
-            <Select value={cur} onChange={(e) => setMeta('currency', e.target.value)} options={['EUR', 'USD', 'GBP']} />
-          </Field>
-          <Field label="Contingency %">
-            <Input type="number" min="0" max="50" value={budget.contingencyPct ?? 10} onChange={(e) => setMeta('contingencyPct', Number(e.target.value))} />
-          </Field>
-          <Field label="Budget" hint="Total you agreed with the client or set yourself.">
-            <Input type="number" min="0" value={budget.cap || ''} onChange={(e) => setMeta('cap', e.target.value === '' ? '' : Number(e.target.value))} placeholder="45000" />
-          </Field>
-        </div>
-      )}
+      {(editable || budget.cap) && <BudgetCard cap={Number(budget.cap) || 0} total={t.total} spent={t.act} editable={editable} onCap={setCap} />}
 
       {!budget.lines.length ? (
         <Empty title="No budget lines yet">Start with the big blocks: crew, camera and lighting packages, locations, post. One amount per line.</Empty>
@@ -222,8 +229,6 @@ export default function Budget() {
 
           <table className="table budget-totals">
             <tbody>
-              <tr><td>Subtotal</td><td className="num">{money(t.est, cur)}</td><td className="num">{t.act ? money(t.act, cur) : ''}</td></tr>
-              <tr><td>Contingency {budget.contingencyPct || 0}%</td><td className="num">{money(t.cont, cur)}</td><td /></tr>
               <tr className="grand"><td>Total</td><td className="num">{money(t.total, cur)}</td><td className="num">{t.act ? <span className={t.act > t.total ? 'over' : 'muted'}>{money(t.act, cur)} paid</span> : ''}</td></tr>
             </tbody>
           </table>
