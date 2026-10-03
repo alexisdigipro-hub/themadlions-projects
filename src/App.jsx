@@ -47,6 +47,7 @@ const Deliveries = lazyPage(() => import('./pages/Deliveries.jsx'))
 const PublicStatus = lazyPage(() => import('./pages/PublicStatus.jsx'))
 const PublicEstimate = lazyPage(() => import('./pages/PublicEstimate.jsx'))
 const PublicInvoice = lazyPage(() => import('./pages/PublicInvoice.jsx'))
+const PublicShotList = lazyPage(() => import('./pages/PublicShotList.jsx'))
 const Finance = lazyPage(() => import('./pages/Finance.jsx'))
 const Budget = lazyPage(() => import('./pages/project/Budget.jsx'))
 const Reports = lazyPage(() => import('./pages/project/Reports.jsx'))
@@ -97,6 +98,7 @@ export default function App() {
             <Route path="/ps/:token" element={<PublicStatus />} />
             <Route path="/e/:token" element={<PublicEstimate />} />
             <Route path="/inv/:token" element={<PublicInvoice />} />
+            <Route path="/sl/:token" element={<PublicShotList />} />
             <Route element={<RequireUser />}>
               <Route element={<Layout />}>
                 <Route index element={<Dashboard />} />
