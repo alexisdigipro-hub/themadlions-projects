@@ -19,7 +19,7 @@ export default function PeopleAll({ kind }) {
   const [q, setQ] = useState('')
   const [dept, setDept] = useState('')
   const [draft, setDraft] = useState(null)
-  const [photosFor, setPhotosFor] = useState(null)
+  const [detailFor, setDetailFor] = useState(null)
   const [view, setView] = useState(() => localStorage.getItem('tml_people_view') || 'cards')
   const pickView = (v) => { setView(v); localStorage.setItem('tml_people_view', v) }
   const people = state.library.contacts
@@ -30,7 +30,7 @@ export default function PeopleAll({ kind }) {
     .filter((p) => (dept ? p.dept === dept : true))
     .filter((p) => matchText(q, p.name, p.role, p.phone, p.email, p.agent, p.notes, (p.tags || []).join(' ')))
     .sort((a, b) => a.name.localeCompare(b.name))
-  const target = people.find((p) => p.id === photosFor)
+  const target = people.find((p) => p.id === detailFor)
 
   const save = () => {
     if (!draft.name.trim()) return toast('Add a name.', 'error')
@@ -103,8 +103,8 @@ export default function PeopleAll({ kind }) {
               const used = contactProjects(projects, c.id)
               return (
                 <tr key={c.id}>
-                  <td><button className="avatar" onClick={() => setPhotosFor(c.id)} aria-label="Photos">{c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}</button></td>
-                  <td><strong>{c.name}</strong>{c.agent && <div className="muted small">Agent: {c.agent}</div>}</td>
+                  <td><button className="avatar" onClick={() => setDetailFor(c.id)} aria-label="Details">{c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}</button></td>
+                  <td><button className="name-link" onClick={() => setDetailFor(c.id)}><strong>{c.name}</strong></button>{c.agent && <div className="muted small">Agent: {c.agent}</div>}</td>
                   <td className="small">{c.kind === 'cast' ? c.role : `${c.dept}${c.role ? ` · ${c.role}` : ''}`}</td>
                   <td className="small">{showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</td>
                   <td className="small">{showContacts && c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</td>
@@ -121,12 +121,12 @@ export default function PeopleAll({ kind }) {
             const used = contactProjects(projects, c.id)
             return (
               <article key={c.id} className="person">
-                <button className="person-photo" onClick={() => setPhotosFor(c.id)} aria-label="Photos">
+                <button className="person-photo" onClick={() => setDetailFor(c.id)} aria-label="Details">
                   {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(c.name)}</span>}
                   {c.photos?.length > 1 && <span className="person-count">{c.photos.length}</span>}
                 </button>
                 <div className="person-body">
-                  <strong>{c.name}</strong>
+                  <button className="name-link" onClick={() => setDetailFor(c.id)}><strong>{c.name}</strong></button>
                   <div className="small">{c.kind === 'cast' ? c.role || <span className="muted">Actor</span> : `${c.dept}${c.role ? ` · ${c.role}` : ''}`}</div>
                   <div className="small muted person-contact">
                     {showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}
@@ -141,7 +141,6 @@ export default function PeopleAll({ kind }) {
                 </div>
                 {editable && (
                   <div className="row-actions person-actions">
-                    <button onClick={() => setPhotosFor(c.id)}>Photos</button>
                     <button onClick={() => setDraft({ ...c })}>Edit</button>
                     <Confirm onConfirm={() => remove(c)} label="Delete">×</Confirm>
                   </div>
@@ -177,8 +176,28 @@ export default function PeopleAll({ kind }) {
         )}
       </Modal>
 
-      <Modal open={!!target} wide title={target ? `Photos · ${target.name}` : ''} onClose={() => setPhotosFor(null)}>
-        {target && <PhotoGrid title={target.kind === 'cast' ? 'Headshots & looks' : 'Photos'} photos={target.photos || []} projectId="library" ownerId={target.id} editable={editable} onChange={(photos) => setPhotos(target.id, photos)} />}
+      <Modal open={!!target} wide title={target?.name || ''} onClose={() => setDetailFor(null)}>
+        {target && (
+          <div className="stack">
+            <div className="row-actions">
+              {editable && <Button size="sm" onClick={() => { const d = target; setDetailFor(null); setDraft({ ...d }) }}>Edit</Button>}
+              {editable && <Confirm onConfirm={() => { remove(target); setDetailFor(null) }} />}
+            </div>
+            <dl className="details">
+              <dt>{target.kind === 'cast' ? 'Type' : 'Department'}</dt><dd>{target.kind === 'cast' ? (target.role || '–') : target.dept}</dd>
+              {target.kind !== 'cast' && target.role && (<><dt>Role</dt><dd>{target.role}</dd></>)}
+              <dt>Phone</dt><dd>{showContacts && target.phone ? <a href={`tel:${target.phone}`}>{target.phone}</a> : '–'}</dd>
+              <dt>Email</dt><dd>{showContacts && target.email ? <a href={`mailto:${target.email}`}>{target.email}</a> : '–'}</dd>
+              {target.agent && (<><dt>Agent</dt><dd>{target.agent}{target.agentPhone ? ` · ${target.agentPhone}` : ''}</dd></>)}
+              <dt>Used in</dt>
+              <dd>
+                {contactProjects(projects, target.id).length ? contactProjects(projects, target.id).map((p) => <Link key={p.id} className="proj-link" to={`/p/${p.id}/people`} style={{ '--pc': p.color }}>{p.title}</Link>) : <span className="muted">Not in a project yet</span>}
+              </dd>
+            </dl>
+            {target.notes && <p className="notes-text">{target.notes}</p>}
+            <PhotoGrid title={target.kind === 'cast' ? 'Headshots & looks' : 'Photos'} photos={target.photos || []} projectId="library" ownerId={target.id} editable={editable} onChange={(photos) => setPhotos(target.id, photos)} />
+          </div>
+        )}
       </Modal>
     </section>
   )
