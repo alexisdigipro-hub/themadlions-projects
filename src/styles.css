@@ -963,10 +963,10 @@ code {
   text-decoration: none;
 }
 /* Home on a computer: square cover, artist over title, nothing else. The sizes below are drawn
-   at full scale and the whole grid is zoomed to 65% (Alex: everything 35% smaller, fitting the
-   same way), so cards, type and gaps shrink together. The phone keeps its own cards (mobile layer). */
+   at full scale and the whole grid is zoomed (Alex: 35% smaller, then 10% back up = 71.5%), so
+   cards, type and gaps scale together and fit the same way. The phone keeps its own cards (mobile layer). */
 @media (min-width: 821px) {
-  .project-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); zoom: .65; }
+  .project-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); zoom: .715; }
   .project-cover { flex: none; }
   .project-card .project-meta, .project-card .project-foot { display: none; }
   .project-body { padding: 12px 14px 13px; text-align: center; }
