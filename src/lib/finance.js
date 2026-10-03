@@ -37,8 +37,6 @@ export const TX_STATUS = {
 export const DOCS = [['invoice', 'Invoice'], ['receipt', 'Receipt'], ['none', 'No document']]
 export const METHODS = ['Bank', 'Cash', 'Card', 'Other']
 
-export const defaultFinanceSettings = () => ({ currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 })
-
 export const emptyTx = (type = 'expense', partial = {}) => ({
   id: uid(), type, date: today(), projectId: '', category: type === 'income' ? 'Production fee' : 'Crew',
   description: '', party: '', net: '', vatPct: 24, status: type === 'income' ? 'invoiced' : 'pending', doc: 'invoice', docNumber: '', docLink: '',
