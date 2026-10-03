@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Link banner centred and rounded (4 Oct)
+Alex, from a phone screenshot of a call sheet link: banner text all centred, banner as wide as the cards under it with the same rounded corners. `.pub-hero` now has `margin: 12px 12px 0; border-radius: 16px`, centred. Shared by the call sheet and shot list links.
+
 ### Call sheet: Parking / hospital toggles, live link preview (3 Oct, late)
 Alex: "βγάλε ή να έχω έλεγχο με τικ να βγάζω το parking & nearest hospital" and "να βλέπω το call sheet από το link με την mobile εκδοχή, live preview". `DETAILS` in callsheetLayout.js gained `parking` and `hospital` (sheet and link); the sheet's location grid takes its column count from `--cs-loc-cols`, so phones stay one column. The link payload moved out of `makeShare` into `linkData()`; PublicCallSheet.jsx now exports `CallSheetLinkView({ data, updatedAt })`, used by the public page and by the **Link preview** phone frame on the call sheet (`.cs-with-preview`, `.cs-phone`; theme scoped with `.pv-light` / `.pv-dark` variable sets, since the link's theme must not change the app's). Toggle stored in localStorage `tml_cs_preview`. No SQL.
 
