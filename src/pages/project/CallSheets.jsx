@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Empty, Field, Textarea, useToast } from '../../components/ui.jsx'
+import { Button, Empty, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { useStore } from '../../lib/store.jsx'
 import { formatPages } from '../../lib/breakdown.js'
@@ -10,6 +10,8 @@ import { callSheetText, mailLink, personalCallText, waLink, waShareLink } from '
 import { Modal } from '../../components/ui.jsx'
 import { ensurePin, publishShare } from '../../lib/shares.js'
 import { callsheetDefaults, useCurrentUser } from '../../lib/store.jsx'
+import CallSheetDesigner from '../../components/CallSheetDesigner.jsx'
+import { ZOOM, accentOf, labelOf, layoutOf, linkLayout, normalizeLayout, storedLayout, titleOf } from '../../lib/callsheetLayout.js'
 
 function addMinutes(hhmm, mins) {
   if (!hhmm) return ''
@@ -22,13 +24,14 @@ function addMinutes(hhmm, mins) {
 
 export default function CallSheets() {
   const { project, edit, canEdit } = useProject()
-  const { state } = useStore()
+  const { state, update } = useStore()
   const days = [...project.shootingDays].sort((a, b) => a.date.localeCompare(b.date))
   const [sel, setSel] = useState(days[0]?.id || '')
   const [mode, setMode] = useState('sheet') // sheet | sides
   const [busy, setBusy] = useState(false)
   const [send, setSend] = useState(false)
   const [share, setShare] = useState(null) // { url } | { busy } | { error }
+  const [designing, setDesigning] = useState(false)
   const user = useCurrentUser()
   const csd = callsheetDefaults(state)
   const canShare = true
@@ -53,47 +56,91 @@ export default function CallSheets() {
   const scenes = day.sceneIds.map((id) => sceneById[id]).filter(Boolean)
   const loc = project.locations.find((l) => l.id === day.locationId)
   const chars = [...new Set(scenes.flatMap((s) => s.characters))]
-  const castRows = project.category === 'Event'
-    ? project.contacts.filter((x) => x.kind === 'cast').map((actor) => ({ character: actor.character || actor.role || 'Talent', actor, call: addMinutes(day.callTime, actor.callOffset ?? 0) }))
-    : chars.map((c) => {
-        const actor = project.contacts.find((x) => x.kind === 'cast' && x.character?.toUpperCase() === c.toUpperCase())
-        return { character: c, actor, call: addMinutes(day.callTime, actor?.callOffset ?? 0) }
-      })
+  const sheet = day.callSheet || {}
+  const calls = sheet.calls || {}
+  const hidden = sheet.hidden || {}
+  const extra = (sheet.extra || []).filter((x) => x.name?.trim())
+  // Every person row carries a key, so a call time changed or a person left out on this one day
+  // sticks to them: the contact id, or the character's name while nobody is cast for it.
+  const castAll = (project.category === 'Event'
+    ? project.contacts.filter((x) => x.kind === 'cast').map((actor) => ({ character: actor.character || actor.role || 'Talent', actor }))
+    : chars.map((c) => ({ character: c, actor: project.contacts.find((x) => x.kind === 'cast' && x.character?.toUpperCase() === c.toUpperCase()) }))
+  ).map((r) => {
+    const key = r.actor ? r.actor.id : `ch:${r.character}`
+    const auto = addMinutes(day.callTime, r.actor?.callOffset ?? 0)
+    return { ...r, key, auto, call: calls[key] || auto }
+  })
+  const castRows = [
+    ...castAll.filter((r) => !hidden[r.key]),
+    ...extra.filter((x) => x.kind === 'cast').map((x) => ({ key: x.id, extra: true, character: x.role || 'Cast', actor: { id: x.id, kind: 'cast', name: x.name, phone: x.phone, character: x.role }, call: x.call || day.callTime })),
+  ]
   const crew = project.contacts.filter((c) => c.kind === 'crew')
+  const crewAll = crew.map((c) => {
+    const auto = addMinutes(day.callTime, c.callOffset ?? 0)
+    return { ...c, key: c.id, auto, call: calls[c.id] || auto }
+  })
+  const crewRows = [
+    ...crewAll.filter((c) => !hidden[c.key]),
+    ...extra.filter((x) => x.kind !== 'cast').map((x) => ({ id: x.id, key: x.id, extra: true, kind: 'crew', name: x.name, role: x.role, phone: x.phone, call: x.call || day.callTime })),
+  ]
+  const hiddenPeople = [...castAll, ...crewAll].filter((r) => hidden[r.key]).map((r) => ({ key: r.key, name: r.actor?.name || r.name || r.character }))
   const departments = {}
   for (const s of scenes) for (const [cat, items] of Object.entries(s.elements || {})) departments[cat] = [...new Set([...(departments[cat] || []), ...items])]
-  const sheet = day.callSheet || {}
   const dayIndex = days.indexOf(day)
-  const crewRows = crew.map((c) => ({ ...c, call: addMinutes(day.callTime, c.callOffset ?? 0) }))
-  const fullText = callSheetText({ project, day, dayIndex, dayCount: days.length, scenes, loc, cast: castRows, crew: crewRows, sheet })
+  const layout = layoutOf(project, state)
+  const event = project.category === 'Event'
+  const show = (k) => layout.details[k].sheet
+  const title = sheet.title?.trim() || project.title
+  const customText = (b) => sheet.custom?.[b.key] || b.text || ''
+  const locView = loc || sheet.locName || sheet.locAddress
+    ? { name: sheet.locName || loc?.name || '', address: sheet.locAddress || loc?.address || '', contact: sheet.locContact || loc?.contact || '', phone: sheet.locPhone || loc?.phone || '', notes: loc?.notes || '' }
+    : null
+  const titled = { ...project, title }
+  const notes = layout.blocks.filter((b) => b.custom && customText(b)).map((b) => ({ title: titleOf(layout, b), text: customText(b) }))
+  const fullText = callSheetText({ project: titled, day, dayIndex, dayCount: days.length, scenes, loc: locView, cast: castRows, crew: crewRows, sheet, extra: notes })
   const people = [...castRows.filter((r) => r.actor).map((r) => ({ ...r.actor, call: r.call, character: r.character, scenes: scenes.filter((s) => s.characters?.includes(r.character)) })), ...crewRows.map((c) => ({ ...c, scenes }))]
-  const personal = (pp) => personalCallText({ project, day, dayIndex, loc, person: pp, call: pp.call, scenes: pp.scenes })
+  const personal = (pp) => personalCallText({ project: titled, day, dayIndex, loc: locView, person: pp, call: pp.call, scenes: pp.scenes })
   const emails = people.map((pp) => pp.email).filter(Boolean)
-  const subject = `${project.title} · Call sheet Day ${dayIndex + 1} · ${day.date} · call ${day.callTime}`
+  const subject = `${title} · Call sheet Day ${dayIndex + 1} · ${day.date} · call ${day.callTime}`
   const copy = async (text) => {
     try { await navigator.clipboard.writeText(text); toast('Copied', 'ok') } catch { toast('Could not copy', 'error') }
   }
   const makeShare = async () => {
     setShare({ busy: true })
     try {
-      const keyCrew = crew.filter((c) => /1st AD|assistant director|production manager|UPM|line producer|DoP|photography|producer/i.test(c.role || '')).slice(0, 5).map((c) => ({ role: c.role, name: c.name, phone: c.phone }))
-      if (project.producer) keyCrew.unshift({ role: 'Producer', name: project.producer })
+      const on = (k) => layout.blocks.some((b) => b.key === k && b.link)
+      const linkShow = (k) => layout.details[k].link
+      const phone = (x) => (linkShow('phones') ? x || '' : '')
+      // Only what the link shows goes into it: a section switched off for the link is left out of
+      // the snapshot, not just hidden, since anyone holding the link can read the snapshot.
+      const keyCrew = !linkShow('keycrew') ? [] : crew.filter((c) => /1st AD|assistant director|production manager|UPM|line producer|DoP|photography|producer/i.test(c.role || '')).slice(0, 5).map((c) => ({ role: c.role, name: c.name, phone: phone(c.phone) }))
+      if (project.producer && linkShow('keycrew')) keyCrew.unshift({ role: 'Producer', name: project.producer })
       const data = {
-        project: { title: project.title, color: project.color, cover: project.coverThumb || '', category: project.category },
+        project: { title, color: project.color, cover: linkShow('cover') ? project.coverThumb || '' : '', category: project.category },
         company: { name: state.workspace.name, address: state.settings.companyAddress || '', logo: state.settings.logo || '' },
         day: { index: dayIndex + 1, count: days.length, date: day.date, callTime: day.callTime, wrapTime: day.wrapTime },
         expiresAt: Number(state.settings.shareExpiryDays) > 0 ? new Date(new Date(day.date + 'T23:59:59').getTime() + Number(state.settings.shareExpiryDays) * 86400000).toISOString() : '',
-        sheet: { tagline: sheet.tagline || csd.tagline || '', notes: sheet.notes || '', shootingCall: sheet.shootingCall || '', lunch: sheet.lunch || lunchDefault, parking: sheet.parking || csd.parking || '', hospital: sheet.weather || csd.hospital || '', footer: csd.footer || '' },
-        wx: wx && csd.showWeather !== false ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
-        sun: sun && csd.showSun !== false ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,
-        loc: loc ? { name: loc.name, address: loc.address, contact: loc.contact, phone: loc.phone } : null,
-        scenes: scenes.map((s) => ({ location: s.location, heading: s.heading, from: sceneTime(s.id).from, to: sceneTime(s.id).to })),
-        cast: castRows.map((r) => ({ character: r.character, name: r.actor?.name || '', phone: r.actor?.phone || '', call: r.call, photo: r.actor?.photos?.[0]?.thumb || '' })),
-        crew: crewRows.map((c) => ({ name: c.name, role: c.role || c.dept, phone: c.phone || '', call: c.call, photo: c.photos?.[0]?.thumb || '' })),
-        blocks: (day.blocks || []).map((b) => ({ time: b.time, end: b.end, item: b.item, owner: b.owner, notes: b.notes })),
+        sheet: {
+          tagline: linkShow('tagline') ? sheet.tagline || csd.tagline || '' : '',
+          notes: on('note') ? sheet.notes || '' : '',
+          shootingCall: sheet.shootingCall || '',
+          lunch: sheet.lunch || lunchDefault,
+          parking: on('location') ? sheet.parking || csd.parking || '' : '',
+          hospital: on('location') ? sheet.weather || csd.hospital || '' : '',
+          footer: csd.footer || '',
+        },
+        wx: wx && csd.showWeather !== false && linkShow('weather') ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
+        sun: sun && csd.showSun !== false && linkShow('sun') ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,
+        loc: locView && on('location') ? { name: locView.name, address: locView.address, contact: locView.contact, phone: phone(locView.phone) } : null,
+        scenes: on('schedule') ? scenes.map((s) => ({ location: s.location, heading: s.heading, from: sceneTime(s.id).from, to: sceneTime(s.id).to })) : [],
+        cast: on('cast') ? castRows.map((r) => ({ character: r.character, name: r.actor?.name || '', phone: phone(r.actor?.phone), call: r.call, photo: r.actor?.photos?.[0]?.thumb || '' })) : [],
+        crew: on('crew') ? crewRows.map((c) => ({ name: c.name, role: c.role || c.dept, phone: phone(c.phone), call: c.call, photo: c.photos?.[0]?.thumb || '' })) : [],
+        blocks: on('schedule') ? (day.blocks || []).map((b) => ({ time: b.time, end: b.end, item: b.item, owner: b.owner, notes: b.notes })) : [],
+        departments: on('departments') ? Object.entries(departments).map(([cat, items]) => ({ cat, items })) : [],
         keyCrew,
-        emergency,
-        prodContacts,
+        emergency: on('contacts') ? emergency : [],
+        prodContacts: on('contacts') ? prodContacts : [],
+        layout: linkLayout(layout, project, customText),
       }
       const ref = `callsheet:${project.id}:${day.id}`
       const url = await publishShare({ workspaceId: state.workspace.id, kind: 'callsheet', ref, data, userId: user?.id })
@@ -122,6 +169,28 @@ export default function CallSheets() {
     if (d) d.callSheet = { ...(d.callSheet || {}), [k]: v }
   })
 
+  const setDay = (k, v) => edit((p) => {
+    const d = p.shootingDays.find((x) => x.id === day.id)
+    if (d) d[k] = v
+  })
+  const setCall = (key, v) => setSheet('calls', { ...calls, [key]: v })
+  const hidePerson = (key, on) => {
+    const next = { ...hidden }
+    if (on) next[key] = true
+    else delete next[key]
+    setSheet('hidden', next)
+  }
+  const setCustom = (key, v) => setSheet('custom', { ...(sheet.custom || {}), [key]: v })
+  // The layout is saved whole on the project the first time anything in it changes.
+  const setLayout = (fn) => edit((p) => {
+    p.callsheetLayout = storedLayout(fn(normalizeLayout(p.callsheetLayout || state.settings?.callsheet?.layout, { event })))
+  })
+  const makeDefault = () => {
+    update((s) => { s.settings = { ...s.settings, callsheet: { ...(s.settings.callsheet || {}), layout: storedLayout(layout) } }; return s })
+    toast('Every project without its own layout now uses this one', 'ok')
+  }
+  const resetLayout = () => edit((p) => { delete p.callsheetLayout })
+
   // sun and weather for the day's location (falls back to the city in the address, then Athens)
   const coords = (loc?.lat && loc?.lon) ? { lat: Number(loc.lat), lon: Number(loc.lon) } : coordsFromText(loc?.address) || null
   const sun = sunTimes(day.date, coords?.lat ?? ATHENS.lat, coords?.lon ?? ATHENS.lon)
@@ -144,6 +213,189 @@ export default function CallSheets() {
     }
   }
 
+  const accent = accentOf(layout, project)
+  const showWx = show('weather') && csd.showWeather !== false
+  const showSun = show('sun') && csd.showSun !== false
+  const named = (b) => !!b.title // note and numbers carry their own labels, so a heading only when renamed
+  const phoneOf = (x) => (show('phones') ? x || '' : '')
+
+  const renderBlock = (b) => {
+    const h = <h3>{titleOf(layout, b)}</h3>
+    switch (b.key) {
+      case 'note':
+        return (sheet.notes || editable) ? (
+          <>
+            {named(b) && h}
+            <div className="cs-note">
+              <span className="cs-pin">📌</span>
+              {editable ? (
+                <textarea rows={2} value={sheet.notes || ''} onChange={(e) => setSheet('notes', e.target.value)} placeholder="Parking, catering, safety, permits, transport. Everyone reads this one." />
+              ) : <p>{sheet.notes}</p>}
+            </div>
+          </>
+        ) : null
+      case 'location':
+        return (
+          <section>
+            {h}
+            <div className="cs-locgrid">
+              <div>
+                <div className="cs-loc-h">Set location</div>
+                {locView ? (
+                  <>
+                    <strong className="cs-loc-name">{locView.name}</strong>
+                    <div>{locView.address}</div>
+                    {(locView.contact || phoneOf(locView.phone)) && <div className="muted small">{[locView.contact, phoneOf(locView.phone)].filter(Boolean).join(' · ')}</div>}
+                    {locView.address && <a className="link no-print small" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locView.address)}`} target="_blank" rel="noreferrer">Open in Google Maps</a>}
+                  </>
+                ) : <span className="muted">Set the location on the shoot day.</span>}
+              </div>
+              <div>
+                <div className="cs-loc-h">Parking</div>
+                {editable ? <textarea rows={3} value={sheet.parking || ''} onChange={(e) => setSheet('parking', e.target.value)} placeholder={csd.parking || 'Where, how many cars, who unloads where'} /> : <div>{sheet.parking || csd.parking || '–'}</div>}
+              </div>
+              <div>
+                <div className="cs-loc-h">Nearest hospital</div>
+                {editable ? <textarea rows={3} value={sheet.weather || ''} onChange={(e) => setSheet('weather', e.target.value)} placeholder={csd.hospital || 'Name, address, phone'} /> : <div>{sheet.weather || csd.hospital || '–'}</div>}
+              </div>
+            </div>
+            {wx && showWx && <div className="muted small no-print">{wx.place} · forecast from open-meteo · {editable && <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'refresh'}</button>}</div>}
+          </section>
+        )
+      case 'contacts':
+        return (emergency.length > 0 || prodContacts.length > 0) ? (
+          <section>
+            {named(b) && h}
+            <div className="cs-safety">
+              {emergency.length > 0 && (
+                <div className="cs-emergency">
+                  <div className="cs-loc-h">Emergency</div>
+                  <ul className="plain">
+                    {emergency.map((n) => <li key={n.id}><span>{n.label}</span><a href={`tel:${n.number}`}>{n.number}</a></li>)}
+                  </ul>
+                </div>
+              )}
+              {prodContacts.length > 0 && (
+                <div className="cs-prodcontacts">
+                  <div className="cs-loc-h">Production</div>
+                  <ul className="plain">
+                    {prodContacts.map((c) => <li key={c.id}><span>{c.role}{c.name ? ` · ${c.name}` : ''}</span>{c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </section>
+        ) : null
+      case 'schedule':
+        return event ? (
+          <section>
+            {h}
+            <table className="table">
+              <thead><tr><th>Time</th><th>Block</th><th>Owner</th><th>Notes</th></tr></thead>
+              <tbody>
+                {(day.blocks || []).map((x) => (
+                  <tr key={x.id}><td className="nowrap">{x.time}{x.end ? ` – ${x.end}` : ''}</td><td><strong>{x.item}</strong></td><td>{x.owner}</td><td className="small">{x.notes}</td></tr>
+                ))}
+                {!(day.blocks || []).length && <tr><td colSpan={4} className="muted">No run of show yet. Build it in the Run of show tab.</td></tr>}
+              </tbody>
+            </table>
+          </section>
+        ) : (
+          <section>
+            {h}
+            <table className="table">
+              <thead><tr><th>Time</th><th>I/E</th><th>Set</th><th>D/N</th><th>Description</th><th>Cast</th></tr></thead>
+              <tbody>
+                {scenes.map((sc) => (
+                  <tr key={sc.id}>
+                    <td className="nowrap cs-scene-time">
+                      {editable ? (
+                        <span className="cs-range"><input className="cs-time" value={sceneTime(sc.id).from} placeholder="09:00" onChange={(e) => setSceneTime(sc.id, 'from', e.target.value)} /> – <input className="cs-time" value={sceneTime(sc.id).to} placeholder="11:00" onChange={(e) => setSceneTime(sc.id, 'to', e.target.value)} /></span>
+                      ) : sceneTime(sc.id).from || sceneTime(sc.id).to ? `${sceneTime(sc.id).from}${sceneTime(sc.id).to ? ` – ${sceneTime(sc.id).to}` : ''}` : <span className="muted">–</span>}
+                    </td>
+                    <td>{sc.intExt}</td>
+                    <td>{sc.location}</td>
+                    <td>{sc.timeOfDay}</td>
+                    <td>{sc.synopsis}</td>
+                    <td>{sc.characters.join(', ')}</td>
+                  </tr>
+                ))}
+                {!scenes.length && <tr><td colSpan={6} className="muted">No scenes assigned to this day.</td></tr>}
+              </tbody>
+            </table>
+          </section>
+        )
+      case 'cast':
+        return (event && !castRows.length) ? null : (
+          <section>
+            {h}
+            <table className="table">
+              <thead><tr><th>Character</th><th>Actor</th>{show('phones') && <th>Phone</th>}<th>Call</th>{editable && <th className="no-print" />}</tr></thead>
+              <tbody>
+                {castRows.map((r) => (
+                  <tr key={r.key}>
+                    <td>{r.character}</td>
+                    <td>
+                      <div className="person-cell">
+                        {r.actor?.photos?.[0]?.thumb && <img className="avatar-img" src={r.actor.photos[0].thumb} alt="" />}
+                        {r.actor?.name || <span className="muted">Not cast</span>}
+                      </div>
+                    </td>
+                    {show('phones') && <td>{r.actor?.phone || ''}</td>}
+                    <td>{editable && !r.extra ? <input className="cs-time" value={calls[r.key] ?? ''} placeholder={r.auto} onChange={(e) => setCall(r.key, e.target.value)} aria-label={`Call for ${r.actor?.name || r.character}`} /> : r.call}</td>
+                    {editable && <td className="no-print row-actions">{!r.extra && <button onClick={() => hidePerson(r.key, true)} title="Leave out of this day">×</button>}</td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )
+      case 'departments':
+        return Object.keys(departments).length > 0 ? (
+          <section>
+            {h}
+            <div className="dept-grid">
+              {Object.entries(departments).map(([cat, items]) => (
+                <div key={cat}>
+                  <strong>{cat}</strong>
+                  <div className="small">{items.join(', ')}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null
+      case 'crew':
+        return (
+          <section>
+            {h}
+            <div className="dept-grid">
+              {crewRows.map((c) => (
+                <div key={c.key} className="cs-crew">
+                  <strong>{c.name}</strong>
+                  {editable && !c.extra && <button className="cs-x no-print" onClick={() => hidePerson(c.key, true)} title="Leave out of this day">×</button>}
+                  <div className="small muted">
+                    {c.role || c.dept} · call {editable && !c.extra ? <input className="cs-time" value={calls[c.key] ?? ''} placeholder={c.auto} onChange={(e) => setCall(c.key, e.target.value)} aria-label={`Call for ${c.name}`} /> : c.call}
+                    {phoneOf(c.phone) ? ` · ${c.phone}` : ''}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      default:
+        if (!b.custom) return null
+        if (!editable && !customText(b)) return null
+        return (
+          <section>
+            {h}
+            {editable
+              ? <textarea className="cs-custom-edit" rows={3} value={sheet.custom?.[b.key] ?? ''} placeholder={b.text || 'Anything you want on the sheet'} onChange={(e) => setCustom(b.key, e.target.value)} />
+              : <p className="cs-custom">{customText(b)}</p>}
+          </section>
+        )
+    }
+  }
+
   return (
     <div className="callsheets">
       <div className="toolbar no-print">
@@ -161,6 +413,7 @@ export default function CallSheets() {
               <button className={mode === 'sides' ? 'on' : ''} onClick={() => setMode('sides')}>Sides</button>
             </div>
           )}
+          {editable && mode === 'sheet' && <Button variant={designing ? 'primary' : 'default'} onClick={() => setDesigning(!designing)}>{designing ? 'Done' : 'Customise'}</Button>}
           {canShare && <Button onClick={makeShare}>Share link</Button>}
           <Button onClick={() => setSend(true)}>Send message</Button>
           <Button variant="primary" onClick={() => window.print()}>
@@ -181,7 +434,7 @@ export default function CallSheets() {
             )}
             {share.pinError && <p className="error small">{share.pinError}</p>}
             <div className="row-actions wrap">
-              <a className="btn btn-primary" href={waShareLink(`${project.title} · Call sheet Day ${dayIndex + 1} · ${day.date} · call ${day.callTime}\n${share.url}${share.pin ? `\nCode: ${share.pin}` : ''}`)} target="_blank" rel="noreferrer">Send on WhatsApp</a>
+              <a className="btn btn-primary" href={waShareLink(`${title} · Call sheet Day ${dayIndex + 1} · ${day.date} · call ${day.callTime}\n${share.url}${share.pin ? `\nCode: ${share.pin}` : ''}`)} target="_blank" rel="noreferrer">Send on WhatsApp</a>
               <a className="btn btn-ghost" href={mailLink({ bcc: emails, subject, body: `${subject}\n\n${share.url}${share.pin ? `\nCode: ${share.pin}` : ''}` })}>Mail</a>
               {navigator.share && <Button variant="ghost" onClick={() => navigator.share({ title: subject, url: share.url }).catch(() => {})}>Share…</Button>}
             </div>
@@ -249,215 +502,68 @@ export default function CallSheets() {
         </article>
       )}
 
-      <article className="sheet cs" hidden={mode !== 'sheet'}>
+      {designing && editable && mode === 'sheet' && (
+        <CallSheetDesigner
+          layout={layout} setLayout={setLayout}
+          sheet={sheet} setSheet={setSheet} day={day} setDay={setDay} loc={loc}
+          hiddenPeople={hiddenPeople} onShowPerson={(k) => hidePerson(k, false)}
+          hasOwn={!!project.callsheetLayout} isAdmin={user?.role === 'admin'}
+          onMakeDefault={makeDefault} onReset={resetLayout}
+        />
+      )}
+
+      <article
+        className={`sheet cs${layout.look.header === 'centred' ? ' cs-centred' : ''}${accent ? ' cs-accented' : ''}`}
+        style={{ ...(accent ? { '--cs-accent': accent } : {}), ...(ZOOM[layout.look.size] !== 1 ? { zoom: ZOOM[layout.look.size] } : {}) }}
+        hidden={mode !== 'sheet'}
+      >
         <header className="cs-head">
           <div className="cs-company">
             <div className="cs-brand">{state.settings.logo ? <img className="cs-logo" src={state.settings.logo} alt="" /> : <span className="cs-mark" />}{state.workspace.name}</div>
             {state.settings.companyAddress && <div className="muted small cs-addr">{state.settings.companyAddress}</div>}
-            <dl className="cs-kv">
-              {project.producer && (<><dt>Producer</dt><dd>{project.producer}</dd></>)}
-              {crew.filter((c) => /1st AD|assistant director|production manager|UPM|line producer|DoP|photography/i.test(c.role || '')).slice(0, 4).map((c) => (
-                <span key={c.id} className="cs-kv-row"><dt>{c.role}</dt><dd>{c.name}{c.phone ? <span className="muted"> {c.phone}</span> : null}</dd></span>
-              ))}
-            </dl>
+            {show('keycrew') && (
+              <dl className="cs-kv">
+                {project.producer && (<><dt>Producer</dt><dd>{project.producer}</dd></>)}
+                {crew.filter((c) => /1st AD|assistant director|production manager|UPM|line producer|DoP|photography/i.test(c.role || '')).slice(0, 4).map((c) => (
+                  <span key={c.id} className="cs-kv-row"><dt>{c.role}</dt><dd>{c.name}{c.phone && show('phones') ? <span className="muted"> {c.phone}</span> : null}</dd></span>
+                ))}
+              </dl>
+            )}
           </div>
           <div className="cs-center">
-            {project.coverThumb ? <img className="cs-key" src={project.coverThumb} alt="" /> : null}
-            <h1>{project.title}</h1>
-            <div className="cs-call-label">General crew call</div>
+            {project.coverThumb && show('cover') ? <img className="cs-key" src={project.coverThumb} alt="" /> : null}
+            <h1>{title}</h1>
+            <div className="cs-call-label">{labelOf(layout, 'call')}</div>
             <div className="cs-call-time">{day.callTime}</div>
-            {editable ? (
+            {!show('tagline') ? null : editable ? (
               <textarea className="cs-tagline" rows={3} value={sheet.tagline || ''} onChange={(e) => setSheet('tagline', e.target.value)} placeholder={csd.tagline || 'One line for everyone: safety first, bring a jacket, no smoking on set.'} />
             ) : (sheet.tagline || csd.tagline) ? <p className="cs-tagline-text">{sheet.tagline || csd.tagline}</p> : null}
           </div>
           <div className="cs-side">
             <div className="cs-day">Day {dayIndex + 1} of {days.length}</div>
             <div className="cs-date">{new Date(day.date + 'T00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })}</div>
-            <div className="cs-wx">
-              {csd.showWeather === false ? null : wx ? (
-                <>
-                  <div className="cs-temp"><span className="cs-sun-ico">☀</span> {wx.tmax}° <span className="muted">/ {wx.tmin}°</span></div>
-                  <div className="muted small"><em>{wx.summary}{wx.rain != null ? `, rain ${wx.rain}%` : ''}</em></div>
-                </>
-              ) : (
-                <div className="muted small no-print">No forecast yet{editable ? <> · <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'fetch'}</button></> : null}</div>
-              )}
-              {csd.showSun !== false && sun && <div className="small"><strong>Sunrise</strong> {wx?.sunrise || sun.sunrise} · <strong>Sunset</strong> {wx?.sunset || sun.sunset}</div>}
-            </div>
+            {(showWx || showSun) && (
+              <div className="cs-wx">
+                {!showWx ? null : wx ? (
+                  <>
+                    <div className="cs-temp"><span className="cs-sun-ico">☀</span> {wx.tmax}° <span className="muted">/ {wx.tmin}°</span></div>
+                    <div className="muted small"><em>{wx.summary}{wx.rain != null ? `, rain ${wx.rain}%` : ''}</em></div>
+                  </>
+                ) : (
+                  <div className="muted small no-print">No forecast yet{editable ? <> · <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'fetch'}</button></> : null}</div>
+                )}
+                {showSun && sun && <div className="small"><strong>Sunrise</strong> {wx?.sunrise || sun.sunrise} · <strong>Sunset</strong> {wx?.sunset || sun.sunset}</div>}
+              </div>
+            )}
             <dl className="cs-times">
-              <dt>Shooting call</dt><dd>{editable ? <input className="cs-time" value={sheet.shootingCall ?? ''} placeholder={day.callTime} onChange={(e) => setSheet('shootingCall', e.target.value)} /> : sheet.shootingCall || day.callTime}</dd>
-              <dt>Lunch</dt><dd>{editable ? <input className="cs-time" value={sheet.lunch ?? ''} placeholder={lunchDefault || '13:00'} onChange={(e) => setSheet('lunch', e.target.value)} /> : sheet.lunch || lunchDefault || ''}</dd>
-              <dt>Est. wrap</dt><dd>{day.wrapTime}</dd>
+              <dt>{labelOf(layout, 'shooting')}</dt><dd>{editable ? <input className="cs-time" value={sheet.shootingCall ?? ''} placeholder={day.callTime} onChange={(e) => setSheet('shootingCall', e.target.value)} /> : sheet.shootingCall || day.callTime}</dd>
+              <dt>{labelOf(layout, 'lunch')}</dt><dd>{editable ? <input className="cs-time" value={sheet.lunch ?? ''} placeholder={lunchDefault || '13:00'} onChange={(e) => setSheet('lunch', e.target.value)} /> : sheet.lunch || lunchDefault || ''}</dd>
+              <dt>{labelOf(layout, 'wrap')}</dt><dd>{day.wrapTime}</dd>
             </dl>
           </div>
         </header>
 
-        {(sheet.notes || editable) && (
-          <div className="cs-note">
-            <span className="cs-pin">📌</span>
-            {editable ? (
-              <textarea rows={2} value={sheet.notes || ''} onChange={(e) => setSheet('notes', e.target.value)} placeholder="Parking, catering, safety, permits, transport. Everyone reads this one." />
-            ) : <p>{sheet.notes}</p>}
-          </div>
-        )}
-
-        <section>
-          <h3>Location</h3>
-          <div className="cs-locgrid">
-            <div>
-              <div className="cs-loc-h">Set location</div>
-              {loc ? (
-                <>
-                  <strong className="cs-loc-name">{loc.name}</strong>
-                  <div>{loc.address}</div>
-                  {loc.phone && <div className="muted small">{loc.contact ? `${loc.contact} · ` : ''}{loc.phone}</div>}
-                  <a className="link no-print small" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.address)}`} target="_blank" rel="noreferrer">Open in Google Maps</a>
-                </>
-              ) : <span className="muted">Set the location on the shoot day.</span>}
-            </div>
-            <div>
-              <div className="cs-loc-h">Parking</div>
-              {editable ? <textarea rows={3} value={sheet.parking || ''} onChange={(e) => setSheet('parking', e.target.value)} placeholder={csd.parking || 'Where, how many cars, who unloads where'} /> : <div>{sheet.parking || csd.parking || '–'}</div>}
-            </div>
-            <div>
-              <div className="cs-loc-h">Nearest hospital</div>
-              {editable ? <textarea rows={3} value={sheet.weather || ''} onChange={(e) => setSheet('weather', e.target.value)} placeholder={csd.hospital || 'Name, address, phone'} /> : <div>{sheet.weather || csd.hospital || '–'}</div>}
-            </div>
-          </div>
-          {wx && <div className="muted small no-print">{wx.place} · forecast from open-meteo · {editable && <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'refresh'}</button>}</div>}
-          {(emergency.length > 0 || prodContacts.length > 0) && (
-            <div className="cs-safety">
-              {emergency.length > 0 && (
-                <div className="cs-emergency">
-                  <div className="cs-loc-h">Emergency</div>
-                  <ul className="plain">
-                    {emergency.map((n) => <li key={n.id}><span>{n.label}</span><a href={`tel:${n.number}`}>{n.number}</a></li>)}
-                  </ul>
-                </div>
-              )}
-              {prodContacts.length > 0 && (
-                <div className="cs-prodcontacts">
-                  <div className="cs-loc-h">Production</div>
-                  <ul className="plain">
-                    {prodContacts.map((c) => <li key={c.id}><span>{c.role}{c.name ? ` · ${c.name}` : ''}</span>{c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</li>)}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-
-        {project.category === 'Event' && (
-          <section>
-            <h3>Run of show</h3>
-            <table className="table">
-              <thead><tr><th>Time</th><th>Block</th><th>Owner</th><th>Notes</th></tr></thead>
-              <tbody>
-                {(day.blocks || []).map((b) => (
-                  <tr key={b.id}><td className="nowrap">{b.time}{b.end ? ` – ${b.end}` : ''}</td><td><strong>{b.item}</strong></td><td>{b.owner}</td><td className="small">{b.notes}</td></tr>
-                ))}
-                {!(day.blocks || []).length && <tr><td colSpan={4} className="muted">No run of show yet. Build it in the Run of show tab.</td></tr>}
-              </tbody>
-            </table>
-          </section>
-        )}
-
-        <section hidden={project.category === 'Event'}>
-          <h3>Scenes</h3>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>I/E</th>
-                <th>Set</th>
-                <th>D/N</th>
-                <th>Description</th>
-                <th>Cast</th>
-              </tr>
-            </thead>
-            <tbody>
-              {scenes.map((s) => (
-                <tr key={s.id}>
-                  <td className="nowrap cs-scene-time">
-                    {editable ? (
-                      <span className="cs-range"><input className="cs-time" value={sceneTime(s.id).from} placeholder="09:00" onChange={(e) => setSceneTime(s.id, 'from', e.target.value)} /> – <input className="cs-time" value={sceneTime(s.id).to} placeholder="11:00" onChange={(e) => setSceneTime(s.id, 'to', e.target.value)} /></span>
-                    ) : sceneTime(s.id).from || sceneTime(s.id).to ? `${sceneTime(s.id).from}${sceneTime(s.id).to ? ` – ${sceneTime(s.id).to}` : ''}` : <span className="muted">–</span>}
-                  </td>
-                  <td>{s.intExt}</td>
-                  <td>{s.location}</td>
-                  <td>{s.timeOfDay}</td>
-                  <td>{s.synopsis}</td>
-                  <td>{s.characters.join(', ')}</td>
-                </tr>
-              ))}
-              {!scenes.length && (
-                <tr>
-                  <td colSpan={6} className="muted">
-                    No scenes assigned to this day.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </section>
-
-        <section hidden={project.category === 'Event' && !project.contacts.some((c) => c.kind === 'cast')}>
-          <h3>{project.category === 'Event' ? 'Talent' : 'Cast'}</h3>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Character</th>
-                <th>Actor</th>
-                <th>Phone</th>
-                <th>Call</th>
-              </tr>
-            </thead>
-            <tbody>
-              {castRows.map((r) => (
-                <tr key={r.character}>
-                  <td>{r.character}</td>
-                  <td>
-                    <div className="person-cell">
-                      {r.actor?.photos?.[0]?.thumb && <img className="avatar-img" src={r.actor.photos[0].thumb} alt="" />}
-                      {r.actor?.name || <span className="muted">Not cast</span>}
-                    </div>
-                  </td>
-                  <td>{r.actor?.phone || ''}</td>
-                  <td>{r.call}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-
-        {Object.keys(departments).length > 0 && (
-          <section>
-            <h3>Department requirements</h3>
-            <div className="dept-grid">
-              {Object.entries(departments).map(([cat, items]) => (
-                <div key={cat}>
-                  <strong>{cat}</strong>
-                  <div className="small">{items.join(', ')}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <section>
-          <h3>Crew</h3>
-          <div className="dept-grid">
-            {crew.map((c) => (
-              <div key={c.id}>
-                <strong>{c.name}</strong>
-                <div className="small muted">
-                  {c.role || c.dept} · call {addMinutes(day.callTime, c.callOffset ?? 0)}
-                  {c.phone ? ` · ${c.phone}` : ''}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        {layout.blocks.filter((b) => b.sheet).map((b) => <Fragment key={b.key}>{renderBlock(b)}</Fragment>)}
 
         {csd.footer && <p className="cs-footer">{csd.footer}</p>}
         {editable && (

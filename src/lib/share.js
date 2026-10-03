@@ -19,7 +19,7 @@ export const mailLink = ({ to = [], bcc = [], subject, body }) =>
 export const mapsLink = (address) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 
 /* Full call sheet as a WhatsApp-friendly message. */
-export function callSheetText({ project, day, dayIndex, dayCount, scenes, loc, cast, crew, sheet }) {
+export function callSheetText({ project, day, dayIndex, dayCount, scenes, loc, cast, crew, sheet, extra = [] }) {
   const coords = (loc?.lat && loc?.lon) ? { lat: Number(loc.lat), lon: Number(loc.lon) } : coordsFromText(loc?.address) || null
   const sun = sunTimes(day.date, coords?.lat ?? ATHENS.lat, coords?.lon ?? ATHENS.lon)
   const L = []
@@ -57,6 +57,8 @@ export function callSheetText({ project, day, dayIndex, dayCount, scenes, loc, c
   }
   if (sheet?.weather) L.push(`Safety / hospital: ${sheet.weather}`)
   if (sheet?.notes) L.push(`Notes: ${sheet.notes}`)
+  // the sections Alex adds himself in Customise, each under its own name
+  for (const x of extra) L.push('', `*${x.title}*`, x.text)
   L.push('')
   L.push('Please reply "OK" to confirm you received this.')
   return L.join('\n')
