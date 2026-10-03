@@ -972,7 +972,7 @@ code {
   .project-body h3 { font-size: 21px; line-height: 1.2; }
   .project-body h3 .pc-artist, .project-body h3 .pc-name { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .project-body h3 .pc-sep { display: none; }
-  .project-body h3 .pc-artist + .pc-sep + .pc-name { font-weight: 700; font-size: 19.5px; margin-top: 2px; }
+  .project-body h3 .pc-artist + .pc-sep + .pc-name { font-weight: 700; font-size: 14.5px; margin-top: 3px; }
 }
 
 /* ---------- project workspace ---------- */
