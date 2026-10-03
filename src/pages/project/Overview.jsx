@@ -208,6 +208,7 @@ export default function Overview() {
             <Button
               variant="primary"
               onClick={() => {
+                if (!(draft.title || '').trim()) return toast('Give the project a title.', 'error')
                 edit((p) => Object.assign(p, draft))
                 setDraft(null)
                 toast('Project saved', 'ok')

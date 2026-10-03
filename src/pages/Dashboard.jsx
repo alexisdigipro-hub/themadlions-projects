@@ -7,6 +7,7 @@ import { projectProgress } from '../lib/progress.js'
 import { compress } from '../lib/photos.js'
 import { allHideable, hiddenAfterCategory, projectTabs, tabHidden, toggleTab } from '../lib/tabs.js'
 import { initialsOf } from './Profile.jsx'
+import { joinName, nameParts } from '../lib/projectName.js'
 
 /* The row of tab chips: on = shown, struck through = hidden, Overview fixed. Used by the project
    form and by the strip on the Overview, so switching a tab on is one tap either way. */
@@ -28,15 +29,32 @@ export function TabPicker({ project, onChange }) {
 
 const COLORS = ['#C8503F', '#D9A441', '#5B9E7A', '#6C9BD1', '#B07FD1', '#E08A5A', '#4FB3BF', '#9AA0A6']
 
+// On a computer the two parts stack, centred (styles.css); a phone still reads "Artist - Title" in one run.
+function CardName({ p }) {
+  const { artist, shortTitle } = nameParts(p)
+  if (!artist) return <span className="pc-name">{shortTitle}</span>
+  return <><span className="pc-artist">{artist}</span><span className="pc-sep"> - </span><span className="pc-name">{shortTitle}</span></>
+}
+
 export function ProjectForm({ value, onChange }) {
   const set = (k) => (e) => onChange({ ...value, [k]: e.target.value })
   // a category switch can bring new tabs (Music, Script…); they start hidden, like everything else
   const setCategory = (e) => onChange({ ...value, category: e.target.value, hiddenTabs: hiddenAfterCategory(value, e.target.value) })
+  const parts = nameParts(value)
+  const setPart = (k) => (e) => {
+    const next = { ...parts, [k]: e.target.value }
+    onChange({ ...value, ...next, title: joinName(next.artist, next.shortTitle) })
+  }
   return (
     <div className="stack">
-      <Field label="Title">
-        <Input value={value.title} onChange={set('title')} autoFocus />
-      </Field>
+      <div className="row-2">
+        <Field label="Artist / Client">
+          <Input value={parts.artist} onChange={setPart('artist')} autoFocus placeholder="Γιάννης Φακίνος" />
+        </Field>
+        <Field label="Title">
+          <Input value={parts.shortTitle} onChange={setPart('shortTitle')} placeholder="Ματάρες μου" />
+        </Field>
+      </div>
       <div className="row-2">
         <Field label="Category">
           <Select value={value.category} onChange={setCategory} options={CATEGORIES} />
@@ -121,7 +139,7 @@ export default function Dashboard() {
 
   // a new project: the workspace defaults, and every tab but Overview switched off (Alex's call)
   const freshProject = () => {
-    const base = { ...emptyProject(), category: state.settings?.defaultCategory || 'Music Video', budget: { lines: [], contingencyPct: Number(state.settings?.budgetContingency ?? 10), currency: state.settings?.budgetCurrency || 'EUR', cap: '' }, isNew: true }
+    const base = { ...emptyProject(), title: '', artist: '', shortTitle: '', category: state.settings?.defaultCategory || 'Music Video', budget: { lines: [], contingencyPct: Number(state.settings?.budgetContingency ?? 10), currency: state.settings?.budgetCurrency || 'EUR', cap: '' }, isNew: true }
     return { ...base, hiddenTabs: allHideable(base) }
   }
 
@@ -157,7 +175,7 @@ export default function Dashboard() {
       </div>
       <div className="project-progress" title={`${projectProgress(p, state.settings).pct}% done`}><span style={{ width: `${projectProgress(p, state.settings).pct}%` }} /></div>
       <div className="project-body">
-        <h3 title={p.title}>{p.title}</h3>
+        <h3 title={p.title}><CardName p={p} /></h3>
         <div className="project-meta">
           <Badge>{p.status}</Badge>
           {p.code && <span className="project-code">{p.code}</span>}
