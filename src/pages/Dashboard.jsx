@@ -157,7 +157,7 @@ export default function Dashboard() {
       </div>
       <div className="project-progress" title={`${projectProgress(p, state.settings).pct}% done`}><span style={{ width: `${projectProgress(p, state.settings).pct}%` }} /></div>
       <div className="project-body">
-        <h3>{p.title}</h3>
+        <h3 title={p.title}>{p.title}</h3>
         <div className="project-meta">
           <Badge>{p.status}</Badge>
           {p.code && <span className="project-code">{p.code}</span>}
