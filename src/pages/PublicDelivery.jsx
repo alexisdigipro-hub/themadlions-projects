@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { respondToDelivery } from '../lib/shares.js'
-import { PinGate, usePublicShare } from '../components/PublicGate.jsx'
+import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
 import { stageAction, stageLabel } from './Deliveries.jsx'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
@@ -25,6 +25,7 @@ export default function PublicDelivery() {
     return <div className="pub"><div className="pub-card"><h1>This link is closed</h1><p className="muted">The production has closed this page. Ask them for a fresh one.</p></div></div>
   }
   if (share?.locked) return <PinGate onTry={tryPin} err={pinErr} what="this page" />
+  if (share?.error) return <ShareProblem error={share.error} />
   if (!share || share.kind !== 'delivery') {
     return <div className="pub"><div className="pub-card"><h1>This link has expired</h1><p className="muted">Ask the production for a fresh one.</p></div></div>
   }

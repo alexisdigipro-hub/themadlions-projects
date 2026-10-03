@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { usePublicShare } from '../components/PublicGate.jsx'
+import { ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
 import { downloadInvoicePdf, invoiceFilename, renderInvoice } from '../lib/invoicePdf.js'
 import { invoiceTotals, money } from '../lib/invoice.js'
 
@@ -27,6 +27,7 @@ export default function PublicInvoice() {
   }, [d])
 
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading…</p></div>
+  if (share?.error) return <ShareProblem error={share.error} />
   if (!share || share.kind !== 'invoice') {
     return <div className="pub"><div className="pub-card"><h1>This link has expired</h1><p className="muted">Ask for a fresh one.</p></div></div>
   }

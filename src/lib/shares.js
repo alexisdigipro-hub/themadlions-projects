@@ -36,10 +36,12 @@ export async function removeShare({ workspaceId, ref }) {
 
 export async function fetchShare(t, pin = '') {
   if (!remote) throw new Error('Not available in this mode.')
-  let { data, error } = await supabase.rpc('share_get', pin ? { p_token: t, p_pin: pin } : { p_token: t })
+  // Always both arguments: if an older SQL file re-created the one-argument share_get next to the
+  // two-argument one, a call with the token alone is ambiguous and every link fails to open.
+  let { data, error } = await supabase.rpc('share_get', { p_token: t, p_pin: pin || null })
   // Before share_pin.sql has been run the function takes one argument, and asking with two is
   // refused. Ask again the old way rather than showing a dead page.
-  if (error && pin && (error.code === 'PGRST202' || error.code === '42883')) ({ data, error } = await supabase.rpc('share_get', { p_token: t }))
+  if (error && (error.code === 'PGRST202' || error.code === '42883')) ({ data, error } = await supabase.rpc('share_get', { p_token: t }))
   if (error) throw error
   return data
 }

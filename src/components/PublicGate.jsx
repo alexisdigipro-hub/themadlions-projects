@@ -15,8 +15,9 @@ export function usePublicShare(token) {
       setShare(r || null)
       if (r?.locked) setPinErr(pin ? 'That code is not right.' : '')
       else if (pin) { try { localStorage.setItem(KEY(token), pin) } catch { /* private window */ } }
-    } catch {
-      setShare(null)
+    } catch (e) {
+      // not "expired": the link may be fine and the request failed, so say what failed
+      setShare({ error: e?.message || e?.code || 'Unknown error' })
     }
   }
 
@@ -29,6 +30,19 @@ export function usePublicShare(token) {
   }, [token])
 
   return { share, tryPin: load, pinErr }
+}
+
+export function ShareProblem({ error }) {
+  return (
+    <div className="pub">
+      <div className="pub-card">
+        <h1>This page could not open</h1>
+        <p className="muted">The link is probably fine; loading it failed. Try again in a minute, and if it keeps happening send this to the production:</p>
+        <p className="small"><code>{error}</code></p>
+        <button className="dlv-btn" type="button" onClick={() => window.location.reload()}>Try again</button>
+      </div>
+    </div>
+  )
 }
 
 export function PinGate({ onTry, err, what = 'this page' }) {
