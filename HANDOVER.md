@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Link banner 16:9, picture at 75% (4 Oct)
+Alex changed his mind on the square: `.pub-hero.has-cover` is now `aspect-ratio: 16/9`, cover at `opacity: .75`.
+
 ### Lunch / break off the link (4 Oct)
 Alex: "βγάλε το break από την mobile version" (his Lunch label renamed "Break"). New detail `lunch` in callsheetLayout.js; `DETAIL_LINK_OFF` makes it start off on the link even in layouts saved before it existed, so it disappears from his link on the next Share link; a tick in Customise > Details brings it back. Sheet unchanged unless untick "Sheet".
 
