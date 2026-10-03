@@ -276,10 +276,6 @@ export default function Settings() {
               <Field label="Category for a new project" hint="What New project is set to before you change it.">
                 <Select value={state.settings.defaultCategory || 'Music Video'} onChange={(e) => setSetting('defaultCategory', e.target.value)} options={CATEGORIES} />
               </Field>
-              <div className="row-2">
-                <Field label="Budget currency for new projects"><Select value={state.settings.budgetCurrency || 'EUR'} onChange={(e) => setSetting('budgetCurrency', e.target.value)} options={[['EUR', 'EUR €'], ['USD', 'USD $'], ['GBP', 'GBP £']]} /></Field>
-                <Field label="Budget contingency % for new projects"><Input type="number" min={0} max={50} value={state.settings.budgetContingency ?? 10} onChange={(e) => setSetting('budgetContingency', Number(e.target.value) || 0)} /></Field>
-              </div>
             </div>
           </section>
         )}
