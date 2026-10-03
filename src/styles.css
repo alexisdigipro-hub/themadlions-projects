@@ -1744,7 +1744,7 @@ code {
 .scene-rail .cnt { font-size: 14px; color: var(--amber); font-weight: 600; }
 .shots-scene-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 14px; margin-bottom: 12px; }
 .shots-scene-head h2 { margin: 0; font-size: 21px; }
-.shots-table td:nth-child(6) { min-width: 170px; }
+.shots-table td.c-wide { min-width: 170px; }
 .input.select.tiny { padding: 3px 24px 3px 8px; font-size: 15px; width: auto; }
 .table-wrap { overflow-x: auto; }
 .board-grid {
@@ -1855,8 +1855,46 @@ code {
   .print-only { display: block; }
 }
 .shots-table { min-width: 720px; }
-.shots-table td:nth-child(-n + 5), .shots-table td:nth-child(7), .shots-table td:nth-child(8), .shots-table .row-actions { white-space: nowrap; }
-.shots-table .row-actions { display: flex; gap: 4px; flex-wrap: nowrap; }
+.shots-table td.c-tight, .shots-table .row-actions { white-space: nowrap; }
+/* shot list Customise: thumbnails, colour, the pick lists side by side */
+.shot-thumb { width: 72px; height: 41px; object-fit: cover; border-radius: 4px; display: block; }
+.sl-accented th, .sl-accented h1, .sl-accented h3 { color: var(--sl-accent); }
+.shots-print.sl-accented h3, .shots-print.sl-accented th { color: var(--sl-accent); }
+.sl-lists { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.sl-lists textarea { font-size: 13.5px; }
+/* Shoot day: the day shot by shot with planned times and Done */
+.sd-head { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 12px; }
+.sd-head > div { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 150px; }
+html[data-theme='light'] .sd-head > div { border-color: transparent; box-shadow: var(--shadow); }
+.sd-head strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+.sd-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+.sd-bad { color: var(--danger); }
+.sd-good { color: var(--ok); }
+.sd-live { border-color: var(--accent) !important; }
+.sd-table td { vertical-align: middle; }
+.sd-time { font-variant-numeric: tabular-nums; font-weight: 700; }
+.sd-time .muted { font-weight: 400; }
+.sd-min { width: 46px; text-align: right; }
+.sd-check { font: inherit; font-size: 13.5px; font-weight: 700; border: 1px solid var(--line); background: var(--raised); color: var(--text); border-radius: 999px; padding: 4px 12px; cursor: pointer; white-space: nowrap; }
+.sd-check:hover { border-color: var(--ok); color: var(--ok); }
+.sd-check.on { background: color-mix(in srgb, var(--ok) 18%, transparent); border-color: var(--ok); color: var(--ok); }
+.sd-done td { opacity: .62; }
+.sd-done td:nth-last-child(-n + 2) { opacity: 1; }
+.sd-now td { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.sd-break td { background: var(--raised); }
+.sd-break-name { width: 100%; max-width: 220px; }
+.sd-cards { list-style: none; margin: 0; padding: 0; flex-direction: column; gap: 8px; }
+.sd-card { display: flex; gap: 10px; align-items: center; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); padding: 10px 12px; }
+.sd-card.sd-break { background: var(--raised); }
+.sd-card.sd-now { border-color: var(--accent); }
+.sd-card.sd-done { opacity: .7; }
+.sd-card-time { display: flex; flex-direction: column; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 48px; }
+.sd-card-time .muted { font-weight: 400; font-size: 13px; }
+.sd-card-tools { justify-content: flex-start; margin-top: 4px; }
+.sd-cards.mob-only { display: none; }
+/* actions stay a table cell (a flex cell loses the row's border) */
+.shots-table td.row-actions, .sd-table td.row-actions { display: table-cell; white-space: nowrap; text-align: right; }
+.shots-table td.row-actions > * + *, .sd-table td.row-actions > * + * { margin-left: 4px; }
 .tabs a { padding: 9px 10px; font-size: 16.5px; }
 .mob-only { display: none; }
 .shot-cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -1866,9 +1904,12 @@ code {
 .shot-card-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .shot-card-head strong { font-size: 18.5px; }
 .shot-card .row-actions { display: flex; gap: 6px; margin-top: 4px; }
+/* the phone cards were showing on desktop under the table: .shot-cards came after .mob-only */
+.shot-cards.mob-only { display: none; }
 @media (max-width: 820px) {
   .desk-only { display: none !important; }
   .mob-only { display: block; }
+  .shot-cards.mob-only { display: flex; }
 }
 
 /* ---------- invoices (Finance > Invoices) ---------- */
@@ -3165,6 +3206,21 @@ a.drive-item-title:hover { text-decoration: underline; }
 .pub-tagline { margin: 12px 0 0; font-weight: 600; font-size: 15.5px; }
 .pub-accented .pub-call-main strong, .pub-accented .pub-card h2 { color: var(--pa); }
 .pub-custom { margin: 0; white-space: pre-wrap; }
+/* public shot list: one card per shot */
+.psl-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.psl-list > li { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-top: 1px solid var(--line-soft); }
+.psl-list > li:first-child { border-top: 0; }
+.psl-time { font-weight: 800; font-variant-numeric: tabular-nums; min-width: 48px; }
+.psl-frame { width: 96px; height: 54px; object-fit: cover; border-radius: 6px; flex: none; }
+.psl-top { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.psl-num { font-size: 17px; }
+.psl-status { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ok); }
+.psl-shot.skipped { opacity: .5; }
+.psl-shot.done .psl-num { text-decoration: line-through; text-decoration-color: var(--ok); }
+.psl-desc { margin-top: 2px; font-weight: 600; }
+.psl-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; font-size: 13.5px; }
+.psl-break { background: var(--raised); border-radius: 10px; padding: 8px 10px !important; margin: 6px 0; justify-content: space-between; }
+.psl-break strong { flex: 1; }
 .pub-note { display: flex; gap: 10px; margin: 12px 12px 0; padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, #D9A441 18%, var(--panel)); border: 1px solid color-mix(in srgb, #D9A441 40%, transparent); }
 .pub-note p { margin: 0; white-space: pre-wrap; font-weight: 600; }
 .pub-card { background: var(--panel); margin: 12px 12px 0; border-radius: 16px; padding: 14px 16px; box-shadow: var(--shadow); }
@@ -3316,4 +3372,11 @@ html[data-public='1'] body { background: var(--bg); }
   .cs-design-cols { grid-template-columns: 1fr; gap: 18px; }
   .cs-extra { grid-template-columns: 1fr 1fr; }
   .cs-centred .cs-head { grid-template-columns: 1fr; }
+}
+
+/* Shoot day on a phone: bigger Done buttons, the head in two columns */
+@media (max-width: 820px) {
+  .sd-head > div { min-width: 0; flex: 1 1 40%; }
+  .sd-check { padding: 10px 16px; font-size: 15px; }
+  .sd-cards.mob-only { display: flex; }
 }

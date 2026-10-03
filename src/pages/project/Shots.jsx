@@ -2,18 +2,21 @@ import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
-import { uid } from '../../lib/store.jsx'
+import { can, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
+import { publishShare, shotlistUrl, tokenOf } from '../../lib/shares.js'
+import { mailLink, waShareLink } from '../../lib/share.js'
+import ShotListDesigner from '../../components/ShotListDesigner.jsx'
+import ShotDay from '../../components/ShotDay.jsx'
+import { ZOOM } from '../../lib/callsheetLayout.js'
+import { accentOf, cellText, colTitle, dayPlan, optionsWith, shotLayoutOf, timeline, toHHMM } from '../../lib/shotLayout.js'
 
-export const SHOT_SIZES = ['EWS', 'WS', 'FS', 'MWS', 'MS', 'MCU', 'CU', 'ECU', 'Insert', 'OTS', 'POV', 'Two shot', 'Establishing']
-export const ANGLES = ['Eye level', 'Low', 'High', 'Dutch', 'Overhead', 'Worm', 'Profile', 'Frontal', 'Three-quarter']
-export const MOVEMENTS = ['Static', 'Pan', 'Tilt', 'Push in', 'Pull out', 'Dolly', 'Track', 'Steadicam', 'Handheld', 'Crane', 'Drone', 'Zoom', 'Whip pan', 'Rack focus']
-export const GEAR = ['Tripod', 'Slider', 'Dolly', 'Steadicam', 'Gimbal', 'Handheld', 'Crane', 'Jib', 'Drone', 'Car mount', 'Underwater', 'Probe lens']
 const STATUS = ['planned', 'shot', 'skipped']
 
-const emptyShot = (sceneId, n) => ({
-  id: uid(), sceneId, number: n, size: 'MS', angle: 'Eye level', movement: 'Static', lens: '', camera: 'A', fps: '25',
-  gear: 'Tripod', description: '', subject: '', audio: '', duration: '', status: 'planned', notes: '', frame: '', frameUrl: '',
+const emptyShot = (sceneId, n, layout) => ({
+  id: uid(), sceneId, number: n, size: layout.lists.size.includes('MS') ? 'MS' : layout.lists.size[0] || '', angle: layout.lists.angle[0] || '', movement: layout.lists.movement[0] || '', lens: '', camera: 'A', fps: '25',
+  gear: layout.lists.gear[0] || '', description: '', subject: '', audio: '', duration: '', status: 'planned', notes: '', frame: '', frameUrl: '',
+  setupMin: '', shootMin: '', custom: {},
 })
 
 // Downscale a picked image to a small JPEG data URL so storyboard frames fit in local storage.
@@ -53,12 +56,19 @@ const manualScene = (n) => ({
 
 export default function Shots() {
   const { project, edit, canEdit } = useProject()
+  const { state, update } = useStore()
+  const user = useCurrentUser()
   const toast = useToast()
   const editable = canEdit('shots')
+  const canShare = can(user, 'share', 'edit')
+  const layout = shotLayoutOf(project, state)
+  const [designing, setDesigning] = useState(false)
+  const [share, setShare] = useState(null) // { busy } | { url, what } | { error }
+  const [dayId, setDayId] = useState('')
   const shots = project.shots || []
   const [sceneId, setSceneId] = useState(project.scenes[0]?.id || '')
   const [draft, setDraft] = useState(null)
-  const [view, setView] = useState('list') // list | board
+  const [view, setView] = useState('list') // list | board | day
   const [quick, setQuick] = useState('')
   const scene = project.scenes.find((s) => s.id === sceneId) || project.scenes[0]
 
@@ -117,7 +127,7 @@ export default function Shots() {
     edit((p) => {
       p.shots = p.shots || []
       const existing = p.shots.filter((s) => s.sceneId === scene.id)
-      p.shots.push({ ...emptyShot(scene.id, `${scene.number}${nextLetter(existing)}`), description: v })
+      p.shots.push({ ...emptyShot(scene.id, `${scene.number}${nextLetter(existing)}`, layout), description: v })
     })
     setQuick('')
   }
@@ -139,12 +149,100 @@ export default function Shots() {
   })
 
   const exportCSV = () => {
-    const head = ['Scene', 'Shot', 'Size', 'Angle', 'Movement', 'Gear', 'Lens', 'Camera', 'FPS', 'Subject', 'Description', 'Audio', 'Est. duration', 'Status', 'Notes']
+    const cols = layout.columns.filter((c) => c.key !== 'frame')
+    const head = ['Scene', ...cols.map(colTitle)]
     const rows = project.scenes.flatMap((sc) =>
-      shots.filter((s) => s.sceneId === sc.id).map((s) => [sc.number, s.number, s.size, s.angle, s.movement, s.gear, s.lens, s.camera, s.fps, s.subject, s.description, s.audio, s.duration, s.status, s.notes]),
+      shots.filter((s) => s.sceneId === sc.id).map((s) => [sc.number, ...cols.map((c) => cellText(s, c.key))]),
     )
     const csv = [head, ...rows].map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n')
     download(`${project.title} - shot list.csv`, csv, 'text/csv')
+  }
+
+  // The layout is saved whole on the project the first time anything in it changes.
+  const setLayout = (fn) => edit((p) => { p.shotLayout = fn(shotLayoutOf(p, state)) })
+  const makeDefault = () => {
+    update((st) => { st.settings = { ...st.settings, shotLayout: layout }; return st })
+    toast('Every project without its own layout now uses this one', 'ok')
+  }
+  const resetLayout = () => edit((p) => { delete p.shotLayout })
+
+  const accent = accentOf(layout, project)
+  const screenCols = layout.columns.filter((c) => c.screen)
+  const printCols = layout.columns.filter((c) => c.print)
+  const has = (cols, k) => cols.some((c) => c.key === k)
+  const cell = (s, c, cols, live) => {
+    switch (c.key) {
+      case 'number': return <><strong>{s.number}</strong>{(s.frame || s.frameUrl) && !has(cols, 'frame') && <span className="muted small"> ◧</span>}</>
+      case 'frame': return s.frame || s.frameUrl ? <img className="shot-thumb" src={s.frame || s.frameUrl} alt="" /> : null
+      case 'description':
+        return (
+          <>
+            {!has(cols, 'subject') && s.subject && <strong>{s.subject}. </strong>}{s.description}
+            {!has(cols, 'notes') && s.notes && <div className="muted small">{s.notes}</div>}
+          </>
+        )
+      case 'status':
+        return live && editable ? (
+          <select className="input select tiny" value={s.status} onChange={(e) => setStatus(s.id, e.target.value)}>
+            {STATUS.map((x) => <option key={x}>{x}</option>)}
+          </select>
+        ) : s.status
+      default: return cellText(s, c.key)
+    }
+  }
+  const wide = (k) => k === 'description' || k === 'notes' || k === 'subject' || k.startsWith('f_')
+
+  // What a link carries: only the columns switched on for it, nothing else of the shot.
+  const linkShot = (s, cols) => ({
+    id: s.id,
+    status: s.status,
+    frame: has(cols, 'frame') ? s.frame || s.frameUrl || '' : '',
+    cells: cols.filter((c) => c.key !== 'frame').map((c) => cellText(s, c.key)),
+  })
+  const makeShare = async (what) => {
+    setShare({ busy: true })
+    try {
+      const cols = layout.columns.filter((c) => c.link)
+      const base = {
+        project: { title: project.title, color: project.color, cover: project.coverThumb || '' },
+        company: { name: state.workspace.name, logo: state.settings.logo || '' },
+        columns: cols.filter((c) => c.key !== 'frame').map((c) => ({ key: c.key, title: colTitle(c) })),
+        look: { theme: layout.look.linkTheme, size: layout.look.linkSize, accent },
+      }
+      let data, ref
+      if (what === 'day') {
+        const days = [...project.shootingDays].sort((a, b) => a.date.localeCompare(b.date))
+        const day = days.find((d) => d.id === dayId) || days[0]
+        const tl = timeline(dayPlan(day, shots, project.scenes), day.callSheet?.shootingCall || day.callTime, layout)
+        data = {
+          ...base,
+          mode: 'day',
+          day: { index: days.indexOf(day) + 1, count: days.length, date: day.date, callTime: day.callTime, wrap: toHHMM(tl.end) },
+          rows: tl.rows.map((r) => (r.shot
+            ? { start: toHHMM(r.start), end: toHHMM(r.end), scene: r.scene?.number || '', ...linkShot(r.shot, cols) }
+            : { start: toHHMM(r.start), end: toHHMM(r.end), label: r.label, min: r.len })),
+        }
+        ref = `shotlist:${project.id}:${day.id}`
+      } else {
+        data = {
+          ...base,
+          mode: 'list',
+          scenes: project.scenes.filter((sc) => countBy[sc.id]).map((sc) => ({
+            number: sc.number,
+            heading: sc.source === 'manual' ? sc.location || sc.heading : sc.heading,
+            shots: shots.filter((x) => x.sceneId === sc.id).map((x) => linkShot(x, cols)),
+          })),
+        }
+        ref = `shotlist:${project.id}`
+      }
+      const url = await publishShare({ workspaceId: state.workspace.id, kind: 'shotlist', ref, data, userId: user?.id })
+      setShare({ url: shotlistUrl(tokenOf(url)), what })
+    } catch (e) {
+      setShare({ error: e.message })
+    }
+  }
+  const copy = async (text) => {
+    try { await navigator.clipboard.writeText(text); toast('Copied', 'ok') } catch { toast('Could not copy', 'error') }
   }
 
   const done = sceneShots.filter((s) => s.status === 'shot').length
@@ -162,7 +260,10 @@ export default function Shots() {
           <div className="segmented small">
             <button className={view === 'list' ? 'on' : ''} onClick={() => setView('list')}>List</button>
             <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}>Storyboard</button>
+            <button className={view === 'day' ? 'on' : ''} onClick={() => setView('day')}>Shoot day</button>
           </div>
+          {editable && <Button variant={designing ? 'primary' : 'default'} onClick={() => setDesigning(!designing)}>{designing ? 'Done' : 'Customise'}</Button>}
+          {canShare && shots.length > 0 && <Button onClick={() => makeShare(view === 'day' ? 'day' : 'list')}>Share link</Button>}
           {shots.length > 0 && (
             <Button variant="ghost" onClick={exportCSV}>Export CSV</Button>
           )}
@@ -171,13 +272,40 @@ export default function Shots() {
           )}
           {editable && <Button onClick={addScene}>Add setup</Button>}
           {editable && (
-            <Button variant="primary" onClick={() => setDraft(emptyShot(scene.id, `${scene.number}${nextLetter(sceneShots)}`))}>
+            <Button variant="primary" onClick={() => setDraft(emptyShot(scene.id, `${scene.number}${nextLetter(sceneShots)}`, layout))}>
               Add shot
             </Button>
           )}
         </div>
       </div>
 
+      {designing && editable && (
+        <ShotListDesigner layout={layout} setLayout={setLayout} hasOwn={!!project.shotLayout} isAdmin={user?.role === 'admin'} onMakeDefault={makeDefault} onReset={resetLayout} />
+      )}
+
+      <Modal open={!!share} title={share?.what === 'day' ? 'Share the shoot day' : 'Share the shot list'} onClose={() => setShare(null)}>
+        {share?.busy && <p className="muted">Preparing the link…</p>}
+        {share?.error && <p className="error">{share.error}</p>}
+        {share?.url && (
+          <div className="stack">
+            <p className="small muted">
+              {share.what === 'day'
+                ? 'The day in shooting order with planned times, as it stands now. Anyone with the link sees it on their phone, no login.'
+                : 'Every scene with its shots, in the columns you switched on for the link. Anyone with the link sees it on their phone, no login.'}
+              {' '}Sharing again after changes refreshes the same link.
+            </p>
+            <div className="share-link"><input className="input" readOnly value={share.url} onFocus={(e) => e.target.select()} /><Button variant="ghost" onClick={() => copy(share.url)}>Copy</Button></div>
+            <div className="row-actions wrap">
+              <a className="btn btn-primary" href={waShareLink(`${project.title} · Shot list\n${share.url}`)} target="_blank" rel="noreferrer">Send on WhatsApp</a>
+              <a className="btn btn-ghost" href={mailLink({ subject: `${project.title} · Shot list`, body: share.url })}>Mail</a>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {view === 'day' ? (
+        <ShotDay project={project} shots={shots} layout={layout} edit={edit} editable={editable} dayId={dayId} setDayId={setDayId} onOpenShot={(s) => setDraft({ ...s })} />
+      ) : (
       <div className="shots-layout">
         <ul className="scene-rail no-print">
           {project.scenes.map((s) => (
@@ -239,6 +367,7 @@ export default function Shots() {
                   </div>
                   <div>{s.subject && <strong>{s.subject}. </strong>}{s.description}</div>
                   <div className="muted small">{[s.gear, s.lens && `${s.lens}mm`, s.camera && `Cam ${s.camera}`, s.duration].filter(Boolean).join(' · ')}</div>
+                  {screenCols.filter((c) => c.custom && cellText(s, c.key)).map((c) => <div key={c.key} className="small"><span className="muted">{colTitle(c)}:</span> {cellText(s, c.key)}</div>)}
                   {editable && (
                     <div className="row-actions">
                       <button onClick={() => move(i, -1)} aria-label="Move up">↑</button>
@@ -252,32 +381,16 @@ export default function Shots() {
               ))}
             </ul>
             <div className="table-wrap desk-only">
-              <table className="table shots-table">
+              <table className={`table shots-table${accent ? ' sl-accented' : ''}`} style={accent ? { '--sl-accent': accent } : undefined}>
                 <thead>
                   <tr>
-                    <th>Shot</th><th>Size</th><th>Angle</th><th>Move</th><th>Gear / lens</th><th>Description</th><th>Dur.</th><th>Status</th>{editable && <th />}
+                    {screenCols.map((c) => <th key={c.key}>{colTitle(c)}</th>)}{editable && <th />}
                   </tr>
                 </thead>
                 <tbody>
                   {sceneShots.map((s, i) => (
                     <tr key={s.id} className={s.status === 'skipped' ? 'dim' : ''}>
-                      <td><strong>{s.number}</strong>{s.frame && <span className="muted small"> ◧</span>}</td>
-                      <td>{s.size}</td>
-                      <td>{s.angle}</td>
-                      <td>{s.movement}</td>
-                      <td>{[s.gear, s.lens && `${s.lens}mm`, s.camera && `Cam ${s.camera}`, s.fps && s.fps !== '25' && `${s.fps}fps`].filter(Boolean).join(' · ')}</td>
-                      <td>
-                        {s.subject && <strong>{s.subject}. </strong>}{s.description}
-                        {s.notes && <div className="muted small">{s.notes}</div>}
-                      </td>
-                      <td>{s.duration}</td>
-                      <td>
-                        {editable ? (
-                          <select className="input select tiny" value={s.status} onChange={(e) => setStatus(s.id, e.target.value)}>
-                            {STATUS.map((x) => <option key={x}>{x}</option>)}
-                          </select>
-                        ) : s.status}
-                      </td>
+                      {screenCols.map((c) => <td key={c.key} className={wide(c.key) ? 'c-wide' : 'c-tight'}>{cell(s, c, screenCols, true)}</td>)}
                       {editable && (
                         <td className="row-actions no-print">
                           <button onClick={() => move(i, -1)} aria-label="Move up">↑</button>
@@ -324,30 +437,34 @@ export default function Shots() {
         </div>
       </div>
 
-      {/* print: every scene with its shots */}
-      <div className="print-only shots-print">
-        <h1>{project.title} · Shot list</h1>
-        {project.scenes.filter((sc) => countBy[sc.id]).map((sc) => (
-          <section key={sc.id}>
-            <h3>Sc. {sc.number} {sc.heading}</h3>
-            <table className="table">
-              <thead><tr><th>Shot</th><th>Size</th><th>Angle</th><th>Move</th><th>Gear / lens</th><th>Description</th><th>Dur.</th></tr></thead>
-              <tbody>
-                {shots.filter((s) => s.sceneId === sc.id).map((s) => (
-                  <tr key={s.id}><td>{s.number}</td><td>{s.size}</td><td>{s.angle}</td><td>{s.movement}</td><td>{[s.gear, s.lens && `${s.lens}mm`].filter(Boolean).join(' · ')}</td><td>{s.subject && `${s.subject}. `}{s.description}</td><td>{s.duration}</td></tr>
-                ))}
-              </tbody>
-            </table>
-          </section>
-        ))}
-      </div>
+      )}
 
-      {draft && <ShotModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} scenes={project.scenes} />}
+      {/* print: every scene with its shots, in the columns switched on for paper */}
+      {view !== 'day' && (
+        <div className={`print-only shots-print${accent ? ' sl-accented' : ''}`} style={{ ...(accent ? { '--sl-accent': accent } : {}), ...(ZOOM[layout.look.printSize] !== 1 ? { zoom: ZOOM[layout.look.printSize] } : {}) }}>
+          <h1>{project.title} · Shot list</h1>
+          {project.scenes.filter((sc) => countBy[sc.id]).map((sc) => (
+            <section key={sc.id}>
+              <h3>Sc. {sc.number} {sc.heading}</h3>
+              <table className="table">
+                <thead><tr>{printCols.map((c) => <th key={c.key}>{colTitle(c)}</th>)}</tr></thead>
+                <tbody>
+                  {shots.filter((s) => s.sceneId === sc.id).map((s) => (
+                    <tr key={s.id}>{printCols.map((c) => <td key={c.key} className={wide(c.key) ? 'c-wide' : 'c-tight'}>{cell(s, c, printCols, false)}</td>)}</tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          ))}
+        </div>
+      )}
+
+      {draft && <ShotModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} scenes={project.scenes} layout={layout} />}
     </div>
   )
 }
 
-function ShotModal({ draft, setDraft, onSave, onClose, scenes }) {
+function ShotModal({ draft, setDraft, onSave, onClose, scenes, layout }) {
   const toast = useToast()
   const fileRef = useRef()
   const set = (k, v) => setDraft({ ...draft, [k]: v })
@@ -380,13 +497,17 @@ function ShotModal({ draft, setDraft, onSave, onClose, scenes }) {
         <Field label="Status"><Select value={draft.status} onChange={(e) => set('status', e.target.value)} options={STATUS} /></Field>
       </div>
       <div className="row-3">
-        <Field label="Size"><Select value={draft.size} onChange={(e) => set('size', e.target.value)} options={SHOT_SIZES} /></Field>
-        <Field label="Angle"><Select value={draft.angle} onChange={(e) => set('angle', e.target.value)} options={ANGLES} /></Field>
-        <Field label="Movement"><Select value={draft.movement} onChange={(e) => set('movement', e.target.value)} options={MOVEMENTS} /></Field>
+        <Field label="Size"><Select value={draft.size} onChange={(e) => set('size', e.target.value)} options={optionsWith(layout.lists.size, draft.size)} /></Field>
+        <Field label="Angle"><Select value={draft.angle} onChange={(e) => set('angle', e.target.value)} options={optionsWith(layout.lists.angle, draft.angle)} /></Field>
+        <Field label="Movement"><Select value={draft.movement} onChange={(e) => set('movement', e.target.value)} options={optionsWith(layout.lists.movement, draft.movement)} /></Field>
       </div>
       <div className="row-3">
-        <Field label="Gear"><Select value={draft.gear} onChange={(e) => set('gear', e.target.value)} options={GEAR} /></Field>
-        <Field label="Lens (mm)"><Input value={draft.lens} onChange={(e) => set('lens', e.target.value)} placeholder="35" inputMode="numeric" /></Field>
+        <Field label="Gear"><Select value={draft.gear} onChange={(e) => set('gear', e.target.value)} options={optionsWith(layout.lists.gear, draft.gear)} /></Field>
+        <Field label="Lens (mm)">
+          {layout.lists.lens.length
+            ? <Select value={draft.lens} onChange={(e) => set('lens', e.target.value)} options={[['', '–'], ...optionsWith(layout.lists.lens, draft.lens)]} />
+            : <Input value={draft.lens} onChange={(e) => set('lens', e.target.value)} placeholder="35" inputMode="numeric" />}
+        </Field>
         <div className="row-2">
           <Field label="Camera"><Input value={draft.camera} onChange={(e) => set('camera', e.target.value)} placeholder="A" /></Field>
           <Field label="FPS"><Input value={draft.fps} onChange={(e) => set('fps', e.target.value)} placeholder="25" inputMode="numeric" /></Field>
@@ -394,6 +515,18 @@ function ShotModal({ draft, setDraft, onSave, onClose, scenes }) {
       </div>
       <Field label="Subject"><Input value={draft.subject} onChange={(e) => set('subject', e.target.value)} placeholder="ELENI at the steel door" /></Field>
       <Field label="Description"><Textarea rows={2} value={draft.description} onChange={(e) => set('description', e.target.value)} placeholder="Slow push in as she pulls the door shut. Hold on her face." /></Field>
+      <div className="row-3">
+        <Field label="Setup (minutes)" hint={`Empty means ${layout.timing.setup}`}><Input value={draft.setupMin ?? ''} onChange={(e) => set('setupMin', e.target.value.replace(/[^\d]/g, ''))} placeholder={String(layout.timing.setup)} inputMode="numeric" /></Field>
+        <Field label="Shoot (minutes)" hint={`Empty means ${layout.timing.shoot}`}><Input value={draft.shootMin ?? ''} onChange={(e) => set('shootMin', e.target.value.replace(/[^\d]/g, ''))} placeholder={String(layout.timing.shoot)} inputMode="numeric" /></Field>
+        <div />
+      </div>
+      {layout.columns.some((c) => c.custom) && (
+        <div className="row-3">
+          {layout.columns.filter((c) => c.custom).map((c) => (
+            <Field key={c.key} label={colTitle(c)}><Input value={draft.custom?.[c.key] || ''} onChange={(e) => set('custom', { ...(draft.custom || {}), [c.key]: e.target.value })} /></Field>
+          ))}
+        </div>
+      )}
       <div className="row-3">
         <Field label="Audio"><Input value={draft.audio} onChange={(e) => set('audio', e.target.value)} placeholder="Sync, MOS, playback" /></Field>
         <Field label="Est. duration"><Input value={draft.duration} onChange={(e) => set('duration', e.target.value)} placeholder="0:08" /></Field>
