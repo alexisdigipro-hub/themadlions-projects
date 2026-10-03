@@ -705,8 +705,15 @@ code {
 .table tr.dim {
   opacity: 0.5;
 }
+/* .row-actions is flex everywhere else, but flex directly on a <td> breaks the row and drops
+   it onto its own line below the rest of the table row; keep it a plain cell here instead. */
 .table .row-actions {
-  justify-content: flex-end;
+  display: table-cell;
+  text-align: right;
+  white-space: nowrap;
+}
+.table .row-actions > * + * {
+  margin-left: 8px;
 }
 .plain {
   list-style: none;
