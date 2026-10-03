@@ -116,7 +116,9 @@ export default function Budget() {
   const t = budgetTotals(project)
 
   const save = () => {
-    if (!draft.description.trim()) return toast('Describe the line.', 'error')
+    // Alex: crew lines rarely need a description beyond their category, props and gear do. Empty = the category.
+    const description = (draft.description || '').trim() || draft.category
+    if (!description) return toast('Pick a category or describe the line.', 'error')
     if (budget.cap) {
       const others = budget.lines.filter((l) => l.id !== draft.id).reduce((a, l) => a + lineTotal(l), 0)
       const newTotal = others + lineTotal(draft)
@@ -127,7 +129,7 @@ export default function Budget() {
     const who = team.find((u) => u.id === draft.memberId)
     const contact = draft.contactId ? (project.contacts || []).find((c) => c.id === draft.contactId) : null
     const loc = draft.locationId ? locations.find((l) => l.id === draft.locationId) : null
-    const line = { ...draft, vendor: who ? who.name : contact ? contact.name : loc ? loc.name : draft.vendor }
+    const line = { ...draft, description, vendor: who ? who.name : contact ? contact.name : loc ? loc.name : draft.vendor }
     update((s) => {
       const p = s.projects.find((x) => x.id === project.id)
       if (!p) return s
@@ -289,11 +291,11 @@ export default function Budget() {
             </Field>
           </div>
           {draft.memberId ? (
-            <Field label="Work date" hint={`From the project's shooting days. Goes into ${team.find((u) => u.id === draft.memberId)?.name || 'their'} My work as "${project.title}${draft.description ? ` · ${draft.description}` : ''}"${draft.date ? ` on ${fmtDate(draft.date)}` : ', dated today'}.`}><Input type="date" value={draft.date || ''} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
+            <Field label="Work date" hint={`From the project's shooting days. Goes into ${team.find((u) => u.id === draft.memberId)?.name || 'their'} My work as "${project.title}${draft.description || draft.category ? ` · ${draft.description || draft.category}` : ''}"${draft.date ? ` on ${fmtDate(draft.date)}` : ', dated today'}.`}><Input type="date" value={draft.date || ''} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
           ) : !draft.contactId && !draft.locationId ? (
             <Field label="Vendor / payee"><Input value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} placeholder="Optional" /></Field>
           ) : null}
-          <Field label="Description"><Input autoFocus value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder="DoP, Alexa Mini LF package, rooftop permit" /></Field>
+          <Field label="Description (optional)" hint={`Leave it empty and the line is called "${draft.category || 'its category'}". Worth writing for props, gear, permits.`}><Input autoFocus value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder={draft.category || 'Alexa Mini LF package, rooftop permit'} /></Field>
           {/* One amount per line, Alex's call. An old line made as quantity × rate shows its total here and is saved as that total. VAT is optional, next to it, and folds into the line's total. */}
           <div className="row-2">
             <Field label={`Amount (${cur})`} hint={draft.payments?.length ? `${money(linePaid(draft), cur)} paid so far, ${draft.payments.length} payment${draft.payments.length === 1 ? '' : 's'} recorded in Finance.` : 'What this costs. Payments are recorded from Finance or with Pay on the line.'}>
