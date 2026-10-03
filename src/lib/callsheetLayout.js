@@ -24,6 +24,8 @@ export const DETAILS = [
   ['weather', 'Weather'],
   ['sun', 'Sunrise and sunset'],
   ['phones', 'Phone numbers'],
+  ['parking', 'Parking'],
+  ['hospital', 'Nearest hospital'],
 ]
 
 export const LABELS = [

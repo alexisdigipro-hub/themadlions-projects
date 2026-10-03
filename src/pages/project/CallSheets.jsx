@@ -11,6 +11,7 @@ import { Modal } from '../../components/ui.jsx'
 import { ensurePin, publishShare } from '../../lib/shares.js'
 import { callsheetDefaults, useCurrentUser } from '../../lib/store.jsx'
 import CallSheetDesigner from '../../components/CallSheetDesigner.jsx'
+import { CallSheetLinkView } from '../PublicCallSheet.jsx'
 import { ZOOM, accentOf, labelOf, layoutOf, linkLayout, normalizeLayout, storedLayout, titleOf } from '../../lib/callsheetLayout.js'
 
 function addMinutes(hhmm, mins) {
@@ -32,6 +33,9 @@ export default function CallSheets() {
   const [send, setSend] = useState(false)
   const [share, setShare] = useState(null) // { url } | { busy } | { error }
   const [designing, setDesigning] = useState(false)
+  // The phone next to the sheet showing the link as it will look; remembered on this device.
+  const [preview, setPreviewState] = useState(() => { try { return localStorage.getItem('tml_cs_preview') === '1' } catch { return false } })
+  const setPreview = (v) => { setPreviewState(v); try { localStorage.setItem('tml_cs_preview', v ? '1' : '0') } catch { /* private window */ } }
   const user = useCurrentUser()
   const csd = callsheetDefaults(state)
   const canShare = true
@@ -105,43 +109,48 @@ export default function CallSheets() {
   const copy = async (text) => {
     try { await navigator.clipboard.writeText(text); toast('Copied', 'ok') } catch { toast('Could not copy', 'error') }
   }
+  // What the link carries, built from the sheet as it is now: used to publish, and live by the
+  // phone preview next to the sheet.
+  const linkData = () => {
+    const on = (k) => layout.blocks.some((b) => b.key === k && b.link)
+    const linkShow = (k) => layout.details[k].link
+    const phone = (x) => (linkShow('phones') ? x || '' : '')
+    // Only what the link shows goes into it: a section switched off for the link is left out of
+    // the snapshot, not just hidden, since anyone holding the link can read the snapshot.
+    const keyCrew = !linkShow('keycrew') ? [] : crew.filter((c) => /1st AD|assistant director|production manager|UPM|line producer|DoP|photography|producer/i.test(c.role || '')).slice(0, 5).map((c) => ({ role: c.role, name: c.name, phone: phone(c.phone) }))
+    if (project.producer && linkShow('keycrew')) keyCrew.unshift({ role: 'Producer', name: project.producer })
+    return {
+      project: { title, color: project.color, cover: linkShow('cover') ? project.coverThumb || '' : '', category: project.category },
+      company: { name: state.workspace.name, address: state.settings.companyAddress || '', logo: state.settings.logo || '' },
+      day: { index: dayIndex + 1, count: days.length, date: day.date, callTime: day.callTime, wrapTime: day.wrapTime },
+      expiresAt: Number(state.settings.shareExpiryDays) > 0 ? new Date(new Date(day.date + 'T23:59:59').getTime() + Number(state.settings.shareExpiryDays) * 86400000).toISOString() : '',
+      sheet: {
+        tagline: linkShow('tagline') ? sheet.tagline || csd.tagline || '' : '',
+        notes: on('note') ? sheet.notes || '' : '',
+        shootingCall: sheet.shootingCall || '',
+        lunch: sheet.lunch || lunchDefault,
+        parking: on('location') && linkShow('parking') ? sheet.parking || csd.parking || '' : '',
+        hospital: on('location') && linkShow('hospital') ? sheet.weather || csd.hospital || '' : '',
+        footer: csd.footer || '',
+      },
+      wx: wx && csd.showWeather !== false && linkShow('weather') ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
+      sun: sun && csd.showSun !== false && linkShow('sun') ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,
+      loc: locView && on('location') ? { name: locView.name, address: locView.address, contact: locView.contact, phone: phone(locView.phone) } : null,
+      scenes: on('schedule') ? scenes.map((s) => ({ location: s.location, heading: s.heading, from: sceneTime(s.id).from, to: sceneTime(s.id).to })) : [],
+      cast: on('cast') ? castRows.map((r) => ({ character: r.character, name: r.actor?.name || '', phone: phone(r.actor?.phone), call: r.call, photo: r.actor?.photos?.[0]?.thumb || '' })) : [],
+      crew: on('crew') ? crewRows.map((c) => ({ name: c.name, role: c.role || c.dept, phone: phone(c.phone), call: c.call, photo: c.photos?.[0]?.thumb || '' })) : [],
+      blocks: on('schedule') ? (day.blocks || []).map((b) => ({ time: b.time, end: b.end, item: b.item, owner: b.owner, notes: b.notes })) : [],
+      departments: on('departments') ? Object.entries(departments).map(([cat, items]) => ({ cat, items })) : [],
+      keyCrew,
+      emergency: on('contacts') ? emergency : [],
+      prodContacts: on('contacts') ? prodContacts : [],
+      layout: linkLayout(layout, project, customText),
+    }
+  }
   const makeShare = async () => {
     setShare({ busy: true })
     try {
-      const on = (k) => layout.blocks.some((b) => b.key === k && b.link)
-      const linkShow = (k) => layout.details[k].link
-      const phone = (x) => (linkShow('phones') ? x || '' : '')
-      // Only what the link shows goes into it: a section switched off for the link is left out of
-      // the snapshot, not just hidden, since anyone holding the link can read the snapshot.
-      const keyCrew = !linkShow('keycrew') ? [] : crew.filter((c) => /1st AD|assistant director|production manager|UPM|line producer|DoP|photography|producer/i.test(c.role || '')).slice(0, 5).map((c) => ({ role: c.role, name: c.name, phone: phone(c.phone) }))
-      if (project.producer && linkShow('keycrew')) keyCrew.unshift({ role: 'Producer', name: project.producer })
-      const data = {
-        project: { title, color: project.color, cover: linkShow('cover') ? project.coverThumb || '' : '', category: project.category },
-        company: { name: state.workspace.name, address: state.settings.companyAddress || '', logo: state.settings.logo || '' },
-        day: { index: dayIndex + 1, count: days.length, date: day.date, callTime: day.callTime, wrapTime: day.wrapTime },
-        expiresAt: Number(state.settings.shareExpiryDays) > 0 ? new Date(new Date(day.date + 'T23:59:59').getTime() + Number(state.settings.shareExpiryDays) * 86400000).toISOString() : '',
-        sheet: {
-          tagline: linkShow('tagline') ? sheet.tagline || csd.tagline || '' : '',
-          notes: on('note') ? sheet.notes || '' : '',
-          shootingCall: sheet.shootingCall || '',
-          lunch: sheet.lunch || lunchDefault,
-          parking: on('location') ? sheet.parking || csd.parking || '' : '',
-          hospital: on('location') ? sheet.weather || csd.hospital || '' : '',
-          footer: csd.footer || '',
-        },
-        wx: wx && csd.showWeather !== false && linkShow('weather') ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
-        sun: sun && csd.showSun !== false && linkShow('sun') ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,
-        loc: locView && on('location') ? { name: locView.name, address: locView.address, contact: locView.contact, phone: phone(locView.phone) } : null,
-        scenes: on('schedule') ? scenes.map((s) => ({ location: s.location, heading: s.heading, from: sceneTime(s.id).from, to: sceneTime(s.id).to })) : [],
-        cast: on('cast') ? castRows.map((r) => ({ character: r.character, name: r.actor?.name || '', phone: phone(r.actor?.phone), call: r.call, photo: r.actor?.photos?.[0]?.thumb || '' })) : [],
-        crew: on('crew') ? crewRows.map((c) => ({ name: c.name, role: c.role || c.dept, phone: phone(c.phone), call: c.call, photo: c.photos?.[0]?.thumb || '' })) : [],
-        blocks: on('schedule') ? (day.blocks || []).map((b) => ({ time: b.time, end: b.end, item: b.item, owner: b.owner, notes: b.notes })) : [],
-        departments: on('departments') ? Object.entries(departments).map(([cat, items]) => ({ cat, items })) : [],
-        keyCrew,
-        emergency: on('contacts') ? emergency : [],
-        prodContacts: on('contacts') ? prodContacts : [],
-        layout: linkLayout(layout, project, customText),
-      }
+      const data = linkData()
       const ref = `callsheet:${project.id}:${day.id}`
       const url = await publishShare({ workspaceId: state.workspace.id, kind: 'callsheet', ref, data, userId: user?.id })
       // The code stays the same across re-shares of the same day, so crew are not asked twice.
@@ -238,7 +247,7 @@ export default function CallSheets() {
         return (
           <section>
             {h}
-            <div className="cs-locgrid">
+            <div className="cs-locgrid" style={{ '--cs-loc-cols': 1 + (show('parking') ? 1 : 0) + (show('hospital') ? 1 : 0) }}>
               <div>
                 <div className="cs-loc-h">Set location</div>
                 {locView ? (
@@ -250,14 +259,14 @@ export default function CallSheets() {
                   </>
                 ) : <span className="muted">Set the location on the shoot day.</span>}
               </div>
-              <div>
+              {show('parking') && <div>
                 <div className="cs-loc-h">Parking</div>
                 {editable ? <textarea rows={3} value={sheet.parking || ''} onChange={(e) => setSheet('parking', e.target.value)} placeholder={csd.parking || 'Where, how many cars, who unloads where'} /> : <div>{sheet.parking || csd.parking || '–'}</div>}
-              </div>
-              <div>
+              </div>}
+              {show('hospital') && <div>
                 <div className="cs-loc-h">Nearest hospital</div>
                 {editable ? <textarea rows={3} value={sheet.weather || ''} onChange={(e) => setSheet('weather', e.target.value)} placeholder={csd.hospital || 'Name, address, phone'} /> : <div>{sheet.weather || csd.hospital || '–'}</div>}
-              </div>
+              </div>}
             </div>
             {wx && showWx && <div className="muted small no-print">{wx.place} · forecast from open-meteo · {editable && <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'refresh'}</button>}</div>}
           </section>
@@ -414,6 +423,7 @@ export default function CallSheets() {
             </div>
           )}
           {editable && mode === 'sheet' && <Button variant={designing ? 'primary' : 'default'} onClick={() => setDesigning(!designing)}>{designing ? 'Done' : 'Customise'}</Button>}
+          {mode === 'sheet' && <Button variant={preview ? 'primary' : 'default'} onClick={() => setPreview(!preview)}>{preview ? 'Hide link preview' : 'Link preview'}</Button>}
           {canShare && <Button onClick={makeShare}>Share link</Button>}
           <Button onClick={() => setSend(true)}>Send message</Button>
           <Button variant="primary" onClick={() => window.print()}>
@@ -512,6 +522,15 @@ export default function CallSheets() {
         />
       )}
 
+      <div className={preview && mode === 'sheet' ? 'cs-with-preview' : undefined}>
+      {preview && mode === 'sheet' && (
+        <aside className="cs-preview no-print">
+          <div className="cs-preview-head"><strong>The link on a phone</strong><span className="muted small">Live: changes show here at once. Press Share link to send them.</span></div>
+          <div className={`cs-phone pv-${layout.look.linkTheme || 'light'}`}>
+            <CallSheetLinkView data={linkData()} />
+          </div>
+        </aside>
+      )}
       <article
         className={`sheet cs${layout.look.header === 'centred' ? ' cs-centred' : ''}${accent ? ' cs-accented' : ''}`}
         style={{ ...(accent ? { '--cs-accent': accent } : {}), ...(ZOOM[layout.look.size] !== 1 ? { zoom: ZOOM[layout.look.size] } : {}) }}
@@ -570,6 +589,7 @@ export default function CallSheets() {
           <p className="fineprint no-print">Edits here are saved automatically to this day's call sheet.</p>
         )}
       </article>
+      </div>
     </div>
   )
 }

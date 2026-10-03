@@ -11,7 +11,6 @@ const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { wee
 export default function PublicCallSheet() {
   const { token } = useParams()
   const { share, tryPin, pinErr } = usePublicShare(token)
-  const [q, setQ] = useState('')
   const theme = share?.data?.layout?.theme
 
   // The production picks light or dark for the link; the page takes it while it is open.
@@ -30,7 +29,13 @@ export default function PublicCallSheet() {
   if (share?.error) return <ShareProblem error={share.error} />
   if (!share || share.kind !== 'callsheet') return <div className="pub"><div className="pub-card"><h1>This link has expired</h1><p className="muted">Ask the production for a fresh link.</p></div></div>
 
-  const d = share.data
+  return <CallSheetLinkView data={share.data} updatedAt={share.updated_at} />
+}
+
+/* The link's page itself, without the loading and the access code around it, so the call sheet
+   can draw the same thing live in its phone preview. */
+export function CallSheetLinkView({ data: d, updatedAt }) {
+  const [q, setQ] = useState('')
   const lay = d.layout || {}
   const label = (k, fallback) => lay.labels?.[k] || fallback
   const blocks = lay.blocks || OLD_ORDER.map(([key, title]) => ({ key, title }))
@@ -183,7 +188,7 @@ export default function PublicCallSheet() {
       {blocks.map((b) => <Fragment key={b.key}>{block(b)}</Fragment>)}
 
       {d.sheet.footer && <p className="pub-footer">{d.sheet.footer}</p>}
-      <footer className="pub-foot muted small">Updated {new Date(share.updated_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · THEMADLIONS Projects</footer>
+      <footer className="pub-foot muted small">{updatedAt ? 'Updated' : 'Preview'} {new Date(updatedAt || Date.now()).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · THEMADLIONS Projects</footer>
     </div>
   )
 }
