@@ -211,7 +211,7 @@ export default function Budget() {
                     <tr key={l.id}>
                       <td>{l.description}{l.notes && <div className="muted small">{l.notes}</div>}</td>
                       <td>{l.vendor}{l.vendor && (l.memberId ? ' (team)' : l.contactId ? ` (${contactKind(l.contactId) || 'crew'})` : l.locationId ? ' (location)' : '')}</td>
-                      <td className="num">{money(lineTotal(l), cur)}{Number(l.vatPct) > 0 && <div className="muted small">{money(lineEstimate(l), cur)} + {l.vatPct}% VAT</div>}</td>
+                      <td className="num">{money(lineTotal(l), cur)}{Number(l.vatPct) > 0 && <span className="muted small" title={`${money(lineEstimate(l), cur)} + ${l.vatPct}% VAT`}> +{l.vatPct}%</span>}</td>
                       <td className="num">{l.payments?.length ? money(linePaid(l), cur) : l.actual !== '' && l.actual != null && Number(l.actual) ? money(l.actual, cur) : ''}</td>
                       <td className={`num ${l.payments?.length && lineBalance(l) > 0 ? 'over' : ''}`}>{l.payments?.length ? (lineBalance(l) > 0 ? money(lineBalance(l), cur) : <span className="under">settled</span>) : ''}</td>
                       {editable && (
