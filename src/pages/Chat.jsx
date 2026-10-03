@@ -8,7 +8,6 @@ import { deleteFile, fileIcon, fileUrl, fmtBytes, uploadFile } from '../lib/file
 import { compress } from '../lib/photos.js'
 import { pcloudOn } from '../lib/pcloud.js'
 import { loadChatPrefs } from '../lib/chatPrefs.js'
-import { useProject } from './Project.jsx'
 import * as C from '../lib/chat.js'
 
 /*
@@ -101,20 +100,6 @@ export default function Chat() {
     <div className={`chat-page chat2 ${active ? 'has-room' : ''}`}>
       {(!mobile || !active) && <RoomList activeId={active} />}
       {(!mobile || active) && (room ? <ChatRoom key={room.id} room={room} onBack={mobile ? () => nav('/chat') : undefined} /> : <div className="chat-box chat-none muted">Pick a conversation</div>)}
-    </div>
-  )
-}
-
-/* The Chat tab inside a project: the project's room, nothing else around it. */
-export function ProjectChat() {
-  const { project } = useProject()
-  const { state } = useStore()
-  const user = useCurrentUser()
-  if (C.chatExcluded(project, user)) return <p className="muted">You are not in this project's conversation.</p>
-  const room = C.roomOf(state, user, C.projectRoom(project.id)) || { id: C.projectRoom(project.id), kind: 'project', name: project.title, sub: project.category, projectId: project.id, color: project.color, photo: project.coverThumb || '', initials: 'P' }
-  return (
-    <div className="chat-page chat-embedded">
-      <ChatRoom room={room} embedded />
     </div>
   )
 }
@@ -350,7 +335,7 @@ function ProjectMembersModal({ open, projectId, onClose }) {
 }
 
 /* ---------- one room ---------- */
-function ChatRoom({ room, embedded, onBack }) {
+function ChatRoom({ room, onBack }) {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
@@ -509,7 +494,7 @@ function ChatRoom({ room, embedded, onBack }) {
           </span>
         </div>
         {room.kind === 'project' && isAdmin && <Button size="sm" variant="ghost" onClick={() => setEditMembers(true)}>Members</Button>}
-        {room.kind === 'project' && !embedded && <Link className="btn btn-ghost btn-sm" to={`/p/${room.projectId}`}>Open project</Link>}
+        {room.kind === 'project' && <Link className="btn btn-ghost btn-sm" to={`/p/${room.projectId}`}>Open project</Link>}
         {room.kind === 'direct' && room.otherId && <Link className="btn btn-ghost btn-sm" to={`/u/${room.otherId}`}>Profile</Link>}
         {room.kind === 'group' && isAdmin && groupRow && <Button size="sm" variant="ghost" onClick={() => setEditGroup(true)}>Edit group</Button>}
       </div>

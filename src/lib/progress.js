@@ -2,14 +2,6 @@ import { lineEstimate } from './budget.js'
 
 const clamp = (n) => Math.max(0, Math.min(1, n))
 
-/* Weighted stages per project category. Each stage returns 0..1. */
-export const PROGRESS_STAGE_KEYS = {
-  Event: ['brief', 'venue', 'crew', 'ros', 'event', 'post'],
-  Editing: ['brief', 'cut', 'approve', 'deliver'],
-  default: ['doc', 'breakdown', 'budget', 'cast', 'locations', 'shots', 'schedule', 'shoot', 'post'],
-}
-export const stageKeysFor = (category) => PROGRESS_STAGE_KEYS[category] || PROGRESS_STAGE_KEYS.default
-
 export function projectProgress(p, settings) {
   const scenes = p.scenes || []
   const days = p.shootingDays || []

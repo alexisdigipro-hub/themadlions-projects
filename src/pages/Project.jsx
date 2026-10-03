@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { Link, NavLink, Navigate, Outlet, useOutletContext, useParams } from 'react-router-dom'
 import { Badge } from '../components/ui.jsx'
 import { can, canAccessProject, useCurrentUser, useStore } from '../lib/store.jsx'
@@ -63,7 +64,9 @@ export default function Project() {
         ))}
       </nav>
       <div className="tab-body">
-        <Outlet context={ctx} />
+        <Suspense fallback={null}>
+          <Outlet context={ctx} />
+        </Suspense>
       </div>
     </div>
   )

@@ -7,9 +7,6 @@ import { SUPABASE_KEY, SUPABASE_URL } from './supabaseConfig.js'
 /* Settings > Integrations > File storage. Off means the built-in Supabase bucket, as before. */
 export const pcloudOn = (settings) => settings?.storage === 'pcloud'
 
-/* Where a project's files go inside pCloud (under the root folder the function knows). */
-export const projectFolder = (project, sub) => [project?.title || 'Untitled project', sub].filter(Boolean)
-
 async function call(action, body) {
   if (!supabase) throw new Error('pCloud needs the online database.')
   const { data } = await supabase.auth.getSession()

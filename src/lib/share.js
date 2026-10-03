@@ -18,13 +18,6 @@ export const mailLink = ({ to = [], bcc = [], subject, body }) =>
   `mailto:${to.join(',')}?${bcc.length ? `bcc=${bcc.join(',')}&` : ''}subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 export const mapsLink = (address) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 
-const addMin = (hhmm, m) => {
-  if (!hhmm) return ''
-  const [h, mm] = hhmm.split(':').map(Number)
-  const t = h * 60 + mm + (m || 0)
-  return `${String(Math.floor(((t % 1440) + 1440) % 1440 / 60)).padStart(2, '0')}:${String(((t % 60) + 60) % 60).padStart(2, '0')}`
-}
-
 /* Full call sheet as a WhatsApp-friendly message. */
 export function callSheetText({ project, day, dayIndex, dayCount, scenes, loc, cast, crew, sheet }) {
   const coords = (loc?.lat && loc?.lon) ? { lat: Number(loc.lat), lon: Number(loc.lon) } : coordsFromText(loc?.address) || null
@@ -80,5 +73,3 @@ export function personalCallText({ project, day, dayIndex, loc, person, call, sc
   L.push('Please reply "OK" to confirm.')
   return L.join('\n')
 }
-
-export const callFor = (day, person) => addMin(day.callTime, person.callOffset || 0)

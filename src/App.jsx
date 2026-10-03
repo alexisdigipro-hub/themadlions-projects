@@ -1,35 +1,56 @@
+import { Suspense, lazy } from 'react'
 import { HashRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
 import { ToastProvider } from './components/ui.jsx'
 import { StoreProvider, useCurrentUser, useStore } from './lib/store.jsx'
 import Login from './pages/Login.jsx'
-import Dashboard from './pages/Dashboard.jsx'
-import CalendarAll from './pages/CalendarAll.jsx'
-import Team from './pages/Team.jsx'
-import Settings from './pages/Settings.jsx'
 import Project, { useProject } from './pages/Project.jsx'
-import Overview from './pages/project/Overview.jsx'
-import Script from './pages/project/Script.jsx'
-import Schedule from './pages/project/Schedule.jsx'
-import People from './pages/project/People.jsx'
-import Whiteboard from './pages/project/Whiteboard.jsx'
-import Shots from './pages/project/Shots.jsx'
-import TasksAll from './pages/TasksAll.jsx'
-import Database from './pages/Database.jsx'
-import Chat from './pages/Chat.jsx'
-import MyWork from './pages/MyWork.jsx'
-import Profile from './pages/Profile.jsx'
-import Drives from './pages/Drives.jsx'
-import PublicCallSheet from './pages/PublicCallSheet.jsx'
-import PublicDelivery from './pages/PublicDelivery.jsx'
-import Deliveries from './pages/Deliveries.jsx'
-import PublicStatus from './pages/PublicStatus.jsx'
-import PublicEstimate from './pages/PublicEstimate.jsx'
-import PublicInvoice from './pages/PublicInvoice.jsx'
-import Finance from './pages/Finance.jsx'
-import Budget from './pages/project/Budget.jsx'
-import Reports from './pages/project/Reports.jsx'
-import Post from './pages/project/Post.jsx'
+
+// Each page is its own file, fetched the first time it is opened, so opening the app downloads
+// a fraction of the code. A tab left open across a deploy asks for page files the new build no
+// longer has; reload once to pick up the new build instead of failing on a blank page.
+const RELOAD_KEY = 'tml_chunk_reload'
+const session = (fn) => { try { return fn(window.sessionStorage) } catch { return null } }
+function lazyPage(load) {
+  return lazy(() => load().then(
+    (m) => { session((s) => s.removeItem(RELOAD_KEY)); return m },
+    (err) => {
+      if (session((s) => s.getItem(RELOAD_KEY))) throw err
+      session((s) => s.setItem(RELOAD_KEY, '1'))
+      window.location.reload()
+      return new Promise(() => {})
+    },
+  ))
+}
+
+// Home is where everyone lands: start fetching it right away, alongside the workspace data.
+const dashboardFile = import('./pages/Dashboard.jsx')
+const Dashboard = lazyPage(() => dashboardFile)
+const CalendarAll = lazyPage(() => import('./pages/CalendarAll.jsx'))
+const Team = lazyPage(() => import('./pages/Team.jsx'))
+const Settings = lazyPage(() => import('./pages/Settings.jsx'))
+const Overview = lazyPage(() => import('./pages/project/Overview.jsx'))
+const Script = lazyPage(() => import('./pages/project/Script.jsx'))
+const Schedule = lazyPage(() => import('./pages/project/Schedule.jsx'))
+const People = lazyPage(() => import('./pages/project/People.jsx'))
+const Whiteboard = lazyPage(() => import('./pages/project/Whiteboard.jsx'))
+const Shots = lazyPage(() => import('./pages/project/Shots.jsx'))
+const TasksAll = lazyPage(() => import('./pages/TasksAll.jsx'))
+const Database = lazyPage(() => import('./pages/Database.jsx'))
+const Chat = lazyPage(() => import('./pages/Chat.jsx'))
+const MyWork = lazyPage(() => import('./pages/MyWork.jsx'))
+const Profile = lazyPage(() => import('./pages/Profile.jsx'))
+const Drives = lazyPage(() => import('./pages/Drives.jsx'))
+const PublicCallSheet = lazyPage(() => import('./pages/PublicCallSheet.jsx'))
+const PublicDelivery = lazyPage(() => import('./pages/PublicDelivery.jsx'))
+const Deliveries = lazyPage(() => import('./pages/Deliveries.jsx'))
+const PublicStatus = lazyPage(() => import('./pages/PublicStatus.jsx'))
+const PublicEstimate = lazyPage(() => import('./pages/PublicEstimate.jsx'))
+const PublicInvoice = lazyPage(() => import('./pages/PublicInvoice.jsx'))
+const Finance = lazyPage(() => import('./pages/Finance.jsx'))
+const Budget = lazyPage(() => import('./pages/project/Budget.jsx'))
+const Reports = lazyPage(() => import('./pages/project/Reports.jsx'))
+const Post = lazyPage(() => import('./pages/project/Post.jsx'))
 
 function Loading() {
   return (
@@ -67,6 +88,7 @@ export default function App() {
     <StoreProvider>
       <ToastProvider>
         <HashRouter>
+          <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/login" element={<LoginGate />} />
             <Route path="/s/:token" element={<PublicCallSheet />} />
@@ -128,6 +150,7 @@ export default function App() {
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
         </HashRouter>
       </ToastProvider>
     </StoreProvider>

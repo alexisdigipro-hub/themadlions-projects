@@ -32,9 +32,6 @@ export function sendAutoNotice(update, { kind, key = '', fromId, fromName = '', 
   })
 }
 
-/* Everyone who should hear about something, excluding whoever caused it. */
-export const teamExcept = (state, userId) => state.users.filter((u) => u.active !== false && u.id !== userId).map((u) => u.id)
-
 /* Match a free-typed assignee name back to a teammate, so the task can reach them. */
 export const userByName = (state, name) => {
   const n = (name || '').trim().toLowerCase()
