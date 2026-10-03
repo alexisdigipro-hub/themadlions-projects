@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { PinGate, usePublicShare } from '../components/PublicGate.jsx'
+import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
@@ -13,6 +13,7 @@ export default function PublicCallSheet() {
   if (share?.closed) return <div className="pub"><div className="pub-card"><h1>This link is closed</h1><p className="muted">The production has closed this call sheet. Ask them for the current one.</p></div></div>
   if (share?.locked) return <PinGate onTry={tryPin} err={pinErr} what="the call sheet" />
   if (share?.data?.expiresAt && new Date(share.data.expiresAt) < new Date()) return <div className="pub"><div className="pub-card"><h1>This call sheet has expired</h1><p className="muted">The shooting day has passed. Ask the production for the current one.</p></div></div>
+  if (share?.error) return <ShareProblem error={share.error} />
   if (!share || share.kind !== 'callsheet') return <div className="pub"><div className="pub-card"><h1>This link has expired</h1><p className="muted">Ask the production for a fresh link.</p></div></div>
 
   const d = share.data
