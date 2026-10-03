@@ -148,11 +148,11 @@ export default function People() {
             <thead>
               <tr>
                 <th>Name</th>
-                {kind === 'cast' ? <th>Character</th> : <th>Department</th>}
+                {kind === 'cast' && <th>Character</th>}
                 <th>Role</th>
                 <th>Phone</th>
-                <th>Email</th>
-                <th>Call</th>
+                {kind === 'cast' && <th>Email</th>}
+                {kind === 'cast' && <th>Call</th>}
                 {editable && <th />}
               </tr>
             </thead>
@@ -167,11 +167,11 @@ export default function People() {
                       <strong>{c.name}</strong>
                     </div>
                   </td>
-                  <td>{kind === 'cast' ? c.character : c.dept}</td>
+                  {kind === 'cast' && <td>{c.character}</td>}
                   <td>{c.role}</td>
                   <td>{showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</td>
-                  <td>{showContacts && c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</td>
-                  <td className="muted">{c.callOffset ? `${c.callOffset > 0 ? '+' : ''}${c.callOffset} min` : 'General'}</td>
+                  {kind === 'cast' && <td>{showContacts && c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</td>}
+                  {kind === 'cast' && <td className="muted">{c.callOffset ? `${c.callOffset > 0 ? '+' : ''}${c.callOffset} min` : 'General'}</td>}
                   {editable && (
                     <td className="row-actions">
                       <Button size="sm" variant="ghost" onClick={() => setDraft({ ...c })}>
