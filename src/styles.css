@@ -2121,7 +2121,11 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 .fin-bymonth tr.fin-month-head td { background: var(--raised); font-weight: 700; border-top: 8px solid var(--panel); }
 .fin-bymonth tbody:first-of-type tr.fin-month-head td { border-top: 0; }
 .fin-bymonth tr.fin-month-head td.muted { font-weight: 500; }
-.fin-bymonth tr.fin-month-line td:first-child { padding-left: 26px; }
+.fin-bymonth tr.fin-month-line td:first-child { padding-left: 30px; }
+.fin-bymonth tr.fin-month-head { cursor: pointer; }
+.fin-bymonth tr.fin-month-head:hover td { background: color-mix(in srgb, var(--accent) 8%, var(--raised)); }
+.fin-chev { display: inline-block; width: 18px; color: var(--muted); }
+.fin-bd-tabs button { font-size: 15px; }
 .fin-table tr.muted td { color: var(--muted); }
 .fin-list .nowrap { white-space: nowrap; }
 .tx-income td:nth-child(5) { color: var(--ok); }
