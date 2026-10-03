@@ -2101,6 +2101,10 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 .fin-sortbar .select { width: auto; min-width: 150px; }
 .fin-table tr.fin-total td { border-top: 2px solid var(--line); font-weight: 700; }
 .fin-table tr.fin-total td.muted { font-weight: 500; }
+.fin-bymonth tr.fin-month-head td { background: var(--raised); font-weight: 700; border-top: 8px solid var(--panel); }
+.fin-bymonth tbody:first-of-type tr.fin-month-head td { border-top: 0; }
+.fin-bymonth tr.fin-month-head td.muted { font-weight: 500; }
+.fin-bymonth tr.fin-month-line td:first-child { padding-left: 26px; }
 .fin-table tr.muted td { color: var(--muted); }
 .fin-list .nowrap { white-space: nowrap; }
 .tx-income td:nth-child(5) { color: var(--ok); }

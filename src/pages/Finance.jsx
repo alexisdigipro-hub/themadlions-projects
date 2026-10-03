@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Stat, Textarea, useToast } from '../components/ui.jsx'
 import { today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
-import { DOCS, FREQ, METHODS, TX_STATUS, catsFor, duePeriods, emptyRecurring, emptyTx, expenseCats, financeCategoryUses, fiscalYearLabel, fiscalYearOf, generateFromRecurring, grossOf, incomeCats, matchTx, money, renameFinanceCategory, summarize, vatOf } from '../lib/finance.js'
+import { DOCS, FREQ, METHODS, TX_STATUS, catsFor, duePeriods, emptyRecurring, emptyTx, expenseCats, financeCategoryUses, fiscalYearLabel, fiscalYearOf, generateFromRecurring, grossOf, incomeCats, matchTx, money, renameFinanceCategory, summarize, vatOf, ym } from '../lib/finance.js'
 import { download, fmtDate } from '../lib/dates.js'
 import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
@@ -265,6 +265,8 @@ export default function Finance() {
   const [bdSort, setBdSort] = useState({ key: 'income', dir: -1 })
   const bdSortBy = (key) => setBdSort((o) => (o.key === key ? { key, dir: -o.dir } : { key, dir: key === 'key' ? 1 : -1 }))
   const byProjectRows = [...S.byProject, ...Object.keys(owedByProject).filter((k) => !S.byProject.some((r) => r.key === k)).map((k) => ({ key: k, income: 0, expense: 0, profit: 0, margin: null }))]
+  // the By month table splits the no-project row by the month each of its transactions was booked
+  const companyTx = fin.transactions.filter((t) => !t.projectId && fiscalYearOf(t.date, fiscalStart) === year && (t.type === 'expense' || t.status !== 'quoted'))
 
   return (
     <div className="finance">
@@ -341,9 +343,13 @@ export default function Finance() {
                 <span className="fin-sortbar-label">Sort by</span>
                 <Select value={bdSort.key} onChange={(e) => setBdSort({ key: e.target.value, dir: e.target.value === 'key' ? 1 : -1 })} options={BD_SORTS} aria-label="Sort every table by" />
                 <Button size="sm" onClick={() => setBdSort((o) => ({ ...o, dir: -o.dir }))} title="Flip the order">{bdSort.dir > 0 ? 'Low to high ↑' : 'High to low ↓'}</Button>
-                <span className="muted small">applies to the table below · clicking a column heading works too</span>
+                <span className="muted small">applies to the tables below · clicking a column heading works too</span>
               </div>
               <section className="panel"><h2>By project</h2><BreakdownTable rows={byProjectRows} label="Project" cur={cur} owed={owedByProject} sort={bdSort} onSort={bdSortBy} /></section>
+              <section className="panel">
+                <div className="panel-head"><h2>By month</h2><span className="muted small">each project in the month it was shot · costs with no project in the month they were booked</span></div>
+                <ByMonthTable rows={byProjectRows} owed={owedByProject} projects={state.projects} companyTx={companyTx} cur={cur} sort={bdSort} onSort={bdSortBy} />
+              </section>
             </div>
           )}
 
@@ -943,6 +949,87 @@ function BreakdownTable({ rows, label, cur, owed, expected, outstanding, sort, o
             </tr>
           )}
         </tbody>
+      </table>
+    </div>
+  )
+}
+
+/* The By project figures again, grouped by the month each project was shot (its work date, the
+   same date Finance files the project's budget under). Costs with no project, like rent, fall in
+   the month they were booked. Months run in calendar order; the Sort by orders the projects
+   inside each month. */
+const COMPANY = 'Company (no project)'
+const monthLabel = (key) => (key ? new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, 1).toLocaleString('en-GB', { month: 'long', year: 'numeric' }) : 'No shooting date')
+
+function ByMonthTable({ rows, owed, projects, companyTx, cur, sort, onSort }) {
+  const byTitle = {}
+  projects.forEach((p) => { if (!(p.title in byTitle)) byTitle[p.title] = p })
+  const derive = (r) => {
+    const o = owed[r.key] || 0
+    const profit = r.income - r.expense - o
+    return { ...r, owedAmt: o, profit, margin: r.income ? Math.round((profit / r.income) * 100) : null }
+  }
+  const lines = rows.filter((r) => r.key !== COMPANY).map((r) => derive({ ...r, month: byTitle[r.key] ? ym(projectWorkDate(byTitle[r.key])) : '' }))
+  const company = {}
+  companyTx.forEach((t) => {
+    const k = ym(t.date)
+    company[k] = company[k] || { key: COMPANY, month: k, income: 0, expense: 0, count: 0 }
+    company[k][t.type === 'income' ? 'income' : 'expense'] += Number(t.net || 0)
+    company[k].count += 1
+  })
+  lines.push(...Object.values(company).map(derive))
+
+  const totIncome = lines.reduce((a, r) => a + r.income, 0)
+  const sum = (l) => {
+    const income = l.reduce((a, r) => a + r.income, 0), expense = l.reduce((a, r) => a + r.expense, 0), owedAmt = l.reduce((a, r) => a + r.owedAmt, 0)
+    const profit = income - expense - owedAmt
+    return { income, expense, owedAmt, profit, count: l.reduce((a, r) => a + (r.count || 0), 0), margin: income ? Math.round((profit / income) * 100) : null }
+  }
+  const share = (income) => (income && totIncome ? `${Math.round((income / totIncome) * 100)}%` : '')
+  const order = (a, b) => {
+    if (sort.key === 'key') return sort.dir * String(a.key).localeCompare(String(b.key), 'el')
+    const va = sort.key === 'share' ? a.income : a[sort.key] ?? null
+    const vb = sort.key === 'share' ? b.income : b[sort.key] ?? null
+    return sort.dir * ((va ?? -Infinity) - (vb ?? -Infinity))
+  }
+  const months = [...new Set(lines.map((r) => r.month))].sort((a, b) => (!a ? 1 : !b ? -1 : a.localeCompare(b)))
+    .map((m) => { const l = lines.filter((r) => r.month === m).sort(order); return { key: m, lines: l, ...sum(l) } })
+  const total = sum(lines)
+
+  const th = (k, text, num = true) => (
+    <th key={k} className={`${num ? 'num' : ''} sortable ${sort.key === k ? 'on' : ''}`} onClick={() => onSort(k)} title="Sort the projects inside each month by this column">
+      {text}{sort.key === k ? <span className="sort-arrow">{sort.dir > 0 ? '↑' : '↓'}</span> : null}
+    </th>
+  )
+  const cells = (r, withShare = true) => (
+    <>
+      <td className="num muted">{r.count || ''}</td>
+      <td className="num">{r.income ? money(r.income, cur) : ''}</td>
+      <td className="num">{r.expense ? money(r.expense, cur) : ''}</td>
+      <td className="num over">{r.owedAmt ? money(r.owedAmt, cur) : ''}</td>
+      <td className={`num ${r.profit < 0 ? 'over' : ''}`}>{money(r.profit, cur)}</td>
+      <td className="num muted">{r.margin != null ? `${r.margin}%` : ''}</td>
+      <td className="num muted">{withShare ? share(r.income) : ''}</td>
+    </>
+  )
+  const projectCount = (l) => { const n = l.filter((r) => r.key !== COMPANY).length; return n ? ` · ${n} project${n === 1 ? '' : 's'}` : '' }
+  return (
+    <div className="table-wrap">
+      <table className="table fin-table fin-breakdown fin-bymonth">
+        <thead>
+          <tr>{th('key', 'Month / project', false)}{th('count', '#')}{th('income', 'Income')}{th('expense', 'Expense')}{th('owedAmt', 'Owed')}{th('profit', 'Profit')}{th('margin', 'Margin')}{th('share', 'Share')}</tr>
+        </thead>
+        {months.map((m) => (
+          <tbody key={m.key || 'none'}>
+            <tr className="fin-month-head"><td>{monthLabel(m.key)}<span className="muted small">{projectCount(m.lines)}</span></td>{cells(m)}</tr>
+            {m.lines.map((r) => <tr key={`${m.key}:${r.key}`} className="fin-month-line"><td>{r.key}</td>{cells(r)}</tr>)}
+          </tbody>
+        ))}
+        {months.length > 1 && (
+          <tbody>
+            <tr className="fin-total"><td>Total</td>{cells(total, false)}</tr>
+          </tbody>
+        )}
       </table>
     </div>
   )
