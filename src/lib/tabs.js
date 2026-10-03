@@ -24,11 +24,13 @@ export function projectTabs(project) {
     // opt-in: Alex doesn't use Post day to day; switch it on per project from Edit details > Tabs
     { to: 'post', label: 'Post', key: 'post', icon: 'post', optIn: true },
     { to: 'people', label: 'Project Database', key: ['contacts', 'locations', 'gear'], icon: 'people' },
+    // opt-in: the moodboard / treatment deck, switched on per project from Edit details > Tabs
+    { to: 'presentation', label: 'Presentation', key: 'projects', icon: 'deck', optIn: true },
     // Files & notes is framed on Overview now (its own permission still gates that section)
   ]
 }
 
-const OPT_IN = new Set(['reports', 'post'])
+const OPT_IN = new Set(['reports', 'post', 'presentation'])
 export function tabHidden(project, to) {
   if (Array.isArray(project?.hiddenTabs) && project.hiddenTabs.includes(to)) return true
   // an opt-in tab is hidden unless the project lists it in `shownTabs`, so it never appears unasked

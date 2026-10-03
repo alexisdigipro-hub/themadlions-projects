@@ -51,6 +51,7 @@ const Finance = lazyPage(() => import('./pages/Finance.jsx'))
 const Budget = lazyPage(() => import('./pages/project/Budget.jsx'))
 const Reports = lazyPage(() => import('./pages/project/Reports.jsx'))
 const Post = lazyPage(() => import('./pages/project/Post.jsx'))
+const Presentation = lazyPage(() => import('./pages/project/Presentation.jsx'))
 
 function Loading() {
   return (
@@ -135,6 +136,7 @@ export default function App() {
                   {/* Equipment is now a section inside People (Project Database); keep old links alive */}
                   <Route path="gear" element={<Navigate to="../people" replace />} />
                   <Route path="post" element={<Post />} />
+                  <Route path="presentation" element={<Presentation />} />
                   {/* Call sheets is now framed inside Schedule */}
                   <Route path="callsheets" element={<Navigate to="../schedule" replace />} />
                   {/* The project calendar is gone; the global Calendar in the sidebar covers it */}
