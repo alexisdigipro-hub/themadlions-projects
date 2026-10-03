@@ -2270,7 +2270,7 @@ html[data-theme='light'] .sheet { box-shadow: var(--shadow); }
 }
 @media print {
   .sheet.cs { box-shadow: none; padding: 0; max-width: none; }
-  .cs-tagline, .cs-note textarea, .cs-locgrid textarea, .cs-time, .cs-custom-edit { border: 0; background: transparent; }
+  .cs-tagline, .cs-note textarea, .cs-locgrid textarea, .cs-time, .cs-custom-edit, .cs-program-input { border: 0; background: transparent; }
 }
 
 /* Customise: the call sheet's own layout, colour and size, and what changes on one day */
@@ -2295,6 +2295,13 @@ html[data-theme='light'] .sheet { box-shadow: var(--shadow); }
 .cs-centred .cs-center { grid-column: 1 / -1; order: -1; padding: 0 0 18px; border-left: 0 !important; border-bottom: 1px solid #e8eaf0; }
 .cs-accented h3, .cs-accented .cs-call-time, .cs-accented .cs-loc-name { color: var(--cs-accent); }
 .cs-accented .cs-mark { background: var(--cs-accent); }
+/* Program: time and description typed by hand */
+.cs-program td { vertical-align: middle; }
+.cs-program-what { width: 100%; }
+.cs-program-input { width: 100%; border: 1px dashed #d9dce4; border-radius: 4px; padding: 3px 8px; font: inherit; font-size: 15px; background: #fafbfd; color: #1f2430; }
+.cs-program-add { margin-top: 8px; }
+.pub-program-what { white-space: pre-wrap; }
+.pub-program .pub-sc { min-width: 116px; flex: none; }
 /* Link preview: the share link drawn live in a phone frame next to the sheet */
 .cs-with-preview { display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 20px; align-items: start; }
 .cs-with-preview > .cs-preview { order: 2; position: sticky; top: 12px; }

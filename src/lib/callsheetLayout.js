@@ -10,6 +10,7 @@ export const BLOCKS = [
   ['location', 'Location'],
   ['contacts', 'Emergency & production'],
   ['schedule', 'Scenes'],
+  ['program', 'Program'],
   ['cast', 'Cast'],
   ['departments', 'Department requirements'],
   ['crew', 'Crew'],
@@ -57,7 +58,16 @@ export function normalizeLayout(raw, { event = false } = {}) {
     seen.add(b.key)
     blocks.push({ key: b.key, title: b.title || '', sheet: b.sheet !== false, link: b.link !== undefined ? !!b.link : !LINK_OFF.has(b.key), ...(b.custom ? { custom: true, text: b.text || '' } : {}) })
   }
-  for (const [k] of BLOCKS) if (!seen.has(k)) blocks.push({ key: k, title: '', sheet: true, link: !LINK_OFF.has(k) })
+  // A section added to the app later lands right after the one it follows in BLOCKS (Program
+  // after Scenes), not at the bottom of a layout saved before it existed.
+  BLOCKS.forEach(([k], idx) => {
+    if (seen.has(k)) return
+    const fresh = { key: k, title: '', sheet: true, link: !LINK_OFF.has(k) }
+    const before = idx > 0 ? blocks.findIndex((b) => b.key === BLOCKS[idx - 1][0]) : -1
+    if (before >= 0) blocks.splice(before + 1, 0, fresh)
+    else blocks.push(fresh)
+    seen.add(k)
+  })
   const details = {}
   for (const [k] of DETAILS) {
     const d = src.details?.[k] || {}

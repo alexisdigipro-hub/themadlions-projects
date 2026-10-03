@@ -117,6 +117,20 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
             )}
           </>
         )
+      case 'program':
+        return d.program?.length > 0 ? (
+          <section className="pub-card">
+            <h2>{b.title || 'Program'}</h2>
+            <ul className="pub-scenes pub-program">
+              {d.program.map((x, i) => (
+                <li key={i}>
+                  <span className="pub-sc pub-sc-time">{x.from || x.to ? `${x.from || ''}${x.to ? ` – ${x.to}` : ''}` : '–'}</span>
+                  <div className="grow"><strong className="pub-program-what">{x.what}</strong></div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null
       case 'departments':
         return d.departments?.length > 0 ? (
           <section className="pub-card">

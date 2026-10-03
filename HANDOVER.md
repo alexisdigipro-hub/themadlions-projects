@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Call sheet Program section (4 Oct)
+Alex: a section "just like Scenes", called PROGRAM, on the mobile link too, time and description all typed by hand. New block `program` in callsheetLayout.js BLOCKS (after `schedule`); rows on `day.callSheet.program [{id, from, to, what}]`. normalizeLayout now inserts a built-in block missing from a saved layout right after its predecessor in BLOCKS instead of at the end. Link payload `program` (only filled rows); PublicCallSheet renders it like Sets (`.pub-program`). Also goes into the WhatsApp text as the first extra section. No SQL.
+
 ### Link banner 16:9, picture at 75% (4 Oct)
 Alex changed his mind on the square: `.pub-hero.has-cover` is now `aspect-ratio: 16/9`, cover at `opacity: .75`.
 
