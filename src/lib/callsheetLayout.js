@@ -26,7 +26,11 @@ export const DETAILS = [
   ['phones', 'Phone numbers'],
   ['parking', 'Parking'],
   ['hospital', 'Nearest hospital'],
+  ['lunch', 'Lunch / break time'],
 ]
+// Details added after layouts were already saved that start switched off on the link, so a
+// saved layout does not suddenly show them there.
+const DETAIL_LINK_OFF = new Set(['lunch'])
 
 export const LABELS = [
   ['call', 'General crew call'],
@@ -57,7 +61,7 @@ export function normalizeLayout(raw, { event = false } = {}) {
   const details = {}
   for (const [k] of DETAILS) {
     const d = src.details?.[k] || {}
-    details[k] = { sheet: d.sheet !== false, link: d.link !== false }
+    details[k] = { sheet: d.sheet !== false, link: d.link !== undefined ? d.link !== false : !DETAIL_LINK_OFF.has(k) }
   }
   const labels = {}
   for (const [k] of LABELS) labels[k] = String(src.labels?.[k] || '')
