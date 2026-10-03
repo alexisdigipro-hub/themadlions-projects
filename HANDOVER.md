@@ -36,9 +36,25 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
-## Where we stopped (2 Oct 2026)
+## Where we stopped (3 Oct 2026)
 
 Read this first; the detail behind each line is in the pull request that carried it.
+
+### A run of small, one-request-at-a-time fixes (3 Oct)
+- **Finance > Invoices**: a due-date reminder banner (like the existing recurring-items-due one) for invoices coming due. The Edit Income form in Finance > Transactions gained an **Invoices** picker: link an income transaction to an invoice marked "Invoiced" and it fills client/amount/invoice number; an invoice already linked to one transaction is filtered out of every other transaction's picker.
+- **Chat**: a project's room now moves itself into a new **Archived** folder the moment the project's status becomes Delivered (and back out if it changes away), automatic, no manual action; it no longer shows in All or in its category folder while archived (`src/lib/chat.js`).
+- **Database page** (company-wide Locations/Crew/Cast): framed/boxed throughout for visual consistency. Locations rebuilt on the same card-grid-plus-detail-modal pattern as the project-level Locations tab (`LocationsAll.jsx` rewritten, `embedded` prop dropped). Crew and Cast (`PeopleAll.jsx`) got the same: click a name or photo to open a detail card (type/role, phone, email, agent, projects used in, notes, photos), Edit/Delete moved into that card.
+- **Project Database > Crew, List view**: shows only Name, Role, Phone, Edit/Delete now (Department, Email, Call dropped); Cast's list is unchanged.
+- **Global table bug fixed**: `.row-actions` (a flex utility class) applied directly to a `<td>` broke every table's row model, dropping Edit/Delete onto their own line below the row in every browser. Fixed with `.table .row-actions { display: table-cell; ... }` in styles.css. Affected every table with row actions in the app (Budget lines, Database Crew/Cast, Tasks, etc.), not just the one Alex screenshotted.
+- **Overview**: Links and Production notes panels now stretch to the same height (`.cols.notes-cols { align-items: stretch }`), fixing a visible height mismatch.
+- **Budget page, several passes**:
+  - Top sheet table: dropped the Category column; split the old combined cell into its own **Description** and **Name** (payee) columns.
+  - Removed from the shared project header (every tab, not only Budget): the project code and "Dir. …" name.
+  - Removed entirely: **Currency** and **Contingency** (Alex only ever uses euros) — the matching Settings defaults are gone too, and the top sheet's Subtotal/Contingency rows collapsed into a single Total.
+  - The client **Budget** amount moved into its own card at the top (`BudgetCard` in `Budget.jsx`): type straight into a big € field, see Committed/Paid/Left and a progress bar underneath. Replaces the old CapBar.
+  - Added an optional **VAT %** field next to a line's Amount in "Edit budget line". A line's total is amount + VAT; every sum on the page (group totals, the sheet's Total, the Budget card's Committed) now folds VAT in. Paid/Balance and the My work mirror for team members still key off the amount before VAT (unaffected, same as a payment's own VAT already being tracked separately in Finance). New helpers `lineVat`/`lineTotal` in `src/lib/budget.js`; `emptyLine()` gained `vatPct` (empty/0 default, so old lines don't change).
+
+None of this needed a Supabase run, it's all UI. Not build-tested in this sandbox (registry.npmjs.org still blocked); checked by hand (brace/paren balance scripts) and, for the visual changes, by serving a static HTML page built from the real styles.css in headless Chromium and screenshotting it, including a reproduction of the row-actions bug before confirming the fix.
 
 ### Project tabs reorganised into fewer, framed pages (2 Oct)
 Alex: "θέλω να δεις όλα τα tabs ... και να τα οργανώσεις έτσι με πλαίσιωμα" (review every tab and give them all the same boxed/"framed" look), done one step at a time over several PRs that day:

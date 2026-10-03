@@ -6,7 +6,7 @@ import { fmtDate } from '../../lib/dates.js'
 import { projectWorkDate } from '../../components/WorkLog.jsx'
 import { useCurrentUser, useStore } from '../../lib/store.jsx'
 import PaymentModal from '../../components/PaymentModal.jsx'
-import { lineBalance, lineEstimate, linePaid, syncLineWorklog, dropLineWorklog } from '../../lib/budget.js'
+import { lineBalance, lineEstimate, lineTotal, lineVat, linePaid, syncLineWorklog, dropLineWorklog } from '../../lib/budget.js'
 import { groupPairs } from '../../lib/budgetCats.js'
 
 // The categories and their groups live in Settings > Budget (src/lib/budgetCats.js holds the
@@ -17,8 +17,9 @@ import { groupPairs } from '../../lib/budgetCats.js'
 // keeps the name so Finance, CSV and print read the same as before, and is still free text when
 // none of the three is picked. date: the day the work is done, which is the date My work files
 // the job under. estimate: the one amount of the line. qty / unit / rate stay in the data for
-// lines made before the form went down to one amount; lineEstimate() still reads them.
-export const emptyLine = () => ({ id: uid(), category: 'Camera', description: '', qty: 1, unit: 'flat', rate: 0, estimate: '', actual: '', vendor: '', memberId: '', contactId: '', locationId: '', date: '', notes: '' })
+// lines made before the form went down to one amount; lineEstimate() still reads them. vatPct:
+// optional VAT % on top of the amount, 0 by default so old lines are unaffected.
+export const emptyLine = () => ({ id: uid(), category: 'Camera', description: '', qty: 1, unit: 'flat', rate: 0, estimate: '', vatPct: '', actual: '', vendor: '', memberId: '', contactId: '', locationId: '', date: '', notes: '' })
 export { lineEstimate }
 export const money = (n, cur = 'EUR') => new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(Number(n) || 0)
 
@@ -26,7 +27,7 @@ export const money = (n, cur = 'EUR') => new Intl.NumberFormat('en-GB', { style:
 // project's total is simply the sum of its lines, whatever an old project still stores.
 export function budgetTotals(project) {
   const b = project.budget || { lines: [] }
-  const est = b.lines.reduce((a, l) => a + lineEstimate(l), 0)
+  const est = b.lines.reduce((a, l) => a + lineTotal(l), 0)
   const act = b.lines.reduce((a, l) => a + Number(l.actual || 0), 0)
   return { est, act, total: est, lines: b.lines.length }
 }
@@ -107,7 +108,7 @@ export default function Budget() {
   const groups = useMemo(() => {
     return BUDGET_GROUPS.map(([name, cats]) => {
       const lines = budget.lines.filter((l) => cats.includes(l.category))
-      const est = lines.reduce((a, l) => a + lineEstimate(l), 0)
+      const est = lines.reduce((a, l) => a + lineTotal(l), 0)
       const act = lines.reduce((a, l) => a + Number(l.actual || 0), 0)
       return { name, lines, est, act }
     }).filter((g) => g.lines.length)
@@ -117,8 +118,8 @@ export default function Budget() {
   const save = () => {
     if (!draft.description.trim()) return toast('Describe the line.', 'error')
     if (budget.cap) {
-      const others = budget.lines.filter((l) => l.id !== draft.id).reduce((a, l) => a + lineEstimate(l), 0)
-      const newTotal = others + lineEstimate(draft)
+      const others = budget.lines.filter((l) => l.id !== draft.id).reduce((a, l) => a + lineTotal(l), 0)
+      const newTotal = others + lineTotal(draft)
       if (newTotal > Number(budget.cap) && t.total <= Number(budget.cap)) toast(`Careful: this line takes the budget ${money(newTotal - Number(budget.cap), cur)} over the cap.`, 'error')
       else if (newTotal > Number(budget.cap)) toast(`Budget is ${money(newTotal - Number(budget.cap), cur)} over the cap.`, 'error')
     }
@@ -210,7 +211,7 @@ export default function Budget() {
                     <tr key={l.id}>
                       <td>{l.description}{l.notes && <div className="muted small">{l.notes}</div>}</td>
                       <td>{l.vendor}{l.vendor && (l.memberId ? ' (team)' : l.contactId ? ` (${contactKind(l.contactId) || 'crew'})` : l.locationId ? ' (location)' : '')}</td>
-                      <td className="num">{money(lineEstimate(l), cur)}</td>
+                      <td className="num">{money(lineTotal(l), cur)}{Number(l.vatPct) > 0 && <div className="muted small">{money(lineEstimate(l), cur)} + {l.vatPct}% VAT</div>}</td>
                       <td className="num">{l.payments?.length ? money(linePaid(l), cur) : l.actual !== '' && l.actual != null && Number(l.actual) ? money(l.actual, cur) : ''}</td>
                       <td className={`num ${l.payments?.length && lineBalance(l) > 0 ? 'over' : ''}`}>{l.payments?.length ? (lineBalance(l) > 0 ? money(lineBalance(l), cur) : <span className="under">settled</span>) : ''}</td>
                       {editable && (
@@ -292,10 +293,15 @@ export default function Budget() {
             <Field label="Vendor / payee"><Input value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} placeholder="Optional" /></Field>
           ) : null}
           <Field label="Description"><Input autoFocus value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder="DoP, Alexa Mini LF package, rooftop permit" /></Field>
-          {/* One amount per line, Alex's call. An old line made as quantity × rate shows its total here and is saved as that total. */}
-          <Field label={`Amount (${cur})`} hint={draft.payments?.length ? `${money(linePaid(draft), cur)} paid so far, ${draft.payments.length} payment${draft.payments.length === 1 ? '' : 's'} recorded in Finance.` : 'What this costs. Payments are recorded from Finance or with Pay on the line.'}>
-            <Input type="number" min="0" step="0.01" value={draft.estimate === '' || draft.estimate == null ? (lineEstimate(draft) || '') : draft.estimate} onChange={(e) => setDraft({ ...draft, estimate: e.target.value, qty: 1, unit: 'flat', rate: 0 })} placeholder="800" />
-          </Field>
+          {/* One amount per line, Alex's call. An old line made as quantity × rate shows its total here and is saved as that total. VAT is optional, next to it, and folds into the line's total. */}
+          <div className="row-2">
+            <Field label={`Amount (${cur})`} hint={draft.payments?.length ? `${money(linePaid(draft), cur)} paid so far, ${draft.payments.length} payment${draft.payments.length === 1 ? '' : 's'} recorded in Finance.` : 'What this costs. Payments are recorded from Finance or with Pay on the line.'}>
+              <Input type="number" min="0" step="0.01" value={draft.estimate === '' || draft.estimate == null ? (lineEstimate(draft) || '') : draft.estimate} onChange={(e) => setDraft({ ...draft, estimate: e.target.value, qty: 1, unit: 'flat', rate: 0 })} placeholder="800" />
+            </Field>
+            <Field label="VAT %" hint={Number(draft.vatPct) > 0 ? `${money(lineVat(draft), cur)} VAT, ${money(lineTotal(draft), cur)} total.` : 'Leave empty when there is none.'}>
+              <Input type="number" min="0" step="0.5" value={draft.vatPct} onChange={(e) => setDraft({ ...draft, vatPct: e.target.value })} placeholder="24" />
+            </Field>
+          </div>
           <Field label="Notes"><Textarea rows={2} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>
         </Modal>
       )}
