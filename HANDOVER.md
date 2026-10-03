@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Duplicate project (3 Oct, late)
+`duplicateProject()` in src/lib/duplicate.js, used from the Home card tools and the Overview (which navigates to the copy). structuredClone of the stored project (not the hydrated one), new id, next code, "(copy)" on the title part, unlocked. Every item under a `photos` / `tracks` / `files` array whose `path` starts with the old project id is copied in Storage (`storage.copy`, 4 at a time) to the new id's folder and re-pointed; library paths are left alone; a copy that fails (Storage RLS: the user must be able to edit the new project id) keeps the original path and is reported as shared. Budget lines get new ids (so My work jobs never collide on budgetLineId) and lose `payments`, `txId`, `actual`. Calendar events and chat are not copied. pCloud-backed files (fileid) are not copied; none exist in project data today.
+
 ### Settings > Usage (3 Oct, late)
 Alex wanted to see whether GitHub, Supabase and the rest are near their limits. New admin-only **Usage** tab in Settings (`src/components/Usage.jsx`, logic in `src/lib/usage.js`), rendered only while the tab is open so it fetches nothing otherwise:
 - **What loads when you open the app**: measured in the browser from the state already loaded (JSON size per section, heaviest projects, how much of each is inline `data:` pictures, storyboard frame count), plus a rough "openings per month" against the plan's egress. This is the number to watch for the slow start.

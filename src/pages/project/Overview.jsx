@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button, Modal, useToast } from '../../components/ui.jsx'
 import { ProjectForm } from '../Dashboard.jsx'
 import { useProject } from '../Project.jsx'
-import { can, uid, useStore } from '../../lib/store.jsx'
+import { can, nextProjectCode, uid, useStore } from '../../lib/store.jsx'
+import { duplicateProject } from '../../lib/duplicate.js'
 import { fmtDate } from '../../lib/dates.js'
 import { projectProgress } from '../../lib/progress.js'
 import { compress } from '../../lib/photos.js'
@@ -118,9 +119,31 @@ function SongPlayer({ project, edit, editable }) {
 
 export default function Overview() {
   const { project, edit, canEdit, user } = useProject()
-  const { state } = useStore()
+  const { state, update } = useStore()
   const toast = useToast()
+  const navigate = useNavigate()
   const [draft, setDraft] = useState(null)
+  const [duping, setDuping] = useState(false)
+  // copies the stored project, not the one shown here (which has the company library merged in)
+  const duplicate = async () => {
+    const raw = state.projects.find((p) => p.id === project.id)
+    if (!raw) return
+    setDuping(true)
+    try {
+      const { project: copy, shared } = await duplicateProject(raw)
+      update((s) => {
+        copy.code = nextProjectCode(s)
+        s.projects.push(copy)
+        return s
+      })
+      toast(shared ? `Copied. ${shared} file${shared === 1 ? '' : 's'} could not be copied and stay shared with the original.` : `Copied as "${copy.title}"`, shared ? 'error' : 'ok')
+      navigate(`/p/${copy.id}`)
+    } catch (e) {
+      toast(`Could not duplicate: ${e.message}`, 'error')
+    } finally {
+      setDuping(false)
+    }
+  }
 
   const { pct, stages } = projectProgress(project, state.settings)
   const coverRef = useRef()
@@ -153,6 +176,9 @@ export default function Overview() {
               <span className="row-actions">
                 {canEdit('projects') && (
                   <button className="link small" onClick={() => setDraft({ ...project })}>Edit details</button>
+                )}
+                {can(user, 'projects', 'edit') && (
+                  <button className="link small" disabled={duping} onClick={duplicate}>{duping ? 'Copying…' : 'Duplicate'}</button>
                 )}
                 {user?.role === 'admin' && (
                   <button className="link small" onClick={() => { edit((p) => { p.frozen = !p.frozen }); toast(project.frozen ? 'Project unlocked, the team can edit again' : 'Project locked: only administrators can change it now', 'ok') }}>

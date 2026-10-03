@@ -8,6 +8,7 @@ import { compress } from '../lib/photos.js'
 import { allHideable, hiddenAfterCategory, projectTabs, tabHidden, toggleTab } from '../lib/tabs.js'
 import { initialsOf } from './Profile.jsx'
 import { joinName, nameParts } from '../lib/projectName.js'
+import { duplicateProject } from '../lib/duplicate.js'
 
 /* The row of tab chips: on = shown, struck through = hidden, Overview fixed. Used by the project
    form and by the strip on the Overview, so switching a tab on is one tap either way. */
@@ -155,6 +156,24 @@ export default function Dashboard() {
   const shown = showDelivered ? closed : active
   const liveAll = state.projects.filter((p) => p.status !== 'Delivered')
 
+  const [duping, setDuping] = useState('')
+  const duplicate = async (p) => {
+    setDuping(p.id)
+    try {
+      const { project, shared } = await duplicateProject(p)
+      update((s) => {
+        project.code = nextProjectCode(s)
+        s.projects.push(project)
+        return s
+      })
+      toast(shared ? `Copied as "${project.title}". ${shared} file${shared === 1 ? '' : 's'} could not be copied and stay shared with the original.` : `Copied as "${project.title}"`, shared ? 'error' : 'ok')
+    } catch (e) {
+      toast(`Could not duplicate: ${e.message}`, 'error')
+    } finally {
+      setDuping('')
+    }
+  }
+
   const save = () => {
     if (!draft.title.trim()) return toast('Give the project a title.', 'error')
     update((s) => {
@@ -191,6 +210,9 @@ export default function Dashboard() {
         <div className="project-tools" onClick={(e) => e.preventDefault()}>
           <button className="link" onClick={() => setDraft({ ...p })}>
             Edit
+          </button>
+          <button className="link" disabled={!!duping} onClick={() => duplicate(p)}>
+            {duping === p.id ? 'Copying…' : 'Duplicate'}
           </button>
           <Confirm
             onConfirm={() => {
