@@ -5,7 +5,7 @@ import { uid } from '../../lib/store.jsx'
 import { fmtDate } from '../../lib/dates.js'
 import { projectWorkDate } from '../../components/WorkLog.jsx'
 import { useCurrentUser, useStore } from '../../lib/store.jsx'
-import PaymentModal from '../../components/PaymentModal.jsx'
+import PaymentModal, { BulkPaymentModal } from '../../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, lineTotal, lineVat, linePaid, syncLineWorklog, dropLineWorklog } from '../../lib/budget.js'
 import { groupPairs } from '../../lib/budgetCats.js'
 
@@ -100,6 +100,13 @@ export default function Budget() {
   const budget = project.budget || { lines: [] }
   const [draft, setDraft] = useState(null)
   const [pay, setPay] = useState(null) // line
+  // lines ticked for one payment together; only lines with money still owed can be ticked
+  const canPay = me?.role === 'admin' && editable
+  const payable = (l) => lineEstimate(l) > 0 && lineBalance(l) > 0
+  const [picked, setPicked] = useState([])
+  const [bulkPay, setBulkPay] = useState(false)
+  const pickedLines = budget.lines.filter((l) => picked.includes(l.id) && payable(l))
+  const togglePick = (ids, on) => setPicked((p) => (on ? [...new Set([...p, ...ids])] : p.filter((x) => !ids.includes(x))))
   const cur = 'EUR'
   // groups from Settings, plus an "Unlisted" group for lines whose category was removed there
   const BUDGET_GROUPS = useMemo(() => groupPairs(state.settings, budget.lines), [state.settings, budget.lines])
@@ -196,7 +203,10 @@ export default function Budget() {
             </div>
           </header>
 
-          {groups.map((g) => (
+          {groups.map((g) => {
+            const open = g.lines.filter(payable).map((l) => l.id)
+            const allOn = open.length > 0 && open.every((id) => picked.includes(id))
+            return (
             <section key={g.name} className="budget-group">
               <div className="budget-group-head">
                 <h3>{g.name}</h3>
@@ -205,12 +215,14 @@ export default function Budget() {
               <table className="table budget-table">
                 <thead>
                   <tr>
+                    {canPay && <th className="pick no-print">{open.length > 0 && <input type="checkbox" checked={allOn} onChange={(e) => togglePick(open, e.target.checked)} aria-label={`Select every unpaid line in ${g.name}`} title="Select every unpaid line here" />}</th>}
                     <th>Description</th><th>Name</th><th className="num">Amount</th><th>VAT</th><th className="num">Paid</th><th className="num">Balance</th>{editable && <th className="no-print" />}
                   </tr>
                 </thead>
                 <tbody>
                   {g.lines.map((l) => (
-                    <tr key={l.id}>
+                    <tr key={l.id} className={picked.includes(l.id) && payable(l) ? 'picked' : ''}>
+                      {canPay && <td className="pick no-print">{payable(l) && <input type="checkbox" checked={picked.includes(l.id)} onChange={(e) => togglePick([l.id], e.target.checked)} aria-label={`Select ${l.description} to pay`} />}</td>}
                       <td>{l.description}{l.notes && <div className="muted small">{l.notes}</div>}</td>
                       <td>{l.vendor}{l.vendor && (l.memberId ? ' (team)' : l.contactId ? ` (${contactKind(l.contactId) || 'crew'})` : l.locationId ? ' (location)' : '')}</td>
                       <td className="num">{money(lineTotal(l), cur)}</td>
@@ -229,7 +241,8 @@ export default function Budget() {
                 </tbody>
               </table>
             </section>
-          ))}
+            )
+          })}
 
           <table className="table budget-totals">
             <tbody>
@@ -239,7 +252,18 @@ export default function Budget() {
         </article>
       )}
 
+      {canPay && pickedLines.length > 0 && (
+        <div className="bulk-bar no-print">
+          <span><strong>{pickedLines.length} line{pickedLines.length === 1 ? '' : 's'}</strong> selected · {money(pickedLines.reduce((a, l) => a + lineBalance(l), 0), cur)} to pay{pickedLines.some((l) => Number(l.vatPct) > 0) ? ' before VAT' : ''}</span>
+          <span className="bulk-bar-actions">
+            <Button variant="ghost" size="sm" onClick={() => setPicked([])}>Clear</Button>
+            <Button variant="primary" size="sm" onClick={() => setBulkPay(true)}>Pay selected</Button>
+          </span>
+        </div>
+      )}
+
       {pay && <PaymentModal project={project} line={budget.lines.find((l) => l.id === pay.id) || pay} onClose={() => setPay(null)} />}
+      {bulkPay && <BulkPaymentModal project={project} lines={pickedLines} onClose={() => setBulkPay(false)} onDone={() => setPicked([])} />}
       {draft && (
         <Modal
           open

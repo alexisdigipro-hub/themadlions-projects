@@ -22,6 +22,59 @@ export function recordPayment(s, { projectId, lineId, amount, date, method, doc,
   return tx
 }
 
+/* Pays several budget lines at once, each its full open balance: one date, method, document type
+   and note for all, and one Finance expense per line, since each line is a different payee. A
+   line with its own VAT % keeps it; the others take the VAT entered here. */
+export function BulkPaymentModal({ project, lines, onClose, onDone }) {
+  const { state, update } = useStore()
+  const toast = useToast()
+  const cur = project.budget?.currency || 'EUR'
+  const [f, setF] = useState({ date: today(), method: 'Bank', doc: 'invoice', note: '', vatPct: state.finance.settings.vatDefault ?? 24 })
+  const rows = lines.map((l) => ({ line: l, amount: lineBalance(l) })).filter((r) => r.amount > 0)
+  const total = rows.reduce((a, r) => a + r.amount, 0)
+  const save = () => {
+    if (!rows.length) return toast('Nothing left to pay on these lines.', 'error')
+    update((s) => {
+      rows.forEach(({ line, amount }) => recordPayment(s, {
+        projectId: project.id, lineId: line.id, amount, date: f.date, method: f.method, doc: f.doc, docNumber: '', note: f.note,
+        vatPct: f.doc === 'none' ? 0 : Number(line.vatPct) > 0 ? line.vatPct : f.vatPct,
+      }))
+      return s
+    })
+    toast(`${rows.length} payment${rows.length === 1 ? '' : 's'} recorded · ${money(total, cur)}`, 'ok')
+    onDone?.()
+    onClose()
+  }
+  return (
+    <Modal open title={`Pay ${rows.length} line${rows.length === 1 ? '' : 's'}`} onClose={onClose}
+      footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save}>Record {rows.length} payment{rows.length === 1 ? '' : 's'} · {money(total, cur)}</Button></>}>
+      <div className="stack">
+        <table className="table bulk-pay-list">
+          <tbody>
+            {rows.map(({ line, amount }) => (
+              <tr key={line.id}>
+                <td>{line.description}<div className="muted small">{line.vendor}</div></td>
+                <td className="num">{money(amount, cur)}{Number(line.vatPct) > 0 && <div className="muted small">+ {line.vatPct}% VAT = {money(amount * (1 + Number(line.vatPct) / 100), cur)}</div>}</td>
+              </tr>
+            ))}
+            <tr className="fin-total"><td>Total</td><td className="num">{money(total, cur)}</td></tr>
+          </tbody>
+        </table>
+        <div className="row-3">
+          <Field label="Date"><Input type="date" value={f.date} onChange={(e) => setF({ ...f, date: e.target.value })} /></Field>
+          <Field label="Method"><Select value={f.method} onChange={(e) => setF({ ...f, method: e.target.value })} options={METHODS} /></Field>
+          <Field label="Document"><Select value={f.doc} onChange={(e) => setF({ ...f, doc: e.target.value, vatPct: e.target.value === 'none' ? 0 : f.vatPct })} options={DOCS} /></Field>
+        </div>
+        <div className="row-2">
+          <Field label="VAT %" hint="For lines without a VAT % of their own."><Input type="number" min="0" max="30" value={f.vatPct} onChange={(e) => setF({ ...f, vatPct: e.target.value })} /></Field>
+          <Field label="Note"><Input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} placeholder="balance, shoot day fees" /></Field>
+        </div>
+        <p className="small muted">Each line is paid its full open balance and gets its own expense in Finance. For an advance or a part payment, use Pay on the line.</p>
+      </div>
+    </Modal>
+  )
+}
+
 export default function PaymentModal({ project, line, onClose }) {
   const { state, update } = useStore()
   const toast = useToast()
