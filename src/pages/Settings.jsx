@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
-import { CATEGORIES, DEFAULT_DEPARTMENTS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, sampleProject, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { CATEGORIES, DEFAULT_DEPARTMENTS, DEFAULT_GEAR_CATS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, gearCategoriesOf, sampleProject, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { projectProgress } from '../lib/progress.js'
 import { expenseCats } from '../lib/finance.js'
 import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/budgetCats.js'
@@ -44,6 +44,7 @@ export default function Settings() {
   const logoRef = useRef()
   const [cs, setCs] = useState(() => callsheetDefaults(state))
   const [depts, setDepts] = useState(() => departmentsOf(state).join('\n'))
+  const [gearCats, setGearCats] = useState(() => gearCategoriesOf(state).join('\n'))
   const setSetting = (k, v) => update((s) => { s.settings = { ...s.settings, [k]: v }; return s })
   const pickLogo = async (file) => {
     if (!file) return
@@ -63,6 +64,11 @@ export default function Settings() {
     const list = [...new Set(depts.split('\n').map((x) => x.trim()).filter(Boolean))]
     if (!list.length) return toast('Keep at least one department.', 'error')
     setSetting('departments', list); toast(`${list.length} departments saved`, 'ok')
+  }
+  const saveGearCats = () => {
+    const list = [...new Set(gearCats.split('\n').map((x) => x.trim()).filter(Boolean))]
+    if (!list.length) return toast('Keep at least one category.', 'error')
+    setSetting('gearCategories', list); toast(`${list.length} equipment categories saved`, 'ok')
   }
 
   const saveWs = () => {
@@ -276,6 +282,17 @@ export default function Settings() {
               <Field label="Category for a new project" hint="What New project is set to before you change it.">
                 <Select value={state.settings.defaultCategory || 'Music Video'} onChange={(e) => setSetting('defaultCategory', e.target.value)} options={CATEGORIES} />
               </Field>
+            </div>
+          </section>
+        )}
+        {isAdmin && (
+          <section className="panel" data-tab="calendar">
+            <h2>Equipment categories</h2>
+            <p className="small muted">One per line, in the order you want them in a project's Equipment tab. Existing items keep their category even if you remove it from the list.</p>
+            <Textarea rows={8} value={gearCats} onChange={(e) => setGearCats(e.target.value)} />
+            <div className="row-actions">
+              <Button variant="primary" onClick={saveGearCats}>Save equipment categories</Button>
+              <button className="link small" onClick={() => setGearCats(DEFAULT_GEAR_CATS.join('\n'))}>Reset to standard list</button>
             </div>
           </section>
         )}

@@ -2,16 +2,16 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
-import { uid } from '../../lib/store.jsx'
+import { gearCategoriesOf, uid, useStore } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 
-const GEAR_CATS = ['Camera', 'Lenses', 'Lighting', 'Grip', 'Sound', 'Monitoring & video village', 'Power & distro', 'Art & set', 'Wardrobe & makeup', 'Vehicles', 'Drone & special rigs', 'Expendables', 'Other']
 const GEAR_STATUS = [['needed', 'Needed'], ['quoted', 'Quoted'], ['booked', 'Booked'], ['out', 'Picked up'], ['returned', 'Returned']]
-const emptyItem = () => ({ id: uid(), category: 'Camera', item: '', qty: 1, vendor: '', rate: '', days: '', pickup: '', dropoff: '', status: 'needed', notes: '' })
+const emptyItem = (cats) => ({ id: uid(), category: cats[0] || '', item: '', qty: 1, vendor: '', rate: '', days: '', pickup: '', dropoff: '', status: 'needed', notes: '' })
 const emptyVendor = () => ({ id: uid(), name: '', contact: '', phone: '', email: '', address: '', notes: '' })
 
 export default function Gear() {
   const { project, edit, canEdit } = useProject()
+  const { state } = useStore()
   const toast = useToast()
   const editable = canEdit('gear')
   const gear = project.gear || []
@@ -22,7 +22,12 @@ export default function Gear() {
   const cur = project.budget?.currency || 'EUR'
   const money = (n) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(Number(n) || 0)
 
-  const groups = useMemo(() => GEAR_CATS.map((c) => [c, gear.filter((g) => g.category === c && (!cat || cat === c))]).filter(([, l]) => l.length), [gear, cat])
+  // the standard list from Settings > Calendar & projects, plus an "Unlisted" group for items
+  // whose category was since removed there, so nothing already entered goes missing
+  const GEAR_CATS = gearCategoriesOf(state)
+  const stray = useMemo(() => [...new Set(gear.map((g) => g.category).filter((c) => c && !GEAR_CATS.includes(c)))], [gear, GEAR_CATS])
+  const allCats = [...GEAR_CATS, ...stray]
+  const groups = useMemo(() => allCats.map((c) => [c, gear.filter((g) => g.category === c && (!cat || cat === c))]).filter(([, l]) => l.length), [gear, cat, allCats])
   const cost = (g) => Number(g.rate || 0) * Number(g.days || 1) * Number(g.qty || 1)
   const total = gear.reduce((a, g) => a + cost(g), 0)
   const byStatus = (st) => gear.filter((g) => g.status === st).length
@@ -85,11 +90,11 @@ export default function Gear() {
           <span className="muted">{byStatus('needed')} needed · {byStatus('quoted')} quoted · {byStatus('booked')} booked · {byStatus('out')} out</span>
         </div>
         <div className="toolbar-actions">
-          <Select value={cat} onChange={(e) => setCat(e.target.value)} options={[['', 'All categories'], ...GEAR_CATS.map((c) => [c, c])]} />
+          <Select value={cat} onChange={(e) => setCat(e.target.value)} options={[['', 'All categories'], ...allCats.map((c) => [c, c])]} />
           {gear.length > 0 && <Button variant="ghost" onClick={exportCSV}>Export CSV</Button>}
           {editable && gear.length > 0 && <Button variant="ghost" onClick={toBudget}>Sync to budget</Button>}
           {editable && <Button variant="ghost" onClick={() => setVdraft(emptyVendor())}>Add vendor</Button>}
-          {editable && <Button variant="primary" onClick={() => setDraft(emptyItem())}>Add item</Button>}
+          {editable && <Button variant="primary" onClick={() => setDraft(emptyItem(GEAR_CATS))}>Add item</Button>}
         </div>
       </div>
 
@@ -170,7 +175,7 @@ export default function Gear() {
         <Modal open title={gear.some((g) => g.id === draft.id) ? 'Edit item' : 'New item'} onClose={() => setDraft(null)}
           footer={<><Button variant="ghost" onClick={() => setDraft(null)}>Cancel</Button><Button variant="primary" onClick={save}>Save item</Button></>}>
           <div className="row-2">
-            <Field label="Category"><Select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} options={GEAR_CATS} /></Field>
+            <Field label="Category"><Select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} options={draft.category && !GEAR_CATS.includes(draft.category) ? [...GEAR_CATS, draft.category] : GEAR_CATS} /></Field>
             <Field label="Status"><Select value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value })} options={GEAR_STATUS} /></Field>
           </div>
           <Field label="Item"><Input autoFocus value={draft.item} onChange={(e) => setDraft({ ...draft, item: e.target.value })} placeholder="Alexa Mini LF body, Cooke S4 set, Aputure 600d" /></Field>

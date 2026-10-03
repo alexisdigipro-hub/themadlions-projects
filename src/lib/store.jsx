@@ -76,6 +76,8 @@ export const today = () => {
 
 export const DEFAULT_DEPARTMENTS = ['Production', 'Direction', 'Camera', 'Lighting', 'Grip', 'Sound', 'Art', 'Costume', 'Makeup & hair', 'Locations', 'Casting', 'Post', 'Transport', 'Catering', 'Client', 'Other']
 export const departmentsOf = (state) => (state.settings?.departments?.length ? state.settings.departments : DEFAULT_DEPARTMENTS)
+export const DEFAULT_GEAR_CATS = ['Camera', 'Lenses', 'Lighting', 'Grip', 'Sound', 'Monitoring & video village', 'Power & distro', 'Art & set', 'Wardrobe & makeup', 'Vehicles', 'Drone & special rigs', 'Expendables', 'Other']
+export const gearCategoriesOf = (state) => (state.settings?.gearCategories?.length ? state.settings.gearCategories : DEFAULT_GEAR_CATS)
 export const callsheetDefaults = (state) => ({ callTime: '07:00', wrapTime: '19:00', lunchAfterHours: 6, hospital: '', parking: '', tagline: '', footer: '', castOffset: 0, crewOffset: 0, showWeather: true, showSun: true, ...(state.settings?.callsheet || {}) })
 /* Who marked themselves not available on a given day. Days off are ordinary calendar events
    of type 'unavailable', stamped with the id of whoever created them, and they can span a
@@ -118,6 +120,7 @@ export function emptyState() {
       progress: {}, // per category overrides, see progress.js
       driveSeriesOrder: [],
       departments: DEFAULT_DEPARTMENTS,
+      gearCategories: DEFAULT_GEAR_CATS,
       newMemberLevel: 'view', // 'none' | 'view' | 'edit'  (default permissions when adding a teammate)
       phoneVisibility: 'everyone', // 'everyone' | 'admins'  (who sees phone numbers and emails of cast and crew)
       shareExpiryDays: 0, // public call sheet links stop working this many days after the shooting day; 0 = never
