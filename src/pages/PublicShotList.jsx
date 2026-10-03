@@ -57,12 +57,12 @@ export default function PublicShotList() {
 
   return (
     <div className={`pub${look.accent ? ' pub-accented' : ''}`} style={{ ...(look.accent ? { '--pa': look.accent } : {}), ...(ZOOM[look.size] && ZOOM[look.size] !== 1 ? { zoom: ZOOM[look.size] } : {}) }}>
-      <header className="pub-hero" style={{ '--pc': look.accent || d.project?.color || '#C8503F' }}>
+      <header className={`pub-hero${d.project?.cover ? ' has-cover' : ''}`} style={{ '--pc': look.accent || d.project?.color || '#C8503F' }}>
         {d.project?.cover && <img className="pub-cover" src={d.project.cover} alt="" />}
         <div className="pub-hero-body">
           <div className="pub-company">{d.company?.logo && <img src={d.company.logo} alt="" />}{d.company?.name || 'THEMADLIONS'}</div>
           <h1>{d.project?.title}</h1>
-          <div className="pub-day">{d.mode === 'day' ? `Shot list · Day ${d.day.index} of ${d.day.count} · ${fmt(d.day.date)}` : 'Shot list'}</div>
+          <div className="pub-day">{d.mode === 'day' ? `Shot list · ${fmt(d.day.date)}` : 'Shot list'}</div>
         </div>
       </header>
 
