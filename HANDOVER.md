@@ -40,6 +40,15 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Speed and cleanup pass (3 Oct, late)
+Alex: the app "αρχίζει και βαραίνει, αργεί να φορτώσει". What was found and done:
+- **Pages are lazy-loaded now** (`src/App.jsx`, `lazyPage()`). Before, every page shipped in one `index.js` of 1,022 kB (296 kB gzipped) that had to load before anything showed. Home (Dashboard) starts fetching at module load, in parallel with the workspace data. `Suspense` sits around the Layout's and the project's `<Outlet>` so the sidebar and project header stay while a page arrives. **A tab open across a deploy** asks for chunk files that no longer exist; `lazyPage()` reloads once (sessionStorage flag `tml_chunk_reload`) instead of crashing. Any new page added to `App.jsx` should go through `lazyPage()` too.
+- **Dead code removed**: `pages/project/Calendar.jsx`, `ProjectChat` in Chat.jsx, and unused helpers (`teamExcept`, `defaultFinanceSettings`, `projectFolder`, `stageKeysFor`, `callFor`).
+- **Not done, open for Alex to decide**:
+  - **Images stored inside project data.** Storyboard frames (`shots[].frame`, a 560 px JPEG as a data URL, roughly 40–60 kB each), project covers (`coverThumb`, 640 px) and photo thumbnails (320 px) live inside the project JSON. The whole workspace is loaded at sign-in, and every edit to a project re-uploads its whole document, so a project with many storyboard frames makes both opening the app and saving slower. The fix is to move storyboard frames into the `photos` Storage bucket like full-size photos already are, with a migration on load. Bigger change, needs a careful migration.
+  - **Unused CSS.** About 30 classes in styles.css match nothing in the code (mostly the old Home page: `home-blocks`, `home-block*`, `home-week`, `home-alerts`, `mini-progress`, plus `checklist`, `event-list`, `day-card`, `file-list`, `cloud-folder`, `chat-tg`, `chat-embedded`, …). A scripted removal was blocked by the sandbox's safety check; small gain (a few kB), safe to do by hand.
+  - **CI runs Node 20** while `@supabase/supabase-js` asks for Node ≥ 22 (only an engine warning today). Bumping `node-version` in `.github/workflows/deploy.yml` to 22 is a one-line change.
+
 ### A run of small, one-request-at-a-time fixes (3 Oct)
 - **Finance > Invoices**: a due-date reminder banner (like the existing recurring-items-due one) for invoices coming due. The Edit Income form in Finance > Transactions gained an **Invoices** picker: link an income transaction to an invoice marked "Invoiced" and it fills client/amount/invoice number; an invoice already linked to one transaction is filtered out of every other transaction's picker.
 - **Chat**: a project's room now moves itself into a new **Archived** folder the moment the project's status becomes Delivered (and back out if it changes away), automatic, no manual action; it no longer shows in All or in its category folder while archived (`src/lib/chat.js`).
