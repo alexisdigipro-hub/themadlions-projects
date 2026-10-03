@@ -962,6 +962,15 @@ code {
   border-radius: 4px;
   text-decoration: none;
 }
+/* Home on a computer: wider cards so "Artist - Song" fits one line, the cover held square, and
+   nothing under it but the title. The phone keeps its own compact cards (mobile layer below). */
+@media (min-width: 821px) {
+  .project-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+  .project-cover { flex: none; }
+  .project-card .project-meta, .project-card .project-foot { display: none; }
+  .project-body { padding: 12px 14px 13px; }
+  .project-body h3 { font-size: 15.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
 
 /* ---------- project workspace ---------- */
 .crumb {
