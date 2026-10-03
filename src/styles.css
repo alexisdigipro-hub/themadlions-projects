@@ -3247,7 +3247,7 @@ a.drive-item-title:hover { text-decoration: underline; }
 .psl-break { background: var(--raised); border-radius: 10px; padding: 8px 10px !important; margin: 6px 0; justify-content: space-between; }
 .psl-break strong { flex: 1; }
 .pub-note { display: flex; gap: 10px; margin: 12px 12px 0; padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, #D9A441 18%, var(--panel)); border: 1px solid color-mix(in srgb, #D9A441 40%, transparent); }
-.pub-note p { margin: 0; white-space: pre-wrap; font-weight: 600; }
+.pub-note p { margin: 0; white-space: pre-wrap; font-weight: 600; font-size: 14px; line-height: 1.45; } /* no pin, smaller (Alex) */
 .pub-card { background: var(--panel); margin: 12px 12px 0; border-radius: 16px; padding: 14px 16px; box-shadow: var(--shadow); }
 .pub-card h1 { margin: 0 0 6px; font-size: 20px; }
 .pub-card h2 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }

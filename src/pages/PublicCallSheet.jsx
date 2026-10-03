@@ -50,7 +50,7 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
   const block = (b) => {
     switch (b.key) {
       case 'note':
-        return d.sheet.notes ? <section className="pub-note"><span>📌</span><p>{d.sheet.notes}</p></section> : null
+        return d.sheet.notes ? <section className="pub-note"><p>{d.sheet.notes}</p></section> : null
       case 'location':
         return (
           <section className="pub-card">
