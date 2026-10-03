@@ -161,12 +161,12 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
 
   return (
     <div className={`pub${lay.accent ? ' pub-accented' : ''}`} style={{ ...(lay.accent ? { '--pa': lay.accent } : {}), ...(ZOOM[lay.size] && ZOOM[lay.size] !== 1 ? { zoom: ZOOM[lay.size] } : {}) }}>
-      <header className="pub-hero" style={{ '--pc': lay.accent || d.project.color || '#C8503F' }}>
+      <header className={`pub-hero${d.project.cover ? ' has-cover' : ''}`} style={{ '--pc': lay.accent || d.project.color || '#C8503F' }}>
         {d.project.cover && <img className="pub-cover" src={d.project.cover} alt="" />}
         <div className="pub-hero-body">
           <div className="pub-company">{d.company?.logo && <img src={d.company.logo} alt="" />}{d.company?.name || 'THEMADLIONS'}</div>
           <h1>{d.project.title}</h1>
-          <div className="pub-day">Day {d.day.index} of {d.day.count} · {fmt(d.day.date)}</div>
+          <div className="pub-day">{fmt(d.day.date)}</div>
         </div>
       </header>
 

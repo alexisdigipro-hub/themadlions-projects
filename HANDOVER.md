@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Link banner square with the full picture (4 Oct)
+Alex: banner square so the whole picture shows, no "Day 1 of 1", date 5% bigger. `.pub-hero.has-cover` (set when the link carries a cover) is `aspect-ratio: 1/1`, picture at full opacity, a radial shade between picture and text (z-index 0/1/2). `.pub-day` 14.5 → 15.2px. Call sheet link shows only the date; shot list day link "Shot list · date". Without a cover the banner keeps its short gradient form.
+
 ### Link banner centred and rounded (4 Oct)
 Alex, from a phone screenshot of a call sheet link: banner text all centred, banner as wide as the cards under it with the same rounded corners. `.pub-hero` now has `margin: 12px 12px 0; border-radius: 16px`, centred. Shared by the call sheet and shot list links.
 
