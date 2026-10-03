@@ -1,6 +1,10 @@
-import { useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
+
+// Links made before Customise existed carry no layout: they keep the order they always had.
+const OLD_ORDER = [['note', ''], ['location', 'Location'], ['cast', 'Calls'], ['crew', 'Calls'], ['schedule', ''], ['contacts', '']]
+const ZOOM = { small: 0.9, normal: 1, large: 1.12 }
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
@@ -8,6 +12,16 @@ export default function PublicCallSheet() {
   const { token } = useParams()
   const { share, tryPin, pinErr } = usePublicShare(token)
   const [q, setQ] = useState('')
+  const theme = share?.data?.layout?.theme
+
+  // The production picks light or dark for the link; the page takes it while it is open.
+  useEffect(() => {
+    if (!theme) return undefined
+    const html = document.documentElement
+    const before = html.dataset.theme
+    html.dataset.theme = theme
+    return () => { html.dataset.theme = before }
+  }, [theme])
 
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading call sheet…</p></div>
   if (share?.closed) return <div className="pub"><div className="pub-card"><h1>This link is closed</h1><p className="muted">The production has closed this call sheet. Ask them for the current one.</p></div></div>
@@ -17,14 +31,132 @@ export default function PublicCallSheet() {
   if (!share || share.kind !== 'callsheet') return <div className="pub"><div className="pub-card"><h1>This link has expired</h1><p className="muted">Ask the production for a fresh link.</p></div></div>
 
   const d = share.data
+  const lay = d.layout || {}
+  const label = (k, fallback) => lay.labels?.[k] || fallback
+  const blocks = lay.blocks || OLD_ORDER.map(([key, title]) => ({ key, title }))
   const people = [...(d.cast || []).map((c) => ({ ...c, kind: 'cast' })), ...(d.crew || []).map((c) => ({ ...c, kind: 'crew' }))]
   const match = (p) => !q.trim() || [p.name, p.character, p.role].filter(Boolean).some((x) => x.toLowerCase().includes(q.trim().toLowerCase()))
   const mapsUrl = d.loc?.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.loc.address)}` : ''
   const dirUrl = d.loc?.address ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(d.loc.address)}` : ''
+  // Cast and crew are one list with a search box, drawn where the first of the two sits.
+  const firstPeople = blocks.find((b) => b.key === 'cast' || b.key === 'crew')?.key
+  const peopleTitle = blocks.filter((b) => b.key === 'cast' || b.key === 'crew').length > 1 || !lay.blocks ? 'Calls' : blocks.find((b) => b.key === firstPeople)?.title || 'Calls'
+
+  const block = (b) => {
+    switch (b.key) {
+      case 'note':
+        return d.sheet.notes ? <section className="pub-note"><span>📌</span><p>{d.sheet.notes}</p></section> : null
+      case 'location':
+        return (
+          <section className="pub-card">
+            <h2>{b.title || 'Location'}</h2>
+            {d.loc ? (
+              <>
+                <strong className="pub-loc-name">{d.loc.name}</strong>
+                <div>{d.loc.address}</div>
+                {(d.loc.contact || d.loc.phone) && <div className="muted">{d.loc.contact}{d.loc.contact && d.loc.phone ? ' · ' : ''}{d.loc.phone && <a href={`tel:${d.loc.phone}`}>{d.loc.phone}</a>}</div>}
+                {mapsUrl && <div className="pub-btns"><a className="pub-btn" href={dirUrl} target="_blank" rel="noreferrer">Directions</a><a className="pub-btn ghost" href={mapsUrl} target="_blank" rel="noreferrer">Open in Maps</a></div>}
+              </>
+            ) : <p className="muted">To be confirmed.</p>}
+            {(d.sheet.parking || d.sheet.hospital) && (
+              <div className="pub-locgrid">
+                {d.sheet.parking && <div><span className="pub-label">Parking</span><div>{d.sheet.parking}</div></div>}
+                {d.sheet.hospital && <div><span className="pub-label">Nearest hospital</span><div>{d.sheet.hospital}</div></div>}
+              </div>
+            )}
+          </section>
+        )
+      case 'cast':
+      case 'crew':
+        return b.key === firstPeople && people.length > 0 ? (
+          <section className="pub-card">
+            <div className="pub-card-head"><h2>{peopleTitle}</h2><input className="pub-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find your name" /></div>
+            <ul className="pub-people">
+              {people.filter(match).map((p, i) => (
+                <li key={i} className={p.kind}>
+                  {p.photo ? <img src={p.photo} alt="" /> : <span className="pub-av">{(p.name || '?').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase()}</span>}
+                  <div className="grow">
+                    <strong>{p.name || 'Not cast'}</strong>
+                    <div className="muted small">{p.kind === 'cast' ? p.character : p.role}{p.phone ? <> · <a href={`tel:${p.phone}`}>{p.phone}</a></> : null}</div>
+                  </div>
+                  <span className="pub-time">{p.call}</span>
+                </li>
+              ))}
+              {!people.filter(match).length && <li className="muted">No one matches.</li>}
+            </ul>
+          </section>
+        ) : null
+      case 'schedule':
+        return (
+          <>
+            {d.blocks?.length > 0 && (
+              <section className="pub-card">
+                <h2>{b.title || 'Run of show'}</h2>
+                <ul className="pub-scenes">
+                  {d.blocks.map((x, i) => <li key={i}><span className="pub-sc">{x.time}{x.end ? ` – ${x.end}` : ''}</span><div className="grow"><strong>{x.item}</strong>{(x.owner || x.notes) && <div className="muted small">{[x.owner, x.notes].filter(Boolean).join(' · ')}</div>}</div></li>)}
+                </ul>
+              </section>
+            )}
+            {d.scenes?.length > 0 && (
+              <section className="pub-card">
+                <h2>{lay.blocks ? b.title : 'Sets'}</h2>
+                <ul className="pub-scenes">
+                  {d.scenes.map((x, i) => (
+                    <li key={i}>
+                      <span className="pub-sc pub-sc-time">{x.from || x.to ? `${x.from || ''}${x.to ? ` – ${x.to}` : ''}` : '–'}</span>
+                      <div className="grow"><strong>{x.location || x.heading || 'Set'}</strong></div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </>
+        )
+      case 'departments':
+        return d.departments?.length > 0 ? (
+          <section className="pub-card">
+            <h2>{b.title || 'Department requirements'}</h2>
+            <ul className="pub-kv">
+              {d.departments.map((x, i) => <li key={i}><span className="muted">{x.cat}</span><span>{x.items.join(', ')}</span></li>)}
+            </ul>
+          </section>
+        ) : null
+      case 'contacts':
+        return (
+          <>
+            {(d.keyCrew?.length > 0 || d.prodContacts?.length > 0) && (
+              <section className="pub-card">
+                <h2>Production</h2>
+                <ul className="pub-kv">
+                  {(d.prodContacts || []).map((c, i) => <li key={`pc${i}`}><span className="muted">{c.role}</span><span>{c.name}{c.phone ? <> · <a href={`tel:${c.phone}`}>{c.phone}</a></> : null}</span></li>)}
+                  {(d.keyCrew || []).map((k, i) => <li key={i}><span className="muted">{k.role}</span><span>{k.name}{k.phone ? <> · <a href={`tel:${k.phone}`}>{k.phone}</a></> : null}</span></li>)}
+                </ul>
+                {d.company?.address && <p className="muted small">{d.company.name} · {d.company.address}</p>}
+              </section>
+            )}
+            {d.emergency?.length > 0 && (
+              <section className="pub-card pub-emergency">
+                <h2>Emergency</h2>
+                <ul className="pub-kv">
+                  {d.emergency.map((n, i) => <li key={i}><span className="muted">{n.label}</span><a href={`tel:${n.number}`}>{n.number}</a></li>)}
+                </ul>
+              </section>
+            )}
+          </>
+        )
+      default:
+        return b.custom && b.text ? (
+          <section className="pub-card">
+            <h2>{b.title}</h2>
+            <p className="pub-custom">{b.text}</p>
+          </section>
+        ) : null
+    }
+  }
 
   return (
-    <div className="pub">
-      <header className="pub-hero" style={{ '--pc': d.project.color || '#C8503F' }}>
+    <div className={`pub${lay.accent ? ' pub-accented' : ''}`} style={{ ...(lay.accent ? { '--pa': lay.accent } : {}), ...(ZOOM[lay.size] && ZOOM[lay.size] !== 1 ? { zoom: ZOOM[lay.size] } : {}) }}>
+      <header className="pub-hero" style={{ '--pc': lay.accent || d.project.color || '#C8503F' }}>
         {d.project.cover && <img className="pub-cover" src={d.project.cover} alt="" />}
         <div className="pub-hero-body">
           <div className="pub-company">{d.company?.logo && <img src={d.company.logo} alt="" />}{d.company?.name || 'THEMADLIONS'}</div>
@@ -35,100 +167,20 @@ export default function PublicCallSheet() {
 
       <section className="pub-call">
         <div className="pub-call-main">
-          <span className="pub-label">General crew call</span>
+          <span className="pub-label">{label('call', 'General crew call')}</span>
           <strong>{d.day.callTime}</strong>
         </div>
         <div className="pub-call-grid">
-          <div><span className="pub-label">Shooting call</span><b>{d.sheet.shootingCall || d.day.callTime}</b></div>
-          {d.sheet.lunch && <div><span className="pub-label">Lunch</span><b>{d.sheet.lunch}</b></div>}
-          {d.day.wrapTime && <div><span className="pub-label">Est. wrap</span><b>{d.day.wrapTime}</b></div>}
+          <div><span className="pub-label">{label('shooting', 'Shooting call')}</span><b>{d.sheet.shootingCall || d.day.callTime}</b></div>
+          {d.sheet.lunch && <div><span className="pub-label">{label('lunch', 'Lunch')}</span><b>{d.sheet.lunch}</b></div>}
+          {d.day.wrapTime && <div><span className="pub-label">{label('wrap', 'Est. wrap')}</span><b>{d.day.wrapTime}</b></div>}
           {d.sun && <div><span className="pub-label">Sun</span><b>{d.sun.sunrise} · {d.sun.sunset}</b></div>}
         </div>
         {d.wx && <div className="pub-wx">☀ {d.wx.tmax}° / {d.wx.tmin}° · {d.wx.summary}{d.wx.rain != null ? ` · rain ${d.wx.rain}%` : ''}</div>}
         {d.sheet.tagline && <p className="pub-tagline">{d.sheet.tagline}</p>}
       </section>
 
-      {d.sheet.notes && <section className="pub-note"><span>📌</span><p>{d.sheet.notes}</p></section>}
-
-      <section className="pub-card">
-        <h2>Location</h2>
-        {d.loc ? (
-          <>
-            <strong className="pub-loc-name">{d.loc.name}</strong>
-            <div>{d.loc.address}</div>
-            {d.loc.phone && <div className="muted">{d.loc.contact ? `${d.loc.contact} · ` : ''}<a href={`tel:${d.loc.phone}`}>{d.loc.phone}</a></div>}
-            {mapsUrl && <div className="pub-btns"><a className="pub-btn" href={dirUrl} target="_blank" rel="noreferrer">Directions</a><a className="pub-btn ghost" href={mapsUrl} target="_blank" rel="noreferrer">Open in Maps</a></div>}
-          </>
-        ) : <p className="muted">To be confirmed.</p>}
-        {(d.sheet.parking || d.sheet.hospital) && (
-          <div className="pub-locgrid">
-            {d.sheet.parking && <div><span className="pub-label">Parking</span><div>{d.sheet.parking}</div></div>}
-            {d.sheet.hospital && <div><span className="pub-label">Nearest hospital</span><div>{d.sheet.hospital}</div></div>}
-          </div>
-        )}
-      </section>
-
-      {people.length > 0 && (
-        <section className="pub-card">
-          <div className="pub-card-head"><h2>Calls</h2><input className="pub-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find your name" /></div>
-          <ul className="pub-people">
-            {people.filter(match).map((p, i) => (
-              <li key={i} className={p.kind}>
-                {p.photo ? <img src={p.photo} alt="" /> : <span className="pub-av">{(p.name || '?').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase()}</span>}
-                <div className="grow">
-                  <strong>{p.name || 'Not cast'}</strong>
-                  <div className="muted small">{p.kind === 'cast' ? p.character : p.role}{p.phone ? <> · <a href={`tel:${p.phone}`}>{p.phone}</a></> : null}</div>
-                </div>
-                <span className="pub-time">{p.call}</span>
-              </li>
-            ))}
-            {!people.filter(match).length && <li className="muted">No one matches.</li>}
-          </ul>
-        </section>
-      )}
-
-      {d.blocks?.length > 0 && (
-        <section className="pub-card">
-          <h2>Run of show</h2>
-          <ul className="pub-scenes">
-            {d.blocks.map((b, i) => <li key={i}><span className="pub-sc">{b.time}{b.end ? ` – ${b.end}` : ''}</span><div className="grow"><strong>{b.item}</strong>{(b.owner || b.notes) && <div className="muted small">{[b.owner, b.notes].filter(Boolean).join(' · ')}</div>}</div></li>)}
-          </ul>
-        </section>
-      )}
-
-      {d.scenes?.length > 0 && (
-        <section className="pub-card">
-          <h2>Sets</h2>
-          <ul className="pub-scenes">
-            {d.scenes.map((s, i) => (
-              <li key={i}>
-                <span className="pub-sc pub-sc-time">{s.from || s.to ? `${s.from || ''}${s.to ? ` – ${s.to}` : ''}` : '–'}</span>
-                <div className="grow"><strong>{s.location || s.heading || 'Set'}</strong></div>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {(d.keyCrew?.length > 0 || d.prodContacts?.length > 0) && (
-        <section className="pub-card">
-          <h2>Production</h2>
-          <ul className="pub-kv">
-            {(d.prodContacts || []).map((c, i) => <li key={`pc${i}`}><span className="muted">{c.role}</span><span>{c.name}{c.phone ? <> · <a href={`tel:${c.phone}`}>{c.phone}</a></> : null}</span></li>)}
-            {(d.keyCrew || []).map((k, i) => <li key={i}><span className="muted">{k.role}</span><span>{k.name}{k.phone ? <> · <a href={`tel:${k.phone}`}>{k.phone}</a></> : null}</span></li>)}
-          </ul>
-          {d.company?.address && <p className="muted small">{d.company.name} · {d.company.address}</p>}
-        </section>
-      )}
-
-      {d.emergency?.length > 0 && (
-        <section className="pub-card pub-emergency">
-          <h2>Emergency</h2>
-          <ul className="pub-kv">
-            {d.emergency.map((n, i) => <li key={i}><span className="muted">{n.label}</span><a href={`tel:${n.number}`}>{n.number}</a></li>)}
-          </ul>
-        </section>
-      )}
+      {blocks.map((b) => <Fragment key={b.key}>{block(b)}</Fragment>)}
 
       {d.sheet.footer && <p className="pub-footer">{d.sheet.footer}</p>}
       <footer className="pub-foot muted small">Updated {new Date(share.updated_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · THEMADLIONS Projects</footer>
