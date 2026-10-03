@@ -9,7 +9,7 @@ import { ATHENS, coordsFromText, forecast, geocode, sunTimes } from '../../lib/s
 import { callSheetText, mailLink, personalCallText, waLink, waShareLink } from '../../lib/share.js'
 import { Modal } from '../../components/ui.jsx'
 import { ensurePin, publishShare } from '../../lib/shares.js'
-import { callsheetDefaults, useCurrentUser } from '../../lib/store.jsx'
+import { callsheetDefaults, uid, useCurrentUser } from '../../lib/store.jsx'
 import CallSheetDesigner from '../../components/CallSheetDesigner.jsx'
 import { CallSheetLinkView } from '../PublicCallSheet.jsx'
 import { ZOOM, accentOf, labelOf, layoutOf, linkLayout, normalizeLayout, storedLayout, titleOf } from '../../lib/callsheetLayout.js'
@@ -100,7 +100,13 @@ export default function CallSheets() {
     ? { name: sheet.locName || loc?.name || '', address: sheet.locAddress || loc?.address || '', contact: sheet.locContact || loc?.contact || '', phone: sheet.locPhone || loc?.phone || '', notes: loc?.notes || '' }
     : null
   const titled = { ...project, title }
-  const notes = layout.blocks.filter((b) => b.custom && customText(b)).map((b) => ({ title: titleOf(layout, b), text: customText(b) }))
+  // Program: rows typed by hand on the day (time and what happens), like the scene times
+  const program = sheet.program || []
+  const programRows = program.filter((r) => r.from || r.to || r.what?.trim())
+  const notes = [
+    ...(programRows.length ? [{ title: titleOf(layout, layout.blocks.find((b) => b.key === 'program') || { key: 'program' }), text: programRows.map((r) => `${r.from || ''}${r.to ? `–${r.to}` : ''} ${r.what || ''}`.trim()).join('\n') }] : []),
+    ...layout.blocks.filter((b) => b.custom && customText(b)).map((b) => ({ title: titleOf(layout, b), text: customText(b) })),
+  ]
   const fullText = callSheetText({ project: titled, day, dayIndex, dayCount: days.length, scenes, loc: locView, cast: castRows, crew: crewRows, sheet, extra: notes })
   const people = [...castRows.filter((r) => r.actor).map((r) => ({ ...r.actor, call: r.call, character: r.character, scenes: scenes.filter((s) => s.characters?.includes(r.character)) })), ...crewRows.map((c) => ({ ...c, scenes }))]
   const personal = (pp) => personalCallText({ project: titled, day, dayIndex, loc: locView, person: pp, call: pp.call, scenes: pp.scenes })
@@ -141,6 +147,7 @@ export default function CallSheets() {
       crew: on('crew') ? crewRows.map((c) => ({ name: c.name, role: c.role || c.dept, phone: phone(c.phone), call: c.call, photo: c.photos?.[0]?.thumb || '' })) : [],
       blocks: on('schedule') ? (day.blocks || []).map((b) => ({ time: b.time, end: b.end, item: b.item, owner: b.owner, notes: b.notes })) : [],
       departments: on('departments') ? Object.entries(departments).map(([cat, items]) => ({ cat, items })) : [],
+      program: on('program') ? programRows.map((r) => ({ from: r.from || '', to: r.to || '', what: r.what || '' })) : [],
       keyCrew,
       emergency: on('contacts') ? emergency : [],
       prodContacts: on('contacts') ? prodContacts : [],
@@ -166,6 +173,15 @@ export default function CallSheets() {
   }
 
   const sceneTime = (id) => (sheet.sceneTimes || {})[id] || { from: '', to: '' }
+  const setProgram = (list) => setSheet('program', list)
+  const setProgramRow = (i, k, v) => setProgram(program.map((r, j) => (j === i ? { ...r, [k]: v } : r)))
+  const moveProgram = (i, d) => {
+    const j = i + d
+    if (j < 0 || j >= program.length) return
+    const list = [...program]
+    ;[list[i], list[j]] = [list[j], list[i]]
+    setProgram(list)
+  }
   const setSceneTime = (id, k, v) => edit((p) => {
     const d = p.shootingDays.find((x) => x.id === day.id)
     if (!d) return
@@ -357,6 +373,37 @@ export default function CallSheets() {
                 ))}
               </tbody>
             </table>
+          </section>
+        )
+      case 'program':
+        if (!editable && !programRows.length) return null
+        return (
+          <section>
+            {h}
+            <table className="table cs-program">
+              <thead><tr><th>Time</th><th>Description</th>{editable && <th className="no-print" />}</tr></thead>
+              <tbody>
+                {(editable ? program : programRows).map((r, i) => (
+                  <tr key={r.id}>
+                    <td className="nowrap cs-scene-time">
+                      {editable ? (
+                        <span className="cs-range"><input className="cs-time" value={r.from || ''} placeholder="09:00" onChange={(e) => setProgramRow(i, 'from', e.target.value)} aria-label="From" /> – <input className="cs-time" value={r.to || ''} placeholder="end" onChange={(e) => setProgramRow(i, 'to', e.target.value)} aria-label="To" /></span>
+                      ) : `${r.from || ''}${r.to ? ` – ${r.to}` : ''}`}
+                    </td>
+                    <td className="cs-program-what">{editable ? <input className="cs-program-input" value={r.what || ''} placeholder="Hair & make-up, first setup, lunch…" onChange={(e) => setProgramRow(i, 'what', e.target.value)} aria-label="Description" /> : r.what}</td>
+                    {editable && (
+                      <td className="row-actions no-print nowrap">
+                        <button onClick={() => moveProgram(i, -1)} disabled={i === 0} aria-label="Earlier">↑</button>
+                        <button onClick={() => moveProgram(i, 1)} disabled={i === program.length - 1} aria-label="Later">↓</button>
+                        <button onClick={() => setProgram(program.filter((_, j) => j !== i))} aria-label="Remove">×</button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+                {editable && !program.length && <tr><td colSpan={3} className="muted">Nothing yet. Add a row for each part of the day.</td></tr>}
+              </tbody>
+            </table>
+            {editable && <div className="no-print cs-program-add"><Button size="sm" onClick={() => setProgram([...program, { id: uid(), from: '', to: '', what: '' }])}>Add a row</Button></div>}
           </section>
         )
       case 'departments':
