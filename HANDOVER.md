@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Lunch / break off the link (4 Oct)
+Alex: "βγάλε το break από την mobile version" (his Lunch label renamed "Break"). New detail `lunch` in callsheetLayout.js; `DETAIL_LINK_OFF` makes it start off on the link even in layouts saved before it existed, so it disappears from his link on the next Share link; a tick in Customise > Details brings it back. Sheet unchanged unless untick "Sheet".
+
 ### Link banner square with the full picture (4 Oct)
 Alex: banner square so the whole picture shows, no "Day 1 of 1", date 5% bigger. `.pub-hero.has-cover` (set when the link carries a cover) is `aspect-ratio: 1/1`, picture at full opacity, a radial shade between picture and text (z-index 0/1/2). `.pub-day` 14.5 → 15.2px. Call sheet link shows only the date; shot list day link "Shot list · date". Without a cover the banner keeps its short gradient form.
 

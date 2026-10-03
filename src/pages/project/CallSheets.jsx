@@ -128,7 +128,7 @@ export default function CallSheets() {
         tagline: linkShow('tagline') ? sheet.tagline || csd.tagline || '' : '',
         notes: on('note') ? sheet.notes || '' : '',
         shootingCall: sheet.shootingCall || '',
-        lunch: sheet.lunch || lunchDefault,
+        lunch: linkShow('lunch') ? sheet.lunch || lunchDefault : '',
         parking: on('location') && linkShow('parking') ? sheet.parking || csd.parking || '' : '',
         hospital: on('location') && linkShow('hospital') ? sheet.weather || csd.hospital || '' : '',
         footer: csd.footer || '',
@@ -576,7 +576,7 @@ export default function CallSheets() {
             )}
             <dl className="cs-times">
               <dt>{labelOf(layout, 'shooting')}</dt><dd>{editable ? <input className="cs-time" value={sheet.shootingCall ?? ''} placeholder={day.callTime} onChange={(e) => setSheet('shootingCall', e.target.value)} /> : sheet.shootingCall || day.callTime}</dd>
-              <dt>{labelOf(layout, 'lunch')}</dt><dd>{editable ? <input className="cs-time" value={sheet.lunch ?? ''} placeholder={lunchDefault || '13:00'} onChange={(e) => setSheet('lunch', e.target.value)} /> : sheet.lunch || lunchDefault || ''}</dd>
+              {show('lunch') && <><dt>{labelOf(layout, 'lunch')}</dt><dd>{editable ? <input className="cs-time" value={sheet.lunch ?? ''} placeholder={lunchDefault || '13:00'} onChange={(e) => setSheet('lunch', e.target.value)} /> : sheet.lunch || lunchDefault || ''}</dd></>}
               <dt>{labelOf(layout, 'wrap')}</dt><dd>{day.wrapTime}</dd>
             </dl>
           </div>
