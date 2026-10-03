@@ -591,6 +591,11 @@ code {
   gap: 16px;
   align-items: start;
 }
+/* Links and Production notes on Overview: same height, the shorter one stretched to match
+   instead of hugging its own content (Alex: don't let Notes be taller than Links). */
+.cols.notes-cols {
+  align-items: stretch;
+}
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
