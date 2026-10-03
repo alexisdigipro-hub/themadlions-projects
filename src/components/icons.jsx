@@ -44,4 +44,5 @@ export const Icon = {
   gear: () => (<svg {...base}><path d="M4 9h11l3-3 3 3v9a2 2 0 0 1-2 2H4z" /><path d="M4 9V6a2 2 0 0 1 2-2h4v5M8 14h4" /></svg>),
   post: () => (<svg {...base}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M7 4v5M11 4v5M15 4v5M19 4v5M10 13l5 2.5-5 2.5z" /></svg>),
   notes: () => (<svg {...base}><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>),
+  deck: () => (<svg {...base}><rect x="3" y="4" width="18" height="12" rx="1.5" /><path d="M12 16v4M8 20h8M7 8h5M7 11h3M14 8h3v4h-3z" /></svg>),
 }

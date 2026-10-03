@@ -295,8 +295,10 @@ export const canvasToJpegBytes = (canvas, quality = 0.9) =>
   })
 
 /* A minimal but valid PDF: pages, each one a full-bleed JPEG. Pure and DOM-free, so it can be
-   tested with plain fake bytes. `pages`: [{ bytes: Uint8Array (JPEG), width, height }] in px. */
-export function buildPdf(pages) {
+   tested with plain fake bytes. `pages`: [{ bytes: Uint8Array (JPEG), width, height }] in px.
+   `size` is the page in points: A4 portrait unless given (the presentation passes 16:9). */
+export function buildPdf(pages, size = { width: PAGE_W, height: PAGE_H }) {
+  const { width: pw, height: ph } = size
   const enc = new TextEncoder()
   const chunks = []
   const offsets = {}
@@ -325,7 +327,7 @@ export function buildPdf(pages) {
     const p = pages[i]
     writeObj(
       pageIds[i],
-      `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Resources << /XObject << /Im0 ${imgIds[i]} 0 R >> >> /Contents ${contentIds[i]} 0 R >>\n`
+      `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 ${imgIds[i]} 0 R >> >> /Contents ${contentIds[i]} 0 R >>\n`
     )
     writeObj(
       imgIds[i],
@@ -333,7 +335,7 @@ export function buildPdf(pages) {
       p.bytes,
       '\nendstream\nendobj\n'
     )
-    const cs = `q ${PAGE_W} 0 0 ${PAGE_H} 0 0 cm /Im0 Do Q`
+    const cs = `q ${pw} 0 0 ${ph} 0 0 cm /Im0 Do Q`
     const csBytes = enc.encode(cs)
     writeObj(contentIds[i], `<< /Length ${csBytes.length} >>\nstream\n${cs}\nendstream\n`)
   }
