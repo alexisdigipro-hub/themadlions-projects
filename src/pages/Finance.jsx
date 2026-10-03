@@ -46,8 +46,11 @@ export default function Finance() {
     description: c.line.description || c.line.category, party: (c.line.memberId && state.users.find((u) => u.id === c.line.memberId)?.name) || c.line.vendor || '',
     projectId: c.project.id, category: finCatFor(state.settings, c.line.category), net: c.balance, agreed: c.agreed, paid: c.paid, project: c.project, line: c.line,
   }))
+  // per project, only what falls in the year shown (the line's date, else the project's shoot day),
+  // so picking 2025 does not pull in a 2026 project that merely still owes its crew
+  const owedYearRows = owedRows.filter((r) => fiscalYearOf(r.date, fiscalStart) === year)
   const owedByProject = {}
-  openCommitments.forEach((c) => { owedByProject[c.project.title] = (owedByProject[c.project.title] || 0) + c.balance })
+  owedYearRows.forEach((r) => { owedByProject[r.project.title] = (owedByProject[r.project.title] || 0) + r.net })
   /* And the income side (Alex: "but where is the income?", then "I don't want it 'expected', the
      project's Budget already counts as income"): the Budget set on the project is what the client
      pays, booked as income straight away. Whatever of it is not yet recorded as a real transaction
@@ -265,8 +268,14 @@ export default function Finance() {
   const [bdSort, setBdSort] = useState({ key: 'income', dir: -1 })
   const bdSortBy = (key) => setBdSort((o) => (o.key === key ? { key, dir: -o.dir } : { key, dir: key === 'key' ? 1 : -1 }))
   const byProjectRows = [...S.byProject, ...Object.keys(owedByProject).filter((k) => !S.byProject.some((r) => r.key === k)).map((k) => ({ key: k, income: 0, expense: 0, profit: 0, margin: null }))]
-  // the By month table splits the no-project row by the month each of its transactions was booked
-  const companyTx = fin.transactions.filter((t) => !t.projectId && fiscalYearOf(t.date, fiscalStart) === year && (t.type === 'expense' || t.status !== 'quoted'))
+  // By month: the same amounts as By project, each in the month it is dated
+  const [bdView, setBdView] = useState('project')
+  const monthEntries = [
+    ...[...fin.transactions, ...expectedRows]
+      .filter((t) => fiscalYearOf(t.date, fiscalStart) === year && (t.type === 'expense' || t.status !== 'quoted'))
+      .map((t) => ({ date: t.date, key: t.projectId ? pName(t.projectId) || 'Deleted project' : COMPANY, kind: t.type === 'income' ? 'income' : 'expense', amount: Number(t.net || 0) })),
+    ...owedYearRows.map((r) => ({ date: r.date, key: r.project.title, kind: 'owed', amount: r.net })),
+  ]
 
   return (
     <div className="finance">
@@ -343,12 +352,18 @@ export default function Finance() {
                 <span className="fin-sortbar-label">Sort by</span>
                 <Select value={bdSort.key} onChange={(e) => setBdSort({ key: e.target.value, dir: e.target.value === 'key' ? 1 : -1 })} options={BD_SORTS} aria-label="Sort every table by" />
                 <Button size="sm" onClick={() => setBdSort((o) => ({ ...o, dir: -o.dir }))} title="Flip the order">{bdSort.dir > 0 ? 'Low to high ↑' : 'High to low ↓'}</Button>
-                <span className="muted small">applies to the tables below · clicking a column heading works too</span>
+                <span className="muted small">applies to the table below · clicking a column heading works too</span>
               </div>
-              <section className="panel"><h2>By project</h2><BreakdownTable rows={byProjectRows} label="Project" cur={cur} owed={owedByProject} sort={bdSort} onSort={bdSortBy} /></section>
               <section className="panel">
-                <div className="panel-head"><h2>By month</h2><span className="muted small">each project in the month it was shot · costs with no project in the month they were booked</span></div>
-                <ByMonthTable rows={byProjectRows} owed={owedByProject} projects={state.projects} companyTx={companyTx} cur={cur} sort={bdSort} onSort={bdSortBy} />
+                <div className="panel-head">
+                  <div className="segmented small fin-bd-tabs">
+                    {[['project', 'By project'], ['month', 'By month']].map(([k, l]) => <button key={k} className={bdView === k ? 'on' : ''} onClick={() => setBdView(k)}>{l}</button>)}
+                  </div>
+                  {bdView === 'month' && <span className="muted small">each amount in the month it is dated · click a month for its projects</span>}
+                </div>
+                {bdView === 'project'
+                  ? <BreakdownTable rows={byProjectRows} label="Project" cur={cur} owed={owedByProject} sort={bdSort} onSort={bdSortBy} />
+                  : <ByMonthTable entries={monthEntries} cur={cur} sort={bdSort} onSort={bdSortBy} />}
               </section>
             </div>
           )}
@@ -869,10 +884,10 @@ function FinanceCategories({ toast }) {
 
 
 /* The breakdown tables on the Overview: click a heading to sort (again for the other way), a
-   totals row at the bottom, each row's share of the year's income or expenses, and how many
-   transactions it holds. The project table also counts client budgets as income and what is
-   still owed on budget lines; the client table shows what is invoiced and not yet paid. */
-const BD_SORTS = [['income', 'Income'], ['expense', 'Expense'], ['profit', 'Profit'], ['margin', 'Margin'], ['share', 'Share'], ['outstanding', 'Outstanding'], ['owedAmt', 'Owed'], ['count', 'Transactions'], ['key', 'Name']]
+   totals row at the bottom, each row's share of the year's income or expenses. The project table
+   also counts client budgets as income and what is still owed on budget lines; the client table
+   shows what is invoiced and not yet paid. */
+const BD_SORTS = [['income', 'Income'], ['expense', 'Expense'], ['profit', 'Profit'], ['margin', 'Margin'], ['share', 'Share'], ['outstanding', 'Outstanding'], ['owedAmt', 'Owed'], ['key', 'Name']]
 
 function BreakdownTable({ rows, label, cur, owed, expected, outstanding, sort, onSort }) {
   const withDerived = rows.map((r) => {
@@ -887,7 +902,6 @@ function BreakdownTable({ rows, label, cur, owed, expected, outstanding, sort, o
   const totExpense = withDerived.reduce((a, r) => a + r.expense, 0)
   const totOwed = withDerived.reduce((a, r) => a + r.owedAmt, 0)
   const totProfit = totIncome - totExpense - totOwed
-  const totCount = withDerived.reduce((a, r) => a + (r.count || 0), 0)
   const totOut = withDerived.reduce((a, r) => a + (r.outstanding || 0), 0)
   const share = (r) => (r.income ? (totIncome ? Math.round((r.income / totIncome) * 100) : 0) : totExpense ? Math.round((r.expense / totExpense) * 100) : 0)
   const shareLabel = (r) => (r.income ? 'of income' : 'of expenses')
@@ -911,7 +925,6 @@ function BreakdownTable({ rows, label, cur, owed, expected, outstanding, sort, o
         <thead>
           <tr>
             {th('key', label, false)}
-            {th('count', '#')}
             {th('income', 'Income')}
             {cols.outstanding && th('outstanding', 'Outstanding')}
             {th('expense', 'Expense')}
@@ -925,7 +938,6 @@ function BreakdownTable({ rows, label, cur, owed, expected, outstanding, sort, o
           {sorted.map((r) => (
             <tr key={r.key}>
               <td>{r.key}</td>
-              <td className="num muted">{r.count || ''}</td>
               <td className="num">{r.income ? money(r.income, cur) : ''}{r.toInvoice ? <div className="muted small">{money(r.toInvoice, cur)} to invoice</div> : null}</td>
               {cols.outstanding && <td className="num over">{r.outstanding ? money(r.outstanding, cur) : ''}</td>}
               <td className="num">{r.expense ? money(r.expense, cur) : ''}</td>
@@ -938,7 +950,6 @@ function BreakdownTable({ rows, label, cur, owed, expected, outstanding, sort, o
           {sorted.length > 1 && (
             <tr className="fin-total">
               <td>Total</td>
-              <td className="num muted">{totCount || ''}</td>
               <td className="num">{money(totIncome, cur)}</td>
               {cols.outstanding && <td className="num over">{totOut ? money(totOut, cur) : ''}</td>}
               <td className="num">{money(totExpense, cur)}</td>
@@ -954,47 +965,41 @@ function BreakdownTable({ rows, label, cur, owed, expected, outstanding, sort, o
   )
 }
 
-/* The By project figures again, grouped by the month each project was shot (its work date, the
-   same date Finance files the project's budget under). Costs with no project, like rent, fall in
-   the month they were booked. Months run in calendar order; the Sort by orders the projects
-   inside each month. */
+/* The year month by month: every amount in the month it is dated (an invoice, an expense, a
+   client budget still to invoice on the project's shoot day, a budget line still owed), so the
+   months match the bars at the top. Each month is one line with its totals; click it for the
+   projects behind it. Months run in calendar order; the Sort by orders the projects inside. */
 const COMPANY = 'Company (no project)'
-const monthLabel = (key) => (key ? new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, 1).toLocaleString('en-GB', { month: 'long', year: 'numeric' }) : 'No shooting date')
+const monthLabel = (key) => new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, 1).toLocaleString('en-GB', { month: 'long', year: 'numeric' })
 
-function ByMonthTable({ rows, owed, projects, companyTx, cur, sort, onSort }) {
-  const byTitle = {}
-  projects.forEach((p) => { if (!(p.title in byTitle)) byTitle[p.title] = p })
-  const derive = (r) => {
-    const o = owed[r.key] || 0
-    const profit = r.income - r.expense - o
-    return { ...r, owedAmt: o, profit, margin: r.income ? Math.round((profit / r.income) * 100) : null }
+function ByMonthTable({ entries, cur, sort, onSort }) {
+  const [open, setOpen] = useState([])
+  const toggle = (k) => setOpen((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]))
+  const finish = (r) => {
+    const profit = r.income - r.expense - r.owedAmt
+    return { ...r, profit, margin: r.income ? Math.round((profit / r.income) * 100) : null }
   }
-  const lines = rows.filter((r) => r.key !== COMPANY).map((r) => derive({ ...r, month: byTitle[r.key] ? ym(projectWorkDate(byTitle[r.key])) : '' }))
-  const company = {}
-  companyTx.forEach((t) => {
-    const k = ym(t.date)
-    company[k] = company[k] || { key: COMPANY, month: k, income: 0, expense: 0, count: 0 }
-    company[k][t.type === 'income' ? 'income' : 'expense'] += Number(t.net || 0)
-    company[k].count += 1
+  const byMonth = {}
+  entries.forEach((e) => {
+    const m = ym(e.date)
+    if (!m) return
+    const rows = (byMonth[m] = byMonth[m] || {})
+    const r = (rows[e.key] = rows[e.key] || { key: e.key, income: 0, expense: 0, owedAmt: 0 })
+    r[e.kind === 'income' ? 'income' : e.kind === 'owed' ? 'owedAmt' : 'expense'] += e.amount
   })
-  lines.push(...Object.values(company).map(derive))
-
-  const totIncome = lines.reduce((a, r) => a + r.income, 0)
-  const sum = (l) => {
-    const income = l.reduce((a, r) => a + r.income, 0), expense = l.reduce((a, r) => a + r.expense, 0), owedAmt = l.reduce((a, r) => a + r.owedAmt, 0)
-    const profit = income - expense - owedAmt
-    return { income, expense, owedAmt, profit, count: l.reduce((a, r) => a + (r.count || 0), 0), margin: income ? Math.round((profit / income) * 100) : null }
-  }
-  const share = (income) => (income && totIncome ? `${Math.round((income / totIncome) * 100)}%` : '')
+  const sum = (l) => finish({ income: l.reduce((a, r) => a + r.income, 0), expense: l.reduce((a, r) => a + r.expense, 0), owedAmt: l.reduce((a, r) => a + r.owedAmt, 0) })
   const order = (a, b) => {
     if (sort.key === 'key') return sort.dir * String(a.key).localeCompare(String(b.key), 'el')
     const va = sort.key === 'share' ? a.income : a[sort.key] ?? null
     const vb = sort.key === 'share' ? b.income : b[sort.key] ?? null
     return sort.dir * ((va ?? -Infinity) - (vb ?? -Infinity))
   }
-  const months = [...new Set(lines.map((r) => r.month))].sort((a, b) => (!a ? 1 : !b ? -1 : a.localeCompare(b)))
-    .map((m) => { const l = lines.filter((r) => r.month === m).sort(order); return { key: m, lines: l, ...sum(l) } })
-  const total = sum(lines)
+  const months = Object.keys(byMonth).sort().map((m) => {
+    const lines = Object.values(byMonth[m]).map(finish).sort(order)
+    return { key: m, lines, ...sum(lines) }
+  })
+  const total = sum(months.flatMap((m) => m.lines))
+  const share = (income) => (income && total.income ? `${Math.round((income / total.income) * 100)}%` : '')
 
   const th = (k, text, num = true) => (
     <th key={k} className={`${num ? 'num' : ''} sortable ${sort.key === k ? 'on' : ''}`} onClick={() => onSort(k)} title="Sort the projects inside each month by this column">
@@ -1003,7 +1008,6 @@ function ByMonthTable({ rows, owed, projects, companyTx, cur, sort, onSort }) {
   )
   const cells = (r, withShare = true) => (
     <>
-      <td className="num muted">{r.count || ''}</td>
       <td className="num">{r.income ? money(r.income, cur) : ''}</td>
       <td className="num">{r.expense ? money(r.expense, cur) : ''}</td>
       <td className="num over">{r.owedAmt ? money(r.owedAmt, cur) : ''}</td>
@@ -1013,18 +1017,24 @@ function ByMonthTable({ rows, owed, projects, companyTx, cur, sort, onSort }) {
     </>
   )
   const projectCount = (l) => { const n = l.filter((r) => r.key !== COMPANY).length; return n ? ` · ${n} project${n === 1 ? '' : 's'}` : '' }
+  if (!months.length) return <p className="muted small">Nothing booked in this year yet.</p>
   return (
     <div className="table-wrap">
       <table className="table fin-table fin-breakdown fin-bymonth">
         <thead>
-          <tr>{th('key', 'Month / project', false)}{th('count', '#')}{th('income', 'Income')}{th('expense', 'Expense')}{th('owedAmt', 'Owed')}{th('profit', 'Profit')}{th('margin', 'Margin')}{th('share', 'Share')}</tr>
+          <tr>{th('key', 'Month', false)}{th('income', 'Income')}{th('expense', 'Expense')}{th('owedAmt', 'Owed')}{th('profit', 'Profit')}{th('margin', 'Margin')}{th('share', 'Share')}</tr>
         </thead>
-        {months.map((m) => (
-          <tbody key={m.key || 'none'}>
-            <tr className="fin-month-head"><td>{monthLabel(m.key)}<span className="muted small">{projectCount(m.lines)}</span></td>{cells(m)}</tr>
-            {m.lines.map((r) => <tr key={`${m.key}:${r.key}`} className="fin-month-line"><td>{r.key}</td>{cells(r)}</tr>)}
-          </tbody>
-        ))}
+        {months.map((m) => {
+          const isOpen = open.includes(m.key)
+          return (
+            <tbody key={m.key}>
+              <tr className={`fin-month-head ${isOpen ? 'open' : ''}`} onClick={() => toggle(m.key)} title={isOpen ? 'Hide its projects' : 'Show its projects'}>
+                <td><span className="fin-chev" aria-hidden="true">{isOpen ? '▾' : '▸'}</span>{monthLabel(m.key)}<span className="muted small">{projectCount(m.lines)}</span></td>{cells(m)}
+              </tr>
+              {isOpen && m.lines.map((r) => <tr key={`${m.key}:${r.key}`} className="fin-month-line"><td>{r.key}</td>{cells(r)}</tr>)}
+            </tbody>
+          )
+        })}
         {months.length > 1 && (
           <tbody>
             <tr className="fin-total"><td>Total</td>{cells(total, false)}</tr>
