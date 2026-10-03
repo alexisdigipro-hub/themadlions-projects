@@ -195,14 +195,14 @@ export default function Budget() {
               <table className="table budget-table">
                 <thead>
                   <tr>
-                    <th>Category</th><th>Description</th><th className="num">Amount</th><th className="num">Paid</th><th className="num">Balance</th>{editable && <th className="no-print" />}
+                    <th>Description</th><th>Name</th><th className="num">Amount</th><th className="num">Paid</th><th className="num">Balance</th>{editable && <th className="no-print" />}
                   </tr>
                 </thead>
                 <tbody>
                   {g.lines.map((l) => (
                     <tr key={l.id}>
-                      <td>{l.category}</td>
-                      <td>{l.description}{l.vendor && <span className="muted small"> · {l.vendor}{l.memberId ? ' (team)' : l.contactId ? ` (${contactKind(l.contactId) || 'crew'})` : l.locationId ? ' (location)' : ''}</span>}{l.notes && <div className="muted small">{l.notes}</div>}</td>
+                      <td>{l.description}{l.notes && <div className="muted small">{l.notes}</div>}</td>
+                      <td>{l.vendor}{l.vendor && (l.memberId ? ' (team)' : l.contactId ? ` (${contactKind(l.contactId) || 'crew'})` : l.locationId ? ' (location)' : '')}</td>
                       <td className="num">{money(lineEstimate(l), cur)}</td>
                       <td className="num">{l.payments?.length ? money(linePaid(l), cur) : l.actual !== '' && l.actual != null && Number(l.actual) ? money(l.actual, cur) : ''}</td>
                       <td className={`num ${l.payments?.length && lineBalance(l) > 0 ? 'over' : ''}`}>{l.payments?.length ? (lineBalance(l) > 0 ? money(lineBalance(l), cur) : <span className="under">settled</span>) : ''}</td>
