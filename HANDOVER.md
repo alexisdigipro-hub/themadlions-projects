@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Share: Status pages removed (3 Oct, late)
+Alex: "στα Share βγάλε το status". The Share page no longer makes or lists status pages: the New status page button, the Status pages filter, the Update button and the status form are gone from src/pages/Deliveries.jsx (rows of kind `status` are filtered out of the list). PublicStatus.jsx and the `/ps/:token` route stay, so links already sent keep opening; close them from Supabase if needed. `statusUrl` stays exported in shares.js for that reason. No SQL.
+
 ### Presentation tab (3 Oct, late)
 Alex sent his Keynote "MB - Template" (.key) and wants presentations made from it as PDF. Rebuilt in the app, opt-in tab `presentation` (src/pages/project/Presentation.jsx, logic in src/lib/deck.js). `project.deck.slides = [{ id, layout, title, text, photos }]`, layouts cover / overview / box / grid (5 pictures) / side (3 pictures) / end. Every slide is drawn on a 1920×1080 canvas by `drawSlide()`; the editor shows those canvases and the PDF is the same canvases as JPEG pages through `buildPdf(pages, { width: 960, height: 540 })` (buildPdf in estimatePdf.js now takes the page size, A4 by default). Geometry was measured from the .key's own slide thumbnails. Logos in public/deck/ (tml-symbol.png: the lion symbol cropped and turned into a black alpha mask so it can be drawn black or as a faint watermark; tml-letters.png). Titles: `*bold*` runs in weight 900, the rest 300. Font: the template uses Cera GR / Cera PRO (paid, not on Google Fonts); Commissioner (Greek, 100–900) stands in, loaded on demand. If Alex supplies licensed Cera webfont files, load them in `loadDeckFonts()` instead. Slide pictures go through PhotoGrid into the photos bucket under the slide id, so Duplicate copies them like any other photos.
 
