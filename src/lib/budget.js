@@ -1,6 +1,11 @@
 import { today, uid } from './store.jsx'
 
 export const lineEstimate = (l) => (l.estimate !== '' && l.estimate != null ? Number(l.estimate) : Number(l.qty || 0) * Number(l.rate || 0))
+// VAT is optional per line (vatPct, e.g. 24). lineEstimate stays the net amount everything else
+// already keys off (My work fees, payments, Finance); lineTotal is net + VAT, used only where the
+// budget's own totals must show what the line really costs including VAT.
+export const lineVat = (l) => (lineEstimate(l) * Number(l.vatPct || 0)) / 100
+export const lineTotal = (l) => lineEstimate(l) + lineVat(l)
 export const linePaid = (l) => (l.payments || []).reduce((a, p) => a + Number(p.amount || 0), 0)
 export const lineBalance = (l) => Math.max(0, lineEstimate(l) - linePaid(l))
 
