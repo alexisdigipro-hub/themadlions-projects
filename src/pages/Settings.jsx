@@ -9,6 +9,7 @@ import { authorizeUrl, clearOauth, pcloudPing, redirectUri, takeOauth } from '..
 import { authorizeUrl as gcalAuthorizeUrl, clearOauthCode, gcalCalendars, gcalConnect, redirectUri as gcalRedirectUri, takeOauthCode } from '../lib/googleCalendar.js'
 import { CHAT_DEFAULTS, chime, loadChatPrefs, saveChatPrefs } from '../lib/chatPrefs.js'
 import { FONTS, applyFont, currentFont, ensureFontLoaded } from '../lib/fonts.js'
+import Usage from '../components/Usage.jsx'
 import { remote, supabase } from '../lib/supabase.js'
 
 import { testKey } from '../lib/ai.js'
@@ -38,7 +39,7 @@ export default function Settings() {
   const isAdmin = me?.role === 'admin'
   const TABS = [
     ['company', 'Company', true], ['callsheets', 'Call sheets', true], ['team', 'Team', true], ['calendar', 'Calendar & projects', true], ['budget', 'Budget', true],
-    ['display', 'Display', false], ['chat', 'Chat', false], ['integrations', 'Integrations', false], ['data', 'Data', false],
+    ['display', 'Display', false], ['chat', 'Chat', false], ['integrations', 'Integrations', false], ['data', 'Data', false], ['usage', 'Usage', true],
   ].filter(([, , admin]) => !admin || isAdmin)
   const [tab, setTab] = useState(() => (isAdmin ? 'company' : 'display'))
   const logoRef = useRef()
@@ -521,6 +522,7 @@ export default function Settings() {
           </div>
         </section>
       </div>
+      {isAdmin && tab === 'usage' && <Usage state={state} setSetting={setSetting} />}
     </>
   )
 }
