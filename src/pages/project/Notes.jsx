@@ -26,7 +26,7 @@ export default function Notes() {
   }
 
   return (
-    <div className="cols">
+    <div className="cols notes-cols">
       <section className="panel">
         <div className="panel-head">
           <h2>Links</h2>
