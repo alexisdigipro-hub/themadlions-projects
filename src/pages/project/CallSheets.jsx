@@ -6,7 +6,7 @@ import { useStore } from '../../lib/store.jsx'
 import { formatPages } from '../../lib/breakdown.js'
 import { fmtLong } from '../../lib/dates.js'
 import { ATHENS, coordsFromText, forecast, geocode, sunTimes } from '../../lib/sun.js'
-import { callSheetText, mailLink, personalCallText, waLink, waShareLink } from '../../lib/share.js'
+import { callSheetText, mailLink, personalCallText, shortenWithBitly, waLink, waShareLink } from '../../lib/share.js'
 import { Modal } from '../../components/ui.jsx'
 import { ensurePin, publishShare, shareUrl } from '../../lib/shares.js'
 import LinkName from '../../components/LinkName.jsx'
@@ -554,6 +554,7 @@ export default function CallSheets() {
               <a className="btn btn-primary" href={waShareLink(`${title} · Call sheet Day ${dayIndex + 1} · ${day.date} · call ${day.callTime}\n${share.url}${share.pin ? `\nCode: ${share.pin}` : ''}`)} target="_blank" rel="noreferrer">Send on WhatsApp</a>
               <a className="btn btn-ghost" href={mailLink({ bcc: emails, subject, body: `${subject}\n\n${share.url}${share.pin ? `\nCode: ${share.pin}` : ''}` })}>Mail</a>
               {navigator.share && <Button variant="ghost" onClick={() => navigator.share({ title: subject, url: share.url }).catch(() => {})}>Share…</Button>}
+              <Button variant="ghost" onClick={() => shortenWithBitly(share.url, toast)} title="Opens bit.ly with the link copied, for a short address of your own">Shorten with bit.ly</Button>
             </div>
           </div>
         )}

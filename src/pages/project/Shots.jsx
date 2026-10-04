@@ -7,7 +7,7 @@ import { download } from '../../lib/dates.js'
 import { publishShare, shotlistUrl, tokenOf } from '../../lib/shares.js'
 import LinkName from '../../components/LinkName.jsx'
 import { nameParts } from '../../lib/projectName.js'
-import { mailLink, waShareLink } from '../../lib/share.js'
+import { mailLink, shortenWithBitly, waShareLink } from '../../lib/share.js'
 import ShotListDesigner from '../../components/ShotListDesigner.jsx'
 import ShotDay from '../../components/ShotDay.jsx'
 import { ZOOM } from '../../lib/callsheetLayout.js'
@@ -307,6 +307,7 @@ export default function Shots() {
             <div className="row-actions wrap">
               <a className="btn btn-primary" href={waShareLink(`${project.title} · Shot list\n${share.url}`)} target="_blank" rel="noreferrer">Send on WhatsApp</a>
               <a className="btn btn-ghost" href={mailLink({ subject: `${project.title} · Shot list`, body: share.url })}>Mail</a>
+              <Button variant="ghost" onClick={() => shortenWithBitly(share.url, toast)} title="Opens bit.ly with the link copied, for a short address of your own">Shorten with bit.ly</Button>
             </div>
           </div>
         )}

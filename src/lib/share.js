@@ -16,6 +16,14 @@ export const waLink = (phone, text) => `https://wa.me/${waNumber(phone)}?text=${
 export const waShareLink = (text) => `https://wa.me/?text=${encodeURIComponent(text)}`
 export const mailLink = ({ to = [], bcc = [], subject, body }) =>
   `mailto:${to.join(',')}?${bcc.length ? `bcc=${bcc.join(',')}&` : ''}subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+/* bit.ly has no way to take the link in its address, so: open it, and put the link on the clipboard
+   for pasting. The tab opens first, before any await, or the browser's popup blocker eats it. */
+export function shortenWithBitly(url, toast) {
+  window.open('https://bitly.com/', '_blank', 'noopener')
+  navigator.clipboard.writeText(url)
+    .then(() => toast('Link copied. Paste it in bit.ly and pick the short name.', 'ok'))
+    .catch(() => toast('Could not copy; copy the link from the box above and paste it in bit.ly.', 'error'))
+}
 export const mapsLink = (address) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 
 /* Full call sheet as a WhatsApp-friendly message. */
