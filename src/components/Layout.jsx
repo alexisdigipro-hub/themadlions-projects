@@ -156,6 +156,11 @@ export default function Layout() {
           { to: '/', label: 'Home', icon: 'home', end: true },
           { to: '/calendar', label: 'Calendar', icon: 'calendar' },
           { to: '/chat', label: 'Chat', icon: 'chat', badge: unread },
+          // a fifth slot, the grid already has room for it: Finance for admins (their own
+          // day-to-day number), My work for everyone else (their own jobs and payments)
+          user?.role === 'admin'
+            ? { to: '/finance', label: 'Finance', icon: 'finance' }
+            : { to: '/mywork', label: 'My work', icon: 'mywork' },
         ].map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end} onClick={close} className={({ isActive }) => (isActive ? 'active' : '')}>
             <span className="tab-ico-wrap">{Icon[i.icon]?.()}{i.badge > 0 && <span className="nav-badge">{i.badge}</span>}</span>
