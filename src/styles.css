@@ -3237,6 +3237,7 @@ a.drive-item-title:hover { text-decoration: underline; }
 .pub-call-main { display: flex; flex-direction: column; align-items: center; gap: 2px; padding-bottom: 12px; border-bottom: 1px solid var(--line-soft); margin-bottom: 12px; }
 .pub-call-main strong { font-size: 56px; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .pub-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; display: block; }
+.pub-call-main.alone { padding-bottom: 0; border-bottom: 0; margin-bottom: 0; }
 .pub-call-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 14px; }
 .pub-call-grid b { font-size: 18px; }
 .pub-wx { margin-top: 12px; font-size: 14px; color: var(--muted); }

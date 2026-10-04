@@ -38,6 +38,15 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
   const [q, setQ] = useState('')
   const lay = d.layout || {}
   const label = (k, fallback) => lay.labels?.[k] || fallback
+  // Under the big call: whatever the production left switched on for the link. Links made before
+  // these switches existed carry no flag for them and keep showing them.
+  const on = (k) => lay.details?.[k] !== false
+  const grid = [
+    on('shooting') && ['shooting', label('shooting', 'Shooting call'), d.sheet.shootingCall || d.day.callTime],
+    d.sheet.lunch && ['lunch', label('lunch', 'Lunch'), d.sheet.lunch],
+    on('wrap') && d.day.wrapTime && ['wrap', label('wrap', 'Est. wrap'), d.day.wrapTime],
+    d.sun && ['sun', 'Sun', `${d.sun.sunrise} · ${d.sun.sunset}`],
+  ].filter(Boolean)
   const blocks = lay.blocks || OLD_ORDER.map(([key, title]) => ({ key, title }))
   const people = [...(d.cast || []).map((c) => ({ ...c, kind: 'cast' })), ...(d.crew || []).map((c) => ({ ...c, kind: 'crew' }))]
   const match = (p) => !q.trim() || [p.name, p.character, p.role].filter(Boolean).some((x) => x.toLowerCase().includes(q.trim().toLowerCase()))
@@ -194,16 +203,15 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
       </header>
 
       <section className="pub-call">
-        <div className="pub-call-main">
+        <div className={`pub-call-main${grid.length ? '' : ' alone'}`}>
           <span className="pub-label">{label('call', 'General crew call')}</span>
           <strong>{d.day.callTime}</strong>
         </div>
-        <div className="pub-call-grid">
-          <div><span className="pub-label">{label('shooting', 'Shooting call')}</span><b>{d.sheet.shootingCall || d.day.callTime}</b></div>
-          {d.sheet.lunch && <div><span className="pub-label">{label('lunch', 'Lunch')}</span><b>{d.sheet.lunch}</b></div>}
-          {d.day.wrapTime && <div><span className="pub-label">{label('wrap', 'Est. wrap')}</span><b>{d.day.wrapTime}</b></div>}
-          {d.sun && <div><span className="pub-label">Sun</span><b>{d.sun.sunrise} · {d.sun.sunset}</b></div>}
-        </div>
+        {grid.length > 0 && (
+          <div className="pub-call-grid">
+            {grid.map(([k, name, value]) => <div key={k}><span className="pub-label">{name}</span><b>{value}</b></div>)}
+          </div>
+        )}
         {d.wx && <div className="pub-wx">☀ {d.wx.tmax}° / {d.wx.tmin}° · {d.wx.summary}{d.wx.rain != null ? ` · rain ${d.wx.rain}%` : ''}</div>}
         {d.sheet.tagline && <p className="pub-tagline">{d.sheet.tagline}</p>}
       </section>

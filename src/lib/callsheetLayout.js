@@ -29,10 +29,12 @@ export const DETAILS = [
   ['parking', 'Parking'],
   ['hospital', 'Nearest hospital'],
   ['lunch', 'Lunch / break time'],
+  ['shooting', 'Shooting call time'],
+  ['wrap', 'Est. wrap time'],
 ]
-// Details added after layouts were already saved that start switched off on the link, so a
-// saved layout does not suddenly show them there.
-const DETAIL_LINK_OFF = new Set(['lunch'])
+// Details that start switched off, also in layouts saved before they existed: lunch on the link;
+// the shooting call everywhere and the wrap on the link (Alex took that row out of the link).
+const DETAIL_OFF = { lunch: { link: true }, shooting: { sheet: true, link: true }, wrap: { link: true } }
 
 export const LABELS = [
   ['call', 'General crew call'],
@@ -72,7 +74,10 @@ export function normalizeLayout(raw, { event = false } = {}) {
   const details = {}
   for (const [k] of DETAILS) {
     const d = src.details?.[k] || {}
-    details[k] = { sheet: d.sheet !== false, link: d.link !== undefined ? d.link !== false : !DETAIL_LINK_OFF.has(k) }
+    details[k] = {
+      sheet: d.sheet !== undefined ? d.sheet !== false : !DETAIL_OFF[k]?.sheet,
+      link: d.link !== undefined ? d.link !== false : !DETAIL_OFF[k]?.link,
+    }
   }
   const labels = {}
   for (const [k] of LABELS) labels[k] = String(src.labels?.[k] || '')

@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Row under the big call taken off the link (4 Oct)
+Alex (screenshot of his link: "ORDINO 15:00 / EST. WRAP 23:30", ORDINO being his renamed Shooting call): "βγάλ' το εντελώς". New details `shooting` and `wrap`; `DETAIL_OFF` in callsheetLayout.js starts shooting off on sheet and link and wrap off on the link, also for saved layouts. The link builds the row under the big call from what is on (`grid` in CallSheetLinkView); with nothing left, the big call stands alone (`.pub-call-main.alone`). Old links without the flags still show both.
+
 ### Call sheet: Calls by group (4 Oct)
 Alex: a section for ordino per group (production crew, beauty crew, artist, dancers, cast, model). Block `groupcalls` (after `note` in BLOCKS), rows on `day.callSheet.groupCalls [{id, who, time}]`, "Add the usual groups" seeds six. Link payload `groupCalls`, rendered as `.pub-groups`; WhatsApp text gets "⏰ WHO: time" lines. No ⏰ on the sheet or link, since he had just asked for the pin to go from the note card. No SQL.
 

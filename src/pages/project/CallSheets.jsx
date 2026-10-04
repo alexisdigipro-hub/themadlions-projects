@@ -674,11 +674,11 @@ export default function CallSheets() {
                 {showSun && sun && <div className="small"><strong>Sunrise</strong> {wx?.sunrise || sun.sunrise} · <strong>Sunset</strong> {wx?.sunset || sun.sunset}</div>}
               </div>
             )}
-            <dl className="cs-times">
-              <dt>{labelOf(layout, 'shooting')}</dt><dd>{editable ? <input className="cs-time" value={sheet.shootingCall ?? ''} placeholder={day.callTime} onChange={(e) => setSheet('shootingCall', e.target.value)} /> : sheet.shootingCall || day.callTime}</dd>
+            {(show('shooting') || show('lunch') || show('wrap')) && <dl className="cs-times">
+              {show('shooting') && <><dt>{labelOf(layout, 'shooting')}</dt><dd>{editable ? <input className="cs-time" value={sheet.shootingCall ?? ''} placeholder={day.callTime} onChange={(e) => setSheet('shootingCall', e.target.value)} /> : sheet.shootingCall || day.callTime}</dd></>}
               {show('lunch') && <><dt>{labelOf(layout, 'lunch')}</dt><dd>{editable ? <input className="cs-time" value={sheet.lunch ?? ''} placeholder={lunchDefault || '13:00'} onChange={(e) => setSheet('lunch', e.target.value)} /> : sheet.lunch || lunchDefault || ''}</dd></>}
-              <dt>{labelOf(layout, 'wrap')}</dt><dd>{day.wrapTime}</dd>
-            </dl>
+              {show('wrap') && <><dt>{labelOf(layout, 'wrap')}</dt><dd>{day.wrapTime}</dd></>}
+            </dl>}
           </div>
         </header>
 
