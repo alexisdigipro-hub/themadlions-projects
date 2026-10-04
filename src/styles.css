@@ -273,6 +273,8 @@ code {
   opacity: 0.5;
   cursor: not-allowed;
 }
+/* a toggle that is on (Edit, Customise, Preview on the call sheet) */
+.btn.on { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--raised)); }
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent);
@@ -2296,6 +2298,7 @@ html[data-theme='light'] .sheet { box-shadow: var(--shadow); }
 .cs-accented h3, .cs-accented .cs-call-time, .cs-accented .cs-loc-name { color: var(--cs-accent); }
 .cs-accented .cs-mark { background: var(--cs-accent); }
 /* Program: time and description typed by hand */
+.cs-scene-time { white-space: nowrap; } /* "15:00 – 16:30" on one line while reading, not three */
 .cs-program td { vertical-align: middle; }
 .cs-program-what { width: 100%; }
 .cs-program-input { width: 100%; border: 1px dashed #d9dce4; border-radius: 4px; padding: 3px 8px; font: inherit; font-size: 15px; background: #fafbfd; color: #1f2430; }
@@ -2822,6 +2825,11 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
   .calendar .toolbar-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .calendar .toolbar-actions .btn { width: 100%; }
   .cal-mobile { padding: 12px 10px; }
+  /* call sheet: the actions as two tidy columns instead of three ragged rows; Share link last and full width */
+  .callsheets .toolbar-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .callsheets .toolbar-actions .segmented { grid-column: 1 / -1; }
+  .callsheets .toolbar-actions .btn { width: 100%; justify-content: center; }
+  .callsheets .toolbar-actions .btn-primary { grid-column: 1 / -1; }
   /* the legend's desktop grid (repeat(auto-fit, minmax(0, 1fr))) squeezes all ten chips into
      equal-width columns on a narrow screen; with nowrap text that overlaps into the next chip.
      On a phone it wraps instead, each chip sized to its own text. */

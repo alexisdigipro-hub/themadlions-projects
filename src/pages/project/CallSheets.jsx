@@ -44,6 +44,10 @@ export default function CallSheets() {
   const toast = useToast()
   const day = days.find((d) => d.id === sel) || days[0]
   const editable = canEdit('callsheets')
+  // The sheet opens the way the crew will see it; Edit switches the fields on. Remembered per device.
+  const [editMode, setEditModeState] = useState(() => { try { return localStorage.getItem('tml_cs_edit') === '1' } catch { return false } })
+  const setEditMode = (v) => { setEditModeState(v); try { localStorage.setItem('tml_cs_edit', v ? '1' : '0') } catch { /* private window */ } }
+  const editing = editable && editMode
   // Printed on every call sheet and carried into the shared link. Both live in Settings.
   const emergency = (state.settings.emergency || []).filter((n) => n && n.number)
   const prodContacts = (state.settings.productionContacts || []).filter((c) => c && (c.role || c.name))
@@ -265,22 +269,25 @@ export default function CallSheets() {
     const h = <h3>{titleOf(layout, b)}</h3>
     switch (b.key) {
       case 'note':
-        return (sheet.notes || editable) ? (
+        return (sheet.notes || editing) ? (
           <>
             {named(b) && h}
             <div className="cs-note">
               <span className="cs-pin">📌</span>
-              {editable ? (
+              {editing ? (
                 <textarea rows={2} value={sheet.notes || ''} onChange={(e) => setSheet('notes', e.target.value)} placeholder="Parking, catering, safety, permits, transport. Everyone reads this one." />
               ) : <p>{sheet.notes}</p>}
             </div>
           </>
         ) : null
-      case 'location':
+      case 'location': {
+        // while reading, an empty Parking or Hospital column is left out rather than shown as a dash
+        const showParking = show('parking') && (editing || sheet.parking || csd.parking)
+        const showHospital = show('hospital') && (editing || sheet.weather || csd.hospital)
         return (
           <section>
             {h}
-            <div className="cs-locgrid" style={{ '--cs-loc-cols': 1 + (show('parking') ? 1 : 0) + (show('hospital') ? 1 : 0) }}>
+            <div className="cs-locgrid" style={{ '--cs-loc-cols': 1 + (showParking ? 1 : 0) + (showHospital ? 1 : 0) }}>
               <div>
                 <div className="cs-loc-h">Set location</div>
                 {locView ? (
@@ -292,18 +299,19 @@ export default function CallSheets() {
                   </>
                 ) : <span className="muted">Set the location on the shoot day.</span>}
               </div>
-              {show('parking') && <div>
+              {showParking && <div>
                 <div className="cs-loc-h">Parking</div>
-                {editable ? <textarea rows={3} value={sheet.parking || ''} onChange={(e) => setSheet('parking', e.target.value)} placeholder={csd.parking || 'Where, how many cars, who unloads where'} /> : <div>{sheet.parking || csd.parking || '–'}</div>}
+                {editing ? <textarea rows={3} value={sheet.parking || ''} onChange={(e) => setSheet('parking', e.target.value)} placeholder={csd.parking || 'Where, how many cars, who unloads where'} /> : <div>{sheet.parking || csd.parking || '–'}</div>}
               </div>}
-              {show('hospital') && <div>
+              {showHospital && <div>
                 <div className="cs-loc-h">Nearest hospital</div>
-                {editable ? <textarea rows={3} value={sheet.weather || ''} onChange={(e) => setSheet('weather', e.target.value)} placeholder={csd.hospital || 'Name, address, phone'} /> : <div>{sheet.weather || csd.hospital || '–'}</div>}
+                {editing ? <textarea rows={3} value={sheet.weather || ''} onChange={(e) => setSheet('weather', e.target.value)} placeholder={csd.hospital || 'Name, address, phone'} /> : <div>{sheet.weather || csd.hospital || '–'}</div>}
               </div>}
             </div>
-            {wx && showWx && <div className="muted small no-print">{wx.place} · forecast from open-meteo · {editable && <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'refresh'}</button>}</div>}
+            {wx && showWx && <div className="muted small no-print">{wx.place} · forecast from open-meteo · {editing && <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'refresh'}</button>}</div>}
           </section>
         )
+      }
       case 'contacts':
         return (emergency.length > 0 || prodContacts.length > 0) ? (
           <section>
@@ -351,7 +359,7 @@ export default function CallSheets() {
                 {scenes.map((sc) => (
                   <tr key={sc.id}>
                     <td className="nowrap cs-scene-time">
-                      {editable ? (
+                      {editing ? (
                         <span className="cs-range"><input className="cs-time" value={sceneTime(sc.id).from} placeholder="09:00" onChange={(e) => setSceneTime(sc.id, 'from', e.target.value)} /> – <input className="cs-time" value={sceneTime(sc.id).to} placeholder="11:00" onChange={(e) => setSceneTime(sc.id, 'to', e.target.value)} /></span>
                       ) : sceneTime(sc.id).from || sceneTime(sc.id).to ? `${sceneTime(sc.id).from}${sceneTime(sc.id).to ? ` – ${sceneTime(sc.id).to}` : ''}` : <span className="muted">–</span>}
                     </td>
@@ -372,7 +380,7 @@ export default function CallSheets() {
           <section>
             {h}
             <table className="table">
-              <thead><tr><th>Character</th><th>Actor</th>{show('phones') && <th>Phone</th>}<th>Call</th>{editable && <th className="no-print" />}</tr></thead>
+              <thead><tr><th>Character</th><th>Actor</th>{show('phones') && <th>Phone</th>}<th>Call</th>{editing && <th className="no-print" />}</tr></thead>
               <tbody>
                 {castRows.map((r) => (
                   <tr key={r.key}>
@@ -384,8 +392,8 @@ export default function CallSheets() {
                       </div>
                     </td>
                     {show('phones') && <td>{r.actor?.phone || ''}</td>}
-                    <td>{editable && !r.extra ? <input className="cs-time" value={calls[r.key] ?? ''} placeholder={r.auto} onChange={(e) => setCall(r.key, e.target.value)} aria-label={`Call for ${r.actor?.name || r.character}`} /> : r.call}</td>
-                    {editable && <td className="no-print row-actions">{!r.extra && <button onClick={() => hidePerson(r.key, true)} title="Leave out of this day">×</button>}</td>}
+                    <td>{editing && !r.extra ? <input className="cs-time" value={calls[r.key] ?? ''} placeholder={r.auto} onChange={(e) => setCall(r.key, e.target.value)} aria-label={`Call for ${r.actor?.name || r.character}`} /> : r.call}</td>
+                    {editing && <td className="no-print row-actions">{!r.extra && <button onClick={() => hidePerson(r.key, true)} title="Leave out of this day">×</button>}</td>}
                   </tr>
                 ))}
               </tbody>
@@ -393,16 +401,16 @@ export default function CallSheets() {
           </section>
         )
       case 'groupcalls':
-        if (!editable && !groupRows.length) return null
+        if (!editing && !groupRows.length) return null
         return (
           <section>
             {h}
             <ul className="plain cs-groups">
-              {(editable ? groupCalls : groupRows).map((r, i) => (
+              {(editing ? groupCalls : groupRows).map((r, i) => (
                 <li key={r.id}>
-                  {editable ? <input className="cs-program-input cs-group-who" value={r.who || ''} placeholder="Production crew" onChange={(e) => setGroupRow(i, 'who', e.target.value)} aria-label="Who" /> : <span className="cs-group-who">{r.who}</span>}
-                  {editable ? <input className="cs-time" value={r.time || ''} placeholder={day.callTime || '10:00'} onChange={(e) => setGroupRow(i, 'time', e.target.value)} aria-label={`Call for ${r.who || 'this group'}`} /> : <strong className="cs-group-time">{r.time}</strong>}
-                  {editable && (
+                  {editing ? <input className="cs-program-input cs-group-who" value={r.who || ''} placeholder="Production crew" onChange={(e) => setGroupRow(i, 'who', e.target.value)} aria-label="Who" /> : <span className="cs-group-who">{r.who}</span>}
+                  {editing ? <input className="cs-time" value={r.time || ''} placeholder={day.callTime || '10:00'} onChange={(e) => setGroupRow(i, 'time', e.target.value)} aria-label={`Call for ${r.who || 'this group'}`} /> : <strong className="cs-group-time">{r.time}</strong>}
+                  {editing && (
                     <span className="row-actions no-print">
                       <button onClick={() => moveGroup(i, -1)} disabled={i === 0} aria-label="Up">↑</button>
                       <button onClick={() => moveGroup(i, 1)} disabled={i === groupCalls.length - 1} aria-label="Down">↓</button>
@@ -411,9 +419,9 @@ export default function CallSheets() {
                   )}
                 </li>
               ))}
-              {editable && !groupCalls.length && <li className="muted">Nothing yet. One row per group: production crew, beauty, artist, dancers…</li>}
+              {editing && !groupCalls.length && <li className="muted">Nothing yet. One row per group: production crew, beauty, artist, dancers…</li>}
             </ul>
-            {editable && (
+            {editing && (
               <div className="no-print cs-program-add row-actions wrap">
                 <Button size="sm" onClick={() => setGroups([...groupCalls, { id: uid(), who: '', time: '' }])}>Add a group</Button>
                 {!groupCalls.length && <Button size="sm" variant="ghost" onClick={() => setGroups(USUAL_GROUPS.map((who) => ({ id: uid(), who, time: '' })))}>Add the usual groups</Button>}
@@ -422,22 +430,22 @@ export default function CallSheets() {
           </section>
         )
       case 'program':
-        if (!editable && !programRows.length) return null
+        if (!editing && !programRows.length) return null
         return (
           <section>
             {h}
             <table className="table cs-program">
-              <thead><tr><th>Time</th><th>Description</th>{editable && <th className="no-print" />}</tr></thead>
+              <thead><tr><th>Time</th><th>Description</th>{editing && <th className="no-print" />}</tr></thead>
               <tbody>
-                {(editable ? program : programRows).map((r, i) => (
+                {(editing ? program : programRows).map((r, i) => (
                   <tr key={r.id}>
                     <td className="nowrap cs-scene-time">
-                      {editable ? (
+                      {editing ? (
                         <span className="cs-range"><input className="cs-time" value={r.from || ''} placeholder="09:00" onChange={(e) => setProgramRow(i, 'from', e.target.value)} aria-label="From" /> – <input className="cs-time" value={r.to || ''} placeholder="end" onChange={(e) => setProgramRow(i, 'to', e.target.value)} aria-label="To" /></span>
                       ) : `${r.from || ''}${r.to ? ` – ${r.to}` : ''}`}
                     </td>
-                    <td className="cs-program-what">{editable ? <input className="cs-program-input" value={r.what || ''} placeholder="Hair & make-up, first setup, lunch…" onChange={(e) => setProgramRow(i, 'what', e.target.value)} aria-label="Description" /> : r.what}</td>
-                    {editable && (
+                    <td className="cs-program-what">{editing ? <input className="cs-program-input" value={r.what || ''} placeholder="Hair & make-up, first setup, lunch…" onChange={(e) => setProgramRow(i, 'what', e.target.value)} aria-label="Description" /> : r.what}</td>
+                    {editing && (
                       <td className="row-actions no-print nowrap">
                         <button onClick={() => moveProgram(i, -1)} disabled={i === 0} aria-label="Earlier">↑</button>
                         <button onClick={() => moveProgram(i, 1)} disabled={i === program.length - 1} aria-label="Later">↓</button>
@@ -446,10 +454,10 @@ export default function CallSheets() {
                     )}
                   </tr>
                 ))}
-                {editable && !program.length && <tr><td colSpan={3} className="muted">Nothing yet. Add a row for each part of the day.</td></tr>}
+                {editing && !program.length && <tr><td colSpan={3} className="muted">Nothing yet. Add a row for each part of the day.</td></tr>}
               </tbody>
             </table>
-            {editable && <div className="no-print cs-program-add"><Button size="sm" onClick={() => setProgram([...program, { id: uid(), from: '', to: '', what: '' }])}>Add a row</Button></div>}
+            {editing && <div className="no-print cs-program-add"><Button size="sm" onClick={() => setProgram([...program, { id: uid(), from: '', to: '', what: '' }])}>Add a row</Button></div>}
           </section>
         )
       case 'departments':
@@ -474,9 +482,9 @@ export default function CallSheets() {
               {crewRows.map((c) => (
                 <div key={c.key} className="cs-crew">
                   <strong>{c.name}</strong>
-                  {editable && !c.extra && <button className="cs-x no-print" onClick={() => hidePerson(c.key, true)} title="Leave out of this day">×</button>}
+                  {editing && !c.extra && <button className="cs-x no-print" onClick={() => hidePerson(c.key, true)} title="Leave out of this day">×</button>}
                   <div className="small muted">
-                    {c.role || c.dept} · call {editable && !c.extra ? <input className="cs-time" value={calls[c.key] ?? ''} placeholder={c.auto} onChange={(e) => setCall(c.key, e.target.value)} aria-label={`Call for ${c.name}`} /> : c.call}
+                    {c.role || c.dept} · call {editing && !c.extra ? <input className="cs-time" value={calls[c.key] ?? ''} placeholder={c.auto} onChange={(e) => setCall(c.key, e.target.value)} aria-label={`Call for ${c.name}`} /> : c.call}
                     {phoneOf(c.phone) ? ` · ${c.phone}` : ''}
                   </div>
                 </div>
@@ -486,11 +494,11 @@ export default function CallSheets() {
         )
       default:
         if (!b.custom) return null
-        if (!editable && !customText(b)) return null
+        if (!editing && !customText(b)) return null
         return (
           <section>
             {h}
-            {editable
+            {editing
               ? <textarea className="cs-custom-edit" rows={3} value={sheet.custom?.[b.key] ?? ''} placeholder={b.text || 'Anything you want on the sheet'} onChange={(e) => setCustom(b.key, e.target.value)} />
               : <p className="cs-custom">{customText(b)}</p>}
           </section>
@@ -515,13 +523,12 @@ export default function CallSheets() {
               <button className={mode === 'sides' ? 'on' : ''} onClick={() => setMode('sides')}>Sides</button>
             </div>
           )}
-          {editable && mode === 'sheet' && <Button variant={designing ? 'primary' : 'default'} onClick={() => setDesigning(!designing)}>{designing ? 'Done' : 'Customise'}</Button>}
-          {mode === 'sheet' && <Button variant={preview ? 'primary' : 'default'} onClick={() => setPreview(!preview)}>{preview ? 'Hide link preview' : 'Link preview'}</Button>}
-          {canShare && <Button onClick={makeShare}>Share link</Button>}
+          {editable && mode === 'sheet' && <Button className={editMode ? 'on' : ''} onClick={() => setEditMode(!editMode)}>{editMode ? 'Done editing' : 'Edit'}</Button>}
+          {editable && mode === 'sheet' && <Button className={designing ? 'on' : ''} onClick={() => setDesigning(!designing)}>{designing ? 'Close Customise' : 'Customise'}</Button>}
+          {mode === 'sheet' && <Button className={preview ? 'on' : ''} onClick={() => setPreview(!preview)}>{preview ? 'Hide preview' : 'Preview'}</Button>}
           <Button onClick={() => setSend(true)}>Send message</Button>
-          <Button variant="primary" onClick={() => window.print()}>
-            Print / Save PDF
-          </Button>
+          <Button onClick={() => window.print()}>Print / PDF</Button>
+          {canShare && <Button variant="primary" onClick={makeShare}>Share link</Button>}
         </div>
       </div>
 
@@ -654,7 +661,7 @@ export default function CallSheets() {
             <h1>{title}</h1>
             <div className="cs-call-label">{labelOf(layout, 'call')}</div>
             <div className="cs-call-time">{day.callTime}</div>
-            {!show('tagline') ? null : editable ? (
+            {!show('tagline') ? null : editing ? (
               <textarea className="cs-tagline" rows={3} value={sheet.tagline || ''} onChange={(e) => setSheet('tagline', e.target.value)} placeholder={csd.tagline || 'One line for everyone: safety first, bring a jacket, no smoking on set.'} />
             ) : (sheet.tagline || csd.tagline) ? <p className="cs-tagline-text">{sheet.tagline || csd.tagline}</p> : null}
           </div>
@@ -669,14 +676,14 @@ export default function CallSheets() {
                     <div className="muted small"><em>{wx.summary}{wx.rain != null ? `, rain ${wx.rain}%` : ''}</em></div>
                   </>
                 ) : (
-                  <div className="muted small no-print">No forecast yet{editable ? <> · <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'fetch'}</button></> : null}</div>
+                  <div className="muted small no-print">No forecast yet{editing ? <> · <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'fetch'}</button></> : null}</div>
                 )}
                 {showSun && sun && <div className="small"><strong>Sunrise</strong> {wx?.sunrise || sun.sunrise} · <strong>Sunset</strong> {wx?.sunset || sun.sunset}</div>}
               </div>
             )}
             {(show('shooting') || show('lunch') || show('wrap')) && <dl className="cs-times">
-              {show('shooting') && <><dt>{labelOf(layout, 'shooting')}</dt><dd>{editable ? <input className="cs-time" value={sheet.shootingCall ?? ''} placeholder={day.callTime} onChange={(e) => setSheet('shootingCall', e.target.value)} /> : sheet.shootingCall || day.callTime}</dd></>}
-              {show('lunch') && <><dt>{labelOf(layout, 'lunch')}</dt><dd>{editable ? <input className="cs-time" value={sheet.lunch ?? ''} placeholder={lunchDefault || '13:00'} onChange={(e) => setSheet('lunch', e.target.value)} /> : sheet.lunch || lunchDefault || ''}</dd></>}
+              {show('shooting') && <><dt>{labelOf(layout, 'shooting')}</dt><dd>{editing ? <input className="cs-time" value={sheet.shootingCall ?? ''} placeholder={day.callTime} onChange={(e) => setSheet('shootingCall', e.target.value)} /> : sheet.shootingCall || day.callTime}</dd></>}
+              {show('lunch') && <><dt>{labelOf(layout, 'lunch')}</dt><dd>{editing ? <input className="cs-time" value={sheet.lunch ?? ''} placeholder={lunchDefault || '13:00'} onChange={(e) => setSheet('lunch', e.target.value)} /> : sheet.lunch || lunchDefault || ''}</dd></>}
               {show('wrap') && <><dt>{labelOf(layout, 'wrap')}</dt><dd>{day.wrapTime}</dd></>}
             </dl>}
           </div>
@@ -685,8 +692,8 @@ export default function CallSheets() {
         {layout.blocks.filter((b) => b.sheet).map((b) => <Fragment key={b.key}>{renderBlock(b)}</Fragment>)}
 
         {csd.footer && <p className="cs-footer">{csd.footer}</p>}
-        {editable && (
-          <p className="fineprint no-print">Edits here are saved automatically to this day's call sheet.</p>
+        {editing && (
+          <p className="fineprint no-print">Everything you type is saved as you go. Done editing shows the sheet the way the crew sees it.</p>
         )}
       </article>
       </div>
