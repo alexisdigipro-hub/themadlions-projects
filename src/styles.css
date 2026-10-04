@@ -2151,7 +2151,7 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 .legend { margin-top: 8px; display: flex; gap: 6px; align-items: center; }
 .legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
 .legend .sw.in { background: var(--ok); } .legend .sw.out { background: var(--accent); }
-.fin-table td:first-child { max-width: 220px; }
+.fin-table td:first-child { max-width: 220px; overflow: hidden; overflow-wrap: break-word; } /* overflow:hidden lets the column shrink below its longest word on a narrow screen, instead of the text bleeding into the next column (Alex: Project/Line text overlapping the amounts) */
 /* breakdown tables: sortable headings, a totals row */
 .fin-table th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 .fin-table th.sortable:hover { color: var(--text); }
