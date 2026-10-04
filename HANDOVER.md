@@ -40,6 +40,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Three mobile fixes (4 Oct)
+Alex, from the Calendar screenshot thread:
+- **Not available looked like plain text**: its Button in the Calendar toolbar used `variant="ghost"` (transparent background and border), unlike the solid `Add event` next to it. Now default/bordered, same as any other secondary button.
+- **Bottom tab bar had a spare slot**: `.tabbar` is `grid-template-columns: repeat(5, 1fr)` but Layout.jsx only filled 4 (Home, Calendar, Chat, More). Added a 5th, role-based: Finance for administrators, My work for everyone else (admins don't have My work at all). No CSS change needed, the grid already had room.
+- **Crew/Cast List view squeezed illegible on a phone**: `src/pages/PeopleAll.jsx`'s `<table className="people-table">` (7 columns: avatar, name, dept/role, phone, email, projects, actions) was the only table in the app with no `.table-wrap` around it, so on a narrow screen the columns got crushed instead of scrolling. Wrapped it, same as every other table in the codebase (Finance, Gear, Usage, Shots). This is my best match for "το crew και cast χάνονται αριστερά": the default Cards view doesn't show this (checked, no overflow there), only the List/table toggle does, and Locations has no table at all so it was never affected. Flagged to Alex to confirm or send a screenshot if something else was meant.
+
 ### Calendar legend fixed on mobile (4 Oct)
 Alex sent a phone screenshot: the type legend under the mini calendar (Shoot day, Prep, Location scout… Not available) was an unreadable overlapping mess. Cause: `.cal-legend` uses `display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr))`, which on a narrow screen squeezes all ten chips into equal, too-narrow columns; with `white-space: nowrap` the text spills out of its chip and over the next one. Mobile-only fix (inside the existing `@media (max-width: 820px)` block in styles.css): the legend switches to `display: flex; flex-wrap: wrap`, so each chip sizes to its own text and wraps to a new row; chip padding and font-size also came down slightly to fit more per row. Desktop's grid rule is untouched. The same squeeze is there on desktop too if the sidebar is ever narrow, but that wasn't asked for and desktop stays untouched per the rule, so it's still open if Alex wants it later.
 

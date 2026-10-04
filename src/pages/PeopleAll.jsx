@@ -96,6 +96,7 @@ export default function PeopleAll({ kind }) {
           {people.length ? 'Try another search.' : 'People you add inside a project land here automatically, so the next project can pick them from the list. You can also add them directly.'}
         </Empty>
       ) : view === 'table' ? (
+        <div className="table-wrap">
         <table className="table people-table">
           <thead><tr><th /><th>Name</th><th>{kind === 'cast' ? 'Type' : 'Department · role'}</th><th>Phone</th><th>Email</th><th>Projects</th>{editable && <th />}</tr></thead>
           <tbody>
@@ -115,6 +116,7 @@ export default function PeopleAll({ kind }) {
             })}
           </tbody>
         </table>
+        </div>
       ) : (
         <div className="people-grid compact">
           {list.map((c) => {

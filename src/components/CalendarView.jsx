@@ -158,7 +158,7 @@ export default function CalendarView({ projectId = null, title }) {
             </Button>
           )}
           {canMarkOff && (
-            <Button variant="ghost" onClick={() => setDraft(newEvent(today(), 'unavailable'))}>
+            <Button onClick={() => setDraft(newEvent(today(), 'unavailable'))}>
               Not available
             </Button>
           )}
