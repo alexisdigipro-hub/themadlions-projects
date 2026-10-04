@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
@@ -227,9 +227,16 @@ export default function Drives() {
                 </span>
               )}
             </h2>
-            <div className="drive-grid">{list.map(card)}</div>
-            {/* the open disk sits under its own row of the shelf, not at the bottom of the page */}
-            {openedDisk && list.some((d) => d.id === openedDisk.id) && contents(openedDisk)}
+            <div className="drive-grid">
+              {/* the open disk is itself a grid item spanning every column, so wherever it sits in
+                  the list it still lands directly under its own row, not after the whole shelf */}
+              {list.map((d) => (
+                <Fragment key={d.id}>
+                  {card(d)}
+                  {openedDisk?.id === d.id && contents(openedDisk)}
+                </Fragment>
+              ))}
+            </div>
           </section>
         ))
       )}
