@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Drives archive: the open disk sits under its own row (4 Oct)
+Alex: the disk's contents came out "πολύ χαμηλά" (too low). The code already tried to keep it near the shelf (a comment said so) by rendering it as a section right after `.drive-grid`, but that puts it after the WHOLE grid of that series, i.e. after every row, not just the clicked disk's row. Fix: the open disk's panel is now itself a child of `.drive-grid`, inserted right after that disk's card in the list, with `grid-column: 1 / -1`. CSS Grid auto-placement then does the rest: a full-width item that doesn't fit the current row's remaining columns starts its own row, so the panel always lands directly under the row the clicked disk is in, at any screen width (the grid's column count is responsive, 6 down to 1), leaving the rest of that row's cells empty (invisible, no border) and pushing the later disks down by one row. Checked with a render of 8 disks at desktop (6-col) and phone (1-col) width.
+
 ### Three mobile fixes (4 Oct)
 Alex, from the Calendar screenshot thread:
 - **Not available looked like plain text**: its Button in the Calendar toolbar used `variant="ghost"` (transparent background and border), unlike the solid `Add event` next to it. Now default/bordered, same as any other secondary button.

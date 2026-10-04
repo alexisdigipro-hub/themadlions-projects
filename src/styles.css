@@ -3184,7 +3184,7 @@ html[data-theme='light'] .drive { border-color: transparent; }
 .drive-count { font-size: 13px; font-weight: 700; color: var(--muted); }
 
 /* The open disk: full width, normal sized text, room for size, date and notes. */
-.drive-open { margin: 10px 0 4px; padding: 0 0 6px; }
+.drive-open { grid-column: 1 / -1; margin: 10px 0 4px; padding: 0 0 6px; }
 .drive-open-head { flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--line-soft); }
 .drive-open-head h2 { font-size: 18px; letter-spacing: .03em; }
 .drive-open-notes { margin: 10px 16px 0; }
