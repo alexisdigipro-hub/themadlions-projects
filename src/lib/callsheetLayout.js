@@ -7,6 +7,7 @@ import { uid } from './store.jsx'
 
 export const BLOCKS = [
   ['note', 'Note'],
+  ['groupcalls', 'Calls by group'],
   ['location', 'Location'],
   ['contacts', 'Emergency & production'],
   ['schedule', 'Scenes'],

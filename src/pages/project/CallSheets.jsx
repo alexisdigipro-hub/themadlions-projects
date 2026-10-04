@@ -105,7 +105,11 @@ export default function CallSheets() {
   // Program: rows typed by hand on the day (time and what happens), like the scene times
   const program = sheet.program || []
   const programRows = program.filter((r) => r.from || r.to || r.what?.trim())
+  // Calls by group: production crew 10:00, beauty 09:00, dancers 14:00…, typed by hand per day
+  const groupCalls = sheet.groupCalls || []
+  const groupRows = groupCalls.filter((r) => r.who?.trim() || r.time)
   const notes = [
+    ...(groupRows.length ? [{ title: titleOf(layout, layout.blocks.find((b) => b.key === 'groupcalls') || { key: 'groupcalls' }), text: groupRows.map((r) => `⏰ ${(r.who || '').toUpperCase()}: ${r.time || ''}`).join('\n') }] : []),
     ...(programRows.length ? [{ title: titleOf(layout, layout.blocks.find((b) => b.key === 'program') || { key: 'program' }), text: programRows.map((r) => `${r.from || ''}${r.to ? `–${r.to}` : ''} ${r.what || ''}`.trim()).join('\n') }] : []),
     ...layout.blocks.filter((b) => b.custom && customText(b)).map((b) => ({ title: titleOf(layout, b), text: customText(b) })),
   ]
@@ -149,6 +153,7 @@ export default function CallSheets() {
       crew: on('crew') ? crewRows.map((c) => ({ name: c.name, role: c.role || c.dept, phone: phone(c.phone), call: c.call, photo: c.photos?.[0]?.thumb || '' })) : [],
       blocks: on('schedule') ? (day.blocks || []).map((b) => ({ time: b.time, end: b.end, item: b.item, owner: b.owner, notes: b.notes })) : [],
       departments: on('departments') ? Object.entries(departments).map(([cat, items]) => ({ cat, items })) : [],
+      groupCalls: on('groupcalls') ? groupRows.map((r) => ({ who: r.who || '', time: r.time || '' })) : [],
       program: on('program') ? programRows.map((r) => ({ from: r.from || '', to: r.to || '', what: r.what || '' })) : [],
       keyCrew,
       emergency: on('contacts') ? emergency : [],
@@ -175,6 +180,16 @@ export default function CallSheets() {
   }
 
   const sceneTime = (id) => (sheet.sceneTimes || {})[id] || { from: '', to: '' }
+  const setGroups = (list) => setSheet('groupCalls', list)
+  const setGroupRow = (i, k, v) => setGroups(groupCalls.map((r, j) => (j === i ? { ...r, [k]: v } : r)))
+  const moveGroup = (i, d) => {
+    const j = i + d
+    if (j < 0 || j >= groupCalls.length) return
+    const list = [...groupCalls]
+    ;[list[i], list[j]] = [list[j], list[i]]
+    setGroups(list)
+  }
+  const USUAL_GROUPS = ['Production crew', 'Beauty crew', 'Artist', 'Dancers', 'Cast', 'Model']
   const setProgram = (list) => setSheet('program', list)
   const setProgramRow = (i, k, v) => setProgram(program.map((r, j) => (j === i ? { ...r, [k]: v } : r)))
   const moveProgram = (i, d) => {
@@ -375,6 +390,35 @@ export default function CallSheets() {
                 ))}
               </tbody>
             </table>
+          </section>
+        )
+      case 'groupcalls':
+        if (!editable && !groupRows.length) return null
+        return (
+          <section>
+            {h}
+            <ul className="plain cs-groups">
+              {(editable ? groupCalls : groupRows).map((r, i) => (
+                <li key={r.id}>
+                  {editable ? <input className="cs-program-input cs-group-who" value={r.who || ''} placeholder="Production crew" onChange={(e) => setGroupRow(i, 'who', e.target.value)} aria-label="Who" /> : <span className="cs-group-who">{r.who}</span>}
+                  {editable ? <input className="cs-time" value={r.time || ''} placeholder={day.callTime || '10:00'} onChange={(e) => setGroupRow(i, 'time', e.target.value)} aria-label={`Call for ${r.who || 'this group'}`} /> : <strong className="cs-group-time">{r.time}</strong>}
+                  {editable && (
+                    <span className="row-actions no-print">
+                      <button onClick={() => moveGroup(i, -1)} disabled={i === 0} aria-label="Up">↑</button>
+                      <button onClick={() => moveGroup(i, 1)} disabled={i === groupCalls.length - 1} aria-label="Down">↓</button>
+                      <button onClick={() => setGroups(groupCalls.filter((_, j) => j !== i))} aria-label="Remove">×</button>
+                    </span>
+                  )}
+                </li>
+              ))}
+              {editable && !groupCalls.length && <li className="muted">Nothing yet. One row per group: production crew, beauty, artist, dancers…</li>}
+            </ul>
+            {editable && (
+              <div className="no-print cs-program-add row-actions wrap">
+                <Button size="sm" onClick={() => setGroups([...groupCalls, { id: uid(), who: '', time: '' }])}>Add a group</Button>
+                {!groupCalls.length && <Button size="sm" variant="ghost" onClick={() => setGroups(USUAL_GROUPS.map((who) => ({ id: uid(), who, time: '' })))}>Add the usual groups</Button>}
+              </div>
+            )}
           </section>
         )
       case 'program':

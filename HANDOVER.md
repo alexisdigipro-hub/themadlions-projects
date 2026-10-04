@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Call sheet: Calls by group (4 Oct)
+Alex: a section for ordino per group (production crew, beauty crew, artist, dancers, cast, model). Block `groupcalls` (after `note` in BLOCKS), rows on `day.callSheet.groupCalls [{id, who, time}]`, "Add the usual groups" seeds six. Link payload `groupCalls`, rendered as `.pub-groups`; WhatsApp text gets "⏰ WHO: time" lines. No ⏰ on the sheet or link, since he had just asked for the pin to go from the note card. No SQL.
+
 ### Link note: no pin, smaller text (4 Oct)
 Call sheet link only: the 📌 is gone from the note card and its text is 14px. The printed sheet keeps its pin.
 

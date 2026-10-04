@@ -117,6 +117,15 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
             )}
           </>
         )
+      case 'groupcalls':
+        return d.groupCalls?.length > 0 ? (
+          <section className="pub-card">
+            <h2>{b.title || 'Calls by group'}</h2>
+            <ul className="pub-groups">
+              {d.groupCalls.map((x, i) => <li key={i}><span>{x.who}</span><b>{x.time}</b></li>)}
+            </ul>
+          </section>
+        ) : null
       case 'program':
         return d.program?.length > 0 ? (
           <section className="pub-card">

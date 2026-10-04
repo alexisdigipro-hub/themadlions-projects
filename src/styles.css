@@ -2302,6 +2302,18 @@ html[data-theme='light'] .sheet { box-shadow: var(--shadow); }
 .cs-program-add { margin-top: 8px; }
 .pub-program-what { white-space: pre-wrap; }
 .pub-program .pub-sc { min-width: 116px; flex: none; }
+/* Calls by group: who on the left, the time on the right */
+.cs-groups { display: flex; flex-direction: column; gap: 6px; margin: 0; }
+.cs-groups li { display: flex; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid #e8eaf0; }
+.cs-group-who { flex: 1; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; font-size: 15px; }
+input.cs-group-who { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.cs-group-time { font-size: 17px; font-variant-numeric: tabular-nums; }
+.pub-groups { list-style: none; margin: 0; padding: 0; }
+.pub-groups li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line-soft); }
+.pub-groups li:first-child { border-top: 0; }
+.pub-groups span { text-transform: uppercase; letter-spacing: .05em; font-weight: 700; font-size: 14px; }
+.pub-groups b { font-size: 19px; font-variant-numeric: tabular-nums; }
+.pub-accented .pub-groups b { color: var(--pa); }
 /* Link preview: the share link drawn live in a phone frame next to the sheet */
 .cs-with-preview { display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 20px; align-items: start; }
 .cs-with-preview > .cs-preview { order: 2; position: sticky; top: 12px; }
