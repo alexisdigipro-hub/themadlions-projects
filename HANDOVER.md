@@ -36,9 +36,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
-## Where we stopped (3 Oct 2026)
+## Where we stopped (4 Oct 2026)
 
 Read this first; the detail behind each line is in the pull request that carried it.
+
+### Calendar legend fixed on mobile (4 Oct)
+Alex sent a phone screenshot: the type legend under the mini calendar (Shoot day, Prep, Location scout… Not available) was an unreadable overlapping mess. Cause: `.cal-legend` uses `display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr))`, which on a narrow screen squeezes all ten chips into equal, too-narrow columns; with `white-space: nowrap` the text spills out of its chip and over the next one. Mobile-only fix (inside the existing `@media (max-width: 820px)` block in styles.css): the legend switches to `display: flex; flex-wrap: wrap`, so each chip sizes to its own text and wraps to a new row; chip padding and font-size also came down slightly to fit more per row. Desktop's grid rule is untouched. The same squeeze is there on desktop too if the sidebar is ever narrow, but that wasn't asked for and desktop stays untouched per the rule, so it's still open if Alex wants it later.
 
 ### Row under the big call taken off the link (4 Oct)
 Alex (screenshot of his link: "ORDINO 15:00 / EST. WRAP 23:30", ORDINO being his renamed Shooting call): "βγάλ' το εντελώς". New details `shooting` and `wrap`; `DETAIL_OFF` in callsheetLayout.js starts shooting off on sheet and link and wrap off on the link, also for saved layouts. The link builds the row under the big call from what is on (`grid` in CallSheetLinkView); with nothing left, the big call stands alone (`.pub-call-main.alone`). Old links without the flags still show both.
