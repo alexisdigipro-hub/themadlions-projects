@@ -2822,6 +2822,11 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
   .calendar .toolbar-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .calendar .toolbar-actions .btn { width: 100%; }
   .cal-mobile { padding: 12px 10px; }
+  /* the legend's desktop grid (repeat(auto-fit, minmax(0, 1fr))) squeezes all ten chips into
+     equal-width columns on a narrow screen; with nowrap text that overlaps into the next chip.
+     On a phone it wraps instead, each chip sized to its own text. */
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .cal-legend-btn { padding: 5px 9px; font-size: 12.5px; }
   .mini-cal.large .mini-cal-cell { min-height: 46px; padding: 5px 0 4px; }
   .mini-cal.large .mini-cal-day { font-size: 15px; width: 28px; height: 28px; }
   .mini-cal.large .mini-cal-dots { height: 6px; gap: 3px; }
