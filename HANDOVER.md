@@ -68,7 +68,7 @@ Each PR body has the detail and the tests; this is the map.
 
 - **Cover crop**: `components/CoverCropper.jsx` (cropper + `useCover` hook used by Overview and ProjectForm), maths in `lib/coverCrop.js`. `coverThumb` is now a 480×480 square; the original goes to the photos bucket as `<projectId>/cover/source-<stamp>.jpg` in `coverSource`, the cut in `coverCrop`. Old file removed on a new pick, only if it sits in this project's folder (a copied project points at the original's). `Modal` now closes only the top window on Escape and keeps the page locked while another is open.
 
-**Alex still to do:** merge #197. Nothing to run in Supabase.
+**Alex still to do:** merge #198 (Finance and My Finance All time, cover crop; #197 went in before them). Nothing to run in Supabase.
 **Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
 
 ### Calendar feeds: read less often, and one switch over the lot (7 Oct)
