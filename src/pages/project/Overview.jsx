@@ -233,7 +233,7 @@ export default function Overview() {
       </section>
 
       {adds.length > 0 && (
-        <div className="ov-adds">
+        <div className="add-bar">
           {adds.map(([k, label]) => (
             <Button key={k} variant="ghost" onClick={() => begin(k)}>{label}</Button>
           ))}

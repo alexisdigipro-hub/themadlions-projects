@@ -16,14 +16,21 @@ const emptyDay = (date, d = {}) => ({ id: uid(), date, unit: 'Main unit', callTi
    layout and a stripboard table is wide too, neither fits comfortably in half the screen. */
 export default function Schedule() {
   const { project, user } = useProject()
+  const days = project.shootingDays || []
+  // With no shoot day the stripboard is a frame around a sentence, so it drops the frame and
+  // shows its Add shoot day button alone, the way the Overview does. An Event's run of show
+  // keeps its card: it is a page in its own right, not a list waiting to be filled.
+  const bare = project.category !== 'Event' && !days.length
   return (
     <div className="schedule-sheets">
-      <section className="panel">
-        {project.category === 'Event' ? <RunOfShow /> : <StripboardSchedule />}
-      </section>
-      {/* Without a shoot day a call sheet cannot exist, and the card above already says so, so
+      {bare ? <StripboardSchedule /> : (
+        <section className="panel">
+          {project.category === 'Event' ? <RunOfShow /> : <StripboardSchedule />}
+        </section>
+      )}
+      {/* A call sheet cannot exist without a shoot day, and the card above already says so, so
           this one waits rather than repeating it. Add a day up there and it appears. */}
-      {can(user, 'callsheets') && (project.days || []).length > 0 && (
+      {can(user, 'callsheets') && days.length > 0 && (
         <section className="panel">
           <CallSheets />
         </section>
@@ -115,6 +122,78 @@ function StripboardSchedule() {
 
   const dayEighths = (d) => d.sceneIds.reduce((a, id) => a + (sceneById[id]?.eighths || 0), 0)
   const dayCast = (d) => [...new Set(d.sceneIds.flatMap((id) => sceneById[id]?.characters || []))]
+
+  // Alex, same as the Overview: with no shoot day there is nothing to draw but a frame
+  // around a sentence, so it is the button alone until the first day exists. The form stays
+  // mounted either way so that button has something to open.
+  const modals = (
+    <>
+      <Modal
+        open={!!draft}
+        title={project.shootingDays.some((d) => d.id === draft?.id) ? 'Edit shoot day' : 'New shoot day'}
+        onClose={() => setDraft(null)}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setDraft(null)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={saveDay}>
+              Save shoot day
+            </Button>
+          </>
+        }
+      >
+        {draft && (
+          <div className="stack">
+            <div className="row-2">
+              <Field label="Date">
+                <Input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} />
+              </Field>
+              <Field label="Unit">
+                <Input value={draft.unit} onChange={(e) => setDraft({ ...draft, unit: e.target.value })} />
+              </Field>
+            </div>
+            <div className="row-2">
+              <Field label="General call">
+                <Input type="time" value={draft.callTime} onChange={(e) => setDraft({ ...draft, callTime: e.target.value })} />
+              </Field>
+              <Field label="Estimated wrap">
+                <Input type="time" value={draft.wrapTime} onChange={(e) => setDraft({ ...draft, wrapTime: e.target.value })} />
+              </Field>
+            </div>
+            <Field label="Location">
+              <Select value={draft.locationId} onChange={(e) => setDraft({ ...draft, locationId: e.target.value })}>
+                <option value="">No location yet</option>
+                {project.locations.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Notes">
+              <Textarea rows={3} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} />
+            </Field>
+          </div>
+        )}
+      </Modal>
+
+      <ScenePicker open={!!pick} scenes={unscheduled} onClose={() => setPick(null)} onPick={(ids) => { assign(pick, ids); setPick(null) }} />
+    </>
+  )
+
+  if (!days.length) {
+    return (
+      <>
+        {editable && (
+          <div className="add-bar">
+            <Button variant="ghost" onClick={() => setDraft(emptyDay(project.startDate || today(), callsheetDefaults(state)))}>Add shoot day</Button>
+          </div>
+        )}
+        {modals}
+      </>
+    )
+  }
 
   return (
     <div className="schedule">
@@ -253,57 +332,7 @@ function StripboardSchedule() {
         )}
       </div>
 
-      <Modal
-        open={!!draft}
-        title={project.shootingDays.some((d) => d.id === draft?.id) ? 'Edit shoot day' : 'New shoot day'}
-        onClose={() => setDraft(null)}
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setDraft(null)}>
-              Cancel
-            </Button>
-            <Button variant="primary" onClick={saveDay}>
-              Save shoot day
-            </Button>
-          </>
-        }
-      >
-        {draft && (
-          <div className="stack">
-            <div className="row-2">
-              <Field label="Date">
-                <Input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} />
-              </Field>
-              <Field label="Unit">
-                <Input value={draft.unit} onChange={(e) => setDraft({ ...draft, unit: e.target.value })} />
-              </Field>
-            </div>
-            <div className="row-2">
-              <Field label="General call">
-                <Input type="time" value={draft.callTime} onChange={(e) => setDraft({ ...draft, callTime: e.target.value })} />
-              </Field>
-              <Field label="Estimated wrap">
-                <Input type="time" value={draft.wrapTime} onChange={(e) => setDraft({ ...draft, wrapTime: e.target.value })} />
-              </Field>
-            </div>
-            <Field label="Location">
-              <Select value={draft.locationId} onChange={(e) => setDraft({ ...draft, locationId: e.target.value })}>
-                <option value="">No location yet</option>
-                {project.locations.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Notes">
-              <Textarea rows={3} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} />
-            </Field>
-          </div>
-        )}
-      </Modal>
-
-      <ScenePicker open={!!pick} scenes={unscheduled} onClose={() => setPick(null)} onPick={(ids) => { assign(pick, ids); setPick(null) }} />
+      {modals}
     </div>
   )
 }

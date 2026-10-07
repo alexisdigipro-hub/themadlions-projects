@@ -97,18 +97,15 @@ export default function Shots() {
     return m
   }, [shots])
 
+  // Same as the Overview: nothing here yet means the button, not a frame around a sentence
+  // explaining that there is nothing here.
   if (!project.scenes.length) {
-    return (
-      <Empty
-        title="No shot list yet"
-        action={editable && <Button variant="primary" onClick={addScene}>Add first setup</Button>}
-      >
-        <>
-          Start it by hand: add a setup and put its shots under it. Or build the setups automatically from a script,
-          a treatment or pasted text in <Link to="../script">Script &amp; Breakdown</Link>.
-        </>
-      </Empty>
-    )
+    return editable ? (
+      <div className="add-bar">
+        <Button variant="ghost" onClick={addScene}>Add first setup</Button>
+        <Link className="btn btn-ghost btn-md" to="../script">Build from the script</Link>
+      </div>
+    ) : null
   }
 
   const save = () => {

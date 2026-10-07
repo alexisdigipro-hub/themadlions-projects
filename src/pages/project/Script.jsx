@@ -98,6 +98,23 @@ export default function Script() {
   const diff = useMemo(() => (cmpVersion ? diffLines(cmpVersion.text, project.script.text) : null), [cmpVersion, project.script.text])
   const shown = versions.find((v) => v.id === show)
 
+  // Alex, same as the Overview: with no script at all the card would only be a frame around a
+  // line saying so, so it is the two buttons instead and the card arrives with the text.
+  const bare = !project.script.text && !editing && !versions.length
+  if (bare) {
+    return (
+      <div className="script-page">
+        {editable && (
+          <div className="add-bar">
+            <input ref={fileRef} type="file" accept={ACCEPTED} hidden onChange={(e) => onFile(e.target.files?.[0])} />
+            <Button variant="ghost" onClick={() => fileRef.current?.click()} disabled={busy}>{busy ? 'Reading…' : 'Upload script'}</Button>
+            <Button variant="ghost" onClick={() => setEditing(true)}>Paste text</Button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="script-page">
       <section className="panel">

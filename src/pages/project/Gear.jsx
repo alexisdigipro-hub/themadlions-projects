@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
@@ -9,7 +9,10 @@ const GEAR_STATUS = [['needed', 'Needed'], ['quoted', 'Quoted'], ['booked', 'Boo
 const emptyItem = (cats) => ({ id: uid(), category: cats[0] || '', item: '', qty: 1, vendor: '', rate: '', days: '', pickup: '', dropoff: '', status: 'needed', notes: '' })
 const emptyVendor = () => ({ id: uid(), name: '', contact: '', phone: '', email: '', address: '', notes: '' })
 
-export default function Gear() {
+/* On the Project Database an empty card is noise, so `hideEmpty` draws nothing until there is a
+   piece of equipment and `startSignal` (a counter the page bumps) opens the form from a button
+   out there. Nothing else passes either. */
+export default function Gear({ hideEmpty = false, startSignal = 0 }) {
   const { project, edit, canEdit } = useProject()
   const { state } = useStore()
   const toast = useToast()
@@ -81,6 +84,56 @@ export default function Gear() {
     const csv = [head, ...rows].map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n')
     download(`${project.title} - equipment.csv`, '\uFEFF' + csv, 'text/csv')
   }
+
+  // The forms live apart from the cards, so a button on the Project Database still has one
+  // to open while this card is hidden.
+  const modals = (
+    <>
+      {draft && (
+        <Modal open title={gear.some((g) => g.id === draft.id) ? 'Edit item' : 'New item'} onClose={() => setDraft(null)}
+          footer={<><Button variant="ghost" onClick={() => setDraft(null)}>Cancel</Button><Button variant="primary" onClick={save}>Save item</Button></>}>
+          <div className="row-2">
+            <Field label="Category"><Select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} options={draft.category && !GEAR_CATS.includes(draft.category) ? [...GEAR_CATS, draft.category] : GEAR_CATS} /></Field>
+            <Field label="Status"><Select value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value })} options={GEAR_STATUS} /></Field>
+          </div>
+          <Field label="Item"><Input autoFocus value={draft.item} onChange={(e) => setDraft({ ...draft, item: e.target.value })} placeholder="Alexa Mini LF body, Cooke S4 set, Aputure 600d" /></Field>
+          <div className="row-3">
+            <Field label="Quantity"><Input type="number" min="1" value={draft.qty} onChange={(e) => setDraft({ ...draft, qty: e.target.value })} /></Field>
+            <Field label={`Rate per day (${cur})`}><Input type="number" min="0" value={draft.rate} onChange={(e) => setDraft({ ...draft, rate: e.target.value })} /></Field>
+            <Field label="Days"><Input type="number" min="0" value={draft.days} onChange={(e) => setDraft({ ...draft, days: e.target.value })} /></Field>
+          </div>
+          <Field label="Vendor">
+            <Input list="vendor-names" value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} placeholder="Rental house" />
+            <datalist id="vendor-names">{vendors.map((v) => <option key={v.id} value={v.name} />)}</datalist>
+          </Field>
+          <div className="row-2">
+            <Field label="Pickup"><Input type="date" value={draft.pickup} onChange={(e) => setDraft({ ...draft, pickup: e.target.value })} /></Field>
+            <Field label="Return"><Input type="date" value={draft.dropoff} onChange={(e) => setDraft({ ...draft, dropoff: e.target.value })} /></Field>
+          </div>
+          <Field label="Notes"><Textarea rows={2} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} placeholder="Insurance, serial numbers, who picks up" /></Field>
+        </Modal>
+      )}
+      {vdraft && (
+        <Modal open title={vendors.some((v) => v.id === vdraft.id) ? 'Edit vendor' : 'New vendor'} onClose={() => setVdraft(null)}
+          footer={<><Button variant="ghost" onClick={() => setVdraft(null)}>Cancel</Button><Button variant="primary" onClick={saveVendor}>Save vendor</Button></>}>
+          <Field label="Name"><Input autoFocus value={vdraft.name} onChange={(e) => setVdraft({ ...vdraft, name: e.target.value })} /></Field>
+          <div className="row-2">
+            <Field label="Contact person"><Input value={vdraft.contact} onChange={(e) => setVdraft({ ...vdraft, contact: e.target.value })} /></Field>
+            <Field label="Phone"><Input value={vdraft.phone} onChange={(e) => setVdraft({ ...vdraft, phone: e.target.value })} /></Field>
+          </div>
+          <div className="row-2">
+            <Field label="Email"><Input type="email" value={vdraft.email} onChange={(e) => setVdraft({ ...vdraft, email: e.target.value })} /></Field>
+            <Field label="Address"><Input value={vdraft.address} onChange={(e) => setVdraft({ ...vdraft, address: e.target.value })} /></Field>
+          </div>
+          <Field label="Notes"><Textarea rows={2} value={vdraft.notes} onChange={(e) => setVdraft({ ...vdraft, notes: e.target.value })} placeholder="Opening hours, payment terms, insurance requirements" /></Field>
+        </Modal>
+      )}
+    </>
+  )
+
+  useEffect(() => { if (startSignal) setDraft(emptyItem(GEAR_CATS)) }, [startSignal]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (hideEmpty && !gear.length) return modals
 
   return (
     <div className="gear">
@@ -171,45 +224,7 @@ export default function Gear() {
         )}
       </div>
 
-      {draft && (
-        <Modal open title={gear.some((g) => g.id === draft.id) ? 'Edit item' : 'New item'} onClose={() => setDraft(null)}
-          footer={<><Button variant="ghost" onClick={() => setDraft(null)}>Cancel</Button><Button variant="primary" onClick={save}>Save item</Button></>}>
-          <div className="row-2">
-            <Field label="Category"><Select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} options={draft.category && !GEAR_CATS.includes(draft.category) ? [...GEAR_CATS, draft.category] : GEAR_CATS} /></Field>
-            <Field label="Status"><Select value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value })} options={GEAR_STATUS} /></Field>
-          </div>
-          <Field label="Item"><Input autoFocus value={draft.item} onChange={(e) => setDraft({ ...draft, item: e.target.value })} placeholder="Alexa Mini LF body, Cooke S4 set, Aputure 600d" /></Field>
-          <div className="row-3">
-            <Field label="Quantity"><Input type="number" min="1" value={draft.qty} onChange={(e) => setDraft({ ...draft, qty: e.target.value })} /></Field>
-            <Field label={`Rate per day (${cur})`}><Input type="number" min="0" value={draft.rate} onChange={(e) => setDraft({ ...draft, rate: e.target.value })} /></Field>
-            <Field label="Days"><Input type="number" min="0" value={draft.days} onChange={(e) => setDraft({ ...draft, days: e.target.value })} /></Field>
-          </div>
-          <Field label="Vendor">
-            <Input list="vendor-names" value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} placeholder="Rental house" />
-            <datalist id="vendor-names">{vendors.map((v) => <option key={v.id} value={v.name} />)}</datalist>
-          </Field>
-          <div className="row-2">
-            <Field label="Pickup"><Input type="date" value={draft.pickup} onChange={(e) => setDraft({ ...draft, pickup: e.target.value })} /></Field>
-            <Field label="Return"><Input type="date" value={draft.dropoff} onChange={(e) => setDraft({ ...draft, dropoff: e.target.value })} /></Field>
-          </div>
-          <Field label="Notes"><Textarea rows={2} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} placeholder="Insurance, serial numbers, who picks up" /></Field>
-        </Modal>
-      )}
-      {vdraft && (
-        <Modal open title={vendors.some((v) => v.id === vdraft.id) ? 'Edit vendor' : 'New vendor'} onClose={() => setVdraft(null)}
-          footer={<><Button variant="ghost" onClick={() => setVdraft(null)}>Cancel</Button><Button variant="primary" onClick={saveVendor}>Save vendor</Button></>}>
-          <Field label="Name"><Input autoFocus value={vdraft.name} onChange={(e) => setVdraft({ ...vdraft, name: e.target.value })} /></Field>
-          <div className="row-2">
-            <Field label="Contact person"><Input value={vdraft.contact} onChange={(e) => setVdraft({ ...vdraft, contact: e.target.value })} /></Field>
-            <Field label="Phone"><Input value={vdraft.phone} onChange={(e) => setVdraft({ ...vdraft, phone: e.target.value })} /></Field>
-          </div>
-          <div className="row-2">
-            <Field label="Email"><Input type="email" value={vdraft.email} onChange={(e) => setVdraft({ ...vdraft, email: e.target.value })} /></Field>
-            <Field label="Address"><Input value={vdraft.address} onChange={(e) => setVdraft({ ...vdraft, address: e.target.value })} /></Field>
-          </div>
-          <Field label="Notes"><Textarea rows={2} value={vdraft.notes} onChange={(e) => setVdraft({ ...vdraft, notes: e.target.value })} placeholder="Opening hours, payment terms, insurance requirements" /></Field>
-        </Modal>
-      )}
+      {modals}
     </div>
   )
 }

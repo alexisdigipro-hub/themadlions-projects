@@ -49,6 +49,22 @@ export default function People() {
   const characters = [...new Set(project.scenes.flatMap((s) => s.characters))]
   const uncast = characters.filter((c) => !project.contacts.some((x) => x.kind === 'cast' && x.character?.toUpperCase() === c.toUpperCase()))
 
+  // Alex: the same as the Overview. A card with nothing in it is not drawn, and its button sits
+  // in one row at the top. Locations and Gear watch a counter rather than take a callback,
+  // because the form that button opens belongs to them, not to this page.
+  const crew = project.contacts.filter((c) => c.kind === 'crew')
+  const cast = project.contacts.filter((c) => c.kind === 'cast')
+  const [start, setStart] = useState({ location: 0, gear: 0 })
+  // Crew and Cast share this page's own form, so those two open it directly; Locations and Gear
+  // get a nudge instead.
+  const begin = (k) => (k === 'crew' || k === 'cast' ? startDraft(k) : setStart((s0) => ({ ...s0, [k]: s0[k] + 1 })))
+  const adds = [
+    can(user, 'contacts') && editable && !crew.length && ['crew', 'Add crew'],
+    can(user, 'contacts') && editable && !cast.length && ['cast', project.category === 'Event' ? 'Add talent' : 'Add cast'],
+    can(user, 'locations') && canEdit('locations') && !project.locations.length && ['location', 'Add location'],
+    can(user, 'gear') && canEdit('gear') && !(project.gear || []).length && ['gear', 'Add item'],
+  ].filter(Boolean)
+
   const save = () => {
     if (!draft.name.trim()) return toast('Add a name.', 'error')
     const { saveToLibrary, ...c } = draft
@@ -81,6 +97,10 @@ export default function People() {
   const group = (kind) => {
     const list = project.contacts.filter((c) => c.kind === kind)
     const label = kind === 'cast' ? (project.category === 'Event' ? 'Talent' : 'Cast') : 'Crew'
+    // Nothing in it yet: its button is up in the row at the top of the page instead of a card
+    // whose only content is a line saying it is empty. The forms below are shared by all four
+    // cards and stay mounted either way, so that button has something to open.
+    if (!list.length) return null
     return (
       <section className="panel db-card">
         <div className="toolbar">
@@ -208,14 +228,26 @@ export default function People() {
         </div>
       </div>
 
-      {can(user, 'contacts') && (
-        <div className="cols db-grid">
+      {adds.length > 0 && (
+        <div className="add-bar">
+          {adds.map(([k, label]) => (
+            <Button key={k} variant="ghost" onClick={() => begin(k)}>{label}</Button>
+          ))}
+        </div>
+      )}
+
+      {can(user, 'contacts') && (crew.length > 0 || cast.length > 0) && (
+        <div className={`cols db-grid${crew.length && cast.length ? '' : ' one'}`}>
           {group('crew')}
           {group('cast')}
         </div>
       )}
-      {can(user, 'locations') && <section className="panel db-card"><Locations /></section>}
-      {can(user, 'gear') && <section className="panel db-card"><Gear /></section>}
+      {can(user, 'locations') && (project.locations.length > 0
+        ? <section className="panel db-card"><Locations hideEmpty startSignal={start.location} /></section>
+        : <Locations hideEmpty startSignal={start.location} />)}
+      {can(user, 'gear') && ((project.gear || []).length > 0
+        ? <section className="panel db-card"><Gear hideEmpty startSignal={start.gear} /></section>
+        : <Gear hideEmpty startSignal={start.gear} />)}
 
       <Modal
         open={!!draft}

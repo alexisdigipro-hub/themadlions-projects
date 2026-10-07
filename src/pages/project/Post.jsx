@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
+import { Button, Confirm, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { today, uid } from '../../lib/store.jsx'
 import { fmtDate } from '../../lib/dates.js'
