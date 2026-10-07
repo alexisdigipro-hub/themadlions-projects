@@ -209,8 +209,11 @@ async function call(body) {
   }
   let out = null
   try { out = await res.json() } catch { /* not JSON */ }
+  // The function answers 404 itself when the calendar address is wrong, so its own words come
+  // first; only a 404 with no message of ours is Supabase saying the function is not there.
+  if (out?.error) throw new Error(out.error)
   if (res.status === 404) throw new Error('The ical function is not deployed yet: Supabase > Edge Functions > ical.')
-  if (!res.ok || !out || out.error) throw new Error(out?.error || `The calendar feed function answered ${res.status}.`)
+  if (!res.ok || !out) throw new Error(`The calendar feed function answered ${res.status}.`)
   return out
 }
 
