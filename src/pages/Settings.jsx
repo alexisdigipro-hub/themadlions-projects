@@ -7,7 +7,7 @@ import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/bu
 import { fmtBytes, snapshotSummary, snapshotToState } from '../lib/backups.js'
 import { authorizeUrl, clearOauth, pcloudPing, redirectUri, takeOauth } from '../lib/pcloud.js'
 import { authorizeUrl as gcalAuthorizeUrl, clearOauthCode, gcalCalendars, gcalConnect, redirectUri as gcalRedirectUri, takeOauthCode } from '../lib/googleCalendar.js'
-import { FEED_COLOR, feedsOf, fetchFeedText, parseIcs } from '../lib/ical.js'
+import { FEED_COLOR, feedsAreOff, feedsOf, fetchFeedText, parseIcs } from '../lib/ical.js'
 import { CHAT_DEFAULTS, chime, loadChatPrefs, saveChatPrefs } from '../lib/chatPrefs.js'
 import { FONTS, applyFont, currentFont, ensureFontLoaded } from '../lib/fonts.js'
 import Usage from '../components/Usage.jsx'
@@ -870,9 +870,11 @@ const PALETTE = ['#6C9BD1', '#5B9E7A', '#B07FD1', '#E08A5A', '#4FB3BF', '#C8503F
 function CalendarFeedsPanel({ toast }) {
   const { state, update } = useStore()
   const feeds = feedsOf(state.settings)
+  const off = feedsAreOff(state.settings)
   const [draft, setDraft] = useState(null)
   const [testing, setTesting] = useState(false)
   const save = (list) => update((s) => { s.settings = { ...s.settings, calendarFeeds: list }; return s })
+  const setOff = (v) => update((s) => { s.settings = { ...s.settings, calendarFeedsOff: v }; return s })
   const patch = (id, change) => save(feeds.map((f) => (f.id === id ? { ...f, ...change } : f)))
   const add = () => {
     const url = (draft.url || '').trim()
@@ -898,6 +900,10 @@ function CalendarFeedsPanel({ toast }) {
   }
   return (
     <div className="stack">
+      <Field label="Show these calendars on the Calendar page" hint="Off hides all of them at once and stops the app reading them. The addresses below stay as they are, so turning it back on needs nothing else.">
+        <Select value={off ? 'no' : 'yes'} onChange={(e) => setOff(e.target.value === 'no')} options={[['yes', 'Yes'], ['no', 'No']]} />
+      </Field>
+      {off && !!feeds.length && <p className="small muted">{feeds.length === 1 ? 'The calendar below is' : `All ${feeds.length} calendars below are`} switched off right now. Test still works, so you can check one without turning them back on.</p>}
       <ol className="small muted pc-steps">
         <li>In Google Calendar on a computer, hover the calendar in the left list &rarr; &#8942; &rarr; <b>Settings and sharing</b>.</li>
         <li>Scroll to <b>Integrate calendar</b> and copy the <b>Secret address in iCal format</b> (the one ending in <code>/basic.ics</code>).</li>

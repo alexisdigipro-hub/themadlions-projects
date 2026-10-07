@@ -40,6 +40,14 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Calendar feeds: read less often, and one switch over the lot (7 Oct)
+Live, after a long afternoon. The function is deployed in his Supabase as `ical`.
+**What went wrong, in order.** He pasted the Edge Function's TypeScript into the SQL Editor (`syntax error at or near "//"`): `supabase/*.sql` goes to the SQL Editor, `supabase/functions/*` to Edge Functions, and that was never said plainly. Then the app reported every 404 as "the ical function is not deployed yet", because `call()` read the status before the body, and the function answers 404 itself for a bad calendar address — so he went back to Supabase for nothing (PR #178). With that fixed the real answer showed: **429 from Google**. The Calendar page fetched every feed on every visit, so a handful of visits was enough for Google to start refusing the secret address.
+**Now**: `readFeedText(feed, { fresh })` keeps each feed's text in localStorage (`tml_ical_<id>`) for 30 minutes and only then goes out again; Refresh feeds and Test pass `fresh`. A refused read falls back to anything kept in the last week and shows the reason next to it, so the calendar never empties. The 429 is translated into words — a number he cannot act on is not an error message. `fetchFeeds` was dead (CalendarView always used `fetchFeedText`) and is gone.
+**And**: `settings.calendarFeedsOff` is one switch in Settings > Integrations > Calendar feeds over every feed. `liveFeeds()` returns nothing when it is on, so the page reads nothing, the legend loses the entries and the notice goes; the addresses and the per-feed Show ticks are untouched for when it comes back. `loadFeeds` now clears its text and errors when there are no live feeds, or the last notice would sit over a calendar no longer showing any of it.
+**Tested** in the scratchpad against the real module, no stub of the logic: `csx/ioff-test.cjs` (8), `csx/icache-test.cjs` (9), `csx/icall-test.cjs` (6), `csx/ical-test.cjs` (the parser). Settings panel rendered at 1200px and 390px, both states.
+**Still true**: npm is blocked in the cloud environment, so `npm run build` cannot run here; the Actions build on each PR is the only real build check.
+
 ### Loading screen: the name alone (7 Oct)
 Alex: "THE MAD LIONS (MONO)" — only the name. The logo mark, the "Production hub" line and the "Loading…" note are gone from `Loading()` in App.jsx; `.boot-name` is the one style left.
 

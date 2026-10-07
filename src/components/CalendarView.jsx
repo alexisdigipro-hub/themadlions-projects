@@ -4,7 +4,7 @@ import MiniCalendar from './MiniCalendar.jsx'
 import { EVENT_TYPES, can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { addDays, buildICS, download, fmtDate, holidayName, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
 import { gcalDelete, gcalOn, gcalPull, gcalUpsert, reconcilePulledEvents } from '../lib/googleCalendar.js'
-import { FEED_COLOR, fetchFeedText, liveFeeds, parseIcs } from '../lib/ical.js'
+import { FEED_COLOR, liveFeeds, parseIcs, readFeedText } from '../lib/ical.js'
 
 export default function CalendarView({ projectId = null, title }) {
   const { state, update } = useStore()
@@ -30,18 +30,23 @@ export default function CalendarView({ projectId = null, title }) {
   const [feedText, setFeedText] = useState({})
   const [feedErrors, setFeedErrors] = useState([])
   const [feedBusy, setFeedBusy] = useState(false)
-  const loadFeeds = () => {
-    if (!feeds.length || projectId) return
+  // Reading goes through readFeedText, which answers from the last half hour when it can: the
+  // page is opened many times a day and Google starts refusing a calendar that is read that
+  // often. Refresh feeds is the way to insist.
+  const loadFeeds = (fresh = false) => {
+    // Switched off in Settings, or none left: drop what the last read put on the page, or its
+    // notice sits there over a calendar that is no longer showing any of it.
+    if (!feeds.length || projectId) { setFeedText({}); setFeedErrors([]); return }
     setFeedBusy(true)
     setFeedErrors([])
-    Promise.all(feeds.map((f) => fetchFeedText(f.url).then((text) => ({ id: f.id, text })).catch((e) => ({ id: f.id, error: `${f.name || 'Calendar feed'}: ${e.message}` }))))
+    Promise.all(feeds.map((f) => readFeedText(f, { fresh }).then((r) => ({ id: f.id, ...r }))))
       .then((rows) => {
-        setFeedText(Object.fromEntries(rows.filter((r) => r.text !== undefined).map((r) => [r.id, r.text])))
+        setFeedText(Object.fromEntries(rows.filter((r) => r.text).map((r) => [r.id, r.text])))
         setFeedErrors(rows.map((r) => r.error).filter(Boolean))
       })
       .finally(() => setFeedBusy(false))
   }
-  useEffect(loadFeeds, [feedKey, projectId])
+  useEffect(() => { loadFeeds() }, [feedKey, projectId]) // eslint-disable-line react-hooks/exhaustive-deps
   // A year either side of the month on screen: enough for a repeating event to be worked out
   // without walking a calendar's whole history.
   const feedEvents = useMemo(() => {
@@ -189,12 +194,12 @@ export default function CalendarView({ projectId = null, title }) {
             </Button>
           )}
           {synced && !projectId && (
-            <Button variant="ghost" onClick={() => { pull(); loadFeeds() }} disabled={syncing}>
+            <Button variant="ghost" onClick={() => { pull(); loadFeeds(true) }} disabled={syncing}>
               {syncing ? 'Syncing…' : 'Sync now'}
             </Button>
           )}
           {!synced && !!feeds.length && !projectId && (
-            <Button variant="ghost" onClick={loadFeeds} disabled={feedBusy}>{feedBusy ? 'Reading…' : 'Refresh feeds'}</Button>
+            <Button variant="ghost" onClick={() => loadFeeds(true)} disabled={feedBusy}>{feedBusy ? 'Reading…' : 'Refresh feeds'}</Button>
           )}
           {canMarkOff && (
             <Button onClick={() => setDraft(newEvent(today(), 'unavailable'))}>

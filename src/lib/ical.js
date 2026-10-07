@@ -9,7 +9,10 @@ import { SUPABASE_KEY, SUPABASE_URL } from './supabaseConfig.js'
 export const FEED_COLOR = '#6C9BD1'
 /* Settings > Integrations > Calendar feeds: [{ id, name, url, color, off }] */
 export const feedsOf = (settings) => (settings?.calendarFeeds || []).filter((f) => f && f.url)
-export const liveFeeds = (settings) => feedsOf(settings).filter((f) => !f.off)
+/* `calendarFeedsOff` is the one switch over all of them: the Calendar page then reads nothing,
+   draws nothing and says nothing, while the addresses stay where they are. */
+export const feedsAreOff = (settings) => settings?.calendarFeedsOff === true
+export const liveFeeds = (settings) => (feedsAreOff(settings) ? [] : feedsOf(settings).filter((f) => !f.off))
 
 /* ---------------------------------------------------------------- parsing */
 
@@ -217,17 +220,48 @@ async function call(body) {
   return out
 }
 
-export const fetchFeedText = (url) => call({ url }).then((r) => r.text || '')
+/* Google answers 429 when the same secret address is read a few times in quick succession, and
+   the function can only pass the number on. Said plainly, because it is not a fault to go and
+   fix: the calendar is fine and it clears itself. */
+const human = (message) => (/\b429\b/.test(message)
+  ? 'Google is not handing this calendar out right now because it was read too many times in a row. It clears itself in about half an hour, and the calendar keeps working in the meantime.'
+  : message)
 
-/* Every live feed, parsed, in one list. A feed that fails says so instead of taking the rest
-   down with it: one wrong address should not empty the calendar. */
-export async function fetchFeeds(feeds, { from, to }) {
-  const results = await Promise.all(feeds.map(async (f) => {
-    try {
-      return { events: parseIcs(await fetchFeedText(f.url), { from, to, feed: f }) }
-    } catch (e) {
-      return { events: [], error: `${f.name || 'Calendar feed'}: ${e.message}` }
-    }
-  }))
-  return { events: results.flatMap((r) => r.events), errors: results.map((r) => r.error).filter(Boolean) }
+/* One read, now. Test in Settings uses this: pressing it means "go and look". */
+export const fetchFeedText = (url) => call({ url }).then((r) => r.text || '').catch((e) => { throw new Error(human(e.message)) })
+
+/* The Calendar page asked on every visit, and a few feeds times a few visits is exactly what
+   makes Google start refusing. What came back is kept for half an hour per feed, so moving
+   around the app costs nothing and a day's work is a few reads instead of dozens. When Google
+   does refuse, what was read last is used anyway rather than emptying the page. */
+const KEEP_MS = 30 * 60 * 1000
+const STALE_MS = 7 * 24 * 60 * 60 * 1000
+const cacheKey = (feed) => `tml_ical_${feed.id || feed.url}`
+
+const kept = (feed) => {
+  try {
+    const { at, text } = JSON.parse(localStorage.getItem(cacheKey(feed)) || 'null') || {}
+    return text ? { at, text } : null
+  } catch { return null }
+}
+
+const keep = (feed, text) => {
+  try { localStorage.setItem(cacheKey(feed), JSON.stringify({ at: Date.now(), text })) } catch { /* full, or a private window */ }
+}
+
+/* The feed's text, from the last half hour if it is there. `fresh` skips that (Refresh feeds).
+   A read that fails still answers with anything kept from the last week, and says what went
+   wrong alongside it, so a calendar that Google is holding back still draws. */
+export async function readFeedText(feed, { fresh = false } = {}) {
+  const old = kept(feed)
+  if (!fresh && old && Date.now() - old.at < KEEP_MS) return { text: old.text }
+  try {
+    const text = await fetchFeedText(feed.url)
+    keep(feed, text)
+    return { text }
+  } catch (e) {
+    const error = `${feed.name || 'Calendar feed'}: ${e.message}`
+    if (old && Date.now() - old.at < STALE_MS) return { text: old.text, error }
+    return { error }
+  }
 }
