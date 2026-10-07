@@ -49,7 +49,6 @@ export default function TasksAll() {
     return g
   }, [shown, t0])
 
-  const people = [...new Set([...state.users.map((u) => u.name), ...projects.flatMap((p) => p.contacts.map((c) => c.name))])].filter(Boolean)
 
   const persist = (t, fn) => {
     if (!t.projectId) return update((s) => { const x = s.todos.find((y) => y.id === t.id); if (x) fn(x); return s })
@@ -128,7 +127,7 @@ export default function TasksAll() {
         </>
       )}
 
-      {draft && <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} people={people} />}
+      {draft && <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} />}
     </div>
   )
 }
