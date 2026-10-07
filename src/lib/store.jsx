@@ -691,8 +691,8 @@ export function StoreProvider({ children }) {
             ? await supabase.rpc('assign_worklog', { p_id: n.id, p_user: n.userId, p_data: n })
             : await supabase.from('worklog').upsert({ id: n.id, workspace_id: ws, user_id: n.userId, data: n })
           if (error) {
-            if (error.code === '42P01') throw new Error('Run supabase/worklog.sql in the SQL editor to enable My work.')
-            if (forOther(n) && (error.code === 'PGRST202' || error.code === '42883')) throw new Error('Run supabase/worklog_assign.sql so a budget line can reach a colleague\'s My work.')
+            if (error.code === '42P01') throw new Error('Run supabase/worklog.sql in the SQL editor to enable My Finance.')
+            if (forOther(n) && (error.code === 'PGRST202' || error.code === '42883')) throw new Error('Run supabase/worklog_assign.sql so a budget line can reach a colleague\'s My Finance.')
             throw new Error(error.message)
           }
           setTimeout(() => myWrites.current.delete(n.id), 4000)
@@ -1024,6 +1024,17 @@ export function can(user, moduleKey, level = 'view') {
   const has = user.permissions?.[moduleKey] || 'none'
   if (level === 'view') return has === 'view' || has === 'edit'
   return has === 'edit'
+}
+
+/* The Database page in the side menu (people and locations across every project). Alex decides
+   per person whether they get it (Settings > Team > a person > Database page); without it they
+   still have each project's own Project Database tab. Shown unless switched off, so nobody lost
+   it the day the switch arrived. It is a menu choice, not a lock: the same people and locations
+   are what a project's tab picks from when it adds someone from the library. */
+export function seesDatabase(user) {
+  if (!user) return false
+  if (user.role === 'admin') return true
+  return (can(user, 'contacts') || can(user, 'locations')) && user.permissions?.databasePage !== 'hide'
 }
 
 export function canAccessProject(user, projectId) {

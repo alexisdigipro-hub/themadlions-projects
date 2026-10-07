@@ -11,6 +11,7 @@ export const statusUrl = (t) => `${location.origin}${location.pathname}#/ps/${t}
 export const estimateUrl = (t) => `${location.origin}${location.pathname}#/e/${t}`
 export const shotlistUrl = (t) => `${location.origin}${location.pathname}#/sl/${t}`
 export const invoiceUrl = (t) => `${location.origin}${location.pathname}#/inv/${t}`
+export const deckUrl = (t) => `${location.origin}${location.pathname}#/pr/${t}`
 /* publishShare hands back a /s/ url; a delivery needs the token out of it to build its own. */
 export const tokenOf = (url) => String(url || '').split('/').filter(Boolean).pop() || ''
 

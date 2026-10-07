@@ -1,7 +1,7 @@
 import { NavLink, Navigate, useParams } from 'react-router-dom'
 import { PageHead } from '../components/ui.jsx'
 import { Icon } from '../components/icons.jsx'
-import { can, useCurrentUser, useStore } from '../lib/store.jsx'
+import { can, seesDatabase, useCurrentUser, useStore } from '../lib/store.jsx'
 import PeopleAll from './PeopleAll.jsx'
 import LocationsAll from './LocationsAll.jsx'
 
@@ -16,7 +16,7 @@ export default function Database() {
   const { state } = useStore()
   const user = useCurrentUser()
   const tabs = TABS.filter((t) => can(user, t.perm))
-  if (!tabs.length) return <Navigate to="/" replace />
+  if (!tabs.length || !seesDatabase(user)) return <Navigate to="/" replace />
   if (!tabs.some((t) => t.key === tab)) return <Navigate to={`/database/${tabs[0].key}`} replace />
   const lib = state.library
   const sub = `${lib.locations.length} locations · ${lib.contacts.filter((c) => c.kind === 'crew').length} crew · ${lib.contacts.filter((c) => c.kind === 'cast').length} cast in the company database`

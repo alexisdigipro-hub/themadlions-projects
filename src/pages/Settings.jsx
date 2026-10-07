@@ -41,7 +41,7 @@ export default function Settings() {
   const isAdmin = me?.role === 'admin'
   const TABS = [
     ['company', 'Company', true], ['callsheets', 'Call sheets', true], ['team', 'Team', true], ['calendar', 'Calendar & projects', true], ['budget', 'Budget', true],
-    ['display', 'Display', false], ['chat', 'Chat', false], ['integrations', 'Integrations', false], ['data', 'Data', false], ['usage', 'Usage', true],
+    ['display', 'Display', false], ['chat', 'Chat', false], ['integrations', 'Integrations', true], ['data', 'Data', false], ['usage', 'Usage', true],
   ].filter(([, , admin]) => !admin || isAdmin)
   const [tab, setTab] = useState(() => (isAdmin ? 'company' : 'display'))
   const logoRef = useRef()
@@ -356,6 +356,8 @@ export default function Settings() {
           </Field>
         </section>
 
+        {/* Users do not need to know where the data lives (Alex), so Storage is for administrators. */}
+        {isAdmin && (
         <section className="panel" data-tab="data">
           <h2>Storage</h2>
           {mode === 'remote' ? (
@@ -375,6 +377,7 @@ export default function Settings() {
             <p className="muted small">Local mode: everything lives in this browser. Use Backup below before clearing browser data or switching devices.</p>
           )}
         </section>
+        )}
         {isAdmin && (
           <section className="panel" data-tab="company">
             <h2>Workspace</h2>
@@ -428,6 +431,7 @@ export default function Settings() {
           <ChatSettings toast={toast} />
         </section>
 
+        {isAdmin && (
         <section className="panel" data-tab="integrations">
           <h2>Transcription</h2>
           <p className="muted small">Lyrics and timings from the song file with OpenAI Whisper, in the Music tab of music video projects. About $0.006 per minute of audio. The key stays in this browser.</p>
@@ -439,6 +443,7 @@ export default function Settings() {
           </Field>
           {state.settings.openaiKey && <p className="small under">Key saved on this device.</p>}
         </section>
+        )}
 
         {isAdmin && remote && (
           <section className="panel" data-tab="integrations">
