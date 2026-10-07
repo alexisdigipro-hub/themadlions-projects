@@ -2385,6 +2385,8 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
    take up the page just to say it is empty. Overview, Project Database, Script, Shot list and
    Schedule all use this one row. */
 .add-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Home: Sort by Date | Name, the label and its two buttons kept together on one line */
+.sort-by { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
 /* Script now also carries Breakdown, and for a Music Video the song map, each framed as its own
    card instead of their old separate tabs. */
 .script-page { display: flex; flex-direction: column; gap: 20px; }
