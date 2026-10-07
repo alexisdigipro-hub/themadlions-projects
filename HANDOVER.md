@@ -36,9 +36,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
-## Where we stopped (4 Oct 2026)
+## Where we stopped (7 Oct 2026)
 
 Read this first; the detail behind each line is in the pull request that carried it.
+
+### Loading screen says THE MAD LIONS (7 Oct)
+Alex: the first "Loading your workspace…" should show the company. `Loading()` in App.jsx now shows the login-style brand block (logo mark, THE MAD LIONS, Production hub) centred, with a small "Loading…" under it. The name is hard-coded because settings are not loaded at that point; the uploaded logo appears once the workspace is in.
 
 ### Invoice PDF: linked project under the service lines again (7 Oct)
 Alex: the first invoices printed the project title in small type under each service, newer ones don't. Cause: the PDF prints each line's own `project` field (added 1 Oct); on the first invoices he typed it per line, now he picks the project in "Link to project" (invoice-level `projectId`), which never reached the lines. Fix: `pickProject` stores `projectTitle` on the invoice and `withCompany()` fills it for older invoices from `projectId`; invoicePdf.js prints `l.project || inv.projectTitle` under a line, and `invoiceFilename` falls back to it too. The share snapshot goes through withCompany, so the public page gets it as well. No SQL.

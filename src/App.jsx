@@ -54,11 +54,20 @@ const Reports = lazyPage(() => import('./pages/project/Reports.jsx'))
 const Post = lazyPage(() => import('./pages/project/Post.jsx'))
 const Presentation = lazyPage(() => import('./pages/project/Presentation.jsx'))
 
+// The company name while the workspace loads (Alex). Nothing is loaded yet, so the name is typed
+// here rather than read from settings; the logo image arrives with the workspace a moment later.
 function Loading() {
   return (
     <div className="login">
-      <div className="login-card">
-        <p className="muted">Loading your workspace…</p>
+      <div className="login-card boot-card">
+        <div className="logo login-logo">
+          <span className="logo-mark" aria-hidden="true" />
+          <span className="logo-text">
+            <strong>THE MAD LIONS</strong>
+            <em>Production hub</em>
+          </span>
+        </div>
+        <p className="muted small boot-note">Loading…</p>
       </div>
     </div>
   )

@@ -3343,6 +3343,9 @@ html[data-public='1'] body { background: var(--bg); }
 /* ---------- settings: logo ---------- */
 .logo-img { width: 30px; height: 30px; object-fit: contain; border-radius: 6px; flex: none; }
 .login-logo .logo-img { width: 44px; height: 44px; }
+.boot-card { text-align: center; }
+.boot-card .login-logo { justify-content: center; margin-bottom: 10px; }
+.boot-note { margin: 0; }
 .logo-row { display: flex; align-items: center; gap: 12px; }
 .logo-preview { width: 64px; height: 64px; object-fit: contain; border-radius: 10px; background: var(--raised); padding: 4px; }
 .logo-preview-mark { width: 40px; height: 28px; }
