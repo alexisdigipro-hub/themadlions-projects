@@ -77,7 +77,7 @@ export default function Notes({ hideEmpty = false, startLink = 0, startNotes = 0
   if (!showLinks && !showNotes) return modal
 
   return (
-    <div className="cols notes-cols">
+    <div className={`cols notes-cols${showLinks && showNotes ? '' : ' one'}`}>
       {showLinks && (
       <section className="panel">
         <div className="panel-head">

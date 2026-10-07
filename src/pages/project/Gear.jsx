@@ -98,7 +98,7 @@ export default function Gear() {
         </div>
       </div>
 
-      <div className="cols gear-layout">
+      <div className={`cols gear-layout${vendors.length ? '' : ' one'}`}>
         <div>
           {!gear.length ? (
             <Empty title="No equipment yet">List the camera package, lenses, lights, grip, sound and specials. Each item carries vendor, rate, pickup and return dates. Booked items sync into the <Link to="../budget">budget</Link>.</Empty>
@@ -144,31 +144,31 @@ export default function Gear() {
           )}
         </div>
 
+        {/* Vendors fill themselves in from the items, so until there is one the card would only
+            be a box explaining that it is empty. */}
+        {vendors.length > 0 && (
         <section className="panel">
           <div className="panel-head"><h2>Vendors</h2></div>
-          {!vendors.length ? (
-            <p className="muted small">Rental houses, studios, transport, catering. Added automatically when you type a vendor on an item.</p>
-          ) : (
-            <ul className="vendor-list">
-              {vendors.map((v) => (
-                <li key={v.id}>
-                  <div>
-                    <strong>{v.name}</strong>
-                    <div className="muted small">{[v.contact, v.phone, v.email].filter(Boolean).join(' · ')}</div>
-                    {v.notes && <div className="muted small">{v.notes}</div>}
-                    <div className="muted small">{gear.filter((g) => g.vendor === v.name).length} items</div>
+          <ul className="vendor-list">
+            {vendors.map((v) => (
+              <li key={v.id}>
+                <div>
+                  <strong>{v.name}</strong>
+                  <div className="muted small">{[v.contact, v.phone, v.email].filter(Boolean).join(' · ')}</div>
+                  {v.notes && <div className="muted small">{v.notes}</div>}
+                  <div className="muted small">{gear.filter((g) => g.vendor === v.name).length} items</div>
+                </div>
+                {editable && (
+                  <div className="row-actions">
+                    <button onClick={() => setVdraft({ ...v })}>Edit</button>
+                    <Confirm onConfirm={() => edit((p) => (p.vendors = p.vendors.filter((x) => x.id !== v.id)))} label="Delete">×</Confirm>
                   </div>
-                  {editable && (
-                    <div className="row-actions">
-                      <button onClick={() => setVdraft({ ...v })}>Edit</button>
-                      <Confirm onConfirm={() => edit((p) => (p.vendors = p.vendors.filter((x) => x.id !== v.id)))} label="Delete">×</Confirm>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+                )}
+              </li>
+          ))}
+          </ul>
         </section>
+        )}
       </div>
 
       {draft && (

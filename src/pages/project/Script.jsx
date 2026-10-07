@@ -219,7 +219,9 @@ export default function Script() {
 
       {/* Breakdown used to be its own tab; it's framed here as its own card, same as Script
           above, so scenes/elements sit right under the text they come from. */}
-      {can(user, 'breakdown') && (
+      {/* Nothing to break down before there is a script, and the card above already says the
+          script is missing, so this one waits instead of repeating it. */}
+      {can(user, 'breakdown') && !!project.script.text && (
         <section className="panel">
           <Breakdown />
         </section>
@@ -228,7 +230,7 @@ export default function Script() {
       {/* The song map (lyrics, timed sections, Whisper transcription) lives here now — a music
           video's "script" is the song, so it belongs next to the treatment text above. The simple
           upload-and-listen player for the same track is on Overview. */}
-      {project.category === 'Music Video' && can(user, 'music') && (
+      {project.category === 'Music Video' && can(user, 'music') && (project.music?.tracks || []).length > 0 && (
         <section className="panel">
           <Music />
         </section>

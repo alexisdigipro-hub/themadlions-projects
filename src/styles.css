@@ -598,6 +598,11 @@ code {
 .cols.notes-cols {
   align-items: stretch;
 }
+/* When the other card of a pair is empty and therefore not drawn, the one left takes the row
+   rather than sitting in half of it with a hole beside it. */
+.cols.one {
+  grid-template-columns: 1fr;
+}
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -1991,6 +1996,7 @@ p .diff-del { color: var(--danger); }
 
 /* ---------- equipment ---------- */
 .gear-layout { grid-template-columns: minmax(0, 1fr) 300px; align-items: start; }
+.gear-layout.one { grid-template-columns: minmax(0, 1fr); }
 .gear-group { margin-bottom: 18px; }
 .gear-group h3 { margin: 0 0 6px; font-size: 17.5px; }
 .vendor-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }

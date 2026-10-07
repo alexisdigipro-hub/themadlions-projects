@@ -86,73 +86,71 @@ export default function Post() {
         )}
       </div>
 
-      <div className="cols">
+      {/* An empty card is a box saying it is empty, so neither is drawn until it has something
+          in it. Log a cut and Add deliverable are already up in the toolbar. */}
+      <div className={`cols${cuts.length && post.deliverables.length ? '' : ' one'}`}>
+        {cuts.length > 0 && (
         <section className="panel">
           <div className="panel-head"><h2>Cuts & approvals</h2></div>
-          {!cuts.length ? (
-            <p className="muted small">Rough cut, fine cut, picture lock. Each with its review link and where the approval stands.</p>
-          ) : (
-            <ul className="cut-list">
-              {cuts.map((c) => (
-                <li key={c.id} className={`cut ${c.status}`}>
-                  <div className="cut-main">
-                    <strong>{c.name}</strong> <span className="muted small">{fmtDate(c.date)}</span>
-                    {c.link && <a className="link small" href={c.link} target="_blank" rel="noreferrer"> Open</a>}
-                    {c.notes && <div className="muted small">{c.notes}</div>}
+          <ul className="cut-list">
+            {cuts.map((c) => (
+              <li key={c.id} className={`cut ${c.status}`}>
+                <div className="cut-main">
+                  <strong>{c.name}</strong> <span className="muted small">{fmtDate(c.date)}</span>
+                  {c.link && <a className="link small" href={c.link} target="_blank" rel="noreferrer"> Open</a>}
+                  {c.notes && <div className="muted small">{c.notes}</div>}
+                </div>
+                {editable ? (
+                  <select className="input select tiny" value={c.status} onChange={(e) => setCutStatus(c.id, e.target.value)}>
+                    {CUT_STATUS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+                ) : <span className="small">{CUT_STATUS.find(([v]) => v === c.status)?.[1]}</span>}
+                {editable && (
+                  <div className="row-actions">
+                    <button onClick={() => setCut({ ...c })}>Edit</button>
+                    <Confirm onConfirm={() => edit((p) => (p.post.cuts = p.post.cuts.filter((x) => x.id !== c.id)))} label="Delete">×</Confirm>
                   </div>
-                  {editable ? (
-                    <select className="input select tiny" value={c.status} onChange={(e) => setCutStatus(c.id, e.target.value)}>
-                      {CUT_STATUS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
-                  ) : <span className="small">{CUT_STATUS.find(([v]) => v === c.status)?.[1]}</span>}
-                  {editable && (
-                    <div className="row-actions">
-                      <button onClick={() => setCut({ ...c })}>Edit</button>
-                      <Confirm onConfirm={() => edit((p) => (p.post.cuts = p.post.cuts.filter((x) => x.id !== c.id)))} label="Delete">×</Confirm>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+                )}
+              </li>
+          ))}
+          </ul>
         </section>
+        )}
 
+        {post.deliverables.length > 0 && (
         <section className="panel">
           <div className="panel-head"><h2>Deliverables</h2></div>
-          {!post.deliverables.length ? (
-            <p className="muted small">Masters, cutdowns, social formats, subtitles, stills. Start from the standard list for a {project.category.toLowerCase()} and adjust.</p>
-          ) : (
-            <table className="table">
-              <thead><tr><th>Deliverable</th><th>Spec</th><th>Due</th><th>Owner</th><th>Status</th>{editable && <th />}</tr></thead>
-              <tbody>
-                {post.deliverables.map((d) => {
-                  const late = d.due && d.due < t0 && d.status !== 'delivered'
-                  return (
-                    <tr key={d.id} className={d.status === 'delivered' ? 'dim' : ''}>
-                      <td><strong>{d.name}</strong>{d.link && <a className="link small" href={d.link} target="_blank" rel="noreferrer"> Open</a>}{d.notes && <div className="muted small">{d.notes}</div>}</td>
-                      <td className="small">{d.format}</td>
-                      <td className={late ? 'late' : ''}>{d.due ? fmtDate(d.due) : ''}</td>
-                      <td>{d.owner}</td>
-                      <td>
-                        {editable ? (
-                          <select className="input select tiny" value={d.status} onChange={(e) => setDelStatus(d.id, e.target.value)}>
-                            {DELIV_STATUS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                          </select>
-                        ) : DELIV_STATUS.find(([v]) => v === d.status)?.[1]}
+          <table className="table">
+            <thead><tr><th>Deliverable</th><th>Spec</th><th>Due</th><th>Owner</th><th>Status</th>{editable && <th />}</tr></thead>
+            <tbody>
+              {post.deliverables.map((d) => {
+                const late = d.due && d.due < t0 && d.status !== 'delivered'
+                return (
+                  <tr key={d.id} className={d.status === 'delivered' ? 'dim' : ''}>
+                    <td><strong>{d.name}</strong>{d.link && <a className="link small" href={d.link} target="_blank" rel="noreferrer"> Open</a>}{d.notes && <div className="muted small">{d.notes}</div>}</td>
+                    <td className="small">{d.format}</td>
+                    <td className={late ? 'late' : ''}>{d.due ? fmtDate(d.due) : ''}</td>
+                    <td>{d.owner}</td>
+                    <td>
+                      {editable ? (
+                        <select className="input select tiny" value={d.status} onChange={(e) => setDelStatus(d.id, e.target.value)}>
+                          {DELIV_STATUS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                        </select>
+                      ) : DELIV_STATUS.find(([v]) => v === d.status)?.[1]}
+                    </td>
+                    {editable && (
+                      <td className="row-actions">
+                        <button onClick={() => setDel({ ...d })}>Edit</button>
+                        <Confirm onConfirm={() => edit((p) => (p.post.deliverables = p.post.deliverables.filter((x) => x.id !== d.id)))} label="Delete">×</Confirm>
                       </td>
-                      {editable && (
-                        <td className="row-actions">
-                          <button onClick={() => setDel({ ...d })}>Edit</button>
-                          <Confirm onConfirm={() => edit((p) => (p.post.deliverables = p.post.deliverables.filter((x) => x.id !== d.id)))} label="Delete">×</Confirm>
-                        </td>
-                      )}
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          )}
+                    )}
+                  </tr>
+                )
+              })}
+          </tbody>
+          </table>
         </section>
+        )}
       </div>
 
       {cut && (
