@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Invoice PDF: linked project under the service lines again (7 Oct)
+Alex: the first invoices printed the project title in small type under each service, newer ones don't. Cause: the PDF prints each line's own `project` field (added 1 Oct); on the first invoices he typed it per line, now he picks the project in "Link to project" (invoice-level `projectId`), which never reached the lines. Fix: `pickProject` stores `projectTitle` on the invoice and `withCompany()` fills it for older invoices from `projectId`; invoicePdf.js prints `l.project || inv.projectTitle` under a line, and `invoiceFilename` falls back to it too. The share snapshot goes through withCompany, so the public page gets it as well. No SQL.
+
 ### Shorten with bit.ly (4 Oct)
 Alex asked whether the whole link can be ~10 characters. Explained: the GitHub Pages host is 50 of the characters, only an own domain fixes that (tml.gr/s/name, 10-15€/yr; code side would be a 404.html redirect so /s/name works without the #, a CNAME, and the new URL in Supabase Auth redirect URLs). He chose the free route: a **Shorten with bit.ly** button in the call sheet and shot list share dialogs. `shortenWithBitly(url, toast)` in src/lib/share.js opens bitly.com synchronously (popup blockers) and copies the link. Could not test shortener APIs from this session (egress blocked), and bit.ly has no prefill URL, so paste is manual by design.
 
