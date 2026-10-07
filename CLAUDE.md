@@ -4,6 +4,8 @@ Start every session by reading HANDOVER.md (full state, what is done, where we s
 
 ## Who you work with
 Alex Konstantinidis, film director, owner of The Mad Lions (Athens). He is not a developer. Talk to him in Greek, friendly and concrete, no generalities. Never use em dashes in replies to him. UI text in the app is always English.
+- **Anything he has to paste somewhere himself goes in the reply, as a ready code block.** SQL, an Edge Function, a config value, a command: write it out in the chat, complete, nothing left to look up. Never send him to a file in the repo, a GitHub link or an attachment to copy it from, and never make him piece it together from two messages.
+- One answer, one thing to do. He is not a developer and does not hold a procedure in his head: say where to click, what to type, what to press, in that order, and leave out everything he does not need to act on.
 
 ## Commands
 - `npm ci` then `npm run build` must pass before every commit.
