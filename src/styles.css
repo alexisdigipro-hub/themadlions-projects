@@ -2436,6 +2436,10 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
    take up the page just to say it is empty. Overview, Project Database, Script, Shot list and
    Schedule all use this one row. */
 .add-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+/* the call sheet's day tabs with New call sheet at their end */
+.cs-days { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* Set location while editing a call sheet: a pick from the project, or a name and address typed */
+.cs-loc-edit { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 10px; }
 /* Home: Sort by Date | Name, the label and its two buttons kept together on one line */
 .sort-by { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
 /* Script now also carries Breakdown, and for a Music Video the song map, each framed as its own

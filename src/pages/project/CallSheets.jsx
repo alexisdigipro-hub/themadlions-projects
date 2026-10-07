@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Empty, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
@@ -25,7 +25,9 @@ function addMinutes(hhmm, mins) {
   return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
 }
 
-export default function CallSheets() {
+/* `openDay` (a shoot day id) brings that day's sheet up ready to edit: New call sheet sets it
+   after making the day. `onNew` puts the New call sheet button at the end of the day tabs. */
+export default function CallSheets({ openDay = '', onNew }) {
   const { project, edit, canEdit } = useProject()
   const { state, update } = useStore()
   const days = [...project.shootingDays].sort((a, b) => a.date.localeCompare(b.date))
@@ -48,6 +50,12 @@ export default function CallSheets() {
   const [editMode, setEditModeState] = useState(() => { try { return localStorage.getItem('tml_cs_edit') === '1' } catch { return false } })
   const setEditMode = (v) => { setEditModeState(v); try { localStorage.setItem('tml_cs_edit', v ? '1' : '0') } catch { /* private window */ } }
   const editing = editable && editMode
+  useEffect(() => {
+    if (!openDay) return
+    setSel(openDay)
+    setMode('sheet')
+    if (editable) setEditMode(true)
+  }, [openDay]) // eslint-disable-line react-hooks/exhaustive-deps
   // Printed on every call sheet and carried into the shared link. Both live in Settings.
   const emergency = (state.settings.emergency || []).filter((n) => n && n.number)
   const prodContacts = (state.settings.productionContacts || []).filter((c) => c && (c.role || c.name))
@@ -56,8 +64,8 @@ export default function CallSheets() {
 
   if (!days.length) {
     return (
-      <Empty title="No shoot days yet">
-        Call sheets are generated from the <Link to="../schedule">schedule</Link>. Add a shoot day and assign scenes, then come back.
+      <Empty title="No call sheets yet" action={editable && onNew && <Button variant="primary" onClick={onNew}>New call sheet</Button>}>
+        A call sheet needs only a date and a call time. Scenes from the <Link to="../schedule">schedule</Link> are optional.
       </Empty>
     )
   }
@@ -290,6 +298,19 @@ export default function CallSheets() {
             <div className="cs-locgrid" style={{ '--cs-loc-cols': 1 + (showParking ? 1 : 0) + (showHospital ? 1 : 0) }}>
               <div>
                 <div className="cs-loc-h">Set location</div>
+                {/* A call sheet can now be started without going through the Schedule, so its
+                    location is set right here too: one from the project's locations, or a name
+                    and address typed for this sheet alone. */}
+                {editing && (
+                  <div className="cs-loc-edit no-print">
+                    <select className="input select" value={day.locationId || ''} onChange={(e) => setDay('locationId', e.target.value)}>
+                      <option value="">{project.locations.length ? 'Pick a location' : 'No locations in this project'}</option>
+                      {project.locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+                    </select>
+                    <input className="input" value={sheet.locName || ''} onChange={(e) => setSheet('locName', e.target.value)} placeholder={loc?.name || 'Or type a name'} />
+                    <input className="input" value={sheet.locAddress || ''} onChange={(e) => setSheet('locAddress', e.target.value)} placeholder={loc?.address || 'and an address'} />
+                  </div>
+                )}
                 {locView ? (
                   <>
                     <strong className="cs-loc-name">{locView.name}</strong>
@@ -297,7 +318,7 @@ export default function CallSheets() {
                     {(locView.contact || phoneOf(locView.phone)) && <div className="muted small">{[locView.contact, phoneOf(locView.phone)].filter(Boolean).join(' · ')}</div>}
                     {locView.address && <a className="link no-print small" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locView.address)}`} target="_blank" rel="noreferrer">Open in Google Maps</a>}
                   </>
-                ) : <span className="muted">Set the location on the shoot day.</span>}
+                ) : !editing && <span className="muted">No location yet.</span>}
               </div>
               {showParking && <div>
                 <div className="cs-loc-h">Parking</div>
@@ -509,12 +530,15 @@ export default function CallSheets() {
   return (
     <div className="callsheets">
       <div className="toolbar no-print">
-        <div className="segmented">
-          {days.map((d, i) => (
-            <button key={d.id} className={d.id === day.id ? 'on' : ''} onClick={() => setSel(d.id)}>
-              Day {i + 1}
-            </button>
-          ))}
+        <div className="cs-days">
+          <div className="segmented">
+            {days.map((d, i) => (
+              <button key={d.id} className={d.id === day.id ? 'on' : ''} onClick={() => setSel(d.id)}>
+                Day {i + 1}
+              </button>
+            ))}
+          </div>
+          {editable && onNew && <Button variant="ghost" onClick={onNew}>+ New call sheet</Button>}
         </div>
         <div className="toolbar-actions">
           {project.category !== 'Event' && (
