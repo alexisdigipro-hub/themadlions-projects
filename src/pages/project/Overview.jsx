@@ -11,7 +11,7 @@ import { compress } from '../../lib/photos.js'
 import { analyze, fmtTime, fmtTimeMs, trackUrl, uploadTrack } from '../../lib/audio.js'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { remote } from '../../lib/supabase.js'
-import Tasks from './Tasks.jsx'
+import Tasks, { tasksFor } from './Tasks.jsx'
 import { Waveform } from './Music.jsx'
 import Notes from './Notes.jsx'
 
@@ -162,7 +162,7 @@ export default function Overview() {
   const isMusicVideo = project.category === 'Music Video'
   const hasSong = !!(project.music?.tracks || []).length
   const adds = [
-    can(user, 'tasks') && canEdit('tasks') && !(project.tasks || []).length && ['task', 'Add task'],
+    can(user, 'tasks') && canEdit('tasks') && !tasksFor(project.tasks || [], user).length && ['task', 'Add task'],
     isMusicVideo && can(user, 'music') && canEdit('music') && !hasSong && ['song', 'Upload song'],
     can(user, 'files') && canEdit('files') && !(project.links || []).length && ['link', 'Add link'],
     can(user, 'files') && canEdit('files') && !(project.productionNotes || '').trim() && ['notes', 'Add notes'],
