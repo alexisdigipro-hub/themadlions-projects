@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { uid, useStore } from '../../lib/store.jsx'
@@ -18,7 +18,12 @@ function mapSrc(address, key) {
 /* A section of the project's Database page (People.jsx). Kept compact: a small card grid here,
    same look as the Crew/Cast cards; the map, directions and full detail sit behind a click in a
    modal instead of an always-open side panel, so this section doesn't dominate the page. */
-export default function Locations() {
+const emptyLocation = () => ({ id: uid(), name: '', address: '', type: 'Interior', notes: '', contact: '', phone: '', sceneLocations: [], saveToLibrary: true })
+
+/* On the Project Database an empty card is noise, so `hideEmpty` draws nothing until there is a
+   location and `startSignal` (a counter the page bumps) opens the form from a button out there.
+   Nothing else passes either. */
+export default function Locations({ hideEmpty = false, startSignal = 0 }) {
   const { project, edit, canEdit, library, editLibrary } = useProject()
   const { state } = useStore()
   const toast = useToast()
@@ -67,41 +72,12 @@ export default function Locations() {
   const scriptSets = [...new Set(project.scenes.map((s) => s.location).filter(Boolean))]
   const detail = project.locations.find((l) => l.id === detailFor)
 
-  return (
+  useEffect(() => { if (startSignal) setDraft(emptyLocation()) }, [startSignal])
+
+  // Both the cards and the forms, so a button on the Project Database still has a form to
+  // open while this card is hidden.
+  const modals = (
     <>
-      <div className="toolbar">
-        <div className="toolbar-info">
-          <strong>Locations</strong> <span className="muted">{project.locations.length}</span>
-        </div>
-        {editable && (
-          <div className="toolbar-actions">
-            {(library?.locations || []).length > 0 && <Button variant="ghost" onClick={() => setPick({ q: '', sel: [] })}>From library</Button>}
-            <Button variant="primary" onClick={() => setDraft({ id: uid(), name: '', address: '', type: 'Interior', notes: '', contact: '', phone: '', sceneLocations: [], saveToLibrary: true })}>
-              Add location
-            </Button>
-          </div>
-        )}
-      </div>
-
-      {project.locations.length === 0 ? (
-        <Empty title="No locations yet">Add the studio, real locations, base camp and the nearest hospital. Each one gets a map and goes on the call sheet.</Empty>
-      ) : (
-        <div className="people-grid compact">
-          {project.locations.map((l) => (
-            <article key={l.id} className="person loc-card" onClick={() => setDetailFor(l.id)} role="button" tabIndex={0}>
-              <div className="person-photo" aria-hidden="true">
-                {l.photos?.[0]?.thumb ? <img src={l.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(l.name) || '📍'}</span>}
-              </div>
-              <div className="person-body">
-                <strong>{l.name}{l.libraryId && <span className="lib-badge" title="Shared in the company library">library</span>}</strong>
-                <div className="small muted">{[l.type, l.address].filter(Boolean).join(' · ') || 'No address yet'}</div>
-                {scenesAt(l).length > 0 && <div className="small muted">{scenesAt(l).length} scenes</div>}
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
-
       <Modal open={!!detail} wide title={detail?.name || ''} onClose={() => setDetailFor('')}>
         {detail && (
           <div className="stack">
@@ -272,6 +248,47 @@ export default function Locations() {
           </div>
         )}
       </Modal>
+    </>
+  )
+
+  if (hideEmpty && !project.locations.length) return modals
+
+  return (
+    <>
+      <div className="toolbar">
+        <div className="toolbar-info">
+          <strong>Locations</strong> <span className="muted">{project.locations.length}</span>
+        </div>
+        {editable && (
+          <div className="toolbar-actions">
+            {(library?.locations || []).length > 0 && <Button variant="ghost" onClick={() => setPick({ q: '', sel: [] })}>From library</Button>}
+            <Button variant="primary" onClick={() => setDraft(emptyLocation())}>
+              Add location
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {project.locations.length === 0 ? (
+        <Empty title="No locations yet">Add the studio, real locations, base camp and the nearest hospital. Each one gets a map and goes on the call sheet.</Empty>
+      ) : (
+        <div className="people-grid compact">
+          {project.locations.map((l) => (
+            <article key={l.id} className="person loc-card" onClick={() => setDetailFor(l.id)} role="button" tabIndex={0}>
+              <div className="person-photo" aria-hidden="true">
+                {l.photos?.[0]?.thumb ? <img src={l.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(l.name) || '📍'}</span>}
+              </div>
+              <div className="person-body">
+                <strong>{l.name}{l.libraryId && <span className="lib-badge" title="Shared in the company library">library</span>}</strong>
+                <div className="small muted">{[l.type, l.address].filter(Boolean).join(' · ') || 'No address yet'}</div>
+                {scenesAt(l).length > 0 && <div className="small muted">{scenesAt(l).length} scenes</div>}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+
+      {modals}
     </>
   )
 }

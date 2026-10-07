@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Empty, Field, Input, Textarea } from '../../components/ui.jsx'
+import { Button, Field, Input, Textarea } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { formatPages } from '../../lib/breakdown.js'
 import { fmtLong } from '../../lib/dates.js'
@@ -43,11 +43,13 @@ export default function Reports() {
   const day = days.find((d) => d.id === sel) || days[0]
   const editable = canEdit('reports')
 
+  // There is nothing to add here: a report belongs to a shoot day, and days are made on the
+  // Schedule. So the button goes there rather than a framed card explaining the situation.
   if (!days.length) {
     return (
-      <Empty title="No shoot days yet">
-        Production reports are filled in at wrap, one per shoot day. Build the <Link to="../schedule">schedule</Link> first.
-      </Empty>
+      <div className="add-bar">
+        <Link className="btn btn-ghost btn-md" to="../schedule">Add a shoot day first</Link>
+      </div>
     )
   }
 
