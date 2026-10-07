@@ -40,6 +40,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### Loading screen: the name alone (7 Oct)
+Alex: "THE MAD LIONS (MONO)" — only the name. The logo mark, the "Production hub" line and the "Loading…" note are gone from `Loading()` in App.jsx; `.boot-name` is the one style left.
+
 ### Calendar feeds: read-only .ics calendars on the Calendar page (7 Oct)
 Alex asked whether a Google account with several calendars could show on the Calendar page. Offered read-only iCal (A) or extending the two-way connection (B); he started B, stopped it, and chose A, so PR #175 (B) was closed unmerged — the branch for it is gone, the work is only in that PR if it is ever wanted.
 **Model**: `settings.calendarFeeds = [{ id, name, url, color, off }]`, administrators only. Feed events never touch `state.events`: they are parsed in the browser and merged into the Calendar page's display list, so nothing is written to the database and nothing can be edited (`canEditDraft` returns false for `e.feed`, the modal says which calendar it came from and hides Type/Project).
