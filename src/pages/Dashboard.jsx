@@ -147,7 +147,11 @@ export default function Dashboard() {
   const projects = visibleProjects(state, user)
     .filter((p) => filter === 'All' || p.category === filter)
     .filter((p) => !q || [p.title, p.client, p.code].some((v) => (v || '').toLowerCase().includes(q.toLowerCase())))
-    .sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''))
+    // Alex: by the project's own date, the Start date the card already shows, newest first.
+    // It used to be by last change, which shuffled the whole grid every time a task was ticked.
+    // A project with no start date yet goes to the end rather than the top, and projects sharing
+    // a date fall back to the last change so the order does not wobble.
+    .sort((a, b) => (b.startDate || '').localeCompare(a.startDate || '') || (b.updatedAt || '').localeCompare(a.updatedAt || ''))
   // Delivered projects leave the main grid (Alex): a "Delivered" chip at the end of the category
   // row, in the inverse colour of the others, shows them alone, grey until hovered.
   const [showDelivered, setShowDelivered] = useState(false)
