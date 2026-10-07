@@ -3,12 +3,13 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast
 import { useProject } from '../Project.jsx'
 import { today, uid } from '../../lib/store.jsx'
 import { addDays, fmtLong } from '../../lib/dates.js'
+import { emptyEventDay } from '../../lib/shootDays.js'
 
 const PRESET = [
   ['07:00', 'Load-in'], ['09:00', 'Stage & lighting build'], ['12:00', 'Soundcheck'], ['14:00', 'Rehearsal'], ['17:00', 'Crew meal'],
   ['18:30', 'Doors'], ['20:00', 'Show start'], ['22:30', 'Show end'], ['23:00', 'Load-out'],
 ]
-const emptyDay = (date) => ({ id: uid(), date, callTime: '07:00', wrapTime: '23:59', unit: 'Main stage', locationId: '', sceneIds: [], blocks: [], notes: '' })
+const emptyDay = emptyEventDay
 const emptyBlock = (time = '') => ({ id: uid(), time, end: '', item: '', owner: '', notes: '' })
 
 export default function RunOfShow() {

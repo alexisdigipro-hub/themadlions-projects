@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { callsheetDefaults, can, today, uid, useStore } from '../../lib/store.jsx'
@@ -7,39 +7,59 @@ import { addDays, fmtDate } from '../../lib/dates.js'
 import Dood from '../../components/Dood.jsx'
 import RunOfShow from './RunOfShow.jsx'
 import CallSheets from './CallSheets.jsx'
+import { emptyShootDay } from '../../lib/shootDays.js'
+import NewCallSheet from '../../components/NewCallSheet.jsx'
 
-const emptyDay = (date, d = {}) => ({ id: uid(), date, unit: 'Main unit', callTime: d.callTime || '07:00', wrapTime: d.wrapTime || '19:00', locationId: '', notes: '', sceneIds: [] })
+const emptyDay = emptyShootDay
 
 /* Schedule & Sheets: the stripboard (or Run of show for an Event) and Call sheets, each framed as
    its own card — Call sheets used to be a separate tab, merged in here since both are about the
    shoot days. Stacked full-width rather than side by side: a call sheet is a printable page-wide
    layout and a stripboard table is wide too, neither fits comfortably in half the screen. */
 export default function Schedule() {
-  const { project, user } = useProject()
+  const { project, user, canEdit } = useProject()
   const days = project.shootingDays || []
   // With no shoot day the stripboard is a frame around a sentence, so it drops the frame and
-  // shows its Add shoot day button alone, the way the Overview does. An Event's run of show
-  // keeps its card: it is a page in its own right, not a list waiting to be filled.
+  // shows its buttons alone, the way the Overview does. An Event's run of show keeps its card:
+  // it is a page in its own right, not a list waiting to be filled.
   const bare = project.category !== 'Event' && !days.length
+  // New call sheet (Alex): date, call time, location, and the sheet opens ready to fill in; the
+  // shoot day it needs is made behind the scenes. The sheet card is scrolled into view, since
+  // on a full stripboard it sits a long way down.
+  const mayCallSheet = can(user, 'callsheets') && canEdit('callsheets')
+  const [creating, setCreating] = useState(false)
+  const [openDay, setOpenDay] = useState('')
+  const sheetRef = useRef(null)
+  useEffect(() => {
+    if (openDay) sheetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [openDay])
+  const created = (id) => { setCreating(false); setOpenDay(id) }
+
   return (
     <div className="schedule-sheets">
-      {bare ? <StripboardSchedule /> : (
-        <section className="panel">
-          {project.category === 'Event' ? <RunOfShow /> : <StripboardSchedule />}
-        </section>
+      {bare ? <StripboardSchedule onNewCallSheet={mayCallSheet ? () => setCreating(true) : null} /> : (
+        <>
+          {!days.length && mayCallSheet && (
+            <div className="add-bar"><Button variant="ghost" onClick={() => setCreating(true)}>New call sheet</Button></div>
+          )}
+          <section className="panel">
+            {project.category === 'Event' ? <RunOfShow /> : <StripboardSchedule />}
+          </section>
+        </>
       )}
-      {/* A call sheet cannot exist without a shoot day, and the card above already says so, so
-          this one waits rather than repeating it. Add a day up there and it appears. */}
+      {/* A call sheet belongs to a shoot day, so this card appears with the first one, whether
+          it was added on the stripboard or made by New call sheet. */}
       {can(user, 'callsheets') && days.length > 0 && (
-        <section className="panel">
-          <CallSheets />
+        <section className="panel" ref={sheetRef}>
+          <CallSheets openDay={openDay} onNew={mayCallSheet ? () => setCreating(true) : undefined} />
         </section>
       )}
+      {creating && <NewCallSheet onClose={() => setCreating(false)} onCreated={created} />}
     </div>
   )
 }
 
-function StripboardSchedule() {
+function StripboardSchedule({ onNewCallSheet = null }) {
   const { project, edit, canEdit } = useProject()
   const { update, state } = useStore()
   const toast = useToast()
@@ -187,6 +207,7 @@ function StripboardSchedule() {
       <>
         {editable && (
           <div className="add-bar">
+            {onNewCallSheet && <Button variant="ghost" onClick={onNewCallSheet}>New call sheet</Button>}
             <Button variant="ghost" onClick={() => setDraft(emptyDay(project.startDate || today(), callsheetDefaults(state)))}>Add shoot day</Button>
           </div>
         )}
