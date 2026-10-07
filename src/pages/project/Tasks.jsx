@@ -15,6 +15,19 @@ export const PRIORITIES = ['low', 'normal', 'high', 'urgent']
 const PRIORITY_OPTIONS = PRIORITIES.map((p) => [p, p.toUpperCase()])
 export const TASK_DEPTS = ['Production', 'Direction', 'Camera', 'Lighting', 'Sound', 'Art', 'Wardrobe', 'Makeup & hair', 'Locations', 'Casting', 'Post', 'Client', 'Legal', 'Other']
 
+/* Alex: a teammate sees only the tasks assigned to them; administrators see every task.
+   A task's assignee is stored as a name (typed, or picked from the team and the project's
+   contacts), so the match is on the name, ignoring case and stray spaces, the same way a new
+   assignment finds who to notify. An unassigned task is nobody's, so only administrators see it.
+   This decides what is drawn. It is not a lock: project tasks travel inside the project
+   document and general ones in the shared library, so a teammate's browser still receives them. */
+export const seesAllTasks = (user) => user?.role === 'admin'
+export const isAssignedTo = (t, user) => {
+  const me = (user?.name || '').trim().toLowerCase()
+  return !!me && (t.assignee || '').trim().toLowerCase() === me
+}
+export const tasksFor = (list, user) => (seesAllTasks(user) ? list : list.filter((t) => isAssignedTo(t, user)))
+
 export const emptyTask = (partial = {}) => ({
   id: uid(), title: '', notes: '', assigneeId: '', assignee: '', dept: 'Production', due: '', priority: 'normal',
   status: 'todo', createdAt: new Date().toISOString(), doneAt: '', ...partial,
@@ -129,7 +142,7 @@ export default function Tasks({ hideEmpty = false, startSignal = 0 }) {
   const [draft, setDraft] = useState(null)
   const [filter, setFilter] = useState('open') // open | done | all
   const [dept, setDept] = useState('')
-  const tasks = project.tasks || []
+  const tasks = tasksFor(project.tasks || [], me)
 
   const people = useMemo(() => [...new Set([...state.users.map((u) => u.name), ...project.contacts.map((c) => c.name)])].filter(Boolean), [state.users, project.contacts])
 

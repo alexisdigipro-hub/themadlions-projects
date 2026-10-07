@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { PageHead, Select, useToast } from '../components/ui.jsx'
 import { can, today, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
-import { DeptChips, TaskList, TaskModal, emptyTask } from './project/Tasks.jsx'
+import { DeptChips, TaskList, TaskModal, emptyTask, seesAllTasks, tasksFor } from './project/Tasks.jsx'
 import { Button } from '../components/ui.jsx'
 import { sendAutoNotice, userByName } from '../components/Notices.jsx'
 
@@ -18,14 +18,17 @@ export default function TasksAll() {
   const projects = visibleProjects(state, user)
   const projectsById = Object.fromEntries(projects.map((p) => [p.id, p]))
   const editable = can(user, 'tasks', 'edit')
-  const all = [
+  // A teammate gets only what is assigned to them (Alex); an administrator gets everything, and
+  // keeps the Everyone / Mine switch to narrow it down.
+  const all = tasksFor([
     ...projects.flatMap((p) => (p.tasks || []).map((t) => ({ ...t, projectId: p.id }))),
     ...(state.todos || []).map((t) => ({ ...t, projectId: '' })),
-  ]
+  ], user)
+  const everyone = seesAllTasks(user)
   const mine = (t) => !t.assignee || t.assignee.trim().toLowerCase() === (user?.name || '').trim().toLowerCase()
   const t0 = today()
 
-  const base = all.filter((t) => (who === 'me' ? mine(t) : true)).filter((t) => (proj === 'general' ? !t.projectId : proj ? t.projectId === proj : true))
+  const base = all.filter((t) => (everyone && who === 'me' ? mine(t) : true)).filter((t) => (proj === 'general' ? !t.projectId : proj ? t.projectId === proj : true))
   const shown = base
     .filter((t) => (dept ? (t.dept || 'Other') === dept : true))
     .filter((t) => (status === 'all' ? true : status === 'done' ? t.status === 'done' : t.status !== 'done'))
@@ -95,11 +98,13 @@ export default function TasksAll() {
 
   return (
     <div>
-      <PageHead title="ToDo Tasks" sub={`${all.filter((t) => t.status !== 'done').length} open across ${projects.length} projects`}>
-        <div className="segmented small">
-          <button className={who === 'all' ? 'on' : ''} onClick={() => setWho('all')}>Everyone</button>
-          <button className={who === 'me' ? 'on' : ''} onClick={() => setWho('me')}>Mine</button>
-        </div>
+      <PageHead title="ToDo Tasks" sub={everyone ? `${all.filter((t) => t.status !== 'done').length} open across ${projects.length} projects` : `${all.filter((t) => t.status !== 'done').length} open, assigned to you`}>
+        {everyone && (
+          <div className="segmented small">
+            <button className={who === 'all' ? 'on' : ''} onClick={() => setWho('all')}>Everyone</button>
+            <button className={who === 'me' ? 'on' : ''} onClick={() => setWho('me')}>Mine</button>
+          </div>
+        )}
         <div className="segmented small">
           {[['open', 'Open'], ['done', 'Done'], ['all', 'All']].map(([k, l]) => (
             <button key={k} className={status === k ? 'on' : ''} onClick={() => setStatus(k)}>{l}</button>
