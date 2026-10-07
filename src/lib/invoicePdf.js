@@ -150,7 +150,8 @@ export async function renderInvoice(inv) {
     ctx.fillStyle = INK; ctx.font = `700 11px ${FONT}`
     for (const d of wrap(ctx, l.description || '', descW)) { ctx.fillText(d, MARGIN, ly); ly += 14 }
     ctx.fillStyle = MUTED; ctx.font = `400 9px ${FONT}`
-    const sub = [(l.project || '').trim(), (l.date || '').trim() && dateDM(l.date)].filter(Boolean).join('   ·   ')
+    // a line's own project, else the project the invoice is linked to (Alex: the title under the service went missing once he linked instead of typing)
+    const sub = [(l.project || '').trim() || (inv.projectTitle || '').trim(), (l.date || '').trim() && dateDM(l.date)].filter(Boolean).join('   ·   ')
     if (sub) { for (const sl of wrap(ctx, sub, descW)) { ctx.fillText(sl, MARGIN, ly); ly += 12 } }
     ctx.textAlign = 'right'
     ctx.fillStyle = INK; ctx.font = `600 11px ${FONT}`
@@ -266,6 +267,6 @@ export async function previewInvoicePdf(inv) {
 export function invoiceFilename(inv) {
   const lastThree = String(inv.number || '').slice(-3)
   const client = inv.recipient?.name || 'Invoice'
-  const project = inv.lines?.find((l) => (l.project || '').trim())?.project || ''
+  const project = inv.lines?.find((l) => (l.project || '').trim())?.project || inv.projectTitle || ''
   return project ? `#${lastThree} Invoice - ${client} (${project}).pdf` : `#${lastThree} Invoice - ${client}.pdf`
 }

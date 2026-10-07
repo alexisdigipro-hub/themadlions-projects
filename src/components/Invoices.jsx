@@ -61,7 +61,7 @@ export function InvoicesTab() {
   const remove = (id) => update((s) => { s.finance.invoices = (s.finance.invoices || []).filter((x) => x.id !== id); return s })
   // The stamp is applied to every invoice: an invoice made before a stamp was uploaded still gets
   // the current one when it prints, so Alex can upload once and it shows on all of them.
-  const withCompany = (inv) => ({ ...inv, company: { ...inv.company, stamp: inv.company?.stamp || profile.stamp, logo: inv.company?.logo || logo, headerImage: inv.company?.headerImage || profile.headerImage } })
+  const withCompany = (inv) => ({ ...inv, projectTitle: inv.projectTitle || pName(inv.projectId), company: { ...inv.company, stamp: inv.company?.stamp || profile.stamp, logo: inv.company?.logo || logo, headerImage: inv.company?.headerImage || profile.headerImage } })
   const download = async (inv) => {
     const withStamp = withCompany(inv)
     try { await downloadInvoicePdf(withStamp, invoiceFilename(withStamp)) } catch (e) { toast(e.message || 'Could not make the PDF.', 'error') }
@@ -183,7 +183,7 @@ function InvoiceEditor({ draft, isNew, projects, clients, services, onChange, on
   const rmLine = (i) => onChange({ ...draft, lines: draft.lines.filter((_, j) => j !== i) })
   const pickProject = (id) => {
     const p = projects.find((x) => x.id === id)
-    onChange({ ...draft, projectId: id, recipient: { ...draft.recipient, name: draft.recipient.name || p?.client || '' } })
+    onChange({ ...draft, projectId: id, projectTitle: p?.title || '', recipient: { ...draft.recipient, name: draft.recipient.name || p?.client || '' } })
   }
   const pickClient = (id) => {
     const c = clients.find((x) => x.id === id)
@@ -220,7 +220,7 @@ function InvoiceEditor({ draft, isNew, projects, clients, services, onChange, on
               {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </Select>
           </Field>
-          <Field label="Link to project (optional)">
+          <Field label="Link to project (optional)" hint="Printed in small type under every service line that has no project of its own.">
             <Select value={draft.projectId || ''} onChange={(e) => pickProject(e.target.value)}>
               <option value="">No project</option>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
