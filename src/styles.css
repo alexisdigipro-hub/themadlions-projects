@@ -154,6 +154,49 @@ code {
   grid-template-columns: var(--sidebar) 1fr;
   min-height: 100vh;
 }
+/* The View as bar. These rules were lost on 20 Sep, cut out by mistake along with the Share row
+   styles they then sat among, and with nothing to place it the bar fell into the shell grid's
+   first cell: a sliver of text where the sidebar belongs, the sidebar stretched across the page,
+   and the page itself pushed out of sight (Alex, 7 Oct). It spans both columns now, above the
+   sidebar and the page, and stays in view while scrolling. */
+.viewas-bar {
+  grid-column: 1 / -1;
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+}
+.viewas-bar button {
+  font: inherit;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, .6);
+  background: transparent;
+  color: #fff;
+  border-radius: 999px;
+  padding: 3px 14px;
+  cursor: pointer;
+}
+.viewas-bar button:hover { background: rgba(255, 255, 255, .16); }
+/* On a computer the bar is one line of a known height, so the sticky sidebar can start exactly
+   below it instead of sliding under it while the page scrolls. */
+@media (min-width: 821px) {
+  .viewas-bar { height: 44px; box-sizing: border-box; flex-wrap: nowrap; padding-block: 0; }
+  .shell:has(> .viewas-bar) .sidebar { top: 44px; height: calc(100vh - 44px); }
+}
+/* On a phone it wraps, so it is kept small: the screen is the app's, not the warning's. */
+@media (max-width: 820px) {
+  .viewas-bar { font-size: 12.5px; padding: 6px 10px; gap: 8px; }
+  .viewas-bar button { padding: 2px 10px; }
+}
 .topbar {
   display: none;
 }
