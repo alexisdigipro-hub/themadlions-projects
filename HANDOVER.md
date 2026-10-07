@@ -64,6 +64,7 @@ Each PR body has the detail and the tests; this is the map.
 - **Database in the side menu** per person: `permissions.databasePage = 'hide'`, `seesDatabase(user)` in store.jsx, used by the sidebar and the Database page. Default shown. A menu choice, not a lock (library rows are readable by every member because a project's tab adds from them).
 
 - **Finance: All time** in the year picker (`year === 'all'`, `inSel(date)` replaces every year test in Finance.jsx, `summarize` gets `year: null`); the bars become Year by year. Team work keeps its own year tabs.
+- **My Finance: All time** next to the year buttons (`WorkLogTable` in WorkLog.jsx, `year === 'all'`); months keyed by year-month so they stay apart, headed with the year. The same table in an administrator's per-person view gets it too.
 
 **Alex still to do:** merge #197. Nothing to run in Supabase.
 **Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
