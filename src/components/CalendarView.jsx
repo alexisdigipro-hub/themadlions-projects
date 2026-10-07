@@ -3,7 +3,7 @@ import { Button, Confirm, Field, Input, Modal, Select, Textarea, useIsMobile, us
 import MiniCalendar from './MiniCalendar.jsx'
 import { EVENT_TYPES, can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { addDays, buildICS, download, fmtDate, holidayName, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
-import { gcalDelete, gcalOn, gcalPull, gcalUpsert, reconcilePulledEvents } from '../lib/googleCalendar.js'
+import { gcalCalendarsOf, gcalDelete, gcalOn, gcalPullAll, gcalUpsert, reconcilePulledEvents } from '../lib/googleCalendar.js'
 
 export default function CalendarView({ projectId = null, title }) {
   const { state, update } = useStore()
@@ -23,7 +23,12 @@ export default function CalendarView({ projectId = null, title }) {
   const mobile = useIsMobile()
   const [syncing, setSyncing] = useState(false)
   const synced = gcalOn(state.settings)
-  const calendarId = state.settings.googleCalendarId
+  const calendarId = state.settings.googleCalendarId // the one our own events are written to
+  // every Google calendar shown here, each with its colour; an event pulled from one keeps its id
+  const gcals = gcalCalendarsOf(state.settings)
+  const gcalKey = gcals.map((c) => c.id).join(',')
+  const gcalById = Object.fromEntries(gcals.map((c) => [c.id, c]))
+  const calFor = (ev) => ev.googleCalendarId || calendarId
 
   const projects = visibleProjects(state, user)
   const allowedIds = new Set(projects.map((p) => p.id))
@@ -32,7 +37,9 @@ export default function CalendarView({ projectId = null, title }) {
       state.events.filter((e) => {
         if (projectId && e.projectId !== projectId) return false
         if (!projectId && e.projectId && !allowedIds.has(e.projectId)) return false
-        if (typeFilter !== 'all' && e.type !== typeFilter) return false
+        // "gcal:<id>" is one Google calendar when several are connected; a plain type otherwise
+        if (typeFilter.startsWith('gcal:')) { if (e.type !== 'google' || e.googleCalendarId !== typeFilter.slice(5)) return false }
+        else if (typeFilter !== 'all' && e.type !== typeFilter) return false
         if (!projectId && projFilter !== 'all' && (e.projectId || 'none') !== projFilter) return false
         return true
       }),
@@ -76,8 +83,8 @@ export default function CalendarView({ projectId = null, title }) {
     toast(draft.isNew ? 'Event added' : 'Event saved', 'ok')
     setDraft(null)
     // Days off stay internal scheduling, not something to push onto a calendar other people see.
-    if (synced && ev.type !== 'unavailable') {
-      gcalUpsert({ calendarId, event: ev })
+    if (synced && ev.type !== 'unavailable' && calFor(ev)) {
+      gcalUpsert({ calendarId: calFor(ev), event: ev })
         .then((r) => { if (r.googleEventId !== ev.googleEventId) update((s) => { const i = s.events.findIndex((e) => e.id === ev.id); if (i >= 0) s.events[i] = { ...s.events[i], googleEventId: r.googleEventId }; return s }) })
         .catch((e) => toast(`Not synced to Google Calendar: ${e.message}`, 'error'))
     }
@@ -90,7 +97,7 @@ export default function CalendarView({ projectId = null, title }) {
     })
     setDraft(null)
     if (synced && ev?.googleEventId) {
-      gcalDelete({ calendarId, googleEventId: ev.googleEventId }).catch((e) => toast(`Not removed from Google Calendar: ${e.message}`, 'error'))
+      gcalDelete({ calendarId: calFor(ev), googleEventId: ev.googleEventId }).catch((e) => toast(`Not removed from Google Calendar: ${e.message}`, 'error'))
     }
   }
   const pull = () => {
@@ -98,9 +105,9 @@ export default function CalendarView({ projectId = null, title }) {
     const now = new Date()
     const timeMin = new Date(now.getTime() - 90 * 86400000).toISOString()
     const timeMax = new Date(now.getTime() + 400 * 86400000).toISOString()
-    gcalPull({ calendarId, timeMin, timeMax })
-      .then((r) => {
-        update((s) => { s.events = reconcilePulledEvents(s.events, r.events); return s })
+    gcalPullAll({ calendars: gcals, timeMin, timeMax })
+      .then((events) => {
+        update((s) => { s.events = reconcilePulledEvents(s.events, events); return s })
       })
       .catch((e) => toast(`Could not sync from Google Calendar: ${e.message}`, 'error'))
       .finally(() => setSyncing(false))
@@ -110,9 +117,16 @@ export default function CalendarView({ projectId = null, title }) {
   useEffect(() => {
     if (synced && !projectId) pull()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [synced, calendarId])
+  }, [synced, gcalKey])
 
   const typeOf = (k) => EVENT_TYPES.find((t) => t.key === k) || EVENT_TYPES[0]
+  // With several Google calendars the legend and the filter show one entry per calendar, in its
+  // own colour, instead of one "From Google Calendar".
+  const legendTypes = gcals.length > 1
+    ? EVENT_TYPES.filter((t) => t.key !== 'google').concat(gcals.map((c) => ({ key: `gcal:${c.id}`, label: c.name, color: c.color })))
+    : EVENT_TYPES.map((t) => (t.key === 'google' && gcals[0] ? { ...t, color: gcals[0].color } : t))
+  const colorOf = (e) => (e.type === 'google' && gcalById[e.googleCalendarId]?.color) || (e.type === 'google' && gcals[0]?.color) || typeOf(e.type).color
+  const labelOf = (e) => (e.type === 'google' && gcalById[e.googleCalendarId]?.name) || typeOf(e.type).label
   const projName = (id) => state.projects.find((p) => p.id === id)?.title || ''
 
   return (
@@ -129,7 +143,7 @@ export default function CalendarView({ projectId = null, title }) {
         <div className="toolbar-actions">
           <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
             <option value="all">All types</option>
-            {EVENT_TYPES.map((t) => (
+            {legendTypes.map((t) => (
               <option key={t.key} value={t.key}>
                 {t.label}
               </option>
@@ -175,7 +189,7 @@ export default function CalendarView({ projectId = null, title }) {
           <div className="panel cal-mobile">
             <MiniCalendar
               large
-              items={events.map((e) => ({ date: e.date, endDate: e.endDate, time: e.start, color: typeOf(e.type).color, title: e.type === 'unavailable' ? `${personLabel(e)} not available` : e.title, sub: [e.start, !projectId && e.projectId ? projName(e.projectId) : '', e.type !== 'unavailable' ? typeOf(e.type).label : ''].filter(Boolean).join(' · '), ev: e }))}
+              items={events.map((e) => ({ date: e.date, endDate: e.endDate, time: e.start, color: colorOf(e), title: e.type === 'unavailable' ? `${personLabel(e)} not available` : e.title, sub: [e.start, !projectId && e.projectId ? projName(e.projectId) : '', e.type !== 'unavailable' ? labelOf(e) : ''].filter(Boolean).join(' · '), ev: e }))}
               onItemClick={(e) => setDraft({ ...e })}
               onAddDay={editable ? (d) => setDraft(newEvent(d)) : canMarkOff ? (d) => setDraft(newEvent(d, 'unavailable')) : null}
               addLabel={editable ? 'Add event' : 'Not available'}
@@ -207,7 +221,7 @@ export default function CalendarView({ projectId = null, title }) {
                     <button
                       key={e.id}
                       className="cal-ev"
-                      style={{ '--ev': typeOf(e.type).color }}
+                      style={{ '--ev': colorOf(e) }}
                       onClick={(ev) => {
                         ev.stopPropagation()
                         setDraft({ ...e })
@@ -230,7 +244,7 @@ export default function CalendarView({ projectId = null, title }) {
           {/* the legend doubles as a filter: click a type to show only it on the grid above, click it
               again for all types. Same state the "All types" dropdown uses, so the two stay in sync. */}
           <div className="cal-legend">
-            {EVENT_TYPES.map((t) => (
+            {legendTypes.map((t) => (
               <button
                 key={t.key}
                 type="button"
@@ -324,7 +338,7 @@ export default function CalendarView({ projectId = null, title }) {
               <Textarea rows={3} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} disabled={!canEditDraft(draft)} />
             </Field>
             {draft.sourceDayId && <p className="fineprint">This event mirrors a shoot day from the schedule. Change the date there to keep them in sync.</p>}
-            {draft.type === 'google' && draft.googleEventId && <p className="fineprint">Synced with Google Calendar. A change here is pushed there, and the other way round next time the page syncs.</p>}
+            {draft.type === 'google' && draft.googleEventId && <p className="fineprint">Synced with {gcalById[draft.googleCalendarId]?.name || 'Google Calendar'}. A change here is pushed there, and the other way round next time the page syncs.</p>}
           </div>
         )}
       </Modal>

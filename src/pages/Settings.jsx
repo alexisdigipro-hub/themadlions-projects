@@ -6,7 +6,7 @@ import { expenseCats } from '../lib/finance.js'
 import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/budgetCats.js'
 import { fmtBytes, snapshotSummary, snapshotToState } from '../lib/backups.js'
 import { authorizeUrl, clearOauth, pcloudPing, redirectUri, takeOauth } from '../lib/pcloud.js'
-import { authorizeUrl as gcalAuthorizeUrl, clearOauthCode, gcalCalendars, gcalConnect, redirectUri as gcalRedirectUri, takeOauthCode } from '../lib/googleCalendar.js'
+import { GCAL_COLOR, authorizeUrl as gcalAuthorizeUrl, clearOauthCode, gcalCalendars, gcalCalendarsOf, gcalConnect, redirectUri as gcalRedirectUri, takeOauthCode } from '../lib/googleCalendar.js'
 import { CHAT_DEFAULTS, chime, loadChatPrefs, saveChatPrefs } from '../lib/chatPrefs.js'
 import { FONTS, applyFont, currentFont, ensureFontLoaded } from '../lib/fonts.js'
 import Usage from '../components/Usage.jsx'
@@ -867,6 +867,24 @@ function GoogleCalendarPanel({ toast }) {
   const set = (k, v) => update((s) => { s.settings = { ...s.settings, [k]: v }; return s })
   const clientId = state.settings.googleClientId || ''
   const calendarId = state.settings.googleCalendarId || ''
+  // the calendars shown in the app (several), and which one of them our own events go to
+  const chosen = gcalCalendarsOf(state.settings)
+  const PALETTE = ['#4285F4', '#0B8043', '#F4511E', '#8E24AA', '#F6BF26', '#039BE5', '#E67C73', '#33B679', '#7986CB', '#616161']
+  const saveChosen = (list) => update((s) => {
+    const ids = new Set(list.map((c) => c.id))
+    // the write calendar must be one that is shown; the first shown one otherwise
+    const writeId = ids.has(s.settings.googleCalendarId) ? s.settings.googleCalendarId : (list[0]?.id || '')
+    s.settings = { ...s.settings, googleCalendars: list, googleCalendarId: writeId }
+    return s
+  })
+  const toggle = (c, on) => {
+    const list = chosen.filter((x) => x.id !== c.id)
+    if (on) list.push({ id: c.id, name: c.summary || c.name, color: c.color || PALETTE[chosen.length % PALETTE.length] })
+    saveChosen(list)
+  }
+  const recolor = (id, color) => saveChosen(chosen.map((c) => (c.id === id ? { ...c, color } : c)))
+  // the live list from Google when it has been fetched, else what is saved
+  const rows = calendars ? calendars.map((c) => ({ ...c, name: c.summary, saved: chosen.find((x) => x.id === c.id) })) : chosen.map((c) => ({ ...c, saved: c, summary: c.name }))
 
   useEffect(() => {
     if (!code?.code) return
@@ -927,12 +945,27 @@ function GoogleCalendarPanel({ toast }) {
         <Button onClick={test} disabled={testing}>{testing ? 'Testing…' : 'Test connection'}</Button>
         {error && <span className="small" style={{ color: 'var(--danger)' }}>{error}</span>}
       </div>
-      {calendars && (
-        <Field label="Calendar" hint="Which of that account's calendars this workspace reads from and writes to.">
-          <Select value={calendarId} onChange={(e) => set('googleCalendarId', e.target.value)} options={[['', 'Pick a calendar'], ...calendars.map((c) => [c.id, c.summary + (c.primary ? ' (primary)' : '')])]} />
+      {rows.length > 0 && (
+        <Field label="Calendars shown in the app" hint={calendars ? 'Tick the ones to show. Each gets its own colour on the Calendar page and in the legend.' : 'What is saved. Test connection to add or remove calendars.'}>
+          <ul className="plain gcal-list">
+            {rows.map((c) => (
+              <li key={c.id}>
+                <label className="check">
+                  <input type="checkbox" checked={!!c.saved} disabled={!calendars && !c.saved} onChange={(e) => toggle(c, e.target.checked)} />
+                  <span className="grow">{c.summary}{c.primary ? <span className="muted small"> · primary</span> : null}</span>
+                </label>
+                {c.saved && <input type="color" value={c.saved.color || GCAL_COLOR} onChange={(e) => recolor(c.id, e.target.value)} aria-label={`Colour of ${c.summary}`} title="Colour in the app" />}
+              </li>
+            ))}
+          </ul>
         </Field>
       )}
-      {calendarId && !calendars && <p className="small under">Connected to a calendar already. Test connection to change it.</p>}
+      {chosen.length > 0 && (
+        <Field label="Our events go to" hint="Events made on the Calendar page are written to this one. The others are read only.">
+          <Select value={calendarId} onChange={(e) => set('googleCalendarId', e.target.value)} options={chosen.map((c) => [c.id, c.name])} />
+        </Field>
+      )}
+      {!calendars && !chosen.length && <p className="small under">Test connection to see the account's calendars and pick which ones to show.</p>}
     </div>
   )
 }

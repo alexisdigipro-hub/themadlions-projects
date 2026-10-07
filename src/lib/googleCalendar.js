@@ -6,7 +6,17 @@ import { SUPABASE_KEY, SUPABASE_URL } from './supabaseConfig.js'
 import { uid } from './store.jsx'
 
 /* Settings > Integrations > Google Calendar. Off until a calendar has actually been picked. */
-export const gcalOn = (settings) => !!settings?.googleCalendarId
+export const gcalOn = (settings) => !!settings?.googleCalendarId || (settings?.googleCalendars || []).length > 0
+
+/* The calendars this workspace shows: several of the account's, each with its own colour
+   (settings.googleCalendars), while settings.googleCalendarId stays the one our own events are
+   written to. A workspace set up before several could be picked has only the latter. */
+export const GCAL_COLOR = '#4285F4'
+export function gcalCalendarsOf(settings) {
+  const list = (settings?.googleCalendars || []).filter((c) => c && c.id)
+  if (list.length) return list.map((c) => ({ id: c.id, name: c.name || 'Google Calendar', color: c.color || GCAL_COLOR }))
+  return settings?.googleCalendarId ? [{ id: settings.googleCalendarId, name: 'Google Calendar', color: GCAL_COLOR }] : []
+}
 
 async function call(action, body) {
   if (!supabase) throw new Error('Google Calendar needs the online database.')
@@ -45,7 +55,7 @@ export function reconcilePulledEvents(existingEvents, remoteEvents) {
   for (const r of remoteEvents) {
     seen.add(r.googleEventId)
     const local = (r.tmlId && byId.get(r.tmlId)) || byGoogleId.get(r.googleEventId)
-    const patch = { title: r.title, date: r.date, endDate: r.endDate, start: r.start, end: r.end, locationText: r.locationText, notes: r.notes, googleEventId: r.googleEventId }
+    const patch = { title: r.title, date: r.date, endDate: r.endDate, start: r.start, end: r.end, locationText: r.locationText, notes: r.notes, googleEventId: r.googleEventId, googleCalendarId: r.googleCalendarId || '' }
     if (local) {
       const i = out.findIndex((e) => e.id === local.id)
       if (i >= 0) out[i] = { ...out[i], ...patch }
@@ -59,6 +69,12 @@ export function reconcilePulledEvents(existingEvents, remoteEvents) {
 export const gcalConnect = (code, redirectUri) => call('connect', { code, redirectUri })
 export const gcalCalendars = () => call('calendars', {})
 export const gcalPull = ({ calendarId, timeMin, timeMax }) => call('pull', { calendarId, timeMin, timeMax })
+/* Every chosen calendar in one go, each event stamped with the calendar it came from. One call
+   per calendar, so the function already deployed keeps working as it is. */
+export async function gcalPullAll({ calendars, timeMin, timeMax }) {
+  const results = await Promise.all(calendars.map((c) => gcalPull({ calendarId: c.id, timeMin, timeMax })))
+  return results.flatMap((r, i) => (r.events || []).map((e) => ({ ...e, googleCalendarId: calendars[i].id })))
+}
 export const gcalUpsert = ({ calendarId, event }) => call('upsert', { calendarId, event })
 export const gcalDelete = ({ calendarId, googleEventId }) => call('delete', { calendarId, googleEventId })
 

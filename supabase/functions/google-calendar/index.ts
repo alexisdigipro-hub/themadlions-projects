@@ -1,7 +1,7 @@
 // THEMADLIONS Projects · Google Calendar door (Supabase Edge Function "google-calendar")
 //
-// One shared Google account connects one specific Google Calendar to the whole workspace, the
-// same shape as the "pcloud" function: a single secret the function holds, nothing the browser
+// One shared Google account connects its calendars to the whole workspace (several read, one
+// written to), the same shape as the "pcloud" function: a single secret the function holds, nothing the browser
 // ever sees except what it is explicitly handed back once (the refresh token, during setup).
 //
 // Deploy: Supabase > Edge Functions > Deploy a new function > via Editor, name
@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
     if (action === 'calendars') {
       const token = await accessToken()
       const data = await gcal('GET', '/users/me/calendarList', token)
-      const items = (data.items || []).map((c: any) => ({ id: c.id, summary: c.summary, primary: !!c.primary }))
+      const items = (data.items || []).map((c: any) => ({ id: c.id, summary: c.summary, primary: !!c.primary, color: c.backgroundColor || '' }))
       return json({ ok: true, calendars: items })
     }
 

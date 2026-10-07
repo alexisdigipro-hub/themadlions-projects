@@ -2564,6 +2564,9 @@ html[data-theme='dark'] .chat-box[data-bubbles='telegram'] .chat-bubble { color:
 .pc-steps { padding-left: 20px; display: flex; flex-direction: column; gap: 4px; margin: 0; }
 .pc-steps code, .pc-token code { font-family: var(--mono); font-size: 12.5px; background: var(--raised); padding: 1px 5px; border-radius: 4px; word-break: break-all; }
 .pc-token { border: 1px solid var(--amber); border-radius: var(--radius); padding: 10px 12px; }
+.gcal-list li { display: flex; align-items: center; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--line-soft); }
+.gcal-list .check { flex: 1; }
+.gcal-list input[type='color'] { width: 34px; height: 26px; border: 1px solid var(--line); border-radius: 6px; background: none; padding: 1px; flex: none; }
 .pc-token .row-actions .input { flex: 1; min-width: 0; font-family: var(--mono); font-size: 13px; }
 .btn.disabled { opacity: .5; pointer-events: none; }
 
