@@ -21,7 +21,9 @@ export default function Schedule() {
       <section className="panel">
         {project.category === 'Event' ? <RunOfShow /> : <StripboardSchedule />}
       </section>
-      {can(user, 'callsheets') && (
+      {/* Without a shoot day a call sheet cannot exist, and the card above already says so, so
+          this one waits rather than repeating it. Add a day up there and it appears. */}
+      {can(user, 'callsheets') && (project.days || []).length > 0 && (
         <section className="panel">
           <CallSheets />
         </section>
