@@ -301,9 +301,9 @@ export default function Finance() {
         <div className="fin-overview">
           <div className="fin-hero">
             <div className="fin-card">
-              <div className="fin-label">Turnover {year}</div>
+              {/* Alex: "Income", and the number alone, no line underneath splitting it */}
+              <div className="fin-label">Income {year}</div>
               <div className="fin-value">{money(incomeAll, cur)}</div>
-              <div className="fin-sub">{expInYear ? `${money(incomeAll - expInYear, cur)} booked · ${money(expInYear, cur)} from client budgets still to invoice` : 'all booked'}</div>
             </div>
             <div className={`fin-card ${profitAll < 0 ? 'neg' : 'pos'}`}>
               <div className="fin-label">Profit {year}</div>
