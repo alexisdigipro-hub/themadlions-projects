@@ -2112,6 +2112,20 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 /* one table for the whole budget, so the category rides along as a narrow first column rather
    than a heading above its own table */
 .budget-table td.budget-cat { white-space: nowrap; width: 1%; }
+/* the handle a budget line is dragged by: quiet until the row is pointed at, so the sheet still
+   reads as a document rather than a list of controls */
+.budget-table th.grip, .budget-table td.grip { width: 22px; padding-right: 0; }
+.grip-btn { background: none; border: 0; padding: 0 2px; cursor: grab; color: var(--muted); opacity: 0; line-height: 1; font-size: 15px; touch-action: none; }
+.budget-table tr:hover .grip-btn, .grip-btn:focus-visible { opacity: 0.75; }
+.grip-btn:active { cursor: grabbing; opacity: 1; }
+/* the tint goes on the cells, like .picked above: a background on the row itself is hidden by
+   the cells' own */
+.budget-table tr.dragging td { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.budget-table tr.dragging .grip-btn { opacity: 1; }
+/* on a touch screen there is no hover, so the handle is simply always there */
+@media (hover: none) {
+  .grip-btn { opacity: 0.6; }
+}
 .budget-table td.pick input, .budget-table th.pick input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; vertical-align: middle; }
 .budget-table tr.picked td { background: color-mix(in srgb, var(--accent) 9%, transparent); }
 .bulk-bar { position: sticky; bottom: 14px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding: 10px 14px; background: var(--panel); border: 1px solid var(--accent); border-radius: var(--radius-lg); box-shadow: var(--shadow); }

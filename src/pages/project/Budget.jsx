@@ -8,6 +8,7 @@ import { useCurrentUser, useStore } from '../../lib/store.jsx'
 import PaymentModal, { BulkPaymentModal } from '../../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, lineTotal, lineVat, linePaid, syncLineWorklog, dropLineWorklog } from '../../lib/budget.js'
 import { groupPairs } from '../../lib/budgetCats.js'
+import { useDragOrder } from '../../lib/dragOrder.js'
 
 // The categories and their groups live in Settings > Budget (src/lib/budgetCats.js holds the
 // standard list and the helpers). The page reads them through groupPairs() below.
@@ -111,12 +112,24 @@ export default function Budget() {
   const BUDGET_GROUPS = useMemo(() => groupPairs(state.settings, budget.lines), [state.settings, budget.lines])
   const CATEGORIES = BUDGET_GROUPS.flatMap(([, cats]) => cats)
 
-  // Alex wants one table, not a section per group. The groups still decide the order, so crew
-  // stays above camera above post the way Settings has them, and a line whose category was
-  // removed there sits at the end under Unlisted.
-  const rows = useMemo(
+  // Alex wants one table, not a section per group. Until he drags a line the groups still set
+  // the order, so crew stays above camera above post the way Settings has them and a line whose
+  // category was removed there sits at the end under Unlisted. The first drag saves the order he
+  // can see, his move included, and from then on the budget keeps its own order and the groups
+  // only name the lines. Nothing is written until he actually drags something.
+  const sorted = useMemo(
     () => BUDGET_GROUPS.flatMap(([, cats]) => budget.lines.filter((l) => cats.includes(l.category))),
     [BUDGET_GROUPS, budget.lines],
+  )
+  const rows = budget.ordered ? budget.lines : sorted
+  const byId = useMemo(() => Object.fromEntries(rows.map((l) => [l.id, l])), [rows])
+  const { order, dragId, rowRef, bind } = useDragOrder(
+    rows.map((l) => l.id),
+    (next) => edit((p) => {
+      p.budget = p.budget || { lines: [] }
+      p.budget.lines = next.map((id) => p.budget.lines.find((l) => l.id === id)).filter(Boolean)
+      p.budget.ordered = true
+    }),
   )
   const t = budgetTotals(project)
 
@@ -195,13 +208,19 @@ export default function Budget() {
           <table className="table budget-table">
             <thead>
               <tr>
+                {editable && <th className="grip no-print" />}
                 {canPay && <th className="pick no-print">{openIds.length > 0 && <input type="checkbox" checked={allPicked} onChange={(e) => togglePick(openIds, e.target.checked)} aria-label="Select every unpaid line" title="Select every unpaid line" />}</th>}
                 <th>Category</th><th>Description</th><th>Name</th><th className="num">Amount</th><th>VAT</th><th className="num">Paid</th><th className="num">Balance</th>{editable && <th className="no-print" />}
               </tr>
             </thead>
             <tbody>
-              {rows.map((l) => (
-                <tr key={l.id} className={picked.includes(l.id) && payable(l) ? 'picked' : ''}>
+              {order.map((id) => byId[id]).filter(Boolean).map((l) => (
+                <tr key={l.id} ref={rowRef(l.id)} className={`${picked.includes(l.id) && payable(l) ? 'picked' : ''}${dragId === l.id ? ' dragging' : ''}`}>
+                  {editable && (
+                    <td className="grip no-print">
+                      <button type="button" className="grip-btn" aria-label={`Move ${l.description || l.category}`} title="Drag to move this line" {...bind(l.id)}>⠿</button>
+                    </td>
+                  )}
                   {canPay && <td className="pick no-print">{payable(l) && <input type="checkbox" checked={picked.includes(l.id)} onChange={(e) => togglePick([l.id], e.target.checked)} aria-label={`Select ${l.description} to pay`} />}</td>}
                   <td className="muted small budget-cat">{l.category}</td>
                   <td>{l.description}{l.notes && <div className="muted small">{l.notes}</div>}</td>
