@@ -103,7 +103,6 @@ export default function Finance() {
   // here, so it is real income everywhere below: this year's income, the monthly bars, and every
   // By project / client / category / type breakdown, not just the Profit tile.
   const S = summarize([...fin.transactions, ...expectedRows], { year, projects: state.projects, fiscalStart })
-  const expInYear = expectedRows.filter((r) => fiscalYearOf(r.date, fiscalStart) === year).reduce((a, r) => a + r.net, 0)
   const owedInYear = owedRows.filter((r) => fiscalYearOf(r.date, fiscalStart) === year).reduce((a, r) => a + r.net, 0)
   // Pending jobs in the team's My work that are not tied to a budget line (those are counted with
   // the lines above): what we owe the team beyond the budgets (Alex). Same rule as Team work.
@@ -113,10 +112,6 @@ export default function Finance() {
   const incomeAll = S.income
   const expenseAll = S.expense + owedInYear + teamOwedInYear
   const profitAll = incomeAll - expenseAll
-  const taxEst = Math.max(0, Math.round(profitAll * (Number(fin.settings.taxRate || 0) / 100)))
-  const prevS = summarize(fin.transactions, { year: year - 1, projects: state.projects, fiscalStart })
-  const hasPrev = fin.transactions.some((t) => fiscalYearOf(t.date, fiscalStart) === year - 1)
-  const vsPrev = hasPrev ? (prevS.profit ? Math.round(((S.profit - prevS.profit) / Math.abs(prevS.profit)) * 100) : null) : null
   const maxMonth = Math.max(1, ...S.months.map((m) => Math.max(m.income, m.expense)))
 
   const listed = fin.transactions
@@ -301,14 +296,13 @@ export default function Finance() {
         <div className="fin-overview">
           <div className="fin-hero">
             <div className="fin-card">
-              <div className="fin-label">Turnover {year}</div>
+              {/* Alex: "Income", and the number alone, no line underneath splitting it */}
+              <div className="fin-label">Income {year}</div>
               <div className="fin-value">{money(incomeAll, cur)}</div>
-              <div className="fin-sub">{expInYear ? `${money(incomeAll - expInYear, cur)} booked · ${money(expInYear, cur)} from client budgets still to invoice` : 'all booked'}</div>
             </div>
             <div className={`fin-card ${profitAll < 0 ? 'neg' : 'pos'}`}>
               <div className="fin-label">Profit {year}</div>
               <div className="fin-value">{money(profitAll, cur)}</div>
-              <div className="fin-sub">{money(incomeAll, cur)} in{expInYear ? ` (${money(expInYear, cur)} client budgets to invoice)` : ''} · {money(expenseAll, cur)} out{owedInYear || teamOwedInYear ? ` (${[owedInYear ? `${money(owedInYear, cur)} still owed on budget lines` : '', teamOwedInYear ? `${money(teamOwedInYear, cur)} on My work jobs outside a budget` : ''].filter(Boolean).join(', ')})` : ''} · est. tax {money(taxEst, cur)} ({fin.settings.taxRate}%) · after tax {money(profitAll - taxEst, cur)}{hasPrev ? ` · booked profit ${money(S.profit, cur)} vs ${money(prevS.profit, cur)} in ${fyLabel(year - 1)}${vsPrev != null ? ` (${vsPrev >= 0 ? '+' : ''}${vsPrev}%)` : ''}` : ''}</div>
             </div>
             <div className="fin-card">
               <div className="fin-label">Owed to us</div>
@@ -318,12 +312,10 @@ export default function Finance() {
             <div className="fin-card">
               <div className="fin-label">We owe</div>
               <div className="fin-value">{money(S.weOwe + committed + teamOwed, cur)}</div>
-              <div className="fin-sub">{money(S.weOwe, cur)} in {S.weOweCount} bill{S.weOweCount === 1 ? '' : 's'} (gross) · {money(committed, cur)} still owed to crew & vendors on {openCommitments.length} budget line{openCommitments.length === 1 ? '' : 's'} (net){teamJobs.length ? ` · ${money(teamOwed, cur)} on ${teamJobs.length} My work job${teamJobs.length === 1 ? '' : 's'} outside a budget` : ''}</div>
             </div>
             <div className="fin-card">
               <div className="fin-label">This month</div>
               <div className="fin-value">{money(S.monthIn - S.monthOut, cur)}</div>
-              <div className="fin-sub">{money(S.monthIn, cur)} in · {money(S.monthOut, cur)} out</div>
             </div>
           </div>
 
