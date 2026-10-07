@@ -48,7 +48,7 @@ export default function Deliveries() {
   const [error, setError] = useState('')
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
-  const [filter, setFilter] = useState('delivery')
+  const [filter, setFilter] = useState('all') // Alex: open on Everything, not just Deliveries
   const [edraft, setEdraft] = useState(null)
 
   const reload = () => {
@@ -222,7 +222,7 @@ export default function Deliveries() {
     })
   }, [all, isAdmin])
   const tabs = [['delivery', 'Deliveries'], ...(isAdmin ? [['estimate', 'Estimates']] : []), ['callsheet', 'Call sheets'], ['all', 'Everything']]
-  const shown = tabs.some(([k]) => k === filter) ? filter : 'delivery'
+  const shown = tabs.some(([k]) => k === filter) ? filter : 'all'
   const list = useMemo(() => (shown === 'all' ? groups : groups.filter((g) => g.head.kind === shown)), [groups, shown])
   const counts = { all: groups.length, delivery: groups.filter((g) => g.head.isDelivery).length, estimate: groups.filter((g) => g.head.isEstimate).length, callsheet: groups.filter((g) => g.head.kind === 'callsheet').length }
   // These two only exist once the matching SQL file has been run, so say so rather than hiding the gap.
@@ -373,31 +373,6 @@ export default function Deliveries() {
                   )}
                   {one && last?.note && <p className="deliv-quote">&#8220;{last.note}&#8221;</p>}
 
-                  {!one && (
-                    <ul className="plain deliv-people">
-                      {g.people.map((p) => {
-                        const a = p.answers[p.answers.length - 1]
-                        return (
-                          <li key={p.token}>
-                            <b>{p.data.recipient.name}</b>
-                            <span className="deliv-tags">
-                              {p.shut && <span className="deliv-tag t-shut">Closed</span>}
-                              {p.opens === undefined ? null
-                                : p.opens > 0 ? <span className="deliv-tag">Opened {p.opens}&#215;</span> : <span className="deliv-tag t-quiet">Not opened</span>}
-                              {a && <span className={`deliv-tag t-${a.status}`}>{RESPONSE[a.status] || 'Seen'}</span>}
-                            </span>
-                            <span className="deliv-person-tools">
-                              <button className="deliv-tool" onClick={() => copy(p.url, 'Link')}>Copy link</button>
-                              <a className="deliv-tool" href={p.url} target="_blank" rel="noreferrer">Open</a>
-                              {editable && p.opens !== undefined && (
-                                <button className="deliv-tool" onClick={() => setShut(p.ref, !p.shut, true)}>{p.shut ? 'Reopen' : 'Close'}</button>
-                              )}
-                            </span>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  )}
                 </div>
                 <div className="deliv-tools">
                   {one && <button className="deliv-tool" onClick={() => copy(r.url, 'Link')}>Copy link</button>}
@@ -410,6 +385,34 @@ export default function Deliveries() {
                   )}
                   {editable && <Confirm className="deliv-tool deliv-tool-x" onConfirm={async () => { await removeShare({ workspaceId: state.workspace.id, ref: g.key }); reload() }} label="Delete">Delete</Confirm>}
                 </div>
+
+                {/* One page per person: its own row under the two above, spanning across to the
+                    same right edge so its buttons line up with theirs rather than stopping short. */}
+                {!one && (
+                  <ul className="plain deliv-people">
+                    {g.people.map((p) => {
+                      const a = p.answers[p.answers.length - 1]
+                      return (
+                        <li key={p.token}>
+                          <b>{p.data.recipient.name}</b>
+                          <span className="deliv-tags">
+                            {p.shut && <span className="deliv-tag t-shut">Closed</span>}
+                            {p.opens === undefined ? null
+                              : p.opens > 0 ? <span className="deliv-tag">Opened {p.opens}&#215;</span> : <span className="deliv-tag t-quiet">Not opened</span>}
+                            {a && <span className={`deliv-tag t-${a.status}`}>{RESPONSE[a.status] || 'Seen'}</span>}
+                          </span>
+                          <span className="deliv-person-tools">
+                            <button className="deliv-tool" onClick={() => copy(p.url, 'Link')}>Copy link</button>
+                            <a className="deliv-tool" href={p.url} target="_blank" rel="noreferrer">Open</a>
+                            {editable && p.opens !== undefined && (
+                              <button className="deliv-tool" onClick={() => setShut(p.ref, !p.shut, true)}>{p.shut ? 'Reopen' : 'Close'}</button>
+                            )}
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
               </li>
             )
           })}

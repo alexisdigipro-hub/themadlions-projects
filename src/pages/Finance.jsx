@@ -8,7 +8,7 @@ import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
 import { budgetCatForFin, finCatFor } from '../lib/budgetCats.js'
 import { AGE_BUCKETS, WorkLogTable, ageBucket, avgDaysToPay, daysWaiting, entryTotals, entryTotalsByYear, money2, projectWorkDate, topClientOf } from '../components/WorkLog.jsx'
-import { InvoiceProfileSettings, InvoicesTab } from '../components/Invoices.jsx'
+import { InvoiceProfileSettings } from '../components/Invoices.jsx'
 import { invoiceTotals } from '../lib/invoice.js'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -281,7 +281,7 @@ export default function Finance() {
     <div className="finance">
       <PageHead title="Finance">
         <div className="segmented small">
-          {[['overview', 'Overview'], ['transactions', 'Transactions'], ['invoices', 'Invoices'], ['recurring', `Recurring${dueCount ? ` (${dueCount} due)` : ''}`], ['team', 'Team work'], ['settings', 'Settings']].map(([k, l]) => (
+          {[['overview', 'Overview'], ['transactions', 'Transactions'], ['recurring', `Recurring${dueCount ? ` (${dueCount} due)` : ''}`], ['team', 'Team work'], ['settings', 'Settings']].map(([k, l]) => (
             <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
         </div>
@@ -479,7 +479,6 @@ export default function Finance() {
 
       {tab === 'team' && <TeamWork />}
 
-      {tab === 'invoices' && <InvoicesTab />}
 
       {tab === 'recurring' && (
         <>

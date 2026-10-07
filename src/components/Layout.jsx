@@ -82,7 +82,9 @@ export default function Layout() {
     { to: '/drives', label: 'Drives', show: can(user, 'drives'), icon: 'drives' },
     { to: '/share', label: 'Share', show: mayShare, icon: 'post', badge: newReplies },
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance' },
-    { to: '/team', label: 'Team', show: user?.role === 'admin', icon: 'team' },
+    // Invoices came out of Finance's tab row into its own page (Alex). Team went the other way,
+    // into Settings > Team, so it is no longer here.
+    { to: '/invoices', label: 'Invoices', show: user?.role === 'admin', icon: 'finance' },
     // second to last on purpose: Settings is always shown, so My profile always sits just above it
     { to: '/me', label: 'My profile', show: true, icon: 'team' },
     { to: '/settings', label: 'Settings', show: true, icon: 'settings' },
@@ -95,7 +97,7 @@ export default function Layout() {
       {viewAs && (
         <div className="viewas-bar" role="status">
           <span>You are looking at the app as <b>{user?.name || 'someone else'}</b>. Nothing can be changed while you do.</span>
-          <button type="button" onClick={() => { setViewAs(''); nav('/team') }}>Stop</button>
+          <button type="button" onClick={() => { setViewAs(''); nav('/settings') }}>Stop</button>
         </div>
       )}
       <header className="topbar">
