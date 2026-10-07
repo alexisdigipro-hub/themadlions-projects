@@ -25,6 +25,11 @@ export default function Finance() {
   const fyLabel = (y) => fiscalYearLabel(y, fiscalStart)
   const years = useMemo(() => [...new Set(fin.transactions.map((t) => fiscalYearOf(t.date, fiscalStart)).filter(Boolean))].sort((a, b) => b - a), [fin.transactions, fiscalStart])
   const [year, setYear] = useState(years[0] || new Date().getFullYear())
+  // 'all' is All time (Alex: every year added up). Everything on this page that picks a year asks
+  // inSel(date), so the tiles, the tables and the transactions list all follow the one choice.
+  const allTime = year === 'all'
+  const inSel = (d) => allTime || fiscalYearOf(d, fiscalStart) === year
+  const yearText = allTime ? 'all time' : fyLabel(year)
   const [tab, setTab] = useState('overview') // overview | transactions | settings
   const [draft, setDraft] = useState(null)
   const [f, setF] = useState({ q: '', type: '', project: '', status: '', doc: '', month: '' })
@@ -48,7 +53,7 @@ export default function Finance() {
   }))
   // per project, only what falls in the year shown (the line's date, else the project's shoot day),
   // so picking 2025 does not pull in a 2026 project that merely still owes its crew
-  const owedYearRows = owedRows.filter((r) => fiscalYearOf(r.date, fiscalStart) === year)
+  const owedYearRows = owedRows.filter((r) => inSel(r.date))
   const owedByProject = {}
   owedYearRows.forEach((r) => { owedByProject[r.project.title] = (owedByProject[r.project.title] || 0) + r.net })
   /* And the income side (Alex: "but where is the income?", then "I don't want it 'expected', the
@@ -102,20 +107,28 @@ export default function Finance() {
   // expectedRows (each project's remaining Budget) is merged straight into the real transactions
   // here, so it is real income everywhere below: this year's income, the monthly bars, and every
   // By project / client / category / type breakdown, not just the Profit tile.
-  const S = summarize([...fin.transactions, ...expectedRows], { year, projects: state.projects, fiscalStart })
-  const owedInYear = owedRows.filter((r) => fiscalYearOf(r.date, fiscalStart) === year).reduce((a, r) => a + r.net, 0)
+  const S = summarize([...fin.transactions, ...expectedRows], { year: allTime ? null : year, projects: state.projects, fiscalStart })
+  const owedInYear = owedRows.filter((r) => inSel(r.date)).reduce((a, r) => a + r.net, 0)
   // Pending jobs in the team's My work that are not tied to a budget line (those are counted with
   // the lines above): what we owe the team beyond the budgets (Alex). Same rule as Team work.
   const teamJobs = (state.worklog || []).filter((e) => e.status !== 'paid' && !e.budgetLineId && Number(e.amount) > 0)
   const teamOwed = teamJobs.reduce((a, e) => a + Number(e.amount || 0), 0)
-  const teamOwedInYear = teamJobs.filter((e) => fiscalYearOf(e.date, fiscalStart) === year).reduce((a, e) => a + Number(e.amount || 0), 0)
+  const teamOwedInYear = teamJobs.filter((e) => inSel(e.date)).reduce((a, e) => a + Number(e.amount || 0), 0)
   const incomeAll = S.income
   const expenseAll = S.expense + owedInYear + teamOwedInYear
   const profitAll = incomeAll - expenseAll
-  const maxMonth = Math.max(1, ...S.months.map((m) => Math.max(m.income, m.expense)))
+  // The bars: the twelve months of the year shown, or for All time one bar per year
+  const bars = allTime
+    ? [...years].sort((a, b) => a - b).map((y) => {
+        const l = [...fin.transactions, ...expectedRows].filter((t) => fiscalYearOf(t.date, fiscalStart) === y)
+        const add = (list) => list.reduce((a, t) => a + Number(t.net || 0), 0)
+        return { key: String(y), label: fyLabel(y), income: add(l.filter((t) => t.type === 'income' && t.status !== 'quoted')), expense: add(l.filter((t) => t.type === 'expense')) }
+      })
+    : S.months.map((m, i) => ({ ...m, label: MONTHS[i] }))
+  const maxMonth = Math.max(1, ...bars.map((m) => Math.max(m.income, m.expense)))
 
   const listed = fin.transactions
-    .filter((t) => fiscalYearOf(t.date, fiscalStart) === year)
+    .filter((t) => inSel(t.date))
     .filter((t) => (f.type ? t.type === f.type : true))
     .filter((t) => (f.project ? t.projectId === f.project : true))
     .filter((t) => (f.status ? t.status === f.status : true))
@@ -125,7 +138,7 @@ export default function Finance() {
     .sort((a, b) => b.date.localeCompare(a.date))
   // open budget lines pass the same filters (they are expenses to pay with no document) and sit among the transactions by date
   const listedOwed = owedRows
-    .filter((t) => fiscalYearOf(t.date, fiscalStart) === year)
+    .filter((t) => inSel(t.date))
     .filter((t) => (f.type ? f.type === 'expense' : true))
     .filter((t) => (f.project ? t.projectId === f.project : true))
     .filter((t) => (f.status ? f.status === 'pending' : true))
@@ -133,7 +146,7 @@ export default function Finance() {
     .filter((t) => (f.month ? t.date.slice(5, 7) === f.month : true))
     .filter((t) => matchTx(t, f.q))
   const listedExpected = expectedRows
-    .filter((t) => fiscalYearOf(t.date, fiscalStart) === year)
+    .filter((t) => inSel(t.date))
     .filter((t) => (f.type ? f.type === 'income' : true))
     .filter((t) => (f.project ? t.projectId === f.project : true))
     .filter((t) => (f.status ? f.status === 'invoiced' : true))
@@ -253,7 +266,7 @@ export default function Finance() {
     const pById = Object.fromEntries(state.projects.map((p) => [p.id, p.title]))
     const rows = listed.map((t) => [t.date, t.type, pById[t.projectId] || '', t.category, t.description, t.party, t.net, t.vatPct, vatOf(t), grossOf(t), t.status, t.doc, t.docNumber, t.method, t.paidOn, t.notes])
     const csv = [head, ...rows].map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n')
-    download(`finance-${year}.csv`, '\uFEFF' + csv, 'text/csv')
+    download(`finance-${allTime ? 'all-time' : year}.csv`, '\uFEFF' + csv, 'text/csv')
   }
 
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
@@ -267,7 +280,7 @@ export default function Finance() {
   const [bdView, setBdView] = useState('project')
   const monthEntries = [
     ...[...fin.transactions, ...expectedRows]
-      .filter((t) => fiscalYearOf(t.date, fiscalStart) === year && (t.type === 'expense' || t.status !== 'quoted'))
+      .filter((t) => inSel(t.date) && (t.type === 'expense' || t.status !== 'quoted'))
       .map((t) => ({ date: t.date, key: t.projectId ? pName(t.projectId) || 'Deleted project' : COMPANY, kind: t.type === 'income' ? 'income' : 'expense', amount: Number(t.net || 0) })),
     ...owedYearRows.map((r) => ({ date: r.date, key: r.project.title, kind: 'owed', amount: r.net })),
   ]
@@ -280,7 +293,7 @@ export default function Finance() {
             <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
         </div>
-        <Select className="compact" value={year} onChange={(e) => setYear(Number(e.target.value))} options={[...new Set([...years, new Date().getFullYear()])].sort((a, b) => b - a).map((y) => [y, fyLabel(y)])} />
+        <Select className="compact" value={year} onChange={(e) => setYear(e.target.value === 'all' ? 'all' : Number(e.target.value))} options={[...[...new Set([...years, new Date().getFullYear()])].sort((a, b) => b - a).map((y) => [y, fyLabel(y)]), ['all', 'All time']]} />
         <Button variant="ghost" onClick={() => setDraft(emptyTx('income', { vatPct: fin.settings.vatDefault }))}>Add income</Button>
         <Button variant="primary" onClick={() => setDraft(emptyTx('expense', { vatPct: fin.settings.vatDefault }))}>Add expense</Button>
       </PageHead>
@@ -297,11 +310,11 @@ export default function Finance() {
           <div className="fin-hero">
             <div className="fin-card">
               {/* Alex: "Income", and the number alone, no line underneath splitting it */}
-              <div className="fin-label">Income {year}</div>
+              <div className="fin-label">Income {yearText}</div>
               <div className="fin-value">{money(incomeAll, cur)}</div>
             </div>
             <div className={`fin-card ${profitAll < 0 ? 'neg' : 'pos'}`}>
-              <div className="fin-label">Profit {year}</div>
+              <div className="fin-label">Profit {yearText}</div>
               <div className="fin-value">{money(profitAll, cur)}</div>
             </div>
             <div className="fin-card">
@@ -315,15 +328,15 @@ export default function Finance() {
           </div>
 
           <section className="panel">
-            <div className="panel-head"><h2>Month by month {year}</h2><span className="muted small">VAT balance for the year: {money(S.vatBalance, cur)} ({money(S.vatIn, cur)} collected, {money(S.vatOut, cur)} paid)</span></div>
-            <div className="fin-months">
-              {S.months.map((m, i) => (
-                <div key={m.key} className="fin-month" title={`${MONTHS[i]}: ${money(m.income, cur)} in, ${money(m.expense, cur)} out`}>
+            <div className="panel-head"><h2>{allTime ? 'Year by year' : `Month by month ${yearText}`}</h2><span className="muted small">VAT balance {allTime ? 'over all time' : 'for the year'}: {money(S.vatBalance, cur)} ({money(S.vatIn, cur)} collected, {money(S.vatOut, cur)} paid)</span></div>
+            <div className="fin-months" style={allTime ? { gridTemplateColumns: `repeat(${bars.length}, minmax(0, 120px))`, justifyContent: 'space-around' } : undefined}>
+              {bars.map((m) => (
+                <div key={m.key} className="fin-month" title={`${m.label}: ${money(m.income, cur)} in, ${money(m.expense, cur)} out`}>
                   <div className="fin-bars">
                     <div className="fin-bar in" style={{ height: `${(m.income / maxMonth) * 100}%` }} />
                     <div className="fin-bar out" style={{ height: `${(m.expense / maxMonth) * 100}%` }} />
                   </div>
-                  <div className="fin-month-label">{MONTHS[i]}</div>
+                  <div className="fin-month-label">{m.label}</div>
                   <div className={`fin-month-net small ${m.income - m.expense < 0 ? 'over' : ''}`}>{m.income || m.expense ? money(m.income - m.expense, cur) : ''}</div>
                 </div>
               ))}

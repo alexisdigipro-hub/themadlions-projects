@@ -63,7 +63,9 @@ Each PR body has the detail and the tests; this is the map.
 - **My work is now My Finance** in the sidebar, the phone bar, the page title and the texts that name it; the route stays `/mywork`, the data note "From My work" on budget-made jobs is left as is.
 - **Database in the side menu** per person: `permissions.databasePage = 'hide'`, `seesDatabase(user)` in store.jsx, used by the sidebar and the Database page. Default shown. A menu choice, not a lock (library rows are readable by every member because a project's tab adds from them).
 
-**Alex still to do:** merge the PR of this batch. Nothing to run in Supabase.
+- **Finance: All time** in the year picker (`year === 'all'`, `inSel(date)` replaces every year test in Finance.jsx, `summarize` gets `year: null`); the bars become Year by year. Team work keeps its own year tabs.
+
+**Alex still to do:** merge #197. Nothing to run in Supabase.
 **Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
 
 ### Calendar feeds: read less often, and one switch over the lot (7 Oct)
