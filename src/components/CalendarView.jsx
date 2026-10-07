@@ -34,7 +34,9 @@ export default function CalendarView({ projectId = null, title }) {
   // page is opened many times a day and Google starts refusing a calendar that is read that
   // often. Refresh feeds is the way to insist.
   const loadFeeds = (fresh = false) => {
-    if (!feeds.length || projectId) return
+    // Switched off in Settings, or none left: drop what the last read put on the page, or its
+    // notice sits there over a calendar that is no longer showing any of it.
+    if (!feeds.length || projectId) { setFeedText({}); setFeedErrors([]); return }
     setFeedBusy(true)
     setFeedErrors([])
     Promise.all(feeds.map((f) => readFeedText(f, { fresh }).then((r) => ({ id: f.id, ...r }))))

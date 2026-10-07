@@ -9,7 +9,10 @@ import { SUPABASE_KEY, SUPABASE_URL } from './supabaseConfig.js'
 export const FEED_COLOR = '#6C9BD1'
 /* Settings > Integrations > Calendar feeds: [{ id, name, url, color, off }] */
 export const feedsOf = (settings) => (settings?.calendarFeeds || []).filter((f) => f && f.url)
-export const liveFeeds = (settings) => feedsOf(settings).filter((f) => !f.off)
+/* `calendarFeedsOff` is the one switch over all of them: the Calendar page then reads nothing,
+   draws nothing and says nothing, while the addresses stay where they are. */
+export const feedsAreOff = (settings) => settings?.calendarFeedsOff === true
+export const liveFeeds = (settings) => (feedsAreOff(settings) ? [] : feedsOf(settings).filter((f) => !f.off))
 
 /* ---------------------------------------------------------------- parsing */
 
