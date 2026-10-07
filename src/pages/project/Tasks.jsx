@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { departmentsOf, today, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
@@ -116,7 +116,11 @@ export function DeptChips({ tasks, dept, setDept, filter = 'open' }) {
   )
 }
 
-export default function Tasks() {
+/* On the project Overview an empty panel is noise, so it is asked to keep quiet until there is
+   something in it: `hideEmpty` draws nothing while the project has no tasks, and `startSignal`
+   (a counter the Overview bumps) opens the new-task form from a button out there. The Tasks tab
+   itself passes neither and is unchanged. */
+export default function Tasks({ hideEmpty = false, startSignal = 0 }) {
   const { project, edit, canEdit } = useProject()
   const { state, update } = useStore()
   const me = useCurrentUser()
@@ -128,6 +132,8 @@ export default function Tasks() {
   const tasks = project.tasks || []
 
   const people = useMemo(() => [...new Set([...state.users.map((u) => u.name), ...project.contacts.map((c) => c.name)])].filter(Boolean), [state.users, project.contacts])
+
+  useEffect(() => { if (startSignal) setDraft(emptyTask({ projectId: project.id })) }, [startSignal]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Tell the assignee, but only when the task actually lands on someone new, and never yourself.
   const notifyAssignee = (next, before, where) => {
@@ -170,7 +176,17 @@ export default function Tasks() {
   const open = tasks.filter((t) => t.status !== 'done').length
   const overdue = tasks.filter((t) => t.status !== 'done' && t.due && t.due < today()).length
 
+  // Nothing to show yet: the form still has to be here, or the Add task button out on the
+  // Overview would open nothing.
+  if (hideEmpty && !tasks.length) {
+    return draft ? <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} people={people} /> : null
+  }
+
+  // On the Overview the panel is this component's own, so saving the first task does not move
+  // it to a different place in the page and remount it mid-save.
+  const Wrap = hideEmpty ? 'section' : Fragment
   return (
+    <Wrap {...(hideEmpty ? { className: 'panel' } : {})}>
     <div className="tasks">
       <div className="toolbar">
         <div className="toolbar-info">
@@ -201,5 +217,6 @@ export default function Tasks() {
 
       {draft && <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} people={people} />}
     </div>
+    </Wrap>
   )
 }
