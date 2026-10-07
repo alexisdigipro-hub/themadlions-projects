@@ -4,6 +4,7 @@ import MiniCalendar from './MiniCalendar.jsx'
 import { EVENT_TYPES, can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { addDays, buildICS, download, fmtDate, holidayName, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
 import { gcalDelete, gcalOn, gcalPull, gcalUpsert, reconcilePulledEvents } from '../lib/googleCalendar.js'
+import { FEED_COLOR, fetchFeedText, liveFeeds, parseIcs } from '../lib/ical.js'
 
 export default function CalendarView({ projectId = null, title }) {
   const { state, update } = useStore()
@@ -13,7 +14,7 @@ export default function CalendarView({ projectId = null, title }) {
   // Days off are an administrator's call now: they set them for whoever is away, not each
   // person for themselves. Everything else still follows the calendar edit permission.
   const isAdmin = user?.role === 'admin'
-  const canEditDraft = (d) => (d?.type === 'unavailable' ? isAdmin : editable)
+  const canEditDraft = (d) => (d?.feed ? false : d?.type === 'unavailable' ? isAdmin : editable)
   const team = state.users.filter((u) => u.active !== false)
   const now = new Date()
   const [ym, setYm] = useState({ y: now.getFullYear(), m: now.getMonth() })
@@ -22,6 +23,34 @@ export default function CalendarView({ projectId = null, title }) {
   const [projFilter, setProjFilter] = useState('all')
   const mobile = useIsMobile()
   const [syncing, setSyncing] = useState(false)
+  // Read-only calendar feeds (Settings > Integrations). The file is fetched once per visit and
+  // kept as text, so moving between months re-reads it without going back to the network.
+  const feeds = liveFeeds(state.settings)
+  const feedKey = feeds.map((f) => `${f.id}:${f.url}`).join('|')
+  const [feedText, setFeedText] = useState({})
+  const [feedErrors, setFeedErrors] = useState([])
+  const [feedBusy, setFeedBusy] = useState(false)
+  const loadFeeds = () => {
+    if (!feeds.length || projectId) return
+    setFeedBusy(true)
+    setFeedErrors([])
+    Promise.all(feeds.map((f) => fetchFeedText(f.url).then((text) => ({ id: f.id, text })).catch((e) => ({ id: f.id, error: `${f.name || 'Calendar feed'}: ${e.message}` }))))
+      .then((rows) => {
+        setFeedText(Object.fromEntries(rows.filter((r) => r.text !== undefined).map((r) => [r.id, r.text])))
+        setFeedErrors(rows.map((r) => r.error).filter(Boolean))
+      })
+      .finally(() => setFeedBusy(false))
+  }
+  useEffect(loadFeeds, [feedKey, projectId])
+  // A year either side of the month on screen: enough for a repeating event to be worked out
+  // without walking a calendar's whole history.
+  const feedEvents = useMemo(() => {
+    if (projectId) return []
+    const from = `${ym.y - 1}-01-01`, to = `${ym.y + 1}-12-31`
+    return feeds.flatMap((f) => (feedText[f.id] ? parseIcs(feedText[f.id], { from, to, feed: f }) : []))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedText, feedKey, ym.y, projectId])
+
   const synced = gcalOn(state.settings)
   const calendarId = state.settings.googleCalendarId
 
@@ -29,14 +58,16 @@ export default function CalendarView({ projectId = null, title }) {
   const allowedIds = new Set(projects.map((p) => p.id))
   const events = useMemo(
     () =>
-      state.events.filter((e) => {
+      [...state.events, ...feedEvents].filter((e) => {
         if (projectId && e.projectId !== projectId) return false
         if (!projectId && e.projectId && !allowedIds.has(e.projectId)) return false
-        if (typeFilter !== 'all' && e.type !== typeFilter) return false
+        // "feed:<id>" picks one calendar feed; the other values are ordinary event types
+        if (typeFilter.startsWith('feed:')) { if (e.feedId !== typeFilter.slice(5)) return false }
+        else if (typeFilter !== 'all' && e.type !== typeFilter) return false
         if (!projectId && projFilter !== 'all' && (e.projectId || 'none') !== projFilter) return false
         return true
       }),
-    [state.events, projectId, typeFilter, projFilter, allowedIds]
+    [state.events, feedEvents, projectId, typeFilter, projFilter, allowedIds]
   )
   const byDate = useMemo(() => {
     const m = {}
@@ -113,6 +144,11 @@ export default function CalendarView({ projectId = null, title }) {
   }, [synced, calendarId])
 
   const typeOf = (k) => EVENT_TYPES.find((t) => t.key === k) || EVENT_TYPES[0]
+  const feedById = Object.fromEntries(feeds.map((f) => [f.id, f]))
+  const colorOf = (e) => (e.feed ? feedById[e.feedId]?.color || FEED_COLOR : typeOf(e.type).color)
+  const labelOf = (e) => (e.feed ? e.feedName || 'Calendar feed' : typeOf(e.type).label)
+  // the legend and the type filter list the feeds after the app's own kinds
+  const legendTypes = projectId ? EVENT_TYPES : [...EVENT_TYPES, ...feeds.map((f) => ({ key: `feed:${f.id}`, label: f.name || 'Calendar feed', color: f.color || FEED_COLOR }))]
   const projName = (id) => state.projects.find((p) => p.id === id)?.title || ''
 
   return (
@@ -129,7 +165,7 @@ export default function CalendarView({ projectId = null, title }) {
         <div className="toolbar-actions">
           <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
             <option value="all">All types</option>
-            {EVENT_TYPES.map((t) => (
+            {legendTypes.map((t) => (
               <option key={t.key} value={t.key}>
                 {t.label}
               </option>
@@ -153,9 +189,12 @@ export default function CalendarView({ projectId = null, title }) {
             </Button>
           )}
           {synced && !projectId && (
-            <Button variant="ghost" onClick={pull} disabled={syncing}>
+            <Button variant="ghost" onClick={() => { pull(); loadFeeds() }} disabled={syncing}>
               {syncing ? 'Syncing…' : 'Sync now'}
             </Button>
+          )}
+          {!synced && !!feeds.length && !projectId && (
+            <Button variant="ghost" onClick={loadFeeds} disabled={feedBusy}>{feedBusy ? 'Reading…' : 'Refresh feeds'}</Button>
           )}
           {canMarkOff && (
             <Button onClick={() => setDraft(newEvent(today(), 'unavailable'))}>
@@ -170,12 +209,14 @@ export default function CalendarView({ projectId = null, title }) {
         </div>
       </div>
 
+      {feedErrors.map((err) => <p key={err} className="notice">{err}</p>)}
+
       <div className="cal-layout stacked">
         {mobile ? (
           <div className="panel cal-mobile">
             <MiniCalendar
               large
-              items={events.map((e) => ({ date: e.date, endDate: e.endDate, time: e.start, color: typeOf(e.type).color, title: e.type === 'unavailable' ? `${personLabel(e)} not available` : e.title, sub: [e.start, !projectId && e.projectId ? projName(e.projectId) : '', e.type !== 'unavailable' ? typeOf(e.type).label : ''].filter(Boolean).join(' · '), ev: e }))}
+              items={events.map((e) => ({ date: e.date, endDate: e.endDate, time: e.start, color: colorOf(e), title: e.type === 'unavailable' ? `${personLabel(e)} not available` : e.title, sub: [e.start, !projectId && e.projectId ? projName(e.projectId) : '', e.type !== 'unavailable' ? labelOf(e) : ''].filter(Boolean).join(' · '), ev: e }))}
               onItemClick={(e) => setDraft({ ...e })}
               onAddDay={editable ? (d) => setDraft(newEvent(d)) : canMarkOff ? (d) => setDraft(newEvent(d, 'unavailable')) : null}
               addLabel={editable ? 'Add event' : 'Not available'}
@@ -207,7 +248,7 @@ export default function CalendarView({ projectId = null, title }) {
                     <button
                       key={e.id}
                       className="cal-ev"
-                      style={{ '--ev': typeOf(e.type).color }}
+                      style={{ '--ev': colorOf(e) }}
                       onClick={(ev) => {
                         ev.stopPropagation()
                         setDraft({ ...e })
@@ -230,7 +271,7 @@ export default function CalendarView({ projectId = null, title }) {
           {/* the legend doubles as a filter: click a type to show only it on the grid above, click it
               again for all types. Same state the "All types" dropdown uses, so the two stay in sync. */}
           <div className="cal-legend">
-            {EVENT_TYPES.map((t) => (
+            {legendTypes.map((t) => (
               <button
                 key={t.key}
                 type="button"
@@ -271,7 +312,9 @@ export default function CalendarView({ projectId = null, title }) {
       >
         {draft && (
           <div className="stack">
-            {draft.createdByName && <p className="muted small">Added by {draft.createdByName}</p>}
+            {draft.feed
+              ? <p className="muted small">From <b>{draft.feedName}</b>, a calendar this app only reads. Change it in that calendar.</p>
+              : draft.createdByName && <p className="muted small">Added by {draft.createdByName}</p>}
             {draft.type === 'unavailable' ? (
               <Field label="Who is not available" hint="Their photo goes grey on Home for these days.">
                 <Select
@@ -286,7 +329,7 @@ export default function CalendarView({ projectId = null, title }) {
                 <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} autoFocus disabled={!canEditDraft(draft)} />
               </Field>
             )}
-            <div className="row-2">
+            <div className="row-2" hidden={!!draft.feed}>
               <Field label="Type">
                 <Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={EVENT_TYPES.filter((t) => (t.key !== 'google' || draft.type === 'google') && (t.key !== 'unavailable' || isAdmin)).map((t) => [t.key, t.label])} disabled={!canEditDraft(draft)} />
               </Field>

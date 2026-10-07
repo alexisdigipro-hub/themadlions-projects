@@ -7,6 +7,7 @@ import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/bu
 import { fmtBytes, snapshotSummary, snapshotToState } from '../lib/backups.js'
 import { authorizeUrl, clearOauth, pcloudPing, redirectUri, takeOauth } from '../lib/pcloud.js'
 import { authorizeUrl as gcalAuthorizeUrl, clearOauthCode, gcalCalendars, gcalConnect, redirectUri as gcalRedirectUri, takeOauthCode } from '../lib/googleCalendar.js'
+import { FEED_COLOR, feedsOf, fetchFeedText, parseIcs } from '../lib/ical.js'
 import { CHAT_DEFAULTS, chime, loadChatPrefs, saveChatPrefs } from '../lib/chatPrefs.js'
 import { FONTS, applyFont, currentFont, ensureFontLoaded } from '../lib/fonts.js'
 import Usage from '../components/Usage.jsx'
@@ -444,6 +445,14 @@ export default function Settings() {
 
         {isAdmin && remote && (
           <section className="panel" data-tab="integrations">
+            <h2>Calendar feeds</h2>
+            <p className="muted small">Other calendars shown on the Calendar page, read only: a Google Calendar of another account, a shared one, a festival's. Each keeps its own colour and can be switched off without losing the address. Nothing from here is ever written back, and the app's own events are not sent there. Needs the <code>ical</code> function deployed in Supabase (Edge Functions &rarr; Deploy a new function &rarr; via Editor, name <code>ical</code>, paste <code>supabase/functions/ical/index.ts</code>).</p>
+            <CalendarFeedsPanel toast={toast} />
+          </section>
+        )}
+
+        {isAdmin && remote && (
+          <section className="panel" data-tab="integrations">
             <h2>Google Calendar</h2>
             <p className="muted small">Connects one specific Google Calendar to this workspace: events made here (shoot days, prep, everything on the Calendar page) are pushed there, and events made straight in that Google Calendar show up here too. One shared connection for everyone, the same shape as pCloud: a small function inside Supabase holds the credential, no browser ever sees it except once, when you first connect.</p>
             <GoogleCalendarPanel toast={toast} />
@@ -856,6 +865,82 @@ function PcloudPanel({ toast }) {
 /* Settings > Integrations > Google Calendar: connect once (code exchanged for a refresh token,
    shown once for copying into the function's secrets, same spirit as pCloud's token), then pick
    which of that account's calendars this workspace talks to. */
+/* Settings > Integrations > Calendar feeds: published .ics addresses the Calendar page reads. */
+const PALETTE = ['#6C9BD1', '#5B9E7A', '#B07FD1', '#E08A5A', '#4FB3BF', '#C8503F', '#D9A441', '#9AA0A6']
+function CalendarFeedsPanel({ toast }) {
+  const { state, update } = useStore()
+  const feeds = feedsOf(state.settings)
+  const [draft, setDraft] = useState(null)
+  const [testing, setTesting] = useState(false)
+  const save = (list) => update((s) => { s.settings = { ...s.settings, calendarFeeds: list }; return s })
+  const patch = (id, change) => save(feeds.map((f) => (f.id === id ? { ...f, ...change } : f)))
+  const add = () => {
+    const url = (draft.url || '').trim()
+    if (!url) return toast('Paste the calendar address.', 'error')
+    if (feeds.some((f) => f.url === url)) return toast('That calendar is already on the list.', 'error')
+    save([...feeds, { id: uid(), name: (draft.name || '').trim() || 'Calendar', url, color: draft.color }])
+    setDraft(null)
+    toast('Calendar added', 'ok')
+  }
+  // Reading it once here says whether the address works before it is saved, and how many events
+  // are in it, rather than finding out from an empty Calendar page.
+  const test = async (url, name) => {
+    setTesting(true)
+    try {
+      const text = await fetchFeedText((url || '').trim())
+      const year = new Date().getFullYear()
+      const events = parseIcs(text, { from: `${year}-01-01`, to: `${year + 1}-12-31` })
+      toast(`${name || 'That calendar'} works: ${events.length} events this year and next.`, 'ok')
+    } catch (e) {
+      toast(e.message, 'error')
+    }
+    setTesting(false)
+  }
+  return (
+    <div className="stack">
+      <ol className="small muted pc-steps">
+        <li>In Google Calendar on a computer, hover the calendar in the left list &rarr; &#8942; &rarr; <b>Settings and sharing</b>.</li>
+        <li>Scroll to <b>Integrate calendar</b> and copy the <b>Secret address in iCal format</b> (the one ending in <code>/basic.ics</code>).</li>
+        <li>Paste it below, name it, give it a colour. Repeat for each calendar of that account.</li>
+      </ol>
+      {!!feeds.length && (
+        <ul className="plain gcal-list">
+          {feeds.map((f) => (
+            <li key={f.id}>
+              <input type="color" value={f.color || FEED_COLOR} onChange={(e) => patch(f.id, { color: e.target.value })} aria-label={`Colour of ${f.name}`} title="Colour on the Calendar page" />
+              <Input className="grow" value={f.name || ''} onChange={(e) => patch(f.id, { name: e.target.value })} aria-label="Name" />
+              <label className="check" title="Show it on the Calendar page">
+                <input type="checkbox" checked={!f.off} onChange={(e) => patch(f.id, { off: !e.target.checked })} />
+                <span className="small">Show</span>
+              </label>
+              <button className="link small" onClick={() => test(f.url, f.name)} disabled={testing}>Test</button>
+              <Confirm onConfirm={() => save(feeds.filter((x) => x.id !== f.id))} label="Remove">×</Confirm>
+            </li>
+          ))}
+        </ul>
+      )}
+      {draft ? (
+        <>
+          <div className="row-2">
+            <Field label="Name" hint="What it is called in the legend."><Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="Personal" autoFocus /></Field>
+            <Field label="Colour"><input type="color" value={draft.color} onChange={(e) => setDraft({ ...draft, color: e.target.value })} /></Field>
+          </div>
+          <Field label="Secret address in iCal format" hint="Anyone with this address can read that calendar, so treat it like a password.">
+            <Input value={draft.url} onChange={(e) => setDraft({ ...draft, url: e.target.value })} placeholder="https://calendar.google.com/calendar/ical/…/basic.ics" autoComplete="off" />
+          </Field>
+          <div className="row-actions">
+            <Button variant="ghost" onClick={() => setDraft(null)}>Cancel</Button>
+            <Button onClick={() => test(draft.url, draft.name)} disabled={testing || !draft.url.trim()}>{testing ? 'Reading…' : 'Test it'}</Button>
+            <Button variant="primary" onClick={add}>Add calendar</Button>
+          </div>
+        </>
+      ) : (
+        <div className="row-actions"><Button variant="primary" onClick={() => setDraft({ name: '', url: '', color: PALETTE[feeds.length % PALETTE.length] })}>Add a calendar</Button></div>
+      )}
+    </div>
+  )
+}
+
 function GoogleCalendarPanel({ toast }) {
   const { state, update } = useStore()
   const [code] = useState(takeOauthCode)
