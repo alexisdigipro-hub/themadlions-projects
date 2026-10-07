@@ -2180,7 +2180,6 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 .tx-owed td { background: color-mix(in srgb, var(--amber) 9%, transparent); }
 .tx-owed-badge { display: inline-block; font-size: 12.5px; font-weight: 600; color: var(--amber); border: 1px solid color-mix(in srgb, var(--amber) 55%, transparent); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
 .fin-settings { max-width: 720px; }
-.pl-strip { display: flex; flex-wrap: wrap; gap: 8px 22px; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); padding: 10px 14px; margin-bottom: 12px; align-items: baseline; }
 @media (max-width: 1000px) { .fin-hero { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 820px) { .fin-months { gap: 3px; height: 140px; } .fin-month-net { display: none; } .fin-month-label { font-size: 10.5px; } }
 .fin-due { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; }

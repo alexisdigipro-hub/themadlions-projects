@@ -94,9 +94,6 @@ export default function Budget() {
   const contactKind = (id) => (project.contacts || []).find((c) => c.id === id)?.kind
   const toast = useToast()
   const editable = canEdit('budget')
-  const finTx = me?.role === 'admin' ? (state.finance?.transactions || []).filter((t) => t.projectId === project.id) : []
-  const finIn = finTx.filter((t) => t.type === 'income' && t.status !== 'quoted').reduce((a, t) => a + Number(t.net || 0), 0)
-  const finOut = finTx.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.net || 0), 0)
   const budget = project.budget || { lines: [] }
   const [draft, setDraft] = useState(null)
   const [pay, setPay] = useState(null) // line
@@ -173,14 +170,6 @@ export default function Budget() {
           {editable && <Button variant="primary" onClick={() => setDraft({ ...emptyLine(), category: CATEGORIES.includes('Camera') ? 'Camera' : CATEGORIES[0] || '' })}>Add line</Button>}
         </div>
       </div>
-
-      {me?.role === 'admin' && finTx.length > 0 && (
-        <div className="pl-strip no-print">
-          <span><span className="muted">Invoiced</span> <strong>{money(finIn, cur)}</strong></span>
-          <span><span className="muted">Costs booked</span> <strong>{money(finOut, cur)}</strong></span>
-          <span><span className="muted">Profit</span> <strong className={finIn - finOut < 0 ? 'over' : 'under'}>{money(finIn - finOut, cur)}</strong>{finIn ? <span className="muted"> · {Math.round(((finIn - finOut) / finIn) * 100)}%</span> : null}</span>
-        </div>
-      )}
 
       {(editable || budget.cap) && <BudgetCard cap={Number(budget.cap) || 0} total={t.total} spent={t.act} editable={editable} onCap={setCap} />}
 
