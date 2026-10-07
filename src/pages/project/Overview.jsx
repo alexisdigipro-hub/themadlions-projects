@@ -21,7 +21,7 @@ const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: 
    just no sections/lyrics editing, that lives on the Script tab now. Writes to the same
    project.music.tracks the Script page's song map reads, so a track added here shows up there
    too, and the other way round. */
-function SongPlayer({ project, edit, editable }) {
+function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 0 }) {
   const toast = useToast()
   const music = { ...emptyMusic(), ...(project.music || {}) }
   const track = music.tracks.find((t) => t.id === music.activeTrackId) || music.tracks[0]
@@ -48,6 +48,9 @@ function SongPlayer({ project, edit, editable }) {
     a.addEventListener('timeupdate', onTime); a.addEventListener('play', onPlay); a.addEventListener('pause', onPause); a.addEventListener('ended', onPause)
     return () => { a.removeEventListener('timeupdate', onTime); a.removeEventListener('play', onPlay); a.removeEventListener('pause', onPause); a.removeEventListener('ended', onPause) }
   }, [url])
+
+  // Upload song out on the Overview opens this panel's own file picker.
+  useEffect(() => { if (startSignal) fileRef.current?.click() }, [startSignal])
 
   const setMusic = (fn) => edit((p) => { p.music = { ...emptyMusic(), ...(p.music || {}) }; fn(p.music) })
   const seek = (t) => { if (audioRef.current) { audioRef.current.currentTime = t; setTime(t) } }
@@ -77,6 +80,11 @@ function SongPlayer({ project, edit, editable }) {
       setBusy('')
       if (fileRef.current) fileRef.current.value = ''
     }
+  }
+
+  // No song yet: the file input still has to exist for that button to reach.
+  if (hideEmpty && !track) {
+    return editable ? <input ref={fileRef} type="file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac" hidden onChange={(e) => onFile(e.target.files?.[0])} /> : null
   }
 
   return (
@@ -146,6 +154,19 @@ export default function Overview() {
   }
 
   const { pct, stages } = projectProgress(project, state.settings)
+  // Alex: an empty Tasks / Song / Links / Production notes panel is just a box saying nothing.
+  // Each one keeps quiet until it has something in it, and its button lives in one row up here
+  // instead. Pressing a button bumps a counter the panel watches, so it opens its own form.
+  const [start, setStart] = useState({ task: 0, song: 0, link: 0, notes: 0 })
+  const begin = (k) => setStart((s0) => ({ ...s0, [k]: s0[k] + 1 }))
+  const isMusicVideo = project.category === 'Music Video'
+  const hasSong = !!(project.music?.tracks || []).length
+  const adds = [
+    can(user, 'tasks') && canEdit('tasks') && !(project.tasks || []).length && ['task', 'Add task'],
+    isMusicVideo && can(user, 'music') && canEdit('music') && !hasSong && ['song', 'Upload song'],
+    can(user, 'files') && canEdit('files') && !(project.links || []).length && ['link', 'Add link'],
+    can(user, 'files') && canEdit('files') && !(project.productionNotes || '').trim() && ['notes', 'Add notes'],
+  ].filter(Boolean)
   const coverRef = useRef()
   const setCover = async (file) => {
     if (!file) return
@@ -211,16 +232,20 @@ export default function Overview() {
         </div>
       </section>
 
-      {can(user, 'tasks') && (
-        <section className="panel">
-          <Tasks />
-        </section>
+      {adds.length > 0 && (
+        <div className="ov-adds">
+          {adds.map(([k, label]) => (
+            <Button key={k} variant="ghost" onClick={() => begin(k)}>{label}</Button>
+          ))}
+        </div>
       )}
 
-      {project.category === 'Music Video' && can(user, 'music') && <SongPlayer project={project} edit={edit} editable={canEdit('music')} />}
+      {can(user, 'tasks') && <Tasks hideEmpty startSignal={start.task} />}
+
+      {isMusicVideo && can(user, 'music') && <SongPlayer project={project} edit={edit} editable={canEdit('music')} hideEmpty startSignal={start.song} />}
 
       {/* Files & Notes used to be its own tab; links and production notes moved here, Files was dropped */}
-      {can(user, 'files') && <Notes />}
+      {can(user, 'files') && <Notes hideEmpty startLink={start.link} startNotes={start.notes} />}
 
       <Modal
         open={!!draft}

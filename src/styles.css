@@ -2361,6 +2361,9 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 .cover-pick { display: grid; grid-template-columns: 120px 1fr auto; gap: 10px; align-items: center; }
 .cover-pick img { width: 120px; aspect-ratio: 16 / 10; object-fit: cover; border-radius: var(--radius); }
 .overview { display: flex; flex-direction: column; gap: 20px; }
+/* The buttons for the Overview panels that have nothing in them yet, so an empty Tasks, Song,
+   Links or Production notes card does not take up the page just to say it is empty. */
+.ov-adds { display: flex; flex-wrap: wrap; gap: 8px; }
 /* Script now also carries Breakdown, and for a Music Video the song map, each framed as its own
    card instead of their old separate tabs. */
 .script-page { display: flex; flex-direction: column; gap: 20px; }
