@@ -2430,7 +2430,17 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 .project-progress span { display: block; height: 100%; background: var(--pc); }
 .project-head-cover { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; float: left; margin-right: 12px; }
 .cover-pick { display: grid; grid-template-columns: 120px 1fr auto; gap: 10px; align-items: center; }
-.cover-pick img { width: 120px; aspect-ratio: 16 / 10; object-fit: cover; border-radius: var(--radius); }
+.cover-pick img { width: 120px; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius); }
+.cover-links { display: inline-flex; gap: 12px; flex-wrap: wrap; }
+/* Cover crop: a square frame, the picture moved and scaled behind it */
+.cover-crop { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.cover-crop-frame { position: relative; width: min(360px, 100%); aspect-ratio: 1; overflow: hidden; border-radius: var(--radius); background: var(--raised); cursor: grab; user-select: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 1px var(--line); }
+.cover-crop-frame:active { cursor: grabbing; }
+.cover-crop-frame img { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; pointer-events: none; }
+.cover-crop-frame::after { content: ''; position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(to right, rgba(255,255,255,.28) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.28) 1px, transparent 1px); background-size: 33.333% 33.333%; background-position: -1px -1px; }
+.cover-crop-tools { display: flex; align-items: center; gap: 10px; width: min(360px, 100%); }
+.cover-crop-tools input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); }
+.cover-crop > p { margin: 0; text-align: center; }
 .overview { display: flex; flex-direction: column; gap: 20px; }
 /* The buttons for the cards on a tab that have nothing in them yet, so an empty card does not
    take up the page just to say it is empty. Overview, Project Database, Script, Shot list and

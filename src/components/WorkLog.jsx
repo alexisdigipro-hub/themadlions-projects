@@ -112,15 +112,19 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
   const [draft, setDraft] = useState(null)
   const [filter, setFilter] = useState('all')
   const fileRef = useRef(null)
-  const list = all.filter((e) => (e.date || '').startsWith(year)).filter((e) => filter === 'all' || (filter === 'paid' ? e.status === 'paid' : e.status !== 'paid'))
-  const yearList = all.filter((e) => (e.date || '').startsWith(year))
+  // 'all' is All time (Alex): every year together, the cards adding them all up
+  const allTime = year === 'all'
+  const yearText = allTime ? 'all time' : year
+  const inSel = (e) => allTime || (e.date || '').startsWith(year)
+  const list = all.filter(inSel).filter((e) => filter === 'all' || (filter === 'paid' ? e.status === 'paid' : e.status !== 'paid'))
+  const yearList = all.filter(inSel)
   const tot = entryTotals(yearList)
   const projects = visibleProjects(state, me)
 
   const byMonth = useMemo(() => {
     const m = {}
     for (const e of [...list].sort((a, b) => (b.date || '').localeCompare(a.date || ''))) {
-      const k = (e.date || '').slice(5, 7)
+      const k = (e.date || '').slice(0, 7) // year and month, so All time keeps Octobers of different years apart
       ;(m[k] = m[k] || []).push(e)
     }
     return Object.entries(m).sort((a, b) => b[0].localeCompare(a[0]))
@@ -153,7 +157,7 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
       return s
     })
     if (tieTo) toast(`Tied to the fee the production entered in the ${tieTo.project.title} budget.`, 'ok')
-    if (!years.includes(e.date.slice(0, 4))) setYear(e.date.slice(0, 4))
+    if (!allTime && !years.includes(e.date.slice(0, 4))) setYear(e.date.slice(0, 4))
     setDraft(null)
     claimBudget(e)
   }
@@ -239,7 +243,7 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
   const exportCsv = () => {
     const rows = [['Status', 'Client', 'Description', 'Pending', 'Paid', 'Date', 'Paid on', 'Method', 'Notes']]
     ;[...yearList].sort((a, b) => (a.date || '').localeCompare(b.date || '')).forEach((e) => rows.push([e.status === 'paid' ? 'Paid' : 'Pending', e.client, e.description, e.status === 'paid' ? '' : e.amount, e.status === 'paid' ? e.amount : '', e.date, e.paidDate, e.method, e.notes]))
-    download(`work-${year}.csv`, rows.map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n'), 'text/csv')
+    download(`work-${allTime ? 'all-time' : year}.csv`, rows.map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n'), 'text/csv')
   }
 
   return (
@@ -248,13 +252,14 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
       {showHero && (
         <div className="wl-hero">
           <div className="wl-card pend"><span className="wl-label">Pending</span><strong>{money2(tot.pending)}</strong><small>{tot.open} job{tot.open === 1 ? '' : 's'} unpaid</small></div>
-          <div className="wl-card paid"><span className="wl-label">Paid</span><strong>{money2(tot.paid)}</strong><small>in {year}</small></div>
-          <div className="wl-card"><span className="wl-label">Total {year}</span><strong>{money2(tot.total)}</strong><small>{tot.jobs} job{tot.jobs === 1 ? '' : 's'}</small></div>
+          <div className="wl-card paid"><span className="wl-label">Paid</span><strong>{money2(tot.paid)}</strong><small>{allTime ? 'all time' : `in ${year}`}</small></div>
+          <div className="wl-card"><span className="wl-label">Total {yearText}</span><strong>{money2(tot.total)}</strong><small>{tot.jobs} job{tot.jobs === 1 ? '' : 's'}</small></div>
         </div>
       )}
       <div className="toolbar wl-toolbar">
         <div className="segmented small">
           {[...new Set([thisYear, ...years])].sort().reverse().map((y) => <button key={y} className={year === y ? 'on' : ''} onClick={() => setYear(y)}>{y}</button>)}
+          <button className={allTime ? 'on' : ''} onClick={() => setYear('all')}>All time</button>
         </div>
         <div className="toolbar-actions">
           <div className="segmented small">
@@ -267,7 +272,7 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
       </div>
 
       {!list.length ? (
-        <Empty title={yearList.length ? 'Nothing here' : `No jobs in ${year} yet`}>{yearList.length ? 'Try the other filter.' : editable ? 'Add every shoot or job you did: who it was for, what it was, how much, and whether it has been paid.' : 'Nothing logged for this year.'}</Empty>
+        <Empty title={yearList.length ? 'Nothing here' : allTime ? 'No jobs yet' : `No jobs in ${year} yet`}>{yearList.length ? 'Try the other filter.' : editable ? 'Add every shoot or job you did: who it was for, what it was, how much, and whether it has been paid.' : allTime ? 'Nothing logged yet.' : 'Nothing logged for this year.'}</Empty>
       ) : (
         <div className="wl-months">
           {byMonth.map(([mm, items]) => {
@@ -275,7 +280,7 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
             return (
               <section key={mm} className={`wl-month ${compact ? 'compact' : ''}`}>
                 <header className="wl-month-head">
-                  <h3>{MONTHS_LONG[Number(mm) - 1]}</h3>
+                  <h3>{MONTHS_LONG[Number(mm.slice(5, 7)) - 1]}{allTime || mm.slice(0, 4) !== year ? ` ${mm.slice(0, 4)}` : ''}</h3>
                   <span className="wl-month-sums">{t.pending > 0 && <span className="pend">{money2(t.pending)} pending</span>}{t.paid > 0 && <span className="paid">{money2(t.paid)} paid</span>}</span>
                 </header>
                 <ul className="plain wl-list">
