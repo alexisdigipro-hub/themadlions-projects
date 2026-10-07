@@ -20,10 +20,31 @@ function Logo({ name, subtitle, logo }) {
 }
 
 export default function Layout() {
-  const { state, logout, viewAs, setViewAs, replies } = useStore()
+  const { state, logout, viewAs, setViewAs, replies, sessionId, update } = useStore()
   const user = useCurrentUser()
   const nav = useNavigate()
   const [open, setOpen] = useState(false)
+
+  /* When each person was last in the app, so Alex can see it in Settings > Team. Supabase keeps
+     the real sign-in time in auth.users, which a browser cannot read, so everyone stamps their
+     own member row instead: it goes through the same profile column a member is already allowed
+     to write, so there is no new table and no SQL to run. Once per half hour at most, never
+     while viewing as someone else, and never from a stale render. */
+  const stamped = useRef(false)
+  useEffect(() => {
+    if (stamped.current || viewAs || !sessionId) return
+    const me = state.users.find((u) => u.id === sessionId)
+    if (!me) return
+    stamped.current = true
+    const last = me.profile?.lastSeen
+    if (last && Date.now() - whenMs(last) < 30 * 60 * 1000) return
+    update((s) => {
+      const u = s.users.find((x) => x.id === sessionId)
+      if (u) u.profile = { ...(u.profile || {}), lastSeen: new Date().toISOString() }
+      return s
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, viewAs, state.users.length])
   const [readMap, setReadMap] = useState(loadRead)
   useEffect(() => {
     const h = () => setReadMap(loadRead())

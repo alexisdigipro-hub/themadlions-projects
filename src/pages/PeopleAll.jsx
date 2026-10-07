@@ -98,30 +98,26 @@ export default function PeopleAll({ kind }) {
       ) : view === 'table' ? (
         <div className="table-wrap">
         <table className="table people-table">
-          <thead><tr><th /><th>Name</th><th>{kind === 'cast' ? 'Type' : 'Department · role'}</th><th>Phone</th><th>Email</th><th>Projects</th>{editable && <th />}</tr></thead>
+          {/* Alex: the list of projects someone worked on made every row a different height and
+              threw the columns out. It is in the person's own card (tap the name) instead. */}
+          <thead><tr><th /><th>Name</th><th>{kind === 'cast' ? 'Type' : 'Department · role'}</th><th>Phone</th><th>Email</th>{editable && <th />}</tr></thead>
           <tbody>
-            {list.map((c) => {
-              const used = contactProjects(projects, c.id)
-              return (
+            {list.map((c) => (
                 <tr key={c.id}>
                   <td><button className="avatar" onClick={() => setDetailFor(c.id)} aria-label="Details">{c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}</button></td>
                   <td><button className="name-link" onClick={() => setDetailFor(c.id)}><strong>{c.name}</strong></button>{c.agent && <div className="muted small">Agent: {c.agent}</div>}</td>
                   <td className="small">{c.kind === 'cast' ? c.role : `${c.dept}${c.role ? ` · ${c.role}` : ''}`}</td>
                   <td className="small">{showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</td>
                   <td className="small">{showContacts && c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</td>
-                  <td className="small person-projects">{used.map((p) => <Link key={p.id} to={`/p/${p.id}/people`} style={{ '--pc': p.color }}>{p.title}</Link>)}</td>
                   {editable && <td className="row-actions"><button onClick={() => setDraft({ ...c })}>Edit</button><Confirm onConfirm={() => remove(c)} label="Delete">×</Confirm></td>}
                 </tr>
-              )
-            })}
+            ))}
           </tbody>
         </table>
         </div>
       ) : (
         <div className="people-grid compact">
-          {list.map((c) => {
-            const used = contactProjects(projects, c.id)
-            return (
+          {list.map((c) => (
               <article key={c.id} className="person">
                 <button className="person-photo" onClick={() => setDetailFor(c.id)} aria-label="Details">
                   {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(c.name)}</span>}
@@ -137,9 +133,6 @@ export default function PeopleAll({ kind }) {
                   </div>
                   {c.agent && <div className="small muted">Agent: {c.agent}{c.agentPhone ? ` · ${c.agentPhone}` : ''}</div>}
                   {c.notes && <div className="small muted person-notes">{c.notes}</div>}
-                  <div className="small person-projects">
-                    {used.length ? used.map((p) => <Link key={p.id} to={`/p/${p.id}/people`} style={{ '--pc': p.color }}>{p.title}</Link>) : <span className="muted">Not in a project yet</span>}
-                  </div>
                 </div>
                 {editable && (
                   <div className="row-actions person-actions">
@@ -148,8 +141,7 @@ export default function PeopleAll({ kind }) {
                   </div>
                 )}
               </article>
-            )
-          })}
+          ))}
         </div>
       )}
 

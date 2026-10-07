@@ -1,7 +1,8 @@
 import { Fragment, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Badge, Button, Confirm, Field, Input, Modal, PageHead, Select, useToast } from '../components/ui.jsx'
-import { MODULES, ROLE_PRESETS, accessEnded, defaultPermissions, presetPermissions, uid, useCurrentUser, useStore } from '../lib/store.jsx'
+import { MODULES, ROLE_PRESETS, accessEnded, defaultPermissions, presetPermissions, uid, useCurrentUser, useStore, whenMs } from '../lib/store.jsx'
+import { fmtDate } from '../lib/dates.js'
 import { initialsOf } from './Profile.jsx'
 
 const LEVELS = [
@@ -13,6 +14,21 @@ const LEVELS = [
 /* The Team list lives inside Settings > Team now (Alex), so with `embedded` it draws itself as a
    panel in that grid instead of a page with its own heading. The /team address still works and
    still gives the page, so an old link or a bookmark does not break. */
+/* "3 hours ago" reads faster than a timestamp for the thing Alex actually wants to know, which
+   is whether someone has been in lately. The exact date and time is the cell's tooltip. */
+function lastSeenText(at) {
+  const ms = whenMs(at)
+  if (!ms) return '–'
+  const mins = Math.round((Date.now() - ms) / 60000)
+  if (mins < 2) return 'just now'
+  if (mins < 60) return `${mins} min ago`
+  const hours = Math.round(mins / 60)
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`
+  const days = Math.round(hours / 24)
+  if (days < 8) return `${days} day${days === 1 ? '' : 's'} ago`
+  return fmtDate(new Date(ms).toISOString().slice(0, 10))
+}
+
 export default function Team({ embedded = false }) {
   const { state, update, mode, invites, invite, removeInvite, setViewAs } = useStore()
   const me = useCurrentUser()
@@ -91,6 +107,7 @@ export default function Team({ embedded = false }) {
             <th>Role</th>
             <th>Projects</th>
             <th>Can edit</th>
+            <th>Last seen</th>
             <th />
           </tr>
         </thead>
@@ -118,6 +135,10 @@ export default function Team({ embedded = false }) {
                       .map((m) => m.label)
                       .join(', ') || 'View only'}
               </td>
+              {/* Stamped by each person's own browser when they open the app (Layout), at most
+                  once every half hour, so it reads as "when they were last in" rather than an
+                  exact sign-in time. Blank means not since this started being recorded. */}
+              <td className="small muted" title={u.profile?.lastSeen ? new Date(u.profile.lastSeen).toLocaleString('en-GB') : ''}>{lastSeenText(u.profile?.lastSeen)}</td>
               <td className="row-actions">
                 <Button size="sm" variant="ghost" onClick={() => setDraft({ ...u, password: '' })}>
                   Edit
