@@ -103,20 +103,21 @@ export default function Budget() {
   const [picked, setPicked] = useState([])
   const [bulkPay, setBulkPay] = useState(false)
   const pickedLines = budget.lines.filter((l) => picked.includes(l.id) && payable(l))
+  const openIds = budget.lines.filter(payable).map((l) => l.id)
+  const allPicked = openIds.length > 0 && openIds.every((id) => picked.includes(id))
   const togglePick = (ids, on) => setPicked((p) => (on ? [...new Set([...p, ...ids])] : p.filter((x) => !ids.includes(x))))
   const cur = 'EUR'
   // groups from Settings, plus an "Unlisted" group for lines whose category was removed there
   const BUDGET_GROUPS = useMemo(() => groupPairs(state.settings, budget.lines), [state.settings, budget.lines])
   const CATEGORIES = BUDGET_GROUPS.flatMap(([, cats]) => cats)
 
-  const groups = useMemo(() => {
-    return BUDGET_GROUPS.map(([name, cats]) => {
-      const lines = budget.lines.filter((l) => cats.includes(l.category))
-      const est = lines.reduce((a, l) => a + lineTotal(l), 0)
-      const act = lines.reduce((a, l) => a + Number(l.actual || 0), 0)
-      return { name, lines, est, act }
-    }).filter((g) => g.lines.length)
-  }, [BUDGET_GROUPS, budget.lines])
+  // Alex wants one table, not a section per group. The groups still decide the order, so crew
+  // stays above camera above post the way Settings has them, and a line whose category was
+  // removed there sits at the end under Unlisted.
+  const rows = useMemo(
+    () => BUDGET_GROUPS.flatMap(([, cats]) => budget.lines.filter((l) => cats.includes(l.category))),
+    [BUDGET_GROUPS, budget.lines],
+  )
   const t = budgetTotals(project)
 
   const save = () => {
@@ -162,14 +163,13 @@ export default function Budget() {
   })
   return (
     <div className="budget">
-      <div className="toolbar no-print">
-        <div className="toolbar-info">
-          <strong>{money(t.total, cur)} total</strong>
+      {editable && (
+        <div className="toolbar no-print">
+          <div className="toolbar-actions">
+            <Button variant="primary" onClick={() => setDraft({ ...emptyLine(), category: CATEGORIES.includes('Camera') ? 'Camera' : CATEGORIES[0] || '' })}>Add line</Button>
+          </div>
         </div>
-        <div className="toolbar-actions">
-          {editable && <Button variant="primary" onClick={() => setDraft({ ...emptyLine(), category: CATEGORIES.includes('Camera') ? 'Camera' : CATEGORIES[0] || '' })}>Add line</Button>}
-        </div>
-      </div>
+      )}
 
       {(editable || budget.cap) && <BudgetCard cap={Number(budget.cap) || 0} total={t.total} spent={t.act} editable={editable} onCap={setCap} />}
 
@@ -192,46 +192,35 @@ export default function Budget() {
             </div>
           </header>
 
-          {groups.map((g) => {
-            const open = g.lines.filter(payable).map((l) => l.id)
-            const allOn = open.length > 0 && open.every((id) => picked.includes(id))
-            return (
-            <section key={g.name} className="budget-group">
-              <div className="budget-group-head">
-                <h3>{g.name}</h3>
-                <span>{money(g.est, cur)}{g.act ? <span className="muted"> · spent {money(g.act, cur)}</span> : null}</span>
-              </div>
-              <table className="table budget-table">
-                <thead>
-                  <tr>
-                    {canPay && <th className="pick no-print">{open.length > 0 && <input type="checkbox" checked={allOn} onChange={(e) => togglePick(open, e.target.checked)} aria-label={`Select every unpaid line in ${g.name}`} title="Select every unpaid line here" />}</th>}
-                    <th>Description</th><th>Name</th><th className="num">Amount</th><th>VAT</th><th className="num">Paid</th><th className="num">Balance</th>{editable && <th className="no-print" />}
-                  </tr>
-                </thead>
-                <tbody>
-                  {g.lines.map((l) => (
-                    <tr key={l.id} className={picked.includes(l.id) && payable(l) ? 'picked' : ''}>
-                      {canPay && <td className="pick no-print">{payable(l) && <input type="checkbox" checked={picked.includes(l.id)} onChange={(e) => togglePick([l.id], e.target.checked)} aria-label={`Select ${l.description} to pay`} />}</td>}
-                      <td>{l.description}{l.notes && <div className="muted small">{l.notes}</div>}</td>
-                      <td>{l.vendor}{l.vendor && (l.memberId ? ' (team)' : l.contactId ? ` (${contactKind(l.contactId) || 'crew'})` : l.locationId ? ' (location)' : '')}</td>
-                      <td className="num">{money(lineTotal(l), cur)}</td>
-                      <td className="muted small">{Number(l.vatPct) > 0 && <span title={`${money(lineEstimate(l), cur)} + ${l.vatPct}% VAT`}>VAT included</span>}</td>
-                      <td className="num">{l.payments?.length ? money(linePaid(l), cur) : l.actual !== '' && l.actual != null && Number(l.actual) ? money(l.actual, cur) : ''}</td>
-                      <td className={`num ${l.payments?.length && lineBalance(l) > 0 ? 'over' : ''}`}>{l.payments?.length ? (lineBalance(l) > 0 ? money(lineBalance(l), cur) : <span className="under">settled</span>) : ''}</td>
-                      {editable && (
-                        <td className="row-actions no-print">
-                          {me?.role === 'admin' && lineEstimate(l) > 0 && lineBalance(l) > 0 && <button onClick={() => setPay(l)}>Pay</button>}
-                          <button onClick={() => setDraft({ ...l })}>Edit</button>
-                          <Confirm onConfirm={() => remove(l.id)} label="Delete">×</Confirm>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </section>
-            )
-          })}
+          <table className="table budget-table">
+            <thead>
+              <tr>
+                {canPay && <th className="pick no-print">{openIds.length > 0 && <input type="checkbox" checked={allPicked} onChange={(e) => togglePick(openIds, e.target.checked)} aria-label="Select every unpaid line" title="Select every unpaid line" />}</th>}
+                <th>Category</th><th>Description</th><th>Name</th><th className="num">Amount</th><th>VAT</th><th className="num">Paid</th><th className="num">Balance</th>{editable && <th className="no-print" />}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((l) => (
+                <tr key={l.id} className={picked.includes(l.id) && payable(l) ? 'picked' : ''}>
+                  {canPay && <td className="pick no-print">{payable(l) && <input type="checkbox" checked={picked.includes(l.id)} onChange={(e) => togglePick([l.id], e.target.checked)} aria-label={`Select ${l.description} to pay`} />}</td>}
+                  <td className="muted small budget-cat">{l.category}</td>
+                  <td>{l.description}{l.notes && <div className="muted small">{l.notes}</div>}</td>
+                  <td>{l.vendor}{l.vendor && (l.memberId ? ' (team)' : l.contactId ? ` (${contactKind(l.contactId) || 'crew'})` : l.locationId ? ' (location)' : '')}</td>
+                  <td className="num">{money(lineTotal(l), cur)}</td>
+                  <td className="muted small">{Number(l.vatPct) > 0 && <span title={`${money(lineEstimate(l), cur)} + ${l.vatPct}% VAT`}>VAT included</span>}</td>
+                  <td className="num">{l.payments?.length ? money(linePaid(l), cur) : l.actual !== '' && l.actual != null && Number(l.actual) ? money(l.actual, cur) : ''}</td>
+                  <td className={`num ${l.payments?.length && lineBalance(l) > 0 ? 'over' : ''}`}>{l.payments?.length ? (lineBalance(l) > 0 ? money(lineBalance(l), cur) : <span className="under">settled</span>) : ''}</td>
+                  {editable && (
+                    <td className="row-actions no-print">
+                      {me?.role === 'admin' && lineEstimate(l) > 0 && lineBalance(l) > 0 && <button onClick={() => setPay(l)}>Pay</button>}
+                      <button onClick={() => setDraft({ ...l })}>Edit</button>
+                      <Confirm onConfirm={() => remove(l.id)} label="Delete">×</Confirm>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
           <table className="table budget-totals">
             <tbody>
