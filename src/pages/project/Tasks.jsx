@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { departmentsOf, today, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
@@ -73,13 +73,26 @@ export function TaskList({ tasks, onEdit, onStatus, onDelete, editable, showProj
   )
 }
 
-export function TaskModal({ draft, setDraft, onSave, onClose, people }) {
+/* The task form. Wide, with room to read (Alex), and the assignee picked from the team rather
+   than typed: a task is matched to its person by name, so a picked name is one that will match.
+   A task from before this, assigned to someone outside the team (a crew contact), keeps that name
+   as an option so opening it does not quietly drop who it was for. */
+export function TaskModal({ draft, setDraft, onSave, onClose }) {
   const { state } = useStore()
   const TASK_DEPTS = [...new Set([...departmentsOf(state), 'Legal'])]
   const set = (k, v) => setDraft({ ...draft, [k]: v })
+  const team = (state.users || []).filter((u) => u.active !== false && u.name).sort((a, b) => a.name.localeCompare(b.name, ['el', 'en'], { sensitivity: 'base' }))
+  const outside = draft.assignee && !team.some((u) => u.name.trim().toLowerCase() === draft.assignee.trim().toLowerCase())
+  const assigneeOptions = [
+    ['', 'Nobody yet'],
+    ...team.map((u) => [u.name, u.name]),
+    ...(outside ? [[draft.assignee, `${draft.assignee} (not in the team)`]] : []),
+  ]
+  const pickAssignee = (name) => setDraft({ ...draft, assignee: name, assigneeId: team.find((u) => u.name === name)?.id || '' })
   return (
     <Modal
       open
+      wide
       title={draft.title ? 'Edit task' : 'New task'}
       onClose={onClose}
       footer={
@@ -89,20 +102,19 @@ export function TaskModal({ draft, setDraft, onSave, onClose, people }) {
         </>
       }
     >
-      <Field label="Task"><Input autoFocus value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder="Lock the rooftop permit" /></Field>
-      <div className="row-3">
-        <Field label="Assignee">
-          <Input list="task-people" value={draft.assignee} onChange={(e) => set('assignee', e.target.value)} placeholder="Name" />
-          <datalist id="task-people">{people.map((p) => <option key={p} value={p} />)}</datalist>
-        </Field>
-        <Field label="Department"><Select value={draft.dept} onChange={(e) => set('dept', e.target.value)} options={TASK_DEPTS} /></Field>
-        <Field label="Deadline"><Input type="date" value={draft.due} onChange={(e) => set('due', e.target.value)} /></Field>
+      <div className="task-form">
+        <Field label="Task"><Input autoFocus value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder="Lock the rooftop permit" /></Field>
+        <div className="row-2">
+          <Field label="Assignee"><Select value={draft.assignee || ''} onChange={(e) => pickAssignee(e.target.value)} options={assigneeOptions} /></Field>
+          <Field label="Deadline"><Input type="date" value={draft.due} onChange={(e) => set('due', e.target.value)} /></Field>
+        </div>
+        <div className="row-3">
+          <Field label="Department"><Select value={draft.dept} onChange={(e) => set('dept', e.target.value)} options={TASK_DEPTS} /></Field>
+          <Field label="Priority"><Select value={draft.priority} onChange={(e) => set('priority', e.target.value)} options={PRIORITY_OPTIONS} /></Field>
+          <Field label="Status"><Select value={draft.status} onChange={(e) => set('status', e.target.value)} options={TASK_STATUS} /></Field>
+        </div>
+        <Field label="Notes"><Textarea rows={6} value={draft.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Who to call, what was agreed, links" /></Field>
       </div>
-      <div className="row-2">
-        <Field label="Priority"><Select value={draft.priority} onChange={(e) => set('priority', e.target.value)} options={PRIORITY_OPTIONS} /></Field>
-        <Field label="Status"><Select value={draft.status} onChange={(e) => set('status', e.target.value)} options={TASK_STATUS} /></Field>
-      </div>
-      <Field label="Notes"><Textarea rows={3} value={draft.notes} onChange={(e) => set('notes', e.target.value)} /></Field>
     </Modal>
   )
 }
@@ -144,7 +156,6 @@ export default function Tasks({ hideEmpty = false, startSignal = 0 }) {
   const [dept, setDept] = useState('')
   const tasks = tasksFor(project.tasks || [], me)
 
-  const people = useMemo(() => [...new Set([...state.users.map((u) => u.name), ...project.contacts.map((c) => c.name)])].filter(Boolean), [state.users, project.contacts])
 
   useEffect(() => { if (startSignal) setDraft(emptyTask({ projectId: project.id })) }, [startSignal]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -192,7 +203,7 @@ export default function Tasks({ hideEmpty = false, startSignal = 0 }) {
   // Nothing to show yet: the form still has to be here, or the Add task button out on the
   // Overview would open nothing.
   if (hideEmpty && !tasks.length) {
-    return draft ? <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} people={people} /> : null
+    return draft ? <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} /> : null
   }
 
   // On the Overview the panel is this component's own, so saving the first task does not move
@@ -228,7 +239,7 @@ export default function Tasks({ hideEmpty = false, startSignal = 0 }) {
         <TaskList tasks={shown} editable={editable} onEdit={(t) => setDraft({ ...t })} onStatus={setStatus} onDelete={remove} />
       )}
 
-      {draft && <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} people={people} />}
+      {draft && <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} />}
     </div>
     </Wrap>
   )

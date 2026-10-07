@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Button, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
-import { departmentsOf, useCurrentUser, useStore } from '../lib/store.jsx'
+import { departmentsOf, rememberViewAsFrom, useCurrentUser, useStore } from '../lib/store.jsx'
 import { compress } from '../lib/photos.js'
 import { fmtDate } from '../lib/dates.js'
 
@@ -25,8 +25,9 @@ export const canSeeProfileDetails = (viewer, subject) =>
 
 export default function Profile({ mine = false }) {
   const { id } = useParams()
-  const { state, update } = useStore()
+  const { state, update, setViewAs } = useStore()
   const me = useCurrentUser()
+  const nav = useNavigate()
   const toast = useToast()
   const fileRef = useRef(null)
   const [busy, setBusy] = useState(false)
@@ -77,6 +78,15 @@ export default function Profile({ mine = false }) {
   return (
     <div className="profile-page">
       <PageHead title={mine ? 'My profile' : person.name} sub={person.role === 'admin' ? 'Administrator' : 'Team member'}>
+        {/* Alex: from a teammate's profile, open the app exactly as they see it. The same View as
+            Settings > Team has: read-only while it lasts, and Stop comes back to this profile.
+            Not offered for another administrator, who sees everything anyway, or someone whose
+            access is switched off. */}
+        {me?.role === 'admin' && !mine && person.id !== me.id && person.role !== 'admin' && person.active !== false && (
+          <Button variant="ghost" onClick={() => { rememberViewAsFrom(`/u/${person.id}`); setViewAs(person.id); nav('/') }}>
+            See what {(person.name || '').split(' ')[0] || 'they'} sees
+          </Button>
+        )}
         {editable && <Button variant="primary" onClick={save} disabled={busy}>Save profile</Button>}
       </PageHead>
 

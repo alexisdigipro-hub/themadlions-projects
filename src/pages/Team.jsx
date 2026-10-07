@@ -1,7 +1,7 @@
 import { Fragment, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Badge, Button, Confirm, Field, Input, Modal, PageHead, Select, useToast } from '../components/ui.jsx'
-import { MODULES, ROLE_PRESETS, accessEnded, defaultPermissions, presetPermissions, uid, useCurrentUser, useStore, whenMs } from '../lib/store.jsx'
+import { MODULES, ROLE_PRESETS, accessEnded, defaultPermissions, presetPermissions, rememberViewAsFrom, uid, useCurrentUser, useStore, whenMs } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
 import { initialsOf } from './Profile.jsx'
 
@@ -144,7 +144,7 @@ export default function Team({ embedded = false }) {
                   Edit
                 </Button>
                 {u.id !== me.id && u.active !== false && u.role !== 'admin' && (
-                  <Button size="sm" variant="ghost" onClick={() => { setViewAs(u.id); nav('/') }}>
+                  <Button size="sm" variant="ghost" onClick={() => { rememberViewAsFrom('/settings'); setViewAs(u.id); nav('/') }}>
                     View as
                   </Button>
                 )}

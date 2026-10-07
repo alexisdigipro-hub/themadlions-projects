@@ -814,6 +814,14 @@ code {
 .modal-wide {
   width: min(960px, 100%);
 }
+/* The task form (Alex: big enough to read in comfort). Wider than a plain dialog, narrower than
+   the 960 of the wide ones so three selects on a row do not stretch into bars, with more air
+   between the rows and a roomier notes box. */
+.modal-wide:has(.task-form) { width: min(780px, 100%); }
+.task-form { display: flex; flex-direction: column; gap: 6px; }
+.task-form .field { margin-bottom: 10px; }
+.task-form .input, .task-form .select { font-size: 16px; min-height: 44px; }
+.task-form textarea.input { min-height: 140px; }
 .modal-head {
   display: flex;
   justify-content: space-between;

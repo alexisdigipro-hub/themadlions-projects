@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { Suspense, useEffect, useRef, useState } from 'react'
-import { can, useCurrentUser, useStore, whenMs } from '../lib/store.jsx'
+import { can, useCurrentUser, useStore, viewAsReturnPath, whenMs } from '../lib/store.jsx'
 import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
 import { useToast } from './ui.jsx'
@@ -118,7 +118,7 @@ export default function Layout() {
       {viewAs && (
         <div className="viewas-bar" role="status">
           <span>You are looking at the app as <b>{user?.name || 'someone else'}</b>. Nothing can be changed while you do.</span>
-          <button type="button" onClick={() => { setViewAs(''); nav('/settings') }}>Stop</button>
+          <button type="button" onClick={() => { setViewAs(''); nav(viewAsReturnPath()) }}>Stop</button>
         </div>
       )}
       <header className="topbar">

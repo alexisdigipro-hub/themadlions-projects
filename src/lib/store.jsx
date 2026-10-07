@@ -244,6 +244,11 @@ const memberToUser = (m) => ({
 })
 
 const VIEW_AS_KEY = 'tml_view_as'
+/* Where "Stop" on the View as bar goes back to: the page it was started from, a person's profile
+   or Settings > Team, rather than always Settings. Per tab, like View as itself. */
+const VIEW_AS_FROM = 'tml_view_as_from'
+export const rememberViewAsFrom = (path) => { try { sessionStorage.setItem(VIEW_AS_FROM, path) } catch { /* private window */ } }
+export const viewAsReturnPath = () => { try { return sessionStorage.getItem(VIEW_AS_FROM) || '/settings' } catch { return '/settings' } }
 /* Postgres writes a timestamp as ...+00:00 and the browser writes ...Z, so the two never compare
    correctly as text. Everything that asks "is this newer than that" goes through here. */
 export const whenMs = (v) => { const n = Date.parse(v || ''); return Number.isFinite(n) ? n : 0 }
