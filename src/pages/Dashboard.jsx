@@ -112,6 +112,22 @@ export function ProjectForm({ value, onChange }) {
   )
 }
 
+/* The date a project stands for: its Start date when one is set, otherwise its first shoot day,
+   otherwise the day it was created. Sorting by the Start date alone sent every project without
+   one to the bottom of the grid in a heap, which is what Alex saw as the order going wrong. */
+export const projectDate = (p) =>
+  p.startDate
+  || (p.shootingDays || []).map((d) => d.date).filter(Boolean).sort()[0]
+  || (p.createdAt || '').slice(0, 10)
+
+/* Home's two orders. Date: newest first, ties broken by the last change so the order does not
+   flicker. Name: A to Z, Greek and Latin each in their own alphabet, accents ignored, numbers
+   read as numbers so "Part 2" comes before "Part 10". */
+export const SORTS = {
+  date: (a, b) => projectDate(b).localeCompare(projectDate(a)) || (b.updatedAt || '').localeCompare(a.updatedAt || ''),
+  name: (a, b) => (a.title || '').localeCompare(b.title || '', ['el', 'en'], { sensitivity: 'base', numeric: true }),
+}
+
 export default function Dashboard() {
   const { state, update } = useStore()
   const user = useCurrentUser()
@@ -119,6 +135,9 @@ export default function Dashboard() {
   const [draft, setDraft] = useState(null)
   const [filter, setFilter] = useState('All')
   const [q, setQ] = useState('')
+  // Sort by Date or Name (Alex), remembered per device like the other view choices.
+  const [sort, setSort] = useState(() => { try { return localStorage.getItem('tml_home_sort') || 'date' } catch { return 'date' } })
+  const pickSort = (v) => { setSort(v); try { localStorage.setItem('tml_home_sort', v) } catch { /* private window */ } }
   const canEdit = can(user, 'projects', 'edit')
 
   // Who's around today: moved here from the old Home page, right above the project list. Alex
@@ -147,11 +166,7 @@ export default function Dashboard() {
   const projects = visibleProjects(state, user)
     .filter((p) => filter === 'All' || p.category === filter)
     .filter((p) => !q || [p.title, p.client, p.code].some((v) => (v || '').toLowerCase().includes(q.toLowerCase())))
-    // Alex: by the project's own date, the Start date the card already shows, newest first.
-    // It used to be by last change, which shuffled the whole grid every time a task was ticked.
-    // A project with no start date yet goes to the end rather than the top, and projects sharing
-    // a date fall back to the last change so the order does not wobble.
-    .sort((a, b) => (b.startDate || '').localeCompare(a.startDate || '') || (b.updatedAt || '').localeCompare(a.updatedAt || ''))
+    .sort(SORTS[sort] || SORTS.date)
   // Delivered projects leave the main grid (Alex): a "Delivered" chip at the end of the category
   // row, in the inverse colour of the others, shows them alone, grey until hovered.
   const [showDelivered, setShowDelivered] = useState(false)
@@ -280,6 +295,13 @@ export default function Dashboard() {
           </button>
         </div>
         <div className="toolbar-actions">
+          <span className="sort-by">
+            <span className="muted small">Sort by</span>
+            <span className="segmented small">
+              <button className={sort === 'date' ? 'on' : ''} onClick={() => pickSort('date')}>Date</button>
+              <button className={sort === 'name' ? 'on' : ''} onClick={() => pickSort('name')}>Name</button>
+            </span>
+          </span>
           <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="input search" />
           {canEdit && (
             <Button variant="primary" onClick={() => setDraft(freshProject())}>

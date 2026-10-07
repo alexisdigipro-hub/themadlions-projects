@@ -39,6 +39,11 @@ export default function Drives() {
   const [draft, setDraft] = useState(null)
   const [item, setItem] = useState(null) // { driveId, ...item }
   const [openId, setOpenId] = useState('') // the disk whose contents are open below the shelf
+  /* Two ways of looking at the same shelf. Shelf is the disks as objects, one click to see
+     inside. Contents lays every disk open at once with its projects under it, for reading down
+     the whole archive rather than hunting one disk (Alex). The choice is remembered per device. */
+  const [view, setView] = useState(() => { try { return localStorage.getItem('tml_drives_view') || 'shelf' } catch { return 'shelf' } })
+  const pickView = (v) => { setView(v); try { localStorage.setItem('tml_drives_view', v) } catch { /* private window */ } }
 
   const filtered = useMemo(() => {
     if (!q.trim()) return drives
@@ -183,6 +188,12 @@ export default function Drives() {
       <div className="toolbar">
         <Input className="input search drives-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Which disk has… (project, artist, note)" />
         {searching && <span className="muted small">{results.length} result{results.length === 1 ? '' : 's'}</span>}
+        {!searching && (
+          <div className="segmented small drives-view">
+            <button className={view === 'shelf' ? 'on' : ''} onClick={() => pickView('shelf')}>Shelf</button>
+            <button className={view === 'contents' ? 'on' : ''} onClick={() => pickView('contents')}>Contents</button>
+          </div>
+        )}
       </div>
 
       {!drives.length ? (
@@ -227,6 +238,24 @@ export default function Drives() {
                 </span>
               )}
             </h2>
+            {view === 'contents' ? (
+              <ul className="plain drive-contents">
+                {list.map((d) => (
+                  <li key={d.id} className={`drive-contents-disk st-${d.status || 'inuse'}`}>
+                    <div className="drive-contents-head">
+                      <div className="drive-icon" aria-hidden="true"><span /></div>
+                      <strong>{d.name}</strong>
+                      <span className={`drive-status ${d.status || 'inuse'}`}>{statusLabel(d.status)}</span>
+                      <span className="muted small">{[d.capacity, d.free ? `${d.free} free` : '', d.where].filter(Boolean).join(' · ') || 'No details yet'}</span>
+                      {editable && <button className="link small" onClick={() => setItem({ driveId: d.id, ...emptyItem() })}>Add project</button>}
+                    </div>
+                    {(d.items || []).length
+                      ? <ul className="plain drive-rows">{d.items.map((it) => itemRow(d, it))}</ul>
+                      : <p className="muted small drive-contents-empty">Nothing listed on this disk yet.</p>}
+                  </li>
+                ))}
+              </ul>
+            ) : (
             <div className="drive-grid">
               {/* the open disk is itself a grid item spanning every column, so wherever it sits in
                   the list it still lands directly under its own row, not after the whole shelf */}
@@ -237,6 +266,7 @@ export default function Drives() {
                 </Fragment>
               ))}
             </div>
+            )}
           </section>
         ))
       )}

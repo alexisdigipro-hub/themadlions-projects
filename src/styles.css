@@ -2385,6 +2385,8 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
    take up the page just to say it is empty. Overview, Project Database, Script, Shot list and
    Schedule all use this one row. */
 .add-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Home: Sort by Date | Name, the label and its two buttons kept together on one line */
+.sort-by { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
 /* Script now also carries Breakdown, and for a Music Video the song map, each framed as its own
    card instead of their old separate tabs. */
 .script-page { display: flex; flex-direction: column; gap: 20px; }
@@ -3233,7 +3235,24 @@ html[data-theme='light'] .drive { border-color: transparent; }
 .drive-open-empty { margin: 14px 16px; }
 .drive-rows li.drive-row, .drive-results li.drive-result { display: flex; gap: 12px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--line-soft); }
 .drive-rows li.drive-row:first-child { border-top: 0; }
+/* .grow is defined per component in this file, and this one never was: without it the row's
+   buttons sat glued to the end of the title instead of out at the right edge. */
+.drive-row > .grow, .drive-result > .grow { flex: 1; min-width: 0; }
 .drive-row .drive-item-title, .drive-result .drive-item-title { font-size: 15.5px; }
+
+/* Contents: every disk open at once, its projects listed under its name, for reading down the
+   whole archive instead of clicking one disk at a time (Alex). Same rows as an opened disk. */
+.drives-view { margin-left: auto; }
+.drive-contents { display: flex; flex-direction: column; gap: 10px; }
+.drive-contents-disk { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); overflow: hidden; padding: 0; border-bottom: 1px solid var(--line-soft); }
+.drive-contents-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 16px; border-bottom: 1px solid var(--line-soft); }
+.drive-contents-head strong { font-size: 16px; }
+/* the name on the left, everything that describes the disk together on the right, so the heads
+   read the same down the page whatever each disk has filled in */
+.drive-contents-head .drive-status { margin-left: auto; }
+.drive-contents-head .drive-icon { width: 20px; height: 26px; flex: none; }
+.drive-contents-empty { padding: 10px 16px; margin: 0; }
+.drive-contents-disk.st-empty .drive-contents-head { opacity: .72; }
 
 /* Search answers with the things, not the shelf, so each row says which disk it is on. */
 .drive-hits { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
