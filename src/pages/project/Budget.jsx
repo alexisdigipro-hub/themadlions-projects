@@ -160,7 +160,7 @@ export default function Budget() {
       return s
     })
     setDraft(null)
-    toast(who ? `Line saved, and it is now in ${who.name}'s My work` : contact || loc ? `Line saved, linked to ${(contact || loc).name}` : 'Line saved', 'ok')
+    toast(who ? `Line saved, and it is now in ${who.name}'s My Finance` : contact || loc ? `Line saved, linked to ${(contact || loc).name}` : 'Line saved', 'ok')
   }
   const remove = (id) => update((s) => {
     const p = s.projects.find((x) => x.id === project.id)
@@ -284,7 +284,7 @@ export default function Budget() {
               </select>
             </Field>
             <Field label="Paid to" hint={
-              draft.memberId ? 'A team member: this line goes into their My work, and turns to paid when you pay it.'
+              draft.memberId ? 'A team member: this line goes into their My Finance, and turns to paid when you pay it.'
                 : draft.contactId ? 'This project\'s own cast/crew: the vendor name follows if you rename them.'
                 : draft.locationId ? 'This project\'s own location: the vendor name follows if you rename it.'
                 : ''
@@ -312,7 +312,7 @@ export default function Budget() {
             </Field>
           </div>
           {draft.memberId ? (
-            <Field label="Work date" hint={`From the project's shooting days. Goes into ${team.find((u) => u.id === draft.memberId)?.name || 'their'} My work as "${project.title}${draft.description || draft.category ? ` · ${draft.description || draft.category}` : ''}"${draft.date ? ` on ${fmtDate(draft.date)}` : ', dated today'}.`}><Input type="date" value={draft.date || ''} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
+            <Field label="Work date" hint={`From the project's shooting days. Goes into ${team.find((u) => u.id === draft.memberId)?.name || 'their'} My Finance as "${project.title}${draft.description || draft.category ? ` · ${draft.description || draft.category}` : ''}"${draft.date ? ` on ${fmtDate(draft.date)}` : ', dated today'}.`}><Input type="date" value={draft.date || ''} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
           ) : !draft.contactId && !draft.locationId ? (
             <Field label="Vendor / payee"><Input value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} placeholder="Optional" /></Field>
           ) : null}

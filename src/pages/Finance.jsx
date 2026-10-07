@@ -704,7 +704,7 @@ function TeamWork() {
       </div>
       <div className="toolbar">
         <div className="segmented small">{years.map((y) => <button key={y} className={year === y ? 'on' : ''} onClick={() => setYear(y)}>{y}</button>)}</div>
-        <p className="muted small">Each member keeps their own list under My work. Here you see everyone, and you can mark jobs as paid on their behalf.</p>
+        <p className="muted small">Each member keeps their own list under My Finance. Here you see everyone, and you can mark jobs as paid on their behalf.</p>
       </div>
       <div className="tw-grid">
         {/* Kept to just this, on Alex's ask: the name, the all-time total, the paid/pending bar,

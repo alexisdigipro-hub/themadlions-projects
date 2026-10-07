@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { Suspense, useEffect, useRef, useState } from 'react'
-import { can, useCurrentUser, useStore, viewAsReturnPath, whenMs } from '../lib/store.jsx'
+import { can, seesDatabase, useCurrentUser, useStore, viewAsReturnPath, whenMs } from '../lib/store.jsx'
 import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
 import { useToast } from './ui.jsx'
@@ -98,8 +98,8 @@ export default function Layout() {
     { to: '/calendar', label: 'Calendar', show: can(user, 'calendar'), icon: 'calendar' },
     { to: '/tasks', label: 'Tasks', show: can(user, 'tasks'), icon: 'tasks' },
     { to: '/chat', label: 'Chat', show: true, icon: 'chat', badge: unread },
-    { to: '/mywork', label: 'My work', show: user?.role !== 'admin', icon: 'mywork' },
-    { to: '/database', label: 'Database', show: can(user, 'contacts') || can(user, 'locations'), icon: 'database' },
+    { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
+    { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     { to: '/drives', label: 'Drives', show: can(user, 'drives'), icon: 'drives' },
     { to: '/share', label: 'Share', show: mayShare, icon: 'post', badge: newReplies },
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance' },
@@ -183,7 +183,7 @@ export default function Layout() {
           // day-to-day number), My work for everyone else (their own jobs and payments)
           user?.role === 'admin'
             ? { to: '/finance', label: 'Finance', icon: 'finance' }
-            : { to: '/mywork', label: 'My work', icon: 'mywork' },
+            : { to: '/mywork', label: 'My Finance', icon: 'mywork' },
         ].map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end} onClick={close} className={({ isActive }) => (isActive ? 'active' : '')}>
             <span className="tab-ico-wrap">{Icon[i.icon]?.()}{i.badge > 0 && <span className="nav-badge">{i.badge}</span>}</span>

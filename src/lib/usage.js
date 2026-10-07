@@ -47,7 +47,7 @@ export function workspaceWeight(state) {
     ['Database', state.library],
     ['Finance', state.finance],
     ['Chat messages', state.chat],
-    ['My work', state.worklog],
+    ['My Finance', state.worklog],
     ['Notices', state.notices],
     ['Team', state.users],
   ].map(([label, v]) => ({ label, bytes: bytesOf(v) })).sort((a, b) => b.bytes - a.bytes)

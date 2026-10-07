@@ -53,7 +53,17 @@ Each PR body has the detail and the tests; this is the map.
 - **View as** from a profile, "See what Maria sees", Stop returns where it started (#194). **The View as bar had no styles since 20 Sep** (deleted by mistake with Share row CSS in 21bf9d1), so on a computer it broke the whole layout; restored and spanning the grid (#195).
 - **New call sheet** (#196): date, call time, location; the shoot day is made behind the scenes (`lib/shootDays.js`), the sheet opens in Edit and can set its own location.
 
-**Alex still to do:** merge #196. Nothing to run in Supabase from this batch.
+**Alex still to do:** nothing from this list, #196 is merged.
+
+### Presentation looks and link; users' Settings, My Finance, Database switch (7 Oct, evening)
+- **Presentation looks**: `THEMES` in `lib/deck.js` (mb, noir, editorial, poster), one draw function per look over the same six layouts; MB unchanged. `project.deck.theme`, picked from cover thumbnails on the tab. Accent = project colour, company = workspace name. Greek titles are put in capitals without accents (`upperGr`). Editorial loads Noto Serif only when used.
+- **Lighter PDF**: `slideJpeg` draws at 1920 and saves 1600 wide at quality 0.8.
+- **Presentation link**: `lib/deckShare.js` draws each slide to a JPEG, uploads it to the photos bucket under `<projectId>/deck-share/<stamp>-<n>.jpg` (existing storage policies cover it, no SQL), signs the addresses for a year, publishes share kind `deck`, ref `deck:<projectId>`, then removes the previous pictures. Public page `/pr/:token` (`pages/PublicDeck.jsx`): stacked slides, Present viewer, Download PDF built in the browser from the pictures with `buildPdf`. Share page lists it as Presentation. Not tested against the live Supabase from here (no network); first real share is the test.
+- **Settings for team members**: Integrations tab and the Storage panel are administrators only.
+- **My work is now My Finance** in the sidebar, the phone bar, the page title and the texts that name it; the route stays `/mywork`, the data note "From My work" on budget-made jobs is left as is.
+- **Database in the side menu** per person: `permissions.databasePage = 'hide'`, `seesDatabase(user)` in store.jsx, used by the sidebar and the Database page. Default shown. A menu choice, not a lock (library rows are readable by every member because a project's tab adds from them).
+
+**Alex still to do:** merge the PR of this batch. Nothing to run in Supabase.
 **Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
 
 ### Calendar feeds: read less often, and one switch over the lot (7 Oct)

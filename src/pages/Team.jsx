@@ -283,7 +283,7 @@ export default function Team({ embedded = false }) {
                   <span className="field-label">Start from a role</span>
                   <div className="chips">
                     {ROLE_PRESETS.map(([label, perms]) => (
-                      <button key={label} type="button" className="chip" onClick={() => setDraft({ ...draft, permissions: { ...presetPermissions(perms), accessUntil: draft.permissions?.accessUntil || '' } })}>
+                      <button key={label} type="button" className="chip" onClick={() => setDraft({ ...draft, permissions: { ...presetPermissions(perms), accessUntil: draft.permissions?.accessUntil || '', databasePage: draft.permissions?.databasePage || '' } })}>
                         {label}
                       </button>
                     ))}
@@ -308,17 +308,24 @@ export default function Team({ embedded = false }) {
                     ))}
                   </div>
                   <div className="row-actions">
-                    <button className="link" onClick={() => setDraft({ ...draft, permissions: { ...defaultPermissions('view'), accessUntil: draft.permissions?.accessUntil || '' } })}>
+                    <button className="link" onClick={() => setDraft({ ...draft, permissions: { ...defaultPermissions('view'), accessUntil: draft.permissions?.accessUntil || '', databasePage: draft.permissions?.databasePage || '' } })}>
                       All view
                     </button>
-                    <button className="link" onClick={() => setDraft({ ...draft, permissions: { ...defaultPermissions('edit'), accessUntil: draft.permissions?.accessUntil || '' } })}>
+                    <button className="link" onClick={() => setDraft({ ...draft, permissions: { ...defaultPermissions('edit'), accessUntil: draft.permissions?.accessUntil || '', databasePage: draft.permissions?.databasePage || '' } })}>
                       All edit
                     </button>
-                    <button className="link" onClick={() => setDraft({ ...draft, permissions: { ...defaultPermissions('none'), accessUntil: draft.permissions?.accessUntil || '' } })}>
+                    <button className="link" onClick={() => setDraft({ ...draft, permissions: { ...defaultPermissions('none'), accessUntil: draft.permissions?.accessUntil || '', databasePage: draft.permissions?.databasePage || '' } })}>
                       Clear
                     </button>
                   </div>
                 </div>
+
+                <Field label="Database in the side menu" hint="The Database page with the people and locations of every project. Without it they still see each project's own Project Database tab.">
+                  <div className="segmented small">
+                    <button type="button" className={draft.permissions?.databasePage !== 'hide' ? 'on' : ''} onClick={() => setDraft({ ...draft, permissions: { ...draft.permissions, databasePage: '' } })}>Shown</button>
+                    <button type="button" className={draft.permissions?.databasePage === 'hide' ? 'on' : ''} onClick={() => setDraft({ ...draft, permissions: { ...draft.permissions, databasePage: 'hide' } })}>Hidden</button>
+                  </div>
+                </Field>
               </>
             )}
           </div>
