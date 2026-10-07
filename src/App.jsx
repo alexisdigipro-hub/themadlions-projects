@@ -60,14 +60,7 @@ function Loading() {
   return (
     <div className="login">
       <div className="login-card boot-card">
-        <div className="logo login-logo">
-          <span className="logo-mark" aria-hidden="true" />
-          <span className="logo-text">
-            <strong>THE MAD LIONS</strong>
-            <em>Production hub</em>
-          </span>
-        </div>
-        <p className="muted small boot-note">Loading…</p>
+        <strong className="boot-name">THE MAD LIONS</strong>
       </div>
     </div>
   )
