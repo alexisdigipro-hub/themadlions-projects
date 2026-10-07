@@ -4,7 +4,7 @@ import { Badge, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, u
 import { CATEGORIES, STATUSES, can, emptyProject, nextProjectCode, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
 import { projectProgress } from '../lib/progress.js'
-import { compress } from '../lib/photos.js'
+import { useCover } from '../components/CoverCropper.jsx'
 import { allHideable, hiddenAfterCategory, projectTabs, tabHidden, toggleTab } from '../lib/tabs.js'
 import { initialsOf } from './Profile.jsx'
 import { joinName, nameParts } from '../lib/projectName.js'
@@ -39,6 +39,7 @@ function CardName({ p }) {
 
 export function ProjectForm({ value, onChange }) {
   const set = (k) => (e) => onChange({ ...value, [k]: e.target.value })
+  const cover = useCover({ value, projectId: value.id, keepSource: !value.isNew, onChange: (patch) => onChange({ ...value, ...patch }) })
   // a category switch can bring new tabs (Music, Script…); they start hidden, like everything else
   const setCategory = (e) => onChange({ ...value, category: e.target.value, hiddenTabs: hiddenAfterCategory(value, e.target.value) })
   const parts = nameParts(value)
@@ -83,12 +84,18 @@ export function ProjectForm({ value, onChange }) {
       <Field label="Notes">
         <Textarea rows={3} value={value.notes} onChange={set('notes')} />
       </Field>
-      <Field label="Cover image" hint="Key art or a still. Compressed and stored small.">
+      <Field label="Cover image" hint="Key art or a still, cut to a square: drag it into place, scale it, centre it. Adjust changes the cut later.">
         <div className="cover-pick">
           {value.coverThumb && <img src={value.coverThumb} alt="" />}
-          <input type="file" accept="image/*" className="input" onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; try { const c = await compress(f, { max: 1200, quality: 0.8, thumb: 640 }); onChange({ ...value, coverThumb: c.thumb }) } catch {} }} />
-          {value.coverThumb && <button type="button" className="link small" onClick={() => onChange({ ...value, coverThumb: '' })}>Remove</button>}
+          <input type="file" accept="image/*" className="input" onChange={(e) => { cover.pick(e.target.files?.[0]); e.target.value = '' }} />
+          {value.coverThumb && (
+            <span className="cover-links">
+              <button type="button" className="link small" onClick={cover.adjust}>Adjust</button>
+              <button type="button" className="link small" onClick={cover.remove}>Remove</button>
+            </span>
+          )}
         </div>
+        {cover.modal}
       </Field>
       <Field label="Tabs" hint="A new project starts with Overview alone. Tap the tabs it needs; tap again to hide one. Nothing is deleted, a hidden tab keeps its data.">
         <TabPicker project={value} onChange={(patch) => onChange({ ...value, ...patch })} />

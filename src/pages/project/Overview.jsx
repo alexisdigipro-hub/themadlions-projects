@@ -7,7 +7,7 @@ import { can, nextProjectCode, uid, useStore } from '../../lib/store.jsx'
 import { duplicateProject } from '../../lib/duplicate.js'
 import { fmtDate } from '../../lib/dates.js'
 import { projectProgress } from '../../lib/progress.js'
-import { compress } from '../../lib/photos.js'
+import { useCover } from '../../components/CoverCropper.jsx'
 import { analyze, fmtTime, fmtTimeMs, trackUrl, uploadTrack } from '../../lib/audio.js'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { remote } from '../../lib/supabase.js'
@@ -168,13 +168,7 @@ export default function Overview() {
     can(user, 'files') && canEdit('files') && !(project.productionNotes || '').trim() && ['notes', 'Add notes'],
   ].filter(Boolean)
   const coverRef = useRef()
-  const setCover = async (file) => {
-    if (!file) return
-    try {
-      const c = await compress(file, { max: 1200, quality: 0.8, thumb: 640 })
-      edit((p) => { p.coverThumb = c.thumb })
-    } catch (e) { /* ignored */ }
-  }
+  const cover = useCover({ value: project, projectId: project.id, keepSource: true, onChange: (patch) => edit((p) => { Object.assign(p, patch) }) })
 
   return (
     <div className="overview">
@@ -184,8 +178,12 @@ export default function Overview() {
             {project.coverThumb ? <img src={project.coverThumb} alt="" /> : <span className="progress-cover-empty" style={{ background: project.color }} />}
             {canEdit('projects') && (
               <>
-                <input ref={coverRef} type="file" accept="image/*" hidden onChange={(e) => setCover(e.target.files?.[0])} />
-                <button className="link small" onClick={() => coverRef.current?.click()}>{project.coverThumb ? 'Change cover' : 'Add cover'}</button>
+                <input ref={coverRef} type="file" accept="image/*" hidden onChange={(e) => { cover.pick(e.target.files?.[0]); e.target.value = '' }} />
+                <span className="cover-links">
+                  <button className="link small" onClick={() => coverRef.current?.click()}>{project.coverThumb ? 'Change' : 'Add cover'}</button>
+                  {project.coverThumb && <button className="link small" onClick={cover.adjust}>Adjust</button>}
+                </span>
+                {cover.modal}
               </>
             )}
           </div>

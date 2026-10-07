@@ -66,6 +66,8 @@ Each PR body has the detail and the tests; this is the map.
 - **Finance: All time** in the year picker (`year === 'all'`, `inSel(date)` replaces every year test in Finance.jsx, `summarize` gets `year: null`); the bars become Year by year. Team work keeps its own year tabs.
 - **My Finance: All time** next to the year buttons (`WorkLogTable` in WorkLog.jsx, `year === 'all'`); months keyed by year-month so they stay apart, headed with the year. The same table in an administrator's per-person view gets it too.
 
+- **Cover crop**: `components/CoverCropper.jsx` (cropper + `useCover` hook used by Overview and ProjectForm), maths in `lib/coverCrop.js`. `coverThumb` is now a 480×480 square; the original goes to the photos bucket as `<projectId>/cover/source-<stamp>.jpg` in `coverSource`, the cut in `coverCrop`. Old file removed on a new pick, only if it sits in this project's folder (a copied project points at the original's). `Modal` now closes only the top window on Escape and keeps the page locked while another is open.
+
 **Alex still to do:** merge #197. Nothing to run in Supabase.
 **Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
 

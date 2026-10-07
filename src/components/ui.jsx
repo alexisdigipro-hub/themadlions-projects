@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 
 export function Button({ variant = 'default', size = 'md', className = '', ...props }) {
   return <button className={`btn btn-${variant} btn-${size} ${className}`} {...props} />
@@ -68,19 +68,27 @@ export function Badge({ color, children, className = '' }) {
 }
 
 export function Modal({ open, title, onClose, children, footer, wide }) {
+  const self = useRef(null)
   useEffect(() => {
     if (!open) return
-    const onKey = (e) => e.key === 'Escape' && onClose?.()
+    // A window opened from inside another (the cover crop inside Edit details): Escape closes
+    // only the one on top, and the page stays locked until the last one is gone.
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return
+      const all = document.querySelectorAll('.modal-backdrop')
+      if (all.length && all[all.length - 1] !== self.current) return
+      onClose?.()
+    }
     window.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
     return () => {
       window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
+      if (!document.querySelector('.modal-backdrop')) document.body.style.overflow = ''
     }
   }, [open, onClose])
   if (!open) return null
   return (
-    <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
+    <div ref={self} className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
       <div className={`modal ${wide ? 'modal-wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-head">
           <h2>{title}</h2>
