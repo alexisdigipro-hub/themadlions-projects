@@ -40,6 +40,22 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 7 Oct, the long afternoon: what shipped after Calendar feeds (PRs #178 to #196)
+Each PR body has the detail and the tests; this is the map.
+- **Calendar feeds** working end to end: `ical` deployed by Alex, errors read from the function's body first (#178), each feed read at most once per half hour with a week-old fallback when Google answers 429 (#179), and one Show-these-calendars switch in Settings (#179).
+- **Budget**: no Invoiced/Costs/Profit strip (#180); one table instead of a table per group, no running total in the toolbar (#181); lines dragged by a handle, pointer events in `lib/dragOrder.js`, `budget.ordered` set on the first drop so existing budgets are not reshuffled (#183).
+- **Empty cards are not drawn** (#182, #183, #185): Overview, Script, Shot list, Schedule & Sheets, Reports, Project Database show their buttons instead; Locations and Gear take `hideEmpty` / `startSignal` like Tasks and Notes. `.add-bar` is the shared row, `.cols.one` lets a lone card take the row. **#183 gated Call sheets on `project.days`, which does not exist; #185 fixed it to `project.shootingDays`.**
+- **Overview** cover square (#184). **Home**: Sort by Date | Name (#186, #189); Date is the Start date, else first shoot day, else creation (`projectDate` in Dashboard.jsx).
+- **Share** opens on Everything, outlined buttons on one right edge (#187). **Invoices** is its own page in the sidebar, administrators only on the page as well as in the database (#187, #192). **Team** lives in Settings > Team, with Last seen stamped by each browser into `profile.lastSeen` at most every 30 min (#187, #188).
+- **Database** Crew/Cast: no project lists, cards' buttons on one line (#188). **Drives**: Shelf | Contents (#189).
+- **Finance overview**: four tiles, numbers only, no Owed to us (#190, #191). Tax estimate and last-year comparison no longer shown anywhere on the Overview.
+- **Tasks**: a teammate sees only tasks assigned to them, by name (`tasksFor` in Tasks.jsx), a display rule not a lock (#193); the form is wide and the assignee is picked from the team (#194).
+- **View as** from a profile, "See what Maria sees", Stop returns where it started (#194). **The View as bar had no styles since 20 Sep** (deleted by mistake with Share row CSS in 21bf9d1), so on a computer it broke the whole layout; restored and spanning the grid (#195).
+- **New call sheet** (#196): date, call time, location; the shoot day is made behind the scenes (`lib/shootDays.js`), the sheet opens in Edit and can set its own location.
+
+**Alex still to do:** merge #196. Nothing to run in Supabase from this batch.
+**Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
+
 ### Calendar feeds: read less often, and one switch over the lot (7 Oct)
 Live, after a long afternoon. The function is deployed in his Supabase as `ical`.
 **What went wrong, in order.** He pasted the Edge Function's TypeScript into the SQL Editor (`syntax error at or near "//"`): `supabase/*.sql` goes to the SQL Editor, `supabase/functions/*` to Edge Functions, and that was never said plainly. Then the app reported every 404 as "the ical function is not deployed yet", because `call()` read the status before the body, and the function answers 404 itself for a bad calendar address — so he went back to Supabase for nothing (PR #178). With that fixed the real answer showed: **429 from Google**. The Calendar page fetched every feed on every visit, so a handful of visits was enough for Google to start refusing the secret address.
