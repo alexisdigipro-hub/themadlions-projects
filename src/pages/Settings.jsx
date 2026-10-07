@@ -8,6 +8,7 @@ import { fmtBytes, snapshotSummary, snapshotToState } from '../lib/backups.js'
 import { authorizeUrl, clearOauth, pcloudPing, redirectUri, takeOauth } from '../lib/pcloud.js'
 import { authorizeUrl as gcalAuthorizeUrl, clearOauthCode, gcalCalendars, gcalConnect, redirectUri as gcalRedirectUri, takeOauthCode } from '../lib/googleCalendar.js'
 import { FEED_COLOR, feedsAreOff, feedsOf, fetchFeedText, parseIcs } from '../lib/ical.js'
+import Team from './Team.jsx'
 import { CHAT_DEFAULTS, chime, loadChatPrefs, saveChatPrefs } from '../lib/chatPrefs.js'
 import { FONTS, applyFont, currentFont, ensureFontLoaded } from '../lib/fonts.js'
 import Usage from '../components/Usage.jsx'
@@ -212,6 +213,10 @@ export default function Settings() {
             </Field>
           </section>
         )}
+
+        {/* The Team list used to be its own page in the sidebar; it is the first thing on this
+            tab now (Alex), with the rules that govern it underneath. */}
+        {isAdmin && <Team embedded />}
 
         {isAdmin && (
           <section className="panel" data-tab="team">

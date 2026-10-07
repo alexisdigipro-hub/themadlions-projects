@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Badge, Button, Confirm, Field, Input, Modal, PageHead, Select, useToast } from '../components/ui.jsx'
 import { MODULES, ROLE_PRESETS, accessEnded, defaultPermissions, presetPermissions, uid, useCurrentUser, useStore } from '../lib/store.jsx'
@@ -10,7 +10,10 @@ const LEVELS = [
   ['edit', 'Edit'],
 ]
 
-export default function Team() {
+/* The Team list lives inside Settings > Team now (Alex), so with `embedded` it draws itself as a
+   panel in that grid instead of a page with its own heading. The /team address still works and
+   still gives the page, so an old link or a bookmark does not break. */
+export default function Team({ embedded = false }) {
   const { state, update, mode, invites, invite, removeInvite, setViewAs } = useStore()
   const me = useCurrentUser()
   const toast = useToast()
@@ -62,13 +65,23 @@ export default function Team() {
 
   const admins = state.users.filter((u) => u.role === 'admin' && u.active !== false).length
 
+  const Wrap = embedded ? 'section' : Fragment
   return (
     <>
-      <PageHead title="Team" sub="Who can see and change what. Administrators can do everything.">
-        <Button variant="primary" onClick={() => setDraft(newUser())}>
-          Add teammate
-        </Button>
-      </PageHead>
+      <Wrap {...(embedded ? { className: 'panel', 'data-tab': 'team' } : {})}>
+      {embedded ? (
+        <div className="panel-head">
+          <h2>Team</h2>
+          <Button size="sm" variant="primary" onClick={() => setDraft(newUser())}>Add teammate</Button>
+        </div>
+      ) : (
+        <PageHead title="Team" sub="Who can see and change what. Administrators can do everything.">
+          <Button variant="primary" onClick={() => setDraft(newUser())}>
+            Add teammate
+          </Button>
+        </PageHead>
+      )}
+      {embedded && <p className="small muted">Who can see and change what. Administrators can do everything.</p>}
 
       <table className="table">
         <thead>
@@ -171,6 +184,7 @@ export default function Team() {
           : 'Local mode accounts live in this browser only; team login across devices arrives with the Supabase backend.'}{' '}
         {admins === 1 && 'You are the only administrator.'}
       </p>
+      </Wrap>
 
       <Modal
         open={!!draft}
