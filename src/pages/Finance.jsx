@@ -305,11 +305,6 @@ export default function Finance() {
               <div className="fin-value">{money(profitAll, cur)}</div>
             </div>
             <div className="fin-card">
-              <div className="fin-label">Owed to us</div>
-              <div className="fin-value">{money(S.owedToUs, cur)}</div>
-              <div className="fin-sub">{S.owedCount} unpaid invoice{S.owedCount === 1 ? '' : 's'} (gross){S.quoted ? ` · ${money(S.quoted, cur)} quoted, not yet invoiced` : ''}</div>
-            </div>
-            <div className="fin-card">
               <div className="fin-label">We owe</div>
               <div className="fin-value">{money(S.weOwe + committed + teamOwed, cur)}</div>
             </div>
