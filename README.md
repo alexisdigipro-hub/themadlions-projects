@@ -93,7 +93,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - Team: administrators set per user, per module permissions (none / view / edit) and per project access.
   - **Start from a role**: Producer, Director, Editor, 1st AD, Crew or Accountant fills the whole list in one click, and you change what you want afterwards.
   - **Access until**: for someone who is here for one job. The day after that date every module reads as no access and no project is reachable, until you clear the date. Administrators are never cut off this way.
-  - **View as**: look at the app exactly as one of your people sees it, with a red bar at the top and a Stop button. It is a preview only: nothing can be saved, posted or logged while you are wearing their face.
+  - **View as**: look at the app exactly as one of your people sees it, with a red bar at the top and a Stop button. It is a preview only: nothing can be saved, posted or logged while you are wearing their face. Start it from Settings > Team, or from the person's own profile with **See what Maria sees** (administrators only, not offered for another administrator or someone whose access is off); **Stop** takes you back to the page you started from.
   - A module added to the app after someone joined starts at no access for them, rather than being handed out to everyone the day it ships.
 - Backup and restore as JSON
 
