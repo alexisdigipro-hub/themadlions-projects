@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
-import { deliveryUrl, estimateUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, shotlistUrl, tokenOf } from '../lib/shares.js'
+import { deliveryUrl, estimateUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, shotlistUrl, tokenOf, deckUrl } from '../lib/shares.js'
 import { amount, estimateTotals } from '../lib/estimate.js'
 import { fmtDate, toISODate } from '../lib/dates.js'
 
@@ -178,23 +178,26 @@ export default function Deliveries() {
     const isDelivery = r.kind === 'delivery'
     const isEstimate = r.kind === 'estimate'
     const isShotlist = r.kind === 'shotlist'
+    const isDeck = r.kind === 'deck'
     const day = d.day || {}
     return {
       ...r,
       isDelivery,
       isEstimate,
-      url: isDelivery ? deliveryUrl(r.token) : isEstimate ? estimateUrl(r.token) : isShotlist ? shotlistUrl(r.token) : shareUrl(r.token),
+      url: isDelivery ? deliveryUrl(r.token) : isEstimate ? estimateUrl(r.token) : isShotlist ? shotlistUrl(r.token) : isDeck ? deckUrl(r.token) : shareUrl(r.token),
       shut: !!r.closed || (!!r.expires_at && r.expires_at < today),
       answers: Array.isArray(r.responses) ? r.responses : [],
-      badge: isDelivery ? stageLabel(d.stage) : isEstimate ? 'Estimate' : isShotlist ? 'Shot list' : 'Call sheet',
+      badge: isDelivery ? stageLabel(d.stage) : isEstimate ? 'Estimate' : isShotlist ? 'Shot list' : isDeck ? 'Presentation' : 'Call sheet',
       badgeClass: isDelivery ? `s-${d.stage}` : isEstimate ? 's-estimate' : 's-callsheet',
-      name: isDelivery || isEstimate ? d.title : (d.project?.title || (isShotlist ? 'Shot list' : 'Call sheet')),
+      name: isDelivery || isEstimate ? d.title : (d.project?.title || (isShotlist ? 'Shot list' : isDeck ? 'Presentation' : 'Call sheet')),
       version: isDelivery || isEstimate ? d.version : (day.index ? `Day ${day.index}${day.count ? ` of ${day.count}` : ''}` : ''),
       sub: isDelivery
         ? [d.client, projTitle(d.projectId), d.sentAt ? `sent ${fmtDate(d.sentAt.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''].filter(Boolean).join(' · ')
         : isEstimate
             ? [d.client, amount(estimateTotals(d).total, d.currency), d.validUntil ? `valid until ${fmtDate(d.validUntil, { day: 'numeric', month: 'short' })}` : ''].filter(Boolean).join(' · ')
-            : [day.date ? fmtDate(day.date, { weekday: 'short', day: 'numeric', month: 'short' }) : '', day.callTime ? `call ${day.callTime}` : ''].filter(Boolean).join(' · '),
+            : isDeck
+              ? [`${(d.slides || []).length} slides`, d.at ? `shared ${fmtDate(d.at.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''].filter(Boolean).join(' · ')
+              : [day.date ? fmtDate(day.date, { weekday: 'short', day: 'numeric', month: 'short' }) : '', day.callTime ? `call ${day.callTime}` : ''].filter(Boolean).join(' · '),
     }
   }), [rows, state.projects])
   /* A delivery sent to five people is five rows in the table but one thing on this page, so the rows
