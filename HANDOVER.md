@@ -41,6 +41,13 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct, late night: bigger play button
+- The song player's ▶ on a project's Overview had no style (`.player .play` needed a `.player` the Overview does not have) and showed as a tiny chip. Now `.player-bar .play` too: a 56 px accent circle, on the Overview and in Music.
+
+### 9 Oct, late night: Notes in the Tasks look, task cards fixed on the iPhone, Planned gone
+- **Tasks**: Planned is off the side column. The task cards overlapped on Alex's iPhone (Safari squeezing a flex column with gap inside the fixed-height pane; Chromium did not): `.rem-tasks` is now plain blocks with a 4 px margin, cards have min-height, nothing in `.rem-main` but `.rem-scroll` shrinks, and on a phone the pane grows with its list (the page scrolls) instead of a fixed height.
+- **Notes** (`Notes.jsx` render rewritten, logic unchanged): `.rem-app.notes-app` with the Tasks side column (search, folders in `.rem-smart` / `.rem-lists` cards, `.notes-frow` rows with ✎ × on hover, + New Folder) and `.rem-main.notes-main` in amber `#b58a1c`: white `.notes-card`s grouped by date, + New Note… bar (a title + Enter starts the note with it as its Title). An open note replaces the list: ‹ back, folder select, 📌, 🗑 over a white `.notes-sheet` holding the editor. A computer no longer opens the newest note by itself; a phone starts on the folders. The old three-column Notes CSS is gone.
+
 ### 9 Oct, late night: Glass dark is everyone's theme
 - `DEFAULT_THEME = 'glassdark'` in lib/skin.js. main.jsx switches each device to it once (localStorage `tml_theme_default` marks that it was done; icons go to its Thin set), so everyone opens on it; after that Settings → Display → Theme works as before. Settings' picker falls back to it too. To make a different theme the default later: change DEFAULT_THEME (the marker holds the theme's name, so a new value switches every device once again).
 

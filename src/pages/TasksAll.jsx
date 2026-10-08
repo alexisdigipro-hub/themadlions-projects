@@ -8,7 +8,7 @@ import { fmtDate } from '../lib/dates.js'
 /*
   Tasks, laid out like Microsoft To Do (Alex, 9 Oct; before that like Reminders). On the left:
   the smart lists as rows with a line icon and a count (My Day = due today or late, Important =
-  urgent or high, Planned = with a date, Assigned to me, Tasks = everything open, Completed), then
+  urgent or high, Assigned to me, Tasks = everything open, Completed), then
   the lists: General (tasks outside projects), lists an administrator adds with an icon and a
   colour (settings.taskLists, a general task names its list in listId) and one list per project,
   with 👥 when others have tasks on it, and + New List. On the right: the list's name large over
@@ -34,7 +34,7 @@ const LINE = {
 const SMART = [
   ['today', 'My Day', '#4a7a80', '#2f6f8f'],
   ['urgent', 'Important', '#c2185b', '#b03a6b'],
-  ['scheduled', 'Planned', '#00897b', '#2e7d6f'],
+  // Planned taken off the side menu (Alex, 9 Oct)
   ['mine', 'Assigned to me', '#2e7d32', '#3d7a4a'],
   ['all', 'Tasks', '#5c6bc0', '#4a5aa8'],
   ['done', 'Completed', '#78909c', '#5f7480'],
