@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Badge, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { CATEGORIES, STATUSES, can, emptyProject, nextProjectCode, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
@@ -172,16 +172,6 @@ export default function Dashboard() {
     const base = { ...emptyProject(), title: '', artist: '', shortTitle: '', category: state.settings?.defaultCategory || 'Music Video', budget: { lines: [], contingencyPct: Number(state.settings?.budgetContingency ?? 10), currency: state.settings?.budgetCurrency || 'EUR', cap: '' }, isNew: true }
     return { ...base, hiddenTabs: allHideable(base) }
   }
-  // "Start one" on the sidebar's New project card (the app skins) lands here and opens the form
-  const location = useLocation()
-  const navTo = useNavigate()
-  const askedNew = location.state?.newProject
-  useEffect(() => {
-    if (!askedNew) return
-    if (canEdit) setDraft(freshProject())
-    navTo('.', { replace: true, state: null })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [askedNew])
 
   const projects = visibleProjects(state, user)
     .filter((p) => filter === 'All' || p.category === filter)
