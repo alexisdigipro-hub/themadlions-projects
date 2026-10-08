@@ -192,7 +192,7 @@ export default function Overview() {
               <span>
                 <strong>{pct}% done</strong> <span className="muted small">{project.status}{project.endDate ? ` · delivery ${fmtDate(project.endDate)}` : ''}{project.frozen ? ' · 🔒 locked' : ''}</span>
               </span>
-              <span className="row-actions">
+              <span className="row-actions progress-actions">
                 {canEdit('projects') && (
                   <button className="link small" onClick={() => setDraft({ ...project })}>Edit details</button>
                 )}

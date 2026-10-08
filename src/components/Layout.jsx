@@ -31,6 +31,18 @@ export default function Layout() {
      to write, so there is no new table and no SQL to run. Once per half hour at most, never
      while viewing as someone else, and never from a stale render. */
   const stamped = useRef(false)
+  // The phone's header height as --topbar-h, so a bar that sticks under it (a project's tabs)
+  // sits flush whatever the logo and text size make it. 0 on a computer, where it is hidden.
+  const topbarRef = useRef(null)
+  useEffect(() => {
+    const el = topbarRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return undefined
+    const set = () => document.documentElement.style.setProperty('--topbar-h', `${el.offsetHeight}px`)
+    set()
+    const ro = new ResizeObserver(set)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   useEffect(() => {
     if (stamped.current || viewAs || !sessionId) return
     const me = state.users.find((u) => u.id === sessionId)
@@ -121,7 +133,7 @@ export default function Layout() {
           <button type="button" onClick={() => { setViewAs(''); nav(viewAsReturnPath()) }}>Stop</button>
         </div>
       )}
-      <header className="topbar">
+      <header className="topbar" ref={topbarRef}>
         <button className="icon-btn menu-btn" aria-label="Menu" onClick={() => setOpen((o) => !o)}>
           <span className="burger" />
         </button>

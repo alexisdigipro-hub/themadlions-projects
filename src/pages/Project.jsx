@@ -1,6 +1,6 @@
-import { Suspense } from 'react'
-import { Link, NavLink, Navigate, Outlet, useOutletContext, useParams } from 'react-router-dom'
-import { Badge } from '../components/ui.jsx'
+import { Suspense, useEffect, useState } from 'react'
+import { Link, NavLink, Navigate, Outlet, useLocation, useOutletContext, useParams } from 'react-router-dom'
+import { Badge, useIsMobile } from '../components/ui.jsx'
 import { can, canAccessProject, useCurrentUser, useStore } from '../lib/store.jsx'
 import { hydrateProject } from '../lib/library.js'
 import { projectTabs, tabHidden } from '../lib/tabs.js'
@@ -14,10 +14,45 @@ export function useProject() {
   return useOutletContext()
 }
 
+/* A project's tabs on a phone (Alex, 8 Oct): one bar that stays put under the header while the
+   page scrolls, naming the tab you are on; tap it and every tab opens as a grid, tap one and the
+   grid closes. Replaces the row that slid sideways and cut the last tab in half. */
+function MobileTabs({ tabs, base }) {
+  const [open, setOpen] = useState(false)
+  const { pathname } = useLocation()
+  const seg = pathname.startsWith(base) ? pathname.slice(base.length).replace(/^\//, '').split('/')[0] : ''
+  const current = tabs.find((t) => t.to === seg) || (seg ? null : tabs.find((t) => t.end))
+  useEffect(() => { setOpen(false) }, [pathname])
+  return (
+    <div className={`ptabs-m${open ? ' open' : ''}`}>
+      <button type="button" className="ptabs-m-current" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+        {current && <span className="tab-ico">{Icon[current.icon]?.()}</span>}
+        <span className="grow">{current?.label || 'Pages'}</span>
+        <span className="ptabs-m-count muted">{tabs.length} tabs</span>
+        <span className="ptabs-m-chev" aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <>
+          <button type="button" className="ptabs-m-scrim" aria-label="Close" onClick={() => setOpen(false)} />
+          <nav className="ptabs-m-grid">
+            {tabs.map((t) => (
+              <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')} onClick={() => setOpen(false)}>
+                <span className="tab-ico">{Icon[t.icon]?.()}</span>
+                {t.label}
+              </NavLink>
+            ))}
+          </nav>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function Project() {
   const { id } = useParams()
   const { state, updateProject, update } = useStore()
   const user = useCurrentUser()
+  const mobile = useIsMobile()
   const raw = state.projects.find((p) => p.id === id)
   const project = raw ? hydrateProject(raw, state.library) : null
 
@@ -55,14 +90,16 @@ export default function Project() {
           </div>
         </div>
       </div>
-      <nav className="tabs">
-        {tabs.map((t) => (
-          <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')}>
-            <span className="tab-ico">{Icon[t.icon]?.()}</span>
-            {t.label}
-          </NavLink>
-        ))}
-      </nav>
+      {mobile ? <MobileTabs tabs={tabs} base={`/p/${project.id}`} /> : (
+        <nav className="tabs">
+          {tabs.map((t) => (
+            <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')}>
+              <span className="tab-ico">{Icon[t.icon]?.()}</span>
+              {t.label}
+            </NavLink>
+          ))}
+        </nav>
+      )}
       <div className="tab-body">
         <Suspense fallback={null}>
           <Outlet context={ctx} />
