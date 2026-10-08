@@ -7,7 +7,7 @@ import { SUPABASE_KEY, SUPABASE_URL } from './supabaseConfig.js'
 /* Settings > Integrations > File storage. Off means the built-in Supabase bucket, as before. */
 export const pcloudOn = (settings) => settings?.storage === 'pcloud'
 
-async function call(action, body) {
+async function call(action, body, { raw = false } = {}) {
   if (!supabase) throw new Error('pCloud needs the online database.')
   const { data } = await supabase.auth.getSession()
   const token = data?.session?.access_token
@@ -24,6 +24,7 @@ async function call(action, body) {
   } catch (e) {
     throw new Error(`Could not reach the pCloud function (${e.message}).`)
   }
+  if (raw && res.ok && !(res.headers.get('content-type') || '').includes('application/json')) return res.blob()
   let out = null
   try { out = await res.json() } catch {}
   if (!res.ok || !out || out.error) {
@@ -43,6 +44,20 @@ export async function pcloudUpload({ file, folder, scope }) {
 }
 export const pcloudLink = (fileid, scope, download = false) => call('link', { fileid, scope, download })
 export const pcloudDelete = (fileid, scope) => call('delete', { fileid, scope })
+/* Links for many files of one project (or the library) in one call: { [fileid]: url }. */
+export const pcloudLinks = async (fileids, scope) => (await call('links', { fileids, scope })).urls || {}
+/* The file itself, through the function, for pictures drawn on a canvas (presentation slides). */
+export const pcloudBlob = (fileid, scope) => call('raw', { fileid, scope }, { raw: true })
+
+/* Where a photo or a song of this project goes in pCloud, and under which permission. The
+   library (people and locations of the Database page) has its own folder. Null when pCloud is
+   off or there is no online database, so the caller keeps using the built-in storage. */
+export function pcloudTarget(state, projectId, kind = 'Photos') {
+  if (!pcloudOn(state?.settings) || !supabase) return null
+  if (!projectId || projectId === 'library') return { folder: ['Library', kind], scope: { kind: 'library', id: 'library' } }
+  const title = state.projects?.find((p) => p.id === projectId)?.title || 'Project'
+  return { folder: [title, kind], scope: { kind: 'project', id: projectId } }
+}
 
 /* The token pCloud sent back after "Connect pCloud" (main.jsx catches the redirect and parks it
    here), so Settings can show it once for copying into the function's secrets. */

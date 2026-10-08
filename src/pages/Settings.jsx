@@ -448,7 +448,7 @@ export default function Settings() {
         {isAdmin && remote && (
           <section className="panel" data-tab="integrations">
             <h2>File storage</h2>
-            <p className="muted small">Where the files people upload go: project Files & notes and chat attachments. The built-in storage is 1 GB on the free plan. Your own pCloud has no such limit, keeps everything in folders you can open from the Finder, and stays private: the app asks a small function inside Supabase, which holds the pCloud key and checks the same permissions the database enforces.</p>
+            <p className="muted small">Where the files people upload go: photos (locations, cast and crew, equipment, presentations, the Database page), songs in the Music tab, the original of a project cover, and chat attachments. The built-in storage is 1 GB on the free plan. Your own pCloud has no such limit, keeps everything in folders you can open from the Finder, and stays private: the app asks a small function inside Supabase, which holds the pCloud key and checks the same permissions the database enforces.</p>
             <PcloudPanel toast={toast} />
           </section>
         )}

@@ -12,7 +12,7 @@
  * Commissioner (Google Fonts, Greek included, Thin to Black) stands in for it.
  */
 import { buildPdf, canvasToJpegBytes } from './estimatePdf.js'
-import { photoUrls } from './photos.js'
+import { photoBlob, photoUrls } from './photos.js'
 import { uid } from './store.jsx'
 
 export const W = 1920
@@ -134,8 +134,11 @@ const pictureCache = new Map() // photo id -> Promise<ImageBitmap>
 export async function loadSlidePhotos(photos) {
   const missing = photos.filter((p) => !pictureCache.has(p.id))
   if (missing.length) {
-    const urls = await photoUrls(missing)
-    missing.forEach((p) => { if (urls[p.id]) pictureCache.set(p.id, bitmap(urls[p.id]).catch(() => null)) })
+    // a pCloud picture comes through the pcloud function, so the canvas may read it
+    missing.filter((p) => p.fileid).forEach((p) => pictureCache.set(p.id, photoBlob(p).then((b) => createImageBitmap(b)).catch(() => null)))
+    const rest = missing.filter((p) => !p.fileid)
+    const urls = rest.length ? await photoUrls(rest) : {}
+    rest.forEach((p) => { if (urls[p.id]) pictureCache.set(p.id, bitmap(urls[p.id]).catch(() => null)) })
   }
   const out = {}
   await Promise.all(photos.map(async (p) => { out[p.id] = (await pictureCache.get(p.id)) || null }))

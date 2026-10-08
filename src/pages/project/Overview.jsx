@@ -9,6 +9,7 @@ import { fmtDate } from '../../lib/dates.js'
 import { projectProgress } from '../../lib/progress.js'
 import { useCover } from '../../components/CoverCropper.jsx'
 import { analyze, fmtTime, fmtTimeMs, trackUrl, uploadTrack } from '../../lib/audio.js'
+import { pcloudTarget } from '../../lib/pcloud.js'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { remote } from '../../lib/supabase.js'
 import Tasks, { tasksFor } from './Tasks.jsx'
@@ -23,6 +24,7 @@ const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: 
    too, and the other way round. */
 function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 0 }) {
   const toast = useToast()
+  const { state } = useStore()
   const music = { ...emptyMusic(), ...(project.music || {}) }
   const track = music.tracks.find((t) => t.id === music.activeTrackId) || music.tracks[0]
   const sections = music.sections || []
@@ -68,9 +70,9 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
       const { peaks, duration } = await analyze(file)
       const id = uid()
       setBusy('Uploading…')
-      const { path, ext } = await uploadTrack({ projectId: project.id, id, file })
+      const { path, ext, fileid, scope } = await uploadTrack({ projectId: project.id, id, file, pcloud: pcloudTarget(state, project.id, 'Music') })
       setMusic((m) => {
-        m.tracks.push({ id, name: file.name.replace(/\.[^.]+$/, ''), path, ext, duration, peaks, bytes: file.size, kind: m.tracks.length ? 'other' : 'master', addedAt: new Date().toISOString() })
+        m.tracks.push({ id, name: file.name.replace(/\.[^.]+$/, ''), path, ext, ...(fileid ? { fileid, scope } : {}), duration, peaks, bytes: file.size, kind: m.tracks.length ? 'other' : 'master', addedAt: new Date().toISOString() })
         m.activeTrackId = id
       })
       toast(original !== file ? `${original.name} converted and added · ${fmtTime(duration)}` : `${file.name} added · ${fmtTime(duration)}`, 'ok')
