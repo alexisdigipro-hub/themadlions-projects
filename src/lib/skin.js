@@ -11,11 +11,14 @@ export const SKINS = [
   ['ember', 'Ember', 'dark'],
   ['coral', 'Coral', 'light'],
   ['glass', 'Glass', 'dark'],
+  // a calmer pair of glass looks, one dark and one light (Alex, 9 Oct)
+  ['glassdark', 'Glass dark', 'dark'],
+  ['glasslight', 'Glass light', 'light'],
 ]
 /* the icon set each skin comes with (Settings > Display > Icons can change it afterwards) */
-export const SKIN_ICONS = { violet: 'duo', teal: 'rounded', ember: 'bold', coral: 'rounded', glass: 'duo' }
+export const SKIN_ICONS = { violet: 'duo', teal: 'rounded', ember: 'bold', coral: 'rounded', glass: 'duo', glassdark: 'thin', glasslight: 'thin' }
 export const isSkin = (v) => SKINS.some(([k]) => k === v)
-const COLORS = { light: '#f3f4f7', dark: '#17181c', violet: '#0a0a0c', teal: '#1f2226', ember: '#0d0d0f', coral: '#fbf1ec', glass: '#3a0aa0' }
+const COLORS = { light: '#f3f4f7', dark: '#17181c', violet: '#0a0a0c', teal: '#1f2226', ember: '#0d0d0f', coral: '#fbf1ec', glass: '#3a0aa0', glassdark: '#0b1018', glasslight: '#eef1f8' }
 
 export function applyThemeChoice(v) {
   const html = document.documentElement

@@ -4677,6 +4677,96 @@ html[data-skin='glass'][data-theme] .topbar { background: rgba(53, 20, 135, .82)
   html[data-skin='glass'][data-theme] .segmented button.on { background: rgba(255, 255, 255, .18); color: #fff; }
 }
 
+/* Glass dark and Glass light (Alex, 9 Oct): the frosted-glass idea of Glass in two calmer
+   versions for the whole app. Dark: a midnight backdrop with soft blue and teal glows. Light: a
+   pale backdrop with lilac, pink and aqua glows. Sidebar, cards, top bar and the big page frames
+   (Notes, Tasks, the chat) are see-through, blurred glass with a bright edge; menus and pop-ups
+   stay solid so nothing behind them shows through. One set of rules for both, driven by the
+   --gl-* colours each sets. */
+html[data-skin='glassdark'][data-theme][data-accent] {
+  --bg: #0b1018; --panel: #141b27; --raised: #1b2433; --line: #2b3648; --line-soft: #222c3c;
+  --text: #eef3fa; --muted: rgba(214, 224, 238, .66); --accent: #7cc4ff; --accent-ink: #06243d;
+  --sidebar-bg: transparent; --photo-bg: #121a26; --hover-tint: rgba(255, 255, 255, .06);
+  --radius: 10px; --radius-lg: 20px;
+  --skin-grad: linear-gradient(180deg, #7cc4ff, #3f86e8);
+  --skin-card: rgba(255, 255, 255, .055);
+  --gl-fill: rgba(255, 255, 255, .055); --gl-fill-2: rgba(255, 255, 255, .09); --gl-edge: rgba(255, 255, 255, .12);
+  --gl-shine: rgba(255, 255, 255, .10); --gl-shadow: 0 14px 40px rgba(0, 0, 0, .35);
+  --gl-blur: blur(22px) saturate(150%); --gl-bar: rgba(16, 22, 33, .72); --gl-input: rgba(255, 255, 255, .05);
+  --gl-active: rgba(255, 255, 255, .12); --gl-glow: rgba(90, 170, 255, .35);
+  --shadow-lg: 0 24px 70px rgba(0, 0, 0, .55);
+}
+html[data-skin='glassdark'][data-theme] body {
+  background:
+    radial-gradient(900px 600px at 10% 12%, rgba(52, 110, 190, .45) 0%, transparent 60%),
+    radial-gradient(800px 640px at 92% 85%, rgba(20, 140, 150, .35) 0%, transparent 62%),
+    radial-gradient(700px 520px at 75% 8%, rgba(110, 80, 200, .22) 0%, transparent 60%),
+    linear-gradient(160deg, #0a0f18 0%, #0d1522 55%, #0a1119 100%);
+  background-attachment: fixed;
+}
+html[data-skin='glasslight'][data-theme][data-accent] {
+  --bg: #eef1f8; --panel: #f9fafd; --raised: #eef1f7; --line: #d6dbe7; --line-soft: #e3e7f0;
+  --text: #121826; --muted: #5a6478; --accent: #5b5bd6; --accent-ink: #ffffff;
+  --sidebar-bg: transparent; --photo-bg: #e7ebf3; --hover-tint: rgba(30, 40, 80, .05);
+  --radius: 10px; --radius-lg: 20px;
+  --skin-grad: linear-gradient(180deg, #7b7bf0, #5450d0);
+  --skin-card: rgba(255, 255, 255, .55);
+  --gl-fill: rgba(255, 255, 255, .55); --gl-fill-2: rgba(255, 255, 255, .72); --gl-edge: rgba(255, 255, 255, .85);
+  --gl-shine: rgba(255, 255, 255, .9); --gl-shadow: 0 12px 34px rgba(60, 70, 120, .12);
+  --gl-blur: blur(22px) saturate(160%); --gl-bar: rgba(248, 249, 253, .78); --gl-input: rgba(255, 255, 255, .7);
+  --gl-active: rgba(255, 255, 255, .9); --gl-glow: rgba(91, 91, 214, .28);
+  --shadow-lg: 0 24px 70px rgba(60, 70, 120, .22);
+}
+html[data-skin='glasslight'][data-theme] body {
+  background:
+    radial-gradient(900px 620px at 8% 10%, rgba(196, 181, 253, .55) 0%, transparent 60%),
+    radial-gradient(820px 640px at 95% 90%, rgba(165, 243, 252, .55) 0%, transparent 62%),
+    radial-gradient(700px 520px at 80% 5%, rgba(251, 207, 232, .55) 0%, transparent 60%),
+    linear-gradient(160deg, #f3f4fb 0%, #eef2f8 55%, #f1f0f8 100%);
+  background-attachment: fixed;
+}
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .panel,
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .stat,
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .project-card,
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .fin-card,
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .notes-app,
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-app { background: var(--gl-fill); border: 1px solid var(--gl-edge); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); box-shadow: inset 0 1px 0 var(--gl-shine), var(--gl-shadow); }
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .notes-folders, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-side { background: var(--gl-fill); }
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .notes-group-card, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-lists, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-card { background: var(--gl-fill-2); }
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .input { background: var(--gl-input); border-color: var(--gl-edge); }
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--gl-glow); }
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .btn { background: var(--gl-fill-2); border-color: var(--gl-edge); }
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .btn-primary { background: var(--skin-grad); border-color: transparent; color: #fff; box-shadow: 0 6px 20px var(--gl-glow), inset 0 1px 0 rgba(255, 255, 255, .35); }
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .btn-ghost { background: transparent; border-color: transparent; }
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .table th { color: var(--muted); border-bottom-color: var(--gl-edge); }
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .table td { border-bottom-color: var(--line-soft); }
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .chat2 { --tg-wall: transparent; }
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .tabbar, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .topbar { background: var(--gl-bar); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); border-color: var(--gl-edge); }
+html[data-skin='glasslight'][data-theme] .input, html[data-skin='glasslight'][data-theme] .btn:not(.btn-primary):not(.btn-ghost) { border-color: rgba(30, 40, 80, .13); }
+html[data-skin='glasslight'][data-theme] .chat-box[data-bubbles='telegram'] { --wa-in: rgba(255, 255, 255, .85); --wa-out: #dcdcff; --wa-wall: transparent; }
+html[data-skin='glassdark'][data-theme] .chat-box[data-bubbles='telegram'] { --wa-in: rgba(255, 255, 255, .09); --wa-out: #2c5d93; --wa-wall: transparent; }
+
+@media (min-width: 821px) {
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidebar { margin: 12px 0 12px 12px; height: calc(100vh - 24px); top: 12px; border: 1px solid var(--gl-edge); border-radius: 24px; background: var(--gl-fill); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); box-shadow: inset 0 1px 0 var(--gl-shine), var(--gl-shadow); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .logo-mark { border-radius: 10px; box-shadow: 0 4px 16px var(--gl-glow); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidenav a { border-radius: 12px; padding: 10px 12px; color: var(--muted); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidenav a:hover { background: var(--hover-tint); color: var(--text); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidenav a.active { background: var(--gl-active); box-shadow: inset 0 0 0 1px var(--gl-edge), 0 4px 14px rgba(0, 0, 0, .08); color: var(--text); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidenav a.active .nav-ico { color: var(--accent); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidebar-logo, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidebar-foot { border-color: var(--line-soft); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .content { padding-top: 28px; }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .skin-ico { background: var(--gl-fill-2); border-color: var(--gl-edge); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .skin-ava { background: var(--skin-grad); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .skin-user:hover { background: var(--hover-tint); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .page-head h1 { font-size: 28px; font-weight: 600; }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .tabs { border-bottom: 0; gap: 6px; }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .tabs a { border: 1px solid transparent; border-radius: 12px; margin: 0; padding: 8px 14px; color: var(--muted); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .tabs a.active { background: var(--gl-active); border-color: var(--gl-edge); color: var(--text); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .segmented { border-color: var(--gl-edge); border-radius: 12px; background: var(--gl-fill); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .segmented button + button { border-left-color: var(--gl-edge); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .segmented button.on { background: var(--gl-active); color: var(--text); }
+}
+
 /* Icon sets (Alex, 8 Oct): Thin and Bold are the Classic drawings with another line, Duotone
    tints the main shape of the Rounded drawings. svg.ico is every icon of components/icons.jsx. */
 html[data-icons='thin'] svg.ico { stroke-width: 1.3; }
