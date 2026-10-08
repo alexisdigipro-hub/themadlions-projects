@@ -134,6 +134,8 @@ export default function Layout() {
     { to: '/calendar', label: 'Calendar', show: can(user, 'calendar'), icon: 'calendar' },
     { to: '/tasks', label: 'Tasks', show: can(user, 'tasks'), icon: 'tasks' },
     { to: '/chat', label: 'Chat', show: true, icon: 'chat', badge: unread },
+    // each person's own notes, like Apple Notes; nobody else reads them (Alex, 8 Oct)
+    { to: '/notes', label: 'Notes', show: true, icon: 'notes' },
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     { to: '/drives', label: 'Drives', show: can(user, 'drives'), icon: 'drives' },

@@ -37,9 +37,26 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
-## Where we stopped (8 Oct 2026)
+## Where we stopped (9 Oct 2026)
 
 Read this first; the detail behind each line is in the pull request that carried it.
+
+### 9 Oct, later: Notes, Tasks like Reminders, wider side menu
+- **Side menu** on a computer 10% wider again: `--sidebar` 255 → 281 px (phone drawer unchanged).
+- **Notes** (`src/pages/Notes.jsx`, `src/lib/notes.js`, route /notes, nav after Chat): private per person, table `notes` (**`supabase/notes.sql`**, every policy `user_id = auth.uid()`), local mode in localStorage `tml_notes`. Rows: kind note | folder, folder_id, title (first line), body (html), pinned, deleted_at (Recently Deleted, purged after 30 days on load). Editor = Office's `mountDoc`, restyled under `.notes-doc` (no A4 page, toolbar at the foot). Every change carries the note id it was opened on, and what was typed in the last 300 ms is taken when the editor closes; saves 0.8 s after the last change, flushed on switching notes, leaving the page and pagehide; reload on window focus keeps notes being typed. Not in the shared store on purpose.
+- **Tasks** (`src/pages/TasksAll.jsx` rewritten): Reminders layout. Smart cards (today = due ≤ today, scheduled, all, urgent = urgent|high, mine, done), lists = General + `settings.taskLists` [{id, name, color, icon}] (administrators only, since only they may write workspace settings; a general task's `listId`) + projects (with tasks or not Delivered). Quick add, Clear completed, Show/Hide completed. Same data (project.tasks, state.todos), same TaskModal and "New task for you" notice. The Dept chips and Everyone / Mine switch are gone from this page (Assigned to me replaces Mine).
+- Release forms fix: only an administrator's release remembers the form language (settings are admin-only; a member's save would have failed).
+- Checked: JSX/import checks; static mocks of both pages with the real CSS at 1300 px and 390 px. Not run in the built app here.
+- Alex: run `supabase/notes.sql`.
+
+### 9 Oct: push notifications for calls and messages (third of the three)
+- **SQL `supabase/push.sql`**: `push_subscriptions` (own rows only; `push_claim()` security definer takes over an endpoint when another account signs in on that browser), `push_config` (RLS on, no policies: the function's VAPID pair), `push_recipients(room)` (who can read a room minus the caller, the same rules as `can_read_chat`).
+- **Edge Function `supabase/functions/push/index.ts`** ("push"): actions key / test / message {id} / call {chatId, callId, video} / call_missed. Makes its VAPID pair on first use with the service key (auto-provided), checks the message (or the direct room) under the caller's own token, sends RFC 8291 aes128gcm + VAPID ES256 with Web Crypto, no library. Encryption checked byte for byte against RFC 8291's Appendix A vector. 404/410 subscriptions are deleted.
+- **`public/sw.js`**: push only, no fetch cache. Always shows a notification (iOS revokes a web app that does not); silent + closed at once when that room is open and visible. Calls: requireInteraction, `call-wake` posted to open windows; tap → focus + `open` message, or openWindow(url). Checked with a mocked worker (7 cases).
+- **`src/lib/push.js`**: register worker, enable/disable (permission after a tap, key from the function, subscription saved through push_claim with `app` = main | chat so the tap opens the right page), test, `pushMessage(id)` (store.jsx after a message insert), `pushCall`, `closeCallNotice`, `refreshPush`.
+- **Calls** (`lib/calls.jsx`): the caller pushes "call" as the call starts and "call_missed" when it ends unanswered (not on Declined / Busy). The callee opened from the notification (`?call=<id>&from=<uid>` in the hash, or the worker's message) sends `{kind:'wake'}` on the caller's line once its own line is open; the caller re-sends the stored ring and restarts its 45 s.
+- Switch: Settings → Chat → Notifications and sounds (ChatSettings.jsx `PushRow`), per device; iPhone needs the home-screen app.
+- Not testable here end to end (needs a real push service and phones). Alex: run push.sql, deploy the push function, merge, switch it on in each app on each phone, then call between two phones with the app closed.
 
 ### 8 Oct, late: release forms with on-screen signature (second of the three)
 - `src/lib/releases.js`: built-in texts (talent / location × el / en, `{producer} {project} {name} {role} {location} {address} {dates} {fee}`), `releaseTemplate(settings, kind, lang)` (settings.releaseTemplates[`kind_lang`] wins), `fillRelease`, `renderRelease` (A4 canvases, multi-page, Greek capitals without accents), `releasePdf` (reuses `buildPdf` / `canvasToJpegBytes` from estimatePdf.js), `releaseFilename`.
