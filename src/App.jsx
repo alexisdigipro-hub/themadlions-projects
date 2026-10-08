@@ -38,6 +38,8 @@ const Shots = lazyPage(() => import('./pages/project/Shots.jsx'))
 const TasksAll = lazyPage(() => import('./pages/TasksAll.jsx'))
 const Database = lazyPage(() => import('./pages/Database.jsx'))
 const Chat = lazyPage(() => import('./pages/Chat.jsx'))
+// the chat alone in a window of its own (the ⧉ button on the chat list), no side menu
+const ChatWindow = lazyPage(() => import('./pages/Chat.jsx').then((m) => ({ default: m.ChatWindow })))
 const MyWork = lazyPage(() => import('./pages/MyWork.jsx'))
 const Profile = lazyPage(() => import('./pages/Profile.jsx'))
 const Drives = lazyPage(() => import('./pages/Drives.jsx'))
@@ -105,6 +107,8 @@ export default function App() {
             <Route path="/sl/:token" element={<PublicShotList />} />
             <Route path="/pr/:token" element={<PublicDeck />} />
             <Route element={<RequireUser />}>
+              <Route path="chat-window" element={<ChatWindow />} />
+              <Route path="chat-window/:room" element={<ChatWindow />} />
               <Route element={<Layout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="calendar" element={<CalendarAll />} />

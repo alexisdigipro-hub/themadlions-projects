@@ -221,6 +221,8 @@ const rowToMessage = (r) => ({
   id: r.id, userId: r.user_id || '', userName: r.user_name || '', text: r.text || '', source: r.source || 'app', createdAt: r.created_at,
   chatId: r.chat_id || 'team', replyTo: r.reply_to || '', editedAt: r.edited_at || '', attachments: Array.isArray(r.attachments) ? r.attachments : [], mentions: Array.isArray(r.mentions) ? r.mentions : [],
   likes: Array.isArray(r.likes) ? r.likes : [],
+  reactions: r.reactions && typeof r.reactions === 'object' && !Array.isArray(r.reactions) ? r.reactions : {},
+  pinnedAt: r.pinned_at || '',
 })
 const rowToChat = (r) => ({ id: r.id, kind: r.kind, name: r.name || '', members: Array.isArray(r.members) ? r.members : [], createdBy: r.created_by || '', createdAt: r.created_at })
 
@@ -764,12 +766,28 @@ export function StoreProvider({ children }) {
         if (was && (was === m || JSON.stringify(was) === JSON.stringify(m))) return
         myWrites.current.add(m.id)
         schedule('m:' + m.id, async () => {
-          // a heart, on anyone's message: only the hearts differ, and they go through chat_like(),
-          // which can add or remove the signed-in person's own heart and nothing else
-          const heartsOnly = was && JSON.stringify({ ...was, likes: undefined }) === JSON.stringify({ ...m, likes: undefined })
-          if (heartsOnly) {
-            const { error } = await supabase.rpc('chat_like', { p_id: m.id, p_on: (m.likes || []).includes(authUser?.id) })
-            if (error) throw new Error(error.code === 'PGRST202' || error.code === '42883' ? 'Run supabase/chat_likes.sql in the SQL editor to turn on hearts in the chat.' : error.message)
+          // a reaction or a pin, on anyone's message: only those differ, and they go through
+          // chat_react() / chat_pin() (and the old 🎥 hearts through chat_like()), which change
+          // nothing but the signed-in person's own reaction or the pin
+          const strip = (x) => ({ ...x, likes: undefined, reactions: undefined, pinnedAt: undefined })
+          const metaOnly = was && JSON.stringify(strip(was)) === JSON.stringify(strip(m))
+          const missing = (error, file) => (error.code === 'PGRST202' || error.code === '42883' ? `Run supabase/${file} in the SQL editor to turn this on in the chat.` : error.message)
+          if (metaOnly) {
+            const me = authUser?.id
+            if (JSON.stringify(was.likes || []) !== JSON.stringify(m.likes || [])) {
+              const { error } = await supabase.rpc('chat_like', { p_id: m.id, p_on: (m.likes || []).includes(me) })
+              if (error) throw new Error(missing(error, 'chat_likes.sql'))
+            }
+            if (JSON.stringify(was.reactions || {}) !== JSON.stringify(m.reactions || {})) {
+              const mineIn = (r) => Object.keys(r || {}).find((k) => (r[k] || []).includes(me))
+              const now = mineIn(m.reactions)
+              const { error } = await supabase.rpc('chat_react', { p_id: m.id, p_emoji: now || mineIn(was.reactions) || '🎥', p_on: !!now })
+              if (error) throw new Error(missing(error, 'chat_reactions.sql'))
+            }
+            if ((was.pinnedAt || '') !== (m.pinnedAt || '')) {
+              const { error } = await supabase.rpc('chat_pin', { p_id: m.id, p_on: !!m.pinnedAt })
+              if (error) throw new Error(missing(error, 'chat_reactions.sql'))
+            }
           } else if (was) {
             // only the writer's own text and attachments change after the fact (edit, or a file removed)
             const { error } = await supabase.from('messages').update({ text: m.text, edited_at: m.editedAt || null, attachments: m.attachments || [] }).eq('id', m.id)
