@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, Modal, useToast } from './ui.jsx'
 import { MAX_ZOOM, centred, clamp, cropRect, pan, renderCrop } from '../lib/coverCrop.js'
-import { compress, deletePhoto, photoUrls, uploadPhoto } from '../lib/photos.js'
+import { compress, deletePhoto, photoBlob, uploadPhoto } from '../lib/photos.js'
+import { pcloudTarget } from '../lib/pcloud.js'
+import { useStore } from '../lib/store.jsx'
 import { remote } from '../lib/supabase.js'
 
 /* Everything around the cropper, for the two places a cover is set (the Overview and the
@@ -15,6 +17,7 @@ import { remote } from '../lib/supabase.js'
    a project not yet created has no folder there, so it keeps only the square until it exists. */
 export function useCover({ value, projectId, keepSource, onChange }) {
   const toast = useToast()
+  const { state } = useStore()
   const [editing, setEditing] = useState(null) // { src, blob?, crop, fresh }
   const [saving, setSaving] = useState(false)
   const close = () => { if (editing?.src?.startsWith('blob:')) URL.revokeObjectURL(editing.src); setEditing(null) }
@@ -30,12 +33,9 @@ export function useCover({ value, projectId, keepSource, onChange }) {
   }
   const adjust = async () => {
     const src = value?.coverSource
-    if (src?.path || src?.inline) {
+    if (src?.path || src?.inline || src?.fileid) {
       try {
-        const url = (await photoUrls([src]))[src.id]
-        const r = await fetch(url)
-        if (!r.ok) throw new Error(String(r.status))
-        return setEditing({ src: URL.createObjectURL(await r.blob()), crop: value.coverCrop || centred(), fresh: false })
+        return setEditing({ src: URL.createObjectURL(await photoBlob(src)), crop: value.coverCrop || centred(), fresh: false })
       } catch { /* the original is gone: cut again from the square itself */ }
     }
     if (value?.coverThumb) setEditing({ src: value.coverThumb, crop: centred(), fresh: false, fromThumb: true })
@@ -48,8 +48,8 @@ export function useCover({ value, projectId, keepSource, onChange }) {
       if (keepSource && remote && projectId) {
         try {
           const id = `source-${Date.now().toString(36)}`
-          const { path } = await uploadPhoto({ projectId, ownerId: 'cover', id, blob: editing.blob })
-          patch.coverSource = { id: 'cover', path }
+          const { path, fileid, scope } = await uploadPhoto({ projectId, ownerId: 'cover', id, blob: editing.blob, pcloud: pcloudTarget(state, projectId, 'Cover') })
+          patch.coverSource = fileid ? { id: 'cover', fileid, scope } : { id: 'cover', path }
         } catch { /* the square is saved all the same; Adjust then works from it */ }
       }
       dropOld()
@@ -63,8 +63,9 @@ export function useCover({ value, projectId, keepSource, onChange }) {
   }
   // Only a file in this project's own folder: a copied project points at the original's.
   const dropOld = () => {
-    const old = value?.coverSource?.path
-    if (old && projectId && old.startsWith(`${projectId}/`)) deletePhoto(old).catch(() => {})
+    const old = value?.coverSource
+    if (!old || !projectId) return
+    if (old.fileid ? old.scope?.id === projectId : old.path?.startsWith(`${projectId}/`)) deletePhoto(old).catch(() => {})
   }
   const remove = () => { dropOld(); onChange({ coverThumb: '', coverSource: null, coverCrop: null }) }
 

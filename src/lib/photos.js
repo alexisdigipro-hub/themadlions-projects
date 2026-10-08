@@ -1,10 +1,14 @@
 import { remote, supabase } from './supabase.js'
+import { pcloudBlob, pcloudDelete, pcloudLinks, pcloudUpload } from './pcloud.js'
 
 /*
   Photos: compressed in the browser, stored in the private Supabase bucket "photos"
   under <projectId>/<ownerId>/<photoId>.jpg. The project document keeps only a small
   thumbnail and the storage path. In local mode the compressed image itself is kept
   in the document (fine for a few, heavy for many).
+  With Settings > Integrations > File storage = pCloud, new photos go to Alex's pCloud instead
+  (a folder per project, Library for the Database page) and the record keeps `fileid` + `scope`
+  in place of the path. Photos uploaded before stay where they are and keep opening.
 */
 
 const BUCKET = 'photos'
@@ -45,7 +49,12 @@ export async function compress(file, { max = 1600, quality = 0.82, thumb = 320 }
   }
 }
 
-export async function uploadPhoto({ projectId, ownerId, id, blob }) {
+export async function uploadPhoto({ projectId, ownerId, id, blob, pcloud }) {
+  if (remote && pcloud) {
+    const file = new File([blob], `${id}.jpg`, { type: 'image/jpeg' })
+    const r = await pcloudUpload({ file, folder: pcloud.folder, scope: pcloud.scope })
+    return { path: '', inline: '', fileid: r.fileid, scope: pcloud.scope }
+  }
   if (!remote) {
     // local mode: keep the compressed image inline
     return { path: '', inline: await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(blob) }) }
@@ -56,9 +65,26 @@ export async function uploadPhoto({ projectId, ownerId, id, blob }) {
   return { path, inline: '' }
 }
 
-export async function deletePhoto(path) {
-  if (!remote || !path) return
-  await supabase.storage.from(BUCKET).remove([path])
+/* Takes the photo record (or, from older code, its storage path). */
+export async function deletePhoto(p) {
+  if (!remote || !p) return
+  if (typeof p === 'object') {
+    if (p.fileid) return void (await pcloudDelete(p.fileid, p.scope))
+    p = p.path
+  }
+  if (!p) return
+  await supabase.storage.from(BUCKET).remove([p])
+}
+
+/* The photo's bytes, for drawing it on a canvas (presentation slides, the cover crop). A pCloud
+   photo comes through the pcloud function, which answers from this site's own address. */
+export async function photoBlob(p) {
+  if (p?.fileid) return pcloudBlob(p.fileid, p.scope)
+  const url = (await photoUrls([p]))[p.id]
+  if (!url) throw new Error('No picture.')
+  const r = await fetch(url)
+  if (!r.ok) throw new Error(`Could not load a picture (${r.status}).`)
+  return r.blob()
 }
 
 const urlCache = new Map() // path -> { url, exp }
@@ -66,9 +92,14 @@ export async function photoUrls(photos) {
   const out = {}
   const need = []
   const now = Date.now()
+  const fromPcloud = []
   photos.forEach((p) => {
     if (p.inline) out[p.id] = p.inline
-    else if (p.path) {
+    else if (p.fileid) {
+      const c = urlCache.get(`pc:${p.fileid}`)
+      if (c && c.exp > now) out[p.id] = c.url
+      else fromPcloud.push(p)
+    } else if (p.path) {
       const c = urlCache.get(p.path)
       if (c && c.exp > now) out[p.id] = c.url
       else need.push(p)
@@ -84,6 +115,20 @@ export async function photoUrls(photos) {
         }
       })
     }
+  }
+  if (fromPcloud.length && remote) {
+    // one call per project (or the library), however many photos it has
+    const byScope = new Map()
+    fromPcloud.forEach((p) => { const k = JSON.stringify(p.scope || null); if (!byScope.has(k)) byScope.set(k, []); byScope.get(k).push(p) })
+    await Promise.all([...byScope.values()].map(async (list) => {
+      try {
+        const urls = await pcloudLinks(list.map((p) => p.fileid), list[0].scope)
+        list.forEach((p) => {
+          const u = urls[p.fileid]
+          if (u) { out[p.id] = u; urlCache.set(`pc:${p.fileid}`, { url: u, exp: now + 50 * 60 * 1000 }) }
+        })
+      } catch { /* the small picture kept in the record stands in */ }
+    }))
   }
   return out
 }

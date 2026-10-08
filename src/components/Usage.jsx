@@ -46,7 +46,7 @@ export default function Usage({ state, setSetting }) {
     ['Open-Meteo', 'Weather and sun times on call sheets', 'Free up to 10,000 requests a day', ''],
     ['Anthropic (Claude)', 'AI breakdown of scripts and treatments', s.aiKey ? 'Key set on this device' : 'No key on this device', 'https://console.anthropic.com'],
     ['OpenAI (Whisper)', 'Lyrics and timing in the Music tab', s.openaiKey ? 'Key set on this device' : 'No key on this device', 'https://platform.openai.com/usage'],
-    ['pCloud', 'Project files', pcloudOn(s) ? 'Connected' : 'Not connected', ''],
+    ['pCloud', 'Photos, songs, chat files', pcloudOn(s) ? 'Connected' : 'Not connected', ''],
     ['Google Calendar', 'Calendar sync', gcalOn(s) ? 'Connected' : 'Not connected', ''],
   ]
 

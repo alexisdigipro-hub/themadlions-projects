@@ -3,7 +3,8 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast
 import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
-import { SECTION_NAMES, analyze, deleteTrack, fmtTime, fmtTimeMs, parseTime, songMapText, trackUrl, uploadTrack, lastTrackError } from '../../lib/audio.js'
+import { SECTION_NAMES, analyze, deleteTrack, fmtTime, fmtTimeMs, parseTime, songMapText, trackBlob, trackUrl, uploadTrack, lastTrackError } from '../../lib/audio.js'
+import { pcloudTarget } from '../../lib/pcloud.js'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { remote } from '../../lib/supabase.js'
 import { useStore } from '../../lib/store.jsx'
@@ -123,9 +124,9 @@ export default function Music() {
       const id = uid()
       lastFile.current = { file, trackId: id }
       setBusy('Uploading…')
-      const { path, ext } = await uploadTrack({ projectId: project.id, id, file })
+      const { path, ext, fileid, scope } = await uploadTrack({ projectId: project.id, id, file, pcloud: pcloudTarget(state, project.id, 'Music') })
       setMusic((m) => {
-        m.tracks.push({ id, name: file.name.replace(/\.[^.]+$/, ''), path, ext, duration, peaks, bytes: file.size, kind: m.tracks.length ? 'other' : 'master', addedAt: new Date().toISOString() })
+        m.tracks.push({ id, name: file.name.replace(/\.[^.]+$/, ''), path, ext, ...(fileid ? { fileid, scope } : {}), duration, peaks, bytes: file.size, kind: m.tracks.length ? 'other' : 'master', addedAt: new Date().toISOString() })
         m.activeTrackId = id
       })
       toast(original !== file ? `${original.name} converted to MP3 (${Math.round(original.size / 1048576)} MB → ${(file.size / 1048576).toFixed(1)} MB) and added · ${fmtTime(duration)}` : `${file.name} added · ${fmtTime(duration)}`, 'ok')
@@ -137,7 +138,8 @@ export default function Music() {
     }
   }
   const removeTrack = async (t) => {
-    await deleteTrack(t.path).catch(() => {})
+    // a copied project shares the original's pCloud song: only this project's own is deleted
+    if (!t.fileid || t.scope?.id === project.id) await deleteTrack(t).catch(() => {})
     setMusic((m) => { m.tracks = m.tracks.filter((x) => x.id !== t.id); if (m.activeTrackId === t.id) m.activeTrackId = m.tracks[0]?.id || '' })
   }
 
@@ -178,15 +180,13 @@ export default function Music() {
   const getAudioFile = async () => {
     // the file just uploaded is reused only for the track it belongs to, not for whichever is active now
     if (lastFile.current && lastFile.current.trackId === track?.id) return lastFile.current.file
-    if (!url) throw new Error(`Could not get the song from storage. ${lastTrackError || 'Reload the page and try again.'}`)
-    let res
+    if (!url && !track?.fileid) throw new Error(`Could not get the song from storage. ${lastTrackError || 'Reload the page and try again.'}`)
+    let blob
     try {
-      res = await fetch(url)
+      blob = await trackBlob(track, url)
     } catch (e) {
-      throw new Error(`Could not download the song from storage (${e.message}). Check the connection and try again.`)
+      throw new Error(`Could not download the song (${e.message}). Check the connection and try again.`)
     }
-    if (!res.ok) throw new Error(`Could not download the song from storage (${res.status}). Reload the page and try again; the link may have expired.`)
-    const blob = await res.blob()
     return new File([blob], `${track.name}.${track.ext || 'mp3'}`, { type: blob.type || 'audio/mpeg' })
   }
   /* Saves the stored file to the device with its own name. A blob link, not the signed URL
@@ -196,7 +196,7 @@ export default function Music() {
     if (!url) return
     setSaving(true)
     try {
-      const blob = await (await fetch(url)).blob()
+      const blob = await trackBlob(track, url)
       const href = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = href; a.download = `${track.name}.${track.ext || 'mp3'}`

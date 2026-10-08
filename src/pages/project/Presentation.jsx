@@ -78,7 +78,8 @@ export default function Presentation() {
     return list
   })
   const remove = (s) => {
-    ;(s.photos || []).forEach((ph) => deletePhoto(ph.path).catch(() => {}))
+    // a copied project's pCloud pictures belong to the original: those stay
+    ;(s.photos || []).filter((ph) => !ph.fileid || ph.scope?.id === project.id).forEach((ph) => deletePhoto(ph).catch(() => {}))
     setSlides((list) => list.filter((x) => x.id !== s.id))
   }
 

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, Confirm, useToast } from './ui.jsx'
-import { uid } from '../lib/store.jsx'
+import { uid, useStore } from '../lib/store.jsx'
+import { pcloudTarget } from '../lib/pcloud.js'
 import { compress, deletePhoto, fmtBytes, photoUrls, uploadPhoto } from '../lib/photos.js'
 
 /* Reusable photo gallery. `photos` live on the parent record; `onChange(nextPhotos)` persists them. */
 export default function PhotoGrid({ photos = [], onChange, projectId, ownerId, editable, title = 'Photos' }) {
   const toast = useToast()
+  const { state } = useStore()
   const fileRef = useRef()
   const [busy, setBusy] = useState('')
   const [urls, setUrls] = useState({})
@@ -28,8 +30,9 @@ export default function PhotoGrid({ photos = [], onChange, projectId, ownerId, e
         const c = await compress(list[i])
         const id = uid()
         setBusy(`Uploading ${i + 1} of ${list.length}…`)
-        const { path, inline } = await uploadPhoto({ projectId, ownerId, id, blob: c.blob })
-        next.push({ id, path, inline, thumb: c.thumb, w: c.w, h: c.h, bytes: c.bytes, caption: '', addedAt: new Date().toISOString() })
+        // pCloud when Settings > Integrations > File storage says so, the built-in storage otherwise
+        const { path, inline, fileid, scope } = await uploadPhoto({ projectId, ownerId, id, blob: c.blob, pcloud: pcloudTarget(state, projectId) })
+        next.push({ id, path, inline, ...(fileid ? { fileid, scope } : {}), thumb: c.thumb, w: c.w, h: c.h, bytes: c.bytes, caption: '', addedAt: new Date().toISOString() })
         saved += c.originalBytes - c.bytes
         before += c.originalBytes
         after += c.bytes
@@ -45,7 +48,10 @@ export default function PhotoGrid({ photos = [], onChange, projectId, ownerId, e
     if (fileRef.current) fileRef.current.value = ''
   }
   const remove = async (p) => {
-    await deletePhoto(p.path).catch(() => {})
+    // a copied project shares the original's pCloud photos: only a photo of this project (or of
+    // the library, from the Database page) is deleted from pCloud, the rest just leave the list
+    const own = !p.fileid || p.scope?.id === projectId || (p.scope?.kind === 'library' && projectId === 'library')
+    if (own) await deletePhoto(p).catch(() => {})
     onChange(photos.filter((x) => x.id !== p.id))
   }
   const setCaption = (p, caption) => onChange(photos.map((x) => (x.id === p.id ? { ...x, caption } : x)))

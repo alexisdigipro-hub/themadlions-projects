@@ -12,7 +12,9 @@
 //   PCLOUD_HOST    eapi.pcloud.com for a European account (default), api.pcloud.com for a US one
 //   PCLOUD_ROOT    the folder everything goes under, default "/TML HUB"
 //
-// Actions (POST, JSON or multipart): ping · upload · link · delete. See src/lib/pcloud.js.
+// Actions (POST, JSON or multipart): ping · upload · link · links · raw · delete. See src/lib/pcloud.js.
+// Scopes: a project (its files, photos and songs), a chat room, or the company library (the
+// people and locations of the Database page, shared by every project).
 
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from 'npm:@supabase/supabase-js@2'
@@ -53,24 +55,48 @@ async function ensureFolder(parts: string[]) {
   return path
 }
 
-type Scope = { kind: 'project' | 'chat'; id: string }
+type Scope = { kind: 'project' | 'chat' | 'library'; id: string }
+
+/* Is this pCloud file recorded anywhere in this piece of data? Every record the app keeps for a
+   pCloud file (a project file, a photo, a song, a chat attachment) carries "fileid": <n>. */
+const mentions = (data: any, fileid: number) => new RegExp(`"fileid":${fileid}(?![0-9])`).test(JSON.stringify(data ?? null))
+
+/* The library rows the caller can read (people, locations), for photos kept there. */
+async function inLibrary(db: any, fileid: number) {
+  const { data } = await db.from('library').select('data').in('kind', ['contact', 'location'])
+  return mentions(data, fileid)
+}
 
 /* What the caller may do, asked of the database with the caller's own token, so the answer is
    exactly what Row Level Security would say. With a fileid the file must also be recorded in
    that project or that room, so a member cannot fetch another project's file by guessing ids. */
-async function allowed(db: any, uid: string, scope: Scope, fileid?: number, forDelete = false) {
+async function allowed(db: any, uid: string, scope: Scope, fileid?: number, forDelete = false, forUpload = false) {
   if (!scope || !scope.id) return false
   if (scope.kind === 'project') {
     const { data: ok } = await db.rpc('can_view_project', { pid: scope.id })
     if (!ok) return false
     if (forDelete) {
-      const { data: perm } = await db.rpc('my_perm', { p_module: 'files' })
-      if (perm !== 'edit') return false
+      // files need Files & notes = edit; photos and songs need the project itself editable
+      const [{ data: perm }, { data: canEdit }] = await Promise.all([db.rpc('my_perm', { p_module: 'files' }), db.rpc('can_edit_project', { pid: scope.id })])
+      if (perm !== 'edit' && !canEdit) return false
     }
     if (fileid) {
-      const { data } = await db.from('projects').select('id').eq('id', scope.id).contains('data->files', [{ fileid }])
+      // recorded anywhere in this project, or in the library when it is a person's or a
+      // location's photo shown inside the project
+      const { data } = await db.from('projects').select('data').eq('id', scope.id)
       if (!data?.length) return false
+      if (!mentions(data[0].data, fileid) && !(await inLibrary(db, fileid))) return false
     }
+    return true
+  }
+  if (scope.kind === 'library') {
+    const { data: ws } = await db.rpc('my_ws')
+    if (!ws) return false
+    if (forDelete || forUpload) {
+      const { data: canEdit } = await db.rpc('can_edit_any')
+      if (!canEdit) return false
+    }
+    if (fileid && !(await inLibrary(db, fileid))) return false
     return true
   }
   if (scope.kind === 'chat') {
@@ -125,7 +151,7 @@ Deno.serve(async (req) => {
 
     if (action === 'upload') {
       if (!file) return json({ error: 'No file.' }, 400)
-      if (!(await allowed(db, uid, body.scope))) return json({ error: 'You cannot upload there.' }, 403)
+      if (!(await allowed(db, uid, body.scope, undefined, false, true))) return json({ error: 'You cannot upload there.' }, 403)
       const path = await ensureFolder(Array.isArray(body.folder) ? body.folder : [])
       const fd = new FormData()
       fd.append('file', file, file.name)
@@ -142,6 +168,45 @@ Deno.serve(async (req) => {
       const r = await pc('getfilelink', { fileid, forcedownload: body.download ? 1 : 0 })
       const host = Array.isArray(r.hosts) && r.hosts.length ? r.hosts[0] : HOST
       return json({ ok: true, url: `https://${host}${r.path}`, expires: r.expires })
+    }
+
+    // several links at once, for a gallery or a slide: one permission check for the lot
+    if (action === 'links') {
+      const ids = (Array.isArray(body.fileids) ? body.fileids : []).map(Number).filter(Boolean).slice(0, 200)
+      if (!ids.length) return json({ ok: true, urls: {} })
+      const scope = body.scope
+      if (!(await allowed(db, uid, scope))) return json({ error: 'You cannot open these files.' }, 403)
+      let lib: any = null
+      let proj: any = null
+      if (scope?.kind === 'project') proj = (await db.from('projects').select('data').eq('id', scope.id)).data?.[0]?.data
+      const known = async (id: number) => {
+        if (proj && mentions(proj, id)) return true
+        if (lib === null) lib = (await db.from('library').select('data').in('kind', ['contact', 'location'])).data || []
+        return mentions(lib, id)
+      }
+      const urls: Record<string, string> = {}
+      await Promise.all(ids.map(async (id: number) => {
+        if (!(await known(id))) return
+        try {
+          const r = await pc('getfilelink', { fileid: id })
+          const host = Array.isArray(r.hosts) && r.hosts.length ? r.hosts[0] : HOST
+          urls[id] = `https://${host}${r.path}`
+        } catch { /* gone from pCloud: the app shows the small picture it keeps */ }
+      }))
+      return json({ ok: true, urls })
+    }
+
+    // the file's bytes themselves, for the presentation's slides, which are drawn in the browser
+    // and need the picture from this same address
+    if (action === 'raw') {
+      const fileid = Number(body.fileid)
+      if (!fileid) return json({ error: 'No file id.' }, 400)
+      if (!(await allowed(db, uid, body.scope, fileid))) return json({ error: 'You cannot open this file.' }, 403)
+      const r = await pc('getfilelink', { fileid })
+      const host = Array.isArray(r.hosts) && r.hosts.length ? r.hosts[0] : HOST
+      const file = await fetch(`https://${host}${r.path}`)
+      if (!file.ok) return json({ error: `pCloud answered ${file.status}` }, 502)
+      return new Response(file.body, { headers: { ...CORS, 'Content-Type': file.headers.get('content-type') || 'application/octet-stream', 'Cache-Control': 'private, max-age=3600' } })
     }
 
     if (action === 'delete') {
