@@ -17,7 +17,8 @@ import { remote, supabase } from '../lib/supabase.js'
 import { testKey } from '../lib/ai.js'
 import { checkOpenAIKey } from '../lib/transcribe.js'
 import { buildICS, download } from '../lib/dates.js'
-import { SKINS, applyThemeChoice, isSkin } from '../lib/skin.js'
+import { SKINS, SKIN_ICONS, applyThemeChoice, isSkin } from '../lib/skin.js'
+import { ICON_SETS, IconPreview, applyIconSet } from '../components/icons.jsx'
 
 export default function Settings() {
   const { state, update, replaceState, logout, mode, syncError, localBackup } = useStore()
@@ -31,8 +32,13 @@ export default function Settings() {
   const [theme, setTheme] = useState(() => localStorage.getItem('tml_theme') || 'light')
   const [accent, setAccent] = useState(() => localStorage.getItem('tml_accent') || 'amber')
   const [font, setFont] = useState(currentFont)
+  const [icons, setIcons] = useState(() => document.documentElement.dataset.icons || 'classic')
   const pickFont = (id) => setFont(applyFont(id))
-  const applyTheme = (v) => { setTheme(v); localStorage.setItem('tml_theme', v); applyThemeChoice(v) }
+  const applyTheme = (v) => {
+    setTheme(v); localStorage.setItem('tml_theme', v); applyThemeChoice(v)
+    // a skin comes with its own icons, as in its design; Icons below can change them afterwards
+    if (SKIN_ICONS[v]) setIcons(applyIconSet(SKIN_ICONS[v]))
+  }
   const applyAccent = (v) => { setAccent(v); localStorage.setItem('tml_accent', v); document.documentElement.dataset.accent = v }
   const applyTextSize = (v) => {
     setTextSize(v)
@@ -323,13 +329,13 @@ export default function Settings() {
         <section className="panel" data-tab="display">
           <h2>Display</h2>
           <Field label="Theme">
-            <div className="segmented small">
+            <div className="segmented small wrap">
               {[['light', 'Light'], ['dark', 'Dark'], ...SKINS].map(([v, l]) => (
                 <button key={v} className={theme === v ? 'on' : ''} onClick={() => applyTheme(v)}>{l}</button>
               ))}
             </div>
           </Field>
-          {isSkin(theme) ? <p className="muted small">{SKINS.find(([k]) => k === theme)[1]} has its own colours, so the accent colour below is not used while it is on.</p> : null}
+          {isSkin(theme) ? <p className="muted small">{SKINS.find(([k]) => k === theme)[1]} has its own colours and layout, so the accent colour below is not used while it is on.</p> : null}
           <Field label="Accent colour">
             <div className="accent-swatches">
               {[['amber', '#c9932f', 'Lion amber'], ['red', '#c8503f', 'Red'], ['slate', '#3f5578', 'Slate blue'], ['lilac', '#7a5ec7', 'Lilac'], ['green', '#3f8f5f', 'Forest'], ['teal', '#2b8a93', 'Teal'], ['blue', '#3b7dd8', 'Ocean'], ['rose', '#c4547f', 'Rose'], ['orange', '#d9762b', 'Orange'], ['ink', '#1f2430', 'Ink']].map(([v, c, l]) => (
@@ -348,6 +354,18 @@ export default function Settings() {
               ))}
             </div>
             <span className="field-hint">All of these cover Greek, so a call sheet in both languages reads as one face. A font is fetched from Google Fonts when you hover or pick it; your choice is kept on this device.</span>
+          </div>
+          <div className="field">
+            <span className="field-label">Icons</span>
+            <div className="icon-sets">
+              {ICON_SETS.map(([v, l]) => (
+                <button key={v} type="button" className={`icon-set ${icons === v ? 'on' : ''}`} onClick={() => setIcons(applyIconSet(v))} aria-pressed={icons === v}>
+                  <IconPreview set={v} keys={['home', 'calendar', 'chat', 'projects', 'settings']} />
+                  <span>{l}</span>
+                </button>
+              ))}
+            </div>
+            <span className="field-hint">The icons in the menu, the bottom bar and a project's tabs.</span>
           </div>
           <Field label="Text size" hint="Display settings are saved on this device only.">
             <div className="segmented small">

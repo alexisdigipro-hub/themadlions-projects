@@ -18,8 +18,10 @@ export default function PublicCallSheet() {
     if (!theme) return undefined
     const html = document.documentElement
     const before = html.dataset.theme
+    const skin = html.dataset.skin // an app skin would recolour the production's chosen look
     html.dataset.theme = theme
-    return () => { html.dataset.theme = before }
+    delete html.dataset.skin
+    return () => { html.dataset.theme = before; if (skin) html.dataset.skin = skin }
   }, [theme])
 
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading call sheet…</p></div>

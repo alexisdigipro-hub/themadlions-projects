@@ -4,6 +4,7 @@ import App from './App.jsx'
 import './styles.css'
 import { applyFont, currentFont } from './lib/fonts.js'
 import { applyThemeChoice } from './lib/skin.js'
+import { applyIconSet } from './components/icons.jsx'
 
 // Back from "Connect pCloud": pCloud puts the token in the address (#access_token=…), which the
 // router would swallow. Park it for Settings to show once, then land on Settings.
@@ -32,6 +33,7 @@ try {
   applyThemeChoice(localStorage.getItem('tml_theme') || 'light')
   document.documentElement.dataset.accent = localStorage.getItem('tml_accent') || 'amber'
   applyFont(currentFont())
+  applyIconSet(localStorage.getItem('tml_icons') || 'classic')
 } catch {}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
