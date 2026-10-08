@@ -4361,56 +4361,321 @@ html .cset-theme.on[data-chat-theme='coral'] .cset-theme-pic { border-color: #f2
 .chat-call-acts .chat-head-ico svg { width: 20px; height: 20px; }
 .chat-call-acts .chat-head-ico:disabled { opacity: .4; }
 
-/* ===== App skins (Alex, 8 Oct, from two dashboard designs): Settings > Display > Theme =====
-   Each is a dark theme (data-theme='dark' stays, so every dark rule still holds) with its own
-   colours on top, its accent included (the accent picker is not used while one is on). */
+/* ===== App skins (Alex, 8 Oct, from four designs he sent): Settings > Display > Theme =====
+   Not only colours: on a computer each brings the design's layout, a bar across the top
+   (search, chat, you: SkinBar in Layout.jsx), its own sidebar with a card to start a project and
+   an Account section, and its own cards, tabs, tables and buttons. On a phone the colours come
+   along and the phone's own layout stays. Every rule hangs on html[data-skin=…][data-theme], so
+   Light and Dark are untouched, and it comes late enough in the file to win over them.
+   Violet night, Teal slate and Ember sit on Dark, Coral on Light (lib/skin.js). */
 
-/* Violet night: near-black, cards with a faint violet glow in their corner, a magenta-to-violet
-   gradient on the main buttons, rounded navigation pills. */
-html[data-theme='dark'][data-skin='violet'][data-accent] {
+.skin-bar, .nav-section, .side-promo { display: none; }
+
+/* ---------- colours (everywhere, phone included) ---------- */
+html[data-skin='violet'][data-theme][data-accent] {
   --bg: #0a0a0c; --panel: #131316; --raised: #1c1c21; --line: #2b2b33; --line-soft: #212128;
   --text: #f3f2f7; --muted: #8f8d9b; --accent: #b84ce8; --accent-ink: #ffffff;
   --sidebar-bg: #0f0f12; --photo-bg: #0d0d10; --hover-tint: rgba(184, 76, 232, .05);
-  --radius: 9px; --radius-lg: 14px;
+  --radius: 10px; --radius-lg: 16px;
   --skin-grad: linear-gradient(135deg, #e04bd8, #9a3cf0);
-  --skin-card: linear-gradient(155deg, rgba(184, 76, 232, .07), rgba(184, 76, 232, 0) 45%), #131316;
+  --skin-card: linear-gradient(155deg, rgba(184, 76, 232, .08), rgba(184, 76, 232, 0) 45%), #131316;
   --shadow-lg: 0 24px 70px rgba(0, 0, 0, .7), 0 0 0 1px rgba(184, 76, 232, .12);
 }
-html[data-theme='dark'][data-skin='violet'] body { background: radial-gradient(900px 500px at 100% -10%, rgba(184, 76, 232, .13), transparent 60%), radial-gradient(700px 500px at -10% 110%, rgba(120, 40, 200, .10), transparent 60%), #0a0a0c; background-attachment: fixed; }
+html[data-skin='violet'][data-theme] body { background: radial-gradient(900px 500px at 100% -10%, rgba(184, 76, 232, .14), transparent 60%), radial-gradient(700px 500px at -10% 110%, rgba(120, 40, 200, .10), transparent 60%), #0a0a0c; background-attachment: fixed; }
 
-/* Teal slate: graphite, a teal accent, a lime mark, flat soft cards. */
-html[data-theme='dark'][data-skin='teal'][data-accent] {
-  --bg: #1f2226; --panel: #282b31; --raised: #31353c; --line: #3b3f47; --line-soft: #32363d;
+html[data-skin='teal'][data-theme][data-accent] {
+  --bg: #25282d; --panel: #2c3036; --raised: #343840; --line: #40444c; --line-soft: #363a41;
   --text: #eef1f3; --muted: #a2a8b1; --accent: #3f9e90; --accent-ink: #ffffff;
-  --sidebar-bg: #25282d; --photo-bg: #1b1d21; --hover-tint: rgba(63, 158, 144, .06);
+  --sidebar-bg: #2c3036; --photo-bg: #1d2024; --hover-tint: rgba(63, 158, 144, .06);
   --radius: 8px; --radius-lg: 12px;
   --skin-grad: linear-gradient(135deg, #48b3a3, #2f8577);
-  --skin-card: #282b31;
-  --skin-mark: #b8f08c;
+  --skin-card: #2c3036; --skin-mark: #b8f08c;
   --shadow-lg: 0 24px 70px rgba(0, 0, 0, .55);
 }
-html[data-theme='dark'][data-skin='teal'] body { background: radial-gradient(1000px 500px at 50% -20%, rgba(63, 158, 144, .14), transparent 65%), #1f2226; background-attachment: fixed; }
+html[data-skin='teal'][data-theme] body { background: radial-gradient(1100px 520px at 50% -25%, rgba(63, 158, 144, .16), transparent 65%), #25282d; background-attachment: fixed; }
 
-/* what both share: cards, the navigation, buttons, inputs */
-html[data-theme='dark'][data-skin] .panel,
-html[data-theme='dark'][data-skin] .stat,
-html[data-theme='dark'][data-skin] .project-card,
-html[data-theme='dark'][data-skin] .fin-card { background: var(--skin-card); border-color: var(--line-soft); border-radius: var(--radius-lg); }
-html[data-theme='dark'][data-skin] .sidebar { border-right-color: var(--line-soft); }
-html[data-theme='dark'][data-skin] .sidenav a { border-radius: 10px; }
-html[data-theme='dark'][data-skin] .sidenav a.active { background: var(--raised); box-shadow: none; color: var(--text); }
-html[data-theme='dark'][data-skin] .btn-primary { background: var(--skin-grad); border-color: transparent; color: #fff; }
-html[data-theme='dark'][data-skin] .btn-primary:hover { background: var(--skin-grad); border-color: transparent; filter: brightness(1.08); }
-html[data-theme='dark'][data-skin] .input { background: var(--raised); border-color: var(--line-soft); }
-html[data-theme='dark'][data-skin] .modal { background: var(--panel); border-color: var(--line); }
-html[data-theme='dark'][data-skin='violet'] .btn-primary { box-shadow: 0 6px 22px rgba(184, 76, 232, .35); }
-html[data-theme='dark'][data-skin='violet'] .sidenav a.active { background: #1f1f25; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05); }
-html[data-theme='dark'][data-skin='violet'] .sidenav a.active .nav-ico { color: #d26cf0; }
-html[data-theme='dark'][data-skin='violet'] .stat-value { background: linear-gradient(90deg, #fff, #e3c8f5); -webkit-background-clip: text; background-clip: text; color: transparent; }
-html[data-theme='dark'][data-skin='teal'] .logo-mark { border-color: var(--skin-mark); }
-html[data-theme='dark'][data-skin='teal'] .sidenav a.active .nav-ico { color: var(--skin-mark); }
-html[data-theme='dark'][data-skin='teal'] .panel,
-html[data-theme='dark'][data-skin='teal'] .stat { border-color: transparent; }
-/* the chat's wallpaper and others' bubbles follow the skin's greys instead of the dark navy */
-html[data-theme='dark'][data-skin] .chat2 { --tg-wall: color-mix(in srgb, var(--accent) 5%, var(--bg)); }
-html[data-theme='dark'][data-skin] .chat-box[data-bubbles='telegram'] { --wa-in: var(--raised); --wa-wall: color-mix(in srgb, var(--accent) 5%, var(--bg)); }
+html[data-skin='ember'][data-theme][data-accent] {
+  --bg: #0d0d0f; --panel: #161618; --raised: #1f1f23; --line: #2b2b30; --line-soft: #222226;
+  --text: #f2f2f3; --muted: #8d8d94; --accent: #ff5a1f; --accent-ink: #ffffff;
+  --sidebar-bg: #131315; --photo-bg: #0f0f11; --hover-tint: rgba(255, 90, 31, .05);
+  --radius: 8px; --radius-lg: 12px;
+  --skin-violet: #8b7cf6;
+  --skin-grad: linear-gradient(135deg, #ff7a3d, #ff4d12);
+  --skin-card: #161618;
+  --shadow-lg: 0 24px 70px rgba(0, 0, 0, .7);
+}
+html[data-skin='ember'][data-theme] body { background: radial-gradient(900px 600px at 50% 120%, rgba(139, 124, 246, .16), transparent 60%), #0d0d0f; background-attachment: fixed; }
+
+html[data-skin='coral'][data-theme][data-accent] {
+  --bg: #fbf1ec; --panel: #ffffff; --raised: #f3f3f5; --line: #ebe5e2; --line-soft: #f2edea;
+  --text: #2b2b30; --muted: #8e8e97; --accent: #f27a54; --accent-ink: #ffffff;
+  --sidebar-bg: #2f3034; --photo-bg: #f0ebe8; --hover-tint: rgba(242, 122, 84, .05);
+  --radius: 12px; --radius-lg: 22px;
+  --skin-grad: linear-gradient(135deg, #f58a64, #ef6a40);
+  --skin-card: #ffffff;
+  --shadow: 0 6px 24px rgba(242, 122, 84, .08), 0 1px 3px rgba(0, 0, 0, .04);
+  --shadow-lg: 0 24px 60px rgba(60, 30, 20, .18);
+}
+html[data-skin='coral'][data-theme] body { background: #fbf1ec; }
+
+/* shared by all four: cards, buttons, inputs, the chat's wallpaper */
+html[data-skin][data-theme] .panel,
+html[data-skin][data-theme] .stat,
+html[data-skin][data-theme] .project-card,
+html[data-skin][data-theme] .fin-card { background: var(--skin-card); border-color: var(--line-soft); border-radius: var(--radius-lg); }
+html[data-skin][data-theme] .btn { border-radius: var(--radius); }
+html[data-skin][data-theme] .btn-primary { background: var(--skin-grad); border-color: transparent; color: #fff; }
+html[data-skin][data-theme] .btn-primary:hover { background: var(--skin-grad); border-color: transparent; filter: brightness(1.08); }
+html[data-skin][data-theme] .input { border-radius: var(--radius); }
+html[data-skin][data-theme] .modal { background: var(--panel); border-color: var(--line); border-radius: var(--radius-lg); }
+html[data-skin][data-theme] .chat2 { --tg-wall: color-mix(in srgb, var(--accent) 5%, var(--bg)); }
+html[data-skin][data-theme='dark'] .chat-box[data-bubbles='telegram'] { --wa-in: var(--raised); --wa-wall: color-mix(in srgb, var(--accent) 5%, var(--bg)); }
+
+/* ---------- the layout (a computer) ---------- */
+@media (min-width: 821px) {
+  /* the bar across the top */
+  html[data-skin][data-theme] .skin-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: -12px 0 24px; }
+  html[data-skin][data-theme] .content:has(.chat2) .skin-bar { display: none; } /* the chat has its own */
+  .skin-search { position: relative; display: flex; align-items: center; gap: 9px; width: min(380px, 100%); height: 44px; padding: 0 14px; border-radius: 12px; background: var(--raised); border: 1px solid var(--line-soft); color: var(--muted); }
+  .skin-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: 15px; }
+  .skin-search input::placeholder { color: var(--muted); }
+  .skin-results { position: absolute; z-index: 60; left: 0; right: 0; top: calc(100% + 6px); display: flex; flex-direction: column; padding: 6px; border-radius: 14px; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow-lg); }
+  .skin-results button { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 10px; border: 0; border-radius: 9px; background: none; color: var(--text); font: inherit; font-size: 15px; text-align: left; cursor: pointer; }
+  .skin-results button:hover, .skin-results button:focus-visible { background: var(--raised); }
+  .skin-results small { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+  .skin-results p { margin: 8px 10px; color: var(--muted); font-size: 14px; }
+  .skin-bar-right { display: flex; align-items: center; gap: 12px; }
+  .skin-ico { position: relative; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line); background: var(--raised); color: var(--text); cursor: pointer; }
+  .skin-ico svg { width: 19px; height: 19px; }
+  .skin-dot { position: absolute; top: 9px; right: 10px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--raised); }
+  .skin-user { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); padding: 3px 12px 3px 3px; border-radius: 999px; }
+  .skin-user:hover { background: var(--raised); }
+  .skin-ava { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--skin-grad); color: #fff; font-weight: 700; font-size: 14px; flex: none; }
+  .skin-ava img { width: 100%; height: 100%; object-fit: cover; }
+  .skin-user-text { display: flex; flex-direction: column; line-height: 1.2; }
+  .skin-user-text b { font-size: 15px; font-weight: 600; }
+  .skin-user-text small { font-size: 12.5px; color: var(--muted); }
+
+  /* the sidebar: the work, then Account, then the New project card */
+  /* the sidebar scrolls on its own when the menu is longer than the screen */
+  html[data-skin][data-theme] .sidebar { overflow-y: auto; scrollbar-width: thin; }
+  html[data-skin][data-theme] .sidebar-logo { border-bottom: 0; padding: 22px 20px 12px; }
+  html[data-skin][data-theme] .sidenav { padding: 8px 12px; gap: 3px; }
+  html[data-skin][data-theme] .nav-section { display: block; margin: 16px 12px 6px; font-size: 12.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  html[data-skin][data-theme] .side-promo { display: flex; flex-direction: column; gap: 6px; margin: auto 14px 12px; padding: 16px; border-radius: 16px; }
+  html[data-skin][data-theme] .side-promo strong { font-size: 16px; }
+  html[data-skin][data-theme] .side-promo > span:not(.side-promo-ico) { font-size: 13px; line-height: 1.35; opacity: .75; }
+  html[data-skin][data-theme] .side-promo-ico { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; margin-bottom: 4px; }
+  html[data-skin][data-theme] .side-promo button { margin-top: 8px; height: 40px; border: 0; border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer; }
+  html[data-skin][data-theme] .side-promo + .sidebar-foot { margin-top: 0; }
+  html[data-skin][data-theme] .page-head h1 { letter-spacing: -.02em; }
+  html[data-skin][data-theme] .table th { font-weight: 500; }
+
+  /* Violet night: a floating rounded sidebar, pills, a violet card */
+  html[data-skin='violet'][data-theme] .sidebar { margin: 12px 0 12px 12px; height: calc(100vh - 24px); top: 12px; border: 1px solid var(--line-soft); border-radius: 22px; background: #0f0f12; }
+  html[data-skin='violet'][data-theme] .logo-mark { width: 28px; height: 28px; border: 0; border-radius: 9px; background: var(--skin-grad); box-shadow: 0 4px 14px rgba(184, 76, 232, .4); }
+  html[data-skin='violet'][data-theme] .sidenav a { border-radius: 12px; padding: 10px 12px; }
+  html[data-skin='violet'][data-theme] .sidenav a.active { background: #1d1d23; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .06); color: var(--text); }
+  html[data-skin='violet'][data-theme] .sidenav a.active .nav-ico { color: #d26cf0; }
+  html[data-skin='violet'][data-theme] .side-promo { background: linear-gradient(165deg, #1c1427, #121216 70%); border: 1px solid rgba(184, 76, 232, .2); }
+  html[data-skin='violet'][data-theme] .side-promo-ico { background: rgba(184, 76, 232, .2); color: #d68cf4; }
+  html[data-skin='violet'][data-theme] .side-promo button { background: linear-gradient(135deg, #7b2ff7, #4c1d95); color: #fff; }
+  html[data-skin='violet'][data-theme] .content { padding-top: 28px; }
+  html[data-skin='violet'][data-theme] .btn { background: #17171b; border-color: var(--line); }
+  html[data-skin='violet'][data-theme] .btn-primary { background: var(--skin-grad); border-color: transparent; box-shadow: 0 6px 22px rgba(184, 76, 232, .35); }
+  html[data-skin='violet'][data-theme] .btn-ghost { background: transparent; border-color: transparent; }
+  html[data-skin='violet'][data-theme] .tabs { border-bottom: 0; gap: 6px; }
+  html[data-skin='violet'][data-theme] .tabs a { border: 1px solid transparent; border-radius: 10px; padding: 8px 14px; margin: 0; }
+  html[data-skin='violet'][data-theme] .tabs a.active { background: #1c1c22; border-color: var(--line); }
+  html[data-skin='violet'][data-theme] .segmented { border-radius: 10px; }
+  html[data-skin='violet'][data-theme] .segmented button.on { background: #24242b; }
+  html[data-skin='violet'][data-theme] .stat { position: relative; }
+  html[data-skin='violet'][data-theme] .stat::after { content: ''; position: absolute; top: 16px; right: 16px; width: 20px; height: 20px; background: #c45cf0; -webkit-mask: var(--skin-stat-ico) center / contain no-repeat; mask: var(--skin-stat-ico) center / contain no-repeat; }
+  html[data-skin='violet'][data-theme] .stat-value { background: linear-gradient(90deg, #fff, #e6cdf6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  /* Teal slate: a flush graphite sidebar with roomy rows, a lime mark, coloured tiles on the cards */
+  html[data-skin='teal'][data-theme] .sidebar { background: #2c3036; border-right: 1px solid var(--line-soft); }
+  html[data-skin='teal'][data-theme] .sidebar-logo { padding: 26px 26px 20px; }
+  html[data-skin='teal'][data-theme] .logo-mark { width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--skin-mark); box-shadow: 0 6px 18px rgba(184, 240, 140, .25); }
+  html[data-skin='teal'][data-theme] .sidenav { padding: 10px 18px; gap: 6px; }
+  html[data-skin='teal'][data-theme] .sidenav a { padding: 12px 14px; gap: 14px; font-size: 16px; border-radius: 10px; color: #c9cdd3; }
+  html[data-skin='teal'][data-theme] .sidenav a.active { background: rgba(63, 158, 144, .14); box-shadow: none; color: #fff; }
+  html[data-skin='teal'][data-theme] .sidenav a.active .nav-ico { color: var(--skin-mark); }
+  html[data-skin='teal'][data-theme] .nav-ico { width: 20px; height: 20px; }
+  html[data-skin='teal'][data-theme] .side-promo { background: #343840; }
+  html[data-skin='teal'][data-theme] .side-promo-ico { background: var(--skin-mark); color: #1f2a17; }
+  html[data-skin='teal'][data-theme] .side-promo button { background: #2d4f4a; color: #8fe0d2; }
+  html[data-skin='teal'][data-theme] .skin-bar { margin: -28px -32px 28px; padding: 18px 32px; border-bottom: 1px solid var(--line-soft); }
+  html[data-skin='teal'][data-theme] .skin-search { background: #31353c; border-color: transparent; border-radius: 8px; }
+  html[data-skin='teal'][data-theme] .skin-ico { border: 0; background: transparent; }
+  html[data-skin='teal'][data-theme] .page-head h1 { font-size: 32px; font-weight: 600; }
+  html[data-skin='teal'][data-theme] .panel, html[data-skin='teal'][data-theme] .stat { border-color: transparent; }
+  html[data-skin='teal'][data-theme] .btn-primary { background: #2d4f4a; color: #9ae6d9; }
+  html[data-skin='teal'][data-theme] .btn-primary:hover { background: #33605a; filter: none; }
+  html[data-skin='teal'][data-theme] .tabs a.active { border-bottom-color: var(--accent); }
+  html[data-skin='teal'][data-theme] .table th { border-bottom-color: #4a4f57; }
+  html[data-skin='teal'][data-theme] .stat { position: relative; padding-left: 82px; min-height: 84px; }
+  html[data-skin='teal'][data-theme] .stat::before { content: ''; position: absolute; left: 16px; top: 16px; width: 50px; height: 50px; border-radius: 10px; background: #78c08f; }
+  html[data-skin='teal'][data-theme] .stat::after { content: ''; position: absolute; left: 29px; top: 29px; width: 24px; height: 24px; background: #fff; -webkit-mask: var(--skin-stat-ico) center / contain no-repeat; mask: var(--skin-stat-ico) center / contain no-repeat; }
+  html[data-skin='teal'][data-theme] .stat:nth-child(4n + 2)::before { background: #a5772c; }
+  html[data-skin='teal'][data-theme] .stat:nth-child(4n + 3)::before { background: #5b54c8; }
+  html[data-skin='teal'][data-theme] .stat:nth-child(4n + 4)::before { background: #3c7fd1; }
+
+  /* Ember: flush black sidebar, an orange card, underlined tabs, orange and violet tinted cards */
+  html[data-skin='ember'][data-theme] .sidebar { background: #131315; border-right: 1px solid var(--line-soft); }
+  html[data-skin='ember'][data-theme] .logo-mark { width: 30px; height: 16px; border: 0; border-radius: 30px 30px 4px 4px; background: linear-gradient(90deg, var(--skin-violet), #ff5a1f); }
+  html[data-skin='ember'][data-theme] .sidenav a { border-radius: 8px; }
+  html[data-skin='ember'][data-theme] .sidenav a.active { background: #26262b; box-shadow: none; color: #fff; }
+  html[data-skin='ember'][data-theme] .sidenav a.active .nav-ico { color: #fff; }
+  html[data-skin='ember'][data-theme] .nav-section { text-transform: none; letter-spacing: 0; font-size: 14px; color: #a6a6ad; }
+  html[data-skin='ember'][data-theme] .side-promo { color: #fff; background: radial-gradient(circle at 80% 90%, rgba(255, 255, 255, .25) 0 1px, transparent 1.5px) 0 0 / 14px 14px, linear-gradient(160deg, #ff6a2b, #e2410c); border-radius: 6px; }
+  html[data-skin='ember'][data-theme] .side-promo-ico { background: rgba(0, 0, 0, .18); color: #fff; }
+  html[data-skin='ember'][data-theme] .side-promo button { background: #1a1a1c; color: #fff; border-radius: 999px; }
+  html[data-skin='ember'][data-theme] .skin-bar { justify-content: flex-end; }
+  html[data-skin='ember'][data-theme] .skin-search { order: 1; background: #161618; border-color: var(--line); border-radius: 8px; height: 40px; }
+  html[data-skin='ember'][data-theme] .skin-bar-right { order: 2; }
+  html[data-skin='ember'][data-theme] .skin-ico { border-radius: 10px; background: #161618; }
+  html[data-skin='ember'][data-theme] .skin-ava { background: linear-gradient(135deg, var(--skin-violet), #ff5a1f); }
+  html[data-skin='ember'][data-theme] .tabs { border-bottom-color: var(--line); }
+  html[data-skin='ember'][data-theme] .tabs a.active { color: #fff; border-bottom-color: #fff; }
+  html[data-skin='ember'][data-theme] .btn-primary { background: #ff5a1f; }
+  html[data-skin='ember'][data-theme] .stat:nth-child(4n + 2) { background: linear-gradient(165deg, rgba(255, 90, 31, .38), rgba(255, 90, 31, .06) 65%), #161618; border-color: rgba(255, 90, 31, .55); }
+  html[data-skin='ember'][data-theme] .stat:nth-child(4n + 4) { background: linear-gradient(165deg, rgba(139, 124, 246, .38), rgba(139, 124, 246, .06) 65%), #161618; border-color: rgba(139, 124, 246, .5); }
+  html[data-skin='ember'][data-theme] .table th { background: #1c1c1f; }
+
+  /* Coral: a floating graphite sidebar with coral pills, round white cards, pill tabs and buttons */
+  html[data-skin='coral'][data-theme] .sidebar { margin: 12px 0 12px 12px; height: calc(100vh - 24px); top: 12px; border: 0; border-radius: 26px; background: #2f3034; color: #f4f4f5; box-shadow: 0 18px 40px rgba(47, 48, 52, .18); }
+  html[data-skin='coral'][data-theme] .logo-text em { color: rgba(255, 255, 255, .55); }
+  html[data-skin='coral'][data-theme] .logo-mark { width: 30px; height: 30px; border: 0; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 5px rgba(242, 122, 84, .2); }
+  html[data-skin='coral'][data-theme] .sidenav a { color: rgba(255, 255, 255, .72); border-radius: 999px; padding: 10px 14px; }
+  html[data-skin='coral'][data-theme] .sidenav a:hover { background: rgba(255, 255, 255, .06); color: #fff; }
+  html[data-skin='coral'][data-theme] .sidenav a.active { background: var(--accent); color: #fff; box-shadow: 0 6px 16px rgba(242, 122, 84, .35); }
+  html[data-skin='coral'][data-theme] .sidenav a .nav-ico { color: rgba(255, 255, 255, .6); }
+  html[data-skin='coral'][data-theme] .sidenav a.active .nav-ico { color: #fff; }
+  html[data-skin='coral'][data-theme] .nav-section { color: rgba(255, 255, 255, .45); }
+  html[data-skin='coral'][data-theme] .sidebar-foot { border-top-color: rgba(255, 255, 255, .08); }
+  html[data-skin='coral'][data-theme] .sidebar-foot .user-chip small { color: rgba(255, 255, 255, .55); }
+  html[data-skin='coral'][data-theme] .sidebar-foot .btn-ghost { background: transparent; border-color: rgba(255, 255, 255, .15); color: #fff; border-radius: 999px; }
+  html[data-skin='coral'][data-theme] .side-promo { background: rgba(255, 255, 255, .06); }
+  html[data-skin='coral'][data-theme] .side-promo-ico { background: var(--accent); color: #fff; }
+  html[data-skin='coral'][data-theme] .side-promo button { background: var(--accent); color: #fff; border-radius: 999px; }
+  html[data-skin='coral'][data-theme] .content { padding-top: 28px; }
+  html[data-skin='coral'][data-theme] .skin-search { background: #fff; border: 0; border-radius: 999px; box-shadow: var(--shadow); }
+  html[data-skin='coral'][data-theme] .skin-ico { background: #fff; border: 0; box-shadow: var(--shadow); }
+  html[data-skin='coral'][data-theme] .skin-dot { box-shadow: 0 0 0 2px #fff; }
+  html[data-skin='coral'][data-theme] .page-head h1 { font-size: 30px; font-weight: 700; }
+  html[data-skin='coral'][data-theme] .panel, html[data-skin='coral'][data-theme] .stat, html[data-skin='coral'][data-theme] .project-card { border-color: transparent; box-shadow: var(--shadow); }
+  html[data-skin='coral'][data-theme] .btn, html[data-skin='coral'][data-theme] .btn-primary { border-radius: 999px; }
+  html[data-skin='coral'][data-theme] .btn-primary { box-shadow: 0 6px 16px rgba(242, 122, 84, .3); }
+  html[data-skin='coral'][data-theme] .input { background: #f3f3f5; border-color: transparent; }
+  html[data-skin='coral'][data-theme] .tabs { display: inline-flex; max-width: 100%; gap: 2px; padding: 4px; border: 0; border-radius: 999px; background: #f0e9e5; }
+  html[data-skin='coral'][data-theme] .tabs a { border: 0; border-radius: 999px; padding: 7px 14px; margin: 0; }
+  html[data-skin='coral'][data-theme] .tabs a.active { background: #fff; color: var(--text); box-shadow: 0 2px 6px rgba(0, 0, 0, .08); }
+  html[data-skin='coral'][data-theme] .segmented { border: 0; padding: 3px; border-radius: 999px; background: #f0e9e5; }
+  html[data-skin='coral'][data-theme] .segmented button { border-radius: 999px; }
+  html[data-skin='coral'][data-theme] .segmented button + button { border-left: 0; }
+  html[data-skin='coral'][data-theme] .segmented button.on { background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, .08); }
+  html[data-skin='coral'][data-theme] .stat:first-child { background: var(--skin-grad); color: #fff; }
+  html[data-skin='coral'][data-theme] .stat:first-child * { color: inherit; }
+}
+
+/* the cards' small icon (Violet night, Teal slate): a rising line */
+html[data-skin] { --skin-stat-ico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 17 6-6 4 4 8-8'/%3E%3Cpath d='M15 7h6v6'/%3E%3C/svg%3E"); }
+
+/* ---------- the phone: the colours, and Coral's graphite bottom bar ---------- */
+@media (max-width: 820px) {
+  html[data-skin='coral'][data-theme] .tabbar { background: #2f3034; border-top: 0; border-radius: 22px 22px 0 0; }
+  html[data-skin='coral'][data-theme] .tabbar a, html[data-skin='coral'][data-theme] .tabbar button { color: rgba(255, 255, 255, .7); }
+  html[data-skin='coral'][data-theme] .tabbar a.active, html[data-skin='coral'][data-theme] .tabbar button.active { color: var(--accent); }
+  html[data-skin='coral'][data-theme] .sidebar { background: #2f3034; color: #f4f4f5; }
+  html[data-skin='coral'][data-theme] .sidenav a { color: rgba(255, 255, 255, .75); }
+  html[data-skin='coral'][data-theme] .sidenav a.active { background: var(--accent); color: #fff; }
+  html[data-skin='ember'][data-theme] .tabbar a.active, html[data-skin='ember'][data-theme] .tabbar button.active { color: var(--accent); }
+}
+
+/* Glass (Alex, 8 Oct, from a purple glass login and a silk-wave card): a vivid purple silk
+   background, frosted glass for the sidebar, the cards and the top bar (see-through, blurred,
+   a bright edge), white text, lavender buttons and inputs drawn as thin glowing outlines.
+   Menus and pop-ups keep a solid purple so what sits behind them never shows through. */
+html[data-skin='glass'][data-theme][data-accent] {
+  --bg: #3a0aa0; --panel: #351487; --raised: #43209e; --line: #5f40b8; --line-soft: #4d2ea6;
+  --text: #ffffff; --muted: rgba(236, 228, 255, .72); --accent: #c3a6ff; --accent-ink: #26075f;
+  --sidebar-bg: rgba(255, 255, 255, .07); --photo-bg: #2c0b7c; --hover-tint: rgba(255, 255, 255, .06);
+  --radius: 10px; --radius-lg: 22px;
+  --skin-grad: linear-gradient(180deg, #bda2ff, #8e6af0);
+  --skin-card: rgba(255, 255, 255, .08);
+  --glass-edge: rgba(255, 255, 255, .2);
+  --glass-blur: blur(18px) saturate(140%);
+  --shadow-lg: 0 24px 70px rgba(20, 0, 60, .55);
+}
+html[data-skin='glass'][data-theme] body {
+  background:
+    linear-gradient(118deg, transparent 38%, rgba(255, 255, 255, .10) 46%, rgba(255, 255, 255, .02) 52%, transparent 60%),
+    radial-gradient(1100px 650px at 12% 18%, #9a24e0 0%, transparent 58%),
+    radial-gradient(900px 700px at 88% 78%, #6a4ae6 0%, transparent 60%),
+    radial-gradient(700px 500px at 70% 10%, #5b16c9 0%, transparent 60%),
+    linear-gradient(135deg, #6200d0, #4310b0 50%, #2e0a86);
+  background-attachment: fixed;
+}
+html[data-skin='glass'][data-theme] .panel,
+html[data-skin='glass'][data-theme] .stat,
+html[data-skin='glass'][data-theme] .project-card,
+html[data-skin='glass'][data-theme] .fin-card { background: rgba(255, 255, 255, .08); border: 1px solid var(--glass-edge); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 12px 40px rgba(20, 0, 70, .3); }
+html[data-skin='glass'][data-theme] .input { background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .38); color: #fff; }
+html[data-skin='glass'][data-theme] .input:focus { border-color: #d9c8ff; box-shadow: 0 0 0 3px rgba(195, 166, 255, .25); }
+html[data-skin='glass'][data-theme] .btn { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .25); color: #fff; }
+html[data-skin='glass'][data-theme] .btn-primary { background: var(--skin-grad); border-color: rgba(255, 255, 255, .35); color: #fff; box-shadow: 0 6px 22px rgba(140, 100, 255, .45), inset 0 1px 0 rgba(255, 255, 255, .4); }
+html[data-skin='glass'][data-theme] .btn-ghost { background: transparent; border-color: transparent; }
+html[data-skin='glass'][data-theme] .table th { color: rgba(236, 228, 255, .8); border-bottom-color: rgba(255, 255, 255, .25); }
+html[data-skin='glass'][data-theme] .table td { border-bottom-color: rgba(255, 255, 255, .1); }
+html[data-skin='glass'][data-theme] .chat2 { --tg-wall: transparent; }
+html[data-skin='glass'][data-theme] .chat-box[data-bubbles='telegram'] { --wa-in: rgba(255, 255, 255, .14); --wa-out: #8e6af0; --wa-wall: transparent; }
+html[data-skin='glass'][data-theme] .tabbar { background: rgba(53, 20, 135, .82); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border-top-color: var(--glass-edge); }
+html[data-skin='glass'][data-theme] .topbar { background: rgba(53, 20, 135, .82); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
+
+@media (min-width: 821px) {
+  html[data-skin='glass'][data-theme] .sidebar { margin: 12px 0 12px 12px; height: calc(100vh - 24px); top: 12px; border: 1px solid var(--glass-edge); border-radius: 26px; background: rgba(255, 255, 255, .07); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2); }
+  html[data-skin='glass'][data-theme] .logo-mark { width: 30px; height: 30px; border: 1px solid rgba(255, 255, 255, .5); border-radius: 10px; background: linear-gradient(145deg, rgba(255, 255, 255, .55), rgba(195, 166, 255, .2)); box-shadow: 0 4px 16px rgba(140, 100, 255, .5); }
+  html[data-skin='glass'][data-theme] .sidenav a { border-radius: 12px; padding: 10px 12px; color: rgba(255, 255, 255, .78); }
+  html[data-skin='glass'][data-theme] .sidenav a:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+  html[data-skin='glass'][data-theme] .sidenav a.active { background: rgba(255, 255, 255, .16); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .25); color: #fff; }
+  html[data-skin='glass'][data-theme] .nav-ico { color: rgba(255, 255, 255, .7); }
+  html[data-skin='glass'][data-theme] .sidenav a.active .nav-ico { color: #fff; }
+  html[data-skin='glass'][data-theme] .sidebar-logo, html[data-skin='glass'][data-theme] .sidebar-foot { border-color: rgba(255, 255, 255, .12); }
+  html[data-skin='glass'][data-theme] .side-promo { background: rgba(255, 255, 255, .1); border: 1px solid var(--glass-edge); }
+  html[data-skin='glass'][data-theme] .side-promo-ico { background: rgba(255, 255, 255, .2); color: #fff; }
+  html[data-skin='glass'][data-theme] .side-promo button { background: var(--skin-grad); color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4); }
+  html[data-skin='glass'][data-theme] .content { padding-top: 28px; }
+  html[data-skin='glass'][data-theme] .skin-search { background: rgba(255, 255, 255, .08); border: 1px solid var(--glass-edge); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); color: rgba(255, 255, 255, .75); }
+  html[data-skin='glass'][data-theme] .skin-search input::placeholder { color: rgba(255, 255, 255, .6); }
+  html[data-skin='glass'][data-theme] .skin-ico { background: rgba(255, 255, 255, .08); border-color: var(--glass-edge); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
+  html[data-skin='glass'][data-theme] .skin-ava { background: linear-gradient(145deg, #c3a6ff, #7a4fe6); }
+  html[data-skin='glass'][data-theme] .skin-user:hover { background: rgba(255, 255, 255, .08); }
+  html[data-skin='glass'][data-theme] .page-head h1 { font-size: 28px; font-weight: 600; text-shadow: 0 2px 20px rgba(20, 0, 60, .4); }
+  html[data-skin='glass'][data-theme] .tabs { border-bottom: 0; gap: 6px; }
+  html[data-skin='glass'][data-theme] .tabs a { border: 1px solid transparent; border-radius: 12px; margin: 0; padding: 8px 14px; color: rgba(255, 255, 255, .75); }
+  html[data-skin='glass'][data-theme] .tabs a.active { background: rgba(255, 255, 255, .14); border-color: var(--glass-edge); color: #fff; }
+  html[data-skin='glass'][data-theme] .segmented { border-color: var(--glass-edge); border-radius: 12px; background: rgba(255, 255, 255, .05); }
+  html[data-skin='glass'][data-theme] .segmented button + button { border-left-color: var(--glass-edge); }
+  html[data-skin='glass'][data-theme] .segmented button.on { background: rgba(255, 255, 255, .18); color: #fff; }
+}
+
+/* Icon sets (Alex, 8 Oct): Thin and Bold are the Classic drawings with another line, Duotone
+   tints the main shape of the Rounded drawings. svg.ico is every icon of components/icons.jsx. */
+html[data-icons='thin'] svg.ico { stroke-width: 1.3; }
+html[data-icons='bold'] svg.ico { stroke-width: 2.4; }
+html[data-icons='duo'] svg.ico .duo { fill: currentColor; fill-opacity: .22; }
+html[data-icons='duo'] .sidenav a.active svg.ico .duo { fill: var(--accent); fill-opacity: .35; }
+/* the picker's samples show their own set, whatever the app's */
+html .icon-preview[data-icons-preview] svg.ico { stroke-width: 1.8; }
+html .icon-preview[data-icons-preview] svg.ico .duo { fill: none; }
+html .icon-preview[data-icons-preview='thin'] svg.ico { stroke-width: 1.3; }
+html .icon-preview[data-icons-preview='bold'] svg.ico { stroke-width: 2.4; }
+html .icon-preview[data-icons-preview='rounded'] svg.ico, html .icon-preview[data-icons-preview='duo'] svg.ico { stroke-width: 1.9; }
+html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; fill-opacity: .22; }
+.icon-sets { display: flex; flex-wrap: wrap; gap: 10px; }
+.icon-set { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 14px 10px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--panel); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+.icon-set.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.icon-set.on span:last-child { color: var(--accent); font-weight: 600; }
+.icon-preview { display: inline-flex; gap: 10px; color: var(--text); }
+.icon-preview svg { width: 20px; height: 20px; }

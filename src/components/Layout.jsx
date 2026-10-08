@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Suspense, useEffect, useRef, useState } from 'react'
-import { can, seesDatabase, useCurrentUser, useStore, viewAsReturnPath, whenMs } from '../lib/store.jsx'
+import { Fragment, Suspense, useEffect, useRef, useState } from 'react'
+import { can, canAccessProject, seesDatabase, useCurrentUser, useStore, viewAsReturnPath, whenMs } from '../lib/store.jsx'
 import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
 import { useToast } from './ui.jsx'
@@ -15,6 +15,55 @@ function Logo({ name, subtitle, logo }) {
         <strong>{name}</strong>
         <em>{subtitle}</em>
       </span>
+    </div>
+  )
+}
+
+const initialsOf = (name) => (name || '?').split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
+
+/* The bar across the top of a page in the app skins (Settings > Display > Theme, Alex 8 Oct):
+   search on the left, finding projects, people and pages as you type (Enter opens the first);
+   on the right the chat, with a dot when something is unread, and you. Hidden in Light and Dark
+   and on a phone (styles.css). */
+function SkinBar({ items, unread }) {
+  const { state } = useStore()
+  const user = useCurrentUser()
+  const nav = useNavigate()
+  const [q, setQ] = useState('')
+  const [open, setOpen] = useState(false)
+  const needle = q.trim().toLowerCase()
+  const has = (t) => (t || '').toLowerCase().includes(needle)
+  const results = !needle ? [] : [
+    ...items.filter((i) => has(i.label)).map((i) => ({ key: `n${i.to}`, to: i.to, label: i.label, kind: 'Page' })),
+    ...(can(user, 'projects') ? (state.projects || []).filter((p) => canAccessProject(user, p.id) && (has(p.title) || has(p.client))).map((p) => ({ key: `p${p.id}`, to: `/p/${p.id}`, label: p.title || 'Untitled', kind: p.category || 'Project' })) : []),
+    ...(state.users || []).filter((u) => u.active !== false && has(u.name)).map((u) => ({ key: `u${u.id}`, to: u.id === user?.id ? '/me' : `/u/${u.id}`, label: u.name, kind: u.profile?.position || 'Team' })),
+  ].slice(0, 8)
+  const go = (r) => { setQ(''); setOpen(false); nav(r.to) }
+  const photo = user?.profile?.thumb
+  return (
+    <div className="skin-bar">
+      <div className="skin-search">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+        <input value={q} onChange={(e) => { setQ(e.target.value); setOpen(true) }} onFocus={() => setOpen(true)} onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && results[0]) go(results[0]); if (e.key === 'Escape') { setQ(''); e.currentTarget.blur() } }}
+          placeholder="Search projects, people, pages" name="app-search" autoComplete="off" aria-label="Search" />
+        {open && needle && (
+          <div className="skin-results" role="listbox">
+            {results.length ? results.map((r) => (
+              <button key={r.key} type="button" role="option" onMouseDown={(e) => e.preventDefault()} onClick={() => go(r)}><span>{r.label}</span><small>{r.kind}</small></button>
+            )) : <p>Nothing found.</p>}
+          </div>
+        )}
+      </div>
+      <div className="skin-bar-right">
+        <button type="button" className="skin-ico" onClick={() => nav('/chat')} aria-label={unread ? `Chat, ${unread} unread` : 'Chat'} title="Chat">
+          {Icon.chat()}{unread > 0 && <i className="skin-dot" />}
+        </button>
+        <NavLink to="/me" className="skin-user">
+          <span className="skin-ava">{photo ? <img src={photo} alt="" /> : initialsOf(user?.name)}</span>
+          <span className="skin-user-text"><b>{user?.name}</b><small>{user?.email || user?.role}</small></span>
+        </NavLink>
+      </div>
     </div>
   )
 }
@@ -152,13 +201,26 @@ export default function Layout() {
         </div>
         <nav className="sidenav">
           {items.map((i) => (
-            <NavLink key={i.to} to={i.to} end={i.end} onClick={close} className={({ isActive }) => (isActive ? 'active' : '')}>
-              <span className="nav-ico">{Icon[i.icon]?.()}</span>
-              {i.label}
-              {i.badge > 0 && <span className="nav-badge">{i.badge}</span>}
-            </NavLink>
+            <Fragment key={i.to}>
+              {/* the app skins split the menu like their designs: the work above, you below */}
+              {i.to === '/me' && <span className="nav-section">Account</span>}
+              <NavLink to={i.to} end={i.end} onClick={close} className={({ isActive }) => (isActive ? 'active' : '')}>
+                <span className="nav-ico">{Icon[i.icon]?.()}</span>
+                {i.label}
+                {i.badge > 0 && <span className="nav-badge">{i.badge}</span>}
+              </NavLink>
+            </Fragment>
           ))}
         </nav>
+        {can(user, 'projects', 'edit') && (
+          // the designs' card in the sidebar ("Upgrade to Pro"), ours to start a project (skins only)
+          <div className="side-promo">
+            <span className="side-promo-ico">{Icon.projects()}</span>
+            <strong>New project</strong>
+            <span>Script, schedule, call sheets and budget in one place.</span>
+            <button type="button" onClick={() => { close(); nav('/', { state: { newProject: Date.now() } }) }}>Start one</button>
+          </div>
+        )}
         <div className="sidebar-foot">
           <div className="user-chip">
             {user?.name}
@@ -180,6 +242,7 @@ export default function Layout() {
       {open && <div className="scrim" onClick={close} />}
 
       <main className="content">
+        <SkinBar items={items} unread={unread} />
         <Suspense fallback={null}>
           <Outlet />
         </Suspense>
