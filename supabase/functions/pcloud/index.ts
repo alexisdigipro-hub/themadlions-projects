@@ -103,7 +103,9 @@ async function allowed(db: any, uid: string, scope: Scope, fileid?: number, forD
     const { data: ok } = await db.rpc('can_read_chat', { p_chat: scope.id })
     if (!ok) return false
     if (fileid) {
-      const { data } = await db.from('messages').select('id, user_id').eq('chat_id', scope.id).contains('attachments', [{ fileid }])
+      // the JSON goes as text: .contains() with an array writes a Postgres array literal
+      // ({[object Object]}), which never matched, so every chat file was refused (Alex, 8 Oct)
+      const { data } = await db.from('messages').select('id, user_id').eq('chat_id', scope.id).filter('attachments', 'cs', JSON.stringify([{ fileid }]))
       if (!data?.length) return false
       if (forDelete && data[0].user_id !== uid) {
         const { data: adm } = await db.rpc('is_admin')

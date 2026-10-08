@@ -8,7 +8,7 @@ import { SendNoticeModal, SentNotices, sendAutoNotice } from '../components/Noti
 import { deleteFile, fileIcon, fileUrl, fmtBytes, uploadFile } from '../lib/files.js'
 import { compress } from '../lib/photos.js'
 import { canCompressVideo, compressVideo, isVideoFile, mediaSize, prepareVideo, releaseVideo } from '../lib/videoCompress.js'
-import { pcloudOn } from '../lib/pcloud.js'
+import { pcloudBlob, pcloudOn } from '../lib/pcloud.js'
 import { remote, supabase } from '../lib/supabase.js'
 import { loadChatPrefs } from '../lib/chatPrefs.js'
 import * as C from '../lib/chat.js'
@@ -761,15 +761,28 @@ function MediaAlbum({ items, meta }) {
   )
 }
 function MediaTile({ a, shaped }) {
-  const [url, failed, retry] = useAttachmentUrl(a)
+  const [link, failed, retry] = useAttachmentUrl(a)
+  const [local, setLocal] = useState('')
+  const [tried, setTried] = useState(false)
+  // a pCloud link the phone cannot open: the file comes through the pcloud function instead
+  const viaFunction = () => {
+    if (tried || !a.fileid) return
+    setTried(true)
+    pcloudBlob(a.fileid, a.scope).then((b) => {
+      const u = URL.createObjectURL(b)
+      urlCache.set(a.id, { url: u, until: Date.now() + 12 * 3600 * 1000 })
+      setLocal(u)
+    }).catch(() => {})
+  }
+  const url = local || link
   const style = shaped && a.w && a.h ? { aspectRatio: `${a.w} / ${a.h}` } : undefined
   if (!url) {
     return failed
       ? <button type="button" className="chat-media-tile chat-media-wait chat-att-retry" style={style} onClick={retry}>Tap to load</button>
       : <span className="chat-media-tile chat-media-wait" style={style}>…</span>
   }
-  if (isVideo(a)) return <video className="chat-media-tile" src={`${url}#t=0.1`} controls playsInline preload="metadata" style={style} title={a.name} />
-  return <a className="chat-media-tile" href={url} target="_blank" rel="noreferrer" title={a.name} style={style}><img src={url} alt={a.name} loading="lazy" /></a>
+  if (isVideo(a)) return <video className="chat-media-tile" src={`${url}#t=0.1`} controls playsInline preload="metadata" style={style} title={a.name} onError={viaFunction} />
+  return <a className="chat-media-tile" href={url} target="_blank" rel="noreferrer" title={a.name} style={style}><img src={url} alt={a.name} loading="lazy" onError={viaFunction} /></a>
 }
 
 /* The sheet the paperclip opens (Alex, 8 Oct, from Telegram's): what you picked in a grid, a
