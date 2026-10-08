@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Button, Modal, useToast } from './ui.jsx'
 import { MAX_ZOOM, centred, clamp, cropRect, pan, renderCrop } from '../lib/coverCrop.js'
 import { compress, deletePhoto, photoBlob, uploadPhoto } from '../lib/photos.js'
-import { pcloudTarget } from '../lib/pcloud.js'
-import { useStore } from '../lib/store.jsx'
 import { remote } from '../lib/supabase.js'
 
 /* Everything around the cropper, for the two places a cover is set (the Overview and the
@@ -17,7 +15,6 @@ import { remote } from '../lib/supabase.js'
    a project not yet created has no folder there, so it keeps only the square until it exists. */
 export function useCover({ value, projectId, keepSource, onChange }) {
   const toast = useToast()
-  const { state } = useStore()
   const [editing, setEditing] = useState(null) // { src, blob?, crop, fresh }
   const [saving, setSaving] = useState(false)
   const close = () => { if (editing?.src?.startsWith('blob:')) URL.revokeObjectURL(editing.src); setEditing(null) }
@@ -48,8 +45,9 @@ export function useCover({ value, projectId, keepSource, onChange }) {
       if (keepSource && remote && projectId) {
         try {
           const id = `source-${Date.now().toString(36)}`
-          const { path, fileid, scope } = await uploadPhoto({ projectId, ownerId: 'cover', id, blob: editing.blob, pcloud: pcloudTarget(state, projectId, 'Cover') })
-          patch.coverSource = fileid ? { id: 'cover', fileid, scope } : { id: 'cover', path }
+          // one picture per project, read back for Adjust: the built-in storage, quick and direct
+          const { path } = await uploadPhoto({ projectId, ownerId: 'cover', id, blob: editing.blob })
+          patch.coverSource = { id: 'cover', path }
         } catch { /* the square is saved all the same; Adjust then works from it */ }
       }
       dropOld()

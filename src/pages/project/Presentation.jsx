@@ -210,7 +210,7 @@ export default function Presentation() {
                 )}
                 {PHOTO_SLOTS[s.layout] && (
                   <>
-                    <PhotoGrid title={`Pictures · the first ${PHOTO_SLOTS[s.layout]} are used, in order`} photos={s.photos || []} projectId={project.id} ownerId={s.id} editable={editable} onChange={(photos) => patch(s.id, { photos })} />
+                    <PhotoGrid title={`Pictures · the first ${PHOTO_SLOTS[s.layout]} are used, in order`} photos={s.photos || []} projectId={project.id} ownerId={s.id} editable={editable} cloud={false} onChange={(photos) => patch(s.id, { photos })} />
                   </>
                 )}
               </div>
