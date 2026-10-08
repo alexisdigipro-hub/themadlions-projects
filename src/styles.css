@@ -3694,46 +3694,68 @@ html[data-public='1'] body { background: var(--bg); }
 }
 
 
-/* Chat on a computer (Alex, 8 Oct): what the phone got, here too. Click a message for Reply / Edit /
-   Delete under it, double click puts a 🎥 on it, Telegram line icons. Tidier: the list and the room
-   share one frame, folders are underlined tabs, the search has its icon, the send arrow lights up
-   only when there is something to send. The bubble style from Settings stays yours. The phone is
-   unchanged. */
+/* Chat on a computer, Telegram for Mac (Alex, 8 Oct, from a screenshot of his Telegram): two
+   rounded panels on the chat wallpaper, the list on the left (title in the middle, folder tabs in
+   capitals, the open conversation filled with the accent), the room on the right with its name in
+   a floating pill, round buttons, your own bubbles in the full accent, and a floating box to type
+   in. From the phone: click a message for Reply / Edit / Delete under it, double click for a 🎥.
+   It fills the page edge to edge (negative margins equal to .content's padding). The phone is
+   unchanged; its look lives in the blocks above. */
+.chat-head-card { display: contents; }
 @media (min-width: 821px) {
-  /* second pass (Alex, 8 Oct, "strange gaps around the chat"): the chat fills the page edge to edge,
-     from the side menu to the window's edges, like a messaging app, instead of a card with space
-     above, beside and a big strip below it */
-  .chat2 { grid-template-columns: 360px minmax(0, 1fr); gap: 0; margin: -28px -32px -60px; height: 100vh; min-height: 480px; background: var(--panel); border: 0; border-radius: 0; box-shadow: none; overflow: hidden; }
+  .chat2 { --tg-wall: color-mix(in srgb, var(--accent) 9%, #e6ebef); --tg-lift: 0 1px 2px rgba(0, 0, 0, .08), 0 4px 14px rgba(0, 0, 0, .05); grid-template-columns: 380px minmax(0, 1fr); gap: 10px; padding: 10px; margin: -28px -32px -60px; height: 100vh; min-height: 480px; background: var(--tg-wall); border: 0; border-radius: 0; box-shadow: none; overflow: hidden; }
+  html[data-theme='dark'] .chat2 { --tg-wall: color-mix(in srgb, var(--accent) 6%, #0b1016); --tg-lift: 0 1px 2px rgba(0, 0, 0, .3); }
   .shell:has(> .viewas-bar) .chat2 { height: calc(100vh - 44px); }
-  /* your own messages sit against the right edge (they stopped at 72% of the width before) */
+  /* own messages against the right edge: a day is a column, so align-self works */
   .chat2 .chat-day { display: flex; flex-direction: column; }
-  .chat2 .chat-folders .chat-folders-edit { display: none; }
-  .chat2 .chat-list, .chat2 .chat-box { border: 0; border-radius: 0; box-shadow: none; }
-  .chat2 .chat-list { border-right: 1px solid var(--line-soft); }
-  .chat2 .chat-none { font-size: 15px; background: var(--wa-wall, var(--raised)); }
 
-  .chat2 .chat-list-head { padding: 14px 14px 8px 16px; gap: 4px; min-height: 60px; }
-  .chat2 .chat-list-head h1 { font-size: 22px; }
-  .chat2 .chat-folders { gap: 0; padding: 0 8px; border-bottom: 1px solid var(--line-soft); }
-  .chat2 .chat-folders button { background: none; border: 0; border-radius: 0; padding: 9px 7px 8px; font-size: 13.5px; border-bottom: 2px solid transparent; }
+  /* the list */
+  .chat2 .chat-list { border: 0; border-radius: 16px; box-shadow: var(--tg-lift); background: var(--panel); }
+  .chat2 .chat-list-head { position: relative; padding: 10px 10px 6px; gap: 2px; min-height: 52px; }
+  .chat2 .chat-list-head h1 { position: absolute; left: 50%; transform: translateX(-50%); font-size: 16.5px; font-weight: 700; pointer-events: none; }
+  .chat2 .chat-list-head .chat-folders-btn { margin-right: auto; }
+  .chat2 .chat-head-ico { width: 36px; height: 36px; display: grid; place-items: center; color: var(--accent); border-radius: 50%; }
+  .chat2 .chat-head-ico:hover { background: var(--raised); }
+  .chat2 .chat-head-ico svg { width: 21px; height: 21px; }
+  .chat2 .chat-search { padding: 2px 12px 6px; }
+  .chat2 .chat-search .input { border: 1px solid var(--line-soft); border-radius: 999px; background-color: var(--panel); padding: 7px 14px 7px 36px; font-size: 14.5px; text-align: center; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: calc(50% - 40px) 50%; }
+  .chat2 .chat-search .input:focus, .chat2 .chat-search .input:not(:placeholder-shown) { text-align: left; background-position: 13px 50%; }
+  .chat2 .chat-folders { gap: 0; padding: 0 6px; border-bottom: 1px solid var(--line-soft); }
+  .chat2 .chat-folders button { background: none; border: 0; border-radius: 0; padding: 8px 6px 7px; font-size: 12.5px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; border-bottom: 2px solid transparent; }
   .chat2 .chat-folders button.on { background: none; color: var(--accent); border-bottom-color: var(--accent); }
-  .chat2 .chat-folders .chat-folders-edit { font-size: 13px; }
-  .chat2 .chat-search { padding: 10px 12px 6px; }
-  .chat2 .chat-search .input { border: 0; background-color: var(--raised); padding: 8px 14px 8px 36px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 13px 50%; }
-  .chat2 .chat-rooms { padding: 4px 6px; }
-  .chat2 .chat-room-item { padding: 0 0 0 10px; border-radius: 12px; }
-  .chat2 .chat-room-item .chat-rmain { padding: 10px 12px 10px 0; min-height: 66px; justify-content: center; border-bottom: 0; }
-  .chat2 .chat-room-item.active { box-shadow: none; background: color-mix(in srgb, var(--accent) 16%, var(--panel)); }
-  .chat2 .chat-room-item.active .chat-rtop small { color: var(--accent); }
+  .chat2 .chat-folders .chat-folders-edit { display: none; }
+  .chat2 .chat-rooms { padding: 4px 6px 6px; }
+  .chat2 .chat-room-item { padding: 0 0 0 8px; gap: 10px; border-radius: 12px; }
+  .chat2 .chat-room-item .chat-rmain { padding: 10px 10px 10px 0; min-height: 68px; justify-content: center; border-bottom: 1px solid var(--line-soft); }
+  .chat2 .chat-room-item:last-child .chat-rmain, .chat2 .chat-room-item.active .chat-rmain { border-bottom-color: transparent; }
+  .chat2 .chat-room-item:hover { background: var(--raised); }
+  .chat2 .chat-room-item.active { background: var(--accent); color: var(--accent-ink, #fff); box-shadow: none; }
+  .chat2 .chat-room-item.active .chat-rtop small, .chat2 .chat-room-item.active .chat-rprev { color: inherit; opacity: .85; }
+  .chat2 .chat-room-item.active .chat-rbadge { background: var(--accent-ink, #fff); color: var(--accent); }
+  .chat2 .chat-room-item.active .chat-ravatar.team { box-shadow: 0 0 0 2px var(--accent-ink, #fff); }
+  .chat2 .chat-list-foot { border-top: 1px solid var(--line-soft); }
 
-  .chat2 .chat-head { min-height: 60px; padding: 9px 12px 9px 18px; gap: 12px; background: var(--panel); border-bottom: 1px solid var(--line-soft); }
-  .chat2 .chat-head-ico, .chat2 .chat-new { width: 38px; height: 38px; display: grid; place-items: center; color: var(--accent); border-radius: 50%; }
-  .chat2 .chat-head-ico:hover, .chat2 .chat-new:hover { background: var(--raised); }
-  .chat2 .chat-head-ico svg, .chat2 .chat-new svg { width: 21px; height: 21px; }
-  .chat2 .chat-scroll { padding: 14px clamp(16px, 4%, 56px) 16px; }
+  /* the room: on the wallpaper, no panel of its own */
+  .chat2 .chat-box { border: 0; border-radius: 0; box-shadow: none; background: transparent; }
+  .chat2 .chat-none { font-size: 15px; color: var(--muted); }
+  .chat2 .chat-head { background: transparent; border: 0; padding: 0 0 6px; gap: 8px; min-height: 0; }
+  .chat2 .chat-head-card { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; min-height: 48px; padding: 4px 18px 4px 5px; border-radius: 26px; background: var(--panel); box-shadow: var(--tg-lift); }
+  .chat2 .chat-head .chat-head-ico { width: 48px; height: 48px; background: var(--panel); color: var(--text); box-shadow: var(--tg-lift); }
+  .chat2 .chat-head .chat-head-ico:hover { color: var(--accent); background: var(--panel); }
+  .chat2 .chat-head-main strong { font-size: 15px; }
+  .chat2 .chat-head-main .small { font-size: 12.5px; }
+  .chat2 .chat-scroll { padding: 4px clamp(12px, 3%, 40px) 10px; border-radius: 14px; }
+  .chat2 .chat-msg { max-width: min(72%, 680px); }
+  .chat2 .chat-bubble { cursor: pointer; }
+
+  /* your own bubbles in the full accent, like Telegram's blue */
+  html .chat2 .chat-box[data-bubbles='telegram'] { --wa-out: var(--accent); --wa-wall: var(--tg-wall); }
+  .chat2 .chat-msg.mine .chat-bubble { color: var(--accent-ink, #fff); }
+  .chat2 .chat-msg.mine .chat-time, .chat2 .chat-msg.mine .chat-edited, .chat2 .chat-msg.mine .mention, .chat2 .chat-msg.mine .chat-quote b { color: inherit; opacity: .85; }
+  .chat2 .chat-msg.mine .chat-quote { border-left-color: currentColor; background: rgba(255, 255, 255, .18); }
+  .chat2 .chat-msg.mine .chat-file, .chat2 .chat-msg.mine .chat-att-wait { background: rgba(255, 255, 255, .18); }
 
   /* the clicked message's menu sits under it; a click elsewhere or Escape closes it */
-  .chat2 .chat-bubble { cursor: pointer; }
   .chat2 .chat-msg.picked .chat-bubble { filter: brightness(.94); }
   .chat2 .chat-msg.picked .chat-acts { display: flex; width: max-content; align-self: flex-start; opacity: 1; gap: 6px; margin-top: 6px; }
   .chat2 .chat-msg.mine.picked .chat-acts { align-self: flex-end; }
@@ -3746,17 +3768,20 @@ html[data-public='1'] body { background: var(--bg); }
   .chat2 .chat-likes { display: inline-flex; align-items: center; gap: 3px; margin: 5px 0 1px; padding: 2px 7px; border: 0; border-radius: 999px; background: rgba(0, 0, 0, .12); font: inherit; font-size: 13px; line-height: 1.3; color: inherit; cursor: pointer; vertical-align: middle; }
   .chat2 .chat-likes:hover { background: rgba(0, 0, 0, .2); }
   .chat2 .chat-likes.mine { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+  .chat2 .chat-msg.mine .chat-likes { background: rgba(255, 255, 255, .22); }
   .chat2 .chat-likes b { font-size: 12px; }
   .chat2 .chat-heart-burst { display: block; position: absolute; left: 50%; top: 50%; z-index: 3; font-size: 44px; line-height: 1; pointer-events: none; transform: translate(-50%, -50%) scale(.2); animation: chat-heart-d .8s ease-out forwards; }
   @keyframes chat-heart-d { 0% { transform: translate(-50%, -50%) scale(.2); opacity: 0; } 25% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 55% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -80%) scale(.9); opacity: 0; } }
 
-  .chat2 .chat-compose-wrap { background: var(--panel); border-top: 1px solid var(--line-soft); }
-  .chat2 .chat-compose { background: var(--panel); padding: 8px 12px; gap: 6px; }
-  .chat2 .chat-compose textarea { border: 0; background: var(--raised); border-radius: 21px; }
-  .chat2 .chat-attach { display: grid; place-items: center; color: var(--muted); border-radius: 50%; }
-  .chat2 .chat-attach:hover { color: var(--accent); background: var(--raised); }
+  /* the floating box to type in, with round buttons either side */
+  .chat2 .chat-compose-wrap { background: transparent; border: 0; }
+  .chat2 .chat-bar { margin: 6px 58px 0; padding: 8px 14px; background: var(--panel); border-radius: 14px; box-shadow: var(--tg-lift); }
+  .chat2 .chat-pending { padding: 6px 58px 0; }
+  .chat2 .chat-compose { background: transparent; padding: 8px 0 0; gap: 8px; align-items: flex-end; }
+  .chat2 .chat-compose textarea { border: 0; background: var(--panel); border-radius: 24px; min-height: 48px; padding: 13px 18px; box-shadow: var(--tg-lift); }
+  .chat2 .chat-attach, .chat2 .chat-send { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 50%; background: var(--panel); color: var(--muted); box-shadow: var(--tg-lift); transition: background .15s, color .15s; }
+  .chat2 .chat-attach:hover { color: var(--accent); background: var(--panel); }
   .chat2 .chat-attach svg { width: 23px; height: 23px; }
-  .chat2 .chat-send { background: transparent; color: var(--muted); transition: background .15s, color .15s; }
   .chat2 .chat-send.ready { background: var(--accent); color: var(--accent-ink, #fff); }
   .chat2 .chat-send:disabled { opacity: 1; }
   .chat2 .chat-send svg { width: 21px; height: 21px; }

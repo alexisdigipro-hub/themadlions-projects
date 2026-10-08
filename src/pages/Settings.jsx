@@ -1064,8 +1064,9 @@ function ChatSettings({ toast }) {
   const set = (k, v) => setP(saveChatPrefs({ [k]: v }))
   return (
     <div className="stack">
-      <ChatRow label="Background behind the messages" hint="None keeps the panel colour. Soft is a warm tint (dark in the dark theme). Dots adds the WhatsApp-style pattern."><ChatSeg value={p.wallpaper} onPick={(v) => set('wallpaper', v)} options={[['none', 'None'], ['soft', 'Soft'], ['dots', 'Dots']]} /></ChatRow>
-      <ChatRow label="Bubbles" hint="WhatsApp: tails at the top, your messages tinted with the accent. Telegram: rounder bubbles with the tail at the bottom, Telegram's own green and blue. Classic: rounded, your messages in the full accent colour."><ChatSeg value={p.bubbles} onPick={(v) => set('bubbles', v)} options={[['whatsapp', 'WhatsApp'], ['telegram', 'Telegram'], ['classic', 'Classic']]} /></ChatRow>
+      {/* The chat looks like Telegram on the phone and the computer, so the bubble style choice is gone;
+          the old None background shows as Plain (Telegram always has its tinted wallpaper). */}
+      <ChatRow label="Background behind the messages" hint="Plain is Telegram's tinted wallpaper in your accent colour. Pattern adds small dots."><ChatSeg value={p.wallpaper === 'none' ? 'soft' : p.wallpaper} onPick={(v) => set('wallpaper', v)} options={[['soft', 'Plain'], ['dots', 'Pattern']]} /></ChatRow>
       <ChatRow label="Text size in messages"><ChatSeg value={p.size} onPick={(v) => set('size', v)} options={[['small', 'Small'], ['normal', 'Normal'], ['large', 'Large']]} /></ChatRow>
       <ChatRow label="Spacing"><ChatSeg value={p.density} onPick={(v) => set('density', v)} options={[['comfortable', 'Comfortable'], ['compact', 'Compact']]} /></ChatRow>
       <ChatRow label="Enter key" hint="With Send, Shift+Enter makes a new line. With New line, Cmd+Enter (Ctrl+Enter on Windows) sends."><ChatSeg value={p.enterSends} onPick={(v) => set('enterSends', v)} options={[[true, 'Sends the message'], [false, 'New line']]} /></ChatRow>
