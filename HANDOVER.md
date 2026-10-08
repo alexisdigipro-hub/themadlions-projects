@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct, late night: Glass dark is everyone's theme
+- `DEFAULT_THEME = 'glassdark'` in lib/skin.js. main.jsx switches each device to it once (localStorage `tml_theme_default` marks that it was done; icons go to its Thin set), so everyone opens on it; after that Settings → Display → Theme works as before. Settings' picker falls back to it too. To make a different theme the default later: change DEFAULT_THEME (the marker holds the theme's name, so a new value switches every device once again).
+
 ### 9 Oct, late night: Tasks side column tidied (Alex's screenshot)
 - Text in the Tasks side column 5% larger (rows 15.5 → 16.3 px, phone 16.5 → 17.3). The smart lists sit in a framed card like the lists. General is a row with its own ☰ button (`.rem-fold`) that folds the other lists open under it (`.rem-row-sub`, indented); folded by default, kept in localStorage `tml_tasks_lists_open`, and opened by itself when a list under it is the one selected.
 

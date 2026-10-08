@@ -17,7 +17,7 @@ import { remote, supabase } from '../lib/supabase.js'
 import { testKey } from '../lib/ai.js'
 import { checkOpenAIKey } from '../lib/transcribe.js'
 import { buildICS, download } from '../lib/dates.js'
-import { SKINS, SKIN_ICONS, applyThemeChoice, isSkin } from '../lib/skin.js'
+import { DEFAULT_THEME, SKINS, SKIN_ICONS, applyThemeChoice, isSkin } from '../lib/skin.js'
 import { ICON_SETS, IconPreview, applyIconSet } from '../components/icons.jsx'
 
 export default function Settings() {
@@ -29,7 +29,7 @@ export default function Settings() {
   const [ai, setAi] = useState(state.settings)
   const [testing, setTesting] = useState(false)
   const [textSize, setTextSize] = useState(() => localStorage.getItem('tml_text_size') || 'normal')
-  const [theme, setTheme] = useState(() => localStorage.getItem('tml_theme') || 'light')
+  const [theme, setTheme] = useState(() => localStorage.getItem('tml_theme') || DEFAULT_THEME)
   const [accent, setAccent] = useState(() => localStorage.getItem('tml_accent') || 'amber')
   const [font, setFont] = useState(currentFont)
   const [icons, setIcons] = useState(() => document.documentElement.dataset.icons || 'classic')
