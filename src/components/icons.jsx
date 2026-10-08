@@ -28,6 +28,7 @@ const CLASSIC = {
   database: () => (<svg {...base}><ellipse cx="12" cy="5.5" rx="8" ry="3" /><path d="M4 5.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /><path d="M4 11.5v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /></svg>),
   mywork: () => (<svg {...base}><rect x="3" y="5" width="18" height="15" rx="2" /><path d="M3 10h18M8 5V3M16 5V3M7 14h4M7 17h7" /></svg>),
   drives: () => (<svg {...base}><rect x="3" y="4" width="18" height="7" rx="2" /><rect x="3" y="13" width="18" height="7" rx="2" /><circle cx="7" cy="7.5" r="1" fill="currentColor" stroke="none" /><circle cx="7" cy="16.5" r="1" fill="currentColor" stroke="none" /></svg>),
+  office: () => (<svg {...base}><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v4h4M9 12h6M9 15h6M9 18h4" /></svg>),
   more: () => (<svg {...base}><circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" /><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none" /></svg>),
   chat: () => (<svg {...base}><path d="M4 5h16v11H9l-5 4z" /><path d="M8 9h8M8 12.5h5" /></svg>),
   finance: () => (
@@ -65,6 +66,7 @@ const ROUNDED = {
   database: () => (<svg {...soft}><ellipse className="duo" cx="12" cy="5" rx="8.5" ry="3" /><path d="M3.5 5v14c0 1.7 3.8 3 8.5 3s8.5-1.3 8.5-3V5" /><path d="M3.5 12c0 1.7 3.8 3 8.5 3s8.5-1.3 8.5-3" /></svg>),
   mywork: () => (<svg {...soft}><rect className="duo" x="2.5" y="7" width="19" height="14" rx="3" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M2.5 13h19" /></svg>),
   drives: () => (<svg {...soft}><path className="duo" d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z" /><path d="M2 12h20" /><circle cx="6.5" cy="16" r="1" {...dot} /><circle cx="10" cy="16" r="1" {...dot} /></svg>),
+  office: () => (<svg {...soft}><path className="duo" d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5z" /><path d="M14 2v4a2 2 0 0 0 2 2h4M8 13h8M8 17h8" /></svg>),
   more: () => (<svg {...soft}><circle cx="5" cy="12" r="1.9" {...dot} /><circle cx="12" cy="12" r="1.9" {...dot} /><circle cx="19" cy="12" r="1.9" {...dot} /></svg>),
   chat: () => (<svg {...soft}><path className="duo" d="M7.9 20A9 9 0 1 0 4 16.1L2.5 21.5z" /><circle cx="8" cy="12" r="1" {...dot} /><circle cx="12" cy="12" r="1" {...dot} /><circle cx="16" cy="12" r="1" {...dot} /></svg>),
   finance: () => (<svg {...soft}><rect className="duo" x="2.5" y="3" width="19" height="18" rx="4" /><path d="m6.5 15 3.5-3.5 3 3 4.5-5" /><path d="M14.5 9.5h3v3" /></svg>),

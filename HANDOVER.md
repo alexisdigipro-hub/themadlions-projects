@@ -41,6 +41,13 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 8 Oct, night: Office without a server (Alex's option A)
+- `src/pages/Office.jsx` (/office list, /office/:pid/:docId editor, side menu "Office" with Files view), documents in `project.docs` ({ id, name, type docx|xlsx, fileid+scope or path, size, createdAt/By, updatedAt/ByName }). Files go through `uploadFile` under the document's own id (`pcloudTarget(state, pid, 'Office')`): in the app's bucket a save overwrites the same path, in pCloud it is a new file and the old one is deleted **before** the record moves on (the pcloud function only deletes files the project still records). Conflicts: compared on updatedAt, asks before replacing. Autosave 4 s after the last change, Ctrl/Cmd+S, save on leaving the page in the app, warn on closing the tab.
+- `src/lib/office/`: no libraries (none could be fetched or tested from the cloud session, and none need adding): `zip.js` (zip read/write on CompressionStream), `formula.js` (Excel-style formulas), `xlsx.js` (read/write: values, formulas with cached values, shared formulas, styles b/i/align/fill/€/%/date, column widths, sheets), `docx.js` (HTML ⇄ .docx: headings, marks, colour, alignment, nested lists, checklists as ☐/☑, tables, pictures), `sheetView.js` and `docView.js` (plain-DOM editors). Loaded only when Office opens.
+- Tested in Chromium through a static server: xlsx and docx round trips, an Excel-style file with shared strings and shared formulas, the editors driven by keyboard and mouse (cell editing, formula by clicking cells, Σ, styles, undo, sheets; headings, bold, lists, checklists, tables). Not tested inside the built app (no Vite here); CI builds it.
+- The ONLYOFFICE attempt was removed before merging (#232); nothing of it is live.
+
+
 ### 8 Oct, late: smaller team photos on a computer
 - Home's team strip on a computer: photos 60 px (35% smaller), the card's padding trimmed so it hugs them. Phone untouched. Last block of styles.css.
 
