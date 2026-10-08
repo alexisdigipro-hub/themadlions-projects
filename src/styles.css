@@ -3700,7 +3700,14 @@ html[data-public='1'] body { background: var(--bg); }
    only when there is something to send. The bubble style from Settings stays yours. The phone is
    unchanged. */
 @media (min-width: 821px) {
-  .chat2 { grid-template-columns: 360px minmax(0, 1fr); gap: 0; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; }
+  /* second pass (Alex, 8 Oct, "strange gaps around the chat"): the chat fills the page edge to edge,
+     from the side menu to the window's edges, like a messaging app, instead of a card with space
+     above, beside and a big strip below it */
+  .chat2 { grid-template-columns: 360px minmax(0, 1fr); gap: 0; margin: -28px -32px -60px; height: 100vh; min-height: 480px; background: var(--panel); border: 0; border-radius: 0; box-shadow: none; overflow: hidden; }
+  .shell:has(> .viewas-bar) .chat2 { height: calc(100vh - 44px); }
+  /* your own messages sit against the right edge (they stopped at 72% of the width before) */
+  .chat2 .chat-day { display: flex; flex-direction: column; }
+  .chat2 .chat-folders .chat-folders-edit { display: none; }
   .chat2 .chat-list, .chat2 .chat-box { border: 0; border-radius: 0; box-shadow: none; }
   .chat2 .chat-list { border-right: 1px solid var(--line-soft); }
   .chat2 .chat-none { font-size: 15px; background: var(--wa-wall, var(--raised)); }
@@ -3708,7 +3715,7 @@ html[data-public='1'] body { background: var(--bg); }
   .chat2 .chat-list-head { padding: 14px 14px 8px 16px; gap: 4px; min-height: 60px; }
   .chat2 .chat-list-head h1 { font-size: 22px; }
   .chat2 .chat-folders { gap: 0; padding: 0 8px; border-bottom: 1px solid var(--line-soft); }
-  .chat2 .chat-folders button { background: none; border: 0; border-radius: 0; padding: 9px 9px 8px; font-size: 13.5px; border-bottom: 2px solid transparent; }
+  .chat2 .chat-folders button { background: none; border: 0; border-radius: 0; padding: 9px 7px 8px; font-size: 13.5px; border-bottom: 2px solid transparent; }
   .chat2 .chat-folders button.on { background: none; color: var(--accent); border-bottom-color: var(--accent); }
   .chat2 .chat-folders .chat-folders-edit { font-size: 13px; }
   .chat2 .chat-search { padding: 10px 12px 6px; }
@@ -3723,7 +3730,7 @@ html[data-public='1'] body { background: var(--bg); }
   .chat2 .chat-head-ico, .chat2 .chat-new { width: 38px; height: 38px; display: grid; place-items: center; color: var(--accent); border-radius: 50%; }
   .chat2 .chat-head-ico:hover, .chat2 .chat-new:hover { background: var(--raised); }
   .chat2 .chat-head-ico svg, .chat2 .chat-new svg { width: 21px; height: 21px; }
-  .chat2 .chat-scroll { padding: 12px 7% 14px; }
+  .chat2 .chat-scroll { padding: 14px clamp(16px, 4%, 56px) 16px; }
 
   /* the clicked message's menu sits under it; a click elsewhere or Escape closes it */
   .chat2 .chat-bubble { cursor: pointer; }
