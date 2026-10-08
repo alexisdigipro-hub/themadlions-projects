@@ -44,7 +44,6 @@ const ChatWindow = lazyPage(() => import('./pages/Chat.jsx').then((m) => ({ defa
 const MyWork = lazyPage(() => import('./pages/MyWork.jsx'))
 const Profile = lazyPage(() => import('./pages/Profile.jsx'))
 const Drives = lazyPage(() => import('./pages/Drives.jsx'))
-const Office = lazyPage(() => import('./pages/Office.jsx'))
 const PublicCallSheet = lazyPage(() => import('./pages/PublicCallSheet.jsx'))
 const PublicDelivery = lazyPage(() => import('./pages/PublicDelivery.jsx'))
 const Deliveries = lazyPage(() => import('./pages/Deliveries.jsx'))
@@ -123,8 +122,6 @@ export default function App() {
                 <Route path="me" element={<Profile mine />} />
                 <Route path="u/:id" element={<Profile />} />
                 <Route path="drives" element={<Drives />} />
-                <Route path="office" element={<Office />} />
-                <Route path="office/:pid/:fileid" element={<Office />} />
                 <Route path="share" element={<Deliveries />} />
                 <Route path="database/:tab" element={<Database />} />
                 <Route path="database" element={<Navigate to="/database/locations" replace />} />
