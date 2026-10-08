@@ -63,6 +63,7 @@ Each PR body has the detail and the tests; this is the map.
 - **Calendar, phone** (#203): `MiniCalendar` `large` (only CalendarView on a phone uses it) draws the day's events as `.mc-ev` cards and adds Coming up (next 8 days with events within 45 days). `sub` no longer repeats the time. Legend hidden on the phone. CSS in the last block of styles.css.
 - **Chat, phone, Telegram look** (#204): in Chat.jsx, on `useIsMobile()` only: `data-bubbles='telegram'` (wallpaper 'soft' when Settings say none), avatar drawn on the last of a run, tap a bubble to show its actions (`picked`), `.chat-fab` pencil opens New message (the + Message header button hides on the phone), list avatars 54px. CSS in the last block of styles.css.
 - **Chat, phone, second pass** (#205): `html.chat-open` (set by ChatRoom on a phone) hides the tab bar; the room is fixed at `--chat-vt` / `--chat-vh` from `visualViewport`, so it sits on the keyboard; `TgIcon` line icons; symmetric 10px sides; hearts: double tap (`onBubbleTap`, single tap waits 260 ms), `m.likes`, written through RPC `chat_like` (store.jsx detects a hearts-only change). Hearts are drawn on the phone only. **New SQL: `supabase/chat_likes.sql`.**
+- **Chat, phone, third pass** (#206): the like is a 🎥 (same `likes` data); the tapped message's menu is big labelled buttons (Reply / Edit / Delete with line icons) under the bubble, inside `.chat-bubble-wrap`. Alex's screenshot after #205 showed the old version still open on his phone (emoji 📎, filled send): a fresh open of the app loads the new one.
 - **Chat, phone** (from #199, stays): an open room is `position: fixed` from the top down to the tab bar, so the box you type in no longer slides under the menu. Not tried on a real iPhone with the keyboard open.
 
 ### Presentation looks and link; users' Settings, My Finance, Database switch (7 Oct, evening)
@@ -78,7 +79,7 @@ Each PR body has the detail and the tests; this is the map.
 
 - **Cover crop**: `components/CoverCropper.jsx` (cropper + `useCover` hook used by Overview and ProjectForm), maths in `lib/coverCrop.js`. `coverThumb` is now a 480×480 square; the original goes to the photos bucket as `<projectId>/cover/source-<stamp>.jpg` in `coverSource`, the cut in `coverCrop`. Old file removed on a new pick, only if it sits in this project's folder (a copied project points at the original's). `Modal` now closes only the top window on Escape and keeps the page locked while another is open.
 
-**Alex still to do:** run `supabase/chat_likes.sql` in the SQL Editor, then merge the chat PR (#204 is merged).
+**Alex still to do:** run `supabase/chat_likes.sql` in the SQL Editor if not yet done, merge #206, then close the app fully on the phone and open it again.
 **Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
 
 ### Calendar feeds: read less often, and one switch over the lot (7 Oct)
