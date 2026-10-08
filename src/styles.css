@@ -4192,3 +4192,91 @@ html[data-theme='dark'] .cset-theme-pic { background: color-mix(in srgb, var(--a
 .chat-install-acts .btn { text-decoration: none; }
 .chat-install .chat-install-after { margin: 8px 0 0; color: var(--muted); font-size: 13.5px; }
 .chat-install ol + .chat-install-after { margin-top: 8px; }
+
+/* Calls (Alex, 8 Oct): Telegram's call screen. The other person's face blurred behind their name,
+   or their picture full screen in a video call with yours in a corner; round buttons at the foot,
+   red to end, green to answer. Minimised it is a green pill at the top. */
+.call-screen { position: fixed; inset: 0; z-index: 400; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: calc(28px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom)); background: #0d0f14; color: #fff; overflow: hidden; }
+.call-bg { position: absolute; inset: -40px; background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--accent) 45%, #1b2030), #0d0f14 70%); background-size: cover; background-position: center; filter: blur(40px) brightness(.55) saturate(1.2); }
+.call-far { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
+.call-near { position: absolute; z-index: 2; right: 14px; top: calc(14px + env(safe-area-inset-top)); width: 112px; height: 160px; object-fit: cover; border-radius: 16px; background: #111; box-shadow: 0 8px 26px rgba(0, 0, 0, .45); }
+.call-near.alone { inset: 0; width: 100%; height: 100%; border-radius: 0; z-index: 0; }
+.call-near.mirror { transform: scaleX(-1); }
+.call-min { position: absolute; z-index: 3; left: 14px; top: calc(14px + env(safe-area-inset-top)); width: 40px; height: 40px; border-radius: 50%; border: 0; display: grid; place-items: center; background: rgba(255, 255, 255, .14); color: #fff; cursor: pointer; backdrop-filter: blur(10px); }
+.call-who { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 8vh; text-align: center; }
+.call-who.over { margin-top: 0; text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
+.call-who strong { font-size: 26px; font-weight: 700; }
+.call-who span { font-size: 16px; opacity: .8; font-variant-numeric: tabular-nums; }
+.call-face { border-radius: 50%; object-fit: cover; box-shadow: 0 10px 40px rgba(0, 0, 0, .4); }
+.call-face-i { display: grid; place-items: center; background: var(--accent); color: var(--accent-ink, #fff); font-weight: 700; }
+.call-btns { position: relative; z-index: 2; display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; }
+.call-btn-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.call-btn-wrap small { font-size: 12.5px; opacity: .85; }
+.call-btn { width: 64px; height: 64px; border-radius: 50%; border: 0; display: grid; place-items: center; background: rgba(255, 255, 255, .16); color: #fff; cursor: pointer; backdrop-filter: blur(12px); transition: transform .12s, background .12s; }
+.call-btn:active { transform: scale(.94); }
+.call-btn.on { background: #fff; color: #111; }
+.call-btn.red { background: #e5484d; }
+.call-btn.green { background: #30a46c; animation: call-pulse 1.6s ease-in-out infinite; }
+@keyframes call-pulse { 50% { box-shadow: 0 0 0 12px rgba(48, 164, 108, .25); } }
+.call-pill { position: fixed; z-index: 400; top: calc(8px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 8px 16px; border: 0; border-radius: 999px; background: #30a46c; color: #fff; font: inherit; font-size: 14px; font-weight: 600; box-shadow: 0 6px 20px rgba(0, 0, 0, .3); cursor: pointer; }
+.call-pill b { font-variant-numeric: tabular-nums; font-weight: 600; opacity: .9; }
+.chat-call:disabled { opacity: .4; }
+@media (min-width: 821px) {
+  .call-screen { inset: auto 24px 24px auto; width: 380px; height: 600px; border-radius: 22px; box-shadow: 0 24px 70px rgba(0, 0, 0, .5); }
+  .call-screen.has-video { width: 560px; height: 640px; }
+  .call-near { top: 14px; }
+  .call-min { top: 14px; }
+}
+
+/* Chat colours: Neo red (Alex, 8 Oct, from a neumorphic chat design). Always dark graphite,
+   whatever the app's theme: everything raised off the same grey by a light edge top left and a
+   dark shadow bottom right, the box you type in and the search pressed in, your messages and the
+   main round buttons red with a soft glow, small rounded bubbles without tails. */
+html .chat2[data-chat-theme='neo'] {
+  --accent: #ef4a4a; --accent-ink: #ffffff;
+  --bg: #2a2d32; --panel: #2a2d32; --raised: #24272b; --sidebar: #2a2d32;
+  --text: #eceef1; --muted: #9ba0a8; --line: rgba(255, 255, 255, .07); --line-soft: rgba(255, 255, 255, .05);
+  --neo-up: -4px -4px 10px rgba(255, 255, 255, .035), 5px 6px 14px rgba(0, 0, 0, .5);
+  --neo-in: inset 3px 3px 7px rgba(0, 0, 0, .55), inset -3px -3px 7px rgba(255, 255, 255, .035);
+  --neo-glow: 0 6px 18px rgba(239, 74, 74, .35), -3px -3px 8px rgba(255, 255, 255, .03);
+  --tg-wall: #2a2d32; --tg-lift: var(--neo-up);
+  background: #2a2d32; color: var(--text);
+}
+html body .chat2[data-chat-theme='neo'] .chat-box[data-bubbles] { --wa-wall: #2a2d32; --wa-in: #26292e; --wa-out: #ef4a4a; --wa-time: #9ba0a8; --wa-quote: rgba(0, 0, 0, .22); --wa-dots: rgba(255, 255, 255, .03); background: #2a2d32; }
+html body .chat2[data-chat-theme='neo'] .chat-box[data-bubbles] .chat-scroll { background-color: #2a2d32; }
+html body .chat2[data-chat-theme='neo'] .chat-list,
+html body .chat2[data-chat-theme='neo'] .chat-box { background: #2a2d32; color: var(--text); }
+/* bubbles: raised, small corners, no tails; yours red and glowing, its time white */
+html body .chat2[data-chat-theme='neo'] .chat-bubble { border-radius: 8px; box-shadow: var(--neo-up); }
+html body .chat2[data-chat-theme='neo'] .chat-msg.mine .chat-bubble { box-shadow: var(--neo-glow); color: #fff; }
+html body .chat2[data-chat-theme='neo'] .chat-msg.mine .chat-bubble .chat-time,
+html body .chat2[data-chat-theme='neo'] .chat-msg.mine .chat-bubble .chat-tick { color: rgba(255, 255, 255, .85); }
+html body .chat2[data-chat-theme='neo'] .chat-bubble::before,
+html body .chat2[data-chat-theme='neo'] .chat-bubble::after { display: none; }
+html body .chat2[data-chat-theme='neo'] .chat-day-label span { background: #2a2d32; color: var(--text); box-shadow: var(--neo-up); text-transform: none; font-size: 13px; }
+/* round buttons and faces stand off the grey */
+html body .chat2[data-chat-theme='neo'] .chat-head-ico,
+html body .chat2[data-chat-theme='neo'] .chat-back,
+html body .chat2[data-chat-theme='neo'] .chat-attach,
+html body .chat2[data-chat-theme='neo'] .chat-head-card { background: #2a2d32; box-shadow: var(--neo-up); }
+html body .chat2[data-chat-theme='neo'] .chat-head-ico,
+html body .chat2[data-chat-theme='neo'] .chat-back { color: var(--accent); }
+html body .chat2[data-chat-theme='neo'] .chat-ravatar,
+html body .chat2[data-chat-theme='neo'] .chat-avatar { box-shadow: var(--neo-up), 0 0 0 3px #2a2d32; }
+/* pressed in: the box you type in and the search */
+html body .chat2[data-chat-theme='neo'] .chat-compose textarea,
+html body .chat2[data-chat-theme='neo'] .chat-search .input { background: #26292e; box-shadow: var(--neo-in); border: 0; color: var(--text); }
+/* send / mic: always the red round button, as in the design */
+html body .chat2[data-chat-theme='neo'] .chat-send { background: var(--accent); color: #fff; box-shadow: var(--neo-glow); }
+/* the list: a red count, a red time where something is unread, a hairline between rows */
+html body .chat2[data-chat-theme='neo'] .chat-rbadge { background: var(--accent); color: #fff; box-shadow: 0 3px 8px rgba(239, 74, 74, .35); }
+html body .chat2[data-chat-theme='neo'] .chat-room-item:not(.active):has(.chat-rbadge) .chat-rtop small { color: var(--accent); }
+html body .chat2[data-chat-theme='neo'] .chat-room-item.active { box-shadow: var(--neo-glow); }
+html body .chat2[data-chat-theme='neo'] .chat-fab { box-shadow: var(--neo-glow); }
+html body .chat2[data-chat-theme='neo'] .chat-win-tabs { background: #2a2d32; box-shadow: var(--neo-up); }
+html body .chat2[data-chat-theme='neo'] .chat-win-tabs button.on { color: var(--accent); }
+html body .chat2[data-chat-theme='neo'] .chat-menu { background: #2e3136; color: var(--text); box-shadow: var(--neo-up); }
+/* its picture in Settings > Chat */
+.cset-theme[data-chat-theme='neo'] .cset-theme-pic { background: #2a2d32; border-color: #3a3e44; }
+.cset-theme[data-chat-theme='neo'] .cset-theme-pic i { background: #26292e; box-shadow: -2px -2px 4px rgba(255, 255, 255, .04), 2px 3px 6px rgba(0, 0, 0, .5); }
+.cset-theme[data-chat-theme='neo'] .cset-theme-pic b { background: #ef4a4a; box-shadow: 0 3px 8px rgba(239, 74, 74, .45); }
