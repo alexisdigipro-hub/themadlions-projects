@@ -162,6 +162,8 @@ export default function Layout() {
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     { to: '/drives', label: 'Drives', show: can(user, 'drives'), icon: 'drives' },
+    // Word, Excel and PowerPoint in the app, kept in each project's pCloud folder (Alex, 8 Oct)
+    { to: '/office', label: 'Office', show: can(user, 'files'), icon: 'office' },
     { to: '/share', label: 'Share', show: mayShare, icon: 'post', badge: newReplies },
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance' },
     // Invoices came out of Finance's tab row into its own page (Alex). Team went the other way,
