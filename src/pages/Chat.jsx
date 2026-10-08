@@ -109,6 +109,7 @@ function RoomList({ activeId }) {
   const { state } = useStore()
   const user = useCurrentUser()
   const nav = useNavigate()
+  const mobile = useIsMobile()
   const isAdmin = user?.role === 'admin'
   const canNotice = canSendNotices(state, user)
   const [folderId, setFolderId] = useState(() => { try { return localStorage.getItem('tml_chat_folder') || 'all' } catch { return 'all' } })
@@ -142,7 +143,7 @@ function RoomList({ activeId }) {
     <aside className="chat-list">
       <div className="chat-list-head">
         <h1>Chat</h1>
-        <Button size="sm" variant="ghost" onClick={() => setDirect(true)} title="Write to one person">+ Message</Button>
+        {!mobile && <Button size="sm" variant="ghost" onClick={() => setDirect(true)} title="Write to one person">+ Message</Button>}
         {isAdmin && <Button size="sm" variant="primary" onClick={() => setGroup('new')} title="A group of chosen people">+ Group</Button>}
       </div>
       {legacy && <p className="chat-legacy">Rooms are not switched on yet: run supabase/chat_rooms.sql in the SQL editor. Until then only the team room works.</p>}
@@ -168,7 +169,7 @@ function RoomList({ activeId }) {
           const n = unread[r.id] || 0
           return (
             <button key={r.id} type="button" className={`chat-room-item ${r.id === activeId ? 'active' : ''}`} onClick={() => nav(`/chat/${encodeURIComponent(r.id)}`)} disabled={legacy && r.kind !== 'team'}>
-              <RoomAvatar room={r} />
+              <RoomAvatar room={r} size={mobile ? 54 : 42} />
               <span className="chat-rmain">
                 <span className="chat-rtop"><strong>{r.name}</strong><small>{listTime(last?.createdAt)}</small></span>
                 {(preview || n > 0) && <span className="chat-rbottom"><span className="chat-rprev">{preview}</span>{n > 0 && <span className="chat-rbadge">{n}</span>}</span>}
@@ -177,6 +178,12 @@ function RoomList({ activeId }) {
           )
         })}
       </div>
+      {/* Telegram's round pencil (phone only): a new message to one person */}
+      {mobile && (
+        <button type="button" className="chat-fab" onClick={() => setDirect(true)} aria-label="New message" title="New message">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+        </button>
+      )}
       {canNotice && (
         <div className="chat-list-foot">
           <Button size="sm" variant="ghost" onClick={() => setSent(true)}>Sent notices</Button>
@@ -336,6 +343,11 @@ function ProjectMembersModal({ open, projectId, onClose }) {
 
 /* ---------- one room ---------- */
 function ChatRoom({ room, onBack }) {
+  // On a phone the room looks and behaves like Telegram (Alex, 8 Oct): Telegram bubbles on a
+  // wallpaper whatever Settings > Chat says for the computer, the sender's face at the foot of
+  // their run, and Reply / Edit / Delete only for the message you tap, not beside every bubble.
+  const mobile = useIsMobile()
+  const [picked, setPicked] = useState('')
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
@@ -457,8 +469,8 @@ function ChatRoom({ room, onBack }) {
     ;(m.attachments || []).forEach((a) => deleteFile(a).catch(() => {}))
     update((s) => { s.chat = (s.chat || []).filter((x) => x.id !== m.id); return s })
   }
-  const startEdit = (m) => { setEditing(m); setReplyTo(null); setText(m.text); requestAnimationFrame(() => inputRef.current?.focus()) }
-  const startReply = (m) => { setReplyTo(m); setEditing(null); requestAnimationFrame(() => inputRef.current?.focus()) }
+  const startEdit = (m) => { setPicked(''); setEditing(m); setReplyTo(null); setText(m.text); requestAnimationFrame(() => inputRef.current?.focus()) }
+  const startReply = (m) => { setPicked(''); setReplyTo(m); setEditing(null); requestAnimationFrame(() => inputRef.current?.focus()) }
   const cancelBar = () => { setEditing(null); setReplyTo(null); if (editing) setText('') }
   const jumpTo = (id) => {
     const el = scrollRef.current?.querySelector(`[data-msg="${id}"]`)
@@ -483,10 +495,10 @@ function ChatRoom({ room, onBack }) {
   const membersOf = room.kind === 'team' ? state.users.filter((u) => u.active !== false) : room.kind === 'project' ? C.roomRecipients(state, room, '').map((id) => state.users.find((u) => u.id === id)).filter(Boolean) : (room.members || []).map((id) => state.users.find((u) => u.id === id)).filter(Boolean)
 
   return (
-    <div className="chat-box" data-wall={prefs.wallpaper} data-bubbles={prefs.bubbles} data-size={prefs.size} data-density={prefs.density}>
+    <div className="chat-box" data-wall={mobile && prefs.wallpaper === 'none' ? 'soft' : prefs.wallpaper} data-bubbles={mobile ? 'telegram' : prefs.bubbles} data-size={prefs.size} data-density={prefs.density}>
       <div className="chat-head">
         {onBack && <button type="button" className="icon-btn chat-back" onClick={onBack} aria-label="Back">‹</button>}
-        <RoomAvatar room={room} size={36} />
+        <RoomAvatar room={room} size={mobile ? 40 : 36} />
         <div className="chat-head-main">
           <strong>{room.name}</strong>
           <span className="small muted" title={membersOf.map((u) => u.name).join(', ')}>
@@ -512,14 +524,14 @@ function ChatRoom({ room, onBack }) {
               const last = !g.items[i + 1] || !follows(m, g.items[i + 1])
               const quoted = m.replyTo ? byId[m.replyTo] : null
               return (
-                <div key={m.id} data-msg={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${last ? 'last' : ''}`}>
+                <div key={m.id} data-msg={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${last ? 'last' : ''} ${picked === m.id ? 'picked' : ''}`}>
                   {!mine && room.kind !== 'direct' && prefs.avatars && (
                     <span className="chat-avatar">
-                      {!cont && (photoOf(m.userId) ? <img src={photoOf(m.userId)} alt="" /> : (m.userName || '').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase())}
+                      {(mobile ? last : !cont) && (photoOf(m.userId) ? <img src={photoOf(m.userId)} alt="" /> : (m.userName || '').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase())}
                     </span>
                   )}
                   <div className="chat-bubble-wrap">
-                    <div className="chat-bubble">
+                    <div className="chat-bubble" onClick={mobile ? (e) => { if (!e.target.closest('a, button')) setPicked((p) => (p === m.id ? '' : m.id)) } : undefined}>
                       {!cont && !mine && room.kind !== 'direct' && <div className="chat-who" style={{ '--who': `hsl(${senderHue(m.userId)} 55% 42%)` }}>{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>}
                       {m.replyTo && (
                         <div className="chat-quote" onClick={() => quoted && jumpTo(quoted.id)} role={quoted ? 'button' : undefined}>
