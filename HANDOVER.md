@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct, late night: From library back on an empty Project Database
+- The library pickers sat in the Crew / Cast / Locations cards, which stay hidden while empty, so a new project had no way to add from the library. The top button row now also has **Crew from library**, **Cast from library** (Talent for an event) and **Location from library**, shown when that card is empty and the library has someone or somewhere of that kind. People.jsx opens its own picker; Locations takes a `librarySignal` counter like `startSignal`.
+
 ### 9 Oct, late night: bigger play button
 - The song player's ▶ on a project's Overview had no style (`.player .play` needed a `.player` the Overview does not have) and showed as a tiny chip. Now `.player-bar .play` too: a 56 px accent circle, on the Overview and in Music.
 

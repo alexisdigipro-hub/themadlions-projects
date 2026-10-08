@@ -23,7 +23,7 @@ const emptyLocation = () => ({ id: uid(), name: '', address: '', type: 'Interior
 /* On the Project Database an empty card is noise, so `hideEmpty` draws nothing until there is a
    location and `startSignal` (a counter the page bumps) opens the form from a button out there.
    Nothing else passes either. */
-export default function Locations({ hideEmpty = false, startSignal = 0 }) {
+export default function Locations({ hideEmpty = false, startSignal = 0, librarySignal = 0 }) {
   const { project, edit, canEdit, library, editLibrary } = useProject()
   const { state } = useStore()
   const toast = useToast()
@@ -73,6 +73,8 @@ export default function Locations({ hideEmpty = false, startSignal = 0 }) {
   const detail = project.locations.find((l) => l.id === detailFor)
 
   useEffect(() => { if (startSignal) setDraft(emptyLocation()) }, [startSignal])
+  // "Location from library" in the Project Database's top row, while this card is hidden
+  useEffect(() => { if (librarySignal) setPick({ q: '', sel: [] }) }, [librarySignal])
 
   // Both the cards and the forms, so a button on the Project Database still has a form to
   // open while this card is hidden.
