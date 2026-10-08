@@ -708,37 +708,7 @@ code {
   color: var(--muted);
   font-size: 16px;
 }
-.checklist {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 12px;
-}
-.checklist li {
-  padding: 6px 0 6px 26px;
-  position: relative;
-  border-bottom: 1px solid var(--line-soft);
-}
-.checklist li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 10px;
-  width: 14px;
-  height: 14px;
-  border: 1.5px solid var(--muted);
-  border-radius: 50%;
-}
-.checklist li.done::before {
-  background: var(--ok);
-  border-color: var(--ok);
-}
-.checklist li.done a {
-  color: var(--muted);
-  text-decoration: line-through;
-}
-.checklist a {
-  text-decoration: none;
-}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -1505,40 +1475,7 @@ code {
   border-radius: var(--radius-lg);
   padding: 14px 16px;
 }
-.event-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.event-list li {
-  display: grid;
-  grid-template-columns: 10px 86px 1fr;
-  gap: 8px;
-  align-items: baseline;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--line-soft);
-  font-size: 15.5px;
-}
-.event-list .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-  position: relative;
-  top: -1px;
-}
-.event-list .ev-date {
-  color: var(--muted);
-  font-size: 15px;
-}
-.event-list .ev-title {
-  text-decoration: none;
-  text-align: left;
-  font-weight: 500;
-}
-.event-list .ev-title.link:hover {
-  text-decoration: underline;
-}
+
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -1890,7 +1827,7 @@ code {
 .dood-total td.sticky { text-align: left; }
 
 /* ---------- call sheet extras ---------- */
-.sun-row { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 6px; }
+
 .wx { margin-bottom: 8px; }
 .sides .side-scene { margin: 22px 0; page-break-inside: avoid; }
 .sides .script { font-family: var(--mono); white-space: pre-wrap; font-size: 15px; line-height: 1.5; }
@@ -2091,7 +2028,7 @@ p .diff-del { color: var(--danger); }
 /* ---------- people cards ---------- */
 /* Generic divider for content appended below an existing page, e.g. the song map embedded at the
    foot of Script for a Music Video project. */
-.page-section { margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--line-soft); }
+
 /* Project Database: Crew/Cast side by side, Locations and Equipment each their own framed card
    below, so the page reads as a set of boxed sections instead of one long scroll. */
 .db-grid { margin-bottom: 20px; }
@@ -2118,9 +2055,9 @@ p .diff-del { color: var(--danger); }
 .avatar { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; border: 1px solid var(--line-soft); background: var(--raised); color: var(--muted); font-size: 12.5px; font-weight: 700; padding: 0; cursor: pointer; flex: none; }
 .avatar img, .avatar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .avatar-img { width: 28px; height: 28px; border-radius: 50%; flex: none; }
-.person-projects { display: flex; flex-wrap: wrap; gap: 4px 8px; margin-top: 4px; }
-.person-projects a, .proj-link { color: var(--pc); font-weight: 600; text-decoration: none; }
-.person-projects a:hover, .proj-link:hover { text-decoration: underline; }
+
+.proj-link { color: var(--pc); font-weight: 600; text-decoration: none; }
+.proj-link:hover { text-decoration: underline; }
 .proj-link + .proj-link::before { content: ' · '; color: var(--muted); }
 .lib-pick { list-style: none; margin: 0; padding: 0; max-height: 50vh; overflow: auto; display: flex; flex-direction: column; gap: 6px; }
 .lib-pick li { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 8px 10px; }
@@ -2259,10 +2196,9 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 .send-table .row-actions { display: flex; gap: 6px; flex-wrap: nowrap; }
 .send-preview pre { max-height: 40vh; overflow: auto; margin-top: 8px; }
 
-
 /* ---------- light theme refinements ---------- */
-.panel, .card, .fin-card, .task, .person, .frip, .frame, .shot-card, .cut, .strip, .day-card, .project-card, .send-row, .concept, .modal { box-shadow: var(--shadow); }
-html[data-theme='light'] .panel, html[data-theme='light'] .fin-card, html[data-theme='light'] .task, html[data-theme='light'] .person, html[data-theme='light'] .frame, html[data-theme='light'] .shot-card, html[data-theme='light'] .cut, html[data-theme='light'] .day-card, html[data-theme='light'] .project-card, html[data-theme='light'] .concept { border-color: transparent; }
+.panel, .card, .fin-card, .task, .person, .frame, .shot-card, .cut, .strip, .project-card, .send-row, .concept, .modal { box-shadow: var(--shadow); }
+html[data-theme='light'] .panel, html[data-theme='light'] .fin-card, html[data-theme='light'] .task, html[data-theme='light'] .person, html[data-theme='light'] .frame, html[data-theme='light'] .shot-card, html[data-theme='light'] .cut, html[data-theme='light'] .project-card, html[data-theme='light'] .concept { border-color: transparent; }
 html[data-theme='light'] .modal { box-shadow: var(--shadow-lg); }
 html[data-theme='light'] .sidenav a.active { background: var(--raised); }
 html[data-theme='light'] .logo-mark { background: var(--accent); border-color: var(--accent); }
@@ -2423,7 +2359,6 @@ html[data-theme='light'] .song-sec { border-color: transparent; border-left: 4px
 html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 @media (max-width: 820px) { .wave { height: 80px; } .track-meta { grid-template-columns: 1fr; } .song-marks { flex-basis: 100%; } }
 
-
 /* ---------- covers & progress ---------- */
 .project-cover.has-img { padding: 0; position: relative; overflow: hidden; }
 .project-cover.has-img img { width: 100%; height: 100%; object-fit: cover; display: block; position: absolute; inset: 0; }
@@ -2496,50 +2431,33 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 .people-grid.compact .person-contact a { display: inline-flex; align-items: center; background: var(--raised); border: 1px solid var(--line-soft); border-radius: 999px; padding: 3px 10px; font-size: 13px; color: var(--text); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .people-grid.compact .person-contact a:hover { border-color: var(--accent); color: var(--accent); }
 .people-grid.compact .person-notes { display: none; }
-.people-grid.compact .person-projects { margin-top: 2px; }
+
 .people-grid.compact .person-actions { grid-column: 1 / -1; align-self: end; padding: 0; justify-content: flex-end; gap: 2px; }
 .people-grid.compact .person-actions button, .people-grid.compact .person-actions .row-actions button { padding: 2px 8px; font-size: 13px; background: transparent; border-color: transparent; color: var(--muted); box-shadow: none; }
 .people-grid.compact .person-actions button:hover { color: var(--text); background: var(--raised); }
 .people-grid.compact .person-body > .small.muted:not(.person-contact) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .people-table .avatar { width: 30px; height: 30px; }
-.file-list { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.file-list li { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line-soft); border-radius: var(--radius); padding: 8px 10px; }
-.file-list .grow { flex: 1; min-width: 0; }
-.file-list strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 .file-ico { font-size: 20px; flex: none; }
-.cloud-folder { border-top: 1px solid var(--line-soft); padding-top: 12px; margin-top: 6px; }
+
 /* Home is a grid of blocks the person can reorder. Explicit tracks, not auto-fit, because a
    full-width block spans 1 / -1 and auto-fit collapses the empty tracks that span relies on. */
 /* Two columns: the team strip spans both, Projects and Calendar share the row below it.
    Stretch, not start, so the two of them come out the same height whichever is taller. */
-.home-blocks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
-.home-block { display: flex; flex-direction: column; }
-.home-block.wide { grid-column: 1 / -1; }
+
 /* The projects table takes the leftover height and scrolls inside rather than stretching the row. */
-.home-table-wrap { flex: 1; min-height: 0; overflow: auto; }
-.home-arrange-hint { margin: 0 0 10px; }
-.home-blocks.arranging .home-block { cursor: grab; outline: 1px dashed var(--line); outline-offset: 2px; }
-.home-blocks.arranging .home-block:active { cursor: grabbing; }
-.home-block-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: -4px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line-soft); }
-.home-block-name { font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: .02em; }
-.home-block-moves { display: flex; gap: 8px; }
-.home-block-moves button { font-size: 16px; line-height: 1; }
-.home-block-moves button:disabled { opacity: .3; cursor: default; }
-@media (max-width: 1000px) { .home-blocks { grid-template-columns: minmax(0, 1fr); } } /* minmax(0): a wide table never pushes the blocks past the screen */
+
+ /* minmax(0): a wide table never pushes the blocks past the screen */
 .home .panel { margin-bottom: 14px; }
-.home .home-block { margin-bottom: 0; } /* the grid gap already spaces them, and this must come after .home .panel to win */
-.home-week li, .home-alerts li { display: flex; gap: 10px; align-items: baseline; padding: 4px 0; border-bottom: 1px solid var(--line-soft); }
-.home-week li:last-child, .home-alerts li:last-child { border-bottom: 0; }
-.home-date { color: var(--muted); font-size: 13px; min-width: 96px; flex: none; }
-.home-week a { color: var(--text); text-decoration: none; }
+ /* the grid gap already spaces them, and this must come after .home .panel to win */
+
 .home .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--pc); margin-right: 8px; vertical-align: middle; }
 .mini-progress { display: inline-block; width: 120px; height: 8px; background: var(--raised); border-radius: 999px; overflow: hidden; vertical-align: middle; margin-right: 8px; }
 .mini-progress span { display: block; height: 100%; }
-.avatar-img.sq { border-radius: 6px; width: 32px; height: 32px; }
+
 .bars li { display: grid; grid-template-columns: 130px 1fr 32px; gap: 10px; align-items: center; padding: 3px 0; }
 .bars .bar { height: 8px; background: var(--raised); border-radius: 999px; overflow: hidden; }
 .bars .bar span { display: block; height: 100%; background: var(--accent); }
-.home-projects td:first-child { min-width: 220px; }
 
 /* ---------- calendar: panel below the grid ---------- */
 .cal-layout.stacked { grid-template-columns: 1fr; }
@@ -2752,7 +2670,6 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 .chat-mention-pick button { font: inherit; text-align: left; background: none; border: 0; color: var(--text); padding: 7px 10px; border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; gap: 10px; }
 .chat-mention-pick button:hover, .chat-mention-pick button:first-child { background: var(--raised); }
 .chat-mention-pick small { color: var(--muted); }
-
 
 /* ---------- access code on a public link ---------- */
 .pin-gate { display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -3259,8 +3176,6 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
   .team-chip-name { font-size: 10px; }
 
   /* The blocks stop competing for height: on one column there is nothing to match. */
-  .home-block { display: block; }
-  .home-table-wrap { max-height: none; overflow-x: auto; }
 
   /* The Projects block itself stays off the phone (Home.jsx drops it): six columns never fit,
      and the Projects tab in the bar is one tap away. */
