@@ -4345,3 +4345,18 @@ html body .chat2[data-chat-theme='coral'] .chat-menu { background: #ffffff; colo
 .cset-theme[data-chat-theme='coral'] .cset-theme-pic i { background: #f2f2f5; }
 .cset-theme[data-chat-theme='coral'] .cset-theme-pic b { background: #f27a54; }
 html .cset-theme.on[data-chat-theme='coral'] .cset-theme-pic { border-color: #f27a54; }
+
+/* The Calls tab (Alex, 8 Oct): a row per person or recent call, round call buttons at the end. */
+.chat-calls { display: flex; flex-direction: column; }
+.chat-calls .chat-search { padding: 0 0 6px; }
+.chat-calls .chat-hits-title { margin: 12px 0 4px; }
+.chat-call-row { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line-soft); }
+.chat-call-row:last-child { border-bottom: 0; }
+.chat-call-row .chat-rmain { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.chat-call-row strong { font-size: 15.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-call-row strong.missed { color: var(--danger, #e5484d); }
+.chat-call-row small { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-call-acts { display: flex; gap: 6px; flex: none; }
+.chat-call-acts .chat-head-ico { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: none; }
+.chat-call-acts .chat-head-ico svg { width: 20px; height: 20px; }
+.chat-call-acts .chat-head-ico:disabled { opacity: .4; }

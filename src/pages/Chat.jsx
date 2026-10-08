@@ -382,6 +382,81 @@ function InstallHint() {
   )
 }
 
+/* ---------- Calls, the tab at the foot of the list (Alex, 8 Oct) ----------
+   Everyone in the team with a voice and a video button, and the recent calls, read from the lines
+   lib/calls.jsx writes into one-to-one conversations ("📞 Voice call · 3:12", "📞 Missed voice
+   call"): outgoing when you wrote it, incoming otherwise. A tap on a recent call calls back. */
+const CALL_LINE = /^(📞|🎥) /
+function CallsPanel() {
+  const { state } = useStore()
+  const user = useCurrentUser()
+  const calls = useCalls()
+  const mobile = useIsMobile()
+  const [q, setQ] = useState('')
+  if (!user) return null
+  const needle = q.trim().toLowerCase()
+  const people = (state.users || [])
+    .filter((u) => u.active !== false && u.id !== user.id && (!needle || (u.name || '').toLowerCase().includes(needle)))
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+  const roomWith = (otherId) => C.roomOf(state, user, C.directRoom(user.id, otherId))
+  const recent = needle ? [] : (state.chat || [])
+    .filter((m) => (m.chatId || '').startsWith('d:') && m.chatId.slice(2).split(':').includes(user.id) && CALL_LINE.test(m.text || ''))
+    .sort((a, b) => whenMs(b.createdAt) - whenMs(a.createdAt))
+    .slice(0, 30)
+  const size = mobile ? 50 : 44
+  const callBtns = (room) => (
+    <span className="chat-call-acts">
+      <button type="button" className="icon-btn chat-head-ico" onClick={() => calls.start(room, false)} disabled={calls.busy} aria-label={`Voice call ${room.name}`} title="Voice call">{TgIcon.phone()}</button>
+      <button type="button" className="icon-btn chat-head-ico" onClick={() => calls.start(room, true)} disabled={calls.busy} aria-label={`Video call ${room.name}`} title="Video call">{TgIcon.video()}</button>
+    </span>
+  )
+  return (
+    <div className="chat-win-settings chat-calls">
+      <h2>Calls</h2>
+      <div className="chat-search"><input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search people" name="call-search" autoComplete="off" /></div>
+      {recent.length > 0 && (
+        <>
+          <p className="chat-hits-title">Recent</p>
+          {recent.map((m) => {
+            const otherId = m.chatId.slice(2).split(':').find((x) => x !== user.id) || user.id
+            const room = roomWith(otherId)
+            if (!room) return null
+            const out = m.userId === user.id
+            const missed = /Missed/.test(m.text)
+            const video = m.text.startsWith('🎥')
+            const what = missed ? (out ? 'No answer' : 'Missed') : (m.text.split('·')[1] || '').trim()
+            return (
+              <div key={m.id} className="chat-call-row">
+                <RoomAvatar room={room} size={size} />
+                <span className="chat-rmain">
+                  <strong className={missed && !out ? 'missed' : ''}>{room.name}</strong>
+                  <small>{out ? '↗' : '↙'} {video ? 'Video' : 'Voice'}{what ? ` · ${what}` : ''} · {listTime(m.createdAt)}</small>
+                </span>
+                <span className="chat-call-acts">
+                  <button type="button" className="icon-btn chat-head-ico" onClick={() => calls.start(room, video)} disabled={calls.busy} aria-label={`Call ${room.name} back`} title="Call back">{video ? TgIcon.video() : TgIcon.phone()}</button>
+                </span>
+              </div>
+            )
+          })}
+        </>
+      )}
+      <p className="chat-hits-title">{needle ? 'People' : 'Everyone'}</p>
+      {!people.length && <p className="muted small">Nobody found.</p>}
+      {people.map((u) => {
+        const room = roomWith(u.id)
+        if (!room) return null
+        return (
+          <div key={u.id} className="chat-call-row">
+            <RoomAvatar room={room} size={size} />
+            <span className="chat-rmain"><strong>{u.name}</strong>{u.profile?.position && <small>{u.profile.position}</small>}</span>
+            {callBtns(room)}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 /* ---------- the list ---------- */
 function RoomList({ activeId, windowed }) {
   const { state } = useStore()
@@ -475,12 +550,12 @@ function RoomList({ activeId, windowed }) {
         {isAdmin && <button type="button" className="icon-btn chat-head-ico chat-group-new" onClick={() => setGroup('new')} title="New group" aria-label="New group">{TgIcon.people()}</button>}
         {!windowed && <button type="button" className="icon-btn chat-head-ico chat-popout" onClick={popOut} title="Open the chat in its own window" aria-label="Open the chat in its own window">{TgIcon.popout()}</button>}
       </div>
-      {tab === 'settings' || tab === 'notices' ? (tab === 'settings' && (
+      {tab === 'settings' || tab === 'notices' || tab === 'calls' ? (tab === 'settings' ? (
         <div className="chat-win-settings">
           <h2>Chat settings</h2>
           <ChatSettings toast={toast} />
         </div>
-      )) : (<>
+      ) : tab === 'calls' ? <CallsPanel /> : null) : (<>
       {legacy && <p className="chat-legacy">Rooms are not switched on yet: run supabase/chat_rooms.sql in the SQL editor. Until then only the team room works.</p>}
       {mobile && !windowed && installCard > 0 && <InstallHint key={installCard} />}
       <div className="chat-folders" role="tablist">
@@ -549,10 +624,11 @@ function RoomList({ activeId, windowed }) {
         </button>
       )}
       {(windowed || !mobile) && (
-        // the list's foot, Telegram's: chats, notices (administrators), settings (People left, Alex: the
-        // new-message button is already above the list)
+        // the list's foot, Telegram's, in Alex's order: chats, calls, notices (administrators), settings
+        // (People left, Alex: the new-message button is already above the list)
         <nav className="chat-win-tabs">
           <button type="button" className={tab === 'chats' ? 'on' : ''} onClick={() => setTab('chats')}>{TgIcon.chats()}<span>Chats</span></button>
+          {remote && <button type="button" className={tab === 'calls' ? 'on' : ''} onClick={() => setTab('calls')}>{TgIcon.phone()}<span>Calls</span></button>}
           {canNotice && <button type="button" className={tab === 'notices' ? 'on' : ''} onClick={() => setTab('notices')}>{TgIcon.bell()}<span>Notices</span></button>}
           <button type="button" className={tab === 'settings' ? 'on' : ''} onClick={() => setTab('settings')}>{TgIcon.gear()}<span>Settings</span></button>
         </nav>

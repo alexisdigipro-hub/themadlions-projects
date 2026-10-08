@@ -41,6 +41,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 8 Oct, late night: Calls tab
+- The chat list's foot is Chats / Calls / Notices / Settings (Alex's order). `CallsPanel` in Chat.jsx: everyone active with 📞 / 🎥, a search, and Recent read from the call lines lib/calls.jsx writes into direct rooms (`/^(📞|🎥) /`): written by me = outgoing ↗, else incoming ↙, "Missed" in red when incoming. Shown only with Supabase (`remote`). The foot is on a computer and in TML Chat; the phone's in-app chat list has no foot.
+- Group calls: still waiting for Alex to confirm a one-to-one call works on real phones; they go in this tab next.
+
 ### 8 Oct, late night: Coral chat theme
 - `data-chat-theme='coral'`, always light whatever the app's theme (it sets --text, --panel and the rest inside .chat2, and the incoming bubble's colour explicitly, since dark mode forces white bubble text). Graphite header (`--coral-head`), white message sheet with 26px top corners, coral pinned bar, folder tabs as a pill track. Checked on stored chat snapshots at 390 px and 1300 px, light and dark app theme.
 - Alex asked for group voice/video calls: proposed a mesh (each pair connected, fine up to about 5-6 people) on top of lib/calls.jsx, once a one-to-one call has worked on real phones.
