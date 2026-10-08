@@ -41,6 +41,21 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 8 Oct: expenses with a receipt photo (first of Alex's three: receipts, release forms, push)
+- `src/components/Receipt.jsx`: `ReceiptModal` (🧾 Add receipt on Budget), `ReceiptField` (Edit budget line: attach / take again / remove, written at once), `ReceiptView` (full picture or PDF, Download), `storeReceipt` (compress to 2000 px JPEG, thumb 160 px, `uploadFile` under the line's id to `pcloudTarget(state, pid, 'Receipts')`).
+- Line: `receipt: { id, name, type, size, path | fileid+scope, thumb, addedAt, addedBy, addedByName }`; typed total is gross, line keeps `estimate` = net and `vatPct`. Company + administrator: `recordPayment` at once (doc 'receipt', `tx.receipt` too); company + anyone else: unpaid, an administrator Pays it. Out of pocket: `memberId` + `reimburse: true`; `syncLineWorklog` then puts the **gross** amount in My work as "Refund · …".
+- Deleting a line deletes the receipt file first (the pcloud function only deletes what a project still records); replacing uploads the new one, then deletes the old, then records.
+- Finance rows show 🧾 Receipt from the line (or `tx.receipt`). `aiReadReceipt` in lib/ai.js (image or PDF, returns total, vatPct, vendor, date, description).
+- No SQL. Not tested in the built app (no React/Vite here); the refund and settle arithmetic was checked in node. Alex: merge, then try it on the phone on a real receipt.
+- Next: release forms with on-screen signature (PDF into the project), then push notifications (needs SQL, an Edge Function and VAPID keys).
+
+### 8 Oct, night: Office without a server (Alex's option A)
+- `src/pages/Office.jsx` (/office list, /office/:pid/:docId editor, side menu "Office" with Files view), documents in `project.docs` ({ id, name, type docx|xlsx, fileid+scope or path, size, createdAt/By, updatedAt/ByName }). Files go through `uploadFile` under the document's own id (`pcloudTarget(state, pid, 'Office')`): in the app's bucket a save overwrites the same path, in pCloud it is a new file and the old one is deleted **before** the record moves on (the pcloud function only deletes files the project still records). Conflicts: compared on updatedAt, asks before replacing. Autosave 4 s after the last change, Ctrl/Cmd+S, save on leaving the page in the app, warn on closing the tab.
+- `src/lib/office/`: no libraries (none could be fetched or tested from the cloud session, and none need adding): `zip.js` (zip read/write on CompressionStream), `formula.js` (Excel-style formulas), `xlsx.js` (read/write: values, formulas with cached values, shared formulas, styles b/i/align/fill/€/%/date, column widths, sheets), `docx.js` (HTML ⇄ .docx: headings, marks, colour, alignment, nested lists, checklists as ☐/☑, tables, pictures), `sheetView.js` and `docView.js` (plain-DOM editors). Loaded only when Office opens.
+- Tested in Chromium through a static server: xlsx and docx round trips, an Excel-style file with shared strings and shared formulas, the editors driven by keyboard and mouse (cell editing, formula by clicking cells, Σ, styles, undo, sheets; headings, bold, lists, checklists, tables). Not tested inside the built app (no Vite here); CI builds it.
+- The ONLYOFFICE attempt was removed before merging (#232); nothing of it is live.
+
+
 ### 8 Oct, late: smaller team photos on a computer
 - Home's team strip on a computer: photos 60 px (35% smaller), the card's padding trimmed so it hugs them. Phone untouched. Last block of styles.css.
 

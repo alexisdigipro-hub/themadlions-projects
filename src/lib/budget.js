@@ -21,6 +21,8 @@ const WL_METHOD = { Bank: 'Bank transfer', Cash: 'Cash', Card: 'Other', Other: '
  * Status: while the budget holds no payment on the line, whatever the member set stays (they
  * may mark themselves paid by hand). Once a payment exists, the line decides: settled = paid.
  */
+// A receipt someone paid out of their own pocket (line.reimburse) is owed back in full, VAT
+// included, so their My work shows what they actually paid, marked as a refund.
 export function syncLineWorklog(s, project, line) {
   s.worklog = s.worklog || []
   const i = s.worklog.findIndex((e) => e.budgetLineId === line?.id)
@@ -40,8 +42,8 @@ export function syncLineWorklog(s, project, line) {
     projectId: project.id,
     date: line.date || prev?.date || today(),
     client: project.client || project.title,
-    description: project.client ? `${project.title} · ${line.description}` : line.description,
-    amount: lineEstimate(line),
+    description: `${line.reimburse ? 'Refund · ' : ''}${project.client ? `${project.title} · ${line.description}` : line.description}`,
+    amount: line.reimburse ? Math.round(lineTotal(line) * 100) / 100 : lineEstimate(line),
     notes: prev?.notes || '',
     method: pays.length ? WL_METHOD[last.method] || prev?.method || 'Bank transfer' : prev?.method || 'Bank transfer',
     status: pays.length ? (settled ? 'paid' : 'pending') : prev?.status || 'pending',

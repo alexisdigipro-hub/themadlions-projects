@@ -244,3 +244,32 @@ export async function aiDocumentBreakdown({ settings, category, text, files = []
     notes: Array.isArray(json.notes) ? json.notes.map(String) : [],
   }
 }
+
+/* ---------- receipts ---------- */
+
+/* Reads a photographed receipt (or a PDF one) and returns what the expense form needs:
+   { total, vatPct, vendor, date, description }. Anything it cannot read comes back empty, and
+   the person fills it in by hand. */
+export async function aiReadReceipt({ settings, file }) {
+  if (!settings.aiKey) throw new Error('Add your Anthropic API key in Settings first.')
+  const model = settings.aiModel || 'claude-sonnet-4-6'
+  const lang = aiLang(settings)
+  const media = file.type === 'application/pdf' || /\.pdf$/i.test(file.name)
+    ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: await fileToBase64(file) } }
+    : await imageBlock(file)
+  const prompt = [media, { type: 'text', text: `This is a receipt or invoice from a film shoot in Greece. Return exactly this JSON:
+{"total": number, the amount paid including VAT (ΣΥΝΟΛΟ / ΠΛΗΡΩΤΕΟ), or null,
+ "vat_pct": number, the main VAT rate (ΦΠΑ %), e.g. 24, 13, 6, or 0, or null,
+ "vendor": "the shop or company name, as printed", 
+ "date": "YYYY-MM-DD", or "",
+ "description": "what was bought, 2-6 words in ${lang}"}` }]
+  const json = await callClaude({ apiKey: settings.aiKey, model, prompt, system: 'You read receipts and invoices exactly as printed. Never guess numbers that are not on the document. Return JSON only, no markdown fences, no commentary.' })
+  const num = (v) => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? '' : Number(v))
+  return {
+    total: num(json.total),
+    vatPct: num(json.vat_pct),
+    vendor: String(json.vendor || '').trim(),
+    date: /^\d{4}-\d{2}-\d{2}$/.test(json.date || '') ? json.date : '',
+    description: String(json.description || '').trim(),
+  }
+}
