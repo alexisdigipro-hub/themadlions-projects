@@ -8,6 +8,7 @@ import { deleteFile, fileIcon, fileUrl, fmtBytes, uploadFile } from '../lib/file
 import { compress } from '../lib/photos.js'
 import { canCompressVideo, compressVideo, isVideoFile, prepareVideo, releaseVideo } from '../lib/videoCompress.js'
 import { pcloudOn } from '../lib/pcloud.js'
+import { remote, supabase } from '../lib/supabase.js'
 import { loadChatPrefs } from '../lib/chatPrefs.js'
 import * as C from '../lib/chat.js'
 
@@ -39,6 +40,15 @@ const attLabel = (a) => (isImage(a) ? 'Photo' : isVideo(a) ? 'Video' : a.name)
 const SENDER_HUES = [14, 36, 95, 160, 200, 230, 275, 320]
 const senderHue = (id) => { let h = 0; for (const c of String(id || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0; return SENDER_HUES[h % SENDER_HUES.length] }
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/* A new conversation with one person is written to the database with its first message, but a
+   photo or video goes up before the message, and the upload checks that you belong to the
+   conversation: so it is written first (Alex, 8 Oct: "You cannot upload there." on a first video). */
+async function saveDirectRoom(state, room, userId) {
+  if (!remote || !room.unsaved) return
+  const { error } = await supabase.from('chats').upsert({ id: room.id, workspace_id: state.workspace.id, kind: 'direct', name: '', members: room.members, created_by: userId || null }, { ignoreDuplicates: true })
+  if (error) throw new Error(error.message)
+}
 
 /* pCloud folder for a room's files: a project's room under the project, the rest under Chat. */
 function chatFolder(state, room) {
@@ -480,6 +490,7 @@ function ChatRoom({ room, onBack }) {
     if (pending.length) {
       setBusy('Uploading…')
       try {
+        await saveDirectRoom(state, room, user?.id)
         for (let i = 0; i < pending.length; i++) {
           let f = pending[i]
           const of = pending.length > 1 ? ` ${i + 1}/${pending.length}` : ''
