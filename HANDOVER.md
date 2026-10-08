@@ -55,6 +55,11 @@ Each PR body has the detail and the tests; this is the map.
 
 **Alex still to do:** nothing from this list, #196 is merged.
 
+### Home faces, Tasks row, Chat box (8 Oct)
+- **Home, computer only**: team faces five to a row in a fit-content box (`.panel.team-strip-panel`, desktop media in styles.css), smaller faces, no Show all; Sort by is drawn on the phone only and a computer always sorts by Date (`mobile && SORTS[sort]`); `.home-toolbar` keeps the categories left and Search + New project right on one row, both 36px.
+- **Tasks, computer only**: Everything and Add task wrapped in `.tasks-add` (inline-flex, nowrap on a computer, `display: contents` on the phone so the phone is unchanged, checked pixel for pixel).
+- **Chat, phone**: an open room is `position: fixed` from the top down to the tab bar (`bottom: tabbar-h + safe area`), so the box you type in no longer slides under the menu. Not tried on a real iPhone with the keyboard open.
+
 ### Presentation looks and link; users' Settings, My Finance, Database switch (7 Oct, evening)
 - **Presentation looks**: `THEMES` in `lib/deck.js` (mb, noir, editorial, poster), one draw function per look over the same six layouts; MB unchanged. `project.deck.theme`, picked from cover thumbnails on the tab. Accent = project colour, company = workspace name. Greek titles are put in capitals without accents (`upperGr`). Editorial loads Noto Serif only when used.
 - **Lighter PDF**: `slideJpeg` draws at 1920 and saves 1600 wide at quality 0.8.
@@ -68,7 +73,7 @@ Each PR body has the detail and the tests; this is the map.
 
 - **Cover crop**: `components/CoverCropper.jsx` (cropper + `useCover` hook used by Overview and ProjectForm), maths in `lib/coverCrop.js`. `coverThumb` is now a 480×480 square; the original goes to the photos bucket as `<projectId>/cover/source-<stamp>.jpg` in `coverSource`, the cut in `coverCrop`. Old file removed on a new pick, only if it sits in this project's folder (a copied project points at the original's). `Modal` now closes only the top window on Escape and keeps the page locked while another is open.
 
-**Alex still to do:** merge #198 (Finance and My Finance All time, cover crop; #197 went in before them). Nothing to run in Supabase.
+**Alex still to do:** merge the PR with the Home / Tasks / Chat changes (#198 is merged). Nothing to run in Supabase.
 **Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
 
 ### Calendar feeds: read less often, and one switch over the lot (7 Oct)
