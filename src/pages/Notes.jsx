@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, useIsMobile, useToast } from '../components/ui.jsx'
+import { useIsMobile, useToast } from '../components/ui.jsx'
 import { uid } from '../lib/store.jsx'
 import { deleteNotes, loadNotes, noteText, saveNote } from '../lib/notes.js'
 
@@ -75,7 +75,8 @@ export default function Notes() {
   const [folder, setFolder] = useState(() => { try { return localStorage.getItem('tml_notes_folder') || ALL } catch { return ALL } })
   const [openId, setOpenId] = useState('')
   const [q, setQ] = useState('')
-  const [screen, setScreen] = useState('list') // phone: folders | list | note
+  const [screen, setScreen] = useState('folders') // phone: folders | list | note
+  const [quick, setQuick] = useState('')
   const [renaming, setRenaming] = useState(null) // { id, name }
   const pending = useRef(new Map()) // id -> timer, a save waiting
   const itemsRef = useRef(items)
@@ -174,22 +175,21 @@ export default function Notes() {
     flush(id)
   }
   const select = (id) => { if (id !== openId) leave(openId); setOpenId(id); if (mobile) setScreen(id ? 'note' : 'list') }
-  // on a computer the newest note of the folder is open, as in Notes
-  useEffect(() => {
-    if (mobile || !items) return
-    if (!open || (folder !== ALL && !shown.some((n) => n.id === open.id))) setOpenId(shown[0]?.id || '')
-  }, [folder, items, mobile]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const newNote = () => {
+  const esc = (x) => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  // a title typed in "+ New Note…" starts the note with it; ✎ starts an empty one
+  const newNote = (title = '') => {
     if (folder === TRASH) setFolder(ALL)
     const t = now()
-    const n = { id: uid(), kind: 'note', folderId: [ALL, NONE, TRASH].includes(folder) ? '' : folder, title: '', body: '<h1><br></h1>', pinned: false, createdAt: t, updatedAt: t, deletedAt: '' }
+    const body = title ? `<h1>${esc(title)}</h1><p><br></p>` : '<h1><br></h1>'
+    const n = { id: uid(), kind: 'note', folderId: [ALL, NONE, TRASH].includes(folder) ? '' : folder, title, body, pinned: false, createdAt: t, updatedAt: t, deletedAt: '' }
     leave(openId)
     setItems((list) => [n, ...list])
     setOpenId(n.id)
     setQ('')
+    setQuick('')
     if (mobile) setScreen('note')
-    // written to the database once something is typed in it
+    // written to the database once something is typed in it, or now when it already has a title
+    if (title) persist(n)
   }
   const onBody = (id, html) => {
     const lines = noteText(html)
@@ -203,8 +203,7 @@ export default function Notes() {
       clearTimeout(pending.current.get(n.id)); pending.current.delete(n.id)
       patch(n.id, { deletedAt: now(), pinned: false })
     }
-    const next = shown.find((x) => x.id !== n.id)
-    setOpenId(mobile ? '' : next?.id || '')
+    setOpenId('')
     if (mobile) setScreen('list')
   }
   const restore = (n) => { patch(n.id, { deletedAt: '' }); toast('Note restored', 'ok') }
@@ -243,16 +242,18 @@ export default function Notes() {
 
   if (items === null) return <div className="notes-app notes-loading muted">Loading notes…</div>
 
-  const pickFolder = (f) => { leave(openId); setFolder(f); setQ(''); if (mobile) { setOpenId(''); setScreen('list') } }
+  const NOTES_COLOR = '#b58a1c' // the backdrop behind the notes, Notes' own amber
+  const pickFolder = (f) => { leave(openId); setOpenId(''); setFolder(f); setQ(''); if (mobile) setScreen('list') }
+  const close = () => { leave(openId); setOpenId(''); if (mobile) setScreen('list') }
   const folderRow = ({ id, name, count, icon = '🗂', own }) => (
-    <div key={id} className={`notes-folder ${folder === id ? 'on' : ''}`}>
+    <div key={id} className={`rem-row notes-frow ${folder === id && !open ? 'on' : folder === id ? 'here' : ''}`}>
       {renaming?.id === id ? (
         <input className="input notes-rename" autoFocus value={renaming.name} onChange={(e) => setRenaming({ id, name: e.target.value })} onBlur={renameFolder} onKeyDown={(e) => { if (e.key === 'Enter') renameFolder(); if (e.key === 'Escape') setRenaming(null) }} />
       ) : (
-        <button type="button" className="notes-folder-btn" onClick={() => pickFolder(id)} onDoubleClick={() => own && setRenaming({ id, name })}>
-          <span className="notes-folder-ico" aria-hidden="true">{icon}</span>
+        <button type="button" className="rem-row-pick" onClick={() => pickFolder(id)} onDoubleClick={() => own && setRenaming({ id, name })}>
+          <span className="rem-row-emoji" aria-hidden="true">{icon}</span>
           <span className="grow">{name}</span>
-          <span className="notes-count">{count}</span>
+          <span className="rem-count">{count || ''}</span>
         </button>
       )}
       {own && renaming?.id !== id && (
@@ -265,92 +266,99 @@ export default function Notes() {
   )
 
   const foldersPane = (
-    <aside className="notes-folders">
-      <div className="notes-pane-head"><strong>Folders</strong></div>
-      <div className="notes-folder-list">
+    <aside className="rem-side">
+      <div className="rem-search-wrap">
+        <span className="rem-search-ico" aria-hidden="true">⌕</span>
+        <input className="rem-search" type="search" placeholder="Search" value={q} onChange={(e) => { setQ(e.target.value); if (open) close(); if (mobile && e.target.value) setScreen('list') }} />
+      </div>
+      <nav className="rem-smart">
         {folderRow({ id: ALL, name: 'All Notes', count: live.length, icon: '📒' })}
         {folderRow({ id: NONE, name: 'Notes', count: inFolder(NONE).length, icon: '🗒' })}
-        {folders.map((f) => folderRow({ id: f.id, name: f.title, count: inFolder(f.id).length, own: f }))}
         {trash.length > 0 && folderRow({ id: TRASH, name: 'Recently Deleted', count: trash.length, icon: '🗑' })}
-      </div>
-      <button type="button" className="notes-new-folder" onClick={newFolder}>＋ New Folder</button>
+      </nav>
+      {folders.length > 0 && <hr className="rem-rule" />}
+      {folders.length > 0 && <nav className="rem-lists">{folders.map((f) => folderRow({ id: f.id, name: f.title, count: inFolder(f.id).length, own: f }))}</nav>}
+      <button type="button" className="rem-add-list" onClick={newFolder}><span>＋</span> New Folder</button>
     </aside>
   )
 
-  const listPane = (
-    <section className="notes-list">
-      <div className="notes-pane-head">
-        {mobile && <button type="button" className="notes-back" onClick={() => setScreen('folders')}>‹ Folders</button>}
-        <div className="grow">
-          <strong>{folderName}</strong>
-          <span className="muted small"> {shown.length} note{shown.length === 1 ? '' : 's'}</span>
-        </div>
-        {folder === TRASH
-          ? trash.length > 0 && <Button size="sm" variant="ghost" onClick={() => { if (confirm('Delete every note in Recently Deleted for good?')) emptyTrash() }}>Empty</Button>
-          : <button type="button" className="notes-compose" onClick={newNote} title="New note" aria-label="New note">✎</button>}
+  const card = (n) => (
+    <li key={n.id} className="notes-card" onClick={() => select(n.id)}>
+      <div className="notes-card-main">
+        <div className="notes-card-title">{n.pinned && folder !== TRASH && <span className="notes-card-pin">📌</span>}{n.lines[0] || 'New Note'}</div>
+        <div className="notes-card-sub"><b>{when(n.updatedAt)}</b> {n.lines[1] || 'No additional text'}</div>
+        {folder === ALL && n.folderId && <div className="notes-card-folder">🗂 {folders.find((f) => f.id === n.folderId)?.title || ''}</div>}
       </div>
-      <input className="input notes-search" type="search" placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
-      <div className="notes-items">
-        {!shown.length && <p className="muted small notes-empty">{q ? 'No note matches.' : folder === TRASH ? 'Nothing deleted.' : 'No notes yet. ✎ starts one.'}</p>}
+      {folder !== TRASH && <button type="button" className={`notes-card-act ${n.pinned ? 'on' : ''}`} title={n.pinned ? 'Unpin' : 'Pin'} onClick={(e) => { e.stopPropagation(); patch(n.id, { pinned: !n.pinned }) }}>📌</button>}
+      <button type="button" className="rem-del" title={n.deletedAt ? 'Delete now' : 'Delete'} onClick={(e) => { e.stopPropagation(); remove(n) }}>×</button>
+    </li>
+  )
+
+  const listPane = (
+    <section className="rem-main notes-main" style={{ '--lc': NOTES_COLOR }}>
+      <div className="rem-head">
+        {mobile && <button type="button" className="rem-back" onClick={() => setScreen('folders')}>‹ Folders</button>}
+        <div className="grow">
+          <h1>{q.trim() ? `Searching for "${q.trim()}"` : folderName}</h1>
+          <div className="rem-head-date">{shown.length} note{shown.length === 1 ? '' : 's'}</div>
+        </div>
+        {folder === TRASH && trash.length > 0 && <button type="button" className="rem-head-btn" onClick={() => { if (confirm('Delete every note in Recently Deleted for good?')) emptyTrash() }}>Empty</button>}
+      </div>
+      <div className="rem-scroll">
+        {!shown.length && <p className="rem-empty">{q ? 'No note matches.' : folder === TRASH ? 'Nothing deleted.' : 'No notes yet. Write one below.'}</p>}
         {groups.map((g) => (
-          <div key={g.label} className="notes-group">
-            <div className="notes-group-head">{g.label === 'Pinned' ? '📌 Pinned' : g.label}</div>
-            <div className="notes-group-card">
-              {g.list.map((n) => (
-                <button key={n.id} type="button" className={`notes-item ${n.id === openId ? 'on' : ''}`} onClick={() => select(n.id)}>
-                  <strong>{n.lines[0] || 'New Note'}</strong>
-                  <span><b>{when(n.updatedAt)}</b> {n.lines[1] || 'No additional text'}</span>
-                  {folder === ALL && n.folderId && <em>🗂 {folders.find((f) => f.id === n.folderId)?.title || ''}</em>}
-                </button>
-              ))}
-            </div>
+          <div key={g.label} className="rem-section">
+            <div className="notes-group-label">{g.label === 'Pinned' ? '📌 Pinned' : g.label}</div>
+            <ul className="rem-tasks">{g.list.map(card)}</ul>
           </div>
         ))}
       </div>
-    </section>
-  )
-
-  const notePane = (
-    <section className="notes-note">
-      {open ? (
-        <>
-          <div className="notes-note-bar">
-            {mobile && <button type="button" className="notes-back" onClick={() => { leave(openId); setOpenId(''); setScreen('list') }}>‹ {folderName}</button>}
-            <span className="grow" />
-            {open.deletedAt ? (
-              <>
-                <Button size="sm" onClick={() => restore(open)}>Restore</Button>
-                <Button size="sm" variant="ghost" onClick={() => remove(open)}>Delete now</Button>
-              </>
-            ) : (
-              <>
-                <select className="input select notes-move" value={open.folderId && folders.some((f) => f.id === open.folderId) ? open.folderId : NONE} onChange={(e) => moveTo(open, e.target.value)} title="Folder">
-                  <option value={NONE}>Notes</option>
-                  {folders.map((f) => <option key={f.id} value={f.id}>{f.title}</option>)}
-                </select>
-                <button type="button" className={`notes-icon ${open.pinned ? 'on' : ''}`} onClick={() => patch(open.id, { pinned: !open.pinned })} title={open.pinned ? 'Unpin' : 'Pin'}>📌</button>
-                <button type="button" className="notes-icon" onClick={() => remove(open)} title="Delete">🗑</button>
-                {mobile && <button type="button" className="notes-icon" onClick={newNote} title="New note">✎</button>}
-              </>
-            )}
-          </div>
-          <div className="notes-date muted small">{longDate(open.updatedAt)}</div>
-          {open.deletedAt ? (
-            <div className="notes-readonly" dangerouslySetInnerHTML={{ __html: open.body }} />
-          ) : (
-            <Editor key={open.id} note={open} onChange={onBody} />
-          )}
-        </>
-      ) : (
-        <div className="notes-none muted">{folder === TRASH ? 'Pick a note to restore it.' : 'Pick a note, or ✎ to start one.'}</div>
+      {folder !== TRASH && (
+        <div className="rem-quick">
+          <span className="rem-quick-plus" aria-hidden="true">＋</span>
+          <input className="rem-quick-input" value={quick} onChange={(e) => setQuick(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') newNote(quick.trim()); if (e.key === 'Escape') setQuick('') }} placeholder="New Note…" />
+          <button type="button" className="notes-quick-open" onClick={() => newNote(quick.trim())}>Open</button>
+        </div>
       )}
     </section>
   )
 
+  const notePane = open && (
+    <section className="rem-main notes-main" style={{ '--lc': NOTES_COLOR }}>
+      <div className="rem-head notes-note-head">
+        <button type="button" className="rem-back" onClick={close}>‹ {folderName}</button>
+        <span className="grow" />
+        {open.deletedAt ? (
+          <>
+            <button type="button" className="rem-head-btn" onClick={() => restore(open)}>Restore</button>
+            <button type="button" className="rem-head-btn" onClick={() => remove(open)}>Delete now</button>
+          </>
+        ) : (
+          <>
+            <select className="notes-move" value={open.folderId && folders.some((f) => f.id === open.folderId) ? open.folderId : NONE} onChange={(e) => moveTo(open, e.target.value)} title="Folder">
+              <option value={NONE}>Notes</option>
+              {folders.map((f) => <option key={f.id} value={f.id}>{f.title}</option>)}
+            </select>
+            <button type="button" className={`rem-head-btn ${open.pinned ? 'on' : ''}`} onClick={() => patch(open.id, { pinned: !open.pinned })} title={open.pinned ? 'Unpin' : 'Pin'}>📌</button>
+            <button type="button" className="rem-head-btn" onClick={() => remove(open)} title="Delete">🗑</button>
+          </>
+        )}
+      </div>
+      <div className="notes-sheet">
+        <div className="notes-date">{longDate(open.updatedAt)}</div>
+        {open.deletedAt ? (
+          <div className="notes-readonly" dangerouslySetInnerHTML={{ __html: open.body }} />
+        ) : (
+          <Editor key={open.id} note={open} onChange={onBody} />
+        )}
+      </div>
+    </section>
+  )
+
   return (
-    <div className={`notes-app ${mobile ? `m-${screen}` : ''}`}>
+    <div className={`rem-app notes-app ${mobile ? `m-${screen}` : ''}`}>
       {err && <p className="notes-err">{err}</p>}
-      {mobile ? (screen === 'folders' ? foldersPane : screen === 'note' && open ? notePane : listPane) : (<>{foldersPane}{listPane}{notePane}</>)}
+      {mobile ? (screen === 'folders' ? foldersPane : screen === 'note' && open ? notePane : listPane) : (<>{foldersPane}{open ? notePane : listPane}</>)}
     </div>
   )
 }
