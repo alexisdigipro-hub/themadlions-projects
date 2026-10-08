@@ -1,9 +1,9 @@
 {
-  "id": "./?app=chat",
+  "id": "./chat.html",
   "name": "TML Chat",
   "short_name": "TML Chat",
   "description": "The Mad Lions chat on its own: conversations, photos, videos, voice messages.",
-  "start_url": "./?app=chat#/chat-window",
+  "start_url": "./chat.html#/chat-window",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

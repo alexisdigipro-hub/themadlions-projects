@@ -5,5 +5,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   base: './',
   plugins: [react()],
-  build: { outDir: 'dist', chunkSizeWarningLimit: 1500 },
+  // chat.html: the chat on its own, added to a phone's home screen as TML Chat
+  build: { outDir: 'dist', chunkSizeWarningLimit: 1500, rollupOptions: { input: { main: 'index.html', chat: 'chat.html' } } },
 })

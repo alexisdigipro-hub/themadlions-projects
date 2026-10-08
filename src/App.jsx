@@ -88,7 +88,8 @@ function LoginGate() {
   const user = useCurrentUser()
   const { ready } = useStore()
   if (!ready) return <Loading />
-  return user ? <Navigate to="/" replace /> : <Login />
+  // TML Chat (chat.html) signs in on its own on an iPhone, and must land back on the chat, not on Home
+  return user ? <Navigate to={/chat\.html$/.test(window.location.pathname) ? '/chat-window' : '/'} replace /> : <Login />
 }
 
 export default function App() {

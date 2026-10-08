@@ -203,6 +203,9 @@ let linkJumped = ''
 let installPrompt = null
 if (typeof window !== 'undefined') window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e })
 const isStandalone = () => typeof window !== 'undefined' && (window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true)
+// chat.html: the page TML Chat is added to the home screen from, and opens on (see chat.html)
+const onChatPage = () => typeof window !== 'undefined' && /chat\.html$/.test(window.location.pathname)
+const chatPageUrl = (q = '') => `${window.location.origin}${window.location.pathname.replace(/[^/]*$/, '')}chat.html${q}#/chat-window`
 
 /* Where the chat lives: /chat inside the app, /chat-window when it has a window of its own. */
 const ChatBase = createContext('/chat')
@@ -226,7 +229,7 @@ export function ChatWindow() {
     link?.setAttribute('href', './manifest-chat.webmanifest')
     meta?.setAttribute('content', 'TML Chat')
     // an install offer caught on the main app's page is for the main app, not for TML Chat
-    installPrompt = null
+    if (!onChatPage()) installPrompt = null
     return () => {
       root.classList.remove('chat-window'); document.title = title
       if (link && was[0]) link.setAttribute('href', was[0])
@@ -300,13 +303,13 @@ function InstallHint() {
   })
   const [added, setAdded] = useState(chatAppAdded)
   const toast = useToast()
-  // the TML Chat app itself, opened from its icon: nothing to add
-  if (!open || window.location.search.includes('app=chat')) return null
+  // the TML Chat app itself, opened from its icon, starts with a fresh sessionStorage: nothing shown
+  if (!open) return null
   const close = () => { try { sessionStorage.removeItem('tml_install_hint') } catch {} setOpen(false) }
   const done = () => { markChatApp(true); close() }
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /macintosh/i.test(navigator.userAgent))
   const inApp = isStandalone() // inside the main app on the home screen
-  const link = `${window.location.origin}${window.location.pathname}?install=chat#/chat-window`
+  const link = chatPageUrl('?install=chat')
   const install = async () => {
     if (!installPrompt) return
     installPrompt.prompt()
@@ -386,6 +389,7 @@ function RoomList({ activeId, windowed }) {
   const mobile = useIsMobile()
   const isAdmin = user?.role === 'admin'
   const [tab, setTab] = useState('chats') // the window's foot: chats | settings
+  const [installCard, setInstallCard] = useState(0) // the TML Chat card, shown in the list (main home-screen app)
   const toast = useToast()
   const searchRef = useRef(null)
   // ⌘K / Ctrl+K: the search above the list, as in Telegram
@@ -397,7 +401,16 @@ function RoomList({ activeId, windowed }) {
   }, [mobile])
   const popOut = () => {
     // on a phone: the chat on its own, ready to be added to the home screen as an app
-    if (mobile) { try { sessionStorage.setItem('tml_install_hint', '1') } catch {} nav('/chat-window'); return }
+    // on a phone: chat.html, the chat's own page, so that Add to Home Screen adds TML Chat and not
+    // the whole app (the iPhone reads the page's app name and manifest when it loads)
+    // Inside the main app on the home screen the card shows right here: chat.html would open inside
+    // that app with no way back to the rest of it, and Add to Home Screen is only in Safari there.
+    if (mobile) {
+      try { sessionStorage.setItem('tml_install_hint', '1') } catch {}
+      if (isStandalone()) setInstallCard((n) => n + 1)
+      else window.location.assign(chatPageUrl())
+      return
+    }
     const url = `${window.location.origin}${window.location.pathname}#${roomPath('/chat-window', activeId || C.TEAM)}`
     const w = window.open(url, 'tml-chat', 'popup,width=1180,height=820')
     if (!w) window.location.hash = roomPath('/chat-window', activeId || C.TEAM)
@@ -466,6 +479,7 @@ function RoomList({ activeId, windowed }) {
         </div>
       )) : (<>
       {legacy && <p className="chat-legacy">Rooms are not switched on yet: run supabase/chat_rooms.sql in the SQL editor. Until then only the team room works.</p>}
+      {mobile && !windowed && installCard > 0 && <InstallHint key={installCard} />}
       <div className="chat-folders" role="tablist">
         {allFolders.map((f) => {
           const n = folderUnread(f)
