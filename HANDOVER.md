@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct, night: Tasks now like Microsoft To Do (Alex's screenshot)
+- `src/pages/TasksAll.jsx`: same data and logic, new look. Smart lists as rows with line icons (`LINE`): My Day (today), Important (urgent|high; ☆ on a card toggles high ↔ normal), Planned, Assigned to me, Tasks, Completed; lists with emoji + count + 👥, + New List (admins). Main pane: a gradient backdrop in the list's colour (`--lc`), big title (+ date on My Day), white task cards, "› Completed N" fold with Clear, a frosted "+ New Task…" bar at the foot (Enter adds). CSS block "Tasks, laid out like Microsoft To Do" replaced the Reminders one. Checked on a static mock with the real CSS at 1300 and 390 px.
+
 ### 9 Oct, later: Notes, Tasks like Reminders, wider side menu
 - **Side menu** on a computer 10% wider again: `--sidebar` 255 → 281 px (phone drawer unchanged).
 - **Notes** (`src/pages/Notes.jsx`, `src/lib/notes.js`, route /notes, nav after Chat): private per person, table `notes` (**`supabase/notes.sql`**, every policy `user_id = auth.uid()`), local mode in localStorage `tml_notes`. Rows: kind note | folder, folder_id, title (first line), body (html), pinned, deleted_at (Recently Deleted, purged after 30 days on load). Editor = Office's `mountDoc`, restyled under `.notes-doc` (no A4 page, toolbar at the foot). Every change carries the note id it was opened on, and what was typed in the last 300 ms is taken when the editor closes; saves 0.8 s after the last change, flushed on switching notes, leaving the page and pagehide; reload on window focus keeps notes being typed. Not in the shared store on purpose.
