@@ -157,6 +157,42 @@ function RoomAvatar({ room, size = 42 }) {
   )
 }
 
+/* A tiny picture of a photo or of a video's first frame, kept in the message as a data URL
+   (a few hundred bytes) and shown blurred under a spinner while the real file loads. */
+async function tinyThumb(file) {
+  let url = ''
+  try {
+    let src
+    if (file.type.startsWith('image/')) src = await createImageBitmap(file)
+    else {
+      url = URL.createObjectURL(file)
+      const v = document.createElement('video')
+      v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = url
+      await new Promise((resolve, reject) => { v.onloadeddata = resolve; v.onerror = reject; setTimeout(reject, 3000) })
+      src = v
+    }
+    const w = src.videoWidth || src.width
+    const h = src.videoHeight || src.height
+    if (!w || !h) return ''
+    const k = 24 / Math.max(w, h)
+    const c = document.createElement('canvas')
+    c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k))
+    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height)
+    return c.toDataURL('image/jpeg', 0.6)
+  } catch {
+    return ''
+  } finally {
+    if (url) URL.revokeObjectURL(url)
+  }
+}
+
+/* A message picked in the list's search: the room opens and scrolls to it. */
+let pendingJump = ''
+/* Android's own "Install app" prompt, kept for the chat window's Install button. */
+let installPrompt = null
+if (typeof window !== 'undefined') window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e })
+const isStandalone = () => typeof window !== 'undefined' && (window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true)
+
 /* Where the chat lives: /chat inside the app, /chat-window when it has a window of its own. */
 const ChatBase = createContext('/chat')
 const useChatBase = () => useContext(ChatBase)
@@ -172,7 +208,17 @@ export function ChatWindow() {
     root.classList.add('chat-window')
     const title = document.title
     document.title = `Chat · ${state.workspace?.name || 'THE MAD LIONS'}`
-    return () => { root.classList.remove('chat-window'); document.title = title }
+    // added to a phone's home screen from here, it is an app of its own that opens straight on the chat
+    const link = document.querySelector('link[rel="manifest"]')
+    const meta = document.querySelector('meta[name="apple-mobile-web-app-title"]')
+    const was = [link?.getAttribute('href'), meta?.getAttribute('content')]
+    link?.setAttribute('href', './manifest-chat.webmanifest')
+    meta?.setAttribute('content', 'TML Chat')
+    return () => {
+      root.classList.remove('chat-window'); document.title = title
+      if (link && was[0]) link.setAttribute('href', was[0])
+      if (meta && was[1]) meta.setAttribute('content', was[1])
+    }
   }, [])
   // the same tone the app plays, as this window may be the only one open
   const seen = useRef(null)
@@ -213,6 +259,42 @@ export default function Chat({ windowed = false }) {
   )
 }
 
+/* On a phone, in the chat's own window: how to keep it on the home screen as an app of its own. */
+function InstallHint() {
+  const [open, setOpen] = useState(() => { try { return !isStandalone() && sessionStorage.getItem('tml_install_hint') === '1' } catch { return false } })
+  if (!open) return null
+  const close = () => { try { sessionStorage.removeItem('tml_install_hint') } catch {} setOpen(false) }
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
+  const install = async () => {
+    if (!installPrompt) return
+    installPrompt.prompt()
+    await installPrompt.userChoice.catch(() => null)
+    installPrompt = null
+    close()
+  }
+  return (
+    <div className="chat-install">
+      <button type="button" className="chat-install-x" onClick={close} aria-label="Close">{TgIcon.close()}</button>
+      <strong>Keep the chat on your home screen</strong>
+      {ios ? (
+        <ol>
+          <li>Tap <b>Share</b> <span className="chat-install-ico">⬆︎</span> at the bottom of Safari.</li>
+          <li>Tap <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+          <li>The <b>TML Chat</b> icon opens straight on the chat, without the rest of the app.</li>
+        </ol>
+      ) : installPrompt ? (
+        <><p>Install it as an app of its own, <b>TML Chat</b>, that opens straight on the chat.</p><Button variant="primary" onClick={install}>Install</Button></>
+      ) : (
+        <ol>
+          <li>Open the browser's menu <b>⋮</b>.</li>
+          <li>Tap <b>Install app</b> or <b>Add to Home screen</b>.</li>
+          <li>The <b>TML Chat</b> icon opens straight on the chat.</li>
+        </ol>
+      )}
+    </div>
+  )
+}
+
 /* ---------- the list ---------- */
 function RoomList({ activeId, windowed }) {
   const { state } = useStore()
@@ -232,6 +314,8 @@ function RoomList({ activeId, windowed }) {
     return () => document.removeEventListener('keydown', k)
   }, [mobile])
   const popOut = () => {
+    // on a phone: the chat on its own, ready to be added to the home screen as an app
+    if (mobile) { try { sessionStorage.setItem('tml_install_hint', '1') } catch {} nav('/chat-window'); return }
     const url = `${window.location.origin}${window.location.pathname}#${roomPath('/chat-window', activeId || C.TEAM)}`
     const w = window.open(url, 'tml-chat', 'popup,width=1180,height=820')
     if (!w) window.location.hash = roomPath('/chat-window', activeId || C.TEAM)
@@ -261,6 +345,21 @@ function RoomList({ activeId, windowed }) {
     const needle = q.trim().toLowerCase()
     return C.sortRooms(needle ? inFolder.filter((r) => r.name.toLowerCase().includes(needle)) : inFolder, state.chat)
   }, [folder, rooms, q, state.chat])
+  // the list's search also finds words inside messages (Alex), newest first
+  const hits = useMemo(() => {
+    const needle = q.trim().toLowerCase()
+    if (needle.length < 2) return []
+    const ids = new Set(rooms.map((r) => r.id))
+    return (state.chat || []).filter((m) => ids.has(m.chatId || 'team') && (m.text || '').toLowerCase().includes(needle))
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)).slice(0, 60)
+  }, [q, rooms, state.chat])
+  const openHit = (m) => { pendingJump = m.id; nav(roomPath(base, m.chatId || 'team')) }
+  const snippet = (text) => {
+    const needle = q.trim().toLowerCase()
+    const at = text.toLowerCase().indexOf(needle)
+    const from = Math.max(0, at - 24)
+    return <>{from > 0 && '…'}{text.slice(from, at)}<mark>{text.slice(at, at + needle.length)}</mark>{text.slice(at + needle.length, at + needle.length + 80)}</>
+  }
   const folderUnread = (f) => C.totalUnread(Object.fromEntries(C.roomsInFolder(f, rooms).map((r) => [r.id, unread[r.id] || 0])))
   const legacy = state.chatRooms === false
 
@@ -271,14 +370,14 @@ function RoomList({ activeId, windowed }) {
         {!mobile && <button type="button" className="icon-btn chat-head-ico chat-folders-btn" onClick={() => setFolders(true)} title="Your folders" aria-label="Your folders">{TgIcon.folder()}</button>}
         {!mobile && <button type="button" className="icon-btn chat-head-ico chat-new" onClick={() => setDirect(true)} title="New message" aria-label="New message">{TgIcon.edit()}</button>}
         {isAdmin && <button type="button" className="icon-btn chat-head-ico chat-group-new" onClick={() => setGroup('new')} title="New group" aria-label="New group">{TgIcon.people()}</button>}
-        {!mobile && !windowed && <button type="button" className="icon-btn chat-head-ico chat-popout" onClick={popOut} title="Open the chat in its own window" aria-label="Open the chat in its own window">{TgIcon.popout()}</button>}
+        {!windowed && <button type="button" className="icon-btn chat-head-ico chat-popout" onClick={popOut} title="Open the chat in its own window" aria-label="Open the chat in its own window">{TgIcon.popout()}</button>}
       </div>
-      {tab === 'settings' ? (
+      {tab === 'settings' || tab === 'notices' ? (tab === 'settings' && (
         <div className="chat-win-settings">
           <h2>Chat settings</h2>
           <ChatSettings toast={toast} />
         </div>
-      ) : (<>
+      )) : (<>
       {legacy && <p className="chat-legacy">Rooms are not switched on yet: run supabase/chat_rooms.sql in the SQL editor. Until then only the team room works.</p>}
       <div className="chat-folders" role="tablist">
         {allFolders.map((f) => {
@@ -293,7 +392,7 @@ function RoomList({ activeId, windowed }) {
       </div>
       <div className="chat-search"><input ref={searchRef} className="input" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') { setQ(''); e.currentTarget.blur() } }} placeholder={mobile ? 'Search' : 'Search (⌘K)'} name="chat-search" autoComplete="off" /></div>
       <div className="chat-rooms">
-        {!shown.length && <p className="muted small chat-rooms-empty">{folder.custom ? 'This folder is empty. Add conversations to it under Folders.' : 'Nothing here yet.'}</p>}
+        {!shown.length && !hits.length && <p className="muted small chat-rooms-empty">{q.trim() ? 'Nothing found.' : folder.custom ? 'This folder is empty. Add conversations to it under Folders.' : 'Nothing here yet.'}</p>}
         {shown.map((r) => {
           const last = C.lastMessage(state.chat, r.id)
           // never the last message (Alex): the company room shows its name alone, a project room its
@@ -310,23 +409,50 @@ function RoomList({ activeId, windowed }) {
             </button>
           )
         })}
+        {hits.length > 0 && (
+          <>
+            <p className="chat-hits-title">Messages</p>
+            {hits.map((m) => {
+              const r = rooms.find((x) => x.id === (m.chatId || 'team'))
+              return (
+                <button key={m.id} type="button" className="chat-room-item chat-hit" onClick={() => openHit(m)}>
+                  {r && <RoomAvatar room={r} size={mobile ? 54 : 48} />}
+                  <span className="chat-rmain">
+                    <span className="chat-rtop"><strong>{r?.name || 'Chat'}</strong><small>{listTime(m.createdAt)}</small></span>
+                    <span className="chat-rbottom"><span className="chat-rprev"><b>{m.userId === user?.id ? 'You' : m.userName}:</b> {snippet(m.text)}</span></span>
+                  </span>
+                </button>
+              )
+            })}
+          </>
+        )}
       </div>
       </>)}
+      {tab === 'notices' && canNotice && (
+        <div className="chat-win-settings">
+          <h2>Notices</h2>
+          <p className="muted small">A notice pops up on the screen of the people you pick, until they read it.</p>
+          <Button variant="primary" onClick={() => setNotice(true)}>Send a notice</Button>
+          <div className="chat-notices-sent"><SentNotices /></div>
+        </div>
+      )}
+      {windowed && mobile && <InstallHint />}
       {/* Telegram's round pencil (phone only): a new message to one person */}
-      {mobile && (
+      {mobile && !windowed && (
         <button type="button" className="chat-fab" onClick={() => setDirect(true)} aria-label="New message" title="New message">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
         </button>
       )}
-      {windowed && !mobile && (
-        // the window's foot, Telegram's: people (a new message), chats, settings
+      {(windowed || !mobile) && (
+        // the list's foot, Telegram's: people (a new message), chats, notices (administrators), settings
         <nav className="chat-win-tabs">
           <button type="button" onClick={() => setDirect(true)} title="Write to someone">{TgIcon.person()}<span>People</span></button>
           <button type="button" className={tab === 'chats' ? 'on' : ''} onClick={() => setTab('chats')}>{TgIcon.chats()}<span>Chats</span></button>
+          {canNotice && <button type="button" className={tab === 'notices' ? 'on' : ''} onClick={() => setTab('notices')}>{TgIcon.bell()}<span>Notices</span></button>}
           <button type="button" className={tab === 'settings' ? 'on' : ''} onClick={() => setTab('settings')}>{TgIcon.gear()}<span>Settings</span></button>
         </nav>
       )}
-      {canNotice && !windowed && (
+      {canNotice && mobile && !windowed && (
         <div className="chat-list-foot">
           <Button size="sm" variant="ghost" onClick={() => setSent(true)}>Sent notices</Button>
           <Button size="sm" variant="ghost" onClick={() => setNotice(true)}>Send notice</Button>
@@ -648,9 +774,11 @@ function ChatRoom({ room, onBack }) {
           const attId = uid()
           const pcloud = pcloudOn(state.settings) ? { folder: chatFolder(state, room), scope: { kind: 'chat', id: roomId } } : null
           const { path, fileid, scope } = await uploadFile({ projectId: C.roomFolder(roomId), id: attId, file: f, pcloud })
+          // a 24 px picture kept in the message, shown blurred while the real one loads (Telegram)
+          const thumb = /^(image|video)\//.test(f.type) ? await tinyThumb(f) : ''
           // the sender sees their own photo or video at once, from the phone, not after a round trip
           if (/^(image|video|audio)\//.test(f.type)) urlCache.set(attId, { url: URL.createObjectURL(f), until: Date.now() + 12 * 3600 * 1000 })
-          attachments.push({ id: attId, name: f.name, type: f.type, bytes: f.size, path, ...(fileid ? { fileid, scope } : {}), ...(w ? { w, h } : {}), ...(dur ? { dur } : {}) })
+          attachments.push({ id: attId, name: f.name, type: f.type, bytes: f.size, path, ...(fileid ? { fileid, scope } : {}), ...(w ? { w, h } : {}), ...(dur ? { dur } : {}), ...(thumb ? { thumb } : {}) })
         }
       } catch (e) {
         prepared.forEach(releaseVideo)
@@ -784,6 +912,14 @@ function ChatRoom({ room, onBack }) {
     el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1200)
   }
   useEffect(() => { if (found[findAt]) jumpTo(found[findAt]) }, [found, findAt])
+  // opened from a message found in the list's search: scroll to it once it is on screen
+  useEffect(() => {
+    const id = pendingJump
+    if (!id || !msgs.some((x) => x.id === id)) return undefined
+    pendingJump = ''
+    const t = setTimeout(() => jumpTo(id), 350)
+    return () => clearTimeout(t)
+  }, [msgs])
   /* A voice message, Telegram's: the round mic when the box is empty; recording shows the time,
      a bin to drop it and the arrow to send it. MP4 audio where the browser records it (iPhone,
      recent Chrome), WebM otherwise. */
@@ -1105,7 +1241,8 @@ function useMediaSrc(a) {
     if (tried || !a.fileid) return
     setTried(true)
     pcloudBlob(a.fileid, a.scope).then((b) => {
-      const u = URL.createObjectURL(b)
+      // pCloud may send the file as octet-stream, which an iPhone will not play: give it its real type
+      const u = URL.createObjectURL(a.type ? new Blob([b], { type: a.type }) : b)
       urlCache.set(a.id, { url: u, until: Date.now() + 12 * 3600 * 1000 })
       setLocal(u)
     }).catch(() => {})
@@ -1117,23 +1254,28 @@ function useMediaSrc(a) {
 function MediaTile({ a, i, shaped }) {
   const [url, failed, retry, viaFunction] = useMediaSrc(a)
   const [playing, setPlaying] = useState(false)
+  const [loaded, setLoaded] = useState(false)
   const vref = useRef(null)
-  const style = shaped && a.w && a.h ? { aspectRatio: `${a.w} / ${a.h}` } : undefined
-  if (!url) {
-    return failed
-      ? <button type="button" className="chat-media-tile chat-media-wait chat-att-retry" style={style} onClick={retry}>Tap to load</button>
-      : <span className="chat-media-tile chat-media-wait" style={style}>…</span>
-  }
+  // while it loads: the tiny picture kept in the message, blurred, with a spinner (no broken image)
+  const style = { ...(shaped && a.w && a.h ? { aspectRatio: `${a.w} / ${a.h}` } : {}), ...(a.thumb ? { '--thumb': `url("${a.thumb}")` } : {}) }
+  const cls = `chat-media-tile${loaded ? ' loaded' : ''}${a.thumb ? ' has-thumb' : ''}`
+  if (!url && failed) return <button type="button" className={`${cls} chat-media-wait chat-att-retry`} style={style} onClick={retry}>Tap to load</button>
   if (isVideo(a)) {
     return (
-      <span className="chat-media-tile chat-media-vid" style={style} data-tile={i}>
-        <video ref={vref} src={`${url}#t=0.1`} controls={playing} playsInline preload="metadata" title={a.name} onError={viaFunction} onEnded={() => setPlaying(false)} />
-        {!playing && <button type="button" className="chat-media-play" aria-label="Play" onClick={() => { setPlaying(true); requestAnimationFrame(() => vref.current?.play().catch(() => {})) }}>▶</button>}
+      <span className={`${cls} chat-media-vid`} style={style} data-tile={i}>
+        {url && <video ref={vref} src={`${url}#t=0.1`} controls={playing} playsInline preload="metadata" title={a.name} onError={viaFunction} onLoadedMetadata={() => setLoaded(true)} onEnded={() => setPlaying(false)} />}
+        {!loaded && <span className="chat-media-spin" aria-hidden="true" />}
+        {loaded && !playing && <button type="button" className="chat-media-play" aria-label="Play" onClick={() => { setPlaying(true); requestAnimationFrame(() => vref.current?.play().catch(() => {})) }}>▶</button>}
         {!playing && a.dur > 0 && <span className="chat-media-dur">{Math.floor(a.dur / 60)}:{String(a.dur % 60).padStart(2, '0')}</span>}
       </span>
     )
   }
-  return <span className="chat-media-tile" style={style} title={a.name} data-tile={i}><img src={url} alt={a.name} loading="lazy" draggable={false} onError={viaFunction} /></span>
+  return (
+    <span className={cls} style={style} title={a.name} data-tile={i}>
+      {url && <img src={url} alt={a.name} loading="lazy" draggable={false} onLoad={() => setLoaded(true)} onError={viaFunction} />}
+      {!loaded && <span className="chat-media-spin" aria-hidden="true" />}
+    </span>
+  )
 }
 /* Full screen, black, one picture or video at a time; arrows or a swipe for an album. */
 function MediaViewer({ items, start, onClose }) {
@@ -1289,9 +1431,30 @@ function SharedThumb({ a, onOpen }) {
     </button>
   )
 }
+/* A voice message's sound, as a file in memory with its real type: pCloud sends .m4a as
+   octet-stream, which an iPhone refuses to play (Alex, 8 Oct: the voice message did nothing).
+   Voice messages are small, so the whole file comes through the pcloud function at once. */
+function useAudioSrc(a) {
+  const [src, setSrc] = useState(() => urlCache.get(a.id)?.url || '')
+  const [tries, setTries] = useState(0)
+  useEffect(() => {
+    if (src) return undefined
+    let on = true
+    const get = a.fileid ? pcloudBlob(a.fileid, a.scope) : fileUrl(a).then((u) => (u ? fetch(u).then((r) => r.blob()) : null))
+    get.then((b) => {
+      if (!on) return
+      if (!b) throw new Error('no file')
+      const u = URL.createObjectURL(new Blob([b], { type: a.type || 'audio/mp4' }))
+      urlCache.set(a.id, { url: u, until: Date.now() + 12 * 3600 * 1000 })
+      setSrc(u)
+    }).catch(() => { if (on && tries < 6) setTimeout(() => on && setTries((t) => t + 1), 2000 * (tries + 1)) })
+    return () => { on = false }
+  }, [a.id, tries, src])
+  return src
+}
 /* A voice message: a round play button, a bar that fills, the time. */
 function AudioNote({ a }) {
-  const [url] = useMediaSrc(a)
+  const url = useAudioSrc(a)
   const ref = useRef(null)
   const [playing, setPlaying] = useState(false)
   const [t, setT] = useState(0)
