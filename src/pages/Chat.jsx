@@ -37,6 +37,17 @@ const MAX_BYTES = 50 * 1024 * 1024
 // a video is shrunk before it goes up, so a bigger one may be picked (it must end up under 50 MB)
 const MAX_VIDEO_PICK = 2 * 1024 * 1024 * 1024
 const isMedia = (a) => isImage(a) || isVideo(a)
+// Telegram's reaction bar; 🎥 first, Alex's camera instead of the heart (double tap gives it)
+const REACTIONS = ['🎥', '❤️', '👍', '🔥', '🏆', '👏', '😂']
+/* A message's reactions, with the old 🎥 likes (before chat_reactions.sql) counted as 🎥. */
+const reactionsOf = (m) => {
+  const r = {}
+  Object.entries(m.reactions || {}).forEach(([k, v]) => { if (Array.isArray(v) && v.length) r[k] = [...v] })
+  const legacy = (m.likes || []).filter((id) => !Object.values(r).some((v) => v.includes(id)))
+  if (legacy.length) r['🎥'] = [...(r['🎥'] || []), ...legacy]
+  return r
+}
+const myReaction = (m, me) => Object.entries(reactionsOf(m)).find(([, v]) => v.includes(me))?.[0] || ''
 const attLabel = (a) => (isImage(a) ? 'Photo' : isVideo(a) ? 'Video' : a.name)
 /* A colour per sender for their name inside group bubbles, stable for the same person. */
 const SENDER_HUES = [14, 36, 95, 160, 200, 230, 275, 320]
@@ -115,6 +126,11 @@ const TgIcon = {
   camera: () => <svg {...svgProps}><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" /><circle cx="12" cy="13.5" r="3.5" /></svg>,
   file: () => <svg {...svgProps}><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" /><path d="M14 3v5h5" /></svg>,
   expand: () => <svg {...svgProps}><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></svg>,
+  copy: () => <svg {...svgProps}><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>,
+  download: () => <svg {...svgProps}><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></svg>,
+  pin: () => <svg {...svgProps}><path d="M9 4h6l-1 6 3 3v1H7v-1l3-3-1-6ZM12 14v6" /></svg>,
+  forward: () => <svg {...svgProps}><path d="M15 5l6 6-6 6" /><path d="M21 11H11a7 7 0 0 0-7 7v1" /></svg>,
+  select: () => <svg {...svgProps}><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.5 2.5L16 9.5" /></svg>,
   close: () => <svg {...svgProps}><path d="M6 6l12 12M18 6L6 18" /></svg>,
   people: () => <svg {...svgProps}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.1.8 3.5 2.8 3.5 5.7" /></svg>,
 }
@@ -431,6 +447,9 @@ function ChatRoom({ room, onBack }) {
   const [editing, setEditing] = useState(null)
   const [pending, setPending] = useState([]) // files chosen, not sent yet
   const [viewer, setViewer] = useState(null) // { items, i }: photos and videos full screen
+  const [sel, setSel] = useState(null) // ids picked with Select, or null when not selecting
+  const [fwd, setFwd] = useState(null) // messages to forward, while choosing where
+  const pressRef = useRef(null) // long press on a message opens its menu (Telegram)
   const [sheet, setSheet] = useState(false) // the sheet to pick photos, videos and files (Telegram's)
   // photos and videos are shrunk like WhatsApp unless this is switched off in the sheet
   const [compressMedia, setCompressMedia] = useState(true)
@@ -441,6 +460,7 @@ function ChatRoom({ room, onBack }) {
   const endRef = useRef(null)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
+  const pinnedMsg = useMemo(() => msgs.filter((x) => x.pinnedAt).sort((a, b) => (b.pinnedAt > a.pinnedAt ? 1 : -1))[0] || null, [msgs])
   const byId = useMemo(() => Object.fromEntries((state.chat || []).map((m) => [m.id, m])), [state.chat])
   const photoOf = (userId) => state.users.find((u) => u.id === userId)?.profile?.thumb || ''
   const nameRe = useMemo(() => {
@@ -558,38 +578,84 @@ function ChatRoom({ room, onBack }) {
   }
 
   const remove = (m) => {
-    ;(m.attachments || []).forEach((a) => deleteFile(a).catch(() => {}))
+    // a forwarded copy points at the same file: the file goes only when no other message uses it
+    const shared = (a) => (state.chat || []).some((x) => x.id !== m.id && (x.attachments || []).some((b) => (a.fileid && b.fileid === a.fileid) || (a.path && b.path === a.path)))
+    ;(m.attachments || []).forEach((a) => { if (!shared(a)) deleteFile(a).catch(() => {}) })
     update((s) => { s.chat = (s.chat || []).filter((x) => x.id !== m.id); return s })
   }
-  const toggleLike = (m) => {
+  /* One reaction per person: the same emoji again takes it off, another one replaces it. */
+  const react = (m, emoji) => {
     const me = user?.id
     if (!me) return
+    const current = myReaction(m, me)
+    if (current !== emoji && emoji === '🎥') { setBurst(m.id); setTimeout(() => setBurst((b) => (b === m.id ? '' : b)), 800) }
     update((s) => {
       const x = (s.chat || []).find((y) => y.id === m.id)
-      if (x) { const l = x.likes || []; x.likes = l.includes(me) ? l.filter((i) => i !== me) : [...l, me] }
+      if (!x) return s
+      const r = {}
+      Object.entries(x.reactions || {}).forEach(([k, v]) => { const l = (v || []).filter((i) => i !== me); if (l.length) r[k] = l })
+      if (current !== emoji) r[emoji] = [...(r[emoji] || []), me]
+      x.reactions = r
+      if ((x.likes || []).includes(me)) x.likes = x.likes.filter((i) => i !== me)
       return s
     })
   }
-  // One tap shows Reply / Edit / Delete, two quick taps put a 🎥 on it (or take yours off); Alex
-  // swapped the usual heart for the camera.
-  // The single tap waits a moment so a double tap does not flash the actions first.
-  const onBubbleTap = (e, m) => {
-    // a link, a button or a video that is playing keeps its own tap; a photo opens the menu like any message
+  const togglePin = (m) => {
+    setPicked('')
+    update((s) => { const x = (s.chat || []).find((y) => y.id === m.id); if (x) x.pinnedAt = x.pinnedAt ? '' : new Date().toISOString(); return s })
+  }
+  const copyText = (m) => {
+    setPicked('')
+    navigator.clipboard?.writeText(m.text).then(() => toast('Copied', 'ok')).catch(() => toast('Could not copy', 'error'))
+  }
+  /* Forward: a copy of each message in the conversation picked, with the same files (they now
+     belong to that conversation too, so its members can open them). */
+  const forwardTo = async (target) => {
+    const list = fwd || []
+    setFwd(null)
+    try { await saveDirectRoom(state, target, user?.id) } catch (e) { return toast(e.message, 'error') }
+    const t0 = Date.now()
+    update((s) => {
+      if (target.unsaved && !(s.chats || []).some((c) => c.id === target.id)) s.chats = [...(s.chats || []), { id: target.id, kind: 'direct', name: '', members: target.members, createdBy: user?.id || '', createdAt: new Date().toISOString() }]
+      s.chat = [...(s.chat || []), ...list.map((m, k) => ({
+        id: uid(), chatId: target.id, userId: user?.id || '', userName: user?.name || 'Someone', text: m.text, source: 'app', createdAt: new Date(t0 + k).toISOString(), replyTo: '', editedAt: '', mentions: [],
+        attachments: (m.attachments || []).map((a) => ({ ...a, id: uid(), ...(a.fileid ? { scope: { kind: 'chat', id: target.id } } : {}) })),
+      }))]
+      return s
+    })
+    toast(`Forwarded to ${target.name}`, 'ok')
+  }
+  const pressStart = (m) => {
+    if (sel) return
+    clearTimeout(pressRef.current)
+    pressRef.current = setTimeout(() => { pressRef.current = 'fired'; navigator.vibrate?.(10); setPicked(m.id) }, 450)
+  }
+  const pressCancel = () => { if (pressRef.current !== 'fired') { clearTimeout(pressRef.current); pressRef.current = null } }
+  // A tap on a message opens its menu, a tap on a photo or video opens it full screen, a long
+  // press (or a right click) opens the menu on anything, two quick taps put a 🎥 on it (or take
+  // yours off). The single tap waits a moment so a double tap does not flash the menu first.
+  const onBubbleTap = (e, m, media) => {
+    if (pressRef.current === 'fired') { pressRef.current = null; return } // the long press already opened the menu
+    if (sel) { setSel((x) => (x.includes(m.id) ? x.filter((y) => y !== m.id) : [...x, m.id])); return }
+    // a link, a button or a video that is playing keeps its own tap
     if (e.target.closest('a, button, video[controls]')) return
     if (!mobile && String(window.getSelection?.() || '').trim()) return // selecting text to copy, not a tap
+    const tile = e.target.closest('[data-tile]')
     const t = tapRef.current
     const now = Date.now()
     // on a computer the mouse's own double click counts (e.detail), on a phone two taps within 300 ms
     if (t.id === m.id && (mobile ? now - t.at < 300 : e.detail === 2)) {
       clearTimeout(t.timer)
       tapRef.current = { id: '', at: 0, timer: null }
-      if (!(m.likes || []).includes(user?.id)) { setBurst(m.id); setTimeout(() => setBurst((b) => (b === m.id ? '' : b)), 800) }
       setPicked('')
-      toggleLike(m)
+      react(m, '🎥')
       return
     }
     clearTimeout(t.timer)
-    tapRef.current = { id: m.id, at: now, timer: setTimeout(() => setPicked((p) => (p === m.id ? '' : m.id)), 260) }
+    tapRef.current = { id: m.id, at: now, timer: setTimeout(() => {
+      if (tile && !picked) setViewer({ items: media, i: Number(tile.dataset.tile) || 0 })
+      else setPicked((p) => (p === m.id ? '' : m.id))
+    }, 260) }
   }
   // on a computer a click anywhere else, or Escape, closes the menu (a phone taps the message again)
   useEffect(() => {
@@ -600,6 +666,12 @@ function ChatRoom({ room, onBack }) {
     document.addEventListener('keydown', esc)
     return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', esc) }
   }, [picked, mobile])
+  useEffect(() => {
+    if (!picked) return
+    // the whole message with its reactions and menu in view
+    const el = scrollRef.current?.querySelector(`[data-msg="${picked}"]`)
+    requestAnimationFrame(() => el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }))
+  }, [picked])
   const startEdit = (m) => { setPicked(''); setEditing(m); setReplyTo(null); setText(m.text); requestAnimationFrame(() => inputRef.current?.focus()) }
   const startReply = (m) => { setPicked(''); setReplyTo(m); setEditing(null); requestAnimationFrame(() => inputRef.current?.focus()) }
   const cancelBar = () => { setEditing(null); setReplyTo(null); if (editing) setText('') }
@@ -644,7 +716,26 @@ function ChatRoom({ room, onBack }) {
         {room.kind === 'direct' && room.otherId && <Link className="icon-btn chat-head-ico" to={`/u/${room.otherId}`} aria-label="Profile" title="Profile">{TgIcon.person()}</Link>}
         {room.kind === 'group' && isAdmin && groupRow && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditGroup(true)} aria-label="Edit group" title="Edit group">{TgIcon.people()}</button>}
       </div>
-      <div className="chat-scroll" ref={scrollRef}>
+      {sel && (
+        // Select: the header becomes the bar for the messages picked
+        <div className="chat-selbar">
+          <button type="button" onClick={() => setSel(null)}>Cancel</button>
+          <strong>{sel.length} selected</strong>
+          <button type="button" disabled={!sel.length} onClick={() => { setFwd(msgs.filter((x) => sel.includes(x.id))); setSel(null) }}>Forward</button>
+          {sel.length > 0 && msgs.filter((x) => sel.includes(x.id)).every((x) => x.userId === user?.id || isAdmin) && (
+            <Confirm className="chat-selbar-del" onConfirm={() => { msgs.filter((x) => sel.includes(x.id)).forEach(remove); setSel(null) }} label="Delete">Delete</Confirm>
+          )}
+        </div>
+      )}
+      {pinnedMsg && !sel && (
+        <div className="chat-pinbar" role="button" onClick={() => jumpTo(pinnedMsg.id)}>
+          <span className="chat-pinbar-main"><b>Pinned Message</b><span>{pinnedMsg.text || attLabel((pinnedMsg.attachments || [])[0] || {}) || ''}</span></span>
+          <button type="button" className="chat-pinbar-x" onClick={(e) => { e.stopPropagation(); togglePin(pinnedMsg) }} aria-label="Unpin" title="Unpin">{TgIcon.pin()}</button>
+        </div>
+      )}
+      {/* behind the open menu: the rest of the room blurred, a tap closes it */}
+      {picked && <div className="chat-menu-scrim" onClick={() => setPicked('')} />}
+      <div className={`chat-scroll${sel ? ' selecting' : ''}`} ref={scrollRef}>
         {!msgs.length && <p className="muted chat-empty">{room.kind === 'team' ? 'No messages yet. Say hi to the team.' : room.kind === 'direct' ? `No messages with ${room.name} yet.` : 'No messages yet.'}</p>}
         {groups.map((g) => (
           <div key={g.day} className="chat-day">
@@ -662,20 +753,35 @@ function ChatRoom({ room, onBack }) {
               const media = (m.attachments || []).filter(isMedia)
               const files = (m.attachments || []).filter((a) => !isMedia(a))
               const mediaOnly = media.length > 0 && !files.length && !m.text && !m.replyTo && !showWho
-              const likesBtn = (m.likes || []).length > 0 && (
-                <button type="button" className={`chat-likes ${(m.likes || []).includes(user?.id) ? 'mine' : ''}`} onClick={() => toggleLike(m)} title={(m.likes || []).map((id) => state.users.find((u) => u.id === id)?.name || 'Someone').join(', ')}>
-                  🎥{m.likes.length > 1 && <b>{m.likes.length}</b>}
-                </button>
+              const rx = reactionsOf(m)
+              const nameOf = (id) => state.users.find((u) => u.id === id)?.name || 'Someone'
+              const likesBtn = Object.keys(rx).length > 0 && (
+                <span className="chat-rx">
+                  {Object.entries(rx).map(([k, ids]) => (
+                    <button key={k} type="button" className={`chat-likes ${ids.includes(user?.id) ? 'mine' : ''}`} onClick={() => react(m, k)} title={ids.map(nameOf).join(', ')}>
+                      {k}{ids.length > 1 && <b>{ids.length}</b>}
+                    </button>
+                  ))}
+                </span>
               )
+              const mineRx = myReaction(m, user?.id)
+              const selected = sel?.includes(m.id)
               return (
-                <div key={m.id} data-msg={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${last ? 'last' : ''} ${picked === m.id ? 'picked' : ''}`}>
+                <div key={m.id} data-msg={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${last ? 'last' : ''} ${picked === m.id ? 'picked' : ''} ${selected ? 'selected' : ''}`} onClick={sel ? (e) => onBubbleTap(e, m, media) : undefined}>
+                  {sel && <span className="chat-sel-dot" aria-hidden="true">{selected ? '✓' : ''}</span>}
                   {!mine && room.kind !== 'direct' && prefs.avatars && (
                     <span className="chat-avatar">
                       {(mobile ? last : !cont) && (photoOf(m.userId) ? <img src={photoOf(m.userId)} alt="" /> : (m.userName || '').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase())}
                     </span>
                   )}
                   <div className="chat-bubble-wrap">
-                    <div className={`chat-bubble${media.length ? ' has-media' : ''}${mediaOnly ? ' media-only' : ''}`} onClick={(e) => onBubbleTap(e, m)} onMouseDown={mobile ? undefined : (e) => { if (e.detail > 1) e.preventDefault() }}>
+                    {picked === m.id && (
+                      <div className="chat-react-bar">
+                        {REACTIONS.map((r) => <button key={r} type="button" className={mineRx === r ? 'on' : ''} onClick={() => { setPicked(''); react(m, r) }}>{r}</button>)}
+                      </div>
+                    )}
+                    <div className={`chat-bubble${media.length ? ' has-media' : ''}${mediaOnly ? ' media-only' : ''}`} onClick={sel ? undefined : (e) => onBubbleTap(e, m, media)} onMouseDown={mobile ? undefined : (e) => { if (e.detail > 1) e.preventDefault() }}
+                      onTouchStart={() => pressStart(m)} onTouchMove={pressCancel} onTouchEnd={pressCancel} onContextMenu={(e) => { if (sel) return; e.preventDefault(); setPicked(m.id) }}>
                       {burst === m.id && <span className="chat-heart-burst" aria-hidden="true">🎥</span>}
                       {showWho && <div className="chat-who" style={{ '--who': `hsl(${senderHue(m.userId)} 55% 42%)` }}>{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>}
                       {m.replyTo && (
@@ -696,15 +802,20 @@ function ChatRoom({ room, onBack }) {
                       )}
                       {!mediaOnly && <span className="chat-time">{timeOf(m.createdAt)}</span>}
                     </div>
-                      {picked === m.id && (
-                        // the tapped (or clicked) message's menu: buttons with words, Telegram-like, under the bubble
-                        <span className="chat-msg-actions chat-acts">
-                          <button type="button" className="chat-act" onClick={() => startReply(m)}>{TgIcon.reply()}<span>Reply</span></button>
-                          {media.length > 0 && <button type="button" className="chat-act" onClick={() => { setPicked(''); setViewer({ items: media, i: 0 }) }}>{TgIcon.expand()}<span>Open</span></button>}
-                          {mine && m.text && <button type="button" className="chat-act" onClick={() => startEdit(m)}>{TgIcon.edit()}<span>Edit</span></button>}
-                          {(mine || isAdmin) && <Confirm className="chat-act" onConfirm={() => { setPicked(''); remove(m) }} label="Delete">{TgIcon.trash()}<span>Delete</span></Confirm>}
-                        </span>
-                      )}
+                    {picked === m.id && (
+                      // the message's menu, Telegram's: a column of actions under the message
+                      <div className="chat-menu" role="menu">
+                        <button type="button" onClick={() => startReply(m)}>{TgIcon.reply()}<span>Reply</span></button>
+                        {m.text && <button type="button" onClick={() => copyText(m)}>{TgIcon.copy()}<span>Copy</span></button>}
+                        {media.length > 0 && <button type="button" onClick={() => { setPicked(''); setViewer({ items: media, i: 0 }) }}>{TgIcon.download()}<span>{media.length > 1 ? 'Save' : isVideo(media[0]) ? 'Save Video' : 'Save Image'}</span></button>}
+                        <button type="button" onClick={() => togglePin(m)}>{TgIcon.pin()}<span>{m.pinnedAt ? 'Unpin' : 'Pin'}</span></button>
+                        <button type="button" onClick={() => { setPicked(''); setFwd([m]) }}>{TgIcon.forward()}<span>Forward</span></button>
+                        {mine && m.text && <button type="button" onClick={() => startEdit(m)}>{TgIcon.edit()}<span>Edit</span></button>}
+                        {(mine || isAdmin) && <Confirm className="chat-menu-del" onConfirm={() => { setPicked(''); remove(m) }} label="Delete">{TgIcon.trash()}<span>Delete</span></Confirm>}
+                        <span className="chat-menu-sep" />
+                        <button type="button" onClick={() => { setPicked(''); setSel([m.id]) }}>{TgIcon.select()}<span>Select</span></button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )
@@ -744,6 +855,18 @@ function ChatRoom({ room, onBack }) {
         {busy && <div className="chat-bar chat-busy">{busy}</div>}
       </div>
       )}
+      {fwd && (
+        <Modal open title={fwd.length > 1 ? `Forward ${fwd.length} messages` : 'Forward to…'} onClose={() => setFwd(null)}>
+          <div className="chat-people">
+            {C.sortRooms(C.roomsFor(state, user), state.chat).filter((r) => r.id !== roomId).map((r) => (
+              <button key={r.id} type="button" className="chat-room-item" onClick={() => forwardTo(r)}>
+                <RoomAvatar room={r} size={42} />
+                <span className="chat-rmain"><span className="chat-rtop"><strong>{r.name}</strong></span>{r.sub && <span className="chat-rbottom"><span className="chat-rprev">{r.sub}</span></span>}</span>
+              </button>
+            ))}
+          </div>
+        </Modal>
+      )}
       {viewer && <MediaViewer items={viewer.items} start={viewer.i} onClose={() => setViewer(null)} />}
       {sheet && <AttachSheet pending={pending} onAdd={addFiles} onRemove={(i) => setPending((p) => p.filter((_, j) => j !== i))} compress={compressMedia} setCompress={setCompressMedia} text={text} setText={setText} onSend={send} onClose={() => setSheet(false)} />}
       {groupRow && <GroupModal open={editGroup} group={groupRow} onClose={() => setEditGroup(false)} onSaved={() => setEditGroup(false)} />}
@@ -763,7 +886,7 @@ function MediaAlbum({ items, meta }) {
   const style = layout === 'one' && one.w && one.h && one.h > one.w ? { width: `min(var(--media-w), ${Math.round((300 * one.w) / one.h)}px)` } : undefined
   return (
     <div className={`chat-media chat-media-${layout}${n % 2 ? ' odd' : ''}${items.some(isVideo) ? ' has-video' : ''}`} style={style}>
-      {items.map((a) => <MediaTile key={a.id} a={a} shaped={layout !== 'grid'} />)}
+      {items.map((a, i) => <MediaTile key={a.id} a={a} i={i} shaped={layout !== 'grid'} />)}
       {meta && <span className="chat-media-meta">{meta}</span>}
     </div>
   )
@@ -786,7 +909,7 @@ function useMediaSrc(a) {
 }
 /* One picture or video in a message. A tap opens the message's menu (Reply, Open, Edit, Delete),
    like any message; a video plays from its own round play button. */
-function MediaTile({ a, shaped }) {
+function MediaTile({ a, i, shaped }) {
   const [url, failed, retry, viaFunction] = useMediaSrc(a)
   const [playing, setPlaying] = useState(false)
   const vref = useRef(null)
@@ -798,14 +921,14 @@ function MediaTile({ a, shaped }) {
   }
   if (isVideo(a)) {
     return (
-      <span className="chat-media-tile chat-media-vid" style={style}>
+      <span className="chat-media-tile chat-media-vid" style={style} data-tile={i}>
         <video ref={vref} src={`${url}#t=0.1`} controls={playing} playsInline preload="metadata" title={a.name} onError={viaFunction} onEnded={() => setPlaying(false)} />
         {!playing && <button type="button" className="chat-media-play" aria-label="Play" onClick={() => { setPlaying(true); requestAnimationFrame(() => vref.current?.play().catch(() => {})) }}>▶</button>}
         {!playing && a.dur > 0 && <span className="chat-media-dur">{Math.floor(a.dur / 60)}:{String(a.dur % 60).padStart(2, '0')}</span>}
       </span>
     )
   }
-  return <span className="chat-media-tile" style={style} title={a.name}><img src={url} alt={a.name} loading="lazy" onError={viaFunction} /></span>
+  return <span className="chat-media-tile" style={style} title={a.name} data-tile={i}><img src={url} alt={a.name} loading="lazy" draggable={false} onError={viaFunction} /></span>
 }
 /* Full screen, black, one picture or video at a time; arrows or a swipe for an album. */
 function MediaViewer({ items, start, onClose }) {
@@ -813,6 +936,29 @@ function MediaViewer({ items, start, onClose }) {
   const a = items[i]
   const [url] = useMediaSrc(a)
   const touch = useRef(null)
+  // Save: on a phone the share sheet (Save Image / Save Video to Photos), else a download. A
+  // picture is fetched as soon as it shows, so the share sheet can open right from the tap.
+  const [blob, setBlob] = useState(null)
+  useEffect(() => {
+    setBlob(null)
+    if (isVideo(a) || !url) return undefined
+    let on = true
+    ;(a.fileid ? pcloudBlob(a.fileid, a.scope) : fetch(url).then((r) => r.blob())).then((b) => { if (on) setBlob(b) }).catch(() => {})
+    return () => { on = false }
+  }, [a.id, url])
+  const save = async () => {
+    let b = blob
+    if (!b) { try { b = a.fileid ? await pcloudBlob(a.fileid, a.scope) : await (await fetch(url)).blob() } catch { b = null } }
+    const file = b ? new File([b], a.name || 'file', { type: b.type || a.type }) : null
+    if (file && navigator.canShare?.({ files: [file] })) {
+      try { await navigator.share({ files: [file] }); return } catch (e) { if (e?.name === 'AbortError') return }
+    }
+    const el = document.createElement('a')
+    el.href = b ? URL.createObjectURL(b) : url
+    el.download = a.name || 'file'
+    el.target = '_blank'
+    document.body.appendChild(el); el.click(); el.remove()
+  }
   const go = (d) => setI((x) => Math.min(items.length - 1, Math.max(0, x + d)))
   useEffect(() => {
     const key = (e) => { if (e.key === 'Escape') onClose(); if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1) }
@@ -830,7 +976,7 @@ function MediaViewer({ items, start, onClose }) {
         : <img key={a.id} src={url} alt={a.name} />}
       {items.length > 1 && i > 0 && <button type="button" className="chat-viewer-nav prev" onClick={() => go(-1)} aria-label="Previous">‹</button>}
       {items.length > 1 && i < items.length - 1 && <button type="button" className="chat-viewer-nav next" onClick={() => go(1)} aria-label="Next">›</button>}
-      {url && <a className="chat-viewer-save" href={url} target="_blank" rel="noreferrer" download={a.name}>Save</a>}
+      {url && <button type="button" className="chat-viewer-save" onClick={save}>{TgIcon.download()} Save</button>}
     </div>,
     document.body,
   )
