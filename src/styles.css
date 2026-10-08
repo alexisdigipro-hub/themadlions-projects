@@ -4648,3 +4648,16 @@ html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; 
 .icon-set.on span:last-child { color: var(--accent); font-weight: 600; }
 .icon-preview { display: inline-flex; gap: 10px; color: var(--text); }
 .icon-preview svg { width: 20px; height: 20px; }
+
+/* Home's team photos on a computer (Alex, 8 Oct): 35% smaller, in a slimmer card that hugs them. */
+@media (min-width: 821px) {
+  .panel.team-strip-panel { padding: 4px 6px; }
+  .team-strip-panel .team-strip-head { padding: 8px 10px 0; }
+  .team-strip-panel .team-strip-head:empty { display: none; }
+  .team-strip-panel .team-strip { gap: 12px; padding: 10px 10px 10px; }
+  .team-strip-panel .team-chip { width: 68px; gap: 5px; }
+  .team-strip-panel .team-chip-photo { width: 60px; height: 60px; }
+  .team-strip-panel .team-chip-initials { font-size: 20px; }
+  .team-strip-panel .team-chip-off { font-size: 22px; }
+  .team-strip-panel .team-chip-name { font-size: 12px; }
+}
