@@ -5,7 +5,10 @@ import { pcloudTarget } from '../lib/pcloud.js'
 import { compress, deletePhoto, fmtBytes, photoUrls, uploadPhoto } from '../lib/photos.js'
 
 /* Reusable photo gallery. `photos` live on the parent record; `onChange(nextPhotos)` persists them. */
-export default function PhotoGrid({ photos = [], onChange, projectId, ownerId, editable, title = 'Photos' }) {
+/* `cloud` false keeps the photos in the built-in storage even when pCloud is on: the presentation's
+   pictures, which are few, small, and drawn on a canvas for the PDF and the shared link, where a
+   direct link from the built-in storage is faster and surer than going through pCloud. */
+export default function PhotoGrid({ photos = [], onChange, projectId, ownerId, editable, title = 'Photos', cloud = true }) {
   const toast = useToast()
   const { state } = useStore()
   const fileRef = useRef()
@@ -31,7 +34,7 @@ export default function PhotoGrid({ photos = [], onChange, projectId, ownerId, e
         const id = uid()
         setBusy(`Uploading ${i + 1} of ${list.length}…`)
         // pCloud when Settings > Integrations > File storage says so, the built-in storage otherwise
-        const { path, inline, fileid, scope } = await uploadPhoto({ projectId, ownerId, id, blob: c.blob, pcloud: pcloudTarget(state, projectId) })
+        const { path, inline, fileid, scope } = await uploadPhoto({ projectId, ownerId, id, blob: c.blob, pcloud: cloud ? pcloudTarget(state, projectId) : null })
         next.push({ id, path, inline, ...(fileid ? { fileid, scope } : {}), thumb: c.thumb, w: c.w, h: c.h, bytes: c.bytes, caption: '', addedAt: new Date().toISOString() })
         saved += c.originalBytes - c.bytes
         before += c.originalBytes

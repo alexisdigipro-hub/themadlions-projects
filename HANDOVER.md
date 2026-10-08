@@ -86,7 +86,9 @@ Each PR body has the detail and the tests; this is the map.
 
 - **Everything to pCloud** (#210): photos (`PhotoGrid` via `uploadPhoto({ pcloud: pcloudTarget(state, projectId) })`), songs (`uploadTrack`), the cover original, alongside chat attachments. Records keep `fileid` + `scope` (`project` or the new `library`). `photoUrls` batches links per scope through the new `links` action; slides (`loadSlidePhotos`), the cover crop and Whisper/download get bytes through the new `raw` action (no CORS worry). The function now checks a file id against the whole project JSON (or the library rows) instead of `data->files` only. Deck-share pictures and backups stay in Supabase on purpose. Old files are not moved; a "move existing files" tool would be the next step if Supabase storage fills up. **The function must be redeployed** with the new `supabase/functions/pcloud/index.ts`.
 
-**Alex still to do:** redeploy the `pcloud` function with the new code, merge #210, and switch Settings > Integrations > File storage > Uploaded files go to = The company pCloud.
+- **Small things back in Supabase** (#211, Alex: pCloud is for the many and big files, keep small ones in Supabase where it helps): presentation pictures (`PhotoGrid cloud={false}`) and the cover original go to the built-in storage again; locations, cast/crew, equipment and Database photos, songs and chat files stay on pCloud. Records already made either way keep working (photoUrls, deletePhoto and the cover crop read both).
+
+**Alex still to do:** redeploy the `pcloud` function with the code from #210 if not done, merge #211, switch Settings > Integrations > File storage > Uploaded files go to = The company pCloud.
 **Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
 
 ### Calendar feeds: read less often, and one switch over the lot (7 Oct)
