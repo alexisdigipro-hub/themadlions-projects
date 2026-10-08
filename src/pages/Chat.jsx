@@ -74,23 +74,28 @@ function useChatPrefs() {
 const urlCache = new Map()
 function useAttachmentUrl(a) {
   const [url, setUrl] = useState(() => urlCache.get(a?.id)?.url || '')
+  const [failed, setFailed] = useState(false)
+  const [round, setRound] = useState(0)
   useEffect(() => {
-    if (!a) return
+    if (!a) return undefined
     const hit = urlCache.get(a.id)
-    if (hit && hit.until > Date.now()) { setUrl(hit.url); return }
+    if (hit && hit.until > Date.now()) { setUrl(hit.url); return undefined }
     let on = true
+    let timer = null
+    setFailed(false)
     // a pCloud link is refused until the message row that names the file is written, which can
-    // be a moment after the bubble appears, so ask again a few times before giving up
-    const ask = (left) => fileUrl(a).then((u) => {
+    // be a while after the bubble appears on a slow phone line: ask again, a little later each
+    // time, for about a minute, then offer a tap to try again (Alex, 8 Oct: a video stayed "…")
+    const ask = (n) => fileUrl(a).then((u) => {
       if (!on) return
       if (u) { urlCache.set(a.id, { url: u, until: Date.now() + 50 * 60 * 1000 }); setUrl(u) }
-      else if (a.fileid && left > 0) setTimeout(() => ask(left - 1), 1500)
-      else setUrl('')
+      else if (a.fileid && n < 8) timer = setTimeout(() => ask(n + 1), Math.min(1500 * (n + 1), 10000))
+      else { setUrl(''); setFailed(true) }
     })
-    ask(4)
-    return () => { on = false }
-  }, [a?.id])
-  return url
+    ask(0)
+    return () => { on = false; clearTimeout(timer) }
+  }, [a?.id, round])
+  return [url, failed, () => setRound((r) => r + 1)]
 }
 
 /* Line icons for the phone's chat, Telegram-like. */
@@ -510,6 +515,8 @@ function ChatRoom({ room, onBack }) {
           const attId = uid()
           const pcloud = pcloudOn(state.settings) ? { folder: chatFolder(state, room), scope: { kind: 'chat', id: roomId } } : null
           const { path, fileid, scope } = await uploadFile({ projectId: C.roomFolder(roomId), id: attId, file: f, pcloud })
+          // the sender sees their own photo or video at once, from the phone, not after a round trip
+          if (/^(image|video)\//.test(f.type)) urlCache.set(attId, { url: URL.createObjectURL(f), until: Date.now() + 12 * 3600 * 1000 })
           attachments.push({ id: attId, name: f.name, type: f.type, bytes: f.size, path, ...(fileid ? { fileid, scope } : {}), ...(w ? { w, h } : {}), ...(dur ? { dur } : {}) })
         }
       } catch (e) {
@@ -720,20 +727,26 @@ function ChatRoom({ room, onBack }) {
 }
 
 function Attachment({ a }) {
-  const url = useAttachmentUrl(a)
+  const [url, failed, retry] = useAttachmentUrl(a)
+  const wait = (ratio) => (failed
+    ? <button type="button" className="chat-att-img chat-att-wait chat-att-retry" style={ratio} onClick={retry}>Tap to load</button>
+    : <span className="chat-att-img chat-att-wait" style={ratio}>…</span>)
   if (isImage(a)) {
+    const ratio = a.w && a.h ? { aspectRatio: `${a.w} / ${a.h}` } : undefined
+    if (!url) return wait(ratio)
     return (
-      <a className="chat-att" href={url || undefined} target="_blank" rel="noreferrer" title={a.name}>
-        {url ? <img className="chat-att-img" src={url} alt={a.name} style={a.w && a.h ? { aspectRatio: `${a.w} / ${a.h}` } : undefined} loading="lazy" /> : <span className="chat-att-img chat-att-wait">…</span>}
+      <a className="chat-att" href={url} target="_blank" rel="noreferrer" title={a.name}>
+        <img className="chat-att-img" src={url} alt={a.name} style={ratio} loading="lazy" />
       </a>
     )
   }
   // a video plays in the bubble, as in WhatsApp
   if (isVideo(a)) {
     const ratio = a.w && a.h ? { aspectRatio: `${a.w} / ${a.h}` } : undefined
+    // #t=0.1 makes an iPhone draw the first frame instead of an empty box
     return url
-      ? <video className="chat-att-img chat-att-video" src={url} controls playsInline preload="metadata" style={ratio} title={a.name} />
-      : <span className="chat-att-img chat-att-wait" style={ratio}>…</span>
+      ? <video className="chat-att-img chat-att-video" src={`${url}#t=0.1`} controls playsInline preload="metadata" style={ratio} title={a.name} />
+      : wait(ratio)
   }
   return (
     <a className="chat-file" href={url || undefined} target="_blank" rel="noreferrer">

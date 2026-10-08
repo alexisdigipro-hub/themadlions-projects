@@ -3834,3 +3834,16 @@ html[data-public='1'] body { background: var(--bg); }
   .chat2.has-room .chat-send.ready { background: var(--accent); color: var(--accent-ink, #fff); }
   html.chat-open.kb-open .chat2.has-room .chat-compose { padding-bottom: 6px; }
 }
+
+/* An attachment whose link did not come after a minute: tap to ask again. */
+.chat-att-retry { border: 0; font: inherit; font-size: 14px; font-weight: 600; color: var(--accent); cursor: pointer; }
+
+/* Chat on a phone (Alex, 8 Oct: "the whole chat moves up and down"): while a conversation is open
+   the page behind it is pinned, so dragging past the first or last message no longer drags the page,
+   and the room with it, off the screen (the header went out of view). Only the messages scroll. */
+@media (max-width: 820px) {
+  html.chat-open, html.chat-open body { overflow: hidden; overscroll-behavior: none; }
+  html.chat-open body { position: fixed; inset: 0; width: 100%; }
+  html.chat-open .chat2.has-room .chat-scroll { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  html.chat-open .chat2.has-room .chat-head { touch-action: none; }
+}
