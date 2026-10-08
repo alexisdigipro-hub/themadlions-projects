@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 8 Oct, late: smaller team photos on a computer
+- Home's team strip on a computer: photos 60 px (35% smaller), the card's padding trimmed so it hugs them. Phone untouched. Last block of styles.css.
+
 ### 8 Oct, night: team photos, skins' bar, Office tried and taken out
 - From Alex's screenshots: the skins' top bar lost its search and the sidebar its New project card (he does not need them; the Dashboard `state.newProject` hook went too). The team photos on Home are rounded squares (26%) and the photo is absolutely positioned to fill the frame: as a centred grid item its height followed the picture, leaving an empty strip on wide or tall photos.
 - **Office**: an ONLYOFFICE version (own Hetzner server + an "office" Edge Function) was built in this PR's first commit and taken out again before merging: Alex did not want a server to look after. Still open: Word/Excel inside the app with no server (option A, open-source libraries loaded on the Office page only: a spreadsheet with SheetJS-style .xlsx and a rich-text editor with .docx import/export; needs Alex's yes for new libraries) or option B (hand-written, simpler). If he set up a Hetzner server or deployed an "office" function, those can be deleted.
