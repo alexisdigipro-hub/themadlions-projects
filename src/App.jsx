@@ -3,6 +3,7 @@ import { HashRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
 import { ToastProvider } from './components/ui.jsx'
 import { StoreProvider, useCurrentUser, useStore } from './lib/store.jsx'
+import { CallProvider } from './lib/calls.jsx'
 import Login from './pages/Login.jsx'
 import Project, { useProject } from './pages/Project.jsx'
 
@@ -74,7 +75,8 @@ function RequireUser() {
   const user = useCurrentUser()
   const { ready } = useStore()
   if (!ready) return <Loading />
-  return user ? <Outlet /> : <Navigate to="/login" replace />
+  // calls ring wherever the app is open, the chat window included
+  return user ? <CallProvider><Outlet /></CallProvider> : <Navigate to="/login" replace />
 }
 
 // The project's own Chat tab is gone (its room already lives in the sidebar's Chat), but an old

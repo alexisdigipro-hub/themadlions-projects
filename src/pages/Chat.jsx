@@ -12,6 +12,7 @@ import { pcloudBlob, pcloudOn } from '../lib/pcloud.js'
 import { remote, supabase } from '../lib/supabase.js'
 import { chimeFor, loadChatPrefs, loadMuted, textSizeOf, toggleMuted } from '../lib/chatPrefs.js'
 import ChatSettings from '../components/ChatSettings.jsx'
+import { useCalls } from '../lib/calls.jsx'
 import * as C from '../lib/chat.js'
 
 /*
@@ -126,6 +127,8 @@ function useAttachmentUrl(a) {
 const svgProps = { viewBox: '0 0 24 24', width: 24, height: 24, fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
 const TgIcon = {
   back: () => <svg {...svgProps}><path d="M15 5l-7 7 7 7" /></svg>,
+  phone: () => <svg {...svgProps}><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z" /></svg>,
+  video: () => <svg {...svgProps}><path d="m22 8-6 4 6 4V8Z" /><rect x="2" y="6" width="14" height="12" rx="2" /></svg>,
   clip: () => <svg {...svgProps}><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.9-8.9a3.7 3.7 0 0 1 5.2 5.2l-8.9 8.9a1.8 1.8 0 0 1-2.6-2.6l8.2-8.2" /></svg>,
   project: () => <svg {...svgProps}><rect x="3" y="5" width="18" height="15" rx="2" /><path d="M3 10h18M8 5V3M16 5V3" /></svg>,
   person: () => <svg {...svgProps}><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
@@ -765,6 +768,10 @@ function ChatRoom({ room, onBack }) {
   const user = useCurrentUser()
   const toast = useToast()
   const isAdmin = user?.role === 'admin'
+  const nav = useNavigate()
+  const calls = useCalls()
+  // calls: one to one only, and only with the app connected to the database
+  const canCall = remote && room.kind === 'direct' && !!room.otherId && room.otherId !== user?.id
   const roomId = room.id
   const prefs = useChatPrefs()
   const msgs = useMemo(() => C.messagesIn(state.chat, roomId), [state.chat, roomId])
@@ -1152,7 +1159,10 @@ function ChatRoom({ room, onBack }) {
         </div>
         {room.kind === 'project' && isAdmin && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditMembers(true)} aria-label="Members" title="Members">{TgIcon.people()}</button>}
         {room.kind === 'project' && <Link className="icon-btn chat-head-ico" to={`/p/${room.projectId}`} aria-label="Open project" title="Open project">{TgIcon.project()}</Link>}
-        {room.kind === 'direct' && room.otherId && <Link className="icon-btn chat-head-ico" to={`/u/${room.otherId}`} aria-label="Profile" title="Profile">{TgIcon.person()}</Link>}
+        {/* calls, Telegram's: a voice call and a video call with the other person (lib/calls.jsx) */}
+        {canCall && <button type="button" className="icon-btn chat-head-ico chat-call" onClick={() => calls.start(room, false)} disabled={calls.busy} aria-label="Voice call" title="Voice call">{TgIcon.phone()}</button>}
+        {canCall && <button type="button" className="icon-btn chat-head-ico chat-call" onClick={() => calls.start(room, true)} disabled={calls.busy} aria-label="Video call" title="Video call">{TgIcon.video()}</button>}
+        {room.kind === 'direct' && room.otherId && !mobile && <Link className="icon-btn chat-head-ico" to={`/u/${room.otherId}`} aria-label="Profile" title="Profile">{TgIcon.person()}</Link>}
         {room.kind === 'group' && isAdmin && groupRow && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditGroup(true)} aria-label="Edit group" title="Edit group">{TgIcon.people()}</button>}
         {!mobile && <button type="button" className="icon-btn chat-head-ico" onClick={() => { setFind(''); setFindAt(0) }} aria-label="Search in this conversation" title="Search in this conversation">{TgIcon.search()}</button>}
         <span className="chat-more-wrap">
@@ -1161,6 +1171,7 @@ function ChatRoom({ room, onBack }) {
             <>
               <span className="chat-room-menu-scrim" onClick={() => setRoomMenu(false)} />
               <span className="chat-menu chat-room-menu" role="menu">
+                {room.kind === 'direct' && room.otherId && mobile && <button type="button" onClick={() => { setRoomMenu(false); nav(`/u/${room.otherId}`) }}>{TgIcon.person()}<span>Profile</span></button>}
                 <button type="button" onClick={() => { setRoomMenu(false); setFind(''); setFindAt(0) }}>{TgIcon.search()}<span>Search</span></button>
                 <button type="button" onClick={() => { setRoomMenu(false); setShared(true) }}>{TgIcon.media()}<span>Photos, videos &amp; files</span></button>
                 {pinnedMsg && <button type="button" onClick={() => { setRoomMenu(false); jumpTo(pinnedMsg.id) }}>{TgIcon.pin()}<span>Pinned message</span></button>}

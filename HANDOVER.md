@@ -41,6 +41,14 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 8 Oct, night: voice and video calls, Neo red theme
+- **Calls** live in `src/lib/calls.jsx`: `CallProvider` wraps everything under RequireUser in App.jsx (so it rings in the app and in TML Chat), `useCalls().start(room, video)` from the 📞 / 🎥 buttons in a direct room's header (Profile moved into ⋯ on a phone).
+- WebRTC peer to peer, public STUN (Google, Cloudflare), **no TURN yet**: a network that blocks direct connections will say "Could not connect". If that happens, add a TURN server to `ICE` (e.g. Cloudflare Calls TURN or Metered; its credentials must come from an Edge Function, never the repo).
+- Signalling: each user listens on the private Realtime channel `call:u:<uid>`; messages are sent with Realtime's REST broadcast (`/realtime/v1/api/broadcast`, `private: true`), so nobody joins anyone else's channel. Kinds: ring (with the whole offer, ICE gathered up to 2.5 s), answer, decline, busy, cancel, end, taken (to my own other devices). **`supabase/chat_calls.sql`** has the policies on `realtime.messages`: select only on your own line, insert onto a line of an active member of your workspace.
+- The caller writes the call into the conversation ("📞 Voice call · 3:12" / "📞 Missed voice call") and a missed one also sends a chatMessage notice. Ring tone and ringback are WebAudio; the first tap anywhere wakes the iPhone's audio so a later ring is heard. No ringing with the app closed (needs Web Push).
+- **Neo red** chat theme (`data-chat-theme='neo'`): always dark graphite, neumorphic shadows (`--neo-up`, `--neo-in`, `--neo-glow`), red accent, bubbles without tails. In ChatSettings THEMES.
+- Alex: run `supabase/chat_calls.sql`, merge, try a call between two phones.
+
 ### 8 Oct, night: TML Chat really on its own (chat.html)
 - Alex added the chat to the home screen and got the whole app: the iPhone reads the manifest and `apple-mobile-web-app-title` when the page loads, so swapping them from ChatWindow came too late. **`chat.html`** (second Vite entry in vite.config.js, same `src/main.jsx`) carries `manifest-chat.webmanifest` and "TML Chat" from the first byte, and sends an empty hash to `#/chat-window`. The manifest's id and start_url are now `./chat.html`.
 - ⧉ on a phone goes to chat.html (a full page load). Inside the main home-screen app it shows the card in the list instead (chat.html would open inside that app with no way back, and Add to Home Screen is only in Safari).
