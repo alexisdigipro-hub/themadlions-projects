@@ -621,7 +621,7 @@ export function StoreProvider({ children }) {
     const prevP = Object.fromEntries(prev.projects.map((p) => [p.id, p]))
     next.projects.forEach((p) => {
       const before = prevP[p.id]
-      if (before && JSON.stringify(before) === JSON.stringify(p)) return
+      if (before && (before === p || JSON.stringify(before) === JSON.stringify(p))) return
       if (!before) logActivity({ action: 'created', target: 'project', target_name: p.title, project_id: p.id })
       else if (before.frozen !== p.frozen) logActivity({ action: p.frozen ? 'locked' : 'unlocked', target: 'project', target_name: p.title, project_id: p.id })
       else Object.keys(PROJECT_KEYS).filter((k) => JSON.stringify(before[k]) !== JSON.stringify(p[k])).forEach((k) => logActivity({ action: 'updated', target: 'project', target_name: p.title, project_id: p.id }, 'p:' + p.id, PROJECT_KEYS[k]))
@@ -642,7 +642,7 @@ export function StoreProvider({ children }) {
     )
     const prevE = Object.fromEntries(prev.events.map((e) => [e.id, e]))
     next.events.forEach((e) => {
-      if (prevE[e.id] && JSON.stringify(prevE[e.id]) === JSON.stringify(e)) return
+      if (prevE[e.id] && (prevE[e.id] === e || JSON.stringify(prevE[e.id]) === JSON.stringify(e))) return
       logActivity({ action: prevE[e.id] ? 'updated' : 'created', target: 'event', target_name: e.title || e.type, project_id: e.projectId || null })
       myWrites.current.add(e.id)
       schedule('e:' + e.id, async () => {
@@ -662,7 +662,7 @@ export function StoreProvider({ children }) {
       const before = Object.fromEntries(((kind === 'task' ? prev.todos : prev.library?.[key]) || []).map((x) => [x.id, x]))
       const after = (kind === 'task' ? next.todos : next.library?.[key]) || []
       after.forEach((x) => {
-        if (before[x.id] && JSON.stringify(before[x.id]) === JSON.stringify(x)) return
+        if (before[x.id] && (before[x.id] === x || JSON.stringify(before[x.id]) === JSON.stringify(x))) return
         myWrites.current.add(x.id)
         schedule('l:' + x.id, async () => {
           const { error } = await supabase.from('library').upsert({ id: x.id, workspace_id: ws, kind, data: x })
@@ -681,7 +681,7 @@ export function StoreProvider({ children }) {
     {
       const before = Object.fromEntries((prev.worklog || []).map((n) => [n.id, n]))
       ;(next.worklog || []).forEach((n) => {
-        if (before[n.id] && JSON.stringify(before[n.id]) === JSON.stringify(n)) return
+        if (before[n.id] && (before[n.id] === n || JSON.stringify(before[n.id]) === JSON.stringify(n))) return
         myWrites.current.add(n.id)
         // A budget line paid to a colleague writes a job into THEIR My work. RLS only lets a
         // person write their own rows (or an administrator anyone's), so a non-admin with Budget
@@ -711,7 +711,7 @@ export function StoreProvider({ children }) {
     {
       const before = Object.fromEntries((prev.notices || []).map((n) => [n.id, n]))
       ;(next.notices || []).forEach((n) => {
-        if (before[n.id] && JSON.stringify(before[n.id]) === JSON.stringify(n)) return
+        if (before[n.id] && (before[n.id] === n || JSON.stringify(before[n.id]) === JSON.stringify(n))) return
         myWrites.current.add(n.id)
         schedule('n:' + n.id, async () => {
           // A recipient may only say "Got it", and that goes through ack_notice(), which can write
@@ -739,7 +739,7 @@ export function StoreProvider({ children }) {
       // rooms: groups (administrators) and direct conversations (either side opens one)
       const before = Object.fromEntries((prev.chats || []).map((c) => [c.id, c]))
       ;(next.chats || []).forEach((c) => {
-        if (before[c.id] && JSON.stringify(before[c.id]) === JSON.stringify(c)) return
+        if (before[c.id] && (before[c.id] === c || JSON.stringify(before[c.id]) === JSON.stringify(c))) return
         myWrites.current.add(c.id)
         schedule('c:' + c.id, async () => {
           // a direct conversation the other side opened at the same moment is the same row: keep theirs
@@ -761,7 +761,7 @@ export function StoreProvider({ children }) {
       const roomsReady = next.chatRooms !== false
       ;(next.chat || []).forEach((m) => {
         const was = before[m.id]
-        if (was && JSON.stringify(was) === JSON.stringify(m)) return
+        if (was && (was === m || JSON.stringify(was) === JSON.stringify(m))) return
         myWrites.current.add(m.id)
         schedule('m:' + m.id, async () => {
           // a heart, on anyone's message: only the hearts differ, and they go through chat_like(),
@@ -795,7 +795,7 @@ export function StoreProvider({ children }) {
       const before = Object.fromEntries((prev.finance?.transactions || []).map((t) => [t.id, t]))
       const after = next.finance?.transactions || []
       after.forEach((t) => {
-        if (before[t.id] && JSON.stringify(before[t.id]) === JSON.stringify(t)) return
+        if (before[t.id] && (before[t.id] === t || JSON.stringify(before[t.id]) === JSON.stringify(t))) return
         myWrites.current.add(t.id)
         schedule('f:' + t.id, async () => {
           const { error } = await supabase.from('finance').upsert({ id: t.id, workspace_id: ws, kind: 'tx', data: t })
@@ -813,7 +813,7 @@ export function StoreProvider({ children }) {
       const rBefore = Object.fromEntries((prev.finance?.recurring || []).map((t) => [t.id, t]))
       const rAfter = next.finance?.recurring || []
       rAfter.forEach((r) => {
-        if (rBefore[r.id] && JSON.stringify(rBefore[r.id]) === JSON.stringify(r)) return
+        if (rBefore[r.id] && (rBefore[r.id] === r || JSON.stringify(rBefore[r.id]) === JSON.stringify(r))) return
         myWrites.current.add(r.id)
         schedule('fr:' + r.id, async () => {
           const { error } = await supabase.from('finance').upsert({ id: r.id, workspace_id: ws, kind: 'recurring', data: r })
@@ -831,7 +831,7 @@ export function StoreProvider({ children }) {
       const iBefore = Object.fromEntries((prev.finance?.invoices || []).map((t) => [t.id, t]))
       const iAfter = next.finance?.invoices || []
       iAfter.forEach((v) => {
-        if (iBefore[v.id] && JSON.stringify(iBefore[v.id]) === JSON.stringify(v)) return
+        if (iBefore[v.id] && (iBefore[v.id] === v || JSON.stringify(iBefore[v.id]) === JSON.stringify(v))) return
         myWrites.current.add(v.id)
         schedule('fi:' + v.id, async () => {
           const { error } = await supabase.from('finance').upsert({ id: v.id, workspace_id: ws, kind: 'invoice', data: v })
@@ -865,7 +865,7 @@ export function StoreProvider({ children }) {
       )
     }
     next.users.forEach((u) => {
-      if (prevU[u.id] && JSON.stringify(prevU[u.id]) === JSON.stringify(u)) return
+      if (prevU[u.id] && (prevU[u.id] === u || JSON.stringify(prevU[u.id]) === JSON.stringify(u))) return
       if (!prevU[u.id]) return // new members arrive through invites, not here
       schedule('u:' + u.id, async () => {
         // Only an administrator may write a member row, because it carries role, permissions and
@@ -904,14 +904,23 @@ export function StoreProvider({ children }) {
         prevRef.current = next
         return next
       })
+    // One project changes, so only that project is copied: the rest of the state (every other
+    // project, the chat, finance) is passed on as it is, and the diff below skips anything that
+    // is still the very same object without turning it into text. Typing in a project used to
+    // copy and compare the whole workspace on every key, which a phone feels.
     const updateProject = (id, fn) =>
-      update((s) => {
-        const p = s.projects.find((x) => x.id === id)
-        if (p) {
-          fn(p)
-          p.updatedAt = new Date().toISOString()
-        }
-        return s
+      viewAs ? undefined : setState((s) => {
+        const i = s.projects.findIndex((x) => x.id === id)
+        if (i < 0) return s
+        const p = structuredClone(s.projects[i])
+        fn(p)
+        p.updatedAt = new Date().toISOString()
+        const projects = s.projects.slice()
+        projects[i] = p
+        const next = { ...s, projects }
+        syncDiff(prevRef.current, next)
+        prevRef.current = next
+        return next
       })
     const replaceState = (nextState) => {
       if (viewAs) return
