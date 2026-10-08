@@ -37,7 +37,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
-## Where we stopped (7 Oct 2026)
+## Where we stopped (8 Oct 2026)
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
@@ -88,7 +88,14 @@ Each PR body has the detail and the tests; this is the map.
 
 - **Small things back in Supabase** (#211, Alex: pCloud is for the many and big files, keep small ones in Supabase where it helps): presentation pictures (`PhotoGrid cloud={false}`) and the cover original go to the built-in storage again; locations, cast/crew, equipment and Database photos, songs and chat files stay on pCloud. Records already made either way keep working (photoUrls, deletePhoto and the cover crop read both).
 
-**Alex still to do:** redeploy the `pcloud` function with the code from #210 if not done, merge #211, switch Settings > Integrations > File storage > Uploaded files go to = The company pCloud.
+**Alex still to do:** redeploy the `pcloud` function with the code from #210 if not done, switch Settings > Integrations > File storage > Uploaded files go to = The company pCloud.
+
+### Chat on the computer gets the phone's features, tidier (8 Oct, evening)
+Alex: "the features we put in the chat, do them on the desktop too, and tidy the UI".
+- Chat.jsx: the 🎥 pill, the click menu (`picked`, Reply / Edit / Delete with words under the bubble) and `TgIcon` line icons (header, 📎 → paperclip, back) no longer depend on `mobile`; the old hover ↩ ✎ × row is gone. On a computer a double click is the mouse's own (`e.detail === 2`, a mousedown with detail > 1 is prevented so no word gets selected), a click with text selected does nothing (copying still works), and a click elsewhere or Escape closes the menu (effect only when `!mobile`). The textarea has `autoComplete=off` everywhere. + Message on the list is a pencil icon.
+- styles.css, new last block `@media (min-width: 821px)`: list and room share one frame (no gap, list 360px with a border on its right), underlined folder tabs, search with its icon, rounded list rows with the open one tinted in the accent, white header with a bottom line, menu buttons, 🎥 pill and pop (`chat-heart-d` keyframes), send arrow grey until there is text. Bubble style from Settings > Chat still applies on the computer.
+- Phone untouched: the same rendered HTML (clock aside) and pixel-identical screenshots before and after for list, room and room with menu, light and dark, at 390.
+- The 🎥 needs `supabase/chat_likes.sql` (from #205), same as on the phone.
 **Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
 
 ### Calendar feeds: read less often, and one switch over the lot (7 Oct)
