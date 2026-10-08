@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct, late night: Tasks side column tidied (Alex's screenshot)
+- Text in the Tasks side column 5% larger (rows 15.5 → 16.3 px, phone 16.5 → 17.3). The smart lists sit in a framed card like the lists. General is a row with its own ☰ button (`.rem-fold`) that folds the other lists open under it (`.rem-row-sub`, indented); folded by default, kept in localStorage `tml_tasks_lists_open`, and opened by itself when a list under it is the one selected.
+
 ### 9 Oct, night: Glass dark and Glass light skins
 - `lib/skin.js`: `glassdark` (on Dark) and `glasslight` (on Light), Thin icons, theme-color meta. styles.css block "Glass dark and Glass light": each sets its palette plus `--gl-*` (fill, fill-2, edge, shine, shadow, blur, bar, input, active, glow) and its body backdrop; one shared set of rules `html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme]` frosts .panel / .stat / .project-card / .fin-card / .notes-app / .rem-app, inputs, buttons, tabs, segmented, top bar and tab bar, and on a computer the floating sidebar. The purple Glass is untouched. Checked on a static mock with the real CSS at 1300 px.
 

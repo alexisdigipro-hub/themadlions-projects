@@ -4732,7 +4732,7 @@ html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .fin-card
 html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .notes-app,
 html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-app { background: var(--gl-fill); border: 1px solid var(--gl-edge); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); box-shadow: inset 0 1px 0 var(--gl-shine), var(--gl-shadow); }
 html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .notes-folders, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-side { background: var(--gl-fill); }
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .notes-group-card, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-lists, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-card { background: var(--gl-fill-2); }
+html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .notes-group-card, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-lists, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-smart, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-card { background: var(--gl-fill-2); border-color: var(--gl-edge); }
 html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .input { background: var(--gl-input); border-color: var(--gl-edge); }
 html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--gl-glow); }
 html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .btn { background: var(--gl-fill-2); border-color: var(--gl-edge); }
@@ -4985,19 +4985,29 @@ html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; 
 .rem-side { display: flex; flex-direction: column; gap: 4px; min-height: 0; overflow-y: auto; padding: 14px 10px; background: var(--raised); border-right: 1px solid var(--line-soft); }
 .rem-search-wrap { position: relative; margin: 0 4px 10px; }
 .rem-search-ico { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 17px; color: var(--muted); pointer-events: none; }
-.rem-search { width: 100%; box-sizing: border-box; height: 36px; padding: 0 10px 0 32px; font: inherit; font-size: 15px; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; outline: none; }
+.rem-search { width: 100%; box-sizing: border-box; height: 36px; padding: 0 10px 0 32px; font: inherit; font-size: 15.8px; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; outline: none; }
 .rem-search:focus { border-color: var(--accent); }
-.rem-smart, .rem-lists { display: flex; flex-direction: column; }
-.rem-row { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 6px 12px; font: inherit; font-size: 15.5px; text-align: left; color: var(--text); background: none; border: 0; border-radius: 8px; cursor: pointer; }
+.rem-smart, .rem-lists { display: flex; flex-direction: column; padding: 4px; background: var(--panel); border: 1px solid var(--line-soft); border-radius: 12px; }
+.rem-row { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 6px 12px; font: inherit; font-size: 16.3px; text-align: left; color: var(--text); background: none; border: 0; border-radius: 8px; cursor: pointer; }
 .rem-row:hover { background: var(--hover-tint, rgba(127, 127, 127, .08)); }
 .rem-row.on { background: color-mix(in srgb, var(--text) 9%, transparent); font-weight: 600; }
 .rem-row-ico { display: inline-flex; width: 22px; justify-content: center; color: var(--lc); }
 .rem-row-emoji { display: inline-flex; width: 22px; justify-content: center; font-size: 18px; }
 .rem-row .grow { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rem-count { min-width: 18px; text-align: right; font-size: 13.5px; color: var(--muted); font-weight: 400; }
+.rem-count { min-width: 18px; text-align: right; font-size: 14.2px; color: var(--muted); font-weight: 400; }
 .rem-shared { font-size: 13px; opacity: .75; }
-.rem-rule { width: calc(100% - 24px); margin: 8px 12px; border: 0; border-top: 1px solid var(--line); }
-.rem-add-list { display: flex; align-items: center; gap: 12px; margin-top: 2px; padding: 8px 12px; font: inherit; font-size: 15.5px; color: #2f6fde; background: none; border: 0; border-radius: 8px; cursor: pointer; text-align: left; }
+.rem-rule { width: 100%; margin: 6px 0; border: 0; border-top: 0; }
+/* General, with the other lists folded under it (its ☰ opens them) */
+.rem-row-general { gap: 0; padding: 0; }
+.rem-fold { display: inline-flex; align-items: center; justify-content: center; width: 46px; min-height: 40px; padding: 0; font-size: 18px; color: var(--text); background: none; border: 0; border-radius: 8px; cursor: pointer; }
+.rem-fold:hover { background: var(--hover-tint, rgba(127, 127, 127, .1)); }
+.rem-fold.open { color: var(--accent); }
+.rem-row-pick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 6px 4px 6px 0; font: inherit; font-size: 16.3px; text-align: left; color: inherit; background: none; border: 0; cursor: pointer; }
+.rem-row-pick .grow { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rem-row-general.on .rem-row-pick { font-weight: 600; }
+.rem-fold-chev { width: 22px; padding-right: 8px; text-align: center; color: var(--muted); cursor: pointer; }
+.rem-row-sub { padding-left: 26px; }
+.rem-add-list { display: flex; align-items: center; gap: 12px; margin-top: 2px; padding: 8px 12px; font: inherit; font-size: 16.3px; color: #2f6fde; background: none; border: 0; border-radius: 8px; cursor: pointer; text-align: left; }
 .rem-add-list span { width: 22px; text-align: center; font-size: 20px; }
 .rem-add-list:hover { background: var(--hover-tint, rgba(127, 127, 127, .08)); }
 .rem-main { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: linear-gradient(170deg, color-mix(in srgb, var(--lc) 92%, #000) 0%, color-mix(in srgb, var(--lc) 70%, #6d8a9a) 45%, color-mix(in srgb, var(--lc) 25%, #e9d9cf) 100%); }
@@ -5048,7 +5058,7 @@ html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; 
   .rem-app { display: flex; flex-direction: column; height: auto; min-height: 0; border: 0; border-radius: 0; background: transparent; overflow: visible; }
   .rem-side { padding: 0; background: transparent; border: 0; overflow: visible; }
   .rem-search-wrap { margin: 0 0 10px; }
-  .rem-row { min-height: 46px; font-size: 16.5px; }
+  .rem-row, .rem-row-pick { min-height: 46px; font-size: 17.3px; }
   .rem-main { height: calc(100dvh - 150px); margin: 0 -16px; border-radius: 0; }
   .rem-head { padding: 12px 16px 12px; }
   .rem-head h1 { font-size: 28px; }
