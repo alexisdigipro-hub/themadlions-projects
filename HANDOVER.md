@@ -41,6 +41,13 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 8 Oct, late: chat keyboard gap, AutoFill, People, TML Chat install
+- **Gap under the box with the keyboard up** (iPhone home-screen app): `kb-open` was decided by `window.innerHeight - visualViewport.height`, but in a standalone iPhone app innerHeight shrinks with the keyboard, so the home-bar strip stayed. Now `kb-open` is on while a text field has focus, or when the visible height is 120 px under the tallest seen (reset when the width changes).
+- **AutoFill Contact**: the box's `title` said "@name mentions someone", and Safari reads the title when guessing field types, so it took the box for a name field. No title on a phone, the computer's says "Type @ to mention someone". The ⌃ ⌄ ✓ bar is iOS's own and cannot be hidden by a page.
+- **People** left the chat list's foot (Chats / Notices / Settings); the pencil above the list does it.
+- **TML Chat install card** (`InstallHint` in Chat.jsx): Android uses the browser's install offer (the one caught on the main page is dropped when the chat window swaps in its manifest, it was for the main app); iPhone shows Share > Add to Home Screen and an **I added it** button; inside the main home-screen app it offers **Open in Safari** (`x-safari-https://`, iOS 17+) and Copy the link. Once added (`localStorage.tml_chat_app`, also set by `appinstalled`), ⧉ shows a reminder to open it from the icon: no browser lets a page launch a home-screen app. iPhone home-screen apps keep their own storage, so the flag lives in Safari/the main app, not in TML Chat.
+- Alex: merge the PR, close and reopen the app, try the keyboard and ⧉ on the iPhone.
+
 ### 7 Oct, the long afternoon: what shipped after Calendar feeds (PRs #178 to #196)
 Each PR body has the detail and the tests; this is the map.
 - **Calendar feeds** working end to end: `ical` deployed by Alex, errors read from the function's body first (#178), each feed read at most once per half hour with a week-old fallback when Google answers 429 (#179), and one Show-these-calendars switch in Settings (#179).
