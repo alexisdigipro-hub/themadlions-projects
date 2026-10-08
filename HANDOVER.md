@@ -41,6 +41,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 8 Oct, late night: two app skins
+- `src/lib/skin.js`: SKINS (violet "Violet night", teal "Teal slate"), `applyThemeChoice(v)` used by main.jsx and Settings > Display > Theme (Light / Dark / Violet night / Teal slate, still in localStorage `tml_theme`). A skin sets `data-theme='dark'` plus `data-skin`, so every dark rule still applies; the "App skins" block at the end of styles.css recolours on `html[data-theme='dark'][data-skin=…][data-accent]` (beats the accent rules). Public pages that force light/dark only touch data-theme, and the skin rules need dark, so a light shared page is untouched.
+- Checked on stored page snapshots (Home, Finance, Chat) at 1300 px and 390 px.
+
 ### 8 Oct, late night: Calls tab
 - The chat list's foot is Chats / Calls / Notices / Settings (Alex's order). `CallsPanel` in Chat.jsx: everyone active with 📞 / 🎥, a search, and Recent read from the call lines lib/calls.jsx writes into direct rooms (`/^(📞|🎥) /`): written by me = outgoing ↗, else incoming ↙, "Missed" in red when incoming. Shown only with Supabase (`remote`). The foot is on a computer and in TML Chat; the phone's in-app chat list has no foot.
 - Group calls: still waiting for Alex to confirm a one-to-one call works on real phones; they go in this tab next.
