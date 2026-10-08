@@ -3713,7 +3713,7 @@ html[data-public='1'] body { background: var(--bg); }
   .chat2 .chat-head-ico:hover { background: var(--raised); }
   .chat2 .chat-head-ico svg { width: 21px; height: 21px; }
   .chat2 .chat-search { padding: 2px 12px 6px; }
-  .chat2 .chat-search .input { border: 1px solid var(--line-soft); border-radius: 999px; background-color: var(--panel); padding: 7px 14px 7px 36px; font-size: 14.5px; text-align: center; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: calc(50% - 40px) 50%; }
+  .chat2 .chat-search .input { border: 1px solid var(--line-soft); border-radius: 999px; background-color: var(--panel); padding: 7px 14px 7px 36px; font-size: 14.5px; text-align: center; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: calc(50% - 60px) 50%; }
   .chat2 .chat-search .input:focus, .chat2 .chat-search .input:not(:placeholder-shown) { text-align: left; background-position: 13px 50%; }
   .chat2 .chat-folders { gap: 0; padding: 0 6px; border-bottom: 1px solid var(--line-soft); }
   .chat2 .chat-folders button { background: none; border: 0; border-radius: 0; padding: 8px 6px 7px; font-size: 12.5px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; border-bottom: 2px solid transparent; }
@@ -3971,3 +3971,73 @@ html .chat2 .chat-box .chat-msg.picked .chat-bubble, html .chat2 .chat-box .chat
 
 /* room under the last message so its menu can scroll into view */
 .chat-scroll:has(.chat-msg.picked) { padding-bottom: 380px; }
+
+/* The chat in its own window (#/chat-window, Alex, 8 Oct, Telegram for Mac): no side menu, the
+   whole window, Chats / People / Settings at the foot of the list. */
+html.chat-window, html.chat-window body { height: 100%; overflow: hidden; }
+.chat-win { height: 100vh; height: 100dvh; }
+.chat-win .chat2 { margin: 0; height: 100%; }
+.chat-win-tabs { display: flex; justify-content: space-around; flex: none; padding: 6px 8px 8px; border-top: 1px solid var(--line-soft); }
+.chat-win-tabs button { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; padding: 6px 4px; border: 0; border-radius: 12px; background: none; color: var(--muted); font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; }
+.chat-win-tabs button svg { width: 26px; height: 26px; }
+.chat-win-tabs button.on, .chat-win-tabs button:hover { color: var(--accent); }
+.chat-win-settings { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 16px 16px; }
+.chat-win-settings h2 { margin: 6px 0 12px; font-size: 18px; }
+
+/* the ⋯ menu in a conversation's header, and the emoji panel: a tap outside closes them */
+.chat-more-wrap, .chat-emoji-wrap { position: relative; display: inline-flex; flex: none; }
+.chat-room-menu-scrim { position: fixed; inset: 0; z-index: 45; }
+.chat-box .chat-room-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 46; margin: 0; min-width: 250px; }
+
+/* search inside a conversation */
+.chat-findbar { display: flex; align-items: center; gap: 6px; flex: none; margin: 0 8px 6px; padding: 4px 6px 4px 12px; border-radius: 16px; background: var(--panel); box-shadow: 0 1px 3px rgba(0, 0, 0, .1); }
+.chat-findbar > svg { width: 18px; height: 18px; color: var(--muted); flex: none; }
+.chat-findbar .input { flex: 1; min-width: 0; border: 0; background: none; padding: 7px 4px; font-size: 15px; }
+.chat-findbar-n { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.chat-findbar button { width: 32px; height: 32px; display: grid; place-items: center; flex: none; border: 0; border-radius: 50%; background: none; color: var(--text); font-size: 18px; cursor: pointer; }
+.chat-findbar button:disabled { opacity: .3; }
+.chat-findbar button svg { width: 18px; height: 18px; }
+.chat-msg.found .chat-bubble { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent); }
+.chat-msg.found.now .chat-bubble { box-shadow: 0 0 0 3px var(--accent); }
+
+/* emoji beside the box (computer) */
+.chat-emoji-btn { width: 44px; height: 44px; display: grid; place-items: center; color: var(--muted); border-radius: 50%; }
+.chat-emoji-btn svg { width: 24px; height: 24px; }
+.chat-emoji-btn:hover { color: var(--accent); }
+.chat-emoji-pick { position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 46; display: grid; grid-template-columns: repeat(8, 36px); gap: 2px; padding: 8px; border-radius: 16px; background: var(--panel); box-shadow: 0 10px 30px rgba(0, 0, 0, .25); }
+.chat-emoji-pick button { width: 36px; height: 36px; border: 0; border-radius: 8px; background: none; font-size: 22px; cursor: pointer; }
+.chat-emoji-pick button:hover { background: var(--raised); }
+
+/* voice messages: the mic, the recording strip, the player in a bubble */
+.chat-box .chat-send.chat-mic { color: var(--muted); }
+.chat-box .chat-send.chat-mic svg { width: 23px; height: 23px; margin: 0; }
+.chat-rec { display: flex; align-items: center; gap: 10px; flex: 1; min-height: 44px; padding: 0 4px 0 16px; border-radius: 24px; background: var(--panel); box-shadow: 0 1px 3px rgba(0, 0, 0, .1); }
+.chat-rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--danger); animation: chat-rec 1s ease-in-out infinite; }
+@keyframes chat-rec { 50% { opacity: .25; } }
+.chat-rec b { font-variant-numeric: tabular-nums; }
+.chat-rec .grow { flex: 1; }
+.chat-rec-bin { color: var(--danger); width: 40px; height: 40px; }
+.chat-rec-bin svg { width: 21px; height: 21px; }
+.chat-rec .chat-send { width: 40px; height: 40px; border-radius: 50%; }
+.chat-voice { display: flex; align-items: center; gap: 10px; min-width: 210px; margin: 2px 0 4px; }
+.chat-voice-play { width: 40px; height: 40px; flex: none; display: grid; place-items: center; padding-left: 2px; border: 0; border-radius: 50%; background: var(--accent); color: var(--accent-ink, #fff); font-size: 14px; cursor: pointer; }
+.chat-msg.mine .chat-voice-play { background: rgba(255, 255, 255, .9); color: var(--accent); }
+.chat-voice-bar { position: relative; flex: 1; height: 6px; padding: 0; border: 0; border-radius: 3px; background: rgba(0, 0, 0, .15); overflow: hidden; cursor: pointer; }
+.chat-msg.mine .chat-voice-bar { background: rgba(255, 255, 255, .3); }
+.chat-voice-bar span { position: absolute; left: 0; top: 0; bottom: 0; background: currentColor; opacity: .8; }
+.chat-voice-time { font-size: 12.5px; font-variant-numeric: tabular-nums; opacity: .8; }
+
+/* Photos, videos & files of a conversation */
+.chat-shared-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 3px; }
+.chat-shared-tile { position: relative; aspect-ratio: 1; padding: 0; border: 0; overflow: hidden; background: var(--raised); cursor: pointer; }
+.chat-shared-tile img, .chat-shared-tile video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.chat-shared-files { display: flex; flex-direction: column; gap: 4px; margin-top: 14px; }
+
+/* the photo viewer's close: big, with its word, top left like iOS */
+.chat-viewer-x { left: 12px; right: auto; width: auto; padding: 0 16px 0 10px; gap: 6px; display: inline-flex; align-items: center; height: 42px; border-radius: 21px; font: inherit; font-size: 15px; font-weight: 600; }
+.chat-viewer { z-index: 200; }
+/* the emoji button sits inside the box on its right, as in Telegram */
+@media (min-width: 821px) {
+  .chat2 .chat-emoji-wrap { margin-left: -54px; margin-right: 6px; z-index: 1; align-self: center; }
+  .chat2 .chat-compose textarea { padding-right: 52px; }
+}

@@ -5,7 +5,7 @@ import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
 import { useToast } from './ui.jsx'
 import { loadRead, totalUnread, unreadByRoom } from '../lib/chat.js'
-import { chime, loadChatPrefs } from '../lib/chatPrefs.js'
+import { chimeFor } from '../lib/chatPrefs.js'
 
 function Logo({ name, subtitle, logo }) {
   return (
@@ -75,7 +75,7 @@ export default function Layout() {
     if (latest > seenChat.current) {
       const fresh = list.filter((m) => whenMs(m.createdAt) > seenChat.current && m.userId && m.userId !== user?.id)
       const openRoom = decodeURIComponent((window.location.hash.match(/#\/chat\/([^?]+)/) || [])[1] || (window.location.hash.startsWith('#/chat') ? 'team' : ''))
-      if (fresh.some((m) => document.hidden || (m.chatId || 'team') !== openRoom) && loadChatPrefs().sound) chime()
+      chimeFor(fresh, openRoom)
     }
     seenChat.current = latest
   }, [state.chat])

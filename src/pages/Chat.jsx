@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button, Confirm, Field, Input, Modal, useIsMobile, useToast } from '../components/ui.jsx'
-import { canAccessProject, canSendNotices, today as todayISO, uid, useCurrentUser, useStore } from '../lib/store.jsx'
+import { canAccessProject, canSendNotices, today as todayISO, uid, useCurrentUser, useStore, whenMs } from '../lib/store.jsx'
 import { addDays, fmtDate } from '../lib/dates.js'
 import { SendNoticeModal, SentNotices, sendAutoNotice } from '../components/Notices.jsx'
 import { deleteFile, fileIcon, fileUrl, fmtBytes, uploadFile } from '../lib/files.js'
@@ -10,7 +10,8 @@ import { compress } from '../lib/photos.js'
 import { canCompressVideo, compressVideo, isVideoFile, mediaSize, prepareVideo, releaseVideo } from '../lib/videoCompress.js'
 import { pcloudBlob, pcloudOn } from '../lib/pcloud.js'
 import { remote, supabase } from '../lib/supabase.js'
-import { loadChatPrefs } from '../lib/chatPrefs.js'
+import { chimeFor, loadChatPrefs, loadMuted, toggleMuted } from '../lib/chatPrefs.js'
+import ChatSettings from '../components/ChatSettings.jsx'
 import * as C from '../lib/chat.js'
 
 /*
@@ -36,8 +37,11 @@ const isVideo = (a) => (a?.type || '').startsWith('video/')
 const MAX_BYTES = 50 * 1024 * 1024
 // a video is shrunk before it goes up, so a bigger one may be picked (it must end up under 50 MB)
 const MAX_VIDEO_PICK = 2 * 1024 * 1024 * 1024
+const isAudio = (a) => (a?.type || '').startsWith('audio/')
 const isMedia = (a) => isImage(a) || isVideo(a)
 // Telegram's reaction bar; 🎥 first, Alex's camera instead of the heart (double tap gives it)
+// the emoji button beside the box on a computer (a phone has them on its keyboard)
+const EMOJIS = ['😀', '😂', '🥹', '😍', '🥰', '😘', '😎', '🤩', '🤔', '🙄', '😴', '😭', '😡', '🤯', '🥳', '😇', '🙏', '👍', '👎', '👏', '🙌', '💪', '🤝', '👌', '✌️', '🤞', '❤️', '🔥', '✨', '🎉', '💯', '✅', '❌', '⚠️', '🎬', '🎥', '📸', '🎞️', '🎤', '🎧', '💡', '📍', '⏰', '🍕', '☕', '🍻', '🚗', '✈️']
 const REACTIONS = ['🎥', '❤️', '👍', '🔥', '🏆', '👏', '😂']
 /* A message's reactions, with the old 🎥 likes (before chat_reactions.sql) counted as 🎥. */
 const reactionsOf = (m) => {
@@ -48,7 +52,7 @@ const reactionsOf = (m) => {
   return r
 }
 const myReaction = (m, me) => Object.entries(reactionsOf(m)).find(([, v]) => v.includes(me))?.[0] || ''
-const attLabel = (a) => (isImage(a) ? 'Photo' : isVideo(a) ? 'Video' : a.name)
+const attLabel = (a) => (isImage(a) ? 'Photo' : isVideo(a) ? 'Video' : isAudio(a) ? 'Voice message' : a.name)
 /* A colour per sender for their name inside group bubbles, stable for the same person. */
 const SENDER_HUES = [14, 36, 95, 160, 200, 230, 275, 320]
 const senderHue = (id) => { let h = 0; for (const c of String(id || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0; return SENDER_HUES[h % SENDER_HUES.length] }
@@ -131,6 +135,15 @@ const TgIcon = {
   pin: () => <svg {...svgProps}><path d="M9 4h6l-1 6 3 3v1H7v-1l3-3-1-6ZM12 14v6" /></svg>,
   forward: () => <svg {...svgProps}><path d="M15 5l6 6-6 6" /><path d="M21 11H11a7 7 0 0 0-7 7v1" /></svg>,
   select: () => <svg {...svgProps}><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.5 2.5L16 9.5" /></svg>,
+  popout: () => <svg {...svgProps}><rect x="3" y="7" width="14" height="14" rx="2" /><path d="M10 3h11v11M21 3l-9 9" /></svg>,
+  chats: () => <svg {...svgProps}><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" /></svg>,
+  gear: () => <svg {...svgProps}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></svg>,
+  search: () => <svg {...svgProps}><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>,
+  more: () => <svg {...svgProps}><circle cx="5" cy="12" r="1.3" fill="currentColor" /><circle cx="12" cy="12" r="1.3" fill="currentColor" /><circle cx="19" cy="12" r="1.3" fill="currentColor" /></svg>,
+  mic: () => <svg {...svgProps}><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>,
+  smile: () => <svg {...svgProps}><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>,
+  bell: () => <svg {...svgProps}><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15Z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>,
+  media: () => <svg {...svgProps}><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>,
   close: () => <svg {...svgProps}><path d="M6 6l12 12M18 6L6 18" /></svg>,
   people: () => <svg {...svgProps}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.1.8 3.5 2.8 3.5 5.7" /></svg>,
 }
@@ -144,31 +157,85 @@ function RoomAvatar({ room, size = 42 }) {
   )
 }
 
+/* Where the chat lives: /chat inside the app, /chat-window when it has a window of its own. */
+const ChatBase = createContext('/chat')
+const useChatBase = () => useContext(ChatBase)
+const roomPath = (base, id) => `${base}/${encodeURIComponent(id)}`
+
+/* The chat alone in a window of its own (the ⧉ button on the list), like Telegram's app: no side
+   menu, the list with Chats / People / Settings at its foot, the conversation beside it. */
+export function ChatWindow() {
+  const { state } = useStore()
+  const user = useCurrentUser()
+  useEffect(() => {
+    const root = document.documentElement
+    root.classList.add('chat-window')
+    const title = document.title
+    document.title = `Chat · ${state.workspace?.name || 'THE MAD LIONS'}`
+    return () => { root.classList.remove('chat-window'); document.title = title }
+  }, [])
+  // the same tone the app plays, as this window may be the only one open
+  const seen = useRef(null)
+  useEffect(() => {
+    const list = state.chat || []
+    const latest = list.reduce((a, m) => Math.max(a, whenMs(m.createdAt)), 0)
+    if (seen.current === null) { seen.current = latest; return }
+    if (latest > seen.current) {
+      const fresh = list.filter((m) => whenMs(m.createdAt) > seen.current && m.userId && m.userId !== user?.id)
+      const openRoom = decodeURIComponent((window.location.hash.match(/#\/chat-window\/([^?]+)/) || [])[1] || 'team')
+      chimeFor(fresh, openRoom)
+    }
+    seen.current = latest
+  }, [state.chat])
+  return (
+    <ChatBase.Provider value="/chat-window">
+      <div className="chat-win"><Chat windowed /></div>
+    </ChatBase.Provider>
+  )
+}
+
 /* ---------- the page ---------- */
-export default function Chat() {
+export default function Chat({ windowed = false }) {
   const { room: roomParam } = useParams()
   const { state } = useStore()
   const user = useCurrentUser()
   const mobile = useIsMobile()
   const nav = useNavigate()
+  const base = useChatBase()
   const active = roomParam || (mobile ? '' : C.TEAM)
   const room = active ? C.roomOf(state, user, active) : null
-  useEffect(() => { if (roomParam && !room) nav('/chat', { replace: true }) }, [roomParam, !!room])
+  useEffect(() => { if (roomParam && !room) nav(base, { replace: true }) }, [roomParam, !!room])
   return (
-    <div className={`chat-page chat2 ${active ? 'has-room' : ''}`}>
-      {(!mobile || !active) && <RoomList activeId={active} />}
-      {(!mobile || active) && (room ? <ChatRoom key={room.id} room={room} onBack={mobile ? () => nav('/chat') : undefined} /> : <div className="chat-box chat-none muted">Pick a conversation</div>)}
+    <div className={`chat-page chat2 ${active ? 'has-room' : ''}${windowed ? ' windowed' : ''}`}>
+      {(!mobile || !active) && <RoomList activeId={active} windowed={windowed} />}
+      {(!mobile || active) && (room ? <ChatRoom key={room.id} room={room} onBack={mobile ? () => nav(base) : undefined} /> : <div className="chat-box chat-none muted">Pick a conversation</div>)}
     </div>
   )
 }
 
 /* ---------- the list ---------- */
-function RoomList({ activeId }) {
+function RoomList({ activeId, windowed }) {
   const { state } = useStore()
   const user = useCurrentUser()
   const nav = useNavigate()
+  const base = useChatBase()
   const mobile = useIsMobile()
   const isAdmin = user?.role === 'admin'
+  const [tab, setTab] = useState('chats') // the window's foot: chats | settings
+  const toast = useToast()
+  const searchRef = useRef(null)
+  // ⌘K / Ctrl+K: the search above the list, as in Telegram
+  useEffect(() => {
+    if (mobile) return undefined
+    const k = (e) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setTab('chats'); requestAnimationFrame(() => searchRef.current?.focus()) } }
+    document.addEventListener('keydown', k)
+    return () => document.removeEventListener('keydown', k)
+  }, [mobile])
+  const popOut = () => {
+    const url = `${window.location.origin}${window.location.pathname}#${roomPath('/chat-window', activeId || C.TEAM)}`
+    const w = window.open(url, 'tml-chat', 'popup,width=1180,height=820')
+    if (!w) window.location.hash = roomPath('/chat-window', activeId || C.TEAM)
+  }
   const canNotice = canSendNotices(state, user)
   const [folderId, setFolderId] = useState(() => { try { return localStorage.getItem('tml_chat_folder') || 'all' } catch { return 'all' } })
   const [q, setQ] = useState('')
@@ -204,7 +271,14 @@ function RoomList({ activeId }) {
         {!mobile && <button type="button" className="icon-btn chat-head-ico chat-folders-btn" onClick={() => setFolders(true)} title="Your folders" aria-label="Your folders">{TgIcon.folder()}</button>}
         {!mobile && <button type="button" className="icon-btn chat-head-ico chat-new" onClick={() => setDirect(true)} title="New message" aria-label="New message">{TgIcon.edit()}</button>}
         {isAdmin && <button type="button" className="icon-btn chat-head-ico chat-group-new" onClick={() => setGroup('new')} title="New group" aria-label="New group">{TgIcon.people()}</button>}
+        {!mobile && !windowed && <button type="button" className="icon-btn chat-head-ico chat-popout" onClick={popOut} title="Open the chat in its own window" aria-label="Open the chat in its own window">{TgIcon.popout()}</button>}
       </div>
+      {tab === 'settings' ? (
+        <div className="chat-win-settings">
+          <h2>Chat settings</h2>
+          <ChatSettings toast={toast} />
+        </div>
+      ) : (<>
       {legacy && <p className="chat-legacy">Rooms are not switched on yet: run supabase/chat_rooms.sql in the SQL editor. Until then only the team room works.</p>}
       <div className="chat-folders" role="tablist">
         {allFolders.map((f) => {
@@ -217,7 +291,7 @@ function RoomList({ activeId }) {
         })}
         <button type="button" className="chat-folders-edit" onClick={() => setFolders(true)} title="Your folders">Folders…</button>
       </div>
-      <div className="chat-search"><Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" /></div>
+      <div className="chat-search"><input ref={searchRef} className="input" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') { setQ(''); e.currentTarget.blur() } }} placeholder={mobile ? 'Search' : 'Search (⌘K)'} name="chat-search" autoComplete="off" /></div>
       <div className="chat-rooms">
         {!shown.length && <p className="muted small chat-rooms-empty">{folder.custom ? 'This folder is empty. Add conversations to it under Folders.' : 'Nothing here yet.'}</p>}
         {shown.map((r) => {
@@ -227,7 +301,7 @@ function RoomList({ activeId }) {
           const preview = r.kind === 'team' ? '' : r.sub
           const n = unread[r.id] || 0
           return (
-            <button key={r.id} type="button" className={`chat-room-item ${r.id === activeId ? 'active' : ''}`} onClick={() => nav(`/chat/${encodeURIComponent(r.id)}`)} disabled={legacy && r.kind !== 'team'}>
+            <button key={r.id} type="button" className={`chat-room-item ${r.id === activeId ? 'active' : ''}`} onClick={() => nav(roomPath(base, r.id))} disabled={legacy && r.kind !== 'team'}>
               <RoomAvatar room={r} size={mobile ? 54 : 48} />
               <span className="chat-rmain">
                 <span className="chat-rtop"><strong>{r.name}</strong><small>{listTime(last?.createdAt)}</small></span>
@@ -237,20 +311,29 @@ function RoomList({ activeId }) {
           )
         })}
       </div>
+      </>)}
       {/* Telegram's round pencil (phone only): a new message to one person */}
       {mobile && (
         <button type="button" className="chat-fab" onClick={() => setDirect(true)} aria-label="New message" title="New message">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
         </button>
       )}
-      {canNotice && (
+      {windowed && !mobile && (
+        // the window's foot, Telegram's: people (a new message), chats, settings
+        <nav className="chat-win-tabs">
+          <button type="button" onClick={() => setDirect(true)} title="Write to someone">{TgIcon.person()}<span>People</span></button>
+          <button type="button" className={tab === 'chats' ? 'on' : ''} onClick={() => setTab('chats')}>{TgIcon.chats()}<span>Chats</span></button>
+          <button type="button" className={tab === 'settings' ? 'on' : ''} onClick={() => setTab('settings')}>{TgIcon.gear()}<span>Settings</span></button>
+        </nav>
+      )}
+      {canNotice && !windowed && (
         <div className="chat-list-foot">
           <Button size="sm" variant="ghost" onClick={() => setSent(true)}>Sent notices</Button>
           <Button size="sm" variant="ghost" onClick={() => setNotice(true)}>Send notice</Button>
         </div>
       )}
-      <GroupModal open={!!group} group={group === 'new' ? null : group} onClose={() => setGroup(null)} onSaved={(id) => { setGroup(null); nav(`/chat/${encodeURIComponent(id)}`) }} />
-      <DirectModal open={direct} onClose={() => setDirect(false)} onPick={(id) => { setDirect(false); nav(`/chat/${encodeURIComponent(id)}`) }} />
+      <GroupModal open={!!group} group={group === 'new' ? null : group} onClose={() => setGroup(null)} onSaved={(id) => { setGroup(null); nav(roomPath(base, id)) }} />
+      <DirectModal open={direct} onClose={() => setDirect(false)} onPick={(id) => { setDirect(false); nav(roomPath(base, id)) }} />
       <FoldersModal open={folders} onClose={() => setFolders(false)} rooms={rooms} />
       <SendNoticeModal open={notice} onClose={() => setNotice(false)} />
       <Modal open={sent} title="Sent notices" onClose={() => setSent(false)} wide>{sent && <SentNotices />}</Modal>
@@ -450,6 +533,14 @@ function ChatRoom({ room, onBack }) {
   const [sel, setSel] = useState(null) // ids picked with Select, or null when not selecting
   const [fwd, setFwd] = useState(null) // messages to forward, while choosing where
   const pressRef = useRef(null) // long press on a message opens its menu (Telegram)
+  const [find, setFind] = useState(null) // words searched in this conversation, or null when closed
+  const [findAt, setFindAt] = useState(0)
+  const [roomMenu, setRoomMenu] = useState(false) // the ⋯ in the header
+  const [shared, setShared] = useState(false) // Photos, videos & files of this conversation
+  const [muted, setMuted] = useState(() => loadMuted().includes(room.id))
+  const [emoji, setEmoji] = useState(false)
+  const [rec, setRec] = useState(null) // a voice message being recorded
+  const [recSecs, setRecSecs] = useState(0)
   const [sheet, setSheet] = useState(false) // the sheet to pick photos, videos and files (Telegram's)
   // photos and videos are shrunk like WhatsApp unless this is switched off in the sheet
   const [compressMedia, setCompressMedia] = useState(true)
@@ -460,6 +551,11 @@ function ChatRoom({ room, onBack }) {
   const endRef = useRef(null)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
+  // newest first, as Telegram steps through results from the bottom up
+  const found = useMemo(() => {
+    const q = (find || '').trim().toLowerCase()
+    return q ? msgs.filter((x) => (x.text || '').toLowerCase().includes(q)).map((x) => x.id).reverse() : []
+  }, [find, msgs])
   const pinnedMsg = useMemo(() => msgs.filter((x) => x.pinnedAt).sort((a, b) => (b.pinnedAt > a.pinnedAt ? 1 : -1))[0] || null, [msgs])
   const byId = useMemo(() => Object.fromEntries((state.chat || []).map((m) => [m.id, m])), [state.chat])
   const photoOf = (userId) => state.users.find((u) => u.id === userId)?.profile?.thumb || ''
@@ -505,9 +601,11 @@ function ChatRoom({ room, onBack }) {
     setPending((p) => [...p, ...arr])
   }
 
-  const send = async () => {
-    const t = text.trim()
-    if (editing) {
+  // voice: a recorded note is sent on its own, without the text box or the files picked
+  const send = async (voice = null) => {
+    const files = voice ? [voice.file] : pending
+    const t = voice ? '' : text.trim()
+    if (editing && !voice) {
       if (!t) return
       update((s) => {
         const m = (s.chat || []).find((x) => x.id === editing.id)
@@ -516,21 +614,22 @@ function ChatRoom({ room, onBack }) {
       })
       setEditing(null); setText(''); return
     }
-    if (!t && !pending.length) return
+    if (!t && !files.length) return
     const id = uid()
     const attachments = []
     // videos are readied here, inside the tap, before anything waits: Safari only lets them play then
-    const prepared = pending.map((f) => (compressMedia ? prepareVideo(f) : null))
+    const prepared = files.map((f) => (compressMedia && !voice ? prepareVideo(f) : null))
     setSheet(false)
-    if (pending.length) {
+    if (files.length) {
       setBusy('Uploading…')
       try {
         await saveDirectRoom(state, room, user?.id)
-        for (let i = 0; i < pending.length; i++) {
-          let f = pending[i]
-          const of = pending.length > 1 ? ` ${i + 1}/${pending.length}` : ''
+        for (let i = 0; i < files.length; i++) {
+          let f = files[i]
+          const of = files.length > 1 ? ` ${i + 1}/${files.length}` : ''
           setBusy(`Uploading${of}…`)
           let w, h, dur
+          if (voice) dur = voice.dur
           if (!compressMedia && /^(image|video)\//.test(f.type)) {
             // original quality: sent as it is, only its size is read for the bubble's shape
             const d = await mediaSize(f)
@@ -569,12 +668,13 @@ function ChatRoom({ room, onBack }) {
     })
     const recipients = C.roomRecipients(state, room, user?.id)
     const where = room.kind === 'team' ? '' : ` in ${room.name}`
-    const body = t || (attachments.length ? (isImage(attachments[0]) ? 'Sent a photo' : isVideo(attachments[0]) ? 'Sent a video' : `Sent ${attachments[0].name}`) : '')
+    const body = t || (attachments.length ? (isImage(attachments[0]) ? 'Sent a photo' : isVideo(attachments[0]) ? 'Sent a video' : isAudio(attachments[0]) ? 'Sent a voice message' : `Sent ${attachments[0].name}`) : '')
     // One pop-up per sender and room, counting up, so a busy shooting day does not become a wall of modals.
     sendAutoNotice(update, { kind: 'chatMessage', key: `chat:${roomId}:${user?.id || ''}`, count: true, fromId: user?.id, fromName: user?.name, to: recipients.filter((r) => !mentions.includes(r)), title: `Message from ${user?.name || 'the team'}${where}`, body: body.slice(0, 200) })
     // A mention always reaches the person named, even when they switched chat pop-ups off.
     if (mentions.length) sendAutoNotice(update, { kind: 'chatMention', key: `mention:${id}`, fromId: user?.id, fromName: user?.name, to: mentions.filter((x) => recipients.includes(x)), title: `${user?.name || 'Someone'} mentioned you${where}`, body: body.slice(0, 200) })
-    setText(''); setPending([]); setReplyTo(null); setCaret(0)
+    if (!voice) { setText(''); setPending([]) }
+    setReplyTo(null); setCaret(0)
   }
 
   const remove = (m) => {
@@ -631,9 +731,9 @@ function ChatRoom({ room, onBack }) {
     pressRef.current = setTimeout(() => { pressRef.current = 'fired'; navigator.vibrate?.(10); setPicked(m.id) }, 450)
   }
   const pressCancel = () => { if (pressRef.current !== 'fired') { clearTimeout(pressRef.current); pressRef.current = null } }
-  // A tap on a message opens its menu, a tap on a photo or video opens it full screen, a long
-  // press (or a right click) opens the menu on anything, two quick taps put a 🎥 on it (or take
-  // yours off). The single tap waits a moment so a double tap does not flash the menu first.
+  // A long press (or a right click, or a click on a computer) opens a message's menu, a tap on a
+  // photo or video opens it full screen, two quick taps put a 🎥 on it (or take yours off). The
+  // single tap waits a moment so a double tap is not taken for it.
   const onBubbleTap = (e, m, media) => {
     if (pressRef.current === 'fired') { pressRef.current = null; return } // the long press already opened the menu
     if (sel) { setSel((x) => (x.includes(m.id) ? x.filter((y) => y !== m.id) : [...x, m.id])); return }
@@ -653,8 +753,10 @@ function ChatRoom({ room, onBack }) {
     }
     clearTimeout(t.timer)
     tapRef.current = { id: m.id, at: now, timer: setTimeout(() => {
-      if (tile && !picked) setViewer({ items: media, i: Number(tile.dataset.tile) || 0 })
-      else setPicked((p) => (p === m.id ? '' : m.id))
+      if (picked) setPicked('')
+      else if (tile) setViewer({ items: media, i: Number(tile.dataset.tile) || 0 })
+      // on a phone the menu is a long press only, as in Telegram (Alex); a click opens it on a computer
+      else if (!mobile) setPicked(m.id)
     }, 260) }
   }
   // on a computer a click anywhere else, or Escape, closes the menu (a phone taps the message again)
@@ -680,6 +782,51 @@ function ChatRoom({ room, onBack }) {
     if (!el) return
     el.scrollIntoView({ block: 'center', behavior: 'smooth' })
     el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1200)
+  }
+  useEffect(() => { if (found[findAt]) jumpTo(found[findAt]) }, [found, findAt])
+  /* A voice message, Telegram's: the round mic when the box is empty; recording shows the time,
+     a bin to drop it and the arrow to send it. MP4 audio where the browser records it (iPhone,
+     recent Chrome), WebM otherwise. */
+  const canVoice = typeof MediaRecorder !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
+  const startVoice = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const type = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'].find((t) => MediaRecorder.isTypeSupported?.(t)) || ''
+      const mr = new MediaRecorder(stream, type ? { mimeType: type } : undefined)
+      const chunks = []
+      mr.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data) }
+      mr.start(250)
+      setRecSecs(0)
+      setRec({ mr, stream, chunks, t0: Date.now(), type })
+    } catch {
+      toast('The microphone is not allowed. Allow it for this site in the browser settings.', 'error')
+    }
+  }
+  useEffect(() => {
+    if (!rec) return undefined
+    const t = setInterval(() => setRecSecs(Math.floor((Date.now() - rec.t0) / 1000)), 250)
+    return () => clearInterval(t)
+  }, [rec])
+  const stopVoice = (keep) => {
+    const r = rec
+    if (!r) return
+    setRec(null)
+    r.mr.onstop = () => {
+      r.stream.getTracks().forEach((t) => t.stop())
+      if (!keep || !r.chunks.length) return
+      const mime = (r.mr.mimeType || r.type || 'audio/webm').split(';')[0]
+      const ext = mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm'
+      const stamp = new Date().toTimeString().slice(0, 5).replace(':', '.')
+      send({ file: new File(r.chunks, `Voice ${stamp}.${ext}`, { type: mime }), dur: Math.max(1, Math.round((Date.now() - r.t0) / 1000)) })
+    }
+    try { r.mr.stop() } catch { r.stream.getTracks().forEach((t) => t.stop()) }
+  }
+  useEffect(() => () => { rec?.stream.getTracks().forEach((t) => t.stop()) }, [rec])
+  const addEmoji = (e) => {
+    const el = inputRef.current
+    const at = el && el.selectionStart != null ? el.selectionStart : text.length
+    setText(text.slice(0, at) + e + text.slice(at))
+    requestAnimationFrame(() => { el?.focus(); el?.setSelectionRange(at + e.length, at + e.length) })
   }
   const onKey = (e) => {
     if (e.key === 'Escape' && (editing || replyTo)) { e.preventDefault(); cancelBar(); return }
@@ -715,7 +862,32 @@ function ChatRoom({ room, onBack }) {
         {room.kind === 'project' && <Link className="icon-btn chat-head-ico" to={`/p/${room.projectId}`} aria-label="Open project" title="Open project">{TgIcon.project()}</Link>}
         {room.kind === 'direct' && room.otherId && <Link className="icon-btn chat-head-ico" to={`/u/${room.otherId}`} aria-label="Profile" title="Profile">{TgIcon.person()}</Link>}
         {room.kind === 'group' && isAdmin && groupRow && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditGroup(true)} aria-label="Edit group" title="Edit group">{TgIcon.people()}</button>}
+        {!mobile && <button type="button" className="icon-btn chat-head-ico" onClick={() => { setFind(''); setFindAt(0) }} aria-label="Search in this conversation" title="Search in this conversation">{TgIcon.search()}</button>}
+        <span className="chat-more-wrap">
+          <button type="button" className="icon-btn chat-head-ico" onClick={() => setRoomMenu((v) => !v)} aria-label="More" title="More">{TgIcon.more()}</button>
+          {roomMenu && (
+            <>
+              <span className="chat-room-menu-scrim" onClick={() => setRoomMenu(false)} />
+              <span className="chat-menu chat-room-menu" role="menu">
+                <button type="button" onClick={() => { setRoomMenu(false); setFind(''); setFindAt(0) }}>{TgIcon.search()}<span>Search</span></button>
+                <button type="button" onClick={() => { setRoomMenu(false); setShared(true) }}>{TgIcon.media()}<span>Photos, videos &amp; files</span></button>
+                {pinnedMsg && <button type="button" onClick={() => { setRoomMenu(false); jumpTo(pinnedMsg.id) }}>{TgIcon.pin()}<span>Pinned message</span></button>}
+                <button type="button" onClick={() => { setMuted(toggleMuted(room.id).includes(room.id)); setRoomMenu(false) }}>{TgIcon.bell()}<span>{muted ? 'Unmute sounds' : 'Mute sounds'}</span></button>
+              </span>
+            </>
+          )}
+        </span>
       </div>
+      {find !== null && (
+        <div className="chat-findbar">
+          {TgIcon.search()}
+          <input className="input" autoFocus value={find} onChange={(e) => { setFind(e.target.value); setFindAt(0) }} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); setFindAt((i) => (found.length ? (i + 1) % found.length : 0)) } if (e.key === 'Escape') setFind(null) }} placeholder="Search in this conversation" name="chat-find" autoComplete="off" />
+          <span className="chat-findbar-n">{find.trim() ? (found.length ? `${findAt + 1} of ${found.length}` : 'No results') : ''}</span>
+          <button type="button" onClick={() => setFindAt((i) => Math.min(found.length - 1, i + 1))} disabled={findAt >= found.length - 1} aria-label="Older">⌃</button>
+          <button type="button" onClick={() => setFindAt((i) => Math.max(0, i - 1))} disabled={findAt <= 0} aria-label="Newer">⌄</button>
+          <button type="button" onClick={() => setFind(null)} aria-label="Close search">{TgIcon.close()}</button>
+        </div>
+      )}
       {sel && (
         // Select: the header becomes the bar for the messages picked
         <div className="chat-selbar">
@@ -767,7 +939,7 @@ function ChatRoom({ room, onBack }) {
               const mineRx = myReaction(m, user?.id)
               const selected = sel?.includes(m.id)
               return (
-                <div key={m.id} data-msg={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${last ? 'last' : ''} ${picked === m.id ? 'picked' : ''} ${selected ? 'selected' : ''}`} onClick={sel ? (e) => onBubbleTap(e, m, media) : undefined}>
+                <div key={m.id} data-msg={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${last ? 'last' : ''} ${picked === m.id ? 'picked' : ''} ${selected ? 'selected' : ''} ${found.includes(m.id) ? (found[findAt] === m.id ? 'found now' : 'found') : ''}`} onClick={sel ? (e) => onBubbleTap(e, m, media) : undefined}>
                   {sel && <span className="chat-sel-dot" aria-hidden="true">{selected ? '✓' : ''}</span>}
                   {!mine && room.kind !== 'direct' && prefs.avatars && (
                     <span className="chat-avatar">
@@ -845,15 +1017,48 @@ function ChatRoom({ room, onBack }) {
               {mentionHits.map((u) => <button key={u.id} type="button" onMouseDown={(e) => { e.preventDefault(); pickMention(u) }}>@{u.name}<small>{u.profile?.position || ''}</small></button>)}
             </div>
           )}
-          {!editing && <button type="button" className="icon-btn chat-attach" title="Photo, video or file" onClick={() => setSheet(true)} disabled={!!busy}>{TgIcon.clip()}</button>}
-          {/* autoComplete off: the iPhone stops offering AutoFill Contact and your own name above the keyboard */}
-          <textarea ref={inputRef} className="input" rows={1} name="chat-message" autoComplete="off" autoCorrect="on" value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Message" title={prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. @name mentions someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. @name mentions someone'} disabled={!!busy} />
-          <button type="button" className={`chat-send${text.trim() || pending.length ? ' ready' : ''}`} onClick={send} disabled={!!busy || (!text.trim() && !pending.length)} title={editing ? 'Save (Enter)' : 'Send (Enter)'} aria-label={editing ? 'Save' : 'Send'}>
-            {busy ? '…' : editing ? '✓' : <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4l17.4-7.5c.8-.4.8-1.5 0-1.8L3.4 3.6c-.7-.3-1.4.3-1.3 1l1.2 5.7c.1.4.4.7.8.7l9.4 1-9.4 1c-.4 0-.7.3-.8.7L2.1 19.4c-.1.7.6 1.3 1.3 1z" /></svg>}
-          </button>
+          {rec ? (
+            // recording a voice message
+            <div className="chat-rec">
+              <span className="chat-rec-dot" aria-hidden="true" />
+              <b>{Math.floor(recSecs / 60)}:{String(recSecs % 60).padStart(2, '0')}</b>
+              <span className="grow muted">Recording…</span>
+              <button type="button" className="icon-btn chat-rec-bin" onClick={() => stopVoice(false)} aria-label="Delete the recording" title="Delete">{TgIcon.trash()}</button>
+              <button type="button" className="chat-send ready" onClick={() => stopVoice(true)} aria-label="Send the voice message" title="Send"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4l17.4-7.5c.8-.4.8-1.5 0-1.8L3.4 3.6c-.7-.3-1.4.3-1.3 1l1.2 5.7c.1.4.4.7.8.7l9.4 1-9.4 1c-.4 0-.7.3-.8.7L2.1 19.4c-.1.7.6 1.3 1.3 1z" /></svg></button>
+            </div>
+          ) : (
+            <>
+              {!editing && <button type="button" className="icon-btn chat-attach" title="Photo, video or file" onClick={() => setSheet(true)} disabled={!!busy}>{TgIcon.clip()}</button>}
+              {/* autoComplete off: the iPhone stops offering AutoFill Contact and your own name above the keyboard */}
+              <textarea ref={inputRef} className="input" rows={1} name="chat-message" autoComplete="off" autoCorrect="on" value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Write a message…" title={prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. @name mentions someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. @name mentions someone'} disabled={!!busy} />
+              {!mobile && (
+                <span className="chat-emoji-wrap">
+                  <button type="button" className="icon-btn chat-emoji-btn" onClick={() => setEmoji((v) => !v)} aria-label="Emoji" title="Emoji">{TgIcon.smile()}</button>
+                  {emoji && (
+                    <>
+                      <span className="chat-room-menu-scrim" onClick={() => setEmoji(false)} />
+                      <span className="chat-emoji-pick">{EMOJIS.map((e) => <button key={e} type="button" onClick={() => addEmoji(e)}>{e}</button>)}</span>
+                    </>
+                  )}
+                </span>
+              )}
+              {!text.trim() && !pending.length && !editing && canVoice && !busy ? (
+                <button type="button" className="chat-send chat-mic" onClick={startVoice} aria-label="Record a voice message" title="Voice message">{TgIcon.mic()}</button>
+              ) : (
+                <button type="button" className={`chat-send${text.trim() || pending.length ? ' ready' : ''}`} onClick={() => send()} disabled={!!busy || (!text.trim() && !pending.length)} title={editing ? 'Save (Enter)' : 'Send (Enter)'} aria-label={editing ? 'Save' : 'Send'}>
+                  {busy ? '…' : editing ? '✓' : <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4l17.4-7.5c.8-.4.8-1.5 0-1.8L3.4 3.6c-.7-.3-1.4.3-1.3 1l1.2 5.7c.1.4.4.7.8.7l9.4 1-9.4 1c-.4 0-.7.3-.8.7L2.1 19.4c-.1.7.6 1.3 1.3 1z" /></svg>}
+                </button>
+              )}
+            </>
+          )}
         </div>
         {busy && <div className="chat-bar chat-busy">{busy}</div>}
       </div>
+      )}
+      {shared && (
+        <Modal open wide title="Photos, videos & files" onClose={() => setShared(false)}>
+          <SharedMedia msgs={msgs} onOpen={(items, i) => setViewer({ items, i })} />
+        </Modal>
       )}
       {fwd && (
         <Modal open title={fwd.length > 1 ? `Forward ${fwd.length} messages` : 'Forward to…'} onClose={() => setFwd(null)}>
@@ -868,7 +1073,7 @@ function ChatRoom({ room, onBack }) {
         </Modal>
       )}
       {viewer && <MediaViewer items={viewer.items} start={viewer.i} onClose={() => setViewer(null)} />}
-      {sheet && <AttachSheet pending={pending} onAdd={addFiles} onRemove={(i) => setPending((p) => p.filter((_, j) => j !== i))} compress={compressMedia} setCompress={setCompressMedia} text={text} setText={setText} onSend={send} onClose={() => setSheet(false)} />}
+      {sheet && <AttachSheet pending={pending} onAdd={addFiles} onRemove={(i) => setPending((p) => p.filter((_, j) => j !== i))} compress={compressMedia} setCompress={setCompressMedia} text={text} setText={setText} onSend={() => send()} onClose={() => setSheet(false)} />}
       {groupRow && <GroupModal open={editGroup} group={groupRow} onClose={() => setEditGroup(false)} onSaved={() => setEditGroup(false)} />}
       {room.kind === 'project' && isAdmin && <ProjectMembersModal open={editMembers} projectId={room.projectId} onClose={() => setEditMembers(false)} />}
     </div>
@@ -967,9 +1172,17 @@ function MediaViewer({ items, start, onClose }) {
   }, [onClose])
   return createPortal(
     <div className="chat-viewer" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-      onTouchStart={(e) => { touch.current = e.touches[0].clientX }}
-      onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - (touch.current ?? e.changedTouches[0].clientX); if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1) }}>
-      <button type="button" className="chat-viewer-x" onClick={onClose} aria-label="Close">{TgIcon.close()}</button>
+      onTouchStart={(e) => { touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }}
+      onTouchEnd={(e) => {
+        const p = touch.current
+        if (!p) return
+        const dx = e.changedTouches[0].clientX - p.x
+        const dy = e.changedTouches[0].clientY - p.y
+        // a swipe down closes it (as in Telegram), sideways goes through the album
+        if (dy > 90 && Math.abs(dx) < 70) onClose()
+        else if (Math.abs(dx) > 50 && Math.abs(dy) < 80) go(dx < 0 ? 1 : -1)
+      }}>
+      <button type="button" className="chat-viewer-x" onClick={onClose} aria-label="Close">{TgIcon.close()}<span>Close</span></button>
       {items.length > 1 && <span className="chat-viewer-n">{i + 1} / {items.length}</span>}
       {!url ? <span className="chat-viewer-wait">…</span>
         : isVideo(a) ? <video key={a.id} src={url} controls autoPlay playsInline />
@@ -1053,7 +1266,58 @@ function AttachSheet({ pending, onAdd, onRemove, compress, setCompress, text, se
   )
 }
 
+/* Everything sent in a conversation, newest first: photos and videos in a grid, then files. */
+function SharedMedia({ msgs, onOpen }) {
+  const all = msgs.slice().reverse().flatMap((m) => m.attachments || [])
+  const media = all.filter(isMedia)
+  const other = all.filter((a) => !isMedia(a))
+  return (
+    <div className="chat-shared">
+      {media.length ? (
+        <div className="chat-shared-grid">{media.map((a, i) => <SharedThumb key={a.id} a={a} onOpen={() => onOpen(media, i)} />)}</div>
+      ) : <p className="muted">No photos or videos yet.</p>}
+      {other.length > 0 && <div className="chat-shared-files">{other.map((a) => <Attachment key={a.id} a={a} />)}</div>}
+    </div>
+  )
+}
+function SharedThumb({ a, onOpen }) {
+  const [url] = useMediaSrc(a)
+  return (
+    <button type="button" className="chat-shared-tile" onClick={onOpen} title={a.name}>
+      {url && (isVideo(a) ? <video src={`${url}#t=0.1`} muted playsInline preload="metadata" /> : <img src={url} alt="" loading="lazy" />)}
+      {isVideo(a) && <span className="chat-sheet-play">▶</span>}
+    </button>
+  )
+}
+/* A voice message: a round play button, a bar that fills, the time. */
+function AudioNote({ a }) {
+  const [url] = useMediaSrc(a)
+  const ref = useRef(null)
+  const [playing, setPlaying] = useState(false)
+  const [t, setT] = useState(0)
+  const [d, setD] = useState(a.dur || 0)
+  const fmt = (x) => `${Math.floor(x / 60)}:${String(Math.floor(x % 60)).padStart(2, '0')}`
+  const seek = (e) => {
+    const el = ref.current
+    if (!el || !d) return
+    const r = e.currentTarget.getBoundingClientRect()
+    el.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * d
+  }
+  return (
+    <span className="chat-voice">
+      <button type="button" className="chat-voice-play" disabled={!url} onClick={() => { const el = ref.current; if (el) (el.paused ? el.play().catch(() => {}) : el.pause()) }} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
+      <button type="button" className="chat-voice-bar" onClick={seek} aria-label="Seek"><span style={{ width: `${d ? Math.min(100, (t / d) * 100) : 0}%` }} /></button>
+      <span className="chat-voice-time">{fmt(playing || t ? t : d)}</span>
+      {url && <audio ref={ref} src={url} preload="metadata" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setT(0) }} onTimeUpdate={(e) => setT(e.currentTarget.currentTime)} onLoadedMetadata={(e) => { if (Number.isFinite(e.currentTarget.duration)) setD(e.currentTarget.duration) }} />}
+    </span>
+  )
+}
+
 function Attachment({ a }) {
+  if (isAudio(a)) return <AudioNote a={a} />
+  return <FileRow a={a} />
+}
+function FileRow({ a }) {
   const [url, failed, retry] = useAttachmentUrl(a)
   const wait = (ratio) => (failed
     ? <button type="button" className="chat-att-img chat-att-wait chat-att-retry" style={ratio} onClick={retry}>Tap to load</button>

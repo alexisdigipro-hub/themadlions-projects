@@ -49,3 +49,24 @@ export function chime() {
     })
   } catch {}
 }
+
+/* Conversations whose sound is off on this device (the room's ⋯ menu > Mute). */
+const MUTED_KEY = 'tml_chat_muted'
+export function loadMuted() {
+  try { return JSON.parse(localStorage.getItem(MUTED_KEY) || '[]') } catch { return [] }
+}
+export function toggleMuted(roomId) {
+  const list = loadMuted()
+  const next = list.includes(roomId) ? list.filter((x) => x !== roomId) : [...list, roomId]
+  try { localStorage.setItem(MUTED_KEY, JSON.stringify(next)) } catch {}
+  window.dispatchEvent(new Event('tml-chat-prefs'))
+  return next
+}
+
+/* The tone for a message that just arrived, unless its room is the one on screen (and the page is
+   in front) or its room is muted. Used by the app and by the chat's own window. */
+export function chimeFor(fresh, openRoom) {
+  if (!loadChatPrefs().sound) return
+  const muted = loadMuted()
+  if (fresh.some((m) => !muted.includes(m.chatId || 'team') && (document.hidden || (m.chatId || 'team') !== openRoom))) chime()
+}
