@@ -3626,8 +3626,13 @@ html[data-public='1'] body { background: var(--bg); }
   .panel.team-strip-panel { padding: 6px 4px; margin-bottom: 12px; }
   .team-strip-panel .team-strip-head:empty { display: none; }
   .team-strip-panel .team-strip-head { padding: 4px 8px 0; }
-  /* two rows exactly: 2 x 58 + 8 gap + 10 padding = 134; Show all lifts it */
-  .team-strip-panel .team-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 6px 4px 4px; max-height: 134px; }
+  /* bigger faces, so five fill the width (Alex, 8 Oct); two rows exactly: 2 x 74 + 8 gap + 10 padding = 166; Show all lifts it */
+  .team-strip-panel .team-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); grid-auto-rows: 74px; padding: 6px 4px 4px; max-height: 166px; }
+  .team-strip-panel .team-chip { max-width: 72px; gap: 4px; }
+  .team-strip-panel .team-chip-photo { width: 54px; height: 54px; }
+  .team-strip-panel .team-chip-initials { font-size: 18px; }
+  .team-strip-panel .team-chip-off { font-size: 22px; }
+  .team-strip-panel .team-chip-name { font-size: 11px; }
   .team-strip-panel .team-strip.all { max-height: none; }
   .home-toolbar .toolbar-actions { width: 100%; flex-wrap: nowrap; }
   .home-toolbar .toolbar-actions .input.search { flex: 1 1 auto; min-width: 0; width: auto; }

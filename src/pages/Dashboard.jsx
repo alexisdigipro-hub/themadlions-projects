@@ -293,16 +293,23 @@ export default function Dashboard() {
 
       <div className="toolbar home-toolbar">
         <div className="chips">
-          {['All', ...CATEGORIES].map((c) => (
-            <button key={c} className={`chip ${filter === c ? 'on' : ''}`} onClick={() => setFilter(c)}>
-              {c}
-              <small>{(showDelivered ? state.projects.filter((p) => p.status === 'Delivered') : liveAll).filter((p) => c === 'All' || p.category === c).length}</small>
+          {['All', ...CATEGORIES].map((c) => {
+            const n = (showDelivered ? state.projects.filter((p) => p.status === 'Delivered') : liveAll).filter((p) => c === 'All' || p.category === c).length
+            // On a phone only the categories that hold something (Alex, 8 Oct); the one picked stays
+            if (mobile && !n && c !== 'All' && c !== filter) return null
+            return (
+              <button key={c} className={`chip ${filter === c ? 'on' : ''}`} onClick={() => setFilter(c)}>
+                {c}
+                <small>{n}</small>
+              </button>
+            )
+          })}
+          {(!mobile || showDelivered || state.projects.some((p) => p.status === 'Delivered')) && (
+            <button className={`chip neg ${showDelivered ? 'on' : ''}`} onClick={() => setShowDelivered((v) => !v)} aria-pressed={showDelivered} title="Delivered projects">
+              Delivered
+              <small>{state.projects.filter((p) => p.status === 'Delivered').length}</small>
             </button>
-          ))}
-          <button className={`chip neg ${showDelivered ? 'on' : ''}`} onClick={() => setShowDelivered((v) => !v)} aria-pressed={showDelivered} title="Delivered projects">
-            Delivered
-            <small>{state.projects.filter((p) => p.status === 'Delivered').length}</small>
-          </button>
+          )}
         </div>
         <div className="toolbar-actions">
           {!mobile && (
