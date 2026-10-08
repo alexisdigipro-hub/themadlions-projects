@@ -6,6 +6,7 @@ import { addDays, fmtDate } from '../lib/dates.js'
 import { SendNoticeModal, SentNotices, sendAutoNotice } from '../components/Notices.jsx'
 import { deleteFile, fileIcon, fileUrl, fmtBytes, uploadFile } from '../lib/files.js'
 import { compress } from '../lib/photos.js'
+import { canCompressVideo, compressVideo, isVideoFile, prepareVideo, releaseVideo } from '../lib/videoCompress.js'
 import { pcloudOn } from '../lib/pcloud.js'
 import { loadChatPrefs } from '../lib/chatPrefs.js'
 import * as C from '../lib/chat.js'
@@ -29,6 +30,11 @@ const listTime = (iso) => {
   return d === todayISO() ? timeOf(iso) : fmtDate(d, { day: 'numeric', month: 'short' })
 }
 const isImage = (a) => (a?.type || '').startsWith('image/')
+const isVideo = (a) => (a?.type || '').startsWith('video/')
+const MAX_BYTES = 50 * 1024 * 1024
+// a video is shrunk before it goes up, so a bigger one may be picked (it must end up under 50 MB)
+const MAX_VIDEO_PICK = 2 * 1024 * 1024 * 1024
+const attLabel = (a) => (isImage(a) ? 'Photo' : isVideo(a) ? 'Video' : a.name)
 /* A colour per sender for their name inside group bubbles, stable for the same person. */
 const SENDER_HUES = [14, 36, 95, 160, 200, 230, 275, 320]
 const senderHue = (id) => { let h = 0; for (const c of String(id || '')) h = (h * 31 + c.charCodeAt(0)) >>> 0; return SENDER_HUES[h % SENDER_HUES.length] }
@@ -450,7 +456,8 @@ function ChatRoom({ room, onBack }) {
   }
 
   const addFiles = (list) => {
-    const arr = Array.from(list || []).filter((f) => f.size <= 50 * 1024 * 1024)
+    const vids = canCompressVideo()
+    const arr = Array.from(list || []).filter((f) => f.size <= (vids && isVideoFile(f) ? MAX_VIDEO_PICK : MAX_BYTES))
     if (arr.length < (list?.length || 0)) toast('Files over 50 MB were left out.', 'error')
     setPending((p) => [...p, ...arr])
     if (fileRef.current) fileRef.current.value = ''
@@ -470,24 +477,34 @@ function ChatRoom({ room, onBack }) {
     if (!t && !pending.length) return
     const id = uid()
     const attachments = []
+    // videos are readied here, inside the tap, before anything waits: Safari only lets them play then
+    const prepared = pending.map((f) => prepareVideo(f))
     if (pending.length) {
       setBusy('Uploading…')
       try {
         for (let i = 0; i < pending.length; i++) {
           let f = pending[i]
-          setBusy(`Uploading ${i + 1}/${pending.length}…`)
-          let w, h
+          const of = pending.length > 1 ? ` ${i + 1}/${pending.length}` : ''
+          setBusy(`Uploading${of}…`)
+          let w, h, dur
           if (f.type.startsWith('image/') && !/gif$/i.test(f.type)) {
             const c = await compress(f, { max: 1600, quality: 0.82 })
             w = c.w; h = c.h
             f = new File([c.blob], f.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' })
+          } else if (prepared[i]) {
+            setBusy(`Compressing video${of}… keep this page open`)
+            const c = await compressVideo(prepared[i], (p) => setBusy(`Compressing video${of}… ${Math.round(p * 100)}%, keep this page open`))
+            if (c) { f = c.file; w = c.w; h = c.h; dur = Math.round(c.duration) }
+            setBusy(`Uploading${of}…`)
           }
+          if (f.size > MAX_BYTES) throw new Error(`${f.name} is over 50 MB${isVideoFile(f) ? ' even after compressing. Send a shorter clip.' : '.'}`)
           const attId = uid()
           const pcloud = pcloudOn(state.settings) ? { folder: chatFolder(state, room), scope: { kind: 'chat', id: roomId } } : null
           const { path, fileid, scope } = await uploadFile({ projectId: C.roomFolder(roomId), id: attId, file: f, pcloud })
-          attachments.push({ id: attId, name: f.name, type: f.type, bytes: f.size, path, ...(fileid ? { fileid, scope } : {}), ...(w ? { w, h } : {}) })
+          attachments.push({ id: attId, name: f.name, type: f.type, bytes: f.size, path, ...(fileid ? { fileid, scope } : {}), ...(w ? { w, h } : {}), ...(dur ? { dur } : {}) })
         }
       } catch (e) {
+        prepared.forEach(releaseVideo)
         setBusy('')
         return toast(e.message, 'error')
       }
@@ -502,7 +519,7 @@ function ChatRoom({ room, onBack }) {
     })
     const recipients = C.roomRecipients(state, room, user?.id)
     const where = room.kind === 'team' ? '' : ` in ${room.name}`
-    const body = t || (attachments.length ? (isImage(attachments[0]) ? 'Sent a photo' : `Sent ${attachments[0].name}`) : '')
+    const body = t || (attachments.length ? (isImage(attachments[0]) ? 'Sent a photo' : isVideo(attachments[0]) ? 'Sent a video' : `Sent ${attachments[0].name}`) : '')
     // One pop-up per sender and room, counting up, so a busy shooting day does not become a wall of modals.
     sendAutoNotice(update, { kind: 'chatMessage', key: `chat:${roomId}:${user?.id || ''}`, count: true, fromId: user?.id, fromName: user?.name, to: recipients.filter((r) => !mentions.includes(r)), title: `Message from ${user?.name || 'the team'}${where}`, body: body.slice(0, 200) })
     // A mention always reaches the person named, even when they switched chat pop-ups off.
@@ -527,7 +544,7 @@ function ChatRoom({ room, onBack }) {
   // swapped the usual heart for the camera.
   // The single tap waits a moment so a double tap does not flash the actions first.
   const onBubbleTap = (e, m) => {
-    if (e.target.closest('a, button')) return
+    if (e.target.closest('a, button, video')) return
     if (!mobile && String(window.getSelection?.() || '').trim()) return // selecting text to copy, not a tap
     const t = tapRef.current
     const now = Date.now()
@@ -622,7 +639,7 @@ function ChatRoom({ room, onBack }) {
                       {!cont && !mine && room.kind !== 'direct' && <div className="chat-who" style={{ '--who': `hsl(${senderHue(m.userId)} 55% 42%)` }}>{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>}
                       {m.replyTo && (
                         <div className="chat-quote" onClick={() => quoted && jumpTo(quoted.id)} role={quoted ? 'button' : undefined}>
-                          {quoted ? <><b>{quoted.userId === user?.id ? 'You' : quoted.userName}</b><span>{quoted.text || (quoted.attachments?.length ? (isImage(quoted.attachments[0]) ? 'Photo' : quoted.attachments[0].name) : '')}</span></> : <span>Message deleted</span>}
+                          {quoted ? <><b>{quoted.userId === user?.id ? 'You' : quoted.userName}</b><span>{quoted.text || (quoted.attachments?.length ? attLabel(quoted.attachments[0]) : '')}</span></> : <span>Message deleted</span>}
                         </div>
                       )}
                       {(m.attachments || []).map((a) => <Attachment key={a.id} a={a} />)}
@@ -701,6 +718,13 @@ function Attachment({ a }) {
         {url ? <img className="chat-att-img" src={url} alt={a.name} style={a.w && a.h ? { aspectRatio: `${a.w} / ${a.h}` } : undefined} loading="lazy" /> : <span className="chat-att-img chat-att-wait">…</span>}
       </a>
     )
+  }
+  // a video plays in the bubble, as in WhatsApp
+  if (isVideo(a)) {
+    const ratio = a.w && a.h ? { aspectRatio: `${a.w} / ${a.h}` } : undefined
+    return url
+      ? <video className="chat-att-img chat-att-video" src={url} controls playsInline preload="metadata" style={ratio} title={a.name} />
+      : <span className="chat-att-img chat-att-wait" style={ratio}>…</span>
   }
   return (
     <a className="chat-file" href={url || undefined} target="_blank" rel="noreferrer">
