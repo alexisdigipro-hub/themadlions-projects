@@ -4280,3 +4280,68 @@ html body .chat2[data-chat-theme='neo'] .chat-menu { background: #2e3136; color:
 .cset-theme[data-chat-theme='neo'] .cset-theme-pic { background: #2a2d32; border-color: #3a3e44; }
 .cset-theme[data-chat-theme='neo'] .cset-theme-pic i { background: #26292e; box-shadow: -2px -2px 4px rgba(255, 255, 255, .04), 2px 3px 6px rgba(0, 0, 0, .5); }
 .cset-theme[data-chat-theme='neo'] .cset-theme-pic b { background: #ef4a4a; box-shadow: 0 3px 8px rgba(239, 74, 74, .45); }
+
+/* Chat colours: Coral (Alex, 8 Oct, from a light chat design). Always light: a white list with
+   folder tabs as a grey pill track (the picked one a white pill), coral counts; in a conversation
+   a graphite header, the messages on a white sheet with round top corners that rides over it,
+   your messages coral with white text, theirs light grey, round bubbles without tails, and a grey
+   pill to type in with a coral round button. */
+html .chat2[data-chat-theme='coral'] {
+  --accent: #f27a54; --accent-ink: #ffffff;
+  --bg: #ffffff; --panel: #ffffff; --raised: #f2f2f5; --sidebar: #ffffff;
+  --text: #2b2b30; --muted: #9a9aa3; --line: rgba(0, 0, 0, .08); --line-soft: rgba(0, 0, 0, .06);
+  --coral-head: #2f3034;
+  --tg-wall: #fbe6dd; --tg-lift: 0 2px 10px rgba(242, 122, 84, .12), 0 1px 2px rgba(0, 0, 0, .05);
+  background: #fbe6dd; color: var(--text); color-scheme: light;
+}
+html body .chat2[data-chat-theme='coral'] .chat-box[data-bubbles] { --wa-wall: #ffffff; --wa-in: #f2f2f5; --wa-out: #f27a54; --wa-time: #a3a3ab; --wa-quote: rgba(0, 0, 0, .06); --wa-dots: rgba(0, 0, 0, .03); }
+html body .chat2[data-chat-theme='coral'] .chat-list { background: #ffffff; color: var(--text); }
+/* folder tabs: a grey track, the picked one a white pill */
+html body .chat2[data-chat-theme='coral'] .chat-folders { margin: 6px 12px 8px; padding: 4px; gap: 2px; background: #f2f2f5; border: 0; border-radius: 999px; }
+html body .chat2[data-chat-theme='coral'] .chat-folders button { padding: 7px 12px; border: 0; border-radius: 999px; background: none; color: var(--muted); font-weight: 500; text-transform: none; letter-spacing: 0; }
+html body .chat2[data-chat-theme='coral'] .chat-folders button.on { background: #ffffff; color: var(--text); box-shadow: 0 2px 6px rgba(0, 0, 0, .08); }
+html body .chat2[data-chat-theme='coral'] .chat-search .input { background: #f2f2f5; border: 0; }
+html body .chat2[data-chat-theme='coral'] .chat-rbadge { background: var(--accent); color: #fff; }
+html body .chat2[data-chat-theme='coral'] .chat-fab { box-shadow: 0 8px 22px rgba(242, 122, 84, .45), 0 0 0 6px rgba(242, 122, 84, .15); }
+/* the list's foot: a graphite bar, the picked tab coral */
+html body .chat2[data-chat-theme='coral'] .chat-win-tabs { background: var(--coral-head); border-top: 0; border-radius: 22px 22px 0 0; }
+html body .chat2[data-chat-theme='coral'] .chat-win-tabs button { color: rgba(255, 255, 255, .75); }
+html body .chat2[data-chat-theme='coral'] .chat-win-tabs button.on { color: var(--accent); }
+/* a conversation: graphite header, the messages on a white sheet over it */
+html body .chat2[data-chat-theme='coral'] .chat-box { background: var(--coral-head); }
+html body .chat2[data-chat-theme='coral'] .chat-head { background: var(--coral-head); color: #fff; }
+html body .chat2[data-chat-theme='coral'] .chat-head-card { background: transparent; box-shadow: none; color: #fff; }
+html body .chat2[data-chat-theme='coral'] .chat-head-card * { color: inherit; }
+html body .chat2[data-chat-theme='coral'] .chat-head-card small, html body .chat2[data-chat-theme='coral'] .chat-head-card .muted { color: rgba(255, 255, 255, .6); }
+html body .chat2[data-chat-theme='coral'] .chat-head .chat-head-ico,
+html body .chat2[data-chat-theme='coral'] .chat-back { background: rgba(255, 255, 255, .08); box-shadow: none; color: #fff; }
+html body .chat2[data-chat-theme='coral'] .chat-box[data-bubbles] .chat-scroll { background: #ffffff; background-image: none; border-radius: 26px 26px 0 0; }
+/* the pinned message: a coral strip, like the design's "now playing" */
+html body .chat2[data-chat-theme='coral'] .chat-pinbar { background: var(--accent); color: #fff; box-shadow: none; }
+html body .chat2[data-chat-theme='coral'] .chat-pinbar * { color: inherit; }
+@media (min-width: 821px) {
+  html body .chat2[data-chat-theme='coral'] .chat-box { border-radius: 18px; overflow: hidden; }
+  html body .chat2[data-chat-theme='coral'] .chat-head { padding: 10px 12px; }
+}
+html body .chat2[data-chat-theme='coral'] .chat-compose-wrap { background: #ffffff; }
+/* bubbles: round, no tails; yours coral, theirs light grey */
+html body .chat2[data-chat-theme='coral'] .chat-bubble { border-radius: 20px; box-shadow: none; padding: 9px 14px 8px; }
+html body .chat2[data-chat-theme='coral'] .chat-msg.mine .chat-bubble { border-radius: 20px 20px 6px 20px; color: #fff; }
+html body .chat2[data-chat-theme='coral'] .chat-msg:not(.mine) .chat-bubble { border-radius: 20px 20px 20px 6px; color: var(--text); }
+html body .chat2[data-chat-theme='coral'] .chat-msg.mine .chat-bubble .chat-time,
+html body .chat2[data-chat-theme='coral'] .chat-msg.mine .chat-bubble .chat-tick { color: rgba(255, 255, 255, .85); }
+html body .chat2[data-chat-theme='coral'] .chat-bubble::before,
+html body .chat2[data-chat-theme='coral'] .chat-bubble::after { display: none; }
+html body .chat2[data-chat-theme='coral'] .chat-day-label span { background: #f2f2f5; color: var(--muted); box-shadow: none; text-transform: none; font-weight: 500; font-size: 12.5px; border-radius: 999px; padding: 6px 14px; }
+/* the box you type in: a grey pill, the paperclip a coral round button */
+html body .chat2[data-chat-theme='coral'] .chat-compose textarea { background: #f2f2f5; box-shadow: none; border: 0; color: var(--text); }
+html body .chat2[data-chat-theme='coral'] .chat-attach { background: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(242, 122, 84, .35); }
+html body .chat2[data-chat-theme='coral'] .chat-send { background: #f2f2f5; color: var(--muted); box-shadow: none; }
+html body .chat2[data-chat-theme='coral'] .chat-send.ready { background: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(242, 122, 84, .35); }
+html body .chat2[data-chat-theme='coral'] .chat-menu { background: #ffffff; color: var(--text); }
+/* its picture in Settings > Chat */
+.cset-theme[data-chat-theme='coral'] .cset-theme-pic { background: #ffffff; border-color: #f3d2c5; }
+.cset-theme[data-chat-theme='coral'] .cset-theme-pic::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 12px; background: #2f3034; }
+.cset-theme[data-chat-theme='coral'] .cset-theme-pic i { background: #f2f2f5; }
+.cset-theme[data-chat-theme='coral'] .cset-theme-pic b { background: #f27a54; }
+html .cset-theme.on[data-chat-theme='coral'] .cset-theme-pic { border-color: #f27a54; }
