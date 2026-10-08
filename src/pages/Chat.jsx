@@ -114,6 +114,7 @@ const TgIcon = {
   image: () => <svg {...svgProps}><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></svg>,
   camera: () => <svg {...svgProps}><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" /><circle cx="12" cy="13.5" r="3.5" /></svg>,
   file: () => <svg {...svgProps}><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" /><path d="M14 3v5h5" /></svg>,
+  expand: () => <svg {...svgProps}><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></svg>,
   close: () => <svg {...svgProps}><path d="M6 6l12 12M18 6L6 18" /></svg>,
   people: () => <svg {...svgProps}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.1.8 3.5 2.8 3.5 5.7" /></svg>,
 }
@@ -429,6 +430,7 @@ function ChatRoom({ room, onBack }) {
   const [replyTo, setReplyTo] = useState(null)
   const [editing, setEditing] = useState(null)
   const [pending, setPending] = useState([]) // files chosen, not sent yet
+  const [viewer, setViewer] = useState(null) // { items, i }: photos and videos full screen
   const [sheet, setSheet] = useState(false) // the sheet to pick photos, videos and files (Telegram's)
   // photos and videos are shrunk like WhatsApp unless this is switched off in the sheet
   const [compressMedia, setCompressMedia] = useState(true)
@@ -572,7 +574,8 @@ function ChatRoom({ room, onBack }) {
   // swapped the usual heart for the camera.
   // The single tap waits a moment so a double tap does not flash the actions first.
   const onBubbleTap = (e, m) => {
-    if (e.target.closest('a, button, video')) return
+    // a link, a button or a video that is playing keeps its own tap; a photo opens the menu like any message
+    if (e.target.closest('a, button, video[controls]')) return
     if (!mobile && String(window.getSelection?.() || '').trim()) return // selecting text to copy, not a tap
     const t = tapRef.current
     const now = Date.now()
@@ -697,7 +700,8 @@ function ChatRoom({ room, onBack }) {
                         // the tapped (or clicked) message's menu: buttons with words, Telegram-like, under the bubble
                         <span className="chat-msg-actions chat-acts">
                           <button type="button" className="chat-act" onClick={() => startReply(m)}>{TgIcon.reply()}<span>Reply</span></button>
-                          {mine && <button type="button" className="chat-act" onClick={() => startEdit(m)}>{TgIcon.edit()}<span>Edit</span></button>}
+                          {media.length > 0 && <button type="button" className="chat-act" onClick={() => { setPicked(''); setViewer({ items: media, i: 0 }) }}>{TgIcon.expand()}<span>Open</span></button>}
+                          {mine && m.text && <button type="button" className="chat-act" onClick={() => startEdit(m)}>{TgIcon.edit()}<span>Edit</span></button>}
                           {(mine || isAdmin) && <Confirm className="chat-act" onConfirm={() => { setPicked(''); remove(m) }} label="Delete">{TgIcon.trash()}<span>Delete</span></Confirm>}
                         </span>
                       )}
@@ -740,6 +744,7 @@ function ChatRoom({ room, onBack }) {
         {busy && <div className="chat-bar chat-busy">{busy}</div>}
       </div>
       )}
+      {viewer && <MediaViewer items={viewer.items} start={viewer.i} onClose={() => setViewer(null)} />}
       {sheet && <AttachSheet pending={pending} onAdd={addFiles} onRemove={(i) => setPending((p) => p.filter((_, j) => j !== i))} compress={compressMedia} setCompress={setCompressMedia} text={text} setText={setText} onSend={send} onClose={() => setSheet(false)} />}
       {groupRow && <GroupModal open={editGroup} group={groupRow} onClose={() => setEditGroup(false)} onSaved={() => setEditGroup(false)} />}
       {room.kind === 'project' && isAdmin && <ProjectMembersModal open={editMembers} projectId={room.projectId} onClose={() => setEditMembers(false)} />}
@@ -753,18 +758,21 @@ function MediaAlbum({ items, meta }) {
   const n = items.length
   const wide = items.every((a) => a.w && a.h && a.w >= a.h)
   const layout = n === 1 ? 'one' : wide ? 'stack' : 'grid'
+  // one tall picture is drawn narrower, as Telegram does, instead of a full-width strip cropped
+  const one = items[0]
+  const style = layout === 'one' && one.w && one.h && one.h > one.w ? { width: `min(var(--media-w), ${Math.round((300 * one.w) / one.h)}px)` } : undefined
   return (
-    <div className={`chat-media chat-media-${layout}${n % 2 ? ' odd' : ''}${items.some(isVideo) ? ' has-video' : ''}`}>
+    <div className={`chat-media chat-media-${layout}${n % 2 ? ' odd' : ''}${items.some(isVideo) ? ' has-video' : ''}`} style={style}>
       {items.map((a) => <MediaTile key={a.id} a={a} shaped={layout !== 'grid'} />)}
       {meta && <span className="chat-media-meta">{meta}</span>}
     </div>
   )
 }
-function MediaTile({ a, shaped }) {
+/* A pCloud link the phone cannot show: the file comes through the pcloud function instead. */
+function useMediaSrc(a) {
   const [link, failed, retry] = useAttachmentUrl(a)
   const [local, setLocal] = useState('')
   const [tried, setTried] = useState(false)
-  // a pCloud link the phone cannot open: the file comes through the pcloud function instead
   const viaFunction = () => {
     if (tried || !a.fileid) return
     setTried(true)
@@ -774,15 +782,58 @@ function MediaTile({ a, shaped }) {
       setLocal(u)
     }).catch(() => {})
   }
-  const url = local || link
+  return [local || link, failed, retry, viaFunction]
+}
+/* One picture or video in a message. A tap opens the message's menu (Reply, Open, Edit, Delete),
+   like any message; a video plays from its own round play button. */
+function MediaTile({ a, shaped }) {
+  const [url, failed, retry, viaFunction] = useMediaSrc(a)
+  const [playing, setPlaying] = useState(false)
+  const vref = useRef(null)
   const style = shaped && a.w && a.h ? { aspectRatio: `${a.w} / ${a.h}` } : undefined
   if (!url) {
     return failed
       ? <button type="button" className="chat-media-tile chat-media-wait chat-att-retry" style={style} onClick={retry}>Tap to load</button>
       : <span className="chat-media-tile chat-media-wait" style={style}>…</span>
   }
-  if (isVideo(a)) return <video className="chat-media-tile" src={`${url}#t=0.1`} controls playsInline preload="metadata" style={style} title={a.name} onError={viaFunction} />
-  return <a className="chat-media-tile" href={url} target="_blank" rel="noreferrer" title={a.name} style={style}><img src={url} alt={a.name} loading="lazy" onError={viaFunction} /></a>
+  if (isVideo(a)) {
+    return (
+      <span className="chat-media-tile chat-media-vid" style={style}>
+        <video ref={vref} src={`${url}#t=0.1`} controls={playing} playsInline preload="metadata" title={a.name} onError={viaFunction} onEnded={() => setPlaying(false)} />
+        {!playing && <button type="button" className="chat-media-play" aria-label="Play" onClick={() => { setPlaying(true); requestAnimationFrame(() => vref.current?.play().catch(() => {})) }}>▶</button>}
+        {!playing && a.dur > 0 && <span className="chat-media-dur">{Math.floor(a.dur / 60)}:{String(a.dur % 60).padStart(2, '0')}</span>}
+      </span>
+    )
+  }
+  return <span className="chat-media-tile" style={style} title={a.name}><img src={url} alt={a.name} loading="lazy" onError={viaFunction} /></span>
+}
+/* Full screen, black, one picture or video at a time; arrows or a swipe for an album. */
+function MediaViewer({ items, start, onClose }) {
+  const [i, setI] = useState(start || 0)
+  const a = items[i]
+  const [url] = useMediaSrc(a)
+  const touch = useRef(null)
+  const go = (d) => setI((x) => Math.min(items.length - 1, Math.max(0, x + d)))
+  useEffect(() => {
+    const key = (e) => { if (e.key === 'Escape') onClose(); if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1) }
+    document.addEventListener('keydown', key)
+    return () => document.removeEventListener('keydown', key)
+  }, [onClose])
+  return createPortal(
+    <div className="chat-viewer" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+      onTouchStart={(e) => { touch.current = e.touches[0].clientX }}
+      onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - (touch.current ?? e.changedTouches[0].clientX); if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1) }}>
+      <button type="button" className="chat-viewer-x" onClick={onClose} aria-label="Close">{TgIcon.close()}</button>
+      {items.length > 1 && <span className="chat-viewer-n">{i + 1} / {items.length}</span>}
+      {!url ? <span className="chat-viewer-wait">…</span>
+        : isVideo(a) ? <video key={a.id} src={url} controls autoPlay playsInline />
+        : <img key={a.id} src={url} alt={a.name} />}
+      {items.length > 1 && i > 0 && <button type="button" className="chat-viewer-nav prev" onClick={() => go(-1)} aria-label="Previous">‹</button>}
+      {items.length > 1 && i < items.length - 1 && <button type="button" className="chat-viewer-nav next" onClick={() => go(1)} aria-label="Next">›</button>}
+      {url && <a className="chat-viewer-save" href={url} target="_blank" rel="noreferrer" download={a.name}>Save</a>}
+    </div>,
+    document.body,
+  )
 }
 
 /* The sheet the paperclip opens (Alex, 8 Oct, from Telegram's): what you picked in a grid, a
