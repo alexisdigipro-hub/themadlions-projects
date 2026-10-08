@@ -225,6 +225,8 @@ export function ChatWindow() {
     const was = [link?.getAttribute('href'), meta?.getAttribute('content')]
     link?.setAttribute('href', './manifest-chat.webmanifest')
     meta?.setAttribute('content', 'TML Chat')
+    // an install offer caught on the main app's page is for the main app, not for TML Chat
+    installPrompt = null
     return () => {
       root.classList.remove('chat-window'); document.title = title
       if (link && was[0]) link.setAttribute('href', was[0])
@@ -274,38 +276,102 @@ export default function Chat({ windowed = false }) {
   )
 }
 
-/* On a phone, in the chat's own window: how to keep it on the home screen as an app of its own. */
+/* On a phone, in the chat's own window: how to keep it on the home screen as an app of its own
+   (Alex, 8 Oct). The first time the steps to add it; once it is there (the browser said so, or he
+   tapped "I added it") a reminder that the icon opens it: neither iPhone nor Android lets a web
+   page start an app on the home screen, so the pop button cannot jump into it. Inside the main
+   app on the home screen there is no Share button, so the steps start with opening Safari. */
+const APP_KEY = 'tml_chat_app'
+const chatAppAdded = () => { try { return localStorage.getItem(APP_KEY) === '1' } catch { return false } }
+const markChatApp = (on) => { try { if (on) localStorage.setItem(APP_KEY, '1'); else localStorage.removeItem(APP_KEY) } catch {} }
+if (typeof window !== 'undefined') window.addEventListener('appinstalled', () => { if (window.location.hash.includes('/chat-window')) markChatApp(true) })
+
 function InstallHint() {
-  const [open, setOpen] = useState(() => { try { return !isStandalone() && sessionStorage.getItem('tml_install_hint') === '1' } catch { return false } })
-  if (!open) return null
+  const [open, setOpen] = useState(() => {
+    try {
+      // opened in Safari from the main home-screen app ("Open in Safari"): show the steps here, and
+      // take the mark off the address so the icon added from this page does not show them again
+      if (window.location.search.includes('install=chat')) {
+        if (!isStandalone()) sessionStorage.setItem('tml_install_hint', '1')
+        window.history.replaceState(null, '', window.location.pathname + window.location.hash)
+      }
+      return !!sessionStorage.getItem('tml_install_hint')
+    } catch { return false }
+  })
+  const [added, setAdded] = useState(chatAppAdded)
+  const toast = useToast()
+  // the TML Chat app itself, opened from its icon: nothing to add
+  if (!open || window.location.search.includes('app=chat')) return null
   const close = () => { try { sessionStorage.removeItem('tml_install_hint') } catch {} setOpen(false) }
-  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent)
+  const done = () => { markChatApp(true); close() }
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /macintosh/i.test(navigator.userAgent))
+  const inApp = isStandalone() // inside the main app on the home screen
+  const link = `${window.location.origin}${window.location.pathname}?install=chat#/chat-window`
   const install = async () => {
     if (!installPrompt) return
     installPrompt.prompt()
-    await installPrompt.userChoice.catch(() => null)
+    const r = await installPrompt.userChoice.catch(() => null)
     installPrompt = null
-    close()
+    if (r?.outcome === 'accepted') done()
+  }
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(link); toast('Link copied', 'ok') } catch { toast(link, 'info') }
+  }
+  let body
+  if (added) {
+    body = (
+      <>
+        <strong>TML Chat is on your home screen</strong>
+        <p>Open it from its icon. {ios ? 'The iPhone' : 'The phone'} does not let a page open an app, so this button shows the chat here instead.</p>
+        <div className="chat-install-acts">
+          <Button size="sm" variant="primary" onClick={close}>OK</Button>
+          <Button size="sm" variant="ghost" onClick={() => { markChatApp(false); setAdded(false) }}>It is not there</Button>
+        </div>
+      </>
+    )
+  } else if (inApp) {
+    body = (
+      <>
+        <strong>Make TML Chat an app of its own</strong>
+        <p>Apps on the home screen are added from {ios ? 'Safari' : 'Chrome'}. Open the chat there, then follow the steps it shows.</p>
+        <div className="chat-install-acts">
+          {ios && <a className="btn btn-primary btn-sm" href={`x-safari-${link}`} onClick={() => { try { sessionStorage.removeItem('tml_install_hint') } catch {} }}>Open in Safari</a>}
+          <Button size="sm" variant={ios ? 'ghost' : 'primary'} onClick={copy}>Copy the link</Button>
+        </div>
+      </>
+    )
+  } else if (!ios && installPrompt) {
+    body = (
+      <>
+        <strong>Make TML Chat an app of its own</strong>
+        <p>An icon on your home screen that opens straight on the chat, without the rest of the app.</p>
+        <div className="chat-install-acts"><Button size="sm" variant="primary" onClick={install}>Add to home screen</Button></div>
+      </>
+    )
+  } else {
+    body = (
+      <>
+        <strong>Make TML Chat an app of its own</strong>
+        {ios ? (
+          <ol>
+            <li>Tap <b>Share</b> <span className="chat-install-ico">⬆︎</span> in Safari (on newer iPhones it is under <b>⋯</b> at the bottom).</li>
+            <li>Tap <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+          </ol>
+        ) : (
+          <ol>
+            <li>Open the browser's menu <b>⋮</b>.</li>
+            <li>Tap <b>Add to Home screen</b> or <b>Install app</b>.</li>
+          </ol>
+        )}
+        <p className="chat-install-after">From then on the <b>TML Chat</b> icon opens straight on the chat.</p>
+        <div className="chat-install-acts"><Button size="sm" variant="primary" onClick={done}>I added it</Button></div>
+      </>
+    )
   }
   return (
     <div className="chat-install">
       <button type="button" className="chat-install-x" onClick={close} aria-label="Close">{TgIcon.close()}</button>
-      <strong>Keep the chat on your home screen</strong>
-      {ios ? (
-        <ol>
-          <li>Tap <b>Share</b> <span className="chat-install-ico">⬆︎</span> at the bottom of Safari.</li>
-          <li>Tap <b>Add to Home Screen</b>, then <b>Add</b>.</li>
-          <li>The <b>TML Chat</b> icon opens straight on the chat, without the rest of the app.</li>
-        </ol>
-      ) : installPrompt ? (
-        <><p>Install it as an app of its own, <b>TML Chat</b>, that opens straight on the chat.</p><Button variant="primary" onClick={install}>Install</Button></>
-      ) : (
-        <ol>
-          <li>Open the browser's menu <b>⋮</b>.</li>
-          <li>Tap <b>Install app</b> or <b>Add to Home screen</b>.</li>
-          <li>The <b>TML Chat</b> icon opens straight on the chat.</li>
-        </ol>
-      )}
+      {body}
     </div>
   )
 }
@@ -466,9 +532,9 @@ function RoomList({ activeId, windowed }) {
         </button>
       )}
       {(windowed || !mobile) && (
-        // the list's foot, Telegram's: people (a new message), chats, notices (administrators), settings
+        // the list's foot, Telegram's: chats, notices (administrators), settings (People left, Alex: the
+        // new-message button is already above the list)
         <nav className="chat-win-tabs">
-          <button type="button" onClick={() => setDirect(true)} title="Write to someone">{TgIcon.person()}<span>People</span></button>
           <button type="button" className={tab === 'chats' ? 'on' : ''} onClick={() => setTab('chats')}>{TgIcon.chats()}<span>Chats</span></button>
           {canNotice && <button type="button" className={tab === 'notices' ? 'on' : ''} onClick={() => setTab('notices')}>{TgIcon.bell()}<span>Notices</span></button>}
           <button type="button" className={tab === 'settings' ? 'on' : ''} onClick={() => setTab('settings')}>{TgIcon.gear()}<span>Settings</span></button>
@@ -648,22 +714,37 @@ function ChatRoom({ room, onBack }) {
     const root = document.documentElement
     root.classList.add('chat-open')
     const vv = window.visualViewport
+    // the tallest the screen has been, keyboard down; window.innerHeight shrinks with the keyboard in
+    // an iPhone home-screen app, so it cannot tell on its own (Alex, 8 Oct: a gap under the box)
+    let full = 0
+    let wide = 0
+    const typing = () => {
+      const el = document.activeElement
+      return !!el && (el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && !/^(file|checkbox|radio|range|button|submit)$/.test(el.type)) || el.isContentEditable)
+    }
     const fit = () => {
-      if (!vv) return
+      if (!vv) { root.classList.toggle('kb-open', typing()); return }
+      if (vv.width !== wide) { wide = vv.width; full = 0 } // turned sideways: measure again
+      full = Math.max(full, vv.height, typing() ? 0 : window.innerHeight)
       root.style.setProperty('--chat-vh', `${vv.height}px`)
       root.style.setProperty('--chat-vt', `${vv.offsetTop}px`)
       // keyboard up: the strip kept for the iPhone's home bar is not needed under the box (Alex)
-      root.classList.toggle('kb-open', window.innerHeight - vv.height > 120)
+      root.classList.toggle('kb-open', typing() || full - vv.height > 120)
     }
+    const later = () => setTimeout(fit, 60) // focus moves before the keyboard has finished
     fit()
     vv?.addEventListener('resize', fit)
     vv?.addEventListener('scroll', fit)
+    document.addEventListener('focusin', fit)
+    document.addEventListener('focusout', later)
     return () => {
       root.classList.remove('chat-open', 'kb-open')
       root.style.removeProperty('--chat-vh')
       root.style.removeProperty('--chat-vt')
       vv?.removeEventListener('resize', fit)
       vv?.removeEventListener('scroll', fit)
+      document.removeEventListener('focusin', fit)
+      document.removeEventListener('focusout', later)
     }
   }, [mobile])
   const { state, update } = useStore()
@@ -1249,7 +1330,7 @@ function ChatRoom({ room, onBack }) {
             <>
               {!editing && <button type="button" className="icon-btn chat-attach" title="Photo, video or file" onClick={() => setSheet(true)} disabled={!!busy}>{TgIcon.clip()}</button>}
               {/* autoComplete off: the iPhone stops offering AutoFill Contact and your own name above the keyboard */}
-              <textarea ref={inputRef} className="input" rows={1} name="chat-message" autoComplete="off" autoCorrect={prefs.spell ? 'on' : 'off'} spellCheck={prefs.spell} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Write a message…" title={prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. @name mentions someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. @name mentions someone'} disabled={!!busy} />
+              <textarea ref={inputRef} className="input" rows={1} name="chat-message" autoComplete="off" autoCorrect={prefs.spell ? 'on' : 'off'} spellCheck={prefs.spell} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Write a message…" title={mobile ? undefined : prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. Type @ to mention someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. Type @ to mention someone'} data-form-type="other" data-lpignore="true" disabled={!!busy} />
               {!mobile && (
                 <span className="chat-emoji-wrap">
                   <button type="button" className="icon-btn chat-emoji-btn" onClick={() => setEmoji((v) => !v)} aria-label="Emoji" title="Emoji">{TgIcon.smile()}</button>
