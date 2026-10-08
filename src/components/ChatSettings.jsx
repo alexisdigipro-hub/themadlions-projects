@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from './ui.jsx'
+import { disablePush, enablePush, pushStatus, testPush } from '../lib/push.js'
+import { remote } from '../lib/supabase.js'
 import { CHAT_DEFAULTS, TEXT_SIZES, chime, loadChatPrefs, saveChatPrefs, textSizeOf } from '../lib/chatPrefs.js'
 
 /* Settings > Chat (and the chat window's Settings tab): personal, per device, laid out like
@@ -57,6 +59,50 @@ function Seg({ value, options, onPick }) {
   )
 }
 
+/* Calls and messages on this phone or computer with the app closed (Web Push). Per device:
+   TML Chat and the app on the same iPhone are two apps, each switched on on its own. */
+const PUSH_HINT = {
+  on: 'Calls ring and messages show on this device, even with the app closed',
+  off: 'Calls ring and messages show on this device, even with the app closed',
+  blocked: 'Blocked for this site: allow notifications in the browser or phone settings, then come back',
+  homescreen: 'On an iPhone: Share > Add to Home Screen, open the app from there, then switch this on',
+  unsupported: 'This browser cannot show notifications',
+}
+function PushRow({ toast }) {
+  const [st, setSt] = useState('')
+  const [busy, setBusy] = useState(false)
+  useEffect(() => { pushStatus().then(setSt).catch(() => setSt('unsupported')) }, [])
+  if (!remote) return null
+  const flip = async (on) => {
+    setBusy(true)
+    try {
+      if (on) { await enablePush(); toast?.('Notifications are on for this device', 'ok') }
+      else { await disablePush(); toast?.('Notifications are off for this device', 'ok') }
+      setSt(await pushStatus())
+    } catch (e) {
+      toast?.(e.message || 'Could not switch notifications.', 'error')
+      setSt(await pushStatus().catch(() => 'off'))
+    } finally {
+      setBusy(false)
+    }
+  }
+  const test = async () => {
+    try {
+      const r = await testPush()
+      toast?.(r?.sent ? 'Sent: it shows in a moment' : 'No device of yours has notifications on yet', r?.sent ? 'ok' : 'error')
+    } catch (e) { toast?.(e.message, 'error') }
+  }
+  const can = st === 'on' || st === 'off'
+  return (
+    <Row label="Notifications with the app closed" hint={PUSH_HINT[st] || ''}>
+      <span className="cset-inline">
+        {st === 'on' && <Button size="sm" variant="ghost" onClick={test}>Test</Button>}
+        {can && <Switch on={st === 'on'} onChange={(v) => !busy && flip(v)} label="Notifications with the app closed" />}
+      </span>
+    </Row>
+  )
+}
+
 export default function ChatSettings({ toast }) {
   const [p, setP] = useState(loadChatPrefs)
   const set = (k, v) => setP(saveChatPrefs({ [k]: v }))
@@ -103,6 +149,7 @@ export default function ChatSettings({ toast }) {
       </Group>
 
       <Group title="Notifications and sounds">
+        <PushRow toast={toast} />
         <Row label="Sound when a message arrives" hint="When someone else writes while you are in another room, page or tab">
           <span className="cset-inline"><Button size="sm" variant="ghost" onClick={chime}>Play</Button><Switch on={p.sound} onChange={(v) => set('sound', v)} label="Sound" /></span>
         </Row>

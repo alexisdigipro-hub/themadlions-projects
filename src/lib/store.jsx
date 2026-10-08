@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { remote, supabase } from './supabase.js'
 import { toISODate } from './dates.js'
+import { pushMessage } from './push.js'
 
 /*
   Data layer.
@@ -797,6 +798,8 @@ export function StoreProvider({ children }) {
             if (roomsReady) Object.assign(row, { chat_id: m.chatId || 'team', reply_to: m.replyTo || null, attachments: m.attachments || [], mentions: m.mentions || [] })
             const { error } = await supabase.from('messages').insert(row)
             if (error) throw new Error(error.code === '42P01' ? 'Run supabase/chat.sql in the SQL editor to enable the team chat.' : error.code === '42703' ? 'Run supabase/chat_rooms.sql in the SQL editor to enable chat rooms.' : error.message)
+            // ring the others in the room on their phones, app closed or not (lib/push.js); never blocks the chat
+            if (row.user_id) pushMessage(row.id)
           }
           setTimeout(() => myWrites.current.delete(m.id), 4000)
         }, 0)

@@ -5,6 +5,7 @@ import { sendAutoNotice } from '../components/Notices.jsx'
 import { SUPABASE_KEY, SUPABASE_URL } from './supabaseConfig.js'
 import { remote, supabase } from './supabase.js'
 import { uid, useCurrentUser, useStore } from './store.jsx'
+import { closeCallNotice, onWorkerMessage, pushCall, refreshPush } from './push.js'
 
 /*
   Voice and video calls in a one-to-one conversation (Alex, 8 Oct), like Telegram's.
@@ -17,8 +18,12 @@ import { uid, useCurrentUser, useStore } from './store.jsx'
   listen on yours, and only people of the same workspace write to it.
 
   It rings where that person has the app (or TML Chat) open, on every device at once; the first
-  to answer takes it and the others stop. A closed app does not ring (that would need push
-  notifications); the caller's missed call becomes a message in the conversation and a notice.
+  to answer takes it and the others stop. With push notifications on (lib/push.js), a phone with
+  the app closed rings too: the caller also asks the "push" function to send an "Incoming call"
+  notification; tapping it opens the app, which sends a "wake" on the caller's line, and the
+  caller sends the ring again, now that someone is listening (and rings 45 s more). A call nobody
+  answered turns that notification into "Missed call", and becomes a message in the
+  conversation and a notice.
 
   Setting up: the caller makes an offer and waits for the network routes to be gathered, then
   sends it whole (no trickling), and the answer comes back the same way. Public STUN servers find
@@ -128,6 +133,9 @@ export function CallProvider({ children }) {
   stateRef.current = state
   const userRef = useRef(user)
   userRef.current = user
+  const ringRef = useRef(null) // { to, payload }: the caller's ring, sent again on a wake
+  const pendingWake = useRef(null) // { id, from, at }: opened from a call notification, line not open yet
+  const readyRef = useRef(false)
 
   const setCall = useCallback((next) => {
     const v = typeof next === 'function' ? next(callRef.current) : next
@@ -170,6 +178,9 @@ export function CallProvider({ children }) {
     localRef.current = null
     remoteRef.current = null
     logCall(c, dur, reason)
+    if (c.dir === 'out' && !c.answered && c.roomId && reason !== 'Declined' && reason !== 'Busy on another call') pushCall(c.roomId, c.id, c.video, true)
+    if (c.dir === 'in') closeCallNotice(c.id)
+    ringRef.current = null
     setCall({ ...c, phase: 'ended', reason: dur ? `${reason} · ${clock(dur)}` : reason })
     timers.current.close = setTimeout(() => setCall(null), 1800)
   }, [setCall]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -212,6 +223,8 @@ export function CallProvider({ children }) {
     if (!peer || peer.id === me.id) return
     const id = uid()
     setCall({ id, dir: 'out', phase: 'calling', video, peerId: peer.id, peerName: peer.name, peerPhoto: peer.profile?.thumb || '', roomId: room.id, muted: false, camOff: false, facing: 'user' })
+    // their phone rings even with the app closed, while the call is still being set up here
+    pushCall(room.id, id, video)
     try {
       const stream = await media(video)
       if (callRef.current?.id !== id) { stream.getTracks().forEach((t) => t.stop()); return }
@@ -222,11 +235,11 @@ export function CallProvider({ children }) {
       await pc.setLocalDescription(await pc.createOffer())
       await gathered(pc)
       if (callRef.current?.id !== id) return
-      await signal(peer.id, { kind: 'ring', id, from: me.id, fromName: me.name || '', fromPhoto: me.profile?.thumb || '', video, room: room.id, sdp: pc.localDescription.sdp })
+      const payload = { kind: 'ring', id, from: me.id, fromName: me.name || '', fromPhoto: me.profile?.thumb || '', video, room: room.id, sdp: pc.localDescription.sdp }
+      ringRef.current = { to: peer.id, payload, noAnswer: () => { if (callRef.current?.id === id && !callRef.current.answered) { signal(peer.id, { kind: 'cancel', id }).catch(() => {}); finish('No answer') } } }
+      await signal(peer.id, payload)
       stopTone.current = tone('out')
-      timers.current.ring = setTimeout(() => {
-        if (callRef.current?.id === id && !callRef.current.answered) { signal(peer.id, { kind: 'cancel', id }).catch(() => {}); finish('No answer') }
-      }, RING_FOR)
+      timers.current.ring = setTimeout(() => ringRef.current?.noAnswer(), RING_FOR)
     } catch (e) {
       if (callRef.current?.id !== id) return
       finish(e?.name === 'NotAllowedError' ? (video ? 'Camera or microphone not allowed' : 'Microphone not allowed') : e?.message || 'Could not call')
@@ -240,6 +253,7 @@ export function CallProvider({ children }) {
     silence()
     clearTimeout(timers.current.ring)
     const video = c.video && withVideo
+    closeCallNotice(c.id)
     patch({ phase: 'connecting', answered: true, video })
     signal(userRef.current.id, { kind: 'taken', id: c.id }).catch(() => {})
     try {
@@ -265,6 +279,7 @@ export function CallProvider({ children }) {
     if (!c) return
     signal(c.peerId, { kind: 'decline', id: c.id }).catch(() => {})
     signal(userRef.current.id, { kind: 'taken', id: c.id }).catch(() => {})
+    closeCallNotice(c.id)
     silence()
     clearTimers()
     setCall(null)
@@ -292,6 +307,16 @@ export function CallProvider({ children }) {
       return
     }
     if (!c || c.id !== m.id) return
+    if (m.kind === 'wake') {
+      // they opened the app from the call notification: ring again, now that their line is open
+      const r = ringRef.current
+      if (c.dir === 'out' && !c.answered && r && r.payload.id === m.id && m.from === c.peerId) {
+        signal(r.to, r.payload).catch(() => {})
+        clearTimeout(timers.current.ring)
+        timers.current.ring = setTimeout(() => ringRef.current?.noAnswer(), RING_FOR)
+      }
+      return
+    }
     if (m.kind === 'answer' && c.dir === 'out' && !c.answered) {
       silence()
       clearTimeout(timers.current.ring)
@@ -299,8 +324,8 @@ export function CallProvider({ children }) {
       try { await pcRef.current?.setRemoteDescription({ type: 'answer', sdp: m.sdp }) } catch { finish('Could not connect') }
     } else if (m.kind === 'decline' && c.dir === 'out') finish('Declined')
     else if (m.kind === 'busy' && c.dir === 'out') finish('Busy on another call')
-    else if (m.kind === 'cancel' && c.dir === 'in') { silence(); clearTimers(); setCall(null) }
-    else if (m.kind === 'taken' && c.dir === 'in' && c.phase === 'ringing') { silence(); clearTimers(); setCall(null) }
+    else if (m.kind === 'cancel' && c.dir === 'in') { silence(); clearTimers(); closeCallNotice(c.id); setCall(null) }
+    else if (m.kind === 'taken' && c.dir === 'in' && c.phase === 'ringing') { silence(); clearTimers(); closeCallNotice(c.id); setCall(null) }
     else if (m.kind === 'end') finish('Call ended')
   }, [setCall, patch, finish]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -311,9 +336,48 @@ export function CallProvider({ children }) {
     if (!remote || !user?.id) return undefined
     const ch = supabase.channel(line(user.id), { config: { private: true } })
       .on('broadcast', { event: 'call' }, ({ payload }) => onSignalRef.current(payload))
-      .subscribe((status) => setReady(status === 'SUBSCRIBED'))
-    return () => { setReady(false); supabase.removeChannel(ch) }
-  }, [user?.id])
+      .subscribe((status) => { readyRef.current = status === 'SUBSCRIBED'; setReady(status === 'SUBSCRIBED'); if (readyRef.current) flushWake() })
+    return () => { readyRef.current = false; setReady(false); supabase.removeChannel(ch) }
+  }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* Opened from an "Incoming call" notification: tell the caller this line is open now, so they
+     ring again. Waits for the line if it is still opening; a wake older than a minute is dropped. */
+  const flushWake = () => {
+    const w = pendingWake.current
+    const me = userRef.current
+    if (!w || !me || !readyRef.current) return
+    pendingWake.current = null
+    if (Date.now() - w.at > 60000 || callRef.current) return
+    signal(w.from, { kind: 'wake', id: w.id, from: me.id }).catch(() => {})
+  }
+  const wake = (id, from) => {
+    if (!id || !from) return
+    pendingWake.current = { id, from, at: Date.now() }
+    flushWake()
+  }
+  // the link the notification opened: …#/chat-window/<room>?call=<id>&from=<uid>
+  useEffect(() => {
+    if (!remote || !user?.id) return undefined
+    refreshPush()
+    const fromHash = () => {
+      const q = (window.location.hash.split('?')[1] || '')
+      const p = new URLSearchParams(q)
+      if (p.get('call') && p.get('from')) wake(p.get('call'), p.get('from'))
+    }
+    fromHash()
+    window.addEventListener('hashchange', fromHash)
+    // the worker: a tap on a notification while the app is open, or a call ringing it in the background
+    const off = onWorkerMessage((d) => {
+      if (d.type === 'open' && d.url) {
+        const to = new URL(d.url)
+        if (to.pathname === window.location.pathname) { if (to.hash !== window.location.hash) window.location.hash = to.hash }
+        else window.location.href = d.url
+        if (d.callId) wake(d.callId, d.from)
+      } else if (d.type === 'call-wake') wake(d.callId, d.from)
+      else if (d.type === 'resubscribe') refreshPush()
+    })
+    return () => { window.removeEventListener('hashchange', fromHash); off() }
+  }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     document.addEventListener('pointerdown', wakeAudio, { once: true, capture: true })

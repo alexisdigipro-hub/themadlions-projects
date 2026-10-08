@@ -37,9 +37,18 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
-## Where we stopped (8 Oct 2026)
+## Where we stopped (9 Oct 2026)
 
 Read this first; the detail behind each line is in the pull request that carried it.
+
+### 9 Oct: push notifications for calls and messages (third of the three)
+- **SQL `supabase/push.sql`**: `push_subscriptions` (own rows only; `push_claim()` security definer takes over an endpoint when another account signs in on that browser), `push_config` (RLS on, no policies: the function's VAPID pair), `push_recipients(room)` (who can read a room minus the caller, the same rules as `can_read_chat`).
+- **Edge Function `supabase/functions/push/index.ts`** ("push"): actions key / test / message {id} / call {chatId, callId, video} / call_missed. Makes its VAPID pair on first use with the service key (auto-provided), checks the message (or the direct room) under the caller's own token, sends RFC 8291 aes128gcm + VAPID ES256 with Web Crypto, no library. Encryption checked byte for byte against RFC 8291's Appendix A vector. 404/410 subscriptions are deleted.
+- **`public/sw.js`**: push only, no fetch cache. Always shows a notification (iOS revokes a web app that does not); silent + closed at once when that room is open and visible. Calls: requireInteraction, `call-wake` posted to open windows; tap → focus + `open` message, or openWindow(url). Checked with a mocked worker (7 cases).
+- **`src/lib/push.js`**: register worker, enable/disable (permission after a tap, key from the function, subscription saved through push_claim with `app` = main | chat so the tap opens the right page), test, `pushMessage(id)` (store.jsx after a message insert), `pushCall`, `closeCallNotice`, `refreshPush`.
+- **Calls** (`lib/calls.jsx`): the caller pushes "call" as the call starts and "call_missed" when it ends unanswered (not on Declined / Busy). The callee opened from the notification (`?call=<id>&from=<uid>` in the hash, or the worker's message) sends `{kind:'wake'}` on the caller's line once its own line is open; the caller re-sends the stored ring and restarts its 45 s.
+- Switch: Settings → Chat → Notifications and sounds (ChatSettings.jsx `PushRow`), per device; iPhone needs the home-screen app.
+- Not testable here end to end (needs a real push service and phones). Alex: run push.sql, deploy the push function, merge, switch it on in each app on each phone, then call between two phones with the app closed.
 
 ### 8 Oct, late: release forms with on-screen signature (second of the three)
 - `src/lib/releases.js`: built-in texts (talent / location × el / en, `{producer} {project} {name} {role} {location} {address} {dates} {fee}`), `releaseTemplate(settings, kind, lang)` (settings.releaseTemplates[`kind_lang`] wins), `fillRelease`, `renderRelease` (A4 canvases, multi-page, Greek capitals without accents), `releasePdf` (reuses `buildPdf` / `canvasToJpegBytes` from estimatePdf.js), `releaseFilename`.
