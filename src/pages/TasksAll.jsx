@@ -53,6 +53,9 @@ export default function TasksAll() {
   const [draft, setDraft] = useState(null)
   const [listForm, setListForm] = useState(null) // { id?, name, color, icon }
   const [quick, setQuick] = useState('')
+  // the lists under General start folded; the choice is remembered on this device
+  const [listsOpen, setListsOpen] = useState(() => { try { return localStorage.getItem('tml_tasks_lists_open') === '1' } catch { return false } })
+  useEffect(() => { try { localStorage.setItem('tml_tasks_lists_open', listsOpen ? '1' : '0') } catch {} }, [listsOpen])
   const quickRef = useRef(null)
   useEffect(() => { try { localStorage.setItem('tml_tasks_list', sel) } catch {} }, [sel])
   useEffect(() => { setShowDone(false); setQuick('') }, [sel])
@@ -97,6 +100,8 @@ export default function TasksAll() {
   const smart = SMART.find(([k]) => k === sel)
   const current = smart ? { key: sel, name: smart[1], color: smart[3], icon: LINE[sel], smart: true } : listByKey[sel] || listByKey[GENERAL]
   useEffect(() => { if (!smart && !listByKey[sel]) setSel('today') }, [sel, lists.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  // a list chosen before (or a new one) stays in sight
+  useEffect(() => { if (!smart && sel !== GENERAL && listByKey[sel]) setListsOpen(true) }, [sel]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean)
   const match = (t) => !words.length || words.every((w) => `${t.title} ${t.notes || ''} ${t.assignee || ''}`.toLowerCase().includes(w))
@@ -227,9 +232,23 @@ export default function TasksAll() {
         ))}
       </nav>
       <hr className="rem-rule" />
+      {/* General on top; the other lists folded under it, opened with its ☰ (Alex, 9 Oct) */}
       <nav className="rem-lists">
-        {lists.map((l) => (
-          <button key={l.key} type="button" className={`rem-row ${sel === l.key && !searching ? 'on' : ''}`} style={{ '--lc': l.color }} onClick={() => pick(l.key)}>
+        {lists.slice(0, 1).map((l) => (
+          <div key={l.key} className={`rem-row rem-row-general ${sel === l.key && !searching ? 'on' : ''}`}>
+            <button type="button" className={`rem-fold ${listsOpen ? 'open' : ''}`} onClick={() => setListsOpen((v) => !v)} aria-expanded={listsOpen} title={listsOpen ? 'Hide the lists' : 'Show the lists'}>
+              <span aria-hidden="true">☰</span>
+            </button>
+            <button type="button" className="rem-row-pick" onClick={() => pick(l.key)}>
+              <span className="grow">{l.name}</span>
+              {shared(l.key) && <span className="rem-shared" title="Others have tasks on this list">👥</span>}
+              <span className="rem-count">{inList(l.key, open).length || ''}</span>
+            </button>
+            <span className="rem-fold-chev" aria-hidden="true" onClick={() => setListsOpen((v) => !v)}>{listsOpen ? '⌄' : '›'}</span>
+          </div>
+        ))}
+        {listsOpen && lists.slice(1).map((l) => (
+          <button key={l.key} type="button" className={`rem-row rem-row-sub ${sel === l.key && !searching ? 'on' : ''}`} style={{ '--lc': l.color }} onClick={() => pick(l.key)}>
             <span className="rem-row-emoji">{l.icon}</span>
             <span className="grow">{l.name}</span>
             {shared(l.key) && <span className="rem-shared" title="Others have tasks on this list">👥</span>}

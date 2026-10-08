@@ -18,6 +18,8 @@ export const SKINS = [
 /* the icon set each skin comes with (Settings > Display > Icons can change it afterwards) */
 export const SKIN_ICONS = { violet: 'duo', teal: 'rounded', ember: 'bold', coral: 'rounded', glass: 'duo', glassdark: 'thin', glasslight: 'thin' }
 export const isSkin = (v) => SKINS.some(([k]) => k === v)
+/* what every device starts on (main.jsx switches each device to it once) */
+export const DEFAULT_THEME = 'glassdark'
 const COLORS = { light: '#f3f4f7', dark: '#17181c', violet: '#0a0a0c', teal: '#1f2226', ember: '#0d0d0f', coral: '#fbf1ec', glass: '#3a0aa0', glassdark: '#0b1018', glasslight: '#eef1f8' }
 
 export function applyThemeChoice(v) {

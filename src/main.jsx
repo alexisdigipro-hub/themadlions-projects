@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './styles.css'
 import { applyFont, currentFont } from './lib/fonts.js'
-import { applyThemeChoice } from './lib/skin.js'
+import { DEFAULT_THEME, SKIN_ICONS, applyThemeChoice } from './lib/skin.js'
 import { applyIconSet } from './components/icons.jsx'
 
 // Back from "Connect pCloud": pCloud puts the token in the address (#access_token=…), which the
@@ -30,10 +30,18 @@ try {
 
 try {
   document.documentElement.dataset.textSize = localStorage.getItem('tml_text_size') || 'normal'
-  applyThemeChoice(localStorage.getItem('tml_theme') || 'light')
+  // Glass dark is everyone's theme from 9 Oct (Alex): once on each device, whatever was picked
+  // before, then Settings > Display > Theme changes it as usual. A device that never picked one
+  // starts on it too.
+  if (localStorage.getItem('tml_theme_default') !== DEFAULT_THEME) {
+    localStorage.setItem('tml_theme', DEFAULT_THEME)
+    localStorage.setItem('tml_icons', SKIN_ICONS[DEFAULT_THEME] || 'classic')
+    localStorage.setItem('tml_theme_default', DEFAULT_THEME)
+  }
+  applyThemeChoice(localStorage.getItem('tml_theme') || DEFAULT_THEME)
   document.documentElement.dataset.accent = localStorage.getItem('tml_accent') || 'amber'
   applyFont(currentFont())
-  applyIconSet(localStorage.getItem('tml_icons') || 'classic')
+  applyIconSet(localStorage.getItem('tml_icons') || SKIN_ICONS[DEFAULT_THEME] || 'classic')
 } catch {}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
