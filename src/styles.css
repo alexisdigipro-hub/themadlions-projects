@@ -3693,3 +3693,64 @@ html[data-public='1'] body { background: var(--bg); }
   @keyframes chat-heart { 0% { transform: translate(-50%, -50%) scale(.2); opacity: 0; } 25% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 55% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -80%) scale(.9); opacity: 0; } }
 }
 
+
+/* Chat on a computer (Alex, 8 Oct): what the phone got, here too. Click a message for Reply / Edit /
+   Delete under it, double click puts a 🎥 on it, Telegram line icons. Tidier: the list and the room
+   share one frame, folders are underlined tabs, the search has its icon, the send arrow lights up
+   only when there is something to send. The bubble style from Settings stays yours. The phone is
+   unchanged. */
+@media (min-width: 821px) {
+  .chat2 { grid-template-columns: 360px minmax(0, 1fr); gap: 0; background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; }
+  .chat2 .chat-list, .chat2 .chat-box { border: 0; border-radius: 0; box-shadow: none; }
+  .chat2 .chat-list { border-right: 1px solid var(--line-soft); }
+  .chat2 .chat-none { font-size: 15px; background: var(--wa-wall, var(--raised)); }
+
+  .chat2 .chat-list-head { padding: 14px 14px 8px 16px; gap: 4px; min-height: 60px; }
+  .chat2 .chat-list-head h1 { font-size: 22px; }
+  .chat2 .chat-folders { gap: 0; padding: 0 8px; border-bottom: 1px solid var(--line-soft); }
+  .chat2 .chat-folders button { background: none; border: 0; border-radius: 0; padding: 9px 9px 8px; font-size: 13.5px; border-bottom: 2px solid transparent; }
+  .chat2 .chat-folders button.on { background: none; color: var(--accent); border-bottom-color: var(--accent); }
+  .chat2 .chat-folders .chat-folders-edit { font-size: 13px; }
+  .chat2 .chat-search { padding: 10px 12px 6px; }
+  .chat2 .chat-search .input { border: 0; background-color: var(--raised); padding: 8px 14px 8px 36px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 13px 50%; }
+  .chat2 .chat-rooms { padding: 4px 6px; }
+  .chat2 .chat-room-item { padding: 0 0 0 10px; border-radius: 12px; }
+  .chat2 .chat-room-item .chat-rmain { padding: 10px 12px 10px 0; min-height: 66px; justify-content: center; border-bottom: 0; }
+  .chat2 .chat-room-item.active { box-shadow: none; background: color-mix(in srgb, var(--accent) 16%, var(--panel)); }
+  .chat2 .chat-room-item.active .chat-rtop small { color: var(--accent); }
+
+  .chat2 .chat-head { min-height: 60px; padding: 9px 12px 9px 18px; gap: 12px; background: var(--panel); border-bottom: 1px solid var(--line-soft); }
+  .chat2 .chat-head-ico, .chat2 .chat-new { width: 38px; height: 38px; display: grid; place-items: center; color: var(--accent); border-radius: 50%; }
+  .chat2 .chat-head-ico:hover, .chat2 .chat-new:hover { background: var(--raised); }
+  .chat2 .chat-head-ico svg, .chat2 .chat-new svg { width: 21px; height: 21px; }
+  .chat2 .chat-scroll { padding: 12px 7% 14px; }
+
+  /* the clicked message's menu sits under it; a click elsewhere or Escape closes it */
+  .chat2 .chat-bubble { cursor: pointer; }
+  .chat2 .chat-msg.picked .chat-bubble { filter: brightness(.94); }
+  .chat2 .chat-msg.picked .chat-acts { display: flex; width: max-content; align-self: flex-start; opacity: 1; gap: 6px; margin-top: 6px; }
+  .chat2 .chat-msg.mine.picked .chat-acts { align-self: flex-end; }
+  .chat2 .chat-act { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px; border: 1px solid var(--line-soft); border-radius: 17px; background: var(--panel); color: var(--text); font: inherit; font-size: 14px; font-weight: 600; box-shadow: 0 2px 10px rgba(0, 0, 0, .2); cursor: pointer; }
+  .chat2 .chat-act:hover { background: var(--raised); }
+  .chat2 .chat-act svg { width: 17px; height: 17px; color: var(--accent); }
+  .chat2 .chat-act.btn-danger, .chat2 .chat-act.btn-danger:hover { background: var(--danger); color: #fff; }
+  .chat2 .chat-act.btn-danger svg { color: #fff; }
+
+  .chat2 .chat-likes { display: inline-flex; align-items: center; gap: 3px; margin: 5px 0 1px; padding: 2px 7px; border: 0; border-radius: 999px; background: rgba(0, 0, 0, .12); font: inherit; font-size: 13px; line-height: 1.3; color: inherit; cursor: pointer; vertical-align: middle; }
+  .chat2 .chat-likes:hover { background: rgba(0, 0, 0, .2); }
+  .chat2 .chat-likes.mine { background: color-mix(in srgb, var(--accent) 30%, transparent); }
+  .chat2 .chat-likes b { font-size: 12px; }
+  .chat2 .chat-heart-burst { display: block; position: absolute; left: 50%; top: 50%; z-index: 3; font-size: 44px; line-height: 1; pointer-events: none; transform: translate(-50%, -50%) scale(.2); animation: chat-heart-d .8s ease-out forwards; }
+  @keyframes chat-heart-d { 0% { transform: translate(-50%, -50%) scale(.2); opacity: 0; } 25% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 55% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(-50%, -80%) scale(.9); opacity: 0; } }
+
+  .chat2 .chat-compose-wrap { background: var(--panel); border-top: 1px solid var(--line-soft); }
+  .chat2 .chat-compose { background: var(--panel); padding: 8px 12px; gap: 6px; }
+  .chat2 .chat-compose textarea { border: 0; background: var(--raised); border-radius: 21px; }
+  .chat2 .chat-attach { display: grid; place-items: center; color: var(--muted); border-radius: 50%; }
+  .chat2 .chat-attach:hover { color: var(--accent); background: var(--raised); }
+  .chat2 .chat-attach svg { width: 23px; height: 23px; }
+  .chat2 .chat-send { background: transparent; color: var(--muted); transition: background .15s, color .15s; }
+  .chat2 .chat-send.ready { background: var(--accent); color: var(--accent-ink, #fff); }
+  .chat2 .chat-send:disabled { opacity: 1; }
+  .chat2 .chat-send svg { width: 21px; height: 21px; }
+}

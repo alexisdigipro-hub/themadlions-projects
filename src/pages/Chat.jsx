@@ -156,7 +156,7 @@ function RoomList({ activeId }) {
     <aside className="chat-list">
       <div className="chat-list-head">
         <h1>Chat</h1>
-        {!mobile && <Button size="sm" variant="ghost" onClick={() => setDirect(true)} title="Write to one person">+ Message</Button>}
+        {!mobile && <button type="button" className="icon-btn chat-head-ico chat-new" onClick={() => setDirect(true)} title="New message" aria-label="New message">{TgIcon.edit()}</button>}
         {isAdmin && <Button size="sm" variant="primary" onClick={() => setGroup('new')} title="A group of chosen people">+ Group</Button>}
       </div>
       {legacy && <p className="chat-legacy">Rooms are not switched on yet: run supabase/chat_rooms.sql in the SQL editor. Until then only the team room works.</p>}
@@ -182,7 +182,7 @@ function RoomList({ activeId }) {
           const n = unread[r.id] || 0
           return (
             <button key={r.id} type="button" className={`chat-room-item ${r.id === activeId ? 'active' : ''}`} onClick={() => nav(`/chat/${encodeURIComponent(r.id)}`)} disabled={legacy && r.kind !== 'team'}>
-              <RoomAvatar room={r} size={mobile ? 54 : 42} />
+              <RoomAvatar room={r} size={mobile ? 54 : 48} />
               <span className="chat-rmain">
                 <span className="chat-rtop"><strong>{r.name}</strong><small>{listTime(last?.createdAt)}</small></span>
                 {(preview || n > 0) && <span className="chat-rbottom"><span className="chat-rprev">{preview}</span>{n > 0 && <span className="chat-rbadge">{n}</span>}</span>}
@@ -524,9 +524,11 @@ function ChatRoom({ room, onBack }) {
   // The single tap waits a moment so a double tap does not flash the actions first.
   const onBubbleTap = (e, m) => {
     if (e.target.closest('a, button')) return
+    if (!mobile && String(window.getSelection?.() || '').trim()) return // selecting text to copy, not a tap
     const t = tapRef.current
     const now = Date.now()
-    if (t.id === m.id && now - t.at < 300) {
+    // on a computer the mouse's own double click counts (e.detail), on a phone two taps within 300 ms
+    if (t.id === m.id && (mobile ? now - t.at < 300 : e.detail === 2)) {
       clearTimeout(t.timer)
       tapRef.current = { id: '', at: 0, timer: null }
       if (!(m.likes || []).includes(user?.id)) { setBurst(m.id); setTimeout(() => setBurst((b) => (b === m.id ? '' : b)), 800) }
@@ -537,6 +539,15 @@ function ChatRoom({ room, onBack }) {
     clearTimeout(t.timer)
     tapRef.current = { id: m.id, at: now, timer: setTimeout(() => setPicked((p) => (p === m.id ? '' : m.id)), 260) }
   }
+  // on a computer a click anywhere else, or Escape, closes the menu (a phone taps the message again)
+  useEffect(() => {
+    if (mobile || !picked) return
+    const away = (e) => { if (!e.target.closest?.(`[data-msg="${picked}"]`)) setPicked('') }
+    const esc = (e) => { if (e.key === 'Escape') setPicked('') }
+    document.addEventListener('mousedown', away)
+    document.addEventListener('keydown', esc)
+    return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', esc) }
+  }, [picked, mobile])
   const startEdit = (m) => { setPicked(''); setEditing(m); setReplyTo(null); setText(m.text); requestAnimationFrame(() => inputRef.current?.focus()) }
   const startReply = (m) => { setPicked(''); setReplyTo(m); setEditing(null); requestAnimationFrame(() => inputRef.current?.focus()) }
   const cancelBar = () => { setEditing(null); setReplyTo(null); if (editing) setText('') }
@@ -565,29 +576,18 @@ function ChatRoom({ room, onBack }) {
   return (
     <div className="chat-box" data-wall={mobile && prefs.wallpaper === 'none' ? 'soft' : prefs.wallpaper} data-bubbles={mobile ? 'telegram' : prefs.bubbles} data-size={prefs.size} data-density={prefs.density}>
       <div className="chat-head">
-        {onBack && <button type="button" className="icon-btn chat-back" onClick={onBack} aria-label="Back">{mobile ? TgIcon.back() : '‹'}</button>}
-        <RoomAvatar room={room} size={mobile ? 40 : 36} />
+        {onBack && <button type="button" className="icon-btn chat-back" onClick={onBack} aria-label="Back">{TgIcon.back()}</button>}
+        <RoomAvatar room={room} size={40} />
         <div className="chat-head-main">
           <strong>{room.name}</strong>
           <span className="small muted" title={membersOf.map((u) => u.name).join(', ')}>
             {room.kind === 'direct' ? room.sub || 'Direct message' : `${membersOf.length} ${membersOf.length === 1 ? 'person' : 'people'}`}
           </span>
         </div>
-        {mobile ? (
-          <>
-            {room.kind === 'project' && isAdmin && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditMembers(true)} aria-label="Members" title="Members">{TgIcon.people()}</button>}
-            {room.kind === 'project' && <Link className="icon-btn chat-head-ico" to={`/p/${room.projectId}`} aria-label="Open project" title="Open project">{TgIcon.project()}</Link>}
-            {room.kind === 'direct' && room.otherId && <Link className="icon-btn chat-head-ico" to={`/u/${room.otherId}`} aria-label="Profile" title="Profile">{TgIcon.person()}</Link>}
-            {room.kind === 'group' && isAdmin && groupRow && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditGroup(true)} aria-label="Edit group" title="Edit group">{TgIcon.people()}</button>}
-          </>
-        ) : (
-          <>
-            {room.kind === 'project' && isAdmin && <Button size="sm" variant="ghost" onClick={() => setEditMembers(true)}>Members</Button>}
-            {room.kind === 'project' && <Link className="btn btn-ghost btn-sm" to={`/p/${room.projectId}`}>Open project</Link>}
-            {room.kind === 'direct' && room.otherId && <Link className="btn btn-ghost btn-sm" to={`/u/${room.otherId}`}>Profile</Link>}
-            {room.kind === 'group' && isAdmin && groupRow && <Button size="sm" variant="ghost" onClick={() => setEditGroup(true)}>Edit group</Button>}
-          </>
-        )}
+        {room.kind === 'project' && isAdmin && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditMembers(true)} aria-label="Members" title="Members">{TgIcon.people()}</button>}
+        {room.kind === 'project' && <Link className="icon-btn chat-head-ico" to={`/p/${room.projectId}`} aria-label="Open project" title="Open project">{TgIcon.project()}</Link>}
+        {room.kind === 'direct' && room.otherId && <Link className="icon-btn chat-head-ico" to={`/u/${room.otherId}`} aria-label="Profile" title="Profile">{TgIcon.person()}</Link>}
+        {room.kind === 'group' && isAdmin && groupRow && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditGroup(true)} aria-label="Edit group" title="Edit group">{TgIcon.people()}</button>}
       </div>
       <div className="chat-scroll" ref={scrollRef}>
         {!msgs.length && <p className="muted chat-empty">{room.kind === 'team' ? 'No messages yet. Say hi to the team.' : room.kind === 'direct' ? `No messages with ${room.name} yet.` : 'No messages yet.'}</p>}
@@ -610,7 +610,7 @@ function ChatRoom({ room, onBack }) {
                     </span>
                   )}
                   <div className="chat-bubble-wrap">
-                    <div className="chat-bubble" onClick={mobile ? (e) => onBubbleTap(e, m) : undefined}>
+                    <div className="chat-bubble" onClick={(e) => onBubbleTap(e, m)} onMouseDown={mobile ? undefined : (e) => { if (e.detail > 1) e.preventDefault() }}>
                       {burst === m.id && <span className="chat-heart-burst" aria-hidden="true">🎥</span>}
                       {!cont && !mine && room.kind !== 'direct' && <div className="chat-who" style={{ '--who': `hsl(${senderHue(m.userId)} 55% 42%)` }}>{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>}
                       {m.replyTo && (
@@ -622,7 +622,7 @@ function ChatRoom({ room, onBack }) {
                       {m.text && <span className="chat-text">{renderText(m.text)}</span>}
                       {m.editedAt && <span className="chat-edited">edited</span>}
                       {/* hearts on a line of their own, the time beside them, as Telegram does */}
-                      {mobile && (m.likes || []).length > 0 && (
+                      {(m.likes || []).length > 0 && (
                         <>
                           {(m.text || m.editedAt) && <br />}
                           <button type="button" className={`chat-likes ${(m.likes || []).includes(user?.id) ? 'mine' : ''}`} onClick={() => toggleLike(m)} title={(m.likes || []).map((id) => state.users.find((u) => u.id === id)?.name || 'Someone').join(', ')}>
@@ -632,8 +632,8 @@ function ChatRoom({ room, onBack }) {
                       )}
                       <span className="chat-time">{timeOf(m.createdAt)}</span>
                     </div>
-                      {mobile && picked === m.id && (
-                        // the tapped message's menu on a phone: big buttons with words, Telegram-like, under the bubble
+                      {picked === m.id && (
+                        // the tapped (or clicked) message's menu: buttons with words, Telegram-like, under the bubble
                         <span className="chat-msg-actions chat-acts">
                           <button type="button" className="chat-act" onClick={() => startReply(m)}>{TgIcon.reply()}<span>Reply</span></button>
                           {mine && <button type="button" className="chat-act" onClick={() => startEdit(m)}>{TgIcon.edit()}<span>Edit</span></button>}
@@ -641,13 +641,6 @@ function ChatRoom({ room, onBack }) {
                         </span>
                       )}
                   </div>
-                  {!mobile && (
-                    <span className="chat-msg-actions">
-                      <button type="button" className="icon-btn" title="Reply" onClick={() => startReply(m)}>↩</button>
-                      {mine && <button type="button" className="icon-btn" title="Edit" onClick={() => startEdit(m)}>✎</button>}
-                      {(mine || isAdmin) && <Confirm onConfirm={() => remove(m)} label="Delete message">×</Confirm>}
-                    </span>
-                  )}
                 </div>
               )
             })}
@@ -677,9 +670,9 @@ function ChatRoom({ room, onBack }) {
             </div>
           )}
           <input ref={fileRef} type="file" multiple hidden onChange={(e) => addFiles(e.target.files)} />
-          {!editing && <button type="button" className="icon-btn chat-attach" title="Photo or file" onClick={() => fileRef.current?.click()} disabled={!!busy}>{mobile ? TgIcon.clip() : '📎'}</button>}
+          {!editing && <button type="button" className="icon-btn chat-attach" title="Photo or file" onClick={() => fileRef.current?.click()} disabled={!!busy}>{TgIcon.clip()}</button>}
           {/* autoComplete off: the iPhone stops offering AutoFill Contact and your own name above the keyboard */}
-          <textarea ref={inputRef} className="input" rows={1} name={mobile ? 'chat-message' : undefined} autoComplete={mobile ? 'off' : undefined} autoCorrect={mobile ? 'on' : undefined} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Message" title={prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. @name mentions someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. @name mentions someone'} disabled={!!busy} />
+          <textarea ref={inputRef} className="input" rows={1} name="chat-message" autoComplete="off" autoCorrect="on" value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Message" title={prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. @name mentions someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. @name mentions someone'} disabled={!!busy} />
           <button type="button" className={`chat-send${text.trim() || pending.length ? ' ready' : ''}`} onClick={send} disabled={!!busy || (!text.trim() && !pending.length)} title={editing ? 'Save (Enter)' : 'Send (Enter)'} aria-label={editing ? 'Save' : 'Send'}>
             {busy ? '…' : editing ? '✓' : <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4l17.4-7.5c.8-.4.8-1.5 0-1.8L3.4 3.6c-.7-.3-1.4.3-1.3 1l1.2 5.7c.1.4.4.7.8.7l9.4 1-9.4 1c-.4 0-.7.3-.8.7L2.1 19.4c-.1.7.6 1.3 1.3 1z" /></svg>}
           </button>
