@@ -220,6 +220,7 @@ function migrate(parsed) {
 const rowToMessage = (r) => ({
   id: r.id, userId: r.user_id || '', userName: r.user_name || '', text: r.text || '', source: r.source || 'app', createdAt: r.created_at,
   chatId: r.chat_id || 'team', replyTo: r.reply_to || '', editedAt: r.edited_at || '', attachments: Array.isArray(r.attachments) ? r.attachments : [], mentions: Array.isArray(r.mentions) ? r.mentions : [],
+  likes: Array.isArray(r.likes) ? r.likes : [],
 })
 const rowToChat = (r) => ({ id: r.id, kind: r.kind, name: r.name || '', members: Array.isArray(r.members) ? r.members : [], createdBy: r.created_by || '', createdAt: r.created_at })
 
@@ -763,7 +764,13 @@ export function StoreProvider({ children }) {
         if (was && JSON.stringify(was) === JSON.stringify(m)) return
         myWrites.current.add(m.id)
         schedule('m:' + m.id, async () => {
-          if (was) {
+          // a heart, on anyone's message: only the hearts differ, and they go through chat_like(),
+          // which can add or remove the signed-in person's own heart and nothing else
+          const heartsOnly = was && JSON.stringify({ ...was, likes: undefined }) === JSON.stringify({ ...m, likes: undefined })
+          if (heartsOnly) {
+            const { error } = await supabase.rpc('chat_like', { p_id: m.id, p_on: (m.likes || []).includes(authUser?.id) })
+            if (error) throw new Error(error.code === 'PGRST202' || error.code === '42883' ? 'Run supabase/chat_likes.sql in the SQL editor to turn on hearts in the chat.' : error.message)
+          } else if (was) {
             // only the writer's own text and attachments change after the fact (edit, or a file removed)
             const { error } = await supabase.from('messages').update({ text: m.text, edited_at: m.editedAt || null, attachments: m.attachments || [] }).eq('id', m.id)
             if (error) throw new Error(error.message)

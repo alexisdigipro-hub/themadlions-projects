@@ -77,6 +77,16 @@ function useAttachmentUrl(a) {
   return url
 }
 
+/* Line icons for the phone's chat, Telegram-like. */
+const svgProps = { viewBox: '0 0 24 24', width: 24, height: 24, fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
+const TgIcon = {
+  back: () => <svg {...svgProps}><path d="M15 5l-7 7 7 7" /></svg>,
+  clip: () => <svg {...svgProps}><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.9-8.9a3.7 3.7 0 0 1 5.2 5.2l-8.9 8.9a1.8 1.8 0 0 1-2.6-2.6l8.2-8.2" /></svg>,
+  project: () => <svg {...svgProps}><rect x="3" y="5" width="18" height="15" rx="2" /><path d="M3 10h18M8 5V3M16 5V3" /></svg>,
+  person: () => <svg {...svgProps}><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
+  people: () => <svg {...svgProps}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.1.8 3.5 2.8 3.5 5.7" /></svg>,
+}
+
 function RoomAvatar({ room, size = 42 }) {
   const style = { width: size, height: size, ...(room.color ? { '--rc': room.color } : {}) }
   return (
@@ -348,6 +358,32 @@ function ChatRoom({ room, onBack }) {
   // their run, and Reply / Edit / Delete only for the message you tap, not beside every bubble.
   const mobile = useIsMobile()
   const [picked, setPicked] = useState('')
+  const [burst, setBurst] = useState('') // the message a double tap just hearted, for the big heart
+  const tapRef = useRef({ id: '', at: 0, timer: null })
+  // Telegram has no tab bar inside a conversation, and the bar must not ride up with the keyboard
+  // (Alex): the room takes the whole screen while it is open, and follows the visible part of
+  // the screen when the keyboard opens (visualViewport), so the box you type in sits on top of it.
+  useEffect(() => {
+    if (!mobile) return undefined
+    const root = document.documentElement
+    root.classList.add('chat-open')
+    const vv = window.visualViewport
+    const fit = () => {
+      if (!vv) return
+      root.style.setProperty('--chat-vh', `${vv.height}px`)
+      root.style.setProperty('--chat-vt', `${vv.offsetTop}px`)
+    }
+    fit()
+    vv?.addEventListener('resize', fit)
+    vv?.addEventListener('scroll', fit)
+    return () => {
+      root.classList.remove('chat-open')
+      root.style.removeProperty('--chat-vh')
+      root.style.removeProperty('--chat-vt')
+      vv?.removeEventListener('resize', fit)
+      vv?.removeEventListener('scroll', fit)
+    }
+  }, [mobile])
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
@@ -469,6 +505,32 @@ function ChatRoom({ room, onBack }) {
     ;(m.attachments || []).forEach((a) => deleteFile(a).catch(() => {}))
     update((s) => { s.chat = (s.chat || []).filter((x) => x.id !== m.id); return s })
   }
+  const toggleLike = (m) => {
+    const me = user?.id
+    if (!me) return
+    update((s) => {
+      const x = (s.chat || []).find((y) => y.id === m.id)
+      if (x) { const l = x.likes || []; x.likes = l.includes(me) ? l.filter((i) => i !== me) : [...l, me] }
+      return s
+    })
+  }
+  // One tap shows Reply / Edit / Delete, two quick taps put a heart on it (or take yours off).
+  // The single tap waits a moment so a double tap does not flash the actions first.
+  const onBubbleTap = (e, m) => {
+    if (e.target.closest('a, button')) return
+    const t = tapRef.current
+    const now = Date.now()
+    if (t.id === m.id && now - t.at < 300) {
+      clearTimeout(t.timer)
+      tapRef.current = { id: '', at: 0, timer: null }
+      if (!(m.likes || []).includes(user?.id)) { setBurst(m.id); setTimeout(() => setBurst((b) => (b === m.id ? '' : b)), 800) }
+      setPicked('')
+      toggleLike(m)
+      return
+    }
+    clearTimeout(t.timer)
+    tapRef.current = { id: m.id, at: now, timer: setTimeout(() => setPicked((p) => (p === m.id ? '' : m.id)), 260) }
+  }
   const startEdit = (m) => { setPicked(''); setEditing(m); setReplyTo(null); setText(m.text); requestAnimationFrame(() => inputRef.current?.focus()) }
   const startReply = (m) => { setPicked(''); setReplyTo(m); setEditing(null); requestAnimationFrame(() => inputRef.current?.focus()) }
   const cancelBar = () => { setEditing(null); setReplyTo(null); if (editing) setText('') }
@@ -497,7 +559,7 @@ function ChatRoom({ room, onBack }) {
   return (
     <div className="chat-box" data-wall={mobile && prefs.wallpaper === 'none' ? 'soft' : prefs.wallpaper} data-bubbles={mobile ? 'telegram' : prefs.bubbles} data-size={prefs.size} data-density={prefs.density}>
       <div className="chat-head">
-        {onBack && <button type="button" className="icon-btn chat-back" onClick={onBack} aria-label="Back">‹</button>}
+        {onBack && <button type="button" className="icon-btn chat-back" onClick={onBack} aria-label="Back">{mobile ? TgIcon.back() : '‹'}</button>}
         <RoomAvatar room={room} size={mobile ? 40 : 36} />
         <div className="chat-head-main">
           <strong>{room.name}</strong>
@@ -505,10 +567,21 @@ function ChatRoom({ room, onBack }) {
             {room.kind === 'direct' ? room.sub || 'Direct message' : `${membersOf.length} ${membersOf.length === 1 ? 'person' : 'people'}`}
           </span>
         </div>
-        {room.kind === 'project' && isAdmin && <Button size="sm" variant="ghost" onClick={() => setEditMembers(true)}>Members</Button>}
-        {room.kind === 'project' && <Link className="btn btn-ghost btn-sm" to={`/p/${room.projectId}`}>Open project</Link>}
-        {room.kind === 'direct' && room.otherId && <Link className="btn btn-ghost btn-sm" to={`/u/${room.otherId}`}>Profile</Link>}
-        {room.kind === 'group' && isAdmin && groupRow && <Button size="sm" variant="ghost" onClick={() => setEditGroup(true)}>Edit group</Button>}
+        {mobile ? (
+          <>
+            {room.kind === 'project' && isAdmin && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditMembers(true)} aria-label="Members" title="Members">{TgIcon.people()}</button>}
+            {room.kind === 'project' && <Link className="icon-btn chat-head-ico" to={`/p/${room.projectId}`} aria-label="Open project" title="Open project">{TgIcon.project()}</Link>}
+            {room.kind === 'direct' && room.otherId && <Link className="icon-btn chat-head-ico" to={`/u/${room.otherId}`} aria-label="Profile" title="Profile">{TgIcon.person()}</Link>}
+            {room.kind === 'group' && isAdmin && groupRow && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditGroup(true)} aria-label="Edit group" title="Edit group">{TgIcon.people()}</button>}
+          </>
+        ) : (
+          <>
+            {room.kind === 'project' && isAdmin && <Button size="sm" variant="ghost" onClick={() => setEditMembers(true)}>Members</Button>}
+            {room.kind === 'project' && <Link className="btn btn-ghost btn-sm" to={`/p/${room.projectId}`}>Open project</Link>}
+            {room.kind === 'direct' && room.otherId && <Link className="btn btn-ghost btn-sm" to={`/u/${room.otherId}`}>Profile</Link>}
+            {room.kind === 'group' && isAdmin && groupRow && <Button size="sm" variant="ghost" onClick={() => setEditGroup(true)}>Edit group</Button>}
+          </>
+        )}
       </div>
       <div className="chat-scroll" ref={scrollRef}>
         {!msgs.length && <p className="muted chat-empty">{room.kind === 'team' ? 'No messages yet. Say hi to the team.' : room.kind === 'direct' ? `No messages with ${room.name} yet.` : 'No messages yet.'}</p>}
@@ -531,7 +604,8 @@ function ChatRoom({ room, onBack }) {
                     </span>
                   )}
                   <div className="chat-bubble-wrap">
-                    <div className="chat-bubble" onClick={mobile ? (e) => { if (!e.target.closest('a, button')) setPicked((p) => (p === m.id ? '' : m.id)) } : undefined}>
+                    <div className="chat-bubble" onClick={mobile ? (e) => onBubbleTap(e, m) : undefined}>
+                      {burst === m.id && <span className="chat-heart-burst" aria-hidden="true">❤️</span>}
                       {!cont && !mine && room.kind !== 'direct' && <div className="chat-who" style={{ '--who': `hsl(${senderHue(m.userId)} 55% 42%)` }}>{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>}
                       {m.replyTo && (
                         <div className="chat-quote" onClick={() => quoted && jumpTo(quoted.id)} role={quoted ? 'button' : undefined}>
@@ -541,6 +615,15 @@ function ChatRoom({ room, onBack }) {
                       {(m.attachments || []).map((a) => <Attachment key={a.id} a={a} />)}
                       {m.text && <span className="chat-text">{renderText(m.text)}</span>}
                       {m.editedAt && <span className="chat-edited">edited</span>}
+                      {/* hearts on a line of their own, the time beside them, as Telegram does */}
+                      {mobile && (m.likes || []).length > 0 && (
+                        <>
+                          {(m.text || m.editedAt) && <br />}
+                          <button type="button" className={`chat-likes ${(m.likes || []).includes(user?.id) ? 'mine' : ''}`} onClick={() => toggleLike(m)} title={(m.likes || []).map((id) => state.users.find((u) => u.id === id)?.name || 'Someone').join(', ')}>
+                            ❤️{m.likes.length > 1 && <b>{m.likes.length}</b>}
+                          </button>
+                        </>
+                      )}
                       <span className="chat-time">{timeOf(m.createdAt)}</span>
                     </div>
                   </div>
@@ -578,9 +661,9 @@ function ChatRoom({ room, onBack }) {
             </div>
           )}
           <input ref={fileRef} type="file" multiple hidden onChange={(e) => addFiles(e.target.files)} />
-          {!editing && <button type="button" className="icon-btn chat-attach" title="Photo or file" onClick={() => fileRef.current?.click()} disabled={!!busy}>📎</button>}
+          {!editing && <button type="button" className="icon-btn chat-attach" title="Photo or file" onClick={() => fileRef.current?.click()} disabled={!!busy}>{mobile ? TgIcon.clip() : '📎'}</button>}
           <textarea ref={inputRef} className="input" rows={1} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Message" title={prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. @name mentions someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. @name mentions someone'} disabled={!!busy} />
-          <button type="button" className="chat-send" onClick={send} disabled={!!busy || (!text.trim() && !pending.length)} title={editing ? 'Save (Enter)' : 'Send (Enter)'} aria-label={editing ? 'Save' : 'Send'}>
+          <button type="button" className={`chat-send${text.trim() || pending.length ? ' ready' : ''}`} onClick={send} disabled={!!busy || (!text.trim() && !pending.length)} title={editing ? 'Save (Enter)' : 'Send (Enter)'} aria-label={editing ? 'Save' : 'Send'}>
             {busy ? '…' : editing ? '✓' : <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4l17.4-7.5c.8-.4.8-1.5 0-1.8L3.4 3.6c-.7-.3-1.4.3-1.3 1l1.2 5.7c.1.4.4.7.8.7l9.4 1-9.4 1c-.4 0-.7.3-.8.7L2.1 19.4c-.1.7.6 1.3 1.3 1z" /></svg>}
           </button>
         </div>
