@@ -2386,7 +2386,11 @@ input.cs-group-who { text-transform: none; letter-spacing: 0; font-weight: 400; 
 .player { padding: 14px 16px; }
 .wave { width: 100%; height: 110px; display: block; cursor: pointer; border-radius: var(--radius); }
 .player-bar { display: flex; align-items: center; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
-.player .play { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); font-size: 17px; cursor: pointer; flex: none; }
+/* the round play button of the song players (Overview and Music): it lost its style on the
+   Overview, which has no .player around it, and showed as a tiny grey chip (Alex, 9 Oct) */
+.player .play, .player-bar .play { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; padding: 0 0 0 3px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); font-size: 22px; line-height: 1; cursor: pointer; flex: none; box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent); }
+.player-bar .play[aria-label='Pause'] { padding-left: 0; font-size: 18px; letter-spacing: -2px; }
+.player-bar .play:hover { filter: brightness(1.08); }
 .player-time { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 120px; }
 .player-now { flex: 1; }
 .track-meta { display: grid; grid-template-columns: 1fr 160px; gap: 8px; margin-top: 10px; }
