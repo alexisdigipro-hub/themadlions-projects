@@ -649,7 +649,7 @@ function ChatRoom({ room, onBack }) {
           const pcloud = pcloudOn(state.settings) ? { folder: chatFolder(state, room), scope: { kind: 'chat', id: roomId } } : null
           const { path, fileid, scope } = await uploadFile({ projectId: C.roomFolder(roomId), id: attId, file: f, pcloud })
           // the sender sees their own photo or video at once, from the phone, not after a round trip
-          if (/^(image|video)\//.test(f.type)) urlCache.set(attId, { url: URL.createObjectURL(f), until: Date.now() + 12 * 3600 * 1000 })
+          if (/^(image|video|audio)\//.test(f.type)) urlCache.set(attId, { url: URL.createObjectURL(f), until: Date.now() + 12 * 3600 * 1000 })
           attachments.push({ id: attId, name: f.name, type: f.type, bytes: f.size, path, ...(fileid ? { fileid, scope } : {}), ...(w ? { w, h } : {}), ...(dur ? { dur } : {}) })
         }
       } catch (e) {
@@ -1305,7 +1305,7 @@ function AudioNote({ a }) {
   }
   return (
     <span className="chat-voice">
-      <button type="button" className="chat-voice-play" disabled={!url} onClick={() => { const el = ref.current; if (el) (el.paused ? el.play().catch(() => {}) : el.pause()) }} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
+      <button type="button" className={`chat-voice-play${url ? '' : ' wait'}`} onClick={() => { const el = ref.current; if (el) (el.paused ? el.play().catch(() => {}) : el.pause()) }} aria-label={playing ? 'Pause' : 'Play'} title={url ? undefined : 'Loading…'}>{playing ? '❚❚' : '▶'}</button>
       <button type="button" className="chat-voice-bar" onClick={seek} aria-label="Seek"><span style={{ width: `${d ? Math.min(100, (t / d) * 100) : 0}%` }} /></button>
       <span className="chat-voice-time">{fmt(playing || t ? t : d)}</span>
       {url && <audio ref={ref} src={url} preload="metadata" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setT(0) }} onTimeUpdate={(e) => setT(e.currentTarget.currentTime)} onLoadedMetadata={(e) => { if (Number.isFinite(e.currentTarget.duration)) setD(e.currentTarget.duration) }} />}

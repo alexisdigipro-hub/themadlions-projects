@@ -136,6 +136,8 @@ Alex: the picture window had no way to close; a button for the chat in its own w
 
 - **Viewer fix** (Alex's screenshot: pictures and videos sat low, a video ran under Save): `.chat-viewer` is a centred flex box and its picture or video is at most the screen minus 150px (Close above, Save below); a grid's `max-height: 100%` had not limited it.
 
+- **Voice note fix** (Alex: the voice message cannot be pressed, does not play, looks white): his accent is `ink`, which is cream on the dark theme, so the white play button vanished on his cream bubble; in your own bubble the button is now `--accent-ink` with the accent as icon colour, the bar uses `currentColor`. The sender's voice note is kept as a local copy (`urlCache`, like photos and videos), so it plays at once instead of waiting for the pCloud link; the button is never disabled, only dimmed while loading.
+
 **Alex still to do:** redeploy the `pcloud` Edge Function with the current `supabase/functions/pcloud/index.ts` (the chat fix above); run `supabase/chat_reactions.sql` (reactions and pins; `chat_likes.sql` is no longer needed for new reactions).
 **Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
 
