@@ -4890,60 +4890,63 @@ html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; 
   .notes-doc .xd-bar { position: sticky; bottom: 0; overflow-x: auto; flex-wrap: nowrap; justify-content: flex-start; }
 }
 
-/* ---------- Tasks, laid out like Reminders ---------- */
-.rem-app { display: grid; grid-template-columns: 320px 1fr; height: calc(100dvh - 110px); min-height: 520px; border: 1px solid var(--line-soft); border-radius: var(--radius-lg); overflow: hidden; background: var(--panel); }
-.rem-side { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; padding: 14px; background: var(--raised); border-right: 1px solid var(--line-soft); }
-.rem-search { width: 100%; }
-.rem-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.rem-card { position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; align-items: center; gap: 8px 6px; padding: 10px 12px; font: inherit; text-align: left; color: var(--text); background: var(--panel); border: 1px solid var(--line-soft); border-radius: 14px; cursor: pointer; }
-.rem-card-ico { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; font-size: 15px; font-weight: 800; color: #fff; background: var(--lc); border-radius: 50%; }
-.rem-card strong { justify-self: end; font-size: 24px; line-height: 1; }
-.rem-card > span:last-child { grid-column: 1 / -1; font-size: 14px; font-weight: 600; color: var(--muted); }
-.rem-card.on { background: var(--lc); border-color: var(--lc); color: #fff; }
-.rem-card.on .rem-card-ico { background: #fff; color: var(--lc); }
-.rem-card.on > span:last-child { color: rgba(255, 255, 255, .9); }
-.rem-lists-head { margin-top: 6px; padding: 0 4px; font-size: 18px; font-weight: 800; }
-.rem-lists { display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line-soft); border-radius: 12px; overflow: hidden; }
-.rem-list { display: flex; align-items: center; gap: 10px; padding: 9px 12px; font: inherit; font-size: 15px; text-align: left; color: var(--text); background: none; border: 0; border-bottom: 1px solid var(--line-soft); cursor: pointer; }
-.rem-list:last-child { border-bottom: 0; }
-.rem-list .grow { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rem-list-ico { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 30px; height: 30px; font-size: 14px; color: #fff; background: var(--lc); border-radius: 50%; }
-.rem-list.on { background: color-mix(in srgb, var(--lc) 16%, transparent); }
-.rem-shared { font-size: 13px; opacity: .8; }
-.rem-count { color: var(--muted); font-size: 14px; }
-.rem-add-list { align-self: flex-start; padding: 6px 4px; font: inherit; font-size: 14.5px; color: var(--accent); background: none; border: 0; cursor: pointer; }
-.rem-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.rem-head { display: flex; align-items: center; gap: 10px; padding: 18px 22px 8px; }
-.rem-head h1 { margin: 0; font-size: 30px; font-weight: 800; color: var(--lc); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rem-head-count { font-size: 30px; font-weight: 700; color: var(--lc); }
-.rem-edit-list { font: inherit; font-size: 13.5px; color: var(--accent); background: none; border: 0; cursor: pointer; }
-.rem-done-bar { display: flex; align-items: center; gap: 10px; margin: 0 22px; padding: 8px 0; font-size: 14px; color: var(--muted); border-bottom: 1px solid var(--line-soft); }
-.rem-done-bar button { padding: 0; font: inherit; color: var(--lc); background: none; border: 0; cursor: pointer; }
-.rem-scroll { flex: 1; overflow-y: auto; padding: 4px 22px 40px; }
-.rem-section { margin-top: 6px; }
-.rem-section-head { padding: 12px 0 2px; font-size: 16px; font-weight: 800; }
-.rem-tasks { list-style: none; margin: 0; padding: 0; }
-.rem-task { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0 0; }
-.rem-check { flex: none; width: 22px; height: 22px; margin-top: 1px; padding: 0; background: transparent; border: 2px solid color-mix(in srgb, var(--lc) 70%, var(--muted)); border-radius: 50%; cursor: pointer; }
-.rem-check:hover:not(:disabled) { background: color-mix(in srgb, var(--lc) 15%, transparent); }
-.rem-task.done .rem-check { background: var(--lc) radial-gradient(circle, #fff 0 3px, transparent 3.5px); border-color: var(--lc); }
-.rem-check.ghost { border-style: dashed; opacity: .5; cursor: default; }
-.rem-task-main { flex: 1; min-width: 0; padding-bottom: 10px; border-bottom: 1px solid var(--line-soft); cursor: pointer; }
-.rem-task-title { font-size: 15.5px; line-height: 1.35; overflow-wrap: anywhere; }
-.rem-task.done .rem-task-title { color: var(--muted); }
-.rem-bang { margin-right: 6px; color: var(--lc); font-weight: 800; }
+/* ---------- Tasks, laid out like Microsoft To Do ---------- */
+.rem-app { display: grid; grid-template-columns: 290px 1fr; height: calc(100dvh - 110px); min-height: 520px; border: 1px solid var(--line-soft); border-radius: var(--radius-lg); overflow: hidden; background: var(--panel); }
+.rem-side { display: flex; flex-direction: column; gap: 4px; min-height: 0; overflow-y: auto; padding: 14px 10px; background: var(--raised); border-right: 1px solid var(--line-soft); }
+.rem-search-wrap { position: relative; margin: 0 4px 10px; }
+.rem-search-ico { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 17px; color: var(--muted); pointer-events: none; }
+.rem-search { width: 100%; box-sizing: border-box; height: 36px; padding: 0 10px 0 32px; font: inherit; font-size: 15px; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; outline: none; }
+.rem-search:focus { border-color: var(--accent); }
+.rem-smart, .rem-lists { display: flex; flex-direction: column; }
+.rem-row { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 6px 12px; font: inherit; font-size: 15.5px; text-align: left; color: var(--text); background: none; border: 0; border-radius: 8px; cursor: pointer; }
+.rem-row:hover { background: var(--hover-tint, rgba(127, 127, 127, .08)); }
+.rem-row.on { background: color-mix(in srgb, var(--text) 9%, transparent); font-weight: 600; }
+.rem-row-ico { display: inline-flex; width: 22px; justify-content: center; color: var(--lc); }
+.rem-row-emoji { display: inline-flex; width: 22px; justify-content: center; font-size: 18px; }
+.rem-row .grow { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rem-count { min-width: 18px; text-align: right; font-size: 13.5px; color: var(--muted); font-weight: 400; }
+.rem-shared { font-size: 13px; opacity: .75; }
+.rem-rule { width: calc(100% - 24px); margin: 8px 12px; border: 0; border-top: 1px solid var(--line); }
+.rem-add-list { display: flex; align-items: center; gap: 12px; margin-top: 2px; padding: 8px 12px; font: inherit; font-size: 15.5px; color: #2f6fde; background: none; border: 0; border-radius: 8px; cursor: pointer; text-align: left; }
+.rem-add-list span { width: 22px; text-align: center; font-size: 20px; }
+.rem-add-list:hover { background: var(--hover-tint, rgba(127, 127, 127, .08)); }
+.rem-main { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: linear-gradient(170deg, color-mix(in srgb, var(--lc) 92%, #000) 0%, color-mix(in srgb, var(--lc) 70%, #6d8a9a) 45%, color-mix(in srgb, var(--lc) 25%, #e9d9cf) 100%); }
+.rem-head { display: flex; align-items: flex-start; gap: 10px; padding: 26px 28px 14px; color: #fff; }
+.rem-head h1 { margin: 0; font-size: 32px; font-weight: 700; line-height: 1.15; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 8px rgba(0, 0, 0, .18); }
+.rem-head-emoji { margin-right: 10px; }
+.rem-head-date { margin-top: 6px; font-size: 16px; color: rgba(255, 255, 255, .9); }
+.rem-head-btn { padding: 6px 10px; font: inherit; font-size: 13.5px; color: #fff; background: rgba(255, 255, 255, .16); border: 0; border-radius: 8px; cursor: pointer; }
+.rem-head-btn:hover { background: rgba(255, 255, 255, .26); }
+.rem-back { padding: 6px 2px; font: inherit; font-size: 16px; color: #fff; background: none; border: 0; cursor: pointer; white-space: nowrap; }
+.rem-scroll { flex: 1; overflow-y: auto; padding: 4px 28px 20px; }
+.rem-tasks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.rem-task { display: flex; align-items: center; gap: 14px; padding: 9px 14px; color: #1f2430; background: #fff; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, .12); }
+.rem-task:hover { background: #f6f7f9; }
+.rem-check { flex: none; width: 21px; height: 21px; padding: 0; background: transparent; border: 1.5px solid #5f6670; border-radius: 50%; cursor: pointer; }
+.rem-check:hover:not(:disabled) { background: radial-gradient(circle, #5f6670 0 3px, transparent 3.5px); }
+.rem-task.done .rem-check { background: #5f6670 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 8.5 2.5 2.5L12 5.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px no-repeat; border-color: #5f6670; }
+.rem-task-main { flex: 1; min-width: 0; cursor: pointer; }
+.rem-task-title { font-size: 15px; line-height: 1.35; overflow-wrap: anywhere; }
+.rem-task.done .rem-task-title { color: #6b7078; text-decoration: line-through; }
 .rem-task-title .pill { margin-left: 8px; }
-.rem-task-notes { margin-top: 2px; font-size: 13.5px; color: var(--muted); white-space: pre-wrap; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.rem-task-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 3px; font-size: 13px; color: var(--muted); }
-.rem-task-meta .late { color: #ff3b30; }
-.rem-del { flex: none; width: 26px; height: 26px; margin-top: -2px; padding: 0; font-size: 17px; color: var(--muted); background: none; border: 0; border-radius: 6px; cursor: pointer; opacity: 0; }
+.rem-task-meta { display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 2px; font-size: 12.5px; color: #6b7078; }
+.rem-task-meta:empty { display: none; }
+.rem-task-meta .today, .rem-task-meta .due { color: #2f6fde; }
+.rem-task-meta .late { color: #c62828; }
+.rem-star { flex: none; width: 28px; height: 28px; padding: 0; font-size: 19px; color: #8a9099; background: none; border: 0; border-radius: 6px; cursor: pointer; }
+.rem-star.on { color: #2f6fde; }
+.rem-star:disabled { cursor: default; opacity: .5; }
+.rem-del { flex: none; width: 24px; height: 24px; padding: 0; font-size: 17px; color: #8a9099; background: none; border: 0; border-radius: 6px; cursor: pointer; opacity: 0; }
 .rem-task:hover .rem-del { opacity: 1; }
-.rem-quick { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
-.rem-quick-input { flex: 1; padding: 4px 0; font: inherit; font-size: 15.5px; color: var(--text); background: none; border: 0; border-bottom: 1px solid var(--line-soft); outline: none; }
-.rem-quick-input::placeholder { color: var(--muted); }
-.rem-completed { margin-top: 8px; }
-.rem-empty { padding: 18px 0 4px; }
-.rem-back { padding: 6px 2px; font: inherit; font-size: 16px; color: var(--accent); background: none; border: 0; cursor: pointer; white-space: nowrap; }
+.rem-empty { margin: 18px 0; color: rgba(255, 255, 255, .9); font-size: 15px; }
+.rem-done-bar { display: flex; align-items: center; gap: 10px; margin: 14px 0 6px; }
+.rem-done-toggle, .rem-done-clear { padding: 5px 10px; font: inherit; font-size: 14px; font-weight: 600; color: #fff; background: rgba(0, 0, 0, .28); border: 0; border-radius: 6px; cursor: pointer; }
+.rem-done-toggle span { margin-left: 6px; font-weight: 400; opacity: .85; }
+.rem-done-clear { font-weight: 400; background: rgba(0, 0, 0, .18); }
+.rem-quick { display: flex; align-items: center; gap: 14px; margin: 0 28px 20px; padding: 0 16px; min-height: 52px; background: rgba(40, 42, 46, .72); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-radius: 8px; }
+.rem-quick-plus { font-size: 22px; color: #fff; width: 21px; text-align: center; }
+.rem-quick-input { flex: 1; padding: 14px 0; font: inherit; font-size: 15.5px; color: #fff; background: none; border: 0; outline: none; }
+.rem-quick-input::placeholder { color: rgba(255, 255, 255, .85); }
 .rem-list-form { display: flex; flex-direction: column; gap: 14px; }
 .rem-list-preview { align-self: center; display: inline-flex; align-items: center; justify-content: center; width: 72px; height: 72px; font-size: 34px; color: #fff; background: var(--lc); border-radius: 50%; box-shadow: 0 6px 18px color-mix(in srgb, var(--lc) 40%, transparent); }
 .rem-swatches, .rem-icons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
@@ -4954,11 +4957,13 @@ html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; 
 @media (max-width: 820px) {
   .rem-app { display: flex; flex-direction: column; height: auto; min-height: 0; border: 0; border-radius: 0; background: transparent; overflow: visible; }
   .rem-side { padding: 0; background: transparent; border: 0; overflow: visible; }
-  .rem-main { min-height: calc(100dvh - 170px); }
-  .rem-head { padding: 6px 2px; }
-  .rem-head h1, .rem-head-count { font-size: 26px; }
-  .rem-done-bar { margin: 0 2px; }
-  .rem-scroll { padding: 0 2px 40px; overflow: visible; }
+  .rem-search-wrap { margin: 0 0 10px; }
+  .rem-row { min-height: 46px; font-size: 16.5px; }
+  .rem-main { height: calc(100dvh - 150px); margin: 0 -16px; border-radius: 0; }
+  .rem-head { padding: 12px 16px 12px; }
+  .rem-head h1 { font-size: 28px; }
+  .rem-scroll { padding: 4px 12px 16px; }
+  .rem-quick { margin: 0 12px 12px; }
   .rem-del { opacity: .6; }
 }
 .rem-app .grow, .notes-app .grow, .release-list .grow { flex: 1; min-width: 0; }
