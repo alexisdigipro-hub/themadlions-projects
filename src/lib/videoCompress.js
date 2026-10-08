@@ -144,3 +144,25 @@ export async function compressVideo(h, onProgress) {
     releaseVideo(h)
   }
 }
+
+/* Width, height (and length) of a photo or video as it is, for one sent in original quality. */
+export function mediaSize(file) {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file)
+    const done = (v) => { clearTimeout(t); URL.revokeObjectURL(url); resolve(v) }
+    const t = setTimeout(() => done(null), 10000)
+    if ((file.type || '').startsWith('image/')) {
+      const img = new Image()
+      img.onload = () => done(img.naturalWidth ? { w: img.naturalWidth, h: img.naturalHeight } : null)
+      img.onerror = () => done(null)
+      img.src = url
+    } else {
+      const v = document.createElement('video')
+      v.preload = 'metadata'
+      v.muted = true
+      v.onloadedmetadata = () => done(v.videoWidth ? { w: v.videoWidth, h: v.videoHeight, duration: v.duration } : null)
+      v.onerror = () => done(null)
+      v.src = url
+    }
+  })
+}

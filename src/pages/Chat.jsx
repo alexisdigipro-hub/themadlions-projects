@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Button, Confirm, Field, Input, Modal, useIsMobile, useToast } from '../components/ui.jsx'
 import { canAccessProject, canSendNotices, today as todayISO, uid, useCurrentUser, useStore } from '../lib/store.jsx'
@@ -6,8 +7,8 @@ import { addDays, fmtDate } from '../lib/dates.js'
 import { SendNoticeModal, SentNotices, sendAutoNotice } from '../components/Notices.jsx'
 import { deleteFile, fileIcon, fileUrl, fmtBytes, uploadFile } from '../lib/files.js'
 import { compress } from '../lib/photos.js'
-import { canCompressVideo, compressVideo, isVideoFile, prepareVideo, releaseVideo } from '../lib/videoCompress.js'
-import { pcloudOn } from '../lib/pcloud.js'
+import { canCompressVideo, compressVideo, isVideoFile, mediaSize, prepareVideo, releaseVideo } from '../lib/videoCompress.js'
+import { pcloudBlob, pcloudOn } from '../lib/pcloud.js'
 import { remote, supabase } from '../lib/supabase.js'
 import { loadChatPrefs } from '../lib/chatPrefs.js'
 import * as C from '../lib/chat.js'
@@ -35,6 +36,7 @@ const isVideo = (a) => (a?.type || '').startsWith('video/')
 const MAX_BYTES = 50 * 1024 * 1024
 // a video is shrunk before it goes up, so a bigger one may be picked (it must end up under 50 MB)
 const MAX_VIDEO_PICK = 2 * 1024 * 1024 * 1024
+const isMedia = (a) => isImage(a) || isVideo(a)
 const attLabel = (a) => (isImage(a) ? 'Photo' : isVideo(a) ? 'Video' : a.name)
 /* A colour per sender for their name inside group bubbles, stable for the same person. */
 const SENDER_HUES = [14, 36, 95, 160, 200, 230, 275, 320]
@@ -109,6 +111,10 @@ const TgIcon = {
   edit: () => <svg {...svgProps}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>,
   trash: () => <svg {...svgProps}><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" /></svg>,
   folder: () => <svg {...svgProps}><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /></svg>,
+  image: () => <svg {...svgProps}><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></svg>,
+  camera: () => <svg {...svgProps}><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" /><circle cx="12" cy="13.5" r="3.5" /></svg>,
+  file: () => <svg {...svgProps}><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" /><path d="M14 3v5h5" /></svg>,
+  close: () => <svg {...svgProps}><path d="M6 6l12 12M18 6L6 18" /></svg>,
   people: () => <svg {...svgProps}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.1.8 3.5 2.8 3.5 5.7" /></svg>,
 }
 
@@ -423,6 +429,9 @@ function ChatRoom({ room, onBack }) {
   const [replyTo, setReplyTo] = useState(null)
   const [editing, setEditing] = useState(null)
   const [pending, setPending] = useState([]) // files chosen, not sent yet
+  const [sheet, setSheet] = useState(false) // the sheet to pick photos, videos and files (Telegram's)
+  // photos and videos are shrunk like WhatsApp unless this is switched off in the sheet
+  const [compressMedia, setCompressMedia] = useState(true)
   const [busy, setBusy] = useState('')
   const [caret, setCaret] = useState(0)
   const [editGroup, setEditGroup] = useState(false)
@@ -430,7 +439,6 @@ function ChatRoom({ room, onBack }) {
   const endRef = useRef(null)
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
-  const fileRef = useRef(null)
   const byId = useMemo(() => Object.fromEntries((state.chat || []).map((m) => [m.id, m])), [state.chat])
   const photoOf = (userId) => state.users.find((u) => u.id === userId)?.profile?.thumb || ''
   const nameRe = useMemo(() => {
@@ -473,7 +481,6 @@ function ChatRoom({ room, onBack }) {
     const arr = Array.from(list || []).filter((f) => f.size <= (vids && isVideoFile(f) ? MAX_VIDEO_PICK : MAX_BYTES))
     if (arr.length < (list?.length || 0)) toast('Files over 50 MB were left out.', 'error')
     setPending((p) => [...p, ...arr])
-    if (fileRef.current) fileRef.current.value = ''
   }
 
   const send = async () => {
@@ -491,7 +498,8 @@ function ChatRoom({ room, onBack }) {
     const id = uid()
     const attachments = []
     // videos are readied here, inside the tap, before anything waits: Safari only lets them play then
-    const prepared = pending.map((f) => prepareVideo(f))
+    const prepared = pending.map((f) => (compressMedia ? prepareVideo(f) : null))
+    setSheet(false)
     if (pending.length) {
       setBusy('Uploading…')
       try {
@@ -501,7 +509,11 @@ function ChatRoom({ room, onBack }) {
           const of = pending.length > 1 ? ` ${i + 1}/${pending.length}` : ''
           setBusy(`Uploading${of}…`)
           let w, h, dur
-          if (f.type.startsWith('image/') && !/gif$/i.test(f.type)) {
+          if (!compressMedia && /^(image|video)\//.test(f.type)) {
+            // original quality: sent as it is, only its size is read for the bubble's shape
+            const d = await mediaSize(f)
+            if (d) { w = d.w; h = d.h; if (d.duration) dur = Math.round(d.duration) }
+          } else if (f.type.startsWith('image/') && !/gif$/i.test(f.type)) {
             const c = await compress(f, { max: 1600, quality: 0.82 })
             w = c.w; h = c.h
             f = new File([c.blob], f.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' })
@@ -511,7 +523,7 @@ function ChatRoom({ room, onBack }) {
             if (c) { f = c.file; w = c.w; h = c.h; dur = Math.round(c.duration) }
             setBusy(`Uploading${of}…`)
           }
-          if (f.size > MAX_BYTES) throw new Error(`${f.name} is over 50 MB${isVideoFile(f) ? ' even after compressing. Send a shorter clip.' : '.'}`)
+          if (f.size > MAX_BYTES) throw new Error(`${f.name} is over 50 MB${isVideoFile(f) ? (compressMedia ? ' even after compressing. Send a shorter clip.' : '. Switch Compress back on, or send a shorter clip.') : '.'}`)
           const attId = uid()
           const pcloud = pcloudOn(state.settings) ? { folder: chatFolder(state, room), scope: { kind: 'chat', id: roomId } } : null
           const { path, fileid, scope } = await uploadFile({ projectId: C.roomFolder(roomId), id: attId, file: f, pcloud })
@@ -642,6 +654,16 @@ function ChatRoom({ room, onBack }) {
               const cont = follows(g.items[i - 1], m)
               const last = !g.items[i + 1] || !follows(m, g.items[i + 1])
               const quoted = m.replyTo ? byId[m.replyTo] : null
+              const showWho = !cont && !mine && room.kind !== 'direct'
+              // photos and videos as Telegram shows them: big, edge to edge, the time on the picture
+              const media = (m.attachments || []).filter(isMedia)
+              const files = (m.attachments || []).filter((a) => !isMedia(a))
+              const mediaOnly = media.length > 0 && !files.length && !m.text && !m.replyTo && !showWho
+              const likesBtn = (m.likes || []).length > 0 && (
+                <button type="button" className={`chat-likes ${(m.likes || []).includes(user?.id) ? 'mine' : ''}`} onClick={() => toggleLike(m)} title={(m.likes || []).map((id) => state.users.find((u) => u.id === id)?.name || 'Someone').join(', ')}>
+                  🎥{m.likes.length > 1 && <b>{m.likes.length}</b>}
+                </button>
+              )
               return (
                 <div key={m.id} data-msg={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${last ? 'last' : ''} ${picked === m.id ? 'picked' : ''}`}>
                   {!mine && room.kind !== 'direct' && prefs.avatars && (
@@ -650,27 +672,26 @@ function ChatRoom({ room, onBack }) {
                     </span>
                   )}
                   <div className="chat-bubble-wrap">
-                    <div className="chat-bubble" onClick={(e) => onBubbleTap(e, m)} onMouseDown={mobile ? undefined : (e) => { if (e.detail > 1) e.preventDefault() }}>
+                    <div className={`chat-bubble${media.length ? ' has-media' : ''}${mediaOnly ? ' media-only' : ''}`} onClick={(e) => onBubbleTap(e, m)} onMouseDown={mobile ? undefined : (e) => { if (e.detail > 1) e.preventDefault() }}>
                       {burst === m.id && <span className="chat-heart-burst" aria-hidden="true">🎥</span>}
-                      {!cont && !mine && room.kind !== 'direct' && <div className="chat-who" style={{ '--who': `hsl(${senderHue(m.userId)} 55% 42%)` }}>{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>}
+                      {showWho && <div className="chat-who" style={{ '--who': `hsl(${senderHue(m.userId)} 55% 42%)` }}>{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>}
                       {m.replyTo && (
                         <div className="chat-quote" onClick={() => quoted && jumpTo(quoted.id)} role={quoted ? 'button' : undefined}>
                           {quoted ? <><b>{quoted.userId === user?.id ? 'You' : quoted.userName}</b><span>{quoted.text || (quoted.attachments?.length ? attLabel(quoted.attachments[0]) : '')}</span></> : <span>Message deleted</span>}
                         </div>
                       )}
-                      {(m.attachments || []).map((a) => <Attachment key={a.id} a={a} />)}
+                      {media.length > 0 && <MediaAlbum items={media} meta={mediaOnly ? <>{likesBtn}<span className="chat-time">{timeOf(m.createdAt)}</span></> : null} />}
+                      {files.map((a) => <Attachment key={a.id} a={a} />)}
                       {m.text && <span className="chat-text">{renderText(m.text)}</span>}
                       {m.editedAt && <span className="chat-edited">edited</span>}
                       {/* hearts on a line of their own, the time beside them, as Telegram does */}
-                      {(m.likes || []).length > 0 && (
+                      {!mediaOnly && likesBtn && (
                         <>
                           {(m.text || m.editedAt) && <br />}
-                          <button type="button" className={`chat-likes ${(m.likes || []).includes(user?.id) ? 'mine' : ''}`} onClick={() => toggleLike(m)} title={(m.likes || []).map((id) => state.users.find((u) => u.id === id)?.name || 'Someone').join(', ')}>
-                            🎥{m.likes.length > 1 && <b>{m.likes.length}</b>}
-                          </button>
+                          {likesBtn}
                         </>
                       )}
-                      <span className="chat-time">{timeOf(m.createdAt)}</span>
+                      {!mediaOnly && <span className="chat-time">{timeOf(m.createdAt)}</span>}
                     </div>
                       {picked === m.id && (
                         // the tapped (or clicked) message's menu: buttons with words, Telegram-like, under the bubble
@@ -709,8 +730,7 @@ function ChatRoom({ room, onBack }) {
               {mentionHits.map((u) => <button key={u.id} type="button" onMouseDown={(e) => { e.preventDefault(); pickMention(u) }}>@{u.name}<small>{u.profile?.position || ''}</small></button>)}
             </div>
           )}
-          <input ref={fileRef} type="file" multiple hidden onChange={(e) => addFiles(e.target.files)} />
-          {!editing && <button type="button" className="icon-btn chat-attach" title="Photo or file" onClick={() => fileRef.current?.click()} disabled={!!busy}>{TgIcon.clip()}</button>}
+          {!editing && <button type="button" className="icon-btn chat-attach" title="Photo, video or file" onClick={() => setSheet(true)} disabled={!!busy}>{TgIcon.clip()}</button>}
           {/* autoComplete off: the iPhone stops offering AutoFill Contact and your own name above the keyboard */}
           <textarea ref={inputRef} className="input" rows={1} name="chat-message" autoComplete="off" autoCorrect="on" value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Message" title={prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. @name mentions someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. @name mentions someone'} disabled={!!busy} />
           <button type="button" className={`chat-send${text.trim() || pending.length ? ' ready' : ''}`} onClick={send} disabled={!!busy || (!text.trim() && !pending.length)} title={editing ? 'Save (Enter)' : 'Send (Enter)'} aria-label={editing ? 'Save' : 'Send'}>
@@ -720,9 +740,119 @@ function ChatRoom({ room, onBack }) {
         {busy && <div className="chat-bar chat-busy">{busy}</div>}
       </div>
       )}
+      {sheet && <AttachSheet pending={pending} onAdd={addFiles} onRemove={(i) => setPending((p) => p.filter((_, j) => j !== i))} compress={compressMedia} setCompress={setCompressMedia} text={text} setText={setText} onSend={send} onClose={() => setSheet(false)} />}
       {groupRow && <GroupModal open={editGroup} group={groupRow} onClose={() => setEditGroup(false)} onSaved={() => setEditGroup(false)} />}
       {room.kind === 'project' && isAdmin && <ProjectMembersModal open={editMembers} projectId={room.projectId} onClose={() => setEditMembers(false)} />}
     </div>
+  )
+}
+
+/* Photos and videos of one message, Telegram-like: one fills the bubble at its own shape, several
+   wide ones stack, the rest sit two by two as squares (an odd first one spans the row). */
+function MediaAlbum({ items, meta }) {
+  const n = items.length
+  const wide = items.every((a) => a.w && a.h && a.w >= a.h)
+  const layout = n === 1 ? 'one' : wide ? 'stack' : 'grid'
+  return (
+    <div className={`chat-media chat-media-${layout}${n % 2 ? ' odd' : ''}${items.some(isVideo) ? ' has-video' : ''}`}>
+      {items.map((a) => <MediaTile key={a.id} a={a} shaped={layout !== 'grid'} />)}
+      {meta && <span className="chat-media-meta">{meta}</span>}
+    </div>
+  )
+}
+function MediaTile({ a, shaped }) {
+  const [link, failed, retry] = useAttachmentUrl(a)
+  const [local, setLocal] = useState('')
+  const [tried, setTried] = useState(false)
+  // a pCloud link the phone cannot open: the file comes through the pcloud function instead
+  const viaFunction = () => {
+    if (tried || !a.fileid) return
+    setTried(true)
+    pcloudBlob(a.fileid, a.scope).then((b) => {
+      const u = URL.createObjectURL(b)
+      urlCache.set(a.id, { url: u, until: Date.now() + 12 * 3600 * 1000 })
+      setLocal(u)
+    }).catch(() => {})
+  }
+  const url = local || link
+  const style = shaped && a.w && a.h ? { aspectRatio: `${a.w} / ${a.h}` } : undefined
+  if (!url) {
+    return failed
+      ? <button type="button" className="chat-media-tile chat-media-wait chat-att-retry" style={style} onClick={retry}>Tap to load</button>
+      : <span className="chat-media-tile chat-media-wait" style={style}>…</span>
+  }
+  if (isVideo(a)) return <video className="chat-media-tile" src={`${url}#t=0.1`} controls playsInline preload="metadata" style={style} title={a.name} onError={viaFunction} />
+  return <a className="chat-media-tile" href={url} target="_blank" rel="noreferrer" title={a.name} style={style}><img src={url} alt={a.name} loading="lazy" onError={viaFunction} /></a>
+}
+
+/* The sheet the paperclip opens (Alex, 8 Oct, from Telegram's): what you picked in a grid, a
+   switch to send photos and videos in original quality, a caption and Send, and Gallery /
+   Camera / File below. A web page cannot show the phone's photo library itself, so Gallery opens
+   the phone's own picker. */
+function AttachSheet({ pending, onAdd, onRemove, compress, setCompress, text, setText, onSend, onClose }) {
+  const galleryRef = useRef(null)
+  const cameraRef = useRef(null)
+  const fileRef = useRef(null)
+  const thumbs = useMemo(() => pending.map((f) => (/^(image|video)\//.test(f.type) ? URL.createObjectURL(f) : '')), [pending])
+  useEffect(() => () => thumbs.forEach((u) => u && URL.revokeObjectURL(u)), [thumbs])
+  useEffect(() => {
+    const esc = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', esc)
+    return () => document.removeEventListener('keydown', esc)
+  }, [onClose])
+  const hasMedia = pending.some((f) => /^(image|video)\//.test(f.type))
+  const pick = (ref) => ref.current?.click()
+  const take = (e) => { onAdd(e.target.files); e.target.value = '' }
+  return createPortal(
+    <>
+      <div className="chat-sheet-scrim" onClick={onClose} />
+      <div className="chat-sheet" role="dialog" aria-label="Send photos, videos or files">
+        <div className="chat-sheet-head">
+          <button type="button" className="chat-sheet-x" onClick={onClose} aria-label="Close">{TgIcon.close()}</button>
+          <strong>{pending.length ? `${pending.length} selected` : 'Send'}</strong>
+          <span className="chat-sheet-x-spacer" />
+        </div>
+        {pending.length > 0 ? (
+          <div className="chat-sheet-grid">
+            {pending.map((f, i) => (
+              <div key={i} className="chat-sheet-tile">
+                {thumbs[i] && f.type.startsWith('video/') ? <video src={`${thumbs[i]}#t=0.1`} muted playsInline preload="metadata" />
+                  : thumbs[i] ? <img src={thumbs[i]} alt={f.name} />
+                  : <span className="chat-sheet-doc"><span className="file-ico">{fileIcon(f.name, f.type)}</span><small>{f.name}</small></span>}
+                {f.type.startsWith('video/') && <span className="chat-sheet-play">▶</span>}
+                <span className="chat-sheet-size">{fmtBytes(f.size)}</span>
+                <button type="button" className="chat-sheet-rm" onClick={() => onRemove(i)} aria-label="Remove">×</button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="chat-sheet-empty">Pick photos, videos or files to send.</p>
+        )}
+        {hasMedia && (
+          <button type="button" className="chat-sheet-opt" role="switch" aria-checked={compress} onClick={() => setCompress(!compress)}>
+            <span><b>Compress photos and videos</b><small>{compress ? 'Smaller and quicker, like WhatsApp' : 'Off: sent in original quality, up to 50 MB each'}</small></span>
+            <span className={`chat-switch ${compress ? 'on' : ''}`} aria-hidden="true" />
+          </button>
+        )}
+        {pending.length > 0 && (
+          <div className="chat-sheet-send">
+            <input className="input" value={text} onChange={(e) => setText(e.target.value)} placeholder="Add a caption" autoComplete="off" name="chat-caption" />
+            <button type="button" className="chat-send ready" onClick={onSend} aria-label="Send">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4l17.4-7.5c.8-.4.8-1.5 0-1.8L3.4 3.6c-.7-.3-1.4.3-1.3 1l1.2 5.7c.1.4.4.7.8.7l9.4 1-9.4 1c-.4 0-.7.3-.8.7L2.1 19.4c-.1.7.6 1.3 1.3 1z" /></svg>
+            </button>
+          </div>
+        )}
+        <div className="chat-sheet-tabs">
+          <button type="button" onClick={() => pick(galleryRef)}>{TgIcon.image()}<span>Gallery</span></button>
+          <button type="button" onClick={() => pick(cameraRef)}>{TgIcon.camera()}<span>Camera</span></button>
+          <button type="button" onClick={() => pick(fileRef)}>{TgIcon.file()}<span>File</span></button>
+        </div>
+        <input ref={galleryRef} type="file" accept="image/*,video/*" multiple hidden onChange={take} />
+        <input ref={cameraRef} type="file" accept="image/*,video/*" capture="environment" hidden onChange={take} />
+        <input ref={fileRef} type="file" multiple hidden onChange={take} />
+      </div>
+    </>,
+    document.body,
   )
 }
 
