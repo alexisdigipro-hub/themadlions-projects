@@ -3787,3 +3787,50 @@ html[data-public='1'] body { background: var(--bg); }
   .chat2 .chat-send:disabled { opacity: 1; }
   .chat2 .chat-send svg { width: 21px; height: 21px; }
 }
+
+/* Chat on a phone, Telegram like the computer (Alex, 8 Oct: "do the mobile the way you did the
+   desktop"). List: title in the middle, New group as an icon, folder tabs in capitals, search
+   centred until you type. Room: everything sits on the wallpaper; a round back button, the name
+   in a floating pill, round buttons beside it, your bubbles in the full accent, and a floating box
+   to type in between a round paperclip and a round send. The computer is unchanged. */
+@media (max-width: 820px) {
+  .chat2:not(.has-room) .chat-list-head { position: relative; justify-content: flex-end; min-height: 52px; padding: 10px 10px 6px; }
+  .chat2:not(.has-room) .chat-list-head h1 { position: absolute; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 700; pointer-events: none; }
+  .chat2 .chat-list-head .chat-head-ico { width: 40px; height: 40px; display: grid; place-items: center; color: var(--accent); border-radius: 50%; }
+  .chat2 .chat-list-head .chat-head-ico svg { width: 23px; height: 23px; }
+  .chat2 .chat-folders button { font-size: 13px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; padding: 10px 8px 9px; }
+  .chat2 .chat-folders .chat-folders-edit { text-transform: none; letter-spacing: 0; }
+  .chat2 .chat-search .input { text-align: center; background-position: calc(50% - 40px) 50%; }
+  .chat2 .chat-search .input:focus, .chat2 .chat-search .input:not(:placeholder-shown) { text-align: left; background-position: 13px 50%; }
+
+  /* the room on its wallpaper */
+  .chat2.has-room .chat-box { --tg-lift: 0 1px 2px rgba(0, 0, 0, .1), 0 3px 10px rgba(0, 0, 0, .06); background: var(--wa-wall); }
+  html[data-theme='dark'] .chat2.has-room .chat-box { --tg-lift: 0 1px 2px rgba(0, 0, 0, .35); }
+  .chat2.has-room .chat-head { background: transparent; border: 0; gap: 8px; padding: calc(6px + env(safe-area-inset-top)) 8px 6px; }
+  .chat2.has-room .chat-back, .chat2.has-room .chat-head .chat-head-ico { flex: none; width: 44px; height: 44px; margin: 0; display: grid; place-items: center; border-radius: 50%; background: var(--panel); color: var(--text); box-shadow: var(--tg-lift); }
+  .chat2.has-room .chat-back svg { width: 24px; height: 24px; }
+  .chat2.has-room .chat-head .chat-head-ico svg { width: 21px; height: 21px; }
+  .chat2.has-room .chat-head-card { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; min-height: 44px; padding: 2px 14px 2px 3px; border-radius: 24px; background: var(--panel); box-shadow: var(--tg-lift); }
+  .chat2.has-room .chat-head-card .chat-ravatar { width: 38px !important; height: 38px !important; font-size: 14px; }
+  .chat2.has-room .chat-head-main strong { font-size: 15.5px; }
+  .chat2.has-room .chat-head-main .small { font-size: 12.5px; }
+  .chat2.has-room .chat-scroll { background-color: transparent; }
+
+  /* your own bubbles in the full accent */
+  html .chat2.has-room .chat-box[data-bubbles='telegram'] { --wa-out: var(--accent); }
+  .chat2.has-room .chat-msg.mine .chat-bubble { color: var(--accent-ink, #fff); }
+  .chat2.has-room .chat-msg.mine .chat-time, .chat2.has-room .chat-msg.mine .chat-edited, .chat2.has-room .chat-msg.mine .mention, .chat2.has-room .chat-msg.mine .chat-quote b { color: inherit; opacity: .85; }
+  .chat2.has-room .chat-msg.mine .chat-quote { border-left-color: currentColor; background: rgba(255, 255, 255, .18); }
+  .chat2.has-room .chat-msg.mine .chat-file, .chat2.has-room .chat-msg.mine .chat-att-wait { background: rgba(255, 255, 255, .18); }
+  .chat2.has-room .chat-msg.mine .chat-likes { background: rgba(255, 255, 255, .22); }
+
+  /* the floating box to type in */
+  .chat2.has-room .chat-compose-wrap { background: transparent; border: 0; }
+  .chat2.has-room .chat-bar { margin: 4px 8px 0; padding: 8px 12px; background: var(--panel); border-radius: 14px; box-shadow: var(--tg-lift); }
+  .chat2.has-room .chat-pending { padding: 6px 8px 0; }
+  .chat2.has-room .chat-compose { background: transparent; padding: 6px 8px 8px; gap: 7px; }
+  .chat2.has-room .chat-compose textarea { background: var(--panel); border-radius: 22px; min-height: 44px; padding: 11px 16px; box-shadow: var(--tg-lift); }
+  .chat2.has-room .chat-attach, .chat2.has-room .chat-send { width: 44px; height: 44px; border-radius: 50%; background: var(--panel); color: var(--muted); box-shadow: var(--tg-lift); }
+  .chat2.has-room .chat-send.ready { background: var(--accent); color: var(--accent-ink, #fff); }
+  html.chat-open.kb-open .chat2.has-room .chat-compose { padding-bottom: 6px; }
+}

@@ -165,9 +165,7 @@ function RoomList({ activeId }) {
         <h1>Chat</h1>
         {!mobile && <button type="button" className="icon-btn chat-head-ico chat-folders-btn" onClick={() => setFolders(true)} title="Your folders" aria-label="Your folders">{TgIcon.folder()}</button>}
         {!mobile && <button type="button" className="icon-btn chat-head-ico chat-new" onClick={() => setDirect(true)} title="New message" aria-label="New message">{TgIcon.edit()}</button>}
-        {isAdmin && (mobile
-          ? <Button size="sm" variant="primary" onClick={() => setGroup('new')} title="A group of chosen people">+ Group</Button>
-          : <button type="button" className="icon-btn chat-head-ico" onClick={() => setGroup('new')} title="New group" aria-label="New group">{TgIcon.people()}</button>)}
+        {isAdmin && <button type="button" className="icon-btn chat-head-ico chat-group-new" onClick={() => setGroup('new')} title="New group" aria-label="New group">{TgIcon.people()}</button>}
       </div>
       {legacy && <p className="chat-legacy">Rooms are not switched on yet: run supabase/chat_rooms.sql in the SQL editor. Until then only the team room works.</p>}
       <div className="chat-folders" role="tablist">
