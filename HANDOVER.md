@@ -134,6 +134,8 @@ Alex: the picture window had no way to close; a button for the chat in its own w
 - Telegram's buttons: ⌘K / Ctrl+K focuses the list search ("Search (⌘K)"); the conversation header has 🔍 (search in this conversation: n of m, ⌃ ⌄, Enter for the next, matches outlined) and ⋯ (Search, Photos, videos & files, Pinned message, Mute sounds). Mute is per device (`tml_chat_muted`, `loadMuted` / `toggleMuted`). Photos, videos & files: a grid of the conversation's pictures (open in the viewer) and its files.
 - Composer: "Write a message…", an emoji panel inside the box on a computer, and **voice messages**: the round mic when the box is empty, recording shows time, a bin and send; MP4 audio where possible, else WebM; sent through the same upload as files (`send({ file, dur })`), shown as a round play button with a bar and the time (`AudioNote`).
 
+- **Viewer fix** (Alex's screenshot: pictures and videos sat low, a video ran under Save): `.chat-viewer` is a centred flex box and its picture or video is at most the screen minus 150px (Close above, Save below); a grid's `max-height: 100%` had not limited it.
+
 **Alex still to do:** redeploy the `pcloud` Edge Function with the current `supabase/functions/pcloud/index.ts` (the chat fix above); run `supabase/chat_reactions.sql` (reactions and pins; `chat_likes.sql` is no longer needed for new reactions).
 **Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
 
