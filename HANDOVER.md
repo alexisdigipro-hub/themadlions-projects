@@ -41,6 +41,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 8 Oct, late: release forms with on-screen signature (second of the three)
+- `src/lib/releases.js`: built-in texts (talent / location × el / en, `{producer} {project} {name} {role} {location} {address} {dates} {fee}`), `releaseTemplate(settings, kind, lang)` (settings.releaseTemplates[`kind_lang`] wins), `fillRelease`, `renderRelease` (A4 canvases, multi-page, Greek capitals without accents), `releasePdf` (reuses `buildPdf` / `canvasToJpegBytes` from estimatePdf.js), `releaseFilename`.
+- `src/pages/project/Releases.jsx`: the card on People.jsx (Project Database), `ReleaseModal` (details → sign → producer sign / stamp / skip), `SignaturePad` (pointer events, touch-action none, ink cropped to a transparent PNG). Upload with `uploadFile` to `pcloudTarget(state, pid, 'Releases')`. `project.releases[]` = { id, kind, lang, contactId, locationId, name, signer, role, minor, signedAt, signedBy(Name), file }; personal details only in the PDF. Delete removes the PDF first. Empty card hidden; "New release" in the top button row when there is no cast, location or release yet. settings.releaseLang remembers the last language.
+- Tested: the PDFs rendered in Chromium (el/en, talent with guardian, location, a 2-page text). Not tested in the built app (no React/Vite here). No SQL.
+- Next: push notifications (Web Push: service worker, VAPID keys, a subscriptions table, an Edge Function that sends; calls and messages ring with the app closed).
+
 ### 8 Oct: expenses with a receipt photo (first of Alex's three: receipts, release forms, push)
 - `src/components/Receipt.jsx`: `ReceiptModal` (🧾 Add receipt on Budget), `ReceiptField` (Edit budget line: attach / take again / remove, written at once), `ReceiptView` (full picture or PDF, Download), `storeReceipt` (compress to 2000 px JPEG, thumb 160 px, `uploadFile` under the line's id to `pcloudTarget(state, pid, 'Receipts')`).
 - Line: `receipt: { id, name, type, size, path | fileid+scope, thumb, addedAt, addedBy, addedByName }`; typed total is gross, line keeps `estimate` = net and `vatPct`. Company + administrator: `recordPayment` at once (doc 'receipt', `tx.receipt` too); company + anyone else: unpaid, an administrator Pays it. Out of pocket: `memberId` + `reimburse: true`; `syncLineWorklog` then puts the **gross** amount in My work as "Refund · …".
