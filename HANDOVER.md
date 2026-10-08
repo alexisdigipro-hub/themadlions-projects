@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct, night: Glass dark and Glass light skins
+- `lib/skin.js`: `glassdark` (on Dark) and `glasslight` (on Light), Thin icons, theme-color meta. styles.css block "Glass dark and Glass light": each sets its palette plus `--gl-*` (fill, fill-2, edge, shine, shadow, blur, bar, input, active, glow) and its body backdrop; one shared set of rules `html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme]` frosts .panel / .stat / .project-card / .fin-card / .notes-app / .rem-app, inputs, buttons, tabs, segmented, top bar and tab bar, and on a computer the floating sidebar. The purple Glass is untouched. Checked on a static mock with the real CSS at 1300 px.
+
 ### 9 Oct, night: Tasks now like Microsoft To Do (Alex's screenshot)
 - `src/pages/TasksAll.jsx`: same data and logic, new look. Smart lists as rows with line icons (`LINE`): My Day (today), Important (urgent|high; ☆ on a card toggles high ↔ normal), Planned, Assigned to me, Tasks, Completed; lists with emoji + count + 👥, + New List (admins). Main pane: a gradient backdrop in the list's colour (`--lc`), big title (+ date on My Day), white task cards, "› Completed N" fold with Clear, a frosted "+ New Task…" bar at the foot (Enter adds). CSS block "Tasks, laid out like Microsoft To Do" replaced the Reminders one. Checked on a static mock with the real CSS at 1300 and 390 px.
 
