@@ -41,6 +41,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 8 Oct, night: TML Chat really on its own (chat.html)
+- Alex added the chat to the home screen and got the whole app: the iPhone reads the manifest and `apple-mobile-web-app-title` when the page loads, so swapping them from ChatWindow came too late. **`chat.html`** (second Vite entry in vite.config.js, same `src/main.jsx`) carries `manifest-chat.webmanifest` and "TML Chat" from the first byte, and sends an empty hash to `#/chat-window`. The manifest's id and start_url are now `./chat.html`.
+- ⧉ on a phone goes to chat.html (a full page load). Inside the main home-screen app it shows the card in the list instead (chat.html would open inside that app with no way back, and Add to Home Screen is only in Safari).
+- An iPhone home-screen app has its own sign-in: LoginGate sends chat.html back to `/chat-window` after signing in, not to Home.
+- Old icons added before this still open the whole app: delete and add again.
+
 ### 8 Oct, late: chat keyboard gap, AutoFill, People, TML Chat install
 - **Gap under the box with the keyboard up** (iPhone home-screen app): `kb-open` was decided by `window.innerHeight - visualViewport.height`, but in a standalone iPhone app innerHeight shrinks with the keyboard, so the home-bar strip stayed. Now `kb-open` is on while a text field has focus, or when the visible height is 120 px under the tallest seen (reset when the width changes).
 - **AutoFill Contact**: the box's `title` said "@name mentions someone", and Safari reads the title when guessing field types, so it took the box for a name field. No title on a phone, the computer's says "Type @ to mention someone". The ⌃ ⌄ ✓ bar is iOS's own and cannot be hidden by a page.
