@@ -4360,3 +4360,57 @@ html .cset-theme.on[data-chat-theme='coral'] .cset-theme-pic { border-color: #f2
 .chat-call-acts .chat-head-ico { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); box-shadow: none; }
 .chat-call-acts .chat-head-ico svg { width: 20px; height: 20px; }
 .chat-call-acts .chat-head-ico:disabled { opacity: .4; }
+
+/* ===== App skins (Alex, 8 Oct, from two dashboard designs): Settings > Display > Theme =====
+   Each is a dark theme (data-theme='dark' stays, so every dark rule still holds) with its own
+   colours on top, its accent included (the accent picker is not used while one is on). */
+
+/* Violet night: near-black, cards with a faint violet glow in their corner, a magenta-to-violet
+   gradient on the main buttons, rounded navigation pills. */
+html[data-theme='dark'][data-skin='violet'][data-accent] {
+  --bg: #0a0a0c; --panel: #131316; --raised: #1c1c21; --line: #2b2b33; --line-soft: #212128;
+  --text: #f3f2f7; --muted: #8f8d9b; --accent: #b84ce8; --accent-ink: #ffffff;
+  --sidebar-bg: #0f0f12; --photo-bg: #0d0d10; --hover-tint: rgba(184, 76, 232, .05);
+  --radius: 9px; --radius-lg: 14px;
+  --skin-grad: linear-gradient(135deg, #e04bd8, #9a3cf0);
+  --skin-card: linear-gradient(155deg, rgba(184, 76, 232, .07), rgba(184, 76, 232, 0) 45%), #131316;
+  --shadow-lg: 0 24px 70px rgba(0, 0, 0, .7), 0 0 0 1px rgba(184, 76, 232, .12);
+}
+html[data-theme='dark'][data-skin='violet'] body { background: radial-gradient(900px 500px at 100% -10%, rgba(184, 76, 232, .13), transparent 60%), radial-gradient(700px 500px at -10% 110%, rgba(120, 40, 200, .10), transparent 60%), #0a0a0c; background-attachment: fixed; }
+
+/* Teal slate: graphite, a teal accent, a lime mark, flat soft cards. */
+html[data-theme='dark'][data-skin='teal'][data-accent] {
+  --bg: #1f2226; --panel: #282b31; --raised: #31353c; --line: #3b3f47; --line-soft: #32363d;
+  --text: #eef1f3; --muted: #a2a8b1; --accent: #3f9e90; --accent-ink: #ffffff;
+  --sidebar-bg: #25282d; --photo-bg: #1b1d21; --hover-tint: rgba(63, 158, 144, .06);
+  --radius: 8px; --radius-lg: 12px;
+  --skin-grad: linear-gradient(135deg, #48b3a3, #2f8577);
+  --skin-card: #282b31;
+  --skin-mark: #b8f08c;
+  --shadow-lg: 0 24px 70px rgba(0, 0, 0, .55);
+}
+html[data-theme='dark'][data-skin='teal'] body { background: radial-gradient(1000px 500px at 50% -20%, rgba(63, 158, 144, .14), transparent 65%), #1f2226; background-attachment: fixed; }
+
+/* what both share: cards, the navigation, buttons, inputs */
+html[data-theme='dark'][data-skin] .panel,
+html[data-theme='dark'][data-skin] .stat,
+html[data-theme='dark'][data-skin] .project-card,
+html[data-theme='dark'][data-skin] .fin-card { background: var(--skin-card); border-color: var(--line-soft); border-radius: var(--radius-lg); }
+html[data-theme='dark'][data-skin] .sidebar { border-right-color: var(--line-soft); }
+html[data-theme='dark'][data-skin] .sidenav a { border-radius: 10px; }
+html[data-theme='dark'][data-skin] .sidenav a.active { background: var(--raised); box-shadow: none; color: var(--text); }
+html[data-theme='dark'][data-skin] .btn-primary { background: var(--skin-grad); border-color: transparent; color: #fff; }
+html[data-theme='dark'][data-skin] .btn-primary:hover { background: var(--skin-grad); border-color: transparent; filter: brightness(1.08); }
+html[data-theme='dark'][data-skin] .input { background: var(--raised); border-color: var(--line-soft); }
+html[data-theme='dark'][data-skin] .modal { background: var(--panel); border-color: var(--line); }
+html[data-theme='dark'][data-skin='violet'] .btn-primary { box-shadow: 0 6px 22px rgba(184, 76, 232, .35); }
+html[data-theme='dark'][data-skin='violet'] .sidenav a.active { background: #1f1f25; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05); }
+html[data-theme='dark'][data-skin='violet'] .sidenav a.active .nav-ico { color: #d26cf0; }
+html[data-theme='dark'][data-skin='violet'] .stat-value { background: linear-gradient(90deg, #fff, #e3c8f5); -webkit-background-clip: text; background-clip: text; color: transparent; }
+html[data-theme='dark'][data-skin='teal'] .logo-mark { border-color: var(--skin-mark); }
+html[data-theme='dark'][data-skin='teal'] .sidenav a.active .nav-ico { color: var(--skin-mark); }
+html[data-theme='dark'][data-skin='teal'] .panel,
+html[data-theme='dark'][data-skin='teal'] .stat { border-color: transparent; }
+/* the chat's wallpaper and others' bubbles follow the skin's greys instead of the dark navy */
+html[data-theme='dark'][data-skin] .chat2 { --tg-wall: color-mix(in srgb, var(--accent) 5%, var(--bg)); }
+html[data-theme='dark'][data-skin] .chat-box[data-bubbles='telegram'] { --wa-in: var(--raised); --wa-wall: color-mix(in srgb, var(--accent) 5%, var(--bg)); }
