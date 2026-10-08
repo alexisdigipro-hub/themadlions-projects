@@ -146,8 +146,8 @@ export default function Dashboard() {
   const [sort, setSort] = useState(() => { try { return localStorage.getItem('tml_home_sort') || 'date' } catch { return 'date' } })
   const pickSort = (v) => { setSort(v); try { localStorage.setItem('tml_home_sort', v) } catch { /* private window */ } }
   const canEdit = can(user, 'projects', 'edit')
-  // Sort by is on the phone only now (Alex, 8 Oct, took it off the computer): a computer always
-  // shows Date, whatever a phone last picked.
+  // Sort by is on the computer only (Alex, 8 Oct, took it off the phone): a phone always
+  // shows Date, whatever the computer last picked.
   const mobile = useIsMobile()
 
   // Who's around today: moved here from the old Home page, right above the project list. Alex
@@ -176,7 +176,7 @@ export default function Dashboard() {
   const projects = visibleProjects(state, user)
     .filter((p) => filter === 'All' || p.category === filter)
     .filter((p) => !q || [p.title, p.client, p.code].some((v) => (v || '').toLowerCase().includes(q.toLowerCase())))
-    .sort((mobile && SORTS[sort]) || SORTS.date)
+    .sort((!mobile && SORTS[sort]) || SORTS.date)
   // Delivered projects leave the main grid (Alex): a "Delivered" chip at the end of the category
   // row, in the inverse colour of the others, shows them alone, grey until hovered.
   const [showDelivered, setShowDelivered] = useState(false)
@@ -261,7 +261,7 @@ export default function Dashboard() {
   return (
     <>
       {team.length > 0 && (
-        <section className="panel team-strip-panel" style={{ marginBottom: 20 }}>
+        <section className="panel team-strip-panel">
           <div className="team-strip-head muted small">
             {(facesHidden || allFaces) && (
               <button className="link small team-strip-more" onClick={() => setAllFaces((v) => !v)}>
@@ -305,7 +305,7 @@ export default function Dashboard() {
           </button>
         </div>
         <div className="toolbar-actions">
-          {mobile && (
+          {!mobile && (
             <span className="sort-by">
               <span className="muted small">Sort by</span>
               <span className="segmented small">

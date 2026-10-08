@@ -1023,7 +1023,7 @@ code {
 /* Home on a computer: square cover, artist over title, nothing else. The sizes below are drawn
    at full scale and the whole grid is zoomed (Alex: 35% smaller, then 10% back up = 71.5%), so
    cards, type and gaps scale together and fit the same way. The phone keeps its own cards (mobile layer). */
-/* the phone lays Everything and Add task out as before, as if the wrapper were not there */
+/* a computer lays Everything and Add task out as it always has, as if the wrapper were not there */
 .tasks-add { display: contents; }
 @media (min-width: 821px) {
   .project-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); zoom: .715; }
@@ -1034,15 +1034,6 @@ code {
   .project-body h3 .pc-artist, .project-body h3 .pc-name { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .project-body h3 .pc-sep { display: none; }
   .project-body h3 .pc-artist + .pc-sep + .pc-name { font-weight: 700; font-size: 16.8px; margin-top: 3px; }
-  /* Categories on the left, Search and New project together on the right, one row, same height */
-  .home-toolbar { flex-wrap: nowrap; align-items: flex-start; }
-  .home-toolbar .chips { flex: 1 1 auto; min-width: 0; }
-  .home-toolbar .toolbar-actions { flex: none; flex-wrap: nowrap; }
-  .home-toolbar .toolbar-actions .input.search, .home-toolbar .toolbar-actions .btn { height: 36px; box-sizing: border-box; }
-  /* Tasks: the filters, Everything and Add task on one row, same height */
-  .tasks-add { display: inline-flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
-  .tasks-add .input.select { max-width: 220px; text-overflow: ellipsis; }
-  .tasks-add .input.select, .tasks-add .btn { height: 36px; box-sizing: border-box; }
 }
 
 /* ---------- project workspace ---------- */
@@ -3240,7 +3231,7 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 @media (max-width: 820px) { .wb-canvas { height: calc(100vh - 300px); min-height: 340px; } }
 
 /* The team strip on Home: everyone left to right, greyed out on a day they marked off */
-.team-strip-panel { margin-bottom: 16px; }
+.team-strip-panel { margin-bottom: 20px; }
 .team-strip-head { padding: 12px 16px 0; }
 .team-strip { display: flex; flex-wrap: wrap; gap: 16px; padding: 12px 16px 16px; }
 .team-chip { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 104px; color: var(--text); text-decoration: none; }
@@ -3252,18 +3243,6 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .team-chip.off .team-chip-photo { filter: grayscale(1); opacity: .45; }
 .team-chip.off .team-chip-name { color: var(--muted); text-decoration: line-through; }
 .team-chip-off { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; font-weight: 700; color: var(--danger); background: color-mix(in srgb, var(--panel) 45%, transparent); }
-/* On a computer (Alex, 8 Oct): the faces five to a row in a box only as wide as they need,
-   smaller, and every face shown, so there is nothing to open with Show all. */
-@media (min-width: 821px) {
-  .panel.team-strip-panel { width: fit-content; max-width: 100%; padding: 12px 16px; margin-bottom: 16px; }
-  .team-strip-panel .team-strip-head { display: none; }
-  .team-strip-panel .team-strip { display: grid; grid-template-columns: repeat(5, 68px); gap: 12px 14px; padding: 0; }
-  .team-strip-panel .team-chip { width: 68px; gap: 5px; }
-  .team-strip-panel .team-chip-photo { width: 56px; height: 56px; }
-  .team-strip-panel .team-chip-initials { font-size: 19px; }
-  .team-strip-panel .team-chip-off { font-size: 22px; }
-  .team-strip-panel .team-chip-name { font-size: 12px; }
-}
 @media (max-width: 820px) {
   /* Everyone on screen at once. A grid that wraps onto as many rows as it needs, sized so the
      faces fill the width evenly: nothing runs off the side, nothing to drag sideways. */
@@ -3638,4 +3617,24 @@ html[data-public='1'] body { background: var(--bg); }
   .topsheet .budget-table, .topsheet .budget-totals { display: block; overflow-x: auto; white-space: nowrap; }
   .topsheet .budget-table td, .topsheet .budget-table th { white-space: nowrap; }
   .topsheet .budget-table td .small { white-space: normal; }
+}
+
+/* Phone only (Alex, 8 Oct): Home's team box tighter with the faces five to a row, Search and
+   New project always side by side, and on ToDo Tasks the project picker and Add task on one row.
+   The computer keeps its layout. */
+@media (max-width: 820px) {
+  .panel.team-strip-panel { padding: 6px 4px; margin-bottom: 12px; }
+  .team-strip-panel .team-strip-head:empty { display: none; }
+  .team-strip-panel .team-strip-head { padding: 4px 8px 0; }
+  /* two rows exactly: 2 x 58 + 8 gap + 10 padding = 134; Show all lifts it */
+  .team-strip-panel .team-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 6px 4px 4px; max-height: 134px; }
+  .team-strip-panel .team-strip.all { max-height: none; }
+  .home-toolbar .toolbar-actions { width: 100%; flex-wrap: nowrap; }
+  .home-toolbar .toolbar-actions .input.search { flex: 1 1 auto; min-width: 0; width: auto; }
+  .home-toolbar .toolbar-actions .btn { flex: none; white-space: nowrap; }
+  .tasks-page .page-actions { min-width: 0; max-width: 100%; }
+  .tasks-add { display: flex; align-items: stretch; gap: 8px; width: 100%; min-width: 0; }
+  /* width 0 and grow: the picker takes what the button leaves, however long a project's name */
+  .tasks-add .input.select { flex: 1 1 0; min-width: 0; width: 0; text-overflow: ellipsis; }
+  .tasks-add .btn { flex: none; white-space: nowrap; }
 }
