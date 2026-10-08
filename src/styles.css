@@ -3759,6 +3759,7 @@ html[data-public='1'] body { background: var(--bg); }
   html.chat-open .tabbar { display: none; }
   html.chat-open .chat2.has-room .chat-box { top: var(--chat-vt, 0px); bottom: auto; height: var(--chat-vh, 100dvh); }
   html.chat-open .chat2.has-room .chat-compose-wrap { padding-bottom: env(safe-area-inset-bottom); }
+  html.chat-open.kb-open .chat2.has-room .chat-compose-wrap { padding-bottom: 0; }
   .chat2.has-room .chat-back { color: var(--accent); width: 36px; height: 36px; display: grid; place-items: center; margin-left: -6px; }
   .chat2.has-room .chat-back svg { width: 26px; height: 26px; }
   .chat2.has-room .chat-head-ico { width: 38px; height: 38px; display: grid; place-items: center; color: var(--accent); }
