@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Button, Confirm, Field, Input, Modal, useIsMobile, useToast } from '../components/ui.jsx'
 import { canAccessProject, canSendNotices, today as todayISO, uid, useCurrentUser, useStore, whenMs } from '../lib/store.jsx'
 import { addDays, fmtDate } from '../lib/dates.js'
@@ -10,7 +10,7 @@ import { compress } from '../lib/photos.js'
 import { canCompressVideo, compressVideo, isVideoFile, mediaSize, prepareVideo, releaseVideo } from '../lib/videoCompress.js'
 import { pcloudBlob, pcloudOn } from '../lib/pcloud.js'
 import { remote, supabase } from '../lib/supabase.js'
-import { chimeFor, loadChatPrefs, loadMuted, toggleMuted } from '../lib/chatPrefs.js'
+import { chimeFor, loadChatPrefs, loadMuted, textSizeOf, toggleMuted } from '../lib/chatPrefs.js'
 import ChatSettings from '../components/ChatSettings.jsx'
 import * as C from '../lib/chat.js'
 
@@ -50,6 +50,13 @@ const reactionsOf = (m) => {
   const legacy = (m.likes || []).filter((id) => !Object.values(r).some((v) => v.includes(id)))
   if (legacy.length) r['🎥'] = [...(r['🎥'] || []), ...legacy]
   return r
+}
+/* One to three emoji and nothing else: shown large, without a bubble (Telegram's Large Emoji). */
+const isEmojiOnly = (t) => {
+  const x = (t || '').trim()
+  if (!x || x.length > 40 || !/^(?:\p{Extended_Pictographic}|\p{Emoji_Component}|\u200d|\ufe0f|\s)+$/u.test(x) || /^[\d#*\s]+$/.test(x)) return false
+  const n = typeof Intl !== 'undefined' && Intl.Segmenter ? [...new Intl.Segmenter().segment(x.replace(/\s+/g, ''))].length : x.replace(/\s+/g, '').length / 2
+  return n >= 1 && n <= 3
 }
 const myReaction = (m, me) => Object.entries(reactionsOf(m)).find(([, v]) => v.includes(me))?.[0] || ''
 const attLabel = (a) => (isImage(a) ? 'Photo' : isVideo(a) ? 'Video' : isAudio(a) ? 'Voice message' : a.name)
@@ -144,6 +151,9 @@ const TgIcon = {
   smile: () => <svg {...svgProps}><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>,
   bell: () => <svg {...svgProps}><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15Z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>,
   media: () => <svg {...svgProps}><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>,
+  translate: () => <svg {...svgProps}><path d="M4 5h9M8.5 3v2M6 5c.5 3 2.5 5.5 5 7M11 5c-.7 3.4-3 6.4-7 8" /><path d="M13 21l4.5-10L22 21M14.5 17.5h6" /></svg>,
+  link: () => <svg {...svgProps}><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></svg>,
+  replies: () => <svg {...svgProps}><path d="M9 14L4 9l5-5" /><path d="M4 9h9a7 7 0 0 1 7 7v3" /></svg>,
   close: () => <svg {...svgProps}><path d="M6 6l12 12M18 6L6 18" /></svg>,
   people: () => <svg {...svgProps}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.1.8 3.5 2.8 3.5 5.7" /></svg>,
 }
@@ -188,6 +198,7 @@ async function tinyThumb(file) {
 
 /* A message picked in the list's search: the room opens and scrolls to it. */
 let pendingJump = ''
+let linkJumped = ''
 /* Android's own "Install app" prompt, kept for the chat window's Install button. */
 let installPrompt = null
 if (typeof window !== 'undefined') window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e })
@@ -243,6 +254,10 @@ export function ChatWindow() {
 /* ---------- the page ---------- */
 export default function Chat({ windowed = false }) {
   const { room: roomParam } = useParams()
+  const prefs = useChatPrefs()
+  // a message link (Copy Message Link): #/chat/<room>?m=<message>
+  const mParam = new URLSearchParams(useLocation().search).get('m')
+  if (mParam && linkJumped !== mParam) { linkJumped = mParam; pendingJump = mParam }
   const { state } = useStore()
   const user = useCurrentUser()
   const mobile = useIsMobile()
@@ -252,7 +267,7 @@ export default function Chat({ windowed = false }) {
   const room = active ? C.roomOf(state, user, active) : null
   useEffect(() => { if (roomParam && !room) nav(base, { replace: true }) }, [roomParam, !!room])
   return (
-    <div className={`chat-page chat2 ${active ? 'has-room' : ''}${windowed ? ' windowed' : ''}`}>
+    <div className={`chat-page chat2 ${active ? 'has-room' : ''}${windowed ? ' windowed' : ''}`} data-chat-theme={prefs.theme && prefs.theme !== 'accent' ? prefs.theme : undefined}>
       {(!mobile || !active) && <RoomList activeId={active} windowed={windowed} />}
       {(!mobile || active) && (room ? <ChatRoom key={room.id} room={room} onBack={mobile ? () => nav(base) : undefined} /> : <div className="chat-box chat-none muted">Pick a conversation</div>)}
     </div>
@@ -298,6 +313,7 @@ function InstallHint() {
 /* ---------- the list ---------- */
 function RoomList({ activeId, windowed }) {
   const { state } = useStore()
+  const prefs = useChatPrefs()
   const user = useCurrentUser()
   const nav = useNavigate()
   const base = useChatBase()
@@ -360,11 +376,16 @@ function RoomList({ activeId, windowed }) {
     const from = Math.max(0, at - 24)
     return <>{from > 0 && '…'}{text.slice(from, at)}<mark>{text.slice(at, at + needle.length)}</mark>{text.slice(at + needle.length, at + needle.length + 80)}</>
   }
+  // Show Folder Tags: the built-in folder a room belongs to, then the person's own folders holding it
+  const folderTagsOf = (r) => [
+    ...(r.archived ? ['Archived'] : r.kind === 'project' ? ['Projects'] : r.kind === 'group' ? ['Groups'] : r.kind === 'direct' ? ['People'] : []),
+    ...allFolders.filter((f) => f.custom && (f.rooms || []).includes(r.id)).map((f) => f.name),
+  ]
   const folderUnread = (f) => C.totalUnread(Object.fromEntries(C.roomsInFolder(f, rooms).map((r) => [r.id, unread[r.id] || 0])))
   const legacy = state.chatRooms === false
 
   return (
-    <aside className="chat-list">
+    <aside className={`chat-list${prefs.folderTabs === 'left' && !mobile && tab === 'chats' ? ' tabs-left' : ''}`}>
       <div className="chat-list-head">
         <h1>Chat</h1>
         {!mobile && <button type="button" className="icon-btn chat-head-ico chat-folders-btn" onClick={() => setFolders(true)} title="Your folders" aria-label="Your folders">{TgIcon.folder()}</button>}
@@ -405,6 +426,7 @@ function RoomList({ activeId, windowed }) {
               <span className="chat-rmain">
                 <span className="chat-rtop"><strong>{r.name}</strong><small>{listTime(last?.createdAt)}</small></span>
                 {(preview || n > 0) && <span className="chat-rbottom"><span className="chat-rprev">{preview}</span>{n > 0 && <span className="chat-rbadge">{n}</span>}</span>}
+                {prefs.folderTags && <span className="chat-rtags">{folderTagsOf(r).map((t) => <span key={t} className="chat-rtag">{t}</span>)}</span>}
               </span>
             </button>
           )
@@ -707,6 +729,39 @@ function ChatRoom({ room, onBack }) {
     const latest = msgs.reduce((a, m) => (m.createdAt > a ? m.createdAt : a), '')
     if (latest) C.markRead(roomId, latest)
   }, [msgs.length, roomId])
+  // Seen (Telegram): how far each person has read a room is kept in their profile (chatRead), at
+  // most every few seconds, so the sender can see who read a message and gets ✓✓
+  useEffect(() => {
+    const latest = msgs.reduce((a, m) => (m.createdAt > a ? m.createdAt : a), '')
+    if (!latest || !user?.id || document.hidden) return undefined
+    if ((user.profile?.chatRead?.[roomId] || '') >= latest) return undefined
+    const t = setTimeout(() => {
+      update((s) => {
+        const u = s.users.find((x) => x.id === user.id)
+        if (!u) return s
+        const cr = u.profile?.chatRead || {}
+        if ((cr[roomId] || '') >= latest) return s
+        u.profile = { ...(u.profile || {}), chatRead: { ...cr, [roomId]: latest } }
+        return s
+      })
+    }, 2500)
+    return () => clearTimeout(t)
+  }, [msgs.length, roomId])
+  const seenBy = (m) => state.users.filter((u) => u.id !== m.userId && u.active !== false && (u.profile?.chatRead?.[roomId] || '') >= m.createdAt && (room.kind === 'team' || membersOf.some((x) => x.id === u.id)))
+  const repliesTo = (m) => msgs.filter((x) => x.replyTo === m.id)
+  const [seenOpen, setSeenOpen] = useState('')
+  const [repliesOf, setRepliesOf] = useState(null)
+  const copyLink = (m) => {
+    setPicked('')
+    const url = `${window.location.origin}${window.location.pathname}#/chat/${encodeURIComponent(roomId)}?m=${encodeURIComponent(m.id)}`
+    navigator.clipboard?.writeText(url).then(() => toast('Link copied', 'ok')).catch(() => toast('Could not copy', 'error'))
+  }
+  const translate = (m) => {
+    setPicked('')
+    // Greek letters in it: to English, otherwise to Greek
+    const to = /[\u0370-\u03ff\u1f00-\u1fff]/.test(m.text) ? 'en' : 'el'
+    window.open(`https://translate.google.com/?sl=auto&tl=${to}&text=${encodeURIComponent(m.text)}&op=translate`, '_blank', 'noopener')
+  }
 
   const mention = C.mentionQuery(text, caret)
   const mentionHits = mention ? state.users.filter((u) => u.active !== false && u.id !== user?.id && (u.name || '').toLowerCase().includes(mention.q.toLowerCase())).slice(0, 6) : []
@@ -761,7 +816,7 @@ function ChatRoom({ room, onBack }) {
             const d = await mediaSize(f)
             if (d) { w = d.w; h = d.h; if (d.duration) dur = Math.round(d.duration) }
           } else if (f.type.startsWith('image/') && !/gif$/i.test(f.type)) {
-            const c = await compress(f, { max: 1600, quality: 0.82 })
+            const c = await compress(f, prefs.hdPhotos ? { max: 2560, quality: 0.88 } : { max: 1600, quality: 0.82 })
             w = c.w; h = c.h
             f = new File([c.blob], f.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' })
           } else if (prepared[i]) {
@@ -816,7 +871,7 @@ function ChatRoom({ room, onBack }) {
     const me = user?.id
     if (!me) return
     const current = myReaction(m, me)
-    if (current !== emoji && emoji === '🎥') { setBurst(m.id); setTimeout(() => setBurst((b) => (b === m.id ? '' : b)), 800) }
+    if (current !== emoji && emoji === (prefs.quickReaction || '🎥')) { setBurst(m.id); setTimeout(() => setBurst((b) => (b === m.id ? '' : b)), 800) }
     update((s) => {
       const x = (s.chat || []).find((y) => y.id === m.id)
       if (!x) return s
@@ -876,7 +931,8 @@ function ChatRoom({ room, onBack }) {
       clearTimeout(t.timer)
       tapRef.current = { id: '', at: 0, timer: null }
       setPicked('')
-      react(m, '🎥')
+      if (prefs.doubleTap === 'reply') startReply(m)
+      else react(m, prefs.quickReaction || '🎥')
       return
     }
     clearTimeout(t.timer)
@@ -965,6 +1021,11 @@ function ChatRoom({ room, onBack }) {
     requestAnimationFrame(() => { el?.focus(); el?.setSelectionRange(at + e.length, at + e.length) })
   }
   const onKey = (e) => {
+    // ↑ in an empty box: edit your last message (Telegram)
+    if (e.key === 'ArrowUp' && !text && !editing && !pending.length) {
+      const lastMine = [...msgs].reverse().find((x) => x.userId === user?.id && x.text)
+      if (lastMine) { e.preventDefault(); startEdit(lastMine); return }
+    }
     if (e.key === 'Escape' && (editing || replyTo)) { e.preventDefault(); cancelBar(); return }
     if (e.key !== 'Enter') return
     if (mention && mentionHits.length && !e.shiftKey) { e.preventDefault(); pickMention(mentionHits[0]); return }
@@ -981,7 +1042,7 @@ function ChatRoom({ room, onBack }) {
   const membersOf = room.kind === 'team' ? state.users.filter((u) => u.active !== false) : room.kind === 'project' ? C.roomRecipients(state, room, '').map((id) => state.users.find((u) => u.id === id)).filter(Boolean) : (room.members || []).map((id) => state.users.find((u) => u.id === id)).filter(Boolean)
 
   return (
-    <div className="chat-box" data-wall={prefs.wallpaper === 'none' ? 'soft' : prefs.wallpaper} data-bubbles="telegram" data-size={prefs.size} data-density={prefs.density}>
+    <div className="chat-box" data-wall={prefs.wallpaper === 'none' ? 'soft' : prefs.wallpaper} data-bubbles="telegram" data-fs={textSizeOf(prefs)} data-density={prefs.density}>
       <div className="chat-head">
         {onBack && <button type="button" className="icon-btn chat-back" onClick={onBack} aria-label="Back">{TgIcon.back()}</button>}
         {/* the name in a pill of its own on a computer (Telegram for Mac); display: contents on a phone */}
@@ -1073,6 +1134,10 @@ function ChatRoom({ room, onBack }) {
                 </span>
               )
               const mineRx = myReaction(m, user?.id)
+              const bigEmoji = prefs.bigEmoji && !media.length && !files.length && !m.replyTo && isEmojiOnly(m.text)
+              const seen = mine ? seenBy(m) : []
+              const nReplies = repliesTo(m).length
+              const tick = mine ? <span className={`chat-tick${seen.length ? ' seen' : ''}`} title={seen.length ? `Seen by ${seen.map((u) => u.name).join(', ')}` : 'Sent'}>{seen.length ? '✓✓' : '✓'}</span> : null
               const selected = sel?.includes(m.id)
               return (
                 <div key={m.id} data-msg={m.id} className={`chat-msg ${mine ? 'mine' : ''} ${cont ? 'cont' : ''} ${last ? 'last' : ''} ${picked === m.id ? 'picked' : ''} ${selected ? 'selected' : ''} ${found.includes(m.id) ? (found[findAt] === m.id ? 'found now' : 'found') : ''}`} onClick={sel ? (e) => onBubbleTap(e, m, media) : undefined}>
@@ -1088,16 +1153,16 @@ function ChatRoom({ room, onBack }) {
                         {REACTIONS.map((r) => <button key={r} type="button" className={mineRx === r ? 'on' : ''} onClick={() => { setPicked(''); react(m, r) }}>{r}</button>)}
                       </div>
                     )}
-                    <div className={`chat-bubble${media.length ? ' has-media' : ''}${mediaOnly ? ' media-only' : ''}`} onClick={sel ? undefined : (e) => onBubbleTap(e, m, media)} onMouseDown={mobile ? undefined : (e) => { if (e.detail > 1) e.preventDefault() }}
+                    <div className={`chat-bubble${media.length ? ' has-media' : ''}${mediaOnly ? ' media-only' : ''}${bigEmoji ? ' big-emoji' : ''}`} onClick={sel ? undefined : (e) => onBubbleTap(e, m, media)} onMouseDown={mobile ? undefined : (e) => { if (e.detail > 1) e.preventDefault() }}
                       onTouchStart={() => pressStart(m)} onTouchMove={pressCancel} onTouchEnd={pressCancel} onContextMenu={(e) => { if (sel) return; e.preventDefault(); setPicked(m.id) }}>
-                      {burst === m.id && <span className="chat-heart-burst" aria-hidden="true">🎥</span>}
+                      {burst === m.id && <span className="chat-heart-burst" aria-hidden="true">{prefs.quickReaction || '🎥'}</span>}
                       {showWho && <div className="chat-who" style={{ '--who': `hsl(${senderHue(m.userId)} 55% 42%)` }}>{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>}
                       {m.replyTo && (
                         <div className="chat-quote" onClick={() => quoted && jumpTo(quoted.id)} role={quoted ? 'button' : undefined}>
                           {quoted ? <><b>{quoted.userId === user?.id ? 'You' : quoted.userName}</b><span>{quoted.text || (quoted.attachments?.length ? attLabel(quoted.attachments[0]) : '')}</span></> : <span>Message deleted</span>}
                         </div>
                       )}
-                      {media.length > 0 && <MediaAlbum items={media} meta={mediaOnly ? <>{likesBtn}<span className="chat-time">{timeOf(m.createdAt)}</span></> : null} />}
+                      {media.length > 0 && <MediaAlbum items={media} meta={mediaOnly ? <>{likesBtn}<span className="chat-time">{timeOf(m.createdAt)}{tick}</span></> : null} />}
                       {files.map((a) => <Attachment key={a.id} a={a} />)}
                       {m.text && <span className="chat-text">{renderText(m.text)}</span>}
                       {m.editedAt && <span className="chat-edited">edited</span>}
@@ -1108,20 +1173,38 @@ function ChatRoom({ room, onBack }) {
                           {likesBtn}
                         </>
                       )}
-                      {!mediaOnly && <span className="chat-time">{timeOf(m.createdAt)}</span>}
+                      {!mediaOnly && <span className="chat-time">{nReplies > 0 && <button type="button" className="chat-nreplies" onClick={() => setRepliesOf(m)} title="View replies">↩ {nReplies}</button>}{timeOf(m.createdAt)}{tick}</span>}
                     </div>
                     {picked === m.id && (
                       // the message's menu, Telegram's: a column of actions under the message
                       <div className="chat-menu" role="menu">
                         <button type="button" onClick={() => startReply(m)}>{TgIcon.reply()}<span>Reply</span></button>
-                        {m.text && <button type="button" onClick={() => copyText(m)}>{TgIcon.copy()}<span>Copy</span></button>}
+                        {m.text && <button type="button" onClick={() => translate(m)}>{TgIcon.translate()}<span>Translate</span></button>}
+                        {m.text && <button type="button" onClick={() => copyText(m)}>{TgIcon.copy()}<span>Copy Text</span></button>}
+                        <button type="button" onClick={() => copyLink(m)}>{TgIcon.link()}<span>Copy Message Link</span></button>
                         {media.length > 0 && <button type="button" onClick={() => { setPicked(''); setViewer({ items: media, i: 0 }) }}>{TgIcon.download()}<span>{media.length > 1 ? 'Save' : isVideo(media[0]) ? 'Save Video' : 'Save Image'}</span></button>}
+                        <span className="chat-menu-sep" />
+                        {nReplies > 0 && <button type="button" onClick={() => { setPicked(''); setRepliesOf(m) }}>{TgIcon.replies()}<span>View {nReplies} {nReplies === 1 ? 'Reply' : 'Replies'}</span></button>}
+                        {mine && m.text && <button type="button" onClick={() => startEdit(m)}>{TgIcon.edit()}<span>Edit</span></button>}
                         <button type="button" onClick={() => togglePin(m)}>{TgIcon.pin()}<span>{m.pinnedAt ? 'Unpin' : 'Pin'}</span></button>
                         <button type="button" onClick={() => { setPicked(''); setFwd([m]) }}>{TgIcon.forward()}<span>Forward</span></button>
-                        {mine && m.text && <button type="button" onClick={() => startEdit(m)}>{TgIcon.edit()}<span>Edit</span></button>}
-                        {(mine || isAdmin) && <Confirm className="chat-menu-del" onConfirm={() => { setPicked(''); remove(m) }} label="Delete">{TgIcon.trash()}<span>Delete</span></Confirm>}
-                        <span className="chat-menu-sep" />
                         <button type="button" onClick={() => { setPicked(''); setSel([m.id]) }}>{TgIcon.select()}<span>Select</span></button>
+                        {mine && (
+                          <>
+                            <span className="chat-menu-sep" />
+                            <button type="button" className="chat-menu-seen" onClick={() => setSeenOpen((v) => (v === m.id ? '' : m.id))} disabled={!seen.length}>
+                              <span className="chat-tick seen">✓✓</span><span>{seen.length ? `${seen.length} Seen` : 'Not seen yet'}</span>
+                              <span className="chat-menu-faces">{seen.slice(0, 3).map((u) => <span key={u.id} className="chat-menu-face">{photoOf(u.id) ? <img src={photoOf(u.id)} alt="" /> : (u.name || '?')[0]}</span>)}</span>
+                            </button>
+                            {seenOpen === m.id && <span className="chat-menu-seenlist">{seen.map((u) => <span key={u.id}><span className="chat-menu-face">{photoOf(u.id) ? <img src={photoOf(u.id)} alt="" /> : (u.name || '?')[0]}</span>{u.name}</span>)}</span>}
+                          </>
+                        )}
+                        {(mine || isAdmin) && (
+                          <>
+                            <span className="chat-menu-sep" />
+                            <Confirm className="chat-menu-del" onConfirm={() => { setPicked(''); remove(m) }} label="Delete">{TgIcon.trash()}<span>Delete</span></Confirm>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1166,7 +1249,7 @@ function ChatRoom({ room, onBack }) {
             <>
               {!editing && <button type="button" className="icon-btn chat-attach" title="Photo, video or file" onClick={() => setSheet(true)} disabled={!!busy}>{TgIcon.clip()}</button>}
               {/* autoComplete off: the iPhone stops offering AutoFill Contact and your own name above the keyboard */}
-              <textarea ref={inputRef} className="input" rows={1} name="chat-message" autoComplete="off" autoCorrect="on" value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Write a message…" title={prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. @name mentions someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. @name mentions someone'} disabled={!!busy} />
+              <textarea ref={inputRef} className="input" rows={1} name="chat-message" autoComplete="off" autoCorrect={prefs.spell ? 'on' : 'off'} spellCheck={prefs.spell} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Write a message…" title={prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. @name mentions someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. @name mentions someone'} disabled={!!busy} />
               {!mobile && (
                 <span className="chat-emoji-wrap">
                   <button type="button" className="icon-btn chat-emoji-btn" onClick={() => setEmoji((v) => !v)} aria-label="Emoji" title="Emoji">{TgIcon.smile()}</button>
@@ -1190,6 +1273,19 @@ function ChatRoom({ room, onBack }) {
         </div>
         {busy && <div className="chat-bar chat-busy">{busy}</div>}
       </div>
+      )}
+      {repliesOf && (
+        <Modal open title="Replies" onClose={() => setRepliesOf(null)}>
+          <div className="chat-replies">
+            {repliesTo(repliesOf).map((x) => (
+              <button key={x.id} type="button" className="chat-replies-row" onClick={() => { setRepliesOf(null); jumpTo(x.id) }}>
+                <b>{x.userId === user?.id ? 'You' : x.userName}</b>
+                <span>{x.text || attLabel((x.attachments || [])[0] || {})}</span>
+                <small>{listTime(x.createdAt)}</small>
+              </button>
+            ))}
+          </div>
+        </Modal>
       )}
       {shared && (
         <Modal open wide title="Photos, videos & files" onClose={() => setShared(false)}>

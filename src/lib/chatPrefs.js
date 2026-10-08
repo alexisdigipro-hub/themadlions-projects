@@ -9,7 +9,19 @@ export const CHAT_DEFAULTS = {
   enterSends: true, // Enter sends, Shift+Enter breaks the line; off: Enter breaks, Cmd/Ctrl+Enter sends
   avatars: true, // faces next to other people's messages in groups and rooms
   sound: true, // a short tone when a message arrives from someone else while you are elsewhere
+  // Telegram's settings (Alex, 8 Oct)
+  theme: 'accent', // chat colours: 'accent' (the app's accent) | 'blue' | 'sepia' | 'gray' | 'gold' | 'amoled'
+  textSize: null, // 0..4 on the slider; null = from the old size above
+  bigEmoji: true, // a message of one to three emoji shows large, without a bubble
+  spell: true, // check spelling while typing
+  hdPhotos: false, // send photos at 2560 px instead of 1600 when compressing
+  quickReaction: '🎥', // what a double tap puts on a message
+  doubleTap: 'react', // 'react' | 'reply'
+  folderTags: false, // folder names under each conversation in the list
+  folderTabs: 'top', // 'top' | 'left' (computer)
 }
+export const TEXT_SIZES = [13.5, 14.5, 15.5, 17, 18.5]
+export const textSizeOf = (p) => (Number.isInteger(p.textSize) ? p.textSize : p.size === 'small' ? 1 : p.size === 'large' ? 3 : 2)
 export function loadChatPrefs() {
   try {
     const raw = localStorage.getItem(CHAT_PREFS_KEY)
