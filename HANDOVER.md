@@ -82,7 +82,9 @@ Each PR body has the detail and the tests; this is the map.
 
 - **Cover crop**: `components/CoverCropper.jsx` (cropper + `useCover` hook used by Overview and ProjectForm), maths in `lib/coverCrop.js`. `coverThumb` is now a 480×480 square; the original goes to the photos bucket as `<projectId>/cover/source-<stamp>.jpg` in `coverSource`, the cut in `coverCrop`. Old file removed on a new pick, only if it sits in this project's folder (a copied project points at the original's). `Modal` now closes only the top window on Escape and keeps the page locked while another is open.
 
-**Alex still to do:** put the redirect address in the pCloud app's Redirect URIs, merge #209, then Connect pCloud again and follow the steps in Settings > Integrations > File storage.
+- **pCloud connected** (8 Oct, midday): Test connection answers "Connected as alexisk@outlook.com · eapi.pcloud.com · folder /TML HUB". Secrets PCLOUD_TOKEN, PCLOUD_HOST (eapi.pcloud.com), PCLOUD_ROOT (/TML HUB) set, `pcloud` function deployed, pCloud app's Redirect URI is the site address with the closing slash. The token was pasted into the Claude chat once while setting up: to be safe Alex can Connect pCloud again later, put the new token in PCLOUD_TOKEN, and remove the old app access in pCloud.
+
+**Alex still to do:** switch Settings > Integrations > File storage > Uploaded files go to = The company pCloud.
 **Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
 
 ### Calendar feeds: read less often, and one switch over the lot (7 Oct)
