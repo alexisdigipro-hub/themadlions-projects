@@ -84,6 +84,9 @@ const TgIcon = {
   clip: () => <svg {...svgProps}><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.9-8.9a3.7 3.7 0 0 1 5.2 5.2l-8.9 8.9a1.8 1.8 0 0 1-2.6-2.6l8.2-8.2" /></svg>,
   project: () => <svg {...svgProps}><rect x="3" y="5" width="18" height="15" rx="2" /><path d="M3 10h18M8 5V3M16 5V3" /></svg>,
   person: () => <svg {...svgProps}><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
+  reply: () => <svg {...svgProps}><path d="M9 14L4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></svg>,
+  edit: () => <svg {...svgProps}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>,
+  trash: () => <svg {...svgProps}><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" /></svg>,
   people: () => <svg {...svgProps}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.1.8 3.5 2.8 3.5 5.7" /></svg>,
 }
 
@@ -358,7 +361,7 @@ function ChatRoom({ room, onBack }) {
   // their run, and Reply / Edit / Delete only for the message you tap, not beside every bubble.
   const mobile = useIsMobile()
   const [picked, setPicked] = useState('')
-  const [burst, setBurst] = useState('') // the message a double tap just hearted, for the big heart
+  const [burst, setBurst] = useState('') // the message a double tap just liked, for the big 🎥
   const tapRef = useRef({ id: '', at: 0, timer: null })
   // Telegram has no tab bar inside a conversation, and the bar must not ride up with the keyboard
   // (Alex): the room takes the whole screen while it is open, and follows the visible part of
@@ -514,7 +517,8 @@ function ChatRoom({ room, onBack }) {
       return s
     })
   }
-  // One tap shows Reply / Edit / Delete, two quick taps put a heart on it (or take yours off).
+  // One tap shows Reply / Edit / Delete, two quick taps put a 🎥 on it (or take yours off); Alex
+  // swapped the usual heart for the camera.
   // The single tap waits a moment so a double tap does not flash the actions first.
   const onBubbleTap = (e, m) => {
     if (e.target.closest('a, button')) return
@@ -605,7 +609,7 @@ function ChatRoom({ room, onBack }) {
                   )}
                   <div className="chat-bubble-wrap">
                     <div className="chat-bubble" onClick={mobile ? (e) => onBubbleTap(e, m) : undefined}>
-                      {burst === m.id && <span className="chat-heart-burst" aria-hidden="true">❤️</span>}
+                      {burst === m.id && <span className="chat-heart-burst" aria-hidden="true">🎥</span>}
                       {!cont && !mine && room.kind !== 'direct' && <div className="chat-who" style={{ '--who': `hsl(${senderHue(m.userId)} 55% 42%)` }}>{m.userId ? <Link to={`/u/${m.userId}`}>{m.userName}</Link> : m.userName}</div>}
                       {m.replyTo && (
                         <div className="chat-quote" onClick={() => quoted && jumpTo(quoted.id)} role={quoted ? 'button' : undefined}>
@@ -620,18 +624,28 @@ function ChatRoom({ room, onBack }) {
                         <>
                           {(m.text || m.editedAt) && <br />}
                           <button type="button" className={`chat-likes ${(m.likes || []).includes(user?.id) ? 'mine' : ''}`} onClick={() => toggleLike(m)} title={(m.likes || []).map((id) => state.users.find((u) => u.id === id)?.name || 'Someone').join(', ')}>
-                            ❤️{m.likes.length > 1 && <b>{m.likes.length}</b>}
+                            🎥{m.likes.length > 1 && <b>{m.likes.length}</b>}
                           </button>
                         </>
                       )}
                       <span className="chat-time">{timeOf(m.createdAt)}</span>
                     </div>
+                      {mobile && picked === m.id && (
+                        // the tapped message's menu on a phone: big buttons with words, Telegram-like, under the bubble
+                        <span className="chat-msg-actions chat-acts">
+                          <button type="button" className="chat-act" onClick={() => startReply(m)}>{TgIcon.reply()}<span>Reply</span></button>
+                          {mine && <button type="button" className="chat-act" onClick={() => startEdit(m)}>{TgIcon.edit()}<span>Edit</span></button>}
+                          {(mine || isAdmin) && <Confirm className="chat-act" onConfirm={() => { setPicked(''); remove(m) }} label="Delete">{TgIcon.trash()}<span>Delete</span></Confirm>}
+                        </span>
+                      )}
                   </div>
-                  <span className="chat-msg-actions">
-                    <button type="button" className="icon-btn" title="Reply" onClick={() => startReply(m)}>↩</button>
-                    {mine && <button type="button" className="icon-btn" title="Edit" onClick={() => startEdit(m)}>✎</button>}
-                    {(mine || isAdmin) && <Confirm onConfirm={() => remove(m)} label="Delete message">×</Confirm>}
-                  </span>
+                  {!mobile && (
+                    <span className="chat-msg-actions">
+                      <button type="button" className="icon-btn" title="Reply" onClick={() => startReply(m)}>↩</button>
+                      {mine && <button type="button" className="icon-btn" title="Edit" onClick={() => startEdit(m)}>✎</button>}
+                      {(mine || isAdmin) && <Confirm onConfirm={() => remove(m)} label="Delete message">×</Confirm>}
+                    </span>
+                  )}
                 </div>
               )
             })}
