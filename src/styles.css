@@ -4041,3 +4041,8 @@ html.chat-window, html.chat-window body { height: 100%; overflow: hidden; }
   .chat2 .chat-emoji-wrap { margin-left: -54px; margin-right: 6px; z-index: 1; align-self: center; }
   .chat2 .chat-compose textarea { padding-right: 52px; }
 }
+
+/* the viewer's picture or video sits in the middle, between Close and Save, never under them
+   (Alex, 8 Oct: it sat low, a grid's 100% height did not limit it) */
+.chat-viewer { display: flex; align-items: center; justify-content: center; }
+.chat-viewer img, .chat-viewer video { width: auto; height: auto; max-width: min(100vw, 1600px); max-height: calc(100vh - 150px); max-height: calc(100dvh - 150px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
