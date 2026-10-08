@@ -96,7 +96,7 @@ export default function TasksAll() {
     ) : null
 
   return (
-    <div>
+    <div className="tasks-page">
       <PageHead title="ToDo Tasks" sub={everyone ? `${all.filter((t) => t.status !== 'done').length} open across ${projects.length} projects` : `${all.filter((t) => t.status !== 'done').length} open, assigned to you`}>
         {everyone && (
           <div className="segmented small">
@@ -109,8 +109,11 @@ export default function TasksAll() {
             <button key={k} className={status === k ? 'on' : ''} onClick={() => setStatus(k)}>{l}</button>
           ))}
         </div>
-        <Select className="compact" value={proj} onChange={(e) => setProj(e.target.value)} options={[['', 'Everything'], ['general', 'General only'], ...projects.map((p) => [p.id, p.title])]} />
-        {editable && <Button variant="primary" onClick={() => setDraft(emptyTask({ projectId: '', dept: 'Other' }))}>Add task</Button>}
+        {/* Everything and Add task stay together on one row (Alex, 8 Oct) */}
+        <span className="tasks-add">
+          <Select className="compact" value={proj} onChange={(e) => setProj(e.target.value)} options={[['', 'Everything'], ['general', 'General only'], ...projects.map((p) => [p.id, p.title])]} />
+          {editable && <Button variant="primary" onClick={() => setDraft(emptyTask({ projectId: '', dept: 'Other' }))}>Add task</Button>}
+        </span>
       </PageHead>
       {base.length > 0 && <DeptChips tasks={base} dept={dept} setDept={setDept} filter={status} />}
 

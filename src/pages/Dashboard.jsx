@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Badge, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../components/ui.jsx'
+import { Badge, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { CATEGORIES, STATUSES, can, emptyProject, nextProjectCode, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
 import { projectProgress } from '../lib/progress.js'
@@ -146,6 +146,9 @@ export default function Dashboard() {
   const [sort, setSort] = useState(() => { try { return localStorage.getItem('tml_home_sort') || 'date' } catch { return 'date' } })
   const pickSort = (v) => { setSort(v); try { localStorage.setItem('tml_home_sort', v) } catch { /* private window */ } }
   const canEdit = can(user, 'projects', 'edit')
+  // Sort by is on the phone only now (Alex, 8 Oct, took it off the computer): a computer always
+  // shows Date, whatever a phone last picked.
+  const mobile = useIsMobile()
 
   // Who's around today: moved here from the old Home page, right above the project list. Alex
   // uses the calendar day-picker (the global Calendar in the sidebar) to see another day's roster.
@@ -173,7 +176,7 @@ export default function Dashboard() {
   const projects = visibleProjects(state, user)
     .filter((p) => filter === 'All' || p.category === filter)
     .filter((p) => !q || [p.title, p.client, p.code].some((v) => (v || '').toLowerCase().includes(q.toLowerCase())))
-    .sort(SORTS[sort] || SORTS.date)
+    .sort((mobile && SORTS[sort]) || SORTS.date)
   // Delivered projects leave the main grid (Alex): a "Delivered" chip at the end of the category
   // row, in the inverse colour of the others, shows them alone, grey until hovered.
   const [showDelivered, setShowDelivered] = useState(false)
@@ -258,7 +261,7 @@ export default function Dashboard() {
   return (
     <>
       {team.length > 0 && (
-        <section className="panel" style={{ marginBottom: 20 }}>
+        <section className="panel team-strip-panel" style={{ marginBottom: 20 }}>
           <div className="team-strip-head muted small">
             {(facesHidden || allFaces) && (
               <button className="link small team-strip-more" onClick={() => setAllFaces((v) => !v)}>
@@ -288,7 +291,7 @@ export default function Dashboard() {
         </section>
       )}
 
-      <div className="toolbar">
+      <div className="toolbar home-toolbar">
         <div className="chips">
           {['All', ...CATEGORIES].map((c) => (
             <button key={c} className={`chip ${filter === c ? 'on' : ''}`} onClick={() => setFilter(c)}>
@@ -302,13 +305,15 @@ export default function Dashboard() {
           </button>
         </div>
         <div className="toolbar-actions">
-          <span className="sort-by">
-            <span className="muted small">Sort by</span>
-            <span className="segmented small">
-              <button className={sort === 'date' ? 'on' : ''} onClick={() => pickSort('date')}>Date</button>
-              <button className={sort === 'name' ? 'on' : ''} onClick={() => pickSort('name')}>Name</button>
+          {mobile && (
+            <span className="sort-by">
+              <span className="muted small">Sort by</span>
+              <span className="segmented small">
+                <button className={sort === 'date' ? 'on' : ''} onClick={() => pickSort('date')}>Date</button>
+                <button className={sort === 'name' ? 'on' : ''} onClick={() => pickSort('name')}>Name</button>
+              </span>
             </span>
-          </span>
+          )}
           <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="input search" />
           {canEdit && (
             <Button variant="primary" onClick={() => setDraft(freshProject())}>
