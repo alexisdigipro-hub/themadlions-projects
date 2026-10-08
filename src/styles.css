@@ -3673,3 +3673,32 @@ html[data-public='1'] body { background: var(--bg); }
   .progress-actions button.link { display: flex; align-items: center; justify-content: center; height: 36px; padding: 0 6px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--text); text-decoration: none; font-size: 13.5px; font-weight: 600; white-space: nowrap; }
 }
 
+/* The Calendar page on a phone (Alex, 8 Oct): bigger month arrows, the day's events as cards with
+   their colour and time, what comes next listed under them, buttons centred, and no legend (the
+   All types filter does the same job). The computer keeps its month grid and legend. */
+@media (max-width: 820px) {
+  .calendar .toolbar-actions .btn { justify-content: center; text-align: center; }
+  .calendar .cal-side { display: none; }
+  .cal-mobile { padding: 10px 8px 12px; }
+  .mini-cal.large .mini-cal-nav { padding: 0 2px 4px; }
+  .mini-cal.large .mini-cal-nav .link { width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border-radius: 50%; background: var(--raised); font-size: 22px; }
+  .mini-cal.large .mini-cal-list { padding: 10px 4px 0; }
+  /* a long project name in one line must not widen the calendar: everything may shrink */
+  .cal-mobile, .mini-cal.large, .mini-cal.large > *, .mc-evs, .mc-evs > li, .mc-upcoming, .mc-upcoming-day, .mc-ev-btn { min-width: 0; }
+  .mini-cal.large .mini-cal-sel { font-size: 15px; margin-bottom: 8px; }
+  .mini-cal.large .mini-cal-sel .link { font-weight: 700; }
+  .mini-cal.large .mc-evs { display: flex; flex-direction: column; gap: 6px; margin: 0; }
+  .mini-cal.large .mc-evs li.mc-ev { display: block; padding: 0; border: 0; }
+  .mc-ev-btn { display: flex; align-items: stretch; gap: 10px; width: 100%; padding: 9px 10px; border: 0; border-radius: var(--radius); background: color-mix(in srgb, var(--ev) 12%, var(--raised)); box-shadow: inset 3px 0 0 var(--ev); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+  .mc-ev-btn:disabled { cursor: default; opacity: 1; }
+  .mc-ev-time { flex: none; width: 54px; white-space: nowrap; font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ev); padding-top: 1px; }
+  .mc-ev-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .mc-ev-title { font-size: 15px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+  .mc-ev-sub { font-size: 12.5px; color: var(--muted); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mc-none { margin: 2px 0 4px; }
+  .mc-upcoming { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line-soft); display: flex; flex-direction: column; gap: 10px; }
+  .mc-upcoming-head { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .mc-upcoming-day { display: flex; flex-direction: column; gap: 6px; }
+  .mc-upcoming-date { align-self: flex-start; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--text); background: none; border: 0; padding: 0; cursor: pointer; }
+}
+

@@ -221,7 +221,7 @@ export default function CalendarView({ projectId = null, title }) {
           <div className="panel cal-mobile">
             <MiniCalendar
               large
-              items={events.map((e) => ({ date: e.date, endDate: e.endDate, time: e.start, color: colorOf(e), title: e.type === 'unavailable' ? `${personLabel(e)} not available` : e.title, sub: [e.start, !projectId && e.projectId ? projName(e.projectId) : '', e.type !== 'unavailable' ? labelOf(e) : ''].filter(Boolean).join(' · '), ev: e }))}
+              items={events.map((e) => ({ date: e.date, endDate: e.endDate, time: e.start, color: colorOf(e), title: e.type === 'unavailable' ? `${personLabel(e)} not available` : e.title, sub: [!projectId && e.projectId ? projName(e.projectId) : '', e.type !== 'unavailable' ? labelOf(e) : ''].filter(Boolean).join(' · '), ev: e }))}
               onItemClick={(e) => setDraft({ ...e })}
               onAddDay={editable ? (d) => setDraft(newEvent(d)) : canMarkOff ? (d) => setDraft(newEvent(d, 'unavailable')) : null}
               addLabel={editable ? 'Add event' : 'Not available'}
