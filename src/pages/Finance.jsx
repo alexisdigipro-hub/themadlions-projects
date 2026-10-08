@@ -10,6 +10,7 @@ import { budgetCatForFin, finCatFor } from '../lib/budgetCats.js'
 import { AGE_BUCKETS, WorkLogTable, ageBucket, avgDaysToPay, daysWaiting, entryTotals, entryTotalsByYear, money2, projectWorkDate, topClientOf } from '../components/WorkLog.jsx'
 import { InvoiceProfileSettings } from '../components/Invoices.jsx'
 import { invoiceTotals } from '../lib/invoice.js'
+import { ReceiptView } from '../components/Receipt.jsx'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -18,6 +19,9 @@ export default function Finance() {
   const me = useCurrentUser()
   const toast = useToast()
   const fin = state.finance
+  const [viewReceipt, setViewReceipt] = useState(null)
+  // the receipt photographed for an expense: on the budget line it pays, or kept on the expense itself
+  const receiptOf = (t) => (t.budgetLineId && state.projects.find((p) => p.id === t.projectId)?.budget?.lines?.find((l) => l.id === t.budgetLineId)?.receipt) || t.receipt || null
   const cur = fin.settings.currency || 'EUR'
   // The financial year can start in a month other than January (Finance settings), so every
   // year grouping on this page goes through fiscalYearOf rather than slicing the date.
@@ -450,7 +454,7 @@ export default function Finance() {
                   ) : (
                     <tr key={t.id} className={`tx-${t.type}`}>
                       <td className="nowrap">{fmtDate(t.date, { day: 'numeric', month: 'short' })}</td>
-                      <td><strong>{t.description}</strong>{t.party && <div className="muted small">{t.party}{t.docNumber ? ` · ${t.docNumber}` : ''}</div>}</td>
+                      <td><strong>{t.description}</strong>{receiptOf(t) && <button type="button" className="receipt-chip" onClick={() => setViewReceipt(receiptOf(t))} title="Open the receipt">🧾<span>Receipt</span></button>}{t.party && <div className="muted small">{t.party}{t.docNumber ? ` · ${t.docNumber}` : ''}</div>}</td>
                       <td className="small">{pName(t.projectId) || <span className="muted">Company</span>}</td>
                       <td className="small">{t.category}</td>
                       <td className={`num ${t.type === 'income' ? 'under' : ''}`}>{t.type === 'income' ? '+' : '−'}{money(t.net, cur)}</td>
@@ -553,6 +557,7 @@ export default function Finance() {
       )}
 
       {pay && <PaymentModal project={pay.project} line={pay.line} onClose={() => setPay(null)} />}
+      {viewReceipt && <ReceiptView receipt={viewReceipt} onClose={() => setViewReceipt(null)} />}
       {rdraft && (
         <Modal open title={recurring.some((r) => r.id === rdraft.id) ? 'Edit recurring item' : 'New recurring item'} onClose={() => setRdraft(null)}
           footer={<><Button variant="ghost" onClick={() => setRdraft(null)}>Cancel</Button><Button variant="primary" onClick={saveRecurring}>Save</Button></>}>

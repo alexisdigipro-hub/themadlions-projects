@@ -9,6 +9,8 @@ import PaymentModal, { BulkPaymentModal } from '../../components/PaymentModal.js
 import { lineBalance, lineEstimate, lineTotal, lineVat, linePaid, syncLineWorklog, dropLineWorklog } from '../../lib/budget.js'
 import { groupPairs } from '../../lib/budgetCats.js'
 import { useDragOrder } from '../../lib/dragOrder.js'
+import { deleteFile } from '../../lib/files.js'
+import { ReceiptField, ReceiptModal, ReceiptView } from '../../components/Receipt.jsx'
 
 // The categories and their groups live in Settings > Budget (src/lib/budgetCats.js holds the
 // standard list and the helpers). The page reads them through groupPairs() below.
@@ -98,6 +100,8 @@ export default function Budget() {
   const budget = project.budget || { lines: [] }
   const [draft, setDraft] = useState(null)
   const [pay, setPay] = useState(null) // line
+  const [addReceipt, setAddReceipt] = useState(false)
+  const [viewReceipt, setViewReceipt] = useState(null)
   // lines ticked for one payment together; only lines with money still owed can be ticked
   const canPay = me?.role === 'admin' && editable
   const payable = (l) => lineEstimate(l) > 0 && lineBalance(l) > 0
@@ -162,7 +166,13 @@ export default function Budget() {
     setDraft(null)
     toast(who ? `Line saved, and it is now in ${who.name}'s My Finance` : contact || loc ? `Line saved, linked to ${(contact || loc).name}` : 'Line saved', 'ok')
   }
-  const remove = (id) => update((s) => {
+  // a receipt's file goes first, while the line still records it (pCloud only deletes what a project records)
+  const remove = async (id) => {
+    const r = budget.lines.find((l) => l.id === id)?.receipt
+    if (r) await deleteFile(r).catch(() => {})
+    removeLine(id)
+  }
+  const removeLine = (id) => update((s) => {
     const p = s.projects.find((x) => x.id === project.id)
     if (!p?.budget) return s
     p.budget.lines = p.budget.lines.filter((l) => l.id !== id)
@@ -180,6 +190,7 @@ export default function Budget() {
         <div className="toolbar no-print">
           <div className="toolbar-actions">
             <Button variant="primary" onClick={() => setDraft({ ...emptyLine(), category: CATEGORIES.includes('Camera') ? 'Camera' : CATEGORIES[0] || '' })}>Add line</Button>
+            <Button onClick={() => setAddReceipt(true)}>🧾 Add receipt</Button>
           </div>
         </div>
       )}
@@ -223,7 +234,12 @@ export default function Budget() {
                   )}
                   {canPay && <td className="pick no-print">{payable(l) && <input type="checkbox" checked={picked.includes(l.id)} onChange={(e) => togglePick([l.id], e.target.checked)} aria-label={`Select ${l.description} to pay`} />}</td>}
                   <td className="muted small budget-cat">{l.category}</td>
-                  <td>{l.description}{l.notes && <div className="muted small">{l.notes}</div>}</td>
+                  <td>
+                    {l.description}
+                    {l.receipt && <button type="button" className="receipt-chip no-print" onClick={() => setViewReceipt(l.receipt)} title="Open the receipt">🧾<span>Receipt</span></button>}
+                    {l.reimburse && l.memberId && <span className="receipt-refund">refund</span>}
+                    {l.notes && <div className="muted small">{l.notes}</div>}
+                  </td>
                   <td>{l.vendor}{l.vendor && (l.memberId ? ' (team)' : l.contactId ? ` (${contactKind(l.contactId) || 'crew'})` : l.locationId ? ' (location)' : '')}</td>
                   <td className="num">{money(lineTotal(l), cur)}</td>
                   <td className="muted small">{Number(l.vatPct) > 0 && <span title={`${money(lineEstimate(l), cur)} + ${l.vatPct}% VAT`}>VAT included</span>}</td>
@@ -259,6 +275,8 @@ export default function Budget() {
         </div>
       )}
 
+      {addReceipt && <ReceiptModal project={project} groups={BUDGET_GROUPS} onClose={() => setAddReceipt(false)} />}
+      {viewReceipt && <ReceiptView receipt={viewReceipt} onClose={() => setViewReceipt(null)} />}
       {pay && <PaymentModal project={project} line={budget.lines.find((l) => l.id === pay.id) || pay} onClose={() => setPay(null)} />}
       {bulkPay && <BulkPaymentModal project={project} lines={pickedLines} onClose={() => setBulkPay(false)} onDone={() => setPicked([])} />}
       {draft && (
@@ -327,6 +345,12 @@ export default function Budget() {
             </Field>
           </div>
           <Field label="Notes"><Textarea rows={2} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>
+          <ReceiptField project={project} line={draft} onChange={(receipt) => setDraft((d) => {
+            const next = { ...d }
+            if (receipt) next.receipt = receipt
+            else delete next.receipt
+            return next
+          })} />
         </Modal>
       )}
     </div>

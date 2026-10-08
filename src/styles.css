@@ -2121,6 +2121,31 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 .bulk-bar { position: sticky; bottom: 14px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding: 10px 14px; background: var(--panel); border: 1px solid var(--accent); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
 .bulk-bar-actions { display: flex; gap: 8px; }
 .bulk-pay-list td { padding-top: 6px; padding-bottom: 6px; }
+/* expenses with a receipt: the chip on a budget line or a Finance expense, the add form, the viewer */
+.receipt-chip { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 1px 8px 1px 6px; font: inherit; font-size: 12px; line-height: 18px; color: var(--text); background: var(--raised); border: 1px solid var(--line); border-radius: 999px; cursor: pointer; vertical-align: 1px; }
+.receipt-chip:hover { border-color: var(--accent); }
+.receipt-refund { display: inline-block; margin-left: 6px; padding: 0 7px; font-size: 11.5px; line-height: 18px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--amber); border: 1px solid currentColor; border-radius: 999px; vertical-align: 1px; }
+.receipt-form { display: grid; gap: 16px; }
+.receipt-shot { display: flex; flex-direction: column; gap: 10px; }
+.receipt-shot img { display: block; width: 100%; max-height: 300px; object-fit: contain; background: var(--raised); border-radius: var(--radius); }
+.receipt-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 150px; padding: 16px; font-size: 40px; text-align: center; background: var(--raised); border: 1.5px dashed var(--line); border-radius: var(--radius); }
+.receipt-empty span { font-size: 13.5px; color: var(--muted); }
+.receipt-pdf { padding: 22px 14px; text-align: center; background: var(--raised); border-radius: var(--radius); word-break: break-word; }
+.receipt-reading { padding: 8px 12px; font-size: 13px; color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); border-radius: var(--radius); animation: receipt-pulse 1.2s ease-in-out infinite alternate; }
+@keyframes receipt-pulse { from { opacity: .55; } to { opacity: 1; } }
+.receipt-pickers { display: flex; gap: 8px; flex-wrap: wrap; }
+.receipt-pickers .btn { flex: 1 1 auto; }
+.receipt-field { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.receipt-field .receipt-pickers { flex: 1 1 220px; }
+.receipt-thumb { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; padding: 0; overflow: hidden; font-size: 24px; background: var(--raised); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+.receipt-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.receipt-view { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.receipt-view img { display: block; max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: var(--radius); }
+.receipt-view img.loading { filter: blur(2px); opacity: .8; }
+@media (min-width: 821px) {
+  .receipt-form { grid-template-columns: 260px 1fr; align-items: start; }
+  .receipt-shot img { max-height: 380px; }
+}
 .sidenav a { display: flex; align-items: center; gap: 10px; }
 .nav-ico { display: inline-flex; width: 18px; height: 18px; color: var(--muted); flex: none; }
 .sidenav a:hover .nav-ico, .sidenav a.active .nav-ico { color: var(--accent); }
