@@ -188,7 +188,8 @@ function ReleaseModal({ project, start, onClose }) {
         if (!p) return s
         p.releases = [...(p.releases || []), entry]
         p.updatedAt = new Date().toISOString()
-        if (s.settings.releaseLang !== f.lang) s.settings.releaseLang = f.lang
+        // only an administrator may write the workspace's settings
+        if (admin && s.settings.releaseLang !== f.lang) s.settings.releaseLang = f.lang
         return s
       })
       toast(`Release signed by ${signer} and saved as PDF`, 'ok')

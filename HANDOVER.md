@@ -41,6 +41,14 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct, later: Notes, Tasks like Reminders, wider side menu
+- **Side menu** on a computer 10% wider again: `--sidebar` 255 → 281 px (phone drawer unchanged).
+- **Notes** (`src/pages/Notes.jsx`, `src/lib/notes.js`, route /notes, nav after Chat): private per person, table `notes` (**`supabase/notes.sql`**, every policy `user_id = auth.uid()`), local mode in localStorage `tml_notes`. Rows: kind note | folder, folder_id, title (first line), body (html), pinned, deleted_at (Recently Deleted, purged after 30 days on load). Editor = Office's `mountDoc`, restyled under `.notes-doc` (no A4 page, toolbar at the foot). Every change carries the note id it was opened on, and what was typed in the last 300 ms is taken when the editor closes; saves 0.8 s after the last change, flushed on switching notes, leaving the page and pagehide; reload on window focus keeps notes being typed. Not in the shared store on purpose.
+- **Tasks** (`src/pages/TasksAll.jsx` rewritten): Reminders layout. Smart cards (today = due ≤ today, scheduled, all, urgent = urgent|high, mine, done), lists = General + `settings.taskLists` [{id, name, color, icon}] (administrators only, since only they may write workspace settings; a general task's `listId`) + projects (with tasks or not Delivered). Quick add, Clear completed, Show/Hide completed. Same data (project.tasks, state.todos), same TaskModal and "New task for you" notice. The Dept chips and Everyone / Mine switch are gone from this page (Assigned to me replaces Mine).
+- Release forms fix: only an administrator's release remembers the form language (settings are admin-only; a member's save would have failed).
+- Checked: JSX/import checks; static mocks of both pages with the real CSS at 1300 px and 390 px. Not run in the built app here.
+- Alex: run `supabase/notes.sql`.
+
 ### 9 Oct: push notifications for calls and messages (third of the three)
 - **SQL `supabase/push.sql`**: `push_subscriptions` (own rows only; `push_claim()` security definer takes over an endpoint when another account signs in on that browser), `push_config` (RLS on, no policies: the function's VAPID pair), `push_recipients(room)` (who can read a room minus the caller, the same rules as `can_read_chat`).
 - **Edge Function `supabase/functions/push/index.ts`** ("push"): actions key / test / message {id} / call {chatId, callId, video} / call_missed. Makes its VAPID pair on first use with the service key (auto-provided), checks the message (or the direct room) under the caller's own token, sends RFC 8291 aes128gcm + VAPID ES256 with Web Crypto, no library. Encryption checked byte for byte against RFC 8291's Appendix A vector. 404/410 subscriptions are deleted.
