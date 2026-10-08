@@ -54,5 +54,7 @@ export function clearOauth() {
   try { sessionStorage.removeItem(OAUTH_KEY) } catch {}
 }
 /* The page pCloud sends the person back to: this app, at its root. Registered in the pCloud app too. */
-export const redirectUri = () => window.location.origin + window.location.pathname
+// Always the same address, whichever way the app was opened (with or without the closing slash,
+// or as index.html): pCloud refuses anything that is not exactly what its app settings hold.
+export const redirectUri = () => window.location.origin + window.location.pathname.replace(/index\.html$/, '').replace(/\/?$/, '/')
 export const authorizeUrl = (clientId) => `https://my.pcloud.com/oauth2/authorize?client_id=${encodeURIComponent(clientId)}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri())}`

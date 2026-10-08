@@ -66,6 +66,7 @@ Each PR body has the detail and the tests; this is the map.
 - **Chat, phone, third pass** (#206): the like is a 🎥 (same `likes` data); the tapped message's menu is big labelled buttons (Reply / Edit / Delete with line icons) under the bubble, inside `.chat-bubble-wrap`. Alex's screenshot after #205 showed the old version still open on his phone (emoji 📎, filled send): a fresh open of the app loads the new one.
 - **Chat, phone, fourth pass** (#207): `html.kb-open` (visualViewport is 120px+ shorter than the window) drops the safe-area padding under the box; the textarea gets `autoComplete=off` / `name=chat-message` on the phone, which stops iOS offering AutoFill Contact. The bar with the up/down arrows and Done is Safari's own and cannot be removed by a page.
 - **Lighter app** (#208, 8 Oct): build check from the CI log: main chunk 482 KB (140 KB gzip, mostly React and supabase-js), CSS 154 KB (30 KB gzip); pdf.js (365 KB) and mammoth (500 KB) already load only on script import. Done: `updateProject` copies only the project being edited instead of `structuredClone` of the whole state, and every `syncDiff` comparison first checks for the very same object (11 places), so typing in a project no longer copies and stringifies every project, 2000 messages and finance on each key. 24 CSS classes used nowhere removed (48 rules), 13 screens pixel-identical before and after at 1300 and 390. Next, if Alex wants more: Settings > Usage shows which data is heaviest (inline photo thumbnails in projects are the likely one).
+- **pCloud redirect** (#209): Alex got pCloud's "This 'redirect_uri' is not autorized" while connecting. `redirectUri()` now always sends `https://alexisdigipro-hub.github.io/themadlions-projects/` (trailing slash, no index.html), which is what goes in the pCloud app's Redirect URIs.
 - **Chat, phone** (from #199, stays): an open room is `position: fixed` from the top down to the tab bar, so the box you type in no longer slides under the menu. Not tried on a real iPhone with the keyboard open.
 
 ### Presentation looks and link; users' Settings, My Finance, Database switch (7 Oct, evening)
@@ -81,7 +82,7 @@ Each PR body has the detail and the tests; this is the map.
 
 - **Cover crop**: `components/CoverCropper.jsx` (cropper + `useCover` hook used by Overview and ProjectForm), maths in `lib/coverCrop.js`. `coverThumb` is now a 480×480 square; the original goes to the photos bucket as `<projectId>/cover/source-<stamp>.jpg` in `coverSource`, the cut in `coverCrop`. Old file removed on a new pick, only if it sits in this project's folder (a copied project points at the original's). `Modal` now closes only the top window on Escape and keeps the page locked while another is open.
 
-**Alex still to do:** merge #208 (#207 is merged). Nothing to run in Supabase.
+**Alex still to do:** put the redirect address in the pCloud app's Redirect URIs, merge #209, then Connect pCloud again and follow the steps in Settings > Integrations > File storage.
 **Open questions:** whether an accepted estimate should become the project's client budget by itself (Χάρτινες Αγάπες shows -€905 profit because it has no client budget; offered, not answered). Whether tasks should become a real database lock (needs its own table; offered, not answered).
 
 ### Calendar feeds: read less often, and one switch over the lot (7 Oct)
