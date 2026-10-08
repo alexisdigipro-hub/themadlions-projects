@@ -41,6 +41,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 8 Oct, late night: Coral chat theme
+- `data-chat-theme='coral'`, always light whatever the app's theme (it sets --text, --panel and the rest inside .chat2, and the incoming bubble's colour explicitly, since dark mode forces white bubble text). Graphite header (`--coral-head`), white message sheet with 26px top corners, coral pinned bar, folder tabs as a pill track. Checked on stored chat snapshots at 390 px and 1300 px, light and dark app theme.
+- Alex asked for group voice/video calls: proposed a mesh (each pair connected, fine up to about 5-6 people) on top of lib/calls.jsx, once a one-to-one call has worked on real phones.
+
 ### 8 Oct, night: voice and video calls, Neo red theme
 - **Calls** live in `src/lib/calls.jsx`: `CallProvider` wraps everything under RequireUser in App.jsx (so it rings in the app and in TML Chat), `useCalls().start(room, video)` from the 📞 / 🎥 buttons in a direct room's header (Profile moved into ⋯ on a phone).
 - WebRTC peer to peer, public STUN (Google, Cloudflare), **no TURN yet**: a network that blocks direct connections will say "Could not connect". If that happens, add a TURN server to `ICE` (e.g. Cloudflare Calls TURN or Metered; its credentials must come from an Edge Function, never the repo).

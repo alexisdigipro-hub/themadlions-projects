@@ -15,6 +15,7 @@ const THEMES = [
   ['gold', 'Mineshaft gold'],
   ['amoled', 'Amoled black'],
   ['neo', 'Neo red'],
+  ['coral', 'Coral'],
 ]
 const QUICK = ['🎥', '❤️', '👍', '🔥', '🏆', '👏', '😂']
 const SHORTCUTS = [
