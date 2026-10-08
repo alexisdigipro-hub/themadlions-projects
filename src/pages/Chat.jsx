@@ -375,12 +375,14 @@ function ChatRoom({ room, onBack }) {
       if (!vv) return
       root.style.setProperty('--chat-vh', `${vv.height}px`)
       root.style.setProperty('--chat-vt', `${vv.offsetTop}px`)
+      // keyboard up: the strip kept for the iPhone's home bar is not needed under the box (Alex)
+      root.classList.toggle('kb-open', window.innerHeight - vv.height > 120)
     }
     fit()
     vv?.addEventListener('resize', fit)
     vv?.addEventListener('scroll', fit)
     return () => {
-      root.classList.remove('chat-open')
+      root.classList.remove('chat-open', 'kb-open')
       root.style.removeProperty('--chat-vh')
       root.style.removeProperty('--chat-vt')
       vv?.removeEventListener('resize', fit)
@@ -676,7 +678,8 @@ function ChatRoom({ room, onBack }) {
           )}
           <input ref={fileRef} type="file" multiple hidden onChange={(e) => addFiles(e.target.files)} />
           {!editing && <button type="button" className="icon-btn chat-attach" title="Photo or file" onClick={() => fileRef.current?.click()} disabled={!!busy}>{mobile ? TgIcon.clip() : '📎'}</button>}
-          <textarea ref={inputRef} className="input" rows={1} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Message" title={prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. @name mentions someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. @name mentions someone'} disabled={!!busy} />
+          {/* autoComplete off: the iPhone stops offering AutoFill Contact and your own name above the keyboard */}
+          <textarea ref={inputRef} className="input" rows={1} name={mobile ? 'chat-message' : undefined} autoComplete={mobile ? 'off' : undefined} autoCorrect={mobile ? 'on' : undefined} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Message" title={prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. @name mentions someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. @name mentions someone'} disabled={!!busy} />
           <button type="button" className={`chat-send${text.trim() || pending.length ? ' ready' : ''}`} onClick={send} disabled={!!busy || (!text.trim() && !pending.length)} title={editing ? 'Save (Enter)' : 'Send (Enter)'} aria-label={editing ? 'Save' : 'Send'}>
             {busy ? '…' : editing ? '✓' : <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4l17.4-7.5c.8-.4.8-1.5 0-1.8L3.4 3.6c-.7-.3-1.4.3-1.3 1l1.2 5.7c.1.4.4.7.8.7l9.4 1-9.4 1c-.4 0-.7.3-.8.7L2.1 19.4c-.1.7.6 1.3 1.3 1z" /></svg>}
           </button>
