@@ -70,26 +70,23 @@ try {
     const measure = () => {
       if (typing()) return // the keyboard shrinks the window: not a band
       const inset = parseFloat(getComputedStyle(probe).paddingTop) || 0
+      // no safe area: iOS has not settled yet (or the page is not under the clock at all): keep what we have
+      if (!(inset > 0)) return
       const tall = window.innerHeight > window.innerWidth
       const screenH = tall ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height)
-      const gap = Math.round(screenH - probe.getBoundingClientRect().height)
-      if (inset > 0 && gap > 0 && gap <= 160) {
-        root.style.setProperty('--ios-gap', `${gap}px`)
-        root.style.setProperty('--screen-h', `${screenH}px`)
-        try { localStorage.setItem('tml_ios_band', JSON.stringify({ screenH, gap })) } catch {}
-      } else if (inset > 0 || gap <= 0) {
-        // clearly no band (or not drawn under the clock): clear; a reading of 0 safe area with a band is
-        // treated as iOS not having settled yet and leaves the last good numbers alone
-        root.style.removeProperty('--ios-gap')
-        root.style.removeProperty('--screen-h')
-        try { localStorage.removeItem('tml_ios_band') } catch {}
-      }
+      // drawn under the clock, the page is always the whole screen; only how far fixed bars must drop
+      // varies (Alex, 13:4x: it came up right and then turned to a band before his eyes, when a later
+      // reading found no band and the sizes were taken away)
+      const gap = Math.min(160, Math.max(0, Math.round(screenH - probe.getBoundingClientRect().height)))
+      root.style.setProperty('--screen-h', `${screenH}px`)
+      root.style.setProperty('--ios-gap', `${gap}px`)
+      if (tall) { try { localStorage.setItem('tml_ios_band', JSON.stringify({ screenH, gap })) } catch {} }
     }
     // the last good numbers for this screen, straight away, so the first frame already reaches the foot
     try {
       const last = JSON.parse(localStorage.getItem('tml_ios_band') || 'null')
       const tall = window.innerHeight > window.innerWidth
-      if (tall && last && last.screenH === Math.max(screen.width, screen.height) && last.gap > 0 && last.gap <= 160) {
+      if (tall && last && last.screenH === Math.max(screen.width, screen.height) && last.gap >= 0 && last.gap <= 160) {
         root.style.setProperty('--ios-gap', `${last.gap}px`)
         root.style.setProperty('--screen-h', `${last.screenH}px`)
       }

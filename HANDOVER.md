@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct (13:5x): the band appeared after a correct start
+- Alex: it opened right and then turned into the band before his eyes. A later reading found no band and the old code then took `--screen-h` away. Now, once the page is known to be under the clock (safe area > 0), `--screen-h` is always the screen's height (drawn under the clock the page is always the whole screen) and only `--ios-gap` follows the readings (0..160); readings with no safe area are ignored instead of clearing anything.
+
 ### 9 Oct (13:4x): the band came back on reopening
 - Likely iOS reporting no safe area at the very first moment, so main.jsx's one measurement came out empty. Now it measures again at 50/250/700/1500/3000 ms, on load, pageshow and when the app comes back to the screen; a reading of 0 safe area with a band no longer wipes good numbers; and the last good `{screenH, gap}` is kept in localStorage (`tml_ios_band`) and applied at once on the next launch for the same screen. Not yet in a PR: waiting for Alex's description of what he sees.
 
