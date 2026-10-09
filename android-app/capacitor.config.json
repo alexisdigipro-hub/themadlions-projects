@@ -1,0 +1,12 @@
+{
+  "appId": "com.themadlions.chat",
+  "appName": "TML Chat",
+  "webDir": "www",
+  "server": {
+    "url": "https://alexisdigipro-hub.github.io/themadlions-projects/chat.html#/chat-window",
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#0b1018"
+  }
+}
