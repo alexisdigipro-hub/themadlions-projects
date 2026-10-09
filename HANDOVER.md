@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct: the box to type in, Telegram for iPhone style (phones)
+- Phone only (app chat and TML Chat; desktop untouched): in a conversation a round 50 px glass paperclip, a 50 px glass pill reading **Message** with Telegram's sticker mark inside on its right (`TgIcon.sticker`, opens the emoji picker, 7 columns on a phone; the emoji button used to be computer only), and a round glass mic (or the accent send). Frosted fill, a fine light edge, a highlight along the top; icons in the text colour. Coral and Neo keep their own (their rules are more specific). CSS at the end of styles.css.
+
 ### 9 Oct: TML Chat's folders moved to the foot
 - Phone TML Chat only (`tg`): the folder tabs sit at the bottom, right over Chats / Calls / Notices / Settings, in one sticky frosted `.tg-dock` (Chat.jsx RoomList: the tabs and the foot nav are now the `folderTabs` / `footTabs` consts; `{!tg && folderTabs}` above the search everywhere else, `<div className="tg-dock">` for TML Chat; the folders show only on the Chats tab, also while picking with Edit). The top is now Edit · THEMADLIONS · + and the search. The in-app chat and the computer keep the folders on top.
 
