@@ -167,7 +167,7 @@ const TgIcon = {
 function RoomAvatar({ room, size = 42 }) {
   const style = { width: size, height: size, ...(room.color ? { '--rc': room.color } : {}) }
   return (
-    <span className={`chat-ravatar ${room.kind}`} style={style}>
+    <span className={`chat-ravatar ${room.kind}${room.logo && room.photo ? ' logo' : ''}`} style={style}>
       {room.photo ? <img src={room.photo} alt="" /> : room.initials || '?'}
     </span>
   )
