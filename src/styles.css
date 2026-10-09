@@ -5516,3 +5516,15 @@ html[data-theme='light'] .glass-lens, html[data-skin='coral'] .glass-lens { back
 /* The team's room shows the company logo (Settings > Company), whole, on a plain disc, not cropped like a photo */
 .chat-ravatar.logo { background: var(--raised); }
 .chat-ravatar.logo img { object-fit: contain; padding: 16%; }
+
+/* Tasks: ⋮⋮ on each open task drags it to another place in its group (TasksAll.jsx startDrag). The task
+   being moved fades, and a line in the accent shows where it will land. */
+.rem-grip { flex: none; align-self: center; width: 18px; margin: 0 -4px 0 -6px; color: var(--muted); font-size: 14px; letter-spacing: -3px; line-height: 1; text-align: center; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; opacity: .45; }
+.rem-task:hover .rem-grip, .rem-grip:active { opacity: 1; }
+.rem-task.dragging { opacity: .45; }
+.rem-task.dragging .rem-grip { cursor: grabbing; }
+.rem-task { position: relative; }
+.rem-task.drop-before::before, .rem-task.drop-after::after { content: ''; position: absolute; left: 8px; right: 8px; height: 3px; border-radius: 3px; background: var(--accent); pointer-events: none; }
+.rem-task.drop-before::before { top: -7px; }
+.rem-task.drop-after::after { bottom: -7px; }
+@media (max-width: 820px) { .rem-grip { opacity: .7; width: 22px; font-size: 16px; } }

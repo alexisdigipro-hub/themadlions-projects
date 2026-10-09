@@ -121,7 +121,9 @@ export default function TasksAll() {
   const byDue = (a, b) => (a.due || '9999').localeCompare(b.due || '9999') || (a.createdAt || '').localeCompare(b.createdAt || '')
   const searching = words.length > 0
   const base = searching ? all.filter(match) : inBin ? binned : current.smart ? all.filter(smartFilter[current.key]) : inList(current.key)
-  const pending = inBin ? base : base.filter((t) => t.status !== 'done' || current.key === 'done').sort(byDue)
+  // the order dragged by hand comes first (Alex, 9 Oct); tasks never placed follow, by date
+  const byOrder = (a, b) => (a.order ?? 1e9) - (b.order ?? 1e9) || byDue(a, b)
+  const pending = inBin ? base : base.filter((t) => t.status !== 'done' || current.key === 'done').sort(current.key === 'done' ? byDue : byOrder)
   const completed = current.smart || searching ? [] : base.filter((t) => t.status === 'done').sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || ''))
   // smart lists and search show their tasks under the list each comes from, as Reminders does
   const sections = useMemo(() => {
@@ -276,14 +278,54 @@ export default function TasksAll() {
     </aside>
   )
 
-  const row = (t) => {
+  /* Drag a task by its ⋮⋮ to put it where you want (Alex, 9 Oct). Pointer events, so it works with a
+     mouse and with a finger; within one group of the list only. On release every task of that group
+     gets its place (order) saved, which every view then follows. */
+  const [drag, setDrag] = useState(null) // { id, ids, over, after }
+  const startDrag = (e, t, ids) => {
+    if (!editable || e.button > 0) return
+    e.preventDefault()
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
+    setDrag({ id: t.id, ids, over: null, after: false })
+  }
+  const moveDrag = (e) => {
+    if (!drag) return
+    const hit = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-task-id]')
+    const id = hit?.getAttribute('data-task-id')
+    // near the top or the foot of the list, it scrolls along
+    const box = e.currentTarget.closest('.rem-scroll')
+    if (box) {
+      const r = box.getBoundingClientRect()
+      if (e.clientY < r.top + 48) box.scrollTop -= 12
+      else if (e.clientY > r.bottom - 48) box.scrollTop += 12
+    }
+    if (!id || !drag.ids.includes(id)) return
+    const r = hit.getBoundingClientRect()
+    const after = e.clientY > r.top + r.height / 2
+    if (id !== drag.over || after !== drag.after) setDrag({ ...drag, over: id, after })
+  }
+  const endDrag = () => {
+    const d = drag
+    setDrag(null)
+    if (!d || !d.over || d.over === d.id) return
+    const ids = d.ids.filter((x) => x !== d.id)
+    const at = ids.indexOf(d.over) + (d.after ? 1 : 0)
+    ids.splice(at, 0, d.id)
+    ids.forEach((id, i) => {
+      const t = all.find((x) => x.id === id)
+      if (t && t.order !== i) persist(t, (x) => { x.order = i })
+    })
+  }
+  const row = (t, group) => {
+    const canDrag = editable && Array.isArray(group) && group.length > 1 && t.status !== 'done' && !t.deletedAt && !searching
     const late = t.due && t.due < t0 && t.status !== 'done'
     // the list it is on, or its project's name (a delivered project has no list row but keeps its tag)
     // its list (when it is not the one open) and its project, each as a tag
     const from = listOf(t).startsWith('l:') || listOf(t) === GENERAL ? listByKey[listOf(t)] : null
     const proj = t.projectId && projectsById[t.projectId]
     return (
-      <li key={t.id} className={`rem-task ${t.status === 'done' ? 'done' : ''}${t.deletedAt ? ' binned' : ''}`}>
+      <li key={t.id} data-task-id={t.id} className={`rem-task ${t.status === 'done' ? 'done' : ''}${t.deletedAt ? ' binned' : ''}${drag?.id === t.id ? ' dragging' : ''}${drag?.over === t.id && drag.id !== t.id ? (drag.after ? ' drop-after' : ' drop-before') : ''}`}>
+        {canDrag && <span className="rem-grip" role="button" aria-label="Drag to reorder" title="Drag to reorder" onPointerDown={(e) => startDrag(e, t, group.map((x) => x.id))} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={() => setDrag(null)}>⋮⋮</span>}
         <button type="button" className="rem-check" aria-label={t.status === 'done' ? 'Mark as not done' : 'Mark as done'} disabled={!editable || !!t.deletedAt} onClick={() => toggle(t)} />
         <div className="rem-task-main" onClick={() => editable && !t.deletedAt && setDraft({ ...t })}>
           <div className="rem-task-title">
@@ -329,7 +371,7 @@ export default function TasksAll() {
       <div className="rem-scroll">
         {sections.map((s) => (
           <div key={s.key} className="rem-section">
-            <ul className="rem-tasks">{s.list.map(row)}</ul>
+            <ul className="rem-tasks">{s.list.map((t) => row(t, s.list))}</ul>
           </div>
         ))}
         {!pending.length && <p className="rem-empty">{searching ? 'No task matches.' : current.key === 'done' ? 'Nothing completed yet.' : inBin ? 'Nothing deleted.' : 'No tasks here yet.'}</p>}
@@ -339,7 +381,7 @@ export default function TasksAll() {
               <button type="button" className="rem-done-toggle" onClick={() => setShowDone((v) => !v)}>{showDone ? '⌄' : '›'} Completed <span>{completed.length}</span></button>
               {editable && showDone && <button type="button" className="rem-done-clear" onClick={clearDone}>Clear</button>}
             </div>
-            {showDone && <ul className="rem-tasks rem-completed">{completed.map(row)}</ul>}
+            {showDone && <ul className="rem-tasks rem-completed">{completed.map((t) => row(t))}</ul>}
           </>
         )}
       </div>
