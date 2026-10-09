@@ -52,19 +52,21 @@ export function roomsFor(state, user) {
   const users = state.users || []
   // the whole-team room carries the company name from Settings > Company (THEMADLIONS)
   const teamName = (state.workspace?.name || '').trim() || 'Team'
-  const out = [{ id: TEAM, kind: 'team', name: teamName, sub: `${users.filter((u) => u.active !== false).length} people`, initials: initialsOf(teamName) }]
+  // rooms this person archived themselves (Edit > Archive, profile.chatArchived)
+  const mine = new Set(Array.isArray(user.profile?.chatArchived) ? user.profile.chatArchived : [])
+  const out = [{ id: TEAM, kind: 'team', name: teamName, sub: `${users.filter((u) => u.active !== false).length} people`, initials: initialsOf(teamName), archived: mine.has(TEAM) }]
   for (const p of visibleProjects(state, user)) {
     if (tabHidden(p, 'chat') || chatExcluded(p, user)) continue
     // the project's cover is the room's picture, its colour the fallback behind the initials
-    out.push({ id: projectRoom(p.id), kind: 'project', name: p.title, sub: p.category, projectId: p.id, color: p.color, photo: p.coverThumb || '', initials: initialsOf(p.title), archived: p.status === 'Delivered' })
+    out.push({ id: projectRoom(p.id), kind: 'project', name: p.title, sub: p.category, projectId: p.id, color: p.color, photo: p.coverThumb || '', initials: initialsOf(p.title), archived: p.status === 'Delivered' || mine.has(projectRoom(p.id)) })
   }
   for (const c of state.chats || []) {
     if (!Array.isArray(c.members) || !c.members.includes(user.id)) continue
-    if (c.kind === 'group') out.push({ id: c.id, kind: 'group', name: c.name || 'Group', sub: `${c.members.length} members`, members: c.members, initials: initialsOf(c.name) })
+    if (c.kind === 'group') out.push({ id: c.id, kind: 'group', name: c.name || 'Group', sub: `${c.members.length} members`, members: c.members, initials: initialsOf(c.name), archived: mine.has(c.id) })
     else if (c.kind === 'direct') {
       const otherId = c.members.find((m) => m !== user.id) || user.id
       const other = users.find((u) => u.id === otherId)
-      out.push({ id: c.id, kind: 'direct', name: other?.name || 'Former member', sub: other?.profile?.position || '', members: c.members, otherId, photo: other?.profile?.thumb || '', initials: initialsOf(other?.name) })
+      out.push({ id: c.id, kind: 'direct', name: other?.name || 'Former member', sub: other?.profile?.position || '', members: c.members, otherId, photo: other?.profile?.thumb || '', initials: initialsOf(other?.name), archived: mine.has(c.id) })
     }
   }
   return out
