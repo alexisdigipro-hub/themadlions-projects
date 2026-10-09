@@ -5381,10 +5381,9 @@ html.chat-window:has(.chat2[data-chat-theme='glass']) {
    measured in main.jsx, 0 everywhere else): TML Chat, an open conversation and the app's tab bar
    stretch down over that band so the bars sit at the real foot of the screen (Alex, 9 Oct). */
 html.chat-window, html.chat-window body { height: calc(100% + var(--ios-gap, 0px)); }
-.chat-win { height: calc(100dvh + var(--ios-gap, 0px)); }
-@media (max-width: 820px) {
-  .chat-win .chat2:not(.has-room) .chat-list { min-height: calc(100dvh + var(--ios-gap, 0px)); }
-}
+/* .chat-win itself stays 100dvh: on the iPhone that is already the whole screen. What cut it short was
+   the page (html, body: 100%, overflow hidden) being one clock-height shorter; adding the band to the
+   window as well pushed Chats / Calls below the screen (Alex's screenshot, 13:11). */
 @media (max-width: 820px) {
   .tabbar { bottom: calc(0px - var(--ios-gap, 0px)); }
   html.chat-open:not(.kb-open) .chat2.has-room .chat-box { height: calc(var(--chat-vh, 100dvh) + var(--ios-gap, 0px)); }

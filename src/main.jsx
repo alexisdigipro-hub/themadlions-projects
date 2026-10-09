@@ -62,15 +62,14 @@ try {
   const standalone = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
   if (standalone) {
     const probe = document.createElement('div')
-    probe.style.cssText = 'position:fixed;top:0;left:0;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top)'
+    probe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:100dvh;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top);box-sizing:content-box'
     document.body.appendChild(probe)
     const typing = () => { const el = document.activeElement; return !!el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || el.isContentEditable) }
     const measure = () => {
       if (typing()) return // the keyboard shrinks the window: not a band
       const inset = parseFloat(getComputedStyle(probe).paddingTop) || 0
-      const tall = window.innerHeight > window.innerWidth
-      const screenH = tall ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height)
-      const gap = Math.round(screenH - window.innerHeight)
+      // 100dvh is the whole screen there; the page (innerHeight, html at 100%) is the short one
+      const gap = Math.round(parseFloat(getComputedStyle(probe).height) - window.innerHeight)
       document.documentElement.style.setProperty('--ios-gap', `${inset > 0 && gap > 0 && gap <= inset + 4 ? gap : 0}px`)
     }
     measure()

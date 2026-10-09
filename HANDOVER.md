@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct: fix, Chats / Calls had slid below the screen in TML Chat
+- Alex's screenshot (13:11): after #259 the folders sat at the very foot and Chats / Calls / Notices / Settings were under the screen's edge. On the iPhone `100dvh` is already the whole screen; only the page (html/body at 100%, overflow hidden, and `innerHeight`) is one clock-height short. So `.chat-win` (and the phone list's min-height) are back to plain `100dvh`; html/body keep `100% + --ios-gap`. main.jsx now measures the band as the height of a `100dvh` probe minus `innerHeight` (0 in a browser tab).
+
 ### 9 Oct: Tasks and Notes rows a little apart
 - Alex: "the rows stick together". `.rem-tasks > .rem-task + .rem-task` and `.rem-tasks > .notes-card + .notes-card` now 8 px apart (were 4), everywhere.
 
