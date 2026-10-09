@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Field, Input, Modal, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
-import { TaskModal, binTask, emptyTask, tasksFor, visibleTasks } from './project/Tasks.jsx'
+import { TaskModal, binTask, emptyTask, taskStatuses, tasksFor, visibleTasks } from './project/Tasks.jsx'
 import { sendAutoNotice, userByName } from '../components/Notices.jsx'
 import { fmtDate } from '../lib/dates.js'
 
@@ -139,6 +139,11 @@ export default function TasksAll() {
     updateProject(t.projectId, (p) => { const x = (p.tasks || []).find((y) => y.id === t.id); if (x) fn(x, p) })
   }
   const toggle = (t) => persist(t, (x) => { x.status = x.status === 'done' ? 'todo' : 'done'; x.doneAt = x.status === 'done' ? new Date().toISOString() : '' })
+  // the status on the right of a task, picked right there (Alex, 9 Oct); 'done' sends it to Completed
+  const statuses = taskStatuses(state)
+  const statusOf = (t) => statuses.find((x) => x.id === t.status) || statuses[0]
+  const setStatus = (t, status) => persist(t, (x) => { x.status = status; x.doneAt = status === 'done' ? (x.doneAt || new Date().toISOString()) : '' })
+  const tone = (id) => (id === 'todo' || id === 'done' || id === 'blocked' ? id : 'doing')
   // taken out for good: a task moved to another project, or deleted forever from Deleted
   const remove = (t) => (t.projectId ? updateProject(t.projectId, (p) => { p.tasks = (p.tasks || []).filter((y) => y.id !== t.id) }) : update((s) => { s.todos = (s.todos || []).filter((y) => y.id !== t.id); return s }))
   // × on a task: to Deleted, from where it can come back
@@ -367,8 +372,6 @@ export default function TasksAll() {
         <div className="rem-task-main" onClick={() => editable && !t.deletedAt && setDraft({ ...t })}>
           <div className="rem-task-title">
             {t.title}
-            {t.status === 'doing' && <span className="pill doing">in progress</span>}
-            {t.status === 'blocked' && <span className="pill blocked">blocked</span>}
           </div>
           <div className="rem-task-meta">
             {(current.smart || searching || from?.key !== current.key) && from && <span>{from.icon} {from.name}</span>}
@@ -379,6 +382,11 @@ export default function TasksAll() {
             {t.deletedAt && <span>🗑 Deleted {fmtDate(t.deletedAt.slice(0, 10))}{t.deletedBy ? ` by ${t.deletedBy}` : ''}</span>}
           </div>
         </div>
+        {!t.deletedAt && (editable ? (
+          <select className={`rem-status s-${tone(statusOf(t).id)}`} value={statusOf(t).id} onChange={(e) => setStatus(t, e.target.value)} aria-label="Status" title="Status">
+            {statuses.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+          </select>
+        ) : <span className={`rem-status s-${tone(statusOf(t).id)}`}>{statusOf(t).label}</span>)}
         {t.deletedAt ? (editable && (
           <>
             <button type="button" className="rem-restore" onClick={() => restore(t)}>Restore</button>
@@ -403,7 +411,7 @@ export default function TasksAll() {
         </div>
         {current.own && admin && <button type="button" className="rem-head-btn" onClick={() => setListForm({ id: current.id, name: current.name, color: current.color, icon: current.icon })}>Edit list</button>}
         {editable && inBin && binned.length > 0 && <button type="button" className="rem-head-btn" onClick={emptyBin}>Empty</button>}
-        {editable && !inBin && <button type="button" className="rem-head-btn" onClick={() => setDraft(emptyTask({ ...where(), dept: 'Other' }))}>Details…</button>}
+        {editable && !inBin && <button type="button" className="rem-head-btn" onClick={() => setDraft(emptyTask({ ...where(), dept: 'Other' }))}>New Task</button>}
       </div>
       <div className="rem-scroll">
         {sections.map((s) => (
