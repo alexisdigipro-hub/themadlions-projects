@@ -5503,3 +5503,12 @@ html[data-theme='light'] .glass-lens, html[data-skin='coral'] .glass-lens { back
 .chat-livecall b { padding: 3px 14px; border-radius: 999px; background: rgba(255, 255, 255, .22); }
 .chat-livecall:disabled { opacity: .6; cursor: default; }
 .chat-livecall-dot { width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: call-pulse 1.6s ease-in-out infinite; }
+
+/* Tasks: the side column in three parts (Alex, 9 Oct): the smart lists, then Lists (Company and the
+   lists an administrator adds, + New List under them), then Projects, folded under its own heading.
+   In a smart list "+ New Task…" carries a small picker for the list the task goes on. */
+.rem-group-title { display: flex; align-items: center; gap: 8px; width: 100%; margin: 14px 0 6px; padding: 0 12px; font: inherit; font-size: 12.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: none; border: 0; text-align: left; }
+.rem-group-fold { cursor: pointer; }
+.rem-group-fold:hover { color: var(--text); }
+.rem-group-fold .rem-count { font-weight: 500; letter-spacing: 0; }
+.rem-quick-list { flex: none; max-width: 40%; padding: 6px 10px; font: inherit; font-size: 14px; color: var(--text); background: var(--g-card-2, var(--raised)); border: 1px solid var(--g-edge, var(--line)); border-radius: 999px; cursor: pointer; }

@@ -56,6 +56,8 @@ export default function TasksAll() {
   const [draft, setDraft] = useState(null)
   const [listForm, setListForm] = useState(null) // { id?, name, color, icon }
   const [quick, setQuick] = useState('')
+  // where "+ New Task…" puts a task while a smart list (Important, All tasks…) is open
+  const [quickList, setQuickList] = useState(GENERAL)
   // the lists under General start folded; the choice is remembered on this device
   const [listsOpen, setListsOpen] = useState(() => { try { return localStorage.getItem('tml_tasks_lists_open') === '1' } catch { return false } })
   useEffect(() => { try { localStorage.setItem('tml_tasks_lists_open', listsOpen ? '1' : '0') } catch {} }, [listsOpen])
@@ -85,12 +87,16 @@ export default function TasksAll() {
 
   // the lists: General, the administrators' own, then the projects (those with tasks, or still running)
   const lists = [
-    { key: GENERAL, name: 'General', color: '#8e8e93', icon: '☰' },
+    // General was renamed Company (Alex, 9 Oct): the tasks of the company, outside any project
+    { key: GENERAL, name: 'Company', color: '#8e8e93', icon: '☰' },
     ...custom.map((l) => ({ key: `l:${l.id}`, id: l.id, name: l.name, color: l.color, icon: l.icon, own: true })),
+    // projects still running, and a delivered one only while it has something left open
     ...projects
-      .filter((p) => (p.tasks || []).length || p.status !== 'Delivered')
-      .map((p) => ({ key: `p:${p.id}`, pid: p.id, name: p.title, color: p.color || '#5856d6', icon: '🎬' })),
+      .filter((p) => p.status !== 'Delivered' || (p.tasks || []).some((t) => !t.deletedAt && t.status !== 'done'))
+      .map((p) => ({ key: `p:${p.id}`, pid: p.id, name: p.title, color: p.color || '#5856d6', icon: '🎬', project: true })),
   ]
+  const ownLists = lists.filter((l) => !l.project)
+  const projectLists = lists.filter((l) => l.project)
   const listByKey = Object.fromEntries(lists.map((l) => [l.key, l]))
   const inList = (key, list = all) => list.filter((t) => listOf(t) === key)
   const shared = (key) => inList(key).some((t) => t.assignee && !isMine(t))
@@ -107,8 +113,8 @@ export default function TasksAll() {
   const smart = SMART.find(([k]) => k === sel)
   const current = smart ? { key: sel, name: smart[1], color: smart[3], icon: LINE[sel], smart: true } : listByKey[sel] || listByKey[GENERAL]
   useEffect(() => { if (!smart && !listByKey[sel]) setSel('mine') }, [sel, lists.length]) // eslint-disable-line react-hooks/exhaustive-deps
-  // a list chosen before (or a new one) stays in sight
-  useEffect(() => { if (!smart && sel !== GENERAL && listByKey[sel]) setListsOpen(true) }, [sel]) // eslint-disable-line react-hooks/exhaustive-deps
+  // a project's list chosen before stays in sight
+  useEffect(() => { if (!smart && listByKey[sel]?.project) setListsOpen(true) }, [sel]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean)
   const match = (t) => !words.length || words.every((w) => `${t.title} ${t.notes || ''} ${t.assignee || ''}`.toLowerCase().includes(w))
@@ -188,7 +194,7 @@ export default function TasksAll() {
   }
   /* "+ New task" at the foot of the list: straight in, with what the list implies */
   const where = () => {
-    const k = current.smart ? GENERAL : current.key
+    const k = current.smart ? (listByKey[quickList] ? quickList : GENERAL) : current.key
     return k.startsWith('p:') ? { projectId: k.slice(2) } : k.startsWith('l:') ? { projectId: '', listId: k.slice(2) } : { projectId: '' }
   }
   const addQuick = () => {
@@ -237,6 +243,14 @@ export default function TasksAll() {
   }
 
   const pick = (k) => { setSel(k); setQ(''); if (mobile) setScreen('list') }
+  const listRow = (l) => (
+    <button key={l.key} type="button" className={`rem-row rem-row-sub ${sel === l.key && !searching ? 'on' : ''}`} style={{ '--lc': l.color }} onClick={() => pick(l.key)}>
+      <span className="rem-row-emoji">{l.icon}</span>
+      <span className="grow">{l.name}</span>
+      {shared(l.key) && <span className="rem-shared" title="Others have tasks on this list">👥</span>}
+      <span className="rem-count">{inList(l.key, open).length || ''}</span>
+    </button>
+  )
   const home = (
     <aside className="rem-side">
       <div className="rem-search-wrap">
@@ -253,31 +267,23 @@ export default function TasksAll() {
         ))}
       </nav>
       <hr className="rem-rule" />
-      {/* General on top; the other lists folded under it, opened with its ☰ (Alex, 9 Oct) */}
+      {/* Lists: Company (the tasks outside projects) and the lists an administrator adds; then the
+          projects, folded under their own heading (Alex, 9 Oct: tidy Tasks, one job per row) */}
+      <div className="rem-group-title">Lists</div>
       <nav className="rem-lists">
-        {lists.slice(0, 1).map((l) => (
-          <div key={l.key} className={`rem-row rem-row-general ${sel === l.key && !searching ? 'on' : ''}`}>
-            <button type="button" className={`rem-fold ${listsOpen ? 'open' : ''}`} onClick={() => setListsOpen((v) => !v)} aria-expanded={listsOpen} title={listsOpen ? 'Hide the lists' : 'Show the lists'}>
-              <span aria-hidden="true">☰</span>
-            </button>
-            <button type="button" className="rem-row-pick" onClick={() => pick(l.key)}>
-              <span className="grow">{l.name}</span>
-              {shared(l.key) && <span className="rem-shared" title="Others have tasks on this list">👥</span>}
-              <span className="rem-count">{inList(l.key, open).length || ''}</span>
-            </button>
-            <span className="rem-fold-chev" aria-hidden="true" onClick={() => setListsOpen((v) => !v)}>{listsOpen ? '⌄' : '›'}</span>
-          </div>
-        ))}
-        {listsOpen && lists.slice(1).map((l) => (
-          <button key={l.key} type="button" className={`rem-row rem-row-sub ${sel === l.key && !searching ? 'on' : ''}`} style={{ '--lc': l.color }} onClick={() => pick(l.key)}>
-            <span className="rem-row-emoji">{l.icon}</span>
-            <span className="grow">{l.name}</span>
-            {shared(l.key) && <span className="rem-shared" title="Others have tasks on this list">👥</span>}
-            <span className="rem-count">{inList(l.key, open).length || ''}</span>
-          </button>
-        ))}
+        {ownLists.map(listRow)}
       </nav>
       {admin && <button type="button" className="rem-add-list" onClick={() => setListForm({ name: '', color: COLORS[5], icon: ICONS[0] })}><span>＋</span> New List</button>}
+      {projectLists.length > 0 && (
+        <>
+          <button type="button" className="rem-group-title rem-group-fold" onClick={() => setListsOpen((v) => !v)} aria-expanded={listsOpen}>
+            <span className="grow">Projects</span>
+            <span className="rem-count">{listsOpen ? '' : projectLists.length}</span>
+            <span aria-hidden="true">{listsOpen ? '⌄' : '›'}</span>
+          </button>
+          {listsOpen && <nav className="rem-lists">{projectLists.map(listRow)}</nav>}
+        </>
+      )}
     </aside>
   )
 
@@ -350,6 +356,12 @@ export default function TasksAll() {
         <div className="rem-quick">
           <span className="rem-quick-plus" aria-hidden="true">＋</span>
           <input ref={quickRef} className="rem-quick-input" value={quick} onChange={(e) => setQuick(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') addQuick(); if (e.key === 'Escape') setQuick('') }} placeholder="New Task…" />
+          {/* in a smart list the task needs a list of its own: Company unless another is picked */}
+          {current.smart && lists.length > 1 && (
+            <select className="rem-quick-list" value={listByKey[quickList] ? quickList : GENERAL} onChange={(e) => setQuickList(e.target.value)} aria-label="List for the new task">
+              {lists.map((l) => <option key={l.key} value={l.key}>{l.project ? `🎬 ${l.name}` : `${l.icon} ${l.name}`}</option>)}
+            </select>
+          )}
         </div>
       )}
     </section>
@@ -358,7 +370,7 @@ export default function TasksAll() {
   return (
     <div className={`rem-app ${mobile ? `m-${screen}` : ''}`}>
       {mobile ? (screen === 'home' ? home : listPane) : (<>{home}{listPane}</>)}
-      {draft && <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} />}
+      {draft && <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} lists={lists} />}
       {listForm && (
         <Modal open title={listForm.id ? 'Edit list' : 'New list'} onClose={() => setListForm(null)} footer={
           <>
