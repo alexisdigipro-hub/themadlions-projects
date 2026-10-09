@@ -228,15 +228,19 @@ export function ChatWindow() {
     // added to a phone's home screen from here, it is an app of its own that opens straight on the chat
     const link = document.querySelector('link[rel="manifest"]')
     const meta = document.querySelector('meta[name="apple-mobile-web-app-title"]')
-    const was = [link?.getAttribute('href'), meta?.getAttribute('content')]
+    const touch = document.querySelector('link[rel="apple-touch-icon"]')
+    const was = [link?.getAttribute('href'), meta?.getAttribute('content'), touch?.getAttribute('href')]
     link?.setAttribute('href', './manifest-chat.webmanifest')
     meta?.setAttribute('content', 'TML Chat')
+    // TML Chat's own icon: the logo inside a chat bubble, in Glass dark's colours (Alex, 9 Oct)
+    touch?.setAttribute('href', './icons/chat-apple-touch-icon.png')
     // an install offer caught on the main app's page is for the main app, not for TML Chat
     if (!onChatPage()) installPrompt = null
     return () => {
       root.classList.remove('chat-window'); document.title = title
       if (link && was[0]) link.setAttribute('href', was[0])
       if (meta && was[1]) meta.setAttribute('content', was[1])
+      if (touch && was[2]) touch.setAttribute('href', was[2])
     }
   }, [])
   // the same tone the app plays, as this window may be the only one open

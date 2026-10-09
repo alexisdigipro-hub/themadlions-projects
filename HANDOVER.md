@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct: TML Chat's own icon
+- Alex picked draft A's shape (the logo inside a big chat bubble) in draft C's colours (Glass dark): `public/icons/src/chat-icon.svg` (the logo PNG embedded, so it renders on its own), exported to `chat-icon-512.png`, `chat-icon-192.png`, `chat-apple-touch-icon.png` (180). Used by manifest-chat.webmanifest (also #0b1018 background/theme), chat.html's apple-touch-icon, and ChatWindow swaps the touch icon in while it is open. The main app keeps its icon. An iPhone keeps the old icon until TML Chat is removed from the home screen and added again.
+
 ### 9 Oct: TML Chat on a phone laid out like Telegram for iPhone (Alex's screenshot)
 - Only the home-screen chat app on a phone (`tg = mobile && windowed` in Chat.jsx's list; CSS block "TML Chat on a phone, laid out like Telegram for iPhone", scoped to `html.chat-window` under 820 px). Head: an **Edit** pill (opens Folders), **Chats** in the middle, a pill with + group (administrators) and the new-message pencil. Then a 46 px round search (placeholder centred), the folders as a pill track (uppercase, the chosen one in a grey pill, Folders… hidden: Edit opens it), rows with 54 px faces, 17.5 px names, a hairline under the text, folder tags as small uppercase chips, and the Chats / Calls / Notices / Settings bar floating as a frosted pill with the unread count in red on Chats. Colours come from the chat theme. Checked on 390 px mocks, light and dark.
 
