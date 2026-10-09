@@ -41,6 +41,13 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct: the app's chat on a phone tidied, and the soft top bar
+- Sent notices / Send notice (administrators, the app's chat on a phone) had landed between the head and the search with its 84 px foot padding, since every other part of `.chat-list.tgui` has a flex `order`: `.chat-list-foot` now `order: 5`, after the list.
+- The top bar's name still came out soft on the home-screen app (12:29, 13:12), while TML Chat's head at the same height is sharp: iOS blurs the top of a page that scrolls as a whole. In the home-screen app on a phone (`@media (max-width: 820px) and (display-mode: standalone)`, not chat.html) html/body no longer scroll and `.shell` is a fixed, full-screen (100dvh) scroller. Browser tabs and computers unchanged. Still to confirm on the phone; if anything misbehaves, that block at the end of styles.css is the one to take out.
+
+### 9 Oct: fix, Chats / Calls had slid below the screen in TML Chat
+- Alex's screenshot (13:11): after #259 the folders sat at the very foot and Chats / Calls / Notices / Settings were under the screen's edge. On the iPhone `100dvh` is already the whole screen; only the page (html/body at 100%, overflow hidden, and `innerHeight`) is one clock-height short. So `.chat-win` (and the phone list's min-height) are back to plain `100dvh`; html/body keep `100% + --ios-gap`. main.jsx now measures the band as the height of a `100dvh` probe minus `innerHeight` (0 in a browser tab).
+
 ### 9 Oct: Tasks and Notes rows a little apart
 - Alex: "the rows stick together". `.rem-tasks > .rem-task + .rem-task` and `.rem-tasks > .notes-card + .notes-card` now 8 px apart (were 4), everywhere.
 
