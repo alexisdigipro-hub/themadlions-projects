@@ -6,6 +6,8 @@ import { NoticePopup } from './Notices.jsx'
 import { useToast } from './ui.jsx'
 import { loadRead, totalUnread, unreadByRoom } from '../lib/chat.js'
 import { chimeFor } from '../lib/chatPrefs.js'
+import { backupDue, pcloudBackup } from '../lib/pcloud.js'
+import { remote } from '../lib/supabase.js'
 
 function Logo({ name, subtitle, logo }) {
   return (
@@ -34,6 +36,22 @@ export default function Layout() {
      to write, so there is no new table and no SQL to run. Once per half hour at most, never
      while viewing as someone else, and never from a stale render. */
   const stamped = useRef(false)
+  /* Settings > Data > Backup to pCloud > Every week: an administrator opening the app takes it when
+     the last one is a week old, quietly, once per visit; a failure waits for the next visit. */
+  const backedUp = useRef(false)
+  const latest = useRef(state)
+  latest.current = state
+  useEffect(() => {
+    if (backedUp.current || !remote || viewAs || user?.role !== 'admin' || !state.users.length || !backupDue(state.settings)) return
+    backedUp.current = true
+    // after the app has settled, so the backup holds everything loaded
+    setTimeout(() => {
+      if (!backupDue(latest.current.settings)) return
+      pcloudBackup(latest.current)
+        .then(() => update((s) => { s.settings = { ...s.settings, pcloudBackupAt: new Date().toISOString() }; return s }))
+        .catch(() => {})
+    }, 20000)
+  }, [user?.role, viewAs, state.settings?.pcloudAutoBackup, state.users.length]) // eslint-disable-line react-hooks/exhaustive-deps
   // The phone's header height as --topbar-h, so a bar that sticks under it (a project's tabs)
   // sits flush whatever the logo and text size make it. 0 on a computer, where it is hidden.
   const topbarRef = useRef(null)
