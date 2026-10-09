@@ -62,13 +62,12 @@ const Post = lazyPage(() => import('./pages/project/Post.jsx'))
 const Presentation = lazyPage(() => import('./pages/project/Presentation.jsx'))
 
 // The company name while the workspace loads (Alex). Nothing is loaded yet, so the name is typed
-// here rather than read from settings; the logo image arrives with the workspace a moment later.
+// here rather than read from settings. Written like TML Chat's head: THEMADLIONS in one word, MAD
+// heavier, alone in the middle of the screen with no card around it (the app and TML Chat alike).
 function Loading() {
   return (
-    <div className="login">
-      <div className="login-card boot-card">
-        <strong className="boot-name">THE MAD LIONS</strong>
-      </div>
+    <div className="login boot">
+      <strong className="boot-name">THE<b>MAD</b>LIONS</strong>
     </div>
   )
 }

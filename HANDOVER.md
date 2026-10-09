@@ -41,6 +41,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct: TML Chat's folder tabs closer together
+- Phone TML Chat: the folder pill track has no gap, tabs pad `clamp(5px, 1.8vw, 9px)` and their text is `clamp(11px, 3vw, 15px)`, so All / Projects / Groups / People / Archived fit across at 375, 390 and 440 px wide (measured with Sofia Sans). Your own folders or an unread count still scroll the track sideways.
+
+### 9 Oct: the loading screen says THEMADLIONS
+- App.jsx `Loading` (the app and TML Chat share it): no card any more, just **THE<b>MAD</b>LIONS** in one word like TML Chat's head (`.boot-name`, 500 with MAD at 900, 18 px = 5% under the chat head's 19 px), centred both ways on the page background (`.login.boot`, 100dvh).
+
 ### 9 Oct: TML Chat's + opens in glass
 - Phone TML Chat head: **Edit** alone on the left (the folder icon left it); on the right one round **+** (Chat.jsx RoomList `plus` state, `.tg-plus`, absolutely placed so the grid and the centred title do not move). A tap opens it like iOS Liquid Glass: the pill stretches left with a wobble (`tg-plus-wobble`), New folder / New group (administrators) / New message rise into it one after another, + turns into ×, the title fades. A tap outside, an action, or Edit closes it. **New folder** opens Your folders with an empty folder ready to name (`FoldersModal fresh`, `setFolders('new')`; Edit > Folder > Make a folder does the same). Off with Reduce Motion.
 
