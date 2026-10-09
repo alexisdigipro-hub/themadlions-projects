@@ -5475,11 +5475,14 @@ html[data-theme='light'] .glass-lens, html[data-skin='coral'] .glass-lens { back
 .rem-restore { flex: none; padding: 4px 12px; font: inherit; font-size: 13.5px; font-weight: 600; color: var(--text); background: var(--g-card-2, var(--raised)); border: 1px solid var(--g-edge, var(--line)); border-radius: 999px; cursor: pointer; }
 .rem-restore:hover { border-color: var(--accent); }
 
-/* Tasks and Notes on a computer: the window starts and ends level with the side menu (Alex, 9 Oct), 12 px
-   from the top and the foot of the screen, as the glass sidebar does. */
+/* Tasks, Notes and Chat on a computer: the windows on the right keep the gaps Home's boxes have (Alex,
+   9 Oct, pointing at the team strip): 28 px from the top, 32 px from the side menu and from the right
+   edge, and they end 12 px above the foot of the screen, level with the side menu. The chat's two
+   panels sit 12 px apart. The side menu itself is unchanged. */
 @media (min-width: 821px) {
-  html[data-theme] body main.content:has(> .rem-app) { padding-top: 12px; padding-bottom: 12px; }
-  html[data-theme] body main.content > .rem-app { height: calc(100vh - 24px); min-height: 480px; }
+  html[data-theme] body main.content:has(> .rem-app) { padding: 28px 32px 12px; }
+  html[data-theme] body main.content > .rem-app { height: calc(100vh - 40px); min-height: 480px; }
+  html[data-theme] body main.content > .chat2:not(.windowed) { padding: 28px 32px 12px; gap: 12px; }
 }
 
 /* Group calls (lib/calls.jsx GroupScreen, Alex 9 Oct): everyone as a tile in a grid between the name and
