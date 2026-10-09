@@ -129,13 +129,9 @@ export default function TasksAll() {
   const byOrder = (a, b) => (a.order ?? 1e9) - (b.order ?? 1e9) || byDue(a, b)
   const pending = inBin ? base : base.filter((t) => t.status !== 'done' || current.key === 'done').sort(current.key === 'done' ? byDue : byOrder)
   const completed = current.smart || searching ? [] : base.filter((t) => t.status === 'done').sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || ''))
-  // smart lists and search show their tasks under the list each comes from, as Reminders does
-  const sections = useMemo(() => {
-    if (!current.smart && !searching) return [{ key: current.key, list: pending }]
-    const out = []
-    pending.forEach((t) => { const k = listOf(t); let s = out.find((x) => x.key === k); if (!s) out.push(s = { key: k, list: [] }); s.list.push(t) })
-    return out
-  }, [pending, current.key, searching]) // eslint-disable-line react-hooks/exhaustive-deps
+  // One run of tasks in every view, each with its list and project as tags: smart lists used to group
+  // them by list, and a task alone in its group could not be dragged anywhere (Alex, 9 Oct)
+  const sections = useMemo(() => [{ key: current.key, list: pending }], [pending, current.key])
 
   /* ---------- writes (the same as before: project tasks in the project, general ones in todos) ---------- */
   const persist = (t, fn) => {
