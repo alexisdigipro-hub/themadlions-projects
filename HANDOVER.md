@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct: TML Chat on a phone laid out like Telegram for iPhone (Alex's screenshot)
+- Only the home-screen chat app on a phone (`tg = mobile && windowed` in Chat.jsx's list; CSS block "TML Chat on a phone, laid out like Telegram for iPhone", scoped to `html.chat-window` under 820 px). Head: an **Edit** pill (opens Folders), **Chats** in the middle, a pill with + group (administrators) and the new-message pencil. Then a 46 px round search (placeholder centred), the folders as a pill track (uppercase, the chosen one in a grey pill, Folders… hidden: Edit opens it), rows with 54 px faces, 17.5 px names, a hairline under the text, folder tags as small uppercase chips, and the Chats / Calls / Notices / Settings bar floating as a frosted pill with the unread count in red on Chats. Colours come from the chat theme. Checked on 390 px mocks, light and dark.
+
 ### 9 Oct, night: Tasks and Notes tidied on a phone
 - Last block of styles.css ("Tasks and Notes on a phone, tidied"): no frame around the page (the glass skins frosted `.rem-app`, and `.rem-main`'s -16px bleed ran the cards past it), the list on the page's own width, "‹ Lists" / "‹ Folders" on its own line above the title, the "+ New…" bar and the open note with room above the bottom menu. Checked on 390 px mocks (Glass dark).
 
