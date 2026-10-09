@@ -4636,7 +4636,9 @@ html[data-skin='glass'][data-theme][data-accent] {
   --glass-blur: blur(18px) saturate(140%);
   --shadow-lg: 0 24px 70px rgba(20, 0, 60, .55);
 }
-html[data-skin='glass'][data-theme] body {
+/* the backdrop is painted on the page itself (html) as well as body, so the screen never shows black
+   past the window's edge on an iPhone's home screen (Alex, 9 Oct); same for Glass dark and Glass light */
+html[data-skin='glass'][data-theme]:not([data-public='1']), html[data-skin='glass'][data-theme] body {
   background:
     linear-gradient(118deg, transparent 38%, rgba(255, 255, 255, .10) 46%, rgba(255, 255, 255, .02) 52%, transparent 60%),
     radial-gradient(1100px 650px at 12% 18%, #9a24e0 0%, transparent 58%),
@@ -4702,7 +4704,7 @@ html[data-skin='glassdark'][data-theme][data-accent] {
   --gl-active: rgba(255, 255, 255, .12); --gl-glow: rgba(90, 170, 255, .35);
   --shadow-lg: 0 24px 70px rgba(0, 0, 0, .55);
 }
-html[data-skin='glassdark'][data-theme] body {
+html[data-skin='glassdark'][data-theme]:not([data-public='1']), html[data-skin='glassdark'][data-theme] body {
   background:
     radial-gradient(900px 600px at 10% 12%, rgba(52, 110, 190, .45) 0%, transparent 60%),
     radial-gradient(800px 640px at 92% 85%, rgba(20, 140, 150, .35) 0%, transparent 62%),
@@ -4723,7 +4725,7 @@ html[data-skin='glasslight'][data-theme][data-accent] {
   --gl-active: rgba(255, 255, 255, .9); --gl-glow: rgba(91, 91, 214, .28);
   --shadow-lg: 0 24px 70px rgba(60, 70, 120, .22);
 }
-html[data-skin='glasslight'][data-theme] body {
+html[data-skin='glasslight'][data-theme]:not([data-public='1']), html[data-skin='glasslight'][data-theme] body {
   background:
     radial-gradient(900px 620px at 8% 10%, rgba(196, 181, 253, .55) 0%, transparent 60%),
     radial-gradient(820px 640px at 95% 90%, rgba(165, 243, 252, .55) 0%, transparent 62%),
