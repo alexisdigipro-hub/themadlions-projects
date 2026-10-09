@@ -116,7 +116,7 @@ export function TaskModal({ draft, setDraft, onSave, onClose, projects }) {
         {(projects || ownLists.length > 0) && (
           <div className="row-2">
             {projects && <Field label="Project"><Select value={draft.projectId || ''} onChange={(e) => set('projectId', e.target.value)} options={[['', 'No project'], ...projects.map((p) => [p.id, p.title])]} /></Field>}
-            {ownLists.length > 0 && <Field label="List"><Select value={listId} onChange={(e) => set('listId', e.target.value)} options={[['', draft.projectId ? 'No list' : 'Company'], ...ownLists.map((l) => [l.id, `${l.icon || '☰'} ${l.name}`])]} /></Field>}
+            {ownLists.length > 0 && <Field label="List"><Select value={listId} onChange={(e) => set('listId', e.target.value)} options={[['', 'No list'], ...ownLists.map((l) => [l.id, `${l.icon || '☰'} ${l.name}`])]} /></Field>}
           </div>
         )}
         <div className="row-2">
