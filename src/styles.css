@@ -5556,3 +5556,22 @@ select.rem-status option { color: var(--text); background: var(--bg, #1b1f2a); f
 .receipts-only { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .receipts-only h3 { margin: 0 0 4px; }
 .receipts-only p { margin: 0; }
+
+/* Tasks inside a task: the ☑ 1/3 count on a task folds its subtasks open under it (TasksAll.jsx),
+   and the checklist in the task form (Tasks.jsx Subtasks) */
+.rem-subs-btn { padding: 0; font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.rem-subs-btn span { display: inline-block; font-size: 10px; transition: transform .15s; }
+.rem-subs-btn.on span { transform: rotate(180deg); }
+.rem-subs-btn:hover { color: var(--text); }
+.rem-subs { display: grid; gap: 6px; margin: 8px 0 2px; padding: 0; list-style: none; cursor: default; }
+.rem-subs li { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.rem-check.sm { width: 17px; height: 17px; }
+.rem-subs li.done span { color: var(--muted); text-decoration: line-through; }
+.rem-subs li.done .rem-check { background: color-mix(in srgb, var(--text) 45%, transparent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m4 8.5 2.5 2.5L12 5.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 12px no-repeat; border-color: transparent; }
+.subtasks { display: grid; gap: 6px; }
+.subtask { display: flex; align-items: center; gap: 10px; }
+.subtask input[type="checkbox"] { flex: none; width: 17px; height: 17px; margin: 0; accent-color: var(--accent); }
+.subtask-title { flex: 1; min-width: 0; padding: 6px 8px; font: inherit; color: var(--text); background: transparent; border: 1px solid transparent; border-radius: 6px; }
+.subtask-title:hover, .subtask-title:focus { border-color: var(--line); outline: none; }
+.subtask.done .subtask-title { color: var(--muted); text-decoration: line-through; }
+.rem-task:has(> .rem-task-main > .rem-subs) > :is(.rem-check, .rem-grip, .rem-status, .rem-del) { align-self: flex-start; margin-top: 2px; }
