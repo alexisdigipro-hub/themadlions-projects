@@ -23,18 +23,25 @@ export function taskStatuses(state) {
   const done = list.find((x) => x.id === 'done') || DEFAULT_STATUSES[3]
   return [todo, ...list.filter((x) => x.id !== 'todo' && x.id !== 'done' && x.label), done]
 }
+/* Each status's colour: the one picked in Edit statuses (Alex, 9 Oct), else grey for the first,
+   green for done, red for Blocked and blue for the rest */
+export function statusColor(st) {
+  if (st?.color) return st.color
+  return st?.id === 'todo' ? '#8e8e93' : st?.id === 'done' ? '#3fa66b' : st?.id === 'blocked' ? '#e5484d' : '#6c9bd1'
+}
 /* The small tag on a task for a status other than the first and the last */
 export function StatusPill({ status }) {
   const { state } = useStore()
   if (!status || status === 'todo' || status === 'done') return null
   const st = taskStatuses(state).find((x) => x.id === status)
   if (!st) return null
-  return <span className={`pill ${status === 'blocked' ? 'blocked' : 'doing'}`}>{st.label}</span>
+  return <span className="pill" style={{ color: statusColor(st) }}>{st.label}</span>
 }
 export function StatusesModal({ onClose }) {
   const { state, update } = useStore()
   const [rows, setRows] = useState(() => taskStatuses(state).map((x) => ({ ...x })))
   const setLabel = (i, label) => setRows(rows.map((r, j) => (j === i ? { ...r, label } : r)))
+  const setColor = (i, color) => setRows(rows.map((r, j) => (j === i ? { ...r, color } : r)))
   const move = (i, d) => {
     const j = i + d
     if (j < 1 || j > rows.length - 2) return
@@ -46,19 +53,20 @@ export function StatusesModal({ onClose }) {
   const remove = (i) => setRows(rows.filter((_, j) => j !== i))
   const save = () => {
     const clean = rows
-      .map((r) => ({ id: r.id, label: r.label.trim() || (r.id === 'todo' ? 'To do' : r.id === 'done' ? 'Done' : '') }))
+      .map((r) => ({ id: r.id, label: r.label.trim() || (r.id === 'todo' ? 'To do' : r.id === 'done' ? 'Done' : ''), ...(r.color ? { color: r.color } : {}) }))
       .filter((r) => r.label)
     update((s) => { s.settings = { ...s.settings, taskStatuses: clean }; return s })
     onClose()
   }
   return (
     <Modal open title="Statuses" onClose={onClose} footer={<><Button variant="ghost" onClick={() => setRows(DEFAULT_STATUSES.map((x) => ({ ...x })))}>Reset</Button><span className="grow" /><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></>}>
-      <p className="small muted">The first is where a new task starts and the last means done (the task moves to Completed): rename them as you like. Add, rename, reorder or remove the ones in between. A task on a removed status goes back to the first.</p>
+      <p className="small muted">The first is where a new task starts and the last means done (the task moves to Completed): rename them as you like. Add, rename, reorder or remove the ones in between. The dot on the left picks each one's colour. A task on a removed status goes back to the first.</p>
       <div className="status-edit">
         {rows.map((r, i) => {
           const fixed = i === 0 || i === rows.length - 1
           return (
             <div key={r.id} className="status-edit-row">
+              <input type="color" className="status-color" value={statusColor(r)} onChange={(e) => setColor(i, e.target.value)} aria-label="Colour" title="Colour" />
               <Input value={r.label} onChange={(e) => setLabel(i, e.target.value)} placeholder={fixed ? (i === 0 ? 'To do' : 'Done') : 'Waiting for client'} autoFocus={!r.label && !fixed} />
               {fixed ? <span className="small muted status-edit-note">{i === 0 ? 'start' : 'done'}</span> : (
                 <span className="row-actions">
