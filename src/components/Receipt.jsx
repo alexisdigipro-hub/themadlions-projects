@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from './ui.jsx'
-import { today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
+import { can, today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { pcloudTarget } from '../lib/pcloud.js'
 import { deleteFile, fileUrl, uploadFile } from '../lib/files.js'
 import { compress } from '../lib/photos.js'
@@ -230,7 +230,8 @@ export function ReceiptModal({ project, groups, onClose }) {
                 <option value="company">The company</option>
                 <optgroup label="Out of their own pocket">
                   {me && <option value={me.id}>Me ({me.name})</option>}
-                  {team.filter((u) => u.id !== me?.id).map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                  {/* a refund owed to someone else goes into their My Finance, which needs Budget edit (assign_worklog) */}
+                  {(admin || can(me, 'budget', 'edit')) && team.filter((u) => u.id !== me?.id).map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
                 </optgroup>
               </Select>
             </Field>

@@ -11,6 +11,8 @@ export function projectTabs(project) {
     // Overview carries the project's own Tasks, and the song player for a Music Video, so both
     // modules stay reachable (gated on their own permission) without a tab of their own.
     { to: '', label: 'Overview', end: true, key: 'projects', icon: 'overview', fixed: true },
+    // second, right after Overview (Alex, 9 Oct). Someone without Budget sees it as "Add Receipt" (Project.jsx)
+    { to: 'budget', label: 'Budget', key: 'budget', icon: 'budget' },
     // Breakdown is framed inside Script now (its own permission still gates that section)
     ...(cat === 'Event' ? [] : [
       { to: 'script', label: 'Script & Breakdown', key: 'script', icon: 'script' },
@@ -20,7 +22,6 @@ export function projectTabs(project) {
     { to: 'schedule', label: cat === 'Event' ? 'Run of show & Sheets' : 'Schedule & Sheets', key: 'schedule', icon: 'schedule' },
     // opt-in: Alex doesn't use Reports day to day; switch it on per project from Edit details > Tabs
     { to: 'reports', label: 'Reports', key: 'reports', icon: 'reports', optIn: true },
-    { to: 'budget', label: 'Budget', key: 'budget', icon: 'budget' },
     // opt-in: Alex doesn't use Post day to day; switch it on per project from Edit details > Tabs
     { to: 'post', label: 'Post', key: 'post', icon: 'post', optIn: true },
     { to: 'people', label: 'Project Database', key: ['contacts', 'locations', 'gear'], icon: 'people' },
