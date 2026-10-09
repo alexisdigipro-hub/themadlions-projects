@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from './ui.jsx'
+import ScreenInfo from './ScreenInfo.jsx'
 import { disablePush, enablePush, pushStatus, testPush } from '../lib/push.js'
 import { remote } from '../lib/supabase.js'
 import { CHAT_DEFAULTS, TEXT_SIZES, chime, loadChatPrefs, saveChatPrefs, textSizeOf } from '../lib/chatPrefs.js'
@@ -156,9 +157,8 @@ export default function ChatSettings({ toast }) {
         </Row>
       </Group>
 
-      <Group title="Chat folders" note="Your own folders are made with the folder button above the list.">
+      <Group title="Chat folders" note="Your own folders are made with + above the list, New folder.">
         <Row label="Show folder tags" hint="The folder of each conversation under its name"><Switch on={p.folderTags} onChange={(v) => set('folderTags', v)} label="Folder tags" /></Row>
-        <Row label="Folder tabs" hint="On a computer"><Seg value={p.folderTabs} onPick={(v) => set('folderTabs', v)} options={[['top', 'At the top'], ['left', 'On the left']]} /></Row>
       </Group>
 
       <Group title="Keyboard shortcuts">
@@ -168,6 +168,7 @@ export default function ChatSettings({ toast }) {
       <div className="row-actions">
         <Button variant="ghost" onClick={() => { setP(saveChatPrefs({ ...CHAT_DEFAULTS })); toast?.('Chat settings back to standard', 'ok') }}>Back to standard</Button>
       </div>
+      <ScreenInfo />
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import ScreenInfo from '../components/ScreenInfo.jsx'
 import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { CATEGORIES, DEFAULT_DEPARTMENTS, DEFAULT_GEAR_CATS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, gearCategoriesOf, sampleProject, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { projectProgress } from '../lib/progress.js'
@@ -562,6 +563,7 @@ export default function Settings() {
         </section>
       </div>
       {isAdmin && tab === 'usage' && <Usage state={state} setSetting={setSetting} />}
+      <ScreenInfo />
     </>
   )
 }
