@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Button, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
+import { useCalls } from '../lib/calls.jsx'
+import { directRoom, roomOf } from '../lib/chat.js'
+import { remote } from '../lib/supabase.js'
 import { departmentsOf, rememberViewAsFrom, useCurrentUser, useStore } from '../lib/store.jsx'
 import { compress } from '../lib/photos.js'
 import { fmtDate } from '../lib/dates.js'
@@ -30,6 +33,7 @@ export default function Profile({ mine = false }) {
   const nav = useNavigate()
   const toast = useToast()
   const fileRef = useRef(null)
+  const calls = useCalls()
   const [busy, setBusy] = useState(false)
   const targetId = mine ? me?.id : id
   const person = state.users.find((u) => u.id === targetId)
@@ -87,6 +91,17 @@ export default function Profile({ mine = false }) {
             See what {(person.name || '').split(' ')[0] || 'they'} sees
           </Button>
         )}
+        {/* call or write to them from their profile (on a laptop too), as from their conversation */}
+        {remote && !mine && person.id !== me.id && person.active !== false && (() => {
+          const room = roomOf(state, me, directRoom(me.id, person.id))
+          return room && (
+            <>
+              <Button variant="ghost" onClick={() => nav(`/chat/${encodeURIComponent(room.id)}`)}>Message</Button>
+              <Button variant="ghost" onClick={() => calls.start(room, false)} disabled={calls.busy}>Call</Button>
+              <Button variant="ghost" onClick={() => calls.start(room, true)} disabled={calls.busy}>Video call</Button>
+            </>
+          )
+        })()}
         {editable && <Button variant="primary" onClick={save} disabled={busy}>Save profile</Button>}
       </PageHead>
 
