@@ -8,7 +8,8 @@ import { duplicateProject } from '../../lib/duplicate.js'
 import { fmtDate } from '../../lib/dates.js'
 import { projectProgress } from '../../lib/progress.js'
 import { useCover } from '../../components/CoverCropper.jsx'
-import { analyze, fmtTime, fmtTimeMs, trackUrl, uploadTrack } from '../../lib/audio.js'
+import { analyze, fmtTime, fmtTimeMs, uploadTrack } from '../../lib/audio.js'
+import { useTrackSource } from '../../lib/trackSource.js'
 import { pcloudTarget } from '../../lib/pcloud.js'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { remote } from '../../lib/supabase.js'
@@ -30,17 +31,11 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
   const sections = music.sections || []
   const fileRef = useRef()
   const audioRef = useRef()
-  const [url, setUrl] = useState('')
+  const { url, err, onError, play } = useTrackSource(track)
   const [busy, setBusy] = useState('')
   const [time, setTime] = useState(0)
   const [playing, setPlaying] = useState(false)
   const current = sections.find((s) => time >= s.start && time < s.end)
-
-  useEffect(() => {
-    let alive = true
-    trackUrl(track).then((u) => alive && setUrl(u))
-    return () => { alive = false }
-  }, [track?.id, track?.path])
 
   useEffect(() => {
     const a = audioRef.current
@@ -56,7 +51,7 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
 
   const setMusic = (fn) => edit((p) => { p.music = { ...emptyMusic(), ...(p.music || {}) }; fn(p.music) })
   const seek = (t) => { if (audioRef.current) { audioRef.current.currentTime = t; setTime(t) } }
-  const toggle = () => { const a = audioRef.current; if (!a) return; a.paused ? a.play() : a.pause() }
+  const toggle = () => { const a = audioRef.current; if (!a) return; a.paused ? play(a) : a.pause() }
 
   const onFile = async (file) => {
     if (!file) return
@@ -114,13 +109,14 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
               ))}
             </select>
           )}
-          <audio ref={audioRef} src={url} preload="metadata" />
+          <audio ref={audioRef} src={url || undefined} preload="metadata" onError={onError} />
           <Waveform peaks={track.peaks} duration={track.duration} time={time} sections={sections} onSeek={seek} active={current?.id} />
           <div className="player-bar">
             <button className="play" onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
             <span className="player-time">{fmtTimeMs(time)} <span className="muted">/ {fmtTime(track.duration)}</span></span>
             <span className="player-now">{current ? <><span className="muted">now:</span> <strong>{current.name}</strong></> : null}</span>
           </div>
+          {err && <p className="small" style={{ color: 'var(--danger)', margin: 0 }}>{err}</p>}
         </div>
       )}
     </section>

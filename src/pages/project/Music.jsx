@@ -3,7 +3,8 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast
 import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
-import { SECTION_NAMES, analyze, deleteTrack, fmtTime, fmtTimeMs, parseTime, songMapText, trackBlob, trackUrl, uploadTrack, lastTrackError } from '../../lib/audio.js'
+import { SECTION_NAMES, analyze, deleteTrack, fmtTime, fmtTimeMs, parseTime, songMapText, trackBlob, uploadTrack, lastTrackError } from '../../lib/audio.js'
+import { useTrackSource } from '../../lib/trackSource.js'
 import { pcloudTarget } from '../../lib/pcloud.js'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { remote } from '../../lib/supabase.js'
@@ -72,7 +73,7 @@ export default function Music() {
   const track = music.tracks.find((t) => t.id === music.activeTrackId) || music.tracks[0]
   const audioRef = useRef()
   const fileRef = useRef()
-  const [url, setUrl] = useState('')
+  const { url, err, onError, play } = useTrackSource(track)
   const [busy, setBusy] = useState('')
   const [time, setTime] = useState(0)
   const [playing, setPlaying] = useState(false)
@@ -83,12 +84,6 @@ export default function Music() {
 
   const sections = useMemo(() => [...music.sections].sort((a, b) => a.start - b.start), [music.sections])
   const current = sections.find((s) => time >= s.start && time < s.end)
-
-  useEffect(() => {
-    let alive = true
-    trackUrl(track).then((u) => alive && setUrl(u))
-    return () => { alive = false }
-  }, [track?.id, track?.path])
 
   useEffect(() => {
     const a = audioRef.current
@@ -107,8 +102,8 @@ export default function Music() {
 
   const setMusic = (fn) => edit((p) => { p.music = { ...emptyMusic(), ...(p.music || {}) }; fn(p.music, p) })
   const seek = (t) => { if (audioRef.current) { audioRef.current.currentTime = t; setTime(t) } }
-  const toggle = () => { const a = audioRef.current; if (!a) return; a.paused ? a.play() : a.pause() }
-  const playSection = (s) => { setLoop(null); seek(s.start); audioRef.current?.play() }
+  const toggle = () => { const a = audioRef.current; if (!a) return; a.paused ? play(a) : a.pause() }
+  const playSection = (s) => { setLoop(null); seek(s.start); play(audioRef.current) }
 
   const onFile = async (file) => {
     if (!file) return
@@ -268,9 +263,9 @@ export default function Music() {
 
       {track ? (
         <section className="panel player">
-          <audio ref={audioRef} src={url} preload="metadata" />
+          <audio ref={audioRef} src={url || undefined} preload="metadata" onError={onError} />
           <Waveform peaks={track.peaks} duration={track.duration} time={time} sections={sections} onSeek={seek} active={current?.id} />
-          {remote && !url && lastTrackError && <p className="small" style={{ color: 'var(--danger)', margin: '0 0 8px' }}>{lastTrackError}</p>}
+          {remote && err && <p className="small" style={{ color: 'var(--danger)', margin: '0 0 8px' }}>{err}</p>}
           <div className="player-bar">
             <button className="play" onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
             <span className="player-time">{fmtTimeMs(time)} <span className="muted">/ {fmtTime(track.duration)}</span></span>
@@ -322,7 +317,7 @@ export default function Music() {
                       <button onClick={() => quickMark(s, 'end')} title="Set end to the playhead">end = {fmtTimeMs(time)}</button>
                     </span>
                   )}
-                  {track && <button className="link small" onClick={() => { setLoop(loop === s.id ? null : s.id); if (loop !== s.id) { seek(s.start); audioRef.current?.play() } }}>{loop === s.id ? 'looping' : 'loop'}</button>}
+                  {track && <button className="link small" onClick={() => { setLoop(loop === s.id ? null : s.id); if (loop !== s.id) { seek(s.start); play(audioRef.current) } }}>{loop === s.id ? 'looping' : 'loop'}</button>}
                   {editable && <button className="link small" onClick={() => openSection(s)}>Edit</button>}
                   {editable && <Confirm label="Delete" onConfirm={() => setMusic((m) => (m.sections = m.sections.filter((x) => x.id !== s.id)))}>×</Confirm>}
                 </div>
