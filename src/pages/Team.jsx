@@ -262,7 +262,7 @@ export default function Team({ embedded = false }) {
                   <Select value={draft.projectAccess === 'all' ? 'all' : 'some'} onChange={(e) => setDraft({ ...draft, projectAccess: e.target.value === 'all' ? 'all' : [] })} options={[['all', 'All projects'], ['some', 'Only selected projects']]} />
                 </Field>
                 {draft.projectAccess !== 'all' && (
-                  <div className="chips">
+                  <div className="chips" data-glide="off">
                     {state.projects.map((p) => {
                       const on = draft.projectAccess.includes(p.id)
                       return (

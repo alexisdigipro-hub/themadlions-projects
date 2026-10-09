@@ -9,6 +9,7 @@ import { allHideable, hiddenAfterCategory, projectTabs, tabHidden, toggleTab } f
 import { initialsOf } from './Profile.jsx'
 import { joinName, nameParts } from '../lib/projectName.js'
 import { duplicateProject } from '../lib/duplicate.js'
+import { glassLens, slideOut, stillMotion } from '../lib/glide.js'
 
 /* The row of tab chips: on = shown, struck through = hidden, Overview fixed. Used by the project
    form and by the strip on the Overview, so switching a tab on is one tap either way. */
@@ -190,57 +191,32 @@ export default function Dashboard() {
   const chipsRef = useRef(null)
   const slideRef = useRef(null)
   const [slide, setSlide] = useState('')
-  const still = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const glassTo = (from, to, hide) => {
-    const track = chipsRef.current
-    if (!track || !from || !to || from === to || typeof track.animate !== 'function') return
-    track.querySelectorAll('.glass-lens').forEach((n) => n.remove())
-    const lens = document.createElement('span')
-    lens.className = 'glass-lens'
-    lens.setAttribute('aria-hidden', 'true')
-    track.appendChild(lens)
-    track.dataset.lens = hide
-    const at = (b) => `translate(${b.offsetLeft}px, ${b.offsetTop}px)`
-    const box = (b) => ({ width: `${b.offsetWidth}px`, height: `${b.offsetHeight}px` })
-    const run = lens.animate([
-      { transform: `${at(from)} scale(1)`, ...box(from), opacity: 0 },
-      { offset: 0.15, transform: `${at(from)} scale(1.12)`, ...box(from), opacity: 1 },
-      { offset: 0.75, transform: `${at(to)} scale(1.12)`, ...box(to), opacity: 1 },
-      { transform: `${at(to)} scale(1)`, ...box(to), opacity: 0 },
-    ], { duration: 560, easing: 'cubic-bezier(.3, .7, .2, 1)', fill: 'both' })
-    setTimeout(() => { delete track.dataset.lens }, 380)
-    run.onfinish = () => lens.remove()
-  }
-  const slideOut = (dir) => {
-    const box = slideRef.current
-    const old = box?.querySelector(':scope > .home-slide-in')
-    if (!old) return
-    box.querySelectorAll(':scope > .home-slide-ghost').forEach((n) => n.remove())
-    const ghost = old.cloneNode(true)
-    ghost.className = `home-slide-ghost out-${dir}`
-    ghost.setAttribute('aria-hidden', 'true')
-    box.appendChild(ghost)
-    box.classList.add('sliding')
-    setTimeout(() => { ghost.remove(); box.classList.remove('sliding') }, 320)
+  const slideTimer = useRef(0)
+  useEffect(() => () => clearTimeout(slideTimer.current), [])
+  const glassTo = (from, to, hide) => glassLens(chipsRef.current, from, to, { hide })
+  const slideTo = (dir) => {
+    if (!slideOut(slideRef.current, dir)) return
     setSlide(dir)
+    clearTimeout(slideTimer.current)
+    slideTimer.current = setTimeout(() => setSlide(''), 360)
   }
   const chipOf = (key) => chipsRef.current?.querySelector(`[data-chip="${CSS.escape(key)}"]`)
   const pickFilter = (c) => {
     if (c === filter) return
-    if (!still()) {
+    if (!stillMotion()) {
       const order = [...(chipsRef.current?.querySelectorAll('[data-chip]') || [])]
       const from = chipOf(filter)
       const to = chipOf(c)
-      slideOut(order.indexOf(to) > order.indexOf(from) ? 'next' : 'prev')
+      slideTo(order.indexOf(to) > order.indexOf(from) ? 'next' : 'prev')
       glassTo(from, to, 'cat')
     }
     setFilter(c)
   }
   const toggleDelivered = () => {
-    if (!still()) {
+    if (!stillMotion()) {
       const cat = chipOf(filter)
       const neg = chipOf('Delivered')
-      slideOut(showDelivered ? 'prev' : 'next')
+      slideTo(showDelivered ? 'prev' : 'next')
       if (showDelivered) glassTo(neg, cat, 'cat')
       else glassTo(cat, neg, 'neg')
     }
@@ -355,7 +331,7 @@ export default function Dashboard() {
       )}
 
       <div className="toolbar home-toolbar">
-        <div className="chips" ref={chipsRef}>
+        <div className="chips" ref={chipsRef} data-glide="own">
           {['All', ...CATEGORIES].map((c) => {
             const n = (showDelivered ? state.projects.filter((p) => p.status === 'Delivered') : liveAll).filter((p) => c === 'All' || p.category === c).length
             // On a phone only the categories that hold something (Alex, 8 Oct); the one picked stays
@@ -393,8 +369,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="home-slide" ref={slideRef}>
-      <div key={`${filter}|${showDelivered}`} className={`home-slide-in${slide ? ` in-${slide}` : ''}`}>
+      <div className="glide-box" ref={slideRef}>
+      <div key={`${filter}|${showDelivered}`} className={`glide-in${slide ? ` in-${slide}` : ''}`}>
       {shown.length === 0 ? (
         <Empty
           title={showDelivered ? 'No delivered projects here' : state.projects.length ? 'Nothing matches' : 'No projects yet'}

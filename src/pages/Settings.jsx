@@ -13,6 +13,7 @@ import Team from './Team.jsx'
 import ChatSettings from '../components/ChatSettings.jsx'
 import { FONTS, applyFont, currentFont, ensureFontLoaded } from '../lib/fonts.js'
 import Usage from '../components/Usage.jsx'
+import { dirIn, useSlide } from '../lib/glide.js'
 import { remote, supabase } from '../lib/supabase.js'
 
 import { testKey } from '../lib/ai.js'
@@ -52,6 +53,7 @@ export default function Settings() {
     ['display', 'Display', false], ['chat', 'Chat', false], ['integrations', 'Integrations', true], ['data', 'Data', false], ['usage', 'Usage', true],
   ].filter(([, , admin]) => !admin || isAdmin)
   const [tab, setTab] = useState(() => (isAdmin ? 'company' : 'display'))
+  const { boxRef, slideTo, inClass } = useSlide()
   const logoRef = useRef()
   const [cs, setCs] = useState(() => callsheetDefaults(state))
   const [depts, setDepts] = useState(() => departmentsOf(state).join('\n'))
@@ -133,8 +135,11 @@ export default function Settings() {
     <>
       <PageHead title="Settings" />
       <nav className="tabs settings-tabs">
-        {TABS.map(([k, l]) => <button key={k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>)}
+        {TABS.map(([k, l]) => <button key={k} className={tab === k ? 'active' : ''} onClick={(e) => { if (tab !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setTab(k) }}>{l}</button>)}
       </nav>
+      {/* the panel slides over when another tab is picked (lib/glide.js); nothing is keyed, so nothing remounts */}
+      <div className="glide-box" ref={boxRef}>
+      <div className={inClass}>
       <div className="cols settings-cols" data-active={tab}>
         {isAdmin && (
           <section className="panel" data-tab="company">
@@ -563,6 +568,8 @@ export default function Settings() {
         </section>
       </div>
       {isAdmin && tab === 'usage' && <Usage state={state} setSetting={setSetting} />}
+      </div>
+      </div>
       <ScreenInfo />
     </>
   )
