@@ -5285,3 +5285,10 @@ html .chat2[data-chat-theme='glass'] .chat-win-tabs { background: rgba(16, 22, 3
 @media (prefers-reduced-motion: reduce) {
   html.chat-window .tg-plus, html.chat-window .tg-plus * { animation: none !important; transition: none !important; }
 }
+
+/* TML Chat on a phone: the folder tabs closer together so All, Projects, Groups, People and Archived
+   fit across the pill track (Alex, 9 Oct); text and gaps scale with the phone's width */
+@media (max-width: 820px) {
+  html.chat-window body .chat-win .chat2 .chat-folders { gap: 0; }
+  html.chat-window body .chat-win .chat2 .chat-folders button { padding: 9px clamp(5px, 1.8vw, 9px); font-size: clamp(11px, 3vw, 15px); }
+}
