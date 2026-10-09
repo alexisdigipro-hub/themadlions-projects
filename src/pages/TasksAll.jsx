@@ -80,7 +80,9 @@ export default function TasksAll() {
   const all = tasksFor(every, user)
   // the bin: deleted tasks this person may see, newest first
   const binned = visibleTasks(every.filter((t) => t.deletedAt), user).sort((a, b) => (b.deletedAt || '').localeCompare(a.deletedAt || ''))
-  const listOf = (t) => (t.projectId ? `p:${t.projectId}` : t.listId && custom.some((l) => l.id === t.listId) ? `l:${t.listId}` : GENERAL)
+  // A task's project and its list are separate (Alex, 9 Oct): a project's task can also sit on a list
+  // (a department). Its list wins; a project task on no list belongs to its project only.
+  const listOf = (t) => (t.listId && custom.some((l) => l.id === t.listId) ? `l:${t.listId}` : t.projectId ? `p:${t.projectId}` : GENERAL)
   const open = all.filter((t) => t.status !== 'done')
 
   // the lists: General, the administrators' own, then the projects (those with tasks, or still running)
@@ -277,7 +279,9 @@ export default function TasksAll() {
   const row = (t) => {
     const late = t.due && t.due < t0 && t.status !== 'done'
     // the list it is on, or its project's name (a delivered project has no list row but keeps its tag)
-    const from = listByKey[listOf(t)] || (t.projectId && projectsById[t.projectId] ? { key: listOf(t), icon: '🎬', name: projectsById[t.projectId].title } : null)
+    // its list (when it is not the one open) and its project, each as a tag
+    const from = listOf(t).startsWith('l:') || listOf(t) === GENERAL ? listByKey[listOf(t)] : null
+    const proj = t.projectId && projectsById[t.projectId]
     return (
       <li key={t.id} className={`rem-task ${t.status === 'done' ? 'done' : ''}${t.deletedAt ? ' binned' : ''}`}>
         <button type="button" className="rem-check" aria-label={t.status === 'done' ? 'Mark as not done' : 'Mark as done'} disabled={!editable || !!t.deletedAt} onClick={() => toggle(t)} />
@@ -289,6 +293,7 @@ export default function TasksAll() {
           </div>
           <div className="rem-task-meta">
             {(current.smart || searching || from?.key !== current.key) && from && <span>{from.icon} {from.name}</span>}
+            {proj && <span>🎬 {proj.title}</span>}
             {t.due && <span className={late ? 'late' : t.due === t0 ? 'today' : 'due'}>🗓 {t.due === t0 ? 'Today' : late ? `Overdue, ${fmtDate(t.due)}` : fmtDate(t.due)}</span>}
             {t.assignee && <span>👤 {t.assignee}</span>}
             {t.notes && <span className="rem-has-notes" title={t.notes}>📝 Note</span>}
@@ -356,7 +361,7 @@ export default function TasksAll() {
   return (
     <div className={`rem-app ${mobile ? `m-${screen}` : ''}`}>
       {mobile ? (screen === 'home' ? home : listPane) : (<>{home}{listPane}</>)}
-      {draft && <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} lists={lists} />}
+      {draft && <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} projects={projects.filter((p) => p.status !== 'Delivered' || p.id === draft.projectId)} />}
       {listForm && (
         <Modal open title={listForm.id ? 'Edit list' : 'New list'} onClose={() => setListForm(null)} footer={
           <>
