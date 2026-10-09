@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Field, Input, Modal, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
-import { TaskModal, emptyTask, seesAllTasks, tasksFor } from './project/Tasks.jsx'
+import { TaskModal, binTask, emptyTask, tasksFor, visibleTasks } from './project/Tasks.jsx'
 import { sendAutoNotice, userByName } from '../components/Notices.jsx'
 import { fmtDate } from '../lib/dates.js'
 
 /*
   Tasks, laid out like Microsoft To Do (Alex, 9 Oct; before that like Reminders). On the left:
-  the smart lists as rows with a line icon and a count (My Day = due today or late, Important =
-  urgent or high, Assigned to me, Tasks = everything open, Completed), then
+  the smart lists as rows with a line icon and a count (Important = urgent or high, Assigned to me,
+  All tasks = everything open, Completed, Deleted = the bin, where a task can be restored; My Day was
+  taken off, Alex 9 Oct), then
   the lists: General (tasks outside projects), lists an administrator adds with an icon and a
   colour (settings.taskLists, a general task names its list in listId) and one list per project,
   with 👥 when others have tasks on it, and + New List. On the right: the list's name large over
-  a backdrop in its colour (My Day also the date), the tasks as white cards (round check, title,
+  a backdrop in its colour, the tasks as white cards (round check, title,
   the list it is on, the date in blue or red, who, ☆ to mark it important), Completed folding
   under them, and "+ New Task…" at the foot. A click on a task opens the full form.
   The data is unchanged: project tasks in project.tasks, general ones in state.todos.
@@ -24,21 +25,23 @@ const ICONS = ['☰', '📌', '⭐', '🎬', '📷', '💡', '🎤', '🎨', '�
 /* the line icons of the smart lists, drawn like To Do's */
 const svg = (d) => <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{d}</svg>
 const LINE = {
-  today: svg(<><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>),
   urgent: svg(<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />),
   scheduled: svg(<><rect x="3.5" y="5" width="17" height="15" rx="2.5" /><path d="M3.5 10h17M8 3v4M16 3v4" /></>),
   mine: svg(<><circle cx="12" cy="8" r="4" /><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></>),
   all: svg(<><path d="M4 11.5 12 4l8 7.5V20H4z" /><path d="M10 20v-5h4v5" /></>),
   done: svg(<><circle cx="12" cy="12" r="8.5" /><path d="m8.5 12 2.5 2.5 4.5-5" /></>),
+  deleted: svg(<><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6" /></>),
 }
 const SMART = [
-  ['today', 'My Day', '#4a7a80', '#2f6f8f'],
+  // Planned, then My Day taken off the side menu (Alex, 9 Oct)
   ['urgent', 'Important', '#c2185b', '#b03a6b'],
-  // Planned taken off the side menu (Alex, 9 Oct)
   ['mine', 'Assigned to me', '#2e7d32', '#3d7a4a'],
-  ['all', 'Tasks', '#5c6bc0', '#4a5aa8'],
+  ['all', 'All tasks', '#5c6bc0', '#4a5aa8'],
   ['done', 'Completed', '#78909c', '#5f7480'],
+  ['deleted', 'Deleted', '#8d6e63', '#6d5a52'],
 ]
+// the list a person had open when My Day still existed opens Assigned to me instead
+const firstList = () => { try { const k = localStorage.getItem('tml_tasks_list'); return !k || k === 'today' ? 'mine' : k } catch { return 'mine' } }
 const GENERAL = 'general'
 
 export default function TasksAll() {
@@ -46,7 +49,7 @@ export default function TasksAll() {
   const user = useCurrentUser()
   const toast = useToast()
   const mobile = useIsMobile()
-  const [sel, setSel] = useState(() => { try { return localStorage.getItem('tml_tasks_list') || 'today' } catch { return 'today' } })
+  const [sel, setSel] = useState(firstList)
   const [screen, setScreen] = useState('home') // phone: home | list
   const [q, setQ] = useState('')
   const [showDone, setShowDone] = useState(false)
@@ -70,10 +73,13 @@ export default function TasksAll() {
   const isMine = (t) => (t.assigneeId ? t.assigneeId === user?.id : (t.assignee || '').trim().toLowerCase() === meName)
 
   // everything this person may see; a teammate only what is assigned to them
-  const all = tasksFor([
+  const every = [
     ...projects.flatMap((p) => (p.tasks || []).map((t) => ({ ...t, projectId: p.id }))),
     ...(state.todos || []).map((t) => ({ ...t, projectId: '' })),
-  ], user)
+  ]
+  const all = tasksFor(every, user)
+  // the bin: deleted tasks this person may see, newest first
+  const binned = visibleTasks(every.filter((t) => t.deletedAt), user).sort((a, b) => (b.deletedAt || '').localeCompare(a.deletedAt || ''))
   const listOf = (t) => (t.projectId ? `p:${t.projectId}` : t.listId && custom.some((l) => l.id === t.listId) ? `l:${t.listId}` : GENERAL)
   const open = all.filter((t) => t.status !== 'done')
 
@@ -90,16 +96,17 @@ export default function TasksAll() {
   const shared = (key) => inList(key).some((t) => t.assignee && !isMine(t))
 
   const smartFilter = {
-    today: (t) => t.status !== 'done' && t.due && t.due <= t0,
     scheduled: (t) => t.status !== 'done' && !!t.due,
     all: (t) => t.status !== 'done',
     urgent: (t) => t.status !== 'done' && (t.priority === 'urgent' || t.priority === 'high'),
     mine: (t) => t.status !== 'done' && isMine(t),
     done: (t) => t.status === 'done',
   }
+  const countOf = (k) => (k === 'deleted' ? binned.length : all.filter(smartFilter[k]).length)
+  const inBin = sel === 'deleted' && !q.trim()
   const smart = SMART.find(([k]) => k === sel)
   const current = smart ? { key: sel, name: smart[1], color: smart[3], icon: LINE[sel], smart: true } : listByKey[sel] || listByKey[GENERAL]
-  useEffect(() => { if (!smart && !listByKey[sel]) setSel('today') }, [sel, lists.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!smart && !listByKey[sel]) setSel('mine') }, [sel, lists.length]) // eslint-disable-line react-hooks/exhaustive-deps
   // a list chosen before (or a new one) stays in sight
   useEffect(() => { if (!smart && sel !== GENERAL && listByKey[sel]) setListsOpen(true) }, [sel]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -107,8 +114,8 @@ export default function TasksAll() {
   const match = (t) => !words.length || words.every((w) => `${t.title} ${t.notes || ''} ${t.assignee || ''}`.toLowerCase().includes(w))
   const byDue = (a, b) => (a.due || '9999').localeCompare(b.due || '9999') || (a.createdAt || '').localeCompare(b.createdAt || '')
   const searching = words.length > 0
-  const base = searching ? all.filter(match) : current.smart ? all.filter(smartFilter[current.key]) : inList(current.key)
-  const pending = base.filter((t) => t.status !== 'done' || current.key === 'done').sort(byDue)
+  const base = searching ? all.filter(match) : inBin ? binned : current.smart ? all.filter(smartFilter[current.key]) : inList(current.key)
+  const pending = inBin ? base : base.filter((t) => t.status !== 'done' || current.key === 'done').sort(byDue)
   const completed = current.smart || searching ? [] : base.filter((t) => t.status === 'done').sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || ''))
   // smart lists and search show their tasks under the list each comes from, as Reminders does
   const sections = useMemo(() => {
@@ -125,7 +132,20 @@ export default function TasksAll() {
   }
   const star = (t) => persist(t, (x) => { x.priority = x.priority === 'urgent' || x.priority === 'high' ? 'normal' : 'high' })
   const toggle = (t) => persist(t, (x) => { x.status = x.status === 'done' ? 'todo' : 'done'; x.doneAt = x.status === 'done' ? new Date().toISOString() : '' })
+  // taken out for good: a task moved to another project, or deleted forever from Deleted
   const remove = (t) => (t.projectId ? updateProject(t.projectId, (p) => { p.tasks = (p.tasks || []).filter((y) => y.id !== t.id) }) : update((s) => { s.todos = (s.todos || []).filter((y) => y.id !== t.id); return s }))
+  // × on a task: to Deleted, from where it can come back
+  const trash = (t) => persist(t, (x) => binTask(x, user))
+  const restore = (t) => persist(t, (x) => { delete x.deletedAt; delete x.deletedBy })
+  const forget = (t) => { if (confirm(`Delete "${t.title}" for good? It cannot be brought back.`)) remove(t) }
+  const emptyBin = () => {
+    if (!binned.length || !confirm(`Delete the ${binned.length} task${binned.length === 1 ? '' : 's'} in Deleted for good? They cannot be brought back.`)) return
+    const ids = new Set(binned.map((t) => t.id))
+    const byProject = [...new Set(binned.filter((t) => t.projectId).map((t) => t.projectId))]
+    byProject.forEach((pid) => updateProject(pid, (p) => { p.tasks = (p.tasks || []).filter((t) => !ids.has(t.id)) }))
+    if (binned.some((t) => !t.projectId)) update((s) => { s.todos = (s.todos || []).filter((t) => !ids.has(t.id)); return s })
+    toast('Deleted emptied', 'ok')
+  }
   const notify = (t, before) => {
     const target = t.assignee && t.assignee !== before?.assignee && t.status !== 'done' ? userByName(state, t.assignee) : undefined
     if (target && target.id !== user?.id) {
@@ -174,17 +194,18 @@ export default function TasksAll() {
   const addQuick = () => {
     const title = quick.trim()
     if (!title) return
-    const extra = current.key === 'today' ? { due: t0 } : current.key === 'urgent' ? { priority: 'high' } : current.key === 'mine' ? { assignee: user?.name || '', assigneeId: user?.id || '' } : {}
+    const extra = current.key === 'urgent' ? { priority: 'high' } : current.key === 'mine' ? { assignee: user?.name || '', assigneeId: user?.id || '' } : {}
     write(emptyTask({ ...where(), dept: 'Other', title, ...extra }))
     setQuick('')
     setTimeout(() => quickRef.current?.focus(), 0)
   }
   const clearDone = () => {
     if (!completed.length || !confirm(`Delete the ${completed.length} completed task${completed.length === 1 ? '' : 's'} of ${current.name}?`)) return
+    // to Deleted, like a single ×
     const ids = new Set(completed.map((t) => t.id))
-    if (current.key.startsWith('p:')) updateProject(current.key.slice(2), (p) => { p.tasks = (p.tasks || []).filter((t) => !ids.has(t.id)) })
-    else update((s) => { s.todos = (s.todos || []).filter((t) => !ids.has(t.id)); return s })
-    toast('Completed tasks cleared', 'ok')
+    if (current.key.startsWith('p:')) updateProject(current.key.slice(2), (p) => { (p.tasks || []).forEach((t) => { if (ids.has(t.id)) binTask(t, user) }) })
+    else update((s) => { s.todos = (s.todos || []).map((t) => (ids.has(t.id) ? (() => { const x = { ...t }; binTask(x, user); return x })() : t)); return s })
+    toast('Completed tasks moved to Deleted', 'ok')
   }
 
   /* ---------- the administrators' own lists ---------- */
@@ -227,7 +248,7 @@ export default function TasksAll() {
           <button key={k} type="button" className={`rem-row ${sel === k && !searching ? 'on' : ''}`} style={{ '--lc': color }} onClick={() => pick(k)}>
             <span className="rem-row-ico">{LINE[k]}</span>
             <span className="grow">{label}</span>
-            <span className="rem-count">{all.filter(smartFilter[k]).length || ''}</span>
+            <span className="rem-count">{countOf(k) || ''}</span>
           </button>
         ))}
       </nav>
@@ -265,9 +286,9 @@ export default function TasksAll() {
     const from = listByKey[listOf(t)]
     const important = t.priority === 'urgent' || t.priority === 'high'
     return (
-      <li key={t.id} className={`rem-task ${t.status === 'done' ? 'done' : ''}`}>
-        <button type="button" className="rem-check" aria-label={t.status === 'done' ? 'Mark as not done' : 'Mark as done'} disabled={!editable} onClick={() => toggle(t)} />
-        <div className="rem-task-main" onClick={() => editable && setDraft({ ...t })}>
+      <li key={t.id} className={`rem-task ${t.status === 'done' ? 'done' : ''}${t.deletedAt ? ' binned' : ''}`}>
+        <button type="button" className="rem-check" aria-label={t.status === 'done' ? 'Mark as not done' : 'Mark as done'} disabled={!editable || !!t.deletedAt} onClick={() => toggle(t)} />
+        <div className="rem-task-main" onClick={() => editable && !t.deletedAt && setDraft({ ...t })}>
           <div className="rem-task-title">
             {t.title}
             {t.status === 'doing' && <span className="pill doing">in progress</span>}
@@ -278,25 +299,35 @@ export default function TasksAll() {
             {t.due && <span className={late ? 'late' : t.due === t0 ? 'today' : 'due'}>🗓 {t.due === t0 ? 'Today' : late ? `Overdue, ${fmtDate(t.due)}` : fmtDate(t.due)}</span>}
             {t.assignee && <span>👤 {t.assignee}</span>}
             {t.notes && <span className="rem-has-notes" title={t.notes}>📝 Note</span>}
+            {t.deletedAt && <span>🗑 Deleted {fmtDate(t.deletedAt.slice(0, 10))}{t.deletedBy ? ` by ${t.deletedBy}` : ''}</span>}
           </div>
         </div>
-        <button type="button" className={`rem-star ${important ? 'on' : ''}`} disabled={!editable || t.status === 'done'} onClick={() => star(t)} title={important ? 'Not important' : 'Mark as important'} aria-label="Important">{important ? '★' : '☆'}</button>
-        {editable && <button type="button" className="rem-del" title="Delete" onClick={() => remove(t)}>×</button>}
+        {t.deletedAt ? (editable && (
+          <>
+            <button type="button" className="rem-restore" onClick={() => restore(t)}>Restore</button>
+            <button type="button" className="rem-del" title="Delete for good" onClick={() => forget(t)}>×</button>
+          </>
+        )) : (
+          <>
+            <button type="button" className={`rem-star ${important ? 'on' : ''}`} disabled={!editable || t.status === 'done'} onClick={() => star(t)} title={important ? 'Not important' : 'Mark as important'} aria-label="Important">{important ? '★' : '☆'}</button>
+            {editable && <button type="button" className="rem-del" title="Delete" onClick={() => trash(t)}>×</button>}
+          </>
+        )}
       </li>
     )
   }
 
-  const dateLine = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
   const listPane = (
     <section className="rem-main" style={{ '--lc': searching ? 'var(--accent)' : current.color }}>
       <div className="rem-head">
         {mobile && <button type="button" className="rem-back" onClick={() => { setQ(''); setScreen('home') }}>‹ Lists</button>}
         <div className="grow">
           <h1>{!current.smart && !searching && <span className="rem-head-emoji">{current.icon}</span>}{searching ? `Searching for "${q.trim()}"` : current.name}</h1>
-          {current.key === 'today' && !searching && <div className="rem-head-date">{dateLine}</div>}
+          {inBin && <div className="rem-head-date">Deleted tasks wait here until you restore them or delete them for good</div>}
         </div>
         {current.own && admin && <button type="button" className="rem-head-btn" onClick={() => setListForm({ id: current.id, name: current.name, color: current.color, icon: current.icon })}>Edit list</button>}
-        {editable && <button type="button" className="rem-head-btn" onClick={() => setDraft(emptyTask({ ...where(), dept: 'Other' }))}>Details…</button>}
+        {editable && inBin && binned.length > 0 && <button type="button" className="rem-head-btn" onClick={emptyBin}>Empty</button>}
+        {editable && !inBin && <button type="button" className="rem-head-btn" onClick={() => setDraft(emptyTask({ ...where(), dept: 'Other' }))}>Details…</button>}
       </div>
       <div className="rem-scroll">
         {sections.map((s) => (
@@ -304,7 +335,7 @@ export default function TasksAll() {
             <ul className="rem-tasks">{s.list.map(row)}</ul>
           </div>
         ))}
-        {!pending.length && <p className="rem-empty">{searching ? 'No task matches.' : current.key === 'done' ? 'Nothing completed yet.' : current.key === 'today' ? 'Nothing due today. Enjoy the day.' : 'No tasks here yet.'}</p>}
+        {!pending.length && <p className="rem-empty">{searching ? 'No task matches.' : current.key === 'done' ? 'Nothing completed yet.' : inBin ? 'Nothing deleted.' : 'No tasks here yet.'}</p>}
         {completed.length > 0 && (
           <>
             <div className="rem-done-bar">
@@ -315,7 +346,7 @@ export default function TasksAll() {
           </>
         )}
       </div>
-      {editable && !searching && current.key !== 'done' && (
+      {editable && !searching && current.key !== 'done' && !inBin && (
         <div className="rem-quick">
           <span className="rem-quick-plus" aria-hidden="true">＋</span>
           <input ref={quickRef} className="rem-quick-input" value={quick} onChange={(e) => setQuick(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') addQuick(); if (e.key === 'Escape') setQuick('') }} placeholder="New Task…" />
