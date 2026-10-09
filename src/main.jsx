@@ -76,12 +76,32 @@ try {
       if (inset > 0 && gap > 0 && gap <= 160) {
         root.style.setProperty('--ios-gap', `${gap}px`)
         root.style.setProperty('--screen-h', `${screenH}px`)
-      } else {
+        try { localStorage.setItem('tml_ios_band', JSON.stringify({ screenH, gap })) } catch {}
+      } else if (inset > 0 || gap <= 0) {
+        // clearly no band (or not drawn under the clock): clear; a reading of 0 safe area with a band is
+        // treated as iOS not having settled yet and leaves the last good numbers alone
         root.style.removeProperty('--ios-gap')
         root.style.removeProperty('--screen-h')
+        try { localStorage.removeItem('tml_ios_band') } catch {}
       }
     }
+    // the last good numbers for this screen, straight away, so the first frame already reaches the foot
+    try {
+      const last = JSON.parse(localStorage.getItem('tml_ios_band') || 'null')
+      const tall = window.innerHeight > window.innerWidth
+      if (tall && last && last.screenH === Math.max(screen.width, screen.height) && last.gap > 0 && last.gap <= 160) {
+        root.style.setProperty('--ios-gap', `${last.gap}px`)
+        root.style.setProperty('--screen-h', `${last.screenH}px`)
+      }
+    } catch {}
     measure()
+    // right at launch iOS can report no safe area yet, so the numbers would come out empty and the band
+    // come back on the next opening (Alex, 13:4x): measure again as the app settles and whenever it
+    // comes back to the screen
+    ;[50, 250, 700, 1500, 3000].forEach((ms) => setTimeout(measure, ms))
+    window.addEventListener('load', measure)
+    window.addEventListener('pageshow', () => setTimeout(measure, 50))
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(measure, 50) })
     window.addEventListener('resize', measure)
     window.addEventListener('orientationchange', () => setTimeout(measure, 300))
     document.addEventListener('focusout', () => setTimeout(measure, 400))
