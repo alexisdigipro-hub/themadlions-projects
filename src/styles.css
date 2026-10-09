@@ -3485,8 +3485,10 @@ html[data-public='1'] body { background: var(--bg); }
 /* ---------- settings: logo ---------- */
 .logo-img { width: 30px; height: 30px; object-fit: contain; border-radius: 6px; flex: none; }
 .login-logo .logo-img { width: 44px; height: 44px; }
-.boot-card { text-align: center; }
-.boot-name { font-weight: 800; font-size: 19px; letter-spacing: .1em; font-variation-settings: 'wdth' 110; }
+/* the loading screen: THEMADLIONS alone, centred both ways, no frame; 5% smaller than TML Chat's head */
+.boot { min-height: 100vh; min-height: 100dvh; padding: 0; }
+.boot-name { font-weight: 500; font-size: 18px; letter-spacing: -.01em; white-space: nowrap; color: var(--text); }
+.boot-name b { font-weight: 900; }
 .logo-row { display: flex; align-items: center; gap: 12px; }
 .logo-preview { width: 64px; height: 64px; object-fit: contain; border-radius: 10px; background: var(--raised); padding: 4px; }
 .logo-preview-mark { width: 40px; height: 28px; }
