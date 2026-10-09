@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct: TML Chat's + opens in glass
+- Phone TML Chat head: **Edit** alone on the left (the folder icon left it); on the right one round **+** (Chat.jsx RoomList `plus` state, `.tg-plus`, absolutely placed so the grid and the centred title do not move). A tap opens it like iOS Liquid Glass: the pill stretches left with a wobble (`tg-plus-wobble`), New folder / New group (administrators) / New message rise into it one after another, + turns into ×, the title fades. A tap outside, an action, or Edit closes it. **New folder** opens Your folders with an empty folder ready to name (`FoldersModal fresh`, `setFolders('new')`; Edit > Folder > Make a folder does the same). Off with Reduce Motion.
+
 ### 9 Oct: TML Chat's bottom bar slimmer and lower
 - Phone TML Chat only (last block of styles.css): the Chats / Calls / Notices / Settings pill is slimmer (4 px padding, buttons 5/4 px, 11 px labels), its icons and the Edit bar's icons 27 → 20 px (a quarter smaller), and it sits lower: `max(10px, safe-area-inset-bottom - 16px)` under it (about 18 px on an iPhone, the same as its 16 px sides) instead of 10 px + the safe area.
 - The search above the list is slimmer too: 46 → 34 px tall, 16 px text (smaller text would make the iPhone zoom in when it is tapped), a 16 px magnifier.

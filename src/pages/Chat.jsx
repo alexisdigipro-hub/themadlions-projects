@@ -136,6 +136,8 @@ const TgIcon = {
   edit: () => <svg {...svgProps}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>,
   trash: () => <svg {...svgProps}><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" /></svg>,
   folder: () => <svg {...svgProps}><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /></svg>,
+  folderPlus: () => <svg {...svgProps}><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /><path d="M12 10.5v5M9.5 13h5" /></svg>,
+  plus: () => <svg {...svgProps}><path d="M12 5v14M5 12h14" /></svg>,
   image: () => <svg {...svgProps}><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></svg>,
   camera: () => <svg {...svgProps}><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" /><circle cx="12" cy="13.5" r="3.5" /></svg>,
   file: () => <svg {...svgProps}><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z" /><path d="M14 3v5h5" /></svg>,
@@ -503,8 +505,17 @@ function RoomList({ activeId, windowed }) {
   const [readMap, setReadMap] = useState(C.loadRead)
   const [group, setGroup] = useState(null) // null | 'new' | chat row
   const [direct, setDirect] = useState(false)
-  const [folders, setFolders] = useState(false)
+  const [folders, setFolders] = useState(false) // false | true | 'new' (a new empty folder ready to name)
   const [notice, setNotice] = useState(false)
+  // TML Chat's + (phone): opens into New folder / New group / New message; a tap anywhere else closes it
+  const [plus, setPlus] = useState(false)
+  const plusRef = useRef(null)
+  useEffect(() => {
+    if (!plus) return undefined
+    const away = (e) => { if (plusRef.current && !plusRef.current.contains(e.target)) setPlus(false) }
+    document.addEventListener('pointerdown', away)
+    return () => document.removeEventListener('pointerdown', away)
+  }, [plus])
   const [sent, setSent] = useState(false)
   useEffect(() => {
     const h = () => setReadMap(C.loadRead())
@@ -645,12 +656,11 @@ function RoomList({ activeId, windowed }) {
 
   return (
     <aside className={`chat-list${prefs.folderTabs === 'left' && !mobile && tab === 'chats' ? ' tabs-left' : ''}`}>
-      <div className={`chat-list-head${tg ? ' tg-head' : ''}`}>
-        {/* Edit and the folders together on the left, + group and the pencil on the right, so the head is balanced (Alex, 9 Oct) */}
+      <div className={`chat-list-head${tg ? ' tg-head' : ''}${plus ? ' plus-open' : ''}`}>
+        {/* Edit alone on the left; on the right one + that opens, in glass, New folder / New group / New message (Alex, 9 Oct) */}
         {tg && (
           <span className="tg-pill tg-pill-left">
-            <button type="button" className="tg-edit" onClick={() => (picking ? endPick() : setPicking(true))}>{picking ? 'Done' : 'Edit'}</button>
-            {!picking && <button type="button" className="tg-ico" onClick={() => setFolders(true)} title="Your folders" aria-label="Your folders">{TgIcon.folder()}</button>}
+            <button type="button" className="tg-edit" onClick={() => { setPlus(false); picking ? endPick() : setPicking(true) }}>{picking ? 'Done' : 'Edit'}</button>
           </span>
         )}
         {/* the company's name, MAD set heavier (Alex, 9 Oct); while picking, how many are picked */}
@@ -658,9 +668,13 @@ function RoomList({ activeId, windowed }) {
         {tg && (picking ? (
           <button type="button" className="tg-pill tg-all" onClick={() => setPicked(picked.length === shown.length ? [] : shown.map((r) => r.id))}>{picked.length === shown.length && shown.length ? 'None' : 'All'}</button>
         ) : (
-          <span className="tg-pill tg-pill-icons">
-            {isAdmin && <button type="button" onClick={() => setGroup('new')} title="New group" aria-label="New group">{TgIcon.people()}</button>}
-            <button type="button" onClick={() => setDirect(true)} title="New message" aria-label="New message">{TgIcon.edit()}</button>
+          <span ref={plusRef} className={`tg-pill tg-plus${plus ? ' open' : ''}`} style={{ '--n': isAdmin ? 3 : 2 }}>
+            <span className="tg-plus-items" aria-hidden={!plus}>
+              <button type="button" tabIndex={plus ? 0 : -1} onClick={() => { setPlus(false); setFolders('new') }} title="New folder" aria-label="New folder">{TgIcon.folderPlus()}</button>
+              {isAdmin && <button type="button" tabIndex={plus ? 0 : -1} onClick={() => { setPlus(false); setGroup('new') }} title="New group" aria-label="New group">{TgIcon.people()}</button>}
+              <button type="button" tabIndex={plus ? 0 : -1} onClick={() => { setPlus(false); setDirect(true) }} title="New message" aria-label="New message">{TgIcon.edit()}</button>
+            </span>
+            <button type="button" className="tg-plus-btn" onClick={() => setPlus((o) => !o)} aria-expanded={plus} title={plus ? 'Close' : 'New'} aria-label={plus ? 'Close' : 'New folder, group or message'}>{TgIcon.plus()}</button>
           </span>
         ))}
         {!mobile && <button type="button" className="icon-btn chat-head-ico chat-folders-btn" onClick={() => setFolders(true)} title="Your folders" aria-label="Your folders">{TgIcon.folder()}</button>}
@@ -767,7 +781,7 @@ function RoomList({ activeId, windowed }) {
             {allFolders.filter((f) => f.custom).map((f) => <button key={f.id} type="button" className="chat-room-item" onClick={() => bulkFolder(f)}>{TgIcon.folder()}<strong>{f.name}</strong></button>)}
           </div>
         ) : (
-          <div className="stack"><p className="muted">You have no folders of your own yet.</p><Button variant="primary" onClick={() => { setFolderPick(false); setFolders(true) }}>Make a folder</Button></div>
+          <div className="stack"><p className="muted">You have no folders of your own yet.</p><Button variant="primary" onClick={() => { setFolderPick(false); setFolders('new') }}>Make a folder</Button></div>
         ))}
       </Modal>
       {canNotice && mobile && !windowed && (
@@ -778,7 +792,7 @@ function RoomList({ activeId, windowed }) {
       )}
       <GroupModal open={!!group} group={group === 'new' ? null : group} onClose={() => setGroup(null)} onSaved={(id) => { setGroup(null); nav(roomPath(base, id)) }} />
       <DirectModal open={direct} onClose={() => setDirect(false)} onPick={(id) => { setDirect(false); nav(roomPath(base, id)) }} />
-      <FoldersModal open={folders} onClose={() => setFolders(false)} rooms={rooms} />
+      <FoldersModal open={!!folders} fresh={folders === 'new'} onClose={() => setFolders(false)} rooms={rooms} />
       <SendNoticeModal open={notice} onClose={() => setNotice(false)} />
       <Modal open={sent} title="Sent notices" onClose={() => setSent(false)} wide>{sent && <SentNotices />}</Modal>
     </aside>
@@ -858,12 +872,13 @@ function DirectModal({ open, onClose, onPick }) {
 }
 
 /* The person's own folders: a name and the conversations inside. Saved in their profile, so they follow them to any device. */
-function FoldersModal({ open, onClose, rooms }) {
+function FoldersModal({ open, fresh, onClose, rooms }) {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
   const [list, setList] = useState([])
-  useEffect(() => { if (open) setList((Array.isArray(user?.profile?.chatFolders) ? user.profile.chatFolders : []).map((f) => ({ ...f, rooms: [...(f.rooms || [])] }))) }, [open])
+  // fresh: opened from TML Chat's + > New folder, so an empty folder waits at the end to be named
+  useEffect(() => { if (open) setList([...(Array.isArray(user?.profile?.chatFolders) ? user.profile.chatFolders : []).map((f) => ({ ...f, rooms: [...(f.rooms || [])] })), ...(fresh ? [{ id: uid(), name: '', rooms: [] }] : [])]) }, [open])
   const patch = (id, fn) => setList((l) => l.map((f) => (f.id === id ? fn({ ...f }) : f)))
   const toggle = (id, roomId) => patch(id, (f) => ({ ...f, rooms: f.rooms.includes(roomId) ? f.rooms.filter((r) => r !== roomId) : [...f.rooms, roomId] }))
   const save = () => {
