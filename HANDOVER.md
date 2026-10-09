@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct: Tasks and Notes rows a little apart
+- Alex: "the rows stick together". `.rem-tasks > .rem-task + .rem-task` and `.rem-tasks > .notes-card + .notes-card` now 8 px apart (were 4), everywhere.
+
 ### 9 Oct: TML Chat's list everywhere the chat is
 - Alex: what we did in TML Chat, also in the app's chat and on the computer. RoomList no longer has a `tg` switch: the aside is always `.chat-list.tgui` with the TML head (Edit · THE**MAD**LIONS · glass +), Edit's bulk picking, the slim search, the slide between folders and the glass lens, and the `.tg-dock` at the foot (folders; plus Chats / Calls / Notices / Settings where the chat has its own foot: its window or a computer, or while picking). The + menu gained "Open the chat in its own window" (⧉) where it is not already in one; the old head icons, the phone's round pencil (`.chat-fab`) and the "folder tabs on the left" layout are gone from the list (the setting stays in Settings but does nothing now).
 - CSS: every TML rule moved from `html.chat-window … @media (max-width: 820px)` to `.chat-list.tgui` at all widths (same specificity). Differences at the end of styles.css: in the app on a phone the dock is `position: fixed` just above the app's tab bar (the list drops its backdrop-filter, which would otherwise hold a fixed child) and the rows keep 76 px free under them; on a computer (380 px panel) the folder names are 12 px. The glass box to type in now applies on a computer too. Checked on mocks: TML Chat 440 px, the app's chat 440 px, a computer 1440 px.
