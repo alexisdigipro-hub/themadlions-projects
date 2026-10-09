@@ -55,10 +55,13 @@ const PICK_ICONS = {
   who: <svg {...IC}><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>,
   status: <svg {...IC}><path d="M5 21V4" /><path d="M5 4h12l-2.5 4L17 12H5" /></svg>,
 }
-function IconPick({ kind, tint, unset, title, value, onChange, editable, children }) {
+// a person in a few letters under the icon: "Anastasia P."
+const shortName = (name) => { const [first, ...rest] = String(name || '').trim().split(/\s+/); return rest.length ? `${first} ${rest[rest.length - 1][0]}.` : first || '' }
+function IconPick({ kind, tint, unset, title, text, value, onChange, editable, children }) {
   return (
     <label className={`rem-ibtn${unset ? ' unset' : ''}${editable ? '' : ' rem-ibtn-static'}`} style={{ '--ic': tint }} title={title}>
       {PICK_ICONS[kind]}
+      {text && <span className="rem-ibtn-text">{text}</span>}
       {editable && <select value={value} onChange={onChange} aria-label={title}>{children}</select>}
     </label>
   )
@@ -444,12 +447,12 @@ export default function TasksAll() {
               <option value="">No list</option>
               {custom.map((l) => <option key={l.id} value={l.id}>{l.icon ? `${l.icon} ` : ''}{l.name}</option>)}
             </IconPick>
-            <IconPick kind="who" editable={editable} tint="var(--text)" unset={!t.assignee} title={`Assigned to: ${t.assignee || 'nobody yet'}`} value={t.assignee || ''} onChange={(e) => setAssignee(t, e.target.value)}>
+            <IconPick kind="who" editable={editable} tint="var(--text)" unset={!t.assignee} text={t.assignee ? shortName(t.assignee) : 'Nobody'} title={`Assigned to: ${t.assignee || 'nobody yet'}`} value={t.assignee || ''} onChange={(e) => setAssignee(t, e.target.value)}>
               <option value="">Nobody yet</option>
               {team.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
               {t.assignee && !team.some((u) => u.name === t.assignee) && <option value={t.assignee}>{t.assignee}</option>}
             </IconPick>
-            <IconPick kind="status" editable={editable} tint={statusColor(statusOf(t))} title={`Status: ${statusOf(t).label}`} value={statusOf(t).id} onChange={(e) => setStatus(t, e.target.value)}>
+            <IconPick kind="status" editable={editable} tint={statusColor(statusOf(t))} text={statusOf(t).label} title={`Status: ${statusOf(t).label}`} value={statusOf(t).id} onChange={(e) => setStatus(t, e.target.value)}>
               {statuses.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
             </IconPick>
           </div>
