@@ -216,13 +216,27 @@ export default function Dashboard() {
     if (!stillMotion()) {
       const cat = chipOf(filter)
       const neg = chipOf('Delivered')
-      slideTo(showDelivered ? 'prev' : 'next')
+      // the slide goes the way the chips lie: Delivered sits right after All, before the categories
+      const order = [...(chipsRef.current?.querySelectorAll('[data-chip]') || [])]
+      const negRight = order.indexOf(neg) > order.indexOf(cat)
+      slideTo(showDelivered === negRight ? 'prev' : 'next')
       if (showDelivered) glassTo(neg, cat, 'cat')
       else glassTo(cat, neg, 'neg')
     }
     setShowDelivered((v) => !v)
   }
   const liveAll = state.projects.filter((p) => p.status !== 'Delivered')
+  const chipFor = (c) => {
+    const n = (showDelivered ? state.projects.filter((p) => p.status === 'Delivered') : liveAll).filter((p) => c === 'All' || p.category === c).length
+    // On a phone only the categories that hold something (Alex, 8 Oct); the one picked stays
+    if (mobile && !n && c !== 'All' && c !== filter) return null
+    return (
+      <button key={c} data-chip={c} className={`chip ${filter === c ? 'on' : ''}`} onClick={() => pickFilter(c)}>
+        {c}
+        <small>{n}</small>
+      </button>
+    )
+  }
 
   const [duping, setDuping] = useState('')
   const duplicate = async (p) => {
@@ -332,23 +346,15 @@ export default function Dashboard() {
 
       <div className="toolbar home-toolbar">
         <div className="chips" ref={chipsRef} data-glide="own">
-          {['All', ...CATEGORIES].map((c) => {
-            const n = (showDelivered ? state.projects.filter((p) => p.status === 'Delivered') : liveAll).filter((p) => c === 'All' || p.category === c).length
-            // On a phone only the categories that hold something (Alex, 8 Oct); the one picked stays
-            if (mobile && !n && c !== 'All' && c !== filter) return null
-            return (
-              <button key={c} data-chip={c} className={`chip ${filter === c ? 'on' : ''}`} onClick={() => pickFilter(c)}>
-                {c}
-                <small>{n}</small>
-              </button>
-            )
-          })}
+          {/* All, then Delivered, then the categories (Alex, 9 Oct) */}
+          {chipFor('All')}
           {(!mobile || showDelivered || state.projects.some((p) => p.status === 'Delivered')) && (
             <button data-chip="Delivered" className={`chip neg ${showDelivered ? 'on' : ''}`} onClick={toggleDelivered} aria-pressed={showDelivered} title="Delivered projects">
               Delivered
               <small>{state.projects.filter((p) => p.status === 'Delivered').length}</small>
             </button>
           )}
+          {CATEGORIES.map(chipFor)}
         </div>
         <div className="toolbar-actions">
           {!mobile && (
