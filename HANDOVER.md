@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct, night: glass skins' side menu on a phone
+- On a phone the side menu slid over the page see-through (Glass dark / light had `--sidebar-bg: transparent`, purple Glass .07 white), so the page showed through its words. `--sidebar-bg` is now nearly solid in all three (dark navy .94, light white .95, purple .94) and a last phone-only rule blurs it; the computer's floating sidebar keeps its own see-through glass. Checked on a 390 px mock.
+
 ### 9 Oct, late night: Notes and Tasks see-through, no colours
 - Alex did not want the coloured backdrops: a last block in styles.css ("Notes and Tasks without colours") makes `.rem-main` transparent and the task cards, note cards, the open note sheet, the "+ New…" bar and the editor toolbar frosted glass (`--g-card` / `--g-card-2` / `--g-edge`, mixed from `--text`), text in the theme's own colours. Applies in every theme. The colour code is still there (`--lc` on rem-main) if it is ever wanted back.
 
