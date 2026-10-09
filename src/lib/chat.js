@@ -54,7 +54,8 @@ export function roomsFor(state, user) {
   const teamName = (state.workspace?.name || '').trim() || 'Team'
   // rooms this person archived themselves (Edit > Archive, profile.chatArchived)
   const mine = new Set(Array.isArray(user.profile?.chatArchived) ? user.profile.chatArchived : [])
-  const out = [{ id: TEAM, kind: 'team', name: teamName, sub: `${users.filter((u) => u.active !== false).length} people`, initials: initialsOf(teamName), archived: mine.has(TEAM) }]
+  // its picture is the company logo from Settings > Company (Alex, 9 Oct), the one the site shows
+  const out = [{ id: TEAM, kind: 'team', name: teamName, sub: `${users.filter((u) => u.active !== false).length} people`, initials: initialsOf(teamName), photo: state.settings?.logo || '', logo: !!state.settings?.logo, archived: mine.has(TEAM) }]
   for (const p of visibleProjects(state, user)) {
     if (tabHidden(p, 'chat') || chatExcluded(p, user)) continue
     // the project's cover is the room's picture, its colour the fallback behind the initials
@@ -140,13 +141,14 @@ export function roomsInFolder(folder, rooms) {
 }
 
 /* Rooms sorted the way a chat list reads: the one with the newest message first. */
+/* Newest conversation first, except the whole team's room, which always stays on top (Alex, 9 Oct). */
 export function sortRooms(rooms, chat) {
   const last = {}
   for (const m of chat || []) {
     const r = messageRoom(m)
     if ((m.createdAt || '') > (last[r] || '')) last[r] = m.createdAt
   }
-  return [...rooms].sort((a, b) => (last[b.id] || '').localeCompare(last[a.id] || ''))
+  return [...rooms].sort((a, b) => (b.id === TEAM) - (a.id === TEAM) || (last[b.id] || '').localeCompare(last[a.id] || ''))
 }
 export function lastMessage(chat, roomId) {
   let best = null

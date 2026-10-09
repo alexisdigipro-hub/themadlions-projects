@@ -5512,3 +5512,7 @@ html[data-theme='light'] .glass-lens, html[data-skin='coral'] .glass-lens { back
 .rem-group-fold:hover { color: var(--text); }
 .rem-group-fold .rem-count { font-weight: 500; letter-spacing: 0; }
 .rem-quick-list { flex: none; max-width: 40%; padding: 6px 10px; font: inherit; font-size: 14px; color: var(--text); background: var(--g-card-2, var(--raised)); border: 1px solid var(--g-edge, var(--line)); border-radius: 999px; cursor: pointer; }
+
+/* The team's room shows the company logo (Settings > Company), whole, on a plain disc, not cropped like a photo */
+.chat-ravatar.logo { background: var(--raised); }
+.chat-ravatar.logo img { object-fit: contain; padding: 16%; }

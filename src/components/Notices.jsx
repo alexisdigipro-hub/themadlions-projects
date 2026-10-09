@@ -40,17 +40,24 @@ export const userByName = (state, name) => {
 
 /* Shown by the Layout: one unacknowledged notice at a time, oldest first */
 export function NoticePopup() {
-  const { state, update } = useStore()
+  const { state, update, viewAs } = useStore()
   const user = useCurrentUser()
-  const pending = pendingForMe(state.notices, user)
+  // closed on this screen even if saving the "Got it" fails, so a notice can never lock the app
+  const [closed, setClosed] = useState(() => new Set())
+  // Looking as someone else (See what … sees) their notices stay theirs to confirm: nothing pops up,
+  // since every write is stopped in that mode and "Got it" could not close it (Alex, 9 Oct)
+  const pending = viewAs ? [] : pendingForMe(state.notices, user).filter((x) => !closed.has(x.id))
   const n = pending[0]
   useEffect(() => { if (n && navigator.vibrate && state.settings?.noticeVibrate !== false) navigator.vibrate(120) }, [n?.id])
   if (!n) return null
-  const ack = () => update((s) => {
-    const x = (s.notices || []).find((y) => y.id === n.id)
-    if (x) x.acks = { ...(x.acks || {}), [user.id]: new Date().toISOString() }
-    return s
-  })
+  const ack = () => {
+    setClosed((c) => new Set(c).add(n.id))
+    update((s) => {
+      const x = (s.notices || []).find((y) => y.id === n.id)
+      if (x) x.acks = { ...(x.acks || {}), [user.id]: new Date().toISOString() }
+      return s
+    })
+  }
   return (
     <Modal open title={n.title || 'Notice'} onClose={ack} footer={<Button variant="primary" onClick={ack}>Got it{pending.length > 1 ? ` (${pending.length - 1} more)` : ''}</Button>}>
       <div className="notice-pop">
