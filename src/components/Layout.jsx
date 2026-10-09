@@ -19,29 +19,8 @@ function Logo({ name, subtitle, logo }) {
   )
 }
 
-const initialsOf = (name) => (name || '?').split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
 
-/* The bar across the top of a page in the app skins (Settings > Display > Theme, Alex 8 Oct): the
-   chat, with a dot when something is unread, and you, on the right. (Its search came out again,
-   Alex did not need it.) Hidden in Light and Dark and on a phone (styles.css). */
-function SkinBar({ unread }) {
-  const user = useCurrentUser()
-  const nav = useNavigate()
-  const photo = user?.profile?.thumb
-  return (
-    <div className="skin-bar">
-      <div className="skin-bar-right">
-        <button type="button" className="skin-ico" onClick={() => nav('/chat')} aria-label={unread ? `Chat, ${unread} unread` : 'Chat'} title="Chat">
-          {Icon.chat()}{unread > 0 && <i className="skin-dot" />}
-        </button>
-        <NavLink to="/me" className="skin-user">
-          <span className="skin-ava">{photo ? <img src={photo} alt="" /> : initialsOf(user?.name)}</span>
-          <span className="skin-user-text"><b>{user?.name}</b><small>{user?.email || user?.role}</small></span>
-        </NavLink>
-      </div>
-    </div>
-  )
-}
+/* The skins' bar across the top (chat and you) is gone (Alex, 9 Oct): both are in the sidebar. */
 
 export default function Layout() {
   const { state, logout, viewAs, setViewAs, replies, sessionId, update } = useStore()
@@ -212,7 +191,6 @@ export default function Layout() {
       {open && <div className="scrim" onClick={close} />}
 
       <main className="content">
-        <SkinBar unread={unread} />
         <Suspense fallback={null}>
           <Outlet />
         </Suspense>
