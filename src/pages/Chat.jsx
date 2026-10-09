@@ -512,6 +512,34 @@ function RoomList({ activeId, windowed }) {
     return () => window.removeEventListener('tml-chat-read', h)
   }, [])
   useEffect(() => { try { localStorage.setItem('tml_chat_folder', folderId) } catch {} }, [folderId])
+  // Phone: a tap on another folder slides the list over, left or right by where that folder sits
+  // (Alex, 9 Oct). The old list is copied into a frame that slides out while the new one slides in.
+  const roomsRef = useRef(null)
+  const [slide, setSlide] = useState('')
+  const pickFolder = (id) => {
+    if (id === folderId) return
+    const from = allFolders.findIndex((f) => f.id === folder.id)
+    const to = allFolders.findIndex((f) => f.id === id)
+    const dir = to > from ? 'next' : 'prev'
+    const el = roomsRef.current
+    const still = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (mobile && el && !still && el.parentNode) {
+      const frame = document.createElement('div')
+      frame.className = 'chat-rooms-ghost'
+      frame.setAttribute('aria-hidden', 'true')
+      const copy = el.cloneNode(true)
+      frame.appendChild(copy)
+      el.parentNode.appendChild(frame)
+      const at = el.getBoundingClientRect()
+      const here = frame.getBoundingClientRect()
+      Object.assign(frame.style, { top: `${at.top - here.top}px`, left: `${at.left - here.left}px`, width: `${at.width}px`, height: `${at.height}px` })
+      copy.scrollTop = el.scrollTop
+      copy.classList.add(dir === 'next' ? 'out-next' : 'out-prev')
+      setTimeout(() => frame.remove(), 320)
+      setSlide(dir)
+    }
+    setFolderId(id)
+  }
 
   const rooms = useMemo(() => C.roomsFor(state, user), [state.users, state.projects, state.chats, user])
   const unread = useMemo(() => C.unreadByRoom(state, user, readMap, rooms), [state.chat, rooms, readMap, user])
@@ -627,7 +655,7 @@ function RoomList({ activeId, windowed }) {
         {allFolders.map((f) => {
           const n = folderUnread(f)
           return (
-            <button key={f.id} type="button" role="tab" aria-selected={f.id === folder.id} className={f.id === folder.id ? 'on' : ''} onClick={() => setFolderId(f.id)}>
+            <button key={f.id} type="button" role="tab" aria-selected={f.id === folder.id} className={f.id === folder.id ? 'on' : ''} onClick={() => pickFolder(f.id)}>
               {f.name}{n > 0 && <span className="chat-fbadge">{n}</span>}
             </button>
           )
@@ -635,7 +663,7 @@ function RoomList({ activeId, windowed }) {
         <button type="button" className="chat-folders-edit" onClick={() => setFolders(true)} title="Your folders">Folders…</button>
       </div>
       <div className="chat-search"><input ref={searchRef} className="input" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') { setQ(''); e.currentTarget.blur() } }} placeholder={mobile ? 'Search' : 'Search (⌘K)'} name="chat-search" autoComplete="off" /></div>
-      <div className="chat-rooms">
+      <div ref={roomsRef} key={mobile ? folder.id : 'rooms'} className={`chat-rooms${mobile && slide ? ` in-${slide}` : ''}`} onAnimationEnd={() => setSlide('')}>
         {!shown.length && !hits.length && <p className="muted small chat-rooms-empty">{q.trim() ? 'Nothing found.' : folder.custom ? 'This folder is empty. Add conversations to it under Folders.' : 'Nothing here yet.'}</p>}
         {shown.map((r) => {
           const last = C.lastMessage(state.chat, r.id)
