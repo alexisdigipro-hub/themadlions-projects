@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct (13:38): TML Chat's bars reach the foot
+- Alex: "Super". Then the two bars a touch higher: the TML Chat dock's foot margin is now `max(12px, safe-area-bottom - 14px)` (about 20 px on the iPhone, was 12).
+
 ### 9 Oct (13:34, with ScreenInfo numbers): what the iPhone really does
 - ScreenInfo on Alex's iPhone (home-screen app): `screen 440×956 · inner 894 · fixed 894 · dvh 894 · vv 894 · safe 62px / 34px · gap 62px`. So every viewport measure is the screen minus the top safe area; the page still paints down to 956. #262's sizes are right: the app's tab bar now reaches the foot (its dark lower part is its own home-bar padding).
 - TML Chat still showed the band: the dock was `position: sticky`, and sticky holds to the short (894) viewport. Now in chat.html the list is exactly `var(--screen-h)` tall (`height`, not min-height), the conversations scroll inside it, and the dock is plain (`position: relative; bottom: auto`) at its foot.
