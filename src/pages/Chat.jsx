@@ -125,6 +125,71 @@ function useAttachmentUrl(a) {
 
 /* Line icons for the phone's chat, Telegram-like. */
 const svgProps = { viewBox: '0 0 24 24', width: 24, height: 24, fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
+/* A conversation on a phone slides left under the finger to show Mute / Delete / Archive behind it,
+   like Telegram (Alex, 9 Oct). Past half the actions it stays open; a tap anywhere else, or a slide
+   back, closes it. Only one row is open at a time (openId lives in the list). The row's own tap
+   still opens the conversation, unless the finger was sliding. */
+const SWIPE_W = 228
+function SwipeRow({ id, openId, setOpenId, actions, children }) {
+  const [dx, setDx] = useState(0)
+  const [drag, setDrag] = useState(false)
+  const t = useRef(null) // { x, y, base, dir }
+  const slid = useRef(false)
+  const open = openId === id
+  useEffect(() => { if (!open && !drag) setDx(0) }, [open, drag])
+  const start = (e) => {
+    const p = e.touches[0]
+    t.current = { x: p.clientX, y: p.clientY, base: open ? -SWIPE_W : 0, dir: '' }
+    slid.current = false
+  }
+  const move = (e) => {
+    const s = t.current
+    if (!s) return
+    const p = e.touches[0]
+    const mx = p.clientX - s.x
+    const my = p.clientY - s.y
+    if (!s.dir) {
+      if (Math.abs(mx) < 8 && Math.abs(my) < 8) return
+      s.dir = Math.abs(mx) > Math.abs(my) ? 'x' : 'y'
+      if (s.dir === 'x') { setDrag(true); slid.current = true; if (openId && !open) setOpenId(null) }
+    }
+    if (s.dir !== 'x') return
+    setDx(Math.max(-SWIPE_W - 30, Math.min(0, s.base + mx)))
+  }
+  const end = () => {
+    const s = t.current
+    t.current = null
+    if (!s || s.dir !== 'x') return
+    setDrag(false)
+    const stay = dx < -SWIPE_W / 2
+    setDx(stay ? -SWIPE_W : 0)
+    setOpenId(stay ? id : null)
+  }
+  // a slide is not a tap; and while another row is open, a tap only closes it
+  const clickCapture = (e) => {
+    if (slid.current || (openId && !e.target.closest('.chat-swipe-acts'))) {
+      e.preventDefault()
+      e.stopPropagation()
+      slid.current = false
+      if (openId) setOpenId(null)
+    }
+  }
+  return (
+    <div className={`chat-swipe${drag ? ' dragging' : ''}${open ? ' open' : ''}`} onTouchStart={start} onTouchMove={move} onTouchEnd={end} onTouchCancel={end} onClickCapture={clickCapture}>
+      {/* the actions fill exactly the room the row leaves, so nothing shows through a see-through row */}
+      <div className="chat-swipe-acts" style={{ width: Math.max(0, -dx) }} aria-hidden={!open}>
+        {actions.map((a) => (
+          <button key={a.label} type="button" className={`chat-swipe-act ${a.tone}`} tabIndex={open ? 0 : -1} onClick={() => { setOpenId(null); a.run() }}>
+            <span className="chat-swipe-ico">{a.icon}</span>
+            <span>{a.label}</span>
+          </button>
+        ))}
+      </div>
+      <div className="chat-swipe-row" style={{ transform: dx ? `translateX(${dx}px)` : undefined }}>{children}</div>
+    </div>
+  )
+}
+
 const TgIcon = {
   back: () => <svg {...svgProps}><path d="M15 5l-7 7 7 7" /></svg>,
   phone: () => <svg {...svgProps}><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z" /></svg>,
@@ -621,6 +686,34 @@ function RoomList({ activeId, windowed }) {
     writeProfile((p) => ({ ...p, chatFolders: (Array.isArray(p.chatFolders) ? p.chatFolders : []).map((x) => (x.id === f.id ? { ...x, rooms: [...new Set([...(x.rooms || []), ...ids])] } : x)) }))
     toast(`${ids.length} added to ${f.name}`, 'ok'); endPick()
   }
+  // one conversation at a time, from its row slid left on a phone (SwipeRow)
+  const [swipeOpen, setSwipeOpen] = useState(null)
+  const [mutedRooms, setMutedRooms] = useState(() => loadMuted())
+  useEffect(() => {
+    const on = () => setMutedRooms(loadMuted())
+    window.addEventListener('tml-chat-prefs', on)
+    return () => window.removeEventListener('tml-chat-prefs', on)
+  }, [])
+  const muteOne = (r) => {
+    const next = toggleMuted(r.id)
+    setMutedRooms(next)
+    toast(next.includes(r.id) ? `${r.name} muted` : `${r.name} unmuted`, 'ok')
+  }
+  const archiveOne = (r) => {
+    writeProfile((p) => {
+      const cur = new Set(Array.isArray(p.chatArchived) ? p.chatArchived : [])
+      if (r.archived) cur.delete(r.id)
+      else cur.add(r.id)
+      return { ...p, chatArchived: [...cur] }
+    })
+    toast(r.archived ? `${r.name} back from Archived` : `${r.name} moved to Archived`, 'ok')
+  }
+  const deleteOne = (r) => {
+    if (!confirm(`Delete "${r.name}" from your list? Nothing is deleted for the others, and a new message brings it back.`)) return
+    const now = new Date().toISOString()
+    writeProfile((p) => ({ ...p, chatHidden: { ...(p.chatHidden || {}), [r.id]: now } }))
+    toast(`${r.name} deleted from your list`, 'ok')
+  }
   const bulkDelete = () => {
     if (!confirm(`Delete ${pickedRooms.length} conversation${pickedRooms.length === 1 ? '' : 's'} from your list? Nothing is deleted for the others, and a new message brings it back.`)) return
     const now = new Date().toISOString()
@@ -730,16 +823,26 @@ function RoomList({ activeId, windowed }) {
           // category, a group its member count, a person their position
           const preview = r.kind === 'team' ? '' : r.sub
           const n = unread[r.id] || 0
-          return (
+          const row = (
             <button key={r.id} type="button" className={`chat-room-item ${r.id === activeId ? 'active' : ''}${picking ? ' picking' : ''}${picked.includes(r.id) ? ' picked' : ''}`} onClick={() => (picking ? togglePick(r.id) : nav(roomPath(base, r.id)))} disabled={legacy && r.kind !== 'team'}>
               {picking && <span className="tg-check" aria-hidden="true" />}
               <RoomAvatar room={r} size={mobile ? 54 : 48} />
               <span className="chat-rmain">
-                <span className="chat-rtop"><strong>{r.name}</strong><small>{listTime(last?.createdAt)}</small></span>
+                <span className="chat-rtop"><strong>{r.name}{mobile && mutedRooms.includes(r.id) && <span className="chat-rmuted" title="Muted" aria-label="Muted"> 🔕</span>}</strong><small>{listTime(last?.createdAt)}</small></span>
                 {(preview || n > 0) && <span className="chat-rbottom"><span className="chat-rprev">{preview}</span>{n > 0 && <span className="chat-rbadge">{n}</span>}</span>}
                 {prefs.folderTags && <span className="chat-rtags">{folderTagsOf(r).map((t) => <span key={t} className="chat-rtag">{t}</span>)}</span>}
               </span>
             </button>
+          )
+          // on a phone (not while picking) the row slides left for Mute / Delete / Archive
+          if (!mobile || picking || legacy) return row
+          const isMuted = mutedRooms.includes(r.id)
+          return (
+            <SwipeRow key={r.id} id={r.id} openId={swipeOpen} setOpenId={setSwipeOpen} actions={[
+              { label: isMuted ? 'Unmute' : 'Mute', tone: 'mute', icon: TgIcon.bell(), run: () => muteOne(r) },
+              { label: 'Delete', tone: 'del', icon: TgIcon.trash(), run: () => deleteOne(r) },
+              { label: r.archived ? 'Unarchive' : 'Archive', tone: 'arch', icon: TgIcon.folder(), run: () => archiveOne(r) },
+            ]}>{row}</SwipeRow>
           )
         })}
         {hits.length > 0 && (
