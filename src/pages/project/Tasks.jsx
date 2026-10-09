@@ -131,6 +131,7 @@ export function TaskList({ tasks, onEdit, onStatus, onDelete, editable, showProj
               <div className="task-meta muted small">
                 {showProject && (projectsById?.[t.projectId] ? <span className="task-proj" style={{ '--pc': projectsById[t.projectId].color }}>{projectsById[t.projectId].title}</span> : <span className="task-proj" style={{ '--pc': 'var(--muted)' }}>General</span>)}
                 <span>{t.dept}</span>
+                {subCount(t).all > 0 && <span>☑ {subCount(t).done}/{subCount(t).all}</span>}
                 {t.assignee && <span>{t.assignee}</span>}
                 {t.due && <span className={late ? 'late' : ''}>{late ? 'Overdue · ' : 'Due '}{fmtDate(t.due)}</span>}
                 {t.notes && <span className="task-notes">{t.notes}</span>}
@@ -156,6 +157,39 @@ export function TaskList({ tasks, onEdit, onStatus, onDelete, editable, showProj
 /* Two separate fields (Alex, 9 Oct): List, the administrators' lists (departments) a task can sit on,
    shown wherever such lists exist; and Project, the project it is linked to, offered on the Tasks
    page (`projects`). A project's own Tasks tab passes no projects: its tasks are that project's. */
+/* Tasks inside a task (Alex, 9 Oct): task.subtasks = [{ id, title, done }], a checklist edited in
+   the task form and ticked straight from the Tasks page. They are steps of the task, so they share
+   its assignee, list and project; the task itself is still ticked on its own. */
+export const subCount = (t) => {
+  const s = Array.isArray(t?.subtasks) ? t.subtasks : []
+  return { done: s.filter((x) => x.done).length, all: s.length }
+}
+function Subtasks({ items, onChange }) {
+  const [text, setText] = useState('')
+  const add = () => {
+    const title = text.trim()
+    if (!title) return
+    onChange([...items, { id: uid(), title, done: false }])
+    setText('')
+  }
+  const patch = (id, v) => onChange(items.map((x) => (x.id === id ? { ...x, ...v } : x)))
+  return (
+    <div className="field">
+      <span className="field-label">Subtasks{items.length ? ` · ${items.filter((x) => x.done).length}/${items.length}` : ''}</span>
+      <div className="subtasks">
+        {items.map((x) => (
+          <div key={x.id} className={`subtask${x.done ? ' done' : ''}`}>
+            <input type="checkbox" checked={!!x.done} onChange={(e) => patch(x.id, { done: e.target.checked })} aria-label="Done" />
+            <input className="subtask-title" value={x.title} onChange={(e) => patch(x.id, { title: e.target.value })} />
+            <button type="button" className="link danger" onClick={() => onChange(items.filter((y) => y.id !== x.id))} aria-label="Remove subtask">×</button>
+          </div>
+        ))}
+        <input className="input subtask-new" value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add() } }} onBlur={add} placeholder="+ Add a subtask, then Enter" />
+      </div>
+    </div>
+  )
+}
+
 export function TaskModal({ draft, setDraft, onSave, onClose, projects }) {
   const { state } = useStore()
   const TASK_DEPTS = [...new Set([...departmentsOf(state), 'Legal'])]
@@ -189,6 +223,7 @@ export function TaskModal({ draft, setDraft, onSave, onClose, projects }) {
     >
       <div className="task-form">
         <Field label="Task"><Input autoFocus value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder="Lock the rooftop permit" /></Field>
+        <Subtasks items={Array.isArray(draft.subtasks) ? draft.subtasks : []} onChange={(v) => set('subtasks', v)} />
         {(projects || ownLists.length > 0) && (
           <div className="row-2">
             {projects && <Field label="Project"><Select value={draft.projectId || ''} onChange={(e) => set('projectId', e.target.value)} options={[['', 'No project'], ...projects.map((p) => [p.id, p.title])]} /></Field>}

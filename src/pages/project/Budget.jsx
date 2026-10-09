@@ -4,7 +4,7 @@ import { useProject } from '../Project.jsx'
 import { uid } from '../../lib/store.jsx'
 import { fmtDate } from '../../lib/dates.js'
 import { projectWorkDate } from '../../components/WorkLog.jsx'
-import { useCurrentUser, useStore } from '../../lib/store.jsx'
+import { can, useCurrentUser, useStore } from '../../lib/store.jsx'
 import PaymentModal, { BulkPaymentModal } from '../../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, lineTotal, lineVat, linePaid, syncLineWorklog, dropLineWorklog } from '../../lib/budget.js'
 import { groupPairs } from '../../lib/budgetCats.js'
@@ -83,7 +83,64 @@ function BudgetCard({ cap, total, spent, editable, onCap }) {
   )
 }
 
+/* Who sees what on a project's Budget (Alex, 9 Oct):
+   - administrators: everything, as before;
+   - a teammate with Budget (view or edit): the lines, Add line and Add receipt, but no totals (no
+     Budget card, no Total) and no fees: a line paying a team member (a receipt's refund aside) or
+     this project's cast or crew is not shown. With edit they can also change and delete the lines
+     they see;
+   - a teammate without Budget: the tab reads "Add Receipt" (Project.jsx) and holds only that, plus
+     the receipts they added themselves.
+   It decides what the page shows, not what is sent: the budget travels inside the project. */
+export const isFee = (l) => (!!l.memberId && !l.reimburse) || !!l.contactId
+
 export default function Budget() {
+  const me = useCurrentUser()
+  return can(me, 'budget') ? <BudgetPage /> : <ReceiptsOnly />
+}
+
+/* The Budget tab of someone without Budget: Add receipt, and the receipts they added here */
+function ReceiptsOnly() {
+  const { project } = useProject()
+  const { state } = useStore()
+  const me = useCurrentUser()
+  const [adding, setAdding] = useState(false)
+  const [view, setView] = useState(null)
+  const groups = useMemo(() => groupPairs(state.settings, project.budget?.lines || []), [state.settings, project.budget])
+  const mine = (project.budget?.lines || []).filter((l) => l.receipt && l.receipt.addedBy === me?.id).sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
+  return (
+    <div className="budget">
+      <section className="panel receipts-only">
+        <div className="grow">
+          <h3>Add a receipt</h3>
+          <p className="muted small">Paid for something on {project.title}? Photograph the receipt and it goes into the project's expenses.</p>
+        </div>
+        <Button variant="primary" onClick={() => setAdding(true)}>🧾 Add receipt</Button>
+      </section>
+      {mine.length > 0 && (
+        <section className="panel">
+          <h3>Your receipts</h3>
+          <table className="table">
+            <tbody>
+              {mine.map((l) => (
+                <tr key={l.id}>
+                  <td className="muted small">{l.date ? fmtDate(l.date) : ''}</td>
+                  <td>{l.description}{l.reimburse && <span className="receipt-refund">refund</span>}</td>
+                  <td className="num">{money(lineTotal(l))}</td>
+                  <td className="row-actions"><button type="button" className="receipt-chip" onClick={() => setView(l.receipt)}>🧾<span>Receipt</span></button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+      {adding && <ReceiptModal project={project} groups={groups} onClose={() => setAdding(false)} />}
+      {view && <ReceiptView receipt={view} onClose={() => setView(null)} />}
+    </div>
+  )
+}
+
+function BudgetPage() {
   const { project, edit, canEdit } = useProject()
   const { state, update } = useStore()
   const me = useCurrentUser()
@@ -97,6 +154,9 @@ export default function Budget() {
   const contactKind = (id) => (project.contacts || []).find((c) => c.id === id)?.kind
   const toast = useToast()
   const editable = canEdit('budget')
+  const admin = me?.role === 'admin'
+  // Budget view is enough to add a line or a receipt; changing and deleting lines needs edit
+  const canAdd = editable || (can(me, 'budget') && !project.frozen)
   const budget = project.budget || { lines: [] }
   const [draft, setDraft] = useState(null)
   const [pay, setPay] = useState(null) // line
@@ -126,22 +186,30 @@ export default function Budget() {
     [BUDGET_GROUPS, budget.lines],
   )
   const rows = budget.ordered ? budget.lines : sorted
-  const byId = useMemo(() => Object.fromEntries(rows.map((l) => [l.id, l])), [rows])
+  // fees stay with the administrators
+  const shown = useMemo(() => (admin ? rows : rows.filter((l) => !isFee(l))), [admin, rows])
+  const byId = useMemo(() => Object.fromEntries(shown.map((l) => [l.id, l])), [shown])
   const { order, dragId, rowRef, bind } = useDragOrder(
-    rows.map((l) => l.id),
+    shown.map((l) => l.id),
     (next) => edit((p) => {
       p.budget = p.budget || { lines: [] }
-      p.budget.lines = next.map((id) => p.budget.lines.find((l) => l.id === id)).filter(Boolean)
+      // the lines this person cannot see keep their places, the ones they moved fill the rest
+      const vis = new Set(next)
+      let k = 0
+      const ids = rows.map((l) => (vis.has(l.id) ? next[k++] : l.id))
+      p.budget.lines = ids.map((id) => p.budget.lines.find((l) => l.id === id)).filter(Boolean)
       p.budget.ordered = true
     }),
   )
   const t = budgetTotals(project)
 
+  // whom a line can pay: a teammate is a fee, so only an administrator picks one (a refund line keeps its own)
+  const payTeam = admin ? team : team.filter((u) => u.id === draft?.memberId)
   const save = () => {
     // Alex: crew lines rarely need a description beyond their category, props and gear do. Empty = the category.
     const description = (draft.description || '').trim() || draft.category
     if (!description) return toast('Pick a category or describe the line.', 'error')
-    if (budget.cap) {
+    if (admin && budget.cap) {
       const others = budget.lines.filter((l) => l.id !== draft.id).reduce((a, l) => a + lineTotal(l), 0)
       const newTotal = others + lineTotal(draft)
       if (newTotal > Number(budget.cap) && t.total <= Number(budget.cap)) toast(`Careful: this line takes the budget ${money(newTotal - Number(budget.cap), cur)} over the cap.`, 'error')
@@ -186,7 +254,7 @@ export default function Budget() {
   })
   return (
     <div className="budget">
-      {editable && (
+      {canAdd && (
         <div className="toolbar no-print">
           <div className="toolbar-actions">
             <Button variant="primary" onClick={() => setDraft({ ...emptyLine(), category: CATEGORIES.includes('Camera') ? 'Camera' : CATEGORIES[0] || '' })}>Add line</Button>
@@ -195,9 +263,9 @@ export default function Budget() {
         </div>
       )}
 
-      {(editable || budget.cap) && <BudgetCard cap={Number(budget.cap) || 0} total={t.total} spent={t.act} editable={editable} onCap={setCap} />}
+      {admin && (editable || budget.cap) && <BudgetCard cap={Number(budget.cap) || 0} total={t.total} spent={t.act} editable={editable} onCap={setCap} />}
 
-      {!budget.lines.length ? (
+      {!shown.length ? (
         <Empty title="No budget lines yet">Start with the big blocks: crew, camera and lighting packages, locations, post. One amount per line.</Empty>
       ) : (
         <article className="sheet topsheet">
@@ -205,15 +273,15 @@ export default function Budget() {
             <div>
               <div className="sheet-brand">{project.producer || 'THEMADLIONS'}</div>
               <h1>{project.title}</h1>
-              <div className="muted">Budget top sheet · {project.category}{budget.cap ? ` · client budget ${money(budget.cap, cur)}` : ''}</div>
+              <div className="muted">Budget top sheet · {project.category}{admin && budget.cap ? ` · client budget ${money(budget.cap, cur)}` : ''}</div>
             </div>
-            <div className="sheet-call">
+            {admin && <div className="sheet-call">
               <div className="sheet-call-label">Total</div>
               <div className="sheet-call-time">{money(t.total, cur)}</div>
               {budget.cap ? (
                 <div className={t.total > budget.cap ? 'over' : 'under'}>{t.total > budget.cap ? `${money(t.total - budget.cap, cur)} over cap` : `${money(budget.cap - t.total, cur)} under cap`}</div>
               ) : null}
-            </div>
+            </div>}
           </header>
 
           <table className="table budget-table">
@@ -257,11 +325,11 @@ export default function Budget() {
             </tbody>
           </table>
 
-          <table className="table budget-totals">
+          {admin && <table className="table budget-totals">
             <tbody>
               <tr className="grand"><td>Total</td><td className="num">{money(t.total, cur)}</td><td className="num">{t.act ? <span className={t.act > t.total ? 'over' : 'muted'}>{money(t.act, cur)} paid</span> : ''}</td></tr>
             </tbody>
-          </table>
+          </table>}
         </article>
       )}
 
@@ -322,9 +390,9 @@ export default function Budget() {
                 }}
               >
                 <option value="">Someone outside the team</option>
-                <optgroup label="Team">{team.map((u) => <option key={u.id} value={`member:${u.id}`}>{teamLabel(u)}</option>)}</optgroup>
-                {!!cast.length && <optgroup label="Cast">{cast.map((c) => <option key={c.id} value={`contact:${c.id}`}>{contactLabel(c)}</option>)}</optgroup>}
-                {!!crew.length && <optgroup label="Crew">{crew.map((c) => <option key={c.id} value={`contact:${c.id}`}>{contactLabel(c)}</option>)}</optgroup>}
+                {payTeam.length > 0 && <optgroup label="Team">{payTeam.map((u) => <option key={u.id} value={`member:${u.id}`}>{teamLabel(u)}</option>)}</optgroup>}
+                {admin && !!cast.length && <optgroup label="Cast">{cast.map((c) => <option key={c.id} value={`contact:${c.id}`}>{contactLabel(c)}</option>)}</optgroup>}
+                {admin && !!crew.length && <optgroup label="Crew">{crew.map((c) => <option key={c.id} value={`contact:${c.id}`}>{contactLabel(c)}</option>)}</optgroup>}
                 {!!locations.length && <optgroup label="Locations">{locations.map((l) => <option key={l.id} value={`location:${l.id}`}>{locationLabel(l)}</option>)}</optgroup>}
               </Select>
             </Field>

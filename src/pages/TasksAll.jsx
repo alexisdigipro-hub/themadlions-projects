@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Field, Input, Modal, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
-import { TaskModal, binTask, emptyTask, statusColor, taskStatuses, tasksFor, visibleTasks } from './project/Tasks.jsx'
+import { TaskModal, binTask, emptyTask, statusColor, subCount, taskStatuses, tasksFor, visibleTasks } from './project/Tasks.jsx'
 import { sendAutoNotice, userByName } from '../components/Notices.jsx'
 import { fmtDate } from '../lib/dates.js'
 
@@ -323,6 +323,10 @@ export default function TasksAll() {
      mouse and with a finger; within one group of the list only. On release every task of that group
      gets its place (order) saved, which every view then follows. */
   const [drag, setDrag] = useState(null) // { id, ids, over, after }
+  // tasks whose subtasks are folded open under them
+  const [openSubs, setOpenSubs] = useState(() => new Set())
+  const flipSubs = (id) => setOpenSubs((o) => { const n = new Set(o); if (n.has(id)) n.delete(id); else n.add(id); return n })
+  const tickSub = (t, sid) => persist(t, (x) => { x.subtasks = (x.subtasks || []).map((y) => (y.id === sid ? { ...y, done: !y.done } : y)) })
   const startDrag = (e, t, ids) => {
     if (!editable || e.button > 0) return
     e.preventDefault()
@@ -375,11 +379,22 @@ export default function TasksAll() {
           <div className="rem-task-meta">
             {(current.smart || searching || from?.key !== current.key) && from && <span>{from.icon} {from.name}</span>}
             {proj && <span>🎬 {proj.title}</span>}
+            {subCount(t).all > 0 && <button type="button" className={`rem-subs-btn${openSubs.has(t.id) ? ' on' : ''}`} onClick={(e) => { e.stopPropagation(); flipSubs(t.id) }} title={openSubs.has(t.id) ? 'Hide subtasks' : 'Show subtasks'}>☑ {subCount(t).done}/{subCount(t).all} <span aria-hidden="true">▾</span></button>}
             {t.due && <span className={late ? 'late' : t.due === t0 ? 'today' : 'due'}>🗓 {t.due === t0 ? 'Today' : late ? `Overdue, ${fmtDate(t.due)}` : fmtDate(t.due)}</span>}
             {t.assignee && <span>👤 {t.assignee}</span>}
             {t.notes && <span className="rem-has-notes" title={t.notes}>📝 Note</span>}
             {t.deletedAt && <span>🗑 Deleted {fmtDate(t.deletedAt.slice(0, 10))}{t.deletedBy ? ` by ${t.deletedBy}` : ''}</span>}
           </div>
+          {openSubs.has(t.id) && subCount(t).all > 0 && (
+            <ul className="rem-subs" onClick={(e) => e.stopPropagation()}>
+              {t.subtasks.map((x) => (
+                <li key={x.id} className={x.done ? 'done' : ''}>
+                  <button type="button" className="rem-check sm" aria-label={x.done ? 'Mark as not done' : 'Mark as done'} disabled={!editable || !!t.deletedAt} onClick={() => tickSub(t, x.id)} />
+                  <span>{x.title}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         {!t.deletedAt && (editable ? (
           <select className="rem-status" style={{ '--sc': statusColor(statusOf(t)) }} value={statusOf(t).id} onChange={(e) => setStatus(t, e.target.value)} aria-label="Status" title="Status">
