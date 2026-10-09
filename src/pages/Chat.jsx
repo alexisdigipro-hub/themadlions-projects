@@ -999,8 +999,11 @@ function ChatRoom({ room, onBack }) {
   const isAdmin = user?.role === 'admin'
   const nav = useNavigate()
   const calls = useCalls()
-  // calls: one to one only, and only with the app connected to the database
-  const canCall = remote && room.kind === 'direct' && !!room.otherId && room.otherId !== user?.id
+  // calls with the app connected to the database: one to one, or a group call in any other room
+  // (lib/calls.jsx); a group call already going on here shows a bar to Join it
+  const canCall = remote && (room.kind === 'direct' ? !!room.otherId && room.otherId !== user?.id : true)
+  const liveCall = room.kind !== 'direct' ? calls.live?.[room.id] : null
+  const liveOthers = liveCall ? liveCall.inCall.filter((x) => x !== user?.id).length : 0
   const roomId = room.id
   const prefs = useChatPrefs()
   const msgs = useMemo(() => C.messagesIn(state.chat, roomId), [state.chat, roomId])
@@ -1389,8 +1392,8 @@ function ChatRoom({ room, onBack }) {
         {room.kind === 'project' && isAdmin && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditMembers(true)} aria-label="Members" title="Members">{TgIcon.people()}</button>}
         {room.kind === 'project' && <Link className="icon-btn chat-head-ico" to={`/p/${room.projectId}`} aria-label="Open project" title="Open project">{TgIcon.project()}</Link>}
         {/* calls, Telegram's: a voice call and a video call with the other person (lib/calls.jsx) */}
-        {canCall && <button type="button" className="icon-btn chat-head-ico chat-call" onClick={() => calls.start(room, false)} disabled={calls.busy} aria-label="Voice call" title="Voice call">{TgIcon.phone()}</button>}
-        {canCall && <button type="button" className="icon-btn chat-head-ico chat-call" onClick={() => calls.start(room, true)} disabled={calls.busy} aria-label="Video call" title="Video call">{TgIcon.video()}</button>}
+        {canCall && <button type="button" className="icon-btn chat-head-ico chat-call" onClick={() => calls.start(room, false)} disabled={calls.busy} aria-label={room.kind === 'direct' ? 'Voice call' : 'Group voice call'} title={room.kind === 'direct' ? 'Voice call' : 'Group voice call'}>{TgIcon.phone()}</button>}
+        {canCall && <button type="button" className="icon-btn chat-head-ico chat-call" onClick={() => calls.start(room, true)} disabled={calls.busy} aria-label={room.kind === 'direct' ? 'Video call' : 'Group video call'} title={room.kind === 'direct' ? 'Video call' : 'Group video call'}>{TgIcon.video()}</button>}
         {room.kind === 'direct' && room.otherId && !mobile && <Link className="icon-btn chat-head-ico" to={`/u/${room.otherId}`} aria-label="Profile" title="Profile">{TgIcon.person()}</Link>}
         {room.kind === 'group' && isAdmin && groupRow && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditGroup(true)} aria-label="Edit group" title="Edit group">{TgIcon.people()}</button>}
         {!mobile && <button type="button" className="icon-btn chat-head-ico" onClick={() => { setFind(''); setFindAt(0) }} aria-label="Search in this conversation" title="Search in this conversation">{TgIcon.search()}</button>}
@@ -1410,6 +1413,13 @@ function ChatRoom({ room, onBack }) {
           )}
         </span>
       </div>
+      {canCall && liveOthers > 0 && calls.inCall !== room.id && (
+        <button type="button" className="chat-livecall" onClick={() => calls.start(room, liveCall.video)} disabled={calls.busy}>
+          <span className="chat-livecall-dot" aria-hidden="true" />
+          <span className="grow">{liveCall.video ? 'Group video call' : 'Group voice call'} · {liveOthers} in it</span>
+          <b>Join</b>
+        </button>
+      )}
       {find !== null && (
         <div className="chat-findbar">
           {TgIcon.search()}
