@@ -46,6 +46,17 @@ const SMART = [
 const firstList = () => { try { const k = localStorage.getItem('tml_tasks_list'); return !k || k === 'today' || k === 'urgent' || k === 'general' || k.startsWith('p:') ? 'mine' : k } catch { return 'mine' } }
 const GENERAL = 'general'
 
+/* A pill that is also a picker: the label shows at its own width and a see-through select lies over
+   it (a bare select is as wide as its longest option, so every pill came out the same width) */
+function PickPill({ className = '', style, label, value, onChange, title, children }) {
+  return (
+    <label className={`rem-status rem-pick ${className}`} style={style} title={title}>
+      <span className="rem-pick-label">{label}</span>
+      <select value={value} onChange={onChange} aria-label={title}>{children}</select>
+    </label>
+  )
+}
+
 export default function TasksAll() {
   const { state, updateProject, update } = useStore()
   const user = useCurrentUser()
@@ -331,6 +342,14 @@ export default function TasksAll() {
   const addSub = (t, title) => persist(t, (x) => { x.subtasks = [...(x.subtasks || []), { id: uid(), title, done: false }] })
   const dropSub = (t, sid) => persist(t, (x) => { x.subtasks = (x.subtasks || []).filter((y) => y.id !== sid) })
   const canSub = (t) => editable && !t.deletedAt
+  // the list and the person as pills on the right, next to the status, each its own picker (Alex, 9 Oct)
+  const team = (state.users || []).filter((u) => u.active !== false && u.name).sort((a, b) => a.name.localeCompare(b.name, ['el', 'en'], { sensitivity: 'base' }))
+  const setList = (t, id) => persist(t, (x) => { if (id) x.listId = id; else delete x.listId })
+  const setAssignee = (t, name) => {
+    const who = team.find((u) => u.name === name)
+    notify({ ...t, assignee: name }, t)
+    persist(t, (x) => { x.assignee = name; x.assigneeId = who?.id || '' })
+  }
   const startDrag = (e, t, ids) => {
     if (!editable || e.button > 0) return
     e.preventDefault()
@@ -381,12 +400,10 @@ export default function TasksAll() {
             {t.title}
           </div>
           <div className="rem-task-meta">
-            {(current.smart || searching || from?.key !== current.key) && from && <span>{from.icon} {from.name}</span>}
             {proj && <span>🎬 {proj.title}</span>}
             {subCount(t).all > 0 ? <button type="button" className={`rem-subs-btn${openSubs.has(t.id) ? ' on' : ''}`} onClick={(e) => { e.stopPropagation(); flipSubs(t.id) }} title={openSubs.has(t.id) ? 'Hide subtasks' : 'Show subtasks'}>☑ {subCount(t).done}/{subCount(t).all} <span aria-hidden="true">▾</span></button>
               : canSub(t) && t.status !== 'done' && !openSubs.has(t.id) && <button type="button" className="rem-subs-btn rem-subs-new" onClick={(e) => { e.stopPropagation(); flipSubs(t.id) }} title="Add a subtask">＋ Subtask</button>}
             {t.due && <span className={late ? 'late' : t.due === t0 ? 'today' : 'due'}>🗓 {t.due === t0 ? 'Today' : late ? `Overdue, ${fmtDate(t.due)}` : fmtDate(t.due)}</span>}
-            {t.assignee && <span>👤 {t.assignee}</span>}
             {t.notes && <span className="rem-has-notes" title={t.notes}>📝 Note</span>}
             {t.deletedAt && <span>🗑 Deleted {fmtDate(t.deletedAt.slice(0, 10))}{t.deletedBy ? ` by ${t.deletedBy}` : ''}</span>}
           </div>
@@ -414,11 +431,28 @@ export default function TasksAll() {
             </ul>
           )}
         </div>
-        {!t.deletedAt && (editable ? (
-          <select className="rem-status" style={{ '--sc': statusColor(statusOf(t)) }} value={statusOf(t).id} onChange={(e) => setStatus(t, e.target.value)} aria-label="Status" title="Status">
-            {statuses.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
-          </select>
-        ) : <span className="rem-status" style={{ '--sc': statusColor(statusOf(t)) }}>{statusOf(t).label}</span>)}
+        {!t.deletedAt && (
+          <div className="rem-pills">
+            {editable ? (
+              <PickPill className={`rem-pill-list${from ? '' : ' unset'}`} style={{ '--sc': from?.color || 'var(--muted)' }} label={from ? `${from.icon ? `${from.icon} ` : ''}${from.name}` : 'No list'} value={from?.id || ''} onChange={(e) => setList(t, e.target.value)} title="List">
+                <option value="">No list</option>
+                {custom.map((l) => <option key={l.id} value={l.id}>{l.icon ? `${l.icon} ` : ''}{l.name}</option>)}
+              </PickPill>
+            ) : from && <span className="rem-status rem-pill-list" style={{ '--sc': from.color }}>{from.icon} {from.name}</span>}
+            {editable ? (
+              <PickPill className={`rem-pill-who${t.assignee ? '' : ' unset'}`} label={t.assignee ? `👤 ${t.assignee}` : 'Nobody yet'} value={t.assignee || ''} onChange={(e) => setAssignee(t, e.target.value)} title="Assigned to">
+                <option value="">Nobody yet</option>
+                {team.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
+                {t.assignee && !team.some((u) => u.name === t.assignee) && <option value={t.assignee}>{t.assignee}</option>}
+              </PickPill>
+            ) : t.assignee && <span className="rem-status rem-pill-who">👤 {t.assignee}</span>}
+            {editable ? (
+              <PickPill style={{ '--sc': statusColor(statusOf(t)) }} label={statusOf(t).label} value={statusOf(t).id} onChange={(e) => setStatus(t, e.target.value)} title="Status">
+                {statuses.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+              </PickPill>
+            ) : <span className="rem-status" style={{ '--sc': statusColor(statusOf(t)) }}>{statusOf(t).label}</span>}
+          </div>
+        )}
         {t.deletedAt ? (editable && (
           <>
             <button type="button" className="rem-restore" onClick={() => restore(t)}>Restore</button>
