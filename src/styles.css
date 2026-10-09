@@ -5443,3 +5443,24 @@ html.chat-window, html.chat-window body { height: var(--screen-h, 100%); }
   /* no zoom on the top bar: a zoomed top bar may be drawn as a scaled picture, soft (12:29 … 13:52) */
   html[data-text-size]:not(.chat-window) .topbar { zoom: 1; }
 }
+
+/* Home: the categories and Delivered work like TML Chat's folders (Alex, 9 Oct). Dashboard.jsx glassTo
+   lifts a small glass lens off the chosen chip and slides it to the new one; while it travels the new
+   chip stays clear, then fades in under the lens as it melts. slideOut copies the old projects into
+   .home-slide-ghost, which slides out while the new ones slide in, left or right by where the chip sits. */
+.home-toolbar .chips { position: relative; }
+.home-toolbar .chips .chip { position: relative; z-index: 1; transition: background-color .22s ease, border-color .22s ease, color .22s ease; }
+.home-toolbar .chips[data-lens='cat'] .chip.on:not(.neg), .home-toolbar .chips[data-lens='neg'] .chip.neg.on { background: transparent; border-color: var(--line); color: var(--text); }
+.home-toolbar .glass-lens { position: absolute; top: 0; left: 0; z-index: 0; border-radius: 999px; pointer-events: none; background: linear-gradient(180deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .08)); border: 1px solid rgba(255, 255, 255, .4); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 -1px 0 rgba(255, 255, 255, .12), 0 6px 18px rgba(0, 0, 0, .22); -webkit-backdrop-filter: blur(4px) saturate(180%); backdrop-filter: blur(4px) saturate(180%); will-change: transform, width; }
+html[data-theme='light'] .home-toolbar .glass-lens { background: linear-gradient(180deg, rgba(255, 255, 255, .7), rgba(255, 255, 255, .35)); border-color: rgba(0, 0, 0, .08); box-shadow: inset 0 1px 0 #fff, 0 6px 18px rgba(0, 0, 0, .12); }
+.home-slide { position: relative; }
+.home-slide.sliding { overflow-x: clip; }
+.home-slide-ghost { position: absolute; top: 0; left: 0; right: 0; z-index: 1; pointer-events: none; }
+.home-slide-in.in-next { animation: chat-in-next .3s cubic-bezier(.2, .8, .2, 1) both; }
+.home-slide-in.in-prev { animation: chat-in-prev .3s cubic-bezier(.2, .8, .2, 1) both; }
+.home-slide-ghost.out-next { animation: chat-out-next .3s cubic-bezier(.2, .8, .2, 1) both; }
+.home-slide-ghost.out-prev { animation: chat-out-prev .3s cubic-bezier(.2, .8, .2, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .home-slide-in.in-next, .home-slide-in.in-prev { animation: none; }
+  .home-slide-ghost, .home-toolbar .glass-lens { display: none; }
+}
