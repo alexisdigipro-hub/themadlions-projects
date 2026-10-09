@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct: no black strip at the top, in the app too
+- index.html now also has `apple-mobile-web-app-status-bar-style` = black-translucent (chat.html had it since #253), so the home-screen app draws its own background behind the clock and battery. Phone padding by `env(safe-area-inset-top)` (last block of styles.css): `.topbar` (10 px + inset), `.viewas-bar`, the side menu `.sidebar`, `.modal` max height, `.lightbox`. The chat already had it (room header, photo viewer, calls). In a browser tab the inset is 0. iOS keeps the status bar style of the moment the icon was added: remove THEMADLIONS and TML Chat from the home screen and add them again.
+
 ### 9 Oct: the box to type in, Telegram for iPhone style (phones)
 - Phone only (app chat and TML Chat; desktop untouched): in a conversation a round 50 px glass paperclip, a 50 px glass pill reading **Message** with Telegram's sticker mark inside on its right (`TgIcon.sticker`, opens the emoji picker, 7 columns on a phone; the emoji button used to be computer only), and a round glass mic (or the accent send). Frosted fill, a fine light edge, a highlight along the top; icons in the text colour. Coral and Neo keep their own (their rules are more specific). CSS at the end of styles.css.
 

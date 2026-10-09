@@ -12,8 +12,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="THEMADLIONS" />
-    <!-- No status bar style on purpose: black-translucent would run the page under the clock, and the
-         top bar has no safe-area padding yet. Worth revisiting once it can be looked at on a phone. -->
+    <!-- The app's background runs up under the clock and the battery (Alex, 9 Oct), as in TML Chat:
+         black-translucent starts the page at the very top, and the phone's top bar, side menu, sheets
+         and the view-as strip pad themselves by env(safe-area-inset-top) (end of styles.css). -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
