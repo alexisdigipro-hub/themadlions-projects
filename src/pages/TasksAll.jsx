@@ -247,8 +247,43 @@ export default function TasksAll() {
   }
 
   const pick = (k) => { setSel(k); setQ(''); if (mobile) setScreen('list') }
+  /* An administrator drags a list by its ⋮⋮ to reorder the side column (Alex, 9 Oct): the order of
+     settings.taskLists, the same for everyone. Same pointer handling as the tasks. */
+  const [listDrag, setListDrag] = useState(null) // { id, over, after }
+  const startListDrag = (e, l) => {
+    if (e.button > 0) return
+    e.preventDefault()
+    e.stopPropagation()
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
+    setListDrag({ id: l.id, over: null, after: false })
+  }
+  const moveListDrag = (e) => {
+    if (!listDrag) return
+    const hit = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-list-id]')
+    const id = hit?.getAttribute('data-list-id')
+    if (!id) return
+    const r = hit.getBoundingClientRect()
+    const after = e.clientY > r.top + r.height / 2
+    if (id !== listDrag.over || after !== listDrag.after) setListDrag({ ...listDrag, over: id, after })
+  }
+  const endListDrag = () => {
+    const d = listDrag
+    setListDrag(null)
+    if (!d || !d.over || d.over === d.id) return
+    update((st) => {
+      const ls = [...(st.settings.taskLists || [])]
+      const moving = ls.find((x) => x.id === d.id)
+      if (!moving) return st
+      const rest = ls.filter((x) => x.id !== d.id)
+      const at = rest.findIndex((x) => x.id === d.over) + (d.after ? 1 : 0)
+      rest.splice(at, 0, moving)
+      st.settings = { ...st.settings, taskLists: rest }
+      return st
+    })
+  }
   const listRow = (l) => (
-    <button key={l.key} type="button" className={`rem-row rem-row-sub ${sel === l.key && !searching ? 'on' : ''}`} style={{ '--lc': l.color }} onClick={() => pick(l.key)}>
+    <button key={l.key} type="button" data-list-id={l.id} className={`rem-row rem-row-sub ${sel === l.key && !searching ? 'on' : ''}${listDrag?.id === l.id ? ' dragging' : ''}${listDrag?.over === l.id && listDrag.id !== l.id ? (listDrag.after ? ' drop-after' : ' drop-before') : ''}`} style={{ '--lc': l.color }} onClick={() => pick(l.key)}>
+      {admin && ownLists.length > 1 && <span className="rem-grip" role="button" aria-label="Drag to reorder" title="Drag to reorder" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => startListDrag(e, l)} onPointerMove={moveListDrag} onPointerUp={endListDrag} onPointerCancel={() => setListDrag(null)}>⋮⋮</span>}
       <span className="rem-row-emoji">{l.icon}</span>
       <span className="grow">{l.name}</span>
       {shared(l.key) && <span className="rem-shared" title="Others have tasks on this list">👥</span>}
