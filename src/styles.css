@@ -5528,3 +5528,10 @@ html[data-theme='light'] .glass-lens, html[data-skin='coral'] .glass-lens { back
 .rem-task.drop-before::before { top: -7px; }
 .rem-task.drop-after::after { bottom: -7px; }
 @media (max-width: 820px) { .rem-grip { opacity: .7; width: 22px; font-size: 16px; } }
+/* the same ⋮⋮ on the lists of the Tasks side column (administrators) */
+.rem-row { position: relative; }
+.rem-row:hover .rem-grip { opacity: 1; }
+.rem-row.dragging { opacity: .45; }
+.rem-row.drop-before::before, .rem-row.drop-after::after { content: ''; position: absolute; left: 8px; right: 8px; height: 3px; border-radius: 3px; background: var(--accent); pointer-events: none; }
+.rem-row.drop-before::before { top: -2px; }
+.rem-row.drop-after::after { bottom: -2px; }
