@@ -101,6 +101,16 @@ export default function Script() {
   // Alex, same as the Overview: with no script at all the card would only be a frame around a
   // line saying so, so it is the two buttons instead and the card arrives with the text.
   const bare = !project.script.text && !editing && !versions.length
+  /* The song map (lyrics, timed sections, Whisper's Lyrics from audio) lives here: a music
+     video's "script" is the song, so it belongs next to the treatment text. The simple
+     upload-and-listen player for the same track is on Overview. It shows whether or not there is
+     a script: a music video usually has none, and the bare page used to hide the song map with it
+     (Alex, 9 Oct: "Lyrics from audio is gone"). */
+  const songMap = project.category === 'Music Video' && can(user, 'music') && (project.music?.tracks || []).length > 0 && (
+    <section className="panel">
+      <Music />
+    </section>
+  )
   if (bare) {
     return (
       <div className="script-page">
@@ -111,6 +121,7 @@ export default function Script() {
             <Button variant="ghost" onClick={() => setEditing(true)}>Paste text</Button>
           </div>
         )}
+        {songMap}
       </div>
     )
   }
@@ -244,14 +255,7 @@ export default function Script() {
         </section>
       )}
 
-      {/* The song map (lyrics, timed sections, Whisper transcription) lives here now — a music
-          video's "script" is the song, so it belongs next to the treatment text above. The simple
-          upload-and-listen player for the same track is on Overview. */}
-      {project.category === 'Music Video' && can(user, 'music') && (project.music?.tracks || []).length > 0 && (
-        <section className="panel">
-          <Music />
-        </section>
-      )}
+      {songMap}
 
       {/* new revision confirmation */}
       <Modal
