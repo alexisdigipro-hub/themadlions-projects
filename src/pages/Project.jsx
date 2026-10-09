@@ -64,14 +64,13 @@ export default function Project() {
   // The full list lives in src/lib/tabs.js. Two filters: what this person may see, then what
   // this project chose to show (Edit details > Tabs). A hidden tab's page still answers its URL,
   // so an old link keeps working; it just has no tab.
-  // Someone without Budget still gets its tab as "Add Receipt" (only that, see Budget.jsx), when
-  // they can edit something at all (saving a receipt writes the project).
-  const writes = user?.role === 'admin' || Object.values(user?.permissions || {}).includes('edit')
+  // Someone without Budget still gets its tab as "Add Receipt" (only that, see Budget.jsx). With no
+  // edit permission at all the receipt goes through add_receipt_line() (supabase/receipt_line.sql).
   const tabs = [
     ...projectTabs(project),
     ...(SHOW_WHITEBOARD ? [{ to: 'whiteboard', label: 'Whiteboard', key: 'files', icon: 'notes' }] : []),
   ]
-    .map((t) => (t.to === 'budget' && !can(user, 'budget') && writes ? { ...t, label: 'Add Receipt', key: 'projects' } : t))
+    .map((t) => (t.to === 'budget' && !can(user, 'budget') ? { ...t, label: 'Add Receipt', key: 'projects' } : t))
     .filter((t) => (Array.isArray(t.key) ? t.key.some((k) => can(user, k)) : can(user, t.key)) && !tabHidden(project, t.to))
 
   const ctx = {
