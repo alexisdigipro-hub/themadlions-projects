@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (9 Oct 2026)
+- **Latest (9 Oct, evening):** My Tasks / All tasks no longer group their tasks by list (a task alone in its group had no ⋮⋮ and could not be moved): every view is one run of tasks, dragged freely, each with its list and project tags.
 - **Latest (9 Oct, evening):** Home's chips are now All, **Delivered**, then the categories (Dashboard.jsx chipFor); the slide on toggling Delivered follows where the chips lie.
 - **Latest (9 Oct, evening):** a teammate's Tasks side column shows only the lists that hold a task of theirs (open or done); administrators see every list. A hidden list that was open falls back to My Tasks.
 - **Latest (9 Oct, evening):** the Tasks side column's lists can be dragged by their ⋮⋮ (administrators, when there are two or more), reordering settings.taskLists for everyone; same pointer handling as the tasks.
