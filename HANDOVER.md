@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct: TML Chat's folders moved to the foot
+- Phone TML Chat only (`tg`): the folder tabs sit at the bottom, right over Chats / Calls / Notices / Settings, in one sticky frosted `.tg-dock` (Chat.jsx RoomList: the tabs and the foot nav are now the `folderTabs` / `footTabs` consts; `{!tg && folderTabs}` above the search everywhere else, `<div className="tg-dock">` for TML Chat; the folders show only on the Chats tab, also while picking with Edit). The top is now Edit · THEMADLIONS · + and the search. The in-app chat and the computer keep the folders on top.
+
 ### 9 Oct: TML Chat's background runs up under the clock
 - chat.html only: `apple-mobile-web-app-status-bar-style` = black-translucent, so the home-screen TML Chat draws its own background behind the iPhone's clock and battery instead of a black strip. The chat already pads by `env(safe-area-inset-top)` (list, room header, photo viewer, calls). index.html keeps the plain bar until the app's top bar gets that padding. iOS may read this only when the icon is added: if the strip stays black, remove TML Chat from the home screen and add it again.
 
