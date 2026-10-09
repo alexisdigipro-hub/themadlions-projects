@@ -46,13 +46,20 @@ const SMART = [
 const firstList = () => { try { const k = localStorage.getItem('tml_tasks_list'); return !k || k === 'today' || k === 'urgent' || k === 'general' || k.startsWith('p:') ? 'mine' : k } catch { return 'mine' } }
 const GENERAL = 'general'
 
-/* A pill that is also a picker: the label shows at its own width and a see-through select lies over
-   it (a bare select is as wide as its longest option, so every pill came out the same width) */
-function PickPill({ className = '', style, label, value, onChange, title, children }) {
+/* A round icon button that is also a picker (Alex, 9 Oct: like the chat's paperclip): its colour
+   says what it holds, the value shows on hover, a tap opens the list of choices (a see-through
+   select lies over it). Without the right to edit it is just the icon. */
+const IC = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
+const PICK_ICONS = {
+  list: <svg {...IC}><path d="M9 6h11M9 12h11M9 18h11" /><circle cx="4.5" cy="6" r="1" /><circle cx="4.5" cy="12" r="1" /><circle cx="4.5" cy="18" r="1" /></svg>,
+  who: <svg {...IC}><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>,
+  status: <svg {...IC}><path d="M5 21V4" /><path d="M5 4h12l-2.5 4L17 12H5" /></svg>,
+}
+function IconPick({ kind, tint, unset, title, value, onChange, editable, children }) {
   return (
-    <label className={`rem-status rem-pick ${className}`} style={style} title={title}>
-      <span className="rem-pick-label">{label}</span>
-      <select value={value} onChange={onChange} aria-label={title}>{children}</select>
+    <label className={`rem-ibtn${unset ? ' unset' : ''}${editable ? '' : ' rem-ibtn-static'}`} style={{ '--ic': tint }} title={title}>
+      {PICK_ICONS[kind]}
+      {editable && <select value={value} onChange={onChange} aria-label={title}>{children}</select>}
     </label>
   )
 }
@@ -433,24 +440,18 @@ export default function TasksAll() {
         </div>
         {!t.deletedAt && (
           <div className="rem-pills">
-            {editable ? (
-              <PickPill className={`rem-pill-list${from ? '' : ' unset'}`} style={{ '--sc': from?.color || 'var(--muted)' }} label={from ? from.name : 'No list'} value={from?.id || ''} onChange={(e) => setList(t, e.target.value)} title="List">
-                <option value="">No list</option>
-                {custom.map((l) => <option key={l.id} value={l.id}>{l.icon ? `${l.icon} ` : ''}{l.name}</option>)}
-              </PickPill>
-            ) : from ? <span className="rem-status rem-pill-list" style={{ '--sc': from.color }}>{from.name}</span> : <span />}
-            {editable ? (
-              <PickPill className={`rem-pill-who${t.assignee ? '' : ' unset'}`} label={t.assignee || 'Nobody yet'} value={t.assignee || ''} onChange={(e) => setAssignee(t, e.target.value)} title="Assigned to">
-                <option value="">Nobody yet</option>
-                {team.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
-                {t.assignee && !team.some((u) => u.name === t.assignee) && <option value={t.assignee}>{t.assignee}</option>}
-              </PickPill>
-            ) : t.assignee ? <span className="rem-status rem-pill-who">{t.assignee}</span> : <span />}
-            {editable ? (
-              <PickPill style={{ '--sc': statusColor(statusOf(t)) }} label={statusOf(t).label} value={statusOf(t).id} onChange={(e) => setStatus(t, e.target.value)} title="Status">
-                {statuses.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
-              </PickPill>
-            ) : <span className="rem-status" style={{ '--sc': statusColor(statusOf(t)) }}>{statusOf(t).label}</span>}
+            <IconPick kind="list" editable={editable} tint={from?.color || 'var(--muted)'} unset={!from} title={`List: ${from ? from.name : 'none'}`} value={from?.id || ''} onChange={(e) => setList(t, e.target.value)}>
+              <option value="">No list</option>
+              {custom.map((l) => <option key={l.id} value={l.id}>{l.icon ? `${l.icon} ` : ''}{l.name}</option>)}
+            </IconPick>
+            <IconPick kind="who" editable={editable} tint="var(--text)" unset={!t.assignee} title={`Assigned to: ${t.assignee || 'nobody yet'}`} value={t.assignee || ''} onChange={(e) => setAssignee(t, e.target.value)}>
+              <option value="">Nobody yet</option>
+              {team.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
+              {t.assignee && !team.some((u) => u.name === t.assignee) && <option value={t.assignee}>{t.assignee}</option>}
+            </IconPick>
+            <IconPick kind="status" editable={editable} tint={statusColor(statusOf(t))} title={`Status: ${statusOf(t).label}`} value={statusOf(t).id} onChange={(e) => setStatus(t, e.target.value)}>
+              {statuses.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+            </IconPick>
           </div>
         )}
         {t.deletedAt ? (editable && (
