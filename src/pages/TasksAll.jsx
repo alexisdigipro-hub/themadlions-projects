@@ -327,6 +327,10 @@ export default function TasksAll() {
   const [openSubs, setOpenSubs] = useState(() => new Set())
   const flipSubs = (id) => setOpenSubs((o) => { const n = new Set(o); if (n.has(id)) n.delete(id); else n.add(id); return n })
   const tickSub = (t, sid) => persist(t, (x) => { x.subtasks = (x.subtasks || []).map((y) => (y.id === sid ? { ...y, done: !y.done } : y)) })
+  // subtasks added and removed right on the list, without opening the task (Alex, 9 Oct)
+  const addSub = (t, title) => persist(t, (x) => { x.subtasks = [...(x.subtasks || []), { id: uid(), title, done: false }] })
+  const dropSub = (t, sid) => persist(t, (x) => { x.subtasks = (x.subtasks || []).filter((y) => y.id !== sid) })
+  const canSub = (t) => editable && !t.deletedAt
   const startDrag = (e, t, ids) => {
     if (!editable || e.button > 0) return
     e.preventDefault()
@@ -379,20 +383,34 @@ export default function TasksAll() {
           <div className="rem-task-meta">
             {(current.smart || searching || from?.key !== current.key) && from && <span>{from.icon} {from.name}</span>}
             {proj && <span>🎬 {proj.title}</span>}
-            {subCount(t).all > 0 && <button type="button" className={`rem-subs-btn${openSubs.has(t.id) ? ' on' : ''}`} onClick={(e) => { e.stopPropagation(); flipSubs(t.id) }} title={openSubs.has(t.id) ? 'Hide subtasks' : 'Show subtasks'}>☑ {subCount(t).done}/{subCount(t).all} <span aria-hidden="true">▾</span></button>}
+            {subCount(t).all > 0 ? <button type="button" className={`rem-subs-btn${openSubs.has(t.id) ? ' on' : ''}`} onClick={(e) => { e.stopPropagation(); flipSubs(t.id) }} title={openSubs.has(t.id) ? 'Hide subtasks' : 'Show subtasks'}>☑ {subCount(t).done}/{subCount(t).all} <span aria-hidden="true">▾</span></button>
+              : canSub(t) && t.status !== 'done' && !openSubs.has(t.id) && <button type="button" className="rem-subs-btn rem-subs-new" onClick={(e) => { e.stopPropagation(); flipSubs(t.id) }} title="Add a subtask">＋ Subtask</button>}
             {t.due && <span className={late ? 'late' : t.due === t0 ? 'today' : 'due'}>🗓 {t.due === t0 ? 'Today' : late ? `Overdue, ${fmtDate(t.due)}` : fmtDate(t.due)}</span>}
             {t.assignee && <span>👤 {t.assignee}</span>}
             {t.notes && <span className="rem-has-notes" title={t.notes}>📝 Note</span>}
             {t.deletedAt && <span>🗑 Deleted {fmtDate(t.deletedAt.slice(0, 10))}{t.deletedBy ? ` by ${t.deletedBy}` : ''}</span>}
           </div>
-          {openSubs.has(t.id) && subCount(t).all > 0 && (
+          {openSubs.has(t.id) && (subCount(t).all > 0 || canSub(t)) && (
             <ul className="rem-subs" onClick={(e) => e.stopPropagation()}>
-              {t.subtasks.map((x) => (
+              {(t.subtasks || []).map((x) => (
                 <li key={x.id} className={x.done ? 'done' : ''}>
-                  <button type="button" className="rem-check sm" aria-label={x.done ? 'Mark as not done' : 'Mark as done'} disabled={!editable || !!t.deletedAt} onClick={() => tickSub(t, x.id)} />
-                  <span>{x.title}</span>
+                  <button type="button" className="rem-check sm" aria-label={x.done ? 'Mark as not done' : 'Mark as done'} disabled={!canSub(t)} onClick={() => tickSub(t, x.id)} />
+                  <span className="grow">{x.title}</span>
+                  {canSub(t) && <button type="button" className="rem-sub-del" onClick={() => dropSub(t, x.id)} aria-label="Remove subtask" title="Remove subtask">×</button>}
                 </li>
               ))}
+              {canSub(t) && (
+                <li className="rem-sub-add">
+                  <span className="rem-sub-plus" aria-hidden="true">＋</span>
+                  {/* Enter adds it and leaves the line ready for the next; Escape (or empty and away) closes */}
+                  <input className="rem-sub-input" placeholder="Add a subtask" autoFocus={!subCount(t).all} aria-label="Add a subtask"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') { e.preventDefault(); const v = e.currentTarget.value.trim(); if (v) { addSub(t, v); e.currentTarget.value = '' } }
+                      if (e.key === 'Escape') { e.currentTarget.value = ''; flipSubs(t.id) }
+                    }}
+                    onBlur={(e) => { const v = e.currentTarget.value.trim(); if (v) { addSub(t, v); e.currentTarget.value = '' } else if (!subCount(t).all) flipSubs(t.id) }} />
+                </li>
+              )}
             </ul>
           )}
         </div>
