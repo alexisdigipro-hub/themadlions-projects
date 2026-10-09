@@ -5387,7 +5387,7 @@ html.chat-window, html.chat-window body { height: var(--screen-h, 100%); }
   /* TML Chat's list is exactly the screen tall, the conversations scroll inside it and the folders /
      Chats dock simply sits at its foot: sticky held it to the page's short bottom (13:34, a band under it) */
   .chat-win .chat2:not(.has-room) .chat-list { height: var(--screen-h, 100dvh); min-height: 0; }
-  html.chat-window body .chat2 .chat-list.tgui .tg-dock { position: relative; bottom: auto; }
+  html.chat-window body .chat2 .chat-list.tgui .tg-dock { position: relative; bottom: auto; margin-bottom: max(12px, calc(env(safe-area-inset-bottom) - 14px)); }
 }
 @media (max-width: 820px) {
   .tabbar { bottom: calc(0px - var(--ios-gap, 0px)); }
