@@ -154,6 +154,7 @@ const TgIcon = {
   more: () => <svg {...svgProps}><circle cx="5" cy="12" r="1.3" fill="currentColor" /><circle cx="12" cy="12" r="1.3" fill="currentColor" /><circle cx="19" cy="12" r="1.3" fill="currentColor" /></svg>,
   mic: () => <svg {...svgProps}><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>,
   smile: () => <svg {...svgProps}><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>,
+  sticker: () => <svg {...svgProps}><path d="M21 12a9 9 0 1 0-9 9" /><path d="M21 12c-5 0-9 4-9 9" /></svg>,
   bell: () => <svg {...svgProps}><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15Z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>,
   media: () => <svg {...svgProps}><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>,
   translate: () => <svg {...svgProps}><path d="M4 5h9M8.5 3v2M6 5c.5 3 2.5 5.5 5 7M11 5c-.7 3.4-3 6.4-7 8" /><path d="M13 21l4.5-10L22 21M14.5 17.5h6" /></svg>,
@@ -1595,18 +1596,17 @@ function ChatRoom({ room, onBack }) {
             <>
               {!editing && <button type="button" className="icon-btn chat-attach" title="Photo, video or file" onClick={() => setSheet(true)} disabled={!!busy}>{TgIcon.clip()}</button>}
               {/* autoComplete off: the iPhone stops offering AutoFill Contact and your own name above the keyboard */}
-              <textarea ref={inputRef} className="input" rows={1} name="chat-message" autoComplete="off" autoCorrect={prefs.spell ? 'on' : 'off'} spellCheck={prefs.spell} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder="Write a message…" title={mobile ? undefined : prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. Type @ to mention someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. Type @ to mention someone'} data-form-type="other" data-lpignore="true" disabled={!!busy} />
-              {!mobile && (
-                <span className="chat-emoji-wrap">
-                  <button type="button" className="icon-btn chat-emoji-btn" onClick={() => setEmoji((v) => !v)} aria-label="Emoji" title="Emoji">{TgIcon.smile()}</button>
-                  {emoji && (
-                    <>
-                      <span className="chat-room-menu-scrim" onClick={() => setEmoji(false)} />
-                      <span className="chat-emoji-pick">{EMOJIS.map((e) => <button key={e} type="button" onClick={() => addEmoji(e)}>{e}</button>)}</span>
-                    </>
-                  )}
-                </span>
-              )}
+              <textarea ref={inputRef} className="input" rows={1} name="chat-message" autoComplete="off" autoCorrect={prefs.spell ? 'on' : 'off'} spellCheck={prefs.spell} value={text} onChange={(e) => { setText(e.target.value); setCaret(e.target.selectionStart) }} onKeyUp={(e) => setCaret(e.target.selectionStart)} onClick={(e) => setCaret(e.target.selectionStart)} onKeyDown={onKey} placeholder={mobile ? 'Message' : 'Write a message…'} title={mobile ? undefined : prefs.enterSends ? 'Enter sends, Shift+Enter for a new line. Type @ to mention someone' : 'Enter for a new line, Cmd/Ctrl+Enter sends. Type @ to mention someone'} data-form-type="other" data-lpignore="true" disabled={!!busy} />
+              {/* inside the box on its right; on a phone Telegram's sticker mark (Alex, 9 Oct) */}
+              <span className="chat-emoji-wrap">
+                <button type="button" className="icon-btn chat-emoji-btn" onClick={() => setEmoji((v) => !v)} aria-label="Emoji" title="Emoji">{mobile ? TgIcon.sticker() : TgIcon.smile()}</button>
+                {emoji && (
+                  <>
+                    <span className="chat-room-menu-scrim" onClick={() => setEmoji(false)} />
+                    <span className="chat-emoji-pick">{EMOJIS.map((e) => <button key={e} type="button" onClick={() => addEmoji(e)}>{e}</button>)}</span>
+                  </>
+                )}
+              </span>
               {!text.trim() && !pending.length && !editing && canVoice && !busy ? (
                 <button type="button" className="chat-send chat-mic" onClick={startVoice} aria-label="Record a voice message" title="Voice message">{TgIcon.mic()}</button>
               ) : (
