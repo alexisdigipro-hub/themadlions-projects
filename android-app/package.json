@@ -1,0 +1,12 @@
+{
+  "name": "tml-chat-android",
+  "private": true,
+  "version": "1.0.0",
+  "description": "TML Chat as an Android app: a Capacitor shell around the live chat page. Built by .github/workflows/android.yml, not by the site's own build.",
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/app": "^6.0.0",
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/core": "^6.2.0"
+  }
+}
