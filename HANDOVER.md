@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct (13:4x): the band came back on reopening
+- Likely iOS reporting no safe area at the very first moment, so main.jsx's one measurement came out empty. Now it measures again at 50/250/700/1500/3000 ms, on load, pageshow and when the app comes back to the screen; a reading of 0 safe area with a band no longer wipes good numbers; and the last good `{screenH, gap}` is kept in localStorage (`tml_ios_band`) and applied at once on the next launch for the same screen. Not yet in a PR: waiting for Alex's description of what he sees.
+
 ### 9 Oct (13:38): TML Chat's bars reach the foot
 - Alex: "Super". Then the two bars a touch higher: the TML Chat dock's foot margin is now `max(12px, safe-area-bottom - 14px)` (about 20 px on the iPhone, was 12).
 
