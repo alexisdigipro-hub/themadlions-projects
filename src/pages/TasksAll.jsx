@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Field, Input, Modal, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
-import { TaskModal, binTask, emptyTask, taskStatuses, tasksFor, visibleTasks } from './project/Tasks.jsx'
+import { TaskModal, binTask, emptyTask, statusColor, taskStatuses, tasksFor, visibleTasks } from './project/Tasks.jsx'
 import { sendAutoNotice, userByName } from '../components/Notices.jsx'
 import { fmtDate } from '../lib/dates.js'
 
@@ -143,7 +143,6 @@ export default function TasksAll() {
   const statuses = taskStatuses(state)
   const statusOf = (t) => statuses.find((x) => x.id === t.status) || statuses[0]
   const setStatus = (t, status) => persist(t, (x) => { x.status = status; x.doneAt = status === 'done' ? (x.doneAt || new Date().toISOString()) : '' })
-  const tone = (id) => (id === 'todo' || id === 'done' || id === 'blocked' ? id : 'doing')
   // taken out for good: a task moved to another project, or deleted forever from Deleted
   const remove = (t) => (t.projectId ? updateProject(t.projectId, (p) => { p.tasks = (p.tasks || []).filter((y) => y.id !== t.id) }) : update((s) => { s.todos = (s.todos || []).filter((y) => y.id !== t.id); return s }))
   // × on a task: to Deleted, from where it can come back
@@ -383,10 +382,10 @@ export default function TasksAll() {
           </div>
         </div>
         {!t.deletedAt && (editable ? (
-          <select className={`rem-status s-${tone(statusOf(t).id)}`} value={statusOf(t).id} onChange={(e) => setStatus(t, e.target.value)} aria-label="Status" title="Status">
+          <select className="rem-status" style={{ '--sc': statusColor(statusOf(t)) }} value={statusOf(t).id} onChange={(e) => setStatus(t, e.target.value)} aria-label="Status" title="Status">
             {statuses.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
           </select>
-        ) : <span className={`rem-status s-${tone(statusOf(t).id)}`}>{statusOf(t).label}</span>)}
+        ) : <span className="rem-status" style={{ '--sc': statusColor(statusOf(t)) }}>{statusOf(t).label}</span>)}
         {t.deletedAt ? (editable && (
           <>
             <button type="button" className="rem-restore" onClick={() => restore(t)}>Restore</button>
