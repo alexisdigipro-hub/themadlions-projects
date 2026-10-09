@@ -10,13 +10,14 @@ import { fmtDate } from '../lib/dates.js'
   the smart lists as rows with a line icon and a count: My Tasks (assigned to me), All tasks
   (everything open, administrators only), Completed and Deleted (the bin, where a task can be
   restored); a teammate only ever sees the tasks assigned to them. My Day and Important were taken
-  off (Alex, 9 Oct). Then Lists: Company (tasks outside projects) and the lists an administrator
+  off (Alex, 9 Oct). Then Lists: the lists an administrator
   adds with an icon and a colour (settings.taskLists, a general task names its list in listId),
   with 👥 when others have tasks on it, and + New List. Projects have no list of their own here:
   their tasks show in All tasks and My Tasks with the project's name on them. On the right: the
   list's name large, the tasks as cards (round check, title, the list or project it is on, the date
   in blue or red, who), Completed folding under them, and "+ New Task…" at the foot. A click on a
-  task opens the full form, whose List field puts it on Company, a list or a project.
+  task opens the full form, with a Project and a List field. Company (tasks on no list) was taken off
+  the side column too: such a task shows in My Tasks and All tasks.
   The data is unchanged: project tasks in project.tasks, general ones in state.todos.
   On a phone the lists are the first screen and a list the second.
 */
@@ -42,7 +43,7 @@ const SMART = [
   ['deleted', 'Deleted', '#8d6e63', '#6d5a52'],
 ]
 // a list that no longer exists in the side menu (My Day, Important, a project's list) opens My Tasks
-const firstList = () => { try { const k = localStorage.getItem('tml_tasks_list'); return !k || k === 'today' || k === 'urgent' || k.startsWith('p:') ? 'mine' : k } catch { return 'mine' } }
+const firstList = () => { try { const k = localStorage.getItem('tml_tasks_list'); return !k || k === 'today' || k === 'urgent' || k === 'general' || k.startsWith('p:') ? 'mine' : k } catch { return 'mine' } }
 const GENERAL = 'general'
 
 export default function TasksAll() {
@@ -95,7 +96,9 @@ export default function TasksAll() {
       .filter((p) => p.status !== 'Delivered' || (p.tasks || []).some((t) => !t.deletedAt && t.status !== 'done'))
       .map((p) => ({ key: `p:${p.id}`, pid: p.id, name: p.title, color: p.color || '#5856d6', icon: '🎬', project: true })),
   ]
-  const ownLists = lists.filter((l) => !l.project)
+  // the side column shows only the lists an administrator made (departments); Company was taken off
+  // too (Alex, 9 Oct): a task on no list and no project shows in My Tasks and All tasks
+  const ownLists = lists.filter((l) => l.own)
   const listByKey = Object.fromEntries(lists.map((l) => [l.key, l]))
   const inList = (key, list = all) => list.filter((t) => listOf(t) === key)
   const shared = (key) => inList(key).some((t) => t.assignee && !isMine(t))
@@ -114,7 +117,7 @@ export default function TasksAll() {
   const current = smart ? { key: sel, name: smart[1], color: smart[3], icon: LINE[sel], smart: true } : listByKey[sel] || listByKey[GENERAL]
   // projects have no list of their own in the side menu any more (Alex, 9 Oct: their tasks show in
   // All tasks with the project's name on them), so neither a project nor a vanished list stays open
-  useEffect(() => { if (!smart && (!listByKey[sel] || listByKey[sel].project)) setSel('mine') }, [sel, lists.length, admin]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!smart && (!listByKey[sel] || listByKey[sel].project || sel === GENERAL)) setSel('mine') }, [sel, lists.length, admin]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean)
   const match = (t) => !words.length || words.every((w) => `${t.title} ${t.notes || ''} ${t.assignee || ''}`.toLowerCase().includes(w))
@@ -233,7 +236,7 @@ export default function TasksAll() {
   }
   const deleteList = (l) => {
     const n = inList(l.key).length
-    if (!confirm(n ? `Delete the list "${l.name}"? Its ${n} task${n === 1 ? '' : 's'} move to General.` : `Delete the list "${l.name}"?`)) return
+    if (!confirm(n ? `Delete the list "${l.name}"? Its ${n} task${n === 1 ? '' : 's'} stay in My Tasks and All tasks, on no list.` : `Delete the list "${l.name}"?`)) return
     update((s) => {
       s.settings = { ...s.settings, taskLists: (s.settings.taskLists || []).filter((x) => x.id !== l.id) }
       s.todos = (s.todos || []).map((t) => (t.listId === l.id ? { ...t, listId: '' } : t))
@@ -268,12 +271,14 @@ export default function TasksAll() {
         ))}
       </nav>
       <hr className="rem-rule" />
-      {/* Lists: Company (the tasks outside projects) and the lists an administrator adds; then the
+      {/* Lists: the lists an administrator adds (departments); once also Company and
           projects, folded under their own heading (Alex, 9 Oct: tidy Tasks, one job per row) */}
-      <div className="rem-group-title">Lists</div>
-      <nav className="rem-lists">
-        {ownLists.map(listRow)}
-      </nav>
+      {(ownLists.length > 0 || admin) && <div className="rem-group-title">Lists</div>}
+      {ownLists.length > 0 && (
+        <nav className="rem-lists">
+          {ownLists.map(listRow)}
+        </nav>
+      )}
       {admin && <button type="button" className="rem-add-list" onClick={() => setListForm({ name: '', color: COLORS[5], icon: ICONS[0] })}><span>＋</span> New List</button>}
     </aside>
   )
@@ -321,7 +326,7 @@ export default function TasksAll() {
     const late = t.due && t.due < t0 && t.status !== 'done'
     // the list it is on, or its project's name (a delivered project has no list row but keeps its tag)
     // its list (when it is not the one open) and its project, each as a tag
-    const from = listOf(t).startsWith('l:') || listOf(t) === GENERAL ? listByKey[listOf(t)] : null
+    const from = listOf(t).startsWith('l:') ? listByKey[listOf(t)] : null
     const proj = t.projectId && projectsById[t.projectId]
     return (
       <li key={t.id} data-task-id={t.id} className={`rem-task ${t.status === 'done' ? 'done' : ''}${t.deletedAt ? ' binned' : ''}${drag?.id === t.id ? ' dragging' : ''}${drag?.over === t.id && drag.id !== t.id ? (drag.after ? ' drop-after' : ' drop-before') : ''}`}>
@@ -389,9 +394,10 @@ export default function TasksAll() {
         <div className="rem-quick">
           <span className="rem-quick-plus" aria-hidden="true">＋</span>
           <input ref={quickRef} className="rem-quick-input" value={quick} onChange={(e) => setQuick(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') addQuick(); if (e.key === 'Escape') setQuick('') }} placeholder="New Task…" />
-          {/* in a smart list the task needs a list of its own: Company unless another is picked */}
-          {current.smart && ownLists.length > 1 && (
+          {/* in a smart list a new task goes on no list unless one is picked here */}
+          {current.smart && ownLists.length > 0 && (
             <select className="rem-quick-list" value={listByKey[quickList] ? quickList : GENERAL} onChange={(e) => setQuickList(e.target.value)} aria-label="List for the new task">
+              <option value={GENERAL}>No list</option>
               {ownLists.map((l) => <option key={l.key} value={l.key}>{`${l.icon} ${l.name}`}</option>)}
             </select>
           )}
