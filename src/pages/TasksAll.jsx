@@ -434,18 +434,18 @@ export default function TasksAll() {
         {!t.deletedAt && (
           <div className="rem-pills">
             {editable ? (
-              <PickPill className={`rem-pill-list${from ? '' : ' unset'}`} style={{ '--sc': from?.color || 'var(--muted)' }} label={from ? `${from.icon ? `${from.icon} ` : ''}${from.name}` : 'No list'} value={from?.id || ''} onChange={(e) => setList(t, e.target.value)} title="List">
+              <PickPill className={`rem-pill-list${from ? '' : ' unset'}`} style={{ '--sc': from?.color || 'var(--muted)' }} label={from ? from.name : 'No list'} value={from?.id || ''} onChange={(e) => setList(t, e.target.value)} title="List">
                 <option value="">No list</option>
                 {custom.map((l) => <option key={l.id} value={l.id}>{l.icon ? `${l.icon} ` : ''}{l.name}</option>)}
               </PickPill>
-            ) : from ? <span className="rem-status rem-pill-list" style={{ '--sc': from.color }}>{from.icon} {from.name}</span> : <span />}
+            ) : from ? <span className="rem-status rem-pill-list" style={{ '--sc': from.color }}>{from.name}</span> : <span />}
             {editable ? (
-              <PickPill className={`rem-pill-who${t.assignee ? '' : ' unset'}`} label={t.assignee ? `👤 ${t.assignee}` : 'Nobody yet'} value={t.assignee || ''} onChange={(e) => setAssignee(t, e.target.value)} title="Assigned to">
+              <PickPill className={`rem-pill-who${t.assignee ? '' : ' unset'}`} label={t.assignee || 'Nobody yet'} value={t.assignee || ''} onChange={(e) => setAssignee(t, e.target.value)} title="Assigned to">
                 <option value="">Nobody yet</option>
                 {team.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
                 {t.assignee && !team.some((u) => u.name === t.assignee) && <option value={t.assignee}>{t.assignee}</option>}
               </PickPill>
-            ) : t.assignee ? <span className="rem-status rem-pill-who">👤 {t.assignee}</span> : <span />}
+            ) : t.assignee ? <span className="rem-status rem-pill-who">{t.assignee}</span> : <span />}
             {editable ? (
               <PickPill style={{ '--sc': statusColor(statusOf(t)) }} label={statusOf(t).label} value={statusOf(t).id} onChange={(e) => setStatus(t, e.target.value)} title="Status">
                 {statuses.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}

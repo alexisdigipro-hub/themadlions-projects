@@ -5632,3 +5632,29 @@ select.rem-status option { color: var(--text); background: var(--bg, #1b1f2a); f
   .rem-pills { display: grid; grid-template-columns: 170px 220px 130px; gap: 8px; }
   .rem-pills > * { justify-self: start; max-width: 100%; box-sizing: border-box; }
 }
+
+/* Quieter pills (Alex, 9 Oct: "πιο διακριτικό"): list and person read as plain grey text, the list
+   with a small dot in its colour; the status keeps its colour as soft text on a faint tint, no
+   outline. The ▾ and a light background show only when the pointer is on one. */
+.rem-pills .rem-status { padding: 3px 8px; font-size: 12.5px; font-weight: 500; border: 0; border-radius: 6px; }
+.rem-pills .rem-pick { padding-right: 18px; }
+.rem-pills .rem-pick::after { right: 6px; opacity: 0; transition: opacity .15s; }
+.rem-pills .rem-pick:hover::after, .rem-pills .rem-pick:focus-within::after { opacity: .8; }
+.rem-pills .rem-pill-list, .rem-pills .rem-pill-who { color: var(--muted); background: transparent; }
+.rem-pills .rem-pill-list:hover, .rem-pills .rem-pill-who:hover { color: var(--text); background: color-mix(in srgb, var(--text) 7%, transparent); }
+.rem-pills .rem-pill-list::before { content: ''; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--sc); }
+.rem-pills .rem-pill-list.unset::before { background: transparent; box-shadow: inset 0 0 0 1px var(--muted); }
+.rem-pills .rem-status.unset { color: var(--muted); background: transparent; border: 0; opacity: .55; }
+.rem-pills .rem-status:not(.rem-pill-list):not(.rem-pill-who) { font-weight: 600; letter-spacing: .02em; background: color-mix(in srgb, var(--sc) 12%, transparent); }
+.rem-pills .rem-pick:focus-within { outline: 1px solid color-mix(in srgb, var(--text) 25%, transparent); }
+@media (max-width: 820px) {
+  .rem-pills { flex-wrap: nowrap; gap: 2px; padding-left: 49px; box-sizing: border-box; min-width: 0; }
+  .rem-pills .rem-status { max-width: none; min-width: 0; flex: 0 1 auto; }
+  .rem-pills .rem-status:not(.rem-pill-list):not(.rem-pill-who) { flex: none; margin-left: auto; }
+}
+@media (max-width: 820px) {
+  .rem-pills .rem-pick { padding-right: 8px; }
+  .rem-pills .rem-pick::after { display: none; }
+  .rem-pills .rem-pill-who { flex-shrink: 4; }
+  .rem-pills .rem-pill-list { flex-shrink: 0; max-width: 40%; }
+}
