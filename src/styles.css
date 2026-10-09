@@ -5376,3 +5376,12 @@ html.chat-window:has(.chat2[data-chat-theme='glass']) {
   background-attachment: fixed;
   background-color: #0a1119;
 }
+
+/* The app on an iPhone's home screen: iOS blurs whatever sits right under the clock unless the top of the
+   page is a solid colour (it then just carries that colour up). So on a phone the top bar is solid, and a
+   solid strip of the same colour fills the clock's area (Alex, 9 Oct: "a blur at the very top"). In a
+   browser tab the strip has no height. TML Chat keeps its own top. */
+@media (max-width: 820px) {
+  html[data-theme]:not(.chat-window) body .topbar { background: var(--panel); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html[data-theme]:not(.chat-window) body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; z-index: 31; height: env(safe-area-inset-top); background: var(--panel); pointer-events: none; }
+}
