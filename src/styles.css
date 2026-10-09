@@ -5292,3 +5292,11 @@ html .chat2[data-chat-theme='glass'] .chat-win-tabs { background: rgba(16, 22, 3
   html.chat-window body .chat-win .chat2 .chat-folders { gap: 0; }
   html.chat-window body .chat-win .chat2 .chat-folders button { padding: 9px clamp(5px, 1.8vw, 9px); font-size: clamp(11px, 3vw, 15px); }
 }
+
+/* TML Chat on a phone: the folder tabs share the track's spare width evenly, the same gap before the
+   first, between each and after the last (Alex, 9 Oct). Auto margins drop to 0 when your own folders
+   overflow it, so the track still scrolls from the first tab. */
+@media (max-width: 820px) {
+  html.chat-window body .chat-win .chat2 .chat-folders button { margin-left: auto; }
+  html.chat-window body .chat-win .chat2 .chat-folders::after { content: ''; flex: none; width: 0; margin-left: auto; }
+}

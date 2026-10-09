@@ -46,6 +46,7 @@ Read this first; the detail behind each line is in the pull request that carried
 
 ### 9 Oct: TML Chat's folder tabs closer together
 - Phone TML Chat: the folder pill track has no gap, tabs pad `clamp(5px, 1.8vw, 9px)` and their text is `clamp(11px, 3vw, 15px)`, so All / Projects / Groups / People / Archived fit across at 375, 390 and 440 px wide (measured with Sofia Sans). Your own folders or an unread count still scroll the track sideways.
+- Then (Alex: more room on the left, balanced): each tab has `margin-left: auto` and the track an `::after` with `margin-left: auto`, so spare width splits evenly: the same gap before All, between tabs and after Archived (19 / 21 / 19 px at 440 wide). When your own folders overflow, auto margins are 0 and it scrolls as before.
 
 ### 9 Oct: the loading screen says THEMADLIONS
 - App.jsx `Loading` (the app and TML Chat share it): no card any more, just **THE<b>MAD</b>LIONS** in one word like TML Chat's head (`.boot-name`, 500 with MAD at 900, 18 px = 5% under the chat head's 19 px), centred both ways on the page background (`.login.boot`, 100dvh).
