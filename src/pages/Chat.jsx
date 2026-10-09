@@ -463,7 +463,7 @@ function CallsPanel() {
 
 /* ---------- the list ---------- */
 function RoomList({ activeId, windowed }) {
-  const { state } = useStore()
+  const { state, update } = useStore()
   const prefs = useChatPrefs()
   const user = useCurrentUser()
   const nav = useNavigate()
@@ -517,11 +517,51 @@ function RoomList({ activeId, windowed }) {
   const unread = useMemo(() => C.unreadByRoom(state, user, readMap, rooms), [state.chat, rooms, readMap, user])
   const allFolders = C.foldersFor(user)
   const folder = allFolders.find((f) => f.id === folderId) || allFolders[0]
+  // Edit > Delete takes a conversation off this person's list (profile.chatHidden: { room: when });
+  // a message newer than that brings it back, as in Telegram. Nothing is deleted for anyone else.
+  const hiddenMap = user?.profile?.chatHidden || {}
   const shown = useMemo(() => {
-    const inFolder = C.roomsInFolder(folder, rooms)
+    const inFolder = C.roomsInFolder(folder, rooms).filter((r) => !hiddenMap[r.id] || (C.lastMessage(state.chat, r.id)?.createdAt || '') > hiddenMap[r.id])
     const needle = q.trim().toLowerCase()
     return C.sortRooms(needle ? inFolder.filter((r) => r.name.toLowerCase().includes(needle)) : inFolder, state.chat)
-  }, [folder, rooms, q, state.chat])
+  }, [folder, rooms, q, state.chat, hiddenMap])
+  // Edit (TML Chat on a phone): pick conversations and act on them together
+  const [picking, setPicking] = useState(false)
+  const [picked, setPicked] = useState([])
+  const [folderPick, setFolderPick] = useState(false)
+  const togglePick = (id) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))
+  const endPick = () => { setPicking(false); setPicked([]); setFolderPick(false) }
+  const writeProfile = (fn) => update((s) => {
+    const u = s.users.find((x) => x.id === user?.id)
+    if (u) u.profile = fn({ ...(u.profile || {}) })
+    return s
+  })
+  const pickedRooms = rooms.filter((r) => picked.includes(r.id))
+  const allArchived = pickedRooms.length > 0 && pickedRooms.every((r) => r.archived)
+  const bulkRead = () => {
+    pickedRooms.forEach((r) => { const last = C.lastMessage(state.chat, r.id); if (last) C.markRead(r.id, last.createdAt) })
+    toast(`${pickedRooms.length} marked as read`, 'ok'); endPick()
+  }
+  const bulkArchive = () => {
+    const ids = pickedRooms.map((r) => r.id)
+    writeProfile((p) => {
+      const cur = new Set(Array.isArray(p.chatArchived) ? p.chatArchived : [])
+      ids.forEach((id) => (allArchived ? cur.delete(id) : cur.add(id)))
+      return { ...p, chatArchived: [...cur] }
+    })
+    toast(allArchived ? `${ids.length} back from Archived` : `${ids.length} moved to Archived`, 'ok'); endPick()
+  }
+  const bulkFolder = (f) => {
+    const ids = pickedRooms.map((r) => r.id)
+    writeProfile((p) => ({ ...p, chatFolders: (Array.isArray(p.chatFolders) ? p.chatFolders : []).map((x) => (x.id === f.id ? { ...x, rooms: [...new Set([...(x.rooms || []), ...ids])] } : x)) }))
+    toast(`${ids.length} added to ${f.name}`, 'ok'); endPick()
+  }
+  const bulkDelete = () => {
+    if (!confirm(`Delete ${pickedRooms.length} conversation${pickedRooms.length === 1 ? '' : 's'} from your list? Nothing is deleted for the others, and a new message brings it back.`)) return
+    const now = new Date().toISOString()
+    writeProfile((p) => ({ ...p, chatHidden: { ...(p.chatHidden || {}), ...Object.fromEntries(pickedRooms.map((r) => [r.id, now])) } }))
+    toast(`${pickedRooms.length} deleted from your list`, 'ok'); endPick()
+  }
   // the list's search also finds words inside messages (Alex), newest first
   const hits = useMemo(() => {
     const needle = q.trim().toLowerCase()
@@ -553,14 +593,23 @@ function RoomList({ activeId, windowed }) {
   return (
     <aside className={`chat-list${prefs.folderTabs === 'left' && !mobile && tab === 'chats' ? ' tabs-left' : ''}`}>
       <div className={`chat-list-head${tg ? ' tg-head' : ''}`}>
-        {tg && <button type="button" className="tg-pill tg-edit" onClick={() => setFolders(true)}>Edit</button>}
-        <h1>{tg ? 'Chats' : 'Chat'}</h1>
+        {/* Edit and the folders together on the left, + group and the pencil on the right, so the head is balanced (Alex, 9 Oct) */}
         {tg && (
+          <span className="tg-pill tg-pill-left">
+            <button type="button" className="tg-edit" onClick={() => (picking ? endPick() : setPicking(true))}>{picking ? 'Done' : 'Edit'}</button>
+            {!picking && <button type="button" className="tg-ico" onClick={() => setFolders(true)} title="Your folders" aria-label="Your folders">{TgIcon.folder()}</button>}
+          </span>
+        )}
+        {/* the company's name, MAD set heavier (Alex, 9 Oct); while picking, how many are picked */}
+        <h1>{tg ? (picking ? (picked.length ? `${picked.length} selected` : 'Select chats') : <span className="tg-brand">THE<b>MAD</b>LIONS</span>) : 'Chat'}</h1>
+        {tg && (picking ? (
+          <button type="button" className="tg-pill tg-all" onClick={() => setPicked(picked.length === shown.length ? [] : shown.map((r) => r.id))}>{picked.length === shown.length && shown.length ? 'None' : 'All'}</button>
+        ) : (
           <span className="tg-pill tg-pill-icons">
             {isAdmin && <button type="button" onClick={() => setGroup('new')} title="New group" aria-label="New group">{TgIcon.people()}</button>}
             <button type="button" onClick={() => setDirect(true)} title="New message" aria-label="New message">{TgIcon.edit()}</button>
           </span>
-        )}
+        ))}
         {!mobile && <button type="button" className="icon-btn chat-head-ico chat-folders-btn" onClick={() => setFolders(true)} title="Your folders" aria-label="Your folders">{TgIcon.folder()}</button>}
         {!mobile && <button type="button" className="icon-btn chat-head-ico chat-new" onClick={() => setDirect(true)} title="New message" aria-label="New message">{TgIcon.edit()}</button>}
         {isAdmin && !tg && <button type="button" className="icon-btn chat-head-ico chat-group-new" onClick={() => setGroup('new')} title="New group" aria-label="New group">{TgIcon.people()}</button>}
@@ -595,7 +644,8 @@ function RoomList({ activeId, windowed }) {
           const preview = r.kind === 'team' ? '' : r.sub
           const n = unread[r.id] || 0
           return (
-            <button key={r.id} type="button" className={`chat-room-item ${r.id === activeId ? 'active' : ''}`} onClick={() => nav(roomPath(base, r.id))} disabled={legacy && r.kind !== 'team'}>
+            <button key={r.id} type="button" className={`chat-room-item ${r.id === activeId ? 'active' : ''}${picking ? ' picking' : ''}${picked.includes(r.id) ? ' picked' : ''}`} onClick={() => (picking ? togglePick(r.id) : nav(roomPath(base, r.id)))} disabled={legacy && r.kind !== 'team'}>
+              {picking && <span className="tg-check" aria-hidden="true" />}
               <RoomAvatar room={r} size={mobile ? 54 : 48} />
               <span className="chat-rmain">
                 <span className="chat-rtop"><strong>{r.name}</strong><small>{listTime(last?.createdAt)}</small></span>
@@ -642,13 +692,31 @@ function RoomList({ activeId, windowed }) {
       {(windowed || !mobile) && (
         // the list's foot, Telegram's, in Alex's order: chats, calls, notices (administrators), settings
         // (People left, Alex: the new-message button is already above the list)
+        tg && picking ? (
+          <nav className="chat-win-tabs tg-tabs tg-bulk">
+            <button type="button" disabled={!picked.length} onClick={bulkRead}>{TgIcon.chats()}<span>Read</span></button>
+            <button type="button" disabled={!picked.length} onClick={bulkArchive}>{TgIcon.folder()}<span>{allArchived ? 'Unarchive' : 'Archive'}</span></button>
+            <button type="button" disabled={!picked.length} onClick={() => setFolderPick(true)}>{TgIcon.folder()}<span>Folder</span></button>
+            <button type="button" className="tg-del" disabled={!picked.length} onClick={bulkDelete}><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg><span>Delete</span></button>
+          </nav>
+        ) : (
         <nav className={`chat-win-tabs${tg ? ' tg-tabs' : ''}`}>
           <button type="button" className={tab === 'chats' ? 'on' : ''} onClick={() => setTab('chats')}><span className="tg-tab-ico">{TgIcon.chats()}{tg && allUnread > 0 && <i className="tg-tab-badge">{allUnread > 99 ? '99+' : allUnread}</i>}</span><span>Chats</span></button>
           {remote && <button type="button" className={tab === 'calls' ? 'on' : ''} onClick={() => setTab('calls')}>{TgIcon.phone()}<span>Calls</span></button>}
           {canNotice && <button type="button" className={tab === 'notices' ? 'on' : ''} onClick={() => setTab('notices')}>{TgIcon.bell()}<span>Notices</span></button>}
           <button type="button" className={tab === 'settings' ? 'on' : ''} onClick={() => setTab('settings')}>{TgIcon.gear()}<span>Settings</span></button>
         </nav>
+        )
       )}
+      <Modal open={folderPick} title="Add to a folder" onClose={() => setFolderPick(false)}>
+        {folderPick && (allFolders.filter((f) => f.custom).length ? (
+          <div className="tg-folder-pick">
+            {allFolders.filter((f) => f.custom).map((f) => <button key={f.id} type="button" className="chat-room-item" onClick={() => bulkFolder(f)}>{TgIcon.folder()}<strong>{f.name}</strong></button>)}
+          </div>
+        ) : (
+          <div className="stack"><p className="muted">You have no folders of your own yet.</p><Button variant="primary" onClick={() => { setFolderPick(false); setFolders(true) }}>Make a folder</Button></div>
+        ))}
+      </Modal>
       {canNotice && mobile && !windowed && (
         <div className="chat-list-foot">
           <Button size="sm" variant="ghost" onClick={() => setSent(true)}>Sent notices</Button>
