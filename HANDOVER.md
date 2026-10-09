@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct, late night: no top bar in the skins
+- The skins' top bar (chat button and the user chip, `SkinBar` in Layout.jsx) is gone: both are in the sidebar (Alex). Its `.skin-*` CSS is left in place, harmless.
+
 ### 9 Oct, late night: From library back on an empty Project Database
 - The library pickers sat in the Crew / Cast / Locations cards, which stay hidden while empty, so a new project had no way to add from the library. The top button row now also has **Crew from library**, **Cast from library** (Talent for an event) and **Location from library**, shown when that card is empty and the library has someone or somewhere of that kind. People.jsx opens its own picker; Locations takes a `librarySignal` counter like `startSignal`.
 
