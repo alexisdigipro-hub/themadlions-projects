@@ -26,7 +26,11 @@ export const isAssignedTo = (t, user) => {
   const me = (user?.name || '').trim().toLowerCase()
   return !!me && (t.assignee || '').trim().toLowerCase() === me
 }
-export const tasksFor = (list, user) => (seesAllTasks(user) ? list : list.filter((t) => isAssignedTo(t, user)))
+export const visibleTasks = (list, user) => (seesAllTasks(user) ? list : list.filter((t) => isAssignedTo(t, user)))
+/* A deleted task is kept with deletedAt (Alex, 9 Oct: Deleted under Completed on the Tasks page) and is
+   left out everywhere else; Restore there brings it back, Delete forever drops it. */
+export const tasksFor = (list, user) => visibleTasks(list.filter((t) => !t.deletedAt), user)
+export const binTask = (x, user) => { x.deletedAt = new Date().toISOString(); x.deletedBy = user?.name || '' }
 
 export const emptyTask = (partial = {}) => ({
   id: uid(), title: '', notes: '', assigneeId: '', assignee: '', dept: 'Production', due: '', priority: 'normal',
@@ -195,7 +199,7 @@ export default function Tasks({ hideEmpty = false, startSignal = 0 }) {
     const x = (p.tasks || []).find((y) => y.id === t.id)
     if (x) { x.status = status; x.doneAt = status === 'done' ? new Date().toISOString() : '' }
   })
-  const remove = (t) => edit((p) => (p.tasks = (p.tasks || []).filter((y) => y.id !== t.id)))
+  const remove = (t) => edit((p) => { const x = (p.tasks || []).find((y) => y.id === t.id); if (x) binTask(x, me) })
 
   const open = tasks.filter((t) => t.status !== 'done').length
   const overdue = tasks.filter((t) => t.status !== 'done' && t.due && t.due < today()).length
