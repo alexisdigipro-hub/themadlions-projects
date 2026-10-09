@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct: TML Chat starts in Glass dark
+- A chat colour **Glass dark** (`data-chat-theme='glass'`, Settings > Chat > Appearance): midnight backdrop with blue / teal glows on `.chat2`, the list frosted (`--chat-list-bg`), light blue accent and your bubbles #2c5d93, `--panel` solid so menus stay readable. main.jsx: on chat.html, once per device (`tml_chat_glass_default`), the chat colour becomes glass and the app theme glassdark; later choices stick. On an iPhone TML Chat has its own storage, so the main app is not touched; on a computer browser chat.html shares storage with the app.
+
 ### 9 Oct: TML Chat's own icon
 - Alex picked draft A's shape (the logo inside a big chat bubble) in draft C's colours (Glass dark): `public/icons/src/chat-icon.svg` (the logo PNG embedded, so it renders on its own), exported to `chat-icon-512.png`, `chat-icon-192.png`, `chat-apple-touch-icon.png` (180). Used by manifest-chat.webmanifest (also #0b1018 background/theme), chat.html's apple-touch-icon, and ChatWindow swaps the touch icon in while it is open. The main app keeps its icon. An iPhone keeps the old icon until TML Chat is removed from the home screen and added again.
 

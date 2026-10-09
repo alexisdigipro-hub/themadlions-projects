@@ -10,7 +10,7 @@ export const CHAT_DEFAULTS = {
   avatars: true, // faces next to other people's messages in groups and rooms
   sound: true, // a short tone when a message arrives from someone else while you are elsewhere
   // Telegram's settings (Alex, 8 Oct)
-  theme: 'accent', // chat colours: 'accent' (the app's accent) | 'blue' | 'sepia' | 'gray' | 'gold' | 'amoled'
+  theme: 'accent', // chat colours: 'accent' (the app's accent) | 'blue' | 'sepia' | 'gray' | 'gold' | 'amoled' | 'neo' | 'coral' | 'glass' (Glass dark, TML Chat's own from 9 Oct)
   textSize: null, // 0..4 on the slider; null = from the old size above
   bigEmoji: true, // a message of one to three emoji shows large, without a bubble
   spell: true, // check spelling while typing

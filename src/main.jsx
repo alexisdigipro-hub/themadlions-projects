@@ -38,6 +38,15 @@ try {
     localStorage.setItem('tml_icons', SKIN_ICONS[DEFAULT_THEME] || 'classic')
     localStorage.setItem('tml_theme_default', DEFAULT_THEME)
   }
+  // TML Chat (chat.html, the chat's own home-screen app) starts in Glass dark, chat colours
+  // included, once per device (Alex, 9 Oct); Settings > Chat changes it as usual afterwards
+  if (/chat\.html$/.test(window.location.pathname) && localStorage.getItem('tml_chat_glass_default') !== '1') {
+    let prefs = {}
+    try { prefs = JSON.parse(localStorage.getItem('tml_chat_prefs') || '{}') || {} } catch {}
+    localStorage.setItem('tml_chat_prefs', JSON.stringify({ ...prefs, theme: 'glass' }))
+    localStorage.setItem('tml_theme', 'glassdark')
+    localStorage.setItem('tml_chat_glass_default', '1')
+  }
   applyThemeChoice(localStorage.getItem('tml_theme') || DEFAULT_THEME)
   document.documentElement.dataset.accent = localStorage.getItem('tml_accent') || 'amber'
   applyFont(currentFont())
