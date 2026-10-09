@@ -4,6 +4,7 @@ import { can, today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { pcloudTarget } from '../lib/pcloud.js'
 import { deleteFile, fileUrl, uploadFile } from '../lib/files.js'
 import { compress } from '../lib/photos.js'
+import { remote, supabase } from '../lib/supabase.js'
 import { syncLineWorklog } from '../lib/budget.js'
 import { recordPayment } from './PaymentModal.jsx'
 
@@ -161,6 +162,18 @@ export function ReceiptModal({ project, groups, onClose }) {
         vendor: member ? member.name : shop, memberId: member ? member.id : '', contactId: '', locationId: '',
         date: f.date, notes: [member && shop ? `Receipt from ${shop}` : '', f.notes.trim()].filter(Boolean).join(' · '),
         receipt, ...(member ? { reimburse: true } : {}),
+      }
+      // Someone with no edit permission at all cannot write the project (Row Level Security): their
+      // receipt goes through add_receipt_line(), which appends this one line and nothing else
+      // (supabase/receipt_line.sql). Their own refund still reaches their My Finance from here.
+      const direct = !remote || admin || Object.values(me?.permissions || {}).includes('edit')
+      if (!direct) {
+        const { error } = await supabase.rpc('add_receipt_line', { p_project: project.id, p_line: line })
+        if (error) throw new Error(error.code === 'PGRST202' || error.code === '42883' ? 'An administrator has to run supabase/receipt_line.sql before receipts can be added here.' : error.message)
+        if (member) update((s) => { syncLineWorklog(s, project, line); return s })
+        toast(member ? 'Expense saved. You are owed it back in My Finance.' : 'Expense saved. An administrator books the payment.', 'ok')
+        onClose()
+        return
       }
       update((s) => {
         const p = s.projects.find((x) => x.id === project.id)
