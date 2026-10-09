@@ -4636,7 +4636,9 @@ html[data-skin='glass'][data-theme][data-accent] {
   --glass-blur: blur(18px) saturate(140%);
   --shadow-lg: 0 24px 70px rgba(20, 0, 60, .55);
 }
-html[data-skin='glass'][data-theme] body {
+/* the backdrop is painted on the page itself (html) as well as body, so the screen never shows black
+   past the window's edge on an iPhone's home screen (Alex, 9 Oct); same for Glass dark and Glass light */
+html[data-skin='glass'][data-theme]:not([data-public='1']), html[data-skin='glass'][data-theme] body {
   background:
     linear-gradient(118deg, transparent 38%, rgba(255, 255, 255, .10) 46%, rgba(255, 255, 255, .02) 52%, transparent 60%),
     radial-gradient(1100px 650px at 12% 18%, #9a24e0 0%, transparent 58%),
@@ -4702,7 +4704,7 @@ html[data-skin='glassdark'][data-theme][data-accent] {
   --gl-active: rgba(255, 255, 255, .12); --gl-glow: rgba(90, 170, 255, .35);
   --shadow-lg: 0 24px 70px rgba(0, 0, 0, .55);
 }
-html[data-skin='glassdark'][data-theme] body {
+html[data-skin='glassdark'][data-theme]:not([data-public='1']), html[data-skin='glassdark'][data-theme] body {
   background:
     radial-gradient(900px 600px at 10% 12%, rgba(52, 110, 190, .45) 0%, transparent 60%),
     radial-gradient(800px 640px at 92% 85%, rgba(20, 140, 150, .35) 0%, transparent 62%),
@@ -4723,7 +4725,7 @@ html[data-skin='glasslight'][data-theme][data-accent] {
   --gl-active: rgba(255, 255, 255, .9); --gl-glow: rgba(91, 91, 214, .28);
   --shadow-lg: 0 24px 70px rgba(60, 70, 120, .22);
 }
-html[data-skin='glasslight'][data-theme] body {
+html[data-skin='glasslight'][data-theme]:not([data-public='1']), html[data-skin='glasslight'][data-theme] body {
   background:
     radial-gradient(900px 620px at 8% 10%, rgba(196, 181, 253, .55) 0%, transparent 60%),
     radial-gradient(820px 640px at 95% 90%, rgba(165, 243, 252, .55) 0%, transparent 62%),
@@ -5346,4 +5348,40 @@ html .chat2[data-chat-theme='glass'] .chat-win-tabs { background: rgba(16, 22, 3
   .sidebar { padding-top: env(safe-area-inset-top); }
   .modal { max-height: calc(100dvh - env(safe-area-inset-top) - 8px); }
   .lightbox { padding-top: calc(20px + env(safe-area-inset-top)); }
+}
+
+/* TML Chat on a phone: the folders and Chats / Calls / Notices / Settings joined into one frosted card,
+   a fading hairline between them, the folder row a little slimmer, the card lower on the screen
+   (Alex, 9 Oct). */
+@media (max-width: 820px) {
+  html.chat-window body .chat-win .chat2 .tg-dock { gap: 0; padding: 4px; bottom: max(6px, calc(env(safe-area-inset-bottom) - 22px)); margin-bottom: max(6px, calc(env(safe-area-inset-bottom) - 22px)); background: color-mix(in srgb, var(--panel) 80%, transparent); border: 1px solid var(--line-soft); border-radius: 30px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 10px 34px rgba(0, 0, 0, .28); -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%); }
+  html.chat-window body .chat-win .chat2 .tg-dock .chat-folders,
+  html.chat-window body .chat-win .chat2 .tg-dock .chat-win-tabs.tg-tabs { background: none; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html.chat-window body .chat-win .chat2 .tg-dock .chat-folders { padding: 2px 2px 5px; border-radius: 26px; }
+  html.chat-window body .chat-win .chat2 .tg-dock .chat-folders button { padding-top: 7px; padding-bottom: 7px; }
+  html.chat-window body .chat-win .chat2 .tg-dock .chat-win-tabs.tg-tabs { position: relative; padding: 7px 2px 2px; border-radius: 26px; }
+  html.chat-window body .chat-win .chat2 .tg-dock .chat-folders + .chat-win-tabs.tg-tabs::before { content: ''; position: absolute; top: 0; left: 18px; right: 18px; height: 1px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--text) 18%, transparent) 20%, color-mix(in srgb, var(--text) 18%, transparent) 80%, transparent); }
+}
+
+/* TML Chat: the page behind the chat carries the chat's backdrop, so no black shows under the bars at
+   the foot of an iPhone (or above, behind the clock) wherever the window stops short of the glass. */
+html.chat-window { background: var(--bg); }
+html.chat-window body { background: transparent; }
+html.chat-window:has(.chat2[data-chat-theme='glass']) {
+  background:
+    radial-gradient(900px 600px at 10% 12%, rgba(52, 110, 190, .45) 0%, transparent 60%),
+    radial-gradient(800px 640px at 92% 85%, rgba(20, 140, 150, .35) 0%, transparent 62%),
+    radial-gradient(700px 520px at 75% 8%, rgba(110, 80, 200, .22) 0%, transparent 60%),
+    linear-gradient(160deg, #0a0f18 0%, #0d1522 55%, #0a1119 100%);
+  background-attachment: fixed;
+  background-color: #0a1119;
+}
+
+/* The app on an iPhone's home screen: iOS blurs whatever sits right under the clock unless the top of the
+   page is a solid colour (it then just carries that colour up). So on a phone the top bar is solid, and a
+   solid strip of the same colour fills the clock's area (Alex, 9 Oct: "a blur at the very top"). In a
+   browser tab the strip has no height. TML Chat keeps its own top. */
+@media (max-width: 820px) {
+  html[data-theme]:not(.chat-window) body .topbar { background: var(--panel); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html[data-theme]:not(.chat-window) body::before { content: ''; position: fixed; top: 0; left: 0; right: 0; z-index: 31; height: env(safe-area-inset-top); background: var(--panel); pointer-events: none; }
 }
