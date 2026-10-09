@@ -81,9 +81,10 @@ export function TaskList({ tasks, onEdit, onStatus, onDelete, editable, showProj
    than typed: a task is matched to its person by name, so a picked name is one that will match.
    A task from before this, assigned to someone outside the team (a crew contact), keeps that name
    as an option so opening it does not quietly drop who it was for. */
-/* `lists` (the Tasks page: Company, the administrators' lists, the projects) adds a List field, so a
-   task goes on the list picked there (Alex, 9 Oct). A project's own Tasks tab passes none. */
-export function TaskModal({ draft, setDraft, onSave, onClose, lists }) {
+/* Two separate fields (Alex, 9 Oct): List, the administrators' lists (departments) a task can sit on,
+   shown wherever such lists exist; and Project, the project it is linked to, offered on the Tasks
+   page (`projects`). A project's own Tasks tab passes no projects: its tasks are that project's. */
+export function TaskModal({ draft, setDraft, onSave, onClose, projects }) {
   const { state } = useStore()
   const TASK_DEPTS = [...new Set([...departmentsOf(state), 'Legal'])]
   const set = (k, v) => setDraft({ ...draft, [k]: v })
@@ -95,8 +96,8 @@ export function TaskModal({ draft, setDraft, onSave, onClose, lists }) {
     ...(outside ? [[draft.assignee, `${draft.assignee} (not in the team)`]] : []),
   ]
   const pickAssignee = (name) => setDraft({ ...draft, assignee: name, assigneeId: team.find((u) => u.name === name)?.id || '' })
-  const listKey = draft.projectId ? `p:${draft.projectId}` : draft.listId && (lists || []).some((l) => l.key === `l:${draft.listId}`) ? `l:${draft.listId}` : 'general'
-  const pickList = (k) => setDraft({ ...draft, projectId: k.startsWith('p:') ? k.slice(2) : '', listId: k.startsWith('l:') ? k.slice(2) : '' })
+  const ownLists = state.settings?.taskLists || []
+  const listId = ownLists.some((l) => l.id === draft.listId) ? draft.listId : ''
   return (
     <Modal
       open
@@ -112,7 +113,12 @@ export function TaskModal({ draft, setDraft, onSave, onClose, lists }) {
     >
       <div className="task-form">
         <Field label="Task"><Input autoFocus value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder="Lock the rooftop permit" /></Field>
-        {lists?.length > 1 && <Field label="List"><Select value={listKey} onChange={(e) => pickList(e.target.value)} options={lists.map((l) => [l.key, l.project ? `🎬 ${l.name}` : `${l.icon} ${l.name}`])} /></Field>}
+        {(projects || ownLists.length > 0) && (
+          <div className="row-2">
+            {projects && <Field label="Project"><Select value={draft.projectId || ''} onChange={(e) => set('projectId', e.target.value)} options={[['', 'No project'], ...projects.map((p) => [p.id, p.title])]} /></Field>}
+            {ownLists.length > 0 && <Field label="List"><Select value={listId} onChange={(e) => set('listId', e.target.value)} options={[['', draft.projectId ? 'No list' : 'Company'], ...ownLists.map((l) => [l.id, `${l.icon || '☰'} ${l.name}`])]} /></Field>}
+          </div>
+        )}
         <div className="row-2">
           <Field label="Assignee"><Select value={draft.assignee || ''} onChange={(e) => pickAssignee(e.target.value)} options={assigneeOptions} /></Field>
           <Field label="Deadline"><Input type="date" value={draft.due} onChange={(e) => set('due', e.target.value)} /></Field>
