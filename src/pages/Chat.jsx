@@ -535,7 +535,7 @@ function RoomList({ activeId, windowed }) {
     const dir = to > from ? 'next' : 'prev'
     const el = roomsRef.current
     const still = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (mobile && el && !still && el.parentNode) {
+    if (el && !still && el.parentNode) {
       const frame = document.createElement('div')
       frame.className = 'chat-rooms-ghost'
       frame.setAttribute('aria-hidden', 'true')
@@ -550,7 +550,7 @@ function RoomList({ activeId, windowed }) {
       setTimeout(() => frame.remove(), 320)
       setSlide(dir)
     }
-    if (tg && !still) glassTo(id)
+    if (!still) glassTo(id)
     setFolderId(id)
   }
   // TML Chat on a phone: a small glass lens lifts off the chosen folder, slides to the new one and
@@ -652,7 +652,6 @@ function RoomList({ activeId, windowed }) {
   // TML Chat on a phone (the home-screen app) is laid out like Telegram for iPhone (Alex, 9 Oct):
   // Edit · Chats · (+ group, new message) on top, the search, the folders as a pill track, and a
   // floating bar at the foot with the unread count on Chats
-  const tg = mobile && windowed
   const allUnread = C.totalUnread(unread)
   // the folder tabs: above the search, or in TML Chat on a phone at the foot, right over
   // Chats / Calls / Notices / Settings where the thumb is (Alex, 9 Oct)
@@ -672,7 +671,7 @@ function RoomList({ activeId, windowed }) {
   // the list's foot, Telegram's, in Alex's order: chats, calls, notices (administrators), settings
   // (People left, Alex: the new-message button is already above the list)
   const footTabs = (
-    tg && picking ? (
+    picking ? (
       <nav className="chat-win-tabs tg-tabs tg-bulk">
         <button type="button" disabled={!picked.length} onClick={bulkRead}>{TgIcon.chats()}<span>Read</span></button>
         <button type="button" disabled={!picked.length} onClick={bulkArchive}>{TgIcon.folder()}<span>{allArchived ? 'Unarchive' : 'Archive'}</span></button>
@@ -680,8 +679,8 @@ function RoomList({ activeId, windowed }) {
         <button type="button" className="tg-del" disabled={!picked.length} onClick={bulkDelete}><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg><span>Delete</span></button>
       </nav>
     ) : (
-    <nav className={`chat-win-tabs${tg ? ' tg-tabs' : ''}`}>
-      <button type="button" className={tab === 'chats' ? 'on' : ''} onClick={() => setTab('chats')}><span className="tg-tab-ico">{TgIcon.chats()}{tg && allUnread > 0 && <i className="tg-tab-badge">{allUnread > 99 ? '99+' : allUnread}</i>}</span><span>Chats</span></button>
+    <nav className="chat-win-tabs tg-tabs">
+      <button type="button" className={tab === 'chats' ? 'on' : ''} onClick={() => setTab('chats')}><span className="tg-tab-ico">{TgIcon.chats()}{allUnread > 0 && <i className="tg-tab-badge">{allUnread > 99 ? '99+' : allUnread}</i>}</span><span>Chats</span></button>
       {remote && <button type="button" className={tab === 'calls' ? 'on' : ''} onClick={() => setTab('calls')}>{TgIcon.phone()}<span>Calls</span></button>}
       {canNotice && <button type="button" className={tab === 'notices' ? 'on' : ''} onClick={() => setTab('notices')}>{TgIcon.bell()}<span>Notices</span></button>}
       <button type="button" className={tab === 'settings' ? 'on' : ''} onClick={() => setTab('settings')}>{TgIcon.gear()}<span>Settings</span></button>
@@ -690,32 +689,29 @@ function RoomList({ activeId, windowed }) {
   )
 
   return (
-    <aside className={`chat-list${prefs.folderTabs === 'left' && !mobile && tab === 'chats' ? ' tabs-left' : ''}`}>
-      <div className={`chat-list-head${tg ? ' tg-head' : ''}${plus ? ' plus-open' : ''}`}>
+    // TML Chat's list on a phone, everywhere the chat is (Alex, 9 Oct): the app's chat on a phone and
+    // on a computer, and the chat window, get the same head, Edit, + menu, slim search and folders dock
+    <aside className="chat-list tgui">
+      <div className={`chat-list-head tg-head${plus ? ' plus-open' : ''}`}>
         {/* Edit alone on the left; on the right one + that opens, in glass, New folder / New group / New message (Alex, 9 Oct) */}
-        {tg && (
-          <span className="tg-pill tg-pill-left">
-            <button type="button" className="tg-edit" onClick={() => { setPlus(false); picking ? endPick() : setPicking(true) }}>{picking ? 'Done' : 'Edit'}</button>
-          </span>
-        )}
+        <span className="tg-pill tg-pill-left">
+          <button type="button" className="tg-edit" onClick={() => { setPlus(false); picking ? endPick() : setPicking(true) }}>{picking ? 'Done' : 'Edit'}</button>
+        </span>
         {/* the company's name, MAD set heavier (Alex, 9 Oct); while picking, how many are picked */}
-        <h1>{tg ? (picking ? (picked.length ? `${picked.length} selected` : 'Select chats') : <span className="tg-brand">THE<b>MAD</b>LIONS</span>) : 'Chat'}</h1>
-        {tg && (picking ? (
+        <h1>{picking ? (picked.length ? `${picked.length} selected` : 'Select chats') : <span className="tg-brand">THE<b>MAD</b>LIONS</span>}</h1>
+        {picking ? (
           <button type="button" className="tg-pill tg-all" onClick={() => setPicked(picked.length === shown.length ? [] : shown.map((r) => r.id))}>{picked.length === shown.length && shown.length ? 'None' : 'All'}</button>
         ) : (
-          <span ref={plusRef} className={`tg-pill tg-plus${plus ? ' open' : ''}`} style={{ '--n': isAdmin ? 3 : 2 }}>
+          <span ref={plusRef} className={`tg-pill tg-plus${plus ? ' open' : ''}`} style={{ '--n': 2 + (isAdmin ? 1 : 0) + (windowed ? 0 : 1) }}>
             <span className="tg-plus-items" aria-hidden={!plus}>
               <button type="button" tabIndex={plus ? 0 : -1} onClick={() => { setPlus(false); setFolders('new') }} title="New folder" aria-label="New folder">{TgIcon.folderPlus()}</button>
               {isAdmin && <button type="button" tabIndex={plus ? 0 : -1} onClick={() => { setPlus(false); setGroup('new') }} title="New group" aria-label="New group">{TgIcon.people()}</button>}
               <button type="button" tabIndex={plus ? 0 : -1} onClick={() => { setPlus(false); setDirect(true) }} title="New message" aria-label="New message">{TgIcon.edit()}</button>
+              {!windowed && <button type="button" tabIndex={plus ? 0 : -1} onClick={() => { setPlus(false); popOut() }} title="Open the chat in its own window" aria-label="Open the chat in its own window">{TgIcon.popout()}</button>}
             </span>
             <button type="button" className="tg-plus-btn" onClick={() => setPlus((o) => !o)} aria-expanded={plus} title={plus ? 'Close' : 'New'} aria-label={plus ? 'Close' : 'New folder, group or message'}>{TgIcon.plus()}</button>
           </span>
-        ))}
-        {!mobile && <button type="button" className="icon-btn chat-head-ico chat-folders-btn" onClick={() => setFolders(true)} title="Your folders" aria-label="Your folders">{TgIcon.folder()}</button>}
-        {!mobile && <button type="button" className="icon-btn chat-head-ico chat-new" onClick={() => setDirect(true)} title="New message" aria-label="New message">{TgIcon.edit()}</button>}
-        {isAdmin && !tg && <button type="button" className="icon-btn chat-head-ico chat-group-new" onClick={() => setGroup('new')} title="New group" aria-label="New group">{TgIcon.people()}</button>}
-        {!windowed && <button type="button" className="icon-btn chat-head-ico chat-popout" onClick={popOut} title="Open the chat in its own window" aria-label="Open the chat in its own window">{TgIcon.popout()}</button>}
+        )}
       </div>
       {tab === 'settings' || tab === 'notices' || tab === 'calls' ? (tab === 'settings' ? (
         <div className="chat-win-settings">
@@ -725,9 +721,8 @@ function RoomList({ activeId, windowed }) {
       ) : tab === 'calls' ? <CallsPanel /> : null) : (<>
       {legacy && <p className="chat-legacy">Rooms are not switched on yet: run supabase/chat_rooms.sql in the SQL editor. Until then only the team room works.</p>}
       {mobile && !windowed && installCard > 0 && <InstallHint key={installCard} />}
-      {!tg && folderTabs}
       <div className="chat-search"><input ref={searchRef} className="input" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') { setQ(''); e.currentTarget.blur() } }} placeholder={mobile ? 'Search' : 'Search (⌘K)'} name="chat-search" autoComplete="off" /></div>
-      <div ref={roomsRef} key={mobile ? folder.id : 'rooms'} className={`chat-rooms${mobile && slide ? ` in-${slide}` : ''}`} onAnimationEnd={() => setSlide('')}>
+      <div ref={roomsRef} key={folder.id} className={`chat-rooms${slide ? ` in-${slide}` : ''}`} onAnimationEnd={() => setSlide('')}>
         {!shown.length && !hits.length && <p className="muted small chat-rooms-empty">{q.trim() ? 'Nothing found.' : folder.custom ? 'This folder is empty. Add conversations to it under Folders.' : 'Nothing here yet.'}</p>}
         {shown.map((r) => {
           const last = C.lastMessage(state.chat, r.id)
@@ -775,19 +770,12 @@ function RoomList({ activeId, windowed }) {
         </div>
       )}
       {windowed && mobile && <InstallHint />}
-      {/* Telegram's round pencil (phone only): a new message to one person */}
-      {mobile && !windowed && (
-        <button type="button" className="chat-fab" onClick={() => setDirect(true)} aria-label="New message" title="New message">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-        </button>
-      )}
-      {tg && (
-        <div className="tg-dock">
-          {tab === 'chats' && folderTabs}
-          {footTabs}
-        </div>
-      )}
-      {(windowed || !mobile) && !tg && footTabs}
+      {/* the folders and, where the chat has its own foot (its window, a computer), Chats / Calls /
+          Notices / Settings; in the app on a phone the app's own tab bar is under it (Alex, 9 Oct) */}
+      <div className="tg-dock">
+        {tab === 'chats' && folderTabs}
+        {(windowed || !mobile || picking) && footTabs}
+      </div>
       <Modal open={folderPick} title="Add to a folder" onClose={() => setFolderPick(false)}>
         {folderPick && (allFolders.filter((f) => f.custom).length ? (
           <div className="tg-folder-pick">
