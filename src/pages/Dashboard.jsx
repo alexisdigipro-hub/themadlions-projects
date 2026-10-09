@@ -183,6 +183,69 @@ export default function Dashboard() {
   const active = projects.filter((p) => p.status !== 'Delivered')
   const closed = projects.filter((p) => p.status === 'Delivered')
   const shown = showDelivered ? closed : active
+
+  // A tap on another category (or Delivered) works like TML Chat's folders (Alex, 9 Oct): a small glass
+  // lens lifts off the chip that was chosen and slides to the new one, and the projects slide over, left
+  // or right by where the new chip sits. The old grid is copied into a frame that slides out.
+  const chipsRef = useRef(null)
+  const slideRef = useRef(null)
+  const [slide, setSlide] = useState('')
+  const still = () => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const glassTo = (from, to, hide) => {
+    const track = chipsRef.current
+    if (!track || !from || !to || from === to || typeof track.animate !== 'function') return
+    track.querySelectorAll('.glass-lens').forEach((n) => n.remove())
+    const lens = document.createElement('span')
+    lens.className = 'glass-lens'
+    lens.setAttribute('aria-hidden', 'true')
+    track.appendChild(lens)
+    track.dataset.lens = hide
+    const at = (b) => `translate(${b.offsetLeft}px, ${b.offsetTop}px)`
+    const box = (b) => ({ width: `${b.offsetWidth}px`, height: `${b.offsetHeight}px` })
+    const run = lens.animate([
+      { transform: `${at(from)} scale(1)`, ...box(from), opacity: 0 },
+      { offset: 0.15, transform: `${at(from)} scale(1.12)`, ...box(from), opacity: 1 },
+      { offset: 0.75, transform: `${at(to)} scale(1.12)`, ...box(to), opacity: 1 },
+      { transform: `${at(to)} scale(1)`, ...box(to), opacity: 0 },
+    ], { duration: 560, easing: 'cubic-bezier(.3, .7, .2, 1)', fill: 'both' })
+    setTimeout(() => { delete track.dataset.lens }, 380)
+    run.onfinish = () => lens.remove()
+  }
+  const slideOut = (dir) => {
+    const box = slideRef.current
+    const old = box?.querySelector(':scope > .home-slide-in')
+    if (!old) return
+    box.querySelectorAll(':scope > .home-slide-ghost').forEach((n) => n.remove())
+    const ghost = old.cloneNode(true)
+    ghost.className = `home-slide-ghost out-${dir}`
+    ghost.setAttribute('aria-hidden', 'true')
+    box.appendChild(ghost)
+    box.classList.add('sliding')
+    setTimeout(() => { ghost.remove(); box.classList.remove('sliding') }, 320)
+    setSlide(dir)
+  }
+  const chipOf = (key) => chipsRef.current?.querySelector(`[data-chip="${CSS.escape(key)}"]`)
+  const pickFilter = (c) => {
+    if (c === filter) return
+    if (!still()) {
+      const order = [...(chipsRef.current?.querySelectorAll('[data-chip]') || [])]
+      const from = chipOf(filter)
+      const to = chipOf(c)
+      slideOut(order.indexOf(to) > order.indexOf(from) ? 'next' : 'prev')
+      glassTo(from, to, 'cat')
+    }
+    setFilter(c)
+  }
+  const toggleDelivered = () => {
+    if (!still()) {
+      const cat = chipOf(filter)
+      const neg = chipOf('Delivered')
+      slideOut(showDelivered ? 'prev' : 'next')
+      if (showDelivered) glassTo(neg, cat, 'cat')
+      else glassTo(cat, neg, 'neg')
+    }
+    setShowDelivered((v) => !v)
+  }
   const liveAll = state.projects.filter((p) => p.status !== 'Delivered')
 
   const [duping, setDuping] = useState('')
@@ -292,20 +355,20 @@ export default function Dashboard() {
       )}
 
       <div className="toolbar home-toolbar">
-        <div className="chips">
+        <div className="chips" ref={chipsRef}>
           {['All', ...CATEGORIES].map((c) => {
             const n = (showDelivered ? state.projects.filter((p) => p.status === 'Delivered') : liveAll).filter((p) => c === 'All' || p.category === c).length
             // On a phone only the categories that hold something (Alex, 8 Oct); the one picked stays
             if (mobile && !n && c !== 'All' && c !== filter) return null
             return (
-              <button key={c} className={`chip ${filter === c ? 'on' : ''}`} onClick={() => setFilter(c)}>
+              <button key={c} data-chip={c} className={`chip ${filter === c ? 'on' : ''}`} onClick={() => pickFilter(c)}>
                 {c}
                 <small>{n}</small>
               </button>
             )
           })}
           {(!mobile || showDelivered || state.projects.some((p) => p.status === 'Delivered')) && (
-            <button className={`chip neg ${showDelivered ? 'on' : ''}`} onClick={() => setShowDelivered((v) => !v)} aria-pressed={showDelivered} title="Delivered projects">
+            <button data-chip="Delivered" className={`chip neg ${showDelivered ? 'on' : ''}`} onClick={toggleDelivered} aria-pressed={showDelivered} title="Delivered projects">
               Delivered
               <small>{state.projects.filter((p) => p.status === 'Delivered').length}</small>
             </button>
@@ -330,6 +393,8 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <div className="home-slide" ref={slideRef}>
+      <div key={`${filter}|${showDelivered}`} className={`home-slide-in${slide ? ` in-${slide}` : ''}`}>
       {shown.length === 0 ? (
         <Empty
           title={showDelivered ? 'No delivered projects here' : state.projects.length ? 'Nothing matches' : 'No projects yet'}
@@ -340,6 +405,8 @@ export default function Dashboard() {
       ) : (
         <div className="project-grid">{shown.map((p) => card(p, showDelivered))}</div>
       )}
+      </div>
+      </div>
 
       <Modal
         open={!!draft}

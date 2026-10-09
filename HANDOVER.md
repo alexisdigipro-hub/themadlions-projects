@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (9 Oct 2026)
+- **Latest (9 Oct, afternoon):** Home's category chips (All, Music Video … Delivered) now move like TML Chat's folders, on a phone and a computer: a small glass lens lifts off the chip that was chosen and slides to the new one, and the projects slide over, left or right by where the new chip sits (Dashboard.jsx pickFilter / toggleDelivered, styles.css "Home: the categories and Delivered work like TML Chat's folders"). Reduced motion switches both off. Still open: the soft THEMADLIONS / PRODUCTION HUB at the top of the app on the iPhone home screen. Four fixes did not clear it; Alex was offered the top bar built like TML Chat's head (glass menu circle, THE**MAD**LIONS centred, initials on the right) or Plan B (a plain black clock bar for the app only) and has not picked yet.
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
