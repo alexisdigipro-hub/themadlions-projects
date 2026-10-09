@@ -5,6 +5,7 @@ import { can, canAccessProject, useCurrentUser, useStore } from '../lib/store.js
 import { hydrateProject } from '../lib/library.js'
 import { projectTabs, tabHidden } from '../lib/tabs.js'
 import { Icon } from '../components/icons.jsx'
+import { useGlide } from '../lib/glide.js'
 
 // The brainstorm whiteboard is built and working but Alex does not need it yet, so the tab is
 // hidden. The page itself still lives at /p/<id>/whiteboard. Flip this to true to bring it back.
@@ -53,6 +54,8 @@ export default function Project() {
   const { state, updateProject, update } = useStore()
   const user = useCurrentUser()
   const mobile = useIsMobile()
+  const { pathname } = useLocation()
+  const glide = useGlide()
   const raw = state.projects.find((p) => p.id === id)
   const project = raw ? hydrateProject(raw, state.library) : null
 
@@ -93,17 +96,20 @@ export default function Project() {
       {mobile ? <MobileTabs tabs={tabs} base={`/p/${project.id}`} /> : (
         <nav className="tabs">
           {tabs.map((t) => (
-            <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')}>
+            <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')} onClick={glide.go}>
               <span className="tab-ico">{Icon[t.icon]?.()}</span>
               {t.label}
             </NavLink>
           ))}
         </nav>
       )}
-      <div className="tab-body">
-        <Suspense fallback={null}>
-          <Outlet context={ctx} />
-        </Suspense>
+      {/* the page slides over when another tab is picked (lib/glide.js) */}
+      <div className="tab-body glide-box" ref={glide.boxRef}>
+        <div key={pathname.split('/')[3] || ''} className={glide.inClass}>
+          <Suspense fallback={null}>
+            <Outlet context={ctx} />
+          </Suspense>
+        </div>
       </div>
     </div>
   )

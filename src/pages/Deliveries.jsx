@@ -5,6 +5,7 @@ import { can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../
 import { deliveryUrl, estimateUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, shotlistUrl, tokenOf, deckUrl } from '../lib/shares.js'
 import { amount, estimateTotals } from '../lib/estimate.js'
 import { fmtDate, toISODate } from '../lib/dates.js'
+import { dirIn, useSlide } from '../lib/glide.js'
 
 export const STAGES = [
   ['rough', 'Rough cut'],
@@ -49,6 +50,7 @@ export default function Deliveries() {
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
   const [filter, setFilter] = useState('all') // Alex: open on Everything, not just Deliveries
+  const { boxRef, slideTo, inClass } = useSlide()
   const [edraft, setEdraft] = useState(null)
 
   const reload = () => {
@@ -329,13 +331,16 @@ export default function Deliveries() {
 
       <div className="chips">
         {tabs.map(([k, label]) => (
-          <button key={k} className={`chip ${shown === k ? 'on' : ''}`} onClick={() => setFilter(k)}>
+          <button key={k} className={`chip ${shown === k ? 'on' : ''}`} onClick={(e) => { if (shown !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setFilter(k) }}>
             {label}
             <small>{counts[k]}</small>
           </button>
         ))}
       </div>
 
+      {/* the list slides over when another filter is picked (lib/glide.js) */}
+      <div className="glide-box" ref={boxRef}>
+      <div key={shown} className={inClass}>
       {rows === undefined ? (
         <p className="muted">Loading…</p>
       ) : !list.length ? (
@@ -421,6 +426,8 @@ export default function Deliveries() {
           })}
         </ul>
       )}
+      </div>
+      </div>
 
       <Modal open={!!draft} title="Delivery page for the client" wide onClose={() => !busy && setDraft(null)}
         footer={<><Button variant="ghost" onClick={() => setDraft(null)} disabled={busy}>Cancel</Button><Button variant="primary" onClick={publish} disabled={busy}>{busy ? 'Publishing…' : 'Publish and copy link'}</Button></>}>

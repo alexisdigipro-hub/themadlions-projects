@@ -198,7 +198,7 @@ export default function Locations({ hideEmpty = false, startSignal = 0, libraryS
             {scriptSets.length > 0 && (
               <div className="field">
                 <span className="field-label">Which script sets shoot here</span>
-                <div className="chips">
+                <div className="chips" data-glide="off">
                   {scriptSets.map((s) => {
                     const on = draft.sceneLocations?.includes(s)
                     return (

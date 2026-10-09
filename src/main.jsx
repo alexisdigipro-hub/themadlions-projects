@@ -5,6 +5,7 @@ import './styles.css'
 import { applyFont, currentFont } from './lib/fonts.js'
 import { DEFAULT_THEME, SKIN_ICONS, applyThemeChoice } from './lib/skin.js'
 import { applyIconSet } from './components/icons.jsx'
+import { installGlassTabs } from './lib/glide.js'
 
 // Back from "Connect pCloud": pCloud puts the token in the address (#access_token=…), which the
 // router would swallow. Park it for Settings to show once, then land on Settings.
@@ -104,6 +105,8 @@ try {
     document.addEventListener('focusout', () => setTimeout(measure, 400))
   }
 } catch {}
+
+installGlassTabs()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
