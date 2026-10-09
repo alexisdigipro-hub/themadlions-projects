@@ -5130,7 +5130,7 @@ html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; 
    with a large name and a hairline under the text, and a floating frosted bar at the foot with the
    unread count on Chats. Colours come from the chat theme, so Coral, Neo and the rest keep theirs. */
 @media (max-width: 820px) {
-  html.chat-window body .chat-win .chat2:not(.has-room) .chat-list { background: var(--panel); }
+  html.chat-window body .chat-win .chat2:not(.has-room) .chat-list { background: var(--chat-list-bg, var(--panel)); }
   html.chat-window body .chat-win .chat2 .chat-list-head.tg-head { order: 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 10px 16px 10px; background: none; border: 0; }
   html.chat-window body .chat-win .chat2 .chat-list-head.tg-head h1 { position: static; transform: none; grid-column: 2; margin: 0; font-size: 19px; font-weight: 700; color: var(--text); pointer-events: none; }
   html.chat-window .tg-pill { display: inline-flex; align-items: center; height: 46px; padding: 0 20px; font: inherit; font-size: 17px; font-weight: 500; color: var(--text); background: color-mix(in srgb, var(--panel) 85%, transparent); border: 1px solid var(--line-soft); border-radius: 999px; box-shadow: 0 2px 12px rgba(0, 0, 0, .08); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); cursor: pointer; }
@@ -5162,3 +5162,27 @@ html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; 
   html.chat-window .tg-tab-ico svg { width: 27px; height: 27px; }
   html.chat-window .tg-tab-badge { position: absolute; top: -6px; right: -12px; min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; font-style: normal; font-size: 12px; font-weight: 700; line-height: 20px; text-align: center; color: #fff; background: #ff3b30; border: 2px solid var(--panel); border-radius: 999px; }
 }
+
+/* ---------- Glass dark, a chat colour of its own (Alex, 9 Oct) ----------
+   The chat on a midnight backdrop with soft blue and teal glows, the list and the bars as frosted
+   glass, light blue for you. TML Chat starts in it (main.jsx); anyone can pick it in Settings > Chat.
+   --panel stays solid so menus and pop-ups never show what is behind them. */
+html .chat2[data-chat-theme='glass'] {
+  --accent: #7cc4ff; --accent-ink: #06243d;
+  --bg: #0b1018; --panel: #141b27; --raised: rgba(255, 255, 255, .07); --sidebar: #141b27;
+  --text: #eef3fa; --muted: rgba(214, 224, 238, .66); --line: rgba(255, 255, 255, .12); --line-soft: rgba(255, 255, 255, .08);
+  --tg-wall: transparent; --chat-list-bg: rgba(255, 255, 255, .03);
+  color: var(--text);
+  background:
+    radial-gradient(900px 600px at 10% 12%, rgba(52, 110, 190, .45) 0%, transparent 60%),
+    radial-gradient(800px 640px at 92% 85%, rgba(20, 140, 150, .35) 0%, transparent 62%),
+    radial-gradient(700px 520px at 75% 8%, rgba(110, 80, 200, .22) 0%, transparent 60%),
+    linear-gradient(160deg, #0a0f18 0%, #0d1522 55%, #0a1119 100%);
+  background-attachment: fixed;
+}
+html .chat2[data-chat-theme='glass'] .chat-list { background: var(--chat-list-bg); -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%); border-color: rgba(255, 255, 255, .1); }
+html .chat2[data-chat-theme='glass'] .chat-box[data-bubbles] { --wa-wall: transparent; --wa-in: rgba(255, 255, 255, .09); --wa-out: #2c5d93; }
+html .chat2[data-chat-theme='glass'] .chat-win-tabs { background: rgba(16, 22, 33, .72); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+.cset-theme[data-chat-theme='glass'] .cset-theme-pic { background: radial-gradient(60px 40px at 20% 20%, #2f5fa8, transparent 70%), linear-gradient(160deg, #0d1522, #0b3a40); }
+.cset-theme[data-chat-theme='glass'] .cset-theme-pic i { background: rgba(255, 255, 255, .14); }
+.cset-theme[data-chat-theme='glass'] .cset-theme-pic b { background: #2c5d93; }

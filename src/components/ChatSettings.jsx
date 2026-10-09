@@ -18,6 +18,7 @@ const THEMES = [
   ['amoled', 'Amoled black'],
   ['neo', 'Neo red'],
   ['coral', 'Coral'],
+  ['glass', 'Glass dark'],
 ]
 const QUICK = ['🎥', '❤️', '👍', '🔥', '🏆', '👏', '😂']
 const SHORTCUTS = [
