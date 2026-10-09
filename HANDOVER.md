@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct, night: Tasks and Notes tidied on a phone
+- Last block of styles.css ("Tasks and Notes on a phone, tidied"): no frame around the page (the glass skins frosted `.rem-app`, and `.rem-main`'s -16px bleed ran the cards past it), the list on the page's own width, "‹ Lists" / "‹ Folders" on its own line above the title, the "+ New…" bar and the open note with room above the bottom menu. Checked on 390 px mocks (Glass dark).
+
 ### 9 Oct, night: glass skins' side menu on a phone
 - On a phone the side menu slid over the page see-through (Glass dark / light had `--sidebar-bg: transparent`, purple Glass .07 white), so the page showed through its words. `--sidebar-bg` is now nearly solid in all three (dark navy .94, light white .95, purple .94) and a last phone-only rule blurs it; the computer's floating sidebar keeps its own see-through glass. Checked on a 390 px mock.
 

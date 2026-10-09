@@ -5104,3 +5104,22 @@ html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; 
 @media (max-width: 820px) {
   html:is([data-skin='glass'], [data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidebar { background: var(--sidebar-bg); -webkit-backdrop-filter: blur(24px) saturate(150%); backdrop-filter: blur(24px) saturate(150%); box-shadow: 12px 0 40px rgba(0, 0, 0, .35); }
 }
+
+/* ---------- Tasks and Notes on a phone, tidied (Alex, 9 Oct) ----------
+   No frame around the whole page (the glass skins drew one, and the list bled past it), the list
+   and its cards on the page's own width, "‹ Lists" / "‹ Folders" on a line of their own above the
+   title, and room between the "+ New…" bar and the bottom menu. */
+@media (max-width: 820px) {
+  .rem-app,
+  html:is([data-skin='glass'], [data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-app { background: transparent; border: 0; border-radius: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .rem-main { margin: 0; min-height: calc(100dvh - 200px); }
+  .rem-head { flex-wrap: wrap; align-items: flex-end; gap: 6px 10px; padding: 4px 0 12px; }
+  .rem-head > .rem-back { flex: 0 0 100%; padding: 0 0 2px; text-align: left; }
+  .notes-note-head > .rem-back { flex: 1 1 auto; }
+  .rem-head h1 { font-size: 28px; white-space: normal; }
+  .rem-scroll { padding: 0 0 12px; overflow: visible; }
+  .rem-empty { margin: 10px 0 18px; }
+  .rem-quick { margin: 8px 0 24px; }
+  .notes-sheet { margin: 0 0 24px; }
+  .rem-task, .notes-card { padding: 10px 12px; gap: 12px; }
+}
