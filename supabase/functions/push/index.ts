@@ -15,7 +15,7 @@
 // people's subscriptions with the service key and send.
 //
 // Actions (POST JSON): key · message { id } · call { chatId, callId, video } ·
-//   call_missed { chatId, callId, video } · test
+//   call_missed { chatId, callId, video } · test (a call's chatId: a direct room, or any room for a group call)
 //
 // The encryption is RFC 8291 (aes128gcm) and the sender's identity RFC 8292 (VAPID), written
 // out with the Web Crypto the runtime has, so no library is needed.
@@ -226,20 +226,31 @@ Deno.serve(async (req) => {
     if (action === 'call' || action === 'call_missed') {
       const chatId = String(body.chatId || '')
       const callId = String(body.callId || '').slice(0, 40)
-      if (!chatId.startsWith('d:') || !callId) return json({ error: 'Calls are one to one.' }, 400)
-      // a direct room the caller is in (its id is the two member ids)
-      const pair = chatId.slice(2).split(':')
-      if (pair.length !== 2 || !pair.includes(uid)) return json({ error: 'Not your conversation.' }, 403)
-      const other = pair.find((x) => x !== uid) as string
-      const { data: same } = await db.from('members').select('user_id').eq('user_id', other).eq('active', true).limit(1)
-      if (!same?.length) return json({ error: 'Not someone of your team.' }, 403)
+      if (!chatId || !callId) return json({ error: 'No call.' }, 400)
+      let ids: string[] = []
+      let group = ''
+      if (chatId.startsWith('d:')) {
+        // a direct room the caller is in (its id is the two member ids)
+        const pair = chatId.slice(2).split(':')
+        if (pair.length !== 2 || !pair.includes(uid)) return json({ error: 'Not your conversation.' }, 403)
+        const other = pair.find((x) => x !== uid) as string
+        const { data: same } = await db.from('members').select('user_id').eq('user_id', other).eq('active', true).limit(1)
+        if (!same?.length) return json({ error: 'Not someone of your team.' }, 403)
+        ids = [other]
+      } else {
+        // a group call: everyone who may read that room, under the caller's own rules
+        const { data: rec, error } = await db.rpc('push_recipients', { p_chat: chatId })
+        if (error) return json({ error: error.message }, 500)
+        ids = (rec || []).map((r: any) => (typeof r === 'string' ? r : r.push_recipients || Object.values(r)[0])).filter(Boolean)
+        group = (await roomName(db, chatId)) || 'the group'
+      }
       const name = await me()
-      const kind = body.video ? 'video call' : 'voice call'
+      const kind = `${group ? 'group ' : ''}${body.video ? 'video call' : 'voice call'}`
       const missed = action === 'call_missed'
-      const r = await deliver(admin, [other], (sub) => ({
+      const r = await deliver(admin, ids, (sub) => ({
         type: missed ? 'missed' : 'call', room: chatId, callId, from: uid, video: !!body.video,
-        title: missed ? `Missed ${kind}` : `${name}`,
-        body: missed ? `${name} called you.` : `Incoming ${kind} · tap to answer`,
+        title: missed ? `Missed ${kind}` : group ? `${name} · ${group}` : `${name}`,
+        body: missed ? (group ? `${name} called ${group}.` : `${name} called you.`) : `Incoming ${kind} · tap to answer`,
         tag: `call:${callId}`,
         url: roomUrl(sub, chatId, missed ? '' : `?call=${encodeURIComponent(callId)}&from=${encodeURIComponent(uid)}`),
       }), missed ? { ttl: 86400, urgency: 'normal' } : { ttl: 60, urgency: 'high' })

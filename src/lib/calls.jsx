@@ -6,6 +6,7 @@ import { SUPABASE_KEY, SUPABASE_URL } from './supabaseConfig.js'
 import { remote, supabase } from './supabase.js'
 import { uid, useCurrentUser, useStore } from './store.jsx'
 import { closeCallNotice, onWorkerMessage, pushCall, refreshPush } from './push.js'
+import { roomOf, roomRecipients } from './chat.js'
 
 /*
   Voice and video calls in a one-to-one conversation (Alex, 8 Oct), like Telegram's.
@@ -25,6 +26,13 @@ import { closeCallNotice, onWorkerMessage, pushCall, refreshPush } from './push.
   answered turns that notification into "Missed call", and becomes a message in the
   conversation and a notice.
 
+  Group calls (Alex, 9 Oct) in a group, a project's or the team's conversation: the caller rings
+  everyone in it ("g-ring" on each line, and the push), whoever answers sends "g-join" to all of
+  them, and everyone already in the call opens a connection to the newcomer (an offer straight to
+  them, the answer back). So each person is connected to each other one (a mesh, up to 8 people):
+  no media server. Leaving sends "g-leave". Everyone in the conversation hears these, so its
+  header can show a call going on and Join it later.
+
   Setting up: the caller makes an offer and waits for the network routes to be gathered, then
   sends it whole (no trickling), and the answer comes back the same way. Public STUN servers find
   the route; a network that blocks direct connections (some 4G operators, strict office Wi-Fi)
@@ -33,17 +41,21 @@ import { closeCallNotice, onWorkerMessage, pushCall, refreshPush } from './push.
 
 const ICE = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }, { urls: 'stun:stun.cloudflare.com:3478' }]
 const RING_FOR = 45000
+const GROUP_MAX = 8
 const line = (userId) => `call:u:${userId}`
 
-/* A message onto someone's line, through Realtime's REST door (no need to join their line). */
+/* A message onto someone's line (or several people's at once), through Realtime's REST door (no
+   need to join their line). */
 async function signal(to, payload) {
+  const list = (Array.isArray(to) ? to : [to]).filter(Boolean)
+  if (!list.length) return
   const { data } = await supabase.auth.getSession()
   const token = data?.session?.access_token
   if (!token) throw new Error('Not signed in')
   const res = await fetch(`${SUPABASE_URL}/realtime/v1/api/broadcast`, {
     method: 'POST',
     headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages: [{ topic: line(to), event: 'call', payload, private: true }] }),
+    body: JSON.stringify({ messages: list.map((id) => ({ topic: line(id), event: 'call', payload, private: true })) }),
     keepalive: true, // still goes out when the page is closing (hang up on leaving)
   })
   if (!res.ok) throw new Error(`The call could not be sent (${res.status})`)
@@ -216,7 +228,8 @@ export function CallProvider({ children }) {
   const start = useCallback(async (room, video = false) => {
     const me = userRef.current
     if (!remote || !me) return
-    if (callRef.current) { toast('You are already in a call.', 'error'); return }
+    if (room.kind !== 'direct') { G.current.startGroup(room, video); return }
+    if (callRef.current || gRef.current) { toast('You are already in a call.', 'error'); return }
     if (!ready) { toast('Calls are not switched on yet: supabase/chat_calls.sql has to be run once.', 'error'); return }
     if (!navigator.mediaDevices?.getUserMedia || typeof RTCPeerConnection === 'undefined') { toast('This browser cannot make calls.', 'error'); return }
     const peer = (stateRef.current.users || []).find((u) => u.id === room.otherId)
@@ -292,14 +305,266 @@ export function CallProvider({ children }) {
     finish(c.dir === 'out' && !c.answered ? 'Cancelled' : 'Call ended')
   }
 
+  /* ---------- group calls ---------- */
+  const [gcall, setGState] = useState(null)
+  const gRef = useRef(null)
+  const gPeers = useRef(new Map()) // their id -> { pc, stream, lost }
+  const gRing = useRef(null) // the ring, sent again to someone who opens the app from the notification
+  const [live, setLiveState] = useState({}) // room -> { id, video, inCall: [ids] }: calls going on, heard on my line
+  const liveRef = useRef({})
+  const G = useRef({})
+  const setG = useCallback((next) => {
+    const v = typeof next === 'function' ? next(gRef.current) : next
+    gRef.current = v
+    setGState(v)
+  }, [])
+  const gpatch = (p) => setG((c) => (c ? { ...c, ...p } : c))
+  const membersOf = (roomId) => {
+    const me = userRef.current
+    const room = roomOf(stateRef.current, me, roomId)
+    return room ? roomRecipients(stateRef.current, room, me?.id) : []
+  }
+  const noteLive = (roomId, id, fn) => {
+    const was = liveRef.current[roomId]
+    const base = was && was.id === id ? was : { id, video: false, inCall: [] }
+    const next = fn(base)
+    const all = { ...liveRef.current }
+    if (next && next.inCall.length) all[roomId] = next
+    else delete all[roomId]
+    liveRef.current = all
+    setLiveState(all)
+  }
+  const gStopRing = () => { silence(); clearTimeout(timers.current.gring) }
+
+  const gFinish = (reason = 'Call ended', tell = true) => {
+    const g = gRef.current
+    const me = userRef.current
+    if (!g || g.phase === 'ended') return
+    gStopRing()
+    clearTimeout(timers.current.gjoin)
+    if (tell && g.phase !== 'ringing' && me) signal(membersOf(g.roomId), { kind: 'g-leave', id: g.id, room: g.roomId, from: me.id }).catch(() => {})
+    const dur = g.startedAt ? Date.now() - g.startedAt : 0
+    gPeers.current.forEach((e) => { clearTimeout(e.lost); try { e.pc.close() } catch {} })
+    gPeers.current.clear()
+    localRef.current?.getTracks().forEach((t) => t.stop())
+    localRef.current = null
+    if (me) noteLive(g.roomId, g.id, (c) => ({ ...c, inCall: c.inCall.filter((x) => x !== me.id) }))
+    // the one who started it writes it into the conversation
+    if (g.dir === 'out' && me) {
+      const kind = g.video ? 'group video call' : 'group voice call'
+      const text = `${g.video ? '🎥' : '📞'} ${dur ? `${kind[0].toUpperCase()}${kind.slice(1)} · ${clock(dur)}` : `Missed ${kind}`}`
+      const now = new Date().toISOString()
+      update((st) => { st.chat = [...(st.chat || []), { id: uid(), chatId: g.roomId, userId: me.id, userName: me.name || 'Someone', text, source: 'app', createdAt: now, replyTo: '', editedAt: '', attachments: [], mentions: [] }]; return st })
+      if (!g.startedAt) pushCall(g.roomId, g.id, g.video, true)
+    }
+    if (g.dir === 'in') closeCallNotice(g.id)
+    gRing.current = null
+    setG({ ...g, phase: 'ended', reason: dur ? `${reason} · ${clock(dur)}` : reason })
+    timers.current.gclose = setTimeout(() => { if (gRef.current?.id === g.id) setG(null) }, 1800)
+  }
+
+  const dropPeer = (peerId) => {
+    const e = gPeers.current.get(peerId)
+    if (!e) return
+    clearTimeout(e.lost)
+    try { e.pc.close() } catch {}
+    gPeers.current.delete(peerId)
+    tick((n) => n + 1)
+    // the last one left: over for me too
+    if (gRef.current?.startedAt && !gPeers.current.size) gFinish('Everyone left')
+  }
+
+  const gPc = (peerId) => {
+    const pc = new RTCPeerConnection({ iceServers: ICE })
+    const entry = { pc, stream: null, lost: 0 }
+    gPeers.current.set(peerId, entry)
+    const stream = localRef.current
+    stream?.getTracks().forEach((t) => pc.addTrack(t, stream))
+    pc.ontrack = (e) => { entry.stream = e.streams[0] || new MediaStream([e.track]); tick((n) => n + 1) }
+    const watch = () => {
+      if (gPeers.current.get(peerId) !== entry) return
+      const st = pc.connectionState || pc.iceConnectionState
+      if (st === 'connected' || st === 'completed') {
+        clearTimeout(entry.lost)
+        if (gRef.current && !gRef.current.startedAt) { gStopRing(); clearTimeout(timers.current.gjoin); gpatch({ phase: 'live', startedAt: Date.now() }) }
+        tick((n) => n + 1)
+      } else if (st === 'failed') dropPeer(peerId)
+      else if (st === 'disconnected') { clearTimeout(entry.lost); entry.lost = setTimeout(() => dropPeer(peerId), 10000) }
+    }
+    pc.onconnectionstatechange = watch
+    pc.oniceconnectionstatechange = watch
+    return entry
+  }
+  // someone new in the call: those already in it offer them a connection
+  const offerTo = async (peerId) => {
+    const g = gRef.current
+    const me = userRef.current
+    if (!g || !me || !localRef.current || gPeers.current.has(peerId)) return
+    const entry = gPc(peerId)
+    try {
+      await entry.pc.setLocalDescription(await entry.pc.createOffer())
+      await gathered(entry.pc)
+      if (gRef.current?.id !== g.id || gPeers.current.get(peerId) !== entry) return
+      await signal(peerId, { kind: 'g-offer', id: g.id, from: me.id, sdp: entry.pc.localDescription.sdp })
+    } catch { dropPeer(peerId) }
+  }
+  const answerTo = async (peerId, sdp) => {
+    const g = gRef.current
+    const me = userRef.current
+    if (!g || !me || !localRef.current) return
+    let entry = gPeers.current.get(peerId)
+    // both offered at the same moment: the offer from the lower id wins, the other is dropped
+    if (entry) {
+      if (peerId > me.id) return
+      clearTimeout(entry.lost)
+      try { entry.pc.close() } catch {}
+      gPeers.current.delete(peerId)
+    }
+    entry = gPc(peerId)
+    try {
+      await entry.pc.setRemoteDescription({ type: 'offer', sdp })
+      await entry.pc.setLocalDescription(await entry.pc.createAnswer())
+      await gathered(entry.pc)
+      if (gRef.current?.id !== g.id || gPeers.current.get(peerId) !== entry) return
+      await signal(peerId, { kind: 'g-answer', id: g.id, from: me.id, sdp: entry.pc.localDescription.sdp })
+    } catch { dropPeer(peerId) }
+  }
+
+  const mediaError = (e, video) => (e?.name === 'NotAllowedError' ? (video ? 'Camera or microphone not allowed' : 'Microphone not allowed') : e?.message || 'Could not join')
+
+  /* joining: my camera and microphone, then "g-join" to everyone in the conversation */
+  const joinGroup = async (withVideo) => {
+    const g = gRef.current
+    const me = userRef.current
+    if (!g || !me) return
+    const already = (liveRef.current[g.roomId]?.id === g.id ? liveRef.current[g.roomId].inCall : []).filter((x) => x !== me.id)
+    if (already.length >= GROUP_MAX) { gFinish('The call is full', false); return }
+    const video = g.video && withVideo
+    gpatch({ phase: 'joining', video })
+    try {
+      let stream
+      try { stream = await media(video) } catch (e) { if (video) { stream = await media(false); gpatch({ video: false }) } else throw e }
+      if (gRef.current?.id !== g.id) { stream.getTracks().forEach((t) => t.stop()); return }
+      localRef.current = stream
+      tick((n) => n + 1)
+      noteLive(g.roomId, g.id, (c) => ({ ...c, video: g.video, inCall: [...new Set([...c.inCall, me.id])] }))
+      await signal(membersOf(g.roomId), { kind: 'g-join', id: g.id, room: g.roomId, from: me.id, video: g.video })
+      // nobody offered: the call had already ended (someone's app closed without saying so)
+      timers.current.gjoin = setTimeout(() => { if (gRef.current?.id === g.id && !gRef.current.startedAt) { noteLive(g.roomId, g.id, () => null); gFinish('Could not connect') } }, 25000)
+    } catch (e) {
+      if (gRef.current?.id === g.id) gFinish(mediaError(e, video))
+    }
+  }
+
+  /* starting one, or joining the one already going on in that conversation */
+  const startGroup = async (room, video) => {
+    const me = userRef.current
+    if (!remote || !me) return
+    if (callRef.current || gRef.current) { toast('You are already in a call.', 'error'); return }
+    if (!ready) { toast('Calls are not switched on yet: supabase/chat_calls.sql has to be run once.', 'error'); return }
+    if (!navigator.mediaDevices?.getUserMedia || typeof RTCPeerConnection === 'undefined') { toast('This browser cannot make calls.', 'error'); return }
+    const on = liveRef.current[room.id]
+    const base = { roomId: room.id, roomName: room.name, roomPhoto: room.photo || '', muted: false, camOff: false, facing: 'user' }
+    if (on && on.inCall.some((x) => x !== me.id)) {
+      setG({ ...base, id: on.id, dir: 'in', phase: 'joining', video: on.video })
+      joinGroup(video)
+      return
+    }
+    const members = membersOf(room.id)
+    if (!members.length) { toast('Nobody else is in this conversation yet.', 'error'); return }
+    const id = uid()
+    setG({ ...base, id, dir: 'out', phase: 'calling', video, fromId: me.id, fromName: me.name || '' })
+    pushCall(room.id, id, video)
+    try {
+      const stream = await media(video)
+      if (gRef.current?.id !== id) { stream.getTracks().forEach((t) => t.stop()); return }
+      localRef.current = stream
+      tick((n) => n + 1)
+      const payload = { kind: 'g-ring', id, room: room.id, roomName: room.name, from: me.id, fromName: me.name || '', fromPhoto: me.profile?.thumb || '', video }
+      gRing.current = payload
+      noteLive(room.id, id, () => ({ id, video, inCall: [me.id] }))
+      await signal(members, payload)
+      stopTone.current = tone('out')
+      timers.current.gring = setTimeout(() => { if (gRef.current?.id === id && !gPeers.current.size) gFinish('No answer') }, RING_FOR)
+    } catch (e) {
+      if (gRef.current?.id === id) gFinish(mediaError(e, video))
+    }
+  }
+
+  const gAccept = (withVideo) => {
+    const g = gRef.current
+    if (!g || g.phase !== 'ringing') return
+    gStopRing()
+    closeCallNotice(g.id)
+    signal(userRef.current.id, { kind: 'taken', id: g.id }).catch(() => {})
+    joinGroup(withVideo)
+  }
+  const gHangUp = () => {
+    const g = gRef.current
+    if (!g) return
+    if (g.phase === 'ended') { clearTimeout(timers.current.gclose); setG(null); return }
+    if (g.phase === 'ringing') {
+      // not now: stops here and on my other devices; the call goes on for the others
+      signal(userRef.current.id, { kind: 'taken', id: g.id }).catch(() => {})
+      gStopRing()
+      closeCallNotice(g.id)
+      setG(null)
+      return
+    }
+    gFinish(g.dir === 'out' && !g.startedAt ? 'Cancelled' : 'You left the call')
+  }
+
+  const onGroupSignal = (m) => {
+    const me = userRef.current
+    const g = gRef.current
+    const mine = g && g.id === m.id
+    if (m.kind === 'g-ring') {
+      if (m.from === me.id) return
+      noteLive(m.room, m.id, (c) => ({ ...c, video: !!m.video, inCall: [...new Set([...c.inCall, m.from])] }))
+      if (callRef.current || g) return // in another call: the conversation shows Join
+      const room = roomOf(stateRef.current, me, m.room)
+      gRing.current = m
+      setG({ id: m.id, dir: 'in', phase: 'ringing', video: !!m.video, roomId: m.room, roomName: room?.name || m.roomName || 'Group', roomPhoto: room?.photo || '', fromId: m.from, fromName: m.fromName || 'Someone', muted: false, camOff: false, facing: 'user' })
+      stopTone.current = tone('in')
+      timers.current.gring = setTimeout(() => { if (gRef.current?.id === m.id && gRef.current.phase === 'ringing') { gStopRing(); closeCallNotice(m.id); setG(null) } }, RING_FOR + 3000)
+      return
+    }
+    if (m.kind === 'g-join') {
+      if (m.from === me.id) return
+      noteLive(m.room, m.id, (c) => ({ ...c, video: !!m.video, inCall: [...new Set([...c.inCall, m.from])] }))
+      if (mine && g.phase !== 'ringing' && g.phase !== 'ended') offerTo(m.from)
+      return
+    }
+    if (m.kind === 'g-leave') {
+      noteLive(m.room, m.id, (c) => ({ ...c, inCall: c.inCall.filter((x) => x !== m.from) }))
+      if (!mine) return
+      if (g.phase === 'ringing') {
+        // nobody left in it: stop ringing
+        if (!liveRef.current[m.room]) { gStopRing(); closeCallNotice(m.id); setG(null) }
+      } else dropPeer(m.from)
+      return
+    }
+    if (!mine) return
+    if (m.kind === 'g-offer') answerTo(m.from, m.sdp)
+    else if (m.kind === 'g-answer') {
+      const e = gPeers.current.get(m.from)
+      if (e && e.pc.signalingState === 'have-local-offer') e.pc.setRemoteDescription({ type: 'answer', sdp: m.sdp }).catch(() => dropPeer(m.from))
+    } else if (m.kind === 'wake') {
+      // someone opened the app from the call's notification: ring them again
+      if (gRing.current && g.phase !== 'ringing' && m.from) signal(m.from, gRing.current).catch(() => {})
+    } else if (m.kind === 'taken' && g.phase === 'ringing') { gStopRing(); closeCallNotice(g.id); setG(null) }
+  }
+  G.current = { startGroup, onGroupSignal }
+
   /* ---- what arrives on my line ---- */
   const onSignal = useCallback(async (m) => {
     const me = userRef.current
-    if (!m || !m.id || !me) return
+    if (!m || !m.id || !m.kind || !me) return
+    if (m.kind.startsWith('g-') || (gRef.current?.id === m.id && (m.kind === 'wake' || m.kind === 'taken'))) { G.current.onGroupSignal(m); return }
     const c = callRef.current
     if (m.kind === 'ring') {
       if (m.from === me.id) return
-      if (c) { if (c.id !== m.id) signal(m.from, { kind: 'busy', id: m.id }).catch(() => {}); return }
+      if (c || gRef.current) { if (c?.id !== m.id) signal(m.from, { kind: 'busy', id: m.id }).catch(() => {}); return }
       const peer = (stateRef.current.users || []).find((u) => u.id === m.from)
       setCall({ id: m.id, dir: 'in', phase: 'ringing', video: !!m.video, peerId: m.from, peerName: peer?.name || m.fromName || 'Someone', peerPhoto: peer?.profile?.thumb || m.fromPhoto || '', roomId: m.room, offer: m.sdp, muted: false, camOff: false, facing: 'user' })
       stopTone.current = tone('in')
@@ -386,7 +651,12 @@ export function CallProvider({ children }) {
 
   // leaving the page ends the call for the other side too
   useEffect(() => {
-    const bye = () => { const c = callRef.current; if (c && c.phase !== 'ended' && c.peerId) signal(c.peerId, { kind: c.dir === 'out' && !c.answered ? 'cancel' : c.phase === 'ringing' ? 'decline' : 'end', id: c.id }).catch(() => {}) }
+    const bye = () => {
+      const c = callRef.current
+      if (c && c.phase !== 'ended' && c.peerId) signal(c.peerId, { kind: c.dir === 'out' && !c.answered ? 'cancel' : c.phase === 'ringing' ? 'decline' : 'end', id: c.id }).catch(() => {})
+      const g = gRef.current
+      if (g && g.phase !== 'ended' && g.phase !== 'ringing' && userRef.current) signal(membersOf(g.roomId), { kind: 'g-leave', id: g.id, room: g.roomId, from: userRef.current.id }).catch(() => {})
+    }
     window.addEventListener('pagehide', bye)
     return () => window.removeEventListener('pagehide', bye)
   }, [])
@@ -398,37 +668,55 @@ export function CallProvider({ children }) {
     return () => clearInterval(t)
   }, [call?.phase])
 
+  const cur = () => callRef.current || gRef.current
+  const curPatch = (p) => (callRef.current ? patch(p) : gpatch(p))
   const toggleMute = () => {
-    const c = callRef.current
+    const c = cur()
+    if (!c) return
     localRef.current?.getAudioTracks().forEach((t) => { t.enabled = !!c.muted })
-    patch({ muted: !c.muted })
+    curPatch({ muted: !c.muted })
   }
   const toggleCam = () => {
-    const c = callRef.current
+    const c = cur()
+    if (!c) return
     localRef.current?.getVideoTracks().forEach((t) => { t.enabled = !!c.camOff })
-    patch({ camOff: !c.camOff })
+    curPatch({ camOff: !c.camOff })
   }
   const flip = async () => {
-    const c = callRef.current
+    const c = cur()
+    if (!c) return
     const facing = c.facing === 'user' ? 'environment' : 'user'
     try {
       const fresh = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } } })
       const track = fresh.getVideoTracks()[0]
-      const sender = pcRef.current?.getSenders().find((s) => s.track?.kind === 'video')
-      if (sender) await sender.replaceTrack(track)
+      const pcs = callRef.current ? [pcRef.current] : [...gPeers.current.values()].map((e) => e.pc)
+      for (const pc of pcs) {
+        const sender = pc?.getSenders().find((x) => x.track?.kind === 'video')
+        if (sender) await sender.replaceTrack(track)
+      }
       const old = localRef.current?.getVideoTracks()[0]
       if (old) { localRef.current.removeTrack(old); old.stop() }
       localRef.current?.addTrack(track)
-      patch({ facing, camOff: false })
+      curPatch({ facing, camOff: false })
     } catch { toast('Could not switch the camera.', 'error') }
   }
 
-  const value = { start, ready, busy: !!call }
+  const value = { start, ready, busy: !!call || !!gcall, live, inCall: gcall?.phase !== 'ended' ? gcall?.roomId || '' : '' }
   return (
     <CallsCtx.Provider value={value}>
       {children}
       {call && createPortal(
         <CallScreen call={call} local={localRef.current} remote={remoteRef.current} onAccept={accept} onDecline={decline} onHangUp={hangUp} onMute={toggleMute} onCam={toggleCam} onFlip={flip} />,
+        document.body,
+      )}
+      {gcall && !call && createPortal(
+        <GroupScreen
+          call={gcall}
+          local={localRef.current}
+          peers={[...gPeers.current.entries()].map(([id, e]) => { const u = (state.users || []).find((x) => x.id === id); return { id, name: u?.name || 'Someone', photo: u?.profile?.thumb || '', stream: e.stream } })}
+          me={user}
+          onAccept={gAccept} onDecline={() => gHangUp()} onHangUp={() => gHangUp()} onMute={toggleMute} onCam={toggleCam} onFlip={flip}
+        />,
         document.body,
       )}
     </CallsCtx.Provider>
@@ -510,6 +798,79 @@ function CallScreen({ call, local, remote: far, onAccept, onDecline, onHangUp, o
             {call.video && <span className="call-btn-wrap"><button type="button" className={`call-btn${call.camOff ? ' on' : ''}`} onClick={onCam} aria-label={call.camOff ? 'Turn the camera on' : 'Turn the camera off'}>{call.camOff ? I.camOff() : I.video({ width: 24, height: 24 })}</button><small>{call.camOff ? 'Camera off' : 'Camera'}</small></span>}
             <span className="call-btn-wrap"><button type="button" className={`call-btn${call.muted ? ' on' : ''}`} onClick={onMute} aria-label={call.muted ? 'Unmute' : 'Mute'}>{call.muted ? I.micOff() : I.mic()}</button><small>{call.muted ? 'Muted' : 'Mute'}</small></span>
             <span className="call-btn-wrap"><button type="button" className="call-btn red" onClick={onHangUp} aria-label="End call">{I.phone({ style: { transform: 'rotate(135deg)' } })}</button><small>End</small></span>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ---------- a group call's screen: everyone as a tile, the controls of a one-to-one call ---------- */
+function Tile({ name, photo, stream, video, mirror = false }) {
+  const ref = useRef(null)
+  useStream(ref, stream)
+  const hasVideo = video && !!stream?.getVideoTracks().some((t) => t.readyState === 'live' && t.enabled !== false)
+  return (
+    <div className="gcall-tile">
+      {hasVideo ? <video ref={ref} className={mirror ? 'mirror' : ''} autoPlay playsInline muted /> : <Face name={name} photo={photo} size={64} />}
+      <span className="gcall-name">{name}</span>
+    </div>
+  )
+}
+function PeerAudio({ stream }) {
+  const ref = useRef(null)
+  useStream(ref, stream)
+  return <audio ref={ref} autoPlay playsInline />
+}
+
+function GroupScreen({ call, local, peers, me, onAccept, onDecline, onHangUp, onMute, onCam, onFlip }) {
+  const [small, setSmall] = useState(false)
+  const kind = call.video ? 'Group video call' : 'Group voice call'
+  const status = call.phase === 'ringing' ? `${call.fromName} · ${kind}`
+    : call.phase === 'calling' ? 'Ringing everyone…'
+      : call.phase === 'joining' ? 'Joining…'
+        : call.phase === 'live' ? `${peers.length + 1} in the call · ${clock(Date.now() - call.startedAt)}`
+          : call.reason
+  // the sound of each person plays through its own audio element, also while the call is small
+  const sound = peers.map((p) => <PeerAudio key={p.id} stream={p.stream} />)
+  if (small && call.phase !== 'ringing' && call.phase !== 'ended') {
+    return (
+      <>
+        {sound}
+        <button type="button" className="call-pill" onClick={() => setSmall(false)}>{I.phone({ width: 16, height: 16 })}<span>{call.roomName}</span><b>{status}</b></button>
+      </>
+    )
+  }
+  const inCall = call.phase !== 'ringing' && call.phase !== 'ended'
+  return (
+    <div className={`call-screen gcall${inCall ? ' has-tiles' : ''}`} role="dialog" aria-label={`${kind} in ${call.roomName}`}>
+      {sound}
+      <div className="call-bg" style={call.roomPhoto ? { backgroundImage: `url(${call.roomPhoto})` } : undefined} />
+      {inCall && <button type="button" className="call-min" onClick={() => setSmall(true)} aria-label="Make the call small">{I.down()}</button>}
+      <div className={`call-who${inCall ? ' over' : ''}`}>
+        {!inCall && <Face name={call.roomName} photo={call.roomPhoto} />}
+        <strong>{call.roomName}</strong>
+        <span>{status}</span>
+      </div>
+      {inCall && (
+        <div className={`gcall-grid n${Math.min(peers.length + 1, 9)}`}>
+          <Tile name={me?.name ? `${me.name.split(' ')[0]} (you)` : 'You'} photo={me?.profile?.thumb || ''} stream={local} video={call.video && !call.camOff} mirror={call.facing === 'user'} />
+          {peers.map((p) => <Tile key={p.id} name={p.name} photo={p.photo} stream={p.stream} video={call.video} />)}
+        </div>
+      )}
+      <div className="call-btns">
+        {call.phase === 'ringing' ? (
+          <>
+            <span className="call-btn-wrap"><button type="button" className="call-btn red" onClick={onDecline} aria-label="Not now">{I.phone({ style: { transform: 'rotate(135deg)' } })}</button><small>Not now</small></span>
+            {call.video && <span className="call-btn-wrap"><button type="button" className="call-btn" onClick={() => onAccept(false)} aria-label="Join with sound only">{I.phone()}</button><small>Sound only</small></span>}
+            <span className="call-btn-wrap"><button type="button" className="call-btn green" onClick={() => onAccept(true)} aria-label="Join">{call.video ? I.video() : I.phone()}</button><small>Join</small></span>
+          </>
+        ) : call.phase === 'ended' ? null : (
+          <>
+            {call.video && <span className="call-btn-wrap"><button type="button" className="call-btn" onClick={onFlip} aria-label="Switch camera">{I.flip()}</button><small>Flip</small></span>}
+            {call.video && <span className="call-btn-wrap"><button type="button" className={`call-btn${call.camOff ? ' on' : ''}`} onClick={onCam} aria-label={call.camOff ? 'Turn the camera on' : 'Turn the camera off'}>{call.camOff ? I.camOff() : I.video({ width: 24, height: 24 })}</button><small>{call.camOff ? 'Camera off' : 'Camera'}</small></span>}
+            <span className="call-btn-wrap"><button type="button" className={`call-btn${call.muted ? ' on' : ''}`} onClick={onMute} aria-label={call.muted ? 'Unmute' : 'Mute'}>{call.muted ? I.micOff() : I.mic()}</button><small>{call.muted ? 'Muted' : 'Mute'}</small></span>
+            <span className="call-btn-wrap"><button type="button" className="call-btn red" onClick={onHangUp} aria-label="Leave the call">{I.phone({ style: { transform: 'rotate(135deg)' } })}</button><small>Leave</small></span>
           </>
         )}
       </div>
