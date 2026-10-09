@@ -53,24 +53,33 @@ try {
   applyIconSet(localStorage.getItem('tml_icons') || SKIN_ICONS[DEFAULT_THEME] || 'classic')
 } catch {}
 
-// An iPhone home-screen app drawn under the clock (black-translucent) can be laid out shorter than
-// the screen by the clock's height, leaving a band at the foot (Alex, 9 Oct). Measure that band
-// with the keyboard down and hand it to the CSS as --ios-gap, which stretches the backdrop, the chat
-// and the tab bar over it. Only when the page really starts under the clock (safe area on top);
-// 0 everywhere else, so a browser tab or an icon added before 9 Oct are left as they are.
+// An iPhone home-screen app drawn under the clock (black-translucent) is laid out shorter than the
+// screen (Alex, 9 Oct: a band at the foot, and the page's own height, 100dvh and innerHeight do not even
+// agree with each other there). So measure against the screen itself: --screen-h is the screen's
+// height and --ios-gap how far the bottom of what fixed elements see falls short of it. The CSS sizes
+// the app and TML Chat by --screen-h and moves fixed bars down by --ios-gap. Only when the page really
+// starts under the clock (a safe area on top); nothing is set in a browser tab or on a computer.
 try {
   const standalone = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true
   if (standalone) {
     const probe = document.createElement('div')
-    probe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:100dvh;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top);box-sizing:content-box'
+    probe.style.cssText = 'position:fixed;top:0;bottom:0;left:0;width:0;visibility:hidden;pointer-events:none;box-sizing:border-box;padding-top:env(safe-area-inset-top)'
     document.body.appendChild(probe)
     const typing = () => { const el = document.activeElement; return !!el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || el.isContentEditable) }
+    const root = document.documentElement
     const measure = () => {
       if (typing()) return // the keyboard shrinks the window: not a band
       const inset = parseFloat(getComputedStyle(probe).paddingTop) || 0
-      // 100dvh is the whole screen there; the page (innerHeight, html at 100%) is the short one
-      const gap = Math.round(parseFloat(getComputedStyle(probe).height) - window.innerHeight)
-      document.documentElement.style.setProperty('--ios-gap', `${inset > 0 && gap > 0 && gap <= inset + 4 ? gap : 0}px`)
+      const tall = window.innerHeight > window.innerWidth
+      const screenH = tall ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height)
+      const gap = Math.round(screenH - probe.getBoundingClientRect().height)
+      if (inset > 0 && gap > 0 && gap <= 160) {
+        root.style.setProperty('--ios-gap', `${gap}px`)
+        root.style.setProperty('--screen-h', `${screenH}px`)
+      } else {
+        root.style.removeProperty('--ios-gap')
+        root.style.removeProperty('--screen-h')
+      }
     }
     measure()
     window.addEventListener('resize', measure)

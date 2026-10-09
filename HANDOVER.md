@@ -41,6 +41,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct (13:26 screenshots): the band again, and still a soft top bar
+- After #261 both the app and TML Chat showed a ~60 pt band at the foot again, and the app's top bar was still soft. Reading the three screenshots together: on that iPhone `100%`, `100dvh` and `innerHeight` each fall short of the screen by a different amount, so none of them can be trusted there. main.jsx now measures against the screen: `--screen-h` = the screen's height, `--ios-gap` = screen height minus what a `position: fixed; top: 0; bottom: 0` probe gets (only standalone, only with a top safe area, gap ≤ 160). CSS: `html.chat-window`/body and `.chat-win` take `var(--screen-h, 100%/100dvh)`; fixed bars still drop by `--ios-gap`.
+- Soft top bar: scrolling the whole `.shell` did not help, so in the home-screen app on a phone `.shell` is a fixed flex column of `var(--screen-h)` that does not scroll; only `.content` scrolls, under the top bar, which is now in no scrolling area at all (like TML Chat's head, which is sharp). `.ptabs-m` sticks at `top: 0` there.
+- `components/ScreenInfo.jsx`: a small line of numbers (screen, inner, fixed, dvh, visualViewport, safe areas, gap) at the foot of Settings and the chat's Settings, only in a home-screen app. If the foot is still wrong, a screenshot of that line says why. Remove it once the iPhone is settled.
+- Chat settings: the "Folder tabs (top / left)" row is gone (the folders live at the foot now); the folder note points to + > New folder.
+
 ### 9 Oct: the app's chat on a phone tidied, and the soft top bar
 - Sent notices / Send notice (administrators, the app's chat on a phone) had landed between the head and the search with its 84 px foot padding, since every other part of `.chat-list.tgui` has a flex `order`: `.chat-list-foot` now `order: 5`, after the list.
 - The top bar's name still came out soft on the home-screen app (12:29, 13:12), while TML Chat's head at the same height is sharp: iOS blurs the top of a page that scrolls as a whole. In the home-screen app on a phone (`@media (max-width: 820px) and (display-mode: standalone)`, not chat.html) html/body no longer scroll and `.shell` is a fixed, full-screen (100dvh) scroller. Browser tabs and computers unchanged. Still to confirm on the phone; if anything misbehaves, that block at the end of styles.css is the one to take out.
