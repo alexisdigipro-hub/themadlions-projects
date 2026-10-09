@@ -5592,3 +5592,18 @@ select.rem-status option { color: var(--text); background: var(--bg, #1b1f2a); f
   html body .chat2 .chat-list.tgui .chat-swipe.open .chat-room-item, html body .chat2 .chat-list.tgui .chat-swipe.dragging .chat-room-item { border-radius: 0 22px 22px 0; background: color-mix(in srgb, var(--accent) 9%, transparent); }
   .chat-rmuted { font-size: 13px; opacity: .7; }
 }
+
+/* Subtasks added straight on the Tasks list: ＋ Subtask on a task with none, and an "Add a subtask"
+   line at the foot of the open subtasks (TasksAll.jsx addSub), × removes one */
+.rem-subs-new { opacity: 0; transition: opacity .15s; }
+.rem-task:hover .rem-subs-new, .rem-subs-new:focus-visible { opacity: 1; }
+@media (hover: none) { .rem-subs-new { opacity: .8; } }
+.rem-subs li .grow { flex: 1; min-width: 0; }
+.rem-sub-del { flex: none; padding: 0 4px; font: inherit; font-size: 16px; line-height: 1; color: var(--muted); background: none; border: 0; cursor: pointer; opacity: 0; }
+.rem-subs li:hover .rem-sub-del, .rem-sub-del:focus-visible { opacity: 1; }
+@media (hover: none) { .rem-sub-del { opacity: .7; } }
+.rem-sub-add { color: var(--muted); }
+.rem-sub-plus { display: grid; place-items: center; flex: none; width: 17px; height: 17px; font-size: 14px; }
+.rem-sub-input { flex: 1; min-width: 0; padding: 2px 0; font: inherit; font-size: 14px; color: var(--text); background: none; border: 0; border-bottom: 1px solid transparent; outline: none; }
+.rem-sub-input:focus { border-bottom-color: var(--line); }
+.rem-sub-input::placeholder { color: var(--muted); }
