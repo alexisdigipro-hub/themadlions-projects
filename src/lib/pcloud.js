@@ -35,6 +35,29 @@ async function call(action, body, { raw = false } = {}) {
 }
 
 export const pcloudPing = () => call('ping', {})
+
+/* A full backup into pCloud (Alex, 9 Oct): everything the app holds (the same file Download
+   backup gives, which Settings > Data > Restore backup reads back), the database's latest weekly
+   snapshot when there is one, and the function adds the site's code from GitHub. All in
+   <root>/Backups/<date time>. Administrators only. */
+export async function pcloudBackup(state) {
+  const now = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+  const day = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+  const stamp = `${day} ${pad(now.getHours())}.${pad(now.getMinutes())}`
+  const fd = new FormData()
+  fd.append('file', new Blob([JSON.stringify({ ...state, backupTakenAt: now.toISOString() }, null, 1)], { type: 'application/json' }), `themadlions-data-${day}.json`)
+  try {
+    const { data: row } = await supabase.from('backups').select('data').order('taken_at', { ascending: false }).limit(1).maybeSingle()
+    if (row?.data) fd.append('file', new Blob([JSON.stringify(row.data)], { type: 'application/json' }), `themadlions-database-${day}.json`)
+  } catch { /* no weekly backups table yet: the app's own file is enough to restore */ }
+  fd.append('folder', JSON.stringify([stamp]))
+  fd.append('scope', 'null')
+  return call('backup', fd)
+}
+
+/* Once a week on its own, when an administrator has the app open (Settings > Data > Every week). */
+export const backupDue = (settings) => !!settings?.pcloudAutoBackup && (!settings.pcloudBackupAt || Date.now() - new Date(settings.pcloudBackupAt).getTime() > 7 * 86400000)
 export async function pcloudUpload({ file, folder, scope }) {
   const fd = new FormData()
   fd.append('file', file, file.name)

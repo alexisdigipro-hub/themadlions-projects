@@ -12,7 +12,10 @@
 //   PCLOUD_HOST    eapi.pcloud.com for a European account (default), api.pcloud.com for a US one
 //   PCLOUD_ROOT    the folder everything goes under, default "/TML HUB"
 //
-// Actions (POST, JSON or multipart): ping · upload · link · links · raw · delete. See src/lib/pcloud.js.
+// Actions (POST, JSON or multipart): ping · upload · link · links · raw · delete · backup. See src/lib/pcloud.js.
+// backup (administrators): the files the app sends (the workspace's data) and the site's code as
+// GitHub keeps it (a zip of the main branch) go into ROOT/Backups/<date time>, so the whole thing
+// can be put back if anything happens to the site.
 // Scopes: a project (its files, photos and songs), a chat room, or the company library (the
 // people and locations of the Database page, shared by every project).
 
@@ -22,6 +25,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 const HOST = Deno.env.get('PCLOUD_HOST') || 'eapi.pcloud.com'
 const TOKEN = Deno.env.get('PCLOUD_TOKEN') || ''
 const ROOT = '/' + (Deno.env.get('PCLOUD_ROOT') || '/TML HUB').replace(/^\/+|\/+$/g, '')
+const REPO = 'alexisdigipro-hub/themadlions-projects'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -133,10 +137,12 @@ Deno.serve(async (req) => {
     let action = ''
     let body: any = {}
     let file: File | null = null
+    let files: File[] = []
     if ((req.headers.get('content-type') || '').includes('multipart/form-data')) {
       const fd = await req.formData()
       action = String(fd.get('action') || '')
-      file = fd.get('file') as File | null
+      files = fd.getAll('file').filter((f) => f instanceof File) as File[]
+      file = files[0] || null
       body = { folder: JSON.parse(String(fd.get('folder') || '[]')), scope: JSON.parse(String(fd.get('scope') || 'null')) }
     } else {
       body = await req.json().catch(() => ({}))
@@ -161,6 +167,32 @@ Deno.serve(async (req) => {
       const meta = up.metadata?.[0]
       if (!meta?.fileid) return json({ error: 'pCloud did not return the file.' }, 502)
       return json({ ok: true, fileid: meta.fileid, name: meta.name, size: meta.size, folder: path })
+    }
+
+    if (action === 'backup') {
+      const { data: adm } = await db.rpc('is_admin')
+      if (!adm) return json({ error: 'Administrators only.' }, 403)
+      if (!files.length) return json({ error: 'No backup file.' }, 400)
+      const stamp = Array.isArray(body.folder) && body.folder.length ? body.folder[body.folder.length - 1] : new Date().toISOString().slice(0, 16).replace('T', ' ').replace(':', '.')
+      const path = await ensureFolder(['Backups', stamp])
+      const put = async (f: File) => {
+        const fd = new FormData()
+        fd.append('file', f, f.name)
+        const up = await pc('uploadfile', { path, filename: f.name, nopartial: 1, renameifexists: 1 }, fd)
+        return up.metadata?.[0]
+      }
+      const saved: any[] = []
+      for (const f of files) saved.push(await put(f))
+      // the code: the main branch of the site's repository, as a zip
+      let codeError = ''
+      try {
+        const res = await fetch(`https://codeload.github.com/${REPO}/zip/refs/heads/main`)
+        if (!res.ok) throw new Error(`GitHub answered ${res.status}`)
+        saved.push(await put(new File([await res.blob()], 'themadlions-projects-code.zip', { type: 'application/zip' })))
+      } catch (e) {
+        codeError = (e as Error).message
+      }
+      return json({ ok: true, folder: path, files: saved.filter(Boolean).map((m: any) => ({ name: m.name, size: m.size })), codeError })
     }
 
     if (action === 'link') {

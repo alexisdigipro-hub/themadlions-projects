@@ -6,7 +6,7 @@ import { projectProgress } from '../lib/progress.js'
 import { expenseCats } from '../lib/finance.js'
 import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/budgetCats.js'
 import { fmtBytes, snapshotSummary, snapshotToState } from '../lib/backups.js'
-import { authorizeUrl, clearOauth, pcloudPing, redirectUri, takeOauth } from '../lib/pcloud.js'
+import { authorizeUrl, clearOauth, pcloudBackup, pcloudPing, redirectUri, takeOauth } from '../lib/pcloud.js'
 import { authorizeUrl as gcalAuthorizeUrl, clearOauthCode, gcalCalendars, gcalConnect, redirectUri as gcalRedirectUri, takeOauthCode } from '../lib/googleCalendar.js'
 import { FEED_COLOR, feedsAreOff, feedsOf, fetchFeedText, parseIcs } from '../lib/ical.js'
 import Team from './Team.jsx'
@@ -526,6 +526,13 @@ export default function Settings() {
             <BackupsPanel toast={toast} />
           </section>
         )}
+        {isAdmin && remote && (
+          <section className="panel" data-tab="data">
+            <h2>Backup to pCloud</h2>
+            <p className="muted small">A full copy into your pCloud, in <b>Backups</b>, a folder per date: all the app's data (projects, calendar, people, locations, tasks, finance, chat, settings) and the site's code. If anything happens to the site, the data goes back with Restore backup below, and the code can be put back on GitHub from the zip.</p>
+            <PcloudBackup state={state} update={update} toast={toast} />
+          </section>
+        )}
         <section className="panel" data-tab="data">
           <h2>Your data</h2>
           <p className="muted small">
@@ -575,6 +582,40 @@ export default function Settings() {
   )
 }
 
+
+/* Settings > Data > Backup to pCloud: Back up now, and Every week (the app does it on its own when an
+   administrator opens it and the last one is a week old, Layout.jsx). */
+function PcloudBackup({ state, update, toast }) {
+  const [busy, setBusy] = useState(false)
+  const [last, setLast] = useState(null)
+  const at = state.settings?.pcloudBackupAt
+  const run = async () => {
+    setBusy(true)
+    try {
+      const r = await pcloudBackup(state)
+      setLast(r)
+      update((s) => { s.settings = { ...s.settings, pcloudBackupAt: new Date().toISOString() }; return s })
+      toast(r.codeError ? `Data saved to pCloud; the code could not be fetched (${r.codeError}).` : 'Backup saved to pCloud', r.codeError ? 'error' : 'ok')
+    } catch (e) {
+      toast(/Unknown action/.test(e.message) ? 'Deploy the new pcloud function first (Supabase > Edge Functions > pcloud).' : e.message, 'error')
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <div className="stack">
+      <div className="row-actions wrap">
+        <Button variant="primary" onClick={run} disabled={busy}>{busy ? 'Backing up…' : 'Back up to pCloud now'}</Button>
+        <label className="check">
+          <input type="checkbox" checked={!!state.settings?.pcloudAutoBackup} onChange={(e) => update((s) => { s.settings = { ...s.settings, pcloudAutoBackup: e.target.checked }; return s })} />
+          Every week, on its own
+        </label>
+      </div>
+      <p className="small muted">{at ? `Last backup: ${new Date(at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}` : 'No backup in pCloud yet.'}</p>
+      {last && <p className="small">Saved in <code>{last.folder}</code>: {(last.files || []).map((f) => `${f.name} (${fmtBytes(f.size)})`).join(', ')}</p>}
+    </div>
+  )
+}
 
 /* Settings > Data > Weekly backups: the snapshots supabase/backups.sql keeps, with Back up now
    and a Download per row. The download is converted to the app's own backup shape, so the
