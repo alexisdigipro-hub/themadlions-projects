@@ -98,7 +98,8 @@ export default function TasksAll() {
   ]
   // the side column shows only the lists an administrator made (departments); Company was taken off
   // too (Alex, 9 Oct): a task on no list and no project shows in My Tasks and All tasks
-  const ownLists = lists.filter((l) => l.own)
+  // a teammate sees only the lists that hold something of theirs (Alex, 9 Oct); administrators all
+  const ownLists = lists.filter((l) => l.own && (admin || all.some((t) => listOf(t) === l.key)))
   const listByKey = Object.fromEntries(lists.map((l) => [l.key, l]))
   const inList = (key, list = all) => list.filter((t) => listOf(t) === key)
   const shared = (key) => inList(key).some((t) => t.assignee && !isMine(t))
@@ -117,7 +118,7 @@ export default function TasksAll() {
   const current = smart ? { key: sel, name: smart[1], color: smart[3], icon: LINE[sel], smart: true } : listByKey[sel] || listByKey[GENERAL]
   // projects have no list of their own in the side menu any more (Alex, 9 Oct: their tasks show in
   // All tasks with the project's name on them), so neither a project nor a vanished list stays open
-  useEffect(() => { if (!smart && (!listByKey[sel] || listByKey[sel].project || sel === GENERAL)) setSel('mine') }, [sel, lists.length, admin]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!smart && (!listByKey[sel] || listByKey[sel].project || sel === GENERAL || (listByKey[sel].own && !ownLists.some((l) => l.key === sel)))) setSel('mine') }, [sel, lists.length, ownLists.length, admin]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean)
   const match = (t) => !words.length || words.every((w) => `${t.title} ${t.notes || ''} ${t.assignee || ''}`.toLowerCase().includes(w))
