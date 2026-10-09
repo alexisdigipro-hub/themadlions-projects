@@ -43,6 +43,7 @@ Read this first; the detail behind each line is in the pull request that carried
 
 ### 9 Oct: TML Chat's bottom bar slimmer and lower
 - Phone TML Chat only (last block of styles.css): the Chats / Calls / Notices / Settings pill is slimmer (4 px padding, buttons 5/4 px, 11 px labels), its icons and the Edit bar's icons 27 → 20 px (a quarter smaller), and it sits lower: `max(10px, safe-area-inset-bottom - 16px)` under it (about 18 px on an iPhone, the same as its 16 px sides) instead of 10 px + the safe area.
+- The search above the list is slimmer too: 46 → 34 px tall, 16 px text (smaller text would make the iPhone zoom in when it is tapped), a 16 px magnifier.
 
 ### 9 Oct: the chat list slides between folders on a phone
 - Phone only (useIsMobile; desktop untouched), in the app's chat and in TML Chat: tapping another folder (All → Projects…) slides the list like pages, the new one in from the right when the folder sits to the right, from the left otherwise. Chat.jsx RoomList `pickFolder`: copies the old `.chat-rooms` into a `.chat-rooms-ghost` frame laid over it (slides out, removed after 320 ms), and the new list is keyed by folder on a phone so it remounts with `in-next` / `in-prev` (rows animate .3 s). Off with the phone's Reduce Motion. CSS at the end of styles.css.
