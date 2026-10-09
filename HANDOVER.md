@@ -41,6 +41,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct (13:52): the app's band and soft top bar, again
+- TML Chat holds now (its bars are plain elements at the foot of a screen-tall list). The app still showed the band under a fixed tab bar and a soft top bar. In the home-screen app on a phone the tab bar is now the shell's last row (`position: relative`, in flow), so it sits at the foot of the screen-tall shell whatever iOS reports about fixed elements; the page scrolls between the two bars. The app chat's folders dock is `position: sticky; bottom: 8px` inside that scrolling page (the list's `overflow` set to visible so sticky works).
+- Soft top bar: one more suspect removed, `zoom` from Settings > text size on `.topbar` (`html[data-text-size] .topbar { zoom: 1 }` there); a zoomed element can be painted as a scaled bitmap. If it is still soft, the next step is a ScreenInfo screenshot plus trying the top bar without the logo image.
+
 ### 9 Oct (13:5x): the band appeared after a correct start
 - Alex: it opened right and then turned into the band before his eyes. A later reading found no band and the old code then took `--screen-h` away. Now, once the page is known to be under the clock (safe area > 0), `--screen-h` is always the screen's height (drawn under the clock the page is always the whole screen) and only `--ios-gap` follows the readings (0..160); readings with no safe area are ignored instead of clearing anything.
 

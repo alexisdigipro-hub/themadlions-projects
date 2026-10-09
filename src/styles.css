@@ -5429,4 +5429,14 @@ html.chat-window, html.chat-window body { height: var(--screen-h, 100%); }
   html:not(.chat-window) .shell > .viewas-bar, html:not(.chat-window) .shell > .topbar { flex: none; position: relative; }
   html:not(.chat-window) .shell > .content { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
   html:not(.chat-window) .ptabs-m { top: 0; }
+  /* the tab bar is the shell's last row, so it sits at the real foot of the screen whatever iOS says about
+     its window (13:52: a fixed tab bar stopped short again); the page scrolls between the two bars */
+  html:not(.chat-window) .shell > .tabbar { position: relative; left: auto; right: auto; bottom: auto; flex: none; }
+  html:not(.chat-window) .shell > .content { padding-bottom: 24px; }
+  /* the folders in the app's chat float above it by sticking to the foot of the scrolling page */
+  html:not(.chat-window) body .chat2 .chat-list.tgui { overflow: visible; }
+  html:not(.chat-window) body .chat2 .chat-list.tgui .tg-dock { position: sticky; bottom: 8px; left: auto; right: auto; margin: 8px 12px 0; }
+  html:not(.chat-window) body .chat2 .chat-list.tgui .chat-rooms { padding-bottom: 8px; }
+  /* no zoom on the top bar: a zoomed top bar may be drawn as a scaled picture, soft (12:29 … 13:52) */
+  html[data-text-size]:not(.chat-window) .topbar { zoom: 1; }
 }
