@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct, late night: Notes and Tasks see-through, no colours
+- Alex did not want the coloured backdrops: a last block in styles.css ("Notes and Tasks without colours") makes `.rem-main` transparent and the task cards, note cards, the open note sheet, the "+ New…" bar and the editor toolbar frosted glass (`--g-card` / `--g-card-2` / `--g-edge`, mixed from `--text`), text in the theme's own colours. Applies in every theme. The colour code is still there (`--lc` on rem-main) if it is ever wanted back.
+
 ### 9 Oct, late night: no top bar in the skins
 - The skins' top bar (chat button and the user chip, `SkinBar` in Layout.jsx) is gone: both are in the sidebar (Alex). Its `.skin-*` CSS is left in place, harmless.
 

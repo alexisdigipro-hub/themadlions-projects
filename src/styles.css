@@ -5058,3 +5058,42 @@ html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; 
   .rem-del { opacity: .6; }
 }
 .rem-app .grow, .notes-app .grow, .release-list .grow { flex: 1; min-width: 0; }
+
+/* ---------- Notes and Tasks without colours: see-through glass (Alex, 9 Oct) ----------
+   No coloured backdrop behind the list: the page's own background shows through, the cards,
+   the open note and the "+ New…" bar are frosted glass, and the text takes the theme's colours,
+   so it reads in Light, Dark and every skin. Comes last so it wins over the blocks above. */
+.rem-app { --g-card: color-mix(in srgb, var(--text) 6%, transparent); --g-card-2: color-mix(in srgb, var(--text) 10%, transparent); --g-edge: color-mix(in srgb, var(--text) 13%, transparent); }
+.rem-main { background: transparent; }
+.rem-head, .rem-head h1 { color: var(--text); text-shadow: none; }
+.rem-head-date { color: var(--muted); }
+.rem-back { color: var(--accent); }
+.rem-head-btn, .notes-move, .notes-quick-open { color: var(--text); background: var(--g-card); border: 1px solid var(--g-edge); }
+.rem-head-btn:hover, .notes-quick-open:hover { background: var(--g-card-2); }
+.notes-note-head .rem-head-btn.on { background: var(--g-card-2); }
+.notes-move option { color: #1f2430; background: #fff; }
+.rem-task, .notes-card { color: var(--text); background: var(--g-card); border: 1px solid var(--g-edge); box-shadow: none; -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); }
+.rem-task:hover, .notes-card:hover { background: var(--g-card-2); }
+.rem-check { border-color: color-mix(in srgb, var(--text) 50%, transparent); }
+.rem-check:hover:not(:disabled) { background: radial-gradient(circle, color-mix(in srgb, var(--text) 50%, transparent) 0 3px, transparent 3.5px); }
+.rem-task.done .rem-check { background-color: color-mix(in srgb, var(--text) 45%, transparent); border-color: transparent; }
+.rem-task.done .rem-task-title { color: var(--muted); }
+.rem-task-meta, .notes-card-sub, .notes-card-folder { color: var(--muted); }
+.rem-task-meta .today, .rem-task-meta .due { color: var(--accent); }
+.notes-card-sub b { color: var(--text); }
+.rem-star, .rem-del { color: var(--muted); }
+.rem-star.on { color: var(--accent); }
+.rem-empty, .notes-group-label { color: var(--muted); text-shadow: none; }
+.rem-done-toggle, .rem-done-clear { color: var(--text); background: var(--g-card); border: 1px solid var(--g-edge); }
+.rem-quick { background: var(--g-card); border: 1px solid var(--g-edge); }
+.rem-quick-plus, .rem-quick-input { color: var(--text); }
+.rem-quick-input::placeholder { color: var(--muted); }
+.notes-sheet { color: var(--text); background: var(--g-card); border: 1px solid var(--g-edge); box-shadow: none; -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%); }
+.notes-date { color: var(--muted); }
+.notes-doc .xd-bar { color: var(--text); background: var(--g-card); border-top: 1px solid var(--g-edge); }
+.notes-doc .xd-bar .xs-btn, .notes-doc .xd-bar .xs-fmt { color: var(--text); background: var(--g-card); border-color: var(--g-edge); }
+.notes-doc .xd-page, .notes-doc .xd-page h1, .notes-doc .xd-page h2, .notes-doc .xd-page h3 { color: var(--text); }
+.notes-doc .xd-page blockquote { color: var(--muted); border-left-color: var(--g-edge); }
+.notes-doc .xd-page td, .notes-doc .xd-page th { border-color: var(--g-edge); }
+.notes-doc .xd-page ul.checklist > li::before { border-color: var(--muted); }
+.notes-doc .xd-page ul.checklist > li[data-checked='true'] { color: var(--muted); }
