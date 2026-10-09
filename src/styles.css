@@ -2920,7 +2920,7 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
   .chips .chip { flex: 0 0 auto; padding: 4px 10px; font-size: 13px; }
   .chips .chip small { font-size: 11px; }
   .project-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  .chips .chip.neg { margin-left: 4px; }
+  .chips .chip.neg { margin: 0 4px; }
   .project-card { border-radius: 12px; }
   .project-cat { font-size: 10.5px; }
   .project-cover.has-img .project-cat { left: 6px; bottom: 5px; padding: 1px 6px; }

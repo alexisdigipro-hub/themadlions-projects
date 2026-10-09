@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (9 Oct 2026)
+- **Latest (9 Oct, evening):** Home's chips are now All, **Delivered**, then the categories (Dashboard.jsx chipFor); the slide on toggling Delivered follows where the chips lie.
 - **Latest (9 Oct, evening):** a teammate's Tasks side column shows only the lists that hold a task of theirs (open or done); administrators see every list. A hidden list that was open falls back to My Tasks.
 - **Latest (9 Oct, evening):** the Tasks side column's lists can be dragged by their ⋮⋮ (administrators, when there are two or more), reordering settings.taskLists for everyone; same pointer handling as the tasks.
 - **Latest (9 Oct, evening):** **Company** is off the Tasks side column too (Alex): the side column is My Tasks / All tasks (admins) / Completed / Deleted, then Lists = only the administrators' lists (departments) and + New List. A task on no list and no project shows in My Tasks and All tasks; the form's List reads "No list"; the quick-add picker offers No list + the lists; deleting a list leaves its tasks on no list. The GENERAL key stays internally (listByKey, where()).
