@@ -11,6 +11,71 @@ export const TASK_STATUS = [
   ['blocked', 'Blocked'],
   ['done', 'Done'],
 ]
+/* The statuses a task can have, which an administrator edits (Alex, 9 Oct: Status > Edit statuses…),
+   kept in settings.taskStatuses. The first ('todo') is where a new task starts and the last ('done')
+   means done, which sends it to Completed: both can be renamed, not removed. The ones in between are
+   free. A task left on a status that was removed reads as the first one. */
+const DEFAULT_STATUSES = TASK_STATUS.map(([id, label]) => ({ id, label }))
+export function taskStatuses(state) {
+  const saved = state?.settings?.taskStatuses
+  const list = Array.isArray(saved) && saved.length ? saved : DEFAULT_STATUSES
+  const todo = list.find((x) => x.id === 'todo') || DEFAULT_STATUSES[0]
+  const done = list.find((x) => x.id === 'done') || DEFAULT_STATUSES[3]
+  return [todo, ...list.filter((x) => x.id !== 'todo' && x.id !== 'done' && x.label), done]
+}
+/* The small tag on a task for a status other than the first and the last */
+export function StatusPill({ status }) {
+  const { state } = useStore()
+  if (!status || status === 'todo' || status === 'done') return null
+  const st = taskStatuses(state).find((x) => x.id === status)
+  if (!st) return null
+  return <span className={`pill ${status === 'blocked' ? 'blocked' : 'doing'}`}>{st.label}</span>
+}
+export function StatusesModal({ onClose }) {
+  const { state, update } = useStore()
+  const [rows, setRows] = useState(() => taskStatuses(state).map((x) => ({ ...x })))
+  const setLabel = (i, label) => setRows(rows.map((r, j) => (j === i ? { ...r, label } : r)))
+  const move = (i, d) => {
+    const j = i + d
+    if (j < 1 || j > rows.length - 2) return
+    const next = rows.slice()
+    ;[next[i], next[j]] = [next[j], next[i]]
+    setRows(next)
+  }
+  const add = () => setRows([...rows.slice(0, -1), { id: uid(), label: '' }, rows[rows.length - 1]])
+  const remove = (i) => setRows(rows.filter((_, j) => j !== i))
+  const save = () => {
+    const clean = rows
+      .map((r) => ({ id: r.id, label: r.label.trim() || (r.id === 'todo' ? 'To do' : r.id === 'done' ? 'Done' : '') }))
+      .filter((r) => r.label)
+    update((s) => { s.settings = { ...s.settings, taskStatuses: clean }; return s })
+    onClose()
+  }
+  return (
+    <Modal open title="Statuses" onClose={onClose} footer={<><Button variant="ghost" onClick={() => setRows(DEFAULT_STATUSES.map((x) => ({ ...x })))}>Reset</Button><span className="grow" /><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></>}>
+      <p className="small muted">The first is where a new task starts and the last means done (the task moves to Completed): rename them as you like. Add, rename, reorder or remove the ones in between. A task on a removed status goes back to the first.</p>
+      <div className="status-edit">
+        {rows.map((r, i) => {
+          const fixed = i === 0 || i === rows.length - 1
+          return (
+            <div key={r.id} className="status-edit-row">
+              <Input value={r.label} onChange={(e) => setLabel(i, e.target.value)} placeholder={fixed ? (i === 0 ? 'To do' : 'Done') : 'Waiting for client'} autoFocus={!r.label && !fixed} />
+              {fixed ? <span className="small muted status-edit-note">{i === 0 ? 'start' : 'done'}</span> : (
+                <span className="row-actions">
+                  <button type="button" className="link" onClick={() => move(i, -1)} disabled={i <= 1} aria-label="Move up">↑</button>
+                  <button type="button" className="link" onClick={() => move(i, 1)} disabled={i >= rows.length - 2} aria-label="Move down">↓</button>
+                  <button type="button" className="link danger" onClick={() => remove(i)} aria-label="Remove">×</button>
+                </span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      <Button variant="ghost" onClick={add}>+ Add status</Button>
+    </Modal>
+  )
+}
+
 export const PRIORITIES = ['low', 'normal', 'high', 'urgent']
 const PRIORITY_OPTIONS = PRIORITIES.map((p) => [p, p.toUpperCase()])
 export const TASK_DEPTS = ['Production', 'Direction', 'Camera', 'Lighting', 'Sound', 'Art', 'Wardrobe', 'Makeup & hair', 'Locations', 'Casting', 'Post', 'Client', 'Legal', 'Other']
@@ -53,8 +118,7 @@ export function TaskList({ tasks, onEdit, onStatus, onDelete, editable, showProj
                 {t.title}
                 {t.priority === 'urgent' && <span className="pill urgent">urgent</span>}
                 {t.priority === 'high' && <span className="pill high">high</span>}
-                {t.status === 'blocked' && <span className="pill blocked">blocked</span>}
-                {t.status === 'doing' && <span className="pill doing">in progress</span>}
+                <StatusPill status={t.status} />
               </div>
               <div className="task-meta muted small">
                 {showProject && (projectsById?.[t.projectId] ? <span className="task-proj" style={{ '--pc': projectsById[t.projectId].color }}>{projectsById[t.projectId].title}</span> : <span className="task-proj" style={{ '--pc': 'var(--muted)' }}>General</span>)}
@@ -98,7 +162,11 @@ export function TaskModal({ draft, setDraft, onSave, onClose, projects }) {
   const pickAssignee = (name) => setDraft({ ...draft, assignee: name, assigneeId: team.find((u) => u.name === name)?.id || '' })
   const ownLists = state.settings?.taskLists || []
   const listId = ownLists.some((l) => l.id === draft.listId) ? draft.listId : ''
+  const statuses = taskStatuses(state)
+  const isAdmin = useCurrentUser()?.role === 'admin'
+  const [editStatuses, setEditStatuses] = useState(false)
   return (
+    <>
     <Modal
       open
       wide
@@ -126,11 +194,13 @@ export function TaskModal({ draft, setDraft, onSave, onClose, projects }) {
         <div className="row-3">
           <Field label="Department"><Select value={draft.dept} onChange={(e) => set('dept', e.target.value)} options={TASK_DEPTS} /></Field>
           <Field label="Priority"><Select value={draft.priority} onChange={(e) => set('priority', e.target.value)} options={PRIORITY_OPTIONS} /></Field>
-          <Field label="Status"><Select value={draft.status} onChange={(e) => set('status', e.target.value)} options={TASK_STATUS} /></Field>
+          <Field label="Status"><Select value={statuses.some((x) => x.id === draft.status) ? draft.status : 'todo'} onChange={(e) => (e.target.value === '__edit' ? setEditStatuses(true) : set('status', e.target.value))} options={[...statuses.map((x) => [x.id, x.label]), ...(isAdmin ? [['__edit', 'Edit statuses…']] : [])]} /></Field>
         </div>
         <Field label="Notes"><Textarea rows={6} value={draft.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Who to call, what was agreed, links" /></Field>
       </div>
     </Modal>
+    {editStatuses && <StatusesModal onClose={() => setEditStatuses(false)} />}
+    </>
   )
 }
 
