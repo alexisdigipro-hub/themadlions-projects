@@ -43,6 +43,7 @@ Read this first; the detail behind each line is in the pull request that carried
 
 ### 9 Oct: Tasks rows further apart
 - Alex (computer screenshot): the rows still read as riding on each other. `.rem-tasks` rows and Notes cards now 12 px apart (were 8).
+- The real cause (his next screenshot): in a smart list (Important, Assigned to me, Tasks) TasksAll groups tasks by list, one `.rem-section > ul.rem-tasks` per list, and nothing spaced one section from the next, so the last task of a group touched the first of the following one. `.rem-section + .rem-section { margin-top: 12px }`.
 
 ### 9 Oct (13:52): the app's band and soft top bar, again
 - TML Chat holds now (its bars are plain elements at the foot of a screen-tall list). The app still showed the band under a fixed tab bar and a soft top bar. In the home-screen app on a phone the tab bar is now the shell's last row (`position: relative`, in flow), so it sits at the foot of the screen-tall shell whatever iOS reports about fixed elements; the page scrolls between the two bars. The app chat's folders dock is `position: sticky; bottom: 8px` inside that scrolling page (the list's `overflow` set to visible so sticky works).
