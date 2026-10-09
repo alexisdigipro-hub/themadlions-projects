@@ -41,6 +41,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct: TML Chat's background runs up under the clock
+- chat.html only: `apple-mobile-web-app-status-bar-style` = black-translucent, so the home-screen TML Chat draws its own background behind the iPhone's clock and battery instead of a black strip. The chat already pads by `env(safe-area-inset-top)` (list, room header, photo viewer, calls). index.html keeps the plain bar until the app's top bar gets that padding. iOS may read this only when the icon is added: if the strip stays black, remove TML Chat from the home screen and add it again.
+
 ### 9 Oct: TML Chat's folder tabs closer together
 - Phone TML Chat: the folder pill track has no gap, tabs pad `clamp(5px, 1.8vw, 9px)` and their text is `clamp(11px, 3vw, 15px)`, so All / Projects / Groups / People / Archived fit across at 375, 390 and 440 px wide (measured with Sofia Sans). Your own folders or an unread count still scroll the track sideways.
 

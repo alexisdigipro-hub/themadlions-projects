@@ -15,8 +15,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="TML Chat" />
-    <!-- No status bar style on purpose: black-translucent would run the page under the clock, and the
-         top bar has no safe-area padding yet. Worth revisiting once it can be looked at on a phone. -->
+    <!-- The chat's background runs up under the clock and the battery (Alex, 9 Oct): black-translucent
+         starts the page at the very top, and the chat already pads its list, a room's header, the photo
+         viewer and calls by env(safe-area-inset-top). index.html keeps the plain bar: the app's top bar
+         has no such padding yet. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
