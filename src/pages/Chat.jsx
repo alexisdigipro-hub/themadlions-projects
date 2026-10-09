@@ -593,14 +593,19 @@ function RoomList({ activeId, windowed }) {
   return (
     <aside className={`chat-list${prefs.folderTabs === 'left' && !mobile && tab === 'chats' ? ' tabs-left' : ''}`}>
       <div className={`chat-list-head${tg ? ' tg-head' : ''}`}>
-        {tg && <button type="button" className="tg-pill tg-edit" onClick={() => (picking ? endPick() : setPicking(true))}>{picking ? 'Done' : 'Edit'}</button>}
+        {/* Edit and the folders together on the left, + group and the pencil on the right, so the head is balanced (Alex, 9 Oct) */}
+        {tg && (
+          <span className="tg-pill tg-pill-left">
+            <button type="button" className="tg-edit" onClick={() => (picking ? endPick() : setPicking(true))}>{picking ? 'Done' : 'Edit'}</button>
+            {!picking && <button type="button" className="tg-ico" onClick={() => setFolders(true)} title="Your folders" aria-label="Your folders">{TgIcon.folder()}</button>}
+          </span>
+        )}
         {/* the company's name, MAD set heavier (Alex, 9 Oct); while picking, how many are picked */}
         <h1>{tg ? (picking ? (picked.length ? `${picked.length} selected` : 'Select chats') : <span className="tg-brand">THE<b>MAD</b>LIONS</span>) : 'Chat'}</h1>
         {tg && (picking ? (
           <button type="button" className="tg-pill tg-all" onClick={() => setPicked(picked.length === shown.length ? [] : shown.map((r) => r.id))}>{picked.length === shown.length && shown.length ? 'None' : 'All'}</button>
         ) : (
           <span className="tg-pill tg-pill-icons">
-            <button type="button" onClick={() => setFolders(true)} title="Your folders" aria-label="Your folders">{TgIcon.folder()}</button>
             {isAdmin && <button type="button" onClick={() => setGroup('new')} title="New group" aria-label="New group">{TgIcon.people()}</button>}
             <button type="button" onClick={() => setDirect(true)} title="New message" aria-label="New message">{TgIcon.edit()}</button>
           </span>

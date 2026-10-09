@@ -42,7 +42,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 Read this first; the detail behind each line is in the pull request that carried it.
 
 ### 9 Oct: TML Chat header says THEMADLIONS, Edit selects chats in bulk
-- Phone TML Chat head (Chat.jsx RoomList, `tg`): the title is **THE<b>MAD</b>LIONS** (`.tg-brand`, MAD at weight 900). The old Edit pill that opened Folders is now a folder icon inside the right pill (next to + group and the pencil). The left **Edit** pill starts selecting: round checks on every row, title shows "N selected", right pill All / None, and the bottom bar becomes **Read / Archive (Unarchive) / Folder / Delete**. Done ends it.
+- Phone TML Chat head (Chat.jsx RoomList, `tg`): the title is **THE<b>MAD</b>LIONS** (`.tg-brand`, MAD at weight 900). THEMADLIONS is set tight, no letter spacing. Left pill: **Edit** + a folder icon (opens Folders); right pill: + group (administrators) and the pencil, so the head is balanced. Edit starts selecting: round checks on every row, title shows "N selected", right pill All / None, and the bottom bar becomes **Read / Archive (Unarchive) / Folder / Delete**. Done ends it.
 - Per person, saved in their own profile (no SQL): `profile.chatArchived` (room ids archived just for me; lib/chat.js roomsFor reads it, Delivered projects stay archived as before), `profile.chatHidden` ({roomId: time}; Delete hides the chat from my list only, nothing is deleted for anyone, and it comes back when a newer message arrives). Folder adds the picked chats to one of my custom folders (`profile.chatFolders`). Read marks them read up to their last message.
 
 ### 9 Oct: TML Chat starts in Glass dark
