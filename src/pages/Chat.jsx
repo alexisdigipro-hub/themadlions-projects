@@ -228,15 +228,19 @@ export function ChatWindow() {
     // added to a phone's home screen from here, it is an app of its own that opens straight on the chat
     const link = document.querySelector('link[rel="manifest"]')
     const meta = document.querySelector('meta[name="apple-mobile-web-app-title"]')
-    const was = [link?.getAttribute('href'), meta?.getAttribute('content')]
+    const touch = document.querySelector('link[rel="apple-touch-icon"]')
+    const was = [link?.getAttribute('href'), meta?.getAttribute('content'), touch?.getAttribute('href')]
     link?.setAttribute('href', './manifest-chat.webmanifest')
     meta?.setAttribute('content', 'TML Chat')
+    // TML Chat's own icon: the logo inside a chat bubble, in Glass dark's colours (Alex, 9 Oct)
+    touch?.setAttribute('href', './icons/chat-apple-touch-icon.png')
     // an install offer caught on the main app's page is for the main app, not for TML Chat
     if (!onChatPage()) installPrompt = null
     return () => {
       root.classList.remove('chat-window'); document.title = title
       if (link && was[0]) link.setAttribute('href', was[0])
       if (meta && was[1]) meta.setAttribute('content', was[1])
+      if (touch && was[2]) touch.setAttribute('href', was[2])
     }
   }, [])
   // the same tone the app plays, as this window may be the only one open
@@ -540,14 +544,26 @@ function RoomList({ activeId, windowed }) {
   ]
   const folderUnread = (f) => C.totalUnread(Object.fromEntries(C.roomsInFolder(f, rooms).map((r) => [r.id, unread[r.id] || 0])))
   const legacy = state.chatRooms === false
+  // TML Chat on a phone (the home-screen app) is laid out like Telegram for iPhone (Alex, 9 Oct):
+  // Edit · Chats · (+ group, new message) on top, the search, the folders as a pill track, and a
+  // floating bar at the foot with the unread count on Chats
+  const tg = mobile && windowed
+  const allUnread = C.totalUnread(unread)
 
   return (
     <aside className={`chat-list${prefs.folderTabs === 'left' && !mobile && tab === 'chats' ? ' tabs-left' : ''}`}>
-      <div className="chat-list-head">
-        <h1>Chat</h1>
+      <div className={`chat-list-head${tg ? ' tg-head' : ''}`}>
+        {tg && <button type="button" className="tg-pill tg-edit" onClick={() => setFolders(true)}>Edit</button>}
+        <h1>{tg ? 'Chats' : 'Chat'}</h1>
+        {tg && (
+          <span className="tg-pill tg-pill-icons">
+            {isAdmin && <button type="button" onClick={() => setGroup('new')} title="New group" aria-label="New group">{TgIcon.people()}</button>}
+            <button type="button" onClick={() => setDirect(true)} title="New message" aria-label="New message">{TgIcon.edit()}</button>
+          </span>
+        )}
         {!mobile && <button type="button" className="icon-btn chat-head-ico chat-folders-btn" onClick={() => setFolders(true)} title="Your folders" aria-label="Your folders">{TgIcon.folder()}</button>}
         {!mobile && <button type="button" className="icon-btn chat-head-ico chat-new" onClick={() => setDirect(true)} title="New message" aria-label="New message">{TgIcon.edit()}</button>}
-        {isAdmin && <button type="button" className="icon-btn chat-head-ico chat-group-new" onClick={() => setGroup('new')} title="New group" aria-label="New group">{TgIcon.people()}</button>}
+        {isAdmin && !tg && <button type="button" className="icon-btn chat-head-ico chat-group-new" onClick={() => setGroup('new')} title="New group" aria-label="New group">{TgIcon.people()}</button>}
         {!windowed && <button type="button" className="icon-btn chat-head-ico chat-popout" onClick={popOut} title="Open the chat in its own window" aria-label="Open the chat in its own window">{TgIcon.popout()}</button>}
       </div>
       {tab === 'settings' || tab === 'notices' || tab === 'calls' ? (tab === 'settings' ? (
@@ -626,8 +642,8 @@ function RoomList({ activeId, windowed }) {
       {(windowed || !mobile) && (
         // the list's foot, Telegram's, in Alex's order: chats, calls, notices (administrators), settings
         // (People left, Alex: the new-message button is already above the list)
-        <nav className="chat-win-tabs">
-          <button type="button" className={tab === 'chats' ? 'on' : ''} onClick={() => setTab('chats')}>{TgIcon.chats()}<span>Chats</span></button>
+        <nav className={`chat-win-tabs${tg ? ' tg-tabs' : ''}`}>
+          <button type="button" className={tab === 'chats' ? 'on' : ''} onClick={() => setTab('chats')}><span className="tg-tab-ico">{TgIcon.chats()}{tg && allUnread > 0 && <i className="tg-tab-badge">{allUnread > 99 ? '99+' : allUnread}</i>}</span><span>Chats</span></button>
           {remote && <button type="button" className={tab === 'calls' ? 'on' : ''} onClick={() => setTab('calls')}>{TgIcon.phone()}<span>Calls</span></button>}
           {canNotice && <button type="button" className={tab === 'notices' ? 'on' : ''} onClick={() => setTab('notices')}>{TgIcon.bell()}<span>Notices</span></button>}
           <button type="button" className={tab === 'settings' ? 'on' : ''} onClick={() => setTab('settings')}>{TgIcon.gear()}<span>Settings</span></button>
