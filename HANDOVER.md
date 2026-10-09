@@ -41,6 +41,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct (later): two pills with a hair of space, and the black at the foot explained
+- Alex: "a tiny gap after all". `.tg-dock` is two frosted pills again (folders, then Chats / Calls / Notices / Settings) 5 px apart, folder buttons 6 px top/bottom. Bug fixed: inside the dock the tabs kept `bottom: …` from their sticky days, and with `position: relative` that lifted them out of their pill (the empty space in Alex's screenshot); now `position: static; bottom: auto`.
+- The black under the bars was the backdrop's own `background-color` (near black) showing past the window's foot, where the gradient (fixed, viewport sized) stops. Glass dark (app skin, html and body), the chat's Glass dark and `html.chat-window` now end in a last layer `linear-gradient(90deg, #0b151d, #0c2a33 60%, #0f3a43)` that alone repeats (`background-repeat: no-repeat ×4, repeat`), with `background-color: #0c2a33`: past the foot the screen carries the bottom edge's colours instead of black.
+
 ### 9 Oct: TML Chat's foot as one card, no black under it
 - Phone TML Chat: `.tg-dock` is now one frosted card (radius 30, 4 px inset, shadow) holding the folders and Chats / Calls / Notices / Settings, which lose their own backgrounds; a hairline that fades at both ends separates them; folder buttons 7 px top/bottom (were 9); the card sits lower, `max(6px, safe-area-bottom - 22px)` from the bottom (about 12 px on an iPhone).
 - The black under the bars: `html.chat-window` now paints the page itself (`var(--bg)`, and the Glass dark backdrop when `.chat2[data-chat-theme='glass']` is on the page, same gradients, fixed), body transparent, so wherever the window stops short of the screen on an iPhone the backdrop continues instead of black.
