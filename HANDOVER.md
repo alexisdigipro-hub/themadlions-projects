@@ -41,8 +41,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 Read this first; the detail behind each line is in the pull request that carried it.
 
+### 9 Oct: TML Chat's bottom bar slimmer and lower
+- Phone TML Chat only (last block of styles.css): the Chats / Calls / Notices / Settings pill is slimmer (4 px padding, buttons 5/4 px, 11 px labels), its icons and the Edit bar's icons 27 → 20 px (a quarter smaller), and it sits lower: `max(10px, safe-area-inset-bottom - 16px)` under it (about 18 px on an iPhone, the same as its 16 px sides) instead of 10 px + the safe area.
+
 ### 9 Oct: the chat list slides between folders on a phone
 - Phone only (useIsMobile; desktop untouched), in the app's chat and in TML Chat: tapping another folder (All → Projects…) slides the list like pages, the new one in from the right when the folder sits to the right, from the left otherwise. Chat.jsx RoomList `pickFolder`: copies the old `.chat-rooms` into a `.chat-rooms-ghost` frame laid over it (slides out, removed after 320 ms), and the new list is keyed by folder on a phone so it remounts with `in-next` / `in-prev` (rows animate .3 s). Off with the phone's Reduce Motion. CSS at the end of styles.css.
+- TML Chat on a phone also gets a **glass lens** on the folder track (Chat.jsx `glassTo`, `.chat-lens`): it lifts off the chosen folder (scale 1.12), slides to the new one and melts into its pill (560 ms, Web Animations). `.chat-folders.lensing` keeps the new pill clear for 380 ms so the lens settles into it.
 
 ### 9 Oct: TML Chat header says THEMADLIONS, Edit selects chats in bulk
 - Phone TML Chat head (Chat.jsx RoomList, `tg`): the title is **THE<b>MAD</b>LIONS** (`.tg-brand`, MAD at weight 900). THEMADLIONS is set tight, no letter spacing. Left pill: **Edit** + a folder icon (opens Folders); right pill: + group (administrators) and the pencil, so the head is balanced. Edit starts selecting: round checks on every row, title shows "N selected", right pill All / None, and the bottom bar becomes **Read / Archive (Unarchive) / Folder / Delete**. Done ends it.

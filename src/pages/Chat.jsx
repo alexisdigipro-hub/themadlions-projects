@@ -538,7 +538,32 @@ function RoomList({ activeId, windowed }) {
       setTimeout(() => frame.remove(), 320)
       setSlide(dir)
     }
+    if (tg && !still) glassTo(id)
     setFolderId(id)
+  }
+  // TML Chat on a phone: a small glass lens lifts off the chosen folder, slides to the new one and
+  // melts into its pill, like iOS's Liquid Glass tabs (Alex, 9 Oct).
+  const tabsRef = useRef(null)
+  const glassTo = (id) => {
+    const track = tabsRef.current
+    const from = track?.querySelector('button.on')
+    const to = track?.querySelector(`button[data-folder="${CSS.escape(id)}"]`)
+    if (!from || !to || typeof track.animate !== 'function') return
+    track.querySelectorAll('.chat-lens').forEach((n) => n.remove())
+    const lens = document.createElement('span')
+    lens.className = 'chat-lens'
+    lens.setAttribute('aria-hidden', 'true')
+    track.appendChild(lens)
+    track.classList.add('lensing')
+    const at = (b) => `translate(${b.offsetLeft}px, ${b.offsetTop}px)`
+    const run = lens.animate([
+      { transform: `${at(from)} scale(1)`, width: `${from.offsetWidth}px`, height: `${from.offsetHeight}px`, opacity: 0 },
+      { offset: 0.15, transform: `${at(from)} scale(1.12)`, width: `${from.offsetWidth}px`, height: `${from.offsetHeight}px`, opacity: 1 },
+      { offset: 0.75, transform: `${at(to)} scale(1.12)`, width: `${to.offsetWidth}px`, height: `${to.offsetHeight}px`, opacity: 1 },
+      { transform: `${at(to)} scale(1)`, width: `${to.offsetWidth}px`, height: `${to.offsetHeight}px`, opacity: 0 },
+    ], { duration: 560, easing: 'cubic-bezier(.3, .7, .2, 1)', fill: 'both' })
+    setTimeout(() => track.classList.remove('lensing'), 380)
+    run.onfinish = () => lens.remove()
   }
 
   const rooms = useMemo(() => C.roomsFor(state, user), [state.users, state.projects, state.chats, user])
@@ -651,11 +676,11 @@ function RoomList({ activeId, windowed }) {
       ) : tab === 'calls' ? <CallsPanel /> : null) : (<>
       {legacy && <p className="chat-legacy">Rooms are not switched on yet: run supabase/chat_rooms.sql in the SQL editor. Until then only the team room works.</p>}
       {mobile && !windowed && installCard > 0 && <InstallHint key={installCard} />}
-      <div className="chat-folders" role="tablist">
+      <div ref={tabsRef} className="chat-folders" role="tablist">
         {allFolders.map((f) => {
           const n = folderUnread(f)
           return (
-            <button key={f.id} type="button" role="tab" aria-selected={f.id === folder.id} className={f.id === folder.id ? 'on' : ''} onClick={() => pickFolder(f.id)}>
+            <button key={f.id} type="button" role="tab" data-folder={f.id} aria-selected={f.id === folder.id} className={f.id === folder.id ? 'on' : ''} onClick={() => pickFolder(f.id)}>
               {f.name}{n > 0 && <span className="chat-fbadge">{n}</span>}
             </button>
           )
