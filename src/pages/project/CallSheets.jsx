@@ -165,6 +165,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       wx: wx && csd.showWeather !== false && linkShow('weather') ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
       sun: sun && csd.showSun !== false && linkShow('sun') ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,
       loc: locView && on('location') ? { name: locView.name, address: locView.address, contact: locView.contact, phone: phone(locView.phone) } : null,
+      extraLocs: on('location') ? (sheet.extraLocs || []).filter((x) => (x.name || '').trim() || (x.address || '').trim()).map((x) => ({ name: x.name || '', address: x.address || '' })) : [],
       scenes: on('schedule') ? scenes.map((s) => ({ location: s.location, heading: s.heading, from: sceneTime(s.id).from, to: sceneTime(s.id).to })) : [],
       cast: on('cast') ? castRows.map((r) => ({ character: r.character, name: r.actor?.name || '', phone: phone(r.actor?.phone), call: r.call, photo: r.actor?.photos?.[0]?.thumb || '' })) : [],
       crew: on('crew') ? crewRows.map((c) => ({ name: c.name, role: c.role || c.dept, phone: phone(c.phone), call: c.call, photo: c.photos?.[0]?.thumb || '' })) : [],
@@ -279,6 +280,8 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
     setSel(days.find((x) => x.id !== gone.id)?.id || '')
     toast(`${dayLabel(gone, days.indexOf(gone))} deleted`, 'ok')
   }
+  const extraLocs = sheet.extraLocs || []
+  const setExtraLoc = (i, k, v) => setSheet('extraLocs', extraLocs.map((x, j) => (j === i ? { ...x, [k]: v } : x)))
   const setCall = (key, v) => setSheet('calls', { ...calls, [key]: v })
   const hidePerson = (key, on) => {
     const next = { ...hidden }
@@ -651,6 +654,18 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
         <div className="row-2">
           <Field label={labelOf(layout, 'parking')}><Textarea rows={2} value={sheet.parking || ''} placeholder={csd.parking || 'Where, how many cars, who unloads where'} onChange={(e) => setSheet('parking', e.target.value)} /></Field>
           <Field label={labelOf(layout, 'hospital')}><Textarea rows={2} value={sheet.weather || ''} placeholder={csd.hospital || 'Name, address, phone'} onChange={(e) => setSheet('weather', e.target.value)} /></Field>
+        </div>
+        {/* more places that day, shown small at the foot of the location on the link (Alex, 11 Oct) */}
+        <div className="ordino-extra">
+          <span className="ordino-extra-h">Extra Locations</span>
+          {extraLocs.map((x, i) => (
+            <div key={i} className="ordino-row">
+              <Input value={x.name || ''} placeholder="Name" onChange={(e) => setExtraLoc(i, 'name', e.target.value)} aria-label="Extra location name" />
+              <Input value={x.address || ''} placeholder="Address" onChange={(e) => setExtraLoc(i, 'address', e.target.value)} aria-label="Extra location address" />
+              <button type="button" className="ordino-x" onClick={() => setSheet('extraLocs', extraLocs.filter((_, j) => j !== i))} aria-label="Remove">×</button>
+            </div>
+          ))}
+          <div className="ordino-adds"><button type="button" className="link small" onClick={() => setSheet('extraLocs', [...extraLocs, { name: '', address: '' }])}>+ Add a location</button></div>
         </div>
       </>
     ),
