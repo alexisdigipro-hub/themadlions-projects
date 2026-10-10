@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 export function Button({ variant = 'default', size = 'md', className = '', ...props }) {
   return <button className={`btn btn-${variant} btn-${size} ${className}`} {...props} />
@@ -87,7 +88,9 @@ export function Modal({ open, title, onClose, children, footer, wide }) {
     }
   }, [open, onClose])
   if (!open) return null
-  return (
+  // drawn straight into <body> (Alex, 10 Oct): inside the phone app's scrolling page iOS kept a window
+  // under the top bar and the tab bar, so its × and its Save could not be reached
+  return createPortal(
     <div ref={self} className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
       <div className={`modal ${wide ? 'modal-wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-head">
@@ -99,7 +102,8 @@ export function Modal({ open, title, onClose, children, footer, wide }) {
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-foot">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
