@@ -108,6 +108,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 - The Calendar page is the month grid and the colour legend underneath it, nothing else. The Next up and Not available lists that used to sit below were removed; the same days off still show in the grid and on Home.
 - On a phone the Home team faces wrap onto as many rows as they need, five to seven per row depending on the screen, so the whole team is visible without dragging sideways, and the projects table keeps the project, its next shoot day and its open tasks, dropping status, progress and budget. Desktop is unchanged.
 - **Short links** (11 Oct): every link you share (ordino, shot list, notes, deliveries, estimates, invoices, presentations) reads `go.themadlions.com/...` instead of the long github address; links sent before keep working.
+- **Opening a conversation on a phone** (11 Oct): it slides in from the right, like on an iPhone.
 - **Sending photos and videos** (11 Oct): they appear in the conversation straight away with a turning ring (tap the × to stop), like Telegram, and you can carry on typing.
 - **Pull to refresh in a conversation** (11 Oct, home-screen app): pull down from the top bar of the conversation, or from the top of its messages.
 - **Zoom in chat photos** (11 Oct): open a photo and double tap where you want to look closer; move it with a finger, double tap again to zoom back out.

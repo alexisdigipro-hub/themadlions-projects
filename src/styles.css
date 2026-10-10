@@ -6193,3 +6193,17 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
   .panel.ordino-btn { min-height: 97px; gap: 8px; }
   .panel.ordino-btn:not(.receipt-btn) .ordino-btn-text strong { font-size: 18px; }
 }
+
+/* Opening a conversation on a phone, the iPhone way (Alex, 11 Oct): it slides in from the right
+   while the list behind it moves a little to the left and dims. Only under 820 px; the computer
+   keeps its two columns as they are. The animation ends on transform: none, so nothing fixed
+   inside the conversation (the menu's blur, the picture viewer) is affected once it is in. */
+@media (max-width: 820px) {
+  .chat2.has-room .chat-box { animation: chat-push-in .34s cubic-bezier(.2, .8, .2, 1) both; box-shadow: -8px 0 24px rgba(0, 0, 0, .28); }
+  .chat2.has-room .chat-list { animation: chat-push-under .34s cubic-bezier(.2, .8, .2, 1) both; }
+}
+@keyframes chat-push-in { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes chat-push-under { from { transform: none; filter: none; } to { transform: translateX(-24%); filter: brightness(.7); } }
+@media (prefers-reduced-motion: reduce) {
+  .chat2.has-room .chat-box, .chat2.has-room .chat-list { animation: none; }
+}
