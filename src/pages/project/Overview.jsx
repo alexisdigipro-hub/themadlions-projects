@@ -20,6 +20,10 @@ import CallSheets from './CallSheets.jsx'
 import { ReceiptModal } from '../../components/Receipt.jsx'
 import { groupPairs } from '../../lib/budgetCats.js'
 
+// Made absolute here: a relative url() inside a CSS variable is read against the stylesheet
+// (assets/), not the page, so "./ordino-bg.webp" was looked for in the wrong folder
+const ORDINO_BG = new URL(`${import.meta.env.BASE_URL}ordino-bg.webp`, document.baseURI).href
+
 const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: '' })
 
 /* A track to upload and listen to, here on Overview, with the same waveform as the full editor —
@@ -253,7 +257,7 @@ export default function Overview() {
           administrators too (Alex, 10 Oct); it opens the finished ordino as the crew get it on a phone.
           Alex's on-set picture (public/ordino-bg.webp) shows faintly across it */}
       {ordinoDays.length > 0 && (
-        <button type="button" className="panel ordino-btn" style={{ '--ordino-bg': `url("${import.meta.env.BASE_URL}ordino-bg.webp")` }} onClick={() => setOrdinoOpen(true)}>
+        <button type="button" className="panel ordino-btn" style={{ '--ordino-bg': `url("${ORDINO_BG}")` }} onClick={() => setOrdinoOpen(true)}>
           <span className="ordino-btn-text">
             <strong>Ordino</strong>
             <span>{[nextOrdino.date && new Date(nextOrdino.date + 'T00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }), nextOrdino.callTime && `call ${nextOrdino.callTime}`, ordinoDays.length > 1 && `${ordinoDays.length} days`].filter(Boolean).join(' · ')}</span>
