@@ -85,7 +85,7 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
   }
 
   return (
-    <section className="panel">
+    <section className="panel song-card">
       <div className="panel-head">
         <h2>Song</h2>
         {editable && (
@@ -110,11 +110,11 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
             </select>
           )}
           <audio ref={audioRef} src={url || undefined} preload="metadata" onError={onError} />
-          <Waveform peaks={track.peaks} duration={track.duration} time={time} sections={sections} onSeek={seek} active={current?.id} />
-          <div className="player-bar">
+          {/* one slim row, play, the waveform, the time (Alex, 10 Oct: the whole box smaller, not only the wave) */}
+          <div className="player-row">
             <button className="play" onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
+            <Waveform peaks={track.peaks} duration={track.duration} time={time} sections={sections} onSeek={seek} active={current?.id} />
             <span className="player-time">{fmtTimeMs(time)} <span className="muted">/ {fmtTime(track.duration)}</span></span>
-            <span className="player-now">{current ? <><span className="muted">now:</span> <strong>{current.name}</strong></> : null}</span>
           </div>
           {err && <p className="small" style={{ color: 'var(--danger)', margin: 0 }}>{err}</p>}
         </div>
