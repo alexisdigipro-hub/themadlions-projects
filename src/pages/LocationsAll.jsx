@@ -1,14 +1,17 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { locationProjects, locationToLibrary, matchText } from '../lib/library.js'
 import { coordsFromText } from '../lib/sun.js'
+import { isMapsLink, readMapLink } from '../lib/maplink.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
 import { DbAdd, DbFilter } from '../components/DbTools.jsx'
 
 const TYPES = ['Studio', 'Interior', 'Exterior', 'INT. & EXT.', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
-const emptyLoc = () => ({ id: uid(), name: '', address: '', type: 'Interior', notes: '', contact: '', phone: '', lat: '', lon: '', coordsText: '', photos: [], tags: [], createdAt: new Date().toISOString() })
+const emptyLoc = () => ({ id: uid(), name: '', mapsUrl: '', address: '', type: 'Interior', notes: '', contact: '', phone: '', lat: '', lon: '', coordsText: '', photos: [], tags: [], createdAt: new Date().toISOString() })
+// the exact spot when the location has coordinates (from its Google Maps link), else its address
+const mapQuery = (l) => (l.lat && l.lon ? `${l.lat},${l.lon}` : l.address)
 function mapSrc(address, key) {
   const q = encodeURIComponent(address)
   return key ? `https://www.google.com/maps/embed/v1/place?key=${key}&q=${q}` : `https://www.google.com/maps?q=${q}&output=embed`
@@ -38,6 +41,7 @@ export default function LocationsAll() {
   const [type, setType] = useState('')
   const [detailFor, setDetailFor] = useState('')
   const [draft, setDraft] = useState(null)
+  const [linkNote, setLinkNote] = useState('') // what reading the Google Maps link did
   const locs = state.library.locations
   const projects = visibleProjects(state, user)
   const list = locs
@@ -46,6 +50,32 @@ export default function LocationsAll() {
     .sort((a, b) => a.name.localeCompare(b.name))
   const detail = locs.find((l) => l.id === detailFor)
 
+  /* A pasted Google Maps link fills the address, the coordinates (so the map shows the exact spot) and,
+     if it is still empty, the name (Alex, 10 Oct) */
+  const linkTimer = useRef(0)
+  const pickLink = (text) => {
+    const url = String(text || '').trim()
+    setDraft((d) => ({ ...d, mapsUrl: url }))
+    clearTimeout(linkTimer.current)
+    if (!isMapsLink(url)) { setLinkNote(url ? 'Paste the link from Google Maps (Share > Copy link).' : ''); return }
+    // read it once the pasting or typing has stopped, not on every letter
+    linkTimer.current = setTimeout(() => readLink(url), 500)
+  }
+  const readLink = async (url) => {
+    setLinkNote('Reading the link…')
+    try {
+      const r = await readMapLink(url)
+      setDraft((d) => (d && d.mapsUrl === url ? {
+        ...d,
+        name: d.name.trim() ? d.name : r.name || d.name,
+        address: r.address || d.address,
+        lat: r.lat ?? d.lat, lon: r.lon ?? d.lon, coordsText: '',
+      } : d))
+      setLinkNote(r.address ? 'Address and map filled from the link.' : 'Map spot filled from the link.')
+    } catch (e) {
+      setLinkNote(e.message)
+    }
+  }
   const save = () => {
     if (!draft.name.trim()) return toast('Name the location.', 'error')
     update((s) => {
@@ -100,7 +130,7 @@ export default function LocationsAll() {
           <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, address, notes…" />
           <DbFilter value={type} onChange={(e) => setType(e.target.value)} options={[['', 'All types'], ...TYPES.map((t) => [t, t])]} label="Type" />
           {editable && unlinked > 0 && <Button variant="ghost" className="db-collect" onClick={collect}>Collect {unlinked} from projects</Button>}
-          {editable && <DbAdd label="Add location" onClick={() => setDraft(emptyLoc())} />}
+          {editable && <DbAdd label="Add location" onClick={() => { setLinkNote(''); setDraft(emptyLoc()) }} />}
         </div>
       </div>
 
@@ -129,15 +159,15 @@ export default function LocationsAll() {
       <Modal open={!!detail} wide title={detail?.name || ''} onClose={() => setDetailFor('')}>
         {detail && (
           <div className="stack">
-            {detail.address ? (
-              <iframe className="map" title={detail.name} src={mapSrc(detail.address, state.settings.mapsKey)} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
+            {detail.address || (detail.lat && detail.lon) ? (
+              <iframe className="map" title={detail.name} src={mapSrc(mapQuery(detail), state.settings.mapsKey)} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
             ) : (
               <div className="map map-empty muted">Add an address to see the map.</div>
             )}
             <div className="row-actions">
-              {detail.address && <a className="btn btn-ghost btn-sm" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(detail.address)}`} target="_blank" rel="noreferrer">Open in Maps</a>}
-              {detail.address && <a className="btn btn-ghost btn-sm" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(detail.address)}`} target="_blank" rel="noreferrer">Directions</a>}
-              {editable && <Button size="sm" onClick={() => { const d = detail; setDetailFor(''); setDraft({ ...d }) }}>Edit</Button>}
+              {(detail.mapsUrl || detail.address) && <a className="btn btn-ghost btn-sm" href={detail.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(detail.address)}`} target="_blank" rel="noreferrer">Open in Maps</a>}
+              {(detail.address || (detail.lat && detail.lon)) && <a className="btn btn-ghost btn-sm" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapQuery(detail))}`} target="_blank" rel="noreferrer">Directions</a>}
+              {editable && <Button size="sm" onClick={() => { const d = detail; setDetailFor(''); setLinkNote(''); setDraft({ ...d }) }}>Edit</Button>}
               {editable && <Confirm onConfirm={() => remove(detail)} />}
             </div>
             <dl className="details">
@@ -163,6 +193,9 @@ export default function LocationsAll() {
               <Field label="Name"><Input autoFocus value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} /></Field>
               <Field label="Type"><Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={TYPES} /></Field>
             </div>
+            <Field label="Google Maps link" hint={linkNote || 'In Google Maps: Share > Copy link, then paste it here. The address and the map fill in by themselves.'}>
+              <Input value={draft.mapsUrl || ''} inputMode="url" placeholder="https://maps.app.goo.gl/…" onChange={(e) => pickLink(e.target.value)} />
+            </Field>
             <Field label="Address"><Input value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} /></Field>
             <Field label="Coordinates" hint="Optional. Paste a Google Maps link or lat, lon.">
               <Input value={draft.lat && draft.lon ? `${draft.lat}, ${draft.lon}` : draft.coordsText || ''} onChange={(e) => { const c = coordsFromText(e.target.value); setDraft({ ...draft, coordsText: e.target.value, lat: c ? c.lat : '', lon: c ? c.lon : '' }) }} placeholder="37.9838, 23.7275" />
