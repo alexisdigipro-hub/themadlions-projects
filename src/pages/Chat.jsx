@@ -1174,6 +1174,11 @@ function ChatRoom({ room, onBack }) {
   // photos and videos are shrunk like WhatsApp unless this is switched off in the sheet
   const [compressMedia, setCompressMedia] = useState(true)
   const [busy, setBusy] = useState('')
+  /* Photos, videos and files on their way (Alex, 11 Oct, from Telegram): the message shows in the
+     conversation at once, from the phone, with a turning ring and a cross to stop it, instead of
+     names over the box and an "Uploading" bar. Kept here until it is sent. */
+  const [outbox, setOutbox] = useState([])
+  const stopped = useRef(new Set())
   const [caret, setCaret] = useState(0)
   const [editGroup, setEditGroup] = useState(false)
   const [editMembers, setEditMembers] = useState(false)
@@ -1210,6 +1215,7 @@ function ChatRoom({ room, onBack }) {
     const latest = msgs.reduce((a, m) => (m.createdAt > a ? m.createdAt : a), '')
     if (latest) C.markRead(roomId, latest)
   }, [msgs.length, roomId])
+  useEffect(() => { if (outbox.length) endRef.current?.scrollIntoView({ block: 'end' }) }, [outbox.length])
   // Seen (Telegram): how far each person has read a room is kept in their profile (chatRead), at
   // most every few seconds, so the sender can see who read a message and gets ✓✓
   useEffect(() => {
@@ -1282,14 +1288,35 @@ function ChatRoom({ room, onBack }) {
     // videos are readied here, inside the tap, before anything waits: Safari only lets them play then
     const prepared = files.map((f) => (compressMedia && !voice ? prepareVideo(f) : null))
     setSheet(false)
+    const replyId = replyTo?.id || ''
+    // photos, videos and files go into the conversation at once, and the box is free again
+    const outgoing = files.length > 0 && !voice
+    const step = (stage, progress) => setOutbox((o) => o.map((x) => (x.id === id ? { ...x, stage, progress } : x)))
+    const gone = () => stopped.current.has(id)
+    if (outgoing) {
+      const previews = files.map((f) => {
+        const pid = uid()
+        if (/^(image|video)\//.test(f.type)) urlCache.set(pid, { url: URL.createObjectURL(f), until: Date.now() + 3600 * 1000 })
+        return { id: pid, name: f.name, type: f.type, bytes: f.size }
+      })
+      setOutbox((o) => [...o, { id, roomId, text: t, atts: previews, at: new Date().toISOString(), stage: 'Processing…', progress: 0 }])
+      // the real shape of each picture, so the bubble does not jump when it is sent
+      files.forEach((f, i) => {
+        if (!/^(image|video)\//.test(f.type)) return
+        mediaSize(f).then((d) => { if (d) setOutbox((o) => o.map((x) => (x.id === id ? { ...x, atts: x.atts.map((a, j) => (j === i ? { ...a, w: d.w, h: d.h } : a)) } : x))) }).catch(() => {})
+      })
+      setText(''); setPending([]); setReplyTo(null); setCaret(0)
+    }
     if (files.length) {
-      setBusy('Uploading…')
+      if (!outgoing) setBusy('Uploading…')
       try {
         await saveDirectRoom(state, room, user?.id)
         for (let i = 0; i < files.length; i++) {
+          if (gone()) break
           let f = files[i]
           const of = files.length > 1 ? ` ${i + 1}/${files.length}` : ''
-          setBusy(`Uploading${of}…`)
+          const part = (x) => (i + x) / files.length
+          if (outgoing) step(i ? `Uploading${of}` : 'Processing…', part(0.05)); else setBusy(`Uploading${of}…`)
           let w, h, dur
           if (voice) dur = voice.dur
           if (!compressMedia && /^(image|video)\//.test(f.type)) {
@@ -1301,15 +1328,18 @@ function ChatRoom({ room, onBack }) {
             w = c.w; h = c.h
             f = new File([c.blob], f.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' })
           } else if (prepared[i]) {
-            setBusy(`Compressing video${of}… keep this page open`)
-            const c = await compressVideo(prepared[i], (p) => setBusy(`Compressing video${of}… ${Math.round(p * 100)}%, keep this page open`))
+            if (outgoing) step(`Compressing${of}`, part(0.05)); else setBusy(`Compressing video${of}… keep this page open`)
+            const c = await compressVideo(prepared[i], (p) => (outgoing ? step(`Compressing${of} ${Math.round(p * 100)}%`, part(0.05 + p * 0.55)) : setBusy(`Compressing video${of}… ${Math.round(p * 100)}%, keep this page open`)))
             if (c) { f = c.file; w = c.w; h = c.h; dur = Math.round(c.duration) }
-            setBusy(`Uploading${of}…`)
+            if (!outgoing) setBusy(`Uploading${of}…`)
           }
           if (f.size > MAX_BYTES) throw new Error(`${f.name} is over 50 MB${isVideoFile(f) ? (compressMedia ? ' even after compressing. Send a shorter clip.' : '. Switch Compress back on, or send a shorter clip.') : '.'}`)
           const attId = uid()
           const pcloud = pcloudOn(state.settings) ? { folder: chatFolder(state, room), scope: { kind: 'chat', id: roomId } } : null
+          if (gone()) break
+          if (outgoing) step(`Uploading${of}`, part(0.6))
           const { path, fileid, scope } = await uploadFile({ projectId: C.roomFolder(roomId), id: attId, file: f, pcloud })
+          if (outgoing) step(i + 1 < files.length ? `Uploading ${i + 2}/${files.length}` : 'Sending…', part(1))
           // a 24 px picture kept in the message, shown blurred while the real one loads (Telegram)
           const thumb = /^(image|video)\//.test(f.type) ? await tinyThumb(f) : ''
           // the sender sees their own photo or video at once, from the phone, not after a round trip
@@ -1319,12 +1349,22 @@ function ChatRoom({ room, onBack }) {
       } catch (e) {
         prepared.forEach(releaseVideo)
         setBusy('')
+        if (outgoing) {
+          // nothing is lost: the files go back over the box to try again
+          setOutbox((o) => o.filter((x) => x.id !== id))
+          if (!gone()) { setPending((p) => [...files, ...p]); if (t) setText((x) => x || t) }
+        }
         return toast(e.message, 'error')
       }
       setBusy('')
+      if (outgoing) {
+        setOutbox((o) => o.filter((x) => x.id !== id))
+        // stopped with the cross: whatever was already uploaded is left out of the chat
+        if (gone()) { stopped.current.delete(id); prepared.forEach(releaseVideo); return }
+      }
     }
     const mentions = C.parseMentions(t, state.users).filter((x) => x !== user?.id)
-    const m = { id, chatId: roomId, userId: user?.id || '', userName: user?.name || 'Someone', text: t, source: 'app', createdAt: new Date().toISOString(), replyTo: replyTo?.id || '', editedAt: '', attachments, mentions }
+    const m = { id, chatId: roomId, userId: user?.id || '', userName: user?.name || 'Someone', text: t, source: 'app', createdAt: new Date().toISOString(), replyTo: replyId, editedAt: '', attachments, mentions }
     update((s) => {
       if (room.unsaved && !(s.chats || []).some((c) => c.id === roomId)) s.chats = [...(s.chats || []), { id: roomId, kind: 'direct', name: '', members: room.members, createdBy: user?.id || '', createdAt: new Date().toISOString() }]
       s.chat = [...(s.chat || []), m]
@@ -1337,9 +1377,11 @@ function ChatRoom({ room, onBack }) {
     sendAutoNotice(update, { kind: 'chatMessage', key: `chat:${roomId}:${user?.id || ''}`, count: true, fromId: user?.id, fromName: user?.name, to: recipients.filter((r) => !mentions.includes(r)), title: `Message from ${user?.name || 'the team'}${where}`, body: body.slice(0, 200) })
     // A mention always reaches the person named, even when they switched chat pop-ups off.
     if (mentions.length) sendAutoNotice(update, { kind: 'chatMention', key: `mention:${id}`, fromId: user?.id, fromName: user?.name, to: mentions.filter((x) => recipients.includes(x)), title: `${user?.name || 'Someone'} mentioned you${where}`, body: body.slice(0, 200) })
+    if (outgoing) return // the box was emptied when it went out, and may hold the next message by now
     if (!voice) { setText(''); setPending([]) }
     setReplyTo(null); setCaret(0)
   }
+  const stopSending = (oid) => { stopped.current.add(oid); setOutbox((o) => o.filter((x) => x.id !== oid)) }
 
   const remove = (m) => {
     // a forwarded copy points at the same file: the file goes only when no other message uses it
@@ -1709,6 +1751,40 @@ function ChatRoom({ room, onBack }) {
             })}
           </div>
         ))}
+        {outbox.filter((o) => o.roomId === roomId).map((o) => {
+          const pics = o.atts.filter(isMedia)
+          const docs = o.atts.filter((a) => !isMedia(a))
+          const ring = (
+            <button type="button" className="chat-out-ring" onClick={() => stopSending(o.id)} aria-label="Stop sending" title="Stop sending">
+              <svg viewBox="0 0 48 48" aria-hidden="true"><circle className="track" cx="24" cy="24" r="20" /><circle className="bar" cx="24" cy="24" r="20" style={{ strokeDasharray: `${Math.max(0.08, o.progress) * 125.7} 125.7` }} /></svg>
+              <span>{TgIcon.close()}</span>
+            </button>
+          )
+          const clock = <span className="chat-time">{timeOf(o.at)}<span className="chat-out-clock" aria-label="Sending" /></span>
+          return (
+            <div key={o.id} className="chat-msg mine last outgoing">
+              <div className="chat-bubble-wrap">
+                <div className={`chat-bubble${pics.length ? ' has-media' : ''}${pics.length && !docs.length && !o.text ? ' media-only' : ''}`}>
+                  {pics.length > 0 && (
+                    <div className="chat-out-media">
+                      <MediaAlbum items={pics} meta={!docs.length && !o.text ? clock : null} />
+                      <span className="chat-out-stage">{o.stage}</span>
+                      {ring}
+                    </div>
+                  )}
+                  {docs.map((a) => (
+                    <div key={a.id} className="chat-file chat-out-file">
+                      {!pics.length && ring}
+                      <span className="chat-file-main"><strong>{a.name}</strong><small>{o.stage} · {fmtBytes(a.bytes || 0)}</small></span>
+                    </div>
+                  ))}
+                  {o.text && <span className="chat-text">{o.text}</span>}
+                  {(docs.length > 0 || o.text) && clock}
+                </div>
+              </div>
+            </div>
+          )
+        })}
         <div ref={endRef} />
       </div>
       {state.chatRooms === false && room.kind !== 'team' ? (

@@ -3910,6 +3910,24 @@ html[data-public='1'] body { background: var(--bg); }
 .chat-media-vid { background: #000; }
 .chat-media-vid video { object-fit: contain; }
 .chat-media-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 52px; height: 52px; display: grid; place-items: center; padding-left: 4px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .5); color: #fff; font-size: 20px; cursor: pointer; }
+/* Sending, Telegram's way (Alex, 11 Oct): the message is in the conversation at once, a turning ring
+   with a cross to stop it, what is happening in a pill, a clock by the time */
+.chat-out-media { position: relative; }
+.chat-msg.outgoing .chat-media-play, .chat-msg.outgoing .chat-media-dur, .chat-msg.outgoing .chat-media-spin { display: none; }
+.chat-out-stage { position: absolute; top: 8px; left: 8px; z-index: 2; padding: 3px 10px; border-radius: 999px; background: rgba(0, 0, 0, .45); color: #fff; font-size: 13px; font-weight: 500; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); pointer-events: none; }
+.chat-out-ring { position: absolute; left: 50%; top: 50%; z-index: 2; transform: translate(-50%, -50%); width: 54px; height: 54px; padding: 0; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .45); color: #fff; display: grid; place-items: center; cursor: pointer; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.chat-out-ring > svg { position: absolute; inset: 3px; width: 48px; height: 48px; animation: chat-out-turn 1.4s linear infinite; }
+.chat-out-ring circle { fill: none; stroke-width: 3; }
+.chat-out-ring .track { stroke: rgba(255, 255, 255, .18); }
+.chat-out-ring .bar { stroke: #fff; stroke-linecap: round; transition: stroke-dasharray .3s ease; transform: rotate(-90deg); transform-origin: 24px 24px; }
+.chat-out-ring > span { position: relative; display: grid; place-items: center; }
+.chat-out-ring > span svg { width: 20px; height: 20px; }
+@keyframes chat-out-turn { to { transform: rotate(360deg); } }
+.chat-out-clock { position: relative; display: inline-block; width: 11px; height: 11px; margin-left: 4px; border: 1.5px solid currentColor; border-radius: 50%; vertical-align: -1px; box-sizing: border-box; }
+.chat-out-clock::after { content: ''; position: absolute; left: calc(50% - .75px); top: 1px; width: 1.5px; height: 3.5px; background: currentColor; transform-origin: 50% 100%; animation: chat-out-turn 1.2s linear infinite; }
+.chat-out-file { display: flex; align-items: center; gap: 10px; }
+.chat-out-file .chat-out-ring { position: relative; left: auto; top: auto; transform: none; flex: none; width: 44px; height: 44px; background: var(--accent); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.chat-out-file .chat-out-ring > svg { inset: 2px; width: 40px; height: 40px; }
 .chat-media-dur { position: absolute; left: 6px; top: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(0, 0, 0, .5); color: #fff; font-size: 11.5px; }
 .chat-media-wait { display: grid; place-items: center; color: rgba(255, 255, 255, .8); font-weight: 600; aspect-ratio: 4 / 3; }
 .chat-media-meta { position: absolute; right: 6px; bottom: 6px; z-index: 2; display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(0, 0, 0, .45); color: #fff; pointer-events: none; }
