@@ -180,13 +180,17 @@ export default function Notes({ slot = null }) {
   const myId = sessionId || me?.id || ''
   // a note is yours, or someone shared it with you: then you can write in it, while its folder, pin,
   // sharing and deleting stay with its writer (Alex, 10 Oct)
-  const mine = (n) => !n.userId || n.userId === myId
   // While an administrator views the app as a member (Alex, 10 Oct: "it still shows the admin's notes
   // in other users' Notes") the browser is still signed in as the administrator, so the database can
-  // only hand back his own notes, never the member's. The preview shows no notes at all and makes none.
+  // only hand back his own notes, never the member's. The preview shows, under Shared Notes, the
+  // administrator's notes shared with that member, as the member sees them, read only, and nothing else.
   const preview = !!me?.viewingAs
+  const viewerId = preview ? me.id : myId
+  const mine = (n) => !n.userId || n.userId === viewerId
   // only your own notes and the ones shared with you by name, whatever the database sends
-  const visible = (n) => !preview && (!n.userId || n.userId === myId || (n.sharedWith || []).includes(myId))
+  const visible = (n) => (preview
+    ? n.kind === 'note' && !n.deletedAt && (n.sharedWith || []).includes(viewerId)
+    : !n.userId || n.userId === myId || (n.sharedWith || []).includes(myId))
   const pending = useRef(new Map()) // id -> timer, a save waiting
   const itemsRef = useRef(items)
   itemsRef.current = items
@@ -217,7 +221,7 @@ export default function Notes({ slot = null }) {
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
   }, [reload])
-  useEffect(() => { try { localStorage.setItem('tml_notes_folder', folder) } catch {} }, [folder])
+  useEffect(() => { if (!preview) try { localStorage.setItem('tml_notes_folder', folder) } catch {} }, [folder]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // a note with a link has its snapshot refreshed each time it is saved
   const persist = useCallback((n) => (n.userId && n.userId !== myId ? saveSharedNote(n) : saveNote(n)
@@ -253,13 +257,15 @@ export default function Notes({ slot = null }) {
   const folders = all.filter((n) => n.kind === 'folder' && !n.deletedAt && mine(n)).sort((a, b) => a.title.localeCompare(b.title))
   const notes = all.filter((n) => n.kind === 'note' && mine(n))
   // only what someone shared with you by name: a note of theirs never shows here otherwise
-  const sharedIn = all.filter((n) => n.kind === 'note' && !mine(n) && !n.deletedAt && (n.sharedWith || []).includes(myId))
+  const sharedIn = all.filter((n) => n.kind === 'note' && !mine(n) && !n.deletedAt && (n.sharedWith || []).includes(viewerId))
   const authorOf = (n) => (state.users || []).find((u) => u.id === n.userId)?.name || 'A teammate'
   const live = notes.filter((n) => !n.deletedAt)
   const trash = notes.filter((n) => n.deletedAt)
   const inFolder = (f) => (f === ALL ? live : f === TRASH ? trash : f === SHARED ? sharedIn : f === NONE ? live.filter((n) => !n.folderId || !folders.some((x) => x.id === n.folderId)) : live.filter((n) => n.folderId === f))
   // the menu (Alex, 10 Oct): My Notes, Shared Notes (only notes others shared with you), Deleted, then your own folders
   const folderName = folder === ALL ? 'My Notes' : folder === TRASH ? 'Deleted' : folder === SHARED ? 'Shared Notes' : folders.find((f) => f.id === folder)?.title || 'My Notes'
+  // the preview opens where the shared notes are
+  useEffect(() => { if (preview) setFolder(SHARED) }, [preview])
   useEffect(() => { if (items && ![ALL, TRASH, SHARED].includes(folder) && !folders.some((f) => f.id === folder)) setFolder(ALL) }, [items]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const shown = useMemo(() => {
@@ -485,7 +491,9 @@ export default function Notes({ slot = null }) {
       <div className="notes-sheet">
         <div className="notes-date">{longDate(open.updatedAt)}</div>
         {!mine(open) ? (
-          <Editor key={open.id} note={{ ...open, body: cleanHtml(open.body) }} onChange={onBody} />
+          preview
+            ? <div className="notes-readonly notes-shared" dangerouslySetInnerHTML={{ __html: cleanHtml(open.body) }} />
+            : <Editor key={open.id} note={{ ...open, body: cleanHtml(open.body) }} onChange={onBody} />
         ) : open.deletedAt ? (
           <div className="notes-readonly" dangerouslySetInnerHTML={{ __html: open.body }} />
         ) : (
@@ -498,7 +506,7 @@ export default function Notes({ slot = null }) {
   return (
     <div className={`rem-app notes-app ${mobile ? (open ? 'm-note' : 'm-one') : ''}`}>
       {err && <p className="notes-err">{err}</p>}
-      {preview && <p className="notes-err notes-preview">Notes are private: viewing the app as {me.viewingAs} shows none of theirs and none of yours.</p>}
+      {preview && <p className="notes-err notes-preview">Viewing as {me.viewingAs}: Shared Notes shows the notes you shared with them. Their own notes are private.</p>}
       {sharing && <ShareNote note={sharing} onClose={() => setSharing(null)} onChange={(p) => shareChanged(sharing.id, p)} />}
       {slot && createPortal(<div className="toolbar db-bar notes-bar">{search}</div>, slot)}
       {mobile ? (open ? notePane : (<>{phoneTop}{listPane}</>)) : (<>{foldersPane}{open ? notePane : listPane}</>)}
