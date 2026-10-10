@@ -3996,7 +3996,8 @@ html[data-public='1'] body { background: var(--bg); }
 /* double tap to zoom (Alex, 11 Oct): the picture handles its own touches, no page zoom */
 .chat-viewer { overflow: hidden; }
 .chat-viewer img { touch-action: none; cursor: zoom-in; user-select: none; -webkit-user-select: none; }
-.chat-viewer img.zoomed { cursor: zoom-out; }
+.chat-viewer img.zoomed { cursor: grab; }
+.chat-viewer img.zoomed:active { cursor: grabbing; }
 
 /* The message menu, Telegram's (Alex, 8 Oct, from a Telegram screenshot): the room blurs, the
    message stays sharp, a bar of reactions above it and a column of actions under it. A tap on a
@@ -5233,6 +5234,7 @@ html .chat2[data-chat-theme='glass'] .chat-box[data-bubbles] { --wa-wall: transp
 html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble, html body .chat2[data-chat-theme='glass'] .chat-msg.mine .chat-bubble { color: #fff; }
 html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble .chat-time, html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble .chat-tick, html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble .chat-edited { color: rgba(255, 255, 255, .72); }
 html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble .chat-tick.seen { color: #fff; }
+html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble .chat-media-meta .chat-time, html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble.big-emoji .chat-time, html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble .chat-media-meta .chat-tick, html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble.big-emoji .chat-tick { color: #fff; }
 html body .chat2[data-chat-theme='glass'] .chat-msg .chat-who, html body .chat2[data-chat-theme='glass'] .chat-msg .chat-who a { color: #fff; }
 html body .chat2[data-chat-theme='glass'] .chat-msg .chat-quote b, html body .chat2[data-chat-theme='glass'] .chat-msg .chat-quote span { color: #fff; }
 html .chat2[data-chat-theme='glass'] .chat-win-tabs { background: rgba(16, 22, 33, .72); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }

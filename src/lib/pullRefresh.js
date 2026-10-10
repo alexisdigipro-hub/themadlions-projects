@@ -33,7 +33,9 @@ const blocked = (el) =>
 /* Inside an open conversation too (Alex, 11 Oct): a pull down from its top bar, or from the top of
    the messages, reloads it. The box you type in, a message's menu and a picture open full screen
    are left alone. */
-const chatBusy = () => !!document.querySelector('.chat-menu-scrim, .chat-viewer, .modal-backdrop, .call-screen, .chat-msg.outgoing')
+// also left alone while there is something unsent: words typed, files picked, a recording, a voice
+// note going up, or the keyboard open (a swipe down there only closes the keyboard)
+const chatBusy = () => document.documentElement.classList.contains('kb-open') || !!document.querySelector('.chat-menu-scrim, .chat-viewer, .modal-backdrop, .call-screen, .chat-msg.outgoing, .chat-send.ready, .chat-busy, .chat-rec')
 const inChat = (el) => !!el?.closest?.('.chat-head, .chat-scroll') && !el.closest('input, textarea, button.chat-media-play, video') && !chatBusy()
 
 export function installPullToRefresh() {
