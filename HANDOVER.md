@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (10 Oct 2026)
+- **Latest (11 Oct, 00:05):** Overview: an **Add receipt** button under the Ordino one, for everyone but administrators (`user.role !== 'admin'`), the same plain box (`.panel.ordino-btn.receipt-btn`, no picture). It opens the Budget tab's `ReceiptModal` (groups from `groupPairs`) and counts the receipts the member added.
 - **Latest (10 Oct, 23:55):** Alex connected the Supabase connector (project naibamqexcqnqhbbqafa). Checked read-only: notes_share_edit.sql and chat_group_add.sql are both in the database already.
 - **Latest (10 Oct, 23:45):** Alex did not like the glass: the Overview Ordino button is now `.panel.ordino-btn`, the same plain panel as the song box (103px computer / 97px phone), no camera emoji, no project cover. Across it, faint (opacity .28, .36 on hover), the on-set picture Alex sent: `public/ordino-bg.webp` (1200px, 43 KB), passed in as `--ordino-bg` with `import.meta.env.BASE_URL`. Also from now on Claude merges its own PRs once the build is green (CLAUDE.md).
 - **Latest (10 Oct, 22:20):** The project tab Shot list is named **Shotlist** (tabs.js label only).
