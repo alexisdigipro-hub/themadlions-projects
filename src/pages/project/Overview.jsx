@@ -17,6 +17,7 @@ import Tasks, { tasksFor } from './Tasks.jsx'
 import { Waveform } from './Music.jsx'
 import Notes from './Notes.jsx'
 import CallSheets from './CallSheets.jsx'
+import { layoutOf } from '../../lib/callsheetLayout.js'
 
 const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: '' })
 
@@ -237,10 +238,14 @@ export default function Overview() {
         </div>
       )}
 
+      {/* the song first, above the ordino (Alex, 10 Oct) */}
+      {isMusicVideo && can(user, 'music') && <SongPlayer project={project} edit={edit} editable={canEdit('music')} hideEmpty startSignal={start.song} />}
+
       {/* the finished ordino for everyone on the project (Alex, 10 Oct), as the crew get it on a phone,
           the size of a phone on a computer too; made in the Ordino tab by whoever may edit it */}
       {(project.shootingDays || []).length > 0 && (
-        <section className="panel ordino-card">
+        // the card in the link's own grey, light or dark as the link is set in Customise (Alex, 10 Oct)
+        <section className={`panel ordino-card pv-${layoutOf(project, state).look.linkTheme || 'light'}`}>
           <div className="panel-head"><h2>Ordino</h2></div>
           <CallSheets linkOnly />
         </section>
@@ -248,7 +253,6 @@ export default function Overview() {
 
       {can(user, 'tasks') && <Tasks hideEmpty startSignal={start.task} />}
 
-      {isMusicVideo && can(user, 'music') && <SongPlayer project={project} edit={edit} editable={canEdit('music')} hideEmpty startSignal={start.song} />}
 
       {/* Files & Notes used to be its own tab; links and production notes moved here, Files was dropped */}
       {can(user, 'files') && <Notes hideEmpty startLink={start.link} startNotes={start.notes} />}
