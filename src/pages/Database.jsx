@@ -1,8 +1,8 @@
 import { NavLink, Navigate, useParams } from 'react-router-dom'
-import { PageHead, useIsMobile } from '../components/ui.jsx'
+import { PageHead } from '../components/ui.jsx'
 import { Icon } from '../components/icons.jsx'
 import { useGlide } from '../lib/glide.js'
-import { can, seesDatabase, useCurrentUser, useStore } from '../lib/store.jsx'
+import { can, seesDatabase, useCurrentUser } from '../lib/store.jsx'
 import PeopleAll from './PeopleAll.jsx'
 import LocationsAll from './LocationsAll.jsx'
 import EquipmentAll from './EquipmentAll.jsx'
@@ -17,20 +17,17 @@ const TABS = [
 
 export default function Database() {
   const { tab } = useParams()
-  const { state } = useStore()
   const user = useCurrentUser()
   const glide = useGlide()
-  const mobile = useIsMobile()
   const tabs = TABS.filter((t) => can(user, t.perm))
   if (!tabs.length || !seesDatabase(user)) return <Navigate to="/" replace />
   if (!tabs.some((t) => t.key === tab)) return <Navigate to={`/database/${tabs[0].key}`} replace />
-  const lib = state.library
-  // on a phone the line of counts is gone and the tabs are a glass capsule like TML Chat's folders (Alex, 10 Oct)
-  const sub = mobile ? undefined : `${lib.locations.length} locations · ${lib.contacts.filter((c) => c.kind === 'crew').length} crew · ${lib.contacts.filter((c) => c.kind === 'cast').length} cast · ${(lib.gear || []).length} equipment in the company database`
+  // no line of counts under the title and the tabs a glass capsule like TML Chat's folders, on a phone
+  // and then on a computer too (Alex, 10 Oct)
 
   return (
     <div className="db-page">
-      <PageHead title="Database" sub={sub} />
+      <PageHead title="Database" />
       <nav className="tabs db-tabs">
         {tabs.map((t) => (
           <NavLink key={t.key} to={`/database/${t.key}`} className={({ isActive }) => (isActive ? 'active' : '')} onClick={glide.go}>
