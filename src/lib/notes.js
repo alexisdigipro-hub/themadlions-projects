@@ -7,9 +7,9 @@ const LOCAL = 'tml_notes'
 const readLocal = () => { try { return JSON.parse(localStorage.getItem(LOCAL) || '[]') } catch { return [] } }
 const writeLocal = (rows) => { try { localStorage.setItem(LOCAL, JSON.stringify(rows)) } catch { /* full or blocked */ } }
 
-const fromRow = (r) => ({ id: r.id, kind: r.kind, folderId: r.folder_id || '', title: r.title || '', body: r.body || '', pinned: !!r.pinned, createdAt: r.created_at, updatedAt: r.updated_at, deletedAt: r.deleted_at || '' })
+const fromRow = (r) => ({ id: r.id, userId: r.user_id || '', sharedWith: r.shared_with || [], link: !!r.link, kind: r.kind, folderId: r.folder_id || '', title: r.title || '', body: r.body || '', pinned: !!r.pinned, createdAt: r.created_at, updatedAt: r.updated_at, deletedAt: r.deleted_at || '' })
 const toRow = (n) => ({ id: n.id, kind: n.kind, folder_id: n.folderId || null, title: n.title || '', body: n.body || '', pinned: !!n.pinned, created_at: n.createdAt, updated_at: n.updatedAt, deleted_at: n.deletedAt || null })
-const missing = (e) => (/relation .*notes|notes.* does not exist|42P01/.test(`${e?.code} ${e?.message}`) ? new Error('Run supabase/notes.sql in the SQL editor to switch Notes on.') : new Error(e?.message || 'Notes could not be saved.'))
+const missing = (e) => (/relation .*notes|notes.* does not exist|42P01/.test(`${e?.code} ${e?.message}`) ? new Error('Run supabase/notes.sql in the SQL editor to switch Notes on.') : /42703|shared_with|column .*link/.test(`${e?.code} ${e?.message}`) ? new Error('Run supabase/notes_share.sql in the SQL editor to share notes.') : new Error(e?.message || 'Notes could not be saved.'))
 
 export async function loadNotes() {
   if (!remote) return readLocal()
@@ -49,4 +49,33 @@ export function noteText(html) {
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
   return s.split('\n').map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean)
+}
+
+/* Sharing a note (Alex, 10 Oct): who else may read it, and whether it has a link. Written apart from
+   saveNote, so a note is saved the same way whether or not notes_share.sql has been run. Only the
+   note's writer may do it (the database checks). */
+export async function setNoteSharing(id, { sharedWith, link }) {
+  if (!remote) throw new Error('Sharing a note needs the team workspace online.')
+  const patch = {}
+  if (sharedWith) patch.shared_with = sharedWith
+  if (link !== undefined) patch.link = !!link
+  const { error } = await supabase.from('notes').update(patch).eq('id', id)
+  if (error) throw missing(error)
+}
+
+/* Someone else's html, made safe to show: no scripts, frames or forms, no on… handlers, no javascript:
+   addresses. Used for a note shared with you and on a note's public page. */
+export function cleanHtml(html) {
+  if (typeof DOMParser === 'undefined') return ''
+  const doc = new DOMParser().parseFromString(`<body>${String(html || '')}</body>`, 'text/html')
+  doc.querySelectorAll('script, style, iframe, frame, object, embed, link, meta, base, form, input, button, textarea, select').forEach((n) => n.remove())
+  doc.querySelectorAll('*').forEach((el) => {
+    for (const a of [...el.attributes]) {
+      const name = a.name.toLowerCase()
+      const v = String(a.value || '').trim().toLowerCase()
+      if (name.startsWith('on') || name === 'style' && /expression|url\(/.test(v)) el.removeAttribute(a.name)
+      else if ((name === 'href' || name === 'src' || name === 'xlink:href') && (v.startsWith('javascript:') || v.startsWith('vbscript:') || (v.startsWith('data:') && !v.startsWith('data:image/')))) el.removeAttribute(a.name)
+    }
+  })
+  return doc.body.innerHTML
 }

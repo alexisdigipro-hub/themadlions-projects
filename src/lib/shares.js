@@ -12,6 +12,7 @@ export const estimateUrl = (t) => `${location.origin}${location.pathname}#/e/${t
 export const shotlistUrl = (t) => `${location.origin}${location.pathname}#/sl/${t}`
 export const invoiceUrl = (t) => `${location.origin}${location.pathname}#/inv/${t}`
 export const deckUrl = (t) => `${location.origin}${location.pathname}#/pr/${t}`
+export const noteUrl = (t) => `${location.origin}${location.pathname}#/n/${t}`
 /* publishShare hands back a /s/ url; a delivery needs the token out of it to build its own. */
 export const tokenOf = (url) => String(url || '').split('/').filter(Boolean).pop() || ''
 
@@ -98,6 +99,7 @@ export async function listShares(workspaceId) {
     .from('shares')
     .select('*')
     .eq('workspace_id', workspaceId)
+    .neq('kind', 'note') // a note's link is its writer's own business, not the Share page's
     .order('updated_at', { ascending: false })
   if (error && error.code === '42P01') throw new Error('Run supabase/shares.sql in the Supabase SQL editor to enable share links.')
   if (error) throw error

@@ -54,6 +54,7 @@ const PublicEstimate = lazyPage(() => import('./pages/PublicEstimate.jsx'))
 const PublicInvoice = lazyPage(() => import('./pages/PublicInvoice.jsx'))
 const PublicShotList = lazyPage(() => import('./pages/PublicShotList.jsx'))
 const PublicDeck = lazyPage(() => import('./pages/PublicDeck.jsx'))
+const PublicNote = lazyPage(() => import('./pages/PublicNote.jsx'))
 const Finance = lazyPage(() => import('./pages/Finance.jsx'))
 const Invoices = lazyPage(() => import('./pages/Invoices.jsx'))
 const Budget = lazyPage(() => import('./pages/project/Budget.jsx'))
@@ -110,6 +111,8 @@ export default function App() {
             <Route path="/inv/:token" element={<PublicInvoice />} />
             <Route path="/sl/:token" element={<PublicShotList />} />
             <Route path="/pr/:token" element={<PublicDeck />} />
+            {/* a note opened from its link (Alex, 10 Oct) */}
+            <Route path="/n/:token" element={<PublicNote />} />
             <Route element={<RequireUser />}>
               <Route path="chat-window" element={<ChatWindow />} />
               <Route path="chat-window/:room" element={<ChatWindow />} />
