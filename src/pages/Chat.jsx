@@ -12,6 +12,7 @@ import { pcloudBlob, pcloudOn } from '../lib/pcloud.js'
 import { remote, supabase } from '../lib/supabase.js'
 import { chimeFor, loadChatPrefs, loadMuted, textSizeOf, toggleMuted } from '../lib/chatPrefs.js'
 import ChatSettings from '../components/ChatSettings.jsx'
+import Profile from './Profile.jsx'
 import { useCalls } from '../lib/calls.jsx'
 import * as C from '../lib/chat.js'
 
@@ -227,6 +228,28 @@ const TgIcon = {
   replies: () => <svg {...svgProps}><path d="M9 14L4 9l5-5" /><path d="M4 9h9a7 7 0 0 1 7 7v3" /></svg>,
   close: () => <svg {...svgProps}><path d="M6 6l12 12M18 6L6 18" /></svg>,
   people: () => <svg {...svgProps}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2.1.8 3.5 2.8 3.5 5.7" /></svg>,
+}
+
+/* My profile at the top of TML Chat's Settings, as in Settings in the app (Alex, 10 Oct): your photo,
+   name and position; a tap folds the profile form open under it, a second tap folds it away. */
+function MyProfileRow() {
+  const user = useCurrentUser()
+  const [open, setOpen] = useState(false)
+  if (!user) return null
+  const p = user.profile || {}
+  return (
+    <section className="cset-group chat-me">
+      <h3>My profile</h3>
+      <div className="cset-card">
+        <button type="button" className="chat-me-row" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          <RoomAvatar room={{ kind: 'direct', photo: p.thumb || p.photo || '', initials: (user.name || '?').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase() }} size={48} />
+          <span className="chat-rmain"><strong>{user.name}</strong><span className="chat-rprev">{p.position || user.email}</span></span>
+          <span className="chat-me-go" aria-hidden="true">{open ? '⌄' : '›'}</span>
+        </button>
+      </div>
+      {open && <div className="chat-me-form"><Profile mine embedded /></div>}
+    </section>
+  )
 }
 
 function RoomAvatar({ room, size = 42 }) {
@@ -815,6 +838,7 @@ function RoomList({ activeId, windowed }) {
       </div>
       {tab === 'settings' || tab === 'notices' || tab === 'calls' ? (tab === 'settings' ? (
         <div className="chat-win-settings">
+          <MyProfileRow />
           <h2>Chat settings</h2>
           <ChatSettings toast={toast} />
         </div>

@@ -10,6 +10,8 @@ import { authorizeUrl, clearOauth, pcloudBackup, pcloudPing, redirectUri, takeOa
 import { authorizeUrl as gcalAuthorizeUrl, clearOauthCode, gcalCalendars, gcalConnect, redirectUri as gcalRedirectUri, takeOauthCode } from '../lib/googleCalendar.js'
 import { FEED_COLOR, feedsAreOff, feedsOf, fetchFeedText, parseIcs } from '../lib/ical.js'
 import Team from './Team.jsx'
+import Profile from './Profile.jsx'
+import { useNavigate } from 'react-router-dom'
 import ChatSettings from '../components/ChatSettings.jsx'
 import { FONTS, applyFont, currentFont, ensureFontLoaded } from '../lib/fonts.js'
 import Usage from '../components/Usage.jsx'
@@ -48,11 +50,14 @@ export default function Settings() {
     document.documentElement.dataset.textSize = v
   }
   const isAdmin = me?.role === 'admin'
+  const nav = useNavigate()
+  // My profile came off the side menu into Settings, as its first tab (Alex, 10 Oct)
   const TABS = [
+    ['profile', 'My profile', false],
     ['company', 'Company', true], ['callsheets', 'Call sheets', true], ['team', 'Team', true], ['calendar', 'Calendar & projects', true], ['budget', 'Budget', true],
     ['display', 'Display', false], ['chat', 'Chat', false], ['integrations', 'Integrations', true], ['data', 'Data', false], ['usage', 'Usage', true],
   ].filter(([, , admin]) => !admin || isAdmin)
-  const [tab, setTab] = useState(() => (isAdmin ? 'company' : 'display'))
+  const [tab, setTab] = useState('profile')
   const { boxRef, slideTo, inClass } = useSlide()
   const logoRef = useRef()
   const [cs, setCs] = useState(() => callsheetDefaults(state))
@@ -575,6 +580,13 @@ export default function Settings() {
         </section>
       </div>
       {isAdmin && tab === 'usage' && <Usage state={state} setSetting={setSetting} />}
+      {tab === 'profile' && (
+        <>
+          <Profile mine embedded />
+          {/* on a phone there is no side menu any more, so signing out lives here too */}
+          <div className="row-actions settings-signout"><Button variant="ghost" onClick={() => { logout(); nav('/login') }}>Sign out</Button></div>
+        </>
+      )}
       </div>
       </div>
       <ScreenInfo />

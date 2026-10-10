@@ -26,7 +26,9 @@ const toDataUrl = (blob) => new Promise((res, rej) => {
 export const canSeeProfileDetails = (viewer, subject) =>
   !!viewer && (viewer.id === subject.id || viewer.role === 'admin' || (subject.profile?.showPhone || 'everyone') === 'everyone')
 
-export default function Profile({ mine = false }) {
+/* embedded: My profile as a tab of Settings and a section of TML Chat's Settings (Alex, 10 Oct), so
+   without its own page head; the Save button at the foot of the form is the one it keeps */
+export default function Profile({ mine = false, embedded = false }) {
   const { id } = useParams()
   const { state, update, setViewAs } = useStore()
   const me = useCurrentUser()
@@ -80,8 +82,8 @@ export default function Profile({ mine = false }) {
   const view = person.profile || {}
 
   return (
-    <div className="profile-page">
-      <PageHead title={mine ? 'My profile' : person.name} sub={person.role === 'admin' ? 'Administrator' : 'Team member'}>
+    <div className={`profile-page${embedded ? ' embedded' : ''}`}>
+      {!embedded && <PageHead title={mine ? 'My profile' : person.name} sub={person.role === 'admin' ? 'Administrator' : 'Team member'}>
         {/* Alex: from a teammate's profile, open the app exactly as they see it. The same View as
             Settings > Team has: read-only while it lasts, and Stop comes back to this profile.
             Not offered for another administrator, who sees everything anyway, or someone whose
@@ -103,7 +105,7 @@ export default function Profile({ mine = false }) {
           )
         })()}
         {editable && <Button variant="primary" onClick={save} disabled={busy}>Save profile</Button>}
-      </PageHead>
+      </PageHead>}
 
       <div className="profile-grid">
         <section className="panel profile-card">

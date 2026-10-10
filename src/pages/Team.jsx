@@ -115,7 +115,7 @@ export default function Team({ embedded = false }) {
           {state.users.map((u) => (
             <tr key={u.id} className={u.active === false ? 'dim' : ''}>
               <td>
-                <Link className="team-name" to={u.id === me.id ? '/me' : `/u/${u.id}`}>
+                <Link className="team-name" to={u.id === me.id ? '/settings' : `/u/${u.id}`}>
                   {u.profile?.thumb ? <img className="team-avatar" src={u.profile.thumb} alt="" /> : <span className="team-avatar initials">{initialsOf(u.name)}</span>}
                   <strong>{u.name}</strong>
                 </Link>
