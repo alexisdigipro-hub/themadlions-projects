@@ -24,6 +24,7 @@ export const ordinoDates = (project, events = []) => {
     const last = e.endDate && e.endDate > e.date ? e.endDate : e.date
     for (let d = e.date, i = 0; d <= last && i < 62; d = addDays(d, 1), i += 1) out.add(d)
   })
-  if (!out.size && !(project?.shootingDays || []).length && project?.startDate) out.add(project.startDate)
+  // once a day has been deleted by hand, the start date no longer brings one back (Alex, 11 Oct)
+  if (!out.size && !(project?.shootingDays || []).length && project?.startDate && !project.ordinoDeleted) out.add(project.startDate)
   return [...out].sort()
 }
