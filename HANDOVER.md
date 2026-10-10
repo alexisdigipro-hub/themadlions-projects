@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (10 Oct 2026)
+- **Latest (10 Oct, 16:50):** Office page on a computer: the Office search comes first (left of ALL / DOCUMENTS / SPREADSHEETS) and both searches (Office and Notes) are 320px, so the search stays in the same place when the tab changes.
 - **Latest (10 Oct, 16:40):** on a computer the Notes search is portalled into the Office page's tabs row (Notes takes `slot`; OfficeHub now gives a slot on both tabs), glass pill like Office's; the side column keeps the folders only. Phone unchanged (search already on top next to Folders).
 - **Latest (10 Oct, 16:30):** the Office menu item now sits right under Tasks (before Chat).
 - **Latest (10 Oct, 16:20):** Office page: tabs now NOTES · OFFICE and the menu item opens /notes (Notes first).
