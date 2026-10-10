@@ -5788,3 +5788,9 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
   html:not(.chat-window) .shell > .content { padding-bottom: calc(var(--tabbar-h) + 16px); }
   html:not(.chat-window) body .chat2 .chat-list.tgui .tg-dock { bottom: calc(var(--tabbar-h) + 4px); }
 }
+
+/* Settings on a phone: the tabs as Home's category chips, each on one line, the row sliding sideways */
+@media (max-width: 820px) {
+  .settings-chips { margin-bottom: 14px; }
+  .settings-chips .chip { white-space: nowrap; }
+}
