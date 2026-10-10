@@ -5959,6 +5959,10 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
    computer the Notes columns fit under the tabs, and the Office filter line sits on the tabs' row. */
 @media (min-width: 821px) {
   .office-hub .rem-app { height: calc(100dvh - 210px); min-height: 460px; }
+  /* the Office tab in the same frame as Tasks and Notes under the tabs (Alex, 10 Oct): the same edge,
+     corners, background and height; what does not fit scrolls inside it */
+  .office-hub .office.office-frame { height: calc(100dvh - 210px); min-height: 460px; box-sizing: border-box; overflow-y: auto; padding: 20px; border: 1px solid var(--line-soft); border-radius: var(--radius-lg); background: var(--panel); }
+  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .office-hub .office.office-frame { background: var(--gl-fill); border: 1px solid var(--gl-edge); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); box-shadow: inset 0 1px 0 var(--gl-shine), var(--gl-shadow); }
   .office-hub .db-slot .office-tools { flex-wrap: nowrap; justify-content: flex-start; gap: 10px; }
   /* the same glass as the Database's line: ALL / DOCUMENTS / SPREADSHEETS a capsule like the tabs, the
      project picker and the search rounded, all 44px tall */

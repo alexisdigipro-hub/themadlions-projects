@@ -122,7 +122,7 @@ function Library({ embedded, slot }) {
      short name under each, and the filters on the next line: a glass capsule All / Docs / Sheets, a
      round project filter and a round search */
   return (
-    <div className="office">
+    <div className={`office${embedded ? ' office-frame' : ''}`}>
       {!embedded && <PageHead title="Office" sub={mobile ? undefined : 'Documents and spreadsheets for each project, opened and saved right here as Word and Excel files.'} />}
       {mayEdit && editable.length > 0 && (
         <div className="office-new">
