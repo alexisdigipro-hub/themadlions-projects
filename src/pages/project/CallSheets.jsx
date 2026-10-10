@@ -28,7 +28,7 @@ function addMinutes(hhmm, mins) {
 
 /* `openDay` (a shoot day id) brings that day's sheet up ready to edit: New call sheet sets it
    after making the day. `onNew` puts the New call sheet button at the end of the day tabs. */
-export default function CallSheets({ openDay = '', onNew }) {
+export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
   const { project, edit, canEdit } = useProject()
   const { state, update } = useStore()
   const days = [...project.shootingDays].sort((a, b) => a.date.localeCompare(b.date))
@@ -512,6 +512,25 @@ export default function CallSheets({ openDay = '', onNew }) {
           </section>
         )
     }
+  }
+
+  /* Someone with Call sheets on view sees only what the crew get (Alex, 10 Oct): the sheet as its
+     link looks on a phone, with the days to pick from when there are several, and nothing to edit. */
+  if (linkOnly) {
+    return (
+      <div className="callsheets cs-link-only">
+        {days.length > 1 && (
+          <div className="toolbar no-print">
+            <div className="segmented">
+              {days.map((d, i) => <button key={d.id} className={d.id === day.id ? 'on' : ''} onClick={() => setSel(d.id)}>Day {i + 1}</button>)}
+            </div>
+          </div>
+        )}
+        <div className={`cs-phone pv-${layout.look.linkTheme || 'light'}`}>
+          <CallSheetLinkView data={linkData()} />
+        </div>
+      </div>
+    )
   }
 
   return (

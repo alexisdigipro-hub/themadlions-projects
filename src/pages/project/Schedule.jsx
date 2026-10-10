@@ -13,7 +13,7 @@ import { Grip, moveItem, useDragSort } from '../../components/DragSort.jsx'
 
 const emptyDay = emptyShootDay
 
-/* Schedule & Sheets: the stripboard (or Run of show for an Event) and Call sheets, each framed as
+/* Ordino & Program (called Schedule & Sheets until 10 Oct): the stripboard (or Run of show for an Event) and Call sheets, each framed as
    its own card — Call sheets used to be a separate tab, merged in here since both are about the
    shoot days. Stacked full-width rather than side by side: a call sheet is a printable page-wide
    layout and a stripboard table is wide too, neither fits comfortably in half the screen. */
@@ -35,6 +35,15 @@ export default function Schedule() {
     if (openDay) sheetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [openDay])
   const created = (id) => { setCreating(false); setOpenDay(id) }
+  // Call sheets on view only: the tab is the call sheet as its link looks on a phone, nothing else (Alex, 10 Oct)
+  const linkOnly = can(user, 'callsheets') && !can(user, 'callsheets', 'edit')
+  if (linkOnly) {
+    return (
+      <div className="schedule-sheets">
+        {days.length ? <CallSheets linkOnly /> : <Empty title="No call sheet yet">The call sheet shows here as soon as the shoot day is set up.</Empty>}
+      </div>
+    )
+  }
 
   return (
     <div className="schedule-sheets">
