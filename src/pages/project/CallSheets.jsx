@@ -665,7 +665,16 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
               <button type="button" className="ordino-x" onClick={() => setSheet('extraLocs', extraLocs.filter((_, j) => j !== i))} aria-label="Remove">×</button>
             </div>
           ))}
-          <div className="ordino-adds"><button type="button" className="link small" onClick={() => setSheet('extraLocs', [...extraLocs, { name: '', address: '' }])}>+ Add a location</button></div>
+          <div className="ordino-adds">
+            {/* one of the project's locations, name and address filled in (Alex, 11 Oct) */}
+            {project.locations.length > 0 && (
+              <select className="input select ordino-extra-pick" value="" onChange={(e) => { const l = project.locations.find((x) => x.id === e.target.value); if (l) setSheet('extraLocs', [...extraLocs, { locationId: l.id, name: l.name || '', address: l.address || '' }]) }} aria-label="Add one of the project's locations">
+                <option value="">+ From the project</option>
+                {project.locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+              </select>
+            )}
+            <button type="button" className="link small" onClick={() => setSheet('extraLocs', [...extraLocs, { name: '', address: '' }])}>+ Type a location</button>
+          </div>
         </div>
       </>
     ),
