@@ -5853,3 +5853,10 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
   .db-page .db-add-plus { display: block; font-size: 24px; line-height: 1; font-weight: 400; }
   .db-page .db-add-text { display: none; }
 }
+/* Database cards on a phone a quarter shorter (Alex, 10 Oct: about 130px down to about 98px): a smaller
+   picture, tighter padding, no empty row under the text */
+@media (max-width: 820px) {
+  .db-page .people-grid.compact .person.loc-card { grid-template-rows: auto; row-gap: 0; align-items: center; padding: 10px; }
+  .db-page .people-grid.compact .loc-card .person-photo { width: 66px; height: 78px; border-radius: 10px; }
+  .db-page .people-grid.compact .loc-card { grid-template-columns: 66px 1fr; }
+}
