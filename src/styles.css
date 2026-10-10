@@ -5958,7 +5958,7 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
 /* Office and Notes on one page with the Database's tabs (Alex, 10 Oct, pages/OfficeHub.jsx). On a
    computer the Notes columns fit under the tabs, and the Office filter line sits on the tabs' row. */
 @media (min-width: 821px) {
-  .office-hub .notes-app { height: calc(100dvh - 210px); min-height: 460px; }
+  .office-hub .rem-app { height: calc(100dvh - 210px); min-height: 460px; }
   .office-hub .db-slot .office-tools { flex-wrap: nowrap; justify-content: flex-start; gap: 10px; }
   /* the same glass as the Database's line: ALL / DOCUMENTS / SPREADSHEETS a capsule like the tabs, the
      project picker and the search rounded, all 44px tall */

@@ -5,28 +5,30 @@ import { Icon } from '../components/icons.jsx'
 import { can, useCurrentUser } from '../lib/store.jsx'
 import Office from './Office.jsx'
 import Notes from './Notes.jsx'
+import TasksAll from './TasksAll.jsx'
 
-/* Office and Notes on one page (Alex, 10 Oct), with its tabs like the Database's: a glass capsule,
-   OFFICE · NOTES, and on a computer the Office tab's filter line on the tabs' own row. Office (Word and
-   Excel files per project) is for whoever has Files; Notes, each person's own, for everyone. The
-   addresses stay /office and /notes, so old links still land on the right tab; a document itself
-   opens full screen at /office/<project>/<doc> as before. */
+/* The Organizer (Alex, 10 Oct): Tasks, Notes and Office on one page, with tabs like the Database's, a
+   glass capsule TASKS · NOTES · OFFICE, opening on Tasks; on a computer each tab's search (and Office's
+   filters) sits on the tabs' own row. Tasks needs the Tasks permission, Office needs Files, Notes (each
+   person's own) is for everyone. The addresses stay /tasks, /notes and /office, so old links still land
+   on the right tab; a document itself opens full screen at /office/<project>/<doc> as before. */
 export default function OfficeHub() {
   const { pathname } = useLocation()
   const user = useCurrentUser()
   const mobile = useIsMobile()
   const [slot, setSlot] = useState(null)
-  // Notes first and the page opens on it; Office second (Alex, 10 Oct)
+  // Tasks first, then Notes, then Office (Alex, 10 Oct)
   const tabs = [
+    can(user, 'tasks') && { to: '/tasks', key: 'tasks', label: 'Tasks', icon: 'tasks' },
     { to: '/notes', key: 'notes', label: 'Notes', icon: 'notes' },
     can(user, 'files') && { to: '/office', key: 'office', label: 'Office', icon: 'office' },
   ].filter(Boolean)
-  const tab = pathname.startsWith('/notes') ? 'notes' : 'office'
-  if (!tabs.some((t) => t.key === tab)) return <Navigate to="/notes" replace />
+  const tab = pathname.startsWith('/tasks') ? 'tasks' : pathname.startsWith('/notes') ? 'notes' : 'office'
+  if (!tabs.some((t) => t.key === tab)) return <Navigate to={tabs[0].to} replace />
 
   return (
     <div className="hub-page office-hub">
-      <PageHead title="Office" />
+      <PageHead title="Organizer" />
       <div className="db-top">
         <nav className="tabs db-tabs">
           {tabs.map((t) => (
@@ -38,7 +40,7 @@ export default function OfficeHub() {
         </nav>
         {!mobile && <div className="db-slot" ref={setSlot} />}
       </div>
-      {tab === 'office' ? <Office embedded slot={mobile ? null : slot} /> : <Notes slot={mobile ? null : slot} />}
+      {tab === 'tasks' ? <TasksAll slot={mobile ? null : slot} /> : tab === 'office' ? <Office embedded slot={mobile ? null : slot} /> : <Notes slot={mobile ? null : slot} />}
     </div>
   )
 }

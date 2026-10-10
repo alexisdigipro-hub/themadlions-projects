@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Button, Field, Input, Modal, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { TaskModal, binTask, emptyTask, statusColor, subCount, taskStatuses, tasksFor, visibleTasks } from './project/Tasks.jsx'
@@ -161,7 +162,9 @@ function TaskSwipe({ id, openId, setOpenId, tray, className, children, canLift, 
   )
 }
 
-export default function TasksAll() {
+/* slot: on a computer the search goes up on the tabs' row of the Organizer page (Alex, 10 Oct), as
+   Notes' and Office's do */
+export default function TasksAll({ slot = null }) {
   const { state, updateProject, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
@@ -436,7 +439,7 @@ export default function TasksAll() {
       {admin && <button type="button" className="rem-add-list" onClick={() => setListForm({ name: '', color: COLORS[5], icon: ICONS[0] })}><span>＋</span> New List</button>}
     </>
   )
-  const home = <aside className="rem-side">{search}{menuBody}</aside>
+  const home = <aside className="rem-side">{!slot && search}{menuBody}</aside>
   // on a phone: Search and the Lists button on one line, the menu folded under it (Alex, 10 Oct)
   const phoneTop = (
     <div className="rem-mtop">
@@ -653,6 +656,7 @@ export default function TasksAll() {
 
   return (
     <div className={`rem-app ${mobile ? 'm-one' : ''}`}>
+      {slot && createPortal(<div className="toolbar db-bar notes-bar">{search}</div>, slot)}
       {mobile ? (<>{phoneTop}{listPane}</>) : (<>{home}{listPane}</>)}
       {draft && <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} projects={projects.filter((p) => p.status !== 'Delivered' || p.id === draft.projectId)} />}
       {listForm && (
