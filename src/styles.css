@@ -5736,9 +5736,9 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
   .topbar-brand { font-size: 19px; color: var(--text); line-height: 1; }
   .tabbar { display: flex; gap: 0; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-left: 4px; padding-right: 4px; }
   .tabbar::-webkit-scrollbar { display: none; }
-  /* five to a screen, the same size as before (Alex, 10 Oct: "as it is, and sliding it shows the rest") */
+  /* six to a screen (Alex, 10 Oct: "as it is, and sliding it shows the rest", then six visible each time) */
   .tabbar { scroll-snap-type: x proximity; }
-  .tabbar a { flex: 1 0 20%; min-width: 0; padding: 4px 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; scroll-snap-align: start; }
+  .tabbar a { flex: 1 0 calc(100% / 6); min-width: 0; padding: 4px 1px; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; scroll-snap-align: start; }
 }
 @media (min-width: 821px) {
   .topbar-brand { display: none; }
