@@ -62,7 +62,7 @@ export default function Team({ embedded = false }) {
       else s.users.push(u)
       return s
     })
-    toast(draft.isNew ? 'Teammate added' : 'Permissions saved', 'ok')
+    toast(draft.isNew ? 'Teammate added' : 'Saved', 'ok')
     setDraft(null)
   }
 
@@ -80,6 +80,12 @@ export default function Team({ embedded = false }) {
   })
 
   const admins = state.users.filter((u) => u.role === 'admin' && u.active !== false).length
+  const groups = [
+    ['Administrators', state.users.filter((u) => u.role === 'admin' && u.active !== false)],
+    ['Members', state.users.filter((u) => u.role !== 'admin' && u.active !== false)],
+    ['Deactivated', state.users.filter((u) => u.active === false)],
+  ]
+  const countOf = (u, level) => MODULES.filter((m) => u.permissions?.[m.key] === level).length
 
   const Wrap = embedded ? 'section' : Fragment
   return (
@@ -99,106 +105,65 @@ export default function Team({ embedded = false }) {
       )}
       {embedded && <p className="small muted">Who can see and change what. Administrators can do everything.</p>}
 
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Projects</th>
-            <th>Can edit</th>
-            <th>Last seen</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {state.users.map((u) => (
-            <tr key={u.id} className={u.active === false ? 'dim' : ''}>
-              <td>
+      {/* The people as rows grouped Administrators / Members / Deactivated / Waiting to sign up
+          (Alex, 10 Oct: "the Team tab needs another organisation"): who they are and their email,
+          then their projects, what they can do and when they were last in, then the buttons. */}
+      <div className="team-list">
+        {groups.filter(([, list]) => list.length).map(([title, list]) => (
+          <Fragment key={title}>
+            <div className="perm-group">{title}<small> · {list.length}</small></div>
+            {list.map((u) => (
+              <div key={u.id} className={`team-row${u.active === false ? ' dim' : ''}`}>
                 <Link className="team-name" to={u.id === me.id ? '/settings' : `/u/${u.id}`}>
                   {u.profile?.thumb ? <img className="team-avatar" src={u.profile.thumb} alt="" /> : <span className="team-avatar initials">{initialsOf(u.name)}</span>}
-                  <strong>{u.name}</strong>
+                  <span className="team-who">
+                    <strong>{u.name}{u.id === me.id && <span className="muted small"> (you)</span>}</strong>
+                    <span className="small muted">{u.email}</span>
+                  </span>
                 </Link>
-                {u.id === me.id && <span className="muted small"> (you)</span>}
-              </td>
-              <td>{u.email}</td>
-              <td>
-                <Badge color={u.role === 'admin' ? '#C8503F' : accessEnded(u) ? '#d8564a' : undefined}>
-                  {u.active === false ? 'deactivated' : accessEnded(u) ? 'access ended' : u.role}
-                </Badge>
-              </td>
-              <td className="small">{u.role === 'admin' || u.projectAccess === 'all' ? 'All' : `${(u.projectAccess || []).length} selected`}</td>
-              <td className="small muted">
-                {u.role === 'admin'
-                  ? 'Everything'
-                  : MODULES.filter((m) => u.permissions?.[m.key] === 'edit')
-                      .map((m) => m.label)
-                      .join(', ') || 'View only'}
-              </td>
-              {/* Stamped by each person's own browser when they open the app (Layout), at most
-                  once every half hour, so it reads as "when they were last in" rather than an
-                  exact sign-in time. Blank means not since this started being recorded. */}
-              <td className="small muted" title={u.profile?.lastSeen ? new Date(u.profile.lastSeen).toLocaleString('en-GB') : ''}>{lastSeenText(u.profile?.lastSeen)}</td>
-              <td className="row-actions">
-                <Button size="sm" variant="ghost" onClick={() => setDraft({ ...u, password: '' })}>
-                  Edit
-                </Button>
-                {u.id !== me.id && u.active !== false && u.role !== 'admin' && (
-                  <Button size="sm" variant="ghost" onClick={() => { rememberViewAsFrom('/settings'); setViewAs(u.id); nav('/') }}>
-                    View as
-                  </Button>
-                )}
-                {u.id !== me.id && u.active === false && (
-                  <Confirm
-                    label="Remove"
-                    onConfirm={() => {
-                      update((s) => {
-                        s.users = s.users.filter((y) => y.id !== u.id)
-                        return s
-                      })
-                      toast(`${u.name} removed from the team`)
-                    }}
-                  />
-                )}
-                {u.id !== me.id && (
-                  <Confirm
-                    label={u.active === false ? 'Reactivate' : 'Deactivate'}
-                    onConfirm={() =>
-                      update((s) => {
-                        const x = s.users.find((y) => y.id === u.id)
-                        x.active = x.active === false
-                        return s
-                      })
-                    }
-                  />
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {remote && invites.length > 0 && (
-        <>
-          <h3 className="section-title">Waiting to sign up</h3>
-          <table className="table">
-            <thead>
-              <tr><th>Name</th><th>Email</th><th>Role</th><th /></tr>
-            </thead>
-            <tbody>
-              {invites.map((i) => (
-                <tr key={i.id}>
-                  <td>{i.name}</td>
-                  <td>{i.email}</td>
-                  <td><Badge>{i.role}</Badge></td>
-                  <td className="row-actions">
-                    <Confirm label="Remove" onConfirm={() => removeInvite(i.id).catch((e) => toast(e.message, 'error'))} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
-      )}
+                <div className="team-facts small muted">
+                  {accessEnded(u) && u.active !== false && <Badge color="#d8564a">access ended</Badge>}
+                  <span>{u.role === 'admin' ? 'Everything' : `${u.projectAccess === 'all' ? 'All projects' : `${(u.projectAccess || []).length} project${(u.projectAccess || []).length === 1 ? '' : 's'}`} · ${countOf(u, 'edit')} edit · ${countOf(u, 'view')} view`}</span>
+                  {/* stamped by their own browser when they open the app, at most every half hour */}
+                  <span title={u.profile?.lastSeen ? new Date(u.profile.lastSeen).toLocaleString('en-GB') : ''}>Seen {lastSeenText(u.profile?.lastSeen)}</span>
+                </div>
+                <div className="row-actions team-acts">
+                  <Button size="sm" variant="ghost" onClick={() => setDraft({ ...u, password: '' })}>Edit</Button>
+                  {u.id !== me.id && u.active !== false && u.role !== 'admin' && (
+                    <Button size="sm" variant="ghost" onClick={() => { rememberViewAsFrom('/settings'); setViewAs(u.id); nav('/') }}>View as</Button>
+                  )}
+                  {u.id !== me.id && (
+                    <Confirm
+                      label={u.active === false ? 'Reactivate' : 'Deactivate'}
+                      onConfirm={() => update((s) => { const x = s.users.find((y) => y.id === u.id); x.active = x.active === false; return s })}
+                    />
+                  )}
+                  {u.id !== me.id && u.active === false && (
+                    <Confirm label="Remove" onConfirm={() => { update((s) => { s.users = s.users.filter((y) => y.id !== u.id); return s }); toast(`${u.name} removed from the team`) }} />
+                  )}
+                </div>
+              </div>
+            ))}
+          </Fragment>
+        ))}
+        {remote && invites.length > 0 && (
+          <>
+            <div className="perm-group">Waiting to sign up<small> · {invites.length}</small></div>
+            {invites.map((i) => (
+              <div key={i.id} className="team-row">
+                <span className="team-name">
+                  <span className="team-avatar initials">{initialsOf(i.name)}</span>
+                  <span className="team-who"><strong>{i.name}</strong><span className="small muted">{i.email}</span></span>
+                </span>
+                <div className="team-facts small muted"><span>{i.role === 'admin' ? 'Administrator' : 'Member'} · has not signed up yet</span></div>
+                <div className="row-actions team-acts">
+                  <Confirm label="Remove" onConfirm={() => removeInvite(i.id).catch((e) => toast(e.message, 'error'))} />
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
       <p className="fineprint">
         {remote
           ? 'Teammates create their own password when they sign up with the email you added here. Permissions take effect the moment they sign in.'
@@ -210,7 +175,7 @@ export default function Team({ embedded = false }) {
       <Modal
         open={!!draft}
         wide
-        title={draft?.isNew ? 'Add teammate' : `Permissions for ${draft?.name}`}
+        title={draft?.isNew ? 'Add teammate' : draft?.name || 'Teammate'}
         onClose={() => setDraft(null)}
         footer={
           <>
@@ -218,13 +183,14 @@ export default function Team({ embedded = false }) {
               Cancel
             </Button>
             <Button variant="primary" onClick={save}>
-              {draft?.isNew ? 'Add teammate' : 'Save permissions'}
+              {draft?.isNew ? 'Add teammate' : 'Save'}
             </Button>
           </>
         }
       >
         {draft && (
           <div className="stack">
+            <h3 className="team-sec">Person</h3>
             <div className="row-2">
               <Field label="Name">
                 <Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} autoFocus />
@@ -258,6 +224,7 @@ export default function Team({ embedded = false }) {
 
             {draft.role === 'member' && (
               <>
+                <h3 className="team-sec">Projects</h3>
                 <Field label="Project access">
                   <Select value={draft.projectAccess === 'all' ? 'all' : 'some'} onChange={(e) => setDraft({ ...draft, projectAccess: e.target.value === 'all' ? 'all' : [] })} options={[['all', 'All projects'], ['some', 'Only selected projects']]} />
                 </Field>
@@ -279,6 +246,7 @@ export default function Team({ embedded = false }) {
                   <Input type="date" value={draft.permissions?.accessUntil || ''} onChange={(e) => setDraft({ ...draft, permissions: { ...draft.permissions, accessUntil: e.target.value } })} />
                 </Field>
 
+                <h3 className="team-sec">What they can do</h3>
                 <div className="field">
                   <span className="field-label">Start from a role</span>
                   <div className="chips">
@@ -292,7 +260,7 @@ export default function Team({ embedded = false }) {
                 </div>
 
                 <div className="field">
-                  <span className="field-label">What they can do in each module</span>
+                  <span className="field-label">Each part of the app: None, View or Edit</span>
                   <div className="perm-grid">
                     {MODULE_GROUPS.map((g) => (
                       <Fragment key={g}>
@@ -309,6 +277,16 @@ export default function Team({ embedded = false }) {
                             </div>
                           </div>
                         ))}
+                        {/* the Database page in the side menu, with the Database's own permissions (Alex, 10 Oct) */}
+                        {g === 'Database' && (
+                          <div className="perm-row">
+                            <span>Database page in the side menu<small className="perm-hint">without it they still have each project's Project Database</small></span>
+                            <div className="segmented small">
+                              <button type="button" className={draft.permissions?.databasePage !== 'hide' ? 'on' : ''} onClick={() => setDraft({ ...draft, permissions: { ...draft.permissions, databasePage: '' } })}>Shown</button>
+                              <button type="button" className={draft.permissions?.databasePage === 'hide' ? 'on' : ''} onClick={() => setDraft({ ...draft, permissions: { ...draft.permissions, databasePage: 'hide' } })}>Hidden</button>
+                            </div>
+                          </div>
+                        )}
                       </Fragment>
                     ))}
                   </div>
@@ -326,12 +304,6 @@ export default function Team({ embedded = false }) {
                   </div>
                 </div>
 
-                <Field label="Database in the side menu" hint="The Database page with the people and locations of every project. Without it they still see each project's own Project Database tab.">
-                  <div className="segmented small">
-                    <button type="button" className={draft.permissions?.databasePage !== 'hide' ? 'on' : ''} onClick={() => setDraft({ ...draft, permissions: { ...draft.permissions, databasePage: '' } })}>Shown</button>
-                    <button type="button" className={draft.permissions?.databasePage === 'hide' ? 'on' : ''} onClick={() => setDraft({ ...draft, permissions: { ...draft.permissions, databasePage: 'hide' } })}>Hidden</button>
-                  </div>
-                </Field>
               </>
             )}
           </div>

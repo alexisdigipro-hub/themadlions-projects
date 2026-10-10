@@ -242,26 +242,23 @@ export default function Settings() {
 
         {isAdmin && (
           <section className="panel" data-tab="team">
-            <h2>Departments</h2>
-            <p className="small muted">One per line, in the order you want them in menus. Used for crew, the contacts database and tasks. Existing people keep their department even if you remove it from the list.</p>
-            <Textarea rows={8} value={depts} onChange={(e) => setDepts(e.target.value)} />
-            <div className="row-actions">
-              <Button variant="primary" onClick={saveDepts}>Save departments</Button>
-              <button className="link small" onClick={() => setDepts(DEFAULT_DEPARTMENTS.join('\n'))}>Reset to standard list</button>
-            </div>
-          </section>
-        )}
-
-        {isAdmin && (
-          <section className="panel" data-tab="team">
             <h2>Team rules</h2>
             <div className="stack">
-              <Field label="Default access for a new teammate" hint="What every module starts at when you add someone. Drives archive always starts at none. Notices are always administrators only; call sheet share links are open to everyone who can see call sheets.">
+              <Field label="Default access for a new teammate" hint="What every part of the app starts at when you add someone. Drives and Share always start at none. Notices are always administrators only; call sheet share links are open to everyone who can see call sheets.">
                 <Select value={state.settings.newMemberLevel || 'view'} onChange={(e) => setSetting('newMemberLevel', e.target.value)} options={[['none', 'Nothing until you set it'], ['view', 'Can view'], ['edit', 'Can edit']]} />
               </Field>
               <Field label="Who sees phone numbers and emails of cast and crew" hint="Applies inside the app (project Cast & crew, Database). Call sheets and shared links keep showing the numbers they need.">
                 <Select value={state.settings.phoneVisibility || 'everyone'} onChange={(e) => setSetting('phoneVisibility', e.target.value)} options={[['everyone', 'Everyone in the team'], ['admins', 'Administrators only']]} />
               </Field>
+            </div>
+          </section>
+        )}
+
+        {/* the pop-up notices, apart from who can do what (Alex, 10 Oct: the Team tab reorganised) */}
+        {isAdmin && (
+          <section className="panel" data-tab="team">
+            <h2>Notices</h2>
+            <div className="stack">
               <Field label="Pop up a notice when a task is assigned to me" hint="The person who assigns it is the sender, so they see the confirmation. Nothing is sent when you assign a task to yourself.">
                 <Select value={state.settings.autoNotice?.taskAssigned === false ? 'no' : 'yes'} onChange={(e) => setSetting('autoNotice', { ...(state.settings.autoNotice || {}), taskAssigned: e.target.value === 'yes' })} options={[['yes', 'Yes'], ['no', 'No']]} />
               </Field>
@@ -274,6 +271,18 @@ export default function Settings() {
               <div className="row-actions">
                 <Button variant="ghost" onClick={() => { update((s) => { s.notices = [...(s.notices || []), { id: uid(), title: 'Test notice', body: 'This is how a notice looks on your screen. Tap Got it to close it.', fromId: '', fromName: me?.name || 'Settings', to: [me?.id], acks: {}, createdAt: new Date().toISOString() }]; return s }) }}>Send myself a test notice</Button>
               </div>
+            </div>
+          </section>
+        )}
+
+        {isAdmin && (
+          <section className="panel" data-tab="team">
+            <h2>Departments</h2>
+            <p className="small muted">One per line, in the order you want them in menus. Used for crew, the contacts database and tasks. Existing people keep their department even if you remove it from the list.</p>
+            <Textarea rows={8} value={depts} onChange={(e) => setDepts(e.target.value)} />
+            <div className="row-actions">
+              <Button variant="primary" onClick={saveDepts}>Save departments</Button>
+              <button className="link small" onClick={() => setDepts(DEFAULT_DEPARTMENTS.join('\n'))}>Reset to standard list</button>
             </div>
           </section>
         )}
