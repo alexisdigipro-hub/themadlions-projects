@@ -5,14 +5,20 @@ import { remote, supabase } from './supabase.js'
 // PIN or no PIN — while reading noticeably shorter than the 24 hex characters this replaced.
 const TOKEN_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 const token = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => TOKEN_CHARS[b % TOKEN_CHARS.length]).join('')
-export const shareUrl = (t) => `${location.origin}${location.pathname}#/s/${t}`
-export const deliveryUrl = (t) => `${location.origin}${location.pathname}#/d/${t}`
-export const statusUrl = (t) => `${location.origin}${location.pathname}#/ps/${t}`
-export const estimateUrl = (t) => `${location.origin}${location.pathname}#/e/${t}`
-export const shotlistUrl = (t) => `${location.origin}${location.pathname}#/sl/${t}`
-export const invoiceUrl = (t) => `${location.origin}${location.pathname}#/inv/${t}`
-export const deckUrl = (t) => `${location.origin}${location.pathname}#/pr/${t}`
-export const noteUrl = (t) => `${location.origin}${location.pathname}#/n/${t}`
+// Short links (Alex, 11 Oct): on the live app every link goes out as go.themadlions.com/<kind>/<token>.
+// That address is the tml-links repository on GitHub Pages (DNS: CNAME go -> alexisdigipro-hub.github.io
+// at Papaki), whose one page sends it on to #/<kind>/<token> here. Old github.io links keep working.
+// Anywhere else (local build, preview) links point at the app itself, as before.
+const SHORT = 'https://go.themadlions.com/'
+const linkBase = () => (location.hostname === 'alexisdigipro-hub.github.io' ? SHORT : `${location.origin}${location.pathname}#/`)
+export const shareUrl = (t) => `${linkBase()}s/${t}`
+export const deliveryUrl = (t) => `${linkBase()}d/${t}`
+export const statusUrl = (t) => `${linkBase()}ps/${t}`
+export const estimateUrl = (t) => `${linkBase()}e/${t}`
+export const shotlistUrl = (t) => `${linkBase()}sl/${t}`
+export const invoiceUrl = (t) => `${linkBase()}inv/${t}`
+export const deckUrl = (t) => `${linkBase()}pr/${t}`
+export const noteUrl = (t) => `${linkBase()}n/${t}`
 /* publishShare hands back a /s/ url; a delivery needs the token out of it to build its own. */
 export const tokenOf = (url) => String(url || '').split('/').filter(Boolean).pop() || ''
 
