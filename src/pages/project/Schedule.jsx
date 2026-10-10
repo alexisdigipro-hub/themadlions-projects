@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Navigate } from 'react-router-dom'
 import { Button, Empty, Input } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { can, uid, useStore } from '../../lib/store.jsx'
@@ -11,12 +12,11 @@ import { newDayFor, ordinoDates } from '../../lib/shootDays.js'
    a template filled in on the left with the link as it looks on a phone beside it, which is what
    the crew get. The day behind each date is made here by itself, so the Calendar, Finance, the
    weather and the share link go on working as before. An Event keeps its run of show above.
-   Someone with Call sheets on view sees only the link. */
+   Only whoever may edit the ordino gets this tab; everyone sees the finished ordino on the Overview. */
 export default function Schedule() {
   const { project, user, edit, canEdit } = useProject()
   const { state, update } = useStore()
   const days = project.shootingDays || []
-  const linkOnly = can(user, 'callsheets') && !can(user, 'callsheets', 'edit')
   const editable = can(user, 'callsheets', 'edit') && canEdit('callsheets')
   const dates = ordinoDates(project, state.events)
   const missing = dates.filter((d) => !days.some((x) => x.date === d))
@@ -32,13 +32,8 @@ export default function Schedule() {
     setDate('')
   }
 
-  if (linkOnly) {
-    return (
-      <div className="schedule-sheets">
-        {days.length ? <CallSheets linkOnly /> : <Empty title="No ordino yet">It shows here as soon as the shoot date is set.</Empty>}
-      </div>
-    )
-  }
+  // the tab is for whoever may edit the ordino; everyone else has it on the Overview (Alex, 10 Oct)
+  if (!can(user, 'callsheets', 'edit')) return <Navigate to=".." replace />
 
   return (
     <div className="schedule-sheets">

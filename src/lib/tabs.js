@@ -19,9 +19,9 @@ export function projectTabs(project) {
       { to: 'shots', label: 'Shotlist', key: 'shots', icon: 'shots' },
     ]),
     // Call sheets is framed inside Schedule now (its own permission still gates that section)
-    // called Ordino for every kind of project (Alex, 10 Oct); shown to whoever has Schedule
-    // or Call sheets, since someone with Call sheets on view sees the call sheet here as its link
-    { to: 'schedule', label: 'Ordino', key: ['schedule', 'callsheets'], icon: 'schedule' },
+    // Ordino (Alex, 10 Oct): only for whoever may edit it, like an administrator; everyone else sees
+    // the finished ordino on the Overview instead
+    { to: 'schedule', label: 'Ordino', key: 'callsheets', level: 'edit', icon: 'schedule' },
     { to: 'people', label: 'Project Database', key: ['contacts', 'locations', 'gear'], icon: 'people' },
     // opt-in: the moodboard / treatment deck, switched on per project from Edit details > Tabs
     { to: 'presentation', label: 'Presentation', key: 'projects', icon: 'deck', optIn: true },

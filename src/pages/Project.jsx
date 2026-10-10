@@ -71,7 +71,7 @@ export default function Project() {
     ...(SHOW_WHITEBOARD ? [{ to: 'whiteboard', label: 'Whiteboard', key: 'files', icon: 'notes' }] : []),
   ]
     .map((t) => (t.to === 'budget' && !can(user, 'budget') ? { ...t, label: 'Add Receipt', key: 'projects' } : t))
-    .filter((t) => (Array.isArray(t.key) ? t.key.some((k) => can(user, k)) : can(user, t.key)) && !tabHidden(project, t.to))
+    .filter((t) => (Array.isArray(t.key) ? t.key.some((k) => can(user, k, t.level)) : can(user, t.key, t.level)) && !tabHidden(project, t.to))
 
   const ctx = {
     project,

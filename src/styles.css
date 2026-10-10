@@ -6118,3 +6118,9 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
   .player-row .play { width: 34px; height: 34px; }
   .player-row .player-time { font-size: 12px; }
 }
+
+/* The finished ordino on the Overview, for everyone on the project (Alex, 10 Oct): as the crew get it
+   on a phone, and the size of a phone on a computer too, centred in its card */
+.ordino-card .cs-link-only { align-items: center; }
+.ordino-card .cs-linkpage { width: 390px; max-width: 100%; padding: 10px 12px 4px; }
+.ordino-card .cs-linkpage .pub { max-width: none; }
