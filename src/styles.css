@@ -4931,6 +4931,7 @@ html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; 
 /* .notes-app is also .rem-app: the folders are the side column, the notes white cards over an amber backdrop */
 .notes-loading { display: flex; align-items: center; justify-content: center; height: 200px; }
 .notes-err { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 3; margin: 0; padding: 8px 14px; font-size: 13.5px; color: #fff; background: var(--danger); border-radius: 999px; }
+.notes-err.notes-preview { color: var(--text); background: var(--raised); border: 1px solid var(--line-soft); white-space: nowrap; max-width: calc(100% - 24px); overflow: hidden; text-overflow: ellipsis; }
 .notes-app { position: relative; }
 .rem-row.notes-frow { position: relative; gap: 0; padding: 0 0 0 12px; }
 .notes-frow .rem-row-pick { padding-right: 8px; }
