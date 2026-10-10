@@ -5859,6 +5859,8 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
   .db-page .people-grid.compact .person.loc-card { grid-template-rows: auto; row-gap: 0; align-items: center; padding: 10px; }
   .db-page .people-grid.compact .loc-card .person-photo { width: 66px; height: 78px; border-radius: 10px; }
   .db-page .people-grid.compact .loc-card { grid-template-columns: 66px 1fr; }
+  /* the space between two cards the same as inside one, picture to edge (Alex, 10 Oct) */
+  .db-page .people-grid.compact { gap: 10px; }
 }
 
 /* Office on a phone (Alex, 10 Oct): the four starters on one line as icons with a short name under each;
