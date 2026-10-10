@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, Textarea, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { locationProjects, locationToLibrary, matchText } from '../lib/library.js'
 import { coordsFromText } from '../lib/sun.js'
@@ -14,6 +14,17 @@ function mapSrc(address, key) {
   return key ? `https://www.google.com/maps/embed/v1/place?key=${key}&q=${q}` : `https://www.google.com/maps?q=${q}&output=embed`
 }
 
+/* Just the area of an address, for the cards on a phone (Alex, 10 Oct: "only the area, not the address"):
+   "Karaoli ke Dimitriou 9, Vironas 162 32, Greece" gives "Vironas". The street (the first part when there
+   are several), postcodes, the country and plain coordinates are left out. */
+const COUNTRIES = /^(greece|ελλάδα|ελλαδα|hellas)$/i
+function areaOf(address) {
+  const parts = String(address || '').split(',').map((x) => x.replace(/\b\d{3}\s?\d{2}\b/g, '').replace(/\s+/g, ' ').trim()).filter(Boolean)
+  const named = (x) => /\p{L}{2,}/u.test(x) && !/\d/.test(x) && !COUNTRIES.test(x)
+  if (parts.length === 1) return named(parts[0]) ? parts[0] : ''
+  return parts.slice(1).find(named) || ''
+}
+
 /* Database > Locations. A compact card grid, the same look as Crew and Cast, with the map and
    full detail behind a click in a modal instead of an always-open split pane — fits one database
    section among the others instead of taking the whole page over. */
@@ -21,6 +32,7 @@ export default function LocationsAll() {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
+  const mobile = useIsMobile()
   const editable = can(user, 'locations', 'edit')
   const [q, setQ] = useState('')
   const [type, setType] = useState('')
@@ -105,8 +117,9 @@ export default function LocationsAll() {
               </div>
               <div className="person-body">
                 <strong>{l.name}</strong>
-                <div className="small muted">{[l.type, l.address].filter(Boolean).join(' · ') || 'No address yet'}</div>
-                {locationProjects(projects, l.id).length > 0 && <div className="small muted">{locationProjects(projects, l.id).length} project{locationProjects(projects, l.id).length === 1 ? '' : 's'}</div>}
+                {/* on a phone the name and the area only, shorter cards (Alex, 10 Oct) */}
+                {mobile ? (areaOf(l.address) && <div className="small muted">{areaOf(l.address)}</div>) : <div className="small muted">{[l.type, l.address].filter(Boolean).join(' · ') || 'No address yet'}</div>}
+                {!mobile && locationProjects(projects, l.id).length > 0 && <div className="small muted">{locationProjects(projects, l.id).length} project{locationProjects(projects, l.id).length === 1 ? '' : 's'}</div>}
               </div>
             </article>
           ))}
