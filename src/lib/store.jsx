@@ -748,7 +748,10 @@ export function StoreProvider({ children }) {
         myWrites.current.add(c.id)
         schedule('c:' + c.id, async () => {
           // a direct conversation the other side opened at the same moment is the same row: keep theirs
-          const { error } = await supabase.from('chats').upsert({ id: c.id, workspace_id: ws, kind: c.kind, name: c.name || '', members: c.members || [], created_by: c.createdBy || authUser?.id || null }, c.kind === 'direct' ? { ignoreDuplicates: true } : undefined)
+          // a group that already exists is updated, so a member who is not an administrator can add people to it
+          const { error } = c.kind === 'group' && before[c.id]
+            ? await supabase.from('chats').update({ name: c.name || '', members: c.members || [] }).eq('id', c.id)
+            : await supabase.from('chats').upsert({ id: c.id, workspace_id: ws, kind: c.kind, name: c.name || '', members: c.members || [], created_by: c.createdBy || authUser?.id || null }, c.kind === 'direct' ? { ignoreDuplicates: true } : undefined)
           if (error) throw new Error(error.code === '42P01' ? 'Run supabase/chat_rooms.sql in the SQL editor to enable chat rooms.' : error.message)
           setTimeout(() => myWrites.current.delete(c.id), 4000)
         }, 0)

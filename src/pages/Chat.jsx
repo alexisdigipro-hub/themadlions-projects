@@ -928,16 +928,32 @@ function RoomList({ activeId, windowed }) {
   )
 }
 
-/* Administrators make a group: a name and the people in it. The maker is always a member. */
+/* Administrators make a group: a name and the people in it. The maker is always a member.
+   A new group starts with the administrators and the usual people, Mariza and Elias (Alex, 10 Oct),
+   kept in settings.chatGroupStart once an administrator saves them with "Start every new group with
+   these"; before that they are found by name. Then anyone in the group can add people to it; only an
+   administrator takes someone out, renames or deletes it (supabase/chat_group_add.sql). */
+const STARTERS = ['mariza', 'μαρίζα', 'μαριζα', 'elias', 'ηλίας', 'ηλιας']
 function GroupModal({ open, group, onClose, onSaved }) {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
   const [name, setName] = useState('')
   const [members, setMembers] = useState([])
-  useEffect(() => { if (open) { setName(group?.name || ''); setMembers(group?.members || [user?.id].filter(Boolean)) } }, [open, group?.id])
+  const isAdmin = user?.role === 'admin'
   const people = state.users.filter((u) => u.active !== false)
-  const toggle = (id) => setMembers((m) => (id === user?.id ? m : m.includes(id) ? m.filter((x) => x !== id) : [...m, id]))
+  const saved = state.settings?.chatGroupStart
+  const starters = Array.isArray(saved) ? saved : people.filter((u) => STARTERS.includes((u.name || '').trim().split(/\s+/)[0].toLowerCase())).map((u) => u.id)
+  const startWith = () => [...new Set([user?.id, ...people.filter((u) => u.role === 'admin').map((u) => u.id), ...starters.filter((id) => people.some((u) => u.id === id))].filter(Boolean))]
+  useEffect(() => { if (open) { setName(group?.name || ''); setMembers(group?.members || startWith()) } }, [open, group?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  // someone who is not an administrator only adds: who was already in stays in
+  const fixed = (id) => id === user?.id || (!isAdmin && (group?.members || []).includes(id))
+  const toggle = (id) => setMembers((m) => (fixed(id) ? m : m.includes(id) ? m.filter((x) => x !== id) : [...m, id]))
+  const keepStart = () => {
+    const ids = members.filter((id) => !people.some((u) => u.id === id && u.role === 'admin'))
+    update((s) => { s.settings = { ...s.settings, chatGroupStart: ids }; return s })
+    toast('New groups will start with these people', 'ok')
+  }
   const save = () => {
     const n = name.trim()
     if (!n) return toast('Give the group a name.', 'error')
@@ -959,14 +975,16 @@ function GroupModal({ open, group, onClose, onSaved }) {
     onClose()
   }
   return (
-    <Modal open={open} title={group ? 'Edit group' : 'New group'} onClose={onClose} footer={<>{group && <Confirm onConfirm={remove} label="Delete group">Delete group</Confirm>}<span className="grow" /><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save}>{group ? 'Save' : 'Create'}</Button></>}>
+    <Modal open={open} title={group ? (isAdmin ? 'Edit group' : 'Add people') : 'New group'} onClose={onClose} footer={<>{group && isAdmin && <Confirm onConfirm={remove} label="Delete group">Delete group</Confirm>}<span className="grow" /><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save}>{group ? 'Save' : 'Create'}</Button></>}>
       <div className="stack">
-        <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Camera crew" autoFocus /></Field>
+        <Field label="Name"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Camera crew" autoFocus={!group} readOnly={!isAdmin} /></Field>
         <div className="field">
           <span className="field-label">Members</span>
           <div className="chips-static">
-            {people.map((p) => <button key={p.id} type="button" className={`chip ${members.includes(p.id) ? 'on' : ''}`} onClick={() => toggle(p.id)} disabled={p.id === user?.id}>{p.name}{p.id === user?.id ? <small>you</small> : null}</button>)}
+            {people.map((p) => <button key={p.id} type="button" className={`chip ${members.includes(p.id) ? 'on' : ''}`} onClick={() => toggle(p.id)} disabled={fixed(p.id)}>{p.name}{p.id === user?.id ? <small>you</small> : null}</button>)}
           </div>
+          {!group && isAdmin && <button type="button" className="link small" onClick={keepStart}>Start every new group with these</button>}
+          {group && !isAdmin && <p className="small muted">Tap someone to add them. Only an administrator can take someone out.</p>}
         </div>
       </div>
     </Modal>
@@ -1523,7 +1541,7 @@ function ChatRoom({ room, onBack }) {
         {canCall && <button type="button" className="icon-btn chat-head-ico chat-call" onClick={() => calls.start(room, false)} disabled={calls.busy} aria-label={room.kind === 'direct' ? 'Voice call' : 'Group voice call'} title={room.kind === 'direct' ? 'Voice call' : 'Group voice call'}>{TgIcon.phone()}</button>}
         {canCall && <button type="button" className="icon-btn chat-head-ico chat-call" onClick={() => calls.start(room, true)} disabled={calls.busy} aria-label={room.kind === 'direct' ? 'Video call' : 'Group video call'} title={room.kind === 'direct' ? 'Video call' : 'Group video call'}>{TgIcon.video()}</button>}
         {room.kind === 'direct' && room.otherId && !mobile && <Link className="icon-btn chat-head-ico" to={`/u/${room.otherId}`} aria-label="Profile" title="Profile">{TgIcon.person()}</Link>}
-        {room.kind === 'group' && isAdmin && groupRow && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditGroup(true)} aria-label="Edit group" title="Edit group">{TgIcon.people()}</button>}
+        {room.kind === 'group' && groupRow && <button type="button" className="icon-btn chat-head-ico" onClick={() => setEditGroup(true)} aria-label={isAdmin ? 'Edit group' : 'Add people'} title={isAdmin ? 'Edit group' : 'Add people'}>{TgIcon.people()}</button>}
         {!mobile && <button type="button" className="icon-btn chat-head-ico" onClick={() => { setFind(''); setFindAt(0) }} aria-label="Search in this conversation" title="Search in this conversation">{TgIcon.search()}</button>}
         <span className="chat-more-wrap">
           <button type="button" className="icon-btn chat-head-ico" onClick={() => setRoomMenu((v) => !v)} aria-label="More" title="More">{TgIcon.more()}</button>
