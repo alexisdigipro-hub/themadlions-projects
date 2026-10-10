@@ -9,7 +9,7 @@ const writeLocal = (rows) => { try { localStorage.setItem(LOCAL, JSON.stringify(
 
 const fromRow = (r) => ({ id: r.id, userId: r.user_id || '', sharedWith: r.shared_with || [], link: !!r.link, kind: r.kind, folderId: r.folder_id || '', title: r.title || '', body: r.body || '', pinned: !!r.pinned, createdAt: r.created_at, updatedAt: r.updated_at, deletedAt: r.deleted_at || '' })
 const toRow = (n) => ({ id: n.id, kind: n.kind, folder_id: n.folderId || null, title: n.title || '', body: n.body || '', pinned: !!n.pinned, created_at: n.createdAt, updated_at: n.updatedAt, deleted_at: n.deletedAt || null })
-const missing = (e) => (/relation .*notes|notes.* does not exist|42P01/.test(`${e?.code} ${e?.message}`) ? new Error('Run supabase/notes.sql in the SQL editor to switch Notes on.') : /42703|shared_with|column .*link/.test(`${e?.code} ${e?.message}`) ? new Error('Run supabase/notes_share.sql in the SQL editor to share notes.') : new Error(e?.message || 'Notes could not be saved.'))
+const missing = (e) => (/relation .*notes|notes.* does not exist|42P01/.test(`${e?.code} ${e?.message}`) ? new Error('Run supabase/notes.sql in the SQL editor to switch Notes on.') : /42703|shared_with|column .*link/.test(`${e?.code} ${e?.message}`) ? new Error('Run supabase/notes_share_edit.sql in the SQL editor to share notes.') : new Error(e?.message || 'Notes could not be saved.'))
 
 export async function loadNotes() {
   if (!remote) return readLocal()
