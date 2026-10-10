@@ -67,6 +67,63 @@ function IconPick({ kind, tint, unset, title, text, value, onChange, editable, c
   )
 }
 
+/* A task on a phone slides left under the finger to show its list / person / status buttons behind it,
+   like the chat's conversations (Alex, 10 Oct: the three were too big under every task). Past half
+   it stays open; a tap elsewhere or a slide back closes it; one open at a time. The ⋮⋮ handle, the
+   subtasks and any field keep their own touches, and a slide is never taken for a tap. */
+const TRAY_W = 236
+function TaskSwipe({ id, openId, setOpenId, tray, className, children, ...rest }) {
+  const [dx, setDx] = useState(0)
+  const [sliding, setSliding] = useState(false)
+  const t = useRef(null)
+  const slid = useRef(false)
+  const open = openId === id
+  useEffect(() => { if (!open && !sliding) setDx(0) }, [open, sliding])
+  const start = (e) => {
+    slid.current = false
+    if (e.target.closest('.rem-grip, .rem-subs, .rem-swipe-tray, input, select, textarea')) { t.current = null; return }
+    const p = e.touches[0]
+    t.current = { x: p.clientX, y: p.clientY, base: open ? -TRAY_W : 0, dir: '' }
+  }
+  const move = (e) => {
+    const s = t.current
+    if (!s) return
+    const p = e.touches[0]
+    const mx = p.clientX - s.x
+    const my = p.clientY - s.y
+    if (!s.dir) {
+      if (Math.abs(mx) < 8 && Math.abs(my) < 8) return
+      s.dir = Math.abs(mx) > Math.abs(my) ? 'x' : 'y'
+      if (s.dir === 'x') { setSliding(true); slid.current = true; if (openId && !open) setOpenId(null) }
+    }
+    if (s.dir === 'x') setDx(Math.max(-TRAY_W - 30, Math.min(0, s.base + mx)))
+  }
+  const end = () => {
+    const s = t.current
+    t.current = null
+    if (!s || s.dir !== 'x') return
+    setSliding(false)
+    const stay = dx < -TRAY_W / 2
+    setDx(stay ? -TRAY_W : 0)
+    setOpenId(stay ? id : null)
+  }
+  const clickCapture = (e) => {
+    if (e.target.closest('.rem-swipe-tray')) return
+    if (slid.current || openId) {
+      e.preventDefault()
+      e.stopPropagation()
+      slid.current = false
+      if (openId) setOpenId(null)
+    }
+  }
+  return (
+    <li {...rest} className={`${className} rem-swipe${sliding ? ' sliding' : ''}${open ? ' open' : ''}`} onTouchStart={start} onTouchMove={move} onTouchEnd={end} onTouchCancel={end} onClickCapture={clickCapture}>
+      <div className="rem-swipe-tray" style={{ width: Math.max(0, -dx) }} aria-hidden={!open}>{tray}</div>
+      <div className="rem-swipe-row" style={{ transform: dx ? `translateX(${dx}px)` : undefined }}>{children}</div>
+    </li>
+  )
+}
+
 export default function TasksAll() {
   const { state, updateProject, update } = useStore()
   const user = useCurrentUser()
@@ -346,6 +403,7 @@ export default function TasksAll() {
   const [drag, setDrag] = useState(null) // { id, ids, over, after }
   // tasks whose subtasks are folded open under them
   const [openSubs, setOpenSubs] = useState(() => new Set())
+  const [swipeOpen, setSwipeOpen] = useState(null) // the task slid open on a phone
   const flipSubs = (id) => setOpenSubs((o) => { const n = new Set(o); if (n.has(id)) n.delete(id); else n.add(id); return n })
   const tickSub = (t, sid) => persist(t, (x) => { x.subtasks = (x.subtasks || []).map((y) => (y.id === sid ? { ...y, done: !y.done } : y)) })
   // subtasks added and removed right on the list, without opening the task (Alex, 9 Oct)
@@ -401,8 +459,25 @@ export default function TasksAll() {
     // its list (when it is not the one open) and its project, each as a tag
     const from = listOf(t).startsWith('l:') ? listByKey[listOf(t)] : null
     const proj = t.projectId && projectsById[t.projectId]
-    return (
-      <li key={t.id} data-task-id={t.id} className={`rem-task ${t.status === 'done' ? 'done' : ''}${t.deletedAt ? ' binned' : ''}${drag?.id === t.id ? ' dragging' : ''}${drag?.over === t.id && drag.id !== t.id ? (drag.after ? ' drop-after' : ' drop-before') : ''}`}>
+    const pills = t.deletedAt ? null : (
+          <div className="rem-pills">
+            <IconPick kind="list" editable={editable} tint={from?.color || 'var(--muted)'} unset={!from} title={`List: ${from ? from.name : 'none'}`} value={from?.id || ''} onChange={(e) => setList(t, e.target.value)}>
+              <option value="">No list</option>
+              {custom.map((l) => <option key={l.id} value={l.id}>{l.icon ? `${l.icon} ` : ''}{l.name}</option>)}
+            </IconPick>
+            <IconPick kind="who" editable={editable} tint="var(--text)" unset={!t.assignee} text={t.assignee ? shortName(t.assignee) : 'Nobody'} title={`Assigned to: ${t.assignee || 'nobody yet'}`} value={t.assignee || ''} onChange={(e) => setAssignee(t, e.target.value)}>
+              <option value="">Nobody yet</option>
+              {team.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
+              {t.assignee && !team.some((u) => u.name === t.assignee) && <option value={t.assignee}>{t.assignee}</option>}
+            </IconPick>
+            <IconPick kind="status" editable={editable} tint={statusColor(statusOf(t))} text={statusOf(t).label} title={`Status: ${statusOf(t).label}`} value={statusOf(t).id} onChange={(e) => setStatus(t, e.target.value)}>
+              {statuses.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+            </IconPick>
+          </div>
+    )
+    const liClass = `rem-task ${t.status === 'done' ? 'done' : ''}${t.deletedAt ? ' binned' : ''}${drag?.id === t.id ? ' dragging' : ''}${drag?.over === t.id && drag.id !== t.id ? (drag.after ? ' drop-after' : ' drop-before') : ''}`
+    const inside = (
+      <>
         {canDrag && <span className="rem-grip" role="button" aria-label="Drag to reorder" title="Drag to reorder" onPointerDown={(e) => startDrag(e, t, group.map((x) => x.id))} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={() => setDrag(null)}>⋮⋮</span>}
         <button type="button" className="rem-check" aria-label={t.status === 'done' ? 'Mark as not done' : 'Mark as done'} disabled={!editable || !!t.deletedAt} onClick={() => toggle(t)} />
         <div className="rem-task-main" onClick={() => editable && !t.deletedAt && setDraft({ ...t })}>
@@ -441,22 +516,7 @@ export default function TasksAll() {
             </ul>
           )}
         </div>
-        {!t.deletedAt && (
-          <div className="rem-pills">
-            <IconPick kind="list" editable={editable} tint={from?.color || 'var(--muted)'} unset={!from} title={`List: ${from ? from.name : 'none'}`} value={from?.id || ''} onChange={(e) => setList(t, e.target.value)}>
-              <option value="">No list</option>
-              {custom.map((l) => <option key={l.id} value={l.id}>{l.icon ? `${l.icon} ` : ''}{l.name}</option>)}
-            </IconPick>
-            <IconPick kind="who" editable={editable} tint="var(--text)" unset={!t.assignee} text={t.assignee ? shortName(t.assignee) : 'Nobody'} title={`Assigned to: ${t.assignee || 'nobody yet'}`} value={t.assignee || ''} onChange={(e) => setAssignee(t, e.target.value)}>
-              <option value="">Nobody yet</option>
-              {team.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
-              {t.assignee && !team.some((u) => u.name === t.assignee) && <option value={t.assignee}>{t.assignee}</option>}
-            </IconPick>
-            <IconPick kind="status" editable={editable} tint={statusColor(statusOf(t))} text={statusOf(t).label} title={`Status: ${statusOf(t).label}`} value={statusOf(t).id} onChange={(e) => setStatus(t, e.target.value)}>
-              {statuses.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
-            </IconPick>
-          </div>
-        )}
+        {!mobile && pills}
         {t.deletedAt ? (editable && (
           <>
             <button type="button" className="rem-restore" onClick={() => restore(t)}>Restore</button>
@@ -467,7 +527,12 @@ export default function TasksAll() {
             {editable && <button type="button" className="rem-del" title="Delete" onClick={() => trash(t)}>×</button>}
           </>
         )}
-      </li>
+      </>
+    )
+    // on a phone the three buttons sit behind the task, a slide left away (TaskSwipe)
+    if (mobile && pills) return <TaskSwipe key={t.id} id={t.id} data-task-id={t.id} className={liClass} openId={swipeOpen} setOpenId={setSwipeOpen} tray={pills}>{inside}</TaskSwipe>
+    return (
+      <li key={t.id} data-task-id={t.id} className={liClass}>{inside}</li>
     )
   }
 

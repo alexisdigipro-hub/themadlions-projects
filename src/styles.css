@@ -5661,3 +5661,16 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
   html:not(.chat-window) body .chat2:not(.has-room):not(.windowed) { min-height: 100%; }
   html:not(.chat-window) body .chat2:not(.has-room):not(.windowed) .chat-list.tgui { min-height: 0; }
 }
+
+/* Tasks on a phone: the list / person / status buttons sit behind each task and show when it is slid
+   left (TasksAll.jsx TaskSwipe), like a conversation in the chat. The card keeps its look; its content
+   rides on .rem-swipe-row and the buttons fill exactly the room it leaves. */
+@media (max-width: 820px) {
+  .rem-task.rem-swipe { display: block; padding: 0; overflow: hidden; }
+  .rem-swipe-row { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 12px; transition: transform .25s cubic-bezier(.3, .7, .2, 1); touch-action: pan-y; }
+  .rem-swipe-tray { position: absolute; top: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: flex-end; overflow: hidden; transition: width .25s cubic-bezier(.3, .7, .2, 1); }
+  .rem-swipe.sliding .rem-swipe-row, .rem-swipe.sliding .rem-swipe-tray { transition: none; }
+  .rem-swipe-tray .rem-pills { order: 0; flex: none; flex-basis: auto; gap: 6px; padding: 0 8px 0 0; }
+  .rem-swipe-tray .rem-ibtn { width: 72px; height: 52px; }
+  .rem-task.rem-swipe:has(.rem-swipe-row > .rem-task-main > .rem-subs) .rem-swipe-row > :is(.rem-check, .rem-grip, .rem-del) { align-self: flex-start; margin-top: 2px; }
+}
