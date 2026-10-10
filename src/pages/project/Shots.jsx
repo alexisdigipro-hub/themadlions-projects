@@ -15,6 +15,21 @@ import { Grip, moveItem, useDragSort } from '../../components/DragSort.jsx'
 
 const STATUS = ['planned', 'shot', 'skipped']
 
+/* Line icons for the 2026 shot list (Alex, 11 Oct: "more organised, clean, 2026") */
+const svg = (d) => <svg viewBox="0 0 24 24" aria-hidden="true">{d}</svg>
+const I = {
+  customise: svg(<><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></>),
+  share: svg(<><path d="M12 15V4M8 8l4-4 4 4" /><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" /></>),
+  csv: svg(<><path d="M12 4v11M8 11l4 4 4-4" /><path d="M5 20h14" /></>),
+  print: svg(<><path d="M7 9V4h10v5" /><rect x="4" y="9" width="16" height="8" rx="2" /><path d="M7 14h10v6H7z" /></>),
+  plus: svg(<path d="M12 5v14M5 12h14" />),
+  edit: svg(<><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></>),
+  copy: svg(<><rect x="8" y="8" width="12" height="12" rx="3" /><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8" /></>),
+  trash: svg(<path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13" />),
+  list: svg(<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />),
+  board: svg(<><rect x="3.5" y="5" width="7.5" height="6" rx="1.5" /><rect x="13" y="5" width="7.5" height="6" rx="1.5" /><rect x="3.5" y="13" width="7.5" height="6" rx="1.5" /><rect x="13" y="13" width="7.5" height="6" rx="1.5" /></>),
+}
+
 const emptyShot = (sceneId, n, layout) => ({
   id: uid(), sceneId, number: n, size: layout.lists.size.includes('MS') ? 'MS' : layout.lists.size[0] || '', angle: layout.lists.angle[0] || '', movement: layout.lists.movement[0] || '', lens: '', camera: 'A', fps: '25',
   gear: layout.lists.gear[0] || '', description: '', subject: '', audio: '', duration: '', status: 'planned', notes: '', frame: '', frameUrl: '',
@@ -171,7 +186,7 @@ export default function Shots() {
   const has = (cols, k) => cols.some((c) => c.key === k)
   const cell = (s, c, cols, live) => {
     switch (c.key) {
-      case 'number': return <><strong>{s.number}</strong>{(s.frame || s.frameUrl) && !has(cols, 'frame') && <span className="muted small"> ◧</span>}</>
+      case 'number': return live ? <span className="sl-num">{s.number}</span> : <><strong>{s.number}</strong>{(s.frame || s.frameUrl) && !has(cols, 'frame') && <span className="muted small"> ◧</span>}</>
       case 'frame': return s.frame || s.frameUrl ? <img className="shot-thumb" src={s.frame || s.frameUrl} alt="" /> : null
       case 'description':
         return (
@@ -182,10 +197,10 @@ export default function Shots() {
         )
       case 'status':
         return live && editable ? (
-          <select className="input select tiny" value={s.status} onChange={(e) => setStatus(s.id, e.target.value)}>
+          <select className={`sl-status st-${s.status}`} value={s.status} onChange={(e) => setStatus(s.id, e.target.value)}>
             {STATUS.map((x) => <option key={x}>{x}</option>)}
           </select>
-        ) : s.status
+        ) : live ? <span className={`sl-status st-${s.status}`}>{s.status}</span> : s.status
       default: return cellText(s, c.key)
     }
   }
@@ -229,35 +244,32 @@ export default function Shots() {
   }
 
   const done = sceneShots.filter((s) => s.status === 'shot').length
+  const shotTotal = shots.filter((s) => s.status === 'shot').length
+  const planned = project.scenes.filter((s) => countBy[s.id]).length
+  const doneBy = shots.reduce((m, s) => { if (s.status === 'shot') m[s.sceneId] = (m[s.sceneId] || 0) + 1; return m }, {})
+  const pctOf = (a, b) => (b ? Math.round((a / b) * 100) : 0)
+  const addShot = () => setDraft(emptyShot(scene.id, `${scene.number}${nextLetter(sceneShots)}`, layout))
 
   return (
-    <div className="shots">
-      <div className="toolbar no-print">
-        <div className="toolbar-info">
-          <strong>{shots.length} shots</strong>
-          <span className="muted">
-            {project.scenes.filter((s) => countBy[s.id]).length} of {project.scenes.length} scenes planned · {shots.filter((s) => s.status === 'shot').length} shot
-          </span>
+    <div className="shots sl26">
+      {/* the head (Alex, 11 Oct, 2026 look): the numbers on the left, the tools as icon pills on the right */}
+      <div className="sl-head no-print">
+        <div className="sl-stats">
+          <div className="sl-stat"><b>{shots.length}</b><span>shots</span></div>
+          <div className="sl-stat"><b>{planned}<small>/{project.scenes.length}</small></b><span>scenes planned</span></div>
+          <div className="sl-stat"><b>{shotTotal}</b><span>in the can</span></div>
+          <div className="sl-meter" title={`${pctOf(shotTotal, shots.length)}% shot`}><i style={{ width: `${pctOf(shotTotal, shots.length)}%` }} /></div>
         </div>
-        <div className="toolbar-actions">
-          <div className="segmented small">
-            <button className={view === 'list' ? 'on' : ''} onClick={() => setView('list')}>List</button>
-            <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}>Storyboard</button>
+        <div className="sl-tools">
+          <div className="sl-seg" role="tablist">
+            <button className={view === 'list' ? 'on' : ''} onClick={() => setView('list')}>{I.list}<span>List</span></button>
+            <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}>{I.board}<span>Storyboard</span></button>
           </div>
-          {editable && <Button variant={designing ? 'primary' : 'default'} onClick={() => setDesigning(!designing)}>{designing ? 'Done' : 'Customise'}</Button>}
-          {canShare && shots.length > 0 && <Button onClick={() => makeShare('list')}>Share link</Button>}
-          {shots.length > 0 && (
-            <Button variant="ghost" onClick={exportCSV}>Export CSV</Button>
-          )}
-          {shots.length > 0 && (
-            <Button variant="ghost" onClick={() => window.print()}>Print</Button>
-          )}
-          {editable && <Button onClick={addScene}>Add setup</Button>}
-          {editable && (
-            <Button variant="primary" onClick={() => setDraft(emptyShot(scene.id, `${scene.number}${nextLetter(sceneShots)}`, layout))}>
-              Add shot
-            </Button>
-          )}
+          {editable && <button type="button" className={`sl-pill${designing ? ' on' : ''}`} onClick={() => setDesigning(!designing)}>{I.customise}<span>{designing ? 'Done' : 'Customise'}</span></button>}
+          {canShare && shots.length > 0 && <button type="button" className="sl-pill" onClick={() => makeShare('list')}>{I.share}<span>Share</span></button>}
+          {shots.length > 0 && <button type="button" className="sl-pill" onClick={exportCSV} title="Export CSV">{I.csv}<span>CSV</span></button>}
+          {shots.length > 0 && <button type="button" className="sl-pill" onClick={() => window.print()}>{I.print}<span>Print</span></button>}
+          {editable && <button type="button" className="sl-pill sl-primary" onClick={addShot}>{I.plus}<span>Add shot</span></button>}
         </div>
       </div>
 
@@ -297,7 +309,10 @@ export default function Shots() {
             <li key={s.id}>
               <button className={s.id === scene.id ? 'on' : ''} onClick={() => setSceneId(s.id)}>
                 <span className="num">{s.number}</span>
-                <span className="name">{s.location || s.heading}</span>
+                <span className="name">
+                  {s.location || s.heading}
+                  {countBy[s.id] > 0 && <i className="rail-meter"><i style={{ width: `${pctOf(doneBy[s.id] || 0, countBy[s.id])}%` }} /></i>}
+                </span>
                 <span className="cnt">{countBy[s.id] || ''}</span>
               </button>
             </li>
@@ -328,10 +343,10 @@ export default function Shots() {
                 Sc. {scene.number} <span className="muted">{scene.heading}</span>
               </h2>
             )}
-            <span className="muted small">{scene.synopsis}</span>
             {sceneShots.length > 0 && (
-              <span className="muted small">{done}/{sceneShots.length} shot</span>
+              <span className={`sl-progress${done === sceneShots.length ? ' all' : ''}`}><i style={{ '--p': `${pctOf(done, sceneShots.length)}%` }} />{done}/{sceneShots.length} shot</span>
             )}
+            {scene.synopsis && <p className="sl-synopsis">{scene.synopsis}</p>}
           </div>
 
           {!sceneShots.length ? (
@@ -342,23 +357,25 @@ export default function Shots() {
               {sceneShots.map((s, i) => (
                 <li key={s.id} {...sort.row('m', i)} className={`shot-card ${s.status} ${sort.cls('m', i)}`}>
                   <div className="shot-card-head">
-                    <strong>{s.number}</strong>
-                    <span>{s.size} · {s.angle} · {s.movement}</span>
+                    <span className="sl-num">{s.number}</span>
+                    <span className="sl-chips">{[s.size, s.angle, s.movement].filter(Boolean).map((x, k) => <em key={k}>{x}</em>)}</span>
                     {editable ? (
-                      <select className="input select tiny" value={s.status} onChange={(e) => setStatus(s.id, e.target.value)}>
+                      <select className={`sl-status st-${s.status}`} value={s.status} onChange={(e) => setStatus(s.id, e.target.value)}>
                         {STATUS.map((x) => <option key={x}>{x}</option>)}
                       </select>
-                    ) : <span className="muted">{s.status}</span>}
+                    ) : <span className={`sl-status st-${s.status}`}>{s.status}</span>}
                   </div>
-                  <div>{s.subject && <strong>{s.subject}. </strong>}{s.description}</div>
-                  <div className="muted small">{[s.gear, s.lens && `${s.lens}mm`, s.camera && `Cam ${s.camera}`, s.duration].filter(Boolean).join(' · ')}</div>
+                  {(s.frame || s.frameUrl) && <img className="sl-card-frame" src={s.frame || s.frameUrl} alt="" />}
+                  <div className="sl-desc">{s.subject && <strong>{s.subject}. </strong>}{s.description}</div>
+                  {[s.gear, s.lens && `${s.lens}mm`, s.camera && `Cam ${s.camera}`, s.duration].some(Boolean) && <div className="sl-meta">{[s.gear, s.lens && `${s.lens}mm`, s.camera && `Cam ${s.camera}`, s.duration].filter(Boolean).join(' · ')}</div>}
                   {screenCols.filter((c) => c.custom && cellText(s, c.key)).map((c) => <div key={c.key} className="small"><span className="muted">{colTitle(c)}:</span> {cellText(s, c.key)}</div>)}
                   {editable && (
-                    <div className="row-actions">
+                    <div className="sl-acts">
                       <Grip {...sort.grip('m', i)} />
-                      <button onClick={() => setDraft({ ...s })}>Edit</button>
-                      <button onClick={() => duplicate(s)}>Copy</button>
-                      <Confirm onConfirm={() => remove(s.id)} label="Delete">×</Confirm>
+                      <span className="grow" />
+                      <button type="button" className="sl-icon" onClick={() => setDraft({ ...s })} aria-label="Edit">{I.edit}</button>
+                      <button type="button" className="sl-icon" onClick={() => duplicate(s)} aria-label="Copy">{I.copy}</button>
+                      <Confirm onConfirm={() => remove(s.id)} label="Delete" className="sl-icon" aria-label="Delete">{I.trash}</Confirm>
                     </div>
                   )}
                 </li>
@@ -373,14 +390,14 @@ export default function Shots() {
                 </thead>
                 <tbody>
                   {sceneShots.map((s, i) => (
-                    <tr key={s.id} {...sort.row('d', i)} className={`${s.status === 'skipped' ? 'dim' : ''} ${sort.cls('d', i)}`}>
+                    <tr key={s.id} {...sort.row('d', i)} className={`st-${s.status} ${s.status === 'skipped' ? 'dim' : ''} ${sort.cls('d', i)}`}>
                       {screenCols.map((c) => <td key={c.key} className={wide(c.key) ? 'c-wide' : 'c-tight'}>{cell(s, c, screenCols, true)}</td>)}
                       {editable && (
-                        <td className="row-actions no-print">
+                        <td className="row-actions sl-acts no-print">
                           <Grip {...sort.grip('d', i)} />
-                          <button onClick={() => setDraft({ ...s })}>Edit</button>
-                          <button onClick={() => duplicate(s)}>Copy</button>
-                          <Confirm onConfirm={() => remove(s.id)} label="Delete">×</Confirm>
+                          <button type="button" className="sl-icon" onClick={() => setDraft({ ...s })} aria-label="Edit" title="Edit">{I.edit}</button>
+                          <button type="button" className="sl-icon" onClick={() => duplicate(s)} aria-label="Copy" title="Copy">{I.copy}</button>
+                          <Confirm onConfirm={() => remove(s.id)} label="Delete" className="sl-icon" aria-label="Delete" title="Delete">{I.trash}</Confirm>
                         </td>
                       )}
                     </tr>
@@ -394,11 +411,13 @@ export default function Shots() {
               {sceneShots.map((s) => (
                 <figure key={s.id} className={`frame ${s.status}`} onClick={() => editable && setDraft({ ...s })}>
                   <div className="frame-img">
-                    {s.frame || s.frameUrl ? <img src={s.frame || s.frameUrl} alt="" /> : <span className="muted">no frame</span>}
+                    {s.frame || s.frameUrl ? <img src={s.frame || s.frameUrl} alt="" /> : <span className="muted small">No frame yet</span>}
+                    <span className="sl-num on-frame">{s.number}</span>
+                    <span className={`sl-dot st-${s.status}`} title={s.status} />
                   </div>
                   <figcaption>
-                    <strong>{s.number}</strong> {s.size} · {s.movement}
-                    <div className="small">{s.subject && `${s.subject}. `}{s.description}</div>
+                    <span className="sl-chips">{[s.size, s.angle, s.movement].filter(Boolean).map((x, k) => <em key={k}>{x}</em>)}</span>
+                    <div className="sl-desc">{s.subject && <strong>{s.subject}. </strong>}{s.description}</div>
                   </figcaption>
                 </figure>
               ))}
@@ -406,15 +425,16 @@ export default function Shots() {
           )}
 
           {editable && view === 'list' && (
-            <div className="quick-add no-print">
-              <Input
+            <div className="quick-add sl-quick no-print">
+              <span className="sl-quick-plus">{I.plus}</span>
+              <input
+                className="sl-quick-input"
                 value={quick}
-                placeholder="Quick add: describe the shot, press Enter"
+                placeholder="Describe a shot, press Enter"
                 onChange={(e) => setQuick(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && quickAdd()}
               />
-              <Button onClick={quickAdd}>Add</Button>
-              <span className="muted small">or use Add shot for size, lens, movement and a storyboard frame</span>
+              {quick.trim() && <button type="button" className="sl-pill sl-primary" onClick={quickAdd}>Add</button>}
             </div>
           )}
         </div>
