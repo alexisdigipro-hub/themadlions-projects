@@ -17,7 +17,6 @@ import Tasks, { tasksFor } from './Tasks.jsx'
 import { Waveform } from './Music.jsx'
 import Notes from './Notes.jsx'
 import CallSheets from './CallSheets.jsx'
-import { layoutOf } from '../../lib/callsheetLayout.js'
 
 const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: '' })
 
@@ -127,6 +126,11 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
 
 export default function Overview() {
   const { project, edit, canEdit, user } = useProject()
+  const [ordinoOpen, setOrdinoOpen] = useState(false)
+  // the ordino's days, and the one to name on the button: the next to come, else the last
+  const ordinoDays = [...(project.shootingDays || [])].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+  const todayIso = new Date().toISOString().slice(0, 10)
+  const nextOrdino = ordinoDays.find((d) => (d.date || '') >= todayIso) || ordinoDays[ordinoDays.length - 1] || {}
   const { state, update } = useStore()
   const toast = useToast()
   const navigate = useNavigate()
@@ -241,16 +245,22 @@ export default function Overview() {
       {/* the song first, above the ordino (Alex, 10 Oct) */}
       {isMusicVideo && can(user, 'music') && <SongPlayer project={project} edit={edit} editable={canEdit('music')} hideEmpty startSignal={start.song} />}
 
-      {/* the finished ordino for everyone on the project (Alex, 10 Oct), as the crew get it on a phone,
-          the size of a phone on a computer too; made in the Ordino tab by whoever may edit it */}
-      {/* not for administrators, who have the Ordino tab itself (Alex, 10 Oct) */}
-      {(project.shootingDays || []).length > 0 && user?.role !== 'admin' && (
-        // the card in the link's own grey, light or dark as the link is set in Customise (Alex, 10 Oct)
-        <section className={`panel ordino-card pv-${layoutOf(project, state).look.linkTheme || 'light'}`}>
-          <div className="panel-head"><h2>Ordino</h2></div>
-          <CallSheets linkOnly />
-        </section>
+      {/* The ordino as one glass button the height of the song box, for everyone on the project,
+          administrators too (Alex, 10 Oct); it opens the finished ordino as the crew get it on a phone */}
+      {ordinoDays.length > 0 && (
+        // the project's cover, very faint, behind the glass (Alex, 10 Oct)
+        <button type="button" className={`ordino-btn${project.coverThumb ? ' has-cover' : ''}`} style={project.coverThumb ? { '--ordino-cover': `url("${project.coverThumb}")` } : undefined} onClick={() => setOrdinoOpen(true)}>
+          <span className="ordino-btn-ico" aria-hidden="true">🎬</span>
+          <span className="ordino-btn-text">
+            <strong>Ordino</strong>
+            <span>{[nextOrdino.date && new Date(nextOrdino.date + 'T00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }), nextOrdino.callTime && `call ${nextOrdino.callTime}`, ordinoDays.length > 1 && `${ordinoDays.length} days`].filter(Boolean).join(' · ')}</span>
+          </span>
+          <span className="ordino-btn-go" aria-hidden="true">›</span>
+        </button>
       )}
+      <Modal open={ordinoOpen} title="Ordino" onClose={() => setOrdinoOpen(false)}>
+        {ordinoOpen && <div className="ordino-modal"><CallSheets linkOnly /></div>}
+      </Modal>
 
       {can(user, 'tasks') && <Tasks hideEmpty startSignal={start.task} />}
 

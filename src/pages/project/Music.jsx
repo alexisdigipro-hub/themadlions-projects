@@ -68,6 +68,7 @@ export default function Music() {
   const editable = canEdit('music')
   const lastFile = useRef(null) // the file just uploaded, reused for transcription without re-downloading
   const [tr, setTr] = useState(null) // { mode: 'new' | 'align', language }
+  const [trackEdit, setTrackEdit] = useState(false) // the track's name, kind and Remove, folded away
   const [trBusy, setTrBusy] = useState('')
   const music = { ...emptyMusic(), ...(project.music || {}) }
   const track = music.tracks.find((t) => t.id === music.activeTrackId) || music.tracks[0]
@@ -250,6 +251,10 @@ export default function Music() {
             <Select className="compact" value={track?.id || ''} onChange={(e) => setMusic((m) => (m.activeTrackId = e.target.value))} options={music.tracks.map((t) => [t.id, `${t.name} (${TRACK_KINDS.find(([v]) => v === t.kind)?.[1]})`])} />
           )}
           {sections.length > 0 && <Button variant="ghost" onClick={exportMap}>Export song map</Button>}
+          {/* the player's own buttons moved up here, so the song box is one slim row as on the Overview (Alex, 10 Oct) */}
+          {track && loop && <Button variant="ghost" onClick={() => setLoop(null)}>Stop loop</Button>}
+          {track && <Button variant="ghost" onClick={downloadAudio} disabled={saving || !url} title="Save the audio file to this device">{saving ? 'Preparing…' : 'Download'}</Button>}
+          {track && editable && <Button variant="ghost" className={trackEdit ? 'on' : ''} onClick={() => setTrackEdit((v) => !v)}>Edit track</Button>}
           {editable && (
             <>
               <input ref={fileRef} type="file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac" hidden onChange={(e) => onFile(e.target.files?.[0])} />
@@ -262,27 +267,20 @@ export default function Music() {
       {!remote && <p className="notice">Local mode: the audio file plays for this session only. With the Supabase backend it is stored for the whole team.</p>}
 
       {track ? (
-        <section className="panel player">
+        <section className="panel player song-card">
           <audio ref={audioRef} src={url || undefined} preload="metadata" onError={onError} />
           {/* one slim row, play, the waveform, the time; the rest on the line under it (Alex, 10 Oct) */}
           <div className="player-row">
             <button className="play" onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
             <Waveform peaks={track.peaks} duration={track.duration} time={time} sections={sections} onSeek={seek} active={current?.id} />
-            <span className="player-time">{fmtTimeMs(time)} <span className="muted">/ {fmtTime(track.duration)}</span></span>
+            <span className="player-time">{fmtTimeMs(time)} <span className="muted">/ {fmtTime(track.duration)}</span>{current && <span className="player-now-tag"> · {current.name}</span>}</span>
           </div>
-          {remote && err && <p className="small" style={{ color: 'var(--danger)', margin: '0 0 8px' }}>{err}</p>}
-          <div className="player-bar">
-            <span className="player-now">{current ? <><span className="muted">now:</span> <strong>{current.name}</strong></> : null}</span>
-            <div className="row-actions">
-              {loop && <Button size="sm" variant="ghost" onClick={() => setLoop(null)}>Stop loop</Button>}
-              <Button size="sm" variant="ghost" onClick={downloadAudio} disabled={saving || !url} title="Save the audio file to this device">{saving ? 'Preparing…' : 'Download'}</Button>
-              {editable && <Confirm label="Remove track" onConfirm={() => removeTrack(track)} />}
-            </div>
-          </div>
-          {editable && (
+          {remote && err && <p className="small" style={{ color: 'var(--danger)', margin: '6px 0 0' }}>{err}</p>}
+          {editable && trackEdit && (
             <div className="track-meta small">
               <Input value={track.name} onChange={(e) => setMusic((m) => { const t = m.tracks.find((x) => x.id === track.id); if (t) t.name = e.target.value })} />
               <Select value={track.kind} onChange={(e) => setMusic((m) => { const t = m.tracks.find((x) => x.id === track.id); if (t) t.kind = e.target.value })} options={TRACK_KINDS} />
+              <Confirm label="Remove track" onConfirm={() => removeTrack(track)} />
             </div>
           )}
         </section>
