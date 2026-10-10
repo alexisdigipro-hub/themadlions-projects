@@ -243,7 +243,8 @@ export default function Overview() {
 
       {/* the finished ordino for everyone on the project (Alex, 10 Oct), as the crew get it on a phone,
           the size of a phone on a computer too; made in the Ordino tab by whoever may edit it */}
-      {(project.shootingDays || []).length > 0 && (
+      {/* not for administrators, who have the Ordino tab itself (Alex, 10 Oct) */}
+      {(project.shootingDays || []).length > 0 && user?.role !== 'admin' && (
         // the card in the link's own grey, light or dark as the link is set in Customise (Alex, 10 Oct)
         <section className={`panel ordino-card pv-${layoutOf(project, state).look.linkTheme || 'light'}`}>
           <div className="panel-head"><h2>Ordino</h2></div>
