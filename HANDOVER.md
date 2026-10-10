@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (10 Oct 2026)
+- **Latest (11 Oct): the chat's typing bar 15% lower on a phone.** Last block of styles.css (under 820 px): the pill, the paperclip and the mic/send from 50 to 43 px (marks 22 px, send arrow 19 px, sticker button 36 px). The computer keeps 50 px.
 - **Latest (11 Oct): opening a conversation slides in on a phone.** Last lines of styles.css, under 820 px only: `.chat2.has-room .chat-box` animates `chat-push-in` (from translateX(100%), .34s) and the list behind `chat-push-under` (to -24% and dimmed), like an iPhone push. Ends on transform none so fixed things inside the room are unaffected; off with prefers-reduced-motion. Going back is still instant.
 - **Latest (11 Oct): chat check, fixes from a code review of the day's chat work.**
   - Video in a message: the phone's controls pause the video while its timeline is dragged, which hid the controls mid-seek. Now `pause` hides them only after 900 ms still paused (cancelled by seeking or play), and `play` from anywhere shows them.

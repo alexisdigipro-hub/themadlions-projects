@@ -6207,3 +6207,15 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
 @media (prefers-reduced-motion: reduce) {
   .chat2.has-room .chat-box, .chat2.has-room .chat-list { animation: none; }
 }
+
+/* The box to type in on a phone, 15% lower (Alex, 11 Oct): the pill and the round paperclip and
+   mic/send go from 50 to 43 px, their marks a little smaller to match. Phone only. */
+@media (max-width: 820px) {
+  html .chat2.has-room .chat-attach, html .chat2.has-room .chat-send { width: 43px; height: 43px; }
+  html .chat2.has-room .chat-attach svg, html .chat2.has-room .chat-send.chat-mic svg { width: 22px; height: 22px; }
+  html .chat2.has-room .chat-send svg { width: 19px; height: 19px; }
+  html .chat2.has-room .chat-compose textarea { min-height: 43px; border-radius: 21.5px; padding: 9.5px 46px 9.5px 16px; }
+  html .chat2.has-room .chat-emoji-wrap { height: 43px; margin-left: -50px; }
+  html .chat2.has-room .chat-emoji-btn { width: 36px; height: 36px; }
+  html .chat2.has-room .chat-emoji-btn svg { width: 22px; height: 22px; }
+}
