@@ -5,6 +5,7 @@ import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/stor
 import { locationProjects, locationToLibrary, matchText } from '../lib/library.js'
 import { coordsFromText } from '../lib/sun.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
+import { DbAdd, DbFilter } from '../components/DbTools.jsx'
 
 const TYPES = ['Studio', 'Interior', 'Exterior', 'INT. & EXT.', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
 const emptyLoc = () => ({ id: uid(), name: '', address: '', type: 'Interior', notes: '', contact: '', phone: '', lat: '', lon: '', coordsText: '', photos: [], tags: [], createdAt: new Date().toISOString() })
@@ -85,9 +86,9 @@ export default function LocationsAll() {
         </div>
         <div className="toolbar-actions">
           <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, address, notes…" />
-          <Select value={type} onChange={(e) => setType(e.target.value)} options={[['', 'All types'], ...TYPES.map((t) => [t, t])]} />
-          {editable && unlinked > 0 && <Button variant="ghost" onClick={collect}>Collect {unlinked} from projects</Button>}
-          {editable && <Button variant="primary" onClick={() => setDraft(emptyLoc())}>Add location</Button>}
+          <DbFilter value={type} onChange={(e) => setType(e.target.value)} options={[['', 'All types'], ...TYPES.map((t) => [t, t])]} label="Type" />
+          {editable && unlinked > 0 && <Button variant="ghost" className="db-collect" onClick={collect}>Collect {unlinked} from projects</Button>}
+          {editable && <DbAdd label="Add location" onClick={() => setDraft(emptyLoc())} />}
         </div>
       </div>
 

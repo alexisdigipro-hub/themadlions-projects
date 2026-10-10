@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
 import { waLink } from '../lib/share.js'
+import { DbAdd, DbFilter } from '../components/DbTools.jsx'
 
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 const emptyPerson = (kind) => ({ id: uid(), kind, name: '', phone: '', email: '', dept: kind === 'cast' ? 'Cast' : 'Production', role: '', agent: '', agentPhone: '', notes: '', photos: [], tags: [], createdAt: new Date().toISOString() })
@@ -22,6 +23,9 @@ export default function PeopleAll({ kind }) {
   const [detailFor, setDetailFor] = useState(null)
   const [view, setView] = useState(() => localStorage.getItem('tml_people_view') || 'cards')
   const pickView = (v) => { setView(v); localStorage.setItem('tml_people_view', v) }
+  // a phone always shows the cards: its toolbar is one line, with no room for Cards / List (Alex, 10 Oct)
+  const mobile = useIsMobile()
+  const shownView = mobile ? 'cards' : view
   const people = state.library.contacts
   const projects = visibleProjects(state, user)
 
@@ -86,8 +90,8 @@ export default function PeopleAll({ kind }) {
             <button className={view === 'table' ? 'on' : ''} onClick={() => pickView('table')}>List</button>
           </div>
           <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, role, phone, agent…" />
-          <Select value={dept} onChange={(e) => setDept(e.target.value)} options={[['', 'All departments'], ...DEPTS.map((d) => [d, d])]} />
-          {editable && <Button variant="primary" onClick={() => setDraft(emptyPerson(kind))}>Add {kind}</Button>}
+          <DbFilter value={dept} onChange={(e) => setDept(e.target.value)} options={[['', 'All departments'], ...DEPTS.map((d) => [d, d])]} label="Department" />
+          {editable && <DbAdd label={`Add ${kind}`} onClick={() => setDraft(emptyPerson(kind))} />}
         </div>
       </div>
 
@@ -95,7 +99,7 @@ export default function PeopleAll({ kind }) {
         <Empty title={people.length ? 'No matches' : 'The database is empty'}>
           {people.length ? 'Try another search.' : 'People you add inside a project land here automatically, so the next project can pick them from the list. You can also add them directly.'}
         </Empty>
-      ) : view === 'table' ? (
+      ) : shownView === 'table' ? (
         <div className="table-wrap">
         <table className="table people-table">
           {/* Alex: the list of projects someone worked on made every row a different height and

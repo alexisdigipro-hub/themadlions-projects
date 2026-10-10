@@ -105,7 +105,7 @@ export function emptyState() {
     users: [],
     projects: [],
     events: [],
-    library: { contacts: [], locations: [], drives: [] },
+    library: { contacts: [], locations: [], drives: [], gear: [] },
     todos: [],
     chat: [],
     chats: [], // groups and direct conversations (rooms); team and project rooms are derived
@@ -215,7 +215,7 @@ function migrate(parsed) {
   // migrations: new modules and fields added after the first release
   parsed.projects = (parsed.projects || []).map(migrateProject)
   parsed.users = (parsed.users || []).map((u) => ({ ...u, permissions: { ...defaultPermissions(u.role === 'admin' ? 'edit' : 'view'), ...(u.permissions || {}) } }))
-  return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], drives: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), recurring: parsed.finance?.recurring || [], invoices: parsed.finance?.invoices || [], settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}), callsheet: { ...emptyState().settings.callsheet, ...(parsed.settings?.callsheet || {}) } } }
+  return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], drives: [], gear: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), recurring: parsed.finance?.recurring || [], invoices: parsed.finance?.invoices || [], settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}), callsheet: { ...emptyState().settings.callsheet, ...(parsed.settings?.callsheet || {}) } } }
 }
 
 const rowToMessage = (r) => ({
@@ -370,6 +370,8 @@ export function StoreProvider({ children }) {
         contacts: libRows.filter((r) => r.kind === 'contact').map((r) => ({ ...r.data, id: r.id })),
         locations: libRows.filter((r) => r.kind === 'location').map((r) => ({ ...r.data, id: r.id })),
         drives: libRows.filter((r) => r.kind === 'drive').map((r) => ({ ...r.data, id: r.id })),
+        // the company's own equipment, Database > Equipment (supabase/equipment.sql)
+        gear: libRows.filter((r) => r.kind === 'gear').map((r) => ({ ...r.data, id: r.id })),
       },
       todos: libRows.filter((r) => r.kind === 'task').map((r) => ({ ...r.data, id: r.id })),
       chat: msgRows.map(rowToMessage).reverse(),
@@ -476,7 +478,7 @@ export function StoreProvider({ children }) {
             prevRef.current = next
             return next
           }
-          const key = kind === 'location' ? 'locations' : kind === 'drive' ? 'drives' : 'contacts'
+          const key = kind === 'location' ? 'locations' : kind === 'drive' ? 'drives' : kind === 'gear' ? 'gear' : 'contacts'
           const lib = { ...s.library }
           lib[key] = lib[key] || []
           if (payload.eventType === 'DELETE') lib[key] = lib[key].filter((x) => x.id !== payload.old.id)
@@ -661,7 +663,7 @@ export function StoreProvider({ children }) {
         if (error) throw error
       }, 0),
     )
-    ;[['contacts', 'contact'], ['locations', 'location'], ['drives', 'drive'], ['todos', 'task']].forEach(([key, kind]) => {
+    ;[['contacts', 'contact'], ['locations', 'location'], ['drives', 'drive'], ['gear', 'gear'], ['todos', 'task']].forEach(([key, kind]) => {
       const before = Object.fromEntries(((kind === 'task' ? prev.todos : prev.library?.[key]) || []).map((x) => [x.id, x]))
       const after = (kind === 'task' ? next.todos : next.library?.[key]) || []
       after.forEach((x) => {
@@ -669,7 +671,7 @@ export function StoreProvider({ children }) {
         myWrites.current.add(x.id)
         schedule('l:' + x.id, async () => {
           const { error } = await supabase.from('library').upsert({ id: x.id, workspace_id: ws, kind, data: x })
-          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/library.sql in the SQL editor to enable the company library.' : error.code === '23514' ? (kind === 'drive' ? 'Run supabase/drives.sql in the SQL editor to enable the drives archive.' : 'Run supabase/todos.sql in the SQL editor to enable general tasks.') : error.message)
+          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/library.sql in the SQL editor to enable the company library.' : error.code === '23514' ? (kind === 'drive' ? 'Run supabase/drives.sql in the SQL editor to enable the drives archive.' : kind === 'gear' ? 'Run supabase/equipment.sql in the SQL editor to enable Equipment.' : 'Run supabase/todos.sql in the SQL editor to enable general tasks.') : error.message)
           setTimeout(() => myWrites.current.delete(x.id), 4000)
         })
       })
@@ -948,7 +950,7 @@ export function StoreProvider({ children }) {
       const next = migrate({ ...nextState })
       if (remote) {
         // import projects and events; users and workspace stay as they are on the server
-        update((s) => ({ ...s, projects: next.projects, events: next.events, library: { contacts: [...s.library.contacts.filter((c) => !next.library.contacts.some((x) => x.id === c.id)), ...next.library.contacts], locations: [...s.library.locations.filter((c) => !next.library.locations.some((x) => x.id === c.id)), ...next.library.locations] } }))
+        update((s) => ({ ...s, projects: next.projects, events: next.events, library: { ...s.library, contacts: [...s.library.contacts.filter((c) => !next.library.contacts.some((x) => x.id === c.id)), ...next.library.contacts], locations: [...s.library.locations.filter((c) => !next.library.locations.some((x) => x.id === c.id)), ...next.library.locations] } }))
       } else setState(next)
     }
     const auth = remote
@@ -1071,7 +1073,7 @@ export function can(user, moduleKey, level = 'view') {
 export function seesDatabase(user) {
   if (!user) return false
   if (user.role === 'admin') return true
-  return (can(user, 'contacts') || can(user, 'locations')) && user.permissions?.databasePage !== 'hide'
+  return (can(user, 'contacts') || can(user, 'locations') || can(user, 'gear')) && user.permissions?.databasePage !== 'hide'
 }
 
 export function canAccessProject(user, projectId) {
