@@ -5674,3 +5674,11 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
   .rem-swipe-tray .rem-ibtn { width: 72px; height: 52px; }
   .rem-task.rem-swipe:has(.rem-swipe-row > .rem-task-main > .rem-subs) .rem-swipe-row > :is(.rem-check, .rem-grip, .rem-del) { align-self: flex-start; margin-top: 2px; }
 }
+
+/* Home-screen app on a phone: a window (a task's form, any dialog) or an open conversation lives inside
+   the scrolling page, and iOS kept it under the top bar and the tab bar, hiding its × / Save and the
+   conversation's back button (Alex, 10 Oct). While one is open the page itself is lifted above both. */
+@media (max-width: 820px) and (display-mode: standalone) {
+  html:not(.chat-window) .shell > .content:has(.modal-backdrop, .chat2.has-room) { position: relative; z-index: 39; }
+  .modal { max-height: calc(100dvh - env(safe-area-inset-top) - 8px); }
+}

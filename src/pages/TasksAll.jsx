@@ -418,6 +418,14 @@ export default function TasksAll() {
     notify({ ...t, assignee: name }, t)
     persist(t, (x) => { x.assignee = name; x.assigneeId = who?.id || '' })
   }
+  // on a phone the page would start scrolling under the finger and cut the drag short: while a task
+  // is being dragged, the touch moves are kept for the drag (Alex, 10 Oct: could not drag on the phone)
+  useEffect(() => {
+    if (!drag) return
+    const hold = (e) => e.preventDefault()
+    document.addEventListener('touchmove', hold, { passive: false })
+    return () => document.removeEventListener('touchmove', hold)
+  }, [!!drag]) // eslint-disable-line react-hooks/exhaustive-deps
   const startDrag = (e, t, ids) => {
     if (!editable || e.button > 0) return
     e.preventDefault()
