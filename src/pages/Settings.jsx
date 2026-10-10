@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import ScreenInfo from '../components/ScreenInfo.jsx'
-import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { CATEGORIES, DEFAULT_DEPARTMENTS, DEFAULT_GEAR_CATS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, gearCategoriesOf, sampleProject, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { projectProgress } from '../lib/progress.js'
 import { expenseCats } from '../lib/finance.js'
@@ -51,6 +51,7 @@ export default function Settings() {
   }
   const isAdmin = me?.role === 'admin'
   const nav = useNavigate()
+  const mobile = useIsMobile()
   // My profile came off the side menu into Settings, as its first tab (Alex, 10 Oct)
   const TABS = [
     ['profile', 'My profile', false],
@@ -139,8 +140,10 @@ export default function Settings() {
   return (
     <>
       <PageHead title="Settings" />
-      <nav className="tabs settings-tabs">
-        {TABS.map(([k, l]) => <button key={k} className={tab === k ? 'active' : ''} onClick={(e) => { if (tab !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setTab(k) }}>{l}</button>)}
+      {/* on a phone the tabs are chips like Home's categories, one line each, sliding sideways, with the
+          same glass lens moving between them (Alex, 10 Oct); a computer keeps the underlined tabs */}
+      <nav className={mobile ? 'chips settings-chips' : 'tabs settings-tabs'}>
+        {TABS.map(([k, l]) => <button key={k} className={mobile ? `chip${tab === k ? ' on' : ''}` : tab === k ? 'active' : ''} onClick={(e) => { if (tab !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setTab(k) }}>{l}</button>)}
       </nav>
       {/* the panel slides over when another tab is picked (lib/glide.js); nothing is keyed, so nothing remounts */}
       <div className="glide-box" ref={boxRef}>
