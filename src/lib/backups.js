@@ -26,6 +26,7 @@ export function snapshotToState(snap) {
       contacts: lib.filter((r) => r.kind === 'contact').map(withId),
       locations: lib.filter((r) => r.kind === 'location').map(withId),
       drives: lib.filter((r) => r.kind === 'drive').map(withId),
+      gear: lib.filter((r) => r.kind === 'gear').map(withId),
     },
     todos: lib.filter((r) => r.kind === 'task').map(withId),
     finance: {

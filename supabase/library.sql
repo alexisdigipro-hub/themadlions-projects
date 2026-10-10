@@ -4,16 +4,16 @@
 create table if not exists library (
   id text primary key,
   workspace_id uuid not null references workspaces(id) on delete cascade,
-  kind text not null check (kind in ('contact', 'location', 'task', 'drive')),
+  kind text not null check (kind in ('contact', 'location', 'task', 'drive', 'gear')),
   data jsonb not null,
   updated_at timestamptz default now(),
   updated_by uuid
 );
 
--- The kind list is kept identical in library.sql, todos.sql and drives.sql on purpose,
+-- The kind list is kept identical in library.sql, todos.sql, drives.sql and equipment.sql on purpose,
 -- so re-running any of them in any order never drops a kind the others still use.
 alter table library drop constraint if exists library_kind_check;
-alter table library add constraint library_kind_check check (kind in ('contact', 'location', 'task', 'drive'));
+alter table library add constraint library_kind_check check (kind in ('contact', 'location', 'task', 'drive', 'gear'));
 
 drop trigger if exists library_touch on library;
 create trigger library_touch before insert or update on library for each row execute function touch_updated_at();
