@@ -20,8 +20,6 @@ export function projectTabs(project) {
     ]),
     // Call sheets is framed inside Schedule now (its own permission still gates that section)
     { to: 'schedule', label: cat === 'Event' ? 'Run of show & Sheets' : 'Schedule & Sheets', key: 'schedule', icon: 'schedule' },
-    // opt-in: Alex doesn't use Post day to day; switch it on per project from Edit details > Tabs
-    { to: 'post', label: 'Post', key: 'post', icon: 'post', optIn: true },
     { to: 'people', label: 'Project Database', key: ['contacts', 'locations', 'gear'], icon: 'people' },
     // opt-in: the moodboard / treatment deck, switched on per project from Edit details > Tabs
     { to: 'presentation', label: 'Presentation', key: 'projects', icon: 'deck', optIn: true },
@@ -29,7 +27,7 @@ export function projectTabs(project) {
   ]
 }
 
-const OPT_IN = new Set(['post', 'presentation'])
+const OPT_IN = new Set(['presentation'])
 export function tabHidden(project, to) {
   if (Array.isArray(project?.hiddenTabs) && project.hiddenTabs.includes(to)) return true
   // an opt-in tab is hidden unless the project lists it in `shownTabs`, so it never appears unasked
