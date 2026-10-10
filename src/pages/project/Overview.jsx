@@ -245,12 +245,11 @@ export default function Overview() {
       {/* the song first, above the ordino (Alex, 10 Oct) */}
       {isMusicVideo && can(user, 'music') && <SongPlayer project={project} edit={edit} editable={canEdit('music')} hideEmpty startSignal={start.song} />}
 
-      {/* The ordino as one glass button the height of the song box, for everyone on the project,
-          administrators too (Alex, 10 Oct); it opens the finished ordino as the crew get it on a phone */}
+      {/* The ordino as one button that looks like the song box above it, for everyone on the project,
+          administrators too (Alex, 10 Oct); it opens the finished ordino as the crew get it on a phone.
+          Alex's on-set picture (public/ordino-bg.webp) shows faintly across it */}
       {ordinoDays.length > 0 && (
-        // the project's cover, very faint, behind the glass (Alex, 10 Oct)
-        <button type="button" className={`ordino-btn${project.coverThumb ? ' has-cover' : ''}`} style={project.coverThumb ? { '--ordino-cover': `url("${project.coverThumb}")` } : undefined} onClick={() => setOrdinoOpen(true)}>
-          <span className="ordino-btn-ico" aria-hidden="true">🎬</span>
+        <button type="button" className="panel ordino-btn" style={{ '--ordino-bg': `url("${import.meta.env.BASE_URL}ordino-bg.webp")` }} onClick={() => setOrdinoOpen(true)}>
           <span className="ordino-btn-text">
             <strong>Ordino</strong>
             <span>{[nextOrdino.date && new Date(nextOrdino.date + 'T00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }), nextOrdino.callTime && `call ${nextOrdino.callTime}`, ordinoDays.length > 1 && `${ordinoDays.length} days`].filter(Boolean).join(' · ')}</span>
