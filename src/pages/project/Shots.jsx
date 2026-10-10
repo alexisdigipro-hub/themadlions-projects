@@ -12,6 +12,7 @@ import ShotListDesigner from '../../components/ShotListDesigner.jsx'
 import ShotDay from '../../components/ShotDay.jsx'
 import { ZOOM } from '../../lib/callsheetLayout.js'
 import { accentOf, cellText, colTitle, dayPlan, optionsWith, shotLayoutOf, timeline, toHHMM } from '../../lib/shotLayout.js'
+import { Grip, moveItem, useDragSort } from '../../components/DragSort.jsx'
 
 const STATUS = ['planned', 'shot', 'skipped']
 
@@ -135,13 +136,13 @@ export default function Shots() {
     const copy = { ...s, id: uid(), number: `${scene.number}${nextLetter(sceneShots)}`, status: 'planned' }
     p.shots.push(copy)
   })
-  const move = (idx, dir) => edit((p) => {
-    const ids = p.shots.filter((s) => s.sceneId === scene.id).map((s) => s.id)
-    const j = idx + dir
-    if (j < 0 || j >= ids.length) return
-    const a = p.shots.findIndex((s) => s.id === ids[idx]), b = p.shots.findIndex((s) => s.id === ids[j])
-    ;[p.shots[a], p.shots[b]] = [p.shots[b], p.shots[a]]
-  })
+  // drag a shot by its ⋮⋮ to reorder the scene's shots (Alex, 10 Oct: no more arrows); the other
+  // scenes' shots keep their places in the list
+  const sort = useDragSort((from, to) => edit((p) => {
+    const slots = p.shots.map((s, k) => (s.sceneId === scene.id ? k : -1)).filter((k) => k >= 0)
+    const mine = moveItem(slots.map((k) => p.shots[k]), from, to)
+    slots.forEach((k, n) => { p.shots[k] = mine[n] })
+  }))
   const setStatus = (id, status) => edit((p) => {
     const s = p.shots.find((x) => x.id === id)
     if (s) s.status = status
@@ -362,7 +363,7 @@ export default function Shots() {
             <>
             <ul className="shot-cards mob-only">
               {sceneShots.map((s, i) => (
-                <li key={s.id} className={`shot-card ${s.status}`}>
+                <li key={s.id} {...sort.row('m', i)} className={`shot-card ${s.status} ${sort.cls('m', i)}`}>
                   <div className="shot-card-head">
                     <strong>{s.number}</strong>
                     <span>{s.size} · {s.angle} · {s.movement}</span>
@@ -377,8 +378,7 @@ export default function Shots() {
                   {screenCols.filter((c) => c.custom && cellText(s, c.key)).map((c) => <div key={c.key} className="small"><span className="muted">{colTitle(c)}:</span> {cellText(s, c.key)}</div>)}
                   {editable && (
                     <div className="row-actions">
-                      <button onClick={() => move(i, -1)} aria-label="Move up">↑</button>
-                      <button onClick={() => move(i, 1)} aria-label="Move down">↓</button>
+                      <Grip {...sort.grip('m', i)} />
                       <button onClick={() => setDraft({ ...s })}>Edit</button>
                       <button onClick={() => duplicate(s)}>Copy</button>
                       <Confirm onConfirm={() => remove(s.id)} label="Delete">×</Confirm>
@@ -396,12 +396,11 @@ export default function Shots() {
                 </thead>
                 <tbody>
                   {sceneShots.map((s, i) => (
-                    <tr key={s.id} className={s.status === 'skipped' ? 'dim' : ''}>
+                    <tr key={s.id} {...sort.row('d', i)} className={`${s.status === 'skipped' ? 'dim' : ''} ${sort.cls('d', i)}`}>
                       {screenCols.map((c) => <td key={c.key} className={wide(c.key) ? 'c-wide' : 'c-tight'}>{cell(s, c, screenCols, true)}</td>)}
                       {editable && (
                         <td className="row-actions no-print">
-                          <button onClick={() => move(i, -1)} aria-label="Move up">↑</button>
-                          <button onClick={() => move(i, 1)} aria-label="Move down">↓</button>
+                          <Grip {...sort.grip('d', i)} />
                           <button onClick={() => setDraft({ ...s })}>Edit</button>
                           <button onClick={() => duplicate(s)}>Copy</button>
                           <Confirm onConfirm={() => remove(s.id)} label="Delete">×</Confirm>

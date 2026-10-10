@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button, Field, Input, Select, Textarea } from './ui.jsx'
 import { COLUMNS, LISTS, newCustomColumn } from '../lib/shotLayout.js'
 import { SIZES } from '../lib/callsheetLayout.js'
+import { Grip, moveItem, useDragSort } from './DragSort.jsx'
 
 const defaultName = (c) => (c.custom ? 'Untitled' : COLUMNS.find(([k]) => k === c.key)?.[1] || c.key)
 
@@ -17,11 +18,8 @@ function ListBox({ value, onChange }) {
 export default function ShotListDesigner({ layout, setLayout, hasOwn, isAdmin, onMakeDefault, onReset }) {
   const change = (fn) => setLayout((l) => { fn(l); return l })
   const setCol = (i, patch) => change((l) => { l.columns[i] = { ...l.columns[i], ...patch } })
-  const move = (i, d) => change((l) => {
-    const j = i + d
-    if (j < 0 || j >= l.columns.length) return
-    ;[l.columns[i], l.columns[j]] = [l.columns[j], l.columns[i]]
-  })
+  // drag a column by its ⋮⋮ to reorder (Alex, 10 Oct: no more arrows)
+  const sort = useDragSort((from, to) => change((l) => { l.columns = moveItem(l.columns, from, to) }))
 
   return (
     <section className="panel cs-design no-print">
@@ -32,11 +30,8 @@ export default function ShotListDesigner({ layout, setLayout, hasOwn, isAdmin, o
             <thead><tr><th /><th>Name</th><th>Screen</th><th>Print</th><th>Link</th><th /></tr></thead>
             <tbody>
               {layout.columns.map((c, i) => (
-                <tr key={c.key}>
-                  <td className="row-actions nowrap">
-                    <button onClick={() => move(i, -1)} disabled={i === 0} title="Move up">↑</button>
-                    <button onClick={() => move(i, 1)} disabled={i === layout.columns.length - 1} title="Move down">↓</button>
-                  </td>
+                <tr key={c.key} {...sort.row('cols', i)} className={sort.cls('cols', i)}>
+                  <td className="row-actions nowrap"><Grip {...sort.grip('cols', i)} /></td>
                   <td><input className="input sm" value={c.title} placeholder={defaultName(c)} onChange={(e) => setCol(i, { title: e.target.value })} /></td>
                   <td><input type="checkbox" checked={c.screen} onChange={() => setCol(i, { screen: !c.screen })} aria-label={`${defaultName(c)} on screen`} /></td>
                   <td><input type="checkbox" checked={c.print} onChange={() => setCol(i, { print: !c.print })} aria-label={`${defaultName(c)} on paper`} /></td>

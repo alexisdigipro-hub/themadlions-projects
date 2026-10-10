@@ -11,6 +11,7 @@ import { AGE_BUCKETS, WorkLogTable, ageBucket, avgDaysToPay, daysWaiting, entryT
 import { InvoiceProfileSettings } from '../components/Invoices.jsx'
 import { invoiceTotals } from '../lib/invoice.js'
 import { ReceiptView } from '../components/Receipt.jsx'
+import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -815,13 +816,8 @@ function FinanceCategories({ toast }) {
     update((s) => { renameFinanceCategory(s, type, from, to); return s })
     toast(lists[type].includes(to) ? `Merged "${from}" into "${to}"${uses.total ? `, ${uses.total} item${uses.total === 1 ? '' : 's'} moved` : ''}` : `Renamed "${from}" to "${to}"${uses.total ? `, ${uses.total} item${uses.total === 1 ? '' : 's'} follow` : ''}`, 'ok')
   }
-  const move = (type, i, dir) => {
-    const l = [...lists[type]]
-    const j = i + dir
-    if (j < 0 || j >= l.length) return
-    ;[l[i], l[j]] = [l[j], l[i]]
-    setList(type, l)
-  }
+  // drag a category by its ⋮⋮ (Alex, 10 Oct: no more arrows); income and expense are separate lists
+  const sort = useDragSort((from, to, type) => setList(type, moveItem(lists[type], from, to)))
   const askRemove = (type, cat) => {
     const uses = financeCategoryUses(state, type, cat)
     if (lists[type].length <= 1) return toast('Keep at least one category.', 'error')
@@ -849,12 +845,11 @@ function FinanceCategories({ toast }) {
         {lists[type].map((c, i) => {
           const uses = financeCategoryUses(state, type, c)
           return (
-            <li key={c}>
+            <li key={c} {...sort.row(type, i)} className={sort.cls(type, i)}>
               <div className="bcat-row fcat-row">
                 <input className="input" defaultValue={c} onBlur={(e) => rename(type, c, e)} onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }} aria-label="Category name" />
                 <span className="muted small nowrap">{uses.total ? `${uses.total} item${uses.total === 1 ? '' : 's'}` : ''}</span>
-                <button type="button" className="bcat-btn" onClick={() => move(type, i, -1)} disabled={i === 0} aria-label="Move up">↑</button>
-                <button type="button" className="bcat-btn" onClick={() => move(type, i, 1)} disabled={i === lists[type].length - 1} aria-label="Move down">↓</button>
+                <Grip {...sort.grip(type, i)} />
                 <button type="button" className="bcat-btn bcat-x" onClick={() => askRemove(type, c)} aria-label="Remove">×</button>
                 {moving && moving.type === type && moving.cat === c && (
                   <div className="bcat-move">

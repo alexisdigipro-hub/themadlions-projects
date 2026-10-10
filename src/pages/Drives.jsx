@@ -4,6 +4,7 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMob
 import { DbAdd, DbBar, DbFilter } from '../components/DbTools.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
+import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
 
 const STATUS = [['empty', 'Empty'], ['inuse', 'In use'], ['full', 'Full'], ['offline', 'Not around']]
 const statusLabel = (k) => STATUS.find((s) => s[0] === k)?.[1] || 'In use'
@@ -68,14 +69,11 @@ export default function Drives({ slot }) {
     const rank = (k) => { const i = order.indexOf(k); return i === -1 ? 1000 : i }
     return set.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
   }, [drives, order])
-  const moveSeries = (k, dir) => update((s) => {
-    const cur = [...allSeries]
-    const i = cur.indexOf(k), j = i + dir
-    if (i < 0 || j < 0 || j >= cur.length) return s
-    ;[cur[i], cur[j]] = [cur[j], cur[i]]
-    s.settings = { ...s.settings, driveSeriesOrder: cur }
+  // drag a series (LION, SIMBA…) by its ⋮⋮ to change the order of the shelf (Alex, 10 Oct: no more arrows)
+  const sort = useDragSort((from, to) => update((s) => {
+    s.settings = { ...s.settings, driveSeriesOrder: moveItem(allSeries, from, to) }
     return s
-  })
+  }))
   const searching = !!q.trim()
   // Searching is a different question from browsing: you are not asking what is on the shelf,
   // you are asking which disk holds one thing. So it answers with the things, not the shelf.
@@ -234,15 +232,10 @@ export default function Drives({ slot }) {
         </>
       ) : (
         groups.map(([series, list]) => (
-          <section key={series} className="drive-series">
+          <section key={series} {...sort.row('series', allSeries.indexOf(series))} className={`drive-series ${sort.cls('series', allSeries.indexOf(series))}`}>
             <h2 className="drive-series-title">
+              {editable && !seriesF && <Grip {...sort.grip('series', allSeries.indexOf(series))} />}
               {series} <span className="muted small">{list.length}</span>
-              {editable && (
-                <span className="drive-series-move">
-                  <button className="link" onClick={() => moveSeries(series, -1)} disabled={allSeries.indexOf(series) === 0} title="Move up">▲</button>
-                  <button className="link" onClick={() => moveSeries(series, 1)} disabled={allSeries.indexOf(series) === allSeries.length - 1} title="Move down">▼</button>
-                </span>
-              )}
             </h2>
             {shownView === 'contents' ? (
               <ul className="plain drive-contents">

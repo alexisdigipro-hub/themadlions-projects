@@ -15,6 +15,7 @@ import { callsheetDefaults, uid, useCurrentUser } from '../../lib/store.jsx'
 import CallSheetDesigner from '../../components/CallSheetDesigner.jsx'
 import { CallSheetLinkView } from '../PublicCallSheet.jsx'
 import { ZOOM, accentOf, labelOf, layoutOf, linkLayout, normalizeLayout, storedLayout, titleOf } from '../../lib/callsheetLayout.js'
+import { Grip, moveItem, useDragSort } from '../../components/DragSort.jsx'
 
 function addMinutes(hhmm, mins) {
   if (!hhmm) return ''
@@ -194,23 +195,11 @@ export default function CallSheets({ openDay = '', onNew }) {
   const sceneTime = (id) => (sheet.sceneTimes || {})[id] || { from: '', to: '' }
   const setGroups = (list) => setSheet('groupCalls', list)
   const setGroupRow = (i, k, v) => setGroups(groupCalls.map((r, j) => (j === i ? { ...r, [k]: v } : r)))
-  const moveGroup = (i, d) => {
-    const j = i + d
-    if (j < 0 || j >= groupCalls.length) return
-    const list = [...groupCalls]
-    ;[list[i], list[j]] = [list[j], list[i]]
-    setGroups(list)
-  }
+  // group calls and the programme are put in order by dragging their ⋮⋮ (Alex, 10 Oct: no more arrows)
+  const sort = useDragSort((from, to, group) => (group === 'groups' ? setGroups(moveItem(groupCalls, from, to)) : setProgram(moveItem(program, from, to))))
   const USUAL_GROUPS = ['Production crew', 'Beauty crew', 'Artist', 'Dancers', 'Cast', 'Model']
   const setProgram = (list) => setSheet('program', list)
   const setProgramRow = (i, k, v) => setProgram(program.map((r, j) => (j === i ? { ...r, [k]: v } : r)))
-  const moveProgram = (i, d) => {
-    const j = i + d
-    if (j < 0 || j >= program.length) return
-    const list = [...program]
-    ;[list[i], list[j]] = [list[j], list[i]]
-    setProgram(list)
-  }
   const setSceneTime = (id, k, v) => edit((p) => {
     const d = p.shootingDays.find((x) => x.id === day.id)
     if (!d) return
@@ -428,13 +417,12 @@ export default function CallSheets({ openDay = '', onNew }) {
             {h}
             <ul className="plain cs-groups">
               {(editing ? groupCalls : groupRows).map((r, i) => (
-                <li key={r.id}>
+                <li key={r.id} {...(editing ? sort.row('groups', i) : {})} className={editing ? sort.cls('groups', i) : undefined}>
                   {editing ? <input className="cs-program-input cs-group-who" value={r.who || ''} placeholder="Production crew" onChange={(e) => setGroupRow(i, 'who', e.target.value)} aria-label="Who" /> : <span className="cs-group-who">{r.who}</span>}
                   {editing ? <input className="cs-time" value={r.time || ''} placeholder={day.callTime || '10:00'} onChange={(e) => setGroupRow(i, 'time', e.target.value)} aria-label={`Call for ${r.who || 'this group'}`} /> : <strong className="cs-group-time">{r.time}</strong>}
                   {editing && (
                     <span className="row-actions no-print">
-                      <button onClick={() => moveGroup(i, -1)} disabled={i === 0} aria-label="Up">↑</button>
-                      <button onClick={() => moveGroup(i, 1)} disabled={i === groupCalls.length - 1} aria-label="Down">↓</button>
+                      <Grip {...sort.grip('groups', i)} />
                       <button onClick={() => setGroups(groupCalls.filter((_, j) => j !== i))} aria-label="Remove">×</button>
                     </span>
                   )}
@@ -459,7 +447,7 @@ export default function CallSheets({ openDay = '', onNew }) {
               <thead><tr><th>Time</th><th>Description</th>{editing && <th className="no-print" />}</tr></thead>
               <tbody>
                 {(editing ? program : programRows).map((r, i) => (
-                  <tr key={r.id}>
+                  <tr key={r.id} {...(editing ? sort.row('program', i) : {})} className={editing ? sort.cls('program', i) : undefined}>
                     <td className="nowrap cs-scene-time">
                       {editing ? (
                         <span className="cs-range"><input className="cs-time" value={r.from || ''} placeholder="09:00" onChange={(e) => setProgramRow(i, 'from', e.target.value)} aria-label="From" /> – <input className="cs-time" value={r.to || ''} placeholder="end" onChange={(e) => setProgramRow(i, 'to', e.target.value)} aria-label="To" /></span>
@@ -468,8 +456,7 @@ export default function CallSheets({ openDay = '', onNew }) {
                     <td className="cs-program-what">{editing ? <input className="cs-program-input" value={r.what || ''} placeholder="Hair & make-up, first setup, lunch…" onChange={(e) => setProgramRow(i, 'what', e.target.value)} aria-label="Description" /> : r.what}</td>
                     {editing && (
                       <td className="row-actions no-print nowrap">
-                        <button onClick={() => moveProgram(i, -1)} disabled={i === 0} aria-label="Earlier">↑</button>
-                        <button onClick={() => moveProgram(i, 1)} disabled={i === program.length - 1} aria-label="Later">↓</button>
+                        <Grip {...sort.grip('program', i)} />
                         <button onClick={() => setProgram(program.filter((_, j) => j !== i))} aria-label="Remove">×</button>
                       </td>
                     )}

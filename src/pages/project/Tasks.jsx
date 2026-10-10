@@ -4,6 +4,7 @@ import { useProject } from '../Project.jsx'
 import { departmentsOf, today, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
 import { sendAutoNotice, userByName } from '../../components/Notices.jsx'
 import { fmtDate } from '../../lib/dates.js'
+import { Grip, moveItem, useDragSort } from '../../components/DragSort.jsx'
 
 export const TASK_STATUS = [
   ['todo', 'To do'],
@@ -42,13 +43,8 @@ export function StatusesModal({ onClose }) {
   const [rows, setRows] = useState(() => taskStatuses(state).map((x) => ({ ...x })))
   const setLabel = (i, label) => setRows(rows.map((r, j) => (j === i ? { ...r, label } : r)))
   const setColor = (i, color) => setRows(rows.map((r, j) => (j === i ? { ...r, color } : r)))
-  const move = (i, d) => {
-    const j = i + d
-    if (j < 1 || j > rows.length - 2) return
-    const next = rows.slice()
-    ;[next[i], next[j]] = [next[j], next[i]]
-    setRows(next)
-  }
+  // drag a status by its ⋮⋮ (Alex, 10 Oct: no more arrows); the first and the last stay where they are
+  const sort = useDragSort((from, to) => setRows((list) => moveItem(list, from, Math.min(Math.max(to, 1), list.length - 2))))
   const add = () => setRows([...rows.slice(0, -1), { id: uid(), label: '' }, rows[rows.length - 1]])
   const remove = (i) => setRows(rows.filter((_, j) => j !== i))
   const save = () => {
@@ -65,13 +61,12 @@ export function StatusesModal({ onClose }) {
         {rows.map((r, i) => {
           const fixed = i === 0 || i === rows.length - 1
           return (
-            <div key={r.id} className="status-edit-row">
+            <div key={r.id} {...sort.row('st', i)} className={`status-edit-row ${fixed ? '' : sort.cls('st', i)}`}>
               <input type="color" className="status-color" value={statusColor(r)} onChange={(e) => setColor(i, e.target.value)} aria-label="Colour" title="Colour" />
               <Input value={r.label} onChange={(e) => setLabel(i, e.target.value)} placeholder={fixed ? (i === 0 ? 'To do' : 'Done') : 'Waiting for client'} autoFocus={!r.label && !fixed} />
               {fixed ? <span className="small muted status-edit-note">{i === 0 ? 'start' : 'done'}</span> : (
                 <span className="row-actions">
-                  <button type="button" className="link" onClick={() => move(i, -1)} disabled={i <= 1} aria-label="Move up">↑</button>
-                  <button type="button" className="link" onClick={() => move(i, 1)} disabled={i >= rows.length - 2} aria-label="Move down">↓</button>
+                  <Grip {...sort.grip('st', i)} />
                   <button type="button" className="link danger" onClick={() => remove(i)} aria-label="Remove">×</button>
                 </span>
               )}

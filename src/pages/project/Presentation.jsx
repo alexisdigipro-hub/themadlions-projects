@@ -10,6 +10,7 @@ import { deckUrl } from '../../lib/shares.js'
 import { mailLink, shortenWithBitly, waShareLink } from '../../lib/share.js'
 import { HAS_TEXT, LAYOUTS, PHOTO_SLOTS, THEMES, W, deckPdfBlob, drawSlide, loadDeckAssets, loadDeckFonts, loadSlidePhotos, newSlide, starterSlides } from '../../lib/deck.js'
 import { publishDeck, saveBlob } from '../../lib/deckShare.js'
+import { Grip, moveItem, useDragSort } from '../../components/DragSort.jsx'
 
 const layoutName = (l) => LAYOUTS.find(([k]) => k === l)?.[1] || l
 
@@ -71,12 +72,8 @@ export default function Presentation() {
     p.deck.slides = fn([...(p.deck.slides || [])])
   })
   const patch = (id, change) => setSlides((list) => list.map((s) => (s.id === id ? { ...s, ...change } : s)))
-  const move = (i, d) => setSlides((list) => {
-    const j = i + d
-    if (j < 0 || j >= list.length) return list
-    ;[list[i], list[j]] = [list[j], list[i]]
-    return list
-  })
+  // drag a slide by its ⋮⋮ to reorder the deck (Alex, 10 Oct: no more arrows)
+  const sort = useDragSort((from, to) => setSlides((list) => moveItem(list, from, to)))
   const remove = (s) => {
     // a copied project's pCloud pictures belong to the original: those stay
     ;(s.photos || []).filter((ph) => !ph.fileid || ph.scope?.id === project.id).forEach((ph) => deletePhoto(ph).catch(() => {}))
@@ -178,13 +175,12 @@ export default function Presentation() {
       </Modal>
 
       {slides.map((s, i) => (
-        <section key={s.id} className="panel deck-slide">
+        <section key={s.id} {...sort.row('slides', i)} className={`panel deck-slide ${sort.cls('slides', i)}`}>
           <div className="deck-slide-head">
             <strong>{i + 1}. {layoutName(s.layout)}</strong>
             {editable && (
               <span className="row-actions">
-                <button onClick={() => move(i, -1)} disabled={i === 0} title="Move up">↑</button>
-                <button onClick={() => move(i, 1)} disabled={i === slides.length - 1} title="Move down">↓</button>
+                <Grip {...sort.grip('slides', i)} />
                 <Confirm onConfirm={() => remove(s)} label="Delete slide">×</Confirm>
               </span>
             )}

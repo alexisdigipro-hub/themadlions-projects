@@ -9,6 +9,7 @@ import RunOfShow from './RunOfShow.jsx'
 import CallSheets from './CallSheets.jsx'
 import { emptyShootDay } from '../../lib/shootDays.js'
 import NewCallSheet from '../../components/NewCallSheet.jsx'
+import { Grip, moveItem, useDragSort } from '../../components/DragSort.jsx'
 
 const emptyDay = emptyShootDay
 
@@ -131,14 +132,11 @@ function StripboardSchedule({ onNewCallSheet = null }) {
       if (s) s.dayId = ''
     })
   }
-  const move = (dayId, idx, dir) => {
-    edit((p) => {
-      const d = p.shootingDays.find((x) => x.id === dayId)
-      const j = idx + dir
-      if (!d || j < 0 || j >= d.sceneIds.length) return
-      ;[d.sceneIds[idx], d.sceneIds[j]] = [d.sceneIds[j], d.sceneIds[idx]]
-    })
-  }
+  // drag a scene strip by its ⋮⋮ to reorder a shoot day (Alex, 10 Oct: no more arrows); each day is its own list
+  const sort = useDragSort((from, to, dayId) => edit((p) => {
+    const d = p.shootingDays.find((x) => x.id === dayId)
+    if (d) d.sceneIds = moveItem(d.sceneIds, from, to)
+  }))
 
   const dayEighths = (d) => d.sceneIds.reduce((a, id) => a + (sceneById[id]?.eighths || 0), 0)
   const dayCast = (d) => [...new Set(d.sceneIds.flatMap((id) => sceneById[id]?.characters || []))]
@@ -284,7 +282,7 @@ function StripboardSchedule({ onNewCallSheet = null }) {
                     const s = sceneById[id]
                     if (!s) return null
                     return (
-                      <div key={id} className={`strip ${stripColor(s)} static`}>
+                      <div key={id} {...sort.row(d.id, i)} className={`strip ${stripColor(s)} static ${sort.cls(d.id, i)}`}>
                         <span className="strip-num">{s.number}</span>
                         <span className="strip-ie">
                           {s.intExt}
@@ -298,8 +296,7 @@ function StripboardSchedule({ onNewCallSheet = null }) {
                         <span className="strip-pages">{formatPages(s.eighths)}</span>
                         {editable && (
                           <span className="strip-ctl">
-                            <button onClick={() => move(d.id, i, -1)} aria-label="Move up">↑</button>
-                            <button onClick={() => move(d.id, i, 1)} aria-label="Move down">↓</button>
+                            <Grip {...sort.grip(d.id, i)} />
                             <button onClick={() => unassign(id)} aria-label="Remove from day">×</button>
                           </span>
                         )}
