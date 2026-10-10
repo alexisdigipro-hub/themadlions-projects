@@ -80,6 +80,19 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
                 {d.sheet.hospital && <div><span className="pub-label">Nearest hospital</span><div>{d.sheet.hospital}</div></div>}
               </div>
             )}
+            {d.extraLocs?.length > 0 && (
+              <div className="pub-extra">
+                <span className="pub-label">Extra Locations</span>
+                <ul>
+                  {d.extraLocs.map((x, i) => (
+                    <li key={i}>
+                      <div className="grow"><strong>{x.name}</strong>{x.name && x.address ? ' · ' : ''}{x.address}</div>
+                      {x.address && <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(x.address)}`} target="_blank" rel="noreferrer">Directions</a>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </section>
         )
       case 'cast':
