@@ -9,9 +9,8 @@ import LinkName from '../../components/LinkName.jsx'
 import { nameParts } from '../../lib/projectName.js'
 import { mailLink, shortenWithBitly, waShareLink } from '../../lib/share.js'
 import ShotListDesigner from '../../components/ShotListDesigner.jsx'
-import ShotDay from '../../components/ShotDay.jsx'
 import { ZOOM } from '../../lib/callsheetLayout.js'
-import { accentOf, cellText, colTitle, dayPlan, optionsWith, shotLayoutOf, timeline, toHHMM } from '../../lib/shotLayout.js'
+import { accentOf, cellText, colTitle, optionsWith, shotLayoutOf } from '../../lib/shotLayout.js'
 import { Grip, moveItem, useDragSort } from '../../components/DragSort.jsx'
 
 const STATUS = ['planned', 'shot', 'skipped']
@@ -67,11 +66,11 @@ export default function Shots() {
   const layout = shotLayoutOf(project, state)
   const [designing, setDesigning] = useState(false)
   const [share, setShare] = useState(null) // { busy } | { url, what } | { error }
-  const [dayId, setDayId] = useState('')
   const shots = project.shots || []
   const [sceneId, setSceneId] = useState(project.scenes[0]?.id || '')
   const [draft, setDraft] = useState(null)
-  const [view, setView] = useState('list') // list | board | day
+  // the Shoot day view was taken out (Alex, 10 Oct: the shot list is just a tool, no dates or days)
+  const [view, setView] = useState('list') // list | board
   const [quick, setQuick] = useState('')
   const scene = project.scenes.find((s) => s.id === sceneId) || project.scenes[0]
 
@@ -209,32 +208,16 @@ export default function Shots() {
         columns: cols.filter((c) => c.key !== 'frame').map((c) => ({ key: c.key, title: colTitle(c) })),
         look: { theme: layout.look.linkTheme, size: layout.look.linkSize, accent },
       }
-      let data, ref
-      if (what === 'day') {
-        const days = [...project.shootingDays].sort((a, b) => a.date.localeCompare(b.date))
-        const day = days.find((d) => d.id === dayId) || days[0]
-        const tl = timeline(dayPlan(day, shots, project.scenes), day.callSheet?.shootingCall || day.callTime, layout)
-        data = {
-          ...base,
-          mode: 'day',
-          day: { index: days.indexOf(day) + 1, count: days.length, date: day.date, callTime: day.callTime, wrap: toHHMM(tl.end) },
-          rows: tl.rows.map((r) => (r.shot
-            ? { start: toHHMM(r.start), end: toHHMM(r.end), scene: r.scene?.number || '', ...linkShot(r.shot, cols) }
-            : { start: toHHMM(r.start), end: toHHMM(r.end), label: r.label, min: r.len })),
-        }
-        ref = `shotlist:${project.id}:${day.id}`
-      } else {
-        data = {
-          ...base,
-          mode: 'list',
-          scenes: project.scenes.filter((sc) => countBy[sc.id]).map((sc) => ({
-            number: sc.number,
-            heading: sc.source === 'manual' ? sc.location || sc.heading : sc.heading,
-            shots: shots.filter((x) => x.sceneId === sc.id).map((x) => linkShot(x, cols)),
-          })),
-        }
-        ref = `shotlist:${project.id}`
+      const data = {
+        ...base,
+        mode: 'list',
+        scenes: project.scenes.filter((sc) => countBy[sc.id]).map((sc) => ({
+          number: sc.number,
+          heading: sc.source === 'manual' ? sc.location || sc.heading : sc.heading,
+          shots: shots.filter((x) => x.sceneId === sc.id).map((x) => linkShot(x, cols)),
+        })),
       }
+      const ref = `shotlist:${project.id}`
       const url = await publishShare({ workspaceId: state.workspace.id, kind: 'shotlist', ref, data, userId: user?.id })
       setShare({ url: shotlistUrl(tokenOf(url)), what, ref })
     } catch (e) {
@@ -260,10 +243,9 @@ export default function Shots() {
           <div className="segmented small">
             <button className={view === 'list' ? 'on' : ''} onClick={() => setView('list')}>List</button>
             <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}>Storyboard</button>
-            <button className={view === 'day' ? 'on' : ''} onClick={() => setView('day')}>Shoot day</button>
           </div>
           {editable && <Button variant={designing ? 'primary' : 'default'} onClick={() => setDesigning(!designing)}>{designing ? 'Done' : 'Customise'}</Button>}
-          {canShare && shots.length > 0 && <Button onClick={() => makeShare(view === 'day' ? 'day' : 'list')}>Share link</Button>}
+          {canShare && shots.length > 0 && <Button onClick={() => makeShare('list')}>Share link</Button>}
           {shots.length > 0 && (
             <Button variant="ghost" onClick={exportCSV}>Export CSV</Button>
           )}
@@ -283,15 +265,13 @@ export default function Shots() {
         <ShotListDesigner layout={layout} setLayout={setLayout} hasOwn={!!project.shotLayout} isAdmin={user?.role === 'admin'} onMakeDefault={makeDefault} onReset={resetLayout} />
       )}
 
-      <Modal open={!!share} title={share?.what === 'day' ? 'Share the shoot day' : 'Share the shot list'} onClose={() => setShare(null)}>
+      <Modal open={!!share} title="Share the shot list" onClose={() => setShare(null)}>
         {share?.busy && <p className="muted">Preparing the link…</p>}
         {share?.error && <p className="error">{share.error}</p>}
         {share?.url && (
           <div className="stack">
             <p className="small muted">
-              {share.what === 'day'
-                ? 'The day in shooting order with planned times, as it stands now. Anyone with the link sees it on their phone, no login.'
-                : 'Every scene with its shots, in the columns you switched on for the link. Anyone with the link sees it on their phone, no login.'}
+              Every scene with its shots, in the columns you switched on for the link. Anyone with the link sees it on their phone, no login.
               {' '}Sharing again after changes refreshes the same link.
             </p>
             <div className="share-link"><input className="input" readOnly value={share.url} onFocus={(e) => e.target.select()} /><Button variant="ghost" onClick={() => copy(share.url)}>Copy</Button></div>
@@ -311,9 +291,6 @@ export default function Shots() {
         )}
       </Modal>
 
-      {view === 'day' ? (
-        <ShotDay project={project} shots={shots} layout={layout} edit={edit} editable={editable} dayId={dayId} setDayId={setDayId} onOpenShot={(s) => setDraft({ ...s })} />
-      ) : (
       <div className="shots-layout">
         <ul className="scene-rail no-print">
           {project.scenes.map((s) => (
@@ -443,10 +420,8 @@ export default function Shots() {
         </div>
       </div>
 
-      )}
-
       {/* print: every scene with its shots, in the columns switched on for paper */}
-      {view !== 'day' && (
+      {(
         <div className={`print-only shots-print${accent ? ' sl-accented' : ''}`} style={{ ...(accent ? { '--sl-accent': accent } : {}), ...(ZOOM[layout.look.printSize] !== 1 ? { zoom: ZOOM[layout.look.printSize] } : {}) }}>
           <h1>{project.title} · Shot list</h1>
           {project.scenes.filter((sc) => countBy[sc.id]).map((sc) => (

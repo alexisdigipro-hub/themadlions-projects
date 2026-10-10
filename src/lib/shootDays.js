@@ -14,3 +14,16 @@ export const nextDayDate = (project) => {
   const days = (project?.shootingDays || []).map((x) => x.date).filter(Boolean).sort()
   return days.length ? addDays(days[days.length - 1], 1) : project?.startDate || today()
 }
+
+/* The dates a project's ordino is for (Alex, 10 Oct: "no shoot day to add, the date is a given"): the
+   shoot days this project has in the Calendar, a range counted day by day; with none there and no
+   ordino yet, the project's start date. Ordino & Program makes the day behind each date by itself. */
+export const ordinoDates = (project, events = []) => {
+  const out = new Set()
+  events.filter((e) => e.projectId === project?.id && e.type === 'shoot' && e.date).forEach((e) => {
+    const last = e.endDate && e.endDate > e.date ? e.endDate : e.date
+    for (let d = e.date, i = 0; d <= last && i < 62; d = addDays(d, 1), i += 1) out.add(d)
+  })
+  if (!out.size && !(project?.shootingDays || []).length && project?.startDate) out.add(project.startDate)
+  return [...out].sort()
+}

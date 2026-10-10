@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Empty, useToast } from '../../components/ui.jsx'
+import { Button, Empty, useIsMobile, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { useStore } from '../../lib/store.jsx'
 import { formatPages } from '../../lib/breakdown.js'
@@ -28,6 +28,9 @@ function addMinutes(hhmm, mins) {
 
 /* `openDay` (a shoot day id) brings that day's sheet up ready to edit: New call sheet sets it
    after making the day. `onNew` puts the New call sheet button at the end of the day tabs. */
+// each ordino is named by its date (Alex, 10 Oct), Day 1 / Day 2 only when a date is missing
+const dayLabel = (d, i) => (d.date ? new Date(d.date + 'T00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : `Day ${i + 1}`)
+
 export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
   const { project, edit, canEdit } = useProject()
   const { state, update } = useStore()
@@ -39,8 +42,11 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
   const [share, setShare] = useState(null) // { url } | { busy } | { error }
   const [designing, setDesigning] = useState(false)
   // The phone next to the sheet showing the link as it will look; remembered on this device.
-  const [preview, setPreviewState] = useState(() => { try { return localStorage.getItem('tml_cs_preview') === '1' } catch { return false } })
-  const setPreview = (v) => { setPreviewState(v); try { localStorage.setItem('tml_cs_preview', v ? '1' : '0') } catch { /* private window */ } }
+  // Ordino & Program (Alex, 10 Oct): the template on the left and the link as it looks on a phone beside
+  // it, always, on a computer; on a phone the template, with Preview to see the link full screen
+  const mobile = useIsMobile()
+  const [mPreview, setMPreview] = useState(false)
+  const preview = !mobile || mPreview
   const user = useCurrentUser()
   const csd = callsheetDefaults(state)
   const canShare = true
@@ -48,14 +54,12 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
   const day = days.find((d) => d.id === sel) || days[0]
   const editable = canEdit('callsheets')
   // The sheet opens the way the crew will see it; Edit switches the fields on. Remembered per device.
-  const [editMode, setEditModeState] = useState(() => { try { return localStorage.getItem('tml_cs_edit') === '1' } catch { return false } })
-  const setEditMode = (v) => { setEditModeState(v); try { localStorage.setItem('tml_cs_edit', v ? '1' : '0') } catch { /* private window */ } }
-  const editing = editable && editMode
+  // the ordino is a template, always open for whoever may edit it
+  const editing = editable
   useEffect(() => {
     if (!openDay) return
     setSel(openDay)
     setMode('sheet')
-    if (editable) setEditMode(true)
   }, [openDay]) // eslint-disable-line react-hooks/exhaustive-deps
   // Printed on every call sheet and carried into the shared link. Both live in Settings.
   const emergency = (state.settings.emergency || []).filter((n) => n && n.number)
@@ -522,7 +526,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
         {days.length > 1 && (
           <div className="toolbar no-print">
             <div className="segmented">
-              {days.map((d, i) => <button key={d.id} className={d.id === day.id ? 'on' : ''} onClick={() => setSel(d.id)}>Day {i + 1}</button>)}
+              {days.map((d, i) => <button key={d.id} className={d.id === day.id ? 'on' : ''} onClick={() => setSel(d.id)}>{dayLabel(d, i)}</button>)}
             </div>
           </div>
         )}
@@ -541,24 +545,15 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
           <div className="segmented">
             {days.map((d, i) => (
               <button key={d.id} className={d.id === day.id ? 'on' : ''} onClick={() => setSel(d.id)}>
-                Day {i + 1}
+                {dayLabel(d, i)}
               </button>
             ))}
           </div>
-          {editable && onNew && <Button variant="ghost" onClick={onNew}>+ New call sheet</Button>}
         </div>
         <div className="toolbar-actions">
-          {project.category !== 'Event' && (
-            <div className="segmented small">
-              <button className={mode === 'sheet' ? 'on' : ''} onClick={() => setMode('sheet')}>Call sheet</button>
-              <button className={mode === 'sides' ? 'on' : ''} onClick={() => setMode('sides')}>Sides</button>
-            </div>
-          )}
-          {editable && mode === 'sheet' && <Button className={editMode ? 'on' : ''} onClick={() => setEditMode(!editMode)}>{editMode ? 'Done editing' : 'Edit'}</Button>}
-          {editable && mode === 'sheet' && <Button className={designing ? 'on' : ''} onClick={() => setDesigning(!designing)}>{designing ? 'Close Customise' : 'Customise'}</Button>}
-          {mode === 'sheet' && <Button className={preview ? 'on' : ''} onClick={() => setPreview(!preview)}>{preview ? 'Hide preview' : 'Preview'}</Button>}
+          {editable && <Button className={designing ? 'on' : ''} onClick={() => setDesigning(!designing)}>{designing ? 'Close Customise' : 'Customise'}</Button>}
+          {mobile && <Button className={mPreview ? 'on' : ''} onClick={() => setMPreview(!mPreview)}>{mPreview ? 'Back to the ordino' : 'Preview'}</Button>}
           <Button onClick={() => setSend(true)}>Send message</Button>
-          <Button onClick={() => window.print()}>Print / PDF</Button>
           {canShare && <Button variant="primary" onClick={makeShare}>Share link</Button>}
         </div>
       </div>
@@ -664,7 +659,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       <div className={preview && mode === 'sheet' ? 'cs-with-preview' : undefined}>
       {preview && mode === 'sheet' && (
         <aside className="cs-preview no-print">
-          <div className="cs-preview-head"><strong>The link on a phone</strong><span className="muted small">Live: changes show here at once. Press Share link to send them.</span></div>
+          <div className="cs-preview-head"><strong>On the phone</strong><span className="muted small">What the crew see. Changes show here at once; Share link sends it.</span></div>
           <div className={`cs-phone pv-${layout.look.linkTheme || 'light'}`}>
             <CallSheetLinkView data={linkData()} />
           </div>
@@ -673,7 +668,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       <article
         className={`sheet cs${layout.look.header === 'centred' ? ' cs-centred' : ''}${accent ? ' cs-accented' : ''}`}
         style={{ ...(accent ? { '--cs-accent': accent } : {}), ...(ZOOM[layout.look.size] !== 1 ? { zoom: ZOOM[layout.look.size] } : {}) }}
-        hidden={mode !== 'sheet'}
+        hidden={mode !== 'sheet' || (mobile && mPreview)}
       >
         <header className="cs-head">
           <div className="cs-company">

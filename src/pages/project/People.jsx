@@ -8,7 +8,6 @@ import { contactToLibrary, matchText, sharedContact } from '../../lib/library.js
 import { waLink } from '../../lib/share.js'
 import Locations from './Locations.jsx'
 import Gear from './Gear.jsx'
-import Releases from './Releases.jsx'
 
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 
@@ -55,7 +54,7 @@ export default function People() {
   // because the form that button opens belongs to them, not to this page.
   const crew = project.contacts.filter((c) => c.kind === 'crew')
   const cast = project.contacts.filter((c) => c.kind === 'cast')
-  const [start, setStart] = useState({ location: 0, gear: 0, release: 0, locationLib: 0 })
+  const [start, setStart] = useState({ location: 0, gear: 0, locationLib: 0 })
   // Crew and Cast share this page's own form, so those two open it directly; Locations and Gear
   // get a nudge instead.
   const begin = (k) => (k === 'crew' || k === 'cast' ? startDraft(k)
@@ -71,8 +70,7 @@ export default function People() {
     can(user, 'locations') && canEdit('locations') && !project.locations.length && ['location', 'Add location'],
     can(user, 'locations') && canEdit('locations') && !project.locations.length && (library?.locations || []).length > 0 && ['locationLib', 'Location from library'],
     can(user, 'gear') && canEdit('gear') && !(project.gear || []).length && ['gear', 'Add item'],
-    // the Releases card shows itself once there is a release, or cast / a location still without one
-    ((can(user, 'contacts') && canEdit('contacts')) || (can(user, 'locations') && canEdit('locations'))) && !(project.releases || []).length && !cast.length && !project.locations.length && ['release', 'New release'],
+    // release forms were taken out (Alex, 10 Oct: "I don't need them at all")
   ].filter(Boolean)
 
   const save = () => {
@@ -255,7 +253,6 @@ export default function People() {
       {can(user, 'locations') && (project.locations.length > 0
         ? <section className="panel db-card"><Locations hideEmpty startSignal={start.location} librarySignal={start.locationLib} /></section>
         : <Locations hideEmpty startSignal={start.location} librarySignal={start.locationLib} />)}
-      <Releases startSignal={start.release} />
       {can(user, 'gear') && ((project.gear || []).length > 0
         ? <section className="panel db-card"><Gear hideEmpty startSignal={start.gear} /></section>
         : <Gear hideEmpty startSignal={start.gear} />)}
