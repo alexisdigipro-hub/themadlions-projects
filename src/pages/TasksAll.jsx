@@ -72,11 +72,19 @@ function IconPick({ kind, tint, unset, title, text, value, onChange, editable, c
    it stays open; a tap elsewhere or a slide back closes it; one open at a time. The ⋮⋮ handle, the
    subtasks and any field keep their own touches, and a slide is never taken for a tap. */
 const TRAY_W = 236
-function TaskSwipe({ id, openId, setOpenId, tray, className, children, ...rest }) {
+// Holding a task still for a moment lifts it (a small pop) and from then on it follows the finger up
+// and down to a new place (Alex, 10 Oct), instead of the small ⋮⋮ handle on a phone.
+const LIFT_MS = 380
+function TaskSwipe({ id, openId, setOpenId, tray, className, children, canLift, onLift, onLiftMove, onLiftEnd, ...rest }) {
   const [dx, setDx] = useState(0)
   const [sliding, setSliding] = useState(false)
+  const [lifted, setLifted] = useState(false)
   const t = useRef(null)
   const slid = useRef(false)
+  const press = useRef(null)
+  const liftedRef = useRef(false)
+  const cancelPress = () => { if (press.current) { clearTimeout(press.current); press.current = null } }
+  useEffect(() => cancelPress, [])
   const open = openId === id
   useEffect(() => { if (!open && !sliding) setDx(0) }, [open, sliding])
   const start = (e) => {
@@ -84,13 +92,27 @@ function TaskSwipe({ id, openId, setOpenId, tray, className, children, ...rest }
     if (e.target.closest('.rem-grip, .rem-subs, .rem-swipe-tray, input, select, textarea')) { t.current = null; return }
     const p = e.touches[0]
     t.current = { x: p.clientX, y: p.clientY, base: open ? -TRAY_W : 0, dir: '' }
+    cancelPress()
+    if (canLift && !open && !openId) {
+      press.current = setTimeout(() => {
+        press.current = null
+        liftedRef.current = true
+        slid.current = true
+        t.current = null
+        setLifted(true)
+        try { navigator.vibrate?.(12) } catch {}
+        onLift()
+      }, LIFT_MS)
+    }
   }
   const move = (e) => {
+    if (liftedRef.current) { const q = e.touches[0]; onLiftMove(q.clientX, q.clientY, e.currentTarget); return }
     const s = t.current
     if (!s) return
     const p = e.touches[0]
     const mx = p.clientX - s.x
     const my = p.clientY - s.y
+    if (Math.abs(mx) > 8 || Math.abs(my) > 8) cancelPress()
     if (!s.dir) {
       if (Math.abs(mx) < 8 && Math.abs(my) < 8) return
       s.dir = Math.abs(mx) > Math.abs(my) ? 'x' : 'y'
@@ -99,6 +121,8 @@ function TaskSwipe({ id, openId, setOpenId, tray, className, children, ...rest }
     if (s.dir === 'x') setDx(Math.max(-TRAY_W - 30, Math.min(0, s.base + mx)))
   }
   const end = () => {
+    cancelPress()
+    if (liftedRef.current) { liftedRef.current = false; setLifted(false); onLiftEnd(); return }
     const s = t.current
     t.current = null
     if (!s || s.dir !== 'x') return
@@ -117,7 +141,7 @@ function TaskSwipe({ id, openId, setOpenId, tray, className, children, ...rest }
     }
   }
   return (
-    <li {...rest} className={`${className} rem-swipe${sliding ? ' sliding' : ''}${open ? ' open' : ''}`} onTouchStart={start} onTouchMove={move} onTouchEnd={end} onTouchCancel={end} onClickCapture={clickCapture}>
+    <li {...rest} className={`${className} rem-swipe${sliding ? ' sliding' : ''}${open ? ' open' : ''}${lifted ? ' lifted' : ''}`} onTouchStart={start} onTouchMove={move} onTouchEnd={end} onTouchCancel={end} onClickCapture={clickCapture}>
       <div className="rem-swipe-tray" style={{ width: Math.max(0, -dx) }} aria-hidden={!open}>{tray}</div>
       <div className="rem-swipe-row" style={{ transform: dx ? `translateX(${dx}px)` : undefined }}>{children}</div>
     </li>
@@ -432,22 +456,24 @@ export default function TasksAll() {
     try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
     setDrag({ id: t.id, ids, over: null, after: false })
   }
-  const moveDrag = (e) => {
+  const dragTo = (x, y, from) => {
     if (!drag) return
-    const hit = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-task-id]')
+    const hit = document.elementFromPoint(x, y)?.closest('[data-task-id]')
     const id = hit?.getAttribute('data-task-id')
-    // near the top or the foot of the list, it scrolls along
-    const box = e.currentTarget.closest('.rem-scroll')
-    if (box) {
-      const r = box.getBoundingClientRect()
-      if (e.clientY < r.top + 48) box.scrollTop -= 12
-      else if (e.clientY > r.bottom - 48) box.scrollTop += 12
+    // near the top or the foot of the list, it scrolls along (on a phone the page itself scrolls)
+    const box = from?.closest('.rem-scroll')
+    const scroller = box && box.scrollHeight > box.clientHeight ? box : document.querySelector('.shell > .content')
+    if (scroller) {
+      const r = scroller.getBoundingClientRect()
+      if (y < r.top + 56) scroller.scrollTop -= 12
+      else if (y > r.bottom - 56) scroller.scrollTop += 12
     }
     if (!id || !drag.ids.includes(id)) return
     const r = hit.getBoundingClientRect()
-    const after = e.clientY > r.top + r.height / 2
+    const after = y > r.top + r.height / 2
     if (id !== drag.over || after !== drag.after) setDrag({ ...drag, over: id, after })
   }
+  const moveDrag = (e) => dragTo(e.clientX, e.clientY, e.currentTarget)
   const endDrag = () => {
     const d = drag
     setDrag(null)
@@ -486,7 +512,7 @@ export default function TasksAll() {
     const liClass = `rem-task ${t.status === 'done' ? 'done' : ''}${t.deletedAt ? ' binned' : ''}${drag?.id === t.id ? ' dragging' : ''}${drag?.over === t.id && drag.id !== t.id ? (drag.after ? ' drop-after' : ' drop-before') : ''}`
     const inside = (
       <>
-        {canDrag && <span className="rem-grip" role="button" aria-label="Drag to reorder" title="Drag to reorder" onPointerDown={(e) => startDrag(e, t, group.map((x) => x.id))} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={() => setDrag(null)}>⋮⋮</span>}
+        {canDrag && !mobile && <span className="rem-grip" role="button" aria-label="Drag to reorder" title="Drag to reorder" onPointerDown={(e) => startDrag(e, t, group.map((x) => x.id))} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={() => setDrag(null)}>⋮⋮</span>}
         <button type="button" className="rem-check" aria-label={t.status === 'done' ? 'Mark as not done' : 'Mark as done'} disabled={!editable || !!t.deletedAt} onClick={() => toggle(t)} />
         <div className="rem-task-main" onClick={() => editable && !t.deletedAt && setDraft({ ...t })}>
           <div className="rem-task-title">
@@ -538,7 +564,14 @@ export default function TasksAll() {
       </>
     )
     // on a phone the three buttons sit behind the task, a slide left away (TaskSwipe)
-    if (mobile && pills) return <TaskSwipe key={t.id} id={t.id} data-task-id={t.id} className={liClass} openId={swipeOpen} setOpenId={setSwipeOpen} tray={pills}>{inside}</TaskSwipe>
+    if (mobile && pills) {
+      return (
+        <TaskSwipe key={t.id} id={t.id} data-task-id={t.id} className={liClass} openId={swipeOpen} setOpenId={setSwipeOpen} tray={pills}
+          canLift={canDrag} onLift={() => setDrag({ id: t.id, ids: group.map((x) => x.id), over: null, after: false })} onLiftMove={dragTo} onLiftEnd={endDrag}>
+          {inside}
+        </TaskSwipe>
+      )
+    }
     return (
       <li key={t.id} data-task-id={t.id} className={liClass}>{inside}</li>
     )
