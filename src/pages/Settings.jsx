@@ -199,7 +199,7 @@ export default function Settings() {
         {isAdmin && (
           <section className="panel" data-tab="callsheets">
             <h2>Emergency numbers</h2>
-            <p className="small muted">Printed on every call sheet and on the public link, so nobody has to look them up on set. Tap to dial on a phone.</p>
+            <p className="small muted">Shown on every ordino link, so nobody has to look them up on set. Tap to dial on a phone.</p>
             <RowList
               rows={state.settings.emergency || []}
               onChange={(rows) => setSetting('emergency', rows)}
