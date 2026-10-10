@@ -328,7 +328,7 @@ export default function Dashboard() {
               return (
                 <Link
                   key={u.id}
-                  to={u.id === user?.id ? '/me' : `/u/${u.id}`}
+                  to={u.id === user?.id ? '/settings' : `/u/${u.id}`}
                   className={`team-chip ${off ? 'off' : ''}`}
                   title={`${u.name}${u.profile?.position ? ` · ${u.profile.position}` : ''}${off ? ' · not available' : ''}`}
                 >

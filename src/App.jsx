@@ -120,7 +120,7 @@ export default function App() {
                 <Route path="chat" element={<Chat />} />
                 <Route path="chat/:room" element={<Chat />} />
                 <Route path="mywork" element={<MyWork />} />
-                <Route path="me" element={<Profile mine />} />
+                <Route path="me" element={<Navigate to="/settings" replace />} />
                 <Route path="u/:id" element={<Profile />} />
                 <Route path="drives" element={<Drives />} />
                 <Route path="office" element={<Office />} />

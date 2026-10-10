@@ -5726,3 +5726,32 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
   .rem-app.m-one .rem-main { min-height: 0; }
   .rem-app.m-one .rem-head { padding-top: 10px; }
 }
+
+/* ---------- The app on a phone, tidied (Alex, 10 Oct) ----------
+   No side menu: every page sits in the bar at the foot, which slides sideways when they do not all
+   fit. The top bar carries only the name in its middle, MAD heavier, as TML Chat's head does. */
+@media (max-width: 820px) {
+  .shell > .sidebar, .shell > .scrim { display: none; }
+  .topbar { justify-content: center; min-height: 44px; }
+  .topbar-brand { font-size: 19px; color: var(--text); line-height: 1; }
+  .tabbar { display: flex; gap: 0; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-left: 4px; padding-right: 4px; }
+  .tabbar::-webkit-scrollbar { display: none; }
+  /* five to a screen, the same size as before (Alex, 10 Oct: "as it is, and sliding it shows the rest") */
+  .tabbar { scroll-snap-type: x proximity; }
+  .tabbar a { flex: 1 0 20%; min-width: 0; padding: 4px 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; scroll-snap-align: start; }
+}
+@media (min-width: 821px) {
+  .topbar-brand { display: none; }
+}
+
+/* My profile inside Settings (its first tab) and at the top of TML Chat's Settings */
+.profile-page.embedded { margin-top: 4px; }
+.settings-signout { margin-top: 16px; }
+.chat-me-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px; font: inherit; color: var(--text); text-align: left; background: none; border: 0; cursor: pointer; }
+.chat-me-row .chat-rmain { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.chat-me-row .chat-rmain strong { font-size: 16.5px; }
+.chat-me-row .chat-rprev { font-size: 13.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-me-go { font-size: 20px; color: var(--muted); }
+.chat-me-form { margin-top: 12px; }
+.chat-me-form .profile-grid { grid-template-columns: 1fr; }
+.chat-me { margin-bottom: 8px; }
