@@ -1,6 +1,7 @@
 import { Button, Field, Input, Select, Textarea } from './ui.jsx'
 import { uid } from '../lib/store.jsx'
 import { DETAILS, LABELS, SIZES, newCustomBlock, titleOf } from '../lib/callsheetLayout.js'
+import { Grip, moveItem, useDragSort } from './DragSort.jsx'
 
 /* The Customise panel above a call sheet. Left: how every call sheet of this project looks
    (sections, order, names, what goes on paper and on the link). Right: what is different on
@@ -8,11 +9,8 @@ import { DETAILS, LABELS, SIZES, newCustomBlock, titleOf } from '../lib/callshee
 export default function CallSheetDesigner({ layout, setLayout, sheet, setSheet, day, setDay, loc, hiddenPeople, onShowPerson, hasOwn, isAdmin, onMakeDefault, onReset }) {
   const change = (fn) => setLayout((l) => { fn(l); return l })
   const setBlock = (i, patch) => change((l) => { l.blocks[i] = { ...l.blocks[i], ...patch } })
-  const move = (i, d) => change((l) => {
-    const j = i + d
-    if (j < 0 || j >= l.blocks.length) return
-    ;[l.blocks[i], l.blocks[j]] = [l.blocks[j], l.blocks[i]]
-  })
+  // drag a section by its ⋮⋮ to reorder (Alex, 10 Oct: no more arrows)
+  const sort = useDragSort((from, to) => change((l) => { l.blocks = moveItem(l.blocks, from, to) }))
   const extra = sheet.extra || []
   const setExtra = (list) => setSheet('extra', list)
 
@@ -25,11 +23,8 @@ export default function CallSheetDesigner({ layout, setLayout, sheet, setSheet, 
             <thead><tr><th /><th>Name</th><th>Sheet</th><th>Link</th><th /></tr></thead>
             <tbody>
               {layout.blocks.map((b, i) => (
-                <tr key={b.key}>
-                  <td className="row-actions nowrap">
-                    <button onClick={() => move(i, -1)} disabled={i === 0} title="Move up">↑</button>
-                    <button onClick={() => move(i, 1)} disabled={i === layout.blocks.length - 1} title="Move down">↓</button>
-                  </td>
+                <tr key={b.key} {...sort.row('blocks', i)} className={sort.cls('blocks', i)}>
+                  <td className="row-actions nowrap"><Grip {...sort.grip('blocks', i)} /></td>
                   <td><input className="input sm" value={b.title} placeholder={titleOf(layout, { ...b, title: '' })} onChange={(e) => setBlock(i, { title: e.target.value })} /></td>
                   <td><input type="checkbox" checked={b.sheet} onChange={() => setBlock(i, { sheet: !b.sheet })} aria-label={`${titleOf(layout, b)} on the sheet`} /></td>
                   <td><input type="checkbox" checked={b.link} onChange={() => setBlock(i, { link: !b.link })} aria-label={`${titleOf(layout, b)} on the link`} /></td>

@@ -6,6 +6,7 @@ import { deliveryUrl, estimateUrl, listShares, publishShare, removeShare, reopen
 import { amount, estimateTotals } from '../lib/estimate.js'
 import { fmtDate, toISODate } from '../lib/dates.js'
 import { dirIn, useSlide } from '../lib/glide.js'
+import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
 
 export const STAGES = [
   ['rough', 'Rough cut'],
@@ -555,13 +556,8 @@ function LineEditor({ rows, onChange, cur, discount, vatPct }) {
   const add = () => onChange([...rows, { group: rows[rows.length - 1]?.group || '', what: '', qty: 1, unit: '', price: '' }])
   // Reorder by swapping with a neighbour: same move Home's blocks use, so a line's place on the
   // printed estimate (and which group it visually sits under) is something you can set by hand.
-  const move = (i, dir) => {
-    const j = i + dir
-    if (j < 0 || j >= rows.length) return
-    const next = [...rows]
-    ;[next[i], next[j]] = [next[j], next[i]]
-    onChange(next)
-  }
+  // drag a cost by its ⋮⋮ to reorder (Alex, 10 Oct: no more arrows)
+  const sort = useDragSort((from, to) => onChange(moveItem(rows, from, to)))
   const t = estimateTotals({ lines: rows, discount, vatPct })
   return (
     <div className="field">
@@ -571,7 +567,7 @@ function LineEditor({ rows, onChange, cur, discount, vatPct }) {
           <span>Heading</span><span>What</span><span>Amount</span><span>Advance</span><span />
         </div>
         {rows.map((r, i) => (
-          <div key={i} className="est-edit-row">
+          <div key={i} {...sort.row('costs', i)} className={`est-edit-row ${sort.cls('costs', i)}`}>
             <Input value={r.group || ''} placeholder="Shooting" onChange={(e) => set(i, 'group', e.target.value)} />
             <Input value={r.what || ''} placeholder="Camera crew" onChange={(e) => set(i, 'what', e.target.value)} />
             <Input type="number" min="0" step="0.01" value={r.price ?? ''} placeholder="0" onChange={(e) => set(i, 'price', e.target.value)} />
@@ -580,8 +576,7 @@ function LineEditor({ rows, onChange, cur, discount, vatPct }) {
               <span>Advance</span>
             </label>
             <span className="est-edit-actions">
-              <button className="link small" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move this cost up">↑</button>
-              <button className="link small" onClick={() => move(i, 1)} disabled={i === rows.length - 1} aria-label="Move this cost down">↓</button>
+              <Grip {...sort.grip('costs', i)} />
               <button className="link small" onClick={() => onChange(rows.filter((_, j) => j !== i))}>Remove</button>
             </span>
           </div>

@@ -23,6 +23,7 @@ import { checkOpenAIKey } from '../lib/transcribe.js'
 import { buildICS, download } from '../lib/dates.js'
 import { DEFAULT_THEME, SKINS, SKIN_ICONS, applyThemeChoice, isSkin } from '../lib/skin.js'
 import { ICON_SETS, IconPreview, applyIconSet } from '../components/icons.jsx'
+import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
 
 export default function Settings() {
   const { state, update, replaceState, logout, mode, syncError, localBackup } = useStore()
@@ -698,12 +699,12 @@ function BudgetCategoriesSettings({ state, update, toast }) {
   const [moving, setMoving] = useState(null) // { cat, to, uses }
   const save = (next) => update((s) => { s.settings = { ...s.settings, budgetCategories: next }; return s })
   const taken = (name, except) => all.some((c) => c !== except && c.toLowerCase() === name.toLowerCase())
-  const swap = (arr, i, j) => {
-    if (j < 0 || j >= arr.length) return arr
-    const a = [...arr]
-    const t = a[i]; a[i] = a[j]; a[j] = t
-    return a
-  }
+  // drag a group, or a category inside its group, by its ⋮⋮ (Alex, 10 Oct: no more arrows)
+  const sort = useDragSort((from, to, group) => {
+    if (group === 'groups') return save(moveItem(groups, from, to))
+    const gi = Number(String(group).slice(5))
+    save(groups.map((g, i) => (i === gi ? { ...g, cats: moveItem(g.cats, from, to) } : g)))
+  })
 
   const renameGroup = (gi, name) => {
     const v = name.trim()
@@ -730,7 +731,6 @@ function BudgetCategoriesSettings({ state, update, toast }) {
     toast(n ? `Renamed, and ${n} budget line${n === 1 ? '' : 's'} moved with it` : 'Renamed', 'ok')
   }
   const setFin = (gi, ci, fin) => save(groups.map((g, i) => (i === gi ? { ...g, cats: g.cats.map((c, j) => (j === ci ? { ...c, fin } : c)) } : g)))
-  const moveCat = (gi, ci, dir) => save(groups.map((g, i) => (i === gi ? { ...g, cats: swap(g.cats, ci, ci + dir) } : g)))
   const addCat = (gi) => {
     const v = (newCat[gi] || '').trim()
     if (!v) return
@@ -760,20 +760,18 @@ function BudgetCategoriesSettings({ state, update, toast }) {
   return (
     <div className="bcat">
       {groups.map((g, gi) => (
-        <div className="bcat-group" key={g.name}>
+        <div key={g.name} {...sort.row('groups', gi)} className={`bcat-group ${sort.cls('groups', gi)}`}>
           <div className="bcat-head">
+            <Grip {...sort.grip('groups', gi)} />
             <input className="input bcat-name" defaultValue={g.name} onBlur={(e) => renameGroup(gi, e.target.value)} onKeyDown={(e) => e.key === 'Enter' && e.target.blur()} aria-label="Group name" />
-            <button className="bcat-btn" title="Move up" disabled={gi === 0} onClick={() => save(swap(groups, gi, gi - 1))}>↑</button>
-            <button className="bcat-btn" title="Move down" disabled={gi === groups.length - 1} onClick={() => save(swap(groups, gi, gi + 1))}>↓</button>
             <button className="bcat-btn bcat-x" title={g.cats.length ? 'Empty the group first' : 'Remove group'} disabled={!!g.cats.length} onClick={() => removeGroup(gi)}>×</button>
           </div>
           <ul className="plain bcat-list">
             {g.cats.map((c, ci) => (
-              <li key={c.name} className="bcat-row">
+              <li key={c.name} {...sort.row(`cats-${gi}`, ci)} className={`bcat-row ${sort.cls(`cats-${gi}`, ci)}`}>
+                <Grip {...sort.grip(`cats-${gi}`, ci)} />
                 <input className="input" defaultValue={c.name} onBlur={(e) => { if (e.target.value.trim() !== c.name) { const v = e.target.value; e.target.value = c.name; renameCat(c.name, v) } }} onKeyDown={(e) => e.key === 'Enter' && e.target.blur()} aria-label="Category name" />
                 <Select value={c.fin || 'Other expense'} onChange={(e) => setFin(gi, ci, e.target.value)} options={[...new Set([...expenseCats(state.finance?.settings), ...(c.fin ? [c.fin] : [])])]} aria-label="Finance column" />
-                <button className="bcat-btn" title="Move up" disabled={ci === 0} onClick={() => moveCat(gi, ci, -1)}>↑</button>
-                <button className="bcat-btn" title="Move down" disabled={ci === g.cats.length - 1} onClick={() => moveCat(gi, ci, 1)}>↓</button>
                 <button className="bcat-btn bcat-x" title="Remove" onClick={() => askRemove(c.name)}>×</button>
                 {moving?.cat === c.name && (
                   <div className="bcat-move">
