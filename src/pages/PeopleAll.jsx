@@ -4,12 +4,12 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, useIsMo
 import { can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
-import { DbAdd, DbFilter } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbFilter } from '../components/DbTools.jsx'
 
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 const emptyPerson = (kind) => ({ id: uid(), kind, name: '', phone: '', email: '', dept: kind === 'cast' ? 'Cast' : 'Production', role: '', agent: '', agentPhone: '', notes: '', photos: [], tags: [], createdAt: new Date().toISOString() })
 
-export default function PeopleAll({ kind }) {
+export default function PeopleAll({ kind, slot }) {
   const { state, update } = useStore()
   const DEPTS = ['Cast', ...departmentsOf(state)]
   const user = useCurrentUser()
@@ -78,7 +78,7 @@ export default function PeopleAll({ kind }) {
 
   return (
     <section className="panel db-card">
-      <div className="toolbar">
+      <DbBar slot={slot}>
         <div className="toolbar-info">
           <strong>{kind === 'cast' ? 'Cast' : 'Crew'}</strong> <span className="muted">{list.length}</span>
           {unlinked > 0 && editable && <> · <button className="link" onClick={collect}>collect {unlinked} from projects</button></>}
@@ -92,7 +92,7 @@ export default function PeopleAll({ kind }) {
           <DbFilter value={dept} onChange={(e) => setDept(e.target.value)} options={[['', 'All departments'], ...DEPTS.map((d) => [d, d])]} label="Department" />
           {editable && <DbAdd label={`Add ${kind}`} onClick={() => setDraft(emptyPerson(kind))} />}
         </div>
-      </div>
+      </DbBar>
 
       {!list.length ? (
         <Empty title={people.length ? 'No matches' : 'The database is empty'}>

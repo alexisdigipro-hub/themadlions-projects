@@ -5519,9 +5519,10 @@ html[data-theme='light'] .glass-lens, html[data-skin='coral'] .glass-lens { back
 .rem-group-fold .rem-count { font-weight: 500; letter-spacing: 0; }
 .rem-quick-list { flex: none; max-width: 40%; padding: 6px 10px; font: inherit; font-size: 14px; color: var(--text); background: var(--g-card-2, var(--raised)); border: 1px solid var(--g-edge, var(--line)); border-radius: 999px; cursor: pointer; }
 
-/* The team's room shows the company logo (Settings > Company), whole, on a plain disc, not cropped like a photo */
+/* The team's room shows the company logo (Settings > Company). It used to sit whole and small on a plain
+   disc; it now fills its circle like a person's photo (Alex, 10 Oct: a dark square inside a grey ring) */
 .chat-ravatar.logo { background: var(--raised); }
-.chat-ravatar.logo img { object-fit: contain; padding: 16%; }
+.chat-ravatar.logo img { object-fit: cover; padding: 0; }
 
 /* Tasks: ⋮⋮ on each open task drags it to another place in its group (TasksAll.jsx startDrag). The task
    being moved fades, and a line in the accent shows where it will land. */
@@ -5830,16 +5831,16 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
   html[data-theme] body .db-page .db-tabs .tab-ico { display: none; }
 
   html[data-theme] body .db-page .panel.db-card { padding: 0; margin: 0; background: none; border: 0; border-radius: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .db-page .db-card > .toolbar { margin-bottom: 14px; }
-  .db-page .db-card .toolbar-info, .db-page .db-card .toolbar .segmented, .db-page .db-card .db-collect { display: none; }
-  .db-page .db-card .toolbar-actions { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; width: 100%; }
-  html[data-theme] body .db-page .db-card .toolbar-actions .input.search {
+  .db-page .toolbar { margin-bottom: 14px; }
+  .db-page .toolbar-info, .db-page .toolbar .segmented, .db-page .db-collect { display: none; }
+  .db-page .toolbar-actions { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; width: 100%; }
+  html[data-theme] body .db-page .toolbar-actions .input.search {
     flex: 1 1 auto; min-width: 0; width: auto; height: 44px; padding: 0 16px; font-size: 16px;
     border-radius: 999px; border: 1px solid var(--line-soft);
     background: color-mix(in srgb, var(--panel) 80%, transparent);
     -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
   }
-  html[data-theme] body .db-filter, html[data-theme] body .db-search-btn, html[data-theme] body .db-page .db-card .db-add {
+  html[data-theme] body .db-filter, html[data-theme] body .db-search-btn, html[data-theme] body .db-page .db-add {
     position: relative; flex: none; display: grid; place-items: center; width: 44px; height: 44px; min-height: 0; padding: 0;
     border-radius: 50%; border: 1px solid var(--line-soft); color: var(--text);
     background: color-mix(in srgb, var(--panel) 80%, transparent);
@@ -5851,7 +5852,7 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
   html[data-theme] body .db-filter.set { color: var(--accent); border-color: var(--accent); }
   /* the select lies over the round button, see-through: a tap opens the phone's own list */
   .db-filter .input.select { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; margin: 0; padding: 0; opacity: 0; font-size: 16px; cursor: pointer; }
-  html[data-theme] body .db-page .db-card .db-add { color: var(--accent); }
+  html[data-theme] body .db-page .db-add { color: var(--accent); }
   .db-page .db-add-plus { display: block; font-size: 24px; line-height: 1; font-weight: 400; }
   .db-page .db-add-text { display: none; }
 }
@@ -5904,19 +5905,23 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
    search line no wider than it needs, Cards / List and Collect from projects kept (a big screen has the
    room), hover on the round buttons */
 @media (min-width: 821px) {
-  html[data-theme] body .db-page .db-tabs { display: inline-flex; max-width: 100%; margin: 4px 0 18px; }
+  /* tabs and the tab's search line on one row (Alex, 10 Oct); the row wraps on a narrow window */
+  .db-page .db-top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 4px 0 18px; }
+  html[data-theme] body .db-page .db-top .db-tabs { display: inline-flex; flex: none; max-width: 100%; margin: 0; }
+  .db-page .db-slot { flex: 1 1 420px; min-width: 0; }
+  .db-page .db-slot .toolbar.db-bar { margin: 0; }
   html[data-theme] body .db-page .db-tabs a { flex: 0 0 auto; padding: 9px 18px; }
   /* Cards / List at the far right, a small glass capsule like the tabs; Collect from projects just before it */
-  html[data-theme] body .db-page .db-card .toolbar .segmented {
+  html[data-theme] body .db-page .toolbar .segmented {
     order: 5; margin-left: auto; display: inline-flex; flex: none; gap: 0; height: 44px; box-sizing: border-box; padding: 3px;
     border: 1px solid var(--line-soft); border-radius: 999px; background: color-mix(in srgb, var(--panel) 80%, transparent);
     -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
   }
-  html[data-theme] body .db-page .db-card .toolbar .segmented button { padding: 0 16px; border: 0; border-radius: 999px; background: none; box-shadow: none; font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
-  html[data-theme] body .db-page .db-card .toolbar .segmented button.on { color: var(--text); background: color-mix(in srgb, var(--text) 9%, transparent); }
-  html[data-theme] body .db-page .db-card .db-collect { order: 4; margin-left: auto; display: inline-flex; flex: none; }
-  html[data-theme] body .db-page .db-card .toolbar-actions .input.search { max-width: 520px; }
-  .db-page .db-card .toolbar-actions { justify-content: flex-start; }
-  html[data-theme] body .db-page .db-filter:hover, html[data-theme] body .db-page .db-card .db-add:hover { border-color: var(--muted); }
+  html[data-theme] body .db-page .toolbar .segmented button { padding: 0 16px; border: 0; border-radius: 999px; background: none; box-shadow: none; font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
+  html[data-theme] body .db-page .toolbar .segmented button.on { color: var(--text); background: color-mix(in srgb, var(--text) 9%, transparent); }
+  html[data-theme] body .db-page .db-collect { order: 4; margin-left: auto; display: inline-flex; flex: none; }
+  html[data-theme] body .db-page .toolbar-actions .input.search { max-width: 520px; }
+  .db-page .toolbar-actions { justify-content: flex-start; }
+  html[data-theme] body .db-page .db-filter:hover, html[data-theme] body .db-page .db-add:hover { border-color: var(--muted); }
   .db-page .people-grid.compact { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
 }
