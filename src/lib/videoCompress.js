@@ -5,6 +5,11 @@
   so compressing takes about as long as the clip lasts. MP4 where the browser can record it
   (Safari, recent Chrome), WebM otherwise.
 
+  The frame rate is the clip's own (Alex, 11 Oct: 24 and 25 fps were turned into 30, which judders
+  on pans): the canvas is drawn once for every frame the clip shows (requestVideoFrameCallback) and
+  each drawing is handed to the recording as one frame (requestFrame), so 24 stays 24, 25 stays 25
+  and 60 stays 60. A browser without those two falls back to a steady 30.
+
   Anything that does not work out (a format the browser cannot play, a browser that blocks the
   hidden playback, a result that is not smaller) returns null and the original is sent instead.
 
@@ -102,7 +107,11 @@ export async function compressVideo(h, onProgress) {
     canvas.width = w
     canvas.height = ht
     const g = canvas.getContext('2d')
-    const stream = canvas.captureStream(30)
+    // one recorded frame per frame of the clip where the browser allows it, else a steady 30 fps
+    const perFrame = !!v.requestVideoFrameCallback && typeof CanvasCaptureMediaStreamTrack !== 'undefined' && 'requestFrame' in CanvasCaptureMediaStreamTrack.prototype
+    const stream = canvas.captureStream(perFrame ? 0 : 30)
+    const vtrack = stream.getVideoTracks()[0]
+    const frame = () => { if (perFrame) vtrack.requestFrame() }
     dest.stream.getAudioTracks().forEach((t) => stream.addTrack(t))
     const type = pickType()
     rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: VIDEO_BPS, audioBitsPerSecond: AUDIO_BPS })
@@ -121,11 +130,13 @@ export async function compressVideo(h, onProgress) {
     function draw() {
       if (!drawing) return
       g.drawImage(v, 0, 0, w, ht)
+      frame()
       onProgress?.(Math.min(1, v.currentTime / d))
       schedule()
     }
     const ended = once(v, 'ended', d * 2000 + 30000)
     rec.start(1000)
+    frame() // the first picture, drawn above
     await v.play()
     schedule()
     await ended
