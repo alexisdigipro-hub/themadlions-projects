@@ -135,7 +135,7 @@ export default function Layout() {
     { to: '/notes', label: 'Notes', show: true, icon: 'notes' },
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
-    { to: '/drives', label: 'Drives', show: can(user, 'drives'), icon: 'drives' },
+    // Drives is a tab of the Database now (Alex, 10 Oct)
     // Word and Excel inside the app, each file kept with its project (Alex, 8 Oct)
     { to: '/office', label: 'Office', show: can(user, 'files'), icon: 'office' },
     { to: '/share', label: 'Share', show: mayShare, icon: 'post', badge: newReplies },

@@ -1,6 +1,7 @@
 import { Fragment, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
+import { DbAdd, DbBar, DbFilter } from '../components/DbTools.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 
@@ -26,11 +27,15 @@ export const fullness = (capacity, free) => {
   return Math.min(100, Math.max(0, Math.round(((c - parseSize(free)) / c) * 100)))
 }
 
-export default function Drives() {
+/* Database > Drives (Alex, 10 Oct: the drives archive moved into the Database, before Equipment, for
+   whoever has the Drives permission). It follows the Database: the search line with a round series
+   filter and a round +, short cards (the disk, its size and free space, how many projects, its status
+   and how full it is), and a disk's contents open under its row. Shelf / Contents stays on a computer. */
+export default function Drives({ slot }) {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
-  const isAdmin = user?.role === 'admin'
+  const mobile = useIsMobile()
   if (!can(user, 'drives')) return <Navigate to="/" replace />
   const editable = can(user, 'drives', 'edit')
   const drives = state.library.drives || []
@@ -39,11 +44,13 @@ export default function Drives() {
   const [draft, setDraft] = useState(null)
   const [item, setItem] = useState(null) // { driveId, ...item }
   const [openId, setOpenId] = useState('') // the disk whose contents are open below the shelf
+  const [seriesF, setSeriesF] = useState('') // one series only (LION, SIMBA…), or all
   /* Two ways of looking at the same shelf. Shelf is the disks as objects, one click to see
      inside. Contents lays every disk open at once with its projects under it, for reading down
      the whole archive rather than hunting one disk (Alex). The choice is remembered per device. */
   const [view, setView] = useState(() => { try { return localStorage.getItem('tml_drives_view') || 'shelf' } catch { return 'shelf' } })
   const pickView = (v) => { setView(v); try { localStorage.setItem('tml_drives_view', v) } catch { /* private window */ } }
+  const shownView = mobile ? 'shelf' : view // a phone has no room for Contents
 
   const filtered = useMemo(() => {
     if (!q.trim()) return drives
@@ -52,10 +59,10 @@ export default function Drives() {
   const order = state.settings?.driveSeriesOrder || []
   const groups = useMemo(() => {
     const m = {}
-    for (const d of filtered) (m[seriesOf(d)] = m[seriesOf(d)] || []).push(d)
+    for (const d of filtered) if (!seriesF || seriesOf(d) === seriesF) (m[seriesOf(d)] = m[seriesOf(d)] || []).push(d)
     const rank = (k) => { const i = order.indexOf(k); return i === -1 ? 1000 : i }
     return Object.entries(m).map(([k, v]) => [k, v.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[0].localeCompare(b[0]))
-  }, [filtered, order])
+  }, [filtered, order, seriesF])
   const allSeries = useMemo(() => {
     const set = [...new Set(drives.map(seriesOf))]
     const rank = (k) => { const i = order.indexOf(k); return i === -1 ? 1000 : i }
@@ -84,7 +91,6 @@ export default function Drives() {
   }, [drives, q, projects, searching])
   const diskHits = useMemo(() => (searching ? drives.filter((d) => matchText(q, d.name, d.where, d.notes)) : []), [drives, q, searching])
   const openDisk = (id) => { setQ(''); setOpenId(id) }
-  const totalItems = drives.reduce((a, d) => a + (d.items || []).length, 0)
 
   const saveDrive = () => {
     if (!draft.name.trim()) return toast('Name the disk (LION 13, SIMBA 05…).', 'error')
@@ -161,40 +167,39 @@ export default function Drives() {
     </section>
   )
 
+  // the short Database card: the disk, its size and free space, how many projects and its status, how full
   const card = (d) => {
     const pct = fullness(d.capacity, d.free)
     const n = (d.items || []).length
     return (
-      <button key={d.id} className={`drive st-${d.status || 'inuse'} ${openId === d.id ? 'on' : ''}`} onClick={() => setOpenId(openId === d.id ? '' : d.id)}>
-        <header className="drive-head">
-          <div className="drive-icon" aria-hidden="true"><span /></div>
-          <strong className="grow">{d.name}</strong>
-          <span className={`drive-status ${d.status || 'inuse'}`}>{statusLabel(d.status)}</span>
-        </header>
-        {pct !== null && (
-          <div className="drive-bar" title={`${pct}% full`}><span style={{ width: `${pct}%` }} /></div>
-        )}
-        <div className="drive-meta small muted">{[d.capacity, d.free ? `${d.free} free` : '', d.where].filter(Boolean).join(' · ') || 'No details yet'}</div>
-        <div className="drive-count">{n ? `${n} project${n === 1 ? '' : 's'}` : 'Empty'}</div>
-      </button>
+      <article key={d.id} className={`person loc-card drive-card st-${d.status || 'inuse'} ${openId === d.id ? 'on' : ''}`} onClick={() => setOpenId(openId === d.id ? '' : d.id)} role="button" tabIndex={0}>
+        <div className="person-photo drive-photo" aria-hidden="true"><div className="drive-icon"><span /></div></div>
+        <div className="person-body">
+          <strong>{d.name}</strong>
+          <div className="small muted">{[d.capacity, d.free ? `${d.free} free` : ''].filter(Boolean).join(' · ') || d.where || 'No details yet'}</div>
+          <div className="small muted drive-card-line">{n > 0 && <span>{`${n} project${n === 1 ? '' : 's'}`}</span>}<span className={`drive-status ${d.status || 'inuse'}`}>{statusLabel(d.status)}</span></div>
+          {pct !== null && <div className="drive-bar" title={`${pct}% full`}><span style={{ width: `${pct}%` }} /></div>}
+        </div>
+      </article>
     )
   }
 
   return (
-    <div className="drives wide-page">
-      <PageHead title="Drives archive" sub={`${drives.length} disk${drives.length === 1 ? '' : 's'} · ${totalItems} project${totalItems === 1 ? '' : 's'} archived · ${drives.filter((d) => d.status === 'empty').length} empty`}>
-        {editable && <Button variant="primary" onClick={() => setDraft(emptyDrive())}>Add disk</Button>}
-      </PageHead>
-      <div className="toolbar">
-        <Input className="input search drives-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Which disk has… (project, artist, note)" />
-        {searching && <span className="muted small">{results.length} result{results.length === 1 ? '' : 's'}</span>}
-        {!searching && (
-          <div className="segmented small drives-view">
-            <button className={view === 'shelf' ? 'on' : ''} onClick={() => pickView('shelf')}>Shelf</button>
-            <button className={view === 'contents' ? 'on' : ''} onClick={() => pickView('contents')}>Contents</button>
-          </div>
-        )}
-      </div>
+    <section className="panel db-card drives">
+      <DbBar slot={slot}>
+        <div className="toolbar-info"><strong>Drives</strong> <span className="muted">{drives.length}</span></div>
+        <div className="toolbar-actions">
+          <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Which disk has… (project, artist, note)" />
+          <DbFilter value={seriesF} onChange={(e) => setSeriesF(e.target.value)} options={[['', 'All series'], ...allSeries.map((x) => [x, x])]} label="Series" />
+          {editable && <DbAdd label="Add disk" onClick={() => setDraft(emptyDrive())} />}
+          {!searching && (
+            <span className="segmented small">
+              <button className={view === 'shelf' ? 'on' : ''} onClick={() => pickView('shelf')}>Shelf</button>
+              <button className={view === 'contents' ? 'on' : ''} onClick={() => pickView('contents')}>Contents</button>
+            </span>
+          )}
+        </div>
+      </DbBar>
 
       {!drives.length ? (
         <Empty title="No disks yet" action={editable && <Button variant="primary" onClick={() => setDraft(emptyDrive())}>Add the first disk</Button>}>
@@ -208,6 +213,7 @@ export default function Drives() {
               {diskHits.map((d) => <button key={d.id} className="chip" onClick={() => openDisk(d.id)}>{d.name}</button>)}
             </div>
           )}
+          <p className="muted small drive-found">{results.length} result{results.length === 1 ? '' : 's'}</p>
           {!results.length ? (
             <Empty title="Not on any disk">Nothing matches "{q}". Check the spelling or the project name.</Empty>
           ) : (
@@ -238,7 +244,7 @@ export default function Drives() {
                 </span>
               )}
             </h2>
-            {view === 'contents' ? (
+            {shownView === 'contents' ? (
               <ul className="plain drive-contents">
                 {list.map((d) => (
                   <li key={d.id} className={`drive-contents-disk st-${d.status || 'inuse'}`}>
@@ -256,7 +262,7 @@ export default function Drives() {
                 ))}
               </ul>
             ) : (
-            <div className="drive-grid">
+            <div className="people-grid compact drive-shelf">
               {/* the open disk is itself a grid item spanning every column, so wherever it sits in
                   the list it still lands directly under its own row, not after the whole shelf */}
               {list.map((d) => (
@@ -302,6 +308,6 @@ export default function Drives() {
           </div>
         )}
       </Modal>
-    </div>
+    </section>
   )
 }
