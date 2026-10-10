@@ -16,6 +16,7 @@ import { remote } from '../../lib/supabase.js'
 import Tasks, { tasksFor } from './Tasks.jsx'
 import { Waveform } from './Music.jsx'
 import Notes from './Notes.jsx'
+import CallSheets from './CallSheets.jsx'
 
 const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: '' })
 
@@ -234,6 +235,15 @@ export default function Overview() {
             <Button key={k} variant="ghost" onClick={() => begin(k)}>{label}</Button>
           ))}
         </div>
+      )}
+
+      {/* the finished ordino for everyone on the project (Alex, 10 Oct), as the crew get it on a phone,
+          the size of a phone on a computer too; made in the Ordino tab by whoever may edit it */}
+      {(project.shootingDays || []).length > 0 && (
+        <section className="panel ordino-card">
+          <div className="panel-head"><h2>Ordino</h2></div>
+          <CallSheets linkOnly />
+        </section>
       )}
 
       {can(user, 'tasks') && <Tasks hideEmpty startSignal={start.task} />}
