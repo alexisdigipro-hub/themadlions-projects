@@ -6073,3 +6073,11 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
   .settings-cols > section { margin: 0; }
   .settings-cols > section.team-panel, .settings-cols > section.wide { grid-column: 1 / -1; }
 }
+
+/* Ordino & Program for someone with Call sheets on view (Alex, 10 Oct): the call sheet as its link
+   looks on a phone, centred on a computer; on a phone it is simply the page, without the frame */
+.cs-link-only { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.cs-link-only .toolbar { align-self: stretch; justify-content: center; margin: 0; }
+@media (max-width: 820px) {
+  .cs-link-only .cs-phone { width: 100%; height: auto; border: 0; border-radius: var(--radius-lg); box-shadow: none; overflow: visible; }
+}
