@@ -16,24 +16,30 @@ export const SESSION_KEY = 'tml_session_v1'
 export const CATEGORIES = ['Music Video', 'Event', 'Editing', 'Ad', 'Visuals', 'IV']
 export const STATUSES = ['Development', 'Pre-production', 'Production', 'Post-production', 'Delivered', 'On hold']
 
+/* The permission modules, grouped the way the app is laid out today (Alex, 10 Oct: "we have changed
+   various things"): the project's tabs, the Database (the side page and each project's own Project
+   Database), the Organizer, then the other pages. The keys are what the database checks, so they
+   stay; only the order, the names and the groups follow the app. Notes, Chat, My Finance and Settings
+   are everyone's; Finance and Invoices are administrators only. */
+export const MODULE_GROUPS = ['Project tabs', 'Database', 'Organizer', 'Other pages']
 export const MODULES = [
-  { key: 'projects', label: 'Projects' },
-  { key: 'music', label: 'Music' },
-  { key: 'script', label: 'Script' },
-  { key: 'breakdown', label: 'Breakdown' },
-  { key: 'shots', label: 'Shot list' },
-  { key: 'schedule', label: 'Schedule' },
-  { key: 'callsheets', label: 'Call sheets' },
-  { key: 'tasks', label: 'Tasks' },
-  { key: 'budget', label: 'Budget' },
-  { key: 'gear', label: 'Equipment' },
-  { key: 'post', label: 'Post' },
-  { key: 'calendar', label: 'Calendar' },
-  { key: 'locations', label: 'Locations' },
-  { key: 'contacts', label: 'Cast & crew' },
-  { key: 'files', label: 'Files & notes' },
-  { key: 'drives', label: 'Drives archive' },
-  { key: 'share', label: 'Share' },
+  { key: 'projects', label: 'Projects', group: 'Project tabs', hint: 'Overview, project details, Presentation' },
+  { key: 'budget', label: 'Budget', group: 'Project tabs', hint: 'without it: Add Receipt only' },
+  { key: 'script', label: 'Script', group: 'Project tabs' },
+  { key: 'breakdown', label: 'Breakdown', group: 'Project tabs' },
+  { key: 'music', label: 'Music', group: 'Project tabs', hint: 'the song and its map' },
+  { key: 'shots', label: 'Shot list', group: 'Project tabs' },
+  { key: 'schedule', label: 'Schedule', group: 'Project tabs' },
+  { key: 'callsheets', label: 'Call sheets', group: 'Project tabs' },
+  { key: 'post', label: 'Post', group: 'Project tabs' },
+  { key: 'contacts', label: 'Crew & cast', group: 'Database' },
+  { key: 'locations', label: 'Locations', group: 'Database' },
+  { key: 'gear', label: 'Equipment', group: 'Database' },
+  { key: 'drives', label: 'Drives', group: 'Database' },
+  { key: 'tasks', label: 'Tasks', group: 'Organizer' },
+  { key: 'files', label: 'Office', group: 'Organizer', hint: 'documents and spreadsheets' },
+  { key: 'calendar', label: 'Calendar', group: 'Other pages' },
+  { key: 'share', label: 'Share', group: 'Other pages', hint: 'links to clients' },
 ]
 
 /* Ready-made permission sets, so a new person is one click instead of eighteen dropdowns.

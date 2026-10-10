@@ -1,7 +1,7 @@
 import { Fragment, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Badge, Button, Confirm, Field, Input, Modal, PageHead, Select, useToast } from '../components/ui.jsx'
-import { MODULES, ROLE_PRESETS, accessEnded, defaultPermissions, presetPermissions, rememberViewAsFrom, uid, useCurrentUser, useStore, whenMs } from '../lib/store.jsx'
+import { MODULES, MODULE_GROUPS, ROLE_PRESETS, accessEnded, defaultPermissions, presetPermissions, rememberViewAsFrom, uid, useCurrentUser, useStore, whenMs } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
 import { initialsOf } from './Profile.jsx'
 
@@ -294,19 +294,25 @@ export default function Team({ embedded = false }) {
                 <div className="field">
                   <span className="field-label">What they can do in each module</span>
                   <div className="perm-grid">
-                    {MODULES.map((m) => (
-                      <div key={m.key} className="perm-row">
-                        <span>{m.label}</span>
-                        <div className="segmented small">
-                          {LEVELS.map(([v, l]) => (
-                            <button key={v} type="button" className={(draft.permissions?.[m.key] || 'none') === v ? 'on' : ''} onClick={() => setDraft({ ...draft, permissions: { ...draft.permissions, [m.key]: v } })}>
-                              {l}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                    {MODULE_GROUPS.map((g) => (
+                      <Fragment key={g}>
+                        <div className="perm-group">{g}{g === 'Database' && <small> · the Database page and each project's Project Database</small>}</div>
+                        {MODULES.filter((m) => m.group === g).map((m) => (
+                          <div key={m.key} className="perm-row">
+                            <span>{m.label}{m.hint && <small className="perm-hint">{m.hint}</small>}</span>
+                            <div className="segmented small">
+                              {LEVELS.map(([v, l]) => (
+                                <button key={v} type="button" className={(draft.permissions?.[m.key] || 'none') === v ? 'on' : ''} onClick={() => setDraft({ ...draft, permissions: { ...draft.permissions, [m.key]: v } })}>
+                                  {l}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </Fragment>
                     ))}
                   </div>
+                  <span className="field-hint">Always there for everyone: Notes, Chat, My Finance and Settings. Finance and Invoices: administrators only.</span>
                   <div className="row-actions">
                     <button className="link" onClick={() => setDraft({ ...draft, permissions: { ...defaultPermissions('view'), accessUntil: draft.permissions?.accessUntil || '', databasePage: draft.permissions?.databasePage || '' } })}>
                       All view
