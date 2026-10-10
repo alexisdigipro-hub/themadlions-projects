@@ -42,6 +42,7 @@ function CardName({ p }) {
 export function ProjectForm({ value, onChange }) {
   const set = (k) => (e) => onChange({ ...value, [k]: e.target.value })
   const cover = useCover({ value, projectId: value.id, keepSource: !value.isNew, onChange: (patch) => onChange({ ...value, ...patch }) })
+  const coverFile = useRef(null)
   // a category switch can bring new tabs (Music, Script…); they start hidden, like everything else
   const setCategory = (e) => onChange({ ...value, category: e.target.value, hiddenTabs: hiddenAfterCategory(value, e.target.value) })
   const parts = nameParts(value)
@@ -85,13 +86,26 @@ export function ProjectForm({ value, onChange }) {
       <Field label="Cover image" hint="Key art or a still, cut to a square: drag it into place, scale it, centre it. Adjust changes the cut later.">
         <div className="cover-pick">
           {value.coverThumb && <img src={value.coverThumb} alt="" />}
-          <input type="file" accept="image/*" className="input" onChange={(e) => { cover.pick(e.target.files?.[0]); e.target.value = '' }} />
-          {value.coverThumb && (
-            <span className="cover-links">
-              <button type="button" className="link small" onClick={cover.adjust}>Adjust</button>
-              <button type="button" className="link small" onClick={cover.remove}>Remove</button>
-            </span>
-          )}
+          <input ref={coverFile} type="file" accept="image/*" hidden onChange={(e) => { cover.pick(e.target.files?.[0]); e.target.value = '' }} />
+          {/* proper buttons instead of the phone's "Choose File" and two underlined words (Alex, 11 Oct) */}
+          <div className="cover-btns">
+            <button type="button" className="cover-btn" onClick={() => coverFile.current?.click()}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" /><circle cx="9" cy="10" r="1.8" /><path d="m4 17 5-5 4 4 3-3 4 4" /></svg>
+              {value.coverThumb ? 'Change' : 'Choose image'}
+            </button>
+            {value.coverThumb && (
+              <>
+                <button type="button" className="cover-btn" onClick={cover.adjust}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v4H3M17 21v-4h4M3 7h11a3 3 0 0 1 3 3v11M21 17H10a3 3 0 0 1-3-3V3" /></svg>
+                  Adjust
+                </button>
+                <button type="button" className="cover-btn danger" onClick={cover.remove}>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></svg>
+                  Remove
+                </button>
+              </>
+            )}
+          </div>
         </div>
         {cover.modal}
       </Field>
