@@ -12,6 +12,7 @@ import { pcloudBlob, pcloudOn } from '../lib/pcloud.js'
 import { remote, supabase } from '../lib/supabase.js'
 import { chimeFor, loadChatPrefs, loadMuted, textSizeOf, toggleMuted } from '../lib/chatPrefs.js'
 import ChatSettings from '../components/ChatSettings.jsx'
+import { NotoEmoji, emojiParts } from '../components/NotoEmoji.jsx'
 import Profile from './Profile.jsx'
 import { useCalls } from '../lib/calls.jsx'
 import * as C from '../lib/chat.js'
@@ -1655,7 +1656,9 @@ function ChatRoom({ room, onBack }) {
                       )}
                       {media.length > 0 && <MediaAlbum items={media} meta={mediaOnly ? <>{likesBtn}<span className="chat-time">{timeOf(m.createdAt)}{tick}</span></> : null} />}
                       {files.map((a) => <Attachment key={a.id} a={a} />)}
-                      {m.text && <span className="chat-text">{renderText(m.text)}</span>}
+                      {m.text && (bigEmoji && prefs.animatedEmoji
+                        ? <span className={`chat-text noto-big n${emojiParts(m.text).length}`}>{emojiParts(m.text).map((g, i) => <NotoEmoji key={`${i}${g}`} e={g} />)}</span>
+                        : <span className="chat-text">{renderText(m.text)}</span>)}
                       {m.editedAt && <span className="chat-edited">edited</span>}
                       {/* hearts on a line of their own, the time beside them, as Telegram does */}
                       {!mediaOnly && likesBtn && (
@@ -1747,7 +1750,7 @@ function ChatRoom({ room, onBack }) {
                 {emoji && (
                   <>
                     <span className="chat-room-menu-scrim" onClick={() => setEmoji(false)} />
-                    <span className="chat-emoji-pick">{EMOJIS.map((e) => <button key={e} type="button" onClick={() => addEmoji(e)}>{e}</button>)}</span>
+                    <span className="chat-emoji-pick">{EMOJIS.map((e) => <button key={e} type="button" onClick={() => addEmoji(e)} aria-label={e}>{prefs.animatedEmoji ? <NotoEmoji e={e} animated={false} /> : e}</button>)}</span>
                   </>
                 )}
               </span>

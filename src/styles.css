@@ -4172,6 +4172,13 @@ html .chat2[data-chat-theme='amoled'] .chat-box[data-bubbles] { --wa-wall: #0000
 .chat-box[data-bubbles] .chat-msg .chat-bubble.big-emoji { background: transparent; box-shadow: none; border: 0; padding: 0 2px; min-width: 0; }
 .chat-box[data-bubbles] .chat-msg .chat-bubble.big-emoji::before, .chat-box[data-bubbles] .chat-msg .chat-bubble.big-emoji::after { display: none; }
 .chat-bubble.big-emoji .chat-text { font-size: 46px; line-height: 1.15; }
+/* Animated emoji (Noto, Alex 11 Oct): one emoji the biggest, as Telegram does */
+.noto-emoji { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -0.25em; object-fit: contain; }
+.chat-bubble.big-emoji .noto-big { display: inline-flex; align-items: flex-end; gap: 2px; line-height: 1; }
+.chat-bubble.big-emoji .noto-big .noto-emoji { width: 64px; height: 64px; }
+.chat-bubble.big-emoji .noto-big.n1 .noto-emoji { width: 112px; height: 112px; }
+.chat-bubble.big-emoji .noto-big.n2 .noto-emoji { width: 84px; height: 84px; }
+.chat-emoji-pick button .noto-emoji { width: 26px; height: 26px; vertical-align: middle; }
 .chat-box .chat-bubble.big-emoji .chat-time { float: none; display: inline-block; margin: 0 0 0 6px; padding: 2px 7px; border-radius: 999px; background: rgba(0, 0, 0, .35); color: #fff; opacity: 1; vertical-align: bottom; }
 
 /* ✓ sent, ✓✓ seen, on your own messages; ↩ n replies beside the time */

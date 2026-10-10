@@ -13,6 +13,7 @@ export const CHAT_DEFAULTS = {
   theme: 'accent', // chat colours: 'accent' (the app's accent) | 'blue' | 'sepia' | 'gray' | 'gold' | 'amoled' | 'neo' | 'coral' | 'glass' (Glass dark, TML Chat's own from 9 Oct)
   textSize: null, // 0..4 on the slider; null = from the old size above
   bigEmoji: true, // a message of one to three emoji shows large, without a bubble
+  animatedEmoji: true, // Google's moving Noto emoji for large emoji and in the emoji panel, like Telegram's (11 Oct)
   spell: true, // check spelling while typing
   hdPhotos: false, // send photos at 2560 px instead of 1600 when compressing
   quickReaction: '🎥', // what a double tap puts on a message
