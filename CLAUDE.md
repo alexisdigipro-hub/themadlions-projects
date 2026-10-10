@@ -16,7 +16,7 @@ Alex Konstantinidis, film director, owner of The Mad Lions (Athens). He is not a
 Pushing to `main` deploys to GitHub Pages in about 40 s through .github/workflows/deploy.yml. Live: https://alexisdigipro-hub.github.io/themadlions-projects/
 - The same workflow also runs `npm ci` and `npm run build` on every pull request into `main`, without deploying. A red check on a PR means do not merge it.
 - Local session: commit and push to `main` with Alex's own git login. 
-- Cloud session: push the branch, open a PR, tell Alex to merge it (merge = deploy).
+- Cloud session: push the branch, open a PR, wait for the green build check, then merge it yourself (merge = deploy). Alex asked on 10 Oct for Claude to always do the merge; never ask him to merge.
 - Never ask Alex for a GitHub token, never paste, store or commit credentials of any kind. The Supabase publishable key in src/lib/supabaseConfig.js is public by design; service-role keys never go in the repo.
 
 ## Code rules
