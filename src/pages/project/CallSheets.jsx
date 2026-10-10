@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Empty, Field, Input, Textarea, useIsMobile, useToast } from '../../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Textarea, useIsMobile, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { useStore } from '../../lib/store.jsx'
 import { formatPages } from '../../lib/breakdown.js'
@@ -8,7 +8,7 @@ import { addDays, fmtLong } from '../../lib/dates.js'
 import { ATHENS, coordsFromText, forecast, geocode, sunTimes } from '../../lib/sun.js'
 import { callSheetText, mailLink, personalCallText, shortenWithBitly, waLink, waShareLink } from '../../lib/share.js'
 import { Modal } from '../../components/ui.jsx'
-import { ensurePin, publishShare, shareUrl } from '../../lib/shares.js'
+import { ensurePin, publishShare, removeShare, shareUrl } from '../../lib/shares.js'
 import LinkName from '../../components/LinkName.jsx'
 import { nameParts } from '../../lib/projectName.js'
 import { callsheetDefaults, uid, useCurrentUser } from '../../lib/store.jsx'
@@ -251,6 +251,33 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       }
       return s
     })
+  }
+  /* Deleting a day (Alex, 11 Oct). Its date leaves the Calendar too (a one-day shoot goes, a longer one
+     shrinks or splits around it), or Ordino & Program would make it again empty; its share link stops
+     opening; scenes put on it go back to not scheduled. ordinoDeleted stops the project's start date
+     from bringing a day back when the last one is deleted. */
+  const removeDay = () => {
+    const gone = day
+    const from = gone.date
+    edit((p) => {
+      p.shootingDays = (p.shootingDays || []).filter((x) => x.id !== gone.id)
+      ;(p.scenes || []).forEach((sc) => { if (sc.dayId === gone.id) sc.dayId = '' })
+      p.ordinoDeleted = true
+    })
+    if (from) update((s) => {
+      const lastOf = (e) => (e.endDate && e.endDate > e.date ? e.endDate : e.date)
+      const ev = s.events.find((e) => e.projectId === project.id && e.type === 'shoot' && e.date && e.date <= from && from <= lastOf(e))
+      if (!ev) return s
+      const last = lastOf(ev)
+      if (ev.date === last) s.events = s.events.filter((e) => e !== ev)
+      else if (from === ev.date) ev.date = addDays(from, 1)
+      else if (from === last) ev.endDate = addDays(from, -1)
+      else { s.events.push({ ...ev, id: uid(), date: addDays(from, 1), endDate: last }); ev.endDate = addDays(from, -1) }
+      return s
+    })
+    removeShare({ workspaceId: state.workspace.id, ref: `callsheet:${project.id}:${gone.id}` }).catch(() => {})
+    setSel(days.find((x) => x.id !== gone.id)?.id || '')
+    toast(`${dayLabel(gone, days.indexOf(gone))} deleted`, 'ok')
   }
   const setCall = (key, v) => setSheet('calls', { ...calls, [key]: v })
   const hidePerson = (key, on) => {
@@ -692,6 +719,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
           {mobile && <Button className={mPreview ? 'on' : ''} onClick={() => setMPreview(!mPreview)}>{mPreview ? 'Back to the ordino' : 'Preview'}</Button>}
           <Button onClick={() => setSend(true)}>Send message</Button>
           {canShare && <Button variant="primary" onClick={makeShare}>Share link</Button>}
+          {editable && <Confirm onConfirm={removeDay} label="Delete day" />}
         </div>
       </div>
 
