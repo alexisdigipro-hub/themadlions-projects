@@ -150,6 +150,16 @@ export default function Layout() {
   /* On a phone there is no side menu any more (Alex, 10 Oct): every page is in the bar at the foot,
      which slides sideways when they do not fit; the page you are on is brought into view. */
   const tabsRef = useRef(null)
+  // the bar's real height as --tabbar-real, so what floats above it (the chat's folders) clears it
+  useEffect(() => {
+    const el = tabsRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return undefined
+    const set = () => { if (el.offsetHeight) document.documentElement.style.setProperty('--tabbar-real', `${el.offsetHeight}px`) }
+    set()
+    const ro = new ResizeObserver(set)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   useEffect(() => {
     const bar = tabsRef.current
     const on = bar?.querySelector('a.active')
