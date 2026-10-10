@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, useIsMobile, useToast } from '../components/ui.jsx'
 import { DbFilter, DbSearch } from '../components/DbTools.jsx'
@@ -45,12 +46,15 @@ async function storeBytes(state, projectId, docId, name, type, bytes) {
   return { fileid: r.fileid || undefined, scope: r.scope || undefined, path: r.path || '', size: bytes.length }
 }
 
-export default function Office() {
+/* embedded: the Office tab of the Office page (pages/OfficeHub.jsx, Alex 10 Oct: Office and Notes on one
+   page with tabs, like the Database), so without its own page head; on a computer its filter line is
+   drawn into the slot on the tabs' row */
+export default function Office({ embedded = false, slot = null }) {
   const { pid, docId } = useParams()
-  return pid && docId ? <Editor key={`${pid}/${docId}`} pid={pid} docId={docId} /> : <Library />
+  return pid && docId ? <Editor key={`${pid}/${docId}`} pid={pid} docId={docId} /> : <Library embedded={embedded} slot={slot} />
 }
 
-function Library() {
+function Library({ embedded, slot }) {
   const { state, updateProject } = useStore()
   const user = useCurrentUser()
   const nav = useNavigate()
@@ -119,7 +123,7 @@ function Library() {
      round project filter and a round search */
   return (
     <div className="office">
-      <PageHead title="Office" sub={mobile ? undefined : 'Documents and spreadsheets for each project, opened and saved right here as Word and Excel files.'} />
+      {!embedded && <PageHead title="Office" sub={mobile ? undefined : 'Documents and spreadsheets for each project, opened and saved right here as Word and Excel files.'} />}
       {mayEdit && editable.length > 0 && (
         <div className="office-new">
           {TYPES.map((t) => (
@@ -139,19 +143,24 @@ function Library() {
           </Link>
         </div>
       )}
-      <div className="toolbar office-tools">
-        <span className="segmented small">
-          {[['all', 'All'], ['docx', mobile ? 'Docs' : 'Documents'], ['xlsx', mobile ? 'Sheets' : 'Spreadsheets']].map(([v, l]) => (
-            <button key={v} className={kind === v ? 'on' : ''} onClick={() => setKind(v)}>{l}</button>
-          ))}
-        </span>
-        {mobile ? (
-          <DbFilter value={projectFilter === 'all' ? '' : projectFilter} onChange={(e) => setParams(!e.target.value || e.target.value === 'all' ? {} : { p: e.target.value })} options={[['', 'All projects'], ...projects.map((p) => [p.id, p.title || 'Untitled'])]} label="Project" />
-        ) : (
-          <Select value={projectFilter} onChange={(e) => setParams(e.target.value === 'all' ? {} : { p: e.target.value })} options={[['all', 'All projects'], ...projects.map((p) => [p.id, p.title || 'Untitled'])]} />
-        )}
-        <DbSearch value={q} onChange={(e) => setQ(e.target.value)} />
-      </div>
+      {(() => {
+        const tools = (
+          <>
+          <span className="segmented small">
+            {[['all', 'All'], ['docx', mobile ? 'Docs' : 'Documents'], ['xlsx', mobile ? 'Sheets' : 'Spreadsheets']].map(([v, l]) => (
+              <button key={v} className={kind === v ? 'on' : ''} onClick={() => setKind(v)}>{l}</button>
+            ))}
+          </span>
+          {mobile ? (
+            <DbFilter value={projectFilter === 'all' ? '' : projectFilter} onChange={(e) => setParams(!e.target.value || e.target.value === 'all' ? {} : { p: e.target.value })} options={[['', 'All projects'], ...projects.map((p) => [p.id, p.title || 'Untitled'])]} label="Project" />
+          ) : (
+            <Select value={projectFilter} onChange={(e) => setParams(e.target.value === 'all' ? {} : { p: e.target.value })} options={[['all', 'All projects'], ...projects.map((p) => [p.id, p.title || 'Untitled'])]} />
+          )}
+          <DbSearch value={q} onChange={(e) => setQ(e.target.value)} />
+          </>
+        )
+        return slot ? createPortal(<div className="toolbar office-tools db-bar">{tools}</div>, slot) : <div className="toolbar office-tools">{tools}</div>
+      })()}
       {!docs.length ? (
         <Empty title={needle || kind !== 'all' || projectFilter !== 'all' ? 'Nothing matches' : 'No documents yet'}>
           {mayEdit ? 'Start one above, or open a Word or Excel file you already have. It goes into the project you pick.' : 'Documents made in your projects show here.'}

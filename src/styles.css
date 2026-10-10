@@ -5814,7 +5814,7 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
    then on a computer too (Alex, 10 Oct: "make the desktop Database like the mobile one"). The round
    filter is also Office's on a phone. */
 @media all {
-  html[data-theme] body .db-page .db-tabs {
+  html[data-theme] body .db-tabs {
     display: flex; gap: 0; margin: 2px 0 14px; padding: 3px;
     border: 1px solid var(--line-soft); border-radius: 999px;
     background: color-mix(in srgb, var(--panel) 80%, transparent);
@@ -5822,13 +5822,13 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 8px 26px rgba(0, 0, 0, .22);
     overflow-x: auto; scrollbar-width: none;
   }
-  html[data-theme] body .db-page .db-tabs a {
+  html[data-theme] body .db-tabs a {
     flex: 1 0 auto; display: flex; justify-content: center; margin: 0; padding: 9px 10px;
     border: 0; border-radius: 999px; background: none; box-shadow: none;
     font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--text);
   }
-  html[data-theme] body .db-page .db-tabs a.active { color: var(--text); background: color-mix(in srgb, var(--text) 9%, transparent); }
-  html[data-theme] body .db-page .db-tabs .tab-ico { display: none; }
+  html[data-theme] body .db-tabs a.active { color: var(--text); background: color-mix(in srgb, var(--text) 9%, transparent); }
+  html[data-theme] body .db-tabs .tab-ico { display: none; }
 
   html[data-theme] body .db-page .panel.db-card { padding: 0; margin: 0; background: none; border: 0; border-radius: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .db-page .toolbar { margin-bottom: 14px; }
@@ -5906,11 +5906,11 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
    room), hover on the round buttons */
 @media (min-width: 821px) {
   /* tabs and the tab's search line on one row (Alex, 10 Oct); the row wraps on a narrow window */
-  .db-page .db-top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 4px 0 18px; }
-  html[data-theme] body .db-page .db-top .db-tabs { display: inline-flex; flex: none; max-width: 100%; margin: 0; }
-  .db-page .db-slot { flex: 1 1 420px; min-width: 0; }
-  .db-page .db-slot .toolbar.db-bar { margin: 0; }
-  html[data-theme] body .db-page .db-tabs a { flex: 0 0 auto; padding: 9px 18px; }
+  .db-top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 4px 0 18px; }
+  html[data-theme] body .db-top .db-tabs { display: inline-flex; flex: none; max-width: 100%; margin: 0; }
+  .db-slot { flex: 1 1 420px; min-width: 0; }
+  .db-slot .toolbar.db-bar { margin: 0; }
+  html[data-theme] body .db-tabs a { flex: 0 0 auto; padding: 9px 18px; }
   /* Cards / List at the far right, a small glass capsule like the tabs; Collect from projects just before it */
   html[data-theme] body .db-page .toolbar .segmented {
     order: 5; margin-left: auto; display: inline-flex; flex: none; gap: 0; height: 44px; box-sizing: border-box; padding: 3px;
@@ -5954,3 +5954,27 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
 .sort-after:not(tr), tr.sort-after > td { box-shadow: inset 0 -2px 0 var(--accent); }
 [data-sort-axis='x'].sort-before { box-shadow: inset 2px 0 0 var(--accent); }
 [data-sort-axis='x'].sort-after { box-shadow: inset -2px 0 0 var(--accent); }
+
+/* Office and Notes on one page with the Database's tabs (Alex, 10 Oct, pages/OfficeHub.jsx). On a
+   computer the Notes columns fit under the tabs, and the Office filter line sits on the tabs' row. */
+@media (min-width: 821px) {
+  .office-hub .notes-app { height: calc(100dvh - 210px); min-height: 460px; }
+  .office-hub .db-slot .office-tools { flex-wrap: nowrap; justify-content: flex-start; gap: 10px; }
+  /* the same glass as the Database's line: ALL / DOCUMENTS / SPREADSHEETS a capsule like the tabs, the
+     project picker and the search rounded, all 44px tall */
+  html[data-theme] body .office-hub .db-slot .office-tools .segmented {
+    display: inline-flex; flex: none; gap: 0; height: 44px; box-sizing: border-box; padding: 3px; margin: 0;
+    border: 1px solid var(--line-soft); border-radius: 999px; background: color-mix(in srgb, var(--panel) 80%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+  }
+  html[data-theme] body .office-hub .db-slot .office-tools .segmented button { display: flex; align-items: center; padding: 0 14px; border: 0; border-radius: 999px; background: none; box-shadow: none; font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
+  html[data-theme] body .office-hub .db-slot .office-tools .segmented button.on { color: var(--text); background: color-mix(in srgb, var(--text) 9%, transparent); }
+  html[data-theme] body .office-hub .db-slot .office-tools .input.select,
+  html[data-theme] body .office-hub .db-slot .office-tools .input.search {
+    height: 44px; min-height: 0; box-sizing: border-box; padding: 0 16px; font-size: 15px; border-radius: 999px;
+    border: 1px solid var(--line-soft); background-color: color-mix(in srgb, var(--panel) 80%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+  }
+  html[data-theme] body .office-hub .db-slot .office-tools .input.select { width: 210px; flex: none; }
+  html[data-theme] body .office-hub .db-slot .office-tools .input.search { flex: 1 1 auto; min-width: 140px; width: auto; max-width: 420px; }
+}

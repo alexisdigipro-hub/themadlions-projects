@@ -44,7 +44,8 @@ const ChatWindow = lazyPage(() => import('./pages/Chat.jsx').then((m) => ({ defa
 const MyWork = lazyPage(() => import('./pages/MyWork.jsx'))
 const Profile = lazyPage(() => import('./pages/Profile.jsx'))
 const Office = lazyPage(() => import('./pages/Office.jsx'))
-const Notes = lazyPage(() => import('./pages/Notes.jsx'))
+// Office and Notes share one page with tabs (Alex, 10 Oct)
+const OfficeHub = lazyPage(() => import('./pages/OfficeHub.jsx'))
 const PublicCallSheet = lazyPage(() => import('./pages/PublicCallSheet.jsx'))
 const PublicDelivery = lazyPage(() => import('./pages/PublicDelivery.jsx'))
 const Deliveries = lazyPage(() => import('./pages/Deliveries.jsx'))
@@ -122,8 +123,8 @@ export default function App() {
                 <Route path="me" element={<Navigate to="/settings" replace />} />
                 <Route path="u/:id" element={<Profile />} />
                 <Route path="drives" element={<Navigate to="/database/drives" replace />} />
-                <Route path="office" element={<Office />} />
-                <Route path="notes" element={<Notes />} />
+                <Route path="office" element={<OfficeHub />} />
+                <Route path="notes" element={<OfficeHub />} />
                 <Route path="office/:pid/:docId" element={<Office />} />
                 <Route path="share" element={<Deliveries />} />
                 <Route path="database/:tab" element={<Database />} />

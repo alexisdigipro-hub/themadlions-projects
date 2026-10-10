@@ -131,13 +131,12 @@ export default function Layout() {
     { to: '/calendar', label: 'Calendar', show: can(user, 'calendar'), icon: 'calendar' },
     { to: '/tasks', label: 'Tasks', show: can(user, 'tasks'), icon: 'tasks' },
     { to: '/chat', label: 'Chat', show: true, icon: 'chat', badge: unread },
-    // each person's own notes, like Apple Notes; nobody else reads them (Alex, 8 Oct)
-    { to: '/notes', label: 'Notes', show: true, icon: 'notes' },
+    // Office and Notes are one page with tabs now (Alex, 10 Oct); everyone has Notes, Office needs Files;
+    // it sits where Notes was, so on a phone it is among the first five
+    { to: can(user, 'files') ? '/office' : '/notes', label: 'Office', show: true, icon: 'office', also: ['/office', '/notes'] },
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     // Drives is a tab of the Database now (Alex, 10 Oct)
-    // Word and Excel inside the app, each file kept with its project (Alex, 8 Oct)
-    { to: '/office', label: 'Office', show: can(user, 'files'), icon: 'office' },
     { to: '/share', label: 'Share', show: mayShare, icon: 'post', badge: newReplies },
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance' },
     // Invoices came out of Finance's tab row into its own page (Alex). Team went the other way,
@@ -189,7 +188,7 @@ export default function Layout() {
             <Fragment key={i.to}>
               {/* the app skins split the menu like their designs: the work above, you below */}
               {i.to === '/settings' && <span className="nav-section">Account</span>}
-              <NavLink to={i.to} end={i.end} className={({ isActive }) => (isActive ? 'active' : '')}>
+              <NavLink to={i.to} end={i.end} className={({ isActive }) => (isActive || i.also?.some((p) => pathname.startsWith(p)) ? 'active' : '')}>
                 <span className="nav-ico">{Icon[i.icon]?.()}</span>
                 {i.label}
                 {i.badge > 0 && <span className="nav-badge">{i.badge}</span>}
@@ -225,7 +224,7 @@ export default function Layout() {
 
       <nav className="tabbar" aria-label="Main" ref={tabsRef}>
         {items.map((i) => (
-          <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => (isActive ? 'active' : '')}>
+          <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => (isActive || i.also?.some((p) => pathname.startsWith(p)) ? 'active' : '')}>
             <span className="tab-ico-wrap">{Icon[i.icon]?.()}{i.badge > 0 && <span className="nav-badge">{i.badge}</span>}</span>
             {i.label}
           </NavLink>
