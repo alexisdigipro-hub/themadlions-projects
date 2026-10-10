@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Button, Modal, useIsMobile, useToast } from '../components/ui.jsx'
 import { uid, useCurrentUser, useStore } from '../lib/store.jsx'
-import { cleanHtml, deleteNotes, loadNotes, noteText, saveNote, setNoteSharing } from '../lib/notes.js'
+import { cleanHtml, deleteNotes, loadNotes, noteText, saveNote, saveSharedNote, setNoteSharing } from '../lib/notes.js'
 import { noteUrl, publishShare, removeShare, tokenOf } from '../lib/shares.js'
 import { mailLink, waShareLink } from '../lib/share.js'
 
@@ -20,7 +20,7 @@ import { mailLink, waShareLink } from '../lib/share.js'
 
 const ALL = 'all'
 const NONE = 'notes' // notes in no folder (no longer a menu entry: My Notes holds them, Alex 10 Oct)
-const SHARED = 'shared' // notes others shared with you, read only
+const SHARED = 'shared' // notes others shared with you, which you can write in
 const TRASH = 'trash'
 const DAY = 86400000
 const SAVE_AFTER = 800
@@ -98,7 +98,7 @@ function ShareNote({ note, onClose, onChange }) {
   return (
     <Modal open title="Share note" onClose={onClose} footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={!!busy}>Save</Button></>}>
       <div className="stack note-share">
-        <p className="small muted">Only you see your notes. Tick the people who may read this one too; they see it read only, under Shared Notes.</p>
+        <p className="small muted">Only you see your notes. Tick the people who may see this one too; they find it under Shared Notes and can write in it.</p>
         <ul className="plain note-share-people">
           {team.map((u) => (
             <li key={u.id}>
@@ -173,10 +173,14 @@ export default function Notes({ slot = null }) {
   const [quick, setQuick] = useState('')
   const [renaming, setRenaming] = useState(null) // { id, name }
   const [sharing, setSharing] = useState(null) // the note whose Share window is open
-  const { state } = useStore()
+  const { state, sessionId } = useStore()
   const me = useCurrentUser()
-  // a note is yours, or someone shared it with you (then it is read only)
-  const mine = (n) => !n.userId || n.userId === me?.id
+  // whose notes these are: the one signed in, also while an administrator previews someone else, since
+  // the database hands this browser its own notes and those shared with it, never the previewed person's
+  const myId = sessionId || me?.id || ''
+  // a note is yours, or someone shared it with you: then you can write in it, while its folder, pin,
+  // sharing and deleting stay with its writer (Alex, 10 Oct)
+  const mine = (n) => !n.userId || n.userId === myId
   const pending = useRef(new Map()) // id -> timer, a save waiting
   const itemsRef = useRef(items)
   itemsRef.current = items
@@ -210,9 +214,9 @@ export default function Notes({ slot = null }) {
   useEffect(() => { try { localStorage.setItem('tml_notes_folder', folder) } catch {} }, [folder])
 
   // a note with a link has its snapshot refreshed each time it is saved
-  const persist = useCallback((n) => saveNote(n)
-    .then(() => { if (n.link && n.kind === 'note' && (!n.userId || n.userId === me?.id)) publishNote({ note: n, state, me }).catch(() => {}) })
-    .catch((e) => toast(e.message, 'error')), [toast, state, me])
+  const persist = useCallback((n) => (n.userId && n.userId !== myId ? saveSharedNote(n) : saveNote(n)
+    .then(() => { if (n.link && n.kind === 'note') publishNote({ note: n, state, me }).catch(() => {}) }))
+    .catch((e) => toast(e.message, 'error')), [toast, state, me, myId])
   const flush = useCallback((id) => {
     const t = pending.current.get(id)
     if (!t) return
@@ -242,7 +246,8 @@ export default function Notes({ slot = null }) {
   const all = items || []
   const folders = all.filter((n) => n.kind === 'folder' && !n.deletedAt && mine(n)).sort((a, b) => a.title.localeCompare(b.title))
   const notes = all.filter((n) => n.kind === 'note' && mine(n))
-  const sharedIn = all.filter((n) => n.kind === 'note' && !mine(n) && !n.deletedAt)
+  // only what someone shared with you by name: a note of theirs never shows here otherwise
+  const sharedIn = all.filter((n) => n.kind === 'note' && !mine(n) && !n.deletedAt && (n.sharedWith || []).includes(myId))
   const authorOf = (n) => (state.users || []).find((u) => u.id === n.userId)?.name || 'A teammate'
   const live = notes.filter((n) => !n.deletedAt)
   const trash = notes.filter((n) => n.deletedAt)
@@ -453,7 +458,7 @@ export default function Notes({ slot = null }) {
         <button type="button" className="rem-back" onClick={close}>‹ {folderName}</button>
         <span className="grow" />
         {!mine(open) ? (
-          <span className="small muted notes-from">From {authorOf(open)} · read only</span>
+          <span className="small muted notes-from">👥 From {authorOf(open)}</span>
         ) : open.deletedAt ? (
           <>
             <button type="button" className="rem-head-btn" onClick={() => restore(open)}>Restore</button>
@@ -474,7 +479,7 @@ export default function Notes({ slot = null }) {
       <div className="notes-sheet">
         <div className="notes-date">{longDate(open.updatedAt)}</div>
         {!mine(open) ? (
-          <div className="notes-readonly notes-shared" dangerouslySetInnerHTML={{ __html: cleanHtml(open.body) }} />
+          <Editor key={open.id} note={{ ...open, body: cleanHtml(open.body) }} onChange={onBody} />
         ) : open.deletedAt ? (
           <div className="notes-readonly" dangerouslySetInnerHTML={{ __html: open.body }} />
         ) : (

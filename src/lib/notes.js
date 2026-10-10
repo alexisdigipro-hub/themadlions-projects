@@ -31,6 +31,16 @@ export async function saveNote(n) {
   if (error) throw missing(error)
 }
 
+/* A note someone shared with you (Alex, 10 Oct: they can write in it straight away): only its text is
+   saved. If nothing changed, notes_share_edit.sql has not been run yet and the database still lets
+   only the writer change a note. */
+export async function saveSharedNote(n) {
+  if (!remote) return
+  const { data, error } = await supabase.from('notes').update({ title: n.title || '', body: n.body || '', updated_at: n.updatedAt }).eq('id', n.id).select('id')
+  if (error) throw missing(error)
+  if (!data?.length) throw new Error('Run supabase/notes_share_edit.sql in the SQL editor so a shared note can be edited.')
+}
+
 export async function deleteNotes(ids) {
   if (!ids.length) return
   if (!remote) { writeLocal(readLocal().filter((x) => !ids.includes(x.id))); return }
