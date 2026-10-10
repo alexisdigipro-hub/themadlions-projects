@@ -6149,3 +6149,7 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
   .ordino-btn-ico { width: 48px; height: 48px; font-size: 22px; }
   .ordino-btn-text strong { font-size: 18px; }
 }
+/* the project's cover, very faint, behind the glass of the Ordino button (Alex, 10 Oct) */
+.ordino-btn.has-cover::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--ordino-cover) center / cover no-repeat; opacity: .16; filter: blur(2px) saturate(120%); transform: scale(1.04); pointer-events: none; }
+.ordino-btn.has-cover { isolation: isolate; }
+.ordino-btn > * { position: relative; }

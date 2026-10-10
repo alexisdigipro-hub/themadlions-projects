@@ -248,7 +248,8 @@ export default function Overview() {
       {/* The ordino as one glass button the height of the song box, for everyone on the project,
           administrators too (Alex, 10 Oct); it opens the finished ordino as the crew get it on a phone */}
       {ordinoDays.length > 0 && (
-        <button type="button" className="ordino-btn" onClick={() => setOrdinoOpen(true)}>
+        // the project's cover, very faint, behind the glass (Alex, 10 Oct)
+        <button type="button" className={`ordino-btn${project.coverThumb ? ' has-cover' : ''}`} style={project.coverThumb ? { '--ordino-cover': `url("${project.coverThumb}")` } : undefined} onClick={() => setOrdinoOpen(true)}>
           <span className="ordino-btn-ico" aria-hidden="true">🎬</span>
           <span className="ordino-btn-text">
             <strong>Ordino</strong>
