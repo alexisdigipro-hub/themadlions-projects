@@ -36,9 +36,9 @@ export default function OfficeHub() {
             </NavLink>
           ))}
         </nav>
-        {!mobile && tab === 'office' && <div className="db-slot" ref={setSlot} />}
+        {!mobile && <div className="db-slot" ref={setSlot} />}
       </div>
-      {tab === 'office' ? <Office embedded slot={mobile ? null : slot} /> : <Notes />}
+      {tab === 'office' ? <Office embedded slot={mobile ? null : slot} /> : <Notes slot={mobile ? null : slot} />}
     </div>
   )
 }
