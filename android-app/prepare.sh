@@ -12,7 +12,7 @@ sed -i 's|</manifest>|    <uses-permission android:name="android.permission.CAME
 for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
   n=${d%%:*}; s=${d##*:}
   out="$RES/mipmap-$n/ic_launcher.png"
-  if command -v convert >/dev/null; then convert ../public/icons/chat-glass-512.png -resize "${s}x${s}" "$out"; else cp ../public/icons/chat-glass-512.png "$out"; fi
+  if command -v convert >/dev/null; then convert ../public/icons/chat-tile-512.png -resize "${s}x${s}" "$out"; else cp ../public/icons/chat-tile-512.png "$out"; fi
   cp "$out" "$RES/mipmap-$n/ic_launcher_round.png"
 done
 rm -rf "$RES/mipmap-anydpi-v26"
