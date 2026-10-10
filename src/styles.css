@@ -5976,9 +5976,11 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
     -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
   }
   html[data-theme] body .office-hub .db-slot .office-tools .input.select { width: 210px; flex: none; }
-  html[data-theme] body .office-hub .db-slot .office-tools .input.search { flex: 1 1 auto; min-width: 140px; width: auto; max-width: 420px; }
+  /* the search first, left of ALL / DOCUMENTS / SPREADSHEETS, the same width as the Notes search so it
+     stays put when the tab changes (Alex, 10 Oct) */
+  html[data-theme] body .office-hub .db-slot .office-tools .input.search { order: -1; flex: 0 1 320px; min-width: 160px; width: 320px; max-width: 320px; }
   /* the Notes search on the tabs' row, in the same glass as Office's (Alex, 10 Oct) */
-  .office-hub .db-slot .notes-bar .rem-search-wrap { flex: 1 1 auto; max-width: 520px; margin: 0; }
+  .office-hub .db-slot .notes-bar .rem-search-wrap { flex: 0 1 320px; width: 320px; min-width: 160px; margin: 0; }
   html[data-theme] body .office-hub .db-slot .notes-bar .rem-search {
     height: 44px; box-sizing: border-box; padding: 0 16px 0 38px; font-size: 15px; border-radius: 999px;
     border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--panel) 80%, transparent);
