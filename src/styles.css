@@ -5644,3 +5644,9 @@ select.rem-status option { color: var(--text); background: var(--bg, #1b1f2a); f
   .rem-ibtn svg { width: 14px; height: 14px; }
   .rem-ibtn-text { font-size: 9px; }
 }
+
+/* Chat in the app on a phone: Notices is a bell next to the + on the right of the head (Chat.jsx
+   tg-notice), the two buttons that sat under the list (and the empty strip they left) are gone */
+html .chat-list.tgui .tg-notice { position: absolute; top: calc(50% - 23px); right: 70px; z-index: 1; display: grid; place-items: center; width: 46px; height: 46px; padding: 0; color: var(--text); }
+html .chat-list.tgui .tg-notice svg { width: 21px; height: 21px; }
+html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); }

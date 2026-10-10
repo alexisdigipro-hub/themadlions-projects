@@ -795,6 +795,12 @@ function RoomList({ activeId, windowed }) {
         {picking ? (
           <button type="button" className="tg-pill tg-all" onClick={() => setPicked(picked.length === shown.length ? [] : shown.map((r) => r.id))}>{picked.length === shown.length && shown.length ? 'None' : 'All'}</button>
         ) : (
+          <>
+          {/* notices on a phone in the app: a bell up here, like the chat app's Notices (Alex, 10 Oct),
+              instead of the two buttons that sat under the list; tap again for the chats */}
+          {canNotice && mobile && !windowed && (
+            <button type="button" className={`tg-pill tg-notice${tab === 'notices' ? ' on' : ''}`} onClick={() => { setPlus(false); setTab(tab === 'notices' ? 'chats' : 'notices') }} title={tab === 'notices' ? 'Back to the chats' : 'Notices'} aria-label={tab === 'notices' ? 'Back to the chats' : 'Notices'} aria-pressed={tab === 'notices'}>{TgIcon.bell()}</button>
+          )}
           <span ref={plusRef} className={`tg-pill tg-plus${plus ? ' open' : ''}`} style={{ '--n': 2 + (isAdmin ? 1 : 0) + (windowed ? 0 : 1) }}>
             <span className="tg-plus-items" aria-hidden={!plus}>
               <button type="button" tabIndex={plus ? 0 : -1} onClick={() => { setPlus(false); setFolders('new') }} title="New folder" aria-label="New folder">{TgIcon.folderPlus()}</button>
@@ -804,6 +810,7 @@ function RoomList({ activeId, windowed }) {
             </span>
             <button type="button" className="tg-plus-btn" onClick={() => setPlus((o) => !o)} aria-expanded={plus} title={plus ? 'Close' : 'New'} aria-label={plus ? 'Close' : 'New folder, group or message'}>{TgIcon.plus()}</button>
           </span>
+          </>
         )}
       </div>
       {tab === 'settings' || tab === 'notices' || tab === 'calls' ? (tab === 'settings' ? (
@@ -888,12 +895,6 @@ function RoomList({ activeId, windowed }) {
           <div className="stack"><p className="muted">You have no folders of your own yet.</p><Button variant="primary" onClick={() => { setFolderPick(false); setFolders('new') }}>Make a folder</Button></div>
         ))}
       </Modal>
-      {canNotice && mobile && !windowed && (
-        <div className="chat-list-foot">
-          <Button size="sm" variant="ghost" onClick={() => setSent(true)}>Sent notices</Button>
-          <Button size="sm" variant="ghost" onClick={() => setNotice(true)}>Send notice</Button>
-        </div>
-      )}
       <GroupModal open={!!group} group={group === 'new' ? null : group} onClose={() => setGroup(null)} onSaved={(id) => { setGroup(null); nav(roomPath(base, id)) }} />
       <DirectModal open={direct} onClose={() => setDirect(false)} onPick={(id) => { setDirect(false); nav(roomPath(base, id)) }} />
       <FoldersModal open={!!folders} fresh={folders === 'new'} onClose={() => setFolders(false)} rooms={rooms} />
