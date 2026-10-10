@@ -1179,6 +1179,7 @@ function ChatRoom({ room, onBack }) {
      names over the box and an "Uploading" bar. Kept here until it is sent. */
   const [outbox, setOutbox] = useState([])
   const stopped = useRef(new Set())
+  const sendJobs = useRef(new Map()) // outbox id -> the videos being readied, so the cross can stop them
   const [caret, setCaret] = useState(0)
   const [editGroup, setEditGroup] = useState(false)
   const [editMembers, setEditMembers] = useState(false)
@@ -1289,12 +1290,19 @@ function ChatRoom({ room, onBack }) {
     const prepared = files.map((f) => (compressMedia && !voice ? prepareVideo(f) : null))
     setSheet(false)
     const replyId = replyTo?.id || ''
+    const replyMsg = replyTo
     // photos, videos and files go into the conversation at once, and the box is free again
     const outgoing = files.length > 0 && !voice
     const step = (stage, progress) => setOutbox((o) => o.map((x) => (x.id === id ? { ...x, stage, progress } : x)))
     const gone = () => stopped.current.has(id)
+    let previews = []
+    // the phone's copies shown while sending are let go once it is over, whichever way it ends
+    const dropPreviews = () => previews.forEach((a) => { const hit = urlCache.get(a.id); if (hit) { URL.revokeObjectURL(hit.url); urlCache.delete(a.id) } })
+    // stopped or failed: what was already uploaded is deleted again, nothing is left in storage
+    const dropUploaded = () => attachments.forEach((a) => deleteFile(a).catch(() => {}))
     if (outgoing) {
-      const previews = files.map((f) => {
+      sendJobs.current.set(id, prepared)
+      previews = files.map((f) => {
         const pid = uid()
         if (/^(image|video)\//.test(f.type)) urlCache.set(pid, { url: URL.createObjectURL(f), until: Date.now() + 3600 * 1000 })
         return { id: pid, name: f.name, type: f.type, bytes: f.size }
@@ -1349,18 +1357,26 @@ function ChatRoom({ room, onBack }) {
       } catch (e) {
         prepared.forEach(releaseVideo)
         setBusy('')
+        dropUploaded()
         if (outgoing) {
-          // nothing is lost: the files go back over the box to try again
+          sendJobs.current.delete(id); dropPreviews()
+          // nothing is lost: the files, the words and the reply go back over the box to try again
           setOutbox((o) => o.filter((x) => x.id !== id))
-          if (!gone()) { setPending((p) => [...files, ...p]); if (t) setText((x) => x || t) }
+          if (!gone()) {
+            setPending((p) => [...files, ...p])
+            if (t) setText((x) => (x ? `${t} ${x}` : t))
+            if (replyMsg) setReplyTo((r) => r || replyMsg)
+          }
+          stopped.current.delete(id)
         }
         return toast(e.message, 'error')
       }
       setBusy('')
       if (outgoing) {
+        sendJobs.current.delete(id); dropPreviews()
         setOutbox((o) => o.filter((x) => x.id !== id))
-        // stopped with the cross: whatever was already uploaded is left out of the chat
-        if (gone()) { stopped.current.delete(id); prepared.forEach(releaseVideo); return }
+        // stopped with the cross: nothing goes into the chat, and what was uploaded is deleted
+        if (gone()) { stopped.current.delete(id); prepared.forEach(releaseVideo); dropUploaded(); return }
       }
     }
     const mentions = C.parseMentions(t, state.users).filter((x) => x !== user?.id)
@@ -1381,7 +1397,12 @@ function ChatRoom({ room, onBack }) {
     if (!voice) { setText(''); setPending([]) }
     setReplyTo(null); setCaret(0)
   }
-  const stopSending = (oid) => { stopped.current.add(oid); setOutbox((o) => o.filter((x) => x.id !== oid)) }
+  const stopSending = (oid) => {
+    stopped.current.add(oid)
+    setOutbox((o) => o.filter((x) => x.id !== oid))
+    // a video being compressed is cut short at once instead of playing to its end unseen
+    ;(sendJobs.current.get(oid) || []).forEach((h) => { if (h && !h.done) { try { h.v.pause(); h.v.dispatchEvent(new Event('ended')) } catch { /* already gone */ } } })
+  }
 
   const remove = (m) => {
     // a forwarded copy points at the same file: the file goes only when no other message uses it
@@ -1924,6 +1945,12 @@ function MediaTile({ a, i, shaped }) {
   const [playing, setPlaying] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const vref = useRef(null)
+  // The phone's controls pause the video while you drag its timeline: hide them only when it stays
+  // paused for a moment, so seeking still works (review, 11 Oct)
+  const hideAt = useRef(0)
+  const holdControls = () => clearTimeout(hideAt.current)
+  const hideSoon = () => { clearTimeout(hideAt.current); hideAt.current = setTimeout(() => { const v = vref.current; if (v && v.paused && !v.seeking) setPlaying(false) }, 900) }
+  useEffect(() => () => clearTimeout(hideAt.current), [])
   // while it loads: the tiny picture kept in the message, blurred, with a spinner (no broken image)
   const style = { ...(shaped && a.w && a.h ? { aspectRatio: `${a.w} / ${a.h}` } : {}), ...(a.thumb ? { '--thumb': `url("${a.thumb}")` } : {}) }
   const cls = `chat-media-tile${loaded ? ' loaded' : ''}${a.thumb ? ' has-thumb' : ''}`
@@ -1931,7 +1958,7 @@ function MediaTile({ a, i, shaped }) {
   if (isVideo(a)) {
     return (
       <span className={`${cls} chat-media-vid`} style={style} data-tile={i}>
-        {url && <video ref={vref} src={`${url}#t=0.1`} controls={playing} playsInline preload="metadata" title={a.name} onError={viaFunction} onLoadedMetadata={() => setLoaded(true)} onEnded={() => setPlaying(false)} onPause={() => setPlaying(false)} />}
+        {url && <video ref={vref} src={`${url}#t=0.1`} controls={playing} playsInline preload="metadata" title={a.name} onError={viaFunction} onLoadedMetadata={() => setLoaded(true)} onEnded={() => { holdControls(); setPlaying(false) }} onPause={hideSoon} onSeeking={holdControls} onSeeked={() => { if (vref.current?.paused) hideSoon() }} onPlay={() => { holdControls(); setPlaying(true) }} />}
         {!loaded && <span className="chat-media-spin" aria-hidden="true" />}
         {loaded && !playing && <button type="button" className="chat-media-play" aria-label="Play" onClick={() => { setPlaying(true); requestAnimationFrame(() => vref.current?.play().catch(() => {})) }}>▶</button>}
         {!playing && a.dur > 0 && <span className="chat-media-dur">{Math.floor(a.dur / 60)}:{String(a.dur % 60).padStart(2, '0')}</span>}
@@ -1980,6 +2007,8 @@ function MediaViewer({ items, start, onClose }) {
      through the album. */
   const imgRef = useRef(null)
   const lastTap = useRef({ t: 0, x: 0, y: 0 })
+  // a computer drags the zoomed picture with the mouse; a drag that ends off it is not a click to close
+  const dragAt = useRef(0)
   const touchZoomAt = useRef(0) // a phone's double tap also fires a double click: counted once
   const [zoom, setZoom] = useState({ s: 1, x: 0, y: 0, anim: false })
   const zoomed = zoom.s > 1
@@ -2007,16 +2036,37 @@ function MediaViewer({ items, start, onClose }) {
     return () => document.removeEventListener('keydown', key)
   }, [onClose])
   return createPortal(
-    <div className="chat-viewer" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-      onTouchStart={(e) => { touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, zx: zoom.x, zy: zoom.y } }}
+    <div className="chat-viewer" onClick={(e) => { if (e.target === e.currentTarget && Date.now() - dragAt.current > 300) onClose() }}
+      onTouchStart={(e) => {
+        // two fingers on a picture: pinch to zoom (review, 11 Oct); a third finger or a video: nothing
+        if (e.touches.length === 2 && !isVideo(a)) {
+          const [p1, p2] = [e.touches[0], e.touches[1]]
+          touch.current = { pinch: true, d0: Math.hypot(p2.clientX - p1.clientX, p2.clientY - p1.clientY) || 1, s0: zoom.s, zx: zoom.x, zy: zoom.y }
+          return
+        }
+        if (e.touches.length > 1) { touch.current = null; return }
+        touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, zx: zoom.x, zy: zoom.y }
+      }}
       onTouchMove={(e) => {
         const p = touch.current
-        if (!p || !zoomed || e.touches.length !== 1) return
+        if (!p) return
+        if (p.pinch) {
+          if (e.touches.length < 2) return
+          const d = Math.hypot(e.touches[1].clientX - e.touches[0].clientX, e.touches[1].clientY - e.touches[0].clientY)
+          const s = Math.min(4, Math.max(1, (p.s0 * d) / p.d0))
+          const k = s / p.s0
+          setZoom(clampZoom({ s, x: p.zx * k, y: p.zy * k, anim: false }))
+          return
+        }
+        if (!zoomed || e.touches.length !== 1) return
         setZoom(clampZoom({ s: zoom.s, x: p.zx + e.touches[0].clientX - p.x, y: p.zy + e.touches[0].clientY - p.y, anim: false }))
       }}
       onTouchEnd={(e) => {
         const p = touch.current
         if (!p) return
+        // a pinch ends when the last finger lifts; a lifted finger is never read as a swipe or a tap
+        if (p.pinch) { if (!e.touches.length) { touch.current = null; if (zoom.s < 1.05) setZoom({ s: 1, x: 0, y: 0, anim: true }) } return }
+        touch.current = null
         const ex = e.changedTouches[0].clientX
         const ey = e.changedTouches[0].clientY
         const dx = ex - p.x
@@ -2043,7 +2093,16 @@ function MediaViewer({ items, start, onClose }) {
         : <img key={a.id} ref={imgRef} src={url} alt={a.name} draggable={false}
             className={zoomed ? 'zoomed' : ''}
             style={{ transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.s})`, transition: zoom.anim ? 'transform .25s ease' : 'none' }}
-            onDoubleClick={(e) => { if (Date.now() - touchZoomAt.current > 700) toggleZoom(e.clientX, e.clientY) }} />}
+            onDoubleClick={(e) => { if (Date.now() - touchZoomAt.current > 700) toggleZoom(e.clientX, e.clientY) }}
+            onMouseDown={(e) => {
+              if (!zoomed || e.button) return
+              e.preventDefault()
+              const sx = e.clientX, sy = e.clientY, zx = zoom.x, zy = zoom.y, s = zoom.s
+              const move = (ev) => { dragAt.current = Date.now(); setZoom(clampZoom({ s, x: zx + ev.clientX - sx, y: zy + ev.clientY - sy, anim: false })) }
+              const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up) }
+              window.addEventListener('mousemove', move)
+              window.addEventListener('mouseup', up)
+            }} />}
       {items.length > 1 && i > 0 && <button type="button" className="chat-viewer-nav prev" onClick={() => go(-1)} aria-label="Previous">‹</button>}
       {items.length > 1 && i < items.length - 1 && <button type="button" className="chat-viewer-nav next" onClick={() => go(1)} aria-label="Next">›</button>}
       {url && <button type="button" className="chat-viewer-save" onClick={save}>{TgIcon.download()} Save</button>}
