@@ -17,6 +17,8 @@ import Tasks, { tasksFor } from './Tasks.jsx'
 import { Waveform } from './Music.jsx'
 import Notes from './Notes.jsx'
 import CallSheets from './CallSheets.jsx'
+import { ReceiptModal } from '../../components/Receipt.jsx'
+import { groupPairs } from '../../lib/budgetCats.js'
 
 const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: '' })
 
@@ -127,6 +129,8 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
 export default function Overview() {
   const { project, edit, canEdit, user } = useProject()
   const [ordinoOpen, setOrdinoOpen] = useState(false)
+  const [receiptOpen, setReceiptOpen] = useState(false)
+  const myReceipts = (project.budget?.lines || []).filter((l) => l.receipt && l.receipt.addedBy === user?.id).length
   // the ordino's days, and the one to name on the button: the next to come, else the last
   const ordinoDays = [...(project.shootingDays || [])].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
   const todayIso = new Date().toISOString().slice(0, 10)
@@ -260,6 +264,19 @@ export default function Overview() {
       <Modal open={ordinoOpen} title="Ordino" onClose={() => setOrdinoOpen(false)}>
         {ordinoOpen && <div className="ordino-modal"><CallSheets linkOnly /></div>}
       </Modal>
+
+      {/* Add receipt for the team, not administrators (Alex, 10 Oct): the same box as the Ordino button,
+          opening the Budget tab's receipt form */}
+      {user?.role !== 'admin' && (
+        <button type="button" className="panel ordino-btn receipt-btn" onClick={() => setReceiptOpen(true)}>
+          <span className="ordino-btn-text">
+            <strong>Add receipt</strong>
+            <span>{myReceipts ? `${myReceipts} added by you · paid for something? Photograph it` : `Paid for something on ${project.title}? Photograph it`}</span>
+          </span>
+          <span className="ordino-btn-go" aria-hidden="true">›</span>
+        </button>
+      )}
+      {receiptOpen && <ReceiptModal project={project} groups={groupPairs(state.settings, project.budget?.lines || [])} onClose={() => setReceiptOpen(false)} />}
 
       {can(user, 'tasks') && <Tasks hideEmpty startSignal={start.task} />}
 
