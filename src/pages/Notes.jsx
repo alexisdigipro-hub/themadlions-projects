@@ -10,7 +10,9 @@ import { deleteNotes, loadNotes, noteText, saveNote } from '../lib/notes.js'
   the right. The first line of a note is its title and the next one its preview. The editor is the
   Office document editor (lib/office/docView.js): headings, bold, lists, checklists, tables,
   pictures. Saved 0.8 s after the last change and when you leave the note; a note left empty is
-  dropped. On a phone the three are screens one after the other.
+  dropped. On a phone (Alex, 10 Oct: "Notes like Tasks") it opens straight on the notes, with Search and a
+  Folders button on one line at the top and the folders folded away under that button; a note opens
+  over the list and ‹ goes back to it.
 */
 
 const ALL = 'all'
@@ -75,7 +77,7 @@ export default function Notes() {
   const [folder, setFolder] = useState(() => { try { return localStorage.getItem('tml_notes_folder') || ALL } catch { return ALL } })
   const [openId, setOpenId] = useState('')
   const [q, setQ] = useState('')
-  const [screen, setScreen] = useState('folders') // phone: folders | list | note
+  const [menu, setMenu] = useState(false) // phone: the folders folded open over the notes
   const [quick, setQuick] = useState('')
   const [renaming, setRenaming] = useState(null) // { id, name }
   const pending = useRef(new Map()) // id -> timer, a save waiting
@@ -174,7 +176,7 @@ export default function Notes() {
     }
     flush(id)
   }
-  const select = (id) => { if (id !== openId) leave(openId); setOpenId(id); if (mobile) setScreen(id ? 'note' : 'list') }
+  const select = (id) => { if (id !== openId) leave(openId); setOpenId(id) }
   const esc = (x) => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   // a title typed in "+ New Note…" starts the note with it; ✎ starts an empty one
   const newNote = (title = '') => {
@@ -187,7 +189,6 @@ export default function Notes() {
     setOpenId(n.id)
     setQ('')
     setQuick('')
-    if (mobile) setScreen('note')
     // written to the database once something is typed in it, or now when it already has a title
     if (title) persist(n)
   }
@@ -204,7 +205,6 @@ export default function Notes() {
       patch(n.id, { deletedAt: now(), pinned: false })
     }
     setOpenId('')
-    if (mobile) setScreen('list')
   }
   const restore = (n) => { patch(n.id, { deletedAt: '' }); toast('Note restored', 'ok') }
   const emptyTrash = () => {
@@ -223,7 +223,6 @@ export default function Notes() {
     setItems((list) => [...list, f])
     persist(f)
     setFolder(f.id)
-    if (mobile) setScreen('list')
   }
   const renameFolder = () => {
     const name = renaming?.name.trim()
@@ -243,8 +242,8 @@ export default function Notes() {
   if (items === null) return <div className="notes-app notes-loading muted">Loading notes…</div>
 
   const NOTES_COLOR = '#b58a1c' // the backdrop behind the notes, Notes' own amber
-  const pickFolder = (f) => { leave(openId); setOpenId(''); setFolder(f); setQ(''); if (mobile) setScreen('list') }
-  const close = () => { leave(openId); setOpenId(''); if (mobile) setScreen('list') }
+  const pickFolder = (f) => { leave(openId); setOpenId(''); setFolder(f); setQ(''); setMenu(false) }
+  const close = () => { leave(openId); setOpenId('') }
   const folderRow = ({ id, name, count, icon = '🗂', own }) => (
     <div key={id} className={`rem-row notes-frow ${folder === id && !open ? 'on' : folder === id ? 'here' : ''}`}>
       {renaming?.id === id ? (
@@ -265,12 +264,14 @@ export default function Notes() {
     </div>
   )
 
-  const foldersPane = (
-    <aside className="rem-side">
-      <div className="rem-search-wrap">
-        <span className="rem-search-ico" aria-hidden="true">⌕</span>
-        <input className="rem-search" type="search" placeholder="Search" value={q} onChange={(e) => { setQ(e.target.value); if (open) close(); if (mobile && e.target.value) setScreen('list') }} />
-      </div>
+  const search = (
+    <div className="rem-search-wrap">
+      <span className="rem-search-ico" aria-hidden="true">⌕</span>
+      <input className="rem-search" type="search" placeholder="Search" value={q} onChange={(e) => { setQ(e.target.value); if (open) close(); if (e.target.value) setMenu(false) }} />
+    </div>
+  )
+  const folderMenu = (
+    <>
       <nav className="rem-smart">
         {folderRow({ id: ALL, name: 'All Notes', count: live.length, icon: '📒' })}
         {folderRow({ id: NONE, name: 'Notes', count: inFolder(NONE).length, icon: '🗒' })}
@@ -278,8 +279,21 @@ export default function Notes() {
       </nav>
       {folders.length > 0 && <hr className="rem-rule" />}
       {folders.length > 0 && <nav className="rem-lists">{folders.map((f) => folderRow({ id: f.id, name: f.title, count: inFolder(f.id).length, own: f }))}</nav>}
-      <button type="button" className="rem-add-list" onClick={newFolder}><span>＋</span> New Folder</button>
-    </aside>
+      <button type="button" className="rem-add-list" onClick={() => { setMenu(false); newFolder() }}><span>＋</span> New Folder</button>
+    </>
+  )
+  const foldersPane = <aside className="rem-side">{search}{folderMenu}</aside>
+  // on a phone, like Tasks: Search and the Folders button on one line, the folders folded under it
+  const phoneTop = (
+    <div className="rem-mtop">
+      <div className="rem-mtop-bar">
+        {search}
+        <button type="button" className={`rem-menu-btn ${menu ? 'on' : ''}`} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
+          <span aria-hidden="true">🗂</span> Folders <span className="rem-menu-chev" aria-hidden="true">⌄</span>
+        </button>
+      </div>
+      {menu && <div className="rem-side rem-mmenu">{folderMenu}</div>}
+    </div>
   )
 
   const card = (n) => (
@@ -297,7 +311,6 @@ export default function Notes() {
   const listPane = (
     <section className="rem-main notes-main" style={{ '--lc': NOTES_COLOR }}>
       <div className="rem-head">
-        {mobile && <button type="button" className="rem-back" onClick={() => setScreen('folders')}>‹ Folders</button>}
         <div className="grow">
           <h1>{q.trim() ? `Searching for "${q.trim()}"` : folderName}</h1>
           <div className="rem-head-date">{shown.length} note{shown.length === 1 ? '' : 's'}</div>
@@ -356,9 +369,9 @@ export default function Notes() {
   )
 
   return (
-    <div className={`rem-app notes-app ${mobile ? `m-${screen}` : ''}`}>
+    <div className={`rem-app notes-app ${mobile ? (open ? 'm-note' : 'm-one') : ''}`}>
       {err && <p className="notes-err">{err}</p>}
-      {mobile ? (screen === 'folders' ? foldersPane : screen === 'note' && open ? notePane : listPane) : (<>{foldersPane}{open ? notePane : listPane}</>)}
+      {mobile ? (open ? notePane : (<>{phoneTop}{listPane}</>)) : (<>{foldersPane}{open ? notePane : listPane}</>)}
     </div>
   )
 }
