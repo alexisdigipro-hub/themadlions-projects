@@ -6070,3 +6070,13 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
   html[data-theme] body .fin-top .input.select.fin-year { flex: 1 1 auto; }
   html[data-theme] body .fin-top .fin-set button { padding: 9px 18px; }
 }
+
+/* Settings on a computer (Alex, 10 Oct: "what are these big gaps on every page?"): the panels were
+   a grid of two columns, so each row took the height of its tallest panel and left a hole beside
+   it. Now they flow in two columns like a newspaper, each panel straight under the one above, and
+   the Team list takes the whole width. */
+@media (min-width: 821px) {
+  .cols.settings-cols { display: block; columns: 2; column-gap: 16px; }
+  .settings-cols > section { break-inside: avoid; -webkit-column-break-inside: avoid; margin: 0 0 16px; }
+  .settings-cols > section.team-panel { column-span: all; -webkit-column-span: all; }
+}
