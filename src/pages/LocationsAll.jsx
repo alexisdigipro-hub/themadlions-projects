@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, Textarea, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { locationProjects, locationToLibrary, matchText } from '../lib/library.js'
 import { coordsFromText } from '../lib/sun.js'
@@ -35,7 +35,6 @@ export default function LocationsAll() {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
-  const mobile = useIsMobile()
   const editable = can(user, 'locations', 'edit')
   const [q, setQ] = useState('')
   const [type, setType] = useState('')
@@ -147,9 +146,8 @@ export default function LocationsAll() {
               </div>
               <div className="person-body">
                 <strong>{l.name}</strong>
-                {/* on a phone the name and the area only, shorter cards (Alex, 10 Oct) */}
-                {mobile ? (areaOf(l.address) && <div className="small muted">{areaOf(l.address)}</div>) : <div className="small muted">{[l.type, l.address].filter(Boolean).join(' · ') || 'No address yet'}</div>}
-                {!mobile && locationProjects(projects, l.id).length > 0 && <div className="small muted">{locationProjects(projects, l.id).length} project{locationProjects(projects, l.id).length === 1 ? '' : 's'}</div>}
+                {/* the name and the area only, shorter cards: on a phone, then on a computer too (Alex, 10 Oct) */}
+                {areaOf(l.address) && <div className="small muted">{areaOf(l.address)}</div>}
               </div>
             </article>
           ))}

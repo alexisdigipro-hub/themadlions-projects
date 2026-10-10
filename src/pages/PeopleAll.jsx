@@ -4,7 +4,6 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, useIsMo
 import { can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
-import { waLink } from '../lib/share.js'
 import { DbAdd, DbFilter } from '../components/DbTools.jsx'
 
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
@@ -121,9 +120,9 @@ export default function PeopleAll({ kind }) {
         </div>
       ) : (
         <div className="people-grid compact">
-          {list.map((c) => mobile ? (
-              // on a phone the same short card as Locations: picture, name and role; a tap opens the
-              // person's window, which has the phone, the email, Edit and Delete (Alex, 10 Oct)
+          {list.map((c) => (
+              // the same short card as Locations, on a phone and then on a computer too: picture, name and
+              // role; a tap opens the person's window, which has the phone, the email, Edit and Delete (Alex, 10 Oct)
               <article key={c.id} className="person loc-card" onClick={() => setDetailFor(c.id)} role="button" tabIndex={0}>
                 <div className="person-photo" aria-hidden="true">
                   {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(c.name)}</span>}
@@ -132,30 +131,6 @@ export default function PeopleAll({ kind }) {
                   <strong>{c.name}</strong>
                   <div className="small muted">{c.kind === 'cast' ? c.role || 'Actor' : c.role || c.dept}</div>
                 </div>
-              </article>
-            ) : (
-              <article key={c.id} className="person">
-                <button className="person-photo" onClick={() => setDetailFor(c.id)} aria-label="Details">
-                  {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(c.name)}</span>}
-                  {c.photos?.length > 1 && <span className="person-count">{c.photos.length}</span>}
-                </button>
-                <div className="person-body">
-                  <button className="name-link" onClick={() => setDetailFor(c.id)}><strong>{c.name}</strong></button>
-                  <div className="small">{c.kind === 'cast' ? c.role || <span className="muted">Actor</span> : `${c.dept}${c.role ? ` · ${c.role}` : ''}`}</div>
-                  <div className="small muted person-contact">
-                    {showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}
-                    {showContacts && c.phone && <a href={waLink(c.phone, `Hi ${c.name.split(' ')[0]}, `)} target="_blank" rel="noreferrer">WhatsApp</a>}
-                    {showContacts && c.email && <a href={`mailto:${c.email}`} title={c.email}>Mail</a>}
-                  </div>
-                  {c.agent && <div className="small muted">Agent: {c.agent}{c.agentPhone ? ` · ${c.agentPhone}` : ''}</div>}
-                  {c.notes && <div className="small muted person-notes">{c.notes}</div>}
-                </div>
-                {editable && (
-                  <div className="row-actions person-actions">
-                    <button onClick={() => setDraft({ ...c })}>Edit</button>
-                    <Confirm onConfirm={() => remove(c)} label="Delete">×</Confirm>
-                  </div>
-                )}
               </article>
           ))}
         </div>

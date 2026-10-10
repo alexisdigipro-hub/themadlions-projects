@@ -5808,9 +5808,11 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
    The filter and Add (components/DbTools.jsx): on a computer the usual select and button. */
 .db-filter { display: contents; }
 .db-filter-ico, .db-add-plus { display: none; }
-/* On a phone: no line of counts, the tabs a glass capsule like TML Chat's folders, no big frame
-   around each tab, and the search, the filter and Add on one line, the last two round glass buttons. */
-@media (max-width: 820px) {
+/* No line of counts, the tabs a glass capsule like TML Chat's folders, no big frame around each tab,
+   and the search, the filter and Add on one line, the last two round glass buttons. First on a phone,
+   then on a computer too (Alex, 10 Oct: "make the desktop Database like the mobile one"). The round
+   filter is also Office's on a phone. */
+@media all {
   html[data-theme] body .db-page .db-tabs {
     display: flex; gap: 0; margin: 2px 0 14px; padding: 3px;
     border: 1px solid var(--line-soft); border-radius: 999px;
@@ -5853,9 +5855,9 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
   .db-page .db-add-plus { display: block; font-size: 24px; line-height: 1; font-weight: 400; }
   .db-page .db-add-text { display: none; }
 }
-/* Database cards on a phone a quarter shorter (Alex, 10 Oct: about 130px down to about 98px): a smaller
-   picture, tighter padding, no empty row under the text */
-@media (max-width: 820px) {
+/* Database cards a quarter shorter (Alex, 10 Oct: about 130px down to about 98px): a smaller picture,
+   tighter padding, no empty row under the text; on a phone first, then on a computer too */
+@media all {
   .db-page .people-grid.compact .person.loc-card { grid-template-rows: auto; row-gap: 0; align-items: center; padding: 10px; }
   .db-page .people-grid.compact .loc-card .person-photo { width: 66px; height: 78px; border-radius: 10px; }
   .db-page .people-grid.compact .loc-card { grid-template-columns: 66px 1fr; }
@@ -5897,3 +5899,24 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
 }
 .db-search-btn { display: none; }
 @media (max-width: 820px) { .db-search-btn { display: grid; cursor: pointer; } }
+
+/* The Database on a computer, after the phone (Alex, 10 Oct): the tab capsule as wide as its tabs, the
+   search line no wider than it needs, Cards / List and Collect from projects kept (a big screen has the
+   room), hover on the round buttons */
+@media (min-width: 821px) {
+  html[data-theme] body .db-page .db-tabs { display: inline-flex; max-width: 100%; margin: 4px 0 18px; }
+  html[data-theme] body .db-page .db-tabs a { flex: 0 0 auto; padding: 9px 18px; }
+  /* Cards / List at the far right, a small glass capsule like the tabs; Collect from projects just before it */
+  html[data-theme] body .db-page .db-card .toolbar .segmented {
+    order: 5; margin-left: auto; display: inline-flex; flex: none; gap: 0; height: 44px; box-sizing: border-box; padding: 3px;
+    border: 1px solid var(--line-soft); border-radius: 999px; background: color-mix(in srgb, var(--panel) 80%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+  }
+  html[data-theme] body .db-page .db-card .toolbar .segmented button { padding: 0 16px; border: 0; border-radius: 999px; background: none; box-shadow: none; font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
+  html[data-theme] body .db-page .db-card .toolbar .segmented button.on { color: var(--text); background: color-mix(in srgb, var(--text) 9%, transparent); }
+  html[data-theme] body .db-page .db-card .db-collect { order: 4; margin-left: auto; display: inline-flex; flex: none; }
+  html[data-theme] body .db-page .db-card .toolbar-actions .input.search { max-width: 520px; }
+  .db-page .db-card .toolbar-actions { justify-content: flex-start; }
+  html[data-theme] body .db-page .db-filter:hover, html[data-theme] body .db-page .db-card .db-add:hover { border-color: var(--muted); }
+  .db-page .people-grid.compact { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+}
