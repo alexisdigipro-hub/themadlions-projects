@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useIsMobile, useToast } from '../components/ui.jsx'
 import { uid } from '../lib/store.jsx'
 import { deleteNotes, loadNotes, noteText, saveNote } from '../lib/notes.js'
@@ -69,7 +70,8 @@ function Editor({ note, onChange }) {
   return <div ref={host} className="notes-doc" />
 }
 
-export default function Notes() {
+/* slot: on a computer the search goes up on the tabs' row of the Office page, as Office's does (Alex, 10 Oct) */
+export default function Notes({ slot = null }) {
   const toast = useToast()
   const mobile = useIsMobile()
   const [items, setItems] = useState(null) // notes and folders, null while loading
@@ -282,7 +284,7 @@ export default function Notes() {
       <button type="button" className="rem-add-list" onClick={() => { setMenu(false); newFolder() }}><span>＋</span> New Folder</button>
     </>
   )
-  const foldersPane = <aside className="rem-side">{search}{folderMenu}</aside>
+  const foldersPane = <aside className="rem-side">{!slot && search}{folderMenu}</aside>
   // on a phone, like Tasks: Search and the Folders button on one line, the folders folded under it
   const phoneTop = (
     <div className="rem-mtop">
@@ -371,6 +373,7 @@ export default function Notes() {
   return (
     <div className={`rem-app notes-app ${mobile ? (open ? 'm-note' : 'm-one') : ''}`}>
       {err && <p className="notes-err">{err}</p>}
+      {slot && createPortal(<div className="toolbar db-bar notes-bar">{search}</div>, slot)}
       {mobile ? (open ? notePane : (<>{phoneTop}{listPane}</>)) : (<>{foldersPane}{open ? notePane : listPane}</>)}
     </div>
   )
