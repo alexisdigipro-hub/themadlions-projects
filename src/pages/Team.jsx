@@ -90,7 +90,7 @@ export default function Team({ embedded = false }) {
   const Wrap = embedded ? 'section' : Fragment
   return (
     <>
-      <Wrap {...(embedded ? { className: 'panel', 'data-tab': 'team' } : {})}>
+      <Wrap {...(embedded ? { className: 'panel team-panel', 'data-tab': 'team' } : {})}>
       {embedded ? (
         <div className="panel-head">
           <h2>Team</h2>
