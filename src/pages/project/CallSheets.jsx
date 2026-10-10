@@ -788,7 +788,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
               <Button size="sm" variant="ghost" onClick={() => copy(fullText)}>Copy</Button>
             </div>
           </div>
-          <p className="fineprint">The PDF is not attached automatically: use Print / Save PDF and add it to the message if you want it. Mail opens your mail app with everyone in Bcc.</p>
+          <p className="fineprint">Mail opens your mail app with everyone in Bcc.</p>
           <div className="panel-head"><h3>Personal messages</h3><span className="muted small">Each one gets only their own call time</span></div>
           <table className="table send-table">
             <thead><tr><th>Name</th><th>Role</th><th>Call</th><th>Phone</th><th /></tr></thead>

@@ -3,9 +3,10 @@ import { uid } from '../lib/store.jsx'
 import { DETAILS, LABELS, SIZES, newCustomBlock, titleOf } from '../lib/callsheetLayout.js'
 import { Grip, moveItem, useDragSort } from './DragSort.jsx'
 
-/* The Customise panel above a call sheet. Left: how every call sheet of this project looks
-   (sections, order, names, what goes on paper and on the link). Right: what is different on
-   this one day (title, location, people added or left out). */
+/* The Customise panel above the ordino. Left: how every ordino of this project looks on its link
+   (sections, order, names, what shows). There is no printed sheet any more (Alex, 11 Oct), so the
+   Sheet switches, the sheet's header and its text size are gone; old layouts keep their sheet flags
+   unused. Right: what is different on this one day (title, location, people added or left out). */
 export default function CallSheetDesigner({ layout, setLayout, sheet, setSheet, day, setDay, loc, hiddenPeople, onShowPerson, hasOwn, isAdmin, onMakeDefault, onReset }) {
   const change = (fn) => setLayout((l) => { fn(l); return l })
   const setBlock = (i, patch) => change((l) => { l.blocks[i] = { ...l.blocks[i], ...patch } })
@@ -18,15 +19,14 @@ export default function CallSheetDesigner({ layout, setLayout, sheet, setSheet, 
     <section className="panel cs-design no-print">
       <div className="cs-design-cols">
         <div className="stack">
-          <div className="panel-head"><h3>Sections</h3><span className="muted small">Order, name, and where each one shows</span></div>
+          <div className="panel-head"><h3>Sections</h3><span className="muted small">Order, name, and whether the link shows it</span></div>
           <table className="table cs-design-table">
-            <thead><tr><th /><th>Name</th><th>Sheet</th><th>Link</th><th /></tr></thead>
+            <thead><tr><th /><th>Name</th><th>On the link</th><th /></tr></thead>
             <tbody>
               {layout.blocks.map((b, i) => (
                 <tr key={b.key} {...sort.row('blocks', i)} className={sort.cls('blocks', i)}>
                   <td className="row-actions nowrap"><Grip {...sort.grip('blocks', i)} /></td>
                   <td><input className="input sm" value={b.title} placeholder={titleOf(layout, { ...b, title: '' })} onChange={(e) => setBlock(i, { title: e.target.value })} /></td>
-                  <td><input type="checkbox" checked={b.sheet} onChange={() => setBlock(i, { sheet: !b.sheet })} aria-label={`${titleOf(layout, b)} on the sheet`} /></td>
                   <td><input type="checkbox" checked={b.link} onChange={() => setBlock(i, { link: !b.link })} aria-label={`${titleOf(layout, b)} on the link`} /></td>
                   <td className="row-actions">{b.custom && <button onClick={() => change((l) => { l.blocks.splice(i, 1) })} title="Delete this section">×</button>}</td>
                 </tr>
@@ -34,7 +34,7 @@ export default function CallSheetDesigner({ layout, setLayout, sheet, setSheet, 
             </tbody>
           </table>
           {layout.blocks.filter((b) => b.custom).map((b) => (
-            <Field key={b.key} label={`${titleOf(layout, b)} · text for every day`} hint="Type over it on the sheet to change it for one day only.">
+            <Field key={b.key} label={`${titleOf(layout, b)} · text for every day`} hint="Type over it in the ordino to change it for one day only.">
               <Textarea rows={2} value={b.text} onChange={(e) => change((l) => { const x = l.blocks.find((y) => y.key === b.key); if (x) x.text = e.target.value })} />
             </Field>
           ))}
@@ -42,12 +42,11 @@ export default function CallSheetDesigner({ layout, setLayout, sheet, setSheet, 
 
           <div className="panel-head"><h3>Details</h3></div>
           <table className="table cs-design-table">
-            <thead><tr><th>Show</th><th>Sheet</th><th>Link</th></tr></thead>
+            <thead><tr><th>Show</th><th>On the link</th></tr></thead>
             <tbody>
               {DETAILS.map(([k, name]) => (
                 <tr key={k}>
                   <td>{name}</td>
-                  <td><input type="checkbox" checked={layout.details[k].sheet} onChange={() => change((l) => { l.details[k] = { ...l.details[k], sheet: !l.details[k].sheet } })} aria-label={`${name} on the sheet`} /></td>
                   <td><input type="checkbox" checked={layout.details[k].link} onChange={() => change((l) => { l.details[k] = { ...l.details[k], link: !l.details[k].link } })} aria-label={`${name} on the link`} /></td>
                 </tr>
               ))}
@@ -63,16 +62,14 @@ export default function CallSheetDesigner({ layout, setLayout, sheet, setSheet, 
 
           <div className="panel-head"><h3>Look</h3></div>
           <div className="row-2">
-            <Field label="Header"><Select value={layout.look.header} onChange={(e) => change((l) => { l.look.header = e.target.value })} options={[['columns', 'Three columns'], ['centred', 'Title and call on top']]} /></Field>
             <Field label="Colour of headings and call time">
               <div className="cs-colour">
                 <Select value={layout.look.colour} onChange={(e) => change((l) => { l.look.colour = e.target.value })} options={[['', 'Black'], ['project', 'Project colour'], ['custom', 'Pick a colour']]} />
                 {layout.look.colour === 'custom' && <input type="color" value={layout.look.custom} onChange={(e) => change((l) => { l.look.custom = e.target.value })} aria-label="Colour" />}
               </div>
             </Field>
-            <Field label="Text size on the sheet"><Select value={layout.look.size} onChange={(e) => change((l) => { l.look.size = e.target.value })} options={SIZES} /></Field>
-            <Field label="Text size on the link"><Select value={layout.look.linkSize} onChange={(e) => change((l) => { l.look.linkSize = e.target.value })} options={SIZES} /></Field>
-            <Field label="Link colours"><Select value={layout.look.linkTheme} onChange={(e) => change((l) => { l.look.linkTheme = e.target.value })} options={[['light', 'Light'], ['dark', 'Dark']]} /></Field>
+            <Field label="Text size"><Select value={layout.look.linkSize} onChange={(e) => change((l) => { l.look.linkSize = e.target.value })} options={SIZES} /></Field>
+            <Field label="Colours"><Select value={layout.look.linkTheme} onChange={(e) => change((l) => { l.look.linkTheme = e.target.value })} options={[['light', 'Light'], ['dark', 'Dark']]} /></Field>
           </div>
 
           <p className="small muted">
@@ -119,7 +116,7 @@ export default function CallSheetDesigner({ layout, setLayout, sheet, setSheet, 
               </ul>
             </>
           )}
-          <p className="fineprint">Call times and who is on the day can also be changed right on the sheet below. After changes, press Share link again so the link shows them.</p>
+          <p className="fineprint">Call times and who is on the day can also be changed right in the ordino below. After changes, press Share link again so the link shows them.</p>
         </div>
       </div>
     </section>
