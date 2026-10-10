@@ -30,6 +30,12 @@ const blocked = (el) =>
   document.documentElement.classList.contains('chat-open') ||
   !!document.querySelector('.rem-swipe.lifted, .modal-backdrop')
 
+/* Inside an open conversation too (Alex, 11 Oct): a pull down from its top bar, or from the top of
+   the messages, reloads it. The box you type in, a message's menu and a picture open full screen
+   are left alone. */
+const chatBusy = () => !!document.querySelector('.chat-menu-scrim, .chat-viewer, .modal-backdrop, .call-screen, .chat-msg.outgoing')
+const inChat = (el) => !!el?.closest?.('.chat-head, .chat-scroll') && !el.closest('input, textarea, button.chat-media-play, video') && !chatBusy()
+
 export function installPullToRefresh() {
   if (!standalone() || typeof document === 'undefined') return
   const ring = document.createElement('div')
@@ -53,11 +59,12 @@ export function installPullToRefresh() {
 
   document.addEventListener('touchstart', (e) => {
     s = null
-    if (e.touches.length !== 1 || blocked(e.target)) return
+    const chat = inChat(e.target)
+    if (e.touches.length !== 1 || (!chat && blocked(e.target))) return
     const scroller = scrollerOf(e.target)
     if (scroller.scrollTop > 0) return
     const t = e.touches[0]
-    s = { x: t.clientX, y: t.clientY, scroller, dy: 0, on: false }
+    s = { x: t.clientX, y: t.clientY, scroller, dy: 0, on: false, chat }
   }, { passive: true })
 
   document.addEventListener('touchmove', (e) => {
@@ -67,7 +74,7 @@ export function installPullToRefresh() {
     const dy = t.clientY - s.y
     if (!s.on) {
       // only a clear downward pull from the very top; anything sideways or upwards is not ours
-      if (Math.abs(dx) > Math.abs(dy) || dy < 0 || s.scroller.scrollTop > 0 || blocked(e.target)) { if (Math.abs(dx) > 10 || dy < -6) s = null; return }
+      if (Math.abs(dx) > Math.abs(dy) || dy < 0 || s.scroller.scrollTop > 0 || (s.chat ? chatBusy() : blocked(e.target))) { if (Math.abs(dx) > 10 || dy < -6) s = null; return }
       if (dy < 12) return
       s.on = true
       ring.classList.add('pulling')
@@ -78,7 +85,7 @@ export function installPullToRefresh() {
 
   const end = () => {
     if (!s) return
-    const go = s.on && s.dy >= PULL && !blocked(null)
+    const go = s.on && s.dy >= PULL && (s.chat ? !chatBusy() : !blocked(null))
     s = null
     if (go) {
       ring.classList.add('spin')
