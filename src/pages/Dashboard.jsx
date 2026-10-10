@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
-import { CATEGORIES, STATUSES, can, emptyProject, nextProjectCode, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { CATEGORIES, can, emptyProject, nextProjectCode, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
 import { projectProgress } from '../lib/progress.js'
 import { useCover } from '../components/CoverCropper.jsx'
@@ -9,6 +9,7 @@ import { allHideable, hiddenAfterCategory, projectTabs, tabHidden, toggleTab } f
 import { initialsOf } from './Profile.jsx'
 import { joinName, nameParts } from '../lib/projectName.js'
 import { duplicateProject } from '../lib/duplicate.js'
+import { syncShootDay } from '../lib/shootDays.js'
 import { glassLens, slideOut, stillMotion } from '../lib/glide.js'
 
 /* The row of tab chips: on = shown, struck through = hidden, Overview fixed. Used by the project
@@ -62,26 +63,22 @@ export function ProjectForm({ value, onChange }) {
         <Field label="Category">
           <Select value={value.category} onChange={setCategory} options={CATEGORIES} />
         </Field>
-        <Field label="Status">
-          <Select value={value.status} onChange={set('status')} options={STATUSES} />
-        </Field>
-      </div>
-      <div className="row-2">
-        <Field label="Client / label">
-          <Input value={value.client} onChange={set('client')} placeholder="Optional" />
-        </Field>
-        <Field label="Director">
-          <Input value={value.director} onChange={set('director')} />
-        </Field>
-      </div>
-      <div className="row-2">
-        <Field label="Start">
+        {/* Start became Shoot day (Alex, 11 Oct): saving it puts the day in the Calendar and the Ordino */}
+        <Field label="Shoot day">
           <Input type="date" value={value.startDate} onChange={set('startDate')} />
         </Field>
-        <Field label="Delivery">
-          <Input type="date" value={value.endDate} onChange={set('endDate')} />
-        </Field>
       </div>
+      {/* Status, Director and Delivery taken out (Alex, 11 Oct). Delivered stays as a switch: a
+          delivered project leaves the main list and its chat is archived. */}
+      <Field label="Client / label">
+        <Input value={value.client} onChange={set('client')} placeholder="Optional" />
+      </Field>
+      {!value.isNew && (
+        <label className="check-row">
+          <input type="checkbox" checked={value.status === 'Delivered'} onChange={(e) => onChange({ ...value, status: e.target.checked ? 'Delivered' : 'Production' })} />
+          <span><strong>Delivered</strong> <span className="muted small">The project leaves the main list and its chat is archived.</span></span>
+        </label>
+      )}
       <Field label="Notes">
         <Textarea rows={3} value={value.notes} onChange={set('notes')} />
       </Field>
@@ -260,9 +257,10 @@ export default function Dashboard() {
     if (!draft.title.trim()) return toast('Give the project a title.', 'error')
     update((s) => {
       const i = s.projects.findIndex((p) => p.id === draft.id)
+      const from = i >= 0 ? s.projects[i].startDate || '' : ''
       if (i >= 0) s.projects[i] = { ...s.projects[i], ...draft, updatedAt: new Date().toISOString() }
       else s.projects.push(emptyProject({ ...draft, code: draft.code || nextProjectCode(s) }))
-      return s
+      return syncShootDay(s, draft.id, from, draft.startDate || '')
     })
     toast(draft.isNew ? 'Project created' : 'Project saved', 'ok')
     setDraft(null)
@@ -278,7 +276,7 @@ export default function Dashboard() {
       <div className="project-body">
         <h3 title={p.title}><CardName p={p} /></h3>
         <div className="project-meta">
-          <Badge>{p.status}</Badge>
+          {p.status === 'Delivered' && <Badge>Delivered</Badge>}
           {p.code && <span className="project-code">{p.code}</span>}
           {p.client && <span>{p.client}</span>}
         </div>

@@ -93,7 +93,7 @@ export default function Project() {
           <h1>{project.title}</h1>
           <div className="project-meta">
             <Badge>{project.category}</Badge>
-            <Badge>{project.status}</Badge>
+            {project.status === 'Delivered' && <Badge>Delivered</Badge>}
           </div>
         </div>
       </div>

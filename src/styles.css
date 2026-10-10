@@ -6219,3 +6219,7 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
   html .chat2.has-room .chat-emoji-btn { width: 36px; height: 36px; }
   html .chat2.has-room .chat-emoji-btn svg { width: 22px; height: 22px; }
 }
+
+/* Edit details: the Delivered switch that replaced Status (Alex, 11 Oct) */
+.check-row { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.check-row input { flex: none; width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); }
