@@ -5650,3 +5650,14 @@ select.rem-status option { color: var(--text); background: var(--bg, #1b1f2a); f
 html .chat-list.tgui .tg-notice { position: absolute; top: calc(50% - 23px); right: 70px; z-index: 1; display: grid; place-items: center; width: 46px; height: 46px; padding: 0; color: var(--text); }
 html .chat-list.tgui .tg-notice svg { width: 21px; height: 21px; }
 html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
+
+/* The app's chat list on a phone (home-screen app) fills exactly the space between the top bar and
+   the tab bar (Alex, 10 Oct: an empty band before the folders, a strip under them). It was as tall
+   as 100vh minus a guess, taller than the real space, so a list a little shorter than the screen
+   ended in an empty band and the page scrolled for nothing. Now the chat is at least the scrolling
+   area's height and no taller than its rooms, and the page keeps no bottom padding under it. */
+@media (max-width: 820px) and (display-mode: standalone) {
+  html:not(.chat-window) .shell > .content:has(> .chat2:not(.has-room):not(.windowed)) { padding-bottom: 0; }
+  html:not(.chat-window) body .chat2:not(.has-room):not(.windowed) { min-height: 100%; }
+  html:not(.chat-window) body .chat2:not(.has-room):not(.windowed) .chat-list.tgui { min-height: 0; }
+}
