@@ -1594,9 +1594,11 @@ function ChatRoom({ room, onBack }) {
           <button type="button" className="chat-pinbar-x" onClick={(e) => { e.stopPropagation(); togglePin(pinnedMsg) }} aria-label="Unpin" title="Unpin">{TgIcon.pin()}</button>
         </div>
       )}
-      {/* behind the open menu: the rest of the room blurred, a tap closes it */}
-      {picked && <div className="chat-menu-scrim" onClick={() => setPicked('')} />}
       <div className={`chat-scroll${sel ? ' selecting' : ''}`} ref={scrollRef}>
+        {/* behind the open menu: the rest of the room blurred, a tap closes it. Inside the scroll,
+            next to the messages: on the iPhone the scroll is a layer of its own, and a blur outside
+            it covered the held message and its menu too (Alex, 11 Oct) */}
+        {picked && <div className="chat-menu-scrim" onClick={() => setPicked('')} />}
         {!msgs.length && <p className="muted chat-empty">{room.kind === 'team' ? 'No messages yet. Say hi to the team.' : room.kind === 'direct' ? `No messages with ${room.name} yet.` : 'No messages yet.'}</p>}
         {groups.map((g) => (
           <div key={g.day} className="chat-day">
