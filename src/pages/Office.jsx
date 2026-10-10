@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, useIsMobile, useToast } from '../components/ui.jsx'
+import { DbFilter, DbSearch } from '../components/DbTools.jsx'
 import { can, canAccessProject, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
 import { remote } from '../lib/supabase.js'
 import { pcloudBlob, pcloudTarget } from '../lib/pcloud.js'
@@ -54,6 +55,7 @@ function Library() {
   const user = useCurrentUser()
   const nav = useNavigate()
   const toast = useToast()
+  const mobile = useIsMobile()
   const [params, setParams] = useSearchParams()
   const projectFilter = params.get('p') || 'all'
   const [kind, setKind] = useState('all')
@@ -112,36 +114,43 @@ function Library() {
     toast('Deleted', 'ok')
   }
 
+  /* On a phone (Alex, 10 Oct): no line under the title, the four starters on one line as icons with a
+     short name under each, and the filters on the next line: a glass capsule All / Docs / Sheets, a
+     round project filter and a round search */
   return (
     <div className="office">
-      <PageHead title="Office" sub="Documents and spreadsheets for each project, opened and saved right here as Word and Excel files." />
+      <PageHead title="Office" sub={mobile ? undefined : 'Documents and spreadsheets for each project, opened and saved right here as Word and Excel files.'} />
       {mayEdit && editable.length > 0 && (
         <div className="office-new">
           {TYPES.map((t) => (
             <button key={t.type} type="button" className="office-new-card" onClick={() => setDraft({ type: t.type, projectId: firstProject, name: `Untitled ${t.label.toLowerCase()}` })}>
               <DocIcon type={t.type} size={46} />
-              <span><strong>New {t.label.toLowerCase()}</strong><small>{t.app}</small></span>
+              <span><strong>{mobile ? t.label : `New ${t.label.toLowerCase()}`}</strong><small>{t.app}</small></span>
             </button>
           ))}
           <button type="button" className="office-new-card" onClick={() => fileRef.current?.click()}>
             <span className="office-ico office-ico-up" style={{ width: 46, height: 46 }}>↑</span>
-            <span><strong>Open a file</strong><small>.docx or .xlsx from your computer</small></span>
+            <span><strong>{mobile ? 'Open file' : 'Open a file'}</strong><small>.docx or .xlsx from your computer</small></span>
           </button>
           <input ref={fileRef} type="file" hidden accept=".docx,.xlsx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(e) => { pickFile(e.target.files?.[0]); e.target.value = '' }} />
           <Link to="/" className="office-new-card office-new-deck">
             <span className="office-ico" style={{ '--doc': '#d0542c', width: 46, height: 46, fontSize: 20 }}>P</span>
-            <span><strong>Presentations</strong><small>In each project, under Presentation</small></span>
+            <span><strong>{mobile ? 'Decks' : 'Presentations'}</strong><small>In each project, under Presentation</small></span>
           </Link>
         </div>
       )}
       <div className="toolbar office-tools">
         <span className="segmented small">
-          {[['all', 'All'], ['docx', 'Documents'], ['xlsx', 'Spreadsheets']].map(([v, l]) => (
+          {[['all', 'All'], ['docx', mobile ? 'Docs' : 'Documents'], ['xlsx', mobile ? 'Sheets' : 'Spreadsheets']].map(([v, l]) => (
             <button key={v} className={kind === v ? 'on' : ''} onClick={() => setKind(v)}>{l}</button>
           ))}
         </span>
-        <Select value={projectFilter} onChange={(e) => setParams(e.target.value === 'all' ? {} : { p: e.target.value })} options={[['all', 'All projects'], ...projects.map((p) => [p.id, p.title || 'Untitled'])]} />
-        <Input className="input search" placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
+        {mobile ? (
+          <DbFilter value={projectFilter === 'all' ? '' : projectFilter} onChange={(e) => setParams(!e.target.value || e.target.value === 'all' ? {} : { p: e.target.value })} options={[['', 'All projects'], ...projects.map((p) => [p.id, p.title || 'Untitled'])]} label="Project" />
+        ) : (
+          <Select value={projectFilter} onChange={(e) => setParams(e.target.value === 'all' ? {} : { p: e.target.value })} options={[['all', 'All projects'], ...projects.map((p) => [p.id, p.title || 'Untitled'])]} />
+        )}
+        <DbSearch value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       {!docs.length ? (
         <Empty title={needle || kind !== 'all' || projectFilter !== 'all' ? 'Nothing matches' : 'No documents yet'}>
