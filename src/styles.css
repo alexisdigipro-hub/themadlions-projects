@@ -5698,3 +5698,12 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
   .modal .input, .modal select, .modal textarea { max-width: 100%; min-width: 0; box-sizing: border-box; }
   .modal input[type='date'], .modal input[type='time'], .modal input[type='datetime-local'] { -webkit-appearance: none; appearance: none; display: block; width: 100%; min-width: 0; min-height: 44px; text-align: left; }
 }
+
+/* Pull down to refresh in the phone apps (lib/pullRefresh.js): a round arrow that comes down with the
+   finger, turns the accent colour once letting go will reload, and spins while it does */
+.ptr { position: fixed; top: calc(env(safe-area-inset-top) + 10px); left: 50%; z-index: 1000; display: grid; place-items: center; width: 40px; height: 40px; color: var(--muted); background: var(--panel); border: 1px solid var(--line-soft); border-radius: 50%; box-shadow: 0 6px 18px rgba(0, 0, 0, .28); opacity: 0; transform: translate(-50%, -56px); transition: opacity .2s, transform .25s cubic-bezier(.3, .7, .2, 1), color .15s; pointer-events: none; }
+.ptr.pulling { transition: color .15s; }
+.ptr.ready { color: var(--accent); }
+.ptr.spin { color: var(--accent); opacity: 1; transition: transform .2s; }
+.ptr.spin svg { animation: ptr-spin .7s linear infinite; }
+@keyframes ptr-spin { to { transform: rotate(360deg); } }
