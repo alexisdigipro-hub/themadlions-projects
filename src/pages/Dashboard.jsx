@@ -273,7 +273,7 @@ export default function Dashboard() {
       const i = s.projects.findIndex((p) => p.id === draft.id)
       const from = i >= 0 ? s.projects[i].startDate || '' : ''
       if (i >= 0) s.projects[i] = { ...s.projects[i], ...draft, updatedAt: new Date().toISOString() }
-      else s.projects.push(emptyProject({ ...draft, code: draft.code || nextProjectCode(s) }))
+      else { const { isNew, ...fresh } = draft; s.projects.push(emptyProject({ ...fresh, code: draft.code || nextProjectCode(s) })) }
       return syncShootDay(s, draft.id, from, draft.startDate || '')
     })
     toast(draft.isNew ? 'Project created' : 'Project saved', 'ok')

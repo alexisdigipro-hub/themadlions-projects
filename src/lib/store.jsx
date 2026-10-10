@@ -213,6 +213,9 @@ const adapter = {
 const OLD_CATEGORIES = { Events: 'Event', 'Feature Film': 'Visuals', Advertise: 'Ad' }
 export function migrateProject(p) {
   if (OLD_CATEGORIES[p.category]) p = { ...p, category: OLD_CATEGORIES[p.category] }
+  // New project used to save its form's "isNew" flag into the project, so Edit details took it for
+  // a new one and hid the Delivered switch (Alex, 11 Oct); a saved project is never new
+  if ('isNew' in p) { const { isNew, ...rest } = p; p = rest }
   return { shots: [], tasks: [], budget: { lines: [], contingencyPct: 10, currency: 'EUR', cap: '' }, gear: [], vendors: [], post: { cuts: [], deliverables: [] }, scriptVersions: [], ...p }
 }
 function migrate(parsed) {
