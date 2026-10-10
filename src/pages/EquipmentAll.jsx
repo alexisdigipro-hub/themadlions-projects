@@ -3,7 +3,7 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast
 import { can, gearCategoriesOf, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
-import { DbAdd, DbFilter } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbFilter } from '../components/DbTools.jsx'
 
 /* Database > Equipment (Alex, 10 Oct): the company's own film equipment, each item with what it is,
    how many, its serial and a rental price per day, so it can later be sent to whoever wants to rent it.
@@ -12,7 +12,7 @@ import { DbAdd, DbFilter } from '../components/DbTools.jsx'
 const emptyItem = (category) => ({ id: uid(), name: '', category, model: '', qty: 1, dayRate: '', serial: '', notes: '', photos: [], createdAt: new Date().toISOString() })
 const euro = (n) => (Number(n) ? `€${Number(n).toLocaleString('el-GR', { maximumFractionDigits: 2 })}` : '')
 
-export default function EquipmentAll() {
+export default function EquipmentAll({ slot }) {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
@@ -55,7 +55,7 @@ export default function EquipmentAll() {
 
   return (
     <section className="panel db-card">
-      <div className="toolbar">
+      <DbBar slot={slot}>
         <div className="toolbar-info">
           <strong>Equipment</strong> <span className="muted">{items.length}</span>
         </div>
@@ -64,7 +64,7 @@ export default function EquipmentAll() {
           <DbFilter value={cat} onChange={(e) => setCat(e.target.value)} options={[['', 'All categories'], ...cats.map((c) => [c, c])]} label="Category" />
           {editable && <DbAdd label="Add equipment" onClick={() => setDraft(emptyItem(cat || cats[0]))} />}
         </div>
-      </div>
+      </DbBar>
 
       {!list.length ? (
         <Empty title={items.length ? 'No matches' : 'No equipment yet'}>

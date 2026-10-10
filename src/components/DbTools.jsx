@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Button, Input, Select, useIsMobile } from './ui.jsx'
 
 /* The Database toolbar's filter and Add, shared by Locations, Crew, Cast and Equipment. On a computer
@@ -42,4 +43,12 @@ export function DbSearch({ value, onChange, placeholder = 'Search' }) {
       <button type="button" className="db-search-x" aria-label="Close the search" onClick={() => { onChange({ target: { value: '' } }); setOpen(false) }}>×</button>
     </span>
   )
+}
+
+/* A Database tab's search line. On a computer Database.jsx hands each tab a slot on the tabs' own line
+   (Alex, 10 Oct: "on the desktop put these in one row") and the line is drawn there; on a phone, or
+   without a slot, it stays the tab's own toolbar. Drawn through a portal, so it does not slide along
+   with the tab's content when another tab is picked. */
+export function DbBar({ slot, children }) {
+  return slot ? createPortal(<div className="toolbar db-bar">{children}</div>, slot) : <div className="toolbar">{children}</div>
 }

@@ -6,7 +6,7 @@ import { locationProjects, locationToLibrary, matchText } from '../lib/library.j
 import { coordsFromText } from '../lib/sun.js'
 import { isMapsLink, readMapLink } from '../lib/maplink.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
-import { DbAdd, DbFilter } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbFilter } from '../components/DbTools.jsx'
 
 const TYPES = ['Studio', 'Interior', 'Exterior', 'INT. & EXT.', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
 const emptyLoc = () => ({ id: uid(), name: '', mapsUrl: '', address: '', type: 'Interior', notes: '', contact: '', phone: '', lat: '', lon: '', coordsText: '', photos: [], tags: [], createdAt: new Date().toISOString() })
@@ -31,7 +31,7 @@ function areaOf(address) {
 /* Database > Locations. A compact card grid, the same look as Crew and Cast, with the map and
    full detail behind a click in a modal instead of an always-open split pane — fits one database
    section among the others instead of taking the whole page over. */
-export default function LocationsAll() {
+export default function LocationsAll({ slot }) {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
@@ -121,7 +121,7 @@ export default function LocationsAll() {
 
   return (
     <section className="panel db-card">
-      <div className="toolbar">
+      <DbBar slot={slot}>
         <div className="toolbar-info">
           <strong>Locations</strong> <span className="muted">{locs.length}</span>
         </div>
@@ -131,7 +131,7 @@ export default function LocationsAll() {
           {editable && unlinked > 0 && <Button variant="ghost" className="db-collect" onClick={collect}>Collect {unlinked} from projects</Button>}
           {editable && <DbAdd label="Add location" onClick={() => { setLinkNote(''); setDraft(emptyLoc()) }} />}
         </div>
-      </div>
+      </DbBar>
 
       {!list.length ? (
         <Empty title={locs.length ? 'No matches' : 'The database is empty'}>
