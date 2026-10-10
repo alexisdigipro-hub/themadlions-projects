@@ -2389,7 +2389,15 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 .project-progress { height: 4px; background: var(--raised); }
 .project-progress span { display: block; height: 100%; background: var(--pc); }
 .project-head-cover { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; float: left; margin-right: 12px; }
-.cover-pick { display: grid; grid-template-columns: 120px 1fr auto; gap: 10px; align-items: center; }
+.cover-pick { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+/* Choose / Adjust / Remove as real buttons (Alex, 11 Oct) */
+.cover-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.cover-btn { display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 15px 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--raised); color: var(--text); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s; }
+.cover-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cover-btn:hover { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
+.cover-btn:active { transform: scale(.97); }
+.cover-btn.danger { color: var(--danger); }
+.cover-btn.danger:hover { border-color: color-mix(in srgb, var(--danger) 60%, var(--line)); background: color-mix(in srgb, var(--danger) 10%, var(--raised)); }
 .cover-pick img { width: 120px; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius); }
 .cover-links { display: inline-flex; gap: 12px; flex-wrap: wrap; }
 /* Cover crop: a square frame, the picture moved and scaled behind it */
@@ -2433,7 +2441,7 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 .stage-pct { margin-left: auto; }
 .transcript { margin-bottom: 16px; }
 .transcript-text { max-height: 320px; overflow: auto; margin: 0; font-size: 14px; }
-@media (max-width: 820px) { .progress-head { grid-template-columns: 1fr; } .progress-cover { max-width: 240px; } .cover-pick { grid-template-columns: 1fr; } .project-head-cover { width: 44px; height: 44px; } }
+@media (max-width: 820px) { .progress-head { grid-template-columns: 1fr; } .progress-cover { max-width: 240px; } .cover-pick { flex-direction: column; align-items: flex-start; } .project-head-cover { width: 44px; height: 44px; } }
 .ros-day { margin-bottom: 14px; }
 .ros-table td.nowrap { white-space: nowrap; }
 
