@@ -4,7 +4,7 @@ import { Button, Empty, Field, Input, Textarea, useIsMobile, useToast } from '..
 import { useProject } from '../Project.jsx'
 import { useStore } from '../../lib/store.jsx'
 import { formatPages } from '../../lib/breakdown.js'
-import { fmtLong } from '../../lib/dates.js'
+import { addDays, fmtLong } from '../../lib/dates.js'
 import { ATHENS, coordsFromText, forecast, geocode, sunTimes } from '../../lib/sun.js'
 import { callSheetText, mailLink, personalCallText, shortenWithBitly, waLink, waShareLink } from '../../lib/share.js'
 import { Modal } from '../../components/ui.jsx'
@@ -220,6 +220,38 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
     const d = p.shootingDays.find((x) => x.id === day.id)
     if (d) d[k] = v
   })
+  /* The date is changed here, on the ordino (Alex, 11 Oct). Everything filled in moves with it, and so
+     does the project's shoot day in the Calendar, so the old date does not come back as an empty
+     ordino (Ordino & Program makes a day for every Calendar date). A date inside a longer shoot is
+     cut out of it and the new date added on its own. */
+  const moveDate = (to) => {
+    const from = day.date
+    if (!to || to === from) return
+    if (days.some((x) => x.id !== day.id && x.date === to)) { toast('There is already an ordino on that date.', 'error'); return }
+    setDay('date', to)
+    update((s) => {
+      const lastOf = (e) => (e.endDate && e.endDate > e.date ? e.endDate : e.date)
+      const covers = (e, d) => e.date <= d && d <= lastOf(e)
+      const shoots = s.events.filter((e) => e.projectId === project.id && e.type === 'shoot' && e.date)
+      const ev = from && shoots.find((e) => covers(e, from))
+      const taken = shoots.some((e) => e !== ev && covers(e, to))
+      if (ev && ev.date === lastOf(ev)) {
+        if (taken) s.events = s.events.filter((e) => e !== ev)
+        else { ev.date = to; if (ev.endDate) ev.endDate = to }
+        return s
+      }
+      if (ev) {
+        const last = lastOf(ev)
+        if (from === ev.date) ev.date = addDays(from, 1)
+        else if (from === last) ev.endDate = addDays(from, -1)
+        else { s.events.push({ ...ev, id: uid(), date: addDays(from, 1), endDate: last }); ev.endDate = addDays(from, -1) }
+      }
+      if (!taken && !(ev && covers(ev, to))) {
+        s.events.push({ id: uid(), projectId: project.id, type: 'shoot', title: ev?.title || `Shoot day · ${project.title}`, date: to, start: ev?.start || '', end: ev?.end || '', locationText: ev?.locationText || '', notes: '' })
+      }
+      return s
+    })
+  }
   const setCall = (key, v) => setSheet('calls', { ...calls, [key]: v })
   const hidePerson = (key, on) => {
     const next = { ...hidden }
@@ -617,6 +649,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
     <div className="ordino-form">
       <section className="ordino-sec">
         <h3><span className="ordino-n">1</span>The day</h3>
+        <Field label="Date"><Input type="date" value={day.date || ''} onChange={(e) => moveDate(e.target.value)} /></Field>
         <Field label="Title"><Input value={sheet.title || ''} placeholder={project.title} onChange={(e) => setSheet('title', e.target.value)} /></Field>
         <div className="ordino-times">
           <Field label={labelOf(layout, 'call')}><Input inputMode="numeric" placeholder="00:00" value={day.callTime || ''} onChange={(e) => setDay('callTime', e.target.value)} /></Field>
