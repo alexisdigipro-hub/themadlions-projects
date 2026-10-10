@@ -1,4 +1,5 @@
 import { lineEstimate } from './budget.js'
+import { projectTabs, tabHidden } from './tabs.js'
 
 const clamp = (n) => Math.max(0, Math.min(1, n))
 
@@ -47,6 +48,11 @@ export function projectProgress(p, settings) {
     ]
   }
   // settings.progress[category] = { off: [keys], weights: {key: n}, custom: [{ key, label, weight }] }
+  // only the stages of the tabs this project has switched on count towards the bar (Alex, 10 Oct): a
+  // stage whose tab is switched off in Edit details > Tabs, or does not exist for this kind of project,
+  // leaves the total, and the others share the bar by their weights
+  const tabOn = new Set(projectTabs(p).filter((t) => !tabHidden(p, t.to)).map((t) => t.to))
+  stages = stages.filter((s) => { const to = (s.to || '').split('?')[0]; return !to || tabOn.has(to) })
   const conf = settings?.progress?.[p.category]
   if (conf) {
     stages = stages.filter((s) => !(conf.off || []).includes(s.key)).map((s) => ({ ...s, weight: conf.weights?.[s.key] ?? s.weight }))
