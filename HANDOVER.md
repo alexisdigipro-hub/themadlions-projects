@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (10 Oct 2026)
+- **Latest (11 Oct): TML Chat's new icon.** Alex's reference: Apple's dark Liquid Glass icon (black, a glass symbol lit at the edges in violet, pink and blue). The Mad Lions mark alone (from the logo he sent, red on charcoal, turned into a white alpha mark) as glass bars: violet-pink-blue rim with a glow, a light core, on a near-black radial background. Source `public/icons/src/chat-icon.svg` (mark embedded); exported `chat-glass-512.png`, `chat-glass-192.png`, `chat-glass-touch.png` (180); new names so no cache keeps the old one; manifest-chat (background #050507), chat.html and Chat.jsx point at them; the old chat-icon PNGs are deleted. A home-screen app changes icon only when removed and added again.
 - **Open with Alex (11 Oct, end of session):**
   - Check on the iPhone: a 25 fps clip sent with Compress keeps 25 fps (Save, open in DaVinci); large emoji move (Noto); long-press menu sharp; double-tap zoom; sending ring.
   - Tick **Enforce HTTPS** in tml-links Settings > Pages once GitHub allows it.
