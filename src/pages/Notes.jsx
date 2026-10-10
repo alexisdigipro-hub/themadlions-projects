@@ -181,6 +181,12 @@ export default function Notes({ slot = null }) {
   // a note is yours, or someone shared it with you: then you can write in it, while its folder, pin,
   // sharing and deleting stay with its writer (Alex, 10 Oct)
   const mine = (n) => !n.userId || n.userId === myId
+  // While an administrator views the app as a member (Alex, 10 Oct: "it still shows the admin's notes
+  // in other users' Notes") the browser is still signed in as the administrator, so the database can
+  // only hand back his own notes, never the member's. The preview shows no notes at all and makes none.
+  const preview = !!me?.viewingAs
+  // only your own notes and the ones shared with you by name, whatever the database sends
+  const visible = (n) => !preview && (!n.userId || n.userId === myId || (n.sharedWith || []).includes(myId))
   const pending = useRef(new Map()) // id -> timer, a save waiting
   const itemsRef = useRef(items)
   itemsRef.current = items
@@ -243,7 +249,7 @@ export default function Notes({ slot = null }) {
     else { pending.current.delete(id); persist(next) }
   }
 
-  const all = items || []
+  const all = (items || []).filter(visible)
   const folders = all.filter((n) => n.kind === 'folder' && !n.deletedAt && mine(n)).sort((a, b) => a.title.localeCompare(b.title))
   const notes = all.filter((n) => n.kind === 'note' && mine(n))
   // only what someone shared with you by name: a note of theirs never shows here otherwise
@@ -393,7 +399,7 @@ export default function Notes({ slot = null }) {
       </nav>
       {folders.length > 0 && <hr className="rem-rule" />}
       {folders.length > 0 && <nav className="rem-lists">{folders.map((f) => folderRow({ id: f.id, name: f.title, count: inFolder(f.id).length, own: f }))}</nav>}
-      <button type="button" className="rem-add-list" onClick={() => { setMenu(false); newFolder() }}><span>＋</span> New Folder</button>
+      {!preview && <button type="button" className="rem-add-list" onClick={() => { setMenu(false); newFolder() }}><span>＋</span> New Folder</button>}
     </>
   )
   const foldersPane = <aside className="rem-side">{!slot && search}{folderMenu}</aside>
@@ -442,7 +448,7 @@ export default function Notes({ slot = null }) {
           </div>
         ))}
       </div>
-      {folder !== TRASH && folder !== SHARED && (
+      {folder !== TRASH && folder !== SHARED && !preview && (
         <div className="rem-quick">
           <span className="rem-quick-plus" aria-hidden="true">＋</span>
           <input className="rem-quick-input" value={quick} onChange={(e) => setQuick(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') newNote(quick.trim()); if (e.key === 'Escape') setQuick('') }} placeholder="New Note…" />
@@ -492,6 +498,7 @@ export default function Notes({ slot = null }) {
   return (
     <div className={`rem-app notes-app ${mobile ? (open ? 'm-note' : 'm-one') : ''}`}>
       {err && <p className="notes-err">{err}</p>}
+      {preview && <p className="notes-err notes-preview">Notes are private: viewing the app as {me.viewingAs} shows none of theirs and none of yours.</p>}
       {sharing && <ShareNote note={sharing} onClose={() => setSharing(null)} onChange={(p) => shareChanged(sharing.id, p)} />}
       {slot && createPortal(<div className="toolbar db-bar notes-bar">{search}</div>, slot)}
       {mobile ? (open ? notePane : (<>{phoneTop}{listPane}</>)) : (<>{foldersPane}{open ? notePane : listPane}</>)}
