@@ -132,6 +132,7 @@ export default function ChatSettings({ toast }) {
           </span>
         </div>
         <Row label="Large emoji" hint="One to three emoji alone show large, without a bubble"><Switch on={p.bigEmoji} onChange={(v) => set('bigEmoji', v)} label="Large emoji" /></Row>
+        <Row label="Animated emoji" hint="Moving emoji, like Telegram's. Noto Emoji by Google, CC BY 4.0"><Switch on={p.animatedEmoji} onChange={(v) => set('animatedEmoji', v)} label="Animated emoji" /></Row>
         <Row label="Compact spacing"><Switch on={p.density === 'compact'} onChange={(v) => set('density', v ? 'compact' : 'comfortable')} label="Compact spacing" /></Row>
       </Group>
 
