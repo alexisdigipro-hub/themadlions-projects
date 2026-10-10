@@ -2963,7 +2963,13 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
   .chat-page { min-height: 0; }
   .chat-box { min-height: calc(100vh - 150px - var(--tabbar-h)); }
   .chat-compose { padding: 8px 10px; }
-  .chat2 { grid-template-columns: 1fr; height: auto; min-height: 0; }
+  .chat2 { grid-template-columns: minmax(0, 1fr); height: auto; min-height: 0; }
+  /* a bare 1fr grows to the widest thing inside: the folder pill (All … Archived) is wider than a
+     phone, so the whole chat slid sideways and the avatars went off screen (Alex, 10 Oct) */
+  .chat2 > * { min-width: 0; }
+  .chat2 .tg-dock, .chat2 .tg-dock .chat-folders { min-width: 0; max-width: 100%; }
+  /* and the page itself never pans sideways on a phone: anything too wide is cut, not scrolled to */
+  html, body, main.content { overflow-x: clip; }
   /* An open conversation is pinned to the screen, from the top down to the tab bar (Alex, 8 Oct:
      the box you type in slid under the menu). 100vh was taller than the visible screen on a
      phone, and the tab bar is taller than --tabbar-h by the home-indicator strip, so the bottom of
