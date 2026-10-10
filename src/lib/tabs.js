@@ -16,7 +16,7 @@ export function projectTabs(project) {
     // Breakdown is framed inside Script now (its own permission still gates that section)
     ...(cat === 'Event' ? [] : [
       { to: 'script', label: 'Script & Breakdown', key: 'script', icon: 'script' },
-      { to: 'shots', label: 'Shot list', key: 'shots', icon: 'shots' },
+      { to: 'shots', label: 'Shotlist', key: 'shots', icon: 'shots' },
     ]),
     // Call sheets is framed inside Schedule now (its own permission still gates that section)
     // called Ordino for every kind of project (Alex, 10 Oct); shown to whoever has Schedule
