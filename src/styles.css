@@ -6071,12 +6071,12 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
   html[data-theme] body .fin-top .fin-set button { padding: 9px 18px; }
 }
 
-/* Settings on a computer (Alex, 10 Oct: "what are these big gaps on every page?"): the panels were
-   a grid of two columns, so each row took the height of its tallest panel and left a hole beside
-   it. Now they flow in two columns like a newspaper, each panel straight under the one above, and
-   the Team list takes the whole width. */
+/* Settings on a computer (Alex, 10 Oct: "what are these big gaps on every page?", then "put them side
+   by side at the same height, for balance"): the panels go two to a row and the two in a row are
+   always the same height, so nothing leaves a hole beside it; the Team list, and a panel marked
+   .wide, take the whole width. */
 @media (min-width: 821px) {
-  .cols.settings-cols { display: block; columns: 2; column-gap: 16px; }
-  .settings-cols > section { break-inside: avoid; -webkit-column-break-inside: avoid; margin: 0 0 16px; }
-  .settings-cols > section.team-panel { column-span: all; -webkit-column-span: all; }
+  .cols.settings-cols { align-items: stretch; }
+  .settings-cols > section { margin: 0; }
+  .settings-cols > section.team-panel, .settings-cols > section.wide { grid-column: 1 / -1; }
 }

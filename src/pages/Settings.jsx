@@ -276,7 +276,7 @@ export default function Settings() {
         )}
 
         {isAdmin && (
-          <section className="panel" data-tab="team">
+          <section className="panel wide" data-tab="team">
             <h2>Departments</h2>
             <p className="small muted">One per line, in the order you want them in menus. Used for crew, the contacts database and tasks. Existing people keep their department even if you remove it from the list.</p>
             <Textarea rows={8} value={depts} onChange={(e) => setDepts(e.target.value)} />
@@ -343,14 +343,14 @@ export default function Settings() {
         )}
 
         {isAdmin && (
-          <section className="panel" data-tab="budget">
+          <section className="panel wide" data-tab="budget">
             <h2>Budget categories</h2>
             <p className="small muted">What a budget line can be filed under, in groups, the same for every project. Click a name to rename it: every line already filed under it follows. A category with lines on it cannot be removed until you say where those lines go. The Finance column is where a payment on that category lands in Finance.</p>
             <BudgetCategoriesSettings state={state} update={update} toast={toast} />
           </section>
         )}
 
-        <section className="panel" data-tab="display">
+        <section className="panel wide" data-tab="display">
           <h2>Display</h2>
           <Field label="Theme">
             <div className="segmented small wrap">
@@ -469,7 +469,7 @@ export default function Settings() {
           </section>
         )}
 
-        <section className="panel" data-tab="chat">
+        <section className="panel wide" data-tab="chat">
           <h2>Chat</h2>
           <p className="muted small">How the chat looks and behaves for you, on this device. Everyone sets their own; nothing here changes what others see. Who gets a pop-up notice for a chat message is under Team.</p>
           <ChatSettings toast={toast} />
@@ -551,7 +551,7 @@ export default function Settings() {
             <PcloudBackup state={state} update={update} toast={toast} />
           </section>
         )}
-        <section className="panel" data-tab="data">
+        <section className="panel wide" data-tab="data">
           <h2>Your data</h2>
           <p className="muted small">
             Everything is stored in this browser under <code>{STORAGE_KEY}</code>. Download a backup before clearing browser data, and use it to move to the online database later.
