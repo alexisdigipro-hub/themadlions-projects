@@ -131,6 +131,14 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
   )
 }
 
+/* The add buttons as pills with an icon each (Alex, 11 Oct: "buttons of 2026") */
+const ADD_ICONS = {
+  task: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5" /><path d="m8.5 12 2.4 2.4 4.6-4.8" /></svg>,
+  song: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="16.5" cy="16" r="2.5" /></svg>,
+  link: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1" /><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" /></svg>,
+  notes: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5L19 8v11.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1Z" /><path d="M14 3.5V8h5M8.5 12.5h7M8.5 16h5" /></svg>,
+}
+
 export default function Overview() {
   const { project, edit, canEdit, user } = useProject()
   const [ordinoOpen, setOrdinoOpen] = useState(false)
@@ -244,9 +252,12 @@ export default function Overview() {
       </section>
 
       {adds.length > 0 && (
-        <div className="add-bar">
+        <div className="add-pills">
           {adds.map(([k, label]) => (
-            <Button key={k} variant="ghost" onClick={() => begin(k)}>{label}</Button>
+            <button key={k} type="button" className="add-pill" onClick={() => begin(k)}>
+              {ADD_ICONS[k]}
+              <span>{label}</span>
+            </button>
           ))}
         </div>
       )}
