@@ -19,7 +19,9 @@ import { fmtDate } from '../lib/dates.js'
   task opens the full form, with a Project and a List field. Company (tasks on no list) was taken off
   the side column too: such a task shows in My Tasks and All tasks.
   The data is unchanged: project tasks in project.tasks, general ones in state.todos.
-  On a phone the lists are the first screen and a list the second.
+  On a phone (Alex, 10 Oct) Tasks opens straight on My Tasks: Search and a "Lists" button on one
+  line at the top, the menu (the smart lists, the lists, + New List) folded away under that button,
+  the tasks underneath. Picking a list folds the menu again.
 */
 
 const COLORS = ['#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#5ac8fa', '#007aff', '#5856d6', '#af52de', '#ff2d55', '#a2845e', '#8e8e93', '#C8503F']
@@ -164,8 +166,9 @@ export default function TasksAll() {
   const user = useCurrentUser()
   const toast = useToast()
   const mobile = useIsMobile()
-  const [sel, setSel] = useState(firstList)
-  const [screen, setScreen] = useState('home') // phone: home | list
+  // on a phone Tasks always opens on My Tasks (Alex, 10 Oct)
+  const [sel, setSel] = useState(() => (mobile ? 'mine' : firstList()))
+  const [menu, setMenu] = useState(false) // phone: the menu of lists folded open over the tasks
   const [q, setQ] = useState('')
   const [showDone, setShowDone] = useState(false)
   const [draft, setDraft] = useState(null)
@@ -360,7 +363,7 @@ export default function TasksAll() {
     setSel(GENERAL)
   }
 
-  const pick = (k) => { setSel(k); setQ(''); if (mobile) setScreen('list') }
+  const pick = (k) => { setSel(k); setQ(''); setMenu(false) }
   /* An administrator drags a list by its ⋮⋮ to reorder the side column (Alex, 9 Oct): the order of
      settings.taskLists, the same for everyone. Same pointer handling as the tasks. */
   const [listDrag, setListDrag] = useState(null) // { id, over, after }
@@ -404,12 +407,14 @@ export default function TasksAll() {
       <span className="rem-count">{inList(l.key, open).length || ''}</span>
     </button>
   )
-  const home = (
-    <aside className="rem-side">
-      <div className="rem-search-wrap">
-        <span className="rem-search-ico" aria-hidden="true">⌕</span>
-        <input className="rem-search" type="search" placeholder="Search" value={q} onChange={(e) => { setQ(e.target.value); if (mobile && e.target.value) setScreen('list') }} />
-      </div>
+  const search = (
+    <div className="rem-search-wrap">
+      <span className="rem-search-ico" aria-hidden="true">⌕</span>
+      <input className="rem-search" type="search" placeholder="Search" value={q} onChange={(e) => { setQ(e.target.value); if (e.target.value) setMenu(false) }} />
+    </div>
+  )
+  const menuBody = (
+    <>
       <nav className="rem-smart">
         {smartLists.map(([k, label, color]) => (
           <button key={k} type="button" className={`rem-row ${sel === k && !searching ? 'on' : ''}`} style={{ '--lc': color }} onClick={() => pick(k)}>
@@ -429,7 +434,20 @@ export default function TasksAll() {
         </nav>
       )}
       {admin && <button type="button" className="rem-add-list" onClick={() => setListForm({ name: '', color: COLORS[5], icon: ICONS[0] })}><span>＋</span> New List</button>}
-    </aside>
+    </>
+  )
+  const home = <aside className="rem-side">{search}{menuBody}</aside>
+  // on a phone: Search and the Lists button on one line, the menu folded under it (Alex, 10 Oct)
+  const phoneTop = (
+    <div className="rem-mtop">
+      <div className="rem-mtop-bar">
+        {search}
+        <button type="button" className={`rem-menu-btn ${menu ? 'on' : ''}`} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
+          <span aria-hidden="true">☰</span> Lists <span className="rem-menu-chev" aria-hidden="true">⌄</span>
+        </button>
+      </div>
+      {menu && <div className="rem-side rem-mmenu">{menuBody}</div>}
+    </div>
   )
 
   /* Drag a task by its ⋮⋮ to put it where you want (Alex, 9 Oct). Pointer events, so it works with a
@@ -592,7 +610,6 @@ export default function TasksAll() {
   const listPane = (
     <section className="rem-main" style={{ '--lc': searching ? 'var(--accent)' : current.color }}>
       <div className="rem-head">
-        {mobile && <button type="button" className="rem-back" onClick={() => { setQ(''); setScreen('home') }}>‹ Lists</button>}
         <div className="grow">
           <h1>{!current.smart && !searching && <span className="rem-head-emoji">{current.icon}</span>}{searching ? `Searching for "${q.trim()}"` : current.name}</h1>
           {inBin && <div className="rem-head-date">Deleted tasks wait here until you restore them or delete them for good</div>}
@@ -635,8 +652,8 @@ export default function TasksAll() {
   )
 
   return (
-    <div className={`rem-app ${mobile ? `m-${screen}` : ''}`}>
-      {mobile ? (screen === 'home' ? home : listPane) : (<>{home}{listPane}</>)}
+    <div className={`rem-app ${mobile ? 'm-one' : ''}`}>
+      {mobile ? (<>{phoneTop}{listPane}</>) : (<>{home}{listPane}</>)}
       {draft && <TaskModal draft={draft} setDraft={setDraft} onSave={save} onClose={() => setDraft(null)} projects={projects.filter((p) => p.status !== 'Delivered' || p.id === draft.projectId)} />}
       {listForm && (
         <Modal open title={listForm.id ? 'Edit list' : 'New list'} onClose={() => setListForm(null)} footer={

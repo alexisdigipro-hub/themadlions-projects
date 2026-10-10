@@ -5707,3 +5707,22 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
 .ptr.spin { color: var(--accent); opacity: 1; transition: transform .2s; }
 .ptr.spin svg { animation: ptr-spin .7s linear infinite; }
 @keyframes ptr-spin { to { transform: rotate(360deg); } }
+
+/* ---------- Tasks on a phone open on My Tasks, the menu folded (Alex, 10 Oct) ----------
+   Search and a "Lists" button on one line at the top; the button folds the menu of lists open
+   right under it, over the tasks; picking a list folds it again. */
+@media (max-width: 820px) {
+  .rem-mtop { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+  .rem-mtop-bar { display: flex; align-items: center; gap: 8px; }
+  .rem-mtop-bar .rem-search-wrap { flex: 1; min-width: 0; margin: 0; }
+  .rem-mtop-bar .rem-search { height: 40px; }
+  .rem-menu-btn { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; height: 40px; padding: 0 12px; font: inherit; font-size: 15.5px; font-weight: 600; color: var(--text); background: var(--g-card, var(--raised)); border: 1px solid var(--g-edge, var(--line)); border-radius: 10px; cursor: pointer; }
+  .rem-menu-btn.on { color: var(--accent); border-color: var(--accent); }
+  .rem-menu-chev { display: inline-block; font-size: 15px; line-height: 1; transition: transform .18s; transform: translateY(-2px); }
+  .rem-menu-btn.on .rem-menu-chev { transform: translateY(2px) rotate(180deg); }
+  .rem-mmenu { display: flex; flex-direction: column; gap: 4px; animation: rem-menu-in .18s ease-out; }
+  .rem-mmenu .rem-group-title { margin-top: 8px; }
+  @keyframes rem-menu-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  .rem-app.m-one .rem-main { min-height: 0; }
+  .rem-app.m-one .rem-head { padding-top: 10px; }
+}
