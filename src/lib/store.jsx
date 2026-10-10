@@ -1073,7 +1073,7 @@ export function can(user, moduleKey, level = 'view') {
 export function seesDatabase(user) {
   if (!user) return false
   if (user.role === 'admin') return true
-  return (can(user, 'contacts') || can(user, 'locations') || can(user, 'gear')) && user.permissions?.databasePage !== 'hide'
+  return (can(user, 'contacts') || can(user, 'locations') || can(user, 'gear') || can(user, 'drives')) && user.permissions?.databasePage !== 'hide'
 }
 
 export function canAccessProject(user, projectId) {

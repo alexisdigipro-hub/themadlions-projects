@@ -43,7 +43,6 @@ const Chat = lazyPage(() => import('./pages/Chat.jsx'))
 const ChatWindow = lazyPage(() => import('./pages/Chat.jsx').then((m) => ({ default: m.ChatWindow })))
 const MyWork = lazyPage(() => import('./pages/MyWork.jsx'))
 const Profile = lazyPage(() => import('./pages/Profile.jsx'))
-const Drives = lazyPage(() => import('./pages/Drives.jsx'))
 const Office = lazyPage(() => import('./pages/Office.jsx'))
 const Notes = lazyPage(() => import('./pages/Notes.jsx'))
 const PublicCallSheet = lazyPage(() => import('./pages/PublicCallSheet.jsx'))
@@ -122,7 +121,7 @@ export default function App() {
                 <Route path="mywork" element={<MyWork />} />
                 <Route path="me" element={<Navigate to="/settings" replace />} />
                 <Route path="u/:id" element={<Profile />} />
-                <Route path="drives" element={<Drives />} />
+                <Route path="drives" element={<Navigate to="/database/drives" replace />} />
                 <Route path="office" element={<Office />} />
                 <Route path="notes" element={<Notes />} />
                 <Route path="office/:pid/:docId" element={<Office />} />

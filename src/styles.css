@@ -5925,3 +5925,21 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
   html[data-theme] body .db-page .db-filter:hover, html[data-theme] body .db-page .db-add:hover { border-color: var(--muted); }
   .db-page .people-grid.compact { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
 }
+
+/* Database > Drives (Alex, 10 Oct): the disks as the Database's short cards. The picture is the disk icon
+   with its status light, the text the size and free space, then how many projects and the status, and
+   a thin bar for how full it is; the open disk gets the accent edge and its contents open under its row */
+.drive-card .drive-photo { display: grid; place-items: center; background: var(--raised); }
+.drive-card .drive-photo .drive-icon { width: 44px; height: 44px; background: none; transform: scale(1.3); }
+.drive-card.st-empty .drive-icon span { background: var(--muted); }
+.drive-card.st-full .drive-icon span { background: var(--danger); }
+.drive-card.st-offline .drive-icon span { background: #D9A441; }
+.drive-card .drive-card-line { display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
+.drive-card .drive-card-line .drive-status { margin-left: 0; }
+.drive-card .drive-card-line .drive-status { font-size: 10.5px; padding: 1px 7px; }
+.drive-card .drive-bar { height: 4px; margin-top: 6px; }
+.drive-card.st-full .drive-bar span { background: var(--danger); }
+.drive-card.st-offline .drive-bar span { background: #D9A441; }
+html[data-theme] body .db-page .person.drive-card.on { border-color: var(--accent); }
+.db-page .drives .drive-series { margin-bottom: 18px; }
+.db-page .drives .drive-found { margin: 0 0 8px; }
