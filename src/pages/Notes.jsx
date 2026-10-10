@@ -98,7 +98,7 @@ function ShareNote({ note, onClose, onChange }) {
   return (
     <Modal open title="Share note" onClose={onClose} footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={!!busy}>Save</Button></>}>
       <div className="stack note-share">
-        <p className="small muted">Only you see your notes. Tick the people who may read this one too; they see it read only, under Shared with me.</p>
+        <p className="small muted">Only you see your notes. Tick the people who may read this one too; they see it read only, under Shared Notes.</p>
         <ul className="plain note-share-people">
           {team.map((u) => (
             <li key={u.id}>
@@ -247,8 +247,8 @@ export default function Notes({ slot = null }) {
   const live = notes.filter((n) => !n.deletedAt)
   const trash = notes.filter((n) => n.deletedAt)
   const inFolder = (f) => (f === ALL ? live : f === TRASH ? trash : f === SHARED ? sharedIn : f === NONE ? live.filter((n) => !n.folderId || !folders.some((x) => x.id === n.folderId)) : live.filter((n) => n.folderId === f))
-  // the menu (Alex, 10 Oct): My Notes, Deleted, then your own folders; Shared with me when someone shared one
-  const folderName = folder === ALL ? 'My Notes' : folder === TRASH ? 'Deleted' : folder === SHARED ? 'Shared with me' : folders.find((f) => f.id === folder)?.title || 'My Notes'
+  // the menu (Alex, 10 Oct): My Notes, Shared Notes (only notes others shared with you), Deleted, then your own folders
+  const folderName = folder === ALL ? 'My Notes' : folder === TRASH ? 'Deleted' : folder === SHARED ? 'Shared Notes' : folders.find((f) => f.id === folder)?.title || 'My Notes'
   useEffect(() => { if (items && ![ALL, TRASH, SHARED].includes(folder) && !folders.some((f) => f.id === folder)) setFolder(ALL) }, [items]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const shown = useMemo(() => {
@@ -383,7 +383,7 @@ export default function Notes({ slot = null }) {
     <>
       <nav className="rem-smart">
         {folderRow({ id: ALL, name: 'My Notes', count: live.length, icon: '📒' })}
-        {sharedIn.length > 0 && folderRow({ id: SHARED, name: 'Shared with me', count: sharedIn.length, icon: '👥' })}
+        {folderRow({ id: SHARED, name: 'Shared Notes', count: sharedIn.length, icon: '👥' })}
         {folderRow({ id: TRASH, name: 'Deleted', count: trash.length, icon: '🗑' })}
       </nav>
       {folders.length > 0 && <hr className="rem-rule" />}
