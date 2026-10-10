@@ -187,7 +187,6 @@ export default function TasksAll({ slot = null }) {
   const editable = can(user, 'tasks', 'edit')
   const projects = visibleProjects(state, user)
   const projectsById = Object.fromEntries(projects.map((p) => [p.id, p]))
-  const custom = state.settings?.taskLists || []
   const t0 = today()
   const meName = (user?.name || '').trim().toLowerCase()
   const isMine = (t) => (t.assigneeId ? t.assigneeId === user?.id : (t.assignee || '').trim().toLowerCase() === meName)
@@ -197,6 +196,14 @@ export default function TasksAll({ slot = null }) {
     ...projects.flatMap((p) => (p.tasks || []).map((t) => ({ ...t, projectId: p.id }))),
     ...(state.todos || []).map((t) => ({ ...t, projectId: '' })),
   ]
+  /* The lists an administrator made. A teammate also gets a list from the tasks themselves (Alex, 10 Oct:
+     "when I put it on a list, Editing say, he should get that list in his side column too"): each task
+     carries its list's name, colour and icon, so the list appears for him the moment the task reaches
+     him, even before his screen has the workspace's new list. */
+  const settingsLists = state.settings?.taskLists || []
+  const custom = admin ? settingsLists : [...settingsLists, ...every
+    .filter((t) => t.listId && t.listInfo && !settingsLists.some((l) => l.id === t.listId))
+    .reduce((out, t) => (out.some((l) => l.id === t.listId) ? out : [...out, { id: t.listId, ...t.listInfo }]), [])]
   const all = tasksFor(every, user)
   // the bin: deleted tasks this person may see, newest first
   const binned = visibleTasks(every.filter((t) => t.deletedAt), user).sort((a, b) => (b.deletedAt || '').localeCompare(a.deletedAt || ''))
@@ -253,6 +260,24 @@ export default function TasksAll({ slot = null }) {
   const sections = useMemo(() => [{ key: current.key, list: pending }], [pending, current.key])
 
   /* ---------- writes (the same as before: project tasks in the project, general ones in todos) ---------- */
+  // a task carries a copy of its list's look, for the teammates' side column (above)
+  const stampList = (x) => {
+    const l = settingsLists.find((y) => y.id === x.listId)
+    if (l) x.listInfo = { name: l.name, color: l.color, icon: l.icon }
+    else delete x.listInfo
+    return x
+  }
+  // tasks put on a list before they carried its look get it once, by an administrator's screen
+  useEffect(() => {
+    if (!admin || !editable) return
+    const stale = (t) => {
+      const l = settingsLists.find((y) => y.id === t.listId)
+      const want = l ? { name: l.name, color: l.color, icon: l.icon } : undefined
+      return t.listId && JSON.stringify(t.listInfo) !== JSON.stringify(want)
+    }
+    if ((state.todos || []).some(stale)) update((s) => { s.todos = (s.todos || []).map((t) => (stale(t) ? stampList({ ...t }) : t)); return s })
+    projects.filter((p) => (p.tasks || []).some(stale)).forEach((p) => updateProject(p.id, (x) => { x.tasks = (x.tasks || []).map((t) => (stale(t) ? stampList({ ...t }) : t)) }))
+  }, [admin, editable, JSON.stringify(settingsLists)]) // eslint-disable-line react-hooks/exhaustive-deps
   const persist = (t, fn) => {
     if (!t.projectId) return update((s) => { const x = (s.todos || []).find((y) => y.id === t.id); if (x) fn(x); return s })
     updateProject(t.projectId, (p) => { const x = (p.tasks || []).find((y) => y.id === t.id); if (x) fn(x, p) })
@@ -292,6 +317,7 @@ export default function TasksAll({ slot = null }) {
       update((s) => {
         s.todos = s.todos || []
         const { projectId, ...rest } = { ...t, ...done } // eslint-disable-line no-unused-vars
+        stampList(rest)
         const i = s.todos.findIndex((y) => y.id === t.id)
         if (i >= 0) s.todos[i] = rest
         else s.todos.push(rest)
@@ -301,6 +327,7 @@ export default function TasksAll({ slot = null }) {
       updateProject(t.projectId, (p) => {
         p.tasks = p.tasks || []
         const { projectId, ...rest } = { ...t, ...done } // eslint-disable-line no-unused-vars
+        stampList(rest)
         const i = p.tasks.findIndex((y) => y.id === t.id)
         if (i >= 0) p.tasks[i] = rest
         else p.tasks.push(rest)
@@ -468,7 +495,7 @@ export default function TasksAll({ slot = null }) {
   const canSub = (t) => editable && !t.deletedAt
   // the list and the person as pills on the right, next to the status, each its own picker (Alex, 9 Oct)
   const team = (state.users || []).filter((u) => u.active !== false && u.name).sort((a, b) => a.name.localeCompare(b.name, ['el', 'en'], { sensitivity: 'base' }))
-  const setList = (t, id) => persist(t, (x) => { if (id) x.listId = id; else delete x.listId })
+  const setList = (t, id) => persist(t, (x) => { if (id) x.listId = id; else delete x.listId; stampList(x) })
   const setAssignee = (t, name) => {
     const who = team.find((u) => u.name === name)
     notify({ ...t, assignee: name }, t)
