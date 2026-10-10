@@ -7,7 +7,6 @@ import { can, nextProjectCode, uid, useStore } from '../../lib/store.jsx'
 import { duplicateProject } from '../../lib/duplicate.js'
 import { fmtDate } from '../../lib/dates.js'
 import { projectProgress } from '../../lib/progress.js'
-import { useCover } from '../../components/CoverCropper.jsx'
 import { analyze, fmtTime, fmtTimeMs, uploadTrack } from '../../lib/audio.js'
 import { useTrackSource } from '../../lib/trackSource.js'
 import { pcloudTarget } from '../../lib/pcloud.js'
@@ -137,6 +136,10 @@ const ADD_ICONS = {
   song: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="16.5" cy="16" r="2.5" /></svg>,
   link: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1" /><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" /></svg>,
   notes: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5L19 8v11.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1Z" /><path d="M14 3.5V8h5M8.5 12.5h7M8.5 16h5" /></svg>,
+  edit: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></svg>,
+  duplicate: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" /><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8" /></svg>,
+  lock: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /></svg>,
+  unlock: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8 10.5V8a4 4 0 0 1 7.6-1.8" /></svg>,
 }
 
 export default function Overview() {
@@ -188,43 +191,19 @@ export default function Overview() {
     can(user, 'files') && canEdit('files') && !(project.links || []).length && ['link', 'Add link'],
     can(user, 'files') && canEdit('files') && !(project.productionNotes || '').trim() && ['notes', 'Add notes'],
   ].filter(Boolean)
-  const coverRef = useRef()
-  const cover = useCover({ value: project, projectId: project.id, keepSource: true, onChange: (patch) => edit((p) => { Object.assign(p, patch) }) })
 
   return (
     <div className="overview">
       <section className="panel progress">
         <div className="progress-head">
           <div className="progress-cover">
+            {/* Change / Adjust under the picture went (Alex, 11 Oct): the cover is changed in Edit details */}
             {project.coverThumb ? <img src={project.coverThumb} alt="" /> : <span className="progress-cover-empty" style={{ background: project.color }} />}
-            {canEdit('projects') && (
-              <>
-                <input ref={coverRef} type="file" accept="image/*" hidden onChange={(e) => { cover.pick(e.target.files?.[0]); e.target.value = '' }} />
-                <span className="cover-links">
-                  <button className="link small" onClick={() => coverRef.current?.click()}>{project.coverThumb ? 'Change' : 'Add cover'}</button>
-                  {project.coverThumb && <button className="link small" onClick={cover.adjust}>Adjust</button>}
-                </span>
-                {cover.modal}
-              </>
-            )}
           </div>
           <div className="progress-main">
             <div className="progress-top">
               <span>
                 <strong>{pct}% done</strong> <span className="muted small">{[project.status === 'Delivered' && 'Delivered', project.startDate && `shoot ${fmtDate(project.startDate)}`, project.frozen && '🔒 locked'].filter(Boolean).join(' · ')}</span>
-              </span>
-              <span className="row-actions progress-actions">
-                {canEdit('projects') && (
-                  <button className="link small" onClick={() => setDraft({ ...project })}>Edit details</button>
-                )}
-                {can(user, 'projects', 'edit') && (
-                  <button className="link small" disabled={duping} onClick={duplicate}>{duping ? 'Copying…' : 'Duplicate'}</button>
-                )}
-                {user?.role === 'admin' && (
-                  <button className="link small" onClick={() => { edit((p) => { p.frozen = !p.frozen }); toast(project.frozen ? 'Project unlocked, the team can edit again' : 'Project locked: only administrators can change it now', 'ok') }}>
-                    {project.frozen ? 'Unlock' : 'Lock project'}
-                  </button>
-                )}
               </span>
             </div>
             <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
@@ -251,7 +230,8 @@ export default function Overview() {
         </div>
       </section>
 
-      {adds.length > 0 && (
+      {/* the add buttons, then Edit details / Duplicate / Lock project as the same pills (Alex, 11 Oct) */}
+      {(adds.length > 0 || canEdit('projects') || can(user, 'projects', 'edit') || user?.role === 'admin') && (
         <div className="add-pills">
           {adds.map(([k, label]) => (
             <button key={k} type="button" className="add-pill" onClick={() => begin(k)}>
@@ -259,6 +239,24 @@ export default function Overview() {
               <span>{label}</span>
             </button>
           ))}
+          {canEdit('projects') && (
+            <button type="button" className="add-pill" onClick={() => setDraft({ ...project })}>
+              {ADD_ICONS.edit}
+              <span>Edit details</span>
+            </button>
+          )}
+          {can(user, 'projects', 'edit') && (
+            <button type="button" className="add-pill" disabled={duping} onClick={duplicate}>
+              {ADD_ICONS.duplicate}
+              <span>{duping ? 'Copying…' : 'Duplicate'}</span>
+            </button>
+          )}
+          {user?.role === 'admin' && (
+            <button type="button" className="add-pill" onClick={() => { edit((p) => { p.frozen = !p.frozen }); toast(project.frozen ? 'Project unlocked, the team can edit again' : 'Project locked: only administrators can change it now', 'ok') }}>
+              {project.frozen ? ADD_ICONS.unlock : ADD_ICONS.lock}
+              <span>{project.frozen ? 'Unlock' : 'Lock project'}</span>
+            </button>
+          )}
         </div>
       )}
 

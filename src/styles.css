@@ -2420,6 +2420,7 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 .add-pill svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .add-pill:hover { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); background: color-mix(in srgb, var(--accent) 7%, var(--raised)); }
 .add-pill:active { transform: scale(.97); }
+.add-pill:disabled { opacity: .55; cursor: default; transform: none; }
 @media (max-width: 820px) { .add-pills { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .add-pill { width: 100%; padding: 0 12px; } .add-pill:last-child:nth-child(odd) { grid-column: span 2; } }
 /* the call sheet's day tabs with New call sheet at their end */
 .cs-days { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
