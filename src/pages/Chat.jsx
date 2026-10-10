@@ -325,7 +325,7 @@ export function ChatWindow() {
     link?.setAttribute('href', './manifest-chat.webmanifest')
     meta?.setAttribute('content', 'TML Chat')
     // TML Chat's own icon: the logo inside a chat bubble, in Glass dark's colours (Alex, 9 Oct)
-    touch?.setAttribute('href', './icons/chat-tile-touch.png')
+    touch?.setAttribute('href', './icons/chat-mark-touch.png')
     // an install offer caught on the main app's page is for the main app, not for TML Chat
     if (!onChatPage()) installPrompt = null
     return () => {
