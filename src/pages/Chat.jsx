@@ -1899,6 +1899,32 @@ function MediaViewer({ items, start, onClose }) {
     document.body.appendChild(el); el.click(); el.remove()
   }
   const go = (d) => setI((x) => Math.min(items.length - 1, Math.max(0, x + d)))
+  /* Double tap zooms the picture in where you tapped, a finger moves it around, another double tap
+     brings it back (Alex, 11 Oct). Zoomed in, swipes move the picture instead of closing it or going
+     through the album. */
+  const imgRef = useRef(null)
+  const lastTap = useRef({ t: 0, x: 0, y: 0 })
+  const touchZoomAt = useRef(0) // a phone's double tap also fires a double click: counted once
+  const [zoom, setZoom] = useState({ s: 1, x: 0, y: 0, anim: false })
+  const zoomed = zoom.s > 1
+  useEffect(() => { setZoom({ s: 1, x: 0, y: 0, anim: false }) }, [i])
+  // the picture never slides off its own edges
+  const clampZoom = (z) => {
+    const el = imgRef.current
+    if (!el || z.s <= 1) return { s: 1, x: 0, y: 0, anim: z.anim }
+    const mx = (el.offsetWidth * (z.s - 1)) / 2
+    const my = (el.offsetHeight * (z.s - 1)) / 2
+    return { ...z, x: Math.max(-mx, Math.min(mx, z.x)), y: Math.max(-my, Math.min(my, z.y)) }
+  }
+  const toggleZoom = (px, py) => {
+    const el = imgRef.current
+    if (!el || isVideo(a)) return
+    if (zoomed) { setZoom({ s: 1, x: 0, y: 0, anim: true }); return }
+    const r = el.getBoundingClientRect()
+    const s = 2.5
+    // keeps the tapped point under the finger
+    setZoom(clampZoom({ s, x: (r.left + r.width / 2 - px) * (s - 1), y: (r.top + r.height / 2 - py) * (s - 1), anim: true }))
+  }
   useEffect(() => {
     const key = (e) => { if (e.key === 'Escape') onClose(); if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1) }
     document.addEventListener('keydown', key)
@@ -1906,12 +1932,30 @@ function MediaViewer({ items, start, onClose }) {
   }, [onClose])
   return createPortal(
     <div className="chat-viewer" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-      onTouchStart={(e) => { touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY } }}
+      onTouchStart={(e) => { touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, zx: zoom.x, zy: zoom.y } }}
+      onTouchMove={(e) => {
+        const p = touch.current
+        if (!p || !zoomed || e.touches.length !== 1) return
+        setZoom(clampZoom({ s: zoom.s, x: p.zx + e.touches[0].clientX - p.x, y: p.zy + e.touches[0].clientY - p.y, anim: false }))
+      }}
       onTouchEnd={(e) => {
         const p = touch.current
         if (!p) return
-        const dx = e.changedTouches[0].clientX - p.x
-        const dy = e.changedTouches[0].clientY - p.y
+        const ex = e.changedTouches[0].clientX
+        const ey = e.changedTouches[0].clientY
+        const dx = ex - p.x
+        const dy = ey - p.y
+        if (Math.abs(dx) < 10 && Math.abs(dy) < 10 && e.target === imgRef.current) {
+          const now = Date.now()
+          const l = lastTap.current
+          if (now - l.t < 320 && Math.abs(ex - l.x) < 40 && Math.abs(ey - l.y) < 40) {
+            lastTap.current = { t: 0, x: 0, y: 0 }
+            touchZoomAt.current = now
+            toggleZoom(ex, ey)
+          } else lastTap.current = { t: now, x: ex, y: ey }
+          return
+        }
+        if (zoomed) return
         // a swipe down closes it (as in Telegram), sideways goes through the album
         if (dy > 90 && Math.abs(dx) < 70) onClose()
         else if (Math.abs(dx) > 50 && Math.abs(dy) < 80) go(dx < 0 ? 1 : -1)
@@ -1920,7 +1964,10 @@ function MediaViewer({ items, start, onClose }) {
       {items.length > 1 && <span className="chat-viewer-n">{i + 1} / {items.length}</span>}
       {!url ? <span className="chat-viewer-wait">…</span>
         : isVideo(a) ? <video key={a.id} src={url} controls autoPlay playsInline />
-        : <img key={a.id} src={url} alt={a.name} />}
+        : <img key={a.id} ref={imgRef} src={url} alt={a.name} draggable={false}
+            className={zoomed ? 'zoomed' : ''}
+            style={{ transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.s})`, transition: zoom.anim ? 'transform .25s ease' : 'none' }}
+            onDoubleClick={(e) => { if (Date.now() - touchZoomAt.current > 700) toggleZoom(e.clientX, e.clientY) }} />}
       {items.length > 1 && i > 0 && <button type="button" className="chat-viewer-nav prev" onClick={() => go(-1)} aria-label="Previous">‹</button>}
       {items.length > 1 && i < items.length - 1 && <button type="button" className="chat-viewer-nav next" onClick={() => go(1)} aria-label="Next">›</button>}
       {url && <button type="button" className="chat-viewer-save" onClick={save}>{TgIcon.download()} Save</button>}

@@ -3975,6 +3975,10 @@ html[data-public='1'] body { background: var(--bg); }
 .chat-viewer-nav.next { right: 4px; }
 .chat-viewer-save { position: absolute; bottom: calc(14px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); padding: 8px 18px; border-radius: 999px; background: rgba(255, 255, 255, .14); color: #fff; font-weight: 600; text-decoration: none; }
 .chat-viewer-wait { color: #fff; }
+/* double tap to zoom (Alex, 11 Oct): the picture handles its own touches, no page zoom */
+.chat-viewer { overflow: hidden; }
+.chat-viewer img { touch-action: none; cursor: zoom-in; user-select: none; -webkit-user-select: none; }
+.chat-viewer img.zoomed { cursor: zoom-out; }
 
 /* The message menu, Telegram's (Alex, 8 Oct, from a Telegram screenshot): the room blurs, the
    message stays sharp, a bar of reactions above it and a column of actions under it. A tap on a
