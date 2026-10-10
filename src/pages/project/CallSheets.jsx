@@ -526,7 +526,8 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
             </div>
           </div>
         )}
-        <div className={`cs-phone pv-${layout.look.linkTheme || 'light'}`}>
+        {/* the whole sheet, no phone frame and no scroll box of its own (Alex, 10 Oct) */}
+        <div className={`cs-linkpage pv-${layout.look.linkTheme || 'light'}`}>
           <CallSheetLinkView data={linkData()} />
         </div>
       </div>
