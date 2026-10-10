@@ -1,4 +1,5 @@
-import { Button, Select } from './ui.jsx'
+import { useState } from 'react'
+import { Button, Input, Select, useIsMobile } from './ui.jsx'
 
 /* The Database toolbar's filter and Add, shared by Locations, Crew, Cast and Equipment. On a computer
    they are the usual select and button; on a phone (Alex, 10 Oct) they are round glass buttons on one
@@ -21,5 +22,24 @@ export function DbAdd({ label, onClick }) {
       <span className="db-add-plus" aria-hidden="true">＋</span>
       <span className="db-add-text">{label}</span>
     </Button>
+  )
+}
+
+/* Search: on a computer the usual box; on a phone a round glass button with a magnifier that opens
+   into a search box across its line, with × to close it (Alex, 10 Oct, Office). While it is open the
+   line carries .db-search-open, so the other controls on it can step aside. */
+const LENS = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+export function DbSearch({ value, onChange, placeholder = 'Search' }) {
+  const mobile = useIsMobile()
+  const [open, setOpen] = useState(false)
+  if (!mobile) return <Input className="input search" placeholder={placeholder} value={value} onChange={onChange} />
+  if (!open && !value) {
+    return <button type="button" className="db-search-btn" aria-label={placeholder} title={placeholder} onClick={() => setOpen(true)}>{LENS}</button>
+  }
+  return (
+    <span className="db-search-open">
+      <Input className="input search" placeholder={placeholder} value={value} onChange={onChange} autoFocus enterKeyHint="search" />
+      <button type="button" className="db-search-x" aria-label="Close the search" onClick={() => { onChange({ target: { value: '' } }); setOpen(false) }}>×</button>
+    </span>
   )
 }
