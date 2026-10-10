@@ -74,10 +74,8 @@ export default function Deliveries() {
     const p = state.projects.find((x) => x.id === projectId)
     return (p?.contacts || []).filter((c) => c.kind === 'crew' && c.name).map((c) => ({ role: c.role || c.dept || '', name: c.name }))
   }
-  const delivOf = (projectId) => {
-    const p = state.projects.find((x) => x.id === projectId)
-    return (p?.post?.deliverables || []).filter((d) => d.name).map((d) => ({ name: d.name, format: d.format || '', notes: d.notes || '' }))
-  }
+  // the file list was filled from the project's Post tab, which was taken out (Alex, 10 Oct): it is typed here
+  const delivOf = () => []
 
   const startNew = () => setDraft(emptyDelivery())
   /* A delivery keeps its link while it is reworked, so opening an existing one (same as an

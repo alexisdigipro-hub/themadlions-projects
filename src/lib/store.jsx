@@ -31,7 +31,6 @@ export const MODULES = [
   { key: 'shots', label: 'Shot list', group: 'Project tabs' },
   { key: 'schedule', label: 'Schedule', group: 'Project tabs' },
   { key: 'callsheets', label: 'Call sheets', group: 'Project tabs' },
-  { key: 'post', label: 'Post', group: 'Project tabs' },
   { key: 'contacts', label: 'Crew & cast', group: 'Database' },
   { key: 'locations', label: 'Locations', group: 'Database' },
   { key: 'gear', label: 'Equipment', group: 'Database' },
@@ -45,9 +44,9 @@ export const MODULES = [
 /* Ready-made permission sets, so a new person is one click instead of eighteen dropdowns.
    Whatever a preset does not name is 'none'. Finance stays administrators only, whatever is set here. */
 export const ROLE_PRESETS = [
-  ['Producer', { projects: 'edit', calendar: 'edit', tasks: 'edit', schedule: 'edit', callsheets: 'edit', contacts: 'edit', locations: 'edit', files: 'edit', budget: 'view', gear: 'view', drives: 'view', script: 'view', breakdown: 'view', shots: 'view', music: 'view', post: 'view', share: 'edit' }],
-  ['Director', { projects: 'view', script: 'edit', breakdown: 'edit', shots: 'edit', music: 'edit', files: 'edit', tasks: 'edit', calendar: 'view', schedule: 'view', callsheets: 'view', contacts: 'view', locations: 'view', gear: 'view', post: 'view', drives: 'view', share: 'view' }],
-  ['Editor', { projects: 'view', post: 'edit', files: 'edit', drives: 'edit', music: 'view', calendar: 'view', tasks: 'edit', share: 'view' }],
+  ['Producer', { projects: 'edit', calendar: 'edit', tasks: 'edit', schedule: 'edit', callsheets: 'edit', contacts: 'edit', locations: 'edit', files: 'edit', budget: 'view', gear: 'view', drives: 'view', script: 'view', breakdown: 'view', shots: 'view', music: 'view', share: 'edit' }],
+  ['Director', { projects: 'view', script: 'edit', breakdown: 'edit', shots: 'edit', music: 'edit', files: 'edit', tasks: 'edit', calendar: 'view', schedule: 'view', callsheets: 'view', contacts: 'view', locations: 'view', gear: 'view', drives: 'view', share: 'view' }],
+  ['Editor', { projects: 'view', files: 'edit', drives: 'edit', music: 'view', calendar: 'view', tasks: 'edit', share: 'view' }],
   ['1st AD', { projects: 'view', schedule: 'edit', callsheets: 'edit', tasks: 'edit', calendar: 'edit', contacts: 'edit', locations: 'edit', breakdown: 'view', shots: 'view', gear: 'view', files: 'view' }],
   ['Crew', { projects: 'view', callsheets: 'view', calendar: 'view', tasks: 'view' }],
   ['Accountant', { projects: 'view', budget: 'edit', gear: 'view', files: 'view' }],

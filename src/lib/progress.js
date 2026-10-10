@@ -12,10 +12,9 @@ export function projectProgress(p, settings) {
   const castDone = chars.length ? chars.filter((c) => (p.contacts || []).some((x) => x.kind === 'cast' && x.character?.toUpperCase() === c.toUpperCase())).length / chars.length : 0
   const locDone = days.length ? days.filter((d) => d.locationId).length / days.length : (p.locations || []).length ? 1 : 0
   const shotsScenes = scenes.length ? scenes.filter((s) => (p.shots || []).some((sh) => sh.sceneId === s.id)).length / scenes.length : 0
-  const cuts = p.post?.cuts || []
-  const deliv = p.post?.deliverables || []
-  const cutStage = cuts.some((c) => ['approved', 'locked'].includes(c.status)) ? 1 : cuts.some((c) => c.status === 'review' || c.status === 'notes') ? 0.6 : cuts.length ? 0.3 : 0
-  const delivDone = deliv.length ? deliv.filter((d) => d.status === 'delivered').length / deliv.length : 0
+  // Post (cuts and deliverables) was taken out with its stages (Alex, 10 Oct). An Editing job's
+  // first cut, approval and delivery are now boxes ticked by hand on the Overview.
+  const tick = (k, label, weight) => ({ key: 'custom:' + k, label, weight, done: p.customStages?.[k] ? 1 : 0, manual: true, to: '' })
   const budgetDone = (p.budget?.lines || []).some((l) => lineEstimate(l) > 0) ? 1 : 0
   const isMv = p.category === 'Music Video'
   const hasDoc = !!(p.script?.text || (p.concept && scenes.length) || (isMv && (p.music?.sections || []).length))
@@ -28,14 +27,13 @@ export function projectProgress(p, settings) {
       { key: 'venue', label: 'Venue set', weight: 15, done: clamp(locDone), to: 'people?tab=locations' },
       { key: 'crew', label: 'Crew and talent', weight: 15, done: (p.contacts || []).length ? 1 : 0, to: 'people' },
       { key: 'ros', label: 'Run of show', weight: 20, done: clamp(withBlocks), to: 'schedule' },
-      { key: 'post', label: 'Recap and deliverables', weight: 15, done: clamp(cutStage * 0.4 + delivDone * 0.6), to: 'post' },
     ]
   } else if (p.category === 'Editing') {
     stages = [
       { key: 'brief', label: 'Brief and materials in', weight: 10, done: hasDoc || (p.files || []).length > 0 ? 1 : 0, to: '' },
-      { key: 'cut', label: 'First cut', weight: 25, done: cuts.length ? 1 : 0, to: 'post' },
-      { key: 'approve', label: 'Client approval', weight: 30, done: cutStage, to: 'post' },
-      { key: 'deliver', label: 'Deliverables out', weight: 35, done: delivDone, to: 'post' },
+      tick('cut', 'First cut', 25),
+      tick('approve', 'Client approval', 30),
+      tick('deliver', 'Delivered', 35),
     ]
   } else {
     stages = [
@@ -46,7 +44,6 @@ export function projectProgress(p, settings) {
       { key: 'locations', label: 'Locations set', weight: 8, done: clamp(locDone), to: 'people?tab=locations' },
       { key: 'shots', label: 'Shot list', weight: 8, done: clamp(shotsScenes), to: 'shots' },
       { key: 'schedule', label: 'Schedule', weight: 12, done: scenes.length ? clamp(scheduled / scenes.length) : days.length ? 1 : 0, to: 'schedule' },
-      { key: 'post', label: 'Post and delivery', weight: 15, done: clamp(cutStage * 0.5 + delivDone * 0.5), to: 'post' },
     ]
   }
   // settings.progress[category] = { off: [keys], weights: {key: n}, custom: [{ key, label, weight }] }
