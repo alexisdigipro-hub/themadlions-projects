@@ -5229,6 +5229,12 @@ html .chat2[data-chat-theme='glass'] {
 }
 html .chat2[data-chat-theme='glass'] .chat-list { background: var(--chat-list-bg); -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%); border-color: rgba(255, 255, 255, .1); }
 html .chat2[data-chat-theme='glass'] .chat-box[data-bubbles] { --wa-wall: transparent; --wa-in: rgba(255, 255, 255, .09); --wa-out: #2c5d93; }
+/* Glass dark: every letter in the conversation white (Alex, 11 Oct: his own blue bubbles had dark text) */
+html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble, html body .chat2[data-chat-theme='glass'] .chat-msg.mine .chat-bubble { color: #fff; }
+html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble .chat-time, html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble .chat-tick, html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble .chat-edited { color: rgba(255, 255, 255, .72); }
+html body .chat2[data-chat-theme='glass'] .chat-msg .chat-bubble .chat-tick.seen { color: #fff; }
+html body .chat2[data-chat-theme='glass'] .chat-msg .chat-who, html body .chat2[data-chat-theme='glass'] .chat-msg .chat-who a { color: #fff; }
+html body .chat2[data-chat-theme='glass'] .chat-msg .chat-quote b, html body .chat2[data-chat-theme='glass'] .chat-msg .chat-quote span { color: #fff; }
 html .chat2[data-chat-theme='glass'] .chat-win-tabs { background: rgba(16, 22, 33, .72); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
 .cset-theme[data-chat-theme='glass'] .cset-theme-pic { background: radial-gradient(60px 40px at 20% 20%, #2f5fa8, transparent 70%), linear-gradient(160deg, #0d1522, #0b3a40); }
 .cset-theme[data-chat-theme='glass'] .cset-theme-pic i { background: rgba(255, 255, 255, .14); }
