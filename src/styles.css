@@ -5736,9 +5736,9 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
   .topbar-brand { font-size: 19px; color: var(--text); line-height: 1; }
   .tabbar { display: flex; gap: 0; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-left: 4px; padding-right: 4px; }
   .tabbar::-webkit-scrollbar { display: none; }
-  /* six to a screen (Alex, 10 Oct: "as it is, and sliding it shows the rest", then six visible each time) */
+  /* five to a screen (Alex, 10 Oct: "as it is, and sliding it shows the rest"; six for a while, then back to five) */
   .tabbar { scroll-snap-type: x proximity; }
-  .tabbar a { flex: 1 0 calc(100% / 6); min-width: 0; padding: 4px 1px; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; scroll-snap-align: start; }
+  .tabbar a { flex: 1 0 20%; min-width: 0; padding: 4px 1px; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; scroll-snap-align: start; }
 }
 @media (min-width: 821px) {
   .topbar-brand { display: none; }
@@ -5763,7 +5763,8 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
    six at a time, and slides sideways for the rest. --tabbar-h is the room it takes from the foot of
    the screen (its own height and the gap under it), which everything that sits above it uses. */
 @media (max-width: 820px) {
-  :root { --tabbar-h: 70px; --tabbar-gap: max(6px, calc(env(safe-area-inset-bottom) - 22px)); }
+  /* raised a little off the foot of the screen (Alex, 10 Oct) */
+  :root { --tabbar-h: 80px; --tabbar-gap: max(16px, calc(env(safe-area-inset-bottom) - 6px)); }
   html[data-theme] body .shell > .tabbar {
     left: 16px; right: 16px; bottom: calc(var(--tabbar-gap) - var(--ios-gap, 0px));
     padding: 4px; gap: 0;
