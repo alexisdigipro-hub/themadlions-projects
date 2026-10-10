@@ -607,16 +607,30 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
   // one row per person with their call, crew and cast apart, as the link lists them
   const crewCalls = crewRows.map((c) => ({ key: c.key, name: c.name, role: c.role || c.dept || 'Crew', call: c.call, extra: c.extra }))
   const castCalls = castRows.map((r) => ({ key: r.key, name: r.actor?.name || r.character, role: r.character || 'Cast', call: r.call, extra: r.extra }))
-  const callList = (list) => (
+  // people added by hand for this day only (were in Customise > This day only; Alex, 11 Oct: "all of
+  // it outside, so I see the preview"), edited right under the project's own cast or crew
+  const rawExtra = sheet.extra || []
+  const setExtraRow = (id, k, v) => setSheet('extra', rawExtra.map((x) => (x.id === id ? { ...x, [k]: v } : x)))
+  const callList = (list, kind) => (
     <>
-      {list.map((pp) => (
+      {list.filter((pp) => !pp.extra).map((pp) => (
         <div key={pp.key} className="ordino-row ordino-person">
           <span className="ordino-who"><strong>{pp.name}</strong><span className="muted small">{pp.role}</span></span>
           {!pp.extra && <Input inputMode="numeric" placeholder="00:00" className="ordino-time" value={pp.call || ''} onChange={(e) => setCall(pp.key, e.target.value)} aria-label={`Call for ${pp.name}`} />}
           {!pp.extra && <button type="button" className="ordino-x" onClick={() => hidePerson(pp.key, true)} aria-label="Leave out of this ordino" title="Leave out of this ordino">×</button>}
         </div>
       ))}
-      {!list.length && <p className="muted small">Nobody yet. People come from the project&#39;s Project Database.</p>}
+      {rawExtra.filter((x) => (x.kind === 'cast') === (kind === 'cast')).map((x) => (
+        <div key={x.id} className="ordino-row ordino-added">
+          <Input value={x.name || ''} placeholder="Name" onChange={(e) => setExtraRow(x.id, 'name', e.target.value)} aria-label="Name" />
+          <Input value={x.role || ''} placeholder={kind === 'cast' ? 'Character' : 'Role'} onChange={(e) => setExtraRow(x.id, 'role', e.target.value)} aria-label={kind === 'cast' ? 'Character' : 'Role'} />
+          <Input value={x.phone || ''} inputMode="tel" placeholder="Phone" onChange={(e) => setExtraRow(x.id, 'phone', e.target.value)} aria-label="Phone" />
+          <Input inputMode="numeric" className="ordino-time" value={x.call || ''} placeholder={day.callTime || '00:00'} onChange={(e) => setExtraRow(x.id, 'call', e.target.value)} aria-label="Call" />
+          <button type="button" className="ordino-x" onClick={() => setSheet('extra', rawExtra.filter((y) => y.id !== x.id))} aria-label="Remove">×</button>
+        </div>
+      ))}
+      {!list.length && !rawExtra.some((x) => (x.kind === 'cast') === (kind === 'cast')) && <p className="muted small">Nobody yet. People come from the project&#39;s Project Database, or add someone for this day only.</p>}
+      <div className="ordino-adds"><button type="button" className="link small" onClick={() => setSheet('extra', [...rawExtra, { id: uid(), kind, name: '', role: '', phone: '', call: '' }])}>+ Add a person for this day</button></div>
     </>
   )
   // what each part of the link takes, in the link's own order (the order set in Customise)
@@ -650,6 +664,10 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
         <div className="row-2">
           <Field label="Name"><Input value={sheet.locName || ''} placeholder={loc?.name || 'Location name'} onChange={(e) => setSheet('locName', e.target.value)} /></Field>
           <Field label="Address"><Input value={sheet.locAddress || ''} placeholder={loc?.address || 'Street, area'} onChange={(e) => setSheet('locAddress', e.target.value)} /></Field>
+        </div>
+        <div className="row-2">
+          <Field label="Who to ask on location"><Input value={sheet.locContact || ''} placeholder={loc?.contact || 'Name'} onChange={(e) => setSheet('locContact', e.target.value)} /></Field>
+          <Field label="Their phone"><Input value={sheet.locPhone || ''} inputMode="tel" placeholder={loc?.phone || 'Phone'} onChange={(e) => setSheet('locPhone', e.target.value)} /></Field>
         </div>
         <div className="row-2">
           <Field label={labelOf(layout, 'parking')}><Textarea rows={2} value={sheet.parking || ''} placeholder={csd.parking || 'Where, how many cars, who unloads where'} onChange={(e) => setSheet('parking', e.target.value)} /></Field>
@@ -692,8 +710,8 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       </>
     ),
     contacts: <p className="muted small">The emergency numbers and the production contacts come from Settings &gt; Call sheets, the same on every ordino.</p>,
-    cast: callList(castCalls),
-    crew: callList(crewCalls),
+    cast: callList(castCalls, 'cast'),
+    crew: callList(crewCalls, 'crew'),
   }
   const linkBlocks = layout.blocks.filter((b) => b.link && (b.custom || fields[b.key]))
   const ordinoForm = (
@@ -838,8 +856,6 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       {designing && editable && mode === 'sheet' && (
         <CallSheetDesigner
           layout={layout} setLayout={setLayout}
-          sheet={sheet} setSheet={setSheet} day={day} setDay={setDay} loc={loc}
-          hiddenPeople={hiddenPeople} onShowPerson={(k) => hidePerson(k, false)}
           hasOwn={!!project.callsheetLayout} isAdmin={user?.role === 'admin'}
           onMakeDefault={makeDefault} onReset={resetLayout}
         />
