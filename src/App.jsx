@@ -56,7 +56,6 @@ const PublicDeck = lazyPage(() => import('./pages/PublicDeck.jsx'))
 const PublicNote = lazyPage(() => import('./pages/PublicNote.jsx'))
 const Finance = lazyPage(() => import('./pages/Finance.jsx'))
 const Budget = lazyPage(() => import('./pages/project/Budget.jsx'))
-const Reports = lazyPage(() => import('./pages/project/Reports.jsx'))
 const Post = lazyPage(() => import('./pages/project/Post.jsx'))
 const Presentation = lazyPage(() => import('./pages/project/Presentation.jsx'))
 
@@ -151,7 +150,8 @@ export default function App() {
                   <Route path="schedule" element={<Schedule />} />
                   {/* Tasks is now on Overview */}
                   <Route path="tasks" element={<Navigate to=".." replace />} />
-                  <Route path="reports" element={<Reports />} />
+                  {/* Reports was taken out (Alex, 10 Oct); an old link opens the project */}
+                  <Route path="reports" element={<Navigate to=".." replace />} />
                   <Route path="budget" element={<Budget />} />
                   {/* Equipment is now a section inside People (Project Database); keep old links alive */}
                   <Route path="gear" element={<Navigate to="../people" replace />} />

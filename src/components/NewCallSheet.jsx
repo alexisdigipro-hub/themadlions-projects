@@ -7,7 +7,7 @@ import { newDayFor, nextDayDate } from '../lib/shootDays.js'
 /* New call sheet (Alex: "can I make a call sheet without setting up a shoot day first?").
    Three questions, date, call time and location, and the sheet opens ready to fill in. The shoot
    day it belongs to is made here, behind the scenes, so the shoot still lands on the Calendar,
-   on Home, in Reports and in the shot list's timings without being typed twice. Nothing else is
+   on Home and in the shot list's timings without being typed twice. Nothing else is
    needed first: no script, breakdown or scenes. A date that already has a shoot day opens that
    day's sheet instead of making a second one. */
 export default function NewCallSheet({ onClose, onCreated }) {

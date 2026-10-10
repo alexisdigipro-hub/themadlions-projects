@@ -6,7 +6,8 @@ export function projectProgress(p, settings) {
   const scenes = p.scenes || []
   const days = p.shootingDays || []
   const scheduled = scenes.filter((s) => days.some((d) => d.sceneIds.includes(s.id))).length
-  const reported = days.filter((d) => d.report?.wrap).length
+  // Reports, where a shoot day was wrapped, was taken out with its Shoot / Event days done stage
+  // (Alex, 10 Oct); the other stages share the bar by their weights
   const chars = [...new Set(scenes.flatMap((s) => s.characters || []))]
   const castDone = chars.length ? chars.filter((c) => (p.contacts || []).some((x) => x.kind === 'cast' && x.character?.toUpperCase() === c.toUpperCase())).length / chars.length : 0
   const locDone = days.length ? days.filter((d) => d.locationId).length / days.length : (p.locations || []).length ? 1 : 0
@@ -27,7 +28,6 @@ export function projectProgress(p, settings) {
       { key: 'venue', label: 'Venue set', weight: 15, done: clamp(locDone), to: 'people?tab=locations' },
       { key: 'crew', label: 'Crew and talent', weight: 15, done: (p.contacts || []).length ? 1 : 0, to: 'people' },
       { key: 'ros', label: 'Run of show', weight: 20, done: clamp(withBlocks), to: 'schedule' },
-      { key: 'event', label: 'Event days done', weight: 20, done: days.length ? clamp(reported / days.length) : 0, to: 'reports' },
       { key: 'post', label: 'Recap and deliverables', weight: 15, done: clamp(cutStage * 0.4 + delivDone * 0.6), to: 'post' },
     ]
   } else if (p.category === 'Editing') {
@@ -46,7 +46,6 @@ export function projectProgress(p, settings) {
       { key: 'locations', label: 'Locations set', weight: 8, done: clamp(locDone), to: 'people?tab=locations' },
       { key: 'shots', label: 'Shot list', weight: 8, done: clamp(shotsScenes), to: 'shots' },
       { key: 'schedule', label: 'Schedule', weight: 12, done: scenes.length ? clamp(scheduled / scenes.length) : days.length ? 1 : 0, to: 'schedule' },
-      { key: 'shoot', label: 'Shoot', weight: 25, done: days.length ? clamp(reported / days.length) : 0, to: 'reports' },
       { key: 'post', label: 'Post and delivery', weight: 15, done: clamp(cutStage * 0.5 + delivDone * 0.5), to: 'post' },
     ]
   }
