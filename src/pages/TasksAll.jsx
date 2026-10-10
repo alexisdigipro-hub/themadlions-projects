@@ -79,6 +79,9 @@ function TaskSwipe({ id, openId, setOpenId, tray, className, children, canLift, 
   const [dx, setDx] = useState(0)
   const [sliding, setSliding] = useState(false)
   const [lifted, setLifted] = useState(false)
+  const [liftY, setLiftY] = useState(0)
+  const liftAt = useRef(null) // { y, top }: where the finger and the task were when it lifted
+  const self = useRef(null)
   const t = useRef(null)
   const slid = useRef(false)
   const press = useRef(null)
@@ -98,6 +101,7 @@ function TaskSwipe({ id, openId, setOpenId, tray, className, children, canLift, 
         press.current = null
         liftedRef.current = true
         slid.current = true
+        liftAt.current = { y: t.current?.y || 0, top: self.current?.getBoundingClientRect().top || 0 }
         t.current = null
         setLifted(true)
         try { navigator.vibrate?.(12) } catch {}
@@ -106,7 +110,14 @@ function TaskSwipe({ id, openId, setOpenId, tray, className, children, canLift, 
     }
   }
   const move = (e) => {
-    if (liftedRef.current) { const q = e.touches[0]; onLiftMove(q.clientX, q.clientY, e.currentTarget); return }
+    if (liftedRef.current) {
+      const q = e.touches[0]
+      // the task follows the finger: where it should be drawn, minus where the page puts it now
+      const a = liftAt.current
+      if (a && self.current) setLiftY(a.top + (q.clientY - a.y) - (self.current.getBoundingClientRect().top - liftY))
+      onLiftMove(q.clientX, q.clientY, e.currentTarget)
+      return
+    }
     const s = t.current
     if (!s) return
     const p = e.touches[0]
@@ -122,7 +133,7 @@ function TaskSwipe({ id, openId, setOpenId, tray, className, children, canLift, 
   }
   const end = () => {
     cancelPress()
-    if (liftedRef.current) { liftedRef.current = false; setLifted(false); onLiftEnd(); return }
+    if (liftedRef.current) { liftedRef.current = false; setLifted(false); setLiftY(0); onLiftEnd(); return }
     const s = t.current
     t.current = null
     if (!s || s.dir !== 'x') return
@@ -141,7 +152,7 @@ function TaskSwipe({ id, openId, setOpenId, tray, className, children, canLift, 
     }
   }
   return (
-    <li {...rest} className={`${className} rem-swipe${sliding ? ' sliding' : ''}${open ? ' open' : ''}${lifted ? ' lifted' : ''}`} onTouchStart={start} onTouchMove={move} onTouchEnd={end} onTouchCancel={end} onClickCapture={clickCapture}>
+    <li {...rest} ref={self} style={lifted ? { transform: `translateY(${liftY}px) scale(1.035)` } : undefined} className={`${className} rem-swipe${sliding ? ' sliding' : ''}${open ? ' open' : ''}${lifted ? ' lifted' : ''}`} onTouchStart={start} onTouchMove={move} onTouchEnd={end} onTouchCancel={end} onClickCapture={clickCapture}>
       <div className="rem-swipe-tray" style={{ width: Math.max(0, -dx) }} aria-hidden={!open}>{tray}</div>
       <div className="rem-swipe-row" style={{ transform: dx ? `translateX(${dx}px)` : undefined }}>{children}</div>
     </li>
@@ -458,7 +469,8 @@ export default function TasksAll() {
   }
   const dragTo = (x, y, from) => {
     if (!drag) return
-    const hit = document.elementFromPoint(x, y)?.closest('[data-task-id]')
+    // the task under the finger, looking past the one being carried (on a phone it rides under the finger)
+    const hit = (document.elementsFromPoint?.(x, y) || [document.elementFromPoint(x, y)]).map((el) => el?.closest('[data-task-id]')).find((el) => el && el.getAttribute('data-task-id') !== drag.id)
     const id = hit?.getAttribute('data-task-id')
     // near the top or the foot of the list, it scrolls along (on a phone the page itself scrolls)
     const box = from?.closest('.rem-scroll')
