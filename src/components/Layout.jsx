@@ -137,10 +137,8 @@ export default function Layout() {
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     // Drives is a tab of the Database now (Alex, 10 Oct)
     { to: '/share', label: 'Share', show: mayShare, icon: 'post', badge: newReplies },
-    { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance' },
-    // Invoices came out of Finance's tab row into its own page (Alex). Team went the other way,
-    // into Settings > Team, so it is no longer here.
-    { to: '/invoices', label: 'Invoices', show: user?.role === 'admin', icon: 'finance' },
+    // Invoices is a tab of Finance again (Alex, 10 Oct), so /invoices lights Finance
+    { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance', also: ['/invoices'] },
     // My profile is now the first tab of Settings, on every platform (Alex, 10 Oct)
     { to: '/settings', label: 'Settings', show: true, icon: 'settings' },
   ].filter((i) => i.show)
