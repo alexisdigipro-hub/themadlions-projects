@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useIsMobile, useToast } from '../components/ui.jsx'
-import { uid } from '../lib/store.jsx'
-import { deleteNotes, loadNotes, noteText, saveNote } from '../lib/notes.js'
+import { Button, Modal, useIsMobile, useToast } from '../components/ui.jsx'
+import { uid, useCurrentUser, useStore } from '../lib/store.jsx'
+import { cleanHtml, deleteNotes, loadNotes, noteText, saveNote, setNoteSharing } from '../lib/notes.js'
+import { noteUrl, publishShare, removeShare, tokenOf } from '../lib/shares.js'
+import { mailLink, waShareLink } from '../lib/share.js'
 
 /*
   Notes, like Apple Notes (Alex, 8 Oct): each person's own, nobody else sees them. Folders on the
@@ -17,7 +19,8 @@ import { deleteNotes, loadNotes, noteText, saveNote } from '../lib/notes.js'
 */
 
 const ALL = 'all'
-const NONE = 'notes' // notes in no folder
+const NONE = 'notes' // notes in no folder (no longer a menu entry: My Notes holds them, Alex 10 Oct)
+const SHARED = 'shared' // notes others shared with you, read only
 const TRASH = 'trash'
 const DAY = 86400000
 const SAVE_AFTER = 800
@@ -41,6 +44,93 @@ function when(iso) {
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric', year: '2-digit' })
 }
 const longDate = (iso) => new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(', ', ' at ')
+
+/* A note's link (Alex, 10 Oct): a snapshot in shares, kind 'note', refreshed each time its writer saves
+   it, so the link always shows the latest. Returns the link. */
+async function publishNote({ note, state, me }) {
+  const url = await publishShare({
+    workspaceId: state.workspace.id, kind: 'note', ref: `note:${note.id}`, userId: me?.id,
+    data: { title: noteText(note.body)[0] || 'Note', html: cleanHtml(note.body), author: me?.name || '', company: state.workspace?.name || '', logo: state.settings?.logo || '', updatedAt: note.updatedAt },
+  })
+  return noteUrl(tokenOf(url))
+}
+
+/* Share a note (Alex, 10 Oct): pick teammates who may read it, and/or make a link for anyone. Only the
+   note's writer gets here; what is picked is saved with Save, a link is made or removed at once. */
+function ShareNote({ note, onClose, onChange }) {
+  const { state } = useStore()
+  const me = useCurrentUser()
+  const toast = useToast()
+  const team = (state.users || []).filter((u) => u.active !== false && u.name && u.id !== me?.id).sort((a, b) => a.name.localeCompare(b.name))
+  const [picked, setPicked] = useState(() => note.sharedWith || [])
+  const [url, setUrl] = useState('')
+  const [busy, setBusy] = useState('')
+  const flip = (id) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))
+  const makeLink = async () => {
+    setBusy('link')
+    try {
+      setUrl(await publishNote({ note, state, me }))
+      if (!note.link) { await setNoteSharing(note.id, { link: true }); onChange({ link: true }) }
+    } catch (e) { toast(e.message, 'error') } finally { setBusy('') }
+  }
+  // a note that already has a link shows it straight away
+  useEffect(() => { if (note.link) makeLink() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const dropLink = async () => {
+    setBusy('link')
+    try {
+      await removeShare({ workspaceId: state.workspace.id, ref: `note:${note.id}` })
+      await setNoteSharing(note.id, { link: false })
+      onChange({ link: false }); setUrl('')
+      toast('The link no longer opens', 'ok')
+    } catch (e) { toast(e.message, 'error') } finally { setBusy('') }
+  }
+  const save = async () => {
+    setBusy('save')
+    try {
+      await setNoteSharing(note.id, { sharedWith: picked })
+      onChange({ sharedWith: picked })
+      toast(picked.length ? `Shared with ${picked.length} ${picked.length === 1 ? 'person' : 'people'}` : 'Only you see this note now', 'ok')
+      onClose()
+    } catch (e) { toast(e.message, 'error') } finally { setBusy('') }
+  }
+  const copy = () => navigator.clipboard?.writeText(url).then(() => toast('Link copied', 'ok')).catch(() => {})
+  const title = noteText(note.body)[0] || 'Note'
+  return (
+    <Modal open title="Share note" onClose={onClose} footer={<><Button variant="ghost" onClick={onClose}>Cancel</Button><Button variant="primary" onClick={save} disabled={!!busy}>Save</Button></>}>
+      <div className="stack note-share">
+        <p className="small muted">Only you see your notes. Tick the people who may read this one too; they see it read only, under Shared Notes.</p>
+        <ul className="plain note-share-people">
+          {team.map((u) => (
+            <li key={u.id}>
+              <label className="note-share-person">
+                <input type="checkbox" checked={picked.includes(u.id)} onChange={() => flip(u.id)} />
+                <span className="grow">{u.name}</span>
+                {u.profile?.position && <span className="small muted">{u.profile.position}</span>}
+              </label>
+            </li>
+          ))}
+          {!team.length && <li className="small muted">There is nobody else in the team yet.</li>}
+        </ul>
+        <div className="note-share-link">
+          <strong>Link</strong>
+          <p className="small muted">Anyone with the link can read the note, no sign-in. It always shows the latest version.</p>
+          {url ? (
+            <>
+              <div className="share-link"><input className="input" readOnly value={url} onFocus={(e) => e.target.select()} /><Button variant="ghost" onClick={copy}>Copy</Button></div>
+              <div className="row-actions wrap">
+                <a className="btn btn-ghost" href={waShareLink(`${title}\n${url}`)} target="_blank" rel="noreferrer">WhatsApp</a>
+                <a className="btn btn-ghost" href={mailLink({ subject: title, body: url })}>Mail</a>
+                <Button variant="ghost" onClick={dropLink} disabled={!!busy}>Remove link</Button>
+              </div>
+            </>
+          ) : (
+            <Button onClick={makeLink} disabled={!!busy}>{busy === 'link' ? 'Making the link…' : 'Make a link'}</Button>
+          )}
+        </div>
+      </div>
+    </Modal>
+  )
+}
 
 /* The editor, mounted once per note: the note's html goes in, every change comes out. */
 function Editor({ note, onChange }) {
@@ -82,6 +172,11 @@ export default function Notes({ slot = null }) {
   const [menu, setMenu] = useState(false) // phone: the folders folded open over the notes
   const [quick, setQuick] = useState('')
   const [renaming, setRenaming] = useState(null) // { id, name }
+  const [sharing, setSharing] = useState(null) // the note whose Share window is open
+  const { state } = useStore()
+  const me = useCurrentUser()
+  // a note is yours, or someone shared it with you (then it is read only)
+  const mine = (n) => !n.userId || n.userId === me?.id
   const pending = useRef(new Map()) // id -> timer, a save waiting
   const itemsRef = useRef(items)
   itemsRef.current = items
@@ -114,7 +209,10 @@ export default function Notes({ slot = null }) {
   }, [reload])
   useEffect(() => { try { localStorage.setItem('tml_notes_folder', folder) } catch {} }, [folder])
 
-  const persist = useCallback((n) => saveNote(n).catch((e) => toast(e.message, 'error')), [toast])
+  // a note with a link has its snapshot refreshed each time it is saved
+  const persist = useCallback((n) => saveNote(n)
+    .then(() => { if (n.link && n.kind === 'note' && (!n.userId || n.userId === me?.id)) publishNote({ note: n, state, me }).catch(() => {}) })
+    .catch((e) => toast(e.message, 'error')), [toast, state, me])
   const flush = useCallback((id) => {
     const t = pending.current.get(id)
     if (!t) return
@@ -142,13 +240,16 @@ export default function Notes({ slot = null }) {
   }
 
   const all = items || []
-  const folders = all.filter((n) => n.kind === 'folder' && !n.deletedAt).sort((a, b) => a.title.localeCompare(b.title))
-  const notes = all.filter((n) => n.kind === 'note')
+  const folders = all.filter((n) => n.kind === 'folder' && !n.deletedAt && mine(n)).sort((a, b) => a.title.localeCompare(b.title))
+  const notes = all.filter((n) => n.kind === 'note' && mine(n))
+  const sharedIn = all.filter((n) => n.kind === 'note' && !mine(n) && !n.deletedAt)
+  const authorOf = (n) => (state.users || []).find((u) => u.id === n.userId)?.name || 'A teammate'
   const live = notes.filter((n) => !n.deletedAt)
   const trash = notes.filter((n) => n.deletedAt)
-  const inFolder = (f) => (f === ALL ? live : f === TRASH ? trash : f === NONE ? live.filter((n) => !n.folderId || !folders.some((x) => x.id === n.folderId)) : live.filter((n) => n.folderId === f))
-  const folderName = folder === ALL ? 'All Notes' : folder === NONE ? 'Notes' : folder === TRASH ? 'Recently Deleted' : folders.find((f) => f.id === folder)?.title || 'Notes'
-  useEffect(() => { if (items && ![ALL, NONE, TRASH].includes(folder) && !folders.some((f) => f.id === folder)) setFolder(ALL) }, [items]) // eslint-disable-line react-hooks/exhaustive-deps
+  const inFolder = (f) => (f === ALL ? live : f === TRASH ? trash : f === SHARED ? sharedIn : f === NONE ? live.filter((n) => !n.folderId || !folders.some((x) => x.id === n.folderId)) : live.filter((n) => n.folderId === f))
+  // the menu (Alex, 10 Oct): My Notes, Shared Notes (only notes others shared with you), Deleted, then your own folders
+  const folderName = folder === ALL ? 'My Notes' : folder === TRASH ? 'Deleted' : folder === SHARED ? 'Shared Notes' : folders.find((f) => f.id === folder)?.title || 'My Notes'
+  useEffect(() => { if (items && ![ALL, TRASH, SHARED].includes(folder) && !folders.some((f) => f.id === folder)) setFolder(ALL) }, [items]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const shown = useMemo(() => {
     const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean)
@@ -170,7 +271,7 @@ export default function Notes({ slot = null }) {
   const leave = (id) => {
     if (!id) return
     const n = itemsRef.current?.find((x) => x.id === id)
-    if (n && !n.deletedAt && !noteText(n.body).length) {
+    if (n && mine(n) && !n.deletedAt && !noteText(n.body).length) {
       clearTimeout(pending.current.get(id)); pending.current.delete(id)
       setItems((list) => list.filter((x) => x.id !== id))
       deleteNotes([id]).catch(() => {})
@@ -185,7 +286,7 @@ export default function Notes({ slot = null }) {
     if (folder === TRASH) setFolder(ALL)
     const t = now()
     const body = title ? `<h1>${esc(title)}</h1><p><br></p>` : '<h1><br></h1>'
-    const n = { id: uid(), kind: 'note', folderId: [ALL, NONE, TRASH].includes(folder) ? '' : folder, title, body, pinned: false, createdAt: t, updatedAt: t, deletedAt: '' }
+    const n = { id: uid(), userId: me?.id || '', sharedWith: [], link: false, kind: 'note', folderId: [ALL, NONE, TRASH, SHARED].includes(folder) ? '' : folder, title, body, pinned: false, createdAt: t, updatedAt: t, deletedAt: '' }
     leave(openId)
     setItems((list) => [n, ...list])
     setOpenId(n.id)
@@ -215,7 +316,13 @@ export default function Notes({ slot = null }) {
     deleteNotes(ids).catch((e) => toast(e.message, 'error'))
     setOpenId('')
   }
-  const moveTo = (n, fid) => { patch(n.id, { folderId: fid === NONE ? '' : fid }); toast(`Moved to ${fid === NONE ? 'Notes' : folders.find((f) => f.id === fid)?.title || 'folder'}`, 'ok') }
+  const moveTo = (n, fid) => { patch(n.id, { folderId: fid === NONE ? '' : fid }); toast(fid === NONE ? 'Out of its folder' : `Moved to ${folders.find((f) => f.id === fid)?.title || 'folder'}`, 'ok') }
+  // what the Share window changed, kept here too so the list and the note show it at once
+  const shareChanged = (id, p) => {
+    itemsRef.current = (itemsRef.current || []).map((n) => (n.id === id ? { ...n, ...p } : n))
+    setItems((list) => list.map((n) => (n.id === id ? { ...n, ...p } : n)))
+    setSharing((x) => (x && x.id === id ? { ...x, ...p } : x))
+  }
 
   const newFolder = () => {
     const name = (prompt('Name of the new folder', 'New Folder') || '').trim()
@@ -275,9 +382,9 @@ export default function Notes({ slot = null }) {
   const folderMenu = (
     <>
       <nav className="rem-smart">
-        {folderRow({ id: ALL, name: 'All Notes', count: live.length, icon: '📒' })}
-        {folderRow({ id: NONE, name: 'Notes', count: inFolder(NONE).length, icon: '🗒' })}
-        {trash.length > 0 && folderRow({ id: TRASH, name: 'Recently Deleted', count: trash.length, icon: '🗑' })}
+        {folderRow({ id: ALL, name: 'My Notes', count: live.length, icon: '📒' })}
+        {folderRow({ id: SHARED, name: 'Shared Notes', count: sharedIn.length, icon: '👥' })}
+        {folderRow({ id: TRASH, name: 'Deleted', count: trash.length, icon: '🗑' })}
       </nav>
       {folders.length > 0 && <hr className="rem-rule" />}
       {folders.length > 0 && <nav className="rem-lists">{folders.map((f) => folderRow({ id: f.id, name: f.title, count: inFolder(f.id).length, own: f }))}</nav>}
@@ -304,9 +411,11 @@ export default function Notes({ slot = null }) {
         <div className="notes-card-title">{n.pinned && folder !== TRASH && <span className="notes-card-pin">📌</span>}{n.lines[0] || 'New Note'}</div>
         <div className="notes-card-sub"><b>{when(n.updatedAt)}</b> {n.lines[1] || 'No additional text'}</div>
         {folder === ALL && n.folderId && <div className="notes-card-folder">🗂 {folders.find((f) => f.id === n.folderId)?.title || ''}</div>}
+        {!mine(n) && <div className="notes-card-folder">👥 From {authorOf(n)}</div>}
+        {mine(n) && (n.sharedWith?.length > 0 || n.link) && <div className="notes-card-folder">👥 {[n.sharedWith?.length ? `Shared with ${n.sharedWith.length}` : '', n.link ? 'Link' : ''].filter(Boolean).join(' · ')}</div>}
       </div>
-      {folder !== TRASH && <button type="button" className={`notes-card-act ${n.pinned ? 'on' : ''}`} title={n.pinned ? 'Unpin' : 'Pin'} onClick={(e) => { e.stopPropagation(); patch(n.id, { pinned: !n.pinned }) }}>📌</button>}
-      <button type="button" className="rem-del" title={n.deletedAt ? 'Delete now' : 'Delete'} onClick={(e) => { e.stopPropagation(); remove(n) }}>×</button>
+      {mine(n) && folder !== TRASH && <button type="button" className={`notes-card-act ${n.pinned ? 'on' : ''}`} title={n.pinned ? 'Unpin' : 'Pin'} onClick={(e) => { e.stopPropagation(); patch(n.id, { pinned: !n.pinned }) }}>📌</button>}
+      {mine(n) && <button type="button" className="rem-del" title={n.deletedAt ? 'Delete now' : 'Delete'} onClick={(e) => { e.stopPropagation(); remove(n) }}>×</button>}
     </li>
   )
 
@@ -317,10 +426,10 @@ export default function Notes({ slot = null }) {
           <h1>{q.trim() ? `Searching for "${q.trim()}"` : folderName}</h1>
           <div className="rem-head-date">{shown.length} note{shown.length === 1 ? '' : 's'}</div>
         </div>
-        {folder === TRASH && trash.length > 0 && <button type="button" className="rem-head-btn" onClick={() => { if (confirm('Delete every note in Recently Deleted for good?')) emptyTrash() }}>Empty</button>}
+        {folder === TRASH && trash.length > 0 && <button type="button" className="rem-head-btn" onClick={() => { if (confirm('Delete every note in Deleted for good?')) emptyTrash() }}>Empty</button>}
       </div>
       <div className="rem-scroll">
-        {!shown.length && <p className="rem-empty">{q ? 'No note matches.' : folder === TRASH ? 'Nothing deleted.' : 'No notes yet. Write one below.'}</p>}
+        {!shown.length && <p className="rem-empty">{q ? 'No note matches.' : folder === TRASH ? 'Nothing deleted.' : folder === SHARED ? 'Nobody has shared a note with you.' : 'No notes yet. Write one below.'}</p>}
         {groups.map((g) => (
           <div key={g.label} className="rem-section">
             <div className="notes-group-label">{g.label === 'Pinned' ? '📌 Pinned' : g.label}</div>
@@ -328,7 +437,7 @@ export default function Notes({ slot = null }) {
           </div>
         ))}
       </div>
-      {folder !== TRASH && (
+      {folder !== TRASH && folder !== SHARED && (
         <div className="rem-quick">
           <span className="rem-quick-plus" aria-hidden="true">＋</span>
           <input className="rem-quick-input" value={quick} onChange={(e) => setQuick(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') newNote(quick.trim()); if (e.key === 'Escape') setQuick('') }} placeholder="New Note…" />
@@ -343,7 +452,9 @@ export default function Notes({ slot = null }) {
       <div className="rem-head notes-note-head">
         <button type="button" className="rem-back" onClick={close}>‹ {folderName}</button>
         <span className="grow" />
-        {open.deletedAt ? (
+        {!mine(open) ? (
+          <span className="small muted notes-from">From {authorOf(open)} · read only</span>
+        ) : open.deletedAt ? (
           <>
             <button type="button" className="rem-head-btn" onClick={() => restore(open)}>Restore</button>
             <button type="button" className="rem-head-btn" onClick={() => remove(open)}>Delete now</button>
@@ -351,9 +462,10 @@ export default function Notes({ slot = null }) {
         ) : (
           <>
             <select className="notes-move" value={open.folderId && folders.some((f) => f.id === open.folderId) ? open.folderId : NONE} onChange={(e) => moveTo(open, e.target.value)} title="Folder">
-              <option value={NONE}>Notes</option>
+              <option value={NONE}>No folder</option>
               {folders.map((f) => <option key={f.id} value={f.id}>{f.title}</option>)}
             </select>
+            <button type="button" className={`rem-head-btn ${open.sharedWith?.length || open.link ? 'on' : ''}`} onClick={() => setSharing(open)} title="Share with people or by a link">👥 Share</button>
             <button type="button" className={`rem-head-btn ${open.pinned ? 'on' : ''}`} onClick={() => patch(open.id, { pinned: !open.pinned })} title={open.pinned ? 'Unpin' : 'Pin'}>📌</button>
             <button type="button" className="rem-head-btn" onClick={() => remove(open)} title="Delete">🗑</button>
           </>
@@ -361,7 +473,9 @@ export default function Notes({ slot = null }) {
       </div>
       <div className="notes-sheet">
         <div className="notes-date">{longDate(open.updatedAt)}</div>
-        {open.deletedAt ? (
+        {!mine(open) ? (
+          <div className="notes-readonly notes-shared" dangerouslySetInnerHTML={{ __html: cleanHtml(open.body) }} />
+        ) : open.deletedAt ? (
           <div className="notes-readonly" dangerouslySetInnerHTML={{ __html: open.body }} />
         ) : (
           <Editor key={open.id} note={open} onChange={onBody} />
@@ -373,6 +487,7 @@ export default function Notes({ slot = null }) {
   return (
     <div className={`rem-app notes-app ${mobile ? (open ? 'm-note' : 'm-one') : ''}`}>
       {err && <p className="notes-err">{err}</p>}
+      {sharing && <ShareNote note={sharing} onClose={() => setSharing(null)} onChange={(p) => shareChanged(sharing.id, p)} />}
       {slot && createPortal(<div className="toolbar db-bar notes-bar">{search}</div>, slot)}
       {mobile ? (open ? notePane : (<>{phoneTop}{listPane}</>)) : (<>{foldersPane}{open ? notePane : listPane}</>)}
     </div>

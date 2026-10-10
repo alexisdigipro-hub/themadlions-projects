@@ -129,10 +129,9 @@ export default function Layout() {
   const items = [
     { to: '/', label: 'Home', end: true, show: can(user, 'projects'), icon: 'home' },
     { to: '/calendar', label: 'Calendar', show: can(user, 'calendar'), icon: 'calendar' },
-    { to: '/tasks', label: 'Tasks', show: can(user, 'tasks'), icon: 'tasks' },
-    // Office and Notes are one page with tabs now (Alex, 10 Oct); everyone has Notes, Office needs Files.
-    // Right under Tasks (Alex, 10 Oct), so on a phone it is among the first five
-    { to: '/notes', label: 'Office', show: true, icon: 'office', also: ['/office', '/notes'] },
+    // the Organizer (Alex, 10 Oct): Tasks, Notes and Office as tabs of one page, opening on Tasks (or on
+    // Notes for someone without Tasks); where Tasks was, so on a phone it is among the first five
+    { to: can(user, 'tasks') ? '/tasks' : '/notes', label: 'Organizer', show: true, icon: 'tasks', also: ['/tasks', '/notes', '/office'] },
     { to: '/chat', label: 'Chat', show: true, icon: 'chat', badge: unread },
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },

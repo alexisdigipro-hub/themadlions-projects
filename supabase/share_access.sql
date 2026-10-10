@@ -30,30 +30,36 @@ drop policy if exists shares_gone on shares;
 
 create policy shares_read on shares for select
   using (workspace_id = my_ws() and case kind
+    when 'note' then created_by = auth.uid()
     when 'callsheet' then true
     when 'estimate' then is_admin()
     else my_perm('share') <> 'none' end);
 
 create policy shares_new on shares for insert
   with check (workspace_id = my_ws() and case kind
+    when 'note' then created_by = auth.uid()
     when 'callsheet' then true
     when 'estimate' then is_admin()
     else my_perm('share') = 'edit' end);
 
 create policy shares_edit on shares for update
   using (workspace_id = my_ws() and case kind
+    when 'note' then created_by = auth.uid()
     when 'callsheet' then true
     when 'estimate' then is_admin()
     else my_perm('share') = 'edit' end)
   with check (workspace_id = my_ws() and case kind
+    when 'note' then created_by = auth.uid()
     when 'callsheet' then true
     when 'estimate' then is_admin()
     else my_perm('share') = 'edit' end);
 
 create policy shares_gone on shares for delete
   using (workspace_id = my_ws() and case kind
+    when 'note' then created_by = auth.uid()
     when 'callsheet' then true
     when 'estimate' then is_admin()
     else my_perm('share') = 'edit' end);
 
+-- 'note': a note's link (notes_share.sql), seen and changed only by whoever made it.
 -- share_get stays SECURITY DEFINER, so a client opening the link is unaffected by any of this.
