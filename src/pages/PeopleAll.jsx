@@ -121,7 +121,19 @@ export default function PeopleAll({ kind }) {
         </div>
       ) : (
         <div className="people-grid compact">
-          {list.map((c) => (
+          {list.map((c) => mobile ? (
+              // on a phone the same short card as Locations: picture, name and role; a tap opens the
+              // person's window, which has the phone, the email, Edit and Delete (Alex, 10 Oct)
+              <article key={c.id} className="person loc-card" onClick={() => setDetailFor(c.id)} role="button" tabIndex={0}>
+                <div className="person-photo" aria-hidden="true">
+                  {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(c.name)}</span>}
+                </div>
+                <div className="person-body">
+                  <strong>{c.name}</strong>
+                  <div className="small muted">{c.kind === 'cast' ? c.role || 'Actor' : c.role || c.dept}</div>
+                </div>
+              </article>
+            ) : (
               <article key={c.id} className="person">
                 <button className="person-photo" onClick={() => setDetailFor(c.id)} aria-label="Details">
                   {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(c.name)}</span>}
