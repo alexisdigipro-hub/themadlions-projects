@@ -761,7 +761,7 @@ function RoomList({ activeId, windowed }) {
   }
   // Show Folder Tags: the built-in folder a room belongs to, then the person's own folders holding it
   const folderTagsOf = (r) => [
-    ...(r.archived ? ['Archived'] : r.kind === 'project' ? ['Projects'] : r.kind === 'group' ? ['Groups'] : r.kind === 'direct' ? ['People'] : []),
+    ...(r.archived ? ['Archived'] : r.kind === 'project' ? ['Projects'] : r.kind === 'group' ? ['Groups'] : []),
     ...allFolders.filter((f) => f.custom && (f.rooms || []).includes(r.id)).map((f) => f.name),
   ]
   const folderUnread = (f) => C.totalUnread(Object.fromEntries(C.roomsInFolder(f, rooms).map((r) => [r.id, unread[r.id] || 0])))
