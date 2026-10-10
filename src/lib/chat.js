@@ -117,14 +117,15 @@ export function unreadByRoom(state, user, readMap, rooms = roomsFor(state, user)
 }
 export const totalUnread = (counts) => Object.values(counts || {}).reduce((a, b) => a + b, 0)
 
-/* Folders: the built-in five plus the person's own (profile.chatFolders = [{ id, name, rooms }]).
+/* Folders: the built-in four plus the person's own (profile.chatFolders = [{ id, name, rooms }]).
    A delivered project's room is archived (see roomsFor): it drops out of All and Projects, and
    only shows up under Archived, so a closed project stops cluttering the everyday list. */
 export const BUILTIN_FOLDERS = [
   { id: 'all', name: 'All' },
   { id: 'projects', name: 'Projects', kind: 'project' },
   { id: 'groups', name: 'Groups', kind: 'group' },
-  { id: 'direct', name: 'People', kind: 'direct' },
+  // People (one-to-one chats) taken out (Alex, 11 Oct); they still show under All. A saved
+  // 'direct' choice falls back to All (Chat.jsx: allFolders[0]).
   { id: 'archived', name: 'Archived' },
 ]
 export function foldersFor(user) {
