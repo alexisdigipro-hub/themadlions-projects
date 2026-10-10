@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import ScreenInfo from '../components/ScreenInfo.jsx'
 import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
-import { CATEGORIES, DEFAULT_DEPARTMENTS, DEFAULT_GEAR_CATS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, gearCategoriesOf, sampleProject, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { CATEGORIES, DEFAULT_DEPARTMENTS, DEFAULT_GEAR_CATS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, eventTypesOf, FIXED_EVENT_TYPES, gearCategoriesOf, sampleProject, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { projectProgress } from '../lib/progress.js'
 import { expenseCats } from '../lib/finance.js'
 import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/budgetCats.js'
@@ -308,6 +308,13 @@ export default function Settings() {
                 Export .ics
               </Button>
             </Field>
+          </section>
+        )}
+        {isAdmin && (
+          <section className="panel" data-tab="calendar">
+            <h2>Event types</h2>
+            <p className="small muted">The kinds of event on the Calendar, in the order of its type list. Tap a colour to change it, rename a type in place, drag ⋮⋮ to reorder. Shoot day, From Google Calendar and Not available can be renamed but not removed: the Ordino, Google sync and days off depend on them.</p>
+            <EventTypesSettings state={state} update={update} toast={toast} />
           </section>
         )}
         {isAdmin && (
@@ -804,6 +811,67 @@ function BudgetCategoriesSettings({ state, update, toast }) {
         <Button size="sm" variant="ghost" onClick={addGroup}>Add group</Button>
         <span className="grow" />
         <Confirm onConfirm={reset} label="Reset to standard">Reset to standard</Confirm>
+      </div>
+    </div>
+  )
+}
+
+/* Settings > Calendar > Event types (Alex, 11 Oct). A type removed while events still use it is
+   kept as removed (see eventTypesOf), so those events keep their name and colour. */
+const NEW_TYPE_COLOURS = ['#E0679A', '#7C8CE0', '#3FA796', '#C99A2E', '#A8754F', '#8E6FD8']
+function EventTypesSettings({ state, update, toast }) {
+  const all = eventTypesOf(state.settings)
+  const shown = all.filter((t) => !t.removed)
+  const [name, setName] = useState('')
+  const save = (next) => update((s) => { s.settings = { ...s.settings, eventTypes: next }; return s })
+  const patch = (key, p) => save(all.map((t) => (t.key === key ? { ...t, ...p } : t)))
+  const sort = useDragSort((from, to) => save([...moveItem(shown, from, to), ...all.filter((t) => t.removed)]))
+  const taken = (v, except) => shown.some((t) => t.key !== except && t.label.toLowerCase() === v.toLowerCase())
+  const rename = (t, v) => {
+    const x = v.trim()
+    if (!x || x === t.label) return
+    if (taken(x, t.key)) return toast(`"${x}" already exists.`, 'error')
+    patch(t.key, { label: x })
+  }
+  const remove = (t) => {
+    const n = (state.events || []).filter((e) => e.type === t.key).length
+    save(n ? all.map((x) => (x.key === t.key ? { ...x, removed: true } : x)) : all.filter((x) => x.key !== t.key))
+    toast(n ? `Removed. The ${n} event${n === 1 ? '' : 's'} already of this type keep${n === 1 ? 's' : ''} it.` : 'Removed', 'ok')
+  }
+  const add = () => {
+    const x = name.trim()
+    if (!x) return
+    const old = all.find((t) => t.removed && t.label.toLowerCase() === x.toLowerCase())
+    if (old) { save([...shown, { ...old, removed: false }, ...all.filter((t) => t.removed && t.key !== old.key)]); setName(''); return }
+    if (taken(x)) return toast(`"${x}" already exists.`, 'error')
+    const colour = NEW_TYPE_COLOURS[all.length % NEW_TYPE_COLOURS.length]
+    // a new type goes before From Google Calendar and Not available, which close the list
+    const at = shown.findIndex((t) => t.key === 'google' || t.key === 'unavailable')
+    const next = [...shown]
+    next.splice(at < 0 ? next.length : at, 0, { key: `t-${uid()}`, label: x, color: colour })
+    save([...next, ...all.filter((t) => t.removed)])
+    setName('')
+  }
+  return (
+    <div className="stack">
+      <ul className="plain evtype-list">
+        {shown.map((t, i) => (
+          <li key={t.key} {...sort.row('evtypes', i)} className={`evtype-row ${sort.cls('evtypes', i)}`}>
+            <Grip {...sort.grip('evtypes', i)} />
+            <label className="evtype-colour" style={{ background: t.color }} title="Colour">
+              <input type="color" value={t.color} onChange={(e) => patch(t.key, { color: e.target.value })} aria-label={`Colour of ${t.label}`} />
+            </label>
+            <input className="input" defaultValue={t.label} key={t.label} onBlur={(e) => rename(t, e.target.value)} onKeyDown={(e) => e.key === 'Enter' && e.target.blur()} aria-label="Type name" />
+            <button className="bcat-btn bcat-x" title={FIXED_EVENT_TYPES.includes(t.key) ? 'The app needs this one' : 'Remove'} disabled={FIXED_EVENT_TYPES.includes(t.key)} onClick={() => remove(t)}>×</button>
+          </li>
+        ))}
+      </ul>
+      <div className="bcat-add">
+        <Input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} placeholder="New type, e.g. Fitting" />
+        <Button size="sm" variant="ghost" onClick={add}>Add</Button>
+      </div>
+      <div className="evtype-reset">
+        <Confirm onConfirm={() => { save(null); toast('The standard event types are back.', 'ok') }} label="Reset to standard">Reset to standard</Confirm>
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button, Confirm, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from './ui.jsx'
 import MiniCalendar from './MiniCalendar.jsx'
-import { EVENT_TYPES, can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { can, eventTypesOf, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { addDays, buildICS, download, fmtDate, holidayName, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
 import { gcalDelete, gcalOn, gcalPull, gcalUpsert, reconcilePulledEvents } from '../lib/googleCalendar.js'
 import { FEED_COLOR, liveFeeds, parseIcs, readFeedText } from '../lib/ical.js'
@@ -94,7 +94,9 @@ export default function CalendarView({ projectId = null, title }) {
   }
   // personId is who the day off belongs to; createdBy stays who wrote it down. Older days off
   // have no personId, so everything that reads one falls back to createdBy.
-  const newEvent = (date, type = 'prep') => ({ id: uid(), projectId: type === 'unavailable' ? '' : projectId || projects[0]?.id || '', type, title: '', date, endDate: '', start: '', end: '', locationText: '', notes: '', personId: '', personName: '', createdBy: user?.id || '', createdByName: user?.name || '', isNew: true })
+  // a new event starts as Prep, or the first type still in use if Prep was removed in Settings
+  const firstType = () => { const t = eventTypesOf(state.settings).filter((x) => !x.removed && x.key !== 'google' && x.key !== 'unavailable'); return (t.find((x) => x.key === 'prep') || t[0] || { key: 'shoot' }).key }
+  const newEvent = (date, type = firstType()) => ({ id: uid(), projectId: type === 'unavailable' ? '' : projectId || projects[0]?.id || '', type, title: '', date, endDate: '', start: '', end: '', locationText: '', notes: '', personId: '', personName: '', createdBy: user?.id || '', createdByName: user?.name || '', isNew: true })
   const canMarkOff = isAdmin
   const personLabel = (e) => e.personName || e.createdByName || e.title
 
@@ -148,12 +150,15 @@ export default function CalendarView({ projectId = null, title }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [synced, calendarId])
 
-  const typeOf = (k) => EVENT_TYPES.find((t) => t.key === k) || EVENT_TYPES[0]
+  // the workspace's own types (Settings > Calendar > Event types); removed ones still name old events
+  const allTypes = eventTypesOf(state.settings)
+  const types = allTypes.filter((t) => !t.removed)
+  const typeOf = (k) => allTypes.find((t) => t.key === k) || { key: k, label: 'Other', color: '#9AA0A6' }
   const feedById = Object.fromEntries(feeds.map((f) => [f.id, f]))
   const colorOf = (e) => (e.feed ? feedById[e.feedId]?.color || FEED_COLOR : typeOf(e.type).color)
   const labelOf = (e) => (e.feed ? e.feedName || 'Calendar feed' : typeOf(e.type).label)
   // the legend and the type filter list the feeds after the app's own kinds
-  const legendTypes = projectId ? EVENT_TYPES : [...EVENT_TYPES, ...feeds.map((f) => ({ key: `feed:${f.id}`, label: f.name || 'Calendar feed', color: f.color || FEED_COLOR }))]
+  const legendTypes = projectId ? types : [...types, ...feeds.map((f) => ({ key: `feed:${f.id}`, label: f.name || 'Calendar feed', color: f.color || FEED_COLOR }))]
   const projName = (id) => state.projects.find((p) => p.id === id)?.title || ''
 
   return (
@@ -336,7 +341,7 @@ export default function CalendarView({ projectId = null, title }) {
             )}
             <div className="row-2" hidden={!!draft.feed}>
               <Field label="Type">
-                <Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={EVENT_TYPES.filter((t) => (t.key !== 'google' || draft.type === 'google') && (t.key !== 'unavailable' || isAdmin)).map((t) => [t.key, t.label])} disabled={!canEditDraft(draft)} />
+                <Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={allTypes.filter((t) => (!t.removed || t.key === draft.type) && (t.key !== 'google' || draft.type === 'google') && (t.key !== 'unavailable' || isAdmin)).map((t) => [t.key, t.label])} disabled={!canEditDraft(draft)} />
               </Field>
               <Field label="Project">
                 <Select value={draft.projectId || ''} onChange={(e) => setDraft({ ...draft, projectId: e.target.value })} disabled={!canEditDraft(draft) || !!projectId}>

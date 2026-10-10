@@ -68,6 +68,21 @@ export const EVENT_TYPES = [
   { key: 'unavailable', label: 'Not available', color: '#6B7280' },
 ]
 
+/* The event types are the workspace's own (Alex, 11 Oct: Settings > Calendar > Event types): renamed,
+   recoloured, reordered, added, removed. Saved in settings.eventTypes; nothing saved means the
+   standard list above. A removed type that events still use stays in the list as removed, so those
+   events keep their name and colour, but it is no longer offered. Shoot day (the Ordino and Shoot
+   day hang on it), From Google Calendar and Not available can be renamed but never go. */
+export const FIXED_EVENT_TYPES = ['shoot', 'google', 'unavailable']
+export function eventTypesOf(settings) {
+  const saved = Array.isArray(settings?.eventTypes) ? settings.eventTypes.filter((t) => t && t.key) : []
+  if (!saved.length) return EVENT_TYPES
+  const list = saved.map((t) => (FIXED_EVENT_TYPES.includes(t.key) ? { ...t, removed: false } : t))
+  EVENT_TYPES.filter((t) => FIXED_EVENT_TYPES.includes(t.key) && !list.some((x) => x.key === t.key)).forEach((t) => list.push(t))
+  return list
+}
+export const activeEventTypes = (settings) => eventTypesOf(settings).filter((t) => !t.removed)
+
 export const ELEMENT_CATEGORIES = [
   'Cast', 'Extras', 'Props', 'Set dressing', 'Wardrobe', 'Makeup & hair', 'Vehicles', 'Animals',
   'Stunts', 'Special effects', 'VFX', 'Sound', 'Camera & grip', 'Special equipment', 'Notes',
