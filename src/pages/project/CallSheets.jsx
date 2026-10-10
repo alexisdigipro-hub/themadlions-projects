@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Empty, useIsMobile, useToast } from '../../components/ui.jsx'
+import { Button, Empty, Field, Input, Textarea, useIsMobile, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { useStore } from '../../lib/store.jsx'
 import { formatPages } from '../../lib/breakdown.js'
@@ -538,6 +538,110 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
     )
   }
 
+  /* The ordino as a form (Alex, 10 Oct: "I only care about On the phone: put the fields to fill in there
+     and the preview on the right"). Every field writes where the sheet always kept it, so the link,
+     Send message and older ordinos read the same data; what each part shows on the link is still
+     chosen in Customise. */
+  // one row per person with their call, crew and cast apart, as the link lists them
+  const crewCalls = crewRows.map((c) => ({ key: c.key, name: c.name, role: c.role || c.dept || 'Crew', call: c.call, extra: c.extra }))
+  const castCalls = castRows.map((r) => ({ key: r.key, name: r.actor?.name || r.character, role: r.character || 'Cast', call: r.call, extra: r.extra }))
+  const callList = (list) => (
+    <>
+      {list.map((pp) => (
+        <div key={pp.key} className="ordino-row ordino-person">
+          <span className="ordino-who"><strong>{pp.name}</strong><span className="muted small">{pp.role}</span></span>
+          {!pp.extra && <Input inputMode="numeric" placeholder="00:00" className="ordino-time" value={pp.call || ''} onChange={(e) => setCall(pp.key, e.target.value)} aria-label={`Call for ${pp.name}`} />}
+          {!pp.extra && <button type="button" className="ordino-x" onClick={() => hidePerson(pp.key, true)} aria-label="Leave out of this ordino" title="Leave out of this ordino">×</button>}
+        </div>
+      ))}
+      {!list.length && <p className="muted small">Nobody yet. People come from the project&#39;s Project Database.</p>}
+    </>
+  )
+  // what each part of the link takes, in the link's own order (the order set in Customise)
+  const fields = {
+    note: <Textarea rows={3} value={sheet.notes || ''} placeholder="Parking, catering, safety, permits, transport. Everyone reads this one." onChange={(e) => setSheet('notes', e.target.value)} />,
+    groupcalls: (
+      <>
+        {groupCalls.map((r, i) => (
+          <div key={i} className="ordino-row">
+            <Input value={r.who || ''} placeholder="Production crew" onChange={(e) => setGroupRow(i, 'who', e.target.value)} aria-label="Group" />
+            <Input inputMode="numeric" placeholder="00:00" className="ordino-time" value={r.time || ''} onChange={(e) => setGroupRow(i, 'time', e.target.value)} aria-label="Call" />
+            <button type="button" className="ordino-x" onClick={() => setGroups(groupCalls.filter((_, j) => j !== i))} aria-label="Remove">×</button>
+          </div>
+        ))}
+        <div className="ordino-adds">
+          <button type="button" className="link small" onClick={() => setGroups([...groupCalls, { who: '', time: '' }])}>+ Add a group</button>
+          {!groupCalls.length && <button type="button" className="link small" onClick={() => setGroups(USUAL_GROUPS.map((who) => ({ who, time: '' })))}>Add the usual groups</button>}
+        </div>
+      </>
+    ),
+    location: (
+      <>
+        {project.locations.length > 0 && (
+          <Field label="From the project">
+            <select className="input select" value={day.locationId || ''} onChange={(e) => setDay('locationId', e.target.value)}>
+              <option value="">None</option>
+              {project.locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
+            </select>
+          </Field>
+        )}
+        <div className="row-2">
+          <Field label="Name"><Input value={sheet.locName || ''} placeholder={loc?.name || 'Location name'} onChange={(e) => setSheet('locName', e.target.value)} /></Field>
+          <Field label="Address"><Input value={sheet.locAddress || ''} placeholder={loc?.address || 'Street, area'} onChange={(e) => setSheet('locAddress', e.target.value)} /></Field>
+        </div>
+        <div className="row-2">
+          <Field label={labelOf(layout, 'parking')}><Textarea rows={2} value={sheet.parking || ''} placeholder={csd.parking || 'Where, how many cars, who unloads where'} onChange={(e) => setSheet('parking', e.target.value)} /></Field>
+          <Field label={labelOf(layout, 'hospital')}><Textarea rows={2} value={sheet.weather || ''} placeholder={csd.hospital || 'Name, address, phone'} onChange={(e) => setSheet('weather', e.target.value)} /></Field>
+        </div>
+      </>
+    ),
+    program: (
+      <>
+        {program.map((r, i) => (
+          <div key={i} className="ordino-row ordino-prog">
+            <Input inputMode="numeric" placeholder="00:00" className="ordino-time" value={r.from || ''} onChange={(e) => setProgramRow(i, 'from', e.target.value)} aria-label="From" />
+            <Input inputMode="numeric" placeholder="00:00" className="ordino-time" value={r.to || ''} onChange={(e) => setProgramRow(i, 'to', e.target.value)} aria-label="To" />
+            <Input value={r.what || ''} placeholder="What happens" onChange={(e) => setProgramRow(i, 'what', e.target.value)} aria-label="What" />
+            <button type="button" className="ordino-x" onClick={() => setProgram(program.filter((_, j) => j !== i))} aria-label="Remove">×</button>
+          </div>
+        ))}
+        <div className="ordino-adds"><button type="button" className="link small" onClick={() => setProgram([...program, { from: '', to: '', what: '' }])}>+ Add a row</button></div>
+      </>
+    ),
+    contacts: <p className="muted small">The emergency numbers and the production contacts come from Settings &gt; Call sheets, the same on every ordino.</p>,
+    cast: callList(castCalls),
+    crew: callList(crewCalls),
+  }
+  const linkBlocks = layout.blocks.filter((b) => b.link && (b.custom || fields[b.key]))
+  const ordinoForm = (
+    <div className="ordino-form">
+      <section className="ordino-sec">
+        <h3><span className="ordino-n">1</span>The day</h3>
+        <Field label="Title"><Input value={sheet.title || ''} placeholder={project.title} onChange={(e) => setSheet('title', e.target.value)} /></Field>
+        <div className="ordino-times">
+          <Field label={labelOf(layout, 'call')}><Input inputMode="numeric" placeholder="00:00" value={day.callTime || ''} onChange={(e) => setDay('callTime', e.target.value)} /></Field>
+          <Field label={labelOf(layout, 'shooting')}><Input inputMode="numeric" placeholder="00:00" value={sheet.shootingCall || ''} onChange={(e) => setSheet('shootingCall', e.target.value)} /></Field>
+          <Field label={labelOf(layout, 'lunch')}><Input inputMode="numeric" placeholder="00:00" value={sheet.lunch || lunchDefault || ''} onChange={(e) => setSheet('lunch', e.target.value)} /></Field>
+          <Field label={labelOf(layout, 'wrap')}><Input inputMode="numeric" placeholder="00:00" value={day.wrapTime || ''} onChange={(e) => setDay('wrapTime', e.target.value)} /></Field>
+        </div>
+        <Field label="One line for everyone, under the call"><Textarea rows={2} value={sheet.tagline || ''} placeholder={csd.tagline || 'Safety first, bring a jacket, no smoking on set.'} onChange={(e) => setSheet('tagline', e.target.value)} /></Field>
+      </section>
+      {linkBlocks.map((b, i) => (
+        <section key={b.key} className="ordino-sec">
+          <h3><span className="ordino-n">{i + 2}</span>{titleOf(layout, b)}</h3>
+          {b.custom ? <Textarea rows={3} value={customText(b)} onChange={(e) => setCustom(b.key, e.target.value)} /> : fields[b.key]}
+        </section>
+      ))}
+      {hiddenPeople.length > 0 && (
+        <div className="ordino-adds">
+          <span className="muted small">Left out of this ordino:</span>
+          {hiddenPeople.map((h) => <button key={h.key} type="button" className="link small" onClick={() => hidePerson(h.key, false)}>+ {h.name}</button>)}
+        </div>
+      )}
+      <p className="muted small">Saved as you type. Customise chooses which parts the link shows and in what order.</p>
+    </div>
+  )
+
   return (
     <div className="callsheets">
       <div className="toolbar no-print">
@@ -665,64 +769,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
           </div>
         </aside>
       )}
-      <article
-        className={`sheet cs${layout.look.header === 'centred' ? ' cs-centred' : ''}${accent ? ' cs-accented' : ''}`}
-        style={{ ...(accent ? { '--cs-accent': accent } : {}), ...(ZOOM[layout.look.size] !== 1 ? { zoom: ZOOM[layout.look.size] } : {}) }}
-        hidden={mode !== 'sheet' || (mobile && mPreview)}
-      >
-        <header className="cs-head">
-          <div className="cs-company">
-            <div className="cs-brand">{state.settings.logo ? <img className="cs-logo" src={state.settings.logo} alt="" /> : <span className="cs-mark" />}{state.workspace.name}</div>
-            {state.settings.companyAddress && <div className="muted small cs-addr">{state.settings.companyAddress}</div>}
-            {show('keycrew') && (
-              <dl className="cs-kv">
-                {project.producer && (<><dt>Producer</dt><dd>{project.producer}</dd></>)}
-                {crew.filter((c) => /1st AD|assistant director|production manager|UPM|line producer|DoP|photography/i.test(c.role || '')).slice(0, 4).map((c) => (
-                  <span key={c.id} className="cs-kv-row"><dt>{c.role}</dt><dd>{c.name}{c.phone && show('phones') ? <span className="muted"> {c.phone}</span> : null}</dd></span>
-                ))}
-              </dl>
-            )}
-          </div>
-          <div className="cs-center">
-            {project.coverThumb && show('cover') ? <img className="cs-key" src={project.coverThumb} alt="" /> : null}
-            <h1>{title}</h1>
-            <div className="cs-call-label">{labelOf(layout, 'call')}</div>
-            <div className="cs-call-time">{day.callTime}</div>
-            {!show('tagline') ? null : editing ? (
-              <textarea className="cs-tagline" rows={3} value={sheet.tagline || ''} onChange={(e) => setSheet('tagline', e.target.value)} placeholder={csd.tagline || 'One line for everyone: safety first, bring a jacket, no smoking on set.'} />
-            ) : (sheet.tagline || csd.tagline) ? <p className="cs-tagline-text">{sheet.tagline || csd.tagline}</p> : null}
-          </div>
-          <div className="cs-side">
-            <div className="cs-day">Day {dayIndex + 1} of {days.length}</div>
-            <div className="cs-date">{new Date(day.date + 'T00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })}</div>
-            {(showWx || showSun) && (
-              <div className="cs-wx">
-                {!showWx ? null : wx ? (
-                  <>
-                    <div className="cs-temp"><span className="cs-sun-ico">☀</span> {wx.tmax}° <span className="muted">/ {wx.tmin}°</span></div>
-                    <div className="muted small"><em>{wx.summary}{wx.rain != null ? `, rain ${wx.rain}%` : ''}</em></div>
-                  </>
-                ) : (
-                  <div className="muted small no-print">No forecast yet{editing ? <> · <button className="link" onClick={fetchWeather} disabled={busy}>{busy ? 'fetching…' : 'fetch'}</button></> : null}</div>
-                )}
-                {showSun && sun && <div className="small"><strong>Sunrise</strong> {wx?.sunrise || sun.sunrise} · <strong>Sunset</strong> {wx?.sunset || sun.sunset}</div>}
-              </div>
-            )}
-            {(show('shooting') || show('lunch') || show('wrap')) && <dl className="cs-times">
-              {show('shooting') && <><dt>{labelOf(layout, 'shooting')}</dt><dd>{editing ? <input className="cs-time" value={sheet.shootingCall ?? ''} placeholder={day.callTime} onChange={(e) => setSheet('shootingCall', e.target.value)} /> : sheet.shootingCall || day.callTime}</dd></>}
-              {show('lunch') && <><dt>{labelOf(layout, 'lunch')}</dt><dd>{editing ? <input className="cs-time" value={sheet.lunch ?? ''} placeholder={lunchDefault || '13:00'} onChange={(e) => setSheet('lunch', e.target.value)} /> : sheet.lunch || lunchDefault || ''}</dd></>}
-              {show('wrap') && <><dt>{labelOf(layout, 'wrap')}</dt><dd>{day.wrapTime}</dd></>}
-            </dl>}
-          </div>
-        </header>
-
-        {layout.blocks.filter((b) => b.sheet).map((b) => <Fragment key={b.key}>{renderBlock(b)}</Fragment>)}
-
-        {csd.footer && <p className="cs-footer">{csd.footer}</p>}
-        {editing && (
-          <p className="fineprint no-print">Everything you type is saved as you go. Done editing shows the sheet the way the crew sees it.</p>
-        )}
-      </article>
+      {!(mobile && mPreview) && ordinoForm}
       </div>
     </div>
   )
