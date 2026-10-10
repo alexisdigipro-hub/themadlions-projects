@@ -1841,7 +1841,8 @@ function useMediaSrc(a) {
   return [local || link, failed, retry, viaFunction]
 }
 /* One picture or video in a message. A tap opens the message's menu (Reply, Open, Edit, Delete),
-   like any message; a video plays from its own round play button. */
+   like any message; a video plays from its own round play button. The phone's own controls show
+   only while it plays: paused, they go and the round button is back in the middle (Alex, 11 Oct). */
 function MediaTile({ a, i, shaped }) {
   const [url, failed, retry, viaFunction] = useMediaSrc(a)
   const [playing, setPlaying] = useState(false)
@@ -1854,7 +1855,7 @@ function MediaTile({ a, i, shaped }) {
   if (isVideo(a)) {
     return (
       <span className={`${cls} chat-media-vid`} style={style} data-tile={i}>
-        {url && <video ref={vref} src={`${url}#t=0.1`} controls={playing} playsInline preload="metadata" title={a.name} onError={viaFunction} onLoadedMetadata={() => setLoaded(true)} onEnded={() => setPlaying(false)} />}
+        {url && <video ref={vref} src={`${url}#t=0.1`} controls={playing} playsInline preload="metadata" title={a.name} onError={viaFunction} onLoadedMetadata={() => setLoaded(true)} onEnded={() => setPlaying(false)} onPause={() => setPlaying(false)} />}
         {!loaded && <span className="chat-media-spin" aria-hidden="true" />}
         {loaded && !playing && <button type="button" className="chat-media-play" aria-label="Play" onClick={() => { setPlaying(true); requestAnimationFrame(() => vref.current?.play().catch(() => {})) }}>▶</button>}
         {!playing && a.dur > 0 && <span className="chat-media-dur">{Math.floor(a.dur / 60)}:{String(a.dur % 60).padStart(2, '0')}</span>}
