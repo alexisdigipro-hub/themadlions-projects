@@ -313,7 +313,7 @@ export default function Settings() {
         {isAdmin && (
           <section className="panel" data-tab="calendar">
             <h2>Event types</h2>
-            <p className="small muted">The kinds of event on the Calendar, in the order of its type list. Tap a colour to change it, rename a type in place, drag ⋮⋮ to reorder. Shoot day, From Google Calendar and Not available can be renamed but not removed: the Ordino, Google sync and days off depend on them.</p>
+            <p className="small muted">The kinds of event on the Calendar, in the order of its type list. Tap a colour to change it, rename a type in place, drag ⋮⋮ to reorder, × to remove. Events already of a removed type keep its name and colour; bring a removed type back from the list under the types.</p>
             <EventTypesSettings state={state} update={update} toast={toast} />
           </section>
         )}
@@ -835,14 +835,16 @@ function EventTypesSettings({ state, update, toast }) {
   }
   const remove = (t) => {
     const n = (state.events || []).filter((e) => e.type === t.key).length
-    save(n ? all.map((x) => (x.key === t.key ? { ...x, removed: true } : x)) : all.filter((x) => x.key !== t.key))
+    // the app's own kinds (shoot days, Google, days off) are only ever hidden, never dropped
+    save(n || FIXED_EVENT_TYPES.includes(t.key) ? all.map((x) => (x.key === t.key ? { ...x, removed: true } : x)) : all.filter((x) => x.key !== t.key))
     toast(n ? `Removed. The ${n} event${n === 1 ? '' : 's'} already of this type keep${n === 1 ? 's' : ''} it.` : 'Removed', 'ok')
   }
+  const restore = (t) => save([...shown, { ...t, removed: false }, ...all.filter((x) => x.removed && x.key !== t.key)])
   const add = () => {
     const x = name.trim()
     if (!x) return
     const old = all.find((t) => t.removed && t.label.toLowerCase() === x.toLowerCase())
-    if (old) { save([...shown, { ...old, removed: false }, ...all.filter((t) => t.removed && t.key !== old.key)]); setName(''); return }
+    if (old) { restore(old); setName(''); return }
     if (taken(x)) return toast(`"${x}" already exists.`, 'error')
     const colour = NEW_TYPE_COLOURS[all.length % NEW_TYPE_COLOURS.length]
     // a new type goes before From Google Calendar and Not available, which close the list
@@ -862,10 +864,20 @@ function EventTypesSettings({ state, update, toast }) {
               <input type="color" value={t.color} onChange={(e) => patch(t.key, { color: e.target.value })} aria-label={`Colour of ${t.label}`} />
             </label>
             <input className="input" defaultValue={t.label} key={t.label} onBlur={(e) => rename(t, e.target.value)} onKeyDown={(e) => e.key === 'Enter' && e.target.blur()} aria-label="Type name" />
-            <button className="bcat-btn bcat-x" title={FIXED_EVENT_TYPES.includes(t.key) ? 'The app needs this one' : 'Remove'} disabled={FIXED_EVENT_TYPES.includes(t.key)} onClick={() => remove(t)}>×</button>
+            <button className="bcat-btn bcat-x" title="Remove" onClick={() => remove(t)}>×</button>
           </li>
         ))}
       </ul>
+      {all.some((t) => t.removed) && (
+        <div className="evtype-removed">
+          <span className="small muted">Removed:</span>
+          {all.filter((t) => t.removed).map((t) => (
+            <button key={t.key} type="button" className="evtype-back" onClick={() => restore(t)} title="Bring it back">
+              <i style={{ background: t.color }} />{t.label}<b>+</b>
+            </button>
+          ))}
+        </div>
+      )}
       <div className="bcat-add">
         <Input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} placeholder="New type, e.g. Fitting" />
         <Button size="sm" variant="ghost" onClick={add}>Add</Button>

@@ -71,13 +71,14 @@ export const EVENT_TYPES = [
 /* The event types are the workspace's own (Alex, 11 Oct: Settings > Calendar > Event types): renamed,
    recoloured, reordered, added, removed. Saved in settings.eventTypes; nothing saved means the
    standard list above. A removed type that events still use stays in the list as removed, so those
-   events keep their name and colour, but it is no longer offered. Shoot day (the Ordino and Shoot
-   day hang on it), From Google Calendar and Not available can be renamed but never go. */
+   events keep their name and colour, but it is no longer offered. Every type can be removed (Alex,
+   11 Oct); Shoot day, From Google Calendar and Not available are always kept as removed rather than
+   dropped, since the Ordino, Google sync and days off still make events of them. */
 export const FIXED_EVENT_TYPES = ['shoot', 'google', 'unavailable']
 export function eventTypesOf(settings) {
   const saved = Array.isArray(settings?.eventTypes) ? settings.eventTypes.filter((t) => t && t.key) : []
   if (!saved.length) return EVENT_TYPES
-  const list = saved.map((t) => (FIXED_EVENT_TYPES.includes(t.key) ? { ...t, removed: false } : t))
+  const list = [...saved]
   EVENT_TYPES.filter((t) => FIXED_EVENT_TYPES.includes(t.key) && !list.some((x) => x.key === t.key)).forEach((t) => list.push(t))
   return list
 }
