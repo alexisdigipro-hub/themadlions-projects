@@ -21,8 +21,8 @@ import { ReceiptModal } from '../../components/Receipt.jsx'
 import { groupPairs } from '../../lib/budgetCats.js'
 
 // Made absolute here: a relative url() inside a CSS variable is read against the stylesheet
-// (assets/), not the page, so "./ordino-bg.webp" was looked for in the wrong folder
-const ORDINO_BG = new URL(`${import.meta.env.BASE_URL}ordino-bg.webp`, document.baseURI).href
+// (assets/), not the page, so "./ordino-set.webp" was looked for in the wrong folder
+const ORDINO_BG = new URL(`${import.meta.env.BASE_URL}ordino-set.webp`, document.baseURI).href
 
 const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: '' })
 
@@ -255,7 +255,7 @@ export default function Overview() {
 
       {/* The ordino as one button that looks like the song box above it, for everyone on the project,
           administrators too (Alex, 10 Oct); it opens the finished ordino as the crew get it on a phone.
-          Alex's on-set picture (public/ordino-bg.webp) shows faintly across it */}
+          Alex's on-set picture (public/ordino-set.webp) shows faintly across it */}
       {ordinoDays.length > 0 && (
         <button type="button" className="panel ordino-btn" style={{ '--ordino-bg': `url("${ORDINO_BG}")` }} onClick={() => setOrdinoOpen(true)}>
           <span className="ordino-btn-text">
