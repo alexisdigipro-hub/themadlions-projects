@@ -55,7 +55,6 @@ const PublicShotList = lazyPage(() => import('./pages/PublicShotList.jsx'))
 const PublicDeck = lazyPage(() => import('./pages/PublicDeck.jsx'))
 const PublicNote = lazyPage(() => import('./pages/PublicNote.jsx'))
 const Finance = lazyPage(() => import('./pages/Finance.jsx'))
-const Invoices = lazyPage(() => import('./pages/Invoices.jsx'))
 const Budget = lazyPage(() => import('./pages/project/Budget.jsx'))
 const Reports = lazyPage(() => import('./pages/project/Reports.jsx'))
 const Post = lazyPage(() => import('./pages/project/Post.jsx'))
@@ -134,7 +133,7 @@ export default function App() {
                 <Route path="people" element={<Navigate to="/database/cast" replace />} />
                 <Route path="locations" element={<Navigate to="/database/locations" replace />} />
                 <Route path="finance" element={<Finance />} />
-                <Route path="invoices" element={<Invoices />} />
+                <Route path="invoices" element={<Finance start="invoices" />} />
                 {/* Home and Projects are the same page now; keep old bookmarks alive */}
                 <Route path="home" element={<Navigate to="/" replace />} />
                 <Route path="team" element={<Team />} />

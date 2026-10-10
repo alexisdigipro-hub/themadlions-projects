@@ -8,14 +8,19 @@ import PaymentModal from '../components/PaymentModal.jsx'
 import { lineBalance, lineEstimate, linePaid, syncLineWorklog } from '../lib/budget.js'
 import { budgetCatForFin, finCatFor } from '../lib/budgetCats.js'
 import { AGE_BUCKETS, WorkLogTable, ageBucket, avgDaysToPay, daysWaiting, entryTotals, entryTotalsByYear, money2, projectWorkDate, topClientOf } from '../components/WorkLog.jsx'
-import { InvoiceProfileSettings } from '../components/Invoices.jsx'
+import { InvoiceProfileSettings, InvoicesTab } from '../components/Invoices.jsx'
 import { invoiceTotals } from '../lib/invoice.js'
 import { ReceiptView } from '../components/Receipt.jsx'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
 
+/* The tabs, a glass capsule like the Database's (Alex, 10 Oct): Overview, Invoices (back in Finance, out
+   of the side menu), Transactions, Team, then the year and Settings on their own at the end. Recurring
+   is no longer a tab: it opens from Transactions, whose tab stays lit while it is open. */
+const FIN_TABS = [['overview', 'Overview'], ['invoices', 'Invoices'], ['transactions', 'Transactions'], ['team', 'Team']]
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-export default function Finance() {
+export default function Finance({ start }) {
   const { state, update } = useStore()
   const me = useCurrentUser()
   const toast = useToast()
@@ -35,7 +40,7 @@ export default function Finance() {
   const allTime = year === 'all'
   const inSel = (d) => allTime || fiscalYearOf(d, fiscalStart) === year
   const yearText = allTime ? 'all time' : fyLabel(year)
-  const [tab, setTab] = useState('overview') // overview | transactions | settings
+  const [tab, setTab] = useState(start || 'overview') // overview | invoices | transactions | recurring | team | settings
   const [draft, setDraft] = useState(null)
   const [f, setF] = useState({ q: '', type: '', project: '', status: '', doc: '', month: '' })
   const [settings, setSettings] = useState(fin.settings)
@@ -293,15 +298,20 @@ export default function Finance() {
   return (
     <div className="finance">
       <PageHead title="Finance">
-        <div className="segmented small">
-          {[['overview', 'Overview'], ['transactions', 'Transactions'], ['recurring', `Recurring${dueCount ? ` (${dueCount} due)` : ''}`], ['team', 'Team work'], ['settings', 'Settings']].map(([k, l]) => (
-            <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>
-          ))}
-        </div>
-        <Select className="compact" value={year} onChange={(e) => setYear(e.target.value === 'all' ? 'all' : Number(e.target.value))} options={[...[...new Set([...years, new Date().getFullYear()])].sort((a, b) => b - a).map((y) => [y, fyLabel(y)]), ['all', 'All time']]} />
         <Button variant="ghost" onClick={() => setDraft(emptyTx('income', { vatPct: fin.settings.vatDefault }))}>Add income</Button>
         <Button variant="primary" onClick={() => setDraft(emptyTx('expense', { vatPct: fin.settings.vatDefault }))}>Add expense</Button>
       </PageHead>
+      <div className="db-top fin-top">
+        <nav className="tabs db-tabs">
+          {FIN_TABS.map(([k, l]) => (
+            <button key={k} type="button" className={tab === k || (k === 'transactions' && tab === 'recurring') ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>
+          ))}
+        </nav>
+        <Select className="fin-year" value={year} onChange={(e) => setYear(e.target.value === 'all' ? 'all' : Number(e.target.value))} options={[...[...new Set([...years, new Date().getFullYear()])].sort((a, b) => b - a).map((y) => [y, fyLabel(y)]), ['all', 'All time']]} aria-label="Year" />
+        <nav className="tabs db-tabs fin-set">
+          <button type="button" className={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}>Settings</button>
+        </nav>
+      </div>
 
       {dueCount > 0 && tab !== 'recurring' && (
         <p className="notice fin-due">
@@ -411,6 +421,7 @@ export default function Finance() {
               <Select value={f.status} onChange={(e) => setF({ ...f, status: e.target.value })} options={[['', 'Any status'], ['quoted', 'Quoted'], ['invoiced', 'Invoiced'], ['pending', 'To pay'], ['paid', 'Paid']]} />
               <Select value={f.doc} onChange={(e) => setF({ ...f, doc: e.target.value })} options={[['', 'Any document'], ...DOCS]} />
               <Button variant="ghost" onClick={exportCSV}>Export CSV</Button>
+              <Button variant="ghost" onClick={() => setTab('recurring')}>Recurring{dueCount ? ` (${dueCount} due)` : ''}</Button>
             </div>
           </div>
           {!listedAll.length ? (
@@ -482,6 +493,8 @@ export default function Finance() {
         </>
       )}
 
+      {tab === 'invoices' && <InvoicesTab />}
+
       {tab === 'team' && <TeamWork />}
 
 
@@ -493,6 +506,7 @@ export default function Finance() {
               <span className="muted">≈ {money(Math.abs(monthlyLoad), cur)} net {monthlyLoad >= 0 ? 'out' : 'in'} per month{dueCount ? ` · ${dueCount} due` : ''}</span>
             </div>
             <div className="toolbar-actions">
+              <Button variant="ghost" onClick={() => setTab('transactions')}>‹ Transactions</Button>
               {dueCount > 0 && <Button variant="primary" onClick={generateDue}>Book {dueCount} due</Button>}
               <Button variant={dueCount ? 'ghost' : 'primary'} onClick={() => setRdraft(emptyRecurring({ vatPct: fin.settings.vatDefault }))}>Add recurring</Button>
             </div>
