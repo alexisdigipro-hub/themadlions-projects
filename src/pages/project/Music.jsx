@@ -264,11 +264,14 @@ export default function Music() {
       {track ? (
         <section className="panel player">
           <audio ref={audioRef} src={url || undefined} preload="metadata" onError={onError} />
-          <Waveform peaks={track.peaks} duration={track.duration} time={time} sections={sections} onSeek={seek} active={current?.id} />
+          {/* one slim row, play, the waveform, the time; the rest on the line under it (Alex, 10 Oct) */}
+          <div className="player-row">
+            <button className="play" onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
+            <Waveform peaks={track.peaks} duration={track.duration} time={time} sections={sections} onSeek={seek} active={current?.id} />
+            <span className="player-time">{fmtTimeMs(time)} <span className="muted">/ {fmtTime(track.duration)}</span></span>
+          </div>
           {remote && err && <p className="small" style={{ color: 'var(--danger)', margin: '0 0 8px' }}>{err}</p>}
           <div className="player-bar">
-            <button className="play" onClick={toggle} aria-label={playing ? 'Pause' : 'Play'}>{playing ? '❚❚' : '▶'}</button>
-            <span className="player-time">{fmtTimeMs(time)} <span className="muted">/ {fmtTime(track.duration)}</span></span>
             <span className="player-now">{current ? <><span className="muted">now:</span> <strong>{current.name}</strong></> : null}</span>
             <div className="row-actions">
               {loop && <Button size="sm" variant="ghost" onClick={() => setLoop(null)}>Stop loop</Button>}

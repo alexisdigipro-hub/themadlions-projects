@@ -2355,7 +2355,7 @@ input.cs-group-who { text-transform: none; letter-spacing: 0; font-weight: 400; 
 
 /* ---------- music ---------- */
 .player { padding: 14px 16px; }
-.wave { width: 100%; height: 28px; display: block; cursor: pointer; border-radius: var(--radius); } /* a quarter of its old 110px (Alex, 10 Oct: half, then half again), on Overview and in Script alike */
+.wave { width: 100%; height: 40px; display: block; cursor: pointer; border-radius: var(--radius); }
 .player-bar { display: flex; align-items: center; gap: 14px; margin-top: 10px; flex-wrap: wrap; }
 /* the round play button of the song players (Overview and Music): it lost its style on the
    Overview, which has no .player around it, and showed as a tiny grey chip (Alex, 9 Oct) */
@@ -2380,7 +2380,7 @@ input.cs-group-who { text-transform: none; letter-spacing: 0; font-weight: 400; 
 .input.multi { height: 140px; padding: 6px; }
 html[data-theme='light'] .song-sec { border-color: transparent; border-left: 4px solid var(--line); }
 html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
-@media (max-width: 820px) { .wave { height: 20px; } .track-meta { grid-template-columns: 1fr; } .song-marks { flex-basis: 100%; } }
+@media (max-width: 820px) { .wave { height: 34px; } .track-meta { grid-template-columns: 1fr; } .song-marks { flex-basis: 100%; } }
 
 /* ---------- covers & progress ---------- */
 .project-cover.has-img { padding: 0; position: relative; overflow: hidden; }
@@ -6101,3 +6101,20 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
 }
 .ordino-sec h3 { display: flex; align-items: center; gap: 10px; }
 .ordino-n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 11.5px; letter-spacing: 0; }
+
+/* The song box, on Overview and in Script (Alex, 10 Oct: "the whole box smaller, with the waveform"):
+   play, the waveform and the time in one slim row, so the box is about a third of its old height */
+.player-row { display: flex; align-items: center; gap: 12px; }
+.player-row .wave { flex: 1 1 auto; min-width: 0; }
+.player-row .play { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; padding: 0 0 0 2px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); font-size: 14px; line-height: 1; cursor: pointer; flex: none; box-shadow: 0 3px 10px color-mix(in srgb, var(--accent) 30%, transparent); }
+.player-row .play[aria-label='Pause'] { padding-left: 0; font-size: 12px; letter-spacing: -2px; }
+.player-row .player-time { min-width: 0; flex: none; font-size: 13px; }
+.player .player-bar { margin-top: 6px; }
+.panel.song-card { padding-top: 12px; padding-bottom: 12px; }
+.panel.song-card .panel-head { margin-bottom: 6px; }
+.panel.song-card .stack { gap: 8px; }
+@media (max-width: 820px) {
+  .player-row { gap: 8px; }
+  .player-row .play { width: 34px; height: 34px; }
+  .player-row .player-time { font-size: 12px; }
+}
