@@ -133,7 +133,7 @@ export default function Layout() {
     { to: '/chat', label: 'Chat', show: true, icon: 'chat', badge: unread },
     // Office and Notes are one page with tabs now (Alex, 10 Oct); everyone has Notes, Office needs Files;
     // it sits where Notes was, so on a phone it is among the first five
-    { to: can(user, 'files') ? '/office' : '/notes', label: 'Office', show: true, icon: 'office', also: ['/office', '/notes'] },
+    { to: '/notes', label: 'Office', show: true, icon: 'office', also: ['/office', '/notes'] },
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     // Drives is a tab of the Database now (Alex, 10 Oct)

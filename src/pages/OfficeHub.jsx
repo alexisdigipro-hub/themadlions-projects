@@ -16,9 +16,10 @@ export default function OfficeHub() {
   const user = useCurrentUser()
   const mobile = useIsMobile()
   const [slot, setSlot] = useState(null)
+  // Notes first and the page opens on it; Office second (Alex, 10 Oct)
   const tabs = [
-    can(user, 'files') && { to: '/office', key: 'office', label: 'Office', icon: 'office' },
     { to: '/notes', key: 'notes', label: 'Notes', icon: 'notes' },
+    can(user, 'files') && { to: '/office', key: 'office', label: 'Office', icon: 'office' },
   ].filter(Boolean)
   const tab = pathname.startsWith('/notes') ? 'notes' : 'office'
   if (!tabs.some((t) => t.key === tab)) return <Navigate to="/notes" replace />
