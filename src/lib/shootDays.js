@@ -28,3 +28,28 @@ export const ordinoDates = (project, events = []) => {
   if (!out.size && !(project?.shootingDays || []).length && project?.startDate && !project.ordinoDeleted) out.add(project.startDate)
   return [...out].sort()
 }
+
+/* The project's Shoot day (Edit details, Alex 11 Oct: "Start" became "Shoot day"). Saving it puts
+   the day in the Calendar and the Ordino: a one-day shoot event of this project on the old date
+   moves to the new one (and the ordino filled in for it moves along); otherwise a shoot event is
+   added on the new date, unless one already covers it. Works on a store state draft. */
+export function syncShootDay(s, projectId, from, to) {
+  if (!to || to === from) {
+    // nothing changed: only make sure a project with a shoot day has it in the Calendar at all
+    if (!to || (s.events || []).some((e) => e.projectId === projectId && e.type === 'shoot')) return s
+  }
+  const p = (s.projects || []).find((x) => x.id === projectId)
+  if (!p) return s
+  s.events = s.events || []
+  const lastOf = (e) => (e.endDate && e.endDate > e.date ? e.endDate : e.date)
+  const shoots = s.events.filter((e) => e.projectId === projectId && e.type === 'shoot' && e.date)
+  const covered = shoots.some((e) => e.date <= to && to <= lastOf(e))
+  const single = from && shoots.find((e) => e.date === from && lastOf(e) === from)
+  if (single && !covered) { single.date = to; if (single.endDate) single.endDate = to }
+  else if (!covered) s.events.push({ id: uid(), projectId, type: 'shoot', title: `Shoot day · ${p.title || 'Project'}`, date: to, start: '', end: '', locationText: '', notes: '' })
+  // the ordino already filled in for the old date goes with it
+  const days = p.shootingDays || []
+  const day = from && days.find((d) => d.date === from)
+  if (day && !days.some((d) => d.date === to)) day.date = to
+  return s
+}

@@ -17,6 +17,7 @@ import Tasks, { tasksFor } from './Tasks.jsx'
 import { Waveform } from './Music.jsx'
 import Notes from './Notes.jsx'
 import CallSheets from './CallSheets.jsx'
+import { syncShootDay } from '../../lib/shootDays.js'
 import { ReceiptModal } from '../../components/Receipt.jsx'
 import { groupPairs } from '../../lib/budgetCats.js'
 
@@ -202,7 +203,7 @@ export default function Overview() {
           <div className="progress-main">
             <div className="progress-top">
               <span>
-                <strong>{pct}% done</strong> <span className="muted small">{project.status}{project.endDate ? ` · delivery ${fmtDate(project.endDate)}` : ''}{project.frozen ? ' · 🔒 locked' : ''}</span>
+                <strong>{pct}% done</strong> <span className="muted small">{[project.status === 'Delivered' && 'Delivered', project.startDate && `shoot ${fmtDate(project.startDate)}`, project.frozen && '🔒 locked'].filter(Boolean).join(' · ')}</span>
               </span>
               <span className="row-actions progress-actions">
                 {canEdit('projects') && (
@@ -301,7 +302,14 @@ export default function Overview() {
               variant="primary"
               onClick={() => {
                 if (!(draft.title || '').trim()) return toast('Give the project a title.', 'error')
-                edit((p) => Object.assign(p, draft))
+                // the Shoot day goes into the Calendar and the Ordino as well (Alex, 11 Oct)
+                update((s) => {
+                  const i = s.projects.findIndex((x) => x.id === project.id)
+                  if (i < 0) return s
+                  const from = s.projects[i].startDate || ''
+                  s.projects[i] = { ...s.projects[i], ...draft, updatedAt: new Date().toISOString() }
+                  return syncShootDay(s, project.id, from, draft.startDate || '')
+                })
                 setDraft(null)
                 toast('Project saved', 'ok')
               }}

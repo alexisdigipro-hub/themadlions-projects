@@ -47,7 +47,7 @@ export default function Schedule() {
             <Button variant="primary" onClick={addDate} disabled={!date}>Add to the Calendar</Button>
           </div>
         )}>
-          The ordino takes its date from the project: a Shoot day for this project in the Calendar, or the project&#39;s start date in Edit details.
+          The ordino takes its date from the project: a Shoot day for this project in the Calendar, or the Shoot day in the project&#39;s Edit details.
         </Empty>
       )}
     </div>
