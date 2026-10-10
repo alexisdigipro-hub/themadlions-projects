@@ -39,6 +39,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 ## Where we stopped (10 Oct 2026)
 - **Latest (10 Oct, 22:20):** The project tab Shot list is named **Shotlist** (tabs.js label only).
+- **Latest (10 Oct, 23:15):** Overview: the Ordino card became one liquid-glass **Ordino** button (.ordino-btn, the song box's height: 103px on a computer, 97px on a phone), for everyone on the project, administrators too, with the next day's date and call under its name; it opens a Modal (phone width, .ordino-modal) with `<CallSheets linkOnly />`. The .panel.ordino-card CSS is gone.
 - **Latest (10 Oct, 23:05):** The Script tab's song box is the same slim size as the Overview's: Music.jsx's player is `.panel.player.song-card` with only the play/waveform/time row (the current section shows after the time); Stop loop, Download and a new **Edit track** toggle moved to the toolbar above; Edit track folds open the name, kind and Remove track.
 - **Latest (10 Oct, 22:55):** The Overview Ordino card is not shown to administrators (they have the Ordino tab).
 - **Latest (10 Oct, 22:50):** Overview: the Song card now comes before the Ordino card; the Ordino card takes the link's own grey (`pv-light`/`pv-dark` on the section from layoutOf(project).look.linkTheme, `.panel.ordino-card { background: var(--bg) }`), with the sheet inside it borderless and transparent.
