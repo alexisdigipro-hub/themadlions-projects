@@ -251,7 +251,8 @@ export default function Dashboard() {
     return (
       <button key={c} data-chip={c} className={`chip ${filter === c ? 'on' : ''}`} onClick={() => pickFilter(c)}>
         {c}
-        <small>{n}</small>
+        {/* an empty category shows no 0 on a computer (Alex, 11 Oct: tidier row) */}
+        {(n > 0 || mobile) && <small>{n}</small>}
       </button>
     )
   }
@@ -335,6 +336,29 @@ export default function Dashboard() {
     </Link>
   )
 
+  // Sort, Search and New project: on a computer they sit at the right of the team's tile (Alex, 11 Oct:
+  // the Calendar's way, every control in the top row, the category pills get a line of their own)
+  const actionsUp = !mobile && team.length > 0
+  const toolbarActions = (
+    <div className="toolbar-actions">
+      {!mobile && (
+        <span className="sort-by">
+          <span className="muted small">Sort by</span>
+          <span className="segmented small" title="Sort by">
+            <button className={sort === 'date' ? 'on' : ''} onClick={() => pickSort('date')}>Date</button>
+            <button className={sort === 'name' ? 'on' : ''} onClick={() => pickSort('name')}>Name</button>
+          </span>
+        </span>
+      )}
+      <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="input search" />
+      {canEdit && (
+        <Button variant={mobile ? 'primary' : 'default'} onClick={() => setDraft(freshProject())}>
+          New project
+        </Button>
+      )}
+    </div>
+  )
+
   return (
     <>
       {team.length > 0 && (
@@ -346,6 +370,7 @@ export default function Dashboard() {
               </button>
             )}
           </div>
+          <div className="team-strip-row">
           <div className={`team-strip ${allFaces ? 'all' : ''}`} ref={stripRef}>
             {team.map((u) => {
               const off = away.has(u.id)
@@ -365,6 +390,8 @@ export default function Dashboard() {
               )
             })}
           </div>
+          {actionsUp && <div className="home-actions">{toolbarActions}</div>}
+          </div>
         </section>
       )}
 
@@ -380,23 +407,7 @@ export default function Dashboard() {
           )}
           {CATEGORIES.map(chipFor)}
         </div>
-        <div className="toolbar-actions">
-          {!mobile && (
-            <span className="sort-by">
-              <span className="muted small">Sort by</span>
-              <span className="segmented small">
-                <button className={sort === 'date' ? 'on' : ''} onClick={() => pickSort('date')}>Date</button>
-                <button className={sort === 'name' ? 'on' : ''} onClick={() => pickSort('name')}>Name</button>
-              </span>
-            </span>
-          )}
-          <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="input search" />
-          {canEdit && (
-            <Button variant="primary" onClick={() => setDraft(freshProject())}>
-              New project
-            </Button>
-          )}
-        </div>
+        {!actionsUp && toolbarActions}
       </div>
 
       <div className="glide-box" ref={slideRef}>
