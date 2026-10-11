@@ -1061,19 +1061,32 @@ function FoldersModal({ open, fresh, onClose, rooms }) {
   )
 }
 
-/* Who is in a project's conversation: everyone with access to the project, minus the people an
-   administrator took out (project.chatExcluded). Administrators are always in. */
+/* Who is in a project's conversation. A room switched on since 11 Oct keeps a list (project.chatMembers:
+   Mariza and Elias to start, Alex) and people are added to it; an older room is everyone with access to
+   the project minus the people an administrator took out (project.chatExcluded). Administrators are
+   always in. Only people who can see the project can be in its room. */
 function ProjectMembersModal({ open, projectId, onClose }) {
   const { state, updateProject } = useStore()
   const project = state.projects.find((p) => p.id === projectId)
   if (!project) return null
-  const excluded = Array.isArray(project.chatExcluded) ? project.chatExcluded : []
+  const listed = Array.isArray(project.chatMembers)
+  const excluded = listed
+    ? state.users.filter((u) => !project.chatMembers.includes(u.id)).map((u) => u.id)
+    : Array.isArray(project.chatExcluded) ? project.chatExcluded : []
   const people = state.users.filter((u) => u.active !== false && canAccessProject(u, projectId))
-  const toggle = (id) => updateProject(projectId, (p) => { const cur = Array.isArray(p.chatExcluded) ? p.chatExcluded : []; p.chatExcluded = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] })
+    // who is in first, then the rest
+    .sort((a, b) => Number(excluded.includes(a.id) && a.role !== 'admin') - Number(excluded.includes(b.id) && b.role !== 'admin'))
+  const toggle = (id) => updateProject(projectId, (p) => {
+    if (Array.isArray(p.chatMembers)) { p.chatMembers = p.chatMembers.includes(id) ? p.chatMembers.filter((x) => x !== id) : [...p.chatMembers, id]; return }
+    const cur = Array.isArray(p.chatExcluded) ? p.chatExcluded : []
+    p.chatExcluded = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]
+  })
   return (
     <Modal open={open} title={`Members · ${project.title}`} onClose={onClose} footer={<Button variant="primary" onClick={onClose}>Done</Button>}>
       <div className="stack">
-        <p className="small muted">Everyone who can see the project is in its conversation. Take someone out and the room disappears from their Chat and from the project's tabs; the database stops handing them its messages. Put them back any time. Administrators are always in.</p>
+        <p className="small muted">{listed
+          ? 'Only the people marked in are in this conversation; Add puts anyone who can see the project in, Remove takes them out, and the database hands its messages only to them. Administrators are always in.'
+          : "Everyone who can see the project is in its conversation. Take someone out and the room disappears from their Chat and from the project's tabs; the database stops handing them its messages. Put them back any time. Administrators are always in."}</p>
         <ul className="plain chat-people">
           {people.map((p) => {
             const out = excluded.includes(p.id) && p.role !== 'admin'
@@ -1081,7 +1094,7 @@ function ProjectMembersModal({ open, projectId, onClose }) {
               <li key={p.id} className={`chat-member ${out ? 'out' : ''}`}>
                 <RoomAvatar room={{ kind: 'direct', photo: p.profile?.thumb || '', initials: (p.name || '?').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase() }} size={36} />
                 <span className="chat-rmain"><strong>{p.name}</strong><span className="chat-rprev">{p.role === 'admin' ? 'Administrator, always in' : out ? 'Not in this conversation' : p.profile?.position || 'In the conversation'}</span></span>
-                {p.role !== 'admin' && <Button size="sm" variant={out ? 'primary' : 'ghost'} onClick={() => toggle(p.id)}>{out ? 'Put back' : 'Remove'}</Button>}
+                {p.role !== 'admin' && <Button size="sm" variant={out ? 'primary' : 'ghost'} onClick={() => toggle(p.id)}>{out ? (listed ? 'Add' : 'Put back') : 'Remove'}</Button>}
               </li>
             )
           })}
