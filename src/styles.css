@@ -2541,6 +2541,27 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 .dp-foot { display: flex; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
 .dp-pill { height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); font-size: 13px; font-weight: 600; transition: background .2s, border-color .2s, transform .15s, box-shadow .2s; }
 .dp-pill.quiet { margin-left: auto; color: var(--muted); }
+/* Settings: who sees which calendar (Alex, 11 Oct), in the Calendar's way: each calendar a soft tile with
+   its colour dot, Everyone | Chosen people as a glass switch, and the team as face pills, lit = sees it */
+.calacc { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.calacc-row { padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: 16px; background: color-mix(in srgb, var(--panel) 88%, transparent); }
+.calacc-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.calacc-name { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; min-width: 0; }
+.calacc-name i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.calacc-name small { padding: 1px 7px; border-radius: 999px; background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--muted); font-size: 11px; font-weight: 700; }
+.calacc-count { margin-left: auto; }
+.calacc-mode.segmented { margin: 0; padding: 3px; gap: 2px; border-radius: 999px; background: var(--raised); }
+.calacc-mode.segmented button { height: 28px; padding: 0 12px; border: 0; border-radius: 999px; font-size: 12.5px; font-weight: 600; }
+.calacc-mode.segmented button + button { border-left: 0; }
+.calacc-people { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.calacc-person { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 12px 0 4px; border: 1px dashed var(--line); border-radius: 999px; background: transparent; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; opacity: .7; transition: background .15s, border-color .15s, opacity .15s, transform .12s; }
+.calacc-person:hover { opacity: 1; }
+.calacc-person:active { transform: scale(.96); }
+.calacc-person.on { border-style: solid; border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); background: color-mix(in srgb, var(--accent) 12%, var(--raised)); color: var(--text); opacity: 1; }
+.calacc-person img, .calacc-initials { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; flex: none; }
+.calacc-initials { display: grid; place-items: center; background: var(--raised); color: var(--muted); font-size: 10.5px; font-weight: 700; }
+.calacc-person:not(.on) img { filter: grayscale(1); }
+@media (max-width: 820px) { .calacc-count { margin-left: 0; } .calacc-mode.segmented { width: 100%; } .calacc-mode.segmented button { flex: 1; } }
 /* Team: people who signed up and wait to be accepted (Alex, 11 Oct), as soft tiles with Decline / Accept */
 .join-requests { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 18px; }
 .join-requests h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 2px; font-size: 15px; font-weight: 700; }

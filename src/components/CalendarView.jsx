@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from './ui.jsx'
 import MiniCalendar from './MiniCalendar.jsx'
-import { can, eventTypesOf, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { can, canSeeCalendar, canSeeEvent, eventTypesOf, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { addDays, buildICS, download, fmtDate, holidayName, monthGrid, monthLabel, weekdayShort } from '../lib/dates.js'
 import { gcalDelete, gcalOn, gcalPull, gcalUpsert, reconcilePulledEvents } from '../lib/googleCalendar.js'
 import { FEED_COLOR, liveFeeds, parseIcs, readFeedText } from '../lib/ical.js'
@@ -24,12 +24,13 @@ export default function CalendarView({ projectId = null, title }) {
   /* On a computer the type pills are switches (Alex, 11 Oct): all on to start, a click turns a type off
      and its events leave the calendar, another click brings them back; Alt / Option + click shows that
      type alone. Remembered per device. */
-  // Not available starts switched off on every visit (Alex, 11 Oct); switched on, it shows until the
-  // Calendar is left, and only the other types are remembered between visits
+  // Not available on every visit (Alex, 11 Oct): switched off for administrators, switched on for everyone
+  // else; changed by hand it holds until the Calendar is left, and only the other types are remembered
   const [hiddenTypes, setHiddenTypes] = useState(() => {
     let saved = []
     try { saved = JSON.parse(localStorage.getItem('tml_cal_hidden') || '[]') } catch {}
-    return [...new Set([...(Array.isArray(saved) ? saved : []), 'unavailable'])]
+    const list = (Array.isArray(saved) ? saved : []).filter((k) => k !== 'unavailable')
+    return user?.role === 'admin' ? [...list, 'unavailable'] : list
   })
   const saveHidden = (list) => { setHiddenTypes(list); try { localStorage.setItem('tml_cal_hidden', JSON.stringify(list.filter((k) => k !== 'unavailable'))) } catch {} }
   const [projFilter, setProjFilter] = useState('all')
@@ -37,7 +38,8 @@ export default function CalendarView({ projectId = null, title }) {
   const [syncing, setSyncing] = useState(false)
   // Read-only calendar feeds (Settings > Integrations). The file is fetched once per visit and
   // kept as text, so moving between months re-reads it without going back to the network.
-  const feeds = liveFeeds(state.settings)
+  // only the calendars this person may see (Settings > Calendar & projects > Who sees which calendar)
+  const feeds = liveFeeds(state.settings).filter((f) => canSeeCalendar(state.settings, user, `feed:${f.id}`))
   const feedKey = feeds.map((f) => `${f.id}:${f.url}`).join('|')
   const [feedText, setFeedText] = useState({})
   const [feedErrors, setFeedErrors] = useState([])
@@ -78,16 +80,17 @@ export default function CalendarView({ projectId = null, title }) {
       [...state.events, ...feedEvents].filter((e) => {
         if (projectId && e.projectId !== projectId) return false
         if (!projectId && e.projectId && !allowedIds.has(e.projectId)) return false
+        if (!canSeeEvent(state.settings, user, e)) return false
         // "feed:<id>" picks one calendar feed; the other values are ordinary event types
         if (mobile) {
           if (typeFilter.startsWith('feed:')) { if (e.feedId !== typeFilter.slice(5)) return false }
           else if (typeFilter !== 'all' && e.type !== typeFilter) return false
-          else if (typeFilter === 'all' && e.type === 'unavailable') return false // the phone too: Not available only when picked
+          else if (typeFilter === 'all' && e.type === 'unavailable' && user?.role === 'admin') return false // the phone too: an administrator sees days off when picked
         } else if (hiddenTypes.length && hiddenTypes.includes(e.feedId ? `feed:${e.feedId}` : e.type)) return false
         if (!projectId && projFilter !== 'all' && (e.projectId || 'none') !== projFilter) return false
         return true
       }),
-    [state.events, feedEvents, projectId, typeFilter, hiddenTypes, mobile, projFilter, allowedIds]
+    [state.events, feedEvents, projectId, typeFilter, hiddenTypes, mobile, projFilter, allowedIds, state.settings, user]
   )
   const byDate = useMemo(() => {
     const m = {}
@@ -206,7 +209,7 @@ export default function CalendarView({ projectId = null, title }) {
   // personId is who the day off belongs to; createdBy stays who wrote it down. Older days off
   // have no personId, so everything that reads one falls back to createdBy.
   // a new event starts as Prep, or the first type still in use if Prep was removed in Settings
-  const firstType = () => { const t = eventTypesOf(state.settings).filter((x) => !x.removed && x.key !== 'google' && x.key !== 'unavailable'); return (t.find((x) => x.key === 'prep') || t[0] || { key: 'shoot' }).key }
+  const firstType = () => { const t = eventTypesOf(state.settings).filter((x) => !x.removed && x.key !== 'google' && x.key !== 'unavailable' && canSeeCalendar(state.settings, user, x.key)); return (t.find((x) => x.key === 'prep') || t[0] || { key: 'shoot' }).key }
   const newEvent = (date, type = firstType()) => ({ id: uid(), projectId: type === 'unavailable' ? '' : projectId || '', type, title: '', date, endDate: '', start: '', end: '', locationText: '', notes: '', personId: type === 'unavailable' && !isAdmin ? user?.id || '' : '', personName: type === 'unavailable' && !isAdmin ? user?.name || '' : '', createdBy: user?.id || '', createdByName: user?.name || '', isNew: true })
   const canMarkOff = !!user // everyone can say they are not available
   const personLabel = (e) => e.personName || e.createdByName || e.title
@@ -362,7 +365,8 @@ export default function CalendarView({ projectId = null, title }) {
 
   // the workspace's own types (Settings > Calendar > Event types); removed ones still name old events
   const allTypes = eventTypesOf(state.settings)
-  const types = allTypes.filter((t) => !t.removed)
+  // the types this person may see; Not available stays for everyone, for their own days off
+  const types = allTypes.filter((t) => !t.removed && (t.key === 'unavailable' || canSeeCalendar(state.settings, user, t.key)))
   const typeOf = (k) => allTypes.find((t) => t.key === k) || { key: k, label: 'Other', color: '#9AA0A6' }
   const feedById = Object.fromEntries(feeds.map((f) => [f.id, f]))
   const colorOf = (e) => (e.feed ? feedById[e.feedId]?.color || FEED_COLOR : typeOf(e.type).color)
@@ -707,7 +711,7 @@ export default function CalendarView({ projectId = null, title }) {
             )}
             <div className="row-2" hidden={!!draft.feed}>
               <Field label="Type">
-                <Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={allTypes.filter((t) => (!t.removed || t.key === draft.type) && (t.key !== 'google' || draft.type === 'google') && (t.key !== 'unavailable' || isAdmin || draft.type === 'unavailable')).map((t) => [t.key, t.label])} disabled={!canEditDraft(draft) || (draft.type === 'unavailable' && !isAdmin)} />
+                <Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={allTypes.filter((t) => (!t.removed || t.key === draft.type) && (t.key === draft.type || t.key === 'unavailable' || canSeeCalendar(state.settings, user, t.key)) && (t.key !== 'google' || draft.type === 'google') && (t.key !== 'unavailable' || isAdmin || draft.type === 'unavailable')).map((t) => [t.key, t.label])} disabled={!canEditDraft(draft) || (draft.type === 'unavailable' && !isAdmin)} />
               </Field>
               <Field label="Project">
                 <Select value={draft.projectId || ''} onChange={(e) => setDraft({ ...draft, projectId: e.target.value })} disabled={!canEditDraft(draft) || !!projectId}>

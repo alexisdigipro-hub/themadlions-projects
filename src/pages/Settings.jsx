@@ -281,6 +281,13 @@ export default function Settings() {
         )}
         {isAdmin && (
           <section className="panel" data-tab="calendar">
+            <h2>Who sees which calendar</h2>
+            <p className="small muted">Each type of event and each calendar feed, seen by everyone or only by the people you light up. Administrators see every calendar, and everyone always sees their own days off.</p>
+            <CalendarAccessSettings state={state} update={update} />
+          </section>
+        )}
+        {isAdmin && (
+          <section className="panel" data-tab="calendar">
             <h2>Projects</h2>
             <div className="stack">
               <Field label="Project code prefix" hint="New projects get a code like TML-2026-001, counted per year. Leave it empty to stop giving out codes. Existing projects keep whatever they have.">
@@ -781,6 +788,68 @@ function BudgetCategoriesSettings({ state, update, toast }) {
 /* Settings > Calendar > Event types (Alex, 11 Oct). A type removed while events still use it is
    kept as removed (see eventTypesOf), so those events keep their name and colour. */
 const NEW_TYPE_COLOURS = ['#E0679A', '#7C8CE0', '#3FA796', '#C99A2E', '#A8754F', '#8E6FD8']
+/* Who sees which calendar (Alex, 11 Oct). settings.calendarAccess: key -> ids of the people who see it,
+   no entry = everyone (canSeeCalendar in store.jsx; the events table follows it through
+   supabase/calendar_access.sql). Chosen people starts with everyone lit, so nothing vanishes for anyone
+   until a face is switched off. */
+function CalendarAccessSettings({ state, update }) {
+  const access = state.settings.calendarAccess || {}
+  const people = (state.users || []).filter((u) => u.active !== false && u.role !== 'admin')
+  const calendars = [
+    ...eventTypesOf(state.settings).filter((t) => !t.removed).map((t) => ({ key: t.key, label: t.label, color: t.color })),
+    ...feedsOf(state.settings).map((f) => ({ key: `feed:${f.id}`, label: f.name || 'Calendar feed', color: f.color || FEED_COLOR, feed: true })),
+  ]
+  const save = (key, list) => update((s) => {
+    const next = { ...(s.settings.calendarAccess || {}) }
+    if (list === null) delete next[key]
+    else next[key] = list
+    s.settings = { ...s.settings, calendarAccess: next }
+    return s
+  })
+  const first = (n) => (n || '').split(' ')[0]
+  if (!people.length) return <p className="small muted">Everyone on the team is an administrator, so everyone sees every calendar.</p>
+  return (
+    <ul className="calacc">
+      {calendars.map((c) => {
+        const list = Array.isArray(access[c.key]) ? access[c.key] : null
+        const count = list ? people.filter((u) => list.includes(u.id)).length : people.length
+        return (
+          <li key={c.key} className="calacc-row">
+            <div className="calacc-head">
+              <span className="calacc-name"><i style={{ background: c.color }} />{c.label}{c.feed && <small>feed</small>}</span>
+              <span className="calacc-count small muted">{list ? `${count} of ${people.length}` : 'Everyone'}</span>
+              <span className="segmented calacc-mode">
+                <button type="button" className={list ? '' : 'on'} onClick={() => save(c.key, null)}>Everyone</button>
+                <button type="button" className={list ? 'on' : ''} onClick={() => !list && save(c.key, people.map((u) => u.id))}>Chosen people</button>
+              </span>
+            </div>
+            {list && (
+              <div className="calacc-people">
+                {people.map((u) => {
+                  const on = list.includes(u.id)
+                  return (
+                    <button
+                      key={u.id}
+                      type="button"
+                      className={`calacc-person${on ? ' on' : ''}`}
+                      aria-pressed={on}
+                      title={`${u.name}: ${on ? 'sees' : 'does not see'} ${c.label}`}
+                      onClick={() => save(c.key, on ? list.filter((id) => id !== u.id) : [...list, u.id])}
+                    >
+                      {(u.profile?.thumb || u.profile?.photo) ? <img src={u.profile.thumb || u.profile.photo} alt="" /> : <span className="calacc-initials">{(u.name || '?').split(/\s+/).map((x) => x[0]).slice(0, 2).join('').toUpperCase()}</span>}
+                      {first(u.name)}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 function EventTypesSettings({ state, update, toast }) {
   const all = eventTypesOf(state.settings)
   const shown = all.filter((t) => !t.removed)
