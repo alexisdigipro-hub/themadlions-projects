@@ -122,20 +122,52 @@ export default function CalendarView({ projectId = null, title }) {
   }
   const goToday = () => { setYm({ y: now.getFullYear(), m: now.getMonth() }); setWk(weekOf(today())) }
   /* Scroll through the months (Alex, 11 Oct): on a computer a wheel or trackpad stroke over the
-     calendar turns one month (a week in Week, a year in Year), down or right for later. One stroke,
-     one step: the glide a trackpad keeps after the fingers lift does not run on through the months,
-     but a wheel kept turning goes on stepping. A box inside that scrolls by itself keeps the wheel. */
+     calendar pulls the month along with it, against a resistance like a magnet: let go early and it
+     springs back into place; pull past the catch and it slides away and the next month (a week in Week,
+     a year in Year) slides in from the other side. Down or right is later. One stroke, one step: the
+     glide a trackpad keeps after the fingers lift does not run on through the months. A box inside
+     that scrolls by itself keeps the wheel; pinch zoom is left alone. */
   const shiftRef = useRef(shift)
   shiftRef.current = shift
   const layoutRef = useRef(null)
   useEffect(() => {
     const el = layoutRef.current
     if (!el || mobile) return undefined
-    let acc = 0
+    const CATCH = 240 // how far a stroke must pull before the month lets go
+    const REACH = 90 // the furthest the month follows the pull, in px
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    let raw = 0
     let last = 0
-    let flipped = 0
+    let busy = false // sliding out and in
+    let spent = false // this stroke already turned a page
+    let idle = null
+    const view = () => el.firstElementChild
+    const paint = (y, o, ms = 0, ease = 'cubic-bezier(.2, .8, .2, 1)') => {
+      const v = view()
+      if (!v) return
+      v.style.transition = ms ? `transform ${ms}ms ${ease}, opacity ${ms}ms ${ease}` : 'none'
+      v.style.transform = y ? `translate3d(0, ${y}px, 0)` : ''
+      v.style.opacity = o === 1 ? '' : String(o)
+    }
+    const springBack = () => { raw = 0; if (!busy) paint(0, 1, 380, 'cubic-bezier(.3, 1.4, .5, 1)') }
+    const turn = (dir) => {
+      busy = true
+      spent = true
+      raw = 0
+      if (still) { shiftRef.current(dir); busy = false; return }
+      paint(-dir * 140, 0, 170, 'cubic-bezier(.4, 0, 1, 1)')
+      setTimeout(() => {
+        shiftRef.current(dir)
+        requestAnimationFrame(() => {
+          paint(dir * 140, 0)
+          void view()?.offsetHeight // lay the new month out below (or above) before it slides in
+          paint(0, 1, 340)
+          setTimeout(() => { busy = false; const v = view(); if (v) v.style.transition = '' }, 360)
+        })
+      }, 170)
+    }
     const onWheel = (e) => {
-      if (e.ctrlKey) return // pinch to zoom
+      if (e.ctrlKey) return
       for (let n = e.target; n && n !== el; n = n.parentElement) {
         if (n.scrollHeight > n.clientHeight + 1 && /(auto|scroll)/.test(getComputedStyle(n).overflowY)) return
       }
@@ -143,19 +175,19 @@ export default function CalendarView({ projectId = null, title }) {
       const t = Date.now()
       const gap = t - last
       last = t
+      clearTimeout(idle)
+      idle = setTimeout(() => { spent = false; springBack() }, 220) // the stroke ended
+      if (gap > 220) spent = false
+      if (busy || spent) return
       const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
-      if (flipped) {
-        // after a step, wait for the stroke to end (a pause), or for a fresh strong turn a while later
-        if (gap < 180 && !(t - flipped > 500 && Math.abs(d) >= 40)) return
-        flipped = 0
-        acc = 0
-      }
-      if (gap > 250) acc = 0
-      acc += d
-      if (Math.abs(acc) >= 50) { shiftRef.current(acc > 0 ? 1 : -1); acc = 0; flipped = t }
+      raw += d
+      if (Math.abs(raw) >= CATCH) { turn(raw > 0 ? 1 : -1); return }
+      // the pull grows slower the further it goes, so it feels held back
+      const pull = Math.sign(raw) * REACH * (1 - Math.exp(-Math.abs(raw) / (CATCH * 0.9)))
+      if (!still) paint(-pull, 1 - Math.abs(pull) / (REACH * 4))
     }
     el.addEventListener('wheel', onWheel, { passive: false })
-    return () => el.removeEventListener('wheel', onWheel)
+    return () => { el.removeEventListener('wheel', onWheel); clearTimeout(idle); paint(0, 1) }
   }, [mobile])
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(wk, i))
   const weekLabel = () => {
@@ -203,7 +235,8 @@ export default function CalendarView({ projectId = null, title }) {
   useEffect(() => {
     const el = gridRef.current
     if (!el || mobile || yearView) return undefined // the month grid and the week both stretch
-    const fit = () => { el.style.minHeight = `${Math.max(560, Math.round(window.innerHeight - el.getBoundingClientRect().top - window.scrollY - 24))}px` }
+    // measured from the frame around it, which stays put while a month slides in or out
+    const fit = () => { el.style.minHeight = `${Math.max(560, Math.round(window.innerHeight - (el.parentElement || el).getBoundingClientRect().top - window.scrollY - 24))}px` }
     fit()
     window.addEventListener('resize', fit)
     return () => window.removeEventListener('resize', fit)
