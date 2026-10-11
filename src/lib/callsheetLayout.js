@@ -29,7 +29,7 @@ export const LABELS = [
   ['call', 'General crew call'],
 ]
 
-export const LOOK_DEFAULTS = { header: 'columns', colour: '', custom: '#c8503f', size: 'normal', linkTheme: 'light', linkSize: 'normal' }
+export const LOOK_DEFAULTS = { header: 'columns', colour: '', custom: '#c8503f', size: 'normal', linkTheme: 'glass', linkSize: 'normal' }
 export const SIZES = [['small', 'Smaller'], ['normal', 'Normal'], ['large', 'Larger']]
 export const ZOOM = { small: 0.9, normal: 1, large: 1.12 }
 
@@ -67,7 +67,10 @@ export function normalizeLayout(raw, { event = false } = {}) {
   }
   const labels = {}
   for (const [k] of LABELS) labels[k] = String(src.labels?.[k] || '')
-  return { blocks, details, labels, look: { ...LOOK_DEFAULTS, ...(src.look || {}) }, event }
+  const look = { ...LOOK_DEFAULTS, ...(src.look || {}) }
+  // the link's Dark became Glass dark (Alex, 11 Oct), and Glass dark is the look for a new layout
+  if (look.linkTheme !== 'light') look.linkTheme = 'glass'
+  return { blocks, details, labels, look, event }
 }
 
 /* The layout as it is saved: without the project-type flag normalizeLayout adds for the names. */

@@ -336,7 +336,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
           </div>
         )}
         {/* the whole sheet, no phone frame and no scroll box of its own (Alex, 10 Oct) */}
-        <div className={`cs-linkpage pv-${layout.look.linkTheme || 'light'}`}>
+        <div className={`cs-linkpage pv-${layout.look.linkTheme === 'light' ? 'light' : 'glass'}`}>
           <CallSheetLinkView data={linkData()} />
         </div>
       </div>
@@ -540,7 +540,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       {preview && mode === 'sheet' && (
         <aside className="cs-preview no-print">
           <div className="cs-preview-head"><span className="cs-live"><i />On the phone</span><span className="muted small">What the crew see, live. Share link sends it.</span></div>
-          <div className={`cs-phone pv-${layout.look.linkTheme || 'light'}`}>
+          <div className={`cs-phone pv-${layout.look.linkTheme === 'light' ? 'light' : 'glass'}`}>
             <CallSheetLinkView data={linkData()} />
           </div>
         </aside>

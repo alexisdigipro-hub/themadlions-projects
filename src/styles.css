@@ -2352,6 +2352,14 @@ input.cs-group-who { text-transform: none; letter-spacing: 0; font-weight: 400; 
 /* the link's own colours, whatever the app's theme is */
 .pv-light { --bg: #f3f4f7; --panel: #ffffff; --raised: #f1f2f6; --line: #d9dce4; --line-soft: #e8eaf0; --text: #1f2430; --muted: #6b7280; --shadow: 0 1px 2px rgba(20, 24, 40, 0.05), 0 4px 16px rgba(20, 24, 40, 0.06); color-scheme: light; }
 .pv-dark { --bg: #17181c; --panel: #1e2025; --raised: #262930; --line: #33363e; --line-soft: #2a2d34; --text: #ece9e2; --muted: #9b9a94; --shadow: none; color-scheme: dark; }
+/* Glass dark for the ordino link (Alex, 11 Oct): the app's Glass dark backdrop with see-through,
+   blurred cards and a bright edge; in the preview (.pv-glass) and on the public page (.pub-glass) */
+.pv-glass, html.pub-glass-page body { --bg: #0b1018; --panel: rgba(255, 255, 255, .06); --raised: rgba(255, 255, 255, .09); --line: rgba(255, 255, 255, .14); --line-soft: rgba(255, 255, 255, .09); --text: #eef3fa; --muted: rgba(214, 224, 238, .66); --shadow: none; color-scheme: dark;
+  background: radial-gradient(520px 420px at 0% 6%, rgba(52, 110, 190, .5) 0%, transparent 62%), radial-gradient(480px 460px at 100% 88%, rgba(20, 140, 150, .4) 0%, transparent 62%), radial-gradient(420px 360px at 85% 20%, rgba(110, 80, 200, .26) 0%, transparent 60%), linear-gradient(160deg, #0a0f18 0%, #0d1522 55%, #0a1119 100%); }
+html.pub-glass-page body { background-attachment: fixed; min-height: 100vh; }
+.pub.pub-glass, .pv-glass .pub { --panel: rgba(255, 255, 255, .06); --text: #eef3fa; --muted: rgba(214, 224, 238, .66); color: var(--text); }
+.pub.pub-glass .pub-card, .pv-glass .pub .pub-card { background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .12); -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), 0 14px 40px rgba(0, 0, 0, .35); }
+.pub.pub-glass .pub-hero, .pv-glass .pub .pub-hero { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 14px 40px rgba(0, 0, 0, .35); border: 1px solid rgba(255, 255, 255, .12); }
 
 /* ---------- music ---------- */
 .player { padding: 14px 16px; }
