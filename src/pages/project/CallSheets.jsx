@@ -630,7 +630,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
         </div>
       ))}
       {!list.length && !rawExtra.some((x) => (x.kind === 'cast') === (kind === 'cast')) && <p className="muted small">Nobody yet. People come from the project&#39;s Project Database, or add someone for this day only.</p>}
-      <div className="ordino-adds"><button type="button" className="link small" onClick={() => setSheet('extra', [...rawExtra, { id: uid(), kind, name: '', role: '', phone: '', call: '' }])}>+ Add a person for this day</button></div>
+      <div className="ordino-adds"><button type="button" className="ordino-pill" onClick={() => setSheet('extra', [...rawExtra, { id: uid(), kind, name: '', role: '', phone: '', call: '' }])}><b>+</b>Add a person for this day</button></div>
     </>
   )
   // what each part of the link takes, in the link's own order (the order set in Customise)
@@ -646,8 +646,8 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
           </div>
         ))}
         <div className="ordino-adds">
-          <button type="button" className="link small" onClick={() => setGroups([...groupCalls, { who: '', time: '' }])}>+ Add a group</button>
-          {!groupCalls.length && <button type="button" className="link small" onClick={() => setGroups(USUAL_GROUPS.map((who) => ({ who, time: '' })))}>Add the usual groups</button>}
+          <button type="button" className="ordino-pill" onClick={() => setGroups([...groupCalls, { who: '', time: '' }])}><b>+</b>Add a group</button>
+          {!groupCalls.length && <button type="button" className="ordino-pill" onClick={() => setGroups(USUAL_GROUPS.map((who) => ({ who, time: '' })))}><b>≡</b>Add the usual groups</button>}
         </div>
       </>
     ),
@@ -691,7 +691,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
                 {project.locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
               </select>
             )}
-            <button type="button" className="link small" onClick={() => setSheet('extraLocs', [...extraLocs, { name: '', address: '' }])}>+ Type a location</button>
+            <button type="button" className="ordino-pill" onClick={() => setSheet('extraLocs', [...extraLocs, { name: '', address: '' }])}><b>+</b>Type a location</button>
           </div>
         </div>
       </>
@@ -706,7 +706,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
             <button type="button" className="ordino-x" onClick={() => setProgram(program.filter((_, j) => j !== i))} aria-label="Remove">×</button>
           </div>
         ))}
-        <div className="ordino-adds"><button type="button" className="link small" onClick={() => setProgram([...program, { from: '', to: '', what: '' }])}>+ Add a row</button></div>
+        <div className="ordino-adds"><button type="button" className="ordino-pill" onClick={() => setProgram([...program, { from: '', to: '', what: '' }])}><b>+</b>Add a row</button></div>
       </>
     ),
     contacts: <p className="muted small">The emergency numbers and the production contacts come from Settings &gt; Call sheets, the same on every ordino.</p>,
@@ -737,7 +737,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       {hiddenPeople.length > 0 && (
         <div className="ordino-adds">
           <span className="muted small">Left out of this ordino:</span>
-          {hiddenPeople.map((h) => <button key={h.key} type="button" className="link small" onClick={() => hidePerson(h.key, false)}>+ {h.name}</button>)}
+          {hiddenPeople.map((h) => <button key={h.key} type="button" className="ordino-pill" onClick={() => hidePerson(h.key, false)}><b>+</b>{h.name}</button>)}
         </div>
       )}
       <p className="muted small">Saved as you type. Customise chooses which parts the link shows and in what order.</p>
@@ -760,7 +760,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
           {mobile && <Button className={mPreview ? 'on' : ''} onClick={() => setMPreview(!mPreview)}>{mPreview ? 'Back to the ordino' : 'Preview'}</Button>}
           <Button onClick={() => setSend(true)}>Send message</Button>
           {canShare && <Button variant="primary" onClick={makeShare}>Share link</Button>}
-          {editable && <Confirm onConfirm={removeDay} label="Delete day" />}
+          {editable && <Confirm onConfirm={removeDay} label="Delete day" className="ordino-del" />}
         </div>
       </div>
 
