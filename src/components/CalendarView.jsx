@@ -247,11 +247,25 @@ export default function CalendarView({ projectId = null, title }) {
   // the month grid reaches the foot of the window on a computer, however tall the window and
   // whatever sits above it, so nothing is left empty under it (Alex, 11 Oct)
   const gridRef = useRef(null)
+  // how many events a month day shows before "+N" (Alex, 11 Oct: smaller events, as many as fit),
+  // measured from the day tiles once the grid has its height
+  const [dayFits, setDayFits] = useState(3)
   useEffect(() => {
     const el = gridRef.current
     if (!el || mobile || yearView) return undefined // the month grid and the week both stretch
     // measured from the frame around it, which stays put while a month slides in or out
-    const fit = () => { el.style.minHeight = `${Math.max(560, Math.round(window.innerHeight - (el.parentElement || el).getBoundingClientRect().top - window.scrollY - 24))}px` }
+    const fit = () => {
+      el.style.minHeight = `${Math.max(560, Math.round(window.innerHeight - (el.parentElement || el).getBoundingClientRect().top - window.scrollY - 24))}px`
+      requestAnimationFrame(() => {
+        const cell = [...el.querySelectorAll('.cal-cell')].find((c) => !c.querySelector('.cal-holiday'))
+        const box = cell?.querySelector('.cal-events')
+        if (!cell || !box) return
+        const room = cell.getBoundingClientRect().bottom - box.getBoundingClientRect().top - 8
+        const chip = box.querySelector('.cal-ev')
+        const pitch = chip ? chip.offsetHeight + 3 : 21
+        setDayFits(Math.max(2, Math.floor((room + 3) / pitch)))
+      })
+    }
     fit()
     window.addEventListener('resize', fit)
     return () => window.removeEventListener('resize', fit)
@@ -641,7 +655,7 @@ export default function CalendarView({ projectId = null, title }) {
                 <span className="cal-day">{Number(cell.iso.slice(-2))}</span>
                 {hol && <span className="cal-holiday">{hol}</span>}
                 <div className="cal-events">
-                  {evs.slice(0, 3).map((e) => (
+                  {evs.slice(0, evs.length <= dayFits ? dayFits : dayFits - 1).map((e) => (
                     <button
                       key={e.id}
                       className="cal-ev"
@@ -657,7 +671,7 @@ export default function CalendarView({ projectId = null, title }) {
                       {e.type === 'unavailable' ? <><small>✕</small>{personLabel(e)}</> : e.title}
                     </button>
                   ))}
-                  {evs.length > 3 && <span className="cal-more">+{evs.length - 3}</span>}
+                  {evs.length > dayFits && <span className="cal-more">+{evs.length - (dayFits - 1)}</span>}
                 </div>
               </div>
             )
