@@ -24,8 +24,14 @@ export default function CalendarView({ projectId = null, title }) {
   /* On a computer the type pills are switches (Alex, 11 Oct): all on to start, a click turns a type off
      and its events leave the calendar, another click brings them back; Alt / Option + click shows that
      type alone. Remembered per device. */
-  const [hiddenTypes, setHiddenTypes] = useState(() => { try { return JSON.parse(localStorage.getItem('tml_cal_hidden') || '[]') } catch { return [] } })
-  const saveHidden = (list) => { setHiddenTypes(list); try { localStorage.setItem('tml_cal_hidden', JSON.stringify(list)) } catch {} }
+  // Not available starts switched off on every visit (Alex, 11 Oct); switched on, it shows until the
+  // Calendar is left, and only the other types are remembered between visits
+  const [hiddenTypes, setHiddenTypes] = useState(() => {
+    let saved = []
+    try { saved = JSON.parse(localStorage.getItem('tml_cal_hidden') || '[]') } catch {}
+    return [...new Set([...(Array.isArray(saved) ? saved : []), 'unavailable'])]
+  })
+  const saveHidden = (list) => { setHiddenTypes(list); try { localStorage.setItem('tml_cal_hidden', JSON.stringify(list.filter((k) => k !== 'unavailable'))) } catch {} }
   const [projFilter, setProjFilter] = useState('all')
   const mobile = useIsMobile()
   const [syncing, setSyncing] = useState(false)
@@ -76,6 +82,7 @@ export default function CalendarView({ projectId = null, title }) {
         if (mobile) {
           if (typeFilter.startsWith('feed:')) { if (e.feedId !== typeFilter.slice(5)) return false }
           else if (typeFilter !== 'all' && e.type !== typeFilter) return false
+          else if (typeFilter === 'all' && e.type === 'unavailable') return false // the phone too: Not available only when picked
         } else if (hiddenTypes.length && hiddenTypes.includes(e.feedId ? `feed:${e.feedId}` : e.type)) return false
         if (!projectId && projFilter !== 'all' && (e.projectId || 'none') !== projFilter) return false
         return true
@@ -217,6 +224,11 @@ export default function CalendarView({ projectId = null, title }) {
       return s
     })
     toast(draft.isNew ? 'Event added' : 'Event saved', 'ok')
+    // a day off just saved shows, even though Not available starts switched off
+    if (draft.type === 'unavailable') {
+      if (mobile) setTypeFilter('unavailable')
+      else setHiddenTypes((h) => h.filter((k) => k !== 'unavailable'))
+    }
     setDraft(null)
     // Days off stay internal scheduling, not something to push onto a calendar other people see.
     if (synced && ev.type !== 'unavailable') {
