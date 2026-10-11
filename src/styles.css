@@ -1005,6 +1005,35 @@ code {
   .project-body h3 .pc-sep { display: none; }
   .project-body h3 .pc-artist + .pc-sep + .pc-name { font-weight: 700; font-size: 16.8px; margin-top: 3px; }
 }
+/* The project card, 2026 (Alex, 11 Oct), computer only: the cover fills the card, the name sits on it
+   over a soft dark fade, the progress is a thin rounded line at its foot, the category a glass pill
+   at the top left, and Edit / Duplicate / Delete round glass icons at the top right that slide in on
+   hover. Sizes are drawn at full scale; the grid's zoom (.715) scales them down with everything. */
+@media (min-width: 821px) {
+  .project-card { border-radius: 28px; isolation: isolate; transition: transform .25s ease, box-shadow .25s ease, border-color .25s; }
+  .project-card:hover { transform: translateY(-5px); box-shadow: 0 26px 56px rgba(0, 0, 0, .38); }
+  .project-cover.has-img img { transition: transform .6s cubic-bezier(.2, .7, .2, 1); }
+  .project-card:hover .project-cover.has-img img { transform: scale(1.045); }
+  .project-body { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: 90px 24px 38px; background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, .5) 45%, rgba(0, 0, 0, .82) 100%); pointer-events: none; }
+  .project-body h3, .project-body h3 .pc-artist, .project-body h3 .pc-name { color: #fff; text-shadow: 0 1px 12px rgba(0, 0, 0, .45); }
+  .project-body h3 .pc-artist + .pc-sep + .pc-name { color: rgba(255, 255, 255, .78); font-weight: 600; }
+  .project-card .project-progress { position: absolute; left: 24px; right: 24px; bottom: 18px; z-index: 2; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, .22); overflow: hidden; }
+  .project-card .project-progress span { border-radius: inherit; box-shadow: 0 0 12px color-mix(in srgb, var(--pc) 70%, transparent); }
+  .project-card .project-cover .project-cat, .project-card .project-cover.has-img .project-cat { position: absolute; top: 18px; left: 18px; bottom: auto; padding: 7px 16px; border-radius: 999px; background: rgba(14, 17, 23, .42); -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%); border: 1px solid rgba(255, 255, 255, .2); color: #fff; opacity: 1; font-size: 16px; font-weight: 600; letter-spacing: .02em; }
+  .slate-bar { height: 10px; }
+  .project-card .project-cover .project-cat { transition: opacity .2s; }
+  /* the tools take the top of the card on hover, so the category steps aside */
+  .project-card:hover .project-cover .project-cat, .project-card:hover .project-cover.has-img .project-cat { opacity: 0; }
+  .project-tools { top: 16px; right: 16px; z-index: 3; gap: 10px; transform: translateY(-8px); transition: opacity .2s ease, transform .2s ease; }
+  .project-card:hover .project-tools, .project-card:focus-within .project-tools { transform: none; }
+  .project-tools .pt-btn { display: grid; place-items: center; width: 50px; height: 50px; min-width: 0; padding: 0; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .22); background: rgba(14, 17, 23, .48); -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%); color: #fff; font-size: 16px; font-weight: 600; text-decoration: none; cursor: pointer; transition: background .15s, transform .1s; box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
+  .project-tools .pt-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .project-tools .pt-btn:hover { background: rgba(255, 255, 255, .24); }
+  .project-tools .pt-btn:active { transform: scale(.94); }
+  .project-tools .pt-del:hover { background: var(--danger); border-color: var(--danger); }
+  .project-tools .pt-btn.busy, .project-tools .pt-btn.btn-danger { width: auto; padding: 0 20px; border-radius: 999px; }
+  .project-tools .pt-btn.btn-danger { background: var(--danger); border-color: var(--danger); }
+}
 
 /* ---------- project workspace ---------- */
 .crumb {

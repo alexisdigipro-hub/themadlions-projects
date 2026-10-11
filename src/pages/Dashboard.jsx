@@ -33,6 +33,13 @@ export function TabPicker({ project, onChange }) {
 const COLORS = ['#C8503F', '#D9A441', '#5B9E7A', '#6C9BD1', '#B07FD1', '#E08A5A', '#4FB3BF', '#9AA0A6']
 
 // On a computer the two parts stack, centred (styles.css); a phone still reads "Artist - Title" in one run.
+/* The card's hover tools as round glass icons (Alex, 11 Oct: "the buttons above it, 2026") */
+const TOOL_ICONS = {
+  edit: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></svg>,
+  copy: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" /><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8" /></svg>,
+  trash: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13" /></svg>,
+}
+
 function CardName({ p }) {
   const { artist, shortTitle } = nameParts(p)
   if (!artist) return <span className="pc-name">{shortTitle}</span>
@@ -302,13 +309,16 @@ export default function Dashboard() {
       </div>
       {canEdit && (
         <div className="project-tools" onClick={(e) => e.preventDefault()}>
-          <button className="link" onClick={() => setDraft({ ...p })}>
-            Edit
+          <button className="link pt-btn" onClick={() => setDraft({ ...p })} title="Edit" aria-label="Edit">
+            {TOOL_ICONS.edit}
           </button>
-          <button className="link" disabled={!!duping} onClick={() => duplicate(p)}>
-            {duping === p.id ? 'Copying…' : 'Duplicate'}
+          <button className={`link pt-btn${duping === p.id ? ' busy' : ''}`} disabled={!!duping} onClick={() => duplicate(p)} title="Duplicate" aria-label="Duplicate">
+            {duping === p.id ? 'Copying…' : TOOL_ICONS.copy}
           </button>
           <Confirm
+            className="pt-btn pt-del"
+            title="Delete"
+            aria-label="Delete"
             onConfirm={() => {
               update((s) => {
                 s.projects = s.projects.filter((x) => x.id !== p.id)
@@ -317,7 +327,9 @@ export default function Dashboard() {
               })
               toast('Project deleted')
             }}
-          />
+          >
+            {TOOL_ICONS.trash}
+          </Confirm>
         </div>
       )}
     </Link>
