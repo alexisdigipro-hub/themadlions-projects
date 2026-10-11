@@ -38,7 +38,6 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
   const [sel, setSel] = useState(days[0]?.id || '')
   const [mode, setMode] = useState('sheet') // sheet | sides
   const [busy, setBusy] = useState(false)
-  const [send, setSend] = useState(false)
   const [share, setShare] = useState(null) // { url } | { busy } | { error }
   const [designing, setDesigning] = useState(false)
   // The phone next to the sheet showing the link as it will look; remembered on this device.
@@ -461,7 +460,6 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
         </div>
         <div className="toolbar-actions">
           {mobile && <Button className={mPreview ? 'on' : ''} onClick={() => setMPreview(!mPreview)}>{mPreview ? 'Back to the ordino' : 'Preview'}</Button>}
-          <Button onClick={() => setSend(true)}>Send message</Button>
           {canShare && <Button variant="primary" onClick={makeShare}>Share link</Button>}
           {editable && <Confirm onConfirm={removeDay} label="Delete day" className="ordino-del" />}
         </div>
@@ -495,26 +493,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
         )}
       </Modal>
 
-      <Modal open={send} wide title={`Send call sheet · Day ${dayIndex + 1}`} onClose={() => setSend(false)}>
-        <div className="stack">
-          <div className="send-row">
-            <div>
-              <strong>The whole ordino</strong>
-              <div className="muted small">One message with the call, the times, the location, the program and the notes. Paste it in the project group or send to anyone.</div>
-            </div>
-            <div className="row-actions">
-              <a className="btn btn-primary btn-sm" href={waShareLink(fullText)} target="_blank" rel="noreferrer">WhatsApp</a>
-              <a className="btn btn-ghost btn-sm" href={mailLink({ bcc: emails, subject, body: fullText.replace(/\*/g, '') })}>Mail{emails.length ? ` (${emails.length})` : ''}</a>
-              <Button size="sm" variant="ghost" onClick={() => copy(fullText)}>Copy</Button>
-            </div>
-          </div>
-          <p className="fineprint">Mail opens your mail app with the message ready to send.</p>
-          <details className="send-preview">
-            <summary className="small muted">Preview the group message</summary>
-            <pre className="script small">{fullText}</pre>
-          </details>
-        </div>
-      </Modal>
+      {/* Send message went (Alex, 11 Oct): the ordino goes out as its link, Share link */}
 
       {mode === 'sides' && (
         <article className="sheet sides">
