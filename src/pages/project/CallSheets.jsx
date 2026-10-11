@@ -429,8 +429,11 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
     <div className="ordino-form">
       <section className="ordino-sec">
         <h3><span className="ordino-n">1</span>The day</h3>
-        <Field label="Date"><Input type="date" value={day.date || ''} onChange={(e) => moveDate(e.target.value)} /></Field>
-        <Field label="Title"><Input value={sheet.title || ''} placeholder={project.title} onChange={(e) => setSheet('title', e.target.value)} /></Field>
+        {/* date and title side by side (Alex, 11 Oct: tidier, more in view) */}
+        <div className="ordino-pair">
+          <Field label="Date"><Input type="date" value={day.date || ''} onChange={(e) => moveDate(e.target.value)} /></Field>
+          <Field label="Title"><Input value={sheet.title || ''} placeholder={project.title} onChange={(e) => setSheet('title', e.target.value)} /></Field>
+        </div>
         <div className="ordino-times">
           <Field label={labelOf(layout, 'call')}><Input inputMode="numeric" placeholder="00:00" value={day.callTime || ''} onChange={(e) => setDay('callTime', e.target.value)} /></Field>
           <Field label={labelOf(layout, 'lunch')}><Input inputMode="numeric" placeholder="00:00" value={sheet.lunch || lunchDefault || ''} onChange={(e) => setSheet('lunch', e.target.value)} /></Field>
@@ -540,7 +543,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       <div className={preview && mode === 'sheet' ? 'cs-with-preview' : undefined}>
       {preview && mode === 'sheet' && (
         <aside className="cs-preview no-print">
-          <div className="cs-preview-head"><strong>On the phone</strong><span className="muted small">What the crew see. Changes show here at once; Share link sends it.</span></div>
+          <div className="cs-preview-head"><span className="cs-live"><i />On the phone</span><span className="muted small">What the crew see, live. Share link sends it.</span></div>
           <div className={`cs-phone pv-${layout.look.linkTheme || 'light'}`}>
             <CallSheetLinkView data={linkData()} />
           </div>
