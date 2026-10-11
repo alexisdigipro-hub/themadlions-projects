@@ -2507,6 +2507,41 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
   :is(.home-toolbar, .home-actions) .input.search { width: 170px; font-weight: 500; padding: 0 16px; }
   :is(.home-toolbar, .home-actions) .input.search:focus { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
 }
+/* The date picker (Alex, 11 Oct), every date field on a computer: the field shows the date written
+   out with a calendar mark; the panel is the Calendar in small, a bold month between round arrows,
+   the days as soft rounded tiles, today ringed in the accent, the chosen day filled with it, and pill
+   buttons at the foot. Click the month for the twelve months, again for the years. */
+.dp-field { display: flex; align-items: center; gap: 8px; line-height: normal; text-align: left; cursor: pointer; white-space: nowrap; overflow: hidden; }
+.dp-field svg { flex: none; width: 16px; height: 16px; fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-linecap: round; }
+.dp-field span { overflow: hidden; text-overflow: ellipsis; }
+.dp-field.dp-none span { color: var(--muted); }
+.dp-field:hover:not(:disabled), .dp-field.open { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.dp-field.open svg, .dp-field:hover:not(:disabled) svg { stroke: var(--accent); }
+.dp-field:disabled { cursor: default; opacity: .6; }
+.dp-pop { position: fixed; z-index: 120; width: 300px; padding: 14px; border-radius: 20px; border: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 92%, transparent); -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4); box-shadow: 0 22px 60px rgba(0, 0, 0, .38), inset 0 1px 0 rgba(255, 255, 255, .06); color: var(--text); animation: dp-in .16s ease-out; }
+@keyframes dp-in { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+.dp-pop button { font-family: inherit; color: inherit; cursor: pointer; }
+.dp-head { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.dp-title { flex: 1; min-width: 0; text-align: left; padding: 4px 8px; margin-left: -4px; border: 0; border-radius: 10px; background: none; font-size: 18px; font-weight: 700; letter-spacing: -.01em; transition: background .15s; }
+.dp-title:hover { background: color-mix(in srgb, var(--text) 7%, transparent); }
+.dp-arrow { width: 32px; height: 32px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: var(--raised); font-size: 20px; line-height: 1; transition: background .2s, border-color .2s, transform .15s, box-shadow .2s; }
+.dp-arrow:hover, .dp-pill:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0, 0, 0, .2); }
+.dp-arrow:active, .dp-pill:active { transform: scale(.96); box-shadow: none; }
+.dp-dow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 4px; }
+.dp-dow span { text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.dp-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.dp-day, .dp-cell { height: 34px; padding: 0; border-radius: 11px; border: 1px solid transparent; background: color-mix(in srgb, var(--text) 4%, transparent); font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums; transition: background .12s, border-color .12s, transform .12s; }
+.dp-day.wknd { background: color-mix(in srgb, var(--text) 2%, transparent); }
+.dp-day.out { color: var(--muted); opacity: .45; }
+.dp-day:hover, .dp-cell:hover { background: var(--raised); border-color: var(--line); }
+.dp-day:focus-visible, .dp-cell:focus-visible { outline: none; border-color: var(--accent); }
+.dp-day.today, .dp-cell.today { border-color: var(--accent); color: var(--accent); }
+.dp-day.on, .dp-cell.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink, #fff); opacity: 1; box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 35%, transparent); }
+.dp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.dp-cell { height: 46px; font-size: 14px; }
+.dp-foot { display: flex; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
+.dp-pill { height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); font-size: 13px; font-weight: 600; transition: background .2s, border-color .2s, transform .15s, box-shadow .2s; }
+.dp-pill.quiet { margin-left: auto; color: var(--muted); }
 /* The Calendar, 2026 (Alex, 11 Oct), computer only: a big month title between round arrows, rounded
    filters and buttons, each day its own soft rounded tile with breathing room instead of a ruled
    table, today ringed in the accent, events as tinted rounded chips with a colour dot, and the type
