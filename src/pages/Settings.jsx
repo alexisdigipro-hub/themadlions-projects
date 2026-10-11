@@ -56,7 +56,7 @@ export default function Settings() {
   // My profile came off the side menu into Settings, as its first tab (Alex, 10 Oct)
   const TABS = [
     ['profile', 'My profile', false],
-    ['company', 'Company', true], ['callsheets', 'Call sheets', true], ['team', 'Team', true], ['calendar', 'Calendar & projects', true], ['budget', 'Budget', true],
+    ['company', 'Company', true], ['callsheets', 'Ordino', true], ['team', 'Team', true], ['calendar', 'Calendar & projects', true], ['budget', 'Budget', true],
     ['display', 'Display', false], ['chat', 'Chat', false], ['integrations', 'Integrations', true], ['data', 'Data', false], ['usage', 'Usage', true],
   ].filter(([, , admin]) => !admin || isAdmin)
   const [tab, setTab] = useState('profile')
@@ -169,8 +169,8 @@ export default function Settings() {
 
         {isAdmin && (
           <section className="panel" data-tab="callsheets">
-            <h2>Call sheet defaults</h2>
-            <p className="small muted">Used for every new shooting day and wherever a call sheet field is left empty. Each day can still override them.</p>
+            <h2>Ordino defaults</h2>
+            <p className="small muted">Used for every new ordino and wherever one of its fields is left empty. Each ordino can still override them.</p>
             <div className="stack">
               <div className="row-3">
                 <Field label="Crew call"><Input value={cs.callTime} onChange={(e) => setCs({ ...cs, callTime: e.target.value })} placeholder="07:00" /></Field>
@@ -182,14 +182,10 @@ export default function Settings() {
                 <Field label="Default parking note"><Textarea rows={2} value={cs.parking} onChange={(e) => setCs({ ...cs, parking: e.target.value })} /></Field>
                 <Field label="Default nearest hospital"><Textarea rows={2} value={cs.hospital} onChange={(e) => setCs({ ...cs, hospital: e.target.value })} placeholder="Name, address, phone" /></Field>
               </div>
-              <Field label="Footer on every call sheet" hint="Also shown at the bottom of shared links."><Input value={cs.footer} onChange={(e) => setCs({ ...cs, footer: e.target.value })} placeholder="Παραγωγή The Mad Lions · production@themadlions.com · +30 69…" /></Field>
+              <Field label="Footer on every ordino link" hint="A line at the bottom of the link."><Input value={cs.footer} onChange={(e) => setCs({ ...cs, footer: e.target.value })} placeholder="Παραγωγή The Mad Lions · production@themadlions.com · +30 69…" /></Field>
               <div className="row-2">
                 <Field label="Cast call, minutes vs crew call" hint="Negative = earlier (makeup), positive = later. Applied to every new cast member, editable per person."><Input type="number" step={15} value={cs.castOffset ?? 0} onChange={(e) => setCs({ ...cs, castOffset: e.target.value })} /></Field>
                 <Field label="Crew call, minutes vs crew call"><Input type="number" step={15} value={cs.crewOffset ?? 0} onChange={(e) => setCs({ ...cs, crewOffset: e.target.value })} /></Field>
-              </div>
-              <div className="row-2">
-                <Field label="Weather on call sheets"><Select value={cs.showWeather === false ? 'no' : 'yes'} onChange={(e) => setCs({ ...cs, showWeather: e.target.value === 'yes' })} options={[['yes', 'Show forecast'], ['no', 'Hide']]} /></Field>
-                <Field label="Sunrise and sunset"><Select value={cs.showSun === false ? 'no' : 'yes'} onChange={(e) => setCs({ ...cs, showSun: e.target.value === 'yes' })} options={[['yes', 'Show'], ['no', 'Hide']]} /></Field>
               </div>
               <div className="row-actions"><Button variant="primary" onClick={saveCs}>Save defaults</Button></div>
             </div>
@@ -198,28 +194,14 @@ export default function Settings() {
 
         {isAdmin && (
           <section className="panel" data-tab="callsheets">
-            <h2>Emergency numbers</h2>
-            <p className="small muted">Shown on every ordino link, so nobody has to look them up on set. Tap to dial on a phone.</p>
-            <RowList
-              rows={state.settings.emergency || []}
-              onChange={(rows) => setSetting('emergency', rows)}
-              fields={[{ k: 'label', placeholder: 'Ambulance (ΕΚΑΒ)' }, { k: 'number', placeholder: '166', inputMode: 'tel' }]}
-              addLabel="Add a number"
-              empty="No emergency numbers. Nothing will be printed on the call sheets."
-            />
-          </section>
-        )}
-
-        {isAdmin && (
-          <section className="panel" data-tab="callsheets">
             <h2>Production contacts</h2>
-            <p className="small muted">The people who are the same on every shoot. They appear under Production on every call sheet and on the public link, above the key crew picked from that project.</p>
+            <p className="small muted">The people who are the same on every shoot. They appear under Production on every ordino link, above the key crew picked from that project.</p>
             <RowList
               rows={state.settings.productionContacts || []}
               onChange={(rows) => setSetting('productionContacts', rows)}
               fields={[{ k: 'role', placeholder: '1st AD' }, { k: 'name', placeholder: 'Name' }, { k: 'phone', placeholder: '+30 69…', inputMode: 'tel' }]}
               addLabel="Add a contact"
-              empty="None yet. Call sheets will show only the key crew of each project."
+              empty="None yet. Ordino links will show only the key crew of each project."
             />
           </section>
         )}
@@ -227,10 +209,10 @@ export default function Settings() {
         {isAdmin && (
           <section className="panel" data-tab="callsheets">
             <h2>Share links</h2>
-            <Field label="Public call sheet links expire" hint="Counted from the shooting day. Expired links show a short 'this call sheet has expired' page. Sharing again always refreshes the link.">
+            <Field label="Ordino links expire" hint="Counted from the ordino's date. An expired link shows a short 'this ordino has expired' page. Sharing again always refreshes the link.">
               <Select value={String(state.settings.shareExpiryDays || 0)} onChange={(e) => setSetting('shareExpiryDays', Number(e.target.value))} options={[['0', 'Never'], ['1', 'The day after the shoot'], ['3', '3 days after the shoot'], ['7', 'A week after the shoot'], ['30', 'A month after the shoot']]} />
             </Field>
-            <Field label="Ask for a code on call sheet links" hint="The link carries everyone's phone number, and links get forwarded. With this on, each call sheet link gets a six digit code that you send separately; without it the page shows nothing. Crew type it once per phone.">
+            <Field label="Ask for a code on ordino links" hint="The link carries everyone's phone number, and links get forwarded. With this on, each ordino link gets a six digit code that you send separately; without it the page shows nothing. Crew type it once per phone.">
               <Select value={state.settings.sharePin ? 'yes' : 'no'} onChange={(e) => setSetting('sharePin', e.target.value === 'yes')} options={[['no', 'No, the link is enough'], ['yes', 'Yes, link plus a code']]} />
             </Field>
           </section>
@@ -961,7 +943,7 @@ function ActivityLog() {
   )
 }
 
-/* A short editable list of rows, used for the emergency numbers and the standing production
+/* A short editable list of rows, used for the standing production
    contacts. Rows are saved as you type; the Remove button drops one, Add appends a blank. */
 function RowList({ rows, onChange, fields, addLabel, empty }) {
   const set = (id, k, v) => onChange(rows.map((r) => (r.id === id ? { ...r, [k]: v } : r)))

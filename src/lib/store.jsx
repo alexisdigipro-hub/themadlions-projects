@@ -151,8 +151,6 @@ export function emptyState() {
       greekHolidays: true, // show Greek public holidays in the calendars
       aiLanguage: 'greek', // 'greek' | 'english'  (language the AI writes its breakdown in)
       projectCodePrefix: 'TML', // project codes look like TML-2026-001; empty string turns codes off
-      // Emergency numbers printed on every call sheet. Editable in Settings > Call sheets.
-      emergency: [{ id: 'ekab', label: 'Ambulance (ΕΚΑΒ)', number: '166' }, { id: 'fire', label: 'Fire brigade', number: '199' }],
       productionContacts: [], // [{ id, role, name, phone }] auto-filled into every call sheet
       autoNotice: { taskAssigned: true, chatMessage: true }, // which events pop a notice
     },

@@ -186,14 +186,7 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
                 {d.company?.address && <p className="muted small">{d.company.name} · {d.company.address}</p>}
               </section>
             )}
-            {d.emergency?.length > 0 && (
-              <section className="pub-card pub-emergency">
-                <h2>Emergency</h2>
-                <ul className="pub-kv">
-                  {d.emergency.map((n, i) => <li key={i}><span className="muted">{n.label}</span><a href={`tel:${n.number}`}>{n.number}</a></li>)}
-                </ul>
-              </section>
-            )}
+            {/* no Emergency card any more (Alex, 11 Oct), also on links shared before */}
           </>
         )
       default:
