@@ -88,13 +88,36 @@ export default function CalendarView({ projectId = null, title }) {
 
   const grid = monthGrid(ym.y, ym.m, state.settings?.weekStart)
   const holiday = (iso) => holidayName(iso, state.settings?.greekHolidays !== false)
-  // Month or Year (Alex, 11 Oct: "a mode to see months and years"); the arrows step a month or a year
-  const [calMode, setCalMode] = useState(() => { try { return localStorage.getItem('tml_cal_mode') === 'year' ? 'year' : 'month' } catch { return 'month' } })
-  const pickMode = (m) => { setCalMode(m); try { localStorage.setItem('tml_cal_mode', m) } catch {} }
+  // Week, Month or Year (Alex, 11 Oct: "a mode to see months and years", "and Week"); the arrows step
+  // a week, a month or a year. Remembered on this device.
+  const [calMode, setCalMode] = useState(() => { try { const m = localStorage.getItem('tml_cal_mode'); return m === 'year' || m === 'week' ? m : 'month' } catch { return 'month' } })
   const yearView = calMode === 'year' && !mobile
+  const weekView = calMode === 'week' && !mobile
+  // the first day of the week holding `iso`, by the week start set in Settings
+  const weekOf = (iso) => { const d = new Date(iso + 'T00:00'); const back = state.settings?.weekStart === 'sunday' ? d.getDay() : (d.getDay() + 6) % 7; return addDays(iso, -back) }
+  const [wk, setWk] = useState(() => weekOf(today()))
+  const ymOf = (iso) => ({ y: Number(iso.slice(0, 4)), m: Number(iso.slice(5, 7)) - 1 })
+  const pickMode = (m) => {
+    // into Week: this week when today is in the month on screen, else the month's first week
+    if (m === 'week' && calMode !== 'week') {
+      const t = today()
+      const inView = ymOf(t).y === ym.y && ymOf(t).m === ym.m
+      setWk(weekOf(inView ? t : `${ym.y}-${String(ym.m + 1).padStart(2, '0')}-01`))
+    }
+    setCalMode(m)
+    try { localStorage.setItem('tml_cal_mode', m) } catch {}
+  }
   const shift = (n) => {
+    if (weekView) { const w = addDays(wk, 7 * n); setWk(w); setYm(ymOf(addDays(w, 3))); return }
     const d = new Date(ym.y, ym.m + n * (yearView ? 12 : 1), 1)
     setYm({ y: d.getFullYear(), m: d.getMonth() })
+  }
+  const goToday = () => { setYm({ y: now.getFullYear(), m: now.getMonth() }); setWk(weekOf(today())) }
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(wk, i))
+  const weekLabel = () => {
+    const a = new Date(wk + 'T00:00'); const b = new Date(addDays(wk, 6) + 'T00:00')
+    const same = a.getMonth() === b.getMonth()
+    return `${a.toLocaleDateString('en-GB', { day: 'numeric', ...(same ? {} : { month: 'short' }) })} – ${b.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
   }
   const openMonth = (m) => { setYm({ y: ym.y, m }); pickMode('month') }
   // personId is who the day off belongs to; createdBy stays who wrote it down. Older days off
@@ -134,12 +157,12 @@ export default function CalendarView({ projectId = null, title }) {
   const gridRef = useRef(null)
   useEffect(() => {
     const el = gridRef.current
-    if (!el || mobile || yearView) return undefined
+    if (!el || mobile || yearView) return undefined // the month grid and the week both stretch
     const fit = () => { el.style.minHeight = `${Math.max(560, Math.round(window.innerHeight - el.getBoundingClientRect().top - window.scrollY - 24))}px` }
     fit()
     window.addEventListener('resize', fit)
     return () => window.removeEventListener('resize', fit)
-  }, [mobile, ym, yearView])
+  }, [mobile, ym, yearView, weekView, wk])
   const dragging = useRef(null) // { ev, from }
   const [dropDay, setDropDay] = useState('')
   const dayGap = (a, b) => Math.round((Date.UTC(...b.split('-').map((x, i) => (i === 1 ? x - 1 : +x))) - Date.UTC(...a.split('-').map((x, i) => (i === 1 ? x - 1 : +x)))) / 86400000)
@@ -174,6 +197,17 @@ export default function CalendarView({ projectId = null, title }) {
         .catch((e) => toast(`Not synced to Google Calendar: ${e.message}`, 'error'))
     }
   }
+  // the drag handlers a day (month tile or week column) and an event button take
+  const dropOn = (iso) => ({
+    onDragOver: (e) => { if (!dragging.current) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dropDay !== iso) setDropDay(iso) },
+    onDragLeave: (e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDropDay((d) => (d === iso ? '' : d)) },
+    onDrop: (e) => { e.preventDefault(); const d = dragging.current; dragging.current = null; setDropDay(''); if (d) moveEvent(d.ev, d.from, iso) },
+  })
+  const dragFrom = (e, iso) => ({
+    draggable: canEditDraft(e),
+    onDragStart: (ev) => { dragging.current = { ev: state.events.find((x) => x.id === e.id) || e, from: iso }; ev.dataTransfer.effectAllowed = 'move'; ev.dataTransfer.setData('text/plain', e.id); ev.currentTarget.classList.add('dragging') },
+    onDragEnd: (ev) => { ev.currentTarget.classList.remove('dragging'); dragging.current = null; setDropDay('') },
+  })
   const remove = (id) => {
     const ev = state.events.find((e) => e.id === id)
     update((s) => {
@@ -220,14 +254,15 @@ export default function CalendarView({ projectId = null, title }) {
       <div className="toolbar">
         <div className="cal-nav">
           <button className="icon-btn" onClick={() => shift(-1)} aria-label={yearView ? 'Previous year' : 'Previous month'}>‹</button>
-          <h2>{yearView ? ym.y : monthLabel(ym.y, ym.m)}</h2>
+          <h2>{yearView ? ym.y : weekView ? weekLabel() : monthLabel(ym.y, ym.m)}</h2>
           <button className="icon-btn" onClick={() => shift(1)} aria-label={yearView ? 'Next year' : 'Next month'}>›</button>
-          <Button size="sm" variant="ghost" onClick={() => setYm({ y: now.getFullYear(), m: now.getMonth() })}>
+          <Button size="sm" variant="ghost" onClick={goToday}>
             Today
           </Button>
           {!mobile && (
             <div className="segmented cal-mode">
-              <button className={!yearView ? 'on' : ''} onClick={() => pickMode('month')}>Month</button>
+              <button className={weekView ? 'on' : ''} onClick={() => pickMode('week')}>Week</button>
+              <button className={!yearView && !weekView ? 'on' : ''} onClick={() => pickMode('month')}>Month</button>
               <button className={yearView ? 'on' : ''} onClick={() => pickMode('year')}>Year</button>
             </div>
           )}
@@ -354,6 +389,39 @@ export default function CalendarView({ projectId = null, title }) {
               )
             })}
           </div>
+        ) : weekView ? (
+          /* the week: seven tall columns, every event of the day listed in full with its time, its
+             project and its type; drag between days, click empty space to add */
+          <div className="cal-week" ref={gridRef}>
+            {weekDays.map((iso) => {
+              const evs = byDate[iso] || []
+              const hol = holiday(iso)
+              const d = new Date(iso + 'T00:00')
+              return (
+                <div
+                  key={iso}
+                  className={`cal-wd${iso === today() ? ' today' : ''}${d.getDay() === 0 || d.getDay() === 6 ? ' weekend' : ''}${hol ? ' holiday' : ''}${dropDay === iso ? ' drop-over' : ''}`}
+                  onClick={() => editable && setDraft(newEvent(iso))}
+                  {...dropOn(iso)}
+                >
+                  <div className="cal-wd-head">
+                    <span>{d.toLocaleDateString('en-GB', { weekday: 'short' })}</span>
+                    <b>{d.getDate()}</b>
+                    {hol && <small>{hol}</small>}
+                  </div>
+                  <div className="cal-wd-events">
+                    {evs.map((e) => (
+                      <button key={e.id} type="button" className="cal-wev" style={{ '--ev': colorOf(e) }} {...dragFrom(e, iso)} onClick={(ev) => { ev.stopPropagation(); setDraft({ ...e }) }}>
+                        {(e.start || e.end) && <small>{e.start}{e.end ? ` – ${e.end}` : ''}</small>}
+                        <strong>{e.type === 'unavailable' ? `${personLabel(e)} not available` : e.title}</strong>
+                        {e.type !== 'unavailable' && <em>{[!projectId && e.projectId ? projName(e.projectId) : '', labelOf(e)].filter(Boolean).join(' · ')}</em>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         ) : (
         <div className="cal-grid" role="grid" ref={gridRef}>
           {weekdayShort(state.settings?.weekStart).map((d) => (
@@ -370,9 +438,7 @@ export default function CalendarView({ projectId = null, title }) {
                 key={cell.iso}
                 className={`cal-cell ${cell.inMonth ? '' : 'dim'} ${isToday ? 'today' : ''} ${cell.dow >= 5 ? 'weekend' : ''} ${hol ? 'holiday' : ''} ${dropDay === cell.iso ? 'drop-over' : ''}`}
                 onClick={() => editable && setDraft(newEvent(cell.iso))}
-                onDragOver={(e) => { if (!dragging.current) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dropDay !== cell.iso) setDropDay(cell.iso) }}
-                onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDropDay((d) => (d === cell.iso ? '' : d)) }}
-                onDrop={(e) => { e.preventDefault(); const d = dragging.current; dragging.current = null; setDropDay(''); if (d) moveEvent(d.ev, d.from, cell.iso) }}
+                {...dropOn(cell.iso)}
                 role="gridcell"
                 title={hol || undefined}
               >
@@ -384,9 +450,7 @@ export default function CalendarView({ projectId = null, title }) {
                       key={e.id}
                       className="cal-ev"
                       style={{ '--ev': colorOf(e) }}
-                      draggable={canEditDraft(e)}
-                      onDragStart={(ev) => { dragging.current = { ev: state.events.find((x) => x.id === e.id) || e, from: cell.iso }; ev.dataTransfer.effectAllowed = 'move'; ev.dataTransfer.setData('text/plain', e.id); ev.currentTarget.classList.add('dragging') }}
-                      onDragEnd={(ev) => { ev.currentTarget.classList.remove('dragging'); dragging.current = null; setDropDay('') }}
+                      {...dragFrom(e, cell.iso)}
                       onClick={(ev) => {
                         ev.stopPropagation()
                         setDraft({ ...e })

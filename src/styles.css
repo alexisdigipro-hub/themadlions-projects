@@ -2461,7 +2461,9 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 .cal-layout.stacked .cal-side { width: auto; }
 .cal-ev[style*="#6B7280"] { opacity: .9; }
 @media (max-width: 820px) { .cal-layout.stacked .cal-cell { min-height: 64px; } }
-@media (min-width: 821px) and (max-width: 1250px) { .cal-year { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } .calendar .toolbar { flex-wrap: wrap !important; } .calendar .cal-legend.cal-legend-top { order: 3; flex-basis: 100%; justify-content: flex-start; } }
+@media (min-width: 821px) and (max-width: 1250px) { .cal-year { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } }
+/* below 1500 px the type pills take their own line under the month and the buttons */
+@media (min-width: 821px) and (max-width: 1500px) { .calendar .toolbar { flex-wrap: wrap !important; } .calendar .cal-legend.cal-legend-top { order: 3; flex-basis: 100%; justify-content: flex-start; } }
 /* The Calendar, 2026 (Alex, 11 Oct), computer only: a big month title between round arrows, rounded
    filters and buttons, each day its own soft rounded tile with breathing room instead of a ruled
    table, today ringed in the accent, events as tinted rounded chips with a colour dot, and the type
@@ -2514,6 +2516,28 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
   .calendar .segmented.cal-mode button + button { border-left: 0; }
   .calendar .segmented.cal-mode button.on { background: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, .07)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 4px 12px rgba(0, 0, 0, .2); }
   .cal-year { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  /* Week (Alex, 11 Oct): seven tall day columns, events in full */
+  .cal-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; min-height: 560px; }
+  .cal-wd { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 12px 10px; border: 1px solid var(--line-soft); border-radius: 18px; background: color-mix(in srgb, var(--panel) 88%, transparent); cursor: pointer; transition: background .15s, border-color .15s; }
+  .cal-wd:hover { background: var(--raised); border-color: var(--line); }
+  .cal-wd.weekend { background: color-mix(in srgb, var(--panel) 70%, transparent); }
+  .cal-wd.holiday { background: color-mix(in srgb, var(--danger) 9%, var(--panel)); }
+  .cal-wd.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 8px 24px color-mix(in srgb, var(--accent) 22%, transparent); }
+  .cal-wd.drop-over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); box-shadow: inset 0 0 0 1px var(--accent); }
+  .cal-wd-head { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 0 4px; }
+  .cal-wd-head span { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .cal-wd-head b { font-size: 26px; font-weight: 700; line-height: 1.1; color: var(--text); }
+  .cal-wd.today .cal-wd-head b { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 20px; }
+  .cal-wd-head small { color: var(--danger); font-size: 11px; font-weight: 600; }
+  .cal-wd-events { display: flex; flex-direction: column; gap: 6px; }
+  .cal-wev { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 8px 10px 8px 22px; position: relative; border: 0; border-radius: 12px; background: color-mix(in srgb, var(--ev) 18%, transparent); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: background .15s; }
+  .cal-wev::before { content: ''; position: absolute; left: 9px; top: 13px; width: 7px; height: 7px; border-radius: 50%; background: var(--ev); }
+  .cal-wev:hover { background: color-mix(in srgb, var(--ev) 30%, transparent); }
+  .cal-wev[draggable='true'] { cursor: grab; }
+  .cal-wev.dragging { opacity: .4; }
+  .cal-wev small { color: var(--muted); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .cal-wev strong { font-size: 13.5px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+  .cal-wev em { color: var(--muted); font-size: 11.5px; font-style: normal; line-height: 1.3; overflow-wrap: anywhere; }
   .cal-ym { padding: 14px 14px 12px; border: 1px solid var(--line-soft); border-radius: 18px; background: color-mix(in srgb, var(--panel) 88%, transparent); }
   .cal-ym.now { border-color: color-mix(in srgb, var(--accent) 55%, var(--line-soft)); }
   .cal-ym-title { display: flex; align-items: baseline; gap: 8px; width: 100%; margin: 0 0 8px; padding: 0 4px; border: 0; background: none; color: var(--text); font: inherit; font-size: 16px; font-weight: 700; text-align: left; cursor: pointer; }
