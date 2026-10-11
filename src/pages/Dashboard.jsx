@@ -192,16 +192,22 @@ export default function Dashboard() {
     return { ...base, hiddenTabs: allHideable(base) }
   }
 
+  /* Search looks through every project (Alex, 11 Oct): all categories and the delivered ones too,
+     whichever chip is chosen, with accents and capitals ignored (Παπαδόπουλος = παπαδοπουλος). */
+  const plain = (v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+  const needle = plain(q.trim())
+  const searching = !!needle
   const projects = visibleProjects(state, user)
-    .filter((p) => filter === 'All' || p.category === filter)
-    .filter((p) => !q || [p.title, p.client, p.code].some((v) => (v || '').toLowerCase().includes(q.toLowerCase())))
+    .filter((p) => searching || filter === 'All' || p.category === filter)
+    .filter((p) => !searching || [p.title, p.artist, p.shortTitle, p.client, p.code, p.category].some((v) => plain(v).includes(needle)))
     .sort((!mobile && SORTS[sort]) || SORTS.date)
   // Delivered projects leave the main grid (Alex): a "Delivered" chip at the end of the category
   // row, in the inverse colour of the others, shows them alone, grey until hovered.
   const [showDelivered, setShowDelivered] = useState(false)
   const active = projects.filter((p) => p.status !== 'Delivered')
   const closed = projects.filter((p) => p.status === 'Delivered')
-  const shown = showDelivered ? closed : active
+  // while searching, the live ones first and then the delivered ones, greyed as on their own chip
+  const shown = searching ? [...active, ...closed] : showDelivered ? closed : active
 
   // A tap on another category (or Delivered) works like TML Chat's folders (Alex, 9 Oct): a small glass
   // lens lifts off the chip that was chosen and slides to the new one, and the projects slide over, left
@@ -414,13 +420,13 @@ export default function Dashboard() {
       <div key={`${filter}|${showDelivered}`} className={`glide-in${slide ? ` in-${slide}` : ''}`}>
       {shown.length === 0 ? (
         <Empty
-          title={showDelivered ? 'No delivered projects here' : state.projects.length ? 'Nothing matches' : 'No projects yet'}
+          title={searching ? 'Nothing matches' : showDelivered ? 'No delivered projects here' : state.projects.length ? 'Nothing matches' : 'No projects yet'}
           action={canEdit && !state.projects.length && <Button variant="primary" onClick={() => setDraft(freshProject())}>Create the first project</Button>}
         >
-          {showDelivered ? 'A project moves here when its status is set to Delivered.' : state.projects.length ? 'Try another category or search term.' : 'A project holds the script, breakdown, schedule, call sheets, locations and people.'}
+          {searching ? 'No project, live or delivered, has that in its name, client, code or category.' : showDelivered ? 'A project moves here when its status is set to Delivered.' : state.projects.length ? 'Try another category or search term.' : 'A project holds the script, breakdown, schedule, call sheets, locations and people.'}
         </Empty>
       ) : (
-        <div className="project-grid">{shown.map((p) => card(p, showDelivered))}</div>
+        <div className="project-grid">{shown.map((p) => card(p, searching ? p.status === 'Delivered' : showDelivered))}</div>
       )}
       </div>
       </div>

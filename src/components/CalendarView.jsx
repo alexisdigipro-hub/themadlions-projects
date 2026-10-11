@@ -371,19 +371,9 @@ export default function CalendarView({ projectId = null, title }) {
               Today
             </Button>
           )}
-          {/* Today leads the Week | Month | Year pills on a computer (Alex, 11 Oct): it jumps to today
-              and leaves the view as it is, so it never takes the glass and the lens skips it */}
-          {!mobile && (
-            <div className="segmented cal-mode">
-              <button type="button" className="cal-today" data-noglide onClick={goToday}>Today</button>
-              <button className={weekView ? 'on' : ''} onClick={() => pickMode('week')}>Week</button>
-              <button className={!yearView && !weekView ? 'on' : ''} onClick={() => pickMode('month')}>Month</button>
-              <button className={yearView ? 'on' : ''} onClick={() => pickMode('year')}>Year</button>
-            </div>
-          )}
         </div>
-        {/* the type legend, which is also the type filter, sits in this row on a computer (Alex, 11 Oct:
-            "on the same row as Not available"). Each pill is a switch: lit = shown, a click hides that
+        {/* the type legend, which is also the type filter, sits in this row on a computer, at the left as
+            one small pill group (Alex, 11 Oct). Each pill is a switch: lit = shown, a click hides that
             type, Alt / Option + click shows it alone; All turns them all on or all off. */}
         {!mobile && (
           <div className="cal-legend cal-legend-top" data-glide="off">
@@ -450,15 +440,32 @@ export default function CalendarView({ projectId = null, title }) {
           {!synced && !!feeds.length && !projectId && (
             <Button variant="ghost" onClick={() => loadFeeds(true)} disabled={feedBusy}>{feedBusy ? 'Reading…' : 'Refresh feeds'}</Button>
           )}
+          {/* on a computer: Add event, Not available, then Today | Week | Month | Year (Alex, 11 Oct);
+              the phone keeps Not available, Add event */}
+          {!mobile && editable && (
+            <Button onClick={() => setDraft(newEvent(today()))}>
+              Add event
+            </Button>
+          )}
           {canMarkOff && (
             <Button onClick={() => setDraft(newEvent(today(), 'unavailable'))}>
               Not available
             </Button>
           )}
-          {editable && (
-            <Button variant={mobile ? 'primary' : 'default'} onClick={() => setDraft(newEvent(today()))}>
+          {mobile && editable && (
+            <Button variant="primary" onClick={() => setDraft(newEvent(today()))}>
               Add event
             </Button>
+          )}
+          {/* Today leads the Week | Month | Year pills, at the far right on a computer (Alex, 11 Oct): it
+              jumps to today and leaves the view as it is, so it never takes the glass and the lens skips it */}
+          {!mobile && (
+            <div className="segmented cal-mode">
+              <button type="button" className="cal-today" data-noglide onClick={goToday}>Today</button>
+              <button className={weekView ? 'on' : ''} onClick={() => pickMode('week')}>Week</button>
+              <button className={!yearView && !weekView ? 'on' : ''} onClick={() => pickMode('month')}>Month</button>
+              <button className={yearView ? 'on' : ''} onClick={() => pickMode('year')}>Year</button>
+            </div>
           )}
         </div>
       </div>
