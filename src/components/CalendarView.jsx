@@ -88,10 +88,15 @@ export default function CalendarView({ projectId = null, title }) {
 
   const grid = monthGrid(ym.y, ym.m, state.settings?.weekStart)
   const holiday = (iso) => holidayName(iso, state.settings?.greekHolidays !== false)
+  // Month or Year (Alex, 11 Oct: "a mode to see months and years"); the arrows step a month or a year
+  const [calMode, setCalMode] = useState(() => { try { return localStorage.getItem('tml_cal_mode') === 'year' ? 'year' : 'month' } catch { return 'month' } })
+  const pickMode = (m) => { setCalMode(m); try { localStorage.setItem('tml_cal_mode', m) } catch {} }
+  const yearView = calMode === 'year' && !mobile
   const shift = (n) => {
-    const d = new Date(ym.y, ym.m + n, 1)
+    const d = new Date(ym.y, ym.m + n * (yearView ? 12 : 1), 1)
     setYm({ y: d.getFullYear(), m: d.getMonth() })
   }
+  const openMonth = (m) => { setYm({ y: ym.y, m }); pickMode('month') }
   // personId is who the day off belongs to; createdBy stays who wrote it down. Older days off
   // have no personId, so everything that reads one falls back to createdBy.
   // a new event starts as Prep, or the first type still in use if Prep was removed in Settings
@@ -124,6 +129,17 @@ export default function CalendarView({ projectId = null, title }) {
      days as it was dragged (a three-day prep keeps its length); a shoot day takes the project's
      ordino for those dates and its Shoot day with it, the same as moving it on the ordino; Google
      Calendar is told, like after Save. */
+  // the month grid reaches the foot of the window on a computer, however tall the window and
+  // whatever sits above it, so nothing is left empty under it (Alex, 11 Oct)
+  const gridRef = useRef(null)
+  useEffect(() => {
+    const el = gridRef.current
+    if (!el || mobile || yearView) return undefined
+    const fit = () => { el.style.minHeight = `${Math.max(560, Math.round(window.innerHeight - el.getBoundingClientRect().top - window.scrollY - 24))}px` }
+    fit()
+    window.addEventListener('resize', fit)
+    return () => window.removeEventListener('resize', fit)
+  }, [mobile, ym, yearView])
   const dragging = useRef(null) // { ev, from }
   const [dropDay, setDropDay] = useState('')
   const dayGap = (a, b) => Math.round((Date.UTC(...b.split('-').map((x, i) => (i === 1 ? x - 1 : +x))) - Date.UTC(...a.split('-').map((x, i) => (i === 1 ? x - 1 : +x)))) / 86400000)
@@ -203,16 +219,42 @@ export default function CalendarView({ projectId = null, title }) {
     <div className="calendar">
       <div className="toolbar">
         <div className="cal-nav">
-          <button className="icon-btn" onClick={() => shift(-1)} aria-label="Previous month">‹</button>
-          <h2>{monthLabel(ym.y, ym.m)}</h2>
-          <button className="icon-btn" onClick={() => shift(1)} aria-label="Next month">›</button>
+          <button className="icon-btn" onClick={() => shift(-1)} aria-label={yearView ? 'Previous year' : 'Previous month'}>‹</button>
+          <h2>{yearView ? ym.y : monthLabel(ym.y, ym.m)}</h2>
+          <button className="icon-btn" onClick={() => shift(1)} aria-label={yearView ? 'Next year' : 'Next month'}>›</button>
           <Button size="sm" variant="ghost" onClick={() => setYm({ y: now.getFullYear(), m: now.getMonth() })}>
             Today
           </Button>
+          {!mobile && (
+            <div className="segmented cal-mode">
+              <button className={!yearView ? 'on' : ''} onClick={() => pickMode('month')}>Month</button>
+              <button className={yearView ? 'on' : ''} onClick={() => pickMode('year')}>Year</button>
+            </div>
+          )}
         </div>
+        {/* the type legend, which is also the type filter, sits in this row on a computer (Alex, 11 Oct:
+            "on the same row as Not available"): click a type to show only it, click again for all */}
+        {!mobile && (
+          <div className="cal-legend cal-legend-top">
+            {/* All, so one pill is always the chosen one and the glass lens has somewhere to slide from */}
+            <button type="button" className={`cal-legend-btn ${typeFilter === 'all' ? 'on' : ''}`} onClick={() => setTypeFilter('all')}>All</button>
+            {legendTypes.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                className={`cal-legend-btn ${typeFilter === t.key ? 'on' : ''}`}
+                style={{ '--ev': t.color }}
+                onClick={() => setTypeFilter((f) => (f === t.key ? 'all' : t.key))}
+                title={`Show only ${t.label}`}
+              >
+                <i style={{ background: t.color }} /> {t.label}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="toolbar-actions">
-          {/* the type filter is the legend under the grid on a computer (Alex, 11 Oct: "we have them
-              below"); a phone has no legend, so it keeps this menu */}
+          {/* the type filter is the legend on a computer (Alex, 11 Oct); a phone has no legend, so it
+              keeps this menu */}
           {mobile && (
             <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
               <option value="all">All types</option>
@@ -275,8 +317,45 @@ export default function CalendarView({ projectId = null, title }) {
               addLabel={editable ? 'Add event' : 'Not available'}
             />
           </div>
+        ) : yearView ? (
+          /* the year: twelve small months with a coloured dot per event (up to three a day); a month's
+             name or any of its days opens that month */
+          <div className="cal-year">
+            {Array.from({ length: 12 }, (_, m) => {
+              const cells = monthGrid(ym.y, m, state.settings?.weekStart)
+              const count = cells.filter((c) => c.inMonth).reduce((n, c) => n + (byDate[c.iso]?.length || 0), 0)
+              const current = ym.y === now.getFullYear() && m === now.getMonth()
+              return (
+                <section key={m} className={`cal-ym${current ? ' now' : ''}`}>
+                  <button type="button" className="cal-ym-title" onClick={() => openMonth(m)}>
+                    {new Date(ym.y, m, 1).toLocaleDateString('en-GB', { month: 'long' })}
+                    {count > 0 && <small>{count}</small>}
+                  </button>
+                  <div className="cal-ym-grid">
+                    {weekdayShort(state.settings?.weekStart).map((d) => <span key={d} className="cal-ym-dow">{d[0]}</span>)}
+                    {cells.map((c) => {
+                      const evs = c.inMonth ? byDate[c.iso] || [] : []
+                      return (
+                        <button
+                          key={c.iso}
+                          type="button"
+                          className={`cal-ym-day${c.inMonth ? '' : ' out'}${c.iso === today() ? ' today' : ''}${evs.length ? ' has' : ''}${holiday(c.iso) && c.inMonth ? ' hol' : ''}`}
+                          onClick={() => openMonth(m)}
+                          title={evs.map((e) => (e.type === 'unavailable' ? `${personLabel(e)} not available` : e.title)).join('\n') || undefined}
+                          tabIndex={c.inMonth ? 0 : -1}
+                        >
+                          <span>{Number(c.iso.slice(-2))}</span>
+                          {evs.length > 0 && <i className="cal-ym-dots">{evs.slice(0, 3).map((e) => <b key={e.id} style={{ background: colorOf(e) }} />)}</i>}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </section>
+              )
+            })}
+          </div>
         ) : (
-        <div className="cal-grid" role="grid">
+        <div className="cal-grid" role="grid" ref={gridRef}>
           {weekdayShort(state.settings?.weekStart).map((d) => (
             <div key={d} className="cal-dow">
               {d}
@@ -326,24 +405,6 @@ export default function CalendarView({ projectId = null, title }) {
         </div>
         )}
 
-        <aside className="cal-side">
-          {/* the legend doubles as a filter: click a type to show only it on the grid above, click it
-              again for all types. Same state the "All types" dropdown uses, so the two stay in sync. */}
-          <div className="cal-legend">
-            {legendTypes.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                className={`cal-legend-btn ${typeFilter === t.key ? 'on' : ''}`}
-                style={{ '--ev': t.color }}
-                onClick={() => setTypeFilter((f) => (f === t.key ? 'all' : t.key))}
-                title={`Show only ${t.label}`}
-              >
-                <i style={{ background: t.color }} /> {t.label}
-              </button>
-            ))}
-          </div>
-        </aside>
       </div>
 
       <Modal

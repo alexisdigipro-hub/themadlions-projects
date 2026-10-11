@@ -2461,6 +2461,7 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 .cal-layout.stacked .cal-side { width: auto; }
 .cal-ev[style*="#6B7280"] { opacity: .9; }
 @media (max-width: 820px) { .cal-layout.stacked .cal-cell { min-height: 64px; } }
+@media (min-width: 821px) and (max-width: 1250px) { .cal-year { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; } .calendar .toolbar { flex-wrap: wrap !important; } .calendar .cal-legend.cal-legend-top { order: 3; flex-basis: 100%; justify-content: flex-start; } }
 /* The Calendar, 2026 (Alex, 11 Oct), computer only: a big month title between round arrows, rounded
    filters and buttons, each day its own soft rounded tile with breathing room instead of a ruled
    table, today ringed in the accent, events as tinted rounded chips with a colour dot, and the type
@@ -2468,12 +2469,9 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 @media (min-width: 821px) {
   .calendar .cal-nav { gap: 10px; }
   .calendar .cal-nav h2 { min-width: 220px; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
-  .calendar .cal-nav .icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--raised); color: var(--text); font-size: 20px; line-height: 1; display: inline-grid; place-items: center; cursor: pointer; transition: background .15s, border-color .15s; }
-  .calendar .cal-nav .icon-btn:hover { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
-  .calendar .toolbar .btn, .calendar .toolbar .select, .calendar .toolbar select.input { border-radius: 999px; }
   .calendar .toolbar .select, .calendar .toolbar select.input { padding-left: 16px; }
   .calendar .cal-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); background: none; border: 0; border-radius: 0; overflow: visible; gap: 8px; }
-  .calendar .cal-nav .btn-ghost { border: 1px solid var(--line); background: var(--raised); height: 40px; padding: 0 18px; }
+
   .calendar .cal-dow { background: none; padding: 2px 12px 4px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
   .calendar .cal-cell { border-radius: 16px; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--panel) 88%, transparent); padding: 10px; gap: 6px; transition: background .15s, border-color .15s, transform .15s; }
   .calendar .cal-cell:hover { background: var(--raised); border-color: var(--line); }
@@ -2494,10 +2492,48 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
   .calendar .cal-ev[draggable='true'] { cursor: grab; }
   .calendar .cal-ev.dragging { opacity: .4; }
   .calendar .cal-cell.drop-over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); box-shadow: inset 0 0 0 1px var(--accent); }
-  .calendar .cal-layout.stacked .cal-side { background: none; border: 0; padding: 0; box-shadow: none; }
-  .calendar .cal-legend { gap: 8px; margin-top: 18px; }
-  .calendar .cal-legend-btn { border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 600; background: var(--raised); border-color: var(--line); }
-  .calendar .cal-legend-btn.on { background: color-mix(in srgb, var(--ev) 22%, var(--raised)); border-color: var(--ev); }
+  /* the legend sits in the top row between the month and the buttons (Alex, 11 Oct), and the grid
+     fills the rest of the screen so nothing is left empty under it */
+  .calendar .cal-legend.cal-legend-top { flex: 1 1 0; min-width: 0; justify-content: center; gap: 6px; margin: 0; }
+  .calendar .toolbar { flex-wrap: nowrap; }
+  .calendar .cal-nav h2 { min-width: 0; white-space: nowrap; }
+  /* every button in the Calendar's top row the same (Alex, 11 Oct): one pill, one hover (a lift and an
+     accent edge), one press; the chosen type is glass, and the glass lens slides between types */
+  .calendar .cal-nav .icon-btn, .calendar .cal-nav .btn, .calendar .toolbar-actions .btn, .calendar .cal-legend-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 38px; padding: 0 16px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--raised); color: var(--text); font: inherit; font-size: 14px; font-weight: 600; line-height: 1;
+    white-space: nowrap; cursor: pointer; box-shadow: none; transition: background .2s ease, border-color .2s ease, box-shadow .2s ease, transform .15s ease; }
+  .calendar .cal-nav .icon-btn { width: 38px; padding: 0; font-size: 20px; }
+  .calendar .cal-nav .icon-btn:hover, .calendar .cal-nav .btn:hover, .calendar .toolbar-actions .btn:hover, .calendar .cal-legend-btn:hover {
+    background: color-mix(in srgb, var(--text) 7%, var(--raised)); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); color: var(--text); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0, 0, 0, .2); }
+  .calendar .cal-nav .icon-btn:active, .calendar .cal-nav .btn:active, .calendar .toolbar-actions .btn:active, .calendar .cal-legend-btn:active { transform: scale(.97); box-shadow: none; }
+  .calendar .cal-legend-btn i { width: 9px; height: 9px; }
+  /* Month | Year (Alex, 11 Oct) */
+  .calendar .segmented.cal-mode { margin: 0; border-radius: 999px; padding: 3px; gap: 2px; border-color: var(--line); background: var(--raised); }
+  .calendar .segmented.cal-mode button { border: 0; border-radius: 999px; height: 30px; padding: 0 14px; font-size: 13.5px; font-weight: 600; }
+  .calendar .segmented.cal-mode button + button { border-left: 0; }
+  .calendar .segmented.cal-mode button.on { background: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, .07)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 4px 12px rgba(0, 0, 0, .2); }
+  .cal-year { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .cal-ym { padding: 14px 14px 12px; border: 1px solid var(--line-soft); border-radius: 18px; background: color-mix(in srgb, var(--panel) 88%, transparent); }
+  .cal-ym.now { border-color: color-mix(in srgb, var(--accent) 55%, var(--line-soft)); }
+  .cal-ym-title { display: flex; align-items: baseline; gap: 8px; width: 100%; margin: 0 0 8px; padding: 0 4px; border: 0; background: none; color: var(--text); font: inherit; font-size: 16px; font-weight: 700; text-align: left; cursor: pointer; }
+  .cal-ym.now .cal-ym-title { color: var(--accent); }
+  .cal-ym-title:hover { color: var(--accent); }
+  .cal-ym-title small { padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--muted); font-size: 11.5px; font-weight: 700; }
+  .cal-ym-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+  .cal-ym-dow { padding-bottom: 4px; color: var(--muted); font-size: 10.5px; font-weight: 700; text-align: center; }
+  .cal-ym-day { position: relative; height: 30px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 9px; background: none; color: var(--muted); font: inherit; font-size: 12.5px; font-variant-numeric: tabular-nums; cursor: pointer; transition: background .15s; }
+  .cal-ym-day:hover { background: var(--raised); color: var(--text); }
+  .cal-ym-day.out { visibility: hidden; }
+  .cal-ym-day.has { color: var(--text); font-weight: 700; }
+  .cal-ym-day.hol span { color: var(--danger); }
+  .cal-ym-day.today span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+  .cal-ym-dots { position: absolute; left: 50%; bottom: 2px; display: flex; gap: 2px; transform: translateX(-50%); }
+  .cal-ym-dots b { width: 4px; height: 4px; border-radius: 50%; }
+  .calendar .cal-legend-btn.on { color: var(--text); background: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, .07)); border-color: rgba(255, 255, 255, .4); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 6px 18px rgba(0, 0, 0, .22); }
+  html[data-theme='light'] .calendar .cal-legend-btn.on { background: linear-gradient(180deg, rgba(255, 255, 255, .95), rgba(255, 255, 255, .6)); border-color: rgba(0, 0, 0, .1); box-shadow: inset 0 1px 0 #fff, 0 6px 18px rgba(0, 0, 0, .1); }
+  .calendar .cal-grid { grid-template-rows: auto; grid-auto-rows: minmax(104px, 1fr); min-height: 560px; } /* CalendarView stretches it to the window's foot */
+  .calendar .cal-layout.stacked .cal-cell { min-height: 0; overflow: hidden; }
 }
 
 /* ---------- home mini calendar ---------- */

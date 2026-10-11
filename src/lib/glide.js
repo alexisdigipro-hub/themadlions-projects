@@ -94,7 +94,7 @@ export function useGlide() {
 // Every row of tabs, chips or a segmented switch in the app (Alex, 9 Oct: "wherever there are tabs like
 // these"): a click on another item sends the glass lens from the chosen one to it. Rows where more than
 // one item can be on (data-glide="off"), or that run their own lens (data-glide="own"), are left alone.
-const ROWS = '.tabs, .segmented, .chips'
+const ROWS = '.tabs, .segmented, .chips, .cal-legend' // the Calendar's type pills too (Alex, 11 Oct)
 export function installGlassTabs() {
   if (typeof document === 'undefined' || installGlassTabs.done) return
   installGlassTabs.done = true
