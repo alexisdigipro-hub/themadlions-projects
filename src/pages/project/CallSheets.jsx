@@ -448,21 +448,25 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
 
   return (
     <div className="callsheets">
-      <div className="toolbar no-print">
-        <div className="cs-days">
-          <div className="segmented">
-            {days.map((d, i) => (
-              <button key={d.id} className={d.id === day.id ? 'on' : ''} onClick={() => setSel(d.id)}>
-                {dayLabel(d, i)}
-              </button>
-            ))}
+      {/* one row of the same buttons (Alex, 11 Oct): the day, Ordino | Customise, Share link,
+          Delete day, and Preview on a phone */}
+      <div className="ordino-bar no-print">
+        <div className="segmented">
+          {days.map((d, i) => (
+            <button key={d.id} className={d.id === day.id ? 'on' : ''} onClick={() => setSel(d.id)}>
+              {dayLabel(d, i)}
+            </button>
+          ))}
+        </div>
+        {editable && mode === 'sheet' && (
+          <div className="segmented ordino-tabs">
+            <button className={!designing ? 'on' : ''} onClick={() => { setDesigning(false); setMPreview(false) }}>Ordino</button>
+            <button className={designing ? 'on' : ''} onClick={() => { setDesigning(true); setMPreview(false) }}>Customise</button>
           </div>
-        </div>
-        <div className="toolbar-actions">
-          {mobile && <Button className={mPreview ? 'on' : ''} onClick={() => setMPreview(!mPreview)}>{mPreview ? 'Back to the ordino' : 'Preview'}</Button>}
-          {canShare && <Button variant="primary" onClick={makeShare}>Share link</Button>}
-          {editable && <Confirm onConfirm={removeDay} label="Delete day" className="ordino-del" />}
-        </div>
+        )}
+        {mobile && <div className="segmented"><button className={mPreview ? 'on' : ''} onClick={() => setMPreview(!mPreview)}>Preview</button></div>}
+        {canShare && <div className="segmented"><button className="ordino-share" onClick={makeShare}>Share link</button></div>}
+        {editable && <div className="segmented"><DeleteDay onDelete={removeDay} /></div>}
       </div>
 
       <Modal open={!!share} title={`Share call sheet · Day ${dayIndex + 1}`} onClose={() => setShare(null)}>
@@ -528,12 +532,6 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
           link's layout changes */}
       {!(mobile && mPreview) && (
         <div className="ordino-pane">
-          {editable && mode === 'sheet' && (
-            <div className="segmented ordino-tabs">
-              <button className={!designing ? 'on' : ''} onClick={() => setDesigning(false)}>Ordino</button>
-              <button className={designing ? 'on' : ''} onClick={() => setDesigning(true)}>Customise</button>
-            </div>
-          )}
           {designing && editable && mode === 'sheet' ? (
             <CallSheetDesigner
               layout={layout} setLayout={setLayout}
@@ -545,5 +543,21 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       )}
       </div>
     </div>
+  )
+}
+
+/* Delete day as one of the bar's buttons: the first tap asks, the second deletes, and it settles
+   back after three seconds */
+function DeleteDay({ onDelete }) {
+  const [armed, setArmed] = useState(false)
+  useEffect(() => {
+    if (!armed) return undefined
+    const t = setTimeout(() => setArmed(false), 3000)
+    return () => clearTimeout(t)
+  }, [armed])
+  return (
+    <button className={`ordino-delete${armed ? ' armed' : ''}`} onClick={() => { if (armed) { setArmed(false); onDelete() } else setArmed(true) }}>
+      {armed ? 'Tap again to delete' : 'Delete day'}
+    </button>
   )
 }
