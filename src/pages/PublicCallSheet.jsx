@@ -1,7 +1,8 @@
 import { Fragment, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
-import { cleanRich } from '../lib/richText.js'
+import { cleanRich, facesIn } from '../lib/richText.js'
+import { ensureFontLoaded } from '../lib/fonts.js'
 
 // Links made before Customise existed carry no layout: the note, then the location.
 const OLD_ORDER = [['note', ''], ['location', 'Location']]
@@ -55,6 +56,9 @@ export default function PublicCallSheet() {
    Shooting call, Break or Est. wrap, Alex 11 Oct, also on links shared before). */
 export function CallSheetLinkView({ data: d, updatedAt }) {
   const lay = d.layout || {}
+  // typefaces picked with the text tools are fetched before they are needed
+  const rich = [d.sheet?.notesHtml, d.sheet?.taglineHtml, d.sheet?.parkingHtml, d.sheet?.hospitalHtml, ...(lay.blocks || []).map((b) => b.html)].join(' ')
+  useEffect(() => { facesIn(rich).forEach((f) => ensureFontLoaded(f.id)) }, [rich])
   const grid = d.sun ? [['sun', 'Sun', `${d.sun.sunrise} · ${d.sun.sunset}`]] : []
   const blocks = (lay.blocks || OLD_ORDER.map(([key, title]) => ({ key, title }))).filter((b) => b.custom || KEEP.has(b.key))
   const mapsUrl = d.loc?.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.loc.address)}` : ''
