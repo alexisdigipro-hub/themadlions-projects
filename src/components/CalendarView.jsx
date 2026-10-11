@@ -529,7 +529,8 @@ export default function CalendarView({ projectId = null, title }) {
                 </Select>
               </Field>
             </div>
-            <div className="row-3">
+            {/* the day, then All day or the times on a line of their own (Alex, 11 Oct) */}
+            <div className={`ev-when${draft.type === 'unavailable' ? ' two' : ''}`}>
               <Field label={draft.type === 'unavailable' ? 'From' : 'Date'}>
                 <Input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} disabled={!canEditDraft(draft)} />
               </Field>
@@ -537,29 +538,26 @@ export default function CalendarView({ projectId = null, title }) {
                 <Field label="To (optional)">
                   <Input type="date" value={draft.endDate || ''} onChange={(e) => setDraft({ ...draft, endDate: e.target.value })} disabled={!canEditDraft(draft)} />
                 </Field>
-              ) : null}
-              {/* All day (Alex, 11 Oct): no times; an event without times always was all day, the switch
-                  just says so and hides Start and End */}
-              {draft.type !== 'unavailable' && (
-                <div className="field">
-                  <span className="field-label">All day</span>
-                  <label className="cs2-switch ev-allday">
+              ) : (
+                <label className="ev-allday">
+                  <span>All day</span>
+                  <span className="cs2-switch">
                     <input type="checkbox" checked={allDayOf(draft)} disabled={!canEditDraft(draft)} onChange={(e) => setDraft(e.target.checked ? { ...draft, allDay: true, start: '', end: '' } : { ...draft, allDay: false })} aria-label="All day" />
                     <span />
-                  </label>
-                </div>
-              )}
-              {!allDayOf(draft) && (
-                <>
-                  <Field label="Start">
-                    <Input type="time" value={draft.start} onChange={(e) => setDraft({ ...draft, start: e.target.value })} disabled={!canEditDraft(draft)} />
-                  </Field>
-                  <Field label="End">
-                    <Input type="time" value={draft.end} onChange={(e) => setDraft({ ...draft, end: e.target.value })} disabled={!canEditDraft(draft)} />
-                  </Field>
-                </>
+                  </span>
+                </label>
               )}
             </div>
+            {draft.type !== 'unavailable' && !allDayOf(draft) && (
+              <div className="row-2">
+                <Field label="Start">
+                  <Input type="time" value={draft.start} onChange={(e) => setDraft({ ...draft, start: e.target.value })} disabled={!canEditDraft(draft)} />
+                </Field>
+                <Field label="End">
+                  <Input type="time" value={draft.end} onChange={(e) => setDraft({ ...draft, end: e.target.value })} disabled={!canEditDraft(draft)} />
+                </Field>
+              </div>
+            )}
             <Field label="Location">
               <Input value={draft.locationText} onChange={(e) => setDraft({ ...draft, locationText: e.target.value })} disabled={!canEditDraft(draft)} />
             </Field>
