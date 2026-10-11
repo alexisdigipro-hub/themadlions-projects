@@ -357,6 +357,34 @@ export default function CalendarView({ projectId = null, title }) {
   const labelOf = (e) => (e.feed ? e.feedName || 'Calendar feed' : typeOf(e.type).label)
   // the legend and the type filter list the feeds after the app's own kinds
   const legendTypes = projectId ? types : [...types, ...feeds.map((f) => ({ key: `feed:${f.id}`, label: f.name || 'Calendar feed', color: f.color || FEED_COLOR }))]
+  /* The type pills stay on the month's line (Alex, 11 Oct: "no other line, smaller or folding"): when
+     their names do not fit in the room left of the month they first get a size smaller, then fold to
+     their colour dots, a dot opening to its name under the pointer. Measured with the names shown, every
+     time the room changes. */
+  const legendRef = useRef(null)
+  useEffect(() => {
+    const cell = legendRef.current
+    if (!cell || mobile) return undefined
+    const fit = () => {
+      const row = cell.firstElementChild
+      if (!row) return
+      // names at full size; else a size smaller; else the dots alone (measured with the folding
+      // animation off, so each size is read as it will end up)
+      cell.classList.add('measuring')
+      cell.classList.remove('tight', 'compact')
+      const fits = () => row.scrollWidth <= cell.clientWidth + 1
+      if (!fits()) {
+        cell.classList.add('tight')
+        if (!fits()) cell.classList.replace('tight', 'compact')
+      }
+      void row.offsetWidth
+      cell.classList.remove('measuring')
+    }
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(cell)
+    return () => ro.disconnect()
+  }, [mobile, legendTypes.length])
   const projName = (id) => state.projects.find((p) => p.id === id)?.title || ''
 
   return (
@@ -376,6 +404,7 @@ export default function CalendarView({ projectId = null, title }) {
             one small pill group (Alex, 11 Oct). Each pill is a switch: lit = shown, a click hides that
             type, Alt / Option + click shows it alone; All turns them all on or all off. */}
         {!mobile && (
+          <div className="cal-legend-cell" ref={legendRef}>
           <div className="cal-legend cal-legend-top" data-glide="off">
             {/* All is a switch too (Alex, 11 Oct): lit when every type shows; a click then turns them all
                 off, and from anything else a click turns them all on */}
@@ -389,16 +418,18 @@ export default function CalendarView({ projectId = null, title }) {
                   className={`cal-legend-btn ${shown ? 'on' : 'off'}`}
                   style={{ '--ev': t.color }}
                   aria-pressed={shown}
+                  aria-label={t.label}
                   onClick={(e) => {
                     if (e.altKey) saveHidden(legendTypes.filter((x) => x.key !== t.key).map((x) => x.key))
                     else saveHidden(shown ? [...hiddenTypes, t.key] : hiddenTypes.filter((k) => k !== t.key))
                   }}
-                  title={shown ? `Hide ${t.label} (Alt + click: show only ${t.label})` : `Show ${t.label}`}
+                  title={shown ? `${t.label}: click to hide (Alt + click: show only this)` : `${t.label}: click to show`}
                 >
-                  <i style={{ background: t.color }} /> {t.label}
+                  <i style={{ background: t.color }} /><span className="lbl">{t.label}</span>
                 </button>
               )
             })}
+          </div>
           </div>
         )}
         <div className="toolbar-actions">
