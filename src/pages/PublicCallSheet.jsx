@@ -1,6 +1,7 @@
 import { Fragment, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
+import { cleanRich } from '../lib/richText.js'
 
 // Links made before Customise existed carry no layout: the note, then the location.
 const OLD_ORDER = [['note', ''], ['location', 'Location']]
@@ -62,7 +63,9 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
   const block = (b) => {
     switch (b.key) {
       case 'note':
-        return d.sheet.notes ? <section className="pub-note"><p>{d.sheet.notes}</p></section> : null
+        return d.sheet.notes || d.sheet.notesHtml
+          ? <section className="pub-note">{d.sheet.notesHtml ? <div className="pub-rich" dangerouslySetInnerHTML={{ __html: cleanRich(d.sheet.notesHtml) }} /> : <p>{d.sheet.notes}</p>}</section>
+          : null
       case 'location':
         return (
           <section className="pub-card">
@@ -77,8 +80,8 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
             ) : <p className="muted">To be confirmed.</p>}
             {(d.sheet.parking || d.sheet.hospital) && (
               <div className="pub-locgrid">
-                {d.sheet.parking && <div><span className="pub-label">Parking</span><div>{d.sheet.parking}</div></div>}
-                {d.sheet.hospital && <div><span className="pub-label">Nearest hospital</span><div>{d.sheet.hospital}</div></div>}
+                {d.sheet.parking && <div><span className="pub-label">Parking</span>{d.sheet.parkingHtml ? <div className="pub-rich" dangerouslySetInnerHTML={{ __html: cleanRich(d.sheet.parkingHtml) }} /> : <div>{d.sheet.parking}</div>}</div>}
+                {d.sheet.hospital && <div><span className="pub-label">Nearest hospital</span>{d.sheet.hospitalHtml ? <div className="pub-rich" dangerouslySetInnerHTML={{ __html: cleanRich(d.sheet.hospitalHtml) }} /> : <div>{d.sheet.hospital}</div>}</div>}
               </div>
             )}
             {d.extraLocs?.length > 0 && (
@@ -120,10 +123,10 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
           </section>
         ) : null
       default:
-        return b.custom && b.text ? (
+        return b.custom && (b.text || b.html) ? (
           <section className="pub-card">
             <h2>{b.title}</h2>
-            <p className="pub-custom">{b.text}</p>
+            {b.html ? <div className="pub-custom pub-rich" dangerouslySetInnerHTML={{ __html: cleanRich(b.html) }} /> : <p className="pub-custom">{b.text}</p>}
           </section>
         ) : null
     }
@@ -151,7 +154,7 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
           </div>
         )}
         {d.wx && <div className="pub-wx">☀ {d.wx.tmax}° / {d.wx.tmin}° · {d.wx.summary}{d.wx.rain != null ? ` · rain ${d.wx.rain}%` : ''}</div>}
-        {d.sheet.tagline && <p className="pub-tagline">{d.sheet.tagline}</p>}
+        {d.sheet.taglineHtml ? <div className="pub-tagline pub-rich" dangerouslySetInnerHTML={{ __html: cleanRich(d.sheet.taglineHtml) }} /> : d.sheet.tagline && <p className="pub-tagline">{d.sheet.tagline}</p>}
       </section>
 
       {blocks.map((b) => <Fragment key={b.key}>{block(b)}</Fragment>)}
