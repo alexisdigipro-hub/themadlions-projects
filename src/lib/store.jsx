@@ -289,6 +289,10 @@ export function StoreProvider({ children }) {
   const [authUser, setAuthUser] = useState(undefined)
   const [membership, setMembership] = useState(undefined) // undefined = unknown, null = no access
   const [invites, setInvites] = useState([])
+  // people who signed up without an invite and wait for an administrator (supabase/join_requests.sql)
+  const [joinRequests, setJoinRequests] = useState([])
+  const [bootTick, setBootTick] = useState(0) // bumped to ask the server again whether this account got in
+  const [joinRequested, setJoinRequested] = useState(false) // this account's request to join is waiting
   const [syncError, setSyncError] = useState('')
   // "View as": an administrator looking at the app through someone else's permissions. It lives in
   // sessionStorage, so closing the tab ends it and it never follows anyone to another device.
@@ -412,6 +416,8 @@ export function StoreProvider({ children }) {
       settings: { ...emptyState().settings, ...(w.data.settings || {}), aiKey: localStorage.getItem(AI_KEY) || '', openaiKey: localStorage.getItem(OAI_KEY) || '' },
     }
     setInvites(inv.data || [])
+    // only administrators read these; before join_requests.sql has run the table is missing, which is fine
+    supabase.from('join_requests').select('*').eq('workspace_id', ws).order('created_at').then(({ data, error }) => { if (!error) setJoinRequests(data || []) })
     prevRef.current = next
     setState(next)
   }, [])
@@ -431,8 +437,10 @@ export function StoreProvider({ children }) {
         const { data, error } = await supabase.rpc('bootstrap', { p_name: authUser.user_metadata?.name || null })
         if (error) throw error
         if (cancelled) return
-        if (!data) {
+        // no data: not on the team; { requested: true }: not on the team, and a request to join was left
+        if (!data || data.requested) {
           setMembership(null)
+          setJoinRequested(!!data?.requested)
           setReady(true)
           return
         }
@@ -449,7 +457,7 @@ export function StoreProvider({ children }) {
     return () => {
       cancelled = true
     }
-  }, [authUser, loadAll])
+  }, [authUser, loadAll, bootTick])
 
   /* remote mode: live updates from teammates */
   useEffect(() => {
@@ -600,6 +608,10 @@ export function StoreProvider({ children }) {
           prevRef.current = next
           return next
         })
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'join_requests', filter: `workspace_id=eq.${ws}` }, async () => {
+        const { data, error } = await supabase.from('join_requests').select('*').eq('workspace_id', ws).order('created_at')
+        if (!error) setJoinRequests(data || [])
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'members', filter: `workspace_id=eq.${ws}` }, async () => {
         const { data } = await supabase.from('members').select('*').eq('workspace_id', ws)
@@ -1029,6 +1041,21 @@ export function StoreProvider({ children }) {
       const { data } = await supabase.from('invites').select('*').eq('workspace_id', ws)
       setInvites(data || [])
     }
+    /* Accept someone who signed up (Alex, 11 Oct: "just accept them somewhere"): they become a member
+       with the permissions a new teammate gets, and their request goes. Decline only removes the request;
+       signing in again asks again. */
+    const acceptRequest = async (r, u) => {
+      const ws = membership.workspace_id
+      const { error } = await supabase.from('members').insert({ workspace_id: ws, user_id: r.user_id, name: r.name || r.email, email: r.email, role: u.role, permissions: u.permissions, project_access: u.projectAccess === 'all' ? 'all' : u.projectAccess })
+      if (error && error.code !== '23505') throw error // 23505: already a member, the request is just left over
+      await supabase.from('join_requests').delete().eq('id', r.id)
+      setJoinRequests((l) => l.filter((x) => x.id !== r.id))
+    }
+    const declineRequest = async (r) => {
+      const { error } = await supabase.from('join_requests').delete().eq('id', r.id)
+      if (error) throw error
+      setJoinRequests((l) => l.filter((x) => x.id !== r.id))
+    }
     const removeInvite = async (id) => {
       const { error } = await supabase.from('invites').delete().eq('id', id)
       if (error) throw error
@@ -1053,6 +1080,11 @@ export function StoreProvider({ children }) {
       authUser,
       membership,
       invites,
+      joinRequests,
+      joinRequested,
+      acceptRequest,
+      declineRequest,
+      recheckAccess: () => setBootTick((n) => n + 1),
       syncError,
       viewAs,
       setViewAs,
@@ -1064,7 +1096,7 @@ export function StoreProvider({ children }) {
       login: (id) => setSessionId(id),
       logout: () => { setViewAs(''); return remote ? auth.signOut() : setSessionId('') },
     }
-  }, [state, sessionId, ready, authUser, membership, invites, syncError, viewAs, replies])
+  }, [state, sessionId, ready, authUser, membership, invites, joinRequests, joinRequested, syncError, viewAs, replies])
 
   return <StoreCtx.Provider value={api}>{children}</StoreCtx.Provider>
 }
