@@ -56,8 +56,9 @@ export function RichToolbar() {
   }
   // the selected words, or the whole box when nothing in it is selected
   const pick = (box) => {
-    box.focus()
     const sel = window.getSelection()
+    // focusing a box that already has the caret can drop the selection in Safari, so only when it has not
+    if (!box.contains(sel.anchorNode)) box.focus()
     if (!sel.rangeCount || sel.isCollapsed || !box.contains(sel.anchorNode)) {
       const all = document.createRange()
       all.selectNodeContents(box)
@@ -66,39 +67,51 @@ export function RichToolbar() {
     }
     return sel
   }
-  // the element holding the first selected letter, for the size the words have now
-  const firstText = (box, sel) => {
+  /* Styles exactly the selected letters (Alex, 11 Oct: "the text I select"), without leaning on the
+     browser's own font commands, which differ between Safari and Chrome: every piece of text inside
+     the selection is cut out of its line and wrapped in a span (or, when a span already holds just
+     that piece, the span itself is restyled), then the same letters are selected again so the next
+     press goes on from there. */
+  const styleSelection = (box, sel, apply) => {
     const r = sel.getRangeAt(0)
-    const root = r.commonAncestorContainer.nodeType === 1 ? r.commonAncestorContainer : r.commonAncestorContainer.parentElement
-    const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
-    while (walk.nextNode()) if (walk.currentNode.textContent.trim() && r.intersectsNode(walk.currentNode)) return walk.currentNode.parentElement
-    return box
-  }
-  /* The browser marks the words with a placeholder (<font size=7> or <font face>), which is swapped
-     for a span carrying the real style. */
-  const wrap = (box, cmd, value, style) => {
-    try { document.execCommand('styleWithCSS', false, false) } catch {}
-    document.execCommand(cmd, false, value)
-    const sel = cmd === 'fontSize' ? `font[size="${value}"]` : `font[face="${value}"]`
-    box.querySelectorAll(sel).forEach((f) => {
+    const pieces = []
+    const walk = document.createTreeWalker(box, NodeFilter.SHOW_TEXT)
+    while (walk.nextNode()) {
+      const n = walk.currentNode
+      if (!n.textContent || !r.intersectsNode(n)) continue
+      const from = n === r.startContainer ? r.startOffset : 0
+      const to = n === r.endContainer ? r.endOffset : n.length
+      if (from < to) pieces.push([n, from, to])
+    }
+    const done = []
+    for (const [n, from, to] of pieces) {
+      let t = n
+      if (to < t.length) t.splitText(to)
+      if (from > 0) t = t.splitText(from)
+      const p = t.parentElement
+      if (p && p !== box && p.tagName === 'SPAN' && p.childNodes.length === 1) { apply(p, true); done.push(p); continue }
       const span = document.createElement('span')
-      style(span, f)
-      span.append(...f.childNodes)
-      f.replaceWith(span)
-    })
+      t.replaceWith(span)
+      span.append(t)
+      apply(span, false)
+      done.push(span)
+    }
+    if (done.length) {
+      const again = document.createRange()
+      again.setStartBefore(done[0])
+      again.setEndAfter(done[done.length - 1])
+      sel.removeAllRanges()
+      sel.addRange(again)
+    }
     box.dispatchEvent(new Event('input', { bubbles: true }))
   }
-  /* Smaller / bigger by a step each press, as far as you like (Alex, 11 Oct): 15% under or over the
-     size the words have now, sized against the text around them. */
+  // Smaller / bigger by 15% each press, as far as you like: the size is a share of the text around
   const size = (factor) => {
     const box = target()
     if (!box) return
-    const sel = pick(box)
-    const nowPx = parseFloat(getComputedStyle(firstText(box, sel)).fontSize) || 15
-    const wantPx = Math.max(3, Math.min(120, nowPx * factor))
-    wrap(box, 'fontSize', '7', (span, f) => {
-      const parentPx = parseFloat(getComputedStyle(f.parentElement).fontSize) || nowPx
-      span.style.fontSize = `${Math.round((wantPx / parentPx) * 1000) / 1000}em`
+    styleSelection(box, pick(box), (el, had) => {
+      const now = had ? parseFloat(el.style.fontSize) || 1 : 1
+      el.style.fontSize = `${Math.round(Math.max(0.05, Math.min(20, now * factor)) * 1000) / 1000}em`
     })
   }
   // a typeface from the app's own list (Settings > Display), fetched from Google Fonts when picked
@@ -107,8 +120,7 @@ export function RichToolbar() {
     const box = target()
     if (!f || !box) return
     ensureFontLoaded(f.id)
-    pick(box)
-    wrap(box, 'fontName', 'tml-face', (span) => { span.style.fontFamily = fontStack(f) })
+    styleSelection(box, pick(box), (el) => { el.style.fontFamily = fontStack(f) })
   }
   // a toolbar button must not take the selection away from the text
   const hold = (e) => e.preventDefault()
