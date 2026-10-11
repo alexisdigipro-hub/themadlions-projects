@@ -2663,7 +2663,9 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
   /* the month between its arrows at the left again (Alex, 11 Oct, later): the types, smaller, take the room
      between it and the buttons, pushed to the right against Add event */
   .calendar .toolbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px 12px; }
-  .calendar .toolbar > .cal-legend-cell { grid-column: 2; grid-row: 1; min-width: 0; display: flex; justify-content: flex-end; }
+  /* a clear gap before Add event (Alex, 11 Oct), so the types read as their own group; a margin, not a
+     padding, so the folding measures the room the types really have */
+  .calendar .toolbar > .cal-legend-cell { grid-column: 2; grid-row: 1; min-width: 0; display: flex; justify-content: flex-end; margin-right: 28px; }
   .calendar .cal-legend.cal-legend-top { flex: none; width: max-content; flex-wrap: nowrap; justify-content: flex-start; gap: 8px; padding: 0; border: 0; background: none; }
   /* the month and the buttons keep their full size; only the type pills give way (they fold) */
   .calendar .toolbar > .cal-nav { grid-column: 1; grid-row: 1; justify-self: start; min-width: max-content; }
