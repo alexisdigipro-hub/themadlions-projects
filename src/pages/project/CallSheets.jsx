@@ -156,7 +156,6 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       sheet: {
         tagline: linkShow('tagline') ? sheet.tagline || csd.tagline || '' : '',
         notes: on('note') ? sheet.notes || '' : '',
-        shootingCall: sheet.shootingCall || '',
         lunch: linkShow('lunch') ? sheet.lunch || lunchDefault : '',
         parking: on('location') && linkShow('parking') ? sheet.parking || csd.parking || '' : '',
         hospital: on('location') && linkShow('hospital') ? sheet.weather || csd.hospital || '' : '',
@@ -722,7 +721,6 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
         <Field label="Title"><Input value={sheet.title || ''} placeholder={project.title} onChange={(e) => setSheet('title', e.target.value)} /></Field>
         <div className="ordino-times">
           <Field label={labelOf(layout, 'call')}><Input inputMode="numeric" placeholder="00:00" value={day.callTime || ''} onChange={(e) => setDay('callTime', e.target.value)} /></Field>
-          <Field label={labelOf(layout, 'shooting')}><Input inputMode="numeric" placeholder="00:00" value={sheet.shootingCall || ''} onChange={(e) => setSheet('shootingCall', e.target.value)} /></Field>
           <Field label={labelOf(layout, 'lunch')}><Input inputMode="numeric" placeholder="00:00" value={sheet.lunch || lunchDefault || ''} onChange={(e) => setSheet('lunch', e.target.value)} /></Field>
           <Field label={labelOf(layout, 'wrap')}><Input inputMode="numeric" placeholder="00:00" value={day.wrapTime || ''} onChange={(e) => setDay('wrapTime', e.target.value)} /></Field>
         </div>

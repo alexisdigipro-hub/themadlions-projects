@@ -44,7 +44,7 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
   // these switches existed carry no flag for them and keep showing them.
   const on = (k) => lay.details?.[k] !== false
   const grid = [
-    on('shooting') && ['shooting', label('shooting', 'Shooting call'), d.sheet.shootingCall || d.day.callTime],
+    // no Shooting call any more (Alex, 11 Oct), not even on links shared before
     d.sheet.lunch && ['lunch', label('lunch', 'Lunch'), d.sheet.lunch],
     on('wrap') && d.day.wrapTime && ['wrap', label('wrap', 'Est. wrap'), d.day.wrapTime],
     d.sun && ['sun', 'Sun', `${d.sun.sunrise} · ${d.sun.sunset}`],

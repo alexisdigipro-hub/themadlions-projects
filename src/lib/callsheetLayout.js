@@ -29,16 +29,14 @@ export const DETAILS = [
   ['parking', 'Parking'],
   ['hospital', 'Nearest hospital'],
   ['lunch', 'Lunch / break time'],
-  ['shooting', 'Shooting call time'],
   ['wrap', 'Est. wrap time'],
 ]
-// Details that start switched off, also in layouts saved before they existed: lunch on the link;
-// the shooting call everywhere and the wrap on the link (Alex took that row out of the link).
-const DETAIL_OFF = { lunch: { link: true }, shooting: { sheet: true, link: true }, wrap: { link: true } }
+// Details that start switched off, also in layouts saved before they existed: lunch and the wrap on
+// the link (Alex took that row out of the link). The Shooting call is gone altogether (Alex, 11 Oct).
+const DETAIL_OFF = { lunch: { link: true }, wrap: { link: true } }
 
 export const LABELS = [
   ['call', 'General crew call'],
-  ['shooting', 'Shooting call'],
   ['lunch', 'Lunch'],
   ['wrap', 'Est. wrap'],
 ]
