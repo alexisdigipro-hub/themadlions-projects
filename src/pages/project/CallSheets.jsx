@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button, Empty, Field, Input, Modal, Textarea, useIsMobile, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { callsheetDefaults, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
@@ -9,7 +9,7 @@ import { ensurePin, publishShare, removeShare, shareUrl } from '../../lib/shares
 import LinkName from '../../components/LinkName.jsx'
 import { nameParts } from '../../lib/projectName.js'
 import CallSheetDesigner from '../../components/CallSheetDesigner.jsx'
-import { CallSheetLinkView } from '../PublicCallSheet.jsx'
+import { CallSheetLinkView, coverStyle } from '../PublicCallSheet.jsx'
 import { labelOf, layoutOf, linkLayout, normalizeLayout, titleOf } from '../../lib/callsheetLayout.js'
 
 /* Ordino & Program (Alex, 10-11 Oct). Each ordino is one shoot day of the project (project.shootingDays,
@@ -77,7 +77,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
     const on = (k) => layout.blocks.some((b) => b.key === k && b.link)
     const shows = (k) => !!layout.details[k]?.link
     return {
-      project: { title, color: project.color, cover: shows('cover') ? project.coverThumb || '' : '', category: project.category },
+      project: { title, color: project.color, cover: shows('cover') ? project.coverThumb || '' : '', coverPos: project.ordinoCover || null, category: project.category },
       company: { name: state.workspace.name, address: state.settings.companyAddress || '', logo: state.settings.logo || '' },
       day: { index: dayIndex + 1, count: days.length, date: day.date, callTime: day.callTime },
       expiresAt: Number(state.settings.shareExpiryDays) > 0 ? new Date(new Date(day.date + 'T23:59:59').getTime() + Number(state.settings.shareExpiryDays) * 86400000).toISOString() : '',
@@ -309,6 +309,13 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
           <Field label={labelOf(layout, 'call')}><Input inputMode="numeric" placeholder="00:00" value={day.callTime || ''} onChange={(e) => setDay('callTime', e.target.value)} /></Field>
           <Field label="Title"><Input value={sheet.title || ''} placeholder={project.title} onChange={(e) => setSheet('title', e.target.value)} /></Field>
         </div>
+        {/* the picture at the top of the link, moved and zoomed by hand (Alex, 11 Oct); one setting
+            for every ordino of the project */}
+        {project.coverThumb && layout.details.cover?.link && (
+          <Field label="Picture on the link" hint="Drag the picture to choose what shows, zoom in with the slider.">
+            <CoverAdjust src={project.coverThumb} value={project.ordinoCover} onChange={(v) => edit((p) => { if (v) p.ordinoCover = v; else delete p.ordinoCover })} />
+          </Field>
+        )}
         <Field label="One line for everyone, under the call"><Textarea rows={2} value={sheet.tagline || ''} placeholder={csd.tagline || 'Safety first, bring a jacket, no smoking on set.'} onChange={(e) => setSheet('tagline', e.target.value)} /></Field>
       </section>
       {linkBlocks.map((b, i) => (
@@ -407,5 +414,46 @@ function DeleteDay({ onDelete }) {
     <button className={`ordino-delete${armed ? ' armed' : ''}`} onClick={() => { if (armed) { setArmed(false); onDelete() } else setArmed(true) }}>
       {armed ? 'Tap again to delete' : 'Delete day'}
     </button>
+  )
+}
+
+/* Adjust picture: the banner's own shape with the cover in it; drag to move what shows, the slider
+   zooms in. It is saved when the finger or the mouse lets go, so the preview follows on release. */
+const clamp = (n) => Math.max(0, Math.min(100, n))
+function CoverAdjust({ src, value, onChange }) {
+  const [pos, setPos] = useState(() => ({ x: 50, y: 50, z: 1, ...(value || {}) }))
+  useEffect(() => { setPos({ x: 50, y: 50, z: 1, ...(value || {}) }) }, [value])
+  const frame = useRef(null)
+  const drag = useRef(null)
+  const down = (e) => {
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    drag.current = { px: e.clientX, py: e.clientY, x: pos.x, y: pos.y }
+  }
+  const move = (e) => {
+    const d = drag.current
+    if (!d) return
+    const r = frame.current.getBoundingClientRect()
+    // dragging the picture right shows more of its left side, so the kept point moves the other way
+    setPos((p) => ({ ...p, x: clamp(d.x - ((e.clientX - d.px) / r.width) * 100 / p.z), y: clamp(d.y - ((e.clientY - d.py) / r.height) * 100 / p.z) }))
+  }
+  const up = () => {
+    if (!drag.current) return
+    drag.current = null
+    onChange({ x: Math.round(pos.x), y: Math.round(pos.y), z: pos.z })
+  }
+  const moved = value && (value.x !== 50 || value.y !== 50 || value.z !== 1)
+  return (
+    <div className="cover-adj">
+      <div ref={frame} className="cover-adj-frame" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
+        <img src={src} alt="" draggable={false} style={coverStyle(pos)} />
+        <span className="cover-adj-hint">Drag to move</span>
+      </div>
+      <div className="cover-adj-row">
+        <span className="muted small">Zoom</span>
+        <input type="range" min="1" max="3" step="0.05" value={pos.z} onChange={(e) => setPos({ ...pos, z: Number(e.target.value) })} onPointerUp={() => onChange({ x: Math.round(pos.x), y: Math.round(pos.y), z: pos.z })} onKeyUp={() => onChange({ x: Math.round(pos.x), y: Math.round(pos.y), z: pos.z })} aria-label="Zoom" />
+        {moved && <button type="button" className="ordino-pill" onClick={() => onChange(null)}>Reset</button>}
+      </div>
+    </div>
   )
 }
