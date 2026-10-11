@@ -211,14 +211,18 @@ export default function CalendarView({ projectId = null, title }) {
           </Button>
         </div>
         <div className="toolbar-actions">
-          <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-            <option value="all">All types</option>
-            {legendTypes.map((t) => (
-              <option key={t.key} value={t.key}>
-                {t.label}
-              </option>
-            ))}
-          </Select>
+          {/* the type filter is the legend under the grid on a computer (Alex, 11 Oct: "we have them
+              below"); a phone has no legend, so it keeps this menu */}
+          {mobile && (
+            <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+              <option value="all">All types</option>
+              {legendTypes.map((t) => (
+                <option key={t.key} value={t.key}>
+                  {t.label}
+                </option>
+              ))}
+            </Select>
+          )}
           {!projectId && (
             <Select value={projFilter} onChange={(e) => setProjFilter(e.target.value)}>
               <option value="all">All projects</option>
