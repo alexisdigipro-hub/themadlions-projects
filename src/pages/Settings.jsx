@@ -183,25 +183,8 @@ export default function Settings() {
                 <Field label="Default nearest hospital"><Textarea rows={2} value={cs.hospital} onChange={(e) => setCs({ ...cs, hospital: e.target.value })} placeholder="Name, address, phone" /></Field>
               </div>
               <Field label="Footer on every ordino link" hint="A line at the bottom of the link."><Input value={cs.footer} onChange={(e) => setCs({ ...cs, footer: e.target.value })} placeholder="Παραγωγή The Mad Lions · production@themadlions.com · +30 69…" /></Field>
-              <div className="row-2">
-                <Field label="Cast call, minutes vs crew call" hint="Negative = earlier (makeup), positive = later. Applied to every new cast member, editable per person."><Input type="number" step={15} value={cs.castOffset ?? 0} onChange={(e) => setCs({ ...cs, castOffset: e.target.value })} /></Field>
-              </div>
               <div className="row-actions"><Button variant="primary" onClick={saveCs}>Save defaults</Button></div>
             </div>
-          </section>
-        )}
-
-        {isAdmin && (
-          <section className="panel" data-tab="callsheets">
-            <h2>Production contacts</h2>
-            <p className="small muted">The people who are the same on every shoot. They appear under Production on every ordino link, above the key crew picked from that project.</p>
-            <RowList
-              rows={state.settings.productionContacts || []}
-              onChange={(rows) => setSetting('productionContacts', rows)}
-              fields={[{ k: 'role', placeholder: '1st AD' }, { k: 'name', placeholder: 'Name' }, { k: 'phone', placeholder: '+30 69…', inputMode: 'tel' }]}
-              addLabel="Add a contact"
-              empty="None yet. Ordino links will show only the key crew of each project."
-            />
           </section>
         )}
 
