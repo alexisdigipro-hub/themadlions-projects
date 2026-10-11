@@ -2647,6 +2647,9 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
   .calendar .cal-legend-btn.off { color: var(--muted); background: transparent; border-style: dashed; opacity: .7; }
   .calendar .cal-legend-btn.off i { background: transparent !important; box-shadow: inset 0 0 0 1.5px var(--ev); }
   .calendar .cal-legend-btn.off:hover { opacity: 1; }
+  /* a month sliding out or in while scrolling stays inside the calendar's frame, not over the top row
+     (a little room left around it for the tiles' hover lift and shadow) */
+  .calendar .cal-layout.stacked { clip-path: inset(-14px); }
   .calendar .cal-grid { grid-template-rows: auto; grid-auto-rows: minmax(104px, 1fr); min-height: 560px; } /* CalendarView stretches it to the window's foot */
   .calendar .cal-layout.stacked .cal-cell { min-height: 0; overflow: hidden; }
 }
