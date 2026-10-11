@@ -42,6 +42,8 @@ export default function Team({ embedded = false }) {
   const save = async () => {
     const em = draft.email.trim().toLowerCase()
     if (!draft.name.trim() || !em) return toast('Name and email are required.', 'error')
+    // a typo in the address (Alex, 11 Oct: "hotmailcom" without the dot) left a teammate locked out
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@.]{2,}$/.test(em)) return toast(`"${em}" is not a full email address. Check it, e.g. name@hotmail.com.`, 'error')
     if (state.users.some((u) => u.email === em && u.id !== draft.id)) return toast('That email is already in the team.', 'error')
     if (remote && draft.isNew) {
       try {
