@@ -2461,6 +2461,40 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 .cal-layout.stacked .cal-side { width: auto; }
 .cal-ev[style*="#6B7280"] { opacity: .9; }
 @media (max-width: 820px) { .cal-layout.stacked .cal-cell { min-height: 64px; } }
+/* The Calendar, 2026 (Alex, 11 Oct), computer only: a big month title between round arrows, rounded
+   filters and buttons, each day its own soft rounded tile with breathing room instead of a ruled
+   table, today ringed in the accent, events as tinted rounded chips with a colour dot, and the type
+   legend as pills. The phone calendar keeps its own look. */
+@media (min-width: 821px) {
+  .calendar .cal-nav { gap: 10px; }
+  .calendar .cal-nav h2 { min-width: 220px; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.01em; }
+  .calendar .cal-nav .icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--raised); color: var(--text); font-size: 20px; line-height: 1; display: inline-grid; place-items: center; cursor: pointer; transition: background .15s, border-color .15s; }
+  .calendar .cal-nav .icon-btn:hover { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
+  .calendar .toolbar .btn, .calendar .toolbar .select, .calendar .toolbar select.input { border-radius: 999px; }
+  .calendar .toolbar .select, .calendar .toolbar select.input { padding-left: 16px; }
+  .calendar .cal-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); background: none; border: 0; border-radius: 0; overflow: visible; gap: 8px; }
+  .calendar .cal-nav .btn-ghost { border: 1px solid var(--line); background: var(--raised); height: 40px; padding: 0 18px; }
+  .calendar .cal-dow { background: none; padding: 2px 12px 4px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .calendar .cal-cell { border-radius: 16px; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--panel) 88%, transparent); padding: 10px; gap: 6px; transition: background .15s, border-color .15s, transform .15s; }
+  .calendar .cal-cell:hover { background: var(--raised); border-color: var(--line); }
+  .calendar .cal-cell.weekend { background: color-mix(in srgb, var(--panel) 70%, transparent); }
+  .calendar .cal-cell.dim { opacity: .45; }
+  .calendar .cal-cell.dim .cal-day { opacity: 1; }
+  .calendar .cal-cell.holiday { background: color-mix(in srgb, var(--danger) 9%, var(--panel)); }
+  .calendar .cal-cell.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 8px 24px color-mix(in srgb, var(--accent) 22%, transparent); }
+  .calendar .cal-day { font-size: 15px; font-weight: 600; color: var(--text); }
+  .calendar .cal-cell.today .cal-day { width: 28px; height: 28px; font-size: 14px; }
+  .calendar .cal-events { gap: 4px; }
+  .calendar .cal-ev { display: block; min-width: 0; font-size: 12.5px; font-weight: 600; padding: 4px 8px; border: 0; border-radius: 8px; background: color-mix(in srgb, var(--ev) 20%, transparent); transition: background .15s; }
+  .calendar .cal-ev::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--ev); vertical-align: 1px; }
+  .calendar .cal-ev:hover { background: color-mix(in srgb, var(--ev) 32%, transparent); }
+  .calendar .cal-ev small { margin-right: 5px; font-weight: 500; }
+  .calendar .cal-more { padding-left: 8px; font-weight: 600; }
+  .calendar .cal-layout.stacked .cal-side { background: none; border: 0; padding: 0; box-shadow: none; }
+  .calendar .cal-legend { gap: 8px; margin-top: 18px; }
+  .calendar .cal-legend-btn { border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 600; background: var(--raised); border-color: var(--line); }
+  .calendar .cal-legend-btn.on { background: color-mix(in srgb, var(--ev) 22%, var(--raised)); border-color: var(--ev); }
+}
 
 /* ---------- home mini calendar ---------- */
 .mini-cal { display: flex; flex-direction: column; gap: 8px; }
