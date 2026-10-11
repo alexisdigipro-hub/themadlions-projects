@@ -757,7 +757,6 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
           </div>
         </div>
         <div className="toolbar-actions">
-          {editable && <Button className={designing ? 'on' : ''} onClick={() => setDesigning(!designing)}>{designing ? 'Close Customise' : 'Customise'}</Button>}
           {mobile && <Button className={mPreview ? 'on' : ''} onClick={() => setMPreview(!mPreview)}>{mPreview ? 'Back to the ordino' : 'Preview'}</Button>}
           <Button onClick={() => setSend(true)}>Send message</Button>
           {canShare && <Button variant="primary" onClick={makeShare}>Share link</Button>}
@@ -853,13 +852,6 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
         </article>
       )}
 
-      {designing && editable && mode === 'sheet' && (
-        <CallSheetDesigner
-          layout={layout} setLayout={setLayout}
-          hasOwn={!!project.callsheetLayout} isAdmin={user?.role === 'admin'}
-          onMakeDefault={makeDefault} onReset={resetLayout}
-        />
-      )}
 
       <div className={preview && mode === 'sheet' ? 'cs-with-preview' : undefined}>
       {preview && mode === 'sheet' && (
@@ -870,7 +862,25 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
           </div>
         </aside>
       )}
-      {!(mobile && mPreview) && ordinoForm}
+      {/* Customise is a tab beside the ordino (Alex, 11 Oct), so the preview stays in view while the
+          link's layout changes */}
+      {!(mobile && mPreview) && (
+        <div className="ordino-pane">
+          {editable && mode === 'sheet' && (
+            <div className="segmented ordino-tabs">
+              <button className={!designing ? 'on' : ''} onClick={() => setDesigning(false)}>Ordino</button>
+              <button className={designing ? 'on' : ''} onClick={() => setDesigning(true)}>Customise</button>
+            </div>
+          )}
+          {designing && editable && mode === 'sheet' ? (
+            <CallSheetDesigner
+              layout={layout} setLayout={setLayout}
+              hasOwn={!!project.callsheetLayout} isAdmin={user?.role === 'admin'}
+              onMakeDefault={makeDefault} onReset={resetLayout}
+            />
+          ) : ordinoForm}
+        </div>
+      )}
       </div>
     </div>
   )
