@@ -2673,7 +2673,9 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
   /* each type is its own button, the very same as Add event and Not available (Alex, 11 Oct): they carry
      the .btn classes, so the look a skin gives those buttons reaches them too. Lit = shown; a type
      switched off fades, its edge dashed, its dot an empty ring. */
-  .calendar .cal-legend-top .cal-legend-btn { flex: none; height: 32px; padding: 0 12px; gap: 6px; font-size: 13px; }
+  /* every button in the row the same height, 38 px, like Add event and the Today | Week | Month | Year group (Alex, 11 Oct) */
+  .calendar .cal-legend-top .cal-legend-btn { flex: none; height: 38px; padding: 0 13px; gap: 6px; font-size: 13.5px; box-sizing: border-box; }
+  .calendar .toolbar-actions .btn, .calendar .toolbar-actions .segmented.cal-mode { height: 38px; box-sizing: border-box; }
   .calendar .cal-legend.cal-legend-top { gap: 6px; }
   .calendar .cal-legend-top .cal-legend-btn.btn.off { background: transparent; border-style: dashed; color: var(--muted); opacity: .65; box-shadow: none; }
   .calendar .cal-legend-top .cal-legend-btn.btn.off:hover { opacity: 1; }
@@ -2689,7 +2691,7 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
   /* folded, the dots keep their room so they never run under the month */
   .calendar .cal-legend-cell.compact { min-width: max-content; }
   .calendar .cal-legend-cell.compact .cal-legend-top { gap: 5px; }
-  .calendar .cal-legend-cell.compact .cal-legend-btn:has(i) { gap: 0; padding: 0; width: 32px; }
+  .calendar .cal-legend-cell.compact .cal-legend-btn:has(i) { gap: 0; padding: 0; width: 38px; }
   .calendar .cal-legend-cell.compact .cal-legend-btn:not(:has(i)) { padding: 0 10px; }
   .calendar .cal-legend-cell.compact .cal-legend-btn { position: relative; }
   .calendar .cal-legend-cell.compact .lbl { position: absolute; top: calc(100% + 8px); left: 50%; z-index: 6; max-width: none; padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); color: var(--text); font-size: 12px; box-shadow: 0 8px 22px rgba(0, 0, 0, .3); opacity: 0; pointer-events: none; transform: translate(-50%, -3px); transition: opacity .15s ease, transform .15s ease; }
@@ -2699,7 +2701,7 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
      as a list of the same buttons under it */
   .calendar .cal-types-btn { display: none; }
   .calendar .cal-legend-cell.menu { position: relative; min-width: max-content; }
-  .calendar .cal-legend-cell.menu .cal-types-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .calendar .cal-legend-cell.menu .cal-types-btn { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; font-size: 13.5px; font-weight: 600; white-space: nowrap; box-sizing: border-box; }
   .calendar .cal-types-dots { display: inline-flex; }
   .calendar .cal-types-dots i { width: 9px; height: 9px; margin-right: -2px; border-radius: 50%; border: 1.5px solid var(--raised); }
   .calendar .cal-types-dots i:last-child { margin-right: 2px; }
