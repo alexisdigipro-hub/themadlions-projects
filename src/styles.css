@@ -6328,6 +6328,32 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
 }
 .ordino-form { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .ordino-pane { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+/* Text with tools (Alex, 11 Oct): the toolbar over the box, and the sizes the same in the box and on
+   the link */
+/* the one bar of text tools at the top of the ordino, kept in view while scrolling */
+.ordino-tools { position: sticky; top: 8px; z-index: 6; padding: 8px 10px; border: 1px solid var(--line-soft); border-radius: 999px; background: color-mix(in srgb, var(--panel) 82%, transparent); -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%); box-shadow: 0 10px 30px rgba(0, 0, 0, .25); }
+.rt-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.rt-bar-h { padding: 0 8px 0 6px; color: var(--muted); font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.rt-bar button { display: inline-flex; align-items: center; justify-content: center; gap: 1px; min-width: 34px; height: 32px; padding: 0 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--raised); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; transition: background .15s, border-color .15s; }
+.rt-bar button:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); background: color-mix(in srgb, var(--text) 7%, var(--raised)); }
+.rt-bar button:active { transform: scale(.95); }
+.rt-bar svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.rt-bar .rt-a { font-weight: 700; font-size: 15px; }
+.rt-bar .rt-a.small { font-size: 11.5px; }
+.rt-sep { width: 1px; height: 20px; margin: 0 4px; background: var(--line); }
+.rt-box.single { min-height: 0; }
+.rt-box { min-height: 92px; height: auto; padding: 10px 12px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; cursor: text; outline: none; }
+.rt-box:empty::before { content: attr(data-placeholder); color: var(--muted); pointer-events: none; }
+.rt-box ul, .rt-box ol, .pub-rich ul, .pub-rich ol { margin: 4px 0; padding-left: 1.3em; }
+.rt-box font[size='1'], .pub-rich font[size='1'] { font-size: .7em; }
+.rt-box font[size='2'], .pub-rich font[size='2'] { font-size: .82em; }
+.rt-box font[size='3'], .pub-rich font[size='3'] { font-size: 1em; }
+.rt-box font[size='4'], .pub-rich font[size='4'] { font-size: 1.25em; }
+.rt-box font[size='5'], .pub-rich font[size='5'] { font-size: 1.5em; }
+.rt-box font[size='6'], .pub-rich font[size='6'] { font-size: 2em; }
+.rt-box font[size='7'], .pub-rich font[size='7'] { font-size: 2.6em; }
+.pub-rich { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
+.pub-note .pub-rich { margin: 0; font-weight: 600; font-size: 14px; flex: 1; min-width: 0; }
 /* Adjust picture on the ordino: the link's banner shape, drag inside it, zoom under it */
 .cover-adj { display: flex; flex-direction: column; gap: 8px; max-width: 420px; }
 .cover-adj-frame { position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: var(--photo-bg, #111); cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; border: 1px solid var(--line-soft); }

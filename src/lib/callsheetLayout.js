@@ -73,9 +73,9 @@ export const newCustomBlock = () => ({ key: `c_${uid()}`, custom: true, title: '
 export const accentOf = (layout, project) => (layout.look.colour === 'project' ? project.color || '' : layout.look.colour === 'custom' ? layout.look.custom : '')
 
 /* What a share link needs to draw itself the same way; stored in the snapshot. */
-export function linkLayout(layout, project, customText) {
+export function linkLayout(layout, project, customText, customHtml = () => '') {
   return {
-    blocks: layout.blocks.filter((b) => b.link).map((b) => ({ key: b.key, title: titleOf(layout, b), ...(b.custom ? { custom: true, text: customText(b) } : {}) })),
+    blocks: layout.blocks.filter((b) => b.link).map((b) => ({ key: b.key, title: titleOf(layout, b), ...(b.custom ? { custom: true, text: customText(b), html: customHtml(b) } : {}) })),
     details: Object.fromEntries(Object.entries(layout.details).map(([k, v]) => [k, v.link])),
     labels: Object.fromEntries(LABELS.map(([k]) => [k, labelOf(layout, k)])),
     theme: layout.look.linkTheme,

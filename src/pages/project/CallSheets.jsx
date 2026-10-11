@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Button, Empty, Field, Input, Modal, Textarea, useIsMobile, useToast } from '../../components/ui.jsx'
+import { Button, Empty, Field, Input, Modal, useIsMobile, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { callsheetDefaults, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
 import { addDays } from '../../lib/dates.js'
@@ -9,6 +9,8 @@ import { ensurePin, publishShare, removeShare, shareUrl } from '../../lib/shares
 import LinkName from '../../components/LinkName.jsx'
 import { nameParts } from '../../lib/projectName.js'
 import CallSheetDesigner from '../../components/CallSheetDesigner.jsx'
+import RichText, { RichToolbar } from '../../components/RichText.jsx'
+import { cleanRich, richToText, textToHtml } from '../../lib/richText.js'
 import { CallSheetLinkView, coverStyle } from '../PublicCallSheet.jsx'
 import { labelOf, layoutOf, linkLayout, normalizeLayout, titleOf } from '../../lib/callsheetLayout.js'
 
@@ -58,6 +60,9 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
   const layout = layoutOf(project, state)
   const title = sheet.title?.trim() || project.title
   const customText = (b) => sheet.custom?.[b.key] || b.text || ''
+  // the Note and own sections can carry formatting (Alex, 11 Oct); older ones are plain text
+  const customHtml = (b) => sheet.customHtml?.[b.key] || textToHtml(customText(b))
+  const noteHtml = sheet.notesHtml || textToHtml(sheet.notes || '')
   const loc = project.locations.find((l) => l.id === day.locationId)
   const locView = loc || sheet.locName || sheet.locAddress
     ? { name: sheet.locName || loc?.name || '', address: sheet.locAddress || loc?.address || '', contact: sheet.locContact || loc?.contact || '', phone: sheet.locPhone || loc?.phone || '' }
@@ -84,9 +89,13 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       sheet: {
         // the line under the call and the hospital have no switch: each shows when filled in
         tagline: sheet.tagline || csd.tagline || '',
+        taglineHtml: sheet.tagline && sheet.taglineHtml ? cleanRich(sheet.taglineHtml) : '',
         notes: on('note') ? sheet.notes || '' : '',
+        notesHtml: on('note') && sheet.notesHtml ? cleanRich(sheet.notesHtml) : '',
         parking: on('location') && shows('parking') ? sheet.parking || csd.parking || '' : '',
+        parkingHtml: on('location') && shows('parking') && sheet.parking && sheet.parkingHtml ? cleanRich(sheet.parkingHtml) : '',
         hospital: on('location') ? sheet.weather || csd.hospital || '' : '', // kept in `weather` since the first call sheets
+        hospitalHtml: on('location') && sheet.weather && sheet.hospitalHtml ? cleanRich(sheet.hospitalHtml) : '',
         footer: csd.footer || '',
       },
       wx: wx && shows('weather') ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
@@ -95,7 +104,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       extraLocs: on('location') ? extraLocs.filter((x) => (x.name || '').trim() || (x.address || '').trim()).map((x) => ({ name: x.name || '', address: x.address || '' })) : [],
       groupCalls: on('groupcalls') ? groupCalls.filter((r) => r.who?.trim() || r.time).map((r) => ({ who: r.who || '', time: r.time || '' })) : [],
       program: on('program') ? program.filter((r) => r.from || r.to || r.what?.trim()).map((r) => ({ from: r.from || '', to: r.to || '', what: r.what || '' })) : [],
-      layout: linkLayout(layout, project, customText),
+      layout: linkLayout(layout, project, customText, (b) => (sheet.customHtml?.[b.key] ? cleanRich(sheet.customHtml[b.key]) : '')),
     }
   }
 
@@ -128,7 +137,12 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
     if (d) d[k] = v
   })
   const setRow = (key, list, i, k, v) => setSheet(key, list.map((r, j) => (j === i ? { ...r, [k]: v } : r)))
-  const setCustom = (key, v) => setSheet('custom', { ...(sheet.custom || {}), [key]: v })
+  // a formatted text keeps its plain words next to it, which the rest of the app reads
+  const setSheetMany = (patch) => edit((p) => {
+    const d = p.shootingDays.find((x) => x.id === day.id)
+    if (d) d.callSheet = { ...(d.callSheet || {}), ...patch }
+  })
+  const setCustomRich = (key, html) => setSheetMany({ customHtml: { ...(sheet.customHtml || {}), [key]: html }, custom: { ...(sheet.custom || {}), [key]: richToText(html) } })
 
   /* The date is changed on the ordino (Alex, 11 Oct). Everything filled in moves with it, and so does
      the project's shoot day in the Calendar, so the old date does not come back as an empty ordino
@@ -225,7 +239,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
 
   // ---- the form: one numbered card per part, in the link's own order (set in Customise) ----
   const fields = {
-    note: <Textarea rows={3} value={sheet.notes || ''} placeholder="Parking, catering, safety, permits, transport. Everyone reads this one." onChange={(e) => setSheet('notes', e.target.value)} />,
+    note: <RichText key={`${day.id}-note`} html={noteHtml} placeholder="Parking, catering, safety, permits, transport. Everyone reads this one." onChange={(h) => setSheetMany({ notesHtml: h, notes: richToText(h) })} />,
     groupcalls: (
       <>
         {groupCalls.map((r, i) => (
@@ -260,8 +274,8 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
           <Field label="Their phone"><Input value={sheet.locPhone || ''} inputMode="tel" placeholder={loc?.phone || 'Phone'} onChange={(e) => setSheet('locPhone', e.target.value)} /></Field>
         </div>
         <div className="row-2">
-          <Field label="Parking"><Textarea rows={2} value={sheet.parking || ''} placeholder={csd.parking || 'Where, how many cars, who unloads where'} onChange={(e) => setSheet('parking', e.target.value)} /></Field>
-          <Field label="Nearest hospital"><Textarea rows={2} value={sheet.weather || ''} placeholder={csd.hospital || 'Name, address, phone'} onChange={(e) => setSheet('weather', e.target.value)} /></Field>
+          <div className="field"><span className="field-label">Parking</span><RichText key={`${day.id}-parking`} html={sheet.parkingHtml || textToHtml(sheet.parking || '')} placeholder={csd.parking || 'Where, how many cars, who unloads where'} onChange={(h) => setSheetMany({ parkingHtml: h, parking: richToText(h) })} /></div>
+          <div className="field"><span className="field-label">Nearest hospital</span><RichText key={`${day.id}-hospital`} html={sheet.hospitalHtml || textToHtml(sheet.weather || '')} placeholder={csd.hospital || 'Name, address, phone'} onChange={(h) => setSheetMany({ hospitalHtml: h, weather: richToText(h) })} /></div>
         </div>
         {/* more places that day, shown small at the foot of the location on the link (Alex, 11 Oct) */}
         <div className="ordino-extra">
@@ -302,6 +316,8 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
   const linkBlocks = layout.blocks.filter((b) => b.link && (b.custom || fields[b.key]))
   const ordinoForm = (
     <div className="ordino-form">
+      {/* one bar of text tools for every text box below (Alex, 11 Oct); it stays in view while you scroll */}
+      <div className="ordino-tools"><RichToolbar /></div>
       <section className="ordino-sec">
         <h3><span className="ordino-n">1</span>The day</h3>
         <div className="ordino-day">
@@ -316,12 +332,12 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
             <CoverAdjust src={project.coverThumb} value={project.ordinoCover} onChange={(v) => edit((p) => { if (v) p.ordinoCover = v; else delete p.ordinoCover })} />
           </Field>
         )}
-        <Field label="One line for everyone, under the call"><Textarea rows={2} value={sheet.tagline || ''} placeholder={csd.tagline || 'Safety first, bring a jacket, no smoking on set.'} onChange={(e) => setSheet('tagline', e.target.value)} /></Field>
+        <div className="field"><span className="field-label">One line for everyone, under the call</span><RichText key={`${day.id}-tagline`} single html={sheet.taglineHtml || textToHtml(sheet.tagline || '')} placeholder={csd.tagline || 'Safety first, bring a jacket, no smoking on set.'} onChange={(h) => setSheetMany({ taglineHtml: h, tagline: richToText(h) })} /></div>
       </section>
       {linkBlocks.map((b, i) => (
         <section key={b.key} className="ordino-sec">
           <h3><span className="ordino-n">{i + 2}</span>{titleOf(layout, b)}</h3>
-          {b.custom ? <Textarea rows={3} value={customText(b)} onChange={(e) => setCustom(b.key, e.target.value)} /> : fields[b.key]}
+          {b.custom ? <RichText key={`${day.id}-${b.key}`} html={customHtml(b)} onChange={(h) => setCustomRich(b.key, h)} /> : fields[b.key]}
         </section>
       ))}
       <p className="muted small">Saved as you type. Customise chooses which parts the link shows and in what order.</p>
