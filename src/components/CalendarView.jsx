@@ -19,7 +19,12 @@ export default function CalendarView({ projectId = null, title }) {
   const now = new Date()
   const [ym, setYm] = useState({ y: now.getFullYear(), m: now.getMonth() })
   const [draft, setDraft] = useState(null)
-  const [typeFilter, setTypeFilter] = useState('all')
+  const [typeFilter, setTypeFilter] = useState('all') // the phone's one-type menu
+  /* On a computer the type pills are switches (Alex, 11 Oct): all on to start, a click turns a type off
+     and its events leave the calendar, another click brings them back; Alt / Option + click shows that
+     type alone. Remembered per device. */
+  const [hiddenTypes, setHiddenTypes] = useState(() => { try { return JSON.parse(localStorage.getItem('tml_cal_hidden') || '[]') } catch { return [] } })
+  const saveHidden = (list) => { setHiddenTypes(list); try { localStorage.setItem('tml_cal_hidden', JSON.stringify(list)) } catch {} }
   const [projFilter, setProjFilter] = useState('all')
   const mobile = useIsMobile()
   const [syncing, setSyncing] = useState(false)
@@ -67,12 +72,14 @@ export default function CalendarView({ projectId = null, title }) {
         if (projectId && e.projectId !== projectId) return false
         if (!projectId && e.projectId && !allowedIds.has(e.projectId)) return false
         // "feed:<id>" picks one calendar feed; the other values are ordinary event types
-        if (typeFilter.startsWith('feed:')) { if (e.feedId !== typeFilter.slice(5)) return false }
-        else if (typeFilter !== 'all' && e.type !== typeFilter) return false
+        if (mobile) {
+          if (typeFilter.startsWith('feed:')) { if (e.feedId !== typeFilter.slice(5)) return false }
+          else if (typeFilter !== 'all' && e.type !== typeFilter) return false
+        } else if (hiddenTypes.length && hiddenTypes.includes(e.feedId ? `feed:${e.feedId}` : e.type)) return false
         if (!projectId && projFilter !== 'all' && (e.projectId || 'none') !== projFilter) return false
         return true
       }),
-    [state.events, feedEvents, projectId, typeFilter, projFilter, allowedIds]
+    [state.events, feedEvents, projectId, typeFilter, hiddenTypes, mobile, projFilter, allowedIds]
   )
   const byDate = useMemo(() => {
     const m = {}
@@ -301,23 +308,30 @@ export default function CalendarView({ projectId = null, title }) {
           )}
         </div>
         {/* the type legend, which is also the type filter, sits in this row on a computer (Alex, 11 Oct:
-            "on the same row as Not available"): click a type to show only it, click again for all */}
+            "on the same row as Not available"). Each pill is a switch: lit = shown, a click hides that
+            type, Alt / Option + click shows it alone; All brings everything back. */}
         {!mobile && (
-          <div className="cal-legend cal-legend-top">
-            {/* All, so one pill is always the chosen one and the glass lens has somewhere to slide from */}
-            <button type="button" className={`cal-legend-btn ${typeFilter === 'all' ? 'on' : ''}`} onClick={() => setTypeFilter('all')}>All</button>
-            {legendTypes.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                className={`cal-legend-btn ${typeFilter === t.key ? 'on' : ''}`}
-                style={{ '--ev': t.color }}
-                onClick={() => setTypeFilter((f) => (f === t.key ? 'all' : t.key))}
-                title={`Show only ${t.label}`}
-              >
-                <i style={{ background: t.color }} /> {t.label}
-              </button>
-            ))}
+          <div className="cal-legend cal-legend-top" data-glide="off">
+            <button type="button" className={`cal-legend-btn ${hiddenTypes.length ? '' : 'on'}`} onClick={() => saveHidden([])} title="Show every type">All</button>
+            {legendTypes.map((t) => {
+              const shown = !hiddenTypes.includes(t.key)
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  className={`cal-legend-btn ${shown ? 'on' : 'off'}`}
+                  style={{ '--ev': t.color }}
+                  aria-pressed={shown}
+                  onClick={(e) => {
+                    if (e.altKey) saveHidden(legendTypes.filter((x) => x.key !== t.key).map((x) => x.key))
+                    else saveHidden(shown ? [...hiddenTypes, t.key] : hiddenTypes.filter((k) => k !== t.key))
+                  }}
+                  title={shown ? `Hide ${t.label} (Alt + click: show only ${t.label})` : `Show ${t.label}`}
+                >
+                  <i style={{ background: t.color }} /> {t.label}
+                </button>
+              )
+            })}
           </div>
         )}
         <div className="toolbar-actions">
