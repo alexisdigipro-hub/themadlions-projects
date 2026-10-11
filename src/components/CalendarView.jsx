@@ -124,7 +124,7 @@ export default function CalendarView({ projectId = null, title }) {
   // have no personId, so everything that reads one falls back to createdBy.
   // a new event starts as Prep, or the first type still in use if Prep was removed in Settings
   const firstType = () => { const t = eventTypesOf(state.settings).filter((x) => !x.removed && x.key !== 'google' && x.key !== 'unavailable'); return (t.find((x) => x.key === 'prep') || t[0] || { key: 'shoot' }).key }
-  const newEvent = (date, type = firstType()) => ({ id: uid(), projectId: type === 'unavailable' ? '' : projectId || projects[0]?.id || '', type, title: '', date, endDate: '', start: '', end: '', locationText: '', notes: '', personId: '', personName: '', createdBy: user?.id || '', createdByName: user?.name || '', isNew: true })
+  const newEvent = (date, type = firstType()) => ({ id: uid(), projectId: type === 'unavailable' ? '' : projectId || '', type, title: '', date, endDate: '', start: '', end: '', locationText: '', notes: '', personId: '', personName: '', createdBy: user?.id || '', createdByName: user?.name || '', isNew: true })
   const canMarkOff = isAdmin
   const personLabel = (e) => e.personName || e.createdByName || e.title
 
