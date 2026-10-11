@@ -417,14 +417,18 @@ function DeleteDay({ onDelete }) {
   )
 }
 
-/* Adjust picture: the banner's own shape with the cover in it; drag to move what shows, the slider
-   zooms in. It is saved when the finger or the mouse lets go, so the preview follows on release. */
+/* Adjust picture: the banner's own shape with the cover in it; drag to move what shows, Zoom and
+   Opacity under it (Alex, 11 Oct). Saved when the finger or the mouse lets go, so the preview
+   follows on release. */
 const clamp = (n) => Math.max(0, Math.min(100, n))
+const BANNER_OPACITY = 0.75 // what .pub-hero.has-cover .pub-cover shows the picture at
 function CoverAdjust({ src, value, onChange }) {
-  const [pos, setPos] = useState(() => ({ x: 50, y: 50, z: 1, ...(value || {}) }))
-  useEffect(() => { setPos({ x: 50, y: 50, z: 1, ...(value || {}) }) }, [value])
+  const blank = { x: 50, y: 50, z: 1, o: BANNER_OPACITY }
+  const [pos, setPos] = useState(() => ({ ...blank, ...(value || {}) }))
+  useEffect(() => { setPos({ ...blank, ...(value || {}) }) }, [value]) // eslint-disable-line react-hooks/exhaustive-deps
   const frame = useRef(null)
   const drag = useRef(null)
+  const save = (p = pos) => onChange({ x: Math.round(p.x), y: Math.round(p.y), z: p.z, o: p.o })
   const down = (e) => {
     e.preventDefault()
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -440,20 +444,25 @@ function CoverAdjust({ src, value, onChange }) {
   const up = () => {
     if (!drag.current) return
     drag.current = null
-    onChange({ x: Math.round(pos.x), y: Math.round(pos.y), z: pos.z })
+    save()
   }
-  const moved = value && (value.x !== 50 || value.y !== 50 || value.z !== 1)
+  const moved = value && (value.x !== 50 || value.y !== 50 || value.z !== 1 || (value.o != null && value.o !== BANNER_OPACITY))
+  const slider = (k, label, min, max, step) => (
+    <div className="cover-adj-row">
+      <span className="muted small">{label}</span>
+      <input type="range" min={min} max={max} step={step} value={pos[k]} onChange={(e) => setPos({ ...pos, [k]: Number(e.target.value) })} onPointerUp={() => save()} onKeyUp={() => save()} aria-label={label} />
+      <span className="cover-adj-val small">{k === 'o' ? `${Math.round(pos.o * 100)}%` : `${pos.z.toFixed(1)}×`}</span>
+    </div>
+  )
   return (
     <div className="cover-adj">
       <div ref={frame} className="cover-adj-frame" onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
         <img src={src} alt="" draggable={false} style={coverStyle(pos)} />
         <span className="cover-adj-hint">Drag to move</span>
       </div>
-      <div className="cover-adj-row">
-        <span className="muted small">Zoom</span>
-        <input type="range" min="1" max="3" step="0.05" value={pos.z} onChange={(e) => setPos({ ...pos, z: Number(e.target.value) })} onPointerUp={() => onChange({ x: Math.round(pos.x), y: Math.round(pos.y), z: pos.z })} onKeyUp={() => onChange({ x: Math.round(pos.x), y: Math.round(pos.y), z: pos.z })} aria-label="Zoom" />
-        {moved && <button type="button" className="ordino-pill" onClick={() => onChange(null)}>Reset</button>}
-      </div>
+      {slider('z', 'Zoom', 1, 3, 0.05)}
+      {slider('o', 'Opacity', 0.1, 1, 0.05)}
+      {moved && <div><button type="button" className="ordino-pill" onClick={() => onChange(null)}>Reset</button></div>}
     </div>
   )
 }

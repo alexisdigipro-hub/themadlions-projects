@@ -10,11 +10,12 @@ const KEEP = new Set(['note', 'groupcalls', 'location', 'program'])
 const ZOOM = { small: 0.9, normal: 1, large: 1.12 }
 
 /* Where the cover sits in the banner, as set with Adjust picture on the ordino (Alex, 11 Oct): the
-   point of the picture to keep in view (x, y in %) and how far it is zoomed in (z). */
+   point of the picture to keep in view (x, y in %), how far it is zoomed in (z) and how strongly it
+   shows (o, 0-1; the banner's own .75 when not set). */
 export const coverStyle = (pos) => {
   if (!pos) return undefined
   const at = `${pos.x ?? 50}% ${pos.y ?? 50}%`
-  return { objectPosition: at, transformOrigin: at, transform: pos.z > 1 ? `scale(${pos.z})` : undefined }
+  return { objectPosition: at, transformOrigin: at, transform: pos.z > 1 ? `scale(${pos.z})` : undefined, opacity: pos.o != null ? pos.o : undefined }
 }
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '')
