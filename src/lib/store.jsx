@@ -293,6 +293,7 @@ export function StoreProvider({ children }) {
   const [joinRequests, setJoinRequests] = useState([])
   const [bootTick, setBootTick] = useState(0) // bumped to ask the server again whether this account got in
   const [joinRequested, setJoinRequested] = useState(false) // this account's request to join is waiting
+  const [online, setOnline] = useState({}) // userId -> 'online' | 'away', from Realtime Presence
   const [syncError, setSyncError] = useState('')
   // "View as": an administrator looking at the app through someone else's permissions. It lives in
   // sessionStorage, so closing the tab ends it and it never follows anyone to another device.
@@ -458,6 +459,32 @@ export function StoreProvider({ children }) {
       cancelled = true
     }
   }, [authUser, loadAll, bootTick])
+
+  /* Who has the app open right now (Alex, 11 Oct), through Supabase Realtime Presence, nothing stored:
+     every open app joins one presence channel for the workspace and says 'online' while it is looked
+     at, 'away' while it sits in another tab or in the background; a closed app (or a phone that put it
+     to sleep) drops out by itself. Several devices of one person count as online if any of them is. */
+  useEffect(() => {
+    const ws = membership?.workspace_id
+    const me = authUser?.id
+    if (!remote || !ws || !me) return undefined
+    const ch = supabase.channel(`presence:${ws}`, { config: { presence: { key: me } } })
+    const read = () => {
+      const m = {}
+      for (const [id, metas] of Object.entries(ch.presenceState())) m[id] = metas.some((x) => x.status === 'online') ? 'online' : 'away'
+      setOnline(m)
+    }
+    const status = () => (document.visibilityState === 'visible' ? 'online' : 'away')
+    ch.on('presence', { event: 'sync' }, read)
+    ch.subscribe((st) => { if (st === 'SUBSCRIBED') ch.track({ status: status() }).catch(() => {}) })
+    const vis = () => { ch.track({ status: status() }).catch(() => {}) }
+    document.addEventListener('visibilitychange', vis)
+    return () => {
+      document.removeEventListener('visibilitychange', vis)
+      supabase.removeChannel(ch)
+      setOnline({})
+    }
+  }, [membership?.workspace_id, authUser?.id])
 
   /* remote mode: live updates from teammates */
   useEffect(() => {
@@ -1082,6 +1109,7 @@ export function StoreProvider({ children }) {
       invites,
       joinRequests,
       joinRequested,
+      online,
       acceptRequest,
       declineRequest,
       recheckAccess: () => setBootTick((n) => n + 1),
@@ -1096,7 +1124,7 @@ export function StoreProvider({ children }) {
       login: (id) => setSessionId(id),
       logout: () => { setViewAs(''); return remote ? auth.signOut() : setSessionId('') },
     }
-  }, [state, sessionId, ready, authUser, membership, invites, joinRequests, joinRequested, syncError, viewAs, replies])
+  }, [state, sessionId, ready, authUser, membership, invites, joinRequests, joinRequested, online, syncError, viewAs, replies])
 
   return <StoreCtx.Provider value={api}>{children}</StoreCtx.Provider>
 }

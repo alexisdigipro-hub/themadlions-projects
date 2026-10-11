@@ -155,7 +155,7 @@ export const SORTS = {
 }
 
 export default function Dashboard() {
-  const { state, update } = useStore()
+  const { state, update, online } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
   const [draft, setDraft] = useState(null)
@@ -380,16 +380,21 @@ export default function Dashboard() {
           <div className={`team-strip ${allFaces ? 'all' : ''}`} ref={stripRef}>
             {team.map((u) => {
               const off = away.has(u.id)
+              // who has the app open right now (Alex, 11 Oct): green = looking at it, amber = open in the background
+              const live = online?.[u.id]
               return (
                 <Link
                   key={u.id}
                   to={u.id === user?.id ? '/settings' : `/u/${u.id}`}
                   className={`team-chip ${off ? 'off' : ''}`}
-                  title={`${u.name}${u.profile?.position ? ` · ${u.profile.position}` : ''}${off ? ' · not available' : ''}`}
+                  title={`${u.name}${u.profile?.position ? ` · ${u.profile.position}` : ''}${live === 'online' ? ' · online now' : live === 'away' ? ' · away' : ''}${off ? ' · not available' : ''}`}
                 >
-                  <span className="team-chip-photo">
-                    {(u.profile?.photo || u.profile?.thumb) ? <img src={u.profile.photo || u.profile.thumb} alt="" /> : <span className="team-chip-initials">{initialsOf(u.name)}</span>}
-                    {off && <span className="team-chip-off" aria-hidden="true">✕</span>}
+                  <span className="team-chip-pic">
+                    <span className="team-chip-photo">
+                      {(u.profile?.photo || u.profile?.thumb) ? <img src={u.profile.photo || u.profile.thumb} alt="" /> : <span className="team-chip-initials">{initialsOf(u.name)}</span>}
+                      {off && <span className="team-chip-off" aria-hidden="true">✕</span>}
+                    </span>
+                    {live && <span className={`team-chip-live ${live}`} aria-label={live === 'online' ? 'Online now' : 'Away'} />}
                   </span>
                   <span className="team-chip-name">{(u.name || '').split(' ')[0]}</span>
                 </Link>
