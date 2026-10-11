@@ -4,7 +4,7 @@ import { can, seesDatabase, useCurrentUser, useStore, viewAsReturnPath, whenMs }
 import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
 import { useToast } from './ui.jsx'
-import { loadRead, totalUnread, unreadByRoom } from '../lib/chat.js'
+import { badgeUnread, loadRead } from '../lib/chat.js'
 import { chimeFor } from '../lib/chatPrefs.js'
 import { backupDue, pcloudBackup } from '../lib/pcloud.js'
 import { remote } from '../lib/supabase.js'
@@ -85,7 +85,7 @@ export default function Layout() {
     return () => window.removeEventListener('tml-chat-read', h)
   }, [])
   // every room this person is in, so a group or a direct message counts as much as the team room
-  const unread = totalUnread(unreadByRoom(state, user, readMap))
+  const unread = badgeUnread(state, user, readMap)
   // Settings > Chat > Sound: a short tone when a message from someone else arrives and its room
   // is not the one on screen (or the app is in another tab). First load is not news.
   const seenChat = useRef(null)
