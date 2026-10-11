@@ -17,17 +17,14 @@ const LINK_OFF = new Set()
 
 export const DETAILS = [
   ['cover', 'Cover picture'],
-  ['tagline', 'Line under the call time'],
   ['weather', 'Weather'],
   ['sun', 'Sunrise and sunset'],
   ['parking', 'Parking'],
-  ['hospital', 'Nearest hospital'],
-  ['lunch', 'Lunch / break time'],
   ['wrap', 'Est. wrap time'],
 ]
 // Details that start switched off, also in layouts saved before they existed: lunch and the wrap on
 // the link (Alex took that row out of the link). The Shooting call is gone altogether (Alex, 11 Oct).
-const DETAIL_OFF = { lunch: { link: true }, wrap: { link: true } }
+const DETAIL_OFF = { wrap: { link: true } }
 
 export const LABELS = [
   ['call', 'General crew call'],

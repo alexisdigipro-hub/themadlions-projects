@@ -153,11 +153,13 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       day: { index: dayIndex + 1, count: days.length, date: day.date, callTime: day.callTime, wrapTime: day.wrapTime },
       expiresAt: Number(state.settings.shareExpiryDays) > 0 ? new Date(new Date(day.date + 'T23:59:59').getTime() + Number(state.settings.shareExpiryDays) * 86400000).toISOString() : '',
       sheet: {
-        tagline: linkShow('tagline') ? sheet.tagline || csd.tagline || '' : '',
+        // the line under the call, the break and the hospital have no switch in Customise any more
+        // (Alex, 11 Oct): each shows when it is filled in, and leaving it empty keeps it off the link
+        tagline: sheet.tagline || csd.tagline || '',
         notes: on('note') ? sheet.notes || '' : '',
-        lunch: linkShow('lunch') ? sheet.lunch || lunchDefault : '',
+        lunch: sheet.lunch || lunchDefault || '',
         parking: on('location') && linkShow('parking') ? sheet.parking || csd.parking || '' : '',
-        hospital: on('location') && linkShow('hospital') ? sheet.weather || csd.hospital || '' : '',
+        hospital: on('location') ? sheet.weather || csd.hospital || '' : '',
         footer: csd.footer || '',
       },
       wx: wx && linkShow('weather') ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
@@ -382,8 +384,8 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
           <Field label="Their phone"><Input value={sheet.locPhone || ''} inputMode="tel" placeholder={loc?.phone || 'Phone'} onChange={(e) => setSheet('locPhone', e.target.value)} /></Field>
         </div>
         <div className="row-2">
-          <Field label={labelOf(layout, 'parking')}><Textarea rows={2} value={sheet.parking || ''} placeholder={csd.parking || 'Where, how many cars, who unloads where'} onChange={(e) => setSheet('parking', e.target.value)} /></Field>
-          <Field label={labelOf(layout, 'hospital')}><Textarea rows={2} value={sheet.weather || ''} placeholder={csd.hospital || 'Name, address, phone'} onChange={(e) => setSheet('weather', e.target.value)} /></Field>
+          <Field label="Parking"><Textarea rows={2} value={sheet.parking || ''} placeholder={csd.parking || 'Where, how many cars, who unloads where'} onChange={(e) => setSheet('parking', e.target.value)} /></Field>
+          <Field label="Nearest hospital"><Textarea rows={2} value={sheet.weather || ''} placeholder={csd.hospital || 'Name, address, phone'} onChange={(e) => setSheet('weather', e.target.value)} /></Field>
         </div>
         {/* more places that day, shown small at the foot of the location on the link (Alex, 11 Oct) */}
         <div className="ordino-extra">
