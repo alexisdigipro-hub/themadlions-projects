@@ -333,11 +333,16 @@ export default function CalendarView({ projectId = null, title }) {
           <button className="icon-btn" onClick={() => shift(-1)} aria-label={yearView ? 'Previous year' : 'Previous month'}>‹</button>
           <h2>{yearView ? ym.y : weekView ? weekLabel() : monthLabel(ym.y, ym.m)}</h2>
           <button className="icon-btn" onClick={() => shift(1)} aria-label={yearView ? 'Next year' : 'Next month'}>›</button>
-          <Button size="sm" variant="ghost" onClick={goToday}>
-            Today
-          </Button>
+          {mobile && (
+            <Button size="sm" variant="ghost" onClick={goToday}>
+              Today
+            </Button>
+          )}
+          {/* Today leads the Week | Month | Year pills on a computer (Alex, 11 Oct): it jumps to today
+              and leaves the view as it is, so it never takes the glass and the lens skips it */}
           {!mobile && (
             <div className="segmented cal-mode">
+              <button type="button" className="cal-today" data-noglide onClick={goToday}>Today</button>
               <button className={weekView ? 'on' : ''} onClick={() => pickMode('week')}>Week</button>
               <button className={!yearView && !weekView ? 'on' : ''} onClick={() => pickMode('month')}>Month</button>
               <button className={yearView ? 'on' : ''} onClick={() => pickMode('year')}>Year</button>
