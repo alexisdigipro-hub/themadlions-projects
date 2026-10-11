@@ -43,7 +43,7 @@ export function cleanRich(html) {
       if (/^(left|center|right|justify)$/.test(align)) el.setAttribute('style', `text-align: ${align}`)
       if (el.tagName === 'SPAN') {
         // a span keeps a size in em and a face from the app's list, nothing else
-        const n = em ? Math.min(6, Math.max(0.2, Number(em[1]))) : 0
+        const n = em ? Math.min(20, Math.max(0.05, Number(em[1]))) : 0
         const css = [n ? `font-size: ${Math.round(n * 1000) / 1000}em` : '', faceOf ? `font-family: ${fontStack(faceOf)}` : ''].filter(Boolean).join('; ')
         if (css) el.setAttribute('style', css)
         else el.replaceWith(...el.childNodes)
