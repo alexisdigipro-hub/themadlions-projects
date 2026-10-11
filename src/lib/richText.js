@@ -51,7 +51,10 @@ export function cleanRich(html) {
     }
   }
   walk(doc.body)
-  return doc.body.innerHTML
+  // no empty lines left at the end (Alex, 11 Oct: a gap under the note on the link)
+  const blank = (n) => (n.nodeType === 3 ? !n.textContent.trim() : n.tagName === 'BR' || (/^(DIV|P|SPAN|FONT|B|I|U|STRONG|EM)$/.test(n.tagName) && !n.textContent.trim() && !n.querySelector('li')))
+  while (doc.body.lastChild && blank(doc.body.lastChild)) doc.body.lastChild.remove()
+  return doc.body.innerHTML.replace(/>\s*\n\s*</g, '><')
 }
 
 // the html read back as plain text (messages, the plain copy kept next to it)
