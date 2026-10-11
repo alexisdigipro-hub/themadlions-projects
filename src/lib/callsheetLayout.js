@@ -1,9 +1,13 @@
 import { uid } from './store.jsx'
 
-/* How a call sheet is laid out: which sections, in what order, under what name, on the printed
-   sheet and on the share link, plus a few looks. One per project (project.callsheetLayout), with
-   the company default in Settings (settings.callsheet.layout) for projects that have none.
-   What is written on a given day (times, notes, who is called) lives on the day, not here. */
+/* How an ordino's link is laid out: which sections, in what order, under what name, which details
+   show, the word for the call, and a few looks. One per project (project.callsheetLayout), with the
+   company default in Settings (settings.callsheet.layout) for projects that have none. What is
+   written on a given day lives on the day (day.callSheet), not here.
+
+   Alex, 11 Oct: no printed sheet any more, and no cast, crew, production, scenes (run of show),
+   department requirements, emergency numbers, shooting call, break or wrap; saved layouts that still
+   name them are cleaned on load by normalizeLayout. */
 
 export const BLOCKS = [
   ['note', 'Note'],
@@ -11,9 +15,6 @@ export const BLOCKS = [
   ['location', 'Location'],
   ['program', 'Program'],
 ]
-// Cast, crew, production, scenes (run of show) and department requirements left the ordino (Alex,
-// 11 Oct: "I don't need them anywhere"); normalizeLayout drops them from saved layouts.
-const LINK_OFF = new Set()
 
 export const DETAILS = [
   ['cover', 'Cover picture'],
@@ -21,22 +22,20 @@ export const DETAILS = [
   ['sun', 'Sunrise and sunset'],
   ['parking', 'Parking'],
 ]
-// Details that start switched off in layouts saved before they existed (none now: lunch and the wrap
-// left the ordino, Alex 11 Oct).
-const DETAIL_OFF = {}
 
 export const LABELS = [
   ['call', 'General crew call'],
 ]
 
-export const LOOK_DEFAULTS = { header: 'columns', colour: '', custom: '#c8503f', size: 'normal', linkTheme: 'glass', linkSize: 'normal' }
+export const LOOK_DEFAULTS = { colour: '', custom: '#c8503f', linkTheme: 'glass', linkSize: 'normal' }
 export const SIZES = [['small', 'Smaller'], ['normal', 'Normal'], ['large', 'Larger']]
 export const ZOOM = { small: 0.9, normal: 1, large: 1.12 }
 
 const blockName = (key) => BLOCKS.find(([k]) => k === key)?.[1] || key
 
-/* Whatever was saved, made whole: blocks added since are appended, unknown ones dropped. */
-export function normalizeLayout(raw, { event = false } = {}) {
+/* Whatever was saved, made whole: sections the app has and the layout lacks are slotted in after
+   the one they follow in BLOCKS, unknown ones dropped, own sections kept. */
+export function normalizeLayout(raw) {
   const src = raw && typeof raw === 'object' ? raw : {}
   const known = new Set(BLOCKS.map(([k]) => k))
   const seen = new Set()
@@ -45,47 +44,30 @@ export function normalizeLayout(raw, { event = false } = {}) {
     if (!b || !b.key || seen.has(b.key)) continue
     if (!b.custom && !known.has(b.key)) continue
     seen.add(b.key)
-    blocks.push({ key: b.key, title: b.title || '', sheet: b.sheet !== false, link: b.link !== undefined ? !!b.link : !LINK_OFF.has(b.key), ...(b.custom ? { custom: true, text: b.text || '' } : {}) })
+    blocks.push({ key: b.key, title: b.title || '', link: b.link !== false, ...(b.custom ? { custom: true, text: b.text || '' } : {}) })
   }
-  // A section added to the app later lands right after the one it follows in BLOCKS (Program
-  // after Scenes), not at the bottom of a layout saved before it existed.
   BLOCKS.forEach(([k], idx) => {
     if (seen.has(k)) return
-    const fresh = { key: k, title: '', sheet: true, link: !LINK_OFF.has(k) }
+    const fresh = { key: k, title: '', link: true }
     const before = idx > 0 ? blocks.findIndex((b) => b.key === BLOCKS[idx - 1][0]) : -1
     if (before >= 0) blocks.splice(before + 1, 0, fresh)
     else blocks.push(fresh)
     seen.add(k)
   })
-  const details = {}
-  for (const [k] of DETAILS) {
-    const d = src.details?.[k] || {}
-    details[k] = {
-      sheet: d.sheet !== undefined ? d.sheet !== false : !DETAIL_OFF[k]?.sheet,
-      link: d.link !== undefined ? d.link !== false : !DETAIL_OFF[k]?.link,
-    }
-  }
-  const labels = {}
-  for (const [k] of LABELS) labels[k] = String(src.labels?.[k] || '')
+  const details = Object.fromEntries(DETAILS.map(([k]) => [k, { link: src.details?.[k]?.link !== false }]))
+  const labels = Object.fromEntries(LABELS.map(([k]) => [k, String(src.labels?.[k] || '')]))
   const look = { ...LOOK_DEFAULTS, ...(src.look || {}) }
   // the link's Dark became Glass dark (Alex, 11 Oct), and Glass dark is the look for a new layout
   if (look.linkTheme !== 'light') look.linkTheme = 'glass'
-  return { blocks, details, labels, look, event }
+  return { blocks, details, labels, look }
 }
 
-/* The layout as it is saved: without the project-type flag normalizeLayout adds for the names. */
-export const storedLayout = (l) => {
-  const out = { ...l }
-  delete out.event
-  return out
-}
+export const layoutOf = (project, state) => normalizeLayout(project.callsheetLayout || state.settings?.callsheet?.layout)
 
-export const layoutOf = (project, state) => normalizeLayout(project.callsheetLayout || state.settings?.callsheet?.layout, { event: project.category === 'Event' })
-
-export const titleOf = (layout, b) => b.title || (b.custom ? 'Untitled section' : blockName(b.key, layout.event))
+export const titleOf = (layout, b) => b.title || (b.custom ? 'Untitled section' : blockName(b.key))
 export const labelOf = (layout, k) => layout.labels[k] || LABELS.find(([x]) => x === k)?.[1] || k
 
-export const newCustomBlock = () => ({ key: `c_${uid()}`, custom: true, title: 'New section', text: '', sheet: true, link: true })
+export const newCustomBlock = () => ({ key: `c_${uid()}`, custom: true, title: 'New section', text: '', link: true })
 
 /* The colour headings and the call time take: none (black), the project's, or one picked. */
 export const accentOf = (layout, project) => (layout.look.colour === 'project' ? project.color || '' : layout.look.colour === 'custom' ? layout.look.custom : '')

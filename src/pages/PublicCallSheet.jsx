@@ -1,9 +1,12 @@
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
 
-// Links made before Customise existed carry no layout: they keep the order they always had.
-const OLD_ORDER = [['note', ''], ['location', 'Location'], ['cast', 'Calls'], ['crew', 'Calls'], ['schedule', ''], ['contacts', '']]
+// Links made before Customise existed carry no layout: the note, then the location.
+const OLD_ORDER = [['note', ''], ['location', 'Location']]
+// What an ordino link draws now (Alex, 11 Oct): cast, crew, production, scenes, department
+// requirements and emergency numbers are left out, also on links shared before.
+const KEEP = new Set(['note', 'groupcalls', 'location', 'program'])
 const ZOOM = { small: 0.9, normal: 1, large: 1.12 }
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '')
@@ -27,42 +30,25 @@ export default function PublicCallSheet() {
     return () => { html.dataset.theme = before; html.classList.remove('pub-glass-page'); if (skin) html.dataset.skin = skin }
   }, [theme])
 
-  if (share === undefined) return <div className="pub"><p className="pub-loading">Loading call sheet…</p></div>
-  if (share?.closed) return <div className="pub"><div className="pub-card"><h1>This link is closed</h1><p className="muted">The production has closed this call sheet. Ask them for the current one.</p></div></div>
-  if (share?.locked) return <PinGate onTry={tryPin} err={pinErr} what="the call sheet" />
-  if (share?.data?.expiresAt && new Date(share.data.expiresAt) < new Date()) return <div className="pub"><div className="pub-card"><h1>This call sheet has expired</h1><p className="muted">The shooting day has passed. Ask the production for the current one.</p></div></div>
+  if (share === undefined) return <div className="pub"><p className="pub-loading">Loading the ordino…</p></div>
+  if (share?.closed) return <div className="pub"><div className="pub-card"><h1>This link is closed</h1><p className="muted">The production has closed this ordino. Ask them for the current one.</p></div></div>
+  if (share?.locked) return <PinGate onTry={tryPin} err={pinErr} what="the ordino" />
+  if (share?.data?.expiresAt && new Date(share.data.expiresAt) < new Date()) return <div className="pub"><div className="pub-card"><h1>This ordino has expired</h1><p className="muted">The day has passed. Ask the production for the current one.</p></div></div>
   if (share?.error) return <ShareProblem error={share.error} />
   if (!share || share.kind !== 'callsheet') return <div className="pub"><div className="pub-card"><h1>This link has expired</h1><p className="muted">Ask the production for a fresh link.</p></div></div>
 
   return <CallSheetLinkView data={share.data} updatedAt={share.updated_at} />
 }
 
-/* The link's page itself, without the loading and the access code around it, so the call sheet
-   can draw the same thing live in its phone preview. */
+/* The link's page itself, without the loading and the access code around it, so the ordino can
+   draw the same thing live in its phone preview. Under the big call only the sun is left (no
+   Shooting call, Break or Est. wrap, Alex 11 Oct, also on links shared before). */
 export function CallSheetLinkView({ data: d, updatedAt }) {
-  const [q, setQ] = useState('')
   const lay = d.layout || {}
-  const label = (k, fallback) => lay.labels?.[k] || fallback
-  // Under the big call: whatever the production left switched on for the link. Links made before
-  // these switches existed carry no flag for them and keep showing them.
-  const on = (k) => lay.details?.[k] !== false
-  const grid = [
-    // no Shooting call any more (Alex, 11 Oct), not even on links shared before
-    // no Break or Est. wrap any more (Alex, 11 Oct), also on links shared before
-    d.sun && ['sun', 'Sun', `${d.sun.sunrise} · ${d.sun.sunset}`],
-  ].filter(Boolean)
-  // no crew on the ordino any more (Alex, 11 Oct), also on links shared before
-  // only the note, calls by group, location, program and own sections now (Alex, 11 Oct): cast,
-  // crew, production, scenes and department requirements are dropped, also from links shared before
-  const KEEP = new Set(['note', 'groupcalls', 'location', 'program'])
+  const grid = d.sun ? [['sun', 'Sun', `${d.sun.sunrise} · ${d.sun.sunset}`]] : []
   const blocks = (lay.blocks || OLD_ORDER.map(([key, title]) => ({ key, title }))).filter((b) => b.custom || KEEP.has(b.key))
-  const people = []
-  const match = (p) => !q.trim() || [p.name, p.character, p.role].filter(Boolean).some((x) => x.toLowerCase().includes(q.trim().toLowerCase()))
   const mapsUrl = d.loc?.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.loc.address)}` : ''
   const dirUrl = d.loc?.address ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(d.loc.address)}` : ''
-  // Cast and crew are one list with a search box, drawn where the first of the two sits.
-  const firstPeople = blocks.find((b) => b.key === 'cast' || b.key === 'crew')?.key
-  const peopleTitle = blocks.filter((b) => b.key === 'cast' || b.key === 'crew').length > 1 || !lay.blocks ? 'Calls' : blocks.find((b) => b.key === firstPeople)?.title || 'Calls'
 
   const block = (b) => {
     switch (b.key) {
@@ -101,52 +87,6 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
             )}
           </section>
         )
-      case 'cast':
-      case 'crew':
-        return b.key === firstPeople && people.length > 0 ? (
-          <section className="pub-card">
-            <div className="pub-card-head"><h2>{peopleTitle}</h2><input className="pub-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find your name" /></div>
-            <ul className="pub-people">
-              {people.filter(match).map((p, i) => (
-                <li key={i} className={p.kind}>
-                  {p.photo ? <img src={p.photo} alt="" /> : <span className="pub-av">{(p.name || '?').split(/\s+/).slice(0, 2).map((x) => x[0]).join('').toUpperCase()}</span>}
-                  <div className="grow">
-                    <strong>{p.name || 'Not cast'}</strong>
-                    <div className="muted small">{p.kind === 'cast' ? p.character : p.role}{p.phone ? <> · <a href={`tel:${p.phone}`}>{p.phone}</a></> : null}</div>
-                  </div>
-                  <span className="pub-time">{p.call}</span>
-                </li>
-              ))}
-              {!people.filter(match).length && <li className="muted">No one matches.</li>}
-            </ul>
-          </section>
-        ) : null
-      case 'schedule':
-        return (
-          <>
-            {d.blocks?.length > 0 && (
-              <section className="pub-card">
-                <h2>{b.title || 'Run of show'}</h2>
-                <ul className="pub-scenes">
-                  {d.blocks.map((x, i) => <li key={i}><span className="pub-sc">{x.time}{x.end ? ` – ${x.end}` : ''}</span><div className="grow"><strong>{x.item}</strong>{(x.owner || x.notes) && <div className="muted small">{[x.owner, x.notes].filter(Boolean).join(' · ')}</div>}</div></li>)}
-                </ul>
-              </section>
-            )}
-            {d.scenes?.length > 0 && (
-              <section className="pub-card">
-                <h2>{lay.blocks ? b.title : 'Sets'}</h2>
-                <ul className="pub-scenes">
-                  {d.scenes.map((x, i) => (
-                    <li key={i}>
-                      <span className="pub-sc pub-sc-time">{x.from || x.to ? `${x.from || ''}${x.to ? ` – ${x.to}` : ''}` : '–'}</span>
-                      <div className="grow"><strong>{x.location || x.heading || 'Set'}</strong></div>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </>
-        )
       case 'groupcalls':
         return d.groupCalls?.length > 0 ? (
           <section className="pub-card">
@@ -170,31 +110,6 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
             </ul>
           </section>
         ) : null
-      case 'departments':
-        return d.departments?.length > 0 ? (
-          <section className="pub-card">
-            <h2>{b.title || 'Department requirements'}</h2>
-            <ul className="pub-kv">
-              {d.departments.map((x, i) => <li key={i}><span className="muted">{x.cat}</span><span>{x.items.join(', ')}</span></li>)}
-            </ul>
-          </section>
-        ) : null
-      case 'contacts':
-        return (
-          <>
-            {(d.keyCrew?.length > 0 || d.prodContacts?.length > 0) && (
-              <section className="pub-card">
-                <h2>Production</h2>
-                <ul className="pub-kv">
-                  {(d.prodContacts || []).map((c, i) => <li key={`pc${i}`}><span className="muted">{c.role}</span><span>{c.name}{c.phone ? <> · <a href={`tel:${c.phone}`}>{c.phone}</a></> : null}</span></li>)}
-                  {(d.keyCrew || []).map((k, i) => <li key={i}><span className="muted">{k.role}</span><span>{k.name}{k.phone ? <> · <a href={`tel:${k.phone}`}>{k.phone}</a></> : null}</span></li>)}
-                </ul>
-                {d.company?.address && <p className="muted small">{d.company.name} · {d.company.address}</p>}
-              </section>
-            )}
-            {/* no Emergency card any more (Alex, 11 Oct), also on links shared before */}
-          </>
-        )
       default:
         return b.custom && b.text ? (
           <section className="pub-card">
@@ -218,7 +133,7 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
 
       <section className="pub-call">
         <div className={`pub-call-main${grid.length ? '' : ' alone'}`}>
-          <span className="pub-label">{label('call', 'General crew call')}</span>
+          <span className="pub-label">{lay.labels?.call || 'General crew call'}</span>
           <strong>{d.day.callTime}</strong>
         </div>
         {grid.length > 0 && (
