@@ -69,7 +69,7 @@ export default function CallSheetDesigner({ layout, setLayout, hasOwn, isAdmin, 
               </div>
             </Field>
             <Field label="Text size"><Select value={layout.look.linkSize} onChange={(e) => change((l) => { l.look.linkSize = e.target.value })} options={SIZES} /></Field>
-            <Field label="Colours"><Select value={layout.look.linkTheme} onChange={(e) => change((l) => { l.look.linkTheme = e.target.value })} options={[['light', 'Light'], ['dark', 'Dark']]} /></Field>
+            <Field label="Colours"><Select value={layout.look.linkTheme} onChange={(e) => change((l) => { l.look.linkTheme = e.target.value })} options={[['light', 'Light'], ['glass', 'Glass dark']]} /></Field>
           </div>
         </div>
       </div>

@@ -13,15 +13,18 @@ export default function PublicCallSheet() {
   const { share, tryPin, pinErr } = usePublicShare(token)
   const theme = share?.data?.layout?.theme
 
-  // The production picks light or dark for the link; the page takes it while it is open.
+  // The production picks light or Glass dark for the link; the page takes it while it is open.
+  // Dark became Glass dark (Alex, 11 Oct), so links shared as dark open in glass too.
   useEffect(() => {
     if (!theme) return undefined
     const html = document.documentElement
     const before = html.dataset.theme
     const skin = html.dataset.skin // an app skin would recolour the production's chosen look
-    html.dataset.theme = theme
+    const glass = theme === 'glass' || theme === 'dark'
+    html.dataset.theme = glass ? 'dark' : theme
+    html.classList.toggle('pub-glass-page', glass)
     delete html.dataset.skin
-    return () => { html.dataset.theme = before; if (skin) html.dataset.skin = skin }
+    return () => { html.dataset.theme = before; html.classList.remove('pub-glass-page'); if (skin) html.dataset.skin = skin }
   }, [theme])
 
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading call sheet…</p></div>
@@ -203,7 +206,7 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
   }
 
   return (
-    <div className={`pub${lay.accent ? ' pub-accented' : ''}`} style={{ ...(lay.accent ? { '--pa': lay.accent } : {}), ...(ZOOM[lay.size] && ZOOM[lay.size] !== 1 ? { zoom: ZOOM[lay.size] } : {}) }}>
+    <div className={`pub${lay.accent ? ' pub-accented' : ''}${lay.theme === 'glass' || lay.theme === 'dark' ? ' pub-glass' : ''}`} style={{ ...(lay.accent ? { '--pa': lay.accent } : {}), ...(ZOOM[lay.size] && ZOOM[lay.size] !== 1 ? { zoom: ZOOM[lay.size] } : {}) }}>
       <header className={`pub-hero${d.project.cover ? ' has-cover' : ''}`} style={{ '--pc': lay.accent || d.project.color || '#C8503F' }}>
         {d.project.cover && <img className="pub-cover" src={d.project.cover} alt="" />}
         <div className="pub-hero-body">
