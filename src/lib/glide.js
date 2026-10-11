@@ -102,7 +102,7 @@ export function installGlassTabs() {
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || stillMotion()) return
     const item = e.target instanceof Element ? e.target.closest('button, a') : null
     const row = item?.parentElement
-    if (!row || !row.matches(ROWS) || row.closest('[data-glide]') || item.disabled) return
+    if (!row || !row.matches(ROWS) || row.closest('[data-glide]') || item.disabled || item.hasAttribute('data-noglide')) return
     const on = [...row.children].filter((n) => n.classList.contains('on') || n.classList.contains('active'))
     if (on.length !== 1 || on[0] === item) return
     glassLens(row, on[0], item, { scale: row.matches('.tabs') ? 1.04 : 1.08 })
