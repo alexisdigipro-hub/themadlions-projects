@@ -84,6 +84,19 @@ export function eventTypesOf(settings) {
 }
 export const activeEventTypes = (settings) => eventTypesOf(settings).filter((t) => !t.removed)
 
+/* Who sees which calendar (Alex, 11 Oct; Settings > Calendar & projects). settings.calendarAccess maps
+   an event type's key, or 'feed:<id>' for a calendar feed, to the ids of the people who see it; no
+   entry means everyone. Administrators see every calendar, and everyone sees their own days off.
+   The database applies the same rule to the events table (supabase/calendar_access.sql). */
+export function canSeeCalendar(settings, user, key) {
+  if (!user) return false
+  if (user.role === 'admin') return true
+  const list = settings?.calendarAccess?.[key]
+  return !Array.isArray(list) || list.includes(user.id)
+}
+export const canSeeEvent = (settings, user, e) =>
+  (e.type === 'unavailable' && !!user && e.personId === user.id) || canSeeCalendar(settings, user, e.feedId ? `feed:${e.feedId}` : e.type)
+
 export const ELEMENT_CATEGORIES = [
   'Cast', 'Extras', 'Props', 'Set dressing', 'Wardrobe', 'Makeup & hair', 'Vehicles', 'Animals',
   'Stunts', 'Special effects', 'VFX', 'Sound', 'Camera & grip', 'Special equipment', 'Notes',
