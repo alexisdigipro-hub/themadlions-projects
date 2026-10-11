@@ -104,18 +104,31 @@ export function messagesIn(chat, roomId) {
   return (chat || []).filter((m) => messageRoom(m) === roomId).sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))
 }
 
-/* Unread per room: messages by someone else, newer than the room's last read time. */
+/* Unread per room: messages by someone else, newer than the room's last read time. What came before
+   your own last message in a room counts as read too (Alex, 11 Oct: a "1" on the computer for a chat
+   he had answered on the phone; the read time is kept per device, a message you wrote is everywhere). */
 export function unreadByRoom(state, user, readMap, rooms = roomsFor(state, user)) {
   const ids = new Set(rooms.map((r) => r.id))
+  const mineLast = {}
+  for (const m of state.chat || []) {
+    if (m.userId && m.userId === user?.id) { const r = messageRoom(m); if ((m.createdAt || '') > (mineLast[r] || '')) mineLast[r] = m.createdAt }
+  }
   const out = {}
   for (const m of state.chat || []) {
     const r = messageRoom(m)
     if (!ids.has(r) || !m.userId || m.userId === user?.id) continue
-    if ((m.createdAt || '') > (readMap?.[r] || '')) out[r] = (out[r] || 0) + 1
+    const seen = [readMap?.[r] || '', mineLast[r] || ''].sort().pop()
+    if ((m.createdAt || '') > seen) out[r] = (out[r] || 0) + 1
   }
   return out
 }
 export const totalUnread = (counts) => Object.values(counts || {}).reduce((a, b) => a + b, 0)
+/* The side menu's Chat badge: only rooms in the everyday list, not archived ones (a delivered
+   project, or one you archived), which you would not find from the list (Alex, 11 Oct). */
+export const badgeUnread = (state, user, readMap) => {
+  const rooms = roomsFor(state, user).filter((r) => !r.archived)
+  return totalUnread(unreadByRoom(state, user, readMap, rooms))
+}
 
 /* Folders: the built-in four plus the person's own (profile.chatFolders = [{ id, name, rooms }]).
    A delivered project's room is archived (see roomsFor): it drops out of All and Projects, and

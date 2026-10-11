@@ -769,7 +769,8 @@ function RoomList({ activeId, windowed }) {
   // TML Chat on a phone (the home-screen app) is laid out like Telegram for iPhone (Alex, 9 Oct):
   // Edit · Chats · (+ group, new message) on top, the search, the folders as a pill track, and a
   // floating bar at the foot with the unread count on Chats
-  const allUnread = C.totalUnread(unread)
+  // the Chats tab's badge counts the everyday list only, like the side menu's (archived rooms have their folder)
+  const allUnread = C.totalUnread(Object.fromEntries(rooms.filter((r) => !r.archived).map((r) => [r.id, unread[r.id] || 0])))
   // the folder tabs: above the search, or in TML Chat on a phone at the foot, right over
   // Chats / Calls / Notices / Settings where the thumb is (Alex, 9 Oct)
   const folderTabs = (

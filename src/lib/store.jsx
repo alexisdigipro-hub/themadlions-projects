@@ -298,6 +298,9 @@ export function StoreProvider({ children }) {
   const prevRef = useRef(state)
   const timers = useRef({})
   const myWrites = useRef(new Set())
+  // a conversation being written to the server: its first message waits for it (Alex, 11 Oct: the first
+  // message to a new person was refused, it reached the server 0.4 s before the conversation did)
+  const roomSaves = useRef({})
 
   useEffect(() => {
     try { viewAs ? sessionStorage.setItem(VIEW_AS_KEY, viewAs) : sessionStorage.removeItem(VIEW_AS_KEY) } catch { /* private window */ }
@@ -770,10 +773,14 @@ export function StoreProvider({ children }) {
         schedule('c:' + c.id, async () => {
           // a direct conversation the other side opened at the same moment is the same row: keep theirs
           // a group that already exists is updated, so a member who is not an administrator can add people to it
-          const { error } = c.kind === 'group' && before[c.id]
-            ? await supabase.from('chats').update({ name: c.name || '', members: c.members || [] }).eq('id', c.id)
-            : await supabase.from('chats').upsert({ id: c.id, workspace_id: ws, kind: c.kind, name: c.name || '', members: c.members || [], created_by: c.createdBy || authUser?.id || null }, c.kind === 'direct' ? { ignoreDuplicates: true } : undefined)
-          if (error) throw new Error(error.code === '42P01' ? 'Run supabase/chat_rooms.sql in the SQL editor to enable chat rooms.' : error.message)
+          const save = (async () => {
+            const { error } = c.kind === 'group' && before[c.id]
+              ? await supabase.from('chats').update({ name: c.name || '', members: c.members || [] }).eq('id', c.id)
+              : await supabase.from('chats').upsert({ id: c.id, workspace_id: ws, kind: c.kind, name: c.name || '', members: c.members || [], created_by: c.createdBy || authUser?.id || null }, c.kind === 'direct' ? { ignoreDuplicates: true } : undefined)
+            if (error) throw new Error(error.code === '42P01' ? 'Run supabase/chat_rooms.sql in the SQL editor to enable chat rooms.' : error.message)
+          })()
+          roomSaves.current[c.id] = save
+          try { await save } finally { setTimeout(() => { if (roomSaves.current[c.id] === save) delete roomSaves.current[c.id] }, 4000) }
           setTimeout(() => myWrites.current.delete(c.id), 4000)
         }, 0)
       })
@@ -822,7 +829,15 @@ export function StoreProvider({ children }) {
           } else {
             const row = { id: m.id, workspace_id: ws, user_id: authUser?.id || null, user_name: m.userName, text: m.text, source: m.source || 'app', created_at: m.createdAt }
             if (roomsReady) Object.assign(row, { chat_id: m.chatId || 'team', reply_to: m.replyTo || null, attachments: m.attachments || [], mentions: m.mentions || [] })
-            const { error } = await supabase.from('messages').insert(row)
+            // the conversation first, when it is being written right now
+            const room = roomSaves.current[row.chat_id]
+            if (room) await room.catch(() => {})
+            let { error } = await supabase.from('messages').insert(row)
+            // refused by the server's room check (42501): once more after a moment, the room may have just landed
+            if (error && error.code === '42501') {
+              await new Promise((r) => setTimeout(r, 1500))
+              ;({ error } = await supabase.from('messages').insert(row))
+            }
             if (error) throw new Error(error.code === '42P01' ? 'Run supabase/chat.sql in the SQL editor to enable the team chat.' : error.code === '42703' ? 'Run supabase/chat_rooms.sql in the SQL editor to enable chat rooms.' : error.message)
             // ring the others in the room on their phones, app closed or not (lib/push.js); never blocks the chat
             if (row.user_id) pushMessage(row.id)
