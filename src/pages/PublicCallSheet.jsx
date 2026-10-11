@@ -9,6 +9,14 @@ const OLD_ORDER = [['note', ''], ['location', 'Location']]
 const KEEP = new Set(['note', 'groupcalls', 'location', 'program'])
 const ZOOM = { small: 0.9, normal: 1, large: 1.12 }
 
+/* Where the cover sits in the banner, as set with Adjust picture on the ordino (Alex, 11 Oct): the
+   point of the picture to keep in view (x, y in %) and how far it is zoomed in (z). */
+export const coverStyle = (pos) => {
+  if (!pos) return undefined
+  const at = `${pos.x ?? 50}% ${pos.y ?? 50}%`
+  return { objectPosition: at, transformOrigin: at, transform: pos.z > 1 ? `scale(${pos.z})` : undefined }
+}
+
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
 export default function PublicCallSheet() {
@@ -123,7 +131,7 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
   return (
     <div className={`pub${lay.accent ? ' pub-accented' : ''}${lay.theme === 'glass' || lay.theme === 'dark' ? ' pub-glass' : ''}`} style={{ ...(lay.accent ? { '--pa': lay.accent } : {}), ...(ZOOM[lay.size] && ZOOM[lay.size] !== 1 ? { zoom: ZOOM[lay.size] } : {}) }}>
       <header className={`pub-hero${d.project.cover ? ' has-cover' : ''}`} style={{ '--pc': lay.accent || d.project.color || '#C8503F' }}>
-        {d.project.cover && <img className="pub-cover" src={d.project.cover} alt="" />}
+        {d.project.cover && <img className="pub-cover" src={d.project.cover} alt="" style={coverStyle(d.project.coverPos)} />}
         <div className="pub-hero-body">
           <div className="pub-company">{d.company?.logo && <img src={d.company.logo} alt="" />}{d.company?.name || 'THEMADLIONS'}</div>
           <h1>{d.project.title}</h1>
