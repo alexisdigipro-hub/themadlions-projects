@@ -14,7 +14,8 @@ export default function CalendarView({ projectId = null, title }) {
   // Days off are an administrator's call now: they set them for whoever is away, not each
   // person for themselves. Everything else still follows the calendar edit permission.
   const isAdmin = user?.role === 'admin'
-  const canEditDraft = (d) => (d?.feed ? false : d?.type === 'unavailable' ? isAdmin : editable)
+  // a day off: an administrator marks anyone, everyone else marks, moves and removes their own (Alex, 11 Oct)
+  const canEditDraft = (d) => (d?.feed ? false : d?.type === 'unavailable' ? isAdmin || (!!user && d.personId === user.id) : editable)
   const team = state.users.filter((u) => u.active !== false)
   const now = new Date()
   const [ym, setYm] = useState({ y: now.getFullYear(), m: now.getMonth() })
@@ -120,6 +121,42 @@ export default function CalendarView({ projectId = null, title }) {
     setYm({ y: d.getFullYear(), m: d.getMonth() })
   }
   const goToday = () => { setYm({ y: now.getFullYear(), m: now.getMonth() }); setWk(weekOf(today())) }
+  /* Scroll through the months (Alex, 11 Oct): on a computer a wheel or trackpad stroke over the
+     calendar turns one month (a week in Week, a year in Year), down or right for later. One stroke,
+     one step: the glide a trackpad keeps after the fingers lift does not run on through the months,
+     but a wheel kept turning goes on stepping. A box inside that scrolls by itself keeps the wheel. */
+  const shiftRef = useRef(shift)
+  shiftRef.current = shift
+  const layoutRef = useRef(null)
+  useEffect(() => {
+    const el = layoutRef.current
+    if (!el || mobile) return undefined
+    let acc = 0
+    let last = 0
+    let flipped = 0
+    const onWheel = (e) => {
+      if (e.ctrlKey) return // pinch to zoom
+      for (let n = e.target; n && n !== el; n = n.parentElement) {
+        if (n.scrollHeight > n.clientHeight + 1 && /(auto|scroll)/.test(getComputedStyle(n).overflowY)) return
+      }
+      e.preventDefault()
+      const t = Date.now()
+      const gap = t - last
+      last = t
+      const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
+      if (flipped) {
+        // after a step, wait for the stroke to end (a pause), or for a fresh strong turn a while later
+        if (gap < 180 && !(t - flipped > 500 && Math.abs(d) >= 40)) return
+        flipped = 0
+        acc = 0
+      }
+      if (gap > 250) acc = 0
+      acc += d
+      if (Math.abs(acc) >= 50) { shiftRef.current(acc > 0 ? 1 : -1); acc = 0; flipped = t }
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [mobile])
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(wk, i))
   const weekLabel = () => {
     const a = new Date(wk + 'T00:00'); const b = new Date(addDays(wk, 6) + 'T00:00')
@@ -131,8 +168,8 @@ export default function CalendarView({ projectId = null, title }) {
   // have no personId, so everything that reads one falls back to createdBy.
   // a new event starts as Prep, or the first type still in use if Prep was removed in Settings
   const firstType = () => { const t = eventTypesOf(state.settings).filter((x) => !x.removed && x.key !== 'google' && x.key !== 'unavailable'); return (t.find((x) => x.key === 'prep') || t[0] || { key: 'shoot' }).key }
-  const newEvent = (date, type = firstType()) => ({ id: uid(), projectId: type === 'unavailable' ? '' : projectId || '', type, title: '', date, endDate: '', start: '', end: '', locationText: '', notes: '', personId: '', personName: '', createdBy: user?.id || '', createdByName: user?.name || '', isNew: true })
-  const canMarkOff = isAdmin
+  const newEvent = (date, type = firstType()) => ({ id: uid(), projectId: type === 'unavailable' ? '' : projectId || '', type, title: '', date, endDate: '', start: '', end: '', locationText: '', notes: '', personId: type === 'unavailable' && !isAdmin ? user?.id || '' : '', personName: type === 'unavailable' && !isAdmin ? user?.name || '' : '', createdBy: user?.id || '', createdByName: user?.name || '', isNew: true })
+  const canMarkOff = !!user // everyone can say they are not available
   const personLabel = (e) => e.personName || e.createdByName || e.title
 
   const allDayOf = (d) => (d.allDay != null ? d.allDay : !d.start && !d.end)
@@ -309,10 +346,12 @@ export default function CalendarView({ projectId = null, title }) {
         </div>
         {/* the type legend, which is also the type filter, sits in this row on a computer (Alex, 11 Oct:
             "on the same row as Not available"). Each pill is a switch: lit = shown, a click hides that
-            type, Alt / Option + click shows it alone; All brings everything back. */}
+            type, Alt / Option + click shows it alone; All turns them all on or all off. */}
         {!mobile && (
           <div className="cal-legend cal-legend-top" data-glide="off">
-            <button type="button" className={`cal-legend-btn ${hiddenTypes.length ? '' : 'on'}`} onClick={() => saveHidden([])} title="Show every type">All</button>
+            {/* All is a switch too (Alex, 11 Oct): lit when every type shows; a click then turns them all
+                off, and from anything else a click turns them all on */}
+            <button type="button" className={`cal-legend-btn ${hiddenTypes.length ? 'off' : 'on'}`} aria-pressed={!hiddenTypes.length} onClick={() => saveHidden(hiddenTypes.length ? [] : legendTypes.map((t) => t.key))} title={hiddenTypes.length ? 'Show every type' : 'Hide every type'}>All</button>
             {legendTypes.map((t) => {
               const shown = !hiddenTypes.includes(t.key)
               return (
@@ -388,7 +427,7 @@ export default function CalendarView({ projectId = null, title }) {
 
       {feedErrors.map((err) => <p key={err} className="notice">{err}</p>)}
 
-      <div className="cal-layout stacked">
+      <div className="cal-layout stacked" ref={layoutRef}>
         {mobile ? (
           <div className="panel cal-mobile">
             <MiniCalendar
@@ -547,12 +586,12 @@ export default function CalendarView({ projectId = null, title }) {
               ? <p className="muted small">From <b>{draft.feedName}</b>, a calendar this app only reads. Change it in that calendar.</p>
               : draft.createdByName && <p className="muted small">Added by {draft.createdByName}</p>}
             {draft.type === 'unavailable' ? (
-              <Field label="Who is not available" hint="Their photo goes grey on Home for these days.">
+              <Field label="Who is not available" hint={isAdmin ? 'Their photo goes grey on Home for these days.' : 'Your photo goes grey on Home for these days.'}>
                 <Select
                   value={draft.personId || ''}
                   onChange={(e) => setDraft({ ...draft, personId: e.target.value, personName: team.find((u) => u.id === e.target.value)?.name || '' })}
-                  options={[['', 'Pick a person'], ...team.map((u) => [u.id, u.name])]}
-                  disabled={!canEditDraft(draft)}
+                  options={isAdmin ? [['', 'Pick a person'], ...team.map((u) => [u.id, u.name])] : [[draft.personId || '', draft.personName || team.find((u) => u.id === draft.personId)?.name || 'Someone']]}
+                  disabled={!isAdmin || !canEditDraft(draft)}
                 />
               </Field>
             ) : (
@@ -562,7 +601,7 @@ export default function CalendarView({ projectId = null, title }) {
             )}
             <div className="row-2" hidden={!!draft.feed}>
               <Field label="Type">
-                <Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={allTypes.filter((t) => (!t.removed || t.key === draft.type) && (t.key !== 'google' || draft.type === 'google') && (t.key !== 'unavailable' || isAdmin)).map((t) => [t.key, t.label])} disabled={!canEditDraft(draft)} />
+                <Select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} options={allTypes.filter((t) => (!t.removed || t.key === draft.type) && (t.key !== 'google' || draft.type === 'google') && (t.key !== 'unavailable' || isAdmin || draft.type === 'unavailable')).map((t) => [t.key, t.label])} disabled={!canEditDraft(draft) || (draft.type === 'unavailable' && !isAdmin)} />
               </Field>
               <Field label="Project">
                 <Select value={draft.projectId || ''} onChange={(e) => setDraft({ ...draft, projectId: e.target.value })} disabled={!canEditDraft(draft) || !!projectId}>
