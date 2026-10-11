@@ -49,8 +49,9 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
     on('wrap') && d.day.wrapTime && ['wrap', label('wrap', 'Est. wrap'), d.day.wrapTime],
     d.sun && ['sun', 'Sun', `${d.sun.sunrise} · ${d.sun.sunset}`],
   ].filter(Boolean)
-  const blocks = lay.blocks || OLD_ORDER.map(([key, title]) => ({ key, title }))
-  const people = [...(d.cast || []).map((c) => ({ ...c, kind: 'cast' })), ...(d.crew || []).map((c) => ({ ...c, kind: 'crew' }))]
+  // no crew on the ordino any more (Alex, 11 Oct), also on links shared before
+  const blocks = (lay.blocks || OLD_ORDER.map(([key, title]) => ({ key, title }))).filter((b) => b.key !== 'crew')
+  const people = (d.cast || []).map((c) => ({ ...c, kind: 'cast' }))
   const match = (p) => !q.trim() || [p.name, p.character, p.role].filter(Boolean).some((x) => x.toLowerCase().includes(q.trim().toLowerCase()))
   const mapsUrl = d.loc?.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.loc.address)}` : ''
   const dirUrl = d.loc?.address ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(d.loc.address)}` : ''

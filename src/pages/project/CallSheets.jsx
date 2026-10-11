@@ -106,7 +106,9 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
     ...crewAll.filter((c) => !hidden[c.key]),
     ...extra.filter((x) => x.kind !== 'cast').map((x) => ({ id: x.id, key: x.id, extra: true, kind: 'crew', name: x.name, role: x.role, phone: x.phone, call: x.call || day.callTime })),
   ]
-  const hiddenPeople = [...castAll, ...crewAll].filter((r) => hidden[r.key]).map((r) => ({ key: r.key, name: r.actor?.name || r.name || r.character }))
+  // the crew are no longer on the ordino (Alex, 11 Oct): not in the form, the link or the messages;
+  // crewRows is only read by the old sheet renderer; the link's key crew come from the project's crew
+  const hiddenPeople = castAll.filter((r) => hidden[r.key]).map((r) => ({ key: r.key, name: r.actor?.name || r.name || r.character }))
   const departments = {}
   for (const s of scenes) for (const [cat, items] of Object.entries(s.elements || {})) departments[cat] = [...new Set([...(departments[cat] || []), ...items])]
   const dayIndex = days.indexOf(day)
@@ -130,8 +132,8 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
     ...(programRows.length ? [{ title: titleOf(layout, layout.blocks.find((b) => b.key === 'program') || { key: 'program' }), text: programRows.map((r) => `${r.from || ''}${r.to ? `–${r.to}` : ''} ${r.what || ''}`.trim()).join('\n') }] : []),
     ...layout.blocks.filter((b) => b.custom && customText(b)).map((b) => ({ title: titleOf(layout, b), text: customText(b) })),
   ]
-  const fullText = callSheetText({ project: titled, day, dayIndex, dayCount: days.length, scenes, loc: locView, cast: castRows, crew: crewRows, sheet, extra: notes })
-  const people = [...castRows.filter((r) => r.actor).map((r) => ({ ...r.actor, call: r.call, character: r.character, scenes: scenes.filter((s) => s.characters?.includes(r.character)) })), ...crewRows.map((c) => ({ ...c, scenes }))]
+  const fullText = callSheetText({ project: titled, day, dayIndex, dayCount: days.length, scenes, loc: locView, cast: castRows, crew: [], sheet, extra: notes })
+  const people = [...castRows.filter((r) => r.actor).map((r) => ({ ...r.actor, call: r.call, character: r.character, scenes: scenes.filter((s) => s.characters?.includes(r.character)) }))]
   const personal = (pp) => personalCallText({ project: titled, day, dayIndex, loc: locView, person: pp, call: pp.call, scenes: pp.scenes })
   const emails = people.map((pp) => pp.email).filter(Boolean)
   const subject = `${title} · Call sheet Day ${dayIndex + 1} · ${day.date} · call ${day.callTime}`
@@ -167,7 +169,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       extraLocs: on('location') ? (sheet.extraLocs || []).filter((x) => (x.name || '').trim() || (x.address || '').trim()).map((x) => ({ name: x.name || '', address: x.address || '' })) : [],
       scenes: on('schedule') ? scenes.map((s) => ({ location: s.location, heading: s.heading, from: sceneTime(s.id).from, to: sceneTime(s.id).to })) : [],
       cast: on('cast') ? castRows.map((r) => ({ character: r.character, name: r.actor?.name || '', phone: phone(r.actor?.phone), call: r.call, photo: r.actor?.photos?.[0]?.thumb || '' })) : [],
-      crew: on('crew') ? crewRows.map((c) => ({ name: c.name, role: c.role || c.dept, phone: phone(c.phone), call: c.call, photo: c.photos?.[0]?.thumb || '' })) : [],
+      crew: [],
       blocks: on('schedule') ? (day.blocks || []).map((b) => ({ time: b.time, end: b.end, item: b.item, owner: b.owner, notes: b.notes })) : [],
       departments: on('departments') ? Object.entries(departments).map(([cat, items]) => ({ cat, items })) : [],
       groupCalls: on('groupcalls') ? groupRows.map((r) => ({ who: r.who || '', time: r.time || '' })) : [],
@@ -595,7 +597,6 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
      Send message and older ordinos read the same data; what each part shows on the link is still
      chosen in Customise. */
   // one row per person with their call, crew and cast apart, as the link lists them
-  const crewCalls = crewRows.map((c) => ({ key: c.key, name: c.name, role: c.role || c.dept || 'Crew', call: c.call, extra: c.extra }))
   const castCalls = castRows.map((r) => ({ key: r.key, name: r.actor?.name || r.character, role: r.character || 'Cast', call: r.call, extra: r.extra }))
   // people added by hand for this day only (were in Customise > This day only; Alex, 11 Oct: "all of
   // it outside, so I see the preview"), edited right under the project's own cast or crew
@@ -701,7 +702,6 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
     ),
     contacts: <p className="muted small">The production contacts come from Settings &gt; Ordino, the same on every ordino.</p>,
     cast: callList(castCalls, 'cast'),
-    crew: callList(crewCalls, 'crew'),
   }
   const linkBlocks = layout.blocks.filter((b) => b.link && (b.custom || fields[b.key]))
   const ordinoForm = (
