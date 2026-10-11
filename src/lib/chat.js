@@ -32,13 +32,33 @@ export function loadRead() {
     return {}
   }
 }
+/* The read times also live in the database (supabase/chat_reads.sql, Alex 11 Oct), so a room read on
+   one device is read on all of them. This browser's copy stays the quick one to read from; the store
+   registers a writer that saves each new read time, and merges what the other devices saved. */
+let readWriter = null
+export function setReadWriter(fn) { readWriter = fn }
 export function markRead(roomId, iso) {
   const map = loadRead()
   if (!iso || (map[roomId] || '') >= iso) return map
   map[roomId] = iso
   try { localStorage.setItem(READ_KEY, JSON.stringify(map)) } catch {}
   window.dispatchEvent(new Event('tml-chat-read'))
+  readWriter?.(roomId, iso)
   return map
+}
+/* Read times from the other devices: each room keeps the later of the two. Returns the rooms this
+   browser knew a later time for, so they can be saved back. */
+export function mergeRead(remote) {
+  const map = loadRead()
+  let changed = false
+  for (const [room, iso] of Object.entries(remote || {})) {
+    if (iso && (map[room] || '') < iso) { map[room] = iso; changed = true }
+  }
+  if (changed) {
+    try { localStorage.setItem(READ_KEY, JSON.stringify(map)) } catch {}
+    window.dispatchEvent(new Event('tml-chat-read'))
+  }
+  return Object.entries(map).filter(([room, iso]) => iso && (remote?.[room] || '') < iso)
 }
 
 const initialsOf = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
