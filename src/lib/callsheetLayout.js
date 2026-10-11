@@ -14,7 +14,7 @@ export const BLOCKS = [
   ['program', 'Program'],
   ['cast', 'Cast'],
   ['departments', 'Department requirements'],
-  ['crew', 'Crew'],
+  // no Crew section any more (Alex, 11 Oct: the crew leave the ordino); saved layouts drop it
 ]
 // Department requirements stayed inside the app until now, so a link only shows them if asked.
 const LINK_OFF = new Set(['departments'])

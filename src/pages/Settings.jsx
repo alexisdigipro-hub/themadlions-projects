@@ -185,7 +185,6 @@ export default function Settings() {
               <Field label="Footer on every ordino link" hint="A line at the bottom of the link."><Input value={cs.footer} onChange={(e) => setCs({ ...cs, footer: e.target.value })} placeholder="Παραγωγή The Mad Lions · production@themadlions.com · +30 69…" /></Field>
               <div className="row-2">
                 <Field label="Cast call, minutes vs crew call" hint="Negative = earlier (makeup), positive = later. Applied to every new cast member, editable per person."><Input type="number" step={15} value={cs.castOffset ?? 0} onChange={(e) => setCs({ ...cs, castOffset: e.target.value })} /></Field>
-                <Field label="Crew call, minutes vs crew call"><Input type="number" step={15} value={cs.crewOffset ?? 0} onChange={(e) => setCs({ ...cs, crewOffset: e.target.value })} /></Field>
               </div>
               <div className="row-actions"><Button variant="primary" onClick={saveCs}>Save defaults</Button></div>
             </div>
