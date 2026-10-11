@@ -128,11 +128,12 @@ export default function CalendarView({ projectId = null, title }) {
   const canMarkOff = isAdmin
   const personLabel = (e) => e.personName || e.createdByName || e.title
 
+  const allDayOf = (d) => (d.allDay != null ? d.allDay : !d.start && !d.end)
   const save = () => {
     if (draft.type === 'unavailable' && !draft.personId) return toast('Pick who is not available.', 'error')
     if (draft.type !== 'unavailable' && !draft.title.trim()) return toast('Give the event a title.', 'error')
     if (draft.endDate && draft.endDate < draft.date) return toast('End date is before the start.', 'error')
-    const { isNew, ...ev } = { ...draft, title: draft.type === 'unavailable' ? `${draft.personName || 'Someone'} not available` : draft.title, createdBy: draft.createdBy || user?.id || '', createdByName: draft.createdByName || user?.name || '' }
+    const { isNew, allDay, ...ev } = { ...draft, ...(draft.allDay ? { start: '', end: '' } : {}), title: draft.type === 'unavailable' ? `${draft.personName || 'Someone'} not available` : draft.title, createdBy: draft.createdBy || user?.id || '', createdByName: draft.createdByName || user?.name || '' }
     update((s) => {
       const i = s.events.findIndex((e) => e.id === ev.id)
       if (i >= 0) s.events[i] = { ...s.events[i], ...ev }
@@ -412,7 +413,7 @@ export default function CalendarView({ projectId = null, title }) {
                   <div className="cal-wd-events">
                     {evs.map((e) => (
                       <button key={e.id} type="button" className="cal-wev" style={{ '--ev': colorOf(e) }} {...dragFrom(e, iso)} onClick={(ev) => { ev.stopPropagation(); setDraft({ ...e }) }}>
-                        {(e.start || e.end) && <small>{e.start}{e.end ? ` – ${e.end}` : ''}</small>}
+                        <small>{e.start || e.end ? `${e.start}${e.end ? ` – ${e.end}` : ''}` : 'All day'}</small>
                         <strong>{e.type === 'unavailable' ? `${personLabel(e)} not available` : e.title}</strong>
                         {e.type !== 'unavailable' && <em>{[!projectId && e.projectId ? projName(e.projectId) : '', labelOf(e)].filter(Boolean).join(' · ')}</em>}
                       </button>
@@ -537,12 +538,27 @@ export default function CalendarView({ projectId = null, title }) {
                   <Input type="date" value={draft.endDate || ''} onChange={(e) => setDraft({ ...draft, endDate: e.target.value })} disabled={!canEditDraft(draft)} />
                 </Field>
               ) : null}
-              <Field label="Start">
-                <Input type="time" value={draft.start} onChange={(e) => setDraft({ ...draft, start: e.target.value })} disabled={!canEditDraft(draft)} />
-              </Field>
-              <Field label="End">
-                <Input type="time" value={draft.end} onChange={(e) => setDraft({ ...draft, end: e.target.value })} disabled={!canEditDraft(draft)} />
-              </Field>
+              {/* All day (Alex, 11 Oct): no times; an event without times always was all day, the switch
+                  just says so and hides Start and End */}
+              {draft.type !== 'unavailable' && (
+                <div className="field">
+                  <span className="field-label">All day</span>
+                  <label className="cs2-switch ev-allday">
+                    <input type="checkbox" checked={allDayOf(draft)} disabled={!canEditDraft(draft)} onChange={(e) => setDraft(e.target.checked ? { ...draft, allDay: true, start: '', end: '' } : { ...draft, allDay: false })} aria-label="All day" />
+                    <span />
+                  </label>
+                </div>
+              )}
+              {!allDayOf(draft) && (
+                <>
+                  <Field label="Start">
+                    <Input type="time" value={draft.start} onChange={(e) => setDraft({ ...draft, start: e.target.value })} disabled={!canEditDraft(draft)} />
+                  </Field>
+                  <Field label="End">
+                    <Input type="time" value={draft.end} onChange={(e) => setDraft({ ...draft, end: e.target.value })} disabled={!canEditDraft(draft)} />
+                  </Field>
+                </>
+              )}
             </div>
             <Field label="Location">
               <Input value={draft.locationText} onChange={(e) => setDraft({ ...draft, locationText: e.target.value })} disabled={!canEditDraft(draft)} />
