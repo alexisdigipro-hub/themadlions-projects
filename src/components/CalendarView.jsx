@@ -362,20 +362,33 @@ export default function CalendarView({ projectId = null, title }) {
      their colour dots, a dot opening to its name under the pointer. Measured with the names shown, every
      time the room changes. */
   const legendRef = useRef(null)
+  const [typesOpen, setTypesOpen] = useState(false) // the Types list, when the pills are folded into one button
+  useEffect(() => {
+    if (!typesOpen) return undefined
+    const away = (e) => { if (!legendRef.current?.contains(e.target)) setTypesOpen(false) }
+    const key = (e) => { if (e.key === 'Escape') setTypesOpen(false) }
+    document.addEventListener('mousedown', away)
+    document.addEventListener('keydown', key)
+    return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', key) }
+  }, [typesOpen])
   useEffect(() => {
     const cell = legendRef.current
     if (!cell || mobile) return undefined
     const fit = () => {
       const row = cell.firstElementChild
       if (!row) return
-      // names at full size; else a size smaller; else the dots alone (measured with the folding
-      // animation off, so each size is read as it will end up)
+      // names at full size; else closer together; else the dots alone; else one Types button that opens
+      // them as a list (measured with animations and the dots' reserved room off, so each step is read
+      // as it will end up)
       cell.classList.add('measuring')
-      cell.classList.remove('tight', 'compact')
+      cell.classList.remove('tight', 'compact', 'menu')
       const fits = () => row.scrollWidth <= cell.clientWidth + 1
       if (!fits()) {
         cell.classList.add('tight')
-        if (!fits()) cell.classList.replace('tight', 'compact')
+        if (!fits()) {
+          cell.classList.replace('tight', 'compact')
+          if (!fits()) cell.classList.replace('compact', 'menu')
+        }
       }
       void row.offsetWidth
       cell.classList.remove('measuring')
@@ -404,18 +417,18 @@ export default function CalendarView({ projectId = null, title }) {
             one small pill group (Alex, 11 Oct). Each pill is a switch: lit = shown, a click hides that
             type, Alt / Option + click shows it alone; All turns them all on or all off. */}
         {!mobile && (
-          <div className="cal-legend-cell" ref={legendRef}>
+          <div className="cal-legend-cell" ref={legendRef} data-open={typesOpen ? '' : undefined}>
           <div className="cal-legend cal-legend-top" data-glide="off">
             {/* All is a switch too (Alex, 11 Oct): lit when every type shows; a click then turns them all
                 off, and from anything else a click turns them all on */}
-            <button type="button" className={`cal-legend-btn ${hiddenTypes.length ? 'off' : 'on'}`} aria-pressed={!hiddenTypes.length} onClick={() => saveHidden(hiddenTypes.length ? [] : legendTypes.map((t) => t.key))} title={hiddenTypes.length ? 'Show every type' : 'Hide every type'}>All</button>
+            <button type="button" className={`btn btn-default btn-md cal-legend-btn ${hiddenTypes.length ? 'off' : 'on'}`} aria-pressed={!hiddenTypes.length} onClick={() => saveHidden(hiddenTypes.length ? [] : legendTypes.map((t) => t.key))} title={hiddenTypes.length ? 'Show every type' : 'Hide every type'}>All</button>
             {legendTypes.map((t) => {
               const shown = !hiddenTypes.includes(t.key)
               return (
                 <button
                   key={t.key}
                   type="button"
-                  className={`cal-legend-btn ${shown ? 'on' : 'off'}`}
+                  className={`btn btn-default btn-md cal-legend-btn ${shown ? 'on' : 'off'}`}
                   style={{ '--ev': t.color }}
                   aria-pressed={shown}
                   aria-label={t.label}
@@ -430,6 +443,11 @@ export default function CalendarView({ projectId = null, title }) {
               )
             })}
           </div>
+          {/* the last fold: one button, the types as a list under it */}
+          <button type="button" className="btn btn-default btn-md cal-types-btn" aria-expanded={typesOpen} onClick={() => setTypesOpen((o) => !o)} title="Show or hide event types">
+            <span className="cal-types-dots" aria-hidden="true">{legendTypes.slice(0, 4).map((t) => <i key={t.key} style={{ background: hiddenTypes.includes(t.key) ? 'transparent' : t.color, boxShadow: `inset 0 0 0 1.5px ${t.color}` }} />)}</span>
+            Types{hiddenTypes.length ? ` · ${legendTypes.filter((t) => !hiddenTypes.includes(t.key)).length}/${legendTypes.length}` : ''}
+          </button>
           </div>
         )}
         <div className="toolbar-actions">
