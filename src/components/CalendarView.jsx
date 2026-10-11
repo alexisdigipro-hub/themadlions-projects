@@ -223,7 +223,8 @@ export default function CalendarView({ projectId = null, title }) {
               ))}
             </Select>
           )}
-          {!projectId && (
+          {/* no project menu on a computer either (Alex, 11 Oct); the phone keeps it */}
+          {!projectId && mobile && (
             <Select value={projFilter} onChange={(e) => setProjFilter(e.target.value)}>
               <option value="all">All projects</option>
               {projects.map((p) => (
@@ -254,7 +255,7 @@ export default function CalendarView({ projectId = null, title }) {
             </Button>
           )}
           {editable && (
-            <Button variant="primary" onClick={() => setDraft(newEvent(today()))}>
+            <Button variant={mobile ? 'primary' : 'default'} onClick={() => setDraft(newEvent(today()))}>
               Add event
             </Button>
           )}
