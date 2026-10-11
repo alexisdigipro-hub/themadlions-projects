@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { HashRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
+import ChatReadSync from './lib/chatReadSync.jsx'
 import { ToastProvider } from './components/ui.jsx'
 import { StoreProvider, useCurrentUser, useStore } from './lib/store.jsx'
 import { CallProvider } from './lib/calls.jsx'
@@ -95,6 +96,7 @@ function LoginGate() {
 export default function App() {
   return (
     <StoreProvider>
+      <ChatReadSync />
       <ToastProvider>
         <HashRouter>
           <Suspense fallback={<Loading />}>
