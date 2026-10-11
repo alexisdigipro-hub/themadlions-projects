@@ -30,7 +30,7 @@ function lastSeenText(at) {
 }
 
 export default function Team({ embedded = false }) {
-  const { state, update, mode, invites, invite, removeInvite, setViewAs } = useStore()
+  const { state, update, mode, invites, invite, removeInvite, joinRequests, acceptRequest, declineRequest, setViewAs } = useStore()
   const me = useCurrentUser()
   const toast = useToast()
   const nav = useNavigate()
@@ -42,6 +42,8 @@ export default function Team({ embedded = false }) {
   const save = async () => {
     const em = draft.email.trim().toLowerCase()
     if (!draft.name.trim() || !em) return toast('Name and email are required.', 'error')
+    // a typo in the address (Alex, 11 Oct: "hotmailcom" without the dot) left a teammate locked out
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@.]{2,}$/.test(em)) return toast(`"${em}" is not a full email address. Check it, e.g. name@hotmail.com.`, 'error')
     if (state.users.some((u) => u.email === em && u.id !== draft.id)) return toast('That email is already in the team.', 'error')
     if (remote && draft.isNew) {
       try {
@@ -94,16 +96,37 @@ export default function Team({ embedded = false }) {
       {embedded ? (
         <div className="panel-head">
           <h2>Team</h2>
-          <Button size="sm" variant="primary" onClick={() => setDraft(newUser())}>Add teammate</Button>
+          {!remote && <Button size="sm" variant="primary" onClick={() => setDraft(newUser())}>Add teammate</Button>}
         </div>
       ) : (
         <PageHead title="Team" sub="Who can see and change what. Administrators can do everything.">
-          <Button variant="primary" onClick={() => setDraft(newUser())}>
-            Add teammate
-          </Button>
+          {/* no invites on the live app (Alex, 11 Oct): people sign up themselves and are accepted below */}
+          {!remote && (
+            <Button variant="primary" onClick={() => setDraft(newUser())}>
+              Add teammate
+            </Button>
+          )}
         </PageHead>
       )}
       {embedded && <p className="small muted">Who can see and change what. Administrators can do everything.</p>}
+
+      {/* Asking to join (Alex, 11 Oct): everyone who signed up and is not on the team yet. Accept makes
+          them a member with the permissions a new teammate gets (change them after, as for anyone);
+          their screen opens the app by itself within seconds. */}
+      {remote && joinRequests.length > 0 && (
+        <section className="join-requests">
+          <h3>Asking to join <small>{joinRequests.length}</small></h3>
+          {joinRequests.map((r) => (
+            <div key={r.id} className="join-request">
+              <span className="team-avatar initials">{initialsOf(r.name || r.email)}</span>
+              <span className="team-who"><strong>{r.name || r.email}</strong><span className="small muted">{r.email} · signed up {new Date(r.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></span>
+              <span className="spacer" />
+              <Button onClick={() => declineRequest(r).then(() => toast('Request declined')).catch((e) => toast(e.message, 'error'))}>Decline</Button>
+              <Button variant="primary" onClick={() => acceptRequest(r, newUser()).then(() => toast(`${r.name || r.email} is on the team`, 'ok')).catch((e) => toast(e.message, 'error'))}>Accept</Button>
+            </div>
+          ))}
+        </section>
+      )}
 
       {/* The people as rows grouped Administrators / Members / Deactivated / Waiting to sign up
           (Alex, 10 Oct: "the Team tab needs another organisation"): who they are and their email,
@@ -166,7 +189,7 @@ export default function Team({ embedded = false }) {
       </div>
       <p className="fineprint">
         {remote
-          ? 'Teammates create their own password when they sign up with the email you added here. Permissions take effect the moment they sign in.'
+          ? 'New people sign up on the login page and appear above under Asking to join; accept them and set what they can see. Permissions take effect the moment they are saved.'
           : 'Local mode accounts live in this browser only; team login across devices arrives with the Supabase backend.'}{' '}
         {admins === 1 && 'You are the only administrator.'}
       </p>

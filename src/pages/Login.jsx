@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Field, Input } from '../components/ui.jsx'
 import { defaultPermissions, sampleProject, uid, useStore } from '../lib/store.jsx'
@@ -17,7 +17,7 @@ function Logo({ state }) {
 
 /* ---------- remote mode: Supabase Auth ---------- */
 function RemoteLogin() {
-  const { state, auth, authUser, membership, syncError, logout } = useStore()
+  const { state, auth, authUser, membership, joinRequested, recheckAccess, syncError, logout } = useStore()
   const [mode, setMode] = useState('signin') // signin | signup | reset
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -49,15 +49,24 @@ function RemoteLogin() {
     }
   }
 
-  // signed in, but no membership and no invite for this email
-  if (authUser && membership === null) {
+  // signed in, not on the team yet: the request to join waits for an administrator (Alex, 11 Oct), and
+  // this screen asks again every 15 seconds, so the app opens by itself the moment they are accepted
+  const waiting = !!authUser && membership === null
+  useEffect(() => {
+    if (!waiting) return undefined
+    const t = setInterval(recheckAccess, 15000)
+    return () => clearInterval(t)
+  }, [waiting, recheckAccess])
+  if (waiting) {
     return (
       <div className="login">
         <div className="login-card">
           <Logo state={state} />
-          <h1>No access yet</h1>
+          <h1>{joinRequested ? 'Request sent' : 'No access yet'}</h1>
           <p className="muted">
-            You are signed in as <strong>{authUser.email}</strong>, but no administrator has added this email to the team. Ask them to add you from the Team page, then sign in again.
+            {joinRequested
+              ? <>You are signed in as <strong>{authUser.email}</strong>. An administrator has your request to join the team; as soon as they accept it, the app opens here by itself.</>
+              : <>You are signed in as <strong>{authUser.email}</strong>, but you are not on the team yet. Ask an administrator to accept you, then sign in again.</>}
           </p>
           <Button variant="ghost" onClick={logout}>Sign out</Button>
         </div>
@@ -72,7 +81,7 @@ function RemoteLogin() {
         <h1>{mode === 'signup' ? 'Create your account' : mode === 'reset' ? 'Reset password' : 'Sign in'}</h1>
         <p className="muted">
           {mode === 'signup'
-            ? 'Use the email your administrator added to the team. The very first account becomes the administrator.'
+            ? 'Create your account; an administrator accepts you into the team. The very first account becomes the administrator.'
             : mode === 'reset'
               ? 'We will email you a link to set a new password.'
               : 'Your account works on every device.'}
