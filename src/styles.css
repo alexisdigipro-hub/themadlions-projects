@@ -3735,8 +3735,10 @@ html[data-public='1'] body { background: var(--bg); }
 /* ---------- settings: logo ---------- */
 .logo-img { width: 30px; height: 30px; object-fit: contain; border-radius: 6px; flex: none; }
 .login-logo .logo-img { width: 44px; height: 44px; }
-/* the loading screen: THEMADLIONS alone, centred both ways, no frame; 5% smaller than TML Chat's head */
-.boot { min-height: 100vh; min-height: 100dvh; padding: 0; }
+/* the loading screen: THEMADLIONS alone, centred both ways, no frame; 5% smaller than TML Chat's head.
+   Pinned to the whole screen (Alex, 11 Oct): as a home-screen app on an iPhone 100dvh stops above the
+   home bar, and the page's own background showed there as a band of another colour. */
+.boot { position: fixed; inset: 0; z-index: 1; min-height: 0; padding: 0; }
 .boot-name { font-weight: 500; font-size: 18px; letter-spacing: -.01em; white-space: nowrap; color: var(--text); }
 .boot-name b { font-weight: 900; }
 .logo-row { display: flex; align-items: center; gap: 12px; }
