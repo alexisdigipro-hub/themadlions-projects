@@ -6341,6 +6341,8 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
 .rt-bar .rt-a { font-weight: 700; font-size: 15px; }
 .rt-bar .rt-a.small { font-size: 11.5px; }
 .rt-sep { width: 1px; height: 20px; margin: 0 4px; background: var(--line); }
+.rt-font { height: 32px; max-width: 160px; padding: 0 28px 0 12px; border: 1px solid var(--line); border-radius: 999px; background-color: var(--raised); color: var(--text); font: inherit; font-size: 13.5px; cursor: pointer; }
+.rt-font:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
 .rt-box.single { min-height: 0; }
 .rt-box { min-height: 92px; height: auto; padding: 10px 12px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; cursor: text; outline: none; }
 .rt-box:empty::before { content: attr(data-placeholder); color: var(--muted); pointer-events: none; }

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { cleanRich } from '../lib/richText.js'
+import { cleanRich, fontStack } from '../lib/richText.js'
+import { FONTS, ensureFontLoaded } from '../lib/fonts.js'
 
 /* Text with a little formatting (Alex, 11 Oct). One toolbar serves every text box of a form ("one bar
    of text tools for all the forms"): RichToolbar works on whichever RichText box was last clicked
@@ -36,7 +37,6 @@ export default function RichText({ html, onChange, placeholder = '', single = fa
   )
 }
 
-const SIZES = [2, 3, 4, 5, 6] // <font size>: smaller, normal, bigger, big, biggest
 const icon = (d) => <svg viewBox="0 0 24 24" aria-hidden="true">{d}</svg>
 
 export function RichToolbar() {
@@ -54,13 +54,61 @@ export function RichToolbar() {
     document.execCommand(cmd, false, value)
     box.dispatchEvent(new Event('input', { bubbles: true })) // the box saves what changed
   }
-  const size = (dir) => {
+  // the selected words, or the whole box when nothing in it is selected
+  const pick = (box) => {
+    box.focus()
+    const sel = window.getSelection()
+    if (!sel.rangeCount || sel.isCollapsed || !box.contains(sel.anchorNode)) {
+      const all = document.createRange()
+      all.selectNodeContents(box)
+      sel.removeAllRanges()
+      sel.addRange(all)
+    }
+    return sel
+  }
+  // the element holding the first selected letter, for the size the words have now
+  const firstText = (box, sel) => {
+    const r = sel.getRangeAt(0)
+    const root = r.commonAncestorContainer.nodeType === 1 ? r.commonAncestorContainer : r.commonAncestorContainer.parentElement
+    const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    while (walk.nextNode()) if (walk.currentNode.textContent.trim() && r.intersectsNode(walk.currentNode)) return walk.currentNode.parentElement
+    return box
+  }
+  /* The browser marks the words with a placeholder (<font size=7> or <font face>), which is swapped
+     for a span carrying the real style. */
+  const wrap = (box, cmd, value, style) => {
+    try { document.execCommand('styleWithCSS', false, false) } catch {}
+    document.execCommand(cmd, false, value)
+    const sel = cmd === 'fontSize' ? `font[size="${value}"]` : `font[face="${value}"]`
+    box.querySelectorAll(sel).forEach((f) => {
+      const span = document.createElement('span')
+      style(span, f)
+      span.append(...f.childNodes)
+      f.replaceWith(span)
+    })
+    box.dispatchEvent(new Event('input', { bubbles: true }))
+  }
+  /* Smaller / bigger by a step each press, as far as you like (Alex, 11 Oct): 15% under or over the
+     size the words have now, sized against the text around them. */
+  const size = (factor) => {
     const box = target()
     if (!box) return
-    if (document.activeElement !== box) box.focus()
-    const now = Number(document.queryCommandValue('fontSize')) || 3
-    const i = SIZES.indexOf(now)
-    run('fontSize', String(SIZES[Math.max(0, Math.min(SIZES.length - 1, (i < 0 ? 1 : i) + dir))]))
+    const sel = pick(box)
+    const nowPx = parseFloat(getComputedStyle(firstText(box, sel)).fontSize) || 15
+    const wantPx = Math.max(3, Math.min(120, nowPx * factor))
+    wrap(box, 'fontSize', '7', (span, f) => {
+      const parentPx = parseFloat(getComputedStyle(f.parentElement).fontSize) || nowPx
+      span.style.fontSize = `${Math.round((wantPx / parentPx) * 1000) / 1000}em`
+    })
+  }
+  // a typeface from the app's own list (Settings > Display), fetched from Google Fonts when picked
+  const face = (id) => {
+    const f = FONTS.find((x) => x.id === id)
+    const box = target()
+    if (!f || !box) return
+    ensureFontLoaded(f.id)
+    pick(box)
+    wrap(box, 'fontName', 'tml-face', (span) => { span.style.fontFamily = fontStack(f) })
   }
   // a toolbar button must not take the selection away from the text
   const hold = (e) => e.preventDefault()
@@ -68,8 +116,12 @@ export function RichToolbar() {
   return (
     <div className="rt-bar" role="toolbar" aria-label="Text tools">
       <span className="rt-bar-h">Text</span>
-      {btn('Smaller text', () => size(-1), <><span className="rt-a small">A</span>−</>)}
-      {btn('Bigger text', () => size(1), <><span className="rt-a">A</span>+</>)}
+      {btn('Smaller text', () => size(0.85), <><span className="rt-a small">A</span>−</>)}
+      {btn('Bigger text', () => size(1.15), <><span className="rt-a">A</span>+</>)}
+      <select className="rt-font" value="" onMouseDown={(e) => { if (!target()) e.preventDefault() }} onChange={(e) => face(e.target.value)} aria-label="Font" title="Font">
+        <option value="">Font</option>
+        {FONTS.map((f) => <option key={f.id} value={f.id} style={{ fontFamily: fontStack(f) }}>{f.label}</option>)}
+      </select>
       <i className="rt-sep" />
       {btn('Bold', () => run('bold'), <b>B</b>)}
       {btn('Italic', () => run('italic'), <i>I</i>)}
