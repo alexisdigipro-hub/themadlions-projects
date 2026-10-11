@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from './ui.jsx'
 import MiniCalendar from './MiniCalendar.jsx'
 import { can, eventTypesOf, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
@@ -116,6 +116,44 @@ export default function CalendarView({ projectId = null, title }) {
     // Days off stay internal scheduling, not something to push onto a calendar other people see.
     if (synced && ev.type !== 'unavailable') {
       gcalUpsert({ calendarId, event: ev })
+        .then((r) => { if (r.googleEventId !== ev.googleEventId) update((s) => { const i = s.events.findIndex((e) => e.id === ev.id); if (i >= 0) s.events[i] = { ...s.events[i], googleEventId: r.googleEventId }; return s }) })
+        .catch((e) => toast(`Not synced to Google Calendar: ${e.message}`, 'error'))
+    }
+  }
+  /* Drag an event to another day on the computer's month grid (Alex, 11 Oct). It moves by as many
+     days as it was dragged (a three-day prep keeps its length); a shoot day takes the project's
+     ordino for those dates and its Shoot day with it, the same as moving it on the ordino; Google
+     Calendar is told, like after Save. */
+  const dragging = useRef(null) // { ev, from }
+  const [dropDay, setDropDay] = useState('')
+  const dayGap = (a, b) => Math.round((Date.UTC(...b.split('-').map((x, i) => (i === 1 ? x - 1 : +x))) - Date.UTC(...a.split('-').map((x, i) => (i === 1 ? x - 1 : +x)))) / 86400000)
+  const moveEvent = (ev, from, to) => {
+    const n = dayGap(from, to)
+    if (!n) return
+    const date = addDays(ev.date, n)
+    const endDate = ev.endDate ? addDays(ev.endDate, n) : ''
+    update((s) => {
+      const i = s.events.findIndex((e) => e.id === ev.id)
+      if (i < 0) return s
+      s.events[i] = { ...s.events[i], date, endDate }
+      const pi = ev.type === 'shoot' && ev.projectId ? s.projects.findIndex((p) => p.id === ev.projectId) : -1
+      if (pi >= 0) {
+        const p = s.projects[pi]
+        const last = ev.endDate && ev.endDate > ev.date ? ev.endDate : ev.date
+        const days = p.shootingDays || []
+        const taken = new Set(days.map((d) => d.date))
+        const moved = days.map((d) => {
+          if (!d.date || d.date < ev.date || d.date > last) return d
+          const to2 = addDays(d.date, n)
+          return taken.has(to2) && !(to2 >= ev.date && to2 <= last) ? d : { ...d, date: to2 }
+        })
+        s.projects[pi] = { ...p, shootingDays: moved, ...(p.startDate === ev.date ? { startDate: date } : {}) }
+      }
+      return s
+    })
+    toast(`Moved to ${fmtDate(date)}`, 'ok')
+    if (synced && ev.type !== 'unavailable') {
+      gcalUpsert({ calendarId, event: { ...ev, date, endDate } })
         .then((r) => { if (r.googleEventId !== ev.googleEventId) update((s) => { const i = s.events.findIndex((e) => e.id === ev.id); if (i >= 0) s.events[i] = { ...s.events[i], googleEventId: r.googleEventId }; return s }) })
         .catch((e) => toast(`Not synced to Google Calendar: ${e.message}`, 'error'))
     }
@@ -246,8 +284,11 @@ export default function CalendarView({ projectId = null, title }) {
             return (
               <div
                 key={cell.iso}
-                className={`cal-cell ${cell.inMonth ? '' : 'dim'} ${isToday ? 'today' : ''} ${cell.dow >= 5 ? 'weekend' : ''} ${hol ? 'holiday' : ''}`}
+                className={`cal-cell ${cell.inMonth ? '' : 'dim'} ${isToday ? 'today' : ''} ${cell.dow >= 5 ? 'weekend' : ''} ${hol ? 'holiday' : ''} ${dropDay === cell.iso ? 'drop-over' : ''}`}
                 onClick={() => editable && setDraft(newEvent(cell.iso))}
+                onDragOver={(e) => { if (!dragging.current) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dropDay !== cell.iso) setDropDay(cell.iso) }}
+                onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDropDay((d) => (d === cell.iso ? '' : d)) }}
+                onDrop={(e) => { e.preventDefault(); const d = dragging.current; dragging.current = null; setDropDay(''); if (d) moveEvent(d.ev, d.from, cell.iso) }}
                 role="gridcell"
                 title={hol || undefined}
               >
@@ -259,6 +300,9 @@ export default function CalendarView({ projectId = null, title }) {
                       key={e.id}
                       className="cal-ev"
                       style={{ '--ev': colorOf(e) }}
+                      draggable={canEditDraft(e)}
+                      onDragStart={(ev) => { dragging.current = { ev: state.events.find((x) => x.id === e.id) || e, from: cell.iso }; ev.dataTransfer.effectAllowed = 'move'; ev.dataTransfer.setData('text/plain', e.id); ev.currentTarget.classList.add('dragging') }}
+                      onDragEnd={(ev) => { ev.currentTarget.classList.remove('dragging'); dragging.current = null; setDropDay('') }}
                       onClick={(ev) => {
                         ev.stopPropagation()
                         setDraft({ ...e })
