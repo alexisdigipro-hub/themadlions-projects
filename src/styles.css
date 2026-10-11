@@ -6354,7 +6354,8 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
 .rt-box font[size='5'], .pub-rich font[size='5'] { font-size: 1.5em; }
 .rt-box font[size='6'], .pub-rich font[size='6'] { font-size: 2em; }
 .rt-box font[size='7'], .pub-rich font[size='7'] { font-size: 2.6em; }
-.pub-rich { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
+.pub-rich { white-space: normal; overflow-wrap: anywhere; line-height: 1.45; } /* line breaks come from the html; pre-wrap drew stray new lines as a gap */
+.pub-rich > :last-child { margin-bottom: 0; }
 .pub-note .pub-rich { margin: 0; font-weight: 600; font-size: 14px; flex: 1; min-width: 0; }
 /* Adjust picture on the ordino: the link's banner shape, drag inside it, zoom under it */
 .cover-adj { display: flex; flex-direction: column; gap: 8px; max-width: 420px; }
