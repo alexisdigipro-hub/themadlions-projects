@@ -3430,6 +3430,17 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .team-chip.off .team-chip-photo { filter: grayscale(1); opacity: .45; }
 .team-chip.off .team-chip-name { color: var(--muted); text-decoration: line-through; }
 .team-chip-off { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; font-weight: 700; color: var(--danger); background: color-mix(in srgb, var(--panel) 45%, transparent); }
+/* Online now (Alex, 11 Oct): a green dot at the photo's corner that breathes softly while someone has the
+   app in front of them, amber while it sits open in the background, nothing when they are not in. Ringed
+   in the page colour so it reads on any photo. */
+.team-chip-pic { position: relative; display: inline-flex; }
+.team-chip-live { position: absolute; right: -3px; bottom: -3px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--panel); background: #2fd36b; box-shadow: 0 0 0 0 rgba(47, 211, 107, .55); }
+.team-chip-live.online { animation: team-live 2.4s ease-out infinite; }
+.team-chip-live.away { background: #f5a524; }
+@keyframes team-live { 0% { box-shadow: 0 0 0 0 rgba(47, 211, 107, .5); } 70%, 100% { box-shadow: 0 0 0 7px rgba(47, 211, 107, 0); } }
+@media (prefers-reduced-motion: reduce) { .team-chip-live.online { animation: none; } }
+.team-chip.off .team-chip-live { filter: none; }
+@media (max-width: 820px) { .team-chip-live { width: 12px; height: 12px; border-width: 2px; right: -2px; bottom: -2px; } }
 @media (max-width: 820px) {
   /* Everyone on screen at once. A grid that wraps onto as many rows as it needs, sized so the
      faces fill the width evenly: nothing runs off the side, nothing to drag sideways. */
