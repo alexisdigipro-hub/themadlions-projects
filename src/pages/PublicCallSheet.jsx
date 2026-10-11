@@ -50,8 +50,11 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
     d.sun && ['sun', 'Sun', `${d.sun.sunrise} · ${d.sun.sunset}`],
   ].filter(Boolean)
   // no crew on the ordino any more (Alex, 11 Oct), also on links shared before
-  const blocks = (lay.blocks || OLD_ORDER.map(([key, title]) => ({ key, title }))).filter((b) => b.key !== 'crew')
-  const people = (d.cast || []).map((c) => ({ ...c, kind: 'cast' }))
+  // only the note, calls by group, location, program and own sections now (Alex, 11 Oct): cast,
+  // crew, production, scenes and department requirements are dropped, also from links shared before
+  const KEEP = new Set(['note', 'groupcalls', 'location', 'program'])
+  const blocks = (lay.blocks || OLD_ORDER.map(([key, title]) => ({ key, title }))).filter((b) => b.custom || KEEP.has(b.key))
+  const people = []
   const match = (p) => !q.trim() || [p.name, p.character, p.role].filter(Boolean).some((x) => x.toLowerCase().includes(q.trim().toLowerCase()))
   const mapsUrl = d.loc?.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.loc.address)}` : ''
   const dirUrl = d.loc?.address ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(d.loc.address)}` : ''

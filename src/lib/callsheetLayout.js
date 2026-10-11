@@ -9,23 +9,17 @@ export const BLOCKS = [
   ['note', 'Note'],
   ['groupcalls', 'Calls by group'],
   ['location', 'Location'],
-  ['contacts', 'Production'],
-  ['schedule', 'Scenes'],
   ['program', 'Program'],
-  ['cast', 'Cast'],
-  ['departments', 'Department requirements'],
-  // no Crew section any more (Alex, 11 Oct: the crew leave the ordino); saved layouts drop it
 ]
-// Department requirements stayed inside the app until now, so a link only shows them if asked.
-const LINK_OFF = new Set(['departments'])
+// Cast, crew, production, scenes (run of show) and department requirements left the ordino (Alex,
+// 11 Oct: "I don't need them anywhere"); normalizeLayout drops them from saved layouts.
+const LINK_OFF = new Set()
 
 export const DETAILS = [
   ['cover', 'Cover picture'],
-  ['keycrew', 'Key crew in the header'],
   ['tagline', 'Line under the call time'],
   ['weather', 'Weather'],
   ['sun', 'Sunrise and sunset'],
-  ['phones', 'Phone numbers'],
   ['parking', 'Parking'],
   ['hospital', 'Nearest hospital'],
   ['lunch', 'Lunch / break time'],
@@ -45,7 +39,7 @@ export const LOOK_DEFAULTS = { header: 'columns', colour: '', custom: '#c8503f',
 export const SIZES = [['small', 'Smaller'], ['normal', 'Normal'], ['large', 'Larger']]
 export const ZOOM = { small: 0.9, normal: 1, large: 1.12 }
 
-const blockName = (key, event) => (key === 'schedule' && event ? 'Run of show' : key === 'cast' && event ? 'Talent' : BLOCKS.find(([k]) => k === key)?.[1] || key)
+const blockName = (key) => BLOCKS.find(([k]) => k === key)?.[1] || key
 
 /* Whatever was saved, made whole: blocks added since are appended, unknown ones dropped. */
 export function normalizeLayout(raw, { event = false } = {}) {
