@@ -63,8 +63,25 @@ export function mergeRead(remote) {
 
 const initialsOf = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 
-/* Taken out of a project's conversation by an administrator (project.chatExcluded). Administrators never are. */
-export const chatExcluded = (project, user) => !!user && user.role !== 'admin' && Array.isArray(project?.chatExcluded) && project.chatExcluded.includes(user.id)
+/* Not in a project's conversation. Older rooms: everyone who can see the project, minus the people an
+   administrator took out (project.chatExcluded). Rooms switched on since 11 Oct (Alex): only the people
+   on project.chatMembers, which starts as Mariza and Elias and grows as people are added. Administrators
+   are always in. */
+export const chatExcluded = (project, user) => {
+  if (!user || user.role === 'admin') return false
+  if (Array.isArray(project?.chatMembers)) return !project.chatMembers.includes(user.id)
+  return Array.isArray(project?.chatExcluded) && project.chatExcluded.includes(user.id)
+}
+
+/* Who a new conversation starts with besides the administrators: the people saved with "Start every new
+   group with these" (settings.chatGroupStart), else the usual two, Mariza and Elias, found by name. */
+const STARTER_NAMES = ['mariza', 'μαρίζα', 'μαριζα', 'elias', 'ηλίας', 'ηλιας']
+export function chatStarters(state) {
+  const people = (state.users || []).filter((u) => u.active !== false && u.role !== 'admin')
+  const saved = state.settings?.chatGroupStart
+  if (Array.isArray(saved)) return saved.filter((id) => people.some((u) => u.id === id))
+  return people.filter((u) => STARTER_NAMES.includes((u.name || '').trim().split(/\s+/)[0].toLowerCase())).map((u) => u.id)
+}
 
 /* Every room this person belongs to, as the list shows them. Order: team, projects, groups, people. */
 export function roomsFor(state, user) {
