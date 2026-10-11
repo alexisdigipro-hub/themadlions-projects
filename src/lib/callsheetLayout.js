@@ -20,16 +20,13 @@ export const DETAILS = [
   ['weather', 'Weather'],
   ['sun', 'Sunrise and sunset'],
   ['parking', 'Parking'],
-  ['wrap', 'Est. wrap time'],
 ]
-// Details that start switched off, also in layouts saved before they existed: lunch and the wrap on
-// the link (Alex took that row out of the link). The Shooting call is gone altogether (Alex, 11 Oct).
-const DETAIL_OFF = { wrap: { link: true } }
+// Details that start switched off in layouts saved before they existed (none now: lunch and the wrap
+// left the ordino, Alex 11 Oct).
+const DETAIL_OFF = {}
 
 export const LABELS = [
   ['call', 'General crew call'],
-  ['lunch', 'Lunch'],
-  ['wrap', 'Est. wrap'],
 ]
 
 export const LOOK_DEFAULTS = { header: 'columns', colour: '', custom: '#c8503f', size: 'normal', linkTheme: 'light', linkSize: 'normal' }

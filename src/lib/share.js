@@ -34,7 +34,7 @@ export function callSheetText({ project, day, dayIndex, dayCount, scenes, loc, c
   L.push(`*${project.title.toUpperCase()}* · CALL SHEET`)
   L.push(`Day ${dayIndex + 1} of ${dayCount} · ${fmtLong(day.date)}${day.unit && day.unit !== 'Main unit' ? ` · ${day.unit}` : ''}`)
   L.push('')
-  L.push(`*General call: ${day.callTime}*   Est. wrap: ${day.wrapTime}`)
+  L.push(`*General call: ${day.callTime}*`)
   if (loc) {
     L.push(`*Location:* ${loc.name}`)
     if (loc.address) L.push(`${loc.address}\n${mapsLink(loc.address)}`)

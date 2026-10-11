@@ -45,8 +45,7 @@ export function CallSheetLinkView({ data: d, updatedAt }) {
   const on = (k) => lay.details?.[k] !== false
   const grid = [
     // no Shooting call any more (Alex, 11 Oct), not even on links shared before
-    d.sheet.lunch && ['lunch', label('lunch', 'Lunch'), d.sheet.lunch],
-    on('wrap') && d.day.wrapTime && ['wrap', label('wrap', 'Est. wrap'), d.day.wrapTime],
+    // no Break or Est. wrap any more (Alex, 11 Oct), also on links shared before
     d.sun && ['sun', 'Sun', `${d.sun.sunrise} · ${d.sun.sunset}`],
   ].filter(Boolean)
   // no crew on the ordino any more (Alex, 11 Oct), also on links shared before

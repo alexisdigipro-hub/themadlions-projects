@@ -157,7 +157,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
         // (Alex, 11 Oct): each shows when it is filled in, and leaving it empty keeps it off the link
         tagline: sheet.tagline || csd.tagline || '',
         notes: on('note') ? sheet.notes || '' : '',
-        lunch: sheet.lunch || lunchDefault || '',
+        lunch: '', // the break and the wrap left the ordino (Alex, 11 Oct)
         parking: on('location') && linkShow('parking') ? sheet.parking || csd.parking || '' : '',
         hospital: on('location') ? sheet.weather || csd.hospital || '' : '',
         footer: csd.footer || '',
@@ -429,15 +429,11 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
     <div className="ordino-form">
       <section className="ordino-sec">
         <h3><span className="ordino-n">1</span>The day</h3>
-        {/* date and title side by side (Alex, 11 Oct: tidier, more in view) */}
-        <div className="ordino-pair">
+        {/* date, call and title on one line (Alex, 11 Oct); no Break or Est. wrap any more */}
+        <div className="ordino-day">
           <Field label="Date"><Input type="date" value={day.date || ''} onChange={(e) => moveDate(e.target.value)} /></Field>
-          <Field label="Title"><Input value={sheet.title || ''} placeholder={project.title} onChange={(e) => setSheet('title', e.target.value)} /></Field>
-        </div>
-        <div className="ordino-times">
           <Field label={labelOf(layout, 'call')}><Input inputMode="numeric" placeholder="00:00" value={day.callTime || ''} onChange={(e) => setDay('callTime', e.target.value)} /></Field>
-          <Field label={labelOf(layout, 'lunch')}><Input inputMode="numeric" placeholder="00:00" value={sheet.lunch || lunchDefault || ''} onChange={(e) => setSheet('lunch', e.target.value)} /></Field>
-          <Field label={labelOf(layout, 'wrap')}><Input inputMode="numeric" placeholder="00:00" value={day.wrapTime || ''} onChange={(e) => setDay('wrapTime', e.target.value)} /></Field>
+          <Field label="Title"><Input value={sheet.title || ''} placeholder={project.title} onChange={(e) => setSheet('title', e.target.value)} /></Field>
         </div>
         <Field label="One line for everyone, under the call"><Textarea rows={2} value={sheet.tagline || ''} placeholder={csd.tagline || 'Safety first, bring a jacket, no smoking on set.'} onChange={(e) => setSheet('tagline', e.target.value)} /></Field>
       </section>
