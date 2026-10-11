@@ -61,8 +61,8 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
     setSel(openDay)
     setMode('sheet')
   }, [openDay]) // eslint-disable-line react-hooks/exhaustive-deps
-  // Printed on every call sheet and carried into the shared link. Both live in Settings.
-  const emergency = (state.settings.emergency || []).filter((n) => n && n.number)
+  // Production contacts: the same on every ordino link, kept in Settings > Ordino. (The emergency
+  // numbers went, Alex 11 Oct.)
   const prodContacts = (state.settings.productionContacts || []).filter((c) => c && (c.role || c.name))
   // Default lunch time: the day's call plus the company default. Declared after `day`, which it reads.
   const lunchDefault = (() => { const m = /^(\d{1,2}):(\d{2})$/.exec(day?.callTime || ''); if (!m || !csd.lunchAfterHours) return ''; const t = (Number(m[1]) * 60 + Number(m[2]) + Number(csd.lunchAfterHours) * 60) % 1440; return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}` })()
@@ -161,8 +161,8 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
         hospital: on('location') && linkShow('hospital') ? sheet.weather || csd.hospital || '' : '',
         footer: csd.footer || '',
       },
-      wx: wx && csd.showWeather !== false && linkShow('weather') ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
-      sun: sun && csd.showSun !== false && linkShow('sun') ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,
+      wx: wx && linkShow('weather') ? { tmax: wx.tmax, tmin: wx.tmin, summary: wx.summary, rain: wx.rain } : null,
+      sun: sun && linkShow('sun') ? { sunrise: wx?.sunrise || sun.sunrise, sunset: wx?.sunset || sun.sunset } : null,
       loc: locView && on('location') ? { name: locView.name, address: locView.address, contact: locView.contact, phone: phone(locView.phone) } : null,
       extraLocs: on('location') ? (sheet.extraLocs || []).filter((x) => (x.name || '').trim() || (x.address || '').trim()).map((x) => ({ name: x.name || '', address: x.address || '' })) : [],
       scenes: on('schedule') ? scenes.map((s) => ({ location: s.location, heading: s.heading, from: sceneTime(s.id).from, to: sceneTime(s.id).to })) : [],
@@ -173,7 +173,6 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
       groupCalls: on('groupcalls') ? groupRows.map((r) => ({ who: r.who || '', time: r.time || '' })) : [],
       program: on('program') ? programRows.map((r) => ({ from: r.from || '', to: r.to || '', what: r.what || '' })) : [],
       keyCrew,
-      emergency: on('contacts') ? emergency : [],
       prodContacts: on('contacts') ? prodContacts : [],
       layout: linkLayout(layout, project, customText),
     }
@@ -388,18 +387,10 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
         )
       }
       case 'contacts':
-        return (emergency.length > 0 || prodContacts.length > 0) ? (
+        return prodContacts.length > 0 ? (
           <section>
             {named(b) && h}
             <div className="cs-safety">
-              {emergency.length > 0 && (
-                <div className="cs-emergency">
-                  <div className="cs-loc-h">Emergency</div>
-                  <ul className="plain">
-                    {emergency.map((n) => <li key={n.id}><span>{n.label}</span><a href={`tel:${n.number}`}>{n.number}</a></li>)}
-                  </ul>
-                </div>
-              )}
               {prodContacts.length > 0 && (
                 <div className="cs-prodcontacts">
                   <div className="cs-loc-h">Production</div>
@@ -708,7 +699,7 @@ export default function CallSheets({ openDay = '', onNew, linkOnly = false }) {
         <div className="ordino-adds"><button type="button" className="ordino-pill" onClick={() => setProgram([...program, { from: '', to: '', what: '' }])}><b>+</b>Add a row</button></div>
       </>
     ),
-    contacts: <p className="muted small">The emergency numbers and the production contacts come from Settings &gt; Call sheets, the same on every ordino.</p>,
+    contacts: <p className="muted small">The production contacts come from Settings &gt; Ordino, the same on every ordino.</p>,
     cast: callList(castCalls, 'cast'),
     crew: callList(crewCalls, 'crew'),
   }

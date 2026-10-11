@@ -9,7 +9,7 @@ export const BLOCKS = [
   ['note', 'Note'],
   ['groupcalls', 'Calls by group'],
   ['location', 'Location'],
-  ['contacts', 'Emergency & production'],
+  ['contacts', 'Production'],
   ['schedule', 'Scenes'],
   ['program', 'Program'],
   ['cast', 'Cast'],
