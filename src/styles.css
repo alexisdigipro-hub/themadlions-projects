@@ -2572,6 +2572,10 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
   .calendar .cal-ev[draggable='true'] { cursor: grab; }
   .calendar .cal-ev.dragging { opacity: .4; }
   .calendar .cal-cell.drop-over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); box-shadow: inset 0 0 0 1px var(--accent); }
+  /* with Alt held the event is copied, not moved: the day says so and the event stays solid where it was */
+  .calendar .cal-cell.drop-copy, .cal-wd.drop-copy { position: relative; }
+  .calendar .cal-cell.drop-copy::after, .cal-wd.drop-copy::after { content: '+ Copy'; position: absolute; top: 8px; right: 8px; padding: 2px 9px; border-radius: 999px; background: var(--accent); color: var(--accent-ink, #fff); font-size: 11.5px; font-weight: 700; pointer-events: none; }
+  .calendar:has(.drop-copy) .dragging { opacity: 1 !important; }
   /* the legend sits in the top row between the month and the buttons (Alex, 11 Oct), and the grid
      fills the rest of the screen so nothing is left empty under it */
   .calendar .cal-legend.cal-legend-top { flex: 1 1 0; min-width: 0; justify-content: center; gap: 6px; margin: 0; }

@@ -198,16 +198,48 @@ export default function CalendarView({ projectId = null, title }) {
         .catch((e) => toast(`Not synced to Google Calendar: ${e.message}`, 'error'))
     }
   }
+  /* Alt (Option on a Mac) held while dragging leaves the event where it is and drops a copy on the
+     new day (Alex, 11 Oct), the way Finder and the design apps do. The copy is a new event of its
+     own: same type, project, title, times, place and notes, the same length if it spans days. A
+     copied shoot event is one more shoot day, so the Ordino gets that date too. */
+  const copyEvent = (ev, from, to) => {
+    const n = dayGap(from, to)
+    const { googleEventId, isNew, ...rest } = ev
+    const copy = { ...rest, id: uid(), date: addDays(ev.date, n), endDate: ev.endDate ? addDays(ev.endDate, n) : '', createdBy: user?.id || '', createdByName: user?.name || '' }
+    update((s) => { s.events.push(copy); return s })
+    toast(`Copied to ${fmtDate(copy.date)}`, 'ok')
+    if (synced && copy.type !== 'unavailable') {
+      gcalUpsert({ calendarId, event: copy })
+        .then((r) => { if (r.googleEventId) update((s) => { const i = s.events.findIndex((e) => e.id === copy.id); if (i >= 0) s.events[i] = { ...s.events[i], googleEventId: r.googleEventId }; return s }) })
+        .catch((e) => toast(`Not synced to Google Calendar: ${e.message}`, 'error'))
+    }
+  }
+  const [dropCopy, setDropCopy] = useState(false)
   // the drag handlers a day (month tile or week column) and an event button take
   const dropOn = (iso) => ({
-    onDragOver: (e) => { if (!dragging.current) return; e.preventDefault(); e.dataTransfer.dropEffect = 'move'; if (dropDay !== iso) setDropDay(iso) },
+    onDragOver: (e) => {
+      if (!dragging.current) return
+      e.preventDefault()
+      e.dataTransfer.dropEffect = e.altKey ? 'copy' : 'move'
+      if (dropDay !== iso) setDropDay(iso)
+      if (dropCopy !== e.altKey) setDropCopy(e.altKey)
+    },
     onDragLeave: (e) => { if (!e.currentTarget.contains(e.relatedTarget)) setDropDay((d) => (d === iso ? '' : d)) },
-    onDrop: (e) => { e.preventDefault(); const d = dragging.current; dragging.current = null; setDropDay(''); if (d) moveEvent(d.ev, d.from, iso) },
+    onDrop: (e) => {
+      e.preventDefault()
+      const d = dragging.current
+      dragging.current = null
+      setDropDay('')
+      setDropCopy(false)
+      if (!d) return
+      if (e.altKey) copyEvent(d.ev, d.from, iso)
+      else moveEvent(d.ev, d.from, iso)
+    },
   })
   const dragFrom = (e, iso) => ({
     draggable: canEditDraft(e),
-    onDragStart: (ev) => { dragging.current = { ev: state.events.find((x) => x.id === e.id) || e, from: iso }; ev.dataTransfer.effectAllowed = 'move'; ev.dataTransfer.setData('text/plain', e.id); ev.currentTarget.classList.add('dragging') },
-    onDragEnd: (ev) => { ev.currentTarget.classList.remove('dragging'); dragging.current = null; setDropDay('') },
+    onDragStart: (ev) => { dragging.current = { ev: state.events.find((x) => x.id === e.id) || e, from: iso }; ev.dataTransfer.effectAllowed = 'copyMove'; ev.dataTransfer.setData('text/plain', e.id); ev.currentTarget.classList.add('dragging') },
+    onDragEnd: (ev) => { ev.currentTarget.classList.remove('dragging'); dragging.current = null; setDropDay(''); setDropCopy(false) },
   })
   const remove = (id) => {
     const ev = state.events.find((e) => e.id === id)
@@ -401,7 +433,7 @@ export default function CalendarView({ projectId = null, title }) {
               return (
                 <div
                   key={iso}
-                  className={`cal-wd${iso === today() ? ' today' : ''}${d.getDay() === 0 || d.getDay() === 6 ? ' weekend' : ''}${hol ? ' holiday' : ''}${dropDay === iso ? ' drop-over' : ''}`}
+                  className={`cal-wd${iso === today() ? ' today' : ''}${d.getDay() === 0 || d.getDay() === 6 ? ' weekend' : ''}${hol ? ' holiday' : ''}${dropDay === iso ? ` drop-over${dropCopy ? ' drop-copy' : ''}` : ''}`}
                   onClick={() => editable && setDraft(newEvent(iso))}
                   {...dropOn(iso)}
                 >
@@ -437,7 +469,7 @@ export default function CalendarView({ projectId = null, title }) {
             return (
               <div
                 key={cell.iso}
-                className={`cal-cell ${cell.inMonth ? '' : 'dim'} ${isToday ? 'today' : ''} ${cell.dow >= 5 ? 'weekend' : ''} ${hol ? 'holiday' : ''} ${dropDay === cell.iso ? 'drop-over' : ''}`}
+                className={`cal-cell ${cell.inMonth ? '' : 'dim'} ${isToday ? 'today' : ''} ${cell.dow >= 5 ? 'weekend' : ''} ${hol ? 'holiday' : ''} ${dropDay === cell.iso ? `drop-over${dropCopy ? ' drop-copy' : ''}` : ''}`}
                 onClick={() => editable && setDraft(newEvent(cell.iso))}
                 {...dropOn(cell.iso)}
                 role="gridcell"
