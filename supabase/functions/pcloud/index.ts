@@ -13,11 +13,13 @@
 //   PCLOUD_ROOT    the folder everything goes under, default "/TML HUB"
 //
 // Actions (POST, JSON or multipart): ping · upload · link · links · raw · delete · backup ·
-// deliveryStart · deliveryFinish. See src/lib/pcloud.js.
-// deliveryStart / deliveryFinish (Share = edit, or administrators): a cut for a client goes from the
-// browser straight into ROOT/Deliveries/<stage>/<title> through a one-file pCloud upload link that
-// lasts three hours, so a big video never passes through this function; then a public pCloud link
-// for the delivery page.
+// deliveryStart · deliveryChunk · deliveryFinish. See src/lib/pcloud.js.
+// deliveryStart / deliveryChunk / deliveryFinish (Share = edit, or administrators): a cut for a client
+// goes into ROOT/Deliveries/<stage>/<title> in pieces of a few MB through pCloud's upload session
+// (upload_create, upload_write in order, upload_save; the calls pCloud's own apps use), so a file of
+// any size fits in this function's limits and the token never leaves it; then a public pCloud link
+// for the delivery page. (A pCloud upload link was tried first; pCloud answered "Log in required" to
+// a browser sending to it, 12 Oct.)
 // backup (administrators): the files the app sends (the workspace's data) and the site's code as
 // GitHub keeps it (a zip of the main branch) go into ROOT/Backups/<date time>, so the whole thing
 // can be put back if anything happens to the site.
@@ -159,7 +161,7 @@ Deno.serve(async (req) => {
       action = String(fd.get('action') || '')
       files = fd.getAll('file').filter((f) => f instanceof File) as File[]
       file = files[0] || null
-      body = { folder: JSON.parse(String(fd.get('folder') || '[]')), scope: JSON.parse(String(fd.get('scope') || 'null')) }
+      body = { folder: JSON.parse(String(fd.get('folder') || '[]')), scope: JSON.parse(String(fd.get('scope') || 'null')), uploadid: fd.get('uploadid'), offset: fd.get('offset') }
     } else {
       body = await req.json().catch(() => ({}))
       action = String(body.action || '')
@@ -268,7 +270,7 @@ Deno.serve(async (req) => {
     }
 
     // deliveries: who may send cuts to clients (Share = edit), administrators always
-    if (action === 'deliveryStart' || action === 'deliveryFinish') {
+    if (action === 'deliveryStart' || action === 'deliveryChunk' || action === 'deliveryFinish') {
       const [{ data: adm }, { data: perm }] = await Promise.all([db.rpc('is_admin'), db.rpc('my_perm', { p_module: 'share' })])
       if (!adm && perm !== 'edit') return json({ error: 'Only people who can send deliveries may upload them.' }, 403)
     }
@@ -276,29 +278,36 @@ Deno.serve(async (req) => {
     if (action === 'deliveryStart') {
       const { path, folderid } = await ensureFolderId(['Deliveries', body.stage || 'Rough cut', body.title || 'Untitled'])
       if (!folderid) return json({ error: 'pCloud did not return the folder.' }, 502)
-      const up = await pc('createuploadlink', { folderid, comment: 'THEMADLIONS delivery', maxfiles: 1, expire: Math.floor(Date.now() / 1000) + 3 * 3600 })
-      if (!up.code) return json({ error: 'pCloud did not make the upload link.' }, 502)
-      return json({ ok: true, host: HOST, code: up.code, uploadlinkid: up.uploadlinkid, path, folderid, since: Date.now() })
+      const up = await pc('upload_create')
+      if (!up.uploadid) return json({ error: 'pCloud did not open the upload.' }, 502)
+      return json({ ok: true, uploadid: up.uploadid, path })
+    }
+
+    // one piece of the file, written at its place; the pieces come in order
+    if (action === 'deliveryChunk') {
+      const uploadid = Number(body.uploadid)
+      const offset = Number(body.offset)
+      if (!uploadid || !file || !(offset >= 0)) return json({ error: 'No piece to write.' }, 400)
+      const url = new URL(`https://${HOST}/upload_write`)
+      url.searchParams.set('access_token', TOKEN)
+      url.searchParams.set('uploadid', String(uploadid))
+      url.searchParams.set('uploadoffset', String(offset))
+      const res = await fetch(url, { method: 'PUT', body: await file.arrayBuffer() })
+      const out = await res.json().catch(() => ({ result: -1, error: `pCloud answered ${res.status}` }))
+      if (out.result !== 0) return json({ error: out.error ? `pCloud: ${out.error}` : `pCloud error ${out.result}`, code: out.result }, 502)
+      return json({ ok: true })
     }
 
     if (action === 'deliveryFinish') {
       const path = String(body.path || '')
       // only a folder deliveryStart made: under ROOT/Deliveries, nothing climbing out of it
       if (!path.startsWith(`${ROOT}/Deliveries/`) || path.includes('..')) return json({ error: 'Not a delivery folder.' }, 400)
-      if (body.uploadlinkid) { try { await pc('deleteuploadlink', { uploadlinkid: Number(body.uploadlinkid) }) } catch { /* expired already */ } }
-      const list = await pc('listfolder', { path })
-      const files = (list.metadata?.contents || []).filter((x: any) => !x.isfolder)
-      const since = Number(body.since) - 60000 || 0
-      const fresh = files.filter((x: any) => new Date(x.created).getTime() >= since)
-      const pool = fresh.length ? fresh : files
-      const name = String(body.name || '')
-      const stem = name.replace(/\.[^.]+$/, '')
-      const file = pool.find((x: any) => x.name === name)
-        || pool.filter((x: any) => x.name.startsWith(stem)).sort((a: any, b: any) => new Date(b.created).getTime() - new Date(a.created).getTime())[0]
-        || pool.sort((a: any, b: any) => new Date(b.created).getTime() - new Date(a.created).getTime())[0]
-      if (!file) return json({ error: 'The file did not arrive in pCloud.' }, 502)
-      const pub = await pc('getfilepublink', { fileid: file.fileid })
-      return json({ ok: true, url: pub.link, fileid: file.fileid, name: file.name, size: file.size, folder: path })
+      const folderid = Number((await pc('createfolderifnotexists', { path })).metadata?.folderid)
+      const saved = await pc('upload_save', { uploadid: Number(body.uploadid), folderid, name: segment(body.name || 'delivery').replace(/ +/g, ' ') || 'delivery', renameifexists: 1 })
+      const meta = saved.metadata?.[0] || saved.metadata
+      if (!meta?.fileid) return json({ error: 'pCloud did not keep the file.' }, 502)
+      const pub = await pc('getfilepublink', { fileid: meta.fileid })
+      return json({ ok: true, url: pub.link, fileid: meta.fileid, name: meta.name, size: meta.size, folder: path })
     }
 
     return json({ error: `Unknown action "${action}".` }, 400)
