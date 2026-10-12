@@ -91,23 +91,26 @@ export async function pcloudDeliver(file, { stage, title, sub, nolink }, { onPro
   return call('deliveryFinish', { uploadid: start.uploadid, path: start.path, name: file.name, nolink })
 }
 
-/* Several files for one delivery (Alex, 12 Oct: "one link for several files"): one after the other
-   into a folder of their own, <stage>/<title>/<sub>, then one public link for that folder, so the
-   client sees and downloads them all from one page. One file alone goes as pcloudDeliver.
+/* Several files for one delivery (Alex, 12 Oct: "one link for several files", then "a button for each
+   and all together"): one after the other into a folder of their own, <stage>/<title>/<sub>, each with
+   its own public link, then one public link for the whole folder. The delivery page shows Download all
+   (the folder) and a button per file. One file alone goes as pcloudDeliver.
    onProgress gets (overall 0..1, index of the file going up). */
 export async function pcloudDeliverMany(files, { stage, title, sub }, { onProgress, signal } = {}) {
   if (files.length === 1) return pcloudDeliver(files[0], { stage, title }, { onProgress: (p) => onProgress?.(p, 0), signal })
   const total = files.reduce((n, f) => n + f.size, 0) || 1
   let done = 0
   let path = ''
+  const list = []
   for (let i = 0; i < files.length; i += 1) {
     const f = files[i]
-    const r = await pcloudDeliver(f, { stage, title, sub, nolink: true }, { onProgress: (p) => onProgress?.((done + p * f.size) / total, i), signal })
+    const r = await pcloudDeliver(f, { stage, title, sub }, { onProgress: (p) => onProgress?.((done + p * f.size) / total, i), signal })
     path = r.folder
+    list.push({ name: r.name || f.name, url: r.url, size: r.size || f.size })
     done += f.size
   }
   const link = await call('deliveryFolderLink', { path })
-  return { ...link, count: files.length }
+  return { ...link, count: files.length, files: list }
 }
 export const pcloudDelete = (fileid, scope) => call('delete', { fileid, scope })
 /* Links for many files of one project (or the library) in one call: { [fileid]: url }. */

@@ -69,9 +69,24 @@ export default function PublicDelivery() {
           {d.client && <p className="dlv-client">{d.client}</p>}
           {d.recipient?.name && <p className="dlv-for">For {d.recipient.name}</p>}
 
+          {/* several files (Alex, 12 Oct): Download all for the whole folder, then one button per file,
+              so the client takes whichever first, or everything at once */}
           <a className="dlv-btn" href={d.link} target="_blank" rel="noreferrer">
-            {stageAction(d.stage)}
+            {d.files?.length > 1 ? `Download all ${d.files.length} files` : stageAction(d.stage)}
           </a>
+          {d.files?.length > 1 && (
+            <ul className="plain dlv-each">
+              {d.files.map((f) => (
+                <li key={f.url}>
+                  <span className="dlv-each-text">
+                    <span className="dlv-each-name">{f.name}</span>
+                    {f.size > 0 && <span className="dlv-each-size">{f.size > 1e9 ? `${(f.size / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(f.size / 1e6))} MB`}</span>}
+                  </span>
+                  <a className="dlv-btn ghost dlv-each-btn" href={f.url} target="_blank" rel="noreferrer">Open</a>
+                </li>
+              ))}
+            </ul>
+          )}
           {/* one line with dots instead of three stacked greys */}
           <p className="dlv-meta">
             {[
