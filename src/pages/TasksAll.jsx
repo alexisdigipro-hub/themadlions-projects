@@ -173,6 +173,10 @@ export default function TasksAll({ slot = null }) {
   const [sel, setSel] = useState(() => (mobile ? 'mine' : firstList()))
   const [menu, setMenu] = useState(false) // phone: the menu of lists folded open over the tasks
   const [q, setQ] = useState('')
+  // Sort by Name, Assignee or Priority (Alex, 12 Oct), on the computer, remembered per device; a second
+  // click on the chosen one goes back to the order dragged by hand
+  const [sortBy, setSortBy] = useState(() => { try { return localStorage.getItem('tml_tasks_sort') || '' } catch { return '' } })
+  const pickSort = (v) => { const next = sortBy === v ? '' : v; setSortBy(next); try { localStorage.setItem('tml_tasks_sort', next) } catch { /* private window */ } }
   const [showDone, setShowDone] = useState(false)
   const [draft, setDraft] = useState(null)
   const [listForm, setListForm] = useState(null) // { id?, name, color, icon }
@@ -253,7 +257,16 @@ export default function TasksAll({ slot = null }) {
   const base = searching ? all.filter(match) : inBin ? binned : current.smart ? all.filter(smartFilter[current.key]) : inList(current.key)
   // the order dragged by hand comes first (Alex, 9 Oct); tasks never placed follow, by date
   const byOrder = (a, b) => (a.order ?? 1e9) - (b.order ?? 1e9) || byDue(a, b)
-  const pending = inBin ? base : base.filter((t) => t.status !== 'done' || current.key === 'done').sort(current.key === 'done' ? byDue : byOrder)
+  const RANK = { urgent: 0, high: 1, normal: 2, low: 3 }
+  const byText = (x, y) => x.localeCompare(y, undefined, { numeric: true, sensitivity: 'base' })
+  const SORTS = {
+    name: (a, b) => byText(a.title || '', b.title || '') || byOrder(a, b),
+    // nobody assigned goes last
+    assignee: (a, b) => (!a.assignee - !b.assignee) || byText(a.assignee || '', b.assignee || '') || byOrder(a, b),
+    priority: (a, b) => (RANK[a.priority] ?? 2) - (RANK[b.priority] ?? 2) || byOrder(a, b),
+  }
+  const sorted = !mobile && !inBin && current.key !== 'done' ? SORTS[sortBy] : null
+  const pending = inBin ? base : base.filter((t) => t.status !== 'done' || current.key === 'done').sort(current.key === 'done' ? byDue : sorted || byOrder)
   const completed = current.smart || searching ? [] : base.filter((t) => t.status === 'done').sort((a, b) => (b.doneAt || '').localeCompare(a.doneAt || ''))
   // One run of tasks in every view, each with its list and project as tags: smart lists used to group
   // them by list, and a task alone in its group could not be dragged anywhere (Alex, 9 Oct)
@@ -547,7 +560,7 @@ export default function TasksAll({ slot = null }) {
     })
   }
   const row = (t, group) => {
-    const canDrag = editable && Array.isArray(group) && group.length > 1 && t.status !== 'done' && !t.deletedAt && !searching
+    const canDrag = editable && Array.isArray(group) && group.length > 1 && t.status !== 'done' && !t.deletedAt && !searching && !sorted
     const late = t.due && t.due < t0 && t.status !== 'done'
     // the list it is on, or its project's name (a delivered project has no list row but keeps its tag)
     // its list (when it is not the one open) and its project, each as a tag
@@ -583,7 +596,7 @@ export default function TasksAll({ slot = null }) {
             {subCount(t).all > 0 ? <button type="button" className={`rem-subs-btn${openSubs.has(t.id) ? ' on' : ''}`} onClick={(e) => { e.stopPropagation(); flipSubs(t.id) }} title={openSubs.has(t.id) ? 'Hide subtasks' : 'Show subtasks'}>☑ {subCount(t).done}/{subCount(t).all} <span aria-hidden="true">▾</span></button>
               : canSub(t) && t.status !== 'done' && !openSubs.has(t.id) && <button type="button" className="rem-subs-btn rem-subs-new" onClick={(e) => { e.stopPropagation(); flipSubs(t.id) }} title="Add a subtask">＋ Subtask</button>}
             {t.due && <span className={late ? 'late' : t.due === t0 ? 'today' : 'due'}>🗓 {t.due === t0 ? 'Today' : late ? `Overdue, ${fmtDate(t.due)}` : fmtDate(t.due)}</span>}
-            {t.notes && <span className="rem-has-notes" title={t.notes}>📝 Note</span>}
+            {t.notes && <span className="rem-has-notes" title={t.notes}>Note</span>}
             {t.deletedAt && <span>🗑 Deleted {fmtDate(t.deletedAt.slice(0, 10))}{t.deletedBy ? ` by ${t.deletedBy}` : ''}</span>}
           </div>
           {openSubs.has(t.id) && (subCount(t).all > 0 || canSub(t)) && (
@@ -646,6 +659,13 @@ export default function TasksAll({ slot = null }) {
         </div>
         {current.own && admin && <button type="button" className="rem-head-btn" onClick={() => setListForm({ id: current.id, name: current.name, color: current.color, icon: current.icon })}>Edit list</button>}
         {editable && inBin && binned.length > 0 && <button type="button" className="rem-head-btn" onClick={emptyBin}>Empty</button>}
+        {!mobile && !inBin && current.key !== 'done' && pending.length > 1 && (
+          <span className="segmented rem-sort" title="Sort by (click again for your own order)">
+            {[['name', 'Name'], ['assignee', 'Assignee'], ['priority', 'Priority']].map(([k, label]) => (
+              <button key={k} type="button" className={sortBy === k ? 'on' : ''} aria-pressed={sortBy === k} onClick={() => pickSort(k)}>{label}</button>
+            ))}
+          </span>
+        )}
         {editable && !inBin && <button type="button" className="rem-head-btn" onClick={() => setDraft(emptyTask({ ...where(), dept: 'Other' }))}>New Task</button>}
       </div>
       <div className="rem-scroll">

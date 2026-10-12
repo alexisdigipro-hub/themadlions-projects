@@ -6759,3 +6759,13 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
 /* Edit details: the Delivered switch that replaced Status (Alex, 11 Oct) */
 .check-row { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
 .check-row input { flex: none; width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); }
+
+/* Tasks: Sort by Name | Assignee | Priority left of New Task (Alex, 12 Oct), the Calendar's glass pills
+   at the height of the New Task button; none chosen means the order dragged by hand */
+.rem-head .segmented.rem-sort { flex: none; margin: 0; padding: 3px; gap: 2px; border-radius: 999px; border: 1px solid var(--g-edge); background: var(--g-card); overflow: visible; }
+.rem-head .segmented.rem-sort button { height: 26px; padding: 0 12px; border: 0; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); transition: background .15s, color .15s, transform .15s; }
+.rem-head .segmented.rem-sort button + button { border-left: 0; }
+.rem-head .segmented.rem-sort button:hover { color: var(--text); background: var(--g-card-2); }
+.rem-head .segmented.rem-sort button:active { transform: scale(.97); }
+.rem-head .segmented.rem-sort button.on { color: var(--text); background: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(255, 255, 255, .07)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 4px 12px rgba(0, 0, 0, .2); }
+html[data-theme='light'] .rem-head .segmented.rem-sort button.on { background: linear-gradient(180deg, rgba(255, 255, 255, .95), rgba(255, 255, 255, .6)); box-shadow: inset 0 1px 0 #fff, 0 4px 12px rgba(0, 0, 0, .1); }
