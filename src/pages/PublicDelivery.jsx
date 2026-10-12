@@ -19,14 +19,36 @@ const mimeOf = (name) => {
   return { mov: 'video/quicktime', mp4: 'video/mp4', m4v: 'video/x-m4v', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', heic: 'image/heic', heif: 'image/heif', gif: 'image/gif', webp: 'image/webp' }[ext] || 'application/octet-stream'
 }
 const canShareFiles = () => typeof navigator !== 'undefined' && !!navigator.canShare && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '')
-async function directUrl(link) {
+async function directUrl(link, download = false) {
   const u = new URL(link)
   const code = u.searchParams.get('code')
   if (!code) throw new Error('Not a pCloud link')
   const host = /(^|\.)e\.pcloud\.link$|eapi/.test(u.hostname) ? 'eapi.pcloud.com' : 'api.pcloud.com'
-  const r = await (await fetch(`https://${host}/getpublinkdownload?code=${encodeURIComponent(code)}`)).json()
+  const r = await (await fetch(`https://${host}/getpublinkdownload?code=${encodeURIComponent(code)}${download ? '&forcedownload=1' : ''}`)).json()
   if (r.result !== 0 || !r.hosts?.length) throw new Error(r.error || 'pCloud did not give the file')
   return `https://${r.hosts[0]}${r.path}`
+}
+
+/* Download straight away (Alex, 12 Oct: "Download all should download both at once"): each file's
+   direct address from pCloud, saved as a download, one after the other a moment apart (a browser may
+   ask once to allow several downloads). If pCloud does not answer, its own page opens instead. */
+const fire = (url) => {
+  const a = document.createElement('a')
+  a.href = url
+  a.rel = 'noreferrer'
+  a.setAttribute('download', '')
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+}
+async function downloadFiles(files, fallback) {
+  try {
+    const urls = await Promise.all(files.map((f) => directUrl(f.url, true)))
+    urls.forEach((u, i) => setTimeout(() => fire(u), i * 900))
+  } catch {
+    // after a wait a new tab would be blocked as a pop-up, so this one goes there
+    window.location.href = fallback || files[0]?.url
+  }
 }
 function SaveToPhotos({ file }) {
   const [state, setState] = useState({ step: 'idle', p: 0, ready: null, err: '' })
@@ -130,9 +152,13 @@ export default function PublicDelivery() {
 
           {/* several files (Alex, 12 Oct): Download all for the whole folder, then one button per file,
               so the client takes whichever first, or everything at once */}
-          <a className="dlv-btn" href={d.link} target="_blank" rel="noreferrer">
-            {d.files?.length > 1 ? `Download all ${d.files.length} files` : stageAction(d.stage)}
-          </a>
+          {d.files?.length > 0 ? (
+            <button type="button" className="dlv-btn" onClick={() => downloadFiles(d.files, d.link)}>
+              {d.files.length > 1 ? `Download all ${d.files.length} files` : stageAction(d.stage)}
+            </button>
+          ) : (
+            <a className="dlv-btn" href={d.link} target="_blank" rel="noreferrer">{stageAction(d.stage)}</a>
+          )}
           {d.files?.length > 1 && (
             <ul className="plain dlv-each">
               {d.files.map((f) => (
@@ -143,7 +169,7 @@ export default function PublicDelivery() {
                   </span>
                   <span className="dlv-each-acts">
                     <SaveToPhotos file={f} />
-                    <a className="dlv-btn ghost dlv-each-btn" href={f.url} target="_blank" rel="noreferrer">Open</a>
+                    <button type="button" className="dlv-btn ghost dlv-each-btn" onClick={() => downloadFiles([f], f.url)}>Download</button>
                   </span>
                 </li>
               ))}
