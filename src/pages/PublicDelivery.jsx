@@ -6,6 +6,65 @@ import { stageAction, stageLabel } from './Deliveries.jsx'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
+/* Save to Photos on a phone (Alex, 12 Oct). A web page cannot write into the Photos app itself; what an
+   iPhone allows is its share sheet with a file in it, which offers Save Video / Save Image. So: the
+   first tap fetches the file from pCloud (its direct address, asked of pCloud's public API with the
+   link's code) with a progress count; the second tap opens the share sheet with it (the iPhone wants
+   that tap to come straight from a finger, not after a long download). A file too big for a phone's
+   memory, or a phone that cannot share files, opens the file itself instead, to save from Share. */
+const PHOTO_EXT = /\.(mov|mp4|m4v|jpe?g|png|heic|heif|gif|webp)$/i
+const BIG = 1.5e9
+const mimeOf = (name) => {
+  const ext = (name.split('.').pop() || '').toLowerCase()
+  return { mov: 'video/quicktime', mp4: 'video/mp4', m4v: 'video/x-m4v', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', heic: 'image/heic', heif: 'image/heif', gif: 'image/gif', webp: 'image/webp' }[ext] || 'application/octet-stream'
+}
+const canShareFiles = () => typeof navigator !== 'undefined' && !!navigator.canShare && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '')
+async function directUrl(link) {
+  const u = new URL(link)
+  const code = u.searchParams.get('code')
+  if (!code) throw new Error('Not a pCloud link')
+  const host = /(^|\.)e\.pcloud\.link$|eapi/.test(u.hostname) ? 'eapi.pcloud.com' : 'api.pcloud.com'
+  const r = await (await fetch(`https://${host}/getpublinkdownload?code=${encodeURIComponent(code)}`)).json()
+  if (r.result !== 0 || !r.hosts?.length) throw new Error(r.error || 'pCloud did not give the file')
+  return `https://${r.hosts[0]}${r.path}`
+}
+function SaveToPhotos({ file }) {
+  const [state, setState] = useState({ step: 'idle', p: 0, ready: null, err: '' })
+  if (!canShareFiles() || !PHOTO_EXT.test(file.name || '')) return null
+  const fetchIt = async () => {
+    setState({ step: 'loading', p: 0, ready: null, err: '' })
+    try {
+      const url = await directUrl(file.url)
+      if (file.size > BIG) { window.location.href = url; setState({ step: 'idle', p: 0, ready: null, err: '' }); return }
+      const res = await fetch(url)
+      const total = Number(res.headers.get('content-length')) || file.size || 0
+      const reader = res.body.getReader()
+      const parts = []
+      let got = 0
+      for (;;) {
+        const { done, value } = await reader.read()
+        if (done) break
+        parts.push(value)
+        got += value.length
+        if (total) setState((s) => ({ ...s, p: got / total }))
+      }
+      const f = new File(parts, file.name, { type: mimeOf(file.name) })
+      if (!navigator.canShare({ files: [f] })) { window.location.href = url; setState({ step: 'idle', p: 0, ready: null, err: '' }); return }
+      setState({ step: 'ready', p: 1, ready: f, err: '' })
+    } catch {
+      // pCloud's file servers may refuse a page fetching from them: open the file itself instead
+      try { window.location.href = await directUrl(file.url) } catch { window.open(file.url, '_blank') }
+      setState({ step: 'idle', p: 0, ready: null, err: '' })
+    }
+  }
+  const share = async () => {
+    try { await navigator.share({ files: [state.ready], title: file.name }) } catch { /* closed the sheet */ }
+  }
+  return state.step === 'ready'
+    ? <button type="button" className="dlv-btn dlv-each-btn dlv-photos ready" onClick={share}>Tap to save</button>
+    : <button type="button" className="dlv-btn ghost dlv-each-btn dlv-photos" onClick={fetchIt} disabled={state.step === 'loading'}>{state.step === 'loading' ? `${Math.round(state.p * 100)}%` : 'Save to Photos'}</button>
+}
+
 export default function PublicDelivery() {
   const { token } = useParams()
   const { share, tryPin, pinErr } = usePublicShare(token)
@@ -82,10 +141,17 @@ export default function PublicDelivery() {
                     <span className="dlv-each-name">{f.name}</span>
                     {f.size > 0 && <span className="dlv-each-size">{f.size > 1e9 ? `${(f.size / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(f.size / 1e6))} MB`}</span>}
                   </span>
-                  <a className="dlv-btn ghost dlv-each-btn" href={f.url} target="_blank" rel="noreferrer">Open</a>
+                  <span className="dlv-each-acts">
+                    <SaveToPhotos file={f} />
+                    <a className="dlv-btn ghost dlv-each-btn" href={f.url} target="_blank" rel="noreferrer">Open</a>
+                  </span>
                 </li>
               ))}
             </ul>
+          )}
+          {/* one file uploaded to pCloud: Save to Photos under the big button, on a phone */}
+          {!(d.files?.length > 1) && d.files?.length === 1 && (
+            <div className="dlv-one-photos"><SaveToPhotos file={d.files[0]} /></div>
           )}
           {/* one line with dots instead of three stacked greys */}
           <p className="dlv-meta">

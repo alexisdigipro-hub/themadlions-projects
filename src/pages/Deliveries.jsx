@@ -124,7 +124,8 @@ export default function Deliveries() {
       const now = new Date()
       const sub = draft.version.trim() || `${toISODate(now)} ${String(now.getHours()).padStart(2, '0')}.${String(now.getMinutes()).padStart(2, '0')}`
       const r = await pcloudDeliverMany(files, { stage: stageLabel(draft.stage), title, sub }, { onProgress: (p, i) => setUpload((u) => (u ? { ...u, p, i } : u)), signal: ctrl.signal })
-      setDraft((d) => (d ? { ...d, link: r.url, linkLabel: 'pCloud', files: r.files || [] } : d))
+      // one file is kept too, so the client's page can offer Save to Photos for it
+      setDraft((d) => (d ? { ...d, link: r.url, linkLabel: 'pCloud', files: r.files || [{ name: r.name || files[0].name, url: r.url, size: r.size || files[0].size }] } : d))
       toast(files.length > 1 ? `${files.length} files uploaded to pCloud, one link for them all` : `Uploaded to pCloud: ${r.folder.split('/').slice(-3).join(' / ')}`, 'ok')
     } catch (e) {
       if (!ctrl.signal.aborted) toast(/Unknown action/.test(e.message) ? 'Deploy the new pcloud function first (Supabase > Edge Functions > pcloud).' : e.message, 'error')
