@@ -7,7 +7,7 @@ import { amount, estimateTotals } from '../lib/estimate.js'
 import { fmtDate, toISODate } from '../lib/dates.js'
 import { dirIn, useSlide } from '../lib/glide.js'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
-import { pcloudDeliver } from '../lib/pcloud.js'
+import { pcloudDeliverMany } from '../lib/pcloud.js'
 import { remote } from '../lib/supabase.js'
 
 /* The stages a new delivery can be (Alex, 12 Oct, written his way): RoughCut, PreFinal Cut, Final Cut.
@@ -31,6 +31,7 @@ const emptyDelivery = () => ({
   id: uid(), projectId: '', stage: 'rough', version: '', title: '', client: '',
   link: '', linkLabel: '', password: '', linkExpires: '', pageCloses: '', note: '', feedbackBy: '',
   credits: [], deliverables: [], recipients: [], contactName: '', contactEmail: '', contactPhone: '', pin: '',
+  files: [], // several files uploaded together: [{ name, url, size }], one button each on the page
 })
 
 const emptyEstimate = () => ({
@@ -89,7 +90,7 @@ export default function Deliveries() {
     setDraft({
       id: (r.ref.split(':')[1]) || uid(), projectId: d.projectId || '', stage: d.stage || 'rough',
       version: d.version || '', title: d.title || '', client: d.client || '',
-      link: d.link || '', linkLabel: d.linkLabel || '', password: d.password || '', linkExpires: d.linkExpires || '',
+      link: d.link || '', linkLabel: d.linkLabel || '', password: d.password || '', linkExpires: d.linkExpires || '', files: d.files || [],
       pageCloses: r.expires_at || '', note: d.note || '', feedbackBy: d.feedbackBy || '',
       credits: d.credits || [], deliverables: d.deliverables || [],
       recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
@@ -110,17 +111,21 @@ export default function Deliveries() {
   const setD = (k, v) => setDraft((d) => ({ ...d, [k]: v }))
   /* Upload the cut itself to pCloud (Alex, 12 Oct): into Deliveries/<stage>/<title> in the company
      pCloud, straight from this browser, then the public pCloud link fills Download link. */
-  const [upload, setUpload] = useState(null) // { name, size, p, ctrl }
+  const [upload, setUpload] = useState(null) // { names, size, p, i, ctrl }
   const fileRef = useRef(null)
-  const uploadFile = async (file) => {
-    if (!file || !draft) return
+  // one file or several (Alex, 12 Oct): several share one folder and one link for them all
+  const uploadFiles = async (list) => {
+    const files = [...(list || [])]
+    if (!files.length || !draft) return
     const ctrl = new AbortController()
-    setUpload({ name: file.name, size: file.size, p: 0, ctrl })
+    setUpload({ names: files.map((f) => f.name), size: files.reduce((n, f) => n + f.size, 0), p: 0, i: 0, ctrl })
     try {
-      const title = draft.title.trim() || projects.find((p) => p.id === draft.projectId)?.title || file.name.replace(/\.[^.]+$/, '')
-      const r = await pcloudDeliver(file, { stage: stageLabel(draft.stage), title }, { onProgress: (p) => setUpload((u) => (u ? { ...u, p } : u)), signal: ctrl.signal })
-      setDraft((d) => (d ? { ...d, link: r.url, linkLabel: 'pCloud' } : d))
-      toast(`Uploaded to pCloud: ${r.folder.split('/').slice(-3).join(' / ')}`, 'ok')
+      const title = draft.title.trim() || projects.find((p) => p.id === draft.projectId)?.title || files[0].name.replace(/\.[^.]+$/, '')
+      const now = new Date()
+      const sub = draft.version.trim() || `${toISODate(now)} ${String(now.getHours()).padStart(2, '0')}.${String(now.getMinutes()).padStart(2, '0')}`
+      const r = await pcloudDeliverMany(files, { stage: stageLabel(draft.stage), title, sub }, { onProgress: (p, i) => setUpload((u) => (u ? { ...u, p, i } : u)), signal: ctrl.signal })
+      setDraft((d) => (d ? { ...d, link: r.url, linkLabel: 'pCloud', files: r.files || [] } : d))
+      toast(files.length > 1 ? `${files.length} files uploaded to pCloud, one link for them all` : `Uploaded to pCloud: ${r.folder.split('/').slice(-3).join(' / ')}`, 'ok')
     } catch (e) {
       if (!ctrl.signal.aborted) toast(/Unknown action/.test(e.message) ? 'Deploy the new pcloud function first (Supabase > Edge Functions > pcloud).' : e.message, 'error')
     } finally {
@@ -144,6 +149,7 @@ export default function Deliveries() {
         color: state.projects.find((p) => p.id === draft.projectId)?.color || '#C8503F',
         company: { name: state.workspace.name, logo: state.settings.logo || '', address: state.settings.companyAddress || '', footer: cs.footer || '' },
         link: draft.link.trim(),
+        files: (draft.files || []).filter((f) => f.url),
         linkLabel: draft.linkLabel.trim(),
         password: draft.password.trim(),
         linkExpires: draft.linkExpires,
@@ -463,20 +469,27 @@ export default function Deliveries() {
               <Field label="Title"><Input value={draft.title} onChange={(e) => setD('title', e.target.value)} placeholder="Καίτη Γαρμπή — Το τραγούδι" /></Field>
               <Field label="Client / artist"><Input value={draft.client} onChange={(e) => setD('client', e.target.value)} /></Field>
             </div>
-            <Field label="Download link" hint={remote ? `Paste the SwissTransfer or WeTransfer link you already made, or upload the file: it goes into pCloud under Deliveries / ${stageLabel(draft.stage)} and its link comes here.` : 'Paste the SwissTransfer or WeTransfer link you already made.'}>
+            <Field label="Download link" hint={remote ? `Paste the SwissTransfer or WeTransfer link you already made, or upload: one file or several at once (several get one link for them all). They go into pCloud under Deliveries / ${stageLabel(draft.stage)} and the link comes here.` : 'Paste the SwissTransfer or WeTransfer link you already made.'}>
               <div className="deliv-linkrow">
-                <Input value={draft.link} onChange={(e) => setD('link', e.target.value)} placeholder="https://www.swisstransfer.com/d/…" disabled={!!upload} />
+                {/* a link typed by hand replaces the uploaded files' own buttons */}
+                <Input value={draft.link} onChange={(e) => setDraft((d) => ({ ...d, link: e.target.value, files: [] }))} placeholder="https://www.swisstransfer.com/d/…" disabled={!!upload} />
                 {remote && (
                   <>
-                    <input ref={fileRef} type="file" hidden onChange={(e) => uploadFile(e.target.files?.[0])} />
-                    <Button type="button" onClick={() => fileRef.current?.click()} disabled={!!upload}>Upload to pCloud</Button>
+                    <input ref={fileRef} type="file" multiple hidden onChange={(e) => uploadFiles(e.target.files)} />
+                    <Button type="button" onClick={() => fileRef.current?.click()} disabled={!!upload} title="One file, or several at once: several get one link for them all">Upload to pCloud</Button>
                   </>
                 )}
               </div>
+              {!upload && (draft.files || []).length > 1 && (
+                <ul className="deliv-files">
+                  {draft.files.map((f) => <li key={f.url}><span>{f.name}</span><small className="muted">{f.size > 1e9 ? `${(f.size / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(f.size / 1e6))} MB`}</small></li>)}
+                  <li className="muted small">The page shows Download all and a button for each file.</li>
+                </ul>
+              )}
               {upload && (
                 <div className="deliv-upload" role="status">
                   <div className="deliv-upload-row">
-                    <span className="deliv-upload-name">{upload.name}</span>
+                    <span className="deliv-upload-name">{upload.names.length > 1 ? `File ${upload.i + 1} of ${upload.names.length} · ${upload.names[upload.i]}` : upload.names[0]}</span>
                     <span className="deliv-upload-pct">{upload.p >= 1 ? 'Making the link…' : `${Math.round(upload.p * 100)}% of ${upload.size > 1e9 ? `${(upload.size / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(upload.size / 1e6))} MB`}`}</span>
                     <button type="button" className="link small" onClick={() => upload.ctrl.abort()}>Stop</button>
                   </div>
