@@ -12,7 +12,12 @@
 //   PCLOUD_HOST    eapi.pcloud.com for a European account (default), api.pcloud.com for a US one
 //   PCLOUD_ROOT    the folder everything goes under, default "/TML HUB"
 //
-// Actions (POST, JSON or multipart): ping · upload · link · links · raw · delete · backup. See src/lib/pcloud.js.
+// Actions (POST, JSON or multipart): ping · upload · link · links · raw · delete · backup ·
+// deliveryStart · deliveryFinish. See src/lib/pcloud.js.
+// deliveryStart / deliveryFinish (Share = edit, or administrators): a cut for a client goes from the
+// browser straight into ROOT/Deliveries/<stage>/<title> through a one-file pCloud upload link that
+// lasts three hours, so a big video never passes through this function; then a public pCloud link
+// for the delivery page.
 // backup (administrators): the files the app sends (the workspace's data) and the site's code as
 // GitHub keeps it (a zip of the main branch) go into ROOT/Backups/<date time>, so the whole thing
 // can be put back if anything happens to the site.
@@ -57,6 +62,17 @@ async function ensureFolder(parts: string[]) {
     await pc('createfolderifnotexists', { path })
   }
   return path
+}
+
+/* The same, answering the last folder's path and id. */
+async function ensureFolderId(parts: string[]) {
+  let path = ROOT
+  let meta = (await pc('createfolderifnotexists', { path })).metadata
+  for (const p of parts.map(segment)) {
+    path += '/' + p
+    meta = (await pc('createfolderifnotexists', { path })).metadata
+  }
+  return { path, folderid: Number(meta?.folderid) }
 }
 
 type Scope = { kind: 'project' | 'chat' | 'library'; id: string }
@@ -249,6 +265,40 @@ Deno.serve(async (req) => {
       if (!(await allowed(db, uid, body.scope, fileid, true))) return json({ error: 'You cannot delete this file.' }, 403)
       await pc('deletefile', { fileid })
       return json({ ok: true })
+    }
+
+    // deliveries: who may send cuts to clients (Share = edit), administrators always
+    if (action === 'deliveryStart' || action === 'deliveryFinish') {
+      const [{ data: adm }, { data: perm }] = await Promise.all([db.rpc('is_admin'), db.rpc('my_perm', { p_module: 'share' })])
+      if (!adm && perm !== 'edit') return json({ error: 'Only people who can send deliveries may upload them.' }, 403)
+    }
+
+    if (action === 'deliveryStart') {
+      const { path, folderid } = await ensureFolderId(['Deliveries', body.stage || 'Rough cut', body.title || 'Untitled'])
+      if (!folderid) return json({ error: 'pCloud did not return the folder.' }, 502)
+      const up = await pc('createuploadlink', { folderid, comment: 'THEMADLIONS delivery', maxfiles: 1, expire: Math.floor(Date.now() / 1000) + 3 * 3600 })
+      if (!up.code) return json({ error: 'pCloud did not make the upload link.' }, 502)
+      return json({ ok: true, host: HOST, code: up.code, uploadlinkid: up.uploadlinkid, path, folderid, since: Date.now() })
+    }
+
+    if (action === 'deliveryFinish') {
+      const path = String(body.path || '')
+      // only a folder deliveryStart made: under ROOT/Deliveries, nothing climbing out of it
+      if (!path.startsWith(`${ROOT}/Deliveries/`) || path.includes('..')) return json({ error: 'Not a delivery folder.' }, 400)
+      if (body.uploadlinkid) { try { await pc('deleteuploadlink', { uploadlinkid: Number(body.uploadlinkid) }) } catch { /* expired already */ } }
+      const list = await pc('listfolder', { path })
+      const files = (list.metadata?.contents || []).filter((x: any) => !x.isfolder)
+      const since = Number(body.since) - 60000 || 0
+      const fresh = files.filter((x: any) => new Date(x.created).getTime() >= since)
+      const pool = fresh.length ? fresh : files
+      const name = String(body.name || '')
+      const stem = name.replace(/\.[^.]+$/, '')
+      const file = pool.find((x: any) => x.name === name)
+        || pool.filter((x: any) => x.name.startsWith(stem)).sort((a: any, b: any) => new Date(b.created).getTime() - new Date(a.created).getTime())[0]
+        || pool.sort((a: any, b: any) => new Date(b.created).getTime() - new Date(a.created).getTime())[0]
+      if (!file) return json({ error: 'The file did not arrive in pCloud.' }, 502)
+      const pub = await pc('getfilepublink', { fileid: file.fileid })
+      return json({ ok: true, url: pub.link, fileid: file.fileid, name: file.name, size: file.size, folder: path })
     }
 
     return json({ error: `Unknown action "${action}".` }, 400)

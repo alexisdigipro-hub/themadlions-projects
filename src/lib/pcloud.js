@@ -66,6 +66,32 @@ export async function pcloudUpload({ file, folder, scope }) {
   return call('upload', fd)
 }
 export const pcloudLink = (fileid, scope, download = false) => call('link', { fileid, scope, download })
+
+/* A delivery straight to pCloud (Alex, 12 Oct): the function opens a one-file upload link on
+   <root>/Deliveries/<stage>/<title>, the browser sends the file to pCloud itself (a cut of several GB
+   never goes through the function), then the function closes the link and makes a public one for the
+   client. onProgress gets 0..1; signal (an AbortController's) stops the upload. */
+export async function pcloudDeliver(file, { stage, title, uploader }, { onProgress, signal } = {}) {
+  const start = await call('deliveryStart', { stage, title })
+  await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `https://${start.host}/uploadtolink?code=${encodeURIComponent(start.code)}&names=${encodeURIComponent(uploader || 'THEMADLIONS')}&nopartial=1`)
+    xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress?.(e.loaded / e.total) }
+    xhr.onload = () => {
+      let r = null
+      try { r = JSON.parse(xhr.responseText) } catch {}
+      if (r && r.result === 0) resolve(r)
+      else reject(new Error(r?.error ? `pCloud: ${r.error}` : `pCloud answered ${xhr.status}.`))
+    }
+    xhr.onerror = () => reject(new Error('The upload to pCloud was cut off. Check the connection and try again.'))
+    xhr.onabort = () => reject(new Error('Upload stopped.'))
+    signal?.addEventListener('abort', () => xhr.abort())
+    const fd = new FormData()
+    fd.append('file', file, file.name)
+    xhr.send(fd)
+  })
+  return call('deliveryFinish', { uploadlinkid: start.uploadlinkid, path: start.path, name: file.name, since: start.since })
+}
 export const pcloudDelete = (fileid, scope) => call('delete', { fileid, scope })
 /* Links for many files of one project (or the library) in one call: { [fileid]: url }. */
 export const pcloudLinks = async (fileids, scope) => (await call('links', { fileids, scope })).urls || {}
