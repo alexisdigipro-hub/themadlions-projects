@@ -11,7 +11,7 @@ const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day
    iPhone allows is its share sheet with a file in it, which offers Save Video / Save Image. So: the
    first tap fetches the file through our pcloud function (see below) with a progress count; the second tap opens the share sheet with it (the iPhone wants
    that tap to come straight from a finger, not after a long download). A file too big for a phone's
-   memory, or a phone that cannot share files, opens the file itself instead, to save from Share. */
+   memory opens the file itself instead, to save from Share. */
 const PHOTO_EXT = /\.(mov|mp4|m4v|jpe?g|png|heic|heif|gif|webp)$/i
 const BIG = 6e8 // the bytes come through the function, which has a time limit
 const mimeOf = (name) => {
@@ -78,7 +78,7 @@ function SaveToPhotos({ file }) {
         if (total) setState((s) => ({ ...s, p: got / total }))
       }
       const f = new File(parts, file.name, { type: mimeOf(file.name) })
-      if (!navigator.canShare({ files: [f] })) { window.location.href = await directUrl(file.url, false); setState({ step: 'idle', p: 0, ready: null, err: '' }); return }
+      // no more opening the file instead (Alex, 12 Oct: "it does the same as Open"): the share sheet is tried anyway
       setState({ step: 'ready', p: 1, ready: f, err: '' })
     } catch (e) {
       // say what went wrong right here instead of leaving for pCloud's own page
@@ -86,9 +86,17 @@ function SaveToPhotos({ file }) {
     }
   }
   const share = async () => {
-    try { await navigator.share({ files: [state.ready], title: file.name }) } catch { /* closed the sheet */ }
+    // the file alone: with a title next to it the iPhone may offer to share the text instead of Save Video
+    try { await navigator.share({ files: [state.ready] }) } catch (e) {
+      if (e?.name !== 'AbortError') setState((s) => ({ ...s, err: `${e?.name || 'Error'}: ${e?.message || 'the phone refused'}` }))
+    }
   }
-  if (state.step === 'ready') return <button type="button" className="dlv-btn dlv-each-btn dlv-photos ready" onClick={share}>Tap to save</button>
+  if (state.step === 'ready') return (
+    <>
+      <button type="button" className="dlv-btn dlv-each-btn dlv-photos ready" onClick={share}>Tap to save</button>
+      {state.err && <span className="dlv-photos-err">Could not save: {state.err}</span>}
+    </>
+  )
   return (
     <>
       <button type="button" className="dlv-btn ghost dlv-each-btn dlv-photos" onClick={fetchIt} disabled={state.step === 'loading'}>{state.step === 'loading' ? `${Math.round(state.p * 100)}%` : state.err ? 'Try again' : 'Save to Photos'}</button>
