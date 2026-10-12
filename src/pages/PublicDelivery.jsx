@@ -49,6 +49,17 @@ const fire = (url) => {
   a.click()
   a.remove()
 }
+// plays the file in the browser (its address without forcedownload); pCloud's own page if that fails
+async function previewFile(f) {
+  try {
+    const a = document.createElement('a')
+    a.href = await directUrl(f.url, false)
+    a.rel = 'noreferrer'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  } catch { window.location.href = f.url }
+}
 async function downloadFiles(files, fallback) {
   try {
     const urls = await Promise.all(files.map((f) => directUrl(f.url)))
@@ -188,7 +199,10 @@ export default function PublicDelivery() {
                   </span>
                   <span className="dlv-each-acts">
                     <SaveToPhotos file={f} />
-                    <button type="button" className="dlv-btn ghost dlv-each-btn" onClick={() => downloadFiles([f], f.url)}>Download</button>
+                    {/* on a phone the file goes to Photos with the button beside it, so this one plays it (Alex, 12 Oct) */}
+                    {canShareFiles() && PHOTO_EXT.test(f.name || '')
+                      ? <button type="button" className="dlv-btn ghost dlv-each-btn" onClick={() => previewFile(f)}>Preview</button>
+                      : <button type="button" className="dlv-btn ghost dlv-each-btn" onClick={() => downloadFiles([f], f.url)}>Download</button>}
                   </span>
                 </li>
               ))}
