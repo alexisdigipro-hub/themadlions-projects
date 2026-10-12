@@ -26,7 +26,8 @@ const canShareFiles = () => typeof navigator !== 'undefined' && !!navigator.canS
 const codeOf = (link) => { const c = new URL(link).searchParams.get('code'); if (!c) throw new Error('Not a pCloud link'); return c }
 async function directUrl(link, download = true) {
   const host = /(^|\.)e\.pcloud\.link$|eapi/.test(new URL(link).hostname) ? 'eapi.pcloud.com' : 'api.pcloud.com'
-  const r = await (await fetch(`https://${host}/getpublinkdownload?code=${encodeURIComponent(codeOf(link))}${download ? '&forcedownload=1' : ''}`)).json()
+  // without the page's address: pCloud answers "Invalid link referer" to a link asked from another site (checked 12 Oct)
+  const r = await (await fetch(`https://${host}/getpublinkdownload?code=${encodeURIComponent(codeOf(link))}${download ? '&forcedownload=1' : ''}`, { referrerPolicy: 'no-referrer' })).json()
   if (r.result !== 0 || !r.hosts?.length) throw new Error(r.error || 'pCloud did not give the file')
   return `https://${r.hosts[0]}${r.path}`
 }
