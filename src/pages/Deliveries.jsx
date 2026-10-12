@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
@@ -7,6 +7,8 @@ import { amount, estimateTotals } from '../lib/estimate.js'
 import { fmtDate, toISODate } from '../lib/dates.js'
 import { dirIn, useSlide } from '../lib/glide.js'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
+import { pcloudDeliver } from '../lib/pcloud.js'
+import { remote } from '../lib/supabase.js'
 
 export const STAGES = [
   ['rough', 'Rough cut'],
@@ -106,6 +108,26 @@ export default function Deliveries() {
     }))
   }
   const setD = (k, v) => setDraft((d) => ({ ...d, [k]: v }))
+  /* Upload the cut itself to pCloud (Alex, 12 Oct): into Deliveries/<stage>/<title> in the company
+     pCloud, straight from this browser, then the public pCloud link fills Download link. */
+  const [upload, setUpload] = useState(null) // { name, size, p, ctrl }
+  const fileRef = useRef(null)
+  const uploadFile = async (file) => {
+    if (!file || !draft) return
+    const ctrl = new AbortController()
+    setUpload({ name: file.name, size: file.size, p: 0, ctrl })
+    try {
+      const title = draft.title.trim() || projects.find((p) => p.id === draft.projectId)?.title || file.name.replace(/\.[^.]+$/, '')
+      const r = await pcloudDeliver(file, { stage: stageLabel(draft.stage), title, uploader: user?.name }, { onProgress: (p) => setUpload((u) => (u ? { ...u, p } : u)), signal: ctrl.signal })
+      setDraft((d) => (d ? { ...d, link: r.url, linkLabel: 'pCloud' } : d))
+      toast(`Uploaded to pCloud: ${r.folder.split('/').slice(-3).join(' / ')}`, 'ok')
+    } catch (e) {
+      if (!ctrl.signal.aborted) toast(/Unknown action/.test(e.message) ? 'Deploy the new pcloud function first (Supabase > Edge Functions > pcloud).' : e.message, 'error')
+    } finally {
+      setUpload(null)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
   const publish = async () => {
     if (!draft.link.trim()) return toast('Paste the download link (SwissTransfer, WeTransfer…).', 'error')
@@ -428,8 +450,8 @@ export default function Deliveries() {
       </div>
       </div>
 
-      <Modal open={!!draft} title="Delivery page for the client" wide onClose={() => !busy && setDraft(null)}
-        footer={<><Button variant="ghost" onClick={() => setDraft(null)} disabled={busy}>Cancel</Button><Button variant="primary" onClick={publish} disabled={busy}>{busy ? 'Publishing…' : 'Publish and copy link'}</Button></>}>
+      <Modal open={!!draft} title="Delivery page for the client" wide onClose={() => !busy && !upload && setDraft(null)}
+        footer={<><Button variant="ghost" onClick={() => setDraft(null)} disabled={busy || !!upload}>Cancel</Button><Button variant="primary" onClick={publish} disabled={busy || !!upload}>{busy ? 'Publishing…' : upload ? 'Uploading…' : 'Publish and copy link'}</Button></>}>
         {draft && (
           <div className="stack">
             <div className="row-3">
@@ -441,7 +463,28 @@ export default function Deliveries() {
               <Field label="Title"><Input value={draft.title} onChange={(e) => setD('title', e.target.value)} placeholder="Καίτη Γαρμπή — Το τραγούδι" /></Field>
               <Field label="Client / artist"><Input value={draft.client} onChange={(e) => setD('client', e.target.value)} /></Field>
             </div>
-            <Field label="Download link" hint="Paste the SwissTransfer or WeTransfer link you already made."><Input value={draft.link} onChange={(e) => setD('link', e.target.value)} placeholder="https://www.swisstransfer.com/d/…" /></Field>
+            <Field label="Download link" hint={remote ? `Paste the SwissTransfer or WeTransfer link you already made, or upload the file: it goes into pCloud under Deliveries / ${stageLabel(draft.stage)} and its link comes here.` : 'Paste the SwissTransfer or WeTransfer link you already made.'}>
+              <div className="deliv-linkrow">
+                <Input value={draft.link} onChange={(e) => setD('link', e.target.value)} placeholder="https://www.swisstransfer.com/d/…" disabled={!!upload} />
+                {remote && (
+                  <>
+                    <input ref={fileRef} type="file" hidden onChange={(e) => uploadFile(e.target.files?.[0])} />
+                    <Button type="button" onClick={() => fileRef.current?.click()} disabled={!!upload}>Upload to pCloud</Button>
+                  </>
+                )}
+              </div>
+              {upload && (
+                <div className="deliv-upload" role="status">
+                  <div className="deliv-upload-row">
+                    <span className="deliv-upload-name">{upload.name}</span>
+                    <span className="deliv-upload-pct">{upload.p >= 1 ? 'Making the link…' : `${Math.round(upload.p * 100)}% of ${upload.size > 1e9 ? `${(upload.size / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(upload.size / 1e6))} MB`}`}</span>
+                    <button type="button" className="link small" onClick={() => upload.ctrl.abort()}>Stop</button>
+                  </div>
+                  <div className="deliv-upload-bar"><i style={{ width: `${Math.round(upload.p * 100)}%` }} /></div>
+                  <small className="muted">Keep this window open until it finishes.</small>
+                </div>
+              )}
+            </Field>
             <div className="row-3">
               <Field label="Where it is hosted"><Input value={draft.linkLabel} onChange={(e) => setD('linkLabel', e.target.value)} placeholder="SwissTransfer" /></Field>
               <Field label="Password on the transfer"><Input value={draft.password} onChange={(e) => setD('password', e.target.value)} placeholder="Leave empty if none" /></Field>

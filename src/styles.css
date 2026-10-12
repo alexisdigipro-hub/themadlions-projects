@@ -2562,6 +2562,18 @@ html[data-theme='light'] .song-sec.now { border-left-color: var(--accent); }
 .calacc-initials { display: grid; place-items: center; background: var(--raised); color: var(--muted); font-size: 10.5px; font-weight: 700; }
 .calacc-person:not(.on) img { filter: grayscale(1); }
 @media (max-width: 820px) { .calacc-count { margin-left: 0; } .calacc-mode.segmented { width: 100%; } .calacc-mode.segmented button { flex: 1; } }
+/* Deliveries: the cut uploaded to pCloud from the form (Alex, 12 Oct): the link box and its button on one
+   line, then the file's name, how far it is, and a slim bar in the accent */
+.deliv-linkrow { display: flex; gap: 8px; align-items: stretch; }
+.deliv-linkrow .input { flex: 1; min-width: 0; }
+.deliv-linkrow .btn { flex: none; white-space: nowrap; }
+.deliv-upload { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding: 10px 12px; border: 1px solid var(--line-soft); border-radius: 14px; background: color-mix(in srgb, var(--panel) 88%, transparent); }
+.deliv-upload-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.deliv-upload-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.deliv-upload-pct { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.deliv-upload-bar { height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--text) 10%, transparent); overflow: hidden; }
+.deliv-upload-bar i { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .25s ease; }
+@media (max-width: 820px) { .deliv-linkrow { flex-direction: column; } }
 /* Team: people who signed up and wait to be accepted (Alex, 11 Oct), as soft tiles with Decline / Accept */
 .join-requests { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 18px; }
 .join-requests h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 2px; font-size: 15px; font-weight: 700; }
