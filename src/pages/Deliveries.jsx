@@ -18,12 +18,12 @@ export const STAGES = [
   ['final', 'Final Cut'],
 ]
 const OLD_STAGES = [['files', 'Final files'], ['treatment', 'Treatment'], ['lookbook', 'Lookbook']]
-/* What the big button says. A treatment is read, a cut is watched, files are downloaded. */
+/* What the big button says: Download Files for every cut (Alex, 12 Oct, his words); an old treatment or
+   lookbook delivery keeps its own. */
 export const stageAction = (k) =>
-  k === 'files' ? 'Download the files'
-  : k === 'treatment' ? 'Read the treatment'
+  k === 'treatment' ? 'Read the treatment'
   : k === 'lookbook' ? 'Open the lookbook'
-  : 'Watch the cut'
+  : 'Download Files'
 export const stageLabel = (k) => [...STAGES, ...OLD_STAGES].find((s) => s[0] === k)?.[1] || 'RoughCut'
 const RESPONSE = { approved: 'Approved', changes: 'Changes asked', seen: 'Seen' }
 
