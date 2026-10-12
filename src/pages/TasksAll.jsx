@@ -596,7 +596,6 @@ export default function TasksAll({ slot = null }) {
             {subCount(t).all > 0 ? <button type="button" className={`rem-subs-btn${openSubs.has(t.id) ? ' on' : ''}`} onClick={(e) => { e.stopPropagation(); flipSubs(t.id) }} title={openSubs.has(t.id) ? 'Hide subtasks' : 'Show subtasks'}>☑ {subCount(t).done}/{subCount(t).all} <span aria-hidden="true">▾</span></button>
               : canSub(t) && t.status !== 'done' && !openSubs.has(t.id) && <button type="button" className="rem-subs-btn rem-subs-new" onClick={(e) => { e.stopPropagation(); flipSubs(t.id) }} title="Add a subtask">＋ Subtask</button>}
             {t.due && <span className={late ? 'late' : t.due === t0 ? 'today' : 'due'}>🗓 {t.due === t0 ? 'Today' : late ? `Overdue, ${fmtDate(t.due)}` : fmtDate(t.due)}</span>}
-            {t.notes && <span className="rem-has-notes" title={t.notes}>Note</span>}
             {t.deletedAt && <span>🗑 Deleted {fmtDate(t.deletedAt.slice(0, 10))}{t.deletedBy ? ` by ${t.deletedBy}` : ''}</span>}
           </div>
           {openSubs.has(t.id) && (subCount(t).all > 0 || canSub(t)) && (
