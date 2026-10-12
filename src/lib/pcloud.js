@@ -73,8 +73,8 @@ export const pcloudLink = (fileid, scope, download = false) => call('link', { fi
    function), then the function saves it there and makes a public link for the client. A piece that
    fails is tried once more. onProgress gets 0..1; signal (an AbortController's) stops it. */
 const PIECE = 8 * 1024 * 1024
-export async function pcloudDeliver(file, { stage, title }, { onProgress, signal } = {}) {
-  const start = await call('deliveryStart', { stage, title })
+export async function pcloudDeliver(file, { stage, title, sub, nolink }, { onProgress, signal } = {}) {
+  const start = await call('deliveryStart', { stage, title, sub })
   for (let offset = 0; offset < file.size; offset += PIECE) {
     if (signal?.aborted) throw new Error('Upload stopped.')
     const send = () => {
@@ -88,7 +88,26 @@ export async function pcloudDeliver(file, { stage, title }, { onProgress, signal
     onProgress?.(Math.min(1, (offset + PIECE) / file.size))
   }
   if (signal?.aborted) throw new Error('Upload stopped.')
-  return call('deliveryFinish', { uploadid: start.uploadid, path: start.path, name: file.name })
+  return call('deliveryFinish', { uploadid: start.uploadid, path: start.path, name: file.name, nolink })
+}
+
+/* Several files for one delivery (Alex, 12 Oct: "one link for several files"): one after the other
+   into a folder of their own, <stage>/<title>/<sub>, then one public link for that folder, so the
+   client sees and downloads them all from one page. One file alone goes as pcloudDeliver.
+   onProgress gets (overall 0..1, index of the file going up). */
+export async function pcloudDeliverMany(files, { stage, title, sub }, { onProgress, signal } = {}) {
+  if (files.length === 1) return pcloudDeliver(files[0], { stage, title }, { onProgress: (p) => onProgress?.(p, 0), signal })
+  const total = files.reduce((n, f) => n + f.size, 0) || 1
+  let done = 0
+  let path = ''
+  for (let i = 0; i < files.length; i += 1) {
+    const f = files[i]
+    const r = await pcloudDeliver(f, { stage, title, sub, nolink: true }, { onProgress: (p) => onProgress?.((done + p * f.size) / total, i), signal })
+    path = r.folder
+    done += f.size
+  }
+  const link = await call('deliveryFolderLink', { path })
+  return { ...link, count: files.length }
 }
 export const pcloudDelete = (fileid, scope) => call('delete', { fileid, scope })
 /* Links for many files of one project (or the library) in one call: { [fileid]: url }. */

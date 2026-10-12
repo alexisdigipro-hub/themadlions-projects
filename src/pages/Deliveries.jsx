@@ -7,7 +7,7 @@ import { amount, estimateTotals } from '../lib/estimate.js'
 import { fmtDate, toISODate } from '../lib/dates.js'
 import { dirIn, useSlide } from '../lib/glide.js'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
-import { pcloudDeliver } from '../lib/pcloud.js'
+import { pcloudDeliverMany } from '../lib/pcloud.js'
 import { remote } from '../lib/supabase.js'
 
 /* The stages a new delivery can be (Alex, 12 Oct, written his way): RoughCut, PreFinal Cut, Final Cut.
@@ -110,17 +110,21 @@ export default function Deliveries() {
   const setD = (k, v) => setDraft((d) => ({ ...d, [k]: v }))
   /* Upload the cut itself to pCloud (Alex, 12 Oct): into Deliveries/<stage>/<title> in the company
      pCloud, straight from this browser, then the public pCloud link fills Download link. */
-  const [upload, setUpload] = useState(null) // { name, size, p, ctrl }
+  const [upload, setUpload] = useState(null) // { names, size, p, i, ctrl }
   const fileRef = useRef(null)
-  const uploadFile = async (file) => {
-    if (!file || !draft) return
+  // one file or several (Alex, 12 Oct): several share one folder and one link for them all
+  const uploadFiles = async (list) => {
+    const files = [...(list || [])]
+    if (!files.length || !draft) return
     const ctrl = new AbortController()
-    setUpload({ name: file.name, size: file.size, p: 0, ctrl })
+    setUpload({ names: files.map((f) => f.name), size: files.reduce((n, f) => n + f.size, 0), p: 0, i: 0, ctrl })
     try {
-      const title = draft.title.trim() || projects.find((p) => p.id === draft.projectId)?.title || file.name.replace(/\.[^.]+$/, '')
-      const r = await pcloudDeliver(file, { stage: stageLabel(draft.stage), title }, { onProgress: (p) => setUpload((u) => (u ? { ...u, p } : u)), signal: ctrl.signal })
+      const title = draft.title.trim() || projects.find((p) => p.id === draft.projectId)?.title || files[0].name.replace(/\.[^.]+$/, '')
+      const now = new Date()
+      const sub = draft.version.trim() || `${toISODate(now)} ${String(now.getHours()).padStart(2, '0')}.${String(now.getMinutes()).padStart(2, '0')}`
+      const r = await pcloudDeliverMany(files, { stage: stageLabel(draft.stage), title, sub }, { onProgress: (p, i) => setUpload((u) => (u ? { ...u, p, i } : u)), signal: ctrl.signal })
       setDraft((d) => (d ? { ...d, link: r.url, linkLabel: 'pCloud' } : d))
-      toast(`Uploaded to pCloud: ${r.folder.split('/').slice(-3).join(' / ')}`, 'ok')
+      toast(files.length > 1 ? `${files.length} files uploaded to pCloud, one link for them all` : `Uploaded to pCloud: ${r.folder.split('/').slice(-3).join(' / ')}`, 'ok')
     } catch (e) {
       if (!ctrl.signal.aborted) toast(/Unknown action/.test(e.message) ? 'Deploy the new pcloud function first (Supabase > Edge Functions > pcloud).' : e.message, 'error')
     } finally {
@@ -463,20 +467,20 @@ export default function Deliveries() {
               <Field label="Title"><Input value={draft.title} onChange={(e) => setD('title', e.target.value)} placeholder="Καίτη Γαρμπή — Το τραγούδι" /></Field>
               <Field label="Client / artist"><Input value={draft.client} onChange={(e) => setD('client', e.target.value)} /></Field>
             </div>
-            <Field label="Download link" hint={remote ? `Paste the SwissTransfer or WeTransfer link you already made, or upload the file: it goes into pCloud under Deliveries / ${stageLabel(draft.stage)} and its link comes here.` : 'Paste the SwissTransfer or WeTransfer link you already made.'}>
+            <Field label="Download link" hint={remote ? `Paste the SwissTransfer or WeTransfer link you already made, or upload: one file or several at once (several get one link for them all). They go into pCloud under Deliveries / ${stageLabel(draft.stage)} and the link comes here.` : 'Paste the SwissTransfer or WeTransfer link you already made.'}>
               <div className="deliv-linkrow">
                 <Input value={draft.link} onChange={(e) => setD('link', e.target.value)} placeholder="https://www.swisstransfer.com/d/…" disabled={!!upload} />
                 {remote && (
                   <>
-                    <input ref={fileRef} type="file" hidden onChange={(e) => uploadFile(e.target.files?.[0])} />
-                    <Button type="button" onClick={() => fileRef.current?.click()} disabled={!!upload}>Upload to pCloud</Button>
+                    <input ref={fileRef} type="file" multiple hidden onChange={(e) => uploadFiles(e.target.files)} />
+                    <Button type="button" onClick={() => fileRef.current?.click()} disabled={!!upload} title="One file, or several at once: several get one link for them all">Upload to pCloud</Button>
                   </>
                 )}
               </div>
               {upload && (
                 <div className="deliv-upload" role="status">
                   <div className="deliv-upload-row">
-                    <span className="deliv-upload-name">{upload.name}</span>
+                    <span className="deliv-upload-name">{upload.names.length > 1 ? `File ${upload.i + 1} of ${upload.names.length} · ${upload.names[upload.i]}` : upload.names[0]}</span>
                     <span className="deliv-upload-pct">{upload.p >= 1 ? 'Making the link…' : `${Math.round(upload.p * 100)}% of ${upload.size > 1e9 ? `${(upload.size / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(upload.size / 1e6))} MB`}`}</span>
                     <button type="button" className="link small" onClick={() => upload.ctrl.abort()}>Stop</button>
                   </div>

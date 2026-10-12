@@ -13,13 +13,15 @@
 //   PCLOUD_ROOT    the folder everything goes under, default "/TML HUB"
 //
 // Actions (POST, JSON or multipart): ping · upload · link · links · raw · delete · backup ·
-// deliveryStart · deliveryChunk · deliveryFinish. See src/lib/pcloud.js.
+// deliveryStart · deliveryChunk · deliveryFinish · deliveryFolderLink. See src/lib/pcloud.js.
 // deliveryStart / deliveryChunk / deliveryFinish (Share = edit, or administrators): a cut for a client
 // goes into ROOT/Deliveries/<stage>/<title> in pieces of a few MB through pCloud's upload session
 // (upload_create, upload_write in order, upload_save; the calls pCloud's own apps use), so a file of
 // any size fits in this function's limits and the token never leaves it; then a public pCloud link
 // for the delivery page. (A pCloud upload link was tried first; pCloud answered "Log in required" to
-// a browser sending to it, 12 Oct.)
+// a browser sending to it, 12 Oct.) Several files for one delivery go into a folder of their own
+// (ROOT/Deliveries/<stage>/<title>/<version or date>) and deliveryFolderLink makes one public link for
+// that folder, so the client gets them all on one page.
 // backup (administrators): the files the app sends (the workspace's data) and the site's code as
 // GitHub keeps it (a zip of the main branch) go into ROOT/Backups/<date time>, so the whole thing
 // can be put back if anything happens to the site.
@@ -270,13 +272,13 @@ Deno.serve(async (req) => {
     }
 
     // deliveries: who may send cuts to clients (Share = edit), administrators always
-    if (action === 'deliveryStart' || action === 'deliveryChunk' || action === 'deliveryFinish') {
+    if (action === 'deliveryStart' || action === 'deliveryChunk' || action === 'deliveryFinish' || action === 'deliveryFolderLink') {
       const [{ data: adm }, { data: perm }] = await Promise.all([db.rpc('is_admin'), db.rpc('my_perm', { p_module: 'share' })])
       if (!adm && perm !== 'edit') return json({ error: 'Only people who can send deliveries may upload them.' }, 403)
     }
 
     if (action === 'deliveryStart') {
-      const { path, folderid } = await ensureFolderId(['Deliveries', body.stage || 'Rough cut', body.title || 'Untitled'])
+      const { path, folderid } = await ensureFolderId(['Deliveries', body.stage || 'Rough cut', body.title || 'Untitled', ...(body.sub ? [body.sub] : [])])
       if (!folderid) return json({ error: 'pCloud did not return the folder.' }, 502)
       const up = await pc('upload_create')
       if (!up.uploadid) return json({ error: 'pCloud did not open the upload.' }, 502)
@@ -306,8 +308,19 @@ Deno.serve(async (req) => {
       const saved = await pc('upload_save', { uploadid: Number(body.uploadid), folderid, name: segment(body.name || 'delivery').replace(/ +/g, ' ') || 'delivery', renameifexists: 1 })
       const meta = saved.metadata?.[0] || saved.metadata
       if (!meta?.fileid) return json({ error: 'pCloud did not keep the file.' }, 502)
+      // one of several: the folder gets the link at the end (deliveryFolderLink)
+      if (body.nolink) return json({ ok: true, fileid: meta.fileid, name: meta.name, size: meta.size, folder: path })
       const pub = await pc('getfilepublink', { fileid: meta.fileid })
       return json({ ok: true, url: pub.link, fileid: meta.fileid, name: meta.name, size: meta.size, folder: path })
+    }
+
+    // one public link for a whole delivery folder: every file in it on one pCloud page
+    if (action === 'deliveryFolderLink') {
+      const path = String(body.path || '')
+      if (!path.startsWith(`${ROOT}/Deliveries/`) || path.includes('..')) return json({ error: 'Not a delivery folder.' }, 400)
+      const folderid = Number((await pc('createfolderifnotexists', { path })).metadata?.folderid)
+      const pub = await pc('getfolderpublink', { folderid })
+      return json({ ok: true, url: pub.link, folder: path })
     }
 
     return json({ error: `Unknown action "${action}".` }, 400)
