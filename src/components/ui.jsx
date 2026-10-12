@@ -227,7 +227,7 @@ export function Badge({ color, children, className = '' }) {
   )
 }
 
-export function Modal({ open, title, onClose, children, footer, wide }) {
+export function Modal({ open, title, onClose, children, footer, wide, className = '' }) {
   const self = useRef(null)
   useEffect(() => {
     if (!open) return
@@ -251,7 +251,7 @@ export function Modal({ open, title, onClose, children, footer, wide }) {
   // under the top bar and the tab bar, so its × and its Save could not be reached
   return createPortal(
     <div ref={self} className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
-      <div className={`modal ${wide ? 'modal-wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
+      <div className={`modal ${wide ? 'modal-wide' : ''} ${className}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-head">
           <h2>{title}</h2>
           <button className="icon-btn" onClick={onClose} aria-label="Close">

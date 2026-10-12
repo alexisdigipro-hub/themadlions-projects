@@ -67,30 +67,28 @@ export async function pcloudUpload({ file, folder, scope }) {
 }
 export const pcloudLink = (fileid, scope, download = false) => call('link', { fileid, scope, download })
 
-/* A delivery straight to pCloud (Alex, 12 Oct): the function opens a one-file upload link on
-   <root>/Deliveries/<stage>/<title>, the browser sends the file to pCloud itself (a cut of several GB
-   never goes through the function), then the function closes the link and makes a public one for the
-   client. onProgress gets 0..1; signal (an AbortController's) stops the upload. */
-export async function pcloudDeliver(file, { stage, title, uploader }, { onProgress, signal } = {}) {
+/* A delivery straight to pCloud (Alex, 12 Oct): the function opens an upload into
+   <root>/Deliveries/<stage>/<title>, the file goes up in 8 MB pieces, one after the other (each well
+   within the function's limits, so a cut of several GB is fine and the pCloud key stays in the
+   function), then the function saves it there and makes a public link for the client. A piece that
+   fails is tried once more. onProgress gets 0..1; signal (an AbortController's) stops it. */
+const PIECE = 8 * 1024 * 1024
+export async function pcloudDeliver(file, { stage, title }, { onProgress, signal } = {}) {
   const start = await call('deliveryStart', { stage, title })
-  await new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    xhr.open('POST', `https://${start.host}/uploadtolink?code=${encodeURIComponent(start.code)}&names=${encodeURIComponent(uploader || 'THEMADLIONS')}&nopartial=1`)
-    xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress?.(e.loaded / e.total) }
-    xhr.onload = () => {
-      let r = null
-      try { r = JSON.parse(xhr.responseText) } catch {}
-      if (r && r.result === 0) resolve(r)
-      else reject(new Error(r?.error ? `pCloud: ${r.error}` : `pCloud answered ${xhr.status}.`))
+  for (let offset = 0; offset < file.size; offset += PIECE) {
+    if (signal?.aborted) throw new Error('Upload stopped.')
+    const send = () => {
+      const fd = new FormData()
+      fd.append('file', file.slice(offset, offset + PIECE), 'piece')
+      fd.append('uploadid', String(start.uploadid))
+      fd.append('offset', String(offset))
+      return call('deliveryChunk', fd)
     }
-    xhr.onerror = () => reject(new Error('The upload to pCloud was cut off. Check the connection and try again.'))
-    xhr.onabort = () => reject(new Error('Upload stopped.'))
-    signal?.addEventListener('abort', () => xhr.abort())
-    const fd = new FormData()
-    fd.append('file', file, file.name)
-    xhr.send(fd)
-  })
-  return call('deliveryFinish', { uploadlinkid: start.uploadlinkid, path: start.path, name: file.name, since: start.since })
+    try { await send() } catch (e) { if (signal?.aborted) throw e; await send() }
+    onProgress?.(Math.min(1, (offset + PIECE) / file.size))
+  }
+  if (signal?.aborted) throw new Error('Upload stopped.')
+  return call('deliveryFinish', { uploadid: start.uploadid, path: start.path, name: file.name })
 }
 export const pcloudDelete = (fileid, scope) => call('delete', { fileid, scope })
 /* Links for many files of one project (or the library) in one call: { [fileid]: url }. */

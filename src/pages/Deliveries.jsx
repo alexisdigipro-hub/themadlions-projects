@@ -10,21 +10,21 @@ import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
 import { pcloudDeliver } from '../lib/pcloud.js'
 import { remote } from '../lib/supabase.js'
 
+/* The stages a new delivery can be (Alex, 12 Oct, written his way): RoughCut, PreFinal Cut, Final Cut.
+   Older deliveries made as final files, a treatment or a lookbook keep their names and their pages. */
 export const STAGES = [
-  ['rough', 'Rough cut'],
-  ['prefinal', 'Prefinal'],
-  ['final', 'Final cut'],
-  ['files', 'Final files'],
-  ['treatment', 'Treatment'],
-  ['lookbook', 'Lookbook'],
+  ['rough', 'RoughCut'],
+  ['prefinal', 'PreFinal Cut'],
+  ['final', 'Final Cut'],
 ]
+const OLD_STAGES = [['files', 'Final files'], ['treatment', 'Treatment'], ['lookbook', 'Lookbook']]
 /* What the big button says. A treatment is read, a cut is watched, files are downloaded. */
 export const stageAction = (k) =>
   k === 'files' ? 'Download the files'
   : k === 'treatment' ? 'Read the treatment'
   : k === 'lookbook' ? 'Open the lookbook'
   : 'Watch the cut'
-export const stageLabel = (k) => STAGES.find((s) => s[0] === k)?.[1] || 'Rough cut'
+export const stageLabel = (k) => [...STAGES, ...OLD_STAGES].find((s) => s[0] === k)?.[1] || 'RoughCut'
 const RESPONSE = { approved: 'Approved', changes: 'Changes asked', seen: 'Seen' }
 
 const emptyDelivery = () => ({
@@ -118,7 +118,7 @@ export default function Deliveries() {
     setUpload({ name: file.name, size: file.size, p: 0, ctrl })
     try {
       const title = draft.title.trim() || projects.find((p) => p.id === draft.projectId)?.title || file.name.replace(/\.[^.]+$/, '')
-      const r = await pcloudDeliver(file, { stage: stageLabel(draft.stage), title, uploader: user?.name }, { onProgress: (p) => setUpload((u) => (u ? { ...u, p } : u)), signal: ctrl.signal })
+      const r = await pcloudDeliver(file, { stage: stageLabel(draft.stage), title }, { onProgress: (p) => setUpload((u) => (u ? { ...u, p } : u)), signal: ctrl.signal })
       setDraft((d) => (d ? { ...d, link: r.url, linkLabel: 'pCloud' } : d))
       toast(`Uploaded to pCloud: ${r.folder.split('/').slice(-3).join(' / ')}`, 'ok')
     } catch (e) {
@@ -450,12 +450,12 @@ export default function Deliveries() {
       </div>
       </div>
 
-      <Modal open={!!draft} title="Delivery page for the client" wide onClose={() => !busy && !upload && setDraft(null)}
+      <Modal open={!!draft} title="Delivery page for the client" wide className="glass-form" onClose={() => !busy && !upload && setDraft(null)}
         footer={<><Button variant="ghost" onClick={() => setDraft(null)} disabled={busy || !!upload}>Cancel</Button><Button variant="primary" onClick={publish} disabled={busy || !!upload}>{busy ? 'Publishing…' : upload ? 'Uploading…' : 'Publish and copy link'}</Button></>}>
         {draft && (
           <div className="stack">
             <div className="row-3">
-              <Field label="Stage"><Select value={draft.stage} onChange={(e) => setD('stage', e.target.value)} options={STAGES} /></Field>
+              <Field label="Stage"><Select value={draft.stage} onChange={(e) => setD('stage', e.target.value)} options={STAGES.some((s) => s[0] === draft.stage) ? STAGES : [...STAGES, OLD_STAGES.find((s) => s[0] === draft.stage) || [draft.stage, stageLabel(draft.stage)]]} /></Field>
               <Field label="Project" hint="Fills in the title, the client and the credits."><Select value={draft.projectId} onChange={(e) => pickProject(e.target.value)} options={[['', 'Not in the app'], ...projects.map((p) => [p.id, p.title])]} /></Field>
               <Field label="Version" hint="v1, v2, cut 3…"><Input value={draft.version} onChange={(e) => setD('version', e.target.value)} placeholder="v2" /></Field>
             </div>
