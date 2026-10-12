@@ -22,6 +22,11 @@
 // a browser sending to it, 12 Oct.) Several files for one delivery go into a folder of their own
 // (ROOT/Deliveries/<stage>/<title>/<version or date>) and deliveryFolderLink makes one public link for
 // that folder, so the client gets them all on one page.
+// publicDirect / publicFile (no account: the client's delivery page): for a public link this pCloud
+// account made, its file's direct download address, or the file's bytes themselves (Save to Photos on a
+// phone needs them in the page, and pCloud's servers do not let a page fetch them). A browser cannot
+// ask pCloud's API itself; it is refused. Any other public link is refused here too. Deployed with
+// verify_jwt off for this reason; every other action checks the caller's own sign-in below.
 // backup (administrators): the files the app sends (the workspace's data) and the site's code as
 // GitHub keeps it (a zip of the main branch) go into ROOT/Backups/<date time>, so the whole thing
 // can be put back if anything happens to the site.
@@ -145,6 +150,30 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   if (req.method !== 'POST') return json({ error: 'POST only' }, 405)
   if (!TOKEN) return json({ error: 'PCLOUD_TOKEN is not set in the function secrets.' }, 500)
+
+  // the client's delivery page, signed in to nothing: only public links of this account
+  if (!(req.headers.get('content-type') || '').includes('multipart/form-data')) {
+    const pre = await req.clone().json().catch(() => ({}))
+    if (pre.action === 'publicDirect' || pre.action === 'publicFile') {
+      try {
+        const code = String(pre.code || '')
+        if (!/^[A-Za-z0-9]{8,80}$/.test(code)) return json({ error: 'No link.' }, 400)
+        const mine = await pc('listpublinks')
+        if (!(mine.publinks || []).some((p: any) => p.code === code)) return json({ error: 'Not a link of this production.' }, 403)
+        const r = await pc('getpublinkdownload', { code, forcedownload: pre.action === 'publicDirect' ? 1 : 0 })
+        const url = `https://${Array.isArray(r.hosts) && r.hosts.length ? r.hosts[0] : HOST}${r.path}`
+        if (pre.action === 'publicDirect') return json({ ok: true, url })
+        const file = await fetch(url)
+        if (!file.ok) return json({ error: `pCloud answered ${file.status}` }, 502)
+        const headers: Record<string, string> = { ...CORS, 'Content-Type': file.headers.get('content-type') || 'application/octet-stream', 'Access-Control-Expose-Headers': 'Content-Length' }
+        const len = file.headers.get('content-length')
+        if (len) headers['Content-Length'] = len
+        return new Response(file.body, { headers })
+      } catch (e) {
+        return json({ error: (e as Error).message || String(e) }, 502)
+      }
+    }
+  }
 
   const auth = req.headers.get('Authorization') || ''
   const apikey = req.headers.get('apikey') || Deno.env.get('SUPABASE_ANON_KEY') || ''

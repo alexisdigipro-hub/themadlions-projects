@@ -3,31 +3,38 @@ import { useParams } from 'react-router-dom'
 import { respondToDelivery } from '../lib/shares.js'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
 import { stageAction, stageLabel } from './Deliveries.jsx'
+import { SUPABASE_KEY, SUPABASE_URL } from '../lib/supabaseConfig.js'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
 /* Save to Photos on a phone (Alex, 12 Oct). A web page cannot write into the Photos app itself; what an
    iPhone allows is its share sheet with a file in it, which offers Save Video / Save Image. So: the
-   first tap fetches the file from pCloud (its direct address, asked of pCloud's public API with the
-   link's code) with a progress count; the second tap opens the share sheet with it (the iPhone wants
+   first tap fetches the file through our pcloud function (see below) with a progress count; the second tap opens the share sheet with it (the iPhone wants
    that tap to come straight from a finger, not after a long download). A file too big for a phone's
    memory, or a phone that cannot share files, opens the file itself instead, to save from Share. */
 const PHOTO_EXT = /\.(mov|mp4|m4v|jpe?g|png|heic|heif|gif|webp)$/i
-const BIG = 1.5e9
+const BIG = 6e8 // the bytes come through the function, which has a time limit
 const mimeOf = (name) => {
   const ext = (name.split('.').pop() || '').toLowerCase()
   return { mov: 'video/quicktime', mp4: 'video/mp4', m4v: 'video/x-m4v', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', heic: 'image/heic', heif: 'image/heif', gif: 'image/gif', webp: 'image/webp' }[ext] || 'application/octet-stream'
 }
 const canShareFiles = () => typeof navigator !== 'undefined' && !!navigator.canShare && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '')
-async function directUrl(link, download = false) {
-  const u = new URL(link)
-  const code = u.searchParams.get('code')
-  if (!code) throw new Error('Not a pCloud link')
-  const host = /(^|\.)e\.pcloud\.link$|eapi/.test(u.hostname) ? 'eapi.pcloud.com' : 'api.pcloud.com'
-  const r = await (await fetch(`https://${host}/getpublinkdownload?code=${encodeURIComponent(code)}${download ? '&forcedownload=1' : ''}`)).json()
+/* A direct pCloud address works only for the connection that asked for it (410 Gone from anywhere
+   else, checked 12 Oct), so the page asks pCloud's public API itself (it allows any page) for
+   downloads. Save to Photos has to read the bytes in the page, which pCloud's file servers refuse,
+   so those come through the production's pcloud function, which answers only for its own links. */
+const codeOf = (link) => { const c = new URL(link).searchParams.get('code'); if (!c) throw new Error('Not a pCloud link'); return c }
+async function directUrl(link, download = true) {
+  const host = /(^|\.)e\.pcloud\.link$|eapi/.test(new URL(link).hostname) ? 'eapi.pcloud.com' : 'api.pcloud.com'
+  const r = await (await fetch(`https://${host}/getpublinkdownload?code=${encodeURIComponent(codeOf(link))}${download ? '&forcedownload=1' : ''}`)).json()
   if (r.result !== 0 || !r.hosts?.length) throw new Error(r.error || 'pCloud did not give the file')
   return `https://${r.hosts[0]}${r.path}`
 }
+const fileThroughFunction = (link) => fetch(`${SUPABASE_URL}/functions/v1/pcloud`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY },
+  body: JSON.stringify({ action: 'publicFile', code: codeOf(link) }),
+})
 
 /* Download straight away (Alex, 12 Oct: "Download all should download both at once"): each file's
    direct address from pCloud, saved as a download, one after the other a moment apart (a browser may
@@ -43,7 +50,7 @@ const fire = (url) => {
 }
 async function downloadFiles(files, fallback) {
   try {
-    const urls = await Promise.all(files.map((f) => directUrl(f.url, true)))
+    const urls = await Promise.all(files.map((f) => directUrl(f.url)))
     urls.forEach((u, i) => setTimeout(() => fire(u), i * 900))
   } catch {
     // after a wait a new tab would be blocked as a pop-up, so this one goes there
@@ -56,9 +63,9 @@ function SaveToPhotos({ file }) {
   const fetchIt = async () => {
     setState({ step: 'loading', p: 0, ready: null, err: '' })
     try {
-      const url = await directUrl(file.url)
-      if (file.size > BIG) { window.location.href = url; setState({ step: 'idle', p: 0, ready: null, err: '' }); return }
-      const res = await fetch(url)
+      if (file.size > BIG) { window.location.href = await directUrl(file.url, false); setState({ step: 'idle', p: 0, ready: null, err: '' }); return }
+      const res = await fileThroughFunction(file.url)
+      if (!res.ok || !res.body) throw new Error('No file')
       const total = Number(res.headers.get('content-length')) || file.size || 0
       const reader = res.body.getReader()
       const parts = []
@@ -71,20 +78,23 @@ function SaveToPhotos({ file }) {
         if (total) setState((s) => ({ ...s, p: got / total }))
       }
       const f = new File(parts, file.name, { type: mimeOf(file.name) })
-      if (!navigator.canShare({ files: [f] })) { window.location.href = url; setState({ step: 'idle', p: 0, ready: null, err: '' }); return }
+      if (!navigator.canShare({ files: [f] })) { window.location.href = await directUrl(file.url, false); setState({ step: 'idle', p: 0, ready: null, err: '' }); return }
       setState({ step: 'ready', p: 1, ready: f, err: '' })
-    } catch {
-      // pCloud's file servers may refuse a page fetching from them: open the file itself instead
-      try { window.location.href = await directUrl(file.url) } catch { window.open(file.url, '_blank') }
-      setState({ step: 'idle', p: 0, ready: null, err: '' })
+    } catch (e) {
+      // say what went wrong right here instead of leaving for pCloud's own page
+      setState({ step: 'idle', p: 0, ready: null, err: e?.message || 'It could not be prepared.' })
     }
   }
   const share = async () => {
     try { await navigator.share({ files: [state.ready], title: file.name }) } catch { /* closed the sheet */ }
   }
-  return state.step === 'ready'
-    ? <button type="button" className="dlv-btn dlv-each-btn dlv-photos ready" onClick={share}>Tap to save</button>
-    : <button type="button" className="dlv-btn ghost dlv-each-btn dlv-photos" onClick={fetchIt} disabled={state.step === 'loading'}>{state.step === 'loading' ? `${Math.round(state.p * 100)}%` : 'Save to Photos'}</button>
+  if (state.step === 'ready') return <button type="button" className="dlv-btn dlv-each-btn dlv-photos ready" onClick={share}>Tap to save</button>
+  return (
+    <>
+      <button type="button" className="dlv-btn ghost dlv-each-btn dlv-photos" onClick={fetchIt} disabled={state.step === 'loading'}>{state.step === 'loading' ? `${Math.round(state.p * 100)}%` : state.err ? 'Try again' : 'Save to Photos'}</button>
+      {state.err && <span className="dlv-photos-err">Could not save: {state.err}</span>}
+    </>
+  )
 }
 
 export default function PublicDelivery() {
