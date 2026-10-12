@@ -15,6 +15,18 @@ export default function PublicDelivery() {
   const [busy, setBusy] = useState('')
   const [err, setErr] = useState('')
 
+  // The client's page in Glass dark (Alex, 12 Oct), as the ordino link: the deep blue backdrop and
+  // see-through cards, whatever the app's own theme or skin is, while the page is open
+  useEffect(() => {
+    const html = document.documentElement
+    const before = html.dataset.theme
+    const skin = html.dataset.skin
+    html.dataset.theme = 'dark'
+    html.classList.add('pub-glass-page')
+    delete html.dataset.skin
+    return () => { html.dataset.theme = before; html.classList.remove('pub-glass-page'); if (skin) html.dataset.skin = skin }
+  }, [])
+
   // A page made for one person already knows the name, so the reply form does not ask for it again.
   useEffect(() => {
     if (share?.data?.recipient?.name) setName(share.data.recipient.name)
@@ -44,7 +56,7 @@ export default function PublicDelivery() {
   }
 
   return (
-    <div className="pub dlv">
+    <div className="pub dlv pub-glass">
       <div className="dlv-sheet">
         <header className="dlv-band dlv-top">
           {d.company?.logo && <img className="dlv-logo" src={d.company.logo} alt="" />}
