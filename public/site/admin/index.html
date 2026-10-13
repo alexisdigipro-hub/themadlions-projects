@@ -184,6 +184,8 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 .prod small { color: var(--dim); }
 
 .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.hv-prev { aspect-ratio: 16 / 9; border-radius: 14px; background: #18181b center / cover; border: 1px solid var(--edge); }
+.hv-prev.gray { filter: grayscale(1); }
 .hero-pick { display: grid; grid-template-columns: minmax(0, 1.4fr) 1fr; gap: 20px; align-items: center; }
 @media (max-width: 760px) { .hero-pick { grid-template-columns: 1fr; } }
 .theme { border-radius: 24px; padding: 14px; cursor: pointer; transition: transform .2s, box-shadow .2s, border-color .2s; }
@@ -378,10 +380,20 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
       <div class="head"><div><h1>Look</h1><p>The site's theme. A click changes it for every visitor; Preview opens it without changing anything.</p></div></div>
       <div class="themes" id="themes"></div>
       <div class="card glass" style="margin-top:14px">
+        <h3>Opening video</h3>
+        <div class="hero-pick">
+          <div><div class="hv-prev" id="hvPrev"></div><p class="hint" id="hvNone" style="margin:8px 0 0">No video: the site opens on the picture below.</p></div>
+          <div class="hero-txt"><p class="hint" style="margin:0 0 12px">Plays silently on a loop behind the logo, at the very top of the site. Paste a YouTube, Vimeo or pCloud link. From pCloud, a short light MP4 plays best (under 100 MB).</p>
+            <label class="f"><span>Video link</span><input id="hvLink" placeholder="https://youtu.be/… · vimeo.com/… · e.pcloud.link/…" autocomplete="off"></label>
+            <label class="switch" style="margin:4px 0 14px"><input type="checkbox" id="hvGray"> Black and white</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn red" type="button" id="hvSave">Save</button><button class="btn danger" type="button" id="hvRm">Remove</button></div></div>
+        </div>
+      </div>
+      <div class="card glass" style="margin-top:14px">
         <h3>Opening picture</h3>
         <div class="hero-pick">
-          <div><div id="heroFramer"></div><p class="hint" id="heroNone" style="margin:8px 0 0">No picture yet: the site shows a still from the first film.</p></div>
-          <div class="hero-txt"><p class="hint" style="margin:0 0 12px">The picture at the very top of the site, behind the logo. It stays still and shows in black and white, whatever its colours. A wide photo works best (a crew shot, a set, a frame), at least 2000 px across.</p>
+          <div><div id="heroFramer"></div><p class="hint" id="heroNone" style="margin:8px 0 0">No picture yet: the site shows a still from the first film until the video plays.</p></div>
+          <div class="hero-txt"><p class="hint" style="margin:0 0 12px">Shows behind the logo while the opening video loads, and instead of it when there is none. It stays still and shows in black and white, whatever its colours. A wide photo works best (a crew shot, a set, a frame), at least 2000 px across.</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn red" type="button" id="heroUp"><svg class="i"><use href="#i-plus"/></svg>Upload a picture</button><button class="btn" type="button" id="heroSaveFrame" hidden>Save framing</button><button class="btn danger" type="button" id="heroRm" hidden>Remove</button></div></div>
         </div>
       </div>
@@ -897,14 +909,36 @@ $('heroPick').onchange = async (e) => {
     heroFrame = null; await setSetting('hero_image', heroImage); await setSetting('hero_frame', {}); showHero(); toast('The opening picture is on the site · drag it to frame it')
   } catch (err) { toast(err.message) }
 }
+/* the opening video: site_settings.hero_video { url, kind, id, gray }; {} for none. Not set at all = the showreel */
+const HERO_VIDEO = { url: 'https://www.youtube.com/watch?v=kpIHiBkN5Og', kind: 'yt', id: 'kpIHiBkN5Og' }
+let heroVideo = HERO_VIDEO
+const vidStill = (v) => v.kind === 'yt' ? `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg` : v.kind === 'pc' ? pcThumb(v.id) : `https://vumbnail.com/${v.id}.jpg`
+function showHeroVideo() {
+  const v = parseVideo($('hvLink').value)
+  $('hvPrev').style.backgroundImage = v ? `url('${vidStill(v)}')` : 'none'
+  $('hvPrev').classList.toggle('gray', $('hvGray').checked)
+  $('hvNone').hidden = !!v
+}
+$('hvLink').oninput = $('hvGray').onchange = showHeroVideo
+$('hvSave').onclick = async () => {
+  const v = parseVideo($('hvLink').value)
+  if (!v) { toast('Paste a YouTube, Vimeo or pCloud link'); $('hvLink').focus(); return }
+  heroVideo = { url: v.url, kind: v.kind, id: v.id, gray: $('hvGray').checked }
+  try { await setSetting('hero_video', heroVideo); toast('The opening video is on the site') } catch (err) { toast(err.message) }
+}
+$('hvRm').onclick = async () => {
+  try { await setSetting('hero_video', {}); heroVideo = {}; $('hvLink').value = ''; $('hvGray').checked = false; showHeroVideo(); toast('Removed · the site opens on the picture') } catch (err) { toast(err.message) }
+}
 $('heroRm').onclick = async () => { try { await setSetting('hero_image', ''); heroImage = ''; showHero(); toast('Removed') } catch (err) { toast(err.message) } }
 async function loadLook() {
   try {
     const r = await rest('site_settings?select=key,value')
     const get = (k) => (r.find((x) => x.key === k) || {}).value
     theme = get('theme') || 'dark'; heroImage = get('hero_image') || ''; heroFrame = get('hero_frame') || null
+    heroVideo = r.some((x) => x.key === 'hero_video') ? (get('hero_video') || {}) : HERO_VIDEO
   } catch (e) { toast(e.message) }
   showHero()
+  $('hvLink').value = heroVideo.url || ''; $('hvGray').checked = !!heroVideo.gray; showHeroVideo()
   $('themes').innerHTML = THEMES.map((t) => `
     <div class="theme glass ${t.key === theme ? 'on' : ''}" data-theme="${t.key}" role="button" tabindex="0">
       <div class="pv" style="background:${t.bg}"><img src="../wordmark.png" alt="" style="filter:${t.wm}"><div class="b"></div><div class="tiles">${`<i style="background:${t.card}"></i>`.repeat(4)}</div></div>

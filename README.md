@@ -7,7 +7,7 @@ Web-based film production workspace for The Mad Lions. Dark mode, desktop first,
 
 ## What is inside
 
-- **The company site, https://themadlions.com/** (repository alexisdigipro-hub/themadlions-site; source in `public/site/` here): work, services, Aibsent Studios, process, about, clients, shop and an enquiry form, in Dark / Light / Blue with a Ferrari-red accent. Its admin **Studio** is at https://themadlions.com/admin/ (sign in with a hub administrator account): statistics, films (add, hide, reorder, frame and zoom), enquiries, shop, look and opening picture.
+- **The company site, https://themadlions.com/** (repository alexisdigipro-hub/themadlions-site; source in `public/site/` here): work, services, Aibsent Studios, process, about, clients, shop and an enquiry form, in Dark / Light / Blue with a Ferrari-red accent. Its admin **Studio** is at https://themadlions.com/admin/ (sign in with a hub administrator account): statistics, films (add from YouTube, Vimeo or pCloud, hide, reorder with arrows or a place number, frame and zoom), enquiries, shop, look, the opening video (from a link, plays silently behind the logo) and the opening picture. The numbers under the opening (productions, brands & artists) count the films on the site by themselves.
 - Projects in six categories: Music Video, Event, Editing, Ad, Visuals, IV
 - Script import: PDF, Word (.docx), Final Draft (.fdx), Fountain, plain text, or paste. Pages files: export to PDF first
 - Event category: no script, breakdown or shot list; the Schedule tab becomes a Run of show (event days with timed blocks and owners, standard blocks from load-in to load-out), call sheets show the run of show and talent calls, and progress counts venue, crew, run of show, event days and recap deliverables
