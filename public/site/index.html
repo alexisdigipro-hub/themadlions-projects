@@ -70,12 +70,17 @@ img { display: block; max-width: 100%; }
 /* the opening picture stands still, in black and white (Alex, 13 Oct): the one uploaded in the admin, else a still of the first film */
 .hero .reel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(var(--z, 1)); filter: grayscale(1) contrast(1.06); opacity: 0; transition: opacity 1.2s ease; }
 .hero .reel img.on { opacity: 1; }
+/* the opening video (Studio > Look): silent, looping, cut to fill the screen; it fades in once it plays, over the still */
+.hero .reel .bgv { position: absolute; inset: 0; overflow: hidden; pointer-events: none; opacity: 0; transition: opacity 1.4s ease; }
+.hero .reel .bgv.on { opacity: 1; }
+.hero .reel .bgv.gray { filter: grayscale(1) contrast(1.06); }
+.hero .reel .bgv video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero .reel .bgv iframe { position: absolute; left: 50%; top: 50%; border: 0; width: max(100%, calc(max(100svh, 600px) * 16 / 9)); height: max(100%, 56.25vw); transform: translate(-50%, -50%) scale(1.18); }
 .hero::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, color-mix(in srgb, var(--bg) 35%, transparent), color-mix(in srgb, var(--bg) 85%, transparent) 75%), linear-gradient(180deg, color-mix(in srgb, var(--bg) 50%, transparent), transparent 30%, transparent 60%, var(--bg)); }
 .hero-in { position: relative; z-index: 1; text-align: center; padding: 0 var(--pad); }
 .hero-in .wordmark { width: min(760px, 86vw); margin: 0 auto; }
 .hero-in .kicker { margin: 30px 0 0; font-size: clamp(13px, 1.4vw, 15px); font-weight: 500; letter-spacing: .34em; text-transform: uppercase; color: var(--accent); }
 .hero-in p.line { margin: 14px auto 0; max-width: 620px; font-size: clamp(17px, 2vw, 21px); font-weight: 300; line-height: 1.5; color: color-mix(in srgb, var(--text) 88%, transparent); }
-.hero-cta { margin-top: 34px; display: inline-flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .pill { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 46px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 500; letter-spacing: .04em; border: 1px solid var(--glass-edge); background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); cursor: pointer; transition: transform .2s, background .2s, border-color .2s; }
 .pill:hover { transform: translateY(-1px); background: color-mix(in srgb, var(--hi) 12%, transparent); border-color: color-mix(in srgb, var(--hi) 30%, transparent); }
 .pill:active { transform: scale(.97); }
@@ -305,11 +310,6 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
       <h1 style="margin:0"><img class="wordmark" src="wordmark.png" alt="The Mad Lions"></h1>
       <p class="kicker" data-t="hero.kicker">Video production company</p>
       <p class="line" data-t="hero.line">Commercials, music videos and corporate films, from the first idea to final delivery.</p>
-      <div class="hero-cta">
-        <button class="pill main" type="button" id="reelBtn" data-t="hero.reel">Watch the showreel</button>
-        <a class="pill" href="#work" data-t="hero.work">See the work</a>
-        <a class="pill" href="#contact" data-t="hero.talk">Tell us about your project</a>
-      </div>
     </div>
     <span class="scroll-cue" aria-hidden="true"></span>
   </div>
@@ -442,7 +442,6 @@ const T = {
     'aib.kicker': 'Post-production & AI · a Mad Lions studio', 'aib.lead': 'Our in-house post and AI studio. It finishes our films and takes on yours: from the edit and the grade to visual effects, motion graphics and films made with AI.', 'aib.talk': 'Work with Aibsent', 'aib.all': 'All Aibsent work', 'aib.badge': 'by Aibsent', 'svc.aib': 'Meet Aibsent Studios',
     'shop.label': 'Shop', 'shop.title': 'Mad <b>merch.</b>', 'shop.buy': 'Buy', 'shop.soldout': 'Sold out',
     'hero.kicker': 'Video production company', 'hero.line': 'Commercials, music videos and corporate films, from the first idea to final delivery.',
-    'hero.work': 'See the work', 'hero.talk': 'Tell us about your project', 'hero.reel': 'Watch the showreel',
     'stats.years': 'Years making films', 'stats.prod': 'Productions', 'stats.clients': 'Brands & artists',
     'work.label': 'Selected work', 'work.title': 'Films, <b>made mad.</b>', 'work.more': 'Show all work', 'work.less': 'Show less', 'all': 'All',
     'svc.label': 'Services', 'svc.title': 'What we <b>make.</b>', 'svc.sub': 'One team from the first idea to the final master: we write, produce, shoot and finish in house.', 'svc.ex': 'Watch',
@@ -464,7 +463,6 @@ const T = {
     'aib.kicker': 'Post-production & AI · ένα studio των Mad Lions', 'aib.lead': 'Το δικό μας studio για post-production και AI. Ολοκληρώνει τις ταινίες μας και αναλαμβάνει και τις δικές σας: από μοντάζ και χρώμα ως visual effects, motion graphics και ταινίες με AI.', 'aib.talk': 'Δουλέψτε με την Aibsent', 'aib.all': 'Όλη η δουλειά της Aibsent', 'aib.badge': 'by Aibsent', 'svc.aib': 'Γνωρίστε την Aibsent Studios',
     'shop.label': 'Shop', 'shop.title': 'Mad <b>merch.</b>', 'shop.buy': 'Αγορά', 'shop.soldout': 'Εξαντλήθηκε',
     'hero.kicker': 'Εταιρεία παραγωγής βίντεο', 'hero.line': 'Διαφημιστικά, βίντεο κλιπ και εταιρικές ταινίες, από την πρώτη ιδέα ως την τελική παράδοση.',
-    'hero.work': 'Δείτε τη δουλειά', 'hero.talk': 'Πείτε μας για το project σας', 'hero.reel': 'Δείτε το showreel',
     'stats.years': 'Χρόνια στις ταινίες', 'stats.prod': 'Παραγωγές', 'stats.clients': 'Brands & καλλιτέχνες',
     'work.label': 'Επιλεγμένη δουλειά', 'work.title': 'Ταινίες, <b>με τρέλα.</b>', 'work.more': 'Όλη η δουλειά', 'work.less': 'Λιγότερα', 'all': 'Όλα',
     'svc.label': 'Υπηρεσίες', 'svc.title': 'Τι <b>φτιάχνουμε.</b>', 'svc.sub': 'Μία ομάδα από την πρώτη ιδέα ως το τελικό master: γράφουμε, οργανώνουμε, γυρίζουμε και ολοκληρώνουμε μόνοι μας.', 'svc.ex': 'Δείτε',
@@ -683,6 +681,7 @@ function startReel() {
   try { cached = localStorage.getItem('tml_site_hero') || '' } catch (e) {}
   const first = WORKS.find((w) => w.k === 'yt')
   if (cached) setHero(cached); else if (first) setHero('', first)
+  setHeroVideo(heroVideo)
 }
 
 /* the enquiry form: two rows of choices, the fields, straight into the hub */
@@ -769,9 +768,38 @@ function track(kind, ref) {
     body: JSON.stringify({ kind, ref: ref ? String(ref).slice(0, 200) : null, path: location.pathname.slice(0, 200), referrer, device, lang, visitor }) }).catch(() => {})
 }
 
-/* the showreel plays from the opening (its YouTube id is site_settings.showreel) */
-let showreel = 'kpIHiBkN5Og'
-document.getElementById('reelBtn').onclick = () => play({ t: 'Showreel', k: 'yt', id: showreel })
+/* the opening video: site_settings.hero_video { kind, id, gray } from Studio > Look, the showreel until one is set,
+   {} for none (then the still alone). Silent and looping; YouTube's frame is enlarged so its edges stay out of view. */
+const HERO_VIDEO = { kind: 'yt', id: 'kpIHiBkN5Og' }
+let heroVideo = HERO_VIDEO
+try { const c = localStorage.getItem('tml_site_hero_video'); if (c) heroVideo = JSON.parse(c) } catch (e) {}
+function setHeroVideo(v) {
+  const reel = document.getElementById('reel'), old = reel.querySelector('.bgv')
+  if (old) old.remove()
+  if (!v || !v.id || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  const box = document.createElement('div')
+  box.className = 'bgv' + (v.gray ? ' gray' : '')
+  const show = () => box.classList.add('on')
+  if (v.kind === 'pc') {
+    const el = document.createElement('video')
+    el.muted = true; el.loop = true; el.autoplay = true; el.playsInline = true; el.setAttribute('muted', '')
+    el.addEventListener('playing', show, { once: true })
+    box.appendChild(el)
+    const [host, code] = pc(v.id)
+    fetch(`https://${host}.pcloud.com/getpublinkdownload?code=${encodeURIComponent(code)}`, { referrerPolicy: 'no-referrer' }).then((r) => r.json())
+      .then((j) => { if (j.result === 0 && j.hosts) { el.src = `https://${j.hosts[0]}${j.path}`; el.play().catch(() => {}) } }).catch(() => {})
+  } else {
+    const f = document.createElement('iframe')
+    f.title = ''; f.tabIndex = -1; f.allow = 'autoplay; encrypted-media'
+    f.src = v.kind === 'vm'
+      ? `https://player.vimeo.com/video/${v.id}?background=1&dnt=1`
+      : `https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&mute=1&loop=1&playlist=${v.id}&controls=0&playsinline=1&rel=0&modestbranding=1&disablekb=1&iv_load_policy=3&fs=0`
+    // the players show black for a moment before the first frame
+    f.addEventListener('load', () => setTimeout(show, 1500), { once: true })
+    box.appendChild(f)
+  }
+  reel.appendChild(box)
+}
 
 /* the look chosen in the admin */
 async function loadTheme() {
@@ -787,7 +815,9 @@ async function loadTheme() {
     try { was = localStorage.getItem('tml_site_hero') || ''; localStorage.setItem('tml_site_hero', hero) } catch (e) {}
     if (hero && hero !== was) setHero(hero)
     if (!hero && was) { const first = WORKS.find((w) => w.k === 'yt'); if (first) setHero('', first) }
-    if (get('showreel')) showreel = String(get('showreel'))
+    const hv = rows.some((r) => r.key === 'hero_video') ? get('hero_video') : HERO_VIDEO
+    try { localStorage.setItem('tml_site_hero_video', JSON.stringify(hv || {})) } catch (e) {}
+    if (JSON.stringify(hv || {}) !== JSON.stringify(heroVideo || {})) { heroVideo = hv; setHeroVideo(hv) }
     const th = get('theme')
     if (!th) return
     if (th === 'dark') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = th
