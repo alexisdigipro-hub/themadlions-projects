@@ -5,11 +5,14 @@ import { remote, supabase } from './supabase.js'
 // PIN or no PIN — while reading noticeably shorter than the 24 hex characters this replaced.
 const TOKEN_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 const token = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => TOKEN_CHARS[b % TOKEN_CHARS.length]).join('')
-// Short links (Alex, 11 Oct): on the live app every link goes out as go.themadlions.com/<kind>/<token>.
+// Short links (Alex, 11 Oct): on the live app every link goes out as go.themadlions.com/?<kind>/<token>.
 // That address is the tml-links repository on GitHub Pages (DNS: CNAME go -> alexisdigipro-hub.github.io
 // at Papaki), whose one page sends it on to #/<kind>/<token> here. Old github.io links keep working.
 // Anywhere else (local build, preview) links point at the app itself, as before.
-const SHORT = 'https://go.themadlions.com/'
+// From 13 Oct the kind and token ride after a "?" (go.themadlions.com/?d/<token>): that address is the
+// short-link site's own page, answered 200, so chats read its logo preview; /d/<token> only exists as its
+// 404 page and chats show nothing for a 404. Older /d/<token> links still open.
+const SHORT = 'https://go.themadlions.com/?'
 const linkBase = () => (location.hostname === 'alexisdigipro-hub.github.io' ? SHORT : `${location.origin}${location.pathname}#/`)
 export const shareUrl = (t) => `${linkBase()}s/${t}`
 export const deliveryUrl = (t) => `${linkBase()}d/${t}`
