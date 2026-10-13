@@ -4115,10 +4115,6 @@ html[data-public='1'] body { background: var(--bg); }
   .mc-ev-title { font-size: 15px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
   .mc-ev-sub { font-size: 12.5px; color: var(--muted); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mc-none { margin: 2px 0 4px; }
-  .mc-upcoming { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line-soft); display: flex; flex-direction: column; gap: 10px; }
-  .mc-upcoming-head { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-  .mc-upcoming-day { display: flex; flex-direction: column; gap: 6px; }
-  .mc-upcoming-date { align-self: flex-start; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--text); background: none; border: 0; padding: 0; cursor: pointer; }
 }
 
 /* Chat on a phone, Telegram-like (Alex, 8 Oct). The list fills the screen: big round faces,
