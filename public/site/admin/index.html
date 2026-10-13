@@ -170,7 +170,6 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 
 .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .hero-pick { display: grid; grid-template-columns: minmax(0, 1.4fr) 1fr; gap: 20px; align-items: center; }
-.hero-pv { aspect-ratio: 21 / 9; border-radius: 16px; background: #18181b center / cover; filter: grayscale(1); display: grid; place-items: center; text-align: center; padding: 20px; color: var(--dim); font-size: 13px; border: 1px solid var(--edge); }
 @media (max-width: 760px) { .hero-pick { grid-template-columns: 1fr; } }
 .theme { border-radius: 24px; padding: 14px; cursor: pointer; transition: transform .2s, box-shadow .2s, border-color .2s; }
 .theme:hover { transform: translateY(-3px); }
@@ -238,6 +237,22 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
   .area { height: 170px; }
   .drawer { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 92svh; transform: translateY(calc(100% + 30px)); }
 }
+
+/* framing: drag the picture to choose what shows, the slider zooms (Alex: "adjust & scale any image") */
+.framer { display: grid; gap: 10px; }
+.frms { display: flex; gap: 10px; align-items: flex-start; }
+.frm { position: relative; flex: 1; border-radius: 14px; overflow: hidden; background: #18181b; border: 1px solid var(--edge); cursor: grab; touch-action: none; user-select: none; }
+.frm.dragging { cursor: grabbing; }
+.frm img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; transition: transform .05s; }
+.frm.gray img { filter: grayscale(1) contrast(1.06); }
+.frm .tag { position: absolute; left: 8px; top: 8px; z-index: 1; height: 20px; padding: 0 7px; border-radius: 6px; background: rgba(0,0,0,.6); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; display: grid; place-items: center; }
+.frm .hand { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 1; padding: 6px 10px; border-radius: 99px; background: rgba(0,0,0,.55); font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; }
+.frm:hover .hand { opacity: 1; }
+.frm-row { display: flex; align-items: center; gap: 10px; }
+.frm-row input[type=range] { flex: 1; height: 4px; padding: 0; border: 0; border-radius: 99px; background: rgba(255,255,255,.14); appearance: none; -webkit-appearance: none; box-shadow: none; }
+.frm-row input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(212,0,0,.35); cursor: pointer; }
+.frm-row input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border: 0; border-radius: 50%; background: #fff; cursor: pointer; }
+.frm-row .zv { min-width: 44px; text-align: right; font-size: 12.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
@@ -346,9 +361,9 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
       <div class="card glass" style="margin-top:14px">
         <h3>Opening picture</h3>
         <div class="hero-pick">
-          <div class="hero-pv" id="heroPv"><span>No picture yet: the site shows a still from the first film</span></div>
+          <div><div id="heroFramer"></div><p class="hint" id="heroNone" style="margin:8px 0 0">No picture yet: the site shows a still from the first film.</p></div>
           <div class="hero-txt"><p class="hint" style="margin:0 0 12px">The picture at the very top of the site, behind the logo. It stays still and shows in black and white, whatever its colours. A wide photo works best (a crew shot, a set, a frame), at least 2000 px across.</p>
-            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn red" type="button" id="heroUp"><svg class="i"><use href="#i-plus"/></svg>Upload a picture</button><button class="btn danger" type="button" id="heroRm" hidden>Remove</button></div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn red" type="button" id="heroUp"><svg class="i"><use href="#i-plus"/></svg>Upload a picture</button><button class="btn" type="button" id="heroSaveFrame" hidden>Save framing</button><button class="btn danger" type="button" id="heroRm" hidden>Remove</button></div></div>
         </div>
       </div>
     </section>
@@ -360,7 +375,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
   <div class="dh"><h2 id="wTitle">Add a film</h2><span class="grow"></span><button class="btn ghost sm" type="button" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
   <div class="db">
     <label class="f"><span>YouTube or Vimeo link</span><input name="video" placeholder="https://youtu.be/… or https://vimeo.com/…" autocomplete="off"><span class="hint">Paste it and the title and picture come by themselves.</span></label>
-    <div class="preview" id="wPreview">The picture shows here</div>
+    <div class="f"><span>Framing · drag the picture, zoom with the slider</span><div id="wFramer"></div></div>
     <label class="f"><span>Title</span><input name="title" maxlength="160"></label>
     <div class="two">
       <label class="f"><span>Client or artist</span><input name="client" maxlength="160"></label>
@@ -385,6 +400,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
     <label class="f"><span>Sizes or options (comma between them)</span><input name="sizes" placeholder="S, M, L, XL"></label>
     <label class="f"><span>Stripe Payment Link</span><input name="stripe_link" placeholder="https://buy.stripe.com/…"><span class="hint">In Stripe: Product catalogue, + Add product. Then Payment Links, + New, pick it, tick "Collect customers' addresses" for shipping and, for sizes, add a dropdown field. Create link, copy it here.</span></label>
     <div class="f"><span>Photos (the first is the cover, the second shows on hover)</span><div class="photos" id="photos"></div></div>
+    <div class="f"><span>Cover framing · drag, zoom</span><div id="pFramer"></div></div>
     <div class="two">
       <label class="switch"><input type="checkbox" name="active"> Show on the site</label>
       <label class="switch"><input type="checkbox" name="sold_out"> Sold out</label>
@@ -459,6 +475,39 @@ function closeDrawers() { document.querySelectorAll('.drawer').forEach((d) => d.
 $('scrim').onclick = closeDrawers
 document.querySelectorAll('[data-close]').forEach((b) => { b.onclick = closeDrawers })
 addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawers() })
+
+/* ---------- framing ---------- */
+// framer(box, { url, frame, ratios: [['16 / 9', 'Computer'], ...], gray }) puts draggable frames and a zoom
+// slider in box; .get() gives { x, y, z } (x, y in %, z zoom), .set(url) swaps the picture.
+function framer(box, opts) {
+  let f = { x: 50, y: 50, z: 1, ...(opts.frame || {}) }, url = opts.url || ''
+  box.innerHTML = `<div class="framer"><div class="frms">${opts.ratios.map(([r, l], i) => `<div class="frm ${opts.gray ? 'gray' : ''}" style="aspect-ratio:${r};${i ? 'flex:0 0 26%' : ''}">${opts.ratios.length > 1 ? `<span class="tag">${l}</span>` : ''}<span class="hand">Drag to move</span><img alt="" draggable="false"></div>`).join('')}</div>
+    <div class="frm-row"><svg class="i"><use href="#i-search"/></svg><input type="range" min="1" max="3" step="0.01" aria-label="Zoom"><span class="zv"></span><button class="btn sm" type="button">Reset</button></div></div>`
+  const imgs = [...box.querySelectorAll('.frm img')], range = box.querySelector('input[type=range]'), zv = box.querySelector('.zv')
+  const paint = () => {
+    imgs.forEach((im) => { if (url && im.getAttribute('src') !== url) im.src = url; im.style.display = url ? '' : 'none'; im.style.objectPosition = `${f.x}% ${f.y}%`; im.style.transformOrigin = `${f.x}% ${f.y}%`; im.style.transform = `scale(${f.z})` })
+    range.value = f.z; zv.textContent = `${Math.round(f.z * 100)}%`
+  }
+  box.querySelectorAll('.frm').forEach((fr) => {
+    fr.addEventListener('pointerdown', (e) => {
+      if (!url) return
+      fr.setPointerCapture(e.pointerId); fr.classList.add('dragging')
+      const sx = e.clientX, sy = e.clientY, ox = f.x, oy = f.y, r = fr.getBoundingClientRect()
+      const move = (ev) => {
+        f.x = Math.max(0, Math.min(100, ox - (ev.clientX - sx) / r.width * 100 / f.z * 1.6))
+        f.y = Math.max(0, Math.min(100, oy - (ev.clientY - sy) / r.height * 100 / f.z * 1.6))
+        paint()
+      }
+      const up = () => { fr.classList.remove('dragging'); fr.removeEventListener('pointermove', move); fr.removeEventListener('pointerup', up); fr.removeEventListener('pointercancel', up) }
+      fr.addEventListener('pointermove', move); fr.addEventListener('pointerup', up); fr.addEventListener('pointercancel', up)
+    })
+  })
+  range.oninput = () => { f.z = Number(range.value); paint() }
+  box.querySelector('.frm-row .btn').onclick = () => { f = { x: 50, y: 50, z: 1 }; paint() }
+  paint()
+  const round = (v) => Math.round(v * 10) / 10
+  return { get: () => ({ x: round(f.x), y: round(f.y), z: Math.round(f.z * 100) / 100 }), set: (u) => { url = u || ''; paint() }, isDefault: () => f.x === 50 && f.y === 50 && f.z === 1 }
+}
 
 /* ---------- overview ---------- */
 let days = 30
@@ -596,13 +645,15 @@ function openWork(w) {
   f.video.value = editingWork.video || ''; f.title.value = editingWork.title || ''; f.client.value = editingWork.client || ''; f.year.value = editingWork.year || ''; f.visible.checked = editingWork.visible !== false; f.aibsent.checked = !!editingWork.aibsent
   $('wTitle').textContent = w ? 'Edit the film' : 'Add a film'
   $('wDelete').hidden = !w
+  wFrame = framer($('wFramer'), { frame: editingWork.frame, ratios: [['16 / 9', 'Tile']] })
   showPreview(); renderWorkCats(); openDrawer(f)
   if (!w) setTimeout(() => f.video.focus(), 300)
 }
+let wFrame = null
 function showPreview() {
   const v = parseVideo($('workDrawer').video.value)
-  $('wPreview').style.backgroundImage = v ? `url('${thumbOf({ kind: v.kind, video_id: v.id })}')` : ''
-  $('wPreview').textContent = v ? '' : 'The picture shows here'
+  const u = v ? (v.kind === 'yt' ? `https://i.ytimg.com/vi/${v.id}/maxresdefault.jpg` : `https://vumbnail.com/${v.id}_large.jpg`) : ''
+  if (wFrame) wFrame.set(u)
 }
 $('addWork').onclick = () => openWork(null)
 $('workDrawer').video.oninput = async (e) => {
@@ -619,7 +670,7 @@ $('workDrawer').onsubmit = async (e) => {
   const f = e.target, v = parseVideo(f.video.value)
   if (!v) { toast('Paste a YouTube or Vimeo link'); f.video.focus(); return }
   const year = parseInt(f.year.value, 10)
-  const row = { title: f.title.value.trim(), client: f.client.value.trim() || null, year: year > 1900 && year < 2100 ? year : null, categories: editingWork.categories, video: v.url, kind: v.kind, video_id: v.id, visible: f.visible.checked, aibsent: f.aibsent.checked }
+  const row = { title: f.title.value.trim(), client: f.client.value.trim() || null, year: year > 1900 && year < 2100 ? year : null, categories: editingWork.categories, video: v.url, kind: v.kind, video_id: v.id, visible: f.visible.checked, aibsent: f.aibsent.checked, frame: wFrame && !wFrame.isDefault() ? wFrame.get() : null }
   if (!row.title) { toast('Give it a title'); f.title.focus(); return }
   $('wSave').disabled = true
   try {
@@ -698,9 +749,12 @@ function openProduct(p) {
   f.active.checked = !!editing.active; f.sold_out.checked = !!editing.sold_out; f.position.value = editing.position || 0
   $('pTitle').textContent = p ? p.title : 'New product'
   $('pDelete').hidden = !p
+  pFrame = framer($('pFramer'), { frame: editing.frame, ratios: [['4 / 5', 'Cover']] })
   renderPhotos(); openDrawer(f)
 }
+let pFrame = null
 function renderPhotos() {
+  if (pFrame) pFrame.set(editing.images[0] || '')
   $('photos').innerHTML = editing.images.map((u, i) => `<div class="photo" style="background-image:url('${esc(u)}')">${i === 0 ? '<span class="first">Cover</span>' : ''}<button type="button" data-rm="${i}" aria-label="Remove">×</button></div>`).join('') + '<div class="add-photo" id="addPhoto">+ Add<br>photos</div>'
 }
 $('photos').onclick = (e) => {
@@ -725,7 +779,7 @@ $('prodDrawer').onsubmit = async (e) => {
   e.preventDefault()
   const f = e.target, link = f.stripe_link.value.trim(), price = f.price.value.trim().replace(',', '.')
   if (link && !/^https:\/\//.test(link)) { toast('The Stripe link should start with https://'); return }
-  const row = { title: f.title.value.trim(), description: f.description.value.trim(), price: price === '' ? null : Number(price), currency: f.currency.value, sizes: f.sizes.value.split(',').map((x) => x.trim()).filter(Boolean), stripe_link: link || null, active: f.active.checked, sold_out: f.sold_out.checked, position: parseInt(f.position.value, 10) || 0, images: editing.images }
+  const row = { title: f.title.value.trim(), description: f.description.value.trim(), price: price === '' ? null : Number(price), currency: f.currency.value, sizes: f.sizes.value.split(',').map((x) => x.trim()).filter(Boolean), stripe_link: link || null, active: f.active.checked, sold_out: f.sold_out.checked, position: parseInt(f.position.value, 10) || 0, images: editing.images, frame: pFrame && !pFrame.isDefault() ? pFrame.get() : null }
   if (!row.title) { toast('Give it a name'); return }
   if (row.price != null && !isFinite(row.price)) { toast('The price should be a number, e.g. 35 or 35.50'); return }
   $('pSave').disabled = true
@@ -748,11 +802,13 @@ const THEMES = [
 ]
 let theme = 'dark', heroImage = ''
 const setSetting = (key, value) => rest('site_settings?on_conflict=key', { method: 'POST', body: JSON.stringify({ key, value, updated_at: new Date().toISOString() }), headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } })
+let heroFrame = null, heroFramer = null
 function showHero() {
-  $('heroPv').style.backgroundImage = heroImage ? `url('${heroImage.replace(/'/g, '%27')}')` : ''
-  $('heroPv').innerHTML = heroImage ? '' : '<span>No picture yet: the site shows a still from the first film</span>'
-  $('heroRm').hidden = !heroImage
+  heroFramer = framer($('heroFramer'), { url: heroImage, frame: heroFrame, ratios: [['16 / 9', 'Computer'], ['9 / 19.5', 'Phone']], gray: true })
+  $('heroNone').hidden = !!heroImage
+  $('heroRm').hidden = $('heroSaveFrame').hidden = !heroImage
 }
+$('heroSaveFrame').onclick = async () => { try { heroFrame = heroFramer.get(); await setSetting('hero_frame', heroFrame); toast('Framing saved · it is on the site') } catch (err) { toast(err.message) } }
 $('heroUp').onclick = () => $('heroPick').click()
 $('heroPick').onchange = async (e) => {
   const file = e.target.files[0]; e.target.value = ''
@@ -763,7 +819,7 @@ $('heroPick').onchange = async (e) => {
   try {
     await api(`storage/v1/object/site/${path}`, { method: 'POST', body: file, headers: { 'Content-Type': file.type } })
     heroImage = `${SUPABASE_URL}/storage/v1/object/public/site/${path}`
-    await setSetting('hero_image', heroImage); showHero(); toast('The opening picture is on the site')
+    heroFrame = null; await setSetting('hero_image', heroImage); await setSetting('hero_frame', {}); showHero(); toast('The opening picture is on the site · drag it to frame it')
   } catch (err) { toast(err.message) }
 }
 $('heroRm').onclick = async () => { try { await setSetting('hero_image', ''); heroImage = ''; showHero(); toast('Removed') } catch (err) { toast(err.message) } }
@@ -771,7 +827,7 @@ async function loadLook() {
   try {
     const r = await rest('site_settings?select=key,value')
     const get = (k) => (r.find((x) => x.key === k) || {}).value
-    theme = get('theme') || 'dark'; heroImage = get('hero_image') || ''
+    theme = get('theme') || 'dark'; heroImage = get('hero_image') || ''; heroFrame = get('hero_frame') || null
   } catch (e) { toast(e.message) }
   showHero()
   $('themes').innerHTML = THEMES.map((t) => `
