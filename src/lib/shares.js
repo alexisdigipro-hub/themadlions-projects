@@ -13,7 +13,9 @@ const token = () => Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) =
 // short-link site's own page, answered 200, so chats read its logo preview; /d/<token> only exists as its
 // 404 page and chats show nothing for a 404. Older /d/<token> links still open.
 const SHORT = 'https://go.themadlions.com/?'
-const linkBase = () => (location.hostname === 'alexisdigipro-hub.github.io' ? SHORT : `${location.origin}${location.pathname}#/`)
+// the live app: its GitHub address, and hub.themadlions.com from 13 Oct (Alex)
+const LIVE = ['alexisdigipro-hub.github.io', 'hub.themadlions.com']
+const linkBase = () => (LIVE.includes(location.hostname) ? SHORT : `${location.origin}${location.pathname}#/`)
 export const shareUrl = (t) => `${linkBase()}s/${t}`
 export const deliveryUrl = (t) => `${linkBase()}d/${t}`
 export const statusUrl = (t) => `${linkBase()}ps/${t}`
