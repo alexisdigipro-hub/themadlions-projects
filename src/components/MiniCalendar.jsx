@@ -32,14 +32,8 @@ export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLab
   const goToday = () => { setYm({ y: now.getFullYear(), m: now.getMonth() }); pick(t0) }
   const dayItems = byDate[sel] || []
   const selIsToday = sel === t0
-  // The large calendar (the Calendar page on a phone) also lists what comes next after the day
-  // picked, so a glance shows the coming weeks without tapping day after day.
-  const upcoming = useMemo(() => {
-    if (!large) return []
-    const until = addDays(sel, 45)
-    const days = Object.keys(byDate).filter((d) => d > sel && d <= until).sort().slice(0, 8)
-    return days.map((d) => [d, byDate[d].filter((it) => it.date === d || d === days[0])]).filter(([, its]) => its.length)
-  }, [byDate, sel, large])
+  // The large calendar (the Calendar page on a phone) lists only the day picked (Alex, 14 Oct: the
+  // "Coming up" list under it, the next weeks, is gone)
   const row = (it, i) => (
     <li key={i} className="mc-ev" style={{ '--ev': it.color }}>
       <button type="button" className="mc-ev-btn" onClick={() => (onItemClick && it.ev ? onItemClick(it.ev) : null)} disabled={!(onItemClick && it.ev)}>
@@ -87,22 +81,7 @@ export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLab
           {onAddDay && <button className="link small" onClick={() => onAddDay(sel)}>{addLabel}</button>}
         </div>
         {large ? (
-          <>
-            {!dayItems.length ? <p className="muted small mc-none">Nothing on this day.</p> : <ul className="plain mc-evs">{dayItems.map(row)}</ul>}
-            {upcoming.length > 0 && (
-              <div className="mc-upcoming">
-                <div className="mc-upcoming-head">Coming up</div>
-                {upcoming.map(([d, its]) => (
-                  <div key={d} className="mc-upcoming-day">
-                    <button type="button" className="mc-upcoming-date" onClick={() => { const x = new Date(d + 'T00:00'); setYm({ y: x.getFullYear(), m: x.getMonth() }); pick(d) }}>
-                      {d === addDays(t0, 1) ? 'Tomorrow' : fmtDate(d, { weekday: 'short', day: 'numeric', month: 'short' })}
-                    </button>
-                    <ul className="plain mc-evs">{its.map(row)}</ul>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
+          !dayItems.length ? <p className="muted small mc-none">Nothing on this day.</p> : <ul className="plain mc-evs">{dayItems.map(row)}</ul>
         ) : !dayItems.length ? <p className="muted small">Nothing on this day.</p> : (
           <ul className="plain">
             {dayItems.map((it, i) => (
