@@ -1,6 +1,7 @@
 // The work shown on the site, newest first (taken from the old themadlions.com on 13 Oct 2026).
 // k: yt = YouTube, vm = Vimeo; id: the video id; img: the old site's still, used when the video has no thumbnail.
 window.WORKS = [
+{"t": "PENELOPE", "c": ["AI Films"], "k": "yt", "id": "MOh7XEQSFSg", "img": "https://i.ytimg.com/vi/MOh7XEQSFSg/hqdefault.jpg"},
 {
 "t": "Rec Pop Up Concert",
 "c": [

@@ -26,7 +26,7 @@ drop policy if exists site_leads_send on site_leads;
 create policy site_leads_send on site_leads for insert to anon, authenticated
   with check (
     status = 'new'
-    and email ~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' and char_length(email) <= 200
+    and email ~ '^[^@[:space:]]+@[^@[:space:]]+[.][^@[:space:]]+$' and char_length(email) <= 200
     and char_length(coalesce(name, '')) <= 200
     and char_length(coalesce(company, '')) <= 200
     and char_length(coalesce(kind, '')) <= 100
