@@ -143,6 +143,16 @@ main { padding: 26px var(--pad) 90px; min-width: 0; }
 .w .aibm { position: absolute; left: 8px; bottom: 8px; height: 20px; padding: 0 7px; border-radius: 6px; background: rgba(212,0,0,.85); font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; display: grid; place-items: center; }
 .w .eye { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border-radius: 10px; border: 0; background: rgba(0,0,0,.55); color: #fff; display: grid; place-items: center; cursor: pointer; }
 .w .eye:hover { background: rgba(0,0,0,.85); }
+.w .ord { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 4px; opacity: 0; transition: opacity .2s; }
+.w:hover .ord { opacity: 1; }
+@media (hover: none) { .w .ord { opacity: 1; } }
+.w .ord button { width: 30px; height: 30px; border-radius: 9px; border: 0; background: rgba(0,0,0,.6); color: #fff; display: grid; place-items: center; cursor: pointer; }
+.w .ord button:hover { background: var(--red); }
+.w .ord button:disabled { opacity: .3; pointer-events: none; }
+.w .ord .i { width: 15px; height: 15px; }
+.fold { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; margin: 6px 0; color: var(--dim); font-size: 12.5px; letter-spacing: .02em; }
+.fold::before, .fold::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(212,0,0,.6), transparent); }
+.fold b { color: var(--text); font-weight: 500; }
 .w .in { padding: 12px 14px 14px; }
 .w strong { display: block; font-size: 14.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .w small { display: block; margin-top: 3px; color: var(--dim); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -276,6 +286,9 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-crop" viewBox="0 0 24 24"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+  <symbol id="i-top" viewBox="0 0 24 24"><path d="M5 4h14M12 20V9M6 14l6-6 6 6"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-out" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l4-4-4-4M14 12H4"/></symbol>
   <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></symbol>
@@ -332,7 +345,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 
     <section data-pane="work" hidden>
       <div class="head">
-        <div><h1>Work</h1><p>The films on the site. Drag to reorder, the eye hides one, a click edits it.</p></div>
+        <div><h1>Work</h1><p>The films on the site, in their order. Drag or use the arrows to move one, the eye hides one, a click edits it. The first 20 are on the home page.</p></div>
         <span class="grow"></span>
         <button class="btn red" type="button" id="addWork"><svg class="i"><use href="#i-plus"/></svg>Add a film</button>
       </div>
@@ -389,6 +402,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
       <label class="f"><span>Year</span><input name="year" inputmode="numeric" maxlength="4" placeholder="2026"></label>
     </div>
     <div class="f"><span>Categories</span><div class="chips" id="wCats"></div><input id="wNewCat" placeholder="Another category, then Enter" style="height:38px;font-size:14px"></div>
+    <label class="f" id="wPlaceRow"><span>Place on the site</span><input name="place" inputmode="numeric" maxlength="3" style="max-width:120px"><span class="hint" id="wPlaceHint">1 is first. The first 20 are on the home page, the rest come with Show all.</span></label>
     <label class="switch"><input type="checkbox" name="visible" checked> Show on the site</label>
     <label class="switch"><input type="checkbox" name="aibsent"> Made by Aibsent Studios <span class="hint">(post-production &amp; AI: the film gets the "by Aibsent" mark and shows in its section)</span></label>
   </div>
@@ -590,6 +604,7 @@ async function loadOverview() {
 
 /* ---------- work ---------- */
 let works = [], workCat = 'All', editingWork = null
+const HOME = 20 // films the site's home page shows before Show all (public/site/index.html SHORT)
 const BASE_CATS = ['Commercials', 'Music Videos', 'Corporate', 'Motion Graphics', 'Events', 'Films', 'AI Films', 'Showreels', 'Behind the Scenes']
 const AIB = 'Aibsent'
 const allCats = () => [...new Set([...BASE_CATS, ...works.flatMap((w) => w.categories || [])])]
@@ -604,17 +619,27 @@ function renderWorks() {
   const q = $('workSearch').value.trim().toLowerCase()
   const shown = works.filter((w) => (workCat === 'All' || (workCat === AIB ? w.aibsent : (w.categories || []).includes(workCat))) && (!q || `${w.title} ${w.client || ''}`.toLowerCase().includes(q)))
   const canDrag = workCat === 'All' && !q
+  const vis = works.filter((w) => w.visible), last = works.length - 1
+  // in All, a line after the 20th film on the site: above it is the home page, below it Show all
+  const fold = canDrag && vis.length > HOME ? vis[HOME - 1].id : null
   $('works').innerHTML = shown.length ? shown.map((w) => `
     <div class="w glass ${w.visible ? '' : 'off'}" data-id="${esc(w.id)}" draggable="${canDrag}">
-      <div class="ph">${framedImg(w)}<span class="no">${works.indexOf(w) + 1}</span>${w.aibsent ? '<span class="aibm">Aibsent</span>' : ''}<button class="eye" type="button" data-eye title="${w.visible ? 'Hide from the site' : 'Show on the site'}"><svg class="i"><use href="#${w.visible ? 'i-eye' : 'i-eyeoff'}"/></svg></button><button class="eye fr" type="button" data-frame title="Adjust &amp; scale the picture"><svg class="i"><use href="#i-crop"/></svg></button></div>
+      <div class="ph">${framedImg(w)}${w.visible ? `<span class="no">${vis.indexOf(w) + 1}</span>` : ''}${canDrag ? `<span class="ord"><button type="button" data-mv="top" title="Move to the top" ${works.indexOf(w) ? '' : 'disabled'}><svg class="i"><use href="#i-top"/></svg></button><button type="button" data-mv="up" title="Move up" ${works.indexOf(w) ? '' : 'disabled'}><svg class="i"><use href="#i-up"/></svg></button><button type="button" data-mv="down" title="Move down" ${works.indexOf(w) < last ? '' : 'disabled'}><svg class="i"><use href="#i-down"/></svg></button></span>` : ''}${w.aibsent ? '<span class="aibm">Aibsent</span>' : ''}<button class="eye" type="button" data-eye title="${w.visible ? 'Hide from the site' : 'Show on the site'}"><svg class="i"><use href="#${w.visible ? 'i-eye' : 'i-eyeoff'}"/></svg></button><button class="eye fr" type="button" data-frame title="Adjust &amp; scale the picture"><svg class="i"><use href="#i-crop"/></svg></button></div>
       <div class="in"><strong>${esc(w.title)}</strong><small>${esc([w.client, w.year, (w.categories || []).join(', ')].filter(Boolean).join(' · ') || 'No category')}</small></div>
-    </div>`).join('') : '<div class="empty">No film matches.</div>'
+    </div>${w.id === fold ? `<div class="fold"><span><b>Above: the home page</b> · below: after Show all</span></div>` : ''}`).join('') : '<div class="empty">No film matches.</div>'
 }
 $('workCats').onclick = (e) => { const b = e.target.closest('[data-c]'); if (b) { workCat = b.dataset.c; renderWorks() } }
 $('works').onclick = async (e) => {
   const card = e.target.closest('.w'); if (!card) return
   const w = works.find((x) => x.id === card.dataset.id)
   if (e.target.closest('[data-frame]')) { openWork(w); return }
+  const mv = e.target.closest('[data-mv]')
+  if (mv) {
+    const i = works.indexOf(w), to = mv.dataset.mv === 'top' ? 0 : mv.dataset.mv === 'up' ? i - 1 : i + 1
+    if (to < 0 || to >= works.length || to === i) return
+    works.splice(i, 1); works.splice(to, 0, w); renderWorks(); orderLater()
+    return
+  }
   if (e.target.closest('[data-eye]')) {
     try { await rest(`site_works?id=eq.${w.id}`, { method: 'PATCH', body: JSON.stringify({ visible: !w.visible }), headers: { Prefer: 'return=minimal' } }); w.visible = !w.visible; renderWorks(); toast(w.visible ? `${w.title} is on the site` : `${w.title} is hidden`) } catch (err) { toast(err.message) }
     return
@@ -622,6 +647,15 @@ $('works').onclick = async (e) => {
   openWork(w)
 }
 const saveOrder = () => rest('site_works?on_conflict=id', { method: 'POST', body: JSON.stringify(works.map((w, i) => ({ id: w.id, title: w.title, position: i }))), headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } })
+// the arrows save a moment after the last press, so a few presses in a row make one save
+let orderTimer = null
+const orderLater = () => { clearTimeout(orderTimer); orderTimer = setTimeout(async () => { try { await saveOrder(); toast('New order saved') } catch (err) { toast(err.message); loadWorks() } }, 700) }
+// a film goes to place n among the films on the site (hidden ones keep their spot around it)
+function moveToPlace(w, n) {
+  works.splice(works.indexOf(w), 1)
+  const target = works.filter((x) => x.visible)[n - 1]
+  works.splice(target ? works.indexOf(target) : works.length, 0, w)
+}
 // drag to reorder (computer): the new order is saved in one go
 let dragId = null
 $('works').addEventListener('dragstart', (e) => { const c = e.target.closest('.w'); if (!c) return; dragId = c.dataset.id; c.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move' })
@@ -656,6 +690,8 @@ function openWork(w) {
   f.video.value = editingWork.video || ''; f.title.value = editingWork.title || ''; f.client.value = editingWork.client || ''; f.year.value = editingWork.year || ''; f.visible.checked = editingWork.visible !== false; f.aibsent.checked = !!editingWork.aibsent
   $('wTitle').textContent = w ? 'Edit the film' : 'Add a film'
   $('wDelete').hidden = !w
+  f.place.value = w ? (works.filter((x) => x.visible).indexOf(w) + 1 || '') : 1
+  $('wPlaceHint').textContent = w && !w.visible ? 'Hidden now. 1 is first; the first 20 are on the home page, the rest come with Show all.' : '1 is first. The first 20 are on the home page, the rest come with Show all.'
   wFrame = framer($('wFramer'), { frame: editingWork.frame, ratios: [['16 / 9', 'Tile']] })
   showPreview(); renderWorkCats(); openDrawer(f)
   if (!w) setTimeout(() => f.video.focus(), 300)
@@ -699,15 +735,18 @@ $('workDrawer').onsubmit = async (e) => {
   const year = parseInt(f.year.value, 10)
   const row = { title: f.title.value.trim(), client: f.client.value.trim() || null, year: year > 1900 && year < 2100 ? year : null, categories: editingWork.categories, video: v.url, kind: v.kind, video_id: v.id, visible: f.visible.checked, aibsent: f.aibsent.checked, cover: editingWork.cover || null, frame: wFrame && !wFrame.isDefault() ? wFrame.get() : null }
   if (!row.title) { toast('Give it a title'); f.title.focus(); return }
+  const place = parseInt(f.place.value, 10)
   $('wSave').disabled = true
   try {
     if (editingWork.id) await rest(`site_works?id=eq.${editingWork.id}`, { method: 'PATCH', body: JSON.stringify(row), headers: { Prefer: 'return=minimal' } })
-    else {
-      // a new film goes first, and everything after it moves one down
-      await rest('site_works', { method: 'POST', body: JSON.stringify({ ...row, position: -1 }), headers: { Prefer: 'return=minimal' } })
-      works = await rest('site_works?select=*&order=position.asc,created_at.desc')
-      await saveOrder()
-    }
+    // a new film goes first, and everything after it moves one down
+    else await rest('site_works', { method: 'POST', body: JSON.stringify({ ...row, position: -1 }), headers: { Prefer: 'return=minimal' } })
+    works = await rest('site_works?select=*&order=position.asc,created_at.desc')
+    const me = editingWork.id ? works.find((x) => x.id === editingWork.id) : works[0]
+    // then to the place asked for, if one was typed and it differs
+    const moved = me && place > 0 && works.filter((x) => x.visible).indexOf(me) + 1 !== place
+    if (moved) moveToPlace(me, place)
+    if (!editingWork.id || moved) await saveOrder()
     closeDrawers(); toast(row.visible ? 'Saved · it is on the site' : 'Saved · hidden from the site')
     loadWorks()
   } catch (err) { toast(err.message) } finally { $('wSave').disabled = false }
