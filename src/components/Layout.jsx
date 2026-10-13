@@ -8,6 +8,7 @@ import { badgeUnread, loadRead } from '../lib/chat.js'
 import { chimeFor } from '../lib/chatPrefs.js'
 import { backupDue, pcloudBackup } from '../lib/pcloud.js'
 import { remote } from '../lib/supabase.js'
+import { listenSwipes, swipeTabs } from '../lib/swipeTabs.js'
 
 function Logo({ name, subtitle, logo }) {
   return (
@@ -156,6 +157,15 @@ export default function Layout() {
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
+  // a sideways swipe on a phone: the next or previous tab of a project when one is open, else of this bar
+  const swipeRef = useRef(null)
+  swipeRef.current = (dir) => {
+    if (swipeTabs.project) { swipeTabs.project(dir); return }
+    const at = items.findIndex((i) => (i.end ? pathname === i.to : pathname === i.to || pathname.startsWith(`${i.to}/`) || i.also?.some((p) => pathname.startsWith(p))))
+    const to = at < 0 ? null : items[at + (dir === 'next' ? 1 : -1)]
+    if (to) nav(to.to)
+  }
+  useEffect(() => listenSwipes((dir) => { if (window.matchMedia?.('(max-width: 820px)').matches) swipeRef.current?.(dir) }), [])
   useEffect(() => {
     const bar = tabsRef.current
     const on = bar?.querySelector('a.active')
