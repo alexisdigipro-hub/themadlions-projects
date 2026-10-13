@@ -535,8 +535,8 @@ const thumb = (w, big) => w.k === 'yt' ? `https://i.ytimg.com/vi/${w.id}/${big ?
 function img(w, big) {
   const el = document.createElement('img')
   el.loading = 'lazy'; el.decoding = 'async'; el.alt = ''
-  const tries = [thumb(w, true), thumb(w, false), w.img]
-  let i = big || w.k === 'yt' ? 0 : 1
+  const tries = w.cover ? [w.cover] : [thumb(w, true), thumb(w, false), w.img]
+  let i = w.cover || big || w.k === 'yt' ? 0 : 1
   el.src = tries[i]
   el.onerror = () => { if (++i < tries.length) el.src = tries[i]; else el.style.visibility = 'hidden' }
   // YouTube answers a missing maxres with a grey 120px placeholder instead of an error
@@ -814,9 +814,9 @@ function renderShop() {
 /* the work as Alex keeps it in the admin (site_works); works.js is only the first paint */
 async function loadWorks() {
   try {
-    const rows = await (await api('site_works?visible=eq.true&select=title,client,categories,kind,video_id,image,aibsent,frame&order=position.asc,created_at.desc')).json()
+    const rows = await (await api('site_works?visible=eq.true&select=title,client,categories,kind,video_id,image,aibsent,frame,cover&order=position.asc,created_at.desc')).json()
     if (!Array.isArray(rows) || !rows.length) return
-    WORKS = rows.filter((r) => r.video_id).map((r) => ({ t: r.title, c: r.categories || [], k: r.kind === 'vm' ? 'vm' : 'yt', id: r.video_id, img: r.image || '', client: r.client || '', aib: !!r.aibsent, f: r.frame || null }))
+    WORKS = rows.filter((r) => r.video_id).map((r) => ({ t: r.title, c: r.categories || [], k: r.kind === 'vm' ? 'vm' : 'yt', id: r.video_id, img: r.image || '', client: r.client || '', aib: !!r.aibsent, f: r.frame || null, cover: r.cover || '' }))
     renderFilters(); renderGrid(); renderServices(); renderAibsent(); observe()
   } catch (e) {}
 }
