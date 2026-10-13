@@ -197,7 +197,8 @@ footer .wordmark { width: 130px; opacity: .6; }
 .player.open { opacity: 1; pointer-events: auto; }
 .player .frame { width: min(1400px, 100%); aspect-ratio: 16 / 9; max-height: 80vh; border-radius: 14px; overflow: hidden; background: #000; box-shadow: 0 30px 90px rgba(0,0,0,.6); transform: scale(.96); transition: transform .35s; }
 .player.open .frame { transform: none; }
-.player iframe { width: 100%; height: 100%; border: 0; display: block; }
+.player iframe, .player video { width: 100%; height: 100%; border: 0; display: block; background: #000; }
+.player .perr { height: 100%; display: grid; place-items: center; padding: 24px; text-align: center; color: #aaa; font-size: 15px; }
 .player .title { position: absolute; left: var(--pad); top: calc(20px + env(safe-area-inset-top)); font-size: 15px; font-weight: 500; letter-spacing: .04em; }
 .player .close { position: absolute; right: var(--pad); top: calc(14px + env(safe-area-inset-top)); width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--glass-edge); background: var(--glass); cursor: pointer; font-size: 22px; line-height: 1; }
 
@@ -529,13 +530,17 @@ function frameImg(el, f) {
   return el
 }
 
-/* stills: YouTube's own, sharpest first; Vimeo's through vumbnail; the old site's as the last resort */
-const thumb = (w, big) => w.k === 'yt' ? `https://i.ytimg.com/vi/${w.id}/${big ? 'maxresdefault' : 'hqdefault'}.jpg` : `https://vumbnail.com/${w.id}${big ? '_large' : ''}.jpg`
+/* a film kept in pCloud: its id is the public link's code, "us:" in front when the link is on pCloud's US servers */
+const pc = (id) => id.startsWith('us:') ? ['api', id.slice(3)] : ['eapi', id]
+/* stills: YouTube's own, sharpest first; Vimeo's through vumbnail; pCloud's own thumbnail; the old site's as the last resort */
+const thumb = (w, big) => w.k === 'yt' ? `https://i.ytimg.com/vi/${w.id}/${big ? 'maxresdefault' : 'hqdefault'}.jpg`
+  : w.k === 'pc' ? `https://${pc(w.id)[0]}.pcloud.com/getpubthumb?code=${pc(w.id)[1]}&size=${big ? '1280x720' : '640x360'}`
+  : `https://vumbnail.com/${w.id}${big ? '_large' : ''}.jpg`
 function img(w, big) {
   const el = document.createElement('img')
   el.loading = 'lazy'; el.decoding = 'async'; el.alt = ''
   const tries = w.cover ? [w.cover] : [thumb(w, true), thumb(w, false), w.img]
-  let i = w.cover || big || w.k === 'yt' ? 0 : 1
+  let i = w.cover || big || w.k !== 'vm' ? 0 : 1
   el.src = tries[i]
   el.onerror = () => { if (++i < tries.length) el.src = tries[i]; else el.style.visibility = 'hidden' }
   // YouTube answers a missing maxres with a grey 120px placeholder instead of an error
@@ -636,13 +641,27 @@ function renderClients() {
 const player = document.getElementById('player'), frame = document.getElementById('pframe')
 function play(w) {
   track('play', w.t)
+  document.getElementById('ptitle').textContent = w.t
+  player.classList.add('open')
+  document.body.style.overflow = 'hidden'
+  if (w.k === 'pc') { playPcloud(w); return }
   const src = w.k === 'yt'
     ? `https://www.youtube-nocookie.com/embed/${w.id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`
     : `https://player.vimeo.com/video/${w.id}?autoplay=1&title=0&byline=0&portrait=0&dnt=1`
   frame.innerHTML = `<iframe src="${src}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title=""></iframe>`
-  document.getElementById('ptitle').textContent = w.t
-  player.classList.add('open')
-  document.body.style.overflow = 'hidden'
+}
+// pCloud: ask for the file's address (without a Referer, which pCloud refuses from other sites) and play it here
+async function playPcloud(w) {
+  const [host, code] = pc(w.id), v = document.createElement('video')
+  v.controls = true; v.autoplay = true; v.playsInline = true; v.poster = thumb(w, true)
+  frame.innerHTML = ''; frame.appendChild(v)
+  try {
+    const j = await (await fetch(`https://${host}.pcloud.com/getpublinkdownload?code=${encodeURIComponent(code)}`, { referrerPolicy: 'no-referrer' })).json()
+    if (j.result !== 0 || !j.hosts || !j.hosts.length) throw new Error(j.error || 'no link')
+    if (frame.firstChild === v) { v.src = `https://${j.hosts[0]}${j.path}`; v.play().catch(() => {}) }
+  } catch (e) {
+    if (frame.firstChild === v) frame.innerHTML = '<div class="perr">This film could not load right now. Please try again in a moment.</div>'
+  }
 }
 function close() { player.classList.remove('open'); document.body.style.overflow = ''; setTimeout(() => { frame.innerHTML = '' }, 350) }
 document.getElementById('pclose').onclick = close
@@ -815,7 +834,7 @@ async function loadWorks() {
   try {
     const rows = await (await api('site_works?visible=eq.true&select=title,client,categories,kind,video_id,image,aibsent,frame,cover&order=position.asc,created_at.desc')).json()
     if (!Array.isArray(rows) || !rows.length) return
-    WORKS = rows.filter((r) => r.video_id).map((r) => ({ t: r.title, c: r.categories || [], k: r.kind === 'vm' ? 'vm' : 'yt', id: r.video_id, img: r.image || '', client: r.client || '', aib: !!r.aibsent, f: r.frame || null, cover: r.cover || '' }))
+    WORKS = rows.filter((r) => r.video_id).map((r) => ({ t: r.title, c: r.categories || [], k: r.kind === 'vm' || r.kind === 'pc' ? r.kind : 'yt', id: r.video_id, img: r.image || '', client: r.client || '', aib: !!r.aibsent, f: r.frame || null, cover: r.cover || '' }))
     renderFilters(); renderGrid(); renderServices(); renderAibsent(); observe()
   } catch (e) {}
 }
