@@ -316,8 +316,8 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
 
   <div class="stats reveal">
     <div class="stat"><strong><span data-count="12">12</span><em>+</em></strong><span data-t="stats.years">Years making films</span></div>
-    <div class="stat"><strong><span data-count="40">40</span><em>+</em></strong><span data-t="stats.prod">Productions</span></div>
-    <div class="stat"><strong><span data-count="25">25</span><em>+</em></strong><span data-t="stats.clients">Brands &amp; artists</span></div>
+    <div class="stat"><strong><span data-count="40" data-stat="prod">40</span><em>+</em></strong><span data-t="stats.prod">Productions</span></div>
+    <div class="stat"><strong><span data-count="25" data-stat="brands">25</span><em>+</em></strong><span data-t="stats.clients">Brands &amp; artists</span></div>
   </div>
 
   <section id="work">
@@ -830,12 +830,29 @@ function renderShop() {
 }
 
 /* the work as Alex keeps it in the admin (site_works); works.js is only the first paint */
+/* the numbers under the opening count the work itself (Alex, 13 Oct: "refresh the statistics"): productions are the
+   films on the site except showreels, behind the scenes and our own films; brands & artists are the different names
+   (the client, else the title before " – "), Greek and Latin spellings read as one; both rounded down to 5, with + */
+const GR = { α: 'a', β: 'v', γ: 'g', δ: 'd', ε: 'e', ζ: 'z', η: 'i', θ: 'th', ι: 'i', κ: 'k', λ: 'l', μ: 'm', ν: 'n', ξ: 'x', ο: 'o', π: 'p', ρ: 'r', σ: 's', ς: 's', τ: 't', υ: 'y', φ: 'f', χ: 'ch', ψ: 'ps', ω: 'o' }
+function renderStats() {
+  const NOT = ['Showreels', 'Behind the Scenes', 'Films', 'AI Films']
+  const made = WORKS.filter((w) => !w.c.some((c) => NOT.includes(c)))
+  const names = new Set(made.map((w) => {
+    const n = (w.client || w.t.split(/ – | - | ft\.? | x | \/ /i)[0]).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      .replace(/[α-ως]/g, (ch) => GR[ch] || ch).replace(/^#/, '').replace(/ (live|wave|ig stories)$/, '').trim()
+    return n.split(/\s+/).pop()
+  }))
+  const put = (key, n) => { const el = document.querySelector(`[data-stat="${key}"]`); if (el && n >= 5) { el.dataset.count = n; el.textContent = n } }
+  put('prod', Math.floor(made.length / 5) * 5)
+  put('brands', Math.floor(names.size / 5) * 5)
+}
+
 async function loadWorks() {
   try {
     const rows = await (await api('site_works?visible=eq.true&select=title,client,categories,kind,video_id,image,aibsent,frame,cover&order=position.asc,created_at.desc')).json()
     if (!Array.isArray(rows) || !rows.length) return
     WORKS = rows.filter((r) => r.video_id).map((r) => ({ t: r.title, c: r.categories || [], k: r.kind === 'vm' || r.kind === 'pc' ? r.kind : 'yt', id: r.video_id, img: r.image || '', client: r.client || '', aib: !!r.aibsent, f: r.frame || null, cover: r.cover || '' }))
-    renderFilters(); renderGrid(); renderServices(); renderAibsent(); observe()
+    renderFilters(); renderGrid(); renderServices(); renderAibsent(); renderStats(); observe()
   } catch (e) {}
 }
 
