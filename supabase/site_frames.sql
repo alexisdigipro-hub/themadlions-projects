@@ -5,3 +5,5 @@
 
 alter table site_works add column if not exists frame jsonb;
 alter table site_products add column if not exists frame jsonb;
+-- a film's own picture, uploaded in the admin, shown instead of the video's still
+alter table site_works add column if not exists cover text;

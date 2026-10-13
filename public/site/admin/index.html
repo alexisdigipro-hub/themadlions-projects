@@ -132,7 +132,12 @@ main { padding: 26px var(--pad) 90px; min-width: 0; }
 .w:hover { transform: translateY(-3px); border-color: var(--edge-2); box-shadow: 0 14px 40px rgba(0,0,0,.4); }
 .w.dragging { opacity: .35; }
 .w.over { box-shadow: 0 0 0 2px var(--red), 0 14px 40px rgba(212,0,0,.25); }
-.w .ph { aspect-ratio: 16 / 9; background: #18181b center / cover; position: relative; }
+.w .ph { aspect-ratio: 16 / 9; background: #18181b; position: relative; overflow: hidden; }
+.w .ph .fimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.w .ph > :not(.fimg) { z-index: 1; }
+.w .eye.fr { right: 46px; opacity: 0; transition: opacity .2s; }
+.w:hover .eye.fr { opacity: 1; }
+@media (hover: none) { .w .eye.fr { opacity: 1; } }
 .w.off .ph { filter: grayscale(1) brightness(.45); }
 .w .no { position: absolute; top: 8px; left: 8px; min-width: 26px; height: 22px; padding: 0 7px; border-radius: 8px; background: rgba(0,0,0,.6); font-size: 11.5px; font-weight: 600; display: grid; place-items: center; }
 .w .aibm { position: absolute; left: 8px; bottom: 8px; height: 20px; padding: 0 7px; border-radius: 6px; background: rgba(212,0,0,.85); font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; display: grid; place-items: center; }
@@ -270,6 +275,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
   <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11L21 7H6.2"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-crop" viewBox="0 0 24 24"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-out" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l4-4-4-4M14 12H4"/></symbol>
   <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></symbol>
@@ -375,7 +381,8 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
   <div class="dh"><h2 id="wTitle">Add a film</h2><span class="grow"></span><button class="btn ghost sm" type="button" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
   <div class="db">
     <label class="f"><span>YouTube or Vimeo link</span><input name="video" placeholder="https://youtu.be/… or https://vimeo.com/…" autocomplete="off"><span class="hint">Paste it and the title and picture come by themselves.</span></label>
-    <div class="f"><span>Framing · drag the picture, zoom with the slider</span><div id="wFramer"></div></div>
+    <div class="f"><span>Picture &amp; framing · drag the picture to move it, the slider zooms</span><div id="wFramer"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn sm" type="button" id="wCoverUp"><svg class="i"><use href="#i-plus"/></svg>Use my own picture</button><button class="btn sm danger" type="button" id="wCoverRm" hidden>Back to the video's still</button><span class="hint" id="wCoverHint">Now: the video's own still</span></div></div>
     <label class="f"><span>Title</span><input name="title" maxlength="160"></label>
     <div class="two">
       <label class="f"><span>Client or artist</span><input name="client" maxlength="160"></label>
@@ -413,6 +420,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 <div class="toast" id="toast"></div>
 <input type="file" id="filePick" accept="image/jpeg,image/png,image/webp" multiple hidden>
 <input type="file" id="heroPick" accept="image/jpeg,image/png,image/webp" hidden>
+<input type="file" id="coverPick" accept="image/jpeg,image/png,image/webp" hidden>
 
 <script>
 const SUPABASE_URL = 'https://naibamqexcqnqhbbqafa.supabase.co'
@@ -421,7 +429,9 @@ const $ = (id) => document.getElementById(id)
 const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 let toastTimer
 function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2600) }
-const thumbOf = (w) => w.kind === 'vm' ? `https://vumbnail.com/${w.video_id}.jpg` : `https://i.ytimg.com/vi/${w.video_id}/hqdefault.jpg`
+const thumbOf = (w) => w.cover || (w.kind === 'vm' ? `https://vumbnail.com/${w.video_id}.jpg` : `https://i.ytimg.com/vi/${w.video_id}/hqdefault.jpg`)
+// the film's picture as the site will show it, framed and zoomed
+const framedImg = (w) => { const f = { x: 50, y: 50, z: 1, ...(w.frame || {}) }; return `<img class="fimg" src="${esc(thumbOf(w))}" alt="" loading="lazy" style="object-position:${f.x}% ${f.y}%;transform-origin:${f.x}% ${f.y}%;transform:scale(${f.z})">` }
 
 /* ---------- the session: the hub's own accounts, kept in this browser ---------- */
 let session = null
@@ -596,7 +606,7 @@ function renderWorks() {
   const canDrag = workCat === 'All' && !q
   $('works').innerHTML = shown.length ? shown.map((w) => `
     <div class="w glass ${w.visible ? '' : 'off'}" data-id="${esc(w.id)}" draggable="${canDrag}">
-      <div class="ph" style="background-image:url('${esc(thumbOf(w))}')"><span class="no">${works.indexOf(w) + 1}</span>${w.aibsent ? '<span class="aibm">Aibsent</span>' : ''}<button class="eye" type="button" data-eye title="${w.visible ? 'Hide from the site' : 'Show on the site'}"><svg class="i"><use href="#${w.visible ? 'i-eye' : 'i-eyeoff'}"/></svg></button></div>
+      <div class="ph">${framedImg(w)}<span class="no">${works.indexOf(w) + 1}</span>${w.aibsent ? '<span class="aibm">Aibsent</span>' : ''}<button class="eye" type="button" data-eye title="${w.visible ? 'Hide from the site' : 'Show on the site'}"><svg class="i"><use href="#${w.visible ? 'i-eye' : 'i-eyeoff'}"/></svg></button><button class="eye fr" type="button" data-frame title="Adjust &amp; scale the picture"><svg class="i"><use href="#i-crop"/></svg></button></div>
       <div class="in"><strong>${esc(w.title)}</strong><small>${esc([w.client, w.year, (w.categories || []).join(', ')].filter(Boolean).join(' · ') || 'No category')}</small></div>
     </div>`).join('') : '<div class="empty">No film matches.</div>'
 }
@@ -604,6 +614,7 @@ $('workCats').onclick = (e) => { const b = e.target.closest('[data-c]'); if (b) 
 $('works').onclick = async (e) => {
   const card = e.target.closest('.w'); if (!card) return
   const w = works.find((x) => x.id === card.dataset.id)
+  if (e.target.closest('[data-frame]')) { openWork(w); return }
   if (e.target.closest('[data-eye]')) {
     try { await rest(`site_works?id=eq.${w.id}`, { method: 'PATCH', body: JSON.stringify({ visible: !w.visible }), headers: { Prefer: 'return=minimal' } }); w.visible = !w.visible; renderWorks(); toast(w.visible ? `${w.title} is on the site` : `${w.title} is hidden`) } catch (err) { toast(err.message) }
     return
@@ -652,9 +663,25 @@ function openWork(w) {
 let wFrame = null
 function showPreview() {
   const v = parseVideo($('workDrawer').video.value)
-  const u = v ? (v.kind === 'yt' ? `https://i.ytimg.com/vi/${v.id}/maxresdefault.jpg` : `https://vumbnail.com/${v.id}_large.jpg`) : ''
-  if (wFrame) wFrame.set(u)
+  const still = v ? (v.kind === 'yt' ? `https://i.ytimg.com/vi/${v.id}/maxresdefault.jpg` : `https://vumbnail.com/${v.id}_large.jpg`) : ''
+  if (wFrame) wFrame.set(editingWork.cover || still)
+  $('wCoverRm').hidden = !editingWork.cover
+  $('wCoverHint').textContent = editingWork.cover ? 'Now: your own picture' : "Now: the video's own still"
 }
+$('wCoverUp').onclick = () => $('coverPick').click()
+$('coverPick').onchange = async (e) => {
+  const file = e.target.files[0]; e.target.value = ''
+  if (!file) return
+  toast('Uploading the picture…')
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
+  const path = `works/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+  try {
+    await api(`storage/v1/object/site/${path}`, { method: 'POST', body: file, headers: { 'Content-Type': file.type } })
+    editingWork.cover = `${SUPABASE_URL}/storage/v1/object/public/site/${path}`
+    showPreview(); toast('Picture in · frame it and press Save')
+  } catch (err) { toast(err.message) }
+}
+$('wCoverRm').onclick = () => { editingWork.cover = null; showPreview() }
 $('addWork').onclick = () => openWork(null)
 $('workDrawer').video.oninput = async (e) => {
   showPreview()
@@ -670,7 +697,7 @@ $('workDrawer').onsubmit = async (e) => {
   const f = e.target, v = parseVideo(f.video.value)
   if (!v) { toast('Paste a YouTube or Vimeo link'); f.video.focus(); return }
   const year = parseInt(f.year.value, 10)
-  const row = { title: f.title.value.trim(), client: f.client.value.trim() || null, year: year > 1900 && year < 2100 ? year : null, categories: editingWork.categories, video: v.url, kind: v.kind, video_id: v.id, visible: f.visible.checked, aibsent: f.aibsent.checked, frame: wFrame && !wFrame.isDefault() ? wFrame.get() : null }
+  const row = { title: f.title.value.trim(), client: f.client.value.trim() || null, year: year > 1900 && year < 2100 ? year : null, categories: editingWork.categories, video: v.url, kind: v.kind, video_id: v.id, visible: f.visible.checked, aibsent: f.aibsent.checked, cover: editingWork.cover || null, frame: wFrame && !wFrame.isDefault() ? wFrame.get() : null }
   if (!row.title) { toast('Give it a title'); f.title.focus(); return }
   $('wSave').disabled = true
   try {
