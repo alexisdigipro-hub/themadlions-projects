@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>The Mad Lions · Site admin</title>
+<meta name="theme-color" content="#0b0b0c">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<!-- The company site's own admin (Alex, 13 Oct 2026): statistics, enquiries from the form, the merch shop and
+     the site's look. Sign in with a THEMADLIONS Hub account; only hub administrators get past the door, and the
+     database checks the same thing (is_admin) on every read and write. -->
+<style>
+:root { --bg: #0b0b0c; --bg-2: #121214; --bg-3: #18181b; --text: #f2f0ec; --muted: #9a978f; --line: rgba(255,255,255,.1); --accent: #d40000; --ok: #5bd18b; --err: #ff8a7a; --pad: clamp(16px, 3vw, 40px); }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font-family: Jost, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button, input, textarea, select { font: inherit; color: inherit; }
+.wordmark { filter: invert(1); width: 150px; display: block; }
+[hidden] { display: none !important; }
+
+/* one top row: wordmark, the four parts as glass pills, then the site and sign out */
+.top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 14px; padding: calc(12px + env(safe-area-inset-top)) var(--pad) 12px; background: rgba(11,11,12,.8); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.top .title { font-size: 13px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
+.tabs { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--line); margin-left: 10px; }
+.tabs button { height: 34px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background .2s, color .2s; }
+.tabs button:hover { color: var(--text); }
+.tabs button.on { color: var(--text); background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.06)); box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
+.badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 11.5px; font-weight: 700; display: inline-grid; place-items: center; }
+.grow { flex: 1; }
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; transition: transform .2s, background .2s, border-color .2s; white-space: nowrap; }
+.pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.3); }
+.pill:active { transform: scale(.97); }
+.pill.main { background: var(--accent); color: #fff; border-color: transparent; }
+.pill.danger { color: var(--err); }
+.pill:disabled { opacity: .5; cursor: default; transform: none; }
+main { padding: 26px var(--pad) 60px; }
+h1 { margin: 0 0 6px; font-size: 30px; font-weight: 700; }
+.lede { margin: 0 0 22px; color: var(--muted); font-size: 15px; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--line); }
+.seg button { height: 32px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.seg button.on { color: var(--text); background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.06)); box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
+.tile { border-radius: 18px; background: color-mix(in srgb, var(--bg-2) 88%, transparent); border: 1px solid var(--line); padding: 20px 22px; }
+.tile h3 { margin: 0 0 14px; font-size: 12.5px; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+.empty { color: var(--muted); padding: 30px 0; text-align: center; }
+
+/* sign in */
+.door { min-height: 100svh; display: grid; place-items: center; padding: 20px; }
+.door form { width: min(380px, 100%); display: grid; gap: 14px; padding: 30px; border-radius: 22px; background: var(--bg-2); border: 1px solid var(--line); }
+.door .wordmark { width: 200px; margin: 0 auto 6px; }
+.door p { margin: 0 0 6px; text-align: center; color: var(--muted); font-size: 14px; }
+label.f { display: grid; gap: 8px; }
+label.f > span { font-size: 12px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+input, textarea, select { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.04); font-size: 15px; outline: none; }
+input:focus, textarea:focus { border-color: rgba(212,0,0,.7); box-shadow: 0 0 0 4px rgba(212,0,0,.12); }
+textarea { min-height: 90px; resize: vertical; }
+.msg { font-size: 14px; color: var(--err); min-height: 1em; }
+
+/* statistics */
+.kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 10px; }
+.kpi strong { display: block; font-size: 38px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
+.kpi span { display: block; margin-top: 8px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.chart { display: flex; align-items: flex-end; gap: 3px; height: 180px; padding-top: 10px; }
+.chart .day { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; position: relative; }
+.chart .bar { border-radius: 4px 4px 0 0; background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 45%, transparent)); min-height: 2px; transition: height .5s; }
+.chart .day:hover .bar { filter: brightness(1.2); }
+.chart .day .tip { position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 12px; padding: 4px 8px; border-radius: 8px; background: var(--bg-3); border: 1px solid var(--line); opacity: 0; pointer-events: none; z-index: 2; }
+.chart .day:hover .tip { opacity: 1; }
+.axis { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11.5px; color: var(--muted); }
+.cols { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+.list { display: grid; gap: 8px; }
+.li { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; font-size: 14px; }
+.li .meter { grid-column: 1 / -1; height: 5px; border-radius: 99px; background: rgba(255,255,255,.06); overflow: hidden; }
+.li .meter i { display: block; height: 100%; border-radius: 99px; background: var(--accent); }
+.li b { font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* enquiries */
+.leads { display: grid; gap: 10px; }
+.lead { border-radius: 18px; background: var(--bg-2); border: 1px solid var(--line); padding: 18px 20px; display: grid; gap: 10px; }
+.lead.new { border-color: rgba(212,0,0,.45); box-shadow: 0 0 0 1px rgba(212,0,0,.15) inset; }
+.lead .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.lead .head strong { font-size: 18px; font-weight: 500; }
+.lead .head .when { margin-left: auto; font-size: 13px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 11px; border-radius: 10px; font-size: 13px; background: rgba(255,255,255,.06); }
+.chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.lead .text { white-space: pre-wrap; line-height: 1.55; font-size: 15px; color: rgba(242,240,236,.86); }
+.lead .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* shop */
+.products { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.prod { border-radius: 18px; overflow: hidden; background: var(--bg-2); border: 1px solid var(--line); cursor: pointer; transition: border-color .2s, transform .2s; }
+.prod:hover { border-color: rgba(255,255,255,.25); transform: translateY(-2px); }
+.prod .ph { aspect-ratio: 4 / 5; background: var(--bg-3) center / cover no-repeat; position: relative; }
+.prod .state { position: absolute; top: 10px; left: 10px; }
+.prod .in { padding: 14px 16px; }
+.prod .in strong { display: block; font-weight: 500; }
+.editor { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.editor .full { grid-column: 1 / -1; }
+.photos { display: flex; gap: 8px; flex-wrap: wrap; }
+.photo { position: relative; width: 96px; height: 120px; border-radius: 12px; background: var(--bg-3) center / cover no-repeat; border: 1px solid var(--line); }
+.photo button { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0,0,0,.7); cursor: pointer; }
+.photo .first { position: absolute; left: 6px; bottom: 6px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,.7); }
+.add-photo { width: 96px; height: 120px; border-radius: 12px; border: 1px dashed rgba(255,255,255,.25); display: grid; place-items: center; cursor: pointer; color: var(--muted); font-size: 13px; text-align: center; }
+.switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 15px; }
+.switch input { width: 42px; height: 24px; appearance: none; -webkit-appearance: none; border-radius: 99px; background: rgba(255,255,255,.12); position: relative; padding: 0; border: 0; cursor: pointer; transition: background .2s; }
+.switch input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
+.switch input:checked { background: var(--ok); }
+.switch input:checked::after { transform: translateX(18px); }
+label.f > span.hint, .hint { font-size: 13px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); line-height: 1.5; }
+
+/* look */
+.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.theme { border-radius: 20px; border: 1px solid var(--line); background: var(--bg-2); padding: 14px; cursor: pointer; transition: border-color .2s, transform .2s; text-align: left; }
+.theme:hover { transform: translateY(-2px); }
+.theme.on { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(212,0,0,.18); }
+.theme .pv { height: 170px; border-radius: 14px; padding: 18px; display: grid; align-content: space-between; overflow: hidden; }
+.theme .pv img { width: 140px; }
+.theme .pv .bars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.theme .pv .bars i { height: 34px; border-radius: 6px; }
+.theme .pv .btn { width: 70px; height: 18px; border-radius: 99px; }
+.theme .name { margin-top: 12px; display: flex; align-items: center; gap: 10px; }
+.theme .name strong { font-size: 17px; font-weight: 500; }
+.theme .name span { margin-left: auto; }
+
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px); padding: 12px 18px; border-radius: 14px; background: var(--bg-3); border: 1px solid var(--line); font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 30; }
+.toast.on { opacity: 1; transform: translateX(-50%); }
+
+@media (max-width: 1000px) { .kpis { grid-template-columns: repeat(3, 1fr); } .cols { grid-template-columns: 1fr; } }
+@media (max-width: 700px) {
+  .top .title { display: none; }
+  .tabs { order: 3; width: 100%; margin: 0; overflow-x: auto; }
+  .tabs button { flex: 1; padding: 0 10px; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .themes, .editor { grid-template-columns: 1fr; }
+  .chart { height: 140px; }
+}
+</style>
+</head>
+<body>
+
+<div class="door" id="door" hidden>
+  <form id="login">
+    <img class="wordmark" src="../wordmark.png" alt="The Mad Lions">
+    <p>Site admin · sign in with your THEMADLIONS Hub account</p>
+    <label class="f"><span>Email</span><input name="email" type="email" autocomplete="username" required></label>
+    <label class="f"><span>Password</span><input name="password" type="password" autocomplete="current-password" required></label>
+    <div class="msg" id="loginMsg"></div>
+    <button class="pill main" type="submit" id="loginBtn">Sign in</button>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <header class="top">
+    <img class="wordmark" src="../wordmark.png" alt="The Mad Lions">
+    <span class="title">Site admin</span>
+    <nav class="tabs" id="tabs">
+      <button type="button" data-tab="stats" class="on">Statistics</button>
+      <button type="button" data-tab="leads">Enquiries <span class="badge" id="newCount" hidden></span></button>
+      <button type="button" data-tab="shop">Shop</button>
+      <button type="button" data-tab="look">Look</button>
+    </nav>
+    <span class="grow"></span>
+    <a class="pill" href="../" target="_blank" rel="noopener">Open site</a>
+    <button class="pill" type="button" id="signout">Sign out</button>
+  </header>
+
+  <main>
+    <section data-pane="stats">
+      <div class="row">
+        <div><h1>Statistics</h1><p class="lede" style="margin:0">Who came to the site, what they watched, what they asked for. Anonymous: no names, no addresses.</p></div>
+        <span class="grow"></span>
+        <div class="seg" id="range"><button type="button" data-d="7">7 days</button><button type="button" data-d="30" class="on">30 days</button><button type="button" data-d="90">90 days</button></div>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <div class="tile"><h3>Visits per day</h3><div class="chart" id="chart"></div><div class="axis" id="axis"></div></div>
+      <div class="cols">
+        <div class="tile"><h3>Most watched films</h3><div class="list" id="topFilms"></div></div>
+        <div class="tile"><h3>Where they come from</h3><div class="list" id="topRefs"></div></div>
+        <div class="tile"><h3>Devices &amp; language</h3><div class="list" id="devices"></div></div>
+      </div>
+    </section>
+
+    <section data-pane="leads" hidden>
+      <div class="row">
+        <div><h1>Enquiries</h1><p class="lede" style="margin:0">Everything sent through "Tell us about your project", newest first.</p></div>
+        <span class="grow"></span>
+        <div class="seg" id="leadFilter"><button type="button" data-s="all" class="on">All</button><button type="button" data-s="new">New</button><button type="button" data-s="replied">Replied</button><button type="button" data-s="closed">Closed</button></div>
+      </div>
+      <div class="leads" id="leads"></div>
+    </section>
+
+    <section data-pane="shop" hidden>
+      <div id="shopList">
+        <div class="row">
+          <div><h1>Shop</h1><p class="lede" style="margin:0">The merch on the site. A product shows once it is switched on; Buy opens its Stripe page.</p></div>
+          <span class="grow"></span>
+          <button class="pill main" type="button" id="newProduct">+ New product</button>
+        </div>
+        <div class="products" id="products"></div>
+      </div>
+      <form id="editor" hidden>
+        <div class="row">
+          <button class="pill" type="button" id="backToShop">← Products</button>
+          <h1 id="editorTitle" style="margin:0">New product</h1>
+          <span class="grow"></span>
+          <button class="pill danger" type="button" id="delProduct">Delete</button>
+          <button class="pill main" type="submit" id="saveProduct">Save</button>
+        </div>
+        <div class="tile editor">
+          <label class="f full"><span>Name</span><input name="title" required maxlength="120" placeholder="Mad Lions tee, black"></label>
+          <label class="f full"><span>Description</span><textarea name="description" maxlength="800" placeholder="Heavy cotton, embroidered wordmark…"></textarea></label>
+          <label class="f"><span>Price</span><input name="price" inputmode="decimal" placeholder="35"></label>
+          <label class="f"><span>Currency</span><select name="currency"><option>EUR</option><option>BGN</option><option>USD</option><option>GBP</option></select></label>
+          <label class="f full"><span>Sizes or options (comma between them)</span><input name="sizes" placeholder="S, M, L, XL"></label>
+          <label class="f full"><span>Stripe Payment Link</span><input name="stripe_link" placeholder="https://buy.stripe.com/…">
+            <span class="hint">In Stripe: Product catalogue, + Add product (name, price, photo). Then Payment Links, + New, pick the product, tick "Collect customers' addresses" for shipping and, if it has sizes, add a dropdown custom field for the size. Create link, copy it, paste it here.</span></label>
+          <div class="f full"><span class="hint" style="letter-spacing:.16em;text-transform:uppercase;font-size:12px">Photos (the first is the cover; the second shows on hover)</span><div class="photos" id="photos"></div></div>
+          <label class="switch"><input type="checkbox" name="active"> Show on the site</label>
+          <label class="switch"><input type="checkbox" name="sold_out"> Sold out</label>
+          <label class="f"><span>Order (smaller comes first)</span><input name="position" inputmode="numeric" value="0"></label>
+        </div>
+      </form>
+    </section>
+
+    <section data-pane="look" hidden>
+      <h1>Look</h1>
+      <p class="lede">The site's theme. A click changes it for every visitor at once; Preview opens it without changing anything.</p>
+      <div class="themes" id="themes"></div>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="filePick" accept="image/jpeg,image/png,image/webp" multiple hidden>
+
+<script>
+const SUPABASE_URL = 'https://naibamqexcqnqhbbqafa.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_o1OB_ohozPq1Xr2jg2ZSHA_3GsusXFL'
+const $ = (id) => document.getElementById(id)
+const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+let toastTimer
+function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2600) }
+
+/* ---------- the session: the hub's own accounts, kept in this browser ---------- */
+let session = null
+try { session = JSON.parse(localStorage.getItem('tml_site_admin') || 'null') } catch (e) {}
+const saveSession = (s) => { session = s; try { s ? localStorage.setItem('tml_site_admin', JSON.stringify(s)) : localStorage.removeItem('tml_site_admin') } catch (e) {} }
+async function auth(grant, body) {
+  const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=${grant}`, { method: 'POST', headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  const j = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error(j.error_description || j.msg || 'Could not sign in.')
+  return { access: j.access_token, refresh: j.refresh_token, until: Date.now() + (j.expires_in || 3600) * 1000 - 60000, email: j.user && j.user.email }
+}
+async function token() {
+  if (!session) throw new Error('signed out')
+  if (Date.now() > session.until) saveSession({ ...(await auth('refresh_token', { refresh_token: session.refresh })), email: session.email })
+  return session.access
+}
+async function api(path, opts = {}) {
+  const r = await fetch(`${SUPABASE_URL}/${path}`, { ...opts, headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${await token()}`, ...(opts.body && !(opts.body instanceof Blob) ? { 'Content-Type': 'application/json' } : {}), ...(opts.headers || {}) } })
+  if (r.status === 401) { saveSession(null); showDoor(); throw new Error('Signed out') }
+  if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.message || j.error || `Error ${r.status}`) }
+  return r.status === 204 ? null : r.json().catch(() => null)
+}
+const rest = (path, opts) => api(`rest/v1/${path}`, opts)
+async function isAdmin() { return (await rest('rpc/is_admin', { method: 'POST', body: '{}' })) === true }
+
+function showDoor() { $('app').hidden = true; $('door').hidden = false }
+$('login').onsubmit = async (e) => {
+  e.preventDefault()
+  const f = new FormData(e.target)
+  $('loginBtn').disabled = true; $('loginMsg').textContent = ''
+  try {
+    saveSession(await auth('password', { email: f.get('email').trim(), password: f.get('password') }))
+    if (!(await isAdmin())) { saveSession(null); throw new Error('This account is not an administrator of THEMADLIONS Hub.') }
+    start()
+  } catch (err) { $('loginMsg').textContent = err.message } finally { $('loginBtn').disabled = false }
+}
+$('signout').onclick = () => { saveSession(null); showDoor() }
+
+/* ---------- tabs ---------- */
+let tab = 'stats'
+$('tabs').onclick = (e) => {
+  const b = e.target.closest('button'); if (!b) return
+  tab = b.dataset.tab
+  document.querySelectorAll('#tabs button').forEach((x) => x.classList.toggle('on', x === b))
+  document.querySelectorAll('[data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== tab })
+  if (tab === 'stats') loadStats(); if (tab === 'leads') loadLeads(); if (tab === 'shop') loadProducts(); if (tab === 'look') loadLook()
+}
+
+/* ---------- statistics ---------- */
+let days = 30
+$('range').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; days = +b.dataset.d; document.querySelectorAll('#range button').forEach((x) => x.classList.toggle('on', x === b)); loadStats() }
+async function allEvents(since) {
+  const out = []
+  for (let from = 0; from < 100000; from += 1000) {
+    const rows = await rest(`site_events?select=at,kind,ref,device,referrer,lang,visitor&at=gte.${since.toISOString()}&order=at.asc`, { headers: { Range: `${from}-${from + 999}` } })
+    out.push(...rows)
+    if (rows.length < 1000) break
+  }
+  return out
+}
+const dayKey = (d) => d.toISOString().slice(0, 10)
+function list(el, pairs, empty) {
+  const max = Math.max(1, ...pairs.map((p) => p[1]))
+  el.innerHTML = pairs.length ? pairs.map(([k, v]) => `<div class="li"><span>${esc(k)}</span><b>${v}</b><span class="meter"><i style="width:${Math.round(v / max * 100)}%"></i></span></div>`).join('') : `<div class="muted">${empty}</div>`
+}
+function count(rows, f) { const m = new Map(); rows.forEach((r) => { const k = f(r); if (k) m.set(k, (m.get(k) || 0) + 1) }); return [...m].sort((a, b) => b[1] - a[1]) }
+async function loadStats() {
+  const since = new Date(); since.setHours(0, 0, 0, 0); since.setDate(since.getDate() - (days - 1))
+  let ev = []
+  try { ev = await allEvents(since) } catch (e) { toast(e.message); return }
+  const views = ev.filter((e) => e.kind === 'view')
+  const kp = [
+    [new Set(views.map((e) => e.visitor)).size, 'Visitors'], [views.length, 'Page views'],
+    [ev.filter((e) => e.kind === 'play').length, 'Films played'], [ev.filter((e) => e.kind === 'lead').length, 'Enquiries'],
+    [ev.filter((e) => e.kind === 'shop').length, 'Buy clicks'],
+  ]
+  $('kpis').innerHTML = kp.map(([n, l]) => `<div class="tile kpi"><strong>${n}</strong><span>${l}</span></div>`).join('')
+  const per = new Map(); for (let i = 0; i < days; i++) { const d = new Date(since); d.setDate(d.getDate() + i); per.set(dayKey(d), new Set()) }
+  views.forEach((e) => { const k = dayKey(new Date(e.at)); if (per.has(k)) per.get(k).add(e.visitor) })
+  const max = Math.max(1, ...[...per.values()].map((s) => s.size))
+  $('chart').innerHTML = [...per].map(([k, s]) => `<div class="day"><span class="tip">${new Date(k).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · ${s.size} visitor${s.size === 1 ? '' : 's'}</span><div class="bar" style="height:${Math.round(s.size / max * 100)}%"></div></div>`).join('')
+  const keys = [...per.keys()]
+  const fmt = (k) => new Date(k).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  $('axis').innerHTML = `<span>${fmt(keys[0])}</span><span>${fmt(keys[Math.floor(keys.length / 2)])}</span><span>${fmt(keys[keys.length - 1])}</span>`
+  list($('topFilms'), count(ev.filter((e) => e.kind === 'play'), (e) => e.ref).slice(0, 10), 'No film played yet.')
+  list($('topRefs'), count(views, (e) => e.referrer || 'Direct or typed').slice(0, 10), 'No visits yet.')
+  const dev = count(views, (e) => e.device), lg = count(views, (e) => (e.lang === 'el' ? 'Greek' : 'English'))
+  list($('devices'), [...dev.map(([k, v]) => [k[0].toUpperCase() + k.slice(1), v]), ...lg], 'No visits yet.')
+}
+
+/* ---------- enquiries ---------- */
+let leads = [], leadFilter = 'all'
+$('leadFilter').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; leadFilter = b.dataset.s; document.querySelectorAll('#leadFilter button').forEach((x) => x.classList.toggle('on', x === b)); renderLeads() }
+async function loadLeads() {
+  try { leads = await rest('site_leads?select=*&order=created_at.desc&limit=500') } catch (e) { toast(e.message); return }
+  renderLeads()
+}
+function renderLeads() {
+  const n = leads.filter((l) => l.status === 'new').length
+  $('newCount').hidden = !n; $('newCount').textContent = n
+  const shown = leads.filter((l) => leadFilter === 'all' || l.status === leadFilter)
+  if (!shown.length) { $('leads').innerHTML = `<div class="empty">${leads.length ? 'Nothing here.' : 'No enquiries yet. They appear here the moment someone sends the form.'}</div>`; return }
+  $('leads').innerHTML = shown.map((l) => `
+    <div class="lead ${l.status === 'new' ? 'new' : ''}" data-id="${esc(l.id)}">
+      <div class="head"><strong>${esc(l.name || l.email)}</strong>${l.company ? `<span class="muted">${esc(l.company)}</span>` : ''}<span class="when">${new Date(l.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div>
+      <div class="chips">${[l.kind, l.budget, l.needed_by && `By ${l.needed_by}`, l.lang === 'el' ? 'Wrote in Greek' : ''].filter(Boolean).map((c) => `<span class="chip"><i></i>${esc(c)}</span>`).join('')}</div>
+      ${l.message ? `<div class="text">${esc(l.message)}</div>` : ''}
+      <div class="acts">
+        <a class="pill main" href="mailto:${encodeURIComponent(l.email)}?subject=${encodeURIComponent('The Mad Lions · your project')}">Reply to ${esc(l.email)}</a>
+        <div class="seg">${['new', 'replied', 'closed'].map((s) => `<button type="button" data-status="${s}" class="${l.status === s ? 'on' : ''}">${s[0].toUpperCase() + s.slice(1)}</button>`).join('')}</div>
+        <span class="grow"></span>
+        <button class="pill danger" type="button" data-del>Delete</button>
+      </div>
+    </div>`).join('')
+}
+$('leads').onclick = async (e) => {
+  const card = e.target.closest('.lead'); if (!card) return
+  const id = card.dataset.id
+  const st = e.target.closest('[data-status]')
+  try {
+    if (st) { await rest(`site_leads?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ status: st.dataset.status }), headers: { Prefer: 'return=minimal' } }); leads.find((l) => l.id === id).status = st.dataset.status; renderLeads() }
+    if (e.target.closest('[data-del]') && confirm('Delete this enquiry for good?')) { await rest(`site_leads?id=eq.${id}`, { method: 'DELETE' }); leads = leads.filter((l) => l.id !== id); renderLeads(); toast('Deleted') }
+  } catch (err) { toast(err.message) }
+}
+
+/* ---------- shop ---------- */
+let products = [], editing = null
+async function loadProducts() {
+  try { products = await rest('site_products?select=*&order=position.asc,created_at.desc') } catch (e) { toast(e.message); return }
+  renderProducts()
+}
+const money = (p) => p.price == null ? 'No price' : new Intl.NumberFormat('en-IE', { style: 'currency', currency: p.currency || 'EUR' }).format(p.price)
+function renderProducts() {
+  $('products').innerHTML = products.length ? products.map((p) => `
+    <div class="prod" data-id="${esc(p.id)}">
+      <div class="ph" style="background-image:url('${esc((p.images || [])[0] || '')}')"><span class="state chip"><i style="background:${p.active ? 'var(--ok)' : 'var(--muted)'}"></i>${p.sold_out ? 'Sold out' : p.active ? 'On the site' : 'Hidden'}</span></div>
+      <div class="in"><strong>${esc(p.title)}</strong><span class="muted">${money(p)}${p.stripe_link ? '' : ' · no Stripe link yet'}</span></div>
+    </div>`).join('') : '<div class="empty">No products yet. Press + New product.</div>'
+}
+$('products').onclick = (e) => { const c = e.target.closest('.prod'); if (c) openEditor(products.find((p) => p.id === c.dataset.id)) }
+$('newProduct').onclick = () => openEditor(null)
+$('backToShop').onclick = () => { $('editor').hidden = true; $('shopList').hidden = false }
+function openEditor(p) {
+  editing = p ? { ...p, images: [...(p.images || [])] } : { title: '', description: '', price: null, currency: 'EUR', sizes: [], stripe_link: '', active: false, sold_out: false, position: 0, images: [] }
+  const f = $('editor')
+  f.title.value = editing.title || ''; f.description.value = editing.description || ''
+  f.price.value = editing.price == null ? '' : editing.price; f.currency.value = editing.currency || 'EUR'
+  f.sizes.value = (editing.sizes || []).join(', '); f.stripe_link.value = editing.stripe_link || ''
+  f.active.checked = !!editing.active; f.sold_out.checked = !!editing.sold_out; f.position.value = editing.position || 0
+  $('editorTitle').textContent = p ? p.title : 'New product'
+  $('delProduct').hidden = !p
+  renderPhotos()
+  $('shopList').hidden = true; f.hidden = false
+}
+function renderPhotos() {
+  $('photos').innerHTML = editing.images.map((u, i) => `<div class="photo" style="background-image:url('${esc(u)}')">${i === 0 ? '<span class="first">Cover</span>' : ''}<button type="button" data-rm="${i}" aria-label="Remove">×</button></div>`).join('') + '<div class="add-photo" id="addPhoto">+ Add<br>photos</div>'
+}
+$('photos').onclick = (e) => {
+  const rm = e.target.closest('[data-rm]')
+  if (rm) { editing.images.splice(+rm.dataset.rm, 1); renderPhotos() }
+  if (e.target.closest('#addPhoto')) $('filePick').click()
+}
+$('filePick').onchange = async (e) => {
+  const files = [...e.target.files]; e.target.value = ''
+  for (const file of files) {
+    toast(`Uploading ${file.name}…`)
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
+    const path = `products/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+    try {
+      await api(`storage/v1/object/site/${path}`, { method: 'POST', body: file, headers: { 'Content-Type': file.type, 'x-upsert': 'false' } })
+      editing.images.push(`${SUPABASE_URL}/storage/v1/object/public/site/${path}`)
+      renderPhotos()
+    } catch (err) { toast(`${file.name}: ${err.message}`) }
+  }
+  toast('Photos added · press Save')
+}
+$('editor').onsubmit = async (e) => {
+  e.preventDefault()
+  const f = e.target
+  const link = f.stripe_link.value.trim()
+  if (link && !/^https:\/\//.test(link)) { toast('The Stripe link should start with https://'); return }
+  const price = f.price.value.trim().replace(',', '.')
+  const row = {
+    title: f.title.value.trim(), description: f.description.value.trim(), price: price === '' ? null : Number(price), currency: f.currency.value,
+    sizes: f.sizes.value.split(',').map((x) => x.trim()).filter(Boolean), stripe_link: link || null, active: f.active.checked, sold_out: f.sold_out.checked,
+    position: parseInt(f.position.value, 10) || 0, images: editing.images,
+  }
+  if (!row.title) { toast('Give it a name.'); return }
+  if (row.price != null && !isFinite(row.price)) { toast('The price should be a number, e.g. 35 or 35.50'); return }
+  $('saveProduct').disabled = true
+  try {
+    if (editing.id) await rest(`site_products?id=eq.${editing.id}`, { method: 'PATCH', body: JSON.stringify(row), headers: { Prefer: 'return=minimal' } })
+    else await rest('site_products', { method: 'POST', body: JSON.stringify(row), headers: { Prefer: 'return=minimal' } })
+    toast(row.active ? 'Saved · it is on the site' : 'Saved · hidden from the site')
+    $('editor').hidden = true; $('shopList').hidden = false
+    loadProducts()
+  } catch (err) { toast(err.message) } finally { $('saveProduct').disabled = false }
+}
+$('delProduct').onclick = async () => {
+  if (!editing.id || !confirm(`Delete "${editing.title}" for good?`)) return
+  try { await rest(`site_products?id=eq.${editing.id}`, { method: 'DELETE' }); toast('Deleted'); $('editor').hidden = true; $('shopList').hidden = false; loadProducts() } catch (err) { toast(err.message) }
+}
+
+/* ---------- the look ---------- */
+const THEMES = [
+  { key: 'dark', name: 'Dark', note: 'Black, Ferrari red', bg: '#0b0b0c', card: '#18181b', accent: '#d40000', wm: 'invert(1)' },
+  { key: 'light', name: 'Light', note: 'Paper, Ferrari red', bg: '#f3f0e8', card: '#ffffff', accent: '#d40000', wm: 'none' },
+  { key: 'blue', name: 'Blue', note: 'Night glass, Ferrari red', bg: '#08101f', card: '#15233f', accent: '#d40000', wm: 'invert(1)' },
+]
+let theme = 'dark'
+async function loadLook() {
+  try { const r = await rest('site_settings?key=eq.theme&select=value'); theme = (r[0] && r[0].value) || 'dark' } catch (e) { toast(e.message) }
+  renderLook()
+}
+function renderLook() {
+  $('themes').innerHTML = THEMES.map((t) => `
+    <button type="button" class="theme ${t.key === theme ? 'on' : ''}" data-theme="${t.key}">
+      <div class="pv" style="background:${t.bg}"><img src="../wordmark.png" alt="" style="filter:${t.wm}"><div class="btn" style="background:${t.accent}"></div><div class="bars">${'<i></i>'.repeat(4).replace(/<i>/g, `<i style="background:${t.card}">`)}</div></div>
+      <div class="name"><strong>${t.name}</strong><span class="muted">${t.note}</span></div>
+      <div class="row" style="margin:12px 0 0"><a class="pill" href="../?theme=${t.key}" target="_blank" rel="noopener" data-preview>Preview</a>${t.key === theme ? '<span class="chip"><i style="background:var(--ok)"></i>On the site</span>' : ''}</div>
+    </button>`).join('')
+}
+$('themes').onclick = async (e) => {
+  if (e.target.closest('[data-preview]')) return
+  const b = e.target.closest('[data-theme]'); if (!b || b.dataset.theme === theme) return
+  try {
+    await rest('site_settings?on_conflict=key', { method: 'POST', body: JSON.stringify({ key: 'theme', value: b.dataset.theme, updated_at: new Date().toISOString() }), headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } })
+    theme = b.dataset.theme; renderLook(); toast(`The site is now ${THEMES.find((t) => t.key === theme).name}`)
+  } catch (err) { toast(err.message) }
+}
+
+/* ---------- start ---------- */
+async function start() {
+  try {
+    if (!session || !(await isAdmin())) { showDoor(); return }
+  } catch (e) { showDoor(); return }
+  $('door').hidden = true; $('app').hidden = false
+  loadStats(); loadLeads()
+}
+start()
+</script>
+</body>
+</html>
