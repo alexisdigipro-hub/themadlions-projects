@@ -135,6 +135,7 @@ main { padding: 26px var(--pad) 90px; min-width: 0; }
 .w .ph { aspect-ratio: 16 / 9; background: #18181b center / cover; position: relative; }
 .w.off .ph { filter: grayscale(1) brightness(.45); }
 .w .no { position: absolute; top: 8px; left: 8px; min-width: 26px; height: 22px; padding: 0 7px; border-radius: 8px; background: rgba(0,0,0,.6); font-size: 11.5px; font-weight: 600; display: grid; place-items: center; }
+.w .aibm { position: absolute; left: 8px; bottom: 8px; height: 20px; padding: 0 7px; border-radius: 6px; background: rgba(212,0,0,.85); font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; display: grid; place-items: center; }
 .w .eye { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border-radius: 10px; border: 0; background: rgba(0,0,0,.55); color: #fff; display: grid; place-items: center; cursor: pointer; }
 .w .eye:hover { background: rgba(0,0,0,.85); }
 .w .in { padding: 12px 14px 14px; }
@@ -367,6 +368,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
     </div>
     <div class="f"><span>Categories</span><div class="chips" id="wCats"></div><input id="wNewCat" placeholder="Another category, then Enter" style="height:38px;font-size:14px"></div>
     <label class="switch"><input type="checkbox" name="visible" checked> Show on the site</label>
+    <label class="switch"><input type="checkbox" name="aibsent"> Made by Aibsent Studios <span class="hint">(post-production &amp; AI: the film gets the "by Aibsent" mark and shows in its section)</span></label>
   </div>
   <div class="df"><button class="btn danger" type="button" id="wDelete">Delete</button><span class="grow"></span><button class="btn" type="button" data-close>Cancel</button><button class="btn red" type="submit" id="wSave">Save</button></div>
 </form>
@@ -530,6 +532,7 @@ async function loadOverview() {
 /* ---------- work ---------- */
 let works = [], workCat = 'All', editingWork = null
 const BASE_CATS = ['Commercials', 'Music Videos', 'Corporate', 'Motion Graphics', 'Events', 'Films', 'AI Films', 'Showreels', 'Behind the Scenes']
+const AIB = 'Aibsent'
 const allCats = () => [...new Set([...BASE_CATS, ...works.flatMap((w) => w.categories || [])])]
 async function loadWorks() {
   $('works').innerHTML = '<div class="skel" style="aspect-ratio:16/11;border-radius:18px"></div>'.repeat(8)
@@ -538,13 +541,13 @@ async function loadWorks() {
 }
 $('workSearch').oninput = () => renderWorks()
 function renderWorks() {
-  $('workCats').innerHTML = ['All', ...allCats()].map((c) => `<button type="button" class="chip ${c === workCat ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('')
+  $('workCats').innerHTML = ['All', ...allCats(), AIB].map((c) => `<button type="button" class="chip ${c === workCat ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('')
   const q = $('workSearch').value.trim().toLowerCase()
-  const shown = works.filter((w) => (workCat === 'All' || (w.categories || []).includes(workCat)) && (!q || `${w.title} ${w.client || ''}`.toLowerCase().includes(q)))
+  const shown = works.filter((w) => (workCat === 'All' || (workCat === AIB ? w.aibsent : (w.categories || []).includes(workCat))) && (!q || `${w.title} ${w.client || ''}`.toLowerCase().includes(q)))
   const canDrag = workCat === 'All' && !q
   $('works').innerHTML = shown.length ? shown.map((w) => `
     <div class="w glass ${w.visible ? '' : 'off'}" data-id="${esc(w.id)}" draggable="${canDrag}">
-      <div class="ph" style="background-image:url('${esc(thumbOf(w))}')"><span class="no">${works.indexOf(w) + 1}</span><button class="eye" type="button" data-eye title="${w.visible ? 'Hide from the site' : 'Show on the site'}"><svg class="i"><use href="#${w.visible ? 'i-eye' : 'i-eyeoff'}"/></svg></button></div>
+      <div class="ph" style="background-image:url('${esc(thumbOf(w))}')"><span class="no">${works.indexOf(w) + 1}</span>${w.aibsent ? '<span class="aibm">Aibsent</span>' : ''}<button class="eye" type="button" data-eye title="${w.visible ? 'Hide from the site' : 'Show on the site'}"><svg class="i"><use href="#${w.visible ? 'i-eye' : 'i-eyeoff'}"/></svg></button></div>
       <div class="in"><strong>${esc(w.title)}</strong><small>${esc([w.client, w.year, (w.categories || []).join(', ')].filter(Boolean).join(' · ') || 'No category')}</small></div>
     </div>`).join('') : '<div class="empty">No film matches.</div>'
 }
@@ -590,7 +593,7 @@ $('wNewCat').onkeydown = (e) => { if (e.key !== 'Enter') return; e.preventDefaul
 function openWork(w) {
   editingWork = w ? { ...w, categories: [...(w.categories || [])] } : { title: '', client: '', year: new Date().getFullYear(), categories: [], video: '', visible: true }
   const f = $('workDrawer')
-  f.video.value = editingWork.video || ''; f.title.value = editingWork.title || ''; f.client.value = editingWork.client || ''; f.year.value = editingWork.year || ''; f.visible.checked = editingWork.visible !== false
+  f.video.value = editingWork.video || ''; f.title.value = editingWork.title || ''; f.client.value = editingWork.client || ''; f.year.value = editingWork.year || ''; f.visible.checked = editingWork.visible !== false; f.aibsent.checked = !!editingWork.aibsent
   $('wTitle').textContent = w ? 'Edit the film' : 'Add a film'
   $('wDelete').hidden = !w
   showPreview(); renderWorkCats(); openDrawer(f)
@@ -616,7 +619,7 @@ $('workDrawer').onsubmit = async (e) => {
   const f = e.target, v = parseVideo(f.video.value)
   if (!v) { toast('Paste a YouTube or Vimeo link'); f.video.focus(); return }
   const year = parseInt(f.year.value, 10)
-  const row = { title: f.title.value.trim(), client: f.client.value.trim() || null, year: year > 1900 && year < 2100 ? year : null, categories: editingWork.categories, video: v.url, kind: v.kind, video_id: v.id, visible: f.visible.checked }
+  const row = { title: f.title.value.trim(), client: f.client.value.trim() || null, year: year > 1900 && year < 2100 ? year : null, categories: editingWork.categories, video: v.url, kind: v.kind, video_id: v.id, visible: f.visible.checked, aibsent: f.aibsent.checked }
   if (!row.title) { toast('Give it a title'); f.title.focus(); return }
   $('wSave').disabled = true
   try {

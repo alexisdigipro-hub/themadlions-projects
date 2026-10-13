@@ -260,6 +260,22 @@ html[data-theme='light'] .svc::after { background: linear-gradient(180deg, rgba(
 .product .sizes { display: flex; flex-wrap: wrap; gap: 6px; }
 .product .sizes span { min-width: 34px; height: 28px; padding: 0 9px; border-radius: 999px; border: 1px solid var(--line); display: grid; place-items: center; font-size: 12px; color: var(--muted); }
 .product .buy { margin-top: 6px; height: 42px; }
+
+/* Aibsent Studios: The Mad Lions' post-production & AI studio, a panel of its own with a red glow */
+.aibsent { border-top: 1px solid var(--line); }
+.aib { position: relative; display: grid; grid-template-columns: 1fr 1.15fr; gap: clamp(28px, 5vw, 72px); align-items: center; padding: clamp(28px, 4vw, 56px); border-radius: 28px; overflow: hidden; background: radial-gradient(60% 80% at 0% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%), radial-gradient(50% 70% at 100% 100%, color-mix(in srgb, #6d28d9 16%, transparent), transparent 70%), var(--bg-2); border: 1px solid var(--line); }
+.aib-logo { width: min(320px, 70%); height: auto; }
+html[data-theme='light'] .aib-logo { filter: invert(1); }
+.aib-kicker { margin: 22px 0 0; font-size: 13px; font-weight: 500; letter-spacing: .26em; text-transform: uppercase; color: var(--accent); }
+.aib-lead { margin: 14px 0 0; font-size: clamp(17px, 1.7vw, 21px); font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 85%, transparent); }
+.aib-caps { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.aib-caps span { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 12px; font-size: 14px; background: color-mix(in srgb, var(--hi) 6%, transparent); border: 1px solid var(--line); }
+.aib-caps span i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.aib-cta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; }
+.aib-works { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.aib-works .tile:first-child { grid-column: 1 / -1; }
+.badge-aib { position: absolute; top: 10px; left: 10px; z-index: 1; height: 22px; padding: 0 9px; border-radius: 7px; display: inline-flex; align-items: center; font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.18); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+@media (max-width: 900px) { .aib { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -269,6 +285,7 @@ html[data-theme='light'] .svc::after { background: linear-gradient(180deg, rgba(
   <nav>
     <a href="#work" data-t="nav.work">Work</a>
     <a href="#services" data-t="nav.services">Services</a>
+    <a href="#aibsent">Aibsent</a>
     <a href="#process" data-t="nav.process">Process</a>
     <a href="#clients" data-t="nav.clients">Clients</a>
     <a href="#shop" data-t="nav.shop" id="navShop" hidden>Shop</a>
@@ -319,6 +336,22 @@ html[data-theme='light'] .svc::after { background: linear-gradient(180deg, rgba(
     <h2 class="reveal" data-t="svc.title" data-html>What we <b>make.</b></h2>
     <p class="sub reveal" data-t="svc.sub">One team from the first idea to the final master: we write, produce, shoot and finish in house.</p>
     <div class="svc-grid" id="svcGrid"></div>
+  </section>
+
+  <section id="aibsent" class="aibsent">
+    <div class="aib reveal">
+      <div class="aib-text">
+        <img class="aib-logo" src="aibsent.png" alt="Aibsent Studios">
+        <p class="aib-kicker" data-t="aib.kicker">Post-production &amp; AI · a Mad Lions studio</p>
+        <p class="aib-lead" data-t="aib.lead">Our in-house post and AI studio. It finishes our films and takes on yours: from the edit and the grade to visual effects, motion graphics and films made with AI.</p>
+        <div class="aib-caps" id="aibCaps"></div>
+        <div class="aib-cta">
+          <button class="pill main" type="button" id="aibTalk" data-t="aib.talk">Work with Aibsent</button>
+          <button class="pill" type="button" id="aibAll" data-t="aib.all">All Aibsent work</button>
+        </div>
+      </div>
+      <div class="aib-works" id="aibWorks"></div>
+    </div>
   </section>
 
   <section id="process" class="process">
@@ -406,6 +439,7 @@ const SUPABASE_KEY = 'sb_publishable_o1OB_ohozPq1Xr2jg2ZSHA_3GsusXFL'
 const T = {
   en: {
     'nav.work': 'Work', 'nav.services': 'Services', 'nav.process': 'Process', 'nav.clients': 'Clients', 'nav.shop': 'Shop', 'nav.contact': 'Contact',
+    'aib.kicker': 'Post-production & AI · a Mad Lions studio', 'aib.lead': 'Our in-house post and AI studio. It finishes our films and takes on yours: from the edit and the grade to visual effects, motion graphics and films made with AI.', 'aib.talk': 'Work with Aibsent', 'aib.all': 'All Aibsent work', 'aib.badge': 'by Aibsent', 'svc.aib': 'Meet Aibsent Studios',
     'shop.label': 'Shop', 'shop.title': 'Mad <b>merch.</b>', 'shop.buy': 'Buy', 'shop.soldout': 'Sold out',
     'hero.kicker': 'Video production company', 'hero.line': 'Commercials, music videos and corporate films, from the first idea to final delivery.',
     'hero.work': 'See the work', 'hero.talk': 'Tell us about your project', 'hero.reel': 'Watch the showreel',
@@ -427,6 +461,7 @@ const T = {
   },
   el: {
     'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.shop': 'Shop', 'nav.contact': 'Επαφή',
+    'aib.kicker': 'Post-production & AI · ένα studio των Mad Lions', 'aib.lead': 'Το δικό μας studio για post-production και AI. Ολοκληρώνει τις ταινίες μας και αναλαμβάνει και τις δικές σας: από μοντάζ και χρώμα ως visual effects, motion graphics και ταινίες με AI.', 'aib.talk': 'Δουλέψτε με την Aibsent', 'aib.all': 'Όλη η δουλειά της Aibsent', 'aib.badge': 'by Aibsent', 'svc.aib': 'Γνωρίστε την Aibsent Studios',
     'shop.label': 'Shop', 'shop.title': 'Mad <b>merch.</b>', 'shop.buy': 'Αγορά', 'shop.soldout': 'Εξαντλήθηκε',
     'hero.kicker': 'Εταιρεία παραγωγής βίντεο', 'hero.line': 'Διαφημιστικά, βίντεο κλιπ και εταιρικές ταινίες, από την πρώτη ιδέα ως την τελική παράδοση.',
     'hero.work': 'Δείτε τη δουλειά', 'hero.talk': 'Πείτε μας για το project σας', 'hero.reel': 'Δείτε το showreel',
@@ -457,7 +492,7 @@ const SERVICES = [
   { en: ['Corporate Films', 'Brand films, events and campaigns that tell what a company does, clearly and beautifully.'],
     el: ['Εταιρικές ταινίες', 'Brand films, events και καμπάνιες που λένε τι κάνει μια εταιρεία, καθαρά και όμορφα.'], ex: 'L’Oréal – UNESCO For Women In Science' },
   { en: ['Post-production', 'Editing, color grading, visual effects, motion graphics and compositing, for our films or for yours.'],
-    el: ['Post-production', 'Μοντάζ, color grading, visual effects, motion graphics και compositing, για τις δικές μας ταινίες ή για τις δικές σας.'], ex: 'Tresemmé' },
+    el: ['Post-production', 'Μοντάζ, color grading, visual effects, motion graphics και compositing, για τις δικές μας ταινίες ή για τις δικές σας.'], ex: 'Tresemmé', aib: true },
 ]
 const STEPS = [
   { en: ['Idea', 'We listen, then come back with a concept, a treatment and a clear budget.'], el: ['Ιδέα', 'Ακούμε και επιστρέφουμε με concept, treatment και ξεκάθαρο budget.'] },
@@ -508,17 +543,17 @@ function renderFilters() {
   box.innerHTML = ''
   const used = new Set(WORKS.flatMap((w) => w.c))
   const cats = [...Object.keys(CATS).filter((c) => used.has(c)), ...[...used].filter((c) => !(c in CATS))]
-  for (const c of ['all', ...cats]) {
+  for (const c of ['all', ...cats, ...(WORKS.some((w) => w.aib) ? ['aibsent'] : [])]) {
     const b = document.createElement('button')
     b.type = 'button'
-    b.textContent = c === 'all' ? t('all') : lang === 'el' ? (CATS[c] || c) : c
+    b.textContent = c === 'all' ? t('all') : c === 'aibsent' ? 'Aibsent' : lang === 'el' ? (CATS[c] || c) : c
     b.className = c === filter ? 'on' : ''
     b.onclick = () => { filter = c; showAll = false; renderFilters(); renderGrid() }
     box.appendChild(b)
   }
 }
 function renderGrid() {
-  const list = WORKS.filter((w) => filter === 'all' || w.c.includes(filter))
+  const list = WORKS.filter((w) => filter === 'all' || (filter === 'aibsent' ? w.aib : w.c.includes(filter)))
   const shown = showAll ? list : list.slice(0, SHORT)
   const grid = document.getElementById('grid')
   grid.innerHTML = ''
@@ -527,7 +562,7 @@ function renderGrid() {
     b.type = 'button'
     b.className = 'tile reveal'
     b.appendChild(img(w, false))
-    b.insertAdjacentHTML('beforeend', `<span class="play">${PLAY}</span><span class="cap"><strong></strong><span></span></span>`)
+    b.insertAdjacentHTML('beforeend', `${w.aib ? `<span class="badge-aib">${t('aib.badge')}</span>` : ''}<span class="play">${PLAY}</span><span class="cap"><strong></strong><span></span></span>`)
     b.querySelector('.cap strong').textContent = w.t
     b.querySelector('.cap span').textContent = [w.client, ...w.c.map((c) => (lang === 'el' ? (CATS[c] || c) : c))].filter(Boolean).join(' · ')
     b.onclick = () => play(w)
@@ -552,11 +587,32 @@ function renderServices() {
     card.insertAdjacentHTML('beforeend', `<div class="in"><small>0${n + 1}</small><h3></h3><p></p><button type="button" class="ex"><i>${PLAY}</i><span></span></button></div>`)
     card.querySelector('h3').textContent = name
     card.querySelector('p').textContent = text
-    card.querySelector('.ex span').textContent = `${t('svc.ex')}: ${w.t}`
-    card.querySelector('.ex').onclick = () => play(w)
+    if (s.aib) { card.querySelector('.ex span').textContent = t('svc.aib'); card.querySelector('.ex').onclick = () => document.getElementById('aibsent').scrollIntoView({ behavior: 'smooth' }) }
+    else { card.querySelector('.ex span').textContent = `${t('svc.ex')}: ${w.t}`; card.querySelector('.ex').onclick = () => play(w) }
     box.appendChild(card)
   })
 }
+const AIB_CAPS = [['Editing', 'Μοντάζ'], ['Color grading', 'Color grading'], ['Visual FX', 'Visual FX'], ['Motion graphics', 'Motion graphics'], ['Compositing', 'Compositing'], ['AI films', 'Ταινίες με AI']]
+function renderAibsent() {
+  document.getElementById('aibCaps').innerHTML = AIB_CAPS.map((c) => `<span><i></i>${lang === 'el' ? c[1] : c[0]}</span>`).join('')
+  const box = document.getElementById('aibWorks')
+  box.innerHTML = ''
+  const list = WORKS.filter((w) => w.aib).slice(0, 5)
+  document.getElementById('aibAll').hidden = !list.length
+  list.forEach((w, n) => {
+    const b = document.createElement('button')
+    b.type = 'button'; b.className = 'tile'
+    b.appendChild(img(w, n === 0))
+    b.insertAdjacentHTML('beforeend', `<span class="play">${PLAY}</span><span class="cap"><strong></strong><span></span></span>`)
+    b.querySelector('.cap strong').textContent = w.t
+    b.querySelector('.cap span').textContent = w.c.map((c) => (lang === 'el' ? (CATS[c] || c) : c)).join(' · ')
+    b.onclick = () => play(w)
+    box.appendChild(b)
+  })
+}
+document.getElementById('aibTalk').onclick = () => { pick.kind = 'Post-production'; renderChoices(); document.getElementById('contact').scrollIntoView({ behavior: 'smooth' }) }
+document.getElementById('aibAll').onclick = () => { filter = 'aibsent'; showAll = true; renderFilters(); renderGrid(); document.getElementById('work').scrollIntoView({ behavior: 'smooth' }) }
+
 function renderSteps() {
   document.getElementById('steps').innerHTML = STEPS.map((s) => { const [h, p] = s[lang] || s.en; return `<div class="step reveal"><h3>${h}</h3><p>${p}</p></div>` }).join('')
 }
@@ -644,7 +700,7 @@ function applyLang() {
   document.querySelectorAll('[data-t]').forEach((el) => { const v = t(el.dataset.t); if (el.hasAttribute('data-html')) el.innerHTML = v; else el.textContent = v })
   document.querySelectorAll('[data-ph]').forEach((el) => { el.placeholder = t(el.dataset.ph) })
   document.querySelectorAll('.lang button').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang))
-  renderFilters(); renderGrid(); renderServices(); renderSteps(); renderAbout(); renderChoices(); if (typeof renderShop === 'function' && products) renderShop(); observe()
+  renderFilters(); renderGrid(); renderServices(); renderAibsent(); renderSteps(); renderAbout(); renderChoices(); if (typeof renderShop === 'function' && products) renderShop(); observe()
 }
 document.querySelectorAll('.lang button').forEach((b) => { b.onclick = () => { lang = b.dataset.lang; try { localStorage.setItem('tml_site_lang', lang) } catch (e) {} applyLang() } })
 
@@ -742,10 +798,10 @@ function renderShop() {
 /* the work as Alex keeps it in the admin (site_works); works.js is only the first paint */
 async function loadWorks() {
   try {
-    const rows = await (await api('site_works?visible=eq.true&select=title,client,categories,kind,video_id,image&order=position.asc,created_at.desc')).json()
+    const rows = await (await api('site_works?visible=eq.true&select=title,client,categories,kind,video_id,image,aibsent&order=position.asc,created_at.desc')).json()
     if (!Array.isArray(rows) || !rows.length) return
-    WORKS = rows.filter((r) => r.video_id).map((r) => ({ t: r.title, c: r.categories || [], k: r.kind === 'vm' ? 'vm' : 'yt', id: r.video_id, img: r.image || '', client: r.client || '' }))
-    renderFilters(); renderGrid(); renderServices(); observe()
+    WORKS = rows.filter((r) => r.video_id).map((r) => ({ t: r.title, c: r.categories || [], k: r.kind === 'vm' ? 'vm' : 'yt', id: r.video_id, img: r.image || '', client: r.client || '', aib: !!r.aibsent }))
+    renderFilters(); renderGrid(); renderServices(); renderAibsent(); observe()
   } catch (e) {}
 }
 
