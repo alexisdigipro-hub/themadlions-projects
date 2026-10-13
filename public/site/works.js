@@ -1,15 +1,16 @@
 // The work shown on the site, newest first (taken from the old themadlions.com on 13 Oct 2026).
+// Only a first paint and a fallback: the site loads the list from the database (site_works), which Alex
+// edits in the site's admin.
 // k: yt = YouTube, vm = Vimeo; id: the video id; img: the old site's still, used when the video has no thumbnail.
 window.WORKS = [
-{"t": "PENELOPE", "c": ["AI Films"], "k": "yt", "id": "MOh7XEQSFSg", "img": "https://i.ytimg.com/vi/MOh7XEQSFSg/hqdefault.jpg"},
 {
-"t": "Rec Pop Up Concert",
+"t": "PENELOPE",
 "c": [
-"Events"
+"AI Films"
 ],
 "k": "yt",
-"id": "eblylyzRWdY",
-"img": "https://themadlions.com/wp-content/uploads/2020/09/maxresdefault-copy.jpg"
+"id": "MOh7XEQSFSg",
+"img": "https://i.ytimg.com/vi/MOh7XEQSFSg/hqdefault.jpg"
 },
 {
 "t": "Michalis Hatzigiannis – Horevo",
