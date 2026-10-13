@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Preview of the new themadlions.com (Alex, 13 Oct 2026). Not for search engines until it moves to its own address. -->
+<meta name="robots" content="noindex, nofollow">
+<title>The Mad Lions · Film production, Athens</title>
+<meta name="description" content="We design, shoot and edit film for any screen. Commercials, music videos, corporate films and motion graphics from Athens.">
+<meta name="theme-color" content="#0b0b0c">
+<meta property="og:title" content="The Mad Lions">
+<meta property="og:description" content="Film production · Athens">
+<meta property="og:image" content="https://go.themadlions.com/og-image.png">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0b0c; --bg-2: #121214; --text: #f2f0ec; --muted: #9a978f; --line: rgba(255,255,255,.1);
+  --accent: #e2b04a; --glass: rgba(255,255,255,.07); --glass-edge: rgba(255,255,255,.14);
+  --pad: clamp(16px, 4vw, 56px);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: Jost, system-ui, sans-serif; font-weight: 400; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+img { display: block; max-width: 100%; }
+.wordmark { filter: invert(1); height: auto; }
+
+/* top bar: wordmark, sections, language */
+.bar { position: fixed; inset: 0 0 auto 0; z-index: 20; display: flex; align-items: center; gap: 18px; padding: calc(14px + env(safe-area-inset-top)) var(--pad) 14px; transition: background .4s, backdrop-filter .4s; }
+.bar.solid { background: rgba(11,11,12,.72); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); border-bottom: 1px solid var(--line); }
+.bar .wordmark { width: 168px; opacity: 0; transform: translateY(-4px); transition: opacity .4s, transform .4s; }
+.bar.solid .wordmark { opacity: 1; transform: none; }
+.bar nav { margin-left: auto; display: flex; gap: 4px; }
+.bar nav a, .lang button { padding: 8px 14px; border-radius: 999px; font-size: 14px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: rgba(242,240,236,.8); transition: background .2s, color .2s; }
+.bar nav a:hover { background: var(--glass); color: var(--text); }
+.lang { display: flex; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); }
+.lang button { border: 0; background: transparent; cursor: pointer; padding: 6px 12px; font-size: 12.5px; }
+.lang button.on { background: linear-gradient(180deg, rgba(255,255,255,.24), rgba(255,255,255,.08)); box-shadow: inset 0 1px 0 rgba(255,255,255,.45); color: var(--text); }
+
+/* opening: stills of the work dissolving into each other, slowly pushing in, the wordmark over them */
+.hero { position: relative; height: 100svh; min-height: 560px; overflow: hidden; display: grid; place-items: center; }
+.hero .reel { position: absolute; inset: 0; }
+.hero .reel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.04); transition: opacity 1.8s ease; }
+.hero .reel img.on { opacity: 1; animation: push 9s linear forwards; }
+@keyframes push { to { transform: scale(1.16); } }
+.hero::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(11,11,12,.35), rgba(11,11,12,.85) 75%), linear-gradient(180deg, rgba(11,11,12,.5), transparent 30%, transparent 60%, var(--bg)); }
+.hero-in { position: relative; z-index: 1; text-align: center; padding: 0 var(--pad); }
+.hero-in .wordmark { width: min(760px, 86vw); margin: 0 auto; }
+.hero-in p { margin: 28px auto 0; max-width: 560px; font-size: clamp(16px, 2vw, 20px); font-weight: 300; letter-spacing: .02em; color: rgba(242,240,236,.86); }
+.hero-cta { margin-top: 34px; display: inline-flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.pill { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 500; letter-spacing: .04em; border: 1px solid var(--glass-edge); background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); cursor: pointer; transition: transform .2s, background .2s, border-color .2s; }
+.pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.3); }
+.pill:active { transform: scale(.97); }
+.pill.main { background: var(--accent); color: #17130a; border-color: transparent; box-shadow: 0 10px 30px rgba(226,176,74,.25); }
+.pill.main:hover { background: #ecbd5c; }
+.scroll-cue { position: absolute; bottom: calc(24px + env(safe-area-inset-bottom)); left: 50%; z-index: 1; width: 1px; height: 54px; background: linear-gradient(var(--text), transparent); opacity: .5; animation: cue 2.4s ease-in-out infinite; }
+@keyframes cue { 0%, 100% { transform: translate(-50%, 0) scaleY(.6); transform-origin: top; } 50% { transform: translate(-50%, 0) scaleY(1); } }
+
+section { padding: clamp(72px, 10vw, 140px) var(--pad); }
+.label { font-size: 12.5px; font-weight: 500; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); margin: 0 0 18px; }
+h2 { margin: 0; font-size: clamp(34px, 5.4vw, 72px); font-weight: 300; letter-spacing: -.01em; line-height: 1.04; }
+h2 b { font-weight: 800; }
+
+/* work: filters as pills, then the films as stills; a click plays the film here */
+.work-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 34px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters button { height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
+.filters button:hover { color: var(--text); border-color: rgba(255,255,255,.28); }
+.filters button.on { color: var(--text); border-color: rgba(255,255,255,.4); background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.06)); box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.tile { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: var(--bg-2); cursor: pointer; border: 0; padding: 0; text-align: left; }
+.tile.big { grid-column: span 2; grid-row: span 2; }
+.tile img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.01); transition: transform 1.2s cubic-bezier(.2,.7,.2,1), filter .6s; filter: saturate(.92) brightness(.82); }
+.tile:hover img { transform: scale(1.07); filter: saturate(1.05) brightness(.95); }
+.tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,.78)); }
+.tile .cap { position: absolute; left: 18px; right: 18px; bottom: 16px; z-index: 1; }
+.tile .cap strong { display: block; font-size: clamp(15px, 1.4vw, 20px); font-weight: 500; line-height: 1.2; }
+.tile.big .cap strong { font-size: clamp(20px, 2.4vw, 34px); font-weight: 400; }
+.tile .cap span { display: block; margin-top: 4px; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: rgba(242,240,236,.7); }
+.tile .play { position: absolute; z-index: 1; top: 50%; left: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); opacity: 0; transform: scale(.85); transition: opacity .3s, transform .3s; }
+.tile:hover .play { opacity: 1; transform: none; }
+.play svg { width: 20px; margin-left: 3px; fill: #fff; }
+.more { display: flex; justify-content: center; margin-top: 34px; }
+
+/* about */
+.about { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(32px, 6vw, 96px); align-items: start; border-top: 1px solid var(--line); }
+.about .lead { font-size: clamp(22px, 2.6vw, 34px); font-weight: 300; line-height: 1.35; margin: 26px 0 0; }
+.about .lead b { font-weight: 700; }
+.quote { margin: 40px 0 0; padding-left: 18px; border-left: 2px solid var(--accent); color: var(--muted); font-size: 16px; line-height: 1.6; font-style: italic; }
+.services { list-style: none; margin: 0; padding: 0; }
+.services li { display: flex; align-items: baseline; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); font-size: clamp(20px, 2.2vw, 30px); font-weight: 300; transition: padding-left .3s, color .3s; }
+.services li:hover { padding-left: 10px; color: var(--accent); }
+.services li small { font-size: 12px; color: var(--muted); letter-spacing: .1em; font-variant-numeric: tabular-nums; }
+.team { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 64px; grid-column: 1 / -1; }
+.person { padding: 18px 20px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--line); }
+.person .face { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, rgba(226,176,74,.35), rgba(255,255,255,.06)); font-weight: 700; margin-bottom: 14px; }
+.person strong { display: block; font-weight: 500; font-size: 17px; }
+.person span { color: var(--muted); font-size: 13.5px; }
+
+/* clients: the names drifting past */
+.clients { padding-left: 0; padding-right: 0; border-top: 1px solid var(--line); }
+.clients .label, .clients h2 { padding: 0 var(--pad); }
+.marquee { margin-top: 44px; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
+.marquee .row { display: flex; gap: 56px; width: max-content; animation: drift 60s linear infinite; }
+.marquee .row.rev { animation-direction: reverse; margin-top: 18px; animation-duration: 75s; }
+.marquee span { font-size: clamp(26px, 3.4vw, 46px); font-weight: 300; color: rgba(242,240,236,.42); white-space: nowrap; transition: color .3s; }
+.marquee span:hover { color: var(--text); }
+@keyframes drift { to { transform: translateX(-50%); } }
+
+/* contact */
+.contact { text-align: center; border-top: 1px solid var(--line); }
+.contact h2 { font-size: clamp(42px, 8vw, 120px); }
+.contact .mail { display: inline-block; margin-top: 30px; font-size: clamp(20px, 3vw, 36px); font-weight: 300; border-bottom: 1px solid rgba(242,240,236,.3); padding-bottom: 4px; transition: color .2s, border-color .2s; }
+.contact .mail:hover { color: var(--accent); border-color: var(--accent); }
+.social { margin-top: 40px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+footer { padding: 28px var(--pad) calc(28px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); }
+footer .wordmark { width: 130px; opacity: .6; }
+
+/* the film, full screen */
+.player { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 64px var(--pad); background: rgba(5,5,6,.92); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); opacity: 0; pointer-events: none; transition: opacity .35s; }
+.player.open { opacity: 1; pointer-events: auto; }
+.player .frame { width: min(1400px, 100%); aspect-ratio: 16 / 9; max-height: 80vh; border-radius: 14px; overflow: hidden; background: #000; box-shadow: 0 30px 90px rgba(0,0,0,.6); transform: scale(.96); transition: transform .35s; }
+.player.open .frame { transform: none; }
+.player iframe { width: 100%; height: 100%; border: 0; display: block; }
+.player .title { position: absolute; left: var(--pad); top: calc(20px + env(safe-area-inset-top)); font-size: 15px; font-weight: 500; letter-spacing: .04em; }
+.player .close { position: absolute; right: var(--pad); top: calc(14px + env(safe-area-inset-top)); width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--glass-edge); background: var(--glass); cursor: pointer; font-size: 22px; line-height: 1; }
+
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .9s ease, transform .9s cubic-bezier(.2,.7,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } .hero .reel img.on { animation: none; } .marquee .row { animation: none; } }
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+  .about { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .bar nav { display: none; }
+  .bar .wordmark { width: 140px; }
+  .lang { margin-left: auto; }
+  .grid { grid-template-columns: 1fr; gap: 8px; }
+  .tile.big { grid-column: auto; grid-row: auto; }
+  .tile .play { opacity: 1; transform: none; width: 48px; height: 48px; margin: -24px 0 0 -24px; }
+  .player { padding: 64px 0; }
+  .player .frame { border-radius: 0; }
+}
+</style>
+</head>
+<body>
+
+<header class="bar" id="bar">
+  <a href="#top" aria-label="The Mad Lions"><img class="wordmark" src="wordmark.png" alt="The Mad Lions"></a>
+  <nav>
+    <a href="#work" data-t="nav.work">Work</a>
+    <a href="#about" data-t="nav.about">About</a>
+    <a href="#clients" data-t="nav.clients">Clients</a>
+    <a href="#contact" data-t="nav.contact">Contact</a>
+  </nav>
+  <div class="lang" role="group" aria-label="Language">
+    <button type="button" data-lang="en" class="on">EN</button>
+    <button type="button" data-lang="el">GR</button>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero">
+    <div class="reel" id="reel" aria-hidden="true"></div>
+    <div class="hero-in">
+      <h1 style="margin:0"><img class="wordmark" src="wordmark.png" alt="The Mad Lions"></h1>
+      <p data-t="hero.line">We design, shoot and edit film for any screen.</p>
+      <div class="hero-cta">
+        <a class="pill main" href="#work" data-t="hero.work">See the work</a>
+        <a class="pill" href="#contact" data-t="hero.talk">Let's talk</a>
+      </div>
+    </div>
+    <span class="scroll-cue" aria-hidden="true"></span>
+  </div>
+
+  <section id="work">
+    <div class="work-head reveal">
+      <div>
+        <p class="label" data-t="work.label">Selected work</p>
+        <h2 data-t="work.title" data-html>Films, <b>made mad.</b></h2>
+      </div>
+      <div class="filters" id="filters" role="group" aria-label="Filter"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="more"><button class="pill" id="more" type="button" data-t="work.more">Show all work</button></div>
+  </section>
+
+  <section id="about" class="about">
+    <div class="reveal">
+      <p class="label" data-t="about.label">About</p>
+      <h2 data-t="about.title" data-html>We are <b>mad about</b> film.</h2>
+      <p class="lead" data-t="about.lead" data-html>From concept to delivery, our work is steeped in <b>cinematic legacy</b>. We craft visual experiences that stay with the people who watch them.</p>
+      <p class="quote" data-t="about.quote">"No matter what people tell you, words and ideas can change the world." Robin Williams</p>
+    </div>
+    <div class="reveal">
+      <p class="label" data-t="about.services">What we do</p>
+      <ul class="services" id="services"></ul>
+    </div>
+    <div class="team reveal" id="team"></div>
+  </section>
+
+  <section id="clients" class="clients">
+    <p class="label reveal" data-t="clients.label">Clients</p>
+    <h2 class="reveal" data-t="clients.title" data-html>Brands and artists <b>we've filmed for.</b></h2>
+    <div class="marquee" aria-label="Clients">
+      <div class="row" id="row1"></div>
+      <div class="row rev" id="row2"></div>
+    </div>
+  </section>
+
+  <section id="contact" class="contact">
+    <p class="label reveal" data-t="contact.label">Contact</p>
+    <h2 class="reveal" data-t="contact.title" data-html>Let's make <b>something.</b></h2>
+    <a class="mail reveal" href="mailto:info@themadlions.com">info@themadlions.com</a>
+    <div class="social reveal">
+      <a class="pill" href="https://www.instagram.com/themadlions/" target="_blank" rel="noopener">Instagram</a>
+      <a class="pill" href="https://vimeo.com/themadlions" target="_blank" rel="noopener">Vimeo</a>
+      <a class="pill" href="https://www.youtube.com/channel/UCoPMSQpUYXNPSCMJV-ErfiA" target="_blank" rel="noopener">YouTube</a>
+      <a class="pill" href="https://www.facebook.com/themadlions/" target="_blank" rel="noopener">Facebook</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <img class="wordmark" src="wordmark.png" alt="The Mad Lions">
+  <span data-t="footer">© 2026 The Mad Lions · Film production · Athens</span>
+</footer>
+
+<div class="player" id="player" role="dialog" aria-modal="true" aria-label="Film">
+  <div class="title" id="ptitle"></div>
+  <button class="close" id="pclose" type="button" aria-label="Close">×</button>
+  <div class="frame" id="pframe"></div>
+</div>
+
+<script src="works.js"></script>
+<script>
+const T = {
+  en: {
+    'nav.work': 'Work', 'nav.about': 'About', 'nav.clients': 'Clients', 'nav.contact': 'Contact',
+    'hero.line': 'We design, shoot and edit film for any screen.', 'hero.work': 'See the work', 'hero.talk': "Let's talk",
+    'work.label': 'Selected work', 'work.title': 'Films, <b>made mad.</b>', 'work.more': 'Show all work', 'work.less': 'Show less', 'all': 'All',
+    'about.label': 'About', 'about.title': 'We are <b>mad about</b> film.',
+    'about.lead': 'From concept to delivery, our work is steeped in <b>cinematic legacy</b>. We craft visual experiences that stay with the people who watch them.',
+    'about.quote': '"No matter what people tell you, words and ideas can change the world." Robin Williams',
+    'about.services': 'What we do',
+    'clients.label': 'Clients', 'clients.title': "Brands and artists <b>we've filmed for.</b>",
+    'contact.label': 'Contact', 'contact.title': "Let's make <b>something.</b>",
+    'footer': '© 2026 The Mad Lions · Film production · Athens',
+  },
+  el: {
+    'nav.work': 'Δουλειά', 'nav.about': 'Εμείς', 'nav.clients': 'Πελάτες', 'nav.contact': 'Επαφή',
+    'hero.line': 'Σχεδιάζουμε, γυρίζουμε και μοντάρουμε ταινίες για κάθε οθόνη.', 'hero.work': 'Δείτε τη δουλειά', 'hero.talk': 'Ας μιλήσουμε',
+    'work.label': 'Επιλεγμένη δουλειά', 'work.title': 'Ταινίες, <b>με τρέλα.</b>', 'work.more': 'Όλη η δουλειά', 'work.less': 'Λιγότερα', 'all': 'Όλα',
+    'about.label': 'Εμείς', 'about.title': 'Είμαστε <b>τρελοί</b> με το σινεμά.',
+    'about.lead': 'Από την ιδέα ως την παράδοση, η δουλειά μας πατάει στην <b>κινηματογραφική παράδοση</b>. Φτιάχνουμε εικόνες που μένουν σε όποιον τις βλέπει.',
+    'about.quote': '«Ό,τι κι αν σου πουν, οι λέξεις και οι ιδέες μπορούν να αλλάξουν τον κόσμο.» Robin Williams',
+    'about.services': 'Τι κάνουμε',
+    'clients.label': 'Πελάτες', 'clients.title': 'Brands και καλλιτέχνες <b>που γυρίσαμε για αυτούς.</b>',
+    'contact.label': 'Επαφή', 'contact.title': 'Ας φτιάξουμε <b>κάτι.</b>',
+    'footer': '© 2026 The Mad Lions · Παραγωγή ταινιών · Αθήνα',
+  },
+}
+const CATS = { 'Commercials': 'Διαφημιστικά', 'Music Videos': 'Βίντεο κλιπ', 'Corporate': 'Εταιρικά', 'Motion Graphics': 'Motion Graphics', 'Events': 'Events' }
+const SERVICES = [
+  ['TV Commercials', 'Τηλεοπτικά διαφημιστικά'], ['Music Videos', 'Βίντεο κλιπ'], ['Digital Content', 'Digital content'],
+  ['Corporate Films', 'Εταιρικές ταινίες'], ['Feature Films', 'Ταινίες μεγάλου μήκους'], ['Editing & Color Grading', 'Μοντάζ & color grading'],
+  ['Visual FX & Compositing', 'Visual FX & compositing'], ['Motion Graphics', 'Motion graphics'],
+]
+const TEAM = [
+  ['Alex', 'Producer · Film Director', 'Παραγωγός · Σκηνοθέτης'], ['Ioanna', 'Production Manager', 'Διευθύντρια παραγωγής'],
+  ['Anastasia', 'Assistant Director', 'Βοηθός σκηνοθέτη'], ['Theofilos', 'Production Assistant', 'Βοηθός παραγωγής'],
+  ['Triantafyllos', 'Filmmaker', 'Filmmaker'], ['Dimitris', 'Filmmaker', 'Filmmaker'], ['Gregory', 'Still Photographer', 'Φωτογράφος'],
+]
+const CLIENTS = ['Visa', "L'Oréal", 'UNESCO', 'Aperol', 'Nescafé', 'Tresemmé', 'Axe', 'Wind', 'Germanos', 'Elpedison', 'Εθνική Ασφαλιστική', 'AbbVie', 'Janssen',
+  'Gree', 'Loumidis', 'Media Strom', 'Christodoulou', 'Softex', 'ΟΠΕΚΕΠΕ', 'Θησέας', 'Έλενα Παπαρίζου', 'Μιχάλης Χατζηγιάννης', 'Χρήστος Χολίδης', 'Μέλισσες', 'Claydee']
+
+let lang = 'en'
+try { lang = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
+const t = (k) => (T[lang] && T[lang][k]) || T.en[k] || k
+
+/* stills: YouTube's own, sharpest first; Vimeo's through vumbnail; the old site's as the last resort */
+const thumb = (w, big) => w.k === 'yt' ? `https://i.ytimg.com/vi/${w.id}/${big ? 'maxresdefault' : 'hqdefault'}.jpg` : `https://vumbnail.com/${w.id}${big ? '_large' : ''}.jpg`
+function img(w, big) {
+  const el = document.createElement('img')
+  el.loading = 'lazy'; el.decoding = 'async'; el.alt = ''
+  const tries = [thumb(w, true), thumb(w, false), w.img]
+  let i = big ? 0 : (w.k === 'yt' ? 0 : 1)
+  el.src = tries[i]
+  el.onerror = () => { if (++i < tries.length) el.src = tries[i]; else el.style.visibility = 'hidden' }
+  // YouTube answers a missing maxres with a grey 120px placeholder instead of an error
+  el.onload = () => { if (el.naturalWidth && el.naturalWidth < 200 && i < tries.length - 1) el.src = tries[++i] }
+  return el
+}
+
+/* the work */
+let filter = 'all', showAll = false
+const SHORT = 9
+function renderFilters() {
+  const cats = ['all', ...Object.keys(CATS)]
+  const box = document.getElementById('filters')
+  box.innerHTML = ''
+  for (const c of cats) {
+    const b = document.createElement('button')
+    b.type = 'button'
+    b.textContent = c === 'all' ? t('all') : lang === 'el' ? CATS[c] : c
+    b.className = c === filter ? 'on' : ''
+    b.onclick = () => { filter = c; showAll = false; renderFilters(); renderGrid() }
+    box.appendChild(b)
+  }
+}
+function renderGrid() {
+  const list = WORKS.filter((w) => filter === 'all' || w.c.includes(filter))
+  const shown = showAll ? list : list.slice(0, SHORT)
+  const grid = document.getElementById('grid')
+  grid.innerHTML = ''
+  shown.forEach((w, n) => {
+    const b = document.createElement('button')
+    b.type = 'button'
+    b.className = 'tile reveal' + (n === 0 && filter === 'all' ? ' big' : '')
+    b.appendChild(img(w, n === 0))
+    b.insertAdjacentHTML('beforeend', `<span class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span><span class="cap"><strong></strong><span></span></span>`)
+    b.querySelector('.cap strong').textContent = w.t
+    b.querySelector('.cap span').textContent = w.c.map((c) => (lang === 'el' ? CATS[c] : c)).join(' · ')
+    b.onclick = () => play(w)
+    grid.appendChild(b)
+  })
+  const more = document.getElementById('more')
+  more.parentElement.style.display = list.length > SHORT ? '' : 'none'
+  more.textContent = showAll ? t('work.less') : `${t('work.more')} (${list.length})`
+  observe()
+}
+document.getElementById('more').onclick = () => { showAll = !showAll; renderGrid(); if (!showAll) document.getElementById('work').scrollIntoView() }
+
+/* the film plays on the page itself */
+const player = document.getElementById('player'), frame = document.getElementById('pframe')
+function play(w) {
+  const src = w.k === 'yt'
+    ? `https://www.youtube-nocookie.com/embed/${w.id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`
+    : `https://player.vimeo.com/video/${w.id}?autoplay=1&title=0&byline=0&portrait=0&dnt=1`
+  frame.innerHTML = `<iframe src="${src}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title=""></iframe>`
+  document.getElementById('ptitle').textContent = w.t
+  player.classList.add('open')
+  document.body.style.overflow = 'hidden'
+}
+function close() { player.classList.remove('open'); document.body.style.overflow = ''; setTimeout(() => { frame.innerHTML = '' }, 350) }
+document.getElementById('pclose').onclick = close
+player.onclick = (e) => { if (e.target === player) close() }
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && player.classList.contains('open')) close() })
+
+/* the opening stills */
+function startReel() {
+  const reel = document.getElementById('reel')
+  const picks = WORKS.filter((w) => w.k === 'yt').slice(0, 8)
+  const imgs = picks.map((w) => { const i = img(w, true); i.loading = 'eager'; reel.appendChild(i); return i })
+  let n = 0
+  const step = () => { imgs.forEach((i, k) => i.classList.toggle('on', k === n)); n = (n + 1) % imgs.length }
+  step()
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) setInterval(step, 6000)
+}
+
+function renderAbout() {
+  const s = document.getElementById('services')
+  s.innerHTML = SERVICES.map((x, i) => `<li><small>${String(i + 1).padStart(2, '0')}</small><span>${lang === 'el' ? x[1] : x[0]}</span></li>`).join('')
+  document.getElementById('team').innerHTML = TEAM.map((p) => `<div class="person"><div class="face">${p[0][0]}</div><strong>${p[0]}</strong><span>${lang === 'el' ? p[2] : p[1]}</span></div>`).join('')
+}
+function renderClients() {
+  const half = Math.ceil(CLIENTS.length / 2)
+  const fill = (id, names) => { document.getElementById(id).innerHTML = [...names, ...names].map((n) => `<span>${n}</span>`).join('') }
+  fill('row1', CLIENTS.slice(0, half)); fill('row2', CLIENTS.slice(half))
+}
+
+function applyLang() {
+  document.documentElement.lang = lang
+  document.querySelectorAll('[data-t]').forEach((el) => { const v = t(el.dataset.t); if (el.hasAttribute('data-html')) el.innerHTML = v; else el.textContent = v })
+  document.querySelectorAll('.lang button').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang))
+  renderFilters(); renderGrid(); renderAbout()
+}
+document.querySelectorAll('.lang button').forEach((b) => { b.onclick = () => { lang = b.dataset.lang; try { localStorage.setItem('tml_site_lang', lang) } catch (e) {} applyLang() } })
+
+/* things fade up as they come into view; the bar turns to glass past the opening */
+const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }), { rootMargin: '0px 0px -8% 0px' }) : null
+function observe() { document.querySelectorAll('.reveal:not(.in)').forEach((el) => (io ? io.observe(el) : el.classList.add('in'))) }
+const bar = document.getElementById('bar')
+const onScroll = () => bar.classList.toggle('solid', scrollY > innerHeight * 0.6)
+addEventListener('scroll', onScroll, { passive: true })
+
+startReel(); renderClients(); applyLang(); onScroll(); observe()
+</script>
+</body>
+</html>

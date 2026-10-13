@@ -13,7 +13,7 @@ Alex Konstantinidis, film director, owner of The Mad Lions (Athens). He is not a
 - `npm run dev` for a live dev server.
 
 ## Deploy
-Pushing to `main` deploys to GitHub Pages in about 40 s through .github/workflows/deploy.yml. Live: https://alexisdigipro-hub.github.io/themadlions-projects/
+Pushing to `main` deploys to GitHub Pages in about 40 s through .github/workflows/deploy.yml. Live: https://hub.themadlions.com/ (since 13 Oct 2026; the old https://alexisdigipro-hub.github.io/themadlions-projects/ redirects there). Share links go out as https://go.themadlions.com/?<kind>/<token> (repository alexisdigipro-hub/tml-links).
 - The same workflow also runs `npm ci` and `npm run build` on every pull request into `main`, without deploying. A red check on a PR means do not merge it.
 - Local session: commit and push to `main` with Alex's own git login. 
 - Cloud session: push the branch, open a PR, wait for the green build check, then merge it yourself (merge = deploy). Alex asked on 10 Oct for Claude to always do the merge; never ask him to merge.
