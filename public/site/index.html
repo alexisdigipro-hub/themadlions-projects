@@ -68,7 +68,7 @@ img { display: block; max-width: 100%; }
 .hero { position: relative; height: 100svh; min-height: 600px; overflow: hidden; display: grid; place-items: center; }
 .hero .reel { position: absolute; inset: 0; }
 /* the opening picture stands still, in black and white (Alex, 13 Oct): the one uploaded in the admin, else a still of the first film */
-.hero .reel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.06); opacity: 0; transition: opacity 1.2s ease; }
+.hero .reel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(var(--z, 1)); filter: grayscale(1) contrast(1.06); opacity: 0; transition: opacity 1.2s ease; }
 .hero .reel img.on { opacity: 1; }
 .hero::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, color-mix(in srgb, var(--bg) 35%, transparent), color-mix(in srgb, var(--bg) 85%, transparent) 75%), linear-gradient(180deg, color-mix(in srgb, var(--bg) 50%, transparent), transparent 30%, transparent 60%, var(--bg)); }
 .hero-in { position: relative; z-index: 1; text-align: center; padding: 0 var(--pad); }
@@ -109,8 +109,8 @@ h2 b { font-weight: 800; }
 .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 @media (min-width: 1600px) { .grid { grid-template-columns: repeat(5, 1fr); } }
 .tile { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: var(--bg-2); cursor: pointer; border: 0; padding: 0; text-align: left; }
-.tile img, .svc img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.01); transition: transform 1.2s cubic-bezier(.2,.7,.2,1), filter .6s; filter: saturate(.92) brightness(.82); }
-.tile:hover img { transform: scale(1.07); filter: saturate(1.05) brightness(.95); }
+.tile img, .svc img { width: 100%; height: 100%; object-fit: cover; transform: scale(calc(var(--z, 1) * 1.01)); transition: transform 1.2s cubic-bezier(.2,.7,.2,1), filter .6s; filter: saturate(.92) brightness(.82); }
+.tile:hover img { transform: scale(calc(var(--z, 1) * 1.07)); filter: saturate(1.05) brightness(.95); }
 .tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,.78)); }
 .tile .cap { position: absolute; left: 14px; right: 14px; bottom: 12px; z-index: 1; }
 .tile .cap strong { display: block; font-size: 15px; font-weight: 500; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -126,7 +126,7 @@ h2 b { font-weight: 800; }
 .svc { position: relative; min-height: 420px; border-radius: 18px; overflow: hidden; background: var(--bg-2); border: 1px solid var(--line); display: flex; flex-direction: column; justify-content: flex-end; }
 .svc .bg { position: absolute; inset: 0; }
 .svc img { filter: saturate(.85) brightness(.5); }
-.svc:hover img { transform: scale(1.06); filter: saturate(1) brightness(.6); }
+.svc:hover img { transform: scale(calc(var(--z, 1) * 1.06)); filter: saturate(1) brightness(.6); }
 .svc::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 15%, transparent), color-mix(in srgb, var(--bg) 92%, transparent) 72%); }
 .svc .in { position: relative; z-index: 1; padding: 26px 24px 24px; }
 .svc small { font-size: 12px; letter-spacing: .16em; color: var(--accent); font-variant-numeric: tabular-nums; }
@@ -248,9 +248,9 @@ html[data-theme='light'] .svc::after { background: linear-gradient(180deg, rgba(
 .products { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-top: 44px; }
 .product { border-radius: 18px; overflow: hidden; background: var(--bg-2); border: 1px solid var(--line); display: flex; flex-direction: column; }
 .product .ph { position: relative; aspect-ratio: 4 / 5; background: var(--bg-3); overflow: hidden; }
-.product .ph img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s cubic-bezier(.2,.7,.2,1), opacity .5s; }
+.product .ph img { width: 100%; height: 100%; object-fit: cover; transform: scale(var(--z, 1)); transition: transform 1s cubic-bezier(.2,.7,.2,1), opacity .5s; }
 .product .ph img + img { position: absolute; inset: 0; opacity: 0; }
-.product:hover .ph img { transform: scale(1.04); }
+.product:hover .ph img { transform: scale(calc(var(--z, 1) * 1.04)); }
 .product:hover .ph img + img { opacity: 1; }
 .product .tag { position: absolute; top: 12px; left: 12px; z-index: 1; padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; background: var(--bg); color: var(--text); }
 .product .in { padding: 18px 18px 20px; display: grid; gap: 10px; flex: 1; align-content: start; }
@@ -520,6 +520,16 @@ try { lang = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
 const t = (k) => (T[lang] && T[lang][k]) || T.en[k] || k
 const byTitle = (title) => WORKS.find((w) => w.t === title) || WORKS[0]
 
+/* framing set in the admin: { x, y } in % (where the picture sits), z the zoom */
+function frameImg(el, f) {
+  if (!el || !f) return el
+  const x = Number(f.x ?? 50), y = Number(f.y ?? 50), z = Math.max(1, Number(f.z ?? 1))
+  el.style.objectPosition = `${x}% ${y}%`
+  el.style.transformOrigin = `${x}% ${y}%`
+  el.style.setProperty('--z', z)
+  return el
+}
+
 /* stills: YouTube's own, sharpest first; Vimeo's through vumbnail; the old site's as the last resort */
 const thumb = (w, big) => w.k === 'yt' ? `https://i.ytimg.com/vi/${w.id}/${big ? 'maxresdefault' : 'hqdefault'}.jpg` : `https://vumbnail.com/${w.id}${big ? '_large' : ''}.jpg`
 function img(w, big) {
@@ -531,7 +541,7 @@ function img(w, big) {
   el.onerror = () => { if (++i < tries.length) el.src = tries[i]; else el.style.visibility = 'hidden' }
   // YouTube answers a missing maxres with a grey 120px placeholder instead of an error
   el.onload = () => { if (el.naturalWidth && el.naturalWidth < 200 && i < tries.length - 1) el.src = tries[++i] }
-  return el
+  return frameImg(el, w.f)
 }
 const PLAY = '<svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>'
 
@@ -641,9 +651,11 @@ player.onclick = (e) => { if (e.target === player) close() }
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && player.classList.contains('open')) close() })
 
 /* the opening stills */
+let heroFrame = null
+try { heroFrame = JSON.parse(localStorage.getItem('tml_site_hero_frame') || 'null') } catch (e) {}
 function setHero(src, work) {
   const reel = document.getElementById('reel')
-  const i = work ? img(work, true) : Object.assign(document.createElement('img'), { src, alt: '' })
+  const i = work ? img(work, true) : frameImg(Object.assign(document.createElement('img'), { src, alt: '' }), heroFrame)
   i.loading = 'eager'
   i.addEventListener('load', () => { reel.querySelectorAll('img').forEach((o) => o !== i && o.remove()); i.classList.add('on') }, { once: true })
   reel.appendChild(i)
@@ -750,6 +762,9 @@ async function loadTheme() {
     const rows = await (await api('site_settings?select=key,value')).json()
     const get = (k) => ((rows || []).find((r) => r.key === k) || {}).value
     const hero = get('hero_image') || ''
+    const hf = get('hero_frame') || null
+    try { localStorage.setItem('tml_site_hero_frame', JSON.stringify(hf)) } catch (e) {}
+    if (JSON.stringify(hf) !== JSON.stringify(heroFrame)) { heroFrame = hf; const cur = document.querySelector('#reel img.on'); if (cur && hero) frameImg(cur, hf) }
     let was = ''
     try { was = localStorage.getItem('tml_site_hero') || ''; localStorage.setItem('tml_site_hero', hero) } catch (e) {}
     if (hero && hero !== was) setHero(hero)
@@ -781,6 +796,7 @@ function renderShop() {
     card.className = 'product reveal'
     const imgs = (p.images || []).slice(0, 2).map((u) => `<img src="${encodeURI(u)}" alt="" loading="lazy">`).join('')
     card.innerHTML = `<div class="ph">${p.sold_out ? `<span class="tag">${t('shop.soldout')}</span>` : ''}${imgs}</div><div class="in"><h3></h3><p></p><div class="price"></div><div class="sizes"></div></div>`
+    const cover = card.querySelector('.ph img'); if (cover) frameImg(cover, p.frame)
     card.querySelector('h3').textContent = p.title
     card.querySelector('p').textContent = p.description || ''
     card.querySelector('.price').textContent = money(p)
@@ -798,9 +814,9 @@ function renderShop() {
 /* the work as Alex keeps it in the admin (site_works); works.js is only the first paint */
 async function loadWorks() {
   try {
-    const rows = await (await api('site_works?visible=eq.true&select=title,client,categories,kind,video_id,image,aibsent&order=position.asc,created_at.desc')).json()
+    const rows = await (await api('site_works?visible=eq.true&select=title,client,categories,kind,video_id,image,aibsent,frame&order=position.asc,created_at.desc')).json()
     if (!Array.isArray(rows) || !rows.length) return
-    WORKS = rows.filter((r) => r.video_id).map((r) => ({ t: r.title, c: r.categories || [], k: r.kind === 'vm' ? 'vm' : 'yt', id: r.video_id, img: r.image || '', client: r.client || '', aib: !!r.aibsent }))
+    WORKS = rows.filter((r) => r.video_id).map((r) => ({ t: r.title, c: r.categories || [], k: r.kind === 'vm' ? 'vm' : 'yt', id: r.video_id, img: r.image || '', client: r.client || '', aib: !!r.aibsent, f: r.frame || null }))
     renderFilters(); renderGrid(); renderServices(); renderAibsent(); observe()
   } catch (e) {}
 }
