@@ -10,7 +10,8 @@ window.WORKS = [
 ],
 "k": "yt",
 "id": "MOh7XEQSFSg",
-"img": "https://i.ytimg.com/vi/MOh7XEQSFSg/hqdefault.jpg"
+"img": "https://i.ytimg.com/vi/MOh7XEQSFSg/hqdefault.jpg",
+"aib": true
 },
 {
 "t": "Michalis Hatzigiannis – Horevo",
@@ -47,7 +48,8 @@ window.WORKS = [
 ],
 "k": "yt",
 "id": "xfd_9Tllp6E",
-"img": "https://themadlions.com/wp-content/uploads/2020/04/eumemes.png"
+"img": "https://themadlions.com/wp-content/uploads/2020/04/eumemes.png",
+"aib": true
 },
 {
 "t": "Media Strom",
@@ -75,7 +77,8 @@ window.WORKS = [
 ],
 "k": "vm",
 "id": "364348936",
-"img": "https://themadlions.com/wp-content/uploads/2019/10/tresemme.png"
+"img": "https://themadlions.com/wp-content/uploads/2019/10/tresemme.png",
+"aib": true
 },
 {
 "t": "L’Oréal – UNESCO For Women In Science",
@@ -192,7 +195,8 @@ window.WORKS = [
 ],
 "k": "yt",
 "id": "GRTaR6C1ZvI",
-"img": "https://themadlions.com/wp-content/uploads/2018/08/GOLDEN-VIRGINIA.png"
+"img": "https://themadlions.com/wp-content/uploads/2018/08/GOLDEN-VIRGINIA.png",
+"aib": true
 },
 {
 "t": "Softex & Galaxias",
@@ -202,7 +206,8 @@ window.WORKS = [
 ],
 "k": "yt",
 "id": "hNmh6SAuVbw",
-"img": "https://themadlions.com/wp-content/uploads/2018/09/softex.png"
+"img": "https://themadlions.com/wp-content/uploads/2018/09/softex.png",
+"aib": true
 },
 {
 "t": "Christodoulou – Juices",
@@ -329,7 +334,8 @@ window.WORKS = [
 ],
 "k": "yt",
 "id": "IIYKCXvb7JY",
-"img": "https://themadlions.com/wp-content/uploads/2016/12/fluolive.png"
+"img": "https://themadlions.com/wp-content/uploads/2016/12/fluolive.png",
+"aib": true
 },
 {
 "t": "Germanos – The Voice",
