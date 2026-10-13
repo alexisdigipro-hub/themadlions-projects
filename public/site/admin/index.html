@@ -393,7 +393,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 <form class="drawer glass" id="workDrawer">
   <div class="dh"><h2 id="wTitle">Add a film</h2><span class="grow"></span><button class="btn ghost sm" type="button" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
   <div class="db">
-    <label class="f"><span>YouTube or Vimeo link</span><input name="video" placeholder="https://youtu.be/… or https://vimeo.com/…" autocomplete="off"><span class="hint">Paste it and the title and picture come by themselves.</span></label>
+    <label class="f"><span>YouTube, Vimeo or pCloud link</span><input name="video" placeholder="https://youtu.be/… · https://vimeo.com/… · https://e.pcloud.link/publink/show?code=…" autocomplete="off"><span class="hint">Paste it and the title and picture come by themselves. A pCloud film plays from your pCloud, so every view uses its link traffic.</span></label>
     <div class="f"><span>Picture &amp; framing · drag the picture to move it, the slider zooms</span><div id="wFramer"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn sm" type="button" id="wCoverUp"><svg class="i"><use href="#i-plus"/></svg>Use my own picture</button><button class="btn sm danger" type="button" id="wCoverRm" hidden>Back to the video's still</button><span class="hint" id="wCoverHint">Now: the video's own still</span></div></div>
     <label class="f"><span>Title</span><input name="title" maxlength="160"></label>
@@ -443,7 +443,10 @@ const $ = (id) => document.getElementById(id)
 const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 let toastTimer
 function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2600) }
-const thumbOf = (w) => w.cover || (w.kind === 'vm' ? `https://vumbnail.com/${w.video_id}.jpg` : `https://i.ytimg.com/vi/${w.video_id}/hqdefault.jpg`)
+// a film kept in pCloud: video_id is the public link's code, "us:" in front for pCloud's US servers
+const pc = (id) => id.startsWith('us:') ? ['api', id.slice(3)] : ['eapi', id]
+const pcThumb = (id, big) => `https://${pc(id)[0]}.pcloud.com/getpubthumb?code=${pc(id)[1]}&size=${big ? '1280x720' : '640x360'}`
+const thumbOf = (w) => w.cover || (w.kind === 'vm' ? `https://vumbnail.com/${w.video_id}.jpg` : w.kind === 'pc' ? pcThumb(w.video_id) : `https://i.ytimg.com/vi/${w.video_id}/hqdefault.jpg`)
 // the film's picture as the site will show it, framed and zoomed
 const framedImg = (w) => { const f = { x: 50, y: 50, z: 1, ...(w.frame || {}) }; return `<img class="fimg" src="${esc(thumbOf(w))}" alt="" loading="lazy" style="object-position:${f.x}% ${f.y}%;transform-origin:${f.x}% ${f.y}%;transform:scale(${f.z})">` }
 
@@ -676,6 +679,9 @@ function parseVideo(url) {
   if (m) return { kind: 'yt', id: m[1], url: `https://www.youtube.com/watch?v=${m[1]}` }
   m = u.match(/vimeo\.com\/(?:video\/)?(\d{5,})/)
   if (m) return { kind: 'vm', id: m[1], url: `https://vimeo.com/${m[1]}` }
+  // pCloud public link: e.pcloud.link (Europe) or u.pcloud.link / my.pcloud.com (US)
+  m = u.match(/(?:\/\/([a-z0-9]+)\.pcloud\.(?:link|com))\/publink\/show\?(?:.*&)?code=([\w-]+)/)
+  if (m) { const us = m[1] !== 'e' && m[1] !== 'e1'; return { kind: 'pc', id: (us ? 'us:' : '') + m[2], url: `https://${m[1]}.pcloud.${u.includes('pcloud.com') ? 'com' : 'link'}/publink/show?code=${m[2]}` } }
   return null
 }
 function renderWorkCats() {
@@ -699,7 +705,7 @@ function openWork(w) {
 let wFrame = null
 function showPreview() {
   const v = parseVideo($('workDrawer').video.value)
-  const still = v ? (v.kind === 'yt' ? `https://i.ytimg.com/vi/${v.id}/maxresdefault.jpg` : `https://vumbnail.com/${v.id}_large.jpg`) : ''
+  const still = v ? (v.kind === 'yt' ? `https://i.ytimg.com/vi/${v.id}/maxresdefault.jpg` : v.kind === 'pc' ? pcThumb(v.id, true) : `https://vumbnail.com/${v.id}_large.jpg`) : ''
   if (wFrame) wFrame.set(editingWork.cover || still)
   $('wCoverRm').hidden = !editingWork.cover
   $('wCoverHint').textContent = editingWork.cover ? 'Now: your own picture' : "Now: the video's own still"
@@ -724,14 +730,17 @@ $('workDrawer').video.oninput = async (e) => {
   const v = parseVideo(e.target.value), f = $('workDrawer')
   if (!v || f.title.value.trim()) return
   try {
-    const j = await (await fetch(`https://noembed.com/embed?url=${encodeURIComponent(v.url)}`)).json()
-    if (j && j.title && !f.title.value.trim()) { f.title.value = j.title; toast('Title filled in from the video') }
+    // pCloud: the file's name, without the extension; others through noembed
+    const title = v.kind === 'pc'
+      ? ((await (await fetch(`https://${pc(v.id)[0]}.pcloud.com/showpublink?code=${pc(v.id)[1]}`, { referrerPolicy: 'no-referrer' })).json()).metadata || {}).name?.replace(/\.[a-z0-9]{2,4}$/i, '')
+      : (await (await fetch(`https://noembed.com/embed?url=${encodeURIComponent(v.url)}`)).json() || {}).title
+    if (title && !f.title.value.trim()) { f.title.value = title; toast('Title filled in from the video') }
   } catch (err) {}
 }
 $('workDrawer').onsubmit = async (e) => {
   e.preventDefault()
   const f = e.target, v = parseVideo(f.video.value)
-  if (!v) { toast('Paste a YouTube or Vimeo link'); f.video.focus(); return }
+  if (!v) { toast('Paste a YouTube, Vimeo or pCloud link'); f.video.focus(); return }
   const year = parseInt(f.year.value, 10)
   const row = { title: f.title.value.trim(), client: f.client.value.trim() || null, year: year > 1900 && year < 2100 ? year : null, categories: editingWork.categories, video: v.url, kind: v.kind, video_id: v.id, visible: f.visible.checked, aibsent: f.aibsent.checked, cover: editingWork.cover || null, frame: wFrame && !wFrame.isDefault() ? wFrame.get() : null }
   if (!row.title) { toast('Give it a title'); f.title.focus(); return }
