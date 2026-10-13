@@ -4,191 +4,326 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>The Mad Lions · Site admin</title>
-<meta name="theme-color" content="#0b0b0c">
+<title>The Mad Lions · Studio</title>
+<meta name="theme-color" content="#09090b">
 <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;700;800&display=swap" rel="stylesheet">
-<!-- The company site's own admin (Alex, 13 Oct 2026): statistics, enquiries from the form, the merch shop and
-     the site's look. Sign in with a THEMADLIONS Hub account; only hub administrators get past the door, and the
-     database checks the same thing (is_admin) on every read and write. -->
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- The company site's own admin, "Studio" (Alex, 13 Oct 2026): overview with statistics, the work (films
+     Alex adds, hides and reorders), enquiries from the form, the merch shop, and the site's look.
+     Sign in with a THEMADLIONS Hub account; only hub administrators get in, and the database checks the
+     same thing (is_admin) on every read and write. Plain fetch to Supabase, no libraries. -->
 <style>
-:root { --bg: #0b0b0c; --bg-2: #121214; --bg-3: #18181b; --text: #f2f0ec; --muted: #9a978f; --line: rgba(255,255,255,.1); --accent: #d40000; --ok: #5bd18b; --err: #ff8a7a; --pad: clamp(16px, 3vw, 40px); }
+:root {
+  --bg: #09090b; --panel: rgba(24,24,28,.62); --edge: rgba(255,255,255,.08); --edge-2: rgba(255,255,255,.16);
+  --text: #f4f4f5; --muted: #a1a1aa; --dim: #71717a; --red: #d40000; --red-soft: rgba(212,0,0,.16); --ok: #34d399;
+  --r: 22px; --pad: clamp(16px, 2.4vw, 32px); --side: 248px;
+}
 * { box-sizing: border-box; }
-html, body { margin: 0; background: var(--bg); color: var(--text); font-family: Jost, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-a { color: inherit; }
-button, input, textarea, select { font: inherit; color: inherit; }
-.wordmark { filter: invert(1); width: 150px; display: block; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: Geist, Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; letter-spacing: -.005em; }
+body::before { content: ''; position: fixed; inset: -20%; z-index: -2; pointer-events: none;
+  background: radial-gradient(40% 35% at 12% 8%, rgba(212,0,0,.22), transparent 70%), radial-gradient(35% 40% at 92% 90%, rgba(99,102,241,.16), transparent 70%), radial-gradient(30% 30% at 70% 10%, rgba(244,114,182,.07), transparent 70%); filter: blur(10px); }
+body::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .05; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E"); }
+a { color: inherit; text-decoration: none; }
+button, input, textarea, select { font: inherit; color: inherit; letter-spacing: inherit; }
 [hidden] { display: none !important; }
+.wordmark { filter: invert(1); display: block; }
+.glass { background: var(--panel); border: 1px solid var(--edge); -webkit-backdrop-filter: blur(24px) saturate(150%); backdrop-filter: blur(24px) saturate(150%); }
+svg.i { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
-/* one top row: wordmark, the four parts as glass pills, then the site and sign out */
-.top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 14px; padding: calc(12px + env(safe-area-inset-top)) var(--pad) 12px; background: rgba(11,11,12,.8); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-.top .title { font-size: 13px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
-.tabs { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--line); margin-left: 10px; }
-.tabs button { height: 34px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background .2s, color .2s; }
-.tabs button:hover { color: var(--text); }
-.tabs button.on { color: var(--text); background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.06)); box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
-.badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 11.5px; font-weight: 700; display: inline-grid; place-items: center; }
-.grow { flex: 1; }
-.pill { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; transition: transform .2s, background .2s, border-color .2s; white-space: nowrap; }
-.pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.3); }
-.pill:active { transform: scale(.97); }
-.pill.main { background: var(--accent); color: #fff; border-color: transparent; }
-.pill.danger { color: var(--err); }
-.pill:disabled { opacity: .5; cursor: default; transform: none; }
-main { padding: 26px var(--pad) 60px; }
-h1 { margin: 0 0 6px; font-size: 30px; font-weight: 700; }
-.lede { margin: 0 0 22px; color: var(--muted); font-size: 15px; }
-.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
-.seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--line); }
-.seg button { height: 32px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 13.5px; font-weight: 500; cursor: pointer; }
-.seg button.on { color: var(--text); background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.06)); box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
-.tile { border-radius: 18px; background: color-mix(in srgb, var(--bg-2) 88%, transparent); border: 1px solid var(--line); padding: 20px 22px; }
-.tile h3 { margin: 0 0 14px; font-size: 12.5px; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
-.muted { color: var(--muted); }
-.empty { color: var(--muted); padding: 30px 0; text-align: center; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--edge-2); background: rgba(255,255,255,.05); font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: transform .18s, background .18s, border-color .18s, box-shadow .18s; }
+.btn:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.26); transform: translateY(-1px); }
+.btn:active { transform: scale(.97); }
+.btn.red { background: var(--red); border-color: transparent; color: #fff; box-shadow: 0 8px 28px rgba(212,0,0,.35); }
+.btn.red:hover { background: #e60000; box-shadow: 0 10px 34px rgba(212,0,0,.45); }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn.danger { color: #fca5a5; }
+.btn.sm { height: 34px; padding: 0 13px; font-size: 13px; }
+.btn:disabled { opacity: .5; cursor: default; transform: none; }
+.seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.04); border: 1px solid var(--edge); }
+.seg button { height: 32px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 13px; font-weight: 500; cursor: pointer; transition: color .18s, background .18s; }
+.seg button:hover { color: var(--text); }
+.seg button.on { color: var(--text); background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.06)); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 4px 14px rgba(0,0,0,.3); }
 
-/* sign in */
 .door { min-height: 100svh; display: grid; place-items: center; padding: 20px; }
-.door form { width: min(380px, 100%); display: grid; gap: 14px; padding: 30px; border-radius: 22px; background: var(--bg-2); border: 1px solid var(--line); }
-.door .wordmark { width: 200px; margin: 0 auto 6px; }
-.door p { margin: 0 0 6px; text-align: center; color: var(--muted); font-size: 14px; }
-label.f { display: grid; gap: 8px; }
-label.f > span { font-size: 12px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
-input, textarea, select { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.04); font-size: 15px; outline: none; }
-input:focus, textarea:focus { border-color: rgba(212,0,0,.7); box-shadow: 0 0 0 4px rgba(212,0,0,.12); }
-textarea { min-height: 90px; resize: vertical; }
-.msg { font-size: 14px; color: var(--err); min-height: 1em; }
+.door form { width: min(400px, 100%); display: grid; gap: 14px; padding: 34px 30px; border-radius: 28px; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+.door .wordmark { width: 210px; margin: 0 auto; }
+.door .sub { margin: 0 0 8px; text-align: center; color: var(--muted); font-size: 14px; }
+.studio { font-size: 11.5px; letter-spacing: .32em; text-transform: uppercase; color: var(--red); }
+.door .studio { text-align: center; margin: 6px 0 0; }
+.f { display: grid; gap: 7px; }
+.f > span { font-size: 12.5px; font-weight: 500; color: var(--muted); }
+input, textarea, select { width: 100%; height: 44px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--edge); background: rgba(0,0,0,.28); font-size: 15px; outline: none; transition: border-color .18s, box-shadow .18s, background .18s; }
+textarea { height: auto; min-height: 96px; padding: 12px 14px; resize: vertical; line-height: 1.5; }
+input:focus, textarea:focus, select:focus { border-color: rgba(212,0,0,.6); box-shadow: 0 0 0 4px rgba(212,0,0,.14); background: rgba(0,0,0,.4); }
+.msg { min-height: 1em; font-size: 13.5px; color: #fca5a5; }
 
-/* statistics */
-.kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 10px; }
-.kpi strong { display: block; font-size: 38px; font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
-.kpi span { display: block; margin-top: 8px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.chart { display: flex; align-items: flex-end; gap: 3px; height: 180px; padding-top: 10px; }
-.chart .day { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; position: relative; }
-.chart .bar { border-radius: 4px 4px 0 0; background: linear-gradient(180deg, var(--accent), color-mix(in srgb, var(--accent) 45%, transparent)); min-height: 2px; transition: height .5s; }
-.chart .day:hover .bar { filter: brightness(1.2); }
-.chart .day .tip { position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 12px; padding: 4px 8px; border-radius: 8px; background: var(--bg-3); border: 1px solid var(--line); opacity: 0; pointer-events: none; z-index: 2; }
-.chart .day:hover .tip { opacity: 1; }
-.axis { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11.5px; color: var(--muted); }
-.cols { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; margin-top: 10px; }
-.list { display: grid; gap: 8px; }
-.li { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; font-size: 14px; }
-.li .meter { grid-column: 1 / -1; height: 5px; border-radius: 99px; background: rgba(255,255,255,.06); overflow: hidden; }
-.li .meter i { display: block; height: 100%; border-radius: 99px; background: var(--accent); }
-.li b { font-weight: 500; font-variant-numeric: tabular-nums; }
+/* the frame: floating glass sidebar, main area */
+.shell { display: grid; grid-template-columns: var(--side) 1fr; min-height: 100svh; }
+.side { position: sticky; top: 0; height: 100svh; padding: 16px 0 16px 16px; }
+.side .in { height: 100%; border-radius: 26px; padding: 22px 14px; display: flex; flex-direction: column; gap: 6px; }
+.side .wordmark { width: 150px; margin: 4px 10px 2px; }
+.side .studio { margin: 0 10px 22px; }
+.nav { display: grid; gap: 4px; }
+.nav button { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border: 0; border-radius: 14px; background: transparent; color: var(--muted); font-size: 14.5px; font-weight: 500; cursor: pointer; text-align: left; position: relative; transition: background .18s, color .18s; }
+.nav button:hover { color: var(--text); background: rgba(255,255,255,.05); }
+.nav button.on { color: var(--text); background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); box-shadow: inset 0 1px 0 rgba(255,255,255,.18); }
+.nav button.on::before { content: ''; position: absolute; left: -14px; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: var(--red); box-shadow: 0 0 14px var(--red); }
+.nav .count { margin-left: auto; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 99px; background: var(--red); color: #fff; font-size: 11.5px; font-weight: 600; display: grid; place-items: center; }
+.side .foot { margin-top: auto; display: grid; gap: 8px; padding-top: 14px; border-top: 1px solid var(--edge); }
+.me { display: flex; align-items: center; gap: 10px; padding: 6px 8px; }
+.me .av { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; font-size: 14px; background: linear-gradient(135deg, var(--red), #6d28d9); flex: none; }
+.me div { min-width: 0; flex: 1; }
+.me .btn { flex: none; }
+.me strong { display: block; font-size: 13.5px; font-weight: 500; }
+.me small { display: block; color: var(--dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+main { padding: 26px var(--pad) 90px; min-width: 0; }
+.head { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; margin-bottom: 22px; }
+.head h1 { margin: 0; font-size: clamp(26px, 3vw, 36px); font-weight: 600; letter-spacing: -.025em; }
+.head p { margin: 6px 0 0; color: var(--muted); font-size: 14.5px; }
+.grow { flex: 1; }
 
-/* enquiries */
-.leads { display: grid; gap: 10px; }
-.lead { border-radius: 18px; background: var(--bg-2); border: 1px solid var(--line); padding: 18px 20px; display: grid; gap: 10px; }
-.lead.new { border-color: rgba(212,0,0,.45); box-shadow: 0 0 0 1px rgba(212,0,0,.15) inset; }
-.lead .head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.lead .head strong { font-size: 18px; font-weight: 500; }
-.lead .head .when { margin-left: auto; font-size: 13px; color: var(--muted); }
+.card { border-radius: var(--r); padding: 20px 22px; position: relative; overflow: hidden; }
+.card h3 { margin: 0 0 14px; font-size: 13px; font-weight: 500; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.empty { color: var(--dim); padding: 36px 0; text-align: center; font-size: 14px; }
+.bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; }
+.kpi { grid-column: span 3; }
+.kpi .n { font-size: 40px; font-weight: 600; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+.kpi .d { margin-top: 10px; font-size: 12.5px; color: var(--dim); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.delta { padding: 2px 8px; border-radius: 99px; font-weight: 600; font-size: 12px; }
+.delta.up { color: var(--ok); background: rgba(52,211,153,.12); }
+.delta.down { color: #fca5a5; background: rgba(252,165,165,.1); }
+.kpi .ic { position: absolute; top: 18px; right: 18px; width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.05); border: 1px solid var(--edge); color: var(--muted); }
+.wide { grid-column: span 8; }
+.side4 { grid-column: span 4; }
+.half { grid-column: span 6; }
+.area { width: 100%; height: 220px; display: block; }
+.area .ln { fill: none; stroke: var(--red); stroke-width: 2.2; vector-effect: non-scaling-stroke; }
+.area .fl { fill: url(#redfade); }
+.area .gl { stroke: rgba(255,255,255,.06); vector-effect: non-scaling-stroke; }
+.area .dot { fill: var(--red); stroke: #fff; stroke-width: 2; opacity: 0; }
+.area-wrap { position: relative; }
+.axis { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--dim); margin-top: 6px; }
+.area-tip { position: absolute; pointer-events: none; padding: 7px 11px; border-radius: 10px; font-size: 12.5px; background: rgba(20,20,24,.92); border: 1px solid var(--edge-2); transform: translate(-50%, -130%); opacity: 0; transition: opacity .12s; white-space: nowrap; }
+.rows { display: grid; gap: 10px; }
+.rowi { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; font-size: 14px; }
+.rowi .th { width: 54px; height: 32px; border-radius: 8px; background: #1c1c20 center / cover; }
+.rowi .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rowi b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.bar { grid-column: 1 / -1; height: 5px; border-radius: 99px; background: rgba(255,255,255,.06); overflow: hidden; margin-top: -4px; }
+.bar i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--red), #ff4d4d); }
+.donut { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.donut .ring { width: 120px; height: 120px; border-radius: 50%; flex: none; position: relative; }
+.donut .ring::after { content: ''; position: absolute; inset: 18px; border-radius: 50%; background: #131317; }
+.legend { display: grid; gap: 8px; font-size: 13.5px; }
+.legend span { display: flex; align-items: center; gap: 8px; }
+.legend i { width: 9px; height: 9px; border-radius: 3px; }
+.skel { border-radius: 10px; background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.09), rgba(255,255,255,.04)); background-size: 200% 100%; animation: sh 1.2s infinite; }
+@keyframes sh { to { background-position: -200% 0; } }
+
+.tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.search { position: relative; }
+.search svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--dim); }
+.search input { width: 240px; padding-left: 40px; height: 40px; border-radius: 999px; }
+.works { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.w { border-radius: 18px; overflow: hidden; cursor: pointer; transition: transform .2s, border-color .2s, box-shadow .2s, opacity .2s; }
+.w[draggable=true] { cursor: grab; }
+.w:hover { transform: translateY(-3px); border-color: var(--edge-2); box-shadow: 0 14px 40px rgba(0,0,0,.4); }
+.w.dragging { opacity: .35; }
+.w.over { box-shadow: 0 0 0 2px var(--red), 0 14px 40px rgba(212,0,0,.25); }
+.w .ph { aspect-ratio: 16 / 9; background: #18181b center / cover; position: relative; }
+.w.off .ph { filter: grayscale(1) brightness(.45); }
+.w .no { position: absolute; top: 8px; left: 8px; min-width: 26px; height: 22px; padding: 0 7px; border-radius: 8px; background: rgba(0,0,0,.6); font-size: 11.5px; font-weight: 600; display: grid; place-items: center; }
+.w .eye { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border-radius: 10px; border: 0; background: rgba(0,0,0,.55); color: #fff; display: grid; place-items: center; cursor: pointer; }
+.w .eye:hover { background: rgba(0,0,0,.85); }
+.w .in { padding: 12px 14px 14px; }
+.w strong { display: block; font-size: 14.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.w small { display: block; margin-top: 3px; color: var(--dim); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 11px; border-radius: 10px; font-size: 13px; background: rgba(255,255,255,.06); }
-.chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
-.lead .text { white-space: pre-wrap; line-height: 1.55; font-size: 15px; color: rgba(242,240,236,.86); }
+.chip { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 10px; font-size: 13px; background: rgba(255,255,255,.05); border: 1px solid var(--edge); }
+.chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
+button.chip { cursor: pointer; color: var(--muted); transition: color .18s, background .18s, border-color .18s; }
+button.chip:hover { color: var(--text); }
+button.chip.on { color: var(--text); background: var(--red-soft); border-color: rgba(212,0,0,.5); }
+
+.leads { display: grid; gap: 12px; }
+.lead { border-radius: var(--r); padding: 18px 20px; display: grid; gap: 12px; }
+.lead.new { border-color: rgba(212,0,0,.45); box-shadow: 0 0 0 1px rgba(212,0,0,.12) inset, 0 10px 40px rgba(212,0,0,.08); }
+.lead .top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.av2 { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; background: rgba(255,255,255,.08); flex: none; }
+.lead .who strong { display: block; font-size: 16px; font-weight: 600; }
+.lead .who small { color: var(--dim); font-size: 13px; }
+.lead .when { margin-left: auto; color: var(--dim); font-size: 13px; }
+.lead .text { white-space: pre-wrap; line-height: 1.55; font-size: 14.5px; color: #e4e4e7; padding: 12px 14px; border-radius: 14px; background: rgba(0,0,0,.22); }
 .lead .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-/* shop */
-.products { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
-.prod { border-radius: 18px; overflow: hidden; background: var(--bg-2); border: 1px solid var(--line); cursor: pointer; transition: border-color .2s, transform .2s; }
-.prod:hover { border-color: rgba(255,255,255,.25); transform: translateY(-2px); }
-.prod .ph { aspect-ratio: 4 / 5; background: var(--bg-3) center / cover no-repeat; position: relative; }
-.prod .state { position: absolute; top: 10px; left: 10px; }
-.prod .in { padding: 14px 16px; }
-.prod .in strong { display: block; font-weight: 500; }
-.editor { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.editor .full { grid-column: 1 / -1; }
-.photos { display: flex; gap: 8px; flex-wrap: wrap; }
-.photo { position: relative; width: 96px; height: 120px; border-radius: 12px; background: var(--bg-3) center / cover no-repeat; border: 1px solid var(--line); }
-.photo button { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0,0,0,.7); cursor: pointer; }
-.photo .first { position: absolute; left: 6px; bottom: 6px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,.7); }
-.add-photo { width: 96px; height: 120px; border-radius: 12px; border: 1px dashed rgba(255,255,255,.25); display: grid; place-items: center; cursor: pointer; color: var(--muted); font-size: 13px; text-align: center; }
-.switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 15px; }
-.switch input { width: 42px; height: 24px; appearance: none; -webkit-appearance: none; border-radius: 99px; background: rgba(255,255,255,.12); position: relative; padding: 0; border: 0; cursor: pointer; transition: background .2s; }
-.switch input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
-.switch input:checked { background: var(--ok); }
+.products { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.prod { border-radius: 20px; overflow: hidden; cursor: pointer; transition: transform .2s, border-color .2s; }
+.prod:hover { transform: translateY(-3px); border-color: var(--edge-2); }
+.prod .ph { aspect-ratio: 4 / 5; background: #18181b center / cover; position: relative; }
+.prod .st { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,.6); }
+.prod .in { padding: 13px 15px; }
+.prod strong { display: block; font-weight: 500; }
+.prod small { color: var(--dim); }
+
+.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.hero-pick { display: grid; grid-template-columns: minmax(0, 1.4fr) 1fr; gap: 20px; align-items: center; }
+.hero-pv { aspect-ratio: 21 / 9; border-radius: 16px; background: #18181b center / cover; filter: grayscale(1); display: grid; place-items: center; text-align: center; padding: 20px; color: var(--dim); font-size: 13px; border: 1px solid var(--edge); }
+@media (max-width: 760px) { .hero-pick { grid-template-columns: 1fr; } }
+.theme { border-radius: 24px; padding: 14px; cursor: pointer; transition: transform .2s, box-shadow .2s, border-color .2s; }
+.theme:hover { transform: translateY(-3px); }
+.theme.on { border-color: rgba(212,0,0,.6); box-shadow: 0 0 0 3px rgba(212,0,0,.18), 0 20px 50px rgba(212,0,0,.12); }
+.theme .pv { height: 190px; border-radius: 16px; padding: 18px; display: grid; align-content: space-between; overflow: hidden; }
+.theme .pv img { width: 150px; }
+.theme .pv .b { width: 74px; height: 20px; border-radius: 99px; background: #d40000; }
+.theme .pv .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.theme .pv .tiles i { height: 38px; border-radius: 7px; }
+.theme .nm { margin-top: 12px; display: flex; align-items: center; gap: 10px; }
+.theme .nm strong { font-size: 16px; font-weight: 600; }
+.theme .nm small { color: var(--dim); }
+
+/* the drawer: editing slides in from the right (from the bottom on a phone) */
+.scrim { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.5); opacity: 0; pointer-events: none; transition: opacity .25s; }
+.scrim.on { opacity: 1; pointer-events: auto; }
+.drawer { position: fixed; top: 12px; right: 12px; bottom: 12px; z-index: 41; width: min(560px, calc(100vw - 24px)); border-radius: 28px; display: flex; flex-direction: column; transform: translateX(calc(100% + 30px)); transition: transform .32s cubic-bezier(.2,.8,.2,1); box-shadow: -30px 0 80px rgba(0,0,0,.5); background: rgba(20,20,24,.88); }
+.drawer.on { transform: none; }
+.drawer .dh { display: flex; align-items: center; gap: 10px; padding: 18px 20px; border-bottom: 1px solid var(--edge); }
+.drawer .dh h2 { margin: 0; font-size: 19px; font-weight: 600; }
+.drawer .db { padding: 20px; overflow-y: auto; display: grid; gap: 16px; align-content: start; flex: 1; }
+.drawer .df { display: flex; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--edge); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.preview { aspect-ratio: 16 / 9; border-radius: 16px; background: #18181b center / cover; display: grid; place-items: center; color: var(--dim); font-size: 13px; }
+.hint { font-size: 12.5px; color: var(--dim); line-height: 1.5; }
+.switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 14.5px; }
+.switch input { width: 44px; height: 26px; appearance: none; -webkit-appearance: none; border-radius: 99px; background: rgba(255,255,255,.12); position: relative; padding: 0; border: 0; cursor: pointer; transition: background .2s; flex: none; }
+.switch input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+.switch input:checked { background: var(--red); }
 .switch input:checked::after { transform: translateX(18px); }
-label.f > span.hint, .hint { font-size: 13px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); line-height: 1.5; }
+.photos { display: flex; gap: 8px; flex-wrap: wrap; }
+.photo { position: relative; width: 92px; height: 115px; border-radius: 12px; background: #18181b center / cover; border: 1px solid var(--edge); }
+.photo button { position: absolute; top: 5px; right: 5px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0,0,0,.7); cursor: pointer; }
+.photo .first { position: absolute; left: 6px; bottom: 6px; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,.7); }
+.add-photo { width: 92px; height: 115px; border-radius: 12px; border: 1px dashed var(--edge-2); display: grid; place-items: center; cursor: pointer; color: var(--dim); font-size: 12.5px; text-align: center; transition: border-color .2s, color .2s; }
+.add-photo:hover { border-color: var(--red); color: var(--text); }
 
-/* look */
-.themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.theme { border-radius: 20px; border: 1px solid var(--line); background: var(--bg-2); padding: 14px; cursor: pointer; transition: border-color .2s, transform .2s; text-align: left; }
-.theme:hover { transform: translateY(-2px); }
-.theme.on { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(212,0,0,.18); }
-.theme .pv { height: 170px; border-radius: 14px; padding: 18px; display: grid; align-content: space-between; overflow: hidden; }
-.theme .pv img { width: 140px; }
-.theme .pv .bars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
-.theme .pv .bars i { height: 34px; border-radius: 6px; }
-.theme .pv .btn { width: 70px; height: 18px; border-radius: 99px; }
-.theme .name { margin-top: 12px; display: flex; align-items: center; gap: 10px; }
-.theme .name strong { font-size: 17px; font-weight: 500; }
-.theme .name span { margin-left: auto; }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 60; transform: translate(-50%, 20px); padding: 12px 18px; border-radius: 16px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; background: rgba(28,28,32,.94); border: 1px solid var(--edge-2); box-shadow: 0 14px 40px rgba(0,0,0,.4); display: flex; align-items: center; gap: 8px; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+.toast::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--red); box-shadow: 0 0 10px var(--red); }
+.mtop { display: none; align-items: center; gap: 8px; margin-bottom: 18px; }
+.mtop .wordmark { width: 130px; }
 
-.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(20px); padding: 12px 18px; border-radius: 14px; background: var(--bg-3); border: 1px solid var(--line); font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 30; }
-.toast.on { opacity: 1; transform: translateX(-50%); }
-
-@media (max-width: 1000px) { .kpis { grid-template-columns: repeat(3, 1fr); } .cols { grid-template-columns: 1fr; } }
-@media (max-width: 700px) {
-  .top .title { display: none; }
-  .tabs { order: 3; width: 100%; margin: 0; overflow-x: auto; }
-  .tabs button { flex: 1; padding: 0 10px; }
-  .kpis { grid-template-columns: repeat(2, 1fr); }
-  .themes, .editor { grid-template-columns: 1fr; }
-  .chart { height: 140px; }
+@media (max-width: 1180px) { .kpi { grid-column: span 6; } .wide, .side4, .half { grid-column: span 12; } }
+/* phone: the sidebar becomes a glass tab bar at the bottom */
+@media (max-width: 760px) {
+  .shell { grid-template-columns: 1fr; }
+  .side { position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: auto; padding: 0 10px calc(10px + env(safe-area-inset-bottom)); z-index: 30; }
+  .side .in { flex-direction: row; padding: 6px; border-radius: 22px; }
+  .side .wordmark, .side .studio, .side .foot { display: none; }
+  .nav { display: flex; width: 100%; gap: 2px; }
+  .nav button { flex: 1; flex-direction: column; gap: 3px; height: 54px; padding: 0; font-size: 10.5px; justify-content: center; text-align: center; }
+  .nav button.on::before { left: 30%; right: 30%; top: auto; bottom: -6px; width: auto; height: 3px; border-radius: 3px 3px 0 0; }
+  .nav .count { position: absolute; top: 4px; right: 16%; min-width: 18px; height: 18px; font-size: 10px; margin: 0; }
+  main { padding: calc(16px + env(safe-area-inset-top)) 14px 110px; }
+  .mtop { display: flex; }
+  .kpi { grid-column: span 6; padding: 16px; }
+  .kpi .n { font-size: 30px; }
+  .kpi .ic { display: none; }
+  .themes, .two { grid-template-columns: 1fr; }
+  .search { flex: 1; }
+  .search input { width: 100%; }
+  .works { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .w .in { padding: 9px 10px 11px; }
+  .area { height: 170px; }
+  .drawer { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 92svh; transform: translateY(calc(100% + 30px)); }
 }
 </style>
 </head>
 <body>
 
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+  <symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21 20c0-2.6-1.6-4.8-4-5.6"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eyeoff" viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17.7 17.7 0 0 1-3.2 4M6.6 6.6C3.9 8.3 2 12 2 12s3.6 7 10 7c1.8 0 3.4-.5 4.7-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.5 12h11L21 7H6.2"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l4-4-4-4M14 12H4"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></symbol>
+</svg>
+
 <div class="door" id="door" hidden>
-  <form id="login">
+  <form id="login" class="glass">
     <img class="wordmark" src="../wordmark.png" alt="The Mad Lions">
-    <p>Site admin · sign in with your THEMADLIONS Hub account</p>
+    <p class="studio">Studio</p>
+    <p class="sub">Sign in with your THEMADLIONS Hub account</p>
     <label class="f"><span>Email</span><input name="email" type="email" autocomplete="username" required></label>
     <label class="f"><span>Password</span><input name="password" type="password" autocomplete="current-password" required></label>
     <div class="msg" id="loginMsg"></div>
-    <button class="pill main" type="submit" id="loginBtn">Sign in</button>
+    <button class="btn red" type="submit" id="loginBtn" style="height:46px">Sign in</button>
   </form>
 </div>
 
-<div id="app" hidden>
-  <header class="top">
-    <img class="wordmark" src="../wordmark.png" alt="The Mad Lions">
-    <span class="title">Site admin</span>
-    <nav class="tabs" id="tabs">
-      <button type="button" data-tab="stats" class="on">Statistics</button>
-      <button type="button" data-tab="leads">Enquiries <span class="badge" id="newCount" hidden></span></button>
-      <button type="button" data-tab="shop">Shop</button>
-      <button type="button" data-tab="look">Look</button>
-    </nav>
-    <span class="grow"></span>
-    <a class="pill" href="../" target="_blank" rel="noopener">Open site</a>
-    <button class="pill" type="button" id="signout">Sign out</button>
-  </header>
+<div class="shell" id="app" hidden>
+  <aside class="side">
+    <div class="in glass">
+      <img class="wordmark" src="../wordmark.png" alt="The Mad Lions">
+      <div class="studio">Studio</div>
+      <nav class="nav" id="nav">
+        <button type="button" data-tab="overview" class="on"><svg class="i"><use href="#i-grid"/></svg><span>Overview</span></button>
+        <button type="button" data-tab="work"><svg class="i"><use href="#i-film"/></svg><span>Work</span></button>
+        <button type="button" data-tab="leads"><svg class="i"><use href="#i-mail"/></svg><span>Enquiries</span><b class="count" id="newCount" hidden></b></button>
+        <button type="button" data-tab="shop"><svg class="i"><use href="#i-bag"/></svg><span>Shop</span></button>
+        <button type="button" data-tab="look"><svg class="i"><use href="#i-sun"/></svg><span>Look</span></button>
+      </nav>
+      <div class="foot">
+        <a class="btn ghost sm" href="../" target="_blank" rel="noopener" style="justify-content:flex-start"><svg class="i"><use href="#i-ext"/></svg>Open the site</a>
+        <div class="me"><span class="av" id="meAv">A</span><div><strong id="meName">Admin</strong><small id="meMail"></small></div><button class="btn ghost sm" type="button" id="signout" title="Sign out" style="margin-left:auto;padding:0 8px"><svg class="i"><use href="#i-out"/></svg></button></div>
+      </div>
+    </div>
+  </aside>
 
   <main>
-    <section data-pane="stats">
-      <div class="row">
-        <div><h1>Statistics</h1><p class="lede" style="margin:0">Who came to the site, what they watched, what they asked for. Anonymous: no names, no addresses.</p></div>
+    <div class="mtop"><img class="wordmark" src="../wordmark.png" alt=""><span class="grow"></span><a class="btn sm" href="../" target="_blank" rel="noopener">Site</a><button class="btn sm" type="button" id="signout2">Sign out</button></div>
+
+    <section data-pane="overview">
+      <div class="head">
+        <div><h1 id="hello">Overview</h1><p id="today"></p></div>
         <span class="grow"></span>
         <div class="seg" id="range"><button type="button" data-d="7">7 days</button><button type="button" data-d="30" class="on">30 days</button><button type="button" data-d="90">90 days</button></div>
       </div>
-      <div class="kpis" id="kpis"></div>
-      <div class="tile"><h3>Visits per day</h3><div class="chart" id="chart"></div><div class="axis" id="axis"></div></div>
-      <div class="cols">
-        <div class="tile"><h3>Most watched films</h3><div class="list" id="topFilms"></div></div>
-        <div class="tile"><h3>Where they come from</h3><div class="list" id="topRefs"></div></div>
-        <div class="tile"><h3>Devices &amp; language</h3><div class="list" id="devices"></div></div>
+      <div class="bento">
+        <div class="card glass kpi" id="k1"></div><div class="card glass kpi" id="k2"></div><div class="card glass kpi" id="k3"></div><div class="card glass kpi" id="k4"></div>
+        <div class="card glass wide"><h3>Visitors per day</h3><div class="area-wrap" id="areaWrap"></div></div>
+        <div class="card glass side4"><h3>Where they come from</h3><div id="sources"></div></div>
+        <div class="card glass half"><h3>Most watched</h3><div class="rows" id="topFilms"></div></div>
+        <div class="card glass half"><h3>Latest enquiries <span class="grow"></span><button class="btn sm ghost" type="button" data-go="leads">All</button></h3><div class="rows" id="latestLeads"></div></div>
       </div>
     </section>
 
+    <section data-pane="work" hidden>
+      <div class="head">
+        <div><h1>Work</h1><p>The films on the site. Drag to reorder, the eye hides one, a click edits it.</p></div>
+        <span class="grow"></span>
+        <button class="btn red" type="button" id="addWork"><svg class="i"><use href="#i-plus"/></svg>Add a film</button>
+      </div>
+      <div class="tools">
+        <label class="search"><svg class="i"><use href="#i-search"/></svg><input id="workSearch" placeholder="Search films"></label>
+        <div class="chips" id="workCats"></div>
+      </div>
+      <div class="works" id="works"></div>
+    </section>
+
     <section data-pane="leads" hidden>
-      <div class="row">
-        <div><h1>Enquiries</h1><p class="lede" style="margin:0">Everything sent through "Tell us about your project", newest first.</p></div>
+      <div class="head">
+        <div><h1>Enquiries</h1><p>Everything sent through "Tell us about your project", newest first.</p></div>
         <span class="grow"></span>
         <div class="seg" id="leadFilter"><button type="button" data-s="all" class="on">All</button><button type="button" data-s="new">New</button><button type="button" data-s="replied">Replied</button><button type="button" data-s="closed">Closed</button></div>
       </div>
@@ -196,48 +331,70 @@ label.f > span.hint, .hint { font-size: 13px; font-weight: 400; letter-spacing: 
     </section>
 
     <section data-pane="shop" hidden>
-      <div id="shopList">
-        <div class="row">
-          <div><h1>Shop</h1><p class="lede" style="margin:0">The merch on the site. A product shows once it is switched on; Buy opens its Stripe page.</p></div>
-          <span class="grow"></span>
-          <button class="pill main" type="button" id="newProduct">+ New product</button>
-        </div>
-        <div class="products" id="products"></div>
+      <div class="head">
+        <div><h1>Shop</h1><p>Merch on the site. A product shows once it is switched on; Buy opens its Stripe page.</p></div>
+        <span class="grow"></span>
+        <button class="btn red" type="button" id="newProduct"><svg class="i"><use href="#i-plus"/></svg>New product</button>
       </div>
-      <form id="editor" hidden>
-        <div class="row">
-          <button class="pill" type="button" id="backToShop">← Products</button>
-          <h1 id="editorTitle" style="margin:0">New product</h1>
-          <span class="grow"></span>
-          <button class="pill danger" type="button" id="delProduct">Delete</button>
-          <button class="pill main" type="submit" id="saveProduct">Save</button>
-        </div>
-        <div class="tile editor">
-          <label class="f full"><span>Name</span><input name="title" required maxlength="120" placeholder="Mad Lions tee, black"></label>
-          <label class="f full"><span>Description</span><textarea name="description" maxlength="800" placeholder="Heavy cotton, embroidered wordmark…"></textarea></label>
-          <label class="f"><span>Price</span><input name="price" inputmode="decimal" placeholder="35"></label>
-          <label class="f"><span>Currency</span><select name="currency"><option>EUR</option><option>BGN</option><option>USD</option><option>GBP</option></select></label>
-          <label class="f full"><span>Sizes or options (comma between them)</span><input name="sizes" placeholder="S, M, L, XL"></label>
-          <label class="f full"><span>Stripe Payment Link</span><input name="stripe_link" placeholder="https://buy.stripe.com/…">
-            <span class="hint">In Stripe: Product catalogue, + Add product (name, price, photo). Then Payment Links, + New, pick the product, tick "Collect customers' addresses" for shipping and, if it has sizes, add a dropdown custom field for the size. Create link, copy it, paste it here.</span></label>
-          <div class="f full"><span class="hint" style="letter-spacing:.16em;text-transform:uppercase;font-size:12px">Photos (the first is the cover; the second shows on hover)</span><div class="photos" id="photos"></div></div>
-          <label class="switch"><input type="checkbox" name="active"> Show on the site</label>
-          <label class="switch"><input type="checkbox" name="sold_out"> Sold out</label>
-          <label class="f"><span>Order (smaller comes first)</span><input name="position" inputmode="numeric" value="0"></label>
-        </div>
-      </form>
+      <div class="products" id="products"></div>
     </section>
 
     <section data-pane="look" hidden>
-      <h1>Look</h1>
-      <p class="lede">The site's theme. A click changes it for every visitor at once; Preview opens it without changing anything.</p>
+      <div class="head"><div><h1>Look</h1><p>The site's theme. A click changes it for every visitor; Preview opens it without changing anything.</p></div></div>
       <div class="themes" id="themes"></div>
+      <div class="card glass" style="margin-top:14px">
+        <h3>Opening picture</h3>
+        <div class="hero-pick">
+          <div class="hero-pv" id="heroPv"><span>No picture yet: the site shows a still from the first film</span></div>
+          <div class="hero-txt"><p class="hint" style="margin:0 0 12px">The picture at the very top of the site, behind the logo. It stays still and shows in black and white, whatever its colours. A wide photo works best (a crew shot, a set, a frame), at least 2000 px across.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn red" type="button" id="heroUp"><svg class="i"><use href="#i-plus"/></svg>Upload a picture</button><button class="btn danger" type="button" id="heroRm" hidden>Remove</button></div></div>
+        </div>
+      </div>
     </section>
   </main>
 </div>
 
+<div class="scrim" id="scrim"></div>
+<form class="drawer glass" id="workDrawer">
+  <div class="dh"><h2 id="wTitle">Add a film</h2><span class="grow"></span><button class="btn ghost sm" type="button" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db">
+    <label class="f"><span>YouTube or Vimeo link</span><input name="video" placeholder="https://youtu.be/… or https://vimeo.com/…" autocomplete="off"><span class="hint">Paste it and the title and picture come by themselves.</span></label>
+    <div class="preview" id="wPreview">The picture shows here</div>
+    <label class="f"><span>Title</span><input name="title" maxlength="160"></label>
+    <div class="two">
+      <label class="f"><span>Client or artist</span><input name="client" maxlength="160"></label>
+      <label class="f"><span>Year</span><input name="year" inputmode="numeric" maxlength="4" placeholder="2026"></label>
+    </div>
+    <div class="f"><span>Categories</span><div class="chips" id="wCats"></div><input id="wNewCat" placeholder="Another category, then Enter" style="height:38px;font-size:14px"></div>
+    <label class="switch"><input type="checkbox" name="visible" checked> Show on the site</label>
+  </div>
+  <div class="df"><button class="btn danger" type="button" id="wDelete">Delete</button><span class="grow"></span><button class="btn" type="button" data-close>Cancel</button><button class="btn red" type="submit" id="wSave">Save</button></div>
+</form>
+
+<form class="drawer glass" id="prodDrawer">
+  <div class="dh"><h2 id="pTitle">New product</h2><span class="grow"></span><button class="btn ghost sm" type="button" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db">
+    <label class="f"><span>Name</span><input name="title" maxlength="120" placeholder="Mad Lions tee, black"></label>
+    <label class="f"><span>Description</span><textarea name="description" maxlength="800" placeholder="Heavy cotton, embroidered wordmark…"></textarea></label>
+    <div class="two">
+      <label class="f"><span>Price</span><input name="price" inputmode="decimal" placeholder="35"></label>
+      <label class="f"><span>Currency</span><select name="currency"><option>EUR</option><option>BGN</option><option>USD</option><option>GBP</option></select></label>
+    </div>
+    <label class="f"><span>Sizes or options (comma between them)</span><input name="sizes" placeholder="S, M, L, XL"></label>
+    <label class="f"><span>Stripe Payment Link</span><input name="stripe_link" placeholder="https://buy.stripe.com/…"><span class="hint">In Stripe: Product catalogue, + Add product. Then Payment Links, + New, pick it, tick "Collect customers' addresses" for shipping and, for sizes, add a dropdown field. Create link, copy it here.</span></label>
+    <div class="f"><span>Photos (the first is the cover, the second shows on hover)</span><div class="photos" id="photos"></div></div>
+    <div class="two">
+      <label class="switch"><input type="checkbox" name="active"> Show on the site</label>
+      <label class="switch"><input type="checkbox" name="sold_out"> Sold out</label>
+    </div>
+    <label class="f"><span>Order (smaller comes first)</span><input name="position" inputmode="numeric" value="0"></label>
+  </div>
+  <div class="df"><button class="btn danger" type="button" id="pDelete">Delete</button><span class="grow"></span><button class="btn" type="button" data-close>Cancel</button><button class="btn red" type="submit" id="pSave">Save</button></div>
+</form>
+
 <div class="toast" id="toast"></div>
 <input type="file" id="filePick" accept="image/jpeg,image/png,image/webp" multiple hidden>
+<input type="file" id="heroPick" accept="image/jpeg,image/png,image/webp" hidden>
 
 <script>
 const SUPABASE_URL = 'https://naibamqexcqnqhbbqafa.supabase.co'
@@ -246,6 +403,7 @@ const $ = (id) => document.getElementById(id)
 const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 let toastTimer
 function toast(text) { const t = $('toast'); t.textContent = text; t.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 2600) }
+const thumbOf = (w) => w.kind === 'vm' ? `https://vumbnail.com/${w.video_id}.jpg` : `https://i.ytimg.com/vi/${w.video_id}/hqdefault.jpg`
 
 /* ---------- the session: the hub's own accounts, kept in this browser ---------- */
 let session = null
@@ -255,22 +413,23 @@ async function auth(grant, body) {
   const r = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=${grant}`, { method: 'POST', headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
   const j = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error(j.error_description || j.msg || 'Could not sign in.')
-  return { access: j.access_token, refresh: j.refresh_token, until: Date.now() + (j.expires_in || 3600) * 1000 - 60000, email: j.user && j.user.email }
+  const meta = (j.user && j.user.user_metadata) || {}
+  return { access: j.access_token, refresh: j.refresh_token, until: Date.now() + (j.expires_in || 3600) * 1000 - 60000, email: j.user && j.user.email, name: meta.name || meta.full_name || '' }
 }
 async function token() {
   if (!session) throw new Error('signed out')
-  if (Date.now() > session.until) saveSession({ ...(await auth('refresh_token', { refresh_token: session.refresh })), email: session.email })
+  if (Date.now() > session.until) saveSession({ ...session, ...(await auth('refresh_token', { refresh_token: session.refresh })) })
   return session.access
 }
 async function api(path, opts = {}) {
-  const r = await fetch(`${SUPABASE_URL}/${path}`, { ...opts, headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${await token()}`, ...(opts.body && !(opts.body instanceof Blob) ? { 'Content-Type': 'application/json' } : {}), ...(opts.headers || {}) } })
+  const isFile = opts.body instanceof Blob
+  const r = await fetch(`${SUPABASE_URL}/${path}`, { ...opts, headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${await token()}`, ...(opts.body && !isFile ? { 'Content-Type': 'application/json' } : {}), ...(opts.headers || {}) } })
   if (r.status === 401) { saveSession(null); showDoor(); throw new Error('Signed out') }
   if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.message || j.error || `Error ${r.status}`) }
-  return r.status === 204 ? null : r.json().catch(() => null)
+  return r.status === 204 || r.status === 201 ? null : r.json().catch(() => null)
 }
 const rest = (path, opts) => api(`rest/v1/${path}`, opts)
 async function isAdmin() { return (await rest('rpc/is_admin', { method: 'POST', body: '{}' })) === true }
-
 function showDoor() { $('app').hidden = true; $('door').hidden = false }
 $('login').onsubmit = async (e) => {
   e.preventDefault()
@@ -282,89 +441,229 @@ $('login').onsubmit = async (e) => {
     start()
   } catch (err) { $('loginMsg').textContent = err.message } finally { $('loginBtn').disabled = false }
 }
-$('signout').onclick = () => { saveSession(null); showDoor() }
+$('signout').onclick = $('signout2').onclick = () => { saveSession(null); showDoor() }
 
-/* ---------- tabs ---------- */
-let tab = 'stats'
-$('tabs').onclick = (e) => {
-  const b = e.target.closest('button'); if (!b) return
-  tab = b.dataset.tab
-  document.querySelectorAll('#tabs button').forEach((x) => x.classList.toggle('on', x === b))
+/* ---------- navigation and drawers ---------- */
+function go(tab) {
+  document.querySelectorAll('#nav button').forEach((x) => x.classList.toggle('on', x.dataset.tab === tab))
   document.querySelectorAll('[data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== tab })
-  if (tab === 'stats') loadStats(); if (tab === 'leads') loadLeads(); if (tab === 'shop') loadProducts(); if (tab === 'look') loadLook()
+  scrollTo({ top: 0 })
+  ;({ overview: loadOverview, work: loadWorks, leads: loadLeads, shop: loadProducts, look: loadLook })[tab]()
 }
+$('nav').onclick = (e) => { const b = e.target.closest('button'); if (b) go(b.dataset.tab) }
+document.addEventListener('click', (e) => { const g = e.target.closest('[data-go]'); if (g) go(g.dataset.go) })
+function openDrawer(el) { el.classList.add('on'); $('scrim').classList.add('on') }
+function closeDrawers() { document.querySelectorAll('.drawer').forEach((d) => d.classList.remove('on')); $('scrim').classList.remove('on') }
+$('scrim').onclick = closeDrawers
+document.querySelectorAll('[data-close]').forEach((b) => { b.onclick = closeDrawers })
+addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawers() })
 
-/* ---------- statistics ---------- */
+/* ---------- overview ---------- */
 let days = 30
-$('range').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; days = +b.dataset.d; document.querySelectorAll('#range button').forEach((x) => x.classList.toggle('on', x === b)); loadStats() }
+$('range').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; days = +b.dataset.d; document.querySelectorAll('#range button').forEach((x) => x.classList.toggle('on', x === b)); loadOverview() }
 async function allEvents(since) {
   const out = []
-  for (let from = 0; from < 100000; from += 1000) {
-    const rows = await rest(`site_events?select=at,kind,ref,device,referrer,lang,visitor&at=gte.${since.toISOString()}&order=at.asc`, { headers: { Range: `${from}-${from + 999}` } })
+  for (let from = 0; from < 200000; from += 1000) {
+    const rows = await rest(`site_events?select=at,kind,ref,device,referrer,visitor&at=gte.${since.toISOString()}&order=at.asc`, { headers: { Range: `${from}-${from + 999}` } })
     out.push(...rows)
     if (rows.length < 1000) break
   }
   return out
 }
 const dayKey = (d) => d.toISOString().slice(0, 10)
-function list(el, pairs, empty) {
-  const max = Math.max(1, ...pairs.map((p) => p[1]))
-  el.innerHTML = pairs.length ? pairs.map(([k, v]) => `<div class="li"><span>${esc(k)}</span><b>${v}</b><span class="meter"><i style="width:${Math.round(v / max * 100)}%"></i></span></div>`).join('') : `<div class="muted">${empty}</div>`
+const tally = (rows, f) => { const m = new Map(); rows.forEach((r) => { const k = f(r); if (k) m.set(k, (m.get(k) || 0) + 1) }); return [...m].sort((a, b) => b[1] - a[1]) }
+function kpi(el, n, label, prev, icon) {
+  const d = prev ? Math.round((n - prev) / prev * 100) : null
+  el.innerHTML = `<h3>${label}</h3><div class="n">${n.toLocaleString('en-GB')}</div><div class="d">${d == null ? 'nothing to compare yet' : `<span class="delta ${d >= 0 ? 'up' : 'down'}">${d >= 0 ? '↑' : '↓'} ${Math.abs(d)}%</span> vs the ${days} days before`}</div><span class="ic"><svg class="i"><use href="#${icon}"/></svg></span>`
 }
-function count(rows, f) { const m = new Map(); rows.forEach((r) => { const k = f(r); if (k) m.set(k, (m.get(k) || 0) + 1) }); return [...m].sort((a, b) => b[1] - a[1]) }
-async function loadStats() {
+function areaChart(points) {
+  const W = 800, H = 200, max = Math.max(1, ...points.map((p) => p.v))
+  const x = (i) => i * W / Math.max(1, points.length - 1), y = (v) => H - 6 - v / max * (H - 26)
+  let d = ''; points.forEach((p, i) => { d += `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.v).toFixed(1)}` })
+  const grid = [0.33, 0.66, 1].map((k) => `<line class="gl" x1="0" x2="${W}" y1="${y(max * k)}" y2="${y(max * k)}"/>`).join('')
+  const lab = (i) => new Date(points[i].k).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  $('areaWrap').innerHTML = `<svg class="area" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><defs><linearGradient id="redfade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d40000" stop-opacity=".45"/><stop offset="1" stop-color="#d40000" stop-opacity="0"/></linearGradient></defs>${grid}<path class="fl" d="${d}L${W},${H}L0,${H}Z"/><path class="ln" d="${d}"/></svg><div class="axis"><span>${lab(0)}</span><span>${lab(Math.floor((points.length - 1) / 2))}</span><span>${lab(points.length - 1)}</span></div><div class="area-tip" id="aTip"></div>`
+  const svg = $('areaWrap').querySelector('svg'), tip = $('aTip')
+  svg.onmousemove = (e) => {
+    const r = svg.getBoundingClientRect(), i = Math.max(0, Math.min(points.length - 1, Math.round((e.clientX - r.left) / r.width * (points.length - 1))))
+    tip.style.left = `${x(i) / W * r.width}px`; tip.style.top = `${y(points[i].v) / H * r.height}px`; tip.style.opacity = 1
+    tip.textContent = `${lab(i)} · ${points[i].v} visitor${points[i].v === 1 ? '' : 's'}`
+  }
+  svg.onmouseleave = () => { tip.style.opacity = 0 }
+}
+const PALETTE = ['#d40000', '#f87171', '#a78bfa', '#60a5fa', '#34d399', '#fbbf24', '#71717a']
+async function loadOverview() {
+  const h = new Date().getHours(), name = (session && session.name) || 'Alex'
+  $('hello').textContent = `${h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'}, ${name.split(' ')[0]}`
+  $('today').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) + ' · how the site is doing'
+  ;['k1', 'k2', 'k3', 'k4'].forEach((k) => { $(k).innerHTML = '<div class="skel" style="height:14px;width:40%"></div><div class="skel" style="height:40px;width:60%;margin-top:16px"></div>' })
   const since = new Date(); since.setHours(0, 0, 0, 0); since.setDate(since.getDate() - (days - 1))
+  const before = new Date(since); before.setDate(before.getDate() - days)
   let ev = []
-  try { ev = await allEvents(since) } catch (e) { toast(e.message); return }
-  const views = ev.filter((e) => e.kind === 'view')
-  const kp = [
-    [new Set(views.map((e) => e.visitor)).size, 'Visitors'], [views.length, 'Page views'],
-    [ev.filter((e) => e.kind === 'play').length, 'Films played'], [ev.filter((e) => e.kind === 'lead').length, 'Enquiries'],
-    [ev.filter((e) => e.kind === 'shop').length, 'Buy clicks'],
-  ]
-  $('kpis').innerHTML = kp.map(([n, l]) => `<div class="tile kpi"><strong>${n}</strong><span>${l}</span></div>`).join('')
+  try { ev = await allEvents(before) } catch (e) { toast(e.message); return }
+  const cur = ev.filter((e) => new Date(e.at) >= since), old = ev.filter((e) => new Date(e.at) < since)
+  const vis = (rows) => new Set(rows.filter((e) => e.kind === 'view').map((e) => e.visitor)).size
+  const cnt = (rows, k) => rows.filter((e) => e.kind === k).length
+  kpi($('k1'), vis(cur), 'Visitors', vis(old), 'i-users')
+  kpi($('k2'), cnt(cur, 'view'), 'Page views', cnt(old, 'view'), 'i-eye')
+  kpi($('k3'), cnt(cur, 'play'), 'Films played', cnt(old, 'play'), 'i-play')
+  kpi($('k4'), cnt(cur, 'shop') + cnt(cur, 'lead'), 'Buy clicks & enquiries', cnt(old, 'shop') + cnt(old, 'lead'), 'i-cart')
   const per = new Map(); for (let i = 0; i < days; i++) { const d = new Date(since); d.setDate(d.getDate() + i); per.set(dayKey(d), new Set()) }
-  views.forEach((e) => { const k = dayKey(new Date(e.at)); if (per.has(k)) per.get(k).add(e.visitor) })
-  const max = Math.max(1, ...[...per.values()].map((s) => s.size))
-  $('chart').innerHTML = [...per].map(([k, s]) => `<div class="day"><span class="tip">${new Date(k).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} · ${s.size} visitor${s.size === 1 ? '' : 's'}</span><div class="bar" style="height:${Math.round(s.size / max * 100)}%"></div></div>`).join('')
-  const keys = [...per.keys()]
-  const fmt = (k) => new Date(k).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  $('axis').innerHTML = `<span>${fmt(keys[0])}</span><span>${fmt(keys[Math.floor(keys.length / 2)])}</span><span>${fmt(keys[keys.length - 1])}</span>`
-  list($('topFilms'), count(ev.filter((e) => e.kind === 'play'), (e) => e.ref).slice(0, 10), 'No film played yet.')
-  list($('topRefs'), count(views, (e) => e.referrer || 'Direct or typed').slice(0, 10), 'No visits yet.')
-  const dev = count(views, (e) => e.device), lg = count(views, (e) => (e.lang === 'el' ? 'Greek' : 'English'))
-  list($('devices'), [...dev.map(([k, v]) => [k[0].toUpperCase() + k.slice(1), v]), ...lg], 'No visits yet.')
+  cur.filter((e) => e.kind === 'view').forEach((e) => { const k = dayKey(new Date(e.at)); if (per.has(k)) per.get(k).add(e.visitor) })
+  areaChart([...per].map(([k, s]) => ({ k, v: s.size })))
+  const src = tally(cur.filter((e) => e.kind === 'view'), (e) => e.referrer || 'Direct').slice(0, 6), total = src.reduce((a, b) => a + b[1], 0)
+  if (!total) $('sources').innerHTML = '<div class="empty">No visits yet</div>'
+  else {
+    let acc = 0
+    const stops = src.map(([, v], i) => { const a = acc / total * 360; acc += v; return `${PALETTE[i]} ${a}deg ${acc / total * 360}deg` }).join(',')
+    $('sources').innerHTML = `<div class="donut"><div class="ring" style="background:conic-gradient(${stops})"></div><div class="legend">${src.map(([k, v], i) => `<span><i style="background:${PALETTE[i]}"></i>${esc(k)} · ${Math.round(v / total * 100)}%</span>`).join('')}</div></div>`
+  }
+  const films = tally(cur.filter((e) => e.kind === 'play'), (e) => e.ref).slice(0, 6)
+  if (!works.length) { try { works = await rest('site_works?select=*&order=position.asc') } catch (e) {} }
+  const max = Math.max(1, ...films.map((f) => f[1]))
+  $('topFilms').innerHTML = films.length ? films.map(([t, v]) => { const w = works.find((x) => x.title === t); return `<div class="rowi"><span class="th" style="background-image:url('${w ? esc(thumbOf(w)) : ''}')"></span><span class="nm">${esc(t)}</span><b>${v}</b><span class="bar"><i style="width:${v / max * 100}%"></i></span></div>` }).join('') : '<div class="empty">No film played yet</div>'
+  try { leads = await rest('site_leads?select=*&order=created_at.desc&limit=500') } catch (e) {}
+  countNew()
+  $('latestLeads').innerHTML = leads.length ? leads.slice(0, 5).map((l) => `<div class="rowi"><span class="av2" style="width:32px;height:32px;font-size:13px">${esc((l.name || l.email)[0].toUpperCase())}</span><span class="nm">${esc(l.name || l.email)}${l.kind ? ` <span style="color:var(--dim)">· ${esc(l.kind)}</span>` : ''}</span>${l.status === 'new' ? '<span class="chip" style="height:24px"><i></i>New</span>' : `<small style="color:var(--dim)">${esc(l.status)}</small>`}</div>`).join('') : '<div class="empty">No enquiries yet</div>'
+}
+
+/* ---------- work ---------- */
+let works = [], workCat = 'All', editingWork = null
+const BASE_CATS = ['Commercials', 'Music Videos', 'Corporate', 'Motion Graphics', 'Events', 'AI Films']
+const allCats = () => [...new Set([...BASE_CATS, ...works.flatMap((w) => w.categories || [])])]
+async function loadWorks() {
+  $('works').innerHTML = '<div class="skel" style="aspect-ratio:16/11;border-radius:18px"></div>'.repeat(8)
+  try { works = await rest('site_works?select=*&order=position.asc,created_at.desc') } catch (e) { toast(e.message); return }
+  renderWorks()
+}
+$('workSearch').oninput = () => renderWorks()
+function renderWorks() {
+  $('workCats').innerHTML = ['All', ...allCats()].map((c) => `<button type="button" class="chip ${c === workCat ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('')
+  const q = $('workSearch').value.trim().toLowerCase()
+  const shown = works.filter((w) => (workCat === 'All' || (w.categories || []).includes(workCat)) && (!q || `${w.title} ${w.client || ''}`.toLowerCase().includes(q)))
+  const canDrag = workCat === 'All' && !q
+  $('works').innerHTML = shown.length ? shown.map((w) => `
+    <div class="w glass ${w.visible ? '' : 'off'}" data-id="${esc(w.id)}" draggable="${canDrag}">
+      <div class="ph" style="background-image:url('${esc(thumbOf(w))}')"><span class="no">${works.indexOf(w) + 1}</span><button class="eye" type="button" data-eye title="${w.visible ? 'Hide from the site' : 'Show on the site'}"><svg class="i"><use href="#${w.visible ? 'i-eye' : 'i-eyeoff'}"/></svg></button></div>
+      <div class="in"><strong>${esc(w.title)}</strong><small>${esc([w.client, w.year, (w.categories || []).join(', ')].filter(Boolean).join(' · ') || 'No category')}</small></div>
+    </div>`).join('') : '<div class="empty">No film matches.</div>'
+}
+$('workCats').onclick = (e) => { const b = e.target.closest('[data-c]'); if (b) { workCat = b.dataset.c; renderWorks() } }
+$('works').onclick = async (e) => {
+  const card = e.target.closest('.w'); if (!card) return
+  const w = works.find((x) => x.id === card.dataset.id)
+  if (e.target.closest('[data-eye]')) {
+    try { await rest(`site_works?id=eq.${w.id}`, { method: 'PATCH', body: JSON.stringify({ visible: !w.visible }), headers: { Prefer: 'return=minimal' } }); w.visible = !w.visible; renderWorks(); toast(w.visible ? `${w.title} is on the site` : `${w.title} is hidden`) } catch (err) { toast(err.message) }
+    return
+  }
+  openWork(w)
+}
+const saveOrder = () => rest('site_works?on_conflict=id', { method: 'POST', body: JSON.stringify(works.map((w, i) => ({ id: w.id, title: w.title, position: i }))), headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } })
+// drag to reorder (computer): the new order is saved in one go
+let dragId = null
+$('works').addEventListener('dragstart', (e) => { const c = e.target.closest('.w'); if (!c) return; dragId = c.dataset.id; c.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move' })
+$('works').addEventListener('dragend', () => { document.querySelectorAll('.w').forEach((c) => c.classList.remove('dragging', 'over')) })
+$('works').addEventListener('dragover', (e) => { const c = e.target.closest('.w'); if (!c || !dragId) return; e.preventDefault(); document.querySelectorAll('.w.over').forEach((x) => x !== c && x.classList.remove('over')); c.classList.add('over') })
+$('works').addEventListener('drop', async (e) => {
+  e.preventDefault()
+  const c = e.target.closest('.w'); if (!c || !dragId || c.dataset.id === dragId) return
+  const from = works.findIndex((w) => w.id === dragId), to = works.findIndex((w) => w.id === c.dataset.id)
+  const [moved] = works.splice(from, 1); works.splice(to, 0, moved)
+  dragId = null; renderWorks()
+  try { await saveOrder(); toast('New order saved') } catch (err) { toast(err.message); loadWorks() }
+})
+
+function parseVideo(url) {
+  const u = String(url || '').trim()
+  let m = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([\w-]{11})/)
+  if (m) return { kind: 'yt', id: m[1], url: `https://www.youtube.com/watch?v=${m[1]}` }
+  m = u.match(/vimeo\.com\/(?:video\/)?(\d{5,})/)
+  if (m) return { kind: 'vm', id: m[1], url: `https://vimeo.com/${m[1]}` }
+  return null
+}
+function renderWorkCats() {
+  const sel = editingWork.categories
+  $('wCats').innerHTML = allCats().map((c) => `<button type="button" class="chip ${sel.includes(c) ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('')
+}
+$('wCats').onclick = (e) => { const b = e.target.closest('[data-c]'); if (!b) return; const s = editingWork.categories, i = s.indexOf(b.dataset.c); i < 0 ? s.push(b.dataset.c) : s.splice(i, 1); renderWorkCats() }
+$('wNewCat').onkeydown = (e) => { if (e.key !== 'Enter') return; e.preventDefault(); const v = e.target.value.trim(); if (v && !editingWork.categories.includes(v)) { editingWork.categories.push(v); if (!BASE_CATS.includes(v)) BASE_CATS.push(v) } e.target.value = ''; renderWorkCats() }
+function openWork(w) {
+  editingWork = w ? { ...w, categories: [...(w.categories || [])] } : { title: '', client: '', year: new Date().getFullYear(), categories: [], video: '', visible: true }
+  const f = $('workDrawer')
+  f.video.value = editingWork.video || ''; f.title.value = editingWork.title || ''; f.client.value = editingWork.client || ''; f.year.value = editingWork.year || ''; f.visible.checked = editingWork.visible !== false
+  $('wTitle').textContent = w ? 'Edit the film' : 'Add a film'
+  $('wDelete').hidden = !w
+  showPreview(); renderWorkCats(); openDrawer(f)
+  if (!w) setTimeout(() => f.video.focus(), 300)
+}
+function showPreview() {
+  const v = parseVideo($('workDrawer').video.value)
+  $('wPreview').style.backgroundImage = v ? `url('${thumbOf({ kind: v.kind, video_id: v.id })}')` : ''
+  $('wPreview').textContent = v ? '' : 'The picture shows here'
+}
+$('addWork').onclick = () => openWork(null)
+$('workDrawer').video.oninput = async (e) => {
+  showPreview()
+  const v = parseVideo(e.target.value), f = $('workDrawer')
+  if (!v || f.title.value.trim()) return
+  try {
+    const j = await (await fetch(`https://noembed.com/embed?url=${encodeURIComponent(v.url)}`)).json()
+    if (j && j.title && !f.title.value.trim()) { f.title.value = j.title; toast('Title filled in from the video') }
+  } catch (err) {}
+}
+$('workDrawer').onsubmit = async (e) => {
+  e.preventDefault()
+  const f = e.target, v = parseVideo(f.video.value)
+  if (!v) { toast('Paste a YouTube or Vimeo link'); f.video.focus(); return }
+  const year = parseInt(f.year.value, 10)
+  const row = { title: f.title.value.trim(), client: f.client.value.trim() || null, year: year > 1900 && year < 2100 ? year : null, categories: editingWork.categories, video: v.url, kind: v.kind, video_id: v.id, visible: f.visible.checked }
+  if (!row.title) { toast('Give it a title'); f.title.focus(); return }
+  $('wSave').disabled = true
+  try {
+    if (editingWork.id) await rest(`site_works?id=eq.${editingWork.id}`, { method: 'PATCH', body: JSON.stringify(row), headers: { Prefer: 'return=minimal' } })
+    else {
+      // a new film goes first, and everything after it moves one down
+      await rest('site_works', { method: 'POST', body: JSON.stringify({ ...row, position: -1 }), headers: { Prefer: 'return=minimal' } })
+      works = await rest('site_works?select=*&order=position.asc,created_at.desc')
+      await saveOrder()
+    }
+    closeDrawers(); toast(row.visible ? 'Saved · it is on the site' : 'Saved · hidden from the site')
+    loadWorks()
+  } catch (err) { toast(err.message) } finally { $('wSave').disabled = false }
+}
+$('wDelete').onclick = async () => {
+  if (!editingWork.id || !confirm(`Delete "${editingWork.title}" from the site for good? (The eye only hides it.)`)) return
+  try { await rest(`site_works?id=eq.${editingWork.id}`, { method: 'DELETE' }); closeDrawers(); toast('Deleted'); loadWorks() } catch (err) { toast(err.message) }
 }
 
 /* ---------- enquiries ---------- */
 let leads = [], leadFilter = 'all'
+function countNew() { const n = leads.filter((l) => l.status === 'new').length; $('newCount').hidden = !n; $('newCount').textContent = n }
 $('leadFilter').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; leadFilter = b.dataset.s; document.querySelectorAll('#leadFilter button').forEach((x) => x.classList.toggle('on', x === b)); renderLeads() }
 async function loadLeads() {
   try { leads = await rest('site_leads?select=*&order=created_at.desc&limit=500') } catch (e) { toast(e.message); return }
   renderLeads()
 }
 function renderLeads() {
-  const n = leads.filter((l) => l.status === 'new').length
-  $('newCount').hidden = !n; $('newCount').textContent = n
+  countNew()
   const shown = leads.filter((l) => leadFilter === 'all' || l.status === leadFilter)
   if (!shown.length) { $('leads').innerHTML = `<div class="empty">${leads.length ? 'Nothing here.' : 'No enquiries yet. They appear here the moment someone sends the form.'}</div>`; return }
   $('leads').innerHTML = shown.map((l) => `
-    <div class="lead ${l.status === 'new' ? 'new' : ''}" data-id="${esc(l.id)}">
-      <div class="head"><strong>${esc(l.name || l.email)}</strong>${l.company ? `<span class="muted">${esc(l.company)}</span>` : ''}<span class="when">${new Date(l.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div>
+    <div class="lead glass ${l.status === 'new' ? 'new' : ''}" data-id="${esc(l.id)}">
+      <div class="top"><span class="av2">${esc((l.name || l.email)[0].toUpperCase())}</span><div class="who"><strong>${esc(l.name || l.email)}</strong><small>${esc([l.company, l.email].filter(Boolean).join(' · '))}</small></div><span class="when">${new Date(l.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div>
       <div class="chips">${[l.kind, l.budget, l.needed_by && `By ${l.needed_by}`, l.lang === 'el' ? 'Wrote in Greek' : ''].filter(Boolean).map((c) => `<span class="chip"><i></i>${esc(c)}</span>`).join('')}</div>
       ${l.message ? `<div class="text">${esc(l.message)}</div>` : ''}
       <div class="acts">
-        <a class="pill main" href="mailto:${encodeURIComponent(l.email)}?subject=${encodeURIComponent('The Mad Lions · your project')}">Reply to ${esc(l.email)}</a>
+        <a class="btn red sm" href="mailto:${encodeURIComponent(l.email)}?subject=${encodeURIComponent('The Mad Lions · your project')}"><svg class="i"><use href="#i-mail"/></svg>Reply</a>
         <div class="seg">${['new', 'replied', 'closed'].map((s) => `<button type="button" data-status="${s}" class="${l.status === s ? 'on' : ''}">${s[0].toUpperCase() + s.slice(1)}</button>`).join('')}</div>
         <span class="grow"></span>
-        <button class="pill danger" type="button" data-del>Delete</button>
+        <button class="btn danger sm" type="button" data-del>Delete</button>
       </div>
     </div>`).join('')
 }
 $('leads').onclick = async (e) => {
   const card = e.target.closest('.lead'); if (!card) return
-  const id = card.dataset.id
-  const st = e.target.closest('[data-status]')
+  const id = card.dataset.id, st = e.target.closest('[data-status]')
   try {
     if (st) { await rest(`site_leads?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ status: st.dataset.status }), headers: { Prefer: 'return=minimal' } }); leads.find((l) => l.id === id).status = st.dataset.status; renderLeads() }
     if (e.target.closest('[data-del]') && confirm('Delete this enquiry for good?')) { await rest(`site_leads?id=eq.${id}`, { method: 'DELETE' }); leads = leads.filter((l) => l.id !== id); renderLeads(); toast('Deleted') }
@@ -380,25 +679,23 @@ async function loadProducts() {
 const money = (p) => p.price == null ? 'No price' : new Intl.NumberFormat('en-IE', { style: 'currency', currency: p.currency || 'EUR' }).format(p.price)
 function renderProducts() {
   $('products').innerHTML = products.length ? products.map((p) => `
-    <div class="prod" data-id="${esc(p.id)}">
-      <div class="ph" style="background-image:url('${esc((p.images || [])[0] || '')}')"><span class="state chip"><i style="background:${p.active ? 'var(--ok)' : 'var(--muted)'}"></i>${p.sold_out ? 'Sold out' : p.active ? 'On the site' : 'Hidden'}</span></div>
-      <div class="in"><strong>${esc(p.title)}</strong><span class="muted">${money(p)}${p.stripe_link ? '' : ' · no Stripe link yet'}</span></div>
-    </div>`).join('') : '<div class="empty">No products yet. Press + New product.</div>'
+    <div class="prod glass" data-id="${esc(p.id)}">
+      <div class="ph" style="background-image:url('${esc((p.images || [])[0] || '')}')"><span class="st chip"><i style="background:${p.active ? 'var(--ok)' : 'var(--dim)'}"></i>${p.sold_out ? 'Sold out' : p.active ? 'On the site' : 'Hidden'}</span></div>
+      <div class="in"><strong>${esc(p.title)}</strong><small>${money(p)}${p.stripe_link ? '' : ' · no Stripe link yet'}</small></div>
+    </div>`).join('') : '<div class="empty">No products yet. Press New product.</div>'
 }
-$('products').onclick = (e) => { const c = e.target.closest('.prod'); if (c) openEditor(products.find((p) => p.id === c.dataset.id)) }
-$('newProduct').onclick = () => openEditor(null)
-$('backToShop').onclick = () => { $('editor').hidden = true; $('shopList').hidden = false }
-function openEditor(p) {
+$('products').onclick = (e) => { const c = e.target.closest('.prod'); if (c) openProduct(products.find((p) => p.id === c.dataset.id)) }
+$('newProduct').onclick = () => openProduct(null)
+function openProduct(p) {
   editing = p ? { ...p, images: [...(p.images || [])] } : { title: '', description: '', price: null, currency: 'EUR', sizes: [], stripe_link: '', active: false, sold_out: false, position: 0, images: [] }
-  const f = $('editor')
+  const f = $('prodDrawer')
   f.title.value = editing.title || ''; f.description.value = editing.description || ''
   f.price.value = editing.price == null ? '' : editing.price; f.currency.value = editing.currency || 'EUR'
   f.sizes.value = (editing.sizes || []).join(', '); f.stripe_link.value = editing.stripe_link || ''
   f.active.checked = !!editing.active; f.sold_out.checked = !!editing.sold_out; f.position.value = editing.position || 0
-  $('editorTitle').textContent = p ? p.title : 'New product'
-  $('delProduct').hidden = !p
-  renderPhotos()
-  $('shopList').hidden = true; f.hidden = false
+  $('pTitle').textContent = p ? p.title : 'New product'
+  $('pDelete').hidden = !p
+  renderPhotos(); openDrawer(f)
 }
 function renderPhotos() {
   $('photos').innerHTML = editing.images.map((u, i) => `<div class="photo" style="background-image:url('${esc(u)}')">${i === 0 ? '<span class="first">Cover</span>' : ''}<button type="button" data-rm="${i}" aria-label="Remove">×</button></div>`).join('') + '<div class="add-photo" id="addPhoto">+ Add<br>photos</div>'
@@ -416,74 +713,87 @@ $('filePick').onchange = async (e) => {
     const path = `products/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.${ext}`
     try {
       await api(`storage/v1/object/site/${path}`, { method: 'POST', body: file, headers: { 'Content-Type': file.type, 'x-upsert': 'false' } })
-      editing.images.push(`${SUPABASE_URL}/storage/v1/object/public/site/${path}`)
-      renderPhotos()
+      editing.images.push(`${SUPABASE_URL}/storage/v1/object/public/site/${path}`); renderPhotos()
     } catch (err) { toast(`${file.name}: ${err.message}`) }
   }
   toast('Photos added · press Save')
 }
-$('editor').onsubmit = async (e) => {
+$('prodDrawer').onsubmit = async (e) => {
   e.preventDefault()
-  const f = e.target
-  const link = f.stripe_link.value.trim()
+  const f = e.target, link = f.stripe_link.value.trim(), price = f.price.value.trim().replace(',', '.')
   if (link && !/^https:\/\//.test(link)) { toast('The Stripe link should start with https://'); return }
-  const price = f.price.value.trim().replace(',', '.')
-  const row = {
-    title: f.title.value.trim(), description: f.description.value.trim(), price: price === '' ? null : Number(price), currency: f.currency.value,
-    sizes: f.sizes.value.split(',').map((x) => x.trim()).filter(Boolean), stripe_link: link || null, active: f.active.checked, sold_out: f.sold_out.checked,
-    position: parseInt(f.position.value, 10) || 0, images: editing.images,
-  }
-  if (!row.title) { toast('Give it a name.'); return }
+  const row = { title: f.title.value.trim(), description: f.description.value.trim(), price: price === '' ? null : Number(price), currency: f.currency.value, sizes: f.sizes.value.split(',').map((x) => x.trim()).filter(Boolean), stripe_link: link || null, active: f.active.checked, sold_out: f.sold_out.checked, position: parseInt(f.position.value, 10) || 0, images: editing.images }
+  if (!row.title) { toast('Give it a name'); return }
   if (row.price != null && !isFinite(row.price)) { toast('The price should be a number, e.g. 35 or 35.50'); return }
-  $('saveProduct').disabled = true
+  $('pSave').disabled = true
   try {
     if (editing.id) await rest(`site_products?id=eq.${editing.id}`, { method: 'PATCH', body: JSON.stringify(row), headers: { Prefer: 'return=minimal' } })
     else await rest('site_products', { method: 'POST', body: JSON.stringify(row), headers: { Prefer: 'return=minimal' } })
-    toast(row.active ? 'Saved · it is on the site' : 'Saved · hidden from the site')
-    $('editor').hidden = true; $('shopList').hidden = false
-    loadProducts()
-  } catch (err) { toast(err.message) } finally { $('saveProduct').disabled = false }
+    closeDrawers(); toast(row.active ? 'Saved · it is on the site' : 'Saved · hidden from the site'); loadProducts()
+  } catch (err) { toast(err.message) } finally { $('pSave').disabled = false }
 }
-$('delProduct').onclick = async () => {
+$('pDelete').onclick = async () => {
   if (!editing.id || !confirm(`Delete "${editing.title}" for good?`)) return
-  try { await rest(`site_products?id=eq.${editing.id}`, { method: 'DELETE' }); toast('Deleted'); $('editor').hidden = true; $('shopList').hidden = false; loadProducts() } catch (err) { toast(err.message) }
+  try { await rest(`site_products?id=eq.${editing.id}`, { method: 'DELETE' }); closeDrawers(); toast('Deleted'); loadProducts() } catch (err) { toast(err.message) }
 }
 
 /* ---------- the look ---------- */
 const THEMES = [
-  { key: 'dark', name: 'Dark', note: 'Black, Ferrari red', bg: '#0b0b0c', card: '#18181b', accent: '#d40000', wm: 'invert(1)' },
-  { key: 'light', name: 'Light', note: 'Paper, Ferrari red', bg: '#f3f0e8', card: '#ffffff', accent: '#d40000', wm: 'none' },
-  { key: 'blue', name: 'Blue', note: 'Night glass, Ferrari red', bg: '#08101f', card: '#15233f', accent: '#d40000', wm: 'invert(1)' },
+  { key: 'dark', name: 'Dark', note: 'Black, Ferrari red', bg: '#0b0b0c', card: '#18181b', wm: 'invert(1)' },
+  { key: 'light', name: 'Light', note: 'Paper, Ferrari red', bg: '#f3f0e8', card: '#ffffff', wm: 'none' },
+  { key: 'blue', name: 'Blue', note: 'Night glass, Ferrari red', bg: '#08101f', card: '#15233f', wm: 'invert(1)' },
 ]
-let theme = 'dark'
-async function loadLook() {
-  try { const r = await rest('site_settings?key=eq.theme&select=value'); theme = (r[0] && r[0].value) || 'dark' } catch (e) { toast(e.message) }
-  renderLook()
+let theme = 'dark', heroImage = ''
+const setSetting = (key, value) => rest('site_settings?on_conflict=key', { method: 'POST', body: JSON.stringify({ key, value, updated_at: new Date().toISOString() }), headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } })
+function showHero() {
+  $('heroPv').style.backgroundImage = heroImage ? `url('${heroImage.replace(/'/g, '%27')}')` : ''
+  $('heroPv').innerHTML = heroImage ? '' : '<span>No picture yet: the site shows a still from the first film</span>'
+  $('heroRm').hidden = !heroImage
 }
-function renderLook() {
+$('heroUp').onclick = () => $('heroPick').click()
+$('heroPick').onchange = async (e) => {
+  const file = e.target.files[0]; e.target.value = ''
+  if (!file) return
+  toast('Uploading the picture…')
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
+  const path = `hero/${Date.now().toString(36)}.${ext}`
+  try {
+    await api(`storage/v1/object/site/${path}`, { method: 'POST', body: file, headers: { 'Content-Type': file.type } })
+    heroImage = `${SUPABASE_URL}/storage/v1/object/public/site/${path}`
+    await setSetting('hero_image', heroImage); showHero(); toast('The opening picture is on the site')
+  } catch (err) { toast(err.message) }
+}
+$('heroRm').onclick = async () => { try { await setSetting('hero_image', ''); heroImage = ''; showHero(); toast('Removed') } catch (err) { toast(err.message) } }
+async function loadLook() {
+  try {
+    const r = await rest('site_settings?select=key,value')
+    const get = (k) => (r.find((x) => x.key === k) || {}).value
+    theme = get('theme') || 'dark'; heroImage = get('hero_image') || ''
+  } catch (e) { toast(e.message) }
+  showHero()
   $('themes').innerHTML = THEMES.map((t) => `
-    <button type="button" class="theme ${t.key === theme ? 'on' : ''}" data-theme="${t.key}">
-      <div class="pv" style="background:${t.bg}"><img src="../wordmark.png" alt="" style="filter:${t.wm}"><div class="btn" style="background:${t.accent}"></div><div class="bars">${'<i></i>'.repeat(4).replace(/<i>/g, `<i style="background:${t.card}">`)}</div></div>
-      <div class="name"><strong>${t.name}</strong><span class="muted">${t.note}</span></div>
-      <div class="row" style="margin:12px 0 0"><a class="pill" href="../?theme=${t.key}" target="_blank" rel="noopener" data-preview>Preview</a>${t.key === theme ? '<span class="chip"><i style="background:var(--ok)"></i>On the site</span>' : ''}</div>
-    </button>`).join('')
+    <div class="theme glass ${t.key === theme ? 'on' : ''}" data-theme="${t.key}" role="button" tabindex="0">
+      <div class="pv" style="background:${t.bg}"><img src="../wordmark.png" alt="" style="filter:${t.wm}"><div class="b"></div><div class="tiles">${`<i style="background:${t.card}"></i>`.repeat(4)}</div></div>
+      <div class="nm"><strong>${t.name}</strong><small>${t.note}</small><span class="grow"></span><a class="btn sm" href="../?theme=${t.key}" target="_blank" rel="noopener" data-preview>Preview</a></div>
+      ${t.key === theme ? '<div class="chip" style="margin-top:10px;height:26px"><i style="background:var(--ok)"></i>On the site now</div>' : ''}
+    </div>`).join('')
 }
 $('themes').onclick = async (e) => {
   if (e.target.closest('[data-preview]')) return
   const b = e.target.closest('[data-theme]'); if (!b || b.dataset.theme === theme) return
   try {
-    await rest('site_settings?on_conflict=key', { method: 'POST', body: JSON.stringify({ key: 'theme', value: b.dataset.theme, updated_at: new Date().toISOString() }), headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } })
-    theme = b.dataset.theme; renderLook(); toast(`The site is now ${THEMES.find((t) => t.key === theme).name}`)
+    await setSetting('theme', b.dataset.theme)
+    toast(`The site is now ${THEMES.find((t) => t.key === b.dataset.theme).name}`); loadLook()
   } catch (err) { toast(err.message) }
 }
 
 /* ---------- start ---------- */
 async function start() {
-  try {
-    if (!session || !(await isAdmin())) { showDoor(); return }
-  } catch (e) { showDoor(); return }
+  try { if (!session || !(await isAdmin())) { showDoor(); return } } catch (e) { showDoor(); return }
   $('door').hidden = true; $('app').hidden = false
-  loadStats(); loadLeads()
+  const nm = session.name || (session.email || 'A').split('@')[0]
+  $('meName').textContent = nm; $('meMail').textContent = session.email || ''; $('meAv').textContent = nm[0].toUpperCase()
+  go('overview')
 }
 start()
 </script>
