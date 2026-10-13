@@ -1,11 +1,12 @@
 import { Suspense, useEffect, useState } from 'react'
-import { Link, NavLink, Navigate, Outlet, useLocation, useOutletContext, useParams } from 'react-router-dom'
+import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { Badge, useIsMobile } from '../components/ui.jsx'
 import { can, canAccessProject, useCurrentUser, useStore } from '../lib/store.jsx'
 import { hydrateProject } from '../lib/library.js'
 import { projectTabs, tabHidden } from '../lib/tabs.js'
 import { Icon } from '../components/icons.jsx'
 import { useGlide } from '../lib/glide.js'
+import { swipeTabs } from '../lib/swipeTabs.js'
 
 // The brainstorm whiteboard is built and working but Alex does not need it yet, so the tab is
 // hidden. The page itself still lives at /p/<id>/whiteboard. Flip this to true to bring it back.
@@ -56,6 +57,8 @@ export default function Project() {
   const mobile = useIsMobile()
   const { pathname } = useLocation()
   const glide = useGlide()
+  const nav = useNavigate()
+  useEffect(() => () => { swipeTabs.project = null }, [])
   const raw = state.projects.find((p) => p.id === id)
   const project = raw ? hydrateProject(raw, state.library) : null
 
@@ -72,6 +75,18 @@ export default function Project() {
   ]
     .map((t) => (t.to === 'budget' && !can(user, 'budget') ? { ...t, label: 'Add Receipt', key: 'projects' } : t))
     .filter((t) => (Array.isArray(t.key) ? t.key.some((k) => can(user, k, t.level)) : can(user, t.key, t.level)) && !tabHidden(project, t.to))
+
+  // a sideways swipe on a phone moves to the next or previous of these tabs, the page sliding over
+  // as when one is tapped (lib/swipeTabs.js)
+  const base = `/p/${project.id}`
+  const seg = pathname.startsWith(base) ? pathname.slice(base.length).replace(/^\//, '').split('/')[0] : ''
+  swipeTabs.project = mobile ? (dir) => {
+    const at = tabs.findIndex((t) => (seg ? t.to === seg : t.end))
+    const to = at < 0 ? null : tabs[at + (dir === 'next' ? 1 : -1)]
+    if (!to) return
+    glide.slideTo(dir)
+    nav(to.end || !to.to ? base : `${base}/${to.to}`)
+  } : null
 
   const ctx = {
     project,
