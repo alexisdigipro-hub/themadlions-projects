@@ -467,8 +467,9 @@ export default function Deliveries() {
               <Field label="Version" hint="v1, v2, cut 3…"><Input value={draft.version} onChange={(e) => setD('version', e.target.value)} placeholder="v2" /></Field>
             </div>
             <div className="row-2">
-              <Field label="Title"><Input value={draft.title} onChange={(e) => setD('title', e.target.value)} placeholder="Καίτη Γαρμπή — Το τραγούδι" /></Field>
-              <Field label="Client / artist"><Input value={draft.client} onChange={(e) => setD('client', e.target.value)} /></Field>
+              {/* client first, then the title (Alex, 13 Oct) */}
+              <Field label="Client / artist"><Input value={draft.client} onChange={(e) => setD('client', e.target.value)} placeholder="Καίτη Γαρμπή" /></Field>
+              <Field label="Title"><Input value={draft.title} onChange={(e) => setD('title', e.target.value)} placeholder="Το τραγούδι" /></Field>
             </div>
             <Field label="Download link" hint={remote ? `Paste the SwissTransfer or WeTransfer link you already made, or upload: one file or several at once (several get one link for them all). They go into pCloud under Deliveries / ${stageLabel(draft.stage)} and the link comes here.` : 'Paste the SwissTransfer or WeTransfer link you already made.'}>
               <div className="deliv-linkrow">
