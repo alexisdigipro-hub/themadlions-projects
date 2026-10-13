@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Preview of the new themadlions.com (Alex, 13 Oct 2026). Not for search engines until it moves to its own address. -->
+<!-- Preview of the new themadlions.com (Alex, 13 Oct 2026). Not for search engines until it moves to its own address.
+     No city or country anywhere on the site (Alex): the company is not where most of its work is. -->
 <meta name="robots" content="noindex, nofollow">
-<title>The Mad Lions · Film production, Athens</title>
-<meta name="description" content="We design, shoot and edit film for any screen. Commercials, music videos, corporate films and motion graphics from Athens.">
+<title>The Mad Lions · Video production company</title>
+<meta name="description" content="Video production company. Commercials, music videos and corporate films, from the first idea to final delivery.">
 <meta name="theme-color" content="#0b0b0c">
 <meta property="og:title" content="The Mad Lions">
-<meta property="og:description" content="Film production · Athens">
+<meta property="og:description" content="Video production company">
 <meta property="og:image" content="https://go.themadlions.com/og-image.png">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +18,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0b0b0c; --bg-2: #121214; --text: #f2f0ec; --muted: #9a978f; --line: rgba(255,255,255,.1);
+  --bg: #0b0b0c; --bg-2: #121214; --bg-3: #18181b; --text: #f2f0ec; --muted: #9a978f; --line: rgba(255,255,255,.1);
   --accent: #e2b04a; --glass: rgba(255,255,255,.07); --glass-edge: rgba(255,255,255,.14);
   --pad: clamp(16px, 4vw, 56px);
 }
@@ -25,24 +26,24 @@
 html { scroll-behavior: smooth; background: var(--bg); }
 body { margin: 0; background: var(--bg); color: var(--text); font-family: Jost, system-ui, sans-serif; font-weight: 400; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 a { color: inherit; text-decoration: none; }
-button { font: inherit; color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
 img { display: block; max-width: 100%; }
 .wordmark { filter: invert(1); height: auto; }
 
 /* top bar: wordmark, sections, language */
-.bar { position: fixed; inset: 0 0 auto 0; z-index: 20; display: flex; align-items: center; gap: 18px; padding: calc(14px + env(safe-area-inset-top)) var(--pad) 14px; transition: background .4s, backdrop-filter .4s; }
+.bar { position: fixed; inset: 0 0 auto 0; z-index: 20; display: flex; align-items: center; gap: 18px; padding: calc(14px + env(safe-area-inset-top)) var(--pad) 14px; transition: background .4s; }
 .bar.solid { background: rgba(11,11,12,.72); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); border-bottom: 1px solid var(--line); }
 .bar .wordmark { width: 168px; opacity: 0; transform: translateY(-4px); transition: opacity .4s, transform .4s; }
 .bar.solid .wordmark { opacity: 1; transform: none; }
-.bar nav { margin-left: auto; display: flex; gap: 4px; }
-.bar nav a, .lang button { padding: 8px 14px; border-radius: 999px; font-size: 14px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: rgba(242,240,236,.8); transition: background .2s, color .2s; }
+.bar nav { margin-left: auto; display: flex; gap: 2px; }
+.bar nav a { padding: 8px 13px; border-radius: 999px; font-size: 13.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: rgba(242,240,236,.8); transition: background .2s, color .2s; }
 .bar nav a:hover { background: var(--glass); color: var(--text); }
 .lang { display: flex; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); }
-.lang button { border: 0; background: transparent; cursor: pointer; padding: 6px 12px; font-size: 12.5px; }
+.lang button { border: 0; background: transparent; cursor: pointer; padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 500; letter-spacing: .08em; color: rgba(242,240,236,.75); }
 .lang button.on { background: linear-gradient(180deg, rgba(255,255,255,.24), rgba(255,255,255,.08)); box-shadow: inset 0 1px 0 rgba(255,255,255,.45); color: var(--text); }
 
 /* opening: stills of the work dissolving into each other, slowly pushing in, the wordmark over them */
-.hero { position: relative; height: 100svh; min-height: 560px; overflow: hidden; display: grid; place-items: center; }
+.hero { position: relative; height: 100svh; min-height: 600px; overflow: hidden; display: grid; place-items: center; }
 .hero .reel { position: absolute; inset: 0; }
 .hero .reel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.04); transition: opacity 1.8s ease; }
 .hero .reel img.on { opacity: 1; animation: push 9s linear forwards; }
@@ -50,74 +51,123 @@ img { display: block; max-width: 100%; }
 .hero::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(11,11,12,.35), rgba(11,11,12,.85) 75%), linear-gradient(180deg, rgba(11,11,12,.5), transparent 30%, transparent 60%, var(--bg)); }
 .hero-in { position: relative; z-index: 1; text-align: center; padding: 0 var(--pad); }
 .hero-in .wordmark { width: min(760px, 86vw); margin: 0 auto; }
-.hero-in p { margin: 28px auto 0; max-width: 560px; font-size: clamp(16px, 2vw, 20px); font-weight: 300; letter-spacing: .02em; color: rgba(242,240,236,.86); }
+.hero-in .kicker { margin: 30px 0 0; font-size: clamp(13px, 1.4vw, 15px); font-weight: 500; letter-spacing: .34em; text-transform: uppercase; color: var(--accent); }
+.hero-in p.line { margin: 14px auto 0; max-width: 620px; font-size: clamp(17px, 2vw, 21px); font-weight: 300; line-height: 1.5; color: rgba(242,240,236,.88); }
 .hero-cta { margin-top: 34px; display: inline-flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-.pill { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 500; letter-spacing: .04em; border: 1px solid var(--glass-edge); background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); cursor: pointer; transition: transform .2s, background .2s, border-color .2s; }
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 46px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 500; letter-spacing: .04em; border: 1px solid var(--glass-edge); background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); cursor: pointer; transition: transform .2s, background .2s, border-color .2s; }
 .pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.3); }
 .pill:active { transform: scale(.97); }
 .pill.main { background: var(--accent); color: #17130a; border-color: transparent; box-shadow: 0 10px 30px rgba(226,176,74,.25); }
 .pill.main:hover { background: #ecbd5c; }
+.pill:disabled { opacity: .6; cursor: default; transform: none; }
 .scroll-cue { position: absolute; bottom: calc(24px + env(safe-area-inset-bottom)); left: 50%; z-index: 1; width: 1px; height: 54px; background: linear-gradient(var(--text), transparent); opacity: .5; animation: cue 2.4s ease-in-out infinite; }
 @keyframes cue { 0%, 100% { transform: translate(-50%, 0) scaleY(.6); transform-origin: top; } 50% { transform: translate(-50%, 0) scaleY(1); } }
 
-section { padding: clamp(72px, 10vw, 140px) var(--pad); }
+/* numbers, one line under the opening */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 var(--pad); margin-top: -40px; position: relative; z-index: 2; }
+.stat { padding: 26px 28px; border-radius: 18px; background: color-mix(in srgb, var(--bg-2) 88%, transparent); border: 1px solid var(--line); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+.stat strong { display: block; font-size: clamp(40px, 5vw, 64px); font-weight: 300; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.stat strong em { font-style: normal; color: var(--accent); }
+.stat > span { display: block; margin-top: 10px; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+
+section { padding: clamp(80px, 10vw, 140px) var(--pad); }
 .label { font-size: 12.5px; font-weight: 500; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); margin: 0 0 18px; }
 h2 { margin: 0; font-size: clamp(34px, 5.4vw, 72px); font-weight: 300; letter-spacing: -.01em; line-height: 1.04; }
 h2 b { font-weight: 800; }
+.sub { margin: 18px 0 0; max-width: 620px; font-size: clamp(16px, 1.6vw, 19px); font-weight: 300; line-height: 1.55; color: rgba(242,240,236,.75); }
 
 /* work: filters as pills, then the films as stills; a click plays the film here */
 .work-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 34px; }
-.filters { display: flex; flex-wrap: wrap; gap: 8px; }
-.filters button { height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
-.filters button:hover { color: var(--text); border-color: rgba(255,255,255,.28); }
-.filters button.on { color: var(--text); border-color: rgba(255,255,255,.4); background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.06)); box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
-.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.tile { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: var(--bg-2); cursor: pointer; border: 0; padding: 0; text-align: left; }
-.tile.big { grid-column: span 2; grid-row: span 2; }
-.tile img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.01); transition: transform 1.2s cubic-bezier(.2,.7,.2,1), filter .6s; filter: saturate(.92) brightness(.82); }
+.filters, .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.filters button, .choices button { height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer; transition: background .2s, color .2s, border-color .2s, transform .2s; }
+.filters button:hover, .choices button:hover { color: var(--text); border-color: rgba(255,255,255,.28); }
+.filters button:active, .choices button:active { transform: scale(.97); }
+.filters button.on, .choices button.on { color: var(--text); border-color: rgba(255,255,255,.4); background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.06)); box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
+/* small tiles, many in a row (Alex: there will be a lot of projects) */
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+@media (min-width: 1600px) { .grid { grid-template-columns: repeat(5, 1fr); } }
+.tile { position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: var(--bg-2); cursor: pointer; border: 0; padding: 0; text-align: left; }
+.tile img, .svc img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.01); transition: transform 1.2s cubic-bezier(.2,.7,.2,1), filter .6s; filter: saturate(.92) brightness(.82); }
 .tile:hover img { transform: scale(1.07); filter: saturate(1.05) brightness(.95); }
 .tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,.78)); }
-.tile .cap { position: absolute; left: 18px; right: 18px; bottom: 16px; z-index: 1; }
-.tile .cap strong { display: block; font-size: clamp(15px, 1.4vw, 20px); font-weight: 500; line-height: 1.2; }
-.tile.big .cap strong { font-size: clamp(20px, 2.4vw, 34px); font-weight: 400; }
-.tile .cap span { display: block; margin-top: 4px; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: rgba(242,240,236,.7); }
-.tile .play { position: absolute; z-index: 1; top: 50%; left: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); opacity: 0; transform: scale(.85); transition: opacity .3s, transform .3s; }
+.tile .cap { position: absolute; left: 14px; right: 14px; bottom: 12px; z-index: 1; }
+.tile .cap strong { display: block; font-size: 15px; font-weight: 500; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile .cap span { display: block; margin-top: 3px; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: rgba(242,240,236,.7); }
+.play { position: absolute; z-index: 1; top: 50%; left: 50%; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); opacity: 0; transform: scale(.85); transition: opacity .3s, transform .3s; }
 .tile:hover .play { opacity: 1; transform: none; }
-.play svg { width: 20px; margin-left: 3px; fill: #fff; }
+.play svg { width: 16px; margin-left: 3px; fill: #fff; }
 .more { display: flex; justify-content: center; margin-top: 34px; }
+
+/* services as cards: a still of an example behind, what it covers, the example to play */
+.services { border-top: 1px solid var(--line); }
+.svc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 44px; }
+.svc { position: relative; min-height: 420px; border-radius: 18px; overflow: hidden; background: var(--bg-2); border: 1px solid var(--line); display: flex; flex-direction: column; justify-content: flex-end; }
+.svc .bg { position: absolute; inset: 0; }
+.svc img { filter: saturate(.85) brightness(.5); }
+.svc:hover img { transform: scale(1.06); filter: saturate(1) brightness(.6); }
+.svc::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,11,12,.15), rgba(11,11,12,.92) 72%); }
+.svc .in { position: relative; z-index: 1; padding: 26px 24px 24px; }
+.svc small { font-size: 12px; letter-spacing: .16em; color: var(--accent); font-variant-numeric: tabular-nums; }
+.svc h3 { margin: 8px 0 10px; font-size: 26px; font-weight: 500; line-height: 1.1; }
+.svc p { margin: 0; font-size: 15px; font-weight: 300; line-height: 1.55; color: rgba(242,240,236,.8); }
+.svc .ex { margin-top: 18px; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px 0 6px; border-radius: 999px; border: 1px solid var(--glass-edge); background: var(--glass); font-size: 13px; cursor: pointer; transition: background .2s; }
+.svc .ex:hover { background: rgba(255,255,255,.14); }
+.svc .ex i { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; }
+.svc .ex i svg { width: 9px; margin-left: 2px; fill: #17130a; }
+
+/* how we work, five steps */
+.process { border-top: 1px solid var(--line); }
+.steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 44px; counter-reset: step; }
+.step { position: relative; padding: 24px 22px 26px; border-radius: 18px; background: var(--bg-2); border: 1px solid var(--line); transition: border-color .3s, background .3s; }
+.step:hover { background: var(--bg-3); border-color: rgba(226,176,74,.4); }
+.step::before { counter-increment: step; content: '0' counter(step); display: block; font-size: 44px; font-weight: 300; line-height: 1; color: rgba(242,240,236,.18); margin-bottom: 28px; }
+.step h3 { margin: 0 0 8px; font-size: 19px; font-weight: 500; }
+.step p { margin: 0; font-size: 14.5px; font-weight: 300; line-height: 1.55; color: rgba(242,240,236,.72); }
+.step:not(:last-child)::after { content: ''; position: absolute; top: 46px; right: -10px; width: 10px; height: 1px; background: rgba(226,176,74,.5); }
 
 /* about */
 .about { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(32px, 6vw, 96px); align-items: start; border-top: 1px solid var(--line); }
-.about .lead { font-size: clamp(22px, 2.6vw, 34px); font-weight: 300; line-height: 1.35; margin: 26px 0 0; }
+.about .lead { font-size: clamp(22px, 2.4vw, 32px); font-weight: 300; line-height: 1.38; margin: 26px 0 0; }
 .about .lead b { font-weight: 700; }
 .quote { margin: 40px 0 0; padding-left: 18px; border-left: 2px solid var(--accent); color: var(--muted); font-size: 16px; line-height: 1.6; font-style: italic; }
-.services { list-style: none; margin: 0; padding: 0; }
-.services li { display: flex; align-items: baseline; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); font-size: clamp(20px, 2.2vw, 30px); font-weight: 300; transition: padding-left .3s, color .3s; }
-.services li:hover { padding-left: 10px; color: var(--accent); }
-.services li small { font-size: 12px; color: var(--muted); letter-spacing: .1em; font-variant-numeric: tabular-nums; }
-.team { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 64px; grid-column: 1 / -1; }
+.team { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
 .person { padding: 18px 20px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--line); }
 .person .face { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, rgba(226,176,74,.35), rgba(255,255,255,.06)); font-weight: 700; margin-bottom: 14px; }
 .person strong { display: block; font-weight: 500; font-size: 17px; }
 .person span { color: var(--muted); font-size: 13.5px; }
 
-/* clients: the names drifting past */
-.clients { padding-left: 0; padding-right: 0; border-top: 1px solid var(--line); }
-.clients .label, .clients h2 { padding: 0 var(--pad); }
-.marquee { margin-top: 44px; overflow: hidden; mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent); }
-.marquee .row { display: flex; gap: 56px; width: max-content; animation: drift 60s linear infinite; }
-.marquee .row.rev { animation-direction: reverse; margin-top: 18px; animation-duration: 75s; }
-.marquee span { font-size: clamp(26px, 3.4vw, 46px); font-weight: 300; color: rgba(242,240,236,.42); white-space: nowrap; transition: color .3s; }
-.marquee span:hover { color: var(--text); }
-@keyframes drift { to { transform: translateX(-50%); } }
+/* clients: a wall of tiles, ready to take each client's logo */
+.clients { border-top: 1px solid var(--line); }
+.logos { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-top: 44px; }
+.logo { height: 104px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--line); display: grid; place-items: center; padding: 18px; text-align: center; transition: background .3s, border-color .3s; }
+.logo:hover { background: var(--bg-3); border-color: rgba(255,255,255,.2); }
+.logo img { max-height: 46px; max-width: 80%; filter: grayscale(1) brightness(1.6); opacity: .75; }
+.logo span { font-size: 17px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: rgba(242,240,236,.55); transition: color .3s; }
+.logo:hover span { color: var(--text); }
 
-/* contact */
-.contact { text-align: center; border-top: 1px solid var(--line); }
-.contact h2 { font-size: clamp(42px, 8vw, 120px); }
-.contact .mail { display: inline-block; margin-top: 30px; font-size: clamp(20px, 3vw, 36px); font-weight: 300; border-bottom: 1px solid rgba(242,240,236,.3); padding-bottom: 4px; transition: color .2s, border-color .2s; }
+/* contact: tell us about your project */
+.contact { border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1.2fr; gap: clamp(32px, 6vw, 96px); align-items: start; }
+.contact h2 { font-size: clamp(40px, 6vw, 88px); }
+.contact .mail { display: inline-block; margin-top: 30px; font-size: clamp(18px, 2.2vw, 26px); font-weight: 300; border-bottom: 1px solid rgba(242,240,236,.3); padding-bottom: 4px; transition: color .2s, border-color .2s; }
 .contact .mail:hover { color: var(--accent); border-color: var(--accent); }
-.social { margin-top: 40px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-footer { padding: 28px var(--pad) calc(28px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); }
+.social { margin-top: 30px; display: flex; gap: 8px; flex-wrap: wrap; }
+.social .pill { height: 40px; padding: 0 18px; font-size: 14px; }
+form { padding: clamp(22px, 3vw, 36px); border-radius: 22px; background: var(--bg-2); border: 1px solid var(--line); display: grid; gap: 22px; }
+.field { display: grid; gap: 10px; }
+.field > span { font-size: 12.5px; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+input, textarea { width: 100%; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255,255,255,.04); font-size: 16px; outline: none; transition: border-color .2s, box-shadow .2s; }
+input:focus, textarea:focus { border-color: rgba(226,176,74,.7); box-shadow: 0 0 0 4px rgba(226,176,74,.12); }
+textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.form-foot { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.form-msg { font-size: 14.5px; color: var(--muted); }
+.form-msg.err { color: #ff8a7a; }
+.sent { text-align: center; padding: 40px 10px; }
+.sent strong { display: block; font-size: 30px; font-weight: 300; }
+.sent p { color: var(--muted); }
+
+footer { padding: 28px var(--pad) calc(28px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); }
 footer .wordmark { width: 130px; opacity: .6; }
 
 /* the film, full screen */
@@ -131,19 +181,36 @@ footer .wordmark { width: 130px; opacity: .6; }
 
 .reveal { opacity: 0; transform: translateY(24px); transition: opacity .9s ease, transform .9s cubic-bezier(.2,.7,.2,1); }
 .reveal.in { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } .hero .reel img.on { animation: none; } .marquee .row { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } .hero .reel img.on { animation: none; } }
 
+@media (max-width: 1100px) {
+  .svc-grid { grid-template-columns: repeat(2, 1fr); }
+  .steps { grid-template-columns: repeat(3, 1fr); }
+  .step::after { display: none; }
+}
 @media (max-width: 900px) {
-  .grid { grid-template-columns: repeat(2, 1fr); }
-  .about { grid-template-columns: 1fr; }
+  .grid { grid-template-columns: repeat(3, 1fr); }
+  .about, .contact { grid-template-columns: 1fr; }
+  .bar nav { display: none; }
+  .lang { margin-left: auto; }
 }
 @media (max-width: 620px) {
-  .bar nav { display: none; }
   .bar .wordmark { width: 140px; }
-  .lang { margin-left: auto; }
-  .grid { grid-template-columns: 1fr; gap: 8px; }
-  .tile.big { grid-column: auto; grid-row: auto; }
-  .tile .play { opacity: 1; transform: none; width: 48px; height: 48px; margin: -24px 0 0 -24px; }
+  .stats { grid-template-columns: 1fr; margin-top: -24px; }
+  .stat { display: flex; align-items: baseline; gap: 14px; padding: 18px 22px; }
+  .stat > span { margin: 0; }
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .tile { border-radius: 10px; }
+  .tile .cap { left: 10px; right: 10px; bottom: 8px; }
+  .tile .cap strong { font-size: 13px; }
+  .tile .cap span { display: none; }
+  .play { display: none; }
+  .svc-grid, .steps { grid-template-columns: 1fr; }
+  .svc { min-height: 340px; }
+  .two { grid-template-columns: 1fr; }
+  .logos { grid-template-columns: repeat(2, 1fr); }
+  .logo { height: 84px; }
+  .logo span { font-size: 14px; }
   .player { padding: 64px 0; }
   .player .frame { border-radius: 0; }
 }
@@ -155,7 +222,8 @@ footer .wordmark { width: 130px; opacity: .6; }
   <a href="#top" aria-label="The Mad Lions"><img class="wordmark" src="wordmark.png" alt="The Mad Lions"></a>
   <nav>
     <a href="#work" data-t="nav.work">Work</a>
-    <a href="#about" data-t="nav.about">About</a>
+    <a href="#services" data-t="nav.services">Services</a>
+    <a href="#process" data-t="nav.process">Process</a>
     <a href="#clients" data-t="nav.clients">Clients</a>
     <a href="#contact" data-t="nav.contact">Contact</a>
   </nav>
@@ -170,13 +238,20 @@ footer .wordmark { width: 130px; opacity: .6; }
     <div class="reel" id="reel" aria-hidden="true"></div>
     <div class="hero-in">
       <h1 style="margin:0"><img class="wordmark" src="wordmark.png" alt="The Mad Lions"></h1>
-      <p data-t="hero.line">We design, shoot and edit film for any screen.</p>
+      <p class="kicker" data-t="hero.kicker">Video production company</p>
+      <p class="line" data-t="hero.line">Commercials, music videos and corporate films, from the first idea to final delivery.</p>
       <div class="hero-cta">
         <a class="pill main" href="#work" data-t="hero.work">See the work</a>
-        <a class="pill" href="#contact" data-t="hero.talk">Let's talk</a>
+        <a class="pill" href="#contact" data-t="hero.talk">Tell us about your project</a>
       </div>
     </div>
     <span class="scroll-cue" aria-hidden="true"></span>
+  </div>
+
+  <div class="stats reveal">
+    <div class="stat"><strong><span data-count="12">12</span><em>+</em></strong><span data-t="stats.years">Years making films</span></div>
+    <div class="stat"><strong><span data-count="40">40</span><em>+</em></strong><span data-t="stats.prod">Productions</span></div>
+    <div class="stat"><strong><span data-count="25">25</span><em>+</em></strong><span data-t="stats.clients">Brands &amp; artists</span></div>
   </div>
 
   <section id="work">
@@ -191,45 +266,75 @@ footer .wordmark { width: 130px; opacity: .6; }
     <div class="more"><button class="pill" id="more" type="button" data-t="work.more">Show all work</button></div>
   </section>
 
+  <section id="services" class="services">
+    <p class="label reveal" data-t="svc.label">Services</p>
+    <h2 class="reveal" data-t="svc.title" data-html>What we <b>make.</b></h2>
+    <p class="sub reveal" data-t="svc.sub">One team from the first idea to the final master: we write, produce, shoot and finish in house.</p>
+    <div class="svc-grid" id="svcGrid"></div>
+  </section>
+
+  <section id="process" class="process">
+    <p class="label reveal" data-t="proc.label">How we work</p>
+    <h2 class="reveal" data-t="proc.title" data-html>From idea <b>to screen.</b></h2>
+    <div class="steps" id="steps"></div>
+  </section>
+
   <section id="about" class="about">
     <div class="reveal">
       <p class="label" data-t="about.label">About</p>
       <h2 data-t="about.title" data-html>We are <b>mad about</b> film.</h2>
-      <p class="lead" data-t="about.lead" data-html>From concept to delivery, our work is steeped in <b>cinematic legacy</b>. We craft visual experiences that stay with the people who watch them.</p>
+      <p class="lead" data-t="about.lead" data-html>We design, shoot and edit film for any screen. Our work is steeped in <b>cinematic legacy</b>, and made to stay with the people who watch it.</p>
       <p class="quote" data-t="about.quote">"No matter what people tell you, words and ideas can change the world." Robin Williams</p>
     </div>
     <div class="reveal">
-      <p class="label" data-t="about.services">What we do</p>
-      <ul class="services" id="services"></ul>
+      <p class="label" data-t="about.team">The team</p>
+      <div class="team" id="team"></div>
     </div>
-    <div class="team reveal" id="team"></div>
   </section>
 
   <section id="clients" class="clients">
     <p class="label reveal" data-t="clients.label">Clients</p>
     <h2 class="reveal" data-t="clients.title" data-html>Brands and artists <b>we've filmed for.</b></h2>
-    <div class="marquee" aria-label="Clients">
-      <div class="row" id="row1"></div>
-      <div class="row rev" id="row2"></div>
-    </div>
+    <div class="logos reveal" id="logos"></div>
   </section>
 
   <section id="contact" class="contact">
-    <p class="label reveal" data-t="contact.label">Contact</p>
-    <h2 class="reveal" data-t="contact.title" data-html>Let's make <b>something.</b></h2>
-    <a class="mail reveal" href="mailto:info@themadlions.com">info@themadlions.com</a>
-    <div class="social reveal">
-      <a class="pill" href="https://www.instagram.com/themadlions/" target="_blank" rel="noopener">Instagram</a>
-      <a class="pill" href="https://vimeo.com/themadlions" target="_blank" rel="noopener">Vimeo</a>
-      <a class="pill" href="https://www.youtube.com/channel/UCoPMSQpUYXNPSCMJV-ErfiA" target="_blank" rel="noopener">YouTube</a>
-      <a class="pill" href="https://www.facebook.com/themadlions/" target="_blank" rel="noopener">Facebook</a>
+    <div class="reveal">
+      <p class="label" data-t="contact.label">Contact</p>
+      <h2 data-t="contact.title" data-html>Tell us about <b>your project.</b></h2>
+      <p class="sub" data-t="contact.sub">A few lines are enough. We answer within a working day.</p>
+      <a class="mail" href="mailto:info@themadlions.com">info@themadlions.com</a>
+      <div class="social">
+        <a class="pill" href="https://www.instagram.com/themadlions/" target="_blank" rel="noopener">Instagram</a>
+        <a class="pill" href="https://vimeo.com/themadlions" target="_blank" rel="noopener">Vimeo</a>
+        <a class="pill" href="https://www.youtube.com/channel/UCoPMSQpUYXNPSCMJV-ErfiA" target="_blank" rel="noopener">YouTube</a>
+        <a class="pill" href="https://www.facebook.com/themadlions/" target="_blank" rel="noopener">Facebook</a>
+      </div>
     </div>
+    <form id="lead" class="reveal" novalidate>
+      <div class="field"><span data-t="f.kind">What are you making?</span><div class="choices" id="kind"></div></div>
+      <div class="field"><span data-t="f.budget">Budget</span><div class="choices" id="budget"></div></div>
+      <div class="two">
+        <label class="field"><span data-t="f.name">Name</span><input name="name" autocomplete="name" maxlength="200"></label>
+        <label class="field"><span data-t="f.email">Email</span><input name="email" type="email" autocomplete="email" maxlength="200" required></label>
+      </div>
+      <div class="two">
+        <label class="field"><span data-t="f.company">Company or artist</span><input name="company" autocomplete="organization" maxlength="200"></label>
+        <label class="field"><span data-t="f.when">When do you need it?</span><input name="needed_by" maxlength="100" data-ph="f.whenPh" placeholder="e.g. end of November"></label>
+      </div>
+      <label class="field"><span data-t="f.msg">Tell us more</span><textarea name="message" maxlength="4000" data-ph="f.msgPh" placeholder="The idea, the format, where it will be seen…"></textarea></label>
+      <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="form-foot">
+        <button class="pill main" type="submit" id="send" data-t="f.send">Send</button>
+        <span class="form-msg" id="formMsg"></span>
+      </div>
+    </form>
   </section>
 </main>
 
 <footer>
   <img class="wordmark" src="wordmark.png" alt="The Mad Lions">
-  <span data-t="footer">© 2026 The Mad Lions · Film production · Athens</span>
+  <span data-t="footer">© 2026 The Mad Lions · Video production company</span>
 </footer>
 
 <div class="player" id="player" role="dialog" aria-modal="true" aria-label="Film">
@@ -240,49 +345,89 @@ footer .wordmark { width: 130px; opacity: .6; }
 
 <script src="works.js"></script>
 <script>
+// the enquiry goes straight into THEMADLIONS Hub (table site_leads; anyone may add one, only administrators read them)
+const SUPABASE_URL = 'https://naibamqexcqnqhbbqafa.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_o1OB_ohozPq1Xr2jg2ZSHA_3GsusXFL'
+
 const T = {
   en: {
-    'nav.work': 'Work', 'nav.about': 'About', 'nav.clients': 'Clients', 'nav.contact': 'Contact',
-    'hero.line': 'We design, shoot and edit film for any screen.', 'hero.work': 'See the work', 'hero.talk': "Let's talk",
+    'nav.work': 'Work', 'nav.services': 'Services', 'nav.process': 'Process', 'nav.clients': 'Clients', 'nav.contact': 'Contact',
+    'hero.kicker': 'Video production company', 'hero.line': 'Commercials, music videos and corporate films, from the first idea to final delivery.',
+    'hero.work': 'See the work', 'hero.talk': 'Tell us about your project',
+    'stats.years': 'Years making films', 'stats.prod': 'Productions', 'stats.clients': 'Brands & artists',
     'work.label': 'Selected work', 'work.title': 'Films, <b>made mad.</b>', 'work.more': 'Show all work', 'work.less': 'Show less', 'all': 'All',
-    'about.label': 'About', 'about.title': 'We are <b>mad about</b> film.',
-    'about.lead': 'From concept to delivery, our work is steeped in <b>cinematic legacy</b>. We craft visual experiences that stay with the people who watch them.',
+    'svc.label': 'Services', 'svc.title': 'What we <b>make.</b>', 'svc.sub': 'One team from the first idea to the final master: we write, produce, shoot and finish in house.', 'svc.ex': 'Watch',
+    'proc.label': 'How we work', 'proc.title': 'From idea <b>to screen.</b>',
+    'about.label': 'About', 'about.title': 'We are <b>mad about</b> film.', 'about.team': 'The team',
+    'about.lead': 'We design, shoot and edit film for any screen. Our work is steeped in <b>cinematic legacy</b>, and made to stay with the people who watch it.',
     'about.quote': '"No matter what people tell you, words and ideas can change the world." Robin Williams',
-    'about.services': 'What we do',
     'clients.label': 'Clients', 'clients.title': "Brands and artists <b>we've filmed for.</b>",
-    'contact.label': 'Contact', 'contact.title': "Let's make <b>something.</b>",
-    'footer': '© 2026 The Mad Lions · Film production · Athens',
+    'contact.label': 'Contact', 'contact.title': 'Tell us about <b>your project.</b>', 'contact.sub': 'A few lines are enough. We answer within a working day.',
+    'f.kind': 'What are you making?', 'f.budget': 'Budget', 'f.name': 'Name', 'f.email': 'Email', 'f.company': 'Company or artist',
+    'f.when': 'When do you need it?', 'f.whenPh': 'e.g. end of November', 'f.msg': 'Tell us more', 'f.msgPh': 'The idea, the format, where it will be seen…',
+    'f.send': 'Send', 'f.sending': 'Sending…', 'f.needEmail': 'Add your email so we can answer.',
+    'f.fail': 'It did not go through. Write to info@themadlions.com instead.',
+    'f.thanks': 'Thank you.', 'f.thanksSub': 'We have it, and we will be in touch soon.',
+    'footer': '© 2026 The Mad Lions · Video production company',
   },
   el: {
-    'nav.work': 'Δουλειά', 'nav.about': 'Εμείς', 'nav.clients': 'Πελάτες', 'nav.contact': 'Επαφή',
-    'hero.line': 'Σχεδιάζουμε, γυρίζουμε και μοντάρουμε ταινίες για κάθε οθόνη.', 'hero.work': 'Δείτε τη δουλειά', 'hero.talk': 'Ας μιλήσουμε',
+    'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.contact': 'Επαφή',
+    'hero.kicker': 'Εταιρεία παραγωγής βίντεο', 'hero.line': 'Διαφημιστικά, βίντεο κλιπ και εταιρικές ταινίες, από την πρώτη ιδέα ως την τελική παράδοση.',
+    'hero.work': 'Δείτε τη δουλειά', 'hero.talk': 'Πείτε μας για το project σας',
+    'stats.years': 'Χρόνια στις ταινίες', 'stats.prod': 'Παραγωγές', 'stats.clients': 'Brands & καλλιτέχνες',
     'work.label': 'Επιλεγμένη δουλειά', 'work.title': 'Ταινίες, <b>με τρέλα.</b>', 'work.more': 'Όλη η δουλειά', 'work.less': 'Λιγότερα', 'all': 'Όλα',
-    'about.label': 'Εμείς', 'about.title': 'Είμαστε <b>τρελοί</b> με το σινεμά.',
-    'about.lead': 'Από την ιδέα ως την παράδοση, η δουλειά μας πατάει στην <b>κινηματογραφική παράδοση</b>. Φτιάχνουμε εικόνες που μένουν σε όποιον τις βλέπει.',
+    'svc.label': 'Υπηρεσίες', 'svc.title': 'Τι <b>φτιάχνουμε.</b>', 'svc.sub': 'Μία ομάδα από την πρώτη ιδέα ως το τελικό master: γράφουμε, οργανώνουμε, γυρίζουμε και ολοκληρώνουμε μόνοι μας.', 'svc.ex': 'Δείτε',
+    'proc.label': 'Πώς δουλεύουμε', 'proc.title': 'Από την ιδέα <b>στην οθόνη.</b>',
+    'about.label': 'Εμείς', 'about.title': 'Είμαστε <b>τρελοί</b> με το σινεμά.', 'about.team': 'Η ομάδα',
+    'about.lead': 'Σχεδιάζουμε, γυρίζουμε και μοντάρουμε ταινίες για κάθε οθόνη. Η δουλειά μας πατάει στην <b>κινηματογραφική παράδοση</b> και φτιάχνεται για να μένει σε όποιον τη βλέπει.',
     'about.quote': '«Ό,τι κι αν σου πουν, οι λέξεις και οι ιδέες μπορούν να αλλάξουν τον κόσμο.» Robin Williams',
-    'about.services': 'Τι κάνουμε',
-    'clients.label': 'Πελάτες', 'clients.title': 'Brands και καλλιτέχνες <b>που γυρίσαμε για αυτούς.</b>',
-    'contact.label': 'Επαφή', 'contact.title': 'Ας φτιάξουμε <b>κάτι.</b>',
-    'footer': '© 2026 The Mad Lions · Παραγωγή ταινιών · Αθήνα',
+    'clients.label': 'Πελάτες', 'clients.title': 'Brands και καλλιτέχνες <b>που δουλέψαμε μαζί.</b>',
+    'contact.label': 'Επαφή', 'contact.title': 'Πείτε μας για <b>το project σας.</b>', 'contact.sub': 'Λίγες γραμμές αρκούν. Απαντάμε μέσα σε μία εργάσιμη.',
+    'f.kind': 'Τι θέλετε να φτιάξετε;', 'f.budget': 'Budget', 'f.name': 'Όνομα', 'f.email': 'Email', 'f.company': 'Εταιρεία ή καλλιτέχνης',
+    'f.when': 'Πότε το χρειάζεστε;', 'f.whenPh': 'π.χ. τέλη Νοεμβρίου', 'f.msg': 'Πείτε μας περισσότερα', 'f.msgPh': 'Η ιδέα, το format, πού θα προβληθεί…',
+    'f.send': 'Αποστολή', 'f.sending': 'Αποστέλλεται…', 'f.needEmail': 'Βάλτε το email σας για να σας απαντήσουμε.',
+    'f.fail': 'Δεν στάλθηκε. Γράψτε μας στο info@themadlions.com.',
+    'f.thanks': 'Ευχαριστούμε.', 'f.thanksSub': 'Το λάβαμε και θα επικοινωνήσουμε σύντομα.',
+    'footer': '© 2026 The Mad Lions · Εταιρεία παραγωγής βίντεο',
   },
 }
 const CATS = { 'Commercials': 'Διαφημιστικά', 'Music Videos': 'Βίντεο κλιπ', 'Corporate': 'Εταιρικά', 'Motion Graphics': 'Motion Graphics', 'Events': 'Events' }
+// each service with what it covers and one film of ours to show it (by title in works.js)
 const SERVICES = [
-  ['TV Commercials', 'Τηλεοπτικά διαφημιστικά'], ['Music Videos', 'Βίντεο κλιπ'], ['Digital Content', 'Digital content'],
-  ['Corporate Films', 'Εταιρικές ταινίες'], ['Feature Films', 'Ταινίες μεγάλου μήκους'], ['Editing & Color Grading', 'Μοντάζ & color grading'],
-  ['Visual FX & Compositing', 'Visual FX & compositing'], ['Motion Graphics', 'Motion graphics'],
+  { en: ['Commercials', 'TV and online spots, from the creative idea and the script to casting, shoot and the final master for every platform.'],
+    el: ['Διαφημιστικά', 'Τηλεοπτικά και online spots, από τη δημιουργική ιδέα και το σενάριο ως το casting, το γύρισμα και το τελικό master για κάθε πλατφόρμα.'], ex: 'Aperol Spritz' },
+  { en: ['Music Videos', 'A concept built around the song and the artist, directed, shot and finished with the care of a short film.'],
+    el: ['Βίντεο κλιπ', 'Ένα concept χτισμένο γύρω από το τραγούδι και τον καλλιτέχνη, σκηνοθετημένο και ολοκληρωμένο με τη φροντίδα μιας μικρού μήκους.'], ex: 'Michalis Hatzigiannis – Horevo' },
+  { en: ['Corporate Films', 'Brand films, events and campaigns that tell what a company does, clearly and beautifully.'],
+    el: ['Εταιρικές ταινίες', 'Brand films, events και καμπάνιες που λένε τι κάνει μια εταιρεία, καθαρά και όμορφα.'], ex: 'L’Oréal – UNESCO For Women In Science' },
+  { en: ['Post-production', 'Editing, color grading, visual effects, motion graphics and compositing, for our films or for yours.'],
+    el: ['Post-production', 'Μοντάζ, color grading, visual effects, motion graphics και compositing, για τις δικές μας ταινίες ή για τις δικές σας.'], ex: 'Tresemmé' },
+]
+const STEPS = [
+  { en: ['Idea', 'We listen, then come back with a concept, a treatment and a clear budget.'], el: ['Ιδέα', 'Ακούμε και επιστρέφουμε με concept, treatment και ξεκάθαρο budget.'] },
+  { en: ['Pre-production', 'Script, casting, locations, crew, schedule: every detail settled before the first day.'], el: ['Προπαραγωγή', 'Σενάριο, casting, locations, συνεργείο, πρόγραμμα: όλα κλειδωμένα πριν την πρώτη μέρα.'] },
+  { en: ['Shoot', 'A tight crew and the right gear, on set or on location, wherever the film needs to be.'], el: ['Γύρισμα', 'Δεμένο συνεργείο και ο σωστός εξοπλισμός, σε studio ή σε location, όπου χρειάζεται η ταινία.'] },
+  { en: ['Post-production', 'Edit, color, sound, graphics and effects, with you in every review.'], el: ['Post-production', 'Μοντάζ, χρώμα, ήχος, graphics και εφέ, με εσάς σε κάθε review.'] },
+  { en: ['Delivery', 'Masters for TV, cinema and every social format, on time.'], el: ['Παράδοση', 'Masters για TV, σινεμά και κάθε social format, στην ώρα τους.'] },
 ]
 const TEAM = [
   ['Alex', 'Producer · Film Director', 'Παραγωγός · Σκηνοθέτης'], ['Ioanna', 'Production Manager', 'Διευθύντρια παραγωγής'],
   ['Anastasia', 'Assistant Director', 'Βοηθός σκηνοθέτη'], ['Theofilos', 'Production Assistant', 'Βοηθός παραγωγής'],
   ['Triantafyllos', 'Filmmaker', 'Filmmaker'], ['Dimitris', 'Filmmaker', 'Filmmaker'], ['Gregory', 'Still Photographer', 'Φωτογράφος'],
 ]
-const CLIENTS = ['Visa', "L'Oréal", 'UNESCO', 'Aperol', 'Nescafé', 'Tresemmé', 'Axe', 'Wind', 'Germanos', 'Elpedison', 'Εθνική Ασφαλιστική', 'AbbVie', 'Janssen',
-  'Gree', 'Loumidis', 'Media Strom', 'Christodoulou', 'Softex', 'ΟΠΕΚΕΠΕ', 'Θησέας', 'Έλενα Παπαρίζου', 'Μιχάλης Χατζηγιάννης', 'Χρήστος Χολίδης', 'Μέλισσες', 'Claydee']
+// a client's logo goes in `logo` (an image beside this page) when we have it; until then its name shows
+const CLIENTS = [
+  { n: 'Visa' }, { n: "L'Oréal" }, { n: 'UNESCO' }, { n: 'Aperol' }, { n: 'Nescafé' }, { n: 'Tresemmé' }, { n: 'Axe' }, { n: 'Wind' },
+  { n: 'Germanos' }, { n: 'Elpedison' }, { n: 'Εθνική Ασφαλιστική' }, { n: 'AbbVie' }, { n: 'Janssen' }, { n: 'Gree' }, { n: 'Loumidis' },
+  { n: 'Media Strom' }, { n: 'Christodoulou' }, { n: 'Softex' },
+]
+const KINDS = [['Commercial', 'Διαφημιστικό'], ['Music video', 'Βίντεο κλιπ'], ['Corporate film', 'Εταιρική ταινία'], ['Social content', 'Social content'], ['Post-production', 'Post-production'], ['Something else', 'Κάτι άλλο']]
+const BUDGETS = [['Under €5k', 'Έως €5k'], ['€5k to €15k', '€5k έως €15k'], ['€15k to €50k', '€15k έως €50k'], ['€50k+', '€50k+'], ['Not sure yet', 'Δεν ξέρω ακόμα']]
 
 let lang = 'en'
 try { lang = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
 const t = (k) => (T[lang] && T[lang][k]) || T.en[k] || k
+const byTitle = (title) => WORKS.find((w) => w.t === title) || WORKS[0]
 
 /* stills: YouTube's own, sharpest first; Vimeo's through vumbnail; the old site's as the last resort */
 const thumb = (w, big) => w.k === 'yt' ? `https://i.ytimg.com/vi/${w.id}/${big ? 'maxresdefault' : 'hqdefault'}.jpg` : `https://vumbnail.com/${w.id}${big ? '_large' : ''}.jpg`
@@ -290,22 +435,22 @@ function img(w, big) {
   const el = document.createElement('img')
   el.loading = 'lazy'; el.decoding = 'async'; el.alt = ''
   const tries = [thumb(w, true), thumb(w, false), w.img]
-  let i = big ? 0 : (w.k === 'yt' ? 0 : 1)
+  let i = big || w.k === 'yt' ? 0 : 1
   el.src = tries[i]
   el.onerror = () => { if (++i < tries.length) el.src = tries[i]; else el.style.visibility = 'hidden' }
   // YouTube answers a missing maxres with a grey 120px placeholder instead of an error
   el.onload = () => { if (el.naturalWidth && el.naturalWidth < 200 && i < tries.length - 1) el.src = tries[++i] }
   return el
 }
+const PLAY = '<svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>'
 
 /* the work */
 let filter = 'all', showAll = false
-const SHORT = 9
+const SHORT = 12
 function renderFilters() {
-  const cats = ['all', ...Object.keys(CATS)]
   const box = document.getElementById('filters')
   box.innerHTML = ''
-  for (const c of cats) {
+  for (const c of ['all', ...Object.keys(CATS)]) {
     const b = document.createElement('button')
     b.type = 'button'
     b.textContent = c === 'all' ? t('all') : lang === 'el' ? CATS[c] : c
@@ -322,9 +467,9 @@ function renderGrid() {
   shown.forEach((w, n) => {
     const b = document.createElement('button')
     b.type = 'button'
-    b.className = 'tile reveal' + (n === 0 && filter === 'all' ? ' big' : '')
-    b.appendChild(img(w, n === 0))
-    b.insertAdjacentHTML('beforeend', `<span class="play"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg></span><span class="cap"><strong></strong><span></span></span>`)
+    b.className = 'tile reveal'
+    b.appendChild(img(w, false))
+    b.insertAdjacentHTML('beforeend', `<span class="play">${PLAY}</span><span class="cap"><strong></strong><span></span></span>`)
     b.querySelector('.cap strong').textContent = w.t
     b.querySelector('.cap span').textContent = w.c.map((c) => (lang === 'el' ? CATS[c] : c)).join(' · ')
     b.onclick = () => play(w)
@@ -336,6 +481,33 @@ function renderGrid() {
   observe()
 }
 document.getElementById('more').onclick = () => { showAll = !showAll; renderGrid(); if (!showAll) document.getElementById('work').scrollIntoView() }
+
+function renderServices() {
+  const box = document.getElementById('svcGrid')
+  box.innerHTML = ''
+  SERVICES.forEach((s, n) => {
+    const w = byTitle(s.ex)
+    const [name, text] = s[lang] || s.en
+    const card = document.createElement('div')
+    card.className = 'svc reveal'
+    const bg = document.createElement('div'); bg.className = 'bg'; bg.appendChild(img(w, true)); card.appendChild(bg)
+    card.insertAdjacentHTML('beforeend', `<div class="in"><small>0${n + 1}</small><h3></h3><p></p><button type="button" class="ex"><i>${PLAY}</i><span></span></button></div>`)
+    card.querySelector('h3').textContent = name
+    card.querySelector('p').textContent = text
+    card.querySelector('.ex span').textContent = `${t('svc.ex')}: ${w.t}`
+    card.querySelector('.ex').onclick = () => play(w)
+    box.appendChild(card)
+  })
+}
+function renderSteps() {
+  document.getElementById('steps').innerHTML = STEPS.map((s) => { const [h, p] = s[lang] || s.en; return `<div class="step reveal"><h3>${h}</h3><p>${p}</p></div>` }).join('')
+}
+function renderAbout() {
+  document.getElementById('team').innerHTML = TEAM.map((p) => `<div class="person"><div class="face">${p[0][0]}</div><strong>${p[0]}</strong><span>${lang === 'el' ? p[2] : p[1]}</span></div>`).join('')
+}
+function renderClients() {
+  document.getElementById('logos').innerHTML = CLIENTS.map((c) => `<div class="logo">${c.logo ? `<img src="${c.logo}" alt="${c.n}" loading="lazy">` : `<span>${c.n}</span>`}</div>`).join('')
+}
 
 /* the film plays on the page itself */
 const player = document.getElementById('player'), frame = document.getElementById('pframe')
@@ -356,41 +528,79 @@ addEventListener('keydown', (e) => { if (e.key === 'Escape' && player.classList.
 /* the opening stills */
 function startReel() {
   const reel = document.getElementById('reel')
-  const picks = WORKS.filter((w) => w.k === 'yt').slice(0, 8)
-  const imgs = picks.map((w) => { const i = img(w, true); i.loading = 'eager'; reel.appendChild(i); return i })
+  const imgs = WORKS.filter((w) => w.k === 'yt').slice(0, 8).map((w) => { const i = img(w, true); i.loading = 'eager'; reel.appendChild(i); return i })
   let n = 0
   const step = () => { imgs.forEach((i, k) => i.classList.toggle('on', k === n)); n = (n + 1) % imgs.length }
   step()
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) setInterval(step, 6000)
 }
 
-function renderAbout() {
-  const s = document.getElementById('services')
-  s.innerHTML = SERVICES.map((x, i) => `<li><small>${String(i + 1).padStart(2, '0')}</small><span>${lang === 'el' ? x[1] : x[0]}</span></li>`).join('')
-  document.getElementById('team').innerHTML = TEAM.map((p) => `<div class="person"><div class="face">${p[0][0]}</div><strong>${p[0]}</strong><span>${lang === 'el' ? p[2] : p[1]}</span></div>`).join('')
+/* the enquiry form: two rows of choices, the fields, straight into the hub */
+const pick = { kind: '', budget: '' }
+function renderChoices() {
+  for (const [id, list] of [['kind', KINDS], ['budget', BUDGETS]]) {
+    const box = document.getElementById(id)
+    box.innerHTML = ''
+    list.forEach(([en, el]) => {
+      const b = document.createElement('button')
+      b.type = 'button'
+      b.textContent = lang === 'el' ? el : en
+      b.className = pick[id] === en ? 'on' : ''
+      b.onclick = () => { pick[id] = pick[id] === en ? '' : en; renderChoices() }
+      box.appendChild(b)
+    })
+  }
 }
-function renderClients() {
-  const half = Math.ceil(CLIENTS.length / 2)
-  const fill = (id, names) => { document.getElementById(id).innerHTML = [...names, ...names].map((n) => `<span>${n}</span>`).join('') }
-  fill('row1', CLIENTS.slice(0, half)); fill('row2', CLIENTS.slice(half))
+const form = document.getElementById('lead'), msg = document.getElementById('formMsg'), send = document.getElementById('send')
+form.onsubmit = async (e) => {
+  e.preventDefault()
+  const f = new FormData(form)
+  if (f.get('website')) return // a bot filled the hidden field
+  const email = String(f.get('email') || '').trim()
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.className = 'form-msg err'; msg.textContent = t('f.needEmail'); form.email.focus(); return }
+  const row = { email, name: f.get('name').trim(), company: f.get('company').trim(), needed_by: f.get('needed_by').trim(), message: f.get('message').trim(), kind: pick.kind, budget: pick.budget, lang }
+  send.disabled = true; send.textContent = t('f.sending'); msg.className = 'form-msg'; msg.textContent = ''
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/site_leads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Prefer: 'return=minimal' },
+      body: JSON.stringify(row),
+    })
+    if (!r.ok) throw new Error(String(r.status))
+    form.innerHTML = `<div class="sent"><strong>${t('f.thanks')}</strong><p>${t('f.thanksSub')}</p></div>`
+  } catch (err) {
+    send.disabled = false; send.textContent = t('f.send')
+    msg.className = 'form-msg err'; msg.textContent = t('f.fail')
+  }
 }
 
 function applyLang() {
   document.documentElement.lang = lang
   document.querySelectorAll('[data-t]').forEach((el) => { const v = t(el.dataset.t); if (el.hasAttribute('data-html')) el.innerHTML = v; else el.textContent = v })
+  document.querySelectorAll('[data-ph]').forEach((el) => { el.placeholder = t(el.dataset.ph) })
   document.querySelectorAll('.lang button').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang))
-  renderFilters(); renderGrid(); renderAbout()
+  renderFilters(); renderGrid(); renderServices(); renderSteps(); renderAbout(); renderChoices(); observe()
 }
 document.querySelectorAll('.lang button').forEach((b) => { b.onclick = () => { lang = b.dataset.lang; try { localStorage.setItem('tml_site_lang', lang) } catch (e) {} applyLang() } })
 
-/* things fade up as they come into view; the bar turns to glass past the opening */
-const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }), { rootMargin: '0px 0px -8% 0px' }) : null
+/* things fade up as they come into view; the numbers count up once; the bar turns to glass past the opening */
+const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => {
+  if (!e.isIntersecting) return
+  e.target.classList.add('in'); io.unobserve(e.target)
+  e.target.querySelectorAll('[data-count]').forEach(countUp)
+}), { rootMargin: '0px 0px -8% 0px' }) : null
 function observe() { document.querySelectorAll('.reveal:not(.in)').forEach((el) => (io ? io.observe(el) : el.classList.add('in'))) }
+function countUp(el) {
+  const to = Number(el.dataset.count), t0 = performance.now()
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  const tick = (now) => { const k = Math.min(1, (now - t0) / 1400); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(tick) }
+  requestAnimationFrame(tick)
+}
 const bar = document.getElementById('bar')
 const onScroll = () => bar.classList.toggle('solid', scrollY > innerHeight * 0.6)
 addEventListener('scroll', onScroll, { passive: true })
 
-startReel(); renderClients(); applyLang(); onScroll(); observe()
+startReel(); renderClients(); applyLang(); onScroll()
 </script>
 </body>
 </html>
