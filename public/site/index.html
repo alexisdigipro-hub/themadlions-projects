@@ -288,7 +288,8 @@ html[data-theme='light'] .svc::after { background: linear-gradient(180deg, rgba(
       <p class="kicker" data-t="hero.kicker">Video production company</p>
       <p class="line" data-t="hero.line">Commercials, music videos and corporate films, from the first idea to final delivery.</p>
       <div class="hero-cta">
-        <a class="pill main" href="#work" data-t="hero.work">See the work</a>
+        <button class="pill main" type="button" id="reelBtn" data-t="hero.reel">Watch the showreel</button>
+        <a class="pill" href="#work" data-t="hero.work">See the work</a>
         <a class="pill" href="#contact" data-t="hero.talk">Tell us about your project</a>
       </div>
     </div>
@@ -407,7 +408,7 @@ const T = {
     'nav.work': 'Work', 'nav.services': 'Services', 'nav.process': 'Process', 'nav.clients': 'Clients', 'nav.shop': 'Shop', 'nav.contact': 'Contact',
     'shop.label': 'Shop', 'shop.title': 'Mad <b>merch.</b>', 'shop.buy': 'Buy', 'shop.soldout': 'Sold out',
     'hero.kicker': 'Video production company', 'hero.line': 'Commercials, music videos and corporate films, from the first idea to final delivery.',
-    'hero.work': 'See the work', 'hero.talk': 'Tell us about your project',
+    'hero.work': 'See the work', 'hero.talk': 'Tell us about your project', 'hero.reel': 'Watch the showreel',
     'stats.years': 'Years making films', 'stats.prod': 'Productions', 'stats.clients': 'Brands & artists',
     'work.label': 'Selected work', 'work.title': 'Films, <b>made mad.</b>', 'work.more': 'Show all work', 'work.less': 'Show less', 'all': 'All',
     'svc.label': 'Services', 'svc.title': 'What we <b>make.</b>', 'svc.sub': 'One team from the first idea to the final master: we write, produce, shoot and finish in house.', 'svc.ex': 'Watch',
@@ -428,7 +429,7 @@ const T = {
     'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.shop': 'Shop', 'nav.contact': 'Επαφή',
     'shop.label': 'Shop', 'shop.title': 'Mad <b>merch.</b>', 'shop.buy': 'Αγορά', 'shop.soldout': 'Εξαντλήθηκε',
     'hero.kicker': 'Εταιρεία παραγωγής βίντεο', 'hero.line': 'Διαφημιστικά, βίντεο κλιπ και εταιρικές ταινίες, από την πρώτη ιδέα ως την τελική παράδοση.',
-    'hero.work': 'Δείτε τη δουλειά', 'hero.talk': 'Πείτε μας για το project σας',
+    'hero.work': 'Δείτε τη δουλειά', 'hero.talk': 'Πείτε μας για το project σας', 'hero.reel': 'Δείτε το showreel',
     'stats.years': 'Χρόνια στις ταινίες', 'stats.prod': 'Παραγωγές', 'stats.clients': 'Brands & καλλιτέχνες',
     'work.label': 'Επιλεγμένη δουλειά', 'work.title': 'Ταινίες, <b>με τρέλα.</b>', 'work.more': 'Όλη η δουλειά', 'work.less': 'Λιγότερα', 'all': 'Όλα',
     'svc.label': 'Υπηρεσίες', 'svc.title': 'Τι <b>φτιάχνουμε.</b>', 'svc.sub': 'Μία ομάδα από την πρώτη ιδέα ως το τελικό master: γράφουμε, οργανώνουμε, γυρίζουμε και ολοκληρώνουμε μόνοι μας.', 'svc.ex': 'Δείτε',
@@ -446,7 +447,7 @@ const T = {
     'footer': '© 2026 The Mad Lions · Εταιρεία παραγωγής βίντεο',
   },
 }
-const CATS = { 'Commercials': 'Διαφημιστικά', 'Music Videos': 'Βίντεο κλιπ', 'Corporate': 'Εταιρικά', 'Motion Graphics': 'Motion Graphics', 'Events': 'Events', 'AI Films': 'AI ταινίες' }
+const CATS = { 'Commercials': 'Διαφημιστικά', 'Music Videos': 'Βίντεο κλιπ', 'Corporate': 'Εταιρικά', 'Motion Graphics': 'Motion Graphics', 'Events': 'Events', 'AI Films': 'AI ταινίες', 'Films': 'Ταινίες', 'Showreels': 'Showreels', 'Behind the Scenes': 'Πίσω από τις κάμερες' }
 // each service with what it covers and one film of ours to show it (by title in works.js)
 const SERVICES = [
   { en: ['Commercials', 'TV and online spots, from the creative idea and the script to casting, shoot and the final master for every platform.'],
@@ -505,10 +506,12 @@ const SHORT = 12
 function renderFilters() {
   const box = document.getElementById('filters')
   box.innerHTML = ''
-  for (const c of ['all', ...Object.keys(CATS)]) {
+  const used = new Set(WORKS.flatMap((w) => w.c))
+  const cats = [...Object.keys(CATS).filter((c) => used.has(c)), ...[...used].filter((c) => !(c in CATS))]
+  for (const c of ['all', ...cats]) {
     const b = document.createElement('button')
     b.type = 'button'
-    b.textContent = c === 'all' ? t('all') : lang === 'el' ? CATS[c] : c
+    b.textContent = c === 'all' ? t('all') : lang === 'el' ? (CATS[c] || c) : c
     b.className = c === filter ? 'on' : ''
     b.onclick = () => { filter = c; showAll = false; renderFilters(); renderGrid() }
     box.appendChild(b)
@@ -526,7 +529,7 @@ function renderGrid() {
     b.appendChild(img(w, false))
     b.insertAdjacentHTML('beforeend', `<span class="play">${PLAY}</span><span class="cap"><strong></strong><span></span></span>`)
     b.querySelector('.cap strong').textContent = w.t
-    b.querySelector('.cap span').textContent = w.c.map((c) => (lang === 'el' ? CATS[c] : c)).join(' · ')
+    b.querySelector('.cap span').textContent = [w.client, ...w.c.map((c) => (lang === 'el' ? (CATS[c] || c) : c))].filter(Boolean).join(' · ')
     b.onclick = () => play(w)
     grid.appendChild(b)
   })
@@ -680,6 +683,10 @@ function track(kind, ref) {
     body: JSON.stringify({ kind, ref: ref ? String(ref).slice(0, 200) : null, path: location.pathname.slice(0, 200), referrer, device, lang, visitor }) }).catch(() => {})
 }
 
+/* the showreel plays from the opening (its YouTube id is site_settings.showreel) */
+let showreel = 'kpIHiBkN5Og'
+document.getElementById('reelBtn').onclick = () => play({ t: 'Showreel', k: 'yt', id: showreel })
+
 /* the look chosen in the admin */
 async function loadTheme() {
   if (new URLSearchParams(location.search).get('theme')) return
@@ -691,6 +698,7 @@ async function loadTheme() {
     try { was = localStorage.getItem('tml_site_hero') || ''; localStorage.setItem('tml_site_hero', hero) } catch (e) {}
     if (hero && hero !== was) setHero(hero)
     if (!hero && was) { const first = WORKS.find((w) => w.k === 'yt'); if (first) setHero('', first) }
+    if (get('showreel')) showreel = String(get('showreel'))
     const th = get('theme')
     if (!th) return
     if (th === 'dark') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = th
@@ -737,7 +745,7 @@ async function loadWorks() {
     const rows = await (await api('site_works?visible=eq.true&select=title,client,categories,kind,video_id,image&order=position.asc,created_at.desc')).json()
     if (!Array.isArray(rows) || !rows.length) return
     WORKS = rows.filter((r) => r.video_id).map((r) => ({ t: r.title, c: r.categories || [], k: r.kind === 'vm' ? 'vm' : 'yt', id: r.video_id, img: r.image || '', client: r.client || '' }))
-    renderGrid(); renderServices(); observe()
+    renderFilters(); renderGrid(); renderServices(); observe()
   } catch (e) {}
 }
 

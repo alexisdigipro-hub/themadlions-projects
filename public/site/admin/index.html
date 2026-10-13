@@ -529,7 +529,7 @@ async function loadOverview() {
 
 /* ---------- work ---------- */
 let works = [], workCat = 'All', editingWork = null
-const BASE_CATS = ['Commercials', 'Music Videos', 'Corporate', 'Motion Graphics', 'Events', 'AI Films']
+const BASE_CATS = ['Commercials', 'Music Videos', 'Corporate', 'Motion Graphics', 'Events', 'Films', 'AI Films', 'Showreels', 'Behind the Scenes']
 const allCats = () => [...new Set([...BASE_CATS, ...works.flatMap((w) => w.categories || [])])]
 async function loadWorks() {
   $('works').innerHTML = '<div class="skel" style="aspect-ratio:16/11;border-radius:18px"></div>'.repeat(8)
