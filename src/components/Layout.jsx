@@ -157,10 +157,16 @@ export default function Layout() {
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
-  // a sideways swipe on a phone: the next or previous tab of a project when one is open, else of this bar
+  // a sideways swipe on a phone: the next or previous tab of a project when one is open; else of the
+  // page's own tabs (Organizer's Tasks · Notes · Office, the Database's, Finance's, Settings' chips;
+  // Alex, 14 Oct), tapped as if by hand, and past its first or last one the bar's; else of this bar
   const swipeRef = useRef(null)
   swipeRef.current = (dir) => {
     if (swipeTabs.project) { swipeTabs.project(dir); return }
+    const own = [...document.querySelectorAll('.content :is(nav.db-tabs, nav.settings-chips, nav.settings-tabs) > :is(a, button)')].filter((el) => el.offsetParent)
+    const on = own.findIndex((el) => el.classList.contains('active') || el.classList.contains('on'))
+    const next = on < 0 ? null : own[on + (dir === 'next' ? 1 : -1)]
+    if (next) { next.click(); next.scrollIntoView?.({ inline: 'nearest', block: 'nearest' }); return }
     const at = items.findIndex((i) => (i.end ? pathname === i.to : pathname === i.to || pathname.startsWith(`${i.to}/`) || i.also?.some((p) => pathname.startsWith(p))))
     const to = at < 0 ? null : items[at + (dir === 'next' ? 1 : -1)]
     if (to) nav(to.to)
