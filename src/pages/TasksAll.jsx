@@ -480,14 +480,17 @@ export default function TasksAll({ slot = null }) {
     </>
   )
   const home = <aside className="rem-side">{!slot && search}{menuBody}</aside>
-  // on a phone: Search and the Lists button on one line, the menu folded under it (Alex, 10 Oct)
+  // on a phone: Search, Lists and New Task on one line, the menu folded under it (Alex, 10 Oct); since
+  // 14 Oct like the Database's line: a glass pill to search and two round glass buttons, Lists (lines)
+  // and New Task (+)
   const phoneTop = (
     <div className="rem-mtop">
       <div className="rem-mtop-bar">
         {search}
-        <button type="button" className={`rem-menu-btn ${menu ? 'on' : ''}`} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
-          <span aria-hidden="true">☰</span> Lists <span className="rem-menu-chev" aria-hidden="true">⌄</span>
+        <button type="button" className={`rem-menu-btn ${menu ? 'on' : ''}`} aria-expanded={menu} aria-label="Lists" title="Lists" onClick={() => setMenu((v) => !v)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11" /><circle cx="4.5" cy="6" r="1" /><circle cx="4.5" cy="12" r="1" /><circle cx="4.5" cy="18" r="1" /></svg>
         </button>
+        {editable && !inBin && <button type="button" className="rem-madd" aria-label="New Task" title="New Task" onClick={() => setDraft(emptyTask({ ...where(), dept: 'Other' }))}>＋</button>}
       </div>
       {menu && <div className="rem-side rem-mmenu">{menuBody}</div>}
     </div>
@@ -665,7 +668,7 @@ export default function TasksAll({ slot = null }) {
             ))}
           </span>
         )}
-        {editable && !inBin && <button type="button" className="rem-head-btn" onClick={() => setDraft(emptyTask({ ...where(), dept: 'Other' }))}>New Task</button>}
+        {editable && !inBin && <button type="button" className="rem-head-btn rem-head-new" onClick={() => setDraft(emptyTask({ ...where(), dept: 'Other' }))}>New Task</button>}
       </div>
       <div className="rem-scroll">
         {sections.map((s) => (
