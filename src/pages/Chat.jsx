@@ -859,7 +859,7 @@ function RoomList({ activeId, windowed }) {
           const row = (
             <button key={r.id} type="button" className={`chat-room-item ${r.id === activeId ? 'active' : ''}${picking ? ' picking' : ''}${picked.includes(r.id) ? ' picked' : ''}`} onClick={() => (picking ? togglePick(r.id) : nav(roomPath(base, r.id)))} disabled={legacy && r.kind !== 'team'}>
               {picking && <span className="tg-check" aria-hidden="true" />}
-              <RoomAvatar room={r} size={mobile ? 54 : 48} />
+              <RoomAvatar room={r} size={mobile ? 44 : 48} />
               <span className="chat-rmain">
                 <span className="chat-rtop"><strong>{r.name}{mobile && mutedRooms.includes(r.id) && <span className="chat-rmuted" title="Muted" aria-label="Muted"> 🔕</span>}</strong><small>{listTime(last?.createdAt)}</small></span>
                 {(preview || n > 0) && <span className="chat-rbottom"><span className="chat-rprev">{preview}</span>{n > 0 && <span className="chat-rbadge">{n}</span>}</span>}
