@@ -6797,3 +6797,25 @@ html[data-theme='light'] .rem-head .segmented.rem-sort button.on { background: l
   }
   html[data-theme] body .rem-tasks > .rem-task + .rem-task { margin-top: 10px; }
 }
+
+/* Buttons like the Database's (Alex, 14 Oct, of the blue gradient "Add expense": "I don't want these"):
+   no gradient and no glow; the main button is a glass pill like the Database's round buttons, told apart
+   only by its text in the accent and a hair of the accent in its edge; every button rounded to a pill
+   so the two kinds sit together. Everywhere, phone and computer, in every theme. */
+html[data-theme] body .btn { border-radius: 999px; }
+html[data-theme] body .btn.btn-primary:not(.db-add),
+html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary {
+  background: color-mix(in srgb, var(--panel) 80%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line-soft));
+  border-radius: 999px;
+  -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 6px 18px rgba(0, 0, 0, .18);
+  filter: none;
+}
+html[data-theme] body .btn.btn-primary:not(.db-add):hover:not(:disabled),
+html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 14%, color-mix(in srgb, var(--panel) 80%, transparent));
+  border-color: var(--accent);
+  filter: none;
+}
