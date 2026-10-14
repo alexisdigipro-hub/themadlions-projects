@@ -158,6 +158,8 @@ h2 b { font-weight: 800; }
 .quote { margin: 40px 0 0; padding-left: 18px; border-left: 2px solid var(--accent); color: var(--muted); font-size: 16px; line-height: 1.6; font-style: italic; }
 .team { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
 .person { padding: 18px 20px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--line); }
+.person .face img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.person .face:has(img) { overflow: hidden; width: 56px; height: 56px; }
 .person .face { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 35%, transparent), color-mix(in srgb, var(--hi) 6%, transparent)); font-weight: 700; margin-bottom: 14px; }
 .person strong { display: block; font-weight: 500; font-size: 17px; }
 .person span { color: var(--muted); font-size: 13.5px; }
@@ -167,7 +169,11 @@ h2 b { font-weight: 800; }
 .logos { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-top: 44px; }
 .logo { height: 104px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--line); display: grid; place-items: center; padding: 18px; text-align: center; transition: background .3s, border-color .3s; }
 .logo:hover { background: var(--bg-3); border-color: color-mix(in srgb, var(--hi) 20%, transparent); }
-.logo img { max-height: 46px; max-width: 80%; filter: grayscale(1) brightness(1.6); opacity: .75; }
+.logo img { max-height: 46px; max-width: 80%; opacity: .8; transition: opacity .3s; }
+.logo:hover img { opacity: 1; }
+/* a logo in one colour, like the names around it: white on the dark looks, black on the light one */
+.logo img.mono { filter: brightness(0) invert(1); }
+html[data-theme='light'] .logo img.mono { filter: brightness(0); }
 .logo span { font-size: 17px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: color-mix(in srgb, var(--text) 55%, transparent); transition: color .3s; }
 .logo:hover span { color: var(--text); }
 
@@ -313,7 +319,7 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
   </div>
 
   <div class="stats reveal">
-    <div class="stat"><strong><span data-count="12">12</span><em>+</em></strong><span data-t="stats.years">Years making films</span></div>
+    <div class="stat"><strong><span data-count="10" data-stat="years">10</span><em>+</em></strong><span data-t="stats.years">Years making films</span></div>
     <div class="stat"><strong><span data-count="40" data-stat="prod">40</span><em>+</em></strong><span data-t="stats.prod">Productions</span></div>
     <div class="stat"><strong><span data-count="25" data-stat="brands">25</span><em>+</em></strong><span data-t="stats.clients">Brands &amp; artists</span></div>
   </div>
@@ -626,11 +632,27 @@ document.getElementById('aibAll').onclick = () => { filter = 'aibsent'; showAll 
 function renderSteps() {
   document.getElementById('steps').innerHTML = STEPS.map((s) => { const [h, p] = s[lang] || s.en; return `<div class="step reveal"><h3>${h}</h3><p>${p}</p></div>` }).join('')
 }
+// the team and the clients come from Studio > People (site_team, site_clients); TEAM and CLIENTS above
+// are what shows until they load, or if they cannot
+const escH = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 function renderAbout() {
-  document.getElementById('team').innerHTML = TEAM.map((p) => `<div class="person"><div class="face">${p[0][0]}</div><strong>${p[0]}</strong><span>${lang === 'el' ? p[2] : p[1]}</span></div>`).join('')
+  const box = document.getElementById('team')
+  box.innerHTML = TEAM.map((p) => `<div class="person"><div class="face">${p[3] ? '' : escH(p[0][0])}</div><strong>${escH(p[0])}</strong><span>${escH(lang === 'el' ? p[2] || p[1] : p[1])}</span></div>`).join('')
+  // a photo goes in with its framing from Studio
+  box.querySelectorAll('.face').forEach((face, i) => { const p = TEAM[i]; if (p[3]) face.appendChild(frameImg(Object.assign(document.createElement('img'), { src: p[3], alt: '', loading: 'lazy' }), p[4])) })
 }
 function renderClients() {
-  document.getElementById('logos').innerHTML = CLIENTS.map((c) => `<div class="logo">${c.logo ? `<img src="${c.logo}" alt="${c.n}" loading="lazy">` : `<span>${c.n}</span>`}</div>`).join('')
+  document.getElementById('logos').innerHTML = CLIENTS.map((c) => `<div class="logo">${c.logo ? `<img src="${escH(c.logo)}" alt="${escH(c.n)}" loading="lazy"${c.mono === false ? '' : ' class="mono"'}>` : `<span>${escH(c.n)}</span>`}</div>`).join('')
+}
+async function loadPeople() {
+  try {
+    const team = await (await api('site_team?visible=eq.true&select=name,role,role_el,photo,frame&order=position.asc,created_at.asc')).json()
+    if (Array.isArray(team) && team.length) { TEAM.splice(0, TEAM.length, ...team.map((m) => [m.name, m.role || '', m.role_el || '', m.photo || '', m.frame || null])); renderAbout() }
+  } catch (e) {}
+  try {
+    const cl = await (await api('site_clients?visible=eq.true&select=name,logo,mono&order=position.asc,created_at.asc')).json()
+    if (Array.isArray(cl) && cl.length) { CLIENTS.splice(0, CLIENTS.length, ...cl.map((c) => ({ n: c.name, logo: c.logo || '', mono: c.mono }))); renderClients() }
+  } catch (e) {}
 }
 
 /* the film plays on the page itself */
@@ -862,6 +884,13 @@ function renderShop() {
    films on the site except showreels, behind the scenes and our own films; brands & artists are the different names
    (the client, else the title before " – "), Greek and Latin spellings read as one; both rounded down to 5, with + */
 const GR = { α: 'a', β: 'v', γ: 'g', δ: 'd', ε: 'e', ζ: 'z', η: 'i', θ: 'th', ι: 'i', κ: 'k', λ: 'l', μ: 'm', ν: 'n', ξ: 'x', ο: 'o', π: 'p', ρ: 'r', σ: 's', ς: 's', τ: 't', υ: 'y', φ: 'f', χ: 'ch', ψ: 'ps', ω: 'o' }
+// Years making films counts from the company's founding, February 2016 (Alex, 14 Oct)
+const FOUNDED = new Date(2016, 1, 1)
+function renderYears() {
+  const el = document.querySelector('[data-stat="years"]'), n = Math.floor((Date.now() - FOUNDED) / (365.25 * 864e5))
+  if (el && n > 0) { el.dataset.count = n; el.textContent = n }
+}
+renderYears()
 function renderStats() {
   const NOT = ['Showreels', 'Behind the Scenes', 'Films', 'AI Films']
   const made = WORKS.filter((w) => !w.c.some((c) => NOT.includes(c)))
@@ -885,7 +914,7 @@ async function loadWorks() {
 }
 
 startReel(); renderClients(); applyLang(); onScroll()
-loadTheme(); loadWorks(); loadShop(); track('view')
+loadTheme(); loadWorks(); loadShop(); loadPeople(); track('view')
 </script>
 </body>
 </html>
