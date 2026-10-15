@@ -6551,6 +6551,7 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
   html[data-theme] body .fin-top .db-tabs button { padding: 9px 8px; font-size: 12px; }
   html[data-theme] body .fin-top .input.select.fin-year { flex: 1 1 auto; }
   html[data-theme] body .fin-top .fin-set button { padding: 9px 18px; }
+  .fin-top .fin-acts { display: flex; flex: none; gap: 8px; }
 }
 
 /* Settings on a computer (Alex, 10 Oct: "what are these big gaps on every page?", then "put them side

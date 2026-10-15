@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { Act, Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Stat, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
+import { Act, Button, Confirm, Empty, Field, Input, Modal, Select, Stat, Textarea, useToast } from '../components/ui.jsx'
 import { today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { DOCS, FREQ, METHODS, TX_STATUS, catsFor, duePeriods, emptyRecurring, emptyTx, expenseCats, financeCategoryUses, fiscalYearLabel, fiscalYearOf, generateFromRecurring, grossOf, incomeCats, matchTx, money, renameFinanceCategory, summarize, vatOf, ym } from '../lib/finance.js'
 import { download, fmtDate } from '../lib/dates.js'
@@ -24,7 +24,6 @@ export default function Finance({ start }) {
   const { state, update } = useStore()
   const me = useCurrentUser()
   const toast = useToast()
-  const mobile = useIsMobile()
   const fin = state.finance
   const [viewReceipt, setViewReceipt] = useState(null)
   // the receipt photographed for an expense: on the budget line it pays, or kept on the expense itself
@@ -305,7 +304,6 @@ export default function Finance({ start }) {
 
   return (
     <div className="finance">
-      <PageHead title="Finance">{mobile && addActs}</PageHead>
       <div className="db-top fin-top">
         <nav className="tabs db-tabs">
           {FIN_TABS.map(([k, l]) => (
@@ -316,8 +314,9 @@ export default function Finance({ start }) {
         <nav className="tabs db-tabs fin-set">
           <button type="button" className={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}>Settings</button>
         </nav>
-        {/* on a computer Add income / Add expense sit at the end of the tabs' line (Alex, 15 Oct) */}
-        {!mobile && <div className="fin-acts">{addActs}</div>}
+        {/* no page title (Alex, 15 Oct: more room): Add income / Add expense at the end of the tabs' line,
+            round icons beside the year and Settings on a phone */}
+        <div className="fin-acts">{addActs}</div>
       </div>
 
       {dueCount > 0 && tab !== 'recurring' && (
