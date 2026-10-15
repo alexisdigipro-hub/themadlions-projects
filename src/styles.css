@@ -3374,6 +3374,8 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .deliv-stage.s-prefinal { background: color-mix(in srgb, #6C9BD1 18%, transparent); color: #4a7cb0; }
 .deliv-stage.s-final { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
 .deliv-stage.s-files { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.deliv-stage .deliv-ver { display: none; }
+.deliv-tag.t-open svg { display: none; }
 
 /* One strip of small tags carries what happened to a link, instead of three grey lines that all
    read the same weight: opened or not, closing date, and the client's answer. */
@@ -7168,38 +7170,38 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
   html[data-theme] body .deliveries .deliv-people { grid-column: 1; }
   html[data-theme] body .deliveries .deliv-person-tools { display: flex; gap: 6px; }
 
-  /* Two lines a tile (Alex, 15 Oct: "lower, at least 50%", then "cut more"): the kind and the title on
-     the first, the date with the opened tag under it on the left of the second and the round buttons
-     on its right. */
-  html[data-theme] body .deliveries .deliv-list li.deliv-row {
-    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0 8px; padding: 10px 10px 10px 12px;
-    grid-template-areas: "stage title title" "date date tools" "tags tags tools" "quote quote quote" "people people people";
-  }
+  /* A tile (Alex, 15 Oct: "lower", "the cut and version a round pill beside the title, opened on the line
+     above, nicer"): the title with the stage + version pill beside it, then who and when with the opened
+     tag, then the round buttons over a hairline, Delete apart at the right. The title's own version is
+     hidden here; on a computer the pill's is. */
+  html[data-theme] body .deliveries .deliv-list li.deliv-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; padding: 12px 14px 11px; }
+  html[data-theme] body .deliveries .deliv-list li.deliv-row::before { content: ''; order: 3; flex: 0 0 100%; height: 0; }
   html[data-theme] body .deliveries .deliv-row .grow { display: contents; }
-  html[data-theme] body .deliveries .deliv-row .deliv-stage { grid-area: stage; font-size: 10px; padding: 2px 7px; }
-  html[data-theme] body .deliveries .deliv-row .grow > strong { grid-area: title; min-width: 0; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  html[data-theme] body .deliveries .deliv-row .grow > .small { grid-area: date; align-self: end; margin: 7px 0 0; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  html[data-theme] body .deliveries .deliv-row .grow > .deliv-tags { grid-area: tags; align-self: start; margin: 3px 0 0; gap: 4px; }
-  html[data-theme] body .deliveries .deliv-row .deliv-tag { font-size: 10.5px; line-height: 1.6; padding: 0 7px; }
-  html[data-theme] body .deliveries .deliv-row .deliv-quote { grid-area: quote; margin: 6px 0 0; font-size: 13px; }
-  html[data-theme] body .deliveries .deliv-row > .deliv-tools { grid-area: tools; margin: 7px 0 0; gap: 5px; }
-  html[data-theme] body .deliveries .deliv-row > .deliv-people { grid-area: people; margin-top: 8px; }
-  html[data-theme] body .deliveries .deliv-row .deliv-tool { width: 32px; height: 32px; }
-  html[data-theme] body .deliveries .deliv-row .deliv-tool svg { width: 15px; height: 15px; }
-  html[data-theme] body .deliveries .deliv-row .deliv-tools .deliv-tool-x { margin-left: 3px; }
-  /* five or more buttons (a delivery: copy, email, open, update, close, delete) do not fit beside the
-     date: they get their own line, Delete still apart at the right */
-  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) { display: flex; flex-wrap: wrap; align-items: center; }
-  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5))::before { content: ''; order: 3; flex: 0 0 100%; height: 0; }
-  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) .deliv-stage { order: 1; flex: none; }
-  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) .grow > strong { order: 2; flex: 1 1 0; }
-  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) .grow > .small { order: 4; flex: none; margin: 5px 0 0; }
-  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) .grow > .deliv-tags { order: 5; flex: 0 1 auto; margin: 5px 0 0; }
-  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) .deliv-quote { order: 6; flex: 1 1 100%; }
-  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) > .deliv-tools { order: 7; flex: 1 1 100%; margin-top: 8px; }
-  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) > .deliv-people { order: 8; flex: 1 1 100%; }
-  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) .deliv-tool-x { margin-left: auto; }
-  html[data-theme] body .deliveries .deliv-row .grow > .deliv-tags { min-width: 0; }
+  html[data-theme] body .deliveries .deliv-row .grow > strong { order: 1; flex: 1 1 0; max-width: max-content; min-width: 0; font-size: 15.5px; font-weight: 650; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html[data-theme] body .deliveries .deliv-row .deliv-tver { display: none; }
+  html[data-theme] body .deliveries .deliv-row .deliv-stage {
+    order: 2; flex: none; display: inline-flex; align-items: center; gap: 5px; height: 22px; margin: 0; padding: 0 9px 0 8px; border-radius: 999px;
+    font-size: 10px; letter-spacing: .05em; border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  }
+  html[data-theme] body .deliveries .deliv-row .deliv-stage::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  html[data-theme] body .deliveries .deliv-row .deliv-ver { display: inline; opacity: .8; }
+  html[data-theme] body .deliveries .deliv-row .grow > .small { order: 4; flex: 1 1 0; max-width: max-content; min-width: 90px; margin: 5px 0 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html[data-theme] body .deliveries .deliv-row .grow > .deliv-tags { order: 5; flex: 0 1 auto; min-width: 0; max-width: 100%; margin: 5px 0 0; gap: 4px; }
+  html[data-theme] body .deliveries .deliv-row .deliv-tag { font-size: 11px; line-height: 20px; padding: 0 8px; }
+  /* opened as an eye and the count, the word left out, so it fits beside who and when */
+  html[data-theme] body .deliveries .deliv-row .deliv-tag.t-open { display: inline-flex; align-items: center; gap: 4px; }
+  html[data-theme] body .deliveries .deliv-row .deliv-tag.t-open svg { display: block; width: 13px; height: 13px; }
+  html[data-theme] body .deliveries .deliv-row .deliv-tag.t-open .dt-w { display: none; }
+  html[data-theme] body .deliveries .deliv-row .deliv-quote { order: 6; flex: 1 1 100%; margin: 8px 0 0; font-size: 13px; }
+  html[data-theme] body .deliveries .deliv-row > .deliv-tools {
+    order: 7; flex: 1 1 100%; margin: 10px 0 0; padding-top: 10px; gap: 6px;
+    border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+  }
+  html[data-theme] body .deliveries .deliv-row > .deliv-people { order: 8; flex: 1 1 100%; margin-top: 10px; }
+  html[data-theme] body .deliveries .deliv-row .deliv-tool { width: 34px; height: 34px; }
+  html[data-theme] body .deliveries .deliv-row .deliv-tool svg { width: 16px; height: 16px; }
+  html[data-theme] body .deliveries .deliv-row .deliv-tools .deliv-tool-x { margin-left: auto; }
+  html[data-theme] body .deliveries .deliv-row .deliv-tools .deliv-tool-x.btn-danger { width: auto; padding: 0 12px; }
   html[data-theme] body .deliveries .deliv-row .deliv-tools .deliv-tool-x.btn-danger { width: auto; padding: 0 12px; }
 }
 
