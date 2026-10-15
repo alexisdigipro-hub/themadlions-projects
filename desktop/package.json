@@ -1,0 +1,47 @@
+{
+  "name": "tml-chat",
+  "productName": "TML Chat",
+  "version": "1.0.0",
+  "description": "TML Chat for Mac and Windows: the hub's chat in a window of its own",
+  "author": "THEMADLIONS",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:mac": "electron-builder --mac --publish never",
+    "dist:win": "electron-builder --win --publish never"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "com.themadlions.tmlchat",
+    "productName": "TML Chat",
+    "directories": { "output": "out", "buildResources": "build" },
+    "files": ["main.js", "package.json"],
+    "afterPack": "./adhoc-sign.js",
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }],
+      "category": "public.app-category.business",
+      "identity": null,
+      "artifactName": "TML-Chat-Mac-${arch}.${ext}",
+      "extendInfo": {
+        "NSCameraUsageDescription": "TML Chat uses the camera for video calls.",
+        "NSMicrophoneUsageDescription": "TML Chat uses the microphone for calls and voice messages."
+      }
+    },
+    "dmg": { "artifactName": "TML-Chat-Mac-${arch}.${ext}" },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "artifactName": "TML-Chat-Windows-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TML Chat"
+    }
+  }
+}
