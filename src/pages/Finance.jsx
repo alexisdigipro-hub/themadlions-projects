@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { Act, Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Stat, Textarea, useToast } from '../components/ui.jsx'
+import { Act, Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Stat, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { DOCS, FREQ, METHODS, TX_STATUS, catsFor, duePeriods, emptyRecurring, emptyTx, expenseCats, financeCategoryUses, fiscalYearLabel, fiscalYearOf, generateFromRecurring, grossOf, incomeCats, matchTx, money, renameFinanceCategory, summarize, vatOf, ym } from '../lib/finance.js'
 import { download, fmtDate } from '../lib/dates.js'
@@ -24,6 +24,7 @@ export default function Finance({ start }) {
   const { state, update } = useStore()
   const me = useCurrentUser()
   const toast = useToast()
+  const mobile = useIsMobile()
   const fin = state.finance
   const [viewReceipt, setViewReceipt] = useState(null)
   // the receipt photographed for an expense: on the budget line it pays, or kept on the expense itself
@@ -295,12 +296,16 @@ export default function Finance({ start }) {
     ...owedYearRows.map((r) => ({ date: r.date, key: r.project.title, kind: 'owed', amount: r.net })),
   ]
 
+  const addActs = (
+    <>
+      <Act icon="income" label="Add income" onClick={() => setDraft(emptyTx('income', { vatPct: fin.settings.vatDefault }))} />
+      <Act icon="expense" label="Add expense" main onClick={() => setDraft(emptyTx('expense', { vatPct: fin.settings.vatDefault }))} />
+    </>
+  )
+
   return (
     <div className="finance">
-      <PageHead title="Finance">
-        <Act icon="income" label="Add income" onClick={() => setDraft(emptyTx('income', { vatPct: fin.settings.vatDefault }))} />
-        <Act icon="expense" label="Add expense" main onClick={() => setDraft(emptyTx('expense', { vatPct: fin.settings.vatDefault }))} />
-      </PageHead>
+      <PageHead title="Finance">{mobile && addActs}</PageHead>
       <div className="db-top fin-top">
         <nav className="tabs db-tabs">
           {FIN_TABS.map(([k, l]) => (
@@ -311,6 +316,8 @@ export default function Finance({ start }) {
         <nav className="tabs db-tabs fin-set">
           <button type="button" className={tab === 'settings' ? 'active' : ''} onClick={() => setTab('settings')}>Settings</button>
         </nav>
+        {/* on a computer Add income / Add expense sit at the end of the tabs' line (Alex, 15 Oct) */}
+        {!mobile && <div className="fin-acts">{addActs}</div>}
       </div>
 
       {dueCount > 0 && tab !== 'recurring' && (
