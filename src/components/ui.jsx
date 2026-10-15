@@ -341,6 +341,7 @@ export const ACT_ICON = {
   share: actSvg(<><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="m8.2 10.8 7.6-4.5M8.2 13.2l7.6 4.5" /></>),
   print: actSvg(<><path d="M7 9V4h10v5" /><rect x="4" y="9" width="16" height="8" rx="2" /><path d="M7 14h10v6H7z" /></>),
   trash: actSvg(<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />),
+  estimate: actSvg(<><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4M10 12h5M10 16h5" /></>),
 }
 export function Act({ icon = 'plus', label, onClick, main = false, className = '', ...props }) {
   return (

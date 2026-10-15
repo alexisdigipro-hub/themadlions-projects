@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
+import { Act, Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
 import { deliveryUrl, estimateUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, shotlistUrl, tokenOf, deckUrl } from '../lib/shares.js'
 import { amount, estimateTotals } from '../lib/estimate.js'
@@ -397,18 +397,20 @@ export default function Deliveries() {
       {noReplies && <p className="muted small">Run <b>supabase/deliveries.sql</b> in Supabase to collect the clients' answers.</p>}
       {noTracking && <p className="muted small">Run <b>supabase/share_track.sql</b> in Supabase to see whether a link was opened, and to close one.</p>}
 
-      {!mobile && <div className="chips">
-        {tabs.map(([k, label]) => (
-          <button key={k} className={`chip ${shown === k ? 'on' : ''}`} onClick={(e) => { if (shown !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setFilter(k) }}>
-            {label}
-            <small>{counts[k]}</small>
-          </button>
-        ))}
-        {/* the two New buttons at the end of the filters' line (Alex, 15 Oct) */}
+      {/* on a computer the filters as the Organizer's glass capsule, the two New buttons at the end of
+          the same line in the same glass (Alex, 15 Oct) */}
+      {!mobile && <div className="db-top share-dtop">
+        <nav className="tabs db-tabs">
+          {tabs.map(([k, label]) => (
+            <button key={k} type="button" className={shown === k ? 'active' : ''} onClick={(e) => { if (shown !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setFilter(k) }}>
+              {label}<small>{counts[k]}</small>
+            </button>
+          ))}
+        </nav>
         {editable && (
           <span className="share-new">
-            {isAdmin && <Button variant="ghost" onClick={startEstimate}>New cost estimation</Button>}
-            <Button variant="primary" onClick={startNew}>New delivery</Button>
+            {isAdmin && <Act icon="estimate" label="New cost estimation" onClick={startEstimate} />}
+            <Act icon="plus" label="New delivery" main onClick={startNew} />
           </span>
         )}
       </div>}
