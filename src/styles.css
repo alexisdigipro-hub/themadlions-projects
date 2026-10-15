@@ -3807,6 +3807,11 @@ html[data-public='1'] body { background: var(--bg); }
    past it, the band always under its own background, and a matching padding keeps the name in the
    middle of the whole screen (of the window while the gap is not known yet) */
 .boot { bottom: -160px; padding-bottom: calc(160px - var(--ios-gap, 0px)); }
+/* it was not the box: below the page iOS paints the page's own backdrop (html, one plain colour past
+   it), and the loading screen had a backdrop of its own on top, a shade apart (Alex, 10:57, the same
+   band). So the loading screen paints nothing and the app's one backdrop shows to the foot, as it does
+   once the app is open */
+.login.boot { background: none; }
 .boot-name { font-weight: 500; font-size: 18px; letter-spacing: -.01em; white-space: nowrap; color: var(--text); }
 .boot-name b { font-weight: 900; }
 .logo-row { display: flex; align-items: center; gap: 12px; }
