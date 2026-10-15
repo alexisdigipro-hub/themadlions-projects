@@ -369,10 +369,7 @@ export default function Deliveries() {
       {/* on a phone (Alex, 15 Oct): no title, the filters as a glass capsule and a round + on one line;
           the + offers New delivery and, for administrators, New cost estimation */}
       {!mobile && (
-        <PageHead title="Share">
-          {editable && isAdmin && <Button variant="ghost" onClick={startEstimate}>New cost estimation</Button>}
-          {editable && <Button variant="primary" onClick={startNew}>New delivery</Button>}
-        </PageHead>
+        <PageHead title="Share" />
       )}
       {mobile && (
         <div className="share-top">
@@ -407,6 +404,13 @@ export default function Deliveries() {
             <small>{counts[k]}</small>
           </button>
         ))}
+        {/* the two New buttons at the end of the filters' line (Alex, 15 Oct) */}
+        {editable && (
+          <span className="share-new">
+            {isAdmin && <Button variant="ghost" onClick={startEstimate}>New cost estimation</Button>}
+            <Button variant="primary" onClick={startNew}>New delivery</Button>
+          </span>
+        )}
       </div>}
 
       {/* the list slides over when another filter is picked (lib/glide.js) */}
