@@ -52,6 +52,7 @@ const ICO = {
   unlock: ico(<><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 7.5-2" /></>),
   trash: ico(<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />),
   plus: ico(<path d="M12 5v14M5 12h14" />),
+  eye: ico(<><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></>),
 }
 const tool = (icon, text) => <>{icon}<span className="dt-t">{text}</span></>
 
@@ -431,9 +432,9 @@ export default function Deliveries() {
             const singleTarget = g.people.length <= 1
             return (
               <li key={g.key} className={`deliv-row${g.shut ? ' is-shut' : ''}`}>
-                <span className={`deliv-stage ${r.badgeClass}`}>{r.badge}</span>
+                <span className={`deliv-stage ${r.badgeClass}`}>{r.badge}{r.version ? <span className="deliv-ver">· {String(r.version).replace(/^version\s*/i, 'V')}</span> : null}</span>
                 <div className="grow">
-                  <strong>{r.name}{r.version ? <span className="muted"> · {r.version}</span> : null}</strong>
+                  <strong>{r.name}{r.version ? <span className="muted deliv-tver"> · {r.version}</span> : null}</strong>
                   <div className="small muted">{r.sub}</div>
                   {/* one strip of small tags instead of three grey lines that all looked the same */}
                   {one && (g.shut || r.opens !== undefined || last) && (
@@ -441,7 +442,7 @@ export default function Deliveries() {
                       {g.shut && <span className="deliv-tag t-shut">Closed</span>}
                       {r.opens === undefined ? null
                         : r.opens > 0
-                          ? <span className="deliv-tag">Opened {r.opens}&#215;{r.opened_at ? ` · ${fmtDate(r.opened_at.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''}</span>
+                          ? <span className="deliv-tag t-open" title="Opened">{ICO.eye}<span className="dt-w">Opened </span>{r.opens}&#215;{r.opened_at ? ` · ${fmtDate(r.opened_at.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''}</span>
                           : <span className="deliv-tag t-quiet">Not opened</span>}
                       {r.expires_at && !r.closed && <span className="deliv-tag t-quiet">Closes {fmtDate(r.expires_at, { day: 'numeric', month: 'short' })}</span>}
                       {r.pin && <span className="deliv-tag t-quiet">Code {r.pin}</span>}
