@@ -7084,3 +7084,11 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
   /* every search box a glass pill */
   html[data-theme] body .input.search { border-radius: 999px; }
 }
+
+/* The task form on a phone keeps its pairs side by side (Alex, 15 Oct): Priority | Status, List | Assignee,
+   Project | Deadline */
+@media (max-width: 820px) {
+  html body .task-form .row-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  html body .task-form .row-2 > .field { min-width: 0; }
+  html body .task-form .row-2:has(> .field:only-child) { grid-template-columns: minmax(0, 1fr); }
+}

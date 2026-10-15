@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react'
-import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { departmentsOf, today, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
 import { sendAutoNotice, userByName } from '../../components/Notices.jsx'
@@ -187,7 +187,6 @@ function Subtasks({ items, onChange }) {
 
 export function TaskModal({ draft, setDraft, onSave, onClose, projects }) {
   const { state } = useStore()
-  const TASK_DEPTS = [...new Set([...departmentsOf(state), 'Legal'])]
   const set = (k, v) => setDraft({ ...draft, [k]: v })
   const team = (state.users || []).filter((u) => u.active !== false && u.name).sort((a, b) => a.name.localeCompare(b.name, ['el', 'en'], { sensitivity: 'base' }))
   const outside = draft.assignee && !team.some((u) => u.name.trim().toLowerCase() === draft.assignee.trim().toLowerCase())
@@ -201,6 +200,7 @@ export function TaskModal({ draft, setDraft, onSave, onClose, projects }) {
   const listId = ownLists.some((l) => l.id === draft.listId) ? draft.listId : ''
   const statuses = taskStatuses(state)
   const isAdmin = useCurrentUser()?.role === 'admin'
+  const mobile = useIsMobile()
   const [editStatuses, setEditStatuses] = useState(false)
   return (
     <>
@@ -218,22 +218,22 @@ export function TaskModal({ draft, setDraft, onSave, onClose, projects }) {
       }
     >
       <div className="task-form">
+        {/* the form (Alex, 15 Oct): no Department; Priority and Status together near the top; List with
+            Assignee; Project with Deadline; subtasks here on a computer only (on a phone they are added
+            right on the list, "+ Subtask") */}
         <Field label="Task"><Input autoFocus value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder="Lock the rooftop permit" /></Field>
-        <Subtasks items={Array.isArray(draft.subtasks) ? draft.subtasks : []} onChange={(v) => set('subtasks', v)} />
-        {(projects || ownLists.length > 0) && (
-          <div className="row-2">
-            {projects && <Field label="Project"><Select value={draft.projectId || ''} onChange={(e) => set('projectId', e.target.value)} options={[['', 'No project'], ...projects.map((p) => [p.id, p.title])]} /></Field>}
-            {ownLists.length > 0 && <Field label="List"><Select value={listId} onChange={(e) => set('listId', e.target.value)} options={[['', 'No list'], ...ownLists.map((l) => [l.id, `${l.icon || '☰'} ${l.name}`])]} /></Field>}
-          </div>
-        )}
+        {!mobile && <Subtasks items={Array.isArray(draft.subtasks) ? draft.subtasks : []} onChange={(v) => set('subtasks', v)} />}
         <div className="row-2">
-          <Field label="Assignee"><Select value={draft.assignee || ''} onChange={(e) => pickAssignee(e.target.value)} options={assigneeOptions} /></Field>
-          <Field label="Deadline"><Input type="date" value={draft.due} onChange={(e) => set('due', e.target.value)} /></Field>
-        </div>
-        <div className="row-3">
-          <Field label="Department"><Select value={draft.dept} onChange={(e) => set('dept', e.target.value)} options={TASK_DEPTS} /></Field>
           <Field label="Priority"><Select value={draft.priority} onChange={(e) => set('priority', e.target.value)} options={PRIORITY_OPTIONS} /></Field>
           <Field label="Status"><Select value={statuses.some((x) => x.id === draft.status) ? draft.status : 'todo'} onChange={(e) => (e.target.value === '__edit' ? setEditStatuses(true) : set('status', e.target.value))} options={[...statuses.map((x) => [x.id, x.label]), ...(isAdmin ? [['__edit', 'Edit statuses…']] : [])]} /></Field>
+        </div>
+        <div className="row-2">
+          {ownLists.length > 0 && <Field label="List"><Select value={listId} onChange={(e) => set('listId', e.target.value)} options={[['', 'No list'], ...ownLists.map((l) => [l.id, `${l.icon || '☰'} ${l.name}`])]} /></Field>}
+          <Field label="Assignee"><Select value={draft.assignee || ''} onChange={(e) => pickAssignee(e.target.value)} options={assigneeOptions} /></Field>
+        </div>
+        <div className="row-2">
+          {projects && <Field label="Project"><Select value={draft.projectId || ''} onChange={(e) => set('projectId', e.target.value)} options={[['', 'No project'], ...projects.map((p) => [p.id, p.title])]} /></Field>}
+          <Field label="Deadline"><Input type="date" value={draft.due} onChange={(e) => set('due', e.target.value)} /></Field>
         </div>
         <Field label="Notes"><Textarea rows={6} value={draft.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Who to call, what was agreed, links" /></Field>
       </div>
