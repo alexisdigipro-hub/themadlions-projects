@@ -78,7 +78,10 @@ export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLab
       <div className="mini-cal-list">
         <div className="mini-cal-sel">
           <span>{selIsToday ? (large ? `Today · ${fmtDate(sel, { weekday: 'short', day: 'numeric', month: 'short' })}` : 'Today') : fmtDate(sel, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-          {onAddDay && <button className="link small" onClick={() => onAddDay(sel)}>{addLabel}</button>}
+          {/* on the phone's Calendar a glass pill button like the rest (Alex, 15 Oct), elsewhere a link */}
+          {onAddDay && (large
+            ? <button type="button" className="btn btn-primary btn-sm mc-add" onClick={() => onAddDay(sel)}><span aria-hidden="true">＋</span> {addLabel}</button>
+            : <button className="link small" onClick={() => onAddDay(sel)}>{addLabel}</button>)}
         </div>
         {large ? (
           !dayItems.length ? <p className="muted small mc-none">Nothing on this day.</p> : <ul className="plain mc-evs">{dayItems.map(row)}</ul>
