@@ -68,7 +68,12 @@ export function mountDoc(root, html, { onChange, readOnly = false } = {}) {
   for (const [v, l] of [['p', 'Paragraph'], ['h1', 'Title'], ['h2', 'Heading'], ['h3', 'Subheading'], ['blockquote', 'Quote']]) { const o = el('option', '', l); o.value = v; block.appendChild(o) }
   block.title = 'Paragraph style'
   block.addEventListener('change', () => exec('formatBlock', `<${block.value}>`))
-  bar.appendChild(block)
+  // a ¶ the menu lies over, see-through, for a phone's round buttons (Alex, 15 Oct: "Paragraph" was cut);
+  // elsewhere the wrapper takes no room (display: contents) and the ¶ is not shown
+  const blockWrap = el('span', 'xd-block-wrap')
+  blockWrap.appendChild(el('span', 'xd-block-ico', '¶'))
+  blockWrap.appendChild(block)
+  bar.appendChild(blockWrap)
   sep()
   const bB = btn('B', 'Bold (Ctrl/Cmd+B)', () => exec('bold'), 'xs-b')
   const bI = btn('I', 'Italic (Ctrl/Cmd+I)', () => exec('italic'), 'xs-i')
