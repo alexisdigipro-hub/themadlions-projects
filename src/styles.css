@@ -6855,6 +6855,8 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 6px 18px rgba(0, 0, 0, .2);
     font: inherit; font-size: 19px; line-height: 1; cursor: pointer;
   }
-  html[data-theme] body .calendar .cal-round.cal-add { color: var(--accent); font-size: 24px; font-weight: 400; }
+  html[data-theme] body .calendar .cal-round.cal-add { font-size: 24px; font-weight: 400; }
+  /* the no-entry sign drawn in a line like the +, in the same accent, no emoji colours (Alex, 15 Oct) */
+  html[data-theme] body .calendar .cal-round { color: var(--accent); }
   html[data-theme] body .calendar .cal-round:active { transform: scale(.95); }
 }

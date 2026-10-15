@@ -516,10 +516,10 @@ export default function CalendarView({ projectId = null, title }) {
               Add event
             </Button>
           )}
-          {/* on a phone one line (Alex, 15 Oct): the type menu, then Not available as a round 🚫 and Add
+          {/* on a phone one line (Alex, 15 Oct): the type menu, then Not available as a round no-entry sign and Add
               event as a round +, like the Database's buttons */}
           {canMarkOff && (mobile ? (
-            <button type="button" className="cal-round" aria-label="Not available" title="Not available" onClick={() => setDraft(newEvent(today(), 'unavailable'))}>🚫</button>
+            <button type="button" className="cal-round" aria-label="Not available" title="Not available" onClick={() => setDraft(newEvent(today(), 'unavailable'))}><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="m6 6 12 12" /></svg></button>
           ) : (
             <Button onClick={() => setDraft(newEvent(today(), 'unavailable'))}>
               Not available
