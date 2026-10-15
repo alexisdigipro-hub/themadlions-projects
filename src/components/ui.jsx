@@ -251,7 +251,9 @@ export function Modal({ open, title, onClose, children, footer, wide, className 
   // under the top bar and the tab bar, so its × and its Save could not be reached
   return createPortal(
     <div ref={self} className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
-      <div className={`modal ${wide ? 'modal-wide' : ''} ${className}`} role="dialog" aria-modal="true" aria-label={title}>
+      {/* sheet-card: on a phone every window is the popping card that fills the room there is, scrolls
+          inside and keeps its × and its buttons in reach (Alex, 15 Oct: "all that had the old frame") */}
+      <div className={`modal sheet-card ${wide ? 'modal-wide' : ''} ${className}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-head">
           <h2>{title}</h2>
           <button className="icon-btn" onClick={onClose} aria-label="Close">
