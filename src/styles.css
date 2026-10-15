@@ -6980,3 +6980,7 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
   background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--text) 28%, transparent) 18%, color-mix(in srgb, var(--accent) 45%, transparent) 50%, color-mix(in srgb, var(--text) 28%, transparent) 82%, transparent);
   box-shadow: 0 1px 10px color-mix(in srgb, var(--accent) 30%, transparent);
 }
+
+/* A note's title, its first line, sits in the middle (Alex, 15 Oct); the align buttons still move it: they
+   write the alignment on the line itself, which wins over this */
+.notes-doc .xd-page > :is(h1, h2, h3, p):first-child { text-align: center; }

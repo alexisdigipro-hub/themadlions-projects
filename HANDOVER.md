@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (13 Oct 2026)
+- 15 Oct: **a note's title is centred by default** (Alex); the align buttons override it (execCommand writes text-align on the line, which beats the stylesheet). Notes only, not Office documents.
 - 15 Oct: **every window is the popping card on a phone** (Alex: "New project and everything that had the old frame that got hidden"): the shared Modal (components/ui.jsx) always carries `sheet-card`, so on a phone each one pops in, fills the visible screen down to the keyboard's bar, scrolls inside and keeps × and its buttons in reach. The per-window `sheet-card` props (TaskModal, CalendarView) are now redundant but harmless. Computer untouched.
 - 15 Oct: **the Calendar's event window is the same popping card on a phone** (Alex): CalendarView's Modal has `className="sheet-card"` (fills the visible screen, scrolls inside, round glass controls). Computer untouched (the class only acts under 820px).
 - 15 Oct: **Notes editor checked and fixed** (Alex: "bullets do strange things, the text goes elsewhere"; "make every function in notes professional"; "set the title apart from the text with a soft glassy line"). lib/office/docView.js (shared with Office documents):
