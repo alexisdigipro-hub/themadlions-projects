@@ -436,6 +436,11 @@ export function StoreProvider({ children }) {
     setState(next)
   }, [])
 
+  /* Load everything once per sign-in. Supabase hands over a new user object every time it renews
+     the login (each hour, and whenever the window comes back into view); keyed on the object, the
+     whole workspace (projects, library, chat, about 3.5 MB) was downloaded again each time, on every
+     open device, which used up the free plan's monthly traffic (16 Oct). Keyed on who it is instead. */
+  const authKey = authUser === undefined ? '' : authUser === null ? 'out' : authUser.id
   useEffect(() => {
     if (!remote) return
     if (authUser === null) {
@@ -471,7 +476,8 @@ export function StoreProvider({ children }) {
     return () => {
       cancelled = true
     }
-  }, [authUser, loadAll, bootTick])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authKey, loadAll, bootTick])
 
   /* Who has the app open right now (Alex, 11 Oct), through Supabase Realtime Presence, nothing stored:
      every open app joins one presence channel for the workspace and says 'online' while it is looked
@@ -665,7 +671,7 @@ export function StoreProvider({ children }) {
     return () => {
       supabase.removeChannel(ch)
     }
-  }, [membership, authUser])
+  }, [membership, authKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /* remote mode: write what changed, debounced per row */
   const schedule = (key, fn, delay = 700) => {
