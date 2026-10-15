@@ -7297,19 +7297,14 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
   html[data-theme] body :is(.home-toolbar, .home-actions) .act.act-main svg { color: var(--accent); }
 }
 
-/* The chat on a computer in the Organizer's glass (Alex, 15 Oct: "the chat kicks against the rest"): the
+/* The chat in the Organizer's glass (Alex, 15 Oct: "the chat kicks against the rest", then "the same on the phone"): the
    list a glass panel, the chosen conversation a soft glass tile instead of a solid colour, rows as rounded
    tiles without rules, the search, Edit and + as the hub's 44px glass pills, the folders and the foot tabs
    muted with the chosen one in glass, and in the conversation the head, its round buttons and the
    message box in the same glass. The default and Glass dark chat colours only; Coral keeps its own. */
-@media (min-width: 821px) {
+@media all {
   html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) {
     --tml-glass: color-mix(in srgb, var(--text) 6%, transparent);
-  }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui {
-    background: var(--gl-fill, color-mix(in srgb, var(--panel) 70%, transparent)); border: 1px solid var(--gl-edge, var(--line-soft));
-    -webkit-backdrop-filter: blur(22px) saturate(160%); backdrop-filter: blur(22px) saturate(160%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 8px 26px rgba(0, 0, 0, .22);
   }
   html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-list-head.tg-head h1 { font-size: 17px; }
   html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .tg-pill {
@@ -7352,4 +7347,12 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
   html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-compose textarea { min-height: 44px; border-radius: 22px; }
   html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-compose :is(.chat-attach, .chat-send) { width: 44px; height: 44px; color: var(--text); }
   html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-compose .chat-send.ready { color: var(--accent-ink, #fff); }
+}
+/* the list as a glass panel on a computer; on a phone it fills the screen edge to edge */
+@media (min-width: 821px) {
+  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui {
+    background: var(--gl-fill, color-mix(in srgb, var(--panel) 70%, transparent)); border: 1px solid var(--gl-edge, var(--line-soft));
+    -webkit-backdrop-filter: blur(22px) saturate(160%); backdrop-filter: blur(22px) saturate(160%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 8px 26px rgba(0, 0, 0, .22);
+  }
 }
