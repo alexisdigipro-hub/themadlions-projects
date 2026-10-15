@@ -673,8 +673,10 @@ export default function CalendarView({ projectId = null, title }) {
 
       </div>
 
+      {/* on a phone the same popping card as a task's or a note's, filling the room there is (Alex, 15 Oct) */}
       <Modal
         open={!!draft}
+        className="sheet-card"
         title={draft?.isNew ? 'New event' : 'Event'}
         onClose={() => setDraft(null)}
         footer={

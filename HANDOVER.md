@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (13 Oct 2026)
+- 15 Oct: **the Calendar's event window is the same popping card on a phone** (Alex): CalendarView's Modal has `className="sheet-card"` (fills the visible screen, scrolls inside, round glass controls). Computer untouched (the class only acts under 820px).
 - 15 Oct: **Notes editor checked and fixed** (Alex: "bullets do strange things, the text goes elsewhere"; "make every function in notes professional"; "set the title apart from the text with a soft glassy line"). lib/office/docView.js (shared with Office documents):
   - the cursor is kept as it moves (`keep` on selectionchange, on the ¶ menu's pointerdown) and put back before every command (`restore`): on the iPhone a tap on a toolbar button or the menu took the focus off the page and `page.focus()` put the cursor at the start, so a list landed on the first line;
   - bullets / numbers on a title, heading or quote first turn that line into a paragraph (`listCmd`), and `tidy()` also takes lists out of headings and quotes (the browser nested `<ul>` inside `<h1>`);
