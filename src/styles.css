@@ -6945,7 +6945,13 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
   html body .modal.sheet-card .notes-note-head .notes-move { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* the writing bar: clear, the buttons circles */
   html body .modal.sheet-card .notes-doc .xd-bar { gap: 6px; padding: 8px 10px; background: transparent; border-top: 1px solid color-mix(in srgb, var(--text) 9%, transparent); }
-  html body .modal.sheet-card .notes-doc .xd-bar :is(.xs-btn, .xs-fmt) {
+  html body .modal.sheet-card .notes-doc .xd-bar .xd-block-wrap {
+    position: relative; flex: none; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; color: var(--text);
+    background: color-mix(in srgb, var(--text) 7%, transparent); border: 1px solid color-mix(in srgb, var(--text) 13%, transparent);
+  }
+  html body .modal.sheet-card .notes-doc .xd-bar .xd-block-ico { display: block; font-size: 18px; font-weight: 700; line-height: 1; pointer-events: none; }
+  html body .modal.sheet-card .notes-doc .xd-bar .xd-block-wrap > select.xd-block { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; margin: 0; padding: 0; opacity: 0; font-size: 16px; border-radius: 50%; }
+  html body .modal.sheet-card .notes-doc .xd-bar :is(.xs-btn, .xs-fmt:not(.xd-block)) {
     flex: none; width: 36px; height: 36px; min-width: 36px; padding: 0; display: grid; place-items: center;
     border-radius: 50%; color: var(--text);
     background: color-mix(in srgb, var(--text) 7%, transparent); border: 1px solid color-mix(in srgb, var(--text) 13%, transparent);
@@ -6958,3 +6964,7 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
     background-color: color-mix(in srgb, var(--text) 5%, transparent);
   }
 }
+
+/* the editor's ¶ (docView.js) shows only in the phone's note card; elsewhere its wrapper is invisible */
+.xd-block-wrap { display: contents; }
+.xd-block-ico { display: none; }
