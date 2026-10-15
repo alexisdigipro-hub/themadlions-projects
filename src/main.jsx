@@ -107,6 +107,24 @@ try {
   }
 } catch {}
 
+// The part of the screen you can see right now (Alex, 15 Oct: a task's or a note's window should fill
+// all the room there is, down to the keyboard's bar while typing): --vvh its height, --vvt how far it
+// has scrolled down, and html.kb-up while the on-screen keyboard takes the foot of the screen.
+try {
+  const vv = window.visualViewport
+  if (vv) {
+    const root = document.documentElement
+    const set = () => {
+      root.style.setProperty('--vvh', `${Math.round(vv.height)}px`)
+      root.style.setProperty('--vvt', `${Math.round(vv.offsetTop)}px`)
+      root.classList.toggle('kb-up', window.innerHeight - vv.height > 120)
+    }
+    set()
+    vv.addEventListener('resize', set)
+    vv.addEventListener('scroll', set)
+  }
+} catch {}
+
 installGlassTabs()
 installPullToRefresh()
 
