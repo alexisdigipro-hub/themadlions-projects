@@ -14,6 +14,9 @@ Alex Konstantinidis, film director, owner of The Mad Lions (Athens). He is not a
 - **Chat window**: the chat opened in its own window on a computer (the + menu's pop-out), laid out like TML Chat.
 - **Chat colours**: Settings > Chat (Glass dark, Coral, Neo red…), separate from the hub's own skin.
 
+## Not the hub's
+The Supabase tables `roar_*`, functions `roar_*` and buckets `roar-files` / `roar-avatars` belong to RoarMe (repository alexisdigipro-hub/roarme), parked in this project until it gets its own. Never change or drop them from here.
+
 ## Commands
 - `npm ci` then `npm run build` must pass before every commit.
 - Local-storage build for tests (no Supabase needed): `VITE_LOCAL_MODE=1 npx vite build --outDir dist-local`, then `npx vite preview --outDir dist-local`. Drive it with Playwright: create workspace, add a sample project, click through the changed screens on desktop and at 390px wide.
