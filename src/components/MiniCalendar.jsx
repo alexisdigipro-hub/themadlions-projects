@@ -78,13 +78,16 @@ export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLab
       <div className="mini-cal-list">
         <div className="mini-cal-sel">
           <span>{selIsToday ? (large ? `Today · ${fmtDate(sel, { weekday: 'short', day: 'numeric', month: 'short' })}` : 'Today') : fmtDate(sel, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-          {/* on the phone's Calendar a glass pill button like the rest (Alex, 15 Oct), elsewhere a link */}
-          {onAddDay && (large
-            ? <button type="button" className="btn btn-primary btn-sm mc-add" onClick={() => onAddDay(sel)}><span aria-hidden="true">＋</span> {addLabel}</button>
-            : <button className="link small" onClick={() => onAddDay(sel)}>{addLabel}</button>)}
+          {/* on the phone's Calendar Add event is a soft glass pill under the day's events (below) */}
+          {onAddDay && !large && <button className="link small" onClick={() => onAddDay(sel)}>{addLabel}</button>}
         </div>
         {large ? (
-          !dayItems.length ? <p className="muted small mc-none">Nothing on this day.</p> : <ul className="plain mc-evs">{dayItems.map(row)}</ul>
+          <>
+            {!dayItems.length ? <p className="muted small mc-none">Nothing on this day.</p> : <ul className="plain mc-evs">{dayItems.map(row)}</ul>}
+            {/* the picked day in the middle, its events, then Add event centred under them, a quiet glass
+                pill (Alex, 15 Oct: "lower, centred, fainter, more glassy") */}
+            {onAddDay && <button type="button" className="mc-add" onClick={() => onAddDay(sel)}><span aria-hidden="true">＋</span> {addLabel}</button>}
+          </>
         ) : !dayItems.length ? <p className="muted small">Nothing on this day.</p> : (
           <ul className="plain">
             {dayItems.map((it, i) => (
