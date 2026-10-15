@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import ScreenInfo from '../components/ScreenInfo.jsx'
-import { Button, Confirm, Field, Input, PageHead, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Field, Input, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { CATEGORIES, DEFAULT_DEPARTMENTS, DEFAULT_GEAR_CATS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, eventTypesOf, FIXED_EVENT_TYPES, gearCategoriesOf, sampleProject, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { projectProgress } from '../lib/progress.js'
 import { expenseCats } from '../lib/finance.js'
@@ -140,12 +140,20 @@ export default function Settings() {
 
   return (
     <>
-      <PageHead title="Settings" />
-      {/* on a phone the tabs are chips like Home's categories, one line each, sliding sideways, with the
-          same glass lens moving between them (Alex, 10 Oct); a computer keeps the underlined tabs */}
-      <nav className={mobile ? 'chips settings-chips' : 'tabs settings-tabs'}>
-        {TABS.map(([k, l]) => <button key={k} className={mobile ? `chip${tab === k ? ' on' : ''}` : tab === k ? 'active' : ''} onClick={(e) => { if (tab !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setTab(k) }}>{l}</button>)}
-      </nav>
+      {/* no page title (Alex, 15 Oct: more room). On a phone the tabs are chips like Home's categories, one
+          line each, sliding sideways, with the same glass lens moving between them (Alex, 10 Oct); on a
+          computer the Organizer's glass capsule (Alex, 15 Oct) */}
+      {mobile ? (
+        <nav className="chips settings-chips">
+          {TABS.map(([k, l]) => <button key={k} className={`chip${tab === k ? ' on' : ''}`} onClick={(e) => { if (tab !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setTab(k) }}>{l}</button>)}
+        </nav>
+      ) : (
+        <div className="db-top set-top">
+          <nav className="tabs db-tabs">
+            {TABS.map(([k, l]) => <button key={k} type="button" className={tab === k ? 'active' : ''} onClick={(e) => { if (tab !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setTab(k) }}>{l}</button>)}
+          </nav>
+        </div>
+      )}
       {/* the panel slides over when another tab is picked (lib/glide.js); nothing is keyed, so nothing remounts */}
       <div className="glide-box" ref={boxRef}>
       <div className={inClass}>
