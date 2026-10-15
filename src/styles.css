@@ -7168,22 +7168,39 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
   html[data-theme] body .deliveries .deliv-people { grid-column: 1; }
   html[data-theme] body .deliveries .deliv-person-tools { display: flex; gap: 6px; }
 
-  /* Half the height (Alex, 15 Oct): the kind and the title share the first line, the date and the
-     opened tag the second, then the round buttons, a little smaller. */
-  html[data-theme] body .deliveries .deliv-list li.deliv-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0 8px; padding: 11px 12px; }
-  html[data-theme] body .deliveries .deliv-list li.deliv-row::before { content: ''; order: 3; flex: 0 0 100%; height: 0; }
+  /* Two lines a tile (Alex, 15 Oct: "lower, at least 50%", then "cut more"): the kind and the title on
+     the first, the date with the opened tag under it on the left of the second and the round buttons
+     on its right. */
+  html[data-theme] body .deliveries .deliv-list li.deliv-row {
+    display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0 8px; padding: 10px 10px 10px 12px;
+    grid-template-areas: "stage title title" "date date tools" "tags tags tools" "quote quote quote" "people people people";
+  }
   html[data-theme] body .deliveries .deliv-row .grow { display: contents; }
-  html[data-theme] body .deliveries .deliv-row .deliv-stage { order: 1; flex: none; font-size: 10px; padding: 3px 7px; }
-  html[data-theme] body .deliveries .deliv-row .grow > strong { order: 2; flex: 1 1 0; min-width: 0; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  html[data-theme] body .deliveries .deliv-row .grow > .small { order: 4; flex: none; margin: 4px 0 0; font-size: 13px; }
-  html[data-theme] body .deliveries .deliv-row .grow > .deliv-tags { order: 5; flex: 0 1 auto; margin: 4px 0 0; gap: 4px; }
-  html[data-theme] body .deliveries .deliv-row .deliv-tag { font-size: 11px; padding: 0 8px; }
-  html[data-theme] body .deliveries .deliv-row .deliv-quote { order: 6; flex: 1 1 100%; margin: 6px 0 0; }
-  html[data-theme] body .deliveries .deliv-row > .deliv-tools { order: 7; flex: 1 1 100%; margin-top: 10px; gap: 6px; }
-  html[data-theme] body .deliveries .deliv-row > .deliv-people { order: 8; flex: 1 1 100%; margin-top: 8px; }
-  html[data-theme] body .deliveries .deliv-row .deliv-tool { width: 34px; height: 34px; }
-  html[data-theme] body .deliveries .deliv-row .deliv-tool svg { width: 16px; height: 16px; }
-  html[data-theme] body .deliveries .deliv-row .deliv-tools .deliv-tool-x.btn-danger { width: auto; }
+  html[data-theme] body .deliveries .deliv-row .deliv-stage { grid-area: stage; font-size: 10px; padding: 2px 7px; }
+  html[data-theme] body .deliveries .deliv-row .grow > strong { grid-area: title; min-width: 0; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html[data-theme] body .deliveries .deliv-row .grow > .small { grid-area: date; align-self: end; margin: 7px 0 0; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  html[data-theme] body .deliveries .deliv-row .grow > .deliv-tags { grid-area: tags; align-self: start; margin: 3px 0 0; gap: 4px; }
+  html[data-theme] body .deliveries .deliv-row .deliv-tag { font-size: 10.5px; line-height: 1.6; padding: 0 7px; }
+  html[data-theme] body .deliveries .deliv-row .deliv-quote { grid-area: quote; margin: 6px 0 0; font-size: 13px; }
+  html[data-theme] body .deliveries .deliv-row > .deliv-tools { grid-area: tools; margin: 7px 0 0; gap: 5px; }
+  html[data-theme] body .deliveries .deliv-row > .deliv-people { grid-area: people; margin-top: 8px; }
+  html[data-theme] body .deliveries .deliv-row .deliv-tool { width: 32px; height: 32px; }
+  html[data-theme] body .deliveries .deliv-row .deliv-tool svg { width: 15px; height: 15px; }
+  html[data-theme] body .deliveries .deliv-row .deliv-tools .deliv-tool-x { margin-left: 3px; }
+  /* five or more buttons (a delivery: copy, email, open, update, close, delete) do not fit beside the
+     date: they get their own line, Delete still apart at the right */
+  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) { display: flex; flex-wrap: wrap; align-items: center; }
+  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5))::before { content: ''; order: 3; flex: 0 0 100%; height: 0; }
+  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) .deliv-stage { order: 1; flex: none; }
+  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) .grow > strong { order: 2; flex: 1 1 0; }
+  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) .grow > .small { order: 4; flex: none; margin: 5px 0 0; }
+  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) .grow > .deliv-tags { order: 5; flex: 0 1 auto; margin: 5px 0 0; }
+  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) .deliv-quote { order: 6; flex: 1 1 100%; }
+  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) > .deliv-tools { order: 7; flex: 1 1 100%; margin-top: 8px; }
+  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) > .deliv-people { order: 8; flex: 1 1 100%; }
+  html[data-theme] body .deliveries .deliv-list li.deliv-row:has(> .deliv-tools > :nth-child(5)) .deliv-tool-x { margin-left: auto; }
+  html[data-theme] body .deliveries .deliv-row .grow > .deliv-tags { min-width: 0; }
+  html[data-theme] body .deliveries .deliv-row .deliv-tools .deliv-tool-x.btn-danger { width: auto; padding: 0 12px; }
 }
 
 /* A page's action (components/ui.jsx Act): on a computer the icon and its word in a glass pill, on a phone a
