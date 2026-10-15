@@ -132,7 +132,7 @@ function ShareNote({ note, onClose, onChange }) {
   )
 }
 
-/* On a phone the note's buttons are line drawings in round glass buttons, like the rest (Alex, 15 Oct) */
+/* The note's buttons are line drawings in round glass buttons, like the rest (Alex, 15 Oct: on a phone, then on a computer too) */
 const lineSvg = (d) => <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
 const LINE_ICON = {
   share: lineSvg(<><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="m8.2 10.8 7.6-4.5M8.2 13.2l7.6 4.5" /></>),
@@ -492,9 +492,9 @@ export default function Notes({ slot = null }) {
               <option value={NONE}>No folder</option>
               {folders.map((f) => <option key={f.id} value={f.id}>{f.title}</option>)}
             </select>
-            <button type="button" className={`rem-head-btn ${open.sharedWith?.length || open.link ? 'on' : ''}`} onClick={() => setSharing(open)} title="Share with people or by a link" aria-label="Share">{mobile ? LINE_ICON.share : '👥 Share'}</button>
-            <button type="button" className={`rem-head-btn ${open.pinned ? 'on' : ''}`} onClick={() => patch(open.id, { pinned: !open.pinned })} title={open.pinned ? 'Unpin' : 'Pin'} aria-label={open.pinned ? 'Unpin' : 'Pin'}>{mobile ? LINE_ICON.pin : '📌'}</button>
-            <button type="button" className="rem-head-btn" onClick={() => remove(open)} title="Delete" aria-label="Delete">{mobile ? LINE_ICON.trash : '🗑'}</button>
+            <button type="button" className={`rem-head-btn ${open.sharedWith?.length || open.link ? 'on' : ''}`} onClick={() => setSharing(open)} title="Share with people or by a link" aria-label="Share">{LINE_ICON.share}</button>
+            <button type="button" className={`rem-head-btn ${open.pinned ? 'on' : ''}`} onClick={() => patch(open.id, { pinned: !open.pinned })} title={open.pinned ? 'Unpin' : 'Pin'} aria-label={open.pinned ? 'Unpin' : 'Pin'}>{LINE_ICON.pin}</button>
+            <button type="button" className="rem-head-btn" onClick={() => remove(open)} title="Delete" aria-label="Delete">{LINE_ICON.trash}</button>
           </>
         )}
       </div>
