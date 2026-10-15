@@ -6881,14 +6881,17 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
    its head and foot stay put and only its middle scrolls. TaskModal and Notes.jsx add .sheet-card. */
 @media (max-width: 820px) {
   html body .modal-backdrop:has(> .modal.sheet-card) {
-    display: flex; align-items: center; justify-content: center;
-    padding: calc(env(safe-area-inset-top) + 14px) 12px calc(env(safe-area-inset-bottom) + 14px);
+    display: flex; align-items: stretch; justify-content: center;
+    /* the part of the screen you can see (--vvh / --vvt, main.jsx), so the card fills it and with the
+       keyboard up stops right above its bar (Alex, 15 Oct: "use all the empty room there is") */
+    top: var(--vvt, 0px); bottom: auto; height: var(--vvh, 100dvh);
+    padding: calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 12px);
     background: rgba(4, 7, 12, .5);
     -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
     overflow: hidden; animation: sheet-dim .25s ease-out;
   }
   html body .modal-backdrop > .modal.sheet-card.sheet-card {
-    width: 100%; max-width: none; height: auto; max-height: 100%; margin: 0;
+    width: 100%; max-width: none; height: 100%; max-height: 100%; margin: 0;
     display: flex; flex-direction: column; overflow: hidden;
     border-radius: 28px; border: 1px solid var(--gl-edge, var(--line-soft));
     background: linear-gradient(165deg, color-mix(in srgb, var(--panel) 96%, #3a5a9a) 0%, var(--panel) 55%, color-mix(in srgb, var(--panel) 94%, #1d6a70) 100%);
@@ -6904,6 +6907,8 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
   html body .modal.sheet-card.note-sheet .notes-note-head { flex: none; padding: 12px 14px 8px; }
   html body .modal.sheet-card.note-sheet .notes-sheet { flex: 1 1 auto; min-height: 0; margin: 0 10px 10px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 }
+/* with the keyboard up the foot of the screen is the keyboard's bar, so only a small gap above it */
+@media (max-width: 820px) { html.kb-up body .modal-backdrop:has(> .modal.sheet-card) { padding-bottom: 8px; } }
 @keyframes sheet-in { from { opacity: 0; transform: translateY(28px) scale(.93); } to { opacity: 1; transform: none; } }
 @keyframes sheet-dim { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { html body .modal-backdrop > .modal.sheet-card.sheet-card, html body .modal-backdrop:has(> .modal.sheet-card) { animation: none; } }
