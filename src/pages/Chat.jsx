@@ -806,6 +806,11 @@ function RoomList({ activeId, windowed }) {
     )
   )
 
+  const searchBox = <div className="chat-search"><input ref={searchRef} className="input" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') { setQ(''); e.currentTarget.blur() } }} placeholder={mobile ? 'Search' : 'Search (⌘K)'} name="chat-search" autoComplete="off" /></div>
+  // in the app on a phone the search sits on the head's line with Edit, the bell and +, like the
+  // Organizer's search and round buttons (Alex, 15 Oct); the app's own top bar already says THEMADLIONS
+  const inlineSearch = mobile && !windowed && !picking && tab === 'chats'
+
   return (
     // TML Chat's list on a phone, everywhere the chat is (Alex, 9 Oct): the app's chat on a phone and
     // on a computer, and the chat window, get the same head, Edit, + menu, slim search and folders dock
@@ -815,6 +820,7 @@ function RoomList({ activeId, windowed }) {
         <span className="tg-pill tg-pill-left">
           <button type="button" className="tg-edit" onClick={() => { setPlus(false); picking ? endPick() : setPicking(true) }}>{picking ? 'Done' : 'Edit'}</button>
         </span>
+        {inlineSearch && searchBox}
         {/* the company's name, MAD set heavier (Alex, 9 Oct); while picking, how many are picked */}
         <h1>{picking ? (picked.length ? `${picked.length} selected` : 'Select chats') : <span className="tg-brand">THE<b>MAD</b>LIONS</span>}</h1>
         {picking ? (
@@ -847,7 +853,7 @@ function RoomList({ activeId, windowed }) {
       ) : tab === 'calls' ? <CallsPanel /> : null) : (<>
       {legacy && <p className="chat-legacy">Rooms are not switched on yet: run supabase/chat_rooms.sql in the SQL editor. Until then only the team room works.</p>}
       {mobile && !windowed && installCard > 0 && <InstallHint key={installCard} />}
-      <div className="chat-search"><input ref={searchRef} className="input" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') { setQ(''); e.currentTarget.blur() } }} placeholder={mobile ? 'Search' : 'Search (⌘K)'} name="chat-search" autoComplete="off" /></div>
+      {!inlineSearch && searchBox}
       <div ref={roomsRef} key={folder.id} className={`chat-rooms${slide ? ` in-${slide}` : ''}`} onAnimationEnd={() => setSlide('')}>
         {!shown.length && !hits.length && <p className="muted small chat-rooms-empty">{q.trim() ? 'Nothing found.' : folder.custom ? 'This folder is empty. Add conversations to it under Folders.' : 'Nothing here yet.'}</p>}
         {shown.map((r) => {
