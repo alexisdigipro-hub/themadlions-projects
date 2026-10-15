@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
 import { deliveryUrl, estimateUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, shotlistUrl, tokenOf, deckUrl } from '../lib/shares.js'
 import { amount, estimateTotals } from '../lib/estimate.js'
@@ -40,6 +40,21 @@ const emptyEstimate = () => ({
   recipients: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '', pin: '',
 })
 
+/* The link tools as line icons (Alex, 15 Oct: the Share page put in order): round glass buttons on a phone,
+   icon and word on a computer */
+const ico = (d) => <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
+const ICO = {
+  link: ico(<><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></>),
+  mail: ico(<><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m4 7 8 6 8-6" /></>),
+  open: ico(<><path d="M14 4h6v6M20 4l-9 9" /><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" /></>),
+  edit: ico(<><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="m13.5 6.5 4 4" /></>),
+  lock: ico(<><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></>),
+  unlock: ico(<><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 7.5-2" /></>),
+  trash: ico(<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />),
+  plus: ico(<path d="M12 5v14M5 12h14" />),
+}
+const tool = (icon, text) => <>{icon}<span className="dt-t">{text}</span></>
+
 export default function Deliveries() {
   const { state } = useStore()
   const user = useCurrentUser()
@@ -54,6 +69,8 @@ export default function Deliveries() {
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
   const [filter, setFilter] = useState('all') // Alex: open on Everything, not just Deliveries
+  const mobile = useIsMobile()
+  const [addMenu, setAddMenu] = useState(false) // the phone's + : New delivery / New cost estimation
   const { boxRef, slideTo, inClass } = useSlide()
   const [edraft, setEdraft] = useState(null)
 
@@ -348,23 +365,48 @@ export default function Deliveries() {
 
   return (
     <div className="deliveries">
-      <PageHead title="Share" sub="Every link you have sent out of the building, and what happened to it">
-        {editable && isAdmin && <Button variant="ghost" onClick={startEstimate}>New cost estimation</Button>}
-        {editable && <Button variant="primary" onClick={startNew}>New delivery</Button>}
-      </PageHead>
+      {/* on a phone (Alex, 15 Oct): no title, the filters as a glass capsule and a round + on one line;
+          the + offers New delivery and, for administrators, New cost estimation */}
+      {!mobile && (
+        <PageHead title="Share" sub="Every link you have sent out of the building, and what happened to it">
+          {editable && isAdmin && <Button variant="ghost" onClick={startEstimate}>New cost estimation</Button>}
+          {editable && <Button variant="primary" onClick={startNew}>New delivery</Button>}
+        </PageHead>
+      )}
+      {mobile && (
+        <div className="share-top">
+          <div className="share-tabs">
+            {tabs.map(([k, label]) => (
+              <button key={k} type="button" className={shown === k ? 'on' : ''} onClick={(e) => { if (shown !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setFilter(k) }}>
+                {({ 'Call sheets': 'Sheets', Everything: 'All' })[label] || label}<small>{counts[k]}</small>
+              </button>
+            ))}
+          </div>
+          {editable && <button type="button" className="share-add" aria-label="New" title="New" onClick={() => (isAdmin ? setAddMenu((v) => !v) : startNew())}>{ICO.plus}</button>}
+          {addMenu && (
+            <>
+              <button type="button" className="share-scrim" aria-label="Close" onClick={() => setAddMenu(false)} />
+              <div className="share-menu">
+                <button type="button" onClick={() => { setAddMenu(false); startNew() }}>New delivery</button>
+                <button type="button" onClick={() => { setAddMenu(false); startEstimate() }}>New cost estimation</button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {error && <p className="muted small">{error}</p>}
       {noReplies && <p className="muted small">Run <b>supabase/deliveries.sql</b> in Supabase to collect the clients' answers.</p>}
       {noTracking && <p className="muted small">Run <b>supabase/share_track.sql</b> in Supabase to see whether a link was opened, and to close one.</p>}
 
-      <div className="chips">
+      {!mobile && <div className="chips">
         {tabs.map(([k, label]) => (
           <button key={k} className={`chip ${shown === k ? 'on' : ''}`} onClick={(e) => { if (shown !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setFilter(k) }}>
             {label}
             <small>{counts[k]}</small>
           </button>
         ))}
-      </div>
+      </div>}
 
       {/* the list slides over when another filter is picked (lib/glide.js) */}
       <div className="glide-box" ref={boxRef}>
@@ -411,15 +453,15 @@ export default function Deliveries() {
 
                 </div>
                 <div className="deliv-tools">
-                  {one && <button className="deliv-tool" onClick={() => copy(r.url, 'Link')}>Copy link</button>}
-                  {one && r.isDelivery && <button className="deliv-tool" onClick={() => copy(mailText(r), 'Message')}>Copy for email</button>}
-                  {one && <a className="deliv-tool" href={r.url} target="_blank" rel="noreferrer">Open</a>}
-                  {editable && r.isDelivery && singleTarget && <button className="deliv-tool" onClick={() => openDelivery(r)}>Update</button>}
-                  {editable && isAdmin && r.isEstimate && singleTarget && <button className="deliv-tool" onClick={() => openEstimate(r)}>Update</button>}
+                  {one && <button className="deliv-tool" title="Copy link" aria-label="Copy link" onClick={() => copy(r.url, 'Link')}>{tool(ICO.link, 'Copy link')}</button>}
+                  {one && r.isDelivery && <button className="deliv-tool" title="Copy for email" aria-label="Copy for email" onClick={() => copy(mailText(r), 'Message')}>{tool(ICO.mail, 'Copy for email')}</button>}
+                  {one && <a className="deliv-tool" href={r.url} target="_blank" rel="noreferrer" title="Open" aria-label="Open">{tool(ICO.open, 'Open')}</a>}
+                  {editable && r.isDelivery && singleTarget && <button className="deliv-tool" title="Update" aria-label="Update" onClick={() => openDelivery(r)}>{tool(ICO.edit, 'Update')}</button>}
+                  {editable && isAdmin && r.isEstimate && singleTarget && <button className="deliv-tool" title="Update" aria-label="Update" onClick={() => openEstimate(r)}>{tool(ICO.edit, 'Update')}</button>}
                   {editable && r.opens !== undefined && (
-                    <button className="deliv-tool" onClick={() => setShut(g.key, !g.shut)}>{g.shut ? 'Reopen all' : one ? 'Close' : 'Close all'}</button>
+                    <button className="deliv-tool" title={g.shut ? 'Reopen' : 'Close the link'} aria-label={g.shut ? 'Reopen' : 'Close the link'} onClick={() => setShut(g.key, !g.shut)}>{tool(g.shut ? ICO.unlock : ICO.lock, g.shut ? 'Reopen all' : one ? 'Close' : 'Close all')}</button>
                   )}
-                  {editable && <Confirm className="deliv-tool deliv-tool-x" onConfirm={async () => { await removeShare({ workspaceId: state.workspace.id, ref: g.key }); reload() }} label="Delete">Delete</Confirm>}
+                  {editable && <Confirm className="deliv-tool deliv-tool-x" onConfirm={async () => { await removeShare({ workspaceId: state.workspace.id, ref: g.key }); reload() }} label="Delete" title="Delete" aria-label="Delete">{tool(ICO.trash, 'Delete')}</Confirm>}
                 </div>
 
                 {/* One page per person: its own row under the two above, spanning across to the
@@ -438,10 +480,10 @@ export default function Deliveries() {
                             {a && <span className={`deliv-tag t-${a.status}`}>{RESPONSE[a.status] || 'Seen'}</span>}
                           </span>
                           <span className="deliv-person-tools">
-                            <button className="deliv-tool" onClick={() => copy(p.url, 'Link')}>Copy link</button>
-                            <a className="deliv-tool" href={p.url} target="_blank" rel="noreferrer">Open</a>
+                            <button className="deliv-tool" title="Copy link" aria-label="Copy link" onClick={() => copy(p.url, 'Link')}>{tool(ICO.link, 'Copy link')}</button>
+                            <a className="deliv-tool" href={p.url} target="_blank" rel="noreferrer" title="Open" aria-label="Open">{tool(ICO.open, 'Open')}</a>
                             {editable && p.opens !== undefined && (
-                              <button className="deliv-tool" onClick={() => setShut(p.ref, !p.shut, true)}>{p.shut ? 'Reopen' : 'Close'}</button>
+                              <button className="deliv-tool" title={p.shut ? 'Reopen' : 'Close'} aria-label={p.shut ? 'Reopen' : 'Close'} onClick={() => setShut(p.ref, !p.shut, true)}>{tool(p.shut ? ICO.unlock : ICO.lock, p.shut ? 'Reopen' : 'Close')}</button>
                             )}
                           </span>
                         </li>
