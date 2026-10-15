@@ -132,6 +132,14 @@ function ShareNote({ note, onClose, onChange }) {
   )
 }
 
+/* On a phone the note's buttons are line drawings in round glass buttons, like the rest (Alex, 15 Oct) */
+const lineSvg = (d) => <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
+const LINE_ICON = {
+  share: lineSvg(<><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="m8.2 10.8 7.6-4.5M8.2 13.2l7.6 4.5" /></>),
+  pin: lineSvg(<><path d="M9 4h6l-1 6 4 3H6l4-3z" /><path d="M12 13v7" /></>),
+  trash: lineSvg(<><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></>),
+}
+
 /* The editor, mounted once per note: the note's html goes in, every change comes out. */
 function Editor({ note, onChange }) {
   const host = useRef(null)
@@ -469,7 +477,7 @@ export default function Notes({ slot = null }) {
   const notePane = open && (
     <section className="rem-main notes-main" style={{ '--lc': NOTES_COLOR }}>
       <div className="rem-head notes-note-head">
-        <button type="button" className="rem-back" onClick={close}>‹ {folderName}</button>
+        <button type="button" className="rem-back" onClick={close} aria-label={`Back to ${folderName}`} title={folderName}>{mobile ? '‹' : `‹ ${folderName}`}</button>
         <span className="grow" />
         {!mine(open) ? (
           <span className="small muted notes-from">👥 From {authorOf(open)}</span>
@@ -484,9 +492,9 @@ export default function Notes({ slot = null }) {
               <option value={NONE}>No folder</option>
               {folders.map((f) => <option key={f.id} value={f.id}>{f.title}</option>)}
             </select>
-            <button type="button" className={`rem-head-btn ${open.sharedWith?.length || open.link ? 'on' : ''}`} onClick={() => setSharing(open)} title="Share with people or by a link">👥 Share</button>
-            <button type="button" className={`rem-head-btn ${open.pinned ? 'on' : ''}`} onClick={() => patch(open.id, { pinned: !open.pinned })} title={open.pinned ? 'Unpin' : 'Pin'}>📌</button>
-            <button type="button" className="rem-head-btn" onClick={() => remove(open)} title="Delete">🗑</button>
+            <button type="button" className={`rem-head-btn ${open.sharedWith?.length || open.link ? 'on' : ''}`} onClick={() => setSharing(open)} title="Share with people or by a link" aria-label="Share">{mobile ? LINE_ICON.share : '👥 Share'}</button>
+            <button type="button" className={`rem-head-btn ${open.pinned ? 'on' : ''}`} onClick={() => patch(open.id, { pinned: !open.pinned })} title={open.pinned ? 'Unpin' : 'Pin'} aria-label={open.pinned ? 'Unpin' : 'Pin'}>{mobile ? LINE_ICON.pin : '📌'}</button>
+            <button type="button" className="rem-head-btn" onClick={() => remove(open)} title="Delete" aria-label="Delete">{mobile ? LINE_ICON.trash : '🗑'}</button>
           </>
         )}
       </div>
