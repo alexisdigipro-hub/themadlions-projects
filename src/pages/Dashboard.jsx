@@ -206,13 +206,13 @@ export default function Dashboard() {
   const plain = (v) => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
   const needle = plain(q.trim())
   const searching = !!needle
+  // Delivered is a tab like the others (Alex, 15 Oct): it shows every delivered project, any category
+  const [showDelivered, setShowDelivered] = useState(false)
   const projects = visibleProjects(state, user)
-    .filter((p) => searching || filter === 'All' || p.category === filter)
+    .filter((p) => searching || showDelivered || filter === 'All' || p.category === filter)
     .filter((p) => !searching || [p.title, p.artist, p.shortTitle, p.client, p.code, p.category].some((v) => plain(v).includes(needle)))
     .sort((!mobile && SORTS[sort]) || SORTS.date)
-  // Delivered projects leave the main grid (Alex): a "Delivered" chip at the end of the category
-  // row, in the inverse colour of the others, shows them alone, grey until hovered.
-  const [showDelivered, setShowDelivered] = useState(false)
+  // Delivered projects leave the main grid (Alex): the Delivered tab shows them alone, greyed.
   const active = projects.filter((p) => p.status !== 'Delivered')
   const closed = projects.filter((p) => p.status === 'Delivered')
   // while searching, the live ones first and then the delivered ones, greyed as on their own chip
@@ -234,37 +234,27 @@ export default function Dashboard() {
     slideTimer.current = setTimeout(() => setSlide(''), 360)
   }
   const chipOf = (key) => chipsRef.current?.querySelector(`[data-chip="${CSS.escape(key)}"]`)
-  const pickFilter = (c) => {
-    if (c === filter) return
+  // one tab chosen at a time: All, Delivered or a category
+  const current = showDelivered ? 'Delivered' : filter
+  const pickTab = (c) => {
+    if (c === current) return
     if (!stillMotion()) {
       const order = [...(chipsRef.current?.querySelectorAll('[data-chip]') || [])]
-      const from = chipOf(filter)
+      const from = chipOf(current)
       const to = chipOf(c)
       slideTo(order.indexOf(to) > order.indexOf(from) ? 'next' : 'prev')
       glassTo(from, to, 'cat')
     }
-    setFilter(c)
-  }
-  const toggleDelivered = () => {
-    if (!stillMotion()) {
-      const cat = chipOf(filter)
-      const neg = chipOf('Delivered')
-      // the slide goes the way the chips lie: Delivered sits right after All, before the categories
-      const order = [...(chipsRef.current?.querySelectorAll('[data-chip]') || [])]
-      const negRight = order.indexOf(neg) > order.indexOf(cat)
-      slideTo(showDelivered === negRight ? 'prev' : 'next')
-      if (showDelivered) glassTo(neg, cat, 'cat')
-      else glassTo(cat, neg, 'neg')
-    }
-    setShowDelivered((v) => !v)
+    if (c === 'Delivered') setShowDelivered(true)
+    else { setShowDelivered(false); setFilter(c) }
   }
   const liveAll = state.projects.filter((p) => p.status !== 'Delivered')
   const chipFor = (c) => {
-    const n = (showDelivered ? state.projects.filter((p) => p.status === 'Delivered') : liveAll).filter((p) => c === 'All' || p.category === c).length
+    const n = liveAll.filter((p) => c === 'All' || p.category === c).length
     // On a phone only the categories that hold something (Alex, 8 Oct); the one picked stays
-    if (mobile && !n && c !== 'All' && c !== filter) return null
+    if (mobile && !n && c !== 'All' && c !== current) return null
     return (
-      <button key={c} data-chip={c} className={`chip ${filter === c ? 'on' : ''}`} onClick={() => pickFilter(c)}>
+      <button key={c} data-chip={c} className={`chip ${current === c ? 'on' : ''}`} onClick={() => pickTab(c)}>
         {c}
         {/* an empty category shows no 0 on a computer (Alex, 11 Oct: tidier row) */}
         {(n > 0 || mobile) && <small>{n}</small>}
@@ -418,7 +408,7 @@ export default function Dashboard() {
           {/* All, then Delivered, then the categories (Alex, 9 Oct) */}
           {chipFor('All')}
           {(!mobile || showDelivered || state.projects.some((p) => p.status === 'Delivered')) && (
-            <button data-chip="Delivered" className={`chip neg ${showDelivered ? 'on' : ''}`} onClick={toggleDelivered} aria-pressed={showDelivered} title="Delivered projects">
+            <button data-chip="Delivered" className={`chip ${showDelivered ? 'on' : ''}`} onClick={() => pickTab('Delivered')} title="Delivered projects">
               Delivered
               <small>{state.projects.filter((p) => p.status === 'Delivered').length}</small>
             </button>
@@ -429,7 +419,7 @@ export default function Dashboard() {
       </div>
 
       <div className="glide-box" ref={slideRef}>
-      <div key={`${filter}|${showDelivered}`} className={`glide-in${slide ? ` in-${slide}` : ''}`}>
+      <div key={current} className={`glide-in${slide ? ` in-${slide}` : ''}`}>
       {shown.length === 0 ? (
         <Empty
           title={searching ? 'Nothing matches' : showDelivered ? 'No delivered projects here' : state.projects.length ? 'Nothing matches' : 'No projects yet'}
