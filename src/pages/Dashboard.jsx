@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Badge, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
+import { Act, Badge, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { CATEGORIES, can, emptyProject, nextProjectCode, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
 import { projectProgress } from '../lib/progress.js'
@@ -367,9 +367,7 @@ export default function Dashboard() {
       )}
       <Input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} className="input search" />
       {canEdit && (
-        <Button variant={mobile ? 'primary' : 'default'} onClick={() => setDraft(freshProject())}>
-          New project
-        </Button>
+        <Act icon="plus" label="New project" main onClick={() => setDraft(freshProject())} />
       )}
     </div>
   )

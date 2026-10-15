@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Stat, Textarea, useToast } from '../components/ui.jsx'
+import { Act, Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Stat, Textarea, useToast } from '../components/ui.jsx'
 import { today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { DOCS, FREQ, METHODS, TX_STATUS, catsFor, duePeriods, emptyRecurring, emptyTx, expenseCats, financeCategoryUses, fiscalYearLabel, fiscalYearOf, generateFromRecurring, grossOf, incomeCats, matchTx, money, renameFinanceCategory, summarize, vatOf, ym } from '../lib/finance.js'
 import { download, fmtDate } from '../lib/dates.js'
@@ -298,8 +298,8 @@ export default function Finance({ start }) {
   return (
     <div className="finance">
       <PageHead title="Finance">
-        <Button variant="ghost" onClick={() => setDraft(emptyTx('income', { vatPct: fin.settings.vatDefault }))}>Add income</Button>
-        <Button variant="primary" onClick={() => setDraft(emptyTx('expense', { vatPct: fin.settings.vatDefault }))}>Add expense</Button>
+        <Act icon="income" label="Add income" onClick={() => setDraft(emptyTx('income', { vatPct: fin.settings.vatDefault }))} />
+        <Act icon="expense" label="Add expense" main onClick={() => setDraft(emptyTx('expense', { vatPct: fin.settings.vatDefault }))} />
       </PageHead>
       <div className="db-top fin-top">
         <nav className="tabs db-tabs">
