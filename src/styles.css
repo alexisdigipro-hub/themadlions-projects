@@ -6533,6 +6533,8 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
   html[data-theme] body .fin-top .db-tabs { display: inline-flex; flex: none; max-width: 100%; }
   html[data-theme] body .db-tabs button { flex: 0 0 auto; padding: 9px 18px; }
   html[data-theme] body .fin-top .db-tabs button:hover:not(.active) { color: var(--text); background: color-mix(in srgb, var(--text) 5%, transparent); }
+  .fin-top .fin-acts { display: flex; gap: 10px; margin-left: auto; }
+  .fin-top .fin-acts .act { height: 44px; }
 }
 /* on a phone the four tabs fill their own line, the year and Settings share the next */
 @media (max-width: 820px) {
