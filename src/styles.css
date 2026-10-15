@@ -3376,6 +3376,12 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .deliv-stage.s-files { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
 .deliv-stage .deliv-ver { display: none; }
 .deliv-tag.t-open svg { display: none; }
+/* computer: the opened tag on who and when's line (Alex, 15 Oct) */
+@media (min-width: 821px) {
+  .deliveries .deliv-row .grow { display: flex; flex-wrap: wrap; align-items: center; column-gap: 10px; }
+  .deliveries .deliv-row .grow > strong, .deliveries .deliv-row .grow > .deliv-quote { flex: 0 0 100%; }
+  .deliveries .deliv-row .grow > .deliv-tags { margin-top: 0; }
+}
 
 /* One strip of small tags carries what happened to a link, instead of three grey lines that all
    read the same weight: opened or not, closing date, and the client's answer. */
