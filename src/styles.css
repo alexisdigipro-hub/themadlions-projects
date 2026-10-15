@@ -6801,11 +6801,11 @@ html[data-theme='light'] .rem-head .segmented.rem-sort button.on { background: l
   html[data-theme] body .rem-menu-btn.on { color: var(--accent); border-color: var(--accent); }
   html[data-theme] body .rem-madd { color: var(--accent); font-size: 24px; line-height: 1; font-weight: 400; }
   html[data-theme] body .rem-head-btn.rem-head-new, html[data-theme] body .rem-quick { display: none; }
-  html[data-theme] body .rem-tasks > .rem-task {
+  html[data-theme] body .rem-tasks > :is(.rem-task, .notes-card) {
     background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--radius-lg); box-shadow: var(--shadow);
     -webkit-backdrop-filter: none; backdrop-filter: none;
   }
-  html[data-theme] body .rem-tasks > .rem-task + .rem-task { margin-top: 10px; }
+  html[data-theme] body .rem-tasks > :is(.rem-task, .notes-card) + :is(.rem-task, .notes-card) { margin-top: 10px; }
 }
 
 /* Buttons like the Database's (Alex, 14 Oct, of the blue gradient "Add expense": "I don't want these"):

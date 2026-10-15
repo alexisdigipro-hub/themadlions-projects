@@ -409,14 +409,16 @@ export default function Notes({ slot = null }) {
     </>
   )
   const foldersPane = <aside className="rem-side">{!slot && search}{folderMenu}</aside>
-  // on a phone, like Tasks: Search and the Folders button on one line, the folders folded under it
+  // on a phone, like Tasks: Search, Folders and New Note on one line, the folders folded under it; since
+  // 14 Oct round glass buttons like the Database's, a folder and a + (the "New Note…" line is left to it)
   const phoneTop = (
     <div className="rem-mtop">
       <div className="rem-mtop-bar">
         {search}
-        <button type="button" className={`rem-menu-btn ${menu ? 'on' : ''}`} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
-          <span aria-hidden="true">🗂</span> Folders <span className="rem-menu-chev" aria-hidden="true">⌄</span>
+        <button type="button" className={`rem-menu-btn ${menu ? 'on' : ''}`} aria-expanded={menu} aria-label="Folders" title="Folders" onClick={() => setMenu((v) => !v)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>
         </button>
+        {folder !== SHARED && <button type="button" className="rem-madd" aria-label="New Note" title="New Note" onClick={() => newNote('')}>＋</button>}
       </div>
       {menu && <div className="rem-side rem-mmenu">{folderMenu}</div>}
     </div>
@@ -446,7 +448,7 @@ export default function Notes({ slot = null }) {
         {folder === TRASH && trash.length > 0 && <button type="button" className="rem-head-btn" onClick={() => { if (confirm('Delete every note in Deleted for good?')) emptyTrash() }}>Empty</button>}
       </div>
       <div className="rem-scroll">
-        {!shown.length && <p className="rem-empty">{q ? 'No note matches.' : folder === TRASH ? 'Nothing deleted.' : folder === SHARED ? 'Nobody has shared a note with you.' : 'No notes yet. Write one below.'}</p>}
+        {!shown.length && <p className="rem-empty">{q ? 'No note matches.' : folder === TRASH ? 'Nothing deleted.' : folder === SHARED ? 'Nobody has shared a note with you.' : 'No notes yet. Press + to write one.'}</p>}
         {groups.map((g) => (
           <div key={g.label} className="rem-section">
             <div className="notes-group-label">{g.label === 'Pinned' ? '📌 Pinned' : g.label}</div>
