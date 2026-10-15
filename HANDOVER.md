@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (13 Oct 2026)
+- 15 Oct: **Finance and Share rows on a computer in the Organizer's look** (Alex). Share's filters are now a `db-tabs` capsule in `.db-top.share-dtop` (counts small and muted), New cost estimation / New delivery are `Act`s (new `estimate` icon in ACT_ICON) at the end of the line. In `.fin-top` and `.share-dtop` the Acts are 44px glass pills with the tabs' uppercase 13px lettering, the main one's icon in the accent, inactive tabs muted.
 - 15 Oct: **Share on a computer: New cost estimation / New delivery on the filters' line** (Alex), `.share-new` at the end of `.chips`, pushed right; the head keeps only the title. Phone untouched.
 - 15 Oct: **Finance on a computer: Add income / Add expense on the tabs' line** (Alex). Finance.jsx `addActs`: in the PageHead on a phone only, in `.fin-top .fin-acts` (pushed right, 44px like the tabs) on a computer.
 - 15 Oct: Share page head on a computer: subtitle removed (Alex), only the title.
