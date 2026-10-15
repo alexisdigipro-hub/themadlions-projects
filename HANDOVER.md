@@ -38,6 +38,13 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (13 Oct 2026)
+- 15 Oct: **Notes editor checked and fixed** (Alex: "bullets do strange things, the text goes elsewhere"; "make every function in notes professional"; "set the title apart from the text with a soft glassy line"). lib/office/docView.js (shared with Office documents):
+  - the cursor is kept as it moves (`keep` on selectionchange, on the ¶ menu's pointerdown) and put back before every command (`restore`): on the iPhone a tap on a toolbar button or the menu took the focus off the page and `page.focus()` put the cursor at the start, so a list landed on the first line;
+  - bullets / numbers on a title, heading or quote first turn that line into a paragraph (`listCmd`), and `tidy()` also takes lists out of headings and quotes (the browser nested `<ul>` inside `<h1>`);
+  - Enter at the end of a title or heading starts a plain paragraph (Safari kept the title size for the next line);
+  - a checklist box ticks with a tap anywhere on the box (26px, it was 4px);
+  - the toolbar's glyphs (⟸ ⟺ ⟹ • 1. ☑ ▦ 🖼 ↶ ↷ Tx) are line icons (`ICON`), everywhere.
+  The note's first line (its title) has a soft glass divider under it (a fading hair of light with an accent glow, `.notes-doc .xd-page > :first-child::after`).
 - 15 Oct: the note card's paragraph-style menu ("Paragraph", cut by the round button) is a round **¶** with the menu lying over it, see-through (docView.js wraps the select in `.xd-block-wrap` + `.xd-block-ico`, `display: contents` / hidden everywhere else, so Office and the computer are unchanged).
 - 15 Oct: **inside the task and note cards every control is round glass** (Alex: "all the buttons round and glassy like the rest"), phone only: the note's head is ‹ (round), the folder menu (pill), Share / Pin / Delete as round buttons with line icons (Notes.jsx `LINE_ICON`, emoji kept on a computer); a task's × round; the writing bar's B I U S as circles and its colours as round dots on a clear bar; the form's boxes soft glass (14px). Rules at the end of styles.css under `.modal.sheet-card`.
 - 15 Oct: the task / note card **pops** in (Alex: "an animation, like a pop-up"): `sheet-in` scales .8 to 1.035 to .99 to 1 from the centre in .42s.

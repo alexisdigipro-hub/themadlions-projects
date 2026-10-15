@@ -6968,3 +6968,15 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
 /* the editor's ¶ (docView.js) shows only in the phone's note card; elsewhere its wrapper is invisible */
 .xd-block-wrap { display: contents; }
 .xd-block-ico { display: none; }
+
+/* The editor's toolbar icons are line drawings now (docView.js ICON) */
+.xs-btn svg { display: block; margin: 0 auto; }
+
+/* A note's title set apart from its text by a soft glass line (Alex, 15 Oct): a hair of light that
+   fades out at both ends, with a faint glow under it, and air above and below */
+.notes-doc .xd-page > :is(h1, h2, h3, p):first-child { padding-bottom: 14px; margin-bottom: 16px; position: relative; }
+.notes-doc .xd-page > :is(h1, h2, h3, p):first-child::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--text) 28%, transparent) 18%, color-mix(in srgb, var(--accent) 45%, transparent) 50%, color-mix(in srgb, var(--text) 28%, transparent) 82%, transparent);
+  box-shadow: 0 1px 10px color-mix(in srgb, var(--accent) 30%, transparent);
+}
