@@ -84,9 +84,7 @@ export default function MiniCalendar({ items = [], onItemClick, onAddDay, addLab
         {large ? (
           <>
             {!dayItems.length ? <p className="muted small mc-none">Nothing on this day.</p> : <ul className="plain mc-evs">{dayItems.map(row)}</ul>}
-            {/* the picked day in the middle, its events, then Add event centred under them, a quiet glass
-                pill (Alex, 15 Oct: "lower, centred, fainter, more glassy") */}
-            {onAddDay && <button type="button" className="mc-add" onClick={() => onAddDay(sel)}><span aria-hidden="true">＋</span> {addLabel}</button>}
+            {/* no Add event under the day any more (Alex, 15 Oct): the round + at the top does it */}
           </>
         ) : !dayItems.length ? <p className="muted small">Nothing on this day.</p> : (
           <ul className="plain">
