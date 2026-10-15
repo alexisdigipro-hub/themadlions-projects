@@ -50,7 +50,9 @@ export function mountDoc(root, html, { onChange, readOnly = false } = {}) {
   root.append(bar, wrap)
 
   let timer = null
-  const changed = () => { clearTimeout(timer); timer = setTimeout(() => onChange?.(page.innerHTML), 300) }
+  // what is kept: the page, without the invisible characters inline() leaves at the cursor
+  const clean = () => page.innerHTML.replace(/\u200B/g, '')
+  const changed = () => { clearTimeout(timer); timer = setTimeout(() => onChange?.(clean()), 300) }
   /* Where the cursor was, kept as it moves (Alex, 15 Oct: bullets and text "went elsewhere" on the
      iPhone): a tap on a toolbar button or the ¶ menu takes the focus off the page, and page.focus()
      alone puts the cursor back at the very start, so a list landed on the first line. Every command
@@ -65,6 +67,26 @@ export function mountDoc(root, html, { onChange, readOnly = false } = {}) {
     s.addRange(saved)
   }
   const exec = (cmd, value = null) => { restore(); document.execCommand(cmd, false, value); tidy(); keep(); changed(); refresh() }
+  /* Bold, italic, underline, strike-through and colour with nothing selected (Alex, 15 Oct: strike-through
+     would not go off, the text kept coming out struck): at the end of struck text the iPhone keeps typing
+     inside it whatever the button says. So an invisible character goes in at the cursor, the command is
+     applied to it, and the cursor sits after it: what is typed next carries exactly what the button shows. */
+  const inline = (cmd, value = null) => {
+    restore()
+    const s = window.getSelection()
+    if (s && s.rangeCount && s.isCollapsed) {
+      const z = document.createTextNode('\u200B')
+      s.getRangeAt(0).insertNode(z)
+      const r = document.createRange()
+      r.selectNodeContents(z)
+      s.removeAllRanges()
+      s.addRange(r)
+      document.execCommand(cmd, false, value)
+      const after = window.getSelection()
+      if (after.rangeCount) after.collapseToEnd()
+    } else document.execCommand(cmd, false, value)
+    tidy(); keep(); changed(); refresh()
+  }
   /* A list started on a title, a heading or a quote: the browser puts the list inside it (<h1><ul>…),
      and the text scatters. The line becomes a plain paragraph first, then the list. */
   const listCmd = (cmd) => {
@@ -118,10 +140,10 @@ export function mountDoc(root, html, { onChange, readOnly = false } = {}) {
   blockWrap.appendChild(block)
   bar.appendChild(blockWrap)
   sep()
-  const bB = btn('B', 'Bold (Ctrl/Cmd+B)', () => exec('bold'), 'xs-b')
-  const bI = btn('I', 'Italic (Ctrl/Cmd+I)', () => exec('italic'), 'xs-i')
-  const bU = btn('U', 'Underline (Ctrl/Cmd+U)', () => exec('underline'), 'xd-u')
-  const bS = btn('S', 'Strike-through', () => exec('strikeThrough'), 'xd-s')
+  const bB = btn('B', 'Bold (Ctrl/Cmd+B)', () => inline('bold'), 'xs-b')
+  const bI = btn('I', 'Italic (Ctrl/Cmd+I)', () => inline('italic'), 'xs-i')
+  const bU = btn('U', 'Underline (Ctrl/Cmd+U)', () => inline('underline'), 'xd-u')
+  const bS = btn('S', 'Strike-through', () => inline('strikeThrough'), 'xd-s')
   const colors = el('span', 'xs-fills')
   for (const c of COLORS) {
     const s = el('button', 'xs-fill xd-color')
@@ -130,7 +152,7 @@ export function mountDoc(root, html, { onChange, readOnly = false } = {}) {
     s.style.background = c || 'transparent'
     if (!c) s.textContent = 'A'
     s.addEventListener('mousedown', (e) => e.preventDefault())
-    s.addEventListener('click', () => exec('foreColor', c || getComputedStyle(page).color))
+    s.addEventListener('click', () => inline('foreColor', c || getComputedStyle(page).color))
     colors.appendChild(s)
   }
   bar.appendChild(colors)
@@ -291,7 +313,7 @@ export function mountDoc(root, html, { onChange, readOnly = false } = {}) {
   })
 
   return {
-    getHtml: () => page.innerHTML,
+    getHtml: () => clean(),
     focus: () => page.focus(),
     destroy: () => { clearTimeout(timer); document.removeEventListener('selectionchange', onSel); root.replaceChildren(); root.classList.remove('xd') },
   }
