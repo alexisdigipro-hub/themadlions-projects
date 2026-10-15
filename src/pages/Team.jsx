@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { Badge, Button, Confirm, Field, Input, Modal, PageHead, Select, useToast } from '../components/ui.jsx'
+import { Act, Badge, Button, Confirm, Field, Input, Modal, PageHead, Select, useToast } from '../components/ui.jsx'
 import { MODULES, MODULE_GROUPS, ROLE_PRESETS, accessEnded, defaultPermissions, presetPermissions, rememberViewAsFrom, uid, useCurrentUser, useStore, whenMs } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
 import { initialsOf } from './Profile.jsx'
@@ -102,9 +102,7 @@ export default function Team({ embedded = false }) {
         <PageHead title="Team" sub="Who can see and change what. Administrators can do everything.">
           {/* no invites on the live app (Alex, 11 Oct): people sign up themselves and are accepted below */}
           {!remote && (
-            <Button variant="primary" onClick={() => setDraft(newUser())}>
-              Add teammate
-            </Button>
+            <Act icon="person" label="Add teammate" main onClick={() => setDraft(newUser())} />
           )}
         </PageHead>
       )}

@@ -326,6 +326,31 @@ export function ToastProvider({ children }) {
 }
 export const useToast = () => useContext(ToastCtx)
 
+/* A page's action (Alex, 15 Oct: "all over the hub, wherever it tidies, round icons, especially on the
+   phone"): a round glass button with a line icon on a phone, the icon and its word in a glass pill on a
+   computer. `main` gives it the accent. Use it for every new action on a page. */
+const actSvg = (d) => <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
+export const ACT_ICON = {
+  plus: actSvg(<path d="M12 5v14M5 12h14" />),
+  income: actSvg(<><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5" /><path d="M4 18v1.5h16V18" /></>),
+  expense: actSvg(<><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5" /><path d="M4 18v1.5h16V18" /></>),
+  person: actSvg(<><circle cx="10" cy="8" r="3.5" /><path d="M3.5 20c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5" /><path d="M19 8v6M16 11h6" /></>),
+  filter: actSvg(<path d="M4 5h16l-6 7.5V19l-4 1.5v-8z" />),
+  edit: actSvg(<><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="m13.5 6.5 4 4" /></>),
+  download: actSvg(<><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5" /><path d="M5 20h14" /></>),
+  share: actSvg(<><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="m8.2 10.8 7.6-4.5M8.2 13.2l7.6 4.5" /></>),
+  print: actSvg(<><path d="M7 9V4h10v5" /><rect x="4" y="9" width="16" height="8" rx="2" /><path d="M7 14h10v6H7z" /></>),
+  trash: actSvg(<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />),
+}
+export function Act({ icon = 'plus', label, onClick, main = false, className = '', ...props }) {
+  return (
+    <button type="button" className={`act${main ? ' act-main' : ''} ${className}`} onClick={onClick} aria-label={label} title={label} {...props}>
+      {ACT_ICON[icon] || ACT_ICON.plus}
+      <span className="act-t">{label}</span>
+    </button>
+  )
+}
+
 export function PageHead({ title, sub, children }) {
   return (
     <div className="page-head">
