@@ -6864,3 +6864,36 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
 /* Add event under the picked day on the phone's Calendar: a glass pill like the other buttons (Alex, 15 Oct) */
 .mini-cal .mc-add { height: 36px; padding: 0 14px; gap: 6px; font-size: 14px; }
 .mini-cal .mc-add > span { font-size: 17px; line-height: 1; font-weight: 400; }
+
+/* A task or a note on a phone opens as a card (Alex, 15 Oct: "a window with a nice animation, like the
+   calendar's frame, that fits the screen and scrolls inside"): the page dims and blurs behind, the card
+   floats with a gap all round in the calendar panel's glass and rounding, rises and settles into place,
+   its head and foot stay put and only its middle scrolls. TaskModal and Notes.jsx add .sheet-card. */
+@media (max-width: 820px) {
+  html body .modal-backdrop:has(> .modal.sheet-card) {
+    display: flex; align-items: center; justify-content: center;
+    padding: calc(env(safe-area-inset-top) + 14px) 12px calc(env(safe-area-inset-bottom) + 14px);
+    background: rgba(4, 7, 12, .5);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    overflow: hidden; animation: sheet-dim .25s ease-out;
+  }
+  html body .modal-backdrop > .modal.sheet-card.sheet-card {
+    width: 100%; max-width: none; height: auto; max-height: 100%; margin: 0;
+    display: flex; flex-direction: column; overflow: hidden;
+    border-radius: 28px; border: 1px solid var(--gl-edge, var(--line-soft));
+    background: linear-gradient(165deg, color-mix(in srgb, var(--panel) 96%, #3a5a9a) 0%, var(--panel) 55%, color-mix(in srgb, var(--panel) 94%, #1d6a70) 100%);
+    -webkit-backdrop-filter: blur(30px) saturate(160%); backdrop-filter: blur(30px) saturate(160%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .09), 0 30px 80px rgba(0, 0, 0, .5);
+    transform-origin: 50% 70%;
+    animation: sheet-in .46s cubic-bezier(.2, .9, .25, 1.12) both;
+  }
+  html body .modal.sheet-card .modal-head, html body .modal.sheet-card .modal-foot { flex: none; background: transparent; }
+  html body .modal.sheet-card .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  /* a note: its own head (‹ back, folder, share…) on top, the writing below scrolls */
+  html body .modal.sheet-card.note-sheet > .notes-main { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; margin: 0; padding: 0; background: none; border: 0; }
+  html body .modal.sheet-card.note-sheet .notes-note-head { flex: none; padding: 12px 14px 8px; }
+  html body .modal.sheet-card.note-sheet .notes-sheet { flex: 1 1 auto; min-height: 0; margin: 0 10px 10px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+}
+@keyframes sheet-in { from { opacity: 0; transform: translateY(28px) scale(.93); } to { opacity: 1; transform: none; } }
+@keyframes sheet-dim { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { html body .modal-backdrop > .modal.sheet-card.sheet-card, html body .modal-backdrop:has(> .modal.sheet-card) { animation: none; } }

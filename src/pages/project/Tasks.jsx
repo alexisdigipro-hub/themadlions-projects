@@ -207,6 +207,7 @@ export function TaskModal({ draft, setDraft, onSave, onClose, projects }) {
     <Modal
       open
       wide
+      className="sheet-card"
       title={draft.title ? 'Edit task' : 'New task'}
       onClose={onClose}
       footer={
