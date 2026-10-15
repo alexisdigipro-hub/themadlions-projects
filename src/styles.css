@@ -3802,6 +3802,11 @@ html[data-public='1'] body { background: var(--bg); }
    Pinned to the whole screen (Alex, 11 Oct): as a home-screen app on an iPhone 100dvh stops above the
    home bar, and the page's own background showed there as a band of another colour. */
 .boot { position: fixed; inset: 0; z-index: 1; min-height: 0; padding: 0; }
+/* ...and still a band (Alex, 15 Oct, 10:51): on the home-screen app what is fixed stops short of the
+   screen's foot (--ios-gap, main.jsx; unknown on a first launch). So the loading screen reaches 160px
+   past it, the band always under its own background, and a matching padding keeps the name in the
+   middle of the whole screen (of the window while the gap is not known yet) */
+.boot { bottom: -160px; padding-bottom: calc(160px - var(--ios-gap, 0px)); }
 .boot-name { font-weight: 500; font-size: 18px; letter-spacing: -.01em; white-space: nowrap; color: var(--text); }
 .boot-name b { font-weight: 900; }
 .logo-row { display: flex; align-items: center; gap: 12px; }
