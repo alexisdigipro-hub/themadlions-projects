@@ -6860,3 +6860,7 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
   html[data-theme] body .calendar .cal-round { color: var(--accent); }
   html[data-theme] body .calendar .cal-round:active { transform: scale(.95); }
 }
+
+/* Add event under the picked day on the phone's Calendar: a glass pill like the other buttons (Alex, 15 Oct) */
+.mini-cal .mc-add { height: 36px; padding: 0 14px; gap: 6px; font-size: 14px; }
+.mini-cal .mc-add > span { font-size: 17px; line-height: 1; font-weight: 400; }
