@@ -369,7 +369,7 @@ export default function Deliveries() {
       {/* on a phone (Alex, 15 Oct): no title, the filters as a glass capsule and a round + on one line;
           the + offers New delivery and, for administrators, New cost estimation */}
       {!mobile && (
-        <PageHead title="Share" sub="Every link you have sent out of the building, and what happened to it">
+        <PageHead title="Share">
           {editable && isAdmin && <Button variant="ghost" onClick={startEstimate}>New cost estimation</Button>}
           {editable && <Button variant="primary" onClick={startNew}>New delivery</Button>}
         </PageHead>
