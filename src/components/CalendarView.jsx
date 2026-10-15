@@ -493,17 +493,7 @@ export default function CalendarView({ projectId = null, title }) {
               ))}
             </Select>
           )}
-          {/* no project menu on a computer either (Alex, 11 Oct); the phone keeps it */}
-          {!projectId && mobile && (
-            <Select value={projFilter} onChange={(e) => setProjFilter(e.target.value)}>
-              <option value="all">All projects</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.title}
-                </option>
-              ))}
-            </Select>
-          )}
+          {/* no project menu on a computer (Alex, 11 Oct), nor on a phone since 15 Oct */}
           {/* on the top-level Calendar page this moved to Settings > Calendar (Alex); a project's
               own Calendar tab keeps it here, it is that project's own export */}
           {projectId && (
@@ -526,15 +516,17 @@ export default function CalendarView({ projectId = null, title }) {
               Add event
             </Button>
           )}
-          {canMarkOff && (
+          {/* on a phone one line (Alex, 15 Oct): the type menu, then Not available as a round 🚫 and Add
+              event as a round +, like the Database's buttons */}
+          {canMarkOff && (mobile ? (
+            <button type="button" className="cal-round" aria-label="Not available" title="Not available" onClick={() => setDraft(newEvent(today(), 'unavailable'))}>🚫</button>
+          ) : (
             <Button onClick={() => setDraft(newEvent(today(), 'unavailable'))}>
               Not available
             </Button>
-          )}
+          ))}
           {mobile && editable && (
-            <Button variant="primary" onClick={() => setDraft(newEvent(today()))}>
-              Add event
-            </Button>
+            <button type="button" className="cal-round cal-add" aria-label="Add event" title="Add event" onClick={() => setDraft(newEvent(today()))}>＋</button>
           )}
           {/* Today leads the Week | Month | Year pills, at the far right on a computer (Alex, 11 Oct): it
               jumps to today and leaves the view as it is, so it never takes the glass and the lens skips it */}
