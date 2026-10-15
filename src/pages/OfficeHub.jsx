@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Navigate, useLocation } from 'react-router-dom'
-import { PageHead, useIsMobile } from '../components/ui.jsx'
+import { useIsMobile } from '../components/ui.jsx'
 import { Icon } from '../components/icons.jsx'
 import { can, useCurrentUser } from '../lib/store.jsx'
 import Office from './Office.jsx'
@@ -28,7 +28,6 @@ export default function OfficeHub() {
 
   return (
     <div className="hub-page office-hub">
-      <PageHead title="Organizer" />
       <div className="db-top">
         <nav className="tabs db-tabs">
           {tabs.map((t) => (

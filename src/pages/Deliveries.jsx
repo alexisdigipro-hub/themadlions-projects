@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Act, Button, Confirm, Empty, Field, Input, Modal, PageHead, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
+import { Act, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
 import { deliveryUrl, estimateUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, shotlistUrl, tokenOf, deckUrl } from '../lib/shares.js'
 import { amount, estimateTotals } from '../lib/estimate.js'
@@ -368,9 +368,6 @@ export default function Deliveries() {
     <div className="deliveries">
       {/* on a phone (Alex, 15 Oct): no title, the filters as a glass capsule and a round + on one line;
           the + offers New delivery and, for administrators, New cost estimation */}
-      {!mobile && (
-        <PageHead title="Share" />
-      )}
       {mobile && (
         <div className="share-top">
           <div className="share-tabs">

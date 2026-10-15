@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { NavLink, Navigate, useParams } from 'react-router-dom'
-import { PageHead, useIsMobile } from '../components/ui.jsx'
+import { useIsMobile } from '../components/ui.jsx'
 import { Icon } from '../components/icons.jsx'
 import { useGlide } from '../lib/glide.js'
 import { can, seesDatabase, useCurrentUser } from '../lib/store.jsx'
@@ -34,7 +34,6 @@ export default function Database() {
 
   return (
     <div className="db-page">
-      <PageHead title="Database" />
       <div className="db-top">
       <nav className="tabs db-tabs">
         {tabs.map((t) => (
