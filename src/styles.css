@@ -7301,58 +7301,93 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
    list a glass panel, the chosen conversation a soft glass tile instead of a solid colour, rows as rounded
    tiles without rules, the search, Edit and + as the hub's 44px glass pills, the folders and the foot tabs
    muted with the chosen one in glass, and in the conversation the head, its round buttons and the
-   message box in the same glass. The default and Glass dark chat colours only; Coral keeps its own. */
+   message box in the same glass. Every chat colour but Coral, which keeps its own. */
 @media all {
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) {
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) {
     --tml-glass: color-mix(in srgb, var(--text) 6%, transparent);
   }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-list-head.tg-head h1 { font-size: 17px; }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .tg-pill {
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-list-head.tg-head h1 { font-size: 17px; }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .tg-pill {
     height: 44px; background: var(--tml-glass); border: 1px solid var(--line-soft); box-shadow: none;
   }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .tg-pill-left .tg-edit {
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .tg-pill-left .tg-edit {
     font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
   }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-search .input,
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-search .input:focus {
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-search .input,
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-search .input:focus {
     height: 44px; padding: 0 16px 0 40px; font-size: 15px; text-align: left; background-color: var(--tml-glass);
     background-position: 14px 50%; border: 1px solid var(--line-soft);
   }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-rooms { padding: 2px 8px; }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-room-item { padding: 0 0 0 10px; margin: 2px 0; border-radius: 14px; }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-rmain { min-height: 66px; border-bottom-color: transparent; }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-room-item:hover:not(.active) { background: color-mix(in srgb, var(--text) 4%, transparent); }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-room-item.active {
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-rooms { padding: 2px 8px; }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-room-item { padding: 0 0 0 10px; margin: 2px 0; border-radius: 14px; }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-rmain { min-height: 66px; border-bottom-color: transparent; }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-room-item:hover:not(.active) { background: color-mix(in srgb, var(--text) 4%, transparent); }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-room-item.active {
     color: var(--text); background: color-mix(in srgb, var(--text) 10%, transparent); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
   }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-room-item.active :is(.chat-rtop small, .chat-rprev) { color: var(--muted); opacity: 1; }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-room-item.active .chat-rbadge { background: var(--accent); color: var(--accent-ink, #fff); }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-room-item.active .chat-ravatar.team { box-shadow: none; }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-folders { background: var(--tml-glass); box-shadow: none; }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-folders button { font-size: 13px; color: var(--muted); }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-folders button.on { color: var(--text); background: color-mix(in srgb, var(--text) 10%, transparent); }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-win-tabs.tg-tabs { background: var(--tml-glass); border: 1px solid var(--line-soft); box-shadow: none; }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui .chat-win-tabs.tg-tabs button.on { color: var(--text); background: color-mix(in srgb, var(--text) 10%, transparent); }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-room-item.active :is(.chat-rtop small, .chat-rprev) { color: var(--muted); opacity: 1; }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-room-item.active .chat-rbadge { background: var(--accent); color: var(--accent-ink, #fff); }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-room-item.active .chat-ravatar.team { box-shadow: none; }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-folders { background: var(--tml-glass); box-shadow: none; }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-folders button { font-size: 13px; color: var(--muted); }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-folders button.on { color: var(--text); background: color-mix(in srgb, var(--text) 10%, transparent); }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-win-tabs.tg-tabs { background: var(--tml-glass); border: 1px solid var(--line-soft); box-shadow: none; }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui .chat-win-tabs.tg-tabs button.on { color: var(--text); background: color-mix(in srgb, var(--text) 10%, transparent); }
 
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-head .chat-head-card,
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-head .chat-head-ico,
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-compose textarea,
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-compose :is(.chat-attach, .chat-send:not(.ready)) {
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-head .chat-head-card,
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-head .chat-head-ico,
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-compose textarea,
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-compose :is(.chat-attach, .chat-send:not(.ready)) {
     background: var(--tml-glass); border: 1px solid var(--line-soft); box-shadow: none;
     -webkit-backdrop-filter: blur(22px) saturate(160%); backdrop-filter: blur(22px) saturate(160%);
   }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-head .chat-head-ico { width: 44px; height: 44px; color: var(--text); }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-head .chat-head-ico:hover { background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--text); }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-head .chat-head-card { min-height: 44px; }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-compose textarea { min-height: 44px; border-radius: 22px; }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-compose :is(.chat-attach, .chat-send) { width: 44px; height: 44px; color: var(--text); }
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-compose .chat-send.ready { color: var(--accent-ink, #fff); }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-head .chat-head-ico { width: 44px; height: 44px; color: var(--text); }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-head .chat-head-ico:hover { background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--text); }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-head .chat-head-card { min-height: 44px; }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-compose textarea { min-height: 44px; border-radius: 22px; }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-compose :is(.chat-attach, .chat-send) { width: 44px; height: 44px; color: var(--text); }
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-compose .chat-send.ready { color: var(--accent-ink, #fff); }
 }
 /* the list as a glass panel on a computer; on a phone it fills the screen edge to edge */
 @media (min-width: 821px) {
-  html[data-theme] body .chat2:is(:not([data-chat-theme]), [data-chat-theme='glass']) .chat-list.tgui {
+  html[data-theme] body .chat2:not([data-chat-theme='coral']) .chat-list.tgui {
     background: var(--gl-fill, color-mix(in srgb, var(--panel) 70%, transparent)); border: 1px solid var(--gl-edge, var(--line-soft));
     -webkit-backdrop-filter: blur(22px) saturate(160%); backdrop-filter: blur(22px) saturate(160%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 8px 26px rgba(0, 0, 0, .22);
   }
+}
+
+/* The chat in the app on a phone laid out like the Organizer (Alex, 15 Oct: "see the differences"): the
+   page's own backdrop behind it, the folders as the full-width glass capsule at the top (like TASKS ·
+   NOTES · OFFICE), then one line with the search and the round Edit, bell and + (the app's top bar
+   already says THEMADLIONS), and every conversation a soft rounded tile with a gap, like a task. */
+@media (max-width: 820px) {
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) { background: transparent; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui { background: transparent; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .tg-dock { order: -1; position: static; left: auto; right: auto; bottom: auto; margin: 4px 16px 12px; padding: 0; z-index: auto; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .tg-dock .chat-folders { display: flex; height: 54px; box-sizing: border-box; padding: 4px; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .tg-dock .chat-folders button { flex: 1 1 0; justify-content: center; height: 100%; padding: 0 6px; font-size: 13px; letter-spacing: .03em; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .chat-list-head.tg-head:has(> .chat-search) { display: flex; align-items: center; gap: 10px; padding: 0 16px 14px; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .chat-list-head.tg-head:has(> .chat-search) h1 { display: none; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .tg-head > .chat-search { order: 0; flex: 1 1 auto; min-width: 0; padding: 0; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .tg-head > .chat-search .input { width: 100%; height: 54px; font-size: 16px; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .tg-head > .tg-pill-left { order: 1; flex: none; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .tg-head .tg-pill { height: 54px; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .tg-head .tg-pill-left .tg-edit { height: 52px; padding: 0 16px; }
+  /* + (it opens leftwards over the line) and the bell stay pinned at the right; the line leaves them room */
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .chat-list-head.tg-head:has(> .chat-search) { padding-right: 80px; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .chat-list-head.tg-head:has(> .chat-search):has(> .tg-notice) { padding-right: 144px; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .tg-head:has(> .chat-search) .tg-plus { top: 0; right: 16px; width: 54px; padding: 0 4px; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .tg-head:has(> .chat-search) .tg-plus.open { width: calc(54px + var(--n, 3) * 42px); }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .tg-head:has(> .chat-search) .tg-notice { top: 0; right: 80px; width: 54px; height: 54px; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .chat-rooms { display: flex; flex-direction: column; gap: 10px; padding: 0 16px 16px; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .chat-room-item {
+    margin: 0; padding: 0 0 0 12px; border-radius: 22px;
+    background: color-mix(in srgb, var(--panel) 72%, transparent); border: 1px solid var(--line-soft);
+  }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .chat-swipe { border-radius: 22px; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .chat-rmain { min-height: 70px; padding: 8px 14px 8px 0; border-bottom: 0; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .chat-rtop strong { font-size: 16px; font-weight: 500; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .chat-rtop small { font-size: 13px; }
+  html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .chat-rprev { font-size: 14px; }
 }
