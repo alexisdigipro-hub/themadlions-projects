@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (13 Oct 2026)
+- 15 Oct: **Share on a computer: New cost estimation / New delivery on the filters' line** (Alex), `.share-new` at the end of `.chips`, pushed right; the head keeps only the title. Phone untouched.
 - 15 Oct: **Finance on a computer: Add income / Add expense on the tabs' line** (Alex). Finance.jsx `addActs`: in the PageHead on a phone only, in `.fin-top .fin-acts` (pushed right, 44px like the tabs) on a computer.
 - 15 Oct: Share page head on a computer: subtitle removed (Alex), only the title.
 - 15 Oct: **Share on a computer: Opened on who and when's line** (Alex). styles.css `@media (min-width: 821px)` block after `.deliv-stage .deliv-ver`: the row's `.grow` is a wrapping flex, title and quote full width, the tags beside the sub line. Rows about 75px instead of 105. Phone untouched.

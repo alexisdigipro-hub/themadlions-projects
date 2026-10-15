@@ -3376,6 +3376,8 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
 .deliv-stage.s-files { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
 .deliv-stage .deliv-ver { display: none; }
 .deliv-tag.t-open svg { display: none; }
+.deliveries .chips:has(.share-new) { align-items: center; }
+.deliveries .share-new { display: flex; gap: 8px; margin-left: auto; }
 /* computer: the opened tag on who and when's line (Alex, 15 Oct) */
 @media (min-width: 821px) {
   .deliveries .deliv-row .grow { display: flex; flex-wrap: wrap; align-items: center; column-gap: 10px; }
