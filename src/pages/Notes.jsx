@@ -506,12 +506,17 @@ export default function Notes({ slot = null }) {
   )
 
   return (
-    <div className={`rem-app notes-app ${mobile ? (open ? 'm-note' : 'm-one') : ''}`}>
+    <div className={`rem-app notes-app ${mobile ? 'm-one' : ''}`}>
       {err && <p className="notes-err">{err}</p>}
       {preview && <p className="notes-err notes-preview">Viewing as {me.viewingAs}: Shared Notes shows the notes you shared with them. Their own notes are private.</p>}
       {sharing && <ShareNote note={sharing} onClose={() => setSharing(null)} onChange={(p) => shareChanged(sharing.id, p)} />}
       {slot && createPortal(<div className="toolbar db-bar notes-bar">{search}</div>, slot)}
-      {mobile ? (open ? notePane : (<>{phoneTop}{listPane}</>)) : (<>{foldersPane}{open ? notePane : listPane}</>)}
+      {/* on a phone a note opens as a card over the list, like a task's (Alex, 15 Oct): it fits the screen,
+          scrolls inside, and a tap beside it or ‹ closes it */}
+      {mobile ? (<>{phoneTop}{listPane}{notePane && createPortal(
+        <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && close()}>
+          <div className="modal sheet-card note-sheet" role="dialog" aria-modal="true" aria-label={folderName}>{notePane}</div>
+        </div>, document.body)}</>) : (<>{foldersPane}{open ? notePane : listPane}</>)}
     </div>
   )
 }
