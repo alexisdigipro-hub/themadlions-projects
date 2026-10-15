@@ -7092,3 +7092,16 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
   html body .task-form .row-2 > .field { min-width: 0; }
   html body .task-form .row-2:has(> .field:only-child) { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* An event's place with a round glass map button beside it (Alex, 15 Oct) */
+.ev-loc { display: flex; align-items: center; gap: 8px; }
+.ev-loc > .input { flex: 1 1 auto; min-width: 0; }
+.ev-map {
+  flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; text-decoration: none;
+  color: var(--accent); background: color-mix(in srgb, var(--text) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text) 13%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07); transition: background .2s, transform .1s;
+}
+.ev-map:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.ev-map:active { transform: scale(.94); }

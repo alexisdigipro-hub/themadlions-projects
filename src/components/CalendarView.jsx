@@ -761,8 +761,27 @@ export default function CalendarView({ projectId = null, title }) {
                 </Field>
               </div>
             )}
+            {/* a round map button beside the place (Alex, 15 Oct): with a place written in, Google Maps opens
+                with directions to it from where you are (the Maps app on a phone); with nothing yet, Maps
+                opens to look one up, to copy its name or link back here. A pasted Maps link opens as it is. */}
             <Field label="Location">
-              <Input value={draft.locationText} onChange={(e) => setDraft({ ...draft, locationText: e.target.value })} disabled={!canEditDraft(draft)} />
+              <div className="ev-loc">
+                <Input value={draft.locationText} onChange={(e) => setDraft({ ...draft, locationText: e.target.value })} disabled={!canEditDraft(draft)} placeholder="Address, place or a Google Maps link" />
+                <a
+                  className="ev-map"
+                  href={(() => {
+                    const v = (draft.locationText || '').trim()
+                    if (/^https?:\/\/\S*(google\.[a-z.]+\/maps|goo\.gl\/maps|maps\.app\.goo\.gl)/i.test(v)) return v
+                    return v ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(v)}` : 'https://www.google.com/maps'
+                  })()}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={draft.locationText ? 'Directions in Google Maps' : 'Open Google Maps'}
+                  title={draft.locationText ? 'Directions in Google Maps' : 'Open Google Maps'}
+                >
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6z" /><path d="M9 4v14M15 6v14" /></svg>
+                </a>
+              </div>
             </Field>
             <Field label="Notes">
               <Textarea rows={3} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} disabled={!canEditDraft(draft)} />
