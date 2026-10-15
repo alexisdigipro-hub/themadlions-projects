@@ -7249,3 +7249,50 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
   .toolbar-actions:has(> .act) { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; width: 100%; }
   .toolbar-actions:has(> .act) > .input.search { flex: 1 1 auto; min-width: 0; width: auto; height: 44px; border-radius: 999px; }
 }
+
+/* Home on a computer in the Organizer's look (Alex, 15 Oct): the categories (All, Delivered, then each
+   category, Delivered a tab like the others) as one glass capsule, and Date | Name, Search and New project
+   as 44px glass pills with the tabs' uppercase lettering. */
+@media (min-width: 821px) {
+  html[data-theme] body .home-toolbar .chips {
+    flex: 0 1 auto; display: inline-flex; flex-wrap: nowrap; gap: 0; padding: 3px; overflow-x: auto; scrollbar-width: none;
+    border: 1px solid var(--line-soft); border-radius: 999px;
+    background: color-mix(in srgb, var(--panel) 80%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 8px 26px rgba(0, 0, 0, .22);
+  }
+  html[data-theme] body .home-toolbar .chips::-webkit-scrollbar { display: none; }
+  html[data-theme] body .home-toolbar .chips .chip,
+  html[data-theme] body .home-toolbar .chips .chip.on {
+    flex: none; height: 36px; padding: 0 16px; gap: 6px; border: 0; border-radius: 999px; background: none; box-shadow: none;
+    font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); white-space: nowrap;
+  }
+  html[data-theme] body .home-toolbar .chips .chip:hover:not(.on) { color: var(--text); background: color-mix(in srgb, var(--text) 5%, transparent); }
+  html[data-theme] body .home-toolbar .chips .chip.on { color: var(--text); background: color-mix(in srgb, var(--text) 9%, transparent); }
+  html[data-theme] body .home-toolbar .chips .chip small { min-width: 0; height: auto; padding: 0; background: none; font-size: 11px; font-weight: 600; color: var(--muted); }
+  html[data-theme] body .home-toolbar .chips[data-lens='cat'] .chip.on { background: none; }
+
+  html[data-theme] body :is(.home-toolbar, .home-actions) .sort-by .segmented {
+    height: 44px; box-sizing: border-box; padding: 3px; gap: 0; border: 1px solid var(--line-soft);
+    background: color-mix(in srgb, var(--panel) 80%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 8px 26px rgba(0, 0, 0, .22);
+  }
+  html[data-theme] body :is(.home-toolbar, .home-actions) .sort-by .segmented button {
+    height: 36px; padding: 0 16px; background: none; box-shadow: none; color: var(--muted);
+    font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+  }
+  html[data-theme] body :is(.home-toolbar, .home-actions) .sort-by .segmented button.on { color: var(--text); background: color-mix(in srgb, var(--text) 9%, transparent); }
+  html[data-theme] body :is(.home-toolbar, .home-actions) .input.search {
+    height: 44px; box-sizing: border-box; border: 1px solid var(--line-soft); font-size: 15px; font-weight: 500;
+    background: color-mix(in srgb, var(--panel) 80%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+  }
+  html[data-theme] body :is(.home-toolbar, .home-actions) .act {
+    height: 44px; padding: 0 18px; gap: 8px; color: var(--text); border: 1px solid var(--line-soft);
+    font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 8px 26px rgba(0, 0, 0, .22);
+  }
+  html[data-theme] body :is(.home-toolbar, .home-actions) .act svg { width: 17px; height: 17px; }
+  html[data-theme] body :is(.home-toolbar, .home-actions) .act.act-main svg { color: var(--accent); }
+}
