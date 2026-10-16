@@ -4,7 +4,7 @@ import { can, seesDatabase, useCurrentUser, useStore, viewAsReturnPath, whenMs }
 import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
 import { useToast } from './ui.jsx'
-import { badgeUnread, loadRead } from '../lib/chat.js'
+import { HUB_PAGE, badgeUnread, loadRead } from '../lib/chat.js'
 import { chimeFor } from '../lib/chatPrefs.js'
 import { backupDue, pcloudBackup } from '../lib/pcloud.js'
 import { remote } from '../lib/supabase.js'
@@ -187,6 +187,11 @@ export default function Layout() {
     el.classList.add('page-in')
     const t = setTimeout(() => el.classList.remove('page-in'), 700)
     return () => clearTimeout(t)
+  }, [pathname])
+  // the page Hub at the foot of the chat goes back to, on a phone (Chat.jsx)
+  useEffect(() => {
+    if (pathname.startsWith('/chat')) return
+    try { sessionStorage.setItem(HUB_PAGE, pathname) } catch {}
   }, [pathname])
   useEffect(() => {
     const bar = tabsRef.current

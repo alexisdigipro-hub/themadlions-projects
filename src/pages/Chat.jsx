@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Button, Confirm, Field, Input, Modal, useIsMobile, useToast } from '../components/ui.jsx'
 import { canAccessProject, canSendNotices, today as todayISO, uid, useCurrentUser, useStore, whenMs } from '../lib/store.jsx'
 import { addDays, fmtDate } from '../lib/dates.js'
@@ -223,6 +223,7 @@ const TgIcon = {
   smile: () => <svg {...svgProps}><circle cx="12" cy="12" r="9" /><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01" /></svg>,
   sticker: () => <svg {...svgProps}><path d="M21 12a9 9 0 1 0-9 9" /><path d="M21 12c-5 0-9 4-9 9" /></svg>,
   bell: () => <svg {...svgProps}><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15Z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>,
+  hub: () => <svg {...svgProps}><path d="M3 11l9-7 9 7" /><path d="M5.5 9.5V20h13V9.5" /><path d="M10 20v-5h4v5" /></svg>,
   media: () => <svg {...svgProps}><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>,
   translate: () => <svg {...svgProps}><path d="M4 5h9M8.5 3v2M6 5c.5 3 2.5 5.5 5 7M11 5c-.7 3.4-3 6.4-7 8" /><path d="M13 21l4.5-10L22 21M14.5 17.5h6" /></svg>,
   link: () => <svg {...svgProps}><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></svg>,
@@ -359,8 +360,9 @@ export function ChatWindow() {
 export default function Chat({ windowed = false }) {
   const { room: roomParam } = useParams()
   const prefs = useChatPrefs()
+  const { search } = useLocation()
   // a message link (Copy Message Link): #/chat/<room>?m=<message>
-  const mParam = new URLSearchParams(useLocation().search).get('m')
+  const mParam = new URLSearchParams(search).get('m')
   if (mParam && linkJumped !== mParam) { linkJumped = mParam; pendingJump = mParam }
   const { state } = useStore()
   const user = useCurrentUser()
@@ -370,6 +372,9 @@ export default function Chat({ windowed = false }) {
   const active = roomParam || (mobile ? '' : C.TEAM)
   const room = active ? C.roomOf(state, user, active) : null
   useEffect(() => { if (roomParam && !room) nav(base, { replace: true }) }, [roomParam, !!room])
+  // one chat on a phone (Alex, 16 Oct): the hub's Chat is TML Chat itself, its own foot and all,
+  // with Hub at the foot to go back; a link to a room or a message lands in the same place
+  if (mobile && !windowed) return <Navigate to={(roomParam ? roomPath('/chat-window', roomParam) : '/chat-window') + search} replace />
   return (
     <div className={`chat-page chat2 ${active ? 'has-room' : ''}${windowed ? ' windowed' : ''}`} data-chat-theme={prefs.theme && prefs.theme !== 'accent' ? prefs.theme : undefined}>
       {(!mobile || !active) && <RoomList activeId={active} windowed={windowed} />}
@@ -589,6 +594,13 @@ function RoomList({ activeId, windowed }) {
     const w = window.open(url, 'tml-chat', 'popup,width=1180,height=820')
     if (!w) window.location.hash = roomPath('/chat-window', activeId || C.TEAM)
   }
+  // on a phone in the hub (not TML Chat's own page) the chat is full screen: Hub goes back to the page it came from
+  const inHub = mobile && windowed && !onChatPage()
+  const toHub = () => {
+    let to = '/'
+    try { to = sessionStorage.getItem(C.HUB_PAGE) || '/' } catch {}
+    nav(to)
+  }
   const canNotice = canSendNotices(state, user)
   const [folderId, setFolderId] = useState(() => { try { return localStorage.getItem('tml_chat_folder') || 'all' } catch { return 'all' } })
   const [q, setQ] = useState('')
@@ -798,6 +810,7 @@ function RoomList({ activeId, windowed }) {
       </nav>
     ) : (
     <nav className="chat-win-tabs tg-tabs">
+      {inHub && <button type="button" className="tg-hub" onClick={toHub}>{TgIcon.hub()}<span>Hub</span></button>}
       <button type="button" className={tab === 'chats' ? 'on' : ''} onClick={() => setTab('chats')}><span className="tg-tab-ico">{TgIcon.chats()}{allUnread > 0 && <i className="tg-tab-badge">{allUnread > 99 ? '99+' : allUnread}</i>}</span><span>Chats</span></button>
       {remote && <button type="button" className={tab === 'calls' ? 'on' : ''} onClick={() => setTab('calls')}>{TgIcon.phone()}<span>Calls</span></button>}
       {canNotice && <button type="button" className={tab === 'notices' ? 'on' : ''} onClick={() => setTab('notices')}>{TgIcon.bell()}<span>Notices</span></button>}
@@ -832,12 +845,12 @@ function RoomList({ activeId, windowed }) {
           {canNotice && mobile && !windowed && (
             <button type="button" className={`tg-pill tg-notice${tab === 'notices' ? ' on' : ''}`} onClick={() => { setPlus(false); setTab(tab === 'notices' ? 'chats' : 'notices') }} title={tab === 'notices' ? 'Back to the chats' : 'Notices'} aria-label={tab === 'notices' ? 'Back to the chats' : 'Notices'} aria-pressed={tab === 'notices'}>{TgIcon.bell()}</button>
           )}
-          <span ref={plusRef} className={`tg-pill tg-plus${plus ? ' open' : ''}`} style={{ '--n': 2 + (isAdmin ? 1 : 0) + (windowed ? 0 : 1) }}>
+          <span ref={plusRef} className={`tg-pill tg-plus${plus ? ' open' : ''}`} style={{ '--n': 2 + (isAdmin ? 1 : 0) + (windowed && !inHub ? 0 : 1) }}>
             <span className="tg-plus-items" aria-hidden={!plus}>
               <button type="button" tabIndex={plus ? 0 : -1} onClick={() => { setPlus(false); setFolders('new') }} title="New folder" aria-label="New folder">{TgIcon.folderPlus()}</button>
               {isAdmin && <button type="button" tabIndex={plus ? 0 : -1} onClick={() => { setPlus(false); setGroup('new') }} title="New group" aria-label="New group">{TgIcon.people()}</button>}
               <button type="button" tabIndex={plus ? 0 : -1} onClick={() => { setPlus(false); setDirect(true) }} title="New message" aria-label="New message">{TgIcon.edit()}</button>
-              {!windowed && <button type="button" tabIndex={plus ? 0 : -1} onClick={() => { setPlus(false); popOut() }} title="Open the chat in its own window" aria-label="Open the chat in its own window">{TgIcon.popout()}</button>}
+              {(!windowed || inHub) && <button type="button" tabIndex={plus ? 0 : -1} onClick={() => { setPlus(false); popOut() }} title={mobile ? 'TML Chat on your home screen' : 'Open the chat in its own window'} aria-label={mobile ? 'TML Chat on your home screen' : 'Open the chat in its own window'}>{TgIcon.popout()}</button>}
             </span>
             <button type="button" className="tg-plus-btn" onClick={() => setPlus((o) => !o)} aria-expanded={plus} title={plus ? 'Close' : 'New'} aria-label={plus ? 'Close' : 'New folder, group or message'}>{TgIcon.plus()}</button>
           </span>
@@ -852,7 +865,7 @@ function RoomList({ activeId, windowed }) {
         </div>
       ) : tab === 'calls' ? <CallsPanel /> : null) : (<>
       {legacy && <p className="chat-legacy">Rooms are not switched on yet: run supabase/chat_rooms.sql in the SQL editor. Until then only the team room works.</p>}
-      {mobile && !windowed && installCard > 0 && <InstallHint key={installCard} />}
+      {mobile && installCard > 0 && <InstallHint key={installCard} />}
       {!inlineSearch && searchBox}
       <div ref={roomsRef} key={folder.id} className={`chat-rooms${slide ? ` in-${slide}` : ''}`} onAnimationEnd={() => setSlide('')}>
         {!shown.length && !hits.length && <p className="muted small chat-rooms-empty">{q.trim() ? 'Nothing found.' : folder.custom ? 'This folder is empty. Add conversations to it under Folders.' : 'Nothing here yet.'}</p>}
@@ -911,7 +924,7 @@ function RoomList({ activeId, windowed }) {
           <div className="chat-notices-sent"><SentNotices /></div>
         </div>
       )}
-      {windowed && mobile && <InstallHint />}
+      {windowed && mobile && !installCard && <InstallHint />}
       {/* the folders and, where the chat has its own foot (its window, a computer), Chats / Calls /
           Notices / Settings; in the app on a phone the app's own tab bar is under it (Alex, 9 Oct) */}
       <div className="tg-dock">
