@@ -176,6 +176,21 @@ function BudgetPage() {
   const allPicked = openIds.length > 0 && openIds.every((id) => picked.includes(id))
   const togglePick = (ids, on) => setPicked((p) => (on ? [...new Set([...p, ...ids])] : p.filter((x) => !ids.includes(x))))
   const cur = 'EUR'
+  const isNewLine = !!draft && !budget.lines.some((l) => l.id === draft.id)
+  // this person's most recent budget line on any project: the same team member, or the same cast/crew/location by name
+  const lastLineOf = (kind, id) => {
+    if (!kind || !id) return null
+    const name = kind === 'contact' ? (project.contacts || []).find((c) => c.id === id)?.name : kind === 'location' ? (project.locations || []).find((l) => l.id === id)?.name : ''
+    const norm = (x) => (x || '').trim().toLowerCase()
+    const hits = []
+    for (const p of state.projects || []) {
+      for (const l of p.budget?.lines || []) {
+        const same = kind === 'member' ? l.memberId === id : name && norm(l.vendor) === norm(name)
+        if (same && lineEstimate(l) > 0) hits.push({ line: l, project: p, when: l.date || p.startDate || p.updatedAt || '' })
+      }
+    }
+    return hits.sort((a, b) => String(b.when).localeCompare(String(a.when)))[0] || null
+  }
   // groups from Settings, plus an "Unlisted" group for lines whose category was removed there
   const BUDGET_GROUPS = useMemo(() => groupPairs(state.settings, budget.lines), [state.settings, budget.lines])
   const CATEGORIES = BUDGET_GROUPS.flatMap(([, cats]) => cats)
@@ -225,6 +240,7 @@ function BudgetPage() {
     const contact = draft.contactId ? (project.contacts || []).find((c) => c.id === draft.contactId) : null
     const loc = draft.locationId ? locations.find((l) => l.id === draft.locationId) : null
     const line = { ...draft, description, vendor: who ? who.name : contact ? contact.name : loc ? loc.name : draft.vendor }
+    delete line.filledFrom // only the form's note of where the amounts came from
     update((s) => {
       const p = s.projects.find((x) => x.id === project.id)
       if (!p) return s
@@ -356,7 +372,7 @@ function BudgetPage() {
         <Modal
           open
           wide
-          title={budget.lines.some((l) => l.id === draft.id) ? 'Edit budget line' : 'New budget line'}
+          title={isNewLine ? 'New budget line' : 'Edit budget line'}
           onClose={() => setDraft(null)}
           footer={
             <>
@@ -366,31 +382,28 @@ function BudgetPage() {
           }
         >
           <div className="row-2">
-            <Field label="Category">
-              <select className="input select" value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })}>
-                {BUDGET_GROUPS.map(([g, cats]) => (
-                  <optgroup key={g} label={g}>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</optgroup>
-                ))}
-                {draft.category && !CATEGORIES.includes(draft.category) && <option value={draft.category}>{draft.category} (unlisted)</option>}
-              </select>
-            </Field>
             <Field label="Paid to" hint={
-              draft.memberId ? 'A team member: this line goes into their My Finance, and turns to paid when you pay it.'
+              draft.filledFrom ? `Category, amount and VAT from their last line, in ${draft.filledFrom}. Change anything below.`
+                : draft.memberId ? 'A team member: this line goes into their My Finance, and turns to paid when you pay it.'
                 : draft.contactId ? 'This project\'s own cast/crew: the vendor name follows if you rename them.'
                 : draft.locationId ? 'This project\'s own location: the vendor name follows if you rename it.'
                 : ''
             }>
               {/* picking a member also takes the project's shooting day as the work date, unless one is set already */}
               <Select
+                autoFocus={isNewLine}
                 value={draft.memberId ? `member:${draft.memberId}` : draft.contactId ? `contact:${draft.contactId}` : draft.locationId ? `location:${draft.locationId}` : ''}
                 onChange={(e) => {
                   const [kind, id] = e.target.value.split(':')
+                  // a new line takes the category, amount and VAT of this person's last line on any project (Alex, 16 Oct)
+                  const last = isNewLine ? lastLineOf(kind, id) : null
                   setDraft({
                     ...draft,
                     memberId: kind === 'member' ? id : '',
                     contactId: kind === 'contact' ? id : '',
                     locationId: kind === 'location' ? id : '',
                     date: draft.date || (kind === 'member' ? projectWorkDate(project) : draft.date),
+                    ...(last ? { category: last.line.category, estimate: lineEstimate(last.line) || '', qty: 1, unit: 'flat', rate: 0, vatPct: last.line.vatPct ?? '', filledFrom: last.project.title } : { filledFrom: '' }),
                   })
                 }}
               >
@@ -401,13 +414,21 @@ function BudgetPage() {
                 {!!locations.length && <optgroup label="Locations">{locations.map((l) => <option key={l.id} value={`location:${l.id}`}>{locationLabel(l)}</option>)}</optgroup>}
               </Select>
             </Field>
+            <Field label="Category">
+              <select className="input select" value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })}>
+                {BUDGET_GROUPS.map(([g, cats]) => (
+                  <optgroup key={g} label={g}>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</optgroup>
+                ))}
+                {draft.category && !CATEGORIES.includes(draft.category) && <option value={draft.category}>{draft.category} (unlisted)</option>}
+              </select>
+            </Field>
           </div>
           {draft.memberId ? (
             <Field label="Work date" hint={`From the project's shooting days. Goes into ${team.find((u) => u.id === draft.memberId)?.name || 'their'} My Finance as "${project.title}${draft.description || draft.category ? ` · ${draft.description || draft.category}` : ''}"${draft.date ? ` on ${fmtDate(draft.date)}` : ', dated today'}.`}><Input type="date" value={draft.date || ''} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
           ) : !draft.contactId && !draft.locationId ? (
             <Field label="Vendor / payee"><Input value={draft.vendor} onChange={(e) => setDraft({ ...draft, vendor: e.target.value })} placeholder="Optional" /></Field>
           ) : null}
-          <Field label="Description (optional)" hint={`Leave it empty and the line is called "${draft.category || 'its category'}". Worth writing for props, gear, permits.`}><Input autoFocus value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder={draft.category || 'Alexa Mini LF package, rooftop permit'} /></Field>
+          <Field label="Description (optional)" hint={`Leave it empty and the line is called "${draft.category || 'its category'}". Worth writing for props, gear, permits.`}><Input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder={draft.category || 'Alexa Mini LF package, rooftop permit'} /></Field>
           {/* One amount per line, Alex's call. An old line made as quantity × rate shows its total here and is saved as that total. VAT is optional, next to it, and folds into the line's total. */}
           <div className="row-2">
             <Field label={`Amount (${cur})`} hint={draft.payments?.length ? `${money(linePaid(draft), cur)} paid so far, ${draft.payments.length} payment${draft.payments.length === 1 ? '' : 's'} recorded in Finance.` : 'What this costs. Payments are recorded from Finance or with Pay on the line.'}>
