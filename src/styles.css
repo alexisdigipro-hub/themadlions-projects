@@ -2139,6 +2139,35 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 }
 .budget-table td.pick input, .budget-table th.pick input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; vertical-align: middle; }
 .budget-table tr.picked td { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+/* The budget on screen like the Calendar (Alex, 16 Oct: "closer to the rest of the hub, the ticks bigger,
+   they cannot be pressed"): every line a soft rounded tile with a gap, the category a chip with a dot,
+   a round 26px tick with a 40px place to press, Pay / Edit as pills. Print keeps the ruled sheet. */
+@media screen {
+  .topsheet .budget-table { border-collapse: separate; border-spacing: 0 6px; margin-top: 4px; }
+  .topsheet .budget-table th { border: 0; padding: 4px 12px 0; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .topsheet .budget-table td { padding: 12px; vertical-align: middle; background: color-mix(in srgb, var(--panel) 88%, transparent); border-top: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); transition: background .15s; }
+  .topsheet .budget-table td:first-child { border-left: 1px solid var(--line-soft); border-radius: 14px 0 0 14px; }
+  .topsheet .budget-table td:last-child { border-right: 1px solid var(--line-soft); border-radius: 0 14px 14px 0; }
+  .topsheet .budget-table tbody tr:hover td { background: var(--raised); }
+  .topsheet .budget-table tr.picked td { background: color-mix(in srgb, var(--accent) 12%, var(--panel)); border-color: color-mix(in srgb, var(--accent) 45%, var(--line-soft)); }
+  .topsheet .budget-table th.pick, .topsheet .budget-table td.pick { width: 44px; padding: 0 0 0 8px; }
+  .b-tick { display: inline-grid; place-items: center; width: 40px; height: 40px; margin: -8px 0; border-radius: 50%; cursor: pointer; }
+  .b-tick:hover { background: color-mix(in srgb, var(--text) 7%, transparent); }
+  .budget-table .pick .b-tick input { -webkit-appearance: none; appearance: none; display: grid; place-items: center; width: 26px; height: 26px; margin: 0; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--text) 35%, transparent); background: color-mix(in srgb, var(--text) 5%, transparent); cursor: pointer; transition: background .15s, border-color .15s, transform .15s; }
+  .budget-table .pick .b-tick input:checked { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); }
+  .budget-table .pick .b-tick input:checked::after { content: ''; width: 6px; height: 11px; margin-top: -2px; border: solid #fff; border-width: 0 2.4px 2.4px 0; transform: rotate(45deg); }
+  .budget-table .pick .b-tick input:active { transform: scale(.9); }
+  .b-cat { display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 10px; background: color-mix(in srgb, var(--text) 7%, transparent); color: var(--text); font-size: 13px; font-weight: 600; }
+  .b-cat i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+  .topsheet .budget-table .row-actions > * + * { margin-left: 6px; }
+  .topsheet .budget-table .row-actions button { height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--text); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; }
+  .topsheet .budget-table .row-actions button:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 4px 14px rgba(0, 0, 0, .18); }
+  .topsheet .budget-table .row-actions button:active { transform: scale(.97); }
+  .topsheet .budget-table .row-actions .b-pay { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .topsheet .budget-table .row-actions .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .topsheet .budget-table .row-actions button:not(.b-pay):not(.b-edit):not(.btn-danger) { width: 32px; padding: 0; border-radius: 50%; font-size: 16px; color: var(--muted); background: color-mix(in srgb, var(--text) 6%, transparent); border-color: var(--line-soft); }
+  .topsheet .budget-table .row-actions button:not(.b-pay):not(.b-edit):not(.btn-danger):hover { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 50%, var(--line)); }
+}
 .bulk-bar { position: sticky; bottom: 14px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding: 10px 14px; background: var(--panel); border: 1px solid var(--accent); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
 .bulk-bar-actions { display: flex; gap: 8px; }
 .bulk-pay-list td { padding-top: 6px; padding-bottom: 6px; }

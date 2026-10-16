@@ -293,7 +293,7 @@ function BudgetPage() {
             <thead>
               <tr>
                 {editable && <th className="grip no-print" />}
-                {canPay && <th className="pick no-print">{openIds.length > 0 && <input type="checkbox" checked={allPicked} onChange={(e) => togglePick(openIds, e.target.checked)} aria-label="Select every unpaid line" title="Select every unpaid line" />}</th>}
+                {canPay && <th className="pick no-print">{openIds.length > 0 && <label className="b-tick"><input type="checkbox" checked={allPicked} onChange={(e) => togglePick(openIds, e.target.checked)} aria-label="Select every unpaid line" title="Select every unpaid line" /></label>}</th>}
                 <th>Category</th><th>Description</th><th>Name</th><th className="num">Amount</th><th>VAT</th><th className="num">Paid</th><th className="num">Balance</th>{editable && <th className="no-print" />}
               </tr>
             </thead>
@@ -305,8 +305,8 @@ function BudgetPage() {
                       <button type="button" className="grip-btn" aria-label={`Move ${l.description || l.category}`} title="Drag to move this line" {...bind(l.id)}>⠿</button>
                     </td>
                   )}
-                  {canPay && <td className="pick no-print">{payable(l) && <input type="checkbox" checked={picked.includes(l.id)} onChange={(e) => togglePick([l.id], e.target.checked)} aria-label={`Select ${l.description} to pay`} />}</td>}
-                  <td className="muted small budget-cat">{l.category}</td>
+                  {canPay && <td className="pick no-print">{payable(l) && <label className="b-tick"><input type="checkbox" checked={picked.includes(l.id)} onChange={(e) => togglePick([l.id], e.target.checked)} aria-label={`Select ${l.description} to pay`} /></label>}</td>}
+                  <td className="muted small budget-cat"><span className="b-cat"><i />{l.category}</span></td>
                   <td>
                     {l.description}
                     {l.receipt && <button type="button" className="receipt-chip no-print" onClick={() => setViewReceipt(l.receipt)} title="Open the receipt">🧾<span>Receipt</span></button>}
@@ -320,8 +320,8 @@ function BudgetPage() {
                   <td className={`num ${l.payments?.length && lineBalance(l) > 0 ? 'over' : ''}`}>{l.payments?.length ? (lineBalance(l) > 0 ? money(lineBalance(l), cur) : <span className="under">settled</span>) : selfPaid(l) ? <span className="under">settled</span> : ''}</td>
                   {editable && (
                     <td className="row-actions no-print">
-                      {me?.role === 'admin' && lineEstimate(l) > 0 && lineBalance(l) > 0 && <button onClick={() => setPay(l)}>Pay</button>}
-                      <button onClick={() => setDraft({ ...l })}>Edit</button>
+                      {me?.role === 'admin' && lineEstimate(l) > 0 && lineBalance(l) > 0 && <button type="button" className="b-pay" onClick={() => setPay(l)}>Pay</button>}
+                      <button type="button" className="b-edit" onClick={() => setDraft({ ...l })}>Edit</button>
                       <Confirm onConfirm={() => remove(l.id)} label="Delete">×</Confirm>
                     </td>
                   )}
