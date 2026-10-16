@@ -164,7 +164,11 @@ function BudgetPage() {
   const [viewReceipt, setViewReceipt] = useState(null)
   // lines ticked for one payment together; only lines with money still owed can be ticked
   const canPay = me?.role === 'admin' && editable
-  const payable = (l) => lineEstimate(l) > 0 && lineBalance(l) > 0
+  // a team member who marked their fee paid in their own My Finance (Alex, 16 Oct): the line shows it
+  // paid until the production records a payment itself (Pay), which then takes over; it is left out of
+  // "Select every unpaid line" so nobody pays it twice
+  const selfPaid = (l) => !l.payments?.length && !!l.memberId && (state.worklog || []).some((e) => e.budgetLineId === l.id && e.status === 'paid')
+  const payable = (l) => lineEstimate(l) > 0 && lineBalance(l) > 0 && !selfPaid(l)
   const [picked, setPicked] = useState([])
   const [bulkPay, setBulkPay] = useState(false)
   const pickedLines = budget.lines.filter((l) => picked.includes(l.id) && payable(l))
@@ -201,7 +205,8 @@ function BudgetPage() {
       p.budget.ordered = true
     }),
   )
-  const t = budgetTotals(project)
+  const t0 = budgetTotals(project)
+  const t = { ...t0, act: t0.act + budget.lines.filter(selfPaid).reduce((a, l) => a + lineEstimate(l), 0) }
 
   // whom a line can pay: a teammate is a fee, so only an administrator picks one (a refund line keeps its own)
   const payTeam = admin ? team : team.filter((u) => u.id === draft?.memberId)
@@ -311,8 +316,8 @@ function BudgetPage() {
                   <td>{l.vendor}{l.vendor && (l.memberId ? ' (team)' : l.contactId ? ` (${contactKind(l.contactId) || 'crew'})` : l.locationId ? ' (location)' : '')}</td>
                   <td className="num">{money(lineTotal(l), cur)}</td>
                   <td className="muted small">{Number(l.vatPct) > 0 && <span title={`${money(lineEstimate(l), cur)} + ${l.vatPct}% VAT`}>VAT included</span>}</td>
-                  <td className="num">{l.payments?.length ? money(linePaid(l), cur) : l.actual !== '' && l.actual != null && Number(l.actual) ? money(l.actual, cur) : ''}</td>
-                  <td className={`num ${l.payments?.length && lineBalance(l) > 0 ? 'over' : ''}`}>{l.payments?.length ? (lineBalance(l) > 0 ? money(lineBalance(l), cur) : <span className="under">settled</span>) : ''}</td>
+                  <td className="num">{l.payments?.length ? money(linePaid(l), cur) : selfPaid(l) ? <span title={`${l.vendor || 'They'} marked this paid in My Finance. No payment is recorded in Finance yet: Pay records it there.`}>{money(lineEstimate(l), cur)}<div className="muted small">marked by them</div></span> : l.actual !== '' && l.actual != null && Number(l.actual) ? money(l.actual, cur) : ''}</td>
+                  <td className={`num ${l.payments?.length && lineBalance(l) > 0 ? 'over' : ''}`}>{l.payments?.length ? (lineBalance(l) > 0 ? money(lineBalance(l), cur) : <span className="under">settled</span>) : selfPaid(l) ? <span className="under">settled</span> : ''}</td>
                   {editable && (
                     <td className="row-actions no-print">
                       {me?.role === 'admin' && lineEstimate(l) > 0 && lineBalance(l) > 0 && <button onClick={() => setPay(l)}>Pay</button>}
