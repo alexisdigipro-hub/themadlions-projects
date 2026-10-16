@@ -2170,12 +2170,12 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
   .b-cat { display: inline-flex; align-items: center; gap: 7px; padding: 4px 10px; border-radius: 10px; background: color-mix(in srgb, var(--text) 7%, transparent); color: var(--text); font-size: 13px; font-weight: 600; }
   .b-cat i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
   .topsheet .budget-table .row-actions > * + * { margin-left: 6px; }
-  .topsheet .budget-table .row-actions button { height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--text); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; }
+  .topsheet .budget-table .row-actions button { justify-content: center; vertical-align: middle; height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--text); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: transform .15s, border-color .15s, box-shadow .15s; }
   .topsheet .budget-table .row-actions button:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); box-shadow: 0 4px 14px rgba(0, 0, 0, .18); }
   .topsheet .budget-table .row-actions button:active { transform: scale(.97); }
   .topsheet .budget-table .row-actions .b-pay { background: var(--accent); border-color: var(--accent); color: #fff; }
   .topsheet .budget-table .row-actions .btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
-  .topsheet .budget-table .row-actions button:not(.b-pay):not(.b-edit):not(.btn-danger) { width: 32px; padding: 0; border-radius: 50%; font-size: 16px; color: var(--muted); background: color-mix(in srgb, var(--text) 6%, transparent); border-color: var(--line-soft); }
+  .topsheet .budget-table .row-actions button:not(.b-pay):not(.b-edit):not(.btn-danger) { display: inline-grid; place-items: center; width: 32px; min-width: 32px; padding: 0 !important; border-radius: 50%; font-size: 16px; line-height: 1; color: var(--muted); background: color-mix(in srgb, var(--text) 6%, transparent); border-color: var(--line-soft); }
   .topsheet .budget-table .row-actions button:not(.b-pay):not(.b-edit):not(.btn-danger):hover { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 50%, var(--line)); }
 }
 .bulk-bar { position: sticky; bottom: 14px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 14px; padding: 10px 14px; background: var(--panel); border: 1px solid var(--accent); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
