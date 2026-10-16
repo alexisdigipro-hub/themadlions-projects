@@ -12,6 +12,8 @@ import { joinName, nameParts } from '../lib/projectName.js'
 import { duplicateProject } from '../lib/duplicate.js'
 import { syncShootDay } from '../lib/shootDays.js'
 import { glassLens, slideOut, stillMotion } from '../lib/glide.js'
+import { projectTasksFor, pushProjectTasks } from '../lib/autoTasks.js'
+import { sendAutoNotice } from '../components/Notices.jsx'
 
 /* The row of tab chips: on = shown, struck through = hidden, Overview fixed. Used by the project
    form and by the strip on the Overview, so switching a tab on is one tap either way. */
@@ -282,14 +284,19 @@ export default function Dashboard() {
 
   const save = () => {
     if (!draft.title.trim()) return toast('Give the project a title.', 'error')
+    const auto = draft.isNew ? projectTasksFor(state, draft) : null
     update((s) => {
       const i = s.projects.findIndex((p) => p.id === draft.id)
       const from = i >= 0 ? s.projects[i].startDate || '' : ''
       if (i >= 0) s.projects[i] = { ...s.projects[i], ...draft, updatedAt: new Date().toISOString() }
-      else { const { isNew, ...fresh } = draft; s.projects.push(emptyProject({ ...fresh, code: draft.code || nextProjectCode(s) })) }
+      else { const { isNew, ...fresh } = draft; s.projects.push(emptyProject({ ...fresh, code: draft.code || nextProjectCode(s) })); pushProjectTasks(s, auto) }
       return syncShootDay(s, draft.id, from, draft.startDate || '')
     })
-    toast(draft.isNew ? 'Project created' : 'Project saved', 'ok')
+    // the assignee of the task a new Music Video brings gets the usual "New task for you"
+    if (auto?.who && auto.who.id !== user?.id) {
+      sendAutoNotice(update, { kind: 'taskAssigned', key: `task:${auto.task.id}`, fromId: user?.id, fromName: user?.name, to: [auto.who.id], title: 'New task for you', body: auto.task.title })
+    }
+    toast(draft.isNew ? (auto ? `Project created · "${auto.task.title}" added to Tasks` : 'Project created') : 'Project saved', 'ok')
     setDraft(null)
   }
 
