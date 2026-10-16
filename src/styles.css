@@ -7391,3 +7391,36 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
   html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .chat-rtop small { font-size: 13px; }
   html:not(.chat-window)[data-theme] body .chat2:not(.windowed):not([data-chat-theme='coral']) .chat-list.tgui .chat-rprev { font-size: 14px; }
 }
+
+/* ---------- motion on the phone (Alex, 16 Oct: "magnetic" swipes, more slides, transitions, pops) ----------
+   The swipe itself lives in lib/swipeTabs.js; here: a page's entrance, its tiles one after another,
+   the foot bar's hop, and everything that is tapped sinking a little. Nothing here touches desktop. */
+@media (max-width: 820px) {
+  .content.page-in { animation: m-page-in .38s cubic-bezier(.2, .8, .2, 1) both; }
+  .content.page-in > * > :nth-child(-n + 12) { animation: m-tile-in .5s cubic-bezier(.2, .8, .2, 1) both; }
+  .content.page-in > * > :nth-child(2) { animation-delay: 40ms; }
+  .content.page-in > * > :nth-child(3) { animation-delay: 80ms; }
+  .content.page-in > * > :nth-child(4) { animation-delay: 120ms; }
+  .content.page-in > * > :nth-child(5) { animation-delay: 160ms; }
+  .content.page-in > * > :nth-child(6) { animation-delay: 200ms; }
+  .content.page-in > * > :nth-child(n + 7) { animation-delay: 240ms; }
+  @keyframes m-page-in { from { opacity: 0; transform: translate3d(0, 10px, 0); } to { opacity: 1; transform: none; } }
+  @keyframes m-tile-in { from { opacity: 0; transform: translate3d(0, 14px, 0) scale(.98); } to { opacity: 1; transform: none; } }
+
+  /* the foot bar: the chosen icon hops, a tap sinks */
+  .tabbar a.active svg, .tabbar button.active svg { animation: m-hop .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+  @keyframes m-hop { 0% { transform: scale(.8) translateY(2px); } 45% { transform: scale(1.18) translateY(-3px); } 100% { transform: none; } }
+  .tabbar a, .tabbar button { transition: transform .18s cubic-bezier(.3, 1.4, .5, 1), color .2s; }
+  .tabbar a:active, .tabbar button:active { transform: scale(.88); }
+
+  /* anything tapped sinks a little and springs back */
+  .content :is(.btn, .act, .chip, .pill-btn) { transition: transform .16s cubic-bezier(.3, 1.4, .5, 1), background-color .2s, color .2s, box-shadow .2s; }
+  .content :is(.btn, .act, .chip, .pill-btn):active:not(:disabled) { transform: scale(.94); }
+
+  /* notes at the bottom spring up */
+  .toast { animation: m-toast-in .45s cubic-bezier(.3, 1.4, .5, 1) both; }
+  @keyframes m-toast-in { from { opacity: 0; transform: translateY(18px) scale(.94); } to { opacity: 1; transform: none; } }
+}
+@media (max-width: 820px) and (prefers-reduced-motion: reduce) {
+  .content.page-in, .content.page-in > * > *, .tabbar a.active svg, .tabbar button.active svg, .toast { animation: none !important; }
+}

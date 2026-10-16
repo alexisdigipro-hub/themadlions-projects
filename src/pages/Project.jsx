@@ -80,12 +80,14 @@ export default function Project() {
   // as when one is tapped (lib/swipeTabs.js)
   const base = `/p/${project.id}`
   const seg = pathname.startsWith(base) ? pathname.slice(base.length).replace(/^\//, '').split('/')[0] : ''
-  swipeTabs.project = mobile ? (dir) => {
+  swipeTabs.project = mobile ? (dir, mode) => {
     const at = tabs.findIndex((t) => (seg ? t.to === seg : t.end))
     const to = at < 0 ? null : tabs[at + (dir === 'next' ? 1 : -1)]
-    if (!to) return
-    glide.slideTo(dir)
+    if (!to || mode === 'dry') return !!to
+    // the magnetic swipe moves the page itself; a swipe without it gets the tab's own slide
+    if (mode !== 'magnet') glide.slideTo(dir)
     nav(to.end || !to.to ? base : `${base}/${to.to}`)
+    return true
   } : null
 
   const ctx = {
