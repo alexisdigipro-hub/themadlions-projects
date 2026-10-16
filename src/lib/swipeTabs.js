@@ -24,7 +24,7 @@ function fromHere(target) {
   if (!(target instanceof Element) || !target.closest('.content')) return false
   if (target.closest(NO)) return false
   const root = document.documentElement
-  if (root.classList.contains('chat-open') || document.querySelector('.modal-backdrop, .ptabs-m.open')) return false
+  if (root.classList.contains('chat-open') || document.querySelector('.modal-backdrop')) return false
   for (let el = target; el && !el.classList?.contains('content'); el = el.parentElement) {
     const ox = getComputedStyle(el).overflowX
     if ((ox === 'auto' || ox === 'scroll') && el.scrollWidth > el.clientWidth + 4) return false
