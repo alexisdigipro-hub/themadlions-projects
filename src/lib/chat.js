@@ -233,3 +233,6 @@ export function mentionQuery(text, caret) {
   if (/\n/.test(q) || q.length > 30) return null
   return { at, q }
 }
+
+// the hub page the chat was opened from on a phone, for the Hub button at TML Chat's foot (Layout keeps it)
+export const HUB_PAGE = 'tml_hub_page'
