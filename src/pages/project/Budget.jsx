@@ -316,7 +316,7 @@ function BudgetPage() {
                   <td>{l.vendor}{l.vendor && (l.memberId ? ' (team)' : l.contactId ? ` (${contactKind(l.contactId) || 'crew'})` : l.locationId ? ' (location)' : '')}</td>
                   <td className="num">{money(lineTotal(l), cur)}</td>
                   <td className="muted small">{Number(l.vatPct) > 0 && <span title={`${money(lineEstimate(l), cur)} + ${l.vatPct}% VAT`}>VAT included</span>}</td>
-                  <td className="num">{l.payments?.length ? money(linePaid(l), cur) : selfPaid(l) ? <span title={`${l.vendor || 'They'} marked this paid in My Finance. No payment is recorded in Finance yet: Pay records it there.`}>{money(lineEstimate(l), cur)}<div className="muted small">marked by them</div></span> : l.actual !== '' && l.actual != null && Number(l.actual) ? money(l.actual, cur) : ''}</td>
+                  <td className="num">{l.payments?.length ? <>{money(linePaid(l), cur)}{lineBalance(l) > 0 && l.payments.some((p) => p.kind === 'advance') && <div className="muted small">advance</div>}</> : selfPaid(l) ? <span title={`${l.vendor || 'They'} marked this paid in My Finance. No payment is recorded in Finance yet: Pay records it there.`}>{money(lineEstimate(l), cur)}<div className="muted small">marked by them</div></span> : l.actual !== '' && l.actual != null && Number(l.actual) ? money(l.actual, cur) : ''}</td>
                   <td className={`num ${l.payments?.length && lineBalance(l) > 0 ? 'over' : ''}`}>{l.payments?.length ? (lineBalance(l) > 0 ? money(lineBalance(l), cur) : <span className="under">settled</span>) : selfPaid(l) ? <span className="under">settled</span> : ''}</td>
                   {editable && (
                     <td className="row-actions no-print">

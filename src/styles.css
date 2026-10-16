@@ -2139,6 +2139,13 @@ html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, ht
 }
 .budget-table td.pick input, .budget-table th.pick input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; vertical-align: middle; }
 .budget-table tr.picked td { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+/* Payment: Full balance | Advance, and for an advance 30 / 50 / 70% of what is owed (Alex, 16 Oct) */
+.pay-kind { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pay-kind .segmented { margin: 0; padding: 3px; gap: 2px; border-radius: 999px; border: 1px solid var(--line); background: color-mix(in srgb, var(--text) 5%, transparent); }
+.pay-kind .segmented button { height: 32px; padding: 0 16px; border: 0; border-radius: 999px; background: none; color: var(--muted); font-weight: 600; }
+.pay-kind .segmented button.on { color: var(--text); background: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, .07)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 4px 14px rgba(0, 0, 0, .2); }
+.pay-shares { display: flex; gap: 6px; flex-wrap: wrap; }
+.pay-shares .chip { margin: 0; font-size: 13.5px; }
 /* The budget on screen like the Calendar (Alex, 16 Oct: "closer to the rest of the hub, the ticks bigger,
    they cannot be pressed"): every line a soft rounded tile with a gap, the category a chip with a dot,
    a round 26px tick with a 40px place to press, Pay / Edit as pills. Print keeps the ruled sheet. */
