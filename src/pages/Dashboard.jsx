@@ -13,6 +13,7 @@ import { duplicateProject } from '../lib/duplicate.js'
 import { syncShootDay } from '../lib/shootDays.js'
 import { glassLens, slideOut, stillMotion } from '../lib/glide.js'
 import { projectTasksFor, pushProjectTasks } from '../lib/autoTasks.js'
+import { lineTotal } from '../lib/budget.js'
 import { sendAutoNotice } from '../components/Notices.jsx'
 
 /* The row of tab chips: on = shown, struck through = hidden, Overview fixed. Used by the project
@@ -300,11 +301,14 @@ export default function Dashboard() {
     setDraft(null)
   }
 
+  const seesBudget = can(user, 'budget')
   const card = (p, grey) => (
     <Link key={p.id} to={`/p/${p.id}`} className={`project-card ${grey ? 'grey' : ''}`} style={{ '--pc': p.color }}>
       <div className={`project-cover ${p.coverThumb ? 'has-img' : ''}`}>
         {p.coverThumb ? <img src={p.coverThumb} alt="" /> : <span className="slate-bar" />}
         <span className="project-cat">{p.category}</span>
+        {/* € when the project has a budget with money in it, for whoever may see budgets (Alex, 16 Oct) */}
+        {seesBudget && (p.budget?.lines || []).some((l) => lineTotal(l) > 0) && <span className="project-eur" title="Has a budget" aria-label="Has a budget">€</span>}
       </div>
       <div className="project-progress" title={`${projectProgress(p, state.settings).pct}% done`}><span style={{ width: `${projectProgress(p, state.settings).pct}%` }} /></div>
       <div className="project-body">
