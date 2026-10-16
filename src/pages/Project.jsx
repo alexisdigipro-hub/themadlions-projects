@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { Badge, useIsMobile } from '../components/ui.jsx'
 import { can, canAccessProject, useCurrentUser, useStore } from '../lib/store.jsx'
@@ -16,36 +16,27 @@ export function useProject() {
   return useOutletContext()
 }
 
-/* A project's tabs on a phone (Alex, 8 Oct): one bar that stays put under the header while the
-   page scrolls, naming the tab you are on; tap it and every tab opens as a grid, tap one and the
-   grid closes. Replaces the row that slid sideways and cut the last tab in half. */
-function MobileTabs({ tabs, base }) {
-  const [open, setOpen] = useState(false)
+/* A project's tabs on a phone: one row of chips that slides sideways, like Settings' and Home's
+   (Alex, 16 Oct; before that a bar naming the tab you are on that opened a grid). It stays put under
+   the header while the page scrolls, and the chosen chip is brought into view. */
+function MobileTabs({ tabs, onPick }) {
+  const rowRef = useRef(null)
   const { pathname } = useLocation()
-  const seg = pathname.startsWith(base) ? pathname.slice(base.length).replace(/^\//, '').split('/')[0] : ''
-  const current = tabs.find((t) => t.to === seg) || (seg ? null : tabs.find((t) => t.end))
-  useEffect(() => { setOpen(false) }, [pathname])
+  useEffect(() => {
+    const row = rowRef.current
+    const on = row?.querySelector('.chip.on')
+    if (!row || !on || row.scrollWidth <= row.clientWidth) return
+    row.scrollTo({ left: on.offsetLeft - (row.clientWidth - on.offsetWidth) / 2, behavior: 'smooth' })
+  }, [pathname])
   return (
-    <div className={`ptabs-m${open ? ' open' : ''}`}>
-      <button type="button" className="ptabs-m-current" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-        {current && <span className="tab-ico">{Icon[current.icon]?.()}</span>}
-        <span className="grow">{current?.label || 'Pages'}</span>
-        <span className="ptabs-m-count muted">{tabs.length} tabs</span>
-        <span className="ptabs-m-chev" aria-hidden="true">▾</span>
-      </button>
-      {open && (
-        <>
-          <button type="button" className="ptabs-m-scrim" aria-label="Close" onClick={() => setOpen(false)} />
-          <nav className="ptabs-m-grid">
-            {tabs.map((t) => (
-              <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')} onClick={() => setOpen(false)}>
-                <span className="tab-ico">{Icon[t.icon]?.()}</span>
-                {t.label}
-              </NavLink>
-            ))}
-          </nav>
-        </>
-      )}
+    <div className="ptabs-m">
+      <nav ref={rowRef} className="chips ptabs-chips">
+        {tabs.map((t) => (
+          <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => `chip${isActive ? ' on active' : ''}`} onClick={onPick}>
+            {t.label}
+          </NavLink>
+        ))}
+      </nav>
     </div>
   )
 }
@@ -114,7 +105,7 @@ export default function Project() {
           </div>
         </div>
       </div>
-      {mobile ? <MobileTabs tabs={tabs} base={`/p/${project.id}`} /> : (
+      {mobile ? <MobileTabs tabs={tabs} onPick={glide.go} /> : (
         <nav className="tabs">
           {tabs.map((t) => (
             <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')} onClick={glide.go}>
