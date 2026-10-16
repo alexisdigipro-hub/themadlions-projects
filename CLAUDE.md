@@ -15,7 +15,7 @@ Alex Konstantinidis, film director, owner of The Mad Lions (Athens). He is not a
 - **Chat colours**: Settings > Chat (Glass dark, Coral, Neo red…), separate from the hub's own skin.
 
 ## Not the hub's
-The Supabase tables `roar_*`, functions `roar_*` and buckets `roar-files` / `roar-avatars` belong to RoarMe (repository alexisdigipro-hub/roarme), parked in this project until it gets its own. Never change or drop them from here.
+The Supabase tables `roar_*`, functions `roar_*` and buckets `roar-files` / `roar-avatars` in this project are RoarMe's old copy (repository alexisdigipro-hub/roarme). Since 16 Oct 2026 RoarMe runs on its own Supabase project (bzmjhbnwhdwmncxkqkdl) and no longer reads them. Never change or drop them from here; Alex decides when they go.
 
 ## Commands
 - `npm ci` then `npm run build` must pass before every commit.
