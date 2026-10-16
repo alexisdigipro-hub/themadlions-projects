@@ -161,17 +161,33 @@ export default function Layout() {
   // page's own tabs (Organizer's Tasks · Notes · Office, the Database's, Finance's, Settings' chips;
   // Alex, 14 Oct), tapped as if by hand, and past its first or last one the bar's; else of this bar
   const swipeRef = useRef(null)
-  swipeRef.current = (dir) => {
-    if (swipeTabs.project) { swipeTabs.project(dir); return }
+  // mode 'dry' only says whether there is somewhere to go (the magnetic swipe asks while the finger moves)
+  swipeRef.current = (dir, mode) => {
+    if (swipeTabs.project) return swipeTabs.project(dir, mode)
     const own = [...document.querySelectorAll('.content :is(nav.db-tabs, nav.settings-chips, nav.settings-tabs) > :is(a, button)')].filter((el) => el.offsetParent)
     const on = own.findIndex((el) => el.classList.contains('active') || el.classList.contains('on'))
     const next = on < 0 ? null : own[on + (dir === 'next' ? 1 : -1)]
-    if (next) { next.click(); next.scrollIntoView?.({ inline: 'nearest', block: 'nearest' }); return }
+    if (next) {
+      if (mode !== 'dry') { next.click(); next.scrollIntoView?.({ inline: 'nearest', block: 'nearest' }) }
+      return true
+    }
     const at = items.findIndex((i) => (i.end ? pathname === i.to : pathname === i.to || pathname.startsWith(`${i.to}/`) || i.also?.some((p) => pathname.startsWith(p))))
     const to = at < 0 ? null : items[at + (dir === 'next' ? 1 : -1)]
-    if (to) nav(to.to)
+    if (to && mode !== 'dry') nav(to.to)
+    return !!to
   }
-  useEffect(() => listenSwipes((dir) => { if (window.matchMedia?.('(max-width: 820px)').matches) swipeRef.current?.(dir) }), [])
+  useEffect(() => listenSwipes((dir, mode) => (window.matchMedia?.('(max-width: 820px)').matches ? swipeRef.current?.(dir, mode) : false)), [])
+  // on a phone a new page comes in with a short slide and its tiles one after another (Alex, 16 Oct);
+  // not when a magnetic swipe already brought it in
+  useEffect(() => {
+    const el = document.querySelector('.content')
+    if (!el || !window.matchMedia?.('(max-width: 820px)').matches || el.dataset.magnet) return undefined
+    el.classList.remove('page-in')
+    void el.offsetWidth
+    el.classList.add('page-in')
+    const t = setTimeout(() => el.classList.remove('page-in'), 700)
+    return () => clearTimeout(t)
+  }, [pathname])
   useEffect(() => {
     const bar = tabsRef.current
     const on = bar?.querySelector('a.active')
