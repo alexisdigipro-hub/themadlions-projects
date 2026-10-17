@@ -6,12 +6,12 @@
 <!-- RoarMe's page on the company site (Alex, 17 Oct 2026): what the app is and where to get it, in the look of
      themadlions.com (Jost, near-black, Rosso Corsa, glass pills). Lives at themadlions.com/roarme/. EN and GR, as the
      main page. Download links follow the newest desktop build by themselves (releases/latest). -->
-<title>RoarMe · Messages, calls and 3 GB files · by The Mad Lions</title>
+<title>RoarMe · Messages, calls, 3 GB files and encrypted secret chats · by The Mad Lions</title>
 <link rel="canonical" href="https://themadlions.com/roarme/">
-<meta name="description" content="RoarMe, the messenger by The Mad Lions. Messages, voice and video calls, files up to 3 GB with RoarTransfer. No phone number, just a username. For Mac, Windows, the browser and the phone.">
+<meta name="description" content="RoarMe, the messenger by The Mad Lions. Messages, voice and video calls, files up to 3 GB with RoarTransfer, and encrypted secret chats when it matters. No phone number, just a username. For Mac, Windows, the browser and the phone.">
 <meta name="theme-color" content="#1b1e23">
 <meta property="og:title" content="RoarMe · by The Mad Lions">
-<meta property="og:description" content="Messages, calls and files up to 3 GB. No phone number, just a username.">
+<meta property="og:description" content="Messages, calls, files up to 3 GB and encrypted secret chats. No phone number, just a username.">
 <meta property="og:url" content="https://themadlions.com/roarme/">
 <meta property="og:image" content="https://themadlions.com/og-image.png">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
@@ -123,6 +123,7 @@ svg { display: block; }
 .float i svg { width: 16px; height: 16px; }
 .f1 { left: -26px; bottom: 16%; }
 .f2 { right: -14px; top: 12%; }
+.f3 { right: -22px; bottom: 14%; }
 
 
 /* the small pictures */
@@ -379,6 +380,29 @@ footer { border-top-color: var(--line); }
 .stack { display: flex; flex: none; }
 .stack .av { width: 26px; height: 26px; font-size: 9.5px; border: 2px solid var(--app); }
 .stack .av + .av { margin-left: -9px; }
+
+/* Encrypted secret chats (Alex, 17 Oct: "είναι βασικό"): a wide tile with the chat as it looks while it is on */
+.secret-t { border-color: rgba(212, 0, 0, .38); background: radial-gradient(80% 120% at 0% 0%, rgba(212, 0, 0, .14), transparent 60%), var(--bg-2); }
+.secret { width: min(400px, 100%); display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.secret .sys { align-self: center; display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 99px; font-size: 11px; color: #9aa0aa; background: rgba(255,255,255,.06); border: 1px solid var(--app-edge); }
+.secret .sys b { color: var(--text); font-weight: 600; }
+.secret .sys i, .secret .ebar > i, .secret .lk { display: inline-grid; place-items: center; color: #ff4a3f; }
+.secret .sys i { margin-right: 6px; }
+.secret .sys svg, .secret .lk svg { width: 12px; height: 12px; }
+.secret .lk { vertical-align: -1px; margin-left: 4px; }
+.secret .bb.me .lk { color: inherit; }
+.secret .seen-as { display: flex; flex-direction: column; gap: 4px; padding: 8px 11px; border-radius: 12px; border: 1px dashed rgba(255,255,255,.16); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #9aa0aa; }
+.secret .seen-as code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; letter-spacing: 0; text-transform: none; color: rgba(238, 240, 243, .55); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.secret .ebar { display: flex; align-items: center; gap: 10px; margin-top: 2px; padding: 7px 7px 7px 8px; border-radius: 14px; background: color-mix(in srgb, var(--coral) 10%, rgba(255,255,255,.05)); border: 1px solid color-mix(in srgb, var(--coral) 40%, transparent); }
+.secret .ebar > i { flex: none; width: 30px; height: 30px; border-radius: 50%; background: rgba(212, 0, 0, .18); }
+.secret .ebar > i svg { width: 15px; height: 15px; }
+.secret .ebar > span { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.secret .ebar b { font-size: 12px; font-weight: 600; }
+.secret .ebar small { font-size: 10.5px; color: #9aa0aa; }
+.secret .ebar em { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border-radius: 99px; font-style: normal; font-size: 11px; background: rgba(255,255,255,.07); border: 1px solid var(--app-edge); }
+.secret .ebar em svg { width: 12px; height: 12px; }
+.promise.secret-p { border-color: rgba(212, 0, 0, .45); background: radial-gradient(90% 120% at 0% 0%, rgba(212, 0, 0, .14), transparent 65%), rgba(255, 255, 255, .04); }
+.promises .secret-p { grid-column: 1 / -1; }
 </style>
 </head>
 <body>
@@ -410,7 +434,7 @@ footer { border-top-color: var(--line); }
     <p class="kicker rv" data-t="hero.kicker">The messenger for teams, by The Mad Lions</p>
     <h1 class="rv" style="--d:.08s"><span class="rm"><span class="a">ROAR</span><span class="b">ME</span></span></h1>
     <span class="by rv" style="--d:.16s">by <b>THE<strong>MAD</strong>LIONS</b></span>
-    <p class="lead rv" style="--d:.24s" data-t="hero.lead" data-html>Messages, calls and files up to <b>3&nbsp;GB</b>. No phone number, just a <b>username</b>.</p>
+    <p class="lead rv" style="--d:.24s" data-t="hero.lead" data-html>Messages, calls and files up to <b>3&nbsp;GB</b>. <b>Encrypted secret chats</b> when it matters. No phone number, just a <b>username</b>.</p>
     <div class="cta rv" style="--d:.32s">
       <a class="pill main" id="dl-main" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="cta.download">Download</span></a>
       <a class="pill" href="https://alexisdigipro-hub.github.io/roarme/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.4 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.4-3.5-8.5s1-5.9 3.5-8.5z"/></svg><span data-t="cta.browser">Open in the browser</span></a>
@@ -448,6 +472,7 @@ footer { border-top-color: var(--line); }
       </div>
     </div>
     <div class="float f1"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10.5 5-3v9l-5-3"/></svg></i><span><b data-t="float.call">Video call</b><small data-t="float.callsub">Device to device</small></span></div>
+    <div class="float f3"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg></i><span><b data-t="float.secret">Secret chat</b><small data-t="float.secretsub">End-to-end encrypted</small></span></div>
     <div class="float f2"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1-3.6 3.7-5.5 7-5.5s6 1.9 7 5.5"/></svg></i><span><b>@yourname</b><small data-t="float.nonumber">No phone number</small></span></div>
   </div>
 </div>
@@ -492,9 +517,24 @@ footer { border-top-color: var(--line); }
         <small>themadlions.com/roarme</small>
       </div></div>
     </article>
+    <article class="tile w12 wide secret-t rv" style="--d:0.00s">
+      <div>
+        <span class="n">03 · ENCRYPTED SECRET CHATS</span>
+        <h3 data-t="fs.t" data-html><b>Encrypted</b> secret chats.</h3>
+        <p data-t="fs.p">Some things are only for the people in the chat. Turn on Encrypted Chat with one tap: from then on every message is locked on your device before it leaves, and only the devices in that chat can open it. Not us, not the server, nobody else. Done? Turn it off and the chat carries on as normal, while what was said stays locked.</p>
+        <div class="chips"><span data-t="fs.c1">End-to-end encrypted</span><span data-t="fs.c2">On and off in one tap</span><span data-t="fs.c3">Keys only on your devices</span><span data-t="fs.c4">Any chat or group</span></div>
+      </div>
+      <div class="pic"><div class="secret">
+        <div class="sys"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg></i><b data-t="fs.you">You</b>&nbsp;<span data-t="fs.on">turned on Encrypted Chat</span></div>
+        <div class="bb"><span data-t="fs.m1">The budget is 48k. Keep it between us.</span> <i class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg></i><small>21:04</small></div>
+        <div class="bb me"><span data-t="fs.m2">Of course. Contract tomorrow at 10.</span> <i class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg></i><small>21:05</small></div>
+        <div class="seen-as"><span data-t="fs.server">What the server sees</span><code>e2e1.9f3c…Kq7Z0xRw2+Lm8vT…</code></div>
+        <div class="ebar"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg></i><span><b data-t="fs.bar">Encrypted Chat</b><small data-t="fs.barsub">Only the devices in this chat can read it</small></span><em><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 6.8-1.2"/></svg><span data-t="fs.off">Turn off</span></em></div>
+      </div></div>
+    </article>
     <article class="tile  rv" style="--d:0.12s">
       <div>
-        <span class="n">03 · CALLS</span>
+        <span class="n">04 · CALLS</span>
         <h3 data-t="f3.t" data-html>Calls, <b>face to face</b>.</h3>
         <p data-t="f3.p">Voice and video calls go straight from one device to the other. Plan one ahead: it lands in the chat as a card with a countdown, a Join button from ten minutes before, and Add to calendar.</p>
         <div class="chips"><span data-t="f3.c1">Voice</span><span data-t="f3.c2">Video</span><span data-t="f3.c3">Scheduled calls</span><span data-t="f3.c4">Calendar</span></div>
@@ -508,7 +548,7 @@ footer { border-top-color: var(--line); }
     </article>
     <article class="tile  rv" style="--d:0.00s">
       <div>
-        <span class="n">04 · WRITING</span>
+        <span class="n">05 · WRITING</span>
         <h3 data-t="f4.t" data-html>Write it <b>your way</b>.</h3>
         <p data-t="f4.p">Bold, italic, underline, spoilers, code, with a tiny bar when you select. Long Articles with headings and checklists. Voice messages, a place on the map, as many pins as you need, replies and reactions.</p>
         <div class="chips"><span data-t="f4.c1">Formatting</span><span data-t="f4.c2">Articles</span><span data-t="f4.c3">Voice messages</span><span data-t="f4.c4">Location</span><span data-t="f4.c5">Pins</span></div>
@@ -521,7 +561,7 @@ footer { border-top-color: var(--line); }
     </article>
     <article class="tile  rv" style="--d:0.06s">
       <div>
-        <span class="n">05 · LIBRARY</span>
+        <span class="n">06 · LIBRARY</span>
         <h3 data-t="f5.t" data-html>Everything you shared, <b>found</b>.</h3>
         <p data-t="f5.p">Media, Transfers, Files, Links and Music from every chat, in one place, and a tap takes you to the message. A song keeps playing while you move between chats, with a bar to stop it.</p>
         <div class="chips"><span data-t="f5.c1">Media library</span><span data-t="f5.c2">Search</span><span data-t="f5.c3">Music player</span></div>
@@ -534,7 +574,7 @@ footer { border-top-color: var(--line); }
     </article>
     <article class="tile w5 rv" style="--d:0.12s">
       <div>
-        <span class="n">06 · TEAMS</span>
+        <span class="n">07 · TEAMS</span>
         <h3 data-t="f6.t" data-html>Made for <b>teams</b>.</h3>
         <p data-t="f6.p">A group for every project or client, folders to keep work apart, pins for what matters, calls planned ahead and big files for everyone. For any team that has to move fast.</p>
         <div class="chips"><span data-t="f6.c1">Groups</span><span data-t="f6.c2">Folders</span><span data-t="f6.c3">Pins</span><span data-t="f6.c4">Mentions</span></div>
@@ -547,7 +587,7 @@ footer { border-top-color: var(--line); }
     </article>
     <article class="tile w7 rv" style="--d:0.00s">
       <div>
-        <span class="n">07 · EVERY SCREEN</span>
+        <span class="n">08 · EVERY SCREEN</span>
         <h3 data-t="f7.t" data-html>On <b>every screen</b>.</h3>
         <p data-t="f7.p">Apps for Mac and Windows, with the unread count on the icon and RoarMe in the menu bar. In any browser. On the phone, added to the home screen. Always the newest version, without reinstalling.</p>
         <div class="chips"><span>Mac</span><span>Windows</span><span data-t="f7.c3">Browser</span><span data-t="f7.c4">Phone</span></div>
@@ -560,7 +600,7 @@ footer { border-top-color: var(--line); }
     </article>
     <article class="tile w12 wide rv" style="--d:0.06s">
       <div>
-        <span class="n">08 · NOTIFICATIONS</span>
+        <span class="n">09 · NOTIFICATIONS</span>
         <h3 data-t="f8.t" data-html><b>Nothing</b> slips.</h3>
         <p data-t="f8.p">Back after a while? What came in arrives gathered, chat by chat. Lock RoarMe with a code. Mute, archive, folders, mark as unread, peek without reading.</p>
         <div class="chips"><span data-t="f8.c1">Smart notifications</span><span data-t="f8.c2">Passcode lock</span><span data-t="f8.c3">Folders</span></div>
@@ -586,6 +626,7 @@ footer { border-top-color: var(--line); }
       </div>
     </div>
     <div class="promises">
+    <div class="promise secret-p"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg></i><h3 data-t="p0.t">Encrypted secret chats</h3><p data-t="p0.p">Turn on end-to-end encryption in any chat, for as long as you need. The keys stay on your devices: nobody else can read what you write, not even us.</p></div>
     <div class="promise"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M3 3l18 18"/></svg></i><h3 data-t="p1.t">No phone number</h3><p data-t="p1.p">An email and a username. Your contacts are never uploaded.</p></div>
     <div class="promise" style="--d:.06s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.8-3.4 3.2-5.2 6-5.2s5.2 1.8 6 5.2M16 11l2 2 4-4"/></svg></i><h3 data-t="p2.t">Only who you choose</h3><p data-t="p2.p">People reach you by your @name or your link. Block anyone in one tap.</p></div>
     <div class="promise" style="--d:.12s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10.5 5-3v9l-5-3"/></svg></i><h3 data-t="p3.t">Calls stay between you</h3><p data-t="p3.p">They go device to device. We do not record or keep them.</p></div>
@@ -641,7 +682,8 @@ footer { border-top-color: var(--line); }
     <details><summary data-t="q2">Do I need a phone number?</summary><p data-t="a2">No. An email and a username are enough. People find you by your @name, or by the link and QR code you share.</p></details>
     <details><summary data-t="q3">How big can a file be?</summary><p data-t="a3">Up to 50 MB straight in the chat, kept as long as the chat. Up to 3 GB with RoarTransfer, kept 3 days, with a link anyone can download from.</p></details>
     <details><summary data-t="q4">Who sees my location?</summary><p data-t="a4">Only the chat you send it to, and only when you press Send. RoarMe does not follow where you are.</p></details>
-    <details><summary data-t="q5">Where are my messages kept?</summary><p data-t="a5">On our provider's servers in London, always sent over an encrypted connection. You can delete your account, and with it your profile and one-to-one chats, at any time.</p></details>
+    <details><summary data-t="q7">Are my messages end-to-end encrypted?</summary><p data-t="a7">In a secret chat, yes. Open any chat or group, turn on Encrypted Chat and every message from then on is locked on your device; only the devices of the people in that chat can open it, not RoarMe. Turn it off whenever you like. For now it covers text; photos, files and voice messages wait until it is off. A device you add later cannot read the messages sent before it.</p></details>
+    <details><summary data-t="q5">Where are my messages kept?</summary><p data-t="a5">On our provider's servers in London, always sent over an encrypted connection, and in a secret chat locked end to end. You can delete your account, and with it your profile and one-to-one chats, at any time.</p></details>
     <details><summary data-t="q6">Can I use it on several devices?</summary><p data-t="a6">Yes. Sign in on the Mac, the PC, the browser and the phone at the same time; everything stays in step.</p></details>
   </div>
   </div>
@@ -674,7 +716,14 @@ footer { border-top-color: var(--line); }
     'cta.open': 'Άνοιξε το RoarMe', 'cta.download': 'Λήψη', 'cta.browser': 'Άνοιξέ το στον browser',
     'cta.note': 'Δωρεάν · Mac, Windows, browser και κινητό ·', 'cta.all': 'όλες οι λήψεις',
     'hero.kicker': 'Το messenger για ομάδες, από την The Mad Lions',
-    'hero.lead': 'Μηνύματα, κλήσεις και αρχεία ως <b>3&nbsp;GB</b>. Χωρίς αριθμό τηλεφώνου, μόνο ένα <b>username</b>.',
+    'hero.lead': 'Μηνύματα, κλήσεις και αρχεία ως <b>3&nbsp;GB</b>. <b>Κρυπτογραφημένες κρυφές συνομιλίες</b> όταν μετράει. Χωρίς αριθμό τηλεφώνου, μόνο ένα <b>username</b>.',
+    'float.secret': 'Κρυφή συνομιλία', 'float.secretsub': 'Κρυπτογράφηση από άκρο σε άκρο',
+    'fs.t': '<b>Κρυπτογραφημένες</b> κρυφές συνομιλίες.', 'fs.p': 'Κάποια πράγματα είναι μόνο για όσους είναι στη συζήτηση. Άνοιξε το Encrypted Chat με ένα πάτημα: από εκεί και πέρα κάθε μήνυμα κλειδώνει στη συσκευή σου πριν φύγει, και το ανοίγουν μόνο οι συσκευές αυτής της συζήτησης. Ούτε εμείς, ούτε ο server, κανείς άλλος. Τελείωσες; Το κλείνεις και η συζήτηση συνεχίζει κανονικά, ενώ ό,τι ειπώθηκε μένει κλειδωμένο.',
+    'fs.c1': 'Κρυπτογράφηση από άκρο σε άκρο', 'fs.c2': 'Ανοίγει και κλείνει με ένα πάτημα', 'fs.c3': 'Κλειδιά μόνο στις συσκευές σου', 'fs.c4': 'Σε κάθε συζήτηση ή ομάδα',
+    'fs.you': 'Εσύ', 'fs.on': 'ενεργοποίησες την κρυπτογράφηση', 'fs.m1': 'Το budget είναι 48k. Να μείνει μεταξύ μας.', 'fs.m2': 'Φυσικά. Συμβόλαιο αύριο στις 10.',
+    'fs.server': 'Τι βλέπει ο server', 'fs.bar': 'Κρυπτογραφημένη συνομιλία', 'fs.barsub': 'Τη διαβάζουν μόνο οι συσκευές αυτής της συζήτησης', 'fs.off': 'Κλείσιμο',
+    'p0.t': 'Κρυπτογραφημένες κρυφές συνομιλίες', 'p0.p': 'Άνοιξε κρυπτογράφηση από άκρο σε άκρο σε όποια συζήτηση θες, για όσο τη χρειάζεσαι. Τα κλειδιά μένουν στις συσκευές σας: κανείς άλλος δεν διαβάζει τι γράφετε, ούτε εμείς.',
+    'q7': 'Είναι τα μηνύματά μου κρυπτογραφημένα από άκρο σε άκρο;', 'a7': 'Σε μια κρυφή συνομιλία, ναι. Άνοιξε οποιαδήποτε συζήτηση ή ομάδα, ενεργοποίησε το Encrypted Chat και κάθε μήνυμα από εκεί και πέρα κλειδώνει στη συσκευή σου· το ανοίγουν μόνο οι συσκευές όσων είναι στη συζήτηση, όχι το RoarMe. Το κλείνεις όποτε θες. Προς το παρόν καλύπτει το κείμενο· φωτογραφίες, αρχεία και φωνητικά περιμένουν μέχρι να κλείσει. Μια συσκευή που θα προσθέσεις αργότερα δεν διαβάζει όσα στάλθηκαν πριν από αυτήν.',
     'float.call': 'Βιντεοκλήση', 'float.callsub': 'Από συσκευή σε συσκευή', 'float.nonumber': 'Χωρίς αριθμό τηλεφώνου',
     'stat.1': 'ανά αρχείο με το RoarTransfer', 'stat.2': 'αριθμοί τηλεφώνου', 'stat.3': 'τρόποι: Mac, Windows, browser, κινητό',
     'feat.label': 'Τι κάνει', 'feat.title': 'Ό,τι <b>λέει</b> η ομάδα σου. Σε ένα μέρος.',
@@ -710,7 +759,7 @@ footer { border-top-color: var(--line); }
     'q2': 'Χρειάζομαι αριθμό τηλεφώνου;', 'a2': 'Όχι. Αρκούν ένα email και ένα username. Σε βρίσκουν από το @όνομά σου, ή από το link και το QR που μοιράζεσαι.',
     'q3': 'Πόσο μεγάλο μπορεί να είναι ένα αρχείο;', 'a3': 'Ως 50 MB κατευθείαν στη συζήτηση, και μένει όσο μένει η συζήτηση. Ως 3 GB με το RoarTransfer, για 3 μέρες, με link που το κατεβάζει όποιος το έχει.',
     'q4': 'Ποιος βλέπει την τοποθεσία μου;', 'a4': 'Μόνο η συζήτηση στην οποία τη στέλνεις, και μόνο όταν πατήσεις Αποστολή. Το RoarMe δεν παρακολουθεί πού βρίσκεσαι.',
-    'q5': 'Πού φυλάσσονται τα μηνύματά μου;', 'a5': 'Στους servers του παρόχου μας στο Λονδίνο, πάντα μέσω κρυπτογραφημένης σύνδεσης. Μπορείς να σβήσεις τον λογαριασμό σου, και μαζί το προφίλ και τις προσωπικές συζητήσεις σου, όποτε θες.',
+    'q5': 'Πού φυλάσσονται τα μηνύματά μου;', 'a5': 'Στους servers του παρόχου μας στο Λονδίνο, πάντα μέσω κρυπτογραφημένης σύνδεσης, και σε μια κρυφή συνομιλία κλειδωμένα από άκρο σε άκρο. Μπορείς να σβήσεις τον λογαριασμό σου, και μαζί το προφίλ και τις προσωπικές συζητήσεις σου, όποτε θες.',
     'q6': 'Μπορώ να το έχω σε πολλές συσκευές;', 'a6': 'Ναι. Συνδέσου στο Mac, στο PC, στον browser και στο κινητό μαζί· όλα μένουν συγχρονισμένα.',
     'ct.label': 'Επικοινωνία', 'ct.title': 'Ερωτήσεις, ιδέες, <b>Τύπος</b>;',
     'footer': '© 2026 The Mad Lions · RoarMe'
