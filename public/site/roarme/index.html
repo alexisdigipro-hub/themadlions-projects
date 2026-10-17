@@ -371,6 +371,14 @@ h2 b { font-weight: 800; color: #fff; }
 .hero::before { opacity: .55; }
 .pic { background: radial-gradient(120% 90% at 80% 0%, rgba(212, 0, 0, .16), transparent 60%), var(--app); }
 footer { border-top-color: var(--line); }
+.teams { width: min(330px, 100%); display: flex; flex-direction: column; gap: 8px; }
+.team { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 14px; background: rgba(255,255,255,.06); border: 1px solid var(--app-edge); }
+.team > span:nth-child(2) { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.team b { font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.team small { font-size: 10.5px; color: #9aa0aa; }
+.stack { display: flex; flex: none; }
+.stack .av { width: 26px; height: 26px; font-size: 9.5px; border: 2px solid var(--app); }
+.stack .av + .av { margin-left: -9px; }
 </style>
 </head>
 <body>
@@ -399,7 +407,7 @@ footer { border-top-color: var(--line); }
 <main class="wrap">
 <div class="hero">
   <div class="hero-in">
-    <p class="kicker rv" data-t="hero.kicker">The messenger by The Mad Lions</p>
+    <p class="kicker rv" data-t="hero.kicker">The messenger for teams, by The Mad Lions</p>
     <h1 class="rv" style="--d:.08s"><span class="rm"><span class="a">ROAR</span><span class="b">ME</span></span></h1>
     <span class="by rv" style="--d:.16s">by <b>THE<strong>MAD</strong>LIONS</b></span>
     <p class="lead rv" style="--d:.24s" data-t="hero.lead" data-html>Messages, calls and files up to <b>3&nbsp;GB</b>. No phone number, just a <b>username</b>.</p>
@@ -417,7 +425,7 @@ footer { border-top-color: var(--line); }
         <div class="pane">
           <div class="side-h"><span class="rm"><span class="a">ROAR</span><span class="b">ME</span></span></div>
           <div class="chat-r on"><span class="av c1">MP</span><b>Maria P.</b><small>19:46</small></div>
-          <div class="chat-r"><span class="av c2">ST</span><b>Set team</b><span class="badge">5</span></div>
+          <div class="chat-r"><span class="av c2">ST</span><b>Project team</b><span class="badge">5</span></div>
           <div class="chat-r"><span class="av c3">NK</span><b>Nikos</b><small>18:02</small></div>
           <div class="chat-r"><span class="av">EL</span><b>Elena</b><small>Mon</small></div>
           <div class="side-foot"><i></i><i class="on"></i><i></i><i></i><i></i></div>
@@ -425,8 +433,8 @@ footer { border-top-color: var(--line); }
         <div class="pane">
           <div class="room-h"><span class="av c1">MP</span><span><b>Maria P.</b><small>@maria · online</small></span><span class="ic"><i></i><i></i><i></i></span></div>
           <div class="msgs">
-            <div class="bb">Sending the edit tonight <small>19:40</small></div>
-            <div class="bb me">Perfect. Is it the <em>final</em> cut? <small>19:41</small></div>
+            <div class="bb">Sending the proposal tonight <small>19:40</small></div>
+            <div class="bb me">Perfect. Is it the <em>final</em> version? <small>19:41</small></div>
             <div class="tr">
               <div class="tr-m"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h-.5a4.5 4.5 0 0 1-.9-8.9A6 6 0 0 1 17.3 8 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M8.5 15 12 11.5 15.5 15"/></svg></i>Roar<span>Transfer</span></div>
               <div class="tr-h"><span class="tr-k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v14l11-7z"/></svg></span><span><b>2.4 GB</b><small>MOV · VIDEO</small></span></div>
@@ -447,26 +455,26 @@ footer { border-top-color: var(--line); }
 <div class="stats rv">
   <div class="stat"><strong>3<em>GB</em></strong><span data-t="stat.1">per file with RoarTransfer</span></div>
   <div class="stat"><strong>0</strong><span data-t="stat.2">phone numbers asked</span></div>
-  <div class="stat"><strong>6</strong><span data-t="stat.3">looks to make it yours</span></div>
+  <div class="stat"><strong>4</strong><span data-t="stat.3">ways in: Mac, Windows, browser, phone</span></div>
 </div>
 
 <section class="feats" id="features">
   <div class="head">
     <p class="label rv" data-t="feat.label">What it does</p>
-    <h2 class="rv" data-t="feat.title" data-html>Everything a film crew <b>talks</b> about. In one place.</h2>
-    <p class="sub rv" data-t="feat.sub">Made in-house for the way we work: big files, quick calls, a lot of people, nothing lost.</p>
+    <h2 class="rv" data-t="feat.title" data-html>Everything your team <b>talks</b> about. In one place.</h2>
+    <p class="sub rv" data-t="feat.sub">For professional teams of any kind: studios, agencies, offices, crews. Big files, quick calls, a lot of people, nothing lost.</p>
   </div>
   <div class="bento">
     <article class="tile w7 wide rv" style="--d:0.00s">
       <div>
         <span class="n">02 · ROARTRANSFER</span>
         <h3 data-t="f2.t" data-html><b>RoarTransfer</b>. 3&nbsp;GB, as it is.</h3>
-        <p data-t="f2.p">Send the rushes, the edit, the master: up to 3 GB a file, not squeezed. It stays three days, with a link anyone can download from, even without RoarMe. Then it deletes itself.</p>
+        <p data-t="f2.p">Send the presentation, the video, the design files: up to 3 GB a file, not squeezed. It stays three days, with a link anyone can download from, even without RoarMe. Then it deletes itself.</p>
         <div class="chips"><span data-t="f2.c1">Up to 3 GB</span><span data-t="f2.c2">Kept 3 days</span><span data-t="f2.c3">Download link</span><span data-t="f2.c4">Keeps going if the line drops</span></div>
       </div>
       <div class="pic"><div class="tr">
         <div class="tr-m"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h-.5a4.5 4.5 0 0 1-.9-8.9A6 6 0 0 1 17.3 8 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M8.5 15 12 11.5 15.5 15"/></svg></i>Roar<span>Transfer</span></div>
-        <div class="tr-h"><span class="tr-k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v14l11-7z"/></svg></span><span><b>2.9 GB</b><small>PRORES · MASTER</small></span></div>
+        <div class="tr-h"><span class="tr-k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v14l11-7z"/></svg></span><span><b>2.9 GB</b><small>ZIP · PROJECT FILES</small></span></div>
         <div class="tr-t"><i></i><span data-t="f2.left">3 days left</span></div>
         <div class="tr-g" data-t="f2.dl">Download</div>
       </div></div>
@@ -521,23 +529,20 @@ footer { border-top-color: var(--line); }
       <div class="pic"><div class="lib">
         <div class="tabs"><span class="on">Media</span><span>Transfers</span><span>Files</span><span>Links</span><span>Music</span></div>
         <div class="grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-        <div class="now"><i><svg viewBox="0 0 24 24" fill="#fff"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg></i><b>Score · Final mix.wav</b><span style="color:#9aa0aa">1:24</span></div>
+        <div class="now"><i><svg viewBox="0 0 24 24" fill="#fff"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg></i><b>Podcast · Episode 12.mp3</b><span style="color:#9aa0aa">1:24</span></div>
       </div></div>
     </article>
     <article class="tile w5 rv" style="--d:0.12s">
       <div>
-        <span class="n">06 · LOOKS</span>
-        <h3 data-t="f6.t" data-html>A look that is <b>yours</b>.</h3>
-        <p data-t="f6.p">Six themes, glass or solid, your own accent colour, fonts, text size, wallpapers, light or dark. In English or Greek.</p>
-        <div class="chips"><span>Ember</span><span>Glass</span><span>Aura</span><span>Prism</span><span>Aurum</span><span>Studio</span></div>
+        <span class="n">06 · TEAMS</span>
+        <h3 data-t="f6.t" data-html>Made for <b>teams</b>.</h3>
+        <p data-t="f6.p">A group for every project or client, folders to keep work apart, pins for what matters, calls planned ahead and big files for everyone. For any team that has to move fast.</p>
+        <div class="chips"><span data-t="f6.c1">Groups</span><span data-t="f6.c2">Folders</span><span data-t="f6.c3">Pins</span><span data-t="f6.c4">Mentions</span></div>
       </div>
-      <div class="pic"><div class="looks">
-        <span class="look" style="--dot:#ff6b57;background:linear-gradient(180deg,#3a4049,#1b1e23)">Ember</span>
-        <span class="look" style="--dot:#4da3ff;background:#1d2635">Glass</span>
-        <span class="look" style="--dot:#06b6d4;background:linear-gradient(135deg,#7c3aed,#1d4ed8 45%,#06b6d4)">Aura</span>
-        <span class="look" style="--dot:#ff5d4a;background:linear-gradient(180deg,#555963,#2c2e34)">Prism</span>
-        <span class="look" style="--dot:#f8d29a;background:linear-gradient(180deg,#2a2927,#141414)">Aurum</span>
-        <span class="look" style="--dot:#d4ff3a;background:#121210">Studio</span>
+      <div class="pic"><div class="teams">
+        <div class="team"><span class="stack"><span class="av c1">MP</span><span class="av c2">GK</span><span class="av c3">NK</span></span><span><b>Client · Spring launch</b><small>8 members</small></span><span class="badge">3</span></div>
+        <div class="team"><span class="stack"><span class="av c2">EL</span><span class="av">AK</span></span><span><b>Design team</b><small>5 members</small></span></div>
+        <div class="team"><span class="stack"><span class="av c3">DT</span><span class="av c1">SR</span><span class="av c2">ML</span></span><span><b>Office · All hands</b><small>24 members</small></span><span class="badge">12</span></div>
       </div></div>
     </article>
     <article class="tile w7 rv" style="--d:0.00s">
@@ -561,7 +566,7 @@ footer { border-top-color: var(--line); }
         <div class="chips"><span data-t="f8.c1">Smart notifications</span><span data-t="f8.c2">Passcode lock</span><span data-t="f8.c3">Folders</span></div>
       </div>
       <div class="pic"><div class="notes">
-        <div class="note"><span class="av c2">ST</span><span><b>Set team</b><small data-t="f8.n1">5 new messages · Call sheet is up</small></span></div>
+        <div class="note"><span class="av c2">ST</span><span><b>Project team</b><small data-t="f8.n1">5 new messages · The brief is up</small></span></div>
         <div class="note"><span class="av c1">MP</span><span><b>Maria P.</b><small data-t="f8.n2">2 new messages</small></span></div>
         <div class="note"><span class="av c3">NK</span><span><b>Nikos</b><small data-t="f8.n3">RoarTransfer · 1.2 GB</small></span></div>
       </div></div>
@@ -668,15 +673,15 @@ footer { border-top-color: var(--line); }
     'nav.features': 'Δυνατότητες', 'nav.privacy': 'Απόρρητο', 'nav.download': 'Λήψη', 'nav.faq': 'Ερωτήσεις',
     'cta.open': 'Άνοιξε το RoarMe', 'cta.download': 'Λήψη', 'cta.browser': 'Άνοιξέ το στον browser',
     'cta.note': 'Δωρεάν · Mac, Windows, browser και κινητό ·', 'cta.all': 'όλες οι λήψεις',
-    'hero.kicker': 'Το messenger της The Mad Lions',
+    'hero.kicker': 'Το messenger για ομάδες, από την The Mad Lions',
     'hero.lead': 'Μηνύματα, κλήσεις και αρχεία ως <b>3&nbsp;GB</b>. Χωρίς αριθμό τηλεφώνου, μόνο ένα <b>username</b>.',
     'float.call': 'Βιντεοκλήση', 'float.callsub': 'Από συσκευή σε συσκευή', 'float.nonumber': 'Χωρίς αριθμό τηλεφώνου',
-    'stat.1': 'ανά αρχείο με το RoarTransfer', 'stat.2': 'αριθμοί τηλεφώνου', 'stat.3': 'θέματα για να γίνει δικό σου',
-    'feat.label': 'Τι κάνει', 'feat.title': 'Ό,τι <b>λέει</b> ένα κινηματογραφικό συνεργείο. Σε ένα μέρος.',
-    'feat.sub': 'Φτιαγμένο από εμάς, για τον τρόπο που δουλεύουμε: μεγάλα αρχεία, γρήγορες κλήσεις, πολύς κόσμος, τίποτα χαμένο.',
+    'stat.1': 'ανά αρχείο με το RoarTransfer', 'stat.2': 'αριθμοί τηλεφώνου', 'stat.3': 'τρόποι: Mac, Windows, browser, κινητό',
+    'feat.label': 'Τι κάνει', 'feat.title': 'Ό,τι <b>λέει</b> η ομάδα σου. Σε ένα μέρος.',
+    'feat.sub': 'Για επαγγελματικές ομάδες κάθε είδους: στούντιο, εταιρείες, γραφεία, συνεργεία. Μεγάλα αρχεία, γρήγορες κλήσεις, πολύς κόσμος, τίποτα χαμένο.',
     'f1.t': 'Μόνο ένα <b>username</b>.', 'f1.p': 'Κάνεις εγγραφή με email και διαλέγεις το @όνομά σου. Κανείς δεν σε βρίσκει από το τηλέφωνό σου, γιατί δεν το ζητάμε ποτέ. Στείλε το link ή το QR σου και η συζήτηση ανοίγει μόνη της.',
     'f1.c1': '@username', 'f1.c2': 'Link πρόσκλησης', 'f1.c3': 'QR code',
-    'f2.t': '<b>RoarTransfer</b>. 3&nbsp;GB, όπως είναι.', 'f2.p': 'Στείλε τα rushes, το μοντάζ, το master: ως 3 GB το αρχείο, χωρίς συμπίεση. Μένει τρεις μέρες, με link που το κατεβάζει όποιος το έχει, ακόμα και χωρίς RoarMe. Μετά σβήνεται μόνο του.',
+    'f2.t': '<b>RoarTransfer</b>. 3&nbsp;GB, όπως είναι.', 'f2.p': 'Στείλε την παρουσίαση, το βίντεο, τα αρχεία σχεδίων: ως 3 GB το αρχείο, χωρίς συμπίεση. Μένει τρεις μέρες, με link που το κατεβάζει όποιος το έχει, ακόμα και χωρίς RoarMe. Μετά σβήνεται μόνο του.',
     'f2.c1': 'Ως 3 GB', 'f2.c2': 'Μένει 3 μέρες', 'f2.c3': 'Link λήψης', 'f2.c4': 'Συνεχίζει αν κοπεί η σύνδεση', 'f2.left': '3 μέρες ακόμα', 'f2.dl': 'Λήψη',
     'f3.t': 'Κλήσεις, <b>πρόσωπο με πρόσωπο</b>.', 'f3.p': 'Οι φωνητικές και οι βιντεοκλήσεις πάνε κατευθείαν από τη μία συσκευή στην άλλη. Κλείσε μία από πριν: μπαίνει στη συζήτηση σαν κάρτα με αντίστροφη μέτρηση, κουμπί Μπες από δέκα λεπτά πριν και Στο ημερολόγιο.',
     'f3.c1': 'Φωνή', 'f3.c2': 'Βίντεο', 'f3.c3': 'Προγραμματισμένες κλήσεις', 'f3.c4': 'Ημερολόγιο',
@@ -684,11 +689,11 @@ footer { border-top-color: var(--line); }
     'f4.c1': 'Μορφοποίηση', 'f4.c2': 'Άρθρα', 'f4.c3': 'Φωνητικά', 'f4.c4': 'Τοποθεσία', 'f4.c5': 'Pins',
     'f5.t': 'Ό,τι μοιράστηκες, <b>βρίσκεται</b>.', 'f5.p': 'Media, Transfers, Αρχεία, Links και Μουσική από όλες τις συζητήσεις, σε ένα μέρος, και ένα πάτημα σε πάει στο μήνυμα. Ένα τραγούδι συνεχίζει να παίζει όσο αλλάζεις συζήτηση, με μπάρα για να το σταματήσεις.',
     'f5.c1': 'Βιβλιοθήκη media', 'f5.c2': 'Αναζήτηση', 'f5.c3': 'Μουσική',
-    'f6.t': 'Μια εμφάνιση <b>δική σου</b>.', 'f6.p': 'Έξι θέματα, γυάλινο ή γεμάτο, το δικό σου χρώμα, γραμματοσειρές, μέγεθος κειμένου, φόντα, φωτεινό ή σκοτεινό. Στα αγγλικά ή στα ελληνικά.',
+    'f6.t': 'Φτιαγμένο για <b>ομάδες</b>.', 'f6.p': 'Μια ομάδα για κάθε project ή πελάτη, φάκελοι για να μένει η δουλειά χωριστά, pins για ό,τι μετράει, κλήσεις κλεισμένες από πριν και μεγάλα αρχεία για όλους. Για κάθε ομάδα που πρέπει να κινείται γρήγορα.', 'f6.c1': 'Ομάδες', 'f6.c2': 'Φάκελοι', 'f6.c3': 'Pins', 'f6.c4': 'Αναφορές',
     'f7.t': 'Σε <b>κάθε οθόνη</b>.', 'f7.p': 'Εφαρμογές για Mac και Windows, με τα αδιάβαστα πάνω στο εικονίδιο και το RoarMe στη μπάρα. Σε κάθε browser. Στο κινητό, στην αρχική οθόνη. Πάντα η νεότερη έκδοση, χωρίς νέα εγκατάσταση.',
     'f7.c3': 'Browser', 'f7.c4': 'Κινητό',
     'f8.t': '<b>Τίποτα</b> δεν ξεφεύγει.', 'f8.p': 'Γύρισες μετά από ώρα; Ό,τι ήρθε σε περιμένει μαζεμένο, συζήτηση με συζήτηση. Κλείδωσε το RoarMe με κωδικό. Σίγαση, αρχειοθέτηση, φάκελοι, σήμανση ως αδιάβαστο, ματιά χωρίς να διαβαστεί.',
-    'f8.c1': 'Έξυπνες ειδοποιήσεις', 'f8.c2': 'Κλείδωμα με κωδικό', 'f8.c3': 'Φάκελοι', 'f8.n1': '5 νέα μηνύματα · Ανέβηκε το call sheet', 'f8.n2': '2 νέα μηνύματα', 'f8.n3': 'RoarTransfer · 1.2 GB',
+    'f8.c1': 'Έξυπνες ειδοποιήσεις', 'f8.c2': 'Κλείδωμα με κωδικό', 'f8.c3': 'Φάκελοι', 'f8.n1': '5 νέα μηνύματα · Ανέβηκε το brief', 'f8.n2': '2 νέα μηνύματα', 'f8.n3': 'RoarTransfer · 1.2 GB',
     'pv.label': 'Απόρρητο', 'pv.title': 'Ήσυχο <b>από τη φύση του</b>.', 'pv.sub': 'Κρατάμε ό,τι χρειάζεται μια συζήτηση για να δουλέψει, και τίποτα για να πουληθεί. Χωρίς διαφημίσεις, χωρίς tracking, χωρίς τηλεφωνικό κατάλογο.',
     'pv.policy': 'Πολιτική Απορρήτου', 'pv.terms': 'Όροι Χρήσης',
     'p1.t': 'Χωρίς αριθμό τηλεφώνου', 'p1.p': 'Ένα email και ένα username. Οι επαφές σου δεν ανεβαίνουν ποτέ.',
