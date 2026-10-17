@@ -62,16 +62,6 @@ svg { display: block; }
 .by b { font-weight: 300; text-transform: uppercase; letter-spacing: .14em; color: color-mix(in srgb, var(--text) 85%, transparent); }
 .by b strong { font-weight: 800; }
 
-/* top bar */
-.bar { position: fixed; inset: 0 0 auto 0; z-index: 20; display: flex; align-items: center; gap: 18px; padding: calc(14px + env(safe-area-inset-top)) var(--pad) 14px; transition: background .4s, border-color .4s; border-bottom: 1px solid transparent; }
-.bar.solid { background: color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); border-bottom-color: var(--line); }
-.bar .home { display: flex; align-items: center; gap: 14px; }
-.bar .home .wordmark { width: 128px; }
-.bar .home .sep { width: 1px; height: 18px; background: var(--line); }
-.bar .home .rm { font-size: 19px; }
-.bar nav { margin-left: auto; display: flex; gap: 2px; }
-.bar nav a { padding: 8px 13px; border-radius: 999px; font-size: 13px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--text) 80%, transparent); transition: background .2s, color .2s; }
-.bar nav a:hover { background: var(--glass); color: var(--text); }
 .lang { display: flex; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); }
 .lang button { border: 0; background: transparent; cursor: pointer; padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 500; letter-spacing: .08em; color: color-mix(in srgb, var(--text) 75%, transparent); }
 .lang button.on { background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 24%, transparent), color-mix(in srgb, var(--hi) 8%, transparent)); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 45%, transparent); color: var(--text); }
@@ -84,20 +74,6 @@ svg { display: block; }
 .pill svg { width: 18px; height: 18px; flex: none; }
 .pill.sm { height: 40px; padding: 0 18px; font-size: 14px; }
 
-/* opening: the wordmark huge, one line, two ways in, and the app itself */
-.hero { position: relative; min-height: 100svh; padding: calc(110px + env(safe-area-inset-top)) var(--pad) 70px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(28px, 4vw, 72px); align-items: center; overflow: hidden; }
-.hero::before { content: ''; position: absolute; inset: -20% -10% auto auto; width: 70vw; height: 70vw; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), transparent 62%); filter: blur(30px); pointer-events: none; opacity: .75; }
-.hero-in { position: relative; z-index: 1; }
-.kicker { margin: 0 0 22px; font-size: 12.5px; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; color: var(--accent); }
-.hero h1 { margin: 0; font-size: clamp(60px, 8.4vw, 150px); font-weight: 400; line-height: .86; letter-spacing: -.01em; }
-.hero h1 .rm { display: flex; }
-.hero .by { display: block; margin: 18px 0 0 6px; font-size: clamp(12px, 1.1vw, 15px); }
-.hero .lead { margin: 34px 0 0; max-width: 520px; font-size: clamp(19px, 1.9vw, 25px); font-weight: 300; line-height: 1.42; text-wrap: balance; }
-.hero .lead b { font-weight: 600; }
-.cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 34px; }
-.cta-note { margin: 16px 0 0 4px; font-size: 13px; letter-spacing: .04em; color: var(--muted); }
-.cta-note a { border-bottom: 1px solid var(--line); }
-.cta-note a:hover { color: var(--text); border-color: var(--text); }
 
 /* the app, drawn (no screenshot to keep up to date): a window with the list and a chat */
 .shot { position: relative; z-index: 1; perspective: 1600px; text-align: left; }
@@ -158,33 +134,9 @@ svg { display: block; }
 .f1 { left: -26px; bottom: 16%; }
 .f2 { right: -14px; top: 12%; }
 
-/* three numbers */
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 var(--pad); }
-.stat { padding: 26px 28px; border-radius: 18px; background: var(--bg-2); border: 1px solid var(--line); }
-.stat strong { display: block; font-size: clamp(42px, 5vw, 68px); font-weight: 300; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-.stat strong em { font-style: normal; color: var(--accent); }
-.stat > span { display: block; margin-top: 10px; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
 
-section { padding: clamp(80px, 10vw, 140px) var(--pad); }
-.label { font-size: 12.5px; font-weight: 500; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); margin: 0 0 18px; }
-h2 { margin: 0; font-size: clamp(36px, 5.4vw, 76px); font-weight: 300; letter-spacing: -.01em; line-height: 1.02; text-wrap: balance; }
-h2 b { font-weight: 800; }
-.sub { margin: 18px 0 0; max-width: 620px; font-size: clamp(16px, 1.6vw, 19px); font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 75%, transparent); }
-
-/* what it does: eight, each a big number, a line, and a small picture of it */
-.feats { border-top: 1px solid var(--line); }
-.feat-list { margin-top: 56px; display: flex; flex-direction: column; gap: 10px; }
-.feat { display: grid; grid-template-columns: 90px minmax(0, 1fr) minmax(0, 1fr); gap: clamp(18px, 3vw, 48px); align-items: center; padding: clamp(24px, 3vw, 40px); border-radius: 22px; background: var(--bg-2); border: 1px solid var(--line); transition: border-color .4s, background .4s; }
-.feat:hover { border-color: color-mix(in srgb, var(--accent) 38%, transparent); background: var(--bg-3); }
-.feat .n { align-self: start; font-size: 44px; font-weight: 200; line-height: 1; color: color-mix(in srgb, var(--text) 22%, transparent); font-variant-numeric: tabular-nums; }
-.feat h3 { margin: 0; font-size: clamp(26px, 3vw, 40px); font-weight: 300; line-height: 1.08; letter-spacing: -.01em; }
-.feat h3 b { font-weight: 700; }
-.feat p { margin: 14px 0 0; font-size: 16px; font-weight: 300; line-height: 1.6; color: color-mix(in srgb, var(--text) 76%, transparent); max-width: 520px; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
-.chips span { height: 30px; padding: 0 12px; display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; font-size: 12.5px; font-weight: 500; color: color-mix(in srgb, var(--text) 85%, transparent); background: var(--glass); border: 1px solid var(--glass-edge); }
-.chips span::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
 /* the small pictures */
-.pic { position: relative; min-height: 200px; border-radius: 18px; background: radial-gradient(120% 90% at 80% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%), var(--app); border: 1px solid var(--app-edge); display: grid; place-items: center; padding: 22px; overflow: hidden; color: #eef0f3; }
+.pic { position: relative; min-height: 190px; border-radius: 18px; background: radial-gradient(120% 90% at 80% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%), var(--app); border: 1px solid var(--app-edge); display: grid; place-items: center; padding: 22px; overflow: hidden; color: #eef0f3; }
 .handle { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .handle .qr { width: 92px; height: 92px; border-radius: 14px; background: #fff; padding: 8px; }
 .handle b { font-size: 22px; font-weight: 500; letter-spacing: .01em; }
@@ -236,92 +188,161 @@ h2 b { font-weight: 800; }
 .note:nth-child(2) { margin-left: 16px; opacity: .85; }
 .note:nth-child(3) { margin-left: 32px; opacity: .65; }
 
-/* quiet by design */
-.privacy { border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1.1fr; gap: clamp(32px, 6vw, 96px); align-items: start; }
-.promises { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.promise { padding: 22px 22px 24px; border-radius: 18px; background: var(--bg-2); border: 1px solid var(--line); }
-.promise i { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; margin-bottom: 16px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
-.promise i svg { width: 18px; height: 18px; }
-.promise h3 { margin: 0 0 6px; font-size: 18px; font-weight: 500; }
-.promise p { margin: 0; font-size: 14.5px; font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 72%, transparent); }
-.legal-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 30px; }
 
-/* download: every way in */
-.download { border-top: 1px solid var(--line); text-align: center; }
-.download .sub { margin-left: auto; margin-right: auto; }
-.dl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 50px; text-align: left; }
-.dl { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 26px 24px 24px; border-radius: 20px; background: var(--bg-2); border: 1px solid var(--line); transition: border-color .3s, background .3s, transform .4s var(--ease); }
-.dl:hover { border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: var(--bg-3); transform: translateY(-3px); }
-.dl.mine { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
-.dl.mine::after { content: attr(data-mine); position: absolute; top: 16px; right: 16px; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
-.dl > i { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 14px; margin-bottom: 14px; background: var(--glass); border: 1px solid var(--glass-edge); }
+/* the layout, contained (Alex, 17 Oct: "not edge to edge; keep the site's look but set it up differently"):
+   one centred column, the sections as rounded panels floating on the black, the features as a bento */
+.wrap { width: min(1180px, 100% - 2 * var(--pad)); margin: 0 auto; }
+
+/* the bar: a glass capsule in the column */
+.bar { position: fixed; z-index: 20; top: calc(12px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); width: min(1180px, 100% - 2 * var(--pad));
+  display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 20px; border-radius: 999px; border: 1px solid transparent; transition: background .4s, border-color .4s, box-shadow .4s; }
+.bar.solid { background: color-mix(in srgb, var(--bg-2) 70%, transparent); -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%); border-color: var(--glass-edge); box-shadow: 0 20px 50px rgba(0,0,0,.35); }
+.bar .home { display: flex; align-items: center; gap: 12px; }
+.bar .home .wordmark { width: 118px; }
+.bar .home .sep { width: 1px; height: 16px; background: var(--line); }
+.bar .home .rm { font-size: 17px; }
+.bar nav { margin: 0 auto; display: flex; gap: 2px; }
+.bar nav a { padding: 8px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: color-mix(in srgb, var(--text) 78%, transparent); transition: background .2s, color .2s; }
+.bar nav a:hover { background: var(--glass); color: var(--text); }
+.bar .end { display: flex; align-items: center; gap: 8px; }
+
+/* opening: centred, the wordmark, a line, two ways in; the app underneath, rising out of a red glow */
+.hero { position: relative; padding: calc(150px + env(safe-area-inset-top)) 0 0; text-align: center; }
+.hero::before { content: ''; position: absolute; left: 50%; top: 52%; width: min(1100px, 100%); height: 620px; transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 30%, transparent), transparent); filter: blur(40px); opacity: .7; pointer-events: none; }
+.hero-in { position: relative; z-index: 1; }
+.kicker { margin: 0 0 22px; font-size: 12.5px; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; color: var(--accent); }
+.hero h1 { margin: 0; font-size: clamp(66px, 11vw, 150px); font-weight: 400; line-height: .86; letter-spacing: -.01em; }
+.hero h1 .rm { display: inline-flex; }
+.hero .by { display: block; margin: 16px 0 0; font-size: clamp(12px, 1.1vw, 14px); }
+.hero .lead { margin: 30px auto 0; max-width: 560px; font-size: clamp(19px, 1.9vw, 24px); font-weight: 300; line-height: 1.42; text-wrap: balance; }
+.hero .lead b { font-weight: 600; }
+.cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 32px; }
+.cta-note { margin: 16px 0 0; font-size: 13px; letter-spacing: .04em; color: var(--muted); }
+.cta-note a { border-bottom: 1px solid var(--line); }
+.cta-note a:hover { color: var(--text); border-color: var(--text); }
+.shot { position: relative; z-index: 1; max-width: 960px; margin: 64px auto 0; perspective: 1600px; text-align: left; }
+.win { transform-origin: 50% 0; }
+
+/* three numbers, one glass strip */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 70px; border-radius: 26px; background: var(--bg-2); border: 1px solid var(--line); overflow: hidden; }
+.stat { padding: 28px 30px; text-align: center; }
+.stat + .stat { border-left: 1px solid var(--line); }
+.stat strong { display: block; font-size: clamp(42px, 4.6vw, 62px); font-weight: 300; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.stat strong em { font-style: normal; color: var(--accent); }
+.stat > span { display: block; margin-top: 10px; font-size: 12.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+
+section { padding: clamp(80px, 9vw, 120px) 0 0; }
+.head { text-align: center; max-width: 760px; margin: 0 auto; }
+.label { font-size: 12.5px; font-weight: 500; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); margin: 0 0 16px; }
+h2 { margin: 0; font-size: clamp(36px, 4.8vw, 64px); font-weight: 300; letter-spacing: -.01em; line-height: 1.04; text-wrap: balance; }
+h2 b { font-weight: 800; }
+.sub { margin: 16px auto 0; max-width: 600px; font-size: clamp(16px, 1.5vw, 18px); font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 75%, transparent); }
+
+/* the features as a bento: tiles of different sizes, each its number, a line, chips and a small picture */
+.bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 12px; margin-top: 48px; }
+.tile { grid-column: span 4; display: flex; flex-direction: column; padding: 26px 26px 24px; border-radius: 26px; background: var(--bg-2); border: 1px solid var(--line); transition: border-color .4s, transform .5s var(--ease); min-width: 0; }
+.tile:hover { border-color: color-mix(in srgb, var(--accent) 40%, transparent); transform: translateY(-3px); }
+.tile.w5 { grid-column: span 5; } .tile.w7 { grid-column: span 7; } .tile.w12 { grid-column: span 12; }
+.tile .n { font-size: 12px; font-weight: 500; letter-spacing: .22em; color: var(--accent); font-variant-numeric: tabular-nums; }
+.tile h3 { margin: 12px 0 0; font-size: clamp(24px, 2.3vw, 32px); font-weight: 300; line-height: 1.08; letter-spacing: -.01em; }
+.tile h3 b { font-weight: 700; }
+.tile p { margin: 12px 0 0; font-size: 15px; font-weight: 300; line-height: 1.6; color: color-mix(in srgb, var(--text) 74%, transparent); }
+.tile .pic { margin-top: 22px; flex: 1; min-height: 190px; overflow: hidden; }
+.tile.wide { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 28px; align-items: stretch; }
+.tile.wide .pic { margin-top: 0; }
+.tile.wide > div:first-child { display: flex; flex-direction: column; justify-content: center; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+.chips span { height: 28px; padding: 0 11px; display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; font-size: 12px; font-weight: 500; color: color-mix(in srgb, var(--text) 85%, transparent); background: var(--glass); border: 1px solid var(--glass-edge); }
+.chips span::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+/* quiet by design: one panel, the words on one side, four promises on the other */
+.panel { border-radius: 32px; background: radial-gradient(90% 120% at 0% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 55%), var(--bg-2); border: 1px solid var(--line); padding: clamp(28px, 5vw, 64px); }
+.privacy .panel { display: grid; grid-template-columns: 1fr 1.15fr; gap: clamp(28px, 5vw, 72px); align-items: center; }
+.privacy .head { text-align: left; margin: 0; }
+.privacy .sub { margin-left: 0; }
+.promises { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.promise { padding: 20px 20px 22px; border-radius: 20px; background: color-mix(in srgb, var(--bg) 55%, transparent); border: 1px solid var(--line); }
+.promise i { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; margin-bottom: 14px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.promise i svg { width: 17px; height: 17px; }
+.promise h3 { margin: 0 0 6px; font-size: 17px; font-weight: 500; }
+.promise p { margin: 0; font-size: 14px; font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 72%, transparent); }
+.legal-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+
+/* download: four tiles in a row */
+.dl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 44px; }
+.dl { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 26px 22px 24px; border-radius: 26px; background: var(--bg-2); border: 1px solid var(--line); transition: border-color .3s, transform .5s var(--ease); }
+.dl:hover { border-color: color-mix(in srgb, var(--accent) 45%, transparent); transform: translateY(-3px); }
+.dl.mine { border-color: color-mix(in srgb, var(--accent) 60%, transparent); background: radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%), var(--bg-2); }
+.dl.mine::after { content: attr(data-mine); position: absolute; top: 16px; right: 16px; padding: 3px 10px; border-radius: 99px; font-size: 10.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.dl > i { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 14px; margin-bottom: 12px; background: var(--glass); border: 1px solid var(--glass-edge); }
 .dl > i svg { width: 22px; height: 22px; }
 .dl h3 { margin: 0; font-size: 21px; font-weight: 500; }
 .dl small { color: var(--muted); font-size: 13.5px; line-height: 1.5; }
-.dl .pill { margin-top: 16px; align-self: flex-start; }
+.dl .pill { margin-top: auto; align-self: flex-start; }
+.dl small + .pill { margin-top: 18px; }
 .dl .alt { margin-top: 10px; font-size: 13px; color: var(--muted); }
 .dl .alt a { border-bottom: 1px solid var(--line); }
 .dl .alt a:hover { color: var(--text); }
-.dl-help { margin: 28px auto 0; max-width: 760px; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+.dl-help { margin: 22px auto 0; max-width: 760px; text-align: center; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
 
-/* questions */
-.faq { border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1.4fr; gap: clamp(32px, 6vw, 96px); align-items: start; }
-.qa { border-top: 1px solid var(--line); }
+/* questions: the title left, the answers right, in a panel */
+.faq .panel { display: grid; grid-template-columns: 1fr 1.6fr; gap: clamp(28px, 5vw, 72px); align-items: start; background: var(--bg-2); }
+.faq .head { text-align: left; margin: 0; }
 .qa details { border-bottom: 1px solid var(--line); }
-.qa summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 22px 0; font-size: clamp(17px, 1.6vw, 21px); font-weight: 400; }
+.qa details:first-child { border-top: 1px solid var(--line); }
+.qa summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 20px 0; font-size: clamp(16px, 1.5vw, 19px); font-weight: 400; }
 .qa summary::-webkit-details-marker { display: none; }
-.qa summary::after { content: ''; flex: none; width: 12px; height: 12px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg) translateY(-3px); transition: transform .3s var(--ease); }
+.qa summary::after { content: ''; flex: none; width: 11px; height: 11px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg) translateY(-3px); transition: transform .3s var(--ease); }
 .qa details[open] summary::after { transform: rotate(225deg) translateY(-3px); }
-.qa p { margin: 0 0 22px; max-width: 640px; font-size: 15.5px; font-weight: 300; line-height: 1.65; color: color-mix(in srgb, var(--text) 76%, transparent); }
+.qa p { margin: 0 0 20px; max-width: 620px; font-size: 15px; font-weight: 300; line-height: 1.65; color: color-mix(in srgb, var(--text) 76%, transparent); }
 
-/* contact */
-.contact { border-top: 1px solid var(--line); text-align: center; }
-.contact h2 { font-size: clamp(40px, 6vw, 88px); }
-.contact .mail { display: inline-block; margin-top: 30px; font-size: clamp(22px, 3vw, 40px); font-weight: 300; border-bottom: 1px solid color-mix(in srgb, var(--accent) 60%, transparent); padding-bottom: 4px; transition: color .2s, border-color .2s; }
+/* contact: a red-lit panel */
+.contact .panel { text-align: center; background: radial-gradient(70% 120% at 50% 100%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 70%), var(--bg-2); padding: clamp(48px, 7vw, 96px) 24px; }
+.contact h2 { font-size: clamp(36px, 5vw, 72px); }
+.contact .mail { display: inline-block; margin-top: 26px; font-size: clamp(22px, 2.8vw, 36px); font-weight: 300; border-bottom: 1px solid color-mix(in srgb, var(--accent) 60%, transparent); padding-bottom: 4px; transition: color .2s, border-color .2s; }
 .contact .mail:hover { color: var(--accent); border-color: var(--accent); }
 
-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding: 36px var(--pad) calc(36px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); color: var(--muted); font-size: 13.5px; }
-footer .wordmark { width: 150px; opacity: .85; }
+footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; margin-top: 60px; padding: 28px 0 calc(36px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); color: var(--muted); font-size: 13.5px; }
+footer .wordmark { width: 140px; opacity: .85; }
 footer nav { display: flex; flex-wrap: wrap; gap: 18px; }
 footer nav a:hover { color: var(--text); }
 
 /* coming in, once, as you scroll */
 .rv { opacity: 0; transform: translateY(26px); transition: opacity 1s var(--ease), transform 1s var(--ease); transition-delay: var(--d, 0s); }
 .rv.in { opacity: 1; transform: none; }
-.hero .rv { transition-duration: 1.2s; }
+.tile.rv.in:hover, .dl.rv.in:hover { transform: translateY(-3px); }
 
-@media (max-width: 1100px) {
+@media (max-width: 1000px) {
+  .tile, .tile.w5, .tile.w7 { grid-column: span 6; }
+  .tile.w12 { grid-column: span 12; }
   .dl-grid { grid-template-columns: repeat(2, 1fr); }
-  .feat { grid-template-columns: 64px minmax(0, 1fr); }
-  .feat .pic { grid-column: 1 / -1; }
-}
-@media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; text-align: center; padding-top: calc(100px + env(safe-area-inset-top)); }
-  .hero h1 { font-size: clamp(60px, 19vw, 150px); }
-  .hero h1 .rm { justify-content: center; }
-  .hero .by { margin-left: 0; }
-  .hero .lead { margin-left: auto; margin-right: auto; }
-  .cta { justify-content: center; }
-  .shot { max-width: 640px; margin: 0 auto; width: 100%; }
-  .privacy, .faq { grid-template-columns: 1fr; }
+  .privacy .panel, .faq .panel { grid-template-columns: 1fr; }
   .bar nav { display: none; }
-  .lang { margin-left: auto; }
+  .bar .end { margin-left: auto; }
 }
-@media (max-width: 640px) {
+@media (max-width: 680px) {
+  .bento { grid-template-columns: 1fr; }
+  .tile, .tile.w5, .tile.w7, .tile.w12 { grid-column: 1 / -1; }
+  .tile.wide { grid-template-columns: 1fr; }
+  .tile.wide .pic { margin-top: 22px; }
   .stats { grid-template-columns: 1fr; }
-  .stat { text-align: center; }
+  .stat + .stat { border-left: 0; border-top: 1px solid var(--line); }
   .win-body { grid-template-columns: 1fr; height: 440px; }
   .win-body > .pane:first-child { display: none; }
   .float { display: none; }
-  .feat { grid-template-columns: 1fr; text-align: center; }
-  .feat .n { align-self: center; }
-  .feat p { margin-left: auto; margin-right: auto; }
-  .chips { justify-content: center; }
   .promises { grid-template-columns: 1fr; }
   .dl-grid { grid-template-columns: 1fr; }
-  .bar .home .wordmark { width: 104px; }
-  .bar .home .rm { font-size: 16px; }
+  .bar { padding-left: 16px; }
+  .bar .home .wordmark { width: 96px; }
+  .bar .home .rm { font-size: 15px; }
   .bar .pill.sm { display: none; }
+  .hero { padding-top: calc(120px + env(safe-area-inset-top)); }
+  .devices { transform: scale(.78); transform-origin: 50% 100%; gap: 10px; }
+  .devices .mac { width: 140px; }
+  .privacy .head, .faq .head { text-align: center; }
+  .privacy .sub { margin-left: auto; }
+  .legal-links { justify-content: center; }
   footer { justify-content: center; text-align: center; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -346,14 +367,16 @@ footer nav a:hover { color: var(--text); }
     <a href="#download" data-t="nav.download">Download</a>
     <a href="#faq" data-t="nav.faq">Questions</a>
   </nav>
-  <div class="lang" role="group" aria-label="Language">
-    <button type="button" data-lang="en" class="on">EN</button>
-    <button type="button" data-lang="el">GR</button>
+  <div class="end">
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" class="on">EN</button>
+      <button type="button" data-lang="el">GR</button>
+    </div>
+    <a class="pill sm main" href="https://alexisdigipro-hub.github.io/roarme/" data-t="cta.open">Open RoarMe</a>
   </div>
-  <a class="pill sm" href="https://alexisdigipro-hub.github.io/roarme/" data-t="cta.open">Open RoarMe</a>
 </header>
 
-<main>
+<main class="wrap">
 <div class="hero">
   <div class="hero-in">
     <p class="kicker rv" data-t="hero.kicker">The messenger by The Mad Lions</p>
@@ -401,35 +424,22 @@ footer nav a:hover { color: var(--text); }
   </div>
 </div>
 
-<div class="stats">
-  <div class="stat rv"><strong>3<em>GB</em></strong><span data-t="stat.1">per file with RoarTransfer</span></div>
-  <div class="stat rv" style="--d:.08s"><strong>0</strong><span data-t="stat.2">phone numbers asked</span></div>
-  <div class="stat rv" style="--d:.16s"><strong>6</strong><span data-t="stat.3">looks to make it yours</span></div>
+<div class="stats rv">
+  <div class="stat"><strong>3<em>GB</em></strong><span data-t="stat.1">per file with RoarTransfer</span></div>
+  <div class="stat"><strong>0</strong><span data-t="stat.2">phone numbers asked</span></div>
+  <div class="stat"><strong>6</strong><span data-t="stat.3">looks to make it yours</span></div>
 </div>
 
 <section class="feats" id="features">
-  <p class="label rv" data-t="feat.label">What it does</p>
-  <h2 class="rv" data-t="feat.title" data-html>Everything a film crew <b>talks</b> about. In one place.</h2>
-  <p class="sub rv" data-t="feat.sub">Made in-house for the way we work: big files, quick calls, a lot of people, nothing lost.</p>
-
-  <div class="feat-list">
-    <article class="feat rv">
-      <span class="n">01</span>
+  <div class="head">
+    <p class="label rv" data-t="feat.label">What it does</p>
+    <h2 class="rv" data-t="feat.title" data-html>Everything a film crew <b>talks</b> about. In one place.</h2>
+    <p class="sub rv" data-t="feat.sub">Made in-house for the way we work: big files, quick calls, a lot of people, nothing lost.</p>
+  </div>
+  <div class="bento">
+    <article class="tile w7 wide rv" style="--d:0.00s">
       <div>
-        <h3 data-t="f1.t" data-html>Just a <b>username</b>.</h3>
-        <p data-t="f1.p">Sign up with an email and pick your @name. Nobody finds you by your phone number, because we never ask for it. Share your link or QR code and the chat opens by itself.</p>
-        <div class="chips"><span data-t="f1.c1">@username</span><span data-t="f1.c2">Invite link</span><span data-t="f1.c3">QR code</span></div>
-      </div>
-      <div class="pic"><div class="handle">
-        <svg class="qr" viewBox="0 0 21 21" shape-rendering="crispEdges"><path fill="#111" d="M0 0h7v7H0zM14 0h7v7h-7zM0 14h7v7H0z"/><path fill="#fff" d="M1 1h5v5H1zM15 1h5v5h-5zM1 15h5v5H1z"/><path fill="#111" d="M2 2h3v3H2zM16 2h3v3h-3zM2 16h3v3H2zM8 0h1v2H8zM10 1h2v1h-2zM9 3h3v1H9zM8 5h1v3H8zM10 6h2v2h-2zM12 4h1v2h-1zM0 8h2v1H0zM3 8h3v1H3zM2 10h2v2H2zM5 10h3v1H5zM8 9h2v2H8zM11 9h1v3h-1zM13 8h2v2h-2zM16 8h3v1h-3zM19 9h2v2h-2zM15 11h3v1h-3zM9 12h2v2H9zM12 13h3v1h-3zM8 15h2v2H8zM11 15h2v3h-2zM14 15h1v2h-1zM16 14h2v2h-2zM19 13h2v3h-2zM15 18h3v1h-3zM19 17h1v4h-1zM8 18h2v3H8zM13 19h2v2h-2zM16 20h2v1h-2z"/></svg>
-        <b>@<span>yourname</span></b>
-        <small>themadlions.com/roarme</small>
-      </div></div>
-    </article>
-
-    <article class="feat rv">
-      <span class="n">02</span>
-      <div>
+        <span class="n">02 · ROARTRANSFER</span>
         <h3 data-t="f2.t" data-html><b>RoarTransfer</b>. 3&nbsp;GB, as it is.</h3>
         <p data-t="f2.p">Send the rushes, the edit, the master: up to 3 GB a file, not squeezed. It stays three days, with a link anyone can download from, even without RoarMe. Then it deletes itself.</p>
         <div class="chips"><span data-t="f2.c1">Up to 3 GB</span><span data-t="f2.c2">Kept 3 days</span><span data-t="f2.c3">Download link</span><span data-t="f2.c4">Keeps going if the line drops</span></div>
@@ -441,10 +451,22 @@ footer nav a:hover { color: var(--text); }
         <div class="tr-g" data-t="f2.dl">Download</div>
       </div></div>
     </article>
-
-    <article class="feat rv">
-      <span class="n">03</span>
+    <article class="tile w5 rv" style="--d:0.06s">
       <div>
+        <span class="n">01 · USERNAME</span>
+        <h3 data-t="f1.t" data-html>Just a <b>username</b>.</h3>
+        <p data-t="f1.p">Sign up with an email and pick your @name. Nobody finds you by your phone number, because we never ask for it. Share your link or QR code and the chat opens by itself.</p>
+        <div class="chips"><span data-t="f1.c1">@username</span><span data-t="f1.c2">Invite link</span><span data-t="f1.c3">QR code</span></div>
+      </div>
+      <div class="pic"><div class="handle">
+        <svg class="qr" viewBox="0 0 21 21" shape-rendering="crispEdges"><path fill="#111" d="M0 0h7v7H0zM14 0h7v7h-7zM0 14h7v7H0z"/><path fill="#fff" d="M1 1h5v5H1zM15 1h5v5h-5zM1 15h5v5H1z"/><path fill="#111" d="M2 2h3v3H2zM16 2h3v3h-3zM2 16h3v3H2zM8 0h1v2H8zM10 1h2v1h-2zM9 3h3v1H9zM8 5h1v3H8zM10 6h2v2h-2zM12 4h1v2h-1zM0 8h2v1H0zM3 8h3v1H3zM2 10h2v2H2zM5 10h3v1H5zM8 9h2v2H8zM11 9h1v3h-1zM13 8h2v2h-2zM16 8h3v1h-3zM19 9h2v2h-2zM15 11h3v1h-3zM9 12h2v2H9zM12 13h3v1h-3zM8 15h2v2H8zM11 15h2v3h-2zM14 15h1v2h-1zM16 14h2v2h-2zM19 13h2v3h-2zM15 18h3v1h-3zM19 17h1v4h-1zM8 18h2v3H8zM13 19h2v2h-2zM16 20h2v1h-2z"/></svg>
+        <b>@<span>yourname</span></b>
+        <small>themadlions.com/roarme</small>
+      </div></div>
+    </article>
+    <article class="tile  rv" style="--d:0.12s">
+      <div>
+        <span class="n">03 · CALLS</span>
         <h3 data-t="f3.t" data-html>Calls, <b>face to face</b>.</h3>
         <p data-t="f3.p">Voice and video calls go straight from one device to the other. Plan one ahead: it lands in the chat as a card with a countdown, a Join button from ten minutes before, and Add to calendar.</p>
         <div class="chips"><span data-t="f3.c1">Voice</span><span data-t="f3.c2">Video</span><span data-t="f3.c3">Scheduled calls</span><span data-t="f3.c4">Calendar</span></div>
@@ -456,10 +478,9 @@ footer nav a:hover { color: var(--text); }
         </div>
       </div></div>
     </article>
-
-    <article class="feat rv">
-      <span class="n">04</span>
+    <article class="tile  rv" style="--d:0.00s">
       <div>
+        <span class="n">04 · WRITING</span>
         <h3 data-t="f4.t" data-html>Write it <b>your way</b>.</h3>
         <p data-t="f4.p">Bold, italic, underline, spoilers, code, with a tiny bar when you select. Long Articles with headings and checklists. Voice messages, a place on the map, as many pins as you need, replies and reactions.</p>
         <div class="chips"><span data-t="f4.c1">Formatting</span><span data-t="f4.c2">Articles</span><span data-t="f4.c3">Voice messages</span><span data-t="f4.c4">Location</span><span data-t="f4.c5">Pins</span></div>
@@ -470,10 +491,9 @@ footer nav a:hover { color: var(--text); }
         <div class="bb me" style="display:flex;align-items:center">0:14<span class="wave"><i style="height:30%"></i><i style="height:70%"></i><i style="height:45%"></i><i style="height:90%"></i><i style="height:55%"></i><i style="height:80%"></i><i style="height:35%"></i><i style="height:65%"></i><i style="height:40%"></i><i style="height:75%"></i><i style="height:30%"></i><i style="height:50%"></i></span></div>
       </div></div>
     </article>
-
-    <article class="feat rv">
-      <span class="n">05</span>
+    <article class="tile  rv" style="--d:0.06s">
       <div>
+        <span class="n">05 · LIBRARY</span>
         <h3 data-t="f5.t" data-html>Everything you shared, <b>found</b>.</h3>
         <p data-t="f5.p">Media, Transfers, Files, Links and Music from every chat, in one place, and a tap takes you to the message. A song keeps playing while you move between chats, with a bar to stop it.</p>
         <div class="chips"><span data-t="f5.c1">Media library</span><span data-t="f5.c2">Search</span><span data-t="f5.c3">Music player</span></div>
@@ -484,10 +504,9 @@ footer nav a:hover { color: var(--text); }
         <div class="now"><i><svg viewBox="0 0 24 24" fill="#fff"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg></i><b>Score · Final mix.wav</b><span style="color:#9aa0aa">1:24</span></div>
       </div></div>
     </article>
-
-    <article class="feat rv">
-      <span class="n">06</span>
+    <article class="tile w5 rv" style="--d:0.12s">
       <div>
+        <span class="n">06 · LOOKS</span>
         <h3 data-t="f6.t" data-html>A look that is <b>yours</b>.</h3>
         <p data-t="f6.p">Six themes, glass or solid, your own accent colour, fonts, text size, wallpapers, light or dark. In English or Greek.</p>
         <div class="chips"><span>Ember</span><span>Glass</span><span>Aura</span><span>Prism</span><span>Aurum</span><span>Studio</span></div>
@@ -501,10 +520,9 @@ footer nav a:hover { color: var(--text); }
         <span class="look" style="--dot:#d4ff3a;background:#121210">Studio</span>
       </div></div>
     </article>
-
-    <article class="feat rv">
-      <span class="n">07</span>
+    <article class="tile w7 rv" style="--d:0.00s">
       <div>
+        <span class="n">07 · EVERY SCREEN</span>
         <h3 data-t="f7.t" data-html>On <b>every screen</b>.</h3>
         <p data-t="f7.p">Apps for Mac and Windows, with the unread count on the icon and RoarMe in the menu bar. In any browser. On the phone, added to the home screen. Always the newest version, without reinstalling.</p>
         <div class="chips"><span>Mac</span><span>Windows</span><span data-t="f7.c3">Browser</span><span data-t="f7.c4">Phone</span></div>
@@ -515,10 +533,9 @@ footer nav a:hover { color: var(--text); }
         <div class="phone"><span></span><span class="c"></span><span></span><span class="c"></span></div>
       </div></div>
     </article>
-
-    <article class="feat rv">
-      <span class="n">08</span>
+    <article class="tile w12 wide rv" style="--d:0.06s">
       <div>
+        <span class="n">08 · NOTIFICATIONS</span>
         <h3 data-t="f8.t" data-html><b>Nothing</b> slips.</h3>
         <p data-t="f8.p">Back after a while? What came in arrives gathered, chat by chat. Lock RoarMe with a code. Mute, archive, folders, mark as unread, peek without reading.</p>
         <div class="chips"><span data-t="f8.c1">Smart notifications</span><span data-t="f8.c2">Passcode lock</span><span data-t="f8.c3">Folders</span></div>
@@ -533,27 +550,31 @@ footer nav a:hover { color: var(--text); }
 </section>
 
 <section class="privacy" id="privacy">
-  <div>
-    <p class="label rv" data-t="pv.label">Privacy</p>
-    <h2 class="rv" data-t="pv.title" data-html>Quiet <b>by design</b>.</h2>
-    <p class="sub rv" data-t="pv.sub">We keep what a chat needs to work, and nothing to sell. No ads, no tracking, no phone book.</p>
-    <div class="legal-links rv">
-      <a class="pill sm" href="https://alexisdigipro-hub.github.io/roarme/?legal=privacy" data-t="pv.policy">Privacy Policy</a>
-      <a class="pill sm" href="https://alexisdigipro-hub.github.io/roarme/?legal=terms" data-t="pv.terms">Terms</a>
+  <div class="panel rv">
+    <div class="head">
+      <p class="label" data-t="pv.label">Privacy</p>
+      <h2 data-t="pv.title" data-html>Quiet <b>by design</b>.</h2>
+      <p class="sub" data-t="pv.sub">We keep what a chat needs to work, and nothing to sell. No ads, no tracking, no phone book.</p>
+      <div class="legal-links">
+        <a class="pill sm" href="https://alexisdigipro-hub.github.io/roarme/?legal=privacy" data-t="pv.policy">Privacy Policy</a>
+        <a class="pill sm" href="https://alexisdigipro-hub.github.io/roarme/?legal=terms" data-t="pv.terms">Terms</a>
+      </div>
     </div>
+    <div class="promises">
+    <div class="promise"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M3 3l18 18"/></svg></i><h3 data-t="p1.t">No phone number</h3><p data-t="p1.p">An email and a username. Your contacts are never uploaded.</p></div>
+    <div class="promise" style="--d:.06s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.8-3.4 3.2-5.2 6-5.2s5.2 1.8 6 5.2M16 11l2 2 4-4"/></svg></i><h3 data-t="p2.t">Only who you choose</h3><p data-t="p2.p">People reach you by your @name or your link. Block anyone in one tap.</p></div>
+    <div class="promise" style="--d:.12s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10.5 5-3v9l-5-3"/></svg></i><h3 data-t="p3.t">Calls stay between you</h3><p data-t="p3.p">They go device to device. We do not record or keep them.</p></div>
+    <div class="promise" style="--d:.18s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg></i><h3 data-t="p4.t">Big files leave</h3><p data-t="p4.p">A RoarTransfer deletes itself after 3 days. Your location goes only when you send it.</p></div>
   </div>
-  <div class="promises">
-    <div class="promise rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M3 3l18 18"/></svg></i><h3 data-t="p1.t">No phone number</h3><p data-t="p1.p">An email and a username. Your contacts are never uploaded.</p></div>
-    <div class="promise rv" style="--d:.06s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.8-3.4 3.2-5.2 6-5.2s5.2 1.8 6 5.2M16 11l2 2 4-4"/></svg></i><h3 data-t="p2.t">Only who you choose</h3><p data-t="p2.p">People reach you by your @name or your link. Block anyone in one tap.</p></div>
-    <div class="promise rv" style="--d:.12s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10.5 5-3v9l-5-3"/></svg></i><h3 data-t="p3.t">Calls stay between you</h3><p data-t="p3.p">They go device to device. We do not record or keep them.</p></div>
-    <div class="promise rv" style="--d:.18s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg></i><h3 data-t="p4.t">Big files leave</h3><p data-t="p4.p">A RoarTransfer deletes itself after 3 days. Your location goes only when you send it.</p></div>
   </div>
 </section>
 
 <section class="download" id="download">
-  <p class="label rv" data-t="dl.label">Download</p>
-  <h2 class="rv" data-t="dl.title" data-html>Get <b>RoarMe</b>.</h2>
-  <p class="sub rv" data-t="dl.sub">Free. Make an account once and use it everywhere: your chats follow you.</p>
+  <div class="head">
+    <p class="label rv" data-t="dl.label">Download</p>
+    <h2 class="rv" data-t="dl.title" data-html>Get <b>RoarMe</b>.</h2>
+    <p class="sub rv" data-t="dl.sub">Free. Make an account once and use it everywhere: your chats follow you.</p>
+  </div>
   <div class="dl-grid">
     <div class="dl rv" id="dl-mac" data-mine="Your computer">
       <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.6s-2.5-1-2.5-3.8zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.7 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.7-1.3z"/></svg></i>
@@ -581,15 +602,16 @@ footer nav a:hover { color: var(--text); }
       <a class="pill" href="https://alexisdigipro-hub.github.io/roarme/" data-t="cta.open">Open RoarMe</a>
     </div>
   </div>
-  <p class="dl-help rv" data-t="dl.help">First time on a Mac: if it says it cannot check the app, open System Settings > Privacy &amp; Security and press Open Anyway. On Windows: More info > Run anyway. After that it opens straight away, and updates itself.</p>
+  <p class="dl-help rv" data-t="dl.help">First time on a Mac: if it says it cannot check the app, open System Settings &gt; Privacy &amp; Security and press Open Anyway. On Windows: More info &gt; Run anyway. After that it opens straight away, and updates itself.</p>
 </section>
 
 <section class="faq" id="faq">
-  <div>
-    <p class="label rv" data-t="faq.label">Questions</p>
-    <h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2>
-  </div>
-  <div class="qa rv">
+  <div class="panel rv">
+    <div class="head">
+      <p class="label" data-t="faq.label">Questions</p>
+      <h2 data-t="faq.title" data-html>Good to <b>know</b>.</h2>
+    </div>
+    <div class="qa">
     <details><summary data-t="q1">Is RoarMe free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
     <details><summary data-t="q2">Do I need a phone number?</summary><p data-t="a2">No. An email and a username are enough. People find you by your @name, or by the link and QR code you share.</p></details>
     <details><summary data-t="q3">How big can a file be?</summary><p data-t="a3">Up to 50 MB straight in the chat, kept as long as the chat. Up to 3 GB with RoarTransfer, kept 3 days, with a link anyone can download from.</p></details>
@@ -597,14 +619,16 @@ footer nav a:hover { color: var(--text); }
     <details><summary data-t="q5">Where are my messages kept?</summary><p data-t="a5">On our provider's servers in London, always sent over an encrypted connection. You can delete your account, and with it your profile and one-to-one chats, at any time.</p></details>
     <details><summary data-t="q6">Can I use it on several devices?</summary><p data-t="a6">Yes. Sign in on the Mac, the PC, the browser and the phone at the same time; everything stays in step.</p></details>
   </div>
+  </div>
 </section>
 
 <section class="contact" id="contact">
-  <p class="label rv" data-t="ct.label">Contact</p>
-  <h2 class="rv" data-t="ct.title" data-html>Questions, ideas, <b>press</b>?</h2>
-  <a class="mail rv" href="mailto:info@themadlions.com">info@themadlions.com</a>
+  <div class="panel rv">
+    <p class="label" data-t="ct.label">Contact</p>
+    <h2 data-t="ct.title" data-html>Questions, ideas, <b>press</b>?</h2>
+    <a class="mail" href="mailto:info@themadlions.com">info@themadlions.com</a>
+  </div>
 </section>
-</main>
 
 <footer>
   <a href="../"><img class="wordmark" src="../wordmark.png" alt="The Mad Lions"></a>
@@ -615,6 +639,7 @@ footer nav a:hover { color: var(--text); }
   </nav>
   <span data-t="footer">© 2026 The Mad Lions · RoarMe</span>
 </footer>
+</main>
 
 <script>
 (function () {
