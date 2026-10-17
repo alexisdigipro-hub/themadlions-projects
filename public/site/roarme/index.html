@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- RoarMe's page on the company site (Alex, 17 Oct 2026): what the app is and where to get it, in the look of
+     themadlions.com (Jost, near-black, Rosso Corsa, glass pills). Lives at themadlions.com/roarme/. EN and GR, as the
+     main page. Download links follow the newest desktop build by themselves (releases/latest). -->
+<title>RoarMe · Messages, calls and 3 GB files · by The Mad Lions</title>
+<link rel="canonical" href="https://themadlions.com/roarme/">
+<meta name="description" content="RoarMe, the messenger by The Mad Lions. Messages, voice and video calls, files up to 3 GB with RoarTransfer. No phone number, just a username. For Mac, Windows, the browser and the phone.">
+<meta name="theme-color" content="#0b0b0c">
+<meta property="og:title" content="RoarMe · by The Mad Lions">
+<meta property="og:description" content="Messages, calls and files up to 3 GB. No phone number, just a username.">
+<meta property="og:url" content="https://themadlions.com/roarme/">
+<meta property="og:image" content="https://themadlions.com/og-image.png">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<script>
+  // the same look and language as the main page, remembered from there
+  (function () {
+    var t = null
+    try { t = new URLSearchParams(location.search).get('theme') || localStorage.getItem('tml_site_theme') } catch (e) {}
+    if (t && t !== 'dark') document.documentElement.dataset.theme = t
+  })()
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0b0c; --bg-2: #121214; --bg-3: #18181b; --text: #f2f0ec; --muted: #9a978f; --line: rgba(255,255,255,.1);
+  --accent: #d40000; --on-accent: #ffffff; --hi: #ffffff; --glass: rgba(255,255,255,.07); --glass-edge: rgba(255,255,255,.14);
+  --wm: invert(1);
+  --pad: clamp(16px, 4vw, 56px);
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  /* the app's own colours, for the pictures of it */
+  --app: #1b1e23; --app-2: #23272e; --app-edge: rgba(255,255,255,.09); --coral: #ff6b57;
+}
+html[data-theme='light'] {
+  --bg: #f3f0e8; --bg-2: #ffffff; --bg-3: #ebe7dd; --text: #151412; --muted: #6f6a60; --line: rgba(0,0,0,.1);
+  --hi: #000000; --glass: rgba(0,0,0,.04); --glass-edge: rgba(0,0,0,.12); --wm: none;
+}
+html[data-theme='blue'] {
+  --bg: #08101f; --bg-2: #0f1a31; --bg-3: #15233f; --text: #eef3ff; --muted: #8e9cbc; --line: rgba(160,190,255,.13);
+  --glass: rgba(140,180,255,.09); --glass-edge: rgba(160,200,255,.2);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: Jost, system-ui, sans-serif; font-weight: 400; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+img { display: block; max-width: 100%; }
+svg { display: block; }
+.wordmark { filter: var(--wm); height: auto; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+
+/* the RoarMe wordmark, as in the app: ROAR thin, ME heavy, and by THEMADLIONS with MAD bold */
+.rm { display: inline-flex; align-items: baseline; letter-spacing: .02em; line-height: .9; }
+.rm .a { font-weight: 200; }
+.rm .b { font-weight: 800; }
+.by { font-size: 12px; font-weight: 400; letter-spacing: .2em; text-transform: lowercase; color: var(--muted); }
+.by b { font-weight: 300; text-transform: uppercase; letter-spacing: .14em; color: color-mix(in srgb, var(--text) 85%, transparent); }
+.by b strong { font-weight: 800; }
+
+/* top bar */
+.bar { position: fixed; inset: 0 0 auto 0; z-index: 20; display: flex; align-items: center; gap: 18px; padding: calc(14px + env(safe-area-inset-top)) var(--pad) 14px; transition: background .4s, border-color .4s; border-bottom: 1px solid transparent; }
+.bar.solid { background: color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); border-bottom-color: var(--line); }
+.bar .home { display: flex; align-items: center; gap: 14px; }
+.bar .home .wordmark { width: 128px; }
+.bar .home .sep { width: 1px; height: 18px; background: var(--line); }
+.bar .home .rm { font-size: 19px; }
+.bar nav { margin-left: auto; display: flex; gap: 2px; }
+.bar nav a { padding: 8px 13px; border-radius: 999px; font-size: 13px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--text) 80%, transparent); transition: background .2s, color .2s; }
+.bar nav a:hover { background: var(--glass); color: var(--text); }
+.lang { display: flex; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); }
+.lang button { border: 0; background: transparent; cursor: pointer; padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 500; letter-spacing: .08em; color: color-mix(in srgb, var(--text) 75%, transparent); }
+.lang button.on { background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 24%, transparent), color-mix(in srgb, var(--hi) 8%, transparent)); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 45%, transparent); color: var(--text); }
+
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 48px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 500; letter-spacing: .03em; border: 1px solid var(--glass-edge); background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); cursor: pointer; transition: transform .25s var(--ease), background .2s, border-color .2s, filter .2s; white-space: nowrap; }
+.pill:hover { transform: translateY(-1px); background: color-mix(in srgb, var(--hi) 12%, transparent); border-color: color-mix(in srgb, var(--hi) 30%, transparent); }
+.pill:active { transform: scale(.97); }
+.pill.main { background: var(--accent); color: var(--on-accent); border-color: transparent; box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 28%, transparent); }
+.pill.main:hover { filter: brightness(1.08); }
+.pill svg { width: 18px; height: 18px; flex: none; }
+.pill.sm { height: 40px; padding: 0 18px; font-size: 14px; }
+
+/* opening: the wordmark huge, one line, two ways in, and the app itself */
+.hero { position: relative; min-height: 100svh; padding: calc(110px + env(safe-area-inset-top)) var(--pad) 70px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(28px, 4vw, 72px); align-items: center; overflow: hidden; }
+.hero::before { content: ''; position: absolute; inset: -20% -10% auto auto; width: 70vw; height: 70vw; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), transparent 62%); filter: blur(30px); pointer-events: none; opacity: .75; }
+.hero-in { position: relative; z-index: 1; }
+.kicker { margin: 0 0 22px; font-size: 12.5px; font-weight: 500; letter-spacing: .3em; text-transform: uppercase; color: var(--accent); }
+.hero h1 { margin: 0; font-size: clamp(60px, 8.4vw, 150px); font-weight: 400; line-height: .86; letter-spacing: -.01em; }
+.hero h1 .rm { display: flex; }
+.hero .by { display: block; margin: 18px 0 0 6px; font-size: clamp(12px, 1.1vw, 15px); }
+.hero .lead { margin: 34px 0 0; max-width: 520px; font-size: clamp(19px, 1.9vw, 25px); font-weight: 300; line-height: 1.42; text-wrap: balance; }
+.hero .lead b { font-weight: 600; }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 34px; }
+.cta-note { margin: 16px 0 0 4px; font-size: 13px; letter-spacing: .04em; color: var(--muted); }
+.cta-note a { border-bottom: 1px solid var(--line); }
+.cta-note a:hover { color: var(--text); border-color: var(--text); }
+
+/* the app, drawn (no screenshot to keep up to date): a window with the list and a chat */
+.shot { position: relative; z-index: 1; perspective: 1600px; text-align: left; }
+.win { position: relative; border-radius: 22px; background: var(--app); border: 1px solid var(--app-edge); box-shadow: 0 50px 120px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06); overflow: hidden; transform: rotateY(calc(var(--rx, 0) * 1deg)) rotateX(calc(var(--ry, 0) * 1deg)); transition: transform .6s var(--ease); color: #eef0f3; font-size: 13px; }
+.win-top { display: flex; gap: 7px; padding: 12px 14px; }
+.win-top i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
+.win-top i:nth-child(2) { background: #febc2e; } .win-top i:nth-child(3) { background: #28c840; }
+.win-body { display: grid; grid-template-columns: 34% 1fr; gap: 10px; padding: 0 12px 12px; height: clamp(380px, 38vw, 520px); }
+.pane { min-width: 0; border-radius: 16px; background: linear-gradient(180deg, #2b3038, #1f2329); border: 1px solid var(--app-edge); display: flex; flex-direction: column; overflow: hidden; }
+.side-h { display: flex; align-items: center; justify-content: center; padding: 14px 10px 10px; }
+.side-h .rm { font-size: 15px; }
+.chat-r { display: flex; align-items: center; gap: 9px; margin: 2px 8px; padding: 8px; border-radius: 12px; }
+.chat-r.on { background: color-mix(in srgb, var(--coral) 16%, transparent); border: 1px solid color-mix(in srgb, var(--coral) 45%, transparent); }
+.av { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #5b6472, #3a4049); }
+.av.c1 { background: linear-gradient(135deg, #ff8a6b, #e0483a); } .av.c2 { background: linear-gradient(135deg, #7aa7ff, #3b6ff5); } .av.c3 { background: linear-gradient(135deg, #f8d29a, #e79a3d); color: #2a1c08; }
+.chat-r b { flex: 1; min-width: 0; font-weight: 500; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-r small { font-size: 10px; color: #9aa0aa; }
+.badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--coral); color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; }
+.side-foot { margin: auto 8px 8px; display: flex; justify-content: space-around; padding: 8px 4px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid var(--app-edge); }
+.side-foot i { width: 20px; height: 20px; border-radius: 6px; background: rgba(255,255,255,.1); }
+.side-foot i.on { background: color-mix(in srgb, var(--coral) 55%, transparent); }
+.room-h { display: flex; align-items: center; gap: 9px; margin: 10px; padding: 7px 9px; border-radius: 13px; background: rgba(255,255,255,.04); border: 1px solid var(--app-edge); }
+.room-h b { display: block; font-size: 12.5px; font-weight: 600; }
+.room-h small { font-size: 10px; color: #9aa0aa; }
+.room-h .ic { margin-left: auto; display: flex; gap: 5px; }
+.room-h .ic i { width: 26px; height: 26px; border-radius: 9px; background: rgba(255,255,255,.05); border: 1px solid var(--app-edge); }
+.msgs { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; padding: 4px 12px 10px; overflow: hidden; }
+.bb { max-width: 78%; padding: 7px 11px; border-radius: 14px; line-height: 1.35; background: rgba(255,255,255,.06); border: 1px solid var(--app-edge); align-self: flex-start; }
+.bb small { margin-left: 6px; font-size: 9px; color: #9aa0aa; }
+.bb.me { align-self: flex-end; background: color-mix(in srgb, var(--coral) 15%, rgba(255,255,255,.05)); border-color: color-mix(in srgb, var(--coral) 55%, transparent); }
+.bb em { font-style: normal; font-weight: 700; }
+.tr { align-self: flex-end; width: min(250px, 82%); padding: 10px; border-radius: 16px; background: color-mix(in srgb, var(--coral) 12%, rgba(255,255,255,.04)); border: 1px solid color-mix(in srgb, var(--coral) 50%, transparent); display: flex; flex-direction: column; gap: 8px; }
+.tr-m { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 800; }
+.tr-m span { color: var(--coral); }
+.tr-m i, .tr-k { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(140deg, color-mix(in srgb, var(--coral) 45%, transparent), color-mix(in srgb, var(--coral) 15%, transparent)); border: 1px solid color-mix(in srgb, var(--coral) 45%, transparent); color: #ffd3cb; }
+.tr-m i svg { width: 12px; height: 12px; }
+.tr-h { display: flex; align-items: center; gap: 9px; padding: 9px; border-radius: 12px; background: color-mix(in srgb, var(--coral) 8%, transparent); border: 1px solid color-mix(in srgb, var(--coral) 18%, transparent); }
+.tr-k { width: 32px; height: 32px; border-radius: 10px; }
+.tr-k svg { width: 16px; height: 16px; }
+.tr-h b { display: block; font-size: 18px; font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+.tr-h small { font-size: 9px; letter-spacing: .08em; color: #9aa0aa; }
+.tr-t { display: flex; align-items: center; gap: 7px; }
+.tr-t i { flex: 1; height: 3px; border-radius: 99px; background: linear-gradient(90deg, #ffb020 72%, rgba(255,255,255,.1) 72%); }
+.tr-t span { font-size: 9.5px; font-weight: 700; color: #ffc24a; padding: 2px 7px; border-radius: 99px; background: rgba(255,176,32,.1); border: 1px solid rgba(255,176,32,.3); }
+.tr-g { height: 30px; border-radius: 99px; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; color: #ffd3cb; background: linear-gradient(180deg, color-mix(in srgb, var(--coral) 46%, transparent), color-mix(in srgb, var(--coral) 24%, transparent)); border: 1px solid color-mix(in srgb, var(--coral) 62%, transparent); box-shadow: inset 0 1px 0 rgba(255,255,255,.2); }
+.compose { display: flex; gap: 6px; margin: 0 10px 10px; }
+.compose i { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.05); border: 1px solid var(--app-edge); flex: none; }
+.compose span { flex: 1; height: 30px; border-radius: 99px; background: rgba(255,255,255,.04); border: 1px solid color-mix(in srgb, var(--coral) 40%, transparent); padding: 0 12px; display: flex; align-items: center; font-size: 11px; color: #8a909a; }
+.typing { align-self: flex-start; display: flex; gap: 4px; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.06); border: 1px solid var(--app-edge); }
+.typing i { width: 5px; height: 5px; border-radius: 50%; background: #9aa0aa; animation: dot 1.2s infinite ease-in-out; }
+.typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes dot { 0%, 60%, 100% { opacity: .3; transform: none; } 30% { opacity: 1; transform: translateY(-3px); } }
+.float { position: absolute; z-index: 2; padding: 10px 14px; border-radius: 16px; background: color-mix(in srgb, var(--bg-2) 70%, transparent); border: 1px solid var(--glass-edge); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 20px 50px rgba(0,0,0,.35); font-size: 13px; display: flex; align-items: center; gap: 10px; }
+.float b { font-weight: 600; }
+.float small { display: block; color: var(--muted); font-size: 11.5px; }
+.float i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 22%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); color: #ffb3a8; }
+.float i svg { width: 16px; height: 16px; }
+.f1 { left: -26px; bottom: 16%; }
+.f2 { right: -14px; top: 12%; }
+
+/* three numbers */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 var(--pad); }
+.stat { padding: 26px 28px; border-radius: 18px; background: var(--bg-2); border: 1px solid var(--line); }
+.stat strong { display: block; font-size: clamp(42px, 5vw, 68px); font-weight: 300; line-height: 1; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.stat strong em { font-style: normal; color: var(--accent); }
+.stat > span { display: block; margin-top: 10px; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+
+section { padding: clamp(80px, 10vw, 140px) var(--pad); }
+.label { font-size: 12.5px; font-weight: 500; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); margin: 0 0 18px; }
+h2 { margin: 0; font-size: clamp(36px, 5.4vw, 76px); font-weight: 300; letter-spacing: -.01em; line-height: 1.02; text-wrap: balance; }
+h2 b { font-weight: 800; }
+.sub { margin: 18px 0 0; max-width: 620px; font-size: clamp(16px, 1.6vw, 19px); font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 75%, transparent); }
+
+/* what it does: eight, each a big number, a line, and a small picture of it */
+.feats { border-top: 1px solid var(--line); }
+.feat-list { margin-top: 56px; display: flex; flex-direction: column; gap: 10px; }
+.feat { display: grid; grid-template-columns: 90px minmax(0, 1fr) minmax(0, 1fr); gap: clamp(18px, 3vw, 48px); align-items: center; padding: clamp(24px, 3vw, 40px); border-radius: 22px; background: var(--bg-2); border: 1px solid var(--line); transition: border-color .4s, background .4s; }
+.feat:hover { border-color: color-mix(in srgb, var(--accent) 38%, transparent); background: var(--bg-3); }
+.feat .n { align-self: start; font-size: 44px; font-weight: 200; line-height: 1; color: color-mix(in srgb, var(--text) 22%, transparent); font-variant-numeric: tabular-nums; }
+.feat h3 { margin: 0; font-size: clamp(26px, 3vw, 40px); font-weight: 300; line-height: 1.08; letter-spacing: -.01em; }
+.feat h3 b { font-weight: 700; }
+.feat p { margin: 14px 0 0; font-size: 16px; font-weight: 300; line-height: 1.6; color: color-mix(in srgb, var(--text) 76%, transparent); max-width: 520px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+.chips span { height: 30px; padding: 0 12px; display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; font-size: 12.5px; font-weight: 500; color: color-mix(in srgb, var(--text) 85%, transparent); background: var(--glass); border: 1px solid var(--glass-edge); }
+.chips span::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+/* the small pictures */
+.pic { position: relative; min-height: 200px; border-radius: 18px; background: radial-gradient(120% 90% at 80% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%), var(--app); border: 1px solid var(--app-edge); display: grid; place-items: center; padding: 22px; overflow: hidden; color: #eef0f3; }
+.handle { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.handle .qr { width: 92px; height: 92px; border-radius: 14px; background: #fff; padding: 8px; }
+.handle b { font-size: 22px; font-weight: 500; letter-spacing: .01em; }
+.handle b span { color: var(--coral); }
+.handle small { font-size: 12px; color: #9aa0aa; letter-spacing: .06em; }
+.pic .tr { align-self: center; width: min(280px, 100%); }
+.call { display: flex; align-items: center; gap: 18px; }
+.call .face { width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; font-weight: 700; background: linear-gradient(135deg, #7aa7ff, #3b6ff5); box-shadow: 0 0 0 8px rgba(59,111,245,.15), 0 0 0 18px rgba(59,111,245,.07); }
+.call .ctl { display: flex; gap: 8px; }
+.call .ctl i { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.08); border: 1px solid var(--app-edge); }
+.call .ctl i.end { background: rgba(255,59,48,.3); border-color: rgba(255,59,48,.6); }
+.call .ctl svg { width: 17px; height: 17px; }
+.call small { display: block; margin-top: 4px; color: #9aa0aa; font-size: 12px; }
+.fmt { width: min(300px, 100%); display: flex; flex-direction: column; gap: 8px; }
+.fmt .bar2 { align-self: center; display: flex; gap: 2px; padding: 3px; border-radius: 99px; background: rgba(255,255,255,.07); border: 1px solid var(--app-edge); }
+.fmt .bar2 span { width: 28px; height: 26px; border-radius: 99px; display: grid; place-items: center; font-size: 12.5px; }
+.fmt .bar2 span.on { background: color-mix(in srgb, var(--coral) 30%, transparent); }
+.fmt .bb { max-width: 100%; }
+.spoil { filter: blur(4px); background: rgba(255,255,255,.12); border-radius: 4px; padding: 0 3px; }
+.wave { display: flex; align-items: center; gap: 2px; height: 18px; margin-left: 8px; }
+.wave i { width: 2px; border-radius: 2px; background: var(--coral); }
+.lib { width: min(320px, 100%); display: flex; flex-direction: column; gap: 10px; }
+.lib .tabs { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
+.lib .tabs span { padding: 5px 10px; border-radius: 99px; font-size: 11px; background: rgba(255,255,255,.05); border: 1px solid var(--app-edge); }
+.lib .tabs span.on { background: color-mix(in srgb, var(--coral) 22%, transparent); border-color: color-mix(in srgb, var(--coral) 50%, transparent); }
+.lib .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.lib .grid i { aspect-ratio: 1; border-radius: 8px; background: linear-gradient(135deg, #3a4049, #262a31); }
+.lib .grid i:nth-child(3n) { background: linear-gradient(135deg, #6b3a35, #2f2423); }
+.lib .grid i:nth-child(4n+1) { background: linear-gradient(135deg, #2f4a6b, #1f2836); }
+.now { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 12px; background: color-mix(in srgb, var(--coral) 12%, rgba(255,255,255,.04)); border: 1px solid color-mix(in srgb, var(--coral) 45%, transparent); font-size: 11.5px; }
+.now i { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--coral) 40%, transparent); }
+.now i svg { width: 10px; height: 10px; }
+.now b { font-weight: 600; flex: 1; }
+.looks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: min(330px, 100%); }
+.look { aspect-ratio: 1.25; border-radius: 12px; border: 1px solid var(--app-edge); position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 6px 8px; font-size: 10.5px; font-weight: 600; }
+.look::before { content: ''; position: absolute; right: 8px; top: 8px; width: 14px; height: 14px; border-radius: 50%; background: var(--dot); box-shadow: 0 0 0 3px rgba(255,255,255,.12); }
+.devices { display: flex; align-items: flex-end; gap: 14px; }
+.devices .mac { width: 170px; height: 108px; border-radius: 10px; border: 1px solid var(--app-edge); background: linear-gradient(180deg, #2b3038, #1f2329); position: relative; }
+.devices .mac::after { content: ''; position: absolute; left: -14px; right: -14px; bottom: -8px; height: 8px; border-radius: 0 0 8px 8px; background: #3a3f47; }
+.devices .phone { width: 58px; height: 112px; border-radius: 14px; border: 1px solid var(--app-edge); background: linear-gradient(180deg, #2b3038, #1f2329); }
+.devices .win2 { width: 120px; height: 82px; border-radius: 8px; border: 1px solid var(--app-edge); background: linear-gradient(180deg, #2b3038, #1f2329); }
+.devices > div { display: flex; flex-direction: column; gap: 4px; padding: 10px 8px; }
+.devices span { display: block; height: 6px; border-radius: 3px; background: rgba(255,255,255,.1); }
+.devices span.c { background: color-mix(in srgb, var(--coral) 60%, transparent); width: 60%; align-self: flex-end; }
+.notes { width: min(300px, 100%); display: flex; flex-direction: column; gap: 8px; }
+.note { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.07); border: 1px solid var(--app-edge); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.note b { display: block; font-size: 12.5px; }
+.note small { font-size: 11px; color: #9aa0aa; }
+.note:nth-child(2) { margin-left: 16px; opacity: .85; }
+.note:nth-child(3) { margin-left: 32px; opacity: .65; }
+
+/* quiet by design */
+.privacy { border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1.1fr; gap: clamp(32px, 6vw, 96px); align-items: start; }
+.promises { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.promise { padding: 22px 22px 24px; border-radius: 18px; background: var(--bg-2); border: 1px solid var(--line); }
+.promise i { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; margin-bottom: 16px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.promise i svg { width: 18px; height: 18px; }
+.promise h3 { margin: 0 0 6px; font-size: 18px; font-weight: 500; }
+.promise p { margin: 0; font-size: 14.5px; font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 72%, transparent); }
+.legal-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 30px; }
+
+/* download: every way in */
+.download { border-top: 1px solid var(--line); text-align: center; }
+.download .sub { margin-left: auto; margin-right: auto; }
+.dl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 50px; text-align: left; }
+.dl { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 26px 24px 24px; border-radius: 20px; background: var(--bg-2); border: 1px solid var(--line); transition: border-color .3s, background .3s, transform .4s var(--ease); }
+.dl:hover { border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: var(--bg-3); transform: translateY(-3px); }
+.dl.mine { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+.dl.mine::after { content: attr(data-mine); position: absolute; top: 16px; right: 16px; padding: 3px 10px; border-radius: 99px; font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.dl > i { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 14px; margin-bottom: 14px; background: var(--glass); border: 1px solid var(--glass-edge); }
+.dl > i svg { width: 22px; height: 22px; }
+.dl h3 { margin: 0; font-size: 21px; font-weight: 500; }
+.dl small { color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+.dl .pill { margin-top: 16px; align-self: flex-start; }
+.dl .alt { margin-top: 10px; font-size: 13px; color: var(--muted); }
+.dl .alt a { border-bottom: 1px solid var(--line); }
+.dl .alt a:hover { color: var(--text); }
+.dl-help { margin: 28px auto 0; max-width: 760px; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+
+/* questions */
+.faq { border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1.4fr; gap: clamp(32px, 6vw, 96px); align-items: start; }
+.qa { border-top: 1px solid var(--line); }
+.qa details { border-bottom: 1px solid var(--line); }
+.qa summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 22px 0; font-size: clamp(17px, 1.6vw, 21px); font-weight: 400; }
+.qa summary::-webkit-details-marker { display: none; }
+.qa summary::after { content: ''; flex: none; width: 12px; height: 12px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg) translateY(-3px); transition: transform .3s var(--ease); }
+.qa details[open] summary::after { transform: rotate(225deg) translateY(-3px); }
+.qa p { margin: 0 0 22px; max-width: 640px; font-size: 15.5px; font-weight: 300; line-height: 1.65; color: color-mix(in srgb, var(--text) 76%, transparent); }
+
+/* contact */
+.contact { border-top: 1px solid var(--line); text-align: center; }
+.contact h2 { font-size: clamp(40px, 6vw, 88px); }
+.contact .mail { display: inline-block; margin-top: 30px; font-size: clamp(22px, 3vw, 40px); font-weight: 300; border-bottom: 1px solid color-mix(in srgb, var(--accent) 60%, transparent); padding-bottom: 4px; transition: color .2s, border-color .2s; }
+.contact .mail:hover { color: var(--accent); border-color: var(--accent); }
+
+footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding: 36px var(--pad) calc(36px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); color: var(--muted); font-size: 13.5px; }
+footer .wordmark { width: 150px; opacity: .85; }
+footer nav { display: flex; flex-wrap: wrap; gap: 18px; }
+footer nav a:hover { color: var(--text); }
+
+/* coming in, once, as you scroll */
+.rv { opacity: 0; transform: translateY(26px); transition: opacity 1s var(--ease), transform 1s var(--ease); transition-delay: var(--d, 0s); }
+.rv.in { opacity: 1; transform: none; }
+.hero .rv { transition-duration: 1.2s; }
+
+@media (max-width: 1100px) {
+  .dl-grid { grid-template-columns: repeat(2, 1fr); }
+  .feat { grid-template-columns: 64px minmax(0, 1fr); }
+  .feat .pic { grid-column: 1 / -1; }
+}
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; text-align: center; padding-top: calc(100px + env(safe-area-inset-top)); }
+  .hero h1 { font-size: clamp(60px, 19vw, 150px); }
+  .hero h1 .rm { justify-content: center; }
+  .hero .by { margin-left: 0; }
+  .hero .lead { margin-left: auto; margin-right: auto; }
+  .cta { justify-content: center; }
+  .shot { max-width: 640px; margin: 0 auto; width: 100%; }
+  .privacy, .faq { grid-template-columns: 1fr; }
+  .bar nav { display: none; }
+  .lang { margin-left: auto; }
+}
+@media (max-width: 640px) {
+  .stats { grid-template-columns: 1fr; }
+  .stat { text-align: center; }
+  .win-body { grid-template-columns: 1fr; height: 440px; }
+  .win-body > .pane:first-child { display: none; }
+  .float { display: none; }
+  .feat { grid-template-columns: 1fr; text-align: center; }
+  .feat .n { align-self: center; }
+  .feat p { margin-left: auto; margin-right: auto; }
+  .chips { justify-content: center; }
+  .promises { grid-template-columns: 1fr; }
+  .dl-grid { grid-template-columns: 1fr; }
+  .bar .home .wordmark { width: 104px; }
+  .bar .home .rm { font-size: 16px; }
+  .bar .pill.sm { display: none; }
+  footer { justify-content: center; text-align: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .rv { opacity: 1; transform: none; transition: none; }
+  .win { transform: none !important; }
+  .typing i { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="bar" id="bar">
+  <a class="home" href="../" aria-label="The Mad Lions">
+    <img class="wordmark" src="../wordmark.png" alt="The Mad Lions">
+    <span class="sep"></span>
+    <span class="rm" aria-label="RoarMe"><span class="a">ROAR</span><span class="b">ME</span></span>
+  </a>
+  <nav aria-label="Sections">
+    <a href="#features" data-t="nav.features">Features</a>
+    <a href="#privacy" data-t="nav.privacy">Privacy</a>
+    <a href="#download" data-t="nav.download">Download</a>
+    <a href="#faq" data-t="nav.faq">Questions</a>
+  </nav>
+  <div class="lang" role="group" aria-label="Language">
+    <button type="button" data-lang="en" class="on">EN</button>
+    <button type="button" data-lang="el">GR</button>
+  </div>
+  <a class="pill sm" href="https://alexisdigipro-hub.github.io/roarme/" data-t="cta.open">Open RoarMe</a>
+</header>
+
+<main>
+<div class="hero">
+  <div class="hero-in">
+    <p class="kicker rv" data-t="hero.kicker">The messenger by The Mad Lions</p>
+    <h1 class="rv" style="--d:.08s"><span class="rm"><span class="a">ROAR</span><span class="b">ME</span></span></h1>
+    <span class="by rv" style="--d:.16s">by <b>THE<strong>MAD</strong>LIONS</b></span>
+    <p class="lead rv" style="--d:.24s" data-t="hero.lead" data-html>Messages, calls and files up to <b>3&nbsp;GB</b>. No phone number, just a <b>username</b>.</p>
+    <div class="cta rv" style="--d:.32s">
+      <a class="pill main" id="dl-main" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="cta.download">Download</span></a>
+      <a class="pill" href="https://alexisdigipro-hub.github.io/roarme/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.4 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.4-3.5-8.5s1-5.9 3.5-8.5z"/></svg><span data-t="cta.browser">Open in the browser</span></a>
+    </div>
+    <p class="cta-note rv" style="--d:.4s"><span data-t="cta.note">Free · Mac, Windows, browser and phone ·</span> <a href="#download" data-t="cta.all">all downloads</a></p>
+  </div>
+
+  <div class="shot rv" style="--d:.2s" id="shot" aria-hidden="true">
+    <div class="win" id="win">
+      <div class="win-top"><i></i><i></i><i></i></div>
+      <div class="win-body">
+        <div class="pane">
+          <div class="side-h"><span class="rm"><span class="a">ROAR</span><span class="b">ME</span></span></div>
+          <div class="chat-r on"><span class="av c1">MP</span><b>Maria P.</b><small>19:46</small></div>
+          <div class="chat-r"><span class="av c2">ST</span><b>Set team</b><span class="badge">5</span></div>
+          <div class="chat-r"><span class="av c3">NK</span><b>Nikos</b><small>18:02</small></div>
+          <div class="chat-r"><span class="av">EL</span><b>Elena</b><small>Mon</small></div>
+          <div class="side-foot"><i></i><i class="on"></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="pane">
+          <div class="room-h"><span class="av c1">MP</span><span><b>Maria P.</b><small>@maria · online</small></span><span class="ic"><i></i><i></i><i></i></span></div>
+          <div class="msgs">
+            <div class="bb">Sending the edit tonight <small>19:40</small></div>
+            <div class="bb me">Perfect. Is it the <em>final</em> cut? <small>19:41</small></div>
+            <div class="tr">
+              <div class="tr-m"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h-.5a4.5 4.5 0 0 1-.9-8.9A6 6 0 0 1 17.3 8 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M8.5 15 12 11.5 15.5 15"/></svg></i>Roar<span>Transfer</span></div>
+              <div class="tr-h"><span class="tr-k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v14l11-7z"/></svg></span><span><b>2.4 GB</b><small>MOV · VIDEO</small></span></div>
+              <div class="tr-t"><i></i><span>3 days left</span></div>
+              <div class="tr-g">Download</div>
+            </div>
+            <div class="typing"><i></i><i></i><i></i></div>
+          </div>
+          <div class="compose"><i></i><span>Write a message…</span><i></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="float f1"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10.5 5-3v9l-5-3"/></svg></i><span><b data-t="float.call">Video call</b><small data-t="float.callsub">Device to device</small></span></div>
+    <div class="float f2"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1-3.6 3.7-5.5 7-5.5s6 1.9 7 5.5"/></svg></i><span><b>@yourname</b><small data-t="float.nonumber">No phone number</small></span></div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat rv"><strong>3<em>GB</em></strong><span data-t="stat.1">per file with RoarTransfer</span></div>
+  <div class="stat rv" style="--d:.08s"><strong>0</strong><span data-t="stat.2">phone numbers asked</span></div>
+  <div class="stat rv" style="--d:.16s"><strong>6</strong><span data-t="stat.3">looks to make it yours</span></div>
+</div>
+
+<section class="feats" id="features">
+  <p class="label rv" data-t="feat.label">What it does</p>
+  <h2 class="rv" data-t="feat.title" data-html>Everything a film crew <b>talks</b> about. In one place.</h2>
+  <p class="sub rv" data-t="feat.sub">Made in-house for the way we work: big files, quick calls, a lot of people, nothing lost.</p>
+
+  <div class="feat-list">
+    <article class="feat rv">
+      <span class="n">01</span>
+      <div>
+        <h3 data-t="f1.t" data-html>Just a <b>username</b>.</h3>
+        <p data-t="f1.p">Sign up with an email and pick your @name. Nobody finds you by your phone number, because we never ask for it. Share your link or QR code and the chat opens by itself.</p>
+        <div class="chips"><span data-t="f1.c1">@username</span><span data-t="f1.c2">Invite link</span><span data-t="f1.c3">QR code</span></div>
+      </div>
+      <div class="pic"><div class="handle">
+        <svg class="qr" viewBox="0 0 21 21" shape-rendering="crispEdges"><path fill="#111" d="M0 0h7v7H0zM14 0h7v7h-7zM0 14h7v7H0z"/><path fill="#fff" d="M1 1h5v5H1zM15 1h5v5h-5zM1 15h5v5H1z"/><path fill="#111" d="M2 2h3v3H2zM16 2h3v3h-3zM2 16h3v3H2zM8 0h1v2H8zM10 1h2v1h-2zM9 3h3v1H9zM8 5h1v3H8zM10 6h2v2h-2zM12 4h1v2h-1zM0 8h2v1H0zM3 8h3v1H3zM2 10h2v2H2zM5 10h3v1H5zM8 9h2v2H8zM11 9h1v3h-1zM13 8h2v2h-2zM16 8h3v1h-3zM19 9h2v2h-2zM15 11h3v1h-3zM9 12h2v2H9zM12 13h3v1h-3zM8 15h2v2H8zM11 15h2v3h-2zM14 15h1v2h-1zM16 14h2v2h-2zM19 13h2v3h-2zM15 18h3v1h-3zM19 17h1v4h-1zM8 18h2v3H8zM13 19h2v2h-2zM16 20h2v1h-2z"/></svg>
+        <b>@<span>yourname</span></b>
+        <small>themadlions.com/roarme</small>
+      </div></div>
+    </article>
+
+    <article class="feat rv">
+      <span class="n">02</span>
+      <div>
+        <h3 data-t="f2.t" data-html><b>RoarTransfer</b>. 3&nbsp;GB, as it is.</h3>
+        <p data-t="f2.p">Send the rushes, the edit, the master: up to 3 GB a file, not squeezed. It stays three days, with a link anyone can download from, even without RoarMe. Then it deletes itself.</p>
+        <div class="chips"><span data-t="f2.c1">Up to 3 GB</span><span data-t="f2.c2">Kept 3 days</span><span data-t="f2.c3">Download link</span><span data-t="f2.c4">Keeps going if the line drops</span></div>
+      </div>
+      <div class="pic"><div class="tr">
+        <div class="tr-m"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h-.5a4.5 4.5 0 0 1-.9-8.9A6 6 0 0 1 17.3 8 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M8.5 15 12 11.5 15.5 15"/></svg></i>Roar<span>Transfer</span></div>
+        <div class="tr-h"><span class="tr-k"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v14l11-7z"/></svg></span><span><b>2.9 GB</b><small>PRORES · MASTER</small></span></div>
+        <div class="tr-t"><i></i><span data-t="f2.left">3 days left</span></div>
+        <div class="tr-g" data-t="f2.dl">Download</div>
+      </div></div>
+    </article>
+
+    <article class="feat rv">
+      <span class="n">03</span>
+      <div>
+        <h3 data-t="f3.t" data-html>Calls, <b>face to face</b>.</h3>
+        <p data-t="f3.p">Voice and video calls go straight from one device to the other. Plan one ahead: it lands in the chat as a card with a countdown, a Join button from ten minutes before, and Add to calendar.</p>
+        <div class="chips"><span data-t="f3.c1">Voice</span><span data-t="f3.c2">Video</span><span data-t="f3.c3">Scheduled calls</span><span data-t="f3.c4">Calendar</span></div>
+      </div>
+      <div class="pic"><div class="call">
+        <span class="face">MP</span>
+        <div><b style="font-size:17px;font-weight:600">Maria P.</b><small>04:12</small>
+          <div class="ctl" style="margin-top:12px"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></i><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10.5 5-3v9l-5-3"/></svg></i><i class="end"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 14.5c4.5-4 11.5-4 16 0l-2 2.2-3-1.2v-2.3c-2-.6-4-.6-6 0v2.3l-3 1.2z"/></svg></i></div>
+        </div>
+      </div></div>
+    </article>
+
+    <article class="feat rv">
+      <span class="n">04</span>
+      <div>
+        <h3 data-t="f4.t" data-html>Write it <b>your way</b>.</h3>
+        <p data-t="f4.p">Bold, italic, underline, spoilers, code, with a tiny bar when you select. Long Articles with headings and checklists. Voice messages, a place on the map, as many pins as you need, replies and reactions.</p>
+        <div class="chips"><span data-t="f4.c1">Formatting</span><span data-t="f4.c2">Articles</span><span data-t="f4.c3">Voice messages</span><span data-t="f4.c4">Location</span><span data-t="f4.c5">Pins</span></div>
+      </div>
+      <div class="pic"><div class="fmt">
+        <div class="bar2"><span class="on"><b>B</b></span><span><i>I</i></span><span><u>U</u></span><span><s>S</s></span><span style="font-family:monospace;font-size:10px">&lt;/&gt;</span><span style="filter:blur(1.2px)">Aa</span></div>
+        <div class="bb">Call time <em>07:00</em>, location is a <span class="spoil">secret</span></div>
+        <div class="bb me" style="display:flex;align-items:center">0:14<span class="wave"><i style="height:30%"></i><i style="height:70%"></i><i style="height:45%"></i><i style="height:90%"></i><i style="height:55%"></i><i style="height:80%"></i><i style="height:35%"></i><i style="height:65%"></i><i style="height:40%"></i><i style="height:75%"></i><i style="height:30%"></i><i style="height:50%"></i></span></div>
+      </div></div>
+    </article>
+
+    <article class="feat rv">
+      <span class="n">05</span>
+      <div>
+        <h3 data-t="f5.t" data-html>Everything you shared, <b>found</b>.</h3>
+        <p data-t="f5.p">Media, Transfers, Files, Links and Music from every chat, in one place, and a tap takes you to the message. A song keeps playing while you move between chats, with a bar to stop it.</p>
+        <div class="chips"><span data-t="f5.c1">Media library</span><span data-t="f5.c2">Search</span><span data-t="f5.c3">Music player</span></div>
+      </div>
+      <div class="pic"><div class="lib">
+        <div class="tabs"><span class="on">Media</span><span>Transfers</span><span>Files</span><span>Links</span><span>Music</span></div>
+        <div class="grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="now"><i><svg viewBox="0 0 24 24" fill="#fff"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg></i><b>Score · Final mix.wav</b><span style="color:#9aa0aa">1:24</span></div>
+      </div></div>
+    </article>
+
+    <article class="feat rv">
+      <span class="n">06</span>
+      <div>
+        <h3 data-t="f6.t" data-html>A look that is <b>yours</b>.</h3>
+        <p data-t="f6.p">Six themes, glass or solid, your own accent colour, fonts, text size, wallpapers, light or dark. In English or Greek.</p>
+        <div class="chips"><span>Ember</span><span>Glass</span><span>Aura</span><span>Prism</span><span>Aurum</span><span>Studio</span></div>
+      </div>
+      <div class="pic"><div class="looks">
+        <span class="look" style="--dot:#ff6b57;background:linear-gradient(180deg,#3a4049,#1b1e23)">Ember</span>
+        <span class="look" style="--dot:#4da3ff;background:#1d2635">Glass</span>
+        <span class="look" style="--dot:#06b6d4;background:linear-gradient(135deg,#7c3aed,#1d4ed8 45%,#06b6d4)">Aura</span>
+        <span class="look" style="--dot:#ff5d4a;background:linear-gradient(180deg,#555963,#2c2e34)">Prism</span>
+        <span class="look" style="--dot:#f8d29a;background:linear-gradient(180deg,#2a2927,#141414)">Aurum</span>
+        <span class="look" style="--dot:#d4ff3a;background:#121210">Studio</span>
+      </div></div>
+    </article>
+
+    <article class="feat rv">
+      <span class="n">07</span>
+      <div>
+        <h3 data-t="f7.t" data-html>On <b>every screen</b>.</h3>
+        <p data-t="f7.p">Apps for Mac and Windows, with the unread count on the icon and RoarMe in the menu bar. In any browser. On the phone, added to the home screen. Always the newest version, without reinstalling.</p>
+        <div class="chips"><span>Mac</span><span>Windows</span><span data-t="f7.c3">Browser</span><span data-t="f7.c4">Phone</span></div>
+      </div>
+      <div class="pic"><div class="devices">
+        <div class="mac"><span></span><span class="c"></span><span></span><span class="c"></span><span style="width:70%"></span></div>
+        <div class="win2"><span></span><span class="c"></span><span></span></div>
+        <div class="phone"><span></span><span class="c"></span><span></span><span class="c"></span></div>
+      </div></div>
+    </article>
+
+    <article class="feat rv">
+      <span class="n">08</span>
+      <div>
+        <h3 data-t="f8.t" data-html><b>Nothing</b> slips.</h3>
+        <p data-t="f8.p">Back after a while? What came in arrives gathered, chat by chat. Lock RoarMe with a code. Mute, archive, folders, mark as unread, peek without reading.</p>
+        <div class="chips"><span data-t="f8.c1">Smart notifications</span><span data-t="f8.c2">Passcode lock</span><span data-t="f8.c3">Folders</span></div>
+      </div>
+      <div class="pic"><div class="notes">
+        <div class="note"><span class="av c2">ST</span><span><b>Set team</b><small data-t="f8.n1">5 new messages · Call sheet is up</small></span></div>
+        <div class="note"><span class="av c1">MP</span><span><b>Maria P.</b><small data-t="f8.n2">2 new messages</small></span></div>
+        <div class="note"><span class="av c3">NK</span><span><b>Nikos</b><small data-t="f8.n3">RoarTransfer · 1.2 GB</small></span></div>
+      </div></div>
+    </article>
+  </div>
+</section>
+
+<section class="privacy" id="privacy">
+  <div>
+    <p class="label rv" data-t="pv.label">Privacy</p>
+    <h2 class="rv" data-t="pv.title" data-html>Quiet <b>by design</b>.</h2>
+    <p class="sub rv" data-t="pv.sub">We keep what a chat needs to work, and nothing to sell. No ads, no tracking, no phone book.</p>
+    <div class="legal-links rv">
+      <a class="pill sm" href="https://alexisdigipro-hub.github.io/roarme/?legal=privacy" data-t="pv.policy">Privacy Policy</a>
+      <a class="pill sm" href="https://alexisdigipro-hub.github.io/roarme/?legal=terms" data-t="pv.terms">Terms</a>
+    </div>
+  </div>
+  <div class="promises">
+    <div class="promise rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M3 3l18 18"/></svg></i><h3 data-t="p1.t">No phone number</h3><p data-t="p1.p">An email and a username. Your contacts are never uploaded.</p></div>
+    <div class="promise rv" style="--d:.06s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.8-3.4 3.2-5.2 6-5.2s5.2 1.8 6 5.2M16 11l2 2 4-4"/></svg></i><h3 data-t="p2.t">Only who you choose</h3><p data-t="p2.p">People reach you by your @name or your link. Block anyone in one tap.</p></div>
+    <div class="promise rv" style="--d:.12s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="3"/><path d="m16 10.5 5-3v9l-5-3"/></svg></i><h3 data-t="p3.t">Calls stay between you</h3><p data-t="p3.p">They go device to device. We do not record or keep them.</p></div>
+    <div class="promise rv" style="--d:.18s"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg></i><h3 data-t="p4.t">Big files leave</h3><p data-t="p4.p">A RoarTransfer deletes itself after 3 days. Your location goes only when you send it.</p></div>
+  </div>
+</section>
+
+<section class="download" id="download">
+  <p class="label rv" data-t="dl.label">Download</p>
+  <h2 class="rv" data-t="dl.title" data-html>Get <b>RoarMe</b>.</h2>
+  <p class="sub rv" data-t="dl.sub">Free. Make an account once and use it everywhere: your chats follow you.</p>
+  <div class="dl-grid">
+    <div class="dl rv" id="dl-mac" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.6s-2.5-1-2.5-3.8zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.7 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.7-1.3z"/></svg></i>
+      <h3>Mac</h3>
+      <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
+      <a class="pill main" href="https://github.com/alexisdigipro-hub/roarme/releases/latest/download/RoarMe-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.btn">Download</span></a>
+      <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a href="https://github.com/alexisdigipro-hub/roarme/releases/latest/download/RoarMe-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
+    </div>
+    <div class="dl rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
+      <h3>Windows</h3>
+      <small data-t="dl.win">Windows 10 and 11.</small>
+      <a class="pill main" href="https://github.com/alexisdigipro-hub/roarme/releases/latest/download/RoarMe-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.btn">Download</span></a>
+    </div>
+    <div class="dl rv" id="dl-web" style="--d:.12s" data-mine="Here">
+      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.4 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.4-3.5-8.5s1-5.9 3.5-8.5z"/></svg></i>
+      <h3 data-t="dl.webt">Browser</h3>
+      <small data-t="dl.web">Chrome, Safari, Edge, Firefox. Nothing to install.</small>
+      <a class="pill" href="https://alexisdigipro-hub.github.io/roarme/" data-t="cta.open">Open RoarMe</a>
+    </div>
+    <div class="dl rv" id="dl-phone" style="--d:.18s" data-mine="Your phone">
+      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg></i>
+      <h3 data-t="dl.phonet">Phone</h3>
+      <small data-t="dl.phone">iPhone and Android: open it, then Share > Add to Home Screen. It opens like an app.</small>
+      <a class="pill" href="https://alexisdigipro-hub.github.io/roarme/" data-t="cta.open">Open RoarMe</a>
+    </div>
+  </div>
+  <p class="dl-help rv" data-t="dl.help">First time on a Mac: if it says it cannot check the app, open System Settings > Privacy &amp; Security and press Open Anyway. On Windows: More info > Run anyway. After that it opens straight away, and updates itself.</p>
+</section>
+
+<section class="faq" id="faq">
+  <div>
+    <p class="label rv" data-t="faq.label">Questions</p>
+    <h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2>
+  </div>
+  <div class="qa rv">
+    <details><summary data-t="q1">Is RoarMe free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
+    <details><summary data-t="q2">Do I need a phone number?</summary><p data-t="a2">No. An email and a username are enough. People find you by your @name, or by the link and QR code you share.</p></details>
+    <details><summary data-t="q3">How big can a file be?</summary><p data-t="a3">Up to 50 MB straight in the chat, kept as long as the chat. Up to 3 GB with RoarTransfer, kept 3 days, with a link anyone can download from.</p></details>
+    <details><summary data-t="q4">Who sees my location?</summary><p data-t="a4">Only the chat you send it to, and only when you press Send. RoarMe does not follow where you are.</p></details>
+    <details><summary data-t="q5">Where are my messages kept?</summary><p data-t="a5">On our provider's servers in London, always sent over an encrypted connection. You can delete your account, and with it your profile and one-to-one chats, at any time.</p></details>
+    <details><summary data-t="q6">Can I use it on several devices?</summary><p data-t="a6">Yes. Sign in on the Mac, the PC, the browser and the phone at the same time; everything stays in step.</p></details>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <p class="label rv" data-t="ct.label">Contact</p>
+  <h2 class="rv" data-t="ct.title" data-html>Questions, ideas, <b>press</b>?</h2>
+  <a class="mail rv" href="mailto:info@themadlions.com">info@themadlions.com</a>
+</section>
+</main>
+
+<footer>
+  <a href="../"><img class="wordmark" src="../wordmark.png" alt="The Mad Lions"></a>
+  <nav>
+    <a href="https://alexisdigipro-hub.github.io/roarme/?legal=privacy" data-t="pv.policy">Privacy Policy</a>
+    <a href="https://alexisdigipro-hub.github.io/roarme/?legal=terms" data-t="pv.terms">Terms</a>
+    <a href="mailto:info@themadlions.com">info@themadlions.com</a>
+  </nav>
+  <span data-t="footer">© 2026 The Mad Lions · RoarMe</span>
+</footer>
+
+<script>
+(function () {
+  // Greek, the same switch as the main page (remembered for both)
+  var EL = {
+    'nav.features': 'Δυνατότητες', 'nav.privacy': 'Απόρρητο', 'nav.download': 'Λήψη', 'nav.faq': 'Ερωτήσεις',
+    'cta.open': 'Άνοιξε το RoarMe', 'cta.download': 'Λήψη', 'cta.browser': 'Άνοιξέ το στον browser',
+    'cta.note': 'Δωρεάν · Mac, Windows, browser και κινητό ·', 'cta.all': 'όλες οι λήψεις',
+    'hero.kicker': 'Το messenger της The Mad Lions',
+    'hero.lead': 'Μηνύματα, κλήσεις και αρχεία ως <b>3&nbsp;GB</b>. Χωρίς αριθμό τηλεφώνου, μόνο ένα <b>username</b>.',
+    'float.call': 'Βιντεοκλήση', 'float.callsub': 'Από συσκευή σε συσκευή', 'float.nonumber': 'Χωρίς αριθμό τηλεφώνου',
+    'stat.1': 'ανά αρχείο με το RoarTransfer', 'stat.2': 'αριθμοί τηλεφώνου', 'stat.3': 'θέματα για να γίνει δικό σου',
+    'feat.label': 'Τι κάνει', 'feat.title': 'Ό,τι <b>λέει</b> ένα κινηματογραφικό συνεργείο. Σε ένα μέρος.',
+    'feat.sub': 'Φτιαγμένο από εμάς, για τον τρόπο που δουλεύουμε: μεγάλα αρχεία, γρήγορες κλήσεις, πολύς κόσμος, τίποτα χαμένο.',
+    'f1.t': 'Μόνο ένα <b>username</b>.', 'f1.p': 'Κάνεις εγγραφή με email και διαλέγεις το @όνομά σου. Κανείς δεν σε βρίσκει από το τηλέφωνό σου, γιατί δεν το ζητάμε ποτέ. Στείλε το link ή το QR σου και η συζήτηση ανοίγει μόνη της.',
+    'f1.c1': '@username', 'f1.c2': 'Link πρόσκλησης', 'f1.c3': 'QR code',
+    'f2.t': '<b>RoarTransfer</b>. 3&nbsp;GB, όπως είναι.', 'f2.p': 'Στείλε τα rushes, το μοντάζ, το master: ως 3 GB το αρχείο, χωρίς συμπίεση. Μένει τρεις μέρες, με link που το κατεβάζει όποιος το έχει, ακόμα και χωρίς RoarMe. Μετά σβήνεται μόνο του.',
+    'f2.c1': 'Ως 3 GB', 'f2.c2': 'Μένει 3 μέρες', 'f2.c3': 'Link λήψης', 'f2.c4': 'Συνεχίζει αν κοπεί η σύνδεση', 'f2.left': '3 μέρες ακόμα', 'f2.dl': 'Λήψη',
+    'f3.t': 'Κλήσεις, <b>πρόσωπο με πρόσωπο</b>.', 'f3.p': 'Οι φωνητικές και οι βιντεοκλήσεις πάνε κατευθείαν από τη μία συσκευή στην άλλη. Κλείσε μία από πριν: μπαίνει στη συζήτηση σαν κάρτα με αντίστροφη μέτρηση, κουμπί Μπες από δέκα λεπτά πριν και Στο ημερολόγιο.',
+    'f3.c1': 'Φωνή', 'f3.c2': 'Βίντεο', 'f3.c3': 'Προγραμματισμένες κλήσεις', 'f3.c4': 'Ημερολόγιο',
+    'f4.t': 'Γράψ’ το <b>όπως θες</b>.', 'f4.p': 'Έντονα, πλάγια, υπογράμμιση, spoilers, κώδικας, με μια μικρή μπάρα μόλις επιλέξεις. Μεγάλα Άρθρα με επικεφαλίδες και λίστες. Φωνητικά μηνύματα, ένα σημείο στον χάρτη, όσα pins θες, απαντήσεις και αντιδράσεις.',
+    'f4.c1': 'Μορφοποίηση', 'f4.c2': 'Άρθρα', 'f4.c3': 'Φωνητικά', 'f4.c4': 'Τοποθεσία', 'f4.c5': 'Pins',
+    'f5.t': 'Ό,τι μοιράστηκες, <b>βρίσκεται</b>.', 'f5.p': 'Media, Transfers, Αρχεία, Links και Μουσική από όλες τις συζητήσεις, σε ένα μέρος, και ένα πάτημα σε πάει στο μήνυμα. Ένα τραγούδι συνεχίζει να παίζει όσο αλλάζεις συζήτηση, με μπάρα για να το σταματήσεις.',
+    'f5.c1': 'Βιβλιοθήκη media', 'f5.c2': 'Αναζήτηση', 'f5.c3': 'Μουσική',
+    'f6.t': 'Μια εμφάνιση <b>δική σου</b>.', 'f6.p': 'Έξι θέματα, γυάλινο ή γεμάτο, το δικό σου χρώμα, γραμματοσειρές, μέγεθος κειμένου, φόντα, φωτεινό ή σκοτεινό. Στα αγγλικά ή στα ελληνικά.',
+    'f7.t': 'Σε <b>κάθε οθόνη</b>.', 'f7.p': 'Εφαρμογές για Mac και Windows, με τα αδιάβαστα πάνω στο εικονίδιο και το RoarMe στη μπάρα. Σε κάθε browser. Στο κινητό, στην αρχική οθόνη. Πάντα η νεότερη έκδοση, χωρίς νέα εγκατάσταση.',
+    'f7.c3': 'Browser', 'f7.c4': 'Κινητό',
+    'f8.t': '<b>Τίποτα</b> δεν ξεφεύγει.', 'f8.p': 'Γύρισες μετά από ώρα; Ό,τι ήρθε σε περιμένει μαζεμένο, συζήτηση με συζήτηση. Κλείδωσε το RoarMe με κωδικό. Σίγαση, αρχειοθέτηση, φάκελοι, σήμανση ως αδιάβαστο, ματιά χωρίς να διαβαστεί.',
+    'f8.c1': 'Έξυπνες ειδοποιήσεις', 'f8.c2': 'Κλείδωμα με κωδικό', 'f8.c3': 'Φάκελοι', 'f8.n1': '5 νέα μηνύματα · Ανέβηκε το call sheet', 'f8.n2': '2 νέα μηνύματα', 'f8.n3': 'RoarTransfer · 1.2 GB',
+    'pv.label': 'Απόρρητο', 'pv.title': 'Ήσυχο <b>από τη φύση του</b>.', 'pv.sub': 'Κρατάμε ό,τι χρειάζεται μια συζήτηση για να δουλέψει, και τίποτα για να πουληθεί. Χωρίς διαφημίσεις, χωρίς tracking, χωρίς τηλεφωνικό κατάλογο.',
+    'pv.policy': 'Πολιτική Απορρήτου', 'pv.terms': 'Όροι Χρήσης',
+    'p1.t': 'Χωρίς αριθμό τηλεφώνου', 'p1.p': 'Ένα email και ένα username. Οι επαφές σου δεν ανεβαίνουν ποτέ.',
+    'p2.t': 'Μόνο όποιον διαλέξεις', 'p2.p': 'Σε βρίσκουν από το @όνομά σου ή το link σου. Μπλόκαρε όποιον θες με ένα πάτημα.',
+    'p3.t': 'Οι κλήσεις μένουν σε εσάς', 'p3.p': 'Πάνε από συσκευή σε συσκευή. Δεν τις ηχογραφούμε ούτε τις κρατάμε.',
+    'p4.t': 'Τα μεγάλα αρχεία φεύγουν', 'p4.p': 'Ένα RoarTransfer σβήνεται μόνο του μετά από 3 μέρες. Η τοποθεσία σου πάει μόνο όταν τη στείλεις.',
+    'dl.label': 'Λήψη', 'dl.title': 'Πάρε το <b>RoarMe</b>.', 'dl.sub': 'Δωρεάν. Κάνε λογαριασμό μία φορά και χρησιμοποίησέ τον παντού: οι συζητήσεις σε ακολουθούν.',
+    'dl.mac': 'Για Mac με τσιπ Apple (M1 και νεότερα).', 'dl.btn': 'Λήψη', 'dl.intel': 'Παλιότερο Mac με Intel;', 'dl.intelbtn': 'Αυτό εδώ',
+    'dl.win': 'Windows 10 και 11.', 'dl.webt': 'Browser', 'dl.web': 'Chrome, Safari, Edge, Firefox. Τίποτα για εγκατάσταση.',
+    'dl.phonet': 'Κινητό', 'dl.phone': 'iPhone και Android: άνοιξέ το και μετά Κοινοποίηση > Προσθήκη στην οθόνη Αφετηρίας. Ανοίγει σαν εφαρμογή.',
+    'dl.help': 'Πρώτη φορά σε Mac: αν πει ότι δεν μπορεί να ελέγξει την εφαρμογή, άνοιξε Ρυθμίσεις συστήματος > Απόρρητο και ασφάλεια και πάτα Άνοιγμα οπωσδήποτε. Στα Windows: Περισσότερες πληροφορίες > Εκτέλεση οπωσδήποτε. Μετά ανοίγει κατευθείαν και ενημερώνεται μόνο του.',
+    'faq.label': 'Ερωτήσεις', 'faq.title': 'Καλό να <b>ξέρεις</b>.',
+    'q1': 'Είναι δωρεάν το RoarMe;', 'a1': 'Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις.',
+    'q2': 'Χρειάζομαι αριθμό τηλεφώνου;', 'a2': 'Όχι. Αρκούν ένα email και ένα username. Σε βρίσκουν από το @όνομά σου, ή από το link και το QR που μοιράζεσαι.',
+    'q3': 'Πόσο μεγάλο μπορεί να είναι ένα αρχείο;', 'a3': 'Ως 50 MB κατευθείαν στη συζήτηση, και μένει όσο μένει η συζήτηση. Ως 3 GB με το RoarTransfer, για 3 μέρες, με link που το κατεβάζει όποιος το έχει.',
+    'q4': 'Ποιος βλέπει την τοποθεσία μου;', 'a4': 'Μόνο η συζήτηση στην οποία τη στέλνεις, και μόνο όταν πατήσεις Αποστολή. Το RoarMe δεν παρακολουθεί πού βρίσκεσαι.',
+    'q5': 'Πού φυλάσσονται τα μηνύματά μου;', 'a5': 'Στους servers του παρόχου μας στο Λονδίνο, πάντα μέσω κρυπτογραφημένης σύνδεσης. Μπορείς να σβήσεις τον λογαριασμό σου, και μαζί το προφίλ και τις προσωπικές συζητήσεις σου, όποτε θες.',
+    'q6': 'Μπορώ να το έχω σε πολλές συσκευές;', 'a6': 'Ναι. Συνδέσου στο Mac, στο PC, στον browser και στο κινητό μαζί· όλα μένουν συγχρονισμένα.',
+    'ct.label': 'Επικοινωνία', 'ct.title': 'Ερωτήσεις, ιδέες, <b>Τύπος</b>;',
+    'footer': '© 2026 The Mad Lions · RoarMe'
+  }
+  var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
+  var EN = {}
+  nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })
+  var mineLabel = { en: { mac: 'Your computer', win: 'Your computer', web: 'Here', phone: 'Your phone' }, el: { mac: 'Ο υπολογιστής σου', win: 'Ο υπολογιστής σου', web: 'Εδώ', phone: 'Το κινητό σου' } }
+  function setLang(l) {
+    var d = l === 'el' ? EL : EN
+    nodes.forEach(function (n) { var v = d[n.dataset.t]; if (v == null) v = EN[n.dataset.t]; if (n.hasAttribute('data-html')) n.innerHTML = v; else n.textContent = v })
+    document.documentElement.lang = l === 'el' ? 'el' : 'en'
+    document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) })
+    ;['mac', 'win', 'web', 'phone'].forEach(function (k) { var e = document.getElementById('dl-' + k); if (e) e.dataset.mine = mineLabel[l === 'el' ? 'el' : 'en'][k] })
+    setMain(l)
+    try { localStorage.setItem('tml_site_lang', l) } catch (e) {}
+  }
+
+  // the first button downloads for the device you are on
+  var ua = navigator.userAgent || ''
+  var phone = /iPhone|iPad|iPod|Android/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  var os = phone ? 'phone' : /Windows/i.test(ua) ? 'win' : /Mac/i.test(ua) ? 'mac' : 'web'
+  var mine = document.getElementById('dl-' + os)
+  if (mine) mine.classList.add('mine')
+  function setMain(l) {
+    var a = document.getElementById('dl-main')
+    var s = a.querySelector('span')
+    var el = l === 'el'
+    if (os === 'mac') { a.href = 'https://github.com/alexisdigipro-hub/roarme/releases/latest/download/RoarMe-Mac-arm64.dmg'; s.textContent = el ? 'Λήψη για Mac' : 'Download for Mac' }
+    else if (os === 'win') { a.href = 'https://github.com/alexisdigipro-hub/roarme/releases/latest/download/RoarMe-Windows-Setup.exe'; s.textContent = el ? 'Λήψη για Windows' : 'Download for Windows' }
+    else if (os === 'phone') { a.href = 'https://alexisdigipro-hub.github.io/roarme/'; s.textContent = el ? 'Άνοιξε το RoarMe' : 'Open RoarMe' }
+    else { a.href = '#download'; s.textContent = el ? 'Λήψη' : 'Download' }
+  }
+  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang) }) })
+  var saved = 'en'
+  try { saved = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
+  setLang(saved)
+
+  // the bar turns to glass once you scroll
+  var bar = document.getElementById('bar')
+  var onScroll = function () { bar.classList.toggle('solid', window.scrollY > 30) }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll()
+
+  // things come in once as they reach the screen
+  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  var rv = [].slice.call(document.querySelectorAll('.rv'))
+  if (still || !('IntersectionObserver' in window)) rv.forEach(function (e) { e.classList.add('in') })
+  else {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }) }, { rootMargin: '0px 0px -8% 0px', threshold: .08 })
+    rv.forEach(function (e) { io.observe(e) })
+  }
+
+  // the window of the app leans a little towards the pointer
+  var win = document.getElementById('win')
+  if (!still && win && window.matchMedia('(pointer: fine)').matches) {
+    var tx = 0, ty = 0, cx = 0, cy = 0, raf = 0
+    var tick = function () { cx += (tx - cx) * .08; cy += (ty - cy) * .08; win.style.setProperty('--rx', cx.toFixed(2)); win.style.setProperty('--ry', cy.toFixed(2)); raf = Math.abs(tx - cx) + Math.abs(ty - cy) > .01 ? requestAnimationFrame(tick) : 0 }
+    window.addEventListener('pointermove', function (e) { tx = (e.clientX / innerWidth - .5) * -8; ty = (e.clientY / innerHeight - .5) * 5; if (!raf) raf = requestAnimationFrame(tick) })
+  }
+})()
+</script>
+</body>
+</html>
