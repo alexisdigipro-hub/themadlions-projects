@@ -520,6 +520,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
     <label class="f" id="wPlaceRow"><span>Place on the site</span><input name="place" inputmode="numeric" maxlength="3" style="max-width:120px"><span class="hint" id="wPlaceHint">1 is first. The first 20 are on the home page, the rest come with Show all.</span></label>
     <label class="switch"><input type="checkbox" name="visible" checked> Show on the site</label>
     <label class="switch"><input type="checkbox" name="aibsent"> Made by Aibsent Studios <span class="hint">(post-production &amp; AI: the film gets the "by Aibsent Studios" mark and shows in its section)</span></label>
+    <div class="f" id="wAibRow" hidden><span>Aibsent Studios · what kind of work</span><div class="chips" id="wAib"></div><span class="hint">The filters on the Aibsent Studios page. Pick one or more.</span></div>
   </div>
   <div class="df"><button class="btn danger" type="button" id="wDelete">Delete</button><span class="grow"></span><button class="btn" type="button" data-close>Cancel</button><button class="btn red" type="submit" id="wSave">Save</button></div>
 </form>
@@ -780,12 +781,24 @@ async function loadCats() {
   if (catList) { BASE_CATS.splice(0, BASE_CATS.length, ...catList.map((c) => c.en)) }
 }
 const AIB = 'Aibsent Studios'
+/* what kind of Aibsent Studios work a film is (Alex, 18 Oct): all CGI & AI, or added CGI shots in a shot film, animation,
+   motion graphics, visuals. Kept in site_settings.aib_kinds as { film id: [keys] }; the Aibsent Studios page filters by them */
+const AIB_KINDS = [['full', 'Full CGI & AI'], ['shots', 'Added CGI shots'], ['anim', 'Animation'], ['motion', 'Motion Graphics'], ['visuals', 'Visuals']]
+let aibKinds = {}
+function renderAibKinds() {
+  const f = $('workDrawer'), sel = editingWork.aibKinds
+  $('wAibRow').hidden = !f.aibsent.checked
+  $('wAib').innerHTML = AIB_KINDS.map(([k, l]) => `<button type="button" class="chip ${sel.includes(k) ? 'on' : ''}" data-k="${k}">${l}</button>`).join('')
+}
+$('wAib').onclick = (e) => { const b = e.target.closest('[data-k]'); if (!b) return; const s = editingWork.aibKinds, i = s.indexOf(b.dataset.k); i < 0 ? s.push(b.dataset.k) : s.splice(i, 1); renderAibKinds() }
+$('workDrawer').aibsent.addEventListener('change', renderAibKinds)
 const allCats = () => [...new Set([...BASE_CATS, ...works.flatMap((w) => w.categories || [])])]
 async function loadWorks() {
   $('works').innerHTML = '<div class="skel" style="aspect-ratio:16/11;border-radius:18px"></div>'.repeat(8)
   try { works = await rest('site_works?select=*&order=position.asc,created_at.desc') } catch (e) { toast(e.message); return }
   if (!catList) await loadCats()
   try { const r = await rest('site_settings?key=eq.works_hidden_all&select=value'); hiddenAll = Array.isArray(r?.[0]?.value) ? r[0].value : [] } catch (e) { hiddenAll = [] }
+  try { const r = await rest('site_settings?key=eq.aib_kinds&select=value'); aibKinds = r?.[0]?.value && typeof r[0].value === 'object' ? r[0].value : {} } catch (e) { aibKinds = {} }
   renderWorks()
 }
 /* Hide all (Alex, 18 Oct): every film off the site in one go, asked twice. The films it hid are remembered
@@ -964,6 +977,7 @@ $('wCats').onclick = (e) => { const b = e.target.closest('[data-c]'); if (!b) re
 $('wNewCat').onkeydown = (e) => { if (e.key !== 'Enter') return; e.preventDefault(); const v = e.target.value.trim(); if (v && !editingWork.categories.includes(v)) { editingWork.categories.push(v); if (!BASE_CATS.includes(v)) { BASE_CATS.push(v); if (catList) { catList.push({ en: v, el: '' }); setSetting('categories', catList).catch(() => {}) } } } e.target.value = ''; renderWorkCats() }
 function openWork(w) {
   editingWork = w ? { ...w, categories: [...(w.categories || [])] } : { title: '', client: '', year: new Date().getFullYear(), categories: [], video: '', visible: true }
+  editingWork.aibKinds = [...((w && aibKinds[w.id]) || [])]
   const f = $('workDrawer')
   f.video.value = editingWork.video || ''; f.title.value = editingWork.title || ''; f.client.value = editingWork.client || ''; f.year.value = editingWork.year || ''; f.visible.checked = editingWork.visible !== false; f.aibsent.checked = !!editingWork.aibsent
   $('wTitle').textContent = w ? 'Edit the film' : 'Add a film'
@@ -971,7 +985,7 @@ function openWork(w) {
   f.place.value = w ? (works.filter((x) => x.visible).indexOf(w) + 1 || '') : 1
   $('wPlaceHint').textContent = w && !w.visible ? 'Hidden now. 1 is first; the first 20 are on the home page, the rest come with Show all.' : '1 is first. The first 20 are on the home page, the rest come with Show all.'
   wFrame = framer($('wFramer'), { frame: editingWork.frame, ratios: [['16 / 9', 'Tile']] })
-  showPreview(); renderWorkCats(); openDrawer(f)
+  showPreview(); renderWorkCats(); renderAibKinds(); openDrawer(f)
   if (!w) setTimeout(() => f.video.focus(), 300)
 }
 let wFrame = null
@@ -1024,6 +1038,16 @@ $('workDrawer').onsubmit = async (e) => {
     else await rest('site_works', { method: 'POST', body: JSON.stringify({ ...row, position: -1 }), headers: { Prefer: 'return=minimal' } })
     works = await rest('site_works?select=*&order=position.asc,created_at.desc')
     const me = editingWork.id ? works.find((x) => x.id === editingWork.id) : works[0]
+    // its kind of Aibsent Studios work, when that changed
+    if (me) {
+      const want = row.aibsent ? AIB_KINDS.map(([k]) => k).filter((k) => editingWork.aibKinds.includes(k)) : []
+      if (JSON.stringify(want) !== JSON.stringify(aibKinds[me.id] || [])) {
+        const next = { ...aibKinds }
+        if (want.length) next[me.id] = want; else delete next[me.id]
+        for (const id of Object.keys(next)) if (!works.some((x) => x.id === id)) delete next[id]
+        await setSetting('aib_kinds', next); aibKinds = next
+      }
+    }
     // then to the place asked for, if one was typed and it differs
     const moved = me && place > 0 && works.filter((x) => x.visible).indexOf(me) + 1 !== place
     if (moved) moveToPlace(me, place)
