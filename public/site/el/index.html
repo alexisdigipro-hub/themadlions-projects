@@ -441,8 +441,8 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
 /* Services, How we work, About and Clients: the titles and their texts centred (Alex, 18 Oct); the cards keep their own layout */
 .services > .label, .services > h2, .clients > .label, .clients > h2 { text-align: center; }
 /* How we work sits inside Services, under the cards (Alex, 18 Oct: one section, one menu item) */
-/* services in one row, each with its own small 3D shape (Alex, 18 Oct: "in a row, the category standing out with a different
-   shape, a bit 3D"); Studio's picture shows faintly behind a card on hover. How we work follows as one line through five dots */
+/* services in one row of soft cards (Alex, 18 Oct; the 3D shapes that were on them came off again the same day);
+   Studio's picture shows faintly behind a card on hover. How we work follows as one line through five dots */
 .svc-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; max-width: 1320px; margin: 40px auto 0; border: 0; }
 .svc-grid .svc { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; text-align: center; min-height: 0; padding: 24px 14px 22px; border-radius: 20px; border: 1px solid color-mix(in srgb, var(--hi) 8%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 5%, transparent), transparent 75%); box-shadow: none; overflow: hidden; transition: transform .5s cubic-bezier(.2,.7,.2,1), border-color .4s; }
 .svc-grid .svc:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
@@ -451,13 +451,6 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
 .svc-grid .svc:hover .bg { opacity: .2; }
 .svc .in { display: contents; }
 .svc .in > * { position: relative; }
-.svc .shape { display: block; width: 92px; height: 92px; margin: 0 auto 12px; perspective: 500px; }
-.svc .shape svg { display: block; width: 100%; height: 100%; overflow: visible; animation: svcFloat 6s ease-in-out infinite; animation-delay: calc(var(--i, 0) * -.85s); transition: transform .9s cubic-bezier(.2,.7,.2,1); filter: drop-shadow(0 12px 16px rgba(0,0,0,.35)); }
-html[data-theme='light'] .svc .shape svg { filter: drop-shadow(0 10px 14px rgba(0,0,0,.14)); }
-html[data-theme='light'] .svc .shape .ink { stroke: #2a2a30; }
-.svc:hover .shape svg { transform: rotateY(22deg) rotateX(10deg) scale(1.07); }
-@keyframes svcFloat { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
-@media (prefers-reduced-motion: reduce) { .svc .shape svg { animation: none; } }
 .svc small { display: block; font-size: 11px; letter-spacing: .14em; color: color-mix(in srgb, var(--text) 40%, transparent); transition: color .3s; }
 .svc:hover small { color: var(--accent); }
 .svc h3 { margin: 6px 0 8px; font-size: 17px; font-weight: 600; letter-spacing: -.01em; line-height: 1.2; }
@@ -468,7 +461,7 @@ html[data-theme='light'] .svc .shape .ink { stroke: #2a2a30; }
   .svc-grid::-webkit-scrollbar { display: none; }
   .svc-grid .svc { scroll-snap-align: start; }
 }
-@media (max-width: 560px) { .svc-grid { grid-auto-columns: 168px; } .svc .shape { width: 80px; height: 80px; } }
+@media (max-width: 560px) { .svc-grid { grid-auto-columns: 168px; } }
 .svc-how { max-width: 1180px; margin: clamp(48px, 6vw, 80px) auto 0; }
 .svc-how > .label, .how-title { text-align: center; }
 .how-title { margin: 0; font-size: clamp(22px, 2.4vw, 32px); font-weight: 300; line-height: 1.1; letter-spacing: -.01em; }
@@ -956,18 +949,6 @@ function orderSections(order) {
   sectionOrder = order
 }
 try { orderSections(JSON.parse(localStorage.getItem('tml_site_order') || 'null')) } catch (e) {}
-/* one small 3D shape per service (Alex, 18 Oct), drawn here so they stay sharp and need no files:
-   a cube with a play mark, a record, a film can, a globe, stacked layers, a ring of light, a prism splitting a beam */
-const SVC_SHADOW = '<ellipse cx="60" cy="108" rx="30" ry="5" fill="#000" opacity=".28"/>'
-const SVC_SHAPES = {
-  'Commercials': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="sa1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a74"/><stop offset="1" stop-color="#e01414"/></linearGradient><linearGradient id="sa2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c40000"/><stop offset="1" stop-color="#5c0000"/></linearGradient><linearGradient id="sa3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c0000"/><stop offset="1" stop-color="#210000"/></linearGradient></defs>${SVC_SHADOW}<path d="M60 18 96 38 60 58 24 38Z" fill="url(#sa1)"/><path d="M24 38 60 58V98L24 78Z" fill="url(#sa2)"/><path d="M96 38 60 58V98L96 78Z" fill="url(#sa3)"/><path d="M24 38 60 18 96 38" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1"/><path d="M36.6 63 47.4 77 36.6 79Z" fill="#fff" opacity=".9"/></svg>`,
-  'Music Videos': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="sb1" cx=".38" cy=".3" r=".75"><stop offset="0" stop-color="#46464f"/><stop offset="1" stop-color="#0b0b0e"/></radialGradient><linearGradient id="sb2" x1="0" x2="1"><stop offset="0" stop-color="#141418"/><stop offset=".55" stop-color="#4a4a54"/><stop offset="1" stop-color="#0b0b0e"/></linearGradient><radialGradient id="sb3" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ff7a64"/><stop offset="1" stop-color="#b80000"/></radialGradient></defs>${SVC_SHADOW}<g transform="rotate(-14 60 62)"><ellipse cx="60" cy="68" rx="46" ry="20" fill="url(#sb2)"/><ellipse cx="60" cy="62" rx="46" ry="20" fill="url(#sb1)"/><g fill="none" stroke="#fff" stroke-opacity=".09"><ellipse cx="60" cy="62" rx="39" ry="17"/><ellipse cx="60" cy="62" rx="32" ry="14"/><ellipse cx="60" cy="62" rx="25" ry="11"/></g><path d="M24 54Q60 36 96 54" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="2" stroke-linecap="round"/><ellipse cx="60" cy="62" rx="14" ry="6" fill="url(#sb3)"/><ellipse cx="60" cy="62" rx="2.2" ry="1" fill="#0b0b0e"/></g></svg>`,
-  'Feature Films': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="sc1" x1="0" x2="1"><stop offset="0" stop-color="#4a0000"/><stop offset=".33" stop-color="#d40000"/><stop offset=".45" stop-color="#ff7a64"/><stop offset=".7" stop-color="#8c0000"/><stop offset="1" stop-color="#260000"/></linearGradient><radialGradient id="sc2" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#55555f"/><stop offset="1" stop-color="#15151a"/></radialGradient></defs>${SVC_SHADOW}<path d="M94 72C106 74 110 88 101 100" fill="none" stroke="#1a1a1f" stroke-width="8"/><path d="M94 72C106 74 110 88 101 100" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-dasharray="2 4"/><path d="M26 44V82A34 13 0 0 0 94 82V44Z" fill="url(#sc1)"/><ellipse cx="60" cy="44" rx="34" ry="13" fill="url(#sc2)"/><ellipse cx="60" cy="44" rx="34" ry="13" fill="none" stroke="#fff" stroke-opacity=".3"/><g fill="#0b0b0e"><ellipse cx="60" cy="36.6" rx="5" ry="2.2"/><ellipse cx="79" cy="41.8" rx="5" ry="2.2"/><ellipse cx="71.8" cy="50" rx="5" ry="2.2"/><ellipse cx="48.2" cy="50" rx="5" ry="2.2"/><ellipse cx="41" cy="41.8" rx="5" ry="2.2"/></g><ellipse cx="60" cy="44" rx="4" ry="1.6" fill="#d40000"/></svg>`,
-  'Documentaries': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="sd1" cx=".34" cy=".3" r=".8"><stop offset="0" stop-color="#ff8f7a"/><stop offset=".45" stop-color="#d40000"/><stop offset="1" stop-color="#3a0000"/></radialGradient><radialGradient id="sd2" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>${SVC_SHADOW}<circle cx="60" cy="58" r="37" fill="url(#sd1)"/><g fill="none" stroke="#fff" stroke-opacity=".22"><ellipse cx="60" cy="58" rx="37" ry="12"/><ellipse cx="60" cy="58" rx="15" ry="37"/><ellipse cx="60" cy="40" rx="31" ry="8" stroke-opacity=".12"/><ellipse cx="60" cy="76" rx="31" ry="8" stroke-opacity=".12"/></g><ellipse cx="46" cy="40" rx="13" ry="9" fill="url(#sd2)"/></svg>`,
-  'Corporate Films': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="se1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a74"/><stop offset="1" stop-color="#d40000"/></linearGradient><linearGradient id="se2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5c5c66"/><stop offset="1" stop-color="#2a2a31"/></linearGradient></defs>${SVC_SHADOW}${[[66, 'url(#se2)', '#1d1d22', '#121216'], [48, 'url(#se2)', '#1d1d22', '#121216'], [30, 'url(#se1)', '#9a0000', '#520000']].map(([y, t, l, r]) => `<path d="M28 ${y + 16} 60 ${y + 32}V${y + 41}L28 ${y + 25}Z" fill="${l}"/><path d="M92 ${y + 16} 60 ${y + 32}V${y + 41}L92 ${y + 25}Z" fill="${r}"/><path d="M60 ${y} 92 ${y + 16} 60 ${y + 32} 28 ${y + 16}Z" fill="${t}"/><path d="M28 ${y + 16} 60 ${y} 92 ${y + 16}" fill="none" stroke="#fff" stroke-opacity=".3"/>`).join('')}</svg>`,
-  'Visuals': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="sf1" x1="0" x2="1"><stop offset="0" stop-color="#ff2d20"/><stop offset=".5" stop-color="#ff9a7a"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient><filter id="sf2" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur stdDeviation="6"/></filter></defs>${SVC_SHADOW}<g transform="rotate(-16 60 60)"><ellipse cx="60" cy="60" rx="40" ry="18" fill="none" stroke="url(#sf1)" stroke-width="12" opacity=".75" filter="url(#sf2)"/><path d="M20 60A40 18 0 0 1 100 60" fill="none" stroke="url(#sf1)" stroke-width="9" opacity=".45"/><path d="M20 60A40 18 0 0 0 100 60" fill="none" stroke="url(#sf1)" stroke-width="9" stroke-linecap="round"/><path d="M26 64A36 15 0 0 0 94 64" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.4"/></g><circle cx="94" cy="28" r="2" fill="#ff9a7a"/><circle cx="24" cy="92" r="1.6" fill="#8b5cf6"/></svg>`,
-  'Post-production': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="sg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity=".06"/></linearGradient><linearGradient id="sg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity=".03"/></linearGradient></defs>${SVC_SHADOW}<path class="ink" d="M4 62 47 54" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M93 56 118 62" stroke="#ff2d20" stroke-width="3" stroke-linecap="round"/><path d="M93 58 118 73" stroke="#ff8a5a" stroke-width="3" stroke-linecap="round"/><path d="M93 60 116 84" stroke="#8b5cf6" stroke-width="3" stroke-linecap="round"/><path class="ink" d="M60 24 74 16 102 68 88 76Z" fill="url(#sg2)" stroke="#fff" stroke-opacity=".45"/><path class="ink" d="M60 24 88 76H32Z" fill="url(#sg1)" stroke="#fff" stroke-opacity=".7"/><path class="ink" d="M60 24 32 76" stroke="#fff" stroke-opacity=".9" stroke-width="1.2"/></svg>`,
-}
 let svcMedia = {}
 try { svcMedia = JSON.parse(localStorage.getItem('tml_site_svc') || '{}') || {} } catch (e) {}
 function renderServices() {
@@ -981,8 +962,7 @@ function renderServices() {
     const [name, text] = s[lang] || s.en
     const card = document.createElement('div')
     card.className = `svc reveal${m.img ? ' has-img' : ''}`
-    card.style.setProperty('--i', n)
-    card.innerHTML = `<div class="in"><span class="shape">${SVC_SHAPES[s.en[0]] || SVC_SHAPES.Commercials}</span><small>0${n + 1}</small><h3><span></span></h3><p></p><button type="button" class="ex"><i>${PLAY}</i><span></span></button></div>`
+    card.innerHTML = `<div class="in"><small>0${n + 1}</small><h3><span></span></h3><p></p><button type="button" class="ex"><i>${PLAY}</i><span></span></button></div>`
     card.querySelector('h3 span').textContent = name
     if (m.img) { const bg = document.createElement('div'); bg.className = 'bg'; const im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = m.img; bg.appendChild(im); card.prepend(bg) }
     card.querySelector('p').textContent = text
