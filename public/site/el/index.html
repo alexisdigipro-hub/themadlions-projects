@@ -885,6 +885,19 @@ addEventListener('keydown', (e) => {
 
 document.getElementById('more').onclick = () => { showAll = !showAll; renderGrid(); if (!showAll) document.getElementById('work').scrollIntoView() }
 
+/* the order of the home page's sections, from Studio > Look > Page order (site_settings.section_order, Alex 18 Oct);
+   the menu at the top follows the same order. The opening stays first; a section missing from the list keeps its place after the others */
+const SECTION_IDS = ['work', 'services', 'aibsent', 'about', 'clients', 'bts', 'lab', 'shop', 'faq', 'contact']
+let sectionOrder = null
+function orderSections(order) {
+  if (!Array.isArray(order) || !order.length) return
+  const main = document.getElementById('top'), nav = document.querySelector('.bar nav')
+  const ids = [...order.filter((id) => SECTION_IDS.includes(id)), ...SECTION_IDS.filter((id) => !order.includes(id))]
+  ids.forEach((id) => { const el = document.getElementById(id); if (el && el.tagName === 'SECTION' && el.parentElement === main) main.appendChild(el) })
+  if (nav) ids.forEach((id) => { const a = nav.querySelector(`a[href="#${id}"]`); if (a) nav.appendChild(a) })
+  sectionOrder = order
+}
+try { orderSections(JSON.parse(localStorage.getItem('tml_site_order') || 'null')) } catch (e) {}
 let svcMedia = {}
 try { svcMedia = JSON.parse(localStorage.getItem('tml_site_svc') || '{}') || {} } catch (e) {}
 function renderServices() {
@@ -1148,6 +1161,9 @@ async function loadTheme() {
     const hv = rows.some((r) => r.key === 'hero_video') ? get('hero_video') : HERO_VIDEO
     try { localStorage.setItem('tml_site_hero_video', JSON.stringify(hv || {})) } catch (e) {}
     if (JSON.stringify(hv || {}) !== JSON.stringify(heroVideo || {})) { heroVideo = hv; setHeroVideo(hv) }
+    // the order of the sections from Studio > Look > Page order
+    const so = get('section_order')
+    if (Array.isArray(so) && JSON.stringify(so) !== JSON.stringify(sectionOrder)) { orderSections(so); try { localStorage.setItem('tml_site_order', JSON.stringify(so)) } catch (e) {} }
     // the services' pictures and films from Studio > Look
     const sv = get('services') || {}
     if (JSON.stringify(sv) !== JSON.stringify(svcMedia)) { svcMedia = sv; try { localStorage.setItem('tml_site_svc', JSON.stringify(sv)) } catch (e) {} renderServices(); observe() }
