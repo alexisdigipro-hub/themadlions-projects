@@ -293,8 +293,8 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
 @media (max-width: 900px) { .aib { grid-template-columns: 1fr; } }
 /* the clients as a wall of white squares, each logo in black (Alex, 18 Oct); a client without a logo yet shows its
    name the same way. The logo files are already the white square (site bucket, clients/logo-*.png) */
-/* all the clients in two rows (as many to a row as it takes), small squares 3 px apart (Alex, 18 Oct) */
-.logos { grid-template-columns: repeat(var(--cols, 12), 1fr); gap: 3px; }
+/* all the clients in two rows (as many to a row as it takes), small squares 6 px apart (Alex, 18 Oct) */
+.logos { grid-template-columns: repeat(var(--cols, 12), 1fr); gap: 6px; max-width: 1200px; }
 .logo { height: auto; aspect-ratio: 1; padding: 0; overflow: hidden; background: #fff; border: 0; border-radius: 4px; box-shadow: none; transition: background .3s; }
 .logo.fill { pointer-events: none; }
 .logo:hover { background: #fff; }
@@ -307,6 +307,14 @@ html[data-theme='light'] .logo img.mono { filter: none; }
 html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
 .logo span { font-size: 11px; padding: 0 6%; letter-spacing: 0; }
 @media (max-width: 900px) { .logos { grid-template-columns: repeat(6, 1fr); } .logo.fill { display: none; } .logo span { font-size: 9px; } }
+/* about: the text, and the team under it in one row (Alex, 18 Oct) */
+.about { grid-template-columns: minmax(0, 1fr); gap: 56px; }
+.about > .reveal:first-child { max-width: 1000px; }
+.team { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+.person { padding: 16px; min-width: 0; }
+.person strong { font-size: 15px; overflow-wrap: anywhere; }
+.person span { font-size: 12.5px; }
+@media (max-width: 900px) { .about { gap: 40px; } .team { grid-auto-columns: 136px; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); scroll-padding: 0 var(--pad); } .team::-webkit-scrollbar { display: none; } }
 </style>
 </head>
 <body>
@@ -402,7 +410,7 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
 
   <section id="clients" class="clients">
     <p class="label reveal" data-t="clients.label">Clients</p>
-    <h2 class="reveal" data-t="clients.title" data-html>Brands and artists <b>we've filmed for.</b></h2>
+    <h2 class="reveal" data-t="clients.title" data-html>Brands <b>we've filmed for.</b></h2>
     <div class="logos reveal" id="logos"></div>
   </section>
 
@@ -475,7 +483,7 @@ const T = {
     'about.label': 'About', 'about.title': 'We are <b>mad about</b> film.', 'about.team': 'The team',
     'about.lead': 'We design, shoot and edit film for any screen. Our work is steeped in <b>cinematic legacy</b>, and made to stay with the people who watch it.',
     'about.quote': '"No matter what people tell you, words and ideas can change the world." Robin Williams',
-    'clients.label': 'Clients', 'clients.title': "Brands and artists <b>we've filmed for.</b>",
+    'clients.label': 'Clients', 'clients.title': "Brands <b>we've filmed for.</b>",
     'contact.label': 'Contact', 'contact.title': 'Tell us about <b>your project.</b>', 'contact.sub': 'A few lines are enough. We answer within a working day.',
     'f.kind': 'What are you making?', 'f.budget': 'Budget', 'f.name': 'Name', 'f.email': 'Email', 'f.company': 'Company or artist',
     'f.when': 'When do you need it?', 'f.whenPh': 'e.g. end of November', 'f.msg': 'Tell us more', 'f.msgPh': 'The idea, the format, where it will be seen…',
@@ -496,7 +504,7 @@ const T = {
     'about.label': 'Εμείς', 'about.title': 'Είμαστε <b>τρελοί</b> με το σινεμά.', 'about.team': 'Η ομάδα',
     'about.lead': 'Σχεδιάζουμε, γυρίζουμε και μοντάρουμε ταινίες για κάθε οθόνη. Η δουλειά μας πατάει στην <b>κινηματογραφική παράδοση</b> και φτιάχνεται για να μένει σε όποιον τη βλέπει.',
     'about.quote': '«Ό,τι κι αν σου πουν, οι λέξεις και οι ιδέες μπορούν να αλλάξουν τον κόσμο.» Robin Williams',
-    'clients.label': 'Πελάτες', 'clients.title': 'Brands και καλλιτέχνες <b>που δουλέψαμε μαζί.</b>',
+    'clients.label': 'Πελάτες', 'clients.title': 'Brands <b>που δουλέψαμε μαζί.</b>',
     'contact.label': 'Επαφή', 'contact.title': 'Πείτε μας για <b>το project σας.</b>', 'contact.sub': 'Λίγες γραμμές αρκούν. Απαντάμε μέσα σε μία εργάσιμη.',
     'f.kind': 'Τι θέλετε να φτιάξετε;', 'f.budget': 'Budget', 'f.name': 'Όνομα', 'f.email': 'Email', 'f.company': 'Εταιρεία ή καλλιτέχνης',
     'f.when': 'Πότε το χρειάζεστε;', 'f.whenPh': 'π.χ. τέλη Νοεμβρίου', 'f.msg': 'Πείτε μας περισσότερα', 'f.msgPh': 'Η ιδέα, το format, πού θα προβληθεί…',
@@ -535,7 +543,7 @@ const CLIENTS = [
   { n: 'Visa' }, { n: "L'Oréal" }, { n: 'UNESCO' }, { n: 'Aperol' }, { n: 'Nescafé' }, { n: 'Tresemmé' }, { n: 'Axe' }, { n: 'Wind' },
   { n: 'Germanos' }, { n: 'Enerwave' }, { n: 'Εθνική Ασφαλιστική' }, { n: 'AbbVie' }, { n: 'Janssen' }, { n: 'Gree' }, { n: 'Loumidis' },
   { n: 'Media Strom' }, { n: 'Christodoulou' }, { n: 'Softex' }, { n: 'Panik Records' }, { n: 'Heaven Music' }, { n: 'Universal Music' },
-  { n: 'Rythmos FM' }, { n: 'Dromos FM' },
+  { n: 'Rythmos FM' }, { n: 'Dromos FM' }, { n: 'Stoiximan' },
 ]
 const KINDS = [['Commercial', 'Διαφημιστικό'], ['Music video', 'Βίντεο κλιπ'], ['Corporate film', 'Εταιρική ταινία'], ['Social content', 'Social content'], ['Post-production', 'Post-production'], ['Something else', 'Κάτι άλλο']]
 const BUDGETS = [['Under €5k', 'Έως €5k'], ['€5k to €15k', '€5k έως €15k'], ['€15k to €50k', '€15k έως €50k'], ['€50k+', '€50k+'], ['Not sure yet', 'Δεν ξέρω ακόμα']]
