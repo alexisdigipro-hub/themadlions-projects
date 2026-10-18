@@ -132,7 +132,7 @@ main { padding: 26px var(--pad) 90px; min-width: 0; }
 .w:hover { transform: translateY(-3px); border-color: var(--edge-2); box-shadow: 0 14px 40px rgba(0,0,0,.4); }
 .w.dragging { opacity: .35; }
 .w.over { box-shadow: 0 0 0 2px var(--red), 0 14px 40px rgba(212,0,0,.25); }
-.w .ph { aspect-ratio: 16 / 9; background: #18181b; position: relative; overflow: hidden; }
+.w .ph { aspect-ratio: 20 / 9; background: #18181b; position: relative; overflow: hidden; }
 .w .ph .fimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .w .ph > :not(.fimg) { z-index: 1; }
 .w .eye.fr { right: 46px; opacity: 0; transition: opacity .2s; }
@@ -1036,7 +1036,7 @@ function openWork(w) {
   $('wDelete').hidden = !w
   f.place.value = w ? (works.filter((x) => x.visible).indexOf(w) + 1 || '') : 1
   $('wPlaceHint').textContent = w && !w.visible ? 'Hidden now. 1 is first; the first 20 are on the home page, the rest come with Show all.' : '1 is first. The first 20 are on the home page, the rest come with Show all.'
-  wFrame = framer($('wFramer'), { frame: editingWork.frame, ratios: [['16 / 9', 'Tile']] })
+  wFrame = framer($('wFramer'), { frame: editingWork.frame, ratios: [['20 / 9', 'Tile']] })
   showPreview(); renderWorkCats(); renderAibKinds(); openDrawer(f)
   if (!w) setTimeout(() => f.video.focus(), 300)
 }
