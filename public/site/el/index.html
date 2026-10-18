@@ -338,19 +338,18 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
 /* the clients as a wall of white squares, each logo in black (Alex, 18 Oct); a client without a logo yet shows its
    name the same way. The logo files are already the white square (site bucket, clients/logo-*.png) */
 /* all the clients in two rows (as many to a row as it takes), small squares 6 px apart (Alex, 18 Oct) */
-.logos { grid-template-columns: repeat(var(--cols, 12), 1fr); gap: 6px; }
-.logo { height: auto; aspect-ratio: 1; padding: 0; overflow: hidden; background: #fff; border: 0; border-radius: 4px; box-shadow: none; transition: background .3s; }
-.logo.fill { pointer-events: none; }
-.logo:hover { background: #fff; }
-.logo img { transition: transform .4s cubic-bezier(.2,.7,.2,1); }
-.logo:hover img { transform: scale(1.06); }
-.logo img, .logo img.mono { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: cover; opacity: 1; filter: none; }
-html[data-theme='light'] .logo img.mono { filter: none; }
-.logo span { padding: 0 10%; color: #111; font-size: 14px; font-weight: 700; letter-spacing: .04em; line-height: 1.2; overflow-wrap: anywhere; }
-.logo:hover span { color: #111; }
-html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
-.logo span { font-size: 11px; padding: 0 6%; letter-spacing: 0; }
-@media (max-width: 900px) { .logos { grid-template-columns: repeat(6, 1fr); } .logo.fill { display: none; } .logo span { font-size: 9px; } }
+/* the clients, minimal (Alex, 18 Oct): no boxes, the logos straight on the page, quiet until hovered.
+   The logo files are black on white: dark looks turn them white and screen away the black, the light look multiplies the white away */
+.logos { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 0 24px; max-width: 1180px; margin: 40px auto 0; background: var(--bg); }
+.logo { height: auto; aspect-ratio: 1; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; overflow: hidden; }
+.logo:hover { background: none; border: 0; }
+.logo img, .logo img.mono { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: contain; transform: none; filter: invert(1); mix-blend-mode: screen; opacity: .5; transition: opacity .35s; }
+.logo:hover img { opacity: 1; transform: none; }
+html[data-theme='light'] .logo img, html[data-theme='light'] .logo img.mono { filter: none; mix-blend-mode: multiply; opacity: .6; }
+html[data-theme='light'] .logo:hover img { opacity: 1; }
+.logo span { padding: 0 4%; font-size: 12px; font-weight: 500; letter-spacing: .1em; line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; transition: color .35s; }
+.logo:hover span { color: var(--text); }
+@media (max-width: 900px) { .logos { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 14px; } .logo span { font-size: 10px; letter-spacing: .06em; } }
 /* about: the text, and the team under it in one row (Alex, 18 Oct) */
 .about { grid-template-columns: minmax(0, 1fr); gap: 56px; }
 .about > .reveal:first-child { max-width: 1000px; }
@@ -364,36 +363,6 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
 .person strong { font-size: 15px; overflow-wrap: anywhere; }
 .person span { margin-top: 2px; font-size: 12.5px; }
 @media (max-width: 900px) { .about { gap: 40px; } .team { grid-auto-columns: 158px; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); scroll-padding: 0 var(--pad); } .team::-webkit-scrollbar { display: none; } }
-/* seven services in one row of smaller cards on a wide screen (Alex, 18 Oct) */
-.svc-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
-.svc { min-height: 340px; border-radius: 16px; }
-.svc .in { padding: 18px 16px 16px; }
-.svc small { font-size: 11px; }
-.svc h3 { margin: 6px 0 8px; font-size: 19px; }
-.svc p { font-size: 13px; line-height: 1.5; }
-.svc .ex { margin-top: 14px; max-width: 100%; height: auto; min-height: 32px; padding: 5px 12px 5px 5px; border-radius: 16px; font-size: 12px; text-align: left; }
-.svc .ex i { flex: none; width: 22px; height: 22px; }
-.svc .ex span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.25; }
-/* the service cards, 2026 (Alex, 18 Oct): his own pictures from Studio > Look instead of stills from the films, glass,
-   a large outlined number, a soft red glow, a short red line that grows on hover */
-.svc { min-height: 360px; border-radius: 22px; isolation: isolate; border: 1px solid color-mix(in srgb, var(--hi) 10%, transparent);
-  background: radial-gradient(140% 90% at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 55%), linear-gradient(180deg, color-mix(in srgb, var(--hi) 6%, var(--bg-2)), var(--bg-2) 60%);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 10%, transparent); transition: transform .6s cubic-bezier(.2,.7,.2,1), border-color .4s, box-shadow .6s; }
-.svc:hover { transform: translateY(-6px); border-color: color-mix(in srgb, var(--accent) 50%, transparent); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 14%, transparent), 0 30px 60px rgba(0,0,0,.45), 0 0 50px color-mix(in srgb, var(--accent) 18%, transparent); }
-.svc::after { background: linear-gradient(180deg, transparent 25%, color-mix(in srgb, var(--bg) 90%, transparent) 76%); }
-.svc:not(.has-img)::after { display: none; }
-.svc img { filter: saturate(.9) brightness(.62); }
-.svc:hover img { filter: saturate(1.05) brightness(.72); }
-.svc .big { position: absolute; top: 12px; right: 16px; z-index: 1; font-size: clamp(54px, 4.6vw, 76px); font-weight: 200; line-height: 1; letter-spacing: -.04em; color: transparent; -webkit-text-stroke: 1px color-mix(in srgb, var(--hi) 30%, transparent); font-variant-numeric: tabular-nums; transition: -webkit-text-stroke-color .4s, transform .6s cubic-bezier(.2,.7,.2,1); pointer-events: none; }
-.svc:hover .big { -webkit-text-stroke-color: color-mix(in srgb, var(--accent) 85%, transparent); transform: translateY(-3px); }
-.svc small { display: none; }
-.svc h3 { margin: 0 0 8px; font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
-.svc h3::before { content: ''; display: block; width: 22px; height: 2px; margin-bottom: 14px; border-radius: 2px; background: var(--accent); transition: width .5s cubic-bezier(.2,.7,.2,1); }
-.svc:hover h3::before { width: 46px; }
-.svc .ex { background: color-mix(in srgb, var(--hi) 8%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
-@media (max-width: 1280px) { .svc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-@media (max-width: 900px) { .svc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .svc { min-height: 300px; } }
-@media (max-width: 560px) { .svc-grid { grid-template-columns: 1fr; } .svc { min-height: 240px; } }
 /* behind the scenes (Alex, 18 Oct): out of Work into its own section, set photos and videos, a few here and all of them in a full view */
 .bts { border-top: 1px solid var(--line); }
 .bts > .label, .bts > h2, .btsall > .label, .btsall > h2 { text-align: center; }
@@ -430,11 +399,48 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
 /* Services, How we work, About and Clients: the titles and their texts centred (Alex, 18 Oct); the cards keep their own layout */
 .services > .label, .services > h2, .clients > .label, .clients > h2 { text-align: center; }
 /* How we work sits inside Services, under the cards (Alex, 18 Oct: one section, one menu item) */
-.svc-how { margin-top: clamp(70px, 8vw, 120px); }
+/* services and how we work, minimal and joined (Alex, 18 Oct): the services as a clean list (number, name, what it is, the film),
+   Studio's picture as a small square beside the name; straight under it the way we work as one line through five dots */
+.svc-grid { display: block; max-width: 1180px; margin: 40px auto 0; border-top: 1px solid var(--line); }
+.svc { display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1.9fr) 240px; align-items: center; gap: 24px; min-height: 0; padding: 20px 6px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: none; box-shadow: none; overflow: visible; transition: background .3s; }
+.svc:hover { background: color-mix(in srgb, var(--hi) 3%, transparent); }
+.svc::after, .svc .big, .svc .bg { display: none; }
+.svc .in { display: contents; }
+.svc small { display: block; font-size: 12px; letter-spacing: .12em; color: color-mix(in srgb, var(--text) 40%, transparent); transition: color .3s; }
+.svc:hover small { color: var(--accent); }
+.svc h3 { display: flex; align-items: center; gap: 12px; margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -.01em; line-height: 1.2; }
+.svc h3::before { display: none; }
+.svc h3 img, .svc:hover h3 img, html[data-theme='light'] .svc h3 img { flex: none; width: 40px; height: 40px; border-radius: 10px; object-fit: cover; filter: none; transform: none; }
+.svc p { margin: 0; font-size: 14.5px; font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 66%, transparent); }
+.svc .ex { margin: 0; justify-self: end; max-width: 240px; height: auto; min-height: 32px; padding: 4px 12px 4px 4px; border-radius: 999px; font-size: 12.5px; text-align: left; background: none; }
+.svc .ex:hover { background: color-mix(in srgb, var(--hi) 8%, transparent); }
+.svc .ex i { flex: none; width: 24px; height: 24px; }
+.svc .ex span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; line-height: 1.25; }
+.svc-how { max-width: 1180px; margin: clamp(48px, 6vw, 80px) auto 0; }
 .svc-how > .label, .how-title { text-align: center; }
-.how-title { margin: 0; font-size: clamp(28px, 3.6vw, 48px); font-weight: 300; line-height: 1.08; letter-spacing: -.01em; }
+.how-title { margin: 0; font-size: clamp(22px, 2.4vw, 32px); font-weight: 300; line-height: 1.1; letter-spacing: -.01em; }
 .how-title b { font-weight: 800; }
-.svc-how .steps { margin-top: 36px; }
+.svc-how .steps { position: relative; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; margin-top: 32px; }
+.svc-how .steps::before { content: ''; position: absolute; top: 5px; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--line) 6%, var(--line) 94%, transparent); }
+.svc-how .step { padding: 30px 0 0; border: 0; border-radius: 0; background: none; text-align: center; }
+.svc-how .step:hover { background: none; }
+.svc-how .step::before { content: ''; position: absolute; top: 0; left: 50%; width: 11px; height: 11px; margin: 0 0 0 -5.5px; border-radius: 50%; background: var(--bg); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 80%, transparent); transition: background .3s; }
+.svc-how .step:hover::before { background: var(--accent); }
+.svc-how .step::after { display: none; }
+.svc-how .step h3 { font-size: 17px; }
+.svc-how .step p { font-size: 13.5px; color: color-mix(in srgb, var(--text) 62%, transparent); }
+@media (max-width: 900px) {
+  .svc { grid-template-columns: 30px minmax(0, 1fr); gap: 6px 12px; padding: 16px 2px; }
+  .svc p, .svc .ex { grid-column: 2; }
+  .svc .ex { justify-self: start; margin-top: 4px; }
+  .svc h3 { font-size: 18px; }
+  .svc h3 img { width: 34px; height: 34px; border-radius: 9px; }
+  .svc p { font-size: 14px; }
+  .svc-how .steps { grid-template-columns: 1fr; gap: 0; }
+  .svc-how .steps::before { top: 6px; bottom: 6px; left: 5px; right: auto; width: 1px; height: auto; background: var(--line); }
+  .svc-how .step { padding: 0 0 22px 30px; text-align: left; }
+  .svc-how .step::before { top: 1px; left: 0; margin: 0; }
+}
 .services > .sub { margin-left: auto; margin-right: auto; text-align: center; }
 .about > .reveal:first-child { margin: 0 auto; text-align: center; }
 .about > .reveal:last-child > .label { text-align: center; }
@@ -911,9 +917,9 @@ function renderServices() {
     const [name, text] = s[lang] || s.en
     const card = document.createElement('div')
     card.className = `svc reveal${m.img ? ' has-img' : ''}`
-    if (m.img) { const bg = document.createElement('div'); bg.className = 'bg'; const im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = m.img; bg.appendChild(im); card.appendChild(bg) }
-    card.insertAdjacentHTML('beforeend', `<span class="big" aria-hidden="true">0${n + 1}</span><div class="in"><small>0${n + 1}</small><h3></h3><p></p><button type="button" class="ex"><i>${PLAY}</i><span></span></button></div>`)
-    card.querySelector('h3').textContent = name
+    card.innerHTML = `<div class="in"><small>0${n + 1}</small><h3><span></span></h3><p></p><button type="button" class="ex"><i>${PLAY}</i><span></span></button></div>`
+    card.querySelector('h3 span').textContent = name
+    if (m.img) { const im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = m.img; card.querySelector('h3').prepend(im) }
     card.querySelector('p').textContent = text
     if (s.aib && !m.film) { card.querySelector('.ex span').textContent = t('svc.aib'); card.querySelector('.ex').onclick = () => { location.href = location.pathname.includes('/el/') ? '../aibsent/' : 'aibsent/' } }
     else if (w) { card.querySelector('.ex span').textContent = `${t('svc.ex')}: ${w.t}`; card.querySelector('.ex').onclick = () => play(w) }
@@ -959,10 +965,8 @@ function renderAbout() {
   box.querySelectorAll('.face').forEach((face, i) => { const p = TEAM[i]; if (p[3]) face.appendChild(frameImg(Object.assign(document.createElement('img'), { src: p[3], alt: '', loading: 'lazy' }), p[4])) })
 }
 function renderClients() {
-  // two rows: half the clients to a row, and blank squares to close the second row
-  const cols = Math.max(1, Math.ceil(CLIENTS.length / 2)), box = document.getElementById('logos')
-  box.style.setProperty('--cols', cols)
-  box.innerHTML = CLIENTS.map((c) => `<div class="logo">${c.logo ? `<img src="${escH(c.logo)}" alt="${escH(c.n)}" loading="lazy"${c.mono === false ? '' : ' class="mono"'}>` : `<span>${escH(c.n)}</span>`}</div>`).join('') + '<div class="logo fill" aria-hidden="true"></div>'.repeat(cols * 2 - CLIENTS.length)
+  const box = document.getElementById('logos')
+  box.innerHTML = CLIENTS.map((c) => `<div class="logo">${c.logo ? `<img src="${escH(c.logo)}" alt="${escH(c.n)}" loading="lazy"${c.mono === false ? '' : ' class="mono"'}>` : `<span>${escH(c.n)}</span>`}</div>`).join('')
 }
 async function loadPeople() {
   try {
