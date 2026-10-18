@@ -970,7 +970,7 @@ function renderServices() {
     box.appendChild(card)
   })
 }
-const AIB_CAPS = [['Editing', 'Μοντάζ'], ['Color grading', 'Color grading'], ['Visual FX', 'Visual FX'], ['Motion graphics', 'Motion graphics'], ['Compositing', 'Compositing'], ['AI films', 'Ταινίες με AI']]
+const AIB_CAPS = [['Editing', 'Μοντάζ'], ['Color grading', 'Color grading'], ['Visual FX', 'Visual FX'], ['Motion graphics', 'Motion graphics'], ['Compositing', 'Compositing']]
 function renderAibsent() {
   const caps = document.getElementById('aibCaps')
   if (caps) caps.innerHTML = AIB_CAPS.map((c) => `<span><i></i>${lang === 'el' ? c[1] : c[0]}</span>`).join('')

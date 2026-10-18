@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (13 Oct 2026)
+- 18 Oct: **AI films is off the Aibsent Studios crafts on the home page** (AIB_CAPS).
 - 18 Oct: **How we work stays on the home page, without its small "HOW WE WORK" label** (Alex meant only the label; the earlier removal of the whole block was reverted). The title "From idea to screen." and the five steps stay.
 - 18 Oct: **The Lab page's email is lab@themadlions.com** (the "Your idea" card; Alex set the address up himself).
 - 18 Oct (last): **Services cards without the 3D shapes** (Alex: keep the layout, take the icons off). The row of seven soft cards stays: number, name, one line; SVC_SHAPES is gone. The prism and the RoarMe icon were also given to Alex as 2048 px PNGs (not in the repo).
