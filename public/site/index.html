@@ -311,10 +311,15 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
 .about { grid-template-columns: minmax(0, 1fr); gap: 56px; }
 .about > .reveal:first-child { max-width: 1000px; }
 .team { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-.person { padding: 16px; min-width: 0; }
+/* each card is led by the photo, full width in 4:5, the name and role under it (Alex, 18 Oct) */
+.person { padding: 0 0 14px; min-width: 0; overflow: hidden; }
+.person .face, .person .face:has(img) { width: 100%; height: auto; aspect-ratio: 4 / 5; border-radius: 0; margin: 0 0 12px; overflow: hidden; font-size: 44px; font-weight: 300; }
+.person .face img { border-radius: 0; transform: scale(var(--z, 1)); transition: transform .8s cubic-bezier(.2,.7,.2,1); }
+.person:hover .face img { transform: scale(calc(var(--z, 1) * 1.04)); }
+.person strong, .person span { display: block; padding: 0 14px; }
 .person strong { font-size: 15px; overflow-wrap: anywhere; }
-.person span { font-size: 12.5px; }
-@media (max-width: 900px) { .about { gap: 40px; } .team { grid-auto-columns: 136px; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); scroll-padding: 0 var(--pad); } .team::-webkit-scrollbar { display: none; } }
+.person span { margin-top: 2px; font-size: 12.5px; }
+@media (max-width: 900px) { .about { gap: 40px; } .team { grid-auto-columns: 158px; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); scroll-padding: 0 var(--pad); } .team::-webkit-scrollbar { display: none; } }
 </style>
 </head>
 <body>
