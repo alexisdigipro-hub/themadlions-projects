@@ -320,6 +320,12 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
 .person strong { font-size: 15px; overflow-wrap: anywhere; }
 .person span { margin-top: 2px; font-size: 12.5px; }
 @media (max-width: 900px) { .about { gap: 40px; } .team { grid-auto-columns: 158px; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); scroll-padding: 0 var(--pad); } .team::-webkit-scrollbar { display: none; } }
+/* How we work and About: the titles and their texts centred (Alex, 18 Oct); the step cards keep their own layout */
+.process > .label, .process > h2 { text-align: center; }
+.about > .reveal:first-child { margin: 0 auto; text-align: center; }
+.about > .reveal:last-child > .label { text-align: center; }
+.about .quote { border-left: 0; padding: 0; }
+.about .quote::before { content: ''; display: block; width: 28px; height: 2px; margin: 0 auto 14px; background: var(--accent); }
 </style>
 </head>
 <body>
