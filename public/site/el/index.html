@@ -365,6 +365,23 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
 .svc .ex { margin-top: 14px; max-width: 100%; height: auto; min-height: 32px; padding: 5px 12px 5px 5px; border-radius: 16px; font-size: 12px; text-align: left; }
 .svc .ex i { flex: none; width: 22px; height: 22px; }
 .svc .ex span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.25; }
+/* the service cards, 2026 (Alex, 18 Oct): his own pictures from Studio > Look instead of stills from the films, glass,
+   a large outlined number, a soft red glow, a short red line that grows on hover */
+.svc { min-height: 360px; border-radius: 22px; isolation: isolate; border: 1px solid color-mix(in srgb, var(--hi) 10%, transparent);
+  background: radial-gradient(140% 90% at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 55%), linear-gradient(180deg, color-mix(in srgb, var(--hi) 6%, var(--bg-2)), var(--bg-2) 60%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 10%, transparent); transition: transform .6s cubic-bezier(.2,.7,.2,1), border-color .4s, box-shadow .6s; }
+.svc:hover { transform: translateY(-6px); border-color: color-mix(in srgb, var(--accent) 50%, transparent); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 14%, transparent), 0 30px 60px rgba(0,0,0,.45), 0 0 50px color-mix(in srgb, var(--accent) 18%, transparent); }
+.svc::after { background: linear-gradient(180deg, transparent 25%, color-mix(in srgb, var(--bg) 90%, transparent) 76%); }
+.svc:not(.has-img)::after { display: none; }
+.svc img { filter: saturate(.9) brightness(.62); }
+.svc:hover img { filter: saturate(1.05) brightness(.72); }
+.svc .big { position: absolute; top: 12px; right: 16px; z-index: 1; font-size: clamp(54px, 4.6vw, 76px); font-weight: 200; line-height: 1; letter-spacing: -.04em; color: transparent; -webkit-text-stroke: 1px color-mix(in srgb, var(--hi) 30%, transparent); font-variant-numeric: tabular-nums; transition: -webkit-text-stroke-color .4s, transform .6s cubic-bezier(.2,.7,.2,1); pointer-events: none; }
+.svc:hover .big { -webkit-text-stroke-color: color-mix(in srgb, var(--accent) 85%, transparent); transform: translateY(-3px); }
+.svc small { display: none; }
+.svc h3 { margin: 0 0 8px; font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
+.svc h3::before { content: ''; display: block; width: 22px; height: 2px; margin-bottom: 14px; border-radius: 2px; background: var(--accent); transition: width .5s cubic-bezier(.2,.7,.2,1); }
+.svc:hover h3::before { width: 46px; }
+.svc .ex { background: color-mix(in srgb, var(--hi) 8%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
 @media (max-width: 1280px) { .svc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (max-width: 900px) { .svc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .svc { min-height: 300px; } }
 @media (max-width: 560px) { .svc-grid { grid-template-columns: 1fr; } .svc { min-height: 240px; } }
@@ -855,21 +872,26 @@ addEventListener('keydown', (e) => {
 
 document.getElementById('more').onclick = () => { showAll = !showAll; renderGrid(); if (!showAll) document.getElementById('work').scrollIntoView() }
 
+let svcMedia = {}
+try { svcMedia = JSON.parse(localStorage.getItem('tml_site_svc') || '{}') || {} } catch (e) {}
 function renderServices() {
   const box = document.getElementById('svcGrid')
   box.innerHTML = ''
   SERVICES.forEach((s, n) => {
-    const w = byTitle(s.ex || s.bg)
+    // the picture and the film come from Studio > Look > Services; no picture = a clean card, the film only when it is on the site
+    const m = svcMedia[s.en[0]] || {}
+    const film = m.film === '-' ? '' : (m.film || s.ex || '')
+    const w = film ? WORKS.find((x) => x.t === film) : null
     const [name, text] = s[lang] || s.en
     const card = document.createElement('div')
-    card.className = 'svc reveal'
-    if (w) { const bg = document.createElement('div'); bg.className = 'bg'; bg.appendChild(img(w, true)); card.appendChild(bg) }
-    card.insertAdjacentHTML('beforeend', `<div class="in"><small>0${n + 1}</small><h3></h3><p></p><button type="button" class="ex"><i>${PLAY}</i><span></span></button></div>`)
+    card.className = `svc reveal${m.img ? ' has-img' : ''}`
+    if (m.img) { const bg = document.createElement('div'); bg.className = 'bg'; const im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = m.img; bg.appendChild(im); card.appendChild(bg) }
+    card.insertAdjacentHTML('beforeend', `<span class="big" aria-hidden="true">0${n + 1}</span><div class="in"><small>0${n + 1}</small><h3></h3><p></p><button type="button" class="ex"><i>${PLAY}</i><span></span></button></div>`)
     card.querySelector('h3').textContent = name
     card.querySelector('p').textContent = text
-    if (!s.ex || (!w && !s.aib)) card.querySelector('.ex').remove()
-    else if (s.aib) { card.querySelector('.ex span').textContent = t('svc.aib'); card.querySelector('.ex').onclick = () => { location.href = location.pathname.includes('/el/') ? '../aibsent/' : 'aibsent/' } }
-    else { card.querySelector('.ex span').textContent = `${t('svc.ex')}: ${w.t}`; card.querySelector('.ex').onclick = () => play(w) }
+    if (s.aib && !m.film) { card.querySelector('.ex span').textContent = t('svc.aib'); card.querySelector('.ex').onclick = () => { location.href = location.pathname.includes('/el/') ? '../aibsent/' : 'aibsent/' } }
+    else if (w) { card.querySelector('.ex span').textContent = `${t('svc.ex')}: ${w.t}`; card.querySelector('.ex').onclick = () => play(w) }
+    else card.querySelector('.ex').remove()
     box.appendChild(card)
   })
 }
@@ -1110,6 +1132,9 @@ async function loadTheme() {
     const hv = rows.some((r) => r.key === 'hero_video') ? get('hero_video') : HERO_VIDEO
     try { localStorage.setItem('tml_site_hero_video', JSON.stringify(hv || {})) } catch (e) {}
     if (JSON.stringify(hv || {}) !== JSON.stringify(heroVideo || {})) { heroVideo = hv; setHeroVideo(hv) }
+    // the services' pictures and films from Studio > Look
+    const sv = get('services') || {}
+    if (JSON.stringify(sv) !== JSON.stringify(svcMedia)) { svcMedia = sv; try { localStorage.setItem('tml_site_svc', JSON.stringify(sv)) } catch (e) {} renderServices(); observe() }
     // the set photos from Studio > BTS
     const bp = get('bts_photos')
     if (Array.isArray(bp) && JSON.stringify(bp) !== JSON.stringify(btsPhotos)) { btsPhotos = bp; try { localStorage.setItem('tml_site_bts', JSON.stringify(bp)) } catch (e) {} renderBts() }

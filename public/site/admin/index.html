@@ -214,6 +214,13 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 .themes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .hv-prev { aspect-ratio: 16 / 9; border-radius: 14px; background: #18181b center / cover; border: 1px solid var(--edge); }
 .hv-prev.gray { filter: grayscale(1); }
+/* Look > Services: one row a service, its picture, its film */
+.svcrows { display: grid; gap: 8px; }
+.svcrow { display: grid; grid-template-columns: 112px minmax(0, 1fr) minmax(0, 1.4fr) auto auto; gap: 10px; align-items: center; padding: 8px; border-radius: 16px; background: rgba(255,255,255,.03); border: 1px solid var(--edge); }
+.svcrow .th { aspect-ratio: 16 / 10; border-radius: 10px; background: #18181b center / cover; border: 1px solid var(--edge); display: grid; place-items: center; color: var(--dim); font-size: 11.5px; }
+.svcrow strong { font-weight: 500; font-size: 14.5px; }
+.svcrow select { height: 38px; font-size: 13.5px; }
+@media (max-width: 760px) { .svcrow { grid-template-columns: 96px minmax(0, 1fr); } .svcrow select { grid-column: 1 / -1; } }
 .hero-pick { display: grid; grid-template-columns: minmax(0, 1.4fr) 1fr; gap: 20px; align-items: center; }
 @media (max-width: 760px) { .hero-pick { grid-template-columns: 1fr; } }
 .theme { border-radius: 24px; padding: 14px; cursor: pointer; transition: transform .2s, box-shadow .2s, border-color .2s; }
@@ -457,6 +464,11 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
       <div class="head"><div><h1>Look</h1><p>The site's theme. A click changes it for every visitor; Preview opens it without changing anything.</p></div></div>
       <div class="themes" id="themes"></div>
       <div class="card glass" style="margin-top:14px">
+        <h3>Services</h3>
+        <p class="hint" style="margin:-4px 0 14px">The picture behind each service card on the site, and the film its Watch button plays. With no picture the card stays clean, without a film it has no Watch button. Every change is on the site at once.</p>
+        <div class="svcrows" id="svcRows"></div>
+      </div>
+      <div class="card glass" style="margin-top:14px">
         <h3>Opening video</h3>
         <div class="hero-pick">
           <div><div class="hv-prev" id="hvPrev"></div><p class="hint" id="hvNone" style="margin:8px 0 0">No video: the site opens on the picture below.</p></div>
@@ -557,6 +569,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
   </div>
   <div class="df"><button class="btn danger" type="button" id="cDelete">Delete</button><span class="grow"></span><button class="btn" type="button" data-close>Cancel</button><button class="btn red" type="submit" id="cSave">Save</button></div>
 </form>
+<input type="file" id="svcPick" accept="image/jpeg,image/png,image/webp" hidden>
 <input type="file" id="btsPick" accept="image/jpeg,image/png,image/webp" multiple hidden>
 <input type="file" id="personPick" accept="image/jpeg,image/png,image/webp" hidden>
 <input type="file" id="clientPick" accept="image/jpeg,image/png,image/webp" hidden>
@@ -1163,7 +1176,10 @@ async function loadLook() {
     const get = (k) => (r.find((x) => x.key === k) || {}).value
     theme = get('theme') || 'dark'; heroImage = get('hero_image') || ''; heroFrame = get('hero_frame') || null
     heroVideo = r.some((x) => x.key === 'hero_video') ? (get('hero_video') || {}) : HERO_VIDEO
+    svcMedia = get('services') || {}
   } catch (e) { toast(e.message) }
+  try { svcFilms = (await rest('site_works?visible=eq.true&select=title&order=position.asc,created_at.desc')).map((w) => w.title) } catch (e) { svcFilms = [] }
+  renderSvcRows()
   showHero()
   $('hvLink').value = heroVideo.url || ''; $('hvGray').checked = !!heroVideo.gray; showHeroVideo()
   $('themes').innerHTML = THEMES.map((t) => `
@@ -1172,6 +1188,46 @@ async function loadLook() {
       <div class="nm"><strong>${t.name}</strong><small>${t.note}</small><span class="grow"></span><a class="btn sm" href="../?theme=${t.key}" target="_blank" rel="noopener" data-preview>Preview</a></div>
       ${t.key === theme ? '<div class="chip" style="margin-top:10px;height:26px"><i style="background:var(--ok)"></i>On the site now</div>' : ''}
     </div>`).join('')
+}
+/* Look > Services (Alex, 18 Oct): the services' pictures are his own now, no longer stills from the films; and the film each
+   Watch button plays. Kept in site_settings.services { "<English name>": { img, film } }; film '' = the site's default, '-' = none */
+const SVC_NAMES = ['Commercials', 'Music Videos', 'Feature Films', 'Documentaries', 'Corporate Films', 'Visuals', 'Post-production']
+let svcMedia = {}, svcFilms = [], svcFor = ''
+function renderSvcRows() {
+  $('svcRows').innerHTML = SVC_NAMES.map((n) => {
+    const m = svcMedia[n] || {}
+    const opts = [['', 'Watch: the usual film'], ['-', 'No Watch button'], ...svcFilms.map((t) => [t, `Watch: ${t}`])]
+    if (m.film && m.film !== '-' && !svcFilms.includes(m.film)) opts.push([m.film, `Watch: ${m.film} (hidden now)`])
+    return `<div class="svcrow" data-n="${esc(n)}">
+      <div class="th" style="${m.img ? `background-image:url('${esc(m.img)}')` : ''}">${m.img ? '' : 'No picture'}</div>
+      <strong>${esc(n)}</strong>
+      <select data-film>${opts.map(([v, l]) => `<option value="${esc(v)}" ${(m.film || '') === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>
+      <button class="btn sm" type="button" data-up><svg class="i"><use href="#i-plus"/></svg>${m.img ? 'Change' : 'Picture'}</button>
+      <button class="btn sm danger" type="button" data-rm ${m.img ? '' : 'style="visibility:hidden"'}>Remove</button>
+    </div>`
+  }).join('')
+}
+const saveSvc = async (msg) => { try { await setSetting('services', svcMedia); toast(msg) } catch (err) { toast(err.message) } }
+$('svcRows').onclick = (e) => {
+  const row = e.target.closest('[data-n]'); if (!row) return
+  const n = row.dataset.n
+  if (e.target.closest('[data-up]')) { svcFor = n; $('svcPick').click() }
+  if (e.target.closest('[data-rm]')) { svcMedia[n] = { ...(svcMedia[n] || {}), img: '' }; renderSvcRows(); saveSvc(`${n}: picture removed`) }
+}
+$('svcRows').onchange = (e) => {
+  const sel = e.target.closest('[data-film]'); if (!sel) return
+  const n = sel.closest('[data-n]').dataset.n
+  svcMedia[n] = { ...(svcMedia[n] || {}), film: sel.value }; saveSvc(`${n}: saved`)
+}
+$('svcPick').onchange = async (e) => {
+  const file = e.target.files[0]; e.target.value = ''
+  if (!file || !svcFor) return
+  const n = svcFor
+  try {
+    toast('Uploading…')
+    const url = await upload(await shrink(file), 'services')
+    svcMedia[n] = { ...(svcMedia[n] || {}), img: url }; renderSvcRows(); saveSvc(`${n}: new picture on the site`)
+  } catch (err) { toast(err.message) }
 }
 $('themes').onclick = async (e) => {
   if (e.target.closest('[data-preview]')) return
