@@ -320,6 +320,19 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
 .person strong { font-size: 15px; overflow-wrap: anywhere; }
 .person span { margin-top: 2px; font-size: 12.5px; }
 @media (max-width: 900px) { .about { gap: 40px; } .team { grid-auto-columns: 158px; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--pad)); padding: 0 var(--pad); scroll-padding: 0 var(--pad); } .team::-webkit-scrollbar { display: none; } }
+/* seven services in one row of smaller cards on a wide screen (Alex, 18 Oct) */
+.svc-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.svc { min-height: 340px; border-radius: 16px; }
+.svc .in { padding: 18px 16px 16px; }
+.svc small { font-size: 11px; }
+.svc h3 { margin: 6px 0 8px; font-size: 19px; }
+.svc p { font-size: 13px; line-height: 1.5; }
+.svc .ex { margin-top: 14px; max-width: 100%; height: auto; min-height: 32px; padding: 5px 12px 5px 5px; border-radius: 16px; font-size: 12px; text-align: left; }
+.svc .ex i { flex: none; width: 22px; height: 22px; }
+.svc .ex span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; line-height: 1.25; }
+@media (max-width: 1280px) { .svc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .svc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .svc { min-height: 300px; } }
+@media (max-width: 560px) { .svc-grid { grid-template-columns: 1fr; } .svc { min-height: 240px; } }
 /* Services, How we work, About and Clients: the titles and their texts centred (Alex, 18 Oct); the cards keep their own layout */
 .services > .label, .services > h2, .process > .label, .process > h2, .clients > .label, .clients > h2 { text-align: center; }
 .services > .sub { margin-left: auto; margin-right: auto; text-align: center; }
@@ -538,6 +551,15 @@ const SERVICES = [
   { en: ['Post-production', 'Editing, color grading, visual effects, motion graphics and compositing, for our films or for yours.'],
     el: ['Post-production', 'Μοντάζ, color grading, visual effects, motion graphics και compositing, για τις δικές μας ταινίες ή για τις δικές σας.'], ex: 'Tresemmé', aib: true },
 ]
+// Feature Films, Documentaries and Visuals (Alex, 18 Oct); a card with no film to show (bg only) has no Watch button
+SERVICES.splice(2, 0,
+  { en: ['Feature Films', 'Feature and short films, from the script and development to the shoot and the final cut, for the big screen and festivals.'],
+    el: ['Ταινίες', 'Ταινίες μεγάλου και μικρού μήκους, από το σενάριο και την ανάπτυξη ως το γύρισμα και το τελικό μοντάζ, για τη μεγάλη οθόνη και τα φεστιβάλ.'], ex: 'Eva ii – Official Trailer' },
+  { en: ['Documentaries', 'Real people and real stories, researched, filmed and edited with patience and an honest eye.'],
+    el: ['Ντοκιμαντέρ', 'Αληθινοί άνθρωποι και αληθινές ιστορίες, με έρευνα, γύρισμα και μοντάζ, με υπομονή και καθαρή ματιά.'], bg: 'Έψιλον / Epsilon – Short film' })
+SERVICES.splice(5, 0,
+  { en: ['Visuals', 'Stage and concert visuals, LED screen content, VJ loops and motion art made to move with the music.'],
+    el: ['Visuals', 'Visuals για σκηνή και συναυλίες, περιεχόμενο για LED οθόνες, VJ loops και motion art που κινούνται με τη μουσική.'], ex: 'Fluo Live' })
 const STEPS = [
   { en: ['Idea', 'We listen, then come back with a concept, a treatment and a clear budget.'], el: ['Ιδέα', 'Ακούμε και επιστρέφουμε με concept, treatment και ξεκάθαρο budget.'] },
   { en: ['Pre-production', 'Script, casting, locations, crew, schedule: every detail settled before the first day.'], el: ['Προπαραγωγή', 'Σενάριο, casting, locations, συνεργείο, πρόγραμμα: όλα κλειδωμένα πριν την πρώτη μέρα.'] },
@@ -557,7 +579,7 @@ const CLIENTS = [
   { n: 'Media Strom' }, { n: 'Christodoulou' }, { n: 'Softex' }, { n: 'Panik Records' }, { n: 'Heaven Music' }, { n: 'Universal Music' },
   { n: 'Rythmos FM' }, { n: 'Dromos FM' }, { n: 'Stoiximan' },
 ]
-const KINDS = [['Commercial', 'Διαφημιστικό'], ['Music video', 'Βίντεο κλιπ'], ['Corporate film', 'Εταιρική ταινία'], ['Social content', 'Social content'], ['Post-production', 'Post-production'], ['Something else', 'Κάτι άλλο']]
+const KINDS = [['Commercial', 'Διαφημιστικό'], ['Music video', 'Βίντεο κλιπ'], ['Feature film', 'Ταινία'], ['Documentary', 'Ντοκιμαντέρ'], ['Corporate film', 'Εταιρική ταινία'], ['Visuals', 'Visuals'], ['Social content', 'Social content'], ['Post-production', 'Post-production'], ['Something else', 'Κάτι άλλο']]
 const BUDGETS = [['Under €5k', 'Έως €5k'], ['€5k to €15k', '€5k έως €15k'], ['€15k to €50k', '€15k έως €50k'], ['€50k+', '€50k+'], ['Not sure yet', 'Δεν ξέρω ακόμα']]
 
 let lang = 'en'
@@ -638,7 +660,7 @@ function renderServices() {
   const box = document.getElementById('svcGrid')
   box.innerHTML = ''
   SERVICES.forEach((s, n) => {
-    const w = byTitle(s.ex)
+    const w = byTitle(s.ex || s.bg)
     const [name, text] = s[lang] || s.en
     const card = document.createElement('div')
     card.className = 'svc reveal'
@@ -646,7 +668,8 @@ function renderServices() {
     card.insertAdjacentHTML('beforeend', `<div class="in"><small>0${n + 1}</small><h3></h3><p></p><button type="button" class="ex"><i>${PLAY}</i><span></span></button></div>`)
     card.querySelector('h3').textContent = name
     card.querySelector('p').textContent = text
-    if (s.aib) { card.querySelector('.ex span').textContent = t('svc.aib'); card.querySelector('.ex').onclick = () => document.getElementById('aibsent').scrollIntoView({ behavior: 'smooth' }) }
+    if (!s.ex) card.querySelector('.ex').remove()
+    else if (s.aib) { card.querySelector('.ex span').textContent = t('svc.aib'); card.querySelector('.ex').onclick = () => document.getElementById('aibsent').scrollIntoView({ behavior: 'smooth' }) }
     else { card.querySelector('.ex span').textContent = `${t('svc.ex')}: ${w.t}`; card.querySelector('.ex').onclick = () => play(w) }
     box.appendChild(card)
   })
