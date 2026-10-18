@@ -908,6 +908,9 @@ async function loadTheme() {
     const hv = rows.some((r) => r.key === 'hero_video') ? get('hero_video') : HERO_VIDEO
     try { localStorage.setItem('tml_site_hero_video', JSON.stringify(hv || {})) } catch (e) {}
     if (JSON.stringify(hv || {}) !== JSON.stringify(heroVideo || {})) { heroVideo = hv; setHeroVideo(hv) }
+    // the categories from Studio > Work > Categories: their order and Greek names
+    const cl = get('categories')
+    if (Array.isArray(cl) && cl.length) { Object.keys(CATS).forEach((k) => delete CATS[k]); cl.forEach((c) => { if (c && c.en) CATS[c.en] = c.el || c.en }); renderFilters(); renderGrid() }
     const th = get('theme')
     if (!th) return
     if (th === 'dark') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = th
