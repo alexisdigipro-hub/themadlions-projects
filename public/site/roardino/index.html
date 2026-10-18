@@ -150,6 +150,12 @@ a{color:inherit}
   .hide-sm{display:none}
 }
 
+/* ---------- inside RoarMe ---------- */
+body.embedded .topbar{padding-top:10px}
+body.embedded .home{padding-top:14px}
+body.embedded .home .hero-h, body.embedded .home .lede, body.embedded .empty-note{display:none}
+body.embedded::before{display:none}
+
 /* ---------- Sign in ---------- */
 .auth{max-width:460px;margin:0 auto;padding:clamp(28px,7vw,64px) 16px 80px}
 .auth .hero-h{font-size:clamp(38px,8vw,58px)}
@@ -159,7 +165,7 @@ a{color:inherit}
 .msg.ok{color:#7ee2a0}
 .linkish{background:none;border:0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;padding:0;font-size:13px;cursor:pointer;align-self:flex-start}
 .me{display:inline-flex;align-items:center;gap:8px}
-.me .o-av{width:26px;height:26px;font-size:11px;background:color-mix(in srgb,var(--brand) 30%,transparent);color:#fff;border-radius:50%;display:grid;place-items:center;font-weight:700}
+.me .o-av{object-fit:cover;width:26px;height:26px;font-size:11px;background:color-mix(in srgb,var(--brand) 30%,transparent);color:#fff;border-radius:50%;display:grid;place-items:center;font-weight:700}
 .save-state{font-size:12px;color:var(--muted);font-weight:500}
 .center-note{min-height:50vh;display:grid;place-items:center;color:var(--muted)}
 
@@ -303,9 +309,18 @@ const STORE_KEY = 'roardino:v1'; // drafts from before accounts, moved into the 
 // RoarMe's Supabase project (its Auth for accounts, tables roardino_*); the publishable key is public by design.
 const SB_URL = 'https://bzmjhbnwhdwmncxkqkdl.supabase.co';
 const SB_KEY = 'sb_publishable_7mQ3e0NH5lCmdoIKx2-FUA_EgCoXx9X';
-const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY, { auth: { storageKey: 'roardino-auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
+// Inside RoarMe (the clip's Ordino tile opens /roardino/?embed=1 in a frame): no sign-in here, RoarMe posts the
+// user's short-lived access token and Roardino acts as that user. The refresh token never leaves RoarMe.
+const EMBED = new URLSearchParams(location.search).has('embed');
+const ROARME_ORIGINS = ['https://alexisdigipro-hub.github.io'];
+const okParent = o => ROARME_ORIGINS.includes(o) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(o);
+let embedToken = null, parentOrigin = null;
+const sb = !window.supabase ? null : EMBED
+  ? window.supabase.createClient(SB_URL, SB_KEY, { accessToken: async () => embedToken })
+  : window.supabase.createClient(SB_URL, SB_KEY, { auth: { storageKey: 'roardino-auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+const BASE = location.pathname + (EMBED ? '?embed=1' : '');
 async function rpc(fn, args){ const { data, error } = await sb.rpc(fn, args); if (error) throw error; return data; }
-let session = null, profile = null;
+let session = null, profile = null, roarMe = null; // roarMe: the user's RoarMe profile, when they have one
 let flushEditor = null; // set while the editor is open, so leaving it saves first
 const ACCENTS = ['#d40000','#C8503F','#E0A33A','#3F8F6B','#3D6FD8','#8A5CD6','#D9467A','#FFFFFF'];
 const BLOCK_DEFS = {
@@ -406,9 +421,12 @@ async function importLocalDrafts(){
 }
 async function loadProfile(){
   const u = session.user;
+  try { const r = await sb.from('roar_profiles').select('username,display_name,avatar_url').eq('id', u.id).maybeSingle(); roarMe = r.data || null; } catch { roarMe = null; }
   const { data } = await sb.from('roardino_profiles').select('name,company,role,phone').eq('id', u.id).maybeSingle();
-  if (data){ profile = data; return; }
-  profile = { name: (u.user_metadata && u.user_metadata.name) || '', company: (u.user_metadata && u.user_metadata.company) || '', role: '', phone: '' };
+  if (data){ profile = data; if (!profile.name && roarMe && roarMe.display_name) profile.name = roarMe.display_name; return; }
+  // first visit: the name comes from sign-up, or from RoarMe for someone who already has RoarMe
+  const meta = u.user_metadata || {};
+  profile = { name: meta.name || (roarMe && (roarMe.display_name || roarMe.username)) || '', company: meta.company || '', role: '', phone: '' };
   await sb.from('roardino_profiles').insert({ id: u.id, ...profile });
 }
 
@@ -474,6 +492,15 @@ async function publishOrdino(o){
   return linkFor(token);
 }
 const linkFor = token => location.origin + location.pathname + '?t=' + token;
+// Inside RoarMe: publish, then hand RoarMe what it needs to post the ordino as a card in the open chat.
+async function sendToChat(o){
+  try {
+    const url = await publishOrdino(o);
+    window.parent.postMessage({ type: 'roardino:send', ordino: { v: 1, url, token: o.token, title: o.project.title || '', artist: o.project.artist || '',
+      label: o.day.label || 'Ordino', date: o.day.date || '', call: o.day.callTime || '', place: o.loc.name || '', accent: o.look.accent || '#d40000' } }, parentOrigin);
+    toast('Στάλθηκε στη συνομιλία');
+  } catch { toast('Δεν στάλθηκε. Δοκίμασε ξανά.'); }
+}
 
 // Offline fallback: the whole ordino packed into the URL fragment.
 async function buildShareUrl(o){
@@ -682,7 +709,7 @@ function wireOrdinoActions(root, o){
    Views
    ========================================================= */
 const app = $('#app');
-const brandMark = (compact) => h('a', { class: 'brand', href: location.pathname + '#', 'aria-label': 'Roardino' },
+const brandMark = (compact) => h('a', { class: 'brand', href: BASE + '#home', 'aria-label': 'Roardino' },
   h('span', { class: 'rm', html: '<span class="a">ROAR</span><span class="b">DINO</span>' }),
   compact ? null : h('span', { class: 'by', html: 'by <b>THE<strong>MAD</strong>LIONS</b>' }));
 
@@ -693,8 +720,9 @@ async function route(){
   if (t && !hash.startsWith('#edit/') && hash !== '#home') return viewToken(t);
   if (hash.startsWith('#o=')) return viewLink(hash.slice(3));
   if (hash === '#demo') return viewLink(null, demoOrdino());
-  document.body.className = '';
+  document.body.className = EMBED ? 'embedded' : '';
   if (!sb){ app.innerHTML = '<div class="v-error"><div><h2>Δεν φόρτωσε</h2><p>Έλεγξε τη σύνδεση στο internet και ανανέωσε τη σελίδα.</p></div></div>'; return; }
+  if (EMBED && !session){ app.replaceChildren(h('div', { class: 'center-note' }, 'Σύνδεση με το RoarMe…')); return; }
   if (!session) return viewAuth();
   if (hash.startsWith('#edit/')){
     app.replaceChildren(h('div', { class: 'center-note' }, 'Φόρτωση…'));
@@ -705,11 +733,12 @@ async function route(){
 window.addEventListener('hashchange', route);
 
 let booted = false;
-async function onSignedIn(){
+async function onSignedIn(inRoarMe){
   try { await loadProfile(); } catch {}
+  if (inRoarMe) return; // drafts saved in a normal browser tab are not this frame's to move
   try { const n = await importLocalDrafts(); if (n) toast(n === 1 ? 'Μπήκε 1 ordino από αυτή τη συσκευή στον λογαριασμό σου' : `Μπήκαν ${n} ordino από αυτή τη συσκευή στον λογαριασμό σου`); } catch {}
 }
-if (sb){
+if (sb && !EMBED){
   sb.auth.onAuthStateChange((event, s) => {
     const was = session && session.user.id;
     session = s;
@@ -723,7 +752,27 @@ if (sb){
     }, 0);
   });
 }
+function jwtUser(t){
+  try { const p = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); return p.sub ? { id: p.sub, email: p.email || '', user_metadata: p.user_metadata || {} } : null; } catch { return null; }
+}
+function bootEmbed(){
+  document.body.classList.add('embedded');
+  window.addEventListener('message', async e => {
+    const d = e.data || {};
+    if (e.source !== window.parent || !okParent(e.origin) || d.type !== 'roardino:session' || !d.access_token) return;
+    const user = jwtUser(d.access_token); if (!user) return;
+    embedToken = d.access_token; parentOrigin = e.origin;
+    if (session && session.user.id === user.id) return; // a refreshed token for the same person
+    session = { user };
+    await onSignedIn(true);
+    booted = true; route();
+  });
+  window.parent.postMessage({ type: 'roardino:ready' }, '*');
+  route();
+  setTimeout(() => { if (!session) app.replaceChildren(h('div', { class: 'v-error' }, h('div', {}, h('h2', {}, 'Δεν συνδέθηκε με το RoarMe'), h('p', {}, 'Κλείσε το παράθυρο και άνοιξέ το ξανά από τον συνδετήρα.')))); }, 10000);
+}
 async function boot(){
+  if (EMBED) return bootEmbed();
   if (sb){
     try { const { data } = await sb.auth.getSession(); session = data.session; } catch {}
     if (session) await onSignedIn();
@@ -885,6 +934,7 @@ function openAccount(){
     h('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true' },
       h('h3', {}, 'Ο λογαριασμός σου'),
       h('label', { class: 'field' }, h('span', {}, 'Email'), h('input', { class: 'input', value: session.user.email, readonly: true, disabled: true })),
+      roarMe ? h('p', { class: 'msg ok' }, roarMe.username ? `Συνδεδεμένο με RoarMe · @${roarMe.username}` : 'Συνδεδεμένο με RoarMe') : null,
       fld('name', 'Ονοματεπώνυμο', 'text', { autocomplete: 'name' }),
       h('div', { class: 'row' }, fld('company', 'Εταιρεία / παραγωγή', 'text', { autocomplete: 'organization' }), fld('role', 'Ρόλος', 'text', { placeholder: 'π.χ. Παραγωγός' })),
       fld('phone', 'Τηλέφωνο', 'tel', { autocomplete: 'tel', inputmode: 'tel' }),
@@ -901,8 +951,8 @@ function openAccount(){
       h('button', { class: 'btn ghost', onclick: close }, 'Κλείσιμο')));
   document.body.append(bg);
 }
-const meButton = () => h('button', { class: 'btn small me', title: 'Λογαριασμός', onclick: openAccount },
-  h('span', { class: 'o-av' }, initials((profile && profile.name) || (session && session.user.email) || '?')),
+const meButton = () => EMBED ? null : h('button', { class: 'btn small me', title: 'Λογαριασμός', onclick: openAccount },
+  roarMe && roarMe.avatar_url ? h('img', { class: 'o-av', src: roarMe.avatar_url, alt: '' }) : h('span', { class: 'o-av' }, initials((profile && profile.name) || (session && session.user.email) || '?')),
   h('span', { class: 'hide-sm' }, (profile && profile.name) || 'Λογαριασμός'));
 
 /* ---------- home ---------- */
@@ -923,7 +973,8 @@ async function viewHome(){
       o.loc.name ? h('div', { class: 'card-meta' }, o.loc.name) : null,
       o.token ? h('div', { class: 'card-meta', style: 'color:#2fd36b' }, '● Σε link') : null),
     h('div', { class: 'card-actions' },
-      h('a', { class: 'btn small primary', href: '#edit/' + o.id }, 'Άνοιγμα'),
+      EMBED ? h('button', { class: 'btn small primary', onclick: e => { e.currentTarget.disabled = true; sendToChat(o).finally(() => { e.target.disabled = false; }); } }, 'Στείλε') : null,
+      h('a', { class: 'btn small' + (EMBED ? '' : ' primary'), href: '#edit/' + o.id }, EMBED ? 'Άλλαξε' : 'Άνοιγμα'),
       h('button', { class: 'btn small', onclick: async () => { const c = clone(o); c.project.title = (c.project.title || 'Ordino') + ' (αντίγραφο)'; try { await createOrdino(c); toast('Έγινε αντίγραφο'); viewHome(); } catch { toast('Δεν έγινε αντίγραφο'); } } }, 'Αντίγραφο'),
       h('button', { class: 'btn small ghost danger', onclick: async () => {
         if (!confirm(o.token ? 'Να διαγραφεί αυτό το ordino; Το link που έστειλες θα σταματήσει να ανοίγει.' : 'Να διαγραφεί αυτό το ordino;')) return;
@@ -937,7 +988,7 @@ async function viewHome(){
       meButton(),
       h('button', { class: 'btn primary', onclick: create }, '+ Νέο ordino')),
     h('main', { class: 'home' },
-      h('p', { class: 'kicker' }, first ? `Γεια σου, ${first}` : 'The Mad Lions Lab · Experiment 02'),
+      h('p', { class: 'kicker' }, EMBED ? 'Διάλεξε ordino για να το στείλεις, ή φτιάξε καινούργιο' : first ? `Γεια σου, ${first}` : 'The Mad Lions Lab · Experiment 02'),
       h('h1', { class: 'hero-h', html: 'Τα ordino σου,<br><b>σε ένα link.</b>' }),
       h('p', { class: 'lede' }, 'Γράψε call, τοποθεσία και πρόγραμμα, διάλεξε φωτογραφία και χρώμα, και στείλε στο συνεργείο ένα link που ανοίγει όμορφα στο κινητό.'),
       grid,
@@ -1054,7 +1105,7 @@ function viewEditor(o){
 
   const form = h('div', { class: 'form' },
     section('Βασικά', 'τίτλος, ημέρα, call', true,
-      h('div', { class: 'row' }, txt(o.project, 'title', 'Τίτλος project', { ph: 'π.χ. Ήλιε μου' }), txt(o.project, 'artist', 'Καλλιτέχνης / Πελάτης', { ph: 'π.χ. Νίκος Απέργης' })),
+      h('div', { class: 'row' }, txt(o.project, 'artist', 'Πελάτης / Καλλιτέχνης', { ph: 'π.χ. Disney' }), txt(o.project, 'title', 'Τίτλος project', { ph: 'π.χ. The Lion King' })),
       h('div', { class: 'row' }, txt(o.day, 'label', 'Επικεφαλίδα', { ph: 'GENERAL ORDINO' }), txt(o.day, 'date', 'Ημερομηνία', { type: 'date' })),
       h('div', { class: 'row' }, txt(o.day, 'callTime', 'General call', { type: 'time' }), txt(o.day, 'wrapTime', 'Εκτιμώμενο wrap', { type: 'time' }),
         txt(o.day, 'index', 'Ημέρα', { type: 'number', inputmode: 'numeric' }), txt(o.day, 'count', 'από', { type: 'number', inputmode: 'numeric' })),
@@ -1113,11 +1164,13 @@ function viewEditor(o){
 
   app.replaceChildren(
     h('header', { class: 'topbar' },
-      h('a', { class: 'btn icon ghost', href: location.pathname + '#', title: 'Πίσω', html: ICON.back }),
+      h('a', { class: 'btn icon ghost', href: BASE + '#home', title: 'Πίσω', html: ICON.back }),
       brandMark(true),
       h('div', { class: 'spacer' }),
       saveState,
-      h('button', { class: 'btn primary', onclick: () => openShare(o) }, h('span', { html: ICON.share }), 'Αποστολή link')),
+      EMBED
+        ? h('button', { class: 'btn primary', onclick: async e => { const b = e.currentTarget; b.disabled = true; await flush(); await sendToChat(o); b.disabled = false; } }, h('span', { html: ICON.share }), 'Στείλε στη συνομιλία')
+        : h('button', { class: 'btn primary', onclick: () => openShare(o) }, h('span', { html: ICON.share }), 'Αποστολή link')),
     ed, tabs);
   document.title = (o.project.title || 'Νέο ordino') + ' · Roardino';
   refresh();
