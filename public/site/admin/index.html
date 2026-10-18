@@ -258,6 +258,16 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 .switch input::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
 .switch input:checked { background: var(--red); }
 .switch input:checked::after { transform: translateX(18px); }
+/* BTS: the set photos as tiles, a caption under each */
+.btsph { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.bp { position: relative; border-radius: 16px; overflow: hidden; background: rgba(255,255,255,.04); border: 1px solid var(--edge); user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.bp .ph { aspect-ratio: 4 / 3; background: #18181b center / cover; }
+.bp .x { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 9px; border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 16px; line-height: 1; cursor: pointer; }
+.bp .x:hover { background: var(--red); }
+.bp input { width: 100%; height: 38px; border: 0; border-top: 1px solid var(--edge); border-radius: 0; background: transparent; font-size: 13px; padding: 0 12px; }
+@media (hover: hover) { .bp .ph { cursor: grab; } }
+.bp.dragging { border-color: var(--red); box-shadow: 0 0 0 2px var(--red), 0 14px 40px rgba(212,0,0,.25); transform: scale(1.03); z-index: 2; }
+.bp.up { opacity: .55; }
 .photos { display: flex; gap: 8px; flex-wrap: wrap; }
 .photo { position: relative; width: 92px; height: 115px; border-radius: 12px; background: #18181b center / cover; border: 1px solid var(--edge); }
 .photo button { position: absolute; top: 5px; right: 5px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0,0,0,.7); cursor: pointer; }
@@ -317,6 +327,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 
 <svg width="0" height="0" style="position:absolute">
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></symbol>
   <symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></symbol>
   <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></symbol>
   <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></symbol>
@@ -359,6 +370,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
         <button type="button" data-tab="work"><svg class="i"><use href="#i-film"/></svg><span>Work</span></button>
         <button type="button" data-tab="leads"><svg class="i"><use href="#i-mail"/></svg><span>Enquiries</span><b class="count" id="newCount" hidden></b></button>
         <button type="button" data-tab="shop"><svg class="i"><use href="#i-bag"/></svg><span>Shop</span></button>
+        <button type="button" data-tab="bts"><svg class="i"><use href="#i-cam"/></svg><span>BTS</span></button>
         <button type="button" data-tab="people"><svg class="i"><use href="#i-users"/></svg><span>People</span></button>
         <button type="button" data-tab="look"><svg class="i"><use href="#i-sun"/></svg><span>Look</span></button>
       </nav>
@@ -417,6 +429,15 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
         <button class="btn red" type="button" id="newProduct"><svg class="i"><use href="#i-plus"/></svg>New product</button>
       </div>
       <div class="products" id="products"></div>
+    </section>
+
+    <section data-pane="bts" hidden>
+      <div class="head">
+        <div><h1>Behind the scenes</h1><p>Photos from our sets, in their order: drag one to move it (on a phone, hold it for a moment first), write under it if you like, × removes it. The site shows the first 8 with the behind the scenes videos (the films with the Behind the Scenes category in Work), and all of them behind See everything.</p></div>
+        <span class="grow"></span>
+        <button class="btn red" type="button" id="btsAdd"><svg class="i"><use href="#i-plus"/></svg>Add photos</button>
+      </div>
+      <div class="btsph" id="btsPhotos"></div>
     </section>
 
     <section data-pane="people" hidden>
@@ -535,6 +556,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
   </div>
   <div class="df"><button class="btn danger" type="button" id="cDelete">Delete</button><span class="grow"></span><button class="btn" type="button" data-close>Cancel</button><button class="btn red" type="submit" id="cSave">Save</button></div>
 </form>
+<input type="file" id="btsPick" accept="image/jpeg,image/png,image/webp" multiple hidden>
 <input type="file" id="personPick" accept="image/jpeg,image/png,image/webp" hidden>
 <input type="file" id="clientPick" accept="image/jpeg,image/png,image/webp" hidden>
 
@@ -600,7 +622,7 @@ function go(tab) {
   document.querySelectorAll('#nav button').forEach((x) => x.classList.toggle('on', x.dataset.tab === tab))
   document.querySelectorAll('[data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== tab })
   scrollTo({ top: 0 })
-  ;({ overview: loadOverview, work: loadWorks, leads: loadLeads, shop: loadProducts, people: loadPeople, look: loadLook })[tab]()
+  ;({ overview: loadOverview, work: loadWorks, leads: loadLeads, shop: loadProducts, people: loadPeople, bts: loadBts, look: loadLook })[tab]()
 }
 $('nav').onclick = (e) => { const b = e.target.closest('button'); if (b) go(b.dataset.tab) }
 document.addEventListener('click', (e) => { const g = e.target.closest('[data-go]'); if (g) go(g.dataset.go) })
@@ -1218,6 +1240,90 @@ function sortable(box, list, table) {
 }
 sortable($('team'), () => team, 'site_team')
 sortable($('clients'), () => clients, 'site_clients')
+
+/* ---------- behind the scenes: set photos in site_settings.bts_photos [{ url, caption }] (Alex, 18 Oct) ---------- */
+let btsPhotos = [], btsLoaded = false
+async function loadBts() {
+  try { const r = await rest('site_settings?key=eq.bts_photos&select=value'); btsPhotos = Array.isArray(r?.[0]?.value) ? r[0].value : [] } catch (e) { toast(e.message); return }
+  btsLoaded = true; renderBts()
+}
+function renderBts() {
+  $('btsPhotos').innerHTML = btsPhotos.length ? btsPhotos.map((p, i) => `<div class="bp ${p.up ? 'up' : ''}" data-i="${i}"><div class="ph" style="background-image:url('${esc(p.url)}')"></div><button class="x" type="button" data-x title="Remove">×</button><input data-cap value="${esc(p.caption || '')}" placeholder="${p.up ? 'Uploading…' : 'A line under it (optional)'}" maxlength="120"></div>`).join('')
+    : '<div class="empty">No photos yet. Press Add photos.</div>'
+}
+const saveBts = () => setSetting('bts_photos', btsPhotos.filter((p) => !p.up).map((p) => ({ url: p.url, caption: (p.caption || '').trim() })))
+let btsTimer = null
+const btsLater = () => { clearTimeout(btsTimer); btsTimer = setTimeout(() => saveBts().then(() => toast('Saved')).catch((e) => toast(e.message)), 800) }
+$('btsAdd').onclick = () => $('btsPick').click()
+// big phone photos are made 2400 px on the long side (JPEG) before they go up, so the site stays fast
+const shrink = (file) => new Promise((res) => {
+  const im = new Image(); im.onload = () => {
+    const k = Math.min(1, 2400 / Math.max(im.naturalWidth, im.naturalHeight))
+    if (k === 1 && file.size < 1.5e6) { URL.revokeObjectURL(im.src); res(file); return }
+    const c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k)
+    c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(im.src)
+    c.toBlob((b) => res(b ? new File([b], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file), 'image/jpeg', 0.86)
+  }
+  im.onerror = () => res(file); im.src = URL.createObjectURL(file)
+})
+$('btsPick').onchange = async (e) => {
+  const files = [...e.target.files]; e.target.value = ''
+  if (!files.length) return
+  if (!btsLoaded) await loadBts()
+  const slots = files.map((f) => ({ url: URL.createObjectURL(f), caption: '', up: true }))
+  btsPhotos.unshift(...slots); renderBts()
+  let ok = 0
+  for (let n = 0; n < files.length; n++) {
+    try { slots[n].url = await upload(await shrink(files[n]), 'bts'); delete slots[n].up; ok++ } catch (err) { btsPhotos = btsPhotos.filter((p) => p !== slots[n]); toast(err.message) }
+    renderBts()
+  }
+  try { await saveBts(); toast(ok === 1 ? 'Photo added · on the site' : `${ok} photos added · on the site`) } catch (err) { toast(err.message) }
+}
+$('btsPhotos').oninput = (e) => { const t = e.target.closest('[data-cap]'); if (!t) return; btsPhotos[t.closest('[data-i]').dataset.i].caption = t.value; btsLater() }
+$('btsPhotos').onclick = async (e) => {
+  if (!e.target.closest('[data-x]') || Date.now() - btsDragged < 400) return
+  const i = Number(e.target.closest('[data-i]').dataset.i)
+  if (btsPhotos[i].up || !confirm('Remove this photo from the site?')) return
+  btsPhotos.splice(i, 1); renderBts()
+  try { await saveBts(); toast('Removed') } catch (err) { toast(err.message); loadBts() }
+}
+// drag a photo to its new place: the mouse lifts it as soon as it moves, a finger after holding it a moment
+let btsDrag = null, btsDragged = 0
+$('btsPhotos').addEventListener('pointerdown', (e) => {
+  if (e.button > 0 || e.target.closest('button, input')) return
+  const tile = e.target.closest('.bp'); if (!tile) return
+  btsDrag = { el: tile, x: e.clientX, y: e.clientY, on: false, mouse: e.pointerType === 'mouse' }
+  if (!btsDrag.mouse) btsDrag.timer = setTimeout(() => { if (btsDrag) { btsDrag.on = true; tile.classList.add('dragging'); navigator.vibrate?.(8) } }, 320)
+})
+window.addEventListener('pointermove', (e) => {
+  const d = btsDrag; if (!d) return
+  if (!d.on) {
+    const far = Math.hypot(e.clientX - d.x, e.clientY - d.y)
+    if (d.mouse && far > 6) { d.on = true; d.el.classList.add('dragging') } else if (!d.mouse && far > 8) { clearTimeout(d.timer); btsDrag = null }
+    return
+  }
+  const box = $('btsPhotos'), over = document.elementFromPoint(e.clientX, e.clientY)?.closest('.bp')
+  if (!over || over === d.el || !box.contains(over)) return
+  const tiles = [...box.children], order = tiles.filter((t) => t !== d.el)
+  order.splice(tiles.indexOf(over), 0, d.el)
+  const at = order.indexOf(d.el)
+  order.forEach((t, n) => { if (t !== d.el) n < at ? box.insertBefore(t, d.el) : box.appendChild(t) })
+})
+const btsDrop = async () => {
+  const d = btsDrag; btsDrag = null
+  if (!d) return
+  clearTimeout(d.timer)
+  if (!d.on) return
+  btsDragged = Date.now()
+  const next = [...$('btsPhotos').children].map((t) => btsPhotos[t.dataset.i])
+  const moved = next.some((p, i) => p !== btsPhotos[i])
+  btsPhotos = next; renderBts()
+  if (moved) try { await saveBts(); toast('New order saved') } catch (err) { toast(err.message); loadBts() }
+}
+window.addEventListener('pointerup', btsDrop)
+window.addEventListener('pointercancel', btsDrop)
+document.addEventListener('touchend', btsDrop)
+document.addEventListener('touchmove', (e) => { if (btsDrag?.on) e.preventDefault() }, { passive: false })
 
 function openPerson(m) {
   editPerson = m ? { ...m } : { name: '', role: '', role_el: '', photo: '', visible: true }
