@@ -403,6 +403,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
       <div class="head">
         <div><h1>Work</h1><p>The films on the site, in their order. Drag or use the arrows to move one, the eye hides one, a click edits it. The first 20 are on the home page.</p></div>
         <span class="grow"></span>
+        <button class="btn danger" type="button" id="hideAll" hidden>Hide all</button>
         <button class="btn" type="button" id="editCats">Categories</button>
         <button class="btn red" type="button" id="addWork"><svg class="i"><use href="#i-plus"/></svg>Add a film</button>
       </div>
@@ -751,7 +752,35 @@ async function loadWorks() {
   $('works').innerHTML = '<div class="skel" style="aspect-ratio:16/11;border-radius:18px"></div>'.repeat(8)
   try { works = await rest('site_works?select=*&order=position.asc,created_at.desc') } catch (e) { toast(e.message); return }
   if (!catList) await loadCats()
+  try { const r = await rest('site_settings?key=eq.works_hidden_all&select=value'); hiddenAll = Array.isArray(r?.[0]?.value) ? r[0].value : [] } catch (e) { hiddenAll = [] }
   renderWorks()
+}
+/* Hide all (Alex, 18 Oct): every film off the site in one go, asked twice. The films it hid are remembered
+   (site_settings.works_hidden_all), so Show them again brings back exactly those and leaves the ones hidden before. */
+let hiddenAll = []
+function renderHideAll() {
+  const b = $('hideAll'), on = works.some((w) => w.visible), back = hiddenAll.filter((id) => works.some((w) => w.id === id && !w.visible))
+  b.hidden = !on && !back.length
+  b.textContent = on ? 'Hide all' : `Show them again (${back.length})`
+  b.classList.toggle('danger', on)
+}
+$('hideAll').onclick = async () => {
+  const on = works.filter((w) => w.visible)
+  try {
+    if (on.length) {
+      if (!confirm(`Hide all ${on.length} films from the site?`)) return
+      if (!confirm('Are you sure? The site will show no films at all until you show them again.')) return
+      await rest('site_works?visible=eq.true', { method: 'PATCH', body: JSON.stringify({ visible: false }), headers: { Prefer: 'return=minimal' } })
+      hiddenAll = on.map((w) => w.id); await setSetting('works_hidden_all', hiddenAll)
+      on.forEach((w) => { w.visible = false }); renderWorks(); toast(`${on.length} films hidden · the site shows none`)
+    } else {
+      const back = works.filter((w) => hiddenAll.includes(w.id) && !w.visible)
+      if (!back.length || !confirm(`Show the ${back.length} films again?`)) return
+      await rest(`site_works?id=in.(${back.map((w) => w.id).join(',')})`, { method: 'PATCH', body: JSON.stringify({ visible: true }), headers: { Prefer: 'return=minimal' } })
+      hiddenAll = []; await setSetting('works_hidden_all', [])
+      back.forEach((w) => { w.visible = true }); renderWorks(); toast(`${back.length} films back on the site`)
+    }
+  } catch (err) { toast(err.message); loadWorks() }
 }
 /* Work > Categories: fix a name (its films follow), give it a Greek name, add one, delete one */
 let catEdit = []
@@ -827,6 +856,7 @@ $('catDrawer').onsubmit = async (e) => {
 }
 $('workSearch').oninput = () => renderWorks()
 function renderWorks() {
+  renderHideAll()
   $('workCats').innerHTML = ['All', ...allCats(), AIB].map((c) => `<button type="button" class="chip ${c === workCat ? 'on' : ''}" data-c="${esc(c)}">${esc(c)}</button>`).join('')
   const q = $('workSearch').value.trim().toLowerCase()
   const shown = works.filter((w) => (workCat === 'All' || (workCat === AIB ? w.aibsent : (w.categories || []).includes(workCat))) && (!q || `${w.title} ${w.client || ''}`.toLowerCase().includes(q)))
