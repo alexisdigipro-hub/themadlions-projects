@@ -733,9 +733,10 @@ function play(w) {
   document.body.style.overflow = 'hidden'
   if (w.k === 'pc') { playPcloud(w); return }
   const src = w.k === 'yt'
-    ? `https://www.youtube-nocookie.com/embed/${w.id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`
+    // youtube.com with the page as referrer (Alex, 18 Oct: the no-cookie player showed "An error occurred" for some films)
+    ? `https://www.youtube.com/embed/${w.id}?autoplay=1&rel=0&modestbranding=1&playsinline=1&origin=${encodeURIComponent(location.origin)}`
     : `https://player.vimeo.com/video/${w.id}?autoplay=1&title=0&byline=0&portrait=0&dnt=1`
-  frame.innerHTML = `<iframe src="${src}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title=""></iframe>`
+  frame.innerHTML = `<iframe src="${src}" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen title=""></iframe>`
 }
 // pCloud: ask for the file's address (without a Referer, which pCloud refuses from other sites) and play it here
 async function playPcloud(w) {
