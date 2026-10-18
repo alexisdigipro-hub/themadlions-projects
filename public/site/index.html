@@ -168,7 +168,7 @@ h2 b { font-weight: 800; }
 
 /* clients: a wall of tiles, ready to take each client's logo */
 .clients { border-top: 1px solid var(--line); }
-.logos { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-top: 44px; }
+.logos { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 44px; }
 .logo { height: 104px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--line); display: grid; place-items: center; padding: 18px; text-align: center; transition: background .3s, border-color .3s; }
 .logo:hover { background: var(--bg-3); border-color: color-mix(in srgb, var(--hi) 20%, transparent); }
 .logo img { max-height: 46px; max-width: 80%; opacity: .8; transition: opacity .3s; }
@@ -245,9 +245,9 @@ footer .wordmark { width: 130px; opacity: .6; }
   .svc-grid, .steps { grid-template-columns: 1fr; }
   .svc { min-height: 340px; }
   .two { grid-template-columns: 1fr; }
-  .logos { grid-template-columns: repeat(2, 1fr); }
-  .logo { height: 84px; }
-  .logo span { font-size: 14px; }
+  .logos { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .logo { border-radius: 10px; }
+  .logo span { font-size: 10px; letter-spacing: .02em; }
   .player { padding: 64px 0; }
   .player .frame { border-radius: 0; }
 }
@@ -291,6 +291,21 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
 .aib-works .tile:first-child { grid-column: 1 / -1; }
 .badge-aib { position: absolute; top: 10px; left: 10px; z-index: 1; height: 22px; padding: 0 9px; border-radius: 7px; display: inline-flex; align-items: center; font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.18); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 @media (max-width: 900px) { .aib { grid-template-columns: 1fr; } }
+/* the clients as a wall of white squares, each logo in black (Alex, 18 Oct); a client without a logo yet shows its
+   name the same way. The logo files are already the white square (site bucket, clients/logo-*.png) */
+/* nine to a row, two rows, the squares side by side with no gaps between them (Alex, 18 Oct) */
+.logos { grid-template-columns: repeat(9, 1fr); gap: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.logo { height: auto; aspect-ratio: 1; padding: 0; overflow: hidden; background: #fff; border: 0; border-radius: 0; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.08); transition: background .3s; }
+.logo:hover { background: #fff; }
+.logo img { transition: transform .4s cubic-bezier(.2,.7,.2,1); }
+.logo:hover img { transform: scale(1.06); }
+.logo img, .logo img.mono { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: cover; opacity: 1; filter: none; }
+html[data-theme='light'] .logo img.mono { filter: none; }
+.logo span { padding: 0 10%; color: #111; font-size: 14px; font-weight: 700; letter-spacing: .04em; line-height: 1.2; overflow-wrap: anywhere; }
+.logo:hover span { color: #111; }
+html[data-theme='light'] .logos { box-shadow: 0 0 0 1px rgba(0,0,0,.08), 0 10px 30px rgba(0,0,0,.06); }
+@media (max-width: 900px) { .logos { grid-template-columns: repeat(6, 1fr); } .logo span { padding: 0 6%; font-size: 10px; letter-spacing: 0; } }
+@media (max-width: 620px) { .logos { gap: 0; border-radius: 12px; } .logo { border-radius: 0; } .logo span { font-size: 8px; } }
 </style>
 </head>
 <body>
