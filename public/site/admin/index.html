@@ -159,6 +159,11 @@ main { padding: 26px var(--pad) 90px; min-width: 0; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 /* frames from inside a YouTube film to use as its picture (Alex, 18 Oct) */
 .yframes { display: grid; gap: 8px; margin-top: 4px; }
+/* a frame from the film's own file, chosen by scrolling through it (Alex, 18 Oct) */
+.scrub { display: grid; gap: 8px; margin-top: 6px; padding: 10px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid var(--edge); }
+.scrub video { display: block; width: 100%; max-height: 340px; border-radius: 10px; background: #000; }
+.scrub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.scrub-row .hint { min-width: 70px; text-align: center; font-variant-numeric: tabular-nums; }
 .yfrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .yf { position: relative; padding: 0; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; border: 1px solid var(--edge); background: rgba(255,255,255,.04); cursor: pointer; transition: border-color .2s, transform .2s; }
 .yf:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.3); }
@@ -519,8 +524,21 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
   <div class="db">
     <label class="f"><span>YouTube, Vimeo or pCloud link</span><input name="video" placeholder="https://youtu.be/… · https://vimeo.com/… · https://e.pcloud.link/publink/show?code=…" autocomplete="off"><span class="hint">Paste it and the title and picture come by themselves. A pCloud film plays from your pCloud, so every view uses its link traffic.</span></label>
     <div class="f"><span>Picture &amp; framing · drag the picture to move it, the slider zooms</span><div id="wFramer"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn sm" type="button" id="wCoverUp"><svg class="i"><use href="#i-plus"/></svg>Use my own picture</button><button class="btn sm danger" type="button" id="wCoverRm" hidden>Back to the video's still</button><span class="hint" id="wCoverHint">Now: the video's own still</span></div>
-      <div class="yframes" id="wFrames" hidden><span class="hint">Or a frame from inside the film, without the still's text and logos:</span><div class="yfrow" id="wFrameRow"></div></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn sm" type="button" id="wCoverUp"><svg class="i"><use href="#i-plus"/></svg>Use my own picture</button><button class="btn sm" type="button" id="wVidUp"><svg class="i"><use href="#i-plus"/></svg>Pick a frame from the video file</button><button class="btn sm danger" type="button" id="wCoverRm" hidden>Back to the video's still</button><span class="hint" id="wCoverHint">Now: the video's own still</span></div>
+      <div class="yframes" id="wFrames" hidden><span class="hint">Or a frame from inside the film, without the still's text and logos:</span><div class="yfrow" id="wFrameRow"></div></div>
+      <div class="scrub" id="wScrub" hidden>
+        <video id="wVid" playsinline muted controls preload="auto"></video>
+        <div class="scrub-row">
+          <button class="btn sm" type="button" data-step="-1">−1 s</button>
+          <button class="btn sm" type="button" data-step="-0.04">−1 frame</button>
+          <span class="hint" id="wVidTime">0:00.00</span>
+          <button class="btn sm" type="button" data-step="0.04">+1 frame</button>
+          <button class="btn sm" type="button" data-step="1">+1 s</button>
+          <span class="grow"></span>
+          <button class="btn sm" type="button" id="wVidClose">Close</button>
+          <button class="btn sm red" type="button" id="wVidUse">Use this frame</button>
+        </div>
+      </div></div>
     <label class="f"><span>Title</span><input name="title" maxlength="160"></label>
     <div class="two">
       <label class="f"><span>Client or artist</span><input name="client" maxlength="160"></label>
@@ -603,6 +621,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 <input type="file" id="filePick" accept="image/jpeg,image/png,image/webp" multiple hidden>
 <input type="file" id="heroPick" accept="image/jpeg,image/png,image/webp" hidden>
 <input type="file" id="coverPick" accept="image/jpeg,image/png,image/webp" hidden>
+<input type="file" id="vidPick" accept="video/*" hidden>
 
 <script>
 const SUPABASE_URL = 'https://naibamqexcqnqhbbqafa.supabase.co'
@@ -666,7 +685,7 @@ function go(tab) {
 $('nav').onclick = (e) => { const b = e.target.closest('button'); if (b) go(b.dataset.tab) }
 document.addEventListener('click', (e) => { const g = e.target.closest('[data-go]'); if (g) go(g.dataset.go) })
 function openDrawer(el) { el.classList.add('on'); $('scrim').classList.add('on') }
-function closeDrawers() { document.querySelectorAll('.drawer').forEach((d) => d.classList.remove('on')); $('scrim').classList.remove('on') }
+function closeDrawers() { document.querySelectorAll('.drawer').forEach((d) => d.classList.remove('on')); $('scrim').classList.remove('on'); if (!$('wScrub').hidden) closeScrub() }
 $('scrim').onclick = closeDrawers
 document.querySelectorAll('[data-close]').forEach((b) => { b.onclick = closeDrawers })
 addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawers() })
@@ -986,6 +1005,7 @@ function renderWorkCats() {
 $('wCats').onclick = (e) => { const b = e.target.closest('[data-c]'); if (!b) return; const s = editingWork.categories, i = s.indexOf(b.dataset.c); i < 0 ? s.push(b.dataset.c) : s.splice(i, 1); renderWorkCats() }
 $('wNewCat').onkeydown = (e) => { if (e.key !== 'Enter') return; e.preventDefault(); const v = e.target.value.trim(); if (v && !editingWork.categories.includes(v)) { editingWork.categories.push(v); if (!BASE_CATS.includes(v)) { BASE_CATS.push(v); if (catList) { catList.push({ en: v, el: '' }); setSetting('categories', catList).catch(() => {}) } } } e.target.value = ''; renderWorkCats() }
 function openWork(w) {
+  if (!$('wScrub').hidden) closeScrub()
   editingWork = w ? { ...w, categories: [...(w.categories || [])] } : { title: '', client: '', year: new Date().getFullYear(), categories: [], video: '', visible: true }
   editingWork.aibKinds = [...((w && aibKinds[w.id]) || [])]
   const f = $('workDrawer')
@@ -1037,6 +1057,45 @@ function showPreview() {
   renderYtFrames(v)
 }
 $('wCoverUp').onclick = () => $('coverPick').click()
+/* the film's own file (the master on this computer): scroll through it, stop on a frame, and that frame, at the
+   file's full quality (up to 2400 px wide), becomes the film's picture. Nothing of the video is uploaded, only the frame */
+const vid = $('wVid')
+const vidTime = () => { const t = vid.currentTime || 0; $('wVidTime').textContent = `${Math.floor(t / 60)}:${(t % 60).toFixed(2).padStart(5, '0')}` }
+function closeScrub() { vid.pause(); $('wScrub').hidden = true; if (vid.dataset.url) { URL.revokeObjectURL(vid.dataset.url); delete vid.dataset.url } vid.removeAttribute('src'); vid.load() }
+$('wVidUp').onclick = () => $('vidPick').click()
+$('vidPick').onchange = (e) => {
+  const file = e.target.files[0]; e.target.value = ''
+  if (!file) return
+  if (vid.dataset.url) URL.revokeObjectURL(vid.dataset.url)
+  vid.dataset.url = URL.createObjectURL(file)
+  vid.onloadedmetadata = () => { vid.currentTime = Math.min(5, (vid.duration || 0) / 3); vidTime() }
+  vid.onerror = () => { toast('This browser cannot play that file. Try an MP4 or a MOV.'); closeScrub() }
+  vid.src = vid.dataset.url
+  $('wScrub').hidden = false
+  $('wScrub').scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+}
+vid.ontimeupdate = vidTime; vid.onseeked = vidTime
+$('wScrub').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-step]'); if (!b || !vid.duration) return
+  vid.pause(); vid.currentTime = Math.max(0, Math.min(vid.duration, vid.currentTime + Number(b.dataset.step))); vidTime()
+})
+$('wVidClose').onclick = closeScrub
+$('wVidUse').onclick = async () => {
+  if (!vid.videoWidth) return
+  vid.pause()
+  const k = Math.min(1, 2400 / vid.videoWidth), c = document.createElement('canvas')
+  c.width = Math.round(vid.videoWidth * k); c.height = Math.round(vid.videoHeight * k)
+  c.getContext('2d').drawImage(vid, 0, 0, c.width, c.height)
+  const blob = await new Promise((res) => c.toBlob(res, 'image/jpeg', 0.9))
+  if (!blob) { toast('Could not take that frame'); return }
+  $('wVidUse').disabled = true; toast('Uploading the frame…')
+  const path = `works/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.jpg`
+  try {
+    await api(`storage/v1/object/site/${path}`, { method: 'POST', body: blob, headers: { 'Content-Type': 'image/jpeg' } })
+    editingWork.cover = `${SUPABASE_URL}/storage/v1/object/public/site/${path}`
+    closeScrub(); showPreview(); toast('Frame in · frame it and press Save')
+  } catch (err) { toast(err.message) } finally { $('wVidUse').disabled = false }
+}
 $('coverPick').onchange = async (e) => {
   const file = e.target.files[0]; e.target.value = ''
   if (!file) return
