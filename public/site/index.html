@@ -333,6 +333,23 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
 @media (max-width: 1280px) { .svc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (max-width: 900px) { .svc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .svc { min-height: 300px; } }
 @media (max-width: 560px) { .svc-grid { grid-template-columns: 1fr; } .svc { min-height: 240px; } }
+/* behind the scenes (Alex, 18 Oct): out of Work into its own section, set photos and videos, a few here and all of them in a full view */
+.bts { border-top: 1px solid var(--line); }
+.bts > .label, .bts > h2, .btsall > .label, .btsall > h2 { text-align: center; }
+.bts-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 44px; }
+.bts-grid .tile { aspect-ratio: 4 / 3; }
+.bts-grid .tile.ph img { filter: none; }
+.bts-grid .tile.ph::after { background: linear-gradient(180deg, transparent 62%, rgba(0,0,0,.6)); }
+.bts-grid .tile.ph:not(.has-cap)::after { display: none; }
+.btsall { position: fixed; inset: 0; z-index: 45; overflow-y: auto; overscroll-behavior: contain; background: var(--bg); padding: calc(84px + env(safe-area-inset-top)) var(--pad) 80px; opacity: 0; pointer-events: none; transition: opacity .3s; }
+.btsall.open { opacity: 1; pointer-events: auto; }
+.btsall .close { position: fixed; right: var(--pad); top: calc(16px + env(safe-area-inset-top)); z-index: 1; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--glass-edge); background: var(--glass); color: var(--text); font-size: 22px; cursor: pointer; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.player .pnav { display: none; position: absolute; top: 50%; z-index: 1; width: 48px; height: 48px; margin-top: -24px; border-radius: 50%; border: 1px solid var(--glass-edge); background: rgba(255,255,255,.08); color: #f2f0ec; font-size: 28px; line-height: 1; cursor: pointer; }
+.player .pnav.prev { left: 12px; } .player .pnav.next { right: 12px; }
+.player.photo .pnav { display: grid; place-items: center; }
+.player.photo .frame { aspect-ratio: auto; height: min(80vh, 100%); background: transparent; box-shadow: none; }
+.player .frame > img { width: 100%; height: 100%; object-fit: contain; display: block; }
+@media (max-width: 900px) { .bts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; } .player .pnav { top: auto; bottom: calc(20px + env(safe-area-inset-bottom)); margin-top: 0; } .player .pnav.prev { left: calc(50% - 60px); } .player .pnav.next { right: calc(50% - 60px); } }
 /* Services, How we work, About and Clients: the titles and their texts centred (Alex, 18 Oct); the cards keep their own layout */
 .services > .label, .services > h2, .process > .label, .process > h2, .clients > .label, .clients > h2 { text-align: center; }
 .services > .sub { margin-left: auto; margin-right: auto; text-align: center; }
@@ -439,6 +456,13 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
     <div class="logos reveal" id="logos"></div>
   </section>
 
+  <section id="bts" class="bts" hidden>
+    <p class="label reveal" data-t="bts.label">Behind the scenes</p>
+    <h2 class="reveal" data-t="bts.title" data-html>On set <b>with us.</b></h2>
+    <div class="bts-grid" id="btsGrid"></div>
+    <div class="more"><button class="pill" id="btsAll" type="button" data-t="bts.all">See everything</button></div>
+  </section>
+
   <section id="shop" class="shop" hidden>
     <p class="label reveal" data-t="shop.label">Shop</p>
     <h2 class="reveal" data-t="shop.title" data-html>Mad <b>merch.</b></h2>
@@ -483,9 +507,18 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
   <span data-t="footer">© 2026 The Mad Lions · Film production house</span>
 </footer>
 
+<div class="btsall" id="btsView" role="dialog" aria-modal="true" aria-label="Behind the scenes">
+  <button class="close" id="btsClose" type="button" aria-label="Close">×</button>
+  <p class="label" data-t="bts.label">Behind the scenes</p>
+  <h2 data-t="bts.title" data-html>On set <b>with us.</b></h2>
+  <div class="bts-grid" id="btsAllGrid"></div>
+</div>
+
 <div class="player" id="player" role="dialog" aria-modal="true" aria-label="Film">
   <div class="title" id="ptitle"></div>
   <button class="close" id="pclose" type="button" aria-label="Close">×</button>
+  <button class="pnav prev" id="pprev" type="button" aria-label="Previous">‹</button>
+  <button class="pnav next" id="pnext" type="button" aria-label="Next">›</button>
   <div class="frame" id="pframe"></div>
 </div>
 
@@ -509,6 +542,7 @@ const T = {
     'about.lead': 'We design, shoot and edit film for any screen. Our work is steeped in <b>cinematic legacy</b>, and made to stay with the people who watch it.',
     'about.quote': '"No matter what people tell you, words and ideas can change the world." Robin Williams',
     'clients.label': 'Clients', 'clients.title': "Brands <b>we've filmed for.</b>",
+    'bts.label': 'Behind the scenes', 'bts.title': 'On set <b>with us.</b>', 'bts.all': 'See everything',
     'contact.label': 'Contact', 'contact.title': 'Tell us about <b>your project.</b>', 'contact.sub': 'A few lines are enough. We answer within a working day.',
     'f.kind': 'What are you making?', 'f.budget': 'Budget', 'f.name': 'Name', 'f.email': 'Email', 'f.company': 'Company or artist',
     'f.when': 'When do you need it?', 'f.whenPh': 'e.g. end of November', 'f.msg': 'Tell us more', 'f.msgPh': 'The idea, the format, where it will be seen…',
@@ -530,6 +564,7 @@ const T = {
     'about.lead': 'Σχεδιάζουμε, γυρίζουμε και μοντάρουμε ταινίες για κάθε οθόνη. Η δουλειά μας πατάει στην <b>κινηματογραφική παράδοση</b> και φτιάχνεται για να μένει σε όποιον τη βλέπει.',
     'about.quote': '«Ό,τι κι αν σου πουν, οι λέξεις και οι ιδέες μπορούν να αλλάξουν τον κόσμο.» Robin Williams',
     'clients.label': 'Πελάτες', 'clients.title': 'Brands <b>που δουλέψαμε μαζί.</b>',
+    'bts.label': 'Πίσω από τις κάμερες', 'bts.title': 'Στο <b>γύρισμα.</b>', 'bts.all': 'Δες τα όλα',
     'contact.label': 'Επαφή', 'contact.title': 'Πείτε μας για <b>το project σας.</b>', 'contact.sub': 'Λίγες γραμμές αρκούν. Απαντάμε μέσα σε μία εργάσιμη.',
     'f.kind': 'Τι θέλετε να φτιάξετε;', 'f.budget': 'Budget', 'f.name': 'Όνομα', 'f.email': 'Email', 'f.company': 'Εταιρεία ή καλλιτέχνης',
     'f.when': 'Πότε το χρειάζεστε;', 'f.whenPh': 'π.χ. τέλη Νοεμβρίου', 'f.msg': 'Πείτε μας περισσότερα', 'f.msgPh': 'Η ιδέα, το format, πού θα προβληθεί…',
@@ -622,7 +657,7 @@ const SHORT = 20
 function renderFilters() {
   const box = document.getElementById('filters')
   box.innerHTML = ''
-  const used = new Set(WORKS.flatMap((w) => w.c))
+  const used = new Set(WORKS.flatMap((w) => w.c)); used.delete(BTS)
   const cats = [...Object.keys(CATS).filter((c) => used.has(c)), ...[...used].filter((c) => !(c in CATS))]
   for (const c of ['all', ...cats, ...(WORKS.some((w) => w.aib) ? ['aibsent'] : [])]) {
     const b = document.createElement('button')
@@ -634,7 +669,7 @@ function renderFilters() {
   }
 }
 function renderGrid() {
-  const list = WORKS.filter((w) => filter === 'all' || (filter === 'aibsent' ? w.aib : w.c.includes(filter)))
+  const list = WORKS.filter((w) => !w.c.includes(BTS) && (filter === 'all' || (filter === 'aibsent' ? w.aib : w.c.includes(filter))))
   const shown = showAll ? list : list.slice(0, SHORT)
   const grid = document.getElementById('grid')
   grid.innerHTML = ''
@@ -654,6 +689,82 @@ function renderGrid() {
   more.textContent = showAll ? t('work.less') : `${t('work.more')} (${list.length})`
   observe()
 }
+/* behind the scenes: the set photos from Studio > BTS (site_settings.bts_photos) and the films in the Behind the Scenes category,
+   photos and videos in turn; 8 here, all of them in the full view */
+const BTS = 'Behind the Scenes', BTS_HOME = 8
+let btsPhotos = []
+try { btsPhotos = JSON.parse(localStorage.getItem('tml_site_bts') || '[]') || [] } catch (e) {}
+function btsItems() {
+  const v = WORKS.filter((w) => w.c.includes(BTS)), p = btsPhotos.filter((x) => x && x.url).map((x) => ({ photo: x.url, cap: x.caption || '' }))
+  const out = []
+  for (let i = 0; i < Math.max(v.length, p.length); i++) { if (p[i]) out.push(p[i]); if (v[i]) out.push(v[i]) }
+  return out
+}
+function btsTile(it, reveal) {
+  const b = document.createElement('button')
+  b.type = 'button'
+  b.className = `tile${reveal ? ' reveal' : ''}${it.photo ? ' ph' : ''}${it.cap ? ' has-cap' : ''}`
+  if (it.photo) {
+    const im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = it.cap; im.src = it.photo
+    b.appendChild(im)
+    if (it.cap) { b.insertAdjacentHTML('beforeend', '<span class="cap"><strong></strong></span>'); b.querySelector('.cap strong').textContent = it.cap }
+    b.onclick = () => openPhoto(it)
+  } else {
+    b.appendChild(img(it, false))
+    b.insertAdjacentHTML('beforeend', `<span class="play">${PLAY}</span><span class="cap"><strong></strong></span>`)
+    b.querySelector('.cap strong').textContent = it.t
+    b.onclick = () => play(it)
+  }
+  return b
+}
+function renderBts() {
+  const items = btsItems(), sec = document.getElementById('bts'), grid = document.getElementById('btsGrid')
+  sec.hidden = !items.length
+  grid.innerHTML = ''
+  items.slice(0, BTS_HOME).forEach((it) => grid.appendChild(btsTile(it, true)))
+  const all = document.getElementById('btsAll')
+  all.parentElement.style.display = items.length > BTS_HOME ? '' : 'none'
+  all.textContent = `${t('bts.all')} (${items.length})`
+  if (btsView.classList.contains('open')) fillBtsAll()
+  observe()
+}
+const btsView = document.getElementById('btsView')
+function fillBtsAll() { const g = document.getElementById('btsAllGrid'); g.innerHTML = ''; btsItems().forEach((it) => g.appendChild(btsTile(it, false))) }
+function openBtsAll(push) {
+  fillBtsAll(); btsView.scrollTop = 0; btsView.classList.add('open'); document.body.style.overflow = 'hidden'
+  if (push) history.pushState({ bts: 1 }, '', '#behind-the-scenes')
+}
+function closeBtsAll(fromHistory) {
+  if (!btsView.classList.contains('open')) return
+  btsView.classList.remove('open'); if (!player.classList.contains('open')) document.body.style.overflow = ''
+  if (!fromHistory && history.state && history.state.bts) history.back()
+  else if (!fromHistory && location.hash === '#behind-the-scenes') history.replaceState(null, '', location.pathname + location.search)
+}
+document.getElementById('btsAll').onclick = () => openBtsAll(true)
+document.getElementById('btsClose').onclick = () => closeBtsAll(false)
+addEventListener('popstate', () => { if (location.hash === '#behind-the-scenes') openBtsAll(false); else closeBtsAll(true) })
+// a set photo in the big viewer, with the arrows (and the arrow keys) to go through the photos
+let photoAt = -1
+function showPhoto(i) {
+  const list = btsPhotos.filter((x) => x && x.url)
+  if (!list.length) return
+  photoAt = (i + list.length) % list.length
+  const x = list[photoAt]
+  document.getElementById('ptitle').textContent = x.caption || ''
+  frame.innerHTML = ''
+  const im = document.createElement('img'); im.alt = x.caption || ''; im.src = x.url; frame.appendChild(im)
+}
+function openPhoto(it) {
+  player.classList.add('open', 'photo'); document.body.style.overflow = 'hidden'
+  showPhoto(btsPhotos.findIndex((x) => x && x.url === it.photo))
+}
+document.getElementById('pprev').onclick = (e) => { e.stopPropagation(); showPhoto(photoAt - 1) }
+document.getElementById('pnext').onclick = (e) => { e.stopPropagation(); showPhoto(photoAt + 1) }
+addEventListener('keydown', (e) => {
+  if (player.classList.contains('photo') && player.classList.contains('open') && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) showPhoto(photoAt + (e.key === 'ArrowLeft' ? -1 : 1))
+  else if (e.key === 'Escape' && !player.classList.contains('open') && btsView.classList.contains('open')) closeBtsAll(false)
+})
+
 document.getElementById('more').onclick = () => { showAll = !showAll; renderGrid(); if (!showAll) document.getElementById('work').scrollIntoView() }
 
 function renderServices() {
@@ -729,7 +840,7 @@ const player = document.getElementById('player'), frame = document.getElementByI
 function play(w) {
   track('play', w.t)
   document.getElementById('ptitle').textContent = w.t
-  player.classList.add('open')
+  player.classList.add('open'); player.classList.remove('photo')
   document.body.style.overflow = 'hidden'
   if (w.k === 'pc') { playPcloud(w); return }
   const src = w.k === 'yt'
@@ -751,7 +862,7 @@ async function playPcloud(w) {
     if (frame.firstChild === v) frame.innerHTML = '<div class="perr">This film could not load right now. Please try again in a moment.</div>'
   }
 }
-function close() { player.classList.remove('open'); document.body.style.overflow = ''; setTimeout(() => { frame.innerHTML = '' }, 350) }
+function close() { player.classList.remove('open'); document.body.style.overflow = btsView.classList.contains('open') ? 'hidden' : ''; setTimeout(() => { if (!player.classList.contains('open')) { frame.innerHTML = ''; player.classList.remove('photo') } }, 350) }
 document.getElementById('pclose').onclick = close
 player.onclick = (e) => { if (e.target === player) close() }
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && player.classList.contains('open')) close() })
@@ -819,7 +930,7 @@ function applyLang() {
   document.querySelectorAll('[data-t]').forEach((el) => { const v = t(el.dataset.t); if (el.hasAttribute('data-html')) el.innerHTML = v; else el.textContent = v })
   document.querySelectorAll('[data-ph]').forEach((el) => { el.placeholder = t(el.dataset.ph) })
   document.querySelectorAll('.lang button').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang))
-  renderFilters(); renderGrid(); renderServices(); renderAibsent(); renderSteps(); renderAbout(); renderChoices(); if (typeof renderShop === 'function' && products) renderShop(); observe()
+  renderFilters(); renderGrid(); renderBts(); renderServices(); renderAibsent(); renderSteps(); renderAbout(); renderChoices(); if (typeof renderShop === 'function' && products) renderShop(); observe()
 }
 document.querySelectorAll('.lang button').forEach((b) => { b.onclick = () => { lang = b.dataset.lang; try { localStorage.setItem('tml_site_lang', lang) } catch (e) {} applyLang() } })
 
@@ -908,6 +1019,9 @@ async function loadTheme() {
     const hv = rows.some((r) => r.key === 'hero_video') ? get('hero_video') : HERO_VIDEO
     try { localStorage.setItem('tml_site_hero_video', JSON.stringify(hv || {})) } catch (e) {}
     if (JSON.stringify(hv || {}) !== JSON.stringify(heroVideo || {})) { heroVideo = hv; setHeroVideo(hv) }
+    // the set photos from Studio > BTS
+    const bp = get('bts_photos')
+    if (Array.isArray(bp) && JSON.stringify(bp) !== JSON.stringify(btsPhotos)) { btsPhotos = bp; try { localStorage.setItem('tml_site_bts', JSON.stringify(bp)) } catch (e) {} renderBts() }
     // the categories from Studio > Work > Categories: their order and Greek names
     const cl = get('categories')
     if (Array.isArray(cl) && cl.length) { Object.keys(CATS).forEach((k) => delete CATS[k]); cl.forEach((c) => { if (c && c.en) CATS[c.en] = c.el || c.en }); renderFilters(); renderGrid() }
@@ -982,7 +1096,7 @@ async function loadWorks() {
     const rows = await (await api('site_works?visible=eq.true&select=title,client,categories,kind,video_id,image,aibsent,frame,cover&order=position.asc,created_at.desc')).json()
     if (!Array.isArray(rows) || !rows.length) return
     WORKS = rows.filter((r) => r.video_id).map((r) => ({ t: r.title, c: r.categories || [], k: r.kind === 'vm' || r.kind === 'pc' ? r.kind : 'yt', id: r.video_id, img: r.image || '', client: r.client || '', aib: !!r.aibsent, f: r.frame || null, cover: r.cover || '' }))
-    renderFilters(); renderGrid(); renderServices(); renderAibsent(); renderStats(); observe()
+    renderFilters(); renderGrid(); renderBts(); renderServices(); renderAibsent(); renderStats(); observe()
   } catch (e) {}
 }
 
