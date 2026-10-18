@@ -108,7 +108,8 @@ h2 b { font-weight: 800; }
 
 /* the films finished here */
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 40px; }
-.tile { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: var(--bg-2); cursor: pointer; border: 0; padding: 0; text-align: left; }
+/* film tiles 20% lower than 16:9, as on the home page (Alex, 18 Oct) */
+.tile { position: relative; aspect-ratio: 20 / 9; border-radius: 14px; overflow: hidden; background: var(--bg-2); cursor: pointer; border: 0; padding: 0; text-align: left; }
 .tile img { width: 100%; height: 100%; object-fit: cover; transform: scale(calc(var(--z, 1) * 1.01)); transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
 .tile:hover img { transform: scale(calc(var(--z, 1) * 1.06)); }
 /* the kinds of work (Alex, 18 Oct): filters over the films, and the kind as a small chip on each tile */
