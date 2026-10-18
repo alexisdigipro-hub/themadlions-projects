@@ -157,8 +157,48 @@ body.embedded .home .hero-h, body.embedded .home .lede, body.embedded .empty-not
 body.embedded::before{display:none}
 
 /* ---------- Sign in ---------- */
-.auth{max-width:460px;margin:0 auto;padding:clamp(28px,7vw,64px) 16px 80px}
-.auth .hero-h{font-size:clamp(38px,8vw,58px)}
+/* the front page for someone not signed in (Alex, 18 Oct): what it is and the way in on the left, a live ordino on a
+   phone on the right, then what it does, numbered */
+.auth{max-width:1180px;margin:0 auto;padding:clamp(28px,6vw,72px) 16px 40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:clamp(28px,6vw,90px);align-items:center}
+.auth .hero-h{font-size:clamp(44px,5.4vw,76px);margin:16px 0 18px}
+.auth-in{display:flex;flex-direction:column;gap:0;max-width:600px}
+.auth-in .auth-card{margin-top:6px}
+.auth-phone{position:relative;justify-self:center;width:min(360px,100%)}
+.auth-phone::before{content:'';position:absolute;left:8%;right:8%;top:14%;bottom:-4%;background:radial-gradient(closest-side,rgba(212,0,0,.32),transparent);filter:blur(50px);z-index:-1}
+.auth-phone .hand{aspect-ratio:9/18.5;border-radius:44px;border:10px solid #050506;background:#1b1e23;overflow:hidden;box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08)}
+.auth-phone iframe{display:block;width:100%;height:100%;border:0}
+.auth-phone .cap{position:absolute;left:-18px;bottom:5%;display:flex;align-items:center;gap:8px;padding:8px 12px 8px 8px;border-radius:999px;background:rgba(27,30,35,.9);border:1px solid var(--glass-edge);font-size:12px;box-shadow:0 14px 34px rgba(0,0,0,.4)}
+.auth-phone .cap i{width:24px;height:24px;border-radius:50%;background:var(--brand);display:grid;place-items:center;color:#fff}
+.auth-phone .cap i svg{width:14px;height:14px}
+.feats{max-width:1180px;margin:0 auto;padding:30px 16px 40px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-top:1px solid var(--line)}
+.feat{padding:26px 22px 26px 0;display:flex;flex-direction:column;gap:8px;border-right:1px solid var(--line);margin-right:22px}
+.feat:last-child{border-right:0;margin-right:0}
+.feat .no{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px;letter-spacing:.14em;color:var(--brand)}
+.feat b{font-size:17px;font-weight:650}
+.feat p{margin:0;font-size:14.5px;line-height:1.55;color:var(--muted)}
+.roar-strip{max-width:1180px;margin:0 auto 60px;padding:0 16px}
+.roar-strip>div{display:flex;align-items:center;gap:clamp(16px,3vw,36px);padding:clamp(20px,3vw,30px);border-radius:24px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--lit)}
+.roar-strip .ic{flex:none;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,90,80,.6);box-shadow:0 0 0 5px rgba(212,0,0,.16)}
+.roar-strip .ic svg{width:26px;height:26px}
+.roar-strip .tx{flex:1;min-width:0}
+.roar-strip .tx b{display:block;font-size:18px;font-weight:650;margin-bottom:4px}
+.roar-strip .tx span{font-size:14.5px;color:var(--muted);line-height:1.55}
+.auth-foot{max-width:1180px;margin:0 auto;padding:22px 16px calc(28px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.auth-foot a{text-decoration:none;color:var(--muted)} .auth-foot a:hover{color:var(--text)}
+@media (max-width:920px){
+  .auth{grid-template-columns:minmax(0,1fr)}
+  .auth-phone{width:min(300px,82%)}
+  .auth-phone .cap{left:-8px}
+  .feats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .feat:nth-child(2){border-right:0;margin-right:0}
+  .feat:nth-child(-n+2){border-bottom:1px solid var(--line)}
+}
+@media (max-width:560px){
+  .feats{grid-template-columns:minmax(0,1fr)}
+  .feat{border-right:0;margin-right:0;border-bottom:1px solid var(--line);padding:20px 0}
+  .feat:last-child{border-bottom:0}
+  .roar-strip>div{flex-direction:column;align-items:flex-start}
+}
 .auth-card{background:var(--panel);border:1px solid var(--line);border-radius:24px;box-shadow:var(--lit);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);padding:20px;display:flex;flex-direction:column;gap:12px}
 .msg{font-size:14px;line-height:1.5;color:var(--muted);margin:0}
 .msg.err{color:#ff7a70}
@@ -895,13 +935,31 @@ function viewAuth(mode = 'in'){
     }
   });
   draw();
+  const FEATS = [
+    ['Call, πρόγραμμα, τοποθεσία', 'Calls ανά ομάδα, το πρόγραμμα της μέρας, σκηνές, cast και crew, σε ένα όμορφο φύλλο.'],
+    ['Καιρός και δύση, μόνα τους', 'Βάζεις τη διεύθυνση και συμπληρώνονται καιρός, ανατολή και δύση για το μέρος και τη μέρα.'],
+    ['Ένα link για το συνεργείο', 'Ανοίγει σε κάθε κινητό: χάρτης, Waze, κλήση με ένα πάτημα, η μέρα στο ημερολόγιο.'],
+    ['Αλλάζεις, ενημερώνεται', 'Ξαναπατάς Αποστολή και το ίδιο link δείχνει πια τις αλλαγές. Όλα σου τα ordino στον λογαριασμό σου.'],
+  ]
   app.replaceChildren(
     h('header', { class: 'topbar' }, brandMark(), h('div', { class: 'spacer' }), h('a', { class: 'btn small', href: '#demo' }, 'Παράδειγμα')),
     h('main', { class: 'auth' },
-      h('p', { class: 'kicker' }, 'The Mad Lions Lab · Experiment 02'),
-      h('h1', { class: 'hero-h', html: 'Το ordino σου,<br><b>σε ένα link.</b>' }),
-      h('p', { class: 'lede' }, 'Φτιάξε λογαριασμό με το email σου και κράτα όλα τα ordino σου σε ένα μέρος, από κάθε συσκευή.'),
-      card));
+      h('div', { class: 'auth-in' },
+        h('p', { class: 'kicker' }, 'The Mad Lions Lab · Experiment 02'),
+        h('h1', { class: 'hero-h', html: 'Το ordino σου,<br><b>σε ένα link.</b>' }),
+        h('p', { class: 'lede' }, 'Φτιάξε το φύλλο της ημέρας ενός γυρίσματος σε λίγα λεπτά και στείλ’ το στο συνεργείο. Με λογαριασμό, όλα σου τα ordino σε ένα μέρος, από κάθε συσκευή.'),
+        card),
+      h('div', { class: 'auth-phone', 'aria-hidden': 'true' },
+        h('div', { class: 'hand' }, h('iframe', { src: BASE + '#demo', title: 'Ένα ordino σε κινητό', loading: 'lazy', tabindex: '-1' })),
+        h('span', { class: 'cap', html: '<i>' + ICON.share + '</i>Έτσι το βλέπει το συνεργείο' }))),
+    h('section', { class: 'feats' }, FEATS.map(([t, d], i) => h('div', { class: 'feat' }, h('span', { class: 'no' }, '0' + (i + 1)), h('b', {}, t), h('p', {}, d)))),
+    h('section', { class: 'roar-strip' }, h('div', {},
+      h('span', { class: 'ic', html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9.5" width="13" height="10" rx="2.5"/><path d="m16 13 5-2.8v8.6l-5-2.8"/><circle cx="6.5" cy="6" r="2.5"/><circle cx="12.5" cy="6" r="2.5"/><path d="m6 14.3 1.4 1.4 2.6-2.6M11.5 14.5h1.5"/></svg>' }),
+      h('span', { class: 'tx' }, h('b', {}, 'Και μέσα στο RoarMe'), h('span', {}, 'Στο RoarMe, το κουμπί με την κάμερα δίπλα στον συνδετήρα ανοίγει το Roardino ήδη συνδεδεμένο. Διαλέγεις ordino, πατάς Στείλε, και μπαίνει στη συνομιλία ως κάρτα. Ο λογαριασμός σου στο RoarMe δουλεύει και εδώ.')),
+      h('a', { class: 'btn', href: '../roarme/' }, 'Γνώρισε το RoarMe'))),
+    h('footer', { class: 'auth-foot' },
+      h('a', { href: '../' }, '© 2026 The Mad Lions'),
+      h('span', {}, h('a', { href: '../#lab' }, 'The Mad Lions Lab'), ' · ', h('a', { href: '../roarme/' }, 'RoarMe'))));
 }
 
 function openPassword(recovery){
