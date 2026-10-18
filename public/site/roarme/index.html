@@ -275,6 +275,13 @@ h2 b { font-weight: 800; }
 .dl .alt { margin-top: 10px; font-size: 13px; color: var(--muted); }
 .dl .alt a { border-bottom: 1px solid var(--line); }
 .dl .alt a:hover { color: var(--text); }
+.ver { margin: 14px 0 0; display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 500; letter-spacing: .06em; color: var(--text); background: var(--glass); border: 1px solid var(--glass-edge); }
+.ver::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #2fd36b; box-shadow: 0 0 8px rgba(47, 211, 107, .8); }
+/* "beta" beside the name (Alex, 18 Oct), as in the app: a small red-edged tag at the top right of ME */
+.beta { display: inline-block; margin-left: .4em; padding: .2em .6em .22em; border-radius: 999px; font-family: var(--sans); font-style: normal; font-size: max(9px, .17em); font-weight: 600; letter-spacing: .14em; line-height: 1; text-transform: uppercase; vertical-align: top; color: #fff; background: rgba(212, 0, 0, .22); border: 1px solid rgba(255, 70, 60, .7); }
+.bar .home .beta { font-size: 9.5px; margin-left: 6px; align-self: flex-start; }
+.hero h1 .beta { position: relative; top: .35em; }
+@media (max-width: 680px) { .bar .home .beta { display: none; } }
 .dl-help { margin: 22px auto 0; max-width: 760px; text-align: center; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
 
 /* questions: the title left, the answers right, in a panel */
@@ -411,7 +418,7 @@ footer { border-top-color: var(--line); }
   <a class="home" href="../" aria-label="The Mad Lions">
     <img class="wordmark" src="../wordmark.png" alt="The Mad Lions">
     <span class="sep"></span>
-    <span class="rm" aria-label="RoarMe"><span class="a">ROAR</span><span class="b">ME</span></span>
+    <span class="rm" aria-label="RoarMe beta"><span class="a">ROAR</span><span class="b">ME</span></span><em class="beta">beta</em>
   </a>
   <nav aria-label="Sections">
     <a href="#features" data-t="nav.features">Features</a>
@@ -432,7 +439,7 @@ footer { border-top-color: var(--line); }
 <div class="hero">
   <div class="hero-in">
     <p class="kicker rv" data-t="hero.kicker">The messenger for teams, by The Mad Lions</p>
-    <h1 class="rv" style="--d:.08s"><span class="rm"><span class="a">ROAR</span><span class="b">ME</span></span></h1>
+    <h1 class="rv" style="--d:.08s"><span class="rm"><span class="a">ROAR</span><span class="b">ME</span></span><em class="beta">beta</em></h1>
     <span class="by rv" style="--d:.16s">by <b>THE<strong>MAD</strong>LIONS</b></span>
     <p class="lead rv" style="--d:.24s" data-t="hero.lead" data-html><b>No phone number</b>, files up to <b>3&nbsp;GB</b>, <b>secret chats</b> when it matters.</p>
     <div class="cta rv" style="--d:.32s">
@@ -639,7 +646,8 @@ footer { border-top-color: var(--line); }
   <div class="head">
     <p class="label rv" data-t="dl.label">Download</p>
     <h2 class="rv" data-t="dl.title" data-html>Get <b>RoarMe</b>.</h2>
-    <p class="sub rv" data-t="dl.sub">Free. Make an account once and use it everywhere: your chats follow you.</p>
+    <p class="sub rv" data-t="dl.sub">Free, and in beta: it works every day and gets better every week. Make an account once and use it everywhere: your chats follow you.</p>
+    <p class="ver rv" id="dl-ver" hidden></p>
   </div>
   <div class="dl-grid">
     <div class="dl rv" id="dl-mac" data-mine="Your computer">
@@ -685,6 +693,7 @@ footer { border-top-color: var(--line); }
     <details><summary data-t="q7">Are my messages end-to-end encrypted?</summary><p data-t="a7">In a secret chat, yes. Open any chat or group, turn on Encrypted Chat and every message from then on is locked on your device; only the devices of the people in that chat can open it, not RoarMe. Turn it off whenever you like. For now it covers text; photos, files and voice messages wait until it is off. A device you add later cannot read the messages sent before it.</p></details>
     <details><summary data-t="q5">Where are my messages kept?</summary><p data-t="a5">On our provider's servers in London, always sent over an encrypted connection, and in a secret chat locked end to end. You can delete your account, and with it your profile and one-to-one chats, at any time.</p></details>
     <details><summary data-t="q6">Can I use it on several devices?</summary><p data-t="a6">Yes. Sign in on the Mac, the PC, the browser and the phone at the same time; everything stays in step.</p></details>
+    <details><summary data-t="q8">Is RoarMe finished?</summary><p data-t="a8">Not yet: RoarMe is in beta. It works every day, new things arrive all the time, and the apps tell you when a newer version is out. Tell us what you miss at info@themadlions.com.</p></details>
   </div>
   </div>
 </section>
@@ -750,7 +759,7 @@ footer { border-top-color: var(--line); }
     'p2.t': 'Μόνο όποιον διαλέξεις', 'p2.p': 'Σε βρίσκουν από το @όνομά σου ή το link σου. Μπλόκαρε όποιον θες με ένα πάτημα.',
     'p3.t': 'Οι κλήσεις μένουν σε εσάς', 'p3.p': 'Πάνε από συσκευή σε συσκευή. Δεν τις ηχογραφούμε ούτε τις κρατάμε.',
     'p4.t': 'Τα μεγάλα αρχεία φεύγουν', 'p4.p': 'Ένα RoarTransfer σβήνεται μόνο του μετά από 3 μέρες. Η τοποθεσία σου πάει μόνο όταν τη στείλεις.',
-    'dl.label': 'Λήψη', 'dl.title': 'Πάρε το <b>RoarMe</b>.', 'dl.sub': 'Δωρεάν. Κάνε λογαριασμό μία φορά και χρησιμοποίησέ τον παντού: οι συζητήσεις σε ακολουθούν.',
+    'dl.label': 'Λήψη', 'dl.title': 'Πάρε το <b>RoarMe</b>.', 'dl.sub': 'Δωρεάν, και σε beta: δουλεύει κάθε μέρα και γίνεται καλύτερο κάθε εβδομάδα. Κάνε λογαριασμό μία φορά και χρησιμοποίησέ τον παντού: οι συζητήσεις σε ακολουθούν.',
     'dl.mac': 'Για Mac με τσιπ Apple (M1 και νεότερα).', 'dl.btn': 'Λήψη', 'dl.intel': 'Παλιότερο Mac με Intel;', 'dl.intelbtn': 'Αυτό εδώ',
     'dl.win': 'Windows 10 και 11.', 'dl.webt': 'Browser', 'dl.web': 'Chrome, Safari, Edge, Firefox. Τίποτα για εγκατάσταση.',
     'dl.phonet': 'Κινητό', 'dl.phone': 'iPhone και Android: άνοιξέ το και μετά Κοινοποίηση > Προσθήκη στην οθόνη Αφετηρίας. Ανοίγει σαν εφαρμογή.',
@@ -761,6 +770,7 @@ footer { border-top-color: var(--line); }
     'q3': 'Πόσο μεγάλο μπορεί να είναι ένα αρχείο;', 'a3': 'Ως 50 MB κατευθείαν στη συζήτηση, και μένει όσο μένει η συζήτηση. Ως 3 GB με το RoarTransfer, για 3 μέρες, με link που το κατεβάζει όποιος το έχει.',
     'q4': 'Ποιος βλέπει την τοποθεσία μου;', 'a4': 'Μόνο η συζήτηση στην οποία τη στέλνεις, και μόνο όταν πατήσεις Αποστολή. Το RoarMe δεν παρακολουθεί πού βρίσκεσαι.',
     'q5': 'Πού φυλάσσονται τα μηνύματά μου;', 'a5': 'Στους servers του παρόχου μας στο Λονδίνο, πάντα μέσω κρυπτογραφημένης σύνδεσης, και σε μια κρυφή συνομιλία κλειδωμένα από άκρο σε άκρο. Μπορείς να σβήσεις τον λογαριασμό σου, και μαζί το προφίλ και τις προσωπικές συζητήσεις σου, όποτε θες.',
+    'q8': 'Είναι τελειωμένο το RoarMe;', 'a8': 'Όχι ακόμα: το RoarMe είναι σε beta. Δουλεύει κάθε μέρα, νέα πράγματα έρχονται συνέχεια, και οι εφαρμογές σε ειδοποιούν όταν βγαίνει νεότερη έκδοση. Πες μας τι σου λείπει στο info@themadlions.com.',
     'q6': 'Μπορώ να το έχω σε πολλές συσκευές;', 'a6': 'Ναι. Συνδέσου στο Mac, στο PC, στον browser και στο κινητό μαζί· όλα μένουν συγχρονισμένα.',
     'ct.label': 'Επικοινωνία', 'ct.title': 'Ερωτήσεις, ιδέες, <b>Τύπος</b>;',
     'footer': '© 2026 The Mad Lions · RoarMe'
@@ -775,7 +785,7 @@ footer { border-top-color: var(--line); }
     document.documentElement.lang = l === 'el' ? 'el' : 'en'
     document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) })
     ;['mac', 'win', 'web', 'phone'].forEach(function (k) { var e = document.getElementById('dl-' + k); if (e) e.dataset.mine = mineLabel[l === 'el' ? 'el' : 'en'][k] })
-    setMain(l)
+    setMain(l); showVer(l)
     try { localStorage.setItem('tml_site_lang', l) } catch (e) {}
   }
 
@@ -785,12 +795,39 @@ footer { border-top-color: var(--line); }
   var os = phone ? 'phone' : /Windows/i.test(ua) ? 'win' : /Mac/i.test(ua) ? 'mac' : 'web'
   var mine = document.getElementById('dl-' + os)
   if (mine) mine.classList.add('mine')
+  // the installers carry their version and "beta" in the name (Alex, 18 Oct): the links come from the newest
+  // release's own files; the plain names stay on every release as the fallback
+  var REL = 'https://github.com/alexisdigipro-hub/roarme/releases/latest/download/'
+  var FILES = { mac: REL + 'RoarMe-Mac-arm64.dmg', intel: REL + 'RoarMe-Mac-x64.dmg', win: REL + 'RoarMe-Windows-Setup.exe' }
+  var PLAIN = { mac: 'RoarMe-Mac-arm64.dmg', intel: 'RoarMe-Mac-x64.dmg', win: 'RoarMe-Windows-Setup.exe' }
+  var VER = ''
+  fetch('https://api.github.com/repos/alexisdigipro-hub/roarme/releases/latest', { headers: { Accept: 'application/vnd.github+json' } })
+    .then(function (r) { return r.ok ? r.json() : null })
+    .then(function (d) {
+      if (!d) return
+      VER = (String(d.name || '').match(/(\d+\.\d+\.\d+)/) || [])[1] || ''
+      var re = { mac: /Mac-arm64\.dmg$/, intel: /Mac-x64\.dmg$/, win: /Windows-Setup\.exe$/ }
+      Object.keys(re).forEach(function (k) {
+        var list = (d.assets || []).filter(function (a) { return re[k].test(a.name) })
+        var pick = list.filter(function (a) { return /\d+\.\d+\.\d+/.test(a.name) })[0] || list[0]
+        if (!pick) return
+        document.querySelectorAll('a[href="' + FILES[k] + '"]').forEach(function (a) { a.href = pick.browser_download_url })
+        FILES[k] = pick.browser_download_url
+      })
+      setMain(document.documentElement.lang); showVer(document.documentElement.lang)
+    }).catch(function () {})
+  function showVer(l) {
+    var e = document.getElementById('dl-ver')
+    if (!e || !VER) return
+    e.textContent = (l === 'el' ? 'Τελευταία έκδοση: RoarMe ' : 'Latest: RoarMe ') + VER + ' beta'
+    e.hidden = false
+  }
   function setMain(l) {
     var a = document.getElementById('dl-main')
     var s = a.querySelector('span')
     var el = l === 'el'
-    if (os === 'mac') { a.href = 'https://github.com/alexisdigipro-hub/roarme/releases/latest/download/RoarMe-Mac-arm64.dmg'; s.textContent = el ? 'Λήψη για Mac' : 'Download for Mac' }
-    else if (os === 'win') { a.href = 'https://github.com/alexisdigipro-hub/roarme/releases/latest/download/RoarMe-Windows-Setup.exe'; s.textContent = el ? 'Λήψη για Windows' : 'Download for Windows' }
+    if (os === 'mac') { a.href = FILES.mac; s.textContent = el ? 'Λήψη για Mac' : 'Download for Mac' }
+    else if (os === 'win') { a.href = FILES.win; s.textContent = el ? 'Λήψη για Windows' : 'Download for Windows' }
     else if (os === 'phone') { a.href = 'https://alexisdigipro-hub.github.io/roarme/'; s.textContent = el ? 'Άνοιξε το RoarMe' : 'Open RoarMe' }
     else { a.href = '#download'; s.textContent = el ? 'Λήψη' : 'Download' }
   }
