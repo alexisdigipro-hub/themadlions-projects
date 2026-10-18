@@ -442,7 +442,7 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
 .services > .label, .services > h2, .clients > .label, .clients > h2 { text-align: center; }
 /* How we work sits inside Services, under the cards (Alex, 18 Oct: one section, one menu item) */
 /* services in one row of soft cards (Alex, 18 Oct; the 3D shapes that were on them came off again the same day);
-   Studio's picture shows faintly behind a card on hover. How we work came off the page (Alex, 18 Oct) */
+   Studio's picture shows faintly behind a card on hover. How we work follows as one line through five dots */
 .svc-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; max-width: 1320px; margin: 40px auto 0; border: 0; }
 .svc-grid .svc { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; text-align: center; min-height: 0; padding: 24px 14px 22px; border-radius: 20px; border: 1px solid color-mix(in srgb, var(--hi) 8%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 5%, transparent), transparent 75%); box-shadow: none; overflow: hidden; transition: transform .5s cubic-bezier(.2,.7,.2,1), border-color .4s; }
 .svc-grid .svc:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
@@ -462,6 +462,25 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
   .svc-grid .svc { scroll-snap-align: start; }
 }
 @media (max-width: 560px) { .svc-grid { grid-auto-columns: 168px; } }
+.svc-how { max-width: 1180px; margin: clamp(48px, 6vw, 80px) auto 0; }
+.svc-how > .label, .how-title { text-align: center; }
+.how-title { margin: 0; font-size: clamp(22px, 2.4vw, 32px); font-weight: 300; line-height: 1.1; letter-spacing: -.01em; }
+.how-title b { font-weight: 800; }
+.svc-how .steps { position: relative; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; margin-top: 32px; }
+.svc-how .steps::before { content: ''; position: absolute; top: 5px; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--line) 6%, var(--line) 94%, transparent); }
+.svc-how .step { padding: 30px 0 0; border: 0; border-radius: 0; background: none; text-align: center; }
+.svc-how .step:hover { background: none; }
+.svc-how .step::before { content: ''; position: absolute; top: 0; left: 50%; width: 11px; height: 11px; margin: 0 0 0 -5.5px; border-radius: 50%; background: var(--bg); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 80%, transparent); transition: background .3s; }
+.svc-how .step:hover::before { background: var(--accent); }
+.svc-how .step::after { display: none; }
+.svc-how .step h3 { font-size: 17px; }
+.svc-how .step p { font-size: 13.5px; color: color-mix(in srgb, var(--text) 62%, transparent); }
+@media (max-width: 900px) {
+  .svc-how .steps { grid-template-columns: 1fr; gap: 0; }
+  .svc-how .steps::before { top: 6px; bottom: 6px; left: 5px; right: auto; width: 1px; height: auto; background: var(--line); }
+  .svc-how .step { padding: 0 0 22px 30px; text-align: left; }
+  .svc-how .step::before { top: 1px; left: 0; margin: 0; }
+}
 .services > .sub { margin-left: auto; margin-right: auto; text-align: center; }
 .about > .reveal:first-child { margin: 0 auto; text-align: center; }
 .about > .reveal:last-child > .label { text-align: center; }
@@ -521,6 +540,10 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
     <h2 class="reveal" data-t="svc.title" data-html>What we <b>make.</b></h2>
     <p class="sub reveal" data-t="svc.sub">One team from the first idea to the final master: we write, produce, shoot and finish in house.</p>
     <div class="svc-grid" id="svcGrid"><!--seo:svcGrid--><div class="svc"><div class="in"><small>01</small><h3>Commercials</h3><p>TV and online spots, from the first idea to the final master.</p><a class="ex" href="https://www.youtube.com/watch?v=J6xyi0iE8KY"><span>Watch: Aperol Spritz</span></a></div></div><div class="svc"><div class="in"><small>02</small><h3>Music Videos</h3><p>A concept built around the song and the artist, shot like a short film.</p><a class="ex" href="https://www.youtube.com/watch?v=1Y3h-3ka4bo"><span>Watch: Michalis Hatzigiannis – Horevo</span></a></div></div><div class="svc"><div class="in"><small>03</small><h3>Feature Films</h3><p>Feature and short films, from script and development to the final cut.</p><a class="ex" href="https://www.youtube.com/watch?v=_fRXBXkcikw"><span>Watch: Eva ii – Official Trailer</span></a></div></div><div class="svc"><div class="in"><small>04</small><h3>Documentaries</h3><p>Real people and real stories, filmed and edited with an honest eye.</p></div></div><div class="svc"><div class="in"><small>05</small><h3>Corporate Films</h3><p>Brand films, events and campaigns that show what a company does.</p></div></div><div class="svc"><div class="in"><small>06</small><h3>Visuals</h3><p>Stage and concert visuals, LED content and VJ loops that move with the music.</p><a class="ex" href="https://www.youtube.com/watch?v=IIYKCXvb7JY"><span>Watch: Fluo Live</span></a></div></div><div class="svc"><div class="in"><small>07</small><h3>Post-production</h3><p>Editing, grading, VFX and motion graphics, for our films or for yours.</p><a class="ex" href="https://vimeo.com/364348936"><span>Watch: Tresemmé</span></a></div></div><!--/seo:svcGrid--></div>
+    <div class="svc-how" id="process">
+      <h3 class="how-title reveal" data-t="proc.title" data-html>From idea <b>to screen.</b></h3>
+      <div class="steps" id="steps"><!--seo:steps--><div class="step"><h3>Idea</h3><p>We listen, then come back with a concept, a treatment and a clear budget.</p></div><div class="step"><h3>Pre-production</h3><p>Script, casting, locations, crew, schedule: every detail settled before the first day.</p></div><div class="step"><h3>Shoot</h3><p>A tight crew and the right gear, on set or on location, wherever the film needs to be.</p></div><div class="step"><h3>Post-production</h3><p>Edit, color, sound, graphics and effects, with you in every review.</p></div><div class="step"><h3>Delivery</h3><p>Masters for TV, cinema and every social format, on time.</p></div><!--/seo:steps--></div>
+    </div>
   </section>
 
   <!-- Aibsent Studios on the home page, kept minimal (Alex, 18 Oct): the logo, one line, one way in; the studio's own
@@ -985,11 +1008,8 @@ if (aibTalk) aibTalk.onclick = () => { pick.kind = 'Post-production'; renderChoi
 function renderFaq() {
   document.getElementById('faqList').innerHTML = FAQ.map((f) => { const [q, a] = f[lang] || f.en; return `<details class="qa reveal"><summary>${q}</summary><p>${a}</p></details>` }).join('')
 }
-// How we work came off the home page (Alex, 18 Oct); STEPS stays for the text the AI assistants read (llms-full.txt)
 function renderSteps() {
-  const box = document.getElementById('steps')
-  if (!box) return
-  box.innerHTML = STEPS.map((s) => { const [h, p] = s[lang] || s.en; return `<div class="step reveal"><h3>${h}</h3><p>${p}</p></div>` }).join('')
+  document.getElementById('steps').innerHTML = STEPS.map((s) => { const [h, p] = s[lang] || s.en; return `<div class="step reveal"><h3>${h}</h3><p>${p}</p></div>` }).join('')
 }
 // the team and the clients come from Studio > People (site_team, site_clients); TEAM and CLIENTS above
 // are what shows until they load, or if they cannot

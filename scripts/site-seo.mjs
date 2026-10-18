@@ -166,6 +166,7 @@ function blocks(l, c, d) {
       `<a class="tile" href="${esc(watch(w))}"><img src="${esc(still(w))}" alt="${esc(w.t)}${kindOf(w, l) ? ' · ' + esc(kindOf(w, l)) : ''}" loading="lazy"><span class="cap"><strong>${esc(w.t)}</strong><span>${esc(kindOf(w, l))}</span></span></a>`).join(''),
     svcGrid: c.SERVICES.map((s, n) => { const [name, text] = s[l] || s.en, w = s.ex && byTitle(s.ex)
       return `<div class="svc"><div class="in"><small>0${n + 1}</small><h3>${esc(name)}</h3><p>${esc(text)}</p>${w ? `<a class="ex" href="${esc(watch(w))}"><span>${esc(t('svc.ex'))}: ${esc(w.t)}</span></a>` : ''}</div></div>` }).join(''),
+    steps: c.STEPS.map((s) => { const [h, p] = s[l] || s.en; return `<div class="step"><h3>${esc(h)}</h3><p>${esc(p)}</p></div>` }).join(''),
     team: d.team.map((p) => `<div class="person"><strong>${esc(p.name)}</strong><span>${esc(l === 'el' ? p.role_el || p.role : p.role)}</span></div>`).join(''),
     logos: d.clients.map((n) => `<div class="logo"><span>${esc(n)}</span></div>`).join(''),
     faqList: c.FAQ.map((f) => { const [q, a] = f[l] || f.en; return `<details class="qa"><summary>${esc(q)}</summary><p>${esc(a)}</p></details>` }).join(''),
