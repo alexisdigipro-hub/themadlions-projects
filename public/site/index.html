@@ -413,7 +413,7 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
   <nav>
     <a href="#work" data-t="nav.work">Work</a>
     <a href="#services" data-t="nav.services">Services</a>
-    <a href="#aibsent">Aibsent</a>
+    <a href="aibsent/">Aibsent</a>
     <a href="#process" data-t="nav.process">Process</a>
     <a href="#clients" data-t="nav.clients">Clients</a>
     <a href="#shop" data-t="nav.shop" id="navShop" hidden>Shop</a>
@@ -464,13 +464,13 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
   <section id="aibsent" class="aibsent">
     <div class="aib reveal">
       <div class="aib-text">
-        <img class="aib-logo" src="aibsent.png" alt="Aibsent Studios">
+        <a href="aibsent/" aria-label="Aibsent Studios"><img class="aib-logo" src="aibsent.png" alt="Aibsent Studios"></a>
         <p class="aib-kicker" data-t="aib.kicker">Post-production &amp; AI · a Mad Lions studio</p>
         <p class="aib-lead" data-t="aib.lead">Our in-house post and AI studio. It finishes our films and takes on yours: from the edit and the grade to visual effects, motion graphics and films made with AI.</p>
         <div class="aib-caps" id="aibCaps"></div>
         <div class="aib-cta">
           <button class="pill main" type="button" id="aibTalk" data-t="aib.talk">Work with Aibsent</button>
-          <button class="pill" type="button" id="aibAll" data-t="aib.all">All Aibsent work</button>
+          <a class="pill" href="aibsent/" id="aibAll" data-t="aib.all">Discover Aibsent</a>
         </div>
       </div>
       <div class="aib-works" id="aibWorks"></div>
@@ -593,7 +593,7 @@ const SUPABASE_KEY = 'sb_publishable_o1OB_ohozPq1Xr2jg2ZSHA_3GsusXFL'
 const T = {
   en: {
     'nav.work': 'Work', 'nav.services': 'Services', 'nav.process': 'Process', 'nav.clients': 'Clients', 'nav.shop': 'Shop', 'nav.contact': 'Contact',
-    'aib.kicker': 'Post-production & AI · a Mad Lions studio', 'aib.lead': 'Our in-house post and AI studio. It finishes our films and takes on yours: from the edit and the grade to visual effects, motion graphics and films made with AI.', 'aib.talk': 'Work with Aibsent', 'aib.all': 'All Aibsent work', 'aib.badge': 'by Aibsent', 'svc.aib': 'Meet Aibsent Studios',
+    'aib.kicker': 'Post-production & AI · a Mad Lions studio', 'aib.lead': 'Our in-house post and AI studio. It finishes our films and takes on yours: from the edit and the grade to visual effects, motion graphics and films made with AI.', 'aib.talk': 'Work with Aibsent', 'aib.all': 'Discover Aibsent', 'aib.badge': 'by Aibsent', 'svc.aib': 'Meet Aibsent Studios',
     'shop.label': 'Shop', 'shop.title': 'Mad <b>merch.</b>', 'shop.buy': 'Buy', 'shop.soldout': 'Sold out',
     'hero.kicker': 'Film production house',
     'stats.years': 'Years making films', 'stats.prod': 'Productions', 'stats.clients': 'Brands & artists',
@@ -617,7 +617,7 @@ const T = {
   },
   el: {
     'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.shop': 'Shop', 'nav.contact': 'Επαφή',
-    'aib.kicker': 'Post-production & AI · ένα studio των Mad Lions', 'aib.lead': 'Το δικό μας studio για post-production και AI. Ολοκληρώνει τις ταινίες μας και αναλαμβάνει και τις δικές σας: από μοντάζ και χρώμα ως visual effects, motion graphics και ταινίες με AI.', 'aib.talk': 'Δουλέψτε με την Aibsent', 'aib.all': 'Όλη η δουλειά της Aibsent', 'aib.badge': 'by Aibsent', 'svc.aib': 'Γνωρίστε την Aibsent Studios',
+    'aib.kicker': 'Post-production & AI · ένα studio των Mad Lions', 'aib.lead': 'Το δικό μας studio για post-production και AI. Ολοκληρώνει τις ταινίες μας και αναλαμβάνει και τις δικές σας: από μοντάζ και χρώμα ως visual effects, motion graphics και ταινίες με AI.', 'aib.talk': 'Δουλέψτε με την Aibsent', 'aib.all': 'Γνώρισε την Aibsent', 'aib.badge': 'by Aibsent', 'svc.aib': 'Γνωρίστε την Aibsent Studios',
     'shop.label': 'Shop', 'shop.title': 'Mad <b>merch.</b>', 'shop.buy': 'Αγορά', 'shop.soldout': 'Εξαντλήθηκε',
     'hero.kicker': 'Εταιρεία κινηματογραφικής παραγωγής',
     'stats.years': 'Χρόνια στις ταινίες', 'stats.prod': 'Παραγωγές', 'stats.clients': 'Brands & καλλιτέχνες',
@@ -868,7 +868,7 @@ function renderServices() {
     card.querySelector('h3').textContent = name
     card.querySelector('p').textContent = text
     if (!s.ex || (!w && !s.aib)) card.querySelector('.ex').remove()
-    else if (s.aib) { card.querySelector('.ex span').textContent = t('svc.aib'); card.querySelector('.ex').onclick = () => document.getElementById('aibsent').scrollIntoView({ behavior: 'smooth' }) }
+    else if (s.aib) { card.querySelector('.ex span').textContent = t('svc.aib'); card.querySelector('.ex').onclick = () => { location.href = location.pathname.includes('/el/') ? '../aibsent/' : 'aibsent/' } }
     else { card.querySelector('.ex span').textContent = `${t('svc.ex')}: ${w.t}`; card.querySelector('.ex').onclick = () => play(w) }
     box.appendChild(card)
   })
@@ -879,7 +879,6 @@ function renderAibsent() {
   const box = document.getElementById('aibWorks')
   box.innerHTML = ''
   const list = WORKS.filter((w) => w.aib).slice(0, 5)
-  document.getElementById('aibAll').hidden = !list.length
   list.forEach((w, n) => {
     const b = document.createElement('button')
     b.type = 'button'; b.className = 'tile'
@@ -892,7 +891,6 @@ function renderAibsent() {
   })
 }
 document.getElementById('aibTalk').onclick = () => { pick.kind = 'Post-production'; renderChoices(); document.getElementById('contact').scrollIntoView({ behavior: 'smooth' }) }
-document.getElementById('aibAll').onclick = () => { filter = 'aibsent'; showAll = true; renderFilters(); renderGrid(); document.getElementById('work').scrollIntoView({ behavior: 'smooth' }) }
 
 function renderFaq() {
   document.getElementById('faqList').innerHTML = FAQ.map((f) => { const [q, a] = f[lang] || f.en; return `<details class="qa reveal"><summary>${q}</summary><p>${a}</p></details>` }).join('')
@@ -978,6 +976,8 @@ function startReel() {
 
 /* the enquiry form: two rows of choices, the fields, straight into the hub */
 const pick = { kind: '', budget: '' }
+// a link can choose the kind of film, e.g. ?kind=Post-production#contact from the Aibsent page
+{ const k = new URLSearchParams(location.search).get('kind'); if (k && KINDS.some((c) => c[0] === k)) pick.kind = k }
 function renderChoices() {
   for (const [id, list] of [['kind', KINDS], ['budget', BUDGETS]]) {
     const box = document.getElementById(id)
