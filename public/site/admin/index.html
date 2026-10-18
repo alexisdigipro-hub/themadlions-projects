@@ -9,7 +9,7 @@
 <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Jost:wght@300;500;600;700;800&display=swap" rel="stylesheet">
 <!-- The company site's own admin, "Studio" (Alex, 13 Oct 2026): overview with statistics, the work (films
      Alex adds, hides and reorders), enquiries from the form, the merch shop, and the site's look.
      Sign in with a THEMADLIONS Hub account; only hub administrators get in, and the database checks the
@@ -136,6 +136,9 @@ main { padding: 26px var(--pad) 90px; min-width: 0; }
 .w .ph .fimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .w .ph > :not(.fimg) { z-index: 1; }
 .w .eye.fr { right: 46px; opacity: 0; transition: opacity .2s; }
+.w .eye.fr.sh { right: 84px; }
+/* Story & Reel (Alex, 18 Oct) */
+.shcanvas { display: block; width: min(300px, 72%); height: auto; aspect-ratio: 9 / 16; margin: 0 auto 4px; border-radius: 20px; background: #000; box-shadow: 0 24px 60px rgba(0,0,0,.55); }
 .w:hover .eye.fr { opacity: 1; }
 @media (hover: none) { .w .eye.fr { opacity: 1; } }
 .w.off .ph { filter: grayscale(1) brightness(.45); }
@@ -378,6 +381,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
   <symbol id="i-top" viewBox="0 0 24 24"><path d="M5 4h14M12 20V9M6 14l6-6 6 6"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-out" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l4-4-4-4M14 12H4"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M6 12H5a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-1"/></symbol>
   <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></symbol>
 </svg>
 
@@ -556,6 +560,18 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
     <div class="f" id="wAibRow" hidden><span>Aibsent Studios · what kind of work</span><div class="chips" id="wAib"></div><span class="hint">The filters on the Aibsent Studios page. Pick one or more.</span></div>
   </div>
   <div class="df"><button class="btn danger" type="button" id="wDelete">Delete</button><span class="grow"></span><button class="btn" type="button" data-close>Cancel</button><button class="btn red" type="submit" id="wSave">Save</button></div>
+</form>
+
+<form class="drawer glass" id="shareDrawer" onsubmit="return false">
+  <div class="dh"><h2>Story &amp; Reel</h2><span class="grow"></span><button class="btn ghost sm" type="button" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db">
+    <canvas id="shCanvas" class="shcanvas" width="1080" height="1920"></canvas>
+    <div class="chips" id="shLooks" style="justify-content:center"><button type="button" class="chip on" data-look="frame">Framed</button><button type="button" class="chip" data-look="full">Full picture</button></div>
+    <label class="f"><span>Title on it</span><input id="shTitle" maxlength="120"></label>
+    <label class="f"><span>Line under it</span><input id="shMeta" maxlength="120" placeholder="Client · year"></label>
+    <p class="hint" style="margin:0">Story: a 1080×1920 picture. Reel: an 8 second video of it, the picture slowly moving and the words coming in, ending on the name. On a phone it opens the share sheet for Instagram or TikTok; on a computer it downloads. The picture is the film's own (pick Frame 1, 2, 3 or your own in the film first if you want another).</p>
+  </div>
+  <div class="df"><span class="grow"></span><button class="btn" type="button" id="shStory">Story picture</button><button class="btn red" type="button" id="shReel">Reel video</button></div>
 </form>
 
 <form class="drawer glass" id="catDrawer">
@@ -946,7 +962,7 @@ function renderWorks() {
   const fold = canDrag && vis.length > HOME ? vis[HOME - 1].id : null
   $('works').innerHTML = shown.length ? shown.map((w) => `
     <div class="w glass ${w.visible ? '' : 'off'}" data-id="${esc(w.id)}" draggable="${canDrag}">
-      <div class="ph">${framedImg(w)}${w.visible ? `<span class="no">${vis.indexOf(w) + 1}</span>` : ''}${canDrag ? `<span class="ord"><button type="button" data-mv="top" title="Move to the top" ${works.indexOf(w) ? '' : 'disabled'}><svg class="i"><use href="#i-top"/></svg></button><button type="button" data-mv="up" title="Move up" ${works.indexOf(w) ? '' : 'disabled'}><svg class="i"><use href="#i-up"/></svg></button><button type="button" data-mv="down" title="Move down" ${works.indexOf(w) < last ? '' : 'disabled'}><svg class="i"><use href="#i-down"/></svg></button></span>` : ''}${w.aibsent ? '<span class="aibm">Aibsent Studios</span>' : ''}<button class="eye" type="button" data-eye title="${w.visible ? 'Hide from the site' : 'Show on the site'}"><svg class="i"><use href="#${w.visible ? 'i-eye' : 'i-eyeoff'}"/></svg></button><button class="eye fr" type="button" data-frame title="Adjust &amp; scale the picture"><svg class="i"><use href="#i-crop"/></svg></button></div>
+      <div class="ph">${framedImg(w)}${w.visible ? `<span class="no">${vis.indexOf(w) + 1}</span>` : ''}${canDrag ? `<span class="ord"><button type="button" data-mv="top" title="Move to the top" ${works.indexOf(w) ? '' : 'disabled'}><svg class="i"><use href="#i-top"/></svg></button><button type="button" data-mv="up" title="Move up" ${works.indexOf(w) ? '' : 'disabled'}><svg class="i"><use href="#i-up"/></svg></button><button type="button" data-mv="down" title="Move down" ${works.indexOf(w) < last ? '' : 'disabled'}><svg class="i"><use href="#i-down"/></svg></button></span>` : ''}${w.aibsent ? '<span class="aibm">Aibsent Studios</span>' : ''}<button class="eye" type="button" data-eye title="${w.visible ? 'Hide from the site' : 'Show on the site'}"><svg class="i"><use href="#${w.visible ? 'i-eye' : 'i-eyeoff'}"/></svg></button><button class="eye fr" type="button" data-frame title="Adjust &amp; scale the picture"><svg class="i"><use href="#i-crop"/></svg></button><button class="eye fr sh" type="button" data-share title="Story &amp; reel for Instagram and TikTok"><svg class="i"><use href="#i-share"/></svg></button></div>
       <div class="in"><strong>${esc(w.title)}</strong><small>${esc([w.client, w.year, (w.categories || []).join(', ')].filter(Boolean).join(' · ') || 'No category')}</small></div>
     </div>${w.id === fold ? `<div class="fold"><span><b>Above: the home page</b> · below: after Show all</span></div>` : ''}`).join('') : '<div class="empty">No film matches.</div>'
 }
@@ -955,6 +971,7 @@ $('works').onclick = async (e) => {
   const card = e.target.closest('.w'); if (!card) return
   const w = works.find((x) => x.id === card.dataset.id)
   if (e.target.closest('[data-frame]')) { openWork(w); return }
+  if (e.target.closest('[data-share]')) { openShare(w); return }
   const mv = e.target.closest('[data-mv]')
   if (mv) {
     const i = works.indexOf(w), to = mv.dataset.mv === 'top' ? 0 : mv.dataset.mv === 'up' ? i - 1 : i + 1
@@ -1187,6 +1204,199 @@ $('workDrawer').onsubmit = async (e) => {
 $('wDelete').onclick = async () => {
   if (!editingWork.id || !confirm(`Delete "${editingWork.title}" from the site for good? (The eye only hides it.)`)) return
   try { await rest(`site_works?id=eq.${editingWork.id}`, { method: 'DELETE' }); closeDrawers(); toast('Deleted'); loadWorks() } catch (err) { toast(err.message) }
+}
+
+/* ---------- Story & Reel (Alex, 18 Oct): a film made into an Instagram / TikTok story picture (1080×1920 PNG) or a
+   reel (an 8 second video of the same, the picture slowly moving and the words coming in), drawn here from its
+   picture in the site's look. Two looks: Framed (the picture as a card on its own blurred light) and Full picture.
+   On a phone it goes straight to the share sheet (Instagram, TikTok…); on a computer it downloads ---------- */
+const SH_W = 1080, SH_H = 1920, SH_LEN = 8
+let shWork = null, shImg = null, shBlur = null, shLook = 'frame', shBusy = false
+const shEase = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3)
+const shIn = (t, s, d) => shEase((t - s) / d)
+// the name without what YouTube titles carry: (4K), | Official Music Video…
+const shClean = (t) => String(t || '').replace(/\s*[(\[][^)\]]*(?:4k|hd|official|video)[^)\]]*[)\]]/gi, '').replace(/\s*[|\-–]\s*(?:official\b.*|music video.*|video ?clip.*|lyric.*)$/i, '').trim()
+function shLoad(src) { return new Promise((res) => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => res(im.naturalWidth >= 320 ? im : null); im.onerror = () => res(null); im.src = src }) }
+async function shPicture(w) {
+  const tries = w.cover ? [w.cover]
+    : w.kind === 'yt' ? [`https://i.ytimg.com/vi/${w.video_id}/maxresdefault.jpg`, `https://i.ytimg.com/vi/${w.video_id}/hqdefault.jpg`]
+    : w.kind === 'pc' ? [pcThumb(w.video_id, true)] : [`https://vumbnail.com/${w.video_id}_large.jpg`]
+  for (const s of tries) { const im = await shLoad(s); if (im) return im }
+  return null
+}
+// the picture filling a box, centred on the Studio framing point, a little zoom on top
+function shCover(ctx, im, x, y, w, h, z = 1) {
+  const f = shWork?.frame || {}, fx = (f.x ?? 50) / 100, fy = (f.y ?? 50) / 100
+  const k = Math.max(w / im.naturalWidth, h / im.naturalHeight) * z * Math.max(1, Number(f.z || 1))
+  const sw = w / k, sh = h / k
+  const sx = Math.min(im.naturalWidth - sw, Math.max(0, im.naturalWidth * fx - sw / 2)), sy = Math.min(im.naturalHeight - sh, Math.max(0, im.naturalHeight * fy - sh / 2))
+  ctx.drawImage(im, sx, sy, sw, sh, x, y, w, h)
+}
+function shTracked(ctx, text, x, y, gap, align = 'center') {
+  const chars = [...text], widths = chars.map((c) => ctx.measureText(c).width), total = widths.reduce((a, b) => a + b, 0) + gap * (chars.length - 1)
+  let cx = align === 'center' ? x - total / 2 : align === 'right' ? x - total : x
+  ctx.textAlign = 'left'
+  chars.forEach((c, i) => { ctx.fillText(c, cx, y); cx += widths[i] + gap })
+  return total
+}
+function shWordmark(ctx, cx, y, size) {
+  const parts = [['THE', 300], ['MAD', 800], ['LIONS', 300]]
+  const ws = parts.map(([s, wt]) => { ctx.font = `${wt} ${size}px Jost, "Helvetica Neue", Arial, sans-serif`; return ctx.measureText(s).width })
+  let x = cx - ws.reduce((a, b) => a + b, 0) / 2
+  ctx.textAlign = 'left'; ctx.fillStyle = '#f2f0ec'
+  parts.forEach(([s, wt], i) => { ctx.font = `${wt} ${size}px Jost, "Helvetica Neue", Arial, sans-serif`; ctx.fillText(s, x, y); x += ws[i] })
+}
+// the title in as few lines as fit, biggest size first; "Artist - Song" becomes the artist light over the song bold
+function shLines(ctx, text, maxW, sizes, weight, maxLines = 3) {
+  const parts = text.split(/\s+[-–]\s+/).filter(Boolean), many = parts.length > 1
+  for (const size of sizes) {
+    const lines = []
+    parts.forEach((part, pi) => {
+      const wt = many ? (pi === parts.length - 1 ? weight : 300) : weight
+      ctx.font = `${wt} ${size}px Jost, "Helvetica Neue", Arial, sans-serif`
+      let line = ''
+      for (const word of part.split(/\s+/)) {
+        const test = line ? `${line} ${word}` : word
+        if (ctx.measureText(test).width <= maxW || !line) line = test; else { lines.push({ text: line, wt }); line = word }
+      }
+      if (line) lines.push({ text: line, wt })
+    })
+    if (lines.length <= maxLines + (many ? 1 : 0) || size === sizes[sizes.length - 1]) return { size, lines: lines.slice(0, maxLines + (many ? 1 : 0)) }
+  }
+}
+function shPlay(ctx, x, y, r, a) {
+  ctx.save(); ctx.globalAlpha = a
+  ctx.fillStyle = 'rgba(212,0,0,.94)'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill()
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(x - r * .28, y - r * .4); ctx.lineTo(x + r * .45, y); ctx.lineTo(x - r * .28, y + r * .4); ctx.closePath(); ctx.fill()
+  ctx.restore()
+}
+function shDraw(ctx, t, still) {
+  const W = SH_W, H = SH_H, w = shWork, z = still ? 1.02 : 1 + 0.12 * (t / SH_LEN)
+  const title = $('shTitle').value.trim(), meta = $('shMeta').value.trim()
+  const kind = ((w.categories || [])[0] || (w.aibsent ? 'Aibsent Studios' : 'Film')).toUpperCase()
+  ctx.save(); ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#0b0b0c'; ctx.fillRect(0, 0, W, H); ctx.textBaseline = 'alphabetic'
+  if (shLook === 'frame') {
+    if (shBlur) { ctx.imageSmoothingQuality = 'high'; ctx.globalAlpha = 1; ctx.drawImage(shBlur, -60, -60, W + 120, H + 120) }
+    ctx.fillStyle = 'rgba(11,11,12,.66)'; ctx.fillRect(0, 0, W, H)
+    let g = ctx.createRadialGradient(W / 2, 420, 0, W / 2, 420, 900); g.addColorStop(0, 'rgba(212,0,0,.26)'); g.addColorStop(1, 'rgba(212,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H)
+    ctx.globalAlpha = shIn(t, .1, .8); shWordmark(ctx, W / 2, 200, 56)
+    ctx.font = '600 26px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = '#ff3b2f'; shTracked(ctx, kind, W / 2, 268, 7)
+    // the picture as a card
+    const a = shIn(t, 0, 1), cw = 960, ch = 540, cx = 60, cy = 470 + (1 - a) * 50
+    ctx.globalAlpha = a
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.65)'; ctx.shadowBlur = 70; ctx.shadowOffsetY = 34; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.roundRect(cx, cy, cw, ch, 30); ctx.fill(); ctx.restore()
+    ctx.save(); ctx.beginPath(); ctx.roundRect(cx, cy, cw, ch, 30); ctx.clip(); if (shImg) shCover(ctx, shImg, cx, cy, cw, ch, z); ctx.restore()
+    ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(cx + 1, cy + 1, cw - 2, ch - 2, 29); ctx.stroke()
+    shPlay(ctx, W / 2, cy + ch / 2, 62, a * (still ? 1 : shIn(t, 1.1, .6)))
+    // the title and the line under it
+    const tl = shLines(ctx, title, 920, [86, 76, 68, 60, 52], 700)
+    const ta = shIn(t, .7, .9), lh = tl.size * 1.12
+    let y = 1140 + tl.size + (1 - ta) * 40
+    ctx.globalAlpha = ta; ctx.fillStyle = '#f2f0ec'; ctx.textAlign = 'center'
+    tl.lines.forEach((l) => { ctx.font = `${l.wt} ${tl.size}px Jost, "Helvetica Neue", Arial, sans-serif`; ctx.fillText(l.text, W / 2, y); y += lh })
+    ctx.globalAlpha = shIn(t, 1.1, .8)
+    if (meta) { ctx.font = '500 28px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = 'rgba(242,240,236,.62)'; shTracked(ctx, meta.toUpperCase(), W / 2, y + 22, 5) }
+    if (w.aibsent) { ctx.font = '600 24px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = '#ff3b2f'; shTracked(ctx, 'POST-PRODUCTION · AIBSENT STUDIOS', W / 2, y + (meta ? 80 : 30), 5) }
+    // the way to it
+    ctx.globalAlpha = shIn(t, 1.6, .8)
+    ctx.font = '600 28px Jost, "Helvetica Neue", Arial, sans-serif'
+    const label = 'WATCH ON THEMADLIONS.COM', lw = [...label].reduce((s, c) => s + ctx.measureText(c).width + 6, -6) + 110, py = 1700
+    ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.strokeStyle = 'rgba(255,255,255,.2)'; ctx.lineWidth = 2
+    ctx.beginPath(); ctx.roundRect(W / 2 - lw / 2, py - 46, lw, 86, 43); ctx.fill(); ctx.stroke()
+    ctx.fillStyle = '#ff3b2f'; ctx.beginPath(); ctx.arc(W / 2 - lw / 2 + 44, py - 3, 7, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = '#f2f0ec'; shTracked(ctx, label, W / 2 + 20, py + 7, 6)
+  } else {
+    if (shImg) shCover(ctx, shImg, 0, 0, W, H, z)
+    let g = ctx.createLinearGradient(0, 0, 0, 420); g.addColorStop(0, 'rgba(0,0,0,.6)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 420)
+    g = ctx.createLinearGradient(0, 860, 0, H); g.addColorStop(0, 'rgba(8,8,9,0)'); g.addColorStop(.45, 'rgba(8,8,9,.78)'); g.addColorStop(1, 'rgba(8,8,9,.96)'); ctx.fillStyle = g; ctx.fillRect(0, 860, W, H - 860)
+    ctx.globalAlpha = shIn(t, .1, .8); shWordmark(ctx, W / 2, 170, 52)
+    // the words from the bottom up
+    const x = 84, tl = shLines(ctx, title, W - 2 * x, [108, 96, 84, 72, 62], 700), lh = tl.size * 1.08
+    const footY = 1812, metaY = 1716, lastY = metaY - (meta ? 74 : 20), firstY = lastY - lh * (tl.lines.length - 1)
+    const ta = shIn(t, .7, .9), rise = (1 - ta) * 40
+    ctx.globalAlpha = shIn(t, .5, .8)
+    ctx.fillStyle = '#d40000'; ctx.fillRect(x, firstY - tl.size - 96 + rise, 72, 7)
+    ctx.font = '600 28px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = '#ff3b2f'; shTracked(ctx, kind, x, firstY - tl.size - 34 + rise, 7, 'left')
+    ctx.globalAlpha = ta; ctx.fillStyle = '#f2f0ec'; ctx.textAlign = 'left'
+    tl.lines.forEach((l, i) => { ctx.font = `${l.wt} ${tl.size}px Jost, "Helvetica Neue", Arial, sans-serif`; ctx.fillText(l.text, x, firstY + i * lh + rise) })
+    ctx.globalAlpha = shIn(t, 1.1, .8)
+    if (meta) { ctx.font = '500 30px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = 'rgba(242,240,236,.66)'; shTracked(ctx, meta.toUpperCase(), x, metaY, 5, 'left') }
+    ctx.globalAlpha = shIn(t, 1.6, .8)
+    ctx.font = '600 28px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = '#f2f0ec'
+    const fw = shTracked(ctx, w.aibsent ? 'THEMADLIONS.COM · AIBSENT STUDIOS' : 'WATCH ON THEMADLIONS.COM', x, footY, 6, 'left')
+    ctx.fillStyle = '#ff3b2f'; ctx.font = '600 34px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillText('→', x + fw + 18, footY + 2)
+  }
+  // a reel ends on the name
+  if (!still) {
+    const e = shIn(t, SH_LEN - 1.4, .9)
+    if (e > 0) {
+      ctx.globalAlpha = e * .9; ctx.fillStyle = '#0b0b0c'; ctx.fillRect(0, 0, W, H)
+      ctx.globalAlpha = e; shWordmark(ctx, W / 2, H / 2, 92)
+      ctx.font = '600 30px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = '#ff3b2f'; shTracked(ctx, 'THEMADLIONS.COM', W / 2, H / 2 + 90, 9)
+    }
+  }
+  ctx.restore()
+}
+const shRedraw = () => { if (shWork && !shBusy) shDraw($('shCanvas').getContext('2d'), 99, true) }
+async function openShare(w) {
+  shWork = w; shImg = null; shBlur = null
+  $('shTitle').value = shClean(w.title)
+  $('shMeta').value = [w.client, w.year].filter(Boolean).join(' · ')
+  $('shLooks').querySelectorAll('[data-look]').forEach((b) => b.classList.toggle('on', b.dataset.look === shLook))
+  openDrawer($('shareDrawer'))
+  const ctx = $('shCanvas').getContext('2d')
+  ctx.fillStyle = '#0b0b0c'; ctx.fillRect(0, 0, SH_W, SH_H)
+  await Promise.all(['300', '500', '600', '700', '800'].map((wt) => document.fonts.load(`${wt} 40px Jost, "Helvetica Neue", Arial, sans-serif`).catch(() => {})))
+  shImg = await shPicture(w)
+  if (shWork !== w) return
+  if (!shImg) toast("This film's picture cannot be used here. Pick Frame 1, 2, 3 or your own picture first")
+  else { shBlur = document.createElement('canvas'); shBlur.width = 36; shBlur.height = 64; shCover(shBlur.getContext('2d'), shImg, 0, 0, 36, 64) }
+  shRedraw()
+}
+$('shLooks').onclick = (e) => { const b = e.target.closest('[data-look]'); if (!b) return; shLook = b.dataset.look; $('shLooks').querySelectorAll('[data-look]').forEach((x) => x.classList.toggle('on', x === b)); shRedraw() }
+$('shTitle').oninput = shRedraw; $('shMeta').oninput = shRedraw
+const shName = (ext) => `${(shClean(shWork.title) || 'film').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '').slice(0, 50)}-${shLook}.${ext}`
+async function shGive(blob, name) {
+  const file = new File([blob], name, { type: blob.type })
+  // a phone: straight to the share sheet (Instagram, TikTok, Messages…)
+  if (matchMedia('(pointer: coarse)').matches && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); return } catch (e) { if (e.name === 'AbortError') return }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove() }, 2000)
+}
+$('shStory').onclick = () => {
+  if (!shWork || shBusy) return
+  shRedraw()
+  $('shCanvas').toBlob((b) => { if (b) shGive(b, shName('png')); else toast('Could not make the picture') }, 'image/png')
+}
+$('shReel').onclick = async () => {
+  if (!shWork || shBusy) return
+  const types = ['video/mp4;codecs=avc1.640028', 'video/mp4;codecs=avc1.42E01E', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm']
+  const type = window.MediaRecorder && types.find((x) => MediaRecorder.isTypeSupported(x))
+  if (!type) { toast('This browser cannot make a video. Try Chrome or Safari.'); return }
+  const c = $('shCanvas'), ctx = c.getContext('2d'), btn = $('shReel'), was = btn.textContent
+  shBusy = true; btn.disabled = true
+  const rec = new MediaRecorder(c.captureStream(30), { mimeType: type, videoBitsPerSecond: 12e6 }), parts = []
+  rec.ondataavailable = (e) => { if (e.data.size) parts.push(e.data) }
+  const stopped = new Promise((r) => { rec.onstop = r })
+  rec.start(250)
+  const t0 = performance.now()
+  await new Promise((done) => {
+    const step = () => {
+      const t = (performance.now() - t0) / 1000
+      shDraw(ctx, Math.min(t, SH_LEN), false)
+      btn.textContent = `Recording… ${Math.min(SH_LEN, Math.ceil(t))}/${SH_LEN} s`
+      if (t < SH_LEN + 0.2) requestAnimationFrame(step); else done()
+    }
+    requestAnimationFrame(step)
+  })
+  rec.stop(); await stopped
+  shBusy = false; btn.disabled = false; btn.textContent = was
+  shRedraw()
+  const mime = type.split(';')[0]
+  shGive(new Blob(parts, { type: mime }), shName(mime === 'video/mp4' ? 'mp4' : 'webm'))
+  if (mime !== 'video/mp4') toast('Saved as WebM: Instagram prefers MP4, so for reels use Safari or a newer Chrome')
 }
 
 /* ---------- enquiries ---------- */
