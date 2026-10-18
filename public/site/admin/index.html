@@ -167,6 +167,9 @@ main { padding: 26px var(--pad) 90px; min-width: 0; }
 .scrub { display: grid; gap: 8px; margin-top: 6px; padding: 10px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid var(--edge); }
 .scrub video { display: block; width: 100%; max-height: 340px; border-radius: 10px; background: #000; }
 .scrub-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.yfrow.rnd:empty { display: none; }
+.yfrow.rnd { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.yfrow.rnd .yf { aspect-ratio: 16 / 9; }
 .scrub-row .hint { min-width: 70px; text-align: center; font-variant-numeric: tabular-nums; }
 .yfrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .yf { position: relative; padding: 0; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; border: 1px solid var(--edge); background: rgba(255,255,255,.04); cursor: pointer; transition: border-color .2s, transform .2s; }
@@ -534,6 +537,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
       <div class="yframes" id="wFrames" hidden><span class="hint">Or a frame from inside the film, without the still's text and logos:</span><div class="yfrow" id="wFrameRow"></div></div>
       <div class="scrub" id="wScrub" hidden>
         <video id="wVid" playsinline muted controls preload="auto"></video>
+        <div class="yfrow rnd" id="wRnd"></div>
         <div class="scrub-row">
           <button class="btn sm" type="button" data-step="-1">−1 s</button>
           <button class="btn sm" type="button" data-step="-0.04">−1 frame</button>
@@ -541,6 +545,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
           <button class="btn sm" type="button" data-step="0.04">+1 frame</button>
           <button class="btn sm" type="button" data-step="1">+1 s</button>
           <span class="grow"></span>
+          <button class="btn sm" type="button" id="wVidRnd">Random frames</button>
           <button class="btn sm" type="button" id="wVidClose">Close</button>
           <button class="btn sm red" type="button" id="wVidUse">Use this frame</button>
         </div>
@@ -1090,7 +1095,7 @@ $('wAiGo').onclick = async () => {
    file's full quality (up to 2400 px wide), becomes the film's picture. Nothing of the video is uploaded, only the frame */
 const vid = $('wVid')
 const vidTime = () => { const t = vid.currentTime || 0; $('wVidTime').textContent = `${Math.floor(t / 60)}:${(t % 60).toFixed(2).padStart(5, '0')}` }
-function closeScrub() { vid.pause(); $('wScrub').hidden = true; if (vid.dataset.url) { URL.revokeObjectURL(vid.dataset.url); delete vid.dataset.url } vid.removeAttribute('src'); vid.load() }
+function closeScrub() { vid.pause(); $('wScrub').hidden = true; $('wRnd').innerHTML = ''; if (vid.dataset.url) { URL.revokeObjectURL(vid.dataset.url); delete vid.dataset.url } vid.removeAttribute('src'); vid.load() }
 $('wVidUp').onclick = () => $('vidPick').click()
 $('vidPick').onchange = (e) => {
   const file = e.target.files[0]; e.target.value = ''
@@ -1109,6 +1114,30 @@ $('wScrub').addEventListener('click', (e) => {
   vid.pause(); vid.currentTime = Math.max(0, Math.min(vid.duration, vid.currentTime + Number(b.dataset.step))); vidTime()
 })
 $('wVidClose').onclick = closeScrub
+/* Random frames: six moments picked at random through the film, shown small; one press on a moment takes the
+   player there, and Use this frame takes it at full quality. Press again for six others */
+let rndBusy = false
+$('wVidRnd').onclick = async () => {
+  if (!vid.duration || rndBusy) return
+  rndBusy = true; vid.pause()
+  const d = vid.duration, row = $('wRnd'), times = []
+  for (let i = 0; i < 6; i++) times.push(d * (0.04 + 0.92 * ((i + Math.random()) / 6)))
+  row.innerHTML = ''
+  for (const t of times) {
+    await new Promise((res) => { vid.addEventListener('seeked', res, { once: true }); vid.currentTime = t })
+    const c = document.createElement('canvas'); c.width = 320; c.height = Math.round(320 * vid.videoHeight / vid.videoWidth) || 180
+    c.getContext('2d').drawImage(vid, 0, 0, c.width, c.height)
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'yf'; b.dataset.t = t
+    b.innerHTML = `<img src="${c.toDataURL('image/jpeg', 0.8)}" alt=""><small>${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}</small>`
+    row.appendChild(b)
+  }
+  rndBusy = false
+}
+$('wRnd').onclick = (e) => {
+  const b = e.target.closest('.yf'); if (!b || rndBusy) return
+  $('wRnd').querySelectorAll('.yf').forEach((x) => x.classList.toggle('on', x === b))
+  vid.pause(); vid.currentTime = Number(b.dataset.t)
+}
 $('wVidUse').onclick = async () => {
   if (!vid.videoWidth) return
   vid.pause()
