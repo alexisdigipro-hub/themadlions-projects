@@ -419,6 +419,34 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
 .btsall .close { position: fixed; right: var(--pad); top: calc(16px + env(safe-area-inset-top)); z-index: 1; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--glass-edge); background: var(--glass); color: var(--text); font-size: 22px; cursor: pointer; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
 .player .pnav { display: none; position: absolute; top: 50%; z-index: 1; width: 48px; height: 48px; margin-top: -24px; border-radius: 50%; border: 1px solid var(--glass-edge); background: rgba(255,255,255,.08); color: #f2f0ec; font-size: 28px; line-height: 1; cursor: pointer; }
 .player .pnav.prev { left: 12px; } .player .pnav.next { right: 12px; }
+/* share a film (Alex, 18 Oct): a glass pill beside the close button, and its sheet over the player */
+.player .pshare { position: absolute; right: calc(var(--pad) + 54px); top: calc(14px + env(safe-area-inset-top)); z-index: 2; height: 44px; padding: 0 16px 0 13px; border-radius: 999px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.08); color: #f2f0ec; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; transition: background .2s; }
+.player .pshare:hover { background: rgba(255,255,255,.16); }
+.player .title { right: calc(var(--pad) + 170px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player .pshare svg { width: 18px; height: 18px; }
+.player.photo .pshare { display: none; }
+.shsheet { position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; padding: 72px var(--pad) 24px; background: rgba(5,5,6,.72); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #f2f0ec; }
+.shsheet[hidden] { display: none; }
+.shcard { position: relative; display: grid; grid-template-columns: auto 280px; gap: 28px; align-items: center; padding: 22px; border-radius: 28px; background: rgba(22,22,24,.92); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 40px 90px rgba(0,0,0,.6); }
+.shcard canvas { display: block; height: min(64vh, 600px); width: auto; aspect-ratio: 9 / 16; border-radius: 18px; background: #000; }
+.shside { display: grid; gap: 10px; }
+.shside .pill { width: 100%; }
+.shlabel { margin: 0 0 4px; font-size: 12px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: #ff3b2f; }
+.shlooks { display: flex; gap: 6px; margin-bottom: 4px; }
+.shlooks button { flex: 1; height: 38px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); background: none; color: rgba(242,240,236,.7); font: inherit; font-size: 13.5px; cursor: pointer; }
+.shlooks button.on { color: #f2f0ec; background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.24); }
+.shhint { margin: 4px 0 0; font-size: 12.5px; line-height: 1.5; color: rgba(242,240,236,.55); }
+.shx { position: absolute; top: -14px; right: -14px; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.18); background: #1a1a1c; color: #f2f0ec; font-size: 22px; line-height: 1; cursor: pointer; }
+@media (max-width: 760px) {
+  .player .pshare span { display: none; }
+  .player .pshare { width: 44px; padding: 0; justify-content: center; }
+  .player .title { right: calc(var(--pad) + 112px); top: calc(26px + env(safe-area-inset-top)); }
+  .shsheet { padding: 64px 16px 16px; align-items: start; overflow-y: auto; }
+  .shcard { grid-template-columns: 1fr; gap: 16px; padding: 16px; justify-items: center; }
+  .shcard canvas { height: min(48vh, 440px); }
+  .shside { width: 100%; }
+  .shx { top: 8px; right: 8px; }
+}
 .player.photo .pnav { display: grid; place-items: center; }
 .player.photo .frame { aspect-ratio: auto; height: min(80vh, 100%); background: transparent; box-shadow: none; }
 .player .frame > img { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -659,6 +687,21 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
 <div class="player" id="player" role="dialog" aria-modal="true" aria-label="Film">
   <div class="title" id="ptitle"></div>
   <button class="close" id="pclose" type="button" aria-label="Close">×</button>
+  <button class="pshare" id="pshare" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M6 12H5a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6a1 1 0 0 0-1-1h-1"/></svg><span data-t="sh.btn">Share</span></button>
+  <div class="shsheet" id="shSheet" hidden>
+    <div class="shcard">
+      <button class="shx" id="shX" type="button" aria-label="Close">×</button>
+      <canvas id="shCanvas" width="1080" height="1920"></canvas>
+      <div class="shside">
+        <p class="shlabel" data-t="sh.label">Share this film</p>
+        <div class="shlooks" id="shLooks"><button type="button" data-look="frame" class="on" data-t="sh.framed">Framed</button><button type="button" data-look="full" data-t="sh.full">Full picture</button></div>
+        <button class="pill main" id="shStory" type="button" data-t="sh.story">Story picture</button>
+        <button class="pill" id="shReel" type="button" data-t="sh.reel">Reel video</button>
+        <button class="pill" id="shLink" type="button" data-t="sh.link">Copy the link</button>
+        <p class="shhint" data-t="sh.hint">For Instagram and TikTok stories. On a phone it opens your apps; on a computer it downloads.</p>
+      </div>
+    </div>
+  </div>
   <button class="pnav prev" id="pprev" type="button" aria-label="Previous">‹</button>
   <button class="pnav next" id="pnext" type="button" aria-label="Next">›</button>
   <div class="frame" id="pframe"></div>
@@ -685,6 +728,7 @@ const T = {
     'about.quote': '"No matter what people tell you, words and ideas can change the world." Robin Williams',
     'clients.label': 'Clients', 'clients.title': "Brands <b>we've filmed for.</b>",
     'bts.label': 'Behind the scenes', 'bts.title': 'On set <b>with us.</b>', 'bts.all': 'See everything',
+    'sh.btn': 'Share', 'sh.label': 'Share this film', 'sh.framed': 'Framed', 'sh.full': 'Full picture', 'sh.story': 'Story picture', 'sh.reel': 'Reel video', 'sh.link': 'Copy the link', 'sh.copied': 'Link copied', 'sh.rec': 'Recording…', 'sh.watch': 'WATCH ON THEMADLIONS.COM', 'sh.hint': 'For Instagram and TikTok stories. On a phone it opens your apps; on a computer it downloads.',
     'lab.label': 'Lab', 'lab.title': 'What we build <b>between films.</b>', 'lab.e1': 'Experiment 01', 'lab.e2': 'Experiment 02', 'lab.rm': 'The messenger for teams.', 'lab.rd': 'The call sheet, in one link.', 'lab.go': 'Visit the Lab',
     'contact.label': 'Contact', 'contact.title': 'Tell us about <b>your project.</b>', 'contact.sub': 'A few lines are enough. We answer within a working day.',
     'f.kind': 'What are you making?', 'f.budget': 'Budget', 'f.name': 'Name', 'f.email': 'Email', 'f.company': 'Company or artist',
@@ -708,6 +752,7 @@ const T = {
     'about.lead': 'Σχεδιάζουμε, γυρίζουμε και μοντάρουμε ταινίες για κάθε οθόνη. Η δουλειά μας πατάει στην <b>κινηματογραφική παράδοση</b> και φτιάχνεται για να μένει σε όποιον τη βλέπει.',
     'about.quote': '«Ό,τι κι αν σου πουν, οι λέξεις και οι ιδέες μπορούν να αλλάξουν τον κόσμο.» Robin Williams',
     'clients.label': 'Πελάτες', 'clients.title': 'Brands <b>που δουλέψαμε μαζί.</b>',
+    'sh.btn': 'Κοινοποίηση', 'sh.label': 'Μοιράσου την ταινία', 'sh.framed': 'Σε κάδρο', 'sh.full': 'Ολόκληρη εικόνα', 'sh.story': 'Εικόνα για story', 'sh.reel': 'Βίντεο για reel', 'sh.link': 'Αντιγραφή link', 'sh.copied': 'Το link αντιγράφηκε', 'sh.rec': 'Εγγραφή…', 'sh.watch': 'ΔΕΣ ΤΟ ΣΤΟ THEMADLIONS.COM', 'sh.hint': 'Για stories σε Instagram και TikTok. Στο κινητό ανοίγει τις εφαρμογές σου, στον υπολογιστή κατεβαίνει.',
     'bts.label': 'Πίσω από τις κάμερες', 'bts.title': 'Στο <b>γύρισμα.</b>', 'bts.all': 'Δες τα όλα',
     'lab.label': 'Lab', 'lab.title': 'Ό,τι φτιάχνουμε <b>ανάμεσα στις ταινίες.</b>', 'lab.e1': 'Πείραμα 01', 'lab.e2': 'Πείραμα 02', 'lab.rm': 'Το messenger για ομάδες.', 'lab.rd': 'Το ordino, σε ένα link.', 'lab.go': 'Δες το Lab',
     'contact.label': 'Επαφή', 'contact.title': 'Πείτε μας για <b>το project σας.</b>', 'contact.sub': 'Λίγες γραμμές αρκούν. Απαντάμε μέσα σε μία εργάσιμη.',
@@ -1042,6 +1087,7 @@ async function loadPeople() {
 const player = document.getElementById('player'), frame = document.getElementById('pframe')
 function play(w) {
   track('play', w.t)
+  playing = w; if (typeof closeShare === 'function') closeShare()
   document.getElementById('ptitle').textContent = w.t
   player.classList.add('open'); player.classList.remove('photo')
   document.body.style.overflow = 'hidden'
@@ -1309,7 +1355,218 @@ async function loadWorks() {
     if (!Array.isArray(rows)) return
     WORKS = rows.filter((r) => r.video_id).map((r) => ({ t: r.title, c: r.categories || [], k: r.kind === 'vm' || r.kind === 'pc' ? r.kind : 'yt', id: r.video_id, img: r.image || '', client: r.client || '', aib: !!r.aibsent, f: r.frame || null, cover: r.cover || '' }))
     renderFilters(); renderGrid(); renderBts(); renderServices(); renderAibsent(); renderStats(); observe()
+    openFilmFromLink()
   } catch (e) {}
+}
+
+
+/* Share a film (Alex, 18 Oct): from the player, the film as a story picture or an 8 second reel for Instagram and TikTok,
+   drawn here in the site's look (the same as Studio's Story & Reel), or its own link (?film=…) that opens it on the site.
+   On a phone it opens the share sheet; on a computer the picture or video downloads and the link is copied */
+const $ = (id) => document.getElementById(id)
+const SH_W = 1080, SH_H = 1920, SH_LEN = 8
+// (inside the drawing t is the time, so the words come through this)
+const shWatch = () => (T[lang] && T[lang]['sh.watch']) || T.en['sh.watch']
+let shWork = null, shImg = null, shBlur = null, shLook = 'frame', shBusy = false
+const shEase = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3)
+const shIn = (t, s, d) => shEase((t - s) / d)
+// the name without what YouTube titles carry: (4K), | Official Music Video…
+const shClean = (t) => String(t || '').replace(/\s*[(\[][^)\]]*(?:4k|hd|official|video)[^)\]]*[)\]]/gi, '').replace(/\s*[|\-–]\s*(?:official\b.*|music video.*|video ?clip.*|lyric.*)$/i, '').trim()
+function shLoad(src) { return new Promise((res) => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => res(im.naturalWidth >= 320 ? im : null); im.onerror = () => res(null); im.src = src }) }
+async function shPicture(w) {
+  for (const src of (w.cover ? [w.cover] : [thumb(w, true), thumb(w, false), w.img]).filter(Boolean)) { const im = await shLoad(src); if (im) return im }
+  return null
+}
+// the picture filling a box, centred on the Studio framing point, a little zoom on top
+function shCover(ctx, im, x, y, w, h, z = 1) {
+  const f = shWork?.f || {}, fx = (f.x ?? 50) / 100, fy = (f.y ?? 50) / 100
+  const k = Math.max(w / im.naturalWidth, h / im.naturalHeight) * z * Math.max(1, Number(f.z || 1))
+  const sw = w / k, sh = h / k
+  const sx = Math.min(im.naturalWidth - sw, Math.max(0, im.naturalWidth * fx - sw / 2)), sy = Math.min(im.naturalHeight - sh, Math.max(0, im.naturalHeight * fy - sh / 2))
+  ctx.drawImage(im, sx, sy, sw, sh, x, y, w, h)
+}
+function shTracked(ctx, text, x, y, gap, align = 'center') {
+  const chars = [...text], widths = chars.map((c) => ctx.measureText(c).width), total = widths.reduce((a, b) => a + b, 0) + gap * (chars.length - 1)
+  let cx = align === 'center' ? x - total / 2 : align === 'right' ? x - total : x
+  ctx.textAlign = 'left'
+  chars.forEach((c, i) => { ctx.fillText(c, cx, y); cx += widths[i] + gap })
+  return total
+}
+function shWordmark(ctx, cx, y, size) {
+  const parts = [['THE', 300], ['MAD', 800], ['LIONS', 300]]
+  const ws = parts.map(([s, wt]) => { ctx.font = `${wt} ${size}px Jost, "Helvetica Neue", Arial, sans-serif`; return ctx.measureText(s).width })
+  let x = cx - ws.reduce((a, b) => a + b, 0) / 2
+  ctx.textAlign = 'left'; ctx.fillStyle = '#f2f0ec'
+  parts.forEach(([s, wt], i) => { ctx.font = `${wt} ${size}px Jost, "Helvetica Neue", Arial, sans-serif`; ctx.fillText(s, x, y); x += ws[i] })
+}
+// the title in as few lines as fit, biggest size first; "Artist - Song" becomes the artist light over the song bold
+function shLines(ctx, text, maxW, sizes, weight, maxLines = 3) {
+  const parts = text.split(/\s+[-–]\s+/).filter(Boolean), many = parts.length > 1
+  for (const size of sizes) {
+    const lines = []
+    parts.forEach((part, pi) => {
+      const wt = many ? (pi === parts.length - 1 ? weight : 300) : weight
+      ctx.font = `${wt} ${size}px Jost, "Helvetica Neue", Arial, sans-serif`
+      let line = ''
+      for (const word of part.split(/\s+/)) {
+        const test = line ? `${line} ${word}` : word
+        if (ctx.measureText(test).width <= maxW || !line) line = test; else { lines.push({ text: line, wt }); line = word }
+      }
+      if (line) lines.push({ text: line, wt })
+    })
+    if (lines.length <= maxLines + (many ? 1 : 0) || size === sizes[sizes.length - 1]) return { size, lines: lines.slice(0, maxLines + (many ? 1 : 0)) }
+  }
+}
+function shPlay(ctx, x, y, r, a) {
+  ctx.save(); ctx.globalAlpha = a
+  ctx.fillStyle = 'rgba(212,0,0,.94)'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill()
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(x - r * .28, y - r * .4); ctx.lineTo(x + r * .45, y); ctx.lineTo(x - r * .28, y + r * .4); ctx.closePath(); ctx.fill()
+  ctx.restore()
+}
+function shDraw(ctx, t, still) {
+  const W = SH_W, H = SH_H, w = shWork, z = still ? 1.02 : 1 + 0.12 * (t / SH_LEN)
+  const title = shClean(w.t), meta = w.client || ''
+  const kind = String((lang === 'el' ? (CATS[w.c[0]] || w.c[0]) : w.c[0]) || (w.aib ? 'Aibsent Studios' : 'Film')).toUpperCase()
+  ctx.save(); ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#0b0b0c'; ctx.fillRect(0, 0, W, H); ctx.textBaseline = 'alphabetic'
+  if (shLook === 'frame') {
+    if (shBlur) { ctx.imageSmoothingQuality = 'high'; ctx.globalAlpha = 1; ctx.drawImage(shBlur, -60, -60, W + 120, H + 120) }
+    ctx.fillStyle = 'rgba(11,11,12,.66)'; ctx.fillRect(0, 0, W, H)
+    let g = ctx.createRadialGradient(W / 2, 420, 0, W / 2, 420, 900); g.addColorStop(0, 'rgba(212,0,0,.26)'); g.addColorStop(1, 'rgba(212,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H)
+    ctx.globalAlpha = shIn(t, .1, .8); shWordmark(ctx, W / 2, 200, 56)
+    ctx.font = '600 26px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = '#ff3b2f'; shTracked(ctx, kind, W / 2, 268, 7)
+    // the picture as a card
+    const a = shIn(t, 0, 1), cw = 960, ch = 540, cx = 60, cy = 470 + (1 - a) * 50
+    ctx.globalAlpha = a
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.65)'; ctx.shadowBlur = 70; ctx.shadowOffsetY = 34; ctx.fillStyle = '#000'; ctx.beginPath(); ctx.roundRect(cx, cy, cw, ch, 30); ctx.fill(); ctx.restore()
+    ctx.save(); ctx.beginPath(); ctx.roundRect(cx, cy, cw, ch, 30); ctx.clip(); if (shImg) shCover(ctx, shImg, cx, cy, cw, ch, z); ctx.restore()
+    ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(cx + 1, cy + 1, cw - 2, ch - 2, 29); ctx.stroke()
+    shPlay(ctx, W / 2, cy + ch / 2, 62, a * (still ? 1 : shIn(t, 1.1, .6)))
+    // the title and the line under it
+    const tl = shLines(ctx, title, 920, [86, 76, 68, 60, 52], 700)
+    const ta = shIn(t, .7, .9), lh = tl.size * 1.12
+    let y = 1140 + tl.size + (1 - ta) * 40
+    ctx.globalAlpha = ta; ctx.fillStyle = '#f2f0ec'; ctx.textAlign = 'center'
+    tl.lines.forEach((l) => { ctx.font = `${l.wt} ${tl.size}px Jost, "Helvetica Neue", Arial, sans-serif`; ctx.fillText(l.text, W / 2, y); y += lh })
+    ctx.globalAlpha = shIn(t, 1.1, .8)
+    if (meta) { ctx.font = '500 28px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = 'rgba(242,240,236,.62)'; shTracked(ctx, meta.toUpperCase(), W / 2, y + 22, 5) }
+    if (w.aib) { ctx.font = '600 24px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = '#ff3b2f'; shTracked(ctx, 'POST-PRODUCTION · AIBSENT STUDIOS', W / 2, y + (meta ? 80 : 30), 5) }
+    // the way to it
+    ctx.globalAlpha = shIn(t, 1.6, .8)
+    ctx.font = '600 28px Jost, "Helvetica Neue", Arial, sans-serif'
+    const label = shWatch(), lw = [...label].reduce((s, c) => s + ctx.measureText(c).width + 6, -6) + 110, py = 1700
+    ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.strokeStyle = 'rgba(255,255,255,.2)'; ctx.lineWidth = 2
+    ctx.beginPath(); ctx.roundRect(W / 2 - lw / 2, py - 46, lw, 86, 43); ctx.fill(); ctx.stroke()
+    ctx.fillStyle = '#ff3b2f'; ctx.beginPath(); ctx.arc(W / 2 - lw / 2 + 44, py - 3, 7, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = '#f2f0ec'; shTracked(ctx, label, W / 2 + 20, py + 7, 6)
+  } else {
+    if (shImg) shCover(ctx, shImg, 0, 0, W, H, z)
+    let g = ctx.createLinearGradient(0, 0, 0, 420); g.addColorStop(0, 'rgba(0,0,0,.6)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, 420)
+    g = ctx.createLinearGradient(0, 860, 0, H); g.addColorStop(0, 'rgba(8,8,9,0)'); g.addColorStop(.45, 'rgba(8,8,9,.78)'); g.addColorStop(1, 'rgba(8,8,9,.96)'); ctx.fillStyle = g; ctx.fillRect(0, 860, W, H - 860)
+    ctx.globalAlpha = shIn(t, .1, .8); shWordmark(ctx, W / 2, 170, 52)
+    // the words from the bottom up
+    const x = 84, tl = shLines(ctx, title, W - 2 * x, [108, 96, 84, 72, 62], 700), lh = tl.size * 1.08
+    const footY = 1812, metaY = 1716, lastY = metaY - (meta ? 74 : 20), firstY = lastY - lh * (tl.lines.length - 1)
+    const ta = shIn(t, .7, .9), rise = (1 - ta) * 40
+    ctx.globalAlpha = shIn(t, .5, .8)
+    ctx.fillStyle = '#d40000'; ctx.fillRect(x, firstY - tl.size - 96 + rise, 72, 7)
+    ctx.font = '600 28px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = '#ff3b2f'; shTracked(ctx, kind, x, firstY - tl.size - 34 + rise, 7, 'left')
+    ctx.globalAlpha = ta; ctx.fillStyle = '#f2f0ec'; ctx.textAlign = 'left'
+    tl.lines.forEach((l, i) => { ctx.font = `${l.wt} ${tl.size}px Jost, "Helvetica Neue", Arial, sans-serif`; ctx.fillText(l.text, x, firstY + i * lh + rise) })
+    ctx.globalAlpha = shIn(t, 1.1, .8)
+    if (meta) { ctx.font = '500 30px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = 'rgba(242,240,236,.66)'; shTracked(ctx, meta.toUpperCase(), x, metaY, 5, 'left') }
+    ctx.globalAlpha = shIn(t, 1.6, .8)
+    ctx.font = '600 28px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = '#f2f0ec'
+    const fw = shTracked(ctx, w.aib ? 'THEMADLIONS.COM · AIBSENT STUDIOS' : shWatch(), x, footY, 6, 'left')
+    ctx.fillStyle = '#ff3b2f'; ctx.font = '600 34px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillText('→', x + fw + 18, footY + 2)
+  }
+  // a reel ends on the name
+  if (!still) {
+    const e = shIn(t, SH_LEN - 1.4, .9)
+    if (e > 0) {
+      ctx.globalAlpha = e * .9; ctx.fillStyle = '#0b0b0c'; ctx.fillRect(0, 0, W, H)
+      ctx.globalAlpha = e; shWordmark(ctx, W / 2, H / 2, 92)
+      ctx.font = '600 30px Jost, "Helvetica Neue", Arial, sans-serif'; ctx.fillStyle = '#ff3b2f'; shTracked(ctx, 'THEMADLIONS.COM', W / 2, H / 2 + 90, 9)
+    }
+  }
+  ctx.restore()
+}
+
+let playing = null
+const shRedraw = () => { if (shWork && !shBusy) shDraw($('shCanvas').getContext('2d'), 99, true) }
+const filmLink = (w) => `${location.origin}${location.pathname.replace(/index\.html$/, '')}?film=${encodeURIComponent(w.id)}`
+async function openShare() {
+  const w = playing; if (!w) return
+  track('share', w.t)
+  shWork = w; shImg = null; shBlur = null
+  $('shLooks').querySelectorAll('[data-look]').forEach((b) => b.classList.toggle('on', b.dataset.look === shLook))
+  $('shSheet').hidden = false
+  const ctx = $('shCanvas').getContext('2d'); ctx.fillStyle = '#0b0b0c'; ctx.fillRect(0, 0, SH_W, SH_H)
+  await Promise.all(['300', '500', '600', '700', '800'].map((wt) => document.fonts.load(`${wt} 40px Jost`).catch(() => {})))
+  shImg = await shPicture(w)
+  if (shWork !== w) return
+  if (shImg) { shBlur = document.createElement('canvas'); shBlur.width = 36; shBlur.height = 64; shCover(shBlur.getContext('2d'), shImg, 0, 0, 36, 64) }
+  shRedraw()
+}
+const closeShare = () => { $('shSheet').hidden = true; shWork = null }
+$('pshare').onclick = (e) => { e.stopPropagation(); openShare() }
+$('shX').onclick = (e) => { e.stopPropagation(); closeShare() }
+$('shSheet').onclick = (e) => { e.stopPropagation(); if (e.target === $('shSheet')) closeShare() }
+$('shLooks').onclick = (e) => { const b = e.target.closest('[data-look]'); if (!b) return; shLook = b.dataset.look; $('shLooks').querySelectorAll('[data-look]').forEach((x) => x.classList.toggle('on', x === b)); shRedraw() }
+const shName = (ext) => `themadlions-${(shClean(shWork.t) || 'film').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '').slice(0, 40)}.${ext}`
+const phone = () => matchMedia('(pointer: coarse)').matches
+async function shGive(blob, name) {
+  const file = new File([blob], name, { type: blob.type })
+  if (phone() && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); return } catch (e) { if (e.name === 'AbortError') return }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove() }, 2000)
+}
+$('shStory').onclick = () => {
+  if (!shWork || shBusy) return
+  shRedraw()
+  try { $('shCanvas').toBlob((b) => { if (b) shGive(b, shName('png')) }, 'image/png') } catch (e) { /* a picture from elsewhere that cannot be read */ }
+}
+$('shReel').onclick = async () => {
+  if (!shWork || shBusy) return
+  const types = ['video/mp4;codecs=avc1.640028', 'video/mp4;codecs=avc1.42E01E', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm']
+  const type = window.MediaRecorder && types.find((x) => MediaRecorder.isTypeSupported(x))
+  if (!type) return
+  const c = $('shCanvas'), ctx = c.getContext('2d'), btn = $('shReel'), was = btn.textContent
+  shBusy = true; btn.disabled = true
+  const rec = new MediaRecorder(c.captureStream(30), { mimeType: type, videoBitsPerSecond: 12e6 }), parts = []
+  rec.ondataavailable = (e) => { if (e.data.size) parts.push(e.data) }
+  const stopped = new Promise((r) => { rec.onstop = r })
+  rec.start(250)
+  const t0 = performance.now()
+  await new Promise((done) => {
+    const step = () => {
+      const s = (performance.now() - t0) / 1000
+      shDraw(ctx, Math.min(s, SH_LEN), false)
+      btn.textContent = `${t('sh.rec')} ${Math.min(SH_LEN, Math.ceil(s))}/${SH_LEN}`
+      if (s < SH_LEN + 0.2) requestAnimationFrame(step); else done()
+    }
+    requestAnimationFrame(step)
+  })
+  rec.stop(); await stopped
+  shBusy = false; btn.disabled = false; btn.textContent = was
+  shRedraw()
+  const mime = type.split(';')[0]
+  shGive(new Blob(parts, { type: mime }), shName(mime === 'video/mp4' ? 'mp4' : 'webm'))
+}
+$('shLink').onclick = async () => {
+  if (!shWork) return
+  const url = filmLink(shWork)
+  if (phone() && navigator.share) { try { await navigator.share({ title: shClean(shWork.t), url }); return } catch (e) { if (e.name === 'AbortError') return } }
+  try { await navigator.clipboard.writeText(url); const b = $('shLink'), was = b.textContent; b.textContent = t('sh.copied'); setTimeout(() => { b.textContent = was }, 1800) } catch (e) { prompt('', url) }
+}
+// a film's own link opens it
+let filmLinkDone = false
+function openFilmFromLink() {
+  if (filmLinkDone) return
+  const id = new URLSearchParams(location.search).get('film'); if (!id) return
+  const w = WORKS.find((x) => x.id === id); if (!w) return
+  filmLinkDone = true; play(w)
 }
 
 startReel(); renderClients(); applyLang(); onScroll()
