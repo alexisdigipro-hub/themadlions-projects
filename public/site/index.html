@@ -293,9 +293,10 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
 @media (max-width: 900px) { .aib { grid-template-columns: 1fr; } }
 /* the clients as a wall of white squares, each logo in black (Alex, 18 Oct); a client without a logo yet shows its
    name the same way. The logo files are already the white square (site bucket, clients/logo-*.png) */
-/* nine to a row, two rows, the squares side by side with no gaps between them (Alex, 18 Oct) */
-.logos { grid-template-columns: repeat(9, 1fr); gap: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
-.logo { height: auto; aspect-ratio: 1; padding: 0; overflow: hidden; background: #fff; border: 0; border-radius: 0; box-shadow: inset 0 0 0 .5px rgba(0,0,0,.08); transition: background .3s; }
+/* all the clients in two rows (as many to a row as it takes), small squares 3 px apart (Alex, 18 Oct) */
+.logos { grid-template-columns: repeat(var(--cols, 12), 1fr); gap: 3px; }
+.logo { height: auto; aspect-ratio: 1; padding: 0; overflow: hidden; background: #fff; border: 0; border-radius: 4px; box-shadow: none; transition: background .3s; }
+.logo.fill { pointer-events: none; }
 .logo:hover { background: #fff; }
 .logo img { transition: transform .4s cubic-bezier(.2,.7,.2,1); }
 .logo:hover img { transform: scale(1.06); }
@@ -303,9 +304,9 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
 html[data-theme='light'] .logo img.mono { filter: none; }
 .logo span { padding: 0 10%; color: #111; font-size: 14px; font-weight: 700; letter-spacing: .04em; line-height: 1.2; overflow-wrap: anywhere; }
 .logo:hover span { color: #111; }
-html[data-theme='light'] .logos { box-shadow: 0 0 0 1px rgba(0,0,0,.08), 0 10px 30px rgba(0,0,0,.06); }
-@media (max-width: 900px) { .logos { grid-template-columns: repeat(6, 1fr); } .logo span { padding: 0 6%; font-size: 10px; letter-spacing: 0; } }
-@media (max-width: 620px) { .logos { gap: 0; border-radius: 12px; } .logo { border-radius: 0; } .logo span { font-size: 8px; } }
+html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
+.logo span { font-size: 11px; padding: 0 6%; letter-spacing: 0; }
+@media (max-width: 900px) { .logos { grid-template-columns: repeat(6, 1fr); } .logo.fill { display: none; } .logo span { font-size: 9px; } }
 </style>
 </head>
 <body>
@@ -533,7 +534,8 @@ const TEAM = [
 const CLIENTS = [
   { n: 'Visa' }, { n: "L'Oréal" }, { n: 'UNESCO' }, { n: 'Aperol' }, { n: 'Nescafé' }, { n: 'Tresemmé' }, { n: 'Axe' }, { n: 'Wind' },
   { n: 'Germanos' }, { n: 'Elpedison' }, { n: 'Εθνική Ασφαλιστική' }, { n: 'AbbVie' }, { n: 'Janssen' }, { n: 'Gree' }, { n: 'Loumidis' },
-  { n: 'Media Strom' }, { n: 'Christodoulou' }, { n: 'Softex' },
+  { n: 'Media Strom' }, { n: 'Christodoulou' }, { n: 'Softex' }, { n: 'Panik Records' }, { n: 'Heaven Music' }, { n: 'Universal Music' },
+  { n: 'Rythmos FM' }, { n: 'Dromos FM' },
 ]
 const KINDS = [['Commercial', 'Διαφημιστικό'], ['Music video', 'Βίντεο κλιπ'], ['Corporate film', 'Εταιρική ταινία'], ['Social content', 'Social content'], ['Post-production', 'Post-production'], ['Something else', 'Κάτι άλλο']]
 const BUDGETS = [['Under €5k', 'Έως €5k'], ['€5k to €15k', '€5k έως €15k'], ['€15k to €50k', '€15k έως €50k'], ['€50k+', '€50k+'], ['Not sure yet', 'Δεν ξέρω ακόμα']]
@@ -663,7 +665,10 @@ function renderAbout() {
   box.querySelectorAll('.face').forEach((face, i) => { const p = TEAM[i]; if (p[3]) face.appendChild(frameImg(Object.assign(document.createElement('img'), { src: p[3], alt: '', loading: 'lazy' }), p[4])) })
 }
 function renderClients() {
-  document.getElementById('logos').innerHTML = CLIENTS.map((c) => `<div class="logo">${c.logo ? `<img src="${escH(c.logo)}" alt="${escH(c.n)}" loading="lazy"${c.mono === false ? '' : ' class="mono"'}>` : `<span>${escH(c.n)}</span>`}</div>`).join('')
+  // two rows: half the clients to a row, and blank squares to close the second row
+  const cols = Math.max(1, Math.ceil(CLIENTS.length / 2)), box = document.getElementById('logos')
+  box.style.setProperty('--cols', cols)
+  box.innerHTML = CLIENTS.map((c) => `<div class="logo">${c.logo ? `<img src="${escH(c.logo)}" alt="${escH(c.n)}" loading="lazy"${c.mono === false ? '' : ' class="mono"'}>` : `<span>${escH(c.n)}</span>`}</div>`).join('') + '<div class="logo fill" aria-hidden="true"></div>'.repeat(cols * 2 - CLIENTS.length)
 }
 async function loadPeople() {
   try {
