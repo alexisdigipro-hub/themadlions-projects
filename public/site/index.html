@@ -684,6 +684,8 @@ function renderGrid() {
     b.onclick = () => play(w)
     grid.appendChild(b)
   })
+  // no films on the site (all hidden in Studio): the Work section steps aside
+  document.getElementById('work').hidden = !WORKS.some((w) => !w.c.includes(BTS))
   const more = document.getElementById('more')
   more.parentElement.style.display = list.length > SHORT ? '' : 'none'
   more.textContent = showAll ? t('work.less') : `${t('work.more')} (${list.length})`
@@ -775,11 +777,11 @@ function renderServices() {
     const [name, text] = s[lang] || s.en
     const card = document.createElement('div')
     card.className = 'svc reveal'
-    const bg = document.createElement('div'); bg.className = 'bg'; bg.appendChild(img(w, true)); card.appendChild(bg)
+    if (w) { const bg = document.createElement('div'); bg.className = 'bg'; bg.appendChild(img(w, true)); card.appendChild(bg) }
     card.insertAdjacentHTML('beforeend', `<div class="in"><small>0${n + 1}</small><h3></h3><p></p><button type="button" class="ex"><i>${PLAY}</i><span></span></button></div>`)
     card.querySelector('h3').textContent = name
     card.querySelector('p').textContent = text
-    if (!s.ex) card.querySelector('.ex').remove()
+    if (!s.ex || (!w && !s.aib)) card.querySelector('.ex').remove()
     else if (s.aib) { card.querySelector('.ex span').textContent = t('svc.aib'); card.querySelector('.ex').onclick = () => document.getElementById('aibsent').scrollIntoView({ behavior: 'smooth' }) }
     else { card.querySelector('.ex span').textContent = `${t('svc.ex')}: ${w.t}`; card.querySelector('.ex').onclick = () => play(w) }
     box.appendChild(card)
@@ -1094,7 +1096,8 @@ function renderStats() {
 async function loadWorks() {
   try {
     const rows = await (await api('site_works?visible=eq.true&select=title,client,categories,kind,video_id,image,aibsent,frame,cover&order=position.asc,created_at.desc')).json()
-    if (!Array.isArray(rows) || !rows.length) return
+    // an empty list is real too (Studio > Work > Hide all): then the site shows no films, not the built-in list
+    if (!Array.isArray(rows)) return
     WORKS = rows.filter((r) => r.video_id).map((r) => ({ t: r.title, c: r.categories || [], k: r.kind === 'vm' || r.kind === 'pc' ? r.kind : 'yt', id: r.video_id, img: r.image || '', client: r.client || '', aib: !!r.aibsent, f: r.frame || null, cover: r.cover || '' }))
     renderFilters(); renderGrid(); renderBts(); renderServices(); renderAibsent(); renderStats(); observe()
   } catch (e) {}
