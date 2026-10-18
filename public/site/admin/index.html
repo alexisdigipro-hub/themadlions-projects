@@ -157,6 +157,15 @@ main { padding: 26px var(--pad) 90px; min-width: 0; }
 .w strong { display: block; font-size: 14.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .w small { display: block; margin-top: 3px; color: var(--dim); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+/* frames from inside a YouTube film to use as its picture (Alex, 18 Oct) */
+.yframes { display: grid; gap: 8px; margin-top: 4px; }
+.yfrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.yf { position: relative; padding: 0; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; border: 1px solid var(--edge); background: rgba(255,255,255,.04); cursor: pointer; transition: border-color .2s, transform .2s; }
+.yf:hover { transform: translateY(-1px); border-color: rgba(255,255,255,.3); }
+.yf.on { border-color: var(--red); box-shadow: 0 0 0 2px var(--red); }
+.yf img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.yf small { position: absolute; left: 6px; bottom: 5px; padding: 1px 6px; border-radius: 6px; font-size: 10.5px; color: #fff; background: rgba(0,0,0,.55); }
+.yf.none { cursor: default; opacity: .35; }
 .chip { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 10px; font-size: 13px; background: rgba(255,255,255,.05); border: 1px solid var(--edge); }
 .chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
 button.chip { cursor: pointer; color: var(--muted); transition: color .18s, background .18s, border-color .18s; }
@@ -510,7 +519,8 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
   <div class="db">
     <label class="f"><span>YouTube, Vimeo or pCloud link</span><input name="video" placeholder="https://youtu.be/… · https://vimeo.com/… · https://e.pcloud.link/publink/show?code=…" autocomplete="off"><span class="hint">Paste it and the title and picture come by themselves. A pCloud film plays from your pCloud, so every view uses its link traffic.</span></label>
     <div class="f"><span>Picture &amp; framing · drag the picture to move it, the slider zooms</span><div id="wFramer"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn sm" type="button" id="wCoverUp"><svg class="i"><use href="#i-plus"/></svg>Use my own picture</button><button class="btn sm danger" type="button" id="wCoverRm" hidden>Back to the video's still</button><span class="hint" id="wCoverHint">Now: the video's own still</span></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn sm" type="button" id="wCoverUp"><svg class="i"><use href="#i-plus"/></svg>Use my own picture</button><button class="btn sm danger" type="button" id="wCoverRm" hidden>Back to the video's still</button><span class="hint" id="wCoverHint">Now: the video's own still</span></div>
+      <div class="yframes" id="wFrames" hidden><span class="hint">Or a frame from inside the film, without the still's text and logos:</span><div class="yfrow" id="wFrameRow"></div></div></div>
     <label class="f"><span>Title</span><input name="title" maxlength="160"></label>
     <div class="two">
       <label class="f"><span>Client or artist</span><input name="client" maxlength="160"></label>
@@ -989,12 +999,42 @@ function openWork(w) {
   if (!w) setTimeout(() => f.video.focus(), 300)
 }
 let wFrame = null
+/* YouTube keeps three frames from inside every film (about a quarter, half and three quarters in), as well as the still
+   the channel chose. Each is tried in HD, then 640, then 480; the best one that exists becomes the film's picture */
+const ytTry = (src) => new Promise((res) => { const im = new Image(); im.onload = () => res(im.naturalWidth >= 320 ? im.naturalWidth : 0); im.onerror = () => res(0); im.src = src })
+async function ytBest(id, n) {
+  for (const q of ['maxres', 'sd', 'hq']) { const src = `https://i.ytimg.com/vi/${id}/${q}${n}.jpg`, w = await ytTry(src); if (w) return { src, w } }
+  return null
+}
+let yfFor = ''
+async function renderYtFrames(v) {
+  const box = $('wFrames'), row = $('wFrameRow')
+  if (!v || v.kind !== 'yt') { box.hidden = true; yfFor = ''; return }
+  box.hidden = false
+  if (yfFor !== v.id) {
+    yfFor = v.id
+    row.innerHTML = [1, 2, 3].map((n) => `<button type="button" class="yf none" data-n="${n}" disabled><small>Frame ${n}</small></button>`).join('')
+    const found = await Promise.all([1, 2, 3].map((n) => ytBest(v.id, n)))
+    if (yfFor !== v.id) return
+    row.innerHTML = found.map((f, i) => f
+      ? `<button type="button" class="yf" data-src="${esc(f.src)}"><img src="${esc(f.src)}" alt=""><small>Frame ${i + 1}${f.w >= 1280 ? ' · HD' : ''}</small></button>`
+      : `<button type="button" class="yf none" disabled><small>Frame ${i + 1} · none</small></button>`).join('')
+  }
+  row.querySelectorAll('.yf[data-src]').forEach((b) => b.classList.toggle('on', editingWork.cover === b.dataset.src))
+}
+$('wFrameRow').onclick = (e) => {
+  const b = e.target.closest('.yf[data-src]'); if (!b) return
+  editingWork.cover = editingWork.cover === b.dataset.src ? null : b.dataset.src
+  showPreview()
+}
 function showPreview() {
   const v = parseVideo($('workDrawer').video.value)
   const still = v ? (v.kind === 'yt' ? `https://i.ytimg.com/vi/${v.id}/maxresdefault.jpg` : v.kind === 'pc' ? pcThumb(v.id, true) : `https://vumbnail.com/${v.id}_large.jpg`) : ''
   if (wFrame) wFrame.set(editingWork.cover || still)
+  const frameOn = /^https:\/\/i\.ytimg\.com\//.test(editingWork.cover || '')
   $('wCoverRm').hidden = !editingWork.cover
-  $('wCoverHint').textContent = editingWork.cover ? 'Now: your own picture' : "Now: the video's own still"
+  $('wCoverHint').textContent = frameOn ? 'Now: a frame from the film' : editingWork.cover ? 'Now: your own picture' : "Now: the video's own still"
+  renderYtFrames(v)
 }
 $('wCoverUp').onclick = () => $('coverPick').click()
 $('coverPick').onchange = async (e) => {
