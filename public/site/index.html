@@ -338,7 +338,7 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
 .services > .sub { margin-left: auto; margin-right: auto; text-align: center; }
 .about > .reveal:first-child { margin: 0 auto; text-align: center; }
 .about > .reveal:last-child > .label { text-align: center; }
-.about .quote { border-left: 0; padding: 0; }
+.about .quote { border-left: 0; padding: 0; margin-top: 48px; text-align: center; } /* under the team row (Alex, 18 Oct) */
 .about .quote::before { content: ''; display: block; width: 28px; height: 2px; margin: 0 auto 14px; background: var(--accent); }
 </style>
 </head>
@@ -425,11 +425,11 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
       <p class="label" data-t="about.label">About</p>
       <h2 data-t="about.title" data-html>We are <b>mad about</b> film.</h2>
       <p class="lead" data-t="about.lead" data-html>We design, shoot and edit film for any screen. Our work is steeped in <b>cinematic legacy</b>, and made to stay with the people who watch it.</p>
-      <p class="quote" data-t="about.quote">"No matter what people tell you, words and ideas can change the world." Robin Williams</p>
     </div>
     <div class="reveal">
       <p class="label" data-t="about.team">The team</p>
       <div class="team" id="team"></div>
+      <p class="quote" data-t="about.quote">"No matter what people tell you, words and ideas can change the world." Robin Williams</p>
     </div>
   </section>
 
