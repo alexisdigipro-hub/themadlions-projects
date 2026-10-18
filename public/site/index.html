@@ -428,7 +428,13 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
 .lab-x .d { font-size: 15px; font-weight: 300; color: color-mix(in srgb, var(--text) 78%, transparent); }
 @media (max-width: 700px) { .lab-row { grid-template-columns: minmax(0, 1fr); } }
 /* Services, How we work, About and Clients: the titles and their texts centred (Alex, 18 Oct); the cards keep their own layout */
-.services > .label, .services > h2, .process > .label, .process > h2, .clients > .label, .clients > h2 { text-align: center; }
+.services > .label, .services > h2, .clients > .label, .clients > h2 { text-align: center; }
+/* How we work sits inside Services, under the cards (Alex, 18 Oct: one section, one menu item) */
+.svc-how { margin-top: clamp(70px, 8vw, 120px); }
+.svc-how > .label, .how-title { text-align: center; }
+.how-title { margin: 0; font-size: clamp(28px, 3.6vw, 48px); font-weight: 300; line-height: 1.08; letter-spacing: -.01em; }
+.how-title b { font-weight: 800; }
+.svc-how .steps { margin-top: 36px; }
 .services > .sub { margin-left: auto; margin-right: auto; text-align: center; }
 .about > .reveal:first-child { margin: 0 auto; text-align: center; }
 .about > .reveal:last-child > .label { text-align: center; }
@@ -444,7 +450,6 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
     <a href="#work" data-t="nav.work">Work</a>
     <a href="#services" data-t="nav.services">Services</a>
     <a href="#aibsent">Aibsent Studios</a>
-    <a href="#process" data-t="nav.process">Process</a>
     <a href="#clients" data-t="nav.clients">Clients</a>
     <a href="#shop" data-t="nav.shop" id="navShop" hidden>Shop</a>
     <a href="#lab">Lab</a>
@@ -489,6 +494,11 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
     <h2 class="reveal" data-t="svc.title" data-html>What we <b>make.</b></h2>
     <p class="sub reveal" data-t="svc.sub">One team from the first idea to the final master: we write, produce, shoot and finish in house.</p>
     <div class="svc-grid" id="svcGrid"><!--seo:svcGrid--><div class="svc"><div class="in"><small>01</small><h3>Commercials</h3><p>TV and online spots, from the creative idea and the script to casting, shoot and the final master for every platform.</p><a class="ex" href="https://www.youtube.com/watch?v=J6xyi0iE8KY"><span>Watch: Aperol Spritz</span></a></div></div><div class="svc"><div class="in"><small>02</small><h3>Music Videos</h3><p>A concept built around the song and the artist, directed, shot and finished with the care of a short film.</p><a class="ex" href="https://www.youtube.com/watch?v=1Y3h-3ka4bo"><span>Watch: Michalis Hatzigiannis – Horevo</span></a></div></div><div class="svc"><div class="in"><small>03</small><h3>Feature Films</h3><p>Feature and short films, from the script and development to the shoot and the final cut, for the big screen and festivals.</p><a class="ex" href="https://www.youtube.com/watch?v=_fRXBXkcikw"><span>Watch: Eva ii – Official Trailer</span></a></div></div><div class="svc"><div class="in"><small>04</small><h3>Documentaries</h3><p>Real people and real stories, researched, filmed and edited with patience and an honest eye.</p></div></div><div class="svc"><div class="in"><small>05</small><h3>Corporate Films</h3><p>Brand films, events and campaigns that tell what a company does, clearly and beautifully.</p></div></div><div class="svc"><div class="in"><small>06</small><h3>Visuals</h3><p>Stage and concert visuals, LED screen content, VJ loops and motion art made to move with the music.</p><a class="ex" href="https://www.youtube.com/watch?v=IIYKCXvb7JY"><span>Watch: Fluo Live</span></a></div></div><div class="svc"><div class="in"><small>07</small><h3>Post-production</h3><p>Editing, color grading, visual effects, motion graphics and compositing, for our films or for yours.</p><a class="ex" href="https://vimeo.com/364348936"><span>Watch: Tresemmé</span></a></div></div><!--/seo:svcGrid--></div>
+    <div class="svc-how" id="process">
+      <p class="label reveal" data-t="proc.label">How we work</p>
+      <h3 class="how-title reveal" data-t="proc.title" data-html>From idea <b>to screen.</b></h3>
+      <div class="steps" id="steps"><!--seo:steps--><div class="step"><h3>Idea</h3><p>We listen, then come back with a concept, a treatment and a clear budget.</p></div><div class="step"><h3>Pre-production</h3><p>Script, casting, locations, crew, schedule: every detail settled before the first day.</p></div><div class="step"><h3>Shoot</h3><p>A tight crew and the right gear, on set or on location, wherever the film needs to be.</p></div><div class="step"><h3>Post-production</h3><p>Edit, color, sound, graphics and effects, with you in every review.</p></div><div class="step"><h3>Delivery</h3><p>Masters for TV, cinema and every social format, on time.</p></div><!--/seo:steps--></div>
+    </div>
   </section>
 
   <!-- Aibsent Studios on the home page, kept minimal (Alex, 18 Oct): the logo, one line, one way in; the studio's own
@@ -501,11 +511,6 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
     </a>
   </section>
 
-  <section id="process" class="process">
-    <p class="label reveal" data-t="proc.label">How we work</p>
-    <h2 class="reveal" data-t="proc.title" data-html>From idea <b>to screen.</b></h2>
-    <div class="steps" id="steps"><!--seo:steps--><div class="step"><h3>Idea</h3><p>We listen, then come back with a concept, a treatment and a clear budget.</p></div><div class="step"><h3>Pre-production</h3><p>Script, casting, locations, crew, schedule: every detail settled before the first day.</p></div><div class="step"><h3>Shoot</h3><p>A tight crew and the right gear, on set or on location, wherever the film needs to be.</p></div><div class="step"><h3>Post-production</h3><p>Edit, color, sound, graphics and effects, with you in every review.</p></div><div class="step"><h3>Delivery</h3><p>Masters for TV, cinema and every social format, on time.</p></div><!--/seo:steps--></div>
-  </section>
 
   <section id="about" class="about">
     <div class="reveal">
