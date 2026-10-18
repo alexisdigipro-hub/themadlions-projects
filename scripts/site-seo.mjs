@@ -88,6 +88,8 @@ const COPY = {
     locale: 'el_GR', alt: 'en_US',
   },
 }
+// where the studio is: only in the structured data and llms.txt, never on the visible page (Alex, 18 Oct: "yes, Athens, Greece")
+const PLACE = { '@type': 'PostalAddress', addressLocality: 'Athens', addressCountry: 'GR' }
 const SOCIAL = ['https://www.instagram.com/themadlions/', 'https://www.youtube.com/channel/UCoPMSQpUYXNPSCMJV-ErfiA', 'https://www.facebook.com/themadlions/']
 
 function jsonLd(l, c, d) {
@@ -98,7 +100,8 @@ function jsonLd(l, c, d) {
       '@type': 'Organization', '@id': `${BASE}#org`, name: 'The Mad Lions', alternateName: ['THEMADLIONS', 'The Mad Lions Film Production'],
       url: BASE, logo: `${BASE}wordmark.png`, image: `${BASE}og-image.png`, email: 'info@themadlions.com',
       description: COPY.en.desc, ...(c.FOUNDED ? { foundingDate: c.FOUNDED } : {}),
-      founder: { '@id': `${BASE}#alex` }, sameAs: SOCIAL, knowsLanguage: ['en', 'el'],
+      founder: { '@id': `${BASE}#alex` }, sameAs: SOCIAL,
+      address: PLACE, location: { '@type': 'Place', name: 'Athens, Greece', address: PLACE }, areaServed: ['Greece', 'Europe', 'Worldwide'], knowsLanguage: ['en', 'el'],
       knowsAbout: ['Film production', 'Commercials', 'TV commercials', 'Music videos', 'Feature films', 'Short films', 'Documentaries', 'Corporate films', 'Brand films', 'Stage visuals', 'Post-production', 'Editing', 'Color grading', 'Visual effects', 'Motion graphics', 'AI films'],
       contactPoint: { '@type': 'ContactPoint', contactType: 'sales', email: 'info@themadlions.com', availableLanguage: ['English', 'Greek'] },
       subOrganization: { '@type': 'Organization', '@id': `${BASE}#aibsent`, name: 'Aibsent Studios', url: `${BASE}#aibsent`, logo: `${BASE}aibsent.png`,
@@ -106,7 +109,7 @@ function jsonLd(l, c, d) {
       hasOfferCatalog: { '@type': 'OfferCatalog', name: l === 'el' ? 'Υπηρεσίες' : 'Services',
         itemListElement: svc.map(([n, t]) => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: n, description: t, provider: { '@id': `${BASE}#org` } } })) },
     },
-    { '@type': 'Person', '@id': `${BASE}#alex`, name: 'Alex Konstantinidis', jobTitle: 'Producer and Film Director', worksFor: { '@id': `${BASE}#org` },
+    { '@type': 'Person', '@id': `${BASE}#alex`, name: 'Alex Konstantinidis', jobTitle: 'Producer and Film Director', worksFor: { '@id': `${BASE}#org` }, workLocation: { '@type': 'Place', name: 'Athens, Greece', address: PLACE },
       knowsAbout: ['Film directing', 'Commercials', 'Music videos', 'Feature films'] },
     { '@type': 'WebSite', '@id': `${BASE}#site`, url: BASE, name: 'The Mad Lions', inLanguage: ['en', 'el'], publisher: { '@id': `${BASE}#org` } },
     { '@type': 'WebPage', '@id': `${url}#page`, url, name: COPY[l].title, description: COPY[l].desc, inLanguage: l, isPartOf: { '@id': `${BASE}#site` },
@@ -203,10 +206,11 @@ function llms(c, d, full) {
   const faqEl = c.FAQ.map((f) => `### ${f.el[0]}\n${f.el[1]}`).join('\n\n')
   return `# The Mad Lions
 
-> The Mad Lions is a film production house led by producer and film director Alex Konstantinidis. It makes commercials, music videos, feature and short films, documentaries, corporate films and stage visuals, and finishes them in house at Aibsent Studios, its post-production and AI studio. One team from the first idea to the final master. Contact: info@themadlions.com
+> The Mad Lions is a film production house based in Athens, Greece, led by producer and film director Alex Konstantinidis. It makes commercials, music videos, feature and short films, documentaries, corporate films and stage visuals, and finishes them in house at Aibsent Studios, its post-production and AI studio. One team from the first idea to the final master. Contact: info@themadlions.com
 
 - Website: ${BASE} (English) · ${BASE}el/ (Greek)
 - Email for new projects: info@themadlions.com (answers within a working day)${c.FOUNDED ? `\n- Making films since ${c.FOUNDED}` : ''}
+- Based in Athens, Greece; shoots wherever the film needs to be
 - Languages: English, Greek
 - Instagram: ${SOCIAL[0]} · YouTube: ${SOCIAL[1]} · Facebook: ${SOCIAL[2]}
 
