@@ -438,7 +438,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 
     <section data-pane="work" hidden>
       <div class="head">
-        <div><h1>Work</h1><p>The films on the site, in their order. Drag or use the arrows to move one, the eye hides one, a click edits it. The first 20 are on the home page.</p></div>
+        <div><h1>Work</h1><p>The films on the site, in their order. Drag or use the arrows to move one, the eye hides one, a click edits it. The first 28 are on the home page.</p></div>
         <span class="grow"></span>
         <button class="btn danger" type="button" id="hideAll" hidden>Hide all</button>
         <button class="btn" type="button" id="editCats">Categories</button>
@@ -554,7 +554,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
       <label class="f"><span>Year</span><input name="year" inputmode="numeric" maxlength="4" placeholder="2026"></label>
     </div>
     <div class="f"><span>Categories</span><div class="chips" id="wCats"></div><input id="wNewCat" placeholder="Another category, then Enter" style="height:38px;font-size:14px"></div>
-    <label class="f" id="wPlaceRow"><span>Place on the site</span><input name="place" inputmode="numeric" maxlength="3" style="max-width:120px"><span class="hint" id="wPlaceHint">1 is first. The first 20 are on the home page, the rest come with Show all.</span></label>
+    <label class="f" id="wPlaceRow"><span>Place on the site</span><input name="place" inputmode="numeric" maxlength="3" style="max-width:120px"><span class="hint" id="wPlaceHint">1 is first. The first 28 are on the home page, the rest come with Show all.</span></label>
     <label class="switch"><input type="checkbox" name="visible" checked> Show on the site</label>
     <label class="switch"><input type="checkbox" name="aibsent"> Made by Aibsent Studios <span class="hint">(post-production &amp; AI: the film gets the "by Aibsent Studios" mark and shows in its section)</span></label>
     <div class="f" id="wAibRow" hidden><span>Aibsent Studios · what kind of work</span><div class="chips" id="wAib"></div><span class="hint">The filters on the Aibsent Studios page. Pick one or more.</span></div>
@@ -821,7 +821,7 @@ async function loadOverview() {
 
 /* ---------- work ---------- */
 let works = [], workCat = 'All', editingWork = null
-const HOME = 20 // films the site's home page shows before Show all (public/site/index.html SHORT)
+const HOME = 28 // films the site's home page shows before Show all (public/site/index.html SHORT)
 const BASE_CATS = ['Commercials', 'Music Videos', 'Corporate', 'Motion Graphics', 'Events', 'Films', 'AI Films', 'Showreels', 'Behind the Scenes']
 // the categories with their Greek names, kept in site_settings.categories [{ en, el }] (Alex, 18 Oct); the site reads the same list
 const CAT_EL = { 'Commercials': 'Διαφημιστικά', 'Music Videos': 'Βίντεο κλιπ', 'Corporate': 'Εταιρικά', 'Motion Graphics': 'Motion Graphics', 'Events': 'Events', 'AI Films': 'AI ταινίες', 'Films': 'Ταινίες', 'Showreels': 'Showreels', 'Behind the Scenes': 'Πίσω από τις κάμερες' }
@@ -1035,7 +1035,7 @@ function openWork(w) {
   $('wTitle').textContent = w ? 'Edit the film' : 'Add a film'
   $('wDelete').hidden = !w
   f.place.value = w ? (works.filter((x) => x.visible).indexOf(w) + 1 || '') : 1
-  $('wPlaceHint').textContent = w && !w.visible ? 'Hidden now. 1 is first; the first 20 are on the home page, the rest come with Show all.' : '1 is first. The first 20 are on the home page, the rest come with Show all.'
+  $('wPlaceHint').textContent = w && !w.visible ? 'Hidden now. 1 is first; the first 28 are on the home page, the rest come with Show all.' : '1 is first. The first 28 are on the home page, the rest come with Show all.'
   wFrame = framer($('wFramer'), { frame: editingWork.frame, ratios: [['20 / 9', 'Tile']] })
   showPreview(); renderWorkCats(); renderAibKinds(); openDrawer(f)
   if (!w) setTimeout(() => f.video.focus(), 300)
