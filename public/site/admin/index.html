@@ -159,6 +159,10 @@ main { padding: 26px var(--pad) 90px; min-width: 0; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 /* frames from inside a YouTube film to use as its picture (Alex, 18 Oct) */
 .yframes { display: grid; gap: 8px; margin-top: 4px; }
+/* the AI picture (Alex, 18 Oct): GPT Image 2.5 through the site-ai Edge Function */
+.aibox { display: grid; gap: 8px; margin-top: 6px; padding: 12px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid var(--edge); }
+.aibox input { height: 40px; font-size: 14px; }
+.aibox .btn[disabled] { opacity: .6; pointer-events: none; }
 /* a frame from the film's own file, chosen by scrolling through it (Alex, 18 Oct) */
 .scrub { display: grid; gap: 8px; margin-top: 6px; padding: 10px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid var(--edge); }
 .scrub video { display: block; width: 100%; max-height: 340px; border-radius: 10px; background: #000; }
@@ -361,6 +365,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
   <symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/></symbol>
   <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></symbol>
   <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21 20c0-2.6-1.6-4.8-4-5.6"/></symbol>
   <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
@@ -524,7 +529,8 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
   <div class="db">
     <label class="f"><span>YouTube, Vimeo or pCloud link</span><input name="video" placeholder="https://youtu.be/… · https://vimeo.com/… · https://e.pcloud.link/publink/show?code=…" autocomplete="off"><span class="hint">Paste it and the title and picture come by themselves. A pCloud film plays from your pCloud, so every view uses its link traffic.</span></label>
     <div class="f"><span>Picture &amp; framing · drag the picture to move it, the slider zooms</span><div id="wFramer"></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn sm" type="button" id="wCoverUp"><svg class="i"><use href="#i-plus"/></svg>Use my own picture</button><button class="btn sm" type="button" id="wVidUp"><svg class="i"><use href="#i-plus"/></svg>Pick a frame from the video file</button><button class="btn sm danger" type="button" id="wCoverRm" hidden>Back to the video's still</button><span class="hint" id="wCoverHint">Now: the video's own still</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn sm" type="button" id="wCoverUp"><svg class="i"><use href="#i-plus"/></svg>Use my own picture</button><button class="btn sm" type="button" id="wVidUp"><svg class="i"><use href="#i-plus"/></svg>Pick a frame from the video file</button><button class="btn sm" type="button" id="wAi"><svg class="i"><use href="#i-spark"/></svg>Clean it with AI</button><button class="btn sm danger" type="button" id="wCoverRm" hidden>Back to the video's still</button><span class="hint" id="wCoverHint">Now: the video's own still</span></div>
+      <div class="aibox" id="wAiBox" hidden><input id="wAiNote" maxlength="300" placeholder="Anything else for the AI? (optional, e.g. warmer light, no people in the background)"><span class="hint">Takes off text, logos and graphic bars, rebuilds what was under them and makes a clean 2K picture from the one above, keeping the people and the frame. About a minute; you see it before Save.</span><div style="display:flex;gap:8px"><button class="btn sm" type="button" id="wAiCancel">Cancel</button><button class="btn sm red" type="button" id="wAiGo"><svg class="i"><use href="#i-spark"/></svg>Make it</button></div></div>
       <div class="yframes" id="wFrames" hidden><span class="hint">Or a frame from inside the film, without the still's text and logos:</span><div class="yfrow" id="wFrameRow"></div></div>
       <div class="scrub" id="wScrub" hidden>
         <video id="wVid" playsinline muted controls preload="auto"></video>
@@ -1006,6 +1012,7 @@ $('wCats').onclick = (e) => { const b = e.target.closest('[data-c]'); if (!b) re
 $('wNewCat').onkeydown = (e) => { if (e.key !== 'Enter') return; e.preventDefault(); const v = e.target.value.trim(); if (v && !editingWork.categories.includes(v)) { editingWork.categories.push(v); if (!BASE_CATS.includes(v)) { BASE_CATS.push(v); if (catList) { catList.push({ en: v, el: '' }); setSetting('categories', catList).catch(() => {}) } } } e.target.value = ''; renderWorkCats() }
 function openWork(w) {
   if (!$('wScrub').hidden) closeScrub()
+  $('wAiBox').hidden = true
   editingWork = w ? { ...w, categories: [...(w.categories || [])] } : { title: '', client: '', year: new Date().getFullYear(), categories: [], video: '', visible: true }
   editingWork.aibKinds = [...((w && aibKinds[w.id]) || [])]
   const f = $('workDrawer')
@@ -1057,6 +1064,28 @@ function showPreview() {
   renderYtFrames(v)
 }
 $('wCoverUp').onclick = () => $('coverPick').click()
+/* Clean it with AI: the picture shown now (own, a frame, or the video's still) goes to the site-ai Edge Function,
+   which sends it to GPT Image 2.5 and saves the clean 2K picture in the site's bucket; it comes back as the cover */
+function aiSource() {
+  if (editingWork.cover) return editingWork.cover
+  const v = parseVideo($('workDrawer').video.value)
+  return v ? (v.kind === 'yt' ? `https://i.ytimg.com/vi/${v.id}/maxresdefault.jpg` : v.kind === 'pc' ? pcThumb(v.id, true) : `https://vumbnail.com/${v.id}_large.jpg`) : ''
+}
+$('wAi').onclick = () => { $('wAiBox').hidden = !$('wAiBox').hidden; if (!$('wAiBox').hidden) $('wAiNote').focus() }
+$('wAiCancel').onclick = () => { $('wAiBox').hidden = true }
+$('wAiGo').onclick = async () => {
+  const src = aiSource()
+  if (!src) { toast('Paste the video link first'); return }
+  const go = $('wAiGo'), was = go.innerHTML
+  go.disabled = true; go.textContent = 'Working… about a minute'
+  try {
+    const r = await api('functions/v1/site-ai', { method: 'POST', body: JSON.stringify({ src, note: $('wAiNote').value.trim() }) })
+    if (!r?.url) throw new Error('No picture came back')
+    editingWork.cover = r.url
+    $('wAiBox').hidden = true; $('wAiNote').value = ''
+    showPreview(); toast('AI picture in · look at it, frame it and press Save')
+  } catch (err) { toast(err.message) } finally { go.disabled = false; go.innerHTML = was }
+}
 /* the film's own file (the master on this computer): scroll through it, stop on a frame, and that frame, at the
    file's full quality (up to 2400 px wide), becomes the film's picture. Nothing of the video is uploaded, only the frame */
 const vid = $('wVid')
