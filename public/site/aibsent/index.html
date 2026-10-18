@@ -111,6 +111,15 @@ h2 b { font-weight: 800; }
 .tile { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: var(--bg-2); cursor: pointer; border: 0; padding: 0; text-align: left; }
 .tile img { width: 100%; height: 100%; object-fit: cover; transform: scale(calc(var(--z, 1) * 1.01)); transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
 .tile:hover img { transform: scale(calc(var(--z, 1) * 1.06)); }
+/* the kinds of work (Alex, 18 Oct): filters over the films, and the kind as a small chip on each tile */
+.kfilters { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 0 30px; }
+.kfilters button { height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: none; color: color-mix(in srgb, var(--text) 68%, transparent); font: inherit; font-size: 14px; letter-spacing: .02em; cursor: pointer; transition: background .25s, color .25s, border-color .25s; }
+.kfilters button:hover { color: var(--text); border-color: var(--glass-edge); }
+.kfilters button.on { color: var(--text); background: var(--glass); border-color: var(--glass-edge); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 12%, transparent); }
+.tile .kchip { position: absolute; top: 12px; left: 12px; z-index: 2; display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 11px; border-radius: 999px; font-size: 10.5px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: #f2f0ec; background: rgba(10,10,12,.55); border: 1px solid rgba(255,255,255,.14); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.kfilters:not([hidden]) + .grid { margin-top: 0; }
+.tile .kchip i { width: 6px; height: 6px; border-radius: 50%; background: #ff3b2f; }
+@media (max-width: 700px) { .kfilters { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--pad)) 22px; padding: 0 var(--pad); } .kfilters::-webkit-scrollbar { display: none; } .kfilters button { flex: none; } }
 .tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,.35)); }
 .tile .play { position: absolute; left: 50%; top: 50%; z-index: 1; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); opacity: 0; transform: scale(.85); transition: opacity .3s, transform .3s; }
 .tile .play svg { width: 16px; margin-left: 3px; fill: #fff; }
@@ -178,6 +187,7 @@ footer .wordmark { width: 130px; opacity: .6; }
 
   <section id="work">
     <p class="label center reveal" data-t="work.label">The work</p>
+    <div class="kfilters" id="kfilters" hidden></div>
     <div class="grid" id="grid"></div>
   </section>
 
@@ -259,13 +269,26 @@ footer .wordmark { width: 130px; opacity: .6; }
   var CATS_EL = { 'Commercials': 'Διαφημιστικά', 'Music Videos': 'Βίντεο κλιπ', 'Corporate': 'Εταιρικά', 'Motion Graphics': 'Motion Graphics', 'Events': 'Events', 'AI Films': 'AI ταινίες', 'Films': 'Ταινίες', 'Showreels': 'Showreels' }
   var PLAY = '<svg viewBox="0 0 10 12"><path d="M0 0l10 6-10 6z"/></svg>'
   var works = null
+  // the kinds of work, from Studio > Work (site_settings.aib_kinds); a film can be more than one
+  var KINDS = [['full', 'Full CGI & AI', 'Ολόκληρα σε CGI & AI'], ['shots', 'Added CGI shots', 'Συμπληρωματικά πλάνα CGI'], ['anim', 'Animation', 'Animation'], ['motion', 'Motion Graphics', 'Motion Graphics'], ['visuals', 'Visuals', 'Visuals']]
+  var kindsOf = {}, kf = 'all'
+  function kName(k) { for (var i = 0; i < KINDS.length; i++) if (KINDS[i][0] === k) return lang === 'el' ? KINDS[i][2] : KINDS[i][1]; return k }
+  function renderFilters() {
+    var box = document.getElementById('kfilters'), have = KINDS.filter(function (k) { return (works || []).some(function (w) { return (kindsOf[w.id] || []).indexOf(k[0]) >= 0 }) })
+    box.hidden = !have.length
+    if (!have.length) { kf = 'all'; return }
+    if (kf !== 'all' && !have.some(function (k) { return k[0] === kf })) kf = 'all'
+    box.innerHTML = [['all', lang === 'el' ? 'Όλα' : 'All']].concat(have.map(function (k) { return [k[0], kName(k[0])] })).map(function (k) { return '<button type="button" data-k="' + k[0] + '" class="' + (kf === k[0] ? 'on' : '') + '">' + k[1] + '</button>' }).join('')
+  }
+  document.getElementById('kfilters').onclick = function (e) { var b = e.target.closest('[data-k]'); if (!b) return; kf = b.getAttribute('data-k'); renderWorks() }
   function thumb(w) { return w.cover || (w.kind === 'vm' ? 'https://vumbnail.com/' + w.video_id + '_large.jpg' : 'https://i.ytimg.com/vi/' + w.video_id + '/maxresdefault.jpg') }
   function renderWorks() {
     var grid = document.getElementById('grid')
     if (works === null) return
     if (!works.length) { grid.outerHTML = '<p class="empty" id="grid">' + (lang === 'el' ? EL['work.none'] : EN['work.none']) + '</p>'; return }
+    renderFilters()
     grid.innerHTML = ''
-    works.forEach(function (w) {
+    works.filter(function (w) { return kf === 'all' || (kindsOf[w.id] || []).indexOf(kf) >= 0 }).forEach(function (w) {
       var b = document.createElement('button'); b.type = 'button'; b.className = 'tile'
       var im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = thumb(w)
       var f = w.frame || null
@@ -276,15 +299,22 @@ footer .wordmark { width: 130px; opacity: .6; }
       im.onload = function () { if (im.naturalWidth && im.naturalWidth < 200) hq() }
       b.appendChild(im)
       // no titles on the tiles (Alex, 18 Oct), as on the home page; the name stays for screen readers
-      b.insertAdjacentHTML('beforeend', '<span class="play">' + PLAY + '</span>')
+      var ks = kindsOf[w.id] || []
+      b.insertAdjacentHTML('beforeend', (ks.length ? '<span class="kchip"><i></i>' + kName(kf !== 'all' ? kf : ks[0]) + '</span>' : '') + '<span class="play">' + PLAY + '</span>')
       b.setAttribute('aria-label', w.title)
       b.onclick = function () { play(w) }
       grid.appendChild(b)
     })
   }
-  fetch(SUPABASE_URL + '/rest/v1/site_works?visible=eq.true&aibsent=eq.true&kind=in.(yt,vm)&select=title,client,categories,kind,video_id,frame,cover&order=position.asc,created_at.desc', { headers: { apikey: SUPABASE_KEY } })
-    .then(function (r) { return r.json() }).then(function (rows) { works = Array.isArray(rows) ? rows.filter(function (w) { return w.video_id }) : []; renderWorks() })
-    .catch(function () { works = []; renderWorks() })
+  var getJson = function (q) { return fetch(SUPABASE_URL + '/rest/v1/' + q, { headers: { apikey: SUPABASE_KEY } }).then(function (r) { return r.json() }) }
+  Promise.all([
+    getJson('site_works?visible=eq.true&aibsent=eq.true&kind=in.(yt,vm)&select=id,title,client,categories,kind,video_id,frame,cover&order=position.asc,created_at.desc'),
+    getJson('site_settings?key=eq.aib_kinds&select=value').catch(function () { return [] })
+  ]).then(function (r) {
+    var rows = r[0], k = Array.isArray(r[1]) && r[1][0] && r[1][0].value
+    kindsOf = k && typeof k === 'object' ? k : {}
+    works = Array.isArray(rows) ? rows.filter(function (w) { return w.video_id }) : []; renderWorks()
+  }).catch(function () { works = []; renderWorks() })
 
   // a film plays here, through youtube.com with the page as referrer, or Vimeo
   var player = document.getElementById('player'), frame = document.getElementById('pframe')
