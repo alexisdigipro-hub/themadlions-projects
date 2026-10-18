@@ -385,6 +385,18 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
 .player.photo .frame { aspect-ratio: auto; height: min(80vh, 100%); background: transparent; box-shadow: none; }
 .player .frame > img { width: 100%; height: 100%; object-fit: contain; display: block; }
 @media (max-width: 900px) { .bts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; } .player .pnav { top: auto; bottom: calc(20px + env(safe-area-inset-bottom)); margin-top: 0; } .player .pnav.prev { left: calc(50% - 60px); } .player .pnav.next { right: calc(50% - 60px); } }
+/* Lab on the home page (Alex, 18 Oct): a minimal mention, the two experiments and a way into the Lab */
+.labs { border-top: 1px solid var(--line); }
+.labs > .label, .labs > h2 { text-align: center; }
+.lab-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 880px; margin: 44px auto 0; }
+.lab-x { display: grid; gap: 10px; padding: 24px 26px; border-radius: 18px; background: var(--bg-2); border: 1px solid var(--line); color: var(--text); text-decoration: none; transition: border-color .3s, transform .3s; }
+.lab-x:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); transform: translateY(-2px); }
+.lab-x .n { display: flex; align-items: center; gap: 8px; font-size: 11.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
+.lab-x .n i { width: 7px; height: 7px; border-radius: 50%; background: #2fd36b; box-shadow: 0 0 8px rgba(47,211,107,.8); }
+.lab-x .wm { font-size: clamp(26px, 3vw, 34px); font-weight: 800; letter-spacing: .04em; line-height: 1; }
+.lab-x .wm span { font-weight: 250; }
+.lab-x .d { font-size: 15px; font-weight: 300; color: color-mix(in srgb, var(--text) 78%, transparent); }
+@media (max-width: 700px) { .lab-row { grid-template-columns: minmax(0, 1fr); } }
 /* Services, How we work, About and Clients: the titles and their texts centred (Alex, 18 Oct); the cards keep their own layout */
 .services > .label, .services > h2, .process > .label, .process > h2, .clients > .label, .clients > h2 { text-align: center; }
 .services > .sub { margin-left: auto; margin-right: auto; text-align: center; }
@@ -497,6 +509,16 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
     <div class="more"><button class="pill" id="btsAll" type="button" data-t="bts.all">Δες τα όλα</button></div>
   </section>
 
+  <section id="lab" class="labs">
+    <p class="label reveal" data-t="lab.label">Lab</p>
+    <h2 class="reveal" data-t="lab.title" data-html>Ό,τι φτιάχνουμε <b>ανάμεσα στις ταινίες.</b></h2>
+    <div class="lab-row reveal">
+      <a class="lab-x" href="../roarme/"><span class="n"><span data-t="lab.e1">Πείραμα 01</span> <i></i></span><b class="wm"><span>ROAR</span>ME</b><span class="d" data-t="lab.rm">Το messenger για ομάδες.</span></a>
+      <a class="lab-x" href="../roardino/"><span class="n"><span data-t="lab.e2">Πείραμα 02</span> <i></i></span><b class="wm"><span>ROAR</span>DINO</b><span class="d" data-t="lab.rd">Το ordino, σε ένα link.</span></a>
+    </div>
+    <div class="more"><a class="pill" href="../lab/" data-t="lab.go">Δες το Lab</a></div>
+  </section>
+
   <section id="shop" class="shop" hidden>
     <p class="label reveal" data-t="shop.label">Shop</p>
     <h2 class="reveal" data-t="shop.title" data-html>Mad <b>merch.</b></h2>
@@ -583,6 +605,7 @@ const T = {
     'about.quote': '"No matter what people tell you, words and ideas can change the world." Robin Williams',
     'clients.label': 'Clients', 'clients.title': "Brands <b>we've filmed for.</b>",
     'bts.label': 'Behind the scenes', 'bts.title': 'On set <b>with us.</b>', 'bts.all': 'See everything',
+    'lab.label': 'Lab', 'lab.title': 'What we build <b>between films.</b>', 'lab.e1': 'Experiment 01', 'lab.e2': 'Experiment 02', 'lab.rm': 'The messenger for teams.', 'lab.rd': 'The call sheet, in one link.', 'lab.go': 'Visit the Lab',
     'contact.label': 'Contact', 'contact.title': 'Tell us about <b>your project.</b>', 'contact.sub': 'A few lines are enough. We answer within a working day.',
     'f.kind': 'What are you making?', 'f.budget': 'Budget', 'f.name': 'Name', 'f.email': 'Email', 'f.company': 'Company or artist',
     'f.when': 'When do you need it?', 'f.whenPh': 'e.g. end of November', 'f.msg': 'Tell us more', 'f.msgPh': 'The idea, the format, where it will be seen…',
@@ -606,6 +629,7 @@ const T = {
     'about.quote': '«Ό,τι κι αν σου πουν, οι λέξεις και οι ιδέες μπορούν να αλλάξουν τον κόσμο.» Robin Williams',
     'clients.label': 'Πελάτες', 'clients.title': 'Brands <b>που δουλέψαμε μαζί.</b>',
     'bts.label': 'Πίσω από τις κάμερες', 'bts.title': 'Στο <b>γύρισμα.</b>', 'bts.all': 'Δες τα όλα',
+    'lab.label': 'Lab', 'lab.title': 'Ό,τι φτιάχνουμε <b>ανάμεσα στις ταινίες.</b>', 'lab.e1': 'Πείραμα 01', 'lab.e2': 'Πείραμα 02', 'lab.rm': 'Το messenger για ομάδες.', 'lab.rd': 'Το ordino, σε ένα link.', 'lab.go': 'Δες το Lab',
     'contact.label': 'Επαφή', 'contact.title': 'Πείτε μας για <b>το project σας.</b>', 'contact.sub': 'Λίγες γραμμές αρκούν. Απαντάμε μέσα σε μία εργάσιμη.',
     'f.kind': 'Τι θέλετε να φτιάξετε;', 'f.budget': 'Budget', 'f.name': 'Όνομα', 'f.email': 'Email', 'f.company': 'Εταιρεία ή καλλιτέχνης',
     'f.when': 'Πότε το χρειάζεστε;', 'f.whenPh': 'π.χ. τέλη Νοεμβρίου', 'f.msg': 'Πείτε μας περισσότερα', 'f.msgPh': 'Η ιδέα, το format, πού θα προβληθεί…',
