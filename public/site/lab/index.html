@@ -54,6 +54,7 @@ img { display: block; max-width: 100%; }
 .bar .wordmark { width: 168px; }
 .bar nav { margin-left: auto; display: flex; gap: 2px; }
 .bar nav a { padding: 8px 13px; border-radius: 999px; font-size: 13.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--text) 80%, transparent); transition: background .2s, color .2s; }
+.bar nav a { white-space: nowrap; } /* one line, Aibsent Studios too */
 .bar nav a:hover { background: var(--glass); color: var(--text); }
 .bar nav a.on { color: var(--text); background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 20%, transparent), color-mix(in srgb, var(--hi) 7%, transparent)); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 35%, transparent); }
 .lang { display: flex; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); }
@@ -140,7 +141,7 @@ footer .wordmark { width: 130px; opacity: .6; }
   <nav>
     <a href="../#work" data-t="nav.work">Work</a>
     <a href="../#services" data-t="nav.services">Services</a>
-    <a href="../#aibsent">Aibsent</a>
+    <a href="../aibsent/">Aibsent Studios</a>
     <a href="../#process" data-t="nav.process">Process</a>
     <a href="../#clients" data-t="nav.clients">Clients</a>
     <a href="./" class="on" aria-current="page">Lab</a>

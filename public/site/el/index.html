@@ -83,6 +83,7 @@ img { display: block; max-width: 100%; }
 .bar.solid .wordmark { opacity: 1; transform: none; }
 .bar nav { margin-left: auto; display: flex; gap: 2px; }
 .bar nav a { padding: 8px 13px; border-radius: 999px; font-size: 13.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--text) 80%, transparent); transition: background .2s, color .2s; }
+.bar nav a { white-space: nowrap; } /* one line, Aibsent Studios too */
 .bar nav a:hover { background: var(--glass); color: var(--text); }
 /* on a phone the sections menu is hidden; the Lab keeps a small pill of its own beside the language (Alex, 18 Oct) */
 .bar .lab-m { display: none; align-items: center; height: 34px; padding: 0 14px; border-radius: 999px; font-size: 12.5px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; background: var(--glass); border: 1px solid var(--glass-edge); }
@@ -430,7 +431,7 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
   <nav>
     <a href="#work" data-t="nav.work">Δουλειά</a>
     <a href="#services" data-t="nav.services">Υπηρεσίες</a>
-    <a href="../aibsent/">Aibsent</a>
+    <a href="../aibsent/">Aibsent Studios</a>
     <a href="#process" data-t="nav.process">Διαδικασία</a>
     <a href="#clients" data-t="nav.clients">Πελάτες</a>
     <a href="#shop" data-t="nav.shop" id="navShop" hidden>Shop</a>
@@ -486,8 +487,8 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
         <p class="aib-lead" data-t="aib.lead">Το δικό μας studio για post-production και AI. Ολοκληρώνει τις ταινίες μας και αναλαμβάνει και τις δικές σας: από μοντάζ και χρώμα ως visual effects, motion graphics και ταινίες με AI.</p>
         <div class="aib-caps" id="aibCaps"></div>
         <div class="aib-cta">
-          <button class="pill main" type="button" id="aibTalk" data-t="aib.talk">Δουλέψτε με την Aibsent</button>
-          <a class="pill" href="../aibsent/" id="aibAll" data-t="aib.all">Γνώρισε την Aibsent</a>
+          <button class="pill main" type="button" id="aibTalk" data-t="aib.talk">Δουλέψτε με την Aibsent Studios</button>
+          <a class="pill" href="../aibsent/" id="aibAll" data-t="aib.all">Γνώρισε την Aibsent Studios</a>
         </div>
       </div>
       <div class="aib-works" id="aibWorks"></div>
@@ -610,7 +611,7 @@ const SUPABASE_KEY = 'sb_publishable_o1OB_ohozPq1Xr2jg2ZSHA_3GsusXFL'
 const T = {
   en: {
     'nav.work': 'Work', 'nav.services': 'Services', 'nav.process': 'Process', 'nav.clients': 'Clients', 'nav.shop': 'Shop', 'nav.contact': 'Contact',
-    'aib.kicker': 'Post-production & AI · a Mad Lions studio', 'aib.lead': 'Our in-house post and AI studio. It finishes our films and takes on yours: from the edit and the grade to visual effects, motion graphics and films made with AI.', 'aib.talk': 'Work with Aibsent', 'aib.all': 'Discover Aibsent', 'aib.badge': 'by Aibsent', 'svc.aib': 'Meet Aibsent Studios',
+    'aib.kicker': 'Post-production & AI · a Mad Lions studio', 'aib.lead': 'Our in-house post and AI studio. It finishes our films and takes on yours: from the edit and the grade to visual effects, motion graphics and films made with AI.', 'aib.talk': 'Work with Aibsent Studios', 'aib.all': 'Discover Aibsent Studios', 'aib.badge': 'by Aibsent Studios', 'svc.aib': 'Meet Aibsent Studios',
     'shop.label': 'Shop', 'shop.title': 'Mad <b>merch.</b>', 'shop.buy': 'Buy', 'shop.soldout': 'Sold out',
     'hero.kicker': 'Film production house',
     'stats.years': 'Years making films', 'stats.prod': 'Productions', 'stats.clients': 'Brands & artists',
@@ -634,7 +635,7 @@ const T = {
   },
   el: {
     'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.shop': 'Shop', 'nav.contact': 'Επαφή',
-    'aib.kicker': 'Post-production & AI · ένα studio των Mad Lions', 'aib.lead': 'Το δικό μας studio για post-production και AI. Ολοκληρώνει τις ταινίες μας και αναλαμβάνει και τις δικές σας: από μοντάζ και χρώμα ως visual effects, motion graphics και ταινίες με AI.', 'aib.talk': 'Δουλέψτε με την Aibsent', 'aib.all': 'Γνώρισε την Aibsent', 'aib.badge': 'by Aibsent', 'svc.aib': 'Γνωρίστε την Aibsent Studios',
+    'aib.kicker': 'Post-production & AI · ένα studio των Mad Lions', 'aib.lead': 'Το δικό μας studio για post-production και AI. Ολοκληρώνει τις ταινίες μας και αναλαμβάνει και τις δικές σας: από μοντάζ και χρώμα ως visual effects, motion graphics και ταινίες με AI.', 'aib.talk': 'Δουλέψτε με την Aibsent Studios', 'aib.all': 'Γνώρισε την Aibsent Studios', 'aib.badge': 'by Aibsent Studios', 'svc.aib': 'Γνωρίστε την Aibsent Studios',
     'shop.label': 'Shop', 'shop.title': 'Mad <b>merch.</b>', 'shop.buy': 'Αγορά', 'shop.soldout': 'Εξαντλήθηκε',
     'hero.kicker': 'Εταιρεία κινηματογραφικής παραγωγής',
     'stats.years': 'Χρόνια στις ταινίες', 'stats.prod': 'Παραγωγές', 'stats.clients': 'Brands & καλλιτέχνες',
@@ -765,7 +766,7 @@ function renderFilters() {
   for (const c of ['all', ...cats, ...(WORKS.some((w) => w.aib) ? ['aibsent'] : [])]) {
     const b = document.createElement('button')
     b.type = 'button'
-    b.textContent = c === 'all' ? t('all') : c === 'aibsent' ? 'Aibsent' : lang === 'el' ? (CATS[c] || c) : c
+    b.textContent = c === 'all' ? t('all') : c === 'aibsent' ? 'Aibsent Studios' : lang === 'el' ? (CATS[c] || c) : c
     b.className = c === filter ? 'on' : ''
     b.onclick = () => { filter = c; showAll = false; renderFilters(); renderGrid() }
     box.appendChild(b)
@@ -998,7 +999,7 @@ function startReel() {
 
 /* the enquiry form: two rows of choices, the fields, straight into the hub */
 const pick = { kind: '', budget: '' }
-// a link can choose the kind of film, e.g. ?kind=Post-production#contact from the Aibsent page
+// a link can choose the kind of film, e.g. ?kind=Post-production#contact from the Aibsent Studios page
 { const k = new URLSearchParams(location.search).get('kind'); if (k && KINDS.some((c) => c[0] === k)) pick.kind = k }
 function renderChoices() {
   for (const [id, list] of [['kind', KINDS], ['budget', BUDGETS]]) {

@@ -505,7 +505,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
     <div class="f"><span>Categories</span><div class="chips" id="wCats"></div><input id="wNewCat" placeholder="Another category, then Enter" style="height:38px;font-size:14px"></div>
     <label class="f" id="wPlaceRow"><span>Place on the site</span><input name="place" inputmode="numeric" maxlength="3" style="max-width:120px"><span class="hint" id="wPlaceHint">1 is first. The first 20 are on the home page, the rest come with Show all.</span></label>
     <label class="switch"><input type="checkbox" name="visible" checked> Show on the site</label>
-    <label class="switch"><input type="checkbox" name="aibsent"> Made by Aibsent Studios <span class="hint">(post-production &amp; AI: the film gets the "by Aibsent" mark and shows in its section)</span></label>
+    <label class="switch"><input type="checkbox" name="aibsent"> Made by Aibsent Studios <span class="hint">(post-production &amp; AI: the film gets the "by Aibsent Studios" mark and shows in its section)</span></label>
   </div>
   <div class="df"><button class="btn danger" type="button" id="wDelete">Delete</button><span class="grow"></span><button class="btn" type="button" data-close>Cancel</button><button class="btn red" type="submit" id="wSave">Save</button></div>
 </form>
@@ -759,7 +759,7 @@ async function loadCats() {
   try { const r = await rest('site_settings?key=eq.categories&select=value'); catList = Array.isArray(r?.[0]?.value) ? r[0].value : null } catch (e) { catList = null }
   if (catList) { BASE_CATS.splice(0, BASE_CATS.length, ...catList.map((c) => c.en)) }
 }
-const AIB = 'Aibsent'
+const AIB = 'Aibsent Studios'
 const allCats = () => [...new Set([...BASE_CATS, ...works.flatMap((w) => w.categories || [])])]
 async function loadWorks() {
   $('works').innerHTML = '<div class="skel" style="aspect-ratio:16/11;border-radius:18px"></div>'.repeat(8)
@@ -879,7 +879,7 @@ function renderWorks() {
   const fold = canDrag && vis.length > HOME ? vis[HOME - 1].id : null
   $('works').innerHTML = shown.length ? shown.map((w) => `
     <div class="w glass ${w.visible ? '' : 'off'}" data-id="${esc(w.id)}" draggable="${canDrag}">
-      <div class="ph">${framedImg(w)}${w.visible ? `<span class="no">${vis.indexOf(w) + 1}</span>` : ''}${canDrag ? `<span class="ord"><button type="button" data-mv="top" title="Move to the top" ${works.indexOf(w) ? '' : 'disabled'}><svg class="i"><use href="#i-top"/></svg></button><button type="button" data-mv="up" title="Move up" ${works.indexOf(w) ? '' : 'disabled'}><svg class="i"><use href="#i-up"/></svg></button><button type="button" data-mv="down" title="Move down" ${works.indexOf(w) < last ? '' : 'disabled'}><svg class="i"><use href="#i-down"/></svg></button></span>` : ''}${w.aibsent ? '<span class="aibm">Aibsent</span>' : ''}<button class="eye" type="button" data-eye title="${w.visible ? 'Hide from the site' : 'Show on the site'}"><svg class="i"><use href="#${w.visible ? 'i-eye' : 'i-eyeoff'}"/></svg></button><button class="eye fr" type="button" data-frame title="Adjust &amp; scale the picture"><svg class="i"><use href="#i-crop"/></svg></button></div>
+      <div class="ph">${framedImg(w)}${w.visible ? `<span class="no">${vis.indexOf(w) + 1}</span>` : ''}${canDrag ? `<span class="ord"><button type="button" data-mv="top" title="Move to the top" ${works.indexOf(w) ? '' : 'disabled'}><svg class="i"><use href="#i-top"/></svg></button><button type="button" data-mv="up" title="Move up" ${works.indexOf(w) ? '' : 'disabled'}><svg class="i"><use href="#i-up"/></svg></button><button type="button" data-mv="down" title="Move down" ${works.indexOf(w) < last ? '' : 'disabled'}><svg class="i"><use href="#i-down"/></svg></button></span>` : ''}${w.aibsent ? '<span class="aibm">Aibsent Studios</span>' : ''}<button class="eye" type="button" data-eye title="${w.visible ? 'Hide from the site' : 'Show on the site'}"><svg class="i"><use href="#${w.visible ? 'i-eye' : 'i-eyeoff'}"/></svg></button><button class="eye fr" type="button" data-frame title="Adjust &amp; scale the picture"><svg class="i"><use href="#i-crop"/></svg></button></div>
       <div class="in"><strong>${esc(w.title)}</strong><small>${esc([w.client, w.year, (w.categories || []).join(', ')].filter(Boolean).join(' · ') || 'No category')}</small></div>
     </div>${w.id === fold ? `<div class="fold"><span><b>Above: the home page</b> · below: after Show all</span></div>` : ''}`).join('') : '<div class="empty">No film matches.</div>'
 }
