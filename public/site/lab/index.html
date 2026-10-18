@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- The Mad Lions Lab (Alex, 18 Oct 2026): the tools and apps the studio builds between films, as numbered
-     experiments. Experiment 01 is RoarMe; the next ones come later. Same look and language switch as the main page. -->
+     experiments. Experiment 01 is RoarMe, Experiment 02 is Roardino (the ordino on its own, no tie to the hub).
+     Same look and language switch as the main page. -->
 <title>Lab · The Mad Lions</title>
 <script>
   (function () {
@@ -14,7 +15,7 @@
   })()
 </script>
 <link rel="canonical" href="https://themadlions.com/lab/">
-<meta name="description" content="The Mad Lions Lab: the tools and apps we build between films. Experiment 01 is RoarMe, the messenger for teams.">
+<meta name="description" content="The Mad Lions Lab: the tools and apps we build between films. RoarMe, the messenger for teams, and Roardino, the call sheet in one link.">
 <meta name="theme-color" content="#0b0b0c">
 <meta property="og:title" content="The Mad Lions Lab">
 <meta property="og:description" content="The tools and apps we build between films.">
@@ -92,6 +93,15 @@ section { padding: 0 var(--pad) clamp(80px, 10vw, 130px); }
 .pill svg { width: 17px; height: 17px; }
 .shot { display: block; position: relative; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.45), 0 0 80px color-mix(in srgb, var(--accent) 16%, transparent); }
 .shot img { width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
+/* Roardino: the ordino itself, live, in a phone on a graphite stage */
+.stage { position: relative; display: grid; place-items: center; padding: clamp(24px, 4vw, 44px) 16px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line);
+  background: radial-gradient(600px 380px at 50% -10%, #4b525d 0%, transparent 65%), radial-gradient(420px 320px at 80% 100%, rgba(212,0,0,.18), transparent 70%), linear-gradient(180deg, #2b3038, #15171b);
+  box-shadow: 0 30px 80px rgba(0,0,0,.45), 0 0 80px color-mix(in srgb, var(--accent) 16%, transparent); }
+.handset { width: min(300px, 78vw); aspect-ratio: 9 / 19; border-radius: 40px; border: 9px solid #050506; background: #1b1e23; overflow: hidden; box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.08); }
+.handset iframe { display: block; width: 100%; height: 100%; border: 0; }
+.exp.flip { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+.exp.flip .stage { order: -1; }
+.next.one { grid-template-columns: 1fr; }
 
 /* what comes next */
 .next { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
@@ -112,8 +122,8 @@ footer .wordmark { width: 130px; opacity: .6; }
 @media (max-width: 900px) {
   .bar nav { display: none; }
   .lang { margin-left: auto; }
-  .exp { grid-template-columns: 1fr; }
-  .exp .shot { order: -1; }
+  .exp, .exp.flip { grid-template-columns: 1fr; }
+  .exp .shot, .exp .stage { order: -1; }
   .next { grid-template-columns: 1fr; }
 }
 @media (max-width: 620px) {
@@ -169,13 +179,25 @@ footer .wordmark { width: 130px; opacity: .6; }
       <a class="shot" href="../roarme/" aria-label="RoarMe"><img src="roarme.jpg" alt="RoarMe on a computer: a chat with Encrypted Chat turned on" loading="lazy" width="1600" height="1000"></a>
     </article>
 
-    <div class="next">
-      <div class="card reveal">
-        <span class="exp-n">Experiment 02 <i data-t="exp.soon">In the works</i></span>
-        <h3 data-t="n2.t" data-html>Something for <b>film crews</b>.</h3>
-        <p data-t="n2.p">The next tool is already on the drawing board. Follow us to see it first.</p>
-        <a class="pill" href="https://www.instagram.com/themadlions/" target="_blank" rel="noopener">Instagram</a>
+    <article class="exp flip reveal" style="margin-top:10px">
+      <div class="stage"><div class="handset"><iframe src="../roardino/#demo" title="A Roardino ordino on a phone" loading="lazy"></iframe></div></div>
+      <div>
+        <span class="exp-n">Experiment 02 <i data-t="exp.live">Live · beta</i></span>
+        <h2><span class="a">ROAR</span><span class="b">DINO</span></h2>
+        <p class="what" data-t="rd.what">The call sheet, in one link. Write the call, the location and the day's plan, pick a picture and a colour, and send the crew a page that opens beautifully on any phone.</p>
+        <ul class="usp">
+          <li><span><b data-t="rd.u1">Your own account.</b> <span data-t="rd.u1s">Every ordino you make, in one place, from any device.</span></span></li>
+          <li><span><b data-t="rd.u2">One link for the crew.</b> <span data-t="rd.u2s">Maps, Waze, a tap to call and the day in their calendar.</span></span></li>
+          <li><span><b data-t="rd.u3">Weather and sunset.</b> <span data-t="rd.u3s">Filled in by themselves for the place and the day.</span></span></li>
+        </ul>
+        <div class="acts">
+          <a class="pill main" href="../roardino/"><span data-t="rd.open">Make your ordino</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="../roardino/#demo" data-t="rd.demo">See an example</a>
+        </div>
       </div>
+    </article>
+
+    <div class="next one">
       <div class="card reveal">
         <span class="exp-n" data-t="idea.n">Your idea</span>
         <h3 data-t="idea.t" data-html>A tool you <b>wish</b> existed?</h3>
@@ -203,7 +225,11 @@ footer .wordmark { width: 130px; opacity: .6; }
     'rm.u2': 'RoarTransfer.', 'rm.u2s': 'Αρχεία ως 3 GB, με link που ανοίγει ο καθένας.',
     'rm.u3': 'Κρυπτογραφημένες κρυφές συνομιλίες.', 'rm.u3s': 'Ανοίγουν όταν μετράει, με ένα πάτημα.',
     'rm.more': 'Γνώρισε το RoarMe', 'rm.open': 'Άνοιξε την εφαρμογή',
-    'n2.t': 'Κάτι για <b>συνεργεία γυρισμάτων</b>.', 'n2.p': 'Το επόμενο εργαλείο είναι ήδη στο τραπέζι. Ακολούθησέ μας για να το δεις πρώτος.',
+    'rd.what': 'Το ordino, σε ένα link. Γράψε το call, την τοποθεσία και το πρόγραμμα της ημέρας, διάλεξε φωτογραφία και χρώμα, και στείλε στο συνεργείο μια σελίδα που ανοίγει όμορφα σε κάθε κινητό.',
+    'rd.u1': 'Δικός σου λογαριασμός.', 'rd.u1s': 'Όλα τα ordino σου σε ένα μέρος, από κάθε συσκευή.',
+    'rd.u2': 'Ένα link για το συνεργείο.', 'rd.u2s': 'Χάρτης, Waze, κλήση με ένα πάτημα και η μέρα στο ημερολόγιο.',
+    'rd.u3': 'Καιρός και δύση.', 'rd.u3s': 'Συμπληρώνονται μόνα τους για το μέρος και τη μέρα.',
+    'rd.open': 'Φτιάξε το ordino σου', 'rd.demo': 'Δες ένα παράδειγμα',
     'idea.n': 'Η ιδέα σου', 'idea.t': 'Ένα εργαλείο που <b>θα ήθελες</b> να υπάρχει;', 'idea.p': 'Πες μας τι καθυστερεί την ομάδα σου. Οι καλύτερες ιδέες γίνονται το επόμενο πείραμα.',
     'footer': '© 2026 The Mad Lions · Lab'
   }
