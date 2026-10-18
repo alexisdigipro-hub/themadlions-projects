@@ -1152,3 +1152,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - Small items as tinted rounded chips (radius 8-12, the item's colour at ~20% behind it) with a 7 px colour dot in front; times and secondary text muted and smaller.
 - Small uppercase letter-spaced labels (12 px, .1em) for headers like weekdays; the page fills the window height so nothing is left empty under it.
 - Layout: one top row (title, navigation, view switch, filters, actions), no control shown twice (the Calendar lost its All types / All projects menus because the pills did the same), views as a segmented switch (Week | Month | Year), editing in place where possible (drag to move), forms with related fields side by side (Date + All day, Start + End).
+- 18 Oct: **Questions: an eighth one**, "How long does a production take?" (three to six weeks for a commercial or music video, broken down; Alex to correct the numbers if they do not match how we work).
