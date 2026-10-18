@@ -87,6 +87,13 @@ html[data-theme='light'] .hero .logo { filter: invert(1); }
 .hero h1 { font-size: clamp(40px, 7vw, 96px); }
 .hero .sub { margin-left: auto; margin-right: auto; }
 .hero .acts { justify-content: center; }
+/* the name written out, not the logo picture (Alex, 18 Oct): AiBSENT large, STUDIOS small and spaced under it; the line under it CGI & Post Production; no title, text or buttons */
+/* the glow above the name fades out before the hero ends, so the shorter hero shows no edge */
+.hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 45%; background: linear-gradient(180deg, transparent, var(--bg)); pointer-events: none; }
+.hero > * { z-index: 1; }
+.aib-word { position: relative; margin: 0; display: flex; flex-direction: column; align-items: center; font-family: Jost, system-ui, sans-serif; color: var(--text); }
+.aib-word .w1 { font-size: clamp(60px, 11vw, 150px); font-weight: 500; line-height: .92; letter-spacing: .03em; }
+.aib-word .w2 { margin-top: clamp(8px, 1.2vw, 16px); padding-left: .6em; font-size: clamp(13px, 1.5vw, 20px); font-weight: 500; letter-spacing: .6em; color: color-mix(in srgb, var(--text) 82%, transparent); }
 .center { text-align: center; }
 h2 { margin: 0; font-size: clamp(32px, 4.6vw, 60px); font-weight: 300; line-height: 1.05; letter-spacing: -.01em; }
 h2 b { font-weight: 800; }
@@ -168,14 +175,8 @@ footer .wordmark { width: 130px; opacity: .6; }
 
 <main>
   <div class="hero">
-    <img class="logo reveal" src="../aibsent.png" alt="Aibsent Studios" width="713" height="228">
-    <p class="kicker reveal" data-t="hero.kicker">Post-production &amp; AI · a Mad Lions studio</p>
-    <h1 class="reveal" data-t="hero.title" data-html>Where films <b>are finished.</b></h1>
-    <p class="sub reveal" data-t="hero.sub">Our in-house post and AI studio. It finishes our films and takes on yours: from the edit and the grade to visual effects, motion graphics and films made with AI.</p>
-    <div class="acts reveal">
-      <a class="pill main" href="../?kind=Post-production#contact" data-t="cta.talk">Work with Aibsent Studios</a>
-      <a class="pill" href="#work" data-t="cta.see">See the work</a>
-    </div>
+    <h1 class="aib-word reveal" aria-label="Aibsent Studios"><span class="w1">AiBSENT</span><span class="w2">STUDIOS</span></h1>
+    <p class="kicker reveal" data-t="hero.kicker">CGI &amp; Post Production</p>
   </div>
 
   <section>
@@ -229,7 +230,7 @@ footer .wordmark { width: 130px; opacity: .6; }
   ]
   var EL = {
     'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.contact': 'Επαφή',
-    'hero.kicker': 'Post-production & AI · ένα studio των Mad Lions',
+    'hero.kicker': 'CGI & Post Production',
     'hero.title': 'Εκεί που <b>ολοκληρώνονται</b> οι ταινίες.',
     'hero.sub': 'Το δικό μας studio για post-production και AI. Ολοκληρώνει τις ταινίες μας και αναλαμβάνει και τις δικές σας: από το μοντάζ και το color grading ως τα visual effects, τα motion graphics και ταινίες με AI.',
     'cta.talk': 'Δουλέψτε με την Aibsent Studios', 'cta.see': 'Δες τη δουλειά',

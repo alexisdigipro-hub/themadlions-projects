@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (13 Oct 2026)
+- 18 Oct: **/aibsent/ opening** (Alex): the logo picture is replaced by the name in type, `AiBSENT` large and `STUDIOS` small and spaced (.aib-word), the kicker reads CGI & Post Production (EN and GR), and the title "Where films are finished.", its text and the two buttons are off. The glow above fades out (.hero::after) so the shorter opening has no edge.
 - 18 Oct: **Services has no line under its title** (Alex): the `svc.sub` paragraph is off the page (its text stays in T, unused).
 - 18 Oct: **Work tiles have no titles** (Alex): the picture and the play button only; the name stays in aria-label and in the prerendered alt text (site-seo.mjs).
 - 18 Oct: **AI films is off the Aibsent Studios crafts on the home page** (AIB_CAPS).
