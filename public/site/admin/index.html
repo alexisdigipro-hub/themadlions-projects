@@ -174,12 +174,17 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 .lead .text { white-space: pre-wrap; line-height: 1.55; font-size: 14.5px; color: #e4e4e7; padding: 12px 14px; border-radius: 14px; background: rgba(0,0,0,.22); }
 .lead .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-/* People: the team as round photos, the clients as logo tiles; arrows and the eye on each */
+/* People: the team as round photos, the clients as logo tiles; drag one to move it, the eye on each */
 .ppl { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
 .cls { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
 .pp, .cl { position: relative; border-radius: 18px; padding: 16px 12px 12px; text-align: center; cursor: pointer; background: rgba(255,255,255,.04); border: 1px solid var(--edge); transition: border-color .2s, opacity .2s; }
 .pp:hover, .cl:hover { border-color: var(--edge-2); }
 .pp.off, .cl.off { opacity: .45; }
+.pp, .cl { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.pp img, .cl img { pointer-events: none; -webkit-user-drag: none; }
+@media (hover: hover) { .pp, .cl { cursor: grab; } }
+.sorting .pp, .sorting .cl { cursor: grabbing; }
+.pp.dragging, .cl.dragging { border-color: var(--red); box-shadow: 0 0 0 2px var(--red), 0 14px 40px rgba(212,0,0,.25); transform: scale(1.04); z-index: 2; transition: none; }
 .pp .face { width: 72px; height: 72px; margin: 0 auto 10px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; font-size: 26px; font-weight: 600; background: linear-gradient(135deg, rgba(212,0,0,.35), rgba(255,255,255,.08)); position: relative; }
 .pp .face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .pp strong, .cl strong { display: block; font-weight: 500; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -401,7 +406,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
     </section>
 
     <section data-pane="people" hidden>
-      <div class="head"><div><h1>People</h1><p>The team and the clients on the site. A click edits one, the eye hides one, the arrows move it.</p></div></div>
+      <div class="head"><div><h1>People</h1><p>The team and the clients on the site. A click edits one, the eye hides one; drag one to move it (on a phone, hold it for a moment first).</p></div></div>
       <div class="card glass">
         <h3>Team <span class="grow"></span><button class="btn red sm" type="button" id="addPerson"><svg class="i"><use href="#i-plus"/></svg>Add a person</button></h3>
         <div class="ppl" id="team"></div>
@@ -1039,23 +1044,19 @@ async function loadPeople() {
   renderPeople()
 }
 const faceOf = (m) => { const f = { x: 50, y: 50, z: 1, ...(m.frame || {}) }; return m.photo ? `<img src="${esc(m.photo)}" alt="" style="object-position:${f.x}% ${f.y}%;transform-origin:${f.x}% ${f.y}%;transform:scale(${f.z})">` : esc((m.name || '?')[0].toUpperCase()) }
-const acts = (i, n, on) => `<div class="acts"><span style="display:flex;gap:4px"><button type="button" data-mv="-1" title="Move earlier" ${i ? '' : 'disabled style="visibility:hidden"'}>‹</button><button type="button" data-mv="1" title="Move later" ${i < n - 1 ? '' : 'disabled style="visibility:hidden"'}>›</button></span><button type="button" data-eye title="${on ? 'Hide from the site' : 'Show on the site'}"><svg class="i"><use href="#${on ? 'i-eye' : 'i-eyeoff'}"/></svg></button></div>`
+const acts = (i, n, on) => `<div class="acts"><span></span><button type="button" data-eye title="${on ? 'Hide from the site' : 'Show on the site'}"><svg class="i"><use href="#${on ? 'i-eye' : 'i-eyeoff'}"/></svg></button></div>`
 function renderPeople() {
   $('team').innerHTML = team.length ? team.map((m, i) => `<div class="pp ${m.visible ? '' : 'off'}" data-id="${esc(m.id)}">${acts(i, team.length, m.visible)}<div class="face">${faceOf(m)}</div><strong>${esc(m.name)}</strong><small>${esc(m.role || 'No role')}</small></div>`).join('') : '<div class="empty">Nobody yet. Press Add a person.</div>'
   $('clients').innerHTML = clients.length ? clients.map((c, i) => `<div class="cl ${c.visible ? '' : 'off'}" data-id="${esc(c.id)}">${acts(i, clients.length, c.visible)}<div class="lg">${c.logo ? `<img src="${esc(c.logo)}" alt="" class="${c.mono ? 'mono' : ''}">` : `<span>${esc(c.name)}</span>`}</div><strong>${esc(c.name)}</strong></div>`).join('') : '<div class="empty">No clients yet. Press Add a client.</div>'
 }
-// the arrows and the eye on a tile, or a click that opens it; the new order is saved in one go
+const savePeopleOrder = (list, table) => rest(`${table}?on_conflict=id`, { method: 'POST', body: JSON.stringify(list.map((x, n) => ({ id: x.id, name: x.name, position: n }))), headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } })
+// the eye on a tile, or a click that opens it
+let peopleDragged = 0
 async function peopleClick(e, list, table, open) {
+  if (Date.now() - peopleDragged < 400) return // the end of a drag is not a click
   const tile = e.target.closest('[data-id]'); if (!tile) return
-  const i = list.findIndex((x) => x.id === tile.dataset.id), it = list[i]
-  const mv = e.target.closest('[data-mv]')
+  const it = list.find((x) => x.id === tile.dataset.id)
   try {
-    if (mv) {
-      const to = i + Number(mv.dataset.mv); if (to < 0 || to >= list.length) return
-      list.splice(i, 1); list.splice(to, 0, it); renderPeople()
-      await rest(`${table}?on_conflict=id`, { method: 'POST', body: JSON.stringify(list.map((x, n) => ({ id: x.id, name: x.name, position: n }))), headers: { Prefer: 'resolution=merge-duplicates,return=minimal' } })
-      toast('New order saved'); return
-    }
     if (e.target.closest('[data-eye]')) {
       await rest(`${table}?id=eq.${it.id}`, { method: 'PATCH', body: JSON.stringify({ visible: !it.visible }), headers: { Prefer: 'return=minimal' } })
       it.visible = !it.visible; renderPeople(); toast(it.visible ? `${it.name} is on the site` : `${it.name} is hidden`); return
@@ -1065,6 +1066,54 @@ async function peopleClick(e, list, table, open) {
 }
 $('team').onclick = (e) => peopleClick(e, team, 'site_team', openPerson)
 $('clients').onclick = (e) => peopleClick(e, clients, 'site_clients', openClient)
+/* drag a tile to its new place (Alex, 18 Oct): with the mouse it lifts as soon as it moves, with a finger after
+   holding it for a moment (a quick swipe still scrolls the page). The others make room as it passes over them,
+   and the new order is saved in one go when it is let go. */
+function sortable(box, list, table) {
+  let d = null
+  const tileOf = (id) => box.querySelector(`[data-id="${CSS.escape(id)}"]`)
+  const lift = () => { d.on = true; box.classList.add('sorting'); tileOf(d.id)?.classList.add('dragging'); navigator.vibrate?.(8) }
+  const stop = async (save) => {
+    const was = d; d = null
+    if (!was) return
+    clearTimeout(was.timer); box.classList.remove('sorting')
+    if (!was.on) return
+    peopleDragged = Date.now(); renderPeople()
+    if (!save || was.start === list().findIndex((x) => x.id === was.id)) return
+    try { await savePeopleOrder(list(), table); toast('New order saved') } catch (err) { toast(err.message); loadPeople() }
+  }
+  box.addEventListener('pointerdown', (e) => {
+    if (e.button > 0 || e.target.closest('button')) return
+    const tile = e.target.closest('[data-id]'); if (!tile) return
+    d = { id: tile.dataset.id, x: e.clientX, y: e.clientY, on: false, mouse: e.pointerType === 'mouse', start: list().findIndex((x) => x.id === tile.dataset.id) }
+    if (!d.mouse) d.timer = setTimeout(() => d && lift(), 320)
+  })
+  window.addEventListener('pointermove', (e) => {
+    if (!d) return
+    if (!d.on) {
+      const far = Math.hypot(e.clientX - d.x, e.clientY - d.y)
+      if (d.mouse && far > 6) lift()
+      else if (!d.mouse && far > 8) stop(false) // a swipe: the page scrolls
+      return
+    }
+    const over = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-id]')
+    if (!over || !box.contains(over) || over.dataset.id === d.id) return
+    const l = list(), from = l.findIndex((x) => x.id === d.id), to = l.findIndex((x) => x.id === over.dataset.id)
+    l.splice(to, 0, l.splice(from, 1)[0])
+    // the others move around the carried tile, which itself stays put in the page (a finger loses a tile that is redrawn)
+    const held = tileOf(d.id), at = l.findIndex((x) => x.id === d.id)
+    l.forEach((x, n) => { const el = tileOf(x.id); if (el && el !== held) n < at ? box.insertBefore(el, held) : box.appendChild(el) })
+  })
+  window.addEventListener('pointerup', () => stop(true))
+  window.addEventListener('pointercancel', () => stop(true))
+  document.addEventListener('touchend', () => { if (d && !d.mouse) stop(true) })
+  document.addEventListener('touchcancel', () => { if (d && !d.mouse) stop(true) })
+  // while a tile is carried the page must not scroll under the finger
+  document.addEventListener('touchmove', (e) => { if (d?.on) e.preventDefault() }, { passive: false })
+  box.addEventListener('contextmenu', (e) => { if (d) e.preventDefault() })
+}
+sortable($('team'), () => team, 'site_team')
+sortable($('clients'), () => clients, 'site_clients')
 
 function openPerson(m) {
   editPerson = m ? { ...m } : { name: '', role: '', role_el: '', photo: '', visible: true }
