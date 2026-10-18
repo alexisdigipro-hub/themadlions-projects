@@ -33,8 +33,10 @@
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; background: var(--bg); }
-body { margin: 0; color: var(--text); font-family: var(--sans); font-weight: 400; -webkit-font-smoothing: antialiased; overflow-x: hidden;
-  background: radial-gradient(1200px 700px at 50% -12%, #4b525d 0%, transparent 62%), radial-gradient(700px 520px at 85% 90%, rgba(212, 0, 0, .12), transparent 70%), linear-gradient(180deg, #2b3038 0%, #1c1f24 55%, #15171b 100%); background-attachment: fixed; }
+body { margin: 0; color: var(--text); font-family: var(--sans); font-weight: 400; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+/* the backdrop stays put while the page scrolls: a fixed layer drawn once (a fixed background on body repaints the whole screen on every scroll step) */
+body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(1200px 700px at 50% -12%, #4b525d 0%, transparent 62%), radial-gradient(700px 520px at 85% 90%, rgba(212, 0, 0, .12), transparent 70%), linear-gradient(180deg, #2b3038 0%, #1c1f24 55%, #15171b 100%); }
 /* the wordmark keeps Jost, as in the app */
 .rm, .by { font-family: Jost, var(--sans); }
 a { color: inherit; text-decoration: none; }
@@ -67,7 +69,7 @@ svg { display: block; }
 
 /* the app, drawn (no screenshot to keep up to date): a window with the list and a chat */
 .shot { position: relative; z-index: 1; perspective: 1600px; text-align: left; }
-.win { position: relative; border-radius: 22px; background: var(--app); border: 1px solid var(--app-edge); box-shadow: 0 50px 120px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06); overflow: hidden; transform: rotateY(calc(var(--rx, 0) * 1deg)) rotateX(calc(var(--ry, 0) * 1deg)); transition: transform .6s var(--ease); color: #eef0f3; font-size: 13px; }
+.win { position: relative; border-radius: 22px; background: var(--app); border: 1px solid var(--app-edge); box-shadow: 0 50px 120px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06); overflow: hidden; transform: rotateY(calc(var(--rx, 0) * 1deg)) rotateX(calc(var(--ry, 0) * 1deg)); will-change: transform; contain: paint; color: #eef0f3; font-size: 13px; }
 .win-top { display: flex; gap: 7px; padding: 12px 14px; }
 .win-top i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
 .win-top i:nth-child(2) { background: #febc2e; } .win-top i:nth-child(3) { background: #28c840; }
@@ -116,7 +118,7 @@ svg { display: block; }
 .typing i { width: 5px; height: 5px; border-radius: 50%; background: #9aa0aa; animation: dot 1.2s infinite ease-in-out; }
 .typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
 @keyframes dot { 0%, 60%, 100% { opacity: .3; transform: none; } 30% { opacity: 1; transform: translateY(-3px); } }
-.float { position: absolute; z-index: 2; padding: 10px 14px; border-radius: 16px; background: color-mix(in srgb, var(--bg-2) 70%, transparent); border: 1px solid var(--glass-edge); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 20px 50px rgba(0,0,0,.35); font-size: 13px; display: flex; align-items: center; gap: 10px; }
+.float { position: absolute; z-index: 2; padding: 10px 14px; border-radius: 16px; background: color-mix(in srgb, var(--bg-2) 70%, transparent); border: 1px solid var(--glass-edge); box-shadow: 0 20px 50px rgba(0,0,0,.35); font-size: 13px; display: flex; align-items: center; gap: 10px; }
 .float b { font-weight: 600; }
 .float small { display: block; color: var(--muted); font-size: 11.5px; }
 .float i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 22%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); color: #ffb3a8; }
@@ -173,7 +175,7 @@ svg { display: block; }
 .devices span { display: block; height: 6px; border-radius: 3px; background: rgba(255,255,255,.1); }
 .devices span.c { background: color-mix(in srgb, var(--coral) 60%, transparent); width: 60%; align-self: flex-end; }
 .notes { width: min(300px, 100%); display: flex; flex-direction: column; gap: 8px; }
-.note { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.07); border: 1px solid var(--app-edge); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.note { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.07); border: 1px solid var(--app-edge); }
 .note b { display: block; font-size: 12.5px; }
 .note small { font-size: 11px; color: #9aa0aa; }
 .note:nth-child(2) { margin-left: 16px; opacity: .85; }
@@ -852,10 +854,12 @@ footer { border-top-color: var(--line); }
 
   // the window of the app leans a little towards the pointer
   var win = document.getElementById('win')
+  // (only while it is on the screen, so scrolling the rest of the page stays smooth)
   if (!still && win && window.matchMedia('(pointer: fine)').matches) {
-    var tx = 0, ty = 0, cx = 0, cy = 0, raf = 0
+    var tx = 0, ty = 0, cx = 0, cy = 0, raf = 0, seen = true
+    if ('IntersectionObserver' in window) new IntersectionObserver(function (es) { seen = es[0].isIntersecting }).observe(win)
     var tick = function () { cx += (tx - cx) * .08; cy += (ty - cy) * .08; win.style.setProperty('--rx', cx.toFixed(2)); win.style.setProperty('--ry', cy.toFixed(2)); raf = Math.abs(tx - cx) + Math.abs(ty - cy) > .01 ? requestAnimationFrame(tick) : 0 }
-    window.addEventListener('pointermove', function (e) { tx = (e.clientX / innerWidth - .5) * -8; ty = (e.clientY / innerHeight - .5) * 5; if (!raf) raf = requestAnimationFrame(tick) })
+    window.addEventListener('pointermove', function (e) { if (!seen) return; tx = (e.clientX / innerWidth - .5) * -8; ty = (e.clientY / innerHeight - .5) * 5; if (!raf) raf = requestAnimationFrame(tick) })
   }
 })()
 </script>
