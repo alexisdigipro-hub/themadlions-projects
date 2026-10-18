@@ -343,6 +343,38 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
 .aib.aib-min:hover { transform: translateY(-2px); }
 .aib.aib-min:hover .aib-go svg { transform: translateX(3px); }
 .aib-works .tile:first-child { grid-column: 1 / -1; }
+/* Aibsent Studios on the home page without a box (Alex, 18 Oct): the words on the left on a soft red and violet light,
+   three of its films as frames in a 3D stack on the right that fan out on hover; a frame plays its film */
+.aibsent { position: relative; overflow: hidden; }
+.aibsent::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(38% 60% at 20% 50%, color-mix(in srgb, var(--accent) 15%, transparent), transparent 70%), radial-gradient(40% 65% at 76% 50%, color-mix(in srgb, #7c3aed 17%, transparent), transparent 70%); }
+.aib2 { position: relative; display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: clamp(32px, 5vw, 80px); align-items: center; max-width: 1240px; margin: 0 auto; }
+.aib2 .aib-logo { display: block; width: min(330px, 80%); }
+.aib2 .aib-kicker { display: block; margin-top: 22px; }
+.aib2-lead { margin: 16px 0 0; max-width: 470px; font-size: clamp(16px, 1.35vw, 18.5px); font-weight: 300; line-height: 1.6; color: color-mix(in srgb, var(--text) 78%, transparent); }
+.aib2-caps { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 20px 0 0; font-size: 13px; letter-spacing: .03em; color: var(--muted); }
+.aib2-caps span { display: inline-flex; align-items: center; gap: 7px; }
+.aib2-caps i { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+.aib2 .aib-go { margin-top: 30px; }
+.aib2 .aib-go svg { width: 17px; height: 17px; transition: transform .3s; }
+.aib2 .aib-go:hover svg { transform: translateX(3px); }
+.aib2-stack { position: relative; aspect-ratio: 16 / 10.5; perspective: 1600px; }
+.aib2-frame { position: absolute; left: 13%; top: 15%; width: 74%; aspect-ratio: 16 / 9; padding: 0; border: 0; border-radius: 16px; overflow: hidden; cursor: pointer; color: #fff;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 55%, #111), color-mix(in srgb, #7c3aed 55%, #111));
+  box-shadow: 0 34px 70px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.14); transition: transform 1s cubic-bezier(.2,.7,.2,1), filter .6s; }
+html[data-theme='light'] .aib2-frame { box-shadow: 0 26px 50px rgba(0,0,0,.2), inset 0 0 0 1px rgba(255,255,255,.3); }
+.aib2-frame:disabled { cursor: default; }
+.aib2-frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.aib2-frame b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; font-weight: 500; letter-spacing: .26em; text-transform: uppercase; }
+.aib2-frame .play { opacity: 0; transition: opacity .4s; }
+.aib2-frame:hover .play { opacity: 1; }
+.aib2-frame.f0 { z-index: 3; transform: rotateY(-16deg) rotateX(5deg); }
+.aib2-frame.f1 { z-index: 2; transform: rotateY(-16deg) rotateX(5deg) translate3d(-15%, -17%, -150px); filter: brightness(.5) saturate(.8); }
+.aib2-frame.f2 { z-index: 1; transform: rotateY(-16deg) rotateX(5deg) translate3d(16%, 15%, -300px); filter: brightness(.4) saturate(.8); }
+.aib2-stack:hover .f0 { transform: rotateY(-8deg) rotateX(3deg) translate3d(0, 0, 40px); }
+.aib2-stack:hover .f1 { transform: rotateY(-8deg) rotateX(3deg) translate3d(-26%, -22%, -150px); }
+.aib2-stack:hover .f2 { transform: rotateY(-8deg) rotateX(3deg) translate3d(27%, 21%, -300px); }
+.aib2-frame:hover { filter: none; }
+@media (max-width: 900px) { .aib2 { grid-template-columns: minmax(0, 1fr); } .aib2-stack { width: 86%; margin: 4px auto 0; } .aib2-frame.f0, .aib2-stack:hover .f0 { transform: rotateY(-12deg) rotateX(4deg); } .aib2-frame.f1, .aib2-stack:hover .f1 { transform: rotateY(-12deg) rotateX(4deg) translate3d(-11%, -15%, -120px); } .aib2-frame.f2, .aib2-stack:hover .f2 { transform: rotateY(-12deg) rotateX(4deg) translate3d(9%, 13%, -240px); } .aib2 .aib-logo { width: min(260px, 70%); } }
 .badge-aib { position: absolute; top: 10px; left: 10px; z-index: 1; height: 22px; padding: 0 9px; border-radius: 7px; display: inline-flex; align-items: center; font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.18); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 @media (max-width: 900px) { .aib { grid-template-columns: 1fr; } }
 /* the clients as a wall of white squares, each logo in black (Alex, 18 Oct); a client without a logo yet shows its
@@ -350,7 +382,7 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
 /* all the clients in two rows (as many to a row as it takes), small squares 6 px apart (Alex, 18 Oct) */
 /* the clients, minimal (Alex, 18 Oct): no boxes, the logos straight on the page, quiet until hovered.
    The logo files are black on white: dark looks turn them white and screen away the black, the light look multiplies the white away */
-.logos { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 0 24px; max-width: 1180px; margin: 40px auto 0; background: var(--bg); }
+.logos { grid-template-columns: repeat(var(--cols, 12), minmax(0, 1fr)); gap: 0 18px; max-width: 1240px; margin: 40px auto 0; background: var(--bg); }
 .logo { height: auto; aspect-ratio: 1; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; overflow: hidden; }
 .logo:hover { background: none; border: 0; }
 .logo img, .logo img.mono { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: contain; transform: none; filter: invert(1); mix-blend-mode: screen; opacity: .5; transition: opacity .35s; }
@@ -359,7 +391,7 @@ html[data-theme='light'] .logo img, html[data-theme='light'] .logo img.mono { fi
 html[data-theme='light'] .logo:hover img { opacity: 1; }
 .logo span { padding: 0 4%; font-size: 12px; font-weight: 500; letter-spacing: .1em; line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; transition: color .35s; }
 .logo:hover span { color: var(--text); }
-@media (max-width: 900px) { .logos { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 14px; } .logo span { font-size: 10px; letter-spacing: .06em; } }
+@media (max-width: 900px) { .logos { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0 10px; } .logo span { font-size: 10px; letter-spacing: .06em; } }
 /* about: the text, and the team under it in one row (Alex, 18 Oct) */
 .about { grid-template-columns: minmax(0, 1fr); gap: 56px; }
 .about > .reveal:first-child { max-width: 1000px; }
@@ -409,30 +441,34 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
 /* Services, How we work, About and Clients: the titles and their texts centred (Alex, 18 Oct); the cards keep their own layout */
 .services > .label, .services > h2, .clients > .label, .clients > h2 { text-align: center; }
 /* How we work sits inside Services, under the cards (Alex, 18 Oct: one section, one menu item) */
-/* services and how we work, minimal and joined (Alex, 18 Oct): the services as a clean list (number, name, what it is, the film),
-   Studio's picture as a small square beside the name; straight under it the way we work as one line through five dots */
-.svc-grid { display: block; max-width: 1180px; margin: 40px auto 0; border-top: 1px solid var(--line); }
-.svc { display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1.9fr) 240px; align-items: center; gap: 24px; min-height: 0; padding: 20px 6px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: none; box-shadow: none; overflow: visible; transition: background .3s; }
-.svc:hover { background: color-mix(in srgb, var(--hi) 3%, transparent); }
-.svc::after, .svc .big, .svc .bg { display: none; }
+/* services in one row, each with its own small 3D shape (Alex, 18 Oct: "in a row, the category standing out with a different
+   shape, a bit 3D"); Studio's picture shows faintly behind a card on hover. How we work follows as one line through five dots */
+.svc-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; max-width: 1320px; margin: 40px auto 0; border: 0; }
+.svc-grid .svc { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; text-align: center; min-height: 0; padding: 24px 14px 22px; border-radius: 20px; border: 1px solid color-mix(in srgb, var(--hi) 8%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 5%, transparent), transparent 75%); box-shadow: none; overflow: hidden; transition: transform .5s cubic-bezier(.2,.7,.2,1), border-color .4s; }
+.svc-grid .svc:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.svc::after, .svc .big, .svc .ex, .svc h3::before { display: none; }
+.svc-grid .svc .bg { display: block; opacity: 0; transition: opacity .6s; }
+.svc-grid .svc:hover .bg { opacity: .2; }
 .svc .in { display: contents; }
-.svc small { display: block; font-size: 12px; letter-spacing: .12em; color: color-mix(in srgb, var(--text) 40%, transparent); transition: color .3s; }
+.svc .in > * { position: relative; }
+.svc .shape { display: block; width: 92px; height: 92px; margin: 0 auto 12px; perspective: 500px; }
+.svc .shape svg { display: block; width: 100%; height: 100%; overflow: visible; animation: svcFloat 6s ease-in-out infinite; animation-delay: calc(var(--i, 0) * -.85s); transition: transform .9s cubic-bezier(.2,.7,.2,1); filter: drop-shadow(0 12px 16px rgba(0,0,0,.35)); }
+html[data-theme='light'] .svc .shape svg { filter: drop-shadow(0 10px 14px rgba(0,0,0,.14)); }
+html[data-theme='light'] .svc .shape .ink { stroke: #2a2a30; }
+.svc:hover .shape svg { transform: rotateY(22deg) rotateX(10deg) scale(1.07); }
+@keyframes svcFloat { 0%, 100% { translate: 0 0; } 50% { translate: 0 -6px; } }
+@media (prefers-reduced-motion: reduce) { .svc .shape svg { animation: none; } }
+.svc small { display: block; font-size: 11px; letter-spacing: .14em; color: color-mix(in srgb, var(--text) 40%, transparent); transition: color .3s; }
 .svc:hover small { color: var(--accent); }
-.svc h3 { display: flex; align-items: center; gap: 12px; margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -.01em; line-height: 1.2; }
-.svc h3::before { display: none; }
-.svc h3 img, .svc:hover h3 img, html[data-theme='light'] .svc h3 img { flex: none; width: 40px; height: 40px; border-radius: 10px; object-fit: cover; filter: none; transform: none; }
-.svc p { margin: 0; font-size: 14.5px; font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 66%, transparent); }
-.svc .ex { margin: 0; justify-self: end; max-width: 240px; height: auto; min-height: 32px; padding: 4px 12px 4px 4px; border-radius: 999px; font-size: 12.5px; text-align: left; background: none; }
-.svc .ex:hover { background: color-mix(in srgb, var(--hi) 8%, transparent); }
-.svc .ex i { flex: none; width: 24px; height: 24px; }
-.svc .ex span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; line-height: 1.25; }
-/* lower rows, three columns, one line of text each (Alex, 18 Oct) */
-@media (min-width: 901px) {
-  .svc-grid .svc { grid-template-columns: 44px minmax(180px, .8fr) minmax(0, 2.2fr); padding: 13px 6px; }
-  .svc-grid .svc h3 { font-size: 18px; }
-  .svc-grid .svc h3 img { width: 32px; height: 32px; border-radius: 8px; }
+.svc h3 { margin: 6px 0 8px; font-size: 17px; font-weight: 600; letter-spacing: -.01em; line-height: 1.2; }
+.svc h3 img { display: none; }
+.svc p { margin: 0; font-size: 13px; font-weight: 300; line-height: 1.5; color: color-mix(in srgb, var(--text) 64%, transparent); }
+@media (max-width: 1180px) {
+  .svc-grid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 190px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-left: calc(-1 * var(--pad)); margin-right: calc(-1 * var(--pad)); padding: 6px var(--pad) 8px; scroll-padding: 0 var(--pad); }
+  .svc-grid::-webkit-scrollbar { display: none; }
+  .svc-grid .svc { scroll-snap-align: start; }
 }
-.svc-grid .svc .ex { display: none; }
+@media (max-width: 560px) { .svc-grid { grid-auto-columns: 168px; } .svc .shape { width: 80px; height: 80px; } }
 .svc-how { max-width: 1180px; margin: clamp(48px, 6vw, 80px) auto 0; }
 .svc-how > .label, .how-title { text-align: center; }
 .how-title { margin: 0; font-size: clamp(22px, 2.4vw, 32px); font-weight: 300; line-height: 1.1; letter-spacing: -.01em; }
@@ -447,12 +483,6 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
 .svc-how .step h3 { font-size: 17px; }
 .svc-how .step p { font-size: 13.5px; color: color-mix(in srgb, var(--text) 62%, transparent); }
 @media (max-width: 900px) {
-  .svc { grid-template-columns: 30px minmax(0, 1fr); gap: 6px 12px; padding: 16px 2px; }
-  .svc p, .svc .ex { grid-column: 2; }
-  .svc .ex { justify-self: start; margin-top: 4px; }
-  .svc h3 { font-size: 18px; }
-  .svc h3 img { width: 34px; height: 34px; border-radius: 9px; }
-  .svc p { font-size: 14px; }
   .svc-how .steps { grid-template-columns: 1fr; gap: 0; }
   .svc-how .steps::before { top: 6px; bottom: 6px; left: 5px; right: auto; width: 1px; height: auto; background: var(--line); }
   .svc-how .step { padding: 0 0 22px 30px; text-align: left; }
@@ -527,11 +557,16 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
   <!-- Aibsent Studios on the home page, kept minimal (Alex, 18 Oct): the logo, one line, one way in; the studio's own
        page holds the rest. The menu's Aibsent Studios comes here. -->
   <section id="aibsent" class="aibsent">
-    <a class="aib aib-min reveal" href="aibsent/" aria-label="Aibsent Studios">
-      <img class="aib-logo" src="aibsent.png" alt="Aibsent Studios">
-      <span class="aib-kicker" data-t="aib.kicker">Post-production &amp; AI · a Mad Lions studio</span>
-      <span class="pill main aib-go"><span data-t="aib.all">Discover Aibsent Studios</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-    </a>
+    <div class="aib2 reveal">
+      <div>
+        <a href="aibsent/" aria-label="Aibsent Studios"><img class="aib-logo" src="aibsent.png" alt="Aibsent Studios"></a>
+        <span class="aib-kicker" data-t="aib.kicker">Post-production &amp; AI · a Mad Lions studio</span>
+        <p class="aib2-lead" data-t="aib.lead">Our in-house post and AI studio. It finishes our films and takes on yours: from the edit and the grade to visual effects, motion graphics and films made with AI.</p>
+        <p class="aib2-caps" id="aibCaps"></p>
+        <a class="pill main aib-go" href="aibsent/"><span data-t="aib.all">Discover Aibsent Studios</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <div class="aib2-stack" id="aibStack"></div>
+    </div>
   </section>
 
 
@@ -921,6 +956,18 @@ function orderSections(order) {
   sectionOrder = order
 }
 try { orderSections(JSON.parse(localStorage.getItem('tml_site_order') || 'null')) } catch (e) {}
+/* one small 3D shape per service (Alex, 18 Oct), drawn here so they stay sharp and need no files:
+   a cube with a play mark, a record, a film can, a globe, stacked layers, a ring of light, a prism splitting a beam */
+const SVC_SHADOW = '<ellipse cx="60" cy="108" rx="30" ry="5" fill="#000" opacity=".28"/>'
+const SVC_SHAPES = {
+  'Commercials': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="sa1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a74"/><stop offset="1" stop-color="#e01414"/></linearGradient><linearGradient id="sa2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c40000"/><stop offset="1" stop-color="#5c0000"/></linearGradient><linearGradient id="sa3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c0000"/><stop offset="1" stop-color="#210000"/></linearGradient></defs>${SVC_SHADOW}<path d="M60 18 96 38 60 58 24 38Z" fill="url(#sa1)"/><path d="M24 38 60 58V98L24 78Z" fill="url(#sa2)"/><path d="M96 38 60 58V98L96 78Z" fill="url(#sa3)"/><path d="M24 38 60 18 96 38" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1"/><path d="M36.6 63 47.4 77 36.6 79Z" fill="#fff" opacity=".9"/></svg>`,
+  'Music Videos': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="sb1" cx=".38" cy=".3" r=".75"><stop offset="0" stop-color="#46464f"/><stop offset="1" stop-color="#0b0b0e"/></radialGradient><linearGradient id="sb2" x1="0" x2="1"><stop offset="0" stop-color="#141418"/><stop offset=".55" stop-color="#4a4a54"/><stop offset="1" stop-color="#0b0b0e"/></linearGradient><radialGradient id="sb3" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ff7a64"/><stop offset="1" stop-color="#b80000"/></radialGradient></defs>${SVC_SHADOW}<g transform="rotate(-14 60 62)"><ellipse cx="60" cy="68" rx="46" ry="20" fill="url(#sb2)"/><ellipse cx="60" cy="62" rx="46" ry="20" fill="url(#sb1)"/><g fill="none" stroke="#fff" stroke-opacity=".09"><ellipse cx="60" cy="62" rx="39" ry="17"/><ellipse cx="60" cy="62" rx="32" ry="14"/><ellipse cx="60" cy="62" rx="25" ry="11"/></g><path d="M24 54Q60 36 96 54" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="2" stroke-linecap="round"/><ellipse cx="60" cy="62" rx="14" ry="6" fill="url(#sb3)"/><ellipse cx="60" cy="62" rx="2.2" ry="1" fill="#0b0b0e"/></g></svg>`,
+  'Feature Films': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="sc1" x1="0" x2="1"><stop offset="0" stop-color="#4a0000"/><stop offset=".33" stop-color="#d40000"/><stop offset=".45" stop-color="#ff7a64"/><stop offset=".7" stop-color="#8c0000"/><stop offset="1" stop-color="#260000"/></linearGradient><radialGradient id="sc2" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#55555f"/><stop offset="1" stop-color="#15151a"/></radialGradient></defs>${SVC_SHADOW}<path d="M94 72C106 74 110 88 101 100" fill="none" stroke="#1a1a1f" stroke-width="8"/><path d="M94 72C106 74 110 88 101 100" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-dasharray="2 4"/><path d="M26 44V82A34 13 0 0 0 94 82V44Z" fill="url(#sc1)"/><ellipse cx="60" cy="44" rx="34" ry="13" fill="url(#sc2)"/><ellipse cx="60" cy="44" rx="34" ry="13" fill="none" stroke="#fff" stroke-opacity=".3"/><g fill="#0b0b0e"><ellipse cx="60" cy="36.6" rx="5" ry="2.2"/><ellipse cx="79" cy="41.8" rx="5" ry="2.2"/><ellipse cx="71.8" cy="50" rx="5" ry="2.2"/><ellipse cx="48.2" cy="50" rx="5" ry="2.2"/><ellipse cx="41" cy="41.8" rx="5" ry="2.2"/></g><ellipse cx="60" cy="44" rx="4" ry="1.6" fill="#d40000"/></svg>`,
+  'Documentaries': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="sd1" cx=".34" cy=".3" r=".8"><stop offset="0" stop-color="#ff8f7a"/><stop offset=".45" stop-color="#d40000"/><stop offset="1" stop-color="#3a0000"/></radialGradient><radialGradient id="sd2" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>${SVC_SHADOW}<circle cx="60" cy="58" r="37" fill="url(#sd1)"/><g fill="none" stroke="#fff" stroke-opacity=".22"><ellipse cx="60" cy="58" rx="37" ry="12"/><ellipse cx="60" cy="58" rx="15" ry="37"/><ellipse cx="60" cy="40" rx="31" ry="8" stroke-opacity=".12"/><ellipse cx="60" cy="76" rx="31" ry="8" stroke-opacity=".12"/></g><ellipse cx="46" cy="40" rx="13" ry="9" fill="url(#sd2)"/></svg>`,
+  'Corporate Films': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="se1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a74"/><stop offset="1" stop-color="#d40000"/></linearGradient><linearGradient id="se2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5c5c66"/><stop offset="1" stop-color="#2a2a31"/></linearGradient></defs>${SVC_SHADOW}${[[66, 'url(#se2)', '#1d1d22', '#121216'], [48, 'url(#se2)', '#1d1d22', '#121216'], [30, 'url(#se1)', '#9a0000', '#520000']].map(([y, t, l, r]) => `<path d="M28 ${y + 16} 60 ${y + 32}V${y + 41}L28 ${y + 25}Z" fill="${l}"/><path d="M92 ${y + 16} 60 ${y + 32}V${y + 41}L92 ${y + 25}Z" fill="${r}"/><path d="M60 ${y} 92 ${y + 16} 60 ${y + 32} 28 ${y + 16}Z" fill="${t}"/><path d="M28 ${y + 16} 60 ${y} 92 ${y + 16}" fill="none" stroke="#fff" stroke-opacity=".3"/>`).join('')}</svg>`,
+  'Visuals': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="sf1" x1="0" x2="1"><stop offset="0" stop-color="#ff2d20"/><stop offset=".5" stop-color="#ff9a7a"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient><filter id="sf2" x="-40%" y="-80%" width="180%" height="260%"><feGaussianBlur stdDeviation="6"/></filter></defs>${SVC_SHADOW}<g transform="rotate(-16 60 60)"><ellipse cx="60" cy="60" rx="40" ry="18" fill="none" stroke="url(#sf1)" stroke-width="12" opacity=".75" filter="url(#sf2)"/><path d="M20 60A40 18 0 0 1 100 60" fill="none" stroke="url(#sf1)" stroke-width="9" opacity=".45"/><path d="M20 60A40 18 0 0 0 100 60" fill="none" stroke="url(#sf1)" stroke-width="9" stroke-linecap="round"/><path d="M26 64A36 15 0 0 0 94 64" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.4"/></g><circle cx="94" cy="28" r="2" fill="#ff9a7a"/><circle cx="24" cy="92" r="1.6" fill="#8b5cf6"/></svg>`,
+  'Post-production': `<svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="sg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity=".06"/></linearGradient><linearGradient id="sg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity=".03"/></linearGradient></defs>${SVC_SHADOW}<path class="ink" d="M4 62 47 54" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M93 56 118 62" stroke="#ff2d20" stroke-width="3" stroke-linecap="round"/><path d="M93 58 118 73" stroke="#ff8a5a" stroke-width="3" stroke-linecap="round"/><path d="M93 60 116 84" stroke="#8b5cf6" stroke-width="3" stroke-linecap="round"/><path class="ink" d="M60 24 74 16 102 68 88 76Z" fill="url(#sg2)" stroke="#fff" stroke-opacity=".45"/><path class="ink" d="M60 24 88 76H32Z" fill="url(#sg1)" stroke="#fff" stroke-opacity=".7"/><path class="ink" d="M60 24 32 76" stroke="#fff" stroke-opacity=".9" stroke-width="1.2"/></svg>`,
+}
 let svcMedia = {}
 try { svcMedia = JSON.parse(localStorage.getItem('tml_site_svc') || '{}') || {} } catch (e) {}
 function renderServices() {
@@ -934,9 +981,10 @@ function renderServices() {
     const [name, text] = s[lang] || s.en
     const card = document.createElement('div')
     card.className = `svc reveal${m.img ? ' has-img' : ''}`
-    card.innerHTML = `<div class="in"><small>0${n + 1}</small><h3><span></span></h3><p></p><button type="button" class="ex"><i>${PLAY}</i><span></span></button></div>`
+    card.style.setProperty('--i', n)
+    card.innerHTML = `<div class="in"><span class="shape">${SVC_SHAPES[s.en[0]] || SVC_SHAPES.Commercials}</span><small>0${n + 1}</small><h3><span></span></h3><p></p><button type="button" class="ex"><i>${PLAY}</i><span></span></button></div>`
     card.querySelector('h3 span').textContent = name
-    if (m.img) { const im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = m.img; card.querySelector('h3').prepend(im) }
+    if (m.img) { const bg = document.createElement('div'); bg.className = 'bg'; const im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = m.img; bg.appendChild(im); card.prepend(bg) }
     card.querySelector('p').textContent = text
     // the list is the services alone, one short line each, no film beside them (Alex, 18 Oct)
     card.querySelector('.ex').remove()
@@ -947,6 +995,19 @@ const AIB_CAPS = [['Editing', 'Μοντάζ'], ['Color grading', 'Color grading'
 function renderAibsent() {
   const caps = document.getElementById('aibCaps')
   if (caps) caps.innerHTML = AIB_CAPS.map((c) => `<span><i></i>${lang === 'el' ? c[1] : c[0]}</span>`).join('')
+  // the home page's stack: three Aibsent Studios films, or the craft's names on plain frames while there are fewer
+  const stack = document.getElementById('aibStack')
+  if (stack) {
+    const films = WORKS.filter((w) => w.aib && !w.c.includes(BTS)).slice(0, 3)
+    stack.innerHTML = ''
+    ;[0, 1, 2].forEach((n) => {
+      const w = films[n], b = document.createElement('button')
+      b.type = 'button'; b.className = `aib2-frame f${n}`
+      if (w) { b.appendChild(img(w, n === 0)); b.insertAdjacentHTML('beforeend', `<span class="play">${PLAY}</span>`); b.setAttribute('aria-label', w.t); b.onclick = () => play(w) }
+      else { b.disabled = true; b.innerHTML = `<b>${escH(AIB_CAPS[n][lang === 'el' ? 1 : 0])}</b>` }
+      stack.appendChild(b)
+    })
+  }
   const box = document.getElementById('aibWorks')
   if (!box) return
   box.innerHTML = ''
@@ -981,7 +1042,9 @@ function renderAbout() {
   box.querySelectorAll('.face').forEach((face, i) => { const p = TEAM[i]; if (p[3]) face.appendChild(frameImg(Object.assign(document.createElement('img'), { src: p[3], alt: '', loading: 'lazy' }), p[4])) })
 }
 function renderClients() {
+  // two rows (Alex, 18 Oct): half the clients to a row
   const box = document.getElementById('logos')
+  box.style.setProperty('--cols', Math.max(1, Math.ceil(CLIENTS.length / 2)))
   box.innerHTML = CLIENTS.map((c) => `<div class="logo">${c.logo ? `<img src="${escH(c.logo)}" alt="${escH(c.n)}" loading="lazy"${c.mono === false ? '' : ' class="mono"'}>` : `<span>${escH(c.n)}</span>`}</div>`).join('')
 }
 async function loadPeople() {
