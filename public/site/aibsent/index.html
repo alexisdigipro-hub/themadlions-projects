@@ -292,7 +292,7 @@ footer .wordmark { width: 130px; opacity: .6; }
       var b = document.createElement('button'); b.type = 'button'; b.className = 'tile'
       var im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = thumb(w)
       var f = w.frame || null
-      if (f && !w.cover) { im.style.objectPosition = (f.x == null ? 50 : f.x) + '% ' + (f.y == null ? 50 : f.y) + '%'; im.style.transformOrigin = im.style.objectPosition; im.style.setProperty('--z', Math.max(1, Number(f.z || 1))) }
+      if (f) { im.style.objectPosition = (f.x == null ? 50 : f.x) + '% ' + (f.y == null ? 50 : f.y) + '%'; im.style.transformOrigin = im.style.objectPosition; im.style.setProperty('--z', Math.max(1, Number(f.z || 1))) }
       var hq = function () { if (w.kind !== 'vm' && im.src.indexOf('maxres') > 0) { im.src = 'https://i.ytimg.com/vi/' + w.video_id + '/hqdefault.jpg'; return true } return false }
       im.onerror = function () { if (!hq()) im.style.visibility = 'hidden' }
       // YouTube answers a film with no large still with a small grey placeholder, not an error: then the normal still
