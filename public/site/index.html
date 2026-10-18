@@ -324,6 +324,14 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
 .aib-caps span i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
 .aib-cta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; }
 .aib-works { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+/* the minimal Aibsent block: centred, the whole block is the way in */
+.aib.aib-min { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; padding: clamp(52px, 8vw, 110px) 24px; color: inherit; text-decoration: none; transition: transform .35s cubic-bezier(.2,.7,.2,1); }
+.aib.aib-min .aib-logo { width: min(440px, 80%); }
+.aib.aib-min .aib-kicker { margin-top: 26px; }
+.aib.aib-min .aib-go { margin-top: 32px; }
+.aib.aib-min .aib-go svg { width: 17px; height: 17px; transition: transform .3s; }
+.aib.aib-min:hover { transform: translateY(-2px); }
+.aib.aib-min:hover .aib-go svg { transform: translateX(3px); }
 .aib-works .tile:first-child { grid-column: 1 / -1; }
 .badge-aib { position: absolute; top: 10px; left: 10px; z-index: 1; height: 22px; padding: 0 9px; border-radius: 7px; display: inline-flex; align-items: center; font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.18); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 @media (max-width: 900px) { .aib { grid-template-columns: 1fr; } }
@@ -406,6 +414,10 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
 /* Lab on the home page (Alex, 18 Oct): a minimal mention, the two experiments and a way into the Lab */
 .labs { border-top: 1px solid var(--line); }
 .labs > .label, .labs > h2 { text-align: center; }
+.lab-big { margin: 0; font-size: clamp(44px, 8.4vw, 118px); font-weight: 200; line-height: .95; letter-spacing: .01em; text-align: center; }
+.lab-big b { font-weight: 800; }
+.lab-sub { margin: 18px 0 0; text-align: center; font-size: clamp(18px, 2vw, 24px); font-weight: 300; color: color-mix(in srgb, var(--text) 75%, transparent); }
+.lab-sub b { font-weight: 500; color: var(--text); }
 .lab-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 880px; margin: 44px auto 0; }
 .lab-x { display: grid; gap: 10px; padding: 24px 26px; border-radius: 18px; background: var(--bg-2); border: 1px solid var(--line); color: var(--text); text-decoration: none; transition: border-color .3s, transform .3s; }
 .lab-x:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); transform: translateY(-2px); }
@@ -431,14 +443,14 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
   <nav>
     <a href="#work" data-t="nav.work">Work</a>
     <a href="#services" data-t="nav.services">Services</a>
-    <a href="aibsent/">Aibsent Studios</a>
+    <a href="#aibsent">Aibsent Studios</a>
     <a href="#process" data-t="nav.process">Process</a>
     <a href="#clients" data-t="nav.clients">Clients</a>
     <a href="#shop" data-t="nav.shop" id="navShop" hidden>Shop</a>
-    <a href="lab/">Lab</a>
+    <a href="#lab">Lab</a>
     <a href="#contact" data-t="nav.contact">Contact</a>
   </nav>
-  <a class="lab-m" href="lab/">Lab</a>
+  <a class="lab-m" href="#lab">Lab</a>
   <div class="lang" role="group" aria-label="Language">
     <button type="button" data-lang="en" class="on">EN</button>
     <button type="button" data-lang="el">GR</button>
@@ -479,20 +491,14 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
     <div class="svc-grid" id="svcGrid"><!--seo:svcGrid--><div class="svc"><div class="in"><small>01</small><h3>Commercials</h3><p>TV and online spots, from the creative idea and the script to casting, shoot and the final master for every platform.</p><a class="ex" href="https://www.youtube.com/watch?v=J6xyi0iE8KY"><span>Watch: Aperol Spritz</span></a></div></div><div class="svc"><div class="in"><small>02</small><h3>Music Videos</h3><p>A concept built around the song and the artist, directed, shot and finished with the care of a short film.</p><a class="ex" href="https://www.youtube.com/watch?v=1Y3h-3ka4bo"><span>Watch: Michalis Hatzigiannis – Horevo</span></a></div></div><div class="svc"><div class="in"><small>03</small><h3>Feature Films</h3><p>Feature and short films, from the script and development to the shoot and the final cut, for the big screen and festivals.</p><a class="ex" href="https://www.youtube.com/watch?v=_fRXBXkcikw"><span>Watch: Eva ii – Official Trailer</span></a></div></div><div class="svc"><div class="in"><small>04</small><h3>Documentaries</h3><p>Real people and real stories, researched, filmed and edited with patience and an honest eye.</p></div></div><div class="svc"><div class="in"><small>05</small><h3>Corporate Films</h3><p>Brand films, events and campaigns that tell what a company does, clearly and beautifully.</p></div></div><div class="svc"><div class="in"><small>06</small><h3>Visuals</h3><p>Stage and concert visuals, LED screen content, VJ loops and motion art made to move with the music.</p><a class="ex" href="https://www.youtube.com/watch?v=IIYKCXvb7JY"><span>Watch: Fluo Live</span></a></div></div><div class="svc"><div class="in"><small>07</small><h3>Post-production</h3><p>Editing, color grading, visual effects, motion graphics and compositing, for our films or for yours.</p><a class="ex" href="https://vimeo.com/364348936"><span>Watch: Tresemmé</span></a></div></div><!--/seo:svcGrid--></div>
   </section>
 
+  <!-- Aibsent Studios on the home page, kept minimal (Alex, 18 Oct): the logo, one line, one way in; the studio's own
+       page holds the rest. The menu's Aibsent Studios comes here. -->
   <section id="aibsent" class="aibsent">
-    <div class="aib reveal">
-      <div class="aib-text">
-        <a href="aibsent/" aria-label="Aibsent Studios"><img class="aib-logo" src="aibsent.png" alt="Aibsent Studios"></a>
-        <p class="aib-kicker" data-t="aib.kicker">Post-production &amp; AI · a Mad Lions studio</p>
-        <p class="aib-lead" data-t="aib.lead">Our in-house post and AI studio. It finishes our films and takes on yours: from the edit and the grade to visual effects, motion graphics and films made with AI.</p>
-        <div class="aib-caps" id="aibCaps"></div>
-        <div class="aib-cta">
-          <button class="pill main" type="button" id="aibTalk" data-t="aib.talk">Work with Aibsent Studios</button>
-          <a class="pill" href="aibsent/" id="aibAll" data-t="aib.all">Discover Aibsent Studios</a>
-        </div>
-      </div>
-      <div class="aib-works" id="aibWorks"></div>
-    </div>
+    <a class="aib aib-min reveal" href="aibsent/" aria-label="Aibsent Studios">
+      <img class="aib-logo" src="aibsent.png" alt="Aibsent Studios">
+      <span class="aib-kicker" data-t="aib.kicker">Post-production &amp; AI · a Mad Lions studio</span>
+      <span class="pill main aib-go"><span data-t="aib.all">Discover Aibsent Studios</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </a>
   </section>
 
   <section id="process" class="process">
@@ -527,9 +533,10 @@ html[data-theme='light'] .logo { box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
     <div class="more"><button class="pill" id="btsAll" type="button" data-t="bts.all">See everything</button></div>
   </section>
 
+  <!-- the Lab on the home page (Alex, 18 Oct): THEMADLIONS LAB large, what it is under it; the menu's Lab comes here -->
   <section id="lab" class="labs">
-    <p class="label reveal" data-t="lab.label">Lab</p>
-    <h2 class="reveal" data-t="lab.title" data-html>What we build <b>between films.</b></h2>
+    <h2 class="lab-big reveal">THE<b>MAD</b>LIONS <b>LAB</b></h2>
+    <p class="lab-sub reveal" data-t="lab.title" data-html>What we build <b>between films.</b></p>
     <div class="lab-row reveal">
       <a class="lab-x" href="roarme/"><span class="n"><span data-t="lab.e1">Experiment 01</span> <i></i></span><b class="wm"><span>ROAR</span>ME</b><span class="d" data-t="lab.rm">The messenger for teams.</span></a>
       <a class="lab-x" href="roardino/"><span class="n"><span data-t="lab.e2">Experiment 02</span> <i></i></span><b class="wm"><span>ROAR</span>DINO</b><span class="d" data-t="lab.rd">The call sheet, in one link.</span></a>
@@ -898,8 +905,10 @@ function renderServices() {
 }
 const AIB_CAPS = [['Editing', 'Μοντάζ'], ['Color grading', 'Color grading'], ['Visual FX', 'Visual FX'], ['Motion graphics', 'Motion graphics'], ['Compositing', 'Compositing'], ['AI films', 'Ταινίες με AI']]
 function renderAibsent() {
-  document.getElementById('aibCaps').innerHTML = AIB_CAPS.map((c) => `<span><i></i>${lang === 'el' ? c[1] : c[0]}</span>`).join('')
+  const caps = document.getElementById('aibCaps')
+  if (caps) caps.innerHTML = AIB_CAPS.map((c) => `<span><i></i>${lang === 'el' ? c[1] : c[0]}</span>`).join('')
   const box = document.getElementById('aibWorks')
+  if (!box) return
   box.innerHTML = ''
   const list = WORKS.filter((w) => w.aib).slice(0, 5)
   list.forEach((w, n) => {
@@ -913,7 +922,8 @@ function renderAibsent() {
     box.appendChild(b)
   })
 }
-document.getElementById('aibTalk').onclick = () => { pick.kind = 'Post-production'; renderChoices(); document.getElementById('contact').scrollIntoView({ behavior: 'smooth' }) }
+const aibTalk = document.getElementById('aibTalk')
+if (aibTalk) aibTalk.onclick = () => { pick.kind = 'Post-production'; renderChoices(); document.getElementById('contact').scrollIntoView({ behavior: 'smooth' }) }
 
 function renderFaq() {
   document.getElementById('faqList').innerHTML = FAQ.map((f) => { const [q, a] = f[lang] || f.en; return `<details class="qa reveal"><summary>${q}</summary><p>${a}</p></details>` }).join('')
