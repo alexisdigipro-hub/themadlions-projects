@@ -270,7 +270,7 @@ footer .wordmark { width: 130px; opacity: .6; }
   var PLAY = '<svg viewBox="0 0 10 12"><path d="M0 0l10 6-10 6z"/></svg>'
   var works = null
   // the kinds of work, from Studio > Work (site_settings.aib_kinds); a film can be more than one
-  var KINDS = [['full', 'Full CGI & AI', 'Ολόκληρα σε CGI & AI'], ['shots', 'Added CGI shots', 'Συμπληρωματικά πλάνα CGI'], ['anim', 'Animation', 'Animation'], ['motion', 'Motion Graphics', 'Motion Graphics'], ['visuals', 'Visuals', 'Visuals']]
+  var KINDS = [['full', 'Full CGI', 'Ολόκληρα σε CGI'], ['shots', 'Added CGI shots', 'Συμπληρωματικά πλάνα CGI'], ['anim', 'Animation', 'Animation'], ['motion', 'Motion Graphics', 'Motion Graphics'], ['visuals', 'Visuals', 'Visuals']]
   var kindsOf = {}, kf = 'all'
   function kName(k) { for (var i = 0; i < KINDS.length; i++) if (KINDS[i][0] === k) return lang === 'el' ? KINDS[i][2] : KINDS[i][1]; return k }
   function renderFilters() {

@@ -781,9 +781,9 @@ async function loadCats() {
   if (catList) { BASE_CATS.splice(0, BASE_CATS.length, ...catList.map((c) => c.en)) }
 }
 const AIB = 'Aibsent Studios'
-/* what kind of Aibsent Studios work a film is (Alex, 18 Oct): all CGI & AI, or added CGI shots in a shot film, animation,
+/* what kind of Aibsent Studios work a film is (Alex, 18 Oct): all CGI, or added CGI shots in a shot film, animation,
    motion graphics, visuals. Kept in site_settings.aib_kinds as { film id: [keys] }; the Aibsent Studios page filters by them */
-const AIB_KINDS = [['full', 'Full CGI & AI'], ['shots', 'Added CGI shots'], ['anim', 'Animation'], ['motion', 'Motion Graphics'], ['visuals', 'Visuals']]
+const AIB_KINDS = [['full', 'Full CGI'], ['shots', 'Added CGI shots'], ['anim', 'Animation'], ['motion', 'Motion Graphics'], ['visuals', 'Visuals']]
 let aibKinds = {}
 function renderAibKinds() {
   const f = $('workDrawer'), sel = editingWork.aibKinds
