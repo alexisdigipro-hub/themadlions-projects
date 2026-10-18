@@ -60,6 +60,8 @@ img { display: block; max-width: 100%; }
 .bar nav { margin-left: auto; display: flex; gap: 2px; }
 .bar nav a { padding: 8px 13px; border-radius: 999px; font-size: 13.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--text) 80%, transparent); transition: background .2s, color .2s; }
 .bar nav a:hover { background: var(--glass); color: var(--text); }
+/* on a phone the sections menu is hidden; the Lab keeps a small pill of its own beside the language (Alex, 18 Oct) */
+.bar .lab-m { display: none; align-items: center; height: 34px; padding: 0 14px; border-radius: 999px; font-size: 12.5px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; background: var(--glass); border: 1px solid var(--glass-edge); }
 .lang { display: flex; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); }
 .lang button { border: 0; background: transparent; cursor: pointer; padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 500; letter-spacing: .08em; color: color-mix(in srgb, var(--text) 75%, transparent); }
 .lang button.on { background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 24%, transparent), color-mix(in srgb, var(--hi) 8%, transparent)); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 45%, transparent); color: var(--text); }
@@ -226,6 +228,8 @@ footer .wordmark { width: 130px; opacity: .6; }
   .about, .contact { grid-template-columns: 1fr; }
   .bar nav { display: none; }
   .lang { margin-left: auto; }
+  .bar .lab-m { display: inline-flex; margin-left: auto; }
+  .bar .lab-m + .lang { margin-left: 0; }
 }
 @media (max-width: 620px) {
   .bar .wordmark { width: 140px; }
@@ -300,8 +304,10 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
     <a href="#process" data-t="nav.process">Process</a>
     <a href="#clients" data-t="nav.clients">Clients</a>
     <a href="#shop" data-t="nav.shop" id="navShop" hidden>Shop</a>
+    <a href="lab/">Lab</a>
     <a href="#contact" data-t="nav.contact">Contact</a>
   </nav>
+  <a class="lab-m" href="lab/">Lab</a>
   <div class="lang" role="group" aria-label="Language">
     <button type="button" data-lang="en" class="on">EN</button>
     <button type="button" data-lang="el">GR</button>
