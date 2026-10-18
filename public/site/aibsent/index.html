@@ -111,10 +111,7 @@ h2 b { font-weight: 800; }
 .tile { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: var(--bg-2); cursor: pointer; border: 0; padding: 0; text-align: left; }
 .tile img { width: 100%; height: 100%; object-fit: cover; transform: scale(calc(var(--z, 1) * 1.01)); transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
 .tile:hover img { transform: scale(calc(var(--z, 1) * 1.06)); }
-.tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,.8)); }
-.tile .cap2 { position: absolute; left: 16px; right: 16px; bottom: 14px; z-index: 1; color: #f2f0ec; }
-.tile .cap2 strong { display: block; font-size: 15.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tile .cap2 span { display: block; margin-top: 3px; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: rgba(242,240,236,.72); }
+.tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,.35)); }
 .tile .play { position: absolute; left: 50%; top: 50%; z-index: 1; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); opacity: 0; transform: scale(.85); transition: opacity .3s, transform .3s; }
 .tile .play svg { width: 16px; margin-left: 3px; fill: #fff; }
 .tile:hover .play { opacity: 1; transform: none; }
@@ -273,11 +270,14 @@ footer .wordmark { width: 130px; opacity: .6; }
       var im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = thumb(w)
       var f = w.frame || null
       if (f && !w.cover) { im.style.objectPosition = (f.x == null ? 50 : f.x) + '% ' + (f.y == null ? 50 : f.y) + '%'; im.style.transformOrigin = im.style.objectPosition; im.style.setProperty('--z', Math.max(1, Number(f.z || 1))) }
-      im.onerror = function () { if (w.kind !== 'vm' && im.src.indexOf('maxres') > 0) im.src = 'https://i.ytimg.com/vi/' + w.video_id + '/hqdefault.jpg'; else im.style.visibility = 'hidden' }
+      var hq = function () { if (w.kind !== 'vm' && im.src.indexOf('maxres') > 0) { im.src = 'https://i.ytimg.com/vi/' + w.video_id + '/hqdefault.jpg'; return true } return false }
+      im.onerror = function () { if (!hq()) im.style.visibility = 'hidden' }
+      // YouTube answers a film with no large still with a small grey placeholder, not an error: then the normal still
+      im.onload = function () { if (im.naturalWidth && im.naturalWidth < 200) hq() }
       b.appendChild(im)
-      b.insertAdjacentHTML('beforeend', '<span class="play">' + PLAY + '</span><span class="cap2"><strong></strong><span></span></span>')
-      b.querySelector('.cap2 strong').textContent = w.title
-      b.querySelector('.cap2 span').textContent = [w.client].concat((w.categories || []).map(function (c) { return lang === 'el' ? (CATS_EL[c] || c) : c })).filter(Boolean).join(' · ')
+      // no titles on the tiles (Alex, 18 Oct), as on the home page; the name stays for screen readers
+      b.insertAdjacentHTML('beforeend', '<span class="play">' + PLAY + '</span>')
+      b.setAttribute('aria-label', w.title)
       b.onclick = function () { play(w) }
       grid.appendChild(b)
     })
