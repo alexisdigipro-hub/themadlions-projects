@@ -36,7 +36,7 @@ const emptyDelivery = () => ({
 
 const emptyEstimate = () => ({
   id: uid(), projectId: '', version: '', title: '', client: '', intro: '',
-  lines: [], discount: '', vatPct: '', validUntil: '', terms: '',
+  lines: [], totalPrice: '', discount: '', vatPct: '', validUntil: '', terms: '',
   recipients: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '', pin: '',
 })
 
@@ -288,7 +288,7 @@ export default function Deliveries() {
     setEdraft({
       id: (r.ref.split(':')[1]) || uid(), projectId: d.projectId || '', version: d.version || '',
       title: d.title || '', client: d.client || '', intro: d.intro || '',
-      lines: d.lines || [], discount: d.discount ? String(d.discount) : '', vatPct: d.vatPct != null ? String(d.vatPct) : '',
+      lines: d.lines || [], totalPrice: d.totalPrice ? String(d.totalPrice) : '', discount: d.discount ? String(d.discount) : '', vatPct: d.vatPct != null ? String(d.vatPct) : '',
       validUntil: d.validUntil || '', terms: d.terms || '',
       recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
       contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
@@ -319,6 +319,7 @@ export default function Deliveries() {
           group: (l.group || '').trim(), what: l.what.trim(), unit: (l.unit || '').trim(),
           qty: Number(l.qty) || 1, price: Number(l.price) || 0, advance: !!l.advance,
         })),
+        totalPrice: Number(edraft.totalPrice) || 0,
         discount: Number(edraft.discount) || 0,
         vatPct: Number(edraft.vatPct) || 0,
         validUntil: edraft.validUntil,
@@ -614,13 +615,18 @@ export default function Deliveries() {
               rows={edraft.lines}
               onChange={(v) => setE('lines', v)}
               cur={state.finance?.settings?.currency || 'EUR'}
+              totalPrice={edraft.totalPrice}
               discount={edraft.discount}
               vatPct={edraft.vatPct}
             />
 
-            <div className="row-3">
+            {/* the price of the whole job and VAT (Alex, 19 Oct): with a total price the lines only say what it includes */}
+            <div className="row-2">
+              <Field label="Total price" hint="Optional. The price of the whole job, before VAT. When it is set, the client sees only this and the lines say what it includes, without their amounts."><Input type="number" min="0" step="0.01" value={edraft.totalPrice} onChange={(e) => setE('totalPrice', e.target.value)} placeholder="Sum of the lines" /></Field>
+              <Field label="VAT %" hint="0 or empty for no VAT."><Input type="number" min="0" max="99" value={edraft.vatPct} onChange={(e) => setE('vatPct', e.target.value)} placeholder="0" /></Field>
+            </div>
+            <div className="row-2">
               <Field label="Discount" hint="An amount, not a percentage."><Input type="number" min="0" step="0.01" value={edraft.discount} onChange={(e) => setE('discount', e.target.value)} placeholder="0" /></Field>
-              <Field label="VAT %"><Input type="number" min="0" max="99" value={edraft.vatPct} onChange={(e) => setE('vatPct', e.target.value)} /></Field>
               <Field label="Valid until"><Input type="date" value={edraft.validUntil} onChange={(e) => setE('validUntil', e.target.value)} /></Field>
             </div>
             <Field label="Payment terms & Notes" hint="Shown under the total."><Textarea rows={2} value={edraft.terms} onChange={(e) => setE('terms', e.target.value)} placeholder="50% on signature, 50% on delivery. Travel outside Attica billed separately." /></Field>
@@ -651,7 +657,7 @@ export default function Deliveries() {
 }
 
 /* The cost lines. Add one, remove one, and the total underneath moves as you type. */
-function LineEditor({ rows, onChange, cur, discount, vatPct }) {
+function LineEditor({ rows, onChange, cur, totalPrice, discount, vatPct }) {
   // No more quantity or unit (Alex): every line is just what it is and what it costs, so qty is
   // pinned to 1 the moment a line is touched here, whatever it was carrying from before.
   const set = (i, k, v) => onChange(rows.map((r, j) => (j === i ? { ...r, [k]: v, qty: 1, unit: '' } : r)))
@@ -660,7 +666,7 @@ function LineEditor({ rows, onChange, cur, discount, vatPct }) {
   // printed estimate (and which group it visually sits under) is something you can set by hand.
   // drag a cost by its ⋮⋮ to reorder (Alex, 10 Oct: no more arrows)
   const sort = useDragSort((from, to) => onChange(moveItem(rows, from, to)))
-  const t = estimateTotals({ lines: rows, discount, vatPct })
+  const t = estimateTotals({ lines: rows, totalPrice, discount, vatPct })
   return (
     <div className="field">
       <span className="field-label">Costs</span>
@@ -687,7 +693,7 @@ function LineEditor({ rows, onChange, cur, discount, vatPct }) {
         <div className="est-edit-foot">
           <Button variant="ghost" onClick={add}>Add a cost</Button>
           <span className="muted small">
-            Clean cost {amount(t.subtotal, cur)}
+            {t.fixed ? 'Total price' : 'Clean cost'} {amount(t.subtotal, cur)}
             {t.discount > 0 ? ` · discount ${amount(t.discount, cur)}` : ''}
             {t.vatPct > 0 ? ` · VAT ${t.vatPct}% ${amount(t.vat, cur)}` : ''}
             {t.advance > 0 ? ` · advance ${amount(t.advance, cur)}` : ''}
@@ -695,7 +701,7 @@ function LineEditor({ rows, onChange, cur, discount, vatPct }) {
           <b className="est-edit-total">{amount(t.total, cur)}</b>
         </div>
       </div>
-      <span className="field-hint">Leave the heading empty to keep a line loose. Lines with the same heading are grouped together on the page, with their own subtotal. Tick Advance for the lines that make up the advance payment; they show in a different colour and their own sum next to the totals.</span>
+      <span className="field-hint">Leave the heading empty to keep a line loose. Lines with the same heading are grouped together on the page, with their own subtotal. A line with no amount just says what is included. Tick Advance for the lines that make up the advance payment; they show in a different colour and their own sum next to the totals.</span>
     </div>
   )
 }

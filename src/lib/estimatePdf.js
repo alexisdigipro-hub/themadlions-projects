@@ -15,7 +15,7 @@
  * the only part that touches the DOM.
  */
 
-import { amount, lineAmount } from './estimate.js'
+import { amount, lineAmount, showGroupSum, showLineAmount, upper } from './estimate.js'
 
 const PAGE_W = 595.28 // A4 in points
 const PAGE_H = 841.89
@@ -168,7 +168,7 @@ export function renderPages(d, t, groups, cur) {
       ctx.fillStyle = MUTED
       ctx.font = `700 10px ${font}`
       ctx.textAlign = 'left'
-      ctx.fillText(g.label.toUpperCase(), MARGIN, y)
+      ctx.fillText(upper(g.label), MARGIN, y)
       y += 18
     }
     for (const l of g.rows) {
@@ -186,14 +186,14 @@ export function renderPages(d, t, groups, cur) {
       ctx.fillStyle = l.advance ? AMBER : INK
       ctx.font = `400 12.5px ${font}`
       ctx.textAlign = 'right'
-      ctx.fillText(amount(lineAmount(l), cur), AMT_X, rowTop)
+      if (showLineAmount(l, t)) ctx.fillText(amount(lineAmount(l), cur), AMT_X, rowTop)
       ctx.textAlign = 'left'
       y = rowTop + rowH
       ctx.strokeStyle = LINE
       ctx.lineWidth = 1
       ctx.beginPath(); ctx.moveTo(MARGIN, y - 2); ctx.lineTo(PAGE_W - MARGIN, y - 2); ctx.stroke()
     }
-    if (g.label && g.rows.length > 1) {
+    if (showGroupSum(g, t)) {
       // ensure() may start a fresh page and snap y to the top margin: the +14 gap has to come
       // after that check, or a page break leaves this line touching the very top edge.
       ensure(34)
@@ -228,7 +228,7 @@ export function renderPages(d, t, groups, cur) {
     ctx.font = `700 18px ${font}`
     ctx.fillText(amount(t.advance, cur), MARGIN, totalsTop + 23)
   }
-  const totLines = [['Clean cost', amount(t.subtotal, cur), false]]
+  const totLines = [[t.fixed ? 'Total price' : 'Clean cost', amount(t.subtotal, cur), false]]
   if (t.discount > 0) totLines.push(['Discount', `− ${amount(t.discount, cur)}`, false])
   if (t.vatPct > 0) totLines.push([`VAT ${t.vatPct}%`, amount(t.vat, cur), false])
   totLines.push(['Total', amount(t.total, cur), true])
