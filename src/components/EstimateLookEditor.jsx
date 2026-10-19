@@ -1,6 +1,7 @@
 import { useRef } from 'react'
-import { Field, Input, Select, useToast } from './ui.jsx'
-import { FONTS, PRESETS, loadFont, lookOf, shrinkImage } from '../lib/estimateLook.js'
+import { Field, Input, useToast } from './ui.jsx'
+import { PRESETS, fontKey, lookOf, shrinkImage } from '../lib/estimateLook.js'
+import FontPicker from './FontPicker.jsx'
 
 /* The Look tab of the cost estimation window (Alex, 19 Oct: "settings for everything"): colours,
    letters, sizes, layout, a cover photo and the logo. Every change shows at once in the preview. */
@@ -67,7 +68,7 @@ export default function EstimateLookEditor({ look, onChange }) {
         <h4>Letters</h4>
         <div className="row-2">
           <Field label="Font">
-            <Select value={L.font} onChange={(e) => { loadFont(e.target.value); set({ font: e.target.value }) }} options={FONTS.map((f) => [f[0], f[1]])} />
+            <FontPicker value={fontKey(L.font)} onChange={(id) => set({ font: id })} />
           </Field>
           <Field label="Title weight">{seg('titleWeight', [[300, 'Thin'], [500, 'Regular'], [800, 'Bold']])}</Field>
         </div>

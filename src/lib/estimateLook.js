@@ -1,3 +1,4 @@
+import { FONTS, ensureFontLoaded, fontById, fontStackOf } from './fonts.js'
 /* How a cost estimation looks (Alex, 19 Oct: "settings for everything: letters, sizes, layout,
    colours, a photo"). Kept with the estimate's data as `look`, so the client's page, the live
    preview and the PDF all read the same thing. An estimate without one gets the company site's
@@ -23,32 +24,14 @@ export const PRESETS = [
   ['Mono', { bg: '#ffffff', text: '#111111', accent: '#111111', advance: '#7a7a7a', glow: false }],
 ]
 
-/* Fonts that carry Greek, from Google Fonts, loaded only when picked. */
-export const FONTS = [
-  ['sofia', 'Sofia Sans', '"Sofia Sans"', 'Sofia+Sans:wght@300;400;600;700;800'],
-  ['inter', 'Inter', 'Inter', 'Inter:wght@300;400;600;700;800'],
-  ['manrope', 'Manrope', 'Manrope', 'Manrope:wght@300;400;600;700;800'],
-  ['commissioner', 'Commissioner', 'Commissioner', 'Commissioner:wght@300;400;600;700;800'],
-  ['comfortaa', 'Comfortaa', 'Comfortaa', 'Comfortaa:wght@300;400;600;700'],
-  ['noto-serif', 'Noto Serif', '"Noto Serif"', 'Noto+Serif:wght@300;400;600;700;800'],
-  ['literata', 'Literata', 'Literata', 'Literata:wght@300;400;600;700;800'],
-  ['didot', 'GFS Didot', '"GFS Didot"', 'GFS+Didot'],
-]
+/* The font comes from the Hub's one list of Greek fonts (src/lib/fonts.js, Alex 19 Oct: "all the Greek fonts"),
+   so the estimate offers every one of them; the keys it used before keep working. */
+const OLD_KEYS = { 'noto-serif': 'notoserif', didot: 'gfsdidot' }
+export const fontKey = (k) => OLD_KEYS[k] || k || 'sofia'
 
 export const lookOf = (d) => ({ ...LOOK_DEFAULT, ...(d?.look || {}) })
-export const fontFamily = (L) => `${(FONTS.find((f) => f[0] === L.font) || FONTS[0])[2]}, system-ui, sans-serif`
-
-export function loadFont(key) {
-  const f = FONTS.find((x) => x[0] === key)
-  if (!f || typeof document === 'undefined') return
-  const id = `est-font-${f[0]}`
-  if (document.getElementById(id)) return
-  const link = document.createElement('link')
-  link.id = id
-  link.rel = 'stylesheet'
-  link.href = `https://fonts.googleapis.com/css2?family=${f[3]}&display=swap`
-  document.head.appendChild(link)
-}
+export const fontFamily = (L) => fontStackOf(fontById(fontKey(L.font)) || FONTS[0])
+export const loadFont = (key) => { if (typeof document !== 'undefined') ensureFontLoaded(fontKey(key)) }
 
 const rgb = (hex) => {
   const h = String(hex || '').replace('#', '')
