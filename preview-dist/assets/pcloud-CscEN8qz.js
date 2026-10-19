@@ -1,0 +1,1 @@
+import{bm as c}from"./main-NFJMNU2r.js";const l=o=>(o==null?void 0:o.storage)==="pcloud";async function n(o,r,{raw:a=!1}={}){throw new Error("pCloud needs the online database.")}const p=(o,r)=>n("raw",{},{raw:!0});function u(o,r,a="Photos"){if(!l(o==null?void 0:o.settings)||!c)return null}export{u as a,p as b,l as p};
