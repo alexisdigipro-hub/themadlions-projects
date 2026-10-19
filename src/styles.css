@@ -7457,5 +7457,5 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
   .content.page-in, .content.page-in > * > *, .tabbar a.active svg, .tabbar button.active svg, .toast { animation: none !important; }
 }
 
-/* a task on a list takes a 10% wash of the list's colour over its card (Alex, 19 Oct) */
-html[data-theme] body .rem-tasks > .rem-task.tinted, .rem-task.tinted { background-image: linear-gradient(color-mix(in srgb, var(--tint) 10%, transparent), color-mix(in srgb, var(--tint) 10%, transparent)); }
+/* a task on a list takes the list's colour as a soft light from its left edge (Alex, 19 Oct: picked B of three) */
+html[data-theme] body .rem-tasks > .rem-task.tinted, .rem-task.tinted { background-image: radial-gradient(120% 140% at 0% 50%, color-mix(in srgb, var(--tint) 20%, transparent), transparent 55%); }
