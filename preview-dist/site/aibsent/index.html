@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Aibsent Studios (Alex, 18 Oct 2026): the page of the studio's post-production and AI studio. What it does, all
+     the films marked "Made by Aibsent Studios" in Studio (site_works.aibsent), and a way to bring it a film. Same look and
+     language switch as the main page and the Lab. -->
+<title>Aibsent Studios · The Mad Lions</title>
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search).get('theme'), t = null
+    try { t = q || localStorage.getItem('tml_site_theme') } catch (e) {}
+    if (t && t !== 'dark') document.documentElement.dataset.theme = t
+  })()
+</script>
+<link rel="canonical" href="https://themadlions.com/aibsent/">
+<meta name="description" content="Aibsent Studios, the post-production and AI studio of The Mad Lions: editing, color grading, visual effects, motion graphics, compositing and films made with AI, for our films and for yours.">
+<meta name="theme-color" content="#0b0b0c">
+<meta property="og:title" content="Aibsent Studios · The Mad Lions">
+<meta property="og:description" content="Post-production and AI: where our films are finished, and yours too.">
+<meta property="og:url" content="https://themadlions.com/aibsent/">
+<meta property="og:image" content="https://themadlions.com/og-image.png">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0b0c; --bg-2: #121214; --bg-3: #18181b; --text: #f2f0ec; --muted: #9a978f; --line: rgba(255,255,255,.1);
+  --accent: #d40000; --on-accent: #ffffff; --hi: #ffffff; --glass: rgba(255,255,255,.07); --glass-edge: rgba(255,255,255,.14);
+  --wm: invert(1);
+  --pad: clamp(16px, 4vw, 56px);
+}
+html[data-theme='light'] {
+  --bg: #f3f0e8; --bg-2: #ffffff; --bg-3: #ebe7dd; --text: #151412; --muted: #6f6a60; --line: rgba(0,0,0,.1);
+  --hi: #000000; --glass: rgba(0,0,0,.04); --glass-edge: rgba(0,0,0,.12); --wm: none;
+}
+html[data-theme='blue'] {
+  --bg: #08101f; --bg-2: #0f1a31; --bg-3: #15233f; --text: #eef3ff; --muted: #8e9cbc; --line: rgba(160,190,255,.13);
+  --glass: rgba(140,180,255,.09); --glass-edge: rgba(160,200,255,.2);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: Jost, system-ui, sans-serif; font-weight: 400; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+img { display: block; max-width: 100%; }
+.wordmark { filter: var(--wm); height: auto; }
+
+/* the top bar, as on the main page; Lab is the page you are on */
+.bar { position: fixed; inset: 0 0 auto 0; z-index: 20; display: flex; align-items: center; gap: 18px; padding: calc(14px + env(safe-area-inset-top)) var(--pad) 14px; transition: background .4s; }
+.bar.solid { background: color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); border-bottom: 1px solid var(--line); }
+.bar .wordmark { width: 168px; }
+.bar nav { margin-left: auto; display: flex; gap: 2px; }
+.bar nav a { padding: 8px 13px; border-radius: 999px; font-size: 13.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--text) 80%, transparent); transition: background .2s, color .2s; }
+.bar nav a { white-space: nowrap; } /* one line, Aibsent Studios too */
+.bar nav a:hover { background: var(--glass); color: var(--text); }
+.bar nav a.on { color: var(--text); background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 20%, transparent), color-mix(in srgb, var(--hi) 7%, transparent)); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 35%, transparent); }
+.lang { display: flex; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); }
+.lang button { border: 0; background: transparent; cursor: pointer; padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 500; letter-spacing: .08em; color: color-mix(in srgb, var(--text) 75%, transparent); }
+.lang button.on { background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 24%, transparent), color-mix(in srgb, var(--hi) 8%, transparent)); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 45%, transparent); color: var(--text); }
+
+/* the opening */
+.hero { position: relative; padding: calc(150px + env(safe-area-inset-top)) var(--pad) clamp(50px, 7vw, 90px); overflow: hidden; }
+.hero::before { content: ''; position: absolute; inset: -20% -10% auto auto; width: 70vw; height: 70vw; max-width: 900px; max-height: 900px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), transparent 65%); pointer-events: none; }
+.kicker { position: relative; margin: 0; font-size: clamp(13px, 1.4vw, 15px); font-weight: 500; letter-spacing: .34em; text-transform: uppercase; color: var(--accent); }
+h1 { position: relative; margin: 22px 0 0; font-size: clamp(48px, 9vw, 128px); font-weight: 200; line-height: .95; letter-spacing: -.02em; }
+h1 b { font-weight: 800; }
+.sub { position: relative; margin: 26px 0 0; max-width: 640px; font-size: clamp(17px, 1.7vw, 20px); font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 75%, transparent); }
+
+section { padding: 0 var(--pad) clamp(80px, 10vw, 130px); }
+.label { font-size: 12.5px; font-weight: 500; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); margin: 0 0 18px; }
+
+.acts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 46px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 500; letter-spacing: .04em; border: 1px solid var(--glass-edge); background: var(--glass); transition: transform .15s, background .2s, border-color .2s; }
+.pill:hover { transform: translateY(-1px); background: color-mix(in srgb, var(--hi) 12%, transparent); border-color: color-mix(in srgb, var(--hi) 30%, transparent); }
+.pill:active { transform: scale(.97); }
+.pill.main { background: var(--accent); color: var(--on-accent); border-color: transparent; box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 25%, transparent); }
+.pill.main:hover { background: var(--accent); filter: brightness(1.08); }
+.pill svg { width: 17px; height: 17px; }
+.hero { text-align: center; }
+.hero::before { inset: -30% auto auto 50%; transform: translateX(-50%); }
+.hero .logo { position: relative; display: block; width: min(420px, 78%); height: auto; margin: 0 auto; }
+html[data-theme='light'] .hero .logo { filter: invert(1); }
+.hero .kicker { margin-top: 26px; }
+.hero h1 { font-size: clamp(40px, 7vw, 96px); }
+.hero .sub { margin-left: auto; margin-right: auto; }
+.hero .acts { justify-content: center; }
+/* the name written out, not the logo picture (Alex, 18 Oct): AiBSENT large, STUDIOS small and spaced under it; the line under it CGI & Post Production; no title, text or buttons */
+/* the glow above the name fades out before the hero ends, so the shorter hero shows no edge */
+.hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 45%; background: linear-gradient(180deg, transparent, var(--bg)); pointer-events: none; }
+.hero > * { z-index: 1; }
+.aib-word { position: relative; margin: 0; display: flex; flex-direction: column; align-items: center; font-family: Jost, system-ui, sans-serif; color: var(--text); }
+.aib-word .w1 { font-size: clamp(60px, 11vw, 150px); font-weight: 500; line-height: .92; letter-spacing: .03em; }
+.aib-word .w2 { margin-top: clamp(8px, 1.2vw, 16px); padding-left: .6em; font-size: clamp(13px, 1.5vw, 20px); font-weight: 500; letter-spacing: .6em; color: color-mix(in srgb, var(--text) 82%, transparent); }
+.center { text-align: center; }
+h2 { margin: 0; font-size: clamp(32px, 4.6vw, 60px); font-weight: 300; line-height: 1.05; letter-spacing: -.01em; }
+h2 b { font-weight: 800; }
+
+/* what the studio does: six tiles */
+.caps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 40px; }
+.cap { padding: 26px 26px 28px; border-radius: 20px; background: var(--bg-2); border: 1px solid var(--line); transition: border-color .3s; }
+.cap:hover { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.cap small { font-size: 12px; letter-spacing: .18em; color: var(--accent); font-variant-numeric: tabular-nums; }
+.cap h3 { margin: 10px 0 8px; font-size: 22px; font-weight: 500; }
+.cap p { margin: 0; font-size: 15.5px; font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 78%, transparent); }
+
+/* the films finished here */
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 40px; }
+/* film tiles 20% lower than 16:9, as on the home page (Alex, 18 Oct) */
+.tile { position: relative; aspect-ratio: 20 / 9; border-radius: 14px; overflow: hidden; background: var(--bg-2); cursor: pointer; border: 0; padding: 0; text-align: left; }
+.tile img { width: 100%; height: 100%; object-fit: cover; transform: scale(calc(var(--z, 1) * 1.01)); transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
+.tile:hover img { transform: scale(calc(var(--z, 1) * 1.06)); }
+/* the kinds of work (Alex, 18 Oct): filters over the films, and the kind as a small chip on each tile */
+.kfilters { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 0 30px; }
+.kfilters button { height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: none; color: color-mix(in srgb, var(--text) 68%, transparent); font: inherit; font-size: 14px; letter-spacing: .02em; cursor: pointer; transition: background .25s, color .25s, border-color .25s; }
+.kfilters button:hover { color: var(--text); border-color: var(--glass-edge); }
+.kfilters button.on { color: var(--text); background: var(--glass); border-color: var(--glass-edge); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 12%, transparent); }
+.tile .kchip { position: absolute; top: 12px; left: 12px; z-index: 2; display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 11px; border-radius: 999px; font-size: 10.5px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: #f2f0ec; background: rgba(10,10,12,.55); border: 1px solid rgba(255,255,255,.14); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.kfilters:not([hidden]) + .grid { margin-top: 0; }
+.tile .kchip i { width: 6px; height: 6px; border-radius: 50%; background: #ff3b2f; }
+@media (max-width: 700px) { .kfilters { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--pad)) 22px; padding: 0 var(--pad); } .kfilters::-webkit-scrollbar { display: none; } .kfilters button { flex: none; } }
+.tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,.35)); }
+.tile .play { position: absolute; left: 50%; top: 50%; z-index: 1; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); opacity: 0; transform: scale(.85); transition: opacity .3s, transform .3s; }
+.tile .play svg { width: 16px; margin-left: 3px; fill: #fff; }
+.tile:hover .play { opacity: 1; transform: none; }
+.empty { margin-top: 40px; text-align: center; color: var(--muted); }
+
+/* for our films and for yours */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 40px; }
+.two .cap h3 { font-size: clamp(22px, 2.4vw, 28px); font-weight: 300; } .two .cap h3 b { font-weight: 700; }
+.cta { margin-top: 10px; padding: clamp(30px, 5vw, 60px); border-radius: 26px; text-align: center; background: radial-gradient(600px 300px at 50% 0, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%), var(--bg-2); border: 1px solid var(--line); }
+.cta p { margin: 14px auto 0; max-width: 520px; font-size: 17px; font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 78%, transparent); }
+.cta .acts { justify-content: center; }
+
+/* the player */
+.player { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 64px var(--pad); background: rgba(5,5,6,.94); opacity: 0; pointer-events: none; transition: opacity .3s; }
+.player.open { opacity: 1; pointer-events: auto; }
+.player .frame { width: min(1400px, 100%); aspect-ratio: 16 / 9; max-height: 80vh; border-radius: 14px; overflow: hidden; background: #000; }
+.player iframe { width: 100%; height: 100%; border: 0; display: block; }
+.player .ptitle { position: absolute; left: var(--pad); top: calc(20px + env(safe-area-inset-top)); color: #f2f0ec; font-size: 15px; font-weight: 500; letter-spacing: .04em; }
+.player .close { position: absolute; right: var(--pad); top: calc(14px + env(safe-area-inset-top)); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.08); color: #f2f0ec; font-size: 22px; cursor: pointer; }
+
+footer { padding: 28px var(--pad) calc(28px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); }
+footer .wordmark { width: 130px; opacity: .6; }
+
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .9s ease, transform .9s cubic-bezier(.2,.7,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+
+@media (max-width: 900px) {
+  .bar nav { display: none; }
+  .lang { margin-left: auto; }
+  .caps, .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .two { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .bar .wordmark { width: 140px; }
+  .caps, .grid { grid-template-columns: minmax(0, 1fr); }
+  .acts .pill { flex: 1 1 auto; }
+}
+</style>
+</head>
+<body>
+
+<header class="bar" id="bar">
+  <a href="../" aria-label="The Mad Lions"><img class="wordmark" src="../wordmark.png" alt="The Mad Lions"></a>
+  <nav>
+    <a href="../#work" data-t="nav.work">Work</a>
+    <a href="../#services" data-t="nav.services">Services</a>
+    <a href="./" class="on" aria-current="page">Aibsent Studios</a>
+    <a href="../#clients" data-t="nav.clients">Clients</a>
+    <a href="../lab/">Lab</a>
+    <a href="../#contact" data-t="nav.contact">Contact</a>
+  </nav>
+  <div class="lang" role="group" aria-label="Language">
+    <button type="button" data-lang="en" class="on">EN</button>
+    <button type="button" data-lang="el">GR</button>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <h1 class="aib-word reveal" aria-label="Aibsent Studios"><span class="w1">AiBSENT</span><span class="w2">STUDIOS</span></h1>
+    <p class="kicker reveal" data-t="hero.kicker">CGI &amp; Post Production</p>
+  </div>
+
+  <section id="work">
+    <p class="label center reveal" data-t="work.label">The work</p>
+    <div class="kfilters" id="kfilters" hidden></div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section>
+    <p class="label center reveal" data-t="caps.label">What we do</p>
+    <h2 class="center reveal" data-t="caps.title" data-html>Everything after <b>the shoot.</b></h2>
+    <div class="caps" id="caps"></div>
+  </section>
+
+  <section>
+    <div class="two">
+      <div class="cap reveal"><small data-t="ours.n">Our films</small><h3 data-t="ours.t" data-html>Every Mad Lions film <b>ends here.</b></h3><p data-t="ours.p">Commercials, music videos and films shot by The Mad Lions are cut, graded and finished at Aibsent Studios, by the people who were on set.</p></div>
+      <div class="cap reveal"><small data-t="yours.n">Your films</small><h3 data-t="yours.t" data-html>Shot it yourselves? <b>We finish it.</b></h3><p data-t="yours.p">Bring us your footage and we take it from the edit to the final master, for TV, cinema and every social format.</p></div>
+    </div>
+    <div class="cta reveal">
+      <h2 data-t="cta.title" data-html>Have a film <b>to finish?</b></h2>
+      <p data-t="cta.p">Tell us what you shot and when you need it. We answer within a working day.</p>
+      <div class="acts">
+        <a class="pill main" href="../?kind=Post-production#contact" data-t="cta.talk">Work with Aibsent Studios</a>
+        <a class="pill" href="mailto:info@themadlions.com?subject=Aibsent%20Studios">info@themadlions.com</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <a href="../"><img class="wordmark" src="../wordmark.png" alt="The Mad Lions"></a>
+  <span data-t="footer">© 2026 The Mad Lions · Aibsent Studios</span>
+</footer>
+
+<div class="player" id="player" role="dialog" aria-modal="true" aria-label="Film">
+  <div class="ptitle" id="ptitle"></div>
+  <button class="close" id="pclose" type="button" aria-label="Close">×</button>
+  <div class="frame" id="pframe"></div>
+</div>
+
+<script>
+(function () {
+  var CAPS = [
+    [['Editing', 'The cut that finds the film\'s rhythm, from the first assembly to the locked picture.'], ['Μοντάζ', 'Το μοντάζ που βρίσκει τον ρυθμό της ταινίας, από το πρώτο assembly ως το κλείδωμα της εικόνας.']],
+    [['Color grading', 'A look for every film, graded for TV, cinema and every screen it will play on.'], ['Color grading', 'Ένα look για κάθε ταινία, για TV, σινεμά και κάθε οθόνη που θα παίξει.']],
+    [['Visual FX', 'Clean-ups, set extensions and effects: the ones nobody notices and the ones everybody does.'], ['Visual FX', 'Καθαρισμοί, επεκτάσεις σκηνικού και εφέ: αυτά που δεν τα καταλαβαίνει κανείς και αυτά που τα βλέπουν όλοι.']],
+    [['Motion graphics', 'Titles, graphics and animation that move with the film, not on top of it.'], ['Motion graphics', 'Τίτλοι, γραφικά και animation που κινούνται με την ταινία, όχι πάνω της.']],
+    [['Compositing', 'Many layers of picture made one: green screen, CG and plates.'], ['Compositing', 'Πολλά επίπεδα εικόνας γίνονται ένα: green screen, CG και plates.']],
+    [['AI films', 'Films and shots made with AI, directed with the same eye as everything we shoot.'], ['Ταινίες με AI', 'Ταινίες και πλάνα με AI, σκηνοθετημένα με το ίδιο μάτι όπως ό,τι γυρίζουμε.']]
+  ]
+  var EL = {
+    'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.contact': 'Επαφή',
+    'hero.kicker': 'CGI & Post Production',
+    'hero.title': 'Εκεί που <b>ολοκληρώνονται</b> οι ταινίες.',
+    'hero.sub': 'Το δικό μας studio για post-production και AI. Ολοκληρώνει τις ταινίες μας και αναλαμβάνει και τις δικές σας: από το μοντάζ και το color grading ως τα visual effects, τα motion graphics και ταινίες με AI.',
+    'cta.talk': 'Δουλέψτε με την Aibsent Studios', 'cta.see': 'Δες τη δουλειά',
+    'caps.label': 'Τι κάνουμε', 'caps.title': 'Ό,τι γίνεται <b>μετά το γύρισμα.</b>',
+    'work.label': 'Η δουλειά', 'work.title': 'Ολοκληρωμένα <b>από την Aibsent Studios.</b>', 'work.none': 'Οι ταινίες έρχονται σύντομα.',
+    'ours.n': 'Οι ταινίες μας', 'ours.t': 'Κάθε ταινία των Mad Lions <b>τελειώνει εδώ.</b>', 'ours.p': 'Διαφημιστικά, βίντεο κλιπ και ταινίες που γυρίζουν οι The Mad Lions μοντάρονται, παίρνουν χρώμα και ολοκληρώνονται στην Aibsent Studios, από ανθρώπους που ήταν στο γύρισμα.',
+    'yours.n': 'Οι ταινίες σας', 'yours.t': 'Το γυρίσατε μόνοι σας; <b>Το ολοκληρώνουμε.</b>', 'yours.p': 'Φέρτε μας το υλικό σας και το πάμε από το μοντάζ ως το τελικό master, για TV, σινεμά και κάθε social format.',
+    'cta.title': 'Έχετε μια ταινία <b>να ολοκληρώσετε;</b>', 'cta.p': 'Πείτε μας τι γυρίσατε και πότε το χρειάζεστε. Απαντάμε μέσα σε μία εργάσιμη.',
+    'footer': '© 2026 The Mad Lions · Aibsent Studios'
+  }
+  var lang = 'en'
+  function renderCaps() {
+    document.getElementById('caps').innerHTML = CAPS.map(function (c, i) { var x = lang === 'el' ? c[1] : c[0]; return '<div class="cap reveal in"><small>0' + (i + 1) + '</small><h3>' + x[0] + '</h3><p>' + x[1] + '</p></div>' }).join('')
+  }
+  var nodes = [].slice.call(document.querySelectorAll('[data-t]')), EN = {}
+  nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })
+  EN['work.none'] = 'The films are on their way.'
+  function setLang(l) {
+    lang = l === 'el' ? 'el' : 'en'
+    var d = lang === 'el' ? EL : EN
+    nodes.forEach(function (n) { var v = d[n.dataset.t]; if (v == null) v = EN[n.dataset.t]; if (n.hasAttribute('data-html')) n.innerHTML = v; else n.textContent = v })
+    document.documentElement.lang = lang
+    document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === lang) })
+    try { localStorage.setItem('tml_site_lang', lang) } catch (e) {}
+    renderCaps(); renderWorks()
+  }
+
+  // the films marked "Made by Aibsent Studios" in Studio, in the site's order
+  var SUPABASE_URL = 'https://naibamqexcqnqhbbqafa.supabase.co', SUPABASE_KEY = 'sb_publishable_o1OB_ohozPq1Xr2jg2ZSHA_3GsusXFL'
+  var CATS_EL = { 'Commercials': 'Διαφημιστικά', 'Music Videos': 'Βίντεο κλιπ', 'Corporate': 'Εταιρικά', 'Motion Graphics': 'Motion Graphics', 'Events': 'Events', 'AI Films': 'AI ταινίες', 'Films': 'Ταινίες', 'Showreels': 'Showreels' }
+  var PLAY = '<svg viewBox="0 0 10 12"><path d="M0 0l10 6-10 6z"/></svg>'
+  var works = null
+  // the kinds of work, from Studio > Work (site_settings.aib_kinds); a film can be more than one
+  var KINDS = [['full', 'CGI - 100%', 'CGI - 100%'], ['shots', 'CGI - Shots', 'CGI - Shots'], ['anim', 'Animation', 'Animation'], ['motion', 'Motion Graphics', 'Motion Graphics'], ['visuals', 'Visuals', 'Visuals']]
+  var kindsOf = {}, kf = 'all'
+  function kName(k) { for (var i = 0; i < KINDS.length; i++) if (KINDS[i][0] === k) return lang === 'el' ? KINDS[i][2] : KINDS[i][1]; return k }
+  function renderFilters() {
+    var box = document.getElementById('kfilters'), have = KINDS.filter(function (k) { return (works || []).some(function (w) { return (kindsOf[w.id] || []).indexOf(k[0]) >= 0 }) })
+    box.hidden = !have.length
+    if (!have.length) { kf = 'all'; return }
+    if (kf !== 'all' && !have.some(function (k) { return k[0] === kf })) kf = 'all'
+    box.innerHTML = [['all', lang === 'el' ? 'Όλα' : 'All']].concat(have.map(function (k) { return [k[0], kName(k[0])] })).map(function (k) { return '<button type="button" data-k="' + k[0] + '" class="' + (kf === k[0] ? 'on' : '') + '">' + k[1] + '</button>' }).join('')
+  }
+  document.getElementById('kfilters').onclick = function (e) { var b = e.target.closest('[data-k]'); if (!b) return; kf = b.getAttribute('data-k'); renderWorks() }
+  function thumb(w) { return w.cover || (w.kind === 'vm' ? 'https://vumbnail.com/' + w.video_id + '_large.jpg' : 'https://i.ytimg.com/vi/' + w.video_id + '/maxresdefault.jpg') }
+  function renderWorks() {
+    var grid = document.getElementById('grid')
+    if (works === null) return
+    if (!works.length) { grid.outerHTML = '<p class="empty" id="grid">' + (lang === 'el' ? EL['work.none'] : EN['work.none']) + '</p>'; return }
+    renderFilters()
+    grid.innerHTML = ''
+    works.filter(function (w) { return kf === 'all' || (kindsOf[w.id] || []).indexOf(kf) >= 0 }).forEach(function (w) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'tile'
+      var im = document.createElement('img'); im.loading = 'lazy'; im.decoding = 'async'; im.alt = ''; im.src = thumb(w)
+      var f = w.frame || null
+      if (f) { im.style.objectPosition = (f.x == null ? 50 : f.x) + '% ' + (f.y == null ? 50 : f.y) + '%'; im.style.transformOrigin = im.style.objectPosition; im.style.setProperty('--z', Math.max(1, Number(f.z || 1))) }
+      var hq = function () { if (w.kind !== 'vm' && im.src.indexOf('maxres') > 0) { im.src = 'https://i.ytimg.com/vi/' + w.video_id + '/hqdefault.jpg'; return true } return false }
+      im.onerror = function () { if (!hq()) im.style.visibility = 'hidden' }
+      // YouTube answers a film with no large still with a small grey placeholder, not an error: then the normal still
+      im.onload = function () { if (im.naturalWidth && im.naturalWidth < 200) hq() }
+      b.appendChild(im)
+      // no titles on the tiles (Alex, 18 Oct), as on the home page; the name stays for screen readers
+      var ks = kindsOf[w.id] || []
+      b.insertAdjacentHTML('beforeend', (ks.length ? '<span class="kchip"><i></i>' + kName(kf !== 'all' ? kf : ks[0]) + '</span>' : '') + '<span class="play">' + PLAY + '</span>')
+      b.setAttribute('aria-label', w.title)
+      b.onclick = function () { play(w) }
+      grid.appendChild(b)
+    })
+  }
+  var getJson = function (q) { return fetch(SUPABASE_URL + '/rest/v1/' + q, { headers: { apikey: SUPABASE_KEY } }).then(function (r) { return r.json() }) }
+  Promise.all([
+    getJson('site_works?visible=eq.true&aibsent=eq.true&kind=in.(yt,vm)&select=id,title,client,categories,kind,video_id,frame,cover&order=position.asc,created_at.desc'),
+    getJson('site_settings?key=eq.aib_kinds&select=value').catch(function () { return [] })
+  ]).then(function (r) {
+    var rows = r[0], k = Array.isArray(r[1]) && r[1][0] && r[1][0].value
+    kindsOf = k && typeof k === 'object' ? k : {}
+    works = Array.isArray(rows) ? rows.filter(function (w) { return w.video_id }) : []; renderWorks()
+  }).catch(function () { works = []; renderWorks() })
+
+  // a film plays here, through youtube.com with the page as referrer, or Vimeo
+  var player = document.getElementById('player'), frame = document.getElementById('pframe')
+  function play(w) {
+    document.getElementById('ptitle').textContent = w.title
+    var src = w.kind === 'vm'
+      ? 'https://player.vimeo.com/video/' + w.video_id + '?autoplay=1&title=0&byline=0&portrait=0&dnt=1'
+      : 'https://www.youtube.com/embed/' + w.video_id + '?autoplay=1&rel=0&modestbranding=1&playsinline=1&origin=' + encodeURIComponent(location.origin)
+    frame.innerHTML = '<iframe src="' + src + '" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen title=""></iframe>'
+    player.classList.add('open'); document.body.style.overflow = 'hidden'
+  }
+  function close() { player.classList.remove('open'); document.body.style.overflow = ''; setTimeout(function () { frame.innerHTML = '' }, 300) }
+  document.getElementById('pclose').onclick = close
+  player.onclick = function (e) { if (e.target === player) close() }
+  addEventListener('keydown', function (e) { if (e.key === 'Escape' && player.classList.contains('open')) close() })
+
+  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang) }) })
+  var saved = 'en'
+  try { saved = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
+  setLang(saved)
+
+  var bar = document.getElementById('bar')
+  var onScroll = function () { bar.classList.toggle('solid', window.scrollY > 30) }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll()
+
+  var rv = [].slice.call(document.querySelectorAll('.reveal'))
+  if (!('IntersectionObserver' in window) || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) rv.forEach(function (e) { e.classList.add('in') })
+  else {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }) }, { rootMargin: '0px 0px -6% 0px', threshold: .06 })
+    rv.forEach(function (e) { io.observe(e) })
+  }
+})()
+</script>
+</body>
+</html>
