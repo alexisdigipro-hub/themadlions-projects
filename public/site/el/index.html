@@ -351,6 +351,10 @@ html[data-theme='light'] .aib-logo { filter: invert(1); }
 .aibsent::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(38% 60% at 20% 50%, color-mix(in srgb, var(--accent) 15%, transparent), transparent 70%), radial-gradient(40% 65% at 76% 50%, color-mix(in srgb, #7c3aed 17%, transparent), transparent 70%); }
 .aib2 { position: relative; display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: clamp(32px, 5vw, 80px); align-items: center; max-width: 1240px; margin: 0 auto; }
 .aib2 .aib-logo { display: block; width: min(330px, 80%); }
+/* the name in type instead of the logo picture, written AiBSENT (Alex, 19 Oct), as on /aibsent/ */
+.aib2 .aib-word { display: inline-flex; flex-direction: column; align-items: center; font-family: Jost, system-ui, sans-serif; color: var(--text); text-decoration: none; }
+.aib2 .aib-word .w1 { font-size: clamp(50px, 5.6vw, 80px); font-weight: 500; line-height: .92; letter-spacing: .03em; }
+.aib2 .aib-word .w2 { margin-top: clamp(6px, .8vw, 12px); padding-left: .6em; font-size: clamp(12px, 1.15vw, 16px); font-weight: 500; letter-spacing: .6em; color: color-mix(in srgb, var(--text) 82%, transparent); }
 .aib2 .aib-kicker { display: block; margin-top: 22px; }
 .aib2-lead { margin: 16px 0 0; max-width: 470px; font-size: clamp(16px, 1.35vw, 18.5px); font-weight: 300; line-height: 1.6; color: color-mix(in srgb, var(--text) 78%, transparent); }
 .aib2-caps { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 20px 0 0; font-size: 13px; letter-spacing: .03em; color: var(--muted); }
@@ -580,7 +584,7 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
   <section id="aibsent" class="aibsent">
     <div class="aib2 reveal">
       <div>
-        <a href="../aibsent/" aria-label="Aibsent Studios"><img class="aib-logo" src="../aibsent.png" alt="Aibsent Studios"></a>
+        <a href="../aibsent/" class="aib-word" aria-label="Aibsent Studios"><span class="w1">AiBSENT</span><span class="w2">STUDIOS</span></a>
         <span class="aib-kicker" data-t="aib.kicker">Post-production &amp; AI · ένα studio των Mad Lions</span>
         <p class="aib2-lead" data-t="aib.lead">Το δικό μας studio για post-production και AI. Ολοκληρώνει τις ταινίες μας και αναλαμβάνει και τις δικές σας: από μοντάζ και χρώμα ως visual effects, motion graphics και ταινίες με AI.</p>
         <p class="aib2-caps" id="aibCaps"></p>
