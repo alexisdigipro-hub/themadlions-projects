@@ -556,6 +556,8 @@ export default function TasksAll({ slot = null }) {
      screen and makes it your own order (the sort goes off). */
   const press = useRef(null) // { x, y, t, ids }: a press that may become a drag
   const dragged = useRef(false) // the click that ends a drag does not open the task
+  const [carryY, setCarryY] = useState(null) // how far the carried task has followed the mouse
+  const carryFrom = useRef(0)
   const rowDown = (e, t, ids) => {
     if (e.button > 0 || e.target.closest('button, a, input, select, textarea, label, .rem-subs, .rem-grip')) return
     press.current = { x: e.clientX, y: e.clientY, t, ids }
@@ -568,14 +570,17 @@ export default function TasksAll({ slot = null }) {
       press.current = null
       try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
       try { window.getSelection()?.removeAllRanges() } catch {}
+      carryFrom.current = p.y
+      setCarryY(e.clientY - p.y)
       setDrag({ id: p.t.id, ids: p.ids, over: null, after: false })
       return
     }
-    if (drag) moveDrag(e)
+    if (drag) { setCarryY(e.clientY - carryFrom.current); moveDrag(e) }
   }
   const rowUp = (e) => {
     press.current = null
     if (e.target.closest?.('.rem-grip')) return
+    setCarryY(null)
     if (!drag) return
     dragged.current = true
     setTimeout(() => { dragged.current = false }, 0)
@@ -682,7 +687,8 @@ export default function TasksAll({ slot = null }) {
     }
     return (
       <li key={t.id} data-task-id={t.id} className={`${liClass}${canDrag ? ' rem-drag' : ''}`}
-        {...(canDrag ? { onPointerDown: (e) => rowDown(e, t, group.map((x) => x.id)), onPointerMove: rowMove, onPointerUp: rowUp, onPointerCancel: () => { press.current = null; setDrag(null) } } : {})}
+        {...(canDrag ? { onPointerDown: (e) => rowDown(e, t, group.map((x) => x.id)), onPointerMove: rowMove, onPointerUp: rowUp, onPointerCancel: () => { press.current = null; setCarryY(null); setDrag(null) } } : {})}
+        style={drag?.id === t.id && carryY !== null ? { transform: `translateY(${carryY}px) scale(1.015)` } : undefined}
         onClickCapture={(e) => { if (dragged.current) { e.preventDefault(); e.stopPropagation() } }}>{inside}</li>
     )
   }
