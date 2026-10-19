@@ -834,10 +834,10 @@ code {
 /* the cost estimation: the form on the left, the client's page live on the right (Alex, 19 Oct); a phone keeps the form alone */
 @media (min-width: 821px) {
   .modal-wide.est-modal { width: min(1500px, calc(100vw - 48px)); }
-  .est-compose { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .92fr); gap: 24px; align-items: start; }
-  .est-preview { position: sticky; top: 0; display: flex; flex-direction: column; gap: 8px; max-height: calc(100dvh - 190px); overflow-y: auto; border-radius: 18px; }
+  .est-compose { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 24px; align-items: start; }
+  .est-preview { position: sticky; top: 0; display: flex; flex-direction: column; gap: 8px; max-height: calc(100dvh - 190px); overflow-y: auto; padding: 0 2px; }
   .est-preview-label { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-  .est-preview .pub.dlv { max-width: none; margin: 0; padding: 0; zoom: .82; pointer-events: none; }
+  .est-preview .pub.dlv { max-width: none; margin: 0; padding: 0; zoom: .78; pointer-events: none; }
   .est-preview .dlv-sheet { max-width: none; }
 }
 .task-form { display: flex; flex-direction: column; gap: 6px; }
