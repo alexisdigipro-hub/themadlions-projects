@@ -170,7 +170,9 @@ export default function TasksAll({ slot = null }) {
   const toast = useToast()
   const mobile = useIsMobile()
   // on a phone Tasks always opens on My Tasks (Alex, 10 Oct)
-  const [sel, setSel] = useState(() => (mobile ? 'mine' : firstList()))
+  // an administrator (Alex, 19 Oct: "only in my profile", he is the only one) has All tasks first and
+  // Tasks always opens on it, on a computer and on a phone
+  const [sel, setSel] = useState(() => (user?.role === 'admin' ? 'all' : mobile ? 'mine' : firstList()))
   const [menu, setMenu] = useState(false) // phone: the menu of lists folded open over the tasks
   const [q, setQ] = useState('')
   // Sort by Name, Assignee or Priority (Alex, 12 Oct), on the computer, remembered per device; a second
@@ -243,12 +245,12 @@ export default function TasksAll({ slot = null }) {
   }
   const countOf = (k) => (k === 'deleted' ? binned.length : all.filter(smartFilter[k]).length)
   const inBin = sel === 'deleted' && !q.trim()
-  const smartLists = SMART.filter(([, , , , adminOnly]) => !adminOnly || admin)
+  const smartLists = SMART.filter(([, , , , adminOnly]) => !adminOnly || admin).sort((a, b) => (admin ? (b[0] === 'all') - (a[0] === 'all') : 0))
   const smart = smartLists.find(([k]) => k === sel)
   const current = smart ? { key: sel, name: smart[1], color: smart[3], icon: LINE[sel], smart: true } : listByKey[sel] || listByKey[GENERAL]
   // projects have no list of their own in the side menu any more (Alex, 9 Oct: their tasks show in
   // All tasks with the project's name on them), so neither a project nor a vanished list stays open
-  useEffect(() => { if (!smart && (!listByKey[sel] || listByKey[sel].project || sel === GENERAL || (listByKey[sel].own && !ownLists.some((l) => l.key === sel)))) setSel('mine') }, [sel, lists.length, ownLists.length, admin]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!smart && (!listByKey[sel] || listByKey[sel].project || sel === GENERAL || (listByKey[sel].own && !ownLists.some((l) => l.key === sel)))) setSel(admin ? 'all' : 'mine') }, [sel, lists.length, ownLists.length, admin]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean)
   const match = (t) => !words.length || words.every((w) => `${t.title} ${t.notes || ''} ${t.assignee || ''}`.toLowerCase().includes(w))
