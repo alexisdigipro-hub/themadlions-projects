@@ -22,6 +22,17 @@ export default function PublicEstimate() {
     if (share?.data?.recipient?.name) setName(share.data.recipient.name)
   }, [share])
 
+  // The page in the company site's look (Alex, 19 Oct), whatever the app's own theme or skin is, while it is open
+  useEffect(() => {
+    const html = document.documentElement
+    const before = html.dataset.theme
+    const skin = html.dataset.skin
+    html.dataset.theme = 'dark'
+    html.classList.add('pub-est-page')
+    delete html.dataset.skin
+    return () => { html.dataset.theme = before; html.classList.remove('pub-est-page'); if (skin) html.dataset.skin = skin }
+  }, [])
+
   // Also used if someone prints the page by hand (Ctrl+P): a real filename instead of the app's own.
   useEffect(() => {
     const d = share?.data
@@ -114,7 +125,7 @@ export function EstimateSheet({ d, children = null }) {
       <section className="dlv-band dlv-hero">
         <div className="dlv-stage">Cost estimation{d.version ? ` · ${d.version}` : ''}</div>
         <h1 className="dlv-title">{d.title}</h1>
-        {d.client && <p className="dlv-client">{d.client}</p>}
+        {d.client && <p className="dlv-client">{upper(d.client)}</p>}
         {d.recipient?.name && <p className="dlv-for">For {d.recipient.name}</p>}
         {d.intro && <p className="dlv-note est-intro">{d.intro}</p>}
       </section>

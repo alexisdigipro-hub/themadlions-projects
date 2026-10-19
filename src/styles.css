@@ -3535,6 +3535,51 @@ html[data-theme='light'] .deliv-list { border-color: transparent; }
   .dlv-estimate .est-terms { font-size: 16.5px; }
 }
 
+/* The cost estimation link and its live preview in the company site's look (Alex, 19 Oct: "like the
+   Site's theme, fresher"): near-black, cream text, the red accent, thin big title, a red letter-spaced
+   kicker, cost lines as soft rounded tiles instead of ruled rows. Same colours as the estimate PDF. */
+html.pub-est-page body { background: #0b0b0c; min-height: 100vh; color-scheme: dark; }
+.pub.dlv.dlv-estimate { --bg: #0b0b0c; --panel: #121214; --raised: #18181b; --line: rgba(255, 255, 255, .12); --line-soft: rgba(255, 255, 255, .07);
+  --text: #f2f0ec; --muted: #9a978f; --accent: #d40000; --amber: #e0a33a; --shadow: none; color: var(--text); color-scheme: dark; }
+html.pub-est-page .pub.dlv.dlv-estimate { background: radial-gradient(120% 60% at 50% -10%, rgba(212, 0, 0, .16), transparent 60%); min-height: 100vh; box-sizing: border-box; }
+.pub.dlv.dlv-estimate .dlv-sheet { background: linear-gradient(180deg, #151517, #0f0f11); border: 1px solid rgba(255, 255, 255, .08); border-radius: 28px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 30px 80px rgba(0, 0, 0, .55); }
+.pub.dlv.dlv-estimate .dlv-band, .pub.dlv.dlv-estimate .dlv-block { border-bottom-color: rgba(255, 255, 255, .06); }
+.pub.dlv.dlv-estimate .dlv-company { letter-spacing: .3em; font-weight: 600; font-size: 11px; }
+.pub.dlv.dlv-estimate .dlv-hero { padding: 44px 28px 40px; }
+.pub.dlv.dlv-estimate .dlv-stage { font-size: 12px; font-weight: 600; letter-spacing: .34em; }
+.pub.dlv.dlv-estimate .dlv-title { font-size: clamp(32px, 6vw, 56px); font-weight: 300; line-height: 1.04; letter-spacing: -.02em; margin-top: 18px; }
+.pub.dlv.dlv-estimate .dlv-client { margin-top: 14px; font-size: 13px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; }
+.pub.dlv.dlv-estimate .dlv-block h2 { letter-spacing: .3em; font-weight: 600; font-size: 11px; margin-bottom: 20px; }
+.pub.dlv.dlv-estimate .est-table { border-collapse: separate; border-spacing: 0 6px; }
+.pub.dlv.dlv-estimate .est-table td { background: rgba(255, 255, 255, .045); border: 0; padding: 14px 18px; }
+.pub.dlv.dlv-estimate .est-table td:first-child { border-radius: 14px 0 0 14px; }
+.pub.dlv.dlv-estimate .est-table td:last-child { border-radius: 0 14px 14px 0; }
+.pub.dlv.dlv-estimate .est-table td:only-child, .pub.dlv.dlv-estimate .est-table td[colspan] { border-radius: 14px; }
+.pub.dlv.dlv-estimate .est-table .est-head th { padding: 20px 4px 6px; font-weight: 600; letter-spacing: .24em; color: var(--text); }
+.pub.dlv.dlv-estimate .est-table .est-head th::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 10px; vertical-align: 1px; }
+.pub.dlv.dlv-estimate .est-table tbody > .est-head:first-child th { padding-top: 0; }
+.pub.dlv.dlv-estimate .est-advance td { background: color-mix(in srgb, var(--amber) 10%, transparent); }
+.pub.dlv.dlv-estimate .est-sub td { background: none; padding: 4px 18px 10px; }
+.pub.dlv.dlv-estimate .est-totals-row { margin-top: 26px; padding: 22px 24px; border-radius: 20px; background: rgba(255, 255, 255, .035); border: 1px solid rgba(255, 255, 255, .06); }
+.pub.dlv.dlv-estimate .est-total td { border-top-color: rgba(255, 255, 255, .1); }
+.pub.dlv.dlv-estimate .est-total .est-amt { font-size: 30px; font-weight: 300; letter-spacing: -.01em; color: var(--text); }
+.pub.dlv.dlv-estimate .est-advance-amt { font-weight: 300; font-size: 26px; }
+.pub.dlv.dlv-estimate .dlv-by { background: rgba(255, 255, 255, .05); border-color: rgba(255, 255, 255, .12); }
+.pub.dlv.dlv-estimate .dlv-say .est-terms { font-weight: 400; line-height: 1.7; }
+.pub.dlv.dlv-estimate .dlv-reply { background: rgba(255, 255, 255, .025); }
+.pub.dlv.dlv-estimate .dlv-reply h2 { color: var(--text); }
+.pub.dlv.dlv-estimate .dlv-input { background: rgba(255, 255, 255, .05); border-color: rgba(255, 255, 255, .1); border-radius: 16px; }
+.pub.dlv.dlv-estimate .dlv-input:focus { outline: none; border-color: color-mix(in srgb, var(--accent) 60%, rgba(255, 255, 255, .2)); }
+.pub.dlv.dlv-estimate .dlv-btn { box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 30%, transparent); transition: transform .15s ease, filter .2s ease; letter-spacing: .04em; }
+.pub.dlv.dlv-estimate .dlv-btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+.pub.dlv.dlv-estimate .dlv-btn.ghost { background: rgba(255, 255, 255, .07); border-color: rgba(255, 255, 255, .14); box-shadow: none; }
+@media (max-width: 520px) {
+  .pub.dlv.dlv-estimate .dlv-sheet { border-radius: 22px; }
+  .pub.dlv.dlv-estimate .est-table td { padding: 12px 14px; }
+  .pub.dlv.dlv-estimate .est-totals-row { padding: 18px; }
+  .pub.dlv.dlv-estimate .est-totals { width: 100%; }
+}
+
 /* ---------- brainstorm whiteboard ---------- */
 .wb-bar { flex-wrap: wrap; }
 .wb-hint { margin: 0 0 8px; }

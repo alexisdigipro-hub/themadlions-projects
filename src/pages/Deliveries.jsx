@@ -291,10 +291,8 @@ export default function Deliveries() {
       title: d.title || '', client: d.client || '', intro: d.intro || '',
       lines: d.lines || [], totalPrice: d.totalPrice ? String(d.totalPrice) : '', discount: d.discount ? String(d.discount) : '', vatPct: d.vatPct != null ? String(d.vatPct) : '',
       validUntil: d.validUntil || '', terms: d.terms || '',
-      recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
-      contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
-      pageCloses: r.expires_at || '',
-      pin: r.pin || '',
+      // recipients, contact, closing date and access code left the estimate (Alex, 19 Oct)
+      recipients: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '', pin: '',
     })
   }
   const pickEstimateProject = (projectId) => {
@@ -345,8 +343,8 @@ export default function Deliveries() {
         if (!firstUrl) firstUrl = url
       }
       await reopenQuietly({ workspaceId: state.workspace.id, ref })
-      try { await setShareState({ workspaceId: state.workspace.id, ref, expiresAt: edraft.pageCloses }) } catch (e) { toast(e.message, 'error') }
-      if (edraft.pin.trim()) { try { await setShareState({ workspaceId: state.workspace.id, ref, pin: edraft.pin }) } catch (e) { toast(e.message, 'error') } }
+      // an estimate never closes on a date or asks for a code: clear what an older one may still carry
+      try { await setShareState({ workspaceId: state.workspace.id, ref, expiresAt: '', pin: '' }) } catch {}
       if (targets.length === 1) {
         await navigator.clipboard.writeText(estimateUrl(tokenOf(firstUrl))).catch(() => {})
         toast('Cost estimation published, link copied', 'ok')
@@ -632,23 +630,7 @@ export default function Deliveries() {
             </div>
             <Field label="Payment terms & Notes"><Textarea rows={2} value={edraft.terms} onChange={(e) => setE('terms', e.target.value)} placeholder="50% on signature, 50% on delivery. Travel outside Attica billed separately." /></Field>
 
-            <RowEditor
-              label="Send it to"
-              rows={edraft.recipients}
-              onChange={(v) => setE('recipients', v)}
-              fields={[{ k: 'name', placeholder: 'Maria Vlachou' }, { k: 'email', placeholder: 'maria@client.gr' }]}
-              addLabel="Add a person"
-            />
-
-            <div className="row-3">
-              <Field label="Who they ask"><Input value={edraft.contactName} onChange={(e) => setE('contactName', e.target.value)} placeholder={user?.name || 'Name'} /></Field>
-              <Field label="Email"><Input value={edraft.contactEmail} onChange={(e) => setE('contactEmail', e.target.value)} /></Field>
-              <Field label="Phone"><Input value={edraft.contactPhone} onChange={(e) => setE('contactPhone', e.target.value)} /></Field>
-            </div>
-            <div className="row-2">
-              <Field label="Close this page on"><Input type="date" value={edraft.pageCloses} onChange={(e) => setE('pageCloses', e.target.value)} /></Field>
-              <Field label="Access code"><Input value={edraft.pin} onChange={(e) => setE('pin', e.target.value)} placeholder="482913" /></Field>
-            </div>
+            {/* no recipients, contact, closing date or access code on an estimate (Alex, 19 Oct): one page, one link */}
           </div>
           {/* the page the client gets, drawn live as you type (Alex, 19 Oct), on a computer */}
           {!mobile && (
