@@ -1,1 +1,0 @@
-import{bn as n}from"./main-DdvIYFgd.js";const c=o=>(o==null?void 0:o.storage)==="pcloud";async function l(o,r,{raw:a=!1}={}){throw new Error("pCloud needs the online database.")}const p=(o,r)=>l("raw",{},{raw:!0});function u(o,r,a="Photos"){if(!c(o==null?void 0:o.settings)||!n)return null}export{u as a,p as b,c as p};
