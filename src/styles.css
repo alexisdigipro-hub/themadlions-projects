@@ -6053,7 +6053,7 @@ html[data-theme='light'] .glass-lens, html[data-skin='coral'] .glass-lens { back
 .rem-task.dragging .rem-grip { cursor: grabbing; }
 /* a computer drags a task by any of it (Alex, 19 Oct) */
 .rem-task.rem-drag.dragging, .rem-task.rem-drag.dragging * { cursor: grabbing; user-select: none; -webkit-user-select: none; }
-.rem-task.rem-drag.dragging[style] { z-index: 5; opacity: 1; box-shadow: 0 14px 34px rgba(0, 0, 0, .35); }
+.rem-task.rem-drag.dragging[style*=translate] { z-index: 5; opacity: 1; box-shadow: 0 14px 34px rgba(0, 0, 0, .35); }
 .rem-task { position: relative; }
 .rem-task.drop-before::before, .rem-task.drop-after::after { content: ''; position: absolute; left: 8px; right: 8px; height: 3px; border-radius: 3px; background: var(--accent); pointer-events: none; }
 .rem-task.drop-before::before { top: -7px; }
@@ -7456,3 +7456,6 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
 @media (max-width: 820px) and (prefers-reduced-motion: reduce) {
   .content.page-in, .content.page-in > * > *, .tabbar a.active svg, .tabbar button.active svg, .toast { animation: none !important; }
 }
+
+/* a task on a list takes a 10% wash of the list's colour over its card (Alex, 19 Oct) */
+html[data-theme] body .rem-tasks > .rem-task.tinted, .rem-task.tinted { background-image: linear-gradient(color-mix(in srgb, var(--tint) 10%, transparent), color-mix(in srgb, var(--tint) 10%, transparent)); }

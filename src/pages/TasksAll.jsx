@@ -78,7 +78,7 @@ const TRAY_W = 236
 // Holding a task still for a moment lifts it (a small pop) and from then on it follows the finger up
 // and down to a new place (Alex, 10 Oct), instead of the small ⋮⋮ handle on a phone.
 const LIFT_MS = 380
-function TaskSwipe({ id, openId, setOpenId, tray, className, children, canLift, onLift, onLiftMove, onLiftEnd, ...rest }) {
+function TaskSwipe({ id, openId, setOpenId, tray, className, children, canLift, onLift, onLiftMove, onLiftEnd, style, ...rest }) {
   const [dx, setDx] = useState(0)
   const [sliding, setSliding] = useState(false)
   const [lifted, setLifted] = useState(false)
@@ -155,7 +155,7 @@ function TaskSwipe({ id, openId, setOpenId, tray, className, children, canLift, 
     }
   }
   return (
-    <li {...rest} ref={self} style={lifted ? { transform: `translateY(${liftY}px) scale(1.035)` } : undefined} className={`${className} rem-swipe${sliding ? ' sliding' : ''}${open ? ' open' : ''}${lifted ? ' lifted' : ''}`} onTouchStart={start} onTouchMove={move} onTouchEnd={end} onTouchCancel={end} onClickCapture={clickCapture}>
+    <li {...rest} ref={self} style={lifted ? { ...style, transform: `translateY(${liftY}px) scale(1.035)` } : style} className={`${className} rem-swipe${sliding ? ' sliding' : ''}${open ? ' open' : ''}${lifted ? ' lifted' : ''}`} onTouchStart={start} onTouchMove={move} onTouchEnd={end} onTouchCancel={end} onClickCapture={clickCapture}>
       <div className="rem-swipe-tray" style={{ width: Math.max(0, -dx) }} aria-hidden={!open}>{tray}</div>
       <div className="rem-swipe-row" style={{ transform: dx ? `translateX(${dx}px)` : undefined }}>{children}</div>
     </li>
@@ -170,7 +170,9 @@ export default function TasksAll({ slot = null }) {
   const toast = useToast()
   const mobile = useIsMobile()
   // on a phone Tasks always opens on My Tasks (Alex, 10 Oct)
-  const [sel, setSel] = useState(() => (mobile ? 'mine' : firstList()))
+  // an administrator (Alex, 19 Oct: "only in my profile", he is the only one) has All tasks first and
+  // Tasks always opens on it, on a computer and on a phone
+  const [sel, setSel] = useState(() => (user?.role === 'admin' ? 'all' : mobile ? 'mine' : firstList()))
   const [menu, setMenu] = useState(false) // phone: the menu of lists folded open over the tasks
   const [q, setQ] = useState('')
   // Sort by Name, Assignee or Priority (Alex, 12 Oct), on the computer, remembered per device; a second
@@ -243,12 +245,12 @@ export default function TasksAll({ slot = null }) {
   }
   const countOf = (k) => (k === 'deleted' ? binned.length : all.filter(smartFilter[k]).length)
   const inBin = sel === 'deleted' && !q.trim()
-  const smartLists = SMART.filter(([, , , , adminOnly]) => !adminOnly || admin)
+  const smartLists = SMART.filter(([, , , , adminOnly]) => !adminOnly || admin).sort((a, b) => (admin ? (b[0] === 'all') - (a[0] === 'all') : 0))
   const smart = smartLists.find(([k]) => k === sel)
   const current = smart ? { key: sel, name: smart[1], color: smart[3], icon: LINE[sel], smart: true } : listByKey[sel] || listByKey[GENERAL]
   // projects have no list of their own in the side menu any more (Alex, 9 Oct: their tasks show in
   // All tasks with the project's name on them), so neither a project nor a vanished list stays open
-  useEffect(() => { if (!smart && (!listByKey[sel] || listByKey[sel].project || sel === GENERAL || (listByKey[sel].own && !ownLists.some((l) => l.key === sel)))) setSel('mine') }, [sel, lists.length, ownLists.length, admin]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!smart && (!listByKey[sel] || listByKey[sel].project || sel === GENERAL || (listByKey[sel].own && !ownLists.some((l) => l.key === sel)))) setSel(admin ? 'all' : 'mine') }, [sel, lists.length, ownLists.length, admin]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean)
   const match = (t) => !words.length || words.every((w) => `${t.title} ${t.notes || ''} ${t.assignee || ''}`.toLowerCase().includes(w))
@@ -623,7 +625,9 @@ export default function TasksAll({ slot = null }) {
             </IconPick>
           </div>
     )
-    const liClass = `rem-task ${t.status === 'done' ? 'done' : ''}${t.deletedAt ? ' binned' : ''}${drag?.id === t.id ? ' dragging' : ''}${drag?.over === t.id && drag.id !== t.id ? (drag.after ? ' drop-after' : ' drop-before') : ''}`
+    // the whole task takes a light wash of its list's colour (Alex, 19 Oct: 10%)
+    const tint = from && !t.deletedAt ? { '--tint': from.color } : undefined
+    const liClass = `rem-task ${t.status === 'done' ? 'done' : ''}${tint ? ' tinted' : ''}${t.deletedAt ? ' binned' : ''}${drag?.id === t.id ? ' dragging' : ''}${drag?.over === t.id && drag.id !== t.id ? (drag.after ? ' drop-after' : ' drop-before') : ''}`
     const inside = (
       <>
         {canDrag && !mobile && <span className="rem-grip" role="button" aria-label="Drag to reorder" title="Drag to reorder" onPointerDown={(e) => startDrag(e, t, group.map((x) => x.id))} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={() => setDrag(null)}>⋮⋮</span>}
@@ -679,7 +683,7 @@ export default function TasksAll({ slot = null }) {
     // on a phone the three buttons sit behind the task, a slide left away (TaskSwipe)
     if (mobile && pills) {
       return (
-        <TaskSwipe key={t.id} id={t.id} data-task-id={t.id} className={liClass} openId={swipeOpen} setOpenId={setSwipeOpen} tray={pills}
+        <TaskSwipe key={t.id} id={t.id} data-task-id={t.id} className={liClass} style={tint} openId={swipeOpen} setOpenId={setSwipeOpen} tray={pills}
           canLift={canDrag} onLift={() => setDrag({ id: t.id, ids: group.map((x) => x.id), over: null, after: false })} onLiftMove={dragTo} onLiftEnd={endDrag}>
           {inside}
         </TaskSwipe>
@@ -688,7 +692,7 @@ export default function TasksAll({ slot = null }) {
     return (
       <li key={t.id} data-task-id={t.id} className={`${liClass}${canDrag ? ' rem-drag' : ''}`}
         {...(canDrag ? { onPointerDown: (e) => rowDown(e, t, group.map((x) => x.id)), onPointerMove: rowMove, onPointerUp: rowUp, onPointerCancel: () => { press.current = null; setCarryY(null); setDrag(null) } } : {})}
-        style={drag?.id === t.id && carryY !== null ? { transform: `translateY(${carryY}px) scale(1.015)` } : undefined}
+        style={drag?.id === t.id && carryY !== null ? { ...tint, transform: `translateY(${carryY}px) scale(1.015)` } : tint}
         onClickCapture={(e) => { if (dragged.current) { e.preventDefault(); e.stopPropagation() } }}>{inside}</li>
     )
   }
