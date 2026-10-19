@@ -15,7 +15,7 @@
  * the only part that touches the DOM.
  */
 
-import { amount, lineAmount, showGroupSum, showLineAmount } from './estimate.js'
+import { amount, lineAmount, showGroupSum, showLineAmount, upper } from './estimate.js'
 
 const PAGE_W = 595.28 // A4 in points
 const PAGE_H = 841.89
@@ -168,7 +168,7 @@ export function renderPages(d, t, groups, cur) {
       ctx.fillStyle = MUTED
       ctx.font = `700 10px ${font}`
       ctx.textAlign = 'left'
-      ctx.fillText(g.label.toUpperCase(), MARGIN, y)
+      ctx.fillText(upper(g.label), MARGIN, y)
       y += 18
     }
     for (const l of g.rows) {

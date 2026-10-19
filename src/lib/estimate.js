@@ -39,5 +39,8 @@ export function groupLines(lines) {
   return [...out.filter((g) => g.label), ...out.filter((g) => !g.label)]
 }
 
+// a heading in capitals without the Greek accents (ΓΥΡΙΣΜΑ, not ΓΎΡΙΣΜΑ)
+export const upper = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase()
+
 export const amount = (n, cur = 'EUR') =>
   new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur || 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0)

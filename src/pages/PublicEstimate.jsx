@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { respondToDelivery } from '../lib/shares.js'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
-import { amount, estimateTotals, groupLines, lineAmount, showGroupSum, showLineAmount } from '../lib/estimate.js'
+import { amount, estimateTotals, groupLines, lineAmount, showGroupSum, showLineAmount, upper } from '../lib/estimate.js'
 import { downloadEstimatePdf } from '../lib/estimatePdf.js'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
@@ -92,7 +92,7 @@ export default function PublicEstimate() {
               {/* a Fragment with a key, not <>, because a bare fragment cannot carry one */}
               {groups.map((g, gi) => (
                 <Fragment key={g.label || `g${gi}`}>
-                  {g.label && <tr className="est-head"><th colSpan={2}>{g.label}</th></tr>}
+                  {g.label && <tr className="est-head"><th colSpan={2}>{upper(g.label)}</th></tr>}
                   {g.rows.map((l, i) => (
                     <tr key={i} className={l.advance ? 'est-advance' : undefined}>
                       <td className="est-what">{l.what}</td>
