@@ -4,6 +4,7 @@ import { respondToDelivery } from '../lib/shares.js'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
 import { amount, estimateTotals, groupLines, lineAmount, showGroupSum, showLineAmount, upper } from '../lib/estimate.js'
 import { downloadEstimatePdf } from '../lib/estimatePdf.js'
+import { loadFont, lookOf, lookProps } from '../lib/estimateLook.js'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
@@ -30,8 +31,12 @@ export default function PublicEstimate() {
     html.dataset.theme = 'dark'
     html.classList.add('pub-est-page')
     delete html.dataset.skin
-    return () => { html.dataset.theme = before; html.classList.remove('pub-est-page'); if (skin) html.dataset.skin = skin }
+    return () => { html.dataset.theme = before; html.classList.remove('pub-est-page'); html.style.removeProperty('--est-page-bg'); if (skin) html.dataset.skin = skin }
   }, [])
+  useEffect(() => {
+    const bg = share?.data && lookOf(share.data).bg
+    if (bg) document.documentElement.style.setProperty('--est-page-bg', bg)
+  }, [share])
 
   // Also used if someone prints the page by hand (Ctrl+P): a real filename instead of the app's own.
   useEffect(() => {
@@ -79,8 +84,7 @@ export default function PublicEstimate() {
   }
 
   return (
-    <div className="pub dlv dlv-estimate">
-      <EstimateSheet d={d}>
+    <EstimateSheet d={d}>
         <section className="dlv-block dlv-reply">
           {sent ? (
             <p className="dlv-thanks">
@@ -102,8 +106,7 @@ export default function PublicEstimate() {
             </>
           )}
         </section>
-      </EstimateSheet>
-    </div>
+    </EstimateSheet>
   )
 }
 
@@ -115,23 +118,33 @@ export function EstimateSheet({ d, children = null }) {
   const t = estimateTotals(d)
   const groups = groupLines(t.lines)
   const expired = d.validUntil && d.validUntil < new Date().toISOString().slice(0, 10)
+  const L = lookOf(d)
+  const look = lookProps(L)
+  useEffect(() => { loadFont(L.font) }, [L.font])
+  const logo = L.logo ? (L.logoImg || d.company?.logo) : ''
+  const cover = L.cover
+    ? { backgroundImage: `linear-gradient(rgba(0,0,0,${(Number(L.coverDim) || 0) / 100}), rgba(0,0,0,${(Number(L.coverDim) || 0) / 100})), url("${L.cover}")`, backgroundPosition: `center ${Number(L.coverY ?? 50)}%` }
+    : undefined
   return (
+    <div className={`pub dlv dlv-estimate ${look.className}`} style={look.style}>
     <div className="dlv-sheet">
-      <header className="dlv-band dlv-top">
-        {d.company?.logo && <img className="dlv-logo" src={d.company.logo} alt="" />}
-        <div className="dlv-company">{d.company?.name || 'THEMADLIONS'}</div>
-      </header>
+      {(logo || L.company) && (
+        <header className="dlv-band dlv-top">
+          {logo && <img className="dlv-logo" src={logo} alt="" />}
+          {L.company && <div className="dlv-company">{d.company?.name || 'THEMADLIONS'}</div>}
+        </header>
+      )}
 
-      <section className="dlv-band dlv-hero">
-        <div className="dlv-stage">Cost estimation{d.version ? ` · ${d.version}` : ''}</div>
-        <h1 className="dlv-title">{d.title}</h1>
+      <section className={`dlv-band dlv-hero${cover ? ` est-cover est-cover-${L.coverHeight}` : ''}`} style={cover}>
+        {L.kicker && <div className="dlv-stage">{L.kicker}{d.version ? ` · ${d.version}` : ''}</div>}
+        <h1 className="dlv-title">{L.titleCaps ? upper(d.title) : d.title}</h1>
         {d.client && <p className="dlv-client">{upper(d.client)}</p>}
         {d.recipient?.name && <p className="dlv-for">For {d.recipient.name}</p>}
         {d.intro && <p className="dlv-note est-intro">{d.intro}</p>}
       </section>
 
       <section className="dlv-block est-lines">
-        <h2>What it covers</h2>
+        {L.covers && <h2>{L.covers}</h2>}
         <table className="est-table">
           <tbody>
             {/* a Fragment with a key, not <>, because a bare fragment cannot carry one */}
@@ -144,7 +157,7 @@ export function EstimateSheet({ d, children = null }) {
                     <td className="est-amt">{showLineAmount(l, t) ? amount(lineAmount(l), cur) : ''}</td>
                   </tr>
                 ))}
-                {showGroupSum(g, t) && (
+                {L.subtotals && showGroupSum(g, t) && (
                   <tr className="est-sub"><td>Subtotal</td><td className="est-amt">{amount(g.sum, cur)}</td></tr>
                 )}
               </Fragment>
@@ -193,6 +206,7 @@ export function EstimateSheet({ d, children = null }) {
         )}
         {d.company?.footer && <p className="dlv-foot">{d.company.footer}</p>}
       </footer>
+    </div>
     </div>
   )
 }

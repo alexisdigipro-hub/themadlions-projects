@@ -5,6 +5,7 @@ import { can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../
 import { deliveryUrl, estimateUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, shotlistUrl, tokenOf, deckUrl } from '../lib/shares.js'
 import { amount, estimateTotals } from '../lib/estimate.js'
 import { EstimateSheet } from './PublicEstimate.jsx'
+import EstimateLookEditor from '../components/EstimateLookEditor.jsx'
 import { fmtDate, toISODate } from '../lib/dates.js'
 import { dirIn, useSlide } from '../lib/glide.js'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
@@ -38,7 +39,7 @@ const emptyDelivery = () => ({
 const emptyEstimate = () => ({
   id: uid(), projectId: '', version: '', title: '', client: '', intro: '',
   lines: [], totalPrice: '', discount: '', vatPct: '', validUntil: '', terms: '',
-  recipients: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '', pin: '',
+  recipients: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '', pin: '', look: {},
 })
 
 /* The link tools as line icons (Alex, 15 Oct: the Share page put in order): round glass buttons on a phone,
@@ -75,6 +76,7 @@ export default function Deliveries() {
   const [addMenu, setAddMenu] = useState(false) // the phone's + : New delivery / New cost estimation
   const { boxRef, slideTo, inClass } = useSlide()
   const [edraft, setEdraft] = useState(null)
+  const [etab, setEtab] = useState('content') // the estimate window's tabs: Content, Look (and Preview on a phone)
 
   const reload = () => {
     if (!state.workspace?.id) return setRows([])
@@ -282,9 +284,13 @@ export default function Deliveries() {
   const noReplies = !!sample && sample.responses === undefined
   const noTracking = !!sample && sample.opens === undefined
 
-  const startEstimate = () => setEdraft({ ...emptyEstimate(), vatPct: String(state.finance?.settings?.vatDefault ?? 24) })
+  const startEstimate = () => {
+    setEtab('content')
+    setEdraft({ ...emptyEstimate(), vatPct: String(state.finance?.settings?.vatDefault ?? 24) })
+  }
   /* An estimate keeps its link while it is reworked, so opening one means editing it. */
   const openEstimate = (r) => {
+    setEtab('content')
     const d = r.data || {}
     setEdraft({
       id: (r.ref.split(':')[1]) || uid(), projectId: d.projectId || '', version: d.version || '',
@@ -293,6 +299,7 @@ export default function Deliveries() {
       validUntil: d.validUntil || '', terms: d.terms || '',
       // recipients, contact, closing date and access code left the estimate (Alex, 19 Oct)
       recipients: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '', pin: '',
+      look: d.look || {},
     })
   }
   const pickEstimateProject = (projectId) => {
@@ -323,6 +330,7 @@ export default function Deliveries() {
       currency: state.finance?.settings?.currency || 'EUR',
       company: { name: state.workspace.name, logo: state.settings.logo || '', footer: cs.footer || '' },
       contact: { name: e.contactName.trim(), email: e.contactEmail.trim(), phone: e.contactPhone.trim() },
+      look: e.look || {},
       sentAt: new Date().toISOString(),
     }
   }
@@ -604,6 +612,14 @@ export default function Deliveries() {
         {edraft && (
           <div className="est-compose">
           <div className="stack">
+            <div className="est-seg est-tabs" role="tablist">
+              {[['content', 'Content'], ['look', 'Look'], ...(mobile ? [['preview', 'Preview']] : [])].map(([k, label]) => (
+                <button key={k} type="button" role="tab" aria-selected={etab === k} className={etab === k ? 'on' : ''} onClick={() => setEtab(k)}>{label}</button>
+              ))}
+            </div>
+            {etab === 'look' && <EstimateLookEditor look={edraft.look} onChange={(v) => setE('look', v)} />}
+            {etab === 'preview' && mobile && <div className="est-preview est-preview-phone"><EstimateSheet d={estimateData(edraft)} /></div>}
+            {etab === 'content' && (<>
             {/* tidied (Alex, 19 Oct): no explanations, the fields side by side, the opening note one line */}
             <div className="row-3">
               <Field label="Project"><Select value={edraft.projectId} onChange={(e) => pickEstimateProject(e.target.value)} options={[['', 'Not in the app'], ...projects.map((p) => [p.id, p.title])]} /></Field>
@@ -631,12 +647,13 @@ export default function Deliveries() {
             <Field label="Payment terms & Notes"><Textarea rows={2} value={edraft.terms} onChange={(e) => setE('terms', e.target.value)} placeholder="50% on signature, 50% on delivery. Travel outside Attica billed separately." /></Field>
 
             {/* no recipients, contact, closing date or access code on an estimate (Alex, 19 Oct): one page, one link */}
+            </>)}
           </div>
           {/* the page the client gets, drawn live as you type (Alex, 19 Oct), on a computer */}
           {!mobile && (
             <aside className="est-preview" aria-label="Preview">
               <span className="est-preview-label">Preview</span>
-              <div className="pub dlv dlv-estimate"><EstimateSheet d={estimateData(edraft)} /></div>
+              <EstimateSheet d={estimateData(edraft)} />
             </aside>
           )}
           </div>
