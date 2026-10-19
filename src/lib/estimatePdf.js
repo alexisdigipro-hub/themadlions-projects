@@ -184,7 +184,8 @@ export function renderPages(d, t, groups, cur) {
     for (const l of g.rows) {
       // Descriptions read a size up from the rest of the table (Alex: bigger letters here).
       ctx.font = `400 14.5px ${font}`
-      const whatLines = wrapText(ctx, l.what, WHAT_W)
+      // the List style (Alex, 19 Oct) puts a › before each line
+      const whatLines = wrapText(ctx, L?.lines === 'list' ? `›  ${l.what}` : l.what, WHAT_W)
       const rowH = Math.max(22, whatLines.length * 18 + 6)
       ensure(rowH)
       const rowTop = y
@@ -251,6 +252,25 @@ export function renderPages(d, t, groups, cur) {
     ctx.textAlign = 'right'
     ctx.fillText(val, AMT_X, y)
     y += isTotal ? 22 : 18
+  }
+
+  // ---- what the price does not include ----
+  if (d.excluded?.length) {
+    ensure(40)
+    y += 18
+    ctx.textAlign = 'left'
+    ctx.fillStyle = MUTED
+    ctx.font = `700 10px ${font}`
+    ctx.fillText(upper((L || lookOf({})).excludedTitle || 'Not included in the price'), MARGIN, y)
+    y += 20
+    ctx.font = `400 14.5px ${font}`
+    for (const x of d.excluded) {
+      const xl = wrapText(ctx, `›  ${x}`, CONTENT_W)
+      ensure(xl.length * 18 + 4)
+      ctx.fillStyle = INK
+      for (const wl of xl) { ctx.fillText(wl, MARGIN, y); y += 18 }
+      y += 2
+    }
   }
 
   // ---- valid until / terms ----

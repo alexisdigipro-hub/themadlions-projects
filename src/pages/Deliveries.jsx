@@ -38,7 +38,7 @@ const emptyDelivery = () => ({
 
 const emptyEstimate = () => ({
   id: uid(), projectId: '', version: '', title: '', client: '', intro: '',
-  lines: [], totalPrice: '', discount: '', vatPct: '', validUntil: '', terms: '',
+  lines: [], excluded: [], totalPrice: '', discount: '', vatPct: '', validUntil: '', terms: '',
   recipients: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '', pin: '', look: {},
 })
 
@@ -295,7 +295,7 @@ export default function Deliveries() {
     setEdraft({
       id: (r.ref.split(':')[1]) || uid(), projectId: d.projectId || '', version: d.version || '',
       title: d.title || '', client: d.client || '', intro: d.intro || '',
-      lines: d.lines || [], totalPrice: d.totalPrice ? String(d.totalPrice) : '', discount: d.discount ? String(d.discount) : '', vatPct: d.vatPct != null ? String(d.vatPct) : '',
+      lines: d.lines || [], excluded: (d.excluded || []).map((what) => ({ what })), totalPrice: d.totalPrice ? String(d.totalPrice) : '', discount: d.discount ? String(d.discount) : '', vatPct: d.vatPct != null ? String(d.vatPct) : '',
       validUntil: d.validUntil || '', terms: d.terms || '',
       // recipients, contact, closing date and access code left the estimate (Alex, 19 Oct)
       recipients: [], contactName: '', contactEmail: '', contactPhone: '', pageCloses: '', pin: '',
@@ -322,6 +322,7 @@ export default function Deliveries() {
         group: (l.group || '').trim(), what: l.what.trim(), unit: (l.unit || '').trim(),
         qty: Number(l.qty) || 1, price: Number(l.price) || 0, advance: !!l.advance,
       })),
+      excluded: (e.excluded || []).map((x) => (x.what || '').trim()).filter(Boolean),
       totalPrice: Number(e.totalPrice) || 0,
       discount: Number(e.discount) || 0,
       vatPct: Number(e.vatPct) || 0,
@@ -644,6 +645,7 @@ export default function Deliveries() {
               <Field label="Discount"><Input type="number" min="0" step="0.01" value={edraft.discount} onChange={(e) => setE('discount', e.target.value)} placeholder="0" /></Field>
               <Field label="Valid until"><Input type="date" value={edraft.validUntil} onChange={(e) => setE('validUntil', e.target.value)} /></Field>
             </div>
+            <RowEditor label="Not included" rows={edraft.excluded || []} onChange={(v) => setE('excluded', v)} fields={[{ k: 'what', placeholder: 'Props, Make up & Hair, Location fee…' }]} addLabel="Add" />
             <Field label="Payment terms & Notes"><Textarea rows={2} value={edraft.terms} onChange={(e) => setE('terms', e.target.value)} placeholder="50% on signature, 50% on delivery. Travel outside Attica billed separately." /></Field>
 
             {/* no recipients, contact, closing date or access code on an estimate (Alex, 19 Oct): one page, one link */}
@@ -652,7 +654,16 @@ export default function Deliveries() {
           {/* the page the client gets, drawn live as you type (Alex, 19 Oct), on a computer */}
           {!mobile && (
             <aside className="est-preview" aria-label="Preview">
-              <span className="est-preview-label">Preview</span>
+              {/* Tiles or List at a click, right over the preview (Alex, 19 Oct: "on the same page it changes") */}
+              <div className="est-preview-head">
+                <span className="est-preview-label">Preview</span>
+                <div className="est-seg est-style" role="group" aria-label="Style">
+                  {[['tiles', 'Tiles'], ['list', 'List']].map(([k, label]) => {
+                    const cur = (edraft.look?.lines || 'tiles') === 'list' ? 'list' : 'tiles'
+                    return <button key={k} type="button" className={cur === k ? 'on' : ''} onClick={() => setE('look', { ...(edraft.look || {}), lines: k })}>{label}</button>
+                  })}
+                </div>
+              </div>
               <EstimateSheet d={estimateData(edraft)} />
             </aside>
           )}

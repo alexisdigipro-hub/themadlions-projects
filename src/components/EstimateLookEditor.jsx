@@ -85,7 +85,7 @@ export default function EstimateLookEditor({ look, onChange }) {
           <Field label="Width">{seg('width', [['narrow', 'Narrow'], ['normal', 'Normal'], ['wide', 'Wide']])}</Field>
         </div>
         <div className="row-2">
-          <Field label="Cost lines">{seg('lines', [['tiles', 'Tiles'], ['rows', 'Rows'], ['compact', 'Compact']])}</Field>
+          <Field label="Cost lines">{seg('lines', [['tiles', 'Tiles'], ['rows', 'Rows'], ['compact', 'Compact'], ['list', 'List']])}</Field>
           <Field label="Corners">{range('radius', 0, 32, 1, 'px')}</Field>
         </div>
         <div className="est-toggles">
@@ -133,6 +133,7 @@ export default function EstimateLookEditor({ look, onChange }) {
           <Field label="Small line above the title"><Input value={L.kicker} onChange={(e) => set({ kicker: e.target.value })} placeholder="Leave empty for none" /></Field>
           <Field label="Heading over the costs"><Input value={L.covers} onChange={(e) => set({ covers: e.target.value })} placeholder="Leave empty for none" /></Field>
         </div>
+        <Field label="Heading over what is not included"><Input value={L.excludedTitle} onChange={(e) => set({ excludedTitle: e.target.value })} placeholder="Not included in the price" /></Field>
       </section>
 
       <button type="button" className="est-pill est-reset" onClick={() => onChange({})}>Back to the original look</button>
