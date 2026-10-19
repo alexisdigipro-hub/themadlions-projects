@@ -21,9 +21,11 @@ export function estimateTotals(d = {}) {
   return { lines, subtotal, discount, net, vatPct, vat, total: net + vat, advance, fixed }
 }
 
-/* What the client sees beside a line or a group: nothing with a total price, nothing for a line left at 0 (it just
+/* What the client sees beside a line or a group: nothing with a total price; otherwise every amount that was typed,
+   0 included (Alex, 19 Oct: "when I put 0 the 0 shows"), and nothing for a line whose amount was left empty (it just
    says what is included) */
-export const showLineAmount = (l, t) => !t.fixed && lineAmount(l) > 0
+export const hasAmount = (l) => l.price !== null && l.price !== undefined && String(l.price).trim() !== ''
+export const showLineAmount = (l, t) => !t.fixed && hasAmount(l)
 export const showGroupSum = (g, t) => !t.fixed && g.label && g.rows.length > 1 && g.sum > 0
 
 /* Lines in the order they were typed, kept under the heading they were given. Anything with no

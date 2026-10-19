@@ -320,7 +320,8 @@ export default function Deliveries() {
       intro: e.intro.trim(),
       lines: e.lines.filter((l) => (l.what || '').trim()).map((l) => ({
         group: (l.group || '').trim(), what: l.what.trim(), unit: (l.unit || '').trim(),
-        qty: Number(l.qty) || 1, price: Number(l.price) || 0, advance: !!l.advance,
+        // an empty amount stays empty (the line only says what is included), a typed 0 stays 0
+        qty: Number(l.qty) || 1, price: String(l.price ?? '').trim() === '' ? null : Number(l.price) || 0, advance: !!l.advance,
       })),
       excluded: (e.excluded || []).map((x) => (x.what || '').trim()).filter(Boolean),
       totalPrice: Number(e.totalPrice) || 0,
@@ -696,7 +697,7 @@ function LineEditor({ rows, onChange, cur, totalPrice, discount, vatPct }) {
           <div key={i} {...sort.row('costs', i)} className={`est-edit-row ${sort.cls('costs', i)}`}>
             <Input value={r.group || ''} placeholder="Shooting" onChange={(e) => set(i, 'group', e.target.value)} />
             <Input value={r.what || ''} placeholder="Camera crew" onChange={(e) => set(i, 'what', e.target.value)} />
-            <Input type="number" min="0" step="0.01" value={r.price ?? ''} placeholder="0" onChange={(e) => set(i, 'price', e.target.value)} />
+            <Input type="number" min="0" step="0.01" value={r.price ?? ''} placeholder="—" onChange={(e) => set(i, 'price', e.target.value)} />
             <label className="est-edit-adv" title="Part of the advance payment">
               <input type="checkbox" checked={!!r.advance} onChange={() => set(i, 'advance', !r.advance)} />
               <span>Advance</span>
