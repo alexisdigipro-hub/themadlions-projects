@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Act, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
+import { ACT_ICON, Act, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
 import { deliveryUrl, estimateUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, shotlistUrl, tokenOf, deckUrl } from '../lib/shares.js'
 import { amount, estimateTotals } from '../lib/estimate.js'
+import { EstimateSheet } from './PublicEstimate.jsx'
 import { fmtDate, toISODate } from '../lib/dates.js'
 import { dirIn, useSlide } from '../lib/glide.js'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
@@ -303,32 +304,36 @@ export default function Deliveries() {
   }
   const setE = (k, v) => setEdraft((d) => ({ ...d, [k]: v }))
 
+  // what the client's page shows, from the editor: published as it is, and drawn live in the preview beside it
+  const estimateData = (e) => {
+    const cs = state.settings.callsheet || {}
+    return {
+      title: e.title.trim(),
+      client: e.client.trim(),
+      version: e.version.trim(),
+      projectId: e.projectId,
+      intro: e.intro.trim(),
+      lines: e.lines.filter((l) => (l.what || '').trim()).map((l) => ({
+        group: (l.group || '').trim(), what: l.what.trim(), unit: (l.unit || '').trim(),
+        qty: Number(l.qty) || 1, price: Number(l.price) || 0, advance: !!l.advance,
+      })),
+      totalPrice: Number(e.totalPrice) || 0,
+      discount: Number(e.discount) || 0,
+      vatPct: Number(e.vatPct) || 0,
+      validUntil: e.validUntil,
+      terms: e.terms.trim(),
+      currency: state.finance?.settings?.currency || 'EUR',
+      company: { name: state.workspace.name, logo: state.settings.logo || '', footer: cs.footer || '' },
+      contact: { name: e.contactName.trim(), email: e.contactEmail.trim(), phone: e.contactPhone.trim() },
+      sentAt: new Date().toISOString(),
+    }
+  }
   const publishEstimate = async () => {
     if (!edraft.title.trim()) return toast('Give it a title, or pick a project.', 'error')
     if (!edraft.lines.some((l) => (l.what || '').trim())) return toast('Add at least one cost line.', 'error')
     setBusy(true)
     try {
-      const cs = state.settings.callsheet || {}
-      const data = {
-        title: edraft.title.trim(),
-        client: edraft.client.trim(),
-        version: edraft.version.trim(),
-        projectId: edraft.projectId,
-        intro: edraft.intro.trim(),
-        lines: edraft.lines.filter((l) => (l.what || '').trim()).map((l) => ({
-          group: (l.group || '').trim(), what: l.what.trim(), unit: (l.unit || '').trim(),
-          qty: Number(l.qty) || 1, price: Number(l.price) || 0, advance: !!l.advance,
-        })),
-        totalPrice: Number(edraft.totalPrice) || 0,
-        discount: Number(edraft.discount) || 0,
-        vatPct: Number(edraft.vatPct) || 0,
-        validUntil: edraft.validUntil,
-        terms: edraft.terms.trim(),
-        currency: state.finance?.settings?.currency || 'EUR',
-        company: { name: state.workspace.name, logo: state.settings.logo || '', footer: cs.footer || '' },
-        contact: { name: edraft.contactName.trim(), email: edraft.contactEmail.trim(), phone: edraft.contactPhone.trim() },
-        sentAt: new Date().toISOString(),
-      }
+      const data = estimateData(edraft)
       const ref = `estimate:${edraft.id}`
       const people = edraft.recipients.filter((p) => (p.name || '').trim())
       const targets = people.length
@@ -510,15 +515,15 @@ export default function Deliveries() {
           <div className="stack">
             <div className="row-3">
               <Field label="Stage"><Select value={draft.stage} onChange={(e) => setD('stage', e.target.value)} options={STAGES.some((s) => s[0] === draft.stage) ? STAGES : [...STAGES, OLD_STAGES.find((s) => s[0] === draft.stage) || [draft.stage, stageLabel(draft.stage)]]} /></Field>
-              <Field label="Project" hint="Fills in the title, the client and the credits."><Select value={draft.projectId} onChange={(e) => pickProject(e.target.value)} options={[['', 'Not in the app'], ...projects.map((p) => [p.id, p.title])]} /></Field>
-              <Field label="Version" hint="v1, v2, cut 3…"><Input value={draft.version} onChange={(e) => setD('version', e.target.value)} placeholder="v2" /></Field>
+              <Field label="Project"><Select value={draft.projectId} onChange={(e) => pickProject(e.target.value)} options={[['', 'Not in the app'], ...projects.map((p) => [p.id, p.title])]} /></Field>
+              <Field label="Version"><Input value={draft.version} onChange={(e) => setD('version', e.target.value)} placeholder="v2" /></Field>
             </div>
             <div className="row-2">
               {/* client first, then the title (Alex, 13 Oct) */}
               <Field label="Client / artist"><Input value={draft.client} onChange={(e) => setD('client', e.target.value)} placeholder="Καίτη Γαρμπή" /></Field>
               <Field label="Title"><Input value={draft.title} onChange={(e) => setD('title', e.target.value)} placeholder="Το τραγούδι" /></Field>
             </div>
-            <Field label="Download link" hint={remote ? `Paste the SwissTransfer or WeTransfer link you already made, or upload: one file or several at once (several get one link for them all). They go into pCloud under Deliveries / ${stageLabel(draft.stage)} and the link comes here.` : 'Paste the SwissTransfer or WeTransfer link you already made.'}>
+            <Field label="Download link">
               <div className="deliv-linkrow">
                 {/* a link typed by hand replaces the uploaded files' own buttons */}
                 <Input value={draft.link} onChange={(e) => setDraft((d) => ({ ...d, link: e.target.value, files: [] }))} placeholder="https://www.swisstransfer.com/d/…" disabled={!!upload} />
@@ -553,12 +558,12 @@ export default function Deliveries() {
               <Field label="The transfer expires"><Input type="date" value={draft.linkExpires} onChange={(e) => setD('linkExpires', e.target.value)} /></Field>
             </div>
             <div className="row-2">
-              <Field label="Close this page on" hint="After this date the link stops working and says so. Leave empty to keep it open until you close it by hand."><Input type="date" value={draft.pageCloses} onChange={(e) => setD('pageCloses', e.target.value)} /></Field>
-              <Field label="Access code" hint="Optional. Six digits or a word. The page shows nothing without it, so send it separately from the link."><Input value={draft.pin} onChange={(e) => setD('pin', e.target.value)} placeholder="482913" /></Field>
+              <Field label="Close this page on"><Input type="date" value={draft.pageCloses} onChange={(e) => setD('pageCloses', e.target.value)} /></Field>
+              <Field label="Access code"><Input value={draft.pin} onChange={(e) => setD('pin', e.target.value)} placeholder="482913" /></Field>
             </div>
-            <Field label="Your note" hint="What changed, what to look at, what is still missing."><Textarea rows={3} value={draft.note} onChange={(e) => setD('note', e.target.value)} /></Field>
+            <Field label="Your note"><Textarea rows={3} value={draft.note} onChange={(e) => setD('note', e.target.value)} /></Field>
             <div className="row-2">
-              <Field label="Answer by" hint="Shown on the page so it is not forgotten."><Input type="date" value={draft.feedbackBy} onChange={(e) => setD('feedbackBy', e.target.value)} /></Field>
+              <Field label="Answer by"><Input type="date" value={draft.feedbackBy} onChange={(e) => setD('feedbackBy', e.target.value)} /></Field>
               <Field label="Who they reply to"><Input value={draft.contactName} onChange={(e) => setD('contactName', e.target.value)} placeholder={user?.name || 'Name'} /></Field>
             </div>
             <div className="row-2">
@@ -568,7 +573,6 @@ export default function Deliveries() {
 
             <RowEditor
               label="Send it to"
-              hint="Leave empty for one link for everybody. Add names and each person gets their own page, so you can see who opened it and who approved, without taking their word for it."
               rows={draft.recipients}
               onChange={(v) => setD('recipients', v)}
               fields={[{ k: 'name', placeholder: 'Maria Vlachou' }, { k: 'email', placeholder: 'maria@client.gr' }]}
@@ -579,7 +583,6 @@ export default function Deliveries() {
               <>
                 <RowEditor
                   label="Credits"
-                  hint="Taken from the project's cast and crew. Remove whoever should not be on it."
                   rows={draft.credits}
                   onChange={(v) => setD('credits', v)}
                   fields={[{ k: 'role', placeholder: 'Director' }, { k: 'name', placeholder: 'Name' }]}
@@ -587,7 +590,6 @@ export default function Deliveries() {
                 />
                 <RowEditor
                   label="Files included"
-                  hint="Taken from the project's Post tab."
                   rows={draft.deliverables}
                   onChange={(v) => setD('deliverables', v)}
                   fields={[{ k: 'name', placeholder: 'Master 4K' }, { k: 'format', placeholder: 'ProRes 422 HQ' }, { k: 'notes', placeholder: 'with LUT applied' }]}
@@ -599,17 +601,18 @@ export default function Deliveries() {
         )}
       </Modal>
 
-      <Modal open={!!edraft} title="Cost estimation" wide onClose={() => !busy && setEdraft(null)}
+      <Modal open={!!edraft} title="Cost estimation" wide className="est-modal" onClose={() => !busy && setEdraft(null)}
         footer={<><Button variant="ghost" onClick={() => setEdraft(null)} disabled={busy}>Cancel</Button><Button variant="primary" onClick={publishEstimate} disabled={busy}>{busy ? 'Publishing…' : 'Publish and copy link'}</Button></>}>
         {edraft && (
+          <div className="est-compose">
           <div className="stack">
-            <p className="muted small">Your own costs, typed here. Picking a project only fills in the title and the client; the project&#39;s budget is a separate thing and stays out of this.</p>
-            <div className="row-2">
-              <Field label="Project" hint="Only the title and the client."><Select value={edraft.projectId} onChange={(e) => pickEstimateProject(e.target.value)} options={[['', 'Not in the app'], ...projects.map((p) => [p.id, p.title])]} /></Field>
+            {/* tidied (Alex, 19 Oct): no explanations, the fields side by side, the opening note one line */}
+            <div className="row-3">
+              <Field label="Project"><Select value={edraft.projectId} onChange={(e) => pickEstimateProject(e.target.value)} options={[['', 'Not in the app'], ...projects.map((p) => [p.id, p.title])]} /></Field>
               <Field label="Title"><Input value={edraft.title} onChange={(e) => setE('title', e.target.value)} placeholder="Northwind Summer Film" /></Field>
+              <Field label="Client"><Input value={edraft.client} onChange={(e) => setE('client', e.target.value)} /></Field>
             </div>
-            <Field label="Client"><Input value={edraft.client} onChange={(e) => setE('client', e.target.value)} /></Field>
-            <Field label="Opening note" hint="What the estimate covers, in a line or two."><Textarea rows={2} value={edraft.intro} onChange={(e) => setE('intro', e.target.value)} /></Field>
+            <Field label="Opening note"><Input value={edraft.intro} onChange={(e) => setE('intro', e.target.value)} placeholder="What the estimate covers" /></Field>
 
             <LineEditor
               rows={edraft.lines}
@@ -621,19 +624,16 @@ export default function Deliveries() {
             />
 
             {/* the price of the whole job and VAT (Alex, 19 Oct): with a total price the lines only say what it includes */}
-            <div className="row-2">
-              <Field label="Total price" hint="Optional. The price of the whole job, before VAT. When it is set, the client sees only this and the lines say what it includes, without their amounts."><Input type="number" min="0" step="0.01" value={edraft.totalPrice} onChange={(e) => setE('totalPrice', e.target.value)} placeholder="Sum of the lines" /></Field>
-              <Field label="VAT %" hint="0 or empty for no VAT."><Input type="number" min="0" max="99" value={edraft.vatPct} onChange={(e) => setE('vatPct', e.target.value)} placeholder="0" /></Field>
-            </div>
-            <div className="row-2">
-              <Field label="Discount" hint="An amount, not a percentage."><Input type="number" min="0" step="0.01" value={edraft.discount} onChange={(e) => setE('discount', e.target.value)} placeholder="0" /></Field>
+            <div className="row-4">
+              <Field label="Total price"><Input type="number" min="0" step="0.01" value={edraft.totalPrice} onChange={(e) => setE('totalPrice', e.target.value)} placeholder="Sum of the lines" /></Field>
+              <Field label="VAT %"><Input type="number" min="0" max="99" value={edraft.vatPct} onChange={(e) => setE('vatPct', e.target.value)} placeholder="0" /></Field>
+              <Field label="Discount"><Input type="number" min="0" step="0.01" value={edraft.discount} onChange={(e) => setE('discount', e.target.value)} placeholder="0" /></Field>
               <Field label="Valid until"><Input type="date" value={edraft.validUntil} onChange={(e) => setE('validUntil', e.target.value)} /></Field>
             </div>
-            <Field label="Payment terms & Notes" hint="Shown under the total."><Textarea rows={2} value={edraft.terms} onChange={(e) => setE('terms', e.target.value)} placeholder="50% on signature, 50% on delivery. Travel outside Attica billed separately." /></Field>
+            <Field label="Payment terms & Notes"><Textarea rows={2} value={edraft.terms} onChange={(e) => setE('terms', e.target.value)} placeholder="50% on signature, 50% on delivery. Travel outside Attica billed separately." /></Field>
 
             <RowEditor
               label="Send it to"
-              hint="Leave empty for one link for everybody. Add names and each person gets their own page."
               rows={edraft.recipients}
               onChange={(v) => setE('recipients', v)}
               fields={[{ k: 'name', placeholder: 'Maria Vlachou' }, { k: 'email', placeholder: 'maria@client.gr' }]}
@@ -646,9 +646,17 @@ export default function Deliveries() {
               <Field label="Phone"><Input value={edraft.contactPhone} onChange={(e) => setE('contactPhone', e.target.value)} /></Field>
             </div>
             <div className="row-2">
-              <Field label="Close this page on" hint="Leave empty to keep it open until you close it by hand."><Input type="date" value={edraft.pageCloses} onChange={(e) => setE('pageCloses', e.target.value)} /></Field>
-              <Field label="Access code" hint="Optional. Six digits or a word. The page shows nothing without it, so send it separately from the link."><Input value={edraft.pin} onChange={(e) => setE('pin', e.target.value)} placeholder="482913" /></Field>
+              <Field label="Close this page on"><Input type="date" value={edraft.pageCloses} onChange={(e) => setE('pageCloses', e.target.value)} /></Field>
+              <Field label="Access code"><Input value={edraft.pin} onChange={(e) => setE('pin', e.target.value)} placeholder="482913" /></Field>
             </div>
+          </div>
+          {/* the page the client gets, drawn live as you type (Alex, 19 Oct), on a computer */}
+          {!mobile && (
+            <aside className="est-preview" aria-label="Preview">
+              <span className="est-preview-label">Preview</span>
+              <div className="pub dlv dlv-estimate"><EstimateSheet d={estimateData(edraft)} /></div>
+            </aside>
+          )}
           </div>
         )}
       </Modal>
@@ -685,13 +693,12 @@ function LineEditor({ rows, onChange, cur, totalPrice, discount, vatPct }) {
             </label>
             <span className="est-edit-actions">
               <Grip {...sort.grip('costs', i)} />
-              <button className="link small" onClick={() => onChange(rows.filter((_, j) => j !== i))}>Remove</button>
+              <button type="button" className="row-del" onClick={() => onChange(rows.filter((_, j) => j !== i))} aria-label="Remove" title="Remove">{ACT_ICON.trash}</button>
             </span>
           </div>
         ))}
-        {!rows.length && <p className="muted small">No costs yet.</p>}
         <div className="est-edit-foot">
-          <Button variant="ghost" onClick={add}>Add a cost</Button>
+          <Act icon="plus" label="Add a cost" onClick={add} />
           <span className="muted small">
             {t.fixed ? 'Total price' : 'Clean cost'} {amount(t.subtotal, cur)}
             {t.discount > 0 ? ` · discount ${amount(t.discount, cur)}` : ''}
@@ -701,7 +708,6 @@ function LineEditor({ rows, onChange, cur, totalPrice, discount, vatPct }) {
           <b className="est-edit-total">{amount(t.total, cur)}</b>
         </div>
       </div>
-      <span className="field-hint">Leave the heading empty to keep a line loose. Lines with the same heading are grouped together on the page, with their own subtotal. A line with no amount just says what is included. Tick Advance for the lines that make up the advance payment; they show in a different colour and their own sum next to the totals.</span>
     </div>
   )
 }
@@ -716,11 +722,10 @@ function RowEditor({ label, hint, rows, onChange, fields, addLabel }) {
         {rows.map((r, i) => (
           <div key={i} className="rowlist-row">
             {fields.map((f) => <Input key={f.k} type={f.type || 'text'} value={r[f.k] || ''} placeholder={f.placeholder} onChange={(e) => set(i, f.k, e.target.value)} />)}
-            <button className="link small" onClick={() => onChange(rows.filter((_, j) => j !== i))}>Remove</button>
+            <button type="button" className="row-del" onClick={() => onChange(rows.filter((_, j) => j !== i))} aria-label="Remove" title="Remove">{ACT_ICON.trash}</button>
           </div>
         ))}
-        {!rows.length && <p className="muted small">Nothing yet.</p>}
-        <Button variant="ghost" onClick={() => onChange([...rows, Object.fromEntries(fields.map((f) => [f.k, '']))])}>{addLabel}</Button>
+        <Act icon="plus" label={addLabel} onClick={() => onChange([...rows, Object.fromEntries(fields.map((f) => [f.k, '']))])} />
       </div>
       {hint && <span className="field-hint">{hint}</span>}
     </div>
