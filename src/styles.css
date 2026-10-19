@@ -831,6 +831,15 @@ code {
    the 960 of the wide ones so three selects on a row do not stretch into bars, with more air
    between the rows and a roomier notes box. */
 .modal-wide:has(.task-form) { width: min(780px, 100%); }
+/* the cost estimation: the form on the left, the client's page live on the right (Alex, 19 Oct); a phone keeps the form alone */
+@media (min-width: 821px) {
+  .modal-wide.est-modal { width: min(1500px, calc(100vw - 48px)); }
+  .est-compose { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .92fr); gap: 24px; align-items: start; }
+  .est-preview { position: sticky; top: 0; display: flex; flex-direction: column; gap: 8px; max-height: calc(100dvh - 190px); overflow-y: auto; border-radius: 18px; }
+  .est-preview-label { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .est-preview .pub.dlv { max-width: none; margin: 0; padding: 0; zoom: .82; pointer-events: none; }
+  .est-preview .dlv-sheet { max-width: none; }
+}
 .task-form { display: flex; flex-direction: column; gap: 6px; }
 .task-form .field { margin-bottom: 10px; }
 .task-form .input, .task-form .select { font-size: 16px; min-height: 44px; }

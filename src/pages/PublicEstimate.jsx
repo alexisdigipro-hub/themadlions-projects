@@ -42,8 +42,6 @@ export default function PublicEstimate() {
   const cur = d.currency || 'EUR'
   const t = estimateTotals(d)
   const groups = groupLines(t.lines)
-  const expired = d.validUntil && d.validUntil < new Date().toISOString().slice(0, 10)
-
   const reply = async (status) => {
     setBusy(status); setErr('')
     try {
@@ -71,71 +69,7 @@ export default function PublicEstimate() {
 
   return (
     <div className="pub dlv dlv-estimate">
-      <div className="dlv-sheet">
-        <header className="dlv-band dlv-top">
-          {d.company?.logo && <img className="dlv-logo" src={d.company.logo} alt="" />}
-          <div className="dlv-company">{d.company?.name || 'THEMADLIONS'}</div>
-        </header>
-
-        <section className="dlv-band dlv-hero">
-          <div className="dlv-stage">Cost estimation{d.version ? ` · ${d.version}` : ''}</div>
-          <h1 className="dlv-title">{d.title}</h1>
-          {d.client && <p className="dlv-client">{d.client}</p>}
-          {d.recipient?.name && <p className="dlv-for">For {d.recipient.name}</p>}
-          {d.intro && <p className="dlv-note est-intro">{d.intro}</p>}
-        </section>
-
-        <section className="dlv-block est-lines">
-          <h2>What it covers</h2>
-          <table className="est-table">
-            <tbody>
-              {/* a Fragment with a key, not <>, because a bare fragment cannot carry one */}
-              {groups.map((g, gi) => (
-                <Fragment key={g.label || `g${gi}`}>
-                  {g.label && <tr className="est-head"><th colSpan={2}>{upper(g.label)}</th></tr>}
-                  {g.rows.map((l, i) => (
-                    <tr key={i} className={l.advance ? 'est-advance' : undefined}>
-                      <td className="est-what">{l.what}</td>
-                      <td className="est-amt">{showLineAmount(l, t) ? amount(lineAmount(l), cur) : ''}</td>
-                    </tr>
-                  ))}
-                  {showGroupSum(g, t) && (
-                    <tr className="est-sub"><td>Subtotal</td><td className="est-amt">{amount(g.sum, cur)}</td></tr>
-                  )}
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="est-totals-row">
-            {t.advance > 0 && (
-              <div className="est-advance-box">
-                <span className="est-advance-label">Advance</span>
-                <span className="est-advance-amt">{amount(t.advance, cur)}</span>
-              </div>
-            )}
-            <table className="est-totals">
-              <tbody>
-                <tr><td>{t.fixed ? 'Total price' : 'Clean cost'}</td><td className="est-amt">{amount(t.subtotal, cur)}</td></tr>
-                {t.discount > 0 && <tr><td>Discount</td><td className="est-amt">&minus; {amount(t.discount, cur)}</td></tr>}
-                {t.vatPct > 0 && <tr><td>VAT {t.vatPct}%</td><td className="est-amt">{amount(t.vat, cur)}</td></tr>}
-                <tr className="est-total"><td>Total</td><td className="est-amt">{amount(t.total, cur)}</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {(d.validUntil || d.terms) && (
-          <section className="dlv-band dlv-say">
-            {d.validUntil && (
-              <p className={`dlv-by${expired ? ' est-expired' : ''}`}>
-                {expired ? 'This estimate ran out on ' : 'Valid until '}<b>{fmt(d.validUntil)}</b>
-              </p>
-            )}
-            {d.terms && <p className="dlv-note est-terms">{d.terms}</p>}
-          </section>
-        )}
-
+      <EstimateSheet d={d}>
         <section className="dlv-block dlv-reply">
           {sent ? (
             <p className="dlv-thanks">
@@ -157,18 +91,97 @@ export default function PublicEstimate() {
             </>
           )}
         </section>
+      </EstimateSheet>
+    </div>
+  )
+}
 
-        <footer className="dlv-band dlv-end">
-          {(d.contact?.name || d.contact?.email || d.contact?.phone) && (
-            <p className="dlv-contact">
-              {d.contact.name}
-              {d.contact.email && <> · <a href={`mailto:${d.contact.email}`}>{d.contact.email}</a></>}
-              {d.contact.phone && <> · <a href={`tel:${d.contact.phone}`}>{d.contact.phone}</a></>}
+
+/* The estimate itself, as the client sees it: used by the client's page and by the live preview beside the editor
+   (Alex, 19 Oct: "the preview of how it looks on the right"), so the two can never differ */
+export function EstimateSheet({ d, children = null }) {
+  const cur = d.currency || 'EUR'
+  const t = estimateTotals(d)
+  const groups = groupLines(t.lines)
+  const expired = d.validUntil && d.validUntil < new Date().toISOString().slice(0, 10)
+  return (
+    <div className="dlv-sheet">
+      <header className="dlv-band dlv-top">
+        {d.company?.logo && <img className="dlv-logo" src={d.company.logo} alt="" />}
+        <div className="dlv-company">{d.company?.name || 'THEMADLIONS'}</div>
+      </header>
+
+      <section className="dlv-band dlv-hero">
+        <div className="dlv-stage">Cost estimation{d.version ? ` · ${d.version}` : ''}</div>
+        <h1 className="dlv-title">{d.title}</h1>
+        {d.client && <p className="dlv-client">{d.client}</p>}
+        {d.recipient?.name && <p className="dlv-for">For {d.recipient.name}</p>}
+        {d.intro && <p className="dlv-note est-intro">{d.intro}</p>}
+      </section>
+
+      <section className="dlv-block est-lines">
+        <h2>What it covers</h2>
+        <table className="est-table">
+          <tbody>
+            {/* a Fragment with a key, not <>, because a bare fragment cannot carry one */}
+            {groups.map((g, gi) => (
+              <Fragment key={g.label || `g${gi}`}>
+                {g.label && <tr className="est-head"><th colSpan={2}>{upper(g.label)}</th></tr>}
+                {g.rows.map((l, i) => (
+                  <tr key={i} className={l.advance ? 'est-advance' : undefined}>
+                    <td className="est-what">{l.what}</td>
+                    <td className="est-amt">{showLineAmount(l, t) ? amount(lineAmount(l), cur) : ''}</td>
+                  </tr>
+                ))}
+                {showGroupSum(g, t) && (
+                  <tr className="est-sub"><td>Subtotal</td><td className="est-amt">{amount(g.sum, cur)}</td></tr>
+                )}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+
+        <div className="est-totals-row">
+          {t.advance > 0 && (
+            <div className="est-advance-box">
+              <span className="est-advance-label">Advance</span>
+              <span className="est-advance-amt">{amount(t.advance, cur)}</span>
+            </div>
+          )}
+          <table className="est-totals">
+            <tbody>
+              <tr><td>{t.fixed ? 'Total price' : 'Clean cost'}</td><td className="est-amt">{amount(t.subtotal, cur)}</td></tr>
+              {t.discount > 0 && <tr><td>Discount</td><td className="est-amt">&minus; {amount(t.discount, cur)}</td></tr>}
+              {t.vatPct > 0 && <tr><td>VAT {t.vatPct}%</td><td className="est-amt">{amount(t.vat, cur)}</td></tr>}
+              <tr className="est-total"><td>Total</td><td className="est-amt">{amount(t.total, cur)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {(d.validUntil || d.terms) && (
+        <section className="dlv-band dlv-say">
+          {d.validUntil && (
+            <p className={`dlv-by${expired ? ' est-expired' : ''}`}>
+              {expired ? 'This estimate ran out on ' : 'Valid until '}<b>{fmt(d.validUntil)}</b>
             </p>
           )}
-          {d.company?.footer && <p className="dlv-foot">{d.company.footer}</p>}
-        </footer>
-      </div>
+          {d.terms && <p className="dlv-note est-terms">{d.terms}</p>}
+        </section>
+      )}
+
+      {children}
+
+      <footer className="dlv-band dlv-end">
+        {(d.contact?.name || d.contact?.email || d.contact?.phone) && (
+          <p className="dlv-contact">
+            {d.contact.name}
+            {d.contact.email && <> · <a href={`mailto:${d.contact.email}`}>{d.contact.email}</a></>}
+            {d.contact.phone && <> · <a href={`tel:${d.contact.phone}`}>{d.contact.phone}</a></>}
+          </p>
+        )}
+        {d.company?.footer && <p className="dlv-foot">{d.company.footer}</p>}
+      </footer>
     </div>
   )
 }

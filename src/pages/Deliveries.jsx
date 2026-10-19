@@ -4,6 +4,7 @@ import { Act, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, use
 import { can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
 import { deliveryUrl, estimateUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, shotlistUrl, tokenOf, deckUrl } from '../lib/shares.js'
 import { amount, estimateTotals } from '../lib/estimate.js'
+import { EstimateSheet } from './PublicEstimate.jsx'
 import { fmtDate, toISODate } from '../lib/dates.js'
 import { dirIn, useSlide } from '../lib/glide.js'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
@@ -303,32 +304,36 @@ export default function Deliveries() {
   }
   const setE = (k, v) => setEdraft((d) => ({ ...d, [k]: v }))
 
+  // what the client's page shows, from the editor: published as it is, and drawn live in the preview beside it
+  const estimateData = (e) => {
+    const cs = state.settings.callsheet || {}
+    return {
+      title: e.title.trim(),
+      client: e.client.trim(),
+      version: e.version.trim(),
+      projectId: e.projectId,
+      intro: e.intro.trim(),
+      lines: e.lines.filter((l) => (l.what || '').trim()).map((l) => ({
+        group: (l.group || '').trim(), what: l.what.trim(), unit: (l.unit || '').trim(),
+        qty: Number(l.qty) || 1, price: Number(l.price) || 0, advance: !!l.advance,
+      })),
+      totalPrice: Number(e.totalPrice) || 0,
+      discount: Number(e.discount) || 0,
+      vatPct: Number(e.vatPct) || 0,
+      validUntil: e.validUntil,
+      terms: e.terms.trim(),
+      currency: state.finance?.settings?.currency || 'EUR',
+      company: { name: state.workspace.name, logo: state.settings.logo || '', footer: cs.footer || '' },
+      contact: { name: e.contactName.trim(), email: e.contactEmail.trim(), phone: e.contactPhone.trim() },
+      sentAt: new Date().toISOString(),
+    }
+  }
   const publishEstimate = async () => {
     if (!edraft.title.trim()) return toast('Give it a title, or pick a project.', 'error')
     if (!edraft.lines.some((l) => (l.what || '').trim())) return toast('Add at least one cost line.', 'error')
     setBusy(true)
     try {
-      const cs = state.settings.callsheet || {}
-      const data = {
-        title: edraft.title.trim(),
-        client: edraft.client.trim(),
-        version: edraft.version.trim(),
-        projectId: edraft.projectId,
-        intro: edraft.intro.trim(),
-        lines: edraft.lines.filter((l) => (l.what || '').trim()).map((l) => ({
-          group: (l.group || '').trim(), what: l.what.trim(), unit: (l.unit || '').trim(),
-          qty: Number(l.qty) || 1, price: Number(l.price) || 0, advance: !!l.advance,
-        })),
-        totalPrice: Number(edraft.totalPrice) || 0,
-        discount: Number(edraft.discount) || 0,
-        vatPct: Number(edraft.vatPct) || 0,
-        validUntil: edraft.validUntil,
-        terms: edraft.terms.trim(),
-        currency: state.finance?.settings?.currency || 'EUR',
-        company: { name: state.workspace.name, logo: state.settings.logo || '', footer: cs.footer || '' },
-        contact: { name: edraft.contactName.trim(), email: edraft.contactEmail.trim(), phone: edraft.contactPhone.trim() },
-        sentAt: new Date().toISOString(),
-      }
+      const data = estimateData(edraft)
       const ref = `estimate:${edraft.id}`
       const people = edraft.recipients.filter((p) => (p.name || '').trim())
       const targets = people.length
@@ -599,9 +604,10 @@ export default function Deliveries() {
         )}
       </Modal>
 
-      <Modal open={!!edraft} title="Cost estimation" wide onClose={() => !busy && setEdraft(null)}
+      <Modal open={!!edraft} title="Cost estimation" wide className="est-modal" onClose={() => !busy && setEdraft(null)}
         footer={<><Button variant="ghost" onClick={() => setEdraft(null)} disabled={busy}>Cancel</Button><Button variant="primary" onClick={publishEstimate} disabled={busy}>{busy ? 'Publishing…' : 'Publish and copy link'}</Button></>}>
         {edraft && (
+          <div className="est-compose">
           <div className="stack">
             <p className="muted small">Your own costs, typed here. Picking a project only fills in the title and the client; the project&#39;s budget is a separate thing and stays out of this.</p>
             <div className="row-2">
@@ -649,6 +655,14 @@ export default function Deliveries() {
               <Field label="Close this page on" hint="Leave empty to keep it open until you close it by hand."><Input type="date" value={edraft.pageCloses} onChange={(e) => setE('pageCloses', e.target.value)} /></Field>
               <Field label="Access code" hint="Optional. Six digits or a word. The page shows nothing without it, so send it separately from the link."><Input value={edraft.pin} onChange={(e) => setE('pin', e.target.value)} placeholder="482913" /></Field>
             </div>
+          </div>
+          {/* the page the client gets, drawn live as you type (Alex, 19 Oct), on a computer */}
+          {!mobile && (
+            <aside className="est-preview" aria-label="Preview">
+              <span className="est-preview-label">Preview</span>
+              <div className="pub dlv dlv-estimate"><EstimateSheet d={estimateData(edraft)} /></div>
+            </aside>
+          )}
           </div>
         )}
       </Modal>
