@@ -5606,8 +5606,6 @@ html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; 
 .notes-move option { color: #1f2430; background: #fff; }
 .rem-task, .notes-card { color: var(--text); background: var(--g-card); border: 1px solid var(--g-edge); box-shadow: none; -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); }
 .rem-task:hover, .notes-card:hover { background: var(--g-card-2); }
-/* a task on a list takes a 10% wash of the list's colour over its glass (Alex, 19 Oct) */
-.rem-task.tinted, .rem-task.tinted:hover { background-image: linear-gradient(color-mix(in srgb, var(--tint) 10%, transparent), color-mix(in srgb, var(--tint) 10%, transparent)); }
 .rem-check { border-color: color-mix(in srgb, var(--text) 50%, transparent); }
 .rem-check:hover:not(:disabled) { background: radial-gradient(circle, color-mix(in srgb, var(--text) 50%, transparent) 0 3px, transparent 3.5px); }
 .rem-task.done .rem-check { background-color: color-mix(in srgb, var(--text) 45%, transparent); border-color: transparent; }
@@ -7458,3 +7456,6 @@ html[data-theme] body .modal.glass-form.glass-form .btn.btn-primary:hover:not(:d
 @media (max-width: 820px) and (prefers-reduced-motion: reduce) {
   .content.page-in, .content.page-in > * > *, .tabbar a.active svg, .tabbar button.active svg, .toast { animation: none !important; }
 }
+
+/* a task on a list takes a 10% wash of the list's colour over its card (Alex, 19 Oct) */
+html[data-theme] body .rem-tasks > .rem-task.tinted, .rem-task.tinted { background-image: linear-gradient(color-mix(in srgb, var(--tint) 10%, transparent), color-mix(in srgb, var(--tint) 10%, transparent)); }
