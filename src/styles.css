@@ -3842,8 +3842,8 @@ html[data-public='1'] body { background: var(--bg); }
   .modal-foot .btn { flex: 1 1 auto; justify-content: center; }
   /* cost estimation editor */
   .est-edit-head { display: none; }
-  .est-edit-row { grid-template-columns: 1fr 1fr; gap: 6px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--line-soft); }
-  .est-edit-row .input:nth-child(2) { grid-column: 1 / -1; }
+  .est-edit-row { grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--line-soft); }
+  .est-edit-row .input:nth-child(1), .est-edit-row .input:nth-child(2) { grid-column: 1 / -1; }
   .est-edit-adv { justify-content: flex-start; }
   .est-edit-adv span { display: inline; font-size: 12px; color: var(--muted); }
   .est-edit-foot .muted { margin-left: 0; width: 100%; }
