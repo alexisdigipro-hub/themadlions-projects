@@ -297,6 +297,16 @@ body.embedded::before{display:none}
 .o-btn{display:inline-flex;align-items:center;gap:.45em;text-decoration:none;font-weight:800;font-size:.88em;padding:.7em 1em;border-radius:99px;background:color-mix(in srgb,var(--o-text) 8%,transparent);border:1px solid var(--o-line);color:var(--o-text)}
 .o-btn.acc{background:var(--acc);border-color:var(--acc);color:#fff}
 .o-btn svg{width:1.1em;height:1.1em}
+.o-btns-2{flex-wrap:nowrap}
+.o-btns-2 .o-btn{flex:1 1 0;justify-content:center;padding:.85em 1em;border-radius:.8em}
+.o-loc-who{color:var(--o-muted);margin-top:.2em;font-weight:600}
+.o-loc-who a{color:inherit;text-decoration:none}
+.o-xloc{margin-top:1em;padding-top:.85em;border-top:1px solid var(--o-line)}
+.o-xloc-h{font-size:.72em;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--o-muted);margin-bottom:.45em}
+.o-xloc-r{display:flex;align-items:baseline;gap:.8em;padding:.25em 0;font-weight:600;font-size:.92em}
+.o-xloc-r span{flex:1;min-width:0}
+.o-xloc-r b{font-weight:700}
+.o-xloc-r a{flex:none;color:var(--acc);font-weight:800;text-decoration:none}
 .o-kv{display:flex;flex-direction:column;gap:.15em;margin-top:.9em;padding-top:.85em;border-top:1px solid var(--o-line)}
 .o-kv .k{font-size:.72em;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--o-muted)}
 .o-kv .v{font-weight:600;line-height:1.4;white-space:pre-wrap}
@@ -423,10 +433,10 @@ function blankOrdino(){
     details: { cover: true, weather: true, sun: true, wrap: true, tagline: false, parking: false, hospital: false, lunch: false },
     blocks: Object.keys(BLOCK_DEFS).map(key => ({ key, on: ['groupcalls','location','program','note'].includes(key), title: '' })),
     groupCalls: [ { who: 'Production crew', time: '07:00' }, { who: 'Cast / Make-up', time: '07:30' } ],
-    loc: { name: '', address: '', contact: '', phone: '', parking: '', hospital: '', lat: '', lon: '' },
+    loc: { name: '', address: '', link: '', contact: '', phone: '', parking: '', hospital: '', lat: '', lon: '' },
     lunch: '',
     program: [ { from: '08:00', to: '09:00', what: 'Προετοιμασία' }, { from: '09:00', to: '13:00', what: 'Γύρισμα' } ],
-    scenes: [], cast: [], crew: [], contacts: [],
+    scenes: [], cast: [], crew: [], contacts: [], extraLocs: [],
     notes: '', tagline: '',
   };
 }
@@ -438,7 +448,7 @@ function normalize(o){
   const known = new Set((out.blocks || []).map(x => x.key));
   out.blocks = (out.blocks || []).filter(x => BLOCK_DEFS[x.key]);
   for (const key of Object.keys(BLOCK_DEFS)) if (!known.has(key)) out.blocks.push({ key, on: false, title: '' });
-  for (const k of ['groupCalls','program','scenes','cast','crew','contacts']) if (!Array.isArray(out[k])) out[k] = [];
+  for (const k of ['groupCalls','program','scenes','cast','crew','contacts','extraLocs']) if (!Array.isArray(out[k])) out[k] = [];
   return out;
 }
 
@@ -607,14 +617,25 @@ function linkify(text){
     .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
     .replace(/(\+?\d[\d\s]{8,}\d)/g, m => `<a href="${telHref(m)}">${m}</a>`);
 }
+// a Google Maps link pasted in (Alex, 19 Oct): the map button opens exactly that place
+const MAPS_LINK = /^https:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|maps\.google\.[a-z.]+|(www\.)?google\.[a-z.]+\/maps)\//i;
+function mapsLink(loc){ const u = String(loc.link || '').trim(); return MAPS_LINK.test(u) ? u : ''; }
+// the coordinates inside a long Google Maps link, for the weather and the sunset (a short maps.app.goo.gl link has none)
+function coordsOf(u){
+  const m = String(u || '').match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/) || String(u || '').match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || String(u || '').match(/[?&](?:q|query|ll|center)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
+  return m ? { lat: (+m[1]).toFixed(5), lon: (+m[2]).toFixed(5) } : null;
+}
 function mapsUrl(loc){
+  if (mapsLink(loc)) return mapsLink(loc);
   if (loc.lat && loc.lon) return `https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lon}`;
   const q = [loc.name, loc.address].filter(Boolean).join(', ');
   return q ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q) : '';
 }
-function wazeUrl(loc){
-  if (loc.lat && loc.lon) return `https://waze.com/ul?ll=${loc.lat},${loc.lon}&navigate=yes`;
-  return loc.address ? 'https://waze.com/ul?q=' + encodeURIComponent(loc.address) + '&navigate=yes' : '';
+// directions from wherever the phone is to the place: its coordinates, else its address, else the pasted link itself
+function dirUrl(loc){
+  if (loc.lat && loc.lon) return `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lon}`;
+  const q = [loc.name, loc.address].filter(Boolean).join(', ');
+  return q ? 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(q) : mapsLink(loc);
 }
 function isBreak(what){ return /break|διάλειμμα|φαγητ|lunch|γεύμα/i.test(what || ''); }
 
@@ -637,19 +658,26 @@ function renderOrdino(o, { wx = null, interactive = true, updatedAt = null } = {
         return sec(b, `<div class="o-rows">${rows.map(r => `<div class="o-r"><span class="t">${esc(r.time)}</span><span class="w">${esc(r.who)}</span></div>`).join('')}</div>`);
       }
       case 'location': {
-        const l = o.loc; if (!l.name && !l.address) return '';
-        const m = mapsUrl(l), w = wazeUrl(l);
+        const l = o.loc;
+        // more places of the day (Alex, 19 Oct): name · address, and Directions to each
+        const extra = (o.extraLocs || []).filter(x => x.name || x.address || mapsLink(x));
+        if (!l.name && !l.address && !mapsLink(l) && !extra.length) return '';
+        const m = mapsUrl(l), d = dirUrl(l);
         return sec(b, `
           ${l.name ? `<div class="o-loc-name">${esc(l.name)}</div>` : ''}
           ${l.address ? `<div class="o-loc-addr">${esc(l.address)}</div>` : ''}
-          <div class="o-btns">
-            ${m ? `<a class="o-btn acc" href="${esc(m)}" target="_blank" rel="noopener">${ICON.pin}Χάρτης</a>` : ''}
-            ${w ? `<a class="o-btn" href="${esc(w)}" target="_blank" rel="noopener">${ICON.nav}Waze</a>` : ''}
-            ${l.phone ? `<a class="o-btn" href="${telHref(l.phone)}">${ICON.phone}${esc(l.contact || 'Κλήση')}</a>` : ''}
-          </div>
-          ${l.contact && !l.phone ? `<div class="o-kv"><span class="k">Υπεύθυνος χώρου</span><span class="v">${esc(l.contact)}</span></div>` : ''}
+          ${l.contact || l.phone ? `<div class="o-loc-who">${esc(l.contact || '')}${l.contact && l.phone ? ' · ' : ''}${l.phone ? `<a href="${telHref(l.phone)}">${esc(l.phone)}</a>` : ''}</div>` : ''}
+          ${d || m ? `<div class="o-btns o-btns-2">
+            ${d ? `<a class="o-btn acc" href="${esc(d)}" target="_blank" rel="noopener">Directions</a>` : ''}
+            ${m ? `<a class="o-btn" href="${esc(m)}" target="_blank" rel="noopener">Open in Maps</a>` : ''}
+          </div>` : ''}
+
           ${det.parking && l.parking ? `<div class="o-kv"><span class="k">Parking</span><span class="v">${esc(l.parking)}</span></div>` : ''}
-          ${det.hospital && l.hospital ? `<div class="o-kv"><span class="k">Πλησιέστερο νοσοκομείο</span><span class="v">${linkify(l.hospital)}</span></div>` : ''}`);
+          ${det.hospital && l.hospital ? `<div class="o-kv"><span class="k">Πλησιέστερο νοσοκομείο</span><span class="v">${linkify(l.hospital)}</span></div>` : ''}
+          ${extra.length ? `<div class="o-xloc"><div class="o-xloc-h">Extra Locations</div>${extra.map(x => {
+            const xd = dirUrl(x);
+            return `<div class="o-xloc-r"><span>${x.name ? `<b>${esc(x.name)}</b>` : ''}${x.name && x.address ? ' · ' : ''}${esc(x.address || '')}</span>${xd ? `<a href="${esc(xd)}" target="_blank" rel="noopener">Directions</a>` : ''}</div>`;
+          }).join('')}</div>` : ''}`);
       }
       case 'program': {
         const rows = o.program.filter(r => r.what || r.from);
@@ -938,7 +966,7 @@ function viewAuth(mode = 'in'){
   const FEATS = [
     ['Call, πρόγραμμα, τοποθεσία', 'Calls ανά ομάδα, το πρόγραμμα της μέρας, σκηνές, cast και crew, σε ένα όμορφο φύλλο.'],
     ['Καιρός και δύση, μόνα τους', 'Βάζεις τη διεύθυνση και συμπληρώνονται καιρός, ανατολή και δύση για το μέρος και τη μέρα.'],
-    ['Ένα link για το συνεργείο', 'Ανοίγει σε κάθε κινητό: χάρτης, Waze, κλήση με ένα πάτημα, η μέρα στο ημερολόγιο.'],
+    ['Ένα link για το συνεργείο', 'Ανοίγει σε κάθε κινητό: χάρτης, κλήση με ένα πάτημα, η μέρα στο ημερολόγιο.'],
     ['Αλλάζεις, ενημερώνεται', 'Ξαναπατάς Αποστολή και το ίδιο link δείχνει πια τις αλλαγές. Όλα σου τα ordino στον λογαριασμό σου.'],
   ]
   app.replaceChildren(
@@ -1190,10 +1218,23 @@ function viewEditor(o){
 
     section('Τοποθεσία', null, true,
       h('div', { class: 'row' }, txt(o.loc, 'name', 'Όνομα χώρου', { ph: 'π.χ. Boulevart Studios' }), txt(o.loc, 'address', 'Διεύθυνση', { ph: 'Οδός, αριθμός, πόλη' })),
+      h('label', { class: 'field' }, h('span', {}, 'Link Google Maps'),
+        h('input', { class: 'input', type: 'url', inputmode: 'url', value: o.loc.link || '', placeholder: 'https://maps.app.goo.gl/…',
+          oninput: e => {
+            o.loc.link = e.target.value.trim();
+            const c = coordsOf(o.loc.link);
+            if (c){ o.loc.lat = c.lat; o.loc.lon = c.lon; geoStatus.textContent = `📍 ${c.lat}, ${c.lon}`; }
+            else if (o.loc.link && !MAPS_LINK.test(o.loc.link)) geoStatus.textContent = 'Αυτό δεν είναι link του Google Maps.';
+            else if (o.loc.link) geoStatus.textContent = 'Ο χάρτης θα ανοίγει ακριβώς σε αυτό το σημείο. Για καιρό και δύση πάτα και «Εντοπισμός».';
+            changed();
+          } })),
       h('div', { class: 'img-pick' }, geoBtn, geoStatus),
       h('div', { class: 'row' }, txt(o.loc, 'contact', 'Υπεύθυνος χώρου'), txt(o.loc, 'phone', 'Τηλέφωνο', { type: 'tel', inputmode: 'tel' })),
       txt(o.loc, 'parking', 'Parking', { area: true, ph: 'Πού παρκάρουμε, οδηγίες πρόσβασης…' }),
-      txt(o.loc, 'hospital', 'Πλησιέστερο νοσοκομείο', { ph: 'Όνομα, διεύθυνση, τηλέφωνο' })),
+      txt(o.loc, 'hospital', 'Πλησιέστερο νοσοκομείο', { ph: 'Όνομα, διεύθυνση, τηλέφωνο' }),
+      h('div', { class: 'field' }, h('span', {}, 'Extra locations'),
+        h('div', { class: 'hint' }, 'Κι άλλοι χώροι της μέρας (π.χ. parking, base, catering). Το καθένα βγαίνει με δικό του Directions.'),
+        listEditor('extraLocs', [{ key: 'name', ph: 'Όνομα' }, { key: 'address', ph: 'Διεύθυνση' }, { key: 'link', ph: 'Link Google Maps', type: 'url' }], { name: '', address: '', link: '' }, 'Τοποθεσία'))),
 
     section('Πρόγραμμα', null, true,
       listEditor('program', [{ key: 'from', ph: 'Από', type: 'time', w: '100px' }, { key: 'to', ph: 'Έως', type: 'time', w: '100px' }, { key: 'what', ph: 'Τι γίνεται' }], { from: '', to: '', what: '' }, 'Γραμμή')),
