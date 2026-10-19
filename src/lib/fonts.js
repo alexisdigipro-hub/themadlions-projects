@@ -34,7 +34,32 @@ export const FONTS = [
   { id: 'literata', label: 'Literata', family: "'Literata'", google: 'Literata:ital,wght@0,400;0,500;0,600;0,700;1,400', serif: true },
   { id: 'notoserif', label: 'Noto Serif', family: "'Noto Serif'", google: 'Noto+Serif:ital,wght@0,400;0,500;0,600;0,700;1,400', serif: true },
   { id: 'tinos', label: 'Tinos', family: "'Tinos'", google: 'Tinos:ital,wght@0,400;0,700;1,400', serif: true },
-]
+  // every other family on Google Fonts that carries Greek (Alex, 19 Oct: "all the Greek fonts, everywhere I edit"),
+  // in one list for the whole Hub; a family is fetched only when it is used
+  ...[
+    ['Sofia Sans Condensed'], ['Sofia Sans Semi Condensed'], ['Sofia Sans Extra Condensed'], ['Roboto Flex'],
+    ['Noto Sans Display'], ['Fira Sans Condensed'], ['Fira Sans Extra Condensed'], ['Ubuntu Condensed', 'Ubuntu+Condensed'],
+    ['Alegreya Sans SC'], ['Geologica'], ['Andika'], ['Jura'], ['Play'], ['Ysabeau'], ['Ysabeau Office'], ['Ysabeau Infant'],
+    ['M PLUS Rounded 1c'],
+  ].map(([n, g]) => ({ label: n, google: g, cat: 'sans' })),
+  ...[
+    ['Alegreya SC'], ['Roboto Serif'], ['Noto Serif Display'], ['Source Serif 4'], ['Cardo'], ['Caudex'], ['Gentium Plus'],
+    ['Gentium Book Plus'], ['Brygada 1918'], ['Piazzolla'], ['Bona Nova'], ['STIX Two Text'], ['Charis SIL'],
+  ].map(([n, g]) => ({ label: n, google: g, cat: 'serif' })),
+  ...[
+    ['Roboto Mono'], ['Noto Sans Mono'], ['Fira Code'], ['Fira Mono'], ['Source Code Pro'], ['Ubuntu Mono'], ['Cousine'],
+    ['JetBrains Mono'], ['Anonymous Pro'], ['Victor Mono'],
+  ].map(([n, g]) => ({ label: n, google: g, cat: 'mono' })),
+  ...[['Syne'], ['Press Start 2P', 'Press+Start+2P']].map(([n, g]) => ({ label: n, google: g, cat: 'display' })),
+  ...[['Mynerve', 'Mynerve']].map(([n, g]) => ({ label: n, google: g, cat: 'hand' })),
+].map((f) => {
+  // a family added by name only: its id, its CSS name and the regular and bold weights from Google Fonts
+  const id = f.id || f.label.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const google = f.google ?? `${f.label.replace(/ /g, '+')}:wght@400;700`
+  const cat = f.cat || (f.serif ? 'serif' : 'sans')
+  return { ...f, id, family: f.family || `'${f.label}'`, google, cat, serif: f.serif || cat === 'serif' }
+})
+export const FONT_CATS = [['', 'All'], ['sans', 'Sans'], ['serif', 'Serif'], ['mono', 'Mono'], ['display', 'Display'], ['hand', 'Handwriting']]
 export const FONT_KEY = 'tml_font'
 const FALLBACK = "system-ui, -apple-system, 'Segoe UI', sans-serif"
 
@@ -48,8 +73,25 @@ export function ensureFontLoaded(id) {
   l.id = `font-${f.id}`
   l.rel = 'stylesheet'
   l.href = `https://fonts.googleapis.com/css2?family=${f.google}&display=swap`
+  // a family without the weights asked for is refused whole by Google: ask again for the family alone
+  l.onerror = () => { if (!l.dataset.plain) { l.dataset.plain = '1'; l.href = `https://fonts.googleapis.com/css2?family=${f.google.split(':')[0]}&display=swap` } }
   document.head.appendChild(l)
 }
+
+/* Just the letters of a family's own name and a Greek sample, for the font picker: a few hundred bytes each, so
+   every name can be shown in its own face without fetching whole fonts */
+export function ensureFontPreview(id, text) {
+  const f = FONTS.find((x) => x.id === id)
+  if (!f || !f.google || typeof document === 'undefined' || document.getElementById(`font-${f.id}`) || document.getElementById(`fontp-${f.id}`)) return
+  const l = document.createElement('link')
+  l.id = `fontp-${f.id}`
+  l.rel = 'stylesheet'
+  l.href = `https://fonts.googleapis.com/css2?family=${f.google.split(':')[0]}&text=${encodeURIComponent(text)}&display=swap`
+  document.head.appendChild(l)
+}
+export const fontById = (id) => FONTS.find((x) => x.id === id)
+// a family as the CSS font-family it is written with, with the right kind of fallback
+export const fontStackOf = (f) => (f ? `${f.family}, ${f.cat === 'mono' ? 'ui-monospace, monospace' : f.serif ? 'Georgia, serif' : 'system-ui, sans-serif'}` : '')
 
 /* Sets the face for the whole app and remembers it. Called at start-up and from Settings. */
 export function applyFont(id) {

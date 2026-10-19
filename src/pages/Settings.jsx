@@ -13,7 +13,8 @@ import Team from './Team.jsx'
 import Profile from './Profile.jsx'
 import { useNavigate } from 'react-router-dom'
 import ChatSettings from '../components/ChatSettings.jsx'
-import { FONTS, applyFont, currentFont, ensureFontLoaded } from '../lib/fonts.js'
+import { applyFont, currentFont } from '../lib/fonts.js'
+import FontPicker from '../components/FontPicker.jsx'
 import Usage from '../components/Usage.jsx'
 import { dirIn, useSlide } from '../lib/glide.js'
 import { remote, supabase } from '../lib/supabase.js'
@@ -353,15 +354,8 @@ export default function Settings() {
           </Field>
           <div className="field">
             <span className="field-label">Typeface</span>
-            <div className="font-swatches">
-              {FONTS.map((f) => (
-                <button key={f.id} type="button" className={`font-swatch ${font === f.id ? 'on' : ''}`} style={{ fontFamily: `${f.family}, ${f.serif ? 'Georgia, serif' : 'system-ui, sans-serif'}` }} onClick={() => pickFont(f.id)} onMouseEnter={() => ensureFontLoaded(f.id)} onFocus={() => ensureFontLoaded(f.id)} title={f.label}>
-                  <span className="font-swatch-name">{f.label}</span>
-                  <span className="font-swatch-sample">Καλημέρα, call at 06:30</span>
-                </button>
-              ))}
-            </div>
-            <span className="field-hint">All of these cover Greek, so a call sheet in both languages reads as one face. A font is fetched from Google Fonts when you hover or pick it; your choice is kept on this device.</span>
+            {/* every Greek font on Google Fonts, in the one picker the whole Hub uses (Alex, 19 Oct) */}
+            <FontPicker value={font} onChange={pickFont} title="Typeface" />
           </div>
           <div className="field">
             <span className="field-label">Icons</span>

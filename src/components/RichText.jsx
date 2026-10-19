@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { cleanRich, fontStack } from '../lib/richText.js'
 import { FONTS, ensureFontLoaded } from '../lib/fonts.js'
+import { FontPickerDialog } from './FontPicker.jsx'
 
 /* Text with a little formatting (Alex, 11 Oct). One toolbar serves every text box of a form ("one bar
    of text tools for all the forms"): RichToolbar works on whichever RichText box was last clicked
@@ -40,6 +41,9 @@ export default function RichText({ html, onChange, placeholder = '', single = fa
 const icon = (d) => <svg viewBox="0 0 24 24" aria-hidden="true">{d}</svg>
 
 export function RichToolbar() {
+  // the font picker opens over the form; the selected words are remembered and put back when a font is picked
+  const [fontOpen, setFontOpen] = useState(false)
+  const saved = useRef(null)
   // the box the selection is in, else the one used last
   const target = () => {
     const sel = window.getSelection()
@@ -130,10 +134,22 @@ export function RichToolbar() {
       <span className="rt-bar-h">Text</span>
       {btn('Smaller text', () => size(0.85), <><span className="rt-a small">A</span>−</>)}
       {btn('Bigger text', () => size(1.15), <><span className="rt-a">A</span>+</>)}
-      <select className="rt-font" value="" onMouseDown={(e) => { if (!target()) e.preventDefault() }} onChange={(e) => face(e.target.value)} aria-label="Font" title="Font">
-        <option value="">Font</option>
-        {FONTS.map((f) => <option key={f.id} value={f.id} style={{ fontFamily: fontStack(f) }}>{f.label}</option>)}
-      </select>
+      <button type="button" className="rt-font" onMouseDown={hold} title="Font" aria-label="Font"
+        onClick={() => {
+          const sel = window.getSelection()
+          const box = target()
+          saved.current = box && sel?.rangeCount && box.contains(sel.anchorNode) ? { box, range: sel.getRangeAt(0).cloneRange() } : box ? { box, range: null } : null
+          setFontOpen(true)
+        }}>Font ▾</button>
+      <FontPickerDialog open={fontOpen} onClose={() => setFontOpen(false)}
+        onPick={(id) => {
+          const s = saved.current
+          if (s?.box) {
+            s.box.focus()
+            if (s.range) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(s.range) }
+          }
+          face(id)
+        }} />
       <i className="rt-sep" />
       {btn('Bold', () => run('bold'), <b>B</b>)}
       {btn('Italic', () => run('italic'), <i>I</i>)}
