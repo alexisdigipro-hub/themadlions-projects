@@ -336,6 +336,38 @@ body.viewer.v-light{background:#f6f4f0}
 @media (min-width:600px){ .viewer-root .o-hero{border-radius:0 0 2em 2em} }
 .v-error{min-height:100vh;display:grid;place-items:center;text-align:center;padding:24px;color:var(--muted)}
 @media print{ .o-foot .o-btns{display:none} }
+
+/* ---------- Admin panel ---------- */
+.adm-title{font-family:Jost,var(--font);font-size:20px;font-weight:800;letter-spacing:.01em}
+.adm-tiles{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+@media (max-width:980px){.adm-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.adm-tile{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;box-shadow:var(--lit)}
+.adm-tile b{font-family:Jost,var(--font);font-size:34px;font-weight:800;line-height:1}
+.adm-tile span,.adm-stat span{font-size:12px;color:var(--muted)}
+.adm-h{margin:30px 0 12px;font-family:Jost,var(--font);font-size:13px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.adm-bars{display:flex;align-items:flex-end;gap:6px;height:150px;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:16px 16px 10px}
+.adm-bar{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px}
+.adm-bar i{width:100%;max-width:34px;border-radius:9px 9px 4px 4px;background:var(--brand);position:relative;display:block}
+.adm-bar em{position:absolute;top:-17px;left:0;right:0;text-align:center;font-style:normal;font-size:11px;font-weight:700}
+.adm-bar span{font-size:11px;color:var(--muted)}
+.adm-list{display:flex;flex-direction:column;gap:10px}
+.adm-row{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;align-items:center}
+.adm-who{display:flex;align-items:center;gap:12px;min-width:0}
+.adm-who>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.adm-who b{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.adm-who span:not(.o-av):not(.chip){font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.adm-chip{background:var(--panel2);color:var(--muted);font-size:10px}
+.adm-stats{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.adm-stat{min-width:70px;padding:8px 12px;border-radius:16px;background:var(--panel2);display:flex;flex-direction:column;align-items:center;gap:1px}
+.adm-stat b{font-size:18px;font-weight:800}
+.adm-when{grid-column:1/-1;font-size:12px;color:var(--muted)}
+@media (max-width:640px){
+  .adm-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .adm-row{grid-template-columns:1fr}
+  .adm-stats{justify-content:flex-start}
+  .adm-stat{min-width:0;flex:1}
+  .adm-tile b{font-size:28px}
+}
 </style>
 </head>
 <body>
@@ -370,7 +402,7 @@ const sb = !window.supabase ? null : EMBED
   : window.supabase.createClient(SB_URL, SB_KEY, { auth: { storageKey: 'roardino-auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
 const BASE = location.pathname + (EMBED ? '?embed=1' : '');
 async function rpc(fn, args){ const { data, error } = await sb.rpc(fn, args); if (error) throw error; return data; }
-let session = null, profile = null, roarMe = null; // roarMe: the user's RoarMe profile, when they have one
+let session = null, profile = null, roarMe = null, isAdmin = false; // roarMe: the user's RoarMe profile, when they have one
 let flushEditor = null; // set while the editor is open, so leaving it saves first
 const ACCENTS = ['#d40000','#C8503F','#E0A33A','#3F8F6B','#3D6FD8','#8A5CD6','#D9467A','#FFFFFF'];
 const BLOCK_DEFS = {
@@ -408,6 +440,7 @@ function h(tag, attrs = {}, ...kids){
   return el;
 }
 const ICON = {
+  stats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
   back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
   share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>',
   up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 15l6-6 6 6"/></svg>',
@@ -471,6 +504,7 @@ async function importLocalDrafts(){
 }
 async function loadProfile(){
   const u = session.user;
+  try { isAdmin = !!(await rpc('roar_is_admin')); } catch { isAdmin = false; }
   try { const r = await sb.from('roar_profiles').select('username,display_name,avatar_url').eq('id', u.id).maybeSingle(); roarMe = r.data || null; } catch { roarMe = null; }
   const { data } = await sb.from('roardino_profiles').select('name,company,role,phone').eq('id', u.id).maybeSingle();
   if (data){ profile = data; if (!profile.name && roarMe && roarMe.display_name) profile.name = roarMe.display_name; return; }
@@ -796,6 +830,7 @@ async function route(){
     app.replaceChildren(h('div', { class: 'center-note' }, 'Φόρτωση…'));
     try { const o = await getOrdino(hash.slice(6)); if (o) return viewEditor(o); } catch {}
   }
+  if (hash === '#admin' && isAdmin) return viewAdmin();
   return viewHome();
 }
 window.addEventListener('hashchange', route);
@@ -870,11 +905,19 @@ function demoOrdino(){
   return o;
 }
 
+// An anonymous id per browser, so the admin panel can count how many different people opened a link.
+function visitorId(){
+  try {
+    let v = localStorage.getItem('roardino-visitor');
+    if (!v){ v = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('roardino-visitor', v); }
+    return v;
+  } catch { return ''; }
+}
 async function viewToken(token){
   document.body.className = 'viewer';
   app.innerHTML = '<div class="v-error">Φόρτωση…</div>';
   let res;
-  try { res = await rpc('roardino_get', { p_token: token }); }
+  try { res = await rpc('roardino_get', { p_token: token, p_visitor: visitorId() }); }
   catch { app.innerHTML = '<div class="v-error"><div><h2>Δεν υπάρχει σύνδεση</h2><p>Έλεγξε το internet και άνοιξε ξανά το link.</p></div></div>'; return; }
   if (!res || !res.data){ app.innerHTML = '<div class="v-error"><div><h2>Αυτό το ordino δεν υπάρχει πια</h2><p>Ζήτα από την παραγωγή το τρέχον link.</p></div></div>'; return; }
   const o = normalize(res.data);
@@ -1071,6 +1114,7 @@ async function viewHome(){
     h('header', { class: 'topbar' },
       brandMark(),
       h('div', { class: 'spacer' }),
+      isAdmin ? h('a', { class: 'btn small', href: '#admin' }, h('span', { html: ICON.stats }), h('span', { class: 'hide-sm' }, 'Στατιστικά')) : null,
       meButton(),
       h('button', { class: 'btn primary', onclick: create }, '+ Νέο ordino')),
     h('main', { class: 'home' },
@@ -1083,6 +1127,57 @@ async function viewHome(){
   try { list = await listOrdinos(); }
   catch { grid.replaceChildren(h('div', { class: 'card-meta' }, 'Δεν φόρτωσαν τα ordino σου. Έλεγξε τη σύνδεση και ανανέωσε.')); return; }
   grid.replaceChildren(h('button', { class: 'card new-card', onclick: create }, h('span', { class: 'plus' }, '+'), 'Νέο ordino'), ...list.map(card));
+}
+
+/* ---------- admin panel (RoarMe admins only; the database refuses everyone else) ---------- */
+async function viewAdmin(){
+  document.title = 'Στατιστικά · Roardino';
+  const body = h('main', { class: 'home adm' }, h('div', { class: 'center-note' }, 'Φόρτωση…'));
+  const reload = h('button', { class: 'btn small', onclick: () => viewAdmin() }, 'Ανανέωση');
+  app.replaceChildren(
+    h('header', { class: 'topbar' }, h('a', { class: 'btn small', href: '#home' }, '‹ Πίσω'), h('b', { class: 'adm-title' }, 'Στατιστικά'), h('div', { class: 'spacer' }), reload),
+    body);
+  let s;
+  try { s = await rpc('roardino_admin_stats'); }
+  catch { body.replaceChildren(h('div', { class: 'center-note' }, 'Δεν φόρτωσαν τα στατιστικά. Έλεγξε τη σύνδεση.')); return; }
+  const n = v => Number(v || 0).toLocaleString('el-GR');
+  const when = t => {
+    if (!t) return '–';
+    const d = new Date(t), m = Math.round((Date.now() - d) / 60000);
+    if (m < 1) return 'μόλις τώρα';
+    if (m < 60) return m + ' λεπτά πριν';
+    if (m < 1440) return Math.round(m / 60) + ' ώρες πριν';
+    return d.toLocaleDateString('el-GR', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+  };
+  const T = s.totals || {};
+  const tile = (v, l) => h('div', { class: 'adm-tile' }, h('b', {}, n(v)), h('span', {}, l));
+  const max = Math.max(1, ...(s.days || []).map(d => d.opens));
+  const bars = h('div', { class: 'adm-bars' }, (s.days || []).map(d => {
+    const day = new Date(d.day + 'T12:00:00');
+    return h('div', { class: 'adm-bar', title: `${day.toLocaleDateString('el-GR', { weekday: 'short', day: 'numeric', month: 'short' })}: ${d.opens}` },
+      h('i', { style: `height:${Math.max(3, d.opens / max * 100)}%` + (d.opens ? '' : ';opacity:.25') }, d.opens ? h('em', {}, d.opens) : null),
+      h('span', {}, day.getDate()));
+  }));
+  const stat = (v, l) => h('div', { class: 'adm-stat' }, h('b', {}, n(v)), h('span', {}, l));
+  const userTile = u => h('div', { class: 'adm-row' },
+    h('div', { class: 'adm-who' }, h('span', { class: 'o-av' }, initials(u.name)),
+      h('div', {}, h('b', {}, u.name || u.email), h('span', {}, [u.username && '@' + u.username, u.company, u.email].filter(Boolean).join(' · ')))),
+    h('div', { class: 'adm-stats' }, stat(u.ordinos, 'ordino'), stat(u.published, 'σε link'), stat(u.sent, 'στάλθηκαν'), stat(u.opens, 'ανοίγματα'), stat(u.visitors, 'άτομα')),
+    h('div', { class: 'adm-when' }, 'Τελευταία κίνηση: ' + when(u.last)));
+  const ordTile = o => h('div', { class: 'adm-row' },
+    h('div', { class: 'adm-who' }, h('div', {},
+      h('b', {}, o.title, o.label ? h('span', { class: 'chip adm-chip' }, o.label) : null),
+      h('span', {}, [o.owner, o.day && fmtDate(o.day), o.published ? 'σε link από ' + when(o.published_at) : 'δεν έχει σταλεί link'].filter(Boolean).join(' · ')))),
+    h('div', { class: 'adm-stats' }, stat(o.opens, 'ανοίγματα'), stat(o.visitors, 'άτομα'), stat(o.sent, 'στο chat')),
+    h('div', { class: 'adm-when' }, 'Άνοιξε τελευταία: ' + when(o.last_open)));
+  body.replaceChildren(
+    h('div', { class: 'adm-tiles' }, tile(T.users, 'χρήστες'), tile(T.ordinos, 'ordino'), tile(T.published, 'σε link'), tile(T.sent, 'στάλθηκαν στο chat'), tile(T.opens, 'ανοίγματα links'), tile(T.visitors, 'διαφορετικά άτομα')),
+    h('h3', { class: 'adm-h' }, 'Ανοίγματα, τελευταίες 14 μέρες'), bars,
+    h('h3', { class: 'adm-h' }, 'Ανά χρήστη'),
+    h('div', { class: 'adm-list' }, (s.users || []).length ? s.users.map(userTile) : h('div', { class: 'card-meta' }, 'Κανείς ακόμα.')),
+    h('h3', { class: 'adm-h' }, 'Ανά ordino'),
+    h('div', { class: 'adm-list' }, (s.ordinos || []).length ? s.ordinos.map(ordTile) : h('div', { class: 'card-meta' }, 'Κανένα ordino ακόμα.')),
+    h('p', { class: 'empty-note' }, 'Τα «άτομα» μετράνε διαφορετικές συσκευές από 19 Οκτ και μετά. Τα ανοίγματα πριν από αυτό μετράνε μόνο στο σύνολο.'));
 }
 
 /* ---------- editor ---------- */
@@ -1118,7 +1213,7 @@ function viewEditor(o){
   /* field factories bound to an object path */
   const txt = (obj, key, label, opts = {}) => h('label', { class: 'field' }, h('span', {}, label),
     h(opts.area ? 'textarea' : 'input', { class: opts.area ? 'textarea' : 'input', type: opts.type || 'text', value: obj[key] ?? '', placeholder: opts.ph || '', inputmode: opts.inputmode,
-      oninput: e => { obj[key] = opts.type === 'number' ? Math.max(1, +e.target.value || 1) : e.target.value; changed(); } }));
+      oninput: e => { obj[key] = opts.type === 'number' ? Math.max(1, +e.target.value || 1) : e.target.value; changed(); if (opts.after) opts.after(); } }));
   const seg = (obj, key, options) => h('div', { class: 'seg' }, options.map(([v, l]) =>
     h('button', { type: 'button', class: obj[key] === v ? 'on' : '', onclick: e => { obj[key] = v; [...e.target.parentNode.children].forEach(c => c.classList.toggle('on', c === e.target)); changed(); } }, l)));
   const tog = (obj, key, label) => h('label', { class: 'toggle' }, label, h('input', { type: 'checkbox', class: 'switch', checked: !!obj[key], onchange: e => { obj[key] = e.target.checked; changed(); } }));
@@ -1174,20 +1269,24 @@ function viewEditor(o){
   const markSw = () => sws.forEach((s, i) => s.classList.toggle('on', ACCENTS[i].toLowerCase() === o.look.accent.toLowerCase()));
   markSw();
 
-  /* geocode */
-  const geoStatus = h('div', { class: 'hint' }, o.loc.lat ? `📍 ${o.loc.lat}, ${o.loc.lon}` : 'Πάτα «Εντοπισμός» για χάρτη με ακρίβεια, καιρό και ώρα δύσης.');
-  const geoBtn = h('button', { class: 'btn small', type: 'button', onclick: async () => {
+  /* geocode: finds the spot by itself from the address (weather, sunset), unless the Maps link already has coordinates */
+  const geoStatus = h('div', { class: 'hint' }, o.loc.lat ? `📍 ${o.loc.lat}, ${o.loc.lon}` : 'Γράψε διεύθυνση ή βάλε link Google Maps για χάρτη, καιρό και ώρα δύσης.');
+  let geoT = 0;
+  const autoGeo = () => {
+    clearTimeout(geoT);
+    if (coordsOf(o.loc.link || '')) return;
     const q = [o.loc.address, o.loc.name].filter(Boolean).join(', ');
-    if (!q) return toast('Γράψε πρώτα διεύθυνση');
-    geoBtn.disabled = true; geoStatus.textContent = 'Αναζήτηση…';
-    try {
-      let r = await geocode(q);
-      if (!r && o.loc.address) r = await geocode(o.loc.address);
-      if (r){ o.loc.lat = r.lat; o.loc.lon = r.lon; geoStatus.textContent = '📍 ' + r.label; changed(); }
-      else geoStatus.textContent = 'Δεν βρέθηκε — δοκίμασε πιο απλή διεύθυνση (οδός, αριθμός, πόλη).';
-    } catch { geoStatus.textContent = 'Δεν υπάρχει σύνδεση για αναζήτηση.'; }
-    geoBtn.disabled = false;
-  } }, '📍 Εντοπισμός');
+    if (!q){ o.loc.lat = o.loc.lon = null; return; }
+    geoT = setTimeout(async () => {
+      geoStatus.textContent = 'Αναζήτηση τοποθεσίας…';
+      try {
+        let r = await geocode(q);
+        if (!r && o.loc.address) r = await geocode(o.loc.address);
+        if (r){ o.loc.lat = r.lat; o.loc.lon = r.lon; geoStatus.textContent = '📍 ' + r.label; changed(); }
+        else geoStatus.textContent = o.loc.link ? 'Ο χάρτης θα ανοίγει από το link σου.' : 'Δεν βρέθηκε. Γράψε οδό, αριθμό και πόλη, ή βάλε link Google Maps.';
+      } catch { geoStatus.textContent = 'Δεν υπάρχει σύνδεση για αναζήτηση.'; }
+    }, 900);
+  };
 
   const form = h('div', { class: 'form' },
     section('Βασικά', 'τίτλος, ημέρα, call', true,
@@ -1217,7 +1316,7 @@ function viewEditor(o){
       listEditor('groupCalls', [{ key: 'time', ph: 'Ώρα', type: 'time', w: '110px' }, { key: 'who', ph: 'Ποιος / ομάδα' }], { time: '', who: '' }, 'Ομάδα')),
 
     section('Τοποθεσία', null, true,
-      h('div', { class: 'row' }, txt(o.loc, 'name', 'Όνομα χώρου', { ph: 'π.χ. Boulevart Studios' }), txt(o.loc, 'address', 'Διεύθυνση', { ph: 'Οδός, αριθμός, πόλη' })),
+      h('div', { class: 'row' }, txt(o.loc, 'name', 'Όνομα χώρου', { ph: 'π.χ. Boulevart Studios', after: autoGeo }), txt(o.loc, 'address', 'Διεύθυνση', { ph: 'Οδός, αριθμός, πόλη', after: autoGeo })),
       h('label', { class: 'field' }, h('span', {}, 'Link Google Maps'),
         h('input', { class: 'input', type: 'url', inputmode: 'url', value: o.loc.link || '', placeholder: 'https://maps.app.goo.gl/…',
           oninput: e => {
@@ -1225,10 +1324,11 @@ function viewEditor(o){
             const c = coordsOf(o.loc.link);
             if (c){ o.loc.lat = c.lat; o.loc.lon = c.lon; geoStatus.textContent = `📍 ${c.lat}, ${c.lon}`; }
             else if (o.loc.link && !MAPS_LINK.test(o.loc.link)) geoStatus.textContent = 'Αυτό δεν είναι link του Google Maps.';
-            else if (o.loc.link) geoStatus.textContent = 'Ο χάρτης θα ανοίγει ακριβώς σε αυτό το σημείο. Για καιρό και δύση πάτα και «Εντοπισμός».';
+            else if (o.loc.link) geoStatus.textContent = 'Ο χάρτης θα ανοίγει ακριβώς σε αυτό το σημείο.';
             changed();
+            if (!c) autoGeo();
           } })),
-      h('div', { class: 'img-pick' }, geoBtn, geoStatus),
+      geoStatus,
       h('div', { class: 'row' }, txt(o.loc, 'contact', 'Υπεύθυνος χώρου'), txt(o.loc, 'phone', 'Τηλέφωνο', { type: 'tel', inputmode: 'tel' })),
       txt(o.loc, 'parking', 'Parking', { area: true, ph: 'Πού παρκάρουμε, οδηγίες πρόσβασης…' }),
       txt(o.loc, 'hospital', 'Πλησιέστερο νοσοκομείο', { ph: 'Όνομα, διεύθυνση, τηλέφωνο' }),
