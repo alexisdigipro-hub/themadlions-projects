@@ -15,6 +15,7 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: VITE_LOCAL_MODE=1 npx vite build --outDir preview-dist
+      - run: npx vite build --outDir preview-dist/remote
       - run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
