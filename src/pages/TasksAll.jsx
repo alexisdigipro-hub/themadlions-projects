@@ -550,10 +550,48 @@ export default function TasksAll({ slot = null }) {
     if (id !== drag.over || after !== drag.after) setDrag({ ...drag, over: id, after })
   }
   const moveDrag = (e) => dragTo(e.clientX, e.clientY, e.currentTarget)
+  /* On a computer the whole task is the handle (Alex, 19 Oct: "move the tasks up and down by dragging"):
+     press anywhere on it that is not a button or a picker and move a few pixels, and it is carried; a
+     plain click still opens it. With Name / Assignee / Priority on, dragging starts from the order on
+     screen and makes it your own order (the sort goes off). */
+  const press = useRef(null) // { x, y, t, ids }: a press that may become a drag
+  const dragged = useRef(false) // the click that ends a drag does not open the task
+  const [carryY, setCarryY] = useState(null) // how far the carried task has followed the mouse
+  const carryFrom = useRef(0)
+  const rowDown = (e, t, ids) => {
+    if (e.button > 0 || e.target.closest('button, a, input, select, textarea, label, .rem-subs, .rem-grip')) return
+    press.current = { x: e.clientX, y: e.clientY, t, ids }
+  }
+  const rowMove = (e) => {
+    if (e.target.closest?.('.rem-grip')) return // the ⋮⋮ runs its own drag
+    const p = press.current
+    if (p && !drag) {
+      if (Math.abs(e.clientX - p.x) + Math.abs(e.clientY - p.y) < 6) return
+      press.current = null
+      try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
+      try { window.getSelection()?.removeAllRanges() } catch {}
+      carryFrom.current = p.y
+      setCarryY(e.clientY - p.y)
+      setDrag({ id: p.t.id, ids: p.ids, over: null, after: false })
+      return
+    }
+    if (drag) { setCarryY(e.clientY - carryFrom.current); moveDrag(e) }
+  }
+  const rowUp = (e) => {
+    press.current = null
+    if (e.target.closest?.('.rem-grip')) return
+    setCarryY(null)
+    if (!drag) return
+    dragged.current = true
+    setTimeout(() => { dragged.current = false }, 0)
+    endDrag()
+  }
   const endDrag = () => {
     const d = drag
     setDrag(null)
     if (!d || !d.over || d.over === d.id) return
+    // a sorted list becomes your own order, as it was on screen
+    if (sorted) { setSortBy(''); try { localStorage.setItem('tml_tasks_sort', '') } catch { /* private window */ } }
     const ids = d.ids.filter((x) => x !== d.id)
     const at = ids.indexOf(d.over) + (d.after ? 1 : 0)
     ids.splice(at, 0, d.id)
@@ -563,7 +601,7 @@ export default function TasksAll({ slot = null }) {
     })
   }
   const row = (t, group) => {
-    const canDrag = editable && Array.isArray(group) && group.length > 1 && t.status !== 'done' && !t.deletedAt && !searching && !sorted
+    const canDrag = editable && Array.isArray(group) && group.length > 1 && t.status !== 'done' && !t.deletedAt && !searching
     const late = t.due && t.due < t0 && t.status !== 'done'
     // the list it is on, or its project's name (a delivered project has no list row but keeps its tag)
     // its list (when it is not the one open) and its project, each as a tag
@@ -648,7 +686,10 @@ export default function TasksAll({ slot = null }) {
       )
     }
     return (
-      <li key={t.id} data-task-id={t.id} className={liClass}>{inside}</li>
+      <li key={t.id} data-task-id={t.id} className={`${liClass}${canDrag ? ' rem-drag' : ''}`}
+        {...(canDrag ? { onPointerDown: (e) => rowDown(e, t, group.map((x) => x.id)), onPointerMove: rowMove, onPointerUp: rowUp, onPointerCancel: () => { press.current = null; setCarryY(null); setDrag(null) } } : {})}
+        style={drag?.id === t.id && carryY !== null ? { transform: `translateY(${carryY}px) scale(1.015)` } : undefined}
+        onClickCapture={(e) => { if (dragged.current) { e.preventDefault(); e.stopPropagation() } }}>{inside}</li>
     )
   }
 
