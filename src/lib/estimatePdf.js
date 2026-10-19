@@ -16,6 +16,7 @@
  */
 
 import { amount, lineAmount, showGroupSum, showLineAmount, upper } from './estimate.js'
+import { fontFamily, lookOf, mix } from './estimateLook.js'
 
 const PAGE_W = 595.28 // A4 in points
 const PAGE_H = 841.89
@@ -23,14 +24,14 @@ const MARGIN = 50
 const CONTENT_W = PAGE_W - MARGIN * 2
 const SCALE = 2 // canvas px per pt: about 144dpi, crisp enough to read comfortably when printed
 
-const BG = '#17181c'
-const INK = '#ece9e2'
-const MUTED = '#9b9a94'
-const LINE = '#33363e'
-const ACCENT = '#C8503F'
+const BG0 = '#17181c'
+const INK0 = '#ece9e2'
+const MUTED0 = '#9b9a94'
+const LINE0 = '#33363e'
+const ACCENT0 = '#C8503F'
 // A second, fixed accent for lines marked as part of the advance payment — the same var used on
 // the web page (--amber), which unlike --accent never changes with the viewer's theme.
-const AMBER = '#d9a441'
+const AMBER0 = '#d9a441'
 
 /* One line, shortened with an ellipsis if it would not fit — for the running header, where the
    title sits next to "Page N" and never gets to wrap. */
@@ -67,7 +68,16 @@ function wrapText(ctx, text, maxWidth) {
    [{ canvas, width, height }], canvas pixel size already includes SCALE. */
 export function renderPages(d, t, groups, cur) {
   const pages = []
-  const font = 'system-ui, -apple-system, "Segoe UI", Arial, sans-serif'
+  // the colours and font from the estimate's Look tab (Alex, 19 Oct), so the PDF matches the page;
+  // an estimate saved before that keeps the PDF's own colours
+  const L = d.look && Object.keys(d.look).length ? lookOf(d) : null
+  const BG = L ? L.bg : BG0
+  const INK = L ? L.text : INK0
+  const MUTED = L ? mix(L.text, L.bg, 0.58) : MUTED0
+  const LINE = L ? mix(L.text, L.bg, 0.18) : LINE0
+  const ACCENT = L ? L.accent : ACCENT0
+  const AMBER = L ? L.advance : AMBER0
+  const font = L ? fontFamily(L) : 'system-ui, -apple-system, "Segoe UI", Arial, sans-serif'
   let canvas, ctx, y
   const hr = (yy = y) => {
     ctx.strokeStyle = LINE
@@ -357,6 +367,7 @@ export function buildPdf(pages, size = { width: PAGE_W, height: PAGE_H }) {
 /* Draws the estimate, turns each page into a PDF page, and saves it — no print dialog, no
    server round trip, no library to fetch. */
 export async function downloadEstimatePdf(d, t, groups, cur, filename) {
+  try { await document.fonts.ready } catch { /* draw with whatever is loaded */ }
   const canvasPages = renderPages(d, t, groups, cur)
   const pages = []
   for (const p of canvasPages) pages.push({ bytes: await canvasToJpegBytes(p.canvas), width: p.width, height: p.height })
