@@ -659,17 +659,11 @@ function coordsOf(u){
   const m = String(u || '').match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/) || String(u || '').match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || String(u || '').match(/[?&](?:q|query|ll|center)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/);
   return m ? { lat: (+m[1]).toFixed(5), lon: (+m[2]).toFixed(5) } : null;
 }
-function mapsUrl(loc){
-  if (mapsLink(loc)) return mapsLink(loc);
-  if (loc.lat && loc.lon) return `https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lon}`;
-  const q = [loc.name, loc.address].filter(Boolean).join(', ');
-  return q ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q) : '';
-}
-// directions from wherever the phone is to the place: its coordinates, else its address, else the pasted link itself
+// Directions and Open in Maps come only from the pasted Google Maps link (Alex, 19 Oct): never from the address or the looked-up spot
+function mapsUrl(loc){ return mapsLink(loc); }
 function dirUrl(loc){
-  if (loc.lat && loc.lon) return `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lon}`;
-  const q = [loc.name, loc.address].filter(Boolean).join(', ');
-  return q ? 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(q) : mapsLink(loc);
+  const u = mapsLink(loc), c = coordsOf(u);
+  return c ? `https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lon}` : u;
 }
 function isBreak(what){ return /break|διάλειμμα|φαγητ|lunch|γεύμα/i.test(what || ''); }
 
@@ -1270,7 +1264,10 @@ function viewEditor(o){
   markSw();
 
   /* geocode: finds the spot by itself from the address (weather, sunset), unless the Maps link already has coordinates */
-  const geoStatus = h('div', { class: 'hint' }, o.loc.lat ? `📍 ${o.loc.lat}, ${o.loc.lon}` : 'Γράψε διεύθυνση ή βάλε link Google Maps για χάρτη, καιρό και ώρα δύσης.');
+  const geoStatus = h('div', { class: 'hint' }, o.loc.lat ? `Καιρός και δύση για 📍 ${o.loc.lat}, ${o.loc.lon}` : 'Γράψε διεύθυνση για καιρό και ώρα δύσης.');
+  const mapNote = () => !o.loc.link ? 'Directions και Open in Maps εμφανίζονται μόνο με link Google Maps.'
+    : !MAPS_LINK.test(o.loc.link) ? 'Αυτό δεν είναι link του Google Maps.' : 'Directions και Open in Maps ανοίγουν ακριβώς στο σημείο του link.';
+  const mapHint = h('div', { class: 'hint' }, mapNote());
   let geoT = 0;
   const autoGeo = () => {
     clearTimeout(geoT);
@@ -1282,8 +1279,8 @@ function viewEditor(o){
       try {
         let r = await geocode(q);
         if (!r && o.loc.address) r = await geocode(o.loc.address);
-        if (r){ o.loc.lat = r.lat; o.loc.lon = r.lon; geoStatus.textContent = '📍 ' + r.label; changed(); }
-        else geoStatus.textContent = o.loc.link ? 'Ο χάρτης θα ανοίγει από το link σου.' : 'Δεν βρέθηκε. Γράψε οδό, αριθμό και πόλη, ή βάλε link Google Maps.';
+        if (r){ o.loc.lat = r.lat; o.loc.lon = r.lon; geoStatus.textContent = 'Καιρός και δύση για 📍 ' + r.label; changed(); }
+        else geoStatus.textContent = 'Δεν βρέθηκε για τον καιρό. Γράψε οδό, αριθμό και πόλη, ή βάλε το μεγάλο link Google Maps.';
       } catch { geoStatus.textContent = 'Δεν υπάρχει σύνδεση για αναζήτηση.'; }
     }, 900);
   };
@@ -1322,13 +1319,12 @@ function viewEditor(o){
           oninput: e => {
             o.loc.link = e.target.value.trim();
             const c = coordsOf(o.loc.link);
-            if (c){ o.loc.lat = c.lat; o.loc.lon = c.lon; geoStatus.textContent = `📍 ${c.lat}, ${c.lon}`; }
-            else if (o.loc.link && !MAPS_LINK.test(o.loc.link)) geoStatus.textContent = 'Αυτό δεν είναι link του Google Maps.';
-            else if (o.loc.link) geoStatus.textContent = 'Ο χάρτης θα ανοίγει ακριβώς σε αυτό το σημείο.';
+            if (c){ o.loc.lat = c.lat; o.loc.lon = c.lon; geoStatus.textContent = `Καιρός και δύση για 📍 ${c.lat}, ${c.lon}`; }
+            mapHint.textContent = mapNote();
             changed();
             if (!c) autoGeo();
           } })),
-      geoStatus,
+      mapHint, geoStatus,
       h('div', { class: 'row' }, txt(o.loc, 'contact', 'Υπεύθυνος χώρου'), txt(o.loc, 'phone', 'Τηλέφωνο', { type: 'tel', inputmode: 'tel' })),
       txt(o.loc, 'parking', 'Parking', { area: true, ph: 'Πού παρκάρουμε, οδηγίες πρόσβασης…' }),
       txt(o.loc, 'hospital', 'Πλησιέστερο νοσοκομείο', { ph: 'Όνομα, διεύθυνση, τηλέφωνο' }),
