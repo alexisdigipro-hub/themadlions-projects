@@ -3633,6 +3633,12 @@ html.pub-est-page .pub.dlv.dlv-estimate.est-glow { background: radial-gradient(1
 .pub.dlv.dlv-estimate .est-excluded li { padding: 7px 14px; border-radius: var(--est-r, 14px); border: 1px solid color-mix(in srgb, var(--text) 16%, transparent); font-size: calc(14px * var(--est-fs, 1)); color: color-mix(in srgb, var(--text) 82%, transparent); }
 .pub.dlv.dlv-estimate.est-lines-list .est-excluded ul { display: block; }
 .pub.dlv.dlv-estimate.est-lines-list .est-excluded li { padding: 4px 0; border: 0; border-radius: 0; font-size: calc(15.5px * var(--est-fs, 1)); }
+/* in the List style the totals are plain bold lines under the list, no card, like "Συνολικό Κόστος 2800" */
+.pub.dlv.dlv-estimate.est-lines-list .est-totals-row { margin-top: 14px; padding: 0; border: 0; border-radius: 0; background: none; }
+.pub.dlv.dlv-estimate.est-lines-list .est-totals { margin: 0; min-width: 0; }
+.pub.dlv.dlv-estimate.est-lines-list .est-totals td { padding: 3px 24px 3px 0; text-align: left; }
+.pub.dlv.dlv-estimate.est-lines-list .est-total td { padding-top: 6px; border-top: 0; font-size: calc(17px * var(--est-fs, 1)); }
+.pub.dlv.dlv-estimate.est-lines-list .est-total .est-amt { font-size: calc(19px * var(--est-fs, 1)); font-weight: 800; }
 .est-tabs { align-self: flex-start; }
 .est-look-group { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 18px; background: color-mix(in srgb, var(--text) 4%, transparent); border: 1px solid var(--line-soft); }
 .est-look-group h4 { margin: 0; font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
