@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { respondToDelivery } from '../lib/shares.js'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
-import { amount, estimateTotals, groupLines, lineAmount } from '../lib/estimate.js'
+import { amount, estimateTotals, groupLines, lineAmount, showGroupSum, showLineAmount } from '../lib/estimate.js'
 import { downloadEstimatePdf } from '../lib/estimatePdf.js'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
@@ -96,10 +96,10 @@ export default function PublicEstimate() {
                   {g.rows.map((l, i) => (
                     <tr key={i} className={l.advance ? 'est-advance' : undefined}>
                       <td className="est-what">{l.what}</td>
-                      <td className="est-amt">{amount(lineAmount(l), cur)}</td>
+                      <td className="est-amt">{showLineAmount(l, t) ? amount(lineAmount(l), cur) : ''}</td>
                     </tr>
                   ))}
-                  {g.label && g.rows.length > 1 && (
+                  {showGroupSum(g, t) && (
                     <tr className="est-sub"><td>Subtotal</td><td className="est-amt">{amount(g.sum, cur)}</td></tr>
                   )}
                 </Fragment>
@@ -116,7 +116,7 @@ export default function PublicEstimate() {
             )}
             <table className="est-totals">
               <tbody>
-                <tr><td>Clean cost</td><td className="est-amt">{amount(t.subtotal, cur)}</td></tr>
+                <tr><td>{t.fixed ? 'Total price' : 'Clean cost'}</td><td className="est-amt">{amount(t.subtotal, cur)}</td></tr>
                 {t.discount > 0 && <tr><td>Discount</td><td className="est-amt">&minus; {amount(t.discount, cur)}</td></tr>}
                 {t.vatPct > 0 && <tr><td>VAT {t.vatPct}%</td><td className="est-amt">{amount(t.vat, cur)}</td></tr>}
                 <tr className="est-total"><td>Total</td><td className="est-amt">{amount(t.total, cur)}</td></tr>
