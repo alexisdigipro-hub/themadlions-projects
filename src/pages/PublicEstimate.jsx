@@ -145,6 +145,25 @@ export function EstimateSheet({ d, children = null }) {
 
       <section className="dlv-block est-lines">
         {L.covers && <h2>{L.covers}</h2>}
+        {/* List (Alex, 19 Oct, like his own e-mail estimates): each heading, a dashed rule, the lines as › items */}
+        {L.lines === 'list' ? (
+          <div className="est-list">
+            {groups.map((g, gi) => (
+              <div key={g.label || `g${gi}`} className="est-list-group">
+                {g.label && <h3>{g.label}</h3>}
+                <ul>
+                  {g.rows.map((l, i) => (
+                    <li key={i} className={l.advance ? 'est-advance' : undefined}>
+                      <span className="est-what">{l.what}</span>
+                      {showLineAmount(l, t) && <span className="est-amt">{amount(lineAmount(l), cur)}</span>}
+                    </li>
+                  ))}
+                </ul>
+                {L.subtotals && showGroupSum(g, t) && <p className="est-list-sub"><span>Subtotal</span><span className="est-amt">{amount(g.sum, cur)}</span></p>}
+              </div>
+            ))}
+          </div>
+        ) : (
         <table className="est-table">
           <tbody>
             {/* a Fragment with a key, not <>, because a bare fragment cannot carry one */}
@@ -164,6 +183,7 @@ export function EstimateSheet({ d, children = null }) {
             ))}
           </tbody>
         </table>
+        )}
 
         <div className="est-totals-row">
           {t.advance > 0 && (
@@ -182,6 +202,14 @@ export function EstimateSheet({ d, children = null }) {
           </table>
         </div>
       </section>
+
+      {/* what the price does not include (Alex, 19 Oct): props, make-up, a set designer, the location fee… */}
+      {d.excluded?.length > 0 && (
+        <section className="dlv-block est-excluded">
+          {L.excludedTitle && <h2>{L.excludedTitle}</h2>}
+          <ul>{d.excluded.map((x, i) => <li key={i}>{x}</li>)}</ul>
+        </section>
+      )}
 
       {(d.validUntil || d.terms) && (
         <section className="dlv-band dlv-say">

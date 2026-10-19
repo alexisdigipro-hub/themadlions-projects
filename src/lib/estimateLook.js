@@ -10,6 +10,7 @@ export const LOOK_DEFAULT = {
   cover: '', coverHeight: 'medium', coverDim: 55, coverY: 50,
   logo: true, logoImg: '', logoSize: 100, company: true,
   kicker: 'Cost estimation', covers: 'What it covers', subtotals: true,
+  excludedTitle: 'Not included in the price',
 }
 
 /* Ready-made colour sets; each one only sets the colours, the rest of the look stays as it is. */
