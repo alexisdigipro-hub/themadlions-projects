@@ -1,1 +1,0 @@
-const n=new Map,r=e=>e>1048576?`${(e/1048576).toFixed(1)} MB`:`${Math.round(e/1024)} KB`;async function c({projectId:e,id:t,file:s,onProgress:o,pcloud:a}){return n.set(t,URL.createObjectURL(s)),{path:""}}async function u(e){}async function d(e,t=!1){return e&&n.get(e.id)||""}export{d as a,u as d,r as f,c as u};
