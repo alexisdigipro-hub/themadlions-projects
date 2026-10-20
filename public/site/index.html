@@ -463,18 +463,32 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
 .lab-big b { font-weight: 800; }
 .lab-sub { margin: 18px 0 0; text-align: center; font-size: clamp(18px, 2vw, 24px); font-weight: 300; color: color-mix(in srgb, var(--text) 75%, transparent); }
 .lab-sub b { font-weight: 500; color: var(--text); }
-.lab-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; max-width: 1400px; margin: 44px auto 0; }
-/* five experiments in one row on a wide screen; below, two by two and the last one across */
-@media (max-width: 1199px) { .lab-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lab-row .lab-x:last-child:nth-child(odd) { grid-column: 1 / -1; } }
-.lab-x { display: grid; gap: 10px; padding: 24px 26px; border-radius: 18px; background: var(--bg-2); border: 1px solid var(--line); color: var(--text); text-decoration: none; transition: border-color .3s, transform .3s; }
-.lab-x:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); transform: translateY(-2px); }
-.lab-x .n { display: flex; align-items: center; gap: 8px; font-size: 11.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
-.lab-x .n i { width: 7px; height: 7px; border-radius: 50%; background: #2fd36b; box-shadow: 0 0 8px rgba(47,211,107,.8); }
-.lab-x .wm { font-size: clamp(26px, 3vw, 34px); white-space: nowrap; font-weight: 800; letter-spacing: .04em; line-height: 1; }
+/* the experiments as end credits (Alex, 20 Oct): one numbered line each, the name large, a line on what it is;
+   a hover fills the line with the accent from the left and turns the arrow. Grows with the Lab without crowding. */
+.lab-list { max-width: 1240px; margin: 52px auto 0; border-top: 1px solid var(--line); }
+.lab-x { position: relative; overflow: hidden; display: grid; grid-template-columns: 64px minmax(0, 1.1fr) minmax(0, 1fr) 40px; align-items: center; gap: 24px; padding: 24px 8px; border-bottom: 1px solid var(--line); color: var(--text); text-decoration: none; transition: padding .6s cubic-bezier(.16,1,.3,1); }
+.lab-x::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%); transform: translateX(-100%); transition: transform .7s cubic-bezier(.16,1,.3,1); }
+.lab-x > * { position: relative; }
+.lab-x .no { font-size: 13px; letter-spacing: .2em; color: var(--muted); }
+.lab-x .wm { font-size: clamp(30px, 4.2vw, 62px); font-weight: 800; letter-spacing: .04em; line-height: 1; white-space: nowrap; }
 .lab-x .wm span { font-weight: 250; }
-.lab-x .d { font-size: 15px; font-weight: 300; color: color-mix(in srgb, var(--text) 78%, transparent); }
-@media (min-width: 1200px) { .lab-x { padding: 22px; } .lab-x .wm { font-size: clamp(20px, 1.75vw, 30px); } }
-@media (max-width: 700px) { .lab-row { grid-template-columns: minmax(0, 1fr); } }
+.lab-x .d { font-size: clamp(15px, 1.3vw, 18px); font-weight: 300; color: color-mix(in srgb, var(--text) 78%, transparent); }
+.lab-x .ar { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; transition: background .3s, border-color .3s, color .3s, transform .6s cubic-bezier(.16,1,.3,1); }
+.lab-x .ar svg { width: 15px; height: 15px; }
+@media (hover: hover) {
+  .lab-x:hover { padding-left: 22px; }
+  .lab-x:hover::before { transform: none; }
+  .lab-x:hover .ar { background: var(--accent); border-color: var(--accent); color: var(--on-accent); transform: rotate(-45deg); }
+}
+.lab-x:focus-visible .ar { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+@media (prefers-reduced-motion: reduce) { .lab-x, .lab-x::before, .lab-x .ar { transition: none; } }
+@media (max-width: 760px) {
+  .lab-x { grid-template-columns: 30px minmax(0, 1fr) 38px; gap: 6px 12px; padding: 20px 2px; }
+  .lab-x .no { grid-row: span 2; align-self: start; padding-top: 9px; }
+  .lab-x .wm { font-size: clamp(26px, 8.4vw, 40px); }
+  .lab-x .d { grid-column: 2; grid-row: 2; }
+  .lab-x .ar { grid-column: 3; grid-row: 1 / span 2; }
+}
 /* Services, How we work, About and Clients: the titles and their texts centred (Alex, 18 Oct); the cards keep their own layout */
 .services > .label, .services > h2, .clients > .label, .clients > h2 { text-align: center; }
 /* How we work sits inside Services, under the cards (Alex, 18 Oct: one section, one menu item) */
@@ -628,12 +642,12 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
   <section id="lab" class="labs">
     <h2 class="lab-big reveal">THE<b>MAD</b>LIONS<b>LAB</b></h2>
     <p class="lab-sub reveal" data-t="lab.title" data-html>What we build <b>between films.</b></p>
-    <div class="lab-row reveal">
-      <a class="lab-x" href="roarme/"><span class="n"><span data-t="lab.e1">Experiment 01</span> <i></i></span><b class="wm"><span>ROAR</span>ME</b><span class="d" data-t="lab.rm">The messenger for teams.</span></a>
-      <a class="lab-x" href="roardino/"><span class="n"><span data-t="lab.e2">Experiment 02</span> <i></i></span><b class="wm"><span>ROAR</span>DINO</b><span class="d" data-t="lab.rd">The call sheet, in one link.</span></a>
-      <a class="lab-x" href="lab/roarmail/"><span class="n"><span data-t="lab.e3">Experiment 03</span> <i></i></span><b class="wm"><span>ROAR</span>MAIL</b><span class="d" data-t="lab.ml">The mail app, private by design.</span></a>
-      <a class="lab-x" href="lab/roarlist/"><span class="n"><span data-t="lab.e4">Experiment 04</span> <i></i></span><b class="wm"><span>ROAR</span>LIST</b><span class="d" data-t="lab.rl">The shot list, frame by frame.</span></a>
-      <a class="lab-x" href="lab/roartransfer/"><span class="n"><span data-t="lab.e5">Experiment 05</span> <i></i></span><b class="wm"><span>ROAR</span>TRANSFER</b><span class="d" data-t="lab.rt">Big files, one link.</span></a>
+    <div class="lab-list reveal">
+      <a class="lab-x" href="roarme/"><span class="no">01</span><b class="wm"><span>ROAR</span>ME</b><span class="d" data-t="lab.rm">The messenger for teams.</span><span class="ar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+      <a class="lab-x" href="roardino/"><span class="no">02</span><b class="wm"><span>ROAR</span>DINO</b><span class="d" data-t="lab.rd">The call sheet, in one link.</span><span class="ar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+      <a class="lab-x" href="lab/roarmail/"><span class="no">03</span><b class="wm"><span>ROAR</span>MAIL</b><span class="d" data-t="lab.ml">The mail app, private by design.</span><span class="ar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+      <a class="lab-x" href="lab/roarlist/"><span class="no">04</span><b class="wm"><span>ROAR</span>LIST</b><span class="d" data-t="lab.rl">The shot list, frame by frame.</span><span class="ar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+      <a class="lab-x" href="lab/roartransfer/"><span class="no">05</span><b class="wm"><span>ROAR</span>TRANSFER</b><span class="d" data-t="lab.rt">Big files, one link.</span><span class="ar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
     </div>
     <div class="more"><a class="pill" href="lab/" data-t="lab.go">Visit the Lab</a></div>
   </section>
@@ -740,7 +754,7 @@ const T = {
     'clients.label': 'Clients', 'clients.title': "Brands <b>we've filmed for.</b>",
     'bts.label': 'Behind the scenes', 'bts.title': 'On set <b>with us.</b>', 'bts.all': 'See everything',
     'sh.btn': 'Share', 'sh.label': 'Share this film', 'sh.framed': 'Framed', 'sh.full': 'Full picture', 'sh.story': 'Story picture', 'sh.reel': 'Reel video', 'sh.link': 'Copy the link', 'sh.copied': 'Link copied', 'sh.rec': 'Recording…', 'sh.watch': 'WATCH ON THEMADLIONS.COM', 'sh.hint': 'For Instagram and TikTok stories. On a phone it opens your apps; on a computer it downloads.',
-    'lab.label': 'Lab', 'lab.title': 'What we build <b>between films.</b>', 'lab.e1': 'Experiment 01', 'lab.e2': 'Experiment 02', 'lab.rm': 'The messenger for teams.', 'lab.rd': 'The call sheet, in one link.', 'lab.e3': 'Experiment 03', 'lab.ml': 'The mail app, private by design.', 'lab.e4': 'Experiment 04', 'lab.rl': 'The shot list, frame by frame.', 'lab.e5': 'Experiment 05', 'lab.rt': 'Big files, one link.', 'lab.go': 'Visit the Lab',
+    'lab.label': 'Lab', 'lab.title': 'What we build <b>between films.</b>', 'lab.rm': 'The messenger for teams.', 'lab.rd': 'The call sheet, in one link.', 'lab.ml': 'The mail app, private by design.', 'lab.rl': 'The shot list, frame by frame.', 'lab.rt': 'Big files, one link.', 'lab.go': 'Visit the Lab',
     'contact.label': 'Contact', 'contact.title': 'Tell us about <b>your project.</b>', 'contact.sub': 'A few lines are enough. We answer within a working day.',
     'f.kind': 'What are you making?', 'f.budget': 'Budget', 'f.name': 'Name', 'f.email': 'Email', 'f.company': 'Company or artist',
     'f.when': 'When do you need it?', 'f.whenPh': 'e.g. end of November', 'f.msg': 'Tell us more', 'f.msgPh': 'The idea, the format, where it will be seen…',
@@ -765,7 +779,7 @@ const T = {
     'clients.label': 'Πελάτες', 'clients.title': 'Brands <b>που δουλέψαμε μαζί.</b>',
     'sh.btn': 'Κοινοποίηση', 'sh.label': 'Μοιράσου την ταινία', 'sh.framed': 'Σε κάδρο', 'sh.full': 'Ολόκληρη εικόνα', 'sh.story': 'Εικόνα για story', 'sh.reel': 'Βίντεο για reel', 'sh.link': 'Αντιγραφή link', 'sh.copied': 'Το link αντιγράφηκε', 'sh.rec': 'Εγγραφή…', 'sh.watch': 'ΔΕΣ ΤΟ ΣΤΟ THEMADLIONS.COM', 'sh.hint': 'Για stories σε Instagram και TikTok. Στο κινητό ανοίγει τις εφαρμογές σου, στον υπολογιστή κατεβαίνει.',
     'bts.label': 'Πίσω από τις κάμερες', 'bts.title': 'Στο <b>γύρισμα.</b>', 'bts.all': 'Δες τα όλα',
-    'lab.label': 'Lab', 'lab.title': 'Ό,τι φτιάχνουμε <b>ανάμεσα στις ταινίες.</b>', 'lab.e1': 'Πείραμα 01', 'lab.e2': 'Πείραμα 02', 'lab.rm': 'Το messenger για ομάδες.', 'lab.rd': 'Το ordino, σε ένα link.', 'lab.e3': 'Πείραμα 03', 'lab.ml': 'Το email, ιδιωτικά.', 'lab.e4': 'Πείραμα 04', 'lab.rl': 'Το shot list, κάδρο κάδρο.', 'lab.e5': 'Πείραμα 05', 'lab.rt': 'Μεγάλα αρχεία, ένα link.', 'lab.go': 'Δες το Lab',
+    'lab.label': 'Lab', 'lab.title': 'Ό,τι φτιάχνουμε <b>ανάμεσα στις ταινίες.</b>', 'lab.rm': 'Το messenger για ομάδες.', 'lab.rd': 'Το ordino, σε ένα link.', 'lab.ml': 'Το email, ιδιωτικά.', 'lab.rl': 'Το shot list, κάδρο κάδρο.', 'lab.rt': 'Μεγάλα αρχεία, ένα link.', 'lab.go': 'Δες το Lab',
     'contact.label': 'Επαφή', 'contact.title': 'Πείτε μας για <b>το project σας.</b>', 'contact.sub': 'Λίγες γραμμές αρκούν. Απαντάμε μέσα σε μία εργάσιμη.',
     'f.kind': 'Τι θέλετε να φτιάξετε;', 'f.budget': 'Budget', 'f.name': 'Όνομα', 'f.email': 'Email', 'f.company': 'Εταιρεία ή καλλιτέχνης',
     'f.when': 'Πότε το χρειάζεστε;', 'f.whenPh': 'π.χ. τέλη Νοεμβρίου', 'f.msg': 'Πείτε μας περισσότερα', 'f.msgPh': 'Η ιδέα, το format, πού θα προβληθεί…',
