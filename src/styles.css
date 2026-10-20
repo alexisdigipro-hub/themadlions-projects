@@ -3612,7 +3612,10 @@ html.pub-est-page .pub.dlv.dlv-estimate.est-glow { background: radial-gradient(1
 .pub.dlv.dlv-estimate:not(.est-framed) .dlv-sheet { background: none; border: 0; border-radius: 0; box-shadow: none; }
 @media (max-width: 520px) {
   html.pub-est-page .pub.dlv.dlv-estimate:not(.est-framed) { padding-left: 0; padding-right: 0; }
+  /* the cover photo runs to both edges of the screen and the cost lines nearly so (Alex, 20 Oct) */
+  .pub.dlv.dlv-estimate:not(.est-framed) .dlv-sheet { padding-left: 0; padding-right: 0; }
   .pub.dlv.dlv-estimate:not(.est-framed) .dlv-block, .pub.dlv.dlv-estimate:not(.est-framed) .dlv-band { padding-left: 16px; padding-right: 16px; }
+  .pub.dlv.dlv-estimate:not(.est-framed) .dlv-block { padding-left: 8px; padding-right: 8px; }
   .pub.dlv.dlv-estimate:not(.est-framed) .est-table td { padding: 12px 12px; }
 }
 @media (max-width: 520px) {
