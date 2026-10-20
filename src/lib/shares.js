@@ -104,6 +104,15 @@ export async function renameShare({ workspaceId, ref, name }) {
    table directly; only the client's replies come through a function.
    select('*') on purpose: opens, closed and responses only exist once the matching SQL file has
    been run, and asking for them by name would fail the whole query instead of just missing them. */
+/* One link's row as it is in the database right now (its data and when it was last published), so an estimate is
+   always opened, and published, from the newest version (Alex, 20 Oct: an older window wrote over a newer estimate) */
+export async function getShareRow(workspaceId, ref) {
+  if (!remote) return null
+  const { data, error } = await supabase.from('shares').select('data, updated_at').eq('workspace_id', workspaceId).eq('ref', ref).maybeSingle()
+  if (error) throw error
+  return data || null
+}
+
 export async function listShares(workspaceId) {
   if (!remote) return []
   const { data, error } = await supabase
