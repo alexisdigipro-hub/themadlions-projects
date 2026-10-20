@@ -40,6 +40,7 @@ const Whiteboard = lazyPage(() => import('./pages/project/Whiteboard.jsx'))
 const Shots = lazyPage(() => import('./pages/project/Shots.jsx'))
 const Database = lazyPage(() => import('./pages/Database.jsx'))
 const Chat = lazyPage(() => import('./pages/Chat.jsx'))
+const RoarMePage = lazyPage(() => import('./pages/RoarMePage.jsx'))
 // the chat alone in a window of its own (the ⧉ button on the chat list), no side menu
 const ChatWindow = lazyPage(() => import('./pages/Chat.jsx').then((m) => ({ default: m.ChatWindow })))
 const MyWork = lazyPage(() => import('./pages/MyWork.jsx'))
@@ -124,6 +125,7 @@ export default function App() {
                 <Route path="tasks" element={<OfficeHub />} />
                 <Route path="chat" element={<Chat />} />
                 <Route path="chat/:room" element={<Chat />} />
+                <Route path="roarme" element={<RoarMePage />} />
                 <Route path="mywork" element={<MyWork />} />
                 <Route path="me" element={<Navigate to="/settings" replace />} />
                 <Route path="u/:id" element={<Profile />} />

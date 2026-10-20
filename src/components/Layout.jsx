@@ -134,6 +134,8 @@ export default function Layout() {
     // Notes for someone without Tasks); where Tasks was, so on a phone it is among the first five
     { to: can(user, 'tasks') ? '/tasks' : '/notes', label: 'Organizer', show: true, icon: 'tasks', also: ['/tasks', '/notes', '/office'] },
     { to: '/chat', label: 'Chat', show: true, icon: 'chat', badge: unread },
+    // RoarMe inside the hub (Alex, 20 Oct: phase 4, the chat moving onto RoarMe; Chat stays until it is switched off)
+    { to: '/roarme', label: 'RoarMe', show: remote, icon: 'chat' },
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     // Drives is a tab of the Database now (Alex, 10 Oct)
