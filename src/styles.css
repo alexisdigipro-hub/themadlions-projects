@@ -3607,6 +3607,14 @@ html.pub-est-page .pub.dlv.dlv-estimate.est-glow { background: radial-gradient(1
   .pub.dlv-estimate.est-w-wide { max-width: 1340px; }
   .dlv-estimate.est-w-wide .dlv-sheet { max-width: 1280px; }
 }
+/* no frame around the page unless Look > Frame is on (Alex, 20 Oct): the sheet sits straight on the page, and on a phone
+   the text runs nearly edge to edge */
+.pub.dlv.dlv-estimate:not(.est-framed) .dlv-sheet { background: none; border: 0; border-radius: 0; box-shadow: none; }
+@media (max-width: 520px) {
+  html.pub-est-page .pub.dlv.dlv-estimate:not(.est-framed) { padding-left: 0; padding-right: 0; }
+  .pub.dlv.dlv-estimate:not(.est-framed) .dlv-block, .pub.dlv.dlv-estimate:not(.est-framed) .dlv-band { padding-left: 16px; padding-right: 16px; }
+  .pub.dlv.dlv-estimate:not(.est-framed) .est-table td { padding: 12px 12px; }
+}
 @media (max-width: 520px) {
   .pub.dlv.dlv-estimate .dlv-sheet { border-radius: calc(var(--est-r, 14px) * 1.5); }
   .pub.dlv.dlv-estimate .est-table td { padding: 12px 14px; }

@@ -12,6 +12,7 @@ export const LOOK_DEFAULT = {
   logo: true, logoImg: '', logoSize: 100, company: true,
   kicker: 'Cost estimation', covers: 'What it covers', subtotals: true,
   excludedTitle: 'Not included in the price',
+  frame: false, // the box around the page (Alex, 20 Oct: off, so more text fits side to side)
 }
 
 /* Ready-made colour sets; each one only sets the colours, the rest of the look stays as it is. */
@@ -47,7 +48,7 @@ export function lookProps(L) {
   return {
     className: [
       'est-look', `est-lines-${L.lines}`, `est-w-${L.width}`, L.align === 'left' ? 'est-left' : '',
-      isLight(L.bg) ? 'est-light' : '', L.glow ? 'est-glow' : '',
+      isLight(L.bg) ? 'est-light' : '', L.glow ? 'est-glow' : '', L.frame ? 'est-framed' : '',
     ].filter(Boolean).join(' '),
     style: {
       '--bg': L.bg, '--text': L.text, '--accent': L.accent, '--amber': L.advance,

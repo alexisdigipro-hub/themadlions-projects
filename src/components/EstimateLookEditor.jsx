@@ -97,6 +97,7 @@ export default function EstimateLookEditor({ look, onChange, saved = null, onSav
         </div>
         <div className="est-toggles">
           {toggle('subtotals', 'Subtotal per heading')}
+          {toggle('frame', 'Frame around the page')}
         </div>
       </section>
 
