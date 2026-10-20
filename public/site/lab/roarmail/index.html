@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- RoarMail's page on the company site, in the same frame as /roarme/ (its CSS is RoarMe's page's, then this page's
+     own below). One frame of the app (All Inboxes, a message with its trackers blocked), the three things only
+     RoarMail does, what came lately, everything else as an index, privacy, downloads (releases/latest), questions.
+     Only what is in the code of RoarMail 0.8.0. EN and GR, the same switch as the main page. -->
+<title>RoarMail · The private mail app for Mac and Windows: every inbox in one, trackers blocked, undo everything · by The Mad Lions</title>
+<link rel="canonical" href="https://themadlions.com/lab/roarmail/">
+<meta name="description" content="RoarMail, the mail app for Mac and Windows by The Mad Lions Lab. Every mailbox in one inbox, at keyboard speed, with no server of ours between you and your mail. Trackers blocked, links checked, undo for everything, snooze, send later, and big files as a link. It updates itself.">
+<meta name="theme-color" content="#16181c">
+<meta property="og:title" content="RoarMail · by The Mad Lions">
+<meta property="og:description" content="Every inbox in one, trackers blocked, undo for everything. Mail for Mac and Windows.">
+<meta property="og:url" content="https://themadlions.com/lab/roarmail/">
+<meta property="og:image" content="https://themadlions.com/og-image.png">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #16181c; --bg-2: #1d2025; --bg-3: #24282f; --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.16);
+  --text: #eef0f3; --muted: rgba(214,220,228,.6); --dim: rgba(214,220,228,.38);
+  --red: #d40000; --red-hi: #ff3b2f; --ok: #2fd36b;
+  --glass: rgba(255,255,255,.055); --glass-edge: rgba(255,255,255,.12);
+  --pad: clamp(18px, 4.5vw, 72px);
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); scroll-behavior: smooth; }
+body { margin: 0; color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%, transparent 62%), radial-gradient(800px 600px at 100% 100%, rgba(212,0,0,.10), transparent 70%), linear-gradient(180deg, #23272e 0%, #17191d 50%, #121417 100%); }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+img, svg { display: block; }
+:focus-visible { outline: 2px solid var(--red-hi); outline-offset: 3px; border-radius: 8px; }
+.wordmark { filter: invert(1); height: auto; }
+.rm { font-family: Jost, var(--sans); display: inline-flex; align-items: baseline; letter-spacing: .02em; line-height: .86; }
+.rm .a { font-weight: 200; } .rm .b { font-weight: 800; }
+.mono { font-family: var(--mono); }
+.beta { font-family: var(--mono); font-style: normal; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; border: 1px solid rgba(212,0,0,.6); color: #ff8f86; background: rgba(212,0,0,.14); }
+
+/* pills */
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 48px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 600; letter-spacing: .01em; border: 1px solid var(--glass-edge); background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); cursor: pointer; transition: transform .3s var(--ease), background .2s, border-color .2s, filter .2s; white-space: nowrap; }
+.pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.28); }
+.pill:active { transform: scale(.97); }
+.pill.main { background: var(--red); border-color: transparent; color: #fff; box-shadow: 0 12px 34px rgba(212,0,0,.32); }
+.pill.main:hover { filter: brightness(1.1); }
+.pill.sm { height: 38px; padding: 0 16px; font-size: 13.5px; }
+.pill svg { width: 18px; height: 18px; flex: none; }
+
+/* bar */
+.bar { position: fixed; inset: 0 0 auto; z-index: 30; display: flex; align-items: center; gap: 18px; padding: calc(12px + env(safe-area-inset-top)) var(--pad) 12px; transition: background .4s, border-color .4s; border-bottom: 1px solid transparent; }
+.bar.solid { background: rgba(22,24,28,.72); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); border-color: var(--line); }
+.bar .home { display: flex; align-items: center; gap: 14px; }
+.bar .home .wordmark { width: 128px; }
+.bar .home .sep { width: 1px; height: 22px; background: var(--line-2); }
+.bar .home .rm { font-size: 19px; }
+.bar nav { margin-left: auto; display: flex; gap: 2px; }
+.bar nav a { padding: 8px 13px; border-radius: 999px; font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); transition: color .2s, background .2s; }
+.bar nav a:hover { color: var(--text); background: var(--glass); }
+.bar .end { display: flex; align-items: center; gap: 10px; }
+.lang { display: flex; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); }
+.lang button { border: 0; background: transparent; cursor: pointer; padding: 5px 11px; border-radius: 999px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--muted); }
+.lang button.on { background: rgba(255,255,255,.14); color: var(--text); }
+
+/* hero */
+.hero { position: relative; padding: calc(132px + env(safe-area-inset-top)) var(--pad) 0; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px; align-items: end; }
+.kicker { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); line-height: 1.6; }
+.kicker i { display: inline-block; width: 7px; height: 7px; margin-right: 10px; vertical-align: 1px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px rgba(47,211,107,.8); }
+.hero h1 { margin: 22px 0 0; font-size: clamp(72px, 15.5vw, 250px); line-height: .8; display: flex; align-items: flex-end; gap: clamp(10px, 2vw, 28px); flex-wrap: nowrap; }
+.hero h1 .beta { font-size: clamp(10px, 1vw, 13px); margin-bottom: clamp(10px, 2.4vw, 40px); }
+.app-icon { width: clamp(76px, 10vw, 150px); height: auto; filter: drop-shadow(0 24px 50px rgba(212,0,0,.32)); }
+.hero-sub { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: end; margin-top: clamp(28px, 4vw, 52px); }
+.lead { margin: 0; font-size: clamp(22px, 2.5vw, 34px); font-weight: 300; line-height: 1.25; letter-spacing: -.01em; text-wrap: balance; color: color-mix(in srgb, var(--text) 82%, transparent); }
+.lead b { font-weight: 700; color: var(--text); }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.cta-note { grid-column: 1 / -1; margin: -6px 0 0; text-align: right; font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; color: var(--dim); }
+.cta-note a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+
+/* the frame: RoarMe as it is today */
+.frame { position: relative; margin: clamp(44px, 6vw, 84px) auto 0; max-width: 1380px; perspective: 1800px; }
+.frame::before { content: ''; position: absolute; left: 10%; right: 10%; top: 12%; bottom: -6%; background: radial-gradient(closest-side, rgba(212,0,0,.32), transparent); filter: blur(60px); z-index: -1; }
+.win { border-radius: 22px; background: #1b1e23; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 60px 140px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06); overflow: hidden; transform: rotateX(calc(var(--ry, 0) * 1deg)) rotateY(calc(var(--rx, 0) * 1deg)); transition: transform .5s var(--ease); font-size: 13px; color: #eef0f3; }
+.win-top { display: flex; gap: 7px; padding: 12px 14px 8px; }
+.win-top i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; } .win-top i:nth-child(2) { background: #febc2e; } .win-top i:nth-child(3) { background: #28c840; }
+.win-body { display: grid; grid-template-columns: 27% minmax(0, 1fr) 26%; gap: 10px; padding: 0 12px 12px; height: clamp(420px, 42vw, 600px); }
+.pn { min-width: 0; border-radius: 16px; background: linear-gradient(180deg, #2b3038, #1f2329); border: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; overflow: hidden; }
+.pn-h { display: flex; align-items: center; gap: 8px; padding: 12px 12px 8px; }
+.pn-h .rm { font-size: 15px; flex: 1; text-align: center; justify-content: center; }
+.rnd { width: 28px; height: 28px; border-radius: 10px; flex: none; display: grid; place-items: center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); color: #dfe3e8; position: relative; }
+.rnd svg { width: 15px; height: 15px; }
+.rnd b { position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 99px; background: var(--red-hi); font-size: 9px; line-height: 15px; text-align: center; color: #fff; }
+.tabs { display: flex; gap: 2px; margin: 4px 10px 8px; padding: 3px; border-radius: 99px; background: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.06); }
+.tabs span { flex: 1; text-align: center; padding: 5px 0; border-radius: 99px; font-size: 10.5px; color: #9aa0aa; }
+.tabs span.on { background: linear-gradient(180deg, #ff6b5e, #d40000); color: #fff; font-weight: 700; }
+.row { display: flex; align-items: center; gap: 9px; margin: 1px 8px; padding: 8px; border-radius: 12px; }
+.row.on { background: rgba(255,255,255,.06); }
+.av { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 10.5px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #5b6472, #3a4049); }
+.av.c1 { background: linear-gradient(135deg, #ff8a6b, #e0483a); } .av.c2 { background: linear-gradient(135deg, #7aa7ff, #3b6ff5); } .av.c3 { background: linear-gradient(135deg, #f8d29a, #e79a3d); color: #2a1c08; } .av.c4 { background: linear-gradient(135deg, #8fe3b4, #2fa36b); color: #082a18; }
+.row b { flex: 1; min-width: 0; font-weight: 500; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row small { font-size: 10px; color: #9aa0aa; }
+.row .n { min-width: 17px; height: 17px; padding: 0 5px; border-radius: 99px; background: var(--red); font-size: 9.5px; font-weight: 700; display: grid; place-items: center; }
+.foot { margin: auto 8px 8px; display: flex; justify-content: space-around; padding: 8px 4px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); }
+.foot i { width: 20px; height: 20px; border-radius: 7px; background: rgba(255,255,255,.1); } .foot i.on { background: rgba(212,0,0,.6); }
+.room-h { display: flex; align-items: center; gap: 9px; margin: 10px; padding: 7px 9px; border-radius: 13px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); }
+.room-h b { display: block; font-size: 12.5px; font-weight: 600; } .room-h small { font-size: 10px; color: #9aa0aa; }
+.room-h .ic { margin-left: auto; display: flex; gap: 5px; } .room-h .ic i { width: 26px; height: 26px; border-radius: 9px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); }
+.msgs { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px; padding: 4px 12px 10px; justify-content: flex-end; overflow: hidden; }
+.bb { align-self: flex-start; max-width: 74%; padding: 8px 11px; border-radius: 15px 15px 15px 5px; background: rgba(255,255,255,.07); line-height: 1.35; }
+.bb.me { align-self: flex-end; border-radius: 15px 15px 5px 15px; background: linear-gradient(180deg, #e2231a, #b50000); }
+.bb small { margin-left: 6px; font-size: 9.5px; opacity: .6; }
+.card { align-self: flex-end; width: min(270px, 78%); border-radius: 16px; padding: 10px; background: linear-gradient(180deg, #e2231a, #b50000); display: grid; gap: 8px; }
+.card .ch { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 13px; }
+.card .ch i { width: 26px; height: 26px; border-radius: 50%; background: #fff; color: var(--red); display: grid; place-items: center; }
+.card .ch i svg { width: 15px; height: 15px; }
+.card .cb { padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.2); display: grid; gap: 3px; position: relative; overflow: hidden; }
+.card .cb::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: #fff; }
+.card .cb s { text-decoration: none; justify-self: start; font-family: var(--mono); font-size: 8.5px; letter-spacing: .14em; padding: 2px 7px; border-radius: 99px; background: #fff; color: var(--red); }
+.card .cb b { font-size: 15px; font-weight: 800; } .card .cb em { font-style: normal; font-size: 11px; opacity: .85; }
+.card .go { text-align: center; padding: 7px; border-radius: 99px; background: #fff; color: #b50000; font-weight: 700; font-size: 11.5px; }
+.compose { display: flex; align-items: center; gap: 7px; margin: 0 10px 10px; }
+.compose .rnd { width: 32px; height: 32px; border-radius: 50%; }
+.compose .rnd.cam { color: #fff; border-color: rgba(255,90,80,.6); box-shadow: 0 0 0 3px rgba(212,0,0,.18); }
+.compose .box { flex: 1; height: 32px; border-radius: 99px; padding: 0 14px; display: flex; align-items: center; color: #8e949e; background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.07); }
+.tasks-h { display: flex; align-items: center; gap: 6px; padding: 12px 12px 6px; } .tasks-h b { flex: 1; font-size: 15px; font-weight: 800; }
+.tk { margin: 3px 8px; padding: 9px 10px; border-radius: 13px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); display: grid; grid-template-columns: auto 1fr; gap: 3px 9px; align-items: start; }
+.tk.ask { border-color: rgba(255,90,80,.45); background: rgba(212,0,0,.1); }
+.tk > i { width: 15px; height: 15px; margin-top: 1px; border-radius: 50%; border: 1.6px solid rgba(255,255,255,.35); }
+.tk.done > i { border-color: transparent; background: #ff5a4f; }
+.tk b { font-size: 11.5px; font-weight: 600; } .tk.done b { text-decoration: line-through; opacity: .5; }
+.tk small { grid-column: 2; font-size: 9.5px; color: #9aa0aa; }
+.tk .ans { grid-column: 2; display: flex; gap: 5px; margin-top: 3px; } .tk .ans span { padding: 4px 9px; border-radius: 99px; font-size: 9.5px; font-weight: 700; background: rgba(255,255,255,.08); } .tk .ans span:first-child { background: var(--red); }
+.tk .st { grid-column: 2; justify-self: start; padding: 1px 7px; border-radius: 99px; font-size: 9px; font-weight: 700; background: rgba(255,196,0,.16); color: #ffd666; }
+.lbl { margin: 8px 12px 2px; font-family: var(--mono); font-size: 8.5px; letter-spacing: .16em; text-transform: uppercase; color: #8e949e; }
+.tag { position: absolute; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; border-radius: 999px; background: rgba(27,30,35,.86); border: 1px solid var(--line-2); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 16px 40px rgba(0,0,0,.4); font-family: var(--mono); font-size: 11px; letter-spacing: .04em; white-space: nowrap; }
+.tag i { width: 22px; height: 22px; border-radius: 50%; background: var(--red); display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; color: #fff; }
+.tag.t1 { left: 51%; bottom: 11%; } .tag.t2 { right: 3%; top: 18%; } .tag.t3 { left: 3%; top: 26%; }
+
+/* ticker */
+.ticker { margin-top: clamp(64px, 9vw, 120px); border-block: 1px solid var(--line); overflow: hidden; padding: 18px 0; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.ticker-in { display: flex; gap: 40px; width: max-content; animation: tick 46s linear infinite; font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.ticker-in span { display: inline-flex; align-items: center; gap: 40px; }
+.ticker-in span::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
+@keyframes tick { to { transform: translateX(-50%); } }
+
+/* sections */
+section { padding: clamp(84px, 11vw, 160px) var(--pad) 0; max-width: 1480px; margin: 0 auto; }
+.sec-h { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 48px; align-items: end; margin-bottom: clamp(36px, 5vw, 64px); }
+.idx { font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--red-hi); margin: 0 0 16px; }
+h2 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(42px, 6.2vw, 96px); font-weight: 200; line-height: .92; letter-spacing: -.01em; text-wrap: balance; }
+h2 b { font-weight: 800; }
+.sec-h p.sub { margin: 0; font-size: 17px; line-height: 1.6; color: var(--muted); max-width: 520px; justify-self: end; }
+
+/* the three things only RoarMe does: numbered rows */
+.three { border-top: 1px solid var(--line); }
+.big { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: center; padding: clamp(34px, 4.5vw, 60px) 0; border-bottom: 1px solid var(--line); }
+.big .no { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; color: var(--dim); align-self: start; padding-top: 12px; }
+.big h3 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(32px, 4vw, 58px); font-weight: 300; line-height: 1; letter-spacing: -.01em; }
+.big h3 b { font-weight: 800; }
+.big p { margin: 16px 0 0; font-size: 16.5px; line-height: 1.6; color: var(--muted); max-width: 520px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+.chips span { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); }
+.viz { justify-self: end; width: min(440px, 100%); aspect-ratio: 4 / 3; border-radius: 22px; background: linear-gradient(160deg, #262a31, #1a1d22); border: 1px solid var(--line); display: grid; place-items: center; position: relative; overflow: hidden; }
+.viz::after { content: ''; position: absolute; inset: 0; background: radial-gradient(60% 60% at 50% 110%, rgba(212,0,0,.22), transparent 70%); pointer-events: none; }
+.v-name { display: grid; gap: 12px; justify-items: center; z-index: 1; }
+.v-name .at { font-family: Jost, var(--sans); font-size: clamp(34px, 4vw, 52px); font-weight: 300; } .v-name .at b { font-weight: 800; color: var(--red-hi); }
+.v-name .qr { width: 86px; height: 86px; border-radius: 14px; background: conic-gradient(from 90deg, #eef0f3 25%, transparent 0 50%, #eef0f3 0 75%, transparent 0) 0 0 / 14px 14px; border: 8px solid #eef0f3; opacity: .9; }
+.v-name small { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .1em; }
+.v-tr { width: 76%; z-index: 1; padding: 16px; border-radius: 18px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); display: grid; gap: 12px; }
+.v-tr .h { display: flex; align-items: center; gap: 12px; } .v-tr .h i { width: 40px; height: 40px; border-radius: 12px; background: var(--red); display: grid; place-items: center; } .v-tr .h i svg { width: 20px; height: 20px; }
+.v-tr .h b { display: block; font-size: 22px; font-weight: 800; } .v-tr .h small { font-family: var(--mono); font-size: 10.5px; color: var(--dim); letter-spacing: .1em; }
+.v-tr .bar2 { height: 6px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; } .v-tr .bar2 i { display: block; height: 100%; width: 72%; background: linear-gradient(90deg, #ff6b5e, #d40000); border-radius: inherit; animation: fill 3.2s var(--ease) infinite alternate; }
+@keyframes fill { from { width: 18%; } }
+.v-tr .ft { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.v-sec { width: 80%; z-index: 1; display: grid; gap: 8px; }
+.v-sec .ln { justify-self: center; font-family: var(--mono); font-size: 10px; color: #7ee2a0; letter-spacing: .08em; padding: 4px 10px; border-radius: 99px; background: rgba(47,211,107,.12); }
+.v-sec .bb { font-size: 13px; max-width: 86%; } .v-sec .enc { justify-self: end; font-family: var(--mono); font-size: 10.5px; color: var(--dim); word-break: break-all; max-width: 86%; text-align: right; }
+
+/* new: an uneven board */
+.board { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; }
+.tile { position: relative; border-radius: 26px; padding: clamp(22px, 2.6vw, 34px); background: linear-gradient(170deg, rgba(43,48,56,.7), rgba(27,30,35,.7)); border: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: 12px; min-height: 300px; }
+.tile .k { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--red-hi); display: flex; align-items: center; gap: 8px; }
+.tile .k em { font-style: normal; color: #7ee2a0; border: 1px solid rgba(47,211,107,.4); border-radius: 99px; padding: 2px 8px; letter-spacing: .1em; }
+.tile h3 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(28px, 3vw, 44px); font-weight: 300; line-height: 1; } .tile h3 b { font-weight: 800; }
+.tile p { margin: 0; font-size: 15.5px; line-height: 1.6; color: var(--muted); max-width: 520px; }
+.tile .more { margin-top: auto; align-self: flex-start; font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--text); display: inline-flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line-2); padding-bottom: 3px; }
+.tile .more svg { width: 14px; height: 14px; transition: transform .3s var(--ease); }
+.tile .more:hover svg { transform: translateX(3px); }
+.t-tasks { grid-column: span 7; } .t-ord { grid-column: span 5; } .t-upd { grid-column: span 5; } .t-icon { grid-column: span 7; }
+.mini { margin-top: 8px; display: grid; gap: 6px; max-width: 420px; }
+.mini .tk { margin: 0; } .mini .tk b { font-size: 13px; } .mini .tk small { font-size: 11px; } .mini .tk .ans span { font-size: 11px; padding: 5px 12px; }
+.ord-flow { margin-top: 8px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.ord-flow .rnd { width: 52px; height: 52px; border-radius: 50%; color: #fff; border-color: rgba(255,90,80,.6); box-shadow: 0 0 0 5px rgba(212,0,0,.16); } .ord-flow .rnd svg { width: 24px; height: 24px; }
+.ord-flow .arrow { font-family: var(--mono); color: var(--dim); }
+.ord-flow .card { align-self: auto; width: 230px; }
+.upd-card { margin-top: 8px; display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 18px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); max-width: 440px; }
+.upd-card i { width: 40px; height: 40px; flex: none; border-radius: 12px; background: rgba(212,0,0,.2); color: #ff8f86; display: grid; place-items: center; } .upd-card i svg { width: 20px; height: 20px; }
+.upd-card span { flex: 1; min-width: 0; } .upd-card b { display: block; font-size: 14.5px; } .upd-card small { font-size: 12px; color: var(--muted); }
+.upd-card s { text-decoration: none; padding: 9px 14px; border-radius: 99px; background: var(--red); color: #fff; font-weight: 700; font-size: 12.5px; white-space: nowrap; }
+.t-icon { flex-direction: row; align-items: center; gap: clamp(20px, 4vw, 56px); }
+.t-icon .txt { display: flex; flex-direction: column; gap: 12px; }
+.t-icon .icons { display: flex; align-items: center; gap: 18px; flex: none; }
+.t-icon .icons img, .t-icon .icons svg { width: clamp(90px, 10vw, 140px); height: auto; }
+.t-icon .icons .old { width: clamp(56px, 6vw, 84px); opacity: .45; filter: grayscale(.3); }
+.t-icon .icons .to { font-family: var(--mono); color: var(--dim); }
+
+/* everything else: an index */
+.index { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(28px, 5vw, 80px); border-top: 1px solid var(--line); }
+.ix { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 4px 14px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+.ix .no { grid-row: span 2; font-family: var(--mono); font-size: 12px; color: var(--dim); padding-top: 4px; }
+.ix b { font-size: 18px; font-weight: 650; letter-spacing: -.005em; }
+.ix p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+
+/* privacy */
+.priv { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 80px); align-items: start; }
+.priv .legal { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 26px; }
+.prom { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.pr { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 2px 14px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.pr i { grid-row: span 2; width: 34px; height: 34px; border-radius: 11px; background: var(--glass); border: 1px solid var(--glass-edge); display: grid; place-items: center; } .pr i svg { width: 17px; height: 17px; }
+.pr b { font-size: 16px; } .pr p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+
+/* download */
+.dls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.dl { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 26px 22px 22px; border-radius: 24px; background: rgba(255,255,255,.04); border: 1px solid var(--line); }
+.dl.mine { border-color: rgba(255,90,80,.55); background: linear-gradient(170deg, rgba(212,0,0,.14), rgba(255,255,255,.03)); }
+.dl.mine::before { content: attr(data-mine); position: absolute; top: -10px; left: 20px; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; background: var(--red); color: #fff; }
+.dl > i { width: 40px; height: 40px; } .dl > i svg { width: 30px; height: 30px; }
+.dl h3 { margin: 6px 0 0; font-size: 22px; font-weight: 700; }
+.dl small { font-size: 14px; line-height: 1.5; color: var(--muted); min-height: 42px; }
+.dl .pill { margin-top: auto; order: 2; }
+.dl .alt { order: 1; }
+.dl .alt { font-size: 12.5px; color: var(--dim); } .dl .alt a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.dl-note { margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.dl-note p { margin: 0; padding: 16px 18px; border-radius: 18px; border: 1px dashed var(--line-2); font-size: 14px; line-height: 1.55; color: var(--muted); }
+.dl-note p b { color: var(--text); }
+.ver { font-family: var(--mono); font-size: 12px; color: #7ee2a0; letter-spacing: .06em; margin: 14px 0 0; }
+
+/* questions */
+.faq { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(28px, 5vw, 80px); }
+.qa { border-top: 1px solid var(--line); }
+.qa details { border-bottom: 1px solid var(--line); }
+.qa summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; font-size: 17px; font-weight: 600; }
+.qa summary::-webkit-details-marker { display: none; }
+.qa summary::after { content: '+'; font-family: var(--mono); font-weight: 400; font-size: 20px; color: var(--muted); transition: transform .3s var(--ease); }
+.qa details[open] summary::after { transform: rotate(45deg); color: var(--red-hi); }
+.qa p { margin: 0 0 20px; font-size: 15.5px; line-height: 1.6; color: var(--muted); max-width: 640px; }
+
+/* contact + footer */
+.contact { text-align: center; padding-bottom: clamp(80px, 10vw, 140px); }
+.contact .mail { display: inline-block; margin-top: 26px; font-family: Jost, var(--sans); font-size: clamp(26px, 4vw, 54px); font-weight: 300; border-bottom: 1px solid var(--line-2); padding-bottom: 6px; transition: color .2s, border-color .2s; }
+.contact .mail:hover { color: var(--red-hi); border-color: var(--red-hi); }
+footer { padding: 26px var(--pad) calc(26px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; color: var(--dim); }
+footer .wordmark { width: 120px; opacity: .6; }
+footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { color: var(--text); }
+
+/* coming in */
+.rv { opacity: 0; transform: translateY(22px); transition: opacity .9s var(--ease), transform .9s var(--ease); transition-delay: var(--d, 0s); }
+.rv.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; transition: none; } .ticker-in, .v-tr .bar2 i { animation: none; } html { scroll-behavior: auto; } .win { transform: none !important; } }
+
+@media (max-width: 1100px) {
+  .bar nav { display: none; }
+  .win-body { grid-template-columns: 34% minmax(0, 1fr); }
+  .win-body .pn.tasks { display: none; }
+  .tag.t2 { display: none; }
+  .t-tasks, .t-ord, .t-upd, .t-icon { grid-column: span 12; }
+  .dls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .bar .home .wordmark { width: 96px; } .bar .home .sep, .bar .end .pill { display: none; }
+  .bar .end { margin-left: auto; }
+  .hero { padding-top: calc(104px + env(safe-area-inset-top)); }
+  .hero-top, .hero-sub, .sec-h, .big, .priv, .faq, .index, .dl-note { grid-template-columns: minmax(0, 1fr); }
+  .hero h1 { font-size: clamp(54px, 19.5vw, 110px); flex-wrap: wrap; }
+  .ord-flow .arrow { display: none; }
+  .cta { justify-content: stretch; } .cta .pill { flex: 1 1 100%; }
+  .cta-note { text-align: left; }
+  .sec-h p.sub { justify-self: start; }
+  .win-body { grid-template-columns: minmax(0, 1fr); height: 470px; }
+  .win-body .pn.side { display: none; }
+  .tag { display: none; }
+  .big .no { padding-top: 0; }
+  .viz { justify-self: stretch; width: 100%; }
+  .t-icon { flex-direction: column; align-items: flex-start; }
+  .dls { grid-template-columns: minmax(0, 1fr); }
+  .dl small { min-height: 0; }
+  .ord-flow .card { width: 100%; }
+}
+
+/* ---- RoarMail's own ---- */
+.tag.t1 { left: 46%; bottom: 9%; } .tag.t2 { right: 3%; top: 15%; } .tag.t3 { left: 3%; top: 58%; }
+.app-icon { flex: none; }
+.hero h1 { font-size: clamp(64px, 13.4vw, 220px); }
+/* the frame: All Inboxes, as it looks today */
+.win-body.ml { grid-template-columns: 19% 33% minmax(0, 1fr); }
+.fd { display: flex; align-items: center; gap: 9px; margin: 1px 8px; padding: 7px 9px; border-radius: 11px; font-size: 11.5px; color: #cfd3d9; }
+.fd.on { background: rgba(255,255,255,.07); color: #fff; font-weight: 600; }
+.fd svg { width: 14px; height: 14px; flex: none; opacity: .8; }
+.fd .c { margin-left: auto; font-family: var(--mono); font-size: 9.5px; color: #9aa0aa; }
+.fd.on .c { color: #ff8f86; }
+.acc { display: flex; align-items: center; gap: 8px; margin: 1px 8px; padding: 5px 9px; font-size: 11px; color: #9aa0aa; }
+.acc i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.mh { display: flex; align-items: center; gap: 8px; padding: 12px 12px 8px; }
+.mh b { flex: 1; font-size: 14px; font-weight: 800; }
+.mh .srch { height: 26px; width: 44%; border-radius: 99px; padding: 0 10px; display: flex; align-items: center; color: #8e949e; font-size: 10.5px; background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.07); }
+.ml-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; margin: 1px 8px; padding: 8px 10px 8px 14px; border-radius: 12px; }
+.ml-row::before { content: ''; position: absolute; left: 4px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: var(--ac, #5b6472); }
+.ml-row.on { background: rgba(255,255,255,.07); }
+.ml-row b { font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ml-row.un b::before { content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: var(--red-hi); vertical-align: 1px; }
+.ml-row small { font-size: 9.5px; color: #9aa0aa; font-family: var(--mono); }
+.ml-row span { grid-column: 1 / -1; font-size: 10.5px; color: #aeb3bb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ml-row em { grid-column: 1 / -1; font-style: normal; font-size: 10px; color: #8e949e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ml-row .sz { justify-self: start; font-family: var(--mono); font-size: 8.5px; padding: 1px 6px; border-radius: 99px; background: rgba(255,196,0,.16); color: #ffd666; }
+.rd { flex: 1; padding: 12px 14px; display: flex; flex-direction: column; gap: 9px; min-height: 0; overflow: hidden; }
+.rd h4 { margin: 0; font-size: 15px; font-weight: 800; line-height: 1.2; }
+.rd .from { display: flex; align-items: center; gap: 9px; } .rd .from b { display: block; font-size: 11.5px; } .rd .from small { font-size: 9.5px; color: #9aa0aa; }
+.rd .from .av { width: 28px; height: 28px; }
+.rd .acts { margin-left: auto; display: flex; gap: 5px; } .rd .acts i { width: 26px; height: 26px; border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); } .rd .acts i svg { width: 13px; height: 13px; }
+.shield { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 11px; font-size: 10.5px; background: rgba(47,211,107,.1); border: 1px solid rgba(47,211,107,.28); color: #a6efc0; }
+.shield svg { width: 14px; height: 14px; flex: none; }
+.shield s { text-decoration: none; margin-left: auto; padding: 3px 9px; border-radius: 99px; background: rgba(255,255,255,.1); color: #fff; font-weight: 600; }
+.body { font-size: 11.5px; line-height: 1.55; color: #cfd3d9; display: grid; gap: 8px; }
+.body p { margin: 0; }
+.body .lk { color: #ff8f86; text-decoration: underline; text-underline-offset: 2px; }
+.ph-img { height: 64px; border-radius: 10px; border: 1px dashed rgba(255,255,255,.18); display: grid; place-items: center; font-family: var(--mono); font-size: 9.5px; color: #8e949e; }
+.toast { align-self: center; margin-top: auto; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 14px; border-radius: 99px; background: rgba(27,30,35,.95); border: 1px solid var(--line-2); font-size: 11px; box-shadow: 0 12px 30px rgba(0,0,0,.4); }
+.toast s { text-decoration: none; padding: 4px 11px; border-radius: 99px; background: var(--red); color: #fff; font-weight: 700; }
+.toast kbd { font-family: var(--mono); font-size: 9.5px; opacity: .7; }
+/* viz: one inbox */
+.v-acc { width: 78%; z-index: 1; display: grid; gap: 7px; }
+.v-acc .a { display: flex; align-items: center; gap: 11px; padding: 10px 13px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid var(--line); font-size: 13.5px; }
+.v-acc .a i { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.v-acc .a small { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--dim); }
+.v-acc .a.all { border-color: rgba(255,90,80,.5); background: rgba(212,0,0,.12); font-weight: 700; }
+.v-acc .a.all small { color: #ff8f86; }
+/* viz: privacy */
+.v-priv { width: 82%; z-index: 1; display: grid; gap: 9px; }
+.v-priv .shield { font-size: 12px; }
+.v-priv .warn { padding: 12px 14px; border-radius: 14px; background: rgba(255,196,0,.08); border: 1px solid rgba(255,196,0,.3); display: grid; gap: 6px; }
+.v-priv .warn b { font-size: 13px; color: #ffd666; } .v-priv .warn span { font-family: var(--mono); font-size: 10.5px; color: var(--muted); word-break: break-all; }
+.v-priv .warn span del { color: var(--dim); }
+.v-priv .warn .bt { display: flex; gap: 6px; } .v-priv .warn .bt i { font-style: normal; font-size: 11px; font-weight: 600; padding: 4px 11px; border-radius: 99px; background: rgba(255,255,255,.08); }
+/* viz: undo */
+.v-undo { width: 80%; z-index: 1; display: grid; gap: 14px; justify-items: center; }
+.v-undo .toast { margin: 0; font-size: 14px; padding: 10px 10px 10px 18px; }
+.v-undo .toast s { padding: 6px 14px; }
+.v-undo .cd { width: 70%; height: 4px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; }
+.v-undo .cd i { display: block; height: 100%; background: linear-gradient(90deg, #ff6b5e, #d40000); animation: cd 5s linear infinite; transform-origin: left; }
+@keyframes cd { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.v-undo .keys { display: flex; gap: 8px; font-family: var(--mono); font-size: 11px; color: var(--muted); flex-wrap: wrap; justify-content: center; }
+.v-undo .keys span { padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line-2); }
+.v-undo .keys span b { color: var(--text); font-weight: 500; margin-right: 6px; }
+/* tiles */
+.when { margin-top: 8px; display: grid; gap: 6px; max-width: 420px; }
+.when span { display: flex; justify-content: space-between; padding: 9px 14px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); font-size: 13.5px; }
+.when span small { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.when span.on { border-color: rgba(255,90,80,.5); background: rgba(212,0,0,.12); }
+.rm-acts { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+.rm-acts span { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 99px; background: rgba(255,255,255,.06); border: 1px solid var(--line-2); font-size: 13px; font-weight: 600; }
+.rm-acts span i { width: 18px; height: 18px; border-radius: 6px; background: var(--red); display: grid; place-items: center; } .rm-acts span i svg { width: 11px; height: 11px; }
+.tr-card { margin-top: 8px; display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 18px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); max-width: 440px; }
+.tr-card > i { width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--red); display: grid; place-items: center; } .tr-card > i svg { width: 20px; height: 20px; }
+.tr-card span { flex: 1; min-width: 0; } .tr-card b { display: block; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .tr-card small { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.ml-icon { width: clamp(90px, 10vw, 140px); height: auto; }
+.dls.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (prefers-reduced-motion: reduce) { .v-undo .cd i { animation: none; } }
+@media (max-width: 1100px) { .win-body.ml { grid-template-columns: 38% minmax(0, 1fr); } .win-body.ml .pn.side { display: none; } .tag.t3 { display: none; } .dls.three { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .win-body.ml { grid-template-columns: minmax(0, 1fr); height: 500px; }
+  .win-body.ml .pn.rdp { display: none; }
+  .dls.three { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="mlg" x1="0.1" y1="0.95" x2="0.95" y2="0.05"><stop offset="0" stop-color="#0d0d0e"/><stop offset="0.45" stop-color="#2a1416"/><stop offset="1" stop-color="#741416"/></linearGradient>
+  <symbol id="mlicon" viewBox="100 100 824 824"><rect x="100" y="100" width="824" height="824" rx="190" fill="url(#mlg)" stroke="#3a3a3c" stroke-width="3"/><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="34"><rect x="262" y="330" width="500" height="364" rx="44" stroke="#f1efeb"/><path d="M280 360 512 536 744 360" stroke="#d40000"/></g></symbol>
+</defs></svg>
+
+<header class="bar" id="bar">
+  <a class="home" href="../../" aria-label="The Mad Lions">
+    <img class="wordmark" src="../../wordmark.png" alt="The Mad Lions">
+    <span class="sep"></span>
+    <span class="rm" aria-label="RoarMail"><span class="a">ROAR</span><span class="b">MAIL</span></span>
+  </a>
+  <nav aria-label="Sections">
+    <a href="#only" data-t="nav.only">Only here</a>
+    <a href="#new" data-t="nav.new">New</a>
+    <a href="#all" data-t="nav.all">Everything</a>
+    <a href="#privacy" data-t="nav.privacy">Privacy</a>
+    <a href="#download" data-t="nav.download">Download</a>
+    <a href="#faq" data-t="nav.faq">Questions</a>
+  </nav>
+  <div class="end">
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" class="on">EN</button>
+      <button type="button" data-lang="el">GR</button>
+    </div>
+    <a class="pill sm main" href="#download" data-t="cta.get">Get RoarMail</a>
+  </div>
+</header>
+
+<main>
+<div class="hero" id="top">
+  <div class="hero-top">
+    <div>
+      <p class="kicker rv"><i></i><span data-t="hero.kicker">Mail for Mac and Windows · The Mad Lions Lab · Experiment 03</span></p>
+      <h1 class="rv" style="--d:.06s">
+        <svg class="app-icon" viewBox="100 100 824 824" aria-hidden="true"><use href="#mlicon"/></svg>
+        <span class="rm"><span class="a">ROAR</span><span class="b">MAIL</span></span><em class="beta">beta</em>
+      </h1>
+    </div>
+  </div>
+  <div class="hero-sub">
+    <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>Every mailbox in <b>one inbox</b>, at keyboard speed, and <b>no server of ours</b> between you and your mail. <b>Trackers blocked</b>, links checked, and <b>undo</b> for everything.</p>
+    <div class="cta rv" style="--d:.22s">
+      <a class="pill main" id="dl-main" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span>Download</span></a>
+      <a class="pill" href="../../roarmail/"><span data-t="cta.demo">Try the web demo</span></a>
+    </div>
+    <p class="cta-note rv" style="--d:.3s"><span data-t="cta.note">Free · Mac and Windows · updates itself ·</span> <a href="#download" data-t="cta.all">all downloads</a></p>
+  </div>
+
+  <div class="frame rv" style="--d:.2s" aria-hidden="true">
+    <div class="win" id="win">
+      <div class="win-top"><i></i><i></i><i></i></div>
+      <div class="win-body ml">
+        <div class="pn side">
+          <div class="pn-h"><span class="rm"><span class="a">ROAR</span><span class="b">MAIL</span></span></div>
+          <div class="fd on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h5l1.5 3h5L16 13h5M5 5h14l2 8v6H3v-6z"/></svg>All Inboxes<span class="c">12</span></div>
+          <div class="fd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/></svg>Snoozed<span class="c">3</span></div>
+          <div class="fd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 4 2.4 5 5.4.6-4 3.7 1.1 5.3L12 16l-4.9 2.6 1.1-5.3-4-3.7 5.4-.6z"/></svg>Starred</div>
+          <div class="fd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 16-8-6 16-2.5-6.5z"/></svg>Sent</div>
+          <div class="fd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/></svg>Archive</div>
+          <p class="lbl">Accounts</p>
+          <div class="acc"><i style="background:#ff5a4f"></i>studio@themadlions</div>
+          <div class="acc"><i style="background:#3b82f6"></i>alex@gmail</div>
+          <div class="acc"><i style="background:#2fd36b"></i>me@icloud</div>
+        </div>
+        <div class="pn">
+          <div class="mh"><b>All Inboxes</b><span class="srch">Search /</span></div>
+          <div class="ml-row on un" style="--ac:#ff5a4f"><b>Maria P.</b><small>19:46</small><span>Night Shoot: final schedule</span><em>Call moved to 18:30. The location map is attached…</em></div>
+          <div class="ml-row un" style="--ac:#3b82f6"><b>Rental House</b><small>18:12</small><span>Your lens order for Friday</span><em>Two Cooke primes and the 24-70, ready from 09:00</em></div>
+          <div class="ml-row" style="--ac:#ff5a4f"><b>Nikos</b><small>17:30</small><span>Rushes, day 2</span><em class="sz">RoarMe link · 2.4 GB · 3 days</em></div>
+          <div class="ml-row" style="--ac:#2fd36b"><b>Gallery Newsletter</b><small>Mon</small><span>This week's openings</span><em>3 trackers blocked</em></div>
+          <div class="ml-row" style="--ac:#3b82f6"><b>Elena · Edit</b><small>Sun</small><span>Re: Colour grade notes</span><em>Thanks, the second pass is up…</em></div>
+          <div class="ml-row" style="--ac:#ff5a4f"><b>Location Scout</b><small>Sat</small><span>Railway permits</span><em>The permit for Friday night is signed, copy attached</em></div>
+          <div class="ml-row" style="--ac:#2fd36b"><b>Dimitris</b><small>Fri</small><span>Snoozed until Monday</span><em>Budget v3, let's talk next week</em></div>
+        </div>
+        <div class="pn rdp">
+          <div class="rd">
+            <h4>Night Shoot: final schedule</h4>
+            <div class="from"><span class="av c1">MP</span><span><b>Maria P.</b><small>to me · 19:46</small></span><span class="acts"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 8 5 12l5 4M5 12h9a5 5 0 0 1 5 5v1"/></svg></i><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/></svg></i><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/></svg></i></span></div>
+            <div class="shield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6z"/><path d="m9 12 2 2 4-4"/></svg>Images hidden · 2 trackers blocked<s>Show</s></div>
+            <div class="body"><p>Hi all, the call moves to 18:30. Parking is behind the station, the map is below.</p><div class="ph-img">image hidden</div><p>Full schedule: <span class="lk">roarlist.link/night-shoot</span></p></div>
+            <div class="toast">Archived<s>Undo</s><kbd>Z</kbd></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tag t1"><i>01</i><span data-t="tag.undo">Undo anything, a few seconds</span></div>
+    <div class="tag t2"><i>02</i><span data-t="tag.priv">Trackers blocked, even with images on</span></div>
+    <div class="tag t3"><i>03</i><span data-t="tag.one">Every account, one inbox</span></div>
+  </div>
+</div>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-in">
+  <span data-t="tk.1">All Inboxes</span><span data-t="tk.2">Trackers blocked</span><span data-t="tk.3">Undo send</span><span data-t="tk.4">Snooze</span><span data-t="tk.5">Send later</span><span data-t="tk.6">Single-key shortcuts</span><span data-t="tk.7">Big files as a link</span><span data-t="tk.8">Touch ID lock</span><span data-t="tk.9">Mac · Windows</span>
+  <span data-t="tk.1">All Inboxes</span><span data-t="tk.2">Trackers blocked</span><span data-t="tk.3">Undo send</span><span data-t="tk.4">Snooze</span><span data-t="tk.5">Send later</span><span data-t="tk.6">Single-key shortcuts</span><span data-t="tk.7">Big files as a link</span><span data-t="tk.8">Touch ID lock</span><span data-t="tk.9">Mac · Windows</span>
+</div></div>
+
+<section id="only">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="only.idx">01 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only RoarMail</b> does.</h2></div>
+    <p class="sub rv" data-t="only.sub">Why your mail feels lighter here, and safer.</p>
+  </div>
+  <div class="three">
+    <article class="big rv">
+      <span class="no">01</span>
+      <div><h3 data-t="f1.t" data-html>All your mail, <b>one inbox</b>.</h3><p data-t="f1.p">Gmail, iCloud, Yahoo, Outlook or your own domain, side by side in All Inboxes, each with its own colour. Type your address and the server settings are found by themselves, even for a company domain on Google Workspace or Microsoft 365.</p>
+        <div class="chips"><span data-t="f1.c1">All Inboxes</span><span data-t="f1.c2">Any IMAP account</span><span data-t="f1.c3">Settings found for you</span><span data-t="f1.c4">A colour per account</span></div></div>
+      <div class="viz"><div class="v-acc"><div class="a all"><i style="background:var(--red-hi)"></i><span data-t="f1.all">All Inboxes</span><small>12</small></div><div class="a"><i style="background:#ff5a4f"></i>studio@themadlions.com<small>7</small></div><div class="a"><i style="background:#3b82f6"></i>alex@gmail.com<small>4</small></div><div class="a"><i style="background:#2fd36b"></i>me@icloud.com<small>1</small></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">02</span>
+      <div><h3 data-t="f2.t" data-html>Private <b>by design</b>.</h3><p data-t="f2.p">RoarMail talks to your mail servers straight from your computer: no server of ours sees your mail. Images stay hidden until you say so, tracking pixels are blocked even when they show, tracking tags come off links, and a link that pretends to be somewhere else gets a warning before it opens.</p>
+        <div class="chips"><span data-t="f2.c1">No middleman</span><span data-t="f2.c2">Trackers blocked</span><span data-t="f2.c3">Clean links</span><span data-t="f2.c4">Fake-link warning</span></div></div>
+      <div class="viz"><div class="v-priv"><div class="shield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6z"/><path d="m9 12 2 2 4-4"/></svg><span data-t="f2.blocked">3 trackers blocked</span></div><div class="warn"><b data-t="f2.warn">This link goes somewhere else</b><span>paypal.com → <del>paypa1-secure.xyz</del></span><div class="bt"><i data-t="f2.copy">Copy</i><i data-t="f2.anyway">Open anyway</i></div></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">03</span>
+      <div><h3 data-t="f3.t" data-html><b>Undo</b> everything.</h3><p data-t="f3.p">Archive, delete, move: each waits five seconds, and Z takes it back. Sending waits too, as long as you choose, up to 30 seconds, and Undo brings the message back as a draft. Mistakes stop being final.</p>
+        <div class="chips"><span data-t="f3.c1">Undo archive, delete, move</span><span data-t="f3.c2">Undo send, up to 30 s</span><span data-t="f3.c3">Z</span></div></div>
+      <div class="viz"><div class="v-undo"><div class="toast"><span data-t="f3.sent">Sent</span><s data-t="f3.undo">Undo</s><kbd>Z</kbd></div><div class="cd"><i></i></div><div class="keys"><span><b>E</b><span data-t="f3.k1">archive</span></span><span><b>#</b><span data-t="f3.k2">delete</span></span><span><b>M</b><span data-t="f3.k3">move</span></span></div></div></div>
+    </article>
+  </div>
+</section>
+
+<section id="new">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="new.idx">02 · New</p><h2 class="rv" data-t="new.title" data-html>Mail <b>on your time</b>.</h2></div>
+    <p class="sub rv" data-t="new.sub">Put mail away until you need it, send it when they will read it, and hand it to the crew in RoarMe.</p>
+  </div>
+  <div class="board">
+    <article class="tile t-tasks rv">
+      <span class="k" data-t="n1.k">Snooze · Send later</span>
+      <h3 data-t="n1.t" data-html>Not now. <b>Later.</b></h3>
+      <p data-t="n1.p">Snooze a message with B and it leaves the inbox until the time you pick, then comes back unread with a notification. Write now and send later, the same way. Want an answer? Ask RoarMail to remind you if nobody replies in 1, 2, 3 or 7 days.</p>
+      <div class="when">
+        <span data-t="n1.w1" data-html>Later today <small>18:00</small></span>
+        <span class="on" data-t="n1.w2" data-html>Tomorrow morning <small>08:00</small></span>
+        <span data-t="n1.w3" data-html>This weekend <small>Sat 09:00</small></span>
+        <span data-t="n1.w4" data-html>Pick a day and time <small>…</small></span>
+      </div>
+    </article>
+    <article class="tile t-ord rv" style="--d:.08s">
+      <span class="k" data-t="n2.k" data-html>RoarMe <em>0.7</em></span>
+      <h3 data-t="n2.t" data-html>From the inbox <b>to the crew</b>.</h3>
+      <p data-t="n2.p">Sign in with your RoarMe account, if you like. Send an email into a chat or a group, with its attachments, or make it a task with a date and a link back to the email. Your RoarMe tasks and upcoming calls sit beside your mail.</p>
+      <div class="rm-acts"><span><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 16-8-6 16-2.5-6.5z"/></svg></i><span data-t="n2.a1">Send to RoarMe</span></span><span><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-10"/></svg></i><span data-t="n2.a2">Make it a task</span></span></div>
+      <a class="more" href="../../roarme/"><span data-t="n2.more">Meet RoarMe</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </article>
+    <article class="tile t-upd rv">
+      <span class="k" data-t="n3.k" data-html>Big files <em>0.8</em></span>
+      <h3 data-t="n3.t" data-html>3&nbsp;GB, <b>as a link</b>.</h3>
+      <p data-t="n3.p">Most mail servers refuse more than 20 to 25 MB. Signed in to RoarMe, a bigger file goes up as a RoarTransfer link instead, up to 3 GB, kept for 3 days, and the email carries a card with its name, size and expiry.</p>
+      <div class="tr-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h-.5a4.5 4.5 0 0 1-.9-8.9A6 6 0 0 1 17.3 8 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M8.5 15 12 11.5 15.5 15"/></svg></i><span><b>RUSHES_DAY2.MOV</b><small data-t="n3.card">2.4 GB · until Fri 24 Oct</small></span></div>
+    </article>
+    <article class="tile t-icon rv" style="--d:.08s">
+      <div class="txt">
+        <span class="k" data-t="n4.k">The look</span>
+        <h3 data-t="n4.t" data-html>RoarMe's look, <b>your colours</b>.</h3>
+        <p data-t="n4.p">The Simba and Pumba themes, dark, light or as the system, ten accent colours, seven fonts, reading size, spacing and corners, glass or solid panels, with a live preview. The same family as RoarMe.</p>
+      </div>
+      <div class="icons"><svg class="ml-icon" viewBox="100 100 824 824" aria-label="RoarMail icon"><use href="#mlicon"/></svg></div>
+    </article>
+  </div>
+</section>
+
+<section id="all">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="all.idx">03 · Everything</p><h2 class="rv" data-t="all.title" data-html>And all <b>mail should do</b>.</h2></div>
+    <p class="sub rv" data-t="all.sub">The rest of RoarMail, briefly.</p>
+  </div>
+  <div class="index">
+    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">Conversations</b><p data-t="ix1.p">Replies gather into one conversation, your own included. The newest and the unread open; the rest fold to one line.</p></div>
+    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">Search as you type</b><p data-t="ix2.p">Subject, sender and text, across every account, instantly. It ignores accents, so «καλημερα» finds «καλημέρα».</p></div>
+    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Mail the moment it lands</b><p data-t="ix3.p">New mail arrives at once, not every few minutes, and the connection comes back by itself after sleep.</p></div>
+    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">One key for each thing</b><p data-t="ix4.p">C to write, R to reply, E to archive, B to snooze, J and K to move, / to search. All on one page in Settings.</p></div>
+    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">Swipes and quick buttons</b><p data-t="ix5.p">Swipe a message left or right on the trackpad, each side doing what you choose. Hover a row for read, star, snooze, archive and delete.</p></div>
+    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Many at once</b><p data-t="ix6.p">⌘-click, Shift-click or ⌘A, then archive, delete, move, snooze, star or mark them read together.</p></div>
+    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Write it properly</b><p data-t="ix7.p">Reply, reply all and forward, Cc and Bcc, recipients suggested as you type, the system spellchecker, and several signatures per account.</p></div>
+    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">Nothing gets lost</b><p data-t="ix8.p">Drafts save themselves every few seconds. A message that fails to send waits in the Outbox with Retry and Edit.</p></div>
+    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">Less of what you don't want</b><p data-t="ix9.p">Unsubscribe in one tap where the list allows it. Block a sender and their new mail goes straight to the Trash.</p></div>
+    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Always on time</b><p data-t="ix10.p">RoarMail can open with the computer and wait in the menu bar, so snoozes, scheduled sends and reminders happen on time. The unread count sits on the icon.</p></div>
+    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">Reads without a connection</b><p data-t="ix11.p">Mail is kept on your computer, so you can read on a plane. What you do offline is sent when you are back.</p></div>
+    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Your default mail app</b><p data-t="ix12.p">Email links open a new message in RoarMail. The app is in Greek or English, as your system.</p></div>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="priv">
+    <div>
+      <p class="idx rv" data-t="pv.idx">04 · Privacy</p>
+      <h2 class="rv" data-t="pv.title" data-html>Just you and <b>your server</b>.</h2>
+      <p class="sub rv" style="margin-top:22px;color:var(--muted);font-size:17px;line-height:1.6" data-t="pv.sub">We built RoarMail to protect you from the mail itself: from people who track when you open it, and from mail that is not what it says.</p>
+    </div>
+    <div class="prom">
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></i><b data-t="p1.t">No server in between</b><p data-t="p1.p">Your computer talks to your mail servers directly. What RoarMail keeps stays on your computer.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l2 2M15 8l2 2"/></svg></i><b data-t="p2.t">Passwords in the keychain</b><p data-t="p2.p">Locked by your computer's own key store, Keychain on Mac and DPAPI on Windows, and never sent to us.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg></i><b data-t="p3.t">Nobody sees when you read</b><p data-t="p3.p">Images are hidden until you allow them, per message or per sender. Tracking pixels stay blocked either way.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></i><b data-t="p4.t">Links you can trust</b><p data-t="p4.p">Hover a link to see where it really goes. Tracking tags are removed, and look-alike addresses get a warning.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6z"/><path d="M12 8v5M12 16h.01"/></svg></i><b data-t="p5.t">Fake senders caught</b><p data-t="p5.p">A warning when a message fails its sender checks, when the name hides another address, or when replies would go elsewhere.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg></i><b data-t="p6.t">Locked with Touch ID</b><p data-t="p6.p">On a Mac, lock RoarMail at start, after sleep or when idle; notifications hide what they say while it is locked.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="dl.idx">05 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarMail</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
+    <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab, our own mail every day.</p>
+  </div>
+  <div class="dls three">
+    <div class="dl rv" id="dl-mac" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.7zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.6-1.3z"/></svg></i>
+      <h3>Mac</h3>
+      <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
+      <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roarmail/releases/latest/download/RoarMail-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+      <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roarmail/releases/latest/download/RoarMail-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
+    </div>
+    <div class="dl rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
+      <h3>Windows</h3>
+      <small data-t="dl.win">Windows 10 and 11.</small>
+      <a class="pill main" data-f="win" href="https://github.com/alexisdigipro-hub/roarmail/releases/latest/download/RoarMail-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+    </div>
+    <div class="dl rv" id="dl-web" style="--d:.12s" data-mine="Here">
+      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m10 9.5 4.5 2.5-4.5 2.5z"/></svg></i>
+      <h3 data-t="dl.demot">Web demo</h3>
+      <small data-t="dl.demo">The real app over sample mail, in the browser. Nothing connects, nothing is saved.</small>
+      <a class="pill" href="../../roarmail/" data-t="cta.demo">Try the web demo</a>
+    </div>
+  </div>
+  <div class="dl-note">
+    <p class="rv" data-t="dl.upd" data-html><b>It updates itself.</b> RoarMail fetches new versions on its own and asks for a quick restart; if you quit first, it installs on the way out.</p>
+    <p class="rv" data-t="dl.help" data-html><b>First time on a Mac?</b> The app is not signed by Apple yet: right-click RoarMail in Applications and choose Open, or press Open Anyway in System Settings › Privacy &amp; Security. On Windows: More info › Run anyway.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="faq">
+    <div><p class="idx rv" data-t="faq.idx">06 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
+    <div class="qa">
+      <details class="rv"><summary data-t="q1">Is RoarMail free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
+      <details class="rv"><summary data-t="q2">Which accounts can I add?</summary><p data-t="a2">Any account with IMAP and SMTP: Gmail, iCloud, Yahoo, Outlook, Google Workspace, Microsoft 365, or your own domain. Gmail, iCloud and Yahoo ask for an app password, and RoarMail tells you where to make one. Sign-in with a Microsoft account is coming.</p></details>
+      <details class="rv"><summary data-t="q3">Does my mail go through your servers?</summary><p data-t="a3">No. RoarMail connects from your computer straight to your mail servers. Your password stays in your computer's keychain.</p></details>
+      <details class="rv"><summary data-t="q4">Do I need RoarMe?</summary><p data-t="a4">No. RoarMail works on its own. Sign in with RoarMe only if you want to send emails into chats, make them tasks, see your tasks and calls, or send big files as a link. Your mail passwords never go to RoarMe.</p></details>
+      <details class="rv"><summary data-t="q5">How big can an attachment be?</summary><p data-t="a5">As big as your mail server accepts; many refuse more than 20 to 25 MB. Signed in to RoarMe, a file up to 3 GB goes as a RoarTransfer link instead, kept for 3 days.</p></details>
+      <details class="rv"><summary data-t="q6">Does search find old mail?</summary><p data-t="a6">Search looks through the mail kept on your computer, which makes it instant. The first time, RoarMail brings the last 90 days of each folder.</p></details>
+      <details class="rv"><summary data-t="q7">Is there a phone version?</summary><p data-t="a7">Not yet: RoarMail is for Mac and Windows. Snoozed, archived and moved mail moves on your server too, so the mail app on your phone sees the same inbox.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <p class="idx rv" data-t="ct.idx">Contact</p>
+  <h2 class="rv" data-t="ct.title" data-html>Ideas for <b>the next version</b>?</h2>
+  <a class="mail rv" href="mailto:lab@themadlions.com?subject=RoarMail">lab@themadlions.com</a>
+</section>
+</main>
+<footer>
+  <a href="../../"><img class="wordmark" src="../../wordmark.png" alt="The Mad Lions"></a>
+  <nav>
+    <a href="../" data-t="ft.lab">The Mad Lions Lab</a>
+    <a href="../../roarme/">RoarMe</a>
+    <a href="../../roardino/">Roardino</a>
+    <a href="../roarlist/">RoarList</a>
+  </nav>
+  <span data-t="footer">© 2026 The Mad Lions · RoarMail</span>
+</footer>
+
+<script>
+(function () {
+  var APP = 'RoarMail', REPO = 'alexisdigipro-hub/roarmail', WEB = '../../roarmail/'
+  var EL = {
+    'nav.only': 'Μόνο εδώ', 'nav.new': 'Νέα', 'nav.all': 'Όλα', 'nav.privacy': 'Απόρρητο', 'nav.download': 'Λήψη', 'nav.faq': 'Ερωτήσεις',
+    'cta.get': 'Πάρε το RoarMail', 'cta.demo': 'Δοκίμασε το web demo', 'cta.note': 'Δωρεάν · Mac και Windows · ενημερώνεται μόνο του ·', 'cta.all': 'όλες οι λήψεις',
+    'hero.kicker': 'Email για Mac και Windows · The Mad Lions Lab · Πείραμα 03',
+    'hero.lead': 'Όλα τα γραμματοκιβώτια σε <b>ένα inbox</b>, με την ταχύτητα του πληκτρολογίου, και <b>κανένας δικός μας server</b> ανάμεσα σε σένα και τα μηνύματά σου. <b>Μπλοκαρισμένοι trackers</b>, ελεγμένοι σύνδεσμοι, και <b>αναίρεση</b> σε όλα.',
+    'tag.undo': 'Αναίρεση σε όλα, για λίγα δευτερόλεπτα', 'tag.priv': 'Trackers μπλοκαρισμένοι, ακόμα και με τις εικόνες', 'tag.one': 'Όλοι οι λογαριασμοί, ένα inbox',
+    'tk.1': 'Όλα τα εισερχόμενα', 'tk.2': 'Trackers μπλοκαρισμένοι', 'tk.3': 'Αναίρεση αποστολής', 'tk.4': 'Αναβολή', 'tk.5': 'Αποστολή αργότερα', 'tk.6': 'Συντομεύσεις ενός πλήκτρου', 'tk.7': 'Μεγάλα αρχεία ως link', 'tk.8': 'Κλείδωμα με Touch ID', 'tk.9': 'Mac · Windows',
+    'only.idx': '01 · Μόνο εδώ', 'only.title': 'Τρία πράγματα που κάνει <b>μόνο το RoarMail</b>.', 'only.sub': 'Γιατί το email σου εδώ είναι πιο ελαφρύ, και πιο ασφαλές.',
+    'f1.t': 'Όλα σου τα email, <b>ένα inbox</b>.', 'f1.p': 'Gmail, iCloud, Yahoo, Outlook ή το δικό σου domain, δίπλα δίπλα στα Όλα τα εισερχόμενα, το καθένα με το χρώμα του. Γράφεις τη διεύθυνσή σου και οι ρυθμίσεις του server βρίσκονται μόνες τους, ακόμα και για εταιρικό domain σε Google Workspace ή Microsoft 365.',
+    'f1.c1': 'Όλα τα εισερχόμενα', 'f1.c2': 'Κάθε λογαριασμός IMAP', 'f1.c3': 'Ρυθμίσεις που βρίσκονται μόνες τους', 'f1.c4': 'Ένα χρώμα ανά λογαριασμό', 'f1.all': 'Όλα τα εισερχόμενα',
+    'f2.t': 'Ιδιωτικό <b>από τη φύση του</b>.', 'f2.p': 'Το RoarMail μιλά με τους mail servers σου κατευθείαν από τον υπολογιστή σου: κανένας δικός μας server δεν βλέπει τα μηνύματά σου. Οι εικόνες μένουν κρυφές ώσπου να το πεις, τα tracking pixels μπλοκάρονται ακόμα κι όταν φαίνονται, τα tags παρακολούθησης φεύγουν από τους συνδέσμους, και ένας σύνδεσμος που προσποιείται ότι πάει αλλού παίρνει προειδοποίηση πριν ανοίξει.',
+    'f2.c1': 'Χωρίς μεσάζοντα', 'f2.c2': 'Trackers μπλοκαρισμένοι', 'f2.c3': 'Καθαροί σύνδεσμοι', 'f2.c4': 'Προειδοποίηση για ψεύτικους συνδέσμους',
+    'f2.blocked': '3 trackers μπλοκαρίστηκαν', 'f2.warn': 'Αυτός ο σύνδεσμος πάει αλλού', 'f2.copy': 'Αντιγραφή', 'f2.anyway': 'Άνοιγμα παρόλα αυτά',
+    'f3.t': '<b>Αναίρεση</b> σε όλα.', 'f3.p': 'Αρχειοθέτηση, διαγραφή, μετακίνηση: η καθεμιά περιμένει πέντε δευτερόλεπτα, και το Z την παίρνει πίσω. Και η αποστολή περιμένει, όσο διαλέξεις, ως 30 δευτερόλεπτα, και η Αναίρεση φέρνει το μήνυμα πίσω ως πρόχειρο. Τα λάθη παύουν να είναι οριστικά.',
+    'f3.c1': 'Αναίρεση αρχειοθέτησης, διαγραφής, μετακίνησης', 'f3.c2': 'Αναίρεση αποστολής, ως 30 δευτ.', 'f3.c3': 'Z',
+    'f3.sent': 'Στάλθηκε', 'f3.undo': 'Αναίρεση', 'f3.k1': 'αρχειοθέτηση', 'f3.k2': 'διαγραφή', 'f3.k3': 'μετακίνηση',
+    'new.idx': '02 · Νέα', 'new.title': 'Το email <b>στον δικό σου χρόνο</b>.', 'new.sub': 'Βάλε στην άκρη ό,τι δεν χρειάζεσαι τώρα, στείλε όταν θα το διαβάσουν, και δώσ’ το στο συνεργείο στο RoarMe.',
+    'n1.k': 'Αναβολή · Αποστολή αργότερα', 'n1.t': 'Όχι τώρα. <b>Αργότερα.</b>', 'n1.p': 'Ανάβαλε ένα μήνυμα με το B και φεύγει από το inbox ως την ώρα που διαλέγεις, μετά γυρίζει αδιάβαστο με ειδοποίηση. Γράψε τώρα και στείλε αργότερα, με τον ίδιο τρόπο. Περιμένεις απάντηση; Ζήτα από το RoarMail να σου θυμίσει αν δεν απαντήσει κανείς σε 1, 2, 3 ή 7 μέρες.',
+    'n1.w1': 'Αργότερα σήμερα <small>18:00</small>', 'n1.w2': 'Αύριο το πρωί <small>08:00</small>', 'n1.w3': 'Αυτό το Σαββατοκύριακο <small>Σάβ 09:00</small>', 'n1.w4': 'Διάλεξε μέρα και ώρα <small>…</small>',
+    'n2.k': 'RoarMe <em>0.7</em>', 'n2.t': 'Από το inbox <b>στο συνεργείο</b>.', 'n2.p': 'Συνδέσου με τον λογαριασμό σου στο RoarMe, αν θες. Στείλε ένα email σε μια συνομιλία ή ομάδα, με τα συνημμένα του, ή κάν’ το task με ημερομηνία και σύνδεσμο πίσω στο email. Τα tasks σου και οι κλήσεις που έρχονται από το RoarMe κάθονται δίπλα στα μηνύματά σου.',
+    'n2.a1': 'Στείλε στο RoarMe', 'n2.a2': 'Κάν’ το task', 'n2.more': 'Γνώρισε το RoarMe',
+    'n3.k': 'Μεγάλα αρχεία <em>0.8</em>', 'n3.t': '3&nbsp;GB, <b>ως link</b>.', 'n3.p': 'Οι περισσότεροι mail servers δεν δέχονται πάνω από 20 με 25 MB. Συνδεδεμένος στο RoarMe, ένα μεγαλύτερο αρχείο ανεβαίνει ως link RoarTransfer, ως 3 GB, για 3 μέρες, και το email έχει μια κάρτα με το όνομα, το μέγεθος και τη λήξη του.',
+    'n3.card': '2.4 GB · ως Παρ 24 Οκτ',
+    'n4.k': 'Η εμφάνιση', 'n4.t': 'Το look του RoarMe, <b>τα δικά σου χρώματα</b>.', 'n4.p': 'Τα θέματα Simba και Pumba, σκοτεινό, φωτεινό ή όπως το σύστημα, δέκα χρώματα, επτά γραμματοσειρές, μέγεθος ανάγνωσης, αποστάσεις και γωνίες, γυάλινα ή συμπαγή πάνελ, με ζωντανή προεπισκόπηση. Η ίδια οικογένεια με το RoarMe.',
+    'all.idx': '03 · Όλα', 'all.title': 'Και όλα όσα <b>πρέπει να κάνει το email</b>.', 'all.sub': 'Τα υπόλοιπα του RoarMail, με λίγα λόγια.',
+    'ix1.t': 'Συζητήσεις', 'ix1.p': 'Οι απαντήσεις μαζεύονται σε μία συζήτηση, μαζί με τις δικές σου. Το πιο νέο και τα αδιάβαστα ανοίγουν· τα υπόλοιπα διπλώνουν σε μία γραμμή.',
+    'ix2.t': 'Αναζήτηση καθώς γράφεις', 'ix2.p': 'Θέμα, αποστολέας και κείμενο, σε όλους τους λογαριασμούς, αμέσως. Αγνοεί τους τόνους, οπότε το «καλημερα» βρίσκει το «καλημέρα».',
+    'ix3.t': 'Το email τη στιγμή που φτάνει', 'ix3.p': 'Τα νέα μηνύματα έρχονται αμέσως, όχι κάθε λίγα λεπτά, και η σύνδεση επανέρχεται μόνη της μετά τον ύπνο.',
+    'ix4.t': 'Ένα πλήκτρο για κάθε κίνηση', 'ix4.p': 'C για νέο, R για απάντηση, E για αρχειοθέτηση, B για αναβολή, J και K για να κινηθείς, / για αναζήτηση. Όλα σε μία σελίδα στις Ρυθμίσεις.',
+    'ix5.t': 'Σαρώσεις και γρήγορα κουμπιά', 'ix5.p': 'Σάρωσε ένα μήνυμα αριστερά ή δεξιά στο trackpad, με την κάθε πλευρά να κάνει ό,τι διαλέξεις. Πέρνα πάνω από μια γραμμή για διαβασμένο, αστέρι, αναβολή, αρχειοθέτηση και διαγραφή.',
+    'ix6.t': 'Πολλά μαζί', 'ix6.p': '⌘-κλικ, Shift-κλικ ή ⌘A, και μετά αρχειοθέτηση, διαγραφή, μετακίνηση, αναβολή, αστέρι ή διαβασμένα, όλα μαζί.',
+    'ix7.t': 'Γράψ’ το σωστά', 'ix7.p': 'Απάντηση, απάντηση σε όλους και προώθηση, Κοιν. και Ιδιαίτ. κοιν., παραλήπτες που προτείνονται καθώς γράφεις, ο ορθογράφος του συστήματος, και πολλές υπογραφές ανά λογαριασμό.',
+    'ix8.t': 'Τίποτα δεν χάνεται', 'ix8.p': 'Τα πρόχειρα αποθηκεύονται μόνα τους κάθε λίγα δευτερόλεπτα. Ένα μήνυμα που δεν στάλθηκε περιμένει στα Εξερχόμενα με Ξανά και Επεξεργασία.',
+    'ix9.t': 'Λιγότερα απ’ όσα δεν θες', 'ix9.p': 'Διαγραφή από λίστα με ένα πάτημα όπου το επιτρέπει η λίστα. Μπλόκαρε έναν αποστολέα και τα νέα του μηνύματα πάνε κατευθείαν στα Διαγραμμένα.',
+    'ix10.t': 'Πάντα στην ώρα του', 'ix10.p': 'Το RoarMail μπορεί να ανοίγει με τον υπολογιστή και να περιμένει στη γραμμή μενού, ώστε αναβολές, προγραμματισμένες αποστολές και υπενθυμίσεις να γίνονται στην ώρα τους. Ο αριθμός των αδιάβαστων κάθεται στο εικονίδιο.',
+    'ix11.t': 'Διαβάζει χωρίς σύνδεση', 'ix11.p': 'Τα μηνύματα μένουν στον υπολογιστή σου, οπότε διαβάζεις και στο αεροπλάνο. Ό,τι κάνεις χωρίς σύνδεση στέλνεται όταν επιστρέψεις.',
+    'ix12.t': 'Η βασική σου εφαρμογή email', 'ix12.p': 'Οι σύνδεσμοι email ανοίγουν νέο μήνυμα στο RoarMail. Η εφαρμογή είναι στα ελληνικά ή στα αγγλικά, όπως το σύστημά σου.',
+    'pv.idx': '04 · Απόρρητο', 'pv.title': 'Μόνο εσύ και <b>ο server σου</b>.', 'pv.sub': 'Φτιάξαμε το RoarMail για να σε προστατεύει από το ίδιο το email: από όσους παρακολουθούν πότε το ανοίγεις, και από μηνύματα που δεν είναι αυτό που λένε.',
+    'p1.t': 'Κανένας server στη μέση', 'p1.p': 'Ο υπολογιστής σου μιλά κατευθείαν με τους mail servers σου. Ό,τι κρατά το RoarMail μένει στον υπολογιστή σου.',
+    'p2.t': 'Κωδικοί στο keychain', 'p2.p': 'Κλειδωμένοι στο σύστημα κλειδιών του υπολογιστή σου, Keychain σε Mac και DPAPI σε Windows, και δεν μας στέλνονται ποτέ.',
+    'p3.t': 'Κανείς δεν ξέρει πότε διαβάζεις', 'p3.p': 'Οι εικόνες μένουν κρυφές ώσπου να τις επιτρέψεις, ανά μήνυμα ή ανά αποστολέα. Τα tracking pixels μένουν μπλοκαρισμένα έτσι κι αλλιώς.',
+    'p4.t': 'Σύνδεσμοι που εμπιστεύεσαι', 'p4.p': 'Πέρνα πάνω από έναν σύνδεσμο για να δεις πού πάει στ’ αλήθεια. Τα tags παρακολούθησης φεύγουν, και οι διευθύνσεις που μιμούνται άλλες παίρνουν προειδοποίηση.',
+    'p5.t': 'Ψεύτικοι αποστολείς στο φως', 'p5.p': 'Προειδοποίηση όταν ένα μήνυμα αποτυγχάνει στους ελέγχους αποστολέα, όταν το όνομα κρύβει άλλη διεύθυνση, ή όταν οι απαντήσεις θα πήγαιναν αλλού.',
+    'p6.t': 'Κλείδωμα με Touch ID', 'p6.p': 'Σε Mac, κλείδωσε το RoarMail στο άνοιγμα, μετά τον ύπνο ή όταν μένει αδρανές· όσο είναι κλειδωμένο, οι ειδοποιήσεις κρύβουν τι γράφουν.',
+    'dl.idx': '05 · Λήψη', 'dl.title': 'Πάρε το <b>RoarMail</b>.', 'dl.sub': 'Δωρεάν, και σε beta: ένα πείραμα του Mad Lions Lab, το δικό μας email κάθε μέρα.',
+    'dl.mac': 'Για Mac με chip της Apple (M1 και νεότερα).', 'dl.get': 'Λήψη', 'dl.intel': 'Παλιότερο Mac με Intel;', 'dl.intelbtn': 'Αυτό', 'dl.win': 'Windows 10 και 11.',
+    'dl.demot': 'Web demo', 'dl.demo': 'Η κανονική εφαρμογή με δείγματα μηνυμάτων, στον browser. Τίποτα δεν συνδέεται, τίποτα δεν αποθηκεύεται.',
+    'dl.upd': '<b>Ενημερώνεται μόνο του.</b> Το RoarMail κατεβάζει τις νέες εκδόσεις μόνο του και ζητά μια γρήγορη επανεκκίνηση· αν το κλείσεις πρώτα, εγκαθίσταται φεύγοντας.',
+    'dl.help': '<b>Πρώτη φορά σε Mac;</b> Η εφαρμογή δεν είναι ακόμα υπογεγραμμένη από την Apple: κάνε δεξί κλικ στο RoarMail στις Εφαρμογές και διάλεξε Άνοιγμα, ή πάτα Άνοιγμα παρόλα αυτά στις Ρυθμίσεις συστήματος › Απόρρητο και ασφάλεια. Σε Windows: Περισσότερες πληροφορίες › Εκτέλεση παρόλα αυτά.',
+    'faq.idx': '06 · Ερωτήσεις', 'faq.title': 'Καλό να <b>ξέρεις</b>.',
+    'q1': 'Είναι δωρεάν το RoarMail;', 'a1': 'Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις.',
+    'q2': 'Ποιους λογαριασμούς μπορώ να βάλω;', 'a2': 'Κάθε λογαριασμό με IMAP και SMTP: Gmail, iCloud, Yahoo, Outlook, Google Workspace, Microsoft 365, ή το δικό σου domain. Τα Gmail, iCloud και Yahoo ζητούν κωδικό εφαρμογής, και το RoarMail σου λέει πού να τον φτιάξεις. Η σύνδεση με λογαριασμό Microsoft έρχεται.',
+    'q3': 'Περνούν τα email μου από τους servers σας;', 'a3': 'Όχι. Το RoarMail συνδέεται από τον υπολογιστή σου κατευθείαν στους mail servers σου. Ο κωδικός σου μένει στο keychain του υπολογιστή σου.',
+    'q4': 'Χρειάζομαι το RoarMe;', 'a4': 'Όχι. Το RoarMail δουλεύει μόνο του. Συνδέεσαι με το RoarMe μόνο αν θες να στέλνεις email σε συνομιλίες, να τα κάνεις tasks, να βλέπεις τα tasks και τις κλήσεις σου, ή να στέλνεις μεγάλα αρχεία ως link. Οι κωδικοί του email σου δεν πάνε ποτέ στο RoarMe.',
+    'q5': 'Πόσο μεγάλο μπορεί να είναι ένα συνημμένο;', 'a5': 'Όσο δέχεται ο mail server σου· πολλοί δεν δέχονται πάνω από 20 με 25 MB. Συνδεδεμένος στο RoarMe, ένα αρχείο ως 3 GB πηγαίνει αντί γι’ αυτό ως link RoarTransfer, για 3 μέρες.',
+    'q6': 'Βρίσκει η αναζήτηση παλιά email;', 'a6': 'Η αναζήτηση ψάχνει στα μηνύματα που είναι στον υπολογιστή σου, γι’ αυτό είναι άμεση. Την πρώτη φορά, το RoarMail φέρνει τις τελευταίες 90 μέρες από κάθε φάκελο.',
+    'q7': 'Υπάρχει έκδοση για κινητό;', 'a7': 'Όχι ακόμα: το RoarMail είναι για Mac και Windows. Ό,τι αναβάλλεις, αρχειοθετείς ή μετακινείς αλλάζει και στον server σου, οπότε η εφαρμογή email του κινητού σου βλέπει το ίδιο inbox.',
+    'ct.idx': 'Επαφή', 'ct.title': 'Ιδέες για <b>την επόμενη έκδοση</b>;', 'ft.lab': 'The Mad Lions Lab', 'footer': '© 2026 The Mad Lions · RoarMail'
+  }
+  var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
+  var EN = {}
+  nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })
+  var mineLabel = { en: { mac: 'Your computer', win: 'Your computer', web: 'Here' }, el: { mac: 'Ο υπολογιστής σου', win: 'Ο υπολογιστής σου', web: 'Εδώ' } }
+  function setLang(l) {
+    var d = l === 'el' ? EL : EN
+    nodes.forEach(function (n) { var v = d[n.dataset.t]; if (v == null) v = EN[n.dataset.t]; if (n.hasAttribute('data-html')) n.innerHTML = v; else n.textContent = v })
+    document.documentElement.lang = l === 'el' ? 'el' : 'en'
+    document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) })
+    ;['mac', 'win', 'web'].forEach(function (k) { var e = document.getElementById('dl-' + k); if (e) e.dataset.mine = mineLabel[l === 'el' ? 'el' : 'en'][k] })
+    setMain(l); showVer(l)
+    try { localStorage.setItem('tml_site_lang', l) } catch (e) {}
+  }
+  // the first button downloads for the computer you are on; a phone gets the web demo
+  var ua = navigator.userAgent || ''
+  var phone = /iPhone|iPad|iPod|Android/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  var os = phone ? 'web' : /Windows/i.test(ua) ? 'win' : /Mac/i.test(ua) ? 'mac' : 'web'
+  var mine = document.getElementById('dl-' + os)
+  if (mine) mine.classList.add('mine')
+  // the installers carry their version in the name: the links come from the newest release's own files
+  var REL = 'https://github.com/' + REPO + '/releases/latest/download/' + APP
+  var FILES = { mac: REL + '-Mac-arm64.dmg', intel: REL + '-Mac-x64.dmg', win: REL + '-Windows-Setup.exe' }
+  var VER = ''
+  fetch('https://api.github.com/repos/' + REPO + '/releases/latest', { headers: { Accept: 'application/vnd.github+json' } })
+    .then(function (r) { return r.ok ? r.json() : null })
+    .then(function (d) {
+      if (!d) return
+      VER = (String(d.name || '').match(/(\d+\.\d+\.\d+)/) || [])[1] || ''
+      var re = { mac: /Mac-arm64\.dmg$/, intel: /Mac-x64\.dmg$/, win: /Windows-Setup\.exe$/ }
+      Object.keys(re).forEach(function (k) {
+        var list = (d.assets || []).filter(function (a) { return re[k].test(a.name) })
+        var pick = list.filter(function (a) { return /\d+\.\d+\.\d+/.test(a.name) })[0] || list[0]
+        if (!pick) return
+        document.querySelectorAll('a[data-f="' + k + '"]').forEach(function (a) { a.href = pick.browser_download_url })
+        FILES[k] = pick.browser_download_url
+      })
+      setMain(document.documentElement.lang); showVer(document.documentElement.lang)
+    }).catch(function () {})
+  function showVer(l) {
+    var e = document.getElementById('dl-ver')
+    if (!e || !VER) return
+    e.textContent = (l === 'el' ? '● Τελευταία έκδοση: ' : '● Latest: ') + APP + ' ' + VER + ' beta'
+    e.hidden = false
+  }
+  function setMain(l) {
+    var a = document.getElementById('dl-main')
+    var s = a.querySelector('span')
+    var el = l === 'el'
+    if (os === 'mac') { a.href = FILES.mac; s.textContent = el ? 'Λήψη για Mac' : 'Download for Mac' }
+    else if (os === 'win') { a.href = FILES.win; s.textContent = el ? 'Λήψη για Windows' : 'Download for Windows' }
+    else if (phone) { a.href = '#download'; s.textContent = el ? 'Λήψη για τον υπολογιστή' : 'Get it for your computer' }
+    else { a.href = '#download'; s.textContent = el ? 'Λήψη' : 'Download' }
+  }
+  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang) }) })
+  var saved = 'en'
+  try { saved = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
+  setLang(saved)
+  var bar = document.getElementById('bar')
+  var onScroll = function () { bar.classList.toggle('solid', window.scrollY > 30) }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll()
+  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  var rv = [].slice.call(document.querySelectorAll('.rv'))
+  if (still || !('IntersectionObserver' in window)) rv.forEach(function (e) { e.classList.add('in') })
+  else {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }) }, { rootMargin: '0px 0px -8% 0px', threshold: .06 })
+    rv.forEach(function (e) { io.observe(e) })
+  }
+  // the frame leans a little toward the pointer (computers only)
+  var win = document.getElementById('win')
+  if (win && !still && window.matchMedia('(pointer: fine)').matches) {
+    var tx = 0, ty = 0, x = 0, y = 0, raf = 0
+    var loop = function () { x += (tx - x) * .08; y += (ty - y) * .08; win.style.setProperty('--rx', x.toFixed(2)); win.style.setProperty('--ry', y.toFixed(2)); raf = Math.abs(tx - x) + Math.abs(ty - y) > .01 ? requestAnimationFrame(loop) : 0 }
+    window.addEventListener('pointermove', function (e) { var r = win.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return; tx = ((e.clientX / innerWidth) - .5) * 4; ty = -((e.clientY / innerHeight) - .5) * 3; if (!raf) raf = requestAnimationFrame(loop) }, { passive: true })
+  }
+})()
+</script>
+</body>
+</html>
