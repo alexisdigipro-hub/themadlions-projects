@@ -13,7 +13,7 @@ const ROARME_ORIGIN = 'https://alexisdigipro-hub.github.io'
 const ROARME_EMBED = `${ROARME_ORIGIN}/roarme/?embed=hub`
 const STATE = /^[A-Za-z0-9_-]{24,64}$/
 
-export default function RoarMePage() {
+export default function RoarMePage({ full = false }) {
   const me = useCurrentUser()
   const frame = useRef(null)
 
@@ -46,7 +46,7 @@ export default function RoarMePage() {
 
   if (!supabase) return <p className="muted">RoarMe needs the online database.</p>
   return (
-    <div className="roarme-page">
+    <div className={`roarme-page${full ? ' full' : ''}`}>
       <iframe
         ref={frame}
         className="roarme-frame"

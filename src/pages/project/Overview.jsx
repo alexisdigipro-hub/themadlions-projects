@@ -12,6 +12,7 @@ import { useTrackSource } from '../../lib/trackSource.js'
 import { pcloudTarget } from '../../lib/pcloud.js'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { remote } from '../../lib/supabase.js'
+import ProjectRoarMe from '../../components/ProjectRoarMe.jsx'
 import Tasks, { tasksFor } from './Tasks.jsx'
 import { Waveform } from './Music.jsx'
 import Notes from './Notes.jsx'
@@ -194,6 +195,8 @@ export default function Overview() {
 
   return (
     <div className="overview">
+      {/* the project's RoarMe group (Alex, 20 Oct: the chat is RoarMe now), administrators only */}
+      {remote && user?.role === 'admin' && <ProjectRoarMe projectId={project.id} />}
       <section className="panel progress">
         <div className="progress-head">
           <div className="progress-cover">

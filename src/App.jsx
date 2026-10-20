@@ -39,10 +39,8 @@ const People = lazyPage(() => import('./pages/project/People.jsx'))
 const Whiteboard = lazyPage(() => import('./pages/project/Whiteboard.jsx'))
 const Shots = lazyPage(() => import('./pages/project/Shots.jsx'))
 const Database = lazyPage(() => import('./pages/Database.jsx'))
-const Chat = lazyPage(() => import('./pages/Chat.jsx'))
 const RoarMePage = lazyPage(() => import('./pages/RoarMePage.jsx'))
 // the chat alone in a window of its own (the ⧉ button on the chat list), no side menu
-const ChatWindow = lazyPage(() => import('./pages/Chat.jsx').then((m) => ({ default: m.ChatWindow })))
 const MyWork = lazyPage(() => import('./pages/MyWork.jsx'))
 const Profile = lazyPage(() => import('./pages/Profile.jsx'))
 const Office = lazyPage(() => import('./pages/Office.jsx'))
@@ -86,7 +84,8 @@ function RequireUser() {
 // link should still land on that same room rather than a dead page.
 function ProjectChatRedirect() {
   const { project } = useProject()
-  return <Navigate to={`/chat/p:${project.id}`} replace />
+  // Hub Chat is gone (Alex, 20 Oct): the project's chat is its RoarMe group
+  return <Navigate to="/roarme" replace />
 }
 
 function LoginGate() {
@@ -117,14 +116,16 @@ export default function App() {
             {/* a note opened from its link (Alex, 10 Oct) */}
             <Route path="/n/:token" element={<PublicNote />} />
             <Route element={<RequireUser />}>
-              <Route path="chat-window" element={<ChatWindow />} />
-              <Route path="chat-window/:room" element={<ChatWindow />} />
+              {/* TML Chat and the chat window (Alex, 20 Oct): RoarMe on the whole screen */}
+              <Route path="chat-window" element={<RoarMePage full />} />
+              <Route path="chat-window/:room" element={<RoarMePage full />} />
               <Route element={<Layout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="calendar" element={<CalendarAll />} />
                 <Route path="tasks" element={<OfficeHub />} />
-                <Route path="chat" element={<Chat />} />
-                <Route path="chat/:room" element={<Chat />} />
+                {/* Hub Chat is gone (Alex, 20 Oct): an old link opens RoarMe */}
+                <Route path="chat" element={<Navigate to="/roarme" replace />} />
+                <Route path="chat/:room" element={<Navigate to="/roarme" replace />} />
                 <Route path="roarme" element={<RoarMePage />} />
                 <Route path="mywork" element={<MyWork />} />
                 <Route path="me" element={<Navigate to="/settings" replace />} />

@@ -13,7 +13,6 @@ import Team from './Team.jsx'
 import Profile from './Profile.jsx'
 import RoarMeLink from '../components/RoarMeLink.jsx'
 import { useNavigate } from 'react-router-dom'
-import ChatSettings from '../components/ChatSettings.jsx'
 import { applyFont, currentFont } from '../lib/fonts.js'
 import FontPicker from '../components/FontPicker.jsx'
 import Usage from '../components/Usage.jsx'
@@ -59,7 +58,7 @@ export default function Settings() {
   const TABS = [
     ['profile', 'My profile', false],
     ['company', 'Company', true], ['callsheets', 'Ordino', true], ['team', 'Team', true], ['calendar', 'Calendar & projects', true], ['budget', 'Budget', true],
-    ['display', 'Display', false], ['chat', 'Chat', false], ['integrations', 'Integrations', true], ['data', 'Data', false], ['usage', 'Usage', true],
+    ['display', 'Display', false], ['integrations', 'Integrations', true], ['data', 'Data', false], ['usage', 'Usage', true],
   ].filter(([, , admin]) => !admin || isAdmin)
   const [tab, setTab] = useState('profile')
   const { boxRef, slideTo, inClass } = useSlide()
@@ -447,12 +446,6 @@ export default function Settings() {
             </div>
           </section>
         )}
-
-        <section className="panel wide" data-tab="chat">
-          <h2>Chat</h2>
-          <p className="muted small">How the chat looks and behaves for you, on this device. Everyone sets their own; nothing here changes what others see. Who gets a pop-up notice for a chat message is under Team.</p>
-          <ChatSettings toast={toast} />
-        </section>
 
         {isAdmin && (
         <section className="panel" data-tab="integrations">

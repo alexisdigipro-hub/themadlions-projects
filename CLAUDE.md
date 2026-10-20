@@ -7,7 +7,7 @@ Alex Konstantinidis, film director, owner of The Mad Lions (Athens). He is not a
 - **Anything he has to paste somewhere himself goes in the reply, as a ready code block.** SQL, an Edge Function, a config value, a command: write it out in the chat, complete, nothing left to look up. Never send him to a file in the repo, a GitHub link or an attachment to copy it from, and never make him piece it together from two messages.
 - One answer, one thing to do. He is not a developer and does not hold a procedure in his head: say where to click, what to type, what to press, in that order, and leave out everything he does not need to act on.
 
-## Names for the chat (agreed with Alex, 15 Oct)
+## Names for the chat (agreed with Alex, 15 Oct; since 20 Oct Hub Chat is gone and these all open RoarMe, see RoarMe below)
 - **Hub Chat, computer**: the Chat page of hub.themadlions.com from the side menu on a computer.
 - **Hub Chat, phone**: the Chat tab in the hub's bottom bar on a phone (`html:not(.chat-window)`, not `.windowed`).
 - **TML Chat**: the chat's own app on the phone's home screen (chat.html / `html.chat-window`), its own foot Chats · Calls · Notices · Settings.

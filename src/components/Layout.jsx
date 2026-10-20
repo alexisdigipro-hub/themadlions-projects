@@ -133,9 +133,8 @@ export default function Layout() {
     // the Organizer (Alex, 10 Oct): Tasks, Notes and Office as tabs of one page, opening on Tasks (or on
     // Notes for someone without Tasks); where Tasks was, so on a phone it is among the first five
     { to: can(user, 'tasks') ? '/tasks' : '/notes', label: 'Organizer', show: true, icon: 'tasks', also: ['/tasks', '/notes', '/office'] },
-    { to: '/chat', label: 'Chat', show: true, icon: 'chat', badge: unread },
-    // RoarMe inside the hub (Alex, 20 Oct: phase 4, the chat moving onto RoarMe; Chat stays until it is switched off)
-    { to: '/roarme', label: 'RoarMe', show: remote, icon: 'chat' },
+    // the team's chat is RoarMe (Alex, 20 Oct): Hub Chat is gone, RoarMe takes its place
+    { to: '/roarme', label: 'RoarMe', show: remote, icon: 'chat', also: ['/chat'] },
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     // Drives is a tab of the Database now (Alex, 10 Oct)
