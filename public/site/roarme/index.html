@@ -194,6 +194,7 @@ h2 b { font-weight: 800; }
 .tile .more { margin-top: auto; align-self: flex-start; font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--text); display: inline-flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line-2); padding-bottom: 3px; }
 .tile .more svg { width: 14px; height: 14px; transition: transform .3s var(--ease); }
 .tile .more:hover svg { transform: translateX(3px); }
+.t-half { grid-column: span 6; }
 .t-tasks { grid-column: span 7; } .t-ord { grid-column: span 5; } .t-upd { grid-column: span 5; } .t-icon { grid-column: span 7; }
 .mini { margin-top: 8px; display: grid; gap: 6px; max-width: 420px; }
 .mini .tk { margin: 0; } .mini .tk b { font-size: 13px; } .mini .tk small { font-size: 11px; } .mini .tk .ans span { font-size: 11px; padding: 5px 12px; }
@@ -271,7 +272,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   .win-body { grid-template-columns: 34% minmax(0, 1fr); }
   .win-body .pn.tasks { display: none; }
   .tag.t2 { display: none; }
-  .t-tasks, .t-ord, .t-upd, .t-icon { grid-column: span 12; }
+  .t-tasks, .t-ord, .t-upd, .t-icon, .t-half { grid-column: span 12; }
   .dls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
@@ -427,7 +428,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 <section id="new">
   <div class="sec-h">
     <div><p class="idx rv" data-t="new.idx">02 · New</p><h2 class="rv" data-t="new.title" data-html>Made for the way <b>a shoot runs</b>.</h2></div>
-    <p class="sub rv" data-t="new.sub">Who does what, the day's call sheet, and an app that keeps itself up to date.</p>
+    <p class="sub rv" data-t="new.sub">Who does what, the day's call sheet, reminders, mentions that reach people, and an app that keeps itself up to date.</p>
   </div>
   <div class="board">
     <article class="tile t-tasks rv">
@@ -448,10 +449,10 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <a class="more" href="../roardino/"><span data-t="no.more">Meet Roardino</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
     </article>
     <article class="tile t-upd rv">
-      <span class="k" data-t="nu.k">Updates itself <em>1.4.9</em></span>
+      <span class="k" data-t="nu.k" data-html>Updates itself <em>1.5</em></span>
       <h3 data-t="nu.t" data-html>One tap, <b>newest version</b>.</h3>
       <p data-t="nu.p">The Mac and Windows apps fetch a new version in the background and tell you when it is ready. Press Restart, and a few seconds later you are on it. No downloading, no dragging.</p>
-      <div class="upd-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg></i><span><b data-t="nu.c">RoarMe is ready</b><small data-t="nu.cs">Restart to update</small></span><s data-t="nu.btn">Restart</s></div>
+      <div class="upd-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg></i><span><b data-t="nu.c">RoarMe 1.5 is ready</b><small data-t="nu.cs">And what's new in it</small></span><s data-t="nu.btn">Restart to update</s></div>
     </article>
     <article class="tile t-icon rv" style="--d:.08s">
       <div class="txt">
@@ -460,6 +461,30 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
         <p data-t="ni.p">A new icon in the Dock and on the home screen, the same graphite glass as the app, and a choice of looks, dark or light. Tasks, ordinos and chats share one quiet design.</p>
       </div>
       <div class="icons"><svg viewBox="0 0 1932 1932" aria-label="RoarMe icon"><use href="#ricon"/></svg></div>
+    </article>
+    <article class="tile t-half rv">
+      <span class="k" data-t="nm.k" data-html>Mentions <em>new</em></span>
+      <h3 data-t="nm.t" data-html>@all, @here, <b>@μοντάζ</b>.</h3>
+      <p data-t="nm.p">In a group, @all reaches everyone and @here whoever is online right now. Make roles like @μοντάζ or @camera from the chat menu, and one @ reaches all of them. Whoever is mentioned is told even with the chat muted, and an @ waits in the chat list until they read it.</p>
+      <div class="chips"><span>@all</span><span>@here</span><span>@μοντάζ</span><span data-t="nm.c4">Roles for @mentions</span></div>
+    </article>
+    <article class="tile t-half rv" style="--d:.08s">
+      <span class="k" data-t="nr.k" data-html>Remind Me <em>new</em></span>
+      <h3 data-t="nr.t" data-html>Not now. <b>Remind me.</b></h3>
+      <p data-t="nr.p">Any message can come back later: in 20 minutes, in an hour, tomorrow at 09:00. It returns as a card in the app, or as a notification with RoarMe closed. Only you see it, and every reminder waits under Tasks › Reminders.</p>
+      <div class="chips"><span data-t="nr.c1">In 20 minutes</span><span data-t="nr.c2">In 1 hour</span><span data-t="nr.c3">Tomorrow 09:00</span><span data-t="nr.c4">Monday 09:00</span></div>
+    </article>
+    <article class="tile t-half rv">
+      <span class="k" data-t="ns.k" data-html>Scheduled messages <em>new</em></span>
+      <h3 data-t="ns.t" data-html>Written tonight, <b>sent at 08:00</b>.</h3>
+      <p data-t="ns.p">Hold Send, or open the chat menu, and pick a day and time; Tomorrow 08:00 is one tap for call times. It goes out even with RoarMe closed, and can repeat every day, week or month. Away? Auto-Reply answers one-to-one chats for you.</p>
+      <div class="chips"><span data-t="ns.c1">Schedule Message</span><span data-t="ns.c2">Repeat</span><span data-t="ns.c3">Auto-Reply</span></div>
+    </article>
+    <article class="tile t-half rv" style="--d:.08s">
+      <span class="k" data-t="nc.k" data-html>Calendar <em>new</em></span>
+      <h3 data-t="nc.t" data-html>The month, <b>at a glance</b>.</h3>
+      <p data-t="nc.p">Under Tasks, a calendar puts your tasks, planned calls and scheduled messages on one month. For THEMADLIONS teams, the Hub's tasks and events show there too, and you can sign in with your THEMADLIONS Hub account.</p>
+      <div class="chips"><span data-t="nc.c1">Tasks</span><span data-t="nc.c2">Planned calls</span><span data-t="nc.c3">Scheduled messages</span><span>THEMADLIONS Hub</span></div>
     </article>
   </div>
 </section>
@@ -471,13 +496,17 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   </div>
   <div class="index">
     <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">Calls, planned or now</b><p data-t="ix1.p">Voice and video, straight from device to device. Plan one ahead and it lands as a card with a countdown and Add to calendar.</p></div>
-    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">Groups, folders, mentions</b><p data-t="ix2.p">A group for every project or client, folders to keep work apart, @mentions and pins for what matters.</p></div>
+    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">Groups, folders, mentions</b><p data-t="ix2.p">A group for every project or client, folders that follow you on every device, @mentions and pins for what matters. Pinned files have their own tab.</p></div>
     <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Write it properly</b><p data-t="ix3.p">Bold, italic, spoilers, code, long Articles with headings and checklists, replies and reactions.</p></div>
     <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">Voice, places, pins</b><p data-t="ix4.p">Voice messages, a place on the map when you choose to send it, as many pinned messages as you need.</p></div>
-    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">Everything you shared</b><p data-t="ix5.p">Media, Transfers, Files, Links and Music from every chat in one library; a song keeps playing while you move around.</p></div>
+    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">Everything you shared</b><p data-t="ix5.p">Media, Transfers, Files, Links and Music from every chat in one library, AllMedia in Settings; a song keeps playing while you move around.</p></div>
     <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Back after a while?</b><p data-t="ix6.p">What came in arrives gathered, chat by chat. Mute, archive, mark as unread, peek without reading, lock with a code.</p></div>
-    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">On every screen</b><p data-t="ix7.p">Mac and Windows apps with the count on the icon, any browser, and the phone from the home screen. One account, everything in step.</p></div>
+    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">On every screen</b><p data-t="ix7.p">Mac and Windows apps, any browser, and the phone from the home screen, with notifications and the unread count even when RoarMe is closed. One account, everything in step.</p></div>
     <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">English and Greek</b><p data-t="ix8.p">The whole app in either language, switched in Settings. Your messages and names are never touched.</p></div>
+    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">Delete for me, or ask</b><p data-t="ix9.p">Delete a message only for you, or ask the other person to delete it for everyone; they accept or decline.</p></div>
+    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Your own contact card</b><p data-t="ix10.p">Give someone your own name, photo and note for them. Only you see it.</p></div>
+    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">An email if you missed it</b><p data-t="ix11.p">Away for a while? RoarMe can email you about unread messages, at most every three hours, never for muted chats.</p></div>
+    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Help in the app</b><p data-t="ix12.p">Every account has a RoarMe chat for ideas and questions, and the app checks for updates from Settings.</p></div>
   </div>
 </section>
 
@@ -498,6 +527,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.8-3.4 3.2-5.2 6-5.2s5.2 1.8 6 5.2M17 11l2 2 3.5-3.5"/></svg></i><b data-t="p3.t">You decide who reaches you</b><p data-t="p3.p">Who may add you, call you and see you online, set in Settings.</p></div>
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg></i><b data-t="p4.t">Things that disappear</b><p data-t="p4.p">Transfers delete themselves after 3 days; chats can clear themselves too.</p></div>
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12.5A2 2 0 0 0 8 21h8a2 2 0 0 0 2-1.5L19 7M9 7V4h6v3"/></svg></i><b data-t="p5.t">Leave any time</b><p data-t="p5.p">Delete your account and what is yours goes with it.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg></i><b data-t="p6.t">Deleted means deleted</b><p data-t="p6.p">A message you delete, and its files, leave our servers within minutes.</p></div>
     </div>
   </div>
 </section>
@@ -547,7 +577,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <details class="rv"><summary data-t="q1">Is RoarMe free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
       <details class="rv"><summary data-t="q2">Do I need a phone number?</summary><p data-t="a2">No. An email and a username are enough. People find you by your @name, or by the link and QR code you share.</p></details>
       <details class="rv"><summary data-t="q3">How big can a file be?</summary><p data-t="a3">Up to 50 MB straight in the chat, kept as long as the chat. Up to 3 GB with RoarTransfer, kept 3 days, with a link anyone can download from.</p></details>
-      <details class="rv"><summary data-t="q9">How do Tasks work?</summary><p data-t="a9">Press the Tasks button above your chats. Give a task to yourself or to anyone you share a chat with. For someone else it arrives as a request they accept or decline; then you both see its progress. Tasks never appear inside a conversation.</p></details>
+      <details class="rv"><summary data-t="q9">How do Tasks work?</summary><p data-t="a9">Tap Tasks in the bar at the foot. Give a task to yourself or to anyone you share a chat with; for someone else it arrives as a request they accept or decline, then you both see its progress. Reminders and a calendar of the month live there too. Tasks never appear inside a conversation.</p></details>
       <details class="rv"><summary data-t="q10">What is an ordino, and Roardino?</summary><p data-t="a10">An ordino is the day's call sheet: call time, location, programme. Roardino makes them, and the camera button beside the clip opens it inside RoarMe, signed in with your RoarMe account. Send it and the crew gets a card that opens on any phone.</p></details>
       <details class="rv"><summary data-t="q11">How do I get new versions?</summary><p data-t="a11">In the browser and on the phone you always have the newest. The Mac and Windows apps from 1.4.9 download new versions themselves and ask for a quick restart; older ones show a card with a download.</p></details>
       <details class="rv"><summary data-t="q7">Are my messages end-to-end encrypted?</summary><p data-t="a7">In a secret chat, yes. Turn on Encrypted Chat in any chat or group and every message from then on is locked on your device; only the devices in that chat can read it.</p></details>
@@ -592,21 +622,21 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'f2.c1': 'Ως 3 GB', 'f2.c2': 'Για 3 μέρες', 'f2.c3': 'Link λήψης', 'f2.c4': 'Συνεχίζει αν πέσει η σύνδεση', 'f2.left': 'Μένουν 3 μέρες',
     'fs.t': 'Κρυφά, <b>όταν μετράει</b>.', 'fs.p': 'Άνοιξε την Κρυπτογραφημένη Συνομιλία με ένα πάτημα: από εκεί και πέρα κάθε μήνυμα κλειδώνεται στη συσκευή σου πριν φύγει, και το διαβάζουν μόνο οι συσκευές της συνομιλίας. Όχι εμείς, όχι ο server.',
     'fs.c1': 'Κρυπτογράφηση άκρο σε άκρο', 'fs.c2': 'Ανοίγει και κλείνει με ένα πάτημα', 'fs.c3': 'Σε κάθε συνομιλία ή ομάδα', 'fs.on': 'Η Κρυπτογραφημένη Συνομιλία είναι ανοιχτή', 'fs.m1': 'Το budget είναι 48k. Μεταξύ μας.',
-    'new.idx': '02 · Νέα', 'new.title': 'Φτιαγμένο όπως <b>τρέχει ένα γύρισμα</b>.', 'new.sub': 'Ποιος κάνει τι, το ordino της ημέρας, και μια εφαρμογή που ενημερώνεται μόνη της.',
+    'new.idx': '02 · Νέα', 'new.title': 'Φτιαγμένο όπως <b>τρέχει ένα γύρισμα</b>.', 'new.sub': 'Ποιος κάνει τι, το ordino της ημέρας, υπενθυμίσεις, αναφορές που φτάνουν, και μια εφαρμογή που ενημερώνεται μόνη της.',
     'nt.k': 'Tasks', 'nt.t': 'Το δίνεις. <b>Σου απαντά.</b>', 'nt.p': 'Δώσε ένα task σε όποιον έχεις στις επαφές σου, ή στον εαυτό σου, με ημερομηνία, προτεραιότητα και βήματα. Το αποδέχεται ή το απορρίπτει, και βλέπεις την απάντηση και την πρόοδο ζωντανά. Ζει δίπλα στις συνομιλίες, ποτέ μέσα τους.',
     'nt.m1': 'Κλείσε τον φακό για Παρασκευή', 'nt.m1s': 'Από τον Νίκο · Αύριο', 'nt.acc': 'Αποδοχή', 'nt.dec': 'Απόρριψη', 'nt.m2': 'Casting shots', 'nt.m2s': 'Προς Μαρία', 'nt.wait': 'Σε αναμονή',
     'no.k': 'Ordino', 'no.t': 'Το ordino, <b>μέσα στη συνομιλία</b>.', 'no.p': 'Το κουμπί με την κάμερα ανοίγει το Roardino μέσα στο RoarMe, ήδη συνδεδεμένο. Φτιάξε το ordino της ημέρας ή διάλεξε ένα, πάτα Στείλε, και το συνεργείο παίρνει μια κάρτα που ανοίγει σε κάθε κινητό.', 'no.more': 'Γνώρισε το Roardino',
-    'nu.k': 'Ενημερώνεται μόνο του', 'nu.t': 'Ένα πάτημα, <b>νέα έκδοση</b>.', 'nu.p': 'Οι εφαρμογές για Mac και Windows κατεβάζουν τη νέα έκδοση στο παρασκήνιο και σου λένε όταν είναι έτοιμη. Πατάς Επανεκκίνηση και σε λίγα δευτερόλεπτα είσαι σε αυτήν. Χωρίς λήψεις, χωρίς σύρσιμο.',
-    'nu.c': 'Το RoarMe είναι έτοιμο', 'nu.cs': 'Επανεκκίνηση για ενημέρωση', 'nu.btn': 'Επανεκκίνηση',
+    'nu.k': 'Ενημερώνεται μόνο του <em>1.5</em>', 'nu.t': 'Ένα πάτημα, <b>νέα έκδοση</b>.', 'nu.p': 'Οι εφαρμογές για Mac και Windows κατεβάζουν τη νέα έκδοση στο παρασκήνιο και σου λένε όταν είναι έτοιμη. Πατάς Επανεκκίνηση και σε λίγα δευτερόλεπτα είσαι σε αυτήν. Χωρίς λήψεις, χωρίς σύρσιμο.',
+    'nu.c': 'Το RoarMe 1.5 είναι έτοιμο', 'nu.cs': 'Και τι νέο έχει', 'nu.btn': 'Επανεκκίνηση για ενημέρωση',
     'ni.k': 'Η εμφάνιση', 'ni.t': 'Γραφίτης, γυαλί, <b>ένα κόκκινο</b>.', 'ni.p': 'Νέο εικονίδιο στο Dock και στην αρχική οθόνη, ο ίδιος γραφίτης με γυαλί όπως η εφαρμογή, και θέματα σκοτεινά ή φωτεινά. Tasks, ordino και συνομιλίες σε ένα ήσυχο design.',
     'all.idx': '03 · Όλα', 'all.title': 'Και όλα όσα <b>θέλει μια ομάδα</b>.', 'all.sub': 'Τα υπόλοιπα του RoarMe, με λίγα λόγια.',
     'ix1.t': 'Κλήσεις, τώρα ή αργότερα', 'ix1.p': 'Ήχος και βίντεο, κατευθείαν από συσκευή σε συσκευή. Προγραμμάτισε μία και μπαίνει ως κάρτα με αντίστροφη μέτρηση και Προσθήκη στο ημερολόγιο.',
-    'ix2.t': 'Ομάδες, φάκελοι, αναφορές', 'ix2.p': 'Μια ομάδα για κάθε project ή πελάτη, φάκελοι για να μένει χωριστά η δουλειά, @αναφορές και καρφιτσωμένα για ό,τι μετράει.',
+    'ix2.t': 'Ομάδες, φάκελοι, αναφορές', 'ix2.p': 'Μια ομάδα για κάθε project ή πελάτη, φάκελοι που σε ακολουθούν σε κάθε συσκευή, @αναφορές και καρφιτσωμένα για ό,τι μετράει. Τα καρφιτσωμένα αρχεία έχουν δική τους καρτέλα.',
     'ix3.t': 'Γράψ’ το σωστά', 'ix3.p': 'Έντονα, πλάγια, spoilers, κώδικας, μεγάλα Άρθρα με επικεφαλίδες και λίστες, απαντήσεις και αντιδράσεις.',
     'ix4.t': 'Φωνή, τοποθεσίες, καρφιτσώματα', 'ix4.p': 'Φωνητικά μηνύματα, μια τοποθεσία στον χάρτη όταν εσύ τη στείλεις, όσα καρφιτσωμένα μηνύματα χρειάζεσαι.',
-    'ix5.t': 'Ό,τι έχεις μοιραστεί', 'ix5.p': 'Media, Μεταφορές, Αρχεία, Links και Μουσική από όλες τις συνομιλίες σε μία βιβλιοθήκη· ένα τραγούδι συνεχίζει καθώς κινείσαι.',
+    'ix5.t': 'Ό,τι έχεις μοιραστεί', 'ix5.p': 'Media, Μεταφορές, Αρχεία, Links και Μουσική από όλες τις συνομιλίες σε μία βιβλιοθήκη, το AllMedia στις Ρυθμίσεις· ένα τραγούδι συνεχίζει καθώς κινείσαι.',
     'ix6.t': 'Γύρισες μετά από ώρα;', 'ix6.p': 'Ό,τι ήρθε φτάνει μαζεμένο, ανά συνομιλία. Σίγαση, αρχειοθέτηση, σήμανση ως αδιάβαστο, κρυφή ματιά, κλείδωμα με κωδικό.',
-    'ix7.t': 'Σε κάθε οθόνη', 'ix7.p': 'Εφαρμογές για Mac και Windows με τον μετρητή στο εικονίδιο, κάθε browser, και το κινητό από την αρχική οθόνη. Ένας λογαριασμός, όλα συγχρονισμένα.',
+    'ix7.t': 'Σε κάθε οθόνη', 'ix7.p': 'Εφαρμογές για Mac και Windows, κάθε browser, και το κινητό από την αρχική οθόνη, με ειδοποιήσεις και τον αριθμό των αδιάβαστων ακόμα και με το RoarMe κλειστό. Ένας λογαριασμός, όλα συγχρονισμένα.',
     'ix8.t': 'Ελληνικά και αγγλικά', 'ix8.p': 'Όλη η εφαρμογή σε όποια γλώσσα θέλεις, από τις Ρυθμίσεις. Τα μηνύματα και τα ονόματα δεν αγγίζονται ποτέ.',
     'pv.idx': '04 · Απόρρητο', 'pv.title': 'Ήσυχο <b>από τη φύση του</b>.', 'pv.sub': 'Κρατάμε ό,τι χρειάζεται μια συνομιλία για να δουλεύει, και τίποτα για πούλημα. Χωρίς διαφημίσεις, χωρίς παρακολούθηση, χωρίς τηλεφωνικό κατάλογο.',
     'pv.policy': 'Πολιτική Απορρήτου', 'pv.terms': 'Όροι',
@@ -622,11 +652,44 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'q1': 'Είναι δωρεάν το RoarMe;', 'a1': 'Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις.',
     'q2': 'Χρειάζομαι αριθμό τηλεφώνου;', 'a2': 'Όχι. Ένα email και ένα username αρκούν. Σε βρίσκουν από το @όνομά σου, ή από το link και το QR που μοιράζεσαι.',
     'q3': 'Πόσο μεγάλο μπορεί να είναι ένα αρχείο;', 'a3': 'Ως 50 MB κατευθείαν στη συνομιλία, όσο κρατάει η συνομιλία. Ως 3 GB με το RoarTransfer, για 3 μέρες, με link που κατεβάζει ο καθένας.',
-    'q9': 'Πώς δουλεύουν τα Tasks;', 'a9': 'Πάτα το κουμπί Tasks πάνω από τις συνομιλίες σου. Δώσε ένα task στον εαυτό σου ή σε όποιον έχεις κοινή συνομιλία. Για άλλον φτάνει ως αίτημα που αποδέχεται ή απορρίπτει· μετά βλέπετε και οι δύο την πρόοδο. Τα tasks δεν εμφανίζονται ποτέ μέσα σε συνομιλία.',
+    'q9': 'Πώς δουλεύουν τα Tasks;', 'a9': 'Πάτα Tasks στη γραμμή κάτω. Δώσε ένα task στον εαυτό σου ή σε όποιον έχεις κοινή συνομιλία· για άλλον φτάνει ως αίτημα που αποδέχεται ή απορρίπτει, μετά βλέπετε και οι δύο την πρόοδο. Εκεί είναι και οι υπενθυμίσεις και ένα ημερολόγιο του μήνα. Τα tasks δεν εμφανίζονται ποτέ μέσα σε μια συνομιλία.',
     'q10': 'Τι είναι το ordino, και το Roardino;', 'a10': 'Το ordino είναι το φύλλο της ημέρας ενός γυρίσματος: ώρα call, τοποθεσία, πρόγραμμα. Το Roardino τα φτιάχνει, και το κουμπί με την κάμερα δίπλα στον συνδετήρα το ανοίγει μέσα στο RoarMe, με τον λογαριασμό σου του RoarMe. Το στέλνεις και το συνεργείο παίρνει μια κάρτα που ανοίγει σε κάθε κινητό.',
     'q11': 'Πώς παίρνω τις νέες εκδόσεις;', 'a11': 'Στον browser και στο κινητό έχεις πάντα την πιο νέα. Οι εφαρμογές για Mac και Windows από την 1.4.9 κατεβάζουν τις νέες εκδόσεις μόνες τους και ζητούν μια γρήγορη επανεκκίνηση· οι παλιότερες δείχνουν μια κάρτα με λήψη.',
     'q7': 'Είναι τα μηνύματά μου κρυπτογραφημένα άκρο σε άκρο;', 'a7': 'Σε κρυφή συνομιλία, ναι. Άνοιξε την Κρυπτογραφημένη Συνομιλία σε όποια συνομιλία ή ομάδα θες και κάθε μήνυμα από εκεί και πέρα κλειδώνεται στη συσκευή σου· το διαβάζουν μόνο οι συσκευές της συνομιλίας.',
     'q6': 'Μπορώ να το χρησιμοποιώ σε πολλές συσκευές;', 'a6': 'Ναι. Συνδέσου σε Mac, PC, browser και κινητό μαζί· όλα μένουν συγχρονισμένα.',
+    'nm.k': 'Αναφορές <em>νέο</em>',
+    'nm.t': '@all, @here, <b>@μοντάζ</b>.',
+    'nm.p': 'Σε μια ομάδα, το @all φτάνει σε όλους και το @here σε όσους είναι online τώρα. Φτιάξε ρόλους όπως @μοντάζ ή @κάμερα από το μενού της συνομιλίας, και ένα @ τους βρίσκει όλους. Όποιος αναφέρεται ειδοποιείται ακόμα και με τη συζήτηση σε σίγαση, και ένα @ τον περιμένει στη λίστα ώσπου να διαβάσει.',
+    'nm.c4': 'Ρόλοι για @mentions',
+    'nr.k': 'Υπενθύμιση <em>νέο</em>',
+    'nr.t': 'Όχι τώρα. <b>Θύμισέ μου.</b>',
+    'nr.p': 'Κάθε μήνυμα μπορεί να γυρίσει αργότερα: σε 20 λεπτά, σε μία ώρα, αύριο στις 09:00. Επιστρέφει ως κάρτα στην εφαρμογή, ή ως ειδοποίηση με το RoarMe κλειστό. Το βλέπεις μόνο εσύ, και όλες οι υπενθυμίσεις περιμένουν στα Tasks › Υπενθυμίσεις.',
+    'nr.c1': 'Σε 20 λεπτά',
+    'nr.c2': 'Σε 1 ώρα',
+    'nr.c3': 'Αύριο 09:00',
+    'nr.c4': 'Δευτέρα 09:00',
+    'ns.k': 'Προγραμματισμένα <em>νέο</em>',
+    'ns.t': 'Γραμμένο απόψε, <b>στέλνεται στις 08:00</b>.',
+    'ns.p': 'Κράτα πατημένη την Αποστολή, ή άνοιξε το μενού της συνομιλίας, και διάλεξε μέρα και ώρα· το Αύριο 08:00 είναι ένα πάτημα για τα call. Φεύγει ακόμα και με το RoarMe κλειστό, και μπορεί να επαναλαμβάνεται κάθε μέρα, εβδομάδα ή μήνα. Λείπεις; Η Αυτόματη απάντηση απαντά για σένα στις προσωπικές συνομιλίες.',
+    'ns.c1': 'Προγραμματισμός μηνύματος',
+    'ns.c2': 'Επανάληψη',
+    'ns.c3': 'Αυτόματη απάντηση',
+    'nc.k': 'Ημερολόγιο <em>νέο</em>',
+    'nc.t': 'Ο μήνας, <b>με μια ματιά</b>.',
+    'nc.p': 'Στα Tasks, ένα ημερολόγιο βάζει σε έναν μήνα τα tasks, τις προγραμματισμένες κλήσεις και τα προγραμματισμένα μηνύματά σου. Για τις ομάδες της THEMADLIONS, εκεί φαίνονται και τα tasks και τα γεγονότα του Hub, και μπαίνεις με τον λογαριασμό σου στο THEMADLIONS Hub.',
+    'nc.c1': 'Tasks',
+    'nc.c2': 'Προγραμματισμένες κλήσεις',
+    'nc.c3': 'Προγραμματισμένα μηνύματα',
+    'ix9.t': 'Διαγραφή για μένα, ή αίτημα',
+    'ix9.p': 'Σβήσε ένα μήνυμα μόνο για σένα, ή ζήτα από τον άλλον να σβηστεί για όλους· εκείνος το αποδέχεται ή το απορρίπτει.',
+    'ix10.t': 'Η δική σου κάρτα επαφής',
+    'ix10.p': 'Δώσε σε κάποιον το δικό σου όνομα, φωτογραφία και σημείωση γι’ αυτόν. Τα βλέπεις μόνο εσύ.',
+    'ix11.t': 'Ένα email αν το έχασες',
+    'ix11.p': 'Έλειψες λίγο; Το RoarMe μπορεί να σου στείλει email για αδιάβαστα μηνύματα, το πολύ κάθε τρεις ώρες, ποτέ για συνομιλίες σε σίγαση.',
+    'ix12.t': 'Βοήθεια μέσα στην εφαρμογή',
+    'ix12.p': 'Κάθε λογαριασμός έχει μια συνομιλία με το RoarMe για ιδέες και ερωτήσεις, και η εφαρμογή ψάχνει για ενημερώσεις από τις Ρυθμίσεις.',
+    'p6.t': 'Διαγραφή σημαίνει διαγραφή',
+    'p6.p': 'Ένα μήνυμα που σβήνεις, μαζί με τα αρχεία του, φεύγει από τους servers μας μέσα σε λίγα λεπτά.',
     'ct.idx': 'Επαφή', 'ct.title': 'Ερωτήσεις, ιδέες, <b>Τύπος</b>;', 'footer': '© 2026 The Mad Lions · RoarMe'
   }
   var nodes = [].slice.call(document.querySelectorAll('[data-t]'))

@@ -6,7 +6,7 @@
 <!-- RoarMail's page on the company site, in the same frame as /roarme/ (its CSS is RoarMe's page's, then this page's
      own below). One frame of the app (All Inboxes, a message with its trackers blocked), the three things only
      RoarMail does, what came lately, everything else as an index, privacy, downloads (releases/latest), questions.
-     Only what is in the code of RoarMail 0.8.0. EN and GR, the same switch as the main page. -->
+     Only what is in the code of RoarMail 0.10.0. EN and GR, the same switch as the main page. -->
 <title>RoarMail · The private mail app for Mac and Windows: every inbox in one, trackers blocked, undo everything · by The Mad Lions</title>
 <link rel="canonical" href="https://themadlions.com/lab/roarmail/">
 <meta name="description" content="RoarMail, the mail app for Mac and Windows by The Mad Lions Lab. Every mailbox in one inbox, at keyboard speed, with no server of ours between you and your mail. Trackers blocked, links checked, undo for everything, snooze, send later, and big files as a link. It updates itself.">
@@ -369,6 +369,8 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 .tr-card { margin-top: 8px; display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 18px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); max-width: 440px; }
 .tr-card > i { width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--red); display: grid; place-items: center; } .tr-card > i svg { width: 20px; height: 20px; }
 .tr-card span { flex: 1; min-width: 0; } .tr-card b { display: block; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .tr-card small { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.t-half { grid-column: span 6; }
+@media (max-width: 1100px) { .t-half { grid-column: span 12; } }
 .ml-icon { width: clamp(90px, 10vw, 140px); height: auto; }
 .dls.two { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 980px; }
 @media (prefers-reduced-motion: reduce) { .v-undo .cd i { animation: none; } }
@@ -538,9 +540,21 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <div class="txt">
         <span class="k" data-t="n4.k">The look</span>
         <h3 data-t="n4.t" data-html>RoarMe's look, <b>your colours</b>.</h3>
-        <p data-t="n4.p">The Simba and Pumba themes, dark, light or as the system, ten accent colours, seven fonts, reading size, spacing and corners, glass or solid panels, with a live preview. The same family as RoarMe.</p>
+        <p data-t="n4.p">The Simba and Pumba themes, dark, light or as the system, ten accent colours, reading size, spacing and corners, glass or solid panels, colour lines and counters per account, with a live preview. The same family as RoarMe.</p>
       </div>
       <div class="icons"><svg class="ml-icon" viewBox="100 100 824 824" aria-label="RoarMail icon"><use href="#mlicon"/></svg></div>
+    </article>
+    <article class="tile t-half rv">
+      <span class="k" data-t="n5.k" data-html>Find it <em>0.10</em></span>
+      <h3 data-t="n5.t" data-html>The mail you want, <b>nothing else</b>.</h3>
+      <p data-t="n5.p">One tap above the list shows only unread, starred, with attachments or today's mail, newest or oldest first. Search ignores Greek accents too, so «γυρισμα» finds «Γύρισμα», and it can look on your servers for old mail that never came down.</p>
+      <div class="chips"><span data-t="n5.c1">Unread only</span><span data-t="n5.c2">Starred only</span><span data-t="n5.c3">With attachments</span><span data-t="n5.c4">Today only</span></div>
+    </article>
+    <article class="tile t-half rv" style="--d:.08s">
+      <span class="k" data-t="n6.k" data-html>Settings <em>0.9 · 0.10</em></span>
+      <h3 data-t="n6.t" data-html>Set up <b>like a pro's mail</b>.</h3>
+      <p data-t="n6.p">Settings in the manner of Apple Mail and Airmail: how often to check, a new-mail sound of your choice, which mail may notify you, more addresses to send from on each account, and separate fonts for the list and for reading, from any font on your computer.</p>
+      <div class="chips"><span data-t="n6.c1">Send-as addresses</span><span data-t="n6.c2">New-mail sounds</span><span data-t="n6.c3">Fonts page</span><span data-t="n6.c4">Per-account settings</span></div>
     </article>
   </div>
 </section>
@@ -552,7 +566,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   </div>
   <div class="index">
     <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">Conversations</b><p data-t="ix1.p">Replies gather into one conversation, your own included. The newest and the unread open; the rest fold to one line.</p></div>
-    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">Search as you type</b><p data-t="ix2.p">Subject, sender and text, across every account, instantly. It ignores accents, so «καλημερα» finds «καλημέρα».</p></div>
+    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">Search as you type</b><p data-t="ix2.p">Subject, sender and text, across every account, instantly. It ignores accents, so «καλημερα» finds «καλημέρα»; include Junk and Trash, or the servers, when you need to.</p></div>
     <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Mail the moment it lands</b><p data-t="ix3.p">New mail arrives at once, not every few minutes, and the connection comes back by itself after sleep.</p></div>
     <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">One key for each thing</b><p data-t="ix4.p">C to write, R to reply, E to archive, B to snooze, J and K to move, / to search. All on one page in Settings.</p></div>
     <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">Swipes and quick buttons</b><p data-t="ix5.p">Swipe a message left or right on the trackpad, each side doing what you choose. Hover a row for read, star, snooze, archive and delete.</p></div>
@@ -560,9 +574,9 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Write it properly</b><p data-t="ix7.p">Reply, reply all and forward, Cc and Bcc, recipients suggested as you type, the system spellchecker, and several signatures per account.</p></div>
     <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">Nothing gets lost</b><p data-t="ix8.p">Drafts save themselves every few seconds. A message that fails to send waits in the Outbox with Retry and Edit.</p></div>
     <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">Less of what you don't want</b><p data-t="ix9.p">Unsubscribe in one tap where the list allows it. Block a sender and their new mail goes straight to the Trash.</p></div>
-    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Always on time</b><p data-t="ix10.p">RoarMail can open with the computer and wait in the menu bar, so snoozes, scheduled sends and reminders happen on time. The unread count sits on the icon.</p></div>
+    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Always on time</b><p data-t="ix10.p">RoarMail can open with the computer and wait in the Dock, the menu bar or both, so snoozes, scheduled sends and reminders happen on time. You choose which count the icon shows.</p></div>
     <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">Reads without a connection</b><p data-t="ix11.p">Mail is kept on your computer, so you can read on a plane. What you do offline is sent when you are back.</p></div>
-    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Your default mail app</b><p data-t="ix12.p">Email links open a new message in RoarMail. The app is in Greek or English, as your system.</p></div>
+    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Your default mail app</b><p data-t="ix12.p">Make RoarMail the default in Settings and email links open a new message in it. The app speaks Greek or English, as your system or as you choose.</p></div>
   </div>
 </section>
 
@@ -580,6 +594,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></i><b data-t="p4.t">Links you can trust</b><p data-t="p4.p">Hover a link to see where it really goes. Tracking tags are removed, and look-alike addresses get a warning.</p></div>
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6z"/><path d="M12 8v5M12 16h.01"/></svg></i><b data-t="p5.t">Fake senders caught</b><p data-t="p5.p">A warning when a message fails its sender checks, when the name hides another address, or when replies would go elsewhere.</p></div>
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg></i><b data-t="p6.t">Locked with Touch ID</b><p data-t="p6.p">On a Mac, lock RoarMail at start, after sleep or when idle; notifications hide what they say while it is locked.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6z"/><path d="M9 12h6"/></svg></i><b data-t="p7.t">Privacy mode</b><p data-t="p7.p">One switch, and images from the web never load in any message, trackers stay blocked and links come clean.</p></div>
     </div>
   </div>
 </section>
@@ -619,7 +634,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <details class="rv"><summary data-t="q3">Does my mail go through your servers?</summary><p data-t="a3">No. RoarMail connects from your computer straight to your mail servers. Your password stays in your computer's keychain.</p></details>
       <details class="rv"><summary data-t="q4">Do I need RoarMe?</summary><p data-t="a4">No. RoarMail works on its own. Sign in with RoarMe only if you want to send emails into chats, make them tasks, see your tasks and calls, or send big files as a link. Your mail passwords never go to RoarMe.</p></details>
       <details class="rv"><summary data-t="q5">How big can an attachment be?</summary><p data-t="a5">As big as your mail server accepts; many refuse more than 20 to 25 MB. Signed in to RoarMe, a file up to 3 GB goes as a RoarTransfer link instead, kept for 3 days.</p></details>
-      <details class="rv"><summary data-t="q6">Does search find old mail?</summary><p data-t="a6">Search looks through the mail kept on your computer, which makes it instant. The first time, RoarMail brings the last 90 days of each folder.</p></details>
+      <details class="rv"><summary data-t="q6">Does search find old mail?</summary><p data-t="a6">Search looks through the mail kept on your computer, which makes it instant; the first time, RoarMail brings the last 90 days of each folder. For older mail, turn on Search the servers too in Settings.</p></details>
       <details class="rv"><summary data-t="q7">Is there a phone version?</summary><p data-t="a7">Not yet: RoarMail is for Mac and Windows. Snoozed, archived and moved mail moves on your server too, so the mail app on your phone sees the same inbox.</p></details>
     </div>
   </div>
@@ -668,10 +683,26 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'n2.a1': 'Στείλε στο RoarMe', 'n2.a2': 'Κάν’ το task', 'n2.more': 'Γνώρισε το RoarMe',
     'n3.k': 'Μεγάλα αρχεία <em>0.8</em>', 'n3.t': '3&nbsp;GB, <b>ως link</b>.', 'n3.p': 'Οι περισσότεροι mail servers δεν δέχονται πάνω από 20 με 25 MB. Συνδεδεμένος στο RoarMe, ένα μεγαλύτερο αρχείο ανεβαίνει ως link RoarTransfer, ως 3 GB, για 3 μέρες, και το email έχει μια κάρτα με το όνομα, το μέγεθος και τη λήξη του.',
     'n3.card': '2.4 GB · ως Παρ 24 Οκτ',
-    'n4.k': 'Η εμφάνιση', 'n4.t': 'Το look του RoarMe, <b>τα δικά σου χρώματα</b>.', 'n4.p': 'Τα θέματα Simba και Pumba, σκοτεινό, φωτεινό ή όπως το σύστημα, δέκα χρώματα, επτά γραμματοσειρές, μέγεθος ανάγνωσης, αποστάσεις και γωνίες, γυάλινα ή συμπαγή πάνελ, με ζωντανή προεπισκόπηση. Η ίδια οικογένεια με το RoarMe.',
+    'n4.k': 'Η εμφάνιση', 'n4.t': 'Το look του RoarMe, <b>τα δικά σου χρώματα</b>.', 'n4.p': 'Τα θέματα Simba και Pumba, σκοτεινό, φωτεινό ή όπως το σύστημα, δέκα χρώματα, μέγεθος ανάγνωσης, αποστάσεις και γωνίες, γυάλινα ή συμπαγή πάνελ, χρώματα και μετρητές ανά λογαριασμό, με ζωντανή προεπισκόπηση. Η ίδια οικογένεια με το RoarMe.',
+    'n5.k': 'Βρες το <em>0.10</em>',
+    'n5.t': 'Το email που θες, <b>τίποτα άλλο</b>.',
+    'n5.p': 'Ένα πάτημα πάνω από τη λίστα δείχνει μόνο αδιάβαστα, με αστέρι, με συνημμένα ή τα σημερινά, τα νεότερα ή τα παλαιότερα πρώτα. Η αναζήτηση αγνοεί και τους ελληνικούς τόνους, οπότε το «γυρισμα» βρίσκει το «Γύρισμα», και μπορεί να ψάξει στους servers για παλιά μηνύματα που δεν κατέβηκαν ποτέ.',
+    'n5.c1': 'Μόνο αδιάβαστα',
+    'n5.c2': 'Μόνο με αστέρι',
+    'n5.c3': 'Με συνημμένα',
+    'n5.c4': 'Μόνο σημερινά',
+    'n6.k': 'Ρυθμίσεις <em>0.9 · 0.10</em>',
+    'n6.t': 'Στήσ’ το <b>σαν επαγγελματίας</b>.',
+    'n6.p': 'Ρυθμίσεις στο πνεύμα του Apple Mail και του Airmail: κάθε πότε ελέγχει, ο ήχος που θες για νέο μήνυμα, ποια email σε ειδοποιούν, κι άλλες διευθύνσεις αποστολής σε κάθε λογαριασμό, και χωριστές γραμματοσειρές για τη λίστα και την ανάγνωση, από όποια υπάρχει στον υπολογιστή σου.',
+    'n6.c1': 'Διευθύνσεις αποστολής',
+    'n6.c2': 'Ήχοι νέων μηνυμάτων',
+    'n6.c3': 'Σελίδα γραμματοσειρών',
+    'n6.c4': 'Ρυθμίσεις ανά λογαριασμό',
+    'p7.t': 'Λειτουργία απορρήτου',
+    'p7.p': 'Ένας διακόπτης, και οι εικόνες από το web δεν φορτώνουν σε κανένα μήνυμα, οι trackers μένουν μπλοκαρισμένοι και οι σύνδεσμοι καθαροί.',
     'all.idx': '03 · Όλα', 'all.title': 'Και όλα όσα <b>πρέπει να κάνει το email</b>.', 'all.sub': 'Τα υπόλοιπα του RoarMail, με λίγα λόγια.',
     'ix1.t': 'Συζητήσεις', 'ix1.p': 'Οι απαντήσεις μαζεύονται σε μία συζήτηση, μαζί με τις δικές σου. Το πιο νέο και τα αδιάβαστα ανοίγουν· τα υπόλοιπα διπλώνουν σε μία γραμμή.',
-    'ix2.t': 'Αναζήτηση καθώς γράφεις', 'ix2.p': 'Θέμα, αποστολέας και κείμενο, σε όλους τους λογαριασμούς, αμέσως. Αγνοεί τους τόνους, οπότε το «καλημερα» βρίσκει το «καλημέρα».',
+    'ix2.t': 'Αναζήτηση καθώς γράφεις', 'ix2.p': 'Θέμα, αποστολέας και κείμενο, σε όλους τους λογαριασμούς, αμέσως. Αγνοεί τους τόνους, οπότε το «καλημερα» βρίσκει το «καλημέρα»· όταν χρειάζεται, ψάχνει και στα ανεπιθύμητα, στον κάδο ή στους servers.',
     'ix3.t': 'Το email τη στιγμή που φτάνει', 'ix3.p': 'Τα νέα μηνύματα έρχονται αμέσως, όχι κάθε λίγα λεπτά, και η σύνδεση επανέρχεται μόνη της μετά τον ύπνο.',
     'ix4.t': 'Ένα πλήκτρο για κάθε κίνηση', 'ix4.p': 'C για νέο, R για απάντηση, E για αρχειοθέτηση, B για αναβολή, J και K για να κινηθείς, / για αναζήτηση. Όλα σε μία σελίδα στις Ρυθμίσεις.',
     'ix5.t': 'Σαρώσεις και γρήγορα κουμπιά', 'ix5.p': 'Σάρωσε ένα μήνυμα αριστερά ή δεξιά στο trackpad, με την κάθε πλευρά να κάνει ό,τι διαλέξεις. Πέρνα πάνω από μια γραμμή για διαβασμένο, αστέρι, αναβολή, αρχειοθέτηση και διαγραφή.',
@@ -679,9 +710,9 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'ix7.t': 'Γράψ’ το σωστά', 'ix7.p': 'Απάντηση, απάντηση σε όλους και προώθηση, Κοιν. και Ιδιαίτ. κοιν., παραλήπτες που προτείνονται καθώς γράφεις, ο ορθογράφος του συστήματος, και πολλές υπογραφές ανά λογαριασμό.',
     'ix8.t': 'Τίποτα δεν χάνεται', 'ix8.p': 'Τα πρόχειρα αποθηκεύονται μόνα τους κάθε λίγα δευτερόλεπτα. Ένα μήνυμα που δεν στάλθηκε περιμένει στα Εξερχόμενα με Ξανά και Επεξεργασία.',
     'ix9.t': 'Λιγότερα απ’ όσα δεν θες', 'ix9.p': 'Διαγραφή από λίστα με ένα πάτημα όπου το επιτρέπει η λίστα. Μπλόκαρε έναν αποστολέα και τα νέα του μηνύματα πάνε κατευθείαν στα Διαγραμμένα.',
-    'ix10.t': 'Πάντα στην ώρα του', 'ix10.p': 'Το RoarMail μπορεί να ανοίγει με τον υπολογιστή και να περιμένει στη γραμμή μενού, ώστε αναβολές, προγραμματισμένες αποστολές και υπενθυμίσεις να γίνονται στην ώρα τους. Ο αριθμός των αδιάβαστων κάθεται στο εικονίδιο.',
+    'ix10.t': 'Πάντα στην ώρα του', 'ix10.p': 'Το RoarMail μπορεί να ανοίγει με τον υπολογιστή και να περιμένει στο Dock, στη γραμμή μενού ή και στα δύο, ώστε αναβολές, προγραμματισμένες αποστολές και υπενθυμίσεις να γίνονται στην ώρα τους. Εσύ διαλέγεις ποιον αριθμό δείχνει το εικονίδιο.',
     'ix11.t': 'Διαβάζει χωρίς σύνδεση', 'ix11.p': 'Τα μηνύματα μένουν στον υπολογιστή σου, οπότε διαβάζεις και στο αεροπλάνο. Ό,τι κάνεις χωρίς σύνδεση στέλνεται όταν επιστρέψεις.',
-    'ix12.t': 'Η βασική σου εφαρμογή email', 'ix12.p': 'Οι σύνδεσμοι email ανοίγουν νέο μήνυμα στο RoarMail. Η εφαρμογή είναι στα ελληνικά ή στα αγγλικά, όπως το σύστημά σου.',
+    'ix12.t': 'Η βασική σου εφαρμογή email', 'ix12.p': 'Κάν’ το βασική εφαρμογή από τις Ρυθμίσεις και οι σύνδεσμοι email ανοίγουν νέο μήνυμα στο RoarMail. Η εφαρμογή μιλά ελληνικά ή αγγλικά, όπως το σύστημά σου ή όπως διαλέξεις.',
     'pv.idx': '04 · Απόρρητο', 'pv.title': 'Μόνο εσύ και <b>ο server σου</b>.', 'pv.sub': 'Φτιάξαμε το RoarMail για να σε προστατεύει από το ίδιο το email: από όσους παρακολουθούν πότε το ανοίγεις, και από μηνύματα που δεν είναι αυτό που λένε.',
     'p1.t': 'Κανένας server στη μέση', 'p1.p': 'Ο υπολογιστής σου μιλά κατευθείαν με τους mail servers σου. Ό,τι κρατά το RoarMail μένει στον υπολογιστή σου.',
     'p2.t': 'Κωδικοί στο keychain', 'p2.p': 'Κλειδωμένοι στο σύστημα κλειδιών του υπολογιστή σου, Keychain σε Mac και DPAPI σε Windows, και δεν μας στέλνονται ποτέ.',
@@ -699,7 +730,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'q3': 'Περνούν τα email μου από τους servers σας;', 'a3': 'Όχι. Το RoarMail συνδέεται από τον υπολογιστή σου κατευθείαν στους mail servers σου. Ο κωδικός σου μένει στο keychain του υπολογιστή σου.',
     'q4': 'Χρειάζομαι το RoarMe;', 'a4': 'Όχι. Το RoarMail δουλεύει μόνο του. Συνδέεσαι με το RoarMe μόνο αν θες να στέλνεις email σε συνομιλίες, να τα κάνεις tasks, να βλέπεις τα tasks και τις κλήσεις σου, ή να στέλνεις μεγάλα αρχεία ως link. Οι κωδικοί του email σου δεν πάνε ποτέ στο RoarMe.',
     'q5': 'Πόσο μεγάλο μπορεί να είναι ένα συνημμένο;', 'a5': 'Όσο δέχεται ο mail server σου· πολλοί δεν δέχονται πάνω από 20 με 25 MB. Συνδεδεμένος στο RoarMe, ένα αρχείο ως 3 GB πηγαίνει αντί γι’ αυτό ως link RoarTransfer, για 3 μέρες.',
-    'q6': 'Βρίσκει η αναζήτηση παλιά email;', 'a6': 'Η αναζήτηση ψάχνει στα μηνύματα που είναι στον υπολογιστή σου, γι’ αυτό είναι άμεση. Την πρώτη φορά, το RoarMail φέρνει τις τελευταίες 90 μέρες από κάθε φάκελο.',
+    'q6': 'Βρίσκει η αναζήτηση παλιά email;', 'a6': 'Η αναζήτηση ψάχνει στα μηνύματα που είναι στον υπολογιστή σου, γι’ αυτό είναι άμεση· την πρώτη φορά, το RoarMail φέρνει τις τελευταίες 90 μέρες από κάθε φάκελο. Για παλαιότερα, άνοιξε την Αναζήτηση και στους servers στις Ρυθμίσεις.',
     'q7': 'Υπάρχει έκδοση για κινητό;', 'a7': 'Όχι ακόμα: το RoarMail είναι για Mac και Windows. Ό,τι αναβάλλεις, αρχειοθετείς ή μετακινείς αλλάζει και στον server σου, οπότε η εφαρμογή email του κινητού σου βλέπει το ίδιο inbox.',
     'ct.idx': 'Επαφή', 'ct.title': 'Ιδέες για <b>την επόμενη έκδοση</b>;', 'ft.lab': 'The Mad Lions Lab', 'footer': '© 2026 The Mad Lions · RoarMail'
   }
