@@ -193,7 +193,7 @@ function build(src, l, c, d) {
     })
     html = html.replace(/(<[^>]+\bdata-ph="([^"]+)"[^>]*\bplaceholder=")[^"]*"/g, (m, a, key) => c.T.el[key] ? `${a}${esc(c.T.el[key])}"` : m)
     // one folder down: the page's own files are one level up
-    html = html.replace(/(src|href)="(works\.js|wordmark\.png|aibsent\.png|aibsent\/|lab\/|roarme\/|roardino\/|roarmail\/|roarlist\/)"/g, '$1="../$2"')
+    html = html.replace(/(src|href)="((?:works\.js|wordmark\.png|aibsent\.png|aibsent\/|lab\/|roarme\/|roardino\/|roarmail\/|roarlist\/)[^"]*)"/g, '$1="../$2"')
   }
   return html
 }
@@ -260,7 +260,7 @@ if (live) {
     <xhtml:link rel="alternate" hreflang="x-default" href="${BASE}"/>` : ''}</url>`
   writeFileSync(join(dir, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${[u('', '1.0', 'weekly', true), u('el/', '1.0', 'weekly', true), u('aibsent/', '0.8', 'monthly'), u('lab/', '0.6', 'monthly'), u('roarme/', '0.6', 'monthly'), u('roardino/', '0.6', 'monthly'), u('roarmail/', '0.6', 'monthly'), u('roarlist/', '0.6', 'monthly'), u('lab/roarmail/', '0.6', 'monthly'), u('lab/roarlist/', '0.6', 'monthly')].join('\n')}
+${[u('', '1.0', 'weekly', true), u('el/', '1.0', 'weekly', true), u('aibsent/', '0.8', 'monthly'), u('lab/', '0.6', 'monthly'), u('roarme/', '0.6', 'monthly'), u('roardino/', '0.6', 'monthly'), u('lab/roarmail/', '0.6', 'monthly'), u('lab/roarlist/', '0.6', 'monthly')].join('\n')}
 </urlset>
 `)
   console.log('wrote llms.txt, llms-full.txt, sitemap.xml')
