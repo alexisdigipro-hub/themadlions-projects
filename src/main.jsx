@@ -7,6 +7,11 @@ import { DEFAULT_THEME, SKIN_ICONS, applyThemeChoice } from './lib/skin.js'
 import { applyIconSet } from './components/icons.jsx'
 import { installGlassTabs } from './lib/glide.js'
 import { installPullToRefresh } from './lib/pullRefresh.js'
+import { catchInstallOffer, registerRoarMeWorker } from './lib/roarmeApp.js'
+
+// RoarMe as its own app (roarme/index.html, Alex 20 Oct): Chrome's install offer can come at once, so it is caught
+// before anything else; the page's own service worker (scoped to /roarme/) is what makes it installable
+try { catchInstallOffer(); registerRoarMeWorker() } catch {}
 
 // Back from "Connect pCloud": pCloud puts the token in the address (#access_token=…), which the
 // router would swallow. Park it for Settings to show once, then land on Settings.

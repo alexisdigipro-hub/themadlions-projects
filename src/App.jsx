@@ -5,6 +5,7 @@ import { ToastProvider } from './components/ui.jsx'
 import { StoreProvider, useCurrentUser, useStore } from './lib/store.jsx'
 import Login from './pages/Login.jsx'
 import RoarMeSignin, { pendingRoarMeSignin } from './pages/RoarMeSignin.jsx'
+import { isRoarMeApp } from './lib/roarmeApp.js'
 import Project, { useProject } from './pages/Project.jsx'
 
 // Each page is its own file, fetched the first time it is opened, so opening the app downloads
@@ -38,6 +39,7 @@ const Whiteboard = lazyPage(() => import('./pages/project/Whiteboard.jsx'))
 const Shots = lazyPage(() => import('./pages/project/Shots.jsx'))
 const Database = lazyPage(() => import('./pages/Database.jsx'))
 const RoarMePage = lazyPage(() => import('./pages/RoarMePage.jsx'))
+const RoarMeApp = lazyPage(() => import('./pages/RoarMeApp.jsx'))
 // the chat alone in a window of its own (the ⧉ button on the chat list), no side menu
 const MyWork = lazyPage(() => import('./pages/MyWork.jsx'))
 const Profile = lazyPage(() => import('./pages/Profile.jsx'))
@@ -90,7 +92,9 @@ function LoginGate() {
   const { ready } = useStore()
   if (!ready) return <Loading />
   // TML Chat (chat.html) signs in on its own on an iPhone, and must land back on the chat, not on Home
-  return user ? <Navigate to={/chat\.html$/.test(window.location.pathname) ? '/chat-window' : '/'} replace /> : <Login />
+  // so does RoarMe on its own (roarme/index.html, Alex 20 Oct): back to RoarMe once signed in
+  const home = /chat\.html$/.test(window.location.pathname) ? '/chat-window' : isRoarMeApp() ? '/roarme-app' : '/'
+  return user ? <Navigate to={home} replace /> : <Login />
 }
 
 export default function App() {
@@ -115,6 +119,8 @@ export default function App() {
               {/* TML Chat and the chat window (Alex, 20 Oct): RoarMe on the whole screen */}
               <Route path="chat-window" element={<RoarMePage full />} />
               <Route path="chat-window/:room" element={<RoarMePage full />} />
+              {/* RoarMe as its own app (roarme/index.html, Alex 20 Oct): RoarMe on the whole screen, no hub bar */}
+              <Route path="roarme-app" element={<RoarMeApp />} />
               <Route element={<Layout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="calendar" element={<CalendarAll />} />
