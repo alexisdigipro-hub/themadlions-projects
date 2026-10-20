@@ -59,7 +59,7 @@ const ICO = {
 const tool = (icon, text) => <>{icon}<span className="dt-t">{text}</span></>
 
 export default function Deliveries() {
-  const { state } = useStore()
+  const { state, update } = useStore()
   const user = useCurrentUser()
   const toast = useToast()
   if (!can(user, 'share')) return <Navigate to="/" replace />
@@ -299,9 +299,16 @@ export default function Deliveries() {
   const noReplies = !!sample && sample.responses === undefined
   const noTracking = !!sample && sample.opens === undefined
 
+  /* My look (Alex, 20 Oct: "keep the whole look as I made it"): the look of an estimate saved once for the workspace;
+     every new estimate starts with it */
+  const savedLook = state.settings?.estimateLook || null
+  const saveLook = (look) => {
+    update((s) => { s.settings = { ...s.settings, estimateLook: { ...(look || {}) } }; return s })
+    toast('Saved. Every new cost estimation starts with this look.', 'ok')
+  }
   const startEstimate = () => {
     setEtab('content')
-    setEdraft({ ...emptyEstimate(), vatPct: String(state.finance?.settings?.vatDefault ?? 24) })
+    setEdraft({ ...emptyEstimate(), vatPct: String(state.finance?.settings?.vatDefault ?? 24), look: savedLook ? { ...savedLook } : {} })
   }
   /* An estimate keeps its link while it is reworked, so opening one means editing it. */
   const openEstimate = (r) => {
@@ -642,7 +649,7 @@ export default function Deliveries() {
               </button>
             )}
             </div>
-            {etab === 'look' && <EstimateLookEditor look={edraft.look} onChange={(v) => setE('look', v)} />}
+            {etab === 'look' && <EstimateLookEditor look={edraft.look} onChange={(v) => setE('look', v)} saved={savedLook} onSave={() => saveLook(edraft.look)} />}
             {etab === 'preview' && mobile && <div className="est-preview est-preview-phone"><EstimateSheet d={estimateData(edraft)} /></div>}
             {etab === 'content' && (<>
             {/* tidied (Alex, 19 Oct): no explanations, the fields side by side, the opening note one line */}

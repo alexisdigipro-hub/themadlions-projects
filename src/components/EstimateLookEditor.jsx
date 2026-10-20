@@ -5,7 +5,7 @@ import FontPicker from './FontPicker.jsx'
 
 /* The Look tab of the cost estimation window (Alex, 19 Oct: "settings for everything"): colours,
    letters, sizes, layout, a cover photo and the logo. Every change shows at once in the preview. */
-export default function EstimateLookEditor({ look, onChange }) {
+export default function EstimateLookEditor({ look, onChange, saved = null, onSave }) {
   const toast = useToast()
   const L = lookOf({ look })
   const coverRef = useRef()
@@ -44,8 +44,14 @@ export default function EstimateLookEditor({ look, onChange }) {
     </label>
   )
 
+  const same = saved && JSON.stringify(saved) === JSON.stringify(look || {})
   return (
     <div className="est-look-ed stack">
+      {/* my look (Alex, 20 Oct): keep this look for every new estimate, or bring the kept one back */}
+      <div className="est-mylook">
+        {onSave && <button type="button" className={`est-pill est-save${same ? ' on' : ''}`} onClick={onSave} disabled={same}>{same ? 'This is my look' : 'Save as my look'}</button>}
+        {saved && !same && <button type="button" className="est-pill" onClick={() => onChange({ ...saved })}>Use my look</button>}
+      </div>
       <section className="est-look-group">
         <h4>Colours</h4>
         <div className="est-presets">

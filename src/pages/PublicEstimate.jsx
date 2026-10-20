@@ -1,6 +1,5 @@
 import { Fragment, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { respondToDelivery } from '../lib/shares.js'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
 import { amount, estimateTotals, groupLines, lineAmount, showGroupSum, showLineAmount, upper } from '../lib/estimate.js'
 import { downloadEstimatePdf } from '../lib/estimatePdf.js'
@@ -11,17 +10,8 @@ const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day
 export default function PublicEstimate() {
   const { token } = useParams()
   const { share, tryPin, pinErr } = usePublicShare(token)
-  const [name, setName] = useState('')
-  const [note, setNote] = useState('')
-  const [sent, setSent] = useState('')
-  const [busy, setBusy] = useState('')
   const [err, setErr] = useState('')
   const [pdfBusy, setPdfBusy] = useState(false)
-
-  // A page made for one person already knows the name, so the reply form does not ask for it again.
-  useEffect(() => {
-    if (share?.data?.recipient?.name) setName(share.data.recipient.name)
-  }, [share])
 
   // The page in the company site's look (Alex, 19 Oct), whatever the app's own theme or skin is, while it is open
   useEffect(() => {
@@ -58,17 +48,6 @@ export default function PublicEstimate() {
   const cur = d.currency || 'EUR'
   const t = estimateTotals(d)
   const groups = groupLines(t.lines)
-  const reply = async (status) => {
-    setBusy(status); setErr('')
-    try {
-      await respondToDelivery({ token, name, status, note })
-      setSent(status)
-    } catch (e) {
-      setErr(e.message)
-    } finally {
-      setBusy('')
-    }
-  }
 
   // Drawn onto a canvas and wrapped in a hand-written PDF, so this saves the file straight away —
   // no print dialog for the client to find "Save as PDF" in themselves.
@@ -85,26 +64,12 @@ export default function PublicEstimate() {
 
   return (
     <EstimateSheet d={d}>
-        <section className="dlv-block dlv-reply">
-          {sent ? (
-            <p className="dlv-thanks">
-              {sent === 'approved' ? 'Accepted. Thank you, the production has been told.' : 'Sent. The production has your notes.'}
-            </p>
-          ) : (
-            <>
-              <h2>Your answer</h2>
-              <label className="dlv-lbl" htmlFor="est-name">Your name</label>
-              <input id="est-name" className="dlv-input" value={name} onChange={(e) => setName(e.target.value)} />
-              <label className="dlv-lbl" htmlFor="est-note">Questions or changes</label>
-              <textarea id="est-note" className="dlv-input dlv-area" rows={4} value={note} onChange={(e) => setNote(e.target.value)} />
-              <div className="dlv-actions">
-                <button className="dlv-btn ghost" onClick={() => reply('changes')} disabled={!!busy}>{busy === 'changes' ? 'Sending…' : 'Send Feedback'}</button>
-                <button type="button" className="dlv-btn ghost" onClick={savePdf} disabled={pdfBusy}>{pdfBusy ? 'Preparing…' : 'Download PDF'}</button>
-                <button className="dlv-btn" onClick={() => reply('approved')} disabled={!!busy}>{busy === 'approved' ? 'Sending…' : 'Accept'}</button>
-              </div>
-              {err && <p className="dlv-err">{err}</p>}
-            </>
-          )}
+        {/* only Download PDF for the client (Alex, 20 Oct): no answer form, no Accept or Send Feedback */}
+        <section className="dlv-block dlv-reply est-pdf-only">
+          <div className="dlv-actions">
+            <button type="button" className="dlv-btn" onClick={savePdf} disabled={pdfBusy}>{pdfBusy ? 'Preparing…' : 'Download PDF'}</button>
+          </div>
+          {err && <p className="dlv-err">{err}</p>}
         </section>
     </EstimateSheet>
   )
