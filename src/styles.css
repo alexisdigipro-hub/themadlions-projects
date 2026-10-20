@@ -3098,7 +3098,7 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 /* the form Alex fills in */
 .est-edit { border: 1px solid var(--line-soft); border-radius: 12px; padding: 12px; background: var(--raised); }
 .est-edit-head,
-.est-edit-row { display: grid; grid-template-columns: 1.1fr 2.6fr 112px 64px 76px; gap: 8px; align-items: center; }
+.est-edit-row { display: grid; grid-template-columns: 1.5fr 2.5fr 112px 64px 76px; gap: 8px; align-items: center; }
 .est-edit-head { font-size: 11.5px; color: var(--muted); padding: 0 2px 6px; }
 .est-edit-head span:nth-child(4) { text-align: center; }
 .est-edit-row { margin-bottom: 8px; }
