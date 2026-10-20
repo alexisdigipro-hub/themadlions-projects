@@ -76,7 +76,22 @@ export default function Deliveries() {
   const [addMenu, setAddMenu] = useState(false) // the phone's + : New delivery / New cost estimation
   const { boxRef, slideTo, inClass } = useSlide()
   const [edraft, setEdraft] = useState(null)
-  const [etab, setEtab] = useState('content') // the estimate window's tabs: Content, Look (and Preview on a phone)
+  const [etab, setEtab] = useState('content')
+  /* Full screen (Alex, 20 Oct: "to see it on the whole screen"): the browser's own full screen, so the bar of the browser
+     and the Dock go too; Esc or the same button brings them back, and closing the window leaves it */
+  const [full, setFull] = useState(false)
+  useEffect(() => {
+    const on = () => setFull(!!(document.fullscreenElement || document.webkitFullscreenElement))
+    document.addEventListener('fullscreenchange', on)
+    document.addEventListener('webkitfullscreenchange', on)
+    return () => { document.removeEventListener('fullscreenchange', on); document.removeEventListener('webkitfullscreenchange', on) }
+  }, [])
+  const leaveFull = () => { if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen)?.call(document)?.catch?.(() => {}) }
+  const flipFull = () => {
+    if (full) return leaveFull()
+    const el = document.documentElement
+    ;(el.requestFullscreen || el.webkitRequestFullscreen)?.call(el)?.catch?.(() => {})
+  } // the estimate window's tabs: Content, Look (and Preview on a phone)
 
   const reload = () => {
     if (!state.workspace?.id) return setRows([])
@@ -609,15 +624,23 @@ export default function Deliveries() {
         )}
       </Modal>
 
-      <Modal open={!!edraft} title="Cost estimation" wide className="est-modal" onClose={() => !busy && setEdraft(null)}
-        footer={<><Button variant="ghost" onClick={() => setEdraft(null)} disabled={busy}>Cancel</Button><Button variant="primary" onClick={publishEstimate} disabled={busy}>{busy ? 'Publishing…' : 'Publish and copy link'}</Button></>}>
+      <Modal open={!!edraft} title="Cost estimation" wide className="est-modal" onClose={() => { if (!busy) { leaveFull(); setEdraft(null) } }}
+        footer={<><Button variant="ghost" onClick={() => { leaveFull(); setEdraft(null) }} disabled={busy}>Cancel</Button><Button variant="primary" onClick={publishEstimate} disabled={busy}>{busy ? 'Publishing…' : 'Publish and copy link'}</Button></>}>
         {edraft && (
           <div className="est-compose">
           <div className="stack">
+            <div className="est-topbar">
             <div className="est-seg est-tabs" role="tablist">
               {[['content', 'Content'], ['look', 'Look'], ...(mobile ? [['preview', 'Preview']] : [])].map(([k, label]) => (
                 <button key={k} type="button" role="tab" aria-selected={etab === k} className={etab === k ? 'on' : ''} onClick={() => setEtab(k)}>{label}</button>
               ))}
+            </div>
+            {!mobile && (
+              <button type="button" className={`est-full${full ? ' on' : ''}`} onClick={flipFull} title={full ? 'Exit full screen (Esc)' : 'Full screen'}>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{full ? <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" /> : <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />}</svg>
+                <span>{full ? 'Exit full screen' : 'Full screen'}</span>
+              </button>
+            )}
             </div>
             {etab === 'look' && <EstimateLookEditor look={edraft.look} onChange={(v) => setE('look', v)} />}
             {etab === 'preview' && mobile && <div className="est-preview est-preview-phone"><EstimateSheet d={estimateData(edraft)} /></div>}
