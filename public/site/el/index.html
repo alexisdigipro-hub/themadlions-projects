@@ -463,7 +463,8 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
 .lab-big b { font-weight: 800; }
 .lab-sub { margin: 18px 0 0; text-align: center; font-size: clamp(18px, 2vw, 24px); font-weight: 300; color: color-mix(in srgb, var(--text) 75%, transparent); }
 .lab-sub b { font-weight: 500; color: var(--text); }
-.lab-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 880px; margin: 44px auto 0; }
+.lab-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; max-width: 1240px; margin: 44px auto 0; }
+@media (max-width: 1060px) { .lab-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .lab-x { display: grid; gap: 10px; padding: 24px 26px; border-radius: 18px; background: var(--bg-2); border: 1px solid var(--line); color: var(--text); text-decoration: none; transition: border-color .3s, transform .3s; }
 .lab-x:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); transform: translateY(-2px); }
 .lab-x .n { display: flex; align-items: center; gap: 8px; font-size: 11.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
@@ -628,6 +629,8 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
     <div class="lab-row reveal">
       <a class="lab-x" href="../roarme/"><span class="n"><span data-t="lab.e1">Πείραμα 01</span> <i></i></span><b class="wm"><span>ROAR</span>ME</b><span class="d" data-t="lab.rm">Το messenger για ομάδες.</span></a>
       <a class="lab-x" href="../roardino/"><span class="n"><span data-t="lab.e2">Πείραμα 02</span> <i></i></span><b class="wm"><span>ROAR</span>DINO</b><span class="d" data-t="lab.rd">Το ordino, σε ένα link.</span></a>
+      <a class="lab-x" href="../roarmail/"><span class="n"><span data-t="lab.e3">Πείραμα 03</span> <i></i></span><b class="wm"><span>ROAR</span>MAIL</b><span class="d" data-t="lab.ml">Το email, ιδιωτικά.</span></a>
+      <a class="lab-x" href="../roarlist/"><span class="n"><span data-t="lab.e4">Πείραμα 04</span> <i></i></span><b class="wm"><span>ROAR</span>LIST</b><span class="d" data-t="lab.rl">Το shot list, κάδρο κάδρο.</span></a>
     </div>
     <div class="more"><a class="pill" href="../lab/" data-t="lab.go">Δες το Lab</a></div>
   </section>
@@ -734,7 +737,7 @@ const T = {
     'clients.label': 'Clients', 'clients.title': "Brands <b>we've filmed for.</b>",
     'bts.label': 'Behind the scenes', 'bts.title': 'On set <b>with us.</b>', 'bts.all': 'See everything',
     'sh.btn': 'Share', 'sh.label': 'Share this film', 'sh.framed': 'Framed', 'sh.full': 'Full picture', 'sh.story': 'Story picture', 'sh.reel': 'Reel video', 'sh.link': 'Copy the link', 'sh.copied': 'Link copied', 'sh.rec': 'Recording…', 'sh.watch': 'WATCH ON THEMADLIONS.COM', 'sh.hint': 'For Instagram and TikTok stories. On a phone it opens your apps; on a computer it downloads.',
-    'lab.label': 'Lab', 'lab.title': 'What we build <b>between films.</b>', 'lab.e1': 'Experiment 01', 'lab.e2': 'Experiment 02', 'lab.rm': 'The messenger for teams.', 'lab.rd': 'The call sheet, in one link.', 'lab.go': 'Visit the Lab',
+    'lab.label': 'Lab', 'lab.title': 'What we build <b>between films.</b>', 'lab.e1': 'Experiment 01', 'lab.e2': 'Experiment 02', 'lab.rm': 'The messenger for teams.', 'lab.rd': 'The call sheet, in one link.', 'lab.e3': 'Experiment 03', 'lab.ml': 'The mail app, private by design.', 'lab.e4': 'Experiment 04', 'lab.rl': 'The shot list, frame by frame.', 'lab.go': 'Visit the Lab',
     'contact.label': 'Contact', 'contact.title': 'Tell us about <b>your project.</b>', 'contact.sub': 'A few lines are enough. We answer within a working day.',
     'f.kind': 'What are you making?', 'f.budget': 'Budget', 'f.name': 'Name', 'f.email': 'Email', 'f.company': 'Company or artist',
     'f.when': 'When do you need it?', 'f.whenPh': 'e.g. end of November', 'f.msg': 'Tell us more', 'f.msgPh': 'The idea, the format, where it will be seen…',
@@ -759,7 +762,7 @@ const T = {
     'clients.label': 'Πελάτες', 'clients.title': 'Brands <b>που δουλέψαμε μαζί.</b>',
     'sh.btn': 'Κοινοποίηση', 'sh.label': 'Μοιράσου την ταινία', 'sh.framed': 'Σε κάδρο', 'sh.full': 'Ολόκληρη εικόνα', 'sh.story': 'Εικόνα για story', 'sh.reel': 'Βίντεο για reel', 'sh.link': 'Αντιγραφή link', 'sh.copied': 'Το link αντιγράφηκε', 'sh.rec': 'Εγγραφή…', 'sh.watch': 'ΔΕΣ ΤΟ ΣΤΟ THEMADLIONS.COM', 'sh.hint': 'Για stories σε Instagram και TikTok. Στο κινητό ανοίγει τις εφαρμογές σου, στον υπολογιστή κατεβαίνει.',
     'bts.label': 'Πίσω από τις κάμερες', 'bts.title': 'Στο <b>γύρισμα.</b>', 'bts.all': 'Δες τα όλα',
-    'lab.label': 'Lab', 'lab.title': 'Ό,τι φτιάχνουμε <b>ανάμεσα στις ταινίες.</b>', 'lab.e1': 'Πείραμα 01', 'lab.e2': 'Πείραμα 02', 'lab.rm': 'Το messenger για ομάδες.', 'lab.rd': 'Το ordino, σε ένα link.', 'lab.go': 'Δες το Lab',
+    'lab.label': 'Lab', 'lab.title': 'Ό,τι φτιάχνουμε <b>ανάμεσα στις ταινίες.</b>', 'lab.e1': 'Πείραμα 01', 'lab.e2': 'Πείραμα 02', 'lab.rm': 'Το messenger για ομάδες.', 'lab.rd': 'Το ordino, σε ένα link.', 'lab.e3': 'Πείραμα 03', 'lab.ml': 'Το email, ιδιωτικά.', 'lab.e4': 'Πείραμα 04', 'lab.rl': 'Το shot list, κάδρο κάδρο.', 'lab.go': 'Δες το Lab',
     'contact.label': 'Επαφή', 'contact.title': 'Πείτε μας για <b>το project σας.</b>', 'contact.sub': 'Λίγες γραμμές αρκούν. Απαντάμε μέσα σε μία εργάσιμη.',
     'f.kind': 'Τι θέλετε να φτιάξετε;', 'f.budget': 'Budget', 'f.name': 'Όνομα', 'f.email': 'Email', 'f.company': 'Εταιρεία ή καλλιτέχνης',
     'f.when': 'Πότε το χρειάζεστε;', 'f.whenPh': 'π.χ. τέλη Νοεμβρίου', 'f.msg': 'Πείτε μας περισσότερα', 'f.msgPh': 'Η ιδέα, το format, πού θα προβληθεί…',

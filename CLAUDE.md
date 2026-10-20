@@ -25,6 +25,7 @@ RoarMe (repository alexisdigipro-hub/roarme, Supabase project bzmjhbnwhdwmncxkqk
 ## Deploy
 Pushing to `main` deploys to GitHub Pages in about 40 s through .github/workflows/deploy.yml. Live: https://hub.themadlions.com/ (since 13 Oct 2026; the old https://alexisdigipro-hub.github.io/themadlions-projects/ redirects there). Share links go out as https://go.themadlions.com/?<kind>/<token> (repository alexisdigipro-hub/tml-links).
 - The company site https://themadlions.com/ is the repository alexisdigipro-hub/themadlions-site (Pages from main). Its source of truth is `public/site/` here: edit there, run `node scripts/site-seo.mjs public/site`, copy the files (el/ too) into that repository, run `node scripts/site-seo.mjs ../themadlions-site --live` (writes its head, Greek page, sitemap, llms.txt; keep its CNAME and robots) and push its main.
+  - `public/site/roarmail/` and `public/site/roarlist/` are build output of the roarmail and roarlist repositories (`npm run build:renderer`, `dist/renderer/`): update them by rebuilding there and copying, never by editing here.
 - The same workflow also runs `npm ci` and `npm run build` on every pull request into `main`, without deploying. A red check on a PR means do not merge it.
 - Local session: commit and push to `main` with Alex's own git login. 
 - Cloud session: push the branch, open a PR, wait for the green build check, then merge it yourself (merge = deploy). Alex asked on 10 Oct for Claude to always do the merge; never ask him to merge.
