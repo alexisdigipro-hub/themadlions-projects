@@ -7677,3 +7677,6 @@ html[data-theme] body .rem-tasks > .rem-task.tinted, .rem-task.tinted { backgrou
 .roarme-switch-row > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .roarme-switch p { margin: 0; }
 .roarme-switch .row-actions { justify-content: space-between; align-items: center; }
+.roarme-team { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--line, rgba(255,255,255,.08)); }
+.roarme-team h3 { margin: 0; font-size: 15px; }
+.roarme-team p, .roarme-team ul { margin: 0; }

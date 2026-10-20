@@ -12,7 +12,7 @@
 //   start  -> { state }                    a fresh state for the RoarMe window, good for 10 minutes
 //   finish { state, code } -> { link }     redeem RoarMe's code; the state must be this member's own
 //   status -> { link | null }              also drops the link here if the person removed it in RoarMe
-//   unlink -> { ok }                       removes it on both sides
+//   unlink { user_id? } -> { ok }          administrators only (since 20 Oct): removes it on both sides
 
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from 'npm:@supabase/supabase-js@2'
@@ -103,9 +103,16 @@ Deno.serve(async (req) => {
     }
 
     if (body.action === 'unlink') {
-      // the hub's side goes first, so the link is off here even if RoarMe cannot be reached right now
-      await sb.from('roarme_links').delete().eq('user_id', user.id)
-      await roarme({ action: 'unlink' })
+      // since 20 Oct the link is the team's (one account, signed in through the hub): only an administrator removes it,
+      // for anyone in the workspace; a removed link takes the person out of every project group in RoarMe at once
+      const { data: meRow } = await sb.from('members').select('role').eq('user_id', user.id).maybeSingle()
+      if (meRow?.role !== 'admin') return json({ error: 'Only an administrator can disconnect RoarMe.' }, 403)
+      const target = String(body.user_id || user.id)
+      const { data: t } = await sb.from('members').select('workspace_id').eq('user_id', target).maybeSingle()
+      if (!t || t.workspace_id !== member.workspace_id) return json({ error: 'Not in this team.' }, 400)
+      await sb.from('roarme_links').delete().eq('user_id', target)
+      const res = await fetch(ROARME, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-hub-secret': conf.secret }, body: JSON.stringify({ action: 'unlink', hub_user_id: target }) })
+      if (!res.ok) return json({ error: `RoarMe answered ${res.status}.` }, 502)
       return json({ ok: true })
     }
   } catch (e) {

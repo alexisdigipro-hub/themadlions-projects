@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, useToast } from './ui.jsx'
-import { useStore } from '../lib/store.jsx'
+import { useCurrentUser, useStore } from '../lib/store.jsx'
 import { supabase } from '../lib/supabase.js'
 import { SUPABASE_KEY, SUPABASE_URL } from '../lib/supabaseConfig.js'
 
@@ -29,6 +29,8 @@ async function call(action, body = {}, fn = 'roarme-link') {
 
 export default function RoarMeLink() {
   const toast = useToast()
+  const me = useCurrentUser()
+  const isAdmin = me?.role === 'admin'
   const [link, setLink] = useState(undefined)
   const [busy, setBusy] = useState(false)
   const winRef = useRef(null)
@@ -96,18 +98,63 @@ export default function RoarMeLink() {
         <p className="muted small">Checking…</p>
       ) : link ? (
         <>
-          <p>Linked to <b>@{link.roar_username}</b>{link.roar_name ? ` (${link.roar_name})` : ''}.</p>
-          <p className="fineprint">The hub knows this RoarMe account is yours. It never reads your RoarMe chats and never has your RoarMe password. You can also remove the link in RoarMe: Settings, Privacy and Security, Linked apps.</p>
-          <div className="row-actions"><Button variant="ghost" onClick={disconnect} disabled={busy}>Disconnect</Button></div>
+          <p>Your RoarMe account: <b>@{link.roar_username}</b>{link.roar_name ? ` (${link.roar_name})` : ''}.</p>
+          <p className="fineprint">In RoarMe, press <b>Sign in with THEMADLIONS Hub</b> and use your hub email and password. The hub puts you in the group chats of your projects; it never reads your RoarMe chats.</p>
+          {isAdmin && <div className="row-actions"><Button variant="ghost" onClick={disconnect} disabled={busy}>Disconnect</Button></div>}
         </>
       ) : (
         <>
-          <p>Link your RoarMe account to the hub. Soon the team chat moves to RoarMe, and the hub will put you in the chats of your projects.</p>
-          <p className="fineprint">RoarMe opens in a small window: sign in there (or make an account) and press Approve. The hub never sees your RoarMe password.</p>
-          <div className="row-actions"><Button variant="primary" onClick={connect} disabled={busy}>{busy ? 'Waiting for RoarMe…' : 'Connect RoarMe'}</Button></div>
+          <p>The team chat is moving to RoarMe. Open RoarMe and press <b>Sign in with THEMADLIONS Hub</b>: your hub email and password are all you need, and your account is made the first time.</p>
+          <p className="fineprint">Already have a RoarMe account of your own? Connect it here instead.</p>
+          <div className="row-actions">
+            <a className="btn btn-primary btn-md" href="https://alexisdigipro-hub.github.io/roarme/" target="_blank" rel="noreferrer">Open RoarMe</a>
+            <Button variant="ghost" onClick={connect} disabled={busy}>{busy ? 'Waiting for RoarMe…' : 'Connect my RoarMe'}</Button>
+          </div>
         </>
       )}
+      {isAdmin && <RoarMeTeam />}
     </section>
+  )
+}
+
+/* Administrators: a RoarMe account for everyone in the team at once (Alex, 20 Oct). Each active member gets the RoarMe
+   account with their hub email (found if they have one, made if not) and is linked, so the project groups have them
+   before they ever open RoarMe. No passwords: they come in with Sign in with THEMADLIONS Hub. */
+function RoarMeTeam() {
+  const { state } = useStore()
+  const toast = useToast()
+  const [links, setLinks] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState(null)
+  const load = async () => { const { data } = await supabase.from('roarme_links').select('user_id, roar_username'); setLinks(data || []) }
+  useEffect(() => { load() }, [])
+  const active = (state.users || []).filter((u) => u.active !== false)
+  const linkedIds = new Set((links || []).map((l) => l.user_id))
+  const missing = active.filter((u) => !linkedIds.has(u.id))
+  const setUp = async () => {
+    if (!window.confirm(`Make or link a RoarMe account for ${missing.length === active.length ? 'everyone in the team' : `${missing.length} people`}, with their hub email?`)) return
+    setBusy(true)
+    try {
+      const r = await call('provision', {}, 'roarme-signin')
+      setResult(r.people || [])
+      const bad = (r.people || []).filter((p) => p.error)
+      toast(bad.length ? `${bad.length} could not be set up` : 'RoarMe ready for the team', bad.length ? 'error' : 'ok')
+      await load()
+    } catch (e) { toast(e.message, 'error') } finally { setBusy(false) }
+  }
+  if (!links) return null
+  return (
+    <div className="roarme-team">
+      <h3>Team on RoarMe</h3>
+      <p className="small muted">{active.length - missing.length} of {active.length} have RoarMe.{missing.length ? ` Not yet: ${missing.map((u) => u.name).join(', ')}.` : ''}</p>
+      {missing.length > 0 && <div className="row-actions"><Button variant="primary" onClick={setUp} disabled={busy}>{busy ? 'Setting up…' : 'Set up RoarMe for the whole team'}</Button></div>}
+      {result && (
+        <ul className="plain small">
+          {result.map((p, i) => <li key={i}>{p.name}: {p.error ? <span className="error">{p.error}</span> : <>@{p.username}{p.created ? ' (new)' : ''}</>}</li>)}
+        </ul>
+      )}
+      <p className="fineprint">Accounts use each person's hub email and have no RoarMe password: everyone signs in with Sign in with THEMADLIONS Hub.</p>
+    </div>
   )
 }
 

@@ -6,6 +6,7 @@ import { ToastProvider } from './components/ui.jsx'
 import { StoreProvider, useCurrentUser, useStore } from './lib/store.jsx'
 import { CallProvider } from './lib/calls.jsx'
 import Login from './pages/Login.jsx'
+import RoarMeSignin, { pendingRoarMeSignin } from './pages/RoarMeSignin.jsx'
 import Project, { useProject } from './pages/Project.jsx'
 
 // Each page is its own file, fetched the first time it is opened, so opening the app downloads
@@ -74,6 +75,8 @@ function RequireUser() {
   const user = useCurrentUser()
   const { ready } = useStore()
   if (!ready) return <Loading />
+  // signed in on the way to RoarMe ("Sign in with THEMADLIONS Hub"): carry on there (pages/RoarMeSignin.jsx)
+  if (user && pendingRoarMeSignin()) return <Navigate to="/roarme-signin" replace />
   // calls ring wherever the app is open, the chat window included
   return user ? <CallProvider><Outlet /></CallProvider> : <Navigate to="/login" replace />
 }
@@ -102,6 +105,7 @@ export default function App() {
           <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/login" element={<LoginGate />} />
+            <Route path="/roarme-signin" element={<RoarMeSignin />} />
             <Route path="/s/:token" element={<PublicCallSheet />} />
             <Route path="/d/:token" element={<PublicDelivery />} />
             <Route path="/ps/:token" element={<PublicStatus />} />
