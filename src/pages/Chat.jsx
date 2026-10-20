@@ -12,6 +12,7 @@ import { pcloudBlob, pcloudOn } from '../lib/pcloud.js'
 import { remote, supabase } from '../lib/supabase.js'
 import { chimeFor, loadChatPrefs, loadMuted, textSizeOf, toggleMuted } from '../lib/chatPrefs.js'
 import ChatSettings from '../components/ChatSettings.jsx'
+import { RoarMeProjectSwitch } from '../components/RoarMeLink.jsx'
 import { NotoEmoji, emojiParts } from '../components/NotoEmoji.jsx'
 import Profile from './Profile.jsx'
 import { useCalls } from '../lib/calls.jsx'
@@ -1106,6 +1107,8 @@ function ProjectMembersModal({ open, projectId, onClose }) {
         <p className="small muted">{listed
           ? 'Only the people marked in are in this conversation; Add puts anyone who can see the project in, Remove takes them out, and the database hands its messages only to them. Administrators are always in.'
           : "Everyone who can see the project is in its conversation. Take someone out and the room disappears from their Chat and from the project's tabs; the database stops handing them its messages. Put them back any time. Administrators are always in."}</p>
+        {/* the project's RoarMe group (Alex, 20 Oct: the chat moves onto RoarMe, one switch per project) */}
+        <RoarMeProjectSwitch projectId={projectId} people={people.filter((p) => !(excluded.includes(p.id) && p.role !== 'admin'))} />
         <ul className="plain chat-people">
           {people.map((p) => {
             const out = excluded.includes(p.id) && p.role !== 'admin'

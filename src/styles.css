@@ -7671,3 +7671,9 @@ html[data-theme] body .rem-tasks > .rem-task.tinted, .rem-task.tinted { backgrou
   .font-pick-item { padding: 10px 12px; }
   .font-pick-name { font-size: 15.5px; }
 }
+/* Chat > project room > Members: the RoarMe group switch (20 Oct) */
+.roarme-switch { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 16px; background: var(--glass, rgba(255,255,255,.04)); border: 1px solid var(--line, rgba(255,255,255,.08)); }
+.roarme-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.roarme-switch-row > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.roarme-switch p { margin: 0; }
+.roarme-switch .row-actions { justify-content: space-between; align-items: center; }

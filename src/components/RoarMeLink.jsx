@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, useToast } from './ui.jsx'
+import { useStore } from '../lib/store.jsx'
 import { supabase } from '../lib/supabase.js'
 import { SUPABASE_KEY, SUPABASE_URL } from '../lib/supabaseConfig.js'
 
@@ -11,11 +12,11 @@ import { SUPABASE_KEY, SUPABASE_URL } from '../lib/supabaseConfig.js'
 const ROARME_ORIGIN = 'https://alexisdigipro-hub.github.io'
 const ROARME_APP = `${ROARME_ORIGIN}/roarme/`
 
-async function call(action, body = {}) {
+async function call(action, body = {}, fn = 'roarme-link') {
   const { data } = await supabase.auth.getSession()
   const token = data?.session?.access_token
   if (!token) throw new Error('Sign in again.')
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/roarme-link`, {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/${fn}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({ action, ...body }),
@@ -107,5 +108,70 @@ export default function RoarMeLink() {
         </>
       )}
     </section>
+  )
+}
+
+/* Chat > a project's room > Members, administrators only (Alex, 20 Oct: phase 3, one switch per project).
+   On: the project gets a RoarMe group, and the database keeps its members in step on every change that matters
+   (supabase/roarme_sync.sql, Edge Function roarme-sync). Only people who linked their RoarMe account can be in it.
+   Off, or the project deleted: everyone is taken out of the group. */
+export function RoarMeProjectSwitch({ projectId, people }) {
+  const { state, updateProject } = useStore()
+  const toast = useToast()
+  const project = state.projects.find((p) => p.id === projectId)
+  const on = project?.roarme === true
+  const [group, setGroup] = useState(null)
+  const [linked, setLinked] = useState([])
+  const [busy, setBusy] = useState(false)
+  const load = async () => {
+    const [{ data: g }, { data: l }] = await Promise.all([
+      supabase.from('roarme_groups').select('*').eq('project_id', projectId).maybeSingle(),
+      supabase.from('roarme_links').select('user_id, roar_username'),
+    ])
+    setGroup(g || null)
+    setLinked(l || [])
+  }
+  useEffect(() => { if (supabase) load() }, [projectId, on]) // eslint-disable-line react-hooks/exhaustive-deps
+  // the group is made in the background a moment after the switch is saved: look again shortly after
+  useEffect(() => {
+    if (!supabase) return undefined
+    const t = setTimeout(load, 4000)
+    return () => clearTimeout(t)
+  }, [on]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!supabase || !project) return null
+  const linkedIds = new Set(linked.map((l) => l.user_id))
+  const inGroup = people.filter((p) => linkedIds.has(p.id))
+  const notLinked = people.filter((p) => !linkedIds.has(p.id))
+  const syncNow = async () => {
+    setBusy(true)
+    try {
+      const r = await call('run', {}, 'roarme-sync')
+      const mine = (r.projects || []).find((x) => x.project_id === projectId)
+      if (mine?.error) toast(mine.error, 'error'); else toast('RoarMe group up to date', 'ok')
+      await load()
+    } catch (e) { toast(e.message, 'error') } finally { setBusy(false) }
+  }
+  return (
+    <div className="roarme-switch">
+      <div className="roarme-switch-row">
+        <span><strong>RoarMe group</strong><span className="small muted">{on ? 'On: this project has a group chat in RoarMe.' : 'Off: no RoarMe group for this project.'}</span></span>
+        <Button size="sm" variant={on ? 'ghost' : 'primary'} onClick={() => updateProject(projectId, (p) => { p.roarme = !on })}>{on ? 'Turn off' : 'Turn on'}</Button>
+      </div>
+      {on && (
+        <>
+          <p className="small muted">
+            In the group: {inGroup.length ? inGroup.map((p) => p.name).join(', ') : 'nobody yet'}.
+            {notLinked.length > 0 && ` Not linked to RoarMe yet, so not in it: ${notLinked.map((p) => p.name).join(', ')} (Settings > My profile > RoarMe).`}
+          </p>
+          {group?.last_error && <p className="small error">Last sync failed: {group.last_error}</p>}
+          <div className="row-actions">
+            <span className="small muted">{group?.synced_at ? `Synced ${new Date(group.synced_at).toLocaleString()}` : 'Not synced yet'}</span>
+            <Button size="sm" variant="ghost" onClick={syncNow} disabled={busy}>{busy ? 'Syncing…' : 'Sync now'}</Button>
+          </div>
+        </>
+      )}
+      <p className="fineprint">The people in the RoarMe group follow this list: whoever is taken out here, loses access to the project or leaves the team is taken out of the RoarMe group too.</p>
+    </div>
   )
 }
