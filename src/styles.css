@@ -833,11 +833,14 @@ code {
 .modal-wide:has(.task-form) { width: min(780px, 100%); }
 /* the cost estimation: the form on the left, the client's page live on the right (Alex, 19 Oct); a phone keeps the form alone */
 @media (min-width: 821px) {
-  .modal-wide.est-modal { width: min(1500px, calc(100vw - 48px)); }
-  .est-compose { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 24px; align-items: start; }
-  .est-preview { position: sticky; top: 0; display: flex; flex-direction: column; gap: 8px; max-height: calc(100dvh - 190px); overflow-y: auto; padding: 0 2px; }
+  /* the whole screen (Alex, 20 Oct: "full screen, to see it all at ease"), a small margin all round */
+  .modal-backdrop:has(> .est-modal) { padding: 12px; }
+  html body .modal.modal-wide.est-modal { width: calc(100vw - 24px); max-width: none; height: calc(100dvh - 24px); max-height: calc(100dvh - 24px); }
+  html body .modal.est-modal .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  .est-compose { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 28px; align-items: start; }
+  .est-preview { position: sticky; top: 0; display: flex; flex-direction: column; gap: 8px; max-height: calc(100dvh - 170px); overflow-y: auto; padding: 0 2px; }
   .est-preview-label { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-  .est-preview .pub.dlv { max-width: none; margin: 0; padding: 0; zoom: .78; pointer-events: none; }
+  .est-preview .pub.dlv { max-width: none; margin: 0; padding: 0; zoom: .85; pointer-events: none; }
   .est-preview .dlv-sheet { max-width: none; }
 }
 .task-form { display: flex; flex-direction: column; gap: 6px; }
@@ -3095,7 +3098,7 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 /* the form Alex fills in */
 .est-edit { border: 1px solid var(--line-soft); border-radius: 12px; padding: 12px; background: var(--raised); }
 .est-edit-head,
-.est-edit-row { display: grid; grid-template-columns: 1.1fr 2.6fr 112px 64px 76px; gap: 8px; align-items: center; }
+.est-edit-row { display: grid; grid-template-columns: 1.5fr 2.5fr 112px 64px 76px; gap: 8px; align-items: center; }
 .est-edit-head { font-size: 11.5px; color: var(--muted); padding: 0 2px 6px; }
 .est-edit-head span:nth-child(4) { text-align: center; }
 .est-edit-row { margin-bottom: 8px; }
