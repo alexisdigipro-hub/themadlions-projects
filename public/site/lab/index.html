@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- The Mad Lions Lab (Alex, 18 Oct 2026): the tools and apps the studio builds between films, as numbered
-     experiments. Experiment 01 is RoarMe, Experiment 02 is Roardino (the ordino on its own, no tie to the hub), Experiment 03 is RoarMail (desktop mail app; the web demo lives in /roarmail), Experiment 04 is RoarList (shot lists; web app at /roarlist, its live example at /roarlist/#demo).
+     experiments. Experiment 01 is RoarMe, Experiment 02 is Roardino (the ordino on its own, no tie to the hub), Experiment 03 is RoarMail (desktop mail app; its page is /lab/roarmail), Experiment 04 is RoarList (shot lists; web app at /roarlist, its live example at /roarlist/#demo).
      Same look and language switch as the main page. -->
 <title>Lab · The Mad Lions</title>
 <script>
@@ -214,10 +214,9 @@ footer .wordmark { width: 130px; opacity: .6; }
         <div class="acts">
           <a class="pill main" href="roarmail/"><span data-t="ml.more">Discover RoarMail</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           <a class="pill" href="https://github.com/alexisdigipro-hub/roarmail/releases/latest" target="_blank" rel="noopener"><span data-t="ml.dl">Download for Mac / Windows</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15l5-4.5M5 19h14"/></svg></a>
-          <a class="pill" href="../roarmail/" target="_blank" rel="noopener" data-t="ml.demo">Try the web demo</a>
         </div>
       </div>
-      <div class="stage wide"><div class="desk"><iframe src="../roarmail/" title="RoarMail web demo" loading="lazy" tabindex="-1"></iframe></div></div>
+      <a class="shot" href="roarmail/" aria-label="RoarMail"><img src="roarmail.jpg" alt="RoarMail on a computer: All Inboxes, a message with its trackers blocked" loading="lazy" width="1600" height="782" style="aspect-ratio:auto"></a>
     </article>
 
     <article class="exp flip reveal" style="margin-top:10px">
@@ -277,7 +276,7 @@ footer .wordmark { width: 130px; opacity: .6; }
     'ml.u1': 'Όλα σου τα email, ένα inbox.', 'ml.u1s': 'Gmail, Outlook, iCloud ή το δικό σου domain, δίπλα δίπλα.',
     'ml.u2': 'Ιδιωτικό από τη φύση του.', 'ml.u2s': 'Μπλοκάρει τα tracking pixels, ελέγχει τους συνδέσμους, κρατά τους κωδικούς στο keychain του υπολογιστή σου.',
     'ml.u3': 'Αναίρεση σε όλα.', 'ml.u3s': 'Αρχειοθέτηση, διαγραφή, μετακίνηση, ακόμα και αποστολή: λίγα δευτερόλεπτα για να το ξανασκεφτείς.',
-    'ml.more': 'Γνώρισε το RoarMail', 'ml.dl': 'Κατέβασε για Mac / Windows', 'ml.demo': 'Δοκίμασε το web demo',
+    'ml.more': 'Γνώρισε το RoarMail', 'ml.dl': 'Κατέβασε για Mac / Windows',
     'rl.what': 'Το shot list, κάδρο κάδρο. Σκηνές και πλάνα με μέγεθος, γωνία, κίνηση και φακό, μια εικόνα για κάθε πλάνο, και ένα PDF που διαβάζει το συνεργείο στο γύρισμα.',
     'rl.u1': 'Ένα κάδρο για κάθε πλάνο.', 'rl.u1s': 'Σύρε, επικόλλησε ή διάλεξέ το, και η λίστα γίνεται storyboard.',
     'rl.u2': 'Ένα PDF για το συνεργείο.', 'rl.u2s': 'Σαν λίστα ή σαν storyboard, έτοιμο για το γύρισμα.',
