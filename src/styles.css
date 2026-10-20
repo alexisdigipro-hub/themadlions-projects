@@ -6450,6 +6450,10 @@ html .chat-list.tgui .tg-notice.on { color: var(--accent); background: color-mix
 /* My profile inside Settings (its first tab) and at the top of TML Chat's Settings */
 .profile-page.embedded { margin-top: 4px; }
 .settings-signout { margin-top: 16px; }
+/* Settings > My profile > RoarMe (20 Oct): the link card under the profile */
+.roarme-link { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.roarme-link h2 { margin: 0; }
+.roarme-link p { margin: 0; }
 .chat-me-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px; font: inherit; color: var(--text); text-align: left; background: none; border: 0; cursor: pointer; }
 .chat-me-row .chat-rmain { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .chat-me-row .chat-rmain strong { font-size: 16.5px; }
