@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- The Mad Lions Lab (Alex, 18 Oct 2026): the tools and apps the studio builds between films, as numbered
-     experiments. Experiment 01 is RoarMe, Experiment 02 is Roardino (the ordino on its own, no tie to the hub), Experiment 03 is RoarMail (desktop mail app; its page is /lab/roarmail), Experiment 04 is RoarList (shot lists; web app at /roarlist, its live example at /roarlist/#demo).
+     experiments. Experiment 01 is RoarMe, Experiment 02 is Roardino (the ordino on its own, no tie to the hub), Experiment 03 is RoarMail (desktop mail app; its page is /lab/roarmail), Experiment 04 is RoarList (shot lists; web app at /roarlist, its live example at /roarlist/#demo), Experiment 05 is RoarTransfer (big files with a 3-day link; its page is /lab/roartransfer, the tool itself is RoarMe's /roarme/transfer/).
      Same look and language switch as the main page. -->
 <title>Lab · The Mad Lions</title>
 <script>
@@ -79,6 +79,8 @@ section { padding: 0 var(--pad) clamp(80px, 10vw, 130px); }
 .exp-n i::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #2fd36b; box-shadow: 0 0 8px rgba(47, 211, 107, .8); }
 .exp h2 { margin: 18px 0 0; font-size: clamp(44px, 6vw, 84px); font-weight: 400; line-height: .9; letter-spacing: .02em; }
 .exp h2 .a { font-weight: 200; } .exp h2 .b { font-weight: 800; }
+.exp h2.long { font-size: clamp(36px, 4.8vw, 72px); }
+.exp > div { min-width: 0; }
 .exp .what { margin: 18px 0 0; font-size: clamp(17px, 1.6vw, 19px); font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 78%, transparent); }
 .usp { margin: 22px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
 .usp li { display: flex; align-items: baseline; gap: 12px; font-size: 16px; line-height: 1.45; }
@@ -107,6 +109,19 @@ section { padding: 0 var(--pad) clamp(80px, 10vw, 130px); }
 .desk { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; background: #1b1e23; box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.08); }
 .desk iframe { position: absolute; left: 0; top: 0; width: 1360px; height: 850px; border: 0; transform-origin: 0 0; }
 .stage.wide { padding: clamp(18px, 3vw, 34px); }
+/* RoarTransfer: its sending card, drawn in the stage */
+.rt-mini { width: min(360px, 100%); padding: 22px; border-radius: 26px; background: linear-gradient(170deg, rgba(43,48,56,.9), rgba(27,30,35,.9)); border: 1px solid rgba(255,255,255,.14); box-shadow: 0 30px 70px rgba(0,0,0,.55); display: grid; gap: 12px; color: #eef0f3; }
+.rt-mini .h { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 17px; }
+.rt-mini .h i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(180deg, #ff4a3d, #b50000); }
+.rt-mini .h i svg { width: 16px; height: 16px; } .rt-mini .h b span { color: #ff3b2f; }
+.rt-mini .ring { position: relative; justify-self: center; width: 128px; height: 128px; }
+.rt-mini .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.rt-mini .ring circle { fill: none; stroke-width: 7; } .rt-mini .ring .t { stroke: rgba(255,255,255,.08); } .rt-mini .ring .f { stroke: #ff3b2f; stroke-linecap: round; stroke-dasharray: 352; stroke-dashoffset: 127; }
+.rt-mini .ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 30px; font-weight: 300; }
+.rt-mini .f-r { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); font-size: 13px; }
+.rt-mini .f-r b { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rt-mini .f-r small { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: rgba(214,220,228,.6); }
+.rt-mini .f-r em { font-style: normal; padding: 4px 10px; border-radius: 99px; background: rgba(47,211,107,.16); color: #a6efc0; font-size: 11px; font-weight: 700; }
 
 /* what comes next */
 .next { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
@@ -132,6 +147,7 @@ footer .wordmark { width: 130px; opacity: .6; }
   .next { grid-template-columns: 1fr; }
 }
 @media (max-width: 620px) {
+  .exp h2.long { font-size: 10vw; }
   .bar .wordmark { width: 140px; }
   .exp { border-radius: 20px; }
   .acts .pill { flex: 1 1 auto; }
@@ -239,6 +255,31 @@ footer .wordmark { width: 130px; opacity: .6; }
       </div>
     </article>
 
+    <article class="exp reveal" style="margin-top:10px">
+      <div>
+        <span class="exp-n">Experiment 05 <i data-t="exp.live">Live · beta</i></span>
+        <h2 class="long"><span class="a">ROAR</span><span class="b">TRANSFER</span></h2>
+        <p class="what" data-t="rt.what">Big files, one link. Rushes, a cut or the master, up to 3 GB, with a link anyone can download for 3 days. On its own page, in every RoarMe chat and in RoarMail.</p>
+        <ul class="usp">
+          <li><span><b data-t="rt.u1">3 GB, as it is.</b> <span data-t="rt.u1s">Sent in its original quality, several files at once.</span></span></li>
+          <li><span><b data-t="rt.u2">Picks up where it stopped.</b> <span data-t="rt.u2s">If the connection drops, it carries on instead of starting again.</span></span></li>
+          <li><span><b data-t="rt.u3">Gone in 3 days.</b> <span data-t="rt.u3s">The file and its link delete themselves. No account needed to download.</span></span></li>
+        </ul>
+        <div class="acts">
+          <a class="pill main" href="roartransfer/"><span data-t="rt.more">Discover RoarTransfer</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="https://alexisdigipro-hub.github.io/roarme/transfer/" data-t="rt.open">Send a file</a>
+        </div>
+      </div>
+      <a class="stage" href="roartransfer/" aria-label="RoarTransfer">
+        <span class="rt-mini" aria-hidden="true">
+          <span class="h"><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h-.5a4.5 4.5 0 0 1-.9-8.9A6 6 0 0 1 17.3 8 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M8.5 15 12 11.5 15.5 15"/></svg></i><b>Roar<span>Transfer</span></b></span>
+          <span class="ring"><svg viewBox="0 0 128 128"><circle class="t" cx="64" cy="64" r="56"/><circle class="f" cx="64" cy="64" r="56"/></svg><b>64%</b></span>
+          <span class="f-r"><b>A001_C003_NIGHT.MOV</b><small>1.2 GB</small><em>Link</em></span>
+          <span class="f-r"><b>A001_C004_NIGHT.MOV</b><small>1.6 GB</small></span>
+        </span>
+      </a>
+    </article>
+
     <div class="next one">
       <div class="card reveal">
         <span class="exp-n" data-t="idea.n">Your idea</span>
@@ -281,6 +322,11 @@ footer .wordmark { width: 130px; opacity: .6; }
     'rl.u1': 'Ένα κάδρο για κάθε πλάνο.', 'rl.u1s': 'Σύρε, επικόλλησε ή διάλεξέ το, και η λίστα γίνεται storyboard.',
     'rl.u2': 'Ένα PDF για το συνεργείο.', 'rl.u2s': 'Σαν λίστα ή σαν storyboard, έτοιμο για το γύρισμα.',
     'rl.u3': 'Ο λογαριασμός σου στο RoarMe.', 'rl.u3s': 'Όλα σου τα shot lists στο cloud, στο web και σε Mac και Windows.',
+    'rt.what': 'Μεγάλα αρχεία, ένας σύνδεσμος. Rushes, ένα μοντάζ ή το master, ως 3 GB, με σύνδεσμο που κατεβάζει ο καθένας για 3 μέρες. Σε δική του σελίδα, σε κάθε συνομιλία του RoarMe και στο RoarMail.',
+    'rt.u1': '3 GB, όπως είναι.', 'rt.u1s': 'Στέλνεται στην αυθεντική του ποιότητα, πολλά αρχεία μαζί.',
+    'rt.u2': 'Συνεχίζει από εκεί που σταμάτησε.', 'rt.u2s': 'Αν πέσει η σύνδεση, συνεχίζει αντί να ξεκινήσει από την αρχή.',
+    'rt.u3': 'Φεύγει σε 3 μέρες.', 'rt.u3s': 'Το αρχείο και ο σύνδεσμός του σβήνονται μόνα τους. Για τη λήψη δεν χρειάζεται λογαριασμός.',
+    'rt.more': 'Γνώρισε το RoarTransfer', 'rt.open': 'Στείλε αρχείο',
     'rl.more': 'Γνώρισε το RoarList', 'rl.open': 'Φτιάξε το shot list σου', 'rl.demo': 'Δες ένα παράδειγμα', 'rl.dl': 'Mac / Windows',
     'idea.n': 'Η ιδέα σου', 'idea.t': 'Ένα εργαλείο που <b>θα ήθελες</b> να υπάρχει;', 'idea.p': 'Πες μας τι καθυστερεί την ομάδα σου. Οι καλύτερες ιδέες γίνονται το επόμενο πείραμα.',
     'footer': '© 2026 The Mad Lions · Lab'
