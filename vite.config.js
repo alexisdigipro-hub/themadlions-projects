@@ -5,6 +5,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   base: './',
   plugins: [react()],
-  // chat.html: the chat on its own, added to a phone's home screen as TML Chat
-  build: { outDir: 'dist', chunkSizeWarningLimit: 1500, rollupOptions: { input: { main: 'index.html', chat: 'chat.html' } } },
+  // chat.html: the chat on its own, added to a phone's home screen as TML Chat; roarme/index.html: RoarMe as its own app
+  build: { outDir: 'dist', chunkSizeWarningLimit: 1500, rollupOptions: { input: { main: 'index.html', chat: 'chat.html', roarme: 'roarme/index.html' } } },
 })

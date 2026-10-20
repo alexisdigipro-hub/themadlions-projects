@@ -7,6 +7,7 @@ import { useToast } from './ui.jsx'
 import { backupDue, pcloudBackup } from '../lib/pcloud.js'
 import { remote } from '../lib/supabase.js'
 import { listenSwipes, swipeTabs } from '../lib/swipeTabs.js'
+import { isStandalone, roarmeAppUrl, roarmeInstalled } from '../lib/roarmeApp.js'
 
 function Logo({ name, subtitle, logo }) {
   return (
@@ -120,6 +121,26 @@ export default function Layout() {
     { to: '/settings', label: 'Settings', show: true, icon: 'settings' },
   ].filter((i) => i.show)
 
+  /* The RoarMe tab on a phone opens RoarMe as its own app (Alex, 20 Oct; lib/roarmeApp.js). In a browser: /roarme/
+     in the same tab, where Chrome hands it to RoarMe if it is installed and otherwise RoarMe offers to install itself
+     (on an iPhone, how to Add to Home Screen). In the hub's own home-screen app: the installed RoarMe if Android
+     reports it, else the hub's RoarMe page as before (no app can install another from inside itself). A computer,
+     and the swipe between tabs (not a real tap), keep the hub's own RoarMe page. */
+  const roarmeApp = useRef(false)
+  useEffect(() => {
+    if (!remote || !window.matchMedia?.('(max-width: 820px)').matches) return
+    roarmeInstalled().then((yes) => { roarmeApp.current = yes })
+  }, [])
+  const roarmeTap = (e) => {
+    if (!e.isTrusted || !window.matchMedia?.('(max-width: 820px)').matches) return
+    if (isStandalone()) {
+      if (roarmeApp.current) { e.preventDefault(); window.open(roarmeAppUrl(), '_blank', 'noopener') }
+      return
+    }
+    e.preventDefault()
+    window.location.assign(roarmeAppUrl())
+  }
+
   /* On a phone there is no side menu any more (Alex, 10 Oct): every page is in the bar at the foot,
      which slides sideways when they do not fit; the page you are on is brought into view. */
   const tabsRef = useRef(null)
@@ -229,7 +250,7 @@ export default function Layout() {
 
       <nav className="tabbar" aria-label="Main" ref={tabsRef}>
         {items.map((i) => (
-          <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => (isActive || i.also?.some((p) => pathname.startsWith(p)) ? 'active' : '')}>
+          <NavLink key={i.to} to={i.to} end={i.end} onClick={i.to === '/roarme' ? roarmeTap : undefined} className={({ isActive }) => (isActive || i.also?.some((p) => pathname.startsWith(p)) ? 'active' : '')}>
             <span className="tab-ico-wrap">{Icon[i.icon]?.()}{i.badge > 0 && <span className="nav-badge">{i.badge}</span>}</span>
             {i.label}
           </NavLink>
