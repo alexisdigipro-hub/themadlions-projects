@@ -3678,6 +3678,9 @@ html:-webkit-full-screen body .modal.modal-wide.est-modal { width: 100vw; height
 .est-pic-empty { width: 120px; height: 68px; display: grid; place-items: center; border-radius: 12px; border: 1px dashed var(--line); font-size: 12px; color: var(--muted); }
 .est-pic-acts { display: flex; gap: 8px; flex-wrap: wrap; }
 .est-reset { align-self: flex-start; color: var(--muted); }
+.est-mylook { display: flex; flex-wrap: wrap; gap: 8px; }
+.est-pill.est-save { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.est-pill.est-save.on { color: var(--muted); border-color: var(--line); cursor: default; }
 .est-preview-phone { position: static; max-height: none; overflow: visible; }
 .est-preview-phone .pub.dlv { zoom: .9; }
 
