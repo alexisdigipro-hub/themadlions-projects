@@ -7689,3 +7689,11 @@ html[data-theme] body .rem-tasks > .rem-task.tinted, .rem-task.tinted { backgrou
 }
 /* TML Chat and the chat window (20 Oct): RoarMe on the whole screen, nothing around it */
 .roarme-page.full { position: fixed; inset: 0; height: 100%; min-height: 0; border-radius: 0; margin: 0; z-index: 1; }
+
+/* A search box with an × at its right that empties it (Alex, 20 Oct, Drives) */
+.search-clear-wrap { position: relative; display: flex; align-items: center; flex: 1 1 auto; min-width: 0; max-width: 520px; }
+html[data-theme] body .search-clear-wrap > .input.search, html[data-theme] body .db-page .toolbar-actions .search-clear-wrap > .input.search { flex: 1 1 auto; width: 100%; max-width: none; padding-right: 44px; }
+.search-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--muted); cursor: pointer; transition: color .15s, background .15s; }
+.search-clear:hover { color: var(--text); background: color-mix(in srgb, var(--text) 14%, transparent); }
+.search-clear:active { transform: translateY(-50%) scale(.92); }
+.search-clear svg { width: 15px; height: 15px; }
