@@ -14,8 +14,8 @@ Alex Konstantinidis, film director, owner of The Mad Lions (Athens). He is not a
 - **Chat window**: the chat opened in its own window on a computer (the + menu's pop-out), laid out like TML Chat.
 - **Chat colours**: Settings > Chat (Glass dark, Coral, Neo red…), separate from the hub's own skin.
 
-## Not the hub's
-The Supabase tables `roar_*`, functions `roar_*` and buckets `roar-files` / `roar-avatars` in this project are RoarMe's old copy (repository alexisdigipro-hub/roarme). Since 16 Oct 2026 RoarMe runs on its own Supabase project (bzmjhbnwhdwmncxkqkdl) and no longer reads them. Never change or drop them from here; Alex decides when they go.
+## RoarMe
+RoarMe (repository alexisdigipro-hub/roarme, Supabase project bzmjhbnwhdwmncxkqkdl) is a separate chat app. Its old copy in this database (`roar_*`, buckets `roar-files` / `roar-avatars`) was removed on 20 Oct 2026 at Alex's request. Since 20 Oct the hub is being linked to RoarMe step by step (HANDOVER.md, "Where we stopped"): members link their own RoarMe account (roarme_links, Edge Function roarme-link). Rules agreed with Alex: no RoarMe service key in the hub, only the narrow signed bridge; leaving a project must take a person out of its RoarMe chat; project tasks and calendar stay in the hub.
 
 ## Commands
 - `npm ci` then `npm run build` must pass before every commit.
