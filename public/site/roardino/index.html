@@ -176,6 +176,21 @@ body.embedded::before{display:none}
 .feat .no{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px;letter-spacing:.14em;color:var(--brand)}
 .feat b{font-size:17px;font-weight:650}
 .feat p{margin:0;font-size:14.5px;line-height:1.55;color:var(--muted)}
+.how{max-width:1180px;margin:0 auto;padding:clamp(30px,5vw,56px) 16px 10px}
+.how-h{font-family:Jost,var(--font);font-size:clamp(30px,4.4vw,52px);font-weight:200;line-height:1;letter-spacing:-.01em;margin:10px 0 clamp(20px,3vw,32px)}
+.how-h b{font-weight:800}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.step{padding:22px;border-radius:22px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--lit);display:flex;flex-direction:column;gap:8px}
+.step .no{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px;letter-spacing:.14em;color:var(--brand)}
+.step b{font-size:18px;font-weight:650}
+.step p{margin:0;font-size:14.5px;line-height:1.55;color:var(--muted)}
+.inside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:clamp(24px,5vw,72px);border-top:1px solid var(--line)}
+.in-row{display:grid;grid-template-columns:34px minmax(0,1fr);grid-template-rows:auto 1fr;align-items:start;gap:3px 12px;padding:18px 0;border-bottom:1px solid var(--line)}
+.in-row .no{grid-row:span 2;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px;color:var(--muted);padding-top:3px}
+.in-row b{font-size:16px;font-weight:650}
+.in-row p{margin:0;font-size:14.5px;line-height:1.55;color:var(--muted)}
+.how + .how{padding-top:clamp(36px,5vw,60px)}
+.how:last-of-type{padding-bottom:clamp(36px,5vw,60px)}
 .roar-strip{max-width:1180px;margin:0 auto 60px;padding:0 16px}
 .roar-strip>div{display:flex;align-items:center;gap:clamp(16px,3vw,36px);padding:clamp(20px,3vw,30px);border-radius:24px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--lit)}
 .roar-strip .ic{flex:none;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,90,80,.6);box-shadow:0 0 0 5px rgba(212,0,0,.16)}
@@ -190,11 +205,13 @@ body.embedded::before{display:none}
   .auth-phone{width:min(300px,82%)}
   .auth-phone .cap{left:-8px}
   .feats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps{grid-template-columns:minmax(0,1fr)}
   .feat:nth-child(2){border-right:0;margin-right:0}
   .feat:nth-child(-n+2){border-bottom:1px solid var(--line)}
 }
 @media (max-width:560px){
   .feats{grid-template-columns:minmax(0,1fr)}
+  .inside{grid-template-columns:minmax(0,1fr)}
   .feat{border-right:0;margin-right:0;border-bottom:1px solid var(--line);padding:20px 0}
   .feat:last-child{border-bottom:0}
   .roar-strip>div{flex-direction:column;align-items:flex-start}
@@ -1006,6 +1023,19 @@ function viewAuth(mode = 'in'){
     ['Ένα link για το συνεργείο', 'Ανοίγει σε κάθε κινητό: χάρτης, κλήση με ένα πάτημα, η μέρα στο ημερολόγιο.'],
     ['Αλλάζεις, ενημερώνεται', 'Ξαναπατάς Αποστολή και το ίδιο link δείχνει πια τις αλλαγές. Όλα σου τα ordino στον λογαριασμό σου.'],
   ]
+  const STEPS = [
+    ['Φτιάχνεις', 'Πελάτης, τίτλος, ημερομηνία, general call, ημέρα 1 από 3. Δίπλα βλέπεις ζωντανά πώς θα φαίνεται στο κινητό. Για την επόμενη μέρα, κάνεις ένα αντίγραφο και αλλάζεις μόνο ό,τι άλλαξε.'],
+    ['Στέλνεις', 'Πατάς Αποστολή link και παίρνεις ένα link. Το αντιγράφεις ή το μοιράζεσαι όπου μιλάει το συνεργείο. Μέσα στο RoarMe πάει κατευθείαν στη συνομιλία ως κάρτα.'],
+    ['Το ανοίγουν όλοι', 'Χωρίς λογαριασμό και χωρίς εφαρμογή, σε κάθε κινητό. Πατάνε ένα τηλέφωνο και καλούν, βάζουν τη μέρα στο ημερολόγιό τους, και με ένα link του Google Maps ανοίγουν τις οδηγίες ως την τοποθεσία.'],
+  ]
+  const INSIDE = [
+    ['Calls ανά ομάδα', 'Τι ώρα θέλεις την κάθε ομάδα, π.χ. production crew 07:00, cast και make-up 07:30, δίπλα στο general call και το εκτιμώμενο wrap.'],
+    ['Τοποθεσία', 'Όνομα, διεύθυνση, link από το Google Maps και ο άνθρωπος του χώρου με το τηλέφωνό του. Αν θες, parking, το πλησιέστερο νοσοκομείο και δεύτερη τοποθεσία.'],
+    ['Πρόγραμμα και σκηνές', 'Η σειρά της μέρας ώρα με ώρα και οι σκηνές που γυρίζονται, μαζί με το διάλειμμα για φαγητό.'],
+    ['Cast, crew, επαφές', 'Cast και crew με ρόλο και ώρα call. Οι επαφές της παραγωγής με το τηλέφωνό τους, που καλείται με ένα πάτημα.'],
+    ['Καιρός και φως', 'Από την τοποθεσία και την ημερομηνία βγαίνουν μόνες τους η ανατολή και η δύση, και για τις επόμενες δύο εβδομάδες περίπου ο καιρός με την πιθανότητα βροχής.'],
+    ['Η δική σου εμφάνιση', 'Dark, Glass ή Light, το χρώμα σου, φωτογραφία cover και το λογότυπο της παραγωγής. Βάζεις τις ενότητες με τη σειρά που θες και τους δίνεις τον δικό σου τίτλο.'],
+  ]
   app.replaceChildren(
     h('header', { class: 'topbar' }, brandMark(), h('div', { class: 'spacer' }), h('a', { class: 'btn small', href: '#demo' }, 'Παράδειγμα')),
     h('main', { class: 'auth' },
@@ -1018,6 +1048,10 @@ function viewAuth(mode = 'in'){
         h('div', { class: 'hand' }, h('iframe', { src: BASE + '#demo', title: 'Ένα ordino σε κινητό', loading: 'lazy', tabindex: '-1' })),
         h('span', { class: 'cap', html: '<i>' + ICON.share + '</i>Έτσι το βλέπει το συνεργείο' }))),
     h('section', { class: 'feats' }, FEATS.map(([t, d], i) => h('div', { class: 'feat' }, h('span', { class: 'no' }, '0' + (i + 1)), h('b', {}, t), h('p', {}, d)))),
+    h('section', { class: 'how' }, h('p', { class: 'kicker' }, 'Πώς δουλεύει'), h('h2', { class: 'how-h', html: 'Από το γραφείο <b>στο set</b>.' }),
+      h('div', { class: 'steps' }, STEPS.map(([t, d], i) => h('div', { class: 'step' }, h('span', { class: 'no' }, '0' + (i + 1)), h('b', {}, t), h('p', {}, d))))),
+    h('section', { class: 'how' }, h('p', { class: 'kicker' }, 'Τι μπαίνει σε ένα ordino'), h('h2', { class: 'how-h', html: 'Όλη η μέρα, <b>σε μία σελίδα</b>.' }),
+      h('div', { class: 'inside' }, INSIDE.map(([t, d], i) => h('div', { class: 'in-row' }, h('span', { class: 'no' }, '0' + (i + 1)), h('b', {}, t), h('p', {}, d))))),
     h('section', { class: 'roar-strip' }, h('div', {},
       h('span', { class: 'ic', html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9.5" width="13" height="10" rx="2.5"/><path d="m16 13 5-2.8v8.6l-5-2.8"/><circle cx="6.5" cy="6" r="2.5"/><circle cx="12.5" cy="6" r="2.5"/><path d="m6 14.3 1.4 1.4 2.6-2.6M11.5 14.5h1.5"/></svg>' }),
       h('span', { class: 'tx' }, h('b', {}, 'Και μέσα στο RoarMe'), h('span', {}, 'Στο RoarMe, το κουμπί με την κάμερα δίπλα στον συνδετήρα ανοίγει το Roardino ήδη συνδεδεμένο. Διαλέγεις ordino, πατάς Στείλε, και μπαίνει στη συνομιλία ως κάρτα. Ο λογαριασμός σου στο RoarMe δουλεύει και εδώ.')),
