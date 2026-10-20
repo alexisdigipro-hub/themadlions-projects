@@ -3643,6 +3643,15 @@ html.pub-est-page .pub.dlv.dlv-estimate.est-glow { background: radial-gradient(1
 .pub.dlv.dlv-estimate.est-lines-list .est-total td { padding-top: 6px; border-top: 0; font-size: calc(17px * var(--est-fs, 1)); }
 .pub.dlv.dlv-estimate.est-lines-list .est-total .est-amt { font-size: calc(19px * var(--est-fs, 1)); font-weight: 800; }
 .est-tabs { align-self: flex-start; }
+.est-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.est-full { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; font: inherit; font-size: 13.5px; font-weight: 600; color: var(--text); cursor: pointer; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text) 13%, transparent); background: color-mix(in srgb, var(--panel) 80%, transparent); transition: background .2s, border-color .2s; }
+.est-full:hover { background: color-mix(in srgb, var(--text) 9%, color-mix(in srgb, var(--panel) 80%, transparent)); }
+.est-full.on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+/* in the browser's full screen the window runs edge to edge (two rules: Safari's older name must not void the other) */
+html:fullscreen .modal-backdrop:has(> .est-modal) { padding: 0; }
+html:fullscreen body .modal.modal-wide.est-modal { width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; }
+html:-webkit-full-screen .modal-backdrop:has(> .est-modal) { padding: 0; }
+html:-webkit-full-screen body .modal.modal-wide.est-modal { width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; }
 .est-look-group { display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 18px; background: color-mix(in srgb, var(--text) 4%, transparent); border: 1px solid var(--line-soft); }
 .est-look-group h4 { margin: 0; font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .est-look-group .field { margin: 0; }
