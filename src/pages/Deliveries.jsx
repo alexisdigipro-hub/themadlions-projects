@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { ACT_ICON, Act, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
-import { deliveryUrl, estimateUrl, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, shotlistUrl, tokenOf, deckUrl } from '../lib/shares.js'
+import { deliveryUrl, estimateUrl, getShareRow, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, shotlistUrl, tokenOf, deckUrl } from '../lib/shares.js'
 import { amount, estimateTotals } from '../lib/estimate.js'
 import { EstimateSheet } from './PublicEstimate.jsx'
 import EstimateLookEditor from '../components/EstimateLookEditor.jsx'
@@ -98,6 +98,13 @@ export default function Deliveries() {
     listShares(state.workspace.id).then(setRows).catch((e) => { setError(e.message); setRows([]) })
   }
   useEffect(reload, [state.workspace?.id])
+  // coming back to this window reads the links again, so nothing older than the database is ever shown or opened
+  useEffect(() => {
+    const back = () => { if (document.visibilityState === 'visible') reload() }
+    document.addEventListener('visibilitychange', back)
+    window.addEventListener('focus', back)
+    return () => { document.removeEventListener('visibilitychange', back); window.removeEventListener('focus', back) }
+  }, [state.workspace?.id]) // eslint-disable-line react-hooks/exhaustive-deps
   /* Opening this page counts as having seen the clients' answers, which clears the badge in the
      sidebar. Marked once the rows are actually on screen, not on mount. */
   useEffect(() => {
@@ -311,10 +318,14 @@ export default function Deliveries() {
     setEdraft({ ...emptyEstimate(), vatPct: String(state.finance?.settings?.vatDefault ?? 24), look: savedLook ? { ...savedLook } : {} })
   }
   /* An estimate keeps its link while it is reworked, so opening one means editing it. */
-  const openEstimate = (r) => {
+  const openEstimate = async (r) => {
     setEtab('content')
-    const d = r.data || {}
+    // the newest version from the database, not the copy this page loaded earlier (another window may have published since)
+    let row = { data: r.data, updated_at: r.updated_at }
+    try { row = (await getShareRow(state.workspace.id, r.ref)) || row } catch { /* offline: the copy on the page */ }
+    const d = row.data || {}
     setEdraft({
+      ref: r.ref, baseAt: row.updated_at || '',
       id: (r.ref.split(':')[1]) || uid(), projectId: d.projectId || '', version: d.version || '',
       title: d.title || '', client: d.client || '', intro: d.intro || '',
       lines: d.lines || [], excluded: (d.excluded || []).map((what) => ({ what })), totalPrice: d.totalPrice ? String(d.totalPrice) : '', discount: d.discount ? String(d.discount) : '', vatPct: d.vatPct != null ? String(d.vatPct) : '',
@@ -361,6 +372,14 @@ export default function Deliveries() {
   const publishEstimate = async () => {
     if (!edraft.title.trim()) return toast('Give it a title, or pick a project.', 'error')
     if (!edraft.lines.some((l) => (l.what || '').trim())) return toast('Add at least one cost line.', 'error')
+    // published from somewhere else after this window opened it: ask before writing over the newer one
+    if (edraft.ref && edraft.baseAt) {
+      try {
+        const now = await getShareRow(state.workspace.id, edraft.ref)
+        if (now?.updated_at && new Date(now.updated_at) > new Date(edraft.baseAt)
+          && !window.confirm('This estimate was published again from another window or device after you opened it. Publish yours over it? Its newer version would be replaced.')) return
+      } catch { /* offline: publishing will say so */ }
+    }
     setBusy(true)
     try {
       const data = estimateData(edraft)
