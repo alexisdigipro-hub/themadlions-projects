@@ -1,10 +1,8 @@
 import { Suspense, lazy } from 'react'
 import { HashRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
-import ChatReadSync from './lib/chatReadSync.jsx'
 import { ToastProvider } from './components/ui.jsx'
 import { StoreProvider, useCurrentUser, useStore } from './lib/store.jsx'
-import { CallProvider } from './lib/calls.jsx'
 import Login from './pages/Login.jsx'
 import RoarMeSignin, { pendingRoarMeSignin } from './pages/RoarMeSignin.jsx'
 import Project, { useProject } from './pages/Project.jsx'
@@ -76,8 +74,7 @@ function RequireUser() {
   if (!ready) return <Loading />
   // signed in on the way to RoarMe ("Sign in with THEMADLIONS Hub"): carry on there (pages/RoarMeSignin.jsx)
   if (user && pendingRoarMeSignin()) return <Navigate to="/roarme-signin" replace />
-  // calls ring wherever the app is open, the chat window included
-  return user ? <CallProvider><Outlet /></CallProvider> : <Navigate to="/login" replace />
+  return user ? <Outlet /> : <Navigate to="/login" replace />
 }
 
 // The project's own Chat tab is gone (its room already lives in the sidebar's Chat), but an old
@@ -99,7 +96,6 @@ function LoginGate() {
 export default function App() {
   return (
     <StoreProvider>
-      <ChatReadSync />
       <ToastProvider>
         <HashRouter>
           <Suspense fallback={<Loading />}>

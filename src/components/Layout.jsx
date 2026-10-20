@@ -4,8 +4,6 @@ import { can, seesDatabase, useCurrentUser, useStore, viewAsReturnPath, whenMs }
 import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
 import { useToast } from './ui.jsx'
-import { HUB_PAGE, badgeUnread, loadRead } from '../lib/chat.js'
-import { chimeFor } from '../lib/chatPrefs.js'
 import { backupDue, pcloudBackup } from '../lib/pcloud.js'
 import { remote } from '../lib/supabase.js'
 import { listenSwipes, swipeTabs } from '../lib/swipeTabs.js'
@@ -79,31 +77,8 @@ export default function Layout() {
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, viewAs, state.users.length])
-  const [readMap, setReadMap] = useState(loadRead)
-  useEffect(() => {
-    const h = () => setReadMap(loadRead())
-    window.addEventListener('tml-chat-read', h)
-    return () => window.removeEventListener('tml-chat-read', h)
-  }, [])
-  // every room this person is in, so a group or a direct message counts as much as the team room
-  const unread = badgeUnread(state, user, readMap)
-  // Settings > Chat > Sound: a short tone when a message from someone else arrives and its room
-  // is not the one on screen (or the app is in another tab). First load is not news.
-  const seenChat = useRef(null)
-  useEffect(() => {
-    const list = state.chat || []
-    const latest = list.reduce((a, m) => (whenMs(m.createdAt) > a ? whenMs(m.createdAt) : a), 0)
-    if (seenChat.current === null) { seenChat.current = latest; return }
-    if (latest > seenChat.current) {
-      const fresh = list.filter((m) => whenMs(m.createdAt) > seenChat.current && m.userId && m.userId !== user?.id)
-      const openRoom = decodeURIComponent((window.location.hash.match(/#\/chat\/([^?]+)/) || [])[1] || (window.location.hash.startsWith('#/chat') ? 'team' : ''))
-      chimeFor(fresh, openRoom)
-    }
-    seenChat.current = latest
-  }, [state.chat])
-
-  /* Answers left by clients on delivery pages. Same idea as the chat badge: what came in since the
-     last time the Share page was opened. */
+  /* Answers left by clients on delivery pages. What came in since the last time the Share page
+     was opened. */
   const [shareReadAt, setShareReadAt] = useState(() => localStorage.getItem('tml_share_read') || '')
   useEffect(() => {
     const h = () => setShareReadAt(localStorage.getItem('tml_share_read') || '')
@@ -188,11 +163,6 @@ export default function Layout() {
     el.classList.add('page-in')
     const t = setTimeout(() => el.classList.remove('page-in'), 700)
     return () => clearTimeout(t)
-  }, [pathname])
-  // the page Hub at the foot of the chat goes back to, on a phone (Chat.jsx)
-  useEffect(() => {
-    if (pathname.startsWith('/chat')) return
-    try { sessionStorage.setItem(HUB_PAGE, pathname) } catch {}
   }, [pathname])
   useEffect(() => {
     const bar = tabsRef.current

@@ -1,7 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { remote, supabase } from './supabase.js'
 import { toISODate } from './dates.js'
-import { pushMessage } from './push.js'
 
 /*
   Data layer.
@@ -141,8 +140,7 @@ export function emptyState() {
     library: { contacts: [], locations: [], drives: [], gear: [] },
     todos: [],
     chat: [],
-    chats: [], // groups and direct conversations (rooms); team and project rooms are derived
-    chatRooms: true, // false when chat_rooms.sql has not been run yet (remote mode)
+    chats: [],
     notices: [],
     worklog: [],
     finance: { transactions: [], recurring: [], invoices: [], settings: { currency: 'EUR', vatDefault: 24, taxRate: 22, fiscalYearStart: 1 } },
@@ -252,15 +250,6 @@ function migrate(parsed) {
   return { ...emptyState(), ...parsed, library: { contacts: [], locations: [], drives: [], gear: [], ...(parsed.library || {}) }, finance: { ...emptyState().finance, ...(parsed.finance || {}), recurring: parsed.finance?.recurring || [], invoices: parsed.finance?.invoices || [], settings: { ...emptyState().finance.settings, ...(parsed.finance?.settings || {}) } }, settings: { ...emptyState().settings, ...(parsed.settings || {}), callsheet: { ...emptyState().settings.callsheet, ...(parsed.settings?.callsheet || {}) } } }
 }
 
-const rowToMessage = (r) => ({
-  id: r.id, userId: r.user_id || '', userName: r.user_name || '', text: r.text || '', source: r.source || 'app', createdAt: r.created_at,
-  chatId: r.chat_id || 'team', replyTo: r.reply_to || '', editedAt: r.edited_at || '', attachments: Array.isArray(r.attachments) ? r.attachments : [], mentions: Array.isArray(r.mentions) ? r.mentions : [],
-  likes: Array.isArray(r.likes) ? r.likes : [],
-  reactions: r.reactions && typeof r.reactions === 'object' && !Array.isArray(r.reactions) ? r.reactions : {},
-  pinnedAt: r.pinned_at || '',
-})
-const rowToChat = (r) => ({ id: r.id, kind: r.kind, name: r.name || '', members: Array.isArray(r.members) ? r.members : [], createdBy: r.created_by || '', createdAt: r.created_at })
-
 /* ---------- context ---------- */
 const StoreCtx = createContext(null)
 const AI_KEY = 'tml_ai_key_v1' // in remote mode the AI key stays in this browser only
@@ -318,7 +307,6 @@ export function StoreProvider({ children }) {
   const myWrites = useRef(new Set())
   // a conversation being written to the server: its first message waits for it (Alex, 11 Oct: the first
   // message to a new person was refused, it reached the server 0.4 s before the conversation did)
-  const roomSaves = useRef({})
 
   useEffect(() => {
     try { viewAs ? sessionStorage.setItem(VIEW_AS_KEY, viewAs) : sessionStorage.removeItem(VIEW_AS_KEY) } catch { /* private window */ }
@@ -377,7 +365,7 @@ export function StoreProvider({ children }) {
   }, [])
 
   const loadAll = useCallback(async (ws) => {
-    const [w, m, p, e, inv, lib, fin, msg, ntc, wl, rooms] = await Promise.all([
+    const [w, m, p, e, inv, lib, fin, ntc, wl] = await Promise.all([
       supabase.from('workspaces').select('*').eq('id', ws).single(),
       supabase.from('members').select('*').eq('workspace_id', ws),
       supabase.from('projects').select('id, data').eq('workspace_id', ws),
@@ -385,23 +373,16 @@ export function StoreProvider({ children }) {
       supabase.from('invites').select('*').eq('workspace_id', ws),
       supabase.from('library').select('id, kind, data').eq('workspace_id', ws),
       supabase.from('finance').select('id, kind, data').eq('workspace_id', ws),
-      // '*' so the select works before and after chat_rooms.sql; newest 2000 across every room
-      supabase.from('messages').select('*').eq('workspace_id', ws).order('created_at', { ascending: false }).limit(2000),
       supabase.from('notices').select('id, data').eq('workspace_id', ws),
       supabase.from('worklog').select('id, user_id, data').eq('workspace_id', ws),
-      supabase.from('chats').select('*').eq('workspace_id', ws),
     ])
     if (w.error) throw w.error
     const libRows = lib.error ? [] : lib.data || [] // library table may not exist yet (library.sql not run)
     if (lib.error) console.warn('library not available yet:', lib.error.message)
     const finRows = fin.error ? [] : fin.data || [] // admins only; members get nothing (RLS) or the table is missing
     const finSettings = finRows.find((r) => r.kind === 'settings')?.data || {}
-    const msgRows = msg.error ? [] : msg.data || [] // chat table may not exist yet (chat.sql not run)
     const ntcRows = ntc.error ? [] : ntc.data || [] // notices table may not exist yet (notices.sql not run)
     const wlRows = wl.error ? [] : wl.data || [] // worklog table may not exist yet (worklog.sql not run)
-    if (msg.error) console.warn('chat not available yet:', msg.error.message)
-    const roomRows = rooms.error ? [] : rooms.data || [] // chats table may not exist yet (chat_rooms.sql not run)
-    if (rooms.error) console.warn('chat rooms not available yet:', rooms.error.message)
     const next = {
       ...emptyState(),
       workspace: { name: w.data.name, subtitle: w.data.subtitle, createdAt: w.data.created_at, id: ws },
@@ -416,9 +397,9 @@ export function StoreProvider({ children }) {
         gear: libRows.filter((r) => r.kind === 'gear').map((r) => ({ ...r.data, id: r.id })),
       },
       todos: libRows.filter((r) => r.kind === 'task').map((r) => ({ ...r.data, id: r.id })),
-      chat: msgRows.map(rowToMessage).reverse(),
-      chats: roomRows.map(rowToChat),
-      chatRooms: !rooms.error,
+      // Hub Chat is gone (Alex, 20 Oct): the team talks in RoarMe; nothing of the old chat is loaded or saved
+      chat: [],
+      chats: [],
       notices: ntcRows.map((r) => ({ ...r.data, id: r.id })),
       worklog: wlRows.map((r) => ({ ...r.data, id: r.id, userId: r.user_id })),
       finance: {
@@ -594,32 +575,6 @@ export function StoreProvider({ children }) {
             notices = (s.notices || []).some((x) => x.id === n.id) ? s.notices.map((x) => (x.id === n.id ? n : x)) : [...(s.notices || []), n]
           }
           const next = { ...s, notices }
-          prevRef.current = next
-          return next
-        })
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `workspace_id=eq.${ws}` }, (payload) => {
-        setState((s) => {
-          let chat
-          if (payload.eventType === 'DELETE') chat = (s.chat || []).filter((m) => m.id !== payload.old.id)
-          else {
-            const m = rowToMessage(payload.new)
-            chat = (s.chat || []).some((x) => x.id === m.id) ? s.chat.map((x) => (x.id === m.id ? m : x)) : [...(s.chat || []), m]
-          }
-          const next = { ...s, chat }
-          prevRef.current = next
-          return next
-        })
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chats', filter: `workspace_id=eq.${ws}` }, (payload) => {
-        setState((s) => {
-          let chats
-          if (payload.eventType === 'DELETE') chats = (s.chats || []).filter((c) => c.id !== payload.old.id)
-          else {
-            const c = rowToChat(payload.new)
-            chats = (s.chats || []).some((x) => x.id === c.id) ? s.chats.map((x) => (x.id === c.id ? c : x)) : [...(s.chats || []), c]
-          }
-          const next = { ...s, chats }
           prevRef.current = next
           return next
         })
@@ -818,95 +773,6 @@ export function StoreProvider({ children }) {
       Object.values(before).filter((n) => !ids.has(n.id)).forEach((n) =>
         schedule('nd:' + n.id, async () => {
           const { error } = await supabase.from('notices').delete().eq('id', n.id)
-          if (error) throw error
-        }, 0),
-      )
-    }
-    {
-      // rooms: groups (administrators) and direct conversations (either side opens one)
-      const before = Object.fromEntries((prev.chats || []).map((c) => [c.id, c]))
-      ;(next.chats || []).forEach((c) => {
-        if (before[c.id] && (before[c.id] === c || JSON.stringify(before[c.id]) === JSON.stringify(c))) return
-        myWrites.current.add(c.id)
-        schedule('c:' + c.id, async () => {
-          // a direct conversation the other side opened at the same moment is the same row: keep theirs
-          // a group that already exists is updated, so a member who is not an administrator can add people to it
-          const save = (async () => {
-            const { error } = c.kind === 'group' && before[c.id]
-              ? await supabase.from('chats').update({ name: c.name || '', members: c.members || [] }).eq('id', c.id)
-              : await supabase.from('chats').upsert({ id: c.id, workspace_id: ws, kind: c.kind, name: c.name || '', members: c.members || [], created_by: c.createdBy || authUser?.id || null }, c.kind === 'direct' ? { ignoreDuplicates: true } : undefined)
-            if (error) throw new Error(error.code === '42P01' ? 'Run supabase/chat_rooms.sql in the SQL editor to enable chat rooms.' : error.message)
-          })()
-          roomSaves.current[c.id] = save
-          try { await save } finally { setTimeout(() => { if (roomSaves.current[c.id] === save) delete roomSaves.current[c.id] }, 4000) }
-          setTimeout(() => myWrites.current.delete(c.id), 4000)
-        }, 0)
-      })
-      const ids = new Set((next.chats || []).map((c) => c.id))
-      Object.values(before).filter((c) => !ids.has(c.id)).forEach((c) =>
-        schedule('cd:' + c.id, async () => {
-          const { error } = await supabase.from('chats').delete().eq('id', c.id)
-          if (error) throw error
-        }, 0),
-      )
-    }
-    {
-      const before = Object.fromEntries((prev.chat || []).map((m) => [m.id, m]))
-      const roomsReady = next.chatRooms !== false
-      ;(next.chat || []).forEach((m) => {
-        const was = before[m.id]
-        if (was && (was === m || JSON.stringify(was) === JSON.stringify(m))) return
-        myWrites.current.add(m.id)
-        schedule('m:' + m.id, async () => {
-          // a reaction or a pin, on anyone's message: only those differ, and they go through
-          // chat_react() / chat_pin() (and the old 🎥 hearts through chat_like()), which change
-          // nothing but the signed-in person's own reaction or the pin
-          const strip = (x) => ({ ...x, likes: undefined, reactions: undefined, pinnedAt: undefined })
-          const metaOnly = was && JSON.stringify(strip(was)) === JSON.stringify(strip(m))
-          const missing = (error, file) => (error.code === 'PGRST202' || error.code === '42883' ? `Run supabase/${file} in the SQL editor to turn this on in the chat.` : error.message)
-          if (metaOnly) {
-            const me = authUser?.id
-            if (JSON.stringify(was.likes || []) !== JSON.stringify(m.likes || [])) {
-              const { error } = await supabase.rpc('chat_like', { p_id: m.id, p_on: (m.likes || []).includes(me) })
-              if (error) throw new Error(missing(error, 'chat_likes.sql'))
-            }
-            if (JSON.stringify(was.reactions || {}) !== JSON.stringify(m.reactions || {})) {
-              const mineIn = (r) => Object.keys(r || {}).find((k) => (r[k] || []).includes(me))
-              const now = mineIn(m.reactions)
-              const { error } = await supabase.rpc('chat_react', { p_id: m.id, p_emoji: now || mineIn(was.reactions) || '🎥', p_on: !!now })
-              if (error) throw new Error(missing(error, 'chat_reactions.sql'))
-            }
-            if ((was.pinnedAt || '') !== (m.pinnedAt || '')) {
-              const { error } = await supabase.rpc('chat_pin', { p_id: m.id, p_on: !!m.pinnedAt })
-              if (error) throw new Error(missing(error, 'chat_reactions.sql'))
-            }
-          } else if (was) {
-            // only the writer's own text and attachments change after the fact (edit, or a file removed)
-            const { error } = await supabase.from('messages').update({ text: m.text, edited_at: m.editedAt || null, attachments: m.attachments || [] }).eq('id', m.id)
-            if (error) throw new Error(error.message)
-          } else {
-            const row = { id: m.id, workspace_id: ws, user_id: authUser?.id || null, user_name: m.userName, text: m.text, source: m.source || 'app', created_at: m.createdAt }
-            if (roomsReady) Object.assign(row, { chat_id: m.chatId || 'team', reply_to: m.replyTo || null, attachments: m.attachments || [], mentions: m.mentions || [] })
-            // the conversation first, when it is being written right now
-            const room = roomSaves.current[row.chat_id]
-            if (room) await room.catch(() => {})
-            let { error } = await supabase.from('messages').insert(row)
-            // refused by the server's room check (42501): once more after a moment, the room may have just landed
-            if (error && error.code === '42501') {
-              await new Promise((r) => setTimeout(r, 1500))
-              ;({ error } = await supabase.from('messages').insert(row))
-            }
-            if (error) throw new Error(error.code === '42P01' ? 'Run supabase/chat.sql in the SQL editor to enable the team chat.' : error.code === '42703' ? 'Run supabase/chat_rooms.sql in the SQL editor to enable chat rooms.' : error.message)
-            // ring the others in the room on their phones, app closed or not (lib/push.js); never blocks the chat
-            if (row.user_id) pushMessage(row.id)
-          }
-          setTimeout(() => myWrites.current.delete(m.id), 4000)
-        }, 0)
-      })
-      const after = new Set((next.chat || []).map((m) => m.id))
-      ;(prev.chat || []).filter((m) => !after.has(m.id)).forEach((m) =>
-        schedule('md:' + m.id, async () => {
-          const { error } = await supabase.from('messages').delete().eq('id', m.id)
           if (error) throw error
         }, 0),
       )

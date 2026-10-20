@@ -7,7 +7,6 @@ import { projectProgress } from '../lib/progress.js'
 import { useCover } from '../components/CoverCropper.jsx'
 import { allHideable, hiddenAfterCategory, projectTabs, tabHidden, toggleTab } from '../lib/tabs.js'
 import { initialsOf } from './Profile.jsx'
-import { chatStarters } from '../lib/chat.js'
 import { joinName, nameParts } from '../lib/projectName.js'
 import { duplicateProject } from '../lib/duplicate.js'
 import { syncShootDay } from '../lib/shootDays.js'
@@ -20,12 +19,9 @@ import { sendAutoNotice } from '../components/Notices.jsx'
    form and by the strip on the Overview, so switching a tab on is one tap either way. */
 export function TabPicker({ project, onChange }) {
   const { state } = useStore()
-  // onChange gets the fields to store: { hiddenTabs } or, for an opt-in tab such as Chat, { shownTabs }.
-  // Switching the Chat on for the first time starts its conversation with Mariza and Elias only (Alex,
-  // 11 Oct; administrators are always in); more people are added from the room's Members.
+  // onChange gets the fields to store: { hiddenTabs } or, for an opt-in tab, { shownTabs }.
   const flip = (to) => {
     const change = toggleTab(project, to)
-    if (to === 'chat' && tabHidden(project, 'chat') && !Array.isArray(project?.chatMembers)) change.chatMembers = chatStarters(state)
     return change
   }
   return (
