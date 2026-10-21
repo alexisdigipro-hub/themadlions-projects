@@ -241,7 +241,7 @@ ${full ? `\n## Ερωτήσεις (Greek)\n${faqEl}\n` : ''}
 - [Roardino](${BASE}roardino/): the shoot's call sheet in one link
 - [RoarMail](${BASE}lab/roarmail/): the private mail app for Mac and Windows
 - [RoarList](${BASE}lab/roarlist/): the shot list with a frame for every shot
-- [RoarTransfer](${BASE}lab/roartransfer/): big files up to 3 GB with a link anyone can open for 3 days
+- [RoarTransfer](${BASE}lab/roartransfer/): send large files free and secure at roartransfer.com, up to 5 GB with one short link, by email or link, with a password
 `
 }
 
