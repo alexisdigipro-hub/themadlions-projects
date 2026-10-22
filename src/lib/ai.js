@@ -1,4 +1,5 @@
 import { ELEMENT_CATEGORIES } from './store.jsx'
+import { AiCutShort, parseAiJson } from './aiJson.js'
 
 /*
   Phase 1: the key lives only in this browser (Settings) and requests go
@@ -37,7 +38,7 @@ SCENES:
 ${JSON.stringify(payload)}`
 }
 
-async function callClaude({ apiKey, model, prompt, system }) {
+async function callClaude({ apiKey, model, prompt, system, maxTokens = 16000, cutShort = 'repair' }) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -48,7 +49,7 @@ async function callClaude({ apiKey, model, prompt, system }) {
     },
     body: JSON.stringify({
       model,
-      max_tokens: 8000,
+      max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content: prompt }],
     }),
@@ -62,10 +63,9 @@ async function callClaude({ apiKey, model, prompt, system }) {
   }
   const data = await res.json()
   const text = (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('')
-  const clean = text.replace(/```json|```/g, '').trim()
-  const start = clean.indexOf('{')
-  const end = clean.lastIndexOf('}')
-  return JSON.parse(clean.slice(start, end + 1))
+  // cut off at the length limit: the scene breakdown asks again in smaller batches, the rest keep what came
+  if (data.stop_reason === 'max_tokens' && cutShort === 'throw') throw new AiCutShort()
+  return parseAiJson(text)
 }
 
 /**
@@ -79,10 +79,21 @@ export async function aiBreakdown({ scenes, settings, onProgress }) {
   const lang = aiLang(settings)
   const BATCH = 6
   const out = {}
+  // a batch whose answer comes back cut short or unreadable is asked again as two halves, down to one scene
+  const ask = async (batch) => {
+    try {
+      const json = await callClaude({ apiKey: settings.aiKey, model, prompt: buildPrompt(batch, lang), system: systemPrompt(lang), cutShort: batch.length > 1 ? 'throw' : 'repair' })
+      return json.scenes || []
+    } catch (e) {
+      if (batch.length < 2 || /^Claude API/.test(e.message)) throw e
+      const half = Math.ceil(batch.length / 2)
+      return [...(await ask(batch.slice(0, half))), ...(await ask(batch.slice(half)))]
+    }
+  }
   for (let i = 0; i < scenes.length; i += BATCH) {
     const batch = scenes.slice(i, i + BATCH)
-    const json = await callClaude({ apiKey: settings.aiKey, model, prompt: buildPrompt(batch, lang), system: systemPrompt(lang) })
-    for (const s of json.scenes || []) {
+    const got = await ask(batch)
+    for (const s of got) {
       if (!s.id) continue
       out[s.id] = {
         intExt: ['INT', 'EXT', 'INT/EXT'].includes(s.int_ext) ? s.int_ext : undefined,
@@ -208,7 +219,8 @@ export async function aiDocumentBreakdown({ settings, category, text, files = []
       'anthropic-version': '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true',
     },
-    body: JSON.stringify({ model, max_tokens: 12000, system: docSystem(lang), messages: [{ role: 'user', content }] }),
+    // room for a long Greek answer with shots (Alex, 22 Oct: at 12000 it could be cut off and then not read)
+    body: JSON.stringify({ model, max_tokens: 32000, system: docSystem(lang), messages: [{ role: 'user', content }] }),
   })
   if (!res.ok) {
     let detail = ''
@@ -217,8 +229,7 @@ export async function aiDocumentBreakdown({ settings, category, text, files = []
   }
   const data = await res.json()
   const txt = (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('')
-  const clean = txt.replace(/```json|```/g, '').trim()
-  const json = JSON.parse(clean.slice(clean.indexOf('{'), clean.lastIndexOf('}') + 1))
+  const json = parseAiJson(txt)
   const setups = (json.setups || []).map((s, i) => ({
     number: String(s.number || i + 1),
     heading: String(s.heading || `SETUP ${i + 1}`).toUpperCase(),
