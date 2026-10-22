@@ -152,9 +152,11 @@ export default function PublicDelivery() {
   return (
     <div className={`pub dlv dlv-estimate dlv-site ${look.className}`} style={look.style}>
       <div className="dlv-sheet">
-        <header className="dlv-band dlv-top">
-          {d.company?.logo && <img className="dlv-logo" src={d.company.logo} alt="" />}
-          <div className="dlv-company">{d.company?.name || 'THEMADLIONS'}</div>
+        {/* the company site's own head (Alex, 22 Oct): THE MAD LIONS as the site's wordmark, MAD bold, and the red
+            Film production house under it, instead of the small logo and the name in small letters */}
+        <header className="dlv-band dlv-top dlv-brand">
+          <img className="dlv-wordmark" src="./site/wordmark.png" alt={d.company?.name || 'THEMADLIONS'} />
+          <div className="dlv-kicker">Film production house</div>
         </header>
 
         <section className="dlv-band dlv-hero">
@@ -163,15 +165,16 @@ export default function PublicDelivery() {
           {d.client && <p className="dlv-client">{upper(d.client)}</p>}
           {d.recipient?.name && <p className="dlv-for">For {d.recipient.name}</p>}
 
-          {/* several files (Alex, 12 Oct): Download all for the whole folder, then one button per file,
-              so the client takes whichever first, or everything at once */}
-          {d.files?.length > 0 ? (
-            <button type="button" className="dlv-btn" onClick={() => downloadFiles(d.files, d.link)}>
-              {d.files.length > 1 ? `Download all ${d.files.length} files` : stageAction(d.stage)}
-            </button>
+          {/* Final Deliverables' message to the client (Alex, 22 Oct), where the big button was */}
+          {d.message && <p className="dlv-message">{d.message}</p>}
+
+          {/* one file or a bare link: the big button here; several files (Alex, 12 Oct) get one button per file and
+              Download all under them, as wide as the files' tiles (Alex, 22 Oct) */}
+          {!(d.files?.length > 1) && (d.files?.length === 1 ? (
+            <button type="button" className="dlv-btn" onClick={() => downloadFiles(d.files, d.link)}>{stageAction(d.stage)}</button>
           ) : (
             <a className="dlv-btn" href={d.link} target="_blank" rel="noreferrer">{stageAction(d.stage)}</a>
-          )}
+          ))}
           {d.files?.length > 1 && (
             <ul className="plain dlv-each">
               {d.files.map((f) => (
@@ -190,6 +193,9 @@ export default function PublicDelivery() {
                 </li>
               ))}
             </ul>
+          )}
+          {d.files?.length > 1 && (
+            <button type="button" className="dlv-btn dlv-all" onClick={() => downloadFiles(d.files, d.link)}>Download all {d.files.length} files</button>
           )}
           {/* one file uploaded to pCloud: Save to Photos under the big button, on a phone */}
           {!(d.files?.length > 1) && d.files?.length === 1 && (
