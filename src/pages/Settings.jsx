@@ -23,6 +23,7 @@ import { testKey } from '../lib/ai.js'
 import { checkOpenAIKey } from '../lib/transcribe.js'
 import { buildICS, download } from '../lib/dates.js'
 import { DEFAULT_THEME, SKINS, SKIN_ICONS, applyThemeChoice, isSkin } from '../lib/skin.js'
+import { localLook } from '../lib/teamLook.js'
 import { ICON_SETS, IconPreview, applyIconSet } from '../components/icons.jsx'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
 
@@ -39,13 +40,18 @@ export default function Settings() {
   const [accent, setAccent] = useState(() => localStorage.getItem('tml_accent') || 'amber')
   const [font, setFont] = useState(currentFont)
   const [icons, setIcons] = useState(() => document.documentElement.dataset.icons || 'classic')
-  const pickFont = (id) => setFont(applyFont(id))
+  // the look is the administrator's, kept for the whole team (Alex, 22 Oct; lib/teamLook.js): each change is saved
+  // there too, and everyone's app takes it when it opens
+  const keepLook = () => update((s) => { s.settings = { ...s.settings, look: localLook() }; return s })
+  const pickFont = (id) => { setFont(applyFont(id)); keepLook() }
   const applyTheme = (v) => {
     setTheme(v); localStorage.setItem('tml_theme', v); applyThemeChoice(v)
     // a skin comes with its own icons, as in its design; Icons below can change them afterwards
     if (SKIN_ICONS[v]) setIcons(applyIconSet(SKIN_ICONS[v]))
+    keepLook()
   }
-  const applyAccent = (v) => { setAccent(v); localStorage.setItem('tml_accent', v); document.documentElement.dataset.accent = v }
+  const applyAccent = (v) => { setAccent(v); localStorage.setItem('tml_accent', v); document.documentElement.dataset.accent = v; keepLook() }
+  const pickIcons = (v) => { setIcons(applyIconSet(v)); keepLook() }
   const applyTextSize = (v) => {
     setTextSize(v)
     localStorage.setItem('tml_text_size', v)
@@ -337,6 +343,9 @@ export default function Settings() {
 
         <section className="panel wide" data-tab="display">
           <h2>Display</h2>
+          {/* only the administrator picks the look, for everyone (Alex, 22 Oct) */}
+          {isAdmin ? (
+            <>
           <Field label="Theme">
             <div className="segmented small wrap">
               {[['light', 'Light'], ['dark', 'Dark'], ...SKINS].map(([v, l]) => (
@@ -361,7 +370,7 @@ export default function Settings() {
             <span className="field-label">Icons</span>
             <div className="icon-sets">
               {ICON_SETS.map(([v, l]) => (
-                <button key={v} type="button" className={`icon-set ${icons === v ? 'on' : ''}`} onClick={() => setIcons(applyIconSet(v))} aria-pressed={icons === v}>
+                <button key={v} type="button" className={`icon-set ${icons === v ? 'on' : ''}`} onClick={() => pickIcons(v)} aria-pressed={icons === v}>
                   <IconPreview set={v} keys={['home', 'calendar', 'chat', 'projects', 'settings']} />
                   <span>{l}</span>
                 </button>
@@ -369,7 +378,11 @@ export default function Settings() {
             </div>
             <span className="field-hint">The icons in the menu, the bottom bar and a project's tabs.</span>
           </div>
-          <Field label="Text size" hint="Display settings are saved on this device only.">
+            </>
+          ) : (
+            <p className="muted small">The theme, colours, typeface and icons of the hub are set by the administrator for the whole team.</p>
+          )}
+          <Field label="Text size" hint={isAdmin ? "The look above is the whole team's. Text size is saved on this device only." : "Saved on this device only."}>
             <div className="segmented small">
               {[['compact', 'Compact'], ['normal', 'Normal'], ['large', 'Large']].map(([v, l]) => (
                 <button key={v} className={textSize === v ? 'on' : ''} onClick={() => applyTextSize(v)}>{l}</button>
