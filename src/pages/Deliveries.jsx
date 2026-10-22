@@ -10,6 +10,7 @@ import { fmtDate, toISODate } from '../lib/dates.js'
 import { dirIn, useSlide } from '../lib/glide.js'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
 import { pcloudDeliverMany } from '../lib/pcloud.js'
+import { uploadThumbs } from '../lib/deliveryThumbs.js'
 import { remote } from '../lib/supabase.js'
 
 /* The stages a new delivery can be (Alex, 12 Oct, written his way): RoughCut, PreFinal Cut, Final Cut.
@@ -46,6 +47,7 @@ const emptyDelivery = () => ({
   files: [], // several files uploaded together: [{ name, url, size }], one button each on the page
   fine: '', // Final Deliverables' fine print
   message: '', // and its opening message
+  thumbs: [], // thumbnails the client can see and download: [{ name, path, url, dl, size, w, h }]
 })
 
 const emptyEstimate = () => ({
@@ -150,7 +152,7 @@ export default function Deliveries() {
       credits: d.credits || [], deliverables: d.deliverables || [],
       recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
       contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
-      pin: r.pin || '', fine: d.fine || '', message: d.message || '',
+      pin: r.pin || '', fine: d.fine || '', message: d.message || '', thumbs: d.thumbs || [],
     })
   }
   const pickProject = (projectId) => {
@@ -196,8 +198,26 @@ export default function Deliveries() {
     }
   }
 
+  /* Thumbnails (Alex, 22 Oct): up at once into the hub's photos storage, full quality (lib/deliveryThumbs.js) */
+  const [thumbUp, setThumbUp] = useState('')
+  const thumbRef = useRef(null)
+  const addThumbs = async (list) => {
+    const files = [...(list || [])]
+    if (!files.length || !draft) return
+    try {
+      const got = await uploadThumbs(files, draft.id, (i, n) => setThumbUp(n > 1 ? `Uploading ${i} of ${n}…` : 'Uploading…'))
+      setDraft((d) => (d ? { ...d, thumbs: [...(d.thumbs || []), ...got] } : d))
+    } catch (e) {
+      toast(e.message, 'error')
+    } finally {
+      setThumbUp('')
+      if (thumbRef.current) thumbRef.current.value = ''
+    }
+  }
+
   const publish = async () => {
     if (!draft.link.trim()) return toast('Paste the download link (SwissTransfer, WeTransfer…).', 'error')
+    if (thumbUp) return toast('Wait for the thumbnails to finish uploading.', 'error')
     if (!draft.title.trim()) return toast('Give it a title, or pick a project.', 'error')
     setBusy(true)
     try {
@@ -220,6 +240,7 @@ export default function Deliveries() {
         note: '',
         fine: draft.stage === 'deliverables' ? (draft.fine || '').trim() : '',
         message: draft.stage === 'deliverables' ? (draft.message || '').trim() : '',
+        thumbs: (draft.thumbs || []).filter((t) => t.url),
         feedbackBy: '',
         credits: draft.stage === 'files' ? draft.credits.filter((c) => c.name) : [],
         deliverables: draft.stage === 'files' ? draft.deliverables.filter((d) => d.name) : [],
@@ -574,7 +595,7 @@ export default function Deliveries() {
       </div>
 
       <Modal open={!!draft} title="Delivery page for the client" wide className="glass-form" onClose={() => !busy && !upload && setDraft(null)}
-        footer={<><Button variant="ghost" onClick={() => setDraft(null)} disabled={busy || !!upload}>Cancel</Button><Button variant="primary" onClick={publish} disabled={busy || !!upload}>{busy ? 'Publishing…' : upload ? 'Uploading…' : 'Publish and copy link'}</Button></>}>
+        footer={<><Button variant="ghost" onClick={() => setDraft(null)} disabled={busy || !!upload}>Cancel</Button><Button variant="primary" onClick={publish} disabled={busy || !!upload || !!thumbUp}>{busy ? 'Publishing…' : upload || thumbUp ? 'Uploading…' : 'Publish and copy link'}</Button></>}>
         {draft && (
           <div className="stack">
             <div className={draft.stage === 'deliverables' ? 'row-2' : 'row-3'}>
@@ -620,6 +641,24 @@ export default function Deliveries() {
                 or access code, no Answer by, no contact and no Send it to, as an estimate */}
             <Field label="Where it is hosted"><Input value={draft.linkLabel} onChange={(e) => setD('linkLabel', e.target.value)} placeholder="SwissTransfer" /></Field>
             {/* Your note is gone (Alex, 22 Oct); Final Deliverables has its fine print, shown small under the files */}
+            {remote && (
+              <Field label="Thumbnails">
+                <div className="deliv-thumbs">
+                  {(draft.thumbs || []).map((t, i) => (
+                    <figure key={t.path || t.url} className="deliv-thumb">
+                      <img src={t.url} alt="" />
+                      <button type="button" className="deliv-thumb-x" aria-label={`Remove ${t.name}`} title="Remove" onClick={() => setD('thumbs', draft.thumbs.filter((_, k) => k !== i))}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17" /></svg>
+                      </button>
+                    </figure>
+                  ))}
+                  <input ref={thumbRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={(e) => addThumbs(e.target.files)} />
+                  <button type="button" className="deliv-thumb-add" onClick={() => thumbRef.current?.click()} disabled={!!thumbUp}>
+                    {ACT_ICON.plus}<span>{thumbUp || 'Add thumbnails'}</span>
+                  </button>
+                </div>
+              </Field>
+            )}
             {draft.stage === 'deliverables' && (
               <>
                 <Field label="Message"><Textarea rows={5} value={draft.message} onChange={(e) => setD('message', e.target.value)} /></Field>

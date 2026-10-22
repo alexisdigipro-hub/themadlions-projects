@@ -200,6 +200,25 @@ export default function PublicDelivery() {
           {!(d.files?.length > 1) && d.files?.length === 1 && (
             <div className="dlv-one-photos"><SaveToPhotos file={d.files[0]} /></div>
           )}
+          {/* thumbnails (Alex, 22 Oct): each shown as it is, with its own Download */}
+          {d.thumbs?.length > 0 && (
+            <div className="dlv-thumbs">
+              <h2>{d.thumbs.length > 1 ? 'Thumbnails' : 'Thumbnail'}</h2>
+              <ul className="plain dlv-thumb-grid">
+                {d.thumbs.map((t) => (
+                  <li key={t.url}>
+                    <a className="dlv-thumb-img" href={t.url} target="_blank" rel="noreferrer" title={t.name}>
+                      <img src={t.url} alt={t.name} loading="lazy" style={t.w && t.h ? { aspectRatio: `${t.w} / ${t.h}` } : undefined} />
+                    </a>
+                    <div className="dlv-thumb-foot">
+                      <span className="dlv-thumb-meta">{t.w && t.h ? `${t.w} × ${t.h}` : t.name}</span>
+                      <a className="dlv-btn ghost dlv-each-btn" href={t.dl || t.url} download={t.name}>Download</a>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {/* one line with dots instead of three stacked greys */}
           <p className="dlv-meta">
             {[
