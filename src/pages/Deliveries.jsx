@@ -195,33 +195,27 @@ export default function Deliveries() {
         link: draft.link.trim(),
         files: (draft.files || []).filter((f) => f.url),
         linkLabel: draft.linkLabel.trim(),
-        password: draft.password.trim(),
-        linkExpires: draft.linkExpires,
+        // no transfer password or expiry, no Answer by and no contact any more (Alex, 22 Oct)
+        password: '',
+        linkExpires: '',
         note: draft.note.trim(),
-        feedbackBy: draft.feedbackBy,
+        feedbackBy: '',
         credits: draft.stage === 'files' ? draft.credits.filter((c) => c.name) : [],
         deliverables: draft.stage === 'files' ? draft.deliverables.filter((d) => d.name) : [],
-        contact: { name: draft.contactName.trim(), email: draft.contactEmail.trim(), phone: draft.contactPhone.trim() },
+        contact: {},
         sentAt: new Date().toISOString(),
       }
-      /* One page per person when names are given, so an answer carries a name you can trust and you
-         can see who has not opened it yet. No names means one page for everybody, as before. */
+      // one page for everybody: Send it to (a page per named person) was taken out (Alex, 22 Oct)
       const ref = `delivery:${draft.id}`
-      const people = draft.recipients.filter((p) => (p.name || '').trim())
-      const targets = people.length
-        ? people.map((p, i) => ({ ref: `${ref}:r${i + 1}`, recipient: { name: p.name.trim(), email: (p.email || '').trim() } }))
-        : [{ ref, recipient: null }]
+      const targets = [{ ref, recipient: null }]
       let firstUrl = ''
       for (const t of targets) {
         const url = await publishShare({ workspaceId: state.workspace.id, kind: 'delivery', ref: t.ref, data: { ...data, recipient: t.recipient }, userId: user?.id })
         if (!firstUrl) firstUrl = url
       }
       await reopenQuietly({ workspaceId: state.workspace.id, ref })
-      if (draft.pageCloses) {
-        // the pages are published either way; only the closing date can fail, and it says why
-        try { await setShareState({ workspaceId: state.workspace.id, ref, expiresAt: draft.pageCloses }) } catch (e) { toast(e.message, 'error') }
-      if (draft.pin.trim()) { try { await setShareState({ workspaceId: state.workspace.id, ref, pin: draft.pin }) } catch (e) { toast(e.message, 'error') } }
-      }
+      // no closing date or access code any more (Alex, 22 Oct): publishing again clears any an older page still had
+      try { await setShareState({ workspaceId: state.workspace.id, ref, expiresAt: '', pin: '' }) } catch {}
       if (targets.length === 1) {
         await navigator.clipboard.writeText(deliveryUrl(tokenOf(firstUrl))).catch(() => {})
         toast('Delivery page published, link copied', 'ok')
@@ -601,32 +595,10 @@ export default function Deliveries() {
                 </div>
               )}
             </Field>
-            <div className="row-3">
-              <Field label="Where it is hosted"><Input value={draft.linkLabel} onChange={(e) => setD('linkLabel', e.target.value)} placeholder="SwissTransfer" /></Field>
-              <Field label="Password on the transfer"><Input value={draft.password} onChange={(e) => setD('password', e.target.value)} placeholder="Leave empty if none" /></Field>
-              <Field label="The transfer expires"><Input type="date" value={draft.linkExpires} onChange={(e) => setD('linkExpires', e.target.value)} /></Field>
-            </div>
-            <div className="row-2">
-              <Field label="Close this page on"><Input type="date" value={draft.pageCloses} onChange={(e) => setD('pageCloses', e.target.value)} /></Field>
-              <Field label="Access code"><Input value={draft.pin} onChange={(e) => setD('pin', e.target.value)} placeholder="482913" /></Field>
-            </div>
+            {/* one page, one link, nothing else to fill (Alex, 22 Oct): no transfer password or expiry, no closing date
+                or access code, no Answer by, no contact and no Send it to, as an estimate */}
+            <Field label="Where it is hosted"><Input value={draft.linkLabel} onChange={(e) => setD('linkLabel', e.target.value)} placeholder="SwissTransfer" /></Field>
             <Field label="Your note"><Textarea rows={3} value={draft.note} onChange={(e) => setD('note', e.target.value)} /></Field>
-            <div className="row-2">
-              <Field label="Answer by"><Input type="date" value={draft.feedbackBy} onChange={(e) => setD('feedbackBy', e.target.value)} /></Field>
-              <Field label="Who they reply to"><Input value={draft.contactName} onChange={(e) => setD('contactName', e.target.value)} placeholder={user?.name || 'Name'} /></Field>
-            </div>
-            <div className="row-2">
-              <Field label="Email"><Input value={draft.contactEmail} onChange={(e) => setD('contactEmail', e.target.value)} /></Field>
-              <Field label="Phone"><Input value={draft.contactPhone} onChange={(e) => setD('contactPhone', e.target.value)} /></Field>
-            </div>
-
-            <RowEditor
-              label="Send it to"
-              rows={draft.recipients}
-              onChange={(v) => setD('recipients', v)}
-              fields={[{ k: 'name', placeholder: 'Maria Vlachou' }, { k: 'email', placeholder: 'maria@client.gr' }]}
-              addLabel="Add a person"
-            />
 
             {draft.stage === 'files' && (
               <>
