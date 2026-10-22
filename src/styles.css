@@ -7737,7 +7737,9 @@ html[data-theme] body .search-clear-wrap > .input.search, html[data-theme] body 
 .pub.dlv.dlv-site .dlv-say .dlv-note { max-width: 760px; font-size: 16.5px; line-height: 1.7; }
 .pub.dlv.dlv-site .dlv-block h2 { text-transform: uppercase; }
 .pub.dlv.dlv-site .dlv-credits dt { letter-spacing: .2em; text-transform: uppercase; font-size: 11px; color: var(--muted); }
-.pub.dlv.dlv-site .dlv-end { border-top: 1px solid var(--line-soft); text-align: center; }
+.pub.dlv.dlv-site .dlv-end { text-align: center; }
+.pub.dlv.dlv-site .dlv-end:empty { display: none; }
+.pub.dlv.dlv-site .dlv-band:has(+ .dlv-end:empty) { border-bottom: 0; }
 @media (max-width: 520px) {
   .pub.dlv.dlv-site .dlv-hero > .dlv-btn { width: 100%; box-sizing: border-box; }
   .pub.dlv.dlv-site .dlv-each li { padding: 12px 10px 12px 14px; gap: 12px; }

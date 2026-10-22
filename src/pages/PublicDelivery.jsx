@@ -132,7 +132,8 @@ export default function PublicDelivery() {
     html.classList.add('pub-est-page')
     delete html.dataset.skin
     loadFont(LOOK_DEFAULT.font)
-    return () => { html.dataset.theme = before; html.classList.remove('pub-est-page'); if (skin) html.dataset.skin = skin }
+    html.style.setProperty('--est-page-bg', LOOK_DEFAULT.bg)
+    return () => { html.dataset.theme = before; html.classList.remove('pub-est-page'); html.style.removeProperty('--est-page-bg'); if (skin) html.dataset.skin = skin }
   }, [])
 
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading…</p></div>
