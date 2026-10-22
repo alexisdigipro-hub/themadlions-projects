@@ -642,7 +642,9 @@ export default function Deliveries() {
             <Field label="Where it is hosted"><Input value={draft.linkLabel} onChange={(e) => setD('linkLabel', e.target.value)} placeholder="SwissTransfer" /></Field>
             {/* Your note is gone (Alex, 22 Oct); Final Deliverables has its fine print, shown small under the files */}
             {remote && (
-              <Field label="Thumbnails">
+              /* a div, not Field's <label>: inside a label a click on one × is passed on to the first button too */
+              <div className="field">
+                <span className="field-label">Thumbnails</span>
                 <div className="deliv-thumbs">
                   {(draft.thumbs || []).map((t, i) => (
                     <figure key={t.path || t.url} className="deliv-thumb">
@@ -657,7 +659,7 @@ export default function Deliveries() {
                     {ACT_ICON.plus}<span>{thumbUp || 'Add thumbnails'}</span>
                   </button>
                 </div>
-              </Field>
+              </div>
             )}
             {draft.stage === 'deliverables' && (
               <>
