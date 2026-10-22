@@ -27,8 +27,7 @@ export const FINE_DEFAULT = `IMPORTANT !! Τα τελικά παραδοτέα �
 Σε περίπτωση που επιθυμείτε να προβείτε σε buyout των πρωτότυπων υλικών, παρακαλούμε ενημερώστε μας γραπτώς εντός της ανωτέρω προθεσμίας των 30 ημερών.`
 /* The message a Final Deliverables page opens with, under the title (Alex, 22 Oct, his words); filled in like the
    fine print and editable each time. */
-export const MESSAGE_DEFAULT = `Καλησπέρα σας,
-Ακολουθούν τα τελικά αρχεία του Music Video στις εκδόσεις YouTube, TV & Social.
+export const MESSAGE_DEFAULT = `Ακολουθούν τα τελικά αρχεία του Music Video στις εκδόσεις YouTube, TV & Social.
 Παρακαλούμε μετά το ανέβασμα να γίνει ένας τελικός έλεγχος από πλευράς σας, ώστε να βεβαιωθείτε πως όλα είναι εντάξει. Εναλλακτικά, μπορείτε να μας στείλετε ένα κρυφό (unlisted) link του τελικού βίντεο στο YouTube, ώστε να πραγματοποιήσουμε εμείς τον έλεγχο.`
 const OLD_STAGES = [['files', 'Final files'], ['treatment', 'Treatment'], ['lookbook', 'Lookbook']]
 /* What the big button says: Download Files for every cut (Alex, 12 Oct, his words); an old treatment or

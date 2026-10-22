@@ -152,11 +152,10 @@ export default function PublicDelivery() {
   return (
     <div className={`pub dlv dlv-estimate dlv-site ${look.className}`} style={look.style}>
       <div className="dlv-sheet">
-        {/* the company site's own head (Alex, 22 Oct): THE MAD LIONS as the site's wordmark, MAD bold, and the red
-            Film production house under it, instead of the small logo and the name in small letters */}
+        {/* the company site's own head (Alex, 22 Oct): THE MAD LIONS as the site's wordmark, MAD bold, instead of the
+            small logo and the name in small letters (Film production house under it came out again, to save height) */}
         <header className="dlv-band dlv-top dlv-brand">
           <img className="dlv-wordmark" src="./site/wordmark.png" alt={d.company?.name || 'THEMADLIONS'} />
-          <div className="dlv-kicker">Film production house</div>
         </header>
 
         <section className="dlv-band dlv-hero">
@@ -166,7 +165,7 @@ export default function PublicDelivery() {
           {d.recipient?.name && <p className="dlv-for">For {d.recipient.name}</p>}
 
           {/* Final Deliverables' message to the client (Alex, 22 Oct), where the big button was */}
-          {d.message && <p className="dlv-message">{d.message}</p>}
+          {d.message && <p className="dlv-message" lang="el">{d.message}</p>}
 
           {/* one file or a bare link: the big button here; several files (Alex, 12 Oct) get one button per file and
               Download all under them, as wide as the files' tiles (Alex, 22 Oct) */}
@@ -210,7 +209,7 @@ export default function PublicDelivery() {
             {d.password && <span>Password <b className="dlv-pass">{d.password}</b></span>}
           </p>
           {/* Final Deliverables' fine print (Alex, 22 Oct): small and quiet, under the files */}
-          {d.fine && <p className="dlv-fine">{d.fine}</p>}
+          {d.fine && <p className="dlv-fine" lang="el">{d.fine}</p>}
         </section>
 
         {(d.note || d.feedbackBy) && (
