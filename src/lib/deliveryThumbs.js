@@ -27,7 +27,8 @@ export async function uploadThumbs(files, deliveryId, onStep) {
     if (!TYPES.includes(file.type)) throw new Error(`${file.name}: only JPEG, PNG or WebP pictures.`)
     if (file.size > 10 * 1024 * 1024) throw new Error(`${file.name} is over 10 MB.`)
     const safe = file.name.replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '') || 'thumbnail'
-    const path = `library/deliveries/${deliveryId}/${Date.now().toString(36)}-${safe}`
+    // a name of its own even for two pictures picked together with the same file name
+    const path = `library/deliveries/${deliveryId}/${Date.now().toString(36)}${i}${Math.random().toString(36).slice(2, 6)}-${safe}`
     const { error } = await supabase.storage.from(BUCKET).upload(path, file, { contentType: file.type, upsert: true, cacheControl: '31536000' })
     if (error) throw new Error(error.message.includes('not found') ? 'Storage bucket "photos" is missing. Run supabase/storage.sql in the SQL editor.' : error.message)
     const [view, dl, dims] = await Promise.all([

@@ -200,11 +200,19 @@ export default function PublicDelivery() {
           {!(d.files?.length > 1) && d.files?.length === 1 && (
             <div className="dlv-one-photos"><SaveToPhotos file={d.files[0]} /></div>
           )}
+          {/* one line with dots instead of three stacked greys */}
+          <p className="dlv-meta">
+            {[
+              d.linkLabel,
+              d.linkExpires ? `Until ${fmt(d.linkExpires)}` : '',
+            ].filter(Boolean).map((t, i) => <span key={i}>{t}</span>)}
+            {d.password && <span>Password <b className="dlv-pass">{d.password}</b></span>}
+          </p>
           {/* thumbnails (Alex, 22 Oct): each shown as it is, with its own Download */}
           {d.thumbs?.length > 0 && (
             <div className="dlv-thumbs">
               <h2>{d.thumbs.length > 1 ? 'Thumbnails' : 'Thumbnail'}</h2>
-              <ul className="plain dlv-thumb-grid">
+              <ul className="dlv-thumb-grid">
                 {d.thumbs.map((t) => (
                   <li key={t.url}>
                     <a className="dlv-thumb-img" href={t.url} target="_blank" rel="noreferrer" title={t.name}>
@@ -219,14 +227,6 @@ export default function PublicDelivery() {
               </ul>
             </div>
           )}
-          {/* one line with dots instead of three stacked greys */}
-          <p className="dlv-meta">
-            {[
-              d.linkLabel,
-              d.linkExpires ? `Until ${fmt(d.linkExpires)}` : '',
-            ].filter(Boolean).map((t, i) => <span key={i}>{t}</span>)}
-            {d.password && <span>Password <b className="dlv-pass">{d.password}</b></span>}
-          </p>
           {/* Final Deliverables' fine print (Alex, 22 Oct): small and quiet, under the files */}
           {d.fine && <p className="dlv-fine" lang="el">{d.fine}</p>}
         </section>

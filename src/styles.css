@@ -7812,7 +7812,7 @@ html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--
 
 .dlv-thumbs { max-width: 860px; margin: 26px auto 0; }
 .dlv-thumbs > h2 { margin: 0 0 14px; font-size: 11px; font-weight: 600; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); }
-.dlv-thumb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; text-align: left; }
+.dlv-thumb-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; text-align: left; }
 .dlv-thumb-grid li { display: flex; flex-direction: column; gap: 10px; padding: 10px; border-radius: var(--est-r, 14px); background: var(--tile, rgba(255, 255, 255, .04)); }
 .dlv-thumb-img { display: block; border-radius: calc(var(--est-r, 14px) - 4px); overflow: hidden; background: rgba(0, 0, 0, .25); }
 .dlv-thumb-img img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; }
