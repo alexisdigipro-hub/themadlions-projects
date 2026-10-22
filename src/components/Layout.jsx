@@ -8,6 +8,7 @@ import { backupDue, pcloudBackup } from '../lib/pcloud.js'
 import { remote } from '../lib/supabase.js'
 import { listenSwipes, swipeTabs } from '../lib/swipeTabs.js'
 import { isStandalone, roarmeAppUrl, roarmeInstalled } from '../lib/roarmeApp.js'
+import { applyTeamLook, localLook } from '../lib/teamLook.js'
 
 function Logo({ name, subtitle, logo }) {
   return (
@@ -78,6 +79,15 @@ export default function Layout() {
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, viewAs, state.users.length])
+
+  /* The hub's look is the administrator's (Alex, 22 Oct): the team's theme, accent, typeface and icons go on every
+     app as it opens (lib/teamLook.js). Until one is kept, the administrator's own look becomes the team's. */
+  const teamLook = state.settings?.look
+  const lookKey = JSON.stringify(teamLook || null)
+  useEffect(() => {
+    if (teamLook) { applyTeamLook(teamLook); return }
+    if (user?.role === 'admin' && !viewAs && sessionId) update((st) => { st.settings = { ...st.settings, look: localLook() }; return st })
+  }, [lookKey, user?.role, viewAs, sessionId]) // eslint-disable-line react-hooks/exhaustive-deps
   /* Answers left by clients on delivery pages. What came in since the last time the Share page
      was opened. */
   const [shareReadAt, setShareReadAt] = useState(() => localStorage.getItem('tml_share_read') || '')
