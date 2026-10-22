@@ -25,6 +25,11 @@ export const STAGES = [
    when that stage is picked, and editable each time. */
 export const FINE_DEFAULT = `IMPORTANT !! Τα τελικά παραδοτέα αρχεία θα βρίσκονται διαθέσιμα προς λήψη μέσω του εταιρικού μας cloud storage για διάστημα 6 μηνών από την ημερομηνία παράδοσής τους. Τα RAW (ακατέργαστα / πρωτότυπα) αρχεία της παραγωγής θα παραμένουν αποθηκευμένα στο αρχείο μας για 30 ημέρες από την ημερομηνία του γυρίσματος, και μετά την πάροδο αυτού του διαστήματος θα διαγράφονται οριστικά.
 Σε περίπτωση που επιθυμείτε να προβείτε σε buyout των πρωτότυπων υλικών, παρακαλούμε ενημερώστε μας γραπτώς εντός της ανωτέρω προθεσμίας των 30 ημερών.`
+/* The message a Final Deliverables page opens with, under the title (Alex, 22 Oct, his words); filled in like the
+   fine print and editable each time. */
+export const MESSAGE_DEFAULT = `Καλησπέρα σας,
+Ακολουθούν τα τελικά αρχεία του Music Video στις εκδόσεις YouTube, TV & Social.
+Παρακαλούμε μετά το ανέβασμα να γίνει ένας τελικός έλεγχος από πλευράς σας, ώστε να βεβαιωθείτε πως όλα είναι εντάξει. Εναλλακτικά, μπορείτε να μας στείλετε ένα κρυφό (unlisted) link του τελικού βίντεο στο YouTube, ώστε να πραγματοποιήσουμε εμείς τον έλεγχο.`
 const OLD_STAGES = [['files', 'Final files'], ['treatment', 'Treatment'], ['lookbook', 'Lookbook']]
 /* What the big button says: Download Files for every cut (Alex, 12 Oct, his words); an old treatment or
    lookbook delivery keeps its own. */
@@ -41,6 +46,7 @@ const emptyDelivery = () => ({
   credits: [], deliverables: [], recipients: [], contactName: '', contactEmail: '', contactPhone: '', pin: '',
   files: [], // several files uploaded together: [{ name, url, size }], one button each on the page
   fine: '', // Final Deliverables' fine print
+  message: '', // and its opening message
 })
 
 const emptyEstimate = () => ({
@@ -145,7 +151,7 @@ export default function Deliveries() {
       credits: d.credits || [], deliverables: d.deliverables || [],
       recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
       contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
-      pin: r.pin || '', fine: d.fine || '',
+      pin: r.pin || '', fine: d.fine || '', message: d.message || '',
     })
   }
   const pickProject = (projectId) => {
@@ -160,7 +166,11 @@ export default function Deliveries() {
   }
   const setD = (k, v) => setDraft((d) => ({ ...d, [k]: v }))
   // picking Final Deliverables brings its fine print, unless some is already written
-  const setStage = (v) => setDraft((d) => ({ ...d, stage: v, fine: v === 'deliverables' && !d.fine?.trim() ? FINE_DEFAULT : d.fine }))
+  const setStage = (v) => setDraft((d) => ({
+    ...d, stage: v,
+    fine: v === 'deliverables' && !d.fine?.trim() ? FINE_DEFAULT : d.fine,
+    message: v === 'deliverables' && !d.message?.trim() ? MESSAGE_DEFAULT : d.message,
+  }))
   /* Upload the cut itself to pCloud (Alex, 12 Oct): into Deliveries/<stage>/<title> in the company
      pCloud, straight from this browser, then the public pCloud link fills Download link. */
   const [upload, setUpload] = useState(null) // { names, size, p, i, ctrl }
@@ -210,6 +220,7 @@ export default function Deliveries() {
         // no note any more (Alex, 22 Oct); Final Deliverables has its fine print instead
         note: '',
         fine: draft.stage === 'deliverables' ? (draft.fine || '').trim() : '',
+        message: draft.stage === 'deliverables' ? (draft.message || '').trim() : '',
         feedbackBy: '',
         credits: draft.stage === 'files' ? draft.credits.filter((c) => c.name) : [],
         deliverables: draft.stage === 'files' ? draft.deliverables.filter((d) => d.name) : [],
@@ -611,7 +622,10 @@ export default function Deliveries() {
             <Field label="Where it is hosted"><Input value={draft.linkLabel} onChange={(e) => setD('linkLabel', e.target.value)} placeholder="SwissTransfer" /></Field>
             {/* Your note is gone (Alex, 22 Oct); Final Deliverables has its fine print, shown small under the files */}
             {draft.stage === 'deliverables' && (
-              <Field label="Fine print"><Textarea rows={5} value={draft.fine} onChange={(e) => setD('fine', e.target.value)} /></Field>
+              <>
+                <Field label="Message"><Textarea rows={5} value={draft.message} onChange={(e) => setD('message', e.target.value)} /></Field>
+                <Field label="Fine print"><Textarea rows={5} value={draft.fine} onChange={(e) => setD('fine', e.target.value)} /></Field>
+              </>
             )}
 
             {draft.stage === 'files' && (

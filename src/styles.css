@@ -7767,3 +7767,11 @@ html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--
   .pub.dlv.dlv-site .dlv-brand { padding: 34px 16px 30px; }
   .pub.dlv.dlv-site .dlv-kicker { margin-top: 14px; font-size: 10.5px; letter-spacing: .3em; }
 }
+/* several files (Alex, 22 Oct): Download all under them, as wide and as tall as one file's tile; the opening message
+   above the files, quiet and easy to read */
+.pub.dlv.dlv-site .dlv-hero > .dlv-btn.dlv-all { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 100%; max-width: 860px; min-height: 68px; margin: 10px auto 0; padding: 14px 20px; border-radius: var(--est-r, 14px); font-size: 15px; }
+.pub.dlv.dlv-site .dlv-message { max-width: 760px; margin: 30px auto 0; font-size: 15px; line-height: 1.75; color: color-mix(in srgb, var(--text) 74%, var(--bg)); white-space: pre-line; text-wrap: pretty; }
+@media (max-width: 520px) {
+  .pub.dlv.dlv-site .dlv-hero > .dlv-btn.dlv-all { min-height: 58px; }
+  .pub.dlv.dlv-site .dlv-message { margin-top: 24px; font-size: 14.5px; text-align: left; }
+}
