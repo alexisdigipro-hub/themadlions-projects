@@ -7788,4 +7788,7 @@ html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--
   .pub.dlv.dlv-site .dlv-hero { padding-top: 24px; padding-bottom: 28px; }
   .pub.dlv.dlv-site .dlv-message { margin-top: 18px; font-size: 15px; }
   .pub.dlv.dlv-site .dlv-fine { font-size: 11.5px; }
+  /* a phone's column is too narrow to justify without wide gaps between words: left, with words broken where Greek allows */
+  .pub.dlv.dlv-site :is(.dlv-message, .dlv-fine) { text-align: left; -webkit-hyphens: auto; hyphens: auto; }
 }
+.pub.dlv.dlv-site :is(.dlv-message, .dlv-fine) { -webkit-hyphens: auto; hyphens: auto; }
