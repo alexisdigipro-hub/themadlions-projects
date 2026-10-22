@@ -7792,3 +7792,6 @@ html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--
   .pub.dlv.dlv-site :is(.dlv-message, .dlv-fine) { text-align: left; -webkit-hyphens: auto; hyphens: auto; }
 }
 .pub.dlv.dlv-site :is(.dlv-message, .dlv-fine) { -webkit-hyphens: auto; hyphens: auto; }
+/* centred after all (Alex, 22 Oct): the message and the fine print, on a computer and a phone, still as wide as the files */
+.pub.dlv.dlv-site :is(.dlv-message, .dlv-fine) { text-align: center; text-align-last: center; text-wrap: pretty; }
+@media (max-width: 520px) { .pub.dlv.dlv-site :is(.dlv-message, .dlv-fine) { text-align: center; } }
