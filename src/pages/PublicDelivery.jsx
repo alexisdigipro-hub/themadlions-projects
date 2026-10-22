@@ -152,11 +152,10 @@ export default function PublicDelivery() {
   return (
     <div className={`pub dlv dlv-estimate dlv-site ${look.className}`} style={look.style}>
       <div className="dlv-sheet">
-        {/* the company site's own head (Alex, 22 Oct): THE MAD LIONS as the site's wordmark, MAD bold, and the red
-            Film production house under it, instead of the small logo and the name in small letters */}
+        {/* the company site's own head (Alex, 22 Oct): THE MAD LIONS as the site's wordmark, MAD bold, instead of the
+            small logo and the name in small letters (Film production house under it came out again, to save height) */}
         <header className="dlv-band dlv-top dlv-brand">
           <img className="dlv-wordmark" src="./site/wordmark.png" alt={d.company?.name || 'THEMADLIONS'} />
-          <div className="dlv-kicker">Film production house</div>
         </header>
 
         <section className="dlv-band dlv-hero">
