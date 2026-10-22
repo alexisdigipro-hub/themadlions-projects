@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- maximum-scale=1: an iPhone zooms the page in when a box with text under 16px is tapped (the Home search, Alex 11:31) and leaves it zoomed and shifted sideways; this stops that zoom, and iOS still lets you pinch to zoom -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#17181c" />
+    <meta name="description" content="The Mad Lions chat on its own." />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <!-- TML Chat, the chat on its own (Alex, 8 Oct). A page of its own so that the iPhone, which reads
+         the manifest and the title when the page loads, adds the chat to the home screen and not the
+         whole app; swapping them from the script came too late. Same code as index.html. -->
+    <script>if (!/^#\/chat-window/.test(location.hash)) location.replace('#/chat-window')</script>
+    <link rel="manifest" href="./manifest-chat.webmanifest" />
+    <link rel="apple-touch-icon" href="./icons/chat-one-touch.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="TML Chat" />
+    <!-- The chat's background runs up under the clock and the battery (Alex, 9 Oct): black-translucent
+         starts the page at the very top, and the chat already pads its list, a room's header, the photo
+         viewer and calls by env(safe-area-inset-top). index.html keeps the plain bar: the app's top bar
+         has no such padding yet. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+    <title>TML Chat</title>
+    <script type="module" crossorigin src="./assets/main-CSj7l4CM.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/main-CiJxn967.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
