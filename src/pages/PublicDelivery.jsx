@@ -208,6 +208,25 @@ export default function PublicDelivery() {
             ].filter(Boolean).map((t, i) => <span key={i}>{t}</span>)}
             {d.password && <span>Password <b className="dlv-pass">{d.password}</b></span>}
           </p>
+          {/* thumbnails (Alex, 22 Oct): each shown as it is, with its own Download */}
+          {d.thumbs?.length > 0 && (
+            <div className="dlv-thumbs">
+              <h2>{d.thumbs.length > 1 ? 'Thumbnails' : 'Thumbnail'}</h2>
+              <ul className="dlv-thumb-grid">
+                {d.thumbs.map((t) => (
+                  <li key={t.url}>
+                    <a className="dlv-thumb-img" href={t.url} target="_blank" rel="noreferrer" title={t.name}>
+                      <img src={t.url} alt={t.name} loading="lazy" style={t.w && t.h ? { aspectRatio: `${t.w} / ${t.h}` } : undefined} />
+                    </a>
+                    <div className="dlv-thumb-foot">
+                      <span className="dlv-thumb-meta">{t.w && t.h ? `${t.w} × ${t.h}` : t.name}</span>
+                      <a className="dlv-btn ghost dlv-each-btn" href={t.dl || t.url} download={t.name}>Download</a>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {/* Final Deliverables' fine print (Alex, 22 Oct): small and quiet, under the files */}
           {d.fine && <p className="dlv-fine" lang="el">{d.fine}</p>}
         </section>
