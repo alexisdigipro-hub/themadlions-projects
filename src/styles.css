@@ -7748,3 +7748,6 @@ html[data-theme] body .search-clear-wrap > .input.search, html[data-theme] body 
 /* the site's own black behind the page, for the delivery and the estimate link alike (the public pages' body rule
    came later in this file and painted the app's grey over it) */
 html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--est-page-bg, #0b0b0c); }
+/* Final Deliverables' fine print on the client's page (Alex, 22 Oct: "small and discreet, not catching the eye") */
+.dlv-fine { max-width: 680px; margin: 34px auto 0; padding-top: 18px; border-top: 1px solid var(--line-soft); font-size: 11.5px; line-height: 1.65; color: color-mix(in srgb, var(--muted) 85%, transparent); white-space: pre-line; text-align: center; text-wrap: pretty; }
+@media (max-width: 520px) { .dlv-fine { font-size: 11px; margin-top: 28px; } }

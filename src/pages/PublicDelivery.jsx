@@ -203,6 +203,8 @@ export default function PublicDelivery() {
             ].filter(Boolean).map((t, i) => <span key={i}>{t}</span>)}
             {d.password && <span>Password <b className="dlv-pass">{d.password}</b></span>}
           </p>
+          {/* Final Deliverables' fine print (Alex, 22 Oct): small and quiet, under the files */}
+          {d.fine && <p className="dlv-fine">{d.fine}</p>}
         </section>
 
         {(d.note || d.feedbackBy) && (
