@@ -18,7 +18,13 @@ export const STAGES = [
   ['rough', 'RoughCut'],
   ['prefinal', 'PreFinal Cut'],
   ['final', 'Final Cut'],
+  // the final files themselves (Alex, 22 Oct): no version, and the fine print under the files
+  ['deliverables', 'Final Deliverables'],
 ]
+/* The fine print a Final Deliverables page carries, small, under the files (Alex, 22 Oct, his words); filled in
+   when that stage is picked, and editable each time. */
+export const FINE_DEFAULT = `IMPORTANT !! Τα τελικά παραδοτέα αρχεία θα βρίσκονται διαθέσιμα προς λήψη μέσω του εταιρικού μας cloud storage για διάστημα 6 μηνών από την ημερομηνία παράδοσής τους. Τα RAW (ακατέργαστα / πρωτότυπα) αρχεία της παραγωγής θα παραμένουν αποθηκευμένα στο αρχείο μας για 30 ημέρες από την ημερομηνία του γυρίσματος, και μετά την πάροδο αυτού του διαστήματος θα διαγράφονται οριστικά.
+Σε περίπτωση που επιθυμείτε να προβείτε σε buyout των πρωτότυπων υλικών, παρακαλούμε ενημερώστε μας γραπτώς εντός της ανωτέρω προθεσμίας των 30 ημερών.`
 const OLD_STAGES = [['files', 'Final files'], ['treatment', 'Treatment'], ['lookbook', 'Lookbook']]
 /* What the big button says: Download Files for every cut (Alex, 12 Oct, his words); an old treatment or
    lookbook delivery keeps its own. */
@@ -34,6 +40,7 @@ const emptyDelivery = () => ({
   link: '', linkLabel: '', password: '', linkExpires: '', pageCloses: '', note: '', feedbackBy: '',
   credits: [], deliverables: [], recipients: [], contactName: '', contactEmail: '', contactPhone: '', pin: '',
   files: [], // several files uploaded together: [{ name, url, size }], one button each on the page
+  fine: '', // Final Deliverables' fine print
 })
 
 const emptyEstimate = () => ({
@@ -138,7 +145,7 @@ export default function Deliveries() {
       credits: d.credits || [], deliverables: d.deliverables || [],
       recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
       contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
-      pin: r.pin || '',
+      pin: r.pin || '', fine: d.fine || '',
     })
   }
   const pickProject = (projectId) => {
@@ -152,6 +159,8 @@ export default function Deliveries() {
     }))
   }
   const setD = (k, v) => setDraft((d) => ({ ...d, [k]: v }))
+  // picking Final Deliverables brings its fine print, unless some is already written
+  const setStage = (v) => setDraft((d) => ({ ...d, stage: v, fine: v === 'deliverables' && !d.fine?.trim() ? FINE_DEFAULT : d.fine }))
   /* Upload the cut itself to pCloud (Alex, 12 Oct): into Deliveries/<stage>/<title> in the company
      pCloud, straight from this browser, then the public pCloud link fills Download link. */
   const [upload, setUpload] = useState(null) // { names, size, p, i, ctrl }
@@ -186,7 +195,7 @@ export default function Deliveries() {
       const cs = state.settings.callsheet || {}
       const data = {
         stage: draft.stage,
-        version: draft.version.trim(),
+        version: draft.stage === 'deliverables' ? '' : draft.version.trim(),
         title: draft.title.trim(),
         client: draft.client.trim(),
         projectId: draft.projectId,
@@ -198,7 +207,9 @@ export default function Deliveries() {
         // no transfer password or expiry, no Answer by and no contact any more (Alex, 22 Oct)
         password: '',
         linkExpires: '',
-        note: draft.note.trim(),
+        // no note any more (Alex, 22 Oct); Final Deliverables has its fine print instead
+        note: '',
+        fine: draft.stage === 'deliverables' ? (draft.fine || '').trim() : '',
         feedbackBy: '',
         credits: draft.stage === 'files' ? draft.credits.filter((c) => c.name) : [],
         deliverables: draft.stage === 'files' ? draft.deliverables.filter((d) => d.name) : [],
@@ -556,10 +567,10 @@ export default function Deliveries() {
         footer={<><Button variant="ghost" onClick={() => setDraft(null)} disabled={busy || !!upload}>Cancel</Button><Button variant="primary" onClick={publish} disabled={busy || !!upload}>{busy ? 'Publishing…' : upload ? 'Uploading…' : 'Publish and copy link'}</Button></>}>
         {draft && (
           <div className="stack">
-            <div className="row-3">
-              <Field label="Stage"><Select value={draft.stage} onChange={(e) => setD('stage', e.target.value)} options={STAGES.some((s) => s[0] === draft.stage) ? STAGES : [...STAGES, OLD_STAGES.find((s) => s[0] === draft.stage) || [draft.stage, stageLabel(draft.stage)]]} /></Field>
+            <div className={draft.stage === 'deliverables' ? 'row-2' : 'row-3'}>
+              <Field label="Stage"><Select value={draft.stage} onChange={(e) => setStage(e.target.value)} options={STAGES.some((s) => s[0] === draft.stage) ? STAGES : [...STAGES, OLD_STAGES.find((s) => s[0] === draft.stage) || [draft.stage, stageLabel(draft.stage)]]} /></Field>
               <Field label="Project"><Select value={draft.projectId} onChange={(e) => pickProject(e.target.value)} options={[['', 'Not in the app'], ...projects.map((p) => [p.id, p.title])]} /></Field>
-              <Field label="Version"><Input value={draft.version} onChange={(e) => setD('version', e.target.value)} placeholder="v2" /></Field>
+              {draft.stage !== 'deliverables' && <Field label="Version"><Input value={draft.version} onChange={(e) => setD('version', e.target.value)} placeholder="v2" /></Field>}
             </div>
             <div className="row-2">
               {/* client first, then the title (Alex, 13 Oct) */}
@@ -598,7 +609,10 @@ export default function Deliveries() {
             {/* one page, one link, nothing else to fill (Alex, 22 Oct): no transfer password or expiry, no closing date
                 or access code, no Answer by, no contact and no Send it to, as an estimate */}
             <Field label="Where it is hosted"><Input value={draft.linkLabel} onChange={(e) => setD('linkLabel', e.target.value)} placeholder="SwissTransfer" /></Field>
-            <Field label="Your note"><Textarea rows={3} value={draft.note} onChange={(e) => setD('note', e.target.value)} /></Field>
+            {/* Your note is gone (Alex, 22 Oct); Final Deliverables has its fine print, shown small under the files */}
+            {draft.stage === 'deliverables' && (
+              <Field label="Fine print"><Textarea rows={5} value={draft.fine} onChange={(e) => setD('fine', e.target.value)} /></Field>
+            )}
 
             {draft.stage === 'files' && (
               <>
