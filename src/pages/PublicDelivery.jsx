@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { respondToDelivery } from '../lib/shares.js'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
 import { stageAction, stageLabel } from './Deliveries.jsx'
 import { SUPABASE_KEY, SUPABASE_URL } from '../lib/supabaseConfig.js'
@@ -120,11 +119,6 @@ function SaveToPhotos({ file }) {
 export default function PublicDelivery() {
   const { token } = useParams()
   const { share, tryPin, pinErr } = usePublicShare(token)
-  const [name, setName] = useState('')
-  const [note, setNote] = useState('')
-  const [sent, setSent] = useState('')
-  const [busy, setBusy] = useState('')
-  const [err, setErr] = useState('')
 
   // The client's page in Glass dark (Alex, 12 Oct), as the ordino link: the deep blue backdrop and
   // see-through cards, whatever the app's own theme or skin is, while the page is open
@@ -138,11 +132,6 @@ export default function PublicDelivery() {
     return () => { html.dataset.theme = before; html.classList.remove('pub-glass-page'); if (skin) html.dataset.skin = skin }
   }, [])
 
-  // A page made for one person already knows the name, so the reply form does not ask for it again.
-  useEffect(() => {
-    if (share?.data?.recipient?.name) setName(share.data.recipient.name)
-  }, [share])
-
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading…</p></div>
   if (share?.closed) {
     return <div className="pub"><div className="pub-card"><h1>This link is closed</h1><p className="muted">The production has closed this page. Ask them for a fresh one.</p></div></div>
@@ -154,17 +143,6 @@ export default function PublicDelivery() {
   }
 
   const d = share.data
-  const reply = async (status) => {
-    setBusy(status); setErr('')
-    try {
-      await respondToDelivery({ token, name, status, note })
-      setSent(status)
-    } catch (e) {
-      setErr(e.message)
-    } finally {
-      setBusy('')
-    }
-  }
 
   return (
     <div className="pub dlv pub-glass">
@@ -249,26 +227,7 @@ export default function PublicDelivery() {
           </section>
         )}
 
-        <section className="dlv-block dlv-reply">
-          {sent ? (
-            <p className="dlv-thanks">
-              {sent === 'approved' ? 'Approved. Thank you, the production has been told.' : 'Sent. The production has your notes.'}
-            </p>
-          ) : (
-            <>
-              <h2>Your answer</h2>
-              <label className="dlv-lbl" htmlFor="dlv-name">Your name</label>
-              <input id="dlv-name" className="dlv-input" value={name} onChange={(e) => setName(e.target.value)} />
-              <label className="dlv-lbl" htmlFor="dlv-note">Notes, corrections, anything</label>
-              <textarea id="dlv-note" className="dlv-input dlv-area" rows={4} value={note} onChange={(e) => setNote(e.target.value)} />
-              <div className="dlv-actions">
-                <button className="dlv-btn ghost" onClick={() => reply('changes')} disabled={!!busy}>{busy === 'changes' ? 'Sending…' : 'Ask for changes'}</button>
-                <button className="dlv-btn" onClick={() => reply('approved')} disabled={!!busy}>{busy === 'approved' ? 'Sending…' : 'Approve'}</button>
-              </div>
-              {err && <p className="dlv-err">{err}</p>}
-            </>
-          )}
-        </section>
+        {/* no answer form on the client's page any more (Alex, 22 Oct): no Approve or Ask for changes, as on an estimate */}
 
         <footer className="dlv-band dlv-end">
           {(d.contact?.name || d.contact?.email || d.contact?.phone) && (

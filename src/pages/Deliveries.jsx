@@ -476,7 +476,7 @@ export default function Deliveries() {
         <Empty title={shown === 'callsheet' ? 'No call sheet links yet' : 'Nothing sent yet'} action={editable && shown !== 'callsheet' && <Button variant="primary" onClick={startNew}>Send the first one</Button>}>
           {shown === 'callsheet'
             ? 'Call sheet links are made from the day itself, inside the project. They show up here so you can see what is still open and close it when the shoot is over.'
-            : 'Paste the link you already made on SwissTransfer or WeTransfer, choose the stage, and the app gives you a page with your logo to send instead. The client opens it, downloads, and can approve or ask for changes right there.'}
+            : 'Paste the link you already made on SwissTransfer or WeTransfer, choose the stage, and the app gives you a page with your logo to send instead. The client opens it and downloads.'}
         </Empty>
       ) : (
         <ul className="plain deliv-list">
