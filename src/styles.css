@@ -7745,3 +7745,6 @@ html[data-theme] body .search-clear-wrap > .input.search, html[data-theme] body 
   .pub.dlv.dlv-site .dlv-each li { padding: 12px 10px 12px 14px; gap: 12px; }
   .pub.dlv.dlv-site .dlv-each-name { font-size: 14.5px; }
 }
+/* the site's own black behind the page, for the delivery and the estimate link alike (the public pages' body rule
+   came later in this file and painted the app's grey over it) */
+html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--est-page-bg, #0b0b0c); }
