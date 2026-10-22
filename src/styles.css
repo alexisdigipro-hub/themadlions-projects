@@ -7751,3 +7751,17 @@ html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--
 /* Final Deliverables' fine print on the client's page (Alex, 22 Oct: "small and discreet, not catching the eye") */
 .dlv-fine { max-width: 680px; margin: 34px auto 0; padding-top: 18px; border-top: 1px solid var(--line-soft); font-size: 11.5px; line-height: 1.65; color: color-mix(in srgb, var(--muted) 85%, transparent); white-space: pre-line; text-align: center; text-wrap: pretty; }
 @media (max-width: 520px) { .dlv-fine { font-size: 11px; margin-top: 28px; } }
+/* the delivery link's head as the site's (Alex, 22 Oct): the wordmark, then Film production house in red spaced
+   capitals; the title a little smaller and the artist larger under it; the fine print across the page on a computer */
+.pub.dlv.dlv-site .dlv-brand { padding: 46px 24px 40px; gap: 0; }
+.pub.dlv.dlv-site .dlv-wordmark { display: block; width: min(460px, 78vw); height: auto; margin: 0 auto; filter: invert(1); opacity: .96; }
+.pub.dlv.dlv-site .dlv-kicker { margin-top: 18px; font-size: 12px; font-weight: 500; letter-spacing: .34em; text-transform: uppercase; color: var(--accent); }
+.pub.dlv.dlv-site .dlv-title { font-size: clamp(28px, 4.2vw, 42px); }
+.pub.dlv.dlv-site .dlv-client { margin-top: 16px; font-size: clamp(15px, 1.6vw, 19px); font-weight: 500; letter-spacing: .22em; color: color-mix(in srgb, var(--text) 82%, var(--bg)); }
+@media (min-width: 821px) {
+  .pub.dlv.dlv-site .dlv-fine { max-width: 1040px; font-size: 11px; }
+}
+@media (max-width: 520px) {
+  .pub.dlv.dlv-site .dlv-brand { padding: 34px 16px 30px; }
+  .pub.dlv.dlv-site .dlv-kicker { margin-top: 14px; font-size: 10.5px; letter-spacing: .3em; }
+}
