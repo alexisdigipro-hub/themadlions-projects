@@ -7759,7 +7759,8 @@ html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--
 .pub.dlv.dlv-site .dlv-title { font-size: clamp(28px, 4.2vw, 42px); }
 .pub.dlv.dlv-site .dlv-client { margin-top: 16px; font-size: clamp(15px, 1.6vw, 19px); font-weight: 500; letter-spacing: .22em; color: color-mix(in srgb, var(--text) 82%, var(--bg)); }
 @media (min-width: 821px) {
-  .pub.dlv.dlv-site .dlv-fine { max-width: 1040px; font-size: 11px; }
+  /* 2 to 3 lines on a computer (Alex): one run of text across most of the screen, past the page's own width */
+  .pub.dlv.dlv-site .dlv-fine { position: relative; left: 50%; width: min(1280px, 94vw); max-width: none; transform: translateX(-50%); white-space: normal; font-size: 11px; }
 }
 @media (max-width: 520px) {
   .pub.dlv.dlv-site .dlv-brand { padding: 34px 16px 30px; }
