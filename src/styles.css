@@ -7719,3 +7719,32 @@ html[data-theme] body .search-clear-wrap > .input.search, html[data-theme] body 
 .rm-install-btn:hover { background: rgba(255, 255, 255, .12); }
 .rm-install-btn:active { transform: scale(.97); }
 .rm-install-btn.main { border-color: transparent; background: linear-gradient(180deg, #ff4a3d, #d40000); color: #fff; box-shadow: 0 6px 18px rgba(212, 0, 0, .35); }
+
+/* The delivery link in the company site's look (Alex, 22 Oct: "like our page on themadlions.com", wider on a computer):
+   it wears the cost estimate's look (.dlv-estimate with the default look from lib/estimateLook.js), and here its own
+   parts follow it: the files as soft tiles across the page's width, the Download buttons as pills, the line under them
+   in spaced capitals. */
+.pub.dlv.dlv-site .dlv-hero { padding-bottom: 48px; }
+.pub.dlv.dlv-site .dlv-hero > .dlv-btn { margin-top: 30px; padding: 15px 34px; font-size: 15px; font-weight: 600; border-radius: 999px; }
+.pub.dlv.dlv-site .dlv-each.plain { max-width: 860px; margin-top: 30px; gap: 8px; }
+.pub.dlv.dlv-site .dlv-each li { padding: 14px 14px 14px 20px; gap: 16px; border: 0; border-radius: var(--est-r, 14px); background: var(--tile); transition: background .2s ease; }
+.pub.dlv.dlv-site .dlv-each li:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
+.pub.dlv.dlv-site .dlv-each li::before { content: ''; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.pub.dlv.dlv-site .dlv-each-name { font-weight: 500; font-size: 15.5px; }
+.pub.dlv.dlv-site .dlv-each-size { font-size: 12px; letter-spacing: .08em; }
+.pub.dlv.dlv-site .dlv-btn.dlv-each-btn { padding: 9px 20px; border-radius: 999px; font-size: 13.5px; letter-spacing: .02em; }
+.pub.dlv.dlv-site .dlv-meta { margin-top: 26px; font-size: 11px; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; }
+.pub.dlv.dlv-site .dlv-say .dlv-note { max-width: 760px; font-size: 16.5px; line-height: 1.7; }
+.pub.dlv.dlv-site .dlv-block h2 { text-transform: uppercase; }
+.pub.dlv.dlv-site .dlv-credits dt { letter-spacing: .2em; text-transform: uppercase; font-size: 11px; color: var(--muted); }
+.pub.dlv.dlv-site .dlv-end { text-align: center; }
+.pub.dlv.dlv-site .dlv-end:empty { display: none; }
+.pub.dlv.dlv-site .dlv-band:has(+ .dlv-end:empty) { border-bottom: 0; }
+@media (max-width: 520px) {
+  .pub.dlv.dlv-site .dlv-hero > .dlv-btn { width: 100%; box-sizing: border-box; }
+  .pub.dlv.dlv-site .dlv-each li { padding: 12px 10px 12px 14px; gap: 12px; }
+  .pub.dlv.dlv-site .dlv-each-name { font-size: 14.5px; }
+}
+/* the site's own black behind the page, for the delivery and the estimate link alike (the public pages' body rule
+   came later in this file and painted the app's grey over it) */
+html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--est-page-bg, #0b0b0c); }

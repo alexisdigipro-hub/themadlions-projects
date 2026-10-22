@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import { PinGate, ShareProblem, usePublicShare } from '../components/PublicGate.jsx'
 import { stageAction, stageLabel } from './Deliveries.jsx'
 import { SUPABASE_KEY, SUPABASE_URL } from '../lib/supabaseConfig.js'
+import { LOOK_DEFAULT, loadFont, lookProps } from '../lib/estimateLook.js'
+import { upper } from '../lib/estimate.js'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
@@ -120,16 +122,18 @@ export default function PublicDelivery() {
   const { token } = useParams()
   const { share, tryPin, pinErr } = usePublicShare(token)
 
-  // The client's page in Glass dark (Alex, 12 Oct), as the ordino link: the deep blue backdrop and
-  // see-through cards, whatever the app's own theme or skin is, while the page is open
+  // The client's page in the company site's look (Alex, 22 Oct: "like our page on themadlions.com"), the same as a
+  // cost estimate's: near-black, cream letters, the red accent, whatever the app's own theme or skin is
   useEffect(() => {
     const html = document.documentElement
     const before = html.dataset.theme
     const skin = html.dataset.skin
     html.dataset.theme = 'dark'
-    html.classList.add('pub-glass-page')
+    html.classList.add('pub-est-page')
     delete html.dataset.skin
-    return () => { html.dataset.theme = before; html.classList.remove('pub-glass-page'); if (skin) html.dataset.skin = skin }
+    loadFont(LOOK_DEFAULT.font)
+    html.style.setProperty('--est-page-bg', LOOK_DEFAULT.bg)
+    return () => { html.dataset.theme = before; html.classList.remove('pub-est-page'); html.style.removeProperty('--est-page-bg'); if (skin) html.dataset.skin = skin }
   }, [])
 
   if (share === undefined) return <div className="pub"><p className="pub-loading">Loading…</p></div>
@@ -143,9 +147,10 @@ export default function PublicDelivery() {
   }
 
   const d = share.data
+  const look = lookProps(LOOK_DEFAULT)
 
   return (
-    <div className="pub dlv pub-glass">
+    <div className={`pub dlv dlv-estimate dlv-site ${look.className}`} style={look.style}>
       <div className="dlv-sheet">
         <header className="dlv-band dlv-top">
           {d.company?.logo && <img className="dlv-logo" src={d.company.logo} alt="" />}
@@ -155,7 +160,7 @@ export default function PublicDelivery() {
         <section className="dlv-band dlv-hero">
           <div className="dlv-stage">{stageLabel(d.stage)}{d.version ? ` · ${d.version}` : ''}</div>
           <h1 className="dlv-title">{d.title}</h1>
-          {d.client && <p className="dlv-client">{d.client}</p>}
+          {d.client && <p className="dlv-client">{upper(d.client)}</p>}
           {d.recipient?.name && <p className="dlv-for">For {d.recipient.name}</p>}
 
           {/* several files (Alex, 12 Oct): Download all for the whole folder, then one button per file,
