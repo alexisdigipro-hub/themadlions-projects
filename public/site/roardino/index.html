@@ -409,6 +409,16 @@ body.viewer.v-light{background:#f6f4f0}
   .list .li:not(.blocks-order .li) > .input:first-child,.list .li:not(.blocks-order .li) > .input[type=time]{flex:1 1 0;order:0}
   .list .li:not(.blocks-order .li) > .li-tools{order:1;flex:none}
 }
+/* every date and time field on an iPhone (Alex, 23 Oct): Safari draws them wider than their column and, empty,
+   taller than the others; here they keep to their column, the height of a text field, the value on the left */
+.row > *,.field{min-width:0}
+.input{min-width:0;max-width:100%}
+input.input[type=date],input.input[type=time]{-webkit-appearance:none;appearance:none;display:block;width:100%;min-height:42px;line-height:20px;text-align:left}
+.li input.input[type=time]{min-height:36px;text-align:center}
+input.input[type=date]::-webkit-date-and-time-value,input.input[type=time]::-webkit-date-and-time-value{text-align:left;margin:0}
+.li input.input[type=time]::-webkit-date-and-time-value{text-align:center}
+input.input,select.input{height:42px}
+.li input.input{height:36px}
 </style>
 </head>
 <body>
