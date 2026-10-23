@@ -39,7 +39,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 ## Where we stopped (13 Oct 2026)
 
-**23 Oct 2026, RoarMe page and Database.** On a computer the hub's RoarMe page no longer scrolls: the content column is exactly the window's height and the RoarMe frame fills it (styles.css, after .roarme-frame). Database: Drives is the first tab (only for those with the Drives permission).
+**23 Oct 2026, RoarMe page and Database.** On a computer the hub's RoarMe page no longer scrolls: the content column is exactly the window's height and the RoarMe frame fills it (styles.css, after .roarme-frame). Database: Drives is the first tab (only for those with the Drives permission), and /database opens the first tab a person may see (App.jsx), so Drives for them.
 
 **23 Oct 2026.** YouTube copy without the ➤ arrows ("Role : Name", "Directed by Name"); Fill from project and Copy for YouTube in the window are no longer underlined.
 
