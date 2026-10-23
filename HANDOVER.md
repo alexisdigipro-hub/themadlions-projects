@@ -39,6 +39,8 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 ## Where we stopped (13 Oct 2026)
 
+**23 Oct 2026, RoarMe page and Database.** On a computer the hub's RoarMe page no longer scrolls: the content column is exactly the window's height and the RoarMe frame fills it (styles.css, after .roarme-frame). Database: Drives is the first tab (only for those with the Drives permission).
+
 **23 Oct 2026.** YouTube copy without the ➤ arrows ("Role : Name", "Directed by Name"); Fill from project and Copy for YouTube in the window are no longer underlined.
 
 **23 Oct 2026, credits: YouTube copy and order.** `youtubeCredits(rows)` in src/lib/deliveryCredits.js writes Alex's YouTube format (VIDEO CREDITS, blank line, "➤ Role : Name", "➤ Directed by Name"); `copyText` copies with an execCommand fallback. A Copy button under the credits on the client's page (shows Copied), and Copy for YouTube in the window (keeps empty roles via `parseCredits(text, { keepEmpty: true })`). Order: Director, Director's Assistant (any "Director Assist..."), producers, cast, Budget team, crew, Editing, Production Company last.
