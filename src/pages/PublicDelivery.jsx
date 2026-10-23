@@ -227,6 +227,8 @@ export default function PublicDelivery() {
               </ul>
             </div>
           )}
+          {/* Final Deliverables' credits (Alex, 23 Oct): after the pictures, before the fine print */}
+          {d.stage === 'deliverables' && d.credits?.length > 0 && <Credits list={d.credits} />}
           {/* Final Deliverables' fine print (Alex, 22 Oct): small and quiet, under the files */}
           {d.fine && <p className="dlv-fine" lang="el">{d.fine}</p>}
         </section>
@@ -238,12 +240,9 @@ export default function PublicDelivery() {
           </section>
         )}
 
-        {d.credits?.length > 0 && (
+        {d.stage !== 'deliverables' && d.credits?.length > 0 && (
           <section className="dlv-block">
-            <h2>Credits</h2>
-            <dl className="dlv-credits">
-              {d.credits.map((c, i) => <div key={i}><dt>{c.role}</dt><dd>{c.name}</dd></div>)}
-            </dl>
+            <Credits list={d.credits} />
           </section>
         )}
 
@@ -271,6 +270,20 @@ export default function PublicDelivery() {
           {d.company?.footer && <p className="dlv-foot">{d.company.footer}</p>}
         </footer>
       </div>
+    </div>
+  )
+}
+
+// role on the left, name on the right; a line typed with no role stands on its own across both
+function Credits({ list }) {
+  return (
+    <div className="dlv-credits-wrap">
+      <h2>Credits</h2>
+      <dl className="dlv-credits">
+        {list.map((c, i) => (c.role
+          ? <div key={i}><dt>{c.role}</dt><dd>{c.name}</dd></div>
+          : <div key={i} className="solo"><dd>{c.name}</dd></div>))}
+      </dl>
     </div>
   )
 }

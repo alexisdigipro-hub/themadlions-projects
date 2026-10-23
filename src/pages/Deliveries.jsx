@@ -11,6 +11,7 @@ import { dirIn, useSlide } from '../lib/glide.js'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
 import { pcloudDeliverMany } from '../lib/pcloud.js'
 import { uploadThumbs } from '../lib/deliveryThumbs.js'
+import { creditsFromProject, parseCredits } from '../lib/deliveryCredits.js'
 import { remote } from '../lib/supabase.js'
 
 /* The stages a new delivery can be (Alex, 12 Oct, written his way): RoughCut, PreFinal Cut, Final Cut.
@@ -58,6 +59,7 @@ const emptyDelivery = () => ({
   fine: '', // Final Deliverables' fine print
   pcFolder: '', // the pCloud folder the uploaded files are in, so more can go next to them
   message: '', // and its opening message
+  creditsText: '', // and its credits, one "Role: Name" a line
   thumbs: [], // thumbnails the client can see and download: [{ name, path, url, dl, size, w, h }]
 })
 
@@ -163,13 +165,15 @@ export default function Deliveries() {
       credits: d.credits || [], deliverables: d.deliverables || [],
       recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
       contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
-      pin: r.pin || '', fine: d.fine || '', message: d.message || '', thumbs: d.thumbs || [], pcFolder: d.pcFolder || '',
+      pin: r.pin || '', fine: d.fine || '', message: d.message || '', creditsText: d.creditsText || '', thumbs: d.thumbs || [], pcFolder: d.pcFolder || '',
     })
   }
+  const creditsOf = (projectId) => creditsFromProject(state.projects.find((x) => x.id === projectId), state.workspace.name)
   const pickProject = (projectId) => {
     const p = state.projects.find((x) => x.id === projectId)
     setDraft((d) => ({
       ...d, projectId,
+      creditsText: d.stage === 'deliverables' && !d.creditsText?.trim() ? creditsOf(projectId) : d.creditsText,
       title: d.title || p?.title || '',
       client: d.client || p?.client || '',
       credits: d.credits.length ? d.credits : crewOf(projectId),
@@ -182,6 +186,8 @@ export default function Deliveries() {
     ...d, stage: v,
     fine: v === 'deliverables' && !d.fine?.trim() ? FINE_DEFAULT : d.fine,
     message: v === 'deliverables' && !d.message?.trim() ? MESSAGE_DEFAULT : d.message,
+    // and the project's credits (Alex, 23 Oct)
+    creditsText: v === 'deliverables' && !d.creditsText?.trim() && d.projectId ? creditsOf(d.projectId) : d.creditsText,
   }))
   /* Upload the cut itself to pCloud (Alex, 12 Oct): into Deliveries/<stage>/<title> in the company
      pCloud, straight from this browser, then the public pCloud link fills Download link. */
@@ -268,7 +274,8 @@ export default function Deliveries() {
         message: draft.stage === 'deliverables' ? (draft.message || '').trim() : '',
         thumbs: (draft.thumbs || []).filter((t) => t.url),
         feedbackBy: '',
-        credits: draft.stage === 'files' ? draft.credits.filter((c) => c.name) : [],
+        credits: draft.stage === 'deliverables' ? parseCredits(draft.creditsText) : draft.stage === 'files' ? draft.credits.filter((c) => c.name) : [],
+        creditsText: draft.stage === 'deliverables' ? (draft.creditsText || '').trim() : '',
         deliverables: draft.stage === 'files' ? draft.deliverables.filter((d) => d.name) : [],
         contact: {},
         sentAt: new Date().toISOString(),
@@ -692,6 +699,22 @@ export default function Deliveries() {
             {draft.stage === 'deliverables' && (
               <>
                 <Field label="Message"><Textarea rows={5} value={draft.message} onChange={(e) => setD('message', e.target.value)} /></Field>
+                {/* credits (Alex, 23 Oct): written from the project, then his to change and add to; a div, as the
+                    button inside a label would take the textarea's clicks */}
+                <div className="field">
+                  <span className="field-label deliv-credits-head">
+                    Credits
+                    {draft.projectId && (
+                      <button type="button" className="link small" onClick={() => {
+                        const t = creditsOf(draft.projectId)
+                        if (!t) return toast('The project has no director, producer, cast or crew yet.', 'error')
+                        setD('creditsText', t)
+                      }}>Fill from project</button>
+                    )}
+                  </span>
+                  <Textarea rows={7} value={draft.creditsText} placeholder={'Director: Alex Konstantinidis\nDirector of Photography: Name'} onChange={(e) => setD('creditsText', e.target.value)} />
+                  <span className="field-hint">One a line, Role: Name. Two names in a role: Name, Name.</span>
+                </div>
                 <Field label="Fine print"><Textarea rows={5} value={draft.fine} onChange={(e) => setD('fine', e.target.value)} /></Field>
               </>
             )}
