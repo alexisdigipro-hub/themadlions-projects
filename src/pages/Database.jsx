@@ -10,11 +10,11 @@ import EquipmentAll from './EquipmentAll.jsx'
 import Drives from './Drives.jsx'
 
 const TABS = [
+  // the drives archive moved in here, for whoever has the Drives permission (Alex, 10 Oct); the first tab since 23 Oct
+  { key: 'drives', label: 'Drives', icon: 'drives', perm: 'drives' },
   { key: 'locations', label: 'Locations', icon: 'locations', perm: 'locations' },
   { key: 'crew', label: 'Crew', icon: 'team', perm: 'contacts' },
   { key: 'cast', label: 'Cast', icon: 'people', perm: 'contacts' },
-  // the drives archive moved in here, for whoever has the Drives permission (Alex, 10 Oct)
-  { key: 'drives', label: 'Drives', icon: 'drives', perm: 'drives' },
   // the company's own film equipment, with a rental price (Alex, 10 Oct)
   { key: 'equipment', label: 'Equipment', icon: 'gear', perm: 'gear' },
 ]
