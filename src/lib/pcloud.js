@@ -73,20 +73,44 @@ export const pcloudLink = (fileid, scope, download = false) => call('link', { fi
    function), then the function saves it there and makes a public link for the client. A piece that
    fails is tried once more. onProgress gets 0..1; signal (an AbortController's) stops it. */
 const PIECE = 8 * 1024 * 1024
+/* Several pieces at a time (Alex, 23 Oct: a fast wired line went up at 3 to 20 Mbps, one piece after another): four
+   go up together, each written at its own place in the file, so the line is kept full. If pCloud turns a piece
+   down twice, the rest go one after the other as before, so an upload never breaks over it. */
+const AT_ONCE = 4
 export async function pcloudDeliver(file, { stage, title, sub, nolink }, { onProgress, signal } = {}) {
   const start = await call('deliveryStart', { stage, title, sub })
-  for (let offset = 0; offset < file.size; offset += PIECE) {
-    if (signal?.aborted) throw new Error('Upload stopped.')
-    const send = () => {
-      const fd = new FormData()
-      fd.append('file', file.slice(offset, offset + PIECE), 'piece')
-      fd.append('uploadid', String(start.uploadid))
-      fd.append('offset', String(offset))
-      return call('deliveryChunk', fd)
-    }
-    try { await send() } catch (e) { if (signal?.aborted) throw e; await send() }
-    onProgress?.(Math.min(1, (offset + PIECE) / file.size))
+  const offsets = []
+  for (let offset = 0; offset < file.size; offset += PIECE) offsets.push(offset)
+  let next = 0
+  let sent = 0
+  let lanes = AT_ONCE
+  const send = (offset) => {
+    const fd = new FormData()
+    fd.append('file', file.slice(offset, offset + PIECE), 'piece')
+    fd.append('uploadid', String(start.uploadid))
+    fd.append('offset', String(offset))
+    return call('deliveryChunk', fd)
   }
+  const one = async (offset) => {
+    try { await send(offset) } catch (e) {
+      if (signal?.aborted) throw e
+      try { await send(offset) } catch (e2) {
+        if (signal?.aborted || lanes === 1) throw e2
+        lanes = 1 // pCloud did not like pieces side by side: one at a time from here
+        await send(offset)
+      }
+    }
+    sent += Math.min(PIECE, file.size - offset)
+    onProgress?.(Math.min(1, sent / file.size))
+  }
+  const lane = async (k) => {
+    while (next < offsets.length) {
+      if (signal?.aborted) throw new Error('Upload stopped.')
+      if (k >= lanes) return
+      await one(offsets[next++])
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(AT_ONCE, offsets.length || 1) }, (_, k) => lane(k)))
   if (signal?.aborted) throw new Error('Upload stopped.')
   return call('deliveryFinish', { uploadid: start.uploadid, path: start.path, name: file.name, nolink })
 }
