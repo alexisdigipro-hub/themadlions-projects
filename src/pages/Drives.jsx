@@ -1,6 +1,6 @@
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
+import { Act, Button, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { DbAdd, DbBar, DbFilter } from '../components/DbTools.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
@@ -9,6 +9,12 @@ import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
 const STATUS = [['empty', 'Empty'], ['inuse', 'In use'], ['full', 'Full'], ['offline', 'Not around']]
 const statusLabel = (k) => STATUS.find((s) => s[0] === k)?.[1] || 'In use'
 const emptyDrive = () => ({ id: uid(), name: '', series: '', capacity: '', free: '', status: 'empty', where: '', notes: '', items: [], createdAt: new Date().toISOString() })
+/* Delete as a round red glass button that asks once more (Alex, 23 Oct: the underlined words did not look like buttons) */
+function ActDelete({ label, onConfirm, small = false }) {
+  const [armed, setArmed] = useState(false)
+  useEffect(() => { if (!armed) return; const t = setTimeout(() => setArmed(false), 3000); return () => clearTimeout(t) }, [armed])
+  return <Act icon="trash" label={armed ? `Sure? ${label}` : label} className={`act-del${small ? ' act-sm' : ''}${armed ? ' armed' : ''}`} onClick={() => { if (armed) { setArmed(false); onConfirm() } else setArmed(true) }} />
+}
 const emptyItem = () => ({ id: uid(), title: '', projectId: '', size: '', date: '', notes: '' })
 const seriesOf = (d) => d.series || d.name.replace(/[\s\d(].*$/, '').toUpperCase() || 'Other'
 
@@ -138,8 +144,8 @@ export default function Drives({ slot }) {
       </div>
       {editable && (
         <span className="drive-item-tools">
-          <button className="link small" onClick={() => setItem({ driveId: d.id, ...it })}>Edit</button>
-          <Confirm onConfirm={() => removeItem(d.id, it.id)} label="Remove">×</Confirm>
+          <Act icon="edit" label="Edit" className="act-sm" onClick={() => setItem({ driveId: d.id, ...it })} />
+          <ActDelete small label="Remove" onConfirm={() => removeItem(d.id, it.id)} />
         </span>
       )}
     </li>
@@ -153,10 +159,12 @@ export default function Drives({ slot }) {
           {[d.capacity, d.free ? `${d.free} free` : '', d.where, `${(d.items || []).length} project${(d.items || []).length === 1 ? '' : 's'}`].filter(Boolean).join(' · ')}
         </span>
         <span className="grow" />
-        {editable && <button className="link small" onClick={() => setItem({ driveId: d.id, ...emptyItem() })}>Add project</button>}
-        {editable && <button className="link small" onClick={() => setDraft({ ...d })}>Edit disk</button>}
-        {editable && <Confirm onConfirm={() => { removeDrive(d.id); setOpenId('') }} label="Delete disk">×</Confirm>}
-        <button className="link small" onClick={() => setOpenId('')}>Close</button>
+        <span className="drive-open-acts">
+          {editable && <Act icon="plus" label="Add project" main onClick={() => setItem({ driveId: d.id, ...emptyItem() })} />}
+          {editable && <Act icon="edit" label="Edit disk" onClick={() => setDraft({ ...d })} />}
+          {editable && <ActDelete label="Delete disk" onConfirm={() => { removeDrive(d.id); setOpenId('') }} />}
+          <Act icon="close" label="Close" className="act-round" onClick={() => setOpenId('')} />
+        </span>
       </div>
       {d.notes && <p className="small muted drive-open-notes">{d.notes}</p>}
       {(d.items || []).length
@@ -250,7 +258,7 @@ export default function Drives({ slot }) {
                       <strong>{d.name}</strong>
                       <span className={`drive-status ${d.status || 'inuse'}`}>{statusLabel(d.status)}</span>
                       <span className="muted small">{[d.capacity, d.free ? `${d.free} free` : '', d.where].filter(Boolean).join(' · ') || 'No details yet'}</span>
-                      {editable && <button className="link small" onClick={() => setItem({ driveId: d.id, ...emptyItem() })}>Add project</button>}
+                      {editable && <Act icon="plus" label="Add project" className="act-sm-pill" onClick={() => setItem({ driveId: d.id, ...emptyItem() })} />}
                     </div>
                     {(d.items || []).length
                       ? <ul className="plain drive-rows">{d.items.map((it) => itemRow(d, it))}</ul>

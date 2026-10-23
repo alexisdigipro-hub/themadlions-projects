@@ -3900,7 +3900,20 @@ html[data-theme='light'] .drive-results { border-color: transparent; }
 .drive-status.offline { background: color-mix(in srgb, #D9A441 18%, transparent); color: #b0711c; }
 .drive-item-title { font-weight: 600; color: var(--text); text-decoration: none; font-size: 14.5px; }
 a.drive-item-title:hover { text-decoration: underline; }
-.drive-item-tools { display: flex; gap: 4px; align-items: center; }
+.drive-item-tools { display: flex; gap: 6px; align-items: center; }
+/* the open disk's buttons as glass pills and round icons (Alex, 23 Oct: the underlined words did not read as buttons) */
+.drive-open-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.act.act-round { width: 40px; padding: 0; border-radius: 50%; }
+.act.act-round .act-t { display: none; }
+.act.act-sm { width: 34px; height: 34px; padding: 0; border-radius: 50%; }
+.act.act-sm .act-t { display: none; }
+.act.act-sm svg { width: 17px; height: 17px; }
+.act.act-sm-pill { height: 34px; padding: 0 13px; font-size: 13px; }
+.act.act-sm-pill svg { width: 16px; height: 16px; }
+.act.act-del { color: #ff7b72; }
+.act.act-del:hover, .act.act-del.armed { background: color-mix(in srgb, #ff5a4e 16%, transparent); border-color: color-mix(in srgb, #ff5a4e 50%, transparent); }
+.act.act-del.armed:not(.act-sm) .act-t { color: #ffb3ad; }
+@media (max-width: 820px) { .act.act-sm-pill { width: 40px; height: 40px; padding: 0; border-radius: 50%; } }
 .drive-notes { margin: 0; }
 @media (max-width: 560px) { .drive-grid { grid-template-columns: 1fr; } .drive-open-head { padding: 10px 12px; } .drive-rows li.drive-row, .drive-results li.drive-result { padding: 10px 12px; } }
 
