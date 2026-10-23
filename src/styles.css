@@ -7823,3 +7823,18 @@ html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--
 /* the files already up, in the delivery window: each name opens its pCloud page, to check it (Alex, 23 Oct) */
 .deliv-files li a { color: inherit; text-decoration: none; }
 .deliv-files li a:hover { text-decoration: underline; text-underline-offset: 3px; }
+/* Final Deliverables' credits (Alex, 23 Oct): role in spaced grey capitals on the left, the name on the right, the
+   way a film's end credits read; on a phone one under the other. In the window, Fill from project beside the label. */
+.dlv-credits-wrap { max-width: 640px; margin: 34px auto 0; }
+.dlv-credits-wrap > h2 { margin: 0 0 16px; font-size: 11px; font-weight: 600; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); text-align: center; }
+.dlv-credits-wrap .dlv-credits { gap: 9px; }
+.dlv-credits-wrap .dlv-credits dt { letter-spacing: .2em; text-transform: uppercase; font-size: 11px; color: var(--muted); }
+.dlv-credits-wrap .dlv-credits dd { font-weight: 500; font-size: 15px; text-align: left; }
+.dlv-credits > div.solo { grid-template-columns: 1fr; text-align: center; }
+.dlv-credits > div.solo dd { text-align: center; }
+@media (max-width: 520px) {
+  .dlv-credits-wrap { margin-top: 28px; }
+  .dlv-credits-wrap .dlv-credits { gap: 12px; }
+  .dlv-credits-wrap .dlv-credits dd { text-align: center; font-size: 14.5px; }
+}
+.deliv-credits-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
