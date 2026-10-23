@@ -393,3 +393,15 @@ body.viewer.v-light{background:#f6f4f0}
 /* the project's ordinos by date, over the ordino (Overview's Ordino button, view only) */
 .see-tabs{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin:12px auto 0;width:max-content;max-width:calc(100% - 32px)}
 select.input{appearance:none;-webkit-appearance:none;cursor:pointer}
+/* the hub's look, framed in the hub (app.js hubTheme): the hub's backdrop behind the app; an ordino keeps its own */
+html.hub-theme, html.hub-theme body{background:var(--hub-backdrop, var(--bg))}
+html.hub-theme body:not(.viewer)::before{background:none}
+html.hub-theme .topbar{background:color-mix(in srgb,var(--bg) 70%,transparent)}
+html.hub-light .btn:hover{background:color-mix(in srgb,var(--text) 6%,transparent)}
+html.hub-light .seg button.on{background:color-mix(in srgb,var(--text) 9%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+html.hub-light .modal-bg{background:rgba(20,24,40,.28)}
+html.hub-theme .modal{background:color-mix(in srgb,var(--bg) 90%,transparent)}
+html.hub-theme .modal-bg{background:color-mix(in srgb,var(--bg) 45%,rgba(0,0,0,.35))}
+html.hub-theme{min-height:100%;background-attachment:fixed;background-size:cover}
+html.hub-theme body{min-height:100vh;background:transparent}
+html.hub-theme .btn.primary,html.hub-theme .new-card .plus{color:var(--brand-ink)}

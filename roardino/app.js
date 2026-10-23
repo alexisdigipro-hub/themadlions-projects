@@ -21,6 +21,55 @@ const SCOPE = Q.get('project') || '';
 const SEE = Q.has('see');
 const BASE = location.pathname + location.search.replace(/[?&]t=[^&]*/, '').replace(/^&/, '?');
 async function rpc(fn, args){ const { data, error } = await sb.rpc(fn, args); if (error) throw error; return data; }
+/* The hub's look (Alex, 23 Oct): framed in the hub, Roardino takes the hub's theme, skin, accent and typeface from
+   the page around it (the same address, so it can read it) and follows it live when it changes in Settings > Display.
+   Only the app around the ordinos: an ordino keeps the look chosen for it, and the crew's link page (?t=) its own. */
+function hubTheme(){
+  let top;
+  try { top = window.parent !== window && window.parent.document; } catch { top = null; }
+  if (!EMBED || !top) return;
+  const root = document.documentElement;
+  const apply = () => {
+    const cs = top.defaultView.getComputedStyle(top.documentElement);
+    const v = k => cs.getPropertyValue(k).trim();
+    const light = top.documentElement.dataset.theme === 'light';
+    const text = v('--text') || '#eef0f3';
+    const set = (k, val) => { if (val) root.style.setProperty(k, val); };
+    set('--bg', v('--bg'));
+    set('--text', text);
+    set('--muted', v('--muted'));
+    set('--brand', v('--accent'));
+    set('--brand-ink', v('--accent-ink'));
+    set('--hi', light ? '#ffffff' : text);
+    set('--line', v('--gl-edge') || v('--line'));
+    set('--panel', v('--gl-fill') || `color-mix(in srgb, ${v('--panel')} 82%, transparent)`);
+    set('--panel2', `color-mix(in srgb, ${text} 5%, transparent)`);
+    set('--glass', v('--gl-fill') || `color-mix(in srgb, ${text} 6%, transparent)`);
+    set('--glass-edge', v('--gl-edge') || v('--line'));
+    set('--field', v('--gl-input') || `color-mix(in srgb, ${text} ${light ? 4 : 6}%, transparent)`);
+    set('--lit', light ? '0 1px 2px rgba(20,24,40,.05), 0 8px 26px rgba(20,24,40,.08)' : 'inset 0 1px 0 rgba(255,255,255,.08), 0 30px 70px rgba(0,0,0,.28)');
+    set('--font', v('--font'));
+    if (v('--radius-lg')) set('--radius', v('--radius-lg'));
+    root.style.colorScheme = light ? 'light' : 'dark';
+    // the backdrop: the hub's own (a skin's gradient), else its plain background
+    const bs = top.defaultView.getComputedStyle(top.body), hs = cs;
+    const img = [hs, bs].map(x => x.backgroundImage).find(x => x && x !== 'none');
+    const col = [bs, hs].map(x => x.backgroundColor).find(x => x && !/rgba\(0, 0, 0, 0\)|transparent/.test(x));
+    root.style.setProperty('--hub-backdrop', img ? `${img}, ${col || v('--bg')}` : (col || v('--bg')));
+    root.classList.add('hub-theme');
+    root.classList.toggle('hub-light', light);
+    // the hub's typeface: its Google Fonts sheets, once each
+    top.querySelectorAll('link[rel="stylesheet"][href*="fonts.googleapis.com"]').forEach(l => {
+      if (!document.querySelector(`link[href="${CSS.escape(l.href)}"]`)) document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href: l.href }));
+    });
+  };
+  apply();
+  const watch = new top.defaultView.MutationObserver(() => apply());
+  watch.observe(top.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-skin', 'data-accent', 'style', 'class'] });
+  top.head && watch.observe(top.head, { childList: true });
+}
+hubTheme();
+
 let session = null, me = null, canEdit = false, canView = false, projects = [], library = {}; // me: the member row in the hub
 let flushEditor = null; // set while the editor is open, so leaving it saves first
 const projectOf = id => projects.find(p => p.id === id) || null;

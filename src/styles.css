@@ -7714,7 +7714,7 @@ html[data-theme] body .rem-tasks > .rem-task.tinted, .rem-task.tinted { backgrou
 
 /* Roardino inside the hub (23 Oct): the side menu's page is laid out like RoarMe's (above); in a project's Ordino
    tab and in the Overview's Ordino window it sits in the page as a soft rounded frame instead */
-.roarme-page.roardino-page { background: #1b1e23; }
+.roarme-page.roardino-page { background: transparent; } /* Roardino draws the hub's own backdrop (roardino/app.js hubTheme) */
 .roardino-page.in-project { height: calc(100dvh - 220px); min-height: 560px; }
 .roardino-page.in-modal { height: min(78dvh, 820px); min-height: 420px; border-radius: 16px; }
 @media (max-width: 820px) {
