@@ -68,7 +68,30 @@ export function creditsFromProject(project, company = '', { users = [], settings
 }
 
 // "Role: Name" lines into the page's rows; a line with no role is shown on its own, a role with no name not at all
-export const parseCredits = (text) => String(text || '').split('\n').map((l) => l.trim()).filter((l) => l && !/^[^:]+:$/.test(l)).map((l) => {
+// (keepEmpty keeps it, for the window's YouTube copy, where an empty role is a reminder to fill it in)
+export const parseCredits = (text, { keepEmpty = false } = {}) => String(text || '').split('\n').map((l) => l.trim()).filter((l) => l && (keepEmpty || !/^[^:]+:$/.test(l))).map((l) => {
+  if (/^[^:]+:$/.test(l)) return { role: l.slice(0, -1).trim(), name: '' }
   const m = l.match(/^([^:]{1,60}?)\s*(?::|\s[-–]\s)\s*(.+)$/)
   return m ? { role: m[1].trim(), name: m[2].trim() } : { role: '', name: l }
 })
+
+/* The credits as a YouTube description takes them (Alex, 23 Oct, his own example): VIDEO CREDITS, a blank line, then
+   one "➤ Role : Name" a line, left-aligned plain text; the director as "Directed by Name". */
+export const youtubeCredits = (rows) => ['VIDEO CREDITS', '', ...(rows || []).map((c) => (
+  !c.role ? c.name : /^director$/i.test(c.role) && c.name ? `➤ Directed by ${c.name}` : `➤ ${c.role} : ${c.name || ''}`.trimEnd()
+))].join('\n')
+
+// onto the clipboard, with the old way for a browser that refuses the new one
+export async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true } catch {}
+  const t = document.createElement('textarea')
+  t.value = text
+  t.setAttribute('readonly', '')
+  t.style.cssText = 'position:fixed;top:0;left:0;opacity:0'
+  document.body.appendChild(t)
+  t.select()
+  let ok = false
+  try { ok = document.execCommand('copy') } catch {}
+  t.remove()
+  return ok
+}

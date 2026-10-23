@@ -11,7 +11,7 @@ import { dirIn, useSlide } from '../lib/glide.js'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
 import { pcloudDeliverMany } from '../lib/pcloud.js'
 import { uploadThumbs } from '../lib/deliveryThumbs.js'
-import { creditsFromProject, parseCredits } from '../lib/deliveryCredits.js'
+import { copyText, creditsFromProject, parseCredits, youtubeCredits } from '../lib/deliveryCredits.js'
 import { remote } from '../lib/supabase.js'
 
 /* The stages a new delivery can be (Alex, 12 Oct, written his way): RoughCut, PreFinal Cut, Final Cut.
@@ -713,7 +713,15 @@ export default function Deliveries() {
                     )}
                   </span>
                   <Textarea rows={7} value={draft.creditsText} placeholder={'Director: Alex Konstantinidis\nDirector of Photography: Name'} onChange={(e) => setD('creditsText', e.target.value)} />
-                  <span className="field-hint">One a line, Role: Name. Two names in a role: Name, Name.</span>
+                  <span className="field-hint deliv-credits-foot">
+                    <span>One a line, Role: Name. Two names in a role: Name, Name.</span>
+                    {/* the same plain lines the client's Copy gives, for a YouTube description (Alex, 23 Oct) */}
+                    {draft.creditsText?.trim() && (
+                      <button type="button" className="link small" onClick={async () => {
+                        if (await copyText(youtubeCredits(parseCredits(draft.creditsText, { keepEmpty: true })))) toast('Credits copied for YouTube', 'ok')
+                      }}>Copy for YouTube</button>
+                    )}
+                  </span>
                 </div>
                 <Field label="Fine print"><Textarea rows={5} value={draft.fine} onChange={(e) => setD('fine', e.target.value)} /></Field>
               </>
