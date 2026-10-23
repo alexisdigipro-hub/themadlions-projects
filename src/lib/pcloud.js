@@ -96,8 +96,13 @@ export async function pcloudDeliver(file, { stage, title, sub, nolink }, { onPro
    its own public link, then one public link for the whole folder. The delivery page shows Download all
    (the folder) and a button per file. One file alone goes as pcloudDeliver.
    onProgress gets (overall 0..1, index of the file going up). */
-export async function pcloudDeliverMany(files, { stage, title, sub }, { onProgress, signal } = {}) {
-  if (files.length === 1) return pcloudDeliver(files[0], { stage, title }, { onProgress: (p) => onProgress?.(p, 0), signal })
+export async function pcloudDeliverMany(files, { stage, title, sub, into }, { onProgress, signal } = {}) {
+  /* more files for a delivery that already has some (Alex, 23 Oct: "it loses the ones it had"): into the same folder
+     as those, <root>/Deliveries/<stage>/<title>/<sub>, so the folder's one link covers them all */
+  const at = String(into || '').split('/')
+  const k = at.indexOf('Deliveries')
+  if (k >= 0 && at[k + 3]) { stage = at[k + 1]; title = at[k + 2]; sub = at.slice(k + 3).join('/') }
+  else if (files.length === 1) return pcloudDeliver(files[0], { stage, title }, { onProgress: (p) => onProgress?.(p, 0), signal })
   const total = files.reduce((n, f) => n + f.size, 0) || 1
   let done = 0
   let path = ''

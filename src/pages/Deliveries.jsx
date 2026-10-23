@@ -56,6 +56,7 @@ const emptyDelivery = () => ({
   credits: [], deliverables: [], recipients: [], contactName: '', contactEmail: '', contactPhone: '', pin: '',
   files: [], // several files uploaded together: [{ name, url, size }], one button each on the page
   fine: '', // Final Deliverables' fine print
+  pcFolder: '', // the pCloud folder the uploaded files are in, so more can go next to them
   message: '', // and its opening message
   thumbs: [], // thumbnails the client can see and download: [{ name, path, url, dl, size, w, h }]
 })
@@ -162,7 +163,7 @@ export default function Deliveries() {
       credits: d.credits || [], deliverables: d.deliverables || [],
       recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
       contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
-      pin: r.pin || '', fine: d.fine || '', message: d.message || '', thumbs: d.thumbs || [],
+      pin: r.pin || '', fine: d.fine || '', message: d.message || '', thumbs: d.thumbs || [], pcFolder: d.pcFolder || '',
     })
   }
   const pickProject = (projectId) => {
@@ -196,10 +197,24 @@ export default function Deliveries() {
       const title = draft.title.trim() || projects.find((p) => p.id === draft.projectId)?.title || files[0].name.replace(/\.[^.]+$/, '')
       const now = new Date()
       const sub = draft.version.trim() || `${toISODate(now)} ${String(now.getHours()).padStart(2, '0')}.${String(now.getMinutes()).padStart(2, '0')}`
-      const r = await pcloudDeliverMany(files, { stage: stageLabel(draft.stage), title, sub }, { onProgress: (p, i) => setUpload((u) => (u ? { ...u, p, i } : u)), signal: ctrl.signal })
+      // files already on this delivery stay (Alex, 23 Oct): the new ones are added, into the same pCloud folder when
+      // that folder is known (pcFolder, kept with the page since 23 Oct)
+      const prev = (draft.files || []).filter((f) => f.url)
+      const into = prev.length ? draft.pcFolder || '' : ''
+      const r = await pcloudDeliverMany(files, { stage: stageLabel(draft.stage), title, sub, into }, { onProgress: (p, i) => setUpload((u) => (u ? { ...u, p, i } : u)), signal: ctrl.signal })
       // one file is kept too, so the client's page can offer Save to Photos for it
-      setDraft((d) => (d ? { ...d, link: r.url, linkLabel: 'pCloud', files: r.files || [{ name: r.name || files[0].name, url: r.url, size: r.size || files[0].size }] } : d))
-      toast(files.length > 1 ? `${files.length} files uploaded to pCloud, one link for them all` : `Uploaded to pCloud: ${r.folder.split('/').slice(-3).join(' / ')}`, 'ok')
+      const got = r.files || [{ name: r.name || files[0].name, url: r.url, size: r.size || files[0].size }]
+      const together = !!into && into === r.folder
+      setDraft((d) => (d ? {
+        ...d,
+        // the folder's link when everything is in one folder; else the link the delivery already had (each file has its own)
+        link: !prev.length || together ? r.url : d.link || r.url,
+        linkLabel: d.linkLabel || 'pCloud',
+        files: [...prev, ...got],
+        pcFolder: prev.length && !together ? d.pcFolder || '' : r.folder || '',
+      } : d))
+      const n = prev.length + got.length
+      toast(prev.length ? `${got.length} more ${got.length === 1 ? 'file' : 'files'} added, ${n} in all` : files.length > 1 ? `${files.length} files uploaded to pCloud, one link for them all` : `Uploaded to pCloud: ${r.folder.split('/').slice(-3).join(' / ')}`, 'ok')
     } catch (e) {
       if (!ctrl.signal.aborted) toast(/Unknown action/.test(e.message) ? 'Deploy the new pcloud function first (Supabase > Edge Functions > pcloud).' : e.message, 'error')
     } finally {
@@ -242,6 +257,7 @@ export default function Deliveries() {
         company: { name: state.workspace.name, logo: state.settings.logo || '', address: state.settings.companyAddress || '', footer: cs.footer || '' },
         link: draft.link.trim(),
         files: (draft.files || []).filter((f) => f.url),
+        pcFolder: (draft.files || []).length ? draft.pcFolder || '' : '',
         linkLabel: draft.linkLabel.trim(),
         // no transfer password or expiry, no Answer by and no contact any more (Alex, 22 Oct)
         password: '',
@@ -621,7 +637,7 @@ export default function Deliveries() {
             <Field label="Download link">
               <div className="deliv-linkrow">
                 {/* a link typed by hand replaces the uploaded files' own buttons */}
-                <Input value={draft.link} onChange={(e) => setDraft((d) => ({ ...d, link: e.target.value, files: [] }))} placeholder="https://www.swisstransfer.com/d/…" disabled={!!upload} />
+                <Input value={draft.link} onChange={(e) => setDraft((d) => ({ ...d, link: e.target.value, files: [], pcFolder: '' }))} placeholder="https://www.swisstransfer.com/d/…" disabled={!!upload} />
                 {remote && (
                   <>
                     <input ref={fileRef} type="file" multiple hidden onChange={(e) => uploadFiles(e.target.files)} />
