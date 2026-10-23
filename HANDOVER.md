@@ -39,7 +39,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 ## Where we stopped (13 Oct 2026)
 
-**23 Oct 2026, Roardino tidy-up (public/site/roardino/index.html, copied to themadlions-site).** The Break / Φαγητό time is gone (field in Βασικά, its Details toggle, the Break line under Call on the ordino): it showed only behind a toggle that was off by default; the break goes in the Program. Old ordinos keep `lunch` in their data, unused.
+**23 Oct 2026, Roardino: Break / Φαγητό kept.** Removed and put straight back at Alex's request (field in Βασικά, Details toggle off by default, Break line under Call on the ordino when the toggle is on). Nothing changed in the end.
 
 **23 Oct 2026, Drives redesigned (src/pages/Drives.jsx, CSS block "Drives, the archive").** A line of numbers on top (disks, space, films archived, films on one disk only, which filters to them). Two views: Films (default: each film once, its poster from the project's cover or initials, size, date, the disks it is on as coloured chips, 1 copy / n copies) and Shelf (series in their own colour, each disk with a fill bar from its free space or from the sizes of what is on it, the posters of its films, the empty disks folded into one line of chips). A disk opens in a window (Modal) with Add project, Edit disk, Delete and, for each film, where else it is. The old Contents view is gone (its saved choice falls back to Films).
 
