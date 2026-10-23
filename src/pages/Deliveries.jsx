@@ -315,7 +315,7 @@ export default function Deliveries() {
   }
 
   const today = toISODate(new Date()) // local date, not UTC: a link must not look closed a day early
-  const all = useMemo(() => (rows || []).filter((r) => r.kind !== 'status').map((r) => {
+  const all = useMemo(() => (rows || []).filter((r) => r.kind !== 'status' && r.kind !== 'callsheet').map((r) => {
     const d = r.data || {}
     const isDelivery = r.kind === 'delivery'
     const isEstimate = r.kind === 'estimate'
@@ -366,7 +366,8 @@ export default function Deliveries() {
       }
     })
   }, [all, isAdmin])
-  const tabs = [['delivery', 'Deliveries'], ...(isAdmin ? [['estimate', 'Estimates']] : []), ['callsheet', 'Call sheets'], ['all', 'Everything']]
+  // the Call sheets tab went with the old ordino (Alex, 23 Oct): its links stopped, Roardino sends its own
+  const tabs = [['delivery', 'Deliveries'], ...(isAdmin ? [['estimate', 'Estimates']] : []), ['all', 'Everything']]
   const shown = tabs.some(([k]) => k === filter) ? filter : 'all'
   const list = useMemo(() => (shown === 'all' ? groups : groups.filter((g) => g.head.kind === shown)), [groups, shown])
   const counts = { all: groups.length, delivery: groups.filter((g) => g.head.isDelivery).length, estimate: groups.filter((g) => g.head.isEstimate).length, callsheet: groups.filter((g) => g.head.kind === 'callsheet').length }
@@ -542,10 +543,8 @@ export default function Deliveries() {
       {rows === undefined ? (
         <p className="muted">Loading…</p>
       ) : !list.length ? (
-        <Empty title={shown === 'callsheet' ? 'No call sheet links yet' : 'Nothing sent yet'} action={editable && shown !== 'callsheet' && <Button variant="primary" onClick={startNew}>Send the first one</Button>}>
-          {shown === 'callsheet'
-            ? 'Call sheet links are made from the day itself, inside the project. They show up here so you can see what is still open and close it when the shoot is over.'
-            : 'Paste the link you already made on SwissTransfer or WeTransfer, choose the stage, and the app gives you a page with your logo to send instead. The client opens it and downloads.'}
+        <Empty title="Nothing sent yet" action={editable && <Button variant="primary" onClick={startNew}>Send the first one</Button>}>
+          Paste the link you already made on SwissTransfer or WeTransfer, choose the stage, and the app gives you a page with your logo to send instead. The client opens it and downloads.
         </Empty>
       ) : (
         <ul className="plain deliv-list">

@@ -7712,6 +7712,17 @@ html[data-theme] body .rem-tasks > .rem-task.tinted, .rem-task.tinted { backgrou
 /* TML Chat and the chat window (20 Oct): RoarMe on the whole screen, nothing around it */
 .roarme-page.full { position: fixed; inset: 0; height: 100%; min-height: 0; border-radius: 0; margin: 0; z-index: 1; }
 
+/* Roardino inside the hub (23 Oct): the side menu's page is laid out like RoarMe's (above); in a project's Ordino
+   tab and in the Overview's Ordino window it sits in the page as a soft rounded frame instead */
+.roarme-page.roardino-page { background: #1b1e23; }
+.roardino-page.in-project { height: calc(100dvh - 220px); min-height: 560px; }
+.roardino-page.in-modal { height: min(78dvh, 820px); min-height: 420px; border-radius: 16px; }
+@media (max-width: 820px) {
+  .roarme-page.roardino-page.in-project, .roarme-page.roardino-page.in-modal { position: relative; top: auto; bottom: auto; left: auto; right: auto; z-index: auto; border-radius: 16px; }
+  .roarme-page.roardino-page.in-project { height: calc(100dvh - var(--topbar-h, 44px) - var(--tabbar-top, 84px) - 120px); min-height: 460px; }
+  .roarme-page.roardino-page.in-modal { height: calc(100dvh - 140px); }
+}
+
 /* A search box with an × at its right that empties it (Alex, 20 Oct, Drives) */
 .search-clear-wrap { position: relative; display: flex; align-items: center; flex: 1 1 auto; min-width: 0; max-width: 520px; }
 html[data-theme] body .search-clear-wrap > .input.search, html[data-theme] body .db-page .toolbar-actions .search-clear-wrap > .input.search { flex: 1 1 auto; width: 100%; max-width: none; padding-right: 44px; }

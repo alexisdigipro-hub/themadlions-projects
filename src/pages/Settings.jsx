@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import ScreenInfo from '../components/ScreenInfo.jsx'
 import { Button, Confirm, Field, Input, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
-import { CATEGORIES, DEFAULT_DEPARTMENTS, DEFAULT_GEAR_CATS, STORAGE_KEY, callsheetDefaults, departmentsOf, emptyProject, eventTypesOf, FIXED_EVENT_TYPES, gearCategoriesOf, sampleProject, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { CATEGORIES, DEFAULT_DEPARTMENTS, DEFAULT_GEAR_CATS, STORAGE_KEY, departmentsOf, emptyProject, eventTypesOf, FIXED_EVENT_TYPES, gearCategoriesOf, sampleProject, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { projectProgress } from '../lib/progress.js'
 import { expenseCats } from '../lib/finance.js'
 import { budgetGroups, categoryUses, moveLines, renameCategory } from '../lib/budgetCats.js'
@@ -63,13 +63,12 @@ export default function Settings() {
   // My profile came off the side menu into Settings, as its first tab (Alex, 10 Oct)
   const TABS = [
     ['profile', 'My profile', false],
-    ['company', 'Company', true], ['callsheets', 'Ordino', true], ['team', 'Team', true], ['calendar', 'Calendar & projects', true], ['budget', 'Budget', true],
+    ['company', 'Company', true], ['team', 'Team', true], ['calendar', 'Calendar & projects', true], ['budget', 'Budget', true],
     ['display', 'Display', false], ['integrations', 'Integrations', true], ['data', 'Data', false], ['usage', 'Usage', true],
   ].filter(([, , admin]) => !admin || isAdmin)
   const [tab, setTab] = useState('profile')
   const { boxRef, slideTo, inClass } = useSlide()
   const logoRef = useRef()
-  const [cs, setCs] = useState(() => callsheetDefaults(state))
   const [depts, setDepts] = useState(() => departmentsOf(state).join('\n'))
   const [gearCats, setGearCats] = useState(() => gearCategoriesOf(state).join('\n'))
   const setSetting = (k, v) => update((s) => { s.settings = { ...s.settings, [k]: v }; return s })
@@ -86,7 +85,6 @@ export default function Settings() {
     } catch { toast('Could not read that image.', 'error') }
     finally { if (logoRef.current) logoRef.current.value = '' }
   }
-  const saveCs = () => { setSetting('callsheet', { ...cs, lunchAfterHours: Number(cs.lunchAfterHours) || 0, castOffset: Number(cs.castOffset) || 0, crewOffset: Number(cs.crewOffset) || 0 }); toast('Call sheet defaults saved', 'ok') }
   const saveDepts = () => {
     const list = [...new Set(depts.split('\n').map((x) => x.trim()).filter(Boolean))]
     if (!list.length) return toast('Keep at least one department.', 'error')
@@ -182,36 +180,7 @@ export default function Settings() {
           </section>
         )}
 
-        {isAdmin && (
-          <section className="panel" data-tab="callsheets">
-            <h2>Ordino defaults</h2>
-            <p className="small muted">Used for every new ordino and wherever one of its fields is left empty. Each ordino can still override them.</p>
-            <div className="stack">
-              <div className="row-3">
-                <Field label="General call"><Input value={cs.callTime} onChange={(e) => setCs({ ...cs, callTime: e.target.value })} placeholder="07:00" /></Field>
-              </div>
-              <Field label="Standard line for everyone (tagline)"><Input value={cs.tagline} onChange={(e) => setCs({ ...cs, tagline: e.target.value })} placeholder="Safety first. No photos on set without permission." /></Field>
-              <div className="row-2">
-                <Field label="Default parking note"><Textarea rows={2} value={cs.parking} onChange={(e) => setCs({ ...cs, parking: e.target.value })} /></Field>
-                <Field label="Default nearest hospital"><Textarea rows={2} value={cs.hospital} onChange={(e) => setCs({ ...cs, hospital: e.target.value })} placeholder="Name, address, phone" /></Field>
-              </div>
-              <Field label="Footer on every ordino link" hint="A line at the bottom of the link."><Input value={cs.footer} onChange={(e) => setCs({ ...cs, footer: e.target.value })} placeholder="Παραγωγή The Mad Lions · production@themadlions.com · +30 69…" /></Field>
-              <div className="row-actions"><Button variant="primary" onClick={saveCs}>Save defaults</Button></div>
-            </div>
-          </section>
-        )}
-
-        {isAdmin && (
-          <section className="panel" data-tab="callsheets">
-            <h2>Share links</h2>
-            <Field label="Ordino links expire" hint="Counted from the ordino's date. An expired link shows a short 'this ordino has expired' page. Sharing again always refreshes the link.">
-              <Select value={String(state.settings.shareExpiryDays || 0)} onChange={(e) => setSetting('shareExpiryDays', Number(e.target.value))} options={[['0', 'Never'], ['1', 'The day after the shoot'], ['3', '3 days after the shoot'], ['7', 'A week after the shoot'], ['30', 'A month after the shoot']]} />
-            </Field>
-            <Field label="Ask for a code on ordino links" hint="The link carries everyone's phone number, and links get forwarded. With this on, each ordino link gets a six digit code that you send separately; without it the page shows nothing. Crew type it once per phone.">
-              <Select value={state.settings.sharePin ? 'yes' : 'no'} onChange={(e) => setSetting('sharePin', e.target.value === 'yes')} options={[['no', 'No, the link is enough'], ['yes', 'Yes, link plus a code']]} />
-            </Field>
-          </section>
-        )}
+        {/* The Ordino tab (defaults, link expiry and code) went with the old ordino: Roardino took it over (Alex, 23 Oct) */}
 
         {/* The Team list used to be its own page in the sidebar; it is the first thing on this
             tab now (Alex), with the rules that govern it underneath. */}

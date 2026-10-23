@@ -121,6 +121,9 @@ export default function Layout() {
     { to: can(user, 'tasks') ? '/tasks' : '/notes', label: 'Organizer', show: true, icon: 'tasks', also: ['/tasks', '/notes', '/office'] },
     // the team's chat is RoarMe (Alex, 20 Oct): Hub Chat is gone, RoarMe takes its place
     { to: '/roarme', label: 'RoarMe', show: remote, icon: 'chat', also: ['/chat'] },
+    // Roardino, the ordino maker, in the hub (Alex, 23 Oct): for whoever has the Ordino permission. In the side menu
+    // only; a phone's bar keeps its five, and a project's Ordino tab opens the same Roardino
+    { to: '/roardino', label: 'Roardino', show: remote && can(user, 'callsheets'), icon: 'callsheets', phone: false },
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     // Drives is a tab of the Database now (Alex, 10 Oct)
@@ -130,6 +133,7 @@ export default function Layout() {
     // My profile is now the first tab of Settings, on every platform (Alex, 10 Oct)
     { to: '/settings', label: 'Settings', show: true, icon: 'settings' },
   ].filter((i) => i.show)
+  const tabItems = items.filter((i) => i.phone !== false) // the phone's bar and its swipe
 
   /* The RoarMe tab on a phone opens RoarMe as its own app (Alex, 20 Oct; lib/roarmeApp.js). In a browser: /roarme/
      in the same tab, where Chrome hands it to RoarMe if it is installed and otherwise RoarMe offers to install itself
@@ -178,8 +182,8 @@ export default function Layout() {
       if (mode !== 'dry') { next.click(); next.scrollIntoView?.({ inline: 'nearest', block: 'nearest' }) }
       return true
     }
-    const at = items.findIndex((i) => (i.end ? pathname === i.to : pathname === i.to || pathname.startsWith(`${i.to}/`) || i.also?.some((p) => pathname.startsWith(p))))
-    const to = at < 0 ? null : items[at + (dir === 'next' ? 1 : -1)]
+    const at = tabItems.findIndex((i) => (i.end ? pathname === i.to : pathname === i.to || pathname.startsWith(`${i.to}/`) || i.also?.some((p) => pathname.startsWith(p))))
+    const to = at < 0 ? null : tabItems[at + (dir === 'next' ? 1 : -1)]
     if (to && mode !== 'dry') nav(to.to)
     return !!to
   }
@@ -259,7 +263,7 @@ export default function Layout() {
       <NoticePopup />
 
       <nav className="tabbar" aria-label="Main" ref={tabsRef}>
-        {items.map((i) => (
+        {tabItems.map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end} onClick={i.to === '/roarme' ? roarmeTap : undefined} className={({ isActive }) => (isActive || i.also?.some((p) => pathname.startsWith(p)) ? 'active' : '')}>
             <span className="tab-ico-wrap">{Icon[i.icon]?.()}{i.badge > 0 && <span className="nav-badge">{i.badge}</span>}</span>
             {i.label}
