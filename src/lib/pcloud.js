@@ -126,7 +126,8 @@ export async function pcloudDeliverMany(files, { stage, title, sub, into }, { on
   const at = String(into || '').split('/')
   const k = at.indexOf('Deliveries')
   if (k >= 0 && at[k + 3]) { stage = at[k + 1]; title = at[k + 2]; sub = at.slice(k + 3).join('/') }
-  else if (files.length === 1) return pcloudDeliver(files[0], { stage, title }, { onProgress: (p) => onProgress?.(p, 0), signal })
+  // one file alone: in its own dated folder too (23 Oct), so files added later land next to it
+  else if (files.length === 1) return pcloudDeliver(files[0], { stage, title, sub }, { onProgress: (p) => onProgress?.(p, 0), signal })
   const total = files.reduce((n, f) => n + f.size, 0) || 1
   let done = 0
   let path = ''
