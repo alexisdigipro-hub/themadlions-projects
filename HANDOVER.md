@@ -39,6 +39,8 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 ## Where we stopped (13 Oct 2026)
 
+**23 Oct 2026, Roardino in the phone's bar too** (Alex): the `/roardino` item lost `phone: false` (Layout.jsx), so it sits in the phone's bottom bar right after RoarMe (the bar scrolls sideways, five at a time) and in its swipe; on a phone the page fills the space between the hub's head and the bar like RoarMe's. Ordinos can now be made on a phone too.
+
 **23 Oct 2026, the project's Ordino tab is gone.** Alex: take Ordino out of the project's tab bar and out of Edit details > Tabs, keep only the Overview's Ordino button, shown when the project has an ordino. tabs.js: the `schedule` tab exists only for an Event, as **Run of show** (permission `schedule`); pages/project/Schedule.jsx is just the Run of show (other projects' old links open the Overview). progress.js: the Ordino stage opens the Overview (to: '') so it still counts. Roardino no longer gets shoot days made by that tab, so it reads the Calendar itself: roardino/app.js loads `events` and `shootDatesOf` (src/lib/roardino.js) gives each project its Shoot days, which `daysOf`/`nextDay` merge with project.shootingDays; a Calendar day has no call, so the ordino keeps its own. Ordinos are made only in the side menu's Roardino, on a computer; a phone only sees them (Overview button).
 
 **23 Oct 2026, Roardino replaces the hub's ordino.** Alex: copy Roardino whole into the hub, delete the project ordino, a clean Roardino in the side menu, on the hub's database and projects, and everywhere the old ordino was wired. Decisions (Alex): old ordino links stop; old ordinos are moved into Roardino; who sees it = the Ordino permission.
