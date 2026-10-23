@@ -39,6 +39,16 @@ export const stageAction = (k) =>
   : 'Download Files'
 export const stageLabel = (k) => [...STAGES, ...OLD_STAGES].find((s) => s[0] === k)?.[1] || 'RoughCut'
 const RESPONSE = { approved: 'Approved', changes: 'Changes asked', seen: 'Seen' }
+/* How long the pCloud upload still needs, from its pace so far (Alex, 23 Oct: a big file on a slow line looked
+   stuck): nothing for the first few seconds, then "· about 40 min left" and its speed. */
+const uploadLeft = (u) => {
+  const secs = (Date.now() - (u.at || Date.now())) / 1000
+  if (!u.p || u.p < 0.005 || secs < 8) return ''
+  const left = Math.max(0, secs / u.p - secs)
+  const speed = (u.p * u.size) / secs / 1e6
+  const t = left < 90 ? 'under 2 min' : left < 3600 ? `${Math.round(left / 60)} min` : `${Math.floor(left / 3600)} h ${Math.round((left % 3600) / 60)} min`
+  return ` · ${speed >= 1 ? speed.toFixed(1) : speed.toFixed(2)} MB/s · about ${t} left`
+}
 
 const emptyDelivery = () => ({
   id: uid(), projectId: '', stage: 'rough', version: '', title: '', client: '',
@@ -181,7 +191,7 @@ export default function Deliveries() {
     const files = [...(list || [])]
     if (!files.length || !draft) return
     const ctrl = new AbortController()
-    setUpload({ names: files.map((f) => f.name), size: files.reduce((n, f) => n + f.size, 0), p: 0, i: 0, ctrl })
+    setUpload({ names: files.map((f) => f.name), size: files.reduce((n, f) => n + f.size, 0), p: 0, i: 0, ctrl, at: Date.now() })
     try {
       const title = draft.title.trim() || projects.find((p) => p.id === draft.projectId)?.title || files[0].name.replace(/\.[^.]+$/, '')
       const now = new Date()
@@ -629,7 +639,7 @@ export default function Deliveries() {
                 <div className="deliv-upload" role="status">
                   <div className="deliv-upload-row">
                     <span className="deliv-upload-name">{upload.names.length > 1 ? `File ${upload.i + 1} of ${upload.names.length} · ${upload.names[upload.i]}` : upload.names[0]}</span>
-                    <span className="deliv-upload-pct">{upload.p >= 1 ? 'Making the link…' : `${Math.round(upload.p * 100)}% of ${upload.size > 1e9 ? `${(upload.size / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(upload.size / 1e6))} MB`}`}</span>
+                    <span className="deliv-upload-pct">{upload.p >= 1 ? 'Making the link…' : `${Math.round(upload.p * 100)}% of ${upload.size > 1e9 ? `${(upload.size / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(upload.size / 1e6))} MB`}${uploadLeft(upload)}`}</span>
                     <button type="button" className="link small" onClick={() => upload.ctrl.abort()}>Stop</button>
                   </div>
                   <div className="deliv-upload-bar"><i style={{ width: `${Math.round(upload.p * 100)}%` }} /></div>
