@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react'
-import { HashRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { HashRouter, Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
 import { ToastProvider } from './components/ui.jsx'
 import { StoreProvider, useCurrentUser, useStore } from './lib/store.jsx'
@@ -46,7 +46,7 @@ const Profile = lazyPage(() => import('./pages/Profile.jsx'))
 const Office = lazyPage(() => import('./pages/Office.jsx'))
 // Office and Notes share one page with tabs (Alex, 10 Oct)
 const OfficeHub = lazyPage(() => import('./pages/OfficeHub.jsx'))
-const PublicCallSheet = lazyPage(() => import('./pages/PublicCallSheet.jsx'))
+const RoardinoPage = lazyPage(() => import('./pages/RoardinoPage.jsx'))
 const PublicDelivery = lazyPage(() => import('./pages/PublicDelivery.jsx'))
 const Deliveries = lazyPage(() => import('./pages/Deliveries.jsx'))
 const PublicStatus = lazyPage(() => import('./pages/PublicStatus.jsx'))
@@ -97,6 +97,17 @@ function LoginGate() {
   return user ? <Navigate to={home} replace /> : <Login />
 }
 
+function RoardinoLink() {
+  const { token } = useParams()
+  window.location.replace(`${import.meta.env.BASE_URL}roardino/?t=${encodeURIComponent(token || '')}`)
+  return null
+}
+function OldOrdinoLink() {
+  return (
+    <div className="pub"><div className="pub-card"><h1>This ordino is no longer here</h1><p className="muted">Ask the production for the new link.</p></div></div>
+  )
+}
+
 export default function App() {
   return (
     <StoreProvider>
@@ -106,7 +117,10 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginGate />} />
             <Route path="/roarme-signin" element={<RoarMeSignin />} />
-            <Route path="/s/:token" element={<PublicCallSheet />} />
+            {/* the old ordino links stopped when Roardino took the ordino over (Alex, 23 Oct); Roardino's own crew
+                links come as go.themadlions.com/?o/<token> and open its page */}
+            <Route path="/s/:token" element={<OldOrdinoLink />} />
+            <Route path="/o/:token" element={<RoardinoLink />} />
             <Route path="/d/:token" element={<PublicDelivery />} />
             <Route path="/ps/:token" element={<PublicStatus />} />
             <Route path="/e/:token" element={<PublicEstimate />} />
@@ -129,6 +143,7 @@ export default function App() {
                 <Route path="chat" element={<Navigate to="/roarme" replace />} />
                 <Route path="chat/:room" element={<Navigate to="/roarme" replace />} />
                 <Route path="roarme" element={<RoarMePage />} />
+                <Route path="roardino" element={<RoardinoPage />} />
                 <Route path="mywork" element={<MyWork />} />
                 <Route path="me" element={<Navigate to="/settings" replace />} />
                 <Route path="u/:id" element={<Profile />} />

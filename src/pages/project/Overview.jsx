@@ -16,7 +16,8 @@ import ProjectRoarMe from '../../components/ProjectRoarMe.jsx'
 import Tasks, { tasksFor } from './Tasks.jsx'
 import { Waveform } from './Music.jsx'
 import Notes from './Notes.jsx'
-import CallSheets from './CallSheets.jsx'
+import RoardinoPage from '../RoardinoPage.jsx'
+import { supabase } from '../../lib/supabase.js'
 import { syncShootDay } from '../../lib/shootDays.js'
 import { ReceiptModal } from '../../components/Receipt.jsx'
 import { groupPairs } from '../../lib/budgetCats.js'
@@ -148,8 +149,15 @@ export default function Overview() {
   const [ordinoOpen, setOrdinoOpen] = useState(false)
   const [receiptOpen, setReceiptOpen] = useState(false)
   const myReceipts = (project.budget?.lines || []).filter((l) => l.receipt && l.receipt.addedBy === user?.id).length
-  // the ordino's days, and the one to name on the button: the next to come, else the last
-  const ordinoDays = [...(project.shootingDays || [])].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+  // the project's ordinos in Roardino (23 Oct) by date, and the one to name on the button: the next to come, else the last
+  const [ordinoDays, setOrdinoDays] = useState([])
+  useEffect(() => {
+    if (!supabase) return
+    let off = false
+    supabase.from('roardino_ordinos').select('id, day:data->day').eq('project_id', project.id)
+      .then(({ data }) => { if (!off) setOrdinoDays((data || []).map((r) => r.day || {}).sort((a, b) => (a.date || '').localeCompare(b.date || ''))) })
+    return () => { off = true }
+  }, [project.id])
   const todayIso = new Date().toISOString().slice(0, 10)
   const nextOrdino = ordinoDays.find((d) => (d.date || '') >= todayIso) || ordinoDays[ordinoDays.length - 1] || {}
   const { state, update } = useStore()
@@ -279,7 +287,7 @@ export default function Overview() {
         </button>
       )}
       <Modal open={ordinoOpen} title="Ordino" onClose={() => setOrdinoOpen(false)}>
-        {ordinoOpen && <div className="ordino-modal"><CallSheets linkOnly /></div>}
+        {ordinoOpen && <RoardinoPage project={project.id} see className="in-modal" />}
       </Modal>
 
       {/* Add receipt for the team, not administrators (Alex, 10 Oct): the same box as the Ordino button,
