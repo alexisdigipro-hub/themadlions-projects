@@ -39,6 +39,8 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 ## Where we stopped (13 Oct 2026)
 
+**23 Oct 2026, Roardino list rows on a phone** (Alex: the fields ran over each other; an iPhone's time field is wider than its grid column). Under 560px a row of Πρόγραμμα, Calls, Σκηνές, Cast, Crew, Επαφές, Extra locations is two lines: the time fields (or the first field) with ↑ × on top, every other field full width below; time fields min-width 0, no native look. Same CSS in both copies (roardino/roardino.css and public/site/roardino/index.html, copied to themadlions-site).
+
 **23 Oct 2026, Roardino wears the hub's theme** (Alex). roardino/app.js `hubTheme()`: framed in the hub (?embed=hub, same address), it reads the page around it (computed --bg, --text, --muted, --accent, --accent-ink, --line, --font, the glass skins' --gl-fill / --gl-edge / --gl-input, the html/body backdrop) and sets Roardino's own tokens (--bg, --panel, --brand…) plus html.hub-theme / .hub-light; a MutationObserver on the hub's html follows a change in Settings > Display live, and the hub's Google Fonts sheets are copied in. CSS at the end of roardino/roardino.css. Not touched: an ordino's own look (.ord, its Dark/Glass/Light), the crew's link page (?t=) and themadlions.com's Roardino. Tested with the hub's styles.css around the frame: Glass dark, Glass light, Light, Coral, and a live switch.
 
 **23 Oct 2026, Roardino in the phone's bar too** (Alex): the `/roardino` item lost `phone: false` (Layout.jsx), so it sits in the phone's bottom bar right after RoarMe (the bar scrolls sideways, five at a time) and in its swipe; on a phone the page fills the space between the hub's head and the bar like RoarMe's. Ordinos can now be made on a phone too.
