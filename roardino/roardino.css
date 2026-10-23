@@ -405,3 +405,13 @@ html.hub-theme .modal-bg{background:color-mix(in srgb,var(--bg) 45%,rgba(0,0,0,.
 html.hub-theme{min-height:100%;background-attachment:fixed;background-size:cover}
 html.hub-theme body{min-height:100vh;background:transparent}
 html.hub-theme .btn.primary,html.hub-theme .new-card .plus{color:var(--brand-ink)}
+/* list rows on a phone (Alex, 23 Oct: the fields ran over each other; an iPhone's time field is wider than its
+   column): the times and the first field share the top line with ↑ ×, every other field gets the full width below */
+.li .input{min-width:0;width:100%}
+.li input[type=time]{-webkit-appearance:none;appearance:none;text-align:center}
+@media (max-width:560px){
+  .list .li:not(.blocks-order .li){display:flex;flex-wrap:wrap}
+  .list .li:not(.blocks-order .li) > .input{flex:1 1 100%;order:2}
+  .list .li:not(.blocks-order .li) > .input:first-child,.list .li:not(.blocks-order .li) > .input[type=time]{flex:1 1 0;order:0}
+  .list .li:not(.blocks-order .li) > .li-tools{order:1;flex:none}
+}
