@@ -434,7 +434,7 @@ const BLOCK_DEFS = {
 };
 const DETAIL_DEFS = {
   cover:'Φωτογραφία cover', weather:'Καιρός', sun:'Ανατολή / Δύση', wrap:'Εκτιμώμενο wrap',
-  tagline:'Tagline', parking:'Parking', hospital:'Νοσοκομείο',
+  tagline:'Tagline', parking:'Parking', hospital:'Νοσοκομείο', lunch:'Break / Φαγητό',
 };
 
 /* ---------- helpers ---------- */
@@ -480,10 +480,11 @@ function blankOrdino(){
     look: { theme: 'glass', accent: '#d40000', size: 'normal', header: 'centred' },
     project: { title: '', artist: '', company: '', logo: '', cover: '', coverPos: { x: 50, y: 40, z: 1, o: 0.25 } },
     day: { date: d, index: 1, count: 1, callTime: '08:00', wrapTime: '', label: 'GENERAL ORDINO', unit: '' },
-    details: { cover: true, weather: true, sun: true, wrap: true, tagline: false, parking: false, hospital: false },
+    details: { cover: true, weather: true, sun: true, wrap: true, tagline: false, parking: false, hospital: false, lunch: false },
     blocks: Object.keys(BLOCK_DEFS).map(key => ({ key, on: ['groupcalls','location','program','note'].includes(key), title: '' })),
     groupCalls: [ { who: 'Production crew', time: '07:00' }, { who: 'Cast / Make-up', time: '07:30' } ],
     loc: { name: '', address: '', link: '', contact: '', phone: '', parking: '', hospital: '', lat: '', lon: '' },
+    lunch: '',
     program: [ { from: '08:00', to: '09:00', what: 'Προετοιμασία' }, { from: '09:00', to: '13:00', what: 'Γύρισμα' } ],
     scenes: [], cast: [], crew: [], contacts: [], extraLocs: [],
     notes: '', tagline: '',
@@ -772,6 +773,7 @@ function renderOrdino(o, { wx = null, interactive = true, updatedAt = null } = {
           <div><div class="o-call-k">Call</div><div class="o-call-time">${esc(D.callTime || '--:--')}</div></div>
           <div class="o-call-side">
             ${det.wrap && D.wrapTime ? `<span>Wrap <b>${esc(D.wrapTime)}</b></span>` : ''}
+            ${det.lunch && o.lunch ? `<span>Break <b>${esc(o.lunch)}</b></span>` : ''}
             ${D.unit ? `<span>${esc(D.unit)}</span>` : ''}
           </div>
         </div>
@@ -1323,7 +1325,7 @@ function viewEditor(o){
       h('div', { class: 'row' }, txt(o.day, 'label', 'Επικεφαλίδα', { ph: 'GENERAL ORDINO' }), txt(o.day, 'date', 'Ημερομηνία', { type: 'date' })),
       h('div', { class: 'row' }, txt(o.day, 'callTime', 'General call', { type: 'time' }), txt(o.day, 'wrapTime', 'Εκτιμώμενο wrap', { type: 'time' }),
         txt(o.day, 'index', 'Ημέρα', { type: 'number', inputmode: 'numeric' }), txt(o.day, 'count', 'από', { type: 'number', inputmode: 'numeric' })),
-      h('div', { class: 'row' }, txt(o.day, 'unit', 'Unit (προαιρετικό)', { ph: 'Main unit' }))),
+      h('div', { class: 'row' }, txt(o.day, 'unit', 'Unit (προαιρετικό)', { ph: 'Main unit' }), txt(o, 'lunch', 'Break / Φαγητό', { type: 'time' }))),
 
     section('Εμφάνιση', 'θέμα, χρώμα, cover', true,
       h('div', { class: 'field' }, h('span', {}, 'Θέμα'), seg(o.look, 'theme', [['dark','Dark'],['glass','Glass'],['light','Light']])),
