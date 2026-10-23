@@ -645,10 +645,12 @@ export default function Deliveries() {
                   </>
                 )}
               </div>
-              {!upload && (draft.files || []).length > 1 && (
+              {/* what is already up stays in view, one line each, even with one file and while more go up (Alex, 23 Oct:
+                  "so we can see what is there and check it") */}
+              {(draft.files || []).length > 0 && (
                 <ul className="deliv-files">
-                  {draft.files.map((f) => <li key={f.url}><span>{f.name}</span><small className="muted">{f.size > 1e9 ? `${(f.size / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(f.size / 1e6))} MB`}</small></li>)}
-                  <li className="muted small">The page shows Download all and a button for each file.</li>
+                  {draft.files.map((f, i) => <li key={`${f.url}-${i}`}><span><a href={f.url} target="_blank" rel="noreferrer">{f.name}</a></span><small className="muted">{f.size > 1e9 ? `${(f.size / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(f.size / 1e6))} MB`}</small></li>)}
+                  <li className="muted small">{draft.files.length > 1 ? `${draft.files.length} files up. The page shows Download all and a button for each file.` : '1 file up.'}</li>
                 </ul>
               )}
               {upload && (
