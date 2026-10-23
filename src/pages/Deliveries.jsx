@@ -168,7 +168,7 @@ export default function Deliveries() {
       pin: r.pin || '', fine: d.fine || '', message: d.message || '', creditsText: d.creditsText || '', thumbs: d.thumbs || [], pcFolder: d.pcFolder || '',
     })
   }
-  const creditsOf = (projectId) => creditsFromProject(state.projects.find((x) => x.id === projectId), state.workspace.name)
+  const creditsOf = (projectId) => creditsFromProject(state.projects.find((x) => x.id === projectId), state.workspace.name, { users: state.users || [], settings: state.settings })
   const pickProject = (projectId) => {
     const p = state.projects.find((x) => x.id === projectId)
     setDraft((d) => ({
