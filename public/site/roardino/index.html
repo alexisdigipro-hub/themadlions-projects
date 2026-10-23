@@ -96,6 +96,11 @@ a{color:inherit}
 .section > summary .chev{margin-left:auto;transition:transform .2s;color:var(--muted)}
 .section[open] > summary .chev{transform:rotate(180deg)}
 .section .inner{padding:0 16px 16px;display:flex;flex-direction:column;gap:12px}
+.section > summary .head-sw{margin-left:auto;display:flex}
+.section > summary .head-sw + .chev{margin-left:0}
+.section > summary .off-note{display:none}
+.section.off > summary{color:var(--muted)}
+.section.off > summary .off-note{display:inline}
 .row{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
 .field{display:flex;flex-direction:column;gap:6px;min-width:0}
 .field > span{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.02em}
@@ -224,6 +229,15 @@ body.embedded::before{display:none}
 .me{display:inline-flex;align-items:center;gap:8px}
 .me .o-av{object-fit:cover;width:26px;height:26px;font-size:11px;background:color-mix(in srgb,var(--brand) 30%,transparent);color:#fff;border-radius:50%;display:grid;place-items:center;font-weight:700}
 .save-state{font-size:12px;color:var(--muted);font-weight:500}
+.topbar .tb > span:first-child{display:flex}
+.topbar .tb svg{width:17px;height:17px}
+/* the editor's bar on a phone: Duplicate and Send as round icons, so nothing runs off the screen */
+@media (max-width:560px){
+  .topbar{gap:8px}
+  .topbar .tb{width:40px;height:40px;padding:0;border-radius:50%;flex:none}
+  .topbar .tb .lbl{display:none}
+  .topbar .save-state{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
 .center-note{min-height:50vh;display:grid;place-items:center;color:var(--muted)}
 
 /* ---------- Modal ---------- */
@@ -432,10 +446,10 @@ const BLOCK_DEFS = {
   contacts:   'Επαφές παραγωγής',
   note:       'Σημείωση',
 };
-const DETAIL_DEFS = {
-  cover:'Φωτογραφία cover', weather:'Καιρός', sun:'Ανατολή / Δύση', wrap:'Εκτιμώμενο wrap',
-  tagline:'Tagline', parking:'Parking', hospital:'Νοσοκομείο', lunch:'Break / Φαγητό',
-};
+// what has a switch (Alex, 23 Oct): only what comes on its own (weather, sun) and the cover photo;
+// every typed field shows when it is filled and stays out when empty
+const OLD_DETAILS = { wrap: o => { o.day.wrapTime = ''; }, lunch: o => { o.lunch = ''; }, tagline: o => { o.tagline = ''; },
+  parking: o => { o.loc.parking = ''; }, hospital: o => { o.loc.hospital = ''; } };
 
 /* ---------- helpers ---------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -457,6 +471,7 @@ function h(tag, attrs = {}, ...kids){
   return el;
 }
 const ICON = {
+  dup:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15H4a1 1 0 01-1-1V4a1 1 0 011-1h10a1 1 0 011 1v1"/></svg>',
   stats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
   back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
   share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>',
@@ -480,7 +495,7 @@ function blankOrdino(){
     look: { theme: 'glass', accent: '#d40000', size: 'normal', header: 'centred' },
     project: { title: '', artist: '', company: '', logo: '', cover: '', coverPos: { x: 50, y: 40, z: 1, o: 0.25 } },
     day: { date: d, index: 1, count: 1, callTime: '08:00', wrapTime: '', label: 'GENERAL ORDINO', unit: '' },
-    details: { cover: true, weather: true, sun: true, wrap: true, tagline: false, parking: false, hospital: false, lunch: false },
+    details: { cover: true, weather: true, sun: true },
     blocks: Object.keys(BLOCK_DEFS).map(key => ({ key, on: ['groupcalls','location','program','note'].includes(key), title: '' })),
     groupCalls: [ { who: 'Production crew', time: '07:00' }, { who: 'Cast / Make-up', time: '07:30' } ],
     loc: { name: '', address: '', link: '', contact: '', phone: '', parking: '', hospital: '', lat: '', lon: '' },
@@ -499,6 +514,9 @@ function normalize(o){
   out.blocks = (out.blocks || []).filter(x => BLOCK_DEFS[x.key]);
   for (const key of Object.keys(BLOCK_DEFS)) if (!known.has(key)) out.blocks.push({ key, on: false, title: '' });
   for (const k of ['groupCalls','program','scenes','cast','crew','contacts','extraLocs']) if (!Array.isArray(out[k])) out[k] = [];
+  // before 23 Oct these had a switch: a value typed but switched off stays hidden, so it is cleared, then the switch goes
+  const was = (o || {}).details || {};
+  for (const [k, clear] of Object.entries(OLD_DETAILS)){ if (was[k] === false) clear(out); delete out.details[k]; }
   return out;
 }
 
@@ -510,6 +528,8 @@ async function listOrdinos(){ const { data, error } = await sb.from('roardino_or
 async function getOrdino(id){ const { data, error } = await sb.from('roardino_ordinos').select(COLS).eq('id', id).maybeSingle(); if (error) throw error; return data && rowToOrdino(data); }
 async function createOrdino(o){ const { data, error } = await sb.from('roardino_ordinos').insert({ data: toData(o) }).select(COLS).single(); if (error) throw error; return rowToOrdino(data); }
 async function saveOrdino(o){ const { error } = await sb.from('roardino_ordinos').update({ data: toData(o), updated_at: new Date().toISOString() }).eq('id', o.id); if (error) throw error; }
+// Duplicate (Alex, 23 Oct): a new ordino with everything in it, not yet sent (no link of its own)
+async function duplicateOrdino(o){ const c = clone(o); c.project.title = (c.project.title || 'Ordino') + ' (αντίγραφο)'; return createOrdino(c); }
 async function deleteOrdino(id){ const { error } = await sb.from('roardino_ordinos').delete().eq('id', id); if (error) throw error; }
 function localDrafts(){ try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; } }
 async function importLocalDrafts(){
@@ -717,8 +737,8 @@ function renderOrdino(o, { wx = null, interactive = true, updatedAt = null } = {
             ${m ? `<a class="o-btn" href="${esc(m)}" target="_blank" rel="noopener">Open in Maps</a>` : ''}
           </div>` : ''}
 
-          ${det.parking && l.parking ? `<div class="o-kv"><span class="k">Parking</span><span class="v">${esc(l.parking)}</span></div>` : ''}
-          ${det.hospital && l.hospital ? `<div class="o-kv"><span class="k">Πλησιέστερο νοσοκομείο</span><span class="v">${linkify(l.hospital)}</span></div>` : ''}
+          ${l.parking ? `<div class="o-kv"><span class="k">Parking</span><span class="v">${esc(l.parking)}</span></div>` : ''}
+          ${l.hospital ? `<div class="o-kv"><span class="k">Πλησιέστερο νοσοκομείο</span><span class="v">${linkify(l.hospital)}</span></div>` : ''}
           ${extra.length ? `<div class="o-xloc"><div class="o-xloc-h">Extra Locations</div>${extra.map(x => {
             const xd = dirUrl(x);
             return `<div class="o-xloc-r"><span>${x.name ? `<b>${esc(x.name)}</b>` : ''}${x.name && x.address ? ' · ' : ''}${esc(x.address || '')}</span>${xd ? `<a href="${esc(xd)}" target="_blank" rel="noopener">Directions</a>` : ''}</div>`;
@@ -772,14 +792,14 @@ function renderOrdino(o, { wx = null, interactive = true, updatedAt = null } = {
         <div class="o-call">
           <div><div class="o-call-k">Call</div><div class="o-call-time">${esc(D.callTime || '--:--')}</div></div>
           <div class="o-call-side">
-            ${det.wrap && D.wrapTime ? `<span>Wrap <b>${esc(D.wrapTime)}</b></span>` : ''}
-            ${det.lunch && o.lunch ? `<span>Break <b>${esc(o.lunch)}</b></span>` : ''}
+            ${D.wrapTime ? `<span>Wrap <b>${esc(D.wrapTime)}</b></span>` : ''}
+            ${o.lunch ? `<span>Break <b>${esc(o.lunch)}</b></span>` : ''}
             ${D.unit ? `<span>${esc(D.unit)}</span>` : ''}
           </div>
         </div>
         ${chips.length ? `<div class="o-chips">${chips.join('')}</div>` : ''}
       </section>
-      ${det.tagline && o.tagline ? `<div class="o-tag">${esc(o.tagline)}</div>` : ''}
+      ${o.tagline ? `<div class="o-tag">${esc(o.tagline)}</div>` : ''}
       ${blocks}
       <footer class="o-foot">
         ${interactive ? `<div class="o-btns"><button class="o-btn" data-act="ics" type="button">${ICON.cal}Στο ημερολόγιο</button>${navigator.share ? `<button class="o-btn" data-act="share" type="button">${ICON.share}Κοινοποίηση</button>` : ''}</div>` : ''}
@@ -1132,7 +1152,7 @@ async function viewHome(){
     h('div', { class: 'card-actions' },
       EMBED ? h('button', { class: 'btn small primary', onclick: e => { e.currentTarget.disabled = true; sendToChat(o).finally(() => { e.target.disabled = false; }); } }, 'Στείλε') : null,
       h('a', { class: 'btn small' + (EMBED ? '' : ' primary'), href: '#edit/' + o.id }, EMBED ? 'Άλλαξε' : 'Άνοιγμα'),
-      h('button', { class: 'btn small', onclick: async () => { const c = clone(o); c.project.title = (c.project.title || 'Ordino') + ' (αντίγραφο)'; try { await createOrdino(c); toast('Έγινε αντίγραφο'); viewHome(); } catch { toast('Δεν έγινε αντίγραφο'); } } }, 'Αντίγραφο'),
+      h('button', { class: 'btn small', onclick: async () => { try { await duplicateOrdino(o); toast('Έγινε αντίγραφο'); viewHome(); } catch { toast('Δεν έγινε αντίγραφο'); } } }, 'Duplicate'),
       h('button', { class: 'btn small ghost danger', onclick: async () => {
         if (!confirm(o.token ? 'Να διαγραφεί αυτό το ordino; Το link που έστειλες θα σταματήσει να ανοίγει.' : 'Να διαγραφεί αυτό το ordino;')) return;
         try { await deleteOrdino(o.id); viewHome(); } catch { toast('Δεν διαγράφηκε'); }
@@ -1247,6 +1267,15 @@ function viewEditor(o){
   const tog = (obj, key, label) => h('label', { class: 'toggle' }, label, h('input', { type: 'checkbox', class: 'switch', checked: !!obj[key], onchange: e => { obj[key] = e.target.checked; changed(); } }));
   const section = (title, sub, open, ...body) => h('details', { class: 'section', open }, h('summary', {}, title, sub ? h('span', { class: 'sub' }, sub) : null, h('span', { class: 'chev', html: ICON.down.replace('<svg', '<svg width="18" height="18"') })), h('div', { class: 'inner' }, ...body));
 
+  const blockSection = (key, open, ...body) => {
+    const b = o.blocks.find(x => x.key === key);
+    const sw = h('input', { type: 'checkbox', class: 'switch', checked: b.on, title: 'Φαίνεται στο ordino', 'aria-label': 'Φαίνεται στο ordino',
+      onclick: e => e.stopPropagation(), onchange: e => { b.on = e.target.checked; node.classList.toggle('off', !b.on); changed(); } });
+    const node = h('details', { class: 'section' + (b.on ? '' : ' off'), open }, h('summary', {}, BLOCK_DEFS[key], h('span', { class: 'sub off-note' }, 'κρυφό'), h('span', { class: 'head-sw', onclick: e => e.stopPropagation() }, sw),
+      h('span', { class: 'chev', html: ICON.down.replace('<svg', '<svg width="18" height="18"') })), h('div', { class: 'inner' }, ...body));
+    return node;
+  };
+
   /* repeatable list editor */
   function listEditor(arrKey, cols, blank, addLabel){
     const wrap = h('div', { class: 'list' });
@@ -1281,10 +1310,9 @@ function viewEditor(o){
   const range = (label, key, min, max, step) => h('label', { class: 'field' }, h('span', {}, label),
     h('input', { class: 'range', type: 'range', min, max, step, value: o.project.coverPos[key], oninput: e => { o.project.coverPos[key] = +e.target.value; changed(); } }));
 
-  /* blocks order + visibility */
+  /* blocks: the order and an own title here, on/off on each section's own head */
   const blocksWrap = h('div', { class: 'list blocks-order' });
   const drawBlocks = () => blocksWrap.replaceChildren(...o.blocks.map((b, i) => h('div', { class: 'li' },
-    h('input', { type: 'checkbox', class: 'switch', checked: b.on, title: 'Εμφάνιση', onchange: e => { b.on = e.target.checked; changed(); } }),
     h('input', { class: 'input', value: b.title, placeholder: BLOCK_DEFS[b.key], 'aria-label': 'Τίτλος ενότητας', oninput: e => { b.title = e.target.value; changed(); } }),
     h('div', { class: 'li-tools' },
       h('button', { class: 'btn ghost', type: 'button', html: ICON.up, disabled: i === 0, title: 'Πάνω', onclick: () => { [o.blocks[i - 1], o.blocks[i]] = [o.blocks[i], o.blocks[i - 1]]; drawBlocks(); changed(); } }),
@@ -1320,33 +1348,25 @@ function viewEditor(o){
   };
 
   const form = h('div', { class: 'form' },
-    section('Βασικά', 'τίτλος, ημέρα, call', true,
+    section('Project', 'πελάτης, τίτλος, εταιρεία', true,
       h('div', { class: 'row' }, txt(o.project, 'artist', 'Πελάτης / Καλλιτέχνης', { ph: 'π.χ. Disney' }), txt(o.project, 'title', 'Τίτλος project', { ph: 'π.χ. The Lion King' })),
+      txt(o.project, 'company', 'Εταιρεία (υπογραφή στο τέλος)', { ph: 'π.χ. THEMADLIONS' })),
+
+    section('Η μέρα', 'επικεφαλίδα, ημερομηνία, unit', true,
       h('div', { class: 'row' }, txt(o.day, 'label', 'Επικεφαλίδα', { ph: 'GENERAL ORDINO' }), txt(o.day, 'date', 'Ημερομηνία', { type: 'date' })),
+      h('div', { class: 'row' }, txt(o.day, 'index', 'Ημέρα', { type: 'number', inputmode: 'numeric' }), txt(o.day, 'count', 'από', { type: 'number', inputmode: 'numeric' }),
+        txt(o.day, 'unit', 'Unit', { ph: 'Main unit' }))),
+
+    section('Ώρες', 'call, wrap, break', true,
       h('div', { class: 'row' }, txt(o.day, 'callTime', 'General call', { type: 'time' }), txt(o.day, 'wrapTime', 'Εκτιμώμενο wrap', { type: 'time' }),
-        txt(o.day, 'index', 'Ημέρα', { type: 'number', inputmode: 'numeric' }), txt(o.day, 'count', 'από', { type: 'number', inputmode: 'numeric' })),
-      h('div', { class: 'row' }, txt(o.day, 'unit', 'Unit (προαιρετικό)', { ph: 'Main unit' }), txt(o, 'lunch', 'Break / Φαγητό', { type: 'time' }))),
+        txt(o, 'lunch', 'Break / Φαγητό', { type: 'time' })),
+      txt(o, 'tagline', 'Γραμμή κάτω από το call', { ph: 'π.χ. Φροντίστε για ζεστά ρούχα.' }),
+      h('div', { class: 'hint' }, 'Ό,τι συμπληρώνεις φαίνεται στο ordino, ό,τι αφήνεις κενό δεν φαίνεται.')),
 
-    section('Εμφάνιση', 'θέμα, χρώμα, cover', true,
-      h('div', { class: 'field' }, h('span', {}, 'Θέμα'), seg(o.look, 'theme', [['dark','Dark'],['glass','Glass'],['light','Light']])),
-      h('div', { class: 'field' }, h('span', {}, 'Χρώμα'), h('div', { class: 'swatches' }, sws, colorIn)),
-      h('div', { class: 'row' },
-        h('div', { class: 'field' }, h('span', {}, 'Κεφαλίδα'), seg(o.look, 'header', [['centred','Κέντρο'],['left','Αριστερά']])),
-        h('div', { class: 'field' }, h('span', {}, 'Μέγεθος γραμμάτων'), seg(o.look, 'size', [['normal','Κανονικό'],['small','Μικρό']]))),
-      h('div', { class: 'row' }, imagePicker('Φωτογραφία cover', 'cover', 1400, 'image/jpeg'), imagePicker('Λογότυπο', 'logo', 400, 'image/png', true)),
-      h('div', { class: 'row' }, range('Θέση οριζόντια', 'x', 0, 100, 1), range('Θέση κάθετα', 'y', 0, 100, 1)),
-      h('div', { class: 'row' }, range('Zoom', 'z', 1, 2.5, 0.05), range('Σκοτείνιασμα', 'o', 0, 0.85, 0.05)),
-      txt(o.project, 'company', 'Υπογραφή στο τέλος (εταιρεία)', { ph: 'π.χ. THEMADLIONS' })),
-
-    section('Τι φαίνεται', 'ενότητες & λεπτομέρειες', false,
-      h('div', { class: 'hint' }, 'Άναψε/σβήσε ενότητες, άλλαξε τη σειρά τους και, αν θες, δώσε δικό σου τίτλο.'),
-      blocksWrap,
-      h('div', { class: 'toggles' }, Object.entries(DETAIL_DEFS).map(([k, l]) => tog(o.details, k, l)))),
-
-    section('Calls ανά ομάδα', null, true,
+    blockSection('groupcalls', true,
       listEditor('groupCalls', [{ key: 'time', ph: 'Ώρα', type: 'time', w: '110px' }, { key: 'who', ph: 'Ποιος / ομάδα' }], { time: '', who: '' }, 'Ομάδα')),
 
-    section('Τοποθεσία', null, true,
+    blockSection('location', true,
       h('div', { class: 'row' }, txt(o.loc, 'name', 'Όνομα χώρου', { ph: 'π.χ. Boulevart Studios', after: autoGeo }), txt(o.loc, 'address', 'Διεύθυνση', { ph: 'Οδός, αριθμός, πόλη', after: autoGeo })),
       h('label', { class: 'field' }, h('span', {}, 'Link Google Maps'),
         h('input', { class: 'input', type: 'url', inputmode: 'url', value: o.loc.link || '', placeholder: 'https://maps.app.goo.gl/…',
@@ -1359,6 +1379,7 @@ function viewEditor(o){
             if (!c) autoGeo();
           } })),
       mapHint, geoStatus,
+      h('div', { class: 'toggles' }, tog(o.details, 'weather', 'Καιρός'), tog(o.details, 'sun', 'Ανατολή / Δύση')),
       h('div', { class: 'row' }, txt(o.loc, 'contact', 'Υπεύθυνος χώρου'), txt(o.loc, 'phone', 'Τηλέφωνο', { type: 'tel', inputmode: 'tel' })),
       txt(o.loc, 'parking', 'Parking', { area: true, ph: 'Πού παρκάρουμε, οδηγίες πρόσβασης…' }),
       txt(o.loc, 'hospital', 'Πλησιέστερο νοσοκομείο', { ph: 'Όνομα, διεύθυνση, τηλέφωνο' }),
@@ -1366,21 +1387,33 @@ function viewEditor(o){
         h('div', { class: 'hint' }, 'Κι άλλοι χώροι της μέρας (π.χ. parking, base, catering). Το καθένα βγαίνει με δικό του Directions.'),
         listEditor('extraLocs', [{ key: 'name', ph: 'Όνομα' }, { key: 'address', ph: 'Διεύθυνση' }, { key: 'link', ph: 'Link Google Maps', type: 'url' }], { name: '', address: '', link: '' }, 'Τοποθεσία'))),
 
-    section('Πρόγραμμα', null, true,
+    blockSection('program', true,
       listEditor('program', [{ key: 'from', ph: 'Από', type: 'time', w: '100px' }, { key: 'to', ph: 'Έως', type: 'time', w: '100px' }, { key: 'what', ph: 'Τι γίνεται' }], { from: '', to: '', what: '' }, 'Γραμμή')),
 
-    section('Σημείωση & tagline', null, false,
-      txt(o, 'notes', 'Σημείωση', { area: true, ph: 'Πληροφορίες, τηλέφωνα επικοινωνίας… (τα τηλέφωνα γίνονται κλικ)' }),
-      txt(o, 'tagline', 'Tagline (κουτί κάτω από το call)', { ph: 'π.χ. Φροντίστε για ζεστά ρούχα.' })),
-
-    section('Σκηνές', null, false,
+    blockSection('scenes', false,
       listEditor('scenes', [{ key: 'num', ph: 'Σκ.', w: '70px' }, { key: 'desc', ph: 'Περιγραφή' }, { key: 'meta', ph: 'INT/EXT · Μέρα', w: '1fr' }], { num: '', desc: '', meta: '' }, 'Σκηνή')),
-    section('Cast', null, false,
+    blockSection('cast', false,
       listEditor('cast', [{ key: 'name', ph: 'Όνομα' }, { key: 'role', ph: 'Ρόλος' }, { key: 'time', ph: 'Call', type: 'time', w: '100px' }], { name: '', role: '', time: '' }, 'Ηθοποιός')),
-    section('Crew', null, false,
+    blockSection('crew', false,
       listEditor('crew', [{ key: 'name', ph: 'Όνομα' }, { key: 'role', ph: 'Θέση' }, { key: 'time', ph: 'Call', type: 'time', w: '100px' }], { name: '', role: '', time: '' }, 'Μέλος')),
-    section('Επαφές παραγωγής', null, false,
+    blockSection('contacts', false,
       listEditor('contacts', [{ key: 'name', ph: 'Όνομα' }, { key: 'role', ph: 'Θέση' }, { key: 'phone', ph: 'Τηλέφωνο', type: 'tel', inputmode: 'tel' }], { name: '', role: '', phone: '' }, 'Επαφή')),
+    blockSection('note', false,
+      txt(o, 'notes', 'Σημείωση', { area: true, ph: 'Πληροφορίες, τηλέφωνα επικοινωνίας… (τα τηλέφωνα γίνονται κλικ)' })),
+
+    section('Εμφάνιση', 'θέμα, χρώμα, cover, σειρά', false,
+      h('div', { class: 'field' }, h('span', {}, 'Θέμα'), seg(o.look, 'theme', [['dark','Dark'],['glass','Glass'],['light','Light']])),
+      h('div', { class: 'field' }, h('span', {}, 'Χρώμα'), h('div', { class: 'swatches' }, sws, colorIn)),
+      h('div', { class: 'row' },
+        h('div', { class: 'field' }, h('span', {}, 'Κεφαλίδα'), seg(o.look, 'header', [['centred','Κέντρο'],['left','Αριστερά']])),
+        h('div', { class: 'field' }, h('span', {}, 'Μέγεθος γραμμάτων'), seg(o.look, 'size', [['normal','Κανονικό'],['small','Μικρό']]))),
+      h('div', { class: 'row' }, imagePicker('Φωτογραφία cover', 'cover', 1400, 'image/jpeg'), imagePicker('Λογότυπο', 'logo', 400, 'image/png', true)),
+      tog(o.details, 'cover', 'Δείξε τη φωτογραφία cover'),
+      h('div', { class: 'row' }, range('Θέση οριζόντια', 'x', 0, 100, 1), range('Θέση κάθετα', 'y', 0, 100, 1)),
+      h('div', { class: 'row' }, range('Zoom', 'z', 1, 2.5, 0.05), range('Σκοτείνιασμα', 'o', 0, 0.85, 0.05)),
+      h('div', { class: 'field' }, h('span', {}, 'Σειρά ενοτήτων'),
+        h('div', { class: 'hint' }, 'Άλλαξε τη σειρά με τα βελάκια και, αν θες, δώσε δικό σου τίτλο. Ποια φαίνονται το ανοίγεις και το κλείνεις στον τίτλο κάθε ενότητας.'),
+        blocksWrap)),
   );
 
   const ed = h('div', { class: 'editor', 'data-view': 'edit' },
@@ -1397,9 +1430,14 @@ function viewEditor(o){
       brandMark(true),
       h('div', { class: 'spacer' }),
       saveState,
+      h('button', { class: 'btn tb', title: 'Duplicate: νέο ordino με όλα αυτά μέσα', 'aria-label': 'Duplicate', onclick: async e => {
+        const b = e.currentTarget; b.disabled = true; await flush();
+        try { const c = await duplicateOrdino(o); toast('Έγινε αντίγραφο, τώρα είσαι σε αυτό'); location.hash = '#edit/' + c.id; } catch { toast('Δεν έγινε αντίγραφο'); }
+        b.disabled = false;
+      } }, h('span', { html: ICON.dup }), h('span', { class: 'lbl' }, 'Duplicate')),
       EMBED
-        ? h('button', { class: 'btn primary', onclick: async e => { const b = e.currentTarget; b.disabled = true; await flush(); await sendToChat(o); b.disabled = false; } }, h('span', { html: ICON.share }), 'Στείλε στη συνομιλία')
-        : h('button', { class: 'btn primary', onclick: () => openShare(o) }, h('span', { html: ICON.share }), 'Αποστολή link')),
+        ? h('button', { class: 'btn primary tb', 'aria-label': 'Στείλε στη συνομιλία', onclick: async e => { const b = e.currentTarget; b.disabled = true; await flush(); await sendToChat(o); b.disabled = false; } }, h('span', { html: ICON.share }), h('span', { class: 'lbl' }, 'Στείλε στη συνομιλία'))
+        : h('button', { class: 'btn primary tb', 'aria-label': 'Αποστολή link', onclick: () => openShare(o) }, h('span', { html: ICON.share }), h('span', { class: 'lbl' }, 'Αποστολή link'))),
     ed, tabs);
   document.title = (o.project.title || 'Νέο ordino') + ' · Roardino';
   refresh();
