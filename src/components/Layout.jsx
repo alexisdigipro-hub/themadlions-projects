@@ -121,9 +121,9 @@ export default function Layout() {
     { to: can(user, 'tasks') ? '/tasks' : '/notes', label: 'Organizer', show: true, icon: 'tasks', also: ['/tasks', '/notes', '/office'] },
     // the team's chat is RoarMe (Alex, 20 Oct): Hub Chat is gone, RoarMe takes its place
     { to: '/roarme', label: 'RoarMe', show: remote, icon: 'chat', also: ['/chat'] },
-    // Roardino, the ordino maker, in the hub (Alex, 23 Oct): for whoever has the Ordino permission. In the side menu
-    // only, a phone's bar keeps its five; on a phone the Overview's Ordino button shows a project's ordino
-    { to: '/roardino', label: 'Roardino', show: remote && can(user, 'callsheets'), icon: 'callsheets', phone: false },
+    // Roardino, the ordino maker, in the hub (Alex, 23 Oct): for whoever has the Ordino permission, in the side menu
+    // and in a phone's bar, right after RoarMe
+    { to: '/roardino', label: 'Roardino', show: remote && can(user, 'callsheets'), icon: 'callsheets' },
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     // Drives is a tab of the Database now (Alex, 10 Oct)
