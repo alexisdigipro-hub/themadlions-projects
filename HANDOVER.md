@@ -39,6 +39,8 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 ## Where we stopped (13 Oct 2026)
 
+**23 Oct 2026, Drives redesigned (src/pages/Drives.jsx, CSS block "Drives, the archive").** A line of numbers on top (disks, space, films archived, films on one disk only, which filters to them). Two views: Films (default: each film once, its poster from the project's cover or initials, size, date, the disks it is on as coloured chips, 1 copy / n copies) and Shelf (series in their own colour, each disk with a fill bar from its free space or from the sizes of what is on it, the posters of its films, the empty disks folded into one line of chips). A disk opens in a window (Modal) with Add project, Edit disk, Delete and, for each film, where else it is. The old Contents view is gone (its saved choice falls back to Films).
+
 **23 Oct 2026, RoarMe page and Database.** On a computer the hub's RoarMe page no longer scrolls: the content column is exactly the window's height and the RoarMe frame fills it (styles.css, after .roarme-frame). Database: Drives is the first tab (only for those with the Drives permission), and /database opens the first tab a person may see (App.jsx), so Drives for them.
 
 **23 Oct 2026.** YouTube copy without the ➤ arrows ("Role : Name", "Directed by Name"); Fill from project and Copy for YouTube in the window are no longer underlined.
