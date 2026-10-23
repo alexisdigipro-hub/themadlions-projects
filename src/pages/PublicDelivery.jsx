@@ -5,6 +5,7 @@ import { stageAction, stageLabel } from './Deliveries.jsx'
 import { SUPABASE_KEY, SUPABASE_URL } from '../lib/supabaseConfig.js'
 import { LOOK_DEFAULT, loadFont, lookProps } from '../lib/estimateLook.js'
 import { upper } from '../lib/estimate.js'
+import { copyText, youtubeCredits } from '../lib/deliveryCredits.js'
 
 const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '')
 
@@ -274,8 +275,15 @@ export default function PublicDelivery() {
   )
 }
 
-// role on the left, name on the right; a line typed with no role stands on its own across both
+// role on the left, name on the right; a line typed with no role stands on its own across both. Copy under them
+// puts them on the clipboard as plain lines for a YouTube description (Alex, 23 Oct).
 function Credits({ list }) {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    if (!(await copyText(youtubeCredits(list)))) return
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2200)
+  }
   return (
     <div className="dlv-credits-wrap">
       <h2>Credits</h2>
@@ -284,6 +292,9 @@ function Credits({ list }) {
           ? <div key={i}><dt>{c.role}</dt><dd>{c.name}</dd></div>
           : <div key={i} className="solo"><dd>{c.name}</dd></div>))}
       </dl>
+      <button type="button" className={`dlv-btn ghost dlv-each-btn dlv-credits-copy${copied ? ' done' : ''}`} onClick={copy} title="Copy the credits for a YouTube description">
+        {copied ? 'Copied' : 'Copy'}
+      </button>
     </div>
   )
 }

@@ -31,11 +31,13 @@ export function creditsFromProject(project, company = '', { users = [], settings
   }
   add('Director', project.director, 0)
   add('Producer', project.producer, 2)
-  if (company) add('Production Company', company, 3)
+  // the company closes the list (Alex, 23 Oct)
+  if (company) add('Production Company', company, 1e9)
   const people = project.contacts || []
   people.filter((c) => c.kind === 'cast').forEach((c) => add(project.category === 'Event' ? 'Talent' : 'Cast', c.name, 4))
-  // the director and the producers lead, wherever they were filed
-  const lead = (role) => (/^director$/i.test(role) ? 0 : /producer/i.test(role) && !/assistant|coordinator/i.test(role) ? 1 : null)
+  // the director and the producers lead, wherever they were filed, the director's assistant straight after the director
+  const lead = (role) => (/^director$/i.test(role) ? 0 : /^director'?s?\s+assist/i.test(role) ? 0.5
+    : /producer/i.test(role) && !/assistant|coordinator/i.test(role) ? 1 : null)
   // the team on the Budget: a line paying a member (a refund of their expenses aside), its category as the role
   const cats = budgetCategories(settings)
   /* and a person typed in by name (Alex, 23 Oct: the director's assistant was missing): a line with no member whose
@@ -68,7 +70,30 @@ export function creditsFromProject(project, company = '', { users = [], settings
 }
 
 // "Role: Name" lines into the page's rows; a line with no role is shown on its own, a role with no name not at all
-export const parseCredits = (text) => String(text || '').split('\n').map((l) => l.trim()).filter((l) => l && !/^[^:]+:$/.test(l)).map((l) => {
+// (keepEmpty keeps it, for the window's YouTube copy, where an empty role is a reminder to fill it in)
+export const parseCredits = (text, { keepEmpty = false } = {}) => String(text || '').split('\n').map((l) => l.trim()).filter((l) => l && (keepEmpty || !/^[^:]+:$/.test(l))).map((l) => {
+  if (/^[^:]+:$/.test(l)) return { role: l.slice(0, -1).trim(), name: '' }
   const m = l.match(/^([^:]{1,60}?)\s*(?::|\s[-–]\s)\s*(.+)$/)
   return m ? { role: m[1].trim(), name: m[2].trim() } : { role: '', name: l }
 })
+
+/* The credits as a YouTube description takes them (Alex, 23 Oct, his own example): VIDEO CREDITS, a blank line, then
+   one "➤ Role : Name" a line, left-aligned plain text; the director as "Directed by Name". */
+export const youtubeCredits = (rows) => ['VIDEO CREDITS', '', ...(rows || []).map((c) => (
+  !c.role ? c.name : /^director$/i.test(c.role) && c.name ? `➤ Directed by ${c.name}` : `➤ ${c.role} : ${c.name || ''}`.trimEnd()
+))].join('\n')
+
+// onto the clipboard, with the old way for a browser that refuses the new one
+export async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true } catch {}
+  const t = document.createElement('textarea')
+  t.value = text
+  t.setAttribute('readonly', '')
+  t.style.cssText = 'position:fixed;top:0;left:0;opacity:0'
+  document.body.appendChild(t)
+  t.select()
+  let ok = false
+  try { ok = document.execCommand('copy') } catch {}
+  t.remove()
+  return ok
+}
