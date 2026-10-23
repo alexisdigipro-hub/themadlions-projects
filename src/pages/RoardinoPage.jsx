@@ -6,8 +6,8 @@ import { fromOldOrdino, roardinoSrc, withLibrary } from '../lib/roardino.js'
 /* Roardino in the hub (Alex, 23 Oct 2026): the ordino maker of themadlions.com/roardino, copied to roardino/ and
    working on the hub's database (supabase/roardino.sql) and its projects. It runs in a frame on the same address as
    the hub, so it is signed in as this member and needs nothing handed over. The side menu's Roardino shows every
-   ordino; a project's Ordino tab (`project`) only that project's; the Overview's Ordino button (`see`) the project's
-   ordino as the crew get it.
+   ordino; the Overview's Ordino button (`project` + `see`) the project's ordino as the crew get it, and only when
+   the project has one. (`project` alone, one project's ordinos to edit, was the project's Ordino tab until it went.)
 
    The first time an administrator opens it, the old project ordinos (one per shoot day, in day.callSheet) are
    copied into Roardino, once (settings.roardinoMoved); the old data stays in the projects, unused. */
