@@ -39,6 +39,8 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 ## Where we stopped (13 Oct 2026)
 
+**23 Oct 2026.** YouTube copy without the ➤ arrows ("Role : Name", "Directed by Name"); Fill from project and Copy for YouTube in the window are no longer underlined.
+
 **23 Oct 2026, credits: YouTube copy and order.** `youtubeCredits(rows)` in src/lib/deliveryCredits.js writes Alex's YouTube format (VIDEO CREDITS, blank line, "➤ Role : Name", "➤ Directed by Name"); `copyText` copies with an execCommand fallback. A Copy button under the credits on the client's page (shows Copied), and Copy for YouTube in the window (keeps empty roles via `parseCredits(text, { keepEmpty: true })`). Order: Director, Director's Assistant (any "Director Assist..."), producers, cast, Budget team, crew, Editing, Production Company last.
 
 **23 Oct 2026, credits: named people and Editing.** The director's assistant was missing: she is paid on budget lines with no member (typed vendor, or the project's crew contact). Now a line counts when it has a member, or a vendor and a category whose Finance column is Crew or Post-Production (not AI/software credits); a line paying a crew contact takes that contact into the budget order and their own crew entry is skipped; a line paying a cast contact is left to Cast. An empty `Editing:` line is always added when nobody is down for editing; `parseCredits` drops any role with no name, so it never shows empty on the page.

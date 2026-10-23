@@ -7842,3 +7842,5 @@ html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--
 .dlv-credits-wrap .dlv-btn.dlv-credits-copy { display: flex; margin: 20px auto 0; min-width: 120px; justify-content: center; }
 .pub.dlv .dlv-credits-wrap .dlv-btn.dlv-credits-copy.done { border-color: var(--accent); color: var(--accent); }
 .deliv-credits-foot { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+/* Fill from project and Copy for YouTube in the window: no underline (Alex, 23 Oct) */
+.deliv-credits-head .link, .deliv-credits-foot .link { text-decoration: none; font-weight: 600; }

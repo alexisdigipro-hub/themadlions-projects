@@ -78,9 +78,9 @@ export const parseCredits = (text, { keepEmpty = false } = {}) => String(text ||
 })
 
 /* The credits as a YouTube description takes them (Alex, 23 Oct, his own example): VIDEO CREDITS, a blank line, then
-   one "➤ Role : Name" a line, left-aligned plain text; the director as "Directed by Name". */
+   one "Role : Name" a line, left-aligned plain text, no arrow in front (Alex, 23 Oct); the director as "Directed by Name". */
 export const youtubeCredits = (rows) => ['VIDEO CREDITS', '', ...(rows || []).map((c) => (
-  !c.role ? c.name : /^director$/i.test(c.role) && c.name ? `➤ Directed by ${c.name}` : `➤ ${c.role} : ${c.name || ''}`.trimEnd()
+  !c.role ? c.name : /^director$/i.test(c.role) && c.name ? `Directed by ${c.name}` : `${c.role} : ${c.name || ''}`.trimEnd()
 ))].join('\n')
 
 // onto the clipboard, with the old way for a browser that refuses the new one
