@@ -39,8 +39,23 @@ const addMin = (hhmm, min) => {
   return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
 }
 
-// the project's shoot days in date order, and the one an ordino is for: the next to come, else the last
-export const daysOf = (project) => [...(project?.shootingDays || [])].filter((d) => d.date).sort((a, b) => a.date.localeCompare(b.date))
+// the project's shoot days in date order (its own, and its Shoot days in the Calendar, `shootDates`), and the one
+// an ordino is for: the next to come, else the last
+export const daysOf = (project) => {
+  const own = (project?.shootingDays || []).filter((d) => d.date)
+  const cal = (project?.shootDates || []).filter((d) => !own.some((x) => x.date === d)).map((date) => ({ id: `cal:${date}`, date }))
+  return [...own, ...cal].sort((a, b) => a.date.localeCompare(b.date))
+}
+// a project's Shoot days in the Calendar, day by day (as lib/shootDays.js ordinoDates)
+export function shootDatesOf(projectId, events = []) {
+  const out = new Set()
+  const next = (d) => { const t = new Date(`${d}T12:00:00Z`); t.setUTCDate(t.getUTCDate() + 1); return t.toISOString().slice(0, 10) }
+  events.filter((e) => e.projectId === projectId && e.type === 'shoot' && e.date).forEach((e) => {
+    const last = e.endDate && e.endDate > e.date ? e.endDate : e.date
+    for (let d = e.date, i = 0; d <= last && i < 62; d = next(d), i += 1) out.add(d)
+  })
+  return [...out].sort()
+}
 export const nextDay = (project, today = new Date().toISOString().slice(0, 10)) => {
   const days = daysOf(project)
   return days.find((d) => d.date >= today) || days[days.length - 1] || null
@@ -73,7 +88,7 @@ export function fromProject(project, { day = nextDay(project), company = 'THEMAD
   const roleOf = (c) => (c.kind === 'cast' ? c.character || c.role || '' : c.role || c.dept || '')
   return {
     project: { title: shortTitle || project.title || '', artist, company, cover: project.coverThumb || '' },
-    day: { date: day?.date || project.startDate || '', callTime: call, wrapTime: day?.wrapTime || '', index: Math.max(1, days.indexOf(day) + 1), count: Math.max(1, days.length) },
+    day: { date: day?.date || project.startDate || '', callTime: call, wrapTime: day?.wrapTime || '', index: Math.max(1, days.findIndex((d) => d.date === day?.date) + 1), count: Math.max(1, days.length) },
     loc: locOf(loc, day?.callSheet),
     cast: people.filter((c) => c.kind === 'cast').map((c) => ({ name: c.name, role: roleOf(c), time: addMin(call, c.callOffset) })),
     crew: people.filter((c) => c.kind === 'crew').map((c) => ({ name: c.name, role: roleOf(c), time: addMin(call, c.callOffset) })),

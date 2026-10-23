@@ -1,5 +1,5 @@
 import { supabase as sb } from '../src/lib/supabase.js';
-import { fromProject, nextDay, roardinoLink, withLibrary } from '../src/lib/roardino.js';
+import { fromProject, nextDay, roardinoLink, shootDatesOf, withLibrary } from '../src/lib/roardino.js';
 /* =========================================================
    Roardino inside the hub (Alex, 23 Oct 2026): a copy of
    themadlions.com/roardino (public/site/roardino) on the hub's
@@ -127,19 +127,21 @@ async function loadMe(){
   me = m || null;
   const level = !me ? 'none' : me.role === 'admin' ? 'edit' : ((me.permissions || {}).callsheets || 'none');
   canEdit = level === 'edit'; canView = level !== 'none';
-  const [{ data: ps }, lib] = await Promise.all([
+  const [{ data: ps }, ev, lib] = await Promise.all([
     sb.from('projects').select('id,data'),
+    sb.from('events').select('id,data').then(r => r, () => ({ data: [] })),
     sb.from('library').select('id,kind,data').in('kind', ['contact', 'location']).then(r => r, () => ({ data: [] })),
   ]);
   const rows = (lib && lib.data) || [];
   library = { contacts: rows.filter(r => r.kind === 'contact').map(r => ({ ...r.data, id: r.id })), locations: rows.filter(r => r.kind === 'location').map(r => ({ ...r.data, id: r.id })) };
-  projects = (ps || []).map(r => ({ ...r.data, id: r.id })).filter(p => !p.deleted).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+  const events = ((ev && ev.data) || []).map(r => r.data || {});
+  projects = (ps || []).map(r => ({ ...r.data, id: r.id, shootDates: shootDatesOf(r.id, events) })).filter(p => !p.deleted).sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
 }
 // an ordino filled from a hub project (its next shoot day): name, cover, date, call, location, people
 function fillFromProject(o, p){
   const f = fromProject(withLibrary(p, library), { day: nextDay(p) });
   Object.assign(o.project, f.project);
-  Object.assign(o.day, f.day);
+  for (const [k, v] of Object.entries(f.day)) if (v !== '') o.day[k] = v; // a day from the Calendar has no call: the ordino's stays
   Object.assign(o.loc, f.loc);
   for (const k of ['cast', 'crew', 'contacts']) if (f[k].length){ o[k] = f[k]; const b = o.blocks.find(x => x.key === k); if (b) b.on = true; }
   o.projectId = p.id;

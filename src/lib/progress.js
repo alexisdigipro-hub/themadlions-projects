@@ -43,8 +43,9 @@ export function projectProgress(p, settings) {
       { key: 'cast', label: 'Cast attached', weight: 8, done: chars.length ? castDone : (p.contacts || []).some((c) => c.kind === 'cast') ? 1 : 0, to: 'people' },
       { key: 'locations', label: 'Locations set', weight: 8, done: clamp(locDone), to: 'people?tab=locations' },
       { key: 'shots', label: 'Shot list', weight: 8, done: clamp(shotsScenes), to: 'shots' },
-      // the stripboard was taken out (Alex, 10 Oct): the stage is done once the project has its ordino
-      { key: 'schedule', label: 'Ordino', weight: 12, done: days.length ? 1 : 0, to: 'schedule' },
+      // the stripboard was taken out (Alex, 10 Oct): the stage is done once the project has its shoot days;
+      // no tab of its own since the Ordino tab went (23 Oct), so it opens the Overview
+      { key: 'schedule', label: 'Ordino', weight: 12, done: days.length ? 1 : 0, to: '' },
     ]
   }
   // settings.progress[category] = { off: [keys], weights: {key: n}, custom: [{ key, label, weight }] }

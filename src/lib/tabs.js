@@ -18,10 +18,9 @@ export function projectTabs(project) {
       { to: 'script', label: 'Script & Breakdown', key: 'script', icon: 'script' },
       { to: 'shots', label: 'Shotlist', key: 'shots', icon: 'shots' },
     ]),
-    // Call sheets is framed inside Schedule now (its own permission still gates that section)
-    // Ordino (Alex, 10 Oct): only for whoever may edit it, like an administrator; everyone else sees
-    // the finished ordino on the Overview instead
-    { to: 'schedule', label: 'Ordino', key: 'callsheets', level: 'edit', icon: 'schedule' },
+    // the Ordino tab is gone (Alex, 23 Oct): the ordino is made in Roardino (side menu) and shows on the
+    // Overview's Ordino button; an Event keeps the tab for its Run of show
+    ...(cat === 'Event' ? [{ to: 'schedule', label: 'Run of show', key: 'schedule', icon: 'schedule' }] : []),
     { to: 'people', label: 'Project Database', key: ['contacts', 'locations', 'gear'], icon: 'people' },
     // opt-in: the moodboard / treatment deck, switched on per project from Edit details > Tabs
     { to: 'presentation', label: 'Presentation', key: 'projects', icon: 'deck', optIn: true },
