@@ -31,11 +31,13 @@ export function creditsFromProject(project, company = '', { users = [], settings
   }
   add('Director', project.director, 0)
   add('Producer', project.producer, 2)
-  if (company) add('Production Company', company, 3)
+  // the company closes the list (Alex, 23 Oct)
+  if (company) add('Production Company', company, 1e9)
   const people = project.contacts || []
   people.filter((c) => c.kind === 'cast').forEach((c) => add(project.category === 'Event' ? 'Talent' : 'Cast', c.name, 4))
-  // the director and the producers lead, wherever they were filed
-  const lead = (role) => (/^director$/i.test(role) ? 0 : /producer/i.test(role) && !/assistant|coordinator/i.test(role) ? 1 : null)
+  // the director and the producers lead, wherever they were filed, the director's assistant straight after the director
+  const lead = (role) => (/^director$/i.test(role) ? 0 : /^director'?s?\s+assist/i.test(role) ? 0.5
+    : /producer/i.test(role) && !/assistant|coordinator/i.test(role) ? 1 : null)
   // the team on the Budget: a line paying a member (a refund of their expenses aside), its category as the role
   const cats = budgetCategories(settings)
   /* and a person typed in by name (Alex, 23 Oct: the director's assistant was missing): a line with no member whose
