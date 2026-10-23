@@ -138,7 +138,8 @@ export default function App() {
                 <Route path="office/:pid/:docId" element={<Office />} />
                 <Route path="share" element={<Deliveries />} />
                 <Route path="database/:tab" element={<Database />} />
-                <Route path="database" element={<Navigate to="/database/locations" replace />} />
+                {/* /database opens the first tab this person may see: Drives for those with the Drives permission (Alex, 23 Oct) */}
+                <Route path="database" element={<Database />} />
                 <Route path="people" element={<Navigate to="/database/cast" replace />} />
                 <Route path="locations" element={<Navigate to="/database/locations" replace />} />
                 <Route path="finance" element={<Finance />} />
