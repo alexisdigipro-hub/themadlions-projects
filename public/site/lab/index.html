@@ -155,6 +155,24 @@ footer .wordmark { width: 130px; opacity: .6; }
   .exp { border-radius: 20px; }
   .acts .pill { flex: 1 1 auto; }
 }
+
+/* every app at a glance, at the top */
+.apps-sec { padding-bottom: clamp(50px, 7vw, 90px); }
+.apps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.app { position: relative; display: flex; flex-direction: column; gap: 10px; min-height: 190px; padding: 22px 22px 20px; border-radius: 26px; background: var(--g); border: 1px solid var(--glass-edge); overflow: hidden; color: var(--text); text-decoration: none; transition: transform .35s cubic-bezier(.2,.7,.2,1), border-color .3s; }
+.app::after { content: ''; position: absolute; inset: auto -30% -60% auto; width: 70%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--c) 45%, transparent), transparent 70%); opacity: .55; pointer-events: none; }
+.app:hover { transform: translateY(-4px); border-color: color-mix(in srgb, var(--c) 60%, transparent); }
+.app-n { font-size: 12px; letter-spacing: .24em; color: var(--muted); }
+.app-w { font-size: clamp(30px, 3vw, 42px); font-weight: 800; line-height: 1; letter-spacing: .02em; }
+.app-w.long { font-size: clamp(24px, 2.4vw, 34px); }
+.app-w span { font-weight: 200; }
+.app-d { font-size: 16px; font-weight: 300; line-height: 1.4; color: color-mix(in srgb, var(--text) 82%, transparent); max-width: 30ch; }
+.app-p { margin-top: auto; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--c); }
+.app-go { position: absolute; right: 18px; bottom: 16px; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: var(--glass); border: 1px solid var(--glass-edge); }
+.app-go svg { width: 18px; height: 18px; }
+.exp { scroll-margin-top: 90px; }
+@media (max-width: 900px) { .apps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .apps { grid-template-columns: 1fr; } .app { min-height: 150px; } }
 </style>
 </head>
 <body>
@@ -182,6 +200,12 @@ footer .wordmark { width: 130px; opacity: .6; }
     <p class="sub reveal" data-t="hero.sub">We make films, and the tools we wish we had while making them. Apps for teams, crews and anyone who works fast. Some are ready, some are still taking shape. All of them are open to try.</p>
   </div>
 
+  <!-- every app at a glance first (Alex, 25 Oct), then each one as you scroll -->
+  <section class="apps-sec">
+    <p class="label reveal" data-t="apps.label">Six apps, one family</p>
+    <div class="apps"><a class="app reveal" href="#roarme" style="--c:#ff5a4f;--g:radial-gradient(120% 90% at 20% 0%, #4a4d55, #151619)"><span class="app-n">01</span><b class="app-w"><span>ROAR</span>ME</b><span class="app-d" data-t="rm.one">The messenger for crews.</span><span class="app-p">Web · Mac · Windows · Phone</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roardino" style="--c:#ffb224;--g:radial-gradient(120% 90% at 80% 0%, #5a3a12, #140c04)"><span class="app-n">02</span><b class="app-w"><span>ROAR</span>DINO</b><span class="app-d" data-t="rd.one">The call sheet, in one link.</span><span class="app-p">Web · Phone</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarmail" style="--c:#3b82f6;--g:radial-gradient(120% 90% at 20% 0%, #1d2c52, #080b14)"><span class="app-n">03</span><b class="app-w"><span>ROAR</span>MAIL</b><span class="app-d" data-t="ml.one">Every mailbox, one private inbox.</span><span class="app-p">Mac · Windows</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarlist" style="--c:#2fd36b;--g:radial-gradient(120% 90% at 80% 0%, #1d4a35, #06110c)"><span class="app-n">04</span><b class="app-w"><span>ROAR</span>LIST</b><span class="app-d" data-t="rl.one">The shot list, frame by frame.</span><span class="app-p">Web · Mac · Windows</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roartransfer" style="--c:#7c5cff;--g:radial-gradient(120% 90% at 20% 0%, #2c2357, #0b0916)"><span class="app-n">05</span><b class="app-w long"><span>ROAR</span>TRANSFER</b><span class="app-d" data-t="rt.one">Big files, one short link, free.</span><span class="app-p">Web</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarwriter" style="--c:#ff6b2c;--g:radial-gradient(120% 90% at 80% 0%, #6a2a0a, #140803)"><span class="app-n">06</span><b class="app-w long"><span>ROAR</span>WRITER</b><span class="app-d" data-t="rw.one">Screenwriting, from page to shoot.</span><span class="app-p">Web · Mac · Windows · Phone</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a></div>
+  </section>
+
   <section>
     <p class="label reveal" data-t="exp.label">Experiments</p>
     <article class="exp reveal">
@@ -199,7 +223,7 @@ footer .wordmark { width: 130px; opacity: .6; }
           <a class="pill" href="https://alexisdigipro-hub.github.io/roarme/" target="_blank" rel="noopener" data-t="rm.open">Open the app</a>
         </div>
       </div>
-      <a class="shot" href="../roarme/" aria-label="RoarMe"><img src="roarme.jpg" alt="RoarMe on a computer: a chat with Encrypted Chat turned on" loading="lazy" width="1600" height="1000"></a>
+      <a class="shot" href="../roarme/" aria-label="RoarMe"><img src="roarme.jpg" alt="RoarMe on a computer in the Stone theme: the crew chat of a night shoot" loading="lazy" width="1600" height="1000"></a>
     </article>
 
     <article class="exp flip reveal" style="margin-top:10px">
@@ -299,11 +323,11 @@ footer .wordmark { width: 130px; opacity: .6; }
       <div>
         <span class="exp-n">Experiment 06 <i data-t="exp.live">Live · beta</i></span>
         <h2 class="long"><span class="a">ROAR</span><span class="b">WRITER</span></h2>
-        <p class="what" data-t="rw.what">Screenwriting in the industry format: film, TV, stage, musical, audio, AV and comic, in English or Greek, with a breakdown, writing together and a PDF ready to send.</p>
+        <p class="what" data-t="rw.what">Screenwriting from the first page to the shoot: nine formats in English or Greek, revisions and versions, a beat board, a storyboard and a shooting schedule, an AI that reads the whole script, and a PDF ready to send.</p>
         <ul class="usp">
           <li><span><b data-t="rw.u1">The keys of Final Draft.</b> <span data-t="rw.u1s">Enter and Tab lay out the page while you write, ΕΣΩΤ. and ΕΞΩΤ. included.</span></span></li>
-          <li><span><b data-t="rw.u2">Nine formats, and a breakdown.</b> <span data-t="rw.u2s">Each format with its own page and PDF; tag props, cast and locations with a right click.</span></span></li>
-          <li><span><b data-t="rw.u3">An AI that waits to be asked.</b> <span data-t="rw.u3s">Dialogue, a rewrite or what comes next, shown first; nothing changes until you say so.</span></span></li>
+          <li><span><b data-t="rw.u2">From the page to the shoot.</b> <span data-t="rw.u2s">Breakdown, beats, storyboard, shot list and a stripboard schedule, all from the same script.</span></span></li>
+          <li><span><b data-t="rw.u3">An AI that reads the whole script.</b> <span data-t="rw.u3s">Coverage, continuity, a budget pass, a pitch package and a translation, only when you ask.</span></span></li>
         </ul>
         <div class="acts">
           <a class="pill main" href="roarwriter/"><span data-t="rw.more">Discover RoarWriter</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
@@ -335,6 +359,9 @@ footer .wordmark { width: 130px; opacity: .6; }
     'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.contact': 'Επαφή',
     'hero.title': 'Όσα <b>φτιάχνουμε</b><br>ανάμεσα στις ταινίες.',
     'hero.sub': 'Φτιάχνουμε ταινίες, και τα εργαλεία που θα θέλαμε να έχουμε όσο τις φτιάχνουμε. Εφαρμογές για ομάδες, συνεργεία και όποιον δουλεύει γρήγορα. Κάποιες είναι έτοιμες, κάποιες παίρνουν ακόμα μορφή. Όλες είναι ανοιχτές να τις δοκιμάσεις.',
+    'apps.label': 'Έξι εφαρμογές, μία οικογένεια',
+    'rm.one': 'Το messenger για συνεργεία.', 'rd.one': 'Το ordino, σε ένα link.', 'ml.one': 'Όλα τα email, ένα ιδιωτικό inbox.',
+    'rl.one': 'Το shot list, κάδρο κάδρο.', 'rt.one': 'Μεγάλα αρχεία, ένας κοντός σύνδεσμος, δωρεάν.', 'rw.one': 'Το σενάριο, από τη σελίδα ως το γύρισμα.',
     'exp.label': 'Πειράματα', 'exp.live': 'Live · beta', 'exp.on': 'Live', 'exp.soon': 'Ετοιμάζεται',
     'rm.what': 'Το messenger για ομάδες. Φτιαγμένο για τον τρόπο που μιλάει πραγματικά ένα συνεργείο: γρήγορα, με μεγάλα αρχεία, και καμιά φορά ιδιωτικά.',
     'rm.u1': 'Χωρίς αριθμό τηλεφώνου.', 'rm.u1s': 'Μόνο το @username σου.',
@@ -355,10 +382,10 @@ footer .wordmark { width: 130px; opacity: .6; }
     'rl.u1': 'Ένα κάδρο για κάθε πλάνο.', 'rl.u1s': 'Σύρε, επικόλλησε ή διάλεξέ το, και η λίστα γίνεται storyboard.',
     'rl.u2': 'Ένα PDF για το συνεργείο.', 'rl.u2s': 'Σαν λίστα ή σαν storyboard, έτοιμο για το γύρισμα.',
     'rl.u3': 'Ο λογαριασμός σου στο RoarMe.', 'rl.u3s': 'Όλα σου τα shot lists στο cloud, στο web και σε Mac και Windows.',
-    'rw.what': 'Σενάριο στο βιομηχανικό format: ταινία, τηλεόραση, θέατρο, μιούζικαλ, audio, AV και comic, στα ελληνικά ή στα αγγλικά, με breakdown, γράψιμο μαζί και ένα PDF έτοιμο να σταλεί.',
+    'rw.what': 'Το σενάριο από την πρώτη σελίδα ως το γύρισμα: εννιά φορμά σε ελληνικά ή αγγλικά, revisions και εκδόσεις, beat board, storyboard και πρόγραμμα γυρισμάτων, ένα AI που διαβάζει όλο το σενάριο, και ένα PDF έτοιμο να σταλεί.',
     'rw.u1': 'Τα πλήκτρα του Final Draft.', 'rw.u1s': 'Το Enter και το Tab στήνουν τη σελίδα όσο γράφεις, μαζί με ΕΣΩΤ. και ΕΞΩΤ.',
-    'rw.u2': 'Εννιά format, και breakdown.', 'rw.u2s': 'Κάθε format με τη δική του σελίδα και PDF· tags για props, ηθοποιούς και locations με δεξί κλικ.',
-    'rw.u3': 'Ένα AI που περιμένει να το ρωτήσεις.', 'rw.u3s': 'Διάλογος, ξαναγράψιμο ή η συνέχεια, που φαίνονται πρώτα· τίποτα δεν αλλάζει αν δεν το πεις.',
+    'rw.u2': 'Από τη σελίδα ως το γύρισμα.', 'rw.u2s': 'Breakdown, beats, storyboard, shot list και πρόγραμμα γυρισμάτων σε stripboard, όλα από το ίδιο σενάριο.',
+    'rw.u3': 'Ένα AI που διαβάζει όλο το σενάριο.', 'rw.u3s': 'Coverage, continuity, πέρασμα προϋπολογισμού, φάκελος παρουσίασης και μετάφραση, μόνο όταν το ζητήσεις.',
     'rw.more': 'Γνώρισε το RoarWriter', 'rw.open': 'Γράψε στον browser',
     'rt.what': 'Στείλε μεγάλα αρχεία, δωρεάν και με ασφάλεια. Ως 5 GB με έναν κοντό σύνδεσμο, με email ή σαν σύνδεσμο, με κωδικό και email όταν κατέβει. Στο roartransfer.com, σε κάθε συνομιλία του RoarMe και στο RoarMail.',
     'rt.u1': '5 GB, όπως είναι.', 'rt.u1s': 'Αυθεντική ποιότητα, αληθινά ονόματα, πολλά αρχεία κάτω από έναν κοντό σύνδεσμο.',

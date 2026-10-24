@@ -241,7 +241,7 @@ ${full ? `\n## Ερωτήσεις (Greek)\n${faqEl}\n` : ''}
 - [Roardino](${BASE}roardino/): the shoot's call sheet in one link
 - [RoarMail](${BASE}lab/roarmail/): the private mail app for Mac and Windows
 - [RoarList](${BASE}lab/roarlist/): the shot list with a frame for every shot
-- [RoarWriter](${BASE}lab/roarwriter/): screenwriting in nine formats (film, TV, sitcom, stage play, musical, audio drama, AV two-column, comic), in English and Greek, with a breakdown, writing together, PDF, Final Draft, Fade In and Fountain, on Mac, Windows and the web
+- [RoarWriter](${BASE}lab/roarwriter/): screenwriting from the page to the shoot: nine formats (film, TV, sitcom, stage play, musical, audio drama, AV two-column, comic) in English and Greek, revisions and versions, a breakdown, a beat board, a storyboard and shot list, a stripboard shooting schedule, TV series with their bible, writing together, an AI that reads the whole script (coverage, continuity, budget pass, pitch package, translation), PDF, Final Draft, Fade In and Fountain, on Mac, Windows, the web and the phone
 - [RoarTransfer](https://roartransfer.com/about/): send large files free and secure at roartransfer.com, up to 5 GB with one short link, by email or link, with a password
 `
 }
