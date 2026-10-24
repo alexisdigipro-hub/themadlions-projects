@@ -172,8 +172,9 @@ footer .wordmark { width: 130px; opacity: .6; }
 .app-go svg { width: 16px; height: 16px; }
 .app:hover .app-go { color: var(--text); border-color: color-mix(in srgb, var(--c) 70%, transparent); transform: translateY(3px); }
 .exp { scroll-margin-top: 90px; }
-@media (max-width: 900px) { .apps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 560px) { .apps { grid-template-columns: 1fr; } .app { min-height: 0; padding: 20px 20px 18px; } .app-p { top: 20px; right: 20px; } }
+.app:last-child:nth-child(3n+1) { grid-column: 1 / -1; }
+@media (max-width: 900px) { .apps { grid-template-columns: repeat(2, minmax(0, 1fr)); } .app:last-child:nth-child(3n+1) { grid-column: auto; } .app:last-child:nth-child(2n+1) { grid-column: 1 / -1; } }
+@media (max-width: 560px) { .apps { grid-template-columns: 1fr; } .apps .app:last-child { grid-column: auto; } .app { min-height: 0; padding: 20px 20px 18px; } .app-p { top: 20px; right: 20px; } }
 </style>
 </head>
 <body>
@@ -204,8 +205,8 @@ footer .wordmark { width: 130px; opacity: .6; }
 
   <!-- every app at a glance first (Alex, 25 Oct), then each one as you scroll -->
   <section class="apps-sec">
-    <p class="label reveal" data-t="apps.label">Six apps, one family</p>
-    <div class="apps"><a class="app reveal" href="#roarme" style="--c:#ff5a4f;--g:radial-gradient(120% 90% at 20% 0%, #4a4d55, #151619)"><span class="app-n">01</span><b class="app-w"><span>ROAR</span>ME</b><span class="app-d" data-t="rm.one">The messenger for crews.</span><span class="app-p">Web · Mac · Windows · Phone</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roardino" style="--c:#ffb224;--g:radial-gradient(120% 90% at 80% 0%, #5a3a12, #140c04)"><span class="app-n">02</span><b class="app-w"><span>ROAR</span>DINO</b><span class="app-d" data-t="rd.one">The call sheet, in one link.</span><span class="app-p">Web · Phone</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarmail" style="--c:#3b82f6;--g:radial-gradient(120% 90% at 20% 0%, #1d2c52, #080b14)"><span class="app-n">03</span><b class="app-w"><span>ROAR</span>MAIL</b><span class="app-d" data-t="ml.one">Every mailbox, one private inbox.</span><span class="app-p">Mac · Windows</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarlist" style="--c:#2fd36b;--g:radial-gradient(120% 90% at 80% 0%, #1d4a35, #06110c)"><span class="app-n">04</span><b class="app-w"><span>ROAR</span>LIST</b><span class="app-d" data-t="rl.one">The shot list, frame by frame.</span><span class="app-p">Web · Mac · Windows</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roartransfer" style="--c:#7c5cff;--g:radial-gradient(120% 90% at 20% 0%, #2c2357, #0b0916)"><span class="app-n">05</span><b class="app-w long"><span>ROAR</span>TRANSFER</b><span class="app-d" data-t="rt.one">Big files, one short link, free.</span><span class="app-p">Web</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarwriter" style="--c:#ff6b2c;--g:radial-gradient(120% 90% at 80% 0%, #6a2a0a, #140803)"><span class="app-n">06</span><b class="app-w long"><span>ROAR</span>WRITER</b><span class="app-d" data-t="rw.one">Screenwriting, from page to shoot.</span><span class="app-p">Web · Mac · Windows · Phone</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a></div>
+    <p class="label reveal" data-t="apps.label">Seven apps, one family</p>
+    <div class="apps"><a class="app reveal" href="#roarme" style="--c:#ff5a4f;--g:radial-gradient(120% 90% at 20% 0%, #4a4d55, #151619)"><span class="app-n">01</span><b class="app-w"><span>ROAR</span>ME</b><span class="app-d" data-t="rm.one">The messenger for crews.</span><span class="app-p">Web · Mac · Windows · Phone</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roardino" style="--c:#ffb224;--g:radial-gradient(120% 90% at 80% 0%, #5a3a12, #140c04)"><span class="app-n">02</span><b class="app-w"><span>ROAR</span>DINO</b><span class="app-d" data-t="rd.one">The call sheet, in one link.</span><span class="app-p">Web · Phone</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarmail" style="--c:#3b82f6;--g:radial-gradient(120% 90% at 20% 0%, #1d2c52, #080b14)"><span class="app-n">03</span><b class="app-w"><span>ROAR</span>MAIL</b><span class="app-d" data-t="ml.one">Every mailbox, one private inbox.</span><span class="app-p">Mac · Windows</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarlist" style="--c:#2fd36b;--g:radial-gradient(120% 90% at 80% 0%, #1d4a35, #06110c)"><span class="app-n">04</span><b class="app-w"><span>ROAR</span>LIST</b><span class="app-d" data-t="rl.one">The shot list, frame by frame.</span><span class="app-p">Web · Mac · Windows</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roartransfer" style="--c:#7c5cff;--g:radial-gradient(120% 90% at 20% 0%, #2c2357, #0b0916)"><span class="app-n">05</span><b class="app-w long"><span>ROAR</span>TRANSFER</b><span class="app-d" data-t="rt.one">Big files, one short link, free.</span><span class="app-p">Web</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarwriter" style="--c:#ff6b2c;--g:radial-gradient(120% 90% at 80% 0%, #6a2a0a, #140803)"><span class="app-n">06</span><b class="app-w long"><span>ROAR</span>WRITER</b><span class="app-d" data-t="rw.one">Screenwriting, from page to shoot.</span><span class="app-p">Web · Mac · Windows · Phone</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roartwin" style="--c:#ff453a;--g:radial-gradient(120% 90% at 20% 0%, #3a1416, #0d0d0e)"><span class="app-n">07</span><b class="app-w"><span>ROAR</span>TWIN</b><span class="app-d" data-t="tw.one">Duplicates found, even the same video in another file.</span><span class="app-p">Mac · Windows</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a></div>
   </section>
 
   <section>
@@ -320,6 +321,23 @@ footer .wordmark { width: 130px; opacity: .6; }
         </div>
       </div>
     </article>
+    <article id="roartwin" class="exp reveal" style="margin-top:10px">
+      <div>
+        <span class="exp-n">Experiment 07 <i data-t="exp.new">New · beta</i></span>
+        <h2><span class="a">ROAR</span><span class="b">TWIN</span></h2>
+        <p class="what" data-t="tw.what">Finds the twins on your folders and drives: the same file twice, whatever its name, and the same video in another file, exported again in another size, codec or format. Keep one, free the space.</p>
+        <ul class="usp">
+          <li><span><b data-t="tw.u1">Not fooled by names.</b> <span data-t="tw.u1s">It compares what is inside, so a renamed copy is found and two clips that only share a name are not.</span></span></li>
+          <li><span><b data-t="tw.u2">The same video, another file.</b> <span data-t="tw.u2s">The master, the proxy, the web export: it compares the pictures, nine frames through each clip.</span></span></li>
+          <li><span><b data-t="tw.u3">Nothing is lost.</b> <span data-t="tw.u3s">Only to the Trash, and one file of each group always stays.</span></span></li>
+        </ul>
+        <div class="acts">
+          <a class="pill main" href="roartwin/"><span data-t="tw.more">Discover RoarTwin</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="roartwin/#download" data-t="rl.dl">Mac / Windows</a>
+        </div>
+      </div>
+      <a class="shot" href="roartwin/" aria-label="RoarTwin"><img src="roartwin.jpg" alt="RoarTwin on a computer: groups of twins, the same video in other files, the one to keep" loading="lazy" width="1600" height="1000"></a>
+    </article>
 
     <div class="next one">
       <div class="card reveal">
@@ -343,7 +361,7 @@ footer .wordmark { width: 130px; opacity: .6; }
     'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.about': 'Εμείς', 'nav.contact': 'Επαφή',
     'hero.title': 'Όσα <b>φτιάχνουμε</b><br>ανάμεσα στις ταινίες.',
     'hero.sub': 'Φτιάχνουμε ταινίες, και τα εργαλεία που θα θέλαμε να έχουμε όσο τις φτιάχνουμε. Εφαρμογές για ομάδες, συνεργεία και όποιον δουλεύει γρήγορα. Κάποιες είναι έτοιμες, κάποιες παίρνουν ακόμα μορφή. Όλες είναι ανοιχτές να τις δοκιμάσεις.',
-    'apps.label': 'Έξι εφαρμογές, μία οικογένεια',
+    'apps.label': 'Επτά εφαρμογές, μία οικογένεια',
     'rm.one': 'Το messenger για συνεργεία.', 'rd.one': 'Το ordino, σε ένα link.', 'ml.one': 'Όλα τα email, ένα ιδιωτικό inbox.',
     'rl.one': 'Το shot list, κάδρο κάδρο.', 'rt.one': 'Μεγάλα αρχεία, ένας κοντός σύνδεσμος, δωρεάν.', 'rw.one': 'Το σενάριο, από τη σελίδα ως το γύρισμα.',
     'exp.label': 'Πειράματα', 'exp.live': 'Live · beta', 'exp.on': 'Live', 'exp.soon': 'Ετοιμάζεται',
@@ -370,7 +388,7 @@ footer .wordmark { width: 130px; opacity: .6; }
     'rw.u1': 'Τα πλήκτρα του Final Draft.', 'rw.u1s': 'Το Enter και το Tab στήνουν τη σελίδα όσο γράφεις, μαζί με ΕΣΩΤ. και ΕΞΩΤ.',
     'rw.u2': 'Από τη σελίδα ως το γύρισμα.', 'rw.u2s': 'Breakdown, beats, storyboard, shot list και πρόγραμμα γυρισμάτων σε stripboard, όλα από το ίδιο σενάριο.',
     'rw.u3': 'Ένα AI που διαβάζει όλο το σενάριο.', 'rw.u3s': 'Coverage, continuity, πέρασμα προϋπολογισμού, φάκελος παρουσίασης και μετάφραση, μόνο όταν το ζητήσεις.',
-    'rw.more': 'Γνώρισε το RoarWriter', 'rw.open': 'Γράψε στον browser',
+    'rw.more': 'Γνώρισε το RoarWriter', 'tw.one': 'Τα διπλότυπα, ακόμα και το ίδιο βίντεο σε άλλο αρχείο.', 'tw.what': 'Βρίσκει τα δίδυμα στους φακέλους και στους δίσκους σου: το ίδιο αρχείο δύο φορές, όποιο κι αν είναι το όνομά του, και το ίδιο βίντεο σε άλλο αρχείο, ξανά export σε άλλο μέγεθος, codec ή format. Κράτα ένα, ελευθέρωσε χώρο.', 'tw.u1': 'Δεν ξεγελιέται από ονόματα.', 'tw.u1s': 'Συγκρίνει το περιεχόμενο, οπότε βρίσκει ένα αντίγραφο με άλλο όνομα και δεν μπερδεύει δύο clips που απλώς έχουν το ίδιο.', 'tw.u2': 'Το ίδιο βίντεο, άλλο αρχείο.', 'tw.u2s': 'Το master, το proxy, το export για web: συγκρίνει τις εικόνες, εννιά καρέ μέσα σε κάθε clip.', 'tw.u3': 'Τίποτα δεν χάνεται.', 'tw.u3s': 'Μόνο στον Κάδο, και ένα αρχείο από κάθε ομάδα μένει πάντα.', 'tw.more': 'Γνώρισε το RoarTwin', 'exp.new': 'Νέο · beta', 'rw.open': 'Γράψε στον browser',
     'rt.what': 'Στείλε μεγάλα αρχεία, δωρεάν και με ασφάλεια. Ως 5 GB με έναν κοντό σύνδεσμο, με email ή σαν σύνδεσμο, με κωδικό και email όταν κατέβει. Στο roartransfer.com, σε κάθε συνομιλία του RoarMe και στο RoarMail.',
     'rt.u1': '5 GB, όπως είναι.', 'rt.u1s': 'Αυθεντική ποιότητα, αληθινά ονόματα, πολλά αρχεία κάτω από έναν κοντό σύνδεσμο.',
     'rt.u2': 'Συνεχίζει από εκεί που σταμάτησε.', 'rt.u2s': 'Αν πέσει η σύνδεση, συνεχίζει αντί να ξεκινήσει από την αρχή.',
@@ -397,7 +415,7 @@ footer .wordmark { width: 130px; opacity: .6; }
 
   /* the apps' order, from Studio > Look > Lab order (site_settings.lab_order, Alex 25 Oct): the tiles at the top and the
      apps' sections below move to match, numbered and alternating left and right in their new order */
-  var APPS = ['roarme', 'roardino', 'roarmail', 'roarlist', 'roartransfer', 'roarwriter'], labOrder = null
+  var APPS = ['roarme', 'roardino', 'roarmail', 'roarlist', 'roartransfer', 'roarwriter', 'roartwin'], labOrder = null
   function orderApps(order) {
     if (!Array.isArray(order) || !order.length) return
     var ids = order.filter(function (id) { return APPS.indexOf(id) >= 0 }).concat(APPS.filter(function (id) { return order.indexOf(id) < 0 }))
