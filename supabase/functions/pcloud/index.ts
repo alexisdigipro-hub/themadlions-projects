@@ -30,8 +30,10 @@
 // backup (administrators): the files the app sends (the workspace's data) and the site's code as
 // GitHub keeps it (a zip of the main branch) go into ROOT/Backups/<date time>, so the whole thing
 // can be put back if anything happens to the site.
-// Scopes: a project (its files, photos and songs), a chat room, or the company library (the
-// people and locations of the Database page, shared by every project).
+// Scopes: a project (its files, photos and songs), a chat room, the company library (the
+// people and locations of the Database page, shared by every project), or ids: Database > ID sheets,
+// the permission "idsheets" (view to open, edit to upload or delete), files only into ROOT/ID sheets/<name>
+// and only those recorded in the id_sheets table (supabase/id_sheets.sql).
 
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from 'npm:@supabase/supabase-js@2'
@@ -84,7 +86,7 @@ async function ensureFolderId(parts: string[]) {
   return { path, folderid: Number(meta?.folderid) }
 }
 
-type Scope = { kind: 'project' | 'chat' | 'library'; id: string }
+type Scope = { kind: 'project' | 'chat' | 'library' | 'ids'; id: string }
 
 /* Is this pCloud file recorded anywhere in this piece of data? Every record the app keeps for a
    pCloud file (a project file, a photo, a song, a chat attachment) carries "fileid": <n>. */
@@ -126,6 +128,16 @@ async function allowed(db: any, uid: string, scope: Scope, fileid?: number, forD
       if (!canEdit) return false
     }
     if (fileid && !(await inLibrary(db, fileid))) return false
+    return true
+  }
+  if (scope.kind === 'ids') {
+    const { data: perm } = await db.rpc('my_perm', { p_module: 'idsheets' })
+    if (perm !== 'view' && perm !== 'edit') return false
+    if ((forDelete || forUpload) && perm !== 'edit') return false
+    if (fileid) {
+      const { data } = await db.from('id_sheets').select('id').eq('fileid', fileid).limit(1)
+      if (!data?.length) return false
+    }
     return true
   }
   if (scope.kind === 'chat') {
@@ -209,7 +221,9 @@ Deno.serve(async (req) => {
     if (action === 'upload') {
       if (!file) return json({ error: 'No file.' }, 400)
       if (!(await allowed(db, uid, body.scope, undefined, false, true))) return json({ error: 'You cannot upload there.' }, 403)
-      const path = await ensureFolder(Array.isArray(body.folder) ? body.folder : [])
+      // ID sheets only ever go under ROOT/ID sheets
+      const parts = Array.isArray(body.folder) ? body.folder : []
+      const path = await ensureFolder(body.scope?.kind === 'ids' ? ['ID sheets', ...parts.slice(-1)] : parts)
       const fd = new FormData()
       fd.append('file', file, file.name)
       const up = await pc('uploadfile', { path, filename: file.name, nopartial: 1, renameifexists: 1 }, fd)
@@ -262,7 +276,9 @@ Deno.serve(async (req) => {
       let lib: any = null
       let proj: any = null
       if (scope?.kind === 'project') proj = (await db.from('projects').select('data').eq('id', scope.id)).data?.[0]?.data
+      const ids_ = scope?.kind === 'ids' ? new Set(((await db.from('id_sheets').select('fileid').in('fileid', ids)).data || []).map((r: any) => Number(r.fileid))) : null
       const known = async (id: number) => {
+        if (ids_) return ids_.has(id)
         if (proj && mentions(proj, id)) return true
         if (lib === null) lib = (await db.from('library').select('data').in('kind', ['contact', 'location'])).data || []
         return mentions(lib, id)
