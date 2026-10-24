@@ -7950,3 +7950,55 @@ html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--
   .drv-disk { padding: 14px 12px 12px; }
   .drv-poster { width: 56px; height: 56px; }
 }
+
+/* The Share page, 2026 (Alex, 24 Oct, on a computer; the phone keeps its own tiles above): the links as soft tiles
+   in a grid that fills the page, each with its picture (the delivery's first still, else the project's cover) and
+   the stage as a tinted chip on it, the title and tags under it, and the actions as round glass icons along its
+   foot with Delete apart in red */
+.deliv-cover { display: none; }
+@media (min-width: 821px) {
+  html[data-theme] body .deliveries .deliv-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; background: none; border: 0; box-shadow: none; overflow: visible; border-radius: 0; }
+  html[data-theme] body .deliveries .deliv-list li.deliv-row {
+    position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 0; margin: 0; overflow: hidden;
+    background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); border-radius: 18px;
+    box-shadow: var(--shadow); transition: transform .25s cubic-bezier(.16, 1, .3, 1), border-color .2s, box-shadow .25s;
+  }
+  html[data-theme] body .deliveries .deliv-list li.deliv-row:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); box-shadow: 0 16px 40px rgba(0, 0, 0, .22); }
+  html[data-theme] body .deliveries .deliv-row.is-shut { opacity: .62; }
+  html[data-theme] body .deliveries .deliv-row.is-shut:hover { opacity: 1; }
+  html[data-theme] body .deliveries .deliv-cover {
+    display: block; aspect-ratio: 16 / 7; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 35%, var(--raised)), var(--raised)) center / cover no-repeat;
+    position: relative;
+  }
+  html[data-theme] body .deliveries .deliv-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(0, 0, 0, .45)); }
+  html[data-theme] body .deliveries .deliv-row .deliv-stage {
+    position: absolute; left: 12px; top: 12px; z-index: 1; margin: 0; display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px;
+    border-radius: 999px; font-size: 10.5px; color: #fff; background: rgba(15, 18, 24, .5); border: 1px solid rgba(255, 255, 255, .18);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+  html[data-theme] body .deliveries .deliv-row .deliv-stage::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .9; }
+  html[data-theme] body .deliveries .deliv-stage.s-rough::before { background: #e0a33a; opacity: 1; }
+  html[data-theme] body .deliveries .deliv-stage.s-prefinal::before { background: #6c9bd1; opacity: 1; }
+  html[data-theme] body .deliveries .deliv-stage.s-final::before, html[data-theme] body .deliveries .deliv-stage.s-estimate::before { background: #4fc27f; opacity: 1; }
+  html[data-theme] body .deliveries .deliv-stage.s-files::before { background: var(--accent); opacity: 1; }
+  html[data-theme] body .deliveries .deliv-row .grow { padding: 12px 14px 4px; display: block; }
+  html[data-theme] body .deliveries .deliv-row .grow > strong { display: block; font-size: 16.5px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  html[data-theme] body .deliveries .deliv-row .grow > .small { margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  html[data-theme] body .deliveries .deliv-tags { margin-top: 10px; }
+  html[data-theme] body .deliveries .deliv-tag { border-radius: 9px; padding: 2px 9px; background: color-mix(in srgb, var(--text) 7%, transparent); }
+  html[data-theme] body .deliveries .deliv-tag.t-quiet { background: transparent; }
+  html[data-theme] body .deliveries .deliv-quote { margin: 10px 0 0; }
+  html[data-theme] body .deliveries .deliv-tools { margin-top: auto; padding: 10px 12px 12px; display: flex; flex-wrap: nowrap; gap: 6px; justify-content: flex-start; }
+  html[data-theme] body .deliveries .deliv-tools .deliv-tool {
+    width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 50%;
+    background: color-mix(in srgb, var(--text) 6%, transparent); border: 1px solid var(--line-soft); color: var(--text);
+    transition: transform .18s, background .2s, border-color .2s;
+  }
+  html[data-theme] body .deliveries .deliv-tools .deliv-tool:hover { transform: translateY(-1px); background: var(--raised); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+  html[data-theme] body .deliveries .deliv-tools .deliv-tool .dt-t { display: none; }
+  html[data-theme] body .deliveries .deliv-tools .deliv-tool svg { width: 16px; height: 16px; }
+  html[data-theme] body .deliveries .deliv-tools .deliv-tool-x { margin-left: auto; color: var(--danger); }
+  html[data-theme] body .deliveries .deliv-tools .deliv-tool-x.btn-danger { width: auto; padding: 0 14px; border-radius: 999px; color: #fff; }
+  html[data-theme] body .deliveries .deliv-tools .deliv-tool-x.btn-danger .dt-t { display: inline; }
+  html[data-theme] body .deliveries .deliv-people { margin: 6px 14px 4px; }
+}
