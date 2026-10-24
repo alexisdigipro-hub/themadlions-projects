@@ -96,6 +96,7 @@ export default function IdSheets({ slot }) {
 function Folder({ person, editable, slot, toast, onBack, onChanged }) {
   const [sheets, setSheets] = useState(null)
   const [urls, setUrls] = useState({})
+  const [tried, setTried] = useState(false) // the pictures were asked for: one missing could not load
   const [busy, setBusy] = useState('') // "Uploading 2 of 5…"
   const [big, setBig] = useState(null) // the sheet open at its real size
   const [renaming, setRenaming] = useState(null)
@@ -107,6 +108,7 @@ function Folder({ person, editable, slot, toast, onBack, onChanged }) {
       setSheets(list)
       const ids = list.filter(isPicture).map((s) => s.fileid)
       if (ids.length) setUrls(await idApi.urls(ids))
+      setTried(true)
     } catch (e) { toast(e.message, 'error'); setSheets([]) }
   }, [person.id, toast])
   useEffect(() => { load() }, [load])
@@ -170,7 +172,7 @@ function Folder({ person, editable, slot, toast, onBack, onChanged }) {
             <article key={s.id} className="ids-card">
               {isPicture(s) ? (
                 <button type="button" className="ids-pic" onClick={() => urls[s.fileid] && setBig(s)} aria-label={`Open ${s.title || s.name} at full size`}>
-                  {urls[s.fileid] ? <img src={urls[s.fileid]} alt={s.title || s.name} loading="lazy" /> : <span className="ids-wait">Loading the picture…</span>}
+                  {urls[s.fileid] ? <img src={urls[s.fileid]} alt={s.title || s.name} loading="lazy" /> : <span className="ids-wait">{tried ? 'The picture could not be loaded. Download still works.' : 'Loading the picture…'}</span>}
                 </button>
               ) : (
                 <div className="ids-pic ids-doc"><span className="ids-cover-ico">{Icon.office?.()}</span><span>{s.name}</span></div>

@@ -3,7 +3,7 @@
 // exactly as they are, never compressed, into <root>/ID sheets/<name>/, through the pcloud Edge Function with the
 // scope { kind: 'ids' }. In the local build (no database) everything stays in this browser, for trying it out.
 import { remote, supabase } from './supabase.js'
-import { pcloudDelete, pcloudLink, pcloudLinks, pcloudUpload } from './pcloud.js'
+import { pcloudBlob, pcloudDelete, pcloudUpload } from './pcloud.js'
 
 const SCOPE = { kind: 'ids', id: 'all' }
 const byName = (a, b) => a.name.localeCompare(b.name, 'el', { sensitivity: 'base' })
@@ -73,9 +73,28 @@ const online = {
     const { error } = await supabase.from('id_people').delete().eq('id', person.id)
     if (error) throw new Error(error.message)
   },
-  urls: (fileids) => (fileids.length ? pcloudLinks(fileids, SCOPE) : Promise.resolve({})),
-  download: async (sheet) => (await pcloudLink(sheet.fileid, SCOPE, true)).url,
+  /* pCloud's own file links answer only the address that asked for them (the function's), so a browser
+     showing one got a broken picture (Alex, 25 Oct). The picture comes through the function instead, as
+     its bytes, and the page shows it from memory: the same file, untouched, a few at a time. */
+  async urls(fileids) {
+    const out = {}
+    const todo = fileids.filter((id) => { if (blobs.has(id)) { out[id] = blobs.get(id); return false } return true })
+    let i = 0
+    const lane = async () => {
+      while (i < todo.length) {
+        const id = todo[i++]
+        try { const url = URL.createObjectURL(await pcloudBlob(id, SCOPE)); blobs.set(id, url); out[id] = url } catch { /* left out: the card says it could not load */ }
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(3, todo.length) }, lane))
+    return out
+  },
+  async download(sheet) {
+    if (!blobs.has(sheet.fileid)) blobs.set(sheet.fileid, URL.createObjectURL(await pcloudBlob(sheet.fileid, SCOPE)))
+    return blobs.get(sheet.fileid)
+  },
 }
+const blobs = new Map() // fileid -> an object URL of the picture, kept while the page is open
 
 /* ---------- this browser only (the local build) ---------- */
 const KEY = 'tml_idsheets'
