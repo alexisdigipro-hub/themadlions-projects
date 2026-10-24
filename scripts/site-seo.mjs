@@ -241,6 +241,7 @@ ${full ? `\n## Ερωτήσεις (Greek)\n${faqEl}\n` : ''}
 - [Roardino](${BASE}roardino/): the shoot's call sheet in one link
 - [RoarMail](${BASE}lab/roarmail/): the private mail app for Mac and Windows
 - [RoarList](${BASE}lab/roarlist/): the shot list with a frame for every shot
+- [RoarWriter](${BASE}lab/roarwriter/): screenwriting in the industry format, in English and Greek, with PDF, Final Draft and Fountain, on Mac, Windows and the web
 - [RoarTransfer](https://roartransfer.com/about/): send large files free and secure at roartransfer.com, up to 5 GB with one short link, by email or link, with a password
 `
 }
@@ -261,7 +262,7 @@ if (live) {
     <xhtml:link rel="alternate" hreflang="x-default" href="${BASE}"/>` : ''}</url>`
   writeFileSync(join(dir, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${[u('', '1.0', 'weekly', true), u('el/', '1.0', 'weekly', true), u('aibsent/', '0.8', 'monthly'), u('lab/', '0.6', 'monthly'), u('roarme/', '0.6', 'monthly'), u('roardino/', '0.6', 'monthly'), u('roarlist/', '0.6', 'monthly'), u('lab/roarmail/', '0.6', 'monthly'), u('lab/roarlist/', '0.6', 'monthly')].join('\n')}
+${[u('', '1.0', 'weekly', true), u('el/', '1.0', 'weekly', true), u('aibsent/', '0.8', 'monthly'), u('lab/', '0.6', 'monthly'), u('roarme/', '0.6', 'monthly'), u('roardino/', '0.6', 'monthly'), u('roarlist/', '0.6', 'monthly'), u('lab/roarmail/', '0.6', 'monthly'), u('lab/roarlist/', '0.6', 'monthly'), u('lab/roarwriter/', '0.6', 'monthly')].join('\n')}
 </urlset>
 `)
   console.log('wrote llms.txt, llms-full.txt, sitemap.xml')

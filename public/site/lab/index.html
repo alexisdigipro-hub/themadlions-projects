@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- The Mad Lions Lab (Alex, 18 Oct 2026): the tools and apps the studio builds between films, as numbered
-     experiments. Experiment 01 is RoarMe, Experiment 02 is Roardino (the ordino on its own, no tie to the hub), Experiment 03 is RoarMail (desktop mail app; its page is /lab/roarmail), Experiment 04 is RoarList (shot lists; web app at /roarlist, its live example at /roarlist/#demo), Experiment 05 is RoarTransfer (big files with a 3-day link; its page is /lab/roartransfer, the tool itself is RoarMe's /roarme/transfer/).
+     experiments. Experiment 01 is RoarMe, Experiment 02 is Roardino (the ordino on its own, no tie to the hub), Experiment 03 is RoarMail (desktop mail app; its page is /lab/roarmail), Experiment 04 is RoarList (shot lists; web app at /roarlist, its live example at /roarlist/#demo), Experiment 05 is RoarTransfer (big files with a 3-day link; its page is /lab/roartransfer, the tool itself is RoarMe's /roarme/transfer/), Experiment 06 is RoarWriter (screenwriting app; its page is /lab/roarwriter, the web app at alexisdigipro-hub.github.io/roarwriter).
      Same look and language switch as the main page. -->
 <title>Lab · The Mad Lions</title>
 <script>
@@ -15,7 +15,7 @@
   })()
 </script>
 <link rel="canonical" href="https://themadlions.com/lab/">
-<meta name="description" content="The Mad Lions Lab: the tools and apps we build between films. RoarMe, the messenger for teams, Roardino, the call sheet in one link, RoarMail, the private mail app, and RoarList, the shot list with a frame for every shot.">
+<meta name="description" content="The Mad Lions Lab: the tools and apps we build between films. RoarMe, the messenger for teams, Roardino, the call sheet in one link, RoarMail, the private mail app, RoarList, the shot list with a frame for every shot, and RoarWriter, screenwriting in the industry format.">
 <meta name="theme-color" content="#0b0b0c">
 <meta property="og:title" content="The Mad Lions Lab">
 <meta property="og:description" content="The tools and apps we build between films.">
@@ -110,6 +110,9 @@ section { padding: 0 var(--pad) clamp(80px, 10vw, 130px); }
 .desk iframe { position: absolute; left: 0; top: 0; width: 1360px; height: 850px; border: 0; transform-origin: 0 0; }
 .stage.wide { padding: clamp(18px, 3vw, 34px); }
 /* RoarTransfer: its sending card, drawn in the stage */
+.rw-mini { width: min(340px, 100%); aspect-ratio: 8.5 / 10; padding: 26px 26px 22px; border-radius: 6px; background: #fbfaf7; color: #1b1b1b; box-shadow: 0 30px 70px rgba(0,0,0,.55); font-family: 'Courier Prime', 'Courier New', Courier, monospace; font-size: 11.5px; line-height: 1.35; display: flex; flex-direction: column; gap: 9px; transform: rotate(-1.5deg); }
+.rw-mini .sh { font-weight: 700; } .rw-mini .ch { margin: 4px 0 -8px 38%; } .rw-mini .dg { margin: 0 14% 0 22%; } .rw-mini .pn { margin: 0 0 -8px 30%; color: #555; }
+.rw-mini .ai { margin-top: auto; align-self: flex-end; font-family: Jost, system-ui, sans-serif; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 99px; background: rgba(242,87,29,.14); color: #c2410c; }
 .rt-mini { width: min(360px, 100%); padding: 22px; border-radius: 26px; background: linear-gradient(170deg, rgba(43,48,56,.9), rgba(27,30,35,.9)); border: 1px solid rgba(255,255,255,.14); box-shadow: 0 30px 70px rgba(0,0,0,.55); display: grid; gap: 12px; color: #eef0f3; }
 .rt-mini .h { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 17px; }
 .rt-mini .h i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(180deg, #ff4a3d, #b50000); }
@@ -280,6 +283,36 @@ footer .wordmark { width: 130px; opacity: .6; }
       </a>
     </article>
 
+    <article class="exp flip reveal" style="margin-top:10px">
+      <a class="stage" href="roarwriter/" aria-label="RoarWriter">
+        <span class="rw-mini" aria-hidden="true">
+          <span class="sh">ΕΞΩΤ. ΣΤΑΘΜΟΣ - ΝΥΧΤΑ</span>
+          <span>Ο τελευταίος συρμός φεύγει. Ο ΝΙΚΟΣ (40) μένει μόνος στην αποβάθρα.</span>
+          <span class="ch">ΝΙΚΟΣ</span>
+          <span class="pn">(σιγανά)</span>
+          <span class="dg">Είπες ότι θα έρθεις.</span>
+          <span class="sh">INT. TRAIN - CONTINUOUS</span>
+          <span>Through the glass, MARIA watches him disappear.</span>
+          <span class="ai">✦ Suggest dialogue</span>
+        </span>
+      </a>
+      <div>
+        <span class="exp-n">Experiment 06 <i data-t="exp.live">Live · beta</i></span>
+        <h2 class="long"><span class="a">ROAR</span><span class="b">WRITER</span></h2>
+        <p class="what" data-t="rw.what">Screenwriting in the industry format. Scene headings, action, characters and dialogue as the industry reads them, in English or Greek, with a PDF ready to send.</p>
+        <ul class="usp">
+          <li><span><b data-t="rw.u1">The keys of Final Draft.</b> <span data-t="rw.u1s">Enter and Tab lay out the page while you write, ΕΣΩΤ. and ΕΞΩΤ. included.</span></span></li>
+          <li><span><b data-t="rw.u2">PDF, Final Draft and Fountain.</b> <span data-t="rw.u2s">Open and save the files the rest of the industry uses.</span></span></li>
+          <li><span><b data-t="rw.u3">An AI that waits to be asked.</b> <span data-t="rw.u3s">Dialogue, a rewrite or what comes next, shown first; nothing changes until you say so.</span></span></li>
+        </ul>
+        <div class="acts">
+          <a class="pill main" href="roarwriter/"><span data-t="rw.more">Discover RoarWriter</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="https://alexisdigipro-hub.github.io/roarwriter/" data-t="rw.open">Write in the browser</a>
+          <a class="pill" href="https://github.com/alexisdigipro-hub/roarwriter/releases/latest" target="_blank" rel="noopener" data-t="rl.dl">Mac / Windows</a>
+        </div>
+      </div>
+    </article>
+
     <div class="next one">
       <div class="card reveal">
         <span class="exp-n" data-t="idea.n">Your idea</span>
@@ -322,6 +355,11 @@ footer .wordmark { width: 130px; opacity: .6; }
     'rl.u1': 'Ένα κάδρο για κάθε πλάνο.', 'rl.u1s': 'Σύρε, επικόλλησε ή διάλεξέ το, και η λίστα γίνεται storyboard.',
     'rl.u2': 'Ένα PDF για το συνεργείο.', 'rl.u2s': 'Σαν λίστα ή σαν storyboard, έτοιμο για το γύρισμα.',
     'rl.u3': 'Ο λογαριασμός σου στο RoarMe.', 'rl.u3s': 'Όλα σου τα shot lists στο cloud, στο web και σε Mac και Windows.',
+    'rw.what': 'Σενάριο στο βιομηχανικό format. Επικεφαλίδες σκηνών, δράση, χαρακτήρες και διάλογοι όπως τα διαβάζει η βιομηχανία, στα ελληνικά ή στα αγγλικά, με ένα PDF έτοιμο να σταλεί.',
+    'rw.u1': 'Τα πλήκτρα του Final Draft.', 'rw.u1s': 'Το Enter και το Tab στήνουν τη σελίδα όσο γράφεις, μαζί με ΕΣΩΤ. και ΕΞΩΤ.',
+    'rw.u2': 'PDF, Final Draft και Fountain.', 'rw.u2s': 'Άνοιξε και αποθήκευσε τα αρχεία που χρησιμοποιεί όλη η βιομηχανία.',
+    'rw.u3': 'Ένα AI που περιμένει να το ρωτήσεις.', 'rw.u3s': 'Διάλογος, ξαναγράψιμο ή η συνέχεια, που φαίνονται πρώτα· τίποτα δεν αλλάζει αν δεν το πεις.',
+    'rw.more': 'Γνώρισε το RoarWriter', 'rw.open': 'Γράψε στον browser',
     'rt.what': 'Στείλε μεγάλα αρχεία, δωρεάν και με ασφάλεια. Ως 5 GB με έναν κοντό σύνδεσμο, με email ή σαν σύνδεσμο, με κωδικό και email όταν κατέβει. Στο roartransfer.com, σε κάθε συνομιλία του RoarMe και στο RoarMail.',
     'rt.u1': '5 GB, όπως είναι.', 'rt.u1s': 'Αυθεντική ποιότητα, αληθινά ονόματα, πολλά αρχεία κάτω από έναν κοντό σύνδεσμο.',
     'rt.u2': 'Συνεχίζει από εκεί που σταμάτησε.', 'rt.u2s': 'Αν πέσει η σύνδεση, συνεχίζει αντί να ξεκινήσει από την αρχή.',

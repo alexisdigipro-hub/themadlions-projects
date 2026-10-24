@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- RoarWriter's page on the company site (Alex, 24 Oct 2026), in the same frame as RoarList's (/lab/roarlist/): one
+     window of the app (a Greek scene on the page, the scenes at the side, the AI with a suggestion), the three things
+     only RoarWriter does, the page and its files, everything else as an index, where your scripts live, downloads
+     (releases/latest), questions. Only what is in RoarWriter 0.1. EN and GR, the same switch as the main page. -->
+<title>RoarWriter · Screenwriting in the industry format, in English and Greek · by The Mad Lions</title>
+<link rel="canonical" href="https://themadlions.com/lab/roarwriter/">
+<meta name="description" content="RoarWriter, the screenwriting app by The Mad Lions Lab. Scene headings, action, characters and dialogue in the industry format, in English or Greek, with Final Draft's keys, Final Draft and Fountain in and out, a PDF ready to send and an AI that helps when you ask. For Mac, Windows and the browser.">
+<meta name="theme-color" content="#16181c">
+<meta property="og:title" content="RoarWriter · by The Mad Lions">
+<meta property="og:description" content="Write the film in the format it is shot from. English or Greek, Final Draft and Fountain, a PDF ready to send.">
+<meta property="og:url" content="https://themadlions.com/lab/roarwriter/">
+<meta property="og:image" content="https://themadlions.com/og-image.png">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&family=Courier+Prime&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #16181c; --bg-2: #1d2025; --bg-3: #24282f; --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.16);
+  --text: #eef0f3; --muted: rgba(214,220,228,.6); --dim: rgba(214,220,228,.38);
+  --red: #d40000; --red-hi: #ff3b2f; --ok: #2fd36b;
+  --glass: rgba(255,255,255,.055); --glass-edge: rgba(255,255,255,.12);
+  --pad: clamp(18px, 4.5vw, 72px);
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); scroll-behavior: smooth; }
+body { margin: 0; color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%, transparent 62%), radial-gradient(800px 600px at 100% 100%, rgba(212,0,0,.10), transparent 70%), linear-gradient(180deg, #23272e 0%, #17191d 50%, #121417 100%); }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+img, svg { display: block; }
+:focus-visible { outline: 2px solid var(--red-hi); outline-offset: 3px; border-radius: 8px; }
+.wordmark { filter: invert(1); height: auto; }
+.rm { font-family: Jost, var(--sans); display: inline-flex; align-items: baseline; letter-spacing: .02em; line-height: .86; }
+.rm .a { font-weight: 200; } .rm .b { font-weight: 800; }
+.mono { font-family: var(--mono); }
+.beta { font-family: var(--mono); font-style: normal; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; border: 1px solid rgba(212,0,0,.6); color: #ff8f86; background: rgba(212,0,0,.14); }
+
+/* pills */
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 48px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 600; letter-spacing: .01em; border: 1px solid var(--glass-edge); background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); cursor: pointer; transition: transform .3s var(--ease), background .2s, border-color .2s, filter .2s; white-space: nowrap; }
+.pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.28); }
+.pill:active { transform: scale(.97); }
+.pill.main { background: var(--red); border-color: transparent; color: #fff; box-shadow: 0 12px 34px rgba(212,0,0,.32); }
+.pill.main:hover { filter: brightness(1.1); }
+.pill.sm { height: 38px; padding: 0 16px; font-size: 13.5px; }
+.pill svg { width: 18px; height: 18px; flex: none; }
+
+/* bar */
+.bar { position: fixed; inset: 0 0 auto; z-index: 30; display: flex; align-items: center; gap: 18px; padding: calc(12px + env(safe-area-inset-top)) var(--pad) 12px; transition: background .4s, border-color .4s; border-bottom: 1px solid transparent; }
+.bar.solid { background: rgba(22,24,28,.72); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); border-color: var(--line); }
+.bar .home { display: flex; align-items: center; gap: 14px; }
+.bar .home .wordmark { width: 128px; }
+.bar .home .sep { width: 1px; height: 22px; background: var(--line-2); }
+.bar .home .rm { font-size: 19px; }
+.bar nav { margin-left: auto; display: flex; gap: 2px; }
+.bar nav a { padding: 8px 13px; border-radius: 999px; font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); transition: color .2s, background .2s; }
+.bar nav a:hover { color: var(--text); background: var(--glass); }
+.bar .end { display: flex; align-items: center; gap: 10px; }
+.lang { display: flex; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); }
+.lang button { border: 0; background: transparent; cursor: pointer; padding: 5px 11px; border-radius: 999px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--muted); }
+.lang button.on { background: rgba(255,255,255,.14); color: var(--text); }
+
+/* hero */
+.hero { position: relative; padding: calc(132px + env(safe-area-inset-top)) var(--pad) 0; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px; align-items: end; }
+.kicker { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); line-height: 1.6; }
+.kicker i { display: inline-block; width: 7px; height: 7px; margin-right: 10px; vertical-align: 1px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px rgba(47,211,107,.8); }
+.hero h1 { margin: 22px 0 0; font-size: clamp(64px, 11.4vw, 190px); line-height: .8; display: flex; align-items: flex-end; gap: clamp(10px, 2vw, 28px); flex-wrap: nowrap; }
+.hero h1 .beta { font-size: clamp(10px, 1vw, 13px); margin-bottom: clamp(10px, 2.4vw, 40px); }
+.app-icon { width: clamp(76px, 10vw, 150px); height: auto; filter: drop-shadow(0 24px 50px rgba(212,0,0,.32)); }
+.hero-sub { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: end; margin-top: clamp(28px, 4vw, 52px); }
+.lead { margin: 0; font-size: clamp(22px, 2.5vw, 34px); font-weight: 300; line-height: 1.25; letter-spacing: -.01em; text-wrap: balance; color: color-mix(in srgb, var(--text) 82%, transparent); }
+.lead b { font-weight: 700; color: var(--text); }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.cta-note { grid-column: 1 / -1; margin: -6px 0 0; text-align: right; font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; color: var(--dim); }
+.cta-note a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+
+/* the frame: RoarMe as it is today */
+.frame { position: relative; margin: clamp(44px, 6vw, 84px) auto 0; max-width: 1380px; perspective: 1800px; }
+.frame::before { content: ''; position: absolute; left: 10%; right: 10%; top: 12%; bottom: -6%; background: radial-gradient(closest-side, rgba(212,0,0,.32), transparent); filter: blur(60px); z-index: -1; }
+.win { border-radius: 22px; background: #1b1e23; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 60px 140px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06); overflow: hidden; transform: rotateX(calc(var(--ry, 0) * 1deg)) rotateY(calc(var(--rx, 0) * 1deg)); transition: transform .5s var(--ease); font-size: 13px; color: #eef0f3; }
+.win-top { display: flex; gap: 7px; padding: 12px 14px 8px; }
+.win-top i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; } .win-top i:nth-child(2) { background: #febc2e; } .win-top i:nth-child(3) { background: #28c840; }
+.win-body { display: grid; grid-template-columns: 27% minmax(0, 1fr) 26%; gap: 10px; padding: 0 12px 12px; height: clamp(420px, 42vw, 600px); }
+.pn { min-width: 0; border-radius: 16px; background: linear-gradient(180deg, #2b3038, #1f2329); border: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; overflow: hidden; }
+.pn-h { display: flex; align-items: center; gap: 8px; padding: 12px 12px 8px; }
+.pn-h .rm { font-size: 15px; flex: 1; text-align: center; justify-content: center; }
+.rnd { width: 28px; height: 28px; border-radius: 10px; flex: none; display: grid; place-items: center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); color: #dfe3e8; position: relative; }
+.rnd svg { width: 15px; height: 15px; }
+.rnd b { position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 99px; background: var(--red-hi); font-size: 9px; line-height: 15px; text-align: center; color: #fff; }
+.tabs { display: flex; gap: 2px; margin: 4px 10px 8px; padding: 3px; border-radius: 99px; background: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.06); }
+.tabs span { flex: 1; text-align: center; padding: 5px 0; border-radius: 99px; font-size: 10.5px; color: #9aa0aa; }
+.tabs span.on { background: linear-gradient(180deg, #ff6b5e, #d40000); color: #fff; font-weight: 700; }
+.row { display: flex; align-items: center; gap: 9px; margin: 1px 8px; padding: 8px; border-radius: 12px; }
+.row.on { background: rgba(255,255,255,.06); }
+.av { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 10.5px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #5b6472, #3a4049); }
+.av.c1 { background: linear-gradient(135deg, #ff8a6b, #e0483a); } .av.c2 { background: linear-gradient(135deg, #7aa7ff, #3b6ff5); } .av.c3 { background: linear-gradient(135deg, #f8d29a, #e79a3d); color: #2a1c08; } .av.c4 { background: linear-gradient(135deg, #8fe3b4, #2fa36b); color: #082a18; }
+.row b { flex: 1; min-width: 0; font-weight: 500; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row small { font-size: 10px; color: #9aa0aa; }
+.row .n { min-width: 17px; height: 17px; padding: 0 5px; border-radius: 99px; background: var(--red); font-size: 9.5px; font-weight: 700; display: grid; place-items: center; }
+.foot { margin: auto 8px 8px; display: flex; justify-content: space-around; padding: 8px 4px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); }
+.foot i { width: 20px; height: 20px; border-radius: 7px; background: rgba(255,255,255,.1); } .foot i.on { background: rgba(212,0,0,.6); }
+.room-h { display: flex; align-items: center; gap: 9px; margin: 10px; padding: 7px 9px; border-radius: 13px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); }
+.room-h b { display: block; font-size: 12.5px; font-weight: 600; } .room-h small { font-size: 10px; color: #9aa0aa; }
+.room-h .ic { margin-left: auto; display: flex; gap: 5px; } .room-h .ic i { width: 26px; height: 26px; border-radius: 9px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); }
+.msgs { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px; padding: 4px 12px 10px; justify-content: flex-end; overflow: hidden; }
+.bb { align-self: flex-start; max-width: 74%; padding: 8px 11px; border-radius: 15px 15px 15px 5px; background: rgba(255,255,255,.07); line-height: 1.35; }
+.bb.me { align-self: flex-end; border-radius: 15px 15px 5px 15px; background: linear-gradient(180deg, #e2231a, #b50000); }
+.bb small { margin-left: 6px; font-size: 9.5px; opacity: .6; }
+.card { align-self: flex-end; width: min(270px, 78%); border-radius: 16px; padding: 10px; background: linear-gradient(180deg, #e2231a, #b50000); display: grid; gap: 8px; }
+.card .ch { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 13px; }
+.card .ch i { width: 26px; height: 26px; border-radius: 50%; background: #fff; color: var(--red); display: grid; place-items: center; }
+.card .ch i svg { width: 15px; height: 15px; }
+.card .cb { padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.2); display: grid; gap: 3px; position: relative; overflow: hidden; }
+.card .cb::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: #fff; }
+.card .cb s { text-decoration: none; justify-self: start; font-family: var(--mono); font-size: 8.5px; letter-spacing: .14em; padding: 2px 7px; border-radius: 99px; background: #fff; color: var(--red); }
+.card .cb b { font-size: 15px; font-weight: 800; } .card .cb em { font-style: normal; font-size: 11px; opacity: .85; }
+.card .go { text-align: center; padding: 7px; border-radius: 99px; background: #fff; color: #b50000; font-weight: 700; font-size: 11.5px; }
+.compose { display: flex; align-items: center; gap: 7px; margin: 0 10px 10px; }
+.compose .rnd { width: 32px; height: 32px; border-radius: 50%; }
+.compose .rnd.cam { color: #fff; border-color: rgba(255,90,80,.6); box-shadow: 0 0 0 3px rgba(212,0,0,.18); }
+.compose .box { flex: 1; height: 32px; border-radius: 99px; padding: 0 14px; display: flex; align-items: center; color: #8e949e; background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.07); }
+.tasks-h { display: flex; align-items: center; gap: 6px; padding: 12px 12px 6px; } .tasks-h b { flex: 1; font-size: 15px; font-weight: 800; }
+.tk { margin: 3px 8px; padding: 9px 10px; border-radius: 13px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); display: grid; grid-template-columns: auto 1fr; gap: 3px 9px; align-items: start; }
+.tk.ask { border-color: rgba(255,90,80,.45); background: rgba(212,0,0,.1); }
+.tk > i { width: 15px; height: 15px; margin-top: 1px; border-radius: 50%; border: 1.6px solid rgba(255,255,255,.35); }
+.tk.done > i { border-color: transparent; background: #ff5a4f; }
+.tk b { font-size: 11.5px; font-weight: 600; } .tk.done b { text-decoration: line-through; opacity: .5; }
+.tk small { grid-column: 2; font-size: 9.5px; color: #9aa0aa; }
+.tk .ans { grid-column: 2; display: flex; gap: 5px; margin-top: 3px; } .tk .ans span { padding: 4px 9px; border-radius: 99px; font-size: 9.5px; font-weight: 700; background: rgba(255,255,255,.08); } .tk .ans span:first-child { background: var(--red); }
+.tk .st { grid-column: 2; justify-self: start; padding: 1px 7px; border-radius: 99px; font-size: 9px; font-weight: 700; background: rgba(255,196,0,.16); color: #ffd666; }
+.lbl { margin: 8px 12px 2px; font-family: var(--mono); font-size: 8.5px; letter-spacing: .16em; text-transform: uppercase; color: #8e949e; }
+.tag { position: absolute; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; border-radius: 999px; background: rgba(27,30,35,.86); border: 1px solid var(--line-2); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 16px 40px rgba(0,0,0,.4); font-family: var(--mono); font-size: 11px; letter-spacing: .04em; white-space: nowrap; }
+.tag i { width: 22px; height: 22px; border-radius: 50%; background: var(--red); display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; color: #fff; }
+.tag.t1 { left: 51%; bottom: 11%; } .tag.t2 { right: 3%; top: 18%; } .tag.t3 { left: 3%; top: 26%; }
+
+/* ticker */
+.ticker { margin-top: clamp(64px, 9vw, 120px); border-block: 1px solid var(--line); overflow: hidden; padding: 18px 0; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.ticker-in { display: flex; gap: 40px; width: max-content; animation: tick 46s linear infinite; font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.ticker-in span { display: inline-flex; align-items: center; gap: 40px; }
+.ticker-in span::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
+@keyframes tick { to { transform: translateX(-50%); } }
+
+/* sections */
+section { padding: clamp(84px, 11vw, 160px) var(--pad) 0; max-width: 1480px; margin: 0 auto; }
+.sec-h { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 48px; align-items: end; margin-bottom: clamp(36px, 5vw, 64px); }
+.idx { font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--red-hi); margin: 0 0 16px; }
+h2 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(42px, 6.2vw, 96px); font-weight: 200; line-height: .92; letter-spacing: -.01em; text-wrap: balance; }
+h2 b { font-weight: 800; }
+.sec-h p.sub { margin: 0; font-size: 17px; line-height: 1.6; color: var(--muted); max-width: 520px; justify-self: end; }
+
+/* the three things only RoarMe does: numbered rows */
+.three { border-top: 1px solid var(--line); }
+.big { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: center; padding: clamp(34px, 4.5vw, 60px) 0; border-bottom: 1px solid var(--line); }
+.big .no { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; color: var(--dim); align-self: start; padding-top: 12px; }
+.big h3 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(32px, 4vw, 58px); font-weight: 300; line-height: 1; letter-spacing: -.01em; }
+.big h3 b { font-weight: 800; }
+.big p { margin: 16px 0 0; font-size: 16.5px; line-height: 1.6; color: var(--muted); max-width: 520px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+.chips span { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); }
+.viz { justify-self: end; width: min(440px, 100%); aspect-ratio: 4 / 3; border-radius: 22px; background: linear-gradient(160deg, #262a31, #1a1d22); border: 1px solid var(--line); display: grid; place-items: center; position: relative; overflow: hidden; }
+.viz::after { content: ''; position: absolute; inset: 0; background: radial-gradient(60% 60% at 50% 110%, rgba(212,0,0,.22), transparent 70%); pointer-events: none; }
+.v-name { display: grid; gap: 12px; justify-items: center; z-index: 1; }
+.v-name .at { font-family: Jost, var(--sans); font-size: clamp(34px, 4vw, 52px); font-weight: 300; } .v-name .at b { font-weight: 800; color: var(--red-hi); }
+.v-name .qr { width: 86px; height: 86px; border-radius: 14px; background: conic-gradient(from 90deg, #eef0f3 25%, transparent 0 50%, #eef0f3 0 75%, transparent 0) 0 0 / 14px 14px; border: 8px solid #eef0f3; opacity: .9; }
+.v-name small { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .1em; }
+.v-tr { width: 76%; z-index: 1; padding: 16px; border-radius: 18px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); display: grid; gap: 12px; }
+.v-tr .h { display: flex; align-items: center; gap: 12px; } .v-tr .h i { width: 40px; height: 40px; border-radius: 12px; background: var(--red); display: grid; place-items: center; } .v-tr .h i svg { width: 20px; height: 20px; }
+.v-tr .h b { display: block; font-size: 22px; font-weight: 800; } .v-tr .h small { font-family: var(--mono); font-size: 10.5px; color: var(--dim); letter-spacing: .1em; }
+.v-tr .bar2 { height: 6px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; } .v-tr .bar2 i { display: block; height: 100%; width: 72%; background: linear-gradient(90deg, #ff6b5e, #d40000); border-radius: inherit; animation: fill 3.2s var(--ease) infinite alternate; }
+@keyframes fill { from { width: 18%; } }
+.v-tr .ft { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.v-sec { width: 80%; z-index: 1; display: grid; gap: 8px; }
+.v-sec .ln { justify-self: center; font-family: var(--mono); font-size: 10px; color: #7ee2a0; letter-spacing: .08em; padding: 4px 10px; border-radius: 99px; background: rgba(47,211,107,.12); }
+.v-sec .bb { font-size: 13px; max-width: 86%; } .v-sec .enc { justify-self: end; font-family: var(--mono); font-size: 10.5px; color: var(--dim); word-break: break-all; max-width: 86%; text-align: right; }
+
+/* new: an uneven board */
+.board { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; }
+.tile { position: relative; border-radius: 26px; padding: clamp(22px, 2.6vw, 34px); background: linear-gradient(170deg, rgba(43,48,56,.7), rgba(27,30,35,.7)); border: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: 12px; min-height: 300px; }
+.tile .k { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--red-hi); display: flex; align-items: center; gap: 8px; }
+.tile .k em { font-style: normal; color: #7ee2a0; border: 1px solid rgba(47,211,107,.4); border-radius: 99px; padding: 2px 8px; letter-spacing: .1em; }
+.tile h3 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(28px, 3vw, 44px); font-weight: 300; line-height: 1; } .tile h3 b { font-weight: 800; }
+.tile p { margin: 0; font-size: 15.5px; line-height: 1.6; color: var(--muted); max-width: 520px; }
+.tile .more { margin-top: auto; align-self: flex-start; font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--text); display: inline-flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line-2); padding-bottom: 3px; }
+.tile .more svg { width: 14px; height: 14px; transition: transform .3s var(--ease); }
+.tile .more:hover svg { transform: translateX(3px); }
+.t-tasks { grid-column: span 7; } .t-ord { grid-column: span 5; } .t-upd { grid-column: span 5; } .t-icon { grid-column: span 7; }
+.mini { margin-top: 8px; display: grid; gap: 6px; max-width: 420px; }
+.mini .tk { margin: 0; } .mini .tk b { font-size: 13px; } .mini .tk small { font-size: 11px; } .mini .tk .ans span { font-size: 11px; padding: 5px 12px; }
+.ord-flow { margin-top: 8px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.ord-flow .rnd { width: 52px; height: 52px; border-radius: 50%; color: #fff; border-color: rgba(255,90,80,.6); box-shadow: 0 0 0 5px rgba(212,0,0,.16); } .ord-flow .rnd svg { width: 24px; height: 24px; }
+.ord-flow .arrow { font-family: var(--mono); color: var(--dim); }
+.ord-flow .card { align-self: auto; width: 230px; }
+.upd-card { margin-top: 8px; display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 18px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); max-width: 440px; }
+.upd-card i { width: 40px; height: 40px; flex: none; border-radius: 12px; background: rgba(212,0,0,.2); color: #ff8f86; display: grid; place-items: center; } .upd-card i svg { width: 20px; height: 20px; }
+.upd-card span { flex: 1; min-width: 0; } .upd-card b { display: block; font-size: 14.5px; } .upd-card small { font-size: 12px; color: var(--muted); }
+.upd-card s { text-decoration: none; padding: 9px 14px; border-radius: 99px; background: var(--red); color: #fff; font-weight: 700; font-size: 12.5px; white-space: nowrap; }
+.t-icon { flex-direction: row; align-items: center; gap: clamp(20px, 4vw, 56px); }
+.t-icon .txt { display: flex; flex-direction: column; gap: 12px; }
+.t-icon .icons { display: flex; align-items: center; gap: 18px; flex: none; }
+.t-icon .icons img, .t-icon .icons svg { width: clamp(90px, 10vw, 140px); height: auto; }
+.t-icon .icons .old { width: clamp(56px, 6vw, 84px); opacity: .45; filter: grayscale(.3); }
+.t-icon .icons .to { font-family: var(--mono); color: var(--dim); }
+
+/* everything else: an index */
+.index { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(28px, 5vw, 80px); border-top: 1px solid var(--line); }
+.ix { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 4px 14px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+.ix .no { grid-row: span 2; font-family: var(--mono); font-size: 12px; color: var(--dim); padding-top: 4px; }
+.ix b { font-size: 18px; font-weight: 650; letter-spacing: -.005em; }
+.ix p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+
+/* privacy */
+.priv { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 80px); align-items: start; }
+.priv .legal { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 26px; }
+.prom { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.pr { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 2px 14px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.pr i { grid-row: span 2; width: 34px; height: 34px; border-radius: 11px; background: var(--glass); border: 1px solid var(--glass-edge); display: grid; place-items: center; } .pr i svg { width: 17px; height: 17px; }
+.pr b { font-size: 16px; } .pr p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+
+/* download */
+.dls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.dl { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 26px 22px 22px; border-radius: 24px; background: rgba(255,255,255,.04); border: 1px solid var(--line); }
+.dl.mine { border-color: rgba(255,90,80,.55); background: linear-gradient(170deg, rgba(212,0,0,.14), rgba(255,255,255,.03)); }
+.dl.mine::before { content: attr(data-mine); position: absolute; top: -10px; left: 20px; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; background: var(--red); color: #fff; }
+.dl > i { width: 40px; height: 40px; } .dl > i svg { width: 30px; height: 30px; }
+.dl h3 { margin: 6px 0 0; font-size: 22px; font-weight: 700; }
+.dl small { font-size: 14px; line-height: 1.5; color: var(--muted); min-height: 42px; }
+.dl .pill { margin-top: auto; order: 2; }
+.dl .alt { order: 1; }
+.dl .alt { font-size: 12.5px; color: var(--dim); } .dl .alt a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.dl-note { margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.dl-note p { margin: 0; padding: 16px 18px; border-radius: 18px; border: 1px dashed var(--line-2); font-size: 14px; line-height: 1.55; color: var(--muted); }
+.dl-note p b { color: var(--text); }
+.ver { font-family: var(--mono); font-size: 12px; color: #7ee2a0; letter-spacing: .06em; margin: 14px 0 0; }
+
+/* questions */
+.faq { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(28px, 5vw, 80px); }
+.qa { border-top: 1px solid var(--line); }
+.qa details { border-bottom: 1px solid var(--line); }
+.qa summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; font-size: 17px; font-weight: 600; }
+.qa summary::-webkit-details-marker { display: none; }
+.qa summary::after { content: '+'; font-family: var(--mono); font-weight: 400; font-size: 20px; color: var(--muted); transition: transform .3s var(--ease); }
+.qa details[open] summary::after { transform: rotate(45deg); color: var(--red-hi); }
+.qa p { margin: 0 0 20px; font-size: 15.5px; line-height: 1.6; color: var(--muted); max-width: 640px; }
+
+/* contact + footer */
+.contact { text-align: center; padding-bottom: clamp(80px, 10vw, 140px); }
+.contact .mail { display: inline-block; margin-top: 26px; font-family: Jost, var(--sans); font-size: clamp(26px, 4vw, 54px); font-weight: 300; border-bottom: 1px solid var(--line-2); padding-bottom: 6px; transition: color .2s, border-color .2s; }
+.contact .mail:hover { color: var(--red-hi); border-color: var(--red-hi); }
+footer { padding: 26px var(--pad) calc(26px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; color: var(--dim); }
+footer .wordmark { width: 120px; opacity: .6; }
+footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { color: var(--text); }
+
+/* coming in */
+.rv { opacity: 0; transform: translateY(22px); transition: opacity .9s var(--ease), transform .9s var(--ease); transition-delay: var(--d, 0s); }
+.rv.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; transition: none; } .ticker-in, .v-tr .bar2 i { animation: none; } html { scroll-behavior: auto; } .win { transform: none !important; } }
+
+@media (max-width: 1100px) {
+  .bar nav { display: none; }
+  .win-body { grid-template-columns: 34% minmax(0, 1fr); }
+  .win-body .pn.tasks { display: none; }
+  .tag.t2 { display: none; }
+  .t-tasks, .t-ord, .t-upd, .t-icon { grid-column: span 12; }
+  .dls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .bar .home .wordmark { width: 96px; } .bar .home .sep, .bar .end .pill { display: none; }
+  .bar .end { margin-left: auto; }
+  .hero { padding-top: calc(104px + env(safe-area-inset-top)); }
+  .hero-top, .hero-sub, .sec-h, .big, .priv, .faq, .index, .dl-note { grid-template-columns: minmax(0, 1fr); }
+  .hero h1 { font-size: clamp(40px, 13.2vw, 80px); flex-wrap: wrap; }
+  .ord-flow .arrow { display: none; }
+  .cta { justify-content: stretch; } .cta .pill { flex: 1 1 100%; }
+  .cta-note { text-align: left; }
+  .sec-h p.sub { justify-self: start; }
+  .win-body { grid-template-columns: minmax(0, 1fr); height: 470px; }
+  .win-body .pn.side { display: none; }
+  .tag { display: none; }
+  .big .no { padding-top: 0; }
+  .viz { justify-self: stretch; width: 100%; }
+  .t-icon { flex-direction: column; align-items: flex-start; }
+  .dls { grid-template-columns: minmax(0, 1fr); }
+  .dl small { min-height: 0; }
+  .ord-flow .card { width: 100%; }
+}
+
+/* ---- RoarList's own ---- */
+.app-icon.png { filter: drop-shadow(0 24px 50px rgba(212,0,0,.32)); }
+.tag.t3 { top: 66%; } .tag.t2 { top: 24%; }
+/* the frame: a storyboard as it looks today */
+.win-body.rl { grid-template-columns: 23% minmax(0, 1fr); }
+.side .srch { margin: 2px 10px 8px; height: 28px; border-radius: 99px; padding: 0 12px; display: flex; align-items: center; gap: 7px; color: #8e949e; font-size: 11px; background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.07); }
+.side .srch kbd { margin-left: auto; font-family: var(--mono); font-size: 9px; opacity: .7; }
+.ls { display: flex; align-items: center; gap: 9px; margin: 1px 8px; padding: 7px; border-radius: 12px; }
+.ls.on { background: rgba(255,255,255,.07); }
+.ls .cv { flex: none; width: 46px; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; background: #0e1014; }
+.ls .cv svg { width: 100%; height: 100%; }
+.ls span { min-width: 0; flex: 1; } .ls b { display: block; font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ls small { font-size: 9.5px; color: #9aa0aa; font-family: var(--mono); }
+.pj { display: flex; align-items: center; gap: 10px; margin: 10px 10px 4px; padding: 8px 10px; border-radius: 13px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); }
+.pj > span { flex: none; } .pj > span:first-child { min-width: 0; flex: 1; } .pj b { display: block; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .pj small { font-size: 10px; color: #9aa0aa; }
+.seg { display: flex; gap: 2px; padding: 3px; border-radius: 99px; background: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.06); }
+.seg span { padding: 4px 10px; border-radius: 99px; font-size: 10px; color: #9aa0aa; }
+.seg span.on { background: linear-gradient(180deg, #ff6b5e, #d40000); color: #fff; font-weight: 700; }
+.tot { font-family: var(--mono); font-size: 10px; color: #cfd3d9; padding: 4px 9px; border-radius: 99px; background: rgba(255,255,255,.06); white-space: nowrap; }
+.tot i { font-style: normal; color: #7ee2a0; }
+.pdfb { font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 99px; background: var(--red); color: #fff; }
+.scn { margin: 8px 12px 6px; display: flex; align-items: baseline; gap: 9px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: #cfd3d9; }
+.scn b { color: var(--red-hi); font-size: 12px; }
+.sb { flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; padding: 0 12px 12px; align-content: start; }
+.shot { border-radius: 12px; overflow: hidden; background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.07); }
+.shot .fr { position: relative; aspect-ratio: 16 / 9; background: #0e1014; }
+.shot .fr svg { width: 100%; height: 100%; }
+.shot .fr .no { position: absolute; left: 7px; top: 6px; font-family: var(--mono); font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,.55); color: #fff; }
+.shot .fr .ok { position: absolute; right: 7px; top: 6px; width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.55); }
+.shot.done .fr .ok { border-color: transparent; background: #ff5a4f; }
+.shot .meta { padding: 7px 9px 9px; display: grid; gap: 3px; }
+.shot .spec { font-family: var(--mono); font-size: 8.5px; letter-spacing: .04em; color: #ff8f86; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shot .ds { font-size: 10.5px; line-height: 1.3; color: #dfe3e8; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.shot .du { font-family: var(--mono); font-size: 9px; color: #9aa0aa; }
+.shot.add { display: grid; place-items: center; border-style: dashed; border-color: rgba(255,255,255,.16); background: transparent; color: #9aa0aa; font-size: 11px; aspect-ratio: auto; min-height: 90px; }
+/* viz: a frame dropped in */
+.v-drop { width: 78%; z-index: 1; display: grid; gap: 10px; }
+.v-drop .zone { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; border: 1.5px dashed rgba(255,255,255,.25); display: grid; place-items: center; overflow: hidden; }
+.v-drop .zone em { font-style: normal; font-family: var(--mono); font-size: 10.5px; color: var(--dim); letter-spacing: .06em; }
+.v-drop .zone svg { position: absolute; inset: 0; width: 100%; height: 100%; animation: drop 4.2s var(--ease) infinite; }
+@keyframes drop { 0%, 18% { opacity: 0; transform: translate(14%, -18%) scale(.7) rotate(4deg); } 38%, 82% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+.v-drop .row2 { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.v-drop .row2 b { color: var(--red-hi); font-weight: 500; }
+/* viz: the PDF */
+.v-pdf { width: 80%; z-index: 1; aspect-ratio: 297 / 210; border-radius: 6px; background: #f1efeb; color: #1b1e23; padding: 5% 5.5%; display: grid; grid-template-rows: auto auto 1fr; gap: 6%; box-shadow: 0 30px 60px rgba(0,0,0,.45); transform: rotate(-2deg); }
+.v-pdf .ph { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid rgba(0,0,0,.15); padding-bottom: 4%; }
+.v-pdf .ph .rm { font-size: clamp(13px, 1.5vw, 18px); } .v-pdf .ph .rm .b { color: #d40000; }
+.v-pdf .ph small { font-family: var(--mono); font-size: 8px; color: #6b6f76; }
+.v-pdf .pm { font-family: var(--mono); font-size: 7.5px; color: #6b6f76; letter-spacing: .04em; }
+.v-pdf .pg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; align-content: start; }
+.v-pdf .pg i { aspect-ratio: 16 / 9; border-radius: 2px; background: #22262c; position: relative; overflow: hidden; }
+.v-pdf .pg i::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 40%; background: linear-gradient(180deg, transparent, rgba(212,0,0,.45)); }
+/* viz: numbers that read on set */
+.v-no { width: 82%; z-index: 1; display: grid; gap: 14px; justify-items: center; }
+.v-no .nos { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.v-no .nos span { font-family: var(--mono); font-size: 15px; padding: 7px 11px; border-radius: 10px; background: rgba(255,255,255,.06); border: 1px solid var(--line-2); }
+.v-no .nos span.x { color: var(--dim); text-decoration: line-through; text-decoration-color: var(--red-hi); border-style: dashed; background: transparent; }
+.v-no .dur { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.v-no .dur b { color: var(--text); font-weight: 500; padding: 5px 10px; border-radius: 99px; background: rgba(212,0,0,.2); border: 1px solid rgba(255,90,80,.4); }
+/* tiles */
+.mini-rows { margin-top: 8px; display: grid; gap: 6px; max-width: 460px; }
+.mrow { display: grid; grid-template-columns: 40px 58px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 12px; border-radius: 13px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); font-size: 13px; }
+.mrow .n { font-family: var(--mono); color: var(--red-hi); } .mrow .l { font-family: var(--mono); font-size: 11.5px; color: var(--muted); } .mrow em { font-style: normal; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mrow.new { border-color: rgba(255,90,80,.5); background: rgba(212,0,0,.1); } .mrow.new em { color: var(--text); }
+.mrow.new em::after { content: ''; display: inline-block; width: 1.5px; height: 14px; margin-left: 2px; vertical-align: -2px; background: var(--red-hi); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.mrow kbd { font-family: var(--mono); font-size: 10.5px; padding: 3px 7px; border-radius: 6px; border: 1px solid var(--line-2); color: var(--muted); }
+.asp { margin-top: 10px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 12px; }
+.asp span { display: grid; gap: 7px; justify-items: center; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.asp span i { display: block; height: 36px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,.5); background: rgba(255,255,255,.04); }
+.asp span.on i { border-color: var(--red-hi); background: rgba(212,0,0,.16); } .asp span.on { color: var(--text); }
+.looks { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+.looks .dots { display: flex; gap: 6px; align-items: center; }
+.looks .dots i { width: 16px; height: 16px; border-radius: 50%; }
+@media (prefers-reduced-motion: reduce) { .v-drop .zone svg, .mrow.new em::after { animation: none; } }
+@media (max-width: 1100px) { .win-body.rl { grid-template-columns: 30% minmax(0, 1fr); } .sb { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .win-body.rl { grid-template-columns: minmax(0, 1fr); height: 520px; }
+  .pj .seg, .pj .pdfb { display: none; }
+  .mrow { grid-template-columns: 30px 66px minmax(0, 1fr); } .mrow kbd { display: none; }
+}
+@media (max-width: 420px) { .sb { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 7px; padding: 0 9px 9px; } .shot .ds { -webkit-line-clamp: 1; } }
+
+/* ---------- RoarWriter's own (Oct 2026): its orange instead of the Lab's red, and the writing window ---------- */
+:root { --red: #f2571d; --red-hi: #ff7a3d; }
+body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%, transparent 62%), radial-gradient(800px 600px at 100% 100%, rgba(255,107,44,.12), transparent 70%), linear-gradient(180deg, #23272e 0%, #16181c 60%); }
+.pill.main { box-shadow: 0 12px 34px rgba(242,87,29,.32); }
+.app-icon { filter: drop-shadow(0 24px 50px rgba(242,87,29,.32)); }
+.win-body.rw { grid-template-columns: 21% minmax(0, 1fr) 25%; }
+.rw .pn { display: flex; flex-direction: column; overflow: hidden; }
+.rw .side .seg2 { display: flex; gap: 2px; margin: 4px 10px 8px; padding: 3px; border-radius: 99px; background: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.06); }
+.rw .side .seg2 span { flex: 1; text-align: center; padding: 5px 0; border-radius: 99px; font-size: 10.5px; color: #9aa0aa; }
+.rw .side .seg2 span.on { background: rgba(255,255,255,.14); color: #fff; font-weight: 700; }
+.rw .sc { display: flex; gap: 8px; margin: 1px 8px; padding: 8px 9px; border-radius: 11px; font-family: 'Courier New', Courier, monospace; font-size: 10.5px; line-height: 1.3; text-transform: uppercase; color: #d6dce4; }
+.rw .sc b { color: var(--red-hi); font-family: var(--sans); font-weight: 800; min-width: 14px; }
+.rw .sc.on { background: rgba(255,107,44,.14); border: 1px solid rgba(255,107,44,.35); }
+.rw .desk { display: flex; justify-content: center; padding: 14px 10px 0; overflow: hidden; background: rgba(0,0,0,.18); border-radius: 16px; }
+.rw .page { width: min(100%, 470px); background: #fffefb; color: #111; border-radius: 4px 4px 0 0; padding: 30px 30px 0 46px; box-shadow: 0 20px 50px rgba(0,0,0,.45); font-family: 'Courier Prime', 'Courier New', Courier, monospace; font-size: clamp(9px, .82vw, 12px); line-height: 1.25; }
+.rw .page p { margin: 1.25em 0 0; white-space: pre-wrap; }
+.rw .page .sh { margin-top: 0; text-transform: uppercase; }
+.rw .page .sh2 { margin-top: 2.2em; text-transform: uppercase; }
+.rw .page .ch { margin-left: 35%; text-transform: uppercase; }
+.rw .page .pa { margin: 0 0 0 26%; width: 38%; }
+.rw .page .di { margin: 0 0 0 17%; width: 58%; }
+.rw .page .tr { text-align: right; text-transform: uppercase; }
+.rw .page .cur::after { content: ''; display: inline-block; width: 1.5px; height: 1.05em; margin-left: 1px; vertical-align: -2px; background: #e0431b; animation: blink 1.1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.rw .sugg { display: inline-flex; flex-direction: column; margin: 4px 0 0 35%; padding: 4px; border-radius: 9px; background: #23262c; color: #eef0f3; box-shadow: 0 10px 24px rgba(0,0,0,.35); font-family: 'Courier New', monospace; font-size: .92em; }
+.rw .sugg span { padding: 3px 9px; border-radius: 6px; } .rw .sugg span:first-child { background: rgba(255,107,44,.3); }
+.rw .ai { padding: 12px; gap: 8px; }
+.rw .ai-h { display: flex; align-items: center; gap: 7px; font-weight: 800; font-size: 13px; } .rw .ai-h svg { width: 15px; height: 15px; color: var(--red-hi); }
+.rw .ai .q { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.rw .ai .q span { padding: 6px 4px; border-radius: 99px; text-align: center; font-size: 9.5px; font-weight: 600; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rw .ai .pv { background: #fffefb; color: #111; border-radius: 8px; padding: 10px 10px 12px; font-family: 'Courier New', monospace; font-size: 9px; line-height: 1.3; }
+.rw .ai .pv p { margin: .9em 0 0; } .rw .ai .pv p:first-child { margin-top: 0; }
+.rw .ai .pv .ch { margin-left: 36%; } .rw .ai .pv .di { margin-left: 16%; width: 70%; } .rw .ai .pv .pa { margin-left: 26%; }
+.rw .ai .act { display: flex; gap: 5px; } .rw .ai .act span { padding: 6px 12px; border-radius: 99px; font-size: 10px; font-weight: 700; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); }
+.rw .ai .act span.main { background: var(--red); border-color: transparent; color: #fff; }
+.rw .top { display: flex; align-items: center; gap: 6px; padding: 8px 10px; }
+.rw .top .ttl { font-weight: 800; font-size: 12.5px; margin-right: auto; }
+.rw .top span { padding: 5px 10px; border-radius: 99px; font-size: 10px; font-weight: 600; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); white-space: nowrap; }
+/* the three: what each shows */
+.v-keys { z-index: 1; width: 82%; display: grid; gap: 8px; }
+.v-keys .k-r { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); font-size: 13px; }
+.v-keys .k-r kbd { font-family: var(--mono); font-size: 11px; padding: 3px 8px; border-radius: 7px; background: rgba(255,255,255,.1); border: 1px solid var(--line-2); }
+.v-keys .k-r em { font-style: normal; color: var(--muted); margin-left: auto; font-size: 12px; } .v-keys .k-r b { color: var(--red-hi); font-weight: 700; }
+.v-gr { z-index: 1; width: 80%; padding: 18px 20px; border-radius: 10px; background: #fffefb; color: #111; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.35; box-shadow: 0 20px 50px rgba(0,0,0,.45); }
+.v-gr p { margin: 1em 0 0; } .v-gr p:first-child { margin: 0; } .v-gr .ch { margin-left: 34%; } .v-gr .di { margin-left: 16%; width: 66%; }
+.v-gr .sugg { display: inline-flex; flex-direction: column; margin: 6px 0 0 10%; padding: 4px; border-radius: 9px; background: #23262c; color: #eef0f3; font-size: 11.5px; }
+.v-gr .sugg span { padding: 3px 9px; border-radius: 6px; } .v-gr .sugg span:first-child { background: rgba(255,107,44,.32); }
+.v-ai { z-index: 1; width: 80%; display: grid; gap: 10px; }
+.v-ai .bub { justify-self: end; max-width: 86%; padding: 10px 13px; border-radius: 15px 15px 5px 15px; background: linear-gradient(180deg, #ff7a3d, #e0431b); color: #fff; font-size: 13px; }
+.v-ai .pv { padding: 12px 14px; border-radius: 10px; background: #fffefb; color: #111; font-family: 'Courier New', monospace; font-size: 11.5px; line-height: 1.3; }
+.v-ai .pv p { margin: .8em 0 0; } .v-ai .pv p:first-child { margin: 0; } .v-ai .pv .ch { margin-left: 36%; } .v-ai .pv .di { margin-left: 16%; width: 70%; }
+.v-ai .act { display: flex; gap: 6px; } .v-ai .act span { padding: 7px 14px; border-radius: 99px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,.07); border: 1px solid var(--line-2); } .v-ai .act span.main { background: var(--red); border-color: transparent; }
+/* a tile's little picture */
+.pdfs { margin-top: 8px; display: flex; gap: 10px; }
+.pdfs i { width: 74px; aspect-ratio: 8.27 / 11.69; border-radius: 4px; background: #fffefb; position: relative; box-shadow: 0 10px 24px rgba(0,0,0,.35); }
+.pdfs i::before { content: ''; position: absolute; inset: 16% 14% 20% 22%; background: repeating-linear-gradient(180deg, #c9c9c9 0 2px, transparent 2px 7px); opacity: .8; }
+.pdfs i.tp::before { inset: 34% 30% 50% 30%; background: repeating-linear-gradient(180deg, #333 0 2px, transparent 2px 8px); }
+.pdfs i b { position: absolute; top: 5px; right: 7px; font: 7px 'Courier New', monospace; color: #333; }
+.fmts { margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap; }
+.fmts span { font-family: var(--mono); font-size: 12px; padding: 8px 14px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); }
+.fmts span b { color: var(--red-hi); }
+.dls.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .win-body.rw { grid-template-columns: 26% minmax(0, 1fr); } .win-body.rw .pn.ai { display: none; } .dls.three { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) { .win-body.rw { grid-template-columns: minmax(0, 1fr); } .win-body.rw .side { display: none; } .rw .page { padding: 20px 16px 0 26px; font-size: 9.5px; } }
+</style>
+</head>
+<body>
+<header class="bar" id="bar">
+  <a class="home" href="../../" aria-label="The Mad Lions">
+    <img class="wordmark" src="../../wordmark.png" alt="The Mad Lions">
+    <span class="sep"></span>
+    <span class="rm" aria-label="RoarWriter"><span class="a">ROAR</span><span class="b">WRITER</span></span>
+  </a>
+  <nav aria-label="Sections">
+    <a href="#only" data-t="nav.only">Only here</a>
+    <a href="#page" data-t="nav.page">The page</a>
+    <a href="#all" data-t="nav.all">Everything</a>
+    <a href="#yours" data-t="nav.yours">Yours</a>
+    <a href="#download" data-t="nav.download">Download</a>
+    <a href="#faq" data-t="nav.faq">Questions</a>
+  </nav>
+  <div class="end">
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" class="on">EN</button>
+      <button type="button" data-lang="el">GR</button>
+    </div>
+    <a class="pill sm main web-link" href="https://alexisdigipro-hub.github.io/roarwriter/" data-t="cta.open">Open RoarWriter</a>
+  </div>
+</header>
+
+<main>
+<div class="hero" id="top">
+  <div class="hero-top">
+    <div>
+      <p class="kicker rv"><i></i><span data-t="hero.kicker">Screenwriting · The Mad Lions Lab · Experiment 06</span></p>
+      <h1 class="rv" style="--d:.06s">
+        <svg class="app-icon" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="rwg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#e0431b"/></linearGradient></defs><rect x="2" y="2" width="60" height="60" rx="15" fill="#16181d" stroke="#3a3a3c" stroke-width=".5"/><rect x="17" y="12" width="30" height="40" rx="4" fill="#fff"/><path d="M23 22h18M23 28h12M29 34h12M23 40h16" stroke="#16181d" stroke-width="2.6" stroke-linecap="round"/><circle cx="46" cy="46" r="9" fill="url(#rwg)"/><path d="M42.5 49.5l6-6" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></svg>
+        <span class="rm"><span class="a">ROAR</span><span class="b">WRITER</span></span><em class="beta">beta</em>
+      </h1>
+    </div>
+  </div>
+  <div class="hero-sub">
+    <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>Write the film <b>in the format it is shot from</b>. Scene headings, action, characters and dialogue laid out as the industry reads them, <b>in English or Greek</b>, with <b>a PDF ready to send</b>.</p>
+    <div class="cta rv" style="--d:.22s">
+      <a class="pill main" id="dl-main" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span>Download</span></a>
+      <a class="pill web-link" href="https://alexisdigipro-hub.github.io/roarwriter/"><span data-t="cta.browser">Write in the browser</span></a>
+    </div>
+    <p class="cta-note rv" style="--d:.3s"><span data-t="cta.note">Free · Mac, Windows, browser · your RoarMe account · updates itself</span></p>
+  </div>
+
+  <div class="frame rv" style="--d:.2s" aria-hidden="true">
+    <div class="win" id="win">
+      <div class="win-top"><i></i><i></i><i></i></div>
+      <div class="win-body rw">
+        <div class="pn side">
+          <div class="pn-h"><span class="rm"><span class="a">ROAR</span><span class="b">WRITER</span></span></div>
+          <div class="seg2"><span class="on">Scenes</span><span>Characters</span></div>
+          <div class="sc"><b>1</b>ΕΣΩΤ. ΚΟΥΖΙΝΑ - ΝΥΧΤΑ</div>
+          <div class="sc on"><b>2</b>ΕΞΩΤ. ΣΤΑΘΜΟΣ - ΝΥΧΤΑ</div>
+          <div class="sc"><b>3</b>INT. TRAIN - CONTINUOUS</div>
+          <div class="sc"><b>4</b>ΕΞΩΤ. ΠΛΑΤΕΙΑ - ΞΗΜΕΡΩΜΑ</div>
+        </div>
+        <div class="pn">
+          <div class="top"><span class="ttl">Η Νύχτα του Σταθμού</span><span>Character ▾</span><span>12 pages</span><span>Export</span></div>
+          <div class="desk"><div class="page">
+            <p class="sh">ΕΞΩΤ. ΣΤΑΘΜΟΣ - ΝΥΧΤΑ</p>
+            <p>Η αποβάθρα είναι άδεια. Η ΜΑΡΙΑ (30) περιμένει κάτω από τη μοναδική λάμπα, με τη βαλίτσα στα πόδια της.</p>
+            <p class="ch">ΝΙΚΟΣ</p>
+            <p class="pa">(από μακριά)</p>
+            <p class="di">Δεν θα έρθει, Μαρία.</p>
+            <p class="ch">ΜΑΡΙΑ</p>
+            <p class="di">Θα έρθει. Το είπε.</p>
+            <p>Τα φώτα ενός τρένου βγαίνουν από το σκοτάδι.</p>
+            <p class="ch cur">Ν</p>
+            <span class="sugg"><span>ΝΙΚΟΣ</span><span>ΝΙΚΟΣ (V.O.)</span></span>
+          </div></div>
+        </div>
+        <div class="pn ai">
+          <div class="ai-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg> AI</div>
+          <div class="q"><span>Suggest dialogue</span><span>Rewrite scene</span><span>What comes next</span><span>Ideas &amp; notes</span></div>
+          <div class="pv"><p class="ch">ΝΙΚΟΣ</p><p class="di">Κι αν δεν είναι μέσα;</p><p class="ch">ΜΑΡΙΑ</p><p class="pa">(χωρίς να τον κοιτάζει)</p><p class="di">Τότε θα πάρω το επόμενο.</p></div>
+          <div class="act"><span class="main">Insert</span><span>Copy</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="tag t1"><i>01</i><span data-t="tag.keys">Enter and Tab, as in Final Draft</span></div>
+    <div class="tag t2"><i>02</i><span data-t="tag.ai">An AI that waits to be asked</span></div>
+    <div class="tag t3"><i>03</i><span data-t="tag.gr">ΕΣΩΤ. / ΕΞΩΤ. as well as INT. / EXT.</span></div>
+  </div>
+</div>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-in">
+  <span data-t="tk.1">Industry format</span><span data-t="tk.2">English and Greek</span><span data-t="tk.3">Final Draft .fdx</span><span data-t="tk.4">Fountain</span><span data-t="tk.5">PDF ready to send</span><span data-t="tk.6">Scenes and characters</span><span data-t="tk.7">Works offline</span><span data-t="tk.8">AI on request</span>
+  <span data-t="tk.1">Industry format</span><span data-t="tk.2">English and Greek</span><span data-t="tk.3">Final Draft .fdx</span><span data-t="tk.4">Fountain</span><span data-t="tk.5">PDF ready to send</span><span data-t="tk.6">Scenes and characters</span><span data-t="tk.7">Works offline</span><span data-t="tk.8">AI on request</span>
+</div></div>
+
+<section id="only">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="only.idx">01 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only RoarWriter</b> does.</h2></div>
+    <p class="sub rv" data-t="only.sub">Why a director writes the next script here, and not in a word processor.</p>
+  </div>
+  <div class="three">
+    <div class="big rv">
+      <span class="no">01</span>
+      <div><h3 data-t="f1.t" data-html>The keys of <b>Final Draft</b>.</h3><p data-t="f1.p">Enter goes on to what usually comes next: after a scene heading the action, after a name the dialogue, after the dialogue the next name. Tab turns a line into another kind, Cmd or Ctrl and a number picks one. The format takes care of itself while you write.</p>
+        <div class="chips"><span data-t="f1.c1">Enter · Tab · ⌘1–7</span><span data-t="f1.c2">Seven kinds of element</span><span data-t="f1.c3">Undo ⌘Z</span></div></div>
+      <div class="viz"><div class="v-keys">
+        <div class="k-r"><kbd>Enter</kbd><span data-t="f1.k1">Scene heading</span><em>→ <b data-t="f1.k1b">Action</b></em></div>
+        <div class="k-r"><kbd>Tab</kbd><span data-t="f1.k2">Action</span><em>→ <b data-t="f1.k2b">Character</b></em></div>
+        <div class="k-r"><kbd>Enter</kbd><span data-t="f1.k3">Character</span><em>→ <b data-t="f1.k3b">Dialogue</b></em></div>
+        <div class="k-r"><kbd>Tab</kbd><span data-t="f1.k4">Dialogue</span><em>→ <b data-t="f1.k4b">(parenthetical)</b></em></div>
+      </div></div>
+    </div>
+    <div class="big rv">
+      <span class="no">02</span>
+      <div><h3 data-t="f2.t" data-html><b>Greek</b>, as well as English.</h3><p data-t="f2.p">Type ΕΣΩΤ. or ΕΞΩΤ. and the line becomes a scene heading, as INT. and EXT. do. Names, places and the time of day are suggested as you type, ΜΕΡΑ and ΝΥΧΤΑ included, and the PDF prints Greek in the same Courier as the rest.</p>
+        <div class="chips"><span data-t="f2.c1">ΕΣΩΤ. · ΕΞΩΤ.</span><span data-t="f2.c2">Names and places suggested</span><span data-t="f2.c3">Greek and English spelling</span></div></div>
+      <div class="viz"><div class="v-gr">
+        <p>ΕΣΩΤ. ΚΟΥΖΙΝΑ - ΝΥ<span style="border-right:1.5px solid #e0431b">&nbsp;</span></p>
+        <span class="sugg"><span>ΕΣΩΤ. ΚΟΥΖΙΝΑ - ΝΥΧΤΑ</span><span>ΕΣΩΤ. ΚΟΥΖΙΝΑ - ΝΥΧΤΑ (ΣΥΝΕΧΕΙΑ)</span></span>
+        <p class="ch">ΜΑΡΙΑ</p>
+        <p class="di">Άναψε το φως.</p>
+      </div></div>
+    </div>
+    <div class="big rv">
+      <span class="no">03</span>
+      <div><h3 data-t="f3.t" data-html>An AI that <b>waits to be asked</b>.</h3><p data-t="f3.p">On the scene you are in: suggest dialogue, rewrite the scene, write what comes next, or give notes, in the language of the script and the voice of its characters. The answer is shown first, as script; nothing on the page changes until you press Insert or Replace.</p>
+        <div class="chips"><span data-t="f3.c1">Suggest dialogue</span><span data-t="f3.c2">Rewrite scene</span><span data-t="f3.c3">What comes next</span><span data-t="f3.c4">Ideas &amp; notes</span></div></div>
+      <div class="viz"><div class="v-ai">
+        <span class="bub" data-t="f3.ask">Make Nikos more afraid.</span>
+        <div class="pv"><p class="ch">ΝΙΚΟΣ</p><p class="di">Πάμε. Τώρα. Πριν μας δουν.</p></div>
+        <div class="act"><span class="main">Insert</span><span>Replace scene</span></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="page">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="page.idx">02 · The page</p><h2 class="rv" data-t="page.title" data-html>A script <b>that reads like a script</b>.</h2></div>
+    <p class="sub rv" data-t="page.sub">The page as producers, actors and the crew expect it, and the files the rest of the industry uses.</p>
+  </div>
+  <div class="board">
+    <div class="tile t-tasks rv">
+      <span class="k" data-t="s1.k">The PDF</span>
+      <h3 data-t="s1.t" data-html>Ready <b>to send</b>.</h3>
+      <p data-t="s1.p">Courier 12 with the standard margins, a title page, page numbers from page two, A4 or US Letter. The pages are laid out for real, so a scene heading never ends a page and a name stays with its lines.</p>
+      <div class="pdfs"><i class="tp"></i><i></i><i><b>2.</b></i><i><b>3.</b></i></div>
+    </div>
+    <div class="tile t-ord rv">
+      <span class="k" data-t="s2.k">The files</span>
+      <h3 data-t="s2.t" data-html>Final Draft and <b>Fountain</b>.</h3>
+      <p data-t="s2.p">Open a script from Final Draft or Fountain, save it back as either. Paste a screenplay as plain text and it turns into elements.</p>
+      <div class="fmts"><span><b>.fdx</b> in · out</span><span><b>.fountain</b> in · out</span><span><b>.pdf</b> out</span></div>
+    </div>
+    <div class="tile t-upd rv">
+      <span class="k" data-t="s3.k">At the side</span>
+      <h3 data-t="s3.t" data-html>Scenes and <b>characters</b>.</h3>
+      <p data-t="s3.p">Every scene numbered, the one you are in lit; one click takes you there. Every character with how many times they speak and in how many scenes.</p>
+    </div>
+    <div class="tile t-icon rv">
+      <span class="k" data-t="s4.k" data-html>Updates itself <em>0.1</em></span>
+      <h3 data-t="s4.t" data-html>Writes <b>offline</b>, too.</h3>
+      <p data-t="s4.p">The Mac and Windows apps carry the whole program inside them: on a plane or on set with no signal, you go on writing, and the script is sent to your account when the connection is back. New versions download by themselves.</p>
+    </div>
+  </div>
+</section>
+
+<section id="all">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="all.idx">03 · Everything</p><h2 class="rv" data-t="all.title" data-html>And all <b>a draft needs</b>.</h2></div>
+    <p class="sub rv" data-t="all.sub">The rest of RoarWriter, briefly.</p>
+  </div>
+  <div class="index">
+    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">Seven kinds of line</b><p data-t="ix1.p">Scene heading, action, character, parenthetical, dialogue, transition and shot, each where the format puts it.</p></div>
+    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">It knows what you mean</b><p data-t="ix2.p">INT. or ΕΣΩΤ. at the start of a line makes a scene heading; CUT TO: makes a transition. A parenthetical opens its own brackets.</p></div>
+    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Title page</b><p data-t="ix3.p">Title, credit, author, draft and date, contact: on the first page of the PDF and in the files.</p></div>
+    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">Page count as you go</b><p data-t="ix4.p">How many pages the script is, always in the bar at the top.</p></div>
+    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">Undo, and nothing to save</b><p data-t="ix5.p">Every change keeps itself. ⌘Z and ⇧⌘Z go back and forth through what you did.</p></div>
+    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Your library</b><p data-t="ix6.p">Every script as a page of its own, with its pages and scenes; search, duplicate, delete.</p></div>
+    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Import</b><p data-t="ix7.p">Bring in a .fdx from Final Draft or a .fountain, title page included, and go on writing.</p></div>
+    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">A real menu</b><p data-t="ix8.p">On Mac and Windows: Export PDF, Save as Final Draft or Fountain, and the seven kinds with their shortcuts.</p></div>
+    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">Spelling in two languages</b><p data-t="ix9.p">The apps check Greek and English as you type, with suggestions on a right click.</p></div>
+    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">The look of RoarMe</b><p data-t="ix10.p">Dark glass around a white page, round glass buttons, and the orange of RoarWriter.</p></div>
+    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">In the browser too</b><p data-t="ix11.p">The same app on the web, nothing to install, with your scripts in your account.</p></div>
+    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">AI only when you ask</b><p data-t="ix12.p">Nothing is sent to the AI until you press one of its buttons, and only the scene you are on.</p></div>
+  </div>
+</section>
+
+<section id="yours">
+  <div class="priv">
+    <div>
+      <p class="idx rv" data-t="pv.idx">04 · Yours</p>
+      <h2 class="rv" data-t="pv.title" data-html>Your script, <b>your account</b>.</h2>
+      <p class="sub rv" style="margin-top:22px;color:var(--muted);font-size:17px;line-height:1.6" data-t="pv.sub">Kept on your computer the moment you type, and in your account a second later, so it follows you to every device.</p>
+    </div>
+    <div class="prs">
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></i><b data-t="p1.t">On your computer first</b><p data-t="p1.p">Every change is kept here at once: writing never waits for the internet, and works without it.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></i><b data-t="p2.t">Only yours in the cloud</b><p data-t="p2.p">In your account, your scripts can be opened only by you.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></i><b data-t="p3.t">One account</b><p data-t="p3.p">The same account as RoarMe, Roardino and RoarList.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg></i><b data-t="p4.t">The AI sees only what you send</b><p data-t="p4.p">The scene you are on, and only when you press an AI button. It never writes on your page by itself.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="dl.idx">05 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarWriter</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
+    <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab that we write our own films with.</p>
+  </div>
+  <div class="dls three">
+    <div class="dl rv" id="dl-mac">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.5 1.3-.1 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.5.9-1.4 1.3-2.7 1.3-2.8 0 0-2.3-.9-2.3-4.2zM14 5.3c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1.1.1 2.1-.6 2.8-1.4z"/></svg></i>
+      <h3>Mac</h3>
+      <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
+      <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roarwriter/releases/latest/download/RoarWriter-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+      <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roarwriter/releases/latest/download/RoarWriter-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
+    </div>
+    <div class="dl rv" id="dl-win">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
+      <h3>Windows</h3>
+      <small data-t="dl.win">Windows 10 and 11.</small>
+      <a class="pill main" data-f="win" href="https://github.com/alexisdigipro-hub/roarwriter/releases/latest/download/RoarWriter-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+    </div>
+    <div class="dl rv" id="dl-web">
+      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.5-3.8-9S9.5 5.5 12 3z"/></svg></i>
+      <h3 data-t="dl.webt">Browser</h3>
+      <small data-t="dl.web">On any computer, with your RoarMe account. Nothing to install.</small>
+      <a class="pill web-link" href="https://alexisdigipro-hub.github.io/roarwriter/" data-t="cta.open">Open RoarWriter</a>
+    </div>
+  </div>
+  <div class="dl-note">
+    <p class="rv" data-t="dl.upd" data-html><b>It updates itself.</b> The Mac and Windows apps fetch new versions on their own and ask for a quick restart.</p>
+    <p class="rv" data-t="dl.help" data-html><b>First time on a Mac?</b> The app is not signed by Apple yet: right-click RoarWriter in Applications and choose Open, or go to System Settings &gt; Privacy &amp; Security &gt; Open Anyway. Once.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="faq">
+    <div><p class="idx rv" data-t="faq.idx">06 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
+    <div class="qa">
+      <details class="rv"><summary data-t="q1">Is RoarWriter free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
+      <details class="rv"><summary data-t="q2">Do I need an account?</summary><p data-t="a2">Yes, a RoarMe account: the same one as RoarMe, Roardino and RoarList. It is what keeps your scripts safe and the same on every device.</p></details>
+      <details class="rv"><summary data-t="q3">Can I open my Final Draft scripts?</summary><p data-t="a3">Yes: import the .fdx and go on writing; save it back as .fdx whenever you need it in Final Draft. Fountain works both ways too.</p></details>
+      <details class="rv"><summary data-t="q4">Does it write Greek scripts properly?</summary><p data-t="a4">Yes. Scene headings with ΕΣΩΤ. and ΕΞΩΤ., names in capitals, suggestions in Greek, spelling in Greek in the apps, and a PDF in the same format as an English script.</p></details>
+      <details class="rv"><summary data-t="q5">What does the AI see?</summary><p data-t="a5">Only the scene you are on and a little of what comes before it, and only when you press one of its buttons. Its answer appears beside the page; nothing changes until you press Insert or Replace.</p></details>
+      <details class="rv"><summary data-t="q6">Does it work without internet?</summary><p data-t="a6">The Mac and Windows apps do: you write as usual and the script is sent to your account when the connection is back. The AI needs a connection.</p></details>
+      <details class="rv"><summary data-t="q7">A4 or US Letter?</summary><p data-t="a7">Either, chosen per script on its title page. The margins and the font stay those of the standard screenplay format.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <p class="idx rv" data-t="ct.idx">Contact</p>
+  <h2 class="rv" data-t="ct.title" data-html>Ideas for <b>the next version</b>?</h2>
+  <a class="mail rv" href="mailto:lab@themadlions.com?subject=RoarWriter">lab@themadlions.com</a>
+</section>
+</main>
+<footer>
+  <a href="../../"><img class="wordmark" src="../../wordmark.png" alt="The Mad Lions"></a>
+  <nav>
+    <a href="../" data-t="ft.lab">The Mad Lions Lab</a>
+    <a href="../../roarme/">RoarMe</a>
+    <a href="../../roardino/">Roardino</a>
+    <a href="../roarlist/">RoarList</a>
+  </nav>
+  <span data-t="footer">© 2026 The Mad Lions · RoarWriter</span>
+</footer>
+
+<script>
+(function () {
+  var APP = 'RoarWriter', REPO = 'alexisdigipro-hub/roarwriter', WEB = 'https://alexisdigipro-hub.github.io/roarwriter/'
+  var EL = {
+    'nav.only': 'Μόνο εδώ', 'nav.page': 'Η σελίδα', 'nav.all': 'Όλα', 'nav.yours': 'Δικά σου', 'nav.download': 'Λήψη', 'nav.faq': 'Ερωτήσεις',
+    'cta.open': 'Άνοιξε το RoarWriter', 'cta.browser': 'Γράψε στον browser', 'cta.note': 'Δωρεάν · Mac, Windows, browser · ο λογαριασμός σου στο RoarMe · ενημερώνεται μόνο του',
+    'hero.kicker': 'Σενάριο · The Mad Lions Lab · Πείραμα 06',
+    'hero.lead': 'Γράψε την ταινία <b>στο format που γυρίζεται</b>. Επικεφαλίδες σκηνών, δράση, χαρακτήρες και διάλογοι όπως τα διαβάζει η βιομηχανία, <b>στα ελληνικά ή στα αγγλικά</b>, με <b>ένα PDF έτοιμο να σταλεί</b>.',
+    'tag.keys': 'Enter και Tab, όπως στο Final Draft', 'tag.ai': 'Ένα AI που περιμένει να το ρωτήσεις', 'tag.gr': 'ΕΣΩΤ. / ΕΞΩΤ. όπως και INT. / EXT.',
+    'tk.1': 'Βιομηχανικό format', 'tk.2': 'Ελληνικά και αγγλικά', 'tk.3': 'Final Draft .fdx', 'tk.4': 'Fountain', 'tk.5': 'PDF έτοιμο να σταλεί', 'tk.6': 'Σκηνές και χαρακτήρες', 'tk.7': 'Δουλεύει χωρίς σύνδεση', 'tk.8': 'AI όταν το ζητήσεις',
+    'only.idx': '01 · Μόνο εδώ', 'only.title': 'Τρία πράγματα που κάνει <b>μόνο το RoarWriter</b>.', 'only.sub': 'Γιατί ένας σκηνοθέτης γράφει το επόμενο σενάριο εδώ, και όχι σε έναν επεξεργαστή κειμένου.',
+    'f1.t': 'Τα πλήκτρα του <b>Final Draft</b>.', 'f1.p': 'Το Enter πάει σε ό,τι έρχεται συνήθως μετά: μετά την επικεφαλίδα η δράση, μετά το όνομα ο διάλογος, μετά τον διάλογο το επόμενο όνομα. Το Tab αλλάζει το είδος της γραμμής, το Cmd ή Ctrl με έναν αριθμό διαλέγει ένα. Το format φροντίζεται μόνο του όσο γράφεις.',
+    'f1.c1': 'Enter · Tab · ⌘1–7', 'f1.c2': 'Επτά είδη γραμμής', 'f1.c3': 'Αναίρεση ⌘Z',
+    'f1.k1': 'Επικεφαλίδα', 'f1.k1b': 'Δράση', 'f1.k2': 'Δράση', 'f1.k2b': 'Χαρακτήρας', 'f1.k3': 'Χαρακτήρας', 'f1.k3b': 'Διάλογος', 'f1.k4': 'Διάλογος', 'f1.k4b': '(παρένθεση)',
+    'f2.t': '<b>Ελληνικά</b>, όπως και αγγλικά.', 'f2.p': 'Γράψε ΕΣΩΤ. ή ΕΞΩΤ. και η γραμμή γίνεται επικεφαλίδα σκηνής, όπως με το INT. και το EXT. Ονόματα, τόποι και ώρα της μέρας προτείνονται καθώς γράφεις, μαζί και τα ΜΕΡΑ και ΝΥΧΤΑ, και το PDF τυπώνει τα ελληνικά στην ίδια Courier με τα υπόλοιπα.',
+    'f2.c1': 'ΕΣΩΤ. · ΕΞΩΤ.', 'f2.c2': 'Προτάσεις για ονόματα και τόπους', 'f2.c3': 'Ορθογραφία σε ελληνικά και αγγλικά',
+    'f3.t': 'Ένα AI που <b>περιμένει να το ρωτήσεις</b>.', 'f3.p': 'Πάνω στη σκηνή που είσαι: πρότεινε διάλογο, ξαναγράψε τη σκηνή, γράψε τη συνέχεια ή δώσε σημειώσεις, στη γλώσσα του σεναρίου και με τη φωνή των χαρακτήρων του. Η απάντηση φαίνεται πρώτα, ως σενάριο· τίποτα στη σελίδα δεν αλλάζει μέχρι να πατήσεις Insert ή Replace.',
+    'f3.c1': 'Πρότεινε διάλογο', 'f3.c2': 'Ξαναγράψε τη σκηνή', 'f3.c3': 'Η συνέχεια', 'f3.c4': 'Ιδέες και σημειώσεις', 'f3.ask': 'Κάνε τον Νίκο πιο φοβισμένο.',
+    'page.idx': '02 · Η σελίδα', 'page.title': 'Ένα σενάριο <b>που διαβάζεται σαν σενάριο</b>.', 'page.sub': 'Η σελίδα όπως την περιμένουν παραγωγοί, ηθοποιοί και συνεργείο, και τα αρχεία που χρησιμοποιεί όλη η βιομηχανία.',
+    's1.k': 'Το PDF', 's1.t': 'Έτοιμο <b>να σταλεί</b>.', 's1.p': 'Courier 12 με τα κανονικά περιθώρια, σελίδα τίτλου, αριθμοί σελίδας από τη δεύτερη, A4 ή US Letter. Οι σελίδες στήνονται στ’ αλήθεια, οπότε μια επικεφαλίδα δεν κλείνει ποτέ σελίδα και ένα όνομα μένει με τις ατάκες του.',
+    's2.k': 'Τα αρχεία', 's2.t': 'Final Draft και <b>Fountain</b>.', 's2.p': 'Άνοιξε ένα σενάριο από Final Draft ή Fountain, αποθήκευσέ το πίσω σε όποιο από τα δύο θες. Επικόλλησε ένα σενάριο ως απλό κείμενο και γίνεται γραμμές του format.',
+    's3.k': 'Στο πλάι', 's3.t': 'Σκηνές και <b>χαρακτήρες</b>.', 's3.p': 'Κάθε σκηνή αριθμημένη, αυτή που είσαι φωτισμένη· ένα κλικ σε πάει εκεί. Κάθε χαρακτήρας με πόσες φορές μιλά και σε πόσες σκηνές.',
+    's4.k': 'Ενημερώνεται μόνο του <em>0.1</em>', 's4.t': 'Γράφει και <b>χωρίς σύνδεση</b>.', 's4.p': 'Οι εφαρμογές για Mac και Windows έχουν όλο το πρόγραμμα μέσα τους: στο αεροπλάνο ή στο γύρισμα χωρίς σήμα συνεχίζεις να γράφεις, και το σενάριο πάει στον λογαριασμό σου όταν γυρίσει η σύνδεση. Οι νέες εκδόσεις κατεβαίνουν μόνες τους.',
+    'all.idx': '03 · Όλα', 'all.title': 'Και όλα όσα <b>θέλει ένα draft</b>.', 'all.sub': 'Τα υπόλοιπα του RoarWriter, με λίγα λόγια.',
+    'ix1.t': 'Επτά είδη γραμμής', 'ix1.p': 'Επικεφαλίδα σκηνής, δράση, χαρακτήρας, παρένθεση, διάλογος, μετάβαση και πλάνο, το καθένα εκεί που το βάζει το format.',
+    'ix2.t': 'Καταλαβαίνει τι εννοείς', 'ix2.p': 'Το INT. ή ΕΣΩΤ. στην αρχή της γραμμής κάνει επικεφαλίδα· το CUT TO: κάνει μετάβαση. Η παρένθεση ανοίγει μόνη της τις παρενθέσεις της.',
+    'ix3.t': 'Σελίδα τίτλου', 'ix3.p': 'Τίτλος, credit, συγγραφέας, draft και ημερομηνία, επαφή: στην πρώτη σελίδα του PDF και στα αρχεία.',
+    'ix4.t': 'Σελίδες καθώς γράφεις', 'ix4.p': 'Πόσες σελίδες έχει το σενάριο, πάντα στη μπάρα πάνω.',
+    'ix5.t': 'Αναίρεση, και τίποτα για αποθήκευση', 'ix5.p': 'Κάθε αλλαγή κρατιέται μόνη της. Τα ⌘Z και ⇧⌘Z πάνε πίσω και μπρος σε ό,τι έκανες.',
+    'ix6.t': 'Η βιβλιοθήκη σου', 'ix6.p': 'Κάθε σενάριο ως σελίδα, με τις σελίδες και τις σκηνές του· αναζήτηση, αντίγραφο, διαγραφή.',
+    'ix7.t': 'Εισαγωγή', 'ix7.p': 'Φέρε ένα .fdx από το Final Draft ή ένα .fountain, μαζί με τη σελίδα τίτλου, και συνέχισε να γράφεις.',
+    'ix8.t': 'Κανονικό μενού', 'ix8.p': 'Σε Mac και Windows: Export PDF, αποθήκευση ως Final Draft ή Fountain, και τα επτά είδη με τις συντομεύσεις τους.',
+    'ix9.t': 'Ορθογραφία σε δύο γλώσσες', 'ix9.p': 'Οι εφαρμογές ελέγχουν ελληνικά και αγγλικά καθώς γράφεις, με προτάσεις στο δεξί κλικ.',
+    'ix10.t': 'Το look του RoarMe', 'ix10.p': 'Σκούρο γυαλί γύρω από μια λευκή σελίδα, στρογγυλά γυάλινα κουμπιά και το πορτοκαλί του RoarWriter.',
+    'ix11.t': 'Και στον browser', 'ix11.p': 'Η ίδια εφαρμογή στο web, τίποτα για εγκατάσταση, με τα σενάριά σου στον λογαριασμό σου.',
+    'ix12.t': 'AI μόνο όταν το ζητήσεις', 'ix12.p': 'Τίποτα δεν πάει στο AI μέχρι να πατήσεις ένα από τα κουμπιά του, και μόνο η σκηνή που είσαι.',
+    'pv.idx': '04 · Δικά σου', 'pv.title': 'Το σενάριό σου, <b>ο λογαριασμός σου</b>.', 'pv.sub': 'Κρατιέται στον υπολογιστή σου τη στιγμή που γράφεις και στον λογαριασμό σου ένα δευτερόλεπτο μετά, οπότε σε ακολουθεί σε κάθε συσκευή.',
+    'p1.t': 'Πρώτα στον υπολογιστή σου', 'p1.p': 'Κάθε αλλαγή κρατιέται εδώ αμέσως: το γράψιμο δεν περιμένει ποτέ το internet, και δουλεύει και χωρίς αυτό.',
+    'p2.t': 'Μόνο δικά σου στο cloud', 'p2.p': 'Στον λογαριασμό σου, τα σενάριά σου τα ανοίγεις μόνο εσύ.',
+    'p3.t': 'Ένας λογαριασμός', 'p3.p': 'Ο ίδιος λογαριασμός με RoarMe, Roardino και RoarList.',
+    'p4.t': 'Το AI βλέπει μόνο ό,τι στέλνεις', 'p4.p': 'Τη σκηνή που είσαι, και μόνο όταν πατήσεις ένα κουμπί AI. Δεν γράφει ποτέ μόνο του στη σελίδα σου.',
+    'dl.idx': '05 · Λήψη', 'dl.title': 'Πάρε το <b>RoarWriter</b>.', 'dl.sub': 'Δωρεάν, και σε beta: ένα πείραμα του Mad Lions Lab με το οποίο γράφουμε τις δικές μας ταινίες.',
+    'dl.mac': 'Για Mac με chip της Apple (M1 και νεότερα).', 'dl.get': 'Λήψη', 'dl.intel': 'Παλιότερο Mac με Intel;', 'dl.intelbtn': 'Αυτό', 'dl.win': 'Windows 10 και 11.', 'dl.webt': 'Browser', 'dl.web': 'Σε κάθε υπολογιστή, με τον λογαριασμό σου στο RoarMe. Τίποτα για εγκατάσταση.',
+    'dl.upd': '<b>Ενημερώνεται μόνο του.</b> Οι εφαρμογές για Mac και Windows κατεβάζουν τις νέες εκδόσεις μόνες τους και ζητούν μια γρήγορη επανεκκίνηση.',
+    'dl.help': '<b>Πρώτη φορά σε Mac;</b> Η εφαρμογή δεν είναι ακόμα υπογεγραμμένη από την Apple: κάνε δεξί κλικ στο RoarWriter στις Εφαρμογές και διάλεξε Άνοιγμα, ή πάτα Άνοιγμα παρόλα αυτά στις Ρυθμίσεις συστήματος › Απόρρητο και ασφάλεια. Μία φορά.',
+    'faq.idx': '06 · Ερωτήσεις', 'faq.title': 'Καλό να <b>ξέρεις</b>.',
+    'q1': 'Είναι δωρεάν το RoarWriter;', 'a1': 'Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις.',
+    'q2': 'Χρειάζομαι λογαριασμό;', 'a2': 'Ναι, έναν λογαριασμό RoarMe: τον ίδιο με RoarMe, Roardino και RoarList. Αυτός κρατά τα σενάριά σου ασφαλή και ίδια σε κάθε συσκευή.',
+    'q3': 'Ανοίγει τα σενάριά μου από το Final Draft;', 'a3': 'Ναι: κάνε εισαγωγή το .fdx και συνέχισε να γράφεις· αποθήκευσέ το πίσω ως .fdx όποτε το χρειαστείς στο Final Draft. Και το Fountain δουλεύει και προς τις δύο μεριές.',
+    'q4': 'Γράφει σωστά ελληνικά σενάρια;', 'a4': 'Ναι. Επικεφαλίδες με ΕΣΩΤ. και ΕΞΩΤ., ονόματα με κεφαλαία, προτάσεις στα ελληνικά, ορθογραφία στα ελληνικά στις εφαρμογές, και PDF στο ίδιο format με ένα αγγλικό σενάριο.',
+    'q5': 'Τι βλέπει το AI;', 'a5': 'Μόνο τη σκηνή που είσαι και λίγο από ό,τι προηγείται, και μόνο όταν πατήσεις ένα από τα κουμπιά του. Η απάντηση φαίνεται δίπλα στη σελίδα· τίποτα δεν αλλάζει μέχρι να πατήσεις Insert ή Replace.',
+    'q6': 'Δουλεύει χωρίς internet;', 'a6': 'Οι εφαρμογές για Mac και Windows ναι: γράφεις κανονικά και το σενάριο πάει στον λογαριασμό σου όταν γυρίσει η σύνδεση. Το AI θέλει σύνδεση.',
+    'q7': 'A4 ή US Letter;', 'a7': 'Όποιο θες, για κάθε σενάριο από τη σελίδα τίτλου του. Τα περιθώρια και η γραμματοσειρά μένουν αυτά του κανονικού format σεναρίου.',
+    'ct.idx': 'Επαφή', 'ct.title': 'Ιδέες για <b>την επόμενη έκδοση</b>;', 'ft.lab': 'The Mad Lions Lab', 'footer': '© 2026 The Mad Lions · RoarWriter'
+  }
+  var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
+  var EN = {}
+  nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })
+  var mineLabel = { en: { mac: 'Your computer', win: 'Your computer', web: 'Here' }, el: { mac: 'Ο υπολογιστής σου', win: 'Ο υπολογιστής σου', web: 'Εδώ' } }
+  function setLang(l) {
+    var d = l === 'el' ? EL : EN
+    nodes.forEach(function (n) { var v = d[n.dataset.t]; if (v == null) v = EN[n.dataset.t]; if (n.hasAttribute('data-html')) n.innerHTML = v; else n.textContent = v })
+    document.documentElement.lang = l === 'el' ? 'el' : 'en'
+    document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) })
+    ;['mac', 'win', 'web'].forEach(function (k) { var e = document.getElementById('dl-' + k); if (e) e.dataset.mine = mineLabel[l === 'el' ? 'el' : 'en'][k] })
+    setMain(l); showVer(l)
+    try { localStorage.setItem('tml_site_lang', l) } catch (e) {}
+  }
+  // the first button downloads for the device you are on; on a phone it opens the browser version
+  var ua = navigator.userAgent || ''
+  var phone = /iPhone|iPad|iPod|Android/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  var os = phone ? 'web' : /Windows/i.test(ua) ? 'win' : /Mac/i.test(ua) ? 'mac' : 'web'
+  var mine = document.getElementById('dl-' + os)
+  if (mine) mine.classList.add('mine')
+  // the installers carry their version in the name: the links come from the newest release's own files
+  var REL = 'https://github.com/' + REPO + '/releases/latest/download/' + APP
+  var FILES = { mac: REL + '-Mac-arm64.dmg', intel: REL + '-Mac-x64.dmg', win: REL + '-Windows-Setup.exe' }
+  var VER = ''
+  fetch('https://api.github.com/repos/' + REPO + '/releases/latest', { headers: { Accept: 'application/vnd.github+json' } })
+    .then(function (r) { return r.ok ? r.json() : null })
+    .then(function (d) {
+      if (!d) return
+      VER = (String(d.name || '').match(/(\d+\.\d+\.\d+)/) || [])[1] || ''
+      var re = { mac: /Mac-arm64\.dmg$/, intel: /Mac-x64\.dmg$/, win: /Windows-Setup\.exe$/ }
+      Object.keys(re).forEach(function (k) {
+        var list = (d.assets || []).filter(function (a) { return re[k].test(a.name) })
+        var pick = list.filter(function (a) { return /\d+\.\d+\.\d+/.test(a.name) })[0] || list[0]
+        if (!pick) return
+        document.querySelectorAll('a[data-f="' + k + '"]').forEach(function (a) { a.href = pick.browser_download_url })
+        FILES[k] = pick.browser_download_url
+      })
+      setMain(document.documentElement.lang); showVer(document.documentElement.lang)
+    }).catch(function () {})
+  function showVer(l) {
+    var e = document.getElementById('dl-ver')
+    if (!e || !VER) return
+    e.textContent = (l === 'el' ? '● Τελευταία έκδοση: ' : '● Latest: ') + APP + ' ' + VER + ' beta'
+    e.hidden = false
+  }
+  function setMain(l) {
+    var a = document.getElementById('dl-main')
+    var s = a.querySelector('span')
+    var el = l === 'el'
+    if (os === 'mac') { a.href = FILES.mac; s.textContent = el ? 'Λήψη για Mac' : 'Download for Mac' }
+    else if (os === 'win') { a.href = FILES.win; s.textContent = el ? 'Λήψη για Windows' : 'Download for Windows' }
+    else if (phone) { a.href = WEB; s.textContent = el ? 'Άνοιξε το RoarWriter' : 'Open RoarWriter' }
+    else { a.href = '#download'; s.textContent = el ? 'Λήψη' : 'Download' }
+  }
+  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang) }) })
+  var saved = 'en'
+  try { saved = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
+  setLang(saved)
+  var bar = document.getElementById('bar')
+  var onScroll = function () { bar.classList.toggle('solid', window.scrollY > 30) }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll()
+  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  var rv = [].slice.call(document.querySelectorAll('.rv'))
+  if (still || !('IntersectionObserver' in window)) rv.forEach(function (e) { e.classList.add('in') })
+  else {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }) }, { rootMargin: '0px 0px -8% 0px', threshold: .06 })
+    rv.forEach(function (e) { io.observe(e) })
+  }
+  // the frame leans a little toward the pointer (computers only)
+  var win = document.getElementById('win')
+  if (win && !still && window.matchMedia('(pointer: fine)').matches) {
+    var tx = 0, ty = 0, x = 0, y = 0, raf = 0
+    var loop = function () { x += (tx - x) * .08; y += (ty - y) * .08; win.style.setProperty('--rx', x.toFixed(2)); win.style.setProperty('--ry', y.toFixed(2)); raf = Math.abs(tx - x) + Math.abs(ty - y) > .01 ? requestAnimationFrame(loop) : 0 }
+    window.addEventListener('pointermove', function (e) { var r = win.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return; tx = ((e.clientX / innerWidth) - .5) * 4; ty = -((e.clientY / innerHeight) - .5) * 3; if (!raf) raf = requestAnimationFrame(loop) }, { passive: true })
+  }
+})()
+</script>
+</body>
+</html>
