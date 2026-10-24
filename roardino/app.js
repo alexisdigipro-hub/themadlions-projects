@@ -110,6 +110,9 @@ function h(tag, attrs = {}, ...kids){
   return el;
 }
 const ICON = {
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/></svg>',
   dup:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15H4a1 1 0 01-1-1V4a1 1 0 011-1h10a1 1 0 011 1v1"/></svg>',
   stats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
   back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
@@ -624,46 +627,94 @@ async function newOrdino(p){
   if (p) fillFromProject(o, p);
   try { const c = await createOrdino(o); location.hash = '#edit/' + c.id; } catch { toast('Δεν δημιουργήθηκε. Έλεγξε τη σύνδεση.'); }
 }
+/* The home (Alex, 24 Oct: "a different panel, more 2026"), laid out like the hub's Calendar: one top row with the
+   title, the filters as pills with a sliding glass lens, search and New ordino; under it the ordinos as one grid of
+   tiles in time order filling the page, the next shoot ringed, chips for the call, when and place, and the link. */
+const HOME_FILTERS = [['all', 'Όλα'], ['next', 'Επόμενα'], ['sent', 'Σε link'], ['draft', 'Πρόχειρα'], ['past', 'Περασμένα']];
+let homeFilter = (() => { try { return localStorage.getItem('roardino-filter') || 'all'; } catch { return 'all'; } })();
+let homeSearch = '';
+const isoToday = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+const daysTo = iso => Math.round((Date.parse(iso + 'T12:00:00') - Date.parse(isoToday() + 'T12:00:00')) / 86400000);
+const whenWords = n => n === 0 ? 'Σήμερα' : n === 1 ? 'Αύριο' : n === -1 ? 'Χθες' : n > 1 ? `σε ${n} μέρες` : `πριν ${-n} μέρες`;
+function lensRow(cls, options, current, pick){
+  const row = h('div', { class: 'pills ' + cls, role: 'tablist' });
+  const lens = h('span', { class: 'pill-lens', 'aria-hidden': 'true' });
+  const place = () => { const on = row.querySelector('button.on'); if (!on) return; lens.style.width = on.offsetWidth + 'px'; lens.style.transform = `translateX(${on.offsetLeft}px)`; };
+  row.append(lens, ...options.map(([k, l, n]) => h('button', { type: 'button', role: 'tab', class: k === current ? 'on' : '', onclick: e => {
+    row.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === e.currentTarget)); place(); pick(k);
+  } }, l, n != null ? h('span', { class: 'pill-n' }, String(n)) : null)));
+  requestAnimationFrame(place); window.addEventListener('resize', place);
+  return row;
+}
 async function viewHome(){
   document.title = 'Roardino';
   const scoped = projectOf(SCOPE);
-  const grid = h('div', { class: 'grid' }, h('div', { class: 'card-meta' }, 'Φόρτωση…'));
   const create = () => SCOPE ? newOrdino(scoped) : pickProject(newOrdino);
-  const card = o => h('article', { class: 'card' },
-    h('div', { class: 'card-cover', style: o.project.cover ? `background-image:url('${o.project.cover}')` : `background:linear-gradient(135deg,${o.look.accent},#111)` },
-      h('span', { class: 'chip' }, o.day.label || 'Ordino')),
-    h('div', { class: 'card-body' },
-      !SCOPE && projectOf(o.projectId) ? h('div', { class: 'card-meta card-proj' }, projectName(projectOf(o.projectId))) : null,
-      h('div', { class: 'card-title' }, o.project.title || 'Χωρίς τίτλο'),
-      h('div', { class: 'card-meta' }, [fmtDate(o.day.date), o.day.callTime && 'Call ' + o.day.callTime].filter(Boolean).join(' · ')),
-      o.loc.name ? h('div', { class: 'card-meta' }, o.loc.name) : null,
-      o.token ? h('div', { class: 'card-meta', style: 'color:#2fd36b' }, '● Σε link') : null),
-    canEdit
-      ? h('div', { class: 'card-actions' },
-        h('a', { class: 'btn small primary', href: '#edit/' + o.id }, 'Άνοιγμα'),
-        h('button', { class: 'btn small', onclick: async () => { try { await duplicateOrdino(o); toast('Έγινε αντίγραφο'); viewHome(); } catch { toast('Δεν έγινε αντίγραφο'); } } }, 'Duplicate'),
-        h('button', { class: 'btn small ghost danger', onclick: async () => {
-          if (!confirm(o.token ? 'Να διαγραφεί αυτό το ordino; Το link που έστειλες θα σταματήσει να ανοίγει.' : 'Να διαγραφεί αυτό το ordino;')) return;
-          try { await deleteOrdino(o.id); viewHome(); } catch { toast('Δεν διαγράφηκε'); }
-        } }, 'Διαγραφή'))
-      : h('div', { class: 'card-actions' }, h('a', { class: 'btn small primary', href: '#see/' + o.id }, 'Άνοιγμα')));
-  const first = me && me.name ? me.name.split(/\s+/)[0] : '';
-  app.replaceChildren(
-    h('header', { class: 'topbar' },
-      brandMark(),
-      h('div', { class: 'spacer' }),
-      canEdit ? h('button', { class: 'btn primary', onclick: create }, '+ Νέο ordino') : null),
-    h('main', { class: 'home' },
-      h('p', { class: 'kicker' }, scoped ? projectName(scoped) : first ? `Γεια σου, ${first}` : 'THEMADLIONS'),
-      h('h1', { class: 'hero-h', html: scoped ? 'Τα ordino<br><b>του project.</b>' : 'Τα ordino σου,<br><b>σε ένα link.</b>' }),
-      h('p', { class: 'lede' }, 'Γράψε call, τοποθεσία και πρόγραμμα, διάλεξε φωτογραφία και χρώμα, και στείλε στο συνεργείο ένα link που ανοίγει όμορφα στο κινητό.'),
-      grid));
+  const body = h('div', { class: 'home2' }, h('div', { class: 'center-note' }, 'Φόρτωση…'));
+  const search = h('label', { class: 'pill-search' }, h('span', { html: ICON.search }),
+    h('input', { type: 'search', placeholder: 'Αναζήτηση', value: homeSearch, oninput: e => { homeSearch = e.target.value; draw(); } }));
+  const head = h('header', { class: 'topbar home-top' },
+    brandMark(true),
+    h('h1', { class: 'home-title' }, scoped ? projectName(scoped) : 'Ordino'),
+    h('div', { class: 'home-filters' }),
+    search,
+    canEdit ? h('button', { class: 'btn primary pill-new', onclick: create }, h('span', { html: ICON.plus }), h('span', { class: 'lbl' }, 'Νέο ordino')) : null);
+  app.replaceChildren(head, body);
   let list;
   try { list = await listOrdinos(); }
-  catch { grid.replaceChildren(h('div', { class: 'card-meta' }, 'Δεν φόρτωσαν τα ordino. Έλεγξε τη σύνδεση και ανανέωσε.')); return; }
+  catch { body.replaceChildren(h('div', { class: 'home-empty' }, h('b', {}, 'Δεν φόρτωσαν τα ordino'), h('span', {}, 'Έλεγξε τη σύνδεση και ανανέωσε.'))); return; }
   if (SCOPE) list = list.filter(o => o.projectId === SCOPE);
-  grid.replaceChildren(...(canEdit ? [h('button', { class: 'card new-card', onclick: create }, h('span', { class: 'plus' }, '+'), 'Νέο ordino')] : []), ...list.map(card),
-    ...(!canEdit && !list.length ? [h('div', { class: 'card-meta' }, 'Δεν υπάρχει ordino ακόμα.')] : []));
+  const today = isoToday();
+  const test = { all: () => true, next: o => (o.day.date || '') >= today, sent: o => !!o.token, draft: o => !o.token, past: o => o.day.date && o.day.date < today };
+  const counts = Object.fromEntries(HOME_FILTERS.map(([k]) => [k, list.filter(test[k]).length]));
+  head.querySelector('.home-filters').replaceWith(lensRow('home-filters', HOME_FILTERS.map(([k, l]) => [k, l, counts[k]]), homeFilter, k => {
+    homeFilter = k; try { localStorage.setItem('roardino-filter', k); } catch {} draw();
+  }));
+  // the next shoot to come: ringed in the accent
+  const next = list.filter(o => (o.day.date || '') >= today).sort((a, b) => a.day.date.localeCompare(b.day.date) || (a.day.callTime || '').localeCompare(b.day.callTime || ''))[0];
+  const tile = o => {
+    const p = projectOf(o.projectId), n = o.day.date ? daysTo(o.day.date) : null;
+    const d = o.day.date ? new Date(o.day.date + 'T12:00:00') : null;
+    const open = () => { location.hash = (canEdit ? '#edit/' : '#see/') + o.id; };
+    return h('article', { class: 'otile' + (o === next ? ' is-next' : '') + (n != null && n < 0 ? ' is-past' : ''), tabindex: 0, onclick: open, onkeydown: e => { if (e.key === 'Enter') open(); } },
+      h('div', { class: 'otile-cover', style: o.project.cover ? `background-image:url('${o.project.cover}')` : `background-image:linear-gradient(135deg,${o.look.accent},#111)` },
+        d ? h('div', { class: 'otile-date' }, h('b', {}, String(d.getDate())), h('span', {}, d.toLocaleDateString('el-GR', { month: 'short' }).replace('.', '')), h('small', {}, d.toLocaleDateString('el-GR', { weekday: 'short' }))) : null,
+        h('div', { class: 'otile-tags' },
+          o === next ? h('span', { class: 'tchip acc' }, h('i'), 'Επόμενο') : null,
+          h('span', { class: 'tchip ' + (o.token ? 'ok' : 'draft') }, h('i'), o.token ? 'Σε link' : 'Πρόχειρο')),
+        canEdit ? h('div', { class: 'otile-acts' },
+          h('button', { class: 'ibtn', type: 'button', title: 'Duplicate', 'aria-label': 'Duplicate', html: ICON.dup, onclick: async e => { e.stopPropagation(); try { await duplicateOrdino(o); toast('Έγινε αντίγραφο'); viewHome(); } catch { toast('Δεν έγινε αντίγραφο'); } } }),
+          h('button', { class: 'ibtn danger', type: 'button', title: 'Διαγραφή', 'aria-label': 'Διαγραφή', html: ICON.trash, onclick: async e => {
+            e.stopPropagation();
+            if (!confirm(o.token ? 'Να διαγραφεί αυτό το ordino; Το link που έστειλες θα σταματήσει να ανοίγει.' : 'Να διαγραφεί αυτό το ordino;')) return;
+            try { await deleteOrdino(o.id); viewHome(); } catch { toast('Δεν διαγράφηκε'); }
+          } })) : null),
+      h('div', { class: 'otile-body' },
+        p && !SCOPE ? h('div', { class: 'otile-proj' }, h('i', { style: `background:${p.color || 'var(--brand)'}` }), projectName(p)) : null,
+        h('div', { class: 'otile-title' }, o.project.title || 'Χωρίς τίτλο'),
+        h('div', { class: 'otile-chips' },
+          o.day.callTime ? h('span', { class: 'mchip' }, 'Call ', h('b', {}, o.day.callTime)) : null,
+          n != null ? h('span', { class: 'mchip' + (n === 0 ? ' acc' : '') }, whenWords(n)) : h('span', { class: 'mchip' }, 'Χωρίς ημερομηνία'),
+          o.loc.name ? h('span', { class: 'mchip' }, h('span', { html: ICON.pin }), o.loc.name) : null)));
+  };
+  // one grid in time order: the coming ones first (soonest first), then those without a date, then the past (latest first)
+  const ordered = l => {
+    const rank = o => !o.day.date ? 1 : o.day.date >= today ? 0 : 2;
+    return [...l].sort((a, b) => rank(a) - rank(b) || (rank(a) === 2 ? (b.day.date || '').localeCompare(a.day.date || '') : (a.day.date || '').localeCompare(b.day.date || '')) || (a.day.callTime || '').localeCompare(b.day.callTime || ''));
+  };
+  function draw(){
+    const w = homeSearch.trim().toLowerCase();
+    const shown = list.filter(test[homeFilter] || test.all).filter(o => !w || [o.project.title, o.project.artist, o.loc.name, projectName(projectOf(o.projectId))].join(' ').toLowerCase().includes(w));
+    if (!shown.length){
+      body.replaceChildren(h('div', { class: 'home-empty' },
+        h('b', {}, list.length ? 'Κανένα ordino εδώ' : 'Δεν υπάρχει ordino ακόμα'),
+        h('span', {}, list.length ? 'Δοκίμασε άλλο φίλτρο ή άλλη αναζήτηση.' : 'Φτιάξε το πρώτο: παίρνει από το project μέρα, call, τοποθεσία και άτομα.'),
+        canEdit && !list.length ? h('button', { class: 'btn primary', onclick: create }, '+ Νέο ordino') : null));
+      return;
+    }
+    body.replaceChildren(h('div', { class: 'ogrid' }, ...ordered(shown).map(tile)));
+  }
+  draw();
 }
 
 /* ---------- see (no editing): the Overview's Ordino button, and people with view only ---------- */
