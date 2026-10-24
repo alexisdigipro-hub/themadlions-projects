@@ -184,6 +184,7 @@ footer .wordmark { width: 130px; opacity: .6; }
     <a href="../#work" data-t="nav.work">Work</a>
     <a href="../#services" data-t="nav.services">Services</a>
     <a href="../aibsent/">Aibsent Studios</a>
+    <a href="../#about" data-t="nav.about">About</a>
     <a href="../#clients" data-t="nav.clients">Clients</a>
     <a href="./" class="on" aria-current="page">Lab</a>
     <a href="../#contact" data-t="nav.contact">Contact</a>
@@ -209,7 +210,7 @@ footer .wordmark { width: 130px; opacity: .6; }
 
   <section>
     <p class="label reveal" data-t="exp.label">Experiments</p>
-    <article class="exp reveal">
+    <article id="roarme" class="exp reveal">
       <div>
         <span class="exp-n">Experiment 01 <i data-t="exp.live">Live · beta</i></span>
         <h2><span class="a">ROAR</span><span class="b">ME</span></h2>
@@ -227,7 +228,7 @@ footer .wordmark { width: 130px; opacity: .6; }
       <a class="shot" href="../roarme/" aria-label="RoarMe"><img src="roarme.jpg" alt="RoarMe on a computer in the Stone theme: the crew chat of a night shoot" loading="lazy" width="1600" height="1000"></a>
     </article>
 
-    <article class="exp flip reveal" style="margin-top:10px">
+    <article id="roardino" class="exp flip reveal" style="margin-top:10px">
       <div class="stage"><div class="handset"><iframe src="../roardino/#demo" title="A Roardino ordino on a phone" loading="lazy"></iframe></div></div>
       <div>
         <span class="exp-n">Experiment 02 <i data-t="exp.live">Live · beta</i></span>
@@ -235,17 +236,17 @@ footer .wordmark { width: 130px; opacity: .6; }
         <p class="what" data-t="rd.what">The call sheet, in one link. Write the call, the location and the day's plan, pick a picture and a colour, and send the crew a page that opens beautifully on any phone.</p>
         <ul class="usp">
           <li><span><b data-t="rd.u1">Your own account.</b> <span data-t="rd.u1s">Every ordino you make, in one place, from any device.</span></span></li>
-          <li><span><b data-t="rd.u2">One link for the crew.</b> <span data-t="rd.u2s">Maps, Waze, a tap to call and the day in their calendar.</span></span></li>
+          <li><span><b data-t="rd.u2">One link for the crew.</b> <span data-t="rd.u2s">Directions, a tap to call and the day in their calendar.</span></span></li>
           <li><span><b data-t="rd.u3">Weather and sunset.</b> <span data-t="rd.u3s">Filled in by themselves for the place and the day.</span></span></li>
         </ul>
         <div class="acts">
-          <a class="pill main" href="../roardino/"><span data-t="rd.open">Make your ordino</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          <a class="pill" href="../roardino/#demo" data-t="rd.demo">See an example</a>
+          <a class="pill main" href="roardino/"><span data-t="rd.more">Discover Roardino</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="../roardino/" data-t="rd.open">Make your ordino</a>
         </div>
       </div>
     </article>
 
-    <article class="exp reveal" style="margin-top:10px">
+    <article id="roarmail" class="exp reveal" style="margin-top:10px">
       <div>
         <span class="exp-n">Experiment 03 <i data-t="exp.live">Live · beta</i></span>
         <h2><span class="a">ROAR</span><span class="b">MAIL</span></h2>
@@ -263,7 +264,7 @@ footer .wordmark { width: 130px; opacity: .6; }
       <a class="shot" href="roarmail/" aria-label="RoarMail"><img src="roarmail.jpg" alt="RoarMail on a computer: All Inboxes, a message with its trackers blocked" loading="lazy" width="1600" height="782" style="aspect-ratio:auto"></a>
     </article>
 
-    <article class="exp flip reveal" style="margin-top:10px">
+    <article id="roarlist" class="exp flip reveal" style="margin-top:10px">
       <div class="stage wide"><div class="desk"><iframe src="../roarlist/#demo" title="A RoarList shot list" loading="lazy" tabindex="-1"></iframe></div></div>
       <div>
         <span class="exp-n">Experiment 04 <i data-t="exp.live">Live · beta</i></span>
@@ -283,7 +284,7 @@ footer .wordmark { width: 130px; opacity: .6; }
       </div>
     </article>
 
-    <article class="exp reveal" style="margin-top:10px">
+    <article id="roartransfer" class="exp reveal" style="margin-top:10px">
       <div>
         <span class="exp-n">Experiment 05 <i data-t="exp.on">Live</i></span>
         <h2 class="long"><span class="a">ROAR</span><span class="b">TRANSFER</span></h2>
@@ -308,7 +309,7 @@ footer .wordmark { width: 130px; opacity: .6; }
       </a>
     </article>
 
-    <article class="exp flip reveal" style="margin-top:10px">
+    <article id="roarwriter" class="exp flip reveal" style="margin-top:10px">
       <a class="stage" href="roarwriter/" aria-label="RoarWriter">
         <span class="rw-mini" aria-hidden="true">
           <span class="sh">ΕΞΩΤ. ΣΤΑΘΜΟΣ - ΝΥΧΤΑ</span>
@@ -357,7 +358,7 @@ footer .wordmark { width: 130px; opacity: .6; }
 <script>
 (function () {
   var EL = {
-    'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.contact': 'Επαφή',
+    'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.about': 'Εμείς', 'nav.contact': 'Επαφή',
     'hero.title': 'Όσα <b>φτιάχνουμε</b><br>ανάμεσα στις ταινίες.',
     'hero.sub': 'Φτιάχνουμε ταινίες, και τα εργαλεία που θα θέλαμε να έχουμε όσο τις φτιάχνουμε. Εφαρμογές για ομάδες, συνεργεία και όποιον δουλεύει γρήγορα. Κάποιες είναι έτοιμες, κάποιες παίρνουν ακόμα μορφή. Όλες είναι ανοιχτές να τις δοκιμάσεις.',
     'apps.label': 'Έξι εφαρμογές, μία οικογένεια',
@@ -371,9 +372,9 @@ footer .wordmark { width: 130px; opacity: .6; }
     'rm.more': 'Γνώρισε το RoarMe', 'rm.open': 'Άνοιξε την εφαρμογή',
     'rd.what': 'Το ordino, σε ένα link. Γράψε το call, την τοποθεσία και το πρόγραμμα της ημέρας, διάλεξε φωτογραφία και χρώμα, και στείλε στο συνεργείο μια σελίδα που ανοίγει όμορφα σε κάθε κινητό.',
     'rd.u1': 'Δικός σου λογαριασμός.', 'rd.u1s': 'Όλα τα ordino σου σε ένα μέρος, από κάθε συσκευή.',
-    'rd.u2': 'Ένα link για το συνεργείο.', 'rd.u2s': 'Χάρτης, Waze, κλήση με ένα πάτημα και η μέρα στο ημερολόγιο.',
+    'rd.u2': 'Ένα link για το συνεργείο.', 'rd.u2s': 'Οδηγίες, κλήση με ένα πάτημα και η μέρα στο ημερολόγιο.',
     'rd.u3': 'Καιρός και δύση.', 'rd.u3s': 'Συμπληρώνονται μόνα τους για το μέρος και τη μέρα.',
-    'rd.open': 'Φτιάξε το ordino σου', 'rd.demo': 'Δες ένα παράδειγμα',
+    'rd.open': 'Φτιάξε το ordino σου', 'rd.more': 'Γνώρισε το Roardino', 'rd.demo': 'Δες ένα παράδειγμα',
     'ml.what': 'Η εφαρμογή email για Mac και Windows. Όλα τα γραμματοκιβώτια σε ένα inbox, με την ταχύτητα του πληκτρολογίου, και κανένας δικός μας server ανάμεσα σε σένα και τα μηνύματά σου.',
     'ml.u1': 'Όλα σου τα email, ένα inbox.', 'ml.u1s': 'Gmail, Outlook, iCloud ή το δικό σου domain, δίπλα δίπλα.',
     'ml.u2': 'Ιδιωτικό από τη φύση του.', 'ml.u2s': 'Μπλοκάρει τα tracking pixels, ελέγχει τους συνδέσμους, κρατά τους κωδικούς στο keychain του υπολογιστή σου.',

@@ -205,6 +205,7 @@ h2 b { font-weight: 800; }
 .about { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(32px, 6vw, 96px); align-items: start; border-top: 1px solid var(--line); }
 .about .lead { font-size: clamp(22px, 2.4vw, 32px); font-weight: 300; line-height: 1.38; margin: 26px 0 0; }
 .about .lead b { font-weight: 700; }
+.about .story { max-width: 62ch; margin: 22px auto 0; font-size: 16px; font-weight: 300; line-height: 1.7; color: var(--muted); }
 .quote { margin: 40px 0 0; padding-left: 18px; border-left: 2px solid var(--accent); color: var(--muted); font-size: 16px; line-height: 1.6; font-style: italic; }
 .team { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
 .person { padding: 18px 20px; border-radius: 16px; background: var(--bg-2); border: 1px solid var(--line); }
@@ -594,6 +595,7 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
     <a href="#work" data-t="nav.work">Δουλειά</a>
     <a href="#services" data-t="nav.services">Υπηρεσίες</a>
     <a href="#aibsent">Aibsent Studios</a>
+    <a href="#about" data-t="nav.about">Εμείς</a>
     <a href="#clients" data-t="nav.clients">Πελάτες</a>
     <a href="#shop" data-t="nav.shop" id="navShop" hidden>Shop</a>
     <a href="../lab/">Lab</a>
@@ -664,6 +666,7 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
       <p class="label" data-t="about.label">Εμείς</p>
       <h2 data-t="about.title" data-html>Είμαστε <b>τρελοί</b> με το σινεμά.</h2>
       <p class="lead" data-t="about.lead" data-html>Σχεδιάζουμε, γυρίζουμε και μοντάρουμε ταινίες για κάθε οθόνη. Η δουλειά μας πατάει στην <b>κινηματογραφική παράδοση</b> και φτιάχνεται για να μένει σε όποιον τη βλέπει.</p>
+      <p class="story" data-t="about.story">Η The Mad Lions είναι εταιρεία κινηματογραφικής παραγωγής στην Αθήνα, με επικεφαλής τον σκηνοθέτη Alex Konstantinidis. Κάνουμε διαφημιστικά, video clips, ταινίες μεγάλου μήκους, ντοκιμαντέρ και εταιρικές ταινίες για brands, καλλιτέχνες και studios στην Ελλάδα και στο εξωτερικό, με μία ομάδα που γράφει, οργανώνει, γυρίζει, μοντάρει, κάνει χρώμα και ολοκληρώνει τα πάντα μόνη της. Με την Aibsent Studios φτιάχνουμε και ταινίες με AI, και στο Lab μας τις εφαρμογές που χρησιμοποιούμε στο γύρισμα.</p>
     </div>
     <div class="reveal">
       <p class="label" data-t="about.team">Η ομάδα</p>
@@ -691,7 +694,7 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
     <p class="lab-sub reveal" data-t="lab.title" data-html>Ό,τι φτιάχνουμε <b>ανάμεσα στις ταινίες.</b></p>
     <div class="lab-list reveal">
       <a class="lab-x on" href="../roarme/" style="--g: radial-gradient(120% 80% at 30% 10%, #7a1010, #160606)"><span class="no">01</span><span class="ui" aria-hidden="true"><span class="h"><i class="av"></i>Night Shoot · crew<small>8 online</small></span><span class="b">Call moved to 18:30</span><span class="b me">On my way</span><span class="b">Bring the 24-70, please</span><span class="b me">Packed it</span><span class="b">Parking is behind the station</span></span><b aria-hidden="true" class="wm"><span>ROAR</span>ME</b><span class="open"><b class="wm"><span>ROAR</span>ME</b><span class="d" data-t="lab.rm">Το messenger για ομάδες.</span><em data-t="lab.disc">Γνώρισέ το</em></span></a>
-      <a class="lab-x" href="../roardino/" style="--g: radial-gradient(120% 80% at 70% 10%, #5a3a12, #140d06)"><span class="no">02</span><span class="ui" aria-hidden="true"><span class="h">Day 2 · Railway station<small>Fri 23 Oct</small></span><span class="f"><span class="t">06:30</span><b>Crew call</b><small>Platform 1</small></span><span class="f"><span class="t">08:00</span><b>First shot</b><small>Sc. 12</small></span><span class="f"><span class="t">13:00</span><b>Lunch</b><small>45 min</small></span><span class="f"><span class="t">16:30</span><b>Night set-up</b><small>Sc. 14</small></span><span class="f"><span class="t">19:12</span><b>Sunset</b><small>18°C, clear</small></span><span class="f"><span class="t">23:00</span><b>Wrap</b><small>Railway station</small></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>DINO</b><span class="open"><b class="wm"><span>ROAR</span>DINO</b><span class="d" data-t="lab.rd">Το ordino, σε ένα link.</span><em data-t="lab.disc">Γνώρισέ το</em></span></a>
+      <a class="lab-x" href="../lab/roardino/" style="--g: radial-gradient(120% 80% at 70% 10%, #5a3a12, #140d06)"><span class="no">02</span><span class="ui" aria-hidden="true"><span class="h">Day 2 · Railway station<small>Fri 23 Oct</small></span><span class="f"><span class="t">06:30</span><b>Crew call</b><small>Platform 1</small></span><span class="f"><span class="t">08:00</span><b>First shot</b><small>Sc. 12</small></span><span class="f"><span class="t">13:00</span><b>Lunch</b><small>45 min</small></span><span class="f"><span class="t">16:30</span><b>Night set-up</b><small>Sc. 14</small></span><span class="f"><span class="t">19:12</span><b>Sunset</b><small>18°C, clear</small></span><span class="f"><span class="t">23:00</span><b>Wrap</b><small>Railway station</small></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>DINO</b><span class="open"><b class="wm"><span>ROAR</span>DINO</b><span class="d" data-t="lab.rd">Το ordino, σε ένα link.</span><em data-t="lab.disc">Γνώρισέ το</em></span></a>
       <a class="lab-x" href="../lab/roarmail/" style="--g: radial-gradient(120% 80% at 30% 10%, #1d2c52, #080b14)"><span class="no">03</span><span class="ui" aria-hidden="true"><span class="h">All Inboxes<small>12 unread</small></span><span class="f"><i style="background:#ff5a4f"></i><b>Maria P. · Night Shoot schedule</b><small>19:46</small></span><span class="f"><i style="background:#3b82f6"></i><b>Rental House · lens order</b><small>18:12</small></span><span class="f"><i style="background:#2fd36b"></i><b>Gallery newsletter</b><small>Mon</small></span><span class="f"><i style="background:#3b82f6"></i><b>Elena · colour grade notes</b><small>Sun</small></span><span class="f"><i style="background:#ff5a4f"></i><b>Location scout · railway permits</b><small>Sat</small></span><span class="ok">3 trackers blocked</span></span><b aria-hidden="true" class="wm"><span>ROAR</span>MAIL</b><span class="open"><b class="wm"><span>ROAR</span>MAIL</b><span class="d" data-t="lab.ml">Το email, ιδιωτικά.</span><em data-t="lab.disc">Γνώρισέ το</em></span></a>
       <a class="lab-x" href="../lab/roarlist/" style="--g: radial-gradient(120% 80% at 70% 10%, #1d4a35, #06110c)"><span class="no">04</span><span class="ui" aria-hidden="true"><span class="h">Scene 12 · Platform<small>6 shots</small></span><span class="fr"><span><i></i>1 · Wide</span><span><i></i>2 · Medium</span><span><i></i>3 · Close-up</span><span><i></i>4 · Insert</span><span><i></i>5 · OTS</span><span><i></i>6 · Wide</span><span><i></i>7 · Two shot</span><span><i></i>8 · Close-up</span><span><i></i>9 · Wide</span></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>LIST</b><span class="open"><b class="wm"><span>ROAR</span>LIST</b><span class="d" data-t="lab.rl">Το shot list, κάδρο κάδρο.</span><em data-t="lab.disc">Γνώρισέ το</em></span></a>
       <a class="lab-x" href="https://roartransfer.com/about/" style="--g: radial-gradient(120% 80% at 50% 10%, #4a0d0d, #0e0505)"><span class="no">05</span><span class="ui" aria-hidden="true"><span class="h">RoarTransfer<small>5 GB</small></span><span class="ring"><svg viewBox="0 0 128 128"><circle class="a" cx="64" cy="64" r="56"/><circle class="c" cx="64" cy="64" r="56"/></svg><b>64%</b></span><span class="f"><b>A001_C003_NIGHT.MOV</b><small>1.2 GB</small></span><span class="f"><b>A001_C004_NIGHT.MOV<span class="bar"><i></i></span></b><small>1.6 GB</small></span><span class="f"><b>Sound_Day2.wav</b><small>210 MB</small></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>TRANSFER</b><span class="open"><b class="wm"><span>ROAR</span>TRANSFER</b><span class="d" data-t="lab.rt">Μεγάλα αρχεία, ένα link.</span><em data-t="lab.disc">Γνώρισέ το</em></span></a>
@@ -788,7 +791,7 @@ const SUPABASE_KEY = 'sb_publishable_o1OB_ohozPq1Xr2jg2ZSHA_3GsusXFL'
 
 const T = {
   en: {
-    'nav.work': 'Work', 'nav.services': 'Services', 'nav.process': 'Process', 'nav.clients': 'Clients', 'nav.shop': 'Shop', 'nav.contact': 'Contact',
+    'nav.work': 'Work', 'nav.services': 'Services', 'nav.process': 'Process', 'nav.clients': 'Clients', 'nav.about': 'About', 'nav.shop': 'Shop', 'nav.contact': 'Contact',
     'aib.kicker': 'Post-production & AI · a Mad Lions studio', 'aib.lead': 'Our in-house post and AI studio. It finishes our films and takes on yours: from the edit and the grade to visual effects, motion graphics and films made with AI.', 'aib.talk': 'Work with Aibsent Studios', 'aib.all': 'Discover Aibsent Studios', 'aib.badge': 'by Aibsent Studios', 'svc.aib': 'Meet Aibsent Studios',
     'shop.label': 'Shop', 'shop.title': 'Mad <b>merch.</b>', 'shop.buy': 'Buy', 'shop.soldout': 'Sold out',
     'hero.kicker': 'Film production house',
@@ -796,7 +799,7 @@ const T = {
     'work.label': 'Selected work', 'work.title': 'Films, <b>made mad.</b>', 'work.more': 'Show all work', 'work.less': 'Show less', 'all': 'All',
     'svc.label': 'Services', 'svc.title': 'What we <b>make.</b>', 'svc.sub': 'One team from the first idea to the final master: we write, produce, shoot and finish in house.', 'svc.ex': 'Watch',
     'proc.label': 'How we work', 'proc.title': 'From idea <b>to screen.</b>',
-    'about.label': 'About', 'about.title': 'We are <b>mad about</b> film.', 'about.team': 'The team',
+    'about.label': 'About', 'about.title': 'We are <b>mad about</b> film.', 'about.team': 'The team', 'about.story': 'The Mad Lions is a film production house in Athens, Greece, led by director Alex Konstantinidis. We make commercials, music videos, feature films, documentaries and corporate films for brands, artists and studios in Greece and abroad, with one team that writes, produces, shoots, edits, grades and finishes in house. With Aibsent Studios we also make films with AI, and in our Lab we build the apps we use on set.',
     'about.lead': 'We design, shoot and edit film for any screen. Our work is steeped in <b>cinematic legacy</b>, and made to stay with the people who watch it.',
     'about.quote': '"No matter what people tell you, words and ideas can change the world." Robin Williams',
     'clients.label': 'Clients', 'clients.title': "Brands <b>we've filmed for.</b>",
@@ -813,7 +816,7 @@ const T = {
     'faq.label': 'Questions', 'faq.title': 'Good <b>to know.</b>',
   },
   el: {
-    'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.shop': 'Shop', 'nav.contact': 'Επαφή',
+    'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.about': 'Εμείς', 'nav.shop': 'Shop', 'nav.contact': 'Επαφή',
     'aib.kicker': 'Post-production & AI · ένα studio των Mad Lions', 'aib.lead': 'Το δικό μας studio για post-production και AI. Ολοκληρώνει τις ταινίες μας και αναλαμβάνει και τις δικές σας: από μοντάζ και χρώμα ως visual effects, motion graphics και ταινίες με AI.', 'aib.talk': 'Δουλέψτε με την Aibsent Studios', 'aib.all': 'Γνώρισε την Aibsent Studios', 'aib.badge': 'by Aibsent Studios', 'svc.aib': 'Γνωρίστε την Aibsent Studios',
     'shop.label': 'Shop', 'shop.title': 'Mad <b>merch.</b>', 'shop.buy': 'Αγορά', 'shop.soldout': 'Εξαντλήθηκε',
     'hero.kicker': 'Εταιρεία κινηματογραφικής παραγωγής',
@@ -821,7 +824,7 @@ const T = {
     'work.label': 'Επιλεγμένη δουλειά', 'work.title': 'Ταινίες, <b>με τρέλα.</b>', 'work.more': 'Όλη η δουλειά', 'work.less': 'Λιγότερα', 'all': 'Όλα',
     'svc.label': 'Υπηρεσίες', 'svc.title': 'Τι <b>φτιάχνουμε.</b>', 'svc.sub': 'Μία ομάδα από την πρώτη ιδέα ως το τελικό master: γράφουμε, οργανώνουμε, γυρίζουμε και ολοκληρώνουμε μόνοι μας.', 'svc.ex': 'Δείτε',
     'proc.label': 'Πώς δουλεύουμε', 'proc.title': 'Από την ιδέα <b>στην οθόνη.</b>',
-    'about.label': 'Εμείς', 'about.title': 'Είμαστε <b>τρελοί</b> με το σινεμά.', 'about.team': 'Η ομάδα',
+    'about.label': 'Εμείς', 'about.title': 'Είμαστε <b>τρελοί</b> με το σινεμά.', 'about.team': 'Η ομάδα', 'about.story': 'Η The Mad Lions είναι εταιρεία κινηματογραφικής παραγωγής στην Αθήνα, με επικεφαλής τον σκηνοθέτη Alex Konstantinidis. Κάνουμε διαφημιστικά, video clips, ταινίες μεγάλου μήκους, ντοκιμαντέρ και εταιρικές ταινίες για brands, καλλιτέχνες και studios στην Ελλάδα και στο εξωτερικό, με μία ομάδα που γράφει, οργανώνει, γυρίζει, μοντάρει, κάνει χρώμα και ολοκληρώνει τα πάντα μόνη της. Με την Aibsent Studios φτιάχνουμε και ταινίες με AI, και στο Lab μας τις εφαρμογές που χρησιμοποιούμε στο γύρισμα.',
     'about.lead': 'Σχεδιάζουμε, γυρίζουμε και μοντάρουμε ταινίες για κάθε οθόνη. Η δουλειά μας πατάει στην <b>κινηματογραφική παράδοση</b> και φτιάχνεται για να μένει σε όποιον τη βλέπει.',
     'about.quote': '«Ό,τι κι αν σου πουν, οι λέξεις και οι ιδέες μπορούν να αλλάξουν τον κόσμο.» Robin Williams',
     'clients.label': 'Πελάτες', 'clients.title': 'Brands <b>που δουλέψαμε μαζί.</b>',

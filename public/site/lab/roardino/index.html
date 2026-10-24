@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Roardino's page on the company site (Alex, 25 Oct: "we have no page for Roardino"), built like lab/roarlist/
+     (its CSS is RoarList's page's, then this page's own below). The real demo ordino in a phone, the three things only
+     Roardino does, what was made for the set, everything else as an index, where to start, questions. EN and GR. -->
+<title>Roardino · The call sheet in one link, for every phone · by The Mad Lions</title>
+<link rel="canonical" href="https://themadlions.com/lab/roardino/">
+<meta name="description" content="Roardino, the call sheet (ordino) by The Mad Lions Lab. Write the call, the location, the day's schedule, scenes, cast and crew, and send the crew one link that opens on any phone, with directions, weather, sunrise and sunset and the day in their calendar. Free, in the browser.">
+<meta name="theme-color" content="#16181c">
+<meta property="og:title" content="Roardino · by The Mad Lions">
+<meta property="og:description" content="The call sheet, in one link. Directions, weather and sunset, and the day in the crew's calendar.">
+<meta property="og:url" content="https://themadlions.com/lab/roardino/">
+<meta property="og:image" content="https://themadlions.com/og-image.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23d40000'/%3E%3Ctext x='32' y='44' font-family='Arial Black,Arial' font-size='34' font-weight='900' text-anchor='middle' fill='%23fff'%3ER%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #16181c; --bg-2: #1d2025; --bg-3: #24282f; --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.16);
+  --text: #eef0f3; --muted: rgba(214,220,228,.6); --dim: rgba(214,220,228,.38);
+  --red: #d40000; --red-hi: #ff3b2f; --ok: #2fd36b;
+  --glass: rgba(255,255,255,.055); --glass-edge: rgba(255,255,255,.12);
+  --pad: clamp(18px, 4.5vw, 72px);
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); scroll-behavior: smooth; }
+body { margin: 0; color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%, transparent 62%), radial-gradient(800px 600px at 100% 100%, rgba(212,0,0,.10), transparent 70%), linear-gradient(180deg, #23272e 0%, #17191d 50%, #121417 100%); }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+img, svg { display: block; }
+:focus-visible { outline: 2px solid var(--red-hi); outline-offset: 3px; border-radius: 8px; }
+.wordmark { filter: invert(1); height: auto; }
+.rm { font-family: Jost, var(--sans); display: inline-flex; align-items: baseline; letter-spacing: .02em; line-height: .86; }
+.rm .a { font-weight: 200; } .rm .b { font-weight: 800; }
+.mono { font-family: var(--mono); }
+.beta { font-family: var(--mono); font-style: normal; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; border: 1px solid rgba(212,0,0,.6); color: #ff8f86; background: rgba(212,0,0,.14); }
+
+/* pills */
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 48px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 600; letter-spacing: .01em; border: 1px solid var(--glass-edge); background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); cursor: pointer; transition: transform .3s var(--ease), background .2s, border-color .2s, filter .2s; white-space: nowrap; }
+.pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.28); }
+.pill:active { transform: scale(.97); }
+.pill.main { background: var(--red); border-color: transparent; color: #fff; box-shadow: 0 12px 34px rgba(212,0,0,.32); }
+.pill.main:hover { filter: brightness(1.1); }
+.pill.sm { height: 38px; padding: 0 16px; font-size: 13.5px; }
+.pill svg { width: 18px; height: 18px; flex: none; }
+
+/* bar */
+.bar { position: fixed; inset: 0 0 auto; z-index: 30; display: flex; align-items: center; gap: 18px; padding: calc(12px + env(safe-area-inset-top)) var(--pad) 12px; transition: background .4s, border-color .4s; border-bottom: 1px solid transparent; }
+.bar.solid { background: rgba(22,24,28,.72); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); border-color: var(--line); }
+.bar .home { display: flex; align-items: center; gap: 14px; }
+.bar .home .wordmark { width: 128px; }
+.bar .home .sep { width: 1px; height: 22px; background: var(--line-2); }
+.bar .home .rm { font-size: 19px; }
+.bar nav { margin-left: auto; display: flex; gap: 2px; }
+.bar nav a { padding: 8px 13px; border-radius: 999px; font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); transition: color .2s, background .2s; }
+.bar nav a:hover { color: var(--text); background: var(--glass); }
+.bar .end { display: flex; align-items: center; gap: 10px; }
+.lang { display: flex; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); }
+.lang button { border: 0; background: transparent; cursor: pointer; padding: 5px 11px; border-radius: 999px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--muted); }
+.lang button.on { background: rgba(255,255,255,.14); color: var(--text); }
+
+/* hero */
+.hero { position: relative; padding: calc(132px + env(safe-area-inset-top)) var(--pad) 0; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px; align-items: end; }
+.kicker { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); line-height: 1.6; }
+.kicker i { display: inline-block; width: 7px; height: 7px; margin-right: 10px; vertical-align: 1px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px rgba(47,211,107,.8); }
+.hero h1 { margin: 22px 0 0; font-size: clamp(72px, 15.5vw, 250px); line-height: .8; display: flex; align-items: flex-end; gap: clamp(10px, 2vw, 28px); flex-wrap: nowrap; }
+.hero h1 .beta { font-size: clamp(10px, 1vw, 13px); margin-bottom: clamp(10px, 2.4vw, 40px); }
+.app-icon { width: clamp(76px, 10vw, 150px); height: auto; filter: drop-shadow(0 24px 50px rgba(212,0,0,.32)); }
+.hero-sub { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: end; margin-top: clamp(28px, 4vw, 52px); }
+.lead { margin: 0; font-size: clamp(22px, 2.5vw, 34px); font-weight: 300; line-height: 1.25; letter-spacing: -.01em; text-wrap: balance; color: color-mix(in srgb, var(--text) 82%, transparent); }
+.lead b { font-weight: 700; color: var(--text); }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.cta-note { grid-column: 1 / -1; margin: -6px 0 0; text-align: right; font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; color: var(--dim); }
+.cta-note a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+
+/* the frame: RoarMe as it is today */
+.frame { position: relative; margin: clamp(44px, 6vw, 84px) auto 0; max-width: 1380px; perspective: 1800px; }
+.frame::before { content: ''; position: absolute; left: 10%; right: 10%; top: 12%; bottom: -6%; background: radial-gradient(closest-side, rgba(212,0,0,.32), transparent); filter: blur(60px); z-index: -1; }
+.win { border-radius: 22px; background: #1b1e23; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 60px 140px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06); overflow: hidden; transform: rotateX(calc(var(--ry, 0) * 1deg)) rotateY(calc(var(--rx, 0) * 1deg)); transition: transform .5s var(--ease); font-size: 13px; color: #eef0f3; }
+.win-top { display: flex; gap: 7px; padding: 12px 14px 8px; }
+.win-top i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; } .win-top i:nth-child(2) { background: #febc2e; } .win-top i:nth-child(3) { background: #28c840; }
+.win-body { display: grid; grid-template-columns: 27% minmax(0, 1fr) 26%; gap: 10px; padding: 0 12px 12px; height: clamp(420px, 42vw, 600px); }
+.pn { min-width: 0; border-radius: 16px; background: linear-gradient(180deg, #2b3038, #1f2329); border: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; overflow: hidden; }
+.pn-h { display: flex; align-items: center; gap: 8px; padding: 12px 12px 8px; }
+.pn-h .rm { font-size: 15px; flex: 1; text-align: center; justify-content: center; }
+.rnd { width: 28px; height: 28px; border-radius: 10px; flex: none; display: grid; place-items: center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); color: #dfe3e8; position: relative; }
+.rnd svg { width: 15px; height: 15px; }
+.rnd b { position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 99px; background: var(--red-hi); font-size: 9px; line-height: 15px; text-align: center; color: #fff; }
+.tabs { display: flex; gap: 2px; margin: 4px 10px 8px; padding: 3px; border-radius: 99px; background: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.06); }
+.tabs span { flex: 1; text-align: center; padding: 5px 0; border-radius: 99px; font-size: 10.5px; color: #9aa0aa; }
+.tabs span.on { background: linear-gradient(180deg, #ff6b5e, #d40000); color: #fff; font-weight: 700; }
+.row { display: flex; align-items: center; gap: 9px; margin: 1px 8px; padding: 8px; border-radius: 12px; }
+.row.on { background: rgba(255,255,255,.06); }
+.av { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 10.5px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #5b6472, #3a4049); }
+.av.c1 { background: linear-gradient(135deg, #ff8a6b, #e0483a); } .av.c2 { background: linear-gradient(135deg, #7aa7ff, #3b6ff5); } .av.c3 { background: linear-gradient(135deg, #f8d29a, #e79a3d); color: #2a1c08; } .av.c4 { background: linear-gradient(135deg, #8fe3b4, #2fa36b); color: #082a18; }
+.row b { flex: 1; min-width: 0; font-weight: 500; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row small { font-size: 10px; color: #9aa0aa; }
+.row .n { min-width: 17px; height: 17px; padding: 0 5px; border-radius: 99px; background: var(--red); font-size: 9.5px; font-weight: 700; display: grid; place-items: center; }
+.foot { margin: auto 8px 8px; display: flex; justify-content: space-around; padding: 8px 4px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); }
+.foot i { width: 20px; height: 20px; border-radius: 7px; background: rgba(255,255,255,.1); } .foot i.on { background: rgba(212,0,0,.6); }
+.room-h { display: flex; align-items: center; gap: 9px; margin: 10px; padding: 7px 9px; border-radius: 13px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); }
+.room-h b { display: block; font-size: 12.5px; font-weight: 600; } .room-h small { font-size: 10px; color: #9aa0aa; }
+.room-h .ic { margin-left: auto; display: flex; gap: 5px; } .room-h .ic i { width: 26px; height: 26px; border-radius: 9px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); }
+.msgs { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px; padding: 4px 12px 10px; justify-content: flex-end; overflow: hidden; }
+.bb { align-self: flex-start; max-width: 74%; padding: 8px 11px; border-radius: 15px 15px 15px 5px; background: rgba(255,255,255,.07); line-height: 1.35; }
+.bb.me { align-self: flex-end; border-radius: 15px 15px 5px 15px; background: linear-gradient(180deg, #e2231a, #b50000); }
+.bb small { margin-left: 6px; font-size: 9.5px; opacity: .6; }
+.card { align-self: flex-end; width: min(270px, 78%); border-radius: 16px; padding: 10px; background: linear-gradient(180deg, #e2231a, #b50000); display: grid; gap: 8px; }
+.card .ch { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 13px; }
+.card .ch i { width: 26px; height: 26px; border-radius: 50%; background: #fff; color: var(--red); display: grid; place-items: center; }
+.card .ch i svg { width: 15px; height: 15px; }
+.card .cb { padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.2); display: grid; gap: 3px; position: relative; overflow: hidden; }
+.card .cb::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: #fff; }
+.card .cb s { text-decoration: none; justify-self: start; font-family: var(--mono); font-size: 8.5px; letter-spacing: .14em; padding: 2px 7px; border-radius: 99px; background: #fff; color: var(--red); }
+.card .cb b { font-size: 15px; font-weight: 800; } .card .cb em { font-style: normal; font-size: 11px; opacity: .85; }
+.card .go { text-align: center; padding: 7px; border-radius: 99px; background: #fff; color: #b50000; font-weight: 700; font-size: 11.5px; }
+.compose { display: flex; align-items: center; gap: 7px; margin: 0 10px 10px; }
+.compose .rnd { width: 32px; height: 32px; border-radius: 50%; }
+.compose .rnd.cam { color: #fff; border-color: rgba(255,90,80,.6); box-shadow: 0 0 0 3px rgba(212,0,0,.18); }
+.compose .box { flex: 1; height: 32px; border-radius: 99px; padding: 0 14px; display: flex; align-items: center; color: #8e949e; background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.07); }
+.tasks-h { display: flex; align-items: center; gap: 6px; padding: 12px 12px 6px; } .tasks-h b { flex: 1; font-size: 15px; font-weight: 800; }
+.tk { margin: 3px 8px; padding: 9px 10px; border-radius: 13px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); display: grid; grid-template-columns: auto 1fr; gap: 3px 9px; align-items: start; }
+.tk.ask { border-color: rgba(255,90,80,.45); background: rgba(212,0,0,.1); }
+.tk > i { width: 15px; height: 15px; margin-top: 1px; border-radius: 50%; border: 1.6px solid rgba(255,255,255,.35); }
+.tk.done > i { border-color: transparent; background: #ff5a4f; }
+.tk b { font-size: 11.5px; font-weight: 600; } .tk.done b { text-decoration: line-through; opacity: .5; }
+.tk small { grid-column: 2; font-size: 9.5px; color: #9aa0aa; }
+.tk .ans { grid-column: 2; display: flex; gap: 5px; margin-top: 3px; } .tk .ans span { padding: 4px 9px; border-radius: 99px; font-size: 9.5px; font-weight: 700; background: rgba(255,255,255,.08); } .tk .ans span:first-child { background: var(--red); }
+.tk .st { grid-column: 2; justify-self: start; padding: 1px 7px; border-radius: 99px; font-size: 9px; font-weight: 700; background: rgba(255,196,0,.16); color: #ffd666; }
+.lbl { margin: 8px 12px 2px; font-family: var(--mono); font-size: 8.5px; letter-spacing: .16em; text-transform: uppercase; color: #8e949e; }
+.tag { position: absolute; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; border-radius: 999px; background: rgba(27,30,35,.86); border: 1px solid var(--line-2); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 16px 40px rgba(0,0,0,.4); font-family: var(--mono); font-size: 11px; letter-spacing: .04em; white-space: nowrap; }
+.tag i { width: 22px; height: 22px; border-radius: 50%; background: var(--red); display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; color: #fff; }
+.tag.t1 { left: 51%; bottom: 11%; } .tag.t2 { right: 3%; top: 18%; } .tag.t3 { left: 3%; top: 26%; }
+
+/* ticker */
+.ticker { margin-top: clamp(64px, 9vw, 120px); border-block: 1px solid var(--line); overflow: hidden; padding: 18px 0; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.ticker-in { display: flex; gap: 40px; width: max-content; animation: tick 46s linear infinite; font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.ticker-in span { display: inline-flex; align-items: center; gap: 40px; }
+.ticker-in span::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
+@keyframes tick { to { transform: translateX(-50%); } }
+
+/* sections */
+section { padding: clamp(84px, 11vw, 160px) var(--pad) 0; max-width: 1480px; margin: 0 auto; }
+.sec-h { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 48px; align-items: end; margin-bottom: clamp(36px, 5vw, 64px); }
+.idx { font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--red-hi); margin: 0 0 16px; }
+h2 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(42px, 6.2vw, 96px); font-weight: 200; line-height: .92; letter-spacing: -.01em; text-wrap: balance; }
+h2 b { font-weight: 800; }
+.sec-h p.sub { margin: 0; font-size: 17px; line-height: 1.6; color: var(--muted); max-width: 520px; justify-self: end; }
+
+/* the three things only RoarMe does: numbered rows */
+.three { border-top: 1px solid var(--line); }
+.big { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: center; padding: clamp(34px, 4.5vw, 60px) 0; border-bottom: 1px solid var(--line); }
+.big .no { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; color: var(--dim); align-self: start; padding-top: 12px; }
+.big h3 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(32px, 4vw, 58px); font-weight: 300; line-height: 1; letter-spacing: -.01em; }
+.big h3 b { font-weight: 800; }
+.big p { margin: 16px 0 0; font-size: 16.5px; line-height: 1.6; color: var(--muted); max-width: 520px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+.chips span { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); }
+.viz { justify-self: end; width: min(440px, 100%); aspect-ratio: 4 / 3; border-radius: 22px; background: linear-gradient(160deg, #262a31, #1a1d22); border: 1px solid var(--line); display: grid; place-items: center; position: relative; overflow: hidden; }
+.viz::after { content: ''; position: absolute; inset: 0; background: radial-gradient(60% 60% at 50% 110%, rgba(212,0,0,.22), transparent 70%); pointer-events: none; }
+.v-name { display: grid; gap: 12px; justify-items: center; z-index: 1; }
+.v-name .at { font-family: Jost, var(--sans); font-size: clamp(34px, 4vw, 52px); font-weight: 300; } .v-name .at b { font-weight: 800; color: var(--red-hi); }
+.v-name .qr { width: 86px; height: 86px; border-radius: 14px; background: conic-gradient(from 90deg, #eef0f3 25%, transparent 0 50%, #eef0f3 0 75%, transparent 0) 0 0 / 14px 14px; border: 8px solid #eef0f3; opacity: .9; }
+.v-name small { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .1em; }
+.v-tr { width: 76%; z-index: 1; padding: 16px; border-radius: 18px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); display: grid; gap: 12px; }
+.v-tr .h { display: flex; align-items: center; gap: 12px; } .v-tr .h i { width: 40px; height: 40px; border-radius: 12px; background: var(--red); display: grid; place-items: center; } .v-tr .h i svg { width: 20px; height: 20px; }
+.v-tr .h b { display: block; font-size: 22px; font-weight: 800; } .v-tr .h small { font-family: var(--mono); font-size: 10.5px; color: var(--dim); letter-spacing: .1em; }
+.v-tr .bar2 { height: 6px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; } .v-tr .bar2 i { display: block; height: 100%; width: 72%; background: linear-gradient(90deg, #ff6b5e, #d40000); border-radius: inherit; animation: fill 3.2s var(--ease) infinite alternate; }
+@keyframes fill { from { width: 18%; } }
+.v-tr .ft { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.v-sec { width: 80%; z-index: 1; display: grid; gap: 8px; }
+.v-sec .ln { justify-self: center; font-family: var(--mono); font-size: 10px; color: #7ee2a0; letter-spacing: .08em; padding: 4px 10px; border-radius: 99px; background: rgba(47,211,107,.12); }
+.v-sec .bb { font-size: 13px; max-width: 86%; } .v-sec .enc { justify-self: end; font-family: var(--mono); font-size: 10.5px; color: var(--dim); word-break: break-all; max-width: 86%; text-align: right; }
+
+/* new: an uneven board */
+.board { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; }
+.tile { position: relative; border-radius: 26px; padding: clamp(22px, 2.6vw, 34px); background: linear-gradient(170deg, rgba(43,48,56,.7), rgba(27,30,35,.7)); border: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: 12px; min-height: 300px; }
+.tile .k { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--red-hi); display: flex; align-items: center; gap: 8px; }
+.tile .k em { font-style: normal; color: #7ee2a0; border: 1px solid rgba(47,211,107,.4); border-radius: 99px; padding: 2px 8px; letter-spacing: .1em; }
+.tile h3 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(28px, 3vw, 44px); font-weight: 300; line-height: 1; } .tile h3 b { font-weight: 800; }
+.tile p { margin: 0; font-size: 15.5px; line-height: 1.6; color: var(--muted); max-width: 520px; }
+.tile .more { margin-top: auto; align-self: flex-start; font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--text); display: inline-flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line-2); padding-bottom: 3px; }
+.tile .more svg { width: 14px; height: 14px; transition: transform .3s var(--ease); }
+.tile .more:hover svg { transform: translateX(3px); }
+.t-tasks { grid-column: span 7; } .t-ord { grid-column: span 5; } .t-upd { grid-column: span 5; } .t-icon { grid-column: span 7; }
+.mini { margin-top: 8px; display: grid; gap: 6px; max-width: 420px; }
+.mini .tk { margin: 0; } .mini .tk b { font-size: 13px; } .mini .tk small { font-size: 11px; } .mini .tk .ans span { font-size: 11px; padding: 5px 12px; }
+.ord-flow { margin-top: 8px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.ord-flow .rnd { width: 52px; height: 52px; border-radius: 50%; color: #fff; border-color: rgba(255,90,80,.6); box-shadow: 0 0 0 5px rgba(212,0,0,.16); } .ord-flow .rnd svg { width: 24px; height: 24px; }
+.ord-flow .arrow { font-family: var(--mono); color: var(--dim); }
+.ord-flow .card { align-self: auto; width: 230px; }
+.upd-card { margin-top: 8px; display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 18px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); max-width: 440px; }
+.upd-card i { width: 40px; height: 40px; flex: none; border-radius: 12px; background: rgba(212,0,0,.2); color: #ff8f86; display: grid; place-items: center; } .upd-card i svg { width: 20px; height: 20px; }
+.upd-card span { flex: 1; min-width: 0; } .upd-card b { display: block; font-size: 14.5px; } .upd-card small { font-size: 12px; color: var(--muted); }
+.upd-card s { text-decoration: none; padding: 9px 14px; border-radius: 99px; background: var(--red); color: #fff; font-weight: 700; font-size: 12.5px; white-space: nowrap; }
+.t-icon { flex-direction: row; align-items: center; gap: clamp(20px, 4vw, 56px); }
+.t-icon .txt { display: flex; flex-direction: column; gap: 12px; }
+.t-icon .icons { display: flex; align-items: center; gap: 18px; flex: none; }
+.t-icon .icons img, .t-icon .icons svg { width: clamp(90px, 10vw, 140px); height: auto; }
+.t-icon .icons .old { width: clamp(56px, 6vw, 84px); opacity: .45; filter: grayscale(.3); }
+.t-icon .icons .to { font-family: var(--mono); color: var(--dim); }
+
+/* everything else: an index */
+.index { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(28px, 5vw, 80px); border-top: 1px solid var(--line); }
+.ix { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 4px 14px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+.ix .no { grid-row: span 2; font-family: var(--mono); font-size: 12px; color: var(--dim); padding-top: 4px; }
+.ix b { font-size: 18px; font-weight: 650; letter-spacing: -.005em; }
+.ix p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+
+/* privacy */
+.priv { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 80px); align-items: start; }
+.priv .legal { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 26px; }
+.prom { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.pr { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 2px 14px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.pr i { grid-row: span 2; width: 34px; height: 34px; border-radius: 11px; background: var(--glass); border: 1px solid var(--glass-edge); display: grid; place-items: center; } .pr i svg { width: 17px; height: 17px; }
+.pr b { font-size: 16px; } .pr p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+
+/* download */
+.dls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.dl { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 26px 22px 22px; border-radius: 24px; background: rgba(255,255,255,.04); border: 1px solid var(--line); }
+.dl.mine { border-color: rgba(255,90,80,.55); background: linear-gradient(170deg, rgba(212,0,0,.14), rgba(255,255,255,.03)); }
+.dl.mine::before { content: attr(data-mine); position: absolute; top: -10px; left: 20px; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; background: var(--red); color: #fff; }
+.dl > i { width: 40px; height: 40px; } .dl > i svg { width: 30px; height: 30px; }
+.dl h3 { margin: 6px 0 0; font-size: 22px; font-weight: 700; }
+.dl small { font-size: 14px; line-height: 1.5; color: var(--muted); min-height: 42px; }
+.dl .pill { margin-top: auto; order: 2; }
+.dl .alt { order: 1; }
+.dl .alt { font-size: 12.5px; color: var(--dim); } .dl .alt a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.dl-note { margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.dl-note p { margin: 0; padding: 16px 18px; border-radius: 18px; border: 1px dashed var(--line-2); font-size: 14px; line-height: 1.55; color: var(--muted); }
+.dl-note p b { color: var(--text); }
+.ver { font-family: var(--mono); font-size: 12px; color: #7ee2a0; letter-spacing: .06em; margin: 14px 0 0; }
+
+/* questions */
+.faq { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(28px, 5vw, 80px); }
+.qa { border-top: 1px solid var(--line); }
+.qa details { border-bottom: 1px solid var(--line); }
+.qa summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; font-size: 17px; font-weight: 600; }
+.qa summary::-webkit-details-marker { display: none; }
+.qa summary::after { content: '+'; font-family: var(--mono); font-weight: 400; font-size: 20px; color: var(--muted); transition: transform .3s var(--ease); }
+.qa details[open] summary::after { transform: rotate(45deg); color: var(--red-hi); }
+.qa p { margin: 0 0 20px; font-size: 15.5px; line-height: 1.6; color: var(--muted); max-width: 640px; }
+
+/* contact + footer */
+.contact { text-align: center; padding-bottom: clamp(80px, 10vw, 140px); }
+.contact .mail { display: inline-block; margin-top: 26px; font-family: Jost, var(--sans); font-size: clamp(26px, 4vw, 54px); font-weight: 300; border-bottom: 1px solid var(--line-2); padding-bottom: 6px; transition: color .2s, border-color .2s; }
+.contact .mail:hover { color: var(--red-hi); border-color: var(--red-hi); }
+footer { padding: 26px var(--pad) calc(26px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; color: var(--dim); }
+footer .wordmark { width: 120px; opacity: .6; }
+footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { color: var(--text); }
+
+/* coming in */
+.rv { opacity: 0; transform: translateY(22px); transition: opacity .9s var(--ease), transform .9s var(--ease); transition-delay: var(--d, 0s); }
+.rv.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; transition: none; } .ticker-in, .v-tr .bar2 i { animation: none; } html { scroll-behavior: auto; } .win { transform: none !important; } }
+
+@media (max-width: 1100px) {
+  .bar nav { display: none; }
+  .win-body { grid-template-columns: 34% minmax(0, 1fr); }
+  .win-body .pn.tasks { display: none; }
+  .tag.t2 { display: none; }
+  .t-tasks, .t-ord, .t-upd, .t-icon { grid-column: span 12; }
+  .dls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .bar .home .wordmark { width: 96px; } .bar .home .sep, .bar .end .pill { display: none; }
+  .bar .end { margin-left: auto; }
+  .hero { padding-top: calc(104px + env(safe-area-inset-top)); }
+  .hero-top, .hero-sub, .sec-h, .big, .priv, .faq, .index, .dl-note { grid-template-columns: minmax(0, 1fr); }
+  .hero h1 { font-size: clamp(54px, 19.5vw, 110px); flex-wrap: wrap; }
+  .ord-flow .arrow { display: none; }
+  .cta { justify-content: stretch; } .cta .pill { flex: 1 1 100%; }
+  .cta-note { text-align: left; }
+  .sec-h p.sub { justify-self: start; }
+  .win-body { grid-template-columns: minmax(0, 1fr); height: 470px; }
+  .win-body .pn.side { display: none; }
+  .tag { display: none; }
+  .big .no { padding-top: 0; }
+  .viz { justify-self: stretch; width: 100%; }
+  .t-icon { flex-direction: column; align-items: flex-start; }
+  .dls { grid-template-columns: minmax(0, 1fr); }
+  .dl small { min-height: 0; }
+  .ord-flow .card { width: 100%; }
+}
+
+/* ---- RoarList's own ---- */
+.app-icon.png { filter: drop-shadow(0 24px 50px rgba(212,0,0,.32)); }
+.tag.t3 { top: 66%; } .tag.t2 { top: 24%; }
+/* the frame: a storyboard as it looks today */
+.win-body.rl { grid-template-columns: 23% minmax(0, 1fr); }
+.side .srch { margin: 2px 10px 8px; height: 28px; border-radius: 99px; padding: 0 12px; display: flex; align-items: center; gap: 7px; color: #8e949e; font-size: 11px; background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.07); }
+.side .srch kbd { margin-left: auto; font-family: var(--mono); font-size: 9px; opacity: .7; }
+.ls { display: flex; align-items: center; gap: 9px; margin: 1px 8px; padding: 7px; border-radius: 12px; }
+.ls.on { background: rgba(255,255,255,.07); }
+.ls .cv { flex: none; width: 46px; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; background: #0e1014; }
+.ls .cv svg { width: 100%; height: 100%; }
+.ls span { min-width: 0; flex: 1; } .ls b { display: block; font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ls small { font-size: 9.5px; color: #9aa0aa; font-family: var(--mono); }
+.pj { display: flex; align-items: center; gap: 10px; margin: 10px 10px 4px; padding: 8px 10px; border-radius: 13px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); }
+.pj > span { flex: none; } .pj > span:first-child { min-width: 0; flex: 1; } .pj b { display: block; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .pj small { font-size: 10px; color: #9aa0aa; }
+.seg { display: flex; gap: 2px; padding: 3px; border-radius: 99px; background: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.06); }
+.seg span { padding: 4px 10px; border-radius: 99px; font-size: 10px; color: #9aa0aa; }
+.seg span.on { background: linear-gradient(180deg, #ff6b5e, #d40000); color: #fff; font-weight: 700; }
+.tot { font-family: var(--mono); font-size: 10px; color: #cfd3d9; padding: 4px 9px; border-radius: 99px; background: rgba(255,255,255,.06); white-space: nowrap; }
+.tot i { font-style: normal; color: #7ee2a0; }
+.pdfb { font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 99px; background: var(--red); color: #fff; }
+.scn { margin: 8px 12px 6px; display: flex; align-items: baseline; gap: 9px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: #cfd3d9; }
+.scn b { color: var(--red-hi); font-size: 12px; }
+.sb { flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; padding: 0 12px 12px; align-content: start; }
+.shot { border-radius: 12px; overflow: hidden; background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.07); }
+.shot .fr { position: relative; aspect-ratio: 16 / 9; background: #0e1014; }
+.shot .fr svg { width: 100%; height: 100%; }
+.shot .fr .no { position: absolute; left: 7px; top: 6px; font-family: var(--mono); font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,.55); color: #fff; }
+.shot .fr .ok { position: absolute; right: 7px; top: 6px; width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.55); }
+.shot.done .fr .ok { border-color: transparent; background: #ff5a4f; }
+.shot .meta { padding: 7px 9px 9px; display: grid; gap: 3px; }
+.shot .spec { font-family: var(--mono); font-size: 8.5px; letter-spacing: .04em; color: #ff8f86; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shot .ds { font-size: 10.5px; line-height: 1.3; color: #dfe3e8; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.shot .du { font-family: var(--mono); font-size: 9px; color: #9aa0aa; }
+.shot.add { display: grid; place-items: center; border-style: dashed; border-color: rgba(255,255,255,.16); background: transparent; color: #9aa0aa; font-size: 11px; aspect-ratio: auto; min-height: 90px; }
+/* viz: a frame dropped in */
+.v-drop { width: 78%; z-index: 1; display: grid; gap: 10px; }
+.v-drop .zone { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; border: 1.5px dashed rgba(255,255,255,.25); display: grid; place-items: center; overflow: hidden; }
+.v-drop .zone em { font-style: normal; font-family: var(--mono); font-size: 10.5px; color: var(--dim); letter-spacing: .06em; }
+.v-drop .zone svg { position: absolute; inset: 0; width: 100%; height: 100%; animation: drop 4.2s var(--ease) infinite; }
+@keyframes drop { 0%, 18% { opacity: 0; transform: translate(14%, -18%) scale(.7) rotate(4deg); } 38%, 82% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+.v-drop .row2 { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.v-drop .row2 b { color: var(--red-hi); font-weight: 500; }
+/* viz: the PDF */
+.v-pdf { width: 80%; z-index: 1; aspect-ratio: 297 / 210; border-radius: 6px; background: #f1efeb; color: #1b1e23; padding: 5% 5.5%; display: grid; grid-template-rows: auto auto 1fr; gap: 6%; box-shadow: 0 30px 60px rgba(0,0,0,.45); transform: rotate(-2deg); }
+.v-pdf .ph { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid rgba(0,0,0,.15); padding-bottom: 4%; }
+.v-pdf .ph .rm { font-size: clamp(13px, 1.5vw, 18px); } .v-pdf .ph .rm .b { color: #d40000; }
+.v-pdf .ph small { font-family: var(--mono); font-size: 8px; color: #6b6f76; }
+.v-pdf .pm { font-family: var(--mono); font-size: 7.5px; color: #6b6f76; letter-spacing: .04em; }
+.v-pdf .pg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; align-content: start; }
+.v-pdf .pg i { aspect-ratio: 16 / 9; border-radius: 2px; background: #22262c; position: relative; overflow: hidden; }
+.v-pdf .pg i::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 40%; background: linear-gradient(180deg, transparent, rgba(212,0,0,.45)); }
+/* viz: numbers that read on set */
+.v-no { width: 82%; z-index: 1; display: grid; gap: 14px; justify-items: center; }
+.v-no .nos { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.v-no .nos span { font-family: var(--mono); font-size: 15px; padding: 7px 11px; border-radius: 10px; background: rgba(255,255,255,.06); border: 1px solid var(--line-2); }
+.v-no .nos span.x { color: var(--dim); text-decoration: line-through; text-decoration-color: var(--red-hi); border-style: dashed; background: transparent; }
+.v-no .dur { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.v-no .dur b { color: var(--text); font-weight: 500; padding: 5px 10px; border-radius: 99px; background: rgba(212,0,0,.2); border: 1px solid rgba(255,90,80,.4); }
+/* tiles */
+.mini-rows { margin-top: 8px; display: grid; gap: 6px; max-width: 460px; }
+.mrow { display: grid; grid-template-columns: 40px 58px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 12px; border-radius: 13px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); font-size: 13px; }
+.mrow .n { font-family: var(--mono); color: var(--red-hi); } .mrow .l { font-family: var(--mono); font-size: 11.5px; color: var(--muted); } .mrow em { font-style: normal; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mrow.new { border-color: rgba(255,90,80,.5); background: rgba(212,0,0,.1); } .mrow.new em { color: var(--text); }
+.mrow.new em::after { content: ''; display: inline-block; width: 1.5px; height: 14px; margin-left: 2px; vertical-align: -2px; background: var(--red-hi); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.mrow kbd { font-family: var(--mono); font-size: 10.5px; padding: 3px 7px; border-radius: 6px; border: 1px solid var(--line-2); color: var(--muted); }
+.asp { margin-top: 10px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 12px; }
+.asp span { display: grid; gap: 7px; justify-items: center; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.asp span i { display: block; height: 36px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,.5); background: rgba(255,255,255,.04); }
+.asp span.on i { border-color: var(--red-hi); background: rgba(212,0,0,.16); } .asp span.on { color: var(--text); }
+.looks { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+.looks .dots { display: flex; gap: 6px; align-items: center; }
+.looks .dots i { width: 16px; height: 16px; border-radius: 50%; }
+@media (prefers-reduced-motion: reduce) { .v-drop .zone svg, .mrow.new em::after { animation: none; } }
+@media (max-width: 1100px) { .win-body.rl { grid-template-columns: 30% minmax(0, 1fr); } .sb { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .win-body.rl { grid-template-columns: minmax(0, 1fr); height: 520px; }
+  .pj .seg, .pj .pdfb { display: none; }
+  .mrow { grid-template-columns: 30px 66px minmax(0, 1fr); } .mrow kbd { display: none; }
+}
+@media (max-width: 420px) { .sb { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 7px; padding: 0 9px 9px; } .shot .ds { -webkit-line-clamp: 1; } }
+
+/* Roardino's own: the real demo ordino in a phone, and small drawings for the three big tiles */
+.frame.ph { display: flex; justify-content: center; }
+.phone { position: relative; width: min(360px, 86vw); height: min(740px, 150vw); padding: 10px; border-radius: 52px; background: #0b0c0e; border: 1px solid var(--line-2); box-shadow: 0 60px 140px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08); }
+.phone iframe { display: block; width: 100%; height: 100%; border: 0; border-radius: 42px; background: #1b1e23; }
+.frame.ph .tag.t1 { left: 6%; top: 24%; bottom: auto; } .frame.ph .tag.t2 { right: 6%; top: 14%; } .frame.ph .tag.t3 { left: auto; right: 9%; top: auto; bottom: 22%; }
+.mc { width: 100%; max-width: 340px; margin: 0 auto; display: grid; gap: 8px; }
+.mc .r { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 14px; background: var(--glass); border: 1px solid var(--glass-edge); font-size: 13px; }
+.mc .r b { font-weight: 500; } .mc .r small { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.mc .r i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+.mc .r.on { border-color: color-mix(in srgb, var(--red) 55%, transparent); }
+.mc .big { padding: 16px; border-radius: 18px; background: linear-gradient(160deg, #2a1416, #16181c); border: 1px solid var(--line-2); }
+.mc .big b { display: block; font-size: 30px; font-weight: 300; letter-spacing: .02em; } .mc .big small { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em; }
+.mc .pills { display: flex; gap: 8px; flex-wrap: wrap; } .mc .pills span { padding: 8px 13px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); font-size: 12px; }
+.mc .pills span.m { background: var(--red); border-color: transparent; color: #fff; }
+.looks3 { display: flex; gap: 8px; margin-top: 16px; } .looks3 span { flex: 1; height: 54px; border-radius: 12px; border: 1px solid var(--line-2); display: grid; place-items: end start; padding: 8px 10px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+@media (max-width: 720px) { .frame.ph .tag { display: none; } .hero h1 { font-size: clamp(48px, 17vw, 100px); } }
+</style>
+</head>
+<body>
+
+<header class="bar" id="bar">
+  <a class="home" href="../../" aria-label="The Mad Lions">
+    <img class="wordmark" src="../../wordmark.png" alt="The Mad Lions">
+    <span class="sep"></span>
+    <span class="rm" aria-label="Roardino"><span class="a">ROAR</span><span class="b">DINO</span></span>
+  </a>
+  <nav aria-label="Sections">
+    <a href="#only" data-t="nav.only">Only here</a>
+    <a href="#set" data-t="nav.set">For the set</a>
+    <a href="#all" data-t="nav.all">Everything</a>
+    <a href="#start" data-t="nav.start">Start</a>
+    <a href="#faq" data-t="nav.faq">Questions</a>
+  </nav>
+  <div class="end">
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" class="on">EN</button>
+      <button type="button" data-lang="el">GR</button>
+    </div>
+    <a class="pill sm main" href="../../roardino/" data-t="cta.open">Open Roardino</a>
+  </div>
+</header>
+
+<main>
+<div class="hero" id="top">
+  <div class="hero-top">
+    <div>
+      <p class="kicker rv"><i></i><span data-t="hero.kicker">Call sheets · The Mad Lions Lab · Experiment 02</span></p>
+      <h1 class="rv" style="--d:.06s"><span class="rm"><span class="a">ROAR</span><span class="b">DINO</span></span><em class="beta">beta</em></h1>
+    </div>
+  </div>
+  <div class="hero-sub">
+    <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>The call sheet, in one link. Write <b>the call, the place and the day's plan</b>, pick a picture and a colour, and send the crew <b>one page that opens on any phone</b>, with directions, weather and sunset.</p>
+    <div class="cta rv" style="--d:.22s">
+      <a class="pill main" href="../../roardino/"><span data-t="cta.make">Make your ordino</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="pill" href="../../roardino/#demo" data-t="cta.demo2">See an example</a>
+    </div>
+    <p class="cta-note rv" style="--d:.3s"><span data-t="cta.note">Free · in the browser, on a computer or a phone · nothing for the crew to install</span></p>
+  </div>
+
+  <div class="frame ph rv" style="--d:.2s">
+    <div class="phone"><iframe src="../../roardino/#demo" title="A Roardino ordino on a phone" loading="lazy"></iframe></div>
+    <div class="tag t1" aria-hidden="true"><i>01</i><span data-t="tag.link">One link for the whole crew</span></div>
+    <div class="tag t2" aria-hidden="true"><i>02</i><span data-t="tag.sky">Weather · sunrise · sunset</span></div>
+    <div class="tag t3" aria-hidden="true"><i>03</i><span data-t="tag.cal">The day in their calendar</span></div>
+  </div>
+</div>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-in">
+<span data-t="tk.1">One link</span><span data-t="tk.2">Calls by department</span><span data-t="tk.3">Directions · Open in Maps</span><span data-t="tk.4">Weather and sunset</span><span data-t="tk.5">Schedule · Scenes</span><span data-t="tk.6">Cast · Crew · Contacts</span><span data-t="tk.7">Add to calendar</span><span data-t="tk.8">Dark · Glass · Light</span><span data-t="tk.9">WhatsApp · Viber · SMS</span><span data-t="tk.1">One link</span><span data-t="tk.2">Calls by department</span><span data-t="tk.3">Directions · Open in Maps</span><span data-t="tk.4">Weather and sunset</span><span data-t="tk.5">Schedule · Scenes</span><span data-t="tk.6">Cast · Crew · Contacts</span><span data-t="tk.7">Add to calendar</span><span data-t="tk.8">Dark · Glass · Light</span><span data-t="tk.9">WhatsApp · Viber · SMS</span>
+</div></div>
+
+<section id="only">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="only.idx">01 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only Roardino</b> does.</h2></div>
+    <p class="sub rv" data-t="only.sub">Why a production stops sending the call sheet as a PDF in the group chat.</p>
+  </div>
+  <div class="three">
+    <article class="big rv">
+      <span class="no">01</span>
+      <div><h3 data-t="f1.t" data-html><b>One link</b>, every phone.</h3><p data-t="f1.p">The ordino is a page, not a file: it opens at once on any phone, with no app and no zooming. Change the call at night and the same link shows the new one in the morning.</p>
+        <div class="chips"><span data-t="f1.c1">No app for the crew</span><span data-t="f1.c2">Always the latest</span><span data-t="f1.c3">WhatsApp · Viber · SMS</span></div></div>
+      <div class="viz"><div class="mc"><div class="big"><small>GENERAL CALL · FRI 24 OCT</small><b>06:30</b></div><div class="pills"><span class="m" data-t="f1.v1">Share the link</span><span>WhatsApp</span><span>Viber</span></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">02</span>
+      <div><h3 data-t="f2.t" data-html>The place, <b>and the sky</b>.</h3><p data-t="f2.p">Paste a Google Maps link and Roardino finds the spot. The crew gets Directions and Open in Maps, a tap to call the location contact, and the weather, sunrise and sunset for that place and that day, filled in by themselves.</p>
+        <div class="chips"><span data-t="f2.c1">Directions</span><span data-t="f2.c2">Extra locations</span><span data-t="f2.c3">Weather</span><span data-t="f2.c4">Sunrise · sunset</span></div></div>
+      <div class="viz"><div class="mc"><div class="r on"><i></i><b>Piraeus Railway Station</b><small>MAPS</small></div><div class="r"><i style="background:#ffb224"></i><b data-t="f2.v1">Clear · 18°</b><small>WEATHER</small></div><div class="r"><i style="background:#ff6b2c"></i><b data-t="f2.v2">Sunrise 07:38 · Sunset 18:41</b></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">03</span>
+      <div><h3 data-t="f3.t" data-html>Every <b>department's call</b>.</h3><p data-t="f3.p">One general call, then a call for each group: camera, lights, make-up, cast. Under it the day's schedule, the scenes, cast, crew and contacts. Whatever you fill in shows; whatever you leave empty stays out.</p>
+        <div class="chips"><span data-t="f3.c1">Calls by group</span><span data-t="f3.c2">Schedule</span><span data-t="f3.c3">Scenes · Cast · Crew</span><span data-t="f3.c4">Empty stays out</span></div></div>
+      <div class="viz"><div class="mc"><div class="r"><b data-t="f3.v1">Camera &amp; lights</b><small>05:45</small></div><div class="r"><b data-t="f3.v2">Make-up &amp; wardrobe</b><small>06:00</small></div><div class="r on"><b data-t="f3.v3">Cast</b><small>07:15</small></div><div class="r"><b data-t="f3.v4">Wrap</b><small>19:00</small></div></div></div>
+    </article>
+  </div>
+</section>
+
+<section id="set">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="set.idx">02 · For the set</p><h2 class="rv" data-t="set.title" data-html>Made the way <b>a call sheet is read</b>.</h2></div>
+    <p class="sub rv" data-t="set.sub">At five in the morning, on a phone, in a hurry.</p>
+  </div>
+  <div class="board">
+    <article class="tile t-tasks rv">
+      <span class="k" data-t="s1.k">The calendar</span>
+      <h3 data-t="s1.t" data-html>The day, <b>in their calendar</b>.</h3>
+      <p data-t="s1.p">One tap on the ordino puts the shoot day in the phone's calendar, with the call time and the place.</p>
+    </article>
+    <article class="tile t-ord rv" style="--d:.08s">
+      <span class="k" data-t="s2.k">The look</span>
+      <h3 data-t="s2.t" data-html>Dark, Glass or Light, <b>your colour</b>.</h3>
+      <p data-t="s2.p">Pick a look, an accent colour and a cover picture with the production's logo. The ordino looks like your project, not like a form.</p>
+      <div class="looks3"><span style="background:#101114;color:#eef0f3">Dark</span><span style="background:linear-gradient(160deg,#3a2a2c,#1b1e23);color:#eef0f3">Glass</span><span style="background:#f3f0e8;color:#151412">Light</span></div>
+    </article>
+    <article class="tile t-upd rv">
+      <span class="k" data-t="s3.k">The next day</span>
+      <h3 data-t="s3.t" data-html>Duplicate, <b>change the date</b>.</h3>
+      <p data-t="s3.p">Day two is day one with a few changes: Duplicate makes a new ordino with everything in it, ready for the new date, as a draft until you send it.</p>
+    </article>
+    <article class="tile t-icon rv" style="--d:.08s">
+      <div class="txt">
+        <span class="k" data-t="s4.k">The family</span>
+        <h3 data-t="s4.t" data-html>Straight into <b>the crew's chat</b>.</h3>
+        <p data-t="s4.p">Send the ordino into a RoarMe chat, or by WhatsApp, Viber or SMS. It is the same RoarMe account, so every ordino you make is in one place, on any device.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="all">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="all.idx">03 · Everything</p><h2 class="rv" data-t="all.title" data-html>And all <b>a shoot day needs</b>.</h2></div>
+    <p class="sub rv" data-t="all.sub">The rest of Roardino, briefly.</p>
+  </div>
+  <div class="index">
+    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">The project on top</b><p data-t="ix1.p">Client, title and the production company on the cover, with its picture.</p></div>
+    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">The day</b><p data-t="ix2.p">Heading, date, day X of Y and the unit, on top of the ordino.</p></div>
+    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">The hours</b><p data-t="ix3.p">General call, wrap, the break, and one line under the call for whatever matters most today.</p></div>
+    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">Extra locations</b><p data-t="ix4.p">More places for the same day, each with its name, address and its own Directions.</p></div>
+    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">The schedule</b><p data-t="ix5.p">The day hour by hour, in the order you shoot it.</p></div>
+    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Scenes</b><p data-t="ix6.p">The scenes of the day with their numbers and what happens.</p></div>
+    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Cast and crew</b><p data-t="ix7.p">Who is called, in which role, with a tap to call.</p></div>
+    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">Contacts</b><p data-t="ix8.p">Production, location manager, the AD: everyone the crew may need to reach.</p></div>
+    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">A note</b><p data-t="ix9.p">Parking, the dress code, the password for the wifi: one note at the end.</p></div>
+    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Drafts</b><p data-t="ix10.p">Keep an ordino as a draft and send it when it is ready; the link opens only then.</p></div>
+    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">All your ordinos</b><p data-t="ix11.p">Coming next first, then drafts and the ones gone by, with search and filters.</p></div>
+    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Try it first</b><p data-t="ix12.p">A sample ordino for a night shoot opens with no account.</p></div>
+  </div>
+</section>
+
+<section id="start">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="st.idx">04 · Start</p><h2 class="rv" data-t="st.title" data-html>Make <b>your first ordino</b>.</h2></div>
+    <p class="sub rv" data-t="st.sub">Free, and in beta: an experiment of The Mad Lions Lab that we use on our own shoots.</p>
+  </div>
+  <div class="dls">
+    <div class="dl rv">
+      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.4 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.4-3.5-8.5s1-5.9 3.5-8.5z"/></svg></i>
+      <h3 data-t="st.webt">In the browser</h3>
+      <small data-t="st.web">On a computer or a phone, with your RoarMe account. Nothing to install.</small>
+      <a class="pill main" href="../../roardino/" data-t="cta.open">Open Roardino</a>
+    </div>
+    <div class="dl rv" style="--d:.06s">
+      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m10 9.5 4.5 2.5-4.5 2.5z"/></svg></i>
+      <h3 data-t="st.demot">An example</h3>
+      <small data-t="st.demo">A night shoot, as the crew gets it. No account.</small>
+      <a class="pill" href="../../roardino/#demo" data-t="cta.demo2">See an example</a>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="faq">
+    <div><p class="idx rv" data-t="faq.idx">05 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
+    <div class="qa">
+      <details class="rv"><summary data-t="q1">Is Roardino free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
+      <details class="rv"><summary data-t="q2">Does the crew need an account or an app?</summary><p data-t="a2">No. They open the link in the phone's browser. Only you, who make the ordino, sign in, with your RoarMe account.</p></details>
+      <details class="rv"><summary data-t="q3">What if the call changes?</summary><p data-t="a3">Change it in Roardino. The link stays the same, so whoever opens it sees the new call.</p></details>
+      <details class="rv"><summary data-t="q4">Where do the weather and the sunset come from?</summary><p data-t="a4">From the place and the date of the ordino. Paste a Google Maps link, or let Roardino find the spot from the address, and they fill in by themselves.</p></details>
+      <details class="rv"><summary data-t="q5">How do I send it?</summary><p data-t="a5">Copy the link, or send it by WhatsApp, Viber or SMS, or into a RoarMe chat, from the ordino itself.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <p class="idx rv" data-t="ct.idx">Contact</p>
+  <h2 class="rv" data-t="ct.title" data-html>Ideas for <b>the next version</b>?</h2>
+  <a class="mail rv" href="mailto:lab@themadlions.com?subject=Roardino">lab@themadlions.com</a>
+</section>
+</main>
+<footer>
+  <a href="../../"><img class="wordmark" src="../../wordmark.png" alt="The Mad Lions"></a>
+  <nav>
+    <a href="../" data-t="ft.lab">The Mad Lions Lab</a>
+    <a href="../../roarme/">RoarMe</a>
+    <a href="../roarlist/">RoarList</a>
+    <a href="../roarwriter/">RoarWriter</a>
+  </nav>
+  <span data-t="footer">© 2026 The Mad Lions · Roardino</span>
+</footer>
+<script>
+(function () {
+  var EL = {"nav.only": "Μόνο εδώ", "nav.set": "Για το γύρισμα", "nav.all": "Όλα", "nav.start": "Ξεκίνα", "nav.faq": "Ερωτήσεις", "cta.open": "Άνοιξε το Roardino", "cta.make": "Φτιάξε το ordino σου", "cta.demo2": "Δες ένα παράδειγμα", "cta.note": "Δωρεάν · στον browser, σε υπολογιστή ή κινητό · το συνεργείο δεν εγκαθιστά τίποτα", "hero.kicker": "Ordino γυρισμάτων · The Mad Lions Lab · Πείραμα 02", "hero.lead": "Το ordino, σε ένα link. Γράψε <b>το call, το μέρος και το πρόγραμμα της ημέρας</b>, διάλεξε φωτογραφία και χρώμα, και στείλε στο συνεργείο <b>μία σελίδα που ανοίγει σε κάθε κινητό</b>, με οδηγίες, καιρό και δύση.", "tag.link": "Ένα link για όλο το συνεργείο", "tag.sky": "Καιρός · ανατολή · δύση", "tag.cal": "Η μέρα στο ημερολόγιό τους", "tk.1": "Ένα link", "tk.2": "Calls ανά ομάδα", "tk.3": "Οδηγίες · Άνοιγμα στους Χάρτες", "tk.4": "Καιρός και δύση", "tk.5": "Πρόγραμμα · Σκηνές", "tk.6": "Cast · Crew · Επαφές", "tk.7": "Στο ημερολόγιο", "tk.8": "Dark · Glass · Light", "tk.9": "WhatsApp · Viber · SMS", "only.idx": "01 · Μόνο εδώ", "only.title": "Τρία πράγματα που κάνει <b>μόνο το Roardino</b>.", "only.sub": "Γιατί μια παραγωγή σταματά να στέλνει το ordino σαν PDF στο group.", "f1.t": "<b>Ένα link</b>, κάθε κινητό.", "f1.p": "Το ordino είναι σελίδα, όχι αρχείο: ανοίγει αμέσως σε κάθε κινητό, χωρίς εφαρμογή και χωρίς zoom. Άλλαξε το call το βράδυ και το ίδιο link δείχνει το καινούργιο το πρωί.", "f1.c1": "Χωρίς app για το συνεργείο", "f1.c2": "Πάντα το πιο νέο", "f1.c3": "WhatsApp · Viber · SMS", "f1.v1": "Στείλε το link", "f2.t": "Το μέρος, <b>και ο ουρανός</b>.", "f2.p": "Επικόλλησε ένα link από το Google Maps και το Roardino βρίσκει το σημείο. Το συνεργείο παίρνει Οδηγίες και Άνοιγμα στους Χάρτες, κλήση με ένα πάτημα στην επαφή του location, και τον καιρό, την ανατολή και τη δύση για εκείνο το μέρος και εκείνη τη μέρα, συμπληρωμένα μόνα τους.", "f2.c1": "Οδηγίες", "f2.c2": "Extra locations", "f2.c3": "Καιρός", "f2.c4": "Ανατολή · δύση", "f2.v1": "Αίθριος · 18°", "f2.v2": "Ανατολή 07:38 · Δύση 18:41", "f3.t": "Το <b>call κάθε ομάδας</b>.", "f3.p": "Ένα general call, και μετά ένα call για κάθε ομάδα: κάμερα, φώτα, μακιγιάζ, ηθοποιοί. Από κάτω το πρόγραμμα της ημέρας, οι σκηνές, το cast, το crew και οι επαφές. Ό,τι συμπληρώνεις φαίνεται· ό,τι μένει κενό δεν εμφανίζεται.", "f3.c1": "Calls ανά ομάδα", "f3.c2": "Πρόγραμμα", "f3.c3": "Σκηνές · Cast · Crew", "f3.c4": "Το κενό δεν φαίνεται", "f3.v1": "Κάμερα και φώτα", "f3.v2": "Μακιγιάζ και κοστούμια", "f3.v3": "Ηθοποιοί", "f3.v4": "Wrap", "set.idx": "02 · Για το γύρισμα", "set.title": "Φτιαγμένο όπως <b>διαβάζεται ένα ordino</b>.", "set.sub": "Στις πέντε το πρωί, στο κινητό, βιαστικά.", "s1.k": "Το ημερολόγιο", "s1.t": "Η μέρα, <b>στο ημερολόγιό τους</b>.", "s1.p": "Ένα πάτημα στο ordino βάζει τη μέρα του γυρίσματος στο ημερολόγιο του κινητού, με την ώρα του call και το μέρος.", "s2.k": "Η εμφάνιση", "s2.t": "Dark, Glass ή Light, <b>το χρώμα σου</b>.", "s2.p": "Διάλεξε look, χρώμα και φωτογραφία εξωφύλλου με το λογότυπο της παραγωγής. Το ordino μοιάζει με το project σου, όχι με φόρμα.", "s3.k": "Η επόμενη μέρα", "s3.t": "Αντίγραφο, <b>άλλαξε την ημερομηνία</b>.", "s3.p": "Η δεύτερη μέρα είναι η πρώτη με λίγες αλλαγές: το Duplicate φτιάχνει νέο ordino με όλα μέσα, έτοιμο για τη νέα ημερομηνία, ως πρόχειρο μέχρι να το στείλεις.", "s4.k": "Η οικογένεια", "s4.t": "Κατευθείαν <b>στο chat του συνεργείου</b>.", "s4.p": "Στείλε το ordino σε ένα chat του RoarMe, ή με WhatsApp, Viber ή SMS. Είναι ο ίδιος λογαριασμός RoarMe, οπότε όλα τα ordino σου είναι σε ένα μέρος, από κάθε συσκευή.", "all.idx": "03 · Όλα", "all.title": "Και όλα όσα <b>θέλει μια μέρα γυρίσματος</b>.", "all.sub": "Τα υπόλοιπα του Roardino, με λίγα λόγια.", "ix1.t": "Το project στην κορυφή", "ix1.p": "Πελάτης, τίτλος και η εταιρεία παραγωγής στο εξώφυλλο, με τη φωτογραφία του.", "ix2.t": "Η μέρα", "ix2.p": "Τίτλος, ημερομηνία, μέρα Χ από Υ και το unit, στην κορυφή του ordino.", "ix3.t": "Οι ώρες", "ix3.p": "General call, wrap, το διάλειμμα, και μία γραμμή κάτω από το call για ό,τι μετράει περισσότερο σήμερα.", "ix4.t": "Extra locations", "ix4.p": "Κι άλλα μέρη για την ίδια μέρα, το καθένα με όνομα, διεύθυνση και δικές του Οδηγίες.", "ix5.t": "Το πρόγραμμα", "ix5.p": "Η μέρα ώρα με την ώρα, με τη σειρά που γυρίζεις.", "ix6.t": "Σκηνές", "ix6.p": "Οι σκηνές της ημέρας με τους αριθμούς τους και τι γίνεται.", "ix7.t": "Cast και crew", "ix7.p": "Ποιος καλείται, σε ποιο ρόλο, με κλήση με ένα πάτημα.", "ix8.t": "Επαφές", "ix8.p": "Παραγωγή, location manager, ο βοηθός σκηνοθέτη: όλοι όσοι μπορεί να χρειαστεί το συνεργείο.", "ix9.t": "Μια σημείωση", "ix9.p": "Πάρκινγκ, τι να φορέσουν, ο κωδικός του wifi: μία σημείωση στο τέλος.", "ix10.t": "Πρόχειρα", "ix10.p": "Κράτα ένα ordino ως πρόχειρο και στείλ’ το όταν είναι έτοιμο· το link ανοίγει μόνο τότε.", "ix11.t": "Όλα τα ordino σου", "ix11.p": "Πρώτα τα επόμενα, μετά τα πρόχειρα και όσα πέρασαν, με αναζήτηση και φίλτρα.", "ix12.t": "Δοκίμασέ το πρώτα", "ix12.p": "Ένα δείγμα ordino για νυχτερινό γύρισμα ανοίγει χωρίς λογαριασμό.", "st.idx": "04 · Ξεκίνα", "st.title": "Φτιάξε <b>το πρώτο σου ordino</b>.", "st.sub": "Δωρεάν, και σε beta: ένα πείραμα του Mad Lions Lab που χρησιμοποιούμε στα δικά μας γυρίσματα.", "st.webt": "Στον browser", "st.web": "Σε υπολογιστή ή κινητό, με τον λογαριασμό σου στο RoarMe. Τίποτα για εγκατάσταση.", "st.demot": "Ένα παράδειγμα", "st.demo": "Ένα νυχτερινό γύρισμα, όπως το παίρνει το συνεργείο. Χωρίς λογαριασμό.", "faq.idx": "05 · Ερωτήσεις", "faq.title": "Καλό να <b>ξέρεις</b>.", "q1": "Είναι δωρεάν το Roardino;", "a1": "Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις.", "q2": "Χρειάζεται το συνεργείο λογαριασμό ή εφαρμογή;", "a2": "Όχι. Ανοίγουν το link στον browser του κινητού. Συνδέεσαι μόνο εσύ που φτιάχνεις το ordino, με τον λογαριασμό σου στο RoarMe.", "q3": "Κι αν αλλάξει το call;", "a3": "Άλλαξέ το στο Roardino. Το link μένει το ίδιο, οπότε όποιος το ανοίγει βλέπει το νέο call.", "q4": "Από πού έρχονται ο καιρός και η δύση;", "a4": "Από το μέρος και την ημερομηνία του ordino. Επικόλλησε ένα link από το Google Maps, ή άφησε το Roardino να βρει το σημείο από τη διεύθυνση, και συμπληρώνονται μόνα τους.", "q5": "Πώς το στέλνω;", "a5": "Αντέγραψε το link, ή στείλ’ το με WhatsApp, Viber ή SMS, ή σε ένα chat του RoarMe, από το ίδιο το ordino.", "ct.idx": "Επαφή", "ct.title": "Ιδέες για <b>την επόμενη έκδοση</b>;", "ft.lab": "The Mad Lions Lab", "footer": "© 2026 The Mad Lions · Roardino"}
+  var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
+  var EN = {}
+  nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })
+  function setLang(l) {
+    var d = l === 'el' ? EL : EN
+    nodes.forEach(function (n) { var v = d[n.dataset.t]; if (v == null) v = EN[n.dataset.t]; if (n.hasAttribute('data-html')) n.innerHTML = v; else n.textContent = v })
+    document.documentElement.lang = l === 'el' ? 'el' : 'en'
+    document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) })
+    try { localStorage.setItem('tml_site_lang', l) } catch (e) {}
+  }
+  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang) }) })
+  var saved = 'en'
+  try { saved = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
+  setLang(saved)
+  var bar = document.getElementById('bar')
+  var onScroll = function () { bar.classList.toggle('solid', window.scrollY > 30) }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll()
+  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  var rv = [].slice.call(document.querySelectorAll('.rv'))
+  if (still || !('IntersectionObserver' in window)) rv.forEach(function (e) { e.classList.add('in') })
+  else {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }) }, { rootMargin: '0px 0px -8% 0px', threshold: .06 })
+    rv.forEach(function (e) { io.observe(e) })
+  }
+})()
+</script>
+</body>
+</html>
