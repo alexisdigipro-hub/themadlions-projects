@@ -8,6 +8,7 @@ import PeopleAll from './PeopleAll.jsx'
 import LocationsAll from './LocationsAll.jsx'
 import EquipmentAll from './EquipmentAll.jsx'
 import Drives from './Drives.jsx'
+import IdSheets from './IdSheets.jsx'
 
 const TABS = [
   // the drives archive moved in here, for whoever has the Drives permission (Alex, 10 Oct); the first tab since 23 Oct
@@ -17,6 +18,8 @@ const TABS = [
   { key: 'cast', label: 'Cast', icon: 'people', perm: 'contacts' },
   // the company's own film equipment, with a rental price (Alex, 10 Oct)
   { key: 'equipment', label: 'Equipment', icon: 'gear', perm: 'gear' },
+  // photos of people's ID sheets, a folder per person, the pictures in pCloud (Alex, 25 Oct)
+  { key: 'ids', label: 'ID sheets', icon: 'idcard', perm: 'idsheets' },
 ]
 
 export default function Database() {
@@ -52,6 +55,7 @@ export default function Database() {
           {tab === 'cast' && <PeopleAll kind="cast" slot={mobile ? null : slot} />}
           {tab === 'drives' && <Drives slot={mobile ? null : slot} />}
           {tab === 'equipment' && <EquipmentAll slot={mobile ? null : slot} />}
+          {tab === 'ids' && <IdSheets slot={mobile ? null : slot} />}
         </div>
       </div>
     </div>

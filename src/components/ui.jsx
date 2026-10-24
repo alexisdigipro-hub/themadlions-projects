@@ -343,6 +343,8 @@ export const ACT_ICON = {
   trash: actSvg(<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />),
   close: actSvg(<path d="M6 6l12 12M18 6 6 18" />),
   estimate: actSvg(<><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4M10 12h5M10 16h5" /></>),
+  back: actSvg(<path d="M15 5l-7 7 7 7" />),
+  expand: actSvg(<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />),
 }
 export function Act({ icon = 'plus', label, onClick, main = false, className = '', ...props }) {
   return (
