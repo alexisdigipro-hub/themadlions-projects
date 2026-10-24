@@ -8040,3 +8040,31 @@ html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--
   .decks-new { width: 38px; padding: 0; justify-content: center; }
   .decks-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* The Share page as a list (Alex, 24 Oct: "in list mode too"; Tiles | List in the top row, on a computer): one soft
+   row per link, its picture small at the left, the stage chip, title and who/when with the tags beside, the round
+   icons at the right, Delete apart in red */
+@media (min-width: 821px) {
+  html[data-theme] body .share-dtop .share-look { margin-left: auto; }
+  html[data-theme] body .share-dtop .share-look + .share-new { margin-left: 0; }
+  html[data-theme] body .deliveries.share-list .deliv-list { display: flex; flex-direction: column; gap: 8px; }
+  html[data-theme] body .deliveries.share-list .deliv-list li.deliv-row {
+    display: grid; grid-template-columns: 72px 158px minmax(0, 1fr) auto; align-items: center; column-gap: 14px; row-gap: 6px;
+    padding: 10px 12px; border-radius: 16px;
+  }
+  html[data-theme] body .deliveries.share-list .deliv-list li.deliv-row:hover { transform: none; background: var(--raised); }
+  html[data-theme] body .deliveries.share-list .deliv-cover { grid-column: 1; grid-row: 1; width: 72px; height: 46px; aspect-ratio: auto; border-radius: 10px; }
+  html[data-theme] body .deliveries.share-list .deliv-cover::after { display: none; }
+  html[data-theme] body .deliveries.share-list .deliv-row .deliv-stage {
+    position: static; grid-column: 2; grid-row: 1; justify-self: start; -webkit-backdrop-filter: none; backdrop-filter: none;
+    color: var(--text); background: color-mix(in srgb, var(--text) 7%, transparent); border-color: var(--line-soft);
+  }
+  html[data-theme] body .deliveries.share-list .deliv-row .grow { grid-column: 3; grid-row: 1; padding: 0; display: flex; flex-wrap: wrap; align-items: center; column-gap: 10px; min-width: 0; }
+  html[data-theme] body .deliveries.share-list .deliv-row .grow > strong { flex: 0 1 auto; max-width: 100%; font-size: 15.5px; }
+  html[data-theme] body .deliveries.share-list .deliv-row .grow > .small { flex: 1 1 100%; margin-top: 1px; }
+  html[data-theme] body .deliveries.share-list .deliv-tags { flex: 1 1 100%; margin-top: 6px; }
+  html[data-theme] body .deliveries.share-list .deliv-row .grow > .deliv-quote { flex: 1 1 100%; }
+  html[data-theme] body .deliveries.share-list .deliv-tools { grid-column: 4; grid-row: 1; margin: 0; padding: 0; }
+  html[data-theme] body .deliveries.share-list .deliv-tools .deliv-tool-x { margin-left: 10px; }
+  html[data-theme] body .deliveries.share-list .deliv-people { grid-column: 2 / -1; margin: 4px 0 0; }
+}

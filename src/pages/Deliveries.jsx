@@ -99,6 +99,9 @@ export default function Deliveries() {
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
   const [filter, setFilter] = useState('all') // Alex: open on Everything, not just Deliveries
+  // Tiles or a list, on a computer (Alex, 24 Oct), remembered on this device
+  const [look, setLook] = useState(() => { try { return localStorage.getItem('tml_share_look') === 'list' ? 'list' : 'tiles' } catch { return 'tiles' } })
+  const pickLook = (v) => { setLook(v); try { localStorage.setItem('tml_share_look', v) } catch { /* private mode */ } }
   const mobile = useIsMobile()
   const [addMenu, setAddMenu] = useState(false) // the phone's + : New delivery / New cost estimation
   const { boxRef, slideTo, inClass } = useSlide()
@@ -493,7 +496,7 @@ export default function Deliveries() {
   }
 
   return (
-    <div className="deliveries">
+    <div className={`deliveries${look === 'list' ? ' share-list' : ''}`}>
       {/* on a phone (Alex, 15 Oct): no title, the filters as a glass capsule and a round + on one line;
           the + offers New delivery and, for administrators, New cost estimation */}
       {mobile && (
@@ -532,6 +535,9 @@ export default function Deliveries() {
             </button>
           ))}
         </nav>
+        <span className="segmented share-look" role="tablist" aria-label="Show as">
+          {[['tiles', 'Tiles'], ['list', 'List']].map(([v, l]) => <button key={v} type="button" className={look === v ? 'on' : ''} onClick={() => pickLook(v)}>{l}</button>)}
+        </span>
         {editable && (
           <span className="share-new">
             {isAdmin && <Act icon="estimate" label="New cost estimation" onClick={startEstimate} />}
