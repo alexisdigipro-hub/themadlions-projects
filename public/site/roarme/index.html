@@ -8,12 +8,12 @@
      what is new, everything else as an index, then privacy, downloads (the app updates itself from 1.4.9), questions.
      Graphite, Jost for the wordmark, the system face for text, a mono for labels, Rosso Corsa as the one loud colour.
      EN and GR, the same switch as the main page. Download links follow the newest desktop build (releases/latest). -->
-<title>RoarMe · The messenger for teams: no phone number, 3 GB files, tasks, encrypted chats · by The Mad Lions</title>
+<title>RoarMe · The messenger for teams: no phone number, 5 GB files, tasks, encrypted chats · by The Mad Lions</title>
 <link rel="canonical" href="https://themadlions.com/roarme/">
-<meta name="description" content="RoarMe, the messenger for teams by The Mad Lions. No phone number, just a username. Files up to 3 GB with a link anyone can open. Tasks you give and accept. Ordino call sheets for a shoot. Encrypted secret chats. For Mac, Windows, the browser and the phone, and it updates itself.">
+<meta name="description" content="RoarMe, the messenger for teams by The Mad Lions. No phone number, just a username. Files up to 5 GB with one link anyone can open. Tasks you give and accept. Ordino call sheets for a shoot. Encrypted secret chats. For Mac, Windows, the browser and the phone, and it updates itself.">
 <meta name="theme-color" content="#16181c">
 <meta property="og:title" content="RoarMe · by The Mad Lions">
-<meta property="og:description" content="The messenger for teams. No phone number, 3 GB files, tasks, call sheets and encrypted chats.">
+<meta property="og:description" content="The messenger for teams. No phone number, 5 GB files, tasks, call sheets and encrypted chats.">
 <meta property="og:url" content="https://themadlions.com/roarme/">
 <meta property="og:image" content="https://themadlions.com/og-image.png">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
@@ -87,7 +87,7 @@ img, svg { display: block; }
 
 /* the frame: RoarMe as it is today */
 .frame { position: relative; margin: clamp(44px, 6vw, 84px) auto 0; max-width: 1380px; perspective: 1800px; }
-.frame::before { content: ''; position: absolute; left: 10%; right: 10%; top: 12%; bottom: -6%; background: radial-gradient(closest-side, rgba(212,0,0,.32), transparent); filter: blur(60px); z-index: -1; }
+.frame::before { content: ''; position: absolute; left: 10%; right: 10%; top: 12%; bottom: -6%; background: radial-gradient(closest-side, rgba(190,190,192,.28), transparent); filter: blur(60px); z-index: -1; }
 .win { border-radius: 22px; background: #1b1e23; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 60px 140px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06); overflow: hidden; transform: rotateX(calc(var(--ry, 0) * 1deg)) rotateY(calc(var(--rx, 0) * 1deg)); transition: transform .5s var(--ease); font-size: 13px; color: #eef0f3; }
 .win-top { display: flex; gap: 7px; padding: 12px 14px 8px; }
 .win-top i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; } .win-top i:nth-child(2) { background: #febc2e; } .win-top i:nth-child(3) { background: #28c840; }
@@ -295,6 +295,15 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   .dl small { min-height: 0; }
   .ord-flow .card { width: 100%; }
 }
+
+/* the real app in the Stone theme: the computer, and the phone over its corner */
+.win.shot { background: #d9d9da; border-color: rgba(255,255,255,.18); }
+.win.shot img { display: block; width: 100%; height: auto; }
+.phone-shot { position: absolute; right: -2%; bottom: -8%; width: clamp(120px, 19%, 250px); height: auto; border-radius: clamp(18px, 2.4vw, 34px); border: 6px solid #1a1b1e; box-shadow: 0 40px 90px rgba(0,0,0,.6); }
+@media (max-width: 700px) { .phone-shot { right: 2%; bottom: -12%; width: 30%; border-width: 4px; } }
+.t-icon .tone { display: flex; align-items: flex-end; gap: 14px; flex: none; }
+.t-icon .tone img { width: clamp(110px, 14vw, 170px); height: auto; border-radius: 22px; border: 5px solid #1a1b1e; box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+.t-icon .tone svg { width: 72px; height: 72px; }
 </style>
 </head>
 <body>
@@ -334,7 +343,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     </div>
   </div>
   <div class="hero-sub">
-    <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>Everything a crew says, sends and shares, in one place. <b>No phone number</b>, files up to <b>3&nbsp;GB</b>, <b>tasks</b> and <b>call sheets</b>, secret chats when it matters.</p>
+    <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>Everything a crew says, sends and shares, in one place. <b>No phone number</b>, files up to <b>5&nbsp;GB</b>, <b>tasks</b> and <b>call sheets</b>, secret chats when it matters.</p>
     <div class="cta rv" style="--d:.22s">
       <a class="pill main" id="dl-main" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span>Download</span></a>
       <a class="pill" href="https://alexisdigipro-hub.github.io/roarme/"><span data-t="cta.browser">Open in the browser</span></a>
@@ -343,50 +352,11 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   </div>
 
   <div class="frame rv" style="--d:.2s" aria-hidden="true">
-    <div class="win" id="win">
-      <div class="win-top"><i></i><i></i><i></i></div>
-      <div class="win-body">
-        <div class="pn side">
-          <div class="pn-h"><span class="rnd" style="width:auto;padding:0 9px;font-size:10px">Edit</span><span class="rm"><span class="a">ROAR</span><span class="b">ME</span></span><span class="rnd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="16" height="17" rx="3.5"/><path d="m8 9 1.6 1.6L12.5 7.8M8 15l1.6 1.6 2.9-2.8M14.5 9.5H16M14.5 15.5H16"/></svg><b>2</b></span><span class="rnd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></div>
-          <div class="tabs"><span class="on">All</span><span>Unread</span><span>Groups</span></div>
-          <div class="row on"><span class="av c1">NS</span><b>Night Shoot · crew</b><small>19:46</small></div>
-          <div class="row"><span class="av c2">MP</span><b>Maria P.</b><span class="n">3</span></div>
-          <div class="row"><span class="av c3">NK</span><b>Nikos</b><small>18:02</small></div>
-          <div class="row"><span class="av c4">EL</span><b>Elena · Edit</b><small>Mon</small></div>
-          <div class="row"><span class="av">DT</span><b>Dimitris</b><small>Sun</small></div>
-          <div class="foot"><i></i><i class="on"></i><i></i><i></i><i></i></div>
-        </div>
-        <div class="pn">
-          <div class="room-h"><span class="av c1">NS</span><span><b>Night Shoot · crew</b><small>6 members · 4 online</small></span><span class="ic"><i></i><i></i><i></i></span></div>
-          <div class="msgs">
-            <div class="bb">Location confirmed: Rouf Railway. <small>19:38</small></div>
-            <div class="bb me">Sending the ordino now <small>19:41</small></div>
-            <div class="card">
-              <div class="ch"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9.5" width="13" height="10" rx="2.5"/><path d="m16 13 5-2.8v8.6l-5-2.8"/><circle cx="6.5" cy="6" r="2.5"/><circle cx="12.5" cy="6" r="2.5"/><path d="m6 14.3 1.4 1.4 2.6-2.6"/></svg></i>Ordino</div>
-              <div class="cb"><s>GENERAL ORDINO</s><b>Night Shoot</b><em>Fri 24 Oct · Call 18:30</em><em>Rouf Railway</em></div>
-              <div class="go">Open ordino</div>
-            </div>
-            <div class="bb">On it. See you at 18:30 <small>19:44</small></div>
-          </div>
-          <div class="compose">
-            <span class="rnd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5 12.5 20a5.5 5.5 0 0 1-7.8-7.8l8.8-8.8a3.7 3.7 0 0 1 5.2 5.2L9.9 17.4a1.8 1.8 0 0 1-2.6-2.6l8-8"/></svg></span>
-            <span class="rnd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h-.5a4.5 4.5 0 0 1-.9-8.9A6 6 0 0 1 17.3 8 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M8.5 15 12 11.5 15.5 15"/></svg></span>
-            <span class="rnd cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9.5" width="13" height="10" rx="2.5"/><path d="m16 13 5-2.8v8.6l-5-2.8"/><circle cx="6.5" cy="6" r="2.5"/><circle cx="12.5" cy="6" r="2.5"/><path d="m6 14.3 1.4 1.4 2.6-2.6M11.5 14.5h1.5"/></svg></span>
-            <span class="box">Write a message…</span>
-          </div>
-        </div>
-        <div class="pn tasks">
-          <div class="tasks-h"><b>Tasks</b><span class="rnd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></div>
-          <div class="tabs"><span class="on">All</span><span>For me</span><span>Given</span></div>
-          <p class="lbl">Waiting for your answer</p>
-          <div class="tk ask"><i></i><b>Book the lens for Friday</b><small>From Nikos · Tomorrow</small><span class="ans"><span>Accept</span><span>Decline</span></span></div>
-          <p class="lbl">Open</p>
-          <div class="tk"><i></i><b>Send the ordino</b><small>For you · Today</small></div>
-          <div class="tk"><i></i><b>Casting shots</b><small>To Maria</small><span class="st">Waiting</span></div>
-          <div class="tk done"><i></i><b>Moodboard</b><small>Done</small></div>
-        </div>
-      </div>
+    <div class="win shot" id="win">
+      <!-- the app itself in its Stone theme (Alex, 25 Oct), not a drawing of it -->
+      <img src="screens/stone-desktop.jpg" alt="RoarMe on a computer in the Stone theme: the crew chat of a night shoot" width="1800" height="1125" fetchpriority="high">
     </div>
+    <img class="phone-shot" src="screens/stone-chat.jpg" alt="RoarMe on a phone in the Stone theme" width="600" height="1299" loading="lazy">
     <div class="tag t1"><i>01</i><span data-t="tag.ord">An ordino, sent from the camera button</span></div>
     <div class="tag t2"><i>02</i><span data-t="tag.tasks">Tasks, with an answer</span></div>
     <div class="tag t3"><i>03</i><span data-t="tag.name">@names, no phone numbers</span></div>
@@ -394,8 +364,8 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 </div>
 
 <div class="ticker" aria-hidden="true"><div class="ticker-in">
-  <span data-t="tk.1">No phone number</span><span data-t="tk.2">3 GB transfers</span><span data-t="tk.3">Tasks</span><span data-t="tk.4">Ordino call sheets</span><span data-t="tk.5">Encrypted chats</span><span data-t="tk.6">Voice &amp; video calls</span><span data-t="tk.7">Groups &amp; folders</span><span data-t="tk.8">Updates itself</span><span data-t="tk.9">Mac · Windows · Browser · Phone</span>
-  <span data-t="tk.1">No phone number</span><span data-t="tk.2">3 GB transfers</span><span data-t="tk.3">Tasks</span><span data-t="tk.4">Ordino call sheets</span><span data-t="tk.5">Encrypted chats</span><span data-t="tk.6">Voice &amp; video calls</span><span data-t="tk.7">Groups &amp; folders</span><span data-t="tk.8">Updates itself</span><span data-t="tk.9">Mac · Windows · Browser · Phone</span>
+  <span data-t="tk.1">No phone number</span><span data-t="tk.2">5 GB transfers</span><span data-t="tk.3">Tasks</span><span data-t="tk.4">Ordino call sheets</span><span data-t="tk.5">Encrypted chats</span><span data-t="tk.6">Voice &amp; video calls</span><span data-t="tk.7">Groups &amp; folders</span><span data-t="tk.8">Updates itself</span><span data-t="tk.9">Mac · Windows · Browser · Phone</span>
+  <span data-t="tk.1">No phone number</span><span data-t="tk.2">5 GB transfers</span><span data-t="tk.3">Tasks</span><span data-t="tk.4">Ordino call sheets</span><span data-t="tk.5">Encrypted chats</span><span data-t="tk.6">Voice &amp; video calls</span><span data-t="tk.7">Groups &amp; folders</span><span data-t="tk.8">Updates itself</span><span data-t="tk.9">Mac · Windows · Browser · Phone</span>
 </div></div>
 
 <section id="only">
@@ -412,9 +382,9 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     </article>
     <article class="big rv">
       <span class="no">02</span>
-      <div><h3 data-t="f2.t" data-html><b>3&nbsp;GB</b>, as it is.</h3><p data-t="f2.p">Send the presentation, the rushes, the design files: up to 3 GB a file, not squeezed. It stays three days, with a link anyone can download from, even without RoarMe. Then it deletes itself.</p>
-        <div class="chips"><span data-t="f2.c1">Up to 3 GB</span><span data-t="f2.c2">Kept 3 days</span><span data-t="f2.c3">Download link</span><span data-t="f2.c4">Keeps going if the line drops</span></div></div>
-      <div class="viz"><div class="v-tr"><div class="h"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h-.5a4.5 4.5 0 0 1-.9-8.9A6 6 0 0 1 17.3 8 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M8.5 15 12 11.5 15.5 15"/></svg></i><span><b>2.4 GB</b><small>RUSHES_DAY2.MOV</small></span></div><div class="bar2"><i></i></div><div class="ft"><span>RoarTransfer</span><span data-t="f2.left">3 days left</span></div></div></div>
+      <div><h3 data-t="f2.t" data-html><b>5&nbsp;GB</b>, as it is.</h3><p data-t="f2.p">Send the presentation, the rushes, the design files with RoarTransfer, not squeezed: several files under one short link, up to 1 GB kept 7 days or up to 5 GB kept a day, with a title, a message and a password if you want, and an email when they are downloaded. Anyone can download, even without RoarMe.</p>
+        <div class="chips"><span data-t="f2.c1">Up to 5 GB</span><span data-t="f2.c2">7 days, or a day for 5 GB</span><span data-t="f2.c3">One link for all the files</span><span data-t="f2.c4">Keeps going if the line drops</span></div></div>
+      <div class="viz"><div class="v-tr"><div class="h"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h-.5a4.5 4.5 0 0 1-.9-8.9A6 6 0 0 1 17.3 8 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M8.5 15 12 11.5 15.5 15"/></svg></i><span><b>2.4 GB</b><small>RUSHES_DAY2.MOV</small></span></div><div class="bar2"><i></i></div><div class="ft"><span>RoarTransfer</span><span data-t="f2.left">7 days left</span></div></div></div>
     </article>
     <article class="big rv">
       <span class="no">03</span>
@@ -457,10 +427,10 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <article class="tile t-icon rv" style="--d:.08s">
       <div class="txt">
         <span class="k" data-t="ni.k">The look</span>
-        <h3 data-t="ni.t" data-html>Graphite, glass, <b>one red</b>.</h3>
-        <p data-t="ni.p">A new icon in the Dock and on the home screen, the same graphite glass as the app, and a choice of looks, dark or light. Tasks, ordinos and chats share one quiet design.</p>
+        <h3 data-t="ni.t" data-html>Soft stone, <b>graphite</b>.</h3>
+        <p data-t="ni.p">Stone is RoarMe's look: soft grey stone with graphite buttons, light or dark, the same on the computer and on the phone. Tasks, ordinos and chats share one quiet design, and a new icon sits in the Dock and on the home screen.</p>
       </div>
-      <div class="icons"><svg viewBox="0 0 1932 1932" aria-label="RoarMe icon"><use href="#ricon"/></svg></div>
+      <div class="tone"><img src="screens/stone-list.jpg" alt="The chats on a phone, in the Stone theme" width="600" height="1299" loading="lazy"><svg viewBox="0 0 1932 1932" aria-label="RoarMe icon"><use href="#ricon"/></svg></div>
     </article>
     <article class="tile t-half rv">
       <span class="k" data-t="nm.k" data-html>Mentions <em>new</em></span>
@@ -525,7 +495,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg></i><b data-t="p1.t">Locked when you want it</b><p data-t="p1.p">Encrypted Chat: only the devices in the chat can read it.</p></div>
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M3 3l18 18"/></svg></i><b data-t="p2.t">No phone number</b><p data-t="p2.p">We never ask for it, so nobody finds you by it.</p></div>
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c.8-3.4 3.2-5.2 6-5.2s5.2 1.8 6 5.2M17 11l2 2 3.5-3.5"/></svg></i><b data-t="p3.t">You decide who reaches you</b><p data-t="p3.p">Who may add you, call you and see you online, set in Settings.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg></i><b data-t="p4.t">Things that disappear</b><p data-t="p4.p">Transfers delete themselves after 3 days; chats can clear themselves too.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9.5 2.5h5"/></svg></i><b data-t="p4.t">Things that disappear</b><p data-t="p4.p">Transfers delete themselves when their link ends, after a day or 7 days; chats can clear themselves too.</p></div>
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12.5A2 2 0 0 0 8 21h8a2 2 0 0 0 2-1.5L19 7M9 7V4h6v3"/></svg></i><b data-t="p5.t">Leave any time</b><p data-t="p5.p">Delete your account and what is yours goes with it.</p></div>
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg></i><b data-t="p6.t">Deleted means deleted</b><p data-t="p6.p">A message you delete, and its files, leave our servers within minutes.</p></div>
     </div>
@@ -576,7 +546,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <div class="qa">
       <details class="rv"><summary data-t="q1">Is RoarMe free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
       <details class="rv"><summary data-t="q2">Do I need a phone number?</summary><p data-t="a2">No. An email and a username are enough. People find you by your @name, or by the link and QR code you share.</p></details>
-      <details class="rv"><summary data-t="q3">How big can a file be?</summary><p data-t="a3">Up to 50 MB straight in the chat, kept as long as the chat. Up to 3 GB with RoarTransfer, kept 3 days, with a link anyone can download from.</p></details>
+      <details class="rv"><summary data-t="q3">How big can a file be?</summary><p data-t="a3">Up to 50 MB straight in the chat, kept as long as the chat. Up to 5 GB with RoarTransfer (1 GB kept 7 days, 5 GB kept a day), with one link anyone can download from.</p></details>
       <details class="rv"><summary data-t="q9">How do Tasks work?</summary><p data-t="a9">Tap Tasks in the bar at the foot. Give a task to yourself or to anyone you share a chat with; for someone else it arrives as a request they accept or decline, then you both see its progress. Reminders and a calendar of the month live there too. Tasks never appear inside a conversation.</p></details>
       <details class="rv"><summary data-t="q10">What is an ordino, and Roardino?</summary><p data-t="a10">An ordino is the day's call sheet: call time, location, programme. Roardino makes them, and the camera button beside the clip opens it inside RoarMe, signed in with your RoarMe account. Send it and the crew gets a card that opens on any phone.</p></details>
       <details class="rv"><summary data-t="q11">How do I get new versions?</summary><p data-t="a11">In the browser and on the phone you always have the newest. The Mac and Windows apps from 1.4.9 download new versions themselves and ask for a quick restart; older ones show a card with a download.</p></details>
@@ -596,7 +566,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 <footer>
   <a href="../"><img class="wordmark" src="../wordmark.png" alt="The Mad Lions"></a>
   <nav>
-    <a href="../#lab">The Mad Lions Lab</a>
+    <a href="../lab/">The Mad Lions Lab</a>
     <a href="../roardino/">Roardino</a>
     <a href="https://alexisdigipro-hub.github.io/roarme/?legal=privacy" data-t="pv.policy">Privacy Policy</a>
     <a href="https://alexisdigipro-hub.github.io/roarme/?legal=terms" data-t="pv.terms">Terms</a>
@@ -612,14 +582,14 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'nav.only': 'Μόνο εδώ', 'nav.new': 'Νέα', 'nav.all': 'Όλα', 'nav.privacy': 'Απόρρητο', 'nav.download': 'Λήψη', 'nav.faq': 'Ερωτήσεις',
     'cta.open': 'Άνοιξε το RoarMe', 'cta.browser': 'Άνοιξε στον browser', 'cta.note': 'Δωρεάν · Mac, Windows, browser, κινητό · ενημερώνεται μόνο του ·', 'cta.all': 'όλες οι λήψεις',
     'hero.kicker': 'Το messenger για ομάδες · από τους Mad Lions',
-    'hero.lead': 'Ό,τι λέει, στέλνει και μοιράζεται ένα συνεργείο, σε ένα μέρος. <b>Χωρίς αριθμό τηλεφώνου</b>, αρχεία ως <b>3&nbsp;GB</b>, <b>tasks</b> και <b>ordino</b>, κρυφές συνομιλίες όταν μετράει.',
+    'hero.lead': 'Ό,τι λέει, στέλνει και μοιράζεται ένα συνεργείο, σε ένα μέρος. <b>Χωρίς αριθμό τηλεφώνου</b>, αρχεία ως <b>5&nbsp;GB</b>, <b>tasks</b> και <b>ordino</b>, κρυφές συνομιλίες όταν μετράει.',
     'tag.ord': 'Ένα ordino, από το κουμπί με την κάμερα', 'tag.tasks': 'Tasks, με απάντηση', 'tag.name': '@ονόματα, όχι τηλέφωνα',
-    'tk.1': 'Χωρίς αριθμό τηλεφώνου', 'tk.2': 'Μεταφορές 3 GB', 'tk.3': 'Tasks', 'tk.4': 'Ordino γυρισμάτων', 'tk.5': 'Κρυπτογραφημένες συνομιλίες', 'tk.6': 'Κλήσεις ήχου και βίντεο', 'tk.7': 'Ομάδες και φάκελοι', 'tk.8': 'Ενημερώνεται μόνο του', 'tk.9': 'Mac · Windows · Browser · Κινητό',
+    'tk.1': 'Χωρίς αριθμό τηλεφώνου', 'tk.2': 'Μεταφορές 5 GB', 'tk.3': 'Tasks', 'tk.4': 'Ordino γυρισμάτων', 'tk.5': 'Κρυπτογραφημένες συνομιλίες', 'tk.6': 'Κλήσεις ήχου και βίντεο', 'tk.7': 'Ομάδες και φάκελοι', 'tk.8': 'Ενημερώνεται μόνο του', 'tk.9': 'Mac · Windows · Browser · Κινητό',
     'only.idx': '01 · Μόνο εδώ', 'only.title': 'Τρία πράγματα που κάνει <b>μόνο το RoarMe</b>.', 'only.sub': 'Οι λόγοι που ένα συνεργείο φέρνει εδώ τη συζήτησή του, και μένει.',
     'f1.t': 'Μόνο ένα <b>@όνομα</b>.', 'f1.p': 'Γράφεσαι με ένα email και διαλέγεις το @όνομά σου. Κανείς δεν σε βρίσκει από το τηλέφωνό σου, γιατί δεν το ζητάμε ποτέ. Μοιράσου το link ή το QR σου και η συνομιλία ανοίγει μόνη της.',
     'f1.c1': '@username', 'f1.c2': 'Link πρόσκλησης', 'f1.c3': 'QR code',
-    'f2.t': '<b>3&nbsp;GB</b>, όπως είναι.', 'f2.p': 'Στείλε την παρουσίαση, τα rushes, τα αρχεία σχεδίων: ως 3 GB το αρχείο, χωρίς συμπίεση. Μένει τρεις μέρες, με link που κατεβάζει ο καθένας, ακόμα και χωρίς RoarMe. Μετά σβήνεται μόνο του.',
-    'f2.c1': 'Ως 3 GB', 'f2.c2': 'Για 3 μέρες', 'f2.c3': 'Link λήψης', 'f2.c4': 'Συνεχίζει αν πέσει η σύνδεση', 'f2.left': 'Μένουν 3 μέρες',
+    'f2.t': '<b>5&nbsp;GB</b>, όπως είναι.', 'f2.p': 'Στείλε την παρουσίαση, τα rushes, τα αρχεία σχεδίων με το RoarTransfer, χωρίς συμπίεση: πολλά αρχεία κάτω από έναν κοντό σύνδεσμο, ως 1 GB για 7 μέρες ή ως 5 GB για μία μέρα, με τίτλο, μήνυμα και κωδικό αν θέλεις, και ένα email όταν κατεβαίνουν. Τα κατεβάζει όποιος θέλει, και χωρίς RoarMe.',
+    'f2.c1': 'Ως 5 GB', 'f2.c2': '7 μέρες, ή μία για 5 GB', 'f2.c3': 'Ένας σύνδεσμος για όλα', 'f2.c4': 'Συνεχίζει αν πέσει η σύνδεση', 'f2.left': '7 μέρες ακόμα',
     'fs.t': 'Κρυφά, <b>όταν μετράει</b>.', 'fs.p': 'Άνοιξε την Κρυπτογραφημένη Συνομιλία με ένα πάτημα: από εκεί και πέρα κάθε μήνυμα κλειδώνεται στη συσκευή σου πριν φύγει, και το διαβάζουν μόνο οι συσκευές της συνομιλίας. Όχι εμείς, όχι ο server.',
     'fs.c1': 'Κρυπτογράφηση άκρο σε άκρο', 'fs.c2': 'Ανοίγει και κλείνει με ένα πάτημα', 'fs.c3': 'Σε κάθε συνομιλία ή ομάδα', 'fs.on': 'Η Κρυπτογραφημένη Συνομιλία είναι ανοιχτή', 'fs.m1': 'Το budget είναι 48k. Μεταξύ μας.',
     'new.idx': '02 · Νέα', 'new.title': 'Φτιαγμένο όπως <b>τρέχει ένα γύρισμα</b>.', 'new.sub': 'Ποιος κάνει τι, το ordino της ημέρας, υπενθυμίσεις, αναφορές που φτάνουν, και μια εφαρμογή που ενημερώνεται μόνη της.',
@@ -628,7 +598,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'no.k': 'Ordino', 'no.t': 'Το ordino, <b>μέσα στη συνομιλία</b>.', 'no.p': 'Το κουμπί με την κάμερα ανοίγει το Roardino μέσα στο RoarMe, ήδη συνδεδεμένο. Φτιάξε το ordino της ημέρας ή διάλεξε ένα, πάτα Στείλε, και το συνεργείο παίρνει μια κάρτα που ανοίγει σε κάθε κινητό.', 'no.more': 'Γνώρισε το Roardino',
     'nu.k': 'Ενημερώνεται μόνο του <em>1.5</em>', 'nu.t': 'Ένα πάτημα, <b>νέα έκδοση</b>.', 'nu.p': 'Οι εφαρμογές για Mac και Windows κατεβάζουν τη νέα έκδοση στο παρασκήνιο και σου λένε όταν είναι έτοιμη. Πατάς Επανεκκίνηση και σε λίγα δευτερόλεπτα είσαι σε αυτήν. Χωρίς λήψεις, χωρίς σύρσιμο.',
     'nu.c': 'Το RoarMe 1.5 είναι έτοιμο', 'nu.cs': 'Και τι νέο έχει', 'nu.btn': 'Επανεκκίνηση για ενημέρωση',
-    'ni.k': 'Η εμφάνιση', 'ni.t': 'Γραφίτης, γυαλί, <b>ένα κόκκινο</b>.', 'ni.p': 'Νέο εικονίδιο στο Dock και στην αρχική οθόνη, ο ίδιος γραφίτης με γυαλί όπως η εφαρμογή, και θέματα σκοτεινά ή φωτεινά. Tasks, ordino και συνομιλίες σε ένα ήσυχο design.',
+    'ni.k': 'Η εμφάνιση', 'ni.t': 'Απαλή πέτρα, <b>γραφίτης</b>.', 'ni.p': 'Το Stone είναι το θέμα του RoarMe: απαλή γκρι πέτρα με κουμπιά γραφίτη, φωτεινό ή σκούρο, ίδιο στον υπολογιστή και στο κινητό. Εργασίες, ordino και συνομιλίες μοιράζονται ένα ήσυχο design, και ένα νέο εικονίδιο κάθεται στο Dock και στην αρχική οθόνη.',
     'all.idx': '03 · Όλα', 'all.title': 'Και όλα όσα <b>θέλει μια ομάδα</b>.', 'all.sub': 'Τα υπόλοιπα του RoarMe, με λίγα λόγια.',
     'ix1.t': 'Κλήσεις, τώρα ή αργότερα', 'ix1.p': 'Ήχος και βίντεο, κατευθείαν από συσκευή σε συσκευή. Προγραμμάτισε μία και μπαίνει ως κάρτα με αντίστροφη μέτρηση και Προσθήκη στο ημερολόγιο.',
     'ix2.t': 'Ομάδες, φάκελοι, αναφορές', 'ix2.p': 'Μια ομάδα για κάθε project ή πελάτη, φάκελοι που σε ακολουθούν σε κάθε συσκευή, @αναφορές και καρφιτσωμένα για ό,τι μετράει. Τα καρφιτσωμένα αρχεία έχουν δική τους καρτέλα.',
@@ -641,7 +611,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'pv.idx': '04 · Απόρρητο', 'pv.title': 'Ήσυχο <b>από τη φύση του</b>.', 'pv.sub': 'Κρατάμε ό,τι χρειάζεται μια συνομιλία για να δουλεύει, και τίποτα για πούλημα. Χωρίς διαφημίσεις, χωρίς παρακολούθηση, χωρίς τηλεφωνικό κατάλογο.',
     'pv.policy': 'Πολιτική Απορρήτου', 'pv.terms': 'Όροι',
     'p1.t': 'Κλειδωμένο όταν το θέλεις', 'p1.p': 'Κρυπτογραφημένη Συνομιλία: τη διαβάζουν μόνο οι συσκευές της.', 'p2.t': 'Χωρίς αριθμό τηλεφώνου', 'p2.p': 'Δεν τον ζητάμε ποτέ, οπότε κανείς δεν σε βρίσκει από αυτόν.',
-    'p3.t': 'Εσύ αποφασίζεις ποιος σε βρίσκει', 'p3.p': 'Ποιος μπορεί να σε προσθέσει, να σε καλέσει και να σε δει online, από τις Ρυθμίσεις.', 'p4.t': 'Πράγματα που εξαφανίζονται', 'p4.p': 'Οι μεταφορές σβήνονται μετά από 3 μέρες· και οι συνομιλίες μπορούν να καθαρίζουν μόνες τους.',
+    'p3.t': 'Εσύ αποφασίζεις ποιος σε βρίσκει', 'p3.p': 'Ποιος μπορεί να σε προσθέσει, να σε καλέσει και να σε δει online, από τις Ρυθμίσεις.', 'p4.t': 'Πράγματα που εξαφανίζονται', 'p4.p': 'Οι μεταφορές σβήνονται μόλις λήξει ο σύνδεσμός τους, μετά από μία ή 7 μέρες· και οι συνομιλίες μπορούν να καθαρίζουν μόνες τους.',
     'p5.t': 'Φεύγεις όποτε θες', 'p5.p': 'Διαγράφεις τον λογαριασμό σου και ό,τι είναι δικό σου φεύγει μαζί.',
     'dl.idx': '05 · Λήψη', 'dl.title': 'Πάρε το <b>RoarMe</b>.', 'dl.sub': 'Δωρεάν, και σε beta: δουλεύει κάθε μέρα και γίνεται καλύτερο κάθε εβδομάδα. Φτιάχνεις λογαριασμό μία φορά και τον χρησιμοποιείς παντού.',
     'dl.mac': 'Για Mac με chip της Apple (M1 και νεότερα).', 'dl.get': 'Λήψη', 'dl.intel': 'Παλιότερο Mac με Intel;', 'dl.intelbtn': 'Αυτό', 'dl.win': 'Windows 10 και 11.', 'dl.webt': 'Browser', 'dl.web': 'Chrome, Safari, Edge, Firefox. Τίποτα για εγκατάσταση.',
@@ -651,7 +621,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'faq.idx': '06 · Ερωτήσεις', 'faq.title': 'Καλό να <b>ξέρεις</b>.',
     'q1': 'Είναι δωρεάν το RoarMe;', 'a1': 'Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις.',
     'q2': 'Χρειάζομαι αριθμό τηλεφώνου;', 'a2': 'Όχι. Ένα email και ένα username αρκούν. Σε βρίσκουν από το @όνομά σου, ή από το link και το QR που μοιράζεσαι.',
-    'q3': 'Πόσο μεγάλο μπορεί να είναι ένα αρχείο;', 'a3': 'Ως 50 MB κατευθείαν στη συνομιλία, όσο κρατάει η συνομιλία. Ως 3 GB με το RoarTransfer, για 3 μέρες, με link που κατεβάζει ο καθένας.',
+    'q3': 'Πόσο μεγάλο μπορεί να είναι ένα αρχείο;', 'a3': 'Ως 50 MB κατευθείαν στη συνομιλία, όσο κρατάει η συνομιλία. Ως 5 GB με το RoarTransfer (1 GB για 7 μέρες, 5 GB για μία μέρα), με έναν σύνδεσμο που κατεβάζει ο καθένας.',
     'q9': 'Πώς δουλεύουν τα Tasks;', 'a9': 'Πάτα Tasks στη γραμμή κάτω. Δώσε ένα task στον εαυτό σου ή σε όποιον έχεις κοινή συνομιλία· για άλλον φτάνει ως αίτημα που αποδέχεται ή απορρίπτει, μετά βλέπετε και οι δύο την πρόοδο. Εκεί είναι και οι υπενθυμίσεις και ένα ημερολόγιο του μήνα. Τα tasks δεν εμφανίζονται ποτέ μέσα σε μια συνομιλία.',
     'q10': 'Τι είναι το ordino, και το Roardino;', 'a10': 'Το ordino είναι το φύλλο της ημέρας ενός γυρίσματος: ώρα call, τοποθεσία, πρόγραμμα. Το Roardino τα φτιάχνει, και το κουμπί με την κάμερα δίπλα στον συνδετήρα το ανοίγει μέσα στο RoarMe, με τον λογαριασμό σου του RoarMe. Το στέλνεις και το συνεργείο παίρνει μια κάρτα που ανοίγει σε κάθε κινητό.',
     'q11': 'Πώς παίρνω τις νέες εκδόσεις;', 'a11': 'Στον browser και στο κινητό έχεις πάντα την πιο νέα. Οι εφαρμογές για Mac και Windows από την 1.4.9 κατεβάζουν τις νέες εκδόσεις μόνες τους και ζητούν μια γρήγορη επανεκκίνηση· οι παλιότερες δείχνουν μια κάρτα με λήψη.',
