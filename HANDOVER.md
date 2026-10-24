@@ -39,6 +39,8 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 ## Where we stopped (13 Oct 2026)
 
+**24 Oct 2026, RoarWriter page updated** (Alex: "update the site with the new features"). public/site/lab/roarwriter/ now tells of the nine formats, the breakdown, writing together (Share), Fade In, the title page on the page, the pages as they print, zoom and the phone (EN and GR); the Lab's Experiment 06 text and the llms line in scripts/site-seo.mjs follow. Copied into themadlions-site and pushed. Nothing for Alex to run.
+
 **24 Oct 2026, RoarWriter on themadlions.com** (Alex: a page for RoarWriter in the Lab and its button on the home page). New page `public/site/lab/roarwriter/` (index.html + icon.svg, built like lab/roarlist: EN/GR, download buttons from the newest release of alexisdigipro-hub/roarwriter, browser version https://alexisdigipro-hub.github.io/roarwriter/). The Lab has Experiment 06 RoarWriter (a script page as its picture, `.rw-mini`), the home page's Lab row has card 06 (`.ui .pg`, `lab.rw`). scripts/site-seo.mjs lists lab/roarwriter/ in the sitemap and llms.txt. Copied into themadlions-site and pushed (live). Nothing for Alex to run.
 
 **24 Oct 2026, Share: Tiles | List** (Alex: "in list mode too"). A `.segmented` Tiles | List in the Share page's top row on a computer (glides like the others), kept in localStorage tml_share_look; List puts `.share-list` on `.deliveries` and styles.css (block "The Share page as a list") draws one soft row per link: the picture 72x46 at the left, the stage chip in a fixed column, title / who-when / tags, the round icons at the right with Delete apart.
