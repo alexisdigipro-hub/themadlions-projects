@@ -50,8 +50,11 @@ function LookThumb({ slide, subtitle, look }) {
   return <canvas ref={ref} width={W / 4} height={1080 / 4} />
 }
 
-export default function Presentation() {
-  const { project, edit, canEdit } = useProject()
+/* Opened from Organizer > Office > Presentations since 24 Oct (Alex: out of the projects altogether); the deck
+   still lives in its project (project.deck), so `ctx` hands it the project the way a project tab gets it. */
+export default function Presentation({ ctx }) {
+  const outlet = useProject()
+  const { project, edit, canEdit } = ctx || outlet
   const { state } = useStore()
   const user = useCurrentUser()
   const toast = useToast()

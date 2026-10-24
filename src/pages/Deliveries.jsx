@@ -141,6 +141,8 @@ export default function Deliveries() {
   }, [rows])
 
   const projTitle = (id) => projects.find((p) => p.id === id)?.title || ''
+  // a tile's picture on a computer (Alex, 24 Oct: the Share page, 2026): the delivery's first still, else its project's cover
+  const coverOf = (d) => d.thumbs?.find((t) => t.url)?.url || d.project?.cover || projects.find((p) => p.id === d.projectId)?.coverThumb || ''
   // The credits and the deliverables are already in the project, so this offers them rather
   // than asking Alex to type a crew list he has typed once already.
   const crewOf = (projectId) => {
@@ -333,6 +335,7 @@ export default function Deliveries() {
       badgeClass: isDelivery ? `s-${d.stage}` : isEstimate ? 's-estimate' : 's-callsheet',
       name: isDelivery || isEstimate ? d.title : (d.project?.title || (isShotlist ? 'Shot list' : isDeck ? 'Presentation' : 'Call sheet')),
       version: isDelivery || isEstimate ? d.version : (day.index ? `Day ${day.index}${day.count ? ` of ${day.count}` : ''}` : ''),
+      cover: coverOf(d),
       sub: isDelivery
         ? [d.client, projTitle(d.projectId), d.sentAt ? `sent ${fmtDate(d.sentAt.slice(0, 10), { day: 'numeric', month: 'short' })}` : ''].filter(Boolean).join(' · ')
         : isEstimate
@@ -558,6 +561,8 @@ export default function Deliveries() {
             const singleTarget = g.people.length <= 1
             return (
               <li key={g.key} className={`deliv-row${g.shut ? ' is-shut' : ''}`}>
+                {/* the picture on top of a tile, on a computer only (styles.css, "The Share page, 2026") */}
+                <span className="deliv-cover" aria-hidden="true" style={r.cover ? { backgroundImage: `url("${r.cover}")` } : undefined} />
                 <span className={`deliv-stage ${r.badgeClass}`}>{r.badge}{r.version ? <span className="deliv-ver">· {String(r.version).replace(/^version\s*/i, 'V')}</span> : null}</span>
                 <div className="grow">
                   <strong>{r.name}{r.version ? <span className="muted deliv-tver"> · {r.version}</span> : null}</strong>

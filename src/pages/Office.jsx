@@ -137,9 +137,9 @@ function Library({ embedded, slot }) {
             <span><strong>{mobile ? 'Open file' : 'Open a file'}</strong><small>.docx or .xlsx from your computer</small></span>
           </button>
           <input ref={fileRef} type="file" hidden accept=".docx,.xlsx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(e) => { pickFile(e.target.files?.[0]); e.target.value = '' }} />
-          <Link to="/" className="office-new-card office-new-deck">
+          <Link to="/office/decks" className="office-new-card office-new-deck">
             <span className="office-ico" style={{ '--doc': '#d0542c', width: 46, height: 46, fontSize: 20 }}>P</span>
-            <span><strong>{mobile ? 'Decks' : 'Presentations'}</strong><small>In each project, under Presentation</small></span>
+            <span><strong>{mobile ? 'Decks' : 'Presentations'}</strong><small>Moodboards and treatments, for any project</small></span>
           </Link>
         </div>
       )}

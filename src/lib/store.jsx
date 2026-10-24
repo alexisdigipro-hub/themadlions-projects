@@ -22,7 +22,7 @@ export const STATUSES = ['Development', 'Pre-production', 'Production', 'Post-pr
    are everyone's; Finance and Invoices are administrators only. */
 export const MODULE_GROUPS = ['Project tabs', 'Database', 'Organizer', 'Other pages']
 export const MODULES = [
-  { key: 'projects', label: 'Projects', group: 'Project tabs', hint: 'Overview, project details, Presentation' },
+  { key: 'projects', label: 'Projects', group: 'Project tabs', hint: 'Overview, project details, and Presentations (Organizer > Office)' },
   { key: 'budget', label: 'Budget', group: 'Project tabs', hint: 'without it: Add Receipt only' },
   { key: 'script', label: 'Script', group: 'Project tabs' },
   { key: 'breakdown', label: 'Breakdown', group: 'Project tabs' },
