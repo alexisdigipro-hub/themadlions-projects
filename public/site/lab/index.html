@@ -412,6 +412,31 @@ footer .wordmark { width: 130px; opacity: .6; }
   try { saved = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
   setLang(saved)
 
+
+  /* the apps' order, from Studio > Look > Lab order (site_settings.lab_order, Alex 25 Oct): the tiles at the top and the
+     apps' sections below move to match, numbered and alternating left and right in their new order */
+  var APPS = ['roarme', 'roardino', 'roarmail', 'roarlist', 'roartransfer', 'roarwriter'], labOrder = null
+  function orderApps(order) {
+    if (!Array.isArray(order) || !order.length) return
+    var ids = order.filter(function (id) { return APPS.indexOf(id) >= 0 }).concat(APPS.filter(function (id) { return order.indexOf(id) < 0 }))
+    var grid = document.querySelector('.apps'), arts = ids.map(function (id) { return document.getElementById(id) }).filter(Boolean)
+    if (arts.length) {
+      var parent = arts[0].parentNode, all = [].slice.call(parent.children).filter(function (e) { return APPS.indexOf(e.id) >= 0 })
+      var anchor = all[all.length - 1].nextSibling
+      arts.forEach(function (a, i) { parent.insertBefore(a, anchor); a.classList.toggle('flip', i % 2 === 1); a.style.marginTop = i ? '10px' : '' })
+    }
+    ids.forEach(function (id, i) { var t = grid && grid.querySelector('.app[href="#' + id + '"]'); if (t) { grid.appendChild(t); var n = t.querySelector('.app-n'); if (n) n.textContent = (i < 9 ? '0' : '') + (i + 1) } })
+    labOrder = order
+  }
+  try { orderApps(JSON.parse(localStorage.getItem('tml_site_lab') || 'null')) } catch (e) {}
+  fetch('https://naibamqexcqnqhbbqafa.supabase.co/rest/v1/site_settings?key=eq.lab_order&select=value', { headers: { apikey: 'sb_publishable_o1OB_ohozPq1Xr2jg2ZSHA_3GsusXFL' } })
+    .then(function (r) { return r.ok ? r.json() : null })
+    .then(function (r) {
+      var o = r && r[0] && r[0].value
+      if (!Array.isArray(o) || JSON.stringify(o) === JSON.stringify(labOrder)) return
+      orderApps(o); try { localStorage.setItem('tml_site_lab', JSON.stringify(o)) } catch (e) {}
+    }).catch(function () {})
+
   // the RoarMail demo window keeps its desktop size, scaled to the stage
   ;[].slice.call(document.querySelectorAll('.desk')).forEach(function (d) {
     var f = d.querySelector('iframe'), fit = function () { f.style.transform = 'scale(' + d.clientWidth / 1360 + ')' }

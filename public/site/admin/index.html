@@ -499,6 +499,11 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
         <div class="ordrows" id="ordRows"></div>
       </div>
       <div class="card glass" style="margin-top:14px">
+        <h3>Lab order</h3>
+        <p class="hint" style="margin:-4px 0 14px">The apps on the Lab page, from top to bottom: the tiles at the top and each app's section below follow this order. Drag one by its ⋮⋮ to move it. Saved on the site as you let go.</p>
+        <div class="ordrows" id="labRows"></div>
+      </div>
+      <div class="card glass" style="margin-top:14px">
         <h3>Services</h3>
         <p class="hint" style="margin:-4px 0 14px">The picture behind each service card on the site, and the film its Watch button plays. With no picture the card stays clean, without a film it has no Watch button. Every change is on the site at once.</p>
         <div class="svcrows" id="svcRows"></div>
@@ -1560,9 +1565,10 @@ async function loadLook() {
     heroVideo = r.some((x) => x.key === 'hero_video') ? (get('hero_video') || {}) : HERO_VIDEO
     svcMedia = get('services') || {}
     secOrder = Array.isArray(get('section_order')) ? get('section_order') : []
+    labOrder = Array.isArray(get('lab_order')) ? get('lab_order') : []
   } catch (e) { toast(e.message) }
   try { svcFilms = (await rest('site_works?visible=eq.true&select=title&order=position.asc,created_at.desc')).map((w) => w.title) } catch (e) { svcFilms = [] }
-  renderSvcRows(); renderOrd()
+  renderSvcRows(); renderOrd(); renderLab()
   showHero()
   $('hvLink').value = heroVideo.url || ''; $('hvGray').checked = !!heroVideo.gray; showHeroVideo()
   $('themes').innerHTML = THEMES.map((t) => `
@@ -1582,11 +1588,23 @@ const ordList = () => { const known = SECTIONS.map((x) => x[0]); return [...secO
 function renderOrd() {
   $('ordRows').innerHTML = ordList().map((id, i) => { const x = SECTIONS.find((y) => y[0] === id); return `<div class="ordrow" data-id="${id}"><span class="grip" data-grip title="Drag to move" aria-label="Drag to move">⋮⋮</span><b>${i + 1}</b><span>${esc(x[1])}</span>${x[2] ? `<small>${esc(x[2])}</small>` : ''}</div>` }).join('')
 }
+/* Look > Lab order (Alex, 25 Oct): the Lab page's apps dragged into order, kept in site_settings.lab_order */
+const LAB_APPS = [['roarme', 'RoarMe'], ['roardino', 'Roardino'], ['roarmail', 'RoarMail'], ['roarlist', 'RoarList'], ['roartransfer', 'RoarTransfer'], ['roarwriter', 'RoarWriter']]
+let labOrder = []
+const labList = () => { const known = LAB_APPS.map((x) => x[0]); return [...labOrder.filter((id) => known.includes(id)), ...known.filter((id) => !labOrder.includes(id))] }
+function renderLab() {
+  $('labRows').innerHTML = labList().map((id, i) => `<div class="ordrow" data-id="${id}"><span class="grip" data-grip title="Drag to move" aria-label="Drag to move">⋮⋮</span><b>${i + 1}</b><span>${esc(LAB_APPS.find((y) => y[0] === id)[1])}</span></div>`).join('')
+}
+// one drag for both lists: the row is carried inside its own list, and saved when it is let go
+const ORD_LISTS = {
+  ordRows: { list: () => ordList(), set: (v) => { secOrder = v; renderOrd() }, key: 'section_order' },
+  labRows: { list: () => labList(), set: (v) => { labOrder = v; renderLab() }, key: 'lab_order' },
+}
 let ordDrag = null
-$('ordRows').addEventListener('pointerdown', (e) => { const g = e.target.closest('[data-grip]'); if (!g || e.button > 0) return; e.preventDefault(); ordDrag = g.closest('.ordrow'); ordDrag.classList.add('dragging') })
+Object.keys(ORD_LISTS).forEach((id) => $(id).addEventListener('pointerdown', (e) => { const g = e.target.closest('[data-grip]'); if (!g || e.button > 0) return; e.preventDefault(); ordDrag = g.closest('.ordrow'); ordDrag.classList.add('dragging') }))
 window.addEventListener('pointermove', (e) => {
   if (!ordDrag) return
-  const box = $('ordRows'), rows = [...box.children]
+  const box = ordDrag.parentElement, rows = [...box.children]
   const over = rows.find((r) => { const b = r.getBoundingClientRect(); return e.clientY >= b.top && e.clientY <= b.bottom })
   if (!over || over === ordDrag) return
   const order = rows.filter((r) => r !== ordDrag); order.splice(rows.indexOf(over), 0, ordDrag)
@@ -1596,11 +1614,12 @@ window.addEventListener('pointermove', (e) => {
 })
 const ordDrop = async () => {
   if (!ordDrag) return
+  const box = ordDrag.parentElement, L = ORD_LISTS[box.id]
   ordDrag = null
-  const next = [...$('ordRows').children].map((r) => r.dataset.id)
-  const moved = next.join() !== ordList().join()
-  secOrder = next; renderOrd()
-  if (moved) { try { await setSetting('section_order', next); toast('New order on the site') } catch (err) { toast(err.message) } }
+  const next = [...box.children].map((r) => r.dataset.id)
+  const moved = next.join() !== L.list().join()
+  L.set(next)
+  if (moved) { try { await setSetting(L.key, next); toast('New order on the site') } catch (err) { toast(err.message) } }
 }
 window.addEventListener('pointerup', ordDrop)
 window.addEventListener('pointercancel', ordDrop)

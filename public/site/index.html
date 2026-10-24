@@ -598,7 +598,7 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
     <a href="#about" data-t="nav.about">About</a>
     <a href="#clients" data-t="nav.clients">Clients</a>
     <a href="#shop" data-t="nav.shop" id="navShop" hidden>Shop</a>
-    <a href="lab/">Lab</a>
+    <a href="lab/" data-sec="lab">Lab</a>
     <a href="#contact" data-t="nav.contact">Contact</a>
   </nav>
   <a class="lab-m" href="lab/">Lab</a>
@@ -1066,7 +1066,7 @@ function orderSections(order) {
   const main = document.getElementById('top'), nav = document.querySelector('.bar nav')
   const ids = [...order.filter((id) => SECTION_IDS.includes(id)), ...SECTION_IDS.filter((id) => !order.includes(id))]
   ids.forEach((id) => { const el = document.getElementById(id); if (el && el.tagName === 'SECTION' && el.parentElement === main) main.appendChild(el) })
-  if (nav) ids.forEach((id) => { const a = nav.querySelector(`a[href="#${id}"]`); if (a) nav.appendChild(a) })
+  if (nav) ids.forEach((id) => { const a = nav.querySelector(`a[href="#${id}"], a[data-sec="${id}"]`); if (a) nav.appendChild(a) })
   sectionOrder = order
 }
 try { orderSections(JSON.parse(localStorage.getItem('tml_site_order') || 'null')) } catch (e) {}
