@@ -22,13 +22,12 @@ export function projectTabs(project) {
     // Overview's Ordino button; an Event keeps the tab for its Run of show
     ...(cat === 'Event' ? [{ to: 'schedule', label: 'Run of show', key: 'schedule', icon: 'schedule' }] : []),
     { to: 'people', label: 'Project Database', key: ['contacts', 'locations', 'gear'], icon: 'people' },
-    // opt-in: the moodboard / treatment deck, switched on per project from Edit details > Tabs
-    { to: 'presentation', label: 'Presentation', key: 'projects', icon: 'deck', optIn: true },
+    // Presentation left the projects (Alex, 24 Oct): it is in Organizer > Office > Presentations now
     // Files & notes is framed on Overview now (its own permission still gates that section)
   ]
 }
 
-const OPT_IN = new Set(['presentation'])
+const OPT_IN = new Set([]) // no opt-in tab since Presentation moved to the Organizer (24 Oct)
 export function tabHidden(project, to) {
   if (Array.isArray(project?.hiddenTabs) && project.hiddenTabs.includes(to)) return true
   // an opt-in tab is hidden unless the project lists it in `shownTabs`, so it never appears unasked

@@ -57,7 +57,8 @@ const PublicDeck = lazyPage(() => import('./pages/PublicDeck.jsx'))
 const PublicNote = lazyPage(() => import('./pages/PublicNote.jsx'))
 const Finance = lazyPage(() => import('./pages/Finance.jsx'))
 const Budget = lazyPage(() => import('./pages/project/Budget.jsx'))
-const Presentation = lazyPage(() => import('./pages/project/Presentation.jsx'))
+const Presentations = lazyPage(() => import('./pages/Presentations.jsx'))
+const DeckEditor = lazyPage(() => import('./pages/Presentations.jsx').then((m) => ({ default: m.DeckEditor })))
 
 // The company name while the workspace loads (Alex). Nothing is loaded yet, so the name is typed
 // here rather than read from settings. Written like TML Chat's head: THEMADLIONS in one word, MAD
@@ -97,6 +98,10 @@ function LoginGate() {
   return user ? <Navigate to={home} replace /> : <Login />
 }
 
+function PresentationMoved() {
+  const { project } = useProject()
+  return <Navigate to={`/office/deck/${project.id}`} replace />
+}
 function RoardinoLink() {
   const { token } = useParams()
   window.location.replace(`${import.meta.env.BASE_URL}roardino/?t=${encodeURIComponent(token || '')}`)
@@ -149,6 +154,8 @@ export default function App() {
                 <Route path="u/:id" element={<Profile />} />
                 <Route path="drives" element={<Navigate to="/database/drives" replace />} />
                 <Route path="office" element={<OfficeHub />} />
+                <Route path="office/decks" element={<Presentations />} />
+                <Route path="office/deck/:pid" element={<DeckEditor />} />
                 <Route path="notes" element={<OfficeHub />} />
                 <Route path="office/:pid/:docId" element={<Office />} />
                 <Route path="share" element={<Deliveries />} />
@@ -183,7 +190,8 @@ export default function App() {
                   <Route path="gear" element={<Navigate to="../people" replace />} />
                   {/* Post was taken out (Alex, 10 Oct); an old link opens the project */}
                   <Route path="post" element={<Navigate to=".." replace />} />
-                  <Route path="presentation" element={<Presentation />} />
+                  {/* Presentation moved to Organizer > Office (Alex, 24 Oct): an old link opens the deck there */}
+                  <Route path="presentation" element={<PresentationMoved />} />
                   {/* Call sheets is now framed inside Schedule */}
                   <Route path="callsheets" element={<Navigate to="../schedule" replace />} />
                   {/* The project calendar is gone; the global Calendar in the sidebar covers it */}

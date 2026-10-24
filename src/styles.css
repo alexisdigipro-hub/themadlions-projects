@@ -8002,3 +8002,41 @@ html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--
   html[data-theme] body .deliveries .deliv-tools .deliv-tool-x.btn-danger .dt-t { display: inline; }
   html[data-theme] body .deliveries .deliv-people { margin: 6px 14px 4px; }
 }
+
+/* Presentations in the Organizer (Alex, 24 Oct), the Calendar's recipe: one top row (back, bold title, count,
+   search, New presentation), the projects' decks as soft tiles with their cover, a chip for the slides */
+.decks-page { display: flex; flex-direction: column; gap: 16px; }
+.decks-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.decks-top h1 { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.1; }
+.decks-back { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; line-height: 1; text-decoration: none; color: var(--text); background: var(--raised); border: 1px solid var(--line); }
+.decks-back:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+.decks-count { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--muted); }
+.decks-search { margin-left: auto; display: flex; }
+.decks-search input { height: 38px; width: 220px; max-width: 100%; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--text); font: inherit; font-size: 14px; outline: none; }
+.decks-search input:focus { border-color: var(--accent); }
+.decks-new, .decks-proj { height: 38px; border-radius: 999px; }
+.deck-editor-page .decks-proj { margin-left: auto; }
+.decks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.deck-tile { display: flex; flex-direction: column; overflow: hidden; border-radius: 18px; text-decoration: none; color: var(--text); background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); box-shadow: var(--shadow); transition: transform .25s cubic-bezier(.16, 1, .3, 1), border-color .2s, box-shadow .25s; }
+.deck-tile:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); box-shadow: 0 16px 40px rgba(0, 0, 0, .2); }
+.deck-tile-cover { aspect-ratio: 16 / 9; background: center / cover no-repeat; }
+.deck-tile-body { display: flex; flex-direction: column; gap: 5px; padding: 12px 14px 14px; }
+.deck-tile-body strong { font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.deck-tile-proj { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.deck-tile-proj i { width: 7px; height: 7px; border-radius: 50%; }
+.deck-tile-chips span { display: inline-flex; height: 24px; align-items: center; padding: 0 9px; border-radius: 9px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--text) 7%, transparent); }
+.decks-empty { margin: 10vh auto; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; color: var(--muted); }
+.decks-empty b { font-size: 20px; color: var(--text); }
+.decks-pick { display: flex; flex-direction: column; gap: 6px; max-height: 60vh; overflow: auto; }
+.decks-pick button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 10px; border-radius: 14px; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--text) 4%, transparent); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.decks-pick button:hover { border-color: var(--line); background: var(--raised); }
+.decks-pick button span:last-child { display: flex; flex-direction: column; min-width: 0; }
+.decks-pick small { color: var(--muted); font-size: 12px; }
+.deck-pick-dot { width: 40px; height: 40px; border-radius: 12px; flex: none; background: center / cover no-repeat; }
+@media (max-width: 820px) {
+  .decks-top h1 { font-size: 24px; margin-right: auto; }
+  .decks-search { order: 5; flex: 1 1 100%; margin-left: 0; }
+  .decks-search input { width: 100%; }
+  .decks-new { width: 38px; padding: 0; justify-content: center; }
+  .decks-grid { grid-template-columns: minmax(0, 1fr); }
+}
