@@ -1,4 +1,5 @@
 import { readCache, writeCache, clearCache } from './cache.js'
+import { findInline, swapInline, uploadInline } from './thumbs.js'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { remote, supabase } from './supabase.js'
 import { toISODate } from './dates.js'
@@ -328,6 +329,7 @@ export function StoreProvider({ children }) {
   const stale = useRef(false)
   const queued = useRef([]) // [id or null, fn]
   const syncRef = useRef(null)
+  const quiet = useRef(false) // a write the app makes by itself (pictures moved to storage): not in the activity log
   // a conversation being written to the server: its first message waits for it (Alex, 11 Oct: the first
   // message to a new person was refused, it reached the server 0.4 s before the conversation did)
 
@@ -700,7 +702,7 @@ export function StoreProvider({ children }) {
   }
   const actBuf = useRef({}) // key -> { row, keys:Set, timer }
   const logActivity = (row, mergeKey, key) => {
-    if (!remote || !membership) return
+    if (!remote || !membership || quiet.current) return
     const base = { workspace_id: membership.workspace_id, user_id: authUser?.id || null, user_name: membership.name || authUser?.email || '' }
     if (!mergeKey) { supabase.from('activity').insert({ ...base, ...row }).then(({ error }) => { if (error && error.code !== '42P01') console.warn('activity:', error.message) }); return }
     const b = actBuf.current[mergeKey] || { row, keys: new Set(), timer: null }
@@ -955,6 +957,38 @@ export function StoreProvider({ children }) {
   }
 
   syncRef.current = syncDiff
+
+  /* covers and small photo pictures kept inside the JSON move to the bucket "thumbs" (lib/thumbs.js), done by
+     an administrator's app a few seconds after the state settles; stops for the session if the bucket is
+     not there yet (supabase/thumbs.sql) */
+  const lifting = useRef(false)
+  useEffect(() => {
+    if (!remote || stale.current || viewAs || membership?.role !== 'admin' || lifting.current === 'off') return undefined
+    const ws = membership.workspace_id
+    const t = setTimeout(async () => {
+      if (lifting.current) return
+      const found = findInline(prevRef.current)
+      if (!found.size) return
+      lifting.current = true
+      try {
+        const map = await uploadInline([...found].slice(0, 40), ws)
+        if (stale.current) return
+        setState((st) => {
+          const next = { ...st, projects: swapInline(st.projects, map), library: swapInline(st.library, map) }
+          if (next.projects === st.projects && next.library === st.library) return st
+          quiet.current = true
+          try { syncRef.current?.(prevRef.current, next) } finally { quiet.current = false }
+          prevRef.current = next
+          return next
+        })
+        lifting.current = false
+      } catch (e) {
+        console.warn('pictures stay in the JSON for now:', e.message || e)
+        lifting.current = 'off'
+      }
+    }, 4000)
+    return () => clearTimeout(t)
+  }, [state, membership, viewAs])
 
   const api = useMemo(() => {
     // Looking as someone else is a preview and nothing more. Every write is stopped here rather

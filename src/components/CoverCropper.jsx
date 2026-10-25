@@ -84,6 +84,7 @@ export default function CoverCropper({ src, crop: start, onCancel, onSave, savin
 
   useEffect(() => {
     const i = new Image()
+    i.crossOrigin = 'anonymous' // a cover kept in storage (lib/thumbs.js) must stay drawable on the canvas
     i.onload = () => { setImg(i); setCrop((c) => clamp(i.naturalWidth, i.naturalHeight, c)) }
     i.src = src
   }, [src])

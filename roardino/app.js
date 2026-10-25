@@ -236,6 +236,7 @@ function shrinkDataUrl(src, maxW, quality, type){
   return new Promise(res => {
     if (!src) return res('');
     const img = new Image();
+    img.crossOrigin = 'anonymous'; // covers live in the hub's storage now, drawn on a canvas here
     img.onload = () => res(downscale(img, maxW, quality, type));
     img.onerror = () => res('');
     img.src = src;
