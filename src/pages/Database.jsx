@@ -19,7 +19,7 @@ const TABS = [
   // the company's own film equipment, with a rental price (Alex, 10 Oct)
   { key: 'equipment', label: 'Equipment', icon: 'gear', perm: 'gear' },
   // photos of people's ID sheets, a folder per person, the pictures in pCloud (Alex, 25 Oct)
-  { key: 'ids', label: 'ID sheets', icon: 'idcard', perm: 'idsheets' },
+  { key: 'ids', label: 'ID sheets', short: 'IDs', icon: 'idcard', perm: 'idsheets' },
 ]
 
 export default function Database() {
@@ -42,7 +42,7 @@ export default function Database() {
         {tabs.map((t) => (
           <NavLink key={t.key} to={`/database/${t.key}`} className={({ isActive }) => (isActive ? 'active' : '')} onClick={glide.go}>
             <span className="tab-ico">{Icon[t.icon]?.()}</span>
-            {t.label}
+            {mobile && t.short ? t.short : t.label}
           </NavLink>
         ))}
       </nav>

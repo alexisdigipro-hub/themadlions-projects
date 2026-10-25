@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Act, Button, Empty, Field, Input, Modal, Textarea, useToast } from '../components/ui.jsx'
-import { DbAdd, DbBar } from '../components/DbTools.jsx'
+import { Act, Button, Empty, Field, Input, Modal, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
+import { DbAdd, DbBar, DbSearch } from '../components/DbTools.jsx'
 import { can, useCurrentUser } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 import { fmtDate } from '../lib/dates.js'
@@ -28,6 +28,7 @@ export default function IdSheets({ slot }) {
   const user = useCurrentUser()
   const toast = useToast()
   const editable = can(user, 'idsheets', 'edit')
+  const mobile = useIsMobile()
   const [people, setPeople] = useState(null)
   const [sheets, setSheets] = useState([])
   const [urls, setUrls] = useState({})
@@ -167,12 +168,15 @@ export default function IdSheets({ slot }) {
       <DbBar slot={slot}>
         <div className="toolbar-info"><strong>ID sheets</strong> <span className="muted">{people ? people.length : ''}</span></div>
         <div className="toolbar-actions">
-          <span className="search-clear-wrap">
-            <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search the ID sheets" />
-            {q && <button type="button" className="search-clear" aria-label="Clear the search" title="Clear" onClick={() => setQ('')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17" /></svg></button>}
-          </span>
+          {/* on a phone a round magnifier that opens into the search, like the other Database tabs */}
+          {mobile ? <DbSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search people and sheets" /> : (
+            <span className="search-clear-wrap">
+              <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search the ID sheets" />
+              {q && <button type="button" className="search-clear" aria-label="Clear the search" title="Clear" onClick={() => setQ('')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17" /></svg></button>}
+            </span>
+          )}
           {editable && <DbAdd label="New person" onClick={() => setAdding('')} />}
-          <span className="segmented small">
+          <span className="segmented small ids-view">
             <button className={view === 'people' ? 'on' : ''} onClick={() => pickView('people')}>People</button>
             <button className={view === 'sheets' ? 'on' : ''} onClick={() => pickView('sheets')}>Sheets</button>
           </span>
