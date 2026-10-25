@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Made by scripts/site-legal.mjs in the hub repository: edit the texts there, not here. -->
+<title>Roarverter · Privacy Policy and Terms · The Mad Lions</title>
+<link rel="canonical" href="https://themadlions.com/legal/roarverter/">
+<meta name="description" content="What Roarverter keeps, where it goes and the terms of use, from The Mad Lions.">
+<meta name="theme-color" content="#16181c">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<style>
+:root { --bg:#16181c; --line:rgba(255,255,255,.09); --text:#eef0f3; --muted:rgba(214,220,228,.66); --dim:rgba(214,220,228,.4);
+  --red:#d40000; --red-hi:#ff3b2f; --glass:rgba(255,255,255,.055); --edge:rgba(255,255,255,.12); --pad:clamp(16px,4.5vw,72px);
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,'Helvetica Neue',sans-serif; --mono:ui-monospace,'SF Mono',Menlo,monospace; color-scheme:dark; }
+* { box-sizing:border-box; }
+html { background:var(--bg); scroll-behavior:smooth; }
+body { margin:0; color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased; background:var(--bg); }
+body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; background:radial-gradient(1100px 620px at 50% -10%,#3c424c 0%,transparent 62%),radial-gradient(800px 600px at 100% 100%,rgba(212,0,0,.10),transparent 70%),linear-gradient(180deg,#23272e 0%,#17191d 50%,#121417 100%); }
+a { color:inherit; }
+:focus-visible { outline:2px solid var(--red-hi); outline-offset:3px; border-radius:8px; }
+.bar { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:14px; padding:calc(12px + env(safe-area-inset-top)) var(--pad) 12px; background:rgba(22,24,28,.72); -webkit-backdrop-filter:blur(18px) saturate(140%); backdrop-filter:blur(18px) saturate(140%); border-bottom:1px solid var(--line); }
+.bar .home img { width:118px; height:auto; filter:invert(1); display:block; }
+.bar .crumb { font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); text-decoration:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bar .end { margin-left:auto; display:flex; gap:8px; align-items:center; }
+.seg { display:flex; padding:3px; border-radius:999px; background:var(--glass); border:1px solid var(--edge); }
+.seg button, .seg a { border:0; background:transparent; cursor:pointer; padding:6px 13px; border-radius:999px; font:inherit; font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--muted); text-decoration:none; }
+.seg .on { background:rgba(255,255,255,.14); color:var(--text); }
+main { max-width:920px; margin:0 auto; padding:clamp(40px,7vw,90px) var(--pad) 40px; }
+.kicker { margin:0; font-family:var(--mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
+h1 { margin:14px 0 10px; font-size:clamp(38px,7vw,72px); line-height:1; font-weight:800; letter-spacing:-.01em; }
+.date { color:var(--dim); font-size:14px; margin:0 0 26px; }
+.tabs { margin:0 0 34px; width:max-content; max-width:100%; }
+.tabs a { font-size:12px; padding:8px 16px; }
+section { scroll-margin-top:80px; }
+h2 { font-size:clamp(26px,4vw,38px); margin:46px 0 18px; font-weight:700; }
+section:first-of-type h2 { margin-top:0; }
+.grid { display:grid; gap:12px; }
+.tile { padding:20px 22px; border-radius:22px; background:var(--glass); border:1px solid var(--edge); }
+.tile h3 { margin:0 0 8px; font-size:17px; }
+.tile p { margin:0 0 9px; color:var(--muted); font-size:15.5px; line-height:1.6; }
+.tile p:last-child { margin-bottom:0; }
+.tile a { color:var(--text); }
+.apps { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; }
+.apps .tile b { display:block; font-size:19px; margin-bottom:4px; }
+.apps .tile small { display:block; color:var(--muted); font-size:14px; margin-bottom:14px; }
+.pill { display:inline-flex; align-items:center; height:36px; padding:0 15px; margin:0 6px 6px 0; border-radius:999px; font-size:13.5px; font-weight:600; text-decoration:none; border:1px solid var(--edge); background:var(--glass); transition:background .2s,transform .2s; }
+.pill:hover { background:rgba(255,255,255,.1); transform:translateY(-1px); }
+footer { max-width:920px; margin:0 auto; padding:30px var(--pad) calc(40px + env(safe-area-inset-bottom)); color:var(--dim); font-size:13px; display:flex; gap:14px; flex-wrap:wrap; justify-content:space-between; }
+footer a { color:var(--muted); text-decoration:none; }
+@media (max-width:560px) { .bar .home img { width:96px; } .bar .crumb { display:none; } }
+
+html:not([lang=el]) [lang=el], html[lang=el] [lang=en] { display:none !important; }
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="home" href="../../"><img src="../../wordmark.png" alt="The Mad Lions"></a>
+  <a class="crumb" href="../../legal/"><span lang="en">Legal</span><span lang="el">Νομικά</span></a>
+  <div class="end"><div class="seg"><button type="button" data-lang="en">EN</button><button type="button" data-lang="el">ΕΛ</button></div></div>
+</header>
+<main>
+  <p class="kicker"><a href="../../lab/roarverter/" style="text-decoration:none">Roarverter</a> · <span lang="en">the converter for Mac and Windows</span><span lang="el">η εφαρμογή μετατροπής για Mac και Windows</span></p>
+  <h1><span lang="en">Privacy &amp; Terms</span><span lang="el">Απόρρητο &amp; Όροι</span></h1>
+  <p class="date"><span lang="en">Updated 25 October 2026</span><span lang="el">Ενημέρωση 25 Οκτωβρίου 2026</span></p>
+  <nav class="seg tabs"><a href="#privacy"><span lang="en">Privacy Policy</span><span lang="el">Πολιτική απορρήτου</span></a><a href="#terms"><span lang="en">Terms of Use</span><span lang="el">Όροι χρήσης</span></a></nav>
+  <section id="privacy"><h2><span lang="en">Privacy Policy</span><span lang="el">Πολιτική απορρήτου</span></h2>
+    <div class="grid" lang="en"><div class="tile"><h3>In short</h3><p>Roarverter works only on your computer. There is no account and no server of ours: your files, their names and what you make of them never leave your computer.</p></div><div class="tile"><h3>What it reads</h3><p>Only the files and folders you drop in or choose: their names, sizes, picture size, length and codec, and their contents while they are converted, by the sharp library and the ffmpeg that come with the app. On a Mac, HEIC photos are read through the system’s own sips.</p></div><div class="tile"><h3>What it keeps and writes</h3><p>Your settings (format, quality, sizes, the folder to save to, the language) are kept in the app on your computer.</p><p>It writes only new files, next to the originals or in the folder you choose, under a new name; it never writes over or deletes a file. Camera data and location are left out of the new files unless you keep them.</p></div><div class="tile"><h3>What leaves your computer</h3><p>The Mac and Windows app checks every two hours for a new version at GitHub (api.github.com/repos/alexisdigipro-hub/roarverter) and downloads it from there. GitHub sees your IP address, as with any download; nothing about you or your work is sent.</p><p>Nothing else. No analytics, no trackers, no AI, no account.</p></div><div class="tile"><h3>Your rights</h3><p>Under the GDPR you can ask to see, correct, export or delete your data, and you can object to its use. Write to <a href="mailto:lab@themadlions.com">lab@themadlions.com</a> and we answer within one month. You can also complain to the Hellenic Data Protection Authority (<a href="https://www.dpa.gr/" target="_blank" rel="noopener">www.dpa.gr</a>).</p></div><div class="tile"><h3>Changes</h3><p>If this policy changes, the date at the top changes too, and anything important is shown in the app before it applies.</p></div><div class="tile"><h3>Contact</h3><p>The Mad Lions, Athens, Greece · <a href="mailto:lab@themadlions.com">lab@themadlions.com</a></p></div></div><div class="grid" lang="el"><div class="tile"><h3>Με λίγα λόγια</h3><p>Το Roarverter δουλεύει μόνο στον υπολογιστή σου. Δεν υπάρχει λογαριασμός ούτε δικός μας server: τα αρχεία σου, τα ονόματά τους και ό,τι φτιάχνεις από αυτά δεν φεύγουν ποτέ από τον υπολογιστή σου.</p></div><div class="tile"><h3>Τι διαβάζει</h3><p>Μόνο τα αρχεία και τους φακέλους που ρίχνεις μέσα ή διαλέγεις: ονόματα, μεγέθη, διαστάσεις, διάρκεια και codec, και το περιεχόμενό τους όσο μετατρέπονται, από τη βιβλιοθήκη sharp και το ffmpeg που έρχονται με την εφαρμογή. Σε Mac, οι φωτογραφίες HEIC διαβάζονται μέσω του sips του ίδιου του συστήματος.</p></div><div class="tile"><h3>Τι κρατά και τι γράφει</h3><p>Οι ρυθμίσεις σου (μορφή, ποιότητα, μεγέθη, ο φάκελος αποθήκευσης, η γλώσσα) φυλάσσονται στην εφαρμογή στον υπολογιστή σου.</p><p>Γράφει μόνο νέα αρχεία, δίπλα στα αρχικά ή στον φάκελο που διαλέγεις, με νέο όνομα· δεν γράφει ποτέ από πάνω και δεν σβήνει κανένα αρχείο. Τα στοιχεία της κάμερας και η τοποθεσία μένουν έξω από τα νέα αρχεία, εκτός αν τα κρατήσεις.</p></div><div class="tile"><h3>Τι φεύγει από τον υπολογιστή σου</h3><p>Η εφαρμογή για Mac και Windows ελέγχει κάθε δύο ώρες για νέα έκδοση στο GitHub (api.github.com/repos/alexisdigipro-hub/roarverter) και την κατεβάζει από εκεί. Το GitHub βλέπει τη διεύθυνση IP σου, όπως σε κάθε λήψη· τίποτα για σένα ή τη δουλειά σου δεν στέλνεται.</p><p>Τίποτα άλλο. Κανένα analytics, κανένας tracker, κανένα AI, κανένας λογαριασμός.</p></div><div class="tile"><h3>Τα δικαιώματά σου</h3><p>Με βάση τον GDPR μπορείς να ζητήσεις να δεις, να διορθώσεις, να πάρεις ή να διαγράψεις τα δεδομένα σου, και να αρνηθείς τη χρήση τους. Γράψε στο <a href="mailto:lab@themadlions.com">lab@themadlions.com</a> και απαντάμε μέσα σε έναν μήνα. Μπορείς επίσης να κάνεις καταγγελία στην Αρχή Προστασίας Δεδομένων Προσωπικού Χαρακτήρα (<a href="https://www.dpa.gr/" target="_blank" rel="noopener">www.dpa.gr</a>).</p></div><div class="tile"><h3>Αλλαγές</h3><p>Αν αλλάξει αυτή η πολιτική, αλλάζει και η ημερομηνία στην κορυφή, και ό,τι σημαντικό το βλέπεις στην εφαρμογή πριν ισχύσει.</p></div><div class="tile"><h3>Επικοινωνία</h3><p>The Mad Lions, Αθήνα · <a href="mailto:lab@themadlions.com">lab@themadlions.com</a></p></div></div>
+  </section>
+  <section id="terms"><h2><span lang="en">Terms of Use</span><span lang="el">Όροι χρήσης</span></h2>
+    <div class="grid" lang="en"><div class="tile"><h3>Using Roarverter</h3><p>Roarverter makes new files from yours; the originals stay as they are. Look at a converted file before you rely on it or delete the original, and keep the original of anything you cannot shoot again.</p></div><div class="tile"><h3>Your files are yours</h3><p>We never receive your files or anything about them. You are responsible for having the right to convert what you convert.</p></div><div class="tile"><h3>Free, and in beta</h3><p>Roarverter is free and still in beta. It may change, gain or lose features, or stop, and we will try to tell you in good time. If a paid plan ever comes, its price is shown first and nothing is charged without your clear order.</p></div><div class="tile"><h3>No guarantee</h3><p>Roarverter is given as it is. We work hard for it to be right and safe, but we cannot promise it will always work, or work without mistakes, or that a file will come out at exactly the size you asked. Keep your own copies of anything that matters.</p></div><div class="tile"><h3>Liability</h3><p>As far as the law allows, we are not liable for indirect losses, lost data, lost profit or lost work from using the app. Nothing here limits rights you have as a consumer that cannot be limited by law.</p></div><div class="tile"><h3>Law</h3><p>These terms follow Greek law, and the courts of Athens decide any dispute, unless the law where you live as a consumer says otherwise.</p></div><div class="tile"><h3>Contact</h3><p>The Mad Lions, Athens, Greece · <a href="mailto:lab@themadlions.com">lab@themadlions.com</a></p></div></div><div class="grid" lang="el"><div class="tile"><h3>Η χρήση του Roarverter</h3><p>Το Roarverter φτιάχνει νέα αρχεία από τα δικά σου· τα αρχικά μένουν όπως είναι. Κοίτα ένα αρχείο που μετατράπηκε πριν βασιστείς σε αυτό ή σβήσεις το αρχικό, και κράτα το αρχικό για ό,τι δεν ξαναγυρίζεται.</p></div><div class="tile"><h3>Τα αρχεία σου είναι δικά σου</h3><p>Δεν παίρνουμε ποτέ τα αρχεία σου ούτε τίποτα γι’ αυτά. Εσύ ευθύνεσαι να έχεις το δικαίωμα να μετατρέπεις ό,τι μετατρέπεις.</p></div><div class="tile"><h3>Δωρεάν, και σε beta</h3><p>Το Roarverter είναι δωρεάν και ακόμα σε beta. Μπορεί να αλλάξει, να πάρει ή να χάσει λειτουργίες, ή να σταματήσει, και θα προσπαθούμε να σε ενημερώνουμε έγκαιρα. Αν κάποτε έρθει πληρωμένη έκδοση, βλέπεις πρώτα την τιμή και τίποτα δεν χρεώνεται χωρίς τη δική σου ρητή εντολή.</p></div><div class="tile"><h3>Χωρίς εγγύηση</h3><p>Το Roarverter δίνεται όπως είναι. Δουλεύουμε για να είναι σωστό και ασφαλές, αλλά δεν μπορούμε να υποσχεθούμε ότι θα δουλεύει πάντα, ή χωρίς λάθη, ή ότι ένα αρχείο θα βγει ακριβώς στο μέγεθος που ζήτησες. Κράτα δικά σου αντίγραφα για ό,τι μετράει.</p></div><div class="tile"><h3>Ευθύνη</h3><p>Όσο το επιτρέπει ο νόμος, δεν ευθυνόμαστε για έμμεσες ζημιές, χαμένα δεδομένα, χαμένο κέρδος ή χαμένη δουλειά από τη χρήση της εφαρμογής. Τίποτα εδώ δεν περιορίζει δικαιώματα που έχεις ως καταναλωτής και ο νόμος δεν επιτρέπει να περιοριστούν.</p></div><div class="tile"><h3>Δίκαιο</h3><p>Οι όροι αυτοί διέπονται από το ελληνικό δίκαιο, και για κάθε διαφορά αρμόδια είναι τα δικαστήρια της Αθήνας, εκτός αν ο νόμος του τόπου όπου ζεις ως καταναλωτής ορίζει κάτι άλλο.</p></div><div class="tile"><h3>Επικοινωνία</h3><p>The Mad Lions, Αθήνα · <a href="mailto:lab@themadlions.com">lab@themadlions.com</a></p></div></div>
+  </section>
+</main>
+<footer><span>© 2026 The Mad Lions · Roarverter</span><a href="../../legal/"><span lang="en">Every app's policies</span><span lang="el">Οι πολιτικές όλων των εφαρμογών</span></a></footer>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search).get('lang'), l = q
+  try { if (!l) l = localStorage.getItem('tml_site_lang') } catch (e) {}
+  function set(x) { l = x === 'el' ? 'el' : 'en'; document.documentElement.lang = l
+    document.querySelectorAll('[data-lang]').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) }) }
+  document.querySelectorAll('[data-lang]').forEach(function (b) { b.onclick = function () { set(b.dataset.lang); try { localStorage.setItem('tml_site_lang', l) } catch (e) {} } })
+  set(l)
+})()
+</script>
+</body>
+</html>

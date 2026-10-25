@@ -1589,7 +1589,7 @@ function renderOrd() {
   $('ordRows').innerHTML = ordList().map((id, i) => { const x = SECTIONS.find((y) => y[0] === id); return `<div class="ordrow" data-id="${id}"><span class="grip" data-grip title="Drag to move" aria-label="Drag to move">⋮⋮</span><b>${i + 1}</b><span>${esc(x[1])}</span>${x[2] ? `<small>${esc(x[2])}</small>` : ''}</div>` }).join('')
 }
 /* Look > Lab order (Alex, 25 Oct): the Lab page's apps dragged into order, kept in site_settings.lab_order */
-const LAB_APPS = [['roarme', 'RoarMe'], ['roardino', 'Roardino'], ['roarmail', 'RoarMail'], ['roarlist', 'RoarList'], ['roartransfer', 'RoarTransfer'], ['roarwriter', 'RoarWriter'], ['roartwin', 'RoarTwin']]
+const LAB_APPS = [['roarme', 'RoarMe'], ['roardino', 'Roardino'], ['roarmail', 'RoarMail'], ['roarlist', 'RoarList'], ['roartransfer', 'RoarTransfer'], ['roarwriter', 'RoarWriter'], ['roartwin', 'RoarTwin'], ['roarverter', 'Roarverter']]
 let labOrder = []
 const labList = () => { const known = LAB_APPS.map((x) => x[0]); return [...labOrder.filter((id) => known.includes(id)), ...known.filter((id) => !labOrder.includes(id))] }
 function renderLab() {
