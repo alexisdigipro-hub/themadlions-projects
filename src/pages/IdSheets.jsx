@@ -206,10 +206,10 @@ export default function IdSheets({ slot }) {
           </div>
           {searching || view === 'sheets' ? (
             (view === 'sheets' ? shownSheets : shownPeople).length ? (
-              <div className="drv-films">{view === 'sheets' ? shownSheets.map(sheetTile) : shownPeople.map(personTile)}</div>
+              <div className="drv-films ids-films">{view === 'sheets' ? shownSheets.map(sheetTile) : shownPeople.map(personTile)}</div>
             ) : <Empty title="Nothing found">{`Nothing matches "${q}". Try a name, or what the sheet is.`}</Empty>
           ) : (
-            <div className="drv-films">{shownPeople.map(personTile)}</div>
+            <div className="drv-films ids-films">{shownPeople.map(personTile)}</div>
           )}
         </>
       )}

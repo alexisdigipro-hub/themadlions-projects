@@ -13,13 +13,13 @@ import IdSheets from './IdSheets.jsx'
 const TABS = [
   // the drives archive moved in here, for whoever has the Drives permission (Alex, 10 Oct); the first tab since 23 Oct
   { key: 'drives', label: 'Drives', icon: 'drives', perm: 'drives' },
+  // photos of people's ID sheets, a folder per person, the pictures in pCloud (Alex, 25 Oct; after Drives)
+  { key: 'ids', label: 'ID sheets', short: 'IDs', icon: 'idcard', perm: 'idsheets' },
   { key: 'locations', label: 'Locations', icon: 'locations', perm: 'locations' },
   { key: 'crew', label: 'Crew', icon: 'team', perm: 'contacts' },
   { key: 'cast', label: 'Cast', icon: 'people', perm: 'contacts' },
   // the company's own film equipment, with a rental price (Alex, 10 Oct)
   { key: 'equipment', label: 'Equipment', icon: 'gear', perm: 'gear' },
-  // photos of people's ID sheets, a folder per person, the pictures in pCloud (Alex, 25 Oct)
-  { key: 'ids', label: 'ID sheets', short: 'IDs', icon: 'idcard', perm: 'idsheets' },
 ]
 
 export default function Database() {
