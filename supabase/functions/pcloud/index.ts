@@ -103,6 +103,11 @@ async function inLibrary(db: any, fileid: number) {
    that project or that room, so a member cannot fetch another project's file by guessing ids. */
 async function allowed(db: any, uid: string, scope: Scope, fileid?: number, forDelete = false, forUpload = false) {
   if (!scope || !scope.id) return false
+  // an ID sheet's picture only ever through its own scope, whatever a project or the library says (security review, 25 Oct)
+  if (fileid && scope.kind !== 'ids') {
+    const { data: isId } = await db.rpc('is_id_sheet_file', { p_fileid: fileid })
+    if (isId) return false
+  }
   if (scope.kind === 'project') {
     const { data: ok } = await db.rpc('can_view_project', { pid: scope.id })
     if (!ok) return false
@@ -279,6 +284,7 @@ Deno.serve(async (req) => {
       const ids_ = scope?.kind === 'ids' ? new Set(((await db.from('id_sheets').select('fileid').in('fileid', ids)).data || []).map((r: any) => Number(r.fileid))) : null
       const known = async (id: number) => {
         if (ids_) return ids_.has(id)
+        if ((await db.rpc('is_id_sheet_file', { p_fileid: id })).data) return false
         if (proj && mentions(proj, id)) return true
         if (lib === null) lib = (await db.from('library').select('data').in('kind', ['contact', 'location'])).data || []
         return mentions(lib, id)

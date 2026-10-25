@@ -130,6 +130,14 @@ Deno.serve(async (req) => {
       if (!adm) return json({ error: 'Administrators only.' }, 403)
     }
 
+    // the calendar itself: only members with the Calendar permission, edit to change it (security review, 25 Oct:
+    // anyone who signed up could read and change the connected Google calendar)
+    if (action === 'pull' || action === 'upsert' || action === 'delete') {
+      const [{ data: ws }, { data: perm }] = await Promise.all([db.rpc('my_ws'), db.rpc('my_perm', { p_module: 'calendar' })])
+      if (!ws || perm === 'none' || !perm) return json({ error: 'You do not have the Calendar.' }, 403)
+      if (action !== 'pull' && perm !== 'edit') return json({ error: 'You can only look at the Calendar.' }, 403)
+    }
+
     if (action === 'connect') {
       if (!CLIENT_ID || !CLIENT_SECRET) return json({ error: 'GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are not set in the function secrets yet.' }, 500)
       if (!body.code || !body.redirectUri) return json({ error: 'No authorization code.' }, 400)

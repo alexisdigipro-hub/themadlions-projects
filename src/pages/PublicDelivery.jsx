@@ -14,6 +14,8 @@ const fmt = (d) => (d ? new Date(d + 'T00:00').toLocaleDateString('en-GB', { day
    first tap fetches the file through our pcloud function (see below) with a progress count; the second tap opens the share sheet with it (the iPhone wants
    that tap to come straight from a finger, not after a long download). A file too big for a phone's
    memory opens the file itself instead, to save from Share. */
+// a link on this public page goes only to the web (security review, 25 Oct: no javascript: from share data)
+const safe = (u) => (/^https?:\/\//i.test(String(u || '').trim()) ? String(u).trim() : '#')
 const PHOTO_EXT = /\.(mov|mp4|m4v|jpe?g|png|heic|heif|gif|webp)$/i
 const BIG = 6e8 // the bytes come through the function, which has a time limit
 const mimeOf = (name) => {
@@ -55,12 +57,12 @@ const fire = (url) => {
 async function previewFile(f) {
   try {
     const a = document.createElement('a')
-    a.href = await directUrl(f.url, false)
+    a.href = safe(await directUrl(f.url, false))
     a.rel = 'noreferrer'
     document.body.appendChild(a)
     a.click()
     a.remove()
-  } catch { window.location.href = f.url }
+  } catch { window.location.href = safe(f.url) }
 }
 async function downloadFiles(files, fallback) {
   try {
@@ -68,7 +70,7 @@ async function downloadFiles(files, fallback) {
     urls.forEach((u, i) => setTimeout(() => fire(u), i * 900))
   } catch {
     // after a wait a new tab would be blocked as a pop-up, so this one goes there
-    window.location.href = fallback || files[0]?.url
+    window.location.href = safe(fallback || files[0]?.url)
   }
 }
 function SaveToPhotos({ file }) {
@@ -77,7 +79,7 @@ function SaveToPhotos({ file }) {
   const fetchIt = async () => {
     setState({ step: 'loading', p: 0, ready: null, err: '' })
     try {
-      if (file.size > BIG) { window.location.href = await directUrl(file.url, false); setState({ step: 'idle', p: 0, ready: null, err: '' }); return }
+      if (file.size > BIG) { window.location.href = safe(await directUrl(file.url, false)); setState({ step: 'idle', p: 0, ready: null, err: '' }); return }
       const res = await fileThroughFunction(file.url)
       if (!res.ok || !res.body) throw new Error('No file')
       const total = Number(res.headers.get('content-length')) || file.size || 0
@@ -173,7 +175,7 @@ export default function PublicDelivery() {
           {!(d.files?.length > 1) && (d.files?.length === 1 ? (
             <button type="button" className="dlv-btn" onClick={() => downloadFiles(d.files, d.link)}>{stageAction(d.stage)}</button>
           ) : (
-            <a className="dlv-btn" href={d.link} target="_blank" rel="noreferrer">{stageAction(d.stage)}</a>
+            <a className="dlv-btn" href={safe(d.link)} target="_blank" rel="noreferrer">{stageAction(d.stage)}</a>
           ))}
           {d.files?.length > 1 && (
             <ul className="plain dlv-each">
@@ -216,12 +218,12 @@ export default function PublicDelivery() {
               <ul className="dlv-thumb-grid">
                 {d.thumbs.map((t) => (
                   <li key={t.url}>
-                    <a className="dlv-thumb-img" href={t.url} target="_blank" rel="noreferrer" title={t.name}>
+                    <a className="dlv-thumb-img" href={safe(t.url)} target="_blank" rel="noreferrer" title={t.name}>
                       <img src={t.url} alt={t.name} loading="lazy" style={t.w && t.h ? { aspectRatio: `${t.w} / ${t.h}` } : undefined} />
                     </a>
                     <div className="dlv-thumb-foot">
                       <span className="dlv-thumb-meta">{t.w && t.h ? `${t.w} × ${t.h}` : t.name}</span>
-                      <a className="dlv-btn ghost dlv-each-btn" href={t.dl || t.url} download={t.name}>Download</a>
+                      <a className="dlv-btn ghost dlv-each-btn" href={safe(t.dl || t.url)} download={t.name}>Download</a>
                     </div>
                   </li>
                 ))}
