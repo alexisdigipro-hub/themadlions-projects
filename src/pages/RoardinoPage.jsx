@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useCurrentUser, useStore } from '../lib/store.jsx'
 import { supabase } from '../lib/supabase.js'
 import { fromOldOrdino, roardinoSrc, withLibrary } from '../lib/roardino.js'
@@ -31,6 +31,46 @@ export async function moveOldOrdinos(state, update) {
   update((s) => { s.settings = { ...s.settings, roardinoMoved: new Date().toISOString() }; return s })
   return rows.length
 }
+
+/* the side menu's Roardino (Alex, 25 Oct: "it flickers and is slow to open"): Layout keeps this one frame alive
+   from the first visit on and only hides it on the other pages, so going back to Roardino is instant; the frame
+   fades in once Roardino has drawn (it says so with a 'roardino:ready' message), never half-drawn */
+export function RoardinoFrame({ shown }) {
+  const { state, update } = useStore()
+  const user = useCurrentUser()
+  const admin = user?.role === 'admin'
+  const [ready, setReady] = useState(!admin || !!state.settings?.roardinoMoved)
+  const [note, setNote] = useState('')
+  const [drawn, setDrawn] = useState(false)
+  const frame = useRef(null)
+  useEffect(() => {
+    if (ready) return
+    let off = false
+    moveOldOrdinos(state, update)
+      .catch((e) => { if (!off) setNote(e?.code === '42P01' ? 'Run supabase/roardino.sql in the Supabase SQL Editor to switch Roardino on.' : `The old ordinos were not moved yet: ${e?.message || e}`) })
+      .finally(() => { if (!off) setReady(true) })
+    return () => { off = true }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const on = (e) => { if (e.origin === window.location.origin && e.source === frame.current?.contentWindow && e.data?.type === 'roardino:ready') setDrawn(true) }
+    window.addEventListener('message', on)
+    // a frame that never says so is shown anyway after a moment
+    const t = setTimeout(() => setDrawn(true), 4000)
+    return () => { window.removeEventListener('message', on); clearTimeout(t) }
+  }, [])
+  if (!supabase) return shown ? <p className="muted">Roardino needs the online database.</p> : null
+  return (
+    <>
+      {shown && note && <p className="small muted">{note}</p>}
+      <div className={shown ? 'roarme-page roardino-page' : 'roardino-parked'} aria-hidden={!shown}>
+        {!drawn && shown && <span className="roardino-wait" aria-label="Loading Roardino" />}
+        {ready && <iframe ref={frame} className={`roarme-frame roardino-frame${drawn ? ' on' : ''}`} src={roardinoSrc({})} title="Roardino" allow="clipboard-write; web-share" />}
+      </div>
+    </>
+  )
+}
+// the route itself draws nothing: Layout shows the frame above
+export function RoardinoRoute() { return null }
 
 export default function RoardinoPage({ project = '', see = false, className = '' }) {
   const { state, update } = useStore()

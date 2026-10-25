@@ -46,7 +46,7 @@ const Profile = lazyPage(() => import('./pages/Profile.jsx'))
 const Office = lazyPage(() => import('./pages/Office.jsx'))
 // Office and Notes share one page with tabs (Alex, 10 Oct)
 const OfficeHub = lazyPage(() => import('./pages/OfficeHub.jsx'))
-const RoardinoPage = lazyPage(() => import('./pages/RoardinoPage.jsx'))
+const RoardinoRoute = lazyPage(() => import('./pages/RoardinoPage.jsx').then((m) => ({ default: m.RoardinoRoute })))
 const PublicDelivery = lazyPage(() => import('./pages/PublicDelivery.jsx'))
 const Deliveries = lazyPage(() => import('./pages/Deliveries.jsx'))
 const PublicStatus = lazyPage(() => import('./pages/PublicStatus.jsx'))
@@ -148,7 +148,7 @@ export default function App() {
                 <Route path="chat" element={<Navigate to="/roarme" replace />} />
                 <Route path="chat/:room" element={<Navigate to="/roarme" replace />} />
                 <Route path="roarme" element={<RoarMePage />} />
-                <Route path="roardino" element={<RoardinoPage />} />
+                <Route path="roardino" element={<RoardinoRoute />} />
                 <Route path="mywork" element={<MyWork />} />
                 <Route path="me" element={<Navigate to="/settings" replace />} />
                 <Route path="u/:id" element={<Profile />} />

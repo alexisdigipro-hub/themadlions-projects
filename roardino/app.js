@@ -64,8 +64,17 @@ function hubTheme(){
     });
   };
   apply();
-  const watch = new top.defaultView.MutationObserver(() => apply());
-  watch.observe(top.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-skin', 'data-accent', 'style', 'class'] });
+  // the hub writes a few sizes on its root while the page scrolls or the keyboard moves: look again at most once a
+  // frame, and only redo the look when something it reads has changed (it was redone many times a second)
+  let queued = false, last = '';
+  const sig = () => { const cs = top.defaultView.getComputedStyle(top.documentElement); const d = top.documentElement.dataset; return [d.theme, d.skin, d.accent, cs.getPropertyValue('--accent'), cs.getPropertyValue('--bg'), cs.getPropertyValue('--text'), cs.getPropertyValue('--font'), cs.getPropertyValue('--gl-fill')].join('|'); };
+  last = sig();
+  const watch = new top.defaultView.MutationObserver(() => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; const now = sig(); if (now !== last) { last = now; apply(); } });
+  });
+  watch.observe(top.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-skin', 'data-accent', 'style'] });
   top.head && watch.observe(top.head, { childList: true });
 }
 hubTheme();
@@ -533,7 +542,9 @@ async function boot(){
     if (session){ try { await loadMe(); } catch {} }
   }
   booted = true;
-  route();
+  await route();
+  // framed in the hub: say it is drawn, so the hub shows the frame now and not half-way (Alex, 25 Oct)
+  if (EMBED) try { window.parent.postMessage({ type: 'roardino:ready' }, location.origin); } catch {}
 }
 
 /* ---------- link viewer (what the crew opens) ---------- */

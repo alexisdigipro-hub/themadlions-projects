@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Fragment, Suspense, useEffect, useRef, useState } from 'react'
+import { Fragment, Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { can, seesDatabase, useCurrentUser, useStore, viewAsReturnPath, whenMs } from '../lib/store.jsx'
 import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
@@ -9,6 +9,9 @@ import { remote } from '../lib/supabase.js'
 import { listenSwipes, swipeTabs } from '../lib/swipeTabs.js'
 import { isStandalone, roarmeAppUrl, roarmeInstalled } from '../lib/roarmeApp.js'
 import { applyTeamLook, localLook } from '../lib/teamLook.js'
+
+// Roardino's frame, kept alive between visits (Alex, 25 Oct: it flickered and was slow to open every time)
+const RoardinoFrame = lazy(() => import('../pages/RoardinoPage.jsx').then((m) => ({ default: m.RoardinoFrame })))
 
 function Logo({ name, subtitle, logo }) {
   return (
@@ -190,9 +193,15 @@ export default function Layout() {
   useEffect(() => listenSwipes((dir, mode) => (window.matchMedia?.('(max-width: 820px)').matches ? swipeRef.current?.(dir, mode) : false)), [])
   // on a phone a new page comes in with a short slide and its tiles one after another (Alex, 16 Oct);
   // not when a magnetic swipe already brought it in
+  // Roardino opens once and then stays, hidden on the other pages, so coming back to it is instant
+  const onRoardino = pathname === '/roardino'
+  const [keepRoardino, setKeepRoardino] = useState(false)
+  useEffect(() => { if (onRoardino) setKeepRoardino(true) }, [onRoardino])
+  // not for the pages that are a frame (Roardino, RoarMe): the slide moved their fixed frame and it jumped
+  const framePage = pathname === '/roardino' || pathname.startsWith('/roarme')
   useEffect(() => {
     const el = document.querySelector('.content')
-    if (!el || !window.matchMedia?.('(max-width: 820px)').matches || el.dataset.magnet) return undefined
+    if (!el || framePage || !window.matchMedia?.('(max-width: 820px)').matches || el.dataset.magnet) return undefined
     el.classList.remove('page-in')
     void el.offsetWidth
     el.classList.add('page-in')
@@ -259,6 +268,7 @@ export default function Layout() {
         <Suspense fallback={null}>
           <Outlet />
         </Suspense>
+        {keepRoardino && <Suspense fallback={null}><RoardinoFrame shown={onRoardino} /></Suspense>}
       </main>
       <NoticePopup />
 
