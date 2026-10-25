@@ -35,6 +35,11 @@ const online = {
       return { ...p, count: mine.length, last: mine[0]?.uploaded_at || p.created_at, cover: cover?.fileid || null }
     }).sort(byName)
   },
+  async allSheets() {
+    const { data, error } = await supabase.from('id_sheets').select('*').order('uploaded_at', { ascending: false })
+    if (error) throw new Error(error.message)
+    return data || []
+  },
   async sheets(personId) {
     const { data, error } = await supabase.from('id_sheets').select('*').eq('person_id', personId).order('uploaded_at', { ascending: false })
     if (error) throw new Error(error.message)
@@ -110,6 +115,7 @@ const local = {
       return { ...p, count: mine.length, last: mine[0]?.uploaded_at || p.created_at, cover: mine.find((s) => s.width)?.fileid || null }
     }).sort(byName)
   },
+  async allSheets() { return read().sheets.slice().sort((a, b) => b.uploaded_at.localeCompare(a.uploaded_at)) },
   async sheets(personId) { return read().sheets.filter((s) => s.person_id === personId).sort((a, b) => b.uploaded_at.localeCompare(a.uploaded_at)) },
   async addPerson(name) { const d = read(); const p = { id: newId(), name, note: '', created_at: new Date().toISOString() }; d.people.push(p); write(d); return p },
   async updatePerson(id, patch) { const d = read(); Object.assign(d.people.find((p) => p.id === id) || {}, patch); write(d) },
