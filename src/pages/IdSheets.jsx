@@ -31,7 +31,8 @@ export default function IdSheets({ slot }) {
   const mobile = useIsMobile()
   const [people, setPeople] = useState(null)
   const [sheets, setSheets] = useState([])
-  const [urls, setUrls] = useState({})
+  const [orig, setOrig] = useState({}) // fileid -> the original, fetched for Full size
+  const tried = useRef(new Set()) // sheets whose small picture was asked for once
   const [q, setQ] = useState('')
   const [view, setView] = useState(() => { try { return localStorage.getItem('tml_ids_view') === 'sheets' ? 'sheets' : 'people' } catch { return 'people' } })
   const pickView = (v) => { setView(v); try { localStorage.setItem('tml_ids_view', v) } catch { /* private window */ } }
@@ -45,21 +46,28 @@ export default function IdSheets({ slot }) {
   const [error, setError] = useState('')
   const pick = useRef(null)
 
-  // the pictures, fetched through the pCloud function, a few at a time and kept while the page is open
-  const want = useCallback(async (ids) => {
-    const need = ids.filter(Boolean)
+  // the small pictures come with the list (thumb); a sheet from before they existed gets one made once
+  const fill = useCallback(async (all) => {
+    const need = all.filter((x) => isPicture(x) && !x.thumb && !tried.current.has(x.id))
     if (!need.length) return
-    const got = await idApi.urls(need)
-    setUrls((u) => ({ ...u, ...got }))
-  }, [])
+    need.forEach((x) => tried.current.add(x.id))
+    const got = await idApi.previews(need, editable)
+    if (Object.keys(got).length) setSheets((l) => l.map((x) => (got[x.id] ? { ...x, thumb: got[x.id] } : x)))
+  }, [editable])
   const load = useCallback(async () => {
     try {
       const [ppl, all] = await Promise.all([idApi.people(), idApi.allSheets()])
       setPeople(ppl); setSheets(all); setError('')
-      want(ppl.map((p) => p.cover))
+      fill(all)
     } catch (e) { setError(e.message); setPeople([]) }
-  }, [want])
+  }, [fill])
   useEffect(() => { load() }, [load])
+  // Full size: the original from pCloud, the small picture until it is here
+  const openBig = async (x) => {
+    setBig(x)
+    if (orig[x.fileid]) return
+    try { const url = await idApi.original(x); setOrig((o) => ({ ...o, [x.fileid]: url })) } catch (e) { toast(e.message, 'error') }
+  }
 
   const list = people || []
   const hue = (id) => HUES[Math.max(0, list.findIndex((p) => p.id === id)) % HUES.length]
@@ -68,9 +76,7 @@ export default function IdSheets({ slot }) {
   const searching = !!q.trim()
   const shownPeople = useMemo(() => list.filter((p) => !searching || matchText(q, p.name, p.note, ...sheets.filter((s) => s.person_id === p.id).map((s) => `${s.title} ${s.note}`))), [list, sheets, q, searching])
   const shownSheets = useMemo(() => sheets.filter((s) => !searching || matchText(q, s.title, s.note, s.name, personOf(s.person_id)?.name)), [sheets, list, q, searching]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (view === 'sheets' || searching) want(shownSheets.filter(isPicture).map((s) => s.fileid)) }, [view, searching, shownSheets, want])
   const opened = personOf(openId)
-  useEffect(() => { if (opened) want(sheetsOf(opened.id).filter(isPicture).map((s) => s.fileid)) }, [openId, sheets]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const stats = useMemo(() => {
     const size = sheets.reduce((a, s) => a + (s.size || 0), 0)
@@ -103,7 +109,7 @@ export default function IdSheets({ slot }) {
   }
   const download = async (s) => {
     try {
-      const url = await idApi.download(s)
+      const url = await idApi.original(s)
       const a = document.createElement('a')
       a.href = url; a.download = s.name; a.rel = 'noopener'
       document.body.append(a); a.click(); a.remove()
@@ -122,9 +128,9 @@ export default function IdSheets({ slot }) {
   }
 
   // a poster: the newest picture, else the initials on the person's colour
-  const poster = (fileid, name, color, size = '') => (
+  const poster = (pic, name, color, size = '') => (
     <span className={`drv-poster ${size}`} style={{ '--c': color }} aria-hidden="true">
-      {fileid && urls[fileid] ? <img src={urls[fileid]} alt="" /> : <b>{initials(name)}</b>}
+      {pic ? <img src={pic} alt="" /> : <b>{initials(name)}</b>}
     </span>
   )
   const personChip = (p) => (
@@ -136,7 +142,7 @@ export default function IdSheets({ slot }) {
     const mine = sheetsOf(p.id)
     return (
       <article key={p.id} className="drv-film ids-tile" onClick={() => setOpenId(p.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') setOpenId(p.id) }}>
-        {poster(p.cover, p.name, hue(p.id))}
+        {poster(mine.find((x) => x.thumb)?.thumb, p.name, hue(p.id))}
         <div className="drv-film-body">
           <strong>{p.name}</strong>
           <span className="drv-meta">{[mine.length === 1 ? '1 sheet' : `${mine.length} sheets`, mine.length ? `last ${day(mine[0].uploaded_at)}` : 'empty folder', p.note].filter(Boolean).join(' · ')}</span>
@@ -152,8 +158,8 @@ export default function IdSheets({ slot }) {
   const sheetTile = (s) => {
     const p = personOf(s.person_id)
     return (
-      <article key={s.id} className="drv-film ids-tile" onClick={() => (isPicture(s) && urls[s.fileid] ? setBig(s) : setOpenId(s.person_id))} role="button" tabIndex={0}>
-        {poster(isPicture(s) ? s.fileid : null, s.title || s.name, hue(s.person_id))}
+      <article key={s.id} className="drv-film ids-tile" onClick={() => (isPicture(s) ? openBig(s) : setOpenId(s.person_id))} role="button" tabIndex={0}>
+        {poster(s.thumb, s.title || s.name, hue(s.person_id))}
         <div className="drv-film-body">
           <strong>{s.title || s.name}</strong>
           <span className="drv-meta">{[s.doc_date ? day(s.doc_date) : '', s.note, `uploaded ${day(s.uploaded_at)}`].filter(Boolean).join(' · ')}</span>
@@ -235,8 +241,8 @@ export default function IdSheets({ slot }) {
                 <div className="drv-open-list">
                   {mine.map((s) => (
                     <div key={s.id} className="drv-row ids-row">
-                      <button type="button" className="ids-thumb" onClick={() => isPicture(s) && urls[s.fileid] && setBig(s)} aria-label={`Open ${s.title || s.name} at full size`} style={isPicture(s) && urls[s.fileid] ? { backgroundImage: `url("${urls[s.fileid]}")` } : null}>
-                        {!(isPicture(s) && urls[s.fileid]) && <span className="muted small">{isPicture(s) ? 'Loading…' : (s.name.split('.').pop() || 'file').toUpperCase()}</span>}
+                      <button type="button" className="ids-thumb" onClick={() => isPicture(s) && openBig(s)} aria-label={`Open ${s.title || s.name} at full size`} style={s.thumb ? { backgroundImage: `url("${s.thumb}")` } : null}>
+                        {!s.thumb && <span className="muted small">{isPicture(s) ? (tried.current.has(s.id) ? 'Loading…' : 'No preview') : (s.name.split('.').pop() || 'file').toUpperCase()}</span>}
                       </button>
                       <div className="drv-film-body">
                         <strong>{s.title || s.name}</strong>
@@ -248,7 +254,7 @@ export default function IdSheets({ slot }) {
                         </span>
                       </div>
                       <span className="drive-item-tools">
-                        {isPicture(s) && urls[s.fileid] && <Act icon="expand" label="Full size" className="act-sm" onClick={() => setBig(s)} />}
+                        {isPicture(s) && <Act icon="expand" label="Full size" className="act-sm" onClick={() => openBig(s)} />}
                         <Act icon="download" label="Download" className="act-sm" onClick={() => download(s)} />
                         {editable && <Act icon="edit" label="Edit" className="act-sm" onClick={() => setEdit({ id: s.id, title: s.title || '', doc_date: s.doc_date || '', note: s.note || '' })} />}
                         {editable && <ActDelete small label="Delete" onConfirm={() => removeSheet(s)} />}
@@ -265,7 +271,7 @@ export default function IdSheets({ slot }) {
       {/* the picture at its real size */}
       <Modal open={!!big} title={big ? `${personOf(big.person_id)?.name || ''} · ${big.title || big.name}` : ''} wide className="ids-big" onClose={() => { setBig(null); setActual(false) }}
         footer={big ? <><span className="muted">{big.width ? `${big.width}×${big.height} · ` : ''}{kb(big.size)}</span><Button variant="primary" onClick={() => download(big)}>Download</Button></> : null}>
-        {big && <div className={`ids-big-pic${actual ? ' actual' : ''}`} onClick={() => setActual(!actual)} title={actual ? 'Fit the window' : 'Real size'}><img src={urls[big.fileid]} alt={big.title || big.name} /></div>}
+        {big && <div className={`ids-big-pic${actual ? ' actual' : ''}`} onClick={() => setActual(!actual)} title={actual ? 'Fit the window' : 'Real size'}><img src={orig[big.fileid] || big.thumb} alt={big.title || big.name} />{!orig[big.fileid] && <span className="ids-loading"><span className="ids-spin" />Loading the original…</span>}</div>}
       </Modal>
 
       <Modal open={!!edit} title="Edit sheet" onClose={() => setEdit(null)} footer={<><Button variant="ghost" onClick={() => setEdit(null)}>Cancel</Button><Button variant="primary" onClick={saveEdit}>Save</Button></>}>
