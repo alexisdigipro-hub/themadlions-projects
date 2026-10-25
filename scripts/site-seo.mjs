@@ -243,6 +243,7 @@ ${full ? `\n## Ερωτήσεις (Greek)\n${faqEl}\n` : ''}
 - [RoarList](${BASE}lab/roarlist/): the shot list with a frame for every shot
 - [RoarWriter](${BASE}lab/roarwriter/): screenwriting from the page to the shoot: nine formats (film, TV, sitcom, stage play, musical, audio drama, AV two-column, comic) in English and Greek, revisions and versions, a breakdown, a beat board, a storyboard and shot list, a stripboard shooting schedule, TV series with their bible, writing together, an AI that reads the whole script (coverage, continuity, budget pass, pitch package, translation), PDF, Final Draft, Fade In and Fountain, on Mac, Windows, the web and the phone
 - [RoarTwin](${BASE}lab/roartwin/): finds duplicate files on folders and drives, whatever their names, and the same video in another file (another size, codec or format) by comparing its pictures; only to the Trash, one of each always stays; Mac and Windows
+- [Roarverter](${BASE}lab/roarverter/): converts and compresses pictures, videos and sound on your own computer (JPG, PNG, WebP, AVIF, HEIC, TIFF, GIF, MP4 in H.264, H.265 or AV1, WebM, MOV with ProRes, MKV, MP3, WAV, FLAC), with a target file size in MB, trims, stills and GIFs; nothing is uploaded; Mac and Windows
 - [RoarTransfer](https://roartransfer.com/about/): send large files free and secure at roartransfer.com, up to 5 GB with one short link, by email or link, with a password
 `
 }
@@ -257,6 +258,7 @@ const APPS = [
   { path: 'lab/roarlist/', name: 'RoarList', cat: 'MultimediaApplication', os: 'macOS, Windows, Web' },
   { path: 'lab/roarwriter/', name: 'RoarWriter', cat: 'DesignApplication', os: 'macOS, Windows, Web', shot: 'lab/roarwriter.jpg' },
   { path: 'lab/roartwin/', name: 'RoarTwin', cat: 'UtilitiesApplication', os: 'macOS, Windows', shot: 'lab/roartwin.jpg' },
+  { path: 'lab/roarverter/', name: 'Roarverter', cat: 'MultimediaApplication', os: 'macOS, Windows', shot: 'lab/roarverter.jpg' },
 ]
 const attr = (html, re) => { const m = html.match(re); return m ? m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'") : '' }
 const putBlock = (html, body) => /<!--seo:app-->/.test(html) ? fill(html, 'app', body) : html.replace('</head>', `<!--seo:app-->${body}<!--/seo:app-->\n</head>`)
@@ -306,7 +308,7 @@ if (live) {
     <xhtml:link rel="alternate" hreflang="x-default" href="${BASE}"/>` : ''}</url>`
   writeFileSync(join(dir, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${[u('', '1.0', 'weekly', true), u('el/', '1.0', 'weekly', true), u('aibsent/', '0.8', 'monthly'), u('lab/', '0.6', 'monthly'), u('roarme/', '0.6', 'monthly'), u('roardino/', '0.6', 'monthly'), u('lab/roardino/', '0.6', 'monthly'), u('lab/roarmail/', '0.6', 'monthly'), u('lab/roarlist/', '0.6', 'monthly'), u('lab/roarwriter/', '0.6', 'monthly'), u('lab/roartwin/', '0.6', 'monthly'), ...['', 'roarmail/', 'roarlist/', 'roarwriter/', 'roartwin/', 'roardino/', 'site/'].map((p) => u(`legal/${p}`, '0.3', 'yearly'))].join('\n')}
+${[u('', '1.0', 'weekly', true), u('el/', '1.0', 'weekly', true), u('aibsent/', '0.8', 'monthly'), u('lab/', '0.6', 'monthly'), u('roarme/', '0.6', 'monthly'), u('roardino/', '0.6', 'monthly'), u('lab/roardino/', '0.6', 'monthly'), u('lab/roarmail/', '0.6', 'monthly'), u('lab/roarlist/', '0.6', 'monthly'), u('lab/roarwriter/', '0.6', 'monthly'), u('lab/roartwin/', '0.6', 'monthly'), u('lab/roarverter/', '0.6', 'monthly'), ...['', 'roarmail/', 'roarlist/', 'roarwriter/', 'roartwin/', 'roarverter/', 'roardino/', 'site/'].map((p) => u(`legal/${p}`, '0.3', 'yearly'))].join('\n')}
 </urlset>
 `)
   console.log('wrote llms.txt, llms-full.txt, sitemap.xml')
