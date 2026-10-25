@@ -32,6 +32,7 @@ Pushing to `main` deploys to GitHub Pages in about 40 s through .github/workflow
 - Never ask Alex for a GitHub token, never paste, store or commit credentials of any kind. The Supabase publishable key in src/lib/supabaseConfig.js is public by design; service-role keys never go in the repo.
 
 ## Code rules
+- Every app made for Alex that he installs (the Lab's desktop apps: RoarTwin, RoarMind and the ones to come) updates itself (Alex, 26 Oct: "ό,τι κάνουμε θα το κάνεις auto update"): the updater RoarTwin and RoarMind carry (electron/updater.js, from the newest GitHub release, Restart to update) and the offer to move itself to Applications, from the first release.
 - React + Vite, plain CSS. All styles live in src/styles.css; themes through html[data-theme] and html[data-accent]. No UI framework, no new dependencies without asking Alex.
 - State lives in src/lib/store.jsx. Pages mutate a draft through `update(fn)` / `updateProject(id, fn)`. Every project is one JSON document (projects.data).
 - Design (Alex, 11 Oct): everything new, and everything changed, follows the Calendar, both the look and the UI design (how the screen is put together): one top row with a bold title and every control in it, nothing repeated in two places, the content filling the screen with no empty band under it; pill buttons alike in size, hover and press, the chosen option as glass with the sliding glass lens, content as soft rounded tiles with gaps instead of ruled tables, tinted chips with a colour dot. The recipe is "Alex's reference look" at the end of HANDOVER.md.
