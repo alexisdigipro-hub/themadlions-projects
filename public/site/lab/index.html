@@ -184,8 +184,29 @@ footer .wordmark { width: 130px; opacity: .6; }
 .app-go svg { width: 16px; height: 16px; }
 .app:hover .app-go { color: var(--text); border-color: color-mix(in srgb, var(--c) 70%, transparent); transform: translateY(3px); }
 .exp { scroll-margin-top: 90px; }
-.app:last-child:nth-child(3n+1) { grid-column: 1 / -1; }
-@media (max-width: 900px) { .apps { grid-template-columns: repeat(2, minmax(0, 1fr)); } .app:last-child:nth-child(3n+1) { grid-column: auto; } .app:last-child:nth-child(2n+1) { grid-column: 1 / -1; } }
+/* four smaller tiles a row on a computer (Alex, 25 Oct); the lines between them are each tile's own edge,
+   so a short last row ends cleanly instead of in a grey block */
+@media (min-width: 901px) {
+  .apps { grid-template-columns: repeat(4, minmax(0, 1fr)); background: transparent; border: 0; border-radius: 22px; }
+  .app { min-height: 132px; padding: 20px 22px 18px; box-shadow: 0 0 0 1px var(--line); }
+  .app:nth-child(1) { border-top-left-radius: 22px; }
+  .app:nth-child(4) { border-top-right-radius: 22px; }
+  .app:nth-last-child(-n+4):nth-child(4n+1) { border-bottom-left-radius: 22px; }
+  .app:last-child { border-bottom-right-radius: 22px; }
+  .app-p { top: 20px; right: 22px; font-size: 9.5px; letter-spacing: .12em; }
+  .app-w { font-size: clamp(19px, 1.6vw, 23px); }
+  .app-d { font-size: 13px; }
+  .app-go { width: 30px; height: 30px; }
+}
+/* a narrower computer: three a row, so the platforms never run into the number */
+@media (min-width: 901px) and (max-width: 1239px) {
+  .apps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .app:nth-child(4) { border-top-right-radius: 0; }
+  .app:nth-child(3) { border-top-right-radius: 22px; }
+  .app:nth-last-child(-n+4):nth-child(4n+1) { border-bottom-left-radius: 0; }
+  .app:nth-last-child(-n+3):nth-child(3n+1) { border-bottom-left-radius: 22px; }
+}
+@media (max-width: 900px) { .apps { grid-template-columns: repeat(2, minmax(0, 1fr)); } .app:last-child:nth-child(2n+1) { grid-column: 1 / -1; } }
 @media (max-width: 560px) { .apps { grid-template-columns: 1fr; } .apps .app:last-child { grid-column: auto; } .app { min-height: 0; padding: 20px 20px 18px; } .app-p { top: 20px; right: 20px; } }
 </style>
 <!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"The Mad Lions Lab","url":"https://themadlions.com/lab/","description":"The Mad Lions Lab: the tools and apps we build between films. RoarMe, the messenger for teams, Roardino, the call sheet in one link, RoarMail, the private mail app, RoarList, the shot list with a frame for every shot, and RoarWriter, screenwriting in the industry format.","publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"},"mainEntity":{"@type":"ItemList","itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"SoftwareApplication","name":"RoarMe","url":"https://themadlions.com/roarme/","applicationCategory":"CommunicationApplication","operatingSystem":"macOS, Windows, Web, iOS, Android"}},{"@type":"ListItem","position":2,"item":{"@type":"SoftwareApplication","name":"Roardino","url":"https://themadlions.com/lab/roardino/","applicationCategory":"BusinessApplication","operatingSystem":"Web"}},{"@type":"ListItem","position":3,"item":{"@type":"SoftwareApplication","name":"RoarMail","url":"https://themadlions.com/lab/roarmail/","applicationCategory":"CommunicationApplication","operatingSystem":"macOS, Windows"}},{"@type":"ListItem","position":4,"item":{"@type":"SoftwareApplication","name":"RoarList","url":"https://themadlions.com/lab/roarlist/","applicationCategory":"MultimediaApplication","operatingSystem":"macOS, Windows, Web"}},{"@type":"ListItem","position":5,"item":{"@type":"SoftwareApplication","name":"RoarWriter","url":"https://themadlions.com/lab/roarwriter/","applicationCategory":"DesignApplication","operatingSystem":"macOS, Windows, Web"}},{"@type":"ListItem","position":6,"item":{"@type":"SoftwareApplication","name":"RoarTwin","url":"https://themadlions.com/lab/roartwin/","applicationCategory":"UtilitiesApplication","operatingSystem":"macOS, Windows"}},{"@type":"ListItem","position":7,"item":{"@type":"SoftwareApplication","name":"RoarTransfer","url":"https://roartransfer.com/about/","applicationCategory":"UtilitiesApplication","operatingSystem":"Web"}}]}}</script><!--/seo:app-->
