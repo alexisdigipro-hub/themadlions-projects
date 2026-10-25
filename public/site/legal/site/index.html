@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Made by scripts/site-legal.mjs in the hub repository: edit the texts there, not here. -->
+<title>themadlions.com · Privacy Policy and Terms · The Mad Lions</title>
+<link rel="canonical" href="https://themadlions.com/legal/site/">
+<meta name="description" content="What themadlions.com keeps, where it goes and the terms of use, from The Mad Lions.">
+<meta name="theme-color" content="#16181c">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<style>
+:root { --bg:#16181c; --line:rgba(255,255,255,.09); --text:#eef0f3; --muted:rgba(214,220,228,.66); --dim:rgba(214,220,228,.4);
+  --red:#d40000; --red-hi:#ff3b2f; --glass:rgba(255,255,255,.055); --edge:rgba(255,255,255,.12); --pad:clamp(16px,4.5vw,72px);
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,'Helvetica Neue',sans-serif; --mono:ui-monospace,'SF Mono',Menlo,monospace; color-scheme:dark; }
+* { box-sizing:border-box; }
+html { background:var(--bg); scroll-behavior:smooth; }
+body { margin:0; color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased; background:var(--bg); }
+body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; background:radial-gradient(1100px 620px at 50% -10%,#3c424c 0%,transparent 62%),radial-gradient(800px 600px at 100% 100%,rgba(212,0,0,.10),transparent 70%),linear-gradient(180deg,#23272e 0%,#17191d 50%,#121417 100%); }
+a { color:inherit; }
+:focus-visible { outline:2px solid var(--red-hi); outline-offset:3px; border-radius:8px; }
+.bar { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:14px; padding:calc(12px + env(safe-area-inset-top)) var(--pad) 12px; background:rgba(22,24,28,.72); -webkit-backdrop-filter:blur(18px) saturate(140%); backdrop-filter:blur(18px) saturate(140%); border-bottom:1px solid var(--line); }
+.bar .home img { width:118px; height:auto; filter:invert(1); display:block; }
+.bar .crumb { font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); text-decoration:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bar .end { margin-left:auto; display:flex; gap:8px; align-items:center; }
+.seg { display:flex; padding:3px; border-radius:999px; background:var(--glass); border:1px solid var(--edge); }
+.seg button, .seg a { border:0; background:transparent; cursor:pointer; padding:6px 13px; border-radius:999px; font:inherit; font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--muted); text-decoration:none; }
+.seg .on { background:rgba(255,255,255,.14); color:var(--text); }
+main { max-width:920px; margin:0 auto; padding:clamp(40px,7vw,90px) var(--pad) 40px; }
+.kicker { margin:0; font-family:var(--mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
+h1 { margin:14px 0 10px; font-size:clamp(38px,7vw,72px); line-height:1; font-weight:800; letter-spacing:-.01em; }
+.date { color:var(--dim); font-size:14px; margin:0 0 26px; }
+.tabs { margin:0 0 34px; width:max-content; max-width:100%; }
+.tabs a { font-size:12px; padding:8px 16px; }
+section { scroll-margin-top:80px; }
+h2 { font-size:clamp(26px,4vw,38px); margin:46px 0 18px; font-weight:700; }
+section:first-of-type h2 { margin-top:0; }
+.grid { display:grid; gap:12px; }
+.tile { padding:20px 22px; border-radius:22px; background:var(--glass); border:1px solid var(--edge); }
+.tile h3 { margin:0 0 8px; font-size:17px; }
+.tile p { margin:0 0 9px; color:var(--muted); font-size:15.5px; line-height:1.6; }
+.tile p:last-child { margin-bottom:0; }
+.tile a { color:var(--text); }
+.apps { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; }
+.apps .tile b { display:block; font-size:19px; margin-bottom:4px; }
+.apps .tile small { display:block; color:var(--muted); font-size:14px; margin-bottom:14px; }
+.pill { display:inline-flex; align-items:center; height:36px; padding:0 15px; margin:0 6px 6px 0; border-radius:999px; font-size:13.5px; font-weight:600; text-decoration:none; border:1px solid var(--edge); background:var(--glass); transition:background .2s,transform .2s; }
+.pill:hover { background:rgba(255,255,255,.1); transform:translateY(-1px); }
+footer { max-width:920px; margin:0 auto; padding:30px var(--pad) calc(40px + env(safe-area-inset-bottom)); color:var(--dim); font-size:13px; display:flex; gap:14px; flex-wrap:wrap; justify-content:space-between; }
+footer a { color:var(--muted); text-decoration:none; }
+@media (max-width:560px) { .bar .home img { width:96px; } .bar .crumb { display:none; } }
+
+html:not([lang=el]) [lang=el], html[lang=el] [lang=en] { display:none !important; }
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="home" href="../../"><img src="../../wordmark.png" alt="The Mad Lions"></a>
+  <a class="crumb" href="../../legal/"><span lang="en">Legal</span><span lang="el">Νομικά</span></a>
+  <div class="end"><div class="seg"><button type="button" data-lang="en">EN</button><button type="button" data-lang="el">ΕΛ</button></div></div>
+</header>
+<main>
+  <p class="kicker">themadlions.com · <span lang="en">the company site and Aibsent Studios</span><span lang="el">το site της εταιρείας και η Aibsent Studios</span></p>
+  <h1><span lang="en">Privacy &amp; Terms</span><span lang="el">Απόρρητο &amp; Όροι</span></h1>
+  <p class="date"><span lang="en">Updated 25 October 2026</span><span lang="el">Ενημέρωση 25 Οκτωβρίου 2026</span></p>
+  <nav class="seg tabs"><a href="#privacy"><span lang="en">Privacy Policy</span><span lang="el">Πολιτική απορρήτου</span></a><a href="#terms"><span lang="en">Terms of Use</span><span lang="el">Όροι χρήσης</span></a></nav>
+  <section id="privacy"><h2><span lang="en">Privacy Policy</span><span lang="el">Πολιτική απορρήτου</span></h2>
+    <div class="grid" lang="en"><div class="tile"><h3>In short</h3><p>This covers themadlions.com, its Greek pages, Aibsent Studios (themadlions.com/aibsent) and the Lab's pages. We show no ads and use no cookies; we only count visits anonymously.</p></div><div class="tile"><h3>The contact form</h3><p>When you send the form we keep what you write: email, and if you give them your name, company, what you are making, budget, when you need it and your message. We use it only to answer you and to talk about the work, and keep it for as long as that takes, at most two years after our last contact. Ask us and we delete it sooner.</p></div><div class="tile"><h3>Counting visits</h3><p>The site counts, without knowing who you are, which page opened, which film played and when the form was sent, with the kind of device, the language and the site you came from. A random code kept in your browser tells one visit from another. There is no name, email or IP address in it.</p></div><div class="tile"><h3>Kept in your browser</h3><p>Your language and theme, and a copy of the site's films and pictures so it opens fast.</p></div><div class="tile"><h3>Other services</h3><p>Films play from YouTube or Vimeo when you press play; the opening video on the main page plays from YouTube (no-cookie) or Vimeo (do not track). Thumbnails load from YouTube. Under their own policies they see your IP address.</p><p>Some pictures and videos load from pCloud; fonts load from Google Fonts. The site is served by GitHub Pages.</p></div><div class="tile"><h3>Where it is</h3><p>The form and the counts are stored with Supabase in London, United Kingdom (covered by the EU's adequacy decision for the UK). Only The Mad Lions see them.</p></div><div class="tile"><h3>Your rights</h3><p>Under the GDPR you can ask to see, correct, export or delete your data, and you can object to its use. Write to <a href="mailto:info@themadlions.com">info@themadlions.com</a> and we answer within one month. You can also complain to the Hellenic Data Protection Authority (<a href="https://www.dpa.gr/" target="_blank" rel="noopener">www.dpa.gr</a>).</p></div><div class="tile"><h3>Changes</h3><p>If this policy changes, the date at the top changes too, and anything important is shown in the app before it applies.</p></div><div class="tile"><h3>Contact</h3><p>The Mad Lions, Athens, Greece · <a href="mailto:info@themadlions.com">info@themadlions.com</a></p></div></div><div class="grid" lang="el"><div class="tile"><h3>Με λίγα λόγια</h3><p>Αφορά το themadlions.com, τις ελληνικές του σελίδες, την Aibsent Studios (themadlions.com/aibsent) και τις σελίδες του Lab. Δεν δείχνουμε διαφημίσεις και δεν έχουμε cookies· μόνο μετράμε τις επισκέψεις ανώνυμα.</p></div><div class="tile"><h3>Η φόρμα επικοινωνίας</h3><p>Όταν στέλνεις τη φόρμα κρατάμε ό,τι γράφεις: email, και αν τα δώσεις όνομα, εταιρεία, τι φτιάχνεις, budget, πότε το χρειάζεσαι και το μήνυμά σου. Τα χρησιμοποιούμε μόνο για να σου απαντήσουμε και να μιλήσουμε για τη δουλειά, και τα κρατάμε όσο χρειάζεται, το πολύ δύο χρόνια μετά την τελευταία μας επαφή. Ζήτα το και τα σβήνουμε νωρίτερα.</p></div><div class="tile"><h3>Μέτρηση επισκέψεων</h3><p>Το site μετρά, χωρίς να ξέρει ποιος είσαι, ποια σελίδα άνοιξε, ποια ταινία έπαιξε και πότε στάλθηκε η φόρμα, με το είδος της συσκευής, τη γλώσσα και το site από όπου ήρθες. Ένας τυχαίος κωδικός στον browser σου ξεχωρίζει μια επίσκεψη από την άλλη. Δεν έχει όνομα, email ή διεύθυνση IP.</p></div><div class="tile"><h3>Στον browser σου</h3><p>Η γλώσσα και το θέμα σου, και ένα αντίγραφο των ταινιών και των εικόνων του site για να ανοίγει γρήγορα.</p></div><div class="tile"><h3>Άλλες υπηρεσίες</h3><p>Οι ταινίες παίζουν από το YouTube ή το Vimeo όταν πατάς play· το βίντεο στην αρχή της κεντρικής σελίδας παίζει από το YouTube (no-cookie) ή το Vimeo (do not track). Οι μικρογραφίες φορτώνουν από το YouTube. Με τις δικές τους πολιτικές βλέπουν τη διεύθυνση IP σου.</p><p>Κάποιες εικόνες και βίντεο φορτώνουν από το pCloud· οι γραμματοσειρές από το Google Fonts. Το site σερβίρεται από το GitHub Pages.</p></div><div class="tile"><h3>Πού είναι</h3><p>Η φόρμα και οι μετρήσεις φυλάσσονται στη Supabase στο Λονδίνο (το Ηνωμένο Βασίλειο καλύπτεται από απόφαση επάρκειας της ΕΕ). Τα βλέπουν μόνο οι The Mad Lions.</p></div><div class="tile"><h3>Τα δικαιώματά σου</h3><p>Με βάση τον GDPR μπορείς να ζητήσεις να δεις, να διορθώσεις, να πάρεις ή να διαγράψεις τα δεδομένα σου, και να αρνηθείς τη χρήση τους. Γράψε στο <a href="mailto:info@themadlions.com">info@themadlions.com</a> και απαντάμε μέσα σε έναν μήνα. Μπορείς επίσης να κάνεις καταγγελία στην Αρχή Προστασίας Δεδομένων Προσωπικού Χαρακτήρα (<a href="https://www.dpa.gr/" target="_blank" rel="noopener">www.dpa.gr</a>).</p></div><div class="tile"><h3>Αλλαγές</h3><p>Αν αλλάξει αυτή η πολιτική, αλλάζει και η ημερομηνία στην κορυφή, και ό,τι σημαντικό το βλέπεις στην εφαρμογή πριν ισχύσει.</p></div><div class="tile"><h3>Επικοινωνία</h3><p>The Mad Lions, Αθήνα · <a href="mailto:info@themadlions.com">info@themadlions.com</a></p></div></div>
+  </section>
+  <section id="terms"><h2><span lang="en">Terms of Use</span><span lang="el">Όροι χρήσης</span></h2>
+    <div class="grid" lang="en"><div class="tile"><h3>The site</h3><p>themadlions.com is the site of The Mad Lions, a film production house in Athens, Greece, and of Aibsent Studios, its post-production and AI studio.</p></div><div class="tile"><h3>The films</h3><p>The films, pictures, names and logos on the site belong to The Mad Lions and to their clients. You can watch and share their links; do not copy, edit or use them elsewhere without our written permission.</p></div><div class="tile"><h3>Prices and offers</h3><p>What the site says about services is a description, not an offer. Every job is agreed in writing, with its own price and terms.</p></div><div class="tile"><h3>Law</h3><p>These terms follow Greek law, and the courts of Athens decide any dispute, unless the law where you live as a consumer says otherwise.</p></div><div class="tile"><h3>Contact</h3><p>The Mad Lions, Athens, Greece · <a href="mailto:info@themadlions.com">info@themadlions.com</a></p></div></div><div class="grid" lang="el"><div class="tile"><h3>Το site</h3><p>Το themadlions.com είναι το site των The Mad Lions, εταιρείας παραγωγής ταινιών στην Αθήνα, και της Aibsent Studios, του studio της για post-production και AI.</p></div><div class="tile"><h3>Οι ταινίες</h3><p>Οι ταινίες, οι εικόνες, τα ονόματα και τα λογότυπα στο site ανήκουν στους The Mad Lions και στους πελάτες τους. Μπορείς να τις βλέπεις και να μοιράζεσαι τα links τους· μην τις αντιγράφεις, τις επεξεργάζεσαι ή τις χρησιμοποιείς αλλού χωρίς γραπτή μας άδεια.</p></div><div class="tile"><h3>Τιμές και προσφορές</h3><p>Όσα λέει το site για τις υπηρεσίες είναι περιγραφή, όχι προσφορά. Κάθε δουλειά συμφωνείται γραπτά, με δική της τιμή και όρους.</p></div><div class="tile"><h3>Δίκαιο</h3><p>Οι όροι αυτοί διέπονται από το ελληνικό δίκαιο, και για κάθε διαφορά αρμόδια είναι τα δικαστήρια της Αθήνας, εκτός αν ο νόμος του τόπου όπου ζεις ως καταναλωτής ορίζει κάτι άλλο.</p></div><div class="tile"><h3>Επικοινωνία</h3><p>The Mad Lions, Αθήνα · <a href="mailto:info@themadlions.com">info@themadlions.com</a></p></div></div>
+  </section>
+</main>
+<footer><span>© 2026 The Mad Lions · themadlions.com</span><a href="../../legal/"><span lang="en">Every app's policies</span><span lang="el">Οι πολιτικές όλων των εφαρμογών</span></a></footer>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search).get('lang'), l = q
+  try { if (!l) l = localStorage.getItem('tml_site_lang') } catch (e) {}
+  function set(x) { l = x === 'el' ? 'el' : 'en'; document.documentElement.lang = l
+    document.querySelectorAll('[data-lang]').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) }) }
+  document.querySelectorAll('[data-lang]').forEach(function (b) { b.onclick = function () { set(b.dataset.lang); try { localStorage.setItem('tml_site_lang', l) } catch (e) {} } })
+  set(l)
+})()
+</script>
+</body>
+</html>

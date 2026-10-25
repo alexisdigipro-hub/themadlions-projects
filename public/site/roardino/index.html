@@ -826,6 +826,7 @@ function renderOrdino(o, { wx = null, interactive = true, updatedAt = null } = {
         ${P.company ? `<div class="o-made">${esc(P.company)}</div>` : ''}
         ${updatedAt ? `<div class="o-made" style="letter-spacing:.04em;text-transform:none">Ενημερώθηκε ${esc(new Date(updatedAt).toLocaleString('el-GR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</div>` : ''}
         <a class="o-made" href="${esc(location.origin + location.pathname)}#home" target="_blank" rel="noopener">Made with <b>ROAR</b>DINO</a>
+        <a class="o-made" style="letter-spacing:.04em;text-transform:none" href="${esc(new URL('../legal/roardino/?lang=el#privacy', location.href).href)}" target="_blank" rel="noopener">Απόρρητο</a>
       </footer>
     </main>
   </div>`;
@@ -1030,7 +1031,9 @@ function viewAuth(mode = 'in'){
       h('button', { class: 'btn primary', type: 'submit' }, up ? 'Δημιουργία λογαριασμού' : 'Σύνδεση'),
       up ? null : h('button', { class: 'linkish', type: 'button', onclick: forgot }, 'Ξέχασες τον κωδικό;'),
       msg,
-      h('p', { class: 'hint' }, 'Αν έχεις ήδη λογαριασμό στο RoarMe, μπαίνεις με τα ίδια στοιχεία.')].filter(Boolean));
+      h('p', { class: 'hint' }, 'Αν έχεις ήδη λογαριασμό στο RoarMe, μπαίνεις με τα ίδια στοιχεία.'),
+      // Privacy and Terms (Alex, 25 Oct): legal/roardino/ on the site, both texts on one page
+      up ? h('p', { class: 'hint' }, 'Με τη δημιουργία λογαριασμού αποδέχεσαι τους ', h('a', { href: '../legal/roardino/?lang=el#terms', target: '_blank', rel: 'noopener' }, 'Όρους χρήσης'), ' και την ', h('a', { href: '../legal/roardino/?lang=el#privacy', target: '_blank', rel: 'noopener' }, 'Πολιτική απορρήτου'), '.') : null].filter(Boolean));
   };
   async function forgot(){
     if (!f.email.trim()) return say('Γράψε πρώτα το email σου και πάτα ξανά «Ξέχασες τον κωδικό;».', 'err');
@@ -1098,7 +1101,7 @@ function viewAuth(mode = 'in'){
       h('a', { class: 'btn', href: '../roarme/' }, 'Γνώρισε το RoarMe'))),
     h('footer', { class: 'auth-foot' },
       h('a', { href: '../' }, '© 2026 The Mad Lions'),
-      h('span', {}, h('a', { href: '../#lab' }, 'The Mad Lions Lab'), ' · ', h('a', { href: '../roarme/' }, 'RoarMe'))));
+      h('span', {}, h('a', { href: '../#lab' }, 'The Mad Lions Lab'), ' · ', h('a', { href: '../roarme/' }, 'RoarMe'), ' · ', h('a', { href: '../legal/roardino/?lang=el' }, 'Απόρρητο & Όροι'))));
 }
 
 function openPassword(recovery){
@@ -1145,6 +1148,8 @@ function openAccount(){
       h('div', { class: 'linkbox' },
         h('button', { class: 'btn', style: 'flex:1', onclick: () => { close(); openPassword(false); } }, 'Αλλαγή κωδικού'),
         h('button', { class: 'btn danger', style: 'flex:1', onclick: async () => { close(); await sb.auth.signOut(); } }, 'Αποσύνδεση')),
+      h('p', { class: 'hint' }, h('a', { href: '../legal/roardino/?lang=el#privacy', target: '_blank', rel: 'noopener' }, 'Πολιτική απορρήτου'), ' · ', h('a', { href: '../legal/roardino/?lang=el#terms', target: '_blank', rel: 'noopener' }, 'Όροι χρήσης'),
+        ' · Για διαγραφή λογαριασμού: RoarMe > Settings > Privacy and Security > Delete My Account, ή γράψε στο lab@themadlions.com.'),
       h('button', { class: 'btn ghost', onclick: close }, 'Κλείσιμο')));
   document.body.append(bg);
 }

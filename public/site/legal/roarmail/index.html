@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Made by scripts/site-legal.mjs in the hub repository: edit the texts there, not here. -->
+<title>RoarMail · Privacy Policy and Terms · The Mad Lions</title>
+<link rel="canonical" href="https://themadlions.com/legal/roarmail/">
+<meta name="description" content="What RoarMail keeps, where it goes and the terms of use, from The Mad Lions.">
+<meta name="theme-color" content="#16181c">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<style>
+:root { --bg:#16181c; --line:rgba(255,255,255,.09); --text:#eef0f3; --muted:rgba(214,220,228,.66); --dim:rgba(214,220,228,.4);
+  --red:#d40000; --red-hi:#ff3b2f; --glass:rgba(255,255,255,.055); --edge:rgba(255,255,255,.12); --pad:clamp(16px,4.5vw,72px);
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,'Helvetica Neue',sans-serif; --mono:ui-monospace,'SF Mono',Menlo,monospace; color-scheme:dark; }
+* { box-sizing:border-box; }
+html { background:var(--bg); scroll-behavior:smooth; }
+body { margin:0; color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased; background:var(--bg); }
+body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; background:radial-gradient(1100px 620px at 50% -10%,#3c424c 0%,transparent 62%),radial-gradient(800px 600px at 100% 100%,rgba(212,0,0,.10),transparent 70%),linear-gradient(180deg,#23272e 0%,#17191d 50%,#121417 100%); }
+a { color:inherit; }
+:focus-visible { outline:2px solid var(--red-hi); outline-offset:3px; border-radius:8px; }
+.bar { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:14px; padding:calc(12px + env(safe-area-inset-top)) var(--pad) 12px; background:rgba(22,24,28,.72); -webkit-backdrop-filter:blur(18px) saturate(140%); backdrop-filter:blur(18px) saturate(140%); border-bottom:1px solid var(--line); }
+.bar .home img { width:118px; height:auto; filter:invert(1); display:block; }
+.bar .crumb { font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); text-decoration:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bar .end { margin-left:auto; display:flex; gap:8px; align-items:center; }
+.seg { display:flex; padding:3px; border-radius:999px; background:var(--glass); border:1px solid var(--edge); }
+.seg button, .seg a { border:0; background:transparent; cursor:pointer; padding:6px 13px; border-radius:999px; font:inherit; font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--muted); text-decoration:none; }
+.seg .on { background:rgba(255,255,255,.14); color:var(--text); }
+main { max-width:920px; margin:0 auto; padding:clamp(40px,7vw,90px) var(--pad) 40px; }
+.kicker { margin:0; font-family:var(--mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
+h1 { margin:14px 0 10px; font-size:clamp(38px,7vw,72px); line-height:1; font-weight:800; letter-spacing:-.01em; }
+.date { color:var(--dim); font-size:14px; margin:0 0 26px; }
+.tabs { margin:0 0 34px; width:max-content; max-width:100%; }
+.tabs a { font-size:12px; padding:8px 16px; }
+section { scroll-margin-top:80px; }
+h2 { font-size:clamp(26px,4vw,38px); margin:46px 0 18px; font-weight:700; }
+section:first-of-type h2 { margin-top:0; }
+.grid { display:grid; gap:12px; }
+.tile { padding:20px 22px; border-radius:22px; background:var(--glass); border:1px solid var(--edge); }
+.tile h3 { margin:0 0 8px; font-size:17px; }
+.tile p { margin:0 0 9px; color:var(--muted); font-size:15.5px; line-height:1.6; }
+.tile p:last-child { margin-bottom:0; }
+.tile a { color:var(--text); }
+.apps { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; }
+.apps .tile b { display:block; font-size:19px; margin-bottom:4px; }
+.apps .tile small { display:block; color:var(--muted); font-size:14px; margin-bottom:14px; }
+.pill { display:inline-flex; align-items:center; height:36px; padding:0 15px; margin:0 6px 6px 0; border-radius:999px; font-size:13.5px; font-weight:600; text-decoration:none; border:1px solid var(--edge); background:var(--glass); transition:background .2s,transform .2s; }
+.pill:hover { background:rgba(255,255,255,.1); transform:translateY(-1px); }
+footer { max-width:920px; margin:0 auto; padding:30px var(--pad) calc(40px + env(safe-area-inset-bottom)); color:var(--dim); font-size:13px; display:flex; gap:14px; flex-wrap:wrap; justify-content:space-between; }
+footer a { color:var(--muted); text-decoration:none; }
+@media (max-width:560px) { .bar .home img { width:96px; } .bar .crumb { display:none; } }
+
+html:not([lang=el]) [lang=el], html[lang=el] [lang=en] { display:none !important; }
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="home" href="../../"><img src="../../wordmark.png" alt="The Mad Lions"></a>
+  <a class="crumb" href="../../legal/"><span lang="en">Legal</span><span lang="el">Νομικά</span></a>
+  <div class="end"><div class="seg"><button type="button" data-lang="en">EN</button><button type="button" data-lang="el">ΕΛ</button></div></div>
+</header>
+<main>
+  <p class="kicker"><a href="../../lab/roarmail/" style="text-decoration:none">RoarMail</a> · <span lang="en">the mail app for Mac and Windows</span><span lang="el">η εφαρμογή email για Mac και Windows</span></p>
+  <h1><span lang="en">Privacy &amp; Terms</span><span lang="el">Απόρρητο &amp; Όροι</span></h1>
+  <p class="date"><span lang="en">Updated 25 October 2026</span><span lang="el">Ενημέρωση 25 Οκτωβρίου 2026</span></p>
+  <nav class="seg tabs"><a href="#privacy"><span lang="en">Privacy Policy</span><span lang="el">Πολιτική απορρήτου</span></a><a href="#terms"><span lang="en">Terms of Use</span><span lang="el">Όροι χρήσης</span></a></nav>
+  <section id="privacy"><h2><span lang="en">Privacy Policy</span><span lang="el">Πολιτική απορρήτου</span></h2>
+    <div class="grid" lang="en"><div class="tile"><h3>In short</h3><p>RoarMail talks to your mail servers straight from your computer. There is no server of ours in between: we never see your mail, your contacts or your passwords.</p></div><div class="tile"><h3>What stays on your computer</h3><p>Your messages, folders, drafts and attachments are kept on your computer (a local database and the message files in the app's folder), so they open fast and offline.</p><p>Mail passwords are locked with your computer's own key store (Keychain on Mac, DPAPI on Windows) and are only sent to your own mail servers.</p><p>Your settings, signatures and rules stay on your computer too. Remove account, Clear cache and Reset settings in the app delete them.</p></div><div class="tile"><h3>What leaves your computer, and to whom</h3><p>Your mail servers (IMAP and SMTP), to fetch and send your mail. They are run by your mail provider, under its own policy.</p><p>Setting up an account: only the domain of your address (for example example.com) is looked up in Thunderbird's public server list (autoconfig.thunderbird.net) and at your domain.</p><p>Sender pictures (on unless you turn them off in Settings &gt; Appearance, and off in Privacy mode): for a person, a scrambled code of their address (MD5) goes to Gravatar; for a company, its domain goes to Google's and DuckDuckGo's icon services. The pictures are kept on your computer.</p><p>Pictures inside messages load only when you allow them, per message or per sender; tracking pixels stay blocked either way. Unsubscribe in one click contacts the sender only after you confirm.</p><p>The Mac and Windows app checks every two hours for a new version at GitHub (api.github.com/repos/alexisdigipro-hub/roarmail) and downloads it from there. GitHub sees your IP address, as with any download; nothing about you or your work is sent.</p></div><div class="tile"><h3>With your RoarMe account (only if you sign in)</h3><p>Signing in to RoarMe in RoarMail is optional. When you send an email to a RoarMe chat, the chat gets its subject, sender, date, a short extract (up to 600 characters) and the attachments you keep (up to 50 MB each). A task made from an email is saved in RoarMe with a link back to it.</p><p>A large attachment sent as a link goes to RoarTransfer (Cloudflare R2) for the days shown, and is deleted after.</p><p>These follow the RoarMe and RoarTransfer privacy policies.</p></div><div class="tile"><h3>What we do not do</h3><p>No analytics, no trackers, no ads, no AI on your mail. Nothing is sold or shared.</p></div><div class="tile"><h3>Your rights</h3><p>Under the GDPR you can ask to see, correct, export or delete your data, and you can object to its use. Write to <a href="mailto:lab@themadlions.com">lab@themadlions.com</a> and we answer within one month. You can also complain to the Hellenic Data Protection Authority (<a href="https://www.dpa.gr/" target="_blank" rel="noopener">www.dpa.gr</a>).</p></div><div class="tile"><h3>Changes</h3><p>If this policy changes, the date at the top changes too, and anything important is shown in the app before it applies.</p></div><div class="tile"><h3>Contact</h3><p>The Mad Lions, Athens, Greece · <a href="mailto:lab@themadlions.com">lab@themadlions.com</a></p></div></div><div class="grid" lang="el"><div class="tile"><h3>Με λίγα λόγια</h3><p>Το RoarMail μιλά με τους mail servers σου κατευθείαν από τον υπολογιστή σου. Δεν υπάρχει δικός μας server ανάμεσα: δεν βλέπουμε ποτέ τα email, τις επαφές ή τους κωδικούς σου.</p></div><div class="tile"><h3>Τι μένει στον υπολογιστή σου</h3><p>Τα μηνύματα, οι φάκελοι, τα πρόχειρα και τα συνημμένα σου φυλάσσονται στον υπολογιστή σου (τοπική βάση δεδομένων και τα αρχεία των μηνυμάτων στον φάκελο της εφαρμογής), για να ανοίγουν γρήγορα και χωρίς σύνδεση.</p><p>Οι κωδικοί των email κλειδώνονται με το σύστημα κλειδιών του υπολογιστή σου (Keychain στο Mac, DPAPI στα Windows) και στέλνονται μόνο στους δικούς σου mail servers.</p><p>Οι ρυθμίσεις, οι υπογραφές και οι κανόνες σου μένουν κι αυτά στον υπολογιστή. Η Αφαίρεση λογαριασμού, ο Καθαρισμός cache και η Επαναφορά ρυθμίσεων στην εφαρμογή τα σβήνουν.</p></div><div class="tile"><h3>Τι φεύγει από τον υπολογιστή σου, και πού</h3><p>Οι mail servers σου (IMAP και SMTP), για να φέρνουν και να στέλνουν τα email σου. Τους έχει ο πάροχος του email σου, με τη δική του πολιτική.</p><p>Στη ρύθμιση λογαριασμού: μόνο το domain της διεύθυνσής σου (π.χ. example.com) ψάχνεται στη δημόσια λίστα servers του Thunderbird (autoconfig.thunderbird.net) και στο ίδιο το domain.</p><p>Εικόνες αποστολέων (ανοιχτό, εκτός αν το κλείσεις στις Ρυθμίσεις &gt; Εμφάνιση, και κλειστό στη Λειτουργία απορρήτου): για ένα πρόσωπο, ένας κρυπτογραφημένος κωδικός της διεύθυνσης (MD5) πάει στο Gravatar· για μια εταιρεία, το domain της πάει στις υπηρεσίες εικονιδίων της Google και του DuckDuckGo. Οι εικόνες φυλάσσονται στον υπολογιστή σου.</p><p>Οι εικόνες μέσα στα μηνύματα φορτώνουν μόνο όταν το επιτρέψεις, ανά μήνυμα ή ανά αποστολέα· τα tracking pixels μένουν πάντα μπλοκαρισμένα. Η διαγραφή από λίστα με ένα κλικ επικοινωνεί με τον αποστολέα μόνο αφού επιβεβαιώσεις.</p><p>Η εφαρμογή για Mac και Windows ελέγχει κάθε δύο ώρες για νέα έκδοση στο GitHub (api.github.com/repos/alexisdigipro-hub/roarmail) και την κατεβάζει από εκεί. Το GitHub βλέπει τη διεύθυνση IP σου, όπως σε κάθε λήψη· τίποτα για σένα ή τη δουλειά σου δεν στέλνεται.</p></div><div class="tile"><h3>Με τον λογαριασμό RoarMe (μόνο αν συνδεθείς)</h3><p>Η σύνδεση στο RoarMe μέσα από το RoarMail είναι προαιρετική. Όταν στέλνεις ένα email σε συνομιλία του RoarMe, η συνομιλία παίρνει το θέμα, τον αποστολέα, την ημερομηνία, ένα μικρό απόσπασμα (ως 600 χαρακτήρες) και τα συνημμένα που κρατάς (ως 50 MB το καθένα). Ένα task από email αποθηκεύεται στο RoarMe με σύνδεσμο πίσω σε αυτό.</p><p>Ένα μεγάλο συνημμένο που στέλνεται ως link πάει στο RoarTransfer (Cloudflare R2) για τις μέρες που φαίνονται, και μετά σβήνεται.</p><p>Αυτά ακολουθούν τις πολιτικές απορρήτου του RoarMe και του RoarTransfer.</p></div><div class="tile"><h3>Τι δεν κάνουμε</h3><p>Κανένα analytics, κανένας tracker, καμία διαφήμιση, κανένα AI στα email σου. Τίποτα δεν πουλιέται ούτε μοιράζεται.</p></div><div class="tile"><h3>Τα δικαιώματά σου</h3><p>Με βάση τον GDPR μπορείς να ζητήσεις να δεις, να διορθώσεις, να πάρεις ή να διαγράψεις τα δεδομένα σου, και να αρνηθείς τη χρήση τους. Γράψε στο <a href="mailto:lab@themadlions.com">lab@themadlions.com</a> και απαντάμε μέσα σε έναν μήνα. Μπορείς επίσης να κάνεις καταγγελία στην Αρχή Προστασίας Δεδομένων Προσωπικού Χαρακτήρα (<a href="https://www.dpa.gr/" target="_blank" rel="noopener">www.dpa.gr</a>).</p></div><div class="tile"><h3>Αλλαγές</h3><p>Αν αλλάξει αυτή η πολιτική, αλλάζει και η ημερομηνία στην κορυφή, και ό,τι σημαντικό το βλέπεις στην εφαρμογή πριν ισχύσει.</p></div><div class="tile"><h3>Επικοινωνία</h3><p>The Mad Lions, Αθήνα · <a href="mailto:lab@themadlions.com">lab@themadlions.com</a></p></div></div>
+  </section>
+  <section id="terms"><h2><span lang="en">Terms of Use</span><span lang="el">Όροι χρήσης</span></h2>
+    <div class="grid" lang="en"><div class="tile"><h3>Using RoarMail</h3><p>RoarMail is a mail program: you add your own mail accounts and you are responsible for them, and for what you send. Use an app password where your provider asks for one. Follow your mail provider's rules.</p></div><div class="tile"><h3>Your mail is yours</h3><p>We never receive your mail, so we have no rights in it and cannot read it. Do not use RoarMail to send spam or anything illegal.</p></div><div class="tile"><h3>Free, and in beta</h3><p>RoarMail is free and still in beta. It may change, gain or lose features, or stop, and we will try to tell you in good time. If a paid plan ever comes, its price is shown first and nothing is charged without your clear order.</p></div><div class="tile"><h3>No guarantee</h3><p>RoarMail is given as it is. We work hard for it to be right and safe, but we cannot promise it will always work, or work without mistakes. Keep your own copies of anything that matters.</p></div><div class="tile"><h3>Liability</h3><p>As far as the law allows, we are not liable for indirect losses, lost data, lost profit or lost work from using the app. Nothing here limits rights you have as a consumer that cannot be limited by law.</p></div><div class="tile"><h3>Law</h3><p>These terms follow Greek law, and the courts of Athens decide any dispute, unless the law where you live as a consumer says otherwise.</p></div><div class="tile"><h3>Contact</h3><p>The Mad Lions, Athens, Greece · <a href="mailto:lab@themadlions.com">lab@themadlions.com</a></p></div></div><div class="grid" lang="el"><div class="tile"><h3>Η χρήση του RoarMail</h3><p>Το RoarMail είναι πρόγραμμα email: προσθέτεις τους δικούς σου λογαριασμούς και είσαι υπεύθυνος γι’ αυτούς, και για ό,τι στέλνεις. Χρησιμοποίησε app password όπου το ζητά ο πάροχός σου. Ακολούθησε τους κανόνες του παρόχου σου.</p></div><div class="tile"><h3>Τα email σου είναι δικά σου</h3><p>Δεν παίρνουμε ποτέ τα email σου, οπότε δεν έχουμε κανένα δικαίωμα πάνω τους και δεν μπορούμε να τα διαβάσουμε. Μη χρησιμοποιείς το RoarMail για spam ή για κάτι παράνομο.</p></div><div class="tile"><h3>Δωρεάν, και σε beta</h3><p>Το RoarMail είναι δωρεάν και ακόμα σε beta. Μπορεί να αλλάξει, να πάρει ή να χάσει λειτουργίες, ή να σταματήσει, και θα προσπαθούμε να σε ενημερώνουμε έγκαιρα. Αν κάποτε έρθει πληρωμένη έκδοση, βλέπεις πρώτα την τιμή και τίποτα δεν χρεώνεται χωρίς τη δική σου ρητή εντολή.</p></div><div class="tile"><h3>Χωρίς εγγύηση</h3><p>Το RoarMail δίνεται όπως είναι. Δουλεύουμε για να είναι σωστό και ασφαλές, αλλά δεν μπορούμε να υποσχεθούμε ότι θα δουλεύει πάντα, ή χωρίς λάθη. Κράτα δικά σου αντίγραφα για ό,τι μετράει.</p></div><div class="tile"><h3>Ευθύνη</h3><p>Όσο το επιτρέπει ο νόμος, δεν ευθυνόμαστε για έμμεσες ζημιές, χαμένα δεδομένα, χαμένο κέρδος ή χαμένη δουλειά από τη χρήση της εφαρμογής. Τίποτα εδώ δεν περιορίζει δικαιώματα που έχεις ως καταναλωτής και ο νόμος δεν επιτρέπει να περιοριστούν.</p></div><div class="tile"><h3>Δίκαιο</h3><p>Οι όροι αυτοί διέπονται από το ελληνικό δίκαιο, και για κάθε διαφορά αρμόδια είναι τα δικαστήρια της Αθήνας, εκτός αν ο νόμος του τόπου όπου ζεις ως καταναλωτής ορίζει κάτι άλλο.</p></div><div class="tile"><h3>Επικοινωνία</h3><p>The Mad Lions, Αθήνα · <a href="mailto:lab@themadlions.com">lab@themadlions.com</a></p></div></div>
+  </section>
+</main>
+<footer><span>© 2026 The Mad Lions · RoarMail</span><a href="../../legal/"><span lang="en">Every app's policies</span><span lang="el">Οι πολιτικές όλων των εφαρμογών</span></a></footer>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search).get('lang'), l = q
+  try { if (!l) l = localStorage.getItem('tml_site_lang') } catch (e) {}
+  function set(x) { l = x === 'el' ? 'el' : 'en'; document.documentElement.lang = l
+    document.querySelectorAll('[data-lang]').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) }) }
+  document.querySelectorAll('[data-lang]').forEach(function (b) { b.onclick = function () { set(b.dataset.lang); try { localStorage.setItem('tml_site_lang', l) } catch (e) {} } })
+  set(l)
+})()
+</script>
+</body>
+</html>
