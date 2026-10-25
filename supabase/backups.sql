@@ -82,10 +82,10 @@ begin
   return make_backup(my_ws(), 'manual');
 end $$;
 
-revoke all on function snapshot_workspace(uuid) from public;
-revoke all on function make_backup(uuid, text) from public;
-revoke all on function backup_all() from public;
-revoke all on function make_backup_now() from public;
+revoke all on function snapshot_workspace(uuid) from public, anon, authenticated; -- Supabase grants new functions to anon and authenticated directly (security review, 25 Oct)
+revoke all on function make_backup(uuid, text) from public, anon, authenticated; -- Supabase grants new functions to anon and authenticated directly (security review, 25 Oct)
+revoke all on function backup_all() from public, anon, authenticated; -- Supabase grants new functions to anon and authenticated directly (security review, 25 Oct)
+revoke all on function make_backup_now() from public, anon;
 grant execute on function make_backup_now() to authenticated;
 
 alter table backups enable row level security;

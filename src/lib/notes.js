@@ -78,13 +78,15 @@ export async function setNoteSharing(id, { sharedWith, link }) {
 export function cleanHtml(html) {
   if (typeof DOMParser === 'undefined') return ''
   const doc = new DOMParser().parseFromString(`<body>${String(html || '')}</body>`, 'text/html')
-  doc.querySelectorAll('script, style, iframe, frame, object, embed, link, meta, base, form, input, button, textarea, select').forEach((n) => n.remove())
+  doc.querySelectorAll('script, style, iframe, frame, frameset, object, embed, applet, link, meta, base, form, input, button, textarea, select, svg, math, template, noscript').forEach((n) => n.remove())
   doc.querySelectorAll('*').forEach((el) => {
     for (const a of [...el.attributes]) {
       const name = a.name.toLowerCase()
-      const v = String(a.value || '').trim().toLowerCase()
-      if (name.startsWith('on') || name === 'style' && /expression|url\(/.test(v)) el.removeAttribute(a.name)
-      else if ((name === 'href' || name === 'src' || name === 'xlink:href') && (v.startsWith('javascript:') || v.startsWith('vbscript:') || (v.startsWith('data:') && !v.startsWith('data:image/')))) el.removeAttribute(a.name)
+      // spaces and control characters inside a scheme ("jav\tascript:") are dropped before it is read (security review, 25 Oct)
+      const v = String(a.value || '').replace(/[\u0000-\u0020\u007f-\u009f]+/g, '').toLowerCase()
+      if (name.startsWith('on') || name === 'srcdoc' || name === 'formaction' || name === 'style' && /expression|url\(|javascript:/.test(v)) el.removeAttribute(a.name)
+      // a link or a picture may only point to the web, mail, a phone or a picture kept inside the note
+      else if (['href', 'src', 'xlink:href', 'action', 'poster', 'background'].includes(name) && /^[a-z][a-z0-9+.-]*:/.test(v) && !/^(https?:|mailto:|tel:|data:image\/(png|jpe?g|gif|webp);)/.test(v)) el.removeAttribute(a.name)
     }
   })
   return doc.body.innerHTML

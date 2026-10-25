@@ -155,6 +155,9 @@ export async function reopenQuietly({ workspaceId, ref }) {
 /* The client approving or asking for changes. The only write anyone without an account can make. */
 export async function respondToDelivery({ token, name, status, note }) {
   if (!remote) throw new Error('Not available in this mode.')
-  const { error } = await supabase.rpc('share_respond', { p_token: token, p_name: name || '', p_status: status, p_note: note || '' })
+  // a link with a code answers only with that code (supabase/share_safety.sql); it is the one the client typed
+  let pin = ''
+  try { pin = localStorage.getItem(`tml_pin_${token}`) || '' } catch { /* private window */ }
+  const { error } = await supabase.rpc('share_respond', { p_token: token, p_name: name || '', p_status: status, p_note: note || '', ...(pin ? { p_pin: pin } : {}) })
   if (error) throw new Error(error.code === '42883' || error.code === 'PGRST202' ? 'This page is not ready to take replies yet. Ask the production to run supabase/deliveries.sql.' : error.message)
 }

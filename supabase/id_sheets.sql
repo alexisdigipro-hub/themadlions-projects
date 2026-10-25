@@ -57,3 +57,12 @@ create policy id_sheets_write on id_sheets for all to authenticated
 alter table id_sheets add column if not exists thumb text not null default '';
 
 grant select, insert, update, delete on id_people, id_sheets to authenticated;
+
+-- an ID sheet's picture opens only through Database > ID sheets (security review, 25 Oct): the pcloud function asks
+-- this before it opens a file for a project or the library, whose records anyone with edit rights can write
+create or replace function is_id_sheet_file(p_fileid bigint) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from id_sheets where fileid = p_fileid)
+$$;
+revoke all on function is_id_sheet_file(bigint) from public, anon;
+grant execute on function is_id_sheet_file(bigint) to authenticated;

@@ -153,7 +153,7 @@ function Editor({ note, onChange }) {
     const id = note.id
     import('../lib/office/docView.js').then(({ mountDoc }) => {
       if (!live || !host.current) return
-      view = mountDoc(host.current, note.body || '<h1><br></h1>', { onChange: (html) => { start = html; change.current(id, html) } })
+      view = mountDoc(host.current, cleanHtml(note.body) || '<h1><br></h1>', { onChange: (html) => { start = html; change.current(id, html) } })
       start = view.getHtml()
       // a new note opens ready to type
       if (!noteText(note.body).length) setTimeout(() => { view?.focus?.() }, 30)
@@ -505,7 +505,7 @@ export default function Notes({ slot = null }) {
             ? <div className="notes-readonly notes-shared" dangerouslySetInnerHTML={{ __html: cleanHtml(open.body) }} />
             : <Editor key={open.id} note={{ ...open, body: cleanHtml(open.body) }} onChange={onBody} />
         ) : open.deletedAt ? (
-          <div className="notes-readonly" dangerouslySetInnerHTML={{ __html: open.body }} />
+          <div className="notes-readonly" dangerouslySetInnerHTML={{ __html: cleanHtml(open.body) }} />
         ) : (
           <Editor key={open.id} note={open} onChange={onBody} />
         )}
