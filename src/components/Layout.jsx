@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Fragment, Suspense, lazy, useEffect, useRef, useState } from 'react'
-import { can, seesDatabase, useCurrentUser, useStore, viewAsReturnPath, whenMs } from '../lib/store.jsx'
+import { can, seesDatabase, useCurrentUser, useLive, useStore, viewAsReturnPath, whenMs } from '../lib/store.jsx'
 import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
 import { useToast } from './ui.jsx'
@@ -29,7 +29,8 @@ function Logo({ name, subtitle, logo }) {
 /* The skins' bar across the top (chat and you) is gone (Alex, 9 Oct): both are in the sidebar. */
 
 export default function Layout() {
-  const { state, logout, viewAs, setViewAs, replies, sessionId, update } = useStore()
+  const { state, logout, viewAs, setViewAs, sessionId, update } = useStore()
+  const { replies } = useLive()
   const user = useCurrentUser()
   const nav = useNavigate()
   const { pathname } = useLocation()

@@ -1,3 +1,4 @@
+import { readCache, writeCache, clearCache } from './cache.js'
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { remote, supabase } from './supabase.js'
 import { toISODate } from './dates.js'
@@ -253,6 +254,9 @@ function migrate(parsed) {
 
 /* ---------- context ---------- */
 const StoreCtx = createContext(null)
+/* what changes on its own, often, and matters to one or two screens (who is online, client replies, the
+   sync warning, invites): kept apart so a teammate coming online does not redraw every page (useLive) */
+const LiveCtx = createContext(null)
 const AI_KEY = 'tml_ai_key_v1' // in remote mode the AI key stays in this browser only
 const OAI_KEY = 'tml_openai_key_v1'
 
@@ -281,6 +285,18 @@ export const viewAsReturnPath = () => { try { return sessionStorage.getItem(VIEW
    correctly as text. Everything that asks "is this newer than that" goes through here. */
 export const whenMs = (v) => { const n = Date.parse(v || ''); return Number.isFinite(n) ? n : 0 }
 
+// one project changed by fn, the rest of the state passed on as it is
+const withProject = (s, id, fn) => {
+  const i = s.projects.findIndex((x) => x.id === id)
+  if (i < 0) return s
+  const p = structuredClone(s.projects[i])
+  fn(p)
+  p.updatedAt = new Date().toISOString()
+  const projects = s.projects.slice()
+  projects[i] = p
+  return { ...s, projects }
+}
+
 export function StoreProvider({ children }) {
   const [state, setState] = useState(() => (remote ? emptyState() : adapter.load() || emptyState()))
   const [sessionId, setSessionId] = useState(() => (remote ? '' : localStorage.getItem(SESSION_KEY) || ''))
@@ -306,6 +322,12 @@ export function StoreProvider({ children }) {
   const prevRef = useRef(state)
   const timers = useRef({})
   const myWrites = useRef(new Set())
+  /* Opened from this device's copy (lib/cache.js) and not yet refreshed from the server: edits are shown
+     at once but kept here, and sent only on top of the fresh state, so an old copy never overwrites
+     what a teammate saved since. */
+  const stale = useRef(false)
+  const queued = useRef([]) // [id or null, fn]
+  const syncRef = useRef(null)
   // a conversation being written to the server: its first message waits for it (Alex, 11 Oct: the first
   // message to a new person was refused, it reached the server 0.4 s before the conversation did)
 
@@ -333,7 +355,7 @@ export function StoreProvider({ children }) {
         for (const r of Array.isArray(row.responses) ? row.responses : []) out.push({ ...r, token: row.token })
       }
       out.sort((a, b) => whenMs(a.at) - whenMs(b.at))
-      setReplies(out)
+      setReplies((old) => (JSON.stringify(old) === JSON.stringify(out) ? old : out))
     }
     read()
     const timer = setInterval(read, 90000)
@@ -414,8 +436,13 @@ export function StoreProvider({ children }) {
     setInvites(inv.data || [])
     // only administrators read these; before join_requests.sql has run the table is missing, which is fine
     supabase.from('join_requests').select('*').eq('workspace_id', ws).order('created_at').then(({ data, error }) => { if (!error) setJoinRequests(data || []) })
+    let shown = next
+    for (const [id, fn] of queued.current.splice(0)) shown = id ? withProject(shown, id, fn) : fn(structuredClone(shown))
+    stale.current = false
     prevRef.current = next
-    setState(next)
+    if (shown !== next) { syncRef.current?.(next, shown); prevRef.current = shown }
+    setState(shown)
+    return shown
   }, [])
 
   /* Load everything once per sign-in. Supabase hands over a new user object every time it renews
@@ -429,34 +456,62 @@ export function StoreProvider({ children }) {
       setSessionId('')
       setMembership(undefined)
       setReady(true)
+      clearCache()
       return
     }
     if (!authUser) return
     let cancelled = false
+    let retry = null
+    const uid = authUser.id
     ;(async () => {
+      // this device's last copy first, so the screens are there before the server answers
+      if (!prevRef.current.workspace?.id) {
+        const c = await readCache(uid)
+        if (cancelled) return
+        if (c && !prevRef.current.workspace?.id) {
+          const base = emptyState()
+          const cached = { ...base, ...c.state, finance: base.finance, settings: { ...base.settings, ...c.state.settings, aiKey: localStorage.getItem(AI_KEY) || '', openaiKey: localStorage.getItem(OAI_KEY) || '' } }
+          stale.current = true
+          prevRef.current = cached
+          setState(cached)
+          setMembership(c.membership)
+          setSessionId(uid)
+          setReady(true)
+        }
+      }
       try {
         const { data, error } = await supabase.rpc('bootstrap', { p_name: authUser.user_metadata?.name || null })
         if (error) throw error
         if (cancelled) return
         // no data: not on the team; { requested: true }: not on the team, and a request to join was left
         if (!data || data.requested) {
+          clearCache(uid)
+          stale.current = false
+          queued.current = []
+          prevRef.current = emptyState()
+          setState(emptyState())
+          setSessionId('')
           setMembership(null)
           setJoinRequested(!!data?.requested)
           setReady(true)
           return
         }
         setMembership(data)
-        await loadAll(data.workspace_id)
-        setSessionId(authUser.id)
+        const fresh = await loadAll(data.workspace_id)
+        setSessionId(uid)
         setReady(true)
+        if (!cancelled) writeCache(uid, data, fresh)
       } catch (e) {
         console.error(e)
         setSyncError(e.message || String(e))
         setReady(true)
+        // shown from the device's copy: ask again shortly, the edits made meanwhile are waiting for it
+        if (stale.current && !cancelled) retry = setTimeout(() => setBootTick((n) => n + 1), 8000)
       }
     })()
     return () => {
       cancelled = true
+      clearTimeout(retry)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authKey, loadAll, bootTick])
@@ -658,6 +713,24 @@ export function StoreProvider({ children }) {
     actBuf.current[mergeKey] = b
   }
   const PROJECT_KEYS = { title: 'title', status: 'status', category: 'category', client: 'client', director: 'director', producer: 'producer', startDate: 'dates', endDate: 'dates', color: 'colour', coverThumb: 'cover', coverSource: 'cover', coverCrop: 'cover', notes: 'notes', concept: 'concept', script: 'script', scriptVersions: 'script versions', scenes: 'breakdown', shots: 'shot list', shootingDays: 'schedule / call sheets', contacts: 'cast & crew', locations: 'locations', tasks: 'tasks', budget: 'budget', gear: 'equipment', vendors: 'vendors', post: 'post', files: 'files', music: 'music', frozen: 'lock', customStages: 'progress stages', hiddenTabs: 'tabs', shownTabs: 'tabs', chatExcluded: 'chat members', chatMembers: 'chat members' }
+  /* the device's copy follows what is on screen: a few seconds after the last change, and when the app
+     goes to the background (a phone may close it there) */
+  const cacheNow = useRef(null)
+  cacheNow.current = () => {
+    if (!remote || stale.current || !membership || !authUser?.id || !state.workspace?.id) return
+    writeCache(authUser.id, membership, state)
+  }
+  useEffect(() => {
+    if (!remote || stale.current) return undefined
+    const t = setTimeout(() => cacheNow.current?.(), 5000)
+    return () => clearTimeout(t)
+  }, [state])
+  useEffect(() => {
+    const hide = () => { if (document.visibilityState === 'hidden') cacheNow.current?.() }
+    document.addEventListener('visibilitychange', hide)
+    return () => document.removeEventListener('visibilitychange', hide)
+  }, [])
+
   const syncDiff = (prev, next) => {
     if (!remote || !membership) return
     const ws = membership.workspace_id
@@ -881,34 +954,36 @@ export function StoreProvider({ children }) {
     }
   }
 
+  syncRef.current = syncDiff
+
   const api = useMemo(() => {
     // Looking as someone else is a preview and nothing more. Every write is stopped here rather
     // than in each page, so nothing can be saved, posted or logged under their name by accident.
-    const update = (fn) =>
-      viewAs ? undefined : setState((s) => {
+    const update = (fn) => {
+      if (viewAs) return undefined
+      if (stale.current) { queued.current.push([null, fn]); return setState((s) => fn(structuredClone(s))) }
+      return setState((s) => {
         const next = fn(structuredClone(s))
         syncDiff(prevRef.current, next)
         prevRef.current = next
         return next
       })
+    }
     // One project changes, so only that project is copied: the rest of the state (every other
     // project, the chat, finance) is passed on as it is, and the diff below skips anything that
     // is still the very same object without turning it into text. Typing in a project used to
     // copy and compare the whole workspace on every key, which a phone feels.
-    const updateProject = (id, fn) =>
-      viewAs ? undefined : setState((s) => {
-        const i = s.projects.findIndex((x) => x.id === id)
-        if (i < 0) return s
-        const p = structuredClone(s.projects[i])
-        fn(p)
-        p.updatedAt = new Date().toISOString()
-        const projects = s.projects.slice()
-        projects[i] = p
-        const next = { ...s, projects }
+    const updateProject = (id, fn) => {
+      if (viewAs) return undefined
+      if (stale.current) { queued.current.push([id, fn]); return setState((s) => withProject(s, id, fn)) }
+      return setState((s) => {
+        const next = withProject(s, id, fn)
+        if (next === s) return s
         syncDiff(prevRef.current, next)
         prevRef.current = next
         return next
       })
+    }
     const replaceState = (nextState) => {
       if (viewAs) return
       const next = migrate({ ...nextState })
@@ -941,6 +1016,7 @@ export function StoreProvider({ children }) {
             if (error) throw error
           },
           signOut: async () => {
+            await clearCache()
             await supabase.auth.signOut()
             setState(emptyState())
             prevRef.current = emptyState()
@@ -992,17 +1068,12 @@ export function StoreProvider({ children }) {
       ready,
       authUser,
       membership,
-      invites,
-      joinRequests,
       joinRequested,
-      online,
       acceptRequest,
       declineRequest,
       recheckAccess: () => setBootTick((n) => n + 1),
-      syncError,
       viewAs,
       setViewAs,
-      replies,
       auth,
       invite,
       removeInvite,
@@ -1010,13 +1081,17 @@ export function StoreProvider({ children }) {
       login: (id) => setSessionId(id),
       logout: () => { setViewAs(''); return remote ? auth.signOut() : setSessionId('') },
     }
-  }, [state, sessionId, ready, authUser, membership, invites, joinRequests, joinRequested, online, syncError, viewAs, replies])
+  }, [state, sessionId, ready, authUser, membership, joinRequested, viewAs])
+  const live = useMemo(() => ({ online, replies, syncError, invites, joinRequests }), [online, replies, syncError, invites, joinRequests])
 
-  return <StoreCtx.Provider value={api}>{children}</StoreCtx.Provider>
+  return <StoreCtx.Provider value={api}><LiveCtx.Provider value={live}>{children}</LiveCtx.Provider></StoreCtx.Provider>
 }
 
 export function useStore() {
   return useContext(StoreCtx)
+}
+export function useLive() {
+  return useContext(LiveCtx) || {}
 }
 
 export function useCurrentUser() {

@@ -8115,3 +8115,12 @@ html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--
   .ids-thumb { width: 100%; }
   .ids-row .drive-item-tools { width: 100%; justify-content: flex-end; }
 }
+
+/* ---------- phones: frosted glass only where it shows (Alex, 25 Oct: "the hub still feels heavy") ----------
+   Every frosted tile makes the phone blur what is behind it again on each frame of a scroll. On a phone the
+   blur stays on the top bar, the tab bar and the windows and menus (they float over moving content); the
+   tiles and pills on the page keep their colours and edges but not the blur, which over the plain
+   background looked the same. The sliding lens keeps its own (tiny) blur. Desktop untouched. */
+@media (max-width: 820px) {
+  html body main.content *:not(.glass-lens, .chat-lens) { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+}
