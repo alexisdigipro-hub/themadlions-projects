@@ -52,4 +52,8 @@ create policy id_sheets_write on id_sheets for all to authenticated
   with check (workspace_id = my_ws() and my_perm('idsheets') = 'edit'
     and exists (select 1 from id_people p where p.id = person_id and p.workspace_id = my_ws()));
 
+-- the small copy the page shows (25 Oct: the page does not need the full picture, only Download does):
+-- a JPEG data URL at most 560 px on its long side, made in the browser at upload
+alter table id_sheets add column if not exists thumb text not null default '';
+
 grant select, insert, update, delete on id_people, id_sheets to authenticated;

@@ -1,6 +1,6 @@
 // Database > ID sheets (Alex, 25 Oct): photos of people's ID sheets, a folder per person. The rows are in the
 // tables id_people and id_sheets (supabase/id_sheets.sql, the permission "idsheets"); the pictures go to pCloud
-// exactly as they are, never compressed, into <root>/ID sheets/<name>/, through the pcloud Edge Function with the
+// exactly as they are, never compressed, into <root>/ID sheets/<name>/ (the page shows a small copy, thumb), through the pcloud Edge Function with the
 // scope { kind: 'ids' }. In the local build (no database) everything stays in this browser, for trying it out.
 import { remote, supabase } from './supabase.js'
 import { pcloudBlob, pcloudDelete, pcloudUpload } from './pcloud.js'
@@ -18,6 +18,26 @@ export function imageSize(file) {
     img.onerror = () => { ok({ width: null, height: null }); URL.revokeObjectURL(url) }
     img.src = url
   })
+}
+/* the small picture the page shows (Alex, 25 Oct: "it does not need a good resolution online, only the download
+   must be the original"): at most 560 px on its long side, a JPEG at 72%, kept in the sheet's row (thumb). The
+   file in pCloud stays the original; Download and Full size use that. */
+export async function thumbOf(blob) {
+  if (!blob || !/^image\//.test(blob.type || 'image/')) return ''
+  let src = null
+  try { src = await createImageBitmap(blob, { imageOrientation: 'from-image' }) } catch {
+    src = await new Promise((ok) => { const u = URL.createObjectURL(blob); const im = new Image(); im.onload = () => { ok(im); URL.revokeObjectURL(u) }; im.onerror = () => { ok(null); URL.revokeObjectURL(u) }; im.src = u })
+  }
+  if (!src) return ''
+  const w = src.width || src.naturalWidth, h = src.height || src.naturalHeight
+  const k = Math.min(1, 560 / Math.max(w, h))
+  const c = document.createElement('canvas')
+  c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k))
+  const g = c.getContext('2d')
+  g.imageSmoothingQuality = 'high'
+  g.drawImage(src, 0, 0, c.width, c.height)
+  src.close?.()
+  return c.toDataURL('image/jpeg', 0.72)
 }
 const titleOf = (name) => String(name || '').replace(/\.[a-z0-9]{2,5}$/i, '').replace(/[_]+/g, ' ').trim()
 
@@ -56,8 +76,9 @@ const online = {
   },
   async upload(person, file) {
     const dims = await imageSize(file)
+    const thumb = await thumbOf(file).catch(() => '')
     const up = await pcloudUpload({ file, folder: [person.name], scope: SCOPE })
-    const row = { person_id: person.id, fileid: up.fileid, name: up.name || file.name, size: up.size || file.size, width: dims.width, height: dims.height, title: titleOf(file.name), folder: up.folder || '' }
+    const row = { person_id: person.id, fileid: up.fileid, name: up.name || file.name, size: up.size || file.size, width: dims.width, height: dims.height, title: titleOf(file.name), folder: up.folder || '', thumb }
     const { data, error } = await supabase.from('id_sheets').insert(row).select().single()
     // the picture is in pCloud by now; without its row the app cannot show it (it stays in the person's pCloud folder)
     if (error) throw new Error(`${file.name} is in pCloud but could not be listed: ${error.message}`)
@@ -81,20 +102,27 @@ const online = {
   /* pCloud's own file links answer only the address that asked for them (the function's), so a browser
      showing one got a broken picture (Alex, 25 Oct). The picture comes through the function instead, as
      its bytes, and the page shows it from memory: the same file, untouched, a few at a time. */
-  async urls(fileids) {
+  /* the small pictures of sheets uploaded before they had one: made once from the original, and kept in their
+     row when the person may edit, so the next time they come with the list. { [sheet id]: data URL } */
+  async previews(sheets, save) {
     const out = {}
-    const todo = fileids.filter((id) => { if (blobs.has(id)) { out[id] = blobs.get(id); return false } return true })
     let i = 0
     const lane = async () => {
-      while (i < todo.length) {
-        const id = todo[i++]
-        try { const url = URL.createObjectURL(await pcloudBlob(id, SCOPE)); blobs.set(id, url); out[id] = url } catch { /* left out: the card says it could not load */ }
+      while (i < sheets.length) {
+        const s = sheets[i++]
+        try {
+          const thumb = await thumbOf(await pcloudBlob(s.fileid, SCOPE))
+          if (!thumb) continue
+          out[s.id] = thumb
+          if (save) await supabase.from('id_sheets').update({ thumb }).eq('id', s.id)
+        } catch { /* left out: the card says it could not load */ }
       }
     }
-    await Promise.all(Array.from({ length: Math.min(3, todo.length) }, lane))
+    await Promise.all(Array.from({ length: Math.min(3, sheets.length) }, lane))
     return out
   },
-  async download(sheet) {
+  // the original, as it was uploaded: Full size and Download
+  async original(sheet) {
     if (!blobs.has(sheet.fileid)) blobs.set(sheet.fileid, URL.createObjectURL(await pcloudBlob(sheet.fileid, SCOPE)))
     return blobs.get(sheet.fileid)
   },
@@ -124,14 +152,14 @@ const local = {
     const d = read()
     const fileid = Date.now() + Math.floor(Math.random() * 1000)
     d.files[fileid] = await asDataUrl(file)
-    const row = { id: newId(), person_id: person.id, fileid, name: file.name, size: file.size, width: dims.width, height: dims.height, title: titleOf(file.name), doc_date: null, note: '', folder: `ID sheets/${person.name}`, uploaded_at: new Date().toISOString() }
+    const row = { id: newId(), person_id: person.id, fileid, name: file.name, size: file.size, width: dims.width, height: dims.height, title: titleOf(file.name), doc_date: null, note: '', folder: `ID sheets/${person.name}`, thumb: await thumbOf(file).catch(() => ''), uploaded_at: new Date().toISOString() }
     d.sheets.push(row); write(d); return row
   },
   async updateSheet(id, patch) { const d = read(); Object.assign(d.sheets.find((s) => s.id === id) || {}, patch); write(d) },
   async removeSheet(sheet) { const d = read(); d.sheets = d.sheets.filter((s) => s.id !== sheet.id); delete d.files[sheet.fileid]; write(d) },
   async removePerson(person) { const d = read(); d.sheets.filter((s) => s.person_id === person.id).forEach((s) => delete d.files[s.fileid]); d.sheets = d.sheets.filter((s) => s.person_id !== person.id); d.people = d.people.filter((p) => p.id !== person.id); write(d) },
-  async urls(fileids) { const f = read().files; return Object.fromEntries(fileids.filter((id) => f[id]).map((id) => [id, f[id]])) },
-  async download(sheet) { return read().files[sheet.fileid] },
+  async previews() { return {} },
+  async original(sheet) { return read().files[sheet.fileid] },
 }
 
 export const idApi = remote ? online : local
