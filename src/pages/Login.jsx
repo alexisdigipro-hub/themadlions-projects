@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Field, Input } from '../components/ui.jsx'
-import { defaultPermissions, sampleProject, uid, useStore } from '../lib/store.jsx'
+import { defaultPermissions, sampleProject, uid, useLive, useStore } from '../lib/store.jsx'
 
 function Logo({ state }) {
   return (
@@ -17,7 +17,8 @@ function Logo({ state }) {
 
 /* ---------- remote mode: Supabase Auth ---------- */
 function RemoteLogin() {
-  const { state, auth, authUser, membership, joinRequested, recheckAccess, syncError, logout } = useStore()
+  const { state, auth, authUser, membership, joinRequested, recheckAccess, logout } = useStore()
+  const { syncError } = useLive()
   const [mode, setMode] = useState('signin') // signin | signup | reset
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')

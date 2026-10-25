@@ -38,6 +38,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (13 Oct 2026)
+**25 Oct 2026, the hub lighter** (Alex: "it still feels heavy", agreed steps 1, 2, 4, 5, not the lighter update() diff):
+- **Opens at once**: src/lib/cache.js keeps the last state per signed-in person in IndexedDB (no Finance, no AI keys, a week at most). store.jsx shows it before bootstrap/loadAll answer (`stale` ref); edits made meanwhile are shown and queued (`queued`) and sent on top of the fresh state when loadAll arrives, so an old copy never overwrites a teammate's save. Saved 5 s after a change and when the app goes to the background; cleared on sign-out and when bootstrap says the person is off the team. A failed refresh while showing the copy asks again every 8 s.
+- **Fewer redraws**: online, replies, syncError, invites and joinRequests live in their own context (`useLive()`), so presence and the 90 s replies poll no longer redraw every page; replies only change when they really did.
+- **Phones**: no backdrop blur inside `main.content` under 820px (top bar, tab bar, windows and menus keep it; the sliding lens too).
+- Next: the inline pictures (coverThumb, photo/library thumb data URLs) out of the JSON into storage.
+
 - 25 Oct: **Every page and Lab app checked for search** (Alex: "check all pages are declared, with the apps from the Lab"). All real pages were already in sitemap.xml and llms.txt (home, el, aibsent, lab, roarme, roardino app, and lab/roardino, roarmail, roarlist, roarwriter, roartwin; /roarmail/ and /lab/roartransfer/ are redirects, rightly out). Added by `scripts/site-seo.mjs` (`APPS` table): SoftwareApplication JSON-LD between `<!--seo:app-->` markers on each app page (category, systems, free, The Mad Lions as author), the app's own screen (lab/*.jpg) as og:image where there is one, and on the Lab page a CollectionPage with the seven apps (RoarTransfer pointing to roartransfer.com/about/). /roarlist/ (the RoarList web app, an empty shell without JavaScript) left out of the sitemap; its page is /lab/roarlist/. A new app: add it to `APPS` and to the sitemap list in the script.
 
 **25 Oct 2026, security review** (Alex: "check for security holes"). A full read of the SQL, the Edge Functions and the pages. Done:

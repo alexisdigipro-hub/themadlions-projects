@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Act, Badge, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
-import { CATEGORIES, can, emptyProject, nextProjectCode, today, unavailableOn, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
+import { CATEGORIES, can, emptyProject, nextProjectCode, today, unavailableOn, useCurrentUser, useLive, useStore, visibleProjects } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
 import { projectProgress } from '../lib/progress.js'
 import { useCover } from '../components/CoverCropper.jsx'
@@ -163,7 +163,8 @@ export const SORTS = {
 }
 
 export default function Dashboard() {
-  const { state, update, online } = useStore()
+  const { state, update } = useStore()
+  const { online } = useLive()
   const user = useCurrentUser()
   const toast = useToast()
   const [draft, setDraft] = useState(null)

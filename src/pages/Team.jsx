@@ -1,7 +1,7 @@
 import { Fragment, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Act, Badge, Button, Confirm, Field, Input, Modal, PageHead, Select, useToast } from '../components/ui.jsx'
-import { MODULES, MODULE_GROUPS, ROLE_PRESETS, accessEnded, defaultPermissions, presetPermissions, rememberViewAsFrom, uid, useCurrentUser, useStore, whenMs } from '../lib/store.jsx'
+import { MODULES, MODULE_GROUPS, ROLE_PRESETS, accessEnded, defaultPermissions, presetPermissions, rememberViewAsFrom, uid, useCurrentUser, useLive, useStore, whenMs } from '../lib/store.jsx'
 import { fmtDate } from '../lib/dates.js'
 import { initialsOf } from './Profile.jsx'
 
@@ -30,7 +30,8 @@ function lastSeenText(at) {
 }
 
 export default function Team({ embedded = false }) {
-  const { state, update, mode, invites, invite, removeInvite, joinRequests, acceptRequest, declineRequest, setViewAs } = useStore()
+  const { state, update, mode, invite, removeInvite, acceptRequest, declineRequest, setViewAs } = useStore()
+  const { invites = [], joinRequests = [] } = useLive()
   const me = useCurrentUser()
   const toast = useToast()
   const nav = useNavigate()
