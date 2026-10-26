@@ -73,10 +73,10 @@ export const pcloudLink = (fileid, scope, download = false) => call('link', { fi
    function), then the function saves it there and makes a public link for the client. A piece that
    fails is tried once more. onProgress gets 0..1; signal (an AbortController's) stops it. */
 const PIECE = 8 * 1024 * 1024
-/* Several pieces at a time (Alex, 23 Oct: a fast wired line went up at 3 to 20 Mbps, one piece after another): four
-   go up together, each written at its own place in the file, so the line is kept full. If pCloud turns a piece
-   down twice, the rest go one after the other as before, so an upload never breaks over it. */
-const AT_ONCE = 4
+/* One piece at a time again (26 Oct): pCloud now refuses a piece written while another of the same upload is still
+   being written ("Error writing to upload.", 2068; checked with the function pcloud-check), so the four side by side
+   of 23 Oct broke every delivery. A refused piece is still tried again, later each time. */
+const AT_ONCE = 1
 export async function pcloudDeliver(file, { stage, title, sub, nolink }, { onProgress, signal } = {}) {
   const start = await call('deliveryStart', { stage, title, sub })
   const offsets = []
