@@ -91,14 +91,24 @@ export async function pcloudDeliver(file, { stage, title, sub, nolink }, { onPro
     fd.append('offset', String(offset))
     return call('deliveryChunk', fd)
   }
+  /* A piece pCloud turns down (Alex, 26 Oct: "the user cannot upload to pCloud") is tried again, up to five times,
+     a little later each time and one at a time (the queue `again`): the pieces that were already going up side by side
+     used to give up at once and break the whole upload. From the first refusal on, the rest go one after the other. */
+  let again = Promise.resolve()
+  const wait = (ms) => new Promise((ok) => setTimeout(ok, ms))
   const one = async (offset) => {
     try { await send(offset) } catch (e) {
-      if (signal?.aborted) throw e
-      try { await send(offset) } catch (e2) {
-        if (signal?.aborted || lanes === 1) throw e2
-        lanes = 1 // pCloud did not like pieces side by side: one at a time from here
-        await send(offset)
-      }
+      if (signal?.aborted || /signed in|Only people|not allowed/i.test(e.message || '')) throw e
+      lanes = 1
+      const retry = again.then(async () => {
+        for (let t = 1; ; t++) {
+          if (signal?.aborted) throw new Error('Upload stopped.')
+          await wait(700 * t)
+          try { return await send(offset) } catch (e2) { if (t >= 5 || signal?.aborted) throw e2 }
+        }
+      })
+      again = retry.catch(() => {})
+      await retry
     }
     sent += Math.min(PIECE, file.size - offset)
     onProgress?.(Math.min(1, sent / file.size))
