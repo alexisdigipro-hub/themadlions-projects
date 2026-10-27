@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { ACT_ICON, Act, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
 import { deliveryUrl, estimateUrl, getShareRow, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, tokenOf, deckUrl } from '../lib/shares.js'
@@ -98,7 +98,13 @@ export default function Deliveries() {
   const [error, setError] = useState('')
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
-  const [filter, setFilter] = useState('all') // Alex: open on Everything, not just Deliveries
+  const [params] = useSearchParams()
+  const go = useNavigate()
+  const [filter, setFilterRaw] = useState(() => params.get('tab') || 'all') // Alex: open on Everything, not just Deliveries
+  // Roardino is a tab here (Alex, 27 Oct): its frame is the hub's kept one (Layout.jsx), shown while the address
+  // says ?tab=roardino; the other tabs take that away again
+  const setFilter = (k) => { setFilterRaw(k); if (k === 'roardino') go('/share?tab=roardino'); else if (params.get('tab')) go('/share') }
+  useEffect(() => { const t = params.get('tab'); if (t && t !== filter) setFilterRaw(t) }, [params]) // eslint-disable-line react-hooks/exhaustive-deps
   // Tiles or a list, on a computer (Alex, 24 Oct), remembered on this device
   const [look, setLook] = useState(() => { try { return localStorage.getItem('tml_share_look') === 'list' ? 'list' : 'tiles' } catch { return 'tiles' } })
   const pickLook = (v) => { setLook(v); try { localStorage.setItem('tml_share_look', v) } catch { /* private mode */ } }
@@ -373,7 +379,8 @@ export default function Deliveries() {
     })
   }, [all, isAdmin])
   // the Call sheets tab went with the old ordino (Alex, 23 Oct): its links stopped, Roardino sends its own
-  const tabs = [['delivery', 'Deliveries'], ...(isAdmin ? [['estimate', 'Estimates']] : []), ['all', 'Everything']]
+  const tabs = [['delivery', 'Deliveries'], ...(isAdmin ? [['estimate', 'Estimates']] : []), ['all', 'Everything'], ...(remote && can(user, 'callsheets') ? [['roardino', 'Roardino']] : [])]
+  const inRoardino = filter === 'roardino' && tabs.some(([k]) => k === 'roardino')
   const shown = tabs.some(([k]) => k === filter) ? filter : 'all'
   const list = useMemo(() => (shown === 'all' ? groups : groups.filter((g) => g.head.kind === shown)), [groups, shown])
   const counts = { all: groups.length, delivery: groups.filter((g) => g.head.isDelivery).length, estimate: groups.filter((g) => g.head.isEstimate).length, callsheet: groups.filter((g) => g.head.kind === 'callsheet').length }
@@ -496,7 +503,7 @@ export default function Deliveries() {
   }
 
   return (
-    <div className={`deliveries${look === 'list' ? ' share-list' : ''}`}>
+    <div className={`deliveries${look === 'list' ? ' share-list' : ''}${inRoardino ? ' in-roardino' : ''}`}>
       {/* on a phone (Alex, 15 Oct): no title, the filters as a glass capsule and a round + on one line;
           the + offers New delivery and, for administrators, New cost estimation */}
       {mobile && (
@@ -504,7 +511,7 @@ export default function Deliveries() {
           <div className="share-tabs">
             {tabs.map(([k, label]) => (
               <button key={k} type="button" className={shown === k ? 'on' : ''} onClick={(e) => { if (shown !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setFilter(k) }}>
-                {({ 'Call sheets': 'Sheets', Everything: 'All' })[label] || label}<small>{counts[k]}</small>
+                {({ 'Call sheets': 'Sheets', Everything: 'All' })[label] || label}{counts[k] !== undefined && <small>{counts[k]}</small>}
               </button>
             ))}
           </div>
@@ -531,7 +538,7 @@ export default function Deliveries() {
         <nav className="tabs db-tabs">
           {tabs.map(([k, label]) => (
             <button key={k} type="button" className={shown === k ? 'active' : ''} onClick={(e) => { if (shown !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setFilter(k) }}>
-              {label}<small>{counts[k]}</small>
+              {label}{counts[k] !== undefined && <small>{counts[k]}</small>}
             </button>
           ))}
         </nav>

@@ -14,15 +14,26 @@ const localWrite = (rows) => { try { localStorage.setItem(LOCAL, JSON.stringify(
 export const emptyContact = () => ({ id: uid(), name: '', phone: '', phone2: '', email: '', company: '', title: '', notes: '' })
 const clean = (c) => ({ ...emptyContact(), ...c, id: c.id || uid() })
 
+/* Lighter to open (Alex, 27 Oct: "the contacts take a while to load"): the first 1000 come with the total, the rest
+   are asked for all at once instead of one page after the other; and the list is kept for this visit, so going back to
+   Contacts shows it at once while a fresh copy comes in behind it */
+let memo = null
+export const cachedContacts = () => memo
+export const keepContacts = (list) => { if (list) memo = list }
+const PAGE_ROWS = 1000
 export async function loadContacts() {
   if (!supabase) return localRead()
-  const all = []
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase.from('address_book').select('id, data').order('id').range(from, from + 999)
-    if (error) throw new Error(error.code === '42P01' ? 'Run supabase/address_book.sql in the Supabase SQL Editor to switch Contacts on.' : error.message)
-    all.push(...data.map((r) => clean({ ...r.data, id: r.id })))
-    if (data.length < 1000) break
-  }
+  const page = (from, count) => supabase.from('address_book').select('id, data', count ? { count: 'exact' } : undefined).order('id').range(from, from + PAGE_ROWS - 1)
+  const fail = (error) => new Error(error.code === '42P01' ? 'Run supabase/address_book.sql in the Supabase SQL Editor to switch Contacts on.' : error.message)
+  const first = await page(0, true)
+  if (first.error) throw fail(first.error)
+  const rest = []
+  for (let from = PAGE_ROWS; from < (first.count || 0); from += PAGE_ROWS) rest.push(page(from))
+  const more = await Promise.all(rest)
+  const bad = more.find((r) => r.error)
+  if (bad) throw fail(bad.error)
+  const all = [first, ...more].flatMap((r) => r.data).map((r) => clean({ ...r.data, id: r.id }))
+  memo = all
   return all
 }
 

@@ -33,7 +33,7 @@ export default function Layout() {
   const { replies } = useLive()
   const user = useCurrentUser()
   const nav = useNavigate()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
 
   /* When each person was last in the app, so Alex can see it in Settings > Team. Supabase keeps
      the real sign-in time in auth.users, which a browser cannot read, so everyone stamps their
@@ -127,14 +127,15 @@ export default function Layout() {
     { to: '/roarme', label: 'RoarMe', show: remote, icon: 'chat', also: ['/chat'] },
     // Roardino, the ordino maker, in the hub (Alex, 23 Oct): for whoever has the Ordino permission, in the side menu
     // and in a phone's bar, right after RoarMe
-    { to: '/roardino', label: 'Roardino', show: remote && can(user, 'callsheets'), icon: 'callsheets' },
+    // since 27 Oct a tab of Share (Alex); the side menu keeps it only for someone with the Ordino permission but not Share
+    { to: '/roardino', label: 'Roardino', show: remote && can(user, 'callsheets') && !can(user, 'share'), icon: 'callsheets' },
     // RoarList, the shot lists, in the hub (Alex, 27 Oct): for whoever has the Shot list permission; the project's
     // Shotlist tab is gone
     { to: '/roarlist', label: 'RoarList', show: remote && can(user, 'shots'), icon: 'shots' },
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     // Drives is a tab of the Database now (Alex, 10 Oct)
-    { to: '/share', label: 'Share', show: mayShare, icon: 'post', badge: newReplies },
+    { to: '/share', label: 'Share', show: mayShare, icon: 'post', badge: newReplies, also: ['/roardino'] },
     // Invoices is a tab of Finance again (Alex, 10 Oct), so /invoices lights Finance
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance', also: ['/invoices'] },
     // My profile is now the first tab of Settings, on every platform (Alex, 10 Oct)
@@ -198,7 +199,8 @@ export default function Layout() {
   // on a phone a new page comes in with a short slide and its tiles one after another (Alex, 16 Oct);
   // not when a magnetic swipe already brought it in
   // Roardino opens once and then stays, hidden on the other pages, so coming back to it is instant
-  const onRoardino = pathname === '/roardino'
+  // and in Share, as its Roardino tab (Alex, 27 Oct: "I go to Share to make whatever is to be sent")
+  const onRoardino = pathname === '/roardino' || (pathname === '/share' && new URLSearchParams(search).get('tab') === 'roardino')
   const [keepRoardino, setKeepRoardino] = useState(false)
   useEffect(() => { if (onRoardino) setKeepRoardino(true) }, [onRoardino])
   // not for the pages that are a frame (Roardino, RoarList, RoarMe): the slide moved their fixed frame and it jumped
