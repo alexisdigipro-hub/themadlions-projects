@@ -4,6 +4,7 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast
 import { useProject } from '../Project.jsx'
 import { gearCategoriesOf, uid, useStore } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
+import { InfoCard, QuickLinks } from '../../components/InfoCard.jsx'
 
 const GEAR_STATUS = [['needed', 'Needed'], ['quoted', 'Quoted'], ['booked', 'Booked'], ['out', 'Picked up'], ['returned', 'Returned']]
 const emptyItem = (cats) => ({ id: uid(), category: cats[0] || '', item: '', qty: 1, vendor: '', rate: '', days: '', pickup: '', dropoff: '', status: 'needed', notes: '' })
@@ -22,6 +23,9 @@ export default function Gear({ hideEmpty = false, startSignal = 0 }) {
   const [draft, setDraft] = useState(null)
   const [vdraft, setVdraft] = useState(null)
   const [cat, setCat] = useState('')
+  // an item's or a vendor's card, as Contacts' (Alex, 27 Oct)
+  const [cardId, setCardId] = useState('')
+  const [vcardId, setVcardId] = useState('')
   const cur = project.budget?.currency || 'EUR'
   const money = (n) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(Number(n) || 0)
 
@@ -159,38 +163,24 @@ export default function Gear({ hideEmpty = false, startSignal = 0 }) {
             groups.map(([c, items]) => (
               <section key={c} className="gear-group">
                 <h3>{c} <span className="muted">{items.length}</span></h3>
-                <div className="table-wrap">
-                  <table className="table">
-                    <thead>
-                      <tr><th>Item</th><th className="num">Qty</th><th>Vendor</th><th className="num">Rate</th><th className="num">Days</th><th className="num">Cost</th><th>Pickup / return</th><th>Status</th>{editable && <th />}</tr>
-                    </thead>
-                    <tbody>
-                      {items.map((g) => (
-                        <tr key={g.id} className={g.status === 'returned' ? 'dim' : ''}>
-                          <td><strong>{g.item}</strong>{g.notes && <div className="muted small">{g.notes}</div>}</td>
-                          <td className="num">{g.qty}</td>
-                          <td>{g.vendor}</td>
-                          <td className="num">{g.rate ? money(g.rate) : ''}</td>
-                          <td className="num">{g.days}</td>
-                          <td className="num">{g.rate ? money(cost(g)) : ''}</td>
-                          <td className="small">{[g.pickup, g.dropoff].filter(Boolean).join(' → ')}</td>
-                          <td>
-                            {editable ? (
-                              <select className="input select tiny" value={g.status} onChange={(e) => setStatus(g.id, e.target.value)}>
-                                {GEAR_STATUS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                              </select>
-                            ) : GEAR_STATUS.find(([v]) => v === g.status)?.[1]}
-                          </td>
-                          {editable && (
-                            <td className="row-actions">
-                              <button onClick={() => setDraft({ ...g })}>Edit</button>
-                              <Confirm onConfirm={() => edit((p) => (p.gear = p.gear.filter((x) => x.id !== g.id)))} label="Delete">×</Confirm>
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                {/* rows as Contacts' list (Alex, 27 Oct); a tap opens the item's card */}
+                <div className="ab-rows">
+                  {items.map((g) => (
+                    <article key={g.id} className={`ab-row gear-prow${g.status === 'returned' ? ' dim' : ''}`} onClick={() => setCardId(g.id)} role="button" tabIndex={0}>
+                      <span className="ab-two"><strong className="ab-name">{g.item}{Number(g.qty) > 1 && <span className="muted"> ×{g.qty}</span>}</strong>{g.notes && <span className="muted small">{g.notes}</span>}</span>
+                      <span className="ab-cell">{g.vendor && <span className="ab-chip"><i />{g.vendor}</span>}</span>
+                      <span className="ab-cell muted">{[g.rate && `${money(g.rate)} × ${g.days || 1}`].filter(Boolean).join('')}</span>
+                      <span className="ab-cell ab-rate">{g.rate ? money(cost(g)) : ''}</span>
+                      <span className="ab-cell muted small">{[g.pickup, g.dropoff].filter(Boolean).join(' → ')}</span>
+                      <span className="ab-acts" onClick={(e) => e.stopPropagation()}>
+                        {editable ? (
+                          <select className="input select tiny" value={g.status} onChange={(e) => setStatus(g.id, e.target.value)}>
+                            {GEAR_STATUS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                          </select>
+                        ) : <span className="ab-card-in">{GEAR_STATUS.find(([v]) => v === g.status)?.[1]}</span>}
+                      </span>
+                    </article>
+                  ))}
                 </div>
               </section>
             ))
@@ -202,28 +192,56 @@ export default function Gear({ hideEmpty = false, startSignal = 0 }) {
         {vendors.length > 0 && (
         <section className="panel">
           <div className="panel-head"><h2>Vendors</h2></div>
-          <ul className="vendor-list">
+          <div className="ab-rows">
             {vendors.map((v) => (
-              <li key={v.id}>
-                <div>
-                  <strong>{v.name}</strong>
-                  <div className="muted small">{[v.contact, v.phone, v.email].filter(Boolean).join(' · ')}</div>
-                  {v.notes && <div className="muted small">{v.notes}</div>}
-                  <div className="muted small">{gear.filter((g) => g.vendor === v.name).length} items</div>
-                </div>
-                {editable && (
-                  <div className="row-actions">
-                    <button onClick={() => setVdraft({ ...v })}>Edit</button>
-                    <Confirm onConfirm={() => edit((p) => (p.vendors = p.vendors.filter((x) => x.id !== v.id)))} label="Delete">×</Confirm>
-                  </div>
-                )}
-              </li>
-          ))}
-          </ul>
+              <article key={v.id} className="ab-row lib-row" onClick={() => setVcardId(v.id)} role="button" tabIndex={0}>
+                <span className="ab-ava sm" aria-hidden="true">{(v.name || '?').slice(0, 2).toUpperCase()}</span>
+                <strong className="ab-name">{v.name}</strong>
+                <span className="ab-cell muted">{v.contact}</span>
+                <span className="ab-cell" onClick={(e) => e.stopPropagation()}>{v.phone && <a href={`tel:${v.phone}`}>{v.phone}</a>}</span>
+                <span className="ab-cell muted">{gear.filter((g) => g.vendor === v.name).length} items</span>
+                <span />
+              </article>
+            ))}
+          </div>
         </section>
         )}
       </div>
 
+      {(() => {
+        const g = gear.find((x) => x.id === cardId)
+        const v = vendors.find((x) => x.id === vcardId) || (g && vendors.find((x) => x.name === g.vendor))
+        return <>
+          <InfoCard open={!!g} onClose={() => setCardId('')} square glyph="🎥" name={g && `${g.item}${Number(g.qty) > 1 ? ` ×${g.qty}` : ''}`}
+            tags={g && <>
+              {g.category && <span className="ab-chip"><i />{g.category}</span>}
+              <span className="ab-card-in">{GEAR_STATUS.find(([x]) => x === g.status)?.[1]}</span>
+            </>}
+            quick={g && v && <QuickLinks phone={v.phone} email={v.email} />}
+            rows={g ? [
+              ['Vendor', g.vendor && <>{g.vendor}{v?.contact ? <span className="muted"> · {v.contact}</span> : ''}</>],
+              ['Rate', g.rate && `${money(g.rate)} a day × ${g.days || 1}`],
+              ['Cost', g.rate && money(cost(g))],
+              ['Pickup', g.pickup], ['Return', g.dropoff],
+            ] : []}
+            notes={g?.notes}
+            footer={g && editable && <>
+              <Confirm onConfirm={() => { edit((p) => (p.gear = p.gear.filter((x) => x.id !== g.id))); setCardId('') }} label="Delete" className="ab-del">Delete</Confirm>
+              <span className="grow" />
+              <Button variant="primary" onClick={() => { setCardId(''); setDraft({ ...g }) }}>Edit</Button>
+            </>} />
+          <InfoCard open={!!vcardId && !!v} onClose={() => setVcardId('')} square name={v?.name}
+            tags={v && <span className="ab-chip"><i />Vendor · {gear.filter((x) => x.vendor === v.name).length} items</span>}
+            quick={v && <QuickLinks phone={v.phone} email={v.email} />}
+            rows={v ? [['Contact', v.contact], ['Phone', v.phone && <a href={`tel:${v.phone}`}>{v.phone}</a>], ['Email', v.email && <a href={`mailto:${v.email}`}>{v.email}</a>], ['Address', v.address]] : []}
+            notes={v?.notes}
+            footer={v && editable && <>
+              <Confirm onConfirm={() => { edit((p) => (p.vendors = p.vendors.filter((x) => x.id !== v.id))); setVcardId('') }} label="Delete" className="ab-del">Delete</Confirm>
+              <span className="grow" />
+              <Button variant="primary" onClick={() => { setVcardId(''); setVdraft({ ...v }) }}>Edit</Button>
+            </>} />
+        </>
+      })()}
       {modals}
     </div>
   )

@@ -4,6 +4,7 @@ import { useProject } from '../Project.jsx'
 import { uid, useStore } from '../../lib/store.jsx'
 import { coordsFromText } from '../../lib/sun.js'
 import PhotoGrid from '../../components/PhotoGrid.jsx'
+import { InfoCard, QuickLinks } from '../../components/InfoCard.jsx'
 import { locationToLibrary, matchText, sharedLocation } from '../../lib/library.js'
 
 const TYPES = ['Studio', 'Interior', 'Exterior', 'INT. & EXT.', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
@@ -80,74 +81,38 @@ export default function Locations({ hideEmpty = false, startSignal = 0, libraryS
   // open while this card is hidden.
   const modals = (
     <>
-      <Modal open={!!detail} wide title={detail?.name || ''} onClose={() => setDetailFor('')}>
-        {detail && (
-          <div className="stack">
-            {detail.address ? (
-              <iframe className="map" title={detail.name} src={mapSrc(detail.address, state.settings.mapsKey)} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />
-            ) : (
-              <div className="map map-empty muted">Add an address to see the map.</div>
-            )}
-            <div className="row-actions">
-              {detail.address && (
-                <a className="btn btn-ghost btn-sm" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(detail.address)}`} target="_blank" rel="noreferrer">
-                  Open in Maps
-                </a>
-              )}
-              {detail.address && (
-                <a className="btn btn-ghost btn-sm" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(detail.address)}`} target="_blank" rel="noreferrer">
-                  Directions
-                </a>
-              )}
-              {editable && (
-                <>
-                  <Button size="sm" onClick={() => { const d = detail; setDetailFor(''); setDraft({ sceneLocations: [], ...d }) }}>
-                    Edit
-                  </Button>
-                  <Confirm
-                    onConfirm={() => {
-                      edit((p) => {
-                        p.locations = p.locations.filter((x) => x.id !== detail.id)
-                        p.shootingDays.forEach((d) => d.locationId === detail.id && (d.locationId = ''))
-                      })
-                      setDetailFor('')
-                    }}
-                  />
-                </>
-              )}
-            </div>
-            <dl className="details">
-              <dt>Type</dt>
-              <dd>{detail.type}</dd>
-              <dt>Address</dt>
-              <dd>{detail.address || '–'}</dd>
-              {detail.contact && (
-                <>
-                  <dt>Contact</dt>
-                  <dd>
-                    {detail.contact} {detail.phone && <a href={`tel:${detail.phone}`}>{detail.phone}</a>}
-                  </dd>
-                </>
-              )}
-              {detail.sceneLocations?.length > 0 && (
-                <>
-                  <dt>Script sets</dt>
-                  <dd>{detail.sceneLocations.join(', ')}</dd>
-                </>
-              )}
-            </dl>
-            {detail.notes && <p className="notes-text">{detail.notes}</p>}
-            {scenesAt(detail).length > 0 && <p className="small muted">Scenes here: {scenesAt(detail).map((s) => s.number).join(', ')}</p>}
-            <PhotoGrid
-              photos={detail.photos || []}
-              projectId={detail.libraryId ? 'library' : project.id}
-              ownerId={detail.libraryId || detail.id}
-              editable={editable}
-              onChange={(photos) => setLocPhotos(detail, photos)}
-            />
-          </div>
-        )}
-      </Modal>
+      {/* the location's card, as Contacts' (Alex, 27 Oct) */}
+      <InfoCard open={!!detail} onClose={() => setDetailFor('')} wide square glyph="📍"
+        photo={detail?.photos?.[0]?.thumb} name={detail?.name}
+        tags={detail && <>
+          {detail.type && <span className="ab-chip"><i />{detail.type}</span>}
+          {detail.libraryId && <span className="ab-card-in">In the library</span>}
+        </>}
+        quick={detail && <QuickLinks phone={detail.phone} extra={detail.address ? [
+          ['map', `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(detail.address)}`, 'Open in Maps'],
+          ['go', `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(detail.address)}`, 'Directions'],
+        ] : []} />}
+        rows={detail ? [
+          ['Address', detail.address],
+          ['Contact', (detail.contact || detail.phone) && <>{detail.contact} {detail.phone && <a href={`tel:${detail.phone}`}>{detail.phone}</a>}</>],
+          ['Script sets', detail.sceneLocations?.length > 0 && detail.sceneLocations.join(', ')],
+          ['Scenes here', scenesAt(detail).length > 0 && scenesAt(detail).map((s) => s.number).join(', ')],
+        ] : []}
+        notes={detail?.notes}
+        footer={detail && editable && <>
+          <Confirm label="Delete" className="ab-del" onConfirm={() => {
+            edit((p) => {
+              p.locations = p.locations.filter((x) => x.id !== detail.id)
+              p.shootingDays.forEach((d) => d.locationId === detail.id && (d.locationId = ''))
+            })
+            setDetailFor('')
+          }}>Delete</Confirm>
+          <span className="grow" />
+          <Button variant="primary" onClick={() => { const d = detail; setDetailFor(''); setDraft({ sceneLocations: [], ...d }) }}>Edit</Button>
+        </>}>
+        {detail?.address && <iframe className="map" title={detail.name} src={mapSrc(detail.address, state.settings.mapsKey)} loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen />}
+        {detail && <PhotoGrid photos={detail.photos || []} projectId={detail.libraryId ? 'library' : project.id} ownerId={detail.libraryId || detail.id} editable={editable} onChange={(photos) => setLocPhotos(detail, photos)} />}
+      </InfoCard>
 
       <Modal
         open={!!draft}

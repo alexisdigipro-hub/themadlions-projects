@@ -4,6 +4,7 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, useToas
 import { can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
+import { InfoCard, QuickLinks } from '../components/InfoCard.jsx'
 import { DbAdd, DbBar, DbFilter, ListSearch, useFitScroll } from '../components/DbTools.jsx'
 
 // a role's chip key: the same word in any case or accent is one chip
@@ -170,29 +171,29 @@ export default function PeopleAll({ kind, slot }) {
         )}
       </Modal>
 
-      <Modal open={!!target} wide title={target?.name || ''} onClose={() => setDetailFor(null)}>
-        {target && (
-          <div className="stack">
-            <div className="row-actions">
-              {editable && <Button size="sm" onClick={() => { const d = target; setDetailFor(null); setDraft({ ...d }) }}>Edit</Button>}
-              {editable && <Confirm onConfirm={() => { remove(target); setDetailFor(null) }} />}
-            </div>
-            <dl className="details">
-              <dt>{target.kind === 'cast' ? 'Type' : 'Department'}</dt><dd>{target.kind === 'cast' ? (target.role || '–') : target.dept}</dd>
-              {target.kind !== 'cast' && target.role && (<><dt>Role</dt><dd>{target.role}</dd></>)}
-              <dt>Phone</dt><dd>{showContacts && target.phone ? <a href={`tel:${target.phone}`}>{target.phone}</a> : '–'}</dd>
-              <dt>Email</dt><dd>{showContacts && target.email ? <a href={`mailto:${target.email}`}>{target.email}</a> : '–'}</dd>
-              {target.agent && (<><dt>Agent</dt><dd>{target.agent}{target.agentPhone ? ` · ${target.agentPhone}` : ''}</dd></>)}
-              <dt>Used in</dt>
-              <dd>
-                {contactProjects(projects, target.id).length ? contactProjects(projects, target.id).map((p) => <Link key={p.id} className="proj-link" to={`/p/${p.id}/people`} style={{ '--pc': p.color }}>{p.title}</Link>) : <span className="muted">Not in a project yet</span>}
-              </dd>
-            </dl>
-            {target.notes && <p className="notes-text">{target.notes}</p>}
-            <PhotoGrid title={target.kind === 'cast' ? 'Headshots & looks' : 'Photos'} photos={target.photos || []} projectId="library" ownerId={target.id} editable={editable} onChange={(photos) => setPhotos(target.id, photos)} />
-          </div>
-        )}
-      </Modal>
+      {/* the person's card, as Contacts' (Alex, 27 Oct) */}
+      <InfoCard open={!!target} onClose={() => setDetailFor(null)} wide
+        photo={target?.photos?.[0]?.thumb} name={target?.name}
+        tags={target && <>
+          {(target.kind === 'cast' ? target.role : target.dept) && <span className="ab-chip"><i />{target.kind === 'cast' ? target.role : target.dept}</span>}
+          {target.kind !== 'cast' && target.role && <span className="muted">{target.role}</span>}
+          {(target.tags || []).map((t) => <span key={t} className="ab-card-in">{t}</span>)}
+        </>}
+        quick={target && showContacts && <QuickLinks phone={target.phone} email={target.email} />}
+        rows={target ? [
+          ['Phone', showContacts && target.phone && <a href={`tel:${target.phone}`}>{target.phone}</a>],
+          ['Email', showContacts && target.email && <a href={`mailto:${target.email}`}>{target.email}</a>],
+          ['Agent', target.agent && `${target.agent}${target.agentPhone ? ` · ${target.agentPhone}` : ''}`],
+          ['Used in', contactProjects(projects, target.id).length ? <span className="ab-card-links">{contactProjects(projects, target.id).map((p) => <Link key={p.id} className="proj-link" to={`/p/${p.id}`} style={{ '--pc': p.color }}>{p.title}</Link>)}</span> : <span className="muted">Not in a project yet</span>],
+        ] : []}
+        notes={target?.notes}
+        footer={target && editable && <>
+          <Confirm onConfirm={() => { remove(target); setDetailFor(null) }} label="Delete" className="ab-del">Delete</Confirm>
+          <span className="grow" />
+          <Button variant="primary" onClick={() => { const d = target; setDetailFor(null); setDraft({ ...d }) }}>Edit</Button>
+        </>}>
+        {target && <PhotoGrid title={target.kind === 'cast' ? 'Headshots & looks' : 'Photos'} photos={target.photos || []} projectId="library" ownerId={target.id} editable={editable} onChange={(photos) => setPhotos(target.id, photos)} />}
+      </InfoCard>
     </section>
   )
 }

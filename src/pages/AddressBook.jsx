@@ -6,6 +6,7 @@ import { matchText } from '../lib/library.js'
 import { emptyContact, loadContacts, parseContactsFile, removeContacts, sameKey, saveContacts, toBook, toCsv, toVcf } from '../lib/addressBook.js'
 import { download, fmtDate } from '../lib/dates.js'
 import CoverCropper from '../components/CoverCropper.jsx'
+import { QUICK, intl } from '../components/InfoCard.jsx'
 import { compress } from '../lib/photos.js'
 import { centred } from '../lib/coverCrop.js'
 
@@ -23,14 +24,6 @@ const digits9 = (p) => { const d = String(p || '').replace(/\D/g, ''); return d.
 const specialtyOf = (c) => (c.company || '').trim()
 const groupKey = (c) => specialtyOf(c).toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
-// one tap to call or write (Alex, 27 Oct): a Greek number without its country gets +30
-const intl = (p) => { let d = String(p || '').replace(/\D/g, ''); if (d.startsWith('00')) d = d.slice(2); if (d.length === 10 && /^[26]/.test(d)) d = '30' + d; return d }
-const QUICK = {
-  call: <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" /></svg>,
-  wa: <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.6z" /><path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.6-2-1-1 .9a5 5 0 0 1-2.3-2.3l.9-1-1-2z" /></svg>,
-  viber: <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3c5 0 8 2.2 8 7.5S17 18 12 18l-3 3v-3.3C5.6 16.8 4 14.3 4 10.5 4 5.2 7 3 12 3z" /><path d="M13 7.5a3 3 0 0 1 3 3M13 5.5a5 5 0 0 1 5 5" /></svg>,
-  mail: <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m4 7 8 6 8-6" /></svg>,
-}
 // the contact's fields that count when two of them are joined
 const FILL = ['phone', 'phone2', 'email', 'company', 'title']
 const filled = (c) => FILL.filter((k) => c[k]).length + (c.notes ? 1 : 0)

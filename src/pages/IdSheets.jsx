@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Act, Button, Empty, Field, Input, Modal, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { DbAdd, DbBar, DbSearch, useFitScroll } from '../components/DbTools.jsx'
+import { InfoCard } from '../components/InfoCard.jsx'
 import { can, useCurrentUser } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 import { fmtDate } from '../lib/dates.js'
@@ -211,58 +212,60 @@ export default function IdSheets({ slot }) {
       )}
 
       {/* a person in their own window, like a disk: every sheet uploaded for them */}
-      <Modal open={!!opened} title={opened?.name || ''} wide onClose={() => setOpenId('')} footer={<Button variant="ghost" onClick={() => setOpenId('')}>Close</Button>}>
-        {opened && (() => {
-          const mine = sheetsOf(opened.id)
-          const size = mine.reduce((a, s) => a + (s.size || 0), 0)
-          return (
-            <div className="drv-open" style={{ '--c': hue(opened.id) }} onDragOver={(e) => editable && e.preventDefault()} onDrop={(e) => { if (!editable) return; e.preventDefault(); upload(opened, e.dataTransfer.files) }}>
-              <div className="drv-open-head">
-                <span className="drv-chips">
-                  <span className="drv-chip static"><i />{mine.length === 1 ? '1 sheet' : `${mine.length} sheets`}</span>
-                  {size > 0 && <span className="drv-chip static">{kb(size)}</span>}
-                  <span className="drv-chip static">pCloud · ID sheets / {opened.name}</span>
-                </span>
-                {editable && (
-                  <span className="drive-open-acts">
-                    <Act icon="expense" label="Upload" main onClick={() => pick.current?.click()} />
-                    <Act icon="edit" label="Rename" onClick={() => setRenaming(opened.name)} />
-                    <ActDelete label="Delete person" onConfirm={() => removePerson(opened)} />
-                  </span>
-                )}
+      {/* the person's card, as Contacts' (Alex, 27 Oct): the newest picture, how many and where, then their sheets */}
+      {(() => {
+        const mine = opened ? sheetsOf(opened.id) : []
+        const size = mine.reduce((a, s) => a + (s.size || 0), 0)
+        return (
+          <InfoCard open={!!opened} onClose={() => setOpenId('')} wide
+            photo={mine.find((x) => x.thumb)?.thumb} name={opened?.name}
+            tags={opened && <>
+              <span className="ab-chip"><i />{mine.length === 1 ? '1 sheet' : `${mine.length} sheets`}</span>
+              {size > 0 && <span className="muted">{kb(size)}</span>}
+              <span className="ab-card-in">pCloud · ID sheets / {opened.name}</span>
+            </>}
+            notes={opened?.note}
+            footer={opened && editable && <>
+              <ActDelete label="Delete person" onConfirm={() => removePerson(opened)} />
+              <span className="grow" />
+              <Button onClick={() => setRenaming(opened.name)}>Rename</Button>
+              <Button variant="primary" onClick={() => pick.current?.click()}>Upload</Button>
+            </>}>
+            {opened && (
+              <div className="drv-open" style={{ '--c': hue(opened.id) }} onDragOver={(e) => editable && e.preventDefault()} onDrop={(e) => { if (!editable) return; e.preventDefault(); upload(opened, e.dataTransfer.files) }}>
                 <input ref={pick} type="file" accept="image/*,application/pdf" multiple hidden onChange={(e) => { upload(opened, e.target.files); e.target.value = '' }} />
-              </div>
-              {busy && <p className="ids-note busy"><span className="ids-spin" />{busy}</p>}
-              {mine.length ? (
-                <div className="drv-open-list">
-                  {mine.map((s) => (
-                    <div key={s.id} className="drv-row ids-row">
-                      <button type="button" className="ids-thumb" onClick={() => isPicture(s) && openBig(s)} aria-label={`Open ${s.title || s.name} at full size`} style={s.thumb ? { backgroundImage: `url("${s.thumb}")` } : null}>
-                        {!s.thumb && <span className="muted small">{isPicture(s) ? (tried.current.has(s.id) ? 'Loading…' : 'No preview') : (s.name.split('.').pop() || 'file').toUpperCase()}</span>}
-                      </button>
-                      <div className="drv-film-body">
-                        <strong>{s.title || s.name}</strong>
-                        <span className="drv-meta">{[s.doc_date ? day(s.doc_date) : '', s.note].filter(Boolean).join(' · ') || <span className="muted">No date or notes</span>}</span>
-                        <span className="drv-chips">
-                          <span className="drv-chip static">Uploaded {day(s.uploaded_at)}</span>
-                          {s.width ? <span className="drv-chip static">{s.width}×{s.height}</span> : null}
-                          <span className="drv-chip static">{kb(s.size)}</span>
+                {busy && <p className="ids-note busy"><span className="ids-spin" />{busy}</p>}
+                {mine.length ? (
+                  <div className="drv-open-list">
+                    {mine.map((s) => (
+                      <div key={s.id} className="drv-row ids-row">
+                        <button type="button" className="ids-thumb" onClick={() => isPicture(s) && openBig(s)} aria-label={`Open ${s.title || s.name} at full size`} style={s.thumb ? { backgroundImage: `url("${s.thumb}")` } : null}>
+                          {!s.thumb && <span className="muted small">{isPicture(s) ? (tried.current.has(s.id) ? 'Loading…' : 'No preview') : (s.name.split('.').pop() || 'file').toUpperCase()}</span>}
+                        </button>
+                        <div className="drv-film-body">
+                          <strong>{s.title || s.name}</strong>
+                          <span className="drv-meta">{[s.doc_date ? day(s.doc_date) : '', s.note].filter(Boolean).join(' · ') || <span className="muted">No date or notes</span>}</span>
+                          <span className="drv-chips">
+                            <span className="drv-chip static">Uploaded {day(s.uploaded_at)}</span>
+                            {s.width ? <span className="drv-chip static">{s.width}×{s.height}</span> : null}
+                            <span className="drv-chip static">{kb(s.size)}</span>
+                          </span>
+                        </div>
+                        <span className="drive-item-tools">
+                          {isPicture(s) && <Act icon="expand" label="Full size" className="act-sm" onClick={() => openBig(s)} />}
+                          <Act icon="download" label="Download" className="act-sm" onClick={() => download(s)} />
+                          {editable && <Act icon="edit" label="Edit" className="act-sm" onClick={() => setEdit({ id: s.id, title: s.title || '', doc_date: s.doc_date || '', note: s.note || '' })} />}
+                          {editable && <ActDelete small label="Delete" onConfirm={() => removeSheet(s)} />}
                         </span>
                       </div>
-                      <span className="drive-item-tools">
-                        {isPicture(s) && <Act icon="expand" label="Full size" className="act-sm" onClick={() => openBig(s)} />}
-                        <Act icon="download" label="Download" className="act-sm" onClick={() => download(s)} />
-                        {editable && <Act icon="edit" label="Edit" className="act-sm" onClick={() => setEdit({ id: s.id, title: s.title || '', doc_date: s.doc_date || '', note: s.note || '' })} />}
-                        {editable && <ActDelete small label="Delete" onConfirm={() => removeSheet(s)} />}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : <p className="muted">No sheets for {opened.name} yet.{editable ? ' Upload the photos of their ID card, passport or licence, or drop them here.' : ''}</p>}
-            </div>
-          )
-        })()}
-      </Modal>
+                    ))}
+                  </div>
+                ) : <p className="muted">No sheets for {opened.name} yet.{editable ? ' Upload the photos of their ID card, passport or licence, or drop them here.' : ''}</p>}
+              </div>
+            )}
+          </InfoCard>
+        )
+      })()}
 
       {/* the picture at its real size */}
       <Modal open={!!big} title={big ? `${personOf(big.person_id)?.name || ''} · ${big.title || big.name}` : ''} wide className="ids-big" onClose={() => { setBig(null); setActual(false) }}
