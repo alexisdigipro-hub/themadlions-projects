@@ -299,9 +299,6 @@ export default function AddressBook({ slot }) {
           <strong>Contacts</strong> <span className="muted">{list ? list.length : ''}</span> <span className="muted small">· only administrators see them</span>
         </div>
         <div className="toolbar-actions">
-          <span className="segmented small" role="tablist" aria-label="Sort">
-            {[['name', 'Name'], ['new', 'Newest'], ['company', 'Specialty']].map(([v, l]) => <button key={v} type="button" className={sort === v ? 'on' : ''} onClick={() => pickSort(v)}>{l}</button>)}
-          </span>
           {/* × empties the search, as does Escape (Alex, 27 Oct) */}
           <span className="ab-search">
             <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} onKeyDown={(e) => { if (e.key === 'Escape' && q) { setQ(''); setShown(PAGE) } }} placeholder="Search name, phone, email, specialty…" />
@@ -335,15 +332,21 @@ export default function AddressBook({ slot }) {
         </div>
       </DbBar>
 
-      {/* under the top row (Alex, 27 Oct: the search and buttons up on the tabs' line, as every Database tab) */}
+      {/* under the top row (Alex, 27 Oct: the search and buttons up on the tabs' line, as every Database tab): the
+          specialty chips, the order, and the selection */}
         {/* the specialty chips, the most used first; ★ the favourites */}
-        {chips.length > 0 && (
+        <div className="ab-under">
+          {chips.length > 0 && (
           <nav className="chips ab-chips">
             <button type="button" className={`chip${!spec ? ' on' : ''}`} onClick={() => { setSpec(''); setShown(PAGE) }}>All</button>
             {favCount > 0 && <button type="button" className={`chip${spec === '*' ? ' on' : ''}`} onClick={() => { setSpec(spec === '*' ? '' : '*'); setShown(PAGE) }}>★ Favourites <small>{favCount}</small></button>}
             {chips.slice(0, 24).map((x) => <button key={x.k} type="button" className={`chip${spec === x.k ? ' on' : ''}`} onClick={() => { setSpec(spec === x.k ? '' : x.k); setShown(PAGE) }}>{x.label} <small>{x.n}</small></button>)}
           </nav>
-        )}
+          )}
+          <span className="segmented small" role="tablist" aria-label="Sort">
+            {[['name', 'Name'], ['new', 'Newest'], ['company', 'Specialty']].map(([v, l]) => <button key={v} type="button" className={sort === v ? 'on' : ''} onClick={() => pickSort(v)}>{l}</button>)}
+          </span>
+        </div>
         {/* what is done to the ticked contacts at once */}
         {picked.size > 0 && (
           <div className="ab-sel">

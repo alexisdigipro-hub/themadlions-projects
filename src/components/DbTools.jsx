@@ -71,9 +71,11 @@ export function useFitScroll(ready = true) {
       if (extra > 0) { h = Math.max(240, h - extra); el.style.height = `${h}px` }
     }
     fit()
-    const bar = el.closest('.db-page')?.querySelector('.db-top')
+    // again when the top row or what sits above the list (chips, a selection) changes height
     const ro = new ResizeObserver(fit)
+    const bar = el.closest('.db-page')?.querySelector('.db-top')
     if (bar) ro.observe(bar)
+    for (let x = el.previousElementSibling; x; x = x.previousElementSibling) ro.observe(x)
     window.addEventListener('resize', fit)
     return () => { ro.disconnect(); window.removeEventListener('resize', fit) }
   }, [ready])
