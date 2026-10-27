@@ -8776,4 +8776,6 @@ html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='th
   html[data-theme] body .settings-cols .logo-row { display: flex; align-items: center; gap: 10px; }
   html[data-theme] body .settings-cols .logo-row .logo-preview { width: 56px; height: 56px; border-radius: 14px; margin-right: 6px; flex: none; }
   html[data-theme] body .settings-cols .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  html[data-theme] body .settings-cols .field > .btn { align-self: flex-start; }
+  html[data-theme] body .settings-cols:is([data-active='data'], [data-active='team']) > section.panel.wide { margin-top: 16px; }
 }
