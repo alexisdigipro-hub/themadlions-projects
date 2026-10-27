@@ -8169,3 +8169,46 @@ html.pub-est-page[data-public] body, html.pub-est-page body { background: var(--
 .ids-films .ids-tile .drv-poster img { object-fit: contain; background: #0c0d10; }
 .ids-films .ids-tile .drv-poster b { font-size: 34px; }
 .ids-films .ids-tile .drv-film-body { padding: 0 4px 4px; }
+
+/* ===================================================================================================
+   One look for every page (Alex, 27 Oct 2026: "every page the same logic in its layout, buttons, font,
+   the same coherence and aesthetic"; the buttons of the Calendar, RoarList's look as the general guide).
+   Measured on every page before: buttons were 30 to 44 px high in seven font sizes, the tab rows of
+   Organizer, Database, Share, Finance, Settings and Home in small capitals, titles 24 to 32 px. This
+   last layer sets one standard and wins over the page-by-page rules above (hence the !important on the
+   few properties that differed):
+   - text in every control: sentence case, no letter-spacing, semibold;
+   - on a computer: every button and pill 38 px high, 14 px, round ends (the Calendar's), the items of a
+     tab row 32 px inside its 38 px capsule; page titles 28 px bold.
+   On a phone only the capitals and the weight change, so the tab rows still fit the screen.
+   =================================================================================================== */
+html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > button, .chips > .chip, .chips > button, .share-tabs button, .act, .btn) {
+  text-transform: none !important; letter-spacing: normal !important; font-weight: 600 !important;
+}
+@media (min-width: 821px) {
+  html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > button, .chips > .chip, .chips > button, .share-tabs button) {
+    font-size: 14px !important; min-height: 32px; height: auto;
+  }
+  html[data-theme] body main.content :is(.act:not(.act-round):not(.act-sm), .btn:not(.btn-sm):not(.icon-btn):not(.db-add)) {
+    height: 38px !important; min-height: 38px; padding-top: 0; padding-bottom: 0; font-size: 14px !important; border-radius: 999px !important;
+  }
+  html[data-theme] body main.content .btn.btn-sm { font-size: 13px !important; border-radius: 999px !important; }
+  html[data-theme] body main.content :is(.page-head h1, .project-head h1, .rem-head h1, .decks-top h1, .cal-nav h2, h1.page-title) {
+    font-size: 28px !important; font-weight: 700 !important; letter-spacing: -.01em; line-height: 1.15;
+  }
+}
+@media (min-width: 821px) {
+  /* every search line in a page's top row: the same 38 px glass pill (it was 44 px glass here, 38 px solid there) */
+  html[data-theme] body main.content :is(.db-top, .toolbar-actions, .decks-top, .page-actions, .rem-head) input:is([type=search], [placeholder^="Search"]) {
+    height: 38px !important; min-height: 38px; font-size: 14px !important; border-radius: 999px !important;
+    background: color-mix(in srgb, var(--panel) 80%, transparent) !important; border: 1px solid var(--line-soft) !important;
+  }
+  /* round icon buttons in a top row (filter, +, arrows) as the Calendar's arrows: 38 px */
+  html[data-theme] body main.content :is(.db-top, .toolbar-actions, .page-actions) :is(.db-add, .icon-btn, .act-round) {
+    width: 38px !important; height: 38px !important; min-height: 38px; padding: 0 !important;
+  }
+  /* a plain-text button in a toolbar (Add group, Arrow, Edit text, Download .txt) is a pill like the others */
+  html[data-theme] body main.content :is(.toolbar, .toolbar-actions, .page-actions, .script-actions) .btn.btn-ghost {
+    background: color-mix(in srgb, var(--panel) 80%, transparent); border: 1px solid var(--line-soft); padding-left: 16px; padding-right: 16px;
+  }
+}
