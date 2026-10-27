@@ -128,7 +128,11 @@ export default function AddressBook({ slot }) {
           <span className="segmented small" role="tablist" aria-label="Show as">
             {[['cards', 'Cards'], ['list', 'List']].map(([v, l]) => <button key={v} type="button" className={view === v ? 'on' : ''} onClick={() => pickView(v)}>{l}</button>)}
           </span>
-          <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} placeholder="Search name, phone, email, specialty…" />
+          {/* × empties the search, as does Escape (Alex, 27 Oct) */}
+          <span className="ab-search">
+            <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} onKeyDown={(e) => { if (e.key === 'Escape' && q) { setQ(''); setShown(PAGE) } }} placeholder="Search name, phone, email, specialty…" />
+            {q && <button type="button" className="ab-search-x" aria-label="Clear the search" title="Clear" onClick={() => { setQ(''); setShown(PAGE) }}>×</button>}
+          </span>
           {/* how many (Alex, 27 Oct: "with a search, show how many contacts it found") */}
           {list && <span className="ab-count">{q.trim() ? `${found.length} of ${list.length}` : `${list.length} contact${list.length === 1 ? '' : 's'}`}</span>}
           <input ref={fileRef} type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" hidden onChange={(e) => importFile(e.target.files?.[0])} />
