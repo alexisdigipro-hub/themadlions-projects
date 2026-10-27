@@ -42,7 +42,8 @@ export default function AddressBook({ slot }) {
       for (const c of read) { const k = sameKey(c); if (have.has(k)) continue; have.add(k); fresh.push({ ...emptyContact(), ...c, id: uid() }) }
       await saveContacts(fresh)
       setList((l) => [...(l || []), ...fresh])
-      toast(`${fresh.length} contacts imported${read.length > fresh.length ? `, ${read.length - fresh.length} were already here` : ''}`, 'ok')
+      const dup = read.length - fresh.length
+      toast(`${fresh.length} contact${fresh.length === 1 ? '' : 's'} imported${dup ? `, ${dup} ${dup === 1 ? 'was' : 'were'} already here` : ''}`, 'ok')
     } catch (e) { toast(e.message, 'error') } finally { setBusy(false); if (fileRef.current) fileRef.current.value = '' }
   }
 
