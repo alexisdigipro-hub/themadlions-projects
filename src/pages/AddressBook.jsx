@@ -166,11 +166,14 @@ export default function AddressBook({ slot }) {
      - an entry no contact holds (added in Crew, in a project, or moved out of Contacts before 27 Oct) is tied to the
        contact with the same name or mobile, else becomes a new contact. */
   const syncing = useRef(false)
+  const moving = useRef(false)
   const missed = useRef(false) // a change came while saving: look again after
   const [syncTick, setSyncTick] = useState(0)
   useEffect(() => {
     if (!list) return
-    if (syncing.current) { missed.current = true; return }
+    // while + Crew / + Cast is writing, the new entry has no contact yet: waiting keeps the sync from tying it to
+    // another contact of the same name
+    if (syncing.current || moving.current) { missed.current = true; return }
     const lib = state.library.contacts.filter((x) => x.kind === 'crew' || x.kind === 'cast')
     const byId = new Map(lib.map((x) => [x.id, x]))
     const changed = new Map()
@@ -346,6 +349,7 @@ export default function AddressBook({ slot }) {
     if (!todo.length) return toast(cs.length === 1 ? `${cs[0].name} is already in ${where}` : `They are all in ${where} already`, 'ok')
     const held = new Set((list || []).map((c) => c.lib?.[kind]).filter(Boolean))
     const links = new Map()
+    moving.current = true
     update((s) => {
       for (const c of todo) {
         const name = foldName(c.name), ph = digits9(c.phone)
@@ -365,7 +369,10 @@ export default function AddressBook({ slot }) {
       }
       return s
     })
-    try { await saveMany(todo.map((c) => ({ ...c, lib: { ...c.lib, [kind]: links.get(c.id) } }))) } catch (e) { return toast(e.message, 'error') }
+    try { await saveMany(todo.map((c) => ({ ...c, lib: { ...c.lib, [kind]: links.get(c.id) } }))) } catch (e) { return toast(e.message, 'error') } finally {
+      moving.current = false
+      if (missed.current) { missed.current = false; setSyncTick((t) => t + 1) }
+    }
     toast(todo.length === 1 ? `${todo[0].name} is in ${where} now, and still in Contacts` : `${todo.length} added to ${where}, still in Contacts`, 'ok')
   }
   const moveTo = (c, kind) => moveMany([c], kind)
