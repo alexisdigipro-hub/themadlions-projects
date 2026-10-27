@@ -37,6 +37,17 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (27 Oct 2026, security check)
+- Alex asked "are we safe, do we have backups?". Supabase's advisor and a read-only code review were run.
+- Backups: the database had NO scheduled backup (backups.sql never run, pg_cron off). New: supabase/backups_daily.sql (needs backups.sql first): every day 03:00 UTC, every public table with workspace_id, keep 21. pCloud copy (Settings > Data) now daily and on by default (pcloud.js backupDue), the pcloud function keeps the newest 30 dated folders.
+- supabase/security_tighten.sql: signed-in-only functions revoked from anon, trigger functions off the API, fixed search_path on five.
+- supabase/project_guard.sql: a BEFORE UPDATE trigger on projects keeps the budget unless Budget = edit, and chatExcluded / chatMembers / roarme unless administrator (only for role authenticated; RPCs and the server untouched).
+- Edge Functions: pcloud upload needs edit on the project (or Files edit) and refuses Backups / Deliveries / ID sheets / Library folders; google-calendar only the calendar chosen in Settings; ical and maplink team members only, ical checks every redirect, maplink only real google.<country> hosts.
+- RoarMe: roar-hub-signin no longer takes an unconfirmed account with a member's email (supabase/hub-signin-confirmed.sql). Checked: no member's account was taken this way.
+- STATUS: the SQL files and the function deploys above wait for Alex's approval in Supabase (the MCP asks him). Order: hub backups.sql, backups_daily.sql, security_tighten.sql, project_guard.sql; RoarMe hub-signin-confirmed.sql; then deploy pcloud (verify_jwt off), google-calendar, ical, maplink, and RoarMe roar-hub-signin.
+- Alex to do: Authentication > Leaked password protection on, in both projects.
+- Left for later (low): budget still readable by any member who sees the project (needs the budget in its own table); pCloud file links rely on the file id appearing in the project; push endpoints any https host; RoarTransfer IP limits from headers (to verify); notes cleanHtml is hand-written (DOMPurify would need Alex's OK).
+
 ## Where we stopped (27 Oct 2026, last: accent, icons, Settings board, RoarMe see-through)
 - Accent: the picked accent wins over every theme's own (styles.css end, --pick from the accent rules at the top), 20% softer (color-mix 80%); "Theme's own" keeps the theme's colour.
 - Icons: Rounded plus Alex's packs only (Essentials line/solid, Basic UI line/solid, src/components/iconPacks.js, generated); switching theme no longer changes icons.

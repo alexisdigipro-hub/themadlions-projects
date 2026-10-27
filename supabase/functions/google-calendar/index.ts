@@ -136,6 +136,11 @@ Deno.serve(async (req) => {
       const [{ data: ws }, { data: perm }] = await Promise.all([db.rpc('my_ws'), db.rpc('my_perm', { p_module: 'calendar' })])
       if (!ws || perm === 'none' || !perm) return json({ error: 'You do not have the Calendar.' }, 403)
       if (action !== 'pull' && perm !== 'edit') return json({ error: 'You can only look at the Calendar.' }, 403)
+      // only the calendar the administrator chose in Settings, never another one of the connected Google account
+      // (security check, 27 Oct)
+      const { data: w } = await db.from('workspaces').select('settings').eq('id', ws).maybeSingle()
+      const chosen = String((w?.settings as any)?.googleCalendarId || '')
+      if (!chosen || String(body.calendarId || '') !== chosen) return json({ error: 'That is not the team\'s calendar.' }, 403)
     }
 
     if (action === 'connect') {

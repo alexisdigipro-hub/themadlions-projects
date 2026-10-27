@@ -13,7 +13,9 @@
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
-const GOOGLE = /^(maps\.app\.goo\.gl|goo\.gl|g\.co|maps\.google\.[a-z.]+|(www\.)?google\.[a-z.]+|consent\.google\.[a-z.]+)$/i
+// google.<country> only (google.com, google.gr, google.co.uk, google.com.cy), never google.<anything>.<else> (security check, 27 Oct)
+const TLD = '(com|[a-z]{2}|co\\.[a-z]{2}|com\\.[a-z]{2})'
+const GOOGLE = new RegExp(`^(maps\\.app\\.goo\\.gl|goo\\.gl|g\\.co|(maps\\.|www\\.|consent\\.)?google\\.${TLD})$`, 'i')
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -79,6 +81,9 @@ Deno.serve(async (req) => {
   const db = createClient(Deno.env.get('SUPABASE_URL') || '', apikey, { global: { headers: { Authorization: auth } }, auth: { persistSession: false } })
   const { data: userData } = await db.auth.getUser(auth.replace(/^Bearer\s+/i, ''))
   if (!userData?.user?.id) return json({ error: 'Not signed in.' }, 401)
+  // team members only, not any account that signed up
+  const { data: ws } = await db.rpc('my_ws')
+  if (!ws) return json({ error: 'Not a team member.' }, 403)
 
   try {
     const body = await req.json().catch(() => ({}))

@@ -565,8 +565,8 @@ export default function Settings() {
 }
 
 
-/* Settings > Data > Backup to pCloud: Back up now, and Every week (the app does it on its own when an
-   administrator opens it and the last one is a week old, Layout.jsx). */
+/* Settings > Data > Backup to pCloud: Back up now, and Every day (the app does it on its own when an
+   administrator opens it and the last one is a day old, Layout.jsx). */
 function PcloudBackup({ state, update, toast }) {
   const [busy, setBusy] = useState(false)
   const [last, setLast] = useState(null)
@@ -589,8 +589,8 @@ function PcloudBackup({ state, update, toast }) {
       <div className="row-actions wrap">
         <Button variant="primary" onClick={run} disabled={busy}>{busy ? 'Backing up…' : 'Back up to pCloud now'}</Button>
         <label className="check">
-          <input type="checkbox" checked={!!state.settings?.pcloudAutoBackup} onChange={(e) => update((s) => { s.settings = { ...s.settings, pcloudAutoBackup: e.target.checked }; return s })} />
-          Every week, on its own
+          <input type="checkbox" checked={state.settings?.pcloudAutoBackup !== false} onChange={(e) => update((s) => { s.settings = { ...s.settings, pcloudAutoBackup: e.target.checked }; return s })} />
+          Every day, on its own
         </label>
       </div>
       <p className="small muted">{at ? `Last backup: ${new Date(at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}` : 'No backup in pCloud yet.'}</p>
@@ -644,7 +644,7 @@ function BackupsPanel({ toast }) {
           {list.map((b) => (
             <li key={b.id} className="bk-row">
               <span className="bk-when">{new Date(b.taken_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-              <span className="muted small">{b.note === 'weekly' ? 'weekly' : 'by hand'} · {fmtBytes(b.bytes)}</span>
+              <span className="muted small">{b.note === 'manual' ? 'by hand' : b.note} · {fmtBytes(b.bytes)}</span>
               <span className="grow" />
               <Button size="sm" variant="ghost" onClick={() => get(b)} disabled={!!busy}>{busy === String(b.id) ? 'Preparing…' : 'Download'}</Button>
             </li>
