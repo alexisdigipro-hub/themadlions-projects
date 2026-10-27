@@ -93,7 +93,25 @@ export const ICON_SETS = [
   ['bold', 'Bold'],
   ['rounded', 'Rounded'],
   ['duo', 'Duotone'],
+  // five new looks to try (Alex, 27 Oct: "find nicer, different, more 2026 packs"), drawn by styles.css html[data-icons]
+  ['glass', 'Liquid glass'], // Rounded, each main shape filled with a glass gradient of the accent and a soft glow
+  ['neon', 'Neon'], // Classic, a fine line in the accent that glows
+  ['tile', 'App tiles'], // Rounded, each in its own small tinted rounded square, as a phone's settings
+  ['gradient', 'Gradient'], // Classic, the line painted from the accent to violet
+  ['sharp', 'Sharp'], // Classic, square ends and corners, a precise Swiss line
 ]
+const ROUNDED_SETS = new Set(['rounded', 'duo', 'glass', 'tile'])
+/* the gradients the Liquid glass and Gradient icons are painted with, once in the page (their colours follow the
+   accent through styles.css .ico-defs stop) */
+function ensureDefs() {
+  if (typeof document === 'undefined' || document.getElementById('ico-defs')) return
+  const box = document.createElement('div')
+  box.innerHTML = '<svg id="ico-defs" class="ico-defs" width="0" height="0" aria-hidden="true" style="position:absolute"><defs>'
+    + '<linearGradient id="ico-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" class="g1"/><stop offset="1" class="g2"/></linearGradient>'
+    + '<linearGradient id="ico-glass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="s1"/><stop offset="1" class="s2"/></linearGradient>'
+    + '</defs></svg>'
+  document.body.append(box.firstChild)
+}
 const ICON_KEY = 'tml_icons'
 const read = () => { try { const v = localStorage.getItem(ICON_KEY); return ICON_SETS.some(([k]) => k === v) ? v : 'classic' } catch { return 'classic' } }
 let current = typeof window === 'undefined' ? 'classic' : read()
@@ -104,12 +122,13 @@ export function applyIconSet(id) {
   current = ICON_SETS.some(([k]) => k === id) ? id : 'classic'
   try { localStorage.setItem(ICON_KEY, current) } catch {}
   document.documentElement.dataset.icons = current
+  ensureDefs()
   subs.forEach((f) => f())
   return current
 }
 const subscribe = (f) => { subs.add(f); return () => subs.delete(f) }
 const useIconSet = () => useSyncExternalStore(subscribe, () => current, () => current)
-const drawingFor = (set, k) => ((set === 'rounded' || set === 'duo') && ROUNDED[k]) || CLASSIC[k]
+const drawingFor = (set, k) => (ROUNDED_SETS.has(set) && ROUNDED[k]) || CLASSIC[k]
 
 function SetIcon({ k }) {
   const set = useIconSet()
@@ -119,6 +138,7 @@ function SetIcon({ k }) {
 
 /* A few icons in one set, whatever the app's own, for the picker in Settings. */
 export function IconPreview({ set, keys }) {
+  ensureDefs()
   return <span className="icon-preview" data-icons-preview={set}>{keys.map((k) => <span key={k}>{drawingFor(set, k)?.()}</span>)}</span>
 }
 

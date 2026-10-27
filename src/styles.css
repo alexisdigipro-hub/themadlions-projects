@@ -48,28 +48,30 @@ html[data-theme='light'] {
   --sidebar-bg: #ffffff;
   color-scheme: light;
 }
-/* Accent options (Settings → Display) */
-html[data-accent='amber'] { --accent: #c9932f; --accent-ink: #1c1608; }
-html[data-accent='red'] { --accent: #c8503f; --accent-ink: #ffffff; }
-html[data-accent='slate'] { --accent: #3f5578; --accent-ink: #ffffff; }
-html[data-accent='ink'] { --accent: #1f2430; --accent-ink: #ffffff; }
-/* lilac: a shade deeper on the light theme so white text stays readable on buttons, a shade
-   lighter on the dark theme so it still reads as lilac against the dark panels */
-html[data-accent='lilac'] { --accent: #7a5ec7; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='lilac'] { --accent: #a78fe0; --accent-ink: #1a1530; }
-/* five more accents (Alex): each a deeper tone on light and a lighter one on dark, with matching ink */
-html[data-accent='green'] { --accent: #3f8f5f; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='green'] { --accent: #6cc48f; --accent-ink: #0f2318; }
-html[data-accent='teal'] { --accent: #2b8a93; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='teal'] { --accent: #5fc3cb; --accent-ink: #0c2426; }
-html[data-accent='blue'] { --accent: #3b7dd8; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='blue'] { --accent: #7fb0f0; --accent-ink: #0e1b2e; }
-html[data-accent='rose'] { --accent: #c4547f; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='rose'] { --accent: #e592b4; --accent-ink: #2e1220; }
-html[data-accent='orange'] { --accent: #d9762b; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='orange'] { --accent: #f0a45f; --accent-ink: #2a1706; }
-html[data-theme='light'][data-accent='ink'] { --accent: #1f2430; }
-html[data-theme='dark'][data-accent='ink'] { --accent: #ece9e2; --accent-ink: #17181c; }
+/* Accent options (Settings → Display). Metallic and fresher since 27 Oct (Alex: "more metallic, fresher"): each a
+   brighter, slightly cool metal on the dark looks and a deeper polished tone on the light ones, with --accent-metal,
+   a sheen of the same colour for the swatches and the accent buttons */
+html[data-accent='amber'] { --accent: #a8833a; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='amber'] { --accent: #e4c47c; --accent-ink: #1d1708; }
+html[data-accent='red'] { --accent: #d23b31; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='red'] { --accent: #ff5d52; --accent-ink: #ffffff; }
+html[data-accent='slate'] { --accent: #4f6684; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='slate'] { --accent: #a9bcd6; --accent-ink: #121a26; }
+html[data-accent='lilac'] { --accent: #6b55d6; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='lilac'] { --accent: #b8a7ff; --accent-ink: #19132e; }
+html[data-accent='green'] { --accent: #1f9b72; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='green'] { --accent: #7fe8c2; --accent-ink: #0b2219; }
+html[data-accent='teal'] { --accent: #13879a; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='teal'] { --accent: #72e3f0; --accent-ink: #082429; }
+html[data-accent='blue'] { --accent: #2f6fe0; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='blue'] { --accent: #86b8ff; --accent-ink: #0b1a30; }
+html[data-accent='rose'] { --accent: #b9675b; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='rose'] { --accent: #f2ad9e; --accent-ink: #2b1410; }
+html[data-accent='orange'] { --accent: #c4642b; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='orange'] { --accent: #f59f68; --accent-ink: #2a1506; }
+html[data-accent='ink'] { --accent: #2a2f3a; --accent-ink: #ffffff; }
+html[data-theme='dark'][data-accent='ink'] { --accent: #e7eaf0; --accent-ink: #14161b; }
+html { --accent-metal: linear-gradient(135deg, color-mix(in srgb, var(--accent) 55%, #fff) 0%, var(--accent) 42%, color-mix(in srgb, var(--accent) 70%, #000) 100%); }
 
 * {
   box-sizing: border-box;
@@ -8636,3 +8638,29 @@ html[data-theme] body :is(input.search, .input.search, input[type=search], .rem-
   html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions > :is(.ab-search, .search-clear-wrap) { flex: 0 1 200px; width: 200px; max-width: 200px; min-width: 130px; }
   html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions > .segmented { margin-left: 0 !important; }
 }
+
+/* the swatches in Settings > Display as polished metal: the sheen of each colour (Alex, 27 Oct) */
+.accent-swatches .swatch .dot { background: linear-gradient(135deg, color-mix(in srgb, var(--sw) 50%, #fff) 0%, var(--sw) 45%, color-mix(in srgb, var(--sw) 70%, #000) 100%) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 2px 6px rgba(0, 0, 0, .25); }
+
+/* Five new icon looks (Alex, 27 Oct), each on the menu (html[data-icons]) and in Settings' picker (data-icons-preview) */
+.ico-defs .g1 { stop-color: var(--accent); }
+.ico-defs .g2 { stop-color: #9b7bff; }
+.ico-defs .s1 { stop-color: color-mix(in srgb, var(--accent) 85%, #fff); stop-opacity: .75; }
+.ico-defs .s2 { stop-color: var(--accent); stop-opacity: .12; }
+/* Liquid glass: the main shape filled with glass, a soft glow */
+:is(html[data-icons='glass'], .icon-preview[data-icons-preview='glass']) svg.ico { stroke-width: 1.7; }
+:is(html[data-icons='glass'], .icon-preview[data-icons-preview='glass']) svg.ico .duo { fill: url(#ico-glass); }
+html[data-icons='glass'] .sidenav a.active svg.ico, .icon-preview[data-icons-preview='glass'] svg.ico { filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 45%, transparent)); }
+/* Neon: a fine line in the accent that glows */
+:is(html[data-icons='neon'], .icon-preview[data-icons-preview='neon']) svg.ico { stroke-width: 1.4; color: var(--accent); filter: drop-shadow(0 0 2px color-mix(in srgb, var(--accent) 80%, transparent)) drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 45%, transparent)); }
+html[data-icons='neon'] .sidenav a:not(.active) svg.ico { opacity: .75; }
+/* App tiles: each icon in a small tinted rounded square */
+:is(html[data-icons='tile'], .icon-preview[data-icons-preview='tile']) svg.ico { width: 14px; height: 14px; padding: 4px; box-sizing: content-box; border-radius: 7px; stroke-width: 2; color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent); }
+html[data-icons='tile'] .sidenav a.active svg.ico { color: var(--accent-ink); background: var(--accent-metal, var(--accent)); box-shadow: none; }
+.icon-preview[data-icons-preview='tile'] svg.ico { width: 14px; height: 14px; }
+/* Gradient: the line from the accent to violet */
+:is(html[data-icons='gradient'], .icon-preview[data-icons-preview='gradient']) svg.ico { stroke: url(#ico-grad); stroke-width: 1.9; }
+:is(html[data-icons='gradient'], .icon-preview[data-icons-preview='gradient']) svg.ico [fill='currentColor'] { fill: url(#ico-grad); }
+/* Sharp: square ends and corners, a precise line */
+:is(html[data-icons='sharp'], .icon-preview[data-icons-preview='sharp']) svg.ico { stroke-width: 1.6; stroke-linecap: square; stroke-linejoin: miter; }
+:is(html[data-icons='sharp'], .icon-preview[data-icons-preview='sharp']) svg.ico :is(path, rect, circle, ellipse) { stroke-linecap: square; stroke-linejoin: miter; }
