@@ -3,7 +3,7 @@ import { Button, Confirm, Empty, Field, Input, Modal, Textarea, useToast } from 
 import { DbAdd, DbBar, useFitScroll } from '../components/DbTools.jsx'
 import { uid, useStore } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
-import { emptyContact, loadContacts, parseContactsFile, removeContacts, sameKey, saveContacts, toBook, toCsv, toVcf } from '../lib/addressBook.js'
+import { cachedContacts, emptyContact, keepContacts, loadContacts, parseContactsFile, removeContacts, sameKey, saveContacts, toBook, toCsv, toVcf } from '../lib/addressBook.js'
 import { download, fmtDate } from '../lib/dates.js'
 import CoverCropper from '../components/CoverCropper.jsx'
 import { QUICK, intl } from '../components/InfoCard.jsx'
@@ -18,6 +18,8 @@ import { centred } from '../lib/coverCrop.js'
 // the first letters of the name (a number or an emoji makes none: then a phone glyph)
 const initials = (n) => (n || '').split(/\s+/).map((x) => (x.match(/\p{L}/u) || [])[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '☏'
 const PAGE = 200
+// one Greek collator for every sort: localeCompare with a locale made a new one on each of ~20,000 comparisons
+const EL = new Intl.Collator('el', { sensitivity: 'base' })
 const foldName = (n) => String(n || '').trim().toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ')
 const digits9 = (p) => { const d = String(p || '').replace(/\D/g, ''); return d.length >= 9 ? d.slice(-9) : '' }
 // the specialty, for the order and the groups: the same word in any case or accent is one group
@@ -72,7 +74,7 @@ function mergeInto(main, others) {
 export default function AddressBook({ slot }) {
   const { state, update } = useStore()
   const toast = useToast()
-  const [list, setList] = useState(null)
+  const [list, setList] = useState(() => cachedContacts()) // shown at once when Contacts was open before in this visit
   const [error, setError] = useState('')
   const [q, setQ] = useState('')
   // the order (Alex, 27 Oct: "add sorting"): by name, newest first, or grouped by specialty; kept per device.
@@ -114,7 +116,8 @@ export default function AddressBook({ slot }) {
     } catch (e) { toast(e.message, 'error') }
   }
 
-  useEffect(() => { loadContacts().then(setList).catch((e) => { setError(e.message); setList([]) }) }, [])
+  useEffect(() => { loadContacts().then(setList).catch((e) => { setError(e.message); setList((l) => l || []) }) }, [])
+  useEffect(() => keepContacts(list), [list])
 
   // on a computer the list scrolls in its own box, so the top row stays as it was and never moves (Alex, 27 Oct)
   const scrollRef = useFitScroll(list === null)
@@ -125,9 +128,9 @@ export default function AddressBook({ slot }) {
     .sort((a, b) => {
       // the favourites first, in every order (Alex, 27 Oct)
       if (!!a.fav !== !!b.fav) return a.fav ? -1 : 1
-      const byName = a.name.localeCompare(b.name, 'el', { sensitivity: 'base' })
+      const byName = EL.compare(a.name, b.name)
       if (sort === 'new') return (b.addedAt || '').localeCompare(a.addedAt || '') || byName
-      if (sort === 'company') return (!a.company - !b.company) || specialtyOf(a).localeCompare(specialtyOf(b), 'el', { sensitivity: 'base' }) || byName
+      if (sort === 'company') return (!a.company - !b.company) || EL.compare(specialtyOf(a), specialtyOf(b)) || byName
       return byName
     }), [list, q, sort, spec])
 
@@ -140,7 +143,7 @@ export default function AddressBook({ slot }) {
       if (!m.has(k)) m.set(k, { k, n: 0, names: new Map() })
       const g = m.get(k); g.n++; g.names.set(specialtyOf(c), (g.names.get(specialtyOf(c)) || 0) + 1)
     }
-    return [...m.values()].map((g) => ({ k: g.k, n: g.n, label: [...g.names.entries()].sort((a, b) => b[1] - a[1])[0][0] })).sort((a, b) => b.n - a.n || a.label.localeCompare(b.label, 'el'))
+    return [...m.values()].map((g) => ({ k: g.k, n: g.n, label: [...g.names.entries()].sort((a, b) => b[1] - a[1])[0][0] })).sort((a, b) => b.n - a.n || EL.compare(a.label, b.label))
   }, [list])
   // every specialty to pick from in the form: those in use (most used first), then the usual crew roles
   const specChoices = useMemo(() => {
