@@ -8243,7 +8243,7 @@ html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > b
 .ab-row.ab-in:hover, .ab-tile.ab-in:hover { background: color-mix(in srgb, var(--accent) 14%, var(--raised)); }
 .ab-count { flex: none; padding: 0 12px; height: 32px; display: inline-flex; align-items: center; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); background: color-mix(in srgb, var(--text) 6%, transparent); white-space: nowrap; }
 .ab-rows { display: flex; flex-direction: column; gap: 6px; }
-.ab-row { display: grid; grid-template-columns: 22px 32px minmax(160px, 1.3fr) minmax(120px, 1fr) minmax(140px, 1.2fr) minmax(120px, 1fr) 132px 156px; align-items: center; gap: 14px; padding: 14px 14px; /* 25% taller than the first version (Alex, 27 Oct) */ border-radius: 12px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); cursor: pointer; transition: background .2s, border-color .2s; }
+.ab-row { display: grid; grid-template-columns: 22px 32px minmax(160px, 1.3fr) minmax(120px, 1fr) minmax(140px, 1.2fr) minmax(120px, 1fr) 132px 176px; align-items: center; gap: 14px; padding: 14px 14px; /* 25% taller than the first version (Alex, 27 Oct) */ border-radius: 12px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); cursor: pointer; transition: background .2s, border-color .2s; }
 .ab-row:hover { background: var(--raised); border-color: color-mix(in srgb, var(--accent) 35%, var(--line-soft)); }
 .ab-row .ab-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ab-cell { min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -8492,3 +8492,6 @@ html[data-theme] body .ab-card .modal-foot .ab-del.btn-danger { color: #fff; bac
   html[data-theme] body .db-slot .ab-bar .ab-search { flex: 1 1 320px; max-width: 460px; }
   html[data-theme] body .db-slot .ab-bar .ab-export { margin-left: auto; }
 }
+/* Contacts: + Crew / ✓ Crew (in it already, accent; a second tap takes them out, they stay in Contacts) */
+html[data-theme] body .ab-lib.on:not(.btn-danger) { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line-soft)); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+html[data-theme] body .ab-lib.btn-danger { color: #fff; background: #e5484d; border-color: transparent; white-space: nowrap; }
