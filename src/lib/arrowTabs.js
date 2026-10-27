@@ -24,3 +24,25 @@ export function useArrowTabs(ref) {
     return () => window.removeEventListener('keydown', on)
   }, [ref])
 }
+
+/* ↑ and ↓ on a computer step through the side menu's pages (Alex, 27 Oct), by the same rules as above. They no longer
+   scroll the page; the wheel, the trackpad, Page Up / Page Down and Space still do. `ref` holds the side menu. */
+export function useArrowPages(ref) {
+  useEffect(() => {
+    const on = (e) => {
+      if ((e.key !== 'ArrowUp' && e.key !== 'ArrowDown') || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey || e.defaultPrevented) return
+      if (typing(document.activeElement) || document.querySelector('.modal-backdrop')) return
+      if (window.matchMedia?.('(max-width: 820px)').matches) return
+      const menu = ref.current
+      if (!menu || !menu.isConnected) return
+      const items = [...menu.querySelectorAll('a')]
+      const at = items.findIndex((n) => n.classList.contains('active'))
+      const to = items[at + (e.key === 'ArrowDown' ? 1 : -1)]
+      if (at < 0 || !to) return
+      e.preventDefault()
+      to.click()
+    }
+    window.addEventListener('keydown', on)
+    return () => window.removeEventListener('keydown', on)
+  }, [ref])
+}
