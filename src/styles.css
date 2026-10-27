@@ -51,26 +51,26 @@ html[data-theme='light'] {
 /* Accent options (Settings → Display). Metallic and fresher since 27 Oct (Alex: "more metallic, fresher"): each a
    brighter, slightly cool metal on the dark looks and a deeper polished tone on the light ones, with --accent-metal,
    a sheen of the same colour for the swatches and the accent buttons */
-html[data-accent='amber'] { --accent: #a8833a; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='amber'] { --accent: #e4c47c; --accent-ink: #1d1708; }
-html[data-accent='red'] { --accent: #d23b31; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='red'] { --accent: #ff5d52; --accent-ink: #ffffff; }
-html[data-accent='slate'] { --accent: #4f6684; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='slate'] { --accent: #a9bcd6; --accent-ink: #121a26; }
-html[data-accent='lilac'] { --accent: #6b55d6; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='lilac'] { --accent: #b8a7ff; --accent-ink: #19132e; }
-html[data-accent='green'] { --accent: #1f9b72; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='green'] { --accent: #7fe8c2; --accent-ink: #0b2219; }
-html[data-accent='teal'] { --accent: #13879a; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='teal'] { --accent: #72e3f0; --accent-ink: #082429; }
-html[data-accent='blue'] { --accent: #2f6fe0; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='blue'] { --accent: #86b8ff; --accent-ink: #0b1a30; }
-html[data-accent='rose'] { --accent: #b9675b; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='rose'] { --accent: #f2ad9e; --accent-ink: #2b1410; }
-html[data-accent='orange'] { --accent: #c4642b; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='orange'] { --accent: #f59f68; --accent-ink: #2a1506; }
-html[data-accent='ink'] { --accent: #2a2f3a; --accent-ink: #ffffff; }
-html[data-theme='dark'][data-accent='ink'] { --accent: #e7eaf0; --accent-ink: #14161b; }
+html[data-accent='amber'] { --accent: #a8833a; --accent-ink: #ffffff; --pick: #a8833a; --pick-ink: #ffffff; }
+html[data-theme='dark'][data-accent='amber'] { --accent: #e4c47c; --accent-ink: #1d1708; --pick: #e4c47c; --pick-ink: #1d1708; }
+html[data-accent='red'] { --accent: #d23b31; --accent-ink: #ffffff; --pick: #d23b31; --pick-ink: #ffffff; }
+html[data-theme='dark'][data-accent='red'] { --accent: #ff5d52; --accent-ink: #ffffff; --pick: #ff5d52; --pick-ink: #ffffff; }
+html[data-accent='slate'] { --accent: #4f6684; --accent-ink: #ffffff; --pick: #4f6684; --pick-ink: #ffffff; }
+html[data-theme='dark'][data-accent='slate'] { --accent: #a9bcd6; --accent-ink: #121a26; --pick: #a9bcd6; --pick-ink: #121a26; }
+html[data-accent='lilac'] { --accent: #6b55d6; --accent-ink: #ffffff; --pick: #6b55d6; --pick-ink: #ffffff; }
+html[data-theme='dark'][data-accent='lilac'] { --accent: #b8a7ff; --accent-ink: #19132e; --pick: #b8a7ff; --pick-ink: #19132e; }
+html[data-accent='green'] { --accent: #1f9b72; --accent-ink: #ffffff; --pick: #1f9b72; --pick-ink: #ffffff; }
+html[data-theme='dark'][data-accent='green'] { --accent: #7fe8c2; --accent-ink: #0b2219; --pick: #7fe8c2; --pick-ink: #0b2219; }
+html[data-accent='teal'] { --accent: #13879a; --accent-ink: #ffffff; --pick: #13879a; --pick-ink: #ffffff; }
+html[data-theme='dark'][data-accent='teal'] { --accent: #72e3f0; --accent-ink: #082429; --pick: #72e3f0; --pick-ink: #082429; }
+html[data-accent='blue'] { --accent: #2f6fe0; --accent-ink: #ffffff; --pick: #2f6fe0; --pick-ink: #ffffff; }
+html[data-theme='dark'][data-accent='blue'] { --accent: #86b8ff; --accent-ink: #0b1a30; --pick: #86b8ff; --pick-ink: #0b1a30; }
+html[data-accent='rose'] { --accent: #b9675b; --accent-ink: #ffffff; --pick: #b9675b; --pick-ink: #ffffff; }
+html[data-theme='dark'][data-accent='rose'] { --accent: #f2ad9e; --accent-ink: #2b1410; --pick: #f2ad9e; --pick-ink: #2b1410; }
+html[data-accent='orange'] { --accent: #c4642b; --accent-ink: #ffffff; --pick: #c4642b; --pick-ink: #ffffff; }
+html[data-theme='dark'][data-accent='orange'] { --accent: #f59f68; --accent-ink: #2a1506; --pick: #f59f68; --pick-ink: #2a1506; }
+html[data-accent='ink'] { --accent: #2a2f3a; --accent-ink: #ffffff; --pick: #2a2f3a; --pick-ink: #ffffff; }
+html[data-theme='dark'][data-accent='ink'] { --accent: #e7eaf0; --accent-ink: #14161b; --pick: #e7eaf0; --pick-ink: #14161b; }
 html { --accent-metal: linear-gradient(135deg, color-mix(in srgb, var(--accent) 55%, #fff) 0%, var(--accent) 42%, color-mix(in srgb, var(--accent) 70%, #000) 100%); }
 
 * {
@@ -8758,3 +8758,18 @@ html[data-skin='roarlist'][data-theme][data-accent] .drv-risk:not(.none) {
 }
 html[data-skin='roarlist'][data-theme][data-accent] .drv-risk.on:not(.none) { background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 40%, transparent), color-mix(in srgb, var(--accent) 22%, transparent)) !important; }
 html[data-skin='roarlist'][data-theme][data-accent] .drv-risk:not(.none) b { color: var(--lit-ink); }
+
+/* The accent you pick wins over the theme's own (Alex, 27 Oct: "I picked another accent and the menu stays red");
+   "Theme's own" keeps the theme's colour. --pick is the picked colour (top of this file). */
+html[data-skin][data-skin][data-theme][data-accent]:not([data-accent='theme']) {
+  --accent: var(--pick); --accent-ink: var(--pick-ink);
+  --skin-grad: linear-gradient(180deg, color-mix(in srgb, var(--pick) 78%, #fff), var(--pick));
+  --gl-glow: color-mix(in srgb, var(--pick) 35%, transparent);
+}
+html[data-skin='roarlist'][data-skin][data-theme][data-accent]:not([data-accent='theme']) {
+  --gl-active: color-mix(in srgb, var(--pick) 18%, transparent);
+  --rl-lit-edge: color-mix(in srgb, var(--pick) 60%, transparent);
+  --rl-halo: 0 0 24px color-mix(in srgb, var(--pick) 24%, transparent);
+}
+html[data-skin='roarlist'][data-skin][data-theme][data-accent]:not([data-accent='theme']) .input:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pick) 22%, transparent); }
+html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='theme']) { --hover-tint: color-mix(in srgb, var(--pick) 5%, transparent); }
