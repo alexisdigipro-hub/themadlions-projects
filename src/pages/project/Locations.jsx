@@ -274,17 +274,19 @@ export default function Locations({ hideEmpty = false, startSignal = 0, libraryS
       {project.locations.length === 0 ? (
         <Empty title="No locations yet">Add the studio, real locations, base camp and the nearest hospital. Each one gets a map and goes on the call sheet.</Empty>
       ) : (
-        <div className="people-grid compact">
+        // the rows of Contacts' list, 70% taller for the picture (Alex, 27 Oct); a tap opens the map and details
+        <div className="ab-rows">
           {project.locations.map((l) => (
-            <article key={l.id} className="person loc-card" onClick={() => setDetailFor(l.id)} role="button" tabIndex={0}>
-              <div className="person-photo" aria-hidden="true">
-                {l.photos?.[0]?.thumb ? <img src={l.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(l.name) || '📍'}</span>}
-              </div>
-              <div className="person-body">
-                <strong>{l.name}{l.libraryId && <span className="lib-badge" title="Shared in the company library">library</span>}</strong>
-                <div className="small muted">{[l.type, l.address].filter(Boolean).join(' · ') || 'No address yet'}</div>
-                {scenesAt(l).length > 0 && <div className="small muted">{scenesAt(l).length} scenes</div>}
-              </div>
+            <article key={l.id} className="ab-row tall-row loc-row" onClick={() => setDetailFor(l.id)} role="button" tabIndex={0}>
+              <span className="ab-thumb" aria-hidden="true">{l.photos?.[0]?.thumb ? <img src={l.photos[0].thumb} alt="" /> : <b>{initials(l.name) || '📍'}</b>}</span>
+              <span className="ab-two"><strong className="ab-name">{l.name}{l.libraryId && <span className="lib-badge" title="Shared in the company library">library</span>}</strong>{scenesAt(l).length > 0 && <span className="muted small">{scenesAt(l).length} scene{scenesAt(l).length === 1 ? '' : 's'}</span>}</span>
+              <span className="ab-cell">{l.type && <span className="ab-chip"><i />{l.type}</span>}</span>
+              <span className="ab-cell muted">{l.address || 'No address yet'}</span>
+              <span className="ab-cell" onClick={(e) => e.stopPropagation()}>{l.contact}{l.phone && <> {l.contact ? '· ' : ''}<a href={`tel:${l.phone}`}>{l.phone}</a></>}</span>
+              <span className="ab-acts" onClick={(e) => e.stopPropagation()}>
+                {l.address && <a className="btn btn-default btn-sm" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.address)}`} target="_blank" rel="noreferrer">Map</a>}
+                {editable && <button type="button" className="btn btn-default btn-sm" onClick={() => setDraft({ ...l })}>Edit</button>}
+              </span>
             </article>
           ))}
         </div>

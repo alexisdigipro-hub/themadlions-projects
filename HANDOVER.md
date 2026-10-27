@@ -41,7 +41,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Contacts: features 1 to 6 (duplicates, select many, quick call/WhatsApp/Viber/email, specialty chips, specialties cleanup, favourites; `fav` on the contact's data, no SQL). Bar on the tabs' line with a ⋯ menu; chips and order under it. List only.
 - Crew, Cast, Equipment (Database) and Project Database Crew/Cast: Contacts' rows (.ab-row.lib-row), List only; the Cards/List switch is gone. The lists scroll inside their own box (DbTools useFitScroll) so the top row never moves and keeps its look (Alex: the glass sticky band was darker and wrong).
 - Project: Project Database and Script & Breakdown are Overview's sections (tabs.js onOverview; Project.jsx barTabs / ctx.sections; Overview renders People and Script hideEmpty with Upload / Paste script pills). Their tabs are gone; old links (/script, /people, /breakdown, /music, /gear, /locations) land on Overview. Edit details > Tabs still switches either section off.
-- Not yet as list: the project's Locations (cards with photos) and the project's Equipment (table with status): ask Alex.
+- Locations (LocationsAll, project/Locations) and ID sheets: Contacts' list, rows 70% taller (.ab-row.tall-row, .ab-thumb 116x80). Not yet as list: the project's Equipment (table with status).
 
 ## Where we stopped (13 Oct 2026)
 

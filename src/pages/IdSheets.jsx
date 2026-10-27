@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Act, Button, Empty, Field, Input, Modal, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
-import { DbAdd, DbBar, DbSearch } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbSearch, useFitScroll } from '../components/DbTools.jsx'
 import { can, useCurrentUser } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 import { fmtDate } from '../lib/dates.js'
@@ -45,6 +45,8 @@ export default function IdSheets({ slot }) {
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   const pick = useRef(null)
+  // one list as Contacts, its rows 70% taller for the picture (Alex, 27 Oct), in a scroll box under a steady top row
+  const scrollRef = useFitScroll(people === null)
 
   // the small pictures come with the list (thumb); a sheet from before they existed gets one made once
   const fill = useCallback(async (all) => {
@@ -127,44 +129,36 @@ export default function IdSheets({ slot }) {
     try { await idApi.removePerson(p); setOpenId(''); toast(`${p.name} deleted`, 'ok'); await load() } catch (e) { toast(e.message, 'error') }
   }
 
-  // a poster: the newest picture, else the initials on the person's colour
-  const poster = (pic, name, color, size = '') => (
-    <span className={`drv-poster ${size}`} style={{ '--c': color }} aria-hidden="true">
-      {pic ? <img src={pic} alt="" /> : <b>{initials(name)}</b>}
-    </span>
-  )
   const personChip = (p) => (
     <button key={p.id} type="button" className="drv-chip" style={{ '--c': hue(p.id) }} onClick={(e) => { e.stopPropagation(); setOpenId(p.id) }} title={`Open ${p.name}`}>
       <i />{p.name}
     </button>
   )
+  // the picture (or the initials on the person's colour) in a row of Contacts' list, 70% taller (Alex, 27 Oct)
+  const thumb = (pic, name, color) => <span className="ab-thumb" style={{ '--c': color }} aria-hidden="true">{pic ? <img src={pic} alt="" /> : <b>{initials(name)}</b>}</span>
   const personTile = (p) => {
     const mine = sheetsOf(p.id)
     return (
-      <article key={p.id} className="drv-film ids-tile" onClick={() => setOpenId(p.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') setOpenId(p.id) }}>
-        {poster(mine.find((x) => x.thumb)?.thumb, p.name, hue(p.id))}
-        <div className="drv-film-body">
-          <strong>{p.name}</strong>
-          <span className="drv-meta">{[mine.length === 1 ? '1 sheet' : `${mine.length} sheets`, mine.length ? `last ${day(mine[0].uploaded_at)}` : 'empty folder', p.note].filter(Boolean).join(' · ')}</span>
-          <span className="drv-chips">
-            {mine.slice(0, 3).map((s) => <span key={s.id} className="drv-chip static">{s.title || s.name}</span>)}
-            {mine.length > 3 && <span className="drv-badge ok">+{mine.length - 3}</span>}
-            {!mine.length && <span className="drv-badge warn">No sheets yet</span>}
-          </span>
-        </div>
+      <article key={p.id} className="ab-row tall-row ids-row" onClick={() => setOpenId(p.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') setOpenId(p.id) }}>
+        {thumb(mine.find((x) => x.thumb)?.thumb, p.name, hue(p.id))}
+        <span className="ab-two"><strong className="ab-name">{p.name}</strong><span className="muted small">{[mine.length === 1 ? '1 sheet' : `${mine.length} sheets`, mine.length ? `last ${day(mine[0].uploaded_at)}` : 'empty folder'].join(' · ')}</span></span>
+        <span className="ab-cell ids-chips">
+          {mine.slice(0, 3).map((s) => <span key={s.id} className="ab-chip"><i />{s.title || s.name}</span>)}
+          {mine.length > 3 && <span className="muted small"> +{mine.length - 3}</span>}
+          {!mine.length && <span className="muted small">No sheets yet</span>}
+        </span>
+        <span className="ab-cell muted">{p.note}</span>
       </article>
     )
   }
   const sheetTile = (s) => {
     const p = personOf(s.person_id)
     return (
-      <article key={s.id} className="drv-film ids-tile" onClick={() => (isPicture(s) ? openBig(s) : setOpenId(s.person_id))} role="button" tabIndex={0}>
-        {poster(s.thumb, s.title || s.name, hue(s.person_id))}
-        <div className="drv-film-body">
-          <strong>{s.title || s.name}</strong>
-          <span className="drv-meta">{[s.doc_date ? day(s.doc_date) : '', s.note, `uploaded ${day(s.uploaded_at)}`].filter(Boolean).join(' · ')}</span>
-          <span className="drv-chips">{p && personChip(p)}<span className="drv-chip static">{kb(s.size)}</span></span>
-        </div>
+      <article key={s.id} className="ab-row tall-row ids-row" onClick={() => (isPicture(s) ? openBig(s) : setOpenId(s.person_id))} role="button" tabIndex={0}>
+        {thumb(s.thumb, s.title || s.name, hue(s.person_id))}
+        <span className="ab-two"><strong className="ab-name">{s.title || s.name}</strong><span className="muted small">{[s.doc_date ? day(s.doc_date) : '', `uploaded ${day(s.uploaded_at)}`, kb(s.size)].filter(Boolean).join(' · ')}</span></span>
+        <span className="ab-cell">{p && personChip(p)}</span>
+        <span className="ab-cell muted">{s.note}</span>
       </article>
     )
   }
@@ -204,13 +198,15 @@ export default function IdSheets({ slot }) {
             <span><b>{stats.size ? kb(stats.size) : '–'}</b><small>in pCloud, full quality</small></span>
             <span><b>{stats.last ? day(stats.last) : '–'}</b><small>last upload</small></span>
           </div>
+          <div className="ab-scroll" ref={scrollRef}>
           {searching || view === 'sheets' ? (
             (view === 'sheets' ? shownSheets : shownPeople).length ? (
-              <div className="drv-films ids-films">{view === 'sheets' ? shownSheets.map(sheetTile) : shownPeople.map(personTile)}</div>
+              <div className="ab-rows">{view === 'sheets' ? shownSheets.map(sheetTile) : shownPeople.map(personTile)}</div>
             ) : <Empty title="Nothing found">{`Nothing matches "${q}". Try a name, or what the sheet is.`}</Empty>
           ) : (
-            <div className="drv-films ids-films">{shownPeople.map(personTile)}</div>
+            <div className="ab-rows">{shownPeople.map(personTile)}</div>
           )}
+          </div>
         </>
       )}
 
