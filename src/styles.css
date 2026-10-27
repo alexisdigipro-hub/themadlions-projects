@@ -8261,8 +8261,11 @@ html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > b
   .db-slot .ab-bar .toolbar-actions { flex: 1; justify-content: flex-end; flex-wrap: wrap; }
   html[data-theme] body main.content .db-slot .ab-bar .ab-search .input.search { flex: 1 1 auto; min-width: 0; }
 }
-.ab-acts .ab-del { width: 30px; height: 30px; border-radius: 50%; color: var(--muted); }
+.ab-acts .ab-del { min-width: 30px; width: auto; height: 30px; padding: 0 9px; border-radius: 999px !important; color: var(--muted); white-space: nowrap; }
+/* armed, it reads "Confirm delete": a red pill as wide as its words (it ran out of the small circle; Alex, 27 Oct) */
+.ab-acts .ab-del.btn-danger { padding: 0 12px; color: #fff; background: #e5484d; border-color: transparent; }
 .ab-acts .ab-del:hover { color: #ff5a5a; }
+.ab-acts .ab-del.btn-danger:hover { color: #fff; filter: brightness(1.08); }
 @media (max-width: 820px) {
   .ab-grid { grid-template-columns: minmax(0, 1fr); }
   .ab-ava { width: 40px; height: 40px; }
