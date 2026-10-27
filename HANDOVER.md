@@ -37,6 +37,13 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (27 Oct 2026, last: accent, icons, Settings board, RoarMe see-through)
+- Accent: the picked accent wins over every theme's own (styles.css end, --pick from the accent rules at the top), 20% softer (color-mix 80%); "Theme's own" keeps the theme's colour.
+- Icons: Rounded plus Alex's packs only (Essentials line/solid, Basic UI line/solid, src/components/iconPacks.js, generated); switching theme no longer changes icons.
+- Settings: each card has data-k; every tab has a set order in pairs of equal height (grid + order), long lists across (styles.css "Settings and Usage laid out like a board"). Alex happy with it ("τώρα μάλιστα").
+- Database warning number cards and one-copy films wear the accent. Drives' first series wears the accent.
+- RoarMe in the hub is see-through (hub .roarme-page transparent; roarme wearHubLook makes html/body transparent; both sides need the same color-scheme). To check live: no white or black box behind RoarMe.
+
 ## Where we stopped (27 Oct 2026, late night: Settings, profile, New project freshened)
 - Settings > Display: themes Light, Dark, Violet night, Teal slate, Ember removed (skin.js liveTheme moves old choices on); accents renamed as metals; icons: the coloured looks were tried and removed (icons.jsx RETIRED moves them to Rounded); then (Alex) only Rounded plus his packs: Essentials line/solid and Basic UI line/solid (iconPacks.js, generated from his zips: Essentials SVGs by mapping, Basic UI cut out of BasicUIIcons.ai by grid cell; Solid details cut with a per-icon mask). His Basic Arrows pack is coloured gradient arrows only, not used. Everything else moves to Rounded (icons.jsx RETIRED). Text size in steps 92% to 120% (html[data-text-size], zoom; old 'large' = 110).
 - Settings: glass cards, quiet uppercase labels, the same 16 px gap between fields and under every card title (last blocks of styles.css), switches as pill capsules, Budget categories as soft group cards (.bcat-*). Never set `display` on `.settings-cols > section.panel`: it shows every tab's cards.
