@@ -436,7 +436,8 @@ export default function Deliveries() {
     return () => window.removeEventListener('message', on)
   }, [])
   const toRoardino = (msg) => { try { document.querySelector('iframe.roardino-frame')?.contentWindow?.postMessage({ type: 'roardino:do', ...msg }, window.location.origin) } catch { /* the frame is not there */ } }
-  const RD_LABELS = { all: 'All', next: 'Upcoming', sent: 'Sent', draft: 'Drafts', past: 'Past' }
+  // no filters of its own here (Alex, 27 Oct: "delete All, Upcoming, Sent, Drafts, Past"): all the ordinos, the search
+  useEffect(() => { if (inRoardino && rd?.view === 'home' && rd.current && rd.current !== 'all') toRoardino({ filter: 'all' }) }, [inRoardino, rd?.view, rd?.current]) // eslint-disable-line react-hooks/exhaustive-deps
   const shown = tabs.some(([k]) => k === filter) ? filter : 'all'
   const list = useMemo(() => (shown === 'all' ? groups : groups.filter((g) => g.head.kind === shown))
     .filter((g) => matchText(q, g.head.name, g.head.sub, g.head.badge, g.head.version, ...g.people.map((r) => `${r.data?.recipient?.name || ''} ${r.data?.recipient?.email || ''}`))), [groups, shown, q])
@@ -600,9 +601,6 @@ export default function Deliveries() {
           ))}
         </nav>
         {inRoardino && rd?.view === 'home' && <>
-          <nav className="tabs db-tabs share-rd-filters" aria-label="Ordinos">
-            {(rd.filters || []).map(([k, n]) => <button key={k} type="button" className={rd.current === k ? 'active' : ''} onClick={() => { setRd({ ...rd, current: k }); toRoardino({ filter: k }) }}>{RD_LABELS[k] || k}<small>{n}</small></button>)}
-          </nav>
           <span className="share-search"><ListSearch value={rdQ} onChange={(e) => { setRdQ(e.target.value); toRoardino({ search: e.target.value }) }} placeholder="" /></span>
           {rd.canEdit && <span className="share-new rd"><Act icon="plus" label="New ordino" main onClick={() => toRoardino({ create: true })} /></span>}
         </>}
