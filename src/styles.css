@@ -8550,3 +8550,8 @@ html[data-theme] body .deliv-file-acts .deliv-file-x.btn-danger { color: #fff; b
   html[data-theme] body .deliveries.share-list .deliv-row.is-shut { opacity: .72; }
   html[data-theme] body .deliveries.share-list .deliv-row.is-shut:hover { opacity: 1; }
 }
+/* Share's search on the left, right after the tabs, on every tab Roardino too (Alex, 27 Oct); New at the right end */
+@media (min-width: 821px) {
+  html[data-theme] body .share-dtop .share-search { margin-left: 0; }
+  html[data-theme] body .share-dtop .share-search + .share-new, html[data-theme] body .share-dtop .share-new { margin-left: auto; }
+}
