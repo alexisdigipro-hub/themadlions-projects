@@ -5534,17 +5534,7 @@ html:is([data-skin='glassdark'], [data-skin='roarlist'])[data-theme] .chat-box[d
 
 /* Icon sets (Alex, 8 Oct): Thin and Bold are the Classic drawings with another line, Duotone
    tints the main shape of the Rounded drawings. svg.ico is every icon of components/icons.jsx. */
-html[data-icons='thin'] svg.ico { stroke-width: 1.3; }
-html[data-icons='bold'] svg.ico { stroke-width: 2.4; }
-html[data-icons='duo'] svg.ico .duo { fill: currentColor; fill-opacity: .22; }
-html[data-icons='duo'] .sidenav a.active svg.ico .duo { fill: var(--accent); fill-opacity: .35; }
 /* the picker's samples show their own set, whatever the app's */
-html .icon-preview[data-icons-preview] svg.ico { stroke-width: 1.8; }
-html .icon-preview[data-icons-preview] svg.ico .duo { fill: none; }
-html .icon-preview[data-icons-preview='thin'] svg.ico { stroke-width: 1.3; }
-html .icon-preview[data-icons-preview='bold'] svg.ico { stroke-width: 2.4; }
-html .icon-preview[data-icons-preview='rounded'] svg.ico, html .icon-preview[data-icons-preview='duo'] svg.ico { stroke-width: 1.9; }
-html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; fill-opacity: .22; }
 .icon-sets { display: flex; flex-wrap: wrap; gap: 10px; }
 .icon-set { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 14px 10px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--panel); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
 .icon-set.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
@@ -8647,16 +8637,6 @@ html[data-theme] body :is(input.search, .input.search, input[type=search], .rem-
 /* the swatches in Settings > Display as polished metal: the sheen of each colour (Alex, 27 Oct) */
 .accent-swatches .swatch .dot { background: linear-gradient(135deg, color-mix(in srgb, var(--sw) 50%, #fff) 0%, var(--sw) 45%, color-mix(in srgb, var(--sw) 70%, #000) 100%) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 2px 6px rgba(0, 0, 0, .25); }
 
-/* Monochrome icon looks easier to tell apart (Alex, 27 Oct), on the menu (html[data-icons]) and in Settings' picker
-   (each preview shows its own look, whatever the app's) */
-html[data-icons='roundbold'] svg.ico, html .icon-preview[data-icons-preview='roundbold'] svg.ico { stroke-width: 2.4; }
-html[data-icons='large'] svg.ico { width: 21px; height: 21px; stroke-width: 2; }
-html[data-icons='ring'] svg.ico { width: 16px; height: 16px; padding: 3px; box-sizing: content-box; border-radius: 50%; stroke-width: 2.1; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 55%, transparent); }
-html[data-icons='ring'] .sidenav a.active svg.ico { background: color-mix(in srgb, currentColor 16%, transparent); box-shadow: inset 0 0 0 1.5px currentColor; }
-html[data-icons='picto'] svg.ico, html .icon-preview[data-icons-preview='picto'] svg.ico { stroke-width: 2.1; }
-html .icon-preview[data-icons-preview] svg.ico { width: 20px; height: 20px; padding: 0; border-radius: 0; box-shadow: none; background: none; }
-html body .icon-preview[data-icons-preview='large'] svg.ico { width: 23px; height: 23px; stroke-width: 2; }
-html body .icon-preview[data-icons-preview='ring'] svg.ico { width: 17px; height: 17px; padding: 3px; box-sizing: content-box; border-radius: 50%; stroke-width: 2.1; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 55%, transparent); }
 
 /* Settings, a person's profile and the project form freshened (Alex, 27 Oct: "Settings feel out of the hub's look and
    layout; tidy every tab; the New project window; the profiles: no needless gaps, a nicer layout"). One recipe, the

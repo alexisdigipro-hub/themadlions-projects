@@ -11,7 +11,7 @@ export const localLook = () => {
   const html = document.documentElement
   let theme = '', accent = ''
   try { theme = localStorage.getItem('tml_theme') || ''; accent = localStorage.getItem('tml_accent') || '' } catch {}
-  return { theme, accent: accent || html.dataset.accent || 'amber', icons: html.dataset.icons || 'classic', font: currentFont() }
+  return { theme, accent: accent || html.dataset.accent || 'amber', icons: html.dataset.icons || 'rounded', font: currentFont() }
 }
 
 export function applyTeamLook(look) {

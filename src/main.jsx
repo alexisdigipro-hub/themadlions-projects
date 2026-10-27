@@ -42,7 +42,7 @@ try {
   // starts on it too.
   if (localStorage.getItem('tml_theme_default') !== DEFAULT_THEME) {
     localStorage.setItem('tml_theme', DEFAULT_THEME)
-    localStorage.setItem('tml_icons', SKIN_ICONS[DEFAULT_THEME] || 'classic')
+    localStorage.setItem('tml_icons', SKIN_ICONS[DEFAULT_THEME] || 'rounded')
     localStorage.setItem('tml_theme_default', DEFAULT_THEME)
   }
   // TML Chat (chat.html, the chat's own home-screen app) starts in Glass dark, chat colours
@@ -57,7 +57,7 @@ try {
   applyThemeChoice(localStorage.getItem('tml_theme') || DEFAULT_THEME)
   document.documentElement.dataset.accent = localStorage.getItem('tml_accent') || 'amber'
   applyFont(currentFont())
-  applyIconSet(localStorage.getItem('tml_icons') || SKIN_ICONS[DEFAULT_THEME] || 'classic')
+  applyIconSet(localStorage.getItem('tml_icons') || SKIN_ICONS[DEFAULT_THEME] || 'rounded')
 } catch {}
 
 // An iPhone home-screen app drawn under the clock (black-translucent) is laid out shorter than the
