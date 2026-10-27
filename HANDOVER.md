@@ -37,6 +37,11 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (27 Oct 2026, Contacts more, every Database list alike)
+- Contacts: features 1 to 6 (duplicates, select many, quick call/WhatsApp/Viber/email, specialty chips, specialties cleanup, favourites; `fav` on the contact's data, no SQL). Bar on the tabs' line with a ⋯ menu; chips and order under it. List only.
+- Crew, Cast, Equipment (Database) and Project Database Crew/Cast: Contacts' rows (.ab-row.lib-row), List only; the Cards/List switch is gone. The lists scroll inside their own box (DbTools useFitScroll) so the top row never moves and keeps its look (Alex: the glass sticky band was darker and wrong).
+- Not yet as list: the project's Locations (cards with photos) and the project's Equipment (table with status): ask Alex.
+
 ## Where we stopped (13 Oct 2026)
 
 **27 Oct 2026, Contacts: steady page, fixed top, Crew/Cast tint, +30** (Alex). Database on a computer: scrollbar-gutter stable and no sideways rubber-band on the page, the `.db-top` row sticky at the top in glass (styles.css end). Contacts already in Crew or Cast (name folded for case and accents, or the last 9 digits of a phone) get a 10% accent tint and "Already in Crew/Cast" as a tooltip. In the database (address_book, by SQL in the session): +30 put before 1178 first and 49 second mobiles that began with 69, and 0030 made +30 on 3; one 11-digit 69828038105 left for Alex to correct.

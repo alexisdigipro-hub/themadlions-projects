@@ -8243,7 +8243,7 @@ html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > b
 .ab-row.ab-in:hover, .ab-tile.ab-in:hover { background: color-mix(in srgb, var(--accent) 14%, var(--raised)); }
 .ab-count { flex: none; padding: 0 12px; height: 32px; display: inline-flex; align-items: center; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); background: color-mix(in srgb, var(--text) 6%, transparent); white-space: nowrap; }
 .ab-rows { display: flex; flex-direction: column; gap: 6px; }
-.ab-row { display: grid; grid-template-columns: 22px 32px minmax(160px, 1.3fr) minmax(120px, 1fr) minmax(140px, 1.2fr) minmax(120px, 1fr) auto auto; align-items: center; gap: 14px; padding: 14px 14px; /* 25% taller than the first version (Alex, 27 Oct) */ border-radius: 12px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); cursor: pointer; transition: background .2s, border-color .2s; }
+.ab-row { display: grid; grid-template-columns: 22px 32px minmax(160px, 1.3fr) minmax(120px, 1fr) minmax(140px, 1.2fr) minmax(120px, 1fr) 132px 156px; align-items: center; gap: 14px; padding: 14px 14px; /* 25% taller than the first version (Alex, 27 Oct) */ border-radius: 12px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); cursor: pointer; transition: background .2s, border-color .2s; }
 .ab-row:hover { background: var(--raised); border-color: color-mix(in srgb, var(--accent) 35%, var(--line-soft)); }
 .ab-row .ab-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ab-cell { min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -8385,3 +8385,6 @@ button.ab-ava { border: 0; padding: 0; overflow: hidden; cursor: pointer; font-f
 @media (max-width: 820px) {
   .ab-row.proj-row .ab-cell, .ab-row.proj-row .ab-acts { grid-column: 2; }
 }
+/* every Contacts row has the same columns, with or without an email (the quick links' column is fixed) */
+.ab-row:not(.lib-row) .ab-quick { justify-content: flex-end; }
+.ab-row:not(.lib-row) .ab-acts { justify-content: flex-end; }
