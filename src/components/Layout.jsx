@@ -128,6 +128,9 @@ export default function Layout() {
     // Roardino, the ordino maker, in the hub (Alex, 23 Oct): for whoever has the Ordino permission, in the side menu
     // and in a phone's bar, right after RoarMe
     { to: '/roardino', label: 'Roardino', show: remote && can(user, 'callsheets'), icon: 'callsheets' },
+    // RoarList, the shot lists, in the hub (Alex, 27 Oct): for whoever has the Shot list permission; the project's
+    // Shotlist tab is gone
+    { to: '/roarlist', label: 'RoarList', show: remote && can(user, 'shots'), icon: 'shots' },
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     // Drives is a tab of the Database now (Alex, 10 Oct)
@@ -198,8 +201,8 @@ export default function Layout() {
   const onRoardino = pathname === '/roardino'
   const [keepRoardino, setKeepRoardino] = useState(false)
   useEffect(() => { if (onRoardino) setKeepRoardino(true) }, [onRoardino])
-  // not for the pages that are a frame (Roardino, RoarMe): the slide moved their fixed frame and it jumped
-  const framePage = pathname === '/roardino' || pathname.startsWith('/roarme')
+  // not for the pages that are a frame (Roardino, RoarList, RoarMe): the slide moved their fixed frame and it jumped
+  const framePage = pathname === '/roardino' || pathname === '/roarlist' || pathname.startsWith('/roarme')
   useEffect(() => {
     const el = document.querySelector('.content')
     if (!el || framePage || !window.matchMedia?.('(max-width: 820px)').matches || el.dataset.magnet) return undefined

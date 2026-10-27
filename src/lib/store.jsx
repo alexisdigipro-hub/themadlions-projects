@@ -29,7 +29,7 @@ export const MODULES = [
   { key: 'script', label: 'Script', group: 'Project tabs' },
   { key: 'breakdown', label: 'Breakdown', group: 'Project tabs' },
   { key: 'music', label: 'Music', group: 'Project tabs', hint: 'the song and its map' },
-  { key: 'shots', label: 'Shot list', group: 'Project tabs' },
+  { key: 'shots', label: 'Shot list', group: 'Project tabs', hint: 'RoarList (side menu): edit makes and changes shot lists, view sees them' },
   { key: 'schedule', label: 'Schedule', group: 'Project tabs' },
   { key: 'callsheets', label: 'Ordino', group: 'Project tabs', hint: 'Roardino (side menu): edit makes and sends ordinos, view sees them; everyone sees their project\'s ordino on the Overview' },
   { key: 'contacts', label: 'Crew & cast', group: 'Database' },

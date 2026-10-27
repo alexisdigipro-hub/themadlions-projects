@@ -6,6 +6,7 @@ import { ELEMENT_CATEGORIES, useStore } from '../../lib/store.jsx'
 import { formatPages, keywordHints, parseScript, stripColor } from '../../lib/breakdown.js'
 import { aiBreakdown, aiDocumentBreakdown } from '../../lib/ai.js'
 import { uid } from '../../lib/store.jsx'
+import { draftShotList } from '../../lib/roarlist.js'
 import { songMapText } from '../../lib/audio.js'
 import { download } from '../../lib/dates.js'
 import { revisionHex } from '../../lib/diff.js'
@@ -54,18 +55,10 @@ export default function Breakdown() {
         if (d.mode === 'replace') {
           p.scenes = scenes
           p.shootingDays.forEach((d) => (d.sceneIds = []))
-          p.shots = []
         } else {
           const start = p.scenes.length
           scenes.forEach((sc, i) => { sc.number = String(start + i + 1); sc.order = start + i })
           p.scenes = [...p.scenes, ...scenes]
-        }
-        if (d.wantShots) {
-          p.shots = p.shots || []
-          res.setups.forEach((st, i) => {
-            const scene = scenes[i]
-            st.shots.forEach((sh, k) => p.shots.push({ id: uid(), sceneId: scene.id, number: `${scene.number}${String.fromCharCode(65 + (k % 26))}`, size: sh.size, angle: 'Eye level', movement: sh.movement, lens: '', camera: 'A', fps: '25', gear: /drone/i.test(sh.movement) ? 'Drone' : /handheld/i.test(sh.movement) ? 'Handheld' : /steadicam/i.test(sh.movement) ? 'Steadicam' : 'Tripod', description: sh.description, subject: '', audio: '', duration: '', status: 'planned', notes: '', frame: '', frameUrl: '' }))
-          })
         }
         // link setups to song sections named in song_section
         if (p.music?.sections?.length) {
@@ -80,9 +73,12 @@ export default function Breakdown() {
         p.breakdownStatus = 'ai'
         if (!p.script.text && d.useText === false) p.script = { ...p.script, docType: 'document' }
       })
+      // the draft shot list is a list in RoarList (Alex, 27 Oct), tied to this project
+      let shots = 0
+      if (d.wantShots) shots = await draftShotList(project, res.setups, res.setups.map((st, i) => ({ number: d.mode === 'replace' ? st.number || String(i + 1) : String(project.scenes.length + i + 1) }))).catch((e) => { toast(`The shot list was not drafted: ${e.message}`, 'error'); return 0 })
       setDoc(null)
       if (pasted && !files.length) { setPaste(''); setPasteOpen(false) }
-      toast(`${res.setups.length} setups created from the ${pasted && !files.length ? 'text' : 'document'}${d.wantShots ? ', with a draft shot list' : ''}`, 'ok')
+      toast(`${res.setups.length} setups created from the ${pasted && !files.length ? 'text' : 'document'}${shots ? `, with a draft shot list in RoarList (${shots} shots)` : ''}`, 'ok')
     } catch (e) {
       toast(e.message, 'error')
     } finally {
@@ -330,7 +326,7 @@ export default function Breakdown() {
           <div className="paste-actions">
             <label className="check">
               <input type="checkbox" checked={pasteOpts.wantShots} onChange={(e) => setPasteOpts({ ...pasteOpts, wantShots: e.target.checked })} />
-              Also draft a first shot list
+              Also draft a first shot list in RoarList
             </label>
             {project.scenes.length > 0 && (
               <Select
@@ -578,7 +574,7 @@ export default function Breakdown() {
             <Field label="Notes for the AI (optional)"><Textarea rows={2} value={doc.notes} onChange={(e) => setDoc({ ...doc, notes: e.target.value })} placeholder="e.g. one shooting day, artist plus 4 dancers, budget is tight, no drone" /></Field>
             <label className="check">
               <input type="checkbox" checked={doc.wantShots} onChange={(e) => setDoc({ ...doc, wantShots: e.target.checked })} />
-              Also draft a first shot list per setup
+              Also draft a first shot list per setup, in RoarList
             </label>
             {project.scenes.length > 0 && (
               <Field label="Existing scenes">
