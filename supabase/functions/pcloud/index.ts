@@ -13,7 +13,9 @@
 //   PCLOUD_ROOT    the folder everything goes under, default "/TML HUB"
 //
 // Actions (POST, JSON or multipart): ping · upload · link · links · raw · delete · backup ·
-// deliveryStart · deliveryChunk · deliveryFinish · deliveryFolderLink. See src/lib/pcloud.js.
+// deliveryStart · deliveryChunk · deliveryFinish · deliveryFolderLink · deliveryRemove. See src/lib/pcloud.js.
+// deliveryRemove (27 Oct): one file of a delivery taken off it, or replaced, goes to pCloud's trash too, so the
+// delivery's Download all (the folder's link) no longer holds it; only a file inside ROOT/Deliveries.
 // deliveryStart / deliveryChunk / deliveryFinish (Share = edit, or administrators): a cut for a client
 // goes into ROOT/Deliveries/<stage>/<title> in pieces of a few MB through pCloud's upload session
 // (upload_create, upload_write in order, upload_save; the calls pCloud's own apps use), so a file of
@@ -323,7 +325,7 @@ Deno.serve(async (req) => {
     }
 
     // deliveries: who may send cuts to clients (Share = edit), administrators always
-    if (action === 'deliveryStart' || action === 'deliveryChunk' || action === 'deliveryFinish' || action === 'deliveryFolderLink') {
+    if (action === 'deliveryStart' || action === 'deliveryChunk' || action === 'deliveryFinish' || action === 'deliveryFolderLink' || action === 'deliveryRemove') {
       const [{ data: adm }, { data: perm }] = await Promise.all([db.rpc('is_admin'), db.rpc('my_perm', { p_module: 'share' })])
       if (!adm && perm !== 'edit') return json({ error: 'Only people who can send deliveries may upload them.' }, 403)
     }
@@ -372,6 +374,24 @@ Deno.serve(async (req) => {
       const folderid = Number((await pc('createfolderifnotexists', { path })).metadata?.folderid)
       const pub = await pc('getfolderpublink', { folderid })
       return json({ ok: true, url: pub.link, folder: path })
+    }
+
+    // one file off a delivery (Alex, 27 Oct: "delete a link, replace it, keep the same page link"): by its fileid, or
+    // for a file uploaded before fileids were kept, by the code of its public link; it must sit in the delivery's
+    // folder under ROOT/Deliveries, and it goes to pCloud's trash (it can be restored there)
+    if (action === 'deliveryRemove') {
+      const path = String(body.path || '')
+      if (!path.startsWith(`${ROOT}/Deliveries/`) || path.includes('..')) return json({ error: 'Not a delivery folder.' }, 400)
+      let fileid = Number(body.fileid) || 0
+      if (!fileid && body.code) {
+        const mine = await pc('listpublinks')
+        fileid = Number((mine.publinks || []).find((p: any) => p.code === String(body.code))?.metadata?.fileid) || 0
+      }
+      if (!fileid) return json({ ok: true, kept: true }) // nothing to find: it only leaves the page
+      const list = await pc('listfolder', { path })
+      if (!(list.metadata?.contents || []).some((m: any) => Number(m.fileid) === fileid)) return json({ error: 'That file is not in this delivery.' }, 403)
+      await pc('deletefile', { fileid })
+      return json({ ok: true })
     }
 
     return json({ error: `Unknown action "${action}".` }, 400)

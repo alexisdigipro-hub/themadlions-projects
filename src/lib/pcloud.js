@@ -146,13 +146,20 @@ export async function pcloudDeliverMany(files, { stage, title, sub, into }, { on
     const f = files[i]
     const r = await pcloudDeliver(f, { stage, title, sub }, { onProgress: (p) => onProgress?.((done + p * f.size) / total, i), signal })
     path = r.folder
-    list.push({ name: r.name || f.name, url: r.url, size: r.size || f.size })
+    list.push({ name: r.name || f.name, url: r.url, size: r.size || f.size, fileid: r.fileid })
     done += f.size
   }
   const link = await call('deliveryFolderLink', { path })
   return { ...link, count: files.length, files: list }
 }
 export const pcloudDelete = (fileid, scope) => call('delete', { fileid, scope })
+/* One file taken off a delivery, or replaced (Alex, 27 Oct): to pCloud's trash, so the folder's Download all no longer
+   has it. A file from before fileids were kept is found by its public link's code. */
+export const pcloudDeliveryRemove = ({ fileid, url, path }) => {
+  let code = ''
+  try { code = new URL(url).searchParams.get('code') || '' } catch { /* not a pCloud link */ }
+  return call('deliveryRemove', { fileid: fileid || 0, code, path })
+}
 /* Links for many files of one project (or the library) in one call: { [fileid]: url }. */
 export const pcloudLinks = async (fileids, scope) => (await call('links', { fileids, scope })).urls || {}
 /* The file itself, through the function, for pictures drawn on a canvas (presentation slides). */
