@@ -505,7 +505,7 @@ const tellHost = msg => { if (EMBED) try { window.parent.postMessage({ type: 'ro
 window.addEventListener('message', e => {
   if (e.origin !== location.origin || e.source !== window.parent) return;
   const d = e.data || {};
-  if (d.type === 'roardino:host'){ document.documentElement.classList.toggle('in-share', !!d.share); if (homeApi) homeApi.announce(); else tellHost({ view: 'other' }); }
+  if (d.type === 'roardino:host'){ document.documentElement.classList.toggle('in-share', !!d.share); if (homeApi) { homeApi.redraw(); homeApi.announce(); } else tellHost({ view: 'other' }); }
   if (d.type === 'roardino:do' && homeApi){ if (d.filter) homeApi.pick(d.filter); if (typeof d.search === 'string') homeApi.search(d.search); if (d.create) homeApi.create(); }
 });
 
@@ -707,11 +707,39 @@ async function viewHome(){
     },
     search: w => { homeSearch = w; const i = search.querySelector('input'); if (i) i.value = w; draw(); },
     create,
+    redraw: () => draw(),
   };
   homeApi.announce();
   // the next shoot to come: ringed in the accent
   const next = list.filter(o => (o.day.date || '') >= today).sort((a, b) => a.day.date.localeCompare(b.day.date) || (a.day.callTime || '').localeCompare(b.day.callTime || ''))[0];
+  // in the hub's Share on a computer: one soft row per ordino, as Share's own list (Alex, 27 Oct: "the same list mode")
+  const listMode = () => document.documentElement.classList.contains('in-share') && window.matchMedia('(min-width:821px)').matches;
+  const row = o => {
+    const p = projectOf(o.projectId), n = o.day.date ? daysTo(o.day.date) : null;
+    const d = o.day.date ? new Date(o.day.date + 'T12:00:00') : null;
+    const open = () => { location.hash = (canEdit ? '#edit/' : '#see/') + o.id; };
+    return h('article', { class: 'orow' + (o === next ? ' is-next' : '') + (n != null && n < 0 ? ' is-past' : ''), tabindex: 0, onclick: open, onkeydown: e => { if (e.key === 'Enter') open(); } },
+      h('div', { class: 'orow-cover', style: o.project.cover ? `background-image:url('${o.project.cover}')` : `background-image:linear-gradient(135deg,${o.look.accent},#111)` }),
+      d ? h('div', { class: 'orow-date' }, h('b', {}, String(d.getDate())), h('span', {}, d.toLocaleDateString('el-GR', { month: 'short' }).replace('.', '') + ' · ' + d.toLocaleDateString('el-GR', { weekday: 'short' }))) : h('div', { class: 'orow-date none' }, '—'),
+      h('div', { class: 'orow-main' },
+        h('strong', {}, o.project.title || 'Χωρίς τίτλο'),
+        p && !SCOPE ? h('span', { class: 'otile-proj' }, h('i', { style: `background:${p.color || 'var(--brand)'}` }), projectName(p)) : null,
+        h('div', { class: 'otile-chips' },
+          o === next ? h('span', { class: 'mchip acc' }, 'Επόμενο') : null,
+          h('span', { class: 'mchip ' + (o.token ? 'ok' : '') }, o.token ? 'Σε link' : 'Πρόχειρο'),
+          o.day.callTime ? h('span', { class: 'mchip' }, 'Call ', h('b', {}, o.day.callTime)) : null,
+          n != null ? h('span', { class: 'mchip' + (n === 0 ? ' acc' : '') }, whenWords(n)) : null,
+          o.loc.name ? h('span', { class: 'mchip' }, h('span', { html: ICON.pin }), o.loc.name) : null)),
+      canEdit ? h('div', { class: 'orow-acts' },
+        h('button', { class: 'ibtn', type: 'button', title: 'Duplicate', 'aria-label': 'Duplicate', html: ICON.dup, onclick: async e => { e.stopPropagation(); try { await duplicateOrdino(o); toast('Έγινε αντίγραφο'); viewHome(); } catch { toast('Δεν έγινε αντίγραφο'); } } }),
+        h('button', { class: 'ibtn danger', type: 'button', title: 'Διαγραφή', 'aria-label': 'Διαγραφή', html: ICON.trash, onclick: async e => {
+          e.stopPropagation();
+          if (!confirm(o.token ? 'Να διαγραφεί αυτό το ordino; Το link που έστειλες θα σταματήσει να ανοίγει.' : 'Να διαγραφεί αυτό το ordino;')) return;
+          try { await deleteOrdino(o.id); viewHome(); } catch { toast('Δεν διαγράφηκε'); }
+        } })) : null);
+  };
   const tile = o => {
+    if (listMode()) return row(o);
     const p = projectOf(o.projectId), n = o.day.date ? daysTo(o.day.date) : null;
     const d = o.day.date ? new Date(o.day.date + 'T12:00:00') : null;
     const open = () => { location.hash = (canEdit ? '#edit/' : '#see/') + o.id; };
@@ -751,7 +779,7 @@ async function viewHome(){
         canEdit && !list.length ? h('button', { class: 'btn primary', onclick: create }, '+ Νέο ordino') : null));
       return;
     }
-    body.replaceChildren(h('div', { class: 'ogrid' }, ...ordered(shown).map(tile)));
+    body.replaceChildren(h('div', { class: listMode() ? 'olist' : 'ogrid' }, ...ordered(shown).map(tile)));
   }
   draw();
 }
