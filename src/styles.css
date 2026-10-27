@@ -8413,3 +8413,57 @@ button.ab-ava { border: 0; padding: 0; overflow: hidden; cursor: pointer; font-f
 .add-pills-slot { display: contents; }
 .modal .project-roarme { margin: 0; padding: 0; background: none; border: 0; box-shadow: none; }
 .modal .project-roarme > h2 { display: none; }
+
+/* Contacts: a contact's card (Alex, 27 Oct): the photo in a ring, the name large, the specialty, the round quick
+   links, then the details as soft rows; Edit opens the form with the profile photo (upload, place, scale) */
+.ab-card .modal-head { position: absolute; top: 10px; right: 10px; z-index: 2; border: 0; padding: 0; background: none; }
+.ab-card .modal-head h2:empty { display: none; }
+.ab-card .modal-body { padding-top: 0; }
+.ab-card-body { display: flex; flex-direction: column; gap: 16px; }
+.ab-card-hero { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 0 -24px; padding: 30px 24px 22px; text-align: center; background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%); border-bottom: 1px solid var(--line-soft); }
+.ab-card-photo { width: 120px; height: 120px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--accent) 18%, var(--panel)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 35%, transparent), 0 14px 40px rgba(0, 0, 0, .35); }
+.ab-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ab-card-photo b { font-size: 38px; font-weight: 700; color: var(--accent); letter-spacing: .02em; }
+.ab-card-photo.sm { width: 72px; height: 72px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+.ab-card-photo.sm b { font-size: 24px; }
+html[data-theme] body .ab-card-name { margin: 6px 0 0; font-size: 24px; font-weight: 700; line-height: 1.2; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+.ab-card-name .ab-star { opacity: 1 !important; font-size: 20px; width: 26px; height: 26px; }
+.ab-card-tags { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
+.ab-card-tags .ab-chip { font-size: 13px; padding: 3px 11px; }
+.ab-card-in { padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.ab-card-hero .ab-quick { gap: 10px; margin-top: 4px; }
+.ab-card-hero .ab-q { width: 44px; height: 44px; }
+.ab-card-hero .ab-q svg { width: 19px; height: 19px; }
+.ab-card-rows { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 0; margin: 0; padding: 4px 0; }
+.ab-card-rows dt { color: var(--muted); font-size: 13px; padding: 11px 16px 10px 14px; }
+.ab-card-rows dd { margin: 0; padding: 10px 14px 10px 0; font-size: 15px; word-break: break-word; }
+.ab-card-rows dt, .ab-card-rows dd { background: color-mix(in srgb, var(--text) 4%, transparent); }
+.ab-card-rows dt { border-radius: 12px 0 0 12px; }
+.ab-card-rows dd { border-radius: 0 12px 12px 0; }
+.ab-card-rows a { color: var(--text); text-decoration: none; }
+.ab-card-rows a:hover { color: var(--accent); }
+.ab-card-notes { margin: 0; padding: 12px 14px; border-radius: 12px; white-space: pre-wrap; font-size: 14px; background: color-mix(in srgb, var(--text) 4%, transparent); }
+.ab-card .modal-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ab-card .modal-foot .grow { flex: 1; }
+html[data-theme] body .ab-card .modal-foot .ab-del { color: #ff6b6b; }
+html[data-theme] body .ab-card .modal-foot .ab-del.btn-danger { color: #fff; background: #e5484d; border-color: transparent; }
+.ab-photo-edit { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ab-photo-edit .ab-card-photo { margin-right: 6px; }
+.ab-ava img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.ab-ava { overflow: hidden; }
+/* the profile photo's cropper: a circle over the square */
+.cover-crop.round .cover-crop-frame { border-radius: 50%; }
+
+/* Home on a computer (Alex, 27 Oct): the category pills up in the team's tile with Sort, Search and New project, one row */
+@media (min-width: 821px) {
+  html[data-theme] body .home-actions.home-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin: 0; flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; }
+  html[data-theme] body .home-actions.home-toolbar > .chips { flex: 0 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .home-actions.home-toolbar > .chips::-webkit-scrollbar { display: none; }
+  .home-actions.home-toolbar > .chips .chip { flex: none; }
+  html[data-theme] body .home-actions.home-toolbar .input.search { flex: 0 1 180px; width: 180px; min-width: 120px; }
+}
+@media (min-width: 821px) {
+  html[data-theme] body .home-actions.home-toolbar { gap: 10px; }
+  html[data-theme] body .home-actions.home-toolbar > .chips .chip { padding: 0 11px; }
+  html[data-theme] body .home-actions.home-toolbar .input.search { flex: 0 1 150px; width: 150px; }
+}

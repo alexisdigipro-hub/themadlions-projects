@@ -75,7 +75,8 @@ export function useCover({ value, projectId, keepSource, onChange }) {
    fingers) to scale it, Centre to put it back in the middle. What is inside the frame is what
    the cover becomes, on Home, the Overview, the call sheet and everywhere else it is shown.
    src is an object URL or a data URL (never a remote address, so the canvas can read it). */
-export default function CoverCropper({ src, crop: start, onCancel, onSave, saving }) {
+// title / saveLabel / size / round: the same cropper for a contact's profile photo (Contacts, Alex 27 Oct), a circle
+export default function CoverCropper({ src, crop: start, onCancel, onSave, saving, title = 'Cover', saveLabel = 'Save cover', size, round = false }) {
   const [img, setImg] = useState(null)
   const [crop, setCrop] = useState(start || centred())
   const [view, setView] = useState(320)
@@ -133,16 +134,16 @@ export default function CoverCropper({ src, crop: start, onCancel, onSave, savin
   return (
     <Modal
       open
-      title="Cover"
+      title={title}
       onClose={onCancel}
       footer={
         <>
           <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-          <Button variant="primary" disabled={!img || saving} onClick={() => onSave({ thumb: renderCrop(img, crop), crop: clamp(w, h, crop) })}>{saving ? 'Saving…' : 'Save cover'}</Button>
+          <Button variant="primary" disabled={!img || saving} onClick={() => onSave({ thumb: renderCrop(img, crop, size), crop: clamp(w, h, crop) })}>{saving ? 'Saving…' : saveLabel}</Button>
         </>
       }
     >
-      <div className="cover-crop">
+      <div className={`cover-crop${round ? ' round' : ''}`}>
         <div
           ref={frame}
           className="cover-crop-frame"
@@ -167,7 +168,7 @@ export default function CoverCropper({ src, crop: start, onCancel, onSave, savin
           <Button size="sm" onClick={() => setCrop((c) => clamp(w, h, { ...c, x: 0.5, y: 0.5 }))}>Centre</Button>
           <Button size="sm" variant="ghost" onClick={() => setCrop(centred())}>Reset</Button>
         </div>
-        <p className="muted small">Drag the picture to place it in the square. Scale with the slider, the mouse wheel or two fingers.</p>
+        <p className="muted small">Drag the picture to place it in the {round ? 'circle' : 'square'}. Scale with the slider, the mouse wheel or two fingers.</p>
       </div>
     </Modal>
   )
