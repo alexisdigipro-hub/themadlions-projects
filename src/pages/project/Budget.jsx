@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
+import { DbBar } from '../../components/DbTools.jsx'
 import { uid } from '../../lib/store.jsx'
 import { fmtDate } from '../../lib/dates.js'
 import { projectWorkDate } from '../../components/WorkLog.jsx'
@@ -141,7 +142,7 @@ function ReceiptsOnly() {
 }
 
 function BudgetPage() {
-  const { project, edit, canEdit } = useProject()
+  const { project, edit, canEdit, slot } = useProject()
   const { state, update } = useStore()
   const me = useCurrentUser()
   const team = (state.users || []).filter((u) => u.active !== false)
@@ -276,12 +277,12 @@ function BudgetPage() {
   return (
     <div className="budget">
       {canAdd && (
-        <div className="toolbar no-print">
+        <DbBar slot={slot} className="no-print">
           <div className="toolbar-actions">
             <Button variant="primary" onClick={() => setDraft({ ...emptyLine(), category: CATEGORIES.includes('Camera') ? 'Camera' : CATEGORIES[0] || '' })}>Add line</Button>
             <Button onClick={() => setAddReceipt(true)}>🧾 Add receipt</Button>
           </div>
-        </div>
+        </DbBar>
       )}
 
       {admin && (editable || budget.cap) && <BudgetCard cap={Number(budget.cap) || 0} total={t.total} spent={t.act} editable={editable} onCap={setCap} />}

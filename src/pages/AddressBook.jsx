@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Confirm, Empty, Field, Input, Modal, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, Textarea, useToast } from '../components/ui.jsx'
 import { DbAdd, DbBar } from '../components/DbTools.jsx'
 import { uid, useStore } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
@@ -10,16 +10,19 @@ import { emptyContact, loadContacts, parseContactsFile, removeContacts, sameKey,
    where whoever has the Crew & cast permission sees them. Contacts itself only administrators see (Database.jsx
    shows the tab to them only, and the address_book table refuses everyone else). */
 
-const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
+// the first letters of the name (a number or an emoji makes none: then a phone glyph)
+const initials = (n) => (n || '').split(/\s+/).map((x) => (x.match(/\p{L}/u) || [])[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '☏'
 const PAGE = 200
 
 export default function AddressBook({ slot }) {
   const { state, update } = useStore()
   const toast = useToast()
-  const mobile = useIsMobile()
   const [list, setList] = useState(null)
   const [error, setError] = useState('')
   const [q, setQ] = useState('')
+  // the order (Alex, 27 Oct: "add sorting"): by name, newest first, or by company; kept per device
+  const [sort, setSort] = useState(() => { try { return localStorage.getItem('tml_ab_sort') || 'name' } catch { return 'name' } })
+  const pickSort = (v) => { setSort(v); setShown(PAGE); try { localStorage.setItem('tml_ab_sort', v) } catch { /* private */ } }
   const [shown, setShown] = useState(PAGE)
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -29,7 +32,12 @@ export default function AddressBook({ slot }) {
 
   const found = useMemo(() => (list || [])
     .filter((c) => matchText(q, c.name, c.phone, c.phone2, c.email, c.company, c.title, c.notes))
-    .sort((a, b) => a.name.localeCompare(b.name, 'el')), [list, q])
+    .sort((a, b) => {
+      const byName = a.name.localeCompare(b.name, 'el', { sensitivity: 'base' })
+      if (sort === 'new') return (b.addedAt || '').localeCompare(a.addedAt || '') || byName
+      if (sort === 'company') return (!a.company - !b.company) || (a.company || '').localeCompare(b.company || '', 'el', { sensitivity: 'base' }) || byName
+      return byName
+    }), [list, q, sort])
 
   const importFile = async (file) => {
     if (!file) return
@@ -39,7 +47,8 @@ export default function AddressBook({ slot }) {
       if (!read.length) throw new Error('No contacts found in this file. Use a .vcf (iPhone, Mac, Google) or a .csv with a Name column.')
       const have = new Set((list || []).map(sameKey))
       const fresh = []
-      for (const c of read) { const k = sameKey(c); if (have.has(k)) continue; have.add(k); fresh.push({ ...emptyContact(), ...c, id: uid() }) }
+      const at = new Date().toISOString()
+      for (const c of read) { const k = sameKey(c); if (have.has(k)) continue; have.add(k); fresh.push({ ...emptyContact(), ...c, id: uid(), addedAt: at }) }
       await saveContacts(fresh)
       setList((l) => [...(l || []), ...fresh])
       const dup = read.length - fresh.length
@@ -85,22 +94,24 @@ export default function AddressBook({ slot }) {
     <span className="ab-acts" onClick={(e) => e.stopPropagation()}>
       <button type="button" className="btn btn-default btn-sm" onClick={() => moveTo(c, 'crew')} title="Move to Crew">→ Crew</button>
       <button type="button" className="btn btn-default btn-sm" onClick={() => moveTo(c, 'cast')} title="Move to Cast">→ Cast</button>
-      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setDraft({ ...c })}>Edit</button>
-      <Confirm onConfirm={() => remove(c)} label="Delete">×</Confirm>
+      <Confirm onConfirm={() => remove(c)} label="Delete" className="ab-del" title="Delete">×</Confirm>
     </span>
   )
 
   return (
     <section className="panel db-card">
-      <DbBar slot={slot}>
+      <DbBar slot={slot} className="ab-bar">
         <div className="toolbar-info">
           <strong>Contacts</strong> <span className="muted">{list ? list.length : ''}</span> <span className="muted small">· only administrators see them</span>
         </div>
         <div className="toolbar-actions">
+          <span className="segmented small" role="tablist" aria-label="Sort">
+            {[['name', 'Name'], ['new', 'Newest'], ['company', 'Company']].map(([v, l]) => <button key={v} type="button" className={sort === v ? 'on' : ''} onClick={() => pickSort(v)}>{l}</button>)}
+          </span>
           <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} placeholder="Search name, phone, email, company…" />
           <input ref={fileRef} type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" hidden onChange={(e) => importFile(e.target.files?.[0])} />
           <Button onClick={() => fileRef.current?.click()} disabled={busy}>{busy ? 'Importing…' : 'Import file'}</Button>
-          <DbAdd label="Add contact" onClick={() => setDraft(emptyContact())} />
+          <DbAdd label="Add contact" onClick={() => setDraft({ ...emptyContact(), addedAt: new Date().toISOString() })} />
         </div>
       </DbBar>
 
@@ -110,36 +121,21 @@ export default function AddressBook({ slot }) {
           {list.length ? 'Try another search.' : 'Import your contacts: a .vcf from an iPhone or a Mac (Contacts > select all > Export vCard), or a .csv from Google Contacts or Outlook. Then move whoever you work with to Crew or Cast.'}
           {!list.length && <div style={{ marginTop: 12 }}><Button variant="primary" onClick={() => fileRef.current?.click()}>Import file</Button></div>}
         </Empty>
-      ) : mobile ? (
-        <div className="people-grid compact ab-cards">
+      ) : (
+        // soft tiles with gaps, as Crew and the Calendar (Alex, 27 Oct: the ruled table did not belong in the hub);
+        // a tap on the tile edits it, the buttons move it
+        <div className="ab-grid">
           {found.slice(0, shown).map((c) => (
-            <article key={c.id} className="person loc-card ab-card">
-              <div className="person-photo" aria-hidden="true"><span className="person-initials">{initials(c.name)}</span></div>
-              <div className="person-body">
+            <article key={c.id} className="ab-tile" onClick={() => setDraft({ ...c })} role="button" tabIndex={0}>
+              <span className="ab-ava" aria-hidden="true">{initials(c.name)}</span>
+              <div className="ab-body">
                 <strong>{c.name}</strong>
-                <div className="small muted">{[c.phone, c.email].filter(Boolean).join(' · ') || c.company}</div>
-                {acts(c)}
+                {(c.phone || c.email) && <div className="ab-line">{[c.phone, c.email].filter(Boolean).join(' · ')}</div>}
+                {(c.company || c.title) && <span className="ab-chip"><i />{[c.company, c.title].filter(Boolean).join(' · ')}</span>}
               </div>
+              {acts(c)}
             </article>
           ))}
-        </div>
-      ) : (
-        <div className="table-wrap">
-          <table className="table people-table ab-table">
-            <thead><tr><th /><th>Name</th><th>Phone</th><th>Email</th><th>Company · title</th><th /></tr></thead>
-            <tbody>
-              {found.slice(0, shown).map((c) => (
-                <tr key={c.id}>
-                  <td><span className="avatar">{initials(c.name)}</span></td>
-                  <td><strong>{c.name}</strong></td>
-                  <td className="small">{c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}{c.phone2 && <div className="muted">{c.phone2}</div>}</td>
-                  <td className="small">{c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</td>
-                  <td className="small muted">{[c.company, c.title].filter(Boolean).join(' · ')}</td>
-                  <td className="row-actions">{acts(c)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       )}
       {found.length > shown && <div style={{ textAlign: 'center', marginTop: 12 }}><Button onClick={() => setShown((n) => n + PAGE)}>Show more ({found.length - shown})</Button></div>}
