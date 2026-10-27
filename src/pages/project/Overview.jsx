@@ -14,9 +14,9 @@ import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { remote } from '../../lib/supabase.js'
 import ProjectRoarMe from '../../components/ProjectRoarMe.jsx'
 import Tasks, { tasksFor } from './Tasks.jsx'
-import { Waveform } from './Music.jsx'
 import Notes from './Notes.jsx'
 import Script from './Script.jsx'
+import Music, { Waveform } from './Music.jsx'
 import People from './People.jsx'
 import RoardinoPage from '../RoardinoPage.jsx'
 import { supabase } from '../../lib/supabase.js'
@@ -141,6 +141,7 @@ const ADD_ICONS = {
   link: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1" /><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" /></svg>,
   script: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4" /><path d="m7.5 8.5 4.5-4.5 4.5 4.5" /><path d="M5 15v3.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V15" /></svg>,
   paste: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4.5" width="12" height="16" rx="2.5" /><path d="M9.5 4.5V3.8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v.7" /><path d="M9 10h6M9 13.5h6M9 17h4" /></svg>,
+  chat: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H10l-4.5 3.5v-3.5h0a2 2 0 0 1-1-1.7z" /><path d="M8.5 9.5h7M8.5 12.5h4.5" /></svg>,
   notes: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5L19 8v11.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1Z" /><path d="M14 3.5V8h5M8.5 12.5h7M8.5 16h5" /></svg>,
   edit: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></svg>,
   duplicate: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" /><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8" /></svg>,
@@ -194,6 +195,8 @@ export default function Overview() {
   // Alex: an empty Tasks / Song / Links / Production notes panel is just a box saying nothing.
   // Each one keeps quiet until it has something in it, and its button lives in one row up here
   // instead. Pressing a button bumps a counter the panel watches, so it opens its own form.
+  const [pillSlot, setPillSlot] = useState(null) // where the Project Database puts its add pills
+  const [roarmeOpen, setRoarmeOpen] = useState(false)
   const [start, setStart] = useState({ task: 0, song: 0, link: 0, notes: 0, script: 0, paste: 0 })
   const begin = (k) => setStart((s0) => ({ ...s0, [k]: s0[k] + 1 }))
   const isMusicVideo = project.category === 'Music Video'
@@ -209,8 +212,6 @@ export default function Overview() {
 
   return (
     <div className="overview">
-      {/* the project's RoarMe group (Alex, 20 Oct: the chat is RoarMe now), administrators only */}
-      {remote && user?.role === 'admin' && <ProjectRoarMe projectId={project.id} />}
       <section className="panel progress">
         <div className="progress-head">
           <div className="progress-cover">
@@ -248,7 +249,7 @@ export default function Overview() {
       </section>
 
       {/* the add buttons, then Edit details / Duplicate / Lock project as the same pills (Alex, 11 Oct) */}
-      {(adds.length > 0 || canEdit('projects') || can(user, 'projects', 'edit') || user?.role === 'admin') && (
+      {(adds.length > 0 || canEdit('projects') || can(user, 'projects', 'edit') || user?.role === 'admin' || sections.includes('people')) && (
         <div className="add-pills">
           {adds.map(([k, label]) => (
             <button key={k} type="button" className="add-pill" onClick={() => begin(k)}>
@@ -256,6 +257,15 @@ export default function Overview() {
               <span>{label}</span>
             </button>
           ))}
+          {/* the Project Database's Add crew / Add cast / Add item / Export CSV (People.jsx, through a portal) */}
+          <span className="add-pills-slot" ref={setPillSlot} />
+          {/* the project's RoarMe group as a button, administrators only (Alex, 27 Oct; it was a card at the top) */}
+          {remote && user?.role === 'admin' && (
+            <button type="button" className="add-pill" onClick={() => setRoarmeOpen(true)}>
+              {ADD_ICONS.chat}
+              <span>RoarMe group</span>
+            </button>
+          )}
           {canEdit('projects') && (
             <button type="button" className="add-pill" onClick={() => setDraft({ ...project })}>
               {ADD_ICONS.edit}
@@ -278,7 +288,11 @@ export default function Overview() {
       )}
 
       {/* the song first, above the ordino (Alex, 10 Oct) */}
-      {isMusicVideo && can(user, 'music') && <SongPlayer project={project} edit={edit} editable={canEdit('music')} hideEmpty startSignal={start.song} />}
+      {/* one song box (Alex, 27 Oct: "the audio is there twice"): with the Script section on and a song uploaded it is the
+          full song map (waveform, sections, lyrics); otherwise the simple player, whose Upload song is a pill above */}
+      {isMusicVideo && can(user, 'music') && (sections.includes('script') && hasSong
+        ? <section className="panel"><Music /></section>
+        : <SongPlayer project={project} edit={edit} editable={canEdit('music')} hideEmpty startSignal={start.song} />)}
 
       {/* The ordino as one button that looks like the song box above it, for everyone on the project,
           administrators too (Alex, 10 Oct); it opens the finished ordino as the crew get it on a phone.
@@ -292,6 +306,9 @@ export default function Overview() {
           <span className="ordino-btn-go" aria-hidden="true">›</span>
         </button>
       )}
+      <Modal open={roarmeOpen} title="RoarMe group" onClose={() => setRoarmeOpen(false)}>
+        {roarmeOpen && <ProjectRoarMe projectId={project.id} />}
+      </Modal>
       <Modal open={ordinoOpen} title="Ordino" onClose={() => setOrdinoOpen(false)}>
         {ordinoOpen && <RoardinoPage project={project.id} see className="in-modal" />}
       </Modal>
@@ -317,7 +334,7 @@ export default function Overview() {
 
       {/* Project Database and Script & Breakdown, once tabs, are Overview's own sections now (Alex, 27 Oct); a
           project can still switch either off in Edit details > Tabs */}
-      {sections.includes('people') && <People />}
+      {sections.includes('people') && <People onOverview pillSlot={pillSlot} />}
       {sections.includes('script') && <Script hideEmpty uploadSignal={start.script} pasteSignal={start.paste} />}
 
       <Modal

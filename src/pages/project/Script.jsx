@@ -111,7 +111,8 @@ export default function Script({ hideEmpty = false, uploadSignal = 0, pasteSigna
      upload-and-listen player for the same track is on Overview. It shows whether or not there is
      a script: a music video usually has none, and the bare page used to hide the song map with it
      (Alex, 9 Oct: "Lyrics from audio is gone"). */
-  const songMap = project.category === 'Music Video' && can(user, 'music') && (project.music?.tracks || []).length > 0 && (
+  // on Overview the song map sits at the top in place of the song player (Overview.jsx), so not here as well
+  const songMap = !hideEmpty && project.category === 'Music Video' && can(user, 'music') && (project.music?.tracks || []).length > 0 && (
     <section className="panel">
       <Music />
     </section>

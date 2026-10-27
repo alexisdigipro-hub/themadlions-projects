@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { DbBar } from '../../components/DbTools.jsx'
@@ -17,7 +18,19 @@ const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((
    you switch between — Alex wanted everything visible at once, just grouped. Crew and Cast share
    one Add/Edit modal and one "from library" modal, told apart by draft.kind / pick.kind rather
    than a single page-wide tab, since both sections are on screen together now. */
-export default function People() {
+// the add pills' line icons, as Overview's Add task (Alex, 27 Oct: the Project Database's buttons join that row)
+const PILL_ICONS = {
+  person: <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5" /><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5" /></svg>,
+  library: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h4v15H5zM10 4.5h4v15h-4z" /><path d="m15.5 5.2 3.6-.9 3 14.6-3.6.8z" /></svg>,
+  location: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11Z" /><circle cx="12" cy="10" r="2.3" /></svg>,
+  gear: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7.5" width="12" height="10" rx="2.5" /><path d="m15.5 11 5-2.5v8l-5-2.5" /></svg>,
+  export: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11" /><path d="m7.5 10.5 4.5 4.5 4.5-4.5" /><path d="M5 16v2.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V16" /></svg>,
+}
+const pillIcon = (k) => (k === 'crew' || k === 'cast' ? PILL_ICONS.person : /Lib$/.test(k) ? PILL_ICONS.library : k === 'location' ? PILL_ICONS.location : PILL_ICONS.gear)
+
+/* On Overview (Alex, 27 Oct) `pillSlot` is a place in Overview's row of add pills: the Add crew / Add cast / Add item /
+   Export CSV buttons go there as the same pills as Add task, instead of the project's top row. */
+export default function People({ onOverview = false, pillSlot = null }) {
   const { project, edit, canEdit, library, editLibrary, user, slot } = useProject()
   const { state } = useStore()
   const DEPTS = departmentsOf(state)
@@ -176,6 +189,10 @@ export default function People() {
 
   return (
     <div className="people-db">
+      {onOverview ? pillSlot && createPortal(<>
+        {adds.map(([k, label]) => <button key={k} type="button" className="add-pill" onClick={() => begin(k)}>{pillIcon(k)}<span>{label}</span></button>)}
+        {project.contacts.length > 0 && <button type="button" className="add-pill" onClick={exportCSV}>{PILL_ICONS.export}<span>Export CSV</span></button>}
+      </>, pillSlot) : <>
       <DbBar slot={slot}>
         {!slot && <div className="toolbar-info">
           <strong>Project Database</strong>
@@ -198,6 +215,7 @@ export default function People() {
           ))}
         </div>
       )}
+      </>}
 
       {can(user, 'contacts') && (crew.length > 0 || cast.length > 0) && (
         <div className={`cols db-grid${crew.length && cast.length ? '' : ' one'}`}>
