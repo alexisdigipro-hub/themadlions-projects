@@ -14,6 +14,8 @@ import { download } from '../lib/dates.js'
 // the first letters of the name (a number or an emoji makes none: then a phone glyph)
 const initials = (n) => (n || '').split(/\s+/).map((x) => (x.match(/\p{L}/u) || [])[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '☏'
 const PAGE = 200
+const foldName = (n) => String(n || '').trim().toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ')
+const digits9 = (p) => { const d = String(p || '').replace(/\D/g, ''); return d.length >= 9 ? d.slice(-9) : '' }
 // the specialty, for the order and the groups: the same word in any case or accent is one group
 const specialtyOf = (c) => (c.company || '').trim()
 const groupKey = (c) => specialtyOf(c).toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -62,6 +64,18 @@ export default function AddressBook({ slot }) {
       if (sort === 'company') return (!a.company - !b.company) || specialtyOf(a).localeCompare(specialtyOf(b), 'el', { sensitivity: 'base' }) || byName
       return byName
     }), [list, q, sort])
+
+  // who is already in Crew or Cast, by name (case and accents aside) or by mobile (the last 9 digits): they get a
+  // faint accent tint (Alex, 27 Oct)
+  const inLibrary = useMemo(() => {
+    const names = new Map(), phones = new Map()
+    for (const x of state.library.contacts) {
+      const where = x.kind === 'cast' ? 'Cast' : 'Crew'
+      if (x.name) names.set(foldName(x.name), where)
+      for (const ph of [x.phone, x.agentPhone]) { const d = digits9(ph); if (d) phones.set(d, where) }
+    }
+    return (c) => names.get(foldName(c.name)) || phones.get(digits9(c.phone)) || phones.get(digits9(c.phone2)) || ''
+  }, [state.library.contacts])
 
   // ordered by specialty, the contacts come in groups with a heading each; by name or newest, one list
   const groups = useMemo(() => {
@@ -186,7 +200,7 @@ export default function AddressBook({ slot }) {
               // the list: one slim soft row per person, the columns lined up (not a ruled table)
               <div className="ab-rows">
                 {items.map((c) => (
-                  <article key={c.id} className="ab-row" onClick={() => setDraft({ ...c })} role="button" tabIndex={0}>
+                  <article key={c.id} className={`ab-row${inLibrary(c) ? ' ab-in' : ''}`} title={inLibrary(c) ? `Already in ${inLibrary(c)}` : undefined} onClick={() => setDraft({ ...c })} role="button" tabIndex={0}>
                     <span className="ab-ava sm" aria-hidden="true">{initials(c.name)}</span>
                     <strong className="ab-name">{c.name}</strong>
                     <span className="ab-cell">{c.phone}{c.phone2 && <span className="muted"> · {c.phone2}</span>}</span>
@@ -200,7 +214,7 @@ export default function AddressBook({ slot }) {
               // the cards: soft tiles with gaps, as Crew and the Calendar; a tap edits, the buttons move
               <div className="ab-grid">
                 {items.map((c) => (
-                  <article key={c.id} className="ab-tile" onClick={() => setDraft({ ...c })} role="button" tabIndex={0}>
+                  <article key={c.id} className={`ab-tile${inLibrary(c) ? ' ab-in' : ''}`} title={inLibrary(c) ? `Already in ${inLibrary(c)}` : undefined} onClick={() => setDraft({ ...c })} role="button" tabIndex={0}>
                     <span className="ab-ava" aria-hidden="true">{initials(c.name)}</span>
                     <div className="ab-body">
                       <strong>{c.name}</strong>
