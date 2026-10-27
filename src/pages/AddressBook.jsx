@@ -20,6 +20,9 @@ export default function AddressBook({ slot }) {
   const [list, setList] = useState(null)
   const [error, setError] = useState('')
   const [q, setQ] = useState('')
+  // the order (Alex, 27 Oct: "add sorting"): by name, newest first, or by company; kept per device
+  const [sort, setSort] = useState(() => { try { return localStorage.getItem('tml_ab_sort') || 'name' } catch { return 'name' } })
+  const pickSort = (v) => { setSort(v); setShown(PAGE); try { localStorage.setItem('tml_ab_sort', v) } catch { /* private */ } }
   const [shown, setShown] = useState(PAGE)
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
@@ -29,7 +32,12 @@ export default function AddressBook({ slot }) {
 
   const found = useMemo(() => (list || [])
     .filter((c) => matchText(q, c.name, c.phone, c.phone2, c.email, c.company, c.title, c.notes))
-    .sort((a, b) => a.name.localeCompare(b.name, 'el')), [list, q])
+    .sort((a, b) => {
+      const byName = a.name.localeCompare(b.name, 'el', { sensitivity: 'base' })
+      if (sort === 'new') return (b.addedAt || '').localeCompare(a.addedAt || '') || byName
+      if (sort === 'company') return (!a.company - !b.company) || (a.company || '').localeCompare(b.company || '', 'el', { sensitivity: 'base' }) || byName
+      return byName
+    }), [list, q, sort])
 
   const importFile = async (file) => {
     if (!file) return
@@ -39,7 +47,8 @@ export default function AddressBook({ slot }) {
       if (!read.length) throw new Error('No contacts found in this file. Use a .vcf (iPhone, Mac, Google) or a .csv with a Name column.')
       const have = new Set((list || []).map(sameKey))
       const fresh = []
-      for (const c of read) { const k = sameKey(c); if (have.has(k)) continue; have.add(k); fresh.push({ ...emptyContact(), ...c, id: uid() }) }
+      const at = new Date().toISOString()
+      for (const c of read) { const k = sameKey(c); if (have.has(k)) continue; have.add(k); fresh.push({ ...emptyContact(), ...c, id: uid(), addedAt: at }) }
       await saveContacts(fresh)
       setList((l) => [...(l || []), ...fresh])
       const dup = read.length - fresh.length
@@ -96,10 +105,13 @@ export default function AddressBook({ slot }) {
           <strong>Contacts</strong> <span className="muted">{list ? list.length : ''}</span> <span className="muted small">· only administrators see them</span>
         </div>
         <div className="toolbar-actions">
+          <span className="segmented small" role="tablist" aria-label="Sort">
+            {[['name', 'Name'], ['new', 'Newest'], ['company', 'Company']].map(([v, l]) => <button key={v} type="button" className={sort === v ? 'on' : ''} onClick={() => pickSort(v)}>{l}</button>)}
+          </span>
           <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} placeholder="Search name, phone, email, company…" />
           <input ref={fileRef} type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" hidden onChange={(e) => importFile(e.target.files?.[0])} />
           <Button onClick={() => fileRef.current?.click()} disabled={busy}>{busy ? 'Importing…' : 'Import file'}</Button>
-          <DbAdd label="Add contact" onClick={() => setDraft(emptyContact())} />
+          <DbAdd label="Add contact" onClick={() => setDraft({ ...emptyContact(), addedAt: new Date().toISOString() })} />
         </div>
       </DbBar>
 
