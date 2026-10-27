@@ -8485,3 +8485,10 @@ html[data-theme] body .ab-card .modal-foot .ab-del.btn-danger { color: #fff; bac
 /* Contacts' form: the specialties ready to tap */
 .ab-spec-pick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }
 .ab-spec-pick .chip { font-size: 12.5px; padding: 4px 11px; }
+
+/* Contacts on a computer (Alex, 27 Oct): the search right beside the tabs, then the count; ⋯ and + at the right end */
+@media (min-width: 821px) {
+  html[data-theme] body .db-slot .ab-bar .toolbar-actions { justify-content: flex-start; }
+  html[data-theme] body .db-slot .ab-bar .ab-search { flex: 1 1 320px; max-width: 460px; }
+  html[data-theme] body .db-slot .ab-bar .ab-export { margin-left: auto; }
+}
