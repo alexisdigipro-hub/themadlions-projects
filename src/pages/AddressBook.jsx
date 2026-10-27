@@ -4,7 +4,10 @@ import { DbAdd, DbBar, useFitScroll } from '../components/DbTools.jsx'
 import { uid, useStore } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 import { emptyContact, loadContacts, parseContactsFile, removeContacts, sameKey, saveContacts, toBook, toCsv, toVcf } from '../lib/addressBook.js'
-import { download } from '../lib/dates.js'
+import { download, fmtDate } from '../lib/dates.js'
+import CoverCropper from '../components/CoverCropper.jsx'
+import { compress } from '../lib/photos.js'
+import { centred } from '../lib/coverCrop.js'
 
 /* Database > Contacts (Alex, 27 Oct 2026): the administrator's own address book. Import a contacts file (.vcf from
    an iPhone or a Mac, .csv from Google or Outlook), search it, and move anyone with one button to Crew or Cast,
@@ -84,6 +87,17 @@ export default function AddressBook({ slot }) {
   const pickSort = (v) => { setSort(v); setShown(PAGE); try { localStorage.setItem('tml_ab_sort', v) } catch { /* private */ } }
   const [shown, setShown] = useState(PAGE)
   const [draft, setDraft] = useState(null)
+  // a tap on a contact opens their card (Alex, 27 Oct: "a beautiful card; Edit edits it, with a profile photo, size
+  // and scale"); Edit opens the form over it and the card comes back after Save or Cancel
+  const [cardId, setCardId] = useState('')
+  const [cropping, setCropping] = useState(null) // { src } the profile photo in the cropper
+  const photoRef = useRef(null)
+  const pickPhoto = async (file) => {
+    if (!file) return
+    try { const c = await compress(file, { max: 1600, quality: 0.88, thumb: 64 }); setCropping({ src: URL.createObjectURL(c.blob), fresh: true }) } catch (e) { toast(e.message, 'error') }
+    if (photoRef.current) photoRef.current.value = ''
+  }
+  const closeCrop = () => { if (cropping?.fresh) URL.revokeObjectURL(cropping.src); setCropping(null) }
   const [busy, setBusy] = useState(false)
   const fileRef = useRef(null)
   const [exportOpen, setExportOpen] = useState(false)
@@ -182,6 +196,7 @@ export default function AddressBook({ slot }) {
       setDraft(null)
     } catch (e) { toast(e.message, 'error') }
   }
+  const cardC = (list || []).find((c) => c.id === cardId)
   const remove = async (c) => {
     try { await removeContacts([c.id]); setList((l) => l.filter((x) => x.id !== c.id)); setPicked((p) => { const n = new Set(p); n.delete(c.id); return n }) } catch (e) { toast(e.message, 'error') }
   }
@@ -377,9 +392,9 @@ export default function AddressBook({ slot }) {
             {/* one slim soft row per person, the columns lined up (not a ruled table); List only (Alex, 27 Oct) */}
               <div className="ab-rows">
                 {items.map((c) => (
-                  <article key={c.id} className={`ab-row${inLibrary(c) ? ' ab-in' : ''}`} title={inLibrary(c) ? `Already in ${inLibrary(c)}` : undefined} onClick={() => setDraft({ ...c })} role="button" tabIndex={0}>
+                  <article key={c.id} className={`ab-row${inLibrary(c) ? ' ab-in' : ''}`} title={inLibrary(c) ? `Already in ${inLibrary(c)}` : undefined} onClick={() => setCardId(c.id)} role="button" tabIndex={0}>
                     {check(c)}
-                    <span className="ab-ava sm" aria-hidden="true">{initials(c.name)}</span>
+                    <span className="ab-ava sm" aria-hidden="true">{c.photo ? <img src={c.photo} alt="" /> : initials(c.name)}</span>
                     <strong className="ab-name">{star(c)}{c.name}</strong>
                     <span className="ab-cell">{c.phone}{c.phone2 && <span className="muted"> · {c.phone2}</span>}</span>
                     <span className="ab-cell muted">{c.email}</span>
@@ -435,10 +450,51 @@ export default function AddressBook({ slot }) {
         )}
       </Modal>
 
+      {/* the contact's card */}
+      <Modal open={!!cardC && !draft} title="" className="ab-card" onClose={() => setCardId('')}
+        footer={cardC && <>
+          <Confirm onConfirm={() => { remove(cardC); setCardId('') }} label="Delete" className="ab-del">Delete</Confirm>
+          <span className="grow" />
+          <Button onClick={() => moveTo(cardC, 'crew')}>→ Crew</Button>
+          <Button onClick={() => moveTo(cardC, 'cast')}>→ Cast</Button>
+          <Button variant="primary" onClick={() => setDraft({ ...cardC })}>Edit</Button>
+        </>}>
+        {cardC && (
+          <div className="ab-card-body">
+            <div className="ab-card-hero">
+              <span className="ab-card-photo">{cardC.photo ? <img src={cardC.photo} alt="" /> : <b>{initials(cardC.name)}</b>}</span>
+              <h2 className="ab-card-name">{star(cardC)}{cardC.name}</h2>
+              <div className="ab-card-tags">
+                {cardC.company && <span className="ab-chip"><i />{cardC.company}</span>}
+                {cardC.title && <span className="muted">{cardC.title}</span>}
+                {inLibrary(cardC) && <span className="ab-card-in">In {inLibrary(cardC)}</span>}
+              </div>
+              {quick(cardC)}
+            </div>
+            <dl className="ab-card-rows">
+              {cardC.phone && <><dt>Phone</dt><dd><a href={`tel:+${intl(cardC.phone)}`}>{cardC.phone}</a></dd></>}
+              {cardC.phone2 && <><dt>Other phone</dt><dd><a href={`tel:+${intl(cardC.phone2)}`}>{cardC.phone2}</a></dd></>}
+              {cardC.email && <><dt>Email</dt><dd><a href={`mailto:${cardC.email}`}>{cardC.email}</a></dd></>}
+              {cardC.addedAt && <><dt>Added</dt><dd>{fmtDate(cardC.addedAt.slice(0, 10))}</dd></>}
+            </dl>
+            {cardC.notes && <p className="ab-card-notes">{cardC.notes}</p>}
+          </div>
+        )}
+      </Modal>
+      {cropping && <CoverCropper src={cropping.src} crop={centred()} title="Profile photo" saveLabel="Use photo" size={320} round onCancel={closeCrop} onSave={({ thumb }) => { setDraft((d) => (d ? { ...d, photo: thumb } : d)); closeCrop() }} />}
+
       <Modal open={!!draft} title={draft && (list || []).some((c) => c.id === draft.id) ? 'Edit contact' : 'Add contact'} onClose={() => setDraft(null)}
         footer={<><Button variant="ghost" onClick={() => setDraft(null)}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></>}>
         {draft && (
           <div className="stack">
+            {/* the profile photo: upload, then place and scale it in the circle; Adjust cuts again from it */}
+            <div className="ab-photo-edit">
+              <span className="ab-card-photo sm">{draft.photo ? <img src={draft.photo} alt="" /> : <b>{initials(draft.name)}</b>}</span>
+              <input ref={photoRef} type="file" accept="image/*" hidden onChange={(e) => pickPhoto(e.target.files?.[0])} />
+              <Button size="sm" onClick={() => photoRef.current?.click()}>{draft.photo ? 'New photo' : 'Upload photo'}</Button>
+              {draft.photo && <Button size="sm" variant="ghost" onClick={() => setCropping({ src: draft.photo, fresh: false })}>Adjust</Button>}
+              {draft.photo && <Button size="sm" variant="ghost" onClick={() => setDraft({ ...draft, photo: '' })}>Remove</Button>}
+            </div>
             <Field label="Name"><Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} autoFocus /></Field>
             <div className="row-2">
               <Field label="Phone"><Input value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} /></Field>
