@@ -8725,7 +8725,7 @@ html[data-theme] body .bcat-row { grid-template-columns: 22px minmax(0, 1fr) min
   html[data-theme] body .settings-cols > section.panel :is(.field, .row-2, .row-3, .check-row) + :is(.field, .row-2, .row-3, .check-row) { margin-top: 16px; }
   html[data-theme] body .settings-cols > section.panel .field-hint + .field-label { margin-top: 16px; }
   html[data-theme] body .settings-cols > section.panel > h2 + :is(.field, .row-2, .row-3, .check-row, .stack) { margin-top: 16px; }
-  html[data-theme] body .settings-cols .accent-swatches { grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); }
+  html[data-theme] body .settings-cols .accent-swatches { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); }
   html[data-theme] body .settings-cols .accent-swatches button.swatch { overflow: hidden; text-overflow: ellipsis; }
   html[data-theme] body .settings-cols button.link.small { text-decoration: none; color: var(--muted); font-weight: 600; font-size: 13px; }
   html[data-theme] body .settings-cols button.link.small:hover { color: var(--text); }
