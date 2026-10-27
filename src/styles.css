@@ -8227,7 +8227,7 @@ html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > b
 .ab-group + .ab-group { margin-top: 18px; }
 .ab-group-head { display: flex; align-items: center; gap: 10px; margin: 0 0 8px 2px; }
 .ab-group-head .ab-chip { font-size: 13px; font-weight: 600; padding: 3px 11px; }
-.ab-search { position: relative; display: inline-flex; flex: 0 1 320px; min-width: 200px; }
+.ab-search { position: relative; display: inline-flex; flex: 0 1 260px; min-width: 160px; }
 .ab-search .input.search { width: 100%; padding-right: 36px !important; }
 .ab-search-x { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border: 0; border-radius: 50%; display: grid; place-items: center; font-size: 17px; line-height: 1; color: var(--muted); background: color-mix(in srgb, var(--text) 9%, transparent); cursor: pointer; }
 .ab-search-x:hover { color: var(--text); background: color-mix(in srgb, var(--text) 16%, transparent); }
@@ -8239,6 +8239,8 @@ html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > b
 .ab-export-menu button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 9px 10px; border: 0; border-radius: 10px; background: none; color: var(--text); text-align: left; cursor: pointer; }
 .ab-export-menu button:hover { background: color-mix(in srgb, var(--accent) 14%, transparent); }
 .ab-export-menu small { color: var(--muted); font-size: 12px; }
+.ab-row.ab-in, .ab-tile.ab-in { background: color-mix(in srgb, var(--accent) 10%, color-mix(in srgb, var(--panel) 88%, transparent)); }
+.ab-row.ab-in:hover, .ab-tile.ab-in:hover { background: color-mix(in srgb, var(--accent) 14%, var(--raised)); }
 .ab-count { flex: none; padding: 0 12px; height: 32px; display: inline-flex; align-items: center; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); background: color-mix(in srgb, var(--text) 6%, transparent); white-space: nowrap; }
 .ab-rows { display: flex; flex-direction: column; gap: 6px; }
 .ab-row { display: grid; grid-template-columns: 32px minmax(160px, 1.3fr) minmax(120px, 1fr) minmax(140px, 1.2fr) minmax(120px, 1fr) auto; align-items: center; gap: 14px; padding: 14px 14px; /* 25% taller than the first version (Alex, 27 Oct) */ border-radius: 12px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); cursor: pointer; transition: background .2s, border-color .2s; }
@@ -8287,3 +8289,17 @@ html[data-theme] body main.content .ab-acts .ab-del.btn-danger:hover { color: #f
   .proj-top .db-slot .toolbar { width: 100%; justify-content: flex-end; }
 }
 @media print { .proj-top { display: none; } }
+
+/* Database on a computer (Alex, 27 Oct: "Contacts is not steady, it moves; keep the top with the search fixed while
+   scrolling"): the room for the scrollbar is always kept, so nothing shifts sideways when a long list arrives, the
+   page does not rubber-band sideways, and the top row (tabs, search, Import, Export, the order) stays at the top
+   in glass while the list scrolls under it. */
+@media (min-width: 821px) {
+  html:has(.db-page) { scrollbar-gutter: stable; overscroll-behavior-x: none; }
+  .db-page { overflow-x: clip; }
+  html[data-theme] body .db-page > .db-top {
+    position: sticky; top: 0; z-index: 30; margin: -12px -14px 18px; padding: 12px 14px;
+    background: color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
+    border-radius: 0 0 18px 18px;
+  }
+}
