@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
+import { useArrowTabs } from '../lib/arrowTabs.js'
 import { Link, Navigate } from 'react-router-dom'
 import { Act, Button, Confirm, Empty, Field, Input, Modal, Select, Stat, Textarea, useToast } from '../components/ui.jsx'
 import { today, uid, useCurrentUser, useStore } from '../lib/store.jsx'
@@ -25,6 +26,8 @@ export default function Finance({ start }) {
   const me = useCurrentUser()
   const toast = useToast()
   const fin = state.finance
+  const tabsRow = useRef(null) // ← / → step through the tabs on a computer (Alex, 27 Oct)
+  useArrowTabs(tabsRow)
   const [viewReceipt, setViewReceipt] = useState(null)
   // the receipt photographed for an expense: on the budget line it pays, or kept on the expense itself
   const receiptOf = (t) => (t.budgetLineId && state.projects.find((p) => p.id === t.projectId)?.budget?.lines?.find((l) => l.id === t.budgetLineId)?.receipt) || t.receipt || null
@@ -305,7 +308,7 @@ export default function Finance({ start }) {
   return (
     <div className="finance">
       <div className="db-top fin-top">
-        <nav className="tabs db-tabs">
+        <nav className="tabs db-tabs" ref={tabsRow}>
           {FIN_TABS.map(([k, l]) => (
             <button key={k} type="button" className={tab === k || (k === 'transactions' && tab === 'recurring') ? 'active' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
