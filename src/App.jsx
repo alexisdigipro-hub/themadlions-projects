@@ -36,7 +36,6 @@ const Script = lazyPage(() => import('./pages/project/Script.jsx'))
 const Schedule = lazyPage(() => import('./pages/project/Schedule.jsx'))
 const People = lazyPage(() => import('./pages/project/People.jsx'))
 const Whiteboard = lazyPage(() => import('./pages/project/Whiteboard.jsx'))
-const Shots = lazyPage(() => import('./pages/project/Shots.jsx'))
 const Database = lazyPage(() => import('./pages/Database.jsx'))
 const RoarMePage = lazyPage(() => import('./pages/RoarMePage.jsx'))
 const RoarMeApp = lazyPage(() => import('./pages/RoarMeApp.jsx'))
@@ -46,13 +45,13 @@ const Profile = lazyPage(() => import('./pages/Profile.jsx'))
 const Office = lazyPage(() => import('./pages/Office.jsx'))
 // Office and Notes share one page with tabs (Alex, 10 Oct)
 const OfficeHub = lazyPage(() => import('./pages/OfficeHub.jsx'))
+const RoarListPage = lazyPage(() => import('./pages/RoarListPage.jsx'))
 const RoardinoRoute = lazyPage(() => import('./pages/RoardinoPage.jsx').then((m) => ({ default: m.RoardinoRoute })))
 const PublicDelivery = lazyPage(() => import('./pages/PublicDelivery.jsx'))
 const Deliveries = lazyPage(() => import('./pages/Deliveries.jsx'))
 const PublicStatus = lazyPage(() => import('./pages/PublicStatus.jsx'))
 const PublicEstimate = lazyPage(() => import('./pages/PublicEstimate.jsx'))
 const PublicInvoice = lazyPage(() => import('./pages/PublicInvoice.jsx'))
-const PublicShotList = lazyPage(() => import('./pages/PublicShotList.jsx'))
 const PublicDeck = lazyPage(() => import('./pages/PublicDeck.jsx'))
 const PublicNote = lazyPage(() => import('./pages/PublicNote.jsx'))
 const Finance = lazyPage(() => import('./pages/Finance.jsx'))
@@ -112,6 +111,12 @@ function OldOrdinoLink() {
     <div className="pub"><div className="pub-card"><h1>This ordino is no longer here</h1><p className="muted">Ask the production for the new link.</p></div></div>
   )
 }
+// the shot list links stopped when RoarList took the shot list over (Alex, 27 Oct)
+function OldShotListLink() {
+  return (
+    <div className="pub"><div className="pub-card"><h1>This shot list is no longer here</h1><p className="muted">Ask the production for the new one.</p></div></div>
+  )
+}
 
 export default function App() {
   return (
@@ -130,7 +135,7 @@ export default function App() {
             <Route path="/ps/:token" element={<PublicStatus />} />
             <Route path="/e/:token" element={<PublicEstimate />} />
             <Route path="/inv/:token" element={<PublicInvoice />} />
-            <Route path="/sl/:token" element={<PublicShotList />} />
+            <Route path="/sl/:token" element={<OldShotListLink />} />
             <Route path="/pr/:token" element={<PublicDeck />} />
             {/* a note opened from its link (Alex, 10 Oct) */}
             <Route path="/n/:token" element={<PublicNote />} />
@@ -149,6 +154,7 @@ export default function App() {
                 <Route path="chat/:room" element={<Navigate to="/roarme" replace />} />
                 <Route path="roarme" element={<RoarMePage />} />
                 <Route path="roardino" element={<RoardinoRoute />} />
+                <Route path="roarlist" element={<RoarListPage />} />
                 <Route path="mywork" element={<MyWork />} />
                 <Route path="me" element={<Navigate to="/settings" replace />} />
                 <Route path="u/:id" element={<Profile />} />
@@ -179,7 +185,8 @@ export default function App() {
                   <Route path="script" element={<Script />} />
                   {/* Breakdown is now framed inside Script */}
                   <Route path="breakdown" element={<Navigate to="../script" replace />} />
-                  <Route path="shots" element={<Shots />} />
+                  {/* the Shotlist tab is gone (Alex, 27 Oct): shot lists are in the side menu's RoarList */}
+                  <Route path="shots" element={<Navigate to=".." replace />} />
                   <Route path="schedule" element={<Schedule />} />
                   {/* Tasks is now on Overview */}
                   <Route path="tasks" element={<Navigate to=".." replace />} />

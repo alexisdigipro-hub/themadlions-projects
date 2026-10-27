@@ -11,7 +11,6 @@ export function projectProgress(p, settings) {
   const chars = [...new Set(scenes.flatMap((s) => s.characters || []))]
   const castDone = chars.length ? chars.filter((c) => (p.contacts || []).some((x) => x.kind === 'cast' && x.character?.toUpperCase() === c.toUpperCase())).length / chars.length : 0
   const locDone = days.length ? days.filter((d) => d.locationId).length / days.length : (p.locations || []).length ? 1 : 0
-  const shotsScenes = scenes.length ? scenes.filter((s) => (p.shots || []).some((sh) => sh.sceneId === s.id)).length / scenes.length : 0
   // Post (cuts and deliverables) was taken out with its stages (Alex, 10 Oct). An Editing job's
   // first cut, approval and delivery are now boxes ticked by hand on the Overview.
   const tick = (k, label, weight) => ({ key: 'custom:' + k, label, weight, done: p.customStages?.[k] ? 1 : 0, manual: true, to: '' })
@@ -42,7 +41,7 @@ export function projectProgress(p, settings) {
       { key: 'budget', label: 'Budget', weight: 6, done: budgetDone, to: 'budget' },
       { key: 'cast', label: 'Cast attached', weight: 8, done: chars.length ? castDone : (p.contacts || []).some((c) => c.kind === 'cast') ? 1 : 0, to: 'people' },
       { key: 'locations', label: 'Locations set', weight: 8, done: clamp(locDone), to: 'people?tab=locations' },
-      { key: 'shots', label: 'Shot list', weight: 8, done: clamp(shotsScenes), to: 'shots' },
+      // the Shot list stage left with the Shotlist tab (Alex, 27 Oct: shot lists are in RoarList)
       // the stripboard was taken out (Alex, 10 Oct): the stage is done once the project has its shoot days;
       // no tab of its own since the Ordino tab went (23 Oct), so it opens the Overview
       { key: 'schedule', label: 'Ordino', weight: 12, done: days.length ? 1 : 0, to: '' },

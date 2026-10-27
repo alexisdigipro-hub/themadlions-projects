@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { ACT_ICON, Act, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { can, uid, useCurrentUser, useStore, visibleProjects, whenMs } from '../lib/store.jsx'
-import { deliveryUrl, estimateUrl, getShareRow, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, shotlistUrl, tokenOf, deckUrl } from '../lib/shares.js'
+import { deliveryUrl, estimateUrl, getShareRow, listShares, publishShare, removeShare, reopenQuietly, setShareState, shareUrl, tokenOf, deckUrl } from '../lib/shares.js'
 import { amount, estimateTotals } from '../lib/estimate.js'
 import { EstimateSheet } from './PublicEstimate.jsx'
 import EstimateLookEditor from '../components/EstimateLookEditor.jsx'
@@ -320,23 +320,23 @@ export default function Deliveries() {
   }
 
   const today = toISODate(new Date()) // local date, not UTC: a link must not look closed a day early
-  const all = useMemo(() => (rows || []).filter((r) => r.kind !== 'status' && r.kind !== 'callsheet').map((r) => {
+  // shot list links stopped with RoarList (Alex, 27 Oct), as the ordino links with Roardino
+  const all = useMemo(() => (rows || []).filter((r) => r.kind !== 'status' && r.kind !== 'callsheet' && r.kind !== 'shotlist').map((r) => {
     const d = r.data || {}
     const isDelivery = r.kind === 'delivery'
     const isEstimate = r.kind === 'estimate'
-    const isShotlist = r.kind === 'shotlist'
     const isDeck = r.kind === 'deck'
     const day = d.day || {}
     return {
       ...r,
       isDelivery,
       isEstimate,
-      url: isDelivery ? deliveryUrl(r.token) : isEstimate ? estimateUrl(r.token) : isShotlist ? shotlistUrl(r.token) : isDeck ? deckUrl(r.token) : shareUrl(r.token),
+      url: isDelivery ? deliveryUrl(r.token) : isEstimate ? estimateUrl(r.token) : isDeck ? deckUrl(r.token) : shareUrl(r.token),
       shut: !!r.closed || (!!r.expires_at && r.expires_at < today),
       answers: Array.isArray(r.responses) ? r.responses : [],
-      badge: isDelivery ? stageLabel(d.stage) : isEstimate ? 'Estimate' : isShotlist ? 'Shot list' : isDeck ? 'Presentation' : 'Call sheet',
+      badge: isDelivery ? stageLabel(d.stage) : isEstimate ? 'Estimate' : isDeck ? 'Presentation' : 'Call sheet',
       badgeClass: isDelivery ? `s-${d.stage}` : isEstimate ? 's-estimate' : 's-callsheet',
-      name: isDelivery || isEstimate ? d.title : (d.project?.title || (isShotlist ? 'Shot list' : isDeck ? 'Presentation' : 'Call sheet')),
+      name: isDelivery || isEstimate ? d.title : (d.project?.title || (isDeck ? 'Presentation' : 'Call sheet')),
       version: isDelivery || isEstimate ? d.version : (day.index ? `Day ${day.index}${day.count ? ` of ${day.count}` : ''}` : ''),
       cover: coverOf(d),
       sub: isDelivery

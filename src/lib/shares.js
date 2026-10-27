@@ -20,7 +20,6 @@ export const shareUrl = (t) => `${linkBase()}s/${t}`
 export const deliveryUrl = (t) => `${linkBase()}d/${t}`
 export const statusUrl = (t) => `${linkBase()}ps/${t}`
 export const estimateUrl = (t) => `${linkBase()}e/${t}`
-export const shotlistUrl = (t) => `${linkBase()}sl/${t}`
 export const invoiceUrl = (t) => `${linkBase()}inv/${t}`
 export const deckUrl = (t) => `${linkBase()}pr/${t}`
 export const noteUrl = (t) => `${linkBase()}n/${t}`

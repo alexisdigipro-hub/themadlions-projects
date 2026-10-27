@@ -16,7 +16,7 @@ export function projectTabs(project) {
     // Breakdown is framed inside Script now (its own permission still gates that section)
     ...(cat === 'Event' ? [] : [
       { to: 'script', label: 'Script & Breakdown', key: 'script', icon: 'script' },
-      { to: 'shots', label: 'Shotlist', key: 'shots', icon: 'shots' },
+      // the Shotlist tab is gone (Alex, 27 Oct): shot lists are made in RoarList (side menu)
     ]),
     // the Ordino tab is gone (Alex, 23 Oct): the ordino is made in Roardino (side menu) and shows on the
     // Overview's Ordino button; an Event keeps the tab for its Run of show
