@@ -108,8 +108,8 @@ export default function Profile({ mine = false, embedded = false }) {
           {editable && (
             <div className="row-actions wrap">
               <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => pickPhoto(e.target.files?.[0])} />
-              <Button variant="ghost" onClick={() => fileRef.current?.click()} disabled={busy}>{busy ? 'Resizing…' : 'Choose photo'}</Button>
-              {draft.photo && <button className="link small" onClick={() => setDraft((d) => ({ ...d, photo: '', thumb: '' }))}>Remove</button>}
+              <Button size="sm" onClick={() => fileRef.current?.click()} disabled={busy}>{busy ? 'Resizing…' : draft.photo ? 'New photo' : 'Choose photo'}</Button>
+              {draft.photo && <Button size="sm" variant="ghost" onClick={() => setDraft((d) => ({ ...d, photo: '', thumb: '' }))}>Remove</Button>}
             </div>
           )}
           {editable && <p className="fineprint">Your name and email are set by an administrator in Team. Everything else on this page is yours to fill in.</p>}
@@ -119,18 +119,19 @@ export default function Profile({ mine = false, embedded = false }) {
           {editable ? (
             <div className="stack">
               <div className="row-2">
-                <Field label="Position" hint="What you do here, in your own words."><Input value={draft.position} onChange={(e) => set('position', e.target.value)} placeholder="Director of photography" /></Field>
+                <Field label="Position"><Input value={draft.position} onChange={(e) => set('position', e.target.value)} placeholder="Director of photography" /></Field>
                 <Field label="Department"><Select value={draft.dept} onChange={(e) => set('dept', e.target.value)} options={[['', 'Not set'], ...depts.map((d) => [d, d])]} /></Field>
               </div>
               <div className="row-2">
                 <Field label="Phone"><Input value={draft.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+30 69…" inputMode="tel" /></Field>
                 <Field label="Birthday"><Input type="date" value={draft.birthday} onChange={(e) => set('birthday', e.target.value)} /></Field>
               </div>
-              <Field label="A few words" hint="What you have worked on, what you are good at, anything the team should know."><Textarea rows={5} value={draft.bio} onChange={(e) => set('bio', e.target.value)} /></Field>
+              <Field label="A few words"><Textarea rows={4} placeholder="What you have worked on, what you are good at, anything the team should know" value={draft.bio} onChange={(e) => set('bio', e.target.value)} /></Field>
               <Field label="Who can see my phone and birthday" hint="Your name, photo, position and the few words are always visible to the team.">
                 <Select value={draft.showPhone === 'admins' ? 'admins' : 'everyone'} onChange={(e) => set('showPhone', e.target.value)} options={[['everyone', 'Everyone in the team'], ['admins', 'Administrators only']]} />
               </Field>
-              <div className="row-actions"><Button variant="primary" onClick={save} disabled={busy}>Save profile</Button></div>
+              {/* Save sits in the page's top row; inside Settings, where there is no top row, here */}
+              {embedded && <div className="row-actions"><Button variant="primary" onClick={save} disabled={busy}>Save profile</Button></div>}
             </div>
           ) : (
             <dl className="profile-read">
