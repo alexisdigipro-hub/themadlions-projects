@@ -12,17 +12,18 @@ import IdSheets from './IdSheets.jsx'
 import AddressBook from './AddressBook.jsx'
 
 const TABS = [
-  // the drives archive moved in here, for whoever has the Drives permission (Alex, 10 Oct); the first tab since 23 Oct
+  // the order (Alex, 27 Oct): Drives, Contacts, Locations, Crew, Cast, Equipment; ID sheets at the end
+  // the drives archive moved in here, for whoever has the Drives permission (Alex, 10 Oct)
   { key: 'drives', label: 'Drives', icon: 'drives', perm: 'drives' },
-  // photos of people's ID sheets, a folder per person, the pictures in pCloud (Alex, 25 Oct; after Drives)
-  { key: 'ids', label: 'ID sheets', short: 'IDs', icon: 'idcard', perm: 'idsheets' },
+  // the administrator's own address book, the one database of people; Crew and Cast are drawn from it (Alex, 27 Oct)
+  { key: 'contacts', label: 'Contacts', icon: 'people', admin: true },
   { key: 'locations', label: 'Locations', icon: 'locations', perm: 'locations' },
   { key: 'crew', label: 'Crew', icon: 'team', perm: 'contacts' },
   { key: 'cast', label: 'Cast', icon: 'people', perm: 'contacts' },
   // the company's own film equipment, with a rental price (Alex, 10 Oct)
   { key: 'equipment', label: 'Equipment', icon: 'gear', perm: 'gear' },
-  // the administrator's own address book, imported from a file; moved from here to Crew or Cast (Alex, 27 Oct)
-  { key: 'contacts', label: 'Contacts', icon: 'people', admin: true },
+  // photos of people's ID sheets, a folder per person, the pictures in pCloud (Alex, 25 Oct)
+  { key: 'ids', label: 'ID sheets', short: 'IDs', icon: 'idcard', perm: 'idsheets' },
 ]
 
 export default function Database() {
