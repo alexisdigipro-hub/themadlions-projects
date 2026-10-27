@@ -497,3 +497,8 @@ input.input,select.input{height:42px}
   .home2{padding:14px 12px 90px}
   .ogrid{grid-template-columns:minmax(0,1fr)}
 }
+
+/* in the hub's Share (27 Oct): no ROARDINO mark, and on a computer Share's own top row holds the home's filters,
+   search and New ordino, so the home's row goes */
+html.in-share .brand{display:none}
+@media (min-width:821px){ html.in-share .home-top{display:none} html.in-share .home2{padding-top:4px} }

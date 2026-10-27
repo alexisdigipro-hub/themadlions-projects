@@ -8498,7 +8498,7 @@ html[data-theme] body .ab-lib.btn-danger { color: #fff; background: #e5484d; bor
 
 /* Share > Roardino (Alex, 27 Oct): only Share's top row stays, Roardino fills the rest of the page under it */
 .deliveries.in-roardino > :not(.db-top):not(.share-top) { display: none; }
-.deliveries.in-roardino :is(.share-look, .share-new, .share-add) { display: none; }
+.deliveries.in-roardino :is(.share-look, .share-new:not(.rd), .share-add) { display: none; }
 @media (min-width: 821px) {
   html[data-theme] body .content:has(> .deliveries.in-roardino) > .deliveries { flex: none; }
   html[data-theme] body .content:has(> .deliveries.in-roardino) .share-dtop { margin-bottom: 14px; }
@@ -8512,4 +8512,9 @@ html[data-theme] body .ab-lib.btn-danger { color: #fff; background: #e5484d; bor
   html[data-theme] body .share-dtop .share-search { margin-left: auto; display: inline-flex; flex: 0 1 300px; min-width: 180px; }
   html[data-theme] body .share-dtop .share-search .ab-search { flex: 1 1 auto; }
   html[data-theme] body .share-dtop .share-search + .share-new { margin-left: 0; }
+}
+/* Share > Roardino on a computer: the ordinos' filters as a second glass capsule beside Share's tabs, one row */
+@media (min-width: 821px) {
+  html[data-theme] body .share-dtop .share-rd-filters { flex: none; }
+  html[data-theme] body .deliveries.in-roardino .share-dtop { flex-wrap: nowrap; }
 }

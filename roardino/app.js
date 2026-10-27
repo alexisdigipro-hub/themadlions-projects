@@ -495,8 +495,23 @@ const brandMark = (compact) => h('a', { class: 'brand', href: BASE + '#home', 'a
   h('span', { class: 'rm', html: '<span class="a">ROAR</span><span class="b">DINO</span>' }),
   compact ? null : h('span', { class: 'by', html: 'by <b>THE<strong>MAD</strong>LIONS</b>' }));
 
+/* In the hub's Share (Alex, 27 Oct: "Roardino in Share with the same navigation and buttons, one row, no Roardino
+   title"): the hub says so ('roardino:host', share), the home's own top row hides on a computer (roardino.css
+   html.in-share) and Share draws the filters, the search and New ordino in its own top row instead. The home tells
+   Share what to draw ('roardino:home': the filters with their counts, the one chosen, the search) and Share sends
+   back what was pressed ('roardino:do'). */
+let homeApi = null;
+const tellHost = msg => { if (EMBED) try { window.parent.postMessage({ type: 'roardino:home', ...msg }, location.origin); } catch {} };
+window.addEventListener('message', e => {
+  if (e.origin !== location.origin || e.source !== window.parent) return;
+  const d = e.data || {};
+  if (d.type === 'roardino:host'){ document.documentElement.classList.toggle('in-share', !!d.share); if (homeApi) homeApi.announce(); else tellHost({ view: 'other' }); }
+  if (d.type === 'roardino:do' && homeApi){ if (d.filter) homeApi.pick(d.filter); if (typeof d.search === 'string') homeApi.search(d.search); if (d.create) homeApi.create(); }
+});
+
 async function route(){
   if (flushEditor){ const f = flushEditor; flushEditor = null; f(); }
+  homeApi = null; tellHost({ view: 'other' });
   const hash = location.hash;
   const t = Q.get('t');
   if (t && !hash.startsWith('#edit/') && hash !== '#home') return viewToken(t);
@@ -682,6 +697,18 @@ async function viewHome(){
   head.querySelector('.home-filters').replaceWith(lensRow('home-filters', HOME_FILTERS.map(([k, l]) => [k, l, counts[k]]), homeFilter, k => {
     homeFilter = k; try { localStorage.setItem('roardino-filter', k); } catch {} draw();
   }));
+  // the same, pressed in the hub's Share (above)
+  homeApi = {
+    announce: () => tellHost({ view: 'home', filters: HOME_FILTERS.map(([k]) => [k, counts[k]]), current: homeFilter, search: homeSearch, canEdit }),
+    pick: k => {
+      homeFilter = k; try { localStorage.setItem('roardino-filter', k); } catch {}
+      head.querySelectorAll('.home-filters button').forEach((b, i) => b.classList.toggle('on', HOME_FILTERS[i][0] === k));
+      draw(); homeApi.announce();
+    },
+    search: w => { homeSearch = w; const i = search.querySelector('input'); if (i) i.value = w; draw(); },
+    create,
+  };
+  homeApi.announce();
   // the next shoot to come: ringed in the accent
   const next = list.filter(o => (o.day.date || '') >= today).sort((a, b) => a.day.date.localeCompare(b.day.date) || (a.day.callTime || '').localeCompare(b.day.callTime || ''))[0];
   const tile = o => {
