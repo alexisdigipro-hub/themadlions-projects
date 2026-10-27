@@ -5,7 +5,7 @@ import { CATEGORIES, can, emptyProject, nextProjectCode, today, unavailableOn, u
 import { fmtDate } from '../lib/dates.js'
 import { projectProgress } from '../lib/progress.js'
 import { useCover } from '../components/CoverCropper.jsx'
-import { allHideable, hiddenAfterCategory, projectTabs, tabHidden, toggleTab } from '../lib/tabs.js'
+import { hiddenAfterCategory, projectTabs, tabHidden, toggleTab } from '../lib/tabs.js'
 import { initialsOf } from './Profile.jsx'
 import { joinName, nameParts } from '../lib/projectName.js'
 import { duplicateProject } from '../lib/duplicate.js'
@@ -59,7 +59,8 @@ export function ProjectForm({ value, onChange }) {
   const cover = useCover({ value, projectId: value.id, keepSource: !value.isNew, onChange: (patch) => onChange({ ...value, ...patch }) })
   const coverFile = useRef(null)
   // a category switch can bring new tabs (Music, Script…); they start hidden, like everything else
-  const setCategory = (e) => onChange({ ...value, category: e.target.value, hiddenTabs: hiddenAfterCategory(value, e.target.value) })
+  // a project not made yet keeps every tab on when its category changes; an existing one hides the tabs new to it
+  const setCategory = (e) => onChange({ ...value, category: e.target.value, hiddenTabs: value.isNew ? (value.hiddenTabs || []) : hiddenAfterCategory(value, e.target.value) })
   const parts = nameParts(value)
   const setPart = (k) => (e) => {
     const next = { ...parts, [k]: e.target.value }
@@ -124,7 +125,7 @@ export function ProjectForm({ value, onChange }) {
         </div>
         {cover.modal}
       </Field>
-      <Field label="Tabs" hint="A new project starts with Overview alone. Tap the tabs it needs; tap again to hide one. Nothing is deleted, a hidden tab keeps its data.">
+      <Field label="Tabs" hint="A new project starts with every tab on. Tap one to hide it, tap again to bring it back. Nothing is deleted, a hidden tab keeps its data.">
         <TabPicker project={value} onChange={(patch) => onChange({ ...value, ...patch })} />
       </Field>
       <div className="field">
@@ -195,10 +196,11 @@ export default function Dashboard() {
     return () => window.removeEventListener('resize', check)
   }, [team.length, allFaces])
 
-  // a new project: the workspace defaults, and every tab but Overview switched off (Alex's call)
+  // a new project: the workspace defaults, every tab on (Alex, 27 Oct; before, only Overview)
   const freshProject = () => {
     const base = { ...emptyProject(), title: '', artist: '', shortTitle: '', category: state.settings?.defaultCategory || 'Music Video', budget: { lines: [], contingencyPct: Number(state.settings?.budgetContingency ?? 10), currency: state.settings?.budgetCurrency || 'EUR', cap: '' }, isNew: true }
-    return { ...base, hiddenTabs: allHideable(base) }
+    // a new project opens with every tab on (Alex, 27 Oct: "when you make a new project I want these tabs on")
+    return { ...base, hiddenTabs: [] }
   }
 
   /* Search looks through every project (Alex, 11 Oct): all categories and the delivered ones too,
