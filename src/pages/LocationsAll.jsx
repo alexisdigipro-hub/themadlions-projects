@@ -7,7 +7,7 @@ import { coordsFromText } from '../lib/sun.js'
 import { isMapsLink, readMapLink } from '../lib/maplink.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
 import { InfoCard, QuickLinks } from '../components/InfoCard.jsx'
-import { DbAdd, DbBar, DbFilter, ListRow, ListSearch, useFitScroll } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbFilter, DbStats, ListRow, ListSearch, useFitScroll } from '../components/DbTools.jsx'
 
 const TYPES = ['Studio', 'Interior', 'Exterior', 'INT. & EXT.', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
 const emptyLoc = () => ({ id: uid(), name: '', mapsUrl: '', address: '', type: 'Interior', notes: '', contact: '', phone: '', lat: '', lon: '', coordsText: '', photos: [], tags: [], createdAt: new Date().toISOString() })
@@ -137,6 +137,13 @@ export default function LocationsAll({ slot }) {
         </div>
       </DbBar>
 
+      {/* the numbers, as Drives' (Alex, 27 Oct) */}
+      {locs.length > 0 && <DbStats items={[
+        [locs.length, 'locations'],
+        [locs.filter((l) => l.photos?.length).length, 'with photos'],
+        [locs.filter((l) => locationProjects(projects, l.id).length).length, 'used in a project'],
+        locs.filter((l) => !l.address && !(l.lat && l.lon)).length ? [locs.filter((l) => !l.address && !(l.lat && l.lon)).length, 'with no address', true] : [new Set(locs.map((l) => l.type).filter(Boolean)).size, 'types'],
+      ]} />}
       <div className="ab-scroll" ref={scrollRef}>
       {!list.length ? (
         <Empty title={locs.length ? 'No matches' : 'The database is empty'}>

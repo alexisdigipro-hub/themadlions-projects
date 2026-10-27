@@ -8591,3 +8591,25 @@ a.lchip:hover { color: var(--text); }
 .lrow-thumb > .lrow-tint { width: 100%; height: 100%; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 18%, var(--panel)); }
 .lrow-thumb > .lrow-tint img { width: 100%; height: 100%; object-fit: cover; }
 .lrow .ab-quick { gap: 4px; }
+
+/* Every page's top row the same (Alex, 27 Oct: "Share's menu looks smaller, or the gaps are not the same: make all the
+   menus on every page the same"): on a computer, in every skin, the tabs' glass capsule is 44 px with 38 px tabs of
+   the same padding and gap, and everything beside it (search, round buttons, pills, the year, segmented switches) is
+   the same 44 px height, so no row looks smaller or looser than another */
+@media (min-width: 821px) {
+  html[data-theme] body main.content .tabs.db-tabs { padding: 3px !important; gap: 4px !important; min-height: 44px; box-sizing: border-box; align-items: center; }
+  html[data-theme] body main.content .tabs.db-tabs > :is(a, button) {
+    height: 38px !important; min-height: 38px; box-sizing: border-box; padding: 0 16px !important; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 14px !important; font-weight: 600 !important; line-height: 1; white-space: nowrap;
+  }
+  html[data-theme] body main.content .tabs.db-tabs > :is(a, button) small { font-size: 11px; opacity: .7; }
+  html[data-theme] body main.content :is(.db-top, .proj-top, .share-dtop, .fin-top, .hub-top, .cal-top) :is(input.search, .input.search, input[type=search]) { height: 44px !important; min-height: 44px; border-radius: 999px !important; }
+  html[data-theme] body main.content :is(.db-top, .share-dtop, .fin-top) :is(.db-add, .ab-more, .db-filter, .icon-btn, .act-round, .db-search-btn) { width: 44px !important; height: 44px !important; min-height: 44px; }
+  html[data-theme] body main.content :is(.db-top, .share-dtop, .fin-top) :is(.act:not(.act-round), .btn:not(.btn-sm):not(.ab-more):not(.db-add)) { height: 44px; min-height: 44px; }
+  html[data-theme] body main.content :is(.db-top, .share-dtop, .fin-top) .ab-count { height: 44px; }
+  html[data-theme] body main.content :is(.db-top, .share-dtop, .fin-top) .segmented { min-height: 44px; padding: 3px; box-sizing: border-box; }
+  html[data-theme] body main.content :is(.db-top, .share-dtop, .fin-top) .segmented > button { height: 38px; }
+  html[data-theme] body main.content .fin-top :is(.fin-year, select) { height: 44px; }
+}
+.db-stats > .warn { border-color: color-mix(in srgb, #ffb020 45%, transparent); background: color-mix(in srgb, #ffb020 10%, var(--panel)); }
+.db-stats > .warn b { color: #ffb020; }

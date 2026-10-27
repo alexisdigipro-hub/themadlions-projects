@@ -112,3 +112,13 @@ export function ListRow({ check, thumb, title, sub, chips, aside, onClick, class
     </article>
   )
 }
+
+/* The line of numbers over a Database list, as Drives' and ID sheets' (Alex, 27 Oct): [value, label, warn?] each, a
+   warning one in amber */
+export function DbStats({ items }) {
+  return (
+    <div className="drv-stats db-stats">
+      {items.filter(Boolean).map(([v, l, warn]) => <span key={l} className={warn ? 'warn' : ''}><b>{v}</b><small>{l}</small></span>)}
+    </div>
+  )
+}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Textarea, useToast } from '../components/ui.jsx'
-import { DbAdd, DbBar, ListRow, useFitScroll } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbStats, ListRow, useFitScroll } from '../components/DbTools.jsx'
 import { uid, useStore } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 import { cachedContacts, emptyContact, keepContacts, loadContacts, parseContactsFile, removeContacts, sameKey, saveContacts, toBook, toCsv, toVcf } from '../lib/addressBook.js'
@@ -453,6 +453,15 @@ export default function AddressBook({ slot }) {
         </div>
       </DbBar>
 
+      {/* the numbers, as Drives' (Alex, 27 Oct) */}
+      {list && list.length > 0 && <DbStats items={[
+        [list.length, 'contacts'],
+        [chips.length, 'specialties'],
+        [list.filter((c) => c.lib?.crew || c.lib?.cast).length, `in Crew or Cast · ${list.filter((c) => c.lib?.crew).length} crew, ${list.filter((c) => c.lib?.cast).length} cast`],
+        list.filter((c) => !c.phone && !c.phone2 && !c.email).length
+          ? [list.filter((c) => !c.phone && !c.phone2 && !c.email).length, 'with no phone or email', true]
+          : [favCount, 'favourites'],
+      ]} />}
       {/* under the top row (Alex, 27 Oct: the search and buttons up on the tabs' line, as every Database tab): the
           specialty chips, the order, and the selection */}
         {/* the specialty chips, the most used first; ★ the favourites */}

@@ -5,7 +5,7 @@ import { can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore, visi
 import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
 import { InfoCard, QuickLinks } from '../components/InfoCard.jsx'
-import { DbAdd, DbBar, DbFilter, ListRow, ListSearch, useFitScroll } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbFilter, DbStats, ListRow, ListSearch, useFitScroll } from '../components/DbTools.jsx'
 
 // a role's chip key: the same word in any case or accent is one chip
 const roleKey = (r) => String(r || '').trim().toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ')
@@ -117,6 +117,18 @@ export default function PeopleAll({ kind, slot }) {
           </nav>
         </div>
       )}
+      {/* the numbers, as Drives' (Alex, 27 Oct) */}
+      {all > 0 && (() => {
+        const mine = people.filter((p) => p.kind === kind)
+        const inProj = mine.filter((p) => contactProjects(projects, p.id).length).length
+        const noPhone = mine.filter((p) => !p.phone && !p.email).length
+        return <DbStats items={[
+          [all, kind === 'cast' ? 'in cast' : 'in crew'],
+          kind === 'cast' ? [mine.filter((p) => p.photos?.length).length, 'with headshots'] : [new Set(mine.map((p) => p.dept).filter(Boolean)).size, 'departments'],
+          [inProj, 'in a project'],
+          noPhone ? [noPhone, 'with no phone or email', true] : [mine.filter((p) => p.agent).length, 'with an agent'],
+        ]} />
+      })()}
       <div className="ab-scroll" ref={scrollRef}>
       {!list.length ? (
         <Empty title={people.length ? 'No matches' : 'The database is empty'}>
