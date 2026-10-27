@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, useIsMobile, useToast } from '../components/ui.jsx'
+import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, useToast } from '../components/ui.jsx'
 import { can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
-import { DbAdd, DbBar, DbFilter } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbFilter, ListSearch, useFitScroll } from '../components/DbTools.jsx'
 
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 const emptyPerson = (kind) => ({ id: uid(), kind, name: '', phone: '', email: '', dept: kind === 'cast' ? 'Cast' : 'Production', role: '', agent: '', agentPhone: '', notes: '', photos: [], tags: [], createdAt: new Date().toISOString() })
@@ -20,11 +20,9 @@ export default function PeopleAll({ kind, slot }) {
   const [dept, setDept] = useState('')
   const [draft, setDraft] = useState(null)
   const [detailFor, setDetailFor] = useState(null)
-  const [view, setView] = useState(() => localStorage.getItem('tml_people_view') || 'cards')
-  const pickView = (v) => { setView(v); localStorage.setItem('tml_people_view', v) }
-  // a phone always shows the cards: its toolbar is one line, with no room for Cards / List (Alex, 10 Oct)
-  const mobile = useIsMobile()
-  const shownView = mobile ? 'cards' : view
+  // one list, as Contacts (Alex, 27 Oct: "Crew, Cast and Equipment like Contacts, List only"); it scrolls in its own
+  // box so the top row stays put
+  const scrollRef = useFitScroll()
   const people = state.library.contacts
   const projects = visibleProjects(state, user)
 
@@ -33,6 +31,7 @@ export default function PeopleAll({ kind, slot }) {
     .filter((p) => (dept ? p.dept === dept : true))
     .filter((p) => matchText(q, p.name, p.role, p.phone, p.email, p.agent, p.notes, (p.tags || []).join(' ')))
     .sort((a, b) => a.name.localeCompare(b.name))
+  const all = people.filter((p) => p.kind === kind).length
   const target = people.find((p) => p.id === detailFor)
 
   const save = () => {
@@ -80,61 +79,45 @@ export default function PeopleAll({ kind, slot }) {
     <section className="panel db-card">
       <DbBar slot={slot}>
         <div className="toolbar-info">
-          <strong>{kind === 'cast' ? 'Cast' : 'Crew'}</strong> <span className="muted">{list.length}</span>
+          <strong>{kind === 'cast' ? 'Cast' : 'Crew'}</strong>
           {unlinked > 0 && editable && <> · <button className="link" onClick={collect}>collect {unlinked} from projects</button></>}
         </div>
         <div className="toolbar-actions">
-          <div className="segmented small">
-            <button className={view === 'cards' ? 'on' : ''} onClick={() => pickView('cards')}>Cards</button>
-            <button className={view === 'table' ? 'on' : ''} onClick={() => pickView('table')}>List</button>
-          </div>
-          <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, role, phone, agent…" />
+          <ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, role, phone, agent…" />
+          <span className="ab-count">{q.trim() || dept ? `${list.length} of ${all}` : `${all} ${kind === 'cast' ? 'in cast' : 'in crew'}`}</span>
           <DbFilter value={dept} onChange={(e) => setDept(e.target.value)} options={[['', 'All departments'], ...DEPTS.map((d) => [d, d])]} label="Department" />
           {editable && <DbAdd label={`Add ${kind}`} onClick={() => setDraft(emptyPerson(kind))} />}
         </div>
       </DbBar>
 
+      <div className="ab-scroll" ref={scrollRef}>
       {!list.length ? (
         <Empty title={people.length ? 'No matches' : 'The database is empty'}>
           {people.length ? 'Try another search.' : 'People you add inside a project land here automatically, so the next project can pick them from the list. You can also add them directly.'}
         </Empty>
-      ) : shownView === 'table' ? (
-        <div className="table-wrap">
-        <table className="table people-table">
-          {/* Alex: the list of projects someone worked on made every row a different height and
-              threw the columns out. It is in the person's own card (tap the name) instead. */}
-          <thead><tr><th /><th>Name</th><th>{kind === 'cast' ? 'Type' : 'Department · role'}</th><th>Phone</th><th>Email</th>{editable && <th />}</tr></thead>
-          <tbody>
-            {list.map((c) => (
-                <tr key={c.id}>
-                  <td><button className="avatar" onClick={() => setDetailFor(c.id)} aria-label="Details">{c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}</button></td>
-                  <td><button className="name-link" onClick={() => setDetailFor(c.id)}><strong>{c.name}</strong></button>{c.agent && <div className="muted small">Agent: {c.agent}</div>}</td>
-                  <td className="small">{c.kind === 'cast' ? c.role : `${c.dept}${c.role ? ` · ${c.role}` : ''}`}</td>
-                  <td className="small">{showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</td>
-                  <td className="small">{showContacts && c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</td>
-                  {editable && <td className="row-actions"><button onClick={() => setDraft({ ...c })}>Edit</button><Confirm onConfirm={() => remove(c)} label="Delete">×</Confirm></td>}
-                </tr>
-            ))}
-          </tbody>
-        </table>
-        </div>
       ) : (
-        <div className="people-grid compact">
+        // the rows of Contacts: picture, name (and agent), department and role as a chip, phone, email; a tap opens the
+        // person's window (projects, notes, photos). The projects someone worked on stay in that window, so every
+        // row is the same height (Alex, 10 Oct)
+        <div className="ab-rows">
           {list.map((c) => (
-              // the same short card as Locations, on a phone and then on a computer too: picture, name and
-              // role; a tap opens the person's window, which has the phone, the email, Edit and Delete (Alex, 10 Oct)
-              <article key={c.id} className="person loc-card" onClick={() => setDetailFor(c.id)} role="button" tabIndex={0}>
-                <div className="person-photo" aria-hidden="true">
-                  {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : <span className="person-initials">{initials(c.name)}</span>}
-                </div>
-                <div className="person-body">
-                  <strong>{c.name}</strong>
-                  <div className="small muted">{c.kind === 'cast' ? c.role || 'Actor' : c.role || c.dept}</div>
-                </div>
-              </article>
+            <article key={c.id} className="ab-row lib-row" onClick={() => setDetailFor(c.id)} role="button" tabIndex={0}>
+              <span className="ab-ava sm" aria-hidden="true">{c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}</span>
+              <strong className="ab-name">{c.name}{c.agent && <span className="muted small"> · Agent: {c.agent}</span>}</strong>
+              <span className="ab-cell">{(c.kind === 'cast' ? c.role : [c.dept, c.role].filter(Boolean).join(' · ')) && <span className="ab-chip"><i />{c.kind === 'cast' ? c.role : [c.dept, c.role].filter(Boolean).join(' · ')}</span>}</span>
+              <span className="ab-cell" onClick={(e) => e.stopPropagation()}>{showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</span>
+              <span className="ab-cell muted" onClick={(e) => e.stopPropagation()}>{showContacts && c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</span>
+              {editable ? (
+                <span className="ab-acts" onClick={(e) => e.stopPropagation()}>
+                  <button type="button" className="btn btn-default btn-sm" onClick={() => setDraft({ ...c })}>Edit</button>
+                  <Confirm onConfirm={() => remove(c)} label="Delete" className="ab-del" title="Delete">×</Confirm>
+                </span>
+              ) : <span />}
+            </article>
           ))}
         </div>
       )}
+      </div>
 
       <Modal open={!!draft} title={draft && people.some((p) => p.id === draft.id) ? `Edit ${draft.kind}` : `Add ${draft?.kind}`} onClose={() => setDraft(null)}
         footer={<><Button variant="ghost" onClick={() => setDraft(null)}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></>}>

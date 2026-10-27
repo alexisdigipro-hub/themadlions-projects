@@ -3,7 +3,7 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast
 import { can, gearCategoriesOf, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
-import { DbAdd, DbBar, DbFilter } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbFilter, ListSearch, useFitScroll } from '../components/DbTools.jsx'
 
 /* Database > Equipment (Alex, 10 Oct): the company's own film equipment, each item with what it is,
    how many, its serial and a rental price per day, so it can later be sent to whoever wants to rent it.
@@ -28,6 +28,8 @@ export default function EquipmentAll({ slot }) {
     .filter((g) => matchText(q, g.name, g.model, g.category, g.serial, g.notes))
     .sort((a, b) => (cats.indexOf(a.category) - cats.indexOf(b.category)) || a.name.localeCompare(b.name))
   const detail = items.find((g) => g.id === detailFor)
+  // one list, as Contacts (Alex, 27 Oct), in its own scroll box so the top row stays put
+  const scrollRef = useFitScroll()
 
   const save = () => {
     if (!draft.name.trim()) return toast('Name the item.', 'error')
@@ -57,35 +59,37 @@ export default function EquipmentAll({ slot }) {
     <section className="panel db-card">
       <DbBar slot={slot}>
         <div className="toolbar-info">
-          <strong>Equipment</strong> <span className="muted">{items.length}</span>
+          <strong>Equipment</strong>
         </div>
         <div className="toolbar-actions">
-          <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, model, serial…" />
+          <ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, model, serial…" />
+          <span className="ab-count">{q.trim() || cat ? `${list.length} of ${items.length}` : `${items.length} item${items.length === 1 ? '' : 's'}`}</span>
           <DbFilter value={cat} onChange={(e) => setCat(e.target.value)} options={[['', 'All categories'], ...cats.map((c) => [c, c])]} label="Category" />
           {editable && <DbAdd label="Add equipment" onClick={() => setDraft(emptyItem(cat || cats[0]))} />}
         </div>
       </DbBar>
 
+      <div className="ab-scroll" ref={scrollRef}>
       {!list.length ? (
         <Empty title={items.length ? 'No matches' : 'No equipment yet'}>
           {items.length ? 'Try another search.' : 'Add the cameras, lenses, lights and the rest you own, with a rental price per day, so you can send them to whoever wants to rent.'}
         </Empty>
       ) : (
-        <div className="people-grid compact">
+        // the rows of Contacts: picture, name and quantity, category as a chip, brand / model, serial, the day rate
+        <div className="ab-rows">
           {list.map((g) => (
-            <article key={g.id} className="person loc-card" onClick={() => setDetailFor(g.id)} role="button" tabIndex={0}>
-              <div className="person-photo" aria-hidden="true">
-                {g.photos?.[0]?.thumb ? <img src={g.photos[0].thumb} alt="" /> : <span className="person-initials">🎥</span>}
-              </div>
-              <div className="person-body">
-                <strong>{g.name}{Number(g.qty) > 1 ? ` ×${g.qty}` : ''}</strong>
-                <div className="small muted">{[g.category, g.model].filter(Boolean).join(' · ')}</div>
-                {euro(g.dayRate) && <div className="small">{euro(g.dayRate)} / day</div>}
-              </div>
+            <article key={g.id} className="ab-row lib-row gear-row" onClick={() => setDetailFor(g.id)} role="button" tabIndex={0}>
+              <span className="ab-ava sm" aria-hidden="true">{g.photos?.[0]?.thumb ? <img src={g.photos[0].thumb} alt="" /> : '🎥'}</span>
+              <strong className="ab-name">{g.name}{Number(g.qty) > 1 && <span className="muted"> ×{g.qty}</span>}</strong>
+              <span className="ab-cell">{g.category && <span className="ab-chip"><i />{g.category}</span>}</span>
+              <span className="ab-cell muted">{g.model}</span>
+              <span className="ab-cell muted">{g.serial}</span>
+              <span className="ab-cell ab-rate">{euro(g.dayRate) ? `${euro(g.dayRate)} / day` : ''}</span>
             </article>
           ))}
         </div>
       )}
+      </div>
 
       <Modal open={!!detail} title={detail?.name || ''} onClose={() => setDetailFor('')}>
         {detail && (

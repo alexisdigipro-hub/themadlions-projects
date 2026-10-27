@@ -8215,7 +8215,7 @@ html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > b
 
 /* Database > Contacts (Alex, 27 Oct): soft tiles with gaps like Crew's and the Calendar's, not a ruled table */
 .ab-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
-.ab-tile { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: 8px 12px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); cursor: pointer; transition: background .2s, border-color .2s, transform .18s; }
+.ab-tile { display: grid; grid-template-columns: 22px 44px minmax(0, 1fr); align-items: center; gap: 8px 12px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); cursor: pointer; transition: background .2s, border-color .2s, transform .18s; }
 .ab-tile:hover { background: var(--raised); border-color: color-mix(in srgb, var(--accent) 35%, var(--line-soft)); }
 .ab-ava { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 15px; color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
 .ab-body { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
@@ -8243,24 +8243,25 @@ html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > b
 .ab-row.ab-in:hover, .ab-tile.ab-in:hover { background: color-mix(in srgb, var(--accent) 14%, var(--raised)); }
 .ab-count { flex: none; padding: 0 12px; height: 32px; display: inline-flex; align-items: center; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); background: color-mix(in srgb, var(--text) 6%, transparent); white-space: nowrap; }
 .ab-rows { display: flex; flex-direction: column; gap: 6px; }
-.ab-row { display: grid; grid-template-columns: 32px minmax(160px, 1.3fr) minmax(120px, 1fr) minmax(140px, 1.2fr) minmax(120px, 1fr) auto; align-items: center; gap: 14px; padding: 14px 14px; /* 25% taller than the first version (Alex, 27 Oct) */ border-radius: 12px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); cursor: pointer; transition: background .2s, border-color .2s; }
+.ab-row { display: grid; grid-template-columns: 22px 32px minmax(160px, 1.3fr) minmax(120px, 1fr) minmax(140px, 1.2fr) minmax(120px, 1fr) 132px 156px; align-items: center; gap: 14px; padding: 14px 14px; /* 25% taller than the first version (Alex, 27 Oct) */ border-radius: 12px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); cursor: pointer; transition: background .2s, border-color .2s; }
 .ab-row:hover { background: var(--raised); border-color: color-mix(in srgb, var(--accent) 35%, var(--line-soft)); }
 .ab-row .ab-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ab-cell { min-width: 0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ab-row .ab-acts { grid-column: auto; }
 .ab-ava.sm { width: 32px; height: 32px; font-size: 12px; }
 @media (max-width: 820px) {
-  .ab-row { grid-template-columns: 32px minmax(0, 1fr); gap: 4px 10px; }
-  .ab-row .ab-cell:empty { display: none; }
-  .ab-row .ab-cell, .ab-row .ab-acts { grid-column: 2; }
+  .ab-row { grid-template-columns: 22px 32px minmax(0, 1fr); gap: 4px 10px; }
+  .ab-row .ab-cell:empty, .ab-row > span:empty { display: none; }
+  .ab-row .ab-cell, .ab-row .ab-acts, .ab-row .ab-quick { grid-column: 3; }
 }
 .ab-acts { grid-column: 2; display: flex; align-items: center; gap: 6px; }
 .ab-acts .ab-del { margin-left: auto; }
 @media (min-width: 821px) {
-  /* Contacts has more in its bar (search, Import, +, the order): it takes its own line under the tabs */
-  .db-top .db-slot:has(.ab-bar) { flex: 1 1 100%; }
+  /* Contacts' bar sits on the tabs' line, as every Database tab (Alex, 27 Oct); the chips and the selection under it */
+  .db-top .db-slot:has(.ab-bar) { flex: 1 1 0; min-width: 0; }
   .db-slot .ab-bar { width: 100%; }
-  .db-slot .ab-bar .toolbar-actions { flex: 1; justify-content: flex-end; flex-wrap: wrap; }
+  .db-slot .ab-bar .toolbar-info { display: none; }
+  .db-slot .ab-bar .toolbar-actions { flex: 1; justify-content: flex-end; flex-wrap: nowrap; }
   html[data-theme] body main.content .db-slot .ab-bar .ab-search .input.search { flex: 1 1 auto; min-width: 0; }
 }
 .ab-acts .ab-del { min-width: 30px; width: auto; height: 30px; padding: 0 9px; border-radius: 999px !important; color: var(--muted); white-space: nowrap; }
@@ -8291,15 +8292,99 @@ html[data-theme] body main.content .ab-acts .ab-del.btn-danger:hover { color: #f
 @media print { .proj-top { display: none; } }
 
 /* Database on a computer (Alex, 27 Oct: "Contacts is not steady, it moves; keep the top with the search fixed while
-   scrolling"): the room for the scrollbar is always kept, so nothing shifts sideways when a long list arrives, the
-   page does not rubber-band sideways, and the top row (tabs, search, Import, Export, the order) stays at the top
-   in glass while the list scrolls under it. */
+   scrolling", then "as it was, only not moving"): the room for the scrollbar is always kept, so nothing shifts
+   sideways, and Contacts' list scrolls in its own box (AddressBook.jsx sets its height to the window's foot), so the
+   top row keeps its own look and never moves. */
 @media (min-width: 821px) {
   html:has(.db-page) { scrollbar-gutter: stable; overscroll-behavior-x: none; }
   .db-page { overflow-x: clip; }
-  html[data-theme] body .db-page > .db-top {
-    position: sticky; top: 0; z-index: 30; margin: -12px -14px 18px; padding: 12px 14px;
-    background: color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
-    border-radius: 0 0 18px 18px;
-  }
+  .ab-scroll { overflow-y: auto; overscroll-behavior: contain; margin: 0 -6px; padding: 0 6px 12px; scrollbar-gutter: stable; }
+  main.content:has(.ab-scroll) { padding-bottom: 16px; }
+  main.content .db-card:has(.ab-scroll) { margin-bottom: 0; padding-bottom: 0; }
 }
+
+/* Contacts, more (Alex, 27 Oct, "1,2,3,4,5,6"): a tick on each contact for doing things to many at once, the star of
+   a favourite, round quick links (call, WhatsApp, Viber, email), the specialty chips, Duplicates and Specialties */
+.ab-check { display: grid; place-items: center; width: 22px; height: 22px; cursor: pointer; }
+.ab-check input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.ab-row:not(:hover) .ab-check:not(:has(input:checked)), .ab-tile:not(:hover) .ab-check:not(:has(input:checked)) { opacity: .35; }
+.ab-rows:has(.ab-check input:checked) .ab-check, .ab-grid:has(.ab-check input:checked) .ab-check { opacity: 1; }
+.ab-row:has(.ab-check input:checked), .ab-tile:has(.ab-check input:checked) { border-color: color-mix(in srgb, var(--accent) 55%, var(--line-soft)); }
+.ab-star { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; margin: 0 6px 0 0; padding: 0; border: 0; background: none; font-size: 15px; line-height: 1; color: color-mix(in srgb, var(--muted) 60%, transparent); cursor: pointer; vertical-align: -1px; }
+.ab-star:hover { color: var(--text); }
+.ab-star.on { color: #f5b301; }
+.ab-row:not(:hover) .ab-star:not(.on), .ab-tile:not(:hover) .ab-star:not(.on) { opacity: 0; }
+.ab-quick { display: inline-flex; align-items: center; gap: 4px; }
+.ab-q { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: var(--muted); background: color-mix(in srgb, var(--text) 6%, transparent); border: 1px solid var(--line-soft); transition: color .15s, background .15s, border-color .15s; }
+.ab-q svg { width: 15px; height: 15px; }
+.ab-q:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line-soft)); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.ab-tile .ab-check { grid-row: 1; }
+.ab-tile-foot { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-top: 4px; }
+.ab-tile-foot .ab-acts { margin-left: auto; }
+/* the specialty chips: one line under the bar that slides sideways */
+.ab-chips { flex: 1 1 100%; display: flex; flex-wrap: nowrap; gap: 6px; margin: 0 0 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.ab-chips::-webkit-scrollbar { display: none; }
+.ab-chips .chip { flex: 0 0 auto; }
+.ab-chips .chip small { margin-left: 4px; opacity: .6; font-size: 11px; }
+/* what is done to the ticked ones */
+.ab-sel { flex: 1 1 100%; margin: 0 0 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 10px 8px 16px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, color-mix(in srgb, var(--panel) 80%, transparent)); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line-soft)); }
+.ab-sel .grow { flex: 1; }
+.ab-sel .ab-del { height: 30px; padding: 0 14px; border-radius: 999px !important; }
+html[data-theme] body main.content .ab-sel .ab-del.btn-danger { color: #fff; background: #e5484d; border-color: transparent; }
+.db-slot .ab-bar { flex-wrap: wrap; row-gap: 10px; }
+/* Duplicates and Specialties windows */
+.ab-dups { display: flex; flex-direction: column; gap: 10px; }
+.ab-dup { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: 14px; background: color-mix(in srgb, var(--text) 4%, transparent); border: 1px solid var(--line-soft); }
+.ab-dup-row { display: grid; grid-template-columns: 18px minmax(120px, auto) minmax(0, 1fr); align-items: center; gap: 10px; padding: 6px 4px; border-radius: 10px; cursor: pointer; }
+.ab-dup-row:hover { background: color-mix(in srgb, var(--text) 5%, transparent); }
+.ab-dup-row input { accent-color: var(--accent); margin: 0; }
+.ab-dup-row .small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ab-dup-acts { display: flex; gap: 6px; justify-content: flex-end; }
+.ab-specs { display: flex; flex-direction: column; gap: 6px; }
+.ab-spec-row { display: grid; grid-template-columns: minmax(0, 1fr) 48px; align-items: center; gap: 10px; }
+.ab-spec-row .small { text-align: right; }
+@media (max-width: 820px) {
+  .ab-dup-row { grid-template-columns: 18px minmax(0, 1fr); }
+  .ab-dup-row .small { grid-column: 2; }
+  .ab-row:not(:hover) .ab-star:not(.on) { opacity: 1; }
+  .ab-tile .ab-check { grid-row: auto; }
+}
+
+/* Crew, Cast and Equipment as Contacts' list (Alex, 27 Oct): the same soft rows, their own columns */
+.ab-row.lib-row { grid-template-columns: 32px minmax(160px, 1.3fr) minmax(140px, 1fr) minmax(120px, .9fr) minmax(140px, 1.2fr) auto; }
+.ab-row.gear-row { grid-template-columns: 32px minmax(160px, 1.3fr) minmax(120px, .9fr) minmax(120px, 1fr) minmax(100px, .8fr) minmax(90px, auto); }
+.ab-ava img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.ab-row .ab-cell a { color: inherit; text-decoration: none; }
+.ab-row .ab-cell a:hover { color: var(--accent); }
+.ab-rate { text-align: right; font-weight: 600; }
+.db-slot .db-bar:has(.ab-search) .toolbar-actions { flex-wrap: nowrap; }
+@media (max-width: 820px) {
+  .ab-row.lib-row, .ab-row.gear-row { grid-template-columns: 32px minmax(0, 1fr); }
+  .ab-row.lib-row .ab-cell, .ab-row.lib-row .ab-acts { grid-column: 2; }
+  .ab-rate { text-align: left; }
+}
+
+/* Contacts' ⋯ (Import, Export, Duplicates, Specialties) as the bar's round buttons */
+html[data-theme] body main.content .ab-bar .ab-more { width: 38px; height: 38px; min-height: 38px; padding: 0; border-radius: 999px; font-size: 18px; line-height: 1; display: inline-grid; place-items: center; }
+.ab-export-menu button:disabled { opacity: .45; cursor: default; }
+@media (min-width: 821px) { .db-slot .ab-bar .ab-search { flex: 1 1 220px; min-width: 150px; max-width: 300px; } }
+
+/* under Contacts' top row: the specialty chips sliding sideways, the order at their right */
+.ab-under { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; }
+.ab-under .ab-chips { flex: 1 1 auto; min-width: 0; margin: 0; }
+.ab-under .segmented { flex: none; margin-left: auto; }
+@media (max-width: 820px) { .ab-under .segmented { display: none; } }
+
+/* Project Database, Crew and Cast as Contacts' list (Alex, 27 Oct): one under the other, full width */
+.people-db .cols.db-grid { grid-template-columns: minmax(0, 1fr); }
+button.ab-ava { border: 0; padding: 0; overflow: hidden; cursor: pointer; font-family: inherit; }
+.ab-row.ro { cursor: default; }
+.ab-row .lib-badge { margin-left: 8px; }
+.ab-acts .ab-q { width: 30px; height: 30px; }
+.ab-acts .ab-q svg { width: 15px; height: 15px; }
+@media (max-width: 820px) {
+  .ab-row.proj-row .ab-cell, .ab-row.proj-row .ab-acts { grid-column: 2; }
+}
+/* every Contacts row has the same columns, with or without an email (the quick links' column is fixed) */
+.ab-row:not(.lib-row) .ab-quick { justify-content: flex-end; }
+.ab-row:not(.lib-row) .ab-acts { justify-content: flex-end; }

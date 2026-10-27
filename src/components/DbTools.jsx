@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Button, Input, Select, useIsMobile } from './ui.jsx'
 
@@ -51,4 +51,44 @@ export function DbSearch({ value, onChange, placeholder = 'Search' }) {
    with the tab's content when another tab is picked. */
 export function DbBar({ slot, children, className = '' }) {
   return slot ? createPortal(<div className={`toolbar db-bar ${className}`}>{children}</div>, slot) : <div className={`toolbar ${className}`}>{children}</div>
+}
+
+/* The list's own scroll box on a computer (Alex, 27 Oct: Contacts, then Crew, Cast and Equipment: "the top row as
+   it was, only not moving"): the box runs down to the window's foot and scrolls inside, so the top row never moves
+   and keeps its look; on a phone the page scrolls as before. Put the ref on a .ab-scroll div. */
+export function useFitScroll(ready = true) {
+  const ref = useRef(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const fit = () => {
+      if (window.innerWidth <= 820) { el.style.height = ''; return }
+      const top = el.getBoundingClientRect().top + window.scrollY
+      let h = Math.max(240, window.innerHeight - top - 16)
+      el.style.height = `${h}px`
+      // whatever sits under it (the card's and the page's padding) comes off too, so the page itself never scrolls
+      const extra = document.documentElement.scrollHeight - window.innerHeight
+      if (extra > 0) { h = Math.max(240, h - extra); el.style.height = `${h}px` }
+    }
+    fit()
+    // again when the top row or what sits above the list (chips, a selection) changes height
+    const ro = new ResizeObserver(fit)
+    const bar = el.closest('.db-page')?.querySelector('.db-top')
+    if (bar) ro.observe(bar)
+    for (let x = el.previousElementSibling; x; x = x.previousElementSibling) ro.observe(x)
+    window.addEventListener('resize', fit)
+    return () => { ro.disconnect(); window.removeEventListener('resize', fit) }
+  }, [ready])
+  return ref
+}
+
+/* The search of a list tab, as Contacts' (Alex, 27 Oct): × empties it, as does Escape */
+export function ListSearch({ value, onChange, placeholder }) {
+  const set = (v) => onChange({ target: { value: v } })
+  return (
+    <span className="ab-search">
+      <Input className="input search" value={value} onChange={onChange} onKeyDown={(e) => { if (e.key === 'Escape' && value) set('') }} placeholder={placeholder} />
+      {value && <button type="button" className="ab-search-x" aria-label="Clear the search" title="Clear" onClick={() => set('')}>×</button>}
+    </span>
+  )
 }
