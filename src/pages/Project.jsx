@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import { Badge, useIsMobile } from '../components/ui.jsx'
 import { can, canAccessProject, useCurrentUser, useStore } from '../lib/store.jsx'
@@ -49,6 +49,7 @@ export default function Project() {
   const { pathname } = useLocation()
   const glide = useGlide()
   const nav = useNavigate()
+  const [slot, setSlot] = useState(null)
   useEffect(() => () => { swipeTabs.project = null }, [])
   const raw = state.projects.find((p) => p.id === id)
   const project = raw ? hydrateProject(raw, state.library) : null
@@ -88,11 +89,33 @@ export default function Project() {
     canEdit: (key) => can(user, key, 'edit') && (!project.frozen || user?.role === 'admin'),
     library: state.library,
     editLibrary: (fn) => update((s) => { fn(s.library); return s }),
+    // on a computer the tab's own buttons sit at the end of the project's one top row (DbBar, as Database's tabs)
+    slot: mobile ? null : slot,
   }
 
   return (
     <div className="project" style={{ '--pc': project.color }}>
-      <div className="project-head">
+      {/* one top row on a computer (Alex, 27 Oct, the Calendar's and RoarList's way): back, the project's name,
+          its tabs as the glass capsule, then the open tab's own buttons; a phone keeps its head and tab bar */}
+      {!mobile && (
+        <div className="db-top proj-top">
+          <Link to="/" className="icon-btn proj-back" aria-label="Projects" title="Projects">‹</Link>
+          {project.coverThumb && <img className="proj-top-cover" src={project.coverThumb} alt="" />}
+          <h1 className="page-title proj-name">{project.title}</h1>
+          <Badge>{project.category}</Badge>
+          {project.status === 'Delivered' && <Badge>Delivered</Badge>}
+          <nav className="tabs db-tabs">
+            {tabs.map((t) => (
+              <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')} onClick={glide.go}>
+                <span className="tab-ico">{Icon[t.icon]?.()}</span>
+                {t.label}
+              </NavLink>
+            ))}
+          </nav>
+          <div className="db-slot" ref={setSlot} />
+        </div>
+      )}
+      {mobile && <div className="project-head">
         <Link to="/" className="crumb">
           Projects
         </Link>
@@ -104,17 +127,8 @@ export default function Project() {
             {project.status === 'Delivered' && <Badge>Delivered</Badge>}
           </div>
         </div>
-      </div>
-      {mobile ? <MobileTabs tabs={tabs} onPick={glide.go} /> : (
-        <nav className="tabs">
-          {tabs.map((t) => (
-            <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')} onClick={glide.go}>
-              <span className="tab-ico">{Icon[t.icon]?.()}</span>
-              {t.label}
-            </NavLink>
-          ))}
-        </nav>
-      )}
+      </div>}
+      {mobile && <MobileTabs tabs={tabs} onPick={glide.go} />}
       {/* the page slides over when another tab is picked (lib/glide.js) */}
       <div className="tab-body glide-box" ref={glide.boxRef}>
         <div key={pathname.split('/')[3] || ''} className={glide.inClass}>

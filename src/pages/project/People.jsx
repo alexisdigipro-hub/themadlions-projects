@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
+import { DbBar } from '../../components/DbTools.jsx'
 import { callsheetDefaults, can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import PhotoGrid from '../../components/PhotoGrid.jsx'
@@ -16,7 +17,7 @@ const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((
    one Add/Edit modal and one "from library" modal, told apart by draft.kind / pick.kind rather
    than a single page-wide tab, since both sections are on screen together now. */
 export default function People() {
-  const { project, edit, canEdit, library, editLibrary, user } = useProject()
+  const { project, edit, canEdit, library, editLibrary, user, slot } = useProject()
   const { state } = useStore()
   const DEPTS = departmentsOf(state)
   const csd = callsheetDefaults(state)
@@ -219,11 +220,13 @@ export default function People() {
 
   return (
     <div className="people-db">
-      <div className="toolbar">
-        <div className="toolbar-info">
+      <DbBar slot={slot}>
+        {!slot && <div className="toolbar-info">
           <strong>Project Database</strong>
-        </div>
+        </div>}
         <div className="toolbar-actions">
+          {/* on a computer the Add buttons sit in the project's top row too */}
+          {slot && adds.map(([k, label]) => <Button key={k} variant="ghost" onClick={() => begin(k)}>{label}</Button>)}
           <div className="segmented small">
             <button className={view === 'cards' ? 'on' : ''} onClick={() => { setView('cards'); localStorage.setItem('tml_people_view', 'cards') }}>Cards</button>
             <button className={view === 'table' ? 'on' : ''} onClick={() => { setView('table'); localStorage.setItem('tml_people_view', 'table') }}>List</button>
@@ -234,9 +237,9 @@ export default function People() {
             </Button>
           )}
         </div>
-      </div>
+      </DbBar>
 
-      {adds.length > 0 && (
+      {!slot && adds.length > 0 && (
         <div className="add-bar">
           {adds.map(([k, label]) => (
             <Button key={k} variant="ghost" onClick={() => begin(k)}>{label}</Button>

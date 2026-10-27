@@ -49,6 +49,6 @@ export function DbSearch({ value, onChange, placeholder = 'Search' }) {
    (Alex, 10 Oct: "on the desktop put these in one row") and the line is drawn there; on a phone, or
    without a slot, it stays the tab's own toolbar. Drawn through a portal, so it does not slide along
    with the tab's content when another tab is picked. */
-export function DbBar({ slot, children }) {
-  return slot ? createPortal(<div className="toolbar db-bar">{children}</div>, slot) : <div className="toolbar">{children}</div>
+export function DbBar({ slot, children, className = '' }) {
+  return slot ? createPortal(<div className={`toolbar db-bar ${className}`}>{children}</div>, slot) : <div className={`toolbar ${className}`}>{children}</div>
 }
