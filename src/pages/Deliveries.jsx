@@ -384,6 +384,17 @@ export default function Deliveries() {
   // the Call sheets tab went with the old ordino (Alex, 23 Oct): its links stopped, Roardino sends its own
   const tabs = [['delivery', 'Deliveries'], ...(isAdmin ? [['estimate', 'Estimates']] : []), ['all', 'Everything'], ...(remote && can(user, 'callsheets') ? [['roardino', 'Roardino']] : [])]
   const inRoardino = filter === 'roardino' && tabs.some(([k]) => k === 'roardino')
+  // Roardino's home in Share's top row (Alex, 27 Oct): its filters, search and New ordino come from the frame
+  // ('roardino:home') and what is pressed here goes back to it ('roardino:do'); roardino/app.js
+  const [rd, setRd] = useState(null)
+  const [rdQ, setRdQ] = useState('')
+  useEffect(() => {
+    const on = (e) => { if (e.origin === window.location.origin && e.data?.type === 'roardino:home') { setRd(e.data); if (typeof e.data.search === 'string') setRdQ(e.data.search) } }
+    window.addEventListener('message', on)
+    return () => window.removeEventListener('message', on)
+  }, [])
+  const toRoardino = (msg) => { try { document.querySelector('iframe.roardino-frame')?.contentWindow?.postMessage({ type: 'roardino:do', ...msg }, window.location.origin) } catch { /* the frame is not there */ } }
+  const RD_LABELS = { all: 'All', next: 'Upcoming', sent: 'Sent', draft: 'Drafts', past: 'Past' }
   const shown = tabs.some(([k]) => k === filter) ? filter : 'all'
   const list = useMemo(() => (shown === 'all' ? groups : groups.filter((g) => g.head.kind === shown))
     .filter((g) => matchText(q, g.head.name, g.head.sub, g.head.badge, g.head.version, ...g.people.map((r) => `${r.data?.recipient?.name || ''} ${r.data?.recipient?.email || ''}`))), [groups, shown, q])
@@ -546,6 +557,13 @@ export default function Deliveries() {
             </button>
           ))}
         </nav>
+        {inRoardino && rd?.view === 'home' && <>
+          <nav className="tabs db-tabs share-rd-filters" aria-label="Ordinos">
+            {(rd.filters || []).map(([k, n]) => <button key={k} type="button" className={rd.current === k ? 'active' : ''} onClick={() => { setRd({ ...rd, current: k }); toRoardino({ filter: k }) }}>{RD_LABELS[k] || k}<small>{n}</small></button>)}
+          </nav>
+          <span className="share-search"><ListSearch value={rdQ} onChange={(e) => { setRdQ(e.target.value); toRoardino({ search: e.target.value }) }} placeholder="" /></span>
+          {rd.canEdit && <span className="share-new rd"><Act icon="plus" label="New ordino" main onClick={() => toRoardino({ create: true })} /></span>}
+        </>}
         {!inRoardino && <span className="share-search"><ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="" /></span>}
         {editable && (
           <span className="share-new">

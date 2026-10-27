@@ -274,7 +274,7 @@ export default function Layout() {
         <Suspense fallback={null}>
           <Outlet />
         </Suspense>
-        {keepRoardino && <Suspense fallback={null}><RoardinoFrame shown={onRoardino} /></Suspense>}
+        {keepRoardino && <Suspense fallback={null}><RoardinoFrame shown={onRoardino} inShare={pathname === '/share'} /></Suspense>}
       </main>
       <NoticePopup />
 

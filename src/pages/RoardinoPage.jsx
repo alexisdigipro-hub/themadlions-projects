@@ -35,7 +35,7 @@ export async function moveOldOrdinos(state, update) {
 /* the side menu's Roardino (Alex, 25 Oct: "it flickers and is slow to open"): Layout keeps this one frame alive
    from the first visit on and only hides it on the other pages, so going back to Roardino is instant; the frame
    fades in once Roardino has drawn (it says so with a 'roardino:ready' message), never half-drawn */
-export function RoardinoFrame({ shown }) {
+export function RoardinoFrame({ shown, inShare = false }) {
   const { state, update } = useStore()
   const user = useCurrentUser()
   const admin = user?.role === 'admin'
@@ -58,6 +58,11 @@ export function RoardinoFrame({ shown }) {
     const t = setTimeout(() => setDrawn(true), 4000)
     return () => { window.removeEventListener('message', on); clearTimeout(t) }
   }, [])
+  // in Share (Alex, 27 Oct) the frame's home leaves its top row to Share's (roardino/app.js 'roardino:host')
+  useEffect(() => {
+    if (!drawn) return
+    try { frame.current?.contentWindow?.postMessage({ type: 'roardino:host', share: inShare }, window.location.origin) } catch { /* not there yet */ }
+  }, [drawn, inShare])
   if (!supabase) return shown ? <p className="muted">Roardino needs the online database.</p> : null
   return (
     <>
