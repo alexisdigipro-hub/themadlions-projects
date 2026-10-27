@@ -8518,3 +8518,10 @@ html[data-theme] body .ab-lib.btn-danger { color: #fff; background: #e5484d; bor
   html[data-theme] body .share-dtop .share-rd-filters { flex: none; }
   html[data-theme] body .deliveries.in-roardino .share-dtop { flex-wrap: nowrap; }
 }
+/* a delivery's files in its form (Alex, 27 Oct): Replace (a new file in its place, the same client link) and × */
+.deliv-files li { align-items: center; }
+.deliv-files li > span:first-child { flex: 1 1 auto; min-width: 0; }
+.deliv-file-acts { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.deliv-file-acts .btn { height: 28px; padding: 0 11px; }
+html[data-theme] body .deliv-file-acts .deliv-file-x { min-width: 28px; height: 28px; padding: 0 9px; border-radius: 999px; }
+html[data-theme] body .deliv-file-acts .deliv-file-x.btn-danger { color: #fff; background: #e5484d; border-color: transparent; }

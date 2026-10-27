@@ -9,7 +9,7 @@ import EstimateLookEditor from '../components/EstimateLookEditor.jsx'
 import { fmtDate, toISODate } from '../lib/dates.js'
 import { dirIn, useSlide } from '../lib/glide.js'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
-import { pcloudDeliverMany } from '../lib/pcloud.js'
+import { pcloudDeliverMany, pcloudDeliveryRemove } from '../lib/pcloud.js'
 import { uploadThumbs } from '../lib/deliveryThumbs.js'
 import { copyText, creditsFromProject, parseCredits, youtubeCredits } from '../lib/deliveryCredits.js'
 import { remote } from '../lib/supabase.js'
@@ -223,7 +223,7 @@ export default function Deliveries() {
       const into = prev.length ? draft.pcFolder || '' : ''
       const r = await pcloudDeliverMany(files, { stage: stageLabel(draft.stage), title, sub, into }, { onProgress: (p, i) => setUpload((u) => (u ? { ...u, p, i } : u)), signal: ctrl.signal })
       // one file is kept too, so the client's page can offer Save to Photos for it
-      const got = r.files || [{ name: r.name || files[0].name, url: r.url, size: r.size || files[0].size }]
+      const got = r.files || [{ name: r.name || files[0].name, url: r.url, size: r.size || files[0].size, fileid: r.fileid }]
       const together = !!into && into === r.folder
       setDraft((d) => (d ? {
         ...d,
@@ -240,6 +240,43 @@ export default function Deliveries() {
     } finally {
       setUpload(null)
       if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  /* One file off the delivery, or a new one in its place (Alex, 27 Oct: "delete a link and replace it when needed,
+     but keep the same link"): the client's page keeps its address (publishing again keeps its token); the file taken
+     off goes to pCloud's trash only when the page is published, so Cancel loses nothing. */
+  const replaceRef = useRef(null)
+  const [replacing, setReplacing] = useState(-1)
+  const dropFile = (i) => setDraft((d) => {
+    const old = d.files[i]
+    const files = d.files.filter((_, j) => j !== i)
+    return { ...d, files, removed: [...(d.removed || []), old], link: files.length ? d.link : '', pcFolder: files.length ? d.pcFolder : d.pcFolder }
+  })
+  const replaceFile = async (i, file) => {
+    if (!file || !draft) return
+    const ctrl = new AbortController()
+    setUpload({ names: [file.name], size: file.size, p: 0, i: 0, ctrl, at: Date.now() })
+    try {
+      const title = draft.title.trim() || projects.find((p) => p.id === draft.projectId)?.title || file.name.replace(/\.[^.]+$/, '')
+      const now = new Date()
+      const sub = draft.version.trim() || `${toISODate(now)} ${String(now.getHours()).padStart(2, '0')}.${String(now.getMinutes()).padStart(2, '0')}`
+      const r = await pcloudDeliverMany([file], { stage: stageLabel(draft.stage), title, sub, into: draft.pcFolder || '' }, { onProgress: (p) => setUpload((u) => (u ? { ...u, p } : u)), signal: ctrl.signal })
+      const got = (r.files || [{ name: r.name || file.name, url: r.url, size: r.size || file.size, fileid: r.fileid }])[0]
+      setDraft((d) => {
+        if (!d) return d
+        const old = d.files[i]
+        const files = d.files.map((f, j) => (j === i ? got : f))
+        const sameFolder = !!d.pcFolder && d.pcFolder === r.folder
+        // one file: its own link is the page's; several in one folder: the folder's link stays
+        return { ...d, files, removed: [...(d.removed || []), old], link: files.length === 1 ? got.url : sameFolder ? d.link : d.link || got.url, pcFolder: d.pcFolder || r.folder || '' }
+      })
+      toast(`${file.name} in place of the old one. Publish to update the client's page (same link).`, 'ok')
+    } catch (e) {
+      if (!ctrl.signal.aborted) toast(e.message, 'error')
+    } finally {
+      setUpload(null); setReplacing(-1)
+      if (replaceRef.current) replaceRef.current.value = ''
     }
   }
 
@@ -293,6 +330,11 @@ export default function Deliveries() {
         deliverables: draft.stage === 'files' ? draft.deliverables.filter((d) => d.name) : [],
         contact: {},
         sentAt: new Date().toISOString(),
+      }
+      // the files taken off or replaced: out of pCloud's folder too (to its trash), so Download all matches the page
+      for (const f of draft.removed || []) {
+        if (!draft.pcFolder || draft.files.some((x) => x.url === f.url)) continue
+        try { await pcloudDeliveryRemove({ fileid: f.fileid, url: f.url, path: draft.pcFolder }) } catch (e) { toast(`${f.name}: ${e.message}`, 'error') }
       }
       // one page for everybody: Send it to (a page per named person) was taken out (Alex, 22 Oct)
       const ref = `delivery:${draft.id}`
@@ -394,7 +436,8 @@ export default function Deliveries() {
     return () => window.removeEventListener('message', on)
   }, [])
   const toRoardino = (msg) => { try { document.querySelector('iframe.roardino-frame')?.contentWindow?.postMessage({ type: 'roardino:do', ...msg }, window.location.origin) } catch { /* the frame is not there */ } }
-  const RD_LABELS = { all: 'All', next: 'Upcoming', sent: 'Sent', draft: 'Drafts', past: 'Past' }
+  // no filters of its own here (Alex, 27 Oct: "delete All, Upcoming, Sent, Drafts, Past"): all the ordinos, the search
+  useEffect(() => { if (inRoardino && rd?.view === 'home' && rd.current && rd.current !== 'all') toRoardino({ filter: 'all' }) }, [inRoardino, rd?.view, rd?.current]) // eslint-disable-line react-hooks/exhaustive-deps
   const shown = tabs.some(([k]) => k === filter) ? filter : 'all'
   const list = useMemo(() => (shown === 'all' ? groups : groups.filter((g) => g.head.kind === shown))
     .filter((g) => matchText(q, g.head.name, g.head.sub, g.head.badge, g.head.version, ...g.people.map((r) => `${r.data?.recipient?.name || ''} ${r.data?.recipient?.email || ''}`))), [groups, shown, q])
@@ -558,9 +601,6 @@ export default function Deliveries() {
           ))}
         </nav>
         {inRoardino && rd?.view === 'home' && <>
-          <nav className="tabs db-tabs share-rd-filters" aria-label="Ordinos">
-            {(rd.filters || []).map(([k, n]) => <button key={k} type="button" className={rd.current === k ? 'active' : ''} onClick={() => { setRd({ ...rd, current: k }); toRoardino({ filter: k }) }}>{RD_LABELS[k] || k}<small>{n}</small></button>)}
-          </nav>
           <span className="share-search"><ListSearch value={rdQ} onChange={(e) => { setRdQ(e.target.value); toRoardino({ search: e.target.value }) }} placeholder="" /></span>
           {rd.canEdit && <span className="share-new rd"><Act icon="plus" label="New ordino" main onClick={() => toRoardino({ create: true })} /></span>}
         </>}
@@ -678,13 +718,15 @@ export default function Deliveries() {
               <Field label="Client / artist"><Input value={draft.client} onChange={(e) => setD('client', e.target.value)} placeholder="Καίτη Γαρμπή" /></Field>
               <Field label="Title"><Input value={draft.title} onChange={(e) => setD('title', e.target.value)} placeholder="Το τραγούδι" /></Field>
             </div>
-            <Field label="Download link">
+            {/* a div, not Field's <label>: the Replace and × buttons inside it */}
+            <div className="field"><span className="field-label">Download link</span>
               <div className="deliv-linkrow">
                 {/* a link typed by hand replaces the uploaded files' own buttons */}
                 <Input value={draft.link} onChange={(e) => setDraft((d) => ({ ...d, link: e.target.value, files: [], pcFolder: '' }))} placeholder="https://www.swisstransfer.com/d/…" disabled={!!upload} />
                 {remote && (
                   <>
                     <input ref={fileRef} type="file" multiple hidden onChange={(e) => uploadFiles(e.target.files)} />
+                    <input ref={replaceRef} type="file" hidden onChange={(e) => replaceFile(replacing, e.target.files?.[0])} />
                     <Button type="button" onClick={() => fileRef.current?.click()} disabled={!!upload} title="One file, or several at once: several get one link for them all">Upload to pCloud</Button>
                   </>
                 )}
@@ -693,7 +735,16 @@ export default function Deliveries() {
                   "so we can see what is there and check it") */}
               {(draft.files || []).length > 0 && (
                 <ul className="deliv-files">
-                  {draft.files.map((f, i) => <li key={`${f.url}-${i}`}><span><a href={f.url} target="_blank" rel="noreferrer">{f.name}</a></span><small className="muted">{f.size > 1e9 ? `${(f.size / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(f.size / 1e6))} MB`}</small></li>)}
+                  {draft.files.map((f, i) => (
+                    <li key={`${f.url}-${i}`}>
+                      <span><a href={f.url} target="_blank" rel="noreferrer">{f.name}</a></span>
+                      <small className="muted">{f.size > 1e9 ? `${(f.size / 1e9).toFixed(1)} GB` : `${Math.max(1, Math.round(f.size / 1e6))} MB`}</small>
+                      {remote && <span className="deliv-file-acts">
+                        <button type="button" className="btn btn-default btn-sm" disabled={!!upload} onClick={() => { setReplacing(i); replaceRef.current?.click() }} title="Upload a new file in its place; the client's link stays the same">Replace</button>
+                        <Confirm onConfirm={() => dropFile(i)} label="Remove" className="deliv-file-x" title="Take it off this delivery">×</Confirm>
+                      </span>}
+                    </li>
+                  ))}
                   <li className="muted small">{draft.files.length > 1 ? `${draft.files.length} files up. The page shows Download all and a button for each file.` : '1 file up.'}</li>
                 </ul>
               )}
@@ -708,7 +759,7 @@ export default function Deliveries() {
                   <small className="muted">Keep this window open until it finishes.</small>
                 </div>
               )}
-            </Field>
+            </div>
             {/* one page, one link, nothing else to fill (Alex, 22 Oct): no transfer password or expiry, no closing date
                 or access code, no Answer by, no contact and no Send it to, as an estimate */}
             <Field label="Where it is hosted"><Input value={draft.linkLabel} onChange={(e) => setD('linkLabel', e.target.value)} placeholder="SwissTransfer" /></Field>
