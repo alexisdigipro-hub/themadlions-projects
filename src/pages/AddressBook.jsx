@@ -412,11 +412,9 @@ export default function AddressBook({ slot }) {
         <div className="toolbar-actions">
           {/* × empties the search, as does Escape (Alex, 27 Oct) */}
           <span className="ab-search">
-            <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} onKeyDown={(e) => { if (e.key === 'Escape' && q) { setQ(''); setShown(PAGE) } }} placeholder="Search name, phone, email, specialty…" />
+            <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} onKeyDown={(e) => { if (e.key === 'Escape' && q) { setQ(''); setShown(PAGE) } }} aria-label="Search the contacts" placeholder="" />
             {q && <button type="button" className="ab-search-x" aria-label="Clear the search" title="Clear" onClick={() => { setQ(''); setShown(PAGE) }}>×</button>}
           </span>
-          {/* how many (Alex, 27 Oct: "with a search, show how many contacts it found") */}
-          {list && <span className="ab-count">{q.trim() ? `${found.length} of ${list.length}` : `${list.length} contact${list.length === 1 ? '' : 's'}`}</span>}
           <input ref={fileRef} type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" hidden onChange={(e) => importFile(e.target.files?.[0])} />
           {/* one ⋯ menu for Import, Export, Duplicates and Specialties, so the whole bar fits on the tabs' line */}
           <span className="ab-export">
@@ -439,6 +437,8 @@ export default function AddressBook({ slot }) {
               </>
             )}
           </span>
+          {/* how many (Alex, 27 Oct: "with a search, show how many it found"), right of ⋯ */}
+          {list && <span className="ab-count">{q.trim() ? `${found.length} of ${list.length}` : `${list.length} contact${list.length === 1 ? '' : 's'}`}</span>}
           <DbAdd label="Add contact" onClick={() => setDraft({ ...emptyContact(), addedAt: new Date().toISOString() })} />
         </div>
       </DbBar>
