@@ -136,3 +136,30 @@ export function parseContactsFile(text, fileName = '') {
 // the same person twice (by email, else phone, else name) is kept once
 const digits = (s) => String(s || '').replace(/\D/g, '').slice(-9)
 export const sameKey = (c) => (c.email ? 'e:' + c.email.toLowerCase() : digits(c.phone) ? 't:' + digits(c.phone) : 'n:' + c.name.trim().toLowerCase())
+
+/* ---------- writing a contacts file (Alex, 27 Oct: "an export to various files") ---------- */
+const vesc = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/([,;])/g, '\\$1')
+// vCard 3.0, UTF-8: an iPhone, a Mac's Contacts and Google Contacts take it as it is
+export function toVcf(list) {
+  return list.map((c) => {
+    const parts = c.name.trim().split(/\s+/)
+    const last = parts.length > 1 ? parts.pop() : ''
+    return ['BEGIN:VCARD', 'VERSION:3.0', `FN:${vesc(c.name)}`, `N:${vesc(last)};${vesc(parts.join(' '))};;;`,
+      c.phone && `TEL;TYPE=CELL:${vesc(c.phone)}`, c.phone2 && `TEL;TYPE=OTHER:${vesc(c.phone2)}`, c.email && `EMAIL;TYPE=INTERNET:${vesc(c.email)}`,
+      c.company && `ORG:${vesc(c.company)}`, c.title && `TITLE:${vesc(c.title)}`, c.notes && `NOTE:${vesc(c.notes)}`, 'END:VCARD'].filter(Boolean).join('\r\n')
+  }).join('\r\n') + '\r\n'
+}
+// the columns Google Contacts reads (and Excel opens; the BOM keeps the Greek right in Excel)
+const COLS = [['Name', 'name'], ['Phone 1 - Value', 'phone'], ['Phone 2 - Value', 'phone2'], ['E-mail 1 - Value', 'email'], ['Organization 1 - Name', 'company'], ['Organization 1 - Title', 'title'], ['Notes', 'notes']]
+const cq = (s) => { const v = String(s || ''); return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v }
+export const toCsv = (list) => '\uFEFF' + [COLS.map(([h]) => h).join(','), ...list.map((c) => COLS.map(([, k]) => cq(c[k])).join(','))].join('\r\n') + '\r\n'
+// a workbook for the Office page's xlsx writer: a bold header, the specialty named as Alex uses it
+export function toBook(list) {
+  const heads = ['Name', 'Phone', 'Other phone', 'Email', 'Specialty', 'Title', 'Notes']
+  const keys = ['name', 'phone', 'phone2', 'email', 'company', 'title', 'notes']
+  const L = 'ABCDEFG'
+  const cells = {}
+  heads.forEach((h, i) => { cells[`${L[i]}1`] = { v: h, b: true } })
+  list.forEach((c, r) => keys.forEach((k, i) => { if (c[k]) cells[`${L[i]}${r + 2}`] = { v: String(c[k]) } }))
+  return { sheets: [{ name: 'Contacts', cells, cols: { 0: 220, 1: 150, 2: 150, 3: 240, 4: 180, 5: 160, 6: 300 } }] }
+}

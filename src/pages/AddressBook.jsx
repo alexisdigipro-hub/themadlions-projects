@@ -3,7 +3,8 @@ import { Button, Confirm, Empty, Field, Input, Modal, Textarea, useToast } from 
 import { DbAdd, DbBar } from '../components/DbTools.jsx'
 import { uid, useStore } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
-import { emptyContact, loadContacts, parseContactsFile, removeContacts, sameKey, saveContacts } from '../lib/addressBook.js'
+import { emptyContact, loadContacts, parseContactsFile, removeContacts, sameKey, saveContacts, toBook, toCsv, toVcf } from '../lib/addressBook.js'
+import { download } from '../lib/dates.js'
 
 /* Database > Contacts (Alex, 27 Oct 2026): the administrator's own address book. Import a contacts file (.vcf from
    an iPhone or a Mac, .csv from Google or Outlook), search it, and move anyone with one button to Crew or Cast,
@@ -13,7 +14,7 @@ import { emptyContact, loadContacts, parseContactsFile, removeContacts, sameKey,
 // the first letters of the name (a number or an emoji makes none: then a phone glyph)
 const initials = (n) => (n || '').split(/\s+/).map((x) => (x.match(/\p{L}/u) || [])[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '☏'
 const PAGE = 200
-// the specialty as a group: the same word in any case or accent is one group
+// the specialty, for the order and the groups: the same word in any case or accent is one group
 const specialtyOf = (c) => (c.company || '').trim()
 const groupKey = (c) => specialtyOf(c).toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
@@ -29,11 +30,27 @@ export default function AddressBook({ slot }) {
   const pickSort = (v) => { setSort(v); setShown(PAGE); try { localStorage.setItem('tml_ab_sort', v) } catch { /* private */ } }
   const [shown, setShown] = useState(PAGE)
   // Cards or List (Alex, 27 Oct: "keep the cards, add a list, the cards are hard to scan"); kept per device
-  const [view, setView] = useState(() => { try { return localStorage.getItem('tml_ab_view') || 'cards' } catch { return 'cards' } })
-  const pickView = (v) => { setView(v); try { localStorage.setItem('tml_ab_view', v) } catch { /* private */ } }
+  // the List is the main view (Alex, 27 Oct); a new key, so a device that had chosen Cards starts on List too
+  const [view, setView] = useState(() => { try { return localStorage.getItem('tml_ab_view2') || 'list' } catch { return 'list' } })
+  const pickView = (v) => { setView(v); try { localStorage.setItem('tml_ab_view2', v) } catch { /* private */ } }
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
   const fileRef = useRef(null)
+  const [exportOpen, setExportOpen] = useState(false)
+  // Export (Alex, 27 Oct): what is found (a search narrows it), as vCard, CSV or Excel
+  const exportAs = async (kind) => {
+    setExportOpen(false)
+    const rows = found
+    if (!rows.length) return toast('Nothing to export.', 'error')
+    const day = new Date().toISOString().slice(0, 10)
+    const name = `Contacts ${day}${q.trim() ? ` - ${q.trim().replace(/[\\/:*?"<>|]/g, ' ').slice(0, 30)}` : ''}`
+    try {
+      if (kind === 'vcf') download(`${name}.vcf`, toVcf(rows), 'text/vcard;charset=utf-8')
+      else if (kind === 'csv') download(`${name}.csv`, toCsv(rows), 'text/csv;charset=utf-8')
+      else { const { toXlsx } = await import('../lib/office/xlsx.js'); download(`${name}.xlsx`, await toXlsx(toBook(rows)), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') }
+      toast(`${rows.length} contact${rows.length === 1 ? '' : 's'} exported`, 'ok')
+    } catch (e) { toast(e.message, 'error') }
+  }
 
   useEffect(() => { loadContacts().then(setList).catch((e) => { setError(e.message); setList([]) }) }, [])
 
@@ -46,7 +63,7 @@ export default function AddressBook({ slot }) {
       return byName
     }), [list, q, sort])
 
-  // what is on screen, in groups: one group when not ordered by specialty
+  // ordered by specialty, the contacts come in groups with a heading each; by name or newest, one list
   const groups = useMemo(() => {
     const page = found.slice(0, shown)
     if (sort !== 'company') return [['all', '', page]]
@@ -127,11 +144,29 @@ export default function AddressBook({ slot }) {
           <span className="segmented small" role="tablist" aria-label="Show as">
             {[['cards', 'Cards'], ['list', 'List']].map(([v, l]) => <button key={v} type="button" className={view === v ? 'on' : ''} onClick={() => pickView(v)}>{l}</button>)}
           </span>
-          <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} placeholder="Search name, phone, email, specialty…" />
+          {/* × empties the search, as does Escape (Alex, 27 Oct) */}
+          <span className="ab-search">
+            <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} onKeyDown={(e) => { if (e.key === 'Escape' && q) { setQ(''); setShown(PAGE) } }} placeholder="Search name, phone, email, specialty…" />
+            {q && <button type="button" className="ab-search-x" aria-label="Clear the search" title="Clear" onClick={() => { setQ(''); setShown(PAGE) }}>×</button>}
+          </span>
           {/* how many (Alex, 27 Oct: "with a search, show how many contacts it found") */}
           {list && <span className="ab-count">{q.trim() ? `${found.length} of ${list.length}` : `${list.length} contact${list.length === 1 ? '' : 's'}`}</span>}
           <input ref={fileRef} type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" hidden onChange={(e) => importFile(e.target.files?.[0])} />
           <Button onClick={() => fileRef.current?.click()} disabled={busy}>{busy ? 'Importing…' : 'Import file'}</Button>
+          <span className="ab-export">
+            <Button onClick={() => setExportOpen((o) => !o)} disabled={!found.length}>Export</Button>
+            {exportOpen && (
+              <>
+                <span className="ab-export-shade" onClick={() => setExportOpen(false)} />
+                <span className="ab-export-menu" role="menu">
+                  <span className="ab-export-head">{q.trim() ? `The ${found.length} found` : `All ${found.length}`}</span>
+                  <button type="button" role="menuitem" onClick={() => exportAs('vcf')}><b>vCard</b><small>.vcf · iPhone, Mac, Google Contacts</small></button>
+                  <button type="button" role="menuitem" onClick={() => exportAs('csv')}><b>CSV</b><small>.csv · Google Contacts, Outlook</small></button>
+                  <button type="button" role="menuitem" onClick={() => exportAs('xlsx')}><b>Excel</b><small>.xlsx · Excel, Numbers</small></button>
+                </span>
+              </>
+            )}
+          </span>
           <DbAdd label="Add contact" onClick={() => setDraft({ ...emptyContact(), addedAt: new Date().toISOString() })} />
         </div>
       </DbBar>
@@ -143,7 +178,7 @@ export default function AddressBook({ slot }) {
           {!list.length && <div style={{ marginTop: 12 }}><Button variant="primary" onClick={() => fileRef.current?.click()}>Import file</Button></div>}
         </Empty>
       ) : (
-        // grouped by specialty when that is the order, a heading over each group (Alex, 27 Oct)
+        // grouped by specialty when that is the order, a heading over each group; otherwise one list
         groups.map(([key, label, items]) => (
           <div key={key} className="ab-group">
             {sort === 'company' && <div className="ab-group-head"><span className="ab-chip"><i />{label}</span><span className="muted small">{items.length}</span></div>}
