@@ -7738,7 +7738,7 @@ html[data-theme] body .rem-tasks > .rem-task.tinted, .rem-task.tinted { backgrou
 .roarme-team p, .roarme-team ul { margin: 0; }
 
 /* RoarMe inside the hub (20 Oct, phase 4): the whole RoarMe app filling the page, in a soft rounded frame */
-.roarme-page { height: calc(100dvh - 48px); min-height: 480px; border-radius: 18px; overflow: hidden; background: #1c1f24; }
+.roarme-page { height: calc(100dvh - 48px); min-height: 480px; border-radius: 18px; overflow: hidden; background: var(--bg); } /* RoarMe wears the hub's look (RoarMePage.jsx hubLook) */
 .roarme-frame { display: block; width: 100%; height: 100%; border: 0; }
 /* on a computer the page around RoarMe never scrolls (Alex, 23 Oct: "no scroll, it must not move"): the content column is
    exactly the window's height and RoarMe fills what its padding leaves, whatever padding the skin gives it */

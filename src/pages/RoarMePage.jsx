@@ -13,6 +13,26 @@ const ROARME_ORIGIN = 'https://alexisdigipro-hub.github.io'
 const ROARME_EMBED = `${ROARME_ORIGIN}/roarme/?embed=hub`
 const STATE = /^[A-Za-z0-9_-]{24,64}$/
 
+/* The hub's look for RoarMe in the frame (Alex, 27 Oct: "it looks foreign"): the theme or skin's colours, light or
+   dark, its backdrop and typeface, read off this page as Roardino does (roardino/app.js hubTheme). RoarMe sits at
+   another address and cannot read them itself, so they go to it as a message, again whenever they change. */
+function hubLook() {
+  const html = document.documentElement
+  const cs = window.getComputedStyle(html), bs = window.getComputedStyle(document.body)
+  const v = (k) => cs.getPropertyValue(k).trim()
+  const img = [cs, bs].map((x) => x.backgroundImage).find((x) => x && x !== 'none' && !x.includes('url('))
+  const col = [bs, cs].map((x) => x.backgroundColor).find((x) => x && !/rgba\(0, 0, 0, 0\)|transparent/.test(x))
+  return {
+    light: html.dataset.theme === 'light',
+    bg: v('--bg'), panel: v('--panel'), raised: v('--raised'), text: v('--text'), muted: v('--muted'),
+    accent: v('--accent'), accentInk: v('--accent-ink'), danger: v('--danger'), ok: v('--ok'),
+    glFill: v('--gl-fill'), glFill2: v('--gl-fill-2'), glEdge: v('--gl-edge'),
+    font: v('--font'),
+    fonts: [...document.querySelectorAll('link[rel="stylesheet"][href^="https://fonts.googleapis.com/"]')].map((l) => l.href),
+    backdrop: img ? `${img}, ${col || v('--bg')}` : col || v('--bg'),
+  }
+}
+
 export default function RoarMePage({ full = false }) {
   const me = useCurrentUser()
   const frame = useRef(null)
@@ -22,7 +42,8 @@ export default function RoarMePage({ full = false }) {
     const onMsg = async (e) => {
       if (e.origin !== ROARME_ORIGIN || !frame.current || e.source !== frame.current.contentWindow) return
       const m = e.data
-      if (m?.type === 'roarme:ready') { if (me?.id) send({ type: 'roarme:hub-member', id: me.id }); return }
+      if (m?.type === 'roarme:want-look') { send({ type: 'roarme:hub-look', look: hubLook() }); return }
+      if (m?.type === 'roarme:ready') { if (me?.id) send({ type: 'roarme:hub-member', id: me.id }); send({ type: 'roarme:hub-look', look: hubLook() }); return }
       if (m?.type !== 'roarme:need-signin' || !STATE.test(String(m.state || ''))) return
       try {
         const { data } = await supabase.auth.getSession()
@@ -43,6 +64,26 @@ export default function RoarMePage({ full = false }) {
     window.addEventListener('message', onMsg)
     return () => window.removeEventListener('message', onMsg)
   }, [me?.id])
+
+  // Settings > Display changed (theme, skin, accent, typeface): send the new look. The hub writes a few sizes on its
+  // root while it scrolls, so look at most once a frame and send only when the look itself changed.
+  useEffect(() => {
+    let last = JSON.stringify(hubLook()), queued = false
+    const watch = new window.MutationObserver(() => {
+      if (queued) return
+      queued = true
+      requestAnimationFrame(() => {
+        queued = false
+        const look = hubLook(), now = JSON.stringify(look)
+        if (now === last) return
+        last = now
+        frame.current?.contentWindow?.postMessage({ type: 'roarme:hub-look', look }, ROARME_ORIGIN)
+      })
+    })
+    watch.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-skin', 'data-accent', 'style', 'class'] })
+    watch.observe(document.head, { childList: true })
+    return () => watch.disconnect()
+  }, [])
 
   if (!supabase) return <p className="muted">RoarMe needs the online database.</p>
   return (
