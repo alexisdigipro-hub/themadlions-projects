@@ -13,6 +13,9 @@ import { emptyContact, loadContacts, parseContactsFile, removeContacts, sameKey,
 // the first letters of the name (a number or an emoji makes none: then a phone glyph)
 const initials = (n) => (n || '').split(/\s+/).map((x) => (x.match(/\p{L}/u) || [])[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '☏'
 const PAGE = 200
+// the specialty as a group: the same word in any case or accent is one group
+const specialtyOf = (c) => (c.company || '').trim()
+const groupKey = (c) => specialtyOf(c).toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
 export default function AddressBook({ slot }) {
   const { state, update } = useStore()
@@ -20,10 +23,14 @@ export default function AddressBook({ slot }) {
   const [list, setList] = useState(null)
   const [error, setError] = useState('')
   const [q, setQ] = useState('')
-  // the order (Alex, 27 Oct: "add sorting"): by name, newest first, or by company; kept per device
+  // the order (Alex, 27 Oct: "add sorting"): by name, newest first, or grouped by specialty; kept per device.
+  // Specialty is the contact's company field (a vCard's ORG), where Alex writes what each person is: Gaffer, Artist…
   const [sort, setSort] = useState(() => { try { return localStorage.getItem('tml_ab_sort') || 'name' } catch { return 'name' } })
   const pickSort = (v) => { setSort(v); setShown(PAGE); try { localStorage.setItem('tml_ab_sort', v) } catch { /* private */ } }
   const [shown, setShown] = useState(PAGE)
+  // Cards or List (Alex, 27 Oct: "keep the cards, add a list, the cards are hard to scan"); kept per device
+  const [view, setView] = useState(() => { try { return localStorage.getItem('tml_ab_view') || 'cards' } catch { return 'cards' } })
+  const pickView = (v) => { setView(v); try { localStorage.setItem('tml_ab_view', v) } catch { /* private */ } }
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
   const fileRef = useRef(null)
@@ -35,9 +42,18 @@ export default function AddressBook({ slot }) {
     .sort((a, b) => {
       const byName = a.name.localeCompare(b.name, 'el', { sensitivity: 'base' })
       if (sort === 'new') return (b.addedAt || '').localeCompare(a.addedAt || '') || byName
-      if (sort === 'company') return (!a.company - !b.company) || (a.company || '').localeCompare(b.company || '', 'el', { sensitivity: 'base' }) || byName
+      if (sort === 'company') return (!a.company - !b.company) || specialtyOf(a).localeCompare(specialtyOf(b), 'el', { sensitivity: 'base' }) || byName
       return byName
     }), [list, q, sort])
+
+  // what is on screen, in groups: one group when not ordered by specialty
+  const groups = useMemo(() => {
+    const page = found.slice(0, shown)
+    if (sort !== 'company') return [['all', '', page]]
+    const m = new Map()
+    for (const c of page) { const k = groupKey(c); if (!m.has(k)) m.set(k, [k, specialtyOf(c) || 'No specialty', []]); m.get(k)[2].push(c) }
+    return [...m.values()]
+  }, [found, shown, sort])
 
   const importFile = async (file) => {
     if (!file) return
@@ -80,8 +96,8 @@ export default function AddressBook({ slot }) {
         if (!hit.email && c.email) hit.email = c.email
       } else {
         s.library.contacts.push({
-          id: uid(), kind, name: c.name.trim(), phone: c.phone, email: c.email, dept: kind === 'cast' ? 'Cast' : 'Production', role: c.title || '',
-          agent: '', agentPhone: '', notes: [c.company, c.phone2 && `Also ${c.phone2}`, c.notes].filter(Boolean).join('\n'), photos: [], tags: [], createdAt: new Date().toISOString(),
+          id: uid(), kind, name: c.name.trim(), phone: c.phone, email: c.email, dept: kind === 'cast' ? 'Cast' : 'Production', role: c.company || c.title || '',
+          agent: '', agentPhone: '', notes: [c.company && c.title, c.phone2 && `Also ${c.phone2}`, c.notes].filter(Boolean).join('\n'), photos: [], tags: [], createdAt: new Date().toISOString(),
         })
       }
       return s
@@ -106,9 +122,12 @@ export default function AddressBook({ slot }) {
         </div>
         <div className="toolbar-actions">
           <span className="segmented small" role="tablist" aria-label="Sort">
-            {[['name', 'Name'], ['new', 'Newest'], ['company', 'Company']].map(([v, l]) => <button key={v} type="button" className={sort === v ? 'on' : ''} onClick={() => pickSort(v)}>{l}</button>)}
+            {[['name', 'Name'], ['new', 'Newest'], ['company', 'Specialty']].map(([v, l]) => <button key={v} type="button" className={sort === v ? 'on' : ''} onClick={() => pickSort(v)}>{l}</button>)}
           </span>
-          <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} placeholder="Search name, phone, email, company…" />
+          <span className="segmented small" role="tablist" aria-label="Show as">
+            {[['cards', 'Cards'], ['list', 'List']].map(([v, l]) => <button key={v} type="button" className={view === v ? 'on' : ''} onClick={() => pickView(v)}>{l}</button>)}
+          </span>
+          <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} placeholder="Search name, phone, email, specialty…" />
           <input ref={fileRef} type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" hidden onChange={(e) => importFile(e.target.files?.[0])} />
           <Button onClick={() => fileRef.current?.click()} disabled={busy}>{busy ? 'Importing…' : 'Import file'}</Button>
           <DbAdd label="Add contact" onClick={() => setDraft({ ...emptyContact(), addedAt: new Date().toISOString() })} />
@@ -122,21 +141,42 @@ export default function AddressBook({ slot }) {
           {!list.length && <div style={{ marginTop: 12 }}><Button variant="primary" onClick={() => fileRef.current?.click()}>Import file</Button></div>}
         </Empty>
       ) : (
-        // soft tiles with gaps, as Crew and the Calendar (Alex, 27 Oct: the ruled table did not belong in the hub);
-        // a tap on the tile edits it, the buttons move it
-        <div className="ab-grid">
-          {found.slice(0, shown).map((c) => (
-            <article key={c.id} className="ab-tile" onClick={() => setDraft({ ...c })} role="button" tabIndex={0}>
-              <span className="ab-ava" aria-hidden="true">{initials(c.name)}</span>
-              <div className="ab-body">
-                <strong>{c.name}</strong>
-                {(c.phone || c.email) && <div className="ab-line">{[c.phone, c.email].filter(Boolean).join(' · ')}</div>}
-                {(c.company || c.title) && <span className="ab-chip"><i />{[c.company, c.title].filter(Boolean).join(' · ')}</span>}
+        // grouped by specialty when that is the order, a heading over each group (Alex, 27 Oct)
+        groups.map(([key, label, items]) => (
+          <div key={key} className="ab-group">
+            {sort === 'company' && <div className="ab-group-head"><span className="ab-chip"><i />{label}</span><span className="muted small">{items.length}</span></div>}
+            {view === 'list' ? (
+              // the list: one slim soft row per person, the columns lined up (not a ruled table)
+              <div className="ab-rows">
+                {items.map((c) => (
+                  <article key={c.id} className="ab-row" onClick={() => setDraft({ ...c })} role="button" tabIndex={0}>
+                    <span className="ab-ava sm" aria-hidden="true">{initials(c.name)}</span>
+                    <strong className="ab-name">{c.name}</strong>
+                    <span className="ab-cell">{c.phone}{c.phone2 && <span className="muted"> · {c.phone2}</span>}</span>
+                    <span className="ab-cell muted">{c.email}</span>
+                    <span className="ab-cell">{sort !== 'company' && c.company && <span className="ab-chip"><i />{c.company}</span>}{c.title && <span className="muted small"> {c.title}</span>}</span>
+                    {acts(c)}
+                  </article>
+                ))}
               </div>
-              {acts(c)}
-            </article>
-          ))}
-        </div>
+            ) : (
+              // the cards: soft tiles with gaps, as Crew and the Calendar; a tap edits, the buttons move
+              <div className="ab-grid">
+                {items.map((c) => (
+                  <article key={c.id} className="ab-tile" onClick={() => setDraft({ ...c })} role="button" tabIndex={0}>
+                    <span className="ab-ava" aria-hidden="true">{initials(c.name)}</span>
+                    <div className="ab-body">
+                      <strong>{c.name}</strong>
+                      {(c.phone || c.email) && <div className="ab-line">{[c.phone, c.email].filter(Boolean).join(' · ')}</div>}
+                      {(c.company || c.title) && <span className="ab-chip"><i />{[c.company, c.title].filter(Boolean).join(' · ')}</span>}
+                    </div>
+                    {acts(c)}
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        ))
       )}
       {found.length > shown && <div style={{ textAlign: 'center', marginTop: 12 }}><Button onClick={() => setShown((n) => n + PAGE)}>Show more ({found.length - shown})</Button></div>}
 
@@ -151,7 +191,7 @@ export default function AddressBook({ slot }) {
             </div>
             <Field label="Email"><Input value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></Field>
             <div className="row-2">
-              <Field label="Company"><Input value={draft.company} onChange={(e) => setDraft({ ...draft, company: e.target.value })} /></Field>
+              <Field label="Specialty"><Input placeholder="Gaffer, Artist, Choreographer…" value={draft.company} onChange={(e) => setDraft({ ...draft, company: e.target.value })} /></Field>
               <Field label="Title"><Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></Field>
             </div>
             <Field label="Notes"><Textarea rows={3} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>
