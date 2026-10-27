@@ -100,7 +100,7 @@ export default function AddressBook({ slot }) {
 
   return (
     <section className="panel db-card">
-      <DbBar slot={slot}>
+      <DbBar slot={slot} className="ab-bar">
         <div className="toolbar-info">
           <strong>Contacts</strong> <span className="muted">{list ? list.length : ''}</span> <span className="muted small">· only administrators see them</span>
         </div>

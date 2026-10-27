@@ -8225,7 +8225,13 @@ html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > b
 .ab-chip i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
 .ab-acts { grid-column: 2; display: flex; align-items: center; gap: 6px; }
 .ab-acts .ab-del { margin-left: auto; }
-@media (min-width: 821px) { html[data-theme] body main.content .db-slot .toolbar-actions .input.search { flex: 1 1 220px; min-width: 200px; } }
+@media (min-width: 821px) {
+  /* Contacts has more in its bar (search, Import, +, the order): it takes its own line under the tabs */
+  .db-top .db-slot:has(.ab-bar) { flex: 1 1 100%; }
+  .db-slot .ab-bar { width: 100%; }
+  .db-slot .ab-bar .toolbar-actions { flex: 1; justify-content: flex-end; flex-wrap: wrap; }
+  html[data-theme] body main.content .db-slot .ab-bar .input.search { flex: 0 1 320px; min-width: 200px; }
+}
 .ab-acts .ab-del { width: 30px; height: 30px; border-radius: 50%; color: var(--muted); }
 .ab-acts .ab-del:hover { color: #ff5a5a; }
 @media (max-width: 820px) {
