@@ -8727,3 +8727,8 @@ html[data-theme] body .bcat-row { grid-template-columns: 22px minmax(0, 1fr) min
   .pform-cover { flex-direction: row; justify-content: flex-start; }
   .pform-cover-pick { width: 88px; height: 88px; border-radius: 14px; }
 }
+/* fields one after another inside a card: the same gap everywhere (Settings, 27 Oct) */
+@media (min-width: 821px) {
+  html[data-theme] body .settings-cols > section.panel :is(.field, .row-2, .row-3, .check-row) + :is(.field, .row-2, .row-3, .check-row) { margin-top: 16px; }
+  html[data-theme] body .settings-cols > section.panel .field-hint + .field-label { margin-top: 16px; }
+}

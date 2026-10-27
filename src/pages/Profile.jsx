@@ -130,6 +130,8 @@ export default function Profile({ mine = false, embedded = false }) {
               <Field label="Who can see my phone and birthday" hint="Your name, photo, position and the few words are always visible to the team.">
                 <Select value={draft.showPhone === 'admins' ? 'admins' : 'everyone'} onChange={(e) => set('showPhone', e.target.value)} options={[['everyone', 'Everyone in the team'], ['admins', 'Administrators only']]} />
               </Field>
+              {/* Save sits in the page's top row; inside Settings, where there is no top row, here */}
+              {embedded && <div className="row-actions"><Button variant="primary" onClick={save} disabled={busy}>Save profile</Button></div>}
             </div>
           ) : (
             <dl className="profile-read">
