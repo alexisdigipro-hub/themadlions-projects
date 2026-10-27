@@ -8642,28 +8642,12 @@ html[data-theme] body :is(input.search, .input.search, input[type=search], .rem-
 /* the swatches in Settings > Display as polished metal: the sheen of each colour (Alex, 27 Oct) */
 .accent-swatches .swatch .dot { background: linear-gradient(135deg, color-mix(in srgb, var(--sw) 50%, #fff) 0%, var(--sw) 45%, color-mix(in srgb, var(--sw) 70%, #000) 100%) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 2px 6px rgba(0, 0, 0, .25); }
 
-/* Five new icon looks (Alex, 27 Oct), each on the menu (html[data-icons]) and in Settings' picker (data-icons-preview) */
-.ico-defs .g1 { stop-color: var(--accent); }
-.ico-defs .g2 { stop-color: #9b7bff; }
-.ico-defs .s1 { stop-color: color-mix(in srgb, var(--accent) 85%, #fff); stop-opacity: .75; }
-.ico-defs .s2 { stop-color: var(--accent); stop-opacity: .12; }
-/* Liquid glass: the main shape filled with glass, a soft glow */
-:is(html[data-icons='glass'], .icon-preview[data-icons-preview='glass']) svg.ico { stroke-width: 1.7; }
-:is(html[data-icons='glass'], .icon-preview[data-icons-preview='glass']) svg.ico .duo { fill: url(#ico-glass); }
-html[data-icons='glass'] .sidenav a.active svg.ico, .icon-preview[data-icons-preview='glass'] svg.ico { filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 45%, transparent)); }
-/* Neon: a fine line in the accent that glows */
-:is(html[data-icons='neon'], .icon-preview[data-icons-preview='neon']) svg.ico { stroke-width: 1.4; color: var(--accent); filter: drop-shadow(0 0 2px color-mix(in srgb, var(--accent) 80%, transparent)) drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 45%, transparent)); }
-html[data-icons='neon'] .sidenav a:not(.active) svg.ico { opacity: .75; }
-/* App tiles: each icon in a small tinted rounded square */
-:is(html[data-icons='tile'], .icon-preview[data-icons-preview='tile']) svg.ico { width: 14px; height: 14px; padding: 4px; box-sizing: content-box; border-radius: 7px; stroke-width: 2; color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent); }
-html[data-icons='tile'] .sidenav a.active svg.ico { color: var(--accent-ink); background: var(--accent-metal, var(--accent)); box-shadow: none; }
-.icon-preview[data-icons-preview='tile'] svg.ico { width: 14px; height: 14px; }
-/* Gradient: the line from the accent to violet */
-:is(html[data-icons='gradient'], .icon-preview[data-icons-preview='gradient']) svg.ico { stroke: url(#ico-grad); stroke-width: 1.9; }
-:is(html[data-icons='gradient'], .icon-preview[data-icons-preview='gradient']) svg.ico [fill='currentColor'] { fill: url(#ico-grad); }
-/* Sharp: square ends and corners, a precise line */
-:is(html[data-icons='sharp'], .icon-preview[data-icons-preview='sharp']) svg.ico { stroke-width: 1.6; stroke-linecap: square; stroke-linejoin: miter; }
-:is(html[data-icons='sharp'], .icon-preview[data-icons-preview='sharp']) svg.ico :is(path, rect, circle, ellipse) { stroke-linecap: square; stroke-linejoin: miter; }
+/* Monochrome icon looks easier to tell apart (Alex, 27 Oct), on the menu (html[data-icons]) and in Settings' picker */
+:is(html[data-icons='roundbold'], .icon-preview[data-icons-preview='roundbold']) svg.ico { stroke-width: 2.4; }
+:is(html[data-icons='large'], .icon-preview[data-icons-preview='large']) svg.ico { width: 21px; height: 21px; stroke-width: 2; }
+:is(html[data-icons='ring'], .icon-preview[data-icons-preview='ring']) svg.ico { width: 14px; height: 14px; padding: 4px; box-sizing: content-box; border-radius: 50%; stroke-width: 2.1; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 55%, transparent); }
+html[data-icons='ring'] .sidenav a.active svg.ico { background: color-mix(in srgb, currentColor 16%, transparent); box-shadow: inset 0 0 0 1.5px currentColor; }
+:is(html[data-icons='picto'], .icon-preview[data-icons-preview='picto']) svg.ico { stroke-width: 2.1; }
 
 /* Settings, a person's profile and the project form freshened (Alex, 27 Oct: "Settings feel out of the hub's look and
    layout; tidy every tab; the New project window; the profiles: no needless gaps, a nicer layout"). One recipe, the
