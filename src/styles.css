@@ -8212,3 +8212,9 @@ html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > b
     background: color-mix(in srgb, var(--panel) 80%, transparent); border: 1px solid var(--line-soft); padding-left: 16px; padding-right: 16px;
   }
 }
+
+/* Database > Contacts (Alex, 27 Oct): the move buttons in a row, the cards on a phone with their buttons under */
+.ab-acts { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ab-table td.row-actions { white-space: nowrap; text-align: right; }
+.ab-card .ab-acts { margin-top: 8px; }
+.ab-card { cursor: default; }
