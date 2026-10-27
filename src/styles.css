@@ -8789,9 +8789,7 @@ html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='th
   html[data-theme] body .settings-cols > [data-k='activity'] { order: 5; }
   html[data-theme] body .settings-cols > .team-panel { order: 1; }
   html[data-theme] body .settings-cols > :is([data-k='depts'], [data-k='proj'], [data-k='who'], [data-k='backups'], [data-k='yourdata'], [data-k='activity']) { grid-column: 1 / -1; }
-  html[data-theme] body .settings-cols[data-active='calendar'] > [data-k='proj'] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 24px; align-content: start; }
-  html[data-theme] body .settings-cols[data-active='calendar'] > [data-k='proj'] > :not(.field) { grid-column: 1 / -1; }
-  html[data-theme] body .settings-cols[data-active='calendar'] > [data-k='proj'] > .field { margin-top: 16px !important; }
+  html[data-theme] body .settings-cols > [data-k='proj'] > .stack { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
   html[data-theme] body .usage { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; max-width: none; }
   html[data-theme] body .usage > * { margin: 0; min-width: 0; }
   html[data-theme] body .usage > .usage-refresh { grid-column: 1 / -1; }
