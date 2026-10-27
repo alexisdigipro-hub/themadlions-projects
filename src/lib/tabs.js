@@ -15,13 +15,15 @@ export function projectTabs(project) {
     { to: 'budget', label: 'Budget', key: 'budget', icon: 'budget' },
     // Breakdown is framed inside Script now (its own permission still gates that section)
     ...(cat === 'Event' ? [] : [
-      { to: 'script', label: 'Script & Breakdown', key: 'script', icon: 'script' },
+      { to: 'script', label: 'Script & Breakdown', key: 'script', icon: 'script', onOverview: true },
       // the Shotlist tab is gone (Alex, 27 Oct): shot lists are made in RoarList (side menu)
     ]),
     // the Ordino tab is gone (Alex, 23 Oct): the ordino is made in Roardino (side menu) and shows on the
     // Overview's Ordino button; an Event keeps the tab for its Run of show
     ...(cat === 'Event' ? [{ to: 'schedule', label: 'Run of show', key: 'schedule', icon: 'schedule' }] : []),
-    { to: 'people', label: 'Project Database', key: ['contacts', 'locations', 'gear'], icon: 'people' },
+    // Script & Breakdown and Project Database are sections of Overview since 27 Oct (Alex: "put them in Overview and
+    // drop those tabs"): onOverview keeps them in Edit details > Tabs (switch the section on or off) but out of the bar
+    { to: 'people', label: 'Project Database', key: ['contacts', 'locations', 'gear'], icon: 'people', onOverview: true },
     // Presentation left the projects (Alex, 24 Oct): it is in Organizer > Office > Presentations now
     // Files & notes is framed on Overview now (its own permission still gates that section)
   ]
