@@ -166,7 +166,7 @@ export default function Settings() {
       <div className={inClass}>
       <div className="cols settings-cols" data-active={tab}>
         {isAdmin && (
-          <section className="panel" data-tab="company">
+          <section className="panel" data-tab="company" data-k="company">
             <h2>Company</h2>
             <Field label="Logo" hint="PNG or JPG, square works best. Shown in the sidebar, on the login page, on call sheets and on shared call sheet links.">
               <div className="logo-row">
@@ -189,7 +189,7 @@ export default function Settings() {
         {isAdmin && <Team embedded />}
 
         {isAdmin && (
-          <section className="panel" data-tab="team">
+          <section className="panel" data-tab="team" data-k="rules">
             <h2>Team rules</h2>
             <div className="stack">
               <Field label="Default access for a new teammate" hint="What every part of the app starts at when you add someone. Drives and Share always start at none. Notices are always administrators only; call sheet share links are open to everyone who can see call sheets.">
@@ -204,7 +204,7 @@ export default function Settings() {
 
         {/* the pop-up notices, apart from who can do what (Alex, 10 Oct: the Team tab reorganised) */}
         {isAdmin && (
-          <section className="panel" data-tab="team">
+          <section className="panel" data-tab="team" data-k="notices">
             <h2>Notices</h2>
             <div className="stack">
               <Field label="Pop up a notice when a task is assigned to me" hint="The person who assigns it is the sender, so they see the confirmation. Nothing is sent when you assign a task to yourself.">
@@ -224,7 +224,7 @@ export default function Settings() {
         )}
 
         {isAdmin && (
-          <section className="panel wide" data-tab="team">
+          <section className="panel wide" data-tab="team" data-k="depts">
             <h2>Departments</h2>
             <p className="small muted">One per line, in the order you want them in menus. Used for crew, the contacts database and tasks. Existing people keep their department even if you remove it from the list.</p>
             <Textarea rows={8} value={depts} onChange={(e) => setDepts(e.target.value)} />
@@ -236,7 +236,7 @@ export default function Settings() {
         )}
 
         {isAdmin && (
-          <section className="panel" data-tab="calendar">
+          <section className="panel" data-tab="calendar" data-k="cal">
             <h2>Calendar</h2>
             <Field label="Show Greek public holidays" hint="New Year, Epiphany, Clean Monday, 25 March, Good Friday, Easter, Easter Monday, 1 May, Holy Spirit Monday, 15 August, 28 October, Christmas and 26 December. The movable ones follow Orthodox Easter.">
               <Select value={state.settings.greekHolidays === false ? 'no' : 'yes'} onChange={(e) => setSetting('greekHolidays', e.target.value === 'yes')} options={[['yes', 'Yes'], ['no', 'No']]} />
@@ -259,21 +259,21 @@ export default function Settings() {
           </section>
         )}
         {isAdmin && (
-          <section className="panel" data-tab="calendar">
+          <section className="panel" data-tab="calendar" data-k="types">
             <h2>Event types</h2>
             <p className="small muted">The kinds of event on the Calendar, in the order of its type list. Tap a colour to change it, rename a type in place, drag ⋮⋮ to reorder, × to remove. Events already of a removed type keep its name and colour; bring a removed type back from the list under the types.</p>
             <EventTypesSettings state={state} update={update} toast={toast} />
           </section>
         )}
         {isAdmin && (
-          <section className="panel" data-tab="calendar">
+          <section className="panel" data-tab="calendar" data-k="who">
             <h2>Who sees which calendar</h2>
             <p className="small muted">Each type of event and each calendar feed, seen by everyone or only by the people you light up. Administrators see every calendar, and everyone always sees their own days off.</p>
             <CalendarAccessSettings state={state} update={update} />
           </section>
         )}
         {isAdmin && (
-          <section className="panel" data-tab="calendar">
+          <section className="panel" data-tab="calendar" data-k="proj">
             <h2>Projects</h2>
             <div className="stack">
               <Field label="Project code prefix" hint="New projects get a code like TML-2026-001, counted per year. Leave it empty to stop giving out codes. Existing projects keep whatever they have.">
@@ -286,7 +286,7 @@ export default function Settings() {
           </section>
         )}
         {isAdmin && (
-          <section className="panel" data-tab="calendar">
+          <section className="panel" data-tab="calendar" data-k="equip">
             <h2>Equipment categories</h2>
             <p className="small muted">One per line, in the order you want them in a project's Equipment tab. Existing items keep their category even if you remove it from the list.</p>
             <Textarea rows={8} value={gearCats} onChange={(e) => setGearCats(e.target.value)} />
@@ -297,7 +297,7 @@ export default function Settings() {
           </section>
         )}
         {isAdmin && (
-          <section className="panel" data-tab="calendar">
+          <section className="panel" data-tab="calendar" data-k="stages">
             <h2>Progress stages</h2>
             <p className="small muted">What counts towards the "% done" of a project, per category. Untick a stage you never do, change its weight, or add your own manual stages that get ticked on the project Overview.</p>
             <ProgressSettings state={state} setSetting={setSetting} />
@@ -305,14 +305,14 @@ export default function Settings() {
         )}
 
         {isAdmin && (
-          <section className="panel wide" data-tab="budget">
+          <section className="panel wide" data-tab="budget" data-k="budget">
             <h2>Budget categories</h2>
             <p className="small muted">What a budget line can be filed under, in groups, the same for every project. Click a name to rename it: every line already filed under it follows. A category with lines on it cannot be removed until you say where those lines go. The Finance column is where a payment on that category lands in Finance.</p>
             <BudgetCategoriesSettings state={state} update={update} toast={toast} />
           </section>
         )}
 
-        <section className="panel wide" data-tab="display">
+        <section className="panel wide" data-tab="display" data-k="display">
           <h2>Display</h2>
           {/* only the administrator picks the look, for everyone (Alex, 22 Oct) */}
           {isAdmin ? (
@@ -363,7 +363,7 @@ export default function Settings() {
 
         {/* Users do not need to know where the data lives (Alex), so Storage is for administrators. */}
         {isAdmin && (
-        <section className="panel" data-tab="data">
+        <section className="panel" data-tab="data" data-k="storage">
           <h2>Storage</h2>
           {mode === 'remote' ? (
             <>
@@ -384,7 +384,7 @@ export default function Settings() {
         </section>
         )}
         {isAdmin && (
-          <section className="panel" data-tab="company">
+          <section className="panel" data-tab="company" data-k="workspace">
             <h2>Workspace</h2>
             <div className="stack">
               <Field label="Name">
@@ -403,7 +403,7 @@ export default function Settings() {
         )}
 
         {isAdmin && (
-          <section className="panel" data-tab="integrations">
+          <section className="panel" data-tab="integrations" data-k="ai">
             <h2>AI breakdown</h2>
             <p className="muted small">
               Phase 1 calls Anthropic directly from this browser with your key. The key is saved only in this browser. When the Supabase backend is connected the key moves to the server.
@@ -431,7 +431,7 @@ export default function Settings() {
         )}
 
         {isAdmin && (
-        <section className="panel" data-tab="integrations">
+        <section className="panel" data-tab="integrations" data-k="trans">
           <h2>Transcription</h2>
           <p className="muted small">Lyrics and timings from the song file with OpenAI Whisper, in the Music tab of music video projects. About $0.006 per minute of audio. The key stays in this browser.</p>
           <Field label="OpenAI API key">
@@ -445,7 +445,7 @@ export default function Settings() {
         )}
 
         {isAdmin && remote && (
-          <section className="panel" data-tab="integrations">
+          <section className="panel" data-tab="integrations" data-k="files">
             <h2>File storage</h2>
             <p className="muted small">Where the files people upload go: photos (locations, cast and crew, equipment, presentations, the Database page), songs in the Music tab, the original of a project cover, and chat attachments. The built-in storage is 1 GB on the free plan. Your own pCloud has no such limit, keeps everything in folders you can open from the Finder, and stays private: the app asks a small function inside Supabase, which holds the pCloud key and checks the same permissions the database enforces.</p>
             <PcloudPanel toast={toast} />
@@ -453,7 +453,7 @@ export default function Settings() {
         )}
 
         {isAdmin && remote && (
-          <section className="panel" data-tab="integrations">
+          <section className="panel" data-tab="integrations" data-k="feeds">
             <h2>Calendar feeds</h2>
             <p className="muted small">Other calendars shown on the Calendar page, read only: a Google Calendar of another account, a shared one, a festival's. Each keeps its own colour and can be switched off without losing the address. Nothing from here is ever written back, and the app's own events are not sent there. Needs the <code>ical</code> function deployed in Supabase (Edge Functions &rarr; Deploy a new function &rarr; via Editor, name <code>ical</code>, paste <code>supabase/functions/ical/index.ts</code>).</p>
             <CalendarFeedsPanel toast={toast} />
@@ -461,7 +461,7 @@ export default function Settings() {
         )}
 
         {isAdmin && remote && (
-          <section className="panel" data-tab="integrations">
+          <section className="panel" data-tab="integrations" data-k="gcal">
             <h2>Google Calendar</h2>
             <p className="muted small">Connects one specific Google Calendar to this workspace: events made here (shoot days, prep, everything on the Calendar page) are pushed there, and events made straight in that Google Calendar show up here too. One shared connection for everyone, the same shape as pCloud: a small function inside Supabase holds the credential, no browser ever sees it except once, when you first connect.</p>
             <GoogleCalendarPanel toast={toast} />
@@ -469,7 +469,7 @@ export default function Settings() {
         )}
 
         {isAdmin && (
-          <section className="panel" data-tab="integrations">
+          <section className="panel" data-tab="integrations" data-k="maps">
             <h2>Google Maps</h2>
             <p className="muted small">Maps work without a key using the public embed. Add a Maps Embed API key for a cleaner map with no watermark; restrict it to your GitHub Pages domain.</p>
             <div className="stack">
@@ -486,27 +486,27 @@ export default function Settings() {
         )}
 
         {isAdmin && (
-          <section className="panel" data-tab="data">
+          <section className="panel" data-tab="data" data-k="activity">
             <h2>Activity</h2>
             <p className="small muted">Who changed what, newest first. Project edits are grouped per person and project every few seconds. Kept for 180 days.</p>
             {tab === 'data' && <ActivityLog />}
           </section>
         )}
         {isAdmin && remote && (
-          <section className="panel" data-tab="data">
+          <section className="panel" data-tab="data" data-k="backups">
             <h2>Weekly backups</h2>
             <p className="muted small">The database takes a snapshot of the whole workspace every Monday at 06:00 and keeps the last twelve. Download one to keep a copy on your own disk; the Restore button below reads it. Needs <code>supabase/backups.sql</code> run once.</p>
             <BackupsPanel toast={toast} />
           </section>
         )}
         {isAdmin && remote && (
-          <section className="panel" data-tab="data">
+          <section className="panel" data-tab="data" data-k="pcloud">
             <h2>Backup to pCloud</h2>
             <p className="muted small">A full copy into your pCloud, in <b>Backups</b>, a folder per date: all the app's data (projects, calendar, people, locations, tasks, finance, chat, settings) and the site's code. If anything happens to the site, the data goes back with Restore backup below, and the code can be put back on GitHub from the zip.</p>
             <PcloudBackup state={state} update={update} toast={toast} />
           </section>
         )}
-        <section className="panel wide" data-tab="data">
+        <section className="panel wide" data-tab="data" data-k="yourdata">
           <h2>Your data</h2>
           <p className="muted small">
             Everything is stored in this browser under <code>{STORAGE_KEY}</code>. Download a backup before clearing browser data, and use it to move to the online database later.

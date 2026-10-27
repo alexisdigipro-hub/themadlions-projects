@@ -8757,17 +8757,45 @@ html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='th
 html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='theme']) .sidenav a.active { box-shadow: 0 6px 16px color-mix(in srgb, var(--pick) 35%, transparent); }
 .accent-swatches .swatch.theme-own .dot { background: conic-gradient(#ff6b57, #e4c47c, #7fe8c2, #7cc4ff, #b8a7ff, #ff6b57) !important; }
 
-/* Settings and Usage laid out like a board (Alex, 27 Oct: "no alignment anywhere, gaps, chaos"): the cards stack in two
-   columns with no holes under the short ones (CSS columns, each card kept whole), a wide card across both, the plain
-   text actions as the same glass pill buttons, the logo and its buttons on one centred line. */
+/* Settings and Usage laid out like a board (Alex, 27 Oct: "no alignment anywhere, gaps, chaos"): every tab has a set
+   plan (grid areas, by each card's data-k): cards side by side in pairs of about the same size and stretched to the
+   same height, the long lists (who sees which calendar, activity, backups, departments) across the whole width. The
+   plain text actions are the same glass pill buttons, the logo and its buttons on one centred line. */
 @media (min-width: 821px) {
-  html[data-theme] body .cols.settings-cols { display: block; columns: 2; column-gap: 16px; }
-  html[data-theme] body .settings-cols > section.panel { break-inside: avoid; margin: 0 0 16px; width: 100%; box-sizing: border-box; }
-  html[data-theme] body .settings-cols > section.panel:is(.wide, .team-panel) { column-span: all; }
-  html[data-theme] body .settings-cols > :not(section) { break-inside: avoid; column-span: all; }
-  html[data-theme] body .usage { display: block; max-width: none; columns: 2; column-gap: 16px; }
-  html[data-theme] body .usage > * { break-inside: avoid; margin: 0 0 16px; }
-  html[data-theme] body .usage > .usage-refresh { column-span: all; margin-bottom: 8px; }
+  html[data-theme] body .cols.settings-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; columns: auto; }
+  html[data-theme] body .settings-cols > section.panel { margin: 0; min-width: 0; box-sizing: border-box; }
+  html[data-theme] body .settings-cols > :is(.wide, .team-panel) { grid-column: 1 / -1; }
+  html[data-theme] body .settings-cols[data-active='company'] { grid-template-areas: 'company workspace'; }
+  html[data-theme] body .settings-cols[data-active='team'] { grid-template-areas: 'team team' 'rules notices' 'depts depts'; }
+  html[data-theme] body .settings-cols[data-active='calendar'] { grid-template-areas: 'cal types' 'proj types' 'equip stages' 'who who'; }
+  html[data-theme] body .settings-cols[data-active='integrations'] { grid-template-areas: 'ai files' 'trans maps' 'feeds gcal'; }
+  html[data-theme] body .settings-cols[data-active='data'] { grid-template-areas: 'storage pcloud' 'backups backups' 'yourdata yourdata' 'activity activity'; }
+  html[data-theme] body .settings-cols > .team-panel { grid-area: team; }
+  html[data-theme] body .settings-cols > [data-k='company'] { grid-area: company; }
+  html[data-theme] body .settings-cols > [data-k='workspace'] { grid-area: workspace; }
+  html[data-theme] body .settings-cols > [data-k='rules'] { grid-area: rules; }
+  html[data-theme] body .settings-cols > [data-k='notices'] { grid-area: notices; }
+  html[data-theme] body .settings-cols > [data-k='depts'] { grid-area: depts; }
+  html[data-theme] body .settings-cols > [data-k='cal'] { grid-area: cal; }
+  html[data-theme] body .settings-cols > [data-k='types'] { grid-area: types; }
+  html[data-theme] body .settings-cols > [data-k='proj'] { grid-area: proj; }
+  html[data-theme] body .settings-cols > [data-k='equip'] { grid-area: equip; }
+  html[data-theme] body .settings-cols > [data-k='stages'] { grid-area: stages; }
+  html[data-theme] body .settings-cols > [data-k='who'] { grid-area: who; }
+  html[data-theme] body .settings-cols > [data-k='ai'] { grid-area: ai; }
+  html[data-theme] body .settings-cols > [data-k='files'] { grid-area: files; }
+  html[data-theme] body .settings-cols > [data-k='trans'] { grid-area: trans; }
+  html[data-theme] body .settings-cols > [data-k='maps'] { grid-area: maps; }
+  html[data-theme] body .settings-cols > [data-k='feeds'] { grid-area: feeds; }
+  html[data-theme] body .settings-cols > [data-k='gcal'] { grid-area: gcal; }
+  html[data-theme] body .settings-cols > [data-k='storage'] { grid-area: storage; }
+  html[data-theme] body .settings-cols > [data-k='pcloud'] { grid-area: pcloud; }
+  html[data-theme] body .settings-cols > [data-k='backups'] { grid-area: backups; }
+  html[data-theme] body .settings-cols > [data-k='yourdata'] { grid-area: yourdata; }
+  html[data-theme] body .settings-cols > [data-k='activity'] { grid-area: activity; }
+  html[data-theme] body .usage { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: stretch; max-width: none; }
+  html[data-theme] body .usage > * { margin: 0; min-width: 0; }
+  html[data-theme] body .usage > .usage-refresh { grid-column: 1 / -1; }
   html[data-theme] body .usage > .panel { padding: 22px 24px; border-radius: 22px; }
   html[data-theme] body .usage > .panel > h2, html[data-theme] body .usage .panel-head h2 { margin: 0; font-size: 18px; font-weight: 700; }
   html[data-theme] body .usage .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -8777,5 +8805,4 @@ html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='th
   html[data-theme] body .settings-cols .logo-row .logo-preview { width: 56px; height: 56px; border-radius: 14px; margin-right: 6px; flex: none; }
   html[data-theme] body .settings-cols .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   html[data-theme] body .settings-cols .field > .btn { align-self: flex-start; }
-  html[data-theme] body .settings-cols:is([data-active='data'], [data-active='team']) > section.panel.wide { margin-top: 16px; }
 }
