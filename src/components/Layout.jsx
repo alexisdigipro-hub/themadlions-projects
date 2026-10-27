@@ -128,10 +128,10 @@ export default function Layout() {
     // Roardino, the ordino maker, in the hub (Alex, 23 Oct): for whoever has the Ordino permission, in the side menu
     // and in a phone's bar, right after RoarMe
     // since 27 Oct a tab of Share (Alex); the side menu keeps it only for someone with the Ordino permission but not Share
-    { to: '/roardino', label: 'Roardino', show: remote && can(user, 'callsheets') && !can(user, 'share'), icon: 'callsheets' },
+    { to: '/roardino', label: 'Roardino', show: remote && can(user, 'roardino') && !can(user, 'share'), icon: 'callsheets' },
     // RoarList, the shot lists, in the hub (Alex, 27 Oct): for whoever has the Shot list permission; the project's
     // Shotlist tab is gone
-    { to: '/roarlist', label: 'RoarList', show: remote && can(user, 'shots'), icon: 'shots' },
+    { to: '/roarlist', label: 'RoarList', show: remote && can(user, 'roarlist'), icon: 'shots' },
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     // Drives is a tab of the Database now (Alex, 10 Oct)

@@ -430,7 +430,7 @@ export default function Deliveries() {
   }, [all, isAdmin])
   // the Call sheets tab went with the old ordino (Alex, 23 Oct): its links stopped, Roardino sends its own
   // the order (Alex, 27 Oct): Everything, Deliveries, Roardino, Estimates
-  const tabs = [['all', 'Everything'], ['delivery', 'Deliveries'], ...(remote && can(user, 'callsheets') ? [['roardino', 'Roardino']] : []), ...(isAdmin ? [['estimate', 'Estimates']] : [])]
+  const tabs = [['all', 'Everything'], ['delivery', 'Deliveries'], ...(remote && can(user, 'roardino') ? [['roardino', 'Roardino']] : []), ...(isAdmin ? [['estimate', 'Estimates']] : [])]
   const inRoardino = filter === 'roardino' && tabs.some(([k]) => k === 'roardino')
   // Roardino's home in Share's top row (Alex, 27 Oct): its filters, search and New ordino come from the frame
   // ('roardino:home') and what is pressed here goes back to it ('roardino:do'); roardino/app.js

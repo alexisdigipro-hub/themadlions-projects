@@ -41,6 +41,9 @@ export const MODULES = [
   { key: 'files', label: 'Office', group: 'Organizer', hint: 'documents and spreadsheets' },
   { key: 'calendar', label: 'Calendar', group: 'Other pages' },
   { key: 'share', label: 'Share', group: 'Other pages', hint: 'links to clients' },
+  // the Lab apps inside the hub, only for whom the administrator opens them (Alex, 27 Oct)
+  { key: 'roardino', label: 'Roardino', group: 'Other pages', hint: 'the ordino maker: the side menu and its tab in Share; a project\'s own ordino on the Overview stays with Ordino' },
+  { key: 'roarlist', label: 'RoarList', group: 'Other pages', hint: 'the shot list app in the side menu; a project\'s Shot list tab stays with Shot list' },
 ]
 
 /* Ready-made permission sets, so a new person is one click instead of eighteen dropdowns.

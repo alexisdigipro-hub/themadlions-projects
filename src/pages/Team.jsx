@@ -75,7 +75,7 @@ export default function Team({ embedded = false }) {
     email: '',
     password: '',
     role: 'member',
-    permissions: { ...defaultPermissions(state.settings?.newMemberLevel || 'view'), projects: 'view', drives: 'none', share: 'none' },
+    permissions: { ...defaultPermissions(state.settings?.newMemberLevel || 'view'), projects: 'view', drives: 'none', share: 'none', roardino: 'none', roarlist: 'none' },
     projectAccess: 'all',
     active: true,
     createdAt: new Date().toISOString(),
