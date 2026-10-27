@@ -66,30 +66,64 @@ export function ProjectForm({ value, onChange }) {
     const next = { ...parts, [k]: e.target.value }
     onChange({ ...value, ...next, title: joinName(next.artist, next.shortTitle) })
   }
+  // laid out tighter (Alex, 27 Oct: "freshen it, no empty space, a nicer layout"): the cover as a square at the left
+  // of the name, the category and the day; the client with the colour; the notes short; the tabs as chips
   return (
-    <div className="stack">
-      <div className="row-2">
-        <Field label="Artist / Client">
-          <Input value={parts.artist} onChange={setPart('artist')} autoFocus placeholder="Γιάννης Φακίνος" />
-        </Field>
-        <Field label="Title">
-          <Input value={parts.shortTitle} onChange={setPart('shortTitle')} placeholder="Ματάρες μου" />
-        </Field>
+    <div className="stack pform">
+      <div className="pform-hero">
+        <div className="pform-cover">
+          <input ref={coverFile} type="file" accept="image/*" hidden onChange={(e) => { cover.pick(e.target.files?.[0]); e.target.value = '' }} />
+          <button type="button" className="pform-cover-pick" onClick={() => coverFile.current?.click()} title={value.coverThumb ? 'Change the cover' : 'Choose a cover image'} style={{ '--pc': value.color }}>
+            {value.coverThumb ? <img src={value.coverThumb} alt="" /> : (
+              <span className="pform-cover-empty">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" /><circle cx="9" cy="10" r="1.8" /><path d="m4 17 5-5 4 4 3-3 4 4" /></svg>
+                <small>Cover</small>
+              </span>
+            )}
+          </button>
+          {value.coverThumb && (
+            <span className="pform-cover-acts">
+              <button type="button" className="link small" onClick={cover.adjust}>Adjust</button>
+              <button type="button" className="link small danger" onClick={cover.remove}>Remove</button>
+            </span>
+          )}
+          {cover.modal}
+        </div>
+        <div className="pform-main">
+          <div className="row-2">
+            <Field label="Artist / Client">
+              <Input value={parts.artist} onChange={setPart('artist')} autoFocus placeholder="Γιάννης Φακίνος" />
+            </Field>
+            <Field label="Title">
+              <Input value={parts.shortTitle} onChange={setPart('shortTitle')} placeholder="Ματάρες μου" />
+            </Field>
+          </div>
+          <div className="row-2">
+            <Field label="Category">
+              <Select value={value.category} onChange={setCategory} options={CATEGORIES} />
+            </Field>
+            {/* Start became Shoot day (Alex, 11 Oct): saving it puts the day in the Calendar and the Ordino */}
+            <Field label="Shoot day">
+              <Input type="date" value={value.startDate} onChange={set('startDate')} />
+            </Field>
+          </div>
+        </div>
       </div>
       <div className="row-2">
-        <Field label="Category">
-          <Select value={value.category} onChange={setCategory} options={CATEGORIES} />
+        <Field label="Client / label">
+          <Input value={value.client} onChange={set('client')} placeholder="Optional" />
         </Field>
-        {/* Start became Shoot day (Alex, 11 Oct): saving it puts the day in the Calendar and the Ordino */}
-        <Field label="Shoot day">
-          <Input type="date" value={value.startDate} onChange={set('startDate')} />
-        </Field>
+        <div className="field">
+          <span className="field-label">Colour</span>
+          <div className="swatches color-swatches pform-colours">
+            {COLORS.map((c) => (
+              <button key={c} type="button" className={`swatch ${value.color === c ? 'on' : ''}`} style={{ background: c }} onClick={() => onChange({ ...value, color: c })} aria-label={c} />
+            ))}
+          </div>
+        </div>
       </div>
       {/* Status, Director and Delivery taken out (Alex, 11 Oct). Delivered stays as a switch: a
           delivered project leaves the main list and its chat is archived. */}
-      <Field label="Client / label">
-        <Input value={value.client} onChange={set('client')} placeholder="Optional" />
-      </Field>
       {!value.isNew && (
         <label className="check-row">
           <input type="checkbox" checked={value.status === 'Delivered'} onChange={(e) => onChange({ ...value, status: e.target.checked ? 'Delivered' : 'Production' })} />
@@ -97,52 +131,11 @@ export function ProjectForm({ value, onChange }) {
         </label>
       )}
       <Field label="Notes">
-        <Textarea rows={3} value={value.notes} onChange={set('notes')} />
+        <Textarea rows={2} value={value.notes} onChange={set('notes')} placeholder="Optional" />
       </Field>
-      <Field label="Cover image" hint="Key art or a still, cut to a square: drag it into place, scale it, centre it. Adjust changes the cut later.">
-        <div className="cover-pick">
-          {value.coverThumb && <img src={value.coverThumb} alt="" />}
-          <input ref={coverFile} type="file" accept="image/*" hidden onChange={(e) => { cover.pick(e.target.files?.[0]); e.target.value = '' }} />
-          {/* proper buttons instead of the phone's "Choose File" and two underlined words (Alex, 11 Oct) */}
-          <div className="cover-btns">
-            <button type="button" className="cover-btn" onClick={() => coverFile.current?.click()}>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3" /><circle cx="9" cy="10" r="1.8" /><path d="m4 17 5-5 4 4 3-3 4 4" /></svg>
-              {value.coverThumb ? 'Change' : 'Choose image'}
-            </button>
-            {value.coverThumb && (
-              <>
-                <button type="button" className="cover-btn" onClick={cover.adjust}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v4H3M17 21v-4h4M3 7h11a3 3 0 0 1 3 3v11M21 17H10a3 3 0 0 1-3-3V3" /></svg>
-                  Adjust
-                </button>
-                <button type="button" className="cover-btn danger" onClick={cover.remove}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></svg>
-                  Remove
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-        {cover.modal}
-      </Field>
-      <Field label="Tabs" hint="A new project starts with every tab on. Tap one to hide it, tap again to bring it back. Nothing is deleted, a hidden tab keeps its data.">
+      <Field label="Tabs" hint="Tap one to hide it, again to bring it back. A hidden tab keeps its data.">
         <TabPicker project={value} onChange={(patch) => onChange({ ...value, ...patch })} />
       </Field>
-      <div className="field">
-        <span className="field-label">Colour</span>
-        <div className="swatches color-swatches">
-          {COLORS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              className={`swatch ${value.color === c ? 'on' : ''}`}
-              style={{ background: c }}
-              onClick={() => onChange({ ...value, color: c })}
-              aria-label={c}
-            />
-          ))}
-        </div>
-      </div>
     </div>
   )
 }
