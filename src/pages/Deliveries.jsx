@@ -645,7 +645,7 @@ export default function Deliveries() {
                   <strong>{r.name}{r.version ? <span className="muted deliv-tver"> · {r.version}</span> : null}</strong>
                   <div className="small muted">{r.sub}</div>
                   {/* one strip of small tags instead of three grey lines that all looked the same */}
-                  {(one && (g.shut || r.opens !== undefined || last) || look === 'list') && (
+                  {(one && (g.shut || r.opens !== undefined || last) || (look === 'list' && !mobile)) && (
                     <div className="deliv-tags">
                       <span className={`deliv-tag deliv-stage-in ${r.badgeClass}`}>{r.badge}</span>
                       {g.shut && <span className="deliv-tag t-shut">Closed</span>}
