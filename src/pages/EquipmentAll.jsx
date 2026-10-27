@@ -4,7 +4,7 @@ import { can, gearCategoriesOf, uid, useCurrentUser, useStore } from '../lib/sto
 import { matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
 import { InfoCard } from '../components/InfoCard.jsx'
-import { DbAdd, DbBar, DbFilter, ListRow, ListSearch, useFitScroll } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbFilter, DbStats, ListRow, ListSearch, useFitScroll } from '../components/DbTools.jsx'
 
 /* Database > Equipment (Alex, 10 Oct): the company's own film equipment, each item with what it is,
    how many, its serial and a rental price per day, so it can later be sent to whoever wants to rent it.
@@ -70,6 +70,13 @@ export default function EquipmentAll({ slot }) {
         </div>
       </DbBar>
 
+      {/* the numbers, as Drives' (Alex, 27 Oct) */}
+      {items.length > 0 && <DbStats items={[
+        [items.reduce((n, g) => n + (Number(g.qty) || 1), 0), `pieces · ${items.length} items`],
+        [new Set(items.map((g) => g.category).filter(Boolean)).size, 'categories'],
+        [euro(items.reduce((n, g) => n + (Number(g.dayRate) || 0) * (Number(g.qty) || 1), 0)) || '–', 'a day for everything'],
+        items.filter((g) => !Number(g.dayRate)).length ? [items.filter((g) => !Number(g.dayRate)).length, 'with no price yet', true] : [items.filter((g) => g.photos?.length).length, 'with photos'],
+      ]} />}
       <div className="ab-scroll" ref={scrollRef}>
       {!list.length ? (
         <Empty title={items.length ? 'No matches' : 'No equipment yet'}>
