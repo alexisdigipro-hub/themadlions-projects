@@ -12,8 +12,17 @@
 //   PCLOUD_HOST    eapi.pcloud.com for a European account (default), api.pcloud.com for a US one
 //   PCLOUD_ROOT    the folder everything goes under, default "/TML HUB"
 //
+//   PCLOUD_FULL_TOKEN  (27 Oct, optional) a token of the app "TML HUB Library", which sees all of Alex's pCloud,
+//                  not only this app's own folder. With it the deliveries go into Alex's own folders (below).
+//
 // Actions (POST, JSON or multipart): ping · upload · link · links · raw · delete · backup ·
-// deliveryStart · deliveryChunk · deliveryFinish · deliveryFolderLink · deliveryRemove. See src/lib/pcloud.js.
+// deliveryStart · deliveryChunk · deliveryFinish · deliveryFolderLink · deliveryRemove · deliveryLabels. See src/lib/pcloud.js.
+// Where a delivery goes (Alex, 27 Oct): with PCLOUD_FULL_TOKEN, RoughCut and PreFinal Cut straight into
+// "/Projects - RoughCuts" (no folder of their own, so they can be emptied together), Final Deliverables into
+// "/Projects - FinalCuts/<label>/<project>" (the record label, picked from that folder's own folders: deliveryLabels).
+// Without it, ROOT/Deliveries/<stage>/<project>. No dated folder under the project any more: the delivery's one link
+// is a pCloud link to exactly its own files (gettreepublink), not to the folder. Deliveries made before keep their
+// folders and their links; anything under ROOT goes on through PCLOUD_TOKEN.
 // deliveryRemove (27 Oct): one file of a delivery taken off it, or replaced, goes to pCloud's trash too, so the
 // delivery's Download all (the folder's link) no longer holds it; only a file inside ROOT/Deliveries.
 // deliveryStart / deliveryChunk / deliveryFinish (Share = edit, or administrators): a cut for a client
@@ -43,6 +52,9 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 const HOST = Deno.env.get('PCLOUD_HOST') || 'eapi.pcloud.com'
 const TOKEN = Deno.env.get('PCLOUD_TOKEN') || ''
 const ROOT = '/' + (Deno.env.get('PCLOUD_ROOT') || '/TML HUB').replace(/^\/+|\/+$/g, '')
+const FULL = Deno.env.get('PCLOUD_FULL_TOKEN') || ''
+const ROUGH = '/Projects - RoughCuts'
+const FINAL = '/Projects - FinalCuts'
 const REPO = 'alexisdigipro-hub/themadlions-projects'
 
 const CORS = {
@@ -53,9 +65,9 @@ const CORS = {
 const json = (body: any, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } })
 
 /* One pCloud API call. The token goes as a parameter, which is what pCloud's own SDK does. */
-async function pc(method: string, params: Record<string, any> = {}, body?: BodyInit) {
+async function pc(method: string, params: Record<string, any> = {}, body?: BodyInit, token = TOKEN) {
   const url = new URL(`https://${HOST}/${method}`)
-  url.searchParams.set('access_token', TOKEN)
+  url.searchParams.set('access_token', token)
   for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null) url.searchParams.set(k, String(v))
   const res = await fetch(url, body ? { method: 'POST', body } : undefined)
   const data = await res.json().catch(() => ({ result: -1, error: `pCloud answered ${res.status}` }))
@@ -77,15 +89,31 @@ async function ensureFolder(parts: string[]) {
   return path
 }
 
-/* The same, answering the last folder's path and id. */
-async function ensureFolderId(parts: string[]) {
-  let path = ROOT
-  let meta = (await pc('createfolderifnotexists', { path })).metadata
+/* A delivery's folder: under ROOT/Deliveries (the app's own folder), or with the full token Alex's own two folders.
+   Nothing climbing out of them. */
+const inFull = (path: string) => !!FULL && (path === ROUGH || path.startsWith(`${ROUGH}/`) || path.startsWith(`${FINAL}/`))
+const isDelivery = (path: string) => !path.includes('..') && (path.startsWith(`${ROOT}/Deliveries/`) || inFull(path))
+const tokenFor = (path: string) => (inFull(path) ? FULL : TOKEN)
+
+/* base/a/b, each level created if missing, with the token that folder belongs to. */
+async function ensureAt(base: string, parts: string[], token: string) {
+  let path = base
+  let meta = (await pc('createfolderifnotexists', { path }, undefined, token)).metadata
   for (const p of parts.map(segment)) {
     path += '/' + p
-    meta = (await pc('createfolderifnotexists', { path })).metadata
+    meta = (await pc('createfolderifnotexists', { path }, undefined, token)).metadata
   }
   return { path, folderid: Number(meta?.folderid) }
+}
+
+/* Is this a public link either token made? */
+async function ownLink(code: string) {
+  for (const token of [TOKEN, FULL].filter(Boolean)) {
+    const mine = await pc('listpublinks', {}, undefined, token)
+    const hit = (mine.publinks || []).find((p: any) => p.code === code)
+    if (hit) return { hit, token }
+  }
+  return null
 }
 
 type Scope = { kind: 'project' | 'chat' | 'library' | 'ids'; id: string }
@@ -177,9 +205,9 @@ Deno.serve(async (req) => {
       try {
         const code = String(pre.code || '')
         if (!/^[A-Za-z0-9]{8,80}$/.test(code)) return json({ error: 'No link.' }, 400)
-        const mine = await pc('listpublinks')
-        if (!(mine.publinks || []).some((p: any) => p.code === code)) return json({ error: 'Not a link of this production.' }, 403)
-        const r = await pc('getpublinkdownload', { code, forcedownload: pre.action === 'publicDirect' ? 1 : 0 })
+        const own = await ownLink(code)
+        if (!own) return json({ error: 'Not a link of this production.' }, 403)
+        const r = await pc('getpublinkdownload', { code, forcedownload: pre.action === 'publicDirect' ? 1 : 0 }, undefined, own.token)
         const url = `https://${Array.isArray(r.hosts) && r.hosts.length ? r.hosts[0] : HOST}${r.path}`
         if (pre.action === 'publicDirect') return json({ ok: true, url })
         const file = await fetch(url)
@@ -211,7 +239,7 @@ Deno.serve(async (req) => {
       action = String(fd.get('action') || '')
       files = fd.getAll('file').filter((f) => f instanceof File) as File[]
       file = files[0] || null
-      body = { folder: JSON.parse(String(fd.get('folder') || '[]')), scope: JSON.parse(String(fd.get('scope') || 'null')), uploadid: fd.get('uploadid'), offset: fd.get('offset') }
+      body = { folder: JSON.parse(String(fd.get('folder') || '[]')), scope: JSON.parse(String(fd.get('scope') || 'null')), uploadid: fd.get('uploadid'), offset: fd.get('offset'), path: String(fd.get('path') || '') }
     } else {
       body = await req.json().catch(() => ({}))
       action = String(body.action || '')
@@ -342,17 +370,34 @@ Deno.serve(async (req) => {
     }
 
     // deliveries: who may send cuts to clients (Share = edit), administrators always
-    if (action === 'deliveryStart' || action === 'deliveryChunk' || action === 'deliveryFinish' || action === 'deliveryFolderLink' || action === 'deliveryRemove') {
+    if (action.startsWith('delivery')) {
       const [{ data: adm }, { data: perm }] = await Promise.all([db.rpc('is_admin'), db.rpc('my_perm', { p_module: 'share' })])
       if (!adm && perm !== 'edit') return json({ error: 'Only people who can send deliveries may upload them.' }, 403)
     }
 
+    // the record labels a Final Deliverables can go under: the folders inside "/Projects - FinalCuts"
+    if (action === 'deliveryLabels') {
+      if (!FULL) return json({ ok: true, ready: false, labels: [] })
+      const list = await pc('listfolder', { path: FINAL }, undefined, FULL)
+      const labels = (list.metadata?.contents || []).filter((m: any) => m.isfolder).map((m: any) => String(m.name)).sort((a: string, b: string) => a.localeCompare(b))
+      return json({ ok: true, ready: true, labels })
+    }
+
     if (action === 'deliveryStart') {
-      const { path, folderid } = await ensureFolderId(['Deliveries', body.stage || 'Rough cut', body.title || 'Untitled', ...(body.sub ? [body.sub] : [])])
-      if (!folderid) return json({ error: 'pCloud did not return the folder.' }, 502)
-      const up = await pc('upload_create')
+      const stage = String(body.stage || 'RoughCut')
+      const into = String(body.into || '')
+      let at: { path: string; folderid: number }
+      // more files for a delivery that has some: next to them
+      if (into && isDelivery(into)) at = await ensureAt(into, [], tokenFor(into))
+      else if (FULL && /rough|prefinal/i.test(stage)) at = await ensureAt(ROUGH, [], FULL)
+      else if (FULL && /deliverables/i.test(stage)) {
+        if (!String(body.label || '').trim()) return json({ error: 'Pick the label first.' }, 400)
+        at = await ensureAt(FINAL, [body.label, body.title || 'Untitled'], FULL)
+      } else at = await ensureAt(ROOT, ['Deliveries', stage, body.title || 'Untitled'], TOKEN)
+      if (!at.folderid) return json({ error: 'pCloud did not return the folder.' }, 502)
+      const up = await pc('upload_create', {}, undefined, tokenFor(at.path))
       if (!up.uploadid) return json({ error: 'pCloud did not open the upload.' }, 502)
-      return json({ ok: true, uploadid: up.uploadid, path })
+      return json({ ok: true, uploadid: up.uploadid, path: at.path })
     }
 
     // one piece of the file, written at its place; the pieces come in order
@@ -361,7 +406,7 @@ Deno.serve(async (req) => {
       const offset = Number(body.offset)
       if (!uploadid || !file || !(offset >= 0)) return json({ error: 'No piece to write.' }, 400)
       const url = new URL(`https://${HOST}/upload_write`)
-      url.searchParams.set('access_token', TOKEN)
+      url.searchParams.set('access_token', tokenFor(String(body.path || '')))
       url.searchParams.set('uploadid', String(uploadid))
       url.searchParams.set('uploadoffset', String(offset))
       const res = await fetch(url, { method: 'PUT', body: await file.arrayBuffer() })
@@ -372,22 +417,35 @@ Deno.serve(async (req) => {
 
     if (action === 'deliveryFinish') {
       const path = String(body.path || '')
-      // only a folder deliveryStart made: under ROOT/Deliveries, nothing climbing out of it
-      if (!path.startsWith(`${ROOT}/Deliveries/`) || path.includes('..')) return json({ error: 'Not a delivery folder.' }, 400)
-      const folderid = Number((await pc('createfolderifnotexists', { path })).metadata?.folderid)
-      const saved = await pc('upload_save', { uploadid: Number(body.uploadid), folderid, name: segment(body.name || 'delivery').replace(/ +/g, ' ') || 'delivery', renameifexists: 1 })
+      // only a folder deliveryStart made
+      if (!isDelivery(path)) return json({ error: 'Not a delivery folder.' }, 400)
+      const token = tokenFor(path)
+      const folderid = Number((await pc('createfolderifnotexists', { path }, undefined, token)).metadata?.folderid)
+      const saved = await pc('upload_save', { uploadid: Number(body.uploadid), folderid, name: segment(body.name || 'delivery').replace(/ +/g, ' ') || 'delivery', renameifexists: 1 }, undefined, token)
       const meta = saved.metadata?.[0] || saved.metadata
       if (!meta?.fileid) return json({ error: 'pCloud did not keep the file.' }, 502)
       // one of several: the folder gets the link at the end (deliveryFolderLink)
       if (body.nolink) return json({ ok: true, fileid: meta.fileid, name: meta.name, size: meta.size, folder: path })
-      const pub = await pc('getfilepublink', { fileid: meta.fileid })
+      const pub = await pc('getfilepublink', { fileid: meta.fileid }, undefined, token)
       return json({ ok: true, url: pub.link, fileid: meta.fileid, name: meta.name, size: meta.size, folder: path })
     }
 
-    // one public link for a whole delivery folder: every file in it on one pCloud page
+    // one public link for a whole delivery: with fileids, a link to exactly those files (they share the project's
+    // folder, or RoughCuts, with other deliveries); without, the folder's (a delivery made before 27 Oct, in a
+    // folder of its own)
     if (action === 'deliveryFolderLink') {
       const path = String(body.path || '')
-      if (!path.startsWith(`${ROOT}/Deliveries/`) || path.includes('..')) return json({ error: 'Not a delivery folder.' }, 400)
+      if (!isDelivery(path)) return json({ error: 'Not a delivery folder.' }, 400)
+      const token = tokenFor(path)
+      const ids = (Array.isArray(body.fileids) ? body.fileids : []).map(Number).filter((n: number) => n > 0)
+      if (ids.length) {
+        const list = await pc('listfolder', { path }, undefined, token)
+        const here = new Set((list.metadata?.contents || []).map((m: any) => Number(m.fileid)))
+        if (!ids.every((id: number) => here.has(id))) return json({ error: 'Those files are not in this delivery.' }, 403)
+        const pub = await pc('gettreepublink', { name: segment(body.name || path.split('/').pop()), fileids: ids.join(',') }, undefined, token)
+        return json({ ok: true, url: pub.link, folder: path })
+      }
+      if (inFull(path)) return json({ error: 'No files for the link.' }, 400)
       const folderid = Number((await pc('createfolderifnotexists', { path })).metadata?.folderid)
       const pub = await pc('getfolderpublink', { folderid })
       return json({ ok: true, url: pub.link, folder: path })
@@ -398,16 +456,17 @@ Deno.serve(async (req) => {
     // folder under ROOT/Deliveries, and it goes to pCloud's trash (it can be restored there)
     if (action === 'deliveryRemove') {
       const path = String(body.path || '')
-      if (!path.startsWith(`${ROOT}/Deliveries/`) || path.includes('..')) return json({ error: 'Not a delivery folder.' }, 400)
+      if (!isDelivery(path)) return json({ error: 'Not a delivery folder.' }, 400)
+      const token = tokenFor(path)
       let fileid = Number(body.fileid) || 0
       if (!fileid && body.code) {
-        const mine = await pc('listpublinks')
+        const mine = await pc('listpublinks', {}, undefined, token)
         fileid = Number((mine.publinks || []).find((p: any) => p.code === String(body.code))?.metadata?.fileid) || 0
       }
       if (!fileid) return json({ ok: true, kept: true }) // nothing to find: it only leaves the page
-      const list = await pc('listfolder', { path })
+      const list = await pc('listfolder', { path }, undefined, token)
       if (!(list.metadata?.contents || []).some((m: any) => Number(m.fileid) === fileid)) return json({ error: 'That file is not in this delivery.' }, 403)
-      await pc('deletefile', { fileid })
+      await pc('deletefile', { fileid }, undefined, token)
       return json({ ok: true })
     }
 
