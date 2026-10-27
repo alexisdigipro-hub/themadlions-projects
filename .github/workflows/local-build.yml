@@ -1,0 +1,30 @@
+name: Local-mode build for checks
+
+# A build of the app in local mode (no Supabase, everything in the browser), kept as a downloadable artifact, so a
+# session without the npm registry can open every page in a browser and check it. Runs on pushes to claude/* branches.
+on:
+  push:
+    branches: ['claude/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx vite build --outDir dist-local
+        env:
+          VITE_LOCAL_MODE: '1'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-local
+          path: dist-local
+          retention-days: 3
