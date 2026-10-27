@@ -8388,3 +8388,23 @@ button.ab-ava { border: 0; padding: 0; overflow: hidden; cursor: pointer; font-f
 /* every Contacts row has the same columns, with or without an email (the quick links' column is fixed) */
 .ab-row:not(.lib-row) .ab-quick { justify-content: flex-end; }
 .ab-row:not(.lib-row) .ab-acts { justify-content: flex-end; }
+
+/* Locations (Database and a project's) and ID sheets as Contacts' list, the rows 70% taller for a picture
+   (Alex, 27 Oct): about 105 px, the picture a soft rounded landscape at the start */
+.ab-row.tall-row { min-height: 106px; padding-top: 12px; padding-bottom: 12px; }
+.ab-row.loc-row { grid-template-columns: 116px minmax(160px, 1.3fr) minmax(100px, .7fr) minmax(160px, 1.4fr) minmax(120px, 1fr) auto; }
+.ab-row.ids-row { grid-template-columns: 116px minmax(160px, 1.2fr) minmax(160px, 1.6fr) minmax(100px, 1fr); }
+.ab-thumb { width: 116px; height: 80px; border-radius: 12px; overflow: hidden; display: grid; place-items: center; font-size: 26px; background: color-mix(in srgb, var(--c, var(--accent)) 16%, transparent); }
+.ab-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ab-thumb b { font-size: 20px; font-weight: 700; color: var(--c, var(--accent)); }
+.ab-two { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.ab-two .ab-name { font-size: 15px; }
+.ab-two .small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ids-chips { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+.ids-chips .ab-chip { flex: 0 1 auto; min-width: 0; }
+.ab-row.tall-row .ab-cell.muted { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+@media (max-width: 820px) {
+  .ab-row.loc-row, .ab-row.ids-row { grid-template-columns: 96px minmax(0, 1fr); gap: 4px 12px; }
+  .ab-row.tall-row .ab-thumb { grid-row: 1 / span 4; width: 96px; height: 72px; }
+  .ab-row.loc-row > :not(.ab-thumb), .ab-row.ids-row > :not(.ab-thumb) { grid-column: 2; }
+}

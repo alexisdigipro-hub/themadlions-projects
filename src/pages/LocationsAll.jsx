@@ -6,7 +6,7 @@ import { locationProjects, locationToLibrary, matchText } from '../lib/library.j
 import { coordsFromText } from '../lib/sun.js'
 import { isMapsLink, readMapLink } from '../lib/maplink.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
-import { DbAdd, DbBar, DbFilter } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbFilter, ListSearch, useFitScroll } from '../components/DbTools.jsx'
 
 const TYPES = ['Studio', 'Interior', 'Exterior', 'INT. & EXT.', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
 const emptyLoc = () => ({ id: uid(), name: '', mapsUrl: '', address: '', type: 'Interior', notes: '', contact: '', phone: '', lat: '', lon: '', coordsText: '', photos: [], tags: [], createdAt: new Date().toISOString() })
@@ -48,6 +48,8 @@ export default function LocationsAll({ slot }) {
     .filter((l) => matchText(q, l.name, l.address, l.type, l.contact, l.notes, (l.tags || []).join(' ')))
     .sort((a, b) => a.name.localeCompare(b.name))
   const detail = locs.find((l) => l.id === detailFor)
+  // one list as Contacts, its rows 70% taller for the picture (Alex, 27 Oct), in a scroll box under a steady top row
+  const scrollRef = useFitScroll()
 
   /* A pasted Google Maps link fills the address, the coordinates (so the map shows the exact spot) and,
      if it is still empty, the name (Alex, 10 Oct) */
@@ -123,36 +125,41 @@ export default function LocationsAll({ slot }) {
     <section className="panel db-card">
       <DbBar slot={slot}>
         <div className="toolbar-info">
-          <strong>Locations</strong> <span className="muted">{locs.length}</span>
+          <strong>Locations</strong>
         </div>
         <div className="toolbar-actions">
-          <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, address, notes…" />
+          <ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, address, notes…" />
+          <span className="ab-count">{q.trim() || type ? `${list.length} of ${locs.length}` : `${locs.length} location${locs.length === 1 ? '' : 's'}`}</span>
           <DbFilter value={type} onChange={(e) => setType(e.target.value)} options={[['', 'All types'], ...TYPES.map((t) => [t, t])]} label="Type" />
           {editable && unlinked > 0 && <Button variant="ghost" className="db-collect" onClick={collect}>Collect {unlinked} from projects</Button>}
           {editable && <DbAdd label="Add location" onClick={() => { setLinkNote(''); setDraft(emptyLoc()) }} />}
         </div>
       </DbBar>
 
+      <div className="ab-scroll" ref={scrollRef}>
       {!list.length ? (
         <Empty title={locs.length ? 'No matches' : 'The database is empty'}>
           {locs.length ? 'Try another search.' : 'Locations you add inside a project land here automatically. Scouted places you have not used yet can be added directly.'}
         </Empty>
       ) : (
-        <div className="people-grid compact">
+        // the picture, the name and its area, the type as a chip, the address, who to call; a tap opens the map
+        <div className="ab-rows">
           {list.map((l) => (
-            <article key={l.id} className="person loc-card" onClick={() => setDetailFor(l.id)} role="button" tabIndex={0}>
-              <div className="person-photo" aria-hidden="true">
-                {l.photos?.[0]?.thumb ? <img src={l.photos[0].thumb} alt="" /> : <span className="person-initials">📍</span>}
-              </div>
-              <div className="person-body">
-                <strong>{l.name}</strong>
-                {/* the name and the area only, shorter cards: on a phone, then on a computer too (Alex, 10 Oct) */}
-                {areaOf(l.address) && <div className="small muted">{areaOf(l.address)}</div>}
-              </div>
+            <article key={l.id} className="ab-row tall-row loc-row" onClick={() => setDetailFor(l.id)} role="button" tabIndex={0}>
+              <span className="ab-thumb" aria-hidden="true">{l.photos?.[0]?.thumb ? <img src={l.photos[0].thumb} alt="" /> : '📍'}</span>
+              <span className="ab-two"><strong className="ab-name">{l.name}</strong>{areaOf(l.address) && <span className="muted small">{areaOf(l.address)}</span>}</span>
+              <span className="ab-cell">{l.type && <span className="ab-chip"><i />{l.type}</span>}</span>
+              <span className="ab-cell muted">{l.address}</span>
+              <span className="ab-cell" onClick={(e) => e.stopPropagation()}>{l.contact}{l.phone && <> {l.contact ? '· ' : ''}<a href={`tel:${l.phone}`}>{l.phone}</a></>}</span>
+              <span className="ab-acts" onClick={(e) => e.stopPropagation()}>
+                {(l.mapsUrl || l.address) && <a className="btn btn-default btn-sm" href={l.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.address)}`} target="_blank" rel="noreferrer">Map</a>}
+                {editable && <button type="button" className="btn btn-default btn-sm" onClick={() => { setLinkNote(''); setDraft({ ...l }) }}>Edit</button>}
+              </span>
             </article>
           ))}
         </div>
       )}
+      </div>
 
       <Modal open={!!detail} wide title={detail?.name || ''} onClose={() => setDetailFor('')}>
         {detail && (
