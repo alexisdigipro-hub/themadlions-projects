@@ -17,7 +17,7 @@ export const SKINS = [
   ['roarlist', 'RoarList', 'dark'],
 ]
 /* the icon set each skin comes with (Settings > Display > Icons can change it afterwards) */
-export const SKIN_ICONS = { violet: 'duo', teal: 'rounded', ember: 'bold', coral: 'rounded', glass: 'duo', glassdark: 'thin', glasslight: 'thin', roarlist: 'rounded' }
+export const SKIN_ICONS = { coral: 'rounded', glass: 'rounded', glassdark: 'rounded', glasslight: 'rounded', roarlist: 'rounded' }
 export const isSkin = (v) => SKINS.some(([k]) => k === v)
 /* what every device starts on (main.jsx switches each device to it once) */
 export const DEFAULT_THEME = 'glassdark'

@@ -22,7 +22,7 @@ import { remote, supabase } from '../lib/supabase.js'
 import { testKey } from '../lib/ai.js'
 import { checkOpenAIKey } from '../lib/transcribe.js'
 import { buildICS, download } from '../lib/dates.js'
-import { DEFAULT_THEME, SKINS, SKIN_ICONS, applyThemeChoice, liveTheme } from '../lib/skin.js'
+import { DEFAULT_THEME, SKINS, applyThemeChoice, liveTheme } from '../lib/skin.js'
 import { localLook } from '../lib/teamLook.js'
 import { ICON_SETS, IconPreview, applyIconSet } from '../components/icons.jsx'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
@@ -41,15 +41,13 @@ export default function Settings() {
   const [theme, setTheme] = useState(() => localStorage.getItem('tml_theme') || DEFAULT_THEME)
   const [accent, setAccent] = useState(() => localStorage.getItem('tml_accent') || 'amber')
   const [font, setFont] = useState(currentFont)
-  const [icons, setIcons] = useState(() => document.documentElement.dataset.icons || 'classic')
+  const [icons, setIcons] = useState(() => document.documentElement.dataset.icons || 'rounded')
   // the look is the administrator's, kept for the whole team (Alex, 22 Oct; lib/teamLook.js): each change is saved
   // there too, and everyone's app takes it when it opens
   const keepLook = () => update((s) => { s.settings = { ...s.settings, look: localLook() }; return s })
   const pickFont = (id) => { setFont(applyFont(id)); keepLook() }
   const applyTheme = (v) => {
     setTheme(v); localStorage.setItem('tml_theme', v); applyThemeChoice(v)
-    // a skin comes with its own icons, as in its design; Icons below can change them afterwards
-    if (SKIN_ICONS[v]) setIcons(applyIconSet(SKIN_ICONS[v]))
     keepLook()
   }
   const applyAccent = (v) => { setAccent(v); localStorage.setItem('tml_accent', v); document.documentElement.dataset.accent = v; keepLook() }
