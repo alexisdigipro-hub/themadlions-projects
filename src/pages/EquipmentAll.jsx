@@ -3,6 +3,7 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast
 import { can, gearCategoriesOf, uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
+import { InfoCard } from '../components/InfoCard.jsx'
 import { DbAdd, DbBar, DbFilter, ListSearch, useFitScroll } from '../components/DbTools.jsx'
 
 /* Database > Equipment (Alex, 10 Oct): the company's own film equipment, each item with what it is,
@@ -91,25 +92,27 @@ export default function EquipmentAll({ slot }) {
       )}
       </div>
 
-      <Modal open={!!detail} title={detail?.name || ''} onClose={() => setDetailFor('')}>
-        {detail && (
-          <div className="stack">
-            <div className="row-actions">
-              {editable && <Button size="sm" onClick={() => { const d = detail; setDetailFor(''); setDraft({ ...d }) }}>Edit</Button>}
-              {editable && <Confirm onConfirm={() => remove(detail)} />}
-            </div>
-            <dl className="details">
-              <dt>Category</dt><dd>{detail.category || '–'}</dd>
-              {detail.model && (<><dt>Brand / model</dt><dd>{detail.model}</dd></>)}
-              <dt>Quantity</dt><dd>{detail.qty || 1}</dd>
-              <dt>Rental</dt><dd>{euro(detail.dayRate) ? `${euro(detail.dayRate)} / day` : <span className="muted">No price yet</span>}</dd>
-              {detail.serial && (<><dt>Serial</dt><dd>{detail.serial}</dd></>)}
-            </dl>
-            {detail.notes && <p className="notes-text">{detail.notes}</p>}
-            <PhotoGrid photos={detail.photos || []} projectId="library" ownerId={detail.id} editable={editable} onChange={(photos) => setPhotos(detail.id, photos)} />
-          </div>
-        )}
-      </Modal>
+      {/* the item's card, as Contacts' (Alex, 27 Oct) */}
+      <InfoCard open={!!detail} onClose={() => setDetailFor('')} square glyph="🎥"
+        photo={detail?.photos?.[0]?.thumb} name={detail && `${detail.name}${Number(detail.qty) > 1 ? ` ×${detail.qty}` : ''}`}
+        tags={detail && <>
+          {detail.category && <span className="ab-chip"><i />{detail.category}</span>}
+          {euro(detail.dayRate) && <span className="ab-card-in">{euro(detail.dayRate)} / day</span>}
+        </>}
+        rows={detail ? [
+          ['Brand / model', detail.model],
+          ['Quantity', String(detail.qty || 1)],
+          ['Rental', euro(detail.dayRate) ? `${euro(detail.dayRate)} / day` : <span className="muted">No price yet</span>],
+          ['Serial', detail.serial],
+        ] : []}
+        notes={detail?.notes}
+        footer={detail && editable && <>
+          <Confirm onConfirm={() => remove(detail)} label="Delete" className="ab-del">Delete</Confirm>
+          <span className="grow" />
+          <Button variant="primary" onClick={() => { const d = detail; setDetailFor(''); setDraft({ ...d }) }}>Edit</Button>
+        </>}>
+        {detail && <PhotoGrid photos={detail.photos || []} projectId="library" ownerId={detail.id} editable={editable} onChange={(photos) => setPhotos(detail.id, photos)} />}
+      </InfoCard>
 
       <Modal open={!!draft} title={draft && items.some((g) => g.id === draft.id) ? 'Edit equipment' : 'New equipment'} onClose={() => setDraft(null)}
         footer={<><Button variant="ghost" onClick={() => setDraft(null)}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></>}>

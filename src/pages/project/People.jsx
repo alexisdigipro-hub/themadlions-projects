@@ -6,6 +6,7 @@ import { DbBar } from '../../components/DbTools.jsx'
 import { callsheetDefaults, can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore } from '../../lib/store.jsx'
 import { download } from '../../lib/dates.js'
 import PhotoGrid from '../../components/PhotoGrid.jsx'
+import { InfoCard, QuickLinks } from '../../components/InfoCard.jsx'
 import { contactToLibrary, matchText, sharedContact } from '../../lib/library.js'
 import { waLink } from '../../lib/share.js'
 import Locations from './Locations.jsx'
@@ -161,7 +162,7 @@ export default function People({ onOverview = false, pillSlot = null }) {
           // department as a chip with the role, phone, email, round WhatsApp; Edit and × for an editor
           <div className="ab-rows">
             {list.map((c) => (
-              <article key={c.id} className={`ab-row lib-row proj-row${editable ? '' : ' ro'}`} onClick={editable ? () => setDraft({ ...c }) : undefined} role={editable ? 'button' : undefined} tabIndex={editable ? 0 : undefined}>
+              <article key={c.id} className="ab-row lib-row proj-row" onClick={() => setPhotosFor(c.id)} role="button" tabIndex={0}>
                 <button type="button" className="ab-ava sm" onClick={(e) => { e.stopPropagation(); setPhotosFor(c.id) }} aria-label="Photos" title="Photos">
                   {c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}
                 </button>
@@ -333,7 +334,29 @@ export default function People({ onOverview = false, pillSlot = null }) {
         )}
       </Modal>
 
-      <Modal open={!!photoTarget} wide title={photoTarget ? `Photos · ${photoTarget.name}` : ''} onClose={() => setPhotosFor(null)}>
+      {/* the person's card, as Contacts' (Alex, 27 Oct): a tap on a row opens it, Edit opens the form */}
+      <InfoCard open={!!photoTarget} onClose={() => setPhotosFor(null)} wide
+        photo={photoTarget?.photos?.[0]?.thumb} name={photoTarget?.name}
+        tags={photoTarget && <>
+          {photoTarget.kind === 'cast'
+            ? (photoTarget.character ? <span className="ab-chip"><i />{photoTarget.character}</span> : <span className="muted">No character</span>)
+            : photoTarget.dept && <span className="ab-chip"><i />{photoTarget.dept}</span>}
+          {photoTarget.role && <span className="muted">{photoTarget.role}</span>}
+          {photoTarget.libraryId && <span className="ab-card-in">In the library</span>}
+        </>}
+        quick={photoTarget && showContacts && <QuickLinks phone={photoTarget.phone} email={photoTarget.email} />}
+        rows={photoTarget ? [
+          ['Phone', showContacts && photoTarget.phone && <a href={`tel:${photoTarget.phone}`}>{photoTarget.phone}</a>],
+          ['Email', showContacts && photoTarget.email && <a href={`mailto:${photoTarget.email}`}>{photoTarget.email}</a>],
+          ['Call', photoTarget.callOffset ? `${photoTarget.callOffset > 0 ? '+' : ''}${photoTarget.callOffset} min from the general call` : 'General call'],
+          ['Agent', photoTarget.agent && `${photoTarget.agent}${photoTarget.agentPhone ? ` · ${photoTarget.agentPhone}` : ''}`],
+        ] : []}
+        notes={photoTarget?.notes}
+        footer={photoTarget && editable && <>
+          <Confirm onConfirm={() => { edit((p) => (p.contacts = p.contacts.filter((x) => x.id !== photoTarget.id))); setPhotosFor(null) }} label="Delete" className="ab-del">Delete</Confirm>
+          <span className="grow" />
+          <Button variant="primary" onClick={() => { const d = photoTarget; setPhotosFor(null); setDraft({ ...d }) }}>Edit</Button>
+        </>}>
         {photoTarget && (
           <PhotoGrid
             title={photoTarget.kind === 'cast' ? 'Headshots & looks' : 'Photos'}
@@ -344,7 +367,7 @@ export default function People({ onOverview = false, pillSlot = null }) {
             onChange={(photos) => setPhotos(photoTarget.id, photos)}
           />
         )}
-      </Modal>
+      </InfoCard>
     </div>
   )
 }
