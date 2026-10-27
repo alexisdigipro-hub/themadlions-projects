@@ -32,9 +32,7 @@ const CalendarAll = lazyPage(() => import('./pages/CalendarAll.jsx'))
 const Team = lazyPage(() => import('./pages/Team.jsx'))
 const Settings = lazyPage(() => import('./pages/Settings.jsx'))
 const Overview = lazyPage(() => import('./pages/project/Overview.jsx'))
-const Script = lazyPage(() => import('./pages/project/Script.jsx'))
 const Schedule = lazyPage(() => import('./pages/project/Schedule.jsx'))
-const People = lazyPage(() => import('./pages/project/People.jsx'))
 const Whiteboard = lazyPage(() => import('./pages/project/Whiteboard.jsx'))
 const Database = lazyPage(() => import('./pages/Database.jsx'))
 const RoarMePage = lazyPage(() => import('./pages/RoarMePage.jsx'))
@@ -181,10 +179,10 @@ export default function App() {
                   {/* The project's own Chat tab is gone; the same room lives in the sidebar's Chat */}
                   <Route path="chat" element={<ProjectChatRedirect />} />
                   {/* The song map moved into Script (a music video's "script" is the song) */}
-                  <Route path="music" element={<Navigate to="../script" replace />} />
-                  <Route path="script" element={<Script />} />
+                  <Route path="music" element={<Navigate to=".." replace />} />
+                  <Route path="script" element={<Navigate to=".." replace />} />
                   {/* Breakdown is now framed inside Script */}
-                  <Route path="breakdown" element={<Navigate to="../script" replace />} />
+                  <Route path="breakdown" element={<Navigate to=".." replace />} />
                   {/* the Shotlist tab is gone (Alex, 27 Oct): shot lists are in the side menu's RoarList */}
                   <Route path="shots" element={<Navigate to=".." replace />} />
                   <Route path="schedule" element={<Schedule />} />
@@ -194,7 +192,7 @@ export default function App() {
                   <Route path="reports" element={<Navigate to=".." replace />} />
                   <Route path="budget" element={<Budget />} />
                   {/* Equipment is now a section inside People (Project Database); keep old links alive */}
-                  <Route path="gear" element={<Navigate to="../people" replace />} />
+                  <Route path="gear" element={<Navigate to=".." replace />} />
                   {/* Post was taken out (Alex, 10 Oct); an old link opens the project */}
                   <Route path="post" element={<Navigate to=".." replace />} />
                   {/* Presentation moved to Organizer > Office (Alex, 24 Oct): an old link opens the deck there */}
@@ -204,8 +202,9 @@ export default function App() {
                   {/* The project calendar is gone; the global Calendar in the sidebar covers it */}
                   <Route path="calendar" element={<Navigate to=".." replace />} />
                   {/* Locations is now a sub-tab inside People (Crew, Locations & Cast); keep old links alive */}
-                  <Route path="locations" element={<Navigate to="../people?tab=locations" replace />} />
-                  <Route path="people" element={<People />} />
+                  <Route path="locations" element={<Navigate to=".." replace />} />
+                  {/* Script & Breakdown and Project Database are on Overview since 27 Oct: old links land there */}
+                  <Route path="people" element={<Navigate to=".." replace />} />
                   <Route path="whiteboard" element={<Whiteboard />} />
                   {/* Files & notes is now framed on Overview */}
                   <Route path="notes" element={<Navigate to=".." replace />} />

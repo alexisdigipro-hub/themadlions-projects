@@ -16,6 +16,8 @@ import ProjectRoarMe from '../../components/ProjectRoarMe.jsx'
 import Tasks, { tasksFor } from './Tasks.jsx'
 import { Waveform } from './Music.jsx'
 import Notes from './Notes.jsx'
+import Script from './Script.jsx'
+import People from './People.jsx'
 import RoardinoPage from '../RoardinoPage.jsx'
 import { supabase } from '../../lib/supabase.js'
 import { syncShootDay } from '../../lib/shootDays.js'
@@ -137,6 +139,8 @@ const ADD_ICONS = {
   task: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5" /><path d="m8.5 12 2.4 2.4 4.6-4.8" /></svg>,
   song: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="16.5" cy="16" r="2.5" /></svg>,
   link: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1" /><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" /></svg>,
+  script: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4" /><path d="m7.5 8.5 4.5-4.5 4.5 4.5" /><path d="M5 15v3.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V15" /></svg>,
+  paste: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4.5" width="12" height="16" rx="2.5" /><path d="M9.5 4.5V3.8a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v.7" /><path d="M9 10h6M9 13.5h6M9 17h4" /></svg>,
   notes: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h8.5L19 8v11.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1Z" /><path d="M14 3.5V8h5M8.5 12.5h7M8.5 16h5" /></svg>,
   edit: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></svg>,
   duplicate: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" /><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8" /></svg>,
@@ -145,7 +149,7 @@ const ADD_ICONS = {
 }
 
 export default function Overview() {
-  const { project, edit, canEdit, user } = useProject()
+  const { project, edit, canEdit, user, sections = [] } = useProject()
   const [ordinoOpen, setOrdinoOpen] = useState(false)
   const [receiptOpen, setReceiptOpen] = useState(false)
   const myReceipts = (project.budget?.lines || []).filter((l) => l.receipt && l.receipt.addedBy === user?.id).length
@@ -190,7 +194,7 @@ export default function Overview() {
   // Alex: an empty Tasks / Song / Links / Production notes panel is just a box saying nothing.
   // Each one keeps quiet until it has something in it, and its button lives in one row up here
   // instead. Pressing a button bumps a counter the panel watches, so it opens its own form.
-  const [start, setStart] = useState({ task: 0, song: 0, link: 0, notes: 0 })
+  const [start, setStart] = useState({ task: 0, song: 0, link: 0, notes: 0, script: 0, paste: 0 })
   const begin = (k) => setStart((s0) => ({ ...s0, [k]: s0[k] + 1 }))
   const isMusicVideo = project.category === 'Music Video'
   const hasSong = !!(project.music?.tracks || []).length
@@ -199,6 +203,8 @@ export default function Overview() {
     isMusicVideo && can(user, 'music') && canEdit('music') && !hasSong && ['song', 'Upload song'],
     can(user, 'files') && canEdit('files') && !(project.links || []).length && ['link', 'Add link'],
     can(user, 'files') && canEdit('files') && !(project.productionNotes || '').trim() && ['notes', 'Add notes'],
+    sections.includes('script') && canEdit('script') && !project.script?.text && !(project.scriptVersions || []).length && ['script', 'Upload script'],
+    sections.includes('script') && canEdit('script') && !project.script?.text && !(project.scriptVersions || []).length && ['paste', 'Paste script'],
   ].filter(Boolean)
 
   return (
@@ -308,6 +314,11 @@ export default function Overview() {
 
       {/* Files & Notes used to be its own tab; links and production notes moved here, Files was dropped */}
       {can(user, 'files') && <Notes hideEmpty startLink={start.link} startNotes={start.notes} />}
+
+      {/* Project Database and Script & Breakdown, once tabs, are Overview's own sections now (Alex, 27 Oct); a
+          project can still switch either off in Edit details > Tabs */}
+      {sections.includes('people') && <People />}
+      {sections.includes('script') && <Script hideEmpty uploadSignal={start.script} pasteSignal={start.paste} />}
 
       <Modal
         open={!!draft}

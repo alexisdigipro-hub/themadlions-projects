@@ -67,14 +67,17 @@ export default function Project() {
   ]
     .map((t) => (t.to === 'budget' && !can(user, 'budget') ? { ...t, label: 'Add Receipt', key: 'projects' } : t))
     .filter((t) => (Array.isArray(t.key) ? t.key.some((k) => can(user, k, t.level)) : can(user, t.key, t.level)) && !tabHidden(project, t.to))
+  // what Overview shows as its own sections (tabs.js onOverview): not in the bar
+  const sections = tabs.filter((t) => t.onOverview).map((t) => t.to)
+  const barTabs = tabs.filter((t) => !t.onOverview)
 
   // a sideways swipe on a phone moves to the next or previous of these tabs, the page sliding over
   // as when one is tapped (lib/swipeTabs.js)
   const base = `/p/${project.id}`
   const seg = pathname.startsWith(base) ? pathname.slice(base.length).replace(/^\//, '').split('/')[0] : ''
   swipeTabs.project = mobile ? (dir, mode) => {
-    const at = tabs.findIndex((t) => (seg ? t.to === seg : t.end))
-    const to = at < 0 ? null : tabs[at + (dir === 'next' ? 1 : -1)]
+    const at = barTabs.findIndex((t) => (seg ? t.to === seg : t.end))
+    const to = at < 0 ? null : barTabs[at + (dir === 'next' ? 1 : -1)]
     if (!to || mode === 'dry') return !!to
     // the magnetic swipe moves the page itself; a swipe without it gets the tab's own slide
     if (mode !== 'magnet') glide.slideTo(dir)
@@ -91,6 +94,7 @@ export default function Project() {
     editLibrary: (fn) => update((s) => { fn(s.library); return s }),
     // on a computer the tab's own buttons sit at the end of the project's one top row (DbBar, as Database's tabs)
     slot: mobile ? null : slot,
+    sections,
   }
 
   return (
@@ -105,7 +109,7 @@ export default function Project() {
           <Badge>{project.category}</Badge>
           {project.status === 'Delivered' && <Badge>Delivered</Badge>}
           <nav className="tabs db-tabs">
-            {tabs.map((t) => (
+            {barTabs.map((t) => (
               <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => (isActive ? 'active' : '')} onClick={glide.go}>
                 <span className="tab-ico">{Icon[t.icon]?.()}</span>
                 {t.label}
@@ -128,7 +132,7 @@ export default function Project() {
           </div>
         </div>
       </div>}
-      {mobile && <MobileTabs tabs={tabs} onPick={glide.go} />}
+      {mobile && <MobileTabs tabs={barTabs} onPick={glide.go} />}
       {/* the page slides over when another tab is picked (lib/glide.js) */}
       <div className="tab-body glide-box" ref={glide.boxRef}>
         <div key={pathname.split('/')[3] || ''} className={glide.inClass}>

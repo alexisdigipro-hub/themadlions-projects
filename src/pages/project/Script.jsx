@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Textarea, useToast } from '../../components/ui.jsx'
 import { useProject } from '../Project.jsx'
 import { ACCEPTED, extractText } from '../../lib/scriptImport.js'
@@ -28,12 +28,17 @@ export function nextColorFor(p) {
   return p.script?.text ? nextRevisionColor(used) : 'White'
 }
 
-export default function Script() {
+/* On Overview (Alex, 27 Oct: Script & Breakdown and Project Database moved onto Overview, their tabs gone) a project
+   with no script shows nothing here: Upload script and Paste text sit in Overview's row of add pills, which bump
+   uploadSignal / pasteSignal. */
+export default function Script({ hideEmpty = false, uploadSignal = 0, pasteSignal = 0 }) {
   const { project, edit, canEdit, user } = useProject()
   const toast = useToast()
   const fileRef = useRef()
   const [busy, setBusy] = useState(false)
   const [editing, setEditing] = useState(false)
+  useEffect(() => { if (uploadSignal) fileRef.current?.click() }, [uploadSignal])
+  useEffect(() => { if (pasteSignal) setEditing(true) }, [pasteSignal])
   const [text, setText] = useState(project.script.text)
   const [view, setView] = useState('script') // script | revisions
   const [compare, setCompare] = useState(null) // version id
@@ -114,7 +119,8 @@ export default function Script() {
   if (bare) {
     return (
       <div className="script-page">
-        {editable && (
+        {hideEmpty && <input ref={fileRef} type="file" accept={ACCEPTED} hidden onChange={(e) => onFile(e.target.files?.[0])} />}
+        {editable && !hideEmpty && (
           <div className="add-bar">
             <input ref={fileRef} type="file" accept={ACCEPTED} hidden onChange={(e) => onFile(e.target.files?.[0])} />
             <Button variant="ghost" onClick={() => fileRef.current?.click()} disabled={busy}>{busy ? 'Reading…' : 'Upload script'}</Button>
