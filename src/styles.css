@@ -8462,3 +8462,8 @@ html[data-theme] body .ab-card .modal-foot .ab-del.btn-danger { color: #fff; bac
   .home-actions.home-toolbar > .chips .chip { flex: none; }
   html[data-theme] body .home-actions.home-toolbar .input.search { flex: 0 1 180px; width: 180px; min-width: 120px; }
 }
+@media (min-width: 821px) {
+  html[data-theme] body .home-actions.home-toolbar { gap: 10px; }
+  html[data-theme] body .home-actions.home-toolbar > .chips .chip { padding: 0 11px; }
+  html[data-theme] body .home-actions.home-toolbar .input.search { flex: 0 1 150px; width: 150px; }
+}
