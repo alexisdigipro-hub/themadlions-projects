@@ -667,7 +667,7 @@ async function viewHome(){
     h('input', { type: 'search', placeholder: 'Αναζήτηση', value: homeSearch, oninput: e => { homeSearch = e.target.value; draw(); } }));
   const head = h('header', { class: 'topbar home-top' },
     brandMark(true),
-    h('h1', { class: 'home-title' }, scoped ? projectName(scoped) : 'Ordino'),
+    h('h1', { class: scoped ? 'home-title' : 'home-title plain' }, scoped ? projectName(scoped) : 'Ordino'), // .plain: on a computer the ROARDINO mark is the title (Alex, 27 Oct)
     h('div', { class: 'home-filters' }),
     search,
     canEdit ? h('button', { class: 'btn primary pill-new', onclick: create }, h('span', { html: ICON.plus }), h('span', { class: 'lbl' }, 'Νέο ordino')) : null);

@@ -429,6 +429,7 @@ input.input,select.input{height:42px}
 /* ---------- the home, 2026 (Alex, 24 Oct): the hub Calendar's recipe ---------- */
 .home-top{gap:12px;flex-wrap:wrap}
 .home-title{margin:0 6px 0 4px;font-size:28px;font-weight:800;letter-spacing:-.01em;line-height:1}
+.home-title.plain{display:none}
 .pills{position:relative;display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:999px;background:var(--glass);border:1px solid var(--glass-edge);max-width:100%;overflow-x:auto;scrollbar-width:none}
 .pills::-webkit-scrollbar{display:none}
 .pills button{position:relative;z-index:1;display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border:0;border-radius:999px;background:none;font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap;transition:color .2s}
@@ -486,6 +487,7 @@ input.input,select.input{height:42px}
 @media (max-width:720px){
   .home-top{row-gap:10px}
   .home-title{font-size:24px;margin-right:auto}
+  .home-title.plain{display:block}
   .home-top .brand{display:none}
   .home-filters{order:5;width:100%}
   .pill-search{order:6;margin-left:0;flex:1 1 100%}
