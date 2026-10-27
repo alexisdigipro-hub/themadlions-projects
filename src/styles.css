@@ -8227,6 +8227,7 @@ html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > b
 .ab-group + .ab-group { margin-top: 18px; }
 .ab-group-head { display: flex; align-items: center; gap: 10px; margin: 0 0 8px 2px; }
 .ab-group-head .ab-chip { font-size: 13px; font-weight: 600; padding: 3px 11px; }
+.ab-count { flex: none; padding: 0 12px; height: 32px; display: inline-flex; align-items: center; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); background: color-mix(in srgb, var(--text) 6%, transparent); white-space: nowrap; }
 .ab-rows { display: flex; flex-direction: column; gap: 6px; }
 .ab-row { display: grid; grid-template-columns: 32px minmax(160px, 1.3fr) minmax(120px, 1fr) minmax(140px, 1.2fr) minmax(120px, 1fr) auto; align-items: center; gap: 14px; padding: 8px 12px; border-radius: 12px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); cursor: pointer; transition: background .2s, border-color .2s; }
 .ab-row:hover { background: var(--raised); border-color: color-mix(in srgb, var(--accent) 35%, var(--line-soft)); }
