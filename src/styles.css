@@ -8633,6 +8633,6 @@ html[data-theme] body :is(input.search, .input.search, input[type=search], .rem-
 /* the Database search the same size on every tab (Alex, 27 Oct), and Drives' and ID sheets' buttons together at the
    right end like the others' */
 @media (min-width: 821px) {
-  html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions > :is(.ab-search, .search-clear-wrap) { flex: 0 0 280px; width: 280px; max-width: 280px; min-width: 0; }
+  html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions > :is(.ab-search, .search-clear-wrap) { flex: 0 0 220px; width: 220px; max-width: 220px; min-width: 0; }
   html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions > .segmented { margin-left: 0 !important; }
 }
