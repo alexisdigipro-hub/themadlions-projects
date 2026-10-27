@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Act, Button, Empty, Field, Input, Modal, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
-import { DbAdd, DbBar, DbSearch, useFitScroll } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbSearch, ListRow, useFitScroll } from '../components/DbTools.jsx'
 import { InfoCard } from '../components/InfoCard.jsx'
 import { can, useCurrentUser } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
@@ -135,32 +135,33 @@ export default function IdSheets({ slot }) {
       <i />{p.name}
     </button>
   )
-  // the picture (or the initials on the person's colour) in a row of Contacts' list, 70% taller (Alex, 27 Oct)
-  const thumb = (pic, name, color) => <span className="ab-thumb" style={{ '--c': color }} aria-hidden="true">{pic ? <img src={pic} alt="" /> : <b>{initials(name)}</b>}</span>
+  // a row as every Database list (Alex, 27 Oct), 70% taller for the picture; the initials on the person's colour
+  const thumb = (pic, name) => (pic ? <img src={pic} alt="" /> : <b>{initials(name)}</b>)
   const personTile = (p) => {
     const mine = sheetsOf(p.id)
     return (
-      <article key={p.id} className="ab-row tall-row ids-row" onClick={() => setOpenId(p.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter') setOpenId(p.id) }}>
-        {thumb(mine.find((x) => x.thumb)?.thumb, p.name, hue(p.id))}
-        <span className="ab-two"><strong className="ab-name">{p.name}</strong><span className="muted small">{[mine.length === 1 ? '1 sheet' : `${mine.length} sheets`, mine.length ? `last ${day(mine[0].uploaded_at)}` : 'empty folder'].join(' · ')}</span></span>
-        <span className="ab-cell ids-chips">
-          {mine.slice(0, 3).map((s) => <span key={s.id} className="ab-chip"><i />{s.title || s.name}</span>)}
-          {mine.length > 3 && <span className="muted small"> +{mine.length - 3}</span>}
-          {!mine.length && <span className="muted small">No sheets yet</span>}
-        </span>
-        <span className="ab-cell muted">{p.note}</span>
-      </article>
+      <ListRow key={p.id} tall className="ids-lrow" onClick={() => setOpenId(p.id)}
+        thumb={<span className="lrow-tint" style={{ '--c': hue(p.id) }}>{thumb(mine.find((x) => x.thumb)?.thumb, p.name)}</span>}
+        title={p.name}
+        sub={[mine.length === 1 ? '1 sheet' : `${mine.length} sheets`, mine.length ? `last ${day(mine[0].uploaded_at)}` : 'empty folder', p.note].filter(Boolean).join(' · ')}
+        chips={<>
+          {mine.slice(0, 4).map((s) => <span key={s.id} className="lchip acc"><i />{s.title || s.name}</span>)}
+          {mine.length > 4 && <span className="lchip">+{mine.length - 4}</span>}
+          {!mine.length && <span className="lchip">No sheets yet</span>}
+        </>} />
     )
   }
   const sheetTile = (s) => {
     const p = personOf(s.person_id)
     return (
-      <article key={s.id} className="ab-row tall-row ids-row" onClick={() => (isPicture(s) ? openBig(s) : setOpenId(s.person_id))} role="button" tabIndex={0}>
-        {thumb(s.thumb, s.title || s.name, hue(s.person_id))}
-        <span className="ab-two"><strong className="ab-name">{s.title || s.name}</strong><span className="muted small">{[s.doc_date ? day(s.doc_date) : '', `uploaded ${day(s.uploaded_at)}`, kb(s.size)].filter(Boolean).join(' · ')}</span></span>
-        <span className="ab-cell">{p && personChip(p)}</span>
-        <span className="ab-cell muted">{s.note}</span>
-      </article>
+      <ListRow key={s.id} tall className="ids-lrow" onClick={() => (isPicture(s) ? openBig(s) : setOpenId(s.person_id))}
+        thumb={<span className="lrow-tint" style={{ '--c': hue(s.person_id) }}>{thumb(s.thumb, s.title || s.name)}</span>}
+        title={s.title || s.name}
+        sub={[s.doc_date ? day(s.doc_date) : '', `uploaded ${day(s.uploaded_at)}`, s.note].filter(Boolean).join(' · ')}
+        chips={<>
+          {p && personChip(p)}
+          <span className="lchip">{kb(s.size)}</span>
+        </>} />
     )
   }
 
@@ -202,10 +203,10 @@ export default function IdSheets({ slot }) {
           <div className="ab-scroll" ref={scrollRef}>
           {searching || view === 'sheets' ? (
             (view === 'sheets' ? shownSheets : shownPeople).length ? (
-              <div className="ab-rows">{view === 'sheets' ? shownSheets.map(sheetTile) : shownPeople.map(personTile)}</div>
+              <div className="lrow-list">{view === 'sheets' ? shownSheets.map(sheetTile) : shownPeople.map(personTile)}</div>
             ) : <Empty title="Nothing found">{`Nothing matches "${q}". Try a name, or what the sheet is.`}</Empty>
           ) : (
-            <div className="ab-rows">{shownPeople.map(personTile)}</div>
+            <div className="lrow-list">{shownPeople.map(personTile)}</div>
           )}
           </div>
         </>

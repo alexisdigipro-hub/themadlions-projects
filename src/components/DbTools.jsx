@@ -92,3 +92,23 @@ export function ListSearch({ value, onChange, placeholder }) {
     </span>
   )
 }
+
+/* One row of a Database list, as Share's and Roardino's lists (Alex, 27 Oct: "the same list look in every Database
+   list but Drives"): a tick (optional), the picture small in a rounded box, the name with its line under it and the
+   chips under that, the round icons and buttons at the right; the whole row opens the card. `tall` is the 70% taller
+   row of Locations and ID sheets, for their pictures. */
+export function ListRow({ check, thumb, title, sub, chips, aside, onClick, className = '', tall = false, hint }) {
+  return (
+    <article className={`lrow${tall ? ' tall' : ''}${check ? ' has-check' : ''} ${className}`} onClick={onClick} role="button" tabIndex={0} title={hint}
+      onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) onClick?.() }}>
+      {check}
+      <span className="lrow-thumb" aria-hidden="true">{thumb}</span>
+      <div className="lrow-main">
+        <strong className="lrow-title">{title}</strong>
+        {sub && <span className="lrow-sub">{sub}</span>}
+        {chips && <div className="lrow-chips">{chips}</div>}
+      </div>
+      {aside && <div className="lrow-aside" onClick={(e) => e.stopPropagation()}>{aside}</div>}
+    </article>
+  )
+}

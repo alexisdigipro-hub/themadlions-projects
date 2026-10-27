@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Textarea, useToast } from '../components/ui.jsx'
-import { DbAdd, DbBar, useFitScroll } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, ListRow, useFitScroll } from '../components/DbTools.jsx'
 import { uid, useStore } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 import { cachedContacts, emptyContact, keepContacts, loadContacts, parseContactsFile, removeContacts, sameKey, saveContacts, toBook, toCsv, toVcf } from '../lib/addressBook.js'
@@ -489,18 +489,21 @@ export default function AddressBook({ slot }) {
           <div key={key} className="ab-group">
             {sort === 'company' && <div className="ab-group-head"><span className="ab-chip"><i />{label}</span><span className="muted small">{items.length}</span></div>}
             {/* one slim soft row per person, the columns lined up (not a ruled table); List only (Alex, 27 Oct) */}
-              <div className="ab-rows">
+              <div className="lrow-list">
                 {items.map((c) => (
-                  <article key={c.id} className={`ab-row${inLibrary(c) ? ' ab-in' : ''}`} title={inLibrary(c) ? `Already in ${inLibrary(c)}` : undefined} onClick={() => setCardId(c.id)} role="button" tabIndex={0}>
-                    {check(c)}
-                    <span className="ab-ava sm" aria-hidden="true">{c.photo ? <img src={c.photo} alt="" /> : initials(c.name)}</span>
-                    <strong className="ab-name">{star(c)}{c.name}</strong>
-                    <span className="ab-cell">{c.phone}{c.phone2 && <span className="muted"> · {c.phone2}</span>}</span>
-                    <span className="ab-cell muted">{c.email}</span>
-                    <span className="ab-cell">{sort !== 'company' && c.company && <span className="ab-chip"><i />{c.company}</span>}{c.title && <span className="muted small"> {c.title}</span>}</span>
-                    {quick(c) || <span />}
-                    {acts(c)}
-                  </article>
+                  <ListRow key={c.id} className={inLibrary(c) ? 'ab-in' : ''} hint={inLibrary(c) ? `In ${inLibrary(c)}` : undefined} onClick={() => setCardId(c.id)}
+                    check={check(c)}
+                    thumb={c.photo ? <img src={c.photo} alt="" /> : initials(c.name)}
+                    title={<>{star(c)}{c.name}</>}
+                    sub={[c.title, c.notes && c.notes.split('\n')[0]].filter(Boolean).join(' · ')}
+                    chips={<>
+                      {sort !== 'company' && c.company && <span className="lchip acc"><i />{c.company}</span>}
+                      {inLibrary(c) && <span className="lchip">In {inLibrary(c)}</span>}
+                      {c.phone && <span className="lchip">{c.phone}</span>}
+                      {c.phone2 && <span className="lchip">{c.phone2}</span>}
+                      {c.email && <span className="lchip">{c.email}</span>}
+                    </>}
+                    aside={<>{quick(c)}{acts(c)}</>} />
                 ))}
               </div>
           </div>

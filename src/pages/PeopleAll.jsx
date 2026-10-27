@@ -5,7 +5,7 @@ import { can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore, visi
 import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
 import { InfoCard, QuickLinks } from '../components/InfoCard.jsx'
-import { DbAdd, DbBar, DbFilter, ListSearch, useFitScroll } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbFilter, ListRow, ListSearch, useFitScroll } from '../components/DbTools.jsx'
 
 // a role's chip key: the same word in any case or accent is one chip
 const roleKey = (r) => String(r || '').trim().toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ')
@@ -126,21 +126,23 @@ export default function PeopleAll({ kind, slot }) {
         // the rows of Contacts: picture, name (and agent), department and role as a chip, phone, email; a tap opens the
         // person's window (projects, notes, photos). The projects someone worked on stay in that window, so every
         // row is the same height (Alex, 10 Oct)
-        <div className="ab-rows">
+        <div className="lrow-list">
           {list.map((c) => (
-            <article key={c.id} className="ab-row lib-row" onClick={() => setDetailFor(c.id)} role="button" tabIndex={0}>
-              <span className="ab-ava sm" aria-hidden="true">{c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}</span>
-              <strong className="ab-name">{c.name}{c.agent && <span className="muted small"> · Agent: {c.agent}</span>}</strong>
-              <span className="ab-cell">{(c.kind === 'cast' ? c.role : [c.dept, c.role].filter(Boolean).join(' · ')) && <span className="ab-chip"><i />{c.kind === 'cast' ? c.role : [c.dept, c.role].filter(Boolean).join(' · ')}</span>}</span>
-              <span className="ab-cell" onClick={(e) => e.stopPropagation()}>{showContacts && c.phone && <a href={`tel:${c.phone}`}>{c.phone}</a>}</span>
-              <span className="ab-cell muted" onClick={(e) => e.stopPropagation()}>{showContacts && c.email && <a href={`mailto:${c.email}`}>{c.email}</a>}</span>
-              {editable ? (
-                <span className="ab-acts" onClick={(e) => e.stopPropagation()}>
-                  <button type="button" className="btn btn-default btn-sm" onClick={() => setDraft({ ...c })}>Edit</button>
-                  <Confirm onConfirm={() => remove(c)} label="Delete" className="ab-del" title="Delete">×</Confirm>
-                </span>
-              ) : <span />}
-            </article>
+            <ListRow key={c.id} onClick={() => setDetailFor(c.id)}
+              thumb={c.photos?.[0]?.thumb ? <img src={c.photos[0].thumb} alt="" /> : initials(c.name)}
+              title={c.name}
+              sub={c.agent ? `Agent: ${c.agent}${c.agentPhone ? ` · ${c.agentPhone}` : ''}` : (c.notes || '').split('\n')[0]}
+              chips={<>
+                {(c.kind === 'cast' ? c.role : c.dept) && <span className="lchip acc"><i />{c.kind === 'cast' ? c.role : c.dept}</span>}
+                {c.kind !== 'cast' && c.role && <span className="lchip">{c.role}</span>}
+                {showContacts && c.phone && <a className="lchip" href={`tel:${c.phone}`} onClick={(e) => e.stopPropagation()}>{c.phone}</a>}
+                {showContacts && c.email && <a className="lchip" href={`mailto:${c.email}`} onClick={(e) => e.stopPropagation()}>{c.email}</a>}
+                {(c.tags || []).slice(0, 3).map((t) => <span key={t} className="lchip">{t}</span>)}
+              </>}
+              aside={editable && <>
+                <button type="button" className="btn btn-default btn-sm" onClick={() => setDraft({ ...c })}>Edit</button>
+                <Confirm onConfirm={() => remove(c)} label="Delete" className="ab-del" title="Delete">×</Confirm>
+              </>} />
           ))}
         </div>
       )}
