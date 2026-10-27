@@ -37,6 +37,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (27 Oct 2026, RoarMe wears the hub's look)
+- Alex: RoarMe in the hub looked foreign. pages/RoarMePage.jsx hubLook() reads the theme/skin colours, light or dark, backdrop and typeface (as roardino/app.js hubTheme) and posts roarme:hub-look to the frame on roarme:want-look / roarme:ready and again when Settings > Display changes. RoarMe (src/hubLink.jsx wearHubLook) wears them as its 'hub' theme, only at ?embed=hub; its own Theme / Day and Night / Accent settings are hidden there. RoarMe's sign-in card stays dark on purpose.
+- To check live: RoarMe inside the hub on a dark skin and on Coral (the chat screens, not only sign-in).
+
 ## Where we stopped (27 Oct 2026, night: Share, lists, top rows)
 - Share: tabs Everything, Deliveries, Roardino, Estimates; List only (Roardino-like rows: cover, date, title, chips with the stage first); search beside the tabs. Roardino is a Share tab (Layout keeps one RoardinoFrame, shown on /share?tab=roardino; postMessage roardino:host / roardino:home / roardino:do; in Share the frame hides its own top row and shows its ordinos as rows). The side menu's Roardino only for people with Ordino but not Share (permissions to sort out later, Alex).
 - Deliveries: a file can be Replaced or Removed in the form; the client's link stays (same token); on Publish the old file goes to pCloud's trash (pcloud function v12, action deliveryRemove).
