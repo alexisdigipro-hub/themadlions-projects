@@ -8750,3 +8750,11 @@ html[data-skin='roarlist'][data-theme][data-accent] body :is(.btn-primary:not(:d
   filter: none;
 }
 html[data-skin='roarlist'][data-theme][data-accent] body :is(.sidenav a.active, .tabbar a.active, .tabbar button.active, .act.act-main) :is(.nav-ico, svg) { color: var(--lit-ink); }
+/* Drives' "on one disk only" warning in the same red glass on RoarList (Alex, 27 Oct); "every film has a copy" stays green */
+html[data-skin='roarlist'][data-theme][data-accent] .drv-risk:not(.none) {
+  border-color: color-mix(in srgb, var(--accent) var(--lit-edge), transparent) !important;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 26%, transparent), color-mix(in srgb, var(--accent) 12%, transparent)) !important;
+  box-shadow: inset 0 1px 0 var(--lit-shine), 0 6px 22px color-mix(in srgb, var(--accent) var(--lit-glow), transparent);
+}
+html[data-skin='roarlist'][data-theme][data-accent] .drv-risk.on:not(.none) { background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 40%, transparent), color-mix(in srgb, var(--accent) 22%, transparent)) !important; }
+html[data-skin='roarlist'][data-theme][data-accent] .drv-risk:not(.none) b { color: var(--lit-ink); }
