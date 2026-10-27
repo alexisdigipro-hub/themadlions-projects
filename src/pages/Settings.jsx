@@ -22,7 +22,7 @@ import { remote, supabase } from '../lib/supabase.js'
 import { testKey } from '../lib/ai.js'
 import { checkOpenAIKey } from '../lib/transcribe.js'
 import { buildICS, download } from '../lib/dates.js'
-import { DEFAULT_THEME, SKINS, SKIN_ICONS, applyThemeChoice, isSkin } from '../lib/skin.js'
+import { DEFAULT_THEME, SKINS, SKIN_ICONS, applyThemeChoice, liveTheme } from '../lib/skin.js'
 import { localLook } from '../lib/teamLook.js'
 import { ICON_SETS, IconPreview, applyIconSet } from '../components/icons.jsx'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
@@ -321,15 +321,14 @@ export default function Settings() {
             <>
           <Field label="Theme">
             <div className="segmented small wrap">
-              {[['light', 'Light'], ['dark', 'Dark'], ...SKINS].map(([v, l]) => (
-                <button key={v} className={theme === v ? 'on' : ''} onClick={() => applyTheme(v)}>{l}</button>
+              {SKINS.map(([v, l]) => (
+                <button key={v} className={liveTheme(theme) === v ? 'on' : ''} onClick={() => applyTheme(v)}>{l}</button>
               ))}
             </div>
           </Field>
-          {isSkin(theme) ? <p className="muted small">{SKINS.find(([k]) => k === theme)[1]} has its own colours and layout, so the accent colour below is not used while it is on.</p> : null}
           <Field label="Accent colour">
             <div className="accent-swatches">
-              {[['amber', '#c9932f', 'Lion amber'], ['red', '#c8503f', 'Red'], ['slate', '#3f5578', 'Slate blue'], ['lilac', '#7a5ec7', 'Lilac'], ['green', '#3f8f5f', 'Forest'], ['teal', '#2b8a93', 'Teal'], ['blue', '#3b7dd8', 'Ocean'], ['rose', '#c4547f', 'Rose'], ['orange', '#d9762b', 'Orange'], ['ink', '#1f2430', 'Ink']].map(([v, c, l]) => (
+              {[['amber', '#e4c47c', 'Champagne gold'], ['red', '#ff5d52', 'Lion red'], ['slate', '#a9bcd6', 'Titanium'], ['lilac', '#b8a7ff', 'Iris chrome'], ['green', '#7fe8c2', 'Mint'], ['teal', '#72e3f0', 'Aqua chrome'], ['blue', '#86b8ff', 'Electric blue'], ['rose', '#f2ad9e', 'Rose gold'], ['orange', '#f59f68', 'Copper'], ['ink', '#e7eaf0', 'Platinum']].map(([v, c, l]) => (
                 <button key={v} className={`swatch ${accent === v ? 'on' : ''}`} style={{ '--sw': c }} onClick={() => applyAccent(v)} title={l}><span className="dot" />{l}</button>
               ))}
             </div>
