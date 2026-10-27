@@ -8434,8 +8434,8 @@ html[data-theme] body .ab-card-name { margin: 6px 0 0; font-size: 24px; font-wei
 .ab-card-hero .ab-quick { gap: 10px; margin-top: 4px; }
 .ab-card-hero .ab-q { width: 44px; height: 44px; }
 .ab-card-hero .ab-q svg { width: 19px; height: 19px; }
-.ab-card-rows { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 0; padding: 4px 0; }
-.ab-card-rows dt { color: var(--muted); font-size: 13px; padding: 10px 0 10px 14px; }
+.ab-card-rows { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 0; margin: 0; padding: 4px 0; }
+.ab-card-rows dt { color: var(--muted); font-size: 13px; padding: 11px 16px 10px 14px; }
 .ab-card-rows dd { margin: 0; padding: 10px 14px 10px 0; font-size: 15px; word-break: break-word; }
 .ab-card-rows dt, .ab-card-rows dd { background: color-mix(in srgb, var(--text) 4%, transparent); }
 .ab-card-rows dt { border-radius: 12px 0 0 12px; }
@@ -8453,3 +8453,12 @@ html[data-theme] body .ab-card .modal-foot .ab-del.btn-danger { color: #fff; bac
 .ab-ava { overflow: hidden; }
 /* the profile photo's cropper: a circle over the square */
 .cover-crop.round .cover-crop-frame { border-radius: 50%; }
+
+/* Home on a computer (Alex, 27 Oct): the category pills up in the team's tile with Sort, Search and New project, one row */
+@media (min-width: 821px) {
+  html[data-theme] body .home-actions.home-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin: 0; flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; }
+  html[data-theme] body .home-actions.home-toolbar > .chips { flex: 0 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .home-actions.home-toolbar > .chips::-webkit-scrollbar { display: none; }
+  .home-actions.home-toolbar > .chips .chip { flex: none; }
+  html[data-theme] body .home-actions.home-toolbar .input.search { flex: 0 1 180px; width: 180px; min-width: 120px; }
+}

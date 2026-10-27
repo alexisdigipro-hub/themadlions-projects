@@ -370,6 +370,20 @@ export default function Dashboard() {
     </div>
   )
 
+  const categoryChips = (
+    <div className="chips" ref={chipsRef} data-glide="own">
+      {/* All, then Delivered, then the categories (Alex, 9 Oct) */}
+      {chipFor('All')}
+      {(!mobile || showDelivered || state.projects.some((p) => p.status === 'Delivered')) && (
+        <button data-chip="Delivered" className={`chip ${showDelivered ? 'on' : ''}`} onClick={() => pickTab('Delivered')} title="Delivered projects">
+          Delivered
+          <small>{state.projects.filter((p) => p.status === 'Delivered').length}</small>
+        </button>
+      )}
+      {CATEGORIES.map(chipFor)}
+    </div>
+  )
+
   return (
     <>
       {team.length > 0 && (
@@ -406,25 +420,19 @@ export default function Dashboard() {
               )
             })}
           </div>
-          {actionsUp && <div className="home-actions">{toolbarActions}</div>}
+          {actionsUp && <div className="home-actions home-toolbar">{categoryChips}{toolbarActions}</div>}
           </div>
         </section>
       )}
 
+      {/* on a computer the category pills sit up in the team's tile with Sort, Search and New project, one row
+          (Alex, 27 Oct); a phone, or a team of one, keeps them on their own line */}
+      {!actionsUp && (
       <div className="toolbar home-toolbar">
-        <div className="chips" ref={chipsRef} data-glide="own">
-          {/* All, then Delivered, then the categories (Alex, 9 Oct) */}
-          {chipFor('All')}
-          {(!mobile || showDelivered || state.projects.some((p) => p.status === 'Delivered')) && (
-            <button data-chip="Delivered" className={`chip ${showDelivered ? 'on' : ''}`} onClick={() => pickTab('Delivered')} title="Delivered projects">
-              Delivered
-              <small>{state.projects.filter((p) => p.status === 'Delivered').length}</small>
-            </button>
-          )}
-          {CATEGORIES.map(chipFor)}
-        </div>
-        {!actionsUp && toolbarActions}
+        {categoryChips}
+        {toolbarActions}
       </div>
+      )}
 
       <div className="glide-box" ref={slideRef}>
       <div key={current} className={`glide-in${slide ? ` in-${slide}` : ''}`}>
