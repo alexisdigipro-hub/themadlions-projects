@@ -3,7 +3,8 @@ import { Button, Confirm, Empty, Field, Input, Modal, Textarea, useToast } from 
 import { DbAdd, DbBar } from '../components/DbTools.jsx'
 import { uid, useStore } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
-import { emptyContact, loadContacts, parseContactsFile, removeContacts, sameKey, saveContacts } from '../lib/addressBook.js'
+import { emptyContact, loadContacts, parseContactsFile, removeContacts, sameKey, saveContacts, toBook, toCsv, toVcf } from '../lib/addressBook.js'
+import { download } from '../lib/dates.js'
 
 /* Database > Contacts (Alex, 27 Oct 2026): the administrator's own address book. Import a contacts file (.vcf from
    an iPhone or a Mac, .csv from Google or Outlook), search it, and move anyone with one button to Crew or Cast,
@@ -35,6 +36,21 @@ export default function AddressBook({ slot }) {
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
   const fileRef = useRef(null)
+  const [exportOpen, setExportOpen] = useState(false)
+  // Export (Alex, 27 Oct): what is found (a search narrows it), as vCard, CSV or Excel
+  const exportAs = async (kind) => {
+    setExportOpen(false)
+    const rows = found
+    if (!rows.length) return toast('Nothing to export.', 'error')
+    const day = new Date().toISOString().slice(0, 10)
+    const name = `Contacts ${day}${q.trim() ? ` - ${q.trim().replace(/[\\/:*?"<>|]/g, ' ').slice(0, 30)}` : ''}`
+    try {
+      if (kind === 'vcf') download(`${name}.vcf`, toVcf(rows), 'text/vcard;charset=utf-8')
+      else if (kind === 'csv') download(`${name}.csv`, toCsv(rows), 'text/csv;charset=utf-8')
+      else { const { toXlsx } = await import('../lib/office/xlsx.js'); download(`${name}.xlsx`, await toXlsx(toBook(rows)), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') }
+      toast(`${rows.length} contact${rows.length === 1 ? '' : 's'} exported`, 'ok')
+    } catch (e) { toast(e.message, 'error') }
+  }
 
   useEffect(() => { loadContacts().then(setList).catch((e) => { setError(e.message); setList([]) }) }, [])
 
@@ -137,6 +153,20 @@ export default function AddressBook({ slot }) {
           {list && <span className="ab-count">{q.trim() ? `${found.length} of ${list.length}` : `${list.length} contact${list.length === 1 ? '' : 's'}`}</span>}
           <input ref={fileRef} type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" hidden onChange={(e) => importFile(e.target.files?.[0])} />
           <Button onClick={() => fileRef.current?.click()} disabled={busy}>{busy ? 'Importing…' : 'Import file'}</Button>
+          <span className="ab-export">
+            <Button onClick={() => setExportOpen((o) => !o)} disabled={!found.length}>Export</Button>
+            {exportOpen && (
+              <>
+                <span className="ab-export-shade" onClick={() => setExportOpen(false)} />
+                <span className="ab-export-menu" role="menu">
+                  <span className="ab-export-head">{q.trim() ? `The ${found.length} found` : `All ${found.length}`}</span>
+                  <button type="button" role="menuitem" onClick={() => exportAs('vcf')}><b>vCard</b><small>.vcf · iPhone, Mac, Google Contacts</small></button>
+                  <button type="button" role="menuitem" onClick={() => exportAs('csv')}><b>CSV</b><small>.csv · Google Contacts, Outlook</small></button>
+                  <button type="button" role="menuitem" onClick={() => exportAs('xlsx')}><b>Excel</b><small>.xlsx · Excel, Numbers</small></button>
+                </span>
+              </>
+            )}
+          </span>
           <DbAdd label="Add contact" onClick={() => setDraft({ ...emptyContact(), addedAt: new Date().toISOString() })} />
         </div>
       </DbBar>
