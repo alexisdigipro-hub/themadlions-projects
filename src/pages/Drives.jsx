@@ -34,8 +34,9 @@ export const fullness = (capacity, free) => {
   return Math.min(100, Math.max(0, Math.round(((c - parseSize(free)) / c) * 100)))
 }
 
-/* Each series has its own colour on the shelf, like the coloured labels on real disks (Alex, 23 Oct) */
-const HUES = ['#ff8a3d', '#4f9dff', '#b07cff', '#35c98b', '#ff5d8f', '#f2c94c', '#4fd1e6', '#ff6b5b']
+/* Each series has its own colour on the shelf, like the coloured labels on real disks (Alex, 23 Oct); the first one
+   wears the theme's accent (Alex, 27 Oct), the others keep their own */
+const HUES = ['var(--accent)', '#4f9dff', '#b07cff', '#35c98b', '#ff5d8f', '#f2c94c', '#4fd1e6', '#ff6b5b']
 const filmKey = (it) => (it.projectId ? `p:${it.projectId}` : `t:${String(it.title || '').toLowerCase().replace(/[\s\-–—_.,:]+/g, '')}`)
 const fmtGB = (gb) => (gb >= 1024 ? `${(gb / 1024).toFixed(gb >= 10240 ? 0 : 1).replace('.0', '')} TB` : `${Math.round(gb)} GB`)
 const initials = (t) => String(t || '?').split(/[\s\-–—]+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
