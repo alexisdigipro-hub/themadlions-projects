@@ -50,7 +50,7 @@ function findDuplicates(list) {
 // several contacts made one: the main one keeps its fields and takes the others' where it has none; a second
 // number goes to Other phone, anything more into the notes, so nothing is lost
 function mergeInto(main, others) {
-  const m = { ...main }
+  const m = { ...main, lib: Object.assign({}, ...others.map((o) => o.lib || {}), main.lib || {}) }
   const nums = new Set([digits9(m.phone), digits9(m.phone2)].filter(Boolean))
   const extra = []
   for (const o of others) {
@@ -150,17 +150,72 @@ export default function AddressBook({ slot }) {
   }, [chips])
   const favCount = useMemo(() => (list || []).filter((c) => c.fav).length, [list])
 
-  // who is already in Crew or Cast, by name (case and accents aside) or by mobile (the last 9 digits): they get a
-  // faint accent tint (Alex, 27 Oct)
-  const inLibrary = useMemo(() => {
-    const names = new Map(), phones = new Map()
-    for (const x of state.library.contacts) {
-      const where = x.kind === 'cast' ? 'Cast' : 'Crew'
-      if (x.name) names.set(foldName(x.name), where)
-      for (const ph of [x.phone, x.agentPhone]) { const d = digits9(ph); if (d) phones.set(d, where) }
+  // who is in Crew or Cast: the contact's own links (c.lib.crew / c.lib.cast), kept by reconcile below; a faint
+  // accent tint and "In Crew" on the card (Alex, 27 Oct)
+  const inLibrary = (c) => [c.lib?.crew && 'Crew', c.lib?.cast && 'Cast'].filter(Boolean).join(' & ')
+
+  /* Contacts is the one database of people (Alex, 27 Oct: "Crew and Cast are contacts too; putting someone in Crew is
+     only so I can put them in projects, they must not leave Contacts"). Crew and Cast stay library entries (the
+     team with the Crew & cast permission reads those, never Contacts), each tied to its contact by c.lib[kind].
+     Whenever Contacts or the library changes this keeps them in step:
+     - a link to an entry that is gone is dropped (taken out of Crew, the contact stays);
+     - a linked contact takes the entry's name, phone and email (the team may have changed them in Crew);
+     - an entry no contact holds (added in Crew, in a project, or moved out of Contacts before 27 Oct) is tied to the
+       contact with the same name or mobile, else becomes a new contact. */
+  const syncing = useRef(false)
+  const missed = useRef(false) // a change came while saving: look again after
+  const [syncTick, setSyncTick] = useState(0)
+  useEffect(() => {
+    if (!list) return
+    if (syncing.current) { missed.current = true; return }
+    const lib = state.library.contacts.filter((x) => x.kind === 'crew' || x.kind === 'cast')
+    const byId = new Map(lib.map((x) => [x.id, x]))
+    const changed = new Map()
+    const next = list.map((c) => {
+      let n = c
+      for (const k of ['crew', 'cast']) {
+        const id = n.lib?.[k]
+        if (!id) continue
+        const e = byId.get(id)
+        if (!e || e.kind !== k) { n = { ...n, lib: { ...n.lib } }; delete n.lib[k]; continue }
+        const pull = {}
+        for (const f of ['name', 'phone', 'email']) if (e[f] && e[f] !== n[f]) pull[f] = e[f]
+        if (Object.keys(pull).length) n = { ...n, ...pull }
+      }
+      if (n !== c) changed.set(n.id, n)
+      return n
+    })
+    const held = new Set(next.flatMap((c) => [c.lib?.crew, c.lib?.cast]).filter(Boolean))
+    const fresh = []
+    for (const e of lib) {
+      if (held.has(e.id) || !(e.name || '').trim()) continue
+      const name = foldName(e.name), ph = digits9(e.phone)
+      const hit = [...next, ...fresh].find((c) => !c.lib?.[e.kind] && ((name && foldName(c.name) === name) || (ph && (digits9(c.phone) === ph || digits9(c.phone2) === ph))))
+      if (hit) {
+        const linked = { ...(changed.get(hit.id) || hit), lib: { ...hit.lib, [e.kind]: e.id } }
+        if (!linked.phone && e.phone) linked.phone = e.phone
+        if (!linked.email && e.email) linked.email = e.email
+        const i = next.findIndex((c) => c.id === hit.id)
+        if (i >= 0) { next[i] = linked; changed.set(linked.id, linked) } else fresh[fresh.indexOf(hit)] = linked
+      } else {
+        fresh.push({ ...emptyContact(), name: e.name.trim(), phone: e.phone || '', email: e.email || '', company: e.kind === 'cast' ? 'Actor' : (e.role || e.dept || ''), notes: e.notes || '', addedAt: e.createdAt || new Date().toISOString(), lib: { [e.kind]: e.id } })
+      }
+      held.add(e.id)
     }
-    return (c) => names.get(foldName(c.name)) || phones.get(digits9(c.phone)) || phones.get(digits9(c.phone2)) || ''
-  }, [state.library.contacts])
+    if (!changed.size && !fresh.length) return
+    syncing.current = true
+    const all = [...changed.values(), ...fresh]
+    saveContacts(all).then(() => setList((l) => {
+      // the list as it is now, with what this run changed or added
+      const byId = new Map(all.map((c) => [c.id, c]))
+      const have = new Set((l || []).map((c) => c.id))
+      return [...(l || []).map((c) => byId.get(c.id) || c), ...fresh.filter((c) => !have.has(c.id))]
+    })).catch((e) => toast(e.message, 'error')).finally(() => {
+      syncing.current = false
+      if (missed.current) { missed.current = false; setSyncTick((t) => t + 1) }
+    })
+  }, [list, state.library.contacts, syncTick]) // eslint-disable-line react-hooks/exhaustive-deps
+
 
   // ordered by specialty, the contacts come in groups with a heading each; by name or newest, one list
   const groups = useMemo(() => {
@@ -193,12 +248,43 @@ export default function AddressBook({ slot }) {
     try {
       await saveContacts([draft])
       setList((l) => [...(l || []).filter((c) => c.id !== draft.id), draft])
+      pushToLibrary([draft])
       setDraft(null)
     } catch (e) { toast(e.message, 'error') }
   }
   const cardC = (list || []).find((c) => c.id === cardId)
+  // a contact's name, phone and email go to its Crew / Cast entries too
+  const pushToLibrary = (cs) => {
+    const linked = cs.filter((c) => c.lib?.crew || c.lib?.cast)
+    if (!linked.length) return
+    update((s) => {
+      for (const c of linked) for (const id of [c.lib.crew, c.lib.cast].filter(Boolean)) {
+        const e = s.library.contacts.find((x) => x.id === id)
+        if (e) { e.name = c.name.trim(); e.phone = c.phone; e.email = c.email }
+      }
+      return s
+    })
+  }
+  // out of Crew or Cast: the entry goes (projects keep their own copy of the person, as when deleted in Crew)
+  const dropFromLibrary = (ids) => {
+    if (!ids.length) return
+    const gone = new Set(ids)
+    update((s) => {
+      s.projects.forEach((pr) => pr.contacts.forEach((x) => gone.has(x.libraryId) && delete x.libraryId))
+      s.library.contacts = s.library.contacts.filter((x) => !gone.has(x.id))
+      return s
+    })
+  }
+  const unlink = async (c, kind) => {
+    const n = { ...c, lib: { ...c.lib } }
+    delete n.lib[kind]
+    // the entry first: the sync then sees a link to nothing and drops it, never a lone entry to tie back
+    dropFromLibrary([c.lib[kind]])
+    try { await saveMany([n]); toast(`${c.name} is out of ${kind === 'cast' ? 'Cast' : 'Crew'}, still in Contacts`, 'ok') } catch (e) { toast(e.message, 'error') }
+  }
+  // the contact goes first, then its Crew / Cast entries (the other way round, the sync would save it back)
   const remove = async (c) => {
-    try { await removeContacts([c.id]); setList((l) => l.filter((x) => x.id !== c.id)); setPicked((p) => { const n = new Set(p); n.delete(c.id); return n }) } catch (e) { toast(e.message, 'error') }
+    try { await removeContacts([c.id]); setList((l) => l.filter((x) => x.id !== c.id)); dropFromLibrary([c.lib?.crew, c.lib?.cast].filter(Boolean)); setPicked((p) => { const n = new Set(p); n.delete(c.id); return n }) } catch (e) { toast(e.message, 'error') }
   }
   const saveMany = async (changed) => {
     await saveContacts(changed)
@@ -210,7 +296,8 @@ export default function AddressBook({ slot }) {
   const pickedList = () => (list || []).filter((c) => picked.has(c.id))
   const removePicked = async () => {
     const ids = [...picked]
-    try { await removeContacts(ids); setList((l) => l.filter((c) => !picked.has(c.id))); setPicked(new Set()); toast(`${ids.length} deleted`, 'ok') } catch (e) { toast(e.message, 'error') }
+    const libIds = pickedList().flatMap((c) => [c.lib?.crew, c.lib?.cast]).filter(Boolean)
+    try { await removeContacts(ids); setList((l) => l.filter((c) => !picked.has(c.id))); dropFromLibrary(libIds); setPicked(new Set()); toast(`${ids.length} deleted`, 'ok') } catch (e) { toast(e.message, 'error') }
   }
   const favPicked = async () => {
     const cs = pickedList(); const on = cs.some((c) => !c.fav)
@@ -247,36 +334,45 @@ export default function AddressBook({ slot }) {
     try { await saveMany(changed); setSpecs(null); setSpec(''); toast(`${changed.length} contacts updated`, 'ok') } catch (e) { toast(e.message, 'error') }
   }
 
-  // to Crew or Cast: a library entry the Crew & cast permission shows; someone already there by the same name gets
-  // the phone or email they were missing, and nobody is entered twice. The contact leaves Contacts.
+  // into Crew or Cast (Alex, 27 Oct: the contact stays in Contacts): a library entry the Crew & cast permission shows,
+  // tied to the contact; someone already there by the same name or mobile is tied instead, and given the phone or
+  // email they were missing, so nobody is entered twice
   const moveMany = async (cs, kind) => {
     const where = kind === 'cast' ? 'Cast' : 'Crew'
-    let filledIn = 0
+    const todo = cs.filter((c) => !c.lib?.[kind])
+    if (!todo.length) return toast(cs.length === 1 ? `${cs[0].name} is already in ${where}` : `They are all in ${where} already`, 'ok')
+    const held = new Set((list || []).map((c) => c.lib?.[kind]).filter(Boolean))
+    const links = new Map()
     update((s) => {
-      for (const c of cs) {
-        const key = c.name.trim().toLowerCase()
-        const hit = s.library.contacts.find((x) => x.kind === kind && (x.name || '').trim().toLowerCase() === key)
+      for (const c of todo) {
+        const name = foldName(c.name), ph = digits9(c.phone)
+        const hit = s.library.contacts.find((x) => x.kind === kind && !held.has(x.id) && ((name && foldName(x.name) === name) || (ph && digits9(x.phone) === ph)))
         if (hit) {
-          filledIn++
           if (!hit.phone && c.phone) hit.phone = c.phone
           if (!hit.email && c.email) hit.email = c.email
+          links.set(c.id, hit.id); held.add(hit.id)
         } else {
+          const id = uid()
           s.library.contacts.push({
-            id: uid(), kind, name: c.name.trim(), phone: c.phone, email: c.email, dept: kind === 'cast' ? 'Cast' : 'Production', role: c.company || c.title || '',
+            id, kind, name: c.name.trim(), phone: c.phone, email: c.email, dept: kind === 'cast' ? 'Cast' : 'Production', role: c.company || c.title || '',
             agent: '', agentPhone: '', notes: [c.company && c.title, c.phone2 && `Also ${c.phone2}`, c.notes].filter(Boolean).join('\n'), photos: [], tags: [], createdAt: new Date().toISOString(),
           })
+          links.set(c.id, id)
         }
       }
       return s
     })
-    const ids = cs.map((c) => c.id)
-    try { await removeContacts(ids) } catch (e) { return toast(e.message, 'error') }
-    const gone = new Set(ids)
-    setList((l) => l.filter((c) => !gone.has(c.id)))
-    setPicked((p) => { const n = new Set(p); ids.forEach((id) => n.delete(id)); return n })
-    toast(cs.length === 1 ? (filledIn ? `${cs[0].name} was already in ${where}: phone and email filled in` : `${cs[0].name} moved to ${where}`) : `${cs.length} moved to ${where}${filledIn ? ` (${filledIn} were there already)` : ''}`, 'ok')
+    try { await saveMany(todo.map((c) => ({ ...c, lib: { ...c.lib, [kind]: links.get(c.id) } }))) } catch (e) { return toast(e.message, 'error') }
+    toast(todo.length === 1 ? `${todo[0].name} is in ${where} now, and still in Contacts` : `${todo.length} added to ${where}, still in Contacts`, 'ok')
   }
   const moveTo = (c, kind) => moveMany([c], kind)
+  // + Crew puts the contact in Crew; ✓ Crew (in it already) takes them out after a second tap, they stay in Contacts
+  const libToggle = (c, kind, small = false) => {
+    const label = kind === 'cast' ? 'Cast' : 'Crew'
+    return c.lib?.[kind]
+      ? <Confirm key={kind} onConfirm={() => unlink(c, kind)} label={`Out of ${label}`} size={small ? 'sm' : 'md'} className="ab-lib on" title={`In ${label}. Tap twice to take them out (they stay in Contacts)`}>✓ {label}</Confirm>
+      : <Button key={kind} size={small ? 'sm' : undefined} variant="default" className="ab-lib" onClick={() => moveTo(c, kind)} title={`Put in ${label}, for projects (stays in Contacts)`}>+ {label}</Button>
+  }
 
   // call, WhatsApp, Viber, email: round icons, only for what the contact has (Alex, 27 Oct)
   const quick = (c) => {
@@ -301,8 +397,8 @@ export default function AddressBook({ slot }) {
   )
   const acts = (c) => (
     <span className="ab-acts" onClick={(e) => e.stopPropagation()}>
-      <button type="button" className="btn btn-default btn-sm" onClick={() => moveTo(c, 'crew')} title="Move to Crew">→ Crew</button>
-      <button type="button" className="btn btn-default btn-sm" onClick={() => moveTo(c, 'cast')} title="Move to Cast">→ Cast</button>
+      {libToggle(c, 'crew', true)}
+      {libToggle(c, 'cast', true)}
       <Confirm onConfirm={() => remove(c)} label="Delete" className="ab-del" title="Delete">×</Confirm>
     </span>
   )
@@ -368,8 +464,8 @@ export default function AddressBook({ slot }) {
             <strong>{picked.size} selected</strong>
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPicked(new Set(found.map((c) => c.id)))}>Select all {found.length}</button>
             <span className="grow" />
-            <button type="button" className="btn btn-default btn-sm" onClick={() => moveMany(pickedList(), 'crew')}>→ Crew</button>
-            <button type="button" className="btn btn-default btn-sm" onClick={() => moveMany(pickedList(), 'cast')}>→ Cast</button>
+            <button type="button" className="btn btn-default btn-sm" onClick={() => moveMany(pickedList(), 'crew')}>+ Crew</button>
+            <button type="button" className="btn btn-default btn-sm" onClick={() => moveMany(pickedList(), 'cast')}>+ Cast</button>
             <button type="button" className="btn btn-default btn-sm" onClick={favPicked}>★ Favourite</button>
             <button type="button" className="btn btn-default btn-sm" onClick={() => setExportOpen(true)}>Export</button>
             <Confirm onConfirm={removePicked} label={`Delete ${picked.size}`} className="ab-del">Delete</Confirm>
@@ -455,8 +551,8 @@ export default function AddressBook({ slot }) {
         footer={cardC && <>
           <Confirm onConfirm={() => { remove(cardC); setCardId('') }} label="Delete" className="ab-del">Delete</Confirm>
           <span className="grow" />
-          <Button onClick={() => moveTo(cardC, 'crew')}>→ Crew</Button>
-          <Button onClick={() => moveTo(cardC, 'cast')}>→ Cast</Button>
+          {libToggle(cardC, 'crew')}
+          {libToggle(cardC, 'cast')}
           <Button variant="primary" onClick={() => setDraft({ ...cardC })}>Edit</Button>
         </>}>
         {cardC && (

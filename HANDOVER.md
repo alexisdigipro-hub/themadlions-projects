@@ -37,6 +37,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (27 Oct 2026, late: Contacts is the one database)
+- Contacts (address_book) holds everyone; Crew/Cast stay library entries (the team reads those) tied by contact.data.lib = { crew, cast } (library ids). AddressBook.jsx sync effect: drops dead links, pulls name/phone/email from the entry, ties or creates a contact for every unheld Crew/Cast entry (so people moved out before 27 Oct came back). + Crew links (or creates), ✓ Crew + Confirm unlinks and deletes the entry, deleting a contact deletes its entries after it (order matters, else the sync saves it back). Save pushes name/phone/email to the entries.
+- Shared InfoCard (components/InfoCard.jsx) for every person/place/gear card; Contacts' edit has specialty pills; Home's category pills in the top row; song map folds when empty.
+
 ## Where we stopped (27 Oct 2026, Contacts more, every Database list alike)
 - Contacts: features 1 to 6 (duplicates, select many, quick call/WhatsApp/Viber/email, specialty chips, specialties cleanup, favourites; `fav` on the contact's data, no SQL). Bar on the tabs' line with a ⋯ menu; chips and order under it. List only.
 - Crew, Cast, Equipment (Database) and Project Database Crew/Cast: Contacts' rows (.ab-row.lib-row), List only; the Cards/List switch is gone. The lists scroll inside their own box (DbTools useFitScroll) so the top row never moves and keeps its look (Alex: the glass sticky band was darker and wrong).
