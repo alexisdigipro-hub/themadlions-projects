@@ -8613,3 +8613,6 @@ a.lchip:hover { color: var(--text); }
 }
 .db-stats > .warn { border-color: color-mix(in srgb, #ffb020 45%, transparent); background: color-mix(in srgb, #ffb020 10%, var(--panel)); }
 .db-stats > .warn b { color: #ffb020; }
+
+/* Every search box says "Search", faintly: the text at 20% (Alex, 27 Oct) */
+html[data-theme] body :is(input.search, .input.search, input[type=search], .rem-search, .decks-search input)::placeholder { color: var(--text); opacity: .2; }

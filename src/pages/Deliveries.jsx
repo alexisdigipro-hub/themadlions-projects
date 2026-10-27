@@ -607,10 +607,10 @@ export default function Deliveries() {
           ))}
         </nav>
         {inRoardino && rd?.view === 'home' && <>
-          <span className="share-search"><ListSearch value={rdQ} onChange={(e) => { setRdQ(e.target.value); toRoardino({ search: e.target.value }) }} placeholder="" /></span>
+          <span className="share-search"><ListSearch value={rdQ} onChange={(e) => { setRdQ(e.target.value); toRoardino({ search: e.target.value }) }} placeholder="Search" /></span>
           {rd.canEdit && <span className="share-new rd"><Act icon="plus" label="New ordino" main onClick={() => toRoardino({ create: true })} /></span>}
         </>}
-        {!inRoardino && <span className="share-search"><ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="" /></span>}
+        {!inRoardino && <span className="share-search"><ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" /></span>}
         {editable && (
           <span className="share-new">
             {isAdmin && <Act icon="estimate" label="New cost estimation" onClick={startEstimate} />}

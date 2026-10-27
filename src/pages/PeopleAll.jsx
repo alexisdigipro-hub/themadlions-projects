@@ -102,7 +102,7 @@ export default function PeopleAll({ kind, slot }) {
           {unlinked > 0 && editable && <> · <button className="link" onClick={collect}>collect {unlinked} from projects</button></>}
         </div>
         <div className="toolbar-actions">
-          <ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, role, phone, agent…" />
+          <ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" />
           <span className="ab-count">{q.trim() || dept || role ? `${list.length} of ${all}` : `${all} ${kind === 'cast' ? 'in cast' : 'in crew'}`}</span>
           <DbFilter value={dept} onChange={(e) => setDept(e.target.value)} options={[['', 'All departments'], ...DEPTS.map((d) => [d, d])]} label="Department" />
           {editable && <DbAdd label={`Add ${kind}`} onClick={() => setDraft(emptyPerson(kind))} />}

@@ -213,7 +213,7 @@ export default function Drives({ slot }) {
         <div className="toolbar-actions">
           {/* no words inside, an × at the right that empties it (Alex, 20 Oct) */}
           <span className="search-clear-wrap">
-            <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search the archive" />
+            <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search the archive" placeholder="Search" />
             {q && <button type="button" className="search-clear" aria-label="Clear the search" title="Clear" onClick={() => setQ('')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17" /></svg></button>}
           </span>
           <DbFilter value={seriesF} onChange={(e) => setSeriesF(e.target.value)} options={[['', 'All series'], ...allSeries.map((x) => [x, x])]} label="Series" />

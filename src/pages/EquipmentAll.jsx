@@ -63,7 +63,7 @@ export default function EquipmentAll({ slot }) {
           <strong>Equipment</strong>
         </div>
         <div className="toolbar-actions">
-          <ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, model, serial…" />
+          <ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" />
           <span className="ab-count">{q.trim() || cat ? `${list.length} of ${items.length}` : `${items.length} item${items.length === 1 ? '' : 's'}`}</span>
           <DbFilter value={cat} onChange={(e) => setCat(e.target.value)} options={[['', 'All categories'], ...cats.map((c) => [c, c])]} label="Category" />
           {editable && <DbAdd label="Add equipment" onClick={() => setDraft(emptyItem(cat || cats[0]))} />}

@@ -83,7 +83,7 @@ export function useFitScroll(ready = true) {
 }
 
 /* The search of a list tab, as Contacts' (Alex, 27 Oct): × empties it, as does Escape */
-export function ListSearch({ value, onChange, placeholder }) {
+export function ListSearch({ value, onChange, placeholder = 'Search' }) {
   const set = (v) => onChange({ target: { value: v } })
   return (
     <span className="ab-search">

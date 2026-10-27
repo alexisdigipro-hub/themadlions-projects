@@ -129,7 +129,7 @@ export default function LocationsAll({ slot }) {
           <strong>Locations</strong>
         </div>
         <div className="toolbar-actions">
-          <ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, address, notes…" />
+          <ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" />
           <span className="ab-count">{q.trim() || type ? `${list.length} of ${locs.length}` : `${locs.length} location${locs.length === 1 ? '' : 's'}`}</span>
           <DbFilter value={type} onChange={(e) => setType(e.target.value)} options={[['', 'All types'], ...TYPES.map((t) => [t, t])]} label="Type" />
           {editable && unlinked > 0 && <Button variant="ghost" className="db-collect" onClick={collect}>Collect {unlinked} from projects</Button>}
