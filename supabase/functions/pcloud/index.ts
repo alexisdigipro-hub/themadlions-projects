@@ -228,8 +228,17 @@ Deno.serve(async (req) => {
     if (action === 'upload') {
       if (!file) return json({ error: 'No file.' }, 400)
       if (!(await allowed(db, uid, body.scope, undefined, false, true))) return json({ error: 'You cannot upload there.' }, 403)
-      // ID sheets only ever go under ROOT/ID sheets
-      const parts = Array.isArray(body.folder) ? body.folder : []
+      // into a project: the project must be the person's to change, or they have Files = edit (security check, 27 Oct)
+      if (body.scope?.kind === 'project') {
+        const [{ data: perm }, { data: canEdit }] = await Promise.all([db.rpc('my_perm', { p_module: 'files' }), db.rpc('can_edit_project', { pid: body.scope.id })])
+        if (perm !== 'edit' && !canEdit) return json({ error: 'You cannot upload there.' }, 403)
+      }
+      // ID sheets only ever go under ROOT/ID sheets; the folders the server keeps (Backups, Deliveries, ID sheets, and
+      // Library for anything but the library) never take an upload from here, and two levels at most
+      const parts = (Array.isArray(body.folder) ? body.folder : []).slice(0, 2)
+      const top = segment(parts[0]).toLowerCase()
+      const reserved = ['backups', 'deliveries', 'id sheets', ...(body.scope?.kind === 'library' ? [] : ['library'])]
+      if (body.scope?.kind !== 'ids' && reserved.includes(top)) return json({ error: 'You cannot upload there.' }, 403)
       const path = await ensureFolder(body.scope?.kind === 'ids' ? ['ID sheets', ...parts.slice(-1)] : parts)
       const fd = new FormData()
       fd.append('file', file, file.name)

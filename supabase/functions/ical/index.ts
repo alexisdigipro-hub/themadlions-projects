@@ -52,11 +52,19 @@ Deno.serve(async (req) => {
   const db = createClient(Deno.env.get('SUPABASE_URL') || '', apikey, { global: { headers: { Authorization: auth } }, auth: { persistSession: false } })
   const { data: userData } = await db.auth.getUser(auth.replace(/^Bearer\s+/i, ''))
   if (!userData?.user?.id) return json({ error: 'Not signed in.' }, 401)
+  // team members only, not any account that signed up (security check, 27 Oct)
+  const { data: ws } = await db.rpc('my_ws')
+  if (!ws) return json({ error: 'Not a team member.' }, 403)
 
   try {
     const body = await req.json().catch(() => ({}))
     const url = checkUrl(body.url || '')
-    const res = await fetch(url, { headers: { Accept: 'text/calendar, text/plain, */*' }, redirect: 'follow' })
+    // redirects followed by hand, each new address checked again, five at most (security check, 27 Oct)
+    let res = await fetch(url, { headers: { Accept: 'text/calendar, text/plain, */*' }, redirect: 'manual' })
+    for (let hop = 0; hop < 5 && res.status >= 300 && res.status < 400 && res.headers.get('location'); hop++) {
+      const next = checkUrl(new URL(res.headers.get('location')!, url).toString())
+      res = await fetch(next, { headers: { Accept: 'text/calendar, text/plain, */*' }, redirect: 'manual' })
+    }
     if (!res.ok) {
       if (res.status === 404) return json({ error: 'That calendar address was not found. In Google Calendar, check the "Secret address in iCal format" under the calendar\'s settings — it changes if you reset it.' }, 404)
       return json({ error: `The calendar service answered ${res.status}.` }, 502)
