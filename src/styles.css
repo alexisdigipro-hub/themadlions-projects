@@ -5400,7 +5400,7 @@ html[data-skin='glass'][data-theme] .topbar { background: rgba(53, 20, 135, .82)
    (Notes, Tasks, the chat) are see-through, blurred glass with a bright edge; menus and pop-ups
    stay solid so nothing behind them shows through. One set of rules for both, driven by the
    --gl-* colours each sets. */
-html[data-skin='glassdark'][data-theme][data-accent] {
+html:is([data-skin='glassdark'], [data-skin='roarlist'])[data-theme][data-accent] {
   --bg: #0b1018; --panel: #141b27; --raised: #1b2433; --line: #2b3648; --line-soft: #222c3c;
   --text: #eef3fa; --muted: rgba(214, 224, 238, .66); --accent: #7cc4ff; --accent-ink: #06243d;
   --sidebar-bg: rgba(14, 20, 31, .94); --photo-bg: #121a26; --hover-tint: rgba(255, 255, 255, .06);
@@ -5413,7 +5413,7 @@ html[data-skin='glassdark'][data-theme][data-accent] {
   --gl-active: rgba(255, 255, 255, .12); --gl-glow: rgba(90, 170, 255, .35);
   --shadow-lg: 0 24px 70px rgba(0, 0, 0, .55);
 }
-html[data-skin='glassdark'][data-theme]:not([data-public='1']), html[data-skin='glassdark'][data-theme] body {
+html:is([data-skin='glassdark'], [data-skin='roarlist'])[data-theme]:not([data-public='1']), html:is([data-skin='glassdark'], [data-skin='roarlist'])[data-theme] body {
   background:
     radial-gradient(900px 600px at 10% 12%, rgba(52, 110, 190, .45) 0%, transparent 60%),
     radial-gradient(800px 640px at 92% 85%, rgba(20, 140, 150, .35) 0%, transparent 62%),
@@ -5439,6 +5439,42 @@ html[data-skin='glasslight'][data-theme][data-accent] {
   --gl-active: rgba(255, 255, 255, .9); --gl-glow: rgba(91, 91, 214, .28);
   --shadow-lg: 0 24px 70px rgba(60, 70, 120, .22);
 }
+/* RoarList (Alex, 27 Oct: "a theme exactly like RoarList"): RoarList's Simba look on the whole hub, built on the
+   Glass dark rules (every Glass dark rule also names roarlist). Graphite glass on a dark graphite gradient with a
+   soft light from the top, one coral-red accent that glows, the chosen thing lit from inside with a red edge and
+   halo, 12px corners, the system font, bold titles. Values from roarlist/renderer/styles.css (:root, body). */
+html[data-skin='roarlist'][data-theme][data-accent] {
+  --bg: #1b1e23; --panel: #2c3139; --raised: #333942; --line: #3a414b; --line-soft: #30363f;
+  --text: #eef0f3; --muted: rgba(214, 220, 228, .58); --accent: #ff6b57; --accent-ink: #ffffff;
+  --sidebar-bg: rgba(58, 64, 74, .55); --photo-bg: #22262c; --hover-tint: rgba(255, 255, 255, .055);
+  --radius: 12px; --radius-lg: 12px;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, Roboto, sans-serif;
+  --skin-grad: linear-gradient(180deg, #ff8a78, #ff5a45);
+  --skin-card: rgba(44, 49, 57, .62);
+  --gl-fill: rgba(44, 49, 57, .62); --gl-fill-2: rgba(255, 255, 255, .1); --gl-edge: rgba(255, 255, 255, .1);
+  --gl-shine: rgba(255, 255, 255, .08); --gl-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 30px 70px rgba(0, 0, 0, .45);
+  --gl-blur: blur(26px) saturate(140%); --gl-bar: rgba(40, 45, 53, .8); --gl-input: rgba(0, 0, 0, .2);
+  --gl-active: color-mix(in srgb, #ff6b57 18%, transparent); --gl-glow: color-mix(in srgb, #ff6b57 45%, transparent);
+  --rl-lit-edge: color-mix(in srgb, #ff6b57 60%, transparent); --rl-halo: 0 0 24px color-mix(in srgb, #ff6b57 24%, transparent);
+  --shadow-lg: 0 30px 70px rgba(0, 0, 0, .45);
+}
+html[data-skin='roarlist'][data-theme]:not([data-public='1']), html[data-skin='roarlist'][data-theme] body {
+  background:
+    radial-gradient(520px 420px at 82% 88%, rgba(255, 107, 87, .14) 0%, transparent 70%),
+    radial-gradient(420px 360px at 12% 10%, rgba(255, 255, 255, .05) 0%, transparent 70%),
+    radial-gradient(1200px 700px at 50% -12%, #4b525d 0%, transparent 62%),
+    linear-gradient(180deg, #2b3038 0%, #1c1f24 55%, #15171b 100%);
+  background-attachment: fixed;
+  background-size: 100% calc(100% + var(--ios-gap, 0px));
+  background-repeat: no-repeat;
+  background-color: #15171b;
+}
+html[data-skin='roarlist'][data-theme][data-accent] body { font-family: var(--font); }
+/* the chosen thing, lit from inside: a red tint, a red edge and a halo (RoarList's .project.on) */
+html[data-skin='roarlist'][data-theme][data-accent] :is(.sidenav a.active, .tabs a.active, .segmented button.on) { background: var(--gl-active); box-shadow: inset 0 0 0 1px var(--rl-lit-edge), var(--rl-halo); color: var(--text); }
+html[data-skin='roarlist'][data-theme][data-accent] .sidenav a.active .nav-ico { color: var(--accent); }
+html[data-skin='roarlist'][data-theme][data-accent] :is(h1, h2, .page-head h1) { font-weight: 700; }
+html[data-skin='roarlist'][data-theme][data-accent] .input:focus { border-color: var(--rl-lit-edge); box-shadow: 0 0 0 3px color-mix(in srgb, #ff6b57 22%, transparent); }
 html[data-skin='glasslight'][data-theme]:not([data-public='1']), html[data-skin='glasslight'][data-theme] body {
   background:
     radial-gradient(900px 620px at 8% 10%, rgba(196, 181, 253, .55) 0%, transparent 60%),
@@ -5447,46 +5483,46 @@ html[data-skin='glasslight'][data-theme]:not([data-public='1']), html[data-skin=
     linear-gradient(160deg, #f3f4fb 0%, #eef2f8 55%, #f1f0f8 100%);
   background-attachment: fixed;
 }
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .panel,
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .stat,
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .project-card,
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .fin-card,
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .notes-app,
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-app { background: var(--gl-fill); border: 1px solid var(--gl-edge); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); box-shadow: inset 0 1px 0 var(--gl-shine), var(--gl-shadow); }
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .notes-folders, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-side { background: var(--gl-fill); }
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .notes-group-card, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-lists, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-smart, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-card { background: var(--gl-fill-2); border-color: var(--gl-edge); }
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .input { background: var(--gl-input); border-color: var(--gl-edge); }
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--gl-glow); }
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .btn { background: var(--gl-fill-2); border-color: var(--gl-edge); }
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .btn-primary { background: var(--skin-grad); border-color: transparent; color: #fff; box-shadow: 0 6px 20px var(--gl-glow), inset 0 1px 0 rgba(255, 255, 255, .35); }
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .btn-ghost { background: transparent; border-color: transparent; }
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .table th { color: var(--muted); border-bottom-color: var(--gl-edge); }
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .table td { border-bottom-color: var(--line-soft); }
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .chat2 { --tg-wall: transparent; }
-html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .tabbar, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .topbar { background: var(--gl-bar); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); border-color: var(--gl-edge); }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .panel,
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .stat,
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .project-card,
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .fin-card,
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .notes-app,
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .rem-app { background: var(--gl-fill); border: 1px solid var(--gl-edge); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); box-shadow: inset 0 1px 0 var(--gl-shine), var(--gl-shadow); }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .notes-folders, html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .rem-side { background: var(--gl-fill); }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .notes-group-card, html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .rem-lists, html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .rem-smart, html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .rem-card { background: var(--gl-fill-2); border-color: var(--gl-edge); }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .input { background: var(--gl-input); border-color: var(--gl-edge); }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--gl-glow); }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .btn { background: var(--gl-fill-2); border-color: var(--gl-edge); }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .btn-primary { background: var(--skin-grad); border-color: transparent; color: #fff; box-shadow: 0 6px 20px var(--gl-glow), inset 0 1px 0 rgba(255, 255, 255, .35); }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .btn-ghost { background: transparent; border-color: transparent; }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .table th { color: var(--muted); border-bottom-color: var(--gl-edge); }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .table td { border-bottom-color: var(--line-soft); }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .chat2 { --tg-wall: transparent; }
+html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .tabbar, html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .topbar { background: var(--gl-bar); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); border-color: var(--gl-edge); }
 html[data-skin='glasslight'][data-theme] .input, html[data-skin='glasslight'][data-theme] .btn:not(.btn-primary):not(.btn-ghost) { border-color: rgba(30, 40, 80, .13); }
 html[data-skin='glasslight'][data-theme] .chat-box[data-bubbles='telegram'] { --wa-in: rgba(255, 255, 255, .85); --wa-out: #dcdcff; --wa-wall: transparent; }
-html[data-skin='glassdark'][data-theme] .chat-box[data-bubbles='telegram'] { --wa-in: rgba(255, 255, 255, .09); --wa-out: #2c5d93; --wa-wall: transparent; }
+html:is([data-skin='glassdark'], [data-skin='roarlist'])[data-theme] .chat-box[data-bubbles='telegram'] { --wa-in: rgba(255, 255, 255, .09); --wa-out: #2c5d93; --wa-wall: transparent; }
 
 @media (min-width: 821px) {
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidebar { margin: 12px 0 12px 12px; height: calc(100vh - 24px); top: 12px; border: 1px solid var(--gl-edge); border-radius: 24px; background: var(--gl-fill); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); box-shadow: inset 0 1px 0 var(--gl-shine), var(--gl-shadow); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .logo-mark { border-radius: 10px; box-shadow: 0 4px 16px var(--gl-glow); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidenav a { border-radius: 12px; padding: 10px 12px; color: var(--muted); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidenav a:hover { background: var(--hover-tint); color: var(--text); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidenav a.active { background: var(--gl-active); box-shadow: inset 0 0 0 1px var(--gl-edge), 0 4px 14px rgba(0, 0, 0, .08); color: var(--text); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidenav a.active .nav-ico { color: var(--accent); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidebar-logo, html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidebar-foot { border-color: var(--line-soft); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .content { padding-top: 28px; }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .skin-ico { background: var(--gl-fill-2); border-color: var(--gl-edge); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .skin-ava { background: var(--skin-grad); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .skin-user:hover { background: var(--hover-tint); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .page-head h1 { font-size: 28px; font-weight: 600; }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .tabs { border-bottom: 0; gap: 6px; }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .tabs a { border: 1px solid transparent; border-radius: 12px; margin: 0; padding: 8px 14px; color: var(--muted); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .tabs a.active { background: var(--gl-active); border-color: var(--gl-edge); color: var(--text); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .segmented { border-color: var(--gl-edge); border-radius: 12px; background: var(--gl-fill); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .segmented button + button { border-left-color: var(--gl-edge); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .segmented button.on { background: var(--gl-active); color: var(--text); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .sidebar { margin: 12px 0 12px 12px; height: calc(100vh - 24px); top: 12px; border: 1px solid var(--gl-edge); border-radius: 24px; background: var(--gl-fill); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); box-shadow: inset 0 1px 0 var(--gl-shine), var(--gl-shadow); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .logo-mark { border-radius: 10px; box-shadow: 0 4px 16px var(--gl-glow); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .sidenav a { border-radius: 12px; padding: 10px 12px; color: var(--muted); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .sidenav a:hover { background: var(--hover-tint); color: var(--text); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .sidenav a.active { background: var(--gl-active); box-shadow: inset 0 0 0 1px var(--gl-edge), 0 4px 14px rgba(0, 0, 0, .08); color: var(--text); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .sidenav a.active .nav-ico { color: var(--accent); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .sidebar-logo, html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .sidebar-foot { border-color: var(--line-soft); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .content { padding-top: 28px; }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .skin-ico { background: var(--gl-fill-2); border-color: var(--gl-edge); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .skin-ava { background: var(--skin-grad); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .skin-user:hover { background: var(--hover-tint); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .page-head h1 { font-size: 28px; font-weight: 600; }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .tabs { border-bottom: 0; gap: 6px; }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .tabs a { border: 1px solid transparent; border-radius: 12px; margin: 0; padding: 8px 14px; color: var(--muted); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .tabs a.active { background: var(--gl-active); border-color: var(--gl-edge); color: var(--text); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .segmented { border-color: var(--gl-edge); border-radius: 12px; background: var(--gl-fill); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .segmented button + button { border-left-color: var(--gl-edge); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .segmented button.on { background: var(--gl-active); color: var(--text); }
 }
 
 /* Icon sets (Alex, 8 Oct): Thin and Bold are the Classic drawings with another line, Duotone
@@ -5825,7 +5861,7 @@ html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; 
    see-through like the computer's floating one, or the page shows through its words. Nearly solid
    (--sidebar-bg above) and blurred, so it still reads as frosted glass. */
 @media (max-width: 820px) {
-  html:is([data-skin='glass'], [data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .sidebar { background: var(--sidebar-bg); -webkit-backdrop-filter: blur(24px) saturate(150%); backdrop-filter: blur(24px) saturate(150%); box-shadow: 12px 0 40px rgba(0, 0, 0, .35); }
+  html:is([data-skin='glass'], [data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .sidebar { background: var(--sidebar-bg); -webkit-backdrop-filter: blur(24px) saturate(150%); backdrop-filter: blur(24px) saturate(150%); box-shadow: 12px 0 40px rgba(0, 0, 0, .35); }
 }
 
 /* ---------- Tasks and Notes on a phone, tidied (Alex, 9 Oct) ----------
@@ -5834,7 +5870,7 @@ html .icon-preview[data-icons-preview='duo'] svg.ico .duo { fill: currentColor; 
    title, and room between the "+ New…" bar and the bottom menu. */
 @media (max-width: 820px) {
   .rem-app,
-  html:is([data-skin='glass'], [data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .rem-app { background: transparent; border: 0; border-radius: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html:is([data-skin='glass'], [data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .rem-app { background: transparent; border: 0; border-radius: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .rem-main { margin: 0; min-height: calc(100dvh - 200px); }
   .rem-head { flex-wrap: wrap; align-items: flex-end; gap: 6px 10px; padding: 4px 0 12px; }
   .rem-head > .rem-back { flex: 0 0 100%; padding: 0 0 2px; text-align: left; }
@@ -6681,7 +6717,7 @@ html.sorting, html.sorting * { cursor: grabbing !important; user-select: none !i
   /* the Office tab in the same frame as Tasks and Notes under the tabs (Alex, 10 Oct): the same edge,
      corners, background and height; what does not fit scrolls inside it */
   .office-hub .office.office-frame { height: calc(100dvh - 210px); min-height: 460px; box-sizing: border-box; overflow-y: auto; padding: 20px; border: 1px solid var(--line-soft); border-radius: var(--radius-lg); background: var(--panel); }
-  html:is([data-skin='glassdark'], [data-skin='glasslight'])[data-theme] .office-hub .office.office-frame { background: var(--gl-fill); border: 1px solid var(--gl-edge); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); box-shadow: inset 0 1px 0 var(--gl-shine), var(--gl-shadow); }
+  html:is([data-skin='glassdark'], [data-skin='roarlist'], [data-skin='glasslight'])[data-theme] .office-hub .office.office-frame { background: var(--gl-fill); border: 1px solid var(--gl-edge); -webkit-backdrop-filter: var(--gl-blur); backdrop-filter: var(--gl-blur); box-shadow: inset 0 1px 0 var(--gl-shine), var(--gl-shadow); }
   .office-hub .db-slot .office-tools { flex-wrap: nowrap; justify-content: flex-start; gap: 10px; }
   /* the same glass as the Database's line: ALL / DOCUMENTS / SPREADSHEETS a capsule like the tabs, the
      project picker and the search rounded, all 44px tall */
