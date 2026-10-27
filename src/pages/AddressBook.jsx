@@ -13,8 +13,9 @@ import { emptyContact, loadContacts, parseContactsFile, removeContacts, sameKey,
 // the first letters of the name (a number or an emoji makes none: then a phone glyph)
 const initials = (n) => (n || '').split(/\s+/).map((x) => (x.match(/\p{L}/u) || [])[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '☏'
 const PAGE = 200
-// the specialty, for the order
+// the specialty, for the order and the groups: the same word in any case or accent is one group
 const specialtyOf = (c) => (c.company || '').trim()
+const groupKey = (c) => specialtyOf(c).toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
 export default function AddressBook({ slot }) {
   const { state, update } = useStore()
@@ -46,8 +47,14 @@ export default function AddressBook({ slot }) {
       return byName
     }), [list, q, sort])
 
-  // one list, no group headings (Alex, 27 Oct: "no specialty above as a group; if I need it I search")
-  const groups = useMemo(() => [['all', '', found.slice(0, shown)]], [found, shown])
+  // ordered by specialty, the contacts come in groups with a heading each; by name or newest, one list
+  const groups = useMemo(() => {
+    const page = found.slice(0, shown)
+    if (sort !== 'company') return [['all', '', page]]
+    const m = new Map()
+    for (const c of page) { const k = groupKey(c); if (!m.has(k)) m.set(k, [k, specialtyOf(c) || 'No specialty', []]); m.get(k)[2].push(c) }
+    return [...m.values()]
+  }, [found, shown, sort])
 
   const importFile = async (file) => {
     if (!file) return
@@ -137,9 +144,10 @@ export default function AddressBook({ slot }) {
           {!list.length && <div style={{ marginTop: 12 }}><Button variant="primary" onClick={() => fileRef.current?.click()}>Import file</Button></div>}
         </Empty>
       ) : (
-        // one list in the chosen order (no headings: Alex, 27 Oct)
+        // grouped by specialty when that is the order, a heading over each group; otherwise one list
         groups.map(([key, label, items]) => (
           <div key={key} className="ab-group">
+            {sort === 'company' && <div className="ab-group-head"><span className="ab-chip"><i />{label}</span><span className="muted small">{items.length}</span></div>}
             {view === 'list' ? (
               // the list: one slim soft row per person, the columns lined up (not a ruled table)
               <div className="ab-rows">
@@ -149,7 +157,7 @@ export default function AddressBook({ slot }) {
                     <strong className="ab-name">{c.name}</strong>
                     <span className="ab-cell">{c.phone}{c.phone2 && <span className="muted"> · {c.phone2}</span>}</span>
                     <span className="ab-cell muted">{c.email}</span>
-                    <span className="ab-cell">{c.company && <span className="ab-chip"><i />{c.company}</span>}{c.title && <span className="muted small"> {c.title}</span>}</span>
+                    <span className="ab-cell">{sort !== 'company' && c.company && <span className="ab-chip"><i />{c.company}</span>}{c.title && <span className="muted small"> {c.title}</span>}</span>
                     {acts(c)}
                   </article>
                 ))}
