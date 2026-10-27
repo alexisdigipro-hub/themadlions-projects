@@ -8773,3 +8773,5 @@ html[data-skin='roarlist'][data-skin][data-theme][data-accent]:not([data-accent=
 }
 html[data-skin='roarlist'][data-skin][data-theme][data-accent]:not([data-accent='theme']) .input:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pick) 22%, transparent); }
 html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='theme']) { --hover-tint: color-mix(in srgb, var(--pick) 5%, transparent); }
+html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='theme']) .sidenav a.active { box-shadow: 0 6px 16px color-mix(in srgb, var(--pick) 35%, transparent); }
+.accent-swatches .swatch.theme-own .dot { background: conic-gradient(#ff6b57, #e4c47c, #7fe8c2, #7cc4ff, #b8a7ff, #ff6b57) !important; }
