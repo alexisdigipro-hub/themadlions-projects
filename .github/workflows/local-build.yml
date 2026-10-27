@@ -1,14 +1,15 @@
 name: Local-mode build for checks
 
-# A build of the app in local mode (no Supabase, everything in the browser), kept as a downloadable artifact, so a
-# session without the npm registry can open every page in a browser and check it. Runs on pushes to claude/* branches.
+# A build of the app in local mode (no Supabase, everything in the browser), pushed to the branch checks/local-build
+# (nothing else on it, never merged), so a session without the npm registry can fetch it with git, open every page
+# in a browser and check it. Runs on pushes to claude/* branches.
 on:
   push:
     branches: ['claude/**']
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   local:
@@ -23,8 +24,10 @@ jobs:
       - run: npx vite build --outDir dist-local
         env:
           VITE_LOCAL_MODE: '1'
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist-local
-          path: dist-local
-          retention-days: 3
+      - name: Push the build to checks/local-build
+        run: |
+          cd dist-local
+          git init -q -b checks/local-build
+          git config user.name "local-build"; git config user.email "local-build@users.noreply.github.com"
+          git add -A; git commit -qm "local-mode build of ${GITHUB_SHA}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" checks/local-build
