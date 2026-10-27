@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { NavLink, Navigate, useLocation } from 'react-router-dom'
 import { useIsMobile } from '../components/ui.jsx'
 import { Icon } from '../components/icons.jsx'
@@ -6,6 +6,7 @@ import { can, useCurrentUser } from '../lib/store.jsx'
 import Office from './Office.jsx'
 import Notes from './Notes.jsx'
 import TasksAll from './TasksAll.jsx'
+import { useArrowTabs } from '../lib/arrowTabs.js'
 
 /* The Organizer (Alex, 10 Oct): Tasks, Notes and Office on one page, with tabs like the Database's, a
    glass capsule TASKS · NOTES · OFFICE, opening on Tasks; on a computer each tab's search (and Office's
@@ -16,6 +17,8 @@ export default function OfficeHub() {
   const { pathname } = useLocation()
   const user = useCurrentUser()
   const mobile = useIsMobile()
+  const tabsRow = useRef(null) // ← / → step through these tabs on a computer (Alex, 27 Oct)
+  useArrowTabs(tabsRow)
   const [slot, setSlot] = useState(null)
   // Tasks first, then Notes, then Office (Alex, 10 Oct)
   const tabs = [
@@ -29,7 +32,7 @@ export default function OfficeHub() {
   return (
     <div className="hub-page office-hub">
       <div className="db-top">
-        <nav className="tabs db-tabs">
+        <nav className="tabs db-tabs" ref={tabsRow}>
           {tabs.map((t) => (
             <NavLink key={t.key} to={t.to} end className={({ isActive }) => (isActive ? 'active' : '')}>
               <span className="tab-ico">{Icon[t.icon]?.()}</span>

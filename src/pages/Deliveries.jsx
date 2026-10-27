@@ -15,6 +15,7 @@ import { copyText, creditsFromProject, parseCredits, youtubeCredits } from '../l
 import { remote } from '../lib/supabase.js'
 import { ListSearch } from '../components/DbTools.jsx'
 import { matchText } from '../lib/library.js'
+import { useArrowTabs } from '../lib/arrowTabs.js'
 
 /* The stages a new delivery can be (Alex, 12 Oct, written his way): RoughCut, PreFinal Cut, Final Cut.
    Older deliveries made as final files, a treatment or a lookbook keep their names and their pages. */
@@ -100,6 +101,8 @@ export default function Deliveries() {
   const [error, setError] = useState('')
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
+  const tabsRow = useRef(null) // ← / → step through the tabs on a computer (Alex, 27 Oct)
+  useArrowTabs(tabsRow)
   const [params] = useSearchParams()
   const go = useNavigate()
   const [filter, setFilterRaw] = useState(() => params.get('tab') || 'all') // Alex: open on Everything, not just Deliveries
@@ -596,7 +599,7 @@ export default function Deliveries() {
       {/* on a computer the filters as the Organizer's glass capsule, the two New buttons at the end of
           the same line in the same glass (Alex, 15 Oct) */}
       {!mobile && <div className="db-top share-dtop">
-        <nav className="tabs db-tabs">
+        <nav className="tabs db-tabs" ref={tabsRow}>
           {tabs.map(([k, label]) => (
             <button key={k} type="button" className={shown === k ? 'active' : ''} onClick={(e) => { if (shown !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setFilter(k) }}>
               {label}{counts[k] !== undefined && <small>{counts[k]}</small>}
