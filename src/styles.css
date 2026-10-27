@@ -8408,3 +8408,8 @@ button.ab-ava { border: 0; padding: 0; overflow: hidden; cursor: pointer; font-f
   .ab-row.tall-row .ab-thumb { grid-row: 1 / span 4; width: 96px; height: 72px; }
   .ab-row.loc-row > :not(.ab-thumb), .ab-row.ids-row > :not(.ab-thumb) { grid-column: 2; }
 }
+
+/* Overview's add pills: the Project Database's pills come in through a portal into this, as if they were its own */
+.add-pills-slot { display: contents; }
+.modal .project-roarme { margin: 0; padding: 0; background: none; border: 0; box-shadow: none; }
+.modal .project-roarme > h2 { display: none; }
