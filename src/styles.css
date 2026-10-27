@@ -8482,3 +8482,6 @@ html[data-theme] body .ab-card .modal-foot .ab-del.btn-danger { color: #fff; bac
   .ab-row.gear-prow { grid-template-columns: minmax(0, 1fr); }
   .ab-row.gear-prow .ab-cell:empty { display: none; }
 }
+/* Contacts' form: the specialties ready to tap */
+.ab-spec-pick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }
+.ab-spec-pick .chip { font-size: 12.5px; padding: 4px 11px; }

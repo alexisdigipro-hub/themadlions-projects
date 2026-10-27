@@ -24,6 +24,7 @@ const digits9 = (p) => { const d = String(p || '').replace(/\D/g, ''); return d.
 const specialtyOf = (c) => (c.company || '').trim()
 const groupKey = (c) => specialtyOf(c).toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
+const COMMON_SPECS = ['Director', 'Assistant Director', 'Producer', 'Production Manager', 'Production Assistant', 'DOP', 'Camera Operator', 'Focus Puller', 'Steadicam', 'Gaffer', 'Electrician', 'Grip', 'Sound', 'Art Director', 'Set Designer', 'Stylist', 'Make Up', 'Hair Stylist', 'Editor', 'Colorist', 'VFX Artist', 'Photographer', 'Drone', 'Actor', 'Model', 'Dancer', 'Choreographer', 'Artist', 'Music Producer', 'Manager', 'Driver', 'Catering']
 // the contact's fields that count when two of them are joined
 const FILL = ['phone', 'phone2', 'email', 'company', 'title']
 const filled = (c) => FILL.filter((k) => c[k]).length + (c.notes ? 1 : 0)
@@ -141,6 +142,12 @@ export default function AddressBook({ slot }) {
     }
     return [...m.values()].map((g) => ({ k: g.k, n: g.n, label: [...g.names.entries()].sort((a, b) => b[1] - a[1])[0][0] })).sort((a, b) => b.n - a.n || a.label.localeCompare(b.label, 'el'))
   }, [list])
+  // every specialty to pick from in the form: those in use (most used first), then the usual crew roles
+  const specChoices = useMemo(() => {
+    const seen = new Set(), out = []
+    for (const x of [...chips.map((c) => c.label), ...COMMON_SPECS]) { const k = x.toLowerCase(); if (!seen.has(k)) { seen.add(k); out.push(x) } }
+    return out
+  }, [chips])
   const favCount = useMemo(() => (list || []).filter((c) => c.fav).length, [list])
 
   // who is already in Crew or Cast, by name (case and accents aside) or by mobile (the last 9 digits): they get a
@@ -495,9 +502,15 @@ export default function AddressBook({ slot }) {
             </div>
             <Field label="Email"><Input value={draft.email} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /></Field>
             <div className="row-2">
-              <Field label="Specialty"><Input placeholder="Gaffer, Artist, Choreographer…" value={draft.company} onChange={(e) => setDraft({ ...draft, company: e.target.value })} /></Field>
+              <Field label="Specialty"><Input list="ab-specs" placeholder="Gaffer, Artist, Choreographer…" value={draft.company} onChange={(e) => setDraft({ ...draft, company: e.target.value })} /></Field>
               <Field label="Title"><Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></Field>
             </div>
+            {/* the specialties ready to tap (Alex, 27 Oct): the ones already in use, the most used first, then the usual
+                crew roles; typing still works, and suggests from all of them */}
+            <div className="ab-spec-pick">
+              {specChoices.slice(0, 18).map((x) => <button key={x} type="button" className={`chip${(draft.company || '').trim().toLowerCase() === x.toLowerCase() ? ' on' : ''}`} onClick={() => setDraft({ ...draft, company: x })}>{x}</button>)}
+            </div>
+            <datalist id="ab-specs">{specChoices.map((x) => <option key={x} value={x} />)}</datalist>
             <Field label="Notes"><Textarea rows={3} value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} /></Field>
           </div>
         )}
