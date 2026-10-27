@@ -56,8 +56,9 @@ export async function pcloudBackup(state) {
   return call('backup', fd)
 }
 
-/* Once a week on its own, when an administrator has the app open (Settings > Data > Every week). */
-export const backupDue = (settings) => !!settings?.pcloudAutoBackup && (!settings.pcloudBackupAt || Date.now() - new Date(settings.pcloudBackupAt).getTime() > 7 * 86400000)
+/* Once a day on its own, when an administrator has the app open (Settings > Data > Every day; on unless switched off,
+   Alex 27 Oct: "are we safe, do we have backups?"). */
+export const backupDue = (settings) => settings?.pcloudAutoBackup !== false && (!settings?.pcloudBackupAt || Date.now() - new Date(settings.pcloudBackupAt).getTime() > 86400000)
 export async function pcloudUpload({ file, folder, scope }) {
   const fd = new FormData()
   fd.append('file', file, file.name)

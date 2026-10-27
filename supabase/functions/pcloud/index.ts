@@ -31,7 +31,7 @@
 // verify_jwt off for this reason; every other action checks the caller's own sign-in below.
 // backup (administrators): the files the app sends (the workspace's data) and the site's code as
 // GitHub keeps it (a zip of the main branch) go into ROOT/Backups/<date time>, so the whole thing
-// can be put back if anything happens to the site.
+// can be put back if anything happens to the site. The newest 30 are kept, older dated folders go to the trash.
 // Scopes: a project (its files, photos and songs), a chat room, the company library (the
 // people and locations of the Database page, shared by every project), or ids: Database > ID sheets,
 // the permission "idsheets" (view to open, edit to upload or delete), files only into ROOT/ID sheets/<name>
@@ -262,7 +262,15 @@ Deno.serve(async (req) => {
       } catch (e) {
         codeError = (e as Error).message
       }
-      return json({ ok: true, folder: path, files: saved.filter(Boolean).map((m: any) => ({ name: m.name, size: m.size })), codeError })
+      // keep the newest 30 backups (one a day since 27 Oct); older dated folders go to pCloud's trash
+      let pruned = 0
+      try {
+        const list = await pc('listfolder', { path: ROOT + '/Backups' })
+        const dated = (list.metadata?.contents || []).filter((m: any) => m.isfolder && /^\d{4}-\d{2}-\d{2} \d{2}\.\d{2}$/.test(m.name))
+        dated.sort((a: any, b: any) => (a.name < b.name ? 1 : -1))
+        for (const old of dated.slice(30)) { await pc('deletefolderrecursive', { folderid: old.folderid }); pruned++ }
+      } catch { /* keeping more than 30 for a while is harmless */ }
+      return json({ ok: true, folder: path, files: saved.filter(Boolean).map((m: any) => ({ name: m.name, size: m.size })), codeError, pruned })
     }
 
     if (action === 'link') {
