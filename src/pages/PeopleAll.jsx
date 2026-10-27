@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Confirm, Empty, Field, Input, Modal, Select, TagsInput, useToast } from '../components/ui.jsx'
 import { can, canSeeContacts, departmentsOf, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
@@ -6,6 +6,8 @@ import { contactProjects, contactToLibrary, matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
 import { DbAdd, DbBar, DbFilter, ListSearch, useFitScroll } from '../components/DbTools.jsx'
 
+// a role's chip key: the same word in any case or accent is one chip
+const roleKey = (r) => String(r || '').trim().toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ')
 const initials = (n) => (n || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 const emptyPerson = (kind) => ({ id: uid(), kind, name: '', phone: '', email: '', dept: kind === 'cast' ? 'Cast' : 'Production', role: '', agent: '', agentPhone: '', notes: '', photos: [], tags: [], createdAt: new Date().toISOString() })
 
@@ -18,6 +20,7 @@ export default function PeopleAll({ kind, slot }) {
   const editable = can(user, 'contacts', 'edit')
   const [q, setQ] = useState('')
   const [dept, setDept] = useState('')
+  const [role, setRole] = useState('') // a role chip, as Contacts' specialty chips (Alex, 27 Oct)
   const [draft, setDraft] = useState(null)
   const [detailFor, setDetailFor] = useState(null)
   // one list, as Contacts (Alex, 27 Oct: "Crew, Cast and Equipment like Contacts, List only"); it scrolls in its own
@@ -29,9 +32,24 @@ export default function PeopleAll({ kind, slot }) {
   const list = people
     .filter((p) => p.kind === kind)
     .filter((p) => (dept ? p.dept === dept : true))
+    .filter((p) => (role ? roleKey(p.role || p.dept) === role : true))
     .filter((p) => matchText(q, p.name, p.role, p.phone, p.email, p.agent, p.notes, (p.tags || []).join(' ')))
     .sort((a, b) => a.name.localeCompare(b.name))
   const all = people.filter((p) => p.kind === kind).length
+  // the role chips of Crew, the most used first, each with how many; a person without a role counts under their department
+  const chips = useMemo(() => {
+    if (kind !== 'crew') return []
+    const m = new Map()
+    for (const p of people) {
+      if (p.kind !== kind) continue
+      const label = (p.role || p.dept || '').trim()
+      const k = roleKey(label)
+      if (!k) continue
+      if (!m.has(k)) m.set(k, { k, n: 0, names: new Map() })
+      const g = m.get(k); g.n++; g.names.set(label, (g.names.get(label) || 0) + 1)
+    }
+    return [...m.values()].map((g) => ({ k: g.k, n: g.n, label: [...g.names.entries()].sort((a, b) => b[1] - a[1])[0][0] })).sort((a, b) => b.n - a.n || a.label.localeCompare(b.label, 'el'))
+  }, [people, kind])
   const target = people.find((p) => p.id === detailFor)
 
   const save = () => {
@@ -84,12 +102,20 @@ export default function PeopleAll({ kind, slot }) {
         </div>
         <div className="toolbar-actions">
           <ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, role, phone, agent…" />
-          <span className="ab-count">{q.trim() || dept ? `${list.length} of ${all}` : `${all} ${kind === 'cast' ? 'in cast' : 'in crew'}`}</span>
+          <span className="ab-count">{q.trim() || dept || role ? `${list.length} of ${all}` : `${all} ${kind === 'cast' ? 'in cast' : 'in crew'}`}</span>
           <DbFilter value={dept} onChange={(e) => setDept(e.target.value)} options={[['', 'All departments'], ...DEPTS.map((d) => [d, d])]} label="Department" />
           {editable && <DbAdd label={`Add ${kind}`} onClick={() => setDraft(emptyPerson(kind))} />}
         </div>
       </DbBar>
 
+      {chips.length > 1 && (
+        <div className="ab-under">
+          <nav className="chips ab-chips">
+            <button type="button" className={`chip${!role ? ' on' : ''}`} onClick={() => setRole('')}>All</button>
+            {chips.slice(0, 30).map((x) => <button key={x.k} type="button" className={`chip${role === x.k ? ' on' : ''}`} onClick={() => setRole(role === x.k ? '' : x.k)}>{x.label} <small>{x.n}</small></button>)}
+          </nav>
+        </div>
+      )}
       <div className="ab-scroll" ref={scrollRef}>
       {!list.length ? (
         <Empty title={people.length ? 'No matches' : 'The database is empty'}>
