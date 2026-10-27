@@ -163,8 +163,11 @@ export default function AddressBook({ slot }) {
      - an entry no contact holds (added in Crew, in a project, or moved out of Contacts before 27 Oct) is tied to the
        contact with the same name or mobile, else becomes a new contact. */
   const syncing = useRef(false)
+  const missed = useRef(false) // a change came while saving: look again after
+  const [syncTick, setSyncTick] = useState(0)
   useEffect(() => {
-    if (!list || syncing.current) return
+    if (!list) return
+    if (syncing.current) { missed.current = true; return }
     const lib = state.library.contacts.filter((x) => x.kind === 'crew' || x.kind === 'cast')
     const byId = new Map(lib.map((x) => [x.id, x]))
     const changed = new Map()
@@ -202,8 +205,16 @@ export default function AddressBook({ slot }) {
     if (!changed.size && !fresh.length) return
     syncing.current = true
     const all = [...changed.values(), ...fresh]
-    saveContacts(all).then(() => setList([...next, ...fresh])).catch((e) => toast(e.message, 'error')).finally(() => { syncing.current = false })
-  }, [list, state.library.contacts]) // eslint-disable-line react-hooks/exhaustive-deps
+    saveContacts(all).then(() => setList((l) => {
+      // the list as it is now, with what this run changed or added
+      const byId = new Map(all.map((c) => [c.id, c]))
+      const have = new Set((l || []).map((c) => c.id))
+      return [...(l || []).map((c) => byId.get(c.id) || c), ...fresh.filter((c) => !have.has(c.id))]
+    })).catch((e) => toast(e.message, 'error')).finally(() => {
+      syncing.current = false
+      if (missed.current) { missed.current = false; setSyncTick((t) => t + 1) }
+    })
+  }, [list, state.library.contacts, syncTick]) // eslint-disable-line react-hooks/exhaustive-deps
 
 
   // ordered by specialty, the contacts come in groups with a heading each; by name or newest, one list
@@ -267,7 +278,9 @@ export default function AddressBook({ slot }) {
   const unlink = async (c, kind) => {
     const n = { ...c, lib: { ...c.lib } }
     delete n.lib[kind]
-    try { await saveMany([n]); dropFromLibrary([c.lib[kind]]); toast(`${c.name} is out of ${kind === 'cast' ? 'Cast' : 'Crew'}, still in Contacts`, 'ok') } catch (e) { toast(e.message, 'error') }
+    // the entry first: the sync then sees a link to nothing and drops it, never a lone entry to tie back
+    dropFromLibrary([c.lib[kind]])
+    try { await saveMany([n]); toast(`${c.name} is out of ${kind === 'cast' ? 'Cast' : 'Crew'}, still in Contacts`, 'ok') } catch (e) { toast(e.message, 'error') }
   }
   // the contact goes first, then its Crew / Cast entries (the other way round, the sync would save it back)
   const remove = async (c) => {
