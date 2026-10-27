@@ -8287,3 +8287,17 @@ html[data-theme] body main.content .ab-acts .ab-del.btn-danger:hover { color: #f
   .proj-top .db-slot .toolbar { width: 100%; justify-content: flex-end; }
 }
 @media print { .proj-top { display: none; } }
+
+/* Database on a computer (Alex, 27 Oct: "Contacts is not steady, it moves; keep the top with the search fixed while
+   scrolling"): the room for the scrollbar is always kept, so nothing shifts sideways when a long list arrives, the
+   page does not rubber-band sideways, and the top row (tabs, search, Import, Export, the order) stays at the top
+   in glass while the list scrolls under it. */
+@media (min-width: 821px) {
+  html:has(.db-page) { scrollbar-gutter: stable; overscroll-behavior-x: none; }
+  .db-page { overflow-x: clip; }
+  html[data-theme] body .db-page > .db-top {
+    position: sticky; top: 0; z-index: 30; margin: -12px -14px 18px; padding: 12px 14px;
+    background: color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
+    border-radius: 0 0 18px 18px;
+  }
+}
