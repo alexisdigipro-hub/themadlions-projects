@@ -8728,23 +8728,20 @@ html[data-theme] body .bcat-row { grid-template-columns: 22px minmax(0, 1fr) min
 
 /* The accent as RoarMe wears it (Alex, 27 Oct, from RoarMe's Messages key: "I want the hub's accent like this"): the chosen
    place and the main action are see-through glass tinted with the accent, an accent edge and a soft accent glow, instead of
-   a solid fill or plain grey glass. Every theme, on its own accent; lighter tints and darker ink on the light ones. The
-   rows of tabs and chips keep their sliding glass lens. */
-html[data-theme][data-accent] {
+   a solid fill or plain grey glass. Only on the RoarList theme (Alex: "only that theme, not all"); the rows of tabs and
+   chips keep their sliding glass lens. */
+html[data-skin='roarlist'][data-theme][data-accent] {
   --lit-ink: color-mix(in srgb, var(--accent) 38%, #fff); --lit-a1: 42%; --lit-a2: 22%; --lit-edge: 62%; --lit-glow: 24%; --lit-shine: rgba(255, 255, 255, .22);
 }
-html[data-theme='light'][data-accent] {
-  --lit-ink: color-mix(in srgb, var(--accent) 80%, #000); --lit-a1: 24%; --lit-a2: 12%; --lit-edge: 55%; --lit-glow: 18%; --lit-shine: rgba(255, 255, 255, .7);
-}
-html[data-theme][data-accent] body :is(.sidenav a.active, .tabbar a.active, .tabbar button.active, .btn-primary:not(:disabled), .act.act-main:not(:disabled)) {
+html[data-skin='roarlist'][data-theme][data-accent] body :is(.sidenav a.active, .tabbar a.active, .tabbar button.active, .btn-primary:not(:disabled), .act.act-main:not(:disabled)) {
   color: var(--lit-ink);
   background: linear-gradient(180deg, color-mix(in srgb, var(--accent) var(--lit-a1), transparent), color-mix(in srgb, var(--accent) var(--lit-a2), transparent));
   border-color: color-mix(in srgb, var(--accent) var(--lit-edge), transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) var(--lit-edge), transparent), inset 0 1px 0 var(--lit-shine), 0 6px 22px color-mix(in srgb, var(--accent) var(--lit-glow), transparent);
   -webkit-backdrop-filter: blur(12px) saturate(1.5); backdrop-filter: blur(12px) saturate(1.5);
 }
-html[data-theme][data-accent] body :is(.btn-primary:not(:disabled), .act.act-main:not(:disabled)):hover {
+html[data-skin='roarlist'][data-theme][data-accent] body :is(.btn-primary:not(:disabled), .act.act-main:not(:disabled)):hover {
   background: linear-gradient(180deg, color-mix(in srgb, var(--accent) calc(var(--lit-a1) + 12%), transparent), color-mix(in srgb, var(--accent) calc(var(--lit-a2) + 10%), transparent));
   filter: none;
 }
-html[data-theme][data-accent] body :is(.sidenav a.active, .tabbar a.active, .tabbar button.active, .act.act-main) :is(.nav-ico, svg) { color: var(--lit-ink); }
+html[data-skin='roarlist'][data-theme][data-accent] body :is(.sidenav a.active, .tabbar a.active, .tabbar button.active, .act.act-main) :is(.nav-ico, svg) { color: var(--lit-ink); }
