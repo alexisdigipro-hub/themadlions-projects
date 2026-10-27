@@ -502,3 +502,21 @@ input.input,select.input{height:42px}
    search and New ordino, so the home's row goes */
 html.in-share .brand{display:none}
 @media (min-width:821px){ html.in-share .home-top{display:none} html.in-share .home2{padding-top:4px} }
+/* in the hub's Share on a computer (27 Oct): the ordinos as Share's list, one soft row each: the picture small, the
+   date, the title with its project and chips, the round icons at the right */
+.olist{display:flex;flex-direction:column;gap:8px}
+.orow{display:grid;grid-template-columns:72px 92px minmax(0,1fr) auto;align-items:center;column-gap:14px;padding:10px 12px;border-radius:16px;cursor:pointer;background:var(--panel);border:1px solid var(--line);transition:background .2s,border-color .2s;outline:none}
+.orow:hover,.orow:focus-visible{background:var(--panel2);border-color:color-mix(in srgb,var(--brand) 40%,var(--line))}
+.orow.is-next{border-color:color-mix(in srgb,var(--brand) 65%,transparent)}
+.orow.is-past{opacity:.72}
+.orow.is-past:hover{opacity:1}
+.orow-cover{width:72px;height:46px;border-radius:10px;background:var(--panel2) center/cover no-repeat}
+.orow-date{display:flex;flex-direction:column;line-height:1.1}
+.orow-date b{font-size:20px;font-weight:800}
+.orow-date span{font-size:12px;color:var(--muted);text-transform:capitalize}
+.orow-date.none{color:var(--muted)}
+.orow-main{min-width:0;display:flex;flex-wrap:wrap;align-items:center;column-gap:10px;row-gap:6px}
+.orow-main>strong{font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.orow-main .otile-chips{flex:1 1 100%}
+.orow-acts{display:flex;gap:6px}
+.mchip.ok{color:var(--text)}
