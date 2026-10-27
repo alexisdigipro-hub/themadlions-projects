@@ -68,8 +68,9 @@ export async function pcloudUpload({ file, folder, scope }) {
 }
 export const pcloudLink = (fileid, scope, download = false) => call('link', { fileid, scope, download })
 
-/* A delivery straight to pCloud (Alex, 12 Oct): the function opens an upload into
-   <root>/Deliveries/<stage>/<title>, the file goes up in 8 MB pieces, one after the other (each well
+/* A delivery straight to pCloud (Alex, 12 Oct): the function opens an upload into the delivery's folder
+   (27 Oct: RoughCut and PreFinal Cut straight into "Projects - RoughCuts", Final Deliverables into
+   "Projects - FinalCuts/<label>/<project>"; see the function), the file goes up in 8 MB pieces, one after the other (each well
    within the function's limits, so a cut of several GB is fine and the pCloud key stays in the
    function), then the function saves it there and makes a public link for the client. A piece that
    fails is tried once more. onProgress gets 0..1; signal (an AbortController's) stops it. */
@@ -78,8 +79,8 @@ const PIECE = 8 * 1024 * 1024
    being written ("Error writing to upload.", 2068; checked with the function pcloud-check), so the four side by side
    of 23 Oct broke every delivery. A refused piece is still tried again, later each time. */
 const AT_ONCE = 1
-export async function pcloudDeliver(file, { stage, title, sub, nolink }, { onProgress, signal } = {}) {
-  const start = await call('deliveryStart', { stage, title, sub })
+export async function pcloudDeliver(file, { stage, title, label, into, nolink }, { onProgress, signal } = {}) {
+  const start = await call('deliveryStart', { stage, title, label, into })
   const offsets = []
   for (let offset = 0; offset < file.size; offset += PIECE) offsets.push(offset)
   let next = 0
@@ -90,6 +91,7 @@ export async function pcloudDeliver(file, { stage, title, sub, nolink }, { onPro
     fd.append('file', file.slice(offset, offset + PIECE), 'piece')
     fd.append('uploadid', String(start.uploadid))
     fd.append('offset', String(offset))
+    fd.append('path', start.path)
     return call('deliveryChunk', fd)
   }
   /* A piece pCloud turns down (Alex, 26 Oct: "the user cannot upload to pCloud") is tried again, up to five times,
@@ -127,32 +129,38 @@ export async function pcloudDeliver(file, { stage, title, sub, nolink }, { onPro
 }
 
 /* Several files for one delivery (Alex, 12 Oct: "one link for several files", then "a button for each
-   and all together"): one after the other into a folder of their own, <stage>/<title>/<sub>, each with
-   its own public link, then one public link for the whole folder. The delivery page shows Download all
-   (the folder) and a button per file. One file alone goes as pcloudDeliver.
-   onProgress gets (overall 0..1, index of the file going up). */
-export async function pcloudDeliverMany(files, { stage, title, sub, into }, { onProgress, signal } = {}) {
-  /* more files for a delivery that already has some (Alex, 23 Oct: "it loses the ones it had"): into the same folder
-     as those, <root>/Deliveries/<stage>/<title>/<sub>, so the folder's one link covers them all */
-  const at = String(into || '').split('/')
-  const k = at.indexOf('Deliveries')
-  if (k >= 0 && at[k + 3]) { stage = at[k + 1]; title = at[k + 2]; sub = at.slice(k + 3).join('/') }
-  // one file alone: in its own dated folder too (23 Oct), so files added later land next to it
-  else if (files.length === 1) return pcloudDeliver(files[0], { stage, title, sub }, { onProgress: (p) => onProgress?.(p, 0), signal })
+   and all together"): one after the other, each with its own public link, then one link for them all.
+   No dated folder of their own any more (Alex, 27 Oct): they sit with the project's other files, so the one
+   link is to exactly this delivery's files (keep, the ones already on it, plus the new). The delivery page
+   shows Download all and a button per file. into: the folder the delivery's files are already in.
+   onProgress gets (overall 0..1, index of the file going up). Answers { url, folder, files }. */
+export async function pcloudDeliverMany(files, { stage, title, label, into, keep = [] }, { onProgress, signal } = {}) {
   const total = files.reduce((n, f) => n + f.size, 0) || 1
   let done = 0
-  let path = ''
+  let path = into || ''
   const list = []
   for (let i = 0; i < files.length; i += 1) {
     const f = files[i]
-    const r = await pcloudDeliver(f, { stage, title, sub }, { onProgress: (p) => onProgress?.((done + p * f.size) / total, i), signal })
+    const r = await pcloudDeliver(f, { stage, title, label, into: path }, { onProgress: (p) => onProgress?.((done + p * f.size) / total, i), signal })
     path = r.folder
     list.push({ name: r.name || f.name, url: r.url, size: r.size || f.size, fileid: r.fileid })
     done += f.size
   }
-  const link = await call('deliveryFolderLink', { path })
-  return { ...link, count: files.length, files: list }
+  // the files are up whatever happens to the one link: each has its own, and the page's Download all uses those
+  const url = await pcloudDeliveryLink(path, [...keep, ...list], title).catch(() => '')
+  return { url, folder: path, files: list }
 }
+/* The one link for a delivery's files: a file alone is its own link; several, a pCloud link to just those (the
+   folder's link for a delivery from before 27 Oct whose files are in a folder of their own and some have no fileid). */
+export async function pcloudDeliveryLink(path, files, name) {
+  const up = files.filter((f) => f.url)
+  if (up.length <= 1) return up[0]?.url || ''
+  const fileids = up.every((f) => f.fileid) ? up.map((f) => f.fileid) : []
+  return (await call('deliveryFolderLink', { path, fileids, name })).url
+}
+/* The record labels a Final Deliverables can go under (the folders in "Projects - FinalCuts"); ready false until the
+   pcloud function has the token that sees Alex's whole pCloud. */
+export const pcloudDeliveryLabels = () => call('deliveryLabels', {})
 export const pcloudDelete = (fileid, scope) => call('delete', { fileid, scope })
 /* One file taken off a delivery, or replaced (Alex, 27 Oct): to pCloud's trash, so the folder's Download all no longer
    has it. A file from before fileids were kept is found by its public link's code. */

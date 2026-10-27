@@ -9,7 +9,7 @@ import EstimateLookEditor from '../components/EstimateLookEditor.jsx'
 import { fmtDate, toISODate } from '../lib/dates.js'
 import { dirIn, useSlide } from '../lib/glide.js'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
-import { pcloudDeliverMany, pcloudDeliveryRemove } from '../lib/pcloud.js'
+import { pcloudDeliverMany, pcloudDeliveryLabels, pcloudDeliveryLink, pcloudDeliveryRemove } from '../lib/pcloud.js'
 import { uploadThumbs } from '../lib/deliveryThumbs.js'
 import { copyText, creditsFromProject, parseCredits, youtubeCredits } from '../lib/deliveryCredits.js'
 import { remote } from '../lib/supabase.js'
@@ -17,12 +17,12 @@ import { ListSearch } from '../components/DbTools.jsx'
 import { matchText } from '../lib/library.js'
 import { useArrowTabs } from '../lib/arrowTabs.js'
 
-/* The stages a new delivery can be (Alex, 12 Oct, written his way): RoughCut, PreFinal Cut, Final Cut.
-   Older deliveries made as final files, a treatment or a lookbook keep their names and their pages. */
+/* The stages a new delivery can be (Alex, 12 Oct, written his way): RoughCut, PreFinal Cut, Final Deliverables
+   (Final Cut taken out, Alex 27 Oct: "it has no meaning"). Older deliveries made as a Final Cut, final files, a
+   treatment or a lookbook keep their names and their pages. */
 export const STAGES = [
   ['rough', 'RoughCut'],
   ['prefinal', 'PreFinal Cut'],
-  ['final', 'Final Cut'],
   // the final files themselves (Alex, 22 Oct): no version, and the fine print under the files
   ['deliverables', 'Final Deliverables'],
 ]
@@ -34,7 +34,7 @@ export const FINE_DEFAULT = `IMPORTANT !! Τα τελικά παραδοτέα �
    fine print and editable each time. */
 export const MESSAGE_DEFAULT = `Ακολουθούν τα τελικά αρχεία του Music Video στις εκδόσεις YouTube, TV & Social.
 Παρακαλούμε μετά το ανέβασμα να γίνει ένας τελικός έλεγχος από πλευράς σας, ώστε να βεβαιωθείτε πως όλα είναι εντάξει. Εναλλακτικά, μπορείτε να μας στείλετε ένα κρυφό (unlisted) link του τελικού βίντεο στο YouTube, ώστε να πραγματοποιήσουμε εμείς τον έλεγχο.`
-const OLD_STAGES = [['files', 'Final files'], ['treatment', 'Treatment'], ['lookbook', 'Lookbook']]
+const OLD_STAGES = [['final', 'Final Cut'], ['files', 'Final files'], ['treatment', 'Treatment'], ['lookbook', 'Lookbook']]
 /* What the big button says: Download Files for every cut (Alex, 12 Oct, his words); an old treatment or
    lookbook delivery keeps its own. */
 export const stageAction = (k) =>
@@ -61,6 +61,7 @@ const emptyDelivery = () => ({
   files: [], // several files uploaded together: [{ name, url, size }], one button each on the page
   fine: '', // Final Deliverables' fine print
   pcFolder: '', // the pCloud folder the uploaded files are in, so more can go next to them
+  label: '', // Final Deliverables: the record label folder in "Projects - FinalCuts" it goes under (Alex, 27 Oct)
   message: '', // and its opening message
   creditsText: '', // and its credits, one "Role: Name" a line
   thumbs: [], // thumbnails the client can see and download: [{ name, path, url, dl, size, w, h }]
@@ -182,7 +183,7 @@ export default function Deliveries() {
       credits: d.credits || [], deliverables: d.deliverables || [],
       recipients: d.recipient?.name ? [{ name: d.recipient.name, email: d.recipient.email || '' }] : [],
       contactName: d.contact?.name || '', contactEmail: d.contact?.email || '', contactPhone: d.contact?.phone || '',
-      pin: r.pin || '', fine: d.fine || '', message: d.message || '', creditsText: d.creditsText || '', thumbs: d.thumbs || [], pcFolder: d.pcFolder || '',
+      pin: r.pin || '', fine: d.fine || '', message: d.message || '', creditsText: d.creditsText || '', thumbs: d.thumbs || [], pcFolder: d.pcFolder || '', label: d.label || '',
     })
   }
   const creditsOf = (projectId) => creditsFromProject(state.projects.find((x) => x.id === projectId), state.workspace.name, { users: state.users || [], settings: state.settings })
@@ -206,6 +207,19 @@ export default function Deliveries() {
     // and the project's credits (Alex, 23 Oct)
     creditsText: v === 'deliverables' && !d.creditsText?.trim() && d.projectId ? creditsOf(d.projectId) : d.creditsText,
   }))
+  /* The record labels (Alex, 27 Oct): the folders in "Projects - FinalCuts", asked of pCloud once a Final Deliverables
+     form is open; none (ready false) until the function has the token that sees the whole pCloud, and the field stays
+     hidden. */
+  const [labels, setLabels] = useState({ ready: false, list: [] })
+  const [newLabel, setNewLabel] = useState(null)
+  const wantLabels = remote && draft?.stage === 'deliverables'
+  useEffect(() => {
+    if (!wantLabels) return undefined
+    let on = true
+    pcloudDeliveryLabels().then((r) => on && setLabels({ ready: !!r.ready, list: r.labels || [] })).catch(() => {})
+    return () => { on = false }
+  }, [wantLabels])
+  useEffect(() => { if (!draft) setNewLabel(null) }, [draft])
   /* Upload the cut itself to pCloud (Alex, 12 Oct): into Deliveries/<stage>/<title> in the company
      pCloud, straight from this browser, then the public pCloud link fills Download link. */
   const [upload, setUpload] = useState(null) // { names, size, p, i, ctrl }
@@ -218,26 +232,25 @@ export default function Deliveries() {
     setUpload({ names: files.map((f) => f.name), size: files.reduce((n, f) => n + f.size, 0), p: 0, i: 0, ctrl, at: Date.now() })
     try {
       const title = draft.title.trim() || projects.find((p) => p.id === draft.projectId)?.title || files[0].name.replace(/\.[^.]+$/, '')
-      const now = new Date()
-      const sub = draft.version.trim() || `${toISODate(now)} ${String(now.getHours()).padStart(2, '0')}.${String(now.getMinutes()).padStart(2, '0')}`
       // files already on this delivery stay (Alex, 23 Oct): the new ones are added, into the same pCloud folder when
       // that folder is known (pcFolder, kept with the page since 23 Oct)
       const prev = (draft.files || []).filter((f) => f.url)
       const into = prev.length ? draft.pcFolder || '' : ''
-      const r = await pcloudDeliverMany(files, { stage: stageLabel(draft.stage), title, sub, into }, { onProgress: (p, i) => setUpload((u) => (u ? { ...u, p, i } : u)), signal: ctrl.signal })
+      if (!into && draft.stage === 'deliverables' && labels.ready && !draft.label) throw new Error('Pick the label first.')
+      const r = await pcloudDeliverMany(files, { stage: stageLabel(draft.stage), title, label: draft.label, into, keep: into ? prev : [] }, { onProgress: (p, i) => setUpload((u) => (u ? { ...u, p, i } : u)), signal: ctrl.signal })
       // one file is kept too, so the client's page can offer Save to Photos for it
-      const got = r.files || [{ name: r.name || files[0].name, url: r.url, size: r.size || files[0].size, fileid: r.fileid }]
+      const got = r.files
       const together = !!into && into === r.folder
       setDraft((d) => (d ? {
         ...d,
-        // the folder's link when everything is in one folder; else the link the delivery already had (each file has its own)
-        link: !prev.length || together ? r.url : d.link || r.url,
+        // one link for every file when they are in one folder; else the link the delivery already had (each file has its own)
+        link: !prev.length || together ? r.url || d.link || got[0].url : d.link || r.url,
         linkLabel: d.linkLabel || 'pCloud',
         files: [...prev, ...got],
         pcFolder: prev.length && !together ? d.pcFolder || '' : r.folder || '',
       } : d))
       const n = prev.length + got.length
-      toast(prev.length ? `${got.length} more ${got.length === 1 ? 'file' : 'files'} added, ${n} in all` : files.length > 1 ? `${files.length} files uploaded to pCloud, one link for them all` : `Uploaded to pCloud: ${r.folder.split('/').slice(-3).join(' / ')}`, 'ok')
+      toast(prev.length ? `${got.length} more ${got.length === 1 ? 'file' : 'files'} added, ${n} in all` : `Uploaded to pCloud: ${r.folder.split('/').filter(Boolean).slice(-3).join(' / ')}`, 'ok')
     } catch (e) {
       if (!ctrl.signal.aborted) toast(/Unknown action/.test(e.message) ? 'Deploy the new pcloud function first (Supabase > Edge Functions > pcloud).' : e.message, 'error')
     } finally {
@@ -262,17 +275,16 @@ export default function Deliveries() {
     setUpload({ names: [file.name], size: file.size, p: 0, i: 0, ctrl, at: Date.now() })
     try {
       const title = draft.title.trim() || projects.find((p) => p.id === draft.projectId)?.title || file.name.replace(/\.[^.]+$/, '')
-      const now = new Date()
-      const sub = draft.version.trim() || `${toISODate(now)} ${String(now.getHours()).padStart(2, '0')}.${String(now.getMinutes()).padStart(2, '0')}`
-      const r = await pcloudDeliverMany([file], { stage: stageLabel(draft.stage), title, sub, into: draft.pcFolder || '' }, { onProgress: (p) => setUpload((u) => (u ? { ...u, p } : u)), signal: ctrl.signal })
-      const got = (r.files || [{ name: r.name || file.name, url: r.url, size: r.size || file.size, fileid: r.fileid }])[0]
+      const keep = (draft.files || []).filter((f, j) => j !== i && f.url)
+      const r = await pcloudDeliverMany([file], { stage: stageLabel(draft.stage), title, label: draft.label, into: draft.pcFolder || '', keep: draft.pcFolder ? keep : [] }, { onProgress: (p) => setUpload((u) => (u ? { ...u, p } : u)), signal: ctrl.signal })
+      const got = r.files[0]
       setDraft((d) => {
         if (!d) return d
         const old = d.files[i]
         const files = d.files.map((f, j) => (j === i ? got : f))
         const sameFolder = !!d.pcFolder && d.pcFolder === r.folder
-        // one file: its own link is the page's; several in one folder: the folder's link stays
-        return { ...d, files, removed: [...(d.removed || []), old], link: files.length === 1 ? got.url : sameFolder ? d.link : d.link || got.url, pcFolder: d.pcFolder || r.folder || '' }
+        // one file: its own link is the page's; several in one folder: a new link for them all
+        return { ...d, files, removed: [...(d.removed || []), old], link: files.length === 1 ? got.url : sameFolder ? r.url || d.link : d.link || got.url, pcFolder: d.pcFolder || r.folder || '' }
       })
       toast(`${file.name} in place of the old one. Publish to update the client's page (same link).`, 'ok')
     } catch (e) {
@@ -318,6 +330,7 @@ export default function Deliveries() {
         link: draft.link.trim(),
         files: (draft.files || []).filter((f) => f.url),
         pcFolder: (draft.files || []).length ? draft.pcFolder || '' : '',
+        label: draft.stage === 'deliverables' ? draft.label || '' : '',
         linkLabel: draft.linkLabel.trim(),
         // no transfer password or expiry, no Answer by and no contact any more (Alex, 22 Oct)
         password: '',
@@ -335,9 +348,15 @@ export default function Deliveries() {
         sentAt: new Date().toISOString(),
       }
       // the files taken off or replaced: out of pCloud's folder too (to its trash), so Download all matches the page
+      let dropped = false
       for (const f of draft.removed || []) {
         if (!draft.pcFolder || draft.files.some((x) => x.url === f.url)) continue
-        try { await pcloudDeliveryRemove({ fileid: f.fileid, url: f.url, path: draft.pcFolder }) } catch (e) { toast(`${f.name}: ${e.message}`, 'error') }
+        try { await pcloudDeliveryRemove({ fileid: f.fileid, url: f.url, path: draft.pcFolder }); dropped = true } catch (e) { toast(`${f.name}: ${e.message}`, 'error') }
+      }
+      // a file taken off without a new one in its place: the one link is made again for the files left (27 Oct: it is a
+      // link to those files, not to the folder, so it would still hold the one gone)
+      if (dropped && data.files.length) {
+        try { data.link = (await pcloudDeliveryLink(draft.pcFolder, data.files, data.title)) || data.link } catch { /* the old link stays */ }
       }
       // one page for everybody: Send it to (a page per named person) was taken out (Alex, 22 Oct)
       const ref = `delivery:${draft.id}`
@@ -717,9 +736,23 @@ export default function Deliveries() {
         footer={<><Button variant="ghost" onClick={() => setDraft(null)} disabled={busy || !!upload}>Cancel</Button><Button variant="primary" onClick={publish} disabled={busy || !!upload || !!thumbUp}>{busy ? 'Publishing…' : upload || thumbUp ? 'Uploading…' : 'Publish and copy link'}</Button></>}>
         {draft && (
           <div className="stack">
-            <div className={draft.stage === 'deliverables' ? 'row-2' : 'row-3'}>
+            <div className={draft.stage === 'deliverables' && !labels.ready ? 'row-2' : 'row-3'}>
               <Field label="Stage"><Select value={draft.stage} onChange={(e) => setStage(e.target.value)} options={STAGES.some((s) => s[0] === draft.stage) ? STAGES : [...STAGES, OLD_STAGES.find((s) => s[0] === draft.stage) || [draft.stage, stageLabel(draft.stage)]]} /></Field>
               <Field label="Project"><Select value={draft.projectId} onChange={(e) => pickProject(e.target.value)} options={[['', 'Not in the app'], ...projects.map((p) => [p.id, p.title])]} /></Field>
+              {/* the record label's folder in "Projects - FinalCuts" (Alex, 27 Oct), read from pCloud; fixed once files are up */}
+              {draft.stage === 'deliverables' && labels.ready && (
+                <Field label="Label">
+                  {newLabel !== null ? (
+                    <Input autoFocus value={newLabel} placeholder="Panic Records" disabled={!!upload}
+                      onChange={(e) => { setNewLabel(e.target.value); setD('label', e.target.value.trim()) }}
+                      onBlur={() => { if (!newLabel.trim()) setNewLabel(null) }} />
+                  ) : (
+                    <Select value={draft.label} disabled={!!upload || !!draft.pcFolder}
+                      onChange={(e) => (e.target.value === '+new' ? setNewLabel('') : setD('label', e.target.value))}
+                      options={[['', 'Pick the label'], ...[...new Set([...labels.list, ...(draft.label ? [draft.label] : [])])].map((l) => [l, l]), ['+new', 'New label…']]} />
+                  )}
+                </Field>
+              )}
               {draft.stage !== 'deliverables' && <Field label="Version"><Input value={draft.version} onChange={(e) => setD('version', e.target.value)} placeholder="v2" /></Field>}
             </div>
             <div className="row-2">

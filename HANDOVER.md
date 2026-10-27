@@ -37,6 +37,15 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (27 Oct 2026, deliveries into Alex's own pCloud folders)
+- Alex: no dated folder under the project; RoughCut and PreFinal Cut straight into his `/Projects - RoughCuts` (emptied together), Final Deliverables into `/Projects - FinalCuts/<record label>/<project>`; Final Cut taken out of the stages (old ones keep it, OLD_STAGES).
+- The hub's pCloud token only sees its app folder (Applications/…/TML HUB), so Alex asked pCloud for a second app, **TML HUB Library** (Business integration, All folders, Write yes). pCloud has to approve it first (request sent 27 Oct).
+- pcloud function: optional secret `PCLOUD_FULL_TOKEN`. With it deliveryStart picks ROUGH / FINAL/<label>/<title>; without it ROOT/Deliveries/<stage>/<title> (no dated sub). Paths under ROOT keep PCLOUD_TOKEN (tokenFor), so every older delivery, photo, backup and link goes on as before; publicDirect checks both tokens' links. New action deliveryLabels (folders in /Projects - FinalCuts). deliveryFolderLink with fileids makes a gettreepublink to exactly the delivery's files (files share a folder now); without fileids the old folder link. deliveryStart takes `into` (more files next to the ones up) instead of the client parsing the path. deliveryChunk carries the path (which token).
+- Deliveries.jsx: Label field (Final Deliverables, only once labels.ready), New label… types a name (the folder is made on upload); label kept in the delivery's data; after a file is taken off, publish makes the one link again.
+- Not tested against pCloud here (no npm or pCloud from this container): gettreepublink is the one new pCloud call; if it fails the upload still keeps the files (each has its own link, Download all uses them).
+- **Alex still has to**: when pCloud approves the app, add the redirect URI `https://hub.themadlions.com/`, put its Client ID in Settings > Integrations > pCloud, Connect, and save the token in Supabase > Edge Functions > Secrets as `PCLOUD_FULL_TOKEN` (never touch PCLOUD_TOKEN). Then: the video library page (browse and preview his archive), agreed in principle.
+- Open: `Projects - Various` as a label choice (asked, not answered).
+
 ## Where we stopped (27 Oct 2026, security check)
 - Alex asked "are we safe, do we have backups?". Supabase's advisor and a read-only code review were run.
 - Backups: the database had NO scheduled backup (backups.sql never run, pg_cron off). New: supabase/backups_daily.sql (needs backups.sql first): every day 03:00 UTC, every public table with workspace_id, keep 21. pCloud copy (Settings > Data) now daily and on by default (pcloud.js backupDue), the pcloud function keeps the newest 30 dated folders.
