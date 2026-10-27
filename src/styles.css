@@ -8197,3 +8197,18 @@ html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > b
     font-size: 28px !important; font-weight: 700 !important; letter-spacing: -.01em; line-height: 1.15;
   }
 }
+@media (min-width: 821px) {
+  /* every search line in a page's top row: the same 38 px glass pill (it was 44 px glass here, 38 px solid there) */
+  html[data-theme] body main.content :is(.db-top, .toolbar-actions, .decks-top, .page-actions, .rem-head) input:is([type=search], [placeholder^="Search"]) {
+    height: 38px !important; min-height: 38px; font-size: 14px !important; border-radius: 999px !important;
+    background: color-mix(in srgb, var(--panel) 80%, transparent) !important; border: 1px solid var(--line-soft) !important;
+  }
+  /* round icon buttons in a top row (filter, +, arrows) as the Calendar's arrows: 38 px */
+  html[data-theme] body main.content :is(.db-top, .toolbar-actions, .page-actions) :is(.db-add, .icon-btn, .act-round) {
+    width: 38px !important; height: 38px !important; min-height: 38px; padding: 0 !important;
+  }
+  /* a plain-text button in a toolbar (Add group, Arrow, Edit text, Download .txt) is a pill like the others */
+  html[data-theme] body main.content :is(.toolbar, .toolbar-actions, .page-actions, .script-actions) .btn.btn-ghost {
+    background: color-mix(in srgb, var(--panel) 80%, transparent); border: 1px solid var(--line-soft); padding-left: 16px; padding-right: 16px;
+  }
+}
