@@ -13,9 +13,8 @@ import { emptyContact, loadContacts, parseContactsFile, removeContacts, sameKey,
 // the first letters of the name (a number or an emoji makes none: then a phone glyph)
 const initials = (n) => (n || '').split(/\s+/).map((x) => (x.match(/\p{L}/u) || [])[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '☏'
 const PAGE = 200
-// the specialty as a group: the same word in any case or accent is one group
+// the specialty, for the order
 const specialtyOf = (c) => (c.company || '').trim()
-const groupKey = (c) => specialtyOf(c).toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
 export default function AddressBook({ slot }) {
   const { state, update } = useStore()
@@ -29,8 +28,9 @@ export default function AddressBook({ slot }) {
   const pickSort = (v) => { setSort(v); setShown(PAGE); try { localStorage.setItem('tml_ab_sort', v) } catch { /* private */ } }
   const [shown, setShown] = useState(PAGE)
   // Cards or List (Alex, 27 Oct: "keep the cards, add a list, the cards are hard to scan"); kept per device
-  const [view, setView] = useState(() => { try { return localStorage.getItem('tml_ab_view') || 'cards' } catch { return 'cards' } })
-  const pickView = (v) => { setView(v); try { localStorage.setItem('tml_ab_view', v) } catch { /* private */ } }
+  // the List is the main view (Alex, 27 Oct); a new key, so a device that had chosen Cards starts on List too
+  const [view, setView] = useState(() => { try { return localStorage.getItem('tml_ab_view2') || 'list' } catch { return 'list' } })
+  const pickView = (v) => { setView(v); try { localStorage.setItem('tml_ab_view2', v) } catch { /* private */ } }
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
   const fileRef = useRef(null)
@@ -46,14 +46,8 @@ export default function AddressBook({ slot }) {
       return byName
     }), [list, q, sort])
 
-  // what is on screen, in groups: one group when not ordered by specialty
-  const groups = useMemo(() => {
-    const page = found.slice(0, shown)
-    if (sort !== 'company') return [['all', '', page]]
-    const m = new Map()
-    for (const c of page) { const k = groupKey(c); if (!m.has(k)) m.set(k, [k, specialtyOf(c) || 'No specialty', []]); m.get(k)[2].push(c) }
-    return [...m.values()]
-  }, [found, shown, sort])
+  // one list, no group headings (Alex, 27 Oct: "no specialty above as a group; if I need it I search")
+  const groups = useMemo(() => [['all', '', found.slice(0, shown)]], [found, shown])
 
   const importFile = async (file) => {
     if (!file) return
@@ -143,10 +137,9 @@ export default function AddressBook({ slot }) {
           {!list.length && <div style={{ marginTop: 12 }}><Button variant="primary" onClick={() => fileRef.current?.click()}>Import file</Button></div>}
         </Empty>
       ) : (
-        // grouped by specialty when that is the order, a heading over each group (Alex, 27 Oct)
+        // one list in the chosen order (no headings: Alex, 27 Oct)
         groups.map(([key, label, items]) => (
           <div key={key} className="ab-group">
-            {sort === 'company' && <div className="ab-group-head"><span className="ab-chip"><i />{label}</span><span className="muted small">{items.length}</span></div>}
             {view === 'list' ? (
               // the list: one slim soft row per person, the columns lined up (not a ruled table)
               <div className="ab-rows">
@@ -156,7 +149,7 @@ export default function AddressBook({ slot }) {
                     <strong className="ab-name">{c.name}</strong>
                     <span className="ab-cell">{c.phone}{c.phone2 && <span className="muted"> · {c.phone2}</span>}</span>
                     <span className="ab-cell muted">{c.email}</span>
-                    <span className="ab-cell">{sort !== 'company' && c.company && <span className="ab-chip"><i />{c.company}</span>}{c.title && <span className="muted small"> {c.title}</span>}</span>
+                    <span className="ab-cell">{c.company && <span className="ab-chip"><i />{c.company}</span>}{c.title && <span className="muted small"> {c.title}</span>}</span>
                     {acts(c)}
                   </article>
                 ))}
