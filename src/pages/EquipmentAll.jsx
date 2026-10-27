@@ -4,7 +4,7 @@ import { can, gearCategoriesOf, uid, useCurrentUser, useStore } from '../lib/sto
 import { matchText } from '../lib/library.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
 import { InfoCard } from '../components/InfoCard.jsx'
-import { DbAdd, DbBar, DbFilter, ListSearch, useFitScroll } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbFilter, ListRow, ListSearch, useFitScroll } from '../components/DbTools.jsx'
 
 /* Database > Equipment (Alex, 10 Oct): the company's own film equipment, each item with what it is,
    how many, its serial and a rental price per day, so it can later be sent to whoever wants to rent it.
@@ -77,16 +77,17 @@ export default function EquipmentAll({ slot }) {
         </Empty>
       ) : (
         // the rows of Contacts: picture, name and quantity, category as a chip, brand / model, serial, the day rate
-        <div className="ab-rows">
+        <div className="lrow-list">
           {list.map((g) => (
-            <article key={g.id} className="ab-row lib-row gear-row" onClick={() => setDetailFor(g.id)} role="button" tabIndex={0}>
-              <span className="ab-ava sm" aria-hidden="true">{g.photos?.[0]?.thumb ? <img src={g.photos[0].thumb} alt="" /> : '🎥'}</span>
-              <strong className="ab-name">{g.name}{Number(g.qty) > 1 && <span className="muted"> ×{g.qty}</span>}</strong>
-              <span className="ab-cell">{g.category && <span className="ab-chip"><i />{g.category}</span>}</span>
-              <span className="ab-cell muted">{g.model}</span>
-              <span className="ab-cell muted">{g.serial}</span>
-              <span className="ab-cell ab-rate">{euro(g.dayRate) ? `${euro(g.dayRate)} / day` : ''}</span>
-            </article>
+            <ListRow key={g.id} onClick={() => setDetailFor(g.id)}
+              thumb={g.photos?.[0]?.thumb ? <img src={g.photos[0].thumb} alt="" /> : '🎥'}
+              title={<>{g.name}{Number(g.qty) > 1 && <span className="muted"> ×{g.qty}</span>}</>}
+              sub={g.model}
+              chips={<>
+                {g.category && <span className="lchip acc"><i />{g.category}</span>}
+                {euro(g.dayRate) && <span className="lchip"><b>{euro(g.dayRate)}</b> / day</span>}
+                {g.serial && <span className="lchip">S/N {g.serial}</span>}
+              </>} />
           ))}
         </div>
       )}

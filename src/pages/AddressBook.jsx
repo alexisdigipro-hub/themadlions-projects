@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Textarea, useToast } from '../components/ui.jsx'
-import { DbAdd, DbBar, useFitScroll } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, ListRow, useFitScroll } from '../components/DbTools.jsx'
 import { uid, useStore } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 import { cachedContacts, emptyContact, keepContacts, loadContacts, parseContactsFile, removeContacts, sameKey, saveContacts, toBook, toCsv, toVcf } from '../lib/addressBook.js'
@@ -166,11 +166,14 @@ export default function AddressBook({ slot }) {
      - an entry no contact holds (added in Crew, in a project, or moved out of Contacts before 27 Oct) is tied to the
        contact with the same name or mobile, else becomes a new contact. */
   const syncing = useRef(false)
+  const moving = useRef(false)
   const missed = useRef(false) // a change came while saving: look again after
   const [syncTick, setSyncTick] = useState(0)
   useEffect(() => {
     if (!list) return
-    if (syncing.current) { missed.current = true; return }
+    // while + Crew / + Cast is writing, the new entry has no contact yet: waiting keeps the sync from tying it to
+    // another contact of the same name
+    if (syncing.current || moving.current) { missed.current = true; return }
     const lib = state.library.contacts.filter((x) => x.kind === 'crew' || x.kind === 'cast')
     const byId = new Map(lib.map((x) => [x.id, x]))
     const changed = new Map()
@@ -346,6 +349,7 @@ export default function AddressBook({ slot }) {
     if (!todo.length) return toast(cs.length === 1 ? `${cs[0].name} is already in ${where}` : `They are all in ${where} already`, 'ok')
     const held = new Set((list || []).map((c) => c.lib?.[kind]).filter(Boolean))
     const links = new Map()
+    moving.current = true
     update((s) => {
       for (const c of todo) {
         const name = foldName(c.name), ph = digits9(c.phone)
@@ -365,7 +369,10 @@ export default function AddressBook({ slot }) {
       }
       return s
     })
-    try { await saveMany(todo.map((c) => ({ ...c, lib: { ...c.lib, [kind]: links.get(c.id) } }))) } catch (e) { return toast(e.message, 'error') }
+    try { await saveMany(todo.map((c) => ({ ...c, lib: { ...c.lib, [kind]: links.get(c.id) } }))) } catch (e) { return toast(e.message, 'error') } finally {
+      moving.current = false
+      if (missed.current) { missed.current = false; setSyncTick((t) => t + 1) }
+    }
     toast(todo.length === 1 ? `${todo[0].name} is in ${where} now, and still in Contacts` : `${todo.length} added to ${where}, still in Contacts`, 'ok')
   }
   const moveTo = (c, kind) => moveMany([c], kind)
@@ -489,18 +496,21 @@ export default function AddressBook({ slot }) {
           <div key={key} className="ab-group">
             {sort === 'company' && <div className="ab-group-head"><span className="ab-chip"><i />{label}</span><span className="muted small">{items.length}</span></div>}
             {/* one slim soft row per person, the columns lined up (not a ruled table); List only (Alex, 27 Oct) */}
-              <div className="ab-rows">
+              <div className="lrow-list">
                 {items.map((c) => (
-                  <article key={c.id} className={`ab-row${inLibrary(c) ? ' ab-in' : ''}`} title={inLibrary(c) ? `Already in ${inLibrary(c)}` : undefined} onClick={() => setCardId(c.id)} role="button" tabIndex={0}>
-                    {check(c)}
-                    <span className="ab-ava sm" aria-hidden="true">{c.photo ? <img src={c.photo} alt="" /> : initials(c.name)}</span>
-                    <strong className="ab-name">{star(c)}{c.name}</strong>
-                    <span className="ab-cell">{c.phone}{c.phone2 && <span className="muted"> · {c.phone2}</span>}</span>
-                    <span className="ab-cell muted">{c.email}</span>
-                    <span className="ab-cell">{sort !== 'company' && c.company && <span className="ab-chip"><i />{c.company}</span>}{c.title && <span className="muted small"> {c.title}</span>}</span>
-                    {quick(c) || <span />}
-                    {acts(c)}
-                  </article>
+                  <ListRow key={c.id} className={inLibrary(c) ? 'ab-in' : ''} hint={inLibrary(c) ? `In ${inLibrary(c)}` : undefined} onClick={() => setCardId(c.id)}
+                    check={check(c)}
+                    thumb={c.photo ? <img src={c.photo} alt="" /> : initials(c.name)}
+                    title={<>{star(c)}{c.name}</>}
+                    sub={[c.title, c.notes && c.notes.split('\n')[0]].filter(Boolean).join(' · ')}
+                    chips={<>
+                      {sort !== 'company' && c.company && <span className="lchip acc"><i />{c.company}</span>}
+                      {inLibrary(c) && <span className="lchip">In {inLibrary(c)}</span>}
+                      {c.phone && <span className="lchip">{c.phone}</span>}
+                      {c.phone2 && <span className="lchip">{c.phone2}</span>}
+                      {c.email && <span className="lchip">{c.email}</span>}
+                    </>}
+                    aside={<>{quick(c)}{acts(c)}</>} />
                 ))}
               </div>
           </div>

@@ -7,7 +7,7 @@ import { coordsFromText } from '../lib/sun.js'
 import { isMapsLink, readMapLink } from '../lib/maplink.js'
 import PhotoGrid from '../components/PhotoGrid.jsx'
 import { InfoCard, QuickLinks } from '../components/InfoCard.jsx'
-import { DbAdd, DbBar, DbFilter, ListSearch, useFitScroll } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, DbFilter, ListRow, ListSearch, useFitScroll } from '../components/DbTools.jsx'
 
 const TYPES = ['Studio', 'Interior', 'Exterior', 'INT. & EXT.', 'Office', 'Base camp', 'Parking', 'Hospital', 'Other']
 const emptyLoc = () => ({ id: uid(), name: '', mapsUrl: '', address: '', type: 'Interior', notes: '', contact: '', phone: '', lat: '', lon: '', coordsText: '', photos: [], tags: [], createdAt: new Date().toISOString() })
@@ -144,19 +144,21 @@ export default function LocationsAll({ slot }) {
         </Empty>
       ) : (
         // the picture, the name and its area, the type as a chip, the address, who to call; a tap opens the map
-        <div className="ab-rows">
+        <div className="lrow-list">
           {list.map((l) => (
-            <article key={l.id} className="ab-row tall-row loc-row" onClick={() => setDetailFor(l.id)} role="button" tabIndex={0}>
-              <span className="ab-thumb" aria-hidden="true">{l.photos?.[0]?.thumb ? <img src={l.photos[0].thumb} alt="" /> : '📍'}</span>
-              <span className="ab-two"><strong className="ab-name">{l.name}</strong>{areaOf(l.address) && <span className="muted small">{areaOf(l.address)}</span>}</span>
-              <span className="ab-cell">{l.type && <span className="ab-chip"><i />{l.type}</span>}</span>
-              <span className="ab-cell muted">{l.address}</span>
-              <span className="ab-cell" onClick={(e) => e.stopPropagation()}>{l.contact}{l.phone && <> {l.contact ? '· ' : ''}<a href={`tel:${l.phone}`}>{l.phone}</a></>}</span>
-              <span className="ab-acts" onClick={(e) => e.stopPropagation()}>
+            <ListRow key={l.id} tall onClick={() => setDetailFor(l.id)}
+              thumb={l.photos?.[0]?.thumb ? <img src={l.photos[0].thumb} alt="" /> : '📍'}
+              title={l.name}
+              sub={l.address}
+              chips={<>
+                {l.type && <span className="lchip acc"><i />{l.type}</span>}
+                {areaOf(l.address) && <span className="lchip">{areaOf(l.address)}</span>}
+                {(l.contact || l.phone) && <span className="lchip">{l.contact}{l.phone && <> {l.contact ? '· ' : ''}<a href={`tel:${l.phone}`} onClick={(e) => e.stopPropagation()}>{l.phone}</a></>}</span>}
+              </>}
+              aside={<>
                 {(l.mapsUrl || l.address) && <a className="btn btn-default btn-sm" href={l.mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.address)}`} target="_blank" rel="noreferrer">Map</a>}
                 {editable && <button type="button" className="btn btn-default btn-sm" onClick={() => { setLinkNote(''); setDraft({ ...l }) }}>Edit</button>}
-              </span>
-            </article>
+              </>} />
           ))}
         </div>
       )}
