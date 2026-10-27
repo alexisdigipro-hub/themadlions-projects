@@ -294,3 +294,7 @@ input[type='range'] { accent-color: var(--accent); width: 160px; }
   .set-row { flex-wrap: wrap; }
   .set-ctl { max-width: 100%; }
 }
+
+/* in the hub (hubTheme.ts): the hub's own backdrop behind RoarList, no RoarList glow on top of it */
+html.hub-theme body { background: var(--hub-backdrop); background-attachment: fixed; background-size: cover; }
+html.hub-theme body::before { display: none; }

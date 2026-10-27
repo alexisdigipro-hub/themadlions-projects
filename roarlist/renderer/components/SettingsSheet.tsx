@@ -6,6 +6,7 @@ import { ACCENTS, COLUMNS, FONTS, THEMES, TEXT_SIZES, revealFrom, set, type Sett
 import { Lens } from '../ui'
 import { useSettings } from '../useSettings'
 import { Icon } from './Icon'
+import { followsHub } from '../hubTheme'
 
 const VERSION = '0.4.2'
 type Page = 'general' | 'appearance' | 'language' | 'lists' | 'pdf' | 'keys'
@@ -117,7 +118,7 @@ function Appearance({ s }: { s: Settings }) {
           <div className="pv-tags"><span className="on">WS</span><span>Drone</span><span>24mm</span></div>
         </div>
       </div>
-      <Box title={t.theme}>
+      {followsHub() ? <Box title={t.theme} note={t.hubThemeNote}><Row label={t.hubTheme} /></Box> : <Box title={t.theme}>
         <div className="set-row">
           <div className="themes">
             {THEMES.map(([k, name, accent, bg]) => (
@@ -138,27 +139,27 @@ function Appearance({ s }: { s: Settings }) {
             ))}
           </div>
         </Row>
-      </Box>
+      </Box>}
       <Box title={t.text}>
         <Row label={t.textSize}>
           <span className="muted small">A</span>
           <input type="range" min={0} max={TEXT_SIZES.length - 1} value={s.textSize} onChange={(e) => set({ textSize: Number(e.target.value) })} />
           <span className="muted">A</span>
         </Row>
-        <Row label={t.font}>
+        {!followsHub() && <Row label={t.font}>
           <select className="set-select" value={s.font} onChange={(e) => set({ font: e.target.value })}>
             {FONTS.map(([k, name, stack]) => <option key={k} value={k} style={{ fontFamily: stack }}>{name}</option>)}
           </select>
-        </Row>
+        </Row>}
       </Box>
       <Box title={t.layout}>
         <Row label={t.spacing}>
           <Seg value={s.density} options={[['tight', t.tight], ['standard', t.standard], ['relaxed', t.relaxed]]} onChange={(density) => set({ density })} />
         </Row>
-        <Row label={t.radius}>
+        {!followsHub() && <Row label={t.radius}>
           <input type="range" min={4} max={16} step={2} value={s.radius} onChange={(e) => set({ radius: Number(e.target.value) })} />
           <span className="muted small num">{s.radius}px</span>
-        </Row>
+        </Row>}
       </Box>
       <Box title={t.effects}>
         <Row label={t.glassLook} hint={t.glassHint}><Switch on={s.glass} onChange={(glass) => set({ glass })} /></Row>
