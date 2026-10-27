@@ -26,6 +26,7 @@ import { DEFAULT_THEME, SKINS, SKIN_ICONS, applyThemeChoice, isSkin } from '../l
 import { localLook } from '../lib/teamLook.js'
 import { ICON_SETS, IconPreview, applyIconSet } from '../components/icons.jsx'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
+import { useArrowTabs } from '../lib/arrowTabs.js'
 
 export default function Settings() {
   const { state, update, replaceState, logout, mode, localBackup } = useStore()
@@ -61,6 +62,8 @@ export default function Settings() {
   const isAdmin = me?.role === 'admin'
   const nav = useNavigate()
   const mobile = useIsMobile()
+  const tabsRow = useRef(null) // ← / → step through these tabs on a computer (Alex, 27 Oct)
+  useArrowTabs(tabsRow)
   // My profile came off the side menu into Settings, as its first tab (Alex, 10 Oct)
   const TABS = [
     ['profile', 'My profile', false],
@@ -155,7 +158,7 @@ export default function Settings() {
         </nav>
       ) : (
         <div className="db-top set-top">
-          <nav className="tabs db-tabs">
+          <nav className="tabs db-tabs" ref={tabsRow}>
             {TABS.map(([k, l]) => <button key={k} type="button" className={tab === k ? 'active' : ''} onClick={(e) => { if (tab !== k) slideTo(dirIn(e.currentTarget.parentNode, e.currentTarget)); setTab(k) }}>{l}</button>)}
           </nav>
         </div>

@@ -8616,3 +8616,23 @@ a.lchip:hover { color: var(--text); }
 
 /* Every search box says "Search", faintly: the text at 20% (Alex, 27 Oct) */
 html[data-theme] body :is(input.search, .input.search, input[type=search], .rem-search, .decks-search input)::placeholder { color: var(--text); opacity: .2; }
+
+/* Every Database tab's bar as Contacts' (Alex, 27 Oct): the search right after the tabs, then the count, the filter,
+   + and the rest at the right end */
+@media (min-width: 821px) {
+  html[data-theme] body .db-page .db-top .db-slot { flex: 1 1 0; min-width: 0; }
+  html[data-theme] body .db-page .db-slot .db-bar { width: 100%; }
+  html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions { flex: 1 1 auto; justify-content: flex-start; flex-wrap: nowrap; }
+  html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions > :is(.ab-search, .search-clear-wrap, .input.search, .db-search-btn, .db-search-open):first-child + * { margin-left: auto; }
+  html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions > :is(.ab-search, .search-clear-wrap) { flex: 1 1 320px; max-width: 460px; }
+}
+@media (min-width: 821px) {
+  html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions > :is(.ab-search, .search-clear-wrap) { min-width: 120px; }
+  html[data-theme] body .db-page .db-slot .db-bar .db-collect { margin-left: 0; order: 0; }
+}
+/* the Database search the same size on every tab (Alex, 27 Oct), and Drives' and ID sheets' buttons together at the
+   right end like the others' */
+@media (min-width: 821px) {
+  html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions > :is(.ab-search, .search-clear-wrap) { flex: 0 1 200px; width: 200px; max-width: 200px; min-width: 130px; }
+  html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions > .segmented { margin-left: 0 !important; }
+}
