@@ -8626,3 +8626,7 @@ html[data-theme] body :is(input.search, .input.search, input[type=search], .rem-
   html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions > :is(.ab-search, .search-clear-wrap, .input.search, .db-search-btn, .db-search-open):first-child + * { margin-left: auto; }
   html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions > :is(.ab-search, .search-clear-wrap) { flex: 1 1 320px; max-width: 460px; }
 }
+@media (min-width: 821px) {
+  html[data-theme] body .db-page .db-slot .db-bar .toolbar-actions > :is(.ab-search, .search-clear-wrap) { min-width: 120px; }
+  html[data-theme] body .db-page .db-slot .db-bar .db-collect { margin-left: 0; order: 0; }
+}
