@@ -13,6 +13,8 @@ import { pcloudDeliverMany } from '../lib/pcloud.js'
 import { uploadThumbs } from '../lib/deliveryThumbs.js'
 import { copyText, creditsFromProject, parseCredits, youtubeCredits } from '../lib/deliveryCredits.js'
 import { remote } from '../lib/supabase.js'
+import { ListSearch } from '../components/DbTools.jsx'
+import { matchText } from '../lib/library.js'
 
 /* The stages a new delivery can be (Alex, 12 Oct, written his way): RoughCut, PreFinal Cut, Final Cut.
    Older deliveries made as final files, a treatment or a lookbook keep their names and their pages. */
@@ -106,8 +108,9 @@ export default function Deliveries() {
   const setFilter = (k) => { setFilterRaw(k); if (k === 'roardino') go('/share?tab=roardino'); else if (params.get('tab')) go('/share') }
   useEffect(() => { const t = params.get('tab'); if (t && t !== filter) setFilterRaw(t) }, [params]) // eslint-disable-line react-hooks/exhaustive-deps
   // Tiles or a list, on a computer (Alex, 24 Oct), remembered on this device
-  const [look, setLook] = useState(() => { try { return localStorage.getItem('tml_share_look') === 'list' ? 'list' : 'tiles' } catch { return 'tiles' } })
-  const pickLook = (v) => { setLook(v); try { localStorage.setItem('tml_share_look', v) } catch { /* private mode */ } }
+  // the List only (Alex, 27 Oct: "leave only the list mode"), Tiles / List gave way to a search
+  const look = 'list'
+  const [q, setQ] = useState('')
   const mobile = useIsMobile()
   const [addMenu, setAddMenu] = useState(false) // the phone's + : New delivery / New cost estimation
   const { boxRef, slideTo, inClass } = useSlide()
@@ -382,7 +385,8 @@ export default function Deliveries() {
   const tabs = [['delivery', 'Deliveries'], ...(isAdmin ? [['estimate', 'Estimates']] : []), ['all', 'Everything'], ...(remote && can(user, 'callsheets') ? [['roardino', 'Roardino']] : [])]
   const inRoardino = filter === 'roardino' && tabs.some(([k]) => k === 'roardino')
   const shown = tabs.some(([k]) => k === filter) ? filter : 'all'
-  const list = useMemo(() => (shown === 'all' ? groups : groups.filter((g) => g.head.kind === shown)), [groups, shown])
+  const list = useMemo(() => (shown === 'all' ? groups : groups.filter((g) => g.head.kind === shown))
+    .filter((g) => matchText(q, g.head.name, g.head.sub, g.head.badge, g.head.version, ...g.people.map((r) => `${r.data?.recipient?.name || ''} ${r.data?.recipient?.email || ''}`))), [groups, shown, q])
   const counts = { all: groups.length, delivery: groups.filter((g) => g.head.isDelivery).length, estimate: groups.filter((g) => g.head.isEstimate).length, callsheet: groups.filter((g) => g.head.kind === 'callsheet').length }
   // These two only exist once the matching SQL file has been run, so say so rather than hiding the gap.
   const sample = all[0]
@@ -542,9 +546,7 @@ export default function Deliveries() {
             </button>
           ))}
         </nav>
-        <span className="segmented share-look" role="tablist" aria-label="Show as">
-          {[['tiles', 'Tiles'], ['list', 'List']].map(([v, l]) => <button key={v} type="button" className={look === v ? 'on' : ''} onClick={() => pickLook(v)}>{l}</button>)}
-        </span>
+        {!inRoardino && <span className="share-search"><ListSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="" /></span>}
         {editable && (
           <span className="share-new">
             {isAdmin && <Act icon="estimate" label="New cost estimation" onClick={startEstimate} />}
@@ -559,7 +561,7 @@ export default function Deliveries() {
       {rows === undefined ? (
         <p className="muted">Loading…</p>
       ) : !list.length ? (
-        <Empty title="Nothing sent yet" action={editable && <Button variant="primary" onClick={startNew}>Send the first one</Button>}>
+        q.trim() ? <Empty title="Nothing matches">{`Nothing here has "${q.trim()}" in its title, client, project or recipients.`}</Empty> : <Empty title="Nothing sent yet" action={editable && <Button variant="primary" onClick={startNew}>Send the first one</Button>}>
           Paste the link you already made on SwissTransfer or WeTransfer, choose the stage, and the app gives you a page with your logo to send instead. The client opens it and downloads.
         </Empty>
       ) : (
