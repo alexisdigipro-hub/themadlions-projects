@@ -422,7 +422,7 @@ export default function AddressBook({ slot }) {
         <div className="toolbar-actions">
           {/* × empties the search, as does Escape (Alex, 27 Oct) */}
           <span className="ab-search">
-            <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} onKeyDown={(e) => { if (e.key === 'Escape' && q) { setQ(''); setShown(PAGE) } }} aria-label="Search the contacts" placeholder="" />
+            <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} onKeyDown={(e) => { if (e.key === 'Escape' && q) { setQ(''); setShown(PAGE) } }} aria-label="Search the contacts" placeholder="Search" />
             {q && <button type="button" className="ab-search-x" aria-label="Clear the search" title="Clear" onClick={() => { setQ(''); setShown(PAGE) }}>×</button>}
           </span>
           <input ref={fileRef} type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" hidden onChange={(e) => importFile(e.target.files?.[0])} />

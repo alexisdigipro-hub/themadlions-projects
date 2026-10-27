@@ -423,7 +423,7 @@ export default function Finance({ start }) {
           <div className="toolbar">
             <div className="toolbar-info"><strong>{listed.length + listedExpected.length} transactions{listedOwed.length ? ` · ${listedOwed.length} owed from budgets` : ''}</strong><span className="muted">{money(listed.filter((t) => t.type === 'income').reduce((a, t) => a + Number(t.net), 0) + listedExpectedTotal, cur)} in · {money(listed.filter((t) => t.type === 'expense').reduce((a, t) => a + Number(t.net), 0), cur)} out (net){listedOwed.length ? ` · ${money(listedOwedTotal, cur)} still owed on budget lines` : ''}</span></div>
             <div className="toolbar-actions">
-              <Input className="input search" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} placeholder="Search…" />
+              <Input className="input search" value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} placeholder="Search" />
               <Select value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })} options={[['', 'Income & expense'], ['income', 'Income'], ['expense', 'Expense']]} />
               <Select value={f.month} onChange={(e) => setF({ ...f, month: e.target.value })} options={[['', 'All months'], ...MONTHS.map((m, i) => [String(i + 1).padStart(2, '0'), m])]} />
               <Select value={f.project} onChange={(e) => setF({ ...f, project: e.target.value })} options={[['', 'All projects'], ...state.projects.map((p) => [p.id, p.title])]} />

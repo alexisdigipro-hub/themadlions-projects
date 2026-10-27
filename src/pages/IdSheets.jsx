@@ -171,9 +171,9 @@ export default function IdSheets({ slot }) {
         <div className="toolbar-info"><strong>ID sheets</strong> <span className="muted">{people ? people.length : ''}</span></div>
         <div className="toolbar-actions">
           {/* on a phone a round magnifier that opens into the search, like the other Database tabs */}
-          {mobile ? <DbSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search people and sheets" /> : (
+          {mobile ? <DbSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" /> : (
             <span className="search-clear-wrap">
-              <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search the ID sheets" />
+              <Input className="input search" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search the ID sheets" placeholder="Search" />
               {q && <button type="button" className="search-clear" aria-label="Clear the search" title="Clear" onClick={() => setQ('')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17" /></svg></button>}
             </span>
           )}
