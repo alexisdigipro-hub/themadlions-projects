@@ -289,7 +289,7 @@ export default function Music() {
       )}
 
       <div className="toolbar">
-        <div className="toolbar-info"><strong>Song map</strong><span className="muted">Sections with times, lyrics and the setups that cover them</span></div>
+        <div className="toolbar-info"><strong>Song map</strong>{sections.length > 0 && <span className="muted">{sections.length} section{sections.length === 1 ? '' : 's'}</span>}</div>
         {editable && (
           <div className="toolbar-actions">
             {!sections.length && <Button variant="ghost" onClick={() => setPaste({ text: '' })}>Paste full lyrics</Button>}
@@ -299,9 +299,9 @@ export default function Music() {
         )}
       </div>
 
-      {!sections.length ? (
-        <Empty title="No sections yet">Paste the whole lyric once and it is split into sections by the blank lines, then fix the times while the track plays. Or add sections one by one.</Empty>
-      ) : (
+      {/* no sections yet: nothing here, the box stays short; Add section, Paste full lyrics or Lyrics from audio open it
+          (Alex, 27 Oct: "delete the No sections yet text, fold the box, open it when something is added") */}
+      {!sections.length ? null : (
         <ol className="song-map">
           {sections.map((s) => {
             const setups = (s.sceneIds || []).map((id) => project.scenes.find((x) => x.id === id)).filter(Boolean)
