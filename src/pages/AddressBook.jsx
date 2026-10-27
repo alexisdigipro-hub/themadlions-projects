@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Textarea, useToast } from '../components/ui.jsx'
 import { DbAdd, DbBar } from '../components/DbTools.jsx'
 import { uid, useStore } from '../lib/store.jsx'
@@ -20,6 +20,58 @@ const digits9 = (p) => { const d = String(p || '').replace(/\D/g, ''); return d.
 const specialtyOf = (c) => (c.company || '').trim()
 const groupKey = (c) => specialtyOf(c).toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
+// one tap to call or write (Alex, 27 Oct): a Greek number without its country gets +30
+const intl = (p) => { let d = String(p || '').replace(/\D/g, ''); if (d.startsWith('00')) d = d.slice(2); if (d.length === 10 && /^[26]/.test(d)) d = '30' + d; return d }
+const QUICK = {
+  call: <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" /></svg>,
+  wa: <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.6z" /><path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.6-2-1-1 .9a5 5 0 0 1-2.3-2.3l.9-1-1-2z" /></svg>,
+  viber: <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3c5 0 8 2.2 8 7.5S17 18 12 18l-3 3v-3.3C5.6 16.8 4 14.3 4 10.5 4 5.2 7 3 12 3z" /><path d="M13 7.5a3 3 0 0 1 3 3M13 5.5a5 5 0 0 1 5 5" /></svg>,
+  mail: <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5" /><path d="m4 7 8 6 8-6" /></svg>,
+}
+// the contact's fields that count when two of them are joined
+const FILL = ['phone', 'phone2', 'email', 'company', 'title']
+const filled = (c) => FILL.filter((k) => c[k]).length + (c.notes ? 1 : 0)
+/* Duplicates: the same mobile (last 9 digits), the same email or the same name (case and accents aside) puts two
+   contacts in one group; a group is everyone linked that way */
+function findDuplicates(list) {
+  const parent = new Map(list.map((c) => [c.id, c.id]))
+  const find = (x) => { while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x) } return x }
+  const join = (a, b) => { const ra = find(a), rb = find(b); if (ra !== rb) parent.set(ra, rb) }
+  const seen = new Map()
+  const link = (key, id) => { if (!key) return; if (seen.has(key)) join(seen.get(key), id); else seen.set(key, id) }
+  for (const c of list) {
+    link(digits9(c.phone) && 't' + digits9(c.phone), c.id)
+    link(digits9(c.phone2) && 't' + digits9(c.phone2), c.id)
+    link(c.email && 'e' + c.email.trim().toLowerCase(), c.id)
+    const n = foldName(c.name)
+    if (n && !/^[\d\s+]+$/.test(n)) link('n' + n, c.id)
+  }
+  const groups = new Map()
+  for (const c of list) { const r = find(c.id); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(c) }
+  return [...groups.values()].filter((g) => g.length > 1).map((g) => g.sort((a, b) => filled(b) - filled(a)))
+}
+// several contacts made one: the main one keeps its fields and takes the others' where it has none; a second
+// number goes to Other phone, anything more into the notes, so nothing is lost
+function mergeInto(main, others) {
+  const m = { ...main }
+  const nums = new Set([digits9(m.phone), digits9(m.phone2)].filter(Boolean))
+  const extra = []
+  for (const o of others) {
+    for (const k of ['email', 'company', 'title']) { if (!m[k] && o[k]) m[k] = o[k]; else if (k === 'email' && o.email && o.email.toLowerCase() !== (m.email || '').toLowerCase()) extra.push(o.email) }
+    for (const ph of [o.phone, o.phone2]) {
+      const d = digits9(ph)
+      if (!d || nums.has(d)) continue
+      nums.add(d)
+      if (!m.phone) m.phone = ph; else if (!m.phone2) m.phone2 = ph; else extra.push(ph)
+    }
+    if (o.notes && !(m.notes || '').includes(o.notes)) m.notes = [m.notes, o.notes].filter(Boolean).join('\n')
+    if (o.fav) m.fav = true
+    if (o.addedAt && (!m.addedAt || o.addedAt < m.addedAt)) m.addedAt = o.addedAt
+  }
+  if (extra.length) m.notes = [m.notes, `Also ${extra.join(', ')}`].filter(Boolean).join('\n')
+  return m
+}
+
 export default function AddressBook({ slot }) {
   const { state, update } = useStore()
   const toast = useToast()
@@ -39,10 +91,14 @@ export default function AddressBook({ slot }) {
   const [busy, setBusy] = useState(false)
   const fileRef = useRef(null)
   const [exportOpen, setExportOpen] = useState(false)
+  const [picked, setPicked] = useState(() => new Set()) // the contacts ticked for something done to all of them
+  const [spec, setSpec] = useState('') // a specialty chip ('' all, '*' favourites)
+  const [dups, setDups] = useState(null) // the Duplicates window: its groups, and the main one chosen in each
+  const [specs, setSpecs] = useState(null) // the Specialties window: each specialty and its new name
   // Export (Alex, 27 Oct): what is found (a search narrows it), as vCard, CSV or Excel
   const exportAs = async (kind) => {
     setExportOpen(false)
-    const rows = found
+    const rows = picked.size ? found.filter((c) => picked.has(c.id)) : found
     if (!rows.length) return toast('Nothing to export.', 'error')
     const day = new Date().toISOString().slice(0, 10)
     const name = `Contacts ${day}${q.trim() ? ` - ${q.trim().replace(/[\\/:*?"<>|]/g, ' ').slice(0, 30)}` : ''}`
@@ -56,14 +112,53 @@ export default function AddressBook({ slot }) {
 
   useEffect(() => { loadContacts().then(setList).catch((e) => { setError(e.message); setList([]) }) }, [])
 
+  // on a computer the list scrolls in its own box down to the window's foot, so the top row stays where it is and
+  // looks as it always did (Alex, 27 Oct: "as it was, only not moving"); a phone scrolls the page as before
+  const scrollRef = useRef(null)
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const fit = () => {
+      if (window.innerWidth <= 820) { el.style.height = ''; return }
+      const top = el.getBoundingClientRect().top + window.scrollY
+      let h = Math.max(240, window.innerHeight - top - 16)
+      el.style.height = `${h}px`
+      // whatever sits under it (the card's and the page's padding) comes off too, so the page itself never scrolls
+      const extra = document.documentElement.scrollHeight - window.innerHeight
+      if (extra > 0) { h = Math.max(240, h - extra); el.style.height = `${h}px` }
+    }
+    fit()
+    const top = el.closest('.db-page')?.querySelector('.db-top')
+    const ro = new ResizeObserver(fit)
+    if (top) ro.observe(top)
+    window.addEventListener('resize', fit)
+    return () => { ro.disconnect(); window.removeEventListener('resize', fit) }
+  }, [list === null])
+
   const found = useMemo(() => (list || [])
     .filter((c) => matchText(q, c.name, c.phone, c.phone2, c.email, c.company, c.title, c.notes))
+    .filter((c) => (!spec ? true : spec === '*' ? c.fav : groupKey(c) === spec))
     .sort((a, b) => {
+      // the favourites first, in every order (Alex, 27 Oct)
+      if (!!a.fav !== !!b.fav) return a.fav ? -1 : 1
       const byName = a.name.localeCompare(b.name, 'el', { sensitivity: 'base' })
       if (sort === 'new') return (b.addedAt || '').localeCompare(a.addedAt || '') || byName
       if (sort === 'company') return (!a.company - !b.company) || specialtyOf(a).localeCompare(specialtyOf(b), 'el', { sensitivity: 'base' }) || byName
       return byName
-    }), [list, q, sort])
+    }), [list, q, sort, spec])
+
+  // the specialty chips: the most used first, each with how many (Alex, 27 Oct)
+  const chips = useMemo(() => {
+    const m = new Map()
+    for (const c of list || []) {
+      const k = groupKey(c)
+      if (!k) continue
+      if (!m.has(k)) m.set(k, { k, n: 0, names: new Map() })
+      const g = m.get(k); g.n++; g.names.set(specialtyOf(c), (g.names.get(specialtyOf(c)) || 0) + 1)
+    }
+    return [...m.values()].map((g) => ({ k: g.k, n: g.n, label: [...g.names.entries()].sort((a, b) => b[1] - a[1])[0][0] })).sort((a, b) => b.n - a.n || a.label.localeCompare(b.label, 'el'))
+  }, [list])
+  const favCount = useMemo(() => (list || []).filter((c) => c.fav).length, [list])
 
   // who is already in Crew or Cast, by name (case and accents aside) or by mobile (the last 9 digits): they get a
   // faint accent tint (Alex, 27 Oct)
@@ -112,31 +207,107 @@ export default function AddressBook({ slot }) {
     } catch (e) { toast(e.message, 'error') }
   }
   const remove = async (c) => {
-    try { await removeContacts([c.id]); setList((l) => l.filter((x) => x.id !== c.id)) } catch (e) { toast(e.message, 'error') }
+    try { await removeContacts([c.id]); setList((l) => l.filter((x) => x.id !== c.id)); setPicked((p) => { const n = new Set(p); n.delete(c.id); return n }) } catch (e) { toast(e.message, 'error') }
+  }
+  const saveMany = async (changed) => {
+    await saveContacts(changed)
+    const byId = new Map(changed.map((c) => [c.id, c]))
+    setList((l) => l.map((c) => byId.get(c.id) || c))
+  }
+  const toggleFav = async (c) => { try { await saveMany([{ ...c, fav: !c.fav }]) } catch (e) { toast(e.message, 'error') } }
+  const pick = (id) => setPicked((p) => { const n = new Set(p); if (n.has(id)) n.delete(id); else n.add(id); return n })
+  const pickedList = () => (list || []).filter((c) => picked.has(c.id))
+  const removePicked = async () => {
+    const ids = [...picked]
+    try { await removeContacts(ids); setList((l) => l.filter((c) => !picked.has(c.id))); setPicked(new Set()); toast(`${ids.length} deleted`, 'ok') } catch (e) { toast(e.message, 'error') }
+  }
+  const favPicked = async () => {
+    const cs = pickedList(); const on = cs.some((c) => !c.fav)
+    try { await saveMany(cs.map((c) => ({ ...c, fav: on }))); toast(on ? `${cs.length} added to favourites` : `${cs.length} out of favourites`, 'ok') } catch (e) { toast(e.message, 'error') }
+  }
+
+  /* Duplicates: groups of the same person; in each the fullest is the main one, the rest join it */
+  const openDups = () => { const g = findDuplicates(list || []); if (!g.length) return toast('No duplicates found.', 'ok'); setDups({ groups: g, main: Object.fromEntries(g.map((x) => [x[0].id, x[0].id])) }) }
+  const mergeGroups = async (groups) => {
+    const keep = [], drop = []
+    for (const g of groups) {
+      const mainId = dups.main[g[0].id] || g[0].id
+      const main = g.find((c) => c.id === mainId)
+      keep.push(mergeInto(main, g.filter((c) => c.id !== mainId)))
+      drop.push(...g.filter((c) => c.id !== mainId).map((c) => c.id))
+    }
+    try {
+      await saveContacts(keep); await removeContacts(drop)
+      const byId = new Map(keep.map((c) => [c.id, c])), gone = new Set(drop)
+      setList((l) => l.filter((c) => !gone.has(c.id)).map((c) => byId.get(c.id) || c))
+      const left = dups.groups.filter((g) => !groups.includes(g))
+      setDups(left.length ? { ...dups, groups: left } : null)
+      toast(`${drop.length} duplicate${drop.length === 1 ? '' : 's'} joined into ${keep.length}`, 'ok')
+    } catch (e) { toast(e.message, 'error') }
+  }
+
+  /* Specialties: every specialty with its count; a new name changes it on all its contacts, and two given the same
+     name become one */
+  const openSpecs = () => setSpecs(chips.map((c) => ({ ...c, to: c.label })))
+  const saveSpecs = async () => {
+    const to = new Map(specs.filter((x) => x.to.trim() !== x.label).map((x) => [x.k, x.to.trim()]))
+    const changed = (list || []).filter((c) => to.has(groupKey(c))).map((c) => ({ ...c, company: to.get(groupKey(c)) }))
+    if (!changed.length) return setSpecs(null)
+    try { await saveMany(changed); setSpecs(null); setSpec(''); toast(`${changed.length} contacts updated`, 'ok') } catch (e) { toast(e.message, 'error') }
   }
 
   // to Crew or Cast: a library entry the Crew & cast permission shows; someone already there by the same name gets
   // the phone or email they were missing, and nobody is entered twice. The contact leaves Contacts.
-  const moveTo = async (c, kind) => {
-    const key = c.name.trim().toLowerCase()
-    const existing = state.library.contacts.find((x) => x.kind === kind && (x.name || '').trim().toLowerCase() === key)
+  const moveMany = async (cs, kind) => {
+    const where = kind === 'cast' ? 'Cast' : 'Crew'
+    let filledIn = 0
     update((s) => {
-      const hit = s.library.contacts.find((x) => x.kind === kind && (x.name || '').trim().toLowerCase() === key)
-      if (hit) {
-        if (!hit.phone && c.phone) hit.phone = c.phone
-        if (!hit.email && c.email) hit.email = c.email
-      } else {
-        s.library.contacts.push({
-          id: uid(), kind, name: c.name.trim(), phone: c.phone, email: c.email, dept: kind === 'cast' ? 'Cast' : 'Production', role: c.company || c.title || '',
-          agent: '', agentPhone: '', notes: [c.company && c.title, c.phone2 && `Also ${c.phone2}`, c.notes].filter(Boolean).join('\n'), photos: [], tags: [], createdAt: new Date().toISOString(),
-        })
+      for (const c of cs) {
+        const key = c.name.trim().toLowerCase()
+        const hit = s.library.contacts.find((x) => x.kind === kind && (x.name || '').trim().toLowerCase() === key)
+        if (hit) {
+          filledIn++
+          if (!hit.phone && c.phone) hit.phone = c.phone
+          if (!hit.email && c.email) hit.email = c.email
+        } else {
+          s.library.contacts.push({
+            id: uid(), kind, name: c.name.trim(), phone: c.phone, email: c.email, dept: kind === 'cast' ? 'Cast' : 'Production', role: c.company || c.title || '',
+            agent: '', agentPhone: '', notes: [c.company && c.title, c.phone2 && `Also ${c.phone2}`, c.notes].filter(Boolean).join('\n'), photos: [], tags: [], createdAt: new Date().toISOString(),
+          })
+        }
       }
       return s
     })
-    await remove(c)
-    toast(existing ? `${c.name} was already in ${kind === 'cast' ? 'Cast' : 'Crew'}: phone and email filled in` : `${c.name} moved to ${kind === 'cast' ? 'Cast' : 'Crew'}`, 'ok')
+    const ids = cs.map((c) => c.id)
+    try { await removeContacts(ids) } catch (e) { return toast(e.message, 'error') }
+    const gone = new Set(ids)
+    setList((l) => l.filter((c) => !gone.has(c.id)))
+    setPicked((p) => { const n = new Set(p); ids.forEach((id) => n.delete(id)); return n })
+    toast(cs.length === 1 ? (filledIn ? `${cs[0].name} was already in ${where}: phone and email filled in` : `${cs[0].name} moved to ${where}`) : `${cs.length} moved to ${where}${filledIn ? ` (${filledIn} were there already)` : ''}`, 'ok')
   }
+  const moveTo = (c, kind) => moveMany([c], kind)
 
+  // call, WhatsApp, Viber, email: round icons, only for what the contact has (Alex, 27 Oct)
+  const quick = (c) => {
+    const n = intl(c.phone || c.phone2)
+    if (!n && !c.email) return null
+    return (
+      <span className="ab-quick" onClick={(e) => e.stopPropagation()}>
+        {n && <a className="ab-q" href={`tel:+${n}`} title={`Call ${c.phone || c.phone2}`} aria-label="Call">{QUICK.call}</a>}
+        {n && <a className="ab-q" href={`https://wa.me/${n}`} target="_blank" rel="noreferrer" title="WhatsApp" aria-label="WhatsApp">{QUICK.wa}</a>}
+        {n && <a className="ab-q" href={`viber://chat?number=%2B${n}`} title="Viber" aria-label="Viber">{QUICK.viber}</a>}
+        {c.email && <a className="ab-q" href={`mailto:${c.email}`} title={`Email ${c.email}`} aria-label="Email">{QUICK.mail}</a>}
+      </span>
+    )
+  }
+  const check = (c) => (
+    <label className="ab-check" onClick={(e) => e.stopPropagation()} title="Select">
+      <input type="checkbox" checked={picked.has(c.id)} onChange={() => pick(c.id)} />
+    </label>
+  )
+  const star = (c) => (
+    <button type="button" className={`ab-star${c.fav ? ' on' : ''}`} onClick={(e) => { e.stopPropagation(); toggleFav(c) }} title={c.fav ? 'In favourites' : 'Add to favourites'} aria-label="Favourite">{c.fav ? '★' : '☆'}</button>
+  )
   const acts = (c) => (
     <span className="ab-acts" onClick={(e) => e.stopPropagation()}>
       <button type="button" className="btn btn-default btn-sm" onClick={() => moveTo(c, 'crew')} title="Move to Crew">→ Crew</button>
@@ -173,7 +344,7 @@ export default function AddressBook({ slot }) {
               <>
                 <span className="ab-export-shade" onClick={() => setExportOpen(false)} />
                 <span className="ab-export-menu" role="menu">
-                  <span className="ab-export-head">{q.trim() ? `The ${found.length} found` : `All ${found.length}`}</span>
+                  <span className="ab-export-head">{picked.size ? `The ${picked.size} selected` : q.trim() || spec ? `The ${found.length} found` : `All ${found.length}`}</span>
                   <button type="button" role="menuitem" onClick={() => exportAs('vcf')}><b>vCard</b><small>.vcf · iPhone, Mac, Google Contacts</small></button>
                   <button type="button" role="menuitem" onClick={() => exportAs('csv')}><b>CSV</b><small>.csv · Google Contacts, Outlook</small></button>
                   <button type="button" role="menuitem" onClick={() => exportAs('xlsx')}><b>Excel</b><small>.xlsx · Excel, Numbers</small></button>
@@ -181,11 +352,36 @@ export default function AddressBook({ slot }) {
               </>
             )}
           </span>
+          <Button onClick={openDups} disabled={!list?.length} title="Find the same person twice">Duplicates</Button>
+          <Button onClick={openSpecs} disabled={!chips.length} title="Rename or join specialties">Specialties</Button>
           <DbAdd label="Add contact" onClick={() => setDraft({ ...emptyContact(), addedAt: new Date().toISOString() })} />
         </div>
+        {/* the specialty chips, the most used first; ★ the favourites */}
+        {chips.length > 0 && (
+          <nav className="chips ab-chips">
+            <button type="button" className={`chip${!spec ? ' on' : ''}`} onClick={() => { setSpec(''); setShown(PAGE) }}>All</button>
+            {favCount > 0 && <button type="button" className={`chip${spec === '*' ? ' on' : ''}`} onClick={() => { setSpec(spec === '*' ? '' : '*'); setShown(PAGE) }}>★ Favourites <small>{favCount}</small></button>}
+            {chips.slice(0, 24).map((x) => <button key={x.k} type="button" className={`chip${spec === x.k ? ' on' : ''}`} onClick={() => { setSpec(spec === x.k ? '' : x.k); setShown(PAGE) }}>{x.label} <small>{x.n}</small></button>)}
+          </nav>
+        )}
+        {/* what is done to the ticked contacts at once */}
+        {picked.size > 0 && (
+          <div className="ab-sel">
+            <strong>{picked.size} selected</strong>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPicked(new Set(found.map((c) => c.id)))}>Select all {found.length}</button>
+            <span className="grow" />
+            <button type="button" className="btn btn-default btn-sm" onClick={() => moveMany(pickedList(), 'crew')}>→ Crew</button>
+            <button type="button" className="btn btn-default btn-sm" onClick={() => moveMany(pickedList(), 'cast')}>→ Cast</button>
+            <button type="button" className="btn btn-default btn-sm" onClick={favPicked}>★ Favourite</button>
+            <button type="button" className="btn btn-default btn-sm" onClick={() => setExportOpen(true)}>Export</button>
+            <Confirm onConfirm={removePicked} label={`Delete ${picked.size}`} className="ab-del">Delete</Confirm>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPicked(new Set())} aria-label="Clear the selection">✕</button>
+          </div>
+        )}
       </DbBar>
 
       {error ? <p className="small muted">{error}</p> : null}
+      <div className="ab-scroll" ref={scrollRef}>
       {!list ? <p className="muted small">Loading…</p> : !found.length ? (
         <Empty title={list.length ? 'No matches' : 'No contacts yet'}>
           {list.length ? 'Try another search.' : 'Import your contacts: a .vcf from an iPhone or a Mac (Contacts > select all > Export vCard), or a .csv from Google Contacts or Outlook. Then move whoever you work with to Crew or Cast.'}
@@ -201,11 +397,13 @@ export default function AddressBook({ slot }) {
               <div className="ab-rows">
                 {items.map((c) => (
                   <article key={c.id} className={`ab-row${inLibrary(c) ? ' ab-in' : ''}`} title={inLibrary(c) ? `Already in ${inLibrary(c)}` : undefined} onClick={() => setDraft({ ...c })} role="button" tabIndex={0}>
+                    {check(c)}
                     <span className="ab-ava sm" aria-hidden="true">{initials(c.name)}</span>
-                    <strong className="ab-name">{c.name}</strong>
+                    <strong className="ab-name">{star(c)}{c.name}</strong>
                     <span className="ab-cell">{c.phone}{c.phone2 && <span className="muted"> · {c.phone2}</span>}</span>
                     <span className="ab-cell muted">{c.email}</span>
                     <span className="ab-cell">{sort !== 'company' && c.company && <span className="ab-chip"><i />{c.company}</span>}{c.title && <span className="muted small"> {c.title}</span>}</span>
+                    {quick(c) || <span />}
                     {acts(c)}
                   </article>
                 ))}
@@ -215,13 +413,14 @@ export default function AddressBook({ slot }) {
               <div className="ab-grid">
                 {items.map((c) => (
                   <article key={c.id} className={`ab-tile${inLibrary(c) ? ' ab-in' : ''}`} title={inLibrary(c) ? `Already in ${inLibrary(c)}` : undefined} onClick={() => setDraft({ ...c })} role="button" tabIndex={0}>
+                    {check(c)}
                     <span className="ab-ava" aria-hidden="true">{initials(c.name)}</span>
                     <div className="ab-body">
-                      <strong>{c.name}</strong>
+                      <strong>{star(c)}{c.name}</strong>
                       {(c.phone || c.email) && <div className="ab-line">{[c.phone, c.email].filter(Boolean).join(' · ')}</div>}
                       {(c.company || c.title) && <span className="ab-chip"><i />{[c.company, c.title].filter(Boolean).join(' · ')}</span>}
                     </div>
-                    {acts(c)}
+                    <div className="ab-tile-foot">{quick(c)}{acts(c)}</div>
                   </article>
                 ))}
               </div>
@@ -230,6 +429,47 @@ export default function AddressBook({ slot }) {
         ))
       )}
       {found.length > shown && <div style={{ textAlign: 'center', marginTop: 12 }}><Button onClick={() => setShown((n) => n + PAGE)}>Show more ({found.length - shown})</Button></div>}
+      </div>
+
+      <Modal open={!!dups} wide title={dups ? `Duplicates · ${dups.groups.length}` : ''} onClose={() => setDups(null)}
+        footer={dups && <><Button variant="ghost" onClick={() => setDups(null)}>Close</Button><Button variant="primary" onClick={() => mergeGroups(dups.groups)}>Join all {dups.groups.length}</Button></>}>
+        {dups && (
+          <div className="ab-dups">
+            <p className="muted small">The same mobile, email or name. In each group the ticked one stays and takes the others' phones, email and notes; nothing is lost.</p>
+            {dups.groups.slice(0, 60).map((g) => (
+              <section key={g[0].id} className="ab-dup">
+                {g.map((c) => (
+                  <label key={c.id} className="ab-dup-row">
+                    <input type="radio" name={`dup-${g[0].id}`} checked={(dups.main[g[0].id] || g[0].id) === c.id} onChange={() => setDups({ ...dups, main: { ...dups.main, [g[0].id]: c.id } })} />
+                    <strong>{c.name}</strong>
+                    <span className="muted small">{[c.phone, c.phone2, c.email, c.company].filter(Boolean).join(' · ')}</span>
+                  </label>
+                ))}
+                <div className="ab-dup-acts">
+                  <Button size="sm" variant="primary" onClick={() => mergeGroups([g])}>Join</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setDups(dups.groups.length > 1 ? { ...dups, groups: dups.groups.filter((x) => x !== g) } : null)}>Not the same</Button>
+                </div>
+              </section>
+            ))}
+            {dups.groups.length > 60 && <p className="muted small">And {dups.groups.length - 60} more: join these and open Duplicates again.</p>}
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!specs} title="Specialties" onClose={() => setSpecs(null)}
+        footer={specs && <><Button variant="ghost" onClick={() => setSpecs(null)}>Cancel</Button><Button variant="primary" onClick={saveSpecs}>Save</Button></>}>
+        {specs && (
+          <div className="ab-specs">
+            <p className="muted small">Rename a specialty for all its contacts. Give two the same name and they become one (e.g. "artist" and "Καλλιτέχνης" both "Artist").</p>
+            {specs.map((x, i) => (
+              <div key={x.k} className="ab-spec-row">
+                <Input value={x.to} onChange={(e) => setSpecs(specs.map((y, j) => (j === i ? { ...y, to: e.target.value } : y)))} />
+                <span className="muted small">{x.n}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Modal>
 
       <Modal open={!!draft} title={draft && (list || []).some((c) => c.id === draft.id) ? 'Edit contact' : 'Add contact'} onClose={() => setDraft(null)}
         footer={<><Button variant="ghost" onClick={() => setDraft(null)}>Cancel</Button><Button variant="primary" onClick={save}>Save</Button></>}>
