@@ -109,14 +109,6 @@ export default function PeopleAll({ kind, slot }) {
         </div>
       </DbBar>
 
-      {chips.length > 1 && (
-        <div className="ab-under">
-          <nav className="chips ab-chips">
-            <button type="button" className={`chip${!role ? ' on' : ''}`} onClick={() => setRole('')}>All</button>
-            {chips.slice(0, 30).map((x) => <button key={x.k} type="button" className={`chip${role === x.k ? ' on' : ''}`} onClick={() => setRole(role === x.k ? '' : x.k)}>{x.label} <small>{x.n}</small></button>)}
-          </nav>
-        </div>
-      )}
       {/* the numbers, as Drives' (Alex, 27 Oct) */}
       {all > 0 && (() => {
         const mine = people.filter((p) => p.kind === kind)
@@ -129,6 +121,15 @@ export default function PeopleAll({ kind, slot }) {
           noPhone ? [noPhone, 'with no phone or email', true] : [mine.filter((p) => p.agent).length, 'with an agent'],
         ]} />
       })()}
+      {/* the role chips under the numbers (Alex, 27 Oct) */}
+      {chips.length > 1 && (
+        <div className="ab-under">
+          <nav className="chips ab-chips">
+            <button type="button" className={`chip${!role ? ' on' : ''}`} onClick={() => setRole('')}>All</button>
+            {chips.slice(0, 30).map((x) => <button key={x.k} type="button" className={`chip${role === x.k ? ' on' : ''}`} onClick={() => setRole(role === x.k ? '' : x.k)}>{x.label} <small>{x.n}</small></button>)}
+          </nav>
+        </div>
+      )}
       <div className="ab-scroll" ref={scrollRef}>
       {!list.length ? (
         <Empty title={people.length ? 'No matches' : 'The database is empty'}>
