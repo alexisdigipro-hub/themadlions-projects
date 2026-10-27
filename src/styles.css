@@ -7733,7 +7733,7 @@ html[data-theme] body .rem-tasks > .rem-task.tinted, .rem-task.tinted { backgrou
 .roarme-team p, .roarme-team ul { margin: 0; }
 
 /* RoarMe inside the hub (20 Oct, phase 4): the whole RoarMe app filling the page, in a soft rounded frame */
-.roarme-page { height: calc(100dvh - 48px); min-height: 480px; border-radius: 18px; overflow: hidden; background: var(--bg); } /* RoarMe wears the hub's look (RoarMePage.jsx hubLook) */
+.roarme-page { height: calc(100dvh - 48px); min-height: 480px; border-radius: 18px; overflow: hidden; background: transparent; } /* RoarMe wears the hub's look (RoarMePage.jsx hubLook) and is see-through, so the hub's backdrop shows behind it (Alex, 27 Oct) */
 .roarme-frame { display: block; width: 100%; height: 100%; border: 0; }
 /* on a computer the page around RoarMe never scrolls (Alex, 23 Oct: "no scroll, it must not move"): the content column is
    exactly the window's height and RoarMe fills what its padding leaves, whatever padding the skin gives it */
@@ -8742,8 +8742,9 @@ html[data-skin='roarlist'][data-theme][data-accent] .drv-risk:not(.none) b { col
 /* The accent you pick wins over the theme's own (Alex, 27 Oct: "I picked another accent and the menu stays red");
    "Theme's own" keeps the theme's colour. --pick is the picked colour (top of this file). */
 html[data-skin][data-skin][data-theme][data-accent]:not([data-accent='theme']) {
-  --accent: var(--pick); --accent-ink: var(--pick-ink);
-  --skin-grad: linear-gradient(180deg, color-mix(in srgb, var(--pick) 78%, #fff), var(--pick));
+  /* the accent a fifth softer everywhere (Alex, 27 Oct: "20% opacity down") */
+  --accent: color-mix(in srgb, var(--pick) 80%, transparent); --accent-ink: var(--pick-ink);
+  --skin-grad: linear-gradient(180deg, color-mix(in srgb, color-mix(in srgb, var(--pick) 78%, #fff) 80%, transparent), color-mix(in srgb, var(--pick) 80%, transparent));
   --gl-glow: color-mix(in srgb, var(--pick) 35%, transparent);
 }
 html[data-skin='roarlist'][data-skin][data-theme][data-accent]:not([data-accent='theme']) {
@@ -8755,3 +8756,24 @@ html[data-skin='roarlist'][data-skin][data-theme][data-accent]:not([data-accent=
 html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='theme']) { --hover-tint: color-mix(in srgb, var(--pick) 5%, transparent); }
 html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='theme']) .sidenav a.active { box-shadow: 0 6px 16px color-mix(in srgb, var(--pick) 35%, transparent); }
 .accent-swatches .swatch.theme-own .dot { background: conic-gradient(#ff6b57, #e4c47c, #7fe8c2, #7cc4ff, #b8a7ff, #ff6b57) !important; }
+
+/* Settings and Usage laid out like a board (Alex, 27 Oct: "no alignment anywhere, gaps, chaos"): the cards stack in two
+   columns with no holes under the short ones (CSS columns, each card kept whole), a wide card across both, the plain
+   text actions as the same glass pill buttons, the logo and its buttons on one centred line. */
+@media (min-width: 821px) {
+  html[data-theme] body .cols.settings-cols { display: block; columns: 2; column-gap: 16px; }
+  html[data-theme] body .settings-cols > section.panel { break-inside: avoid; margin: 0 0 16px; width: 100%; box-sizing: border-box; }
+  html[data-theme] body .settings-cols > section.panel:is(.wide, .team-panel) { column-span: all; }
+  html[data-theme] body .settings-cols > :not(section) { break-inside: avoid; column-span: all; }
+  html[data-theme] body .usage { display: block; max-width: none; columns: 2; column-gap: 16px; }
+  html[data-theme] body .usage > * { break-inside: avoid; margin: 0 0 16px; }
+  html[data-theme] body .usage > .usage-refresh { column-span: all; margin-bottom: 8px; }
+  html[data-theme] body .usage > .panel { padding: 22px 24px; border-radius: 22px; }
+  html[data-theme] body .usage > .panel > h2, html[data-theme] body .usage .panel-head h2 { margin: 0; font-size: 18px; font-weight: 700; }
+  html[data-theme] body .usage .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  html[data-theme] body :is(.settings-cols, .usage) :is(.btn-ghost, button.link.small) { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text); font-size: 13px; font-weight: 600; text-decoration: none; }
+  html[data-theme] body :is(.settings-cols, .usage) :is(.btn-ghost, button.link.small):hover { background: color-mix(in srgb, var(--text) 11%, transparent); }
+  html[data-theme] body .settings-cols .logo-row { display: flex; align-items: center; gap: 10px; }
+  html[data-theme] body .settings-cols .logo-row .logo-preview { width: 56px; height: 56px; border-radius: 14px; margin-right: 6px; flex: none; }
+  html[data-theme] body .settings-cols .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+}
