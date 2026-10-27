@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Confirm, Empty, Field, Input, Modal, Textarea, useToast } from '../components/ui.jsx'
-import { DbAdd, DbBar } from '../components/DbTools.jsx'
+import { DbAdd, DbBar, useFitScroll } from '../components/DbTools.jsx'
 import { uid, useStore } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 import { emptyContact, loadContacts, parseContactsFile, removeContacts, sameKey, saveContacts, toBook, toCsv, toVcf } from '../lib/addressBook.js'
@@ -83,10 +83,6 @@ export default function AddressBook({ slot }) {
   const [sort, setSort] = useState(() => { try { return localStorage.getItem('tml_ab_sort') || 'name' } catch { return 'name' } })
   const pickSort = (v) => { setSort(v); setShown(PAGE); try { localStorage.setItem('tml_ab_sort', v) } catch { /* private */ } }
   const [shown, setShown] = useState(PAGE)
-  // Cards or List (Alex, 27 Oct: "keep the cards, add a list, the cards are hard to scan"); kept per device
-  // the List is the main view (Alex, 27 Oct); a new key, so a device that had chosen Cards starts on List too
-  const [view, setView] = useState(() => { try { return localStorage.getItem('tml_ab_view2') || 'list' } catch { return 'list' } })
-  const pickView = (v) => { setView(v); try { localStorage.setItem('tml_ab_view2', v) } catch { /* private */ } }
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
   const fileRef = useRef(null)
@@ -112,28 +108,8 @@ export default function AddressBook({ slot }) {
 
   useEffect(() => { loadContacts().then(setList).catch((e) => { setError(e.message); setList([]) }) }, [])
 
-  // on a computer the list scrolls in its own box down to the window's foot, so the top row stays where it is and
-  // looks as it always did (Alex, 27 Oct: "as it was, only not moving"); a phone scrolls the page as before
-  const scrollRef = useRef(null)
-  useLayoutEffect(() => {
-    const el = scrollRef.current
-    if (!el) return
-    const fit = () => {
-      if (window.innerWidth <= 820) { el.style.height = ''; return }
-      const top = el.getBoundingClientRect().top + window.scrollY
-      let h = Math.max(240, window.innerHeight - top - 16)
-      el.style.height = `${h}px`
-      // whatever sits under it (the card's and the page's padding) comes off too, so the page itself never scrolls
-      const extra = document.documentElement.scrollHeight - window.innerHeight
-      if (extra > 0) { h = Math.max(240, h - extra); el.style.height = `${h}px` }
-    }
-    fit()
-    const top = el.closest('.db-page')?.querySelector('.db-top')
-    const ro = new ResizeObserver(fit)
-    if (top) ro.observe(top)
-    window.addEventListener('resize', fit)
-    return () => { ro.disconnect(); window.removeEventListener('resize', fit) }
-  }, [list === null])
+  // on a computer the list scrolls in its own box, so the top row stays as it was and never moves (Alex, 27 Oct)
+  const scrollRef = useFitScroll(list === null)
 
   const found = useMemo(() => (list || [])
     .filter((c) => matchText(q, c.name, c.phone, c.phone2, c.email, c.company, c.title, c.notes))
@@ -326,9 +302,6 @@ export default function AddressBook({ slot }) {
           <span className="segmented small" role="tablist" aria-label="Sort">
             {[['name', 'Name'], ['new', 'Newest'], ['company', 'Specialty']].map(([v, l]) => <button key={v} type="button" className={sort === v ? 'on' : ''} onClick={() => pickSort(v)}>{l}</button>)}
           </span>
-          <span className="segmented small" role="tablist" aria-label="Show as">
-            {[['cards', 'Cards'], ['list', 'List']].map(([v, l]) => <button key={v} type="button" className={view === v ? 'on' : ''} onClick={() => pickView(v)}>{l}</button>)}
-          </span>
           {/* × empties the search, as does Escape (Alex, 27 Oct) */}
           <span className="ab-search">
             <Input className="input search" value={q} onChange={(e) => { setQ(e.target.value); setShown(PAGE) }} onKeyDown={(e) => { if (e.key === 'Escape' && q) { setQ(''); setShown(PAGE) } }} placeholder="Search name, phone, email, specialty…" />
@@ -337,25 +310,32 @@ export default function AddressBook({ slot }) {
           {/* how many (Alex, 27 Oct: "with a search, show how many contacts it found") */}
           {list && <span className="ab-count">{q.trim() ? `${found.length} of ${list.length}` : `${list.length} contact${list.length === 1 ? '' : 's'}`}</span>}
           <input ref={fileRef} type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" hidden onChange={(e) => importFile(e.target.files?.[0])} />
-          <Button onClick={() => fileRef.current?.click()} disabled={busy}>{busy ? 'Importing…' : 'Import file'}</Button>
+          {/* one ⋯ menu for Import, Export, Duplicates and Specialties, so the whole bar fits on the tabs' line */}
           <span className="ab-export">
-            <Button onClick={() => setExportOpen((o) => !o)} disabled={!found.length}>Export</Button>
+            <button type="button" className={`btn btn-default ab-more${exportOpen ? ' on' : ''}`} onClick={() => setExportOpen((o) => !o)} aria-label="More" title="Import, Export, Duplicates, Specialties">{busy ? '…' : '⋯'}</button>
             {exportOpen && (
               <>
                 <span className="ab-export-shade" onClick={() => setExportOpen(false)} />
                 <span className="ab-export-menu" role="menu">
-                  <span className="ab-export-head">{picked.size ? `The ${picked.size} selected` : q.trim() || spec ? `The ${found.length} found` : `All ${found.length}`}</span>
-                  <button type="button" role="menuitem" onClick={() => exportAs('vcf')}><b>vCard</b><small>.vcf · iPhone, Mac, Google Contacts</small></button>
-                  <button type="button" role="menuitem" onClick={() => exportAs('csv')}><b>CSV</b><small>.csv · Google Contacts, Outlook</small></button>
-                  <button type="button" role="menuitem" onClick={() => exportAs('xlsx')}><b>Excel</b><small>.xlsx · Excel, Numbers</small></button>
+                  <button type="button" role="menuitem" disabled={busy} onClick={() => { setExportOpen(false); fileRef.current?.click() }}><b>Import file</b><small>.vcf or .csv · iPhone, Mac, Google, Outlook</small></button>
+                  {found.length > 0 && <>
+                    <span className="ab-export-head">Export {picked.size ? `the ${picked.size} selected` : q.trim() || spec ? `the ${found.length} found` : `all ${found.length}`}</span>
+                    <button type="button" role="menuitem" onClick={() => exportAs('vcf')}><b>vCard</b><small>.vcf · iPhone, Mac, Google Contacts</small></button>
+                    <button type="button" role="menuitem" onClick={() => exportAs('csv')}><b>CSV</b><small>.csv · Google Contacts, Outlook</small></button>
+                    <button type="button" role="menuitem" onClick={() => exportAs('xlsx')}><b>Excel</b><small>.xlsx · Excel, Numbers</small></button>
+                  </>}
+                  <span className="ab-export-head">Tidy up</span>
+                  <button type="button" role="menuitem" disabled={!list?.length} onClick={() => { setExportOpen(false); openDups() }}><b>Duplicates</b><small>The same person twice, joined into one</small></button>
+                  <button type="button" role="menuitem" disabled={!chips.length} onClick={() => { setExportOpen(false); openSpecs() }}><b>Specialties</b><small>Rename or join specialties</small></button>
                 </span>
               </>
             )}
           </span>
-          <Button onClick={openDups} disabled={!list?.length} title="Find the same person twice">Duplicates</Button>
-          <Button onClick={openSpecs} disabled={!chips.length} title="Rename or join specialties">Specialties</Button>
           <DbAdd label="Add contact" onClick={() => setDraft({ ...emptyContact(), addedAt: new Date().toISOString() })} />
         </div>
+      </DbBar>
+
+      {/* under the top row (Alex, 27 Oct: the search and buttons up on the tabs' line, as every Database tab) */}
         {/* the specialty chips, the most used first; ★ the favourites */}
         {chips.length > 0 && (
           <nav className="chips ab-chips">
@@ -378,7 +358,6 @@ export default function AddressBook({ slot }) {
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => setPicked(new Set())} aria-label="Clear the selection">✕</button>
           </div>
         )}
-      </DbBar>
 
       {error ? <p className="small muted">{error}</p> : null}
       <div className="ab-scroll" ref={scrollRef}>
@@ -392,8 +371,7 @@ export default function AddressBook({ slot }) {
         groups.map(([key, label, items]) => (
           <div key={key} className="ab-group">
             {sort === 'company' && <div className="ab-group-head"><span className="ab-chip"><i />{label}</span><span className="muted small">{items.length}</span></div>}
-            {view === 'list' ? (
-              // the list: one slim soft row per person, the columns lined up (not a ruled table)
+            {/* one slim soft row per person, the columns lined up (not a ruled table); List only (Alex, 27 Oct) */}
               <div className="ab-rows">
                 {items.map((c) => (
                   <article key={c.id} className={`ab-row${inLibrary(c) ? ' ab-in' : ''}`} title={inLibrary(c) ? `Already in ${inLibrary(c)}` : undefined} onClick={() => setDraft({ ...c })} role="button" tabIndex={0}>
@@ -408,23 +386,6 @@ export default function AddressBook({ slot }) {
                   </article>
                 ))}
               </div>
-            ) : (
-              // the cards: soft tiles with gaps, as Crew and the Calendar; a tap edits, the buttons move
-              <div className="ab-grid">
-                {items.map((c) => (
-                  <article key={c.id} className={`ab-tile${inLibrary(c) ? ' ab-in' : ''}`} title={inLibrary(c) ? `Already in ${inLibrary(c)}` : undefined} onClick={() => setDraft({ ...c })} role="button" tabIndex={0}>
-                    {check(c)}
-                    <span className="ab-ava" aria-hidden="true">{initials(c.name)}</span>
-                    <div className="ab-body">
-                      <strong>{star(c)}{c.name}</strong>
-                      {(c.phone || c.email) && <div className="ab-line">{[c.phone, c.email].filter(Boolean).join(' · ')}</div>}
-                      {(c.company || c.title) && <span className="ab-chip"><i />{[c.company, c.title].filter(Boolean).join(' · ')}</span>}
-                    </div>
-                    <div className="ab-tile-foot">{quick(c)}{acts(c)}</div>
-                  </article>
-                ))}
-              </div>
-            )}
           </div>
         ))
       )}

@@ -8257,10 +8257,11 @@ html[data-theme] body main.content :is(.tabs > a, .tabs > button, .segmented > b
 .ab-acts { grid-column: 2; display: flex; align-items: center; gap: 6px; }
 .ab-acts .ab-del { margin-left: auto; }
 @media (min-width: 821px) {
-  /* Contacts has more in its bar (search, Import, +, the order): it takes its own line under the tabs */
-  .db-top .db-slot:has(.ab-bar) { flex: 1 1 100%; }
+  /* Contacts' bar sits on the tabs' line, as every Database tab (Alex, 27 Oct); the chips and the selection under it */
+  .db-top .db-slot:has(.ab-bar) { flex: 1 1 0; min-width: 0; }
   .db-slot .ab-bar { width: 100%; }
-  .db-slot .ab-bar .toolbar-actions { flex: 1; justify-content: flex-end; flex-wrap: wrap; }
+  .db-slot .ab-bar .toolbar-info { display: none; }
+  .db-slot .ab-bar .toolbar-actions { flex: 1; justify-content: flex-end; flex-wrap: nowrap; }
   html[data-theme] body main.content .db-slot .ab-bar .ab-search .input.search { flex: 1 1 auto; min-width: 0; }
 }
 .ab-acts .ab-del { min-width: 30px; width: auto; height: 30px; padding: 0 9px; border-radius: 999px !important; color: var(--muted); white-space: nowrap; }
@@ -8321,12 +8322,12 @@ html[data-theme] body main.content .ab-acts .ab-del.btn-danger:hover { color: #f
 .ab-tile-foot { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding-top: 4px; }
 .ab-tile-foot .ab-acts { margin-left: auto; }
 /* the specialty chips: one line under the bar that slides sideways */
-.ab-chips { flex: 1 1 100%; display: flex; flex-wrap: nowrap; gap: 6px; margin: 2px 0 0; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.ab-chips { flex: 1 1 100%; display: flex; flex-wrap: nowrap; gap: 6px; margin: 0 0 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
 .ab-chips::-webkit-scrollbar { display: none; }
 .ab-chips .chip { flex: 0 0 auto; }
 .ab-chips .chip small { margin-left: 4px; opacity: .6; font-size: 11px; }
 /* what is done to the ticked ones */
-.ab-sel { flex: 1 1 100%; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 10px 8px 16px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, color-mix(in srgb, var(--panel) 80%, transparent)); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line-soft)); }
+.ab-sel { flex: 1 1 100%; margin: 0 0 12px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px 10px 8px 16px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, color-mix(in srgb, var(--panel) 80%, transparent)); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line-soft)); }
 .ab-sel .grow { flex: 1; }
 .ab-sel .ab-del { height: 30px; padding: 0 14px; border-radius: 999px !important; }
 html[data-theme] body main.content .ab-sel .ab-del.btn-danger { color: #fff; background: #e5484d; border-color: transparent; }
@@ -8348,3 +8349,22 @@ html[data-theme] body main.content .ab-sel .ab-del.btn-danger { color: #fff; bac
   .ab-row:not(:hover) .ab-star:not(.on) { opacity: 1; }
   .ab-tile .ab-check { grid-row: auto; }
 }
+
+/* Crew, Cast and Equipment as Contacts' list (Alex, 27 Oct): the same soft rows, their own columns */
+.ab-row.lib-row { grid-template-columns: 32px minmax(160px, 1.3fr) minmax(140px, 1fr) minmax(120px, .9fr) minmax(140px, 1.2fr) auto; }
+.ab-row.gear-row { grid-template-columns: 32px minmax(160px, 1.3fr) minmax(120px, .9fr) minmax(120px, 1fr) minmax(100px, .8fr) minmax(90px, auto); }
+.ab-ava img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.ab-row .ab-cell a { color: inherit; text-decoration: none; }
+.ab-row .ab-cell a:hover { color: var(--accent); }
+.ab-rate { text-align: right; font-weight: 600; }
+.db-slot .db-bar:has(.ab-search) .toolbar-actions { flex-wrap: wrap; }
+@media (max-width: 820px) {
+  .ab-row.lib-row, .ab-row.gear-row { grid-template-columns: 32px minmax(0, 1fr); }
+  .ab-row.lib-row .ab-cell, .ab-row.lib-row .ab-acts { grid-column: 2; }
+  .ab-rate { text-align: left; }
+}
+
+/* Contacts' ⋯ (Import, Export, Duplicates, Specialties) as the bar's round buttons */
+html[data-theme] body main.content .ab-bar .ab-more { width: 38px; height: 38px; min-height: 38px; padding: 0; border-radius: 999px; font-size: 18px; line-height: 1; display: inline-grid; place-items: center; }
+.ab-export-menu button:disabled { opacity: .45; cursor: default; }
+@media (min-width: 821px) { .db-slot .ab-bar .ab-search { flex: 1 1 220px; min-width: 150px; max-width: 300px; } }
