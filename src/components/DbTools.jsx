@@ -114,7 +114,7 @@ export function ListRow({ check, thumb, title, sub, chips, aside, onClick, class
 }
 
 /* The line of numbers over a Database list, as Drives' and ID sheets' (Alex, 27 Oct): [value, label, warn?] each, a
-   warning one in amber */
+   warning one in the accent (Alex, 27 Oct) */
 export function DbStats({ items }) {
   return (
     <div className="drv-stats db-stats">
