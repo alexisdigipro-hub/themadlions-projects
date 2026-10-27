@@ -37,6 +37,14 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (27 Oct 2026, night: Share, lists, top rows)
+- Share: tabs Everything, Deliveries, Roardino, Estimates; List only (Roardino-like rows: cover, date, title, chips with the stage first); search beside the tabs. Roardino is a Share tab (Layout keeps one RoardinoFrame, shown on /share?tab=roardino; postMessage roardino:host / roardino:home / roardino:do; in Share the frame hides its own top row and shows its ordinos as rows). The side menu's Roardino only for people with Ordino but not Share (permissions to sort out later, Alex).
+- Deliveries: a file can be Replaced or Removed in the form; the client's link stays (same token); on Publish the old file goes to pCloud's trash (pcloud function v12, action deliveryRemove).
+- Database: every tab but Drives uses ListRow (DbTools.jsx) and DbStats (the numbers line). Tab order Drives, Contacts, Locations, Crew, Cast, Equipment, ID sheets. Contacts loads in parallel and is kept for the visit.
+- ← / → change tabs in Share, Database, Organizer, Finance (lib/arrowTabs.js). Every top row: 44 px capsule, 38 px tabs, 44 px controls. Every search: placeholder "Search" at 20%.
+- New projects start with every tab on.
+- To check live (not testable here): Share > Roardino (row, search, New ordino, the list), Replace / Remove in a delivery.
+
 ## Where we stopped (27 Oct 2026, late: Contacts is the one database)
 - Contacts (address_book) holds everyone; Crew/Cast stay library entries (the team reads those) tied by contact.data.lib = { crew, cast } (library ids). AddressBook.jsx sync effect: drops dead links, pulls name/phone/email from the entry, ties or creates a contact for every unheld Crew/Cast entry (so people moved out before 27 Oct came back). + Crew links (or creates), ✓ Crew + Confirm unlinks and deletes the entry, deleting a contact deletes its entries after it (order matters, else the sync saves it back). Save pushes name/phone/email to the entries.
 - Shared InfoCard (components/InfoCard.jsx) for every person/place/gear card; Contacts' edit has specialty pills; Home's category pills in the top row; song map folds when empty.
