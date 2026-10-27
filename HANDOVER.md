@@ -37,6 +37,11 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (27 Oct 2026, late night: Settings, profile, New project freshened)
+- Settings > Display: themes Light, Dark, Violet night, Teal slate, Ember removed (skin.js liveTheme moves old choices on); accents renamed as metals; five new icon looks (Liquid glass, Neon, App tiles, Gradient, Sharp). Open question: which icon packs Alex keeps.
+- Settings: glass cards, quiet uppercase labels, the same 16 px gap between fields and under every card title (last blocks of styles.css), switches as pill capsules, Budget categories as soft group cards (.bcat-*). Never set `display` on `.settings-cols > section.panel`: it shows every tab's cards.
+- Profile: photo card as a contact card, one Save (inside Settings the Save sits under the fields). New project form (Dashboard.jsx ProjectForm, .pform-*): cover square beside name, category, day; colours as swatches.
+
 ## Where we stopped (27 Oct 2026, RoarMe wears the hub's look)
 - Alex: RoarMe in the hub looked foreign. pages/RoarMePage.jsx hubLook() reads the theme/skin colours, light or dark, backdrop and typeface (as roardino/app.js hubTheme) and posts roarme:hub-look to the frame on roarme:want-look / roarme:ready and again when Settings > Display changes. RoarMe (src/hubLink.jsx wearHubLook) wears them as its 'hub' theme, only at ?embed=hub; its own Theme / Day and Night / Accent settings are hidden there. RoarMe's sign-in card stays dark on purpose.
 - To check live: RoarMe inside the hub on a dark skin and on Coral (the chat screens, not only sign-in).
