@@ -2,7 +2,7 @@ import { Suspense, lazy } from 'react'
 import { HashRouter, Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
 import { ToastProvider } from './components/ui.jsx'
-import { StoreProvider, useCurrentUser, useStore } from './lib/store.jsx'
+import { StoreProvider, can, useCurrentUser, useStore } from './lib/store.jsx'
 import Login from './pages/Login.jsx'
 import RoarMeSignin, { pendingRoarMeSignin } from './pages/RoarMeSignin.jsx'
 import { isRoarMeApp } from './lib/roarmeApp.js'
@@ -116,6 +116,12 @@ function OldShotListLink() {
   )
 }
 
+// a page only for the people the administrator gave it to; anyone else goes to Home
+function OnlyWith({ k, children }) {
+  const user = useCurrentUser()
+  return can(user, k) ? children : <Navigate to="/" replace />
+}
+
 export default function App() {
   return (
     <StoreProvider>
@@ -151,8 +157,9 @@ export default function App() {
                 <Route path="chat" element={<Navigate to="/roarme" replace />} />
                 <Route path="chat/:room" element={<Navigate to="/roarme" replace />} />
                 <Route path="roarme" element={<RoarMePage />} />
-                <Route path="roardino" element={<RoardinoRoute />} />
-                <Route path="roarlist" element={<RoarListPage />} />
+                {/* only for whom the administrator opens them (Alex, 27 Oct) */}
+                <Route path="roardino" element={<OnlyWith k="roardino"><RoardinoRoute /></OnlyWith>} />
+                <Route path="roarlist" element={<OnlyWith k="roarlist"><RoarListPage /></OnlyWith>} />
                 <Route path="mywork" element={<MyWork />} />
                 <Route path="me" element={<Navigate to="/settings" replace />} />
                 <Route path="u/:id" element={<Profile />} />

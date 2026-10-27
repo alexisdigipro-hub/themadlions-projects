@@ -192,7 +192,7 @@ export default function Settings() {
           <section className="panel" data-tab="team" data-k="rules">
             <h2>Team rules</h2>
             <div className="stack">
-              <Field label="Default access for a new teammate" hint="What every part of the app starts at when you add someone. Drives and Share always start at none. Notices are always administrators only; call sheet share links are open to everyone who can see call sheets.">
+              <Field label="Default access for a new teammate" hint="What every part of the app starts at when you add someone. Drives, Share, Roardino and RoarList always start at none. Notices are always administrators only; call sheet share links are open to everyone who can see call sheets.">
                 <Select value={state.settings.newMemberLevel || 'view'} onChange={(e) => setSetting('newMemberLevel', e.target.value)} options={[['none', 'Nothing until you set it'], ['view', 'Can view'], ['edit', 'Can edit']]} />
               </Field>
               <Field label="Who sees phone numbers and emails of cast and crew" hint="Applies inside the app (project Cast & crew, Database). Call sheets and shared links keep showing the numbers they need.">
