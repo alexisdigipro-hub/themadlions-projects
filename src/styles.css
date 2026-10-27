@@ -8642,12 +8642,16 @@ html[data-theme] body :is(input.search, .input.search, input[type=search], .rem-
 /* the swatches in Settings > Display as polished metal: the sheen of each colour (Alex, 27 Oct) */
 .accent-swatches .swatch .dot { background: linear-gradient(135deg, color-mix(in srgb, var(--sw) 50%, #fff) 0%, var(--sw) 45%, color-mix(in srgb, var(--sw) 70%, #000) 100%) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 2px 6px rgba(0, 0, 0, .25); }
 
-/* Monochrome icon looks easier to tell apart (Alex, 27 Oct), on the menu (html[data-icons]) and in Settings' picker */
-:is(html[data-icons='roundbold'], .icon-preview[data-icons-preview='roundbold']) svg.ico { stroke-width: 2.4; }
-:is(html[data-icons='large'], .icon-preview[data-icons-preview='large']) svg.ico { width: 21px; height: 21px; stroke-width: 2; }
-:is(html[data-icons='ring'], .icon-preview[data-icons-preview='ring']) svg.ico { width: 14px; height: 14px; padding: 4px; box-sizing: content-box; border-radius: 50%; stroke-width: 2.1; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 55%, transparent); }
+/* Monochrome icon looks easier to tell apart (Alex, 27 Oct), on the menu (html[data-icons]) and in Settings' picker
+   (each preview shows its own look, whatever the app's) */
+html[data-icons='roundbold'] svg.ico, html .icon-preview[data-icons-preview='roundbold'] svg.ico { stroke-width: 2.4; }
+html[data-icons='large'] svg.ico { width: 21px; height: 21px; stroke-width: 2; }
+html[data-icons='ring'] svg.ico { width: 16px; height: 16px; padding: 3px; box-sizing: content-box; border-radius: 50%; stroke-width: 2.1; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 55%, transparent); }
 html[data-icons='ring'] .sidenav a.active svg.ico { background: color-mix(in srgb, currentColor 16%, transparent); box-shadow: inset 0 0 0 1.5px currentColor; }
-:is(html[data-icons='picto'], .icon-preview[data-icons-preview='picto']) svg.ico { stroke-width: 2.1; }
+html[data-icons='picto'] svg.ico, html .icon-preview[data-icons-preview='picto'] svg.ico { stroke-width: 2.1; }
+html .icon-preview[data-icons-preview] svg.ico { width: 18px; height: 18px; padding: 0; border-radius: 0; box-shadow: none; background: none; }
+html body .icon-preview[data-icons-preview='large'] svg.ico { width: 21px; height: 21px; stroke-width: 2; }
+html body .icon-preview[data-icons-preview='ring'] svg.ico { width: 16px; height: 16px; padding: 3px; box-sizing: content-box; border-radius: 50%; stroke-width: 2.1; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 55%, transparent); }
 
 /* Settings, a person's profile and the project form freshened (Alex, 27 Oct: "Settings feel out of the hub's look and
    layout; tidy every tab; the New project window; the profiles: no needless gaps, a nicer layout"). One recipe, the
