@@ -3,6 +3,7 @@
 // behaviour. Kept in this browser / app, and in the account when signed in. Everything is applied as data-* attributes
 // and CSS variables on <html>, the way RoarMe does it.
 
+import { reapply } from './hubTheme'
 export type Settings = {
   theme: 'ember' | 'prism'      // Simba, Pumba: RoarMe's public themes
   mode: 'dark' | 'light' | 'auto'
@@ -121,6 +122,7 @@ export function apply() {
   if (s.lite) r.dataset.lite = '1'; else delete r.dataset.lite
   r.dataset.buttons = s.glass ? 'glass' : 'solid'
   document.querySelector('meta[name=theme-color]')?.setAttribute('content', r.dataset.mode === 'light' ? '#eceef1' : '#2b3038')
+  reapply() // in the hub, the hub's theme goes back on top
 }
 media?.addEventListener('change', () => { if (current.mode === 'auto') apply() })
 
