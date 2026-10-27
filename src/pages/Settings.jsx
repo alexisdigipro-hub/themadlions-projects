@@ -37,7 +37,7 @@ export default function Settings() {
   const [ws, setWs] = useState(state.workspace)
   const [ai, setAi] = useState(state.settings)
   const [testing, setTesting] = useState(false)
-  const [textSize, setTextSize] = useState(() => localStorage.getItem('tml_text_size') || 'normal')
+  const [textSize, setTextSize] = useState(() => ({ large: '110' })[localStorage.getItem('tml_text_size')] || localStorage.getItem('tml_text_size') || 'normal')
   const [theme, setTheme] = useState(() => localStorage.getItem('tml_theme') || DEFAULT_THEME)
   const [accent, setAccent] = useState(() => localStorage.getItem('tml_accent') || 'amber')
   const [font, setFont] = useState(currentFont)
@@ -356,7 +356,7 @@ export default function Settings() {
           )}
           <Field label="Text size" hint={isAdmin ? "The look above is the whole team's. Text size is saved on this device only." : "Saved on this device only."}>
             <div className="segmented small">
-              {[['compact', 'Compact'], ['normal', 'Normal'], ['large', 'Large']].map(([v, l]) => (
+              {[['compact', '92%'], ['normal', '100%'], ['105', '105%'], ['110', '110%'], ['115', '115%'], ['120', '120%']].map(([v, l]) => (
                 <button key={v} className={textSize === v ? 'on' : ''} onClick={() => applyTextSize(v)}>{l}</button>
               ))}
             </div>

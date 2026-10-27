@@ -2110,7 +2110,12 @@ input[type=file].input { padding: 8px; }
 
 /* ---------- text size (Settings) ---------- */
 html[data-text-size='compact'] .content, html[data-text-size='compact'] .sidebar, html[data-text-size='compact'] .topbar, html[data-text-size='compact'] .modal { zoom: 0.92; }
+/* text size in small even steps (Alex, 27 Oct): everything grows in proportion */
+html[data-text-size='105'] .content, html[data-text-size='105'] .sidebar, html[data-text-size='105'] .topbar, html[data-text-size='105'] .modal { zoom: 1.05; }
+html[data-text-size='110'] .content, html[data-text-size='110'] .sidebar, html[data-text-size='110'] .topbar, html[data-text-size='110'] .modal { zoom: 1.1; }
 html[data-text-size='large'] .content, html[data-text-size='large'] .sidebar, html[data-text-size='large'] .topbar, html[data-text-size='large'] .modal { zoom: 1.1; }
+html[data-text-size='115'] .content, html[data-text-size='115'] .sidebar, html[data-text-size='115'] .topbar, html[data-text-size='115'] .modal { zoom: 1.15; }
+html[data-text-size='120'] .content, html[data-text-size='120'] .sidebar, html[data-text-size='120'] .topbar, html[data-text-size='120'] .modal { zoom: 1.2; }
 
 /* ---------- budget cap ---------- */
 /* Budget tab: the project's Budget amount, edited in place, with what is committed, paid and left */
@@ -8720,7 +8725,7 @@ html[data-theme] body .bcat-row { grid-template-columns: 22px minmax(0, 1fr) min
   html[data-theme] body .settings-cols > section.panel :is(.field, .row-2, .row-3, .check-row) + :is(.field, .row-2, .row-3, .check-row) { margin-top: 16px; }
   html[data-theme] body .settings-cols > section.panel .field-hint + .field-label { margin-top: 16px; }
   html[data-theme] body .settings-cols > section.panel > h2 + :is(.field, .row-2, .row-3, .check-row, .stack) { margin-top: 16px; }
-  html[data-theme] body .settings-cols .accent-swatches { grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); }
+  html[data-theme] body .settings-cols .accent-swatches { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); }
   html[data-theme] body .settings-cols .accent-swatches button.swatch { overflow: hidden; text-overflow: ellipsis; }
   html[data-theme] body .settings-cols button.link.small { text-decoration: none; color: var(--muted); font-weight: 600; font-size: 13px; }
   html[data-theme] body .settings-cols button.link.small:hover { color: var(--text); }

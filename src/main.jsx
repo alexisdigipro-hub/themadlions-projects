@@ -36,7 +36,7 @@ try {
 } catch {}
 
 try {
-  document.documentElement.dataset.textSize = localStorage.getItem('tml_text_size') || 'normal'
+  document.documentElement.dataset.textSize = ({ large: '110' })[localStorage.getItem('tml_text_size')] || localStorage.getItem('tml_text_size') || 'normal'
   // Glass dark is everyone's theme from 9 Oct (Alex): once on each device, whatever was picked
   // before, then Settings > Display > Theme changes it as usual. A device that never picked one
   // starts on it too.
