@@ -9,6 +9,7 @@ import LocationsAll from './LocationsAll.jsx'
 import EquipmentAll from './EquipmentAll.jsx'
 import Drives from './Drives.jsx'
 import IdSheets from './IdSheets.jsx'
+import AddressBook from './AddressBook.jsx'
 
 const TABS = [
   // the drives archive moved in here, for whoever has the Drives permission (Alex, 10 Oct); the first tab since 23 Oct
@@ -20,6 +21,8 @@ const TABS = [
   { key: 'cast', label: 'Cast', icon: 'people', perm: 'contacts' },
   // the company's own film equipment, with a rental price (Alex, 10 Oct)
   { key: 'equipment', label: 'Equipment', icon: 'gear', perm: 'gear' },
+  // the administrator's own address book, imported from a file; moved from here to Crew or Cast (Alex, 27 Oct)
+  { key: 'contacts', label: 'Contacts', icon: 'people', admin: true },
 ]
 
 export default function Database() {
@@ -29,7 +32,7 @@ export default function Database() {
   const mobile = useIsMobile()
   // on a computer the tab's search line sits on the tabs' own line (Alex, 10 Oct): this is where it goes
   const [slot, setSlot] = useState(null)
-  const tabs = TABS.filter((t) => can(user, t.perm))
+  const tabs = TABS.filter((t) => (t.admin ? user?.role === 'admin' : can(user, t.perm)))
   if (!tabs.length || !seesDatabase(user)) return <Navigate to="/" replace />
   if (!tabs.some((t) => t.key === tab)) return <Navigate to={`/database/${tabs[0].key}`} replace />
   // no line of counts under the title and the tabs a glass capsule like TML Chat's folders, on a phone
@@ -56,6 +59,7 @@ export default function Database() {
           {tab === 'drives' && <Drives slot={mobile ? null : slot} />}
           {tab === 'equipment' && <EquipmentAll slot={mobile ? null : slot} />}
           {tab === 'ids' && <IdSheets slot={mobile ? null : slot} />}
+          {tab === 'contacts' && <AddressBook slot={mobile ? null : slot} />}
         </div>
       </div>
     </div>
