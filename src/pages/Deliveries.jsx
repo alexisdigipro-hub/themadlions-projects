@@ -384,6 +384,8 @@ export default function Deliveries() {
       isEstimate,
       url: isDelivery ? deliveryUrl(r.token) : isEstimate ? estimateUrl(r.token) : isDeck ? deckUrl(r.token) : shareUrl(r.token),
       shut: !!r.closed || (!!r.expires_at && r.expires_at < today),
+      // the day it went out, for the list's date (as Roardino's list, Alex 27 Oct)
+      when: d.sentAt || r.updated_at || r.created_at || '',
       answers: Array.isArray(r.responses) ? r.responses : [],
       badge: isDelivery ? stageLabel(d.stage) : isEstimate ? 'Estimate' : isDeck ? 'Presentation' : 'Call sheet',
       badgeClass: isDelivery ? `s-${d.stage}` : isEstimate ? 's-estimate' : 's-callsheet',
@@ -637,12 +639,15 @@ export default function Deliveries() {
                 {/* the picture on top of a tile, on a computer only (styles.css, "The Share page, 2026") */}
                 <span className="deliv-cover" aria-hidden="true" style={r.cover ? { backgroundImage: `url("${r.cover}")` } : undefined} />
                 <span className={`deliv-stage ${r.badgeClass}`}>{r.badge}{r.version ? <span className="deliv-ver">· {String(r.version).replace(/^version\s*/i, 'V')}</span> : null}</span>
+                {/* the list (a computer): the date as Roardino's list, big day then month and weekday */}
+                {(() => { const at = r.when ? new Date(r.when) : null; return at && !isNaN(at) ? <span className="deliv-date"><b>{at.getDate()}</b><span>{at.toLocaleDateString('en-GB', { month: 'short' })} · {at.toLocaleDateString('en-GB', { weekday: 'short' })}</span></span> : <span className="deliv-date none">–</span> })()}
                 <div className="grow">
                   <strong>{r.name}{r.version ? <span className="muted deliv-tver"> · {r.version}</span> : null}</strong>
                   <div className="small muted">{r.sub}</div>
                   {/* one strip of small tags instead of three grey lines that all looked the same */}
-                  {one && (g.shut || r.opens !== undefined || last) && (
+                  {(one && (g.shut || r.opens !== undefined || last) || (look === 'list' && !mobile)) && (
                     <div className="deliv-tags">
+                      <span className={`deliv-tag deliv-stage-in ${r.badgeClass}`}>{r.badge}</span>
                       {g.shut && <span className="deliv-tag t-shut">Closed</span>}
                       {r.opens === undefined ? null
                         : r.opens > 0
