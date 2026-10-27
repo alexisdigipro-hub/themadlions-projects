@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { NavLink, Navigate, useParams } from 'react-router-dom'
 import { useIsMobile } from '../components/ui.jsx'
 import { Icon } from '../components/icons.jsx'
@@ -10,6 +10,7 @@ import EquipmentAll from './EquipmentAll.jsx'
 import Drives from './Drives.jsx'
 import IdSheets from './IdSheets.jsx'
 import AddressBook from './AddressBook.jsx'
+import { useArrowTabs } from '../lib/arrowTabs.js'
 
 const TABS = [
   // the order (Alex, 27 Oct): Drives, Contacts, Locations, Crew, Cast, Equipment; ID sheets at the end
@@ -31,6 +32,8 @@ export default function Database() {
   const user = useCurrentUser()
   const glide = useGlide()
   const mobile = useIsMobile()
+  const tabsRow = useRef(null) // ← / → step through these tabs on a computer (Alex, 27 Oct)
+  useArrowTabs(tabsRow)
   // on a computer the tab's search line sits on the tabs' own line (Alex, 10 Oct): this is where it goes
   const [slot, setSlot] = useState(null)
   const tabs = TABS.filter((t) => (t.admin ? user?.role === 'admin' : can(user, t.perm)))
@@ -42,7 +45,7 @@ export default function Database() {
   return (
     <div className="db-page">
       <div className="db-top">
-      <nav className="tabs db-tabs">
+      <nav className="tabs db-tabs" ref={tabsRow}>
         {tabs.map((t) => (
           <NavLink key={t.key} to={`/database/${t.key}`} className={({ isActive }) => (isActive ? 'active' : '')} onClick={glide.go}>
             <span className="tab-ico">{Icon[t.icon]?.()}</span>
