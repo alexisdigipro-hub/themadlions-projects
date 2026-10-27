@@ -8506,3 +8506,10 @@ html[data-theme] body .ab-lib.btn-danger { color: #fff; background: #e5484d; bor
 @media (max-width: 820px) {
   html[data-theme] body .content:has(> .deliveries.in-roardino) > .roarme-page.roardino-page { top: calc(var(--topbar-h, 44px) + 64px); }
 }
+
+/* Share on a computer (Alex, 27 Oct): the List only; where Tiles | List was, a search with no words in it */
+@media (min-width: 821px) {
+  html[data-theme] body .share-dtop .share-search { margin-left: auto; display: inline-flex; flex: 0 1 300px; min-width: 180px; }
+  html[data-theme] body .share-dtop .share-search .ab-search { flex: 1 1 auto; }
+  html[data-theme] body .share-dtop .share-search + .share-new { margin-left: 0; }
+}
