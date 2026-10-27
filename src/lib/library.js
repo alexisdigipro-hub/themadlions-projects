@@ -30,8 +30,10 @@ export const sharedLocation = (l) => pick(l, LOCATION_SHARED)
 export const contactProjects = (projects, libraryId) => projects.filter((p) => p.contacts.some((c) => c.libraryId === libraryId))
 export const locationProjects = (projects, libraryId) => projects.filter((p) => p.locations.some((l) => l.libraryId === libraryId))
 
+// a search finds a word with or without its accents, in any case ("αγγελ" finds "Άγγελος"; Alex, 27 Oct)
+const fold = (x) => (x || '').toString().toLocaleLowerCase('el').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ς/g, 'σ')
 export const matchText = (q, ...fields) => {
-  const s = (q || '').trim().toLowerCase()
+  const s = fold(q).trim()
   if (!s) return true
-  return fields.some((f) => (f || '').toString().toLowerCase().includes(s))
+  return fields.some((f) => fold(f).includes(s))
 }
