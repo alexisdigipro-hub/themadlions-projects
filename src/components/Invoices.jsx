@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Act, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from './ui.jsx'
+import { Act, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from './ui.jsx'
 import { useCurrentUser, useStore } from '../lib/store.jsx'
 import { INVOICE_STATUS, amountInWords, defaultInvoiceProfile, emptyClient, emptyInvoice, emptyService, invoiceNumberText, invoiceTotals, money, moneyBgn } from '../lib/invoice.js'
 import { downloadInvoicePdf, invoiceFilename, previewInvoicePdf } from '../lib/invoicePdf.js'
@@ -32,7 +32,6 @@ export function InvoicesTab() {
   const [isNew, setIsNew] = useState(false)
   const [panel, setPanel] = useState('') // '' | 'profile' | 'clients' | 'services'
   const [shareBusy, setShareBusy] = useState('') // the invoice whose link is being made; only its button waits
-  const mobile = useIsMobile()
   const [emailing, setEmailing] = useState(null) // { inv, url }: the invoice as an email (Alex, 28 Oct)
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
 
@@ -123,9 +122,9 @@ export function InvoicesTab() {
 
       {!invoices.length ? (
         <Empty title="No invoices yet">Set your company details and upload the stamp once in <b>Company &amp; stamp</b>, add your <b>Clients</b> and <b>Services</b> so they drop in ready, then build an invoice. It downloads as a PDF with your stamp and signature.</Empty>
-      ) : mobile ? (
-        /* on a phone (Alex, 28 Oct: the row of word buttons ran off the screen, Email out of sight): each invoice a
-           tile, a tap opens it, its actions as round icons, Delete apart in red */
+      ) : (
+        /* each invoice a tile, a tap opens it, its actions as round glass icons, Delete apart in red (Alex, 28 Oct: on a
+           phone first, then "the same on the desktop"); the ruled table is gone */
         <ul className="plain inv-tiles">
           {invoices.map((inv) => {
             const t = invoiceTotals(inv)
@@ -138,10 +137,10 @@ export function InvoicesTab() {
                   <span className={`inv-tile-sub small ${over ? 'over' : ''}`}>{inv.date}{inv.dueDate ? ` · ${over ? 'overdue since' : 'due'} ${fmtDate(inv.dueDate)}` : ''}</span>
                 </button>
                 <div className="inv-tile-acts">
-                  <Act icon="mail" label={shareBusy === inv.id ? 'Making the email…' : 'Email'} className={shareBusy === inv.id ? 'act-wait' : ''} onClick={() => shareInvoice(inv)} />
-                  <Act icon="eye" label="Preview" onClick={() => preview(inv)} />
-                  <Act icon="download" label="PDF" onClick={() => download(inv)} />
-                  <Act icon="copy" label="Duplicate" onClick={() => duplicate(inv)} />
+                  <Act icon="mail" label={shareBusy === inv.id ? 'Making the email…' : 'Email'} className={`act-round${shareBusy === inv.id ? ' act-wait' : ''}`} onClick={() => shareInvoice(inv)} />
+                  <Act icon="eye" label="Preview" className="act-round" onClick={() => preview(inv)} />
+                  <Act icon="download" label="PDF" className="act-round" onClick={() => download(inv)} />
+                  <Act icon="copy" label="Duplicate" className="act-round" onClick={() => duplicate(inv)} />
                   <span className="grow" />
                   <DelAct onConfirm={() => remove(inv.id)} />
                 </div>
@@ -149,34 +148,6 @@ export function InvoicesTab() {
             )
           })}
         </ul>
-      ) : (
-        <table className="table">
-          <thead><tr><th>Number</th><th>Date</th><th>Due</th><th>Recipient</th><th>Project</th><th className="num">Total</th><th>Status</th><th /></tr></thead>
-          <tbody>
-            {invoices.map((inv) => {
-              const t = invoiceTotals(inv)
-              return (
-                <tr key={inv.id}>
-                  <td><strong>{inv.number}</strong></td>
-                  <td className="small">{inv.date}</td>
-                  <td className={`small ${inv.dueDate && inv.status !== 'paid' && inv.dueDate < today ? 'over' : ''}`}>{inv.dueDate ? fmtDate(inv.dueDate) : <span className="muted">—</span>}</td>
-                  <td>{inv.recipient?.name}</td>
-                  <td className="small">{pName(inv.projectId) || <span className="muted">—</span>}</td>
-                  <td className="num">{money(t.total, inv.currency)}</td>
-                  <td><span className={`inv-badge s-${inv.status}`}>{INVOICE_STATUS.find(([v]) => v === inv.status)?.[1] || 'Draft'}</span></td>
-                  <td className="row-actions">
-                    <button onClick={() => edit(inv)}>Edit</button>
-                    <button onClick={() => preview(inv)}>Preview</button>
-                    <button onClick={() => download(inv)}>PDF</button>
-                    <button onClick={() => shareInvoice(inv)} disabled={shareBusy === inv.id}>{shareBusy === inv.id ? 'Email…' : 'Email'}</button>
-                    <button onClick={() => duplicate(inv)}>Duplicate</button>
-                    <Confirm onConfirm={() => remove(inv.id)} label="Delete">×</Confirm>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
       )}
 
       <InvoiceEditor draft={draft} isNew={isNew} projects={state.projects} clients={clients} services={services} onChange={setDraft} onClose={() => setDraft(null)} onSave={save} onDownload={download} />
@@ -225,7 +196,7 @@ const INVOICE_FIELDS = [
 function DelAct({ onConfirm }) {
   const [armed, setArmed] = useState(false)
   useEffect(() => { if (!armed) return; const t = setTimeout(() => setArmed(false), 3000); return () => clearTimeout(t) }, [armed])
-  return <Act icon="trash" label={armed ? 'Sure? Delete' : 'Delete'} className={`act-del${armed ? ' armed' : ''}`} onClick={() => { if (armed) { setArmed(false); onConfirm() } else setArmed(true) }} />
+  return <Act icon="trash" label={armed ? 'Sure? Delete' : 'Delete'} className={`act-del act-round${armed ? ' armed' : ''}`} onClick={() => { if (armed) { setArmed(false); onConfirm() } else setArmed(true) }} />
 }
 
 function InvoiceEditor({ draft, isNew, projects, clients, services, onChange, onClose, onSave, onDownload }) {

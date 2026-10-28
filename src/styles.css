@@ -8993,3 +8993,10 @@ html[data-theme] body ul.inv-tiles > li.inv-tile { display: flex; flex-direction
 .act.act-wait { animation: act-wait 1s ease-in-out infinite; pointer-events: none; }
 @keyframes act-wait { 50% { opacity: .45; } }
 .mail-copyme { grid-column: auto; align-self: end; display: flex; align-items: center; gap: 8px; min-height: 42px; font-size: 14px; color: var(--muted); cursor: pointer; }
+/* Finance > Invoices on a computer: the same tiles, side by side (Alex, 28 Oct: "the same look and the round buttons on the desktop") */
+@media (min-width: 821px) {
+  html[data-theme] body ul.inv-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px; margin-top: 12px; }
+  html[data-theme] body ul.inv-tiles > li.inv-tile { padding: 16px 18px; gap: 14px; }
+  .inv-tile-main:hover strong { color: var(--accent); }
+  .inv-tile-acts .act.act-round { width: 42px; height: 42px; }
+}
