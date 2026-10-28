@@ -8993,10 +8993,22 @@ html[data-theme] body ul.inv-tiles > li.inv-tile { display: flex; flex-direction
 .act.act-wait { animation: act-wait 1s ease-in-out infinite; pointer-events: none; }
 @keyframes act-wait { 50% { opacity: .45; } }
 .mail-copyme { grid-column: auto; align-self: end; display: flex; align-items: center; gap: 8px; min-height: 42px; font-size: 14px; color: var(--muted); cursor: pointer; }
-/* Finance > Invoices on a computer: the same tiles, side by side (Alex, 28 Oct: "the same look and the round buttons on the desktop") */
+/* Finance > Invoices on a computer (Alex, 28 Oct: the phone's look and round buttons, "as a list, not tall"): one low
+   row per invoice: number, status, client · project, date, the total, then the round glass buttons */
 @media (min-width: 821px) {
-  html[data-theme] body ul.inv-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px; margin-top: 12px; }
-  html[data-theme] body ul.inv-tiles > li.inv-tile { padding: 16px 18px; gap: 14px; }
+  html[data-theme] body ul.inv-tiles { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+  html[data-theme] body ul.inv-tiles > li.inv-tile { flex-direction: row; align-items: center; gap: 16px; padding: 8px 10px 8px 18px; min-height: 0; border-radius: 16px; }
+  html[data-theme] body ul.inv-tiles > li.inv-tile:hover { background: var(--raised); }
+  .inv-tile-main { flex: 1; min-width: 0; flex-direction: row; align-items: center; gap: 14px; }
+  .inv-tile-top { display: contents; }
+  .inv-tile-top strong { order: 1; flex: none; min-width: 112px; }
+  .inv-tile-top .inv-badge { order: 2; flex: none; }
+  .inv-tile-main > .inv-tile-sub { order: 3; flex: 1 1 0; min-width: 0; }
+  .inv-tile-main > .inv-tile-sub.small { order: 4; flex: 0 1 auto; font-size: 13px; }
+  .inv-tile-sum { order: 5; flex: none; margin-left: 8px; min-width: 96px; text-align: right; }
   .inv-tile-main:hover strong { color: var(--accent); }
-  .inv-tile-acts .act.act-round { width: 42px; height: 42px; }
+  .inv-tile-acts { flex: none; gap: 6px; }
+  .inv-tile-acts .grow { flex: 0 0 10px; }
+  .inv-tile-acts .act.act-round { width: 36px; height: 36px; }
+  .inv-tile-acts .act.act-round svg { width: 17px; height: 17px; }
 }
