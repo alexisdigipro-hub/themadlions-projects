@@ -166,7 +166,7 @@ function Editor({ note, onChange }) {
    {"color","icon"}; an older body of just "#rrggbb" is read as the colour. Until one is picked, a colour of the
    palette chosen by the folder's id. */
 const FOLDER_COLORS = ['#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#5ac8fa', '#007aff', '#5856d6', '#af52de', '#ff2d55', '#a2845e', '#8e8e93', '#C8503F']
-const FOLDER_ICONS = ['🗂', '📌', '⭐', '🎬', '📷', '💡', '🎤', '🎨', '🚚', '📍', '💰', '📞', '🛒', '🧾', '🗓', '✈️', '🏠', '❤️']
+const FOLDER_ICONS = ['🗂', '📌', '⭐', '🎬', '📷', '💡', '🎤', '🤖', '🔐', '🎧', '📝', '🎨', '🚚', '📍', '💰', '📞', '🛒', '🧾', '🗓', '✈️', '🏠', '❤️']
 const folderLook = (f) => {
   if (!f) return { color: '', icon: '' }
   let o = {}
