@@ -25,7 +25,7 @@ function wrap(subject, rows, company) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.bg}" style="background:${C.bg};">
 <tr><td align="center" style="padding:28px 14px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
-<tr><td align="center" style="padding:6px 0 26px;"><img src="${HUB}site/wordmark.png" width="220" alt="${esc(company)}" style="display:block;width:220px;max-width:60%;height:auto;border:0;color:${C.text};font-family:${FONT};font-size:20px;font-weight:700;"></td></tr>
+<tr><td align="center" style="padding:6px 0 26px;"><img src="${HUB}site/wordmark-white.png" width="220" alt="${esc(company)}" style="display:block;width:220px;max-width:60%;height:auto;border:0;color:${C.text};font-family:${FONT};font-size:20px;font-weight:700;"></td></tr>
 ${rows}<tr><td align="center" style="font-family:${FONT};color:${C.muted};font-size:11px;letter-spacing:1px;padding:34px 0 6px;">${esc(company)} · <a href="https://themadlions.com/" target="_blank" style="color:${C.muted};text-decoration:none;">themadlions.com</a></td></tr>
 </table>
 </td></tr>
