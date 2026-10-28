@@ -248,7 +248,7 @@ export function Modal({ open, title, onClose, children, footer, wide, className 
   }, [open, onClose])
   // On a phone a window goes away with a swipe down (Alex, 28 Oct), as an iPhone's sheet: only when what is under the
   // finger is scrolled to its top, never from a field or something that is dragged itself; past a third of the way or
-  // a quick flick it closes, else it springs back.
+  // a quick flick it slides down and fades away, else it springs back.
   const card = useRef(null)
   useEffect(() => {
     const el = card.current
@@ -263,17 +263,30 @@ export function Modal({ open, title, onClose, children, footer, wide, className 
     const move = (e) => {
       if (!on) return
       dy = e.touches[0].clientY - y0
-      if (dy <= 0) { el.style.transform = ''; return }
+      const back = el.parentNode
+      if (dy <= 0) { el.style.transform = ''; el.style.opacity = ''; back.style.opacity = ''; return }
       e.preventDefault()
-      el.style.transition = 'none'
+      // the card follows the finger and fades a little as it goes, the dimmed page behind it with it
+      const f = Math.min(1, dy / (el.offsetHeight || 600))
+      el.style.transition = back.style.transition = 'none'
       el.style.transform = `translateY(${dy}px)`
+      el.style.opacity = String(1 - f * 0.5)
+      back.style.opacity = String(1 - f * 0.6)
     }
     const end = () => {
       if (!on) return
       on = false
+      const back = el.parentNode
       const quick = dy > 60 && Date.now() - t0 < 250
-      el.style.transition = 'transform .22s ease'
-      if (dy > el.offsetHeight / 3 || quick) { el.style.transform = 'translateY(110%)'; setTimeout(() => onClose?.(), 180) } else el.style.transform = ''
+      el.style.transition = 'transform .28s cubic-bezier(.3, .7, .4, 1), opacity .28s ease'
+      back.style.transition = 'opacity .28s ease'
+      if (dy > el.offsetHeight / 3 || quick) {
+        // away down and out of sight, then closed
+        el.style.transform = 'translateY(100%)'
+        el.style.opacity = '0'
+        back.style.opacity = '0'
+        setTimeout(() => onClose?.(), 260)
+      } else { el.style.transform = ''; el.style.opacity = ''; back.style.opacity = '' }
     }
     el.addEventListener('touchstart', start, { passive: true })
     el.addEventListener('touchmove', move, { passive: false })
