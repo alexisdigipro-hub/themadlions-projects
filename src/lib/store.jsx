@@ -37,6 +37,7 @@ export const MODULES = [
   { key: 'gear', label: 'Equipment', group: 'Database' },
   { key: 'drives', label: 'Drives', group: 'Database' },
   { key: 'idsheets', label: 'ID sheets', group: 'Database', hint: 'photos of people\'s IDs, kept in pCloud; give it only to who needs it' },
+  { key: 'logos', label: 'Logos', group: 'Database', hint: 'clients\' and brands\' logos, a folder a brand, kept in pCloud' },
   { key: 'tasks', label: 'Tasks', group: 'Organizer' },
   { key: 'files', label: 'Office', group: 'Organizer', hint: 'documents and spreadsheets' },
   { key: 'calendar', label: 'Calendar', group: 'Other pages' },
@@ -1170,7 +1171,7 @@ export function can(user, moduleKey, level = 'view') {
 export function seesDatabase(user) {
   if (!user) return false
   if (user.role === 'admin') return true
-  return (can(user, 'contacts') || can(user, 'locations') || can(user, 'gear') || can(user, 'drives') || can(user, 'idsheets')) && user.permissions?.databasePage !== 'hide'
+  return (can(user, 'contacts') || can(user, 'locations') || can(user, 'gear') || can(user, 'drives') || can(user, 'idsheets') || can(user, 'logos')) && user.permissions?.databasePage !== 'hide'
 }
 
 export function canAccessProject(user, projectId) {

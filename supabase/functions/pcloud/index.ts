@@ -116,7 +116,7 @@ async function ownLink(code: string) {
   return null
 }
 
-type Scope = { kind: 'project' | 'chat' | 'library' | 'ids'; id: string }
+type Scope = { kind: 'project' | 'chat' | 'library' | 'ids' | 'logos'; id: string }
 
 /* Is this pCloud file recorded anywhere in this piece of data? Every record the app keeps for a
    pCloud file (a project file, a photo, a song, a chat attachment) carries "fileid": <n>. */
@@ -134,7 +134,7 @@ async function inLibrary(db: any, fileid: number) {
 async function allowed(db: any, uid: string, scope: Scope, fileid?: number, forDelete = false, forUpload = false) {
   if (!scope || !scope.id) return false
   // an ID sheet's picture only ever through its own scope, whatever a project or the library says (security review, 25 Oct)
-  if (fileid && scope.kind !== 'ids') {
+  if (fileid && scope.kind !== 'ids' && scope.kind !== 'logos') {
     const { data: isId } = await db.rpc('is_id_sheet_file', { p_fileid: fileid })
     if (isId) return false
   }
@@ -171,6 +171,18 @@ async function allowed(db: any, uid: string, scope: Scope, fileid?: number, forD
     if ((forDelete || forUpload) && perm !== 'edit') return false
     if (fileid) {
       const { data } = await db.from('id_sheets').select('id').eq('fileid', fileid).limit(1)
+      if (!data?.length) return false
+    }
+    return true
+  }
+  // Database > Logos (Alex, 28 Oct): the permission "logos" (view to open, edit to upload or delete), files only into
+  // ROOT/Logos/<brand> and only those recorded in the logos table (supabase/logos.sql)
+  if (scope.kind === 'logos') {
+    const { data: perm } = await db.rpc('my_perm', { p_module: 'logos' })
+    if (perm !== 'view' && perm !== 'edit') return false
+    if ((forDelete || forUpload) && perm !== 'edit') return false
+    if (fileid) {
+      const { data } = await db.from('logos').select('id').eq('fileid', fileid).limit(1)
       if (!data?.length) return false
     }
     return true
@@ -265,9 +277,11 @@ Deno.serve(async (req) => {
       // Library for anything but the library) never take an upload from here, and two levels at most
       const parts = (Array.isArray(body.folder) ? body.folder : []).slice(0, 2)
       const top = segment(parts[0]).toLowerCase()
-      const reserved = ['backups', 'deliveries', 'id sheets', ...(body.scope?.kind === 'library' ? [] : ['library'])]
-      if (body.scope?.kind !== 'ids' && reserved.includes(top)) return json({ error: 'You cannot upload there.' }, 403)
-      const path = await ensureFolder(body.scope?.kind === 'ids' ? ['ID sheets', ...parts.slice(-1)] : parts)
+      const reserved = ['backups', 'deliveries', 'id sheets', 'logos', ...(body.scope?.kind === 'library' ? [] : ['library'])]
+      const ownFolder = body.scope?.kind === 'ids' || body.scope?.kind === 'logos'
+      if (!ownFolder && reserved.includes(top)) return json({ error: 'You cannot upload there.' }, 403)
+      // logos in a folder a brand (Alex, 28 Oct: "they have different versions for different uses")
+      const path = await ensureFolder(body.scope?.kind === 'ids' ? ['ID sheets', ...parts.slice(-1)] : body.scope?.kind === 'logos' ? ['Logos', ...parts.slice(-1)] : parts)
       const fd = new FormData()
       fd.append('file', file, file.name)
       const up = await pc('uploadfile', { path, filename: file.name, nopartial: 1, renameifexists: 1 }, fd)
@@ -328,7 +342,8 @@ Deno.serve(async (req) => {
       let lib: any = null
       let proj: any = null
       if (scope?.kind === 'project') proj = (await db.from('projects').select('data').eq('id', scope.id)).data?.[0]?.data
-      const ids_ = scope?.kind === 'ids' ? new Set(((await db.from('id_sheets').select('fileid').in('fileid', ids)).data || []).map((r: any) => Number(r.fileid))) : null
+      const ids_ = scope?.kind === 'ids' ? new Set(((await db.from('id_sheets').select('fileid').in('fileid', ids)).data || []).map((r: any) => Number(r.fileid)))
+        : scope?.kind === 'logos' ? new Set(((await db.from('logos').select('fileid').in('fileid', ids)).data || []).map((r: any) => Number(r.fileid))) : null
       const known = async (id: number) => {
         if (ids_) return ids_.has(id)
         if ((await db.rpc('is_id_sheet_file', { p_fileid: id })).data) return false
