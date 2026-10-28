@@ -1,7 +1,6 @@
-// A delivery as an email (Alex, 28 Oct): the same page the link opens, made of the things every mail program
-// draws (tables, inline styles, pictures from the web), so it can be pasted into Gmail or Apple Mail, or saved as
-// an .html file. The delivery page's look: black, the wordmark, the stage, the title, the client, the message, a big
-// red Download Files, the files, the fine print. The button goes to the delivery page, which downloads in one tap,
+// A delivery or an invoice as an email (Alex, 28 Oct), made of the things every mail program draws (tables, inline
+// styles, pictures from the web), sent by the hub or pasted: the wordmark, the stage, the title, the client, the
+// message, a big Download Files, the files, the fine print, all centred, in the hub's look. The button goes to the delivery page, which downloads in one tap,
 // counts the opening and carries the thumbnails and the reply.
 
 const HUB = 'https://hub.themadlions.com/'
@@ -12,22 +11,36 @@ const caps = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g,
 const web = (u) => (/^https?:\/\//i.test(String(u || '').trim()) ? String(u).trim() : '')
 const sizeOf = (n) => (n > 1e9 ? `${(n / 1e9).toFixed(1)} GB` : n > 0 ? `${Math.max(1, Math.round(n / 1e6))} MB` : '')
 
-const C = { bg: '#0b0b0c', card: '#151517', line: '#2a2a2e', text: '#f2f0ec', muted: '#9a9893', accent: '#d40000' }
-const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif"
+/* The hub's look (Alex, 28 Oct: "the colours and the feel of the hub as it is now", everything centred): graphite with
+   a warm glow, one glassy card, soft rounded tiles, the coral accent as a pill. Gradients where the mail program draws
+   them (Apple Mail, iOS, Outlook.com), the plain colour under them everywhere else. */
+const C = { bg: '#1c1e22', card: '#2a2d33', tile: '#33363d', line: '#40444c', text: '#f4f4f5', muted: '#a3a8b0', accent: '#ff6b57' }
+const FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif"
+const BG = `background-color:${C.bg};background-image:radial-gradient(120% 60% at 50% 110%, rgba(255,107,87,.22), rgba(255,107,87,0) 60%),linear-gradient(180deg,#2b2e34 0%,#1c1e22 55%,#16171a 100%);`
+const CARD = `background-color:${C.card};background-image:linear-gradient(160deg,#363a41 0%,#2a2d33 45%,#212328 100%);border:1px solid ${C.line};border-radius:28px;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 24px 60px rgba(0,0,0,.35);`
+const TILE = `background-color:${C.tile};background-image:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid ${C.line};border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);`
+const td = (style, inner) => `<tr><td align="center" style="font-family:${FONT};text-align:center;${style}">${inner}</td></tr>`
 
-const btnOf = (href, label, big = true) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td bgcolor="${C.accent}" style="border-radius:999px;background:${C.accent};"><a href="${esc(href)}" target="_blank" style="display:inline-block;padding:${big ? '16px 40px' : '11px 26px'};font-family:${FONT};font-size:${big ? 16 : 14}px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:999px;">${esc(label)}</a></td></tr></table>`
+const btnOf = (href, label, big = true) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td align="center" bgcolor="${C.accent}" style="border-radius:999px;background-color:${C.accent};background-image:linear-gradient(180deg,#ff8572 0%,#ff6b57 55%,#f25a46 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 10px 26px rgba(255,107,87,.38);"><a href="${esc(href)}" target="_blank" style="display:inline-block;padding:${big ? '16px 40px' : '10px 24px'};font-family:${FONT};font-size:${big ? 16 : 13}px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:999px;">${esc(label)}</a></td></tr></table>`
+const glassBtn = (href, label) => `<a href="${esc(href)}" target="_blank" style="display:inline-block;font-family:${FONT};font-size:13px;font-weight:700;color:${C.text};text-decoration:none;background-color:#3a3e45;border:1px solid #4a4f57;border-radius:999px;padding:9px 20px;">${esc(label)}</a>`
+const tileOf = (inner, pad = '18px 20px') => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.tile}" style="${TILE}"><tr><td align="center" style="padding:${pad};text-align:center;">${inner}</td></tr></table>`
 
-/* the frame every email shares: black, 600 wide, the wordmark on top, the company and the site at the foot */
+/* the frame every email shares: graphite, one glass card 600 wide, the wordmark on top, the company at the foot */
 function wrap(subject, rows, company) {
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><title>${esc(subject)}</title></head>
-<body style="margin:0;padding:0;background:${C.bg};">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.bg}" style="background:${C.bg};">
-<tr><td align="center" style="padding:28px 14px;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;">
-<tr><td align="center" style="padding:6px 0 26px;"><img src="${HUB}site/wordmark-white.png" width="220" alt="${esc(company)}" style="display:block;width:220px;max-width:60%;height:auto;border:0;color:${C.text};font-family:${FONT};font-size:20px;font-weight:700;"></td></tr>
-${rows}<tr><td align="center" style="font-family:${FONT};color:${C.muted};font-size:11px;letter-spacing:1px;padding:34px 0 6px;">${esc(company)} · <a href="https://themadlions.com/" target="_blank" style="color:${C.muted};text-decoration:none;">themadlions.com</a></td></tr>
+<body style="margin:0;padding:0;background-color:${C.bg};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.bg}" style="${BG}">
+<tr><td align="center" style="padding:32px 12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.card}" style="max-width:600px;width:100%;${CARD}">
+<tr><td align="center" style="padding:34px 26px 30px;text-align:center;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td align="center" style="padding:0 0 28px;"><img src="${HUB}site/wordmark-white.png" width="210" alt="${esc(company)}" style="display:block;margin:0 auto;width:210px;max-width:62%;height:auto;border:0;color:${C.text};font-family:${FONT};font-size:20px;font-weight:700;"></td></tr>
+${rows}
 </table>
+</td></tr>
+</table>
+<p style="margin:22px 0 0;font-family:${FONT};font-size:11px;letter-spacing:1.5px;color:${C.muted};text-align:center;">${esc(caps(company))} · <a href="https://themadlions.com/" target="_blank" style="color:${C.muted};text-decoration:none;">themadlions.com</a></p>
 </td></tr>
 </table>
 </body></html>`
@@ -43,17 +56,17 @@ export function deliveryEmail(d, pageUrl, company = 'THEMADLIONS', { stageLabel 
   const btn = btnOf
   const meta = [d.linkLabel, d.password ? `Password <b style="color:${C.text};">${esc(d.password)}</b>` : ''].filter(Boolean)
 
-  const html = wrap(subject, `${cover ? `<tr><td style="padding:0 0 26px;"><a href="${esc(pageUrl)}" target="_blank"><img src="${esc(cover)}" width="600" alt="" style="display:block;width:100%;max-width:600px;height:auto;border:0;border-radius:16px;"></a></td></tr>` : ''}
-<tr><td align="center" style="font-family:${FONT};color:${C.accent};font-size:12px;font-weight:700;letter-spacing:2px;padding:0 0 10px;">${esc(caps(stage))}</td></tr>
-<tr><td align="center" style="font-family:${FONT};color:${C.text};font-size:30px;line-height:1.15;font-weight:300;padding:0 10px 8px;">${esc(title)}</td></tr>
-${d.client ? `<tr><td align="center" style="font-family:${FONT};color:${C.muted};font-size:13px;letter-spacing:1.5px;padding:0 0 6px;">${esc(caps(d.client))}</td></tr>` : ''}
-${d.recipient?.name ? `<tr><td align="center" style="font-family:${FONT};color:${C.muted};font-size:14px;padding:0 0 6px;">For ${esc(d.recipient.name)}</td></tr>` : ''}
-${d.message ? `<tr><td align="center" style="font-family:${FONT};color:${C.text};font-size:15px;line-height:1.6;padding:18px 18px 0;">${lines(d.message)}</td></tr>` : ''}
-<tr><td align="center" style="padding:30px 0 10px;">${btn(pageUrl, files.length > 1 ? `Download all ${files.length} files` : stageAction(d.stage))}</td></tr>
-${meta.length ? `<tr><td align="center" style="font-family:${FONT};color:${C.muted};font-size:13px;padding:8px 0 0;">${meta.join(' &nbsp;·&nbsp; ')}</td></tr>` : ''}
-${files.length > 1 ? `<tr><td style="padding:24px 0 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${files.map((f) => `<tr><td style="padding:0 0 8px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.card}" style="background:${C.card};border:1px solid ${C.line};border-radius:14px;"><tr><td style="padding:14px 16px;font-family:${FONT};color:${C.text};font-size:14px;">${esc(f.name)}${sizeOf(f.size) ? `<br><span style="color:${C.muted};font-size:12px;">${sizeOf(f.size)}</span>` : ''}</td><td align="right" style="padding:14px 16px;"><a href="${esc(web(f.url) || pageUrl)}" target="_blank" style="font-family:${FONT};font-size:13px;font-weight:700;color:${C.text};text-decoration:none;border:1px solid ${C.line};border-radius:999px;padding:8px 16px;display:inline-block;">Download</a></td></tr></table></td></tr>`).join('')}</table></td></tr>` : ''}
-<tr><td align="center" style="padding:22px 0 0;font-family:${FONT};font-size:13px;"><a href="${esc(pageUrl)}" target="_blank" style="color:${C.muted};text-decoration:underline;">Open the delivery page</a></td></tr>
-${d.fine ? `<tr><td style="font-family:${FONT};color:${C.muted};font-size:11px;line-height:1.55;padding:30px 8px 0;">${lines(d.fine)}</td></tr>` : ''}
+  const html = wrap(subject, `${cover ? `<tr><td align="center" style="padding:0 0 26px;"><a href="${esc(pageUrl)}" target="_blank"><img src="${esc(cover)}" width="548" alt="" style="display:block;margin:0 auto;width:100%;max-width:548px;height:auto;border:0;border-radius:18px;"></a></td></tr>` : ''}
+${td(`color:${C.accent};font-size:12px;font-weight:700;letter-spacing:2px;padding:0 0 10px;`, esc(caps(stage)))}
+${td(`color:${C.text};font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.4px;padding:0 6px 8px;`, esc(title))}
+${d.client ? td(`color:${C.muted};font-size:13px;letter-spacing:1.5px;padding:0 0 6px;`, esc(caps(d.client))) : ''}
+${d.recipient?.name ? td(`color:${C.muted};font-size:14px;padding:0 0 6px;`, `For ${esc(d.recipient.name)}`) : ''}
+${d.message ? td(`color:${C.text};font-size:15px;line-height:1.65;padding:18px 6px 0;`, lines(d.message)) : ''}
+<tr><td align="center" style="padding:30px 0 10px;">${btnOf(pageUrl, files.length > 1 ? `Download all ${files.length} files` : stageAction(d.stage))}</td></tr>
+${meta.length ? td(`color:${C.muted};font-size:13px;padding:8px 0 0;`, meta.join(' &nbsp;·&nbsp; ')) : ''}
+${files.length > 1 ? files.map((f) => `<tr><td style="padding:10px 0 0;">${tileOf(`<div style="font-family:${FONT};color:${C.text};font-size:14px;font-weight:600;word-break:break-all;">${esc(f.name)}</div>${sizeOf(f.size) ? `<div style="font-family:${FONT};color:${C.muted};font-size:12px;padding-top:3px;">${sizeOf(f.size)}</div>` : ''}<div style="padding-top:12px;">${glassBtn(web(f.url) || pageUrl, 'Download')}</div>`, '16px 18px')}</td></tr>`).join('') : ''}
+${td('padding:24px 0 0;font-size:13px;', `<a href="${esc(pageUrl)}" target="_blank" style="color:${C.muted};text-decoration:underline;">Open the delivery page</a>`)}
+${d.fine ? td(`color:${C.muted};font-size:11px;line-height:1.6;padding:28px 4px 0;`, lines(d.fine)) : ''}
 `, company)
 
   const text = [stage, title, d.client, '', d.message, '', `${files.length > 1 ? `Download all ${files.length} files` : stageAction(d.stage)}: ${pageUrl}`, d.password ? `Password: ${d.password}` : '', '', d.fine, '', company].filter((x, i, a) => x !== undefined && !(x === '' && a[i - 1] === '')).join('\n').trim()
@@ -96,15 +109,14 @@ export function invoiceEmail(inv, pageUrl, { company = 'THEMADLIONS', total = ''
   const message = v.message
   const closing = v.closing
   const msg = message
-  const tile = (inner) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.card}" style="background:${C.card};border:1px solid ${C.line};border-radius:16px;"><tr><td style="padding:18px 20px;">${inner}</td></tr></table>`
-  const html = wrap(subject, `<tr><td align="center" style="font-family:${FONT};color:${C.accent};font-size:12px;font-weight:700;letter-spacing:2px;padding:0 0 10px;">${esc(caps(v.kicker))}</td></tr>
-${project ? `<tr><td align="center" style="font-family:${FONT};color:${C.text};font-size:30px;line-height:1.15;font-weight:300;padding:0 10px 8px;">${esc(project)}</td></tr>` : ''}
-${v.client ? `<tr><td align="center" style="font-family:${FONT};color:${C.muted};font-size:13px;letter-spacing:1.5px;padding:0 0 6px;">${esc(caps(v.client))}</td></tr>` : ''}
-${msg ? `<tr><td style="font-family:${FONT};color:${C.text};font-size:15px;line-height:1.6;padding:20px 8px 0;">${lines(msg)}</td></tr>` : ''}
+  const html = wrap(subject, `${td(`color:${C.accent};font-size:12px;font-weight:700;letter-spacing:2px;padding:0 0 10px;`, esc(caps(v.kicker)))}
+${project ? td(`color:${C.text};font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.4px;padding:0 6px 8px;`, esc(project)) : ''}
+${v.client ? td(`color:${C.muted};font-size:13px;letter-spacing:1.5px;padding:0 0 6px;`, esc(caps(v.client))) : ''}
+${msg ? td(`color:${C.text};font-size:15px;line-height:1.65;padding:20px 6px 0;`, lines(msg)) : ''}
 <tr><td align="center" style="padding:28px 0 6px;">${btnOf(pageUrl, v.button || 'Δείτε το παραστατικό ➤')}</td></tr>
-${facts.length ? `<tr><td style="padding:24px 0 0;">${tile(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${facts.map(([k, v]) => `<td valign="top" style="font-family:${FONT};padding:0 6px;"><div style="color:${C.muted};font-size:11px;letter-spacing:1.5px;">${esc(caps(k))}</div><div style="color:${C.text};font-size:17px;font-weight:700;padding-top:4px;">${esc(v)}</div></td>`).join('')}</tr></table>`)}</td></tr>` : ''}
-${bank.length ? `<tr><td style="padding:10px 0 0;">${tile(`<div style="font-family:${FONT};color:${C.accent};font-size:11px;font-weight:700;letter-spacing:2px;padding:0 0 10px;">ΣΤΟΙΧΕΙΑ ΤΡΑΠΕΖΙΚΟΥ ΛΟΓΑΡΙΑΣΜΟΥ</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${bank.map(([k, v]) => `<tr><td valign="top" style="font-family:${FONT};color:${C.muted};font-size:12px;letter-spacing:1px;padding:5px 10px 5px 0;white-space:nowrap;">${esc(k)}</td><td style="font-family:${FONT};color:${C.text};font-size:14px;font-weight:600;padding:5px 0;">${esc(v)}</td></tr>`).join('')}</table>`)}</td></tr>` : ''}
-${closing ? `<tr><td style="font-family:${FONT};color:${C.text};font-size:15px;line-height:1.6;padding:24px 8px 0;">${lines(closing)}</td></tr>` : ''}
+${facts.length ? `<tr><td style="padding:26px 0 0;">${tileOf(facts.map(([k, val]) => `<div style="font-family:${FONT};padding:6px 0;"><div style="color:${C.muted};font-size:11px;letter-spacing:1.5px;">${esc(caps(k))}</div><div style="color:${C.text};font-size:${k === 'Ποσό' ? 22 : 16}px;font-weight:700;padding-top:3px;">${esc(val)}</div></div>`).join(''))}</td></tr>` : ''}
+${bank.length ? `<tr><td style="padding:10px 0 0;">${tileOf(`<div style="font-family:${FONT};color:${C.accent};font-size:11px;font-weight:700;letter-spacing:2px;padding:0 0 12px;">ΣΤΟΙΧΕΙΑ ΤΡΑΠΕΖΙΚΟΥ ΛΟΓΑΡΙΑΣΜΟΥ</div>${bank.map(([k, val]) => `<div style="font-family:${FONT};padding:6px 0;"><div style="color:${C.muted};font-size:11px;letter-spacing:1.5px;">${esc(k)}</div><div style="color:${C.text};font-size:15px;font-weight:600;padding-top:3px;word-break:break-all;">${esc(val)}</div></div>`).join('')}`)}</td></tr>` : ''}
+${closing ? td(`color:${C.text};font-size:15px;line-height:1.65;padding:26px 6px 0;`, lines(closing)) : ''}
 `, company)
   const text = [msg, '', `${(v.button || 'Δείτε το παραστατικό').replace(/\s*➤\s*$/, '')}: ${pageUrl}`, '', ...facts.map(([k, v]) => `${k}: ${v}`), facts.length ? '' : null, bank.length ? 'ΣΤΟΙΧΕΙΑ ΤΡΑΠΕΖΙΚΟΥ ΛΟΓΑΡΙΑΣΜΟΥ' : null, ...bank.map(([k, v]) => `${k}: ${v}`), '', closing, '', company].filter((x) => x !== null && x !== undefined).join('\n').replace(/\n{3,}/g, '\n\n').trim()
   return { subject, html, text }
