@@ -9111,3 +9111,8 @@ html[data-theme] body .ab-export-menu.ab-menu { width: 320px; max-width: calc(10
 }
 /* the progress card lets its menus open over the cards under it */
 html[data-theme] body .overview .panel.progress { overflow: visible; position: relative; z-index: 30; }
+/* the song's menus (Music.jsx, Alex 28 Oct) open over what is under them, on the Overview and the Script tab */
+html[data-theme] body .panel.music-panel { overflow: visible; position: relative; z-index: 20; }
+.music .toolbar { position: relative; z-index: 5; }
+.music .ov-acts .compact { height: 38px; }
+.music .toolbar:has(.ov-menu) { z-index: 12; }
