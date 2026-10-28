@@ -193,7 +193,7 @@ export function InvoicesTab() {
       {emailing && (() => {
         const inv = withCompany(emailing.inv)
         const total = money(invoiceTotals(inv).total, inv.currency)
-        return <EmailWindow title={`Email · Invoice #${inv.number || ''}`} start={invoiceEmailStart(inv, total)} fields={INVOICE_FIELDS} link={emailing.url} build={(v) => invoiceEmail(inv, emailing.url, { ...v, company: state.workspace.name })} to={clients.find((c) => c.id === inv.clientId)?.email || ''} onClose={() => setEmailing(null)} />
+        return <EmailWindow title={`Email · Invoice #${inv.number || ''}`} start={invoiceEmailStart(inv, total)} fields={INVOICE_FIELDS} link={emailing.url} build={(v) => invoiceEmail(inv, emailing.url, { ...v, company: state.workspace.name })} to={clients.find((c) => c.id === inv.clientId)?.email || ''} cc={profile.accountantEmail || ''} onClose={() => setEmailing(null)} />
       })()}
     </>
   )
@@ -412,6 +412,7 @@ export function InvoiceProfileForm({ onDone }) {
         <Field label="Bank name"><Input value={p.bankName} onChange={(e) => set('bankName', e.target.value)} /></Field>
         <Field label="BIC / SWIFT"><Input value={p.bankBic} onChange={(e) => set('bankBic', e.target.value)} /></Field>
         <Field label="IBAN"><Input value={p.bankIban} onChange={(e) => set('bankIban', e.target.value)} /></Field>
+        <Field label="Accountant's email" hint="In Cc on every invoice email"><Input type="email" value={p.accountantEmail ?? ''} onChange={(e) => set('accountantEmail', e.target.value)} placeholder="info@flexi.gr" /></Field>
       </div>
       <div className="row-3">
         <Field label="Default currency"><Select value={p.currency} onChange={(e) => set('currency', e.target.value)} options={['EUR', 'USD', 'GBP', 'BGN']} /></Field>

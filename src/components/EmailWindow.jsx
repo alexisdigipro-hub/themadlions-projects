@@ -6,13 +6,13 @@ import { copyEmail, sendEmail } from '../lib/deliveryEmail.js'
    Gmail, Apple Mail or Outlook), Copy link, or Send: the hub sends it itself, so it arrives exactly as it looks.
    With `fields` every part of it is edited beside the preview (the invoice's: subject, greeting, button, amount,
    bank account, closing); build(values) makes { subject, html, text }. */
-export default function EmailWindow({ build, start = {}, fields = [], link = '', to: toStart = '', title = 'Email', onClose, onSent }) {
+export default function EmailWindow({ build, start = {}, fields = [], link = '', to: toStart = '', cc: ccStart = '', title = 'Email', onClose, onSent }) {
   const toast = useToast()
   const [v, setV] = useState(start)
   const mail = useMemo(() => build(v), [build, v])
   // sent by the hub itself (Alex, 28 Oct: "like the newsletters I get"), so it arrives exactly as it looks here
   const [to, setTo] = useState(toStart)
-  const [cc, setCc] = useState('')
+  const [cc, setCc] = useState(ccStart)
   const [copyMe, setCopyMe] = useState(true)
   const [sending, setSending] = useState(false)
   const send = async () => {
