@@ -455,7 +455,6 @@ export default function Notes({ slot = null }) {
       {own && renaming?.id !== id && (
         <span className="notes-folder-acts">
           <button type="button" title="Folder settings" onClick={() => setFolderForm({ id, name, ...folderLook(own) })}>✎</button>
-          <button type="button" title="Delete folder" onClick={() => deleteFolder(own)}>×</button>
         </span>
       )}
     </div>
