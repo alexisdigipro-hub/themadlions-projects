@@ -393,7 +393,9 @@ export default function Deliveries() {
 
   const today = toISODate(new Date()) // local date, not UTC: a link must not look closed a day early
   // shot list links stopped with RoarList (Alex, 27 Oct), as the ordino links with Roardino
-  const all = useMemo(() => (rows || []).filter((r) => r.kind !== 'status' && r.kind !== 'callsheet' && r.kind !== 'shotlist').map((r) => {
+  // only what Share sends: deliveries, cost estimations and presentations. An invoice's link (made by Finance's Email,
+  // Alex 28 Oct), a note's or the old call sheets and shot lists are not Share's, and showed here as "Call sheet"
+  const all = useMemo(() => (rows || []).filter((r) => r.kind === 'delivery' || r.kind === 'estimate' || r.kind === 'deck').map((r) => {
     const d = r.data || {}
     const isDelivery = r.kind === 'delivery'
     const isEstimate = r.kind === 'estimate'
