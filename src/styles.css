@@ -8844,3 +8844,8 @@ html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='th
 .notes-move-row { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--text) 5%, transparent); color: var(--text); font: inherit; text-align: left; }
 .notes-move-row.on { border-color: color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
 .notes-swipe-front { background: linear-gradient(var(--g-card, transparent), var(--g-card, transparent)), var(--panel, #fff) !important; border-radius: 14px; }
+/* Notes on a phone: the title only, no line of time and first words under it, so each note is lower (Alex, 28 Oct) */
+@media (max-width: 820px) {
+  :is(.notes-card, .notes-swipe-front) :is(.notes-card-sub, .notes-card-folder) { display: none; }
+  .notes-card, .notes-swipe-front { min-height: 0; padding-top: 12px; padding-bottom: 12px; }
+}
