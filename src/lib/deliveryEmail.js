@@ -58,7 +58,7 @@ export function deliveryEmail(d, pageUrl, company = 'THEMADLIONS', { stageLabel 
 
   const html = wrap(subject, `${cover ? `<tr><td align="center" style="padding:0 0 26px;"><a href="${esc(pageUrl)}" target="_blank"><img src="${esc(cover)}" width="548" alt="" style="display:block;margin:0 auto;width:100%;max-width:548px;height:auto;border:0;border-radius:18px;"></a></td></tr>` : ''}
 ${td(`color:${C.accent};font-size:12px;font-weight:700;letter-spacing:2px;padding:0 0 10px;`, esc(caps(stage)))}
-${td(`color:${C.text};font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.4px;padding:0 6px 8px;`, esc(title))}
+${td(`color:${C.text};font-size:23px;line-height:1.2;font-weight:700;letter-spacing:-.4px;padding:0 6px 8px;`, esc(title))}
 ${d.client ? td(`color:${C.muted};font-size:13px;letter-spacing:1.5px;padding:0 0 6px;`, esc(caps(d.client))) : ''}
 ${d.recipient?.name ? td(`color:${C.muted};font-size:14px;padding:0 0 6px;`, `For ${esc(d.recipient.name)}`) : ''}
 ${d.message ? td(`color:${C.text};font-size:15px;line-height:1.65;padding:18px 6px 0;`, lines(d.message)) : ''}
@@ -89,7 +89,7 @@ export function invoiceEmailStart(inv, total = '') {
     title: project,
     client: inv.recipient?.name || '',
     message: INVOICE_MESSAGE(project),
-    button: 'Δείτε το παραστατικό ➤',
+    button: 'DOWNLOAD INVOICE',
     number: inv.number ? `#${inv.number}` : '',
     amount: total,
     due: inv.dueDate ? fmt(inv.dueDate) : '',
@@ -110,15 +110,15 @@ export function invoiceEmail(inv, pageUrl, { company = 'THEMADLIONS', total = ''
   const closing = v.closing
   const msg = message
   const html = wrap(subject, `${td(`color:${C.accent};font-size:12px;font-weight:700;letter-spacing:2px;padding:0 0 10px;`, esc(caps(v.kicker)))}
-${project ? td(`color:${C.text};font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.4px;padding:0 6px 8px;`, esc(project)) : ''}
+${project ? td(`color:${C.text};font-size:23px;line-height:1.2;font-weight:700;letter-spacing:-.4px;padding:0 6px 8px;`, esc(project)) : ''}
 ${v.client ? td(`color:${C.muted};font-size:13px;letter-spacing:1.5px;padding:0 0 6px;`, esc(caps(v.client))) : ''}
 ${msg ? td(`color:${C.text};font-size:15px;line-height:1.65;padding:20px 6px 0;`, lines(msg)) : ''}
-<tr><td align="center" style="padding:28px 0 6px;">${btnOf(pageUrl, v.button || 'Δείτε το παραστατικό ➤')}</td></tr>
+<tr><td align="center" style="padding:28px 0 6px;">${btnOf(pageUrl, v.button || 'DOWNLOAD INVOICE')}</td></tr>
 ${facts.length ? `<tr><td style="padding:26px 0 0;">${tileOf(facts.map(([k, val]) => `<div style="font-family:${FONT};padding:6px 0;"><div style="color:${C.muted};font-size:11px;letter-spacing:1.5px;">${esc(caps(k))}</div><div style="color:${C.text};font-size:${k === 'Ποσό' ? 22 : 16}px;font-weight:700;padding-top:3px;">${esc(val)}</div></div>`).join(''))}</td></tr>` : ''}
 ${bank.length ? `<tr><td style="padding:10px 0 0;">${tileOf(`<div style="font-family:${FONT};color:${C.accent};font-size:11px;font-weight:700;letter-spacing:2px;padding:0 0 12px;">ΣΤΟΙΧΕΙΑ ΤΡΑΠΕΖΙΚΟΥ ΛΟΓΑΡΙΑΣΜΟΥ</div>${bank.map(([k, val]) => `<div style="font-family:${FONT};padding:6px 0;"><div style="color:${C.muted};font-size:11px;letter-spacing:1.5px;">${esc(k)}</div><div style="color:${C.text};font-size:15px;font-weight:600;padding-top:3px;word-break:break-all;">${esc(val)}</div></div>`).join('')}`)}</td></tr>` : ''}
 ${closing ? td(`color:${C.text};font-size:15px;line-height:1.65;padding:26px 6px 0;`, lines(closing)) : ''}
 `, company)
-  const text = [msg, '', `${(v.button || 'Δείτε το παραστατικό').replace(/\s*➤\s*$/, '')}: ${pageUrl}`, '', ...facts.map(([k, v]) => `${k}: ${v}`), facts.length ? '' : null, bank.length ? 'ΣΤΟΙΧΕΙΑ ΤΡΑΠΕΖΙΚΟΥ ΛΟΓΑΡΙΑΣΜΟΥ' : null, ...bank.map(([k, v]) => `${k}: ${v}`), '', closing, '', company].filter((x) => x !== null && x !== undefined).join('\n').replace(/\n{3,}/g, '\n\n').trim()
+  const text = [msg, '', `${(v.button || 'DOWNLOAD INVOICE').replace(/\s*➤\s*$/, '')}: ${pageUrl}`, '', ...facts.map(([k, v]) => `${k}: ${v}`), facts.length ? '' : null, bank.length ? 'ΣΤΟΙΧΕΙΑ ΤΡΑΠΕΖΙΚΟΥ ΛΟΓΑΡΙΑΣΜΟΥ' : null, ...bank.map(([k, v]) => `${k}: ${v}`), '', closing, '', company].filter((x) => x !== null && x !== undefined).join('\n').replace(/\n{3,}/g, '\n\n').trim()
   return { subject, html, text }
 }
 
