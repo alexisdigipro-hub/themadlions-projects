@@ -310,7 +310,7 @@ export default function Overview() {
       {/* one song box (Alex, 27 Oct: "the audio is there twice"): with the Script section on and a song uploaded it is the
           full song map (waveform, sections, lyrics); otherwise the simple player, whose Upload song is a pill above */}
       {isMusicVideo && can(user, 'music') && (sections.includes('script') && hasSong
-        ? <section className="panel"><Music /></section>
+        ? <section className="panel music-panel"><Music /></section>
         : <SongPlayer project={project} edit={edit} editable={canEdit('music')} hideEmpty startSignal={start.song} />)}
 
       {/* The ordino as one button that looks like the song box above it, for everyone on the project,

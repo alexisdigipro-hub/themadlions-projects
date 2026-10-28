@@ -11,6 +11,19 @@ import { remote } from '../../lib/supabase.js'
 import { useStore } from '../../lib/store.jsx'
 import { alignBlocks, groupSegments, transcribe } from '../../lib/transcribe.js'
 
+const ico = (d) => <svg viewBox="0 0 24 24" aria-hidden="true">{d}</svg>
+const MI = {
+  plus: ico(<path d="M12 5v14M5 12h14" />),
+  edit: ico(<><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></>),
+  more: <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="18.5" cy="12" r="1.4" /></svg>,
+  download: ico(<><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5" /><path d="M5 20h14" /></>),
+  upload: ico(<><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5" /><path d="M5 20h14" /></>),
+  map: ico(<><path d="M4 6h16M4 12h10M4 18h13" /></>),
+  section: ico(<><rect x="4" y="5" width="16" height="5" rx="2" /><rect x="4" y="14" width="10" height="5" rx="2" /></>),
+  lyrics: ico(<><path d="M6 3.5h8.5L19 8v11.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1Z" /><path d="M8.5 12.5h7M8.5 16h5" /></>),
+  mic: ico(<><rect x="9" y="3.5" width="6" height="11" rx="3" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5" /></>),
+  stop: ico(<rect x="7" y="7" width="10" height="10" rx="2" />),
+}
 const TRACK_KINDS = [['master', 'Master'], ['playback', 'Playback'], ['instrumental', 'Instrumental'], ['demo', 'Demo'], ['other', 'Other']]
 const emptyMusic = () => ({ tracks: [], activeTrackId: '', sections: [], notes: '' })
 
@@ -69,6 +82,13 @@ export default function Music() {
   const lastFile = useRef(null) // the file just uploaded, reused for transcription without re-downloading
   const [tr, setTr] = useState(null) // { mode: 'new' | 'align', language }
   const [trackEdit, setTrackEdit] = useState(false) // the track's name, kind and Remove, folded away
+  const [menu, setMenu] = useState('') // 'track' (⋯) or 'map' (+ Add), the two small menus (Alex, 28 Oct)
+  useEffect(() => {
+    if (!menu) return
+    const key = (e) => { if (e.key === 'Escape') setMenu('') }
+    document.addEventListener('keydown', key)
+    return () => document.removeEventListener('keydown', key)
+  }, [menu])
   const [trBusy, setTrBusy] = useState('')
   const music = { ...emptyMusic(), ...(project.music || {}) }
   const track = music.tracks.find((t) => t.id === music.activeTrackId) || music.tracks[0]
@@ -246,20 +266,30 @@ export default function Music() {
           <strong>{track ? track.name : 'No track yet'}</strong>
           <span className="muted">{track ? `${fmtTime(track.duration)} · ${TRACK_KINDS.find(([v]) => v === track.kind)?.[1] || ''}${music.tracks.length > 1 ? ` · ${music.tracks.length} versions` : ''}` : 'Upload the song to start the song map'}{sections.length ? ` · ${sections.length} sections` : ''}</span>
         </div>
-        <div className="toolbar-actions">
+        {/* few buttons, always in the same place (Alex, 28 Oct: "the buttons are mixed up, do it as on the project"):
+            Edit, and ⋯ for Download, Add version and Export song map; Upload song alone when there is no song yet */}
+        <div className="toolbar-actions ov-acts">
           {music.tracks.length > 1 && (
             <Select className="compact" value={track?.id || ''} onChange={(e) => setMusic((m) => (m.activeTrackId = e.target.value))} options={music.tracks.map((t) => [t.id, `${t.name} (${TRACK_KINDS.find(([v]) => v === t.kind)?.[1]})`])} />
           )}
-          {sections.length > 0 && <Button variant="ghost" onClick={exportMap}>Export song map</Button>}
-          {/* the player's own buttons moved up here, so the song box is one slim row as on the Overview (Alex, 10 Oct) */}
-          {track && loop && <Button variant="ghost" onClick={() => setLoop(null)}>Stop loop</Button>}
-          {track && <Button variant="ghost" onClick={downloadAudio} disabled={saving || !url} title="Save the audio file to this device">{saving ? 'Preparing…' : 'Download'}</Button>}
-          {track && editable && <Button variant="ghost" className={trackEdit ? 'on' : ''} onClick={() => setTrackEdit((v) => !v)}>Edit track</Button>}
-          {editable && (
-            <>
-              <input ref={fileRef} type="file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac" hidden onChange={(e) => onFile(e.target.files?.[0])} />
-              <Button variant={track ? 'ghost' : 'primary'} onClick={() => fileRef.current?.click()} disabled={!!busy}>{busy || (track ? 'Add version' : 'Upload song')}</Button>
-            </>
+          {track && loop && <button type="button" className="add-pill" onClick={() => setLoop(null)}>{MI.stop}<span>Stop loop</span></button>}
+          {editable && <input ref={fileRef} type="file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac" hidden onChange={(e) => onFile(e.target.files?.[0])} />}
+          {!track && editable && <button type="button" className="add-pill ov-add" onClick={() => fileRef.current?.click()} disabled={!!busy}>{MI.upload}<span>{busy || 'Upload song'}</span></button>}
+          {track && editable && <button type="button" className={`add-pill ov-edit${trackEdit ? ' on' : ''}`} onClick={() => setTrackEdit((v) => !v)}>{MI.edit}<span>{trackEdit ? 'Done' : 'Edit'}</span></button>}
+          {track && (
+            <span className="ov-menu-wrap">
+              <button type="button" className={`ov-round${menu === 'track' ? ' on' : ''}`} onClick={() => setMenu(menu === 'track' ? '' : 'track')} aria-label="More" title="Download, Add version, Export song map">{MI.more}</button>
+              {menu === 'track' && (
+                <>
+                  <span className="ab-export-shade" onClick={() => setMenu('')} />
+                  <div className="ov-menu ov-menu-more">
+                    <button type="button" className="ov-menu-row" disabled={saving || !url} onClick={() => { setMenu(''); downloadAudio() }}>{MI.download}<span><b>{saving ? 'Preparing…' : 'Download'}</b><small>The audio file to this device</small></span></button>
+                    {editable && <button type="button" className="ov-menu-row" disabled={!!busy} onClick={() => { setMenu(''); fileRef.current?.click() }}>{MI.upload}<span><b>{busy || 'Add version'}</b><small>Another mix: master, playback, demo</small></span></button>}
+                    {sections.length > 0 && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); exportMap() }}>{MI.map}<span><b>Export song map</b><small>The sections, times and lyrics as text</small></span></button>}
+                  </div>
+                </>
+              )}
+            </span>
           )}
         </div>
       </div>
@@ -290,11 +320,22 @@ export default function Music() {
 
       <div className="toolbar">
         <div className="toolbar-info"><strong>Song map</strong>{sections.length > 0 && <span className="muted">{sections.length} section{sections.length === 1 ? '' : 's'}</span>}</div>
+        {/* one + Add for the song map: a section, or the lyrics pasted or heard from the vocal */}
         {editable && (
-          <div className="toolbar-actions">
-            {!sections.length && <Button variant="ghost" onClick={() => setPaste({ text: '' })}>Paste full lyrics</Button>}
-            {track && <Button variant="ghost" onClick={() => setTr({ mode: sections.length ? 'align' : 'new', language: '' })} disabled={!!trBusy}>{trBusy || (sections.length ? 'Time sections from vocal' : 'Lyrics from audio')}</Button>}
-            <Button variant="primary" onClick={addSection}>Add section</Button>
+          <div className="toolbar-actions ov-acts">
+            <span className="ov-menu-wrap">
+              <button type="button" className={`add-pill ov-add${menu === 'map' ? ' on' : ''}`} onClick={() => setMenu(menu === 'map' ? '' : 'map')} disabled={!!trBusy}>{MI.plus}<span>{trBusy || 'Add'}</span></button>
+              {menu === 'map' && (
+                <>
+                  <span className="ab-export-shade" onClick={() => setMenu('')} />
+                  <div className="ov-menu ov-menu-more">
+                    <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); addSection() }}>{MI.section}<span><b>Add section</b><small>Intro, verse, chorus, with its time and lyrics</small></span></button>
+                    {!sections.length && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); setPaste({ text: '' }) }}>{MI.lyrics}<span><b>Paste full lyrics</b><small>Split into sections by their blank lines</small></span></button>}
+                    {track && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); setTr({ mode: sections.length ? 'align' : 'new', language: '' }) }}>{MI.mic}<span><b>{sections.length ? 'Time sections from vocal' : 'Lyrics from audio'}</b><small>{sections.length ? 'Find where each section starts by listening' : 'Write the lyrics by listening to the vocal'}</small></span></button>}
+                  </div>
+                </>
+              )}
+            </span>
           </div>
         )}
       </div>
