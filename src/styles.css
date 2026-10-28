@@ -9106,3 +9106,5 @@ html[data-theme] body .ab-export-menu.ab-menu { width: 320px; max-width: calc(10
   .ov-acts { justify-content: flex-start; flex-wrap: wrap; }
   .ov-menu { position: fixed; top: auto; left: 12px; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); width: auto; max-height: 70vh; overflow: auto; }
 }
+/* the progress card lets its menus open over the cards under it */
+html[data-theme] body .overview .panel.progress { overflow: visible; position: relative; z-index: 30; }
