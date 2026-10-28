@@ -147,6 +147,8 @@ const ADD_ICONS = {
   duplicate: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" /><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8" /></svg>,
   lock: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /></svg>,
   unlock: <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" /><path d="M8 10.5V8a4 4 0 0 1 7.6-1.8" /></svg>,
+  plus: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>,
+  more: <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="18.5" cy="12" r="1.4" /></svg>,
 }
 
 export default function Overview() {
@@ -197,10 +199,19 @@ export default function Overview() {
   // instead. Pressing a button bumps a counter the panel watches, so it opens its own form.
   const [pillSlot, setPillSlot] = useState(null) // where the Project Database puts its add pills
   const [roarmeOpen, setRoarmeOpen] = useState(false)
+  const [menu, setMenu] = useState('') // 'add' or 'more': the two small menus of the project's top row (Alex, 28 Oct)
+  // a choice in + Add closes it; a DOM listener, because the Project Database's pills come in through a portal
+  useEffect(() => {
+    if (menu !== 'add') return
+    const on = (e) => { if (e.target.closest?.('.ov-menu-add button')) setTimeout(() => setMenu(''), 0) }
+    document.addEventListener('click', on)
+    return () => document.removeEventListener('click', on)
+  }, [menu])
   const [start, setStart] = useState({ task: 0, song: 0, link: 0, notes: 0, script: 0, paste: 0 })
   const begin = (k) => setStart((s0) => ({ ...s0, [k]: s0[k] + 1 }))
   const isMusicVideo = project.category === 'Music Video'
   const hasSong = !!(project.music?.tracks || []).length
+  // the adds in groups, so one + Add holds them all (Alex, 28 Oct: "many buttons, all mixed up")
   const adds = [
     can(user, 'tasks') && canEdit('tasks') && !tasksFor(project.tasks || [], user).length && ['task', 'Add task'],
     isMusicVideo && can(user, 'music') && canEdit('music') && !hasSong && ['song', 'Upload song'],
@@ -222,6 +233,51 @@ export default function Overview() {
             <div className="progress-top">
               <span>
                 <strong>{pct}% done</strong> <span className="muted small">{[project.status === 'Delivered' && 'Delivered', project.startDate && `shoot ${fmtDate(project.startDate)}`, project.frozen && '🔒 locked'].filter(Boolean).join(' · ')}</span>
+              </span>
+              {/* the project's few actions, always in the same place (Alex, 28 Oct: "I was looking for Edit"):
+                  + Add (everything that can be added, in groups), Edit, and ⋯ for Duplicate, Lock and the RoarMe group */}
+              <span className="ov-acts">
+                {(adds.length > 0 || sections.includes('people')) && (
+                  <span className="ov-menu-wrap">
+                    <button type="button" className={`add-pill ov-add${menu === 'add' ? ' on' : ''}`} onClick={() => setMenu(menu === 'add' ? '' : 'add')} aria-expanded={menu === 'add'}>{ADD_ICONS.plus}<span>Add</span></button>
+                    {menu === 'add' && (
+                      <>
+                        <span className="ab-export-shade" onClick={() => setMenu('')} />
+                        <div className="ov-menu ov-menu-add">
+                          {adds.some(([k]) => ['task', 'link', 'notes'].includes(k)) && <>
+                            <span className="ov-menu-head">Work</span>
+                            <div className="ov-menu-grid">{adds.filter(([k]) => ['task', 'link', 'notes'].includes(k)).map(([k, label]) => <button key={k} type="button" className="add-pill" onClick={() => begin(k)}>{ADD_ICONS[k]}<span>{label}</span></button>)}</div>
+                          </>}
+                          {adds.some(([k]) => ['song', 'script', 'paste'].includes(k)) && <>
+                            <span className="ov-menu-head">Song &amp; script</span>
+                            <div className="ov-menu-grid">{adds.filter(([k]) => ['song', 'script', 'paste'].includes(k)).map(([k, label]) => <button key={k} type="button" className="add-pill" onClick={() => begin(k)}>{ADD_ICONS[k]}<span>{label}</span></button>)}</div>
+                          </>}
+                          {sections.includes('people') && <>
+                            <span className="ov-menu-head">People, places &amp; gear</span>
+                            {/* the Project Database's Add crew / Add cast / Add location / Add item (People.jsx, through a portal) */}
+                            <div className="ov-menu-grid" ref={setPillSlot} />
+                          </>}
+                        </div>
+                      </>
+                    )}
+                  </span>
+                )}
+                {canEdit('projects') && <button type="button" className="add-pill ov-edit" onClick={() => setDraft({ ...project })}>{ADD_ICONS.edit}<span>Edit</span></button>}
+                {(can(user, 'projects', 'edit') || user?.role === 'admin') && (
+                  <span className="ov-menu-wrap">
+                    <button type="button" className={`ov-round${menu === 'more' ? ' on' : ''}`} onClick={() => setMenu(menu === 'more' ? '' : 'more')} aria-label="More" title="Duplicate, Lock, RoarMe group">{ADD_ICONS.more}</button>
+                    {menu === 'more' && (
+                      <>
+                        <span className="ab-export-shade" onClick={() => setMenu('')} />
+                        <div className="ov-menu ov-menu-more">
+                          {can(user, 'projects', 'edit') && <button type="button" className="ov-menu-row" disabled={duping} onClick={() => { setMenu(''); duplicate() }}>{ADD_ICONS.duplicate}<span><b>{duping ? 'Copying…' : 'Duplicate'}</b><small>A copy of this project to start from</small></span></button>}
+                          {user?.role === 'admin' && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); edit((p) => { p.frozen = !p.frozen }); toast(project.frozen ? 'Project unlocked, the team can edit again' : 'Project locked: only administrators can change it now', 'ok') }}>{project.frozen ? ADD_ICONS.unlock : ADD_ICONS.lock}<span><b>{project.frozen ? 'Unlock project' : 'Lock project'}</b><small>{project.frozen ? 'The team can edit it again' : 'Only administrators can change it'}</small></span></button>}
+                          {remote && user?.role === 'admin' && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); setRoarmeOpen(true) }}>{ADD_ICONS.chat}<span><b>RoarMe group</b><small>The project's chat in RoarMe</small></span></button>}
+                        </div>
+                      </>
+                    )}
+                  </span>
+                )}
               </span>
             </div>
             <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
@@ -247,45 +303,6 @@ export default function Overview() {
           </div>
         </div>
       </section>
-
-      {/* the add buttons, then Edit details / Duplicate / Lock project as the same pills (Alex, 11 Oct) */}
-      {(adds.length > 0 || canEdit('projects') || can(user, 'projects', 'edit') || user?.role === 'admin' || sections.includes('people')) && (
-        <div className="add-pills">
-          {adds.map(([k, label]) => (
-            <button key={k} type="button" className="add-pill" onClick={() => begin(k)}>
-              {ADD_ICONS[k]}
-              <span>{label}</span>
-            </button>
-          ))}
-          {/* the Project Database's Add crew / Add cast / Add item / Export CSV (People.jsx, through a portal) */}
-          <span className="add-pills-slot" ref={setPillSlot} />
-          {/* the project's RoarMe group as a button, administrators only (Alex, 27 Oct; it was a card at the top) */}
-          {remote && user?.role === 'admin' && (
-            <button type="button" className="add-pill" onClick={() => setRoarmeOpen(true)}>
-              {ADD_ICONS.chat}
-              <span>RoarMe group</span>
-            </button>
-          )}
-          {canEdit('projects') && (
-            <button type="button" className="add-pill" onClick={() => setDraft({ ...project })}>
-              {ADD_ICONS.edit}
-              <span>Edit details</span>
-            </button>
-          )}
-          {can(user, 'projects', 'edit') && (
-            <button type="button" className="add-pill" disabled={duping} onClick={duplicate}>
-              {ADD_ICONS.duplicate}
-              <span>{duping ? 'Copying…' : 'Duplicate'}</span>
-            </button>
-          )}
-          {user?.role === 'admin' && (
-            <button type="button" className="add-pill" onClick={() => { edit((p) => { p.frozen = !p.frozen }); toast(project.frozen ? 'Project unlocked, the team can edit again' : 'Project locked: only administrators can change it now', 'ok') }}>
-              {project.frozen ? ADD_ICONS.unlock : ADD_ICONS.lock}
-              <span>{project.frozen ? 'Unlock' : 'Lock project'}</span>
-            </button>
-          )}
-        </div>
-      )}
 
       {/* the song first, above the ordino (Alex, 10 Oct) */}
       {/* one song box (Alex, 27 Oct: "the audio is there twice"): with the Script section on and a song uploaded it is the
