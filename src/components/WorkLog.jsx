@@ -3,7 +3,7 @@ import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast
 import { can, today, uid, useCurrentUser, useStore, visibleProjects } from '../lib/store.jsx'
 import { download, fmtDate } from '../lib/dates.js'
 import { remote, supabase } from '../lib/supabase.js'
-import { budgetLineFromJob, findMemberLine, lineEstimate, linePaid, lineBalance, syncLineWorklog } from '../lib/budget.js'
+import { budgetLineFromJob, findMemberLine, guessJobCategory, lineEstimate, linePaid, lineBalance, syncLineWorklog } from '../lib/budget.js'
 import { budgetCategories } from '../lib/budgetCats.js'
 import PaymentModal from './PaymentModal.jsx'
 
@@ -133,7 +133,10 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
   const save = () => {
     if (!draft.client.trim() && !draft.description.trim()) return toast('Add a client or a description.', 'error')
     if (!draft.date) return toast('Pick the date.', 'error')
-    const e = { ...draft, amount: Number(draft.amount) || 0, paidDate: draft.status === 'paid' ? draft.paidDate || today() : '' }
+    // the role goes to the budget line this job makes, not into the job itself
+    const { role, ...rest } = draft
+    const e = { ...rest, amount: Number(draft.amount) || 0, paidDate: draft.status === 'paid' ? draft.paidDate || today() : '' }
+    if (makesLine(e) && !roleOf(draft)) return toast('Pick your role on this project.', 'error')
     // No double entries (Alex): if the production already pays this person on the project, the
     // fee is already a job in this list (the budget line keeps it). A second job on the same
     // project is refused; a job that arrives before the line's own job is tied to the line instead.
@@ -159,19 +162,28 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
     if (tieTo) toast(`Tied to the fee the production entered in the ${tieTo.project.title} budget.`, 'ok')
     if (!allTime && !years.includes(e.date.slice(0, 4))) setYear(e.date.slice(0, 4))
     setDraft(null)
-    claimBudget(e)
+    claimBudget({ ...e, role: roleOf(draft) })
   }
   /* A job on a project puts the person's fee into that project's budget, unless the production
      already entered a line paying them. Someone with Budget = edit writes the project directly;
      anyone else goes through claim_budget_line(), which can add one line for themself and
      nothing more. The job is then linked to the line, so a payment turns it to paid. */
   const owner = state.users.find((u) => u.id === userId) || me
+  const cats = budgetCategories(state.settings)
+  // a job that will put a new line into the project's budget: on a project that does not pay this person yet
+  const makesLine = (job) => {
+    if (!job.projectId || job.budgetLineId || !(Number(job.amount) > 0)) return false
+    const project = state.projects.find((p) => p.id === job.projectId)
+    return !!project && !findMemberLine(project, job.userId || userId)
+  }
+  // the role the line is filed under (Alex, 28 Oct): what the form shows, the person's usual role unless changed
+  const roleOf = (d) => guessJobCategory(owner, cats, state.projects, d?.role)
   const claimBudget = async (job) => {
     if (!job.projectId || job.budgetLineId || !(Number(job.amount) > 0)) return
     const project = state.projects.find((p) => p.id === job.projectId)
     if (!project) return
     if (findMemberLine(project, job.userId)) return
-    const line = budgetLineFromJob(job, owner, budgetCategories(state.settings))
+    const line = budgetLineFromJob(job, owner, cats, state.projects)
     const link = (lineId) => update((s) => { const x = (s.worklog || []).find((y) => y.id === job.id); if (x) x.budgetLineId = lineId; return s })
     const direct = !remote || can(me, 'budget', 'edit')
     if (direct) {
@@ -320,6 +332,12 @@ export function WorkLogTable({ userId, editable, showHero = true, compact = fals
               <Field label="Client / artist"><Input value={draft.client} onChange={(e) => setDraft({ ...draft, client: e.target.value })} placeholder="Καίτη Γαρμπή" /></Field>
             </div>
             <Field label="Description"><Input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder="Song title, spot, live, intro…" /></Field>
+            {/* the budget line's category, which is also the person's credit on the project's delivery page */}
+            {draft.projectId && !draft.budgetLineId && !findMemberLine(state.projects.find((x) => x.id === draft.projectId), userId) && (
+              <Field label="Your role" hint="Your line in the project budget, and your credit on its delivery page.">
+                <Select value={roleOf(draft)} onChange={(e) => setDraft({ ...draft, role: e.target.value })} options={[...(roleOf(draft) ? [] : [['', 'Choose your role']]), ...cats]} />
+              </Field>
+            )}
             <div className="row-2">
               <Field label="Shooting date"><Input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} /></Field>
               <Field label="Amount (€)"><Input type="number" inputMode="decimal" value={draft.amount} onChange={(e) => setDraft({ ...draft, amount: e.target.value })} placeholder="150" /></Field>

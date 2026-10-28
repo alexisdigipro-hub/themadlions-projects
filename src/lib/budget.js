@@ -58,12 +58,38 @@ export function findMemberLine(project, userId) {
   return (project?.budget?.lines || []).find((l) => l.memberId && l.memberId === userId) || null
 }
 
-/* The other direction: a job someone entered in their own My work becomes a budget line on the
-   project, paid to them. Category: their department when it is one of the budget categories,
-   else Production staff, else the first category there is. */
-export function budgetLineFromJob(job, user, categories = []) {
+/* The role a person most likely had, as a budget category, for a job from their My work. Never
+   simply the first category (Alex, 28 Oct: a camera operator's jobs went in as "Film Director", the
+   list's first, and the credits made him the director). In order: the role picked in the job form;
+   their department when it is a category; the category the production filed them under most on
+   other budgets; the category sharing most words with their department or position ("Camera
+   Department" -> Camera Operator); Production staff. '' when none fits: the form then asks. */
+export function guessJobCategory(user, categories = [], projects = [], picked = '') {
+  if (picked && categories.includes(picked)) return picked
   const dept = user?.profile?.dept || ''
-  const category = categories.includes(dept) ? dept : categories.includes('Production staff') ? 'Production staff' : categories[0] || 'Production staff'
+  if (categories.includes(dept)) return dept
+  const count = {}
+  for (const p of projects) for (const l of p.budget?.lines || []) {
+    if (user?.id && l.memberId === user.id && !l.reimburse && l.notes !== 'From My work' && categories.includes(l.category)) count[l.category] = (count[l.category] || 0) + 1
+  }
+  const most = Object.entries(count).sort((a, b) => b[1] - a[1])[0]
+  if (most) return most[0]
+  const words = (s) => String(s || '').toLowerCase().split(/[^a-zͰ-Ͽ]+/).filter((w) => w.length > 2 && !/^(department|dept|crew|the|and)$/.test(w))
+  // a category word matches the person's word, or completes it ("assist." -> Assistant), never the other way
+  // round: "Filmmaker" is not "Film Director". The department counts twice the position; "production" alone
+  // says too little ("Production Crew" is not Production Manager), so a guess needs more than that.
+  const hit = (w, m) => w === m || (m.length >= 5 && w.startsWith(m))
+  const dw = words(dept), pw = words(user?.profile?.position)
+  const score = (cat) => words(cat).reduce((a, w) => a + (dw.some((m) => hit(w, m)) ? 2 : pw.some((m) => hit(w, m)) ? 1 : 0) / (/^(production|team|staff)$/.test(w) ? 2 : 1), 0)
+  const best = categories.map((c) => [c, score(c)]).filter((x) => x[1] >= 2).sort((a, b) => b[1] - a[1])[0]
+  if (best) return best[0]
+  return categories.includes('Production staff') ? 'Production staff' : ''
+}
+
+/* The other direction: a job someone entered in their own My work becomes a budget line on the
+   project, paid to them, under the category guessJobCategory gives (the form's role first). */
+export function budgetLineFromJob(job, user, categories = [], projects = []) {
+  const category = guessJobCategory(user, categories, projects, job.role) || 'Production staff'
   return {
     id: uid(), category,
     description: job.description || (user?.profile?.position || user?.name || 'Fee'),
