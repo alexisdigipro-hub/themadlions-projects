@@ -8963,7 +8963,7 @@ html[data-theme] body .notes-swipe-front.tinted { background: radial-gradient(12
 
 /* Finance > Invoices on a phone (Alex, 28 Oct): tiles instead of the table, actions as round icons */
 .inv-tiles { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; }
-.inv-tile { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 16px; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--panel) 88%, transparent); }
+html[data-theme] body ul.inv-tiles > li.inv-tile { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 16px; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--panel) 88%, transparent); }
 .inv-tile-main { display: flex; flex-direction: column; gap: 4px; padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
 .inv-tile-top { display: flex; align-items: center; gap: 8px; }
 .inv-tile-top strong { font-size: 15px; }
