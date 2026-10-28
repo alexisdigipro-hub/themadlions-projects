@@ -8831,3 +8831,16 @@ html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='th
   .lrow .lrow-aside, .lrow .lrow-sub { display: none; }
   .lrow .lrow-title { white-space: nowrap; }
 }
+/* Notes on a phone: swipe a note left for Share, Move, Delete behind it, as Apple's Notes (Alex, 28 Oct) */
+.notes-swipe { position: relative; list-style: none; border-radius: 14px; overflow: hidden; touch-action: pan-y; }
+.rem-tasks > .notes-swipe + .notes-swipe { margin-top: 10px; }
+.notes-swipe-front { position: relative; z-index: 1; will-change: transform; }
+.notes-swipe-acts { position: absolute; top: 0; right: 0; bottom: 0; display: flex; gap: 6px; align-items: center; justify-content: flex-end; padding: 0 6px; }
+.notes-swipe-btn { flex: 1; height: calc(100% - 12px); min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 0; border-radius: 12px; color: #fff; font: inherit; font-size: 12px; font-weight: 600; }
+.notes-swipe-btn.share { background: #3b82f6; }
+.notes-swipe-btn.move { background: #7c6cf2; }
+.notes-swipe-btn.del { background: #e5484d; }
+.notes-move-list { display: flex; flex-direction: column; gap: 6px; }
+.notes-move-row { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--text) 5%, transparent); color: var(--text); font: inherit; text-align: left; }
+.notes-move-row.on { border-color: color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.notes-swipe-front { background: linear-gradient(var(--g-card, transparent), var(--g-card, transparent)), var(--panel, #fff) !important; border-radius: 14px; }

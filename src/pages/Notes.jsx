@@ -168,6 +168,48 @@ function Editor({ note, onChange }) {
   return <div ref={host} className="notes-doc" />
 }
 
+/* On a phone a note is swiped to the left from its edge to show Share, Move and Delete behind it, as in Apple's Notes
+   (Alex, 28 Oct). A short swipe springs back; past half the buttons it stays open until a tap elsewhere or another
+   note is swiped. A tap on the note itself opens it as before. */
+const SWIPE_BTN = 76
+const FOLDER_ICON = <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>
+function SwipeRow({ open, onOpen, actions, onTap, children }) {
+  const front = useRef(null)
+  const drag = useRef(null)
+  const width = actions.length * SWIPE_BTN
+  const set = (x, anim) => { const el = front.current; if (!el) return; el.style.transition = anim ? 'transform .22s ease' : 'none'; el.style.transform = x ? `translateX(${x}px)` : '' }
+  useEffect(() => { set(open ? -width : 0, true) }, [open, width])
+  const start = (e) => { const t = e.touches[0]; drag.current = { x0: t.clientX, y0: t.clientY, base: open ? -width : 0, dx: 0, dir: '' } }
+  const move = (e) => {
+    const d = drag.current
+    if (!d) return
+    const t = e.touches[0]
+    const dx = t.clientX - d.x0, dy = t.clientY - d.y0
+    if (!d.dir) { if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return; d.dir = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y' }
+    if (d.dir !== 'x') return
+    d.dx = dx
+    set(Math.max(-width - 30, Math.min(0, d.base + dx)), false)
+  }
+  const end = () => {
+    const d = drag.current
+    drag.current = null
+    if (!d || d.dir !== 'x') return
+    const x = d.base + d.dx
+    const keep = x < -width / 2
+    set(keep ? -width : 0, true)
+    onOpen(keep)
+    d.moved = true
+  }
+  return (
+    <li className="notes-swipe" onTouchStart={start} onTouchMove={move} onTouchEnd={end} onTouchCancel={end}>
+      <div className="notes-swipe-acts" style={{ width }}>
+        {actions.map((a) => <button key={a.label} type="button" className={`notes-swipe-btn ${a.tone}`} onClick={() => { onOpen(false); a.onClick() }}>{a.icon}<span>{a.label}</span></button>)}
+      </div>
+      <div ref={front} className="notes-card notes-swipe-front" onClick={() => { if (open) { onOpen(false); return } onTap() }}>{children}</div>
+    </li>
+  )
+}
+
 /* slot: on a computer the search goes up on the tabs' row of the Office page, as Office's does (Alex, 10 Oct) */
 export default function Notes({ slot = null }) {
   const toast = useToast()
@@ -181,6 +223,8 @@ export default function Notes({ slot = null }) {
   const [quick, setQuick] = useState('')
   const [renaming, setRenaming] = useState(null) // { id, name }
   const [sharing, setSharing] = useState(null) // the note whose Share window is open
+  const [swiped, setSwiped] = useState('') // phone: the note swiped open to its Share / Move / Delete
+  const [moving, setMoving] = useState(null) // phone: the note whose Move window is open
   const { state, sessionId } = useStore()
   const me = useCurrentUser()
   // whose notes these are: the one signed in, also while an administrator previews someone else, since
@@ -432,7 +476,21 @@ export default function Notes({ slot = null }) {
     </div>
   )
 
-  const card = (n) => (
+  const swipeActs = (n) => folder === TRASH
+    ? [{ label: 'Restore', tone: 'move', icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>, onClick: () => restore(n) }, { label: 'Delete', tone: 'del', icon: LINE_ICON.trash, onClick: () => remove(n) }]
+    : [{ label: 'Share', tone: 'share', icon: LINE_ICON.share, onClick: () => setSharing(n) },
+      { label: 'Move', tone: 'move', icon: FOLDER_ICON, onClick: () => setMoving(n) },
+      { label: 'Delete', tone: 'del', icon: LINE_ICON.trash, onClick: () => remove(n) }]
+  const card = (n) => (mobile && mine(n) && !preview ? (
+    <SwipeRow key={n.id} open={swiped === n.id} onOpen={(on) => setSwiped(on ? n.id : '')} onTap={() => select(n.id)} actions={swipeActs(n)}>
+      <div className="notes-card-main">
+        <div className="notes-card-title">{n.pinned && folder !== TRASH && <span className="notes-card-pin">📌</span>}{n.lines[0] || 'New Note'}</div>
+        <div className="notes-card-sub"><b>{when(n.updatedAt)}</b> {n.lines[1] || 'No additional text'}</div>
+        {folder === ALL && n.folderId && <div className="notes-card-folder">🗂 {folders.find((f) => f.id === n.folderId)?.title || ''}</div>}
+        {(n.sharedWith?.length > 0 || n.link) && <div className="notes-card-folder">👥 {[n.sharedWith?.length ? `Shared with ${n.sharedWith.length}` : '', n.link ? 'Link' : ''].filter(Boolean).join(' · ')}</div>}
+      </div>
+    </SwipeRow>
+  ) : (
     <li key={n.id} className="notes-card" onClick={() => select(n.id)}>
       <div className="notes-card-main">
         <div className="notes-card-title">{n.pinned && folder !== TRASH && <span className="notes-card-pin">📌</span>}{n.lines[0] || 'New Note'}</div>
@@ -444,7 +502,7 @@ export default function Notes({ slot = null }) {
       {mine(n) && folder !== TRASH && <button type="button" className={`notes-card-act ${n.pinned ? 'on' : ''}`} title={n.pinned ? 'Unpin' : 'Pin'} onClick={(e) => { e.stopPropagation(); patch(n.id, { pinned: !n.pinned }) }}>📌</button>}
       {mine(n) && <button type="button" className="rem-del" title={n.deletedAt ? 'Delete now' : 'Delete'} onClick={(e) => { e.stopPropagation(); remove(n) }}>×</button>}
     </li>
-  )
+  ))
 
   const listPane = (
     <section className="rem-main notes-main" style={{ '--lc': NOTES_COLOR }}>
@@ -518,6 +576,15 @@ export default function Notes({ slot = null }) {
       {err && <p className="notes-err">{err}</p>}
       {preview && <p className="notes-err notes-preview">Viewing as {me.viewingAs}: Shared Notes shows the notes you shared with them. Their own notes are private.</p>}
       {sharing && <ShareNote note={sharing} onClose={() => setSharing(null)} onChange={(p) => shareChanged(sharing.id, p)} />}
+      {moving && (
+        <Modal open title="Move to" onClose={() => setMoving(null)}>
+          <div className="notes-move-list">
+            {[{ id: NONE, title: 'My Notes (no folder)' }, ...folders].map((f) => (
+              <button key={f.id} type="button" className={`notes-move-row ${(moving.folderId || NONE) === f.id ? 'on' : ''}`} onClick={() => { moveTo(moving, f.id); setMoving(null) }}>🗂 {f.title || 'Folder'}</button>
+            ))}
+          </div>
+        </Modal>
+      )}
       {slot && createPortal(<div className="toolbar db-bar notes-bar">{search}</div>, slot)}
       {/* on a phone a note opens as a card over the list, like a task's (Alex, 15 Oct): it fits the screen,
           scrolls inside, and a tap beside it or ‹ closes it */}
