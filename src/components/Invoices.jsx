@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState } from 'react'
-import { Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useToast } from './ui.jsx'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Act, Button, Confirm, Empty, Field, Input, Modal, Select, Textarea, useIsMobile, useToast } from './ui.jsx'
 import { useCurrentUser, useStore } from '../lib/store.jsx'
 import { INVOICE_STATUS, amountInWords, defaultInvoiceProfile, emptyClient, emptyInvoice, emptyService, invoiceNumberText, invoiceTotals, money, moneyBgn } from '../lib/invoice.js'
 import { downloadInvoicePdf, invoiceFilename, previewInvoicePdf } from '../lib/invoicePdf.js'
@@ -33,6 +33,7 @@ export function InvoicesTab() {
   const [panel, setPanel] = useState('') // '' | 'profile' | 'clients' | 'services'
   const [sharePanel, setSharePanel] = useState(null) // null or { inv, url }
   const [shareBusy, setShareBusy] = useState(false)
+  const mobile = useIsMobile()
   const [emailing, setEmailing] = useState(null) // { inv, url }: the invoice as an email (Alex, 28 Oct)
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
 
@@ -124,6 +125,33 @@ export function InvoicesTab() {
 
       {!invoices.length ? (
         <Empty title="No invoices yet">Set your company details and upload the stamp once in <b>Company &amp; stamp</b>, add your <b>Clients</b> and <b>Services</b> so they drop in ready, then build an invoice. It downloads as a PDF with your stamp and signature.</Empty>
+      ) : mobile ? (
+        /* on a phone (Alex, 28 Oct: the row of word buttons ran off the screen, Email out of sight): each invoice a
+           tile, a tap opens it, its actions as round icons, Delete apart in red */
+        <ul className="plain inv-tiles">
+          {invoices.map((inv) => {
+            const t = invoiceTotals(inv)
+            const over = inv.dueDate && inv.status !== 'paid' && inv.dueDate < today
+            return (
+              <li key={inv.id} className="inv-tile">
+                <button type="button" className="inv-tile-main" onClick={() => edit(inv)}>
+                  <span className="inv-tile-top"><strong>#{inv.number}</strong><span className={`inv-badge s-${inv.status}`}>{INVOICE_STATUS.find(([v]) => v === inv.status)?.[1] || 'Draft'}</span><b className="inv-tile-sum">{money(t.total, inv.currency)}</b></span>
+                  <span className="inv-tile-sub">{[inv.recipient?.name, pName(inv.projectId)].filter(Boolean).join(' · ') || '—'}</span>
+                  <span className={`inv-tile-sub small ${over ? 'over' : ''}`}>{inv.date}{inv.dueDate ? ` · ${over ? 'overdue since' : 'due'} ${fmtDate(inv.dueDate)}` : ''}</span>
+                </button>
+                <div className="inv-tile-acts">
+                  <Act icon="mail" label="Email" main onClick={() => shareInvoice(inv, true)} disabled={shareBusy} />
+                  <Act icon="link" label="Share link" onClick={() => shareInvoice(inv)} disabled={shareBusy} />
+                  <Act icon="eye" label="Preview" onClick={() => preview(inv)} />
+                  <Act icon="download" label="PDF" onClick={() => download(inv)} />
+                  <Act icon="copy" label="Duplicate" onClick={() => duplicate(inv)} />
+                  <span className="grow" />
+                  <DelAct onConfirm={() => remove(inv.id)} />
+                </div>
+              </li>
+            )
+          })}
+        </ul>
       ) : (
         <table className="table">
           <thead><tr><th>Number</th><th>Date</th><th>Due</th><th>Recipient</th><th>Project</th><th className="num">Total</th><th>Status</th><th /></tr></thead>
@@ -182,6 +210,13 @@ export function InvoicesTab() {
       })()}
     </>
   )
+}
+
+/* Delete as a round red icon that asks once more (as the Drives' and ID sheets') */
+function DelAct({ onConfirm }) {
+  const [armed, setArmed] = useState(false)
+  useEffect(() => { if (!armed) return; const t = setTimeout(() => setArmed(false), 3000); return () => clearTimeout(t) }, [armed])
+  return <Act icon="trash" label={armed ? 'Sure? Delete' : 'Delete'} className={`act-del${armed ? ' armed' : ''}`} onClick={() => { if (armed) { setArmed(false); onConfirm() } else setArmed(true) }} />
 }
 
 function InvoiceEditor({ draft, isNew, projects, clients, services, onChange, onClose, onSave, onDownload }) {
