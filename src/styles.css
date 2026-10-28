@@ -1051,6 +1051,41 @@ code {
   .project-tools .pt-btn.busy, .project-tools .pt-btn.btn-danger { width: auto; padding: 0 20px; border-radius: 999px; }
   .project-tools .pt-btn.btn-danger { background: var(--danger); border-color: var(--danger); }
 }
+/* The card polished (Alex, 28 Oct: "size and shape are fine, they want a freshen-up, a polish"), computer only, same
+   size and square: softer corners; a glass edge, brighter along the top, and a sheen from the top left over the cover;
+   the name and a glossy progress line on a frosted glass plate at the foot (so a white cover still reads); on hover a
+   light that crosses the card once and a glow in the project's colour. */
+@media (min-width: 821px) {
+  html[data-theme] body .project-grid .project-card { border-radius: 22px; border-color: rgba(255, 255, 255, .1); box-shadow: 0 16px 38px rgba(0, 0, 0, .34); }
+  html[data-theme] body .project-grid .project-card:hover { box-shadow: 0 28px 60px rgba(0, 0, 0, .46), 0 18px 70px -18px color-mix(in srgb, var(--pc) 55%, transparent); }
+  .project-grid .project-card::after {
+    content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1), inset 0 1.5px 0 rgba(255, 255, 255, .3);
+    background: linear-gradient(140deg, rgba(255, 255, 255, .17) 0%, rgba(255, 255, 255, .05) 22%, transparent 44%);
+  }
+  .project-grid .project-card::before {
+    content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(105deg, transparent 43%, rgba(255, 255, 255, .1) 46.5%, rgba(255, 255, 255, .34) 50%, rgba(255, 255, 255, .1) 53.5%, transparent 57%) no-repeat;
+    background-size: 250% 100%; background-position: 100% 0;
+  }
+  .project-grid .project-card:hover::before { background-position: 0 0; transition: background-position 1.1s cubic-bezier(.4, 0, .2, 1); }
+  /* the name and the progress on a frosted glass plate at the foot of the cover, the cover blurred through it */
+  .project-grid .project-body {
+    left: 12px; right: 12px; bottom: 12px; padding: 16px 18px 34px; border-radius: 15px;
+    background: rgba(16, 18, 22, .42); border: 1px solid rgba(255, 255, 255, .14);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 10px 30px rgba(0, 0, 0, .28);
+    -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
+    transition: background .25s ease;
+  }
+  .project-grid .project-card:hover .project-body { background: rgba(16, 18, 22, .52); }
+  .project-grid .project-body h3 { letter-spacing: -.01em; }
+  .project-grid .project-body h3, .project-grid .project-body h3 :is(.pc-artist, .pc-name) { text-shadow: 0 1px 6px rgba(0, 0, 0, .35); }
+  .project-grid .project-card .project-progress { left: 32px; right: 32px; bottom: 28px; height: 6px; z-index: 2; background: rgba(255, 255, 255, .16); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .35); }
+  .project-grid .project-card .project-progress span { background: linear-gradient(180deg, color-mix(in srgb, var(--pc) 55%, #fff), var(--pc) 70%); box-shadow: 0 0 14px color-mix(in srgb, var(--pc) 75%, transparent); }
+}
+@media (min-width: 821px) and (prefers-reduced-motion: reduce) {
+  .project-grid .project-card:hover::before { background-position: 100% 0; transition: none; }
+}
 
 /* ---------- project workspace ---------- */
 .crumb {
