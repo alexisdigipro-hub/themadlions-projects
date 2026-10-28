@@ -8850,7 +8850,7 @@ html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='th
   .notes-card, .notes-swipe-front { min-height: 0; padding-top: 12px; padding-bottom: 12px; }
 }
 /* Notes: each folder has a colour; its notes wear a tenth of it (Alex, 28 Oct) */
-.notes-fdot { flex: none; width: 12px; height: 12px; margin: 0 4px; border-radius: 50%; background: var(--fc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--fc) 22%, transparent); }
-.notes-folder-acts .notes-fcolor { color: var(--fc); }
-html[data-theme] body .notes-card.tinted { background: linear-gradient(color-mix(in srgb, var(--nc) 10%, transparent), color-mix(in srgb, var(--nc) 10%, transparent)), var(--g-card, var(--panel)); border-color: color-mix(in srgb, var(--nc) 30%, var(--g-edge, var(--line-soft))); }
-html[data-theme] body .notes-swipe-front.tinted { background: linear-gradient(color-mix(in srgb, var(--nc) 10%, transparent), color-mix(in srgb, var(--nc) 10%, transparent)), linear-gradient(var(--g-card, transparent), var(--g-card, transparent)), var(--panel, #fff) !important; }
+/* a note in a folder wears its folder's colour as a task wears its list's, and starts with the folder's icon */
+html[data-theme] body .notes-card.tinted { background: radial-gradient(120% 140% at 0% 50%, color-mix(in srgb, var(--tint) 20%, transparent), transparent 55%), var(--g-card, var(--panel)); }
+html[data-theme] body .notes-swipe-front.tinted { background: radial-gradient(120% 140% at 0% 50%, color-mix(in srgb, var(--tint) 20%, transparent), transparent 55%), linear-gradient(var(--g-card, transparent), var(--g-card, transparent)), var(--panel, #fff) !important; }
+.notes-card-ficon { display: inline-block; margin-right: 6px; font-size: .95em; }
