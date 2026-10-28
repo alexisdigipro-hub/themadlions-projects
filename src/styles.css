@@ -8832,14 +8832,16 @@ html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='th
   .lrow .lrow-title { white-space: nowrap; }
 }
 /* Notes on a phone: swipe a note left for Share, Move, Delete behind it, as Apple's Notes (Alex, 28 Oct) */
-.notes-swipe { position: relative; list-style: none; border-radius: 14px; overflow: hidden; touch-action: pan-y; }
+.notes-swipe { position: relative; list-style: none; border-radius: 14px; touch-action: pan-y; }
 .rem-tasks > .notes-swipe + .notes-swipe { margin-top: 10px; }
-.notes-swipe-front { position: relative; z-index: 1; will-change: transform; }
-.notes-swipe-acts { position: absolute; top: 0; right: 0; bottom: 0; display: flex; gap: 6px; align-items: center; justify-content: flex-end; padding: 0 6px; }
-.notes-swipe-btn { flex: 1; height: calc(100% - 12px); min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 0; border-radius: 12px; color: #fff; font: inherit; font-size: 12px; font-weight: 600; }
-.notes-swipe-btn.share { background: #3b82f6; }
-.notes-swipe-btn.move { background: #7c6cf2; }
-.notes-swipe-btn.del { background: #e5484d; }
+.notes-swipe-front { position: relative; z-index: 1; min-width: 0; }
+.notes-swipe-acts { position: absolute; top: 0; right: 0; bottom: 0; display: flex; gap: 10px; align-items: center; justify-content: flex-end; padding: 0 2px 0 6px; }
+/* round glass buttons, the tone in the icon and a breath of it in the glass, as the hub's other actions */
+.notes-swipe-btn { --tone: var(--accent); flex: none; width: 42px; height: 42px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--tone) 40%, var(--g-edge, var(--line-soft))); background: color-mix(in srgb, var(--tone) 18%, var(--g-card, var(--panel))); color: var(--tone); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 4px 14px rgba(0, 0, 0, .18); transition: transform .12s ease; }
+.notes-swipe-btn:active { transform: scale(.92); }
+.notes-swipe-btn.share { --tone: #4c8dff; }
+.notes-swipe-btn.move { --tone: #9a8cff; }
+.notes-swipe-btn.del { --tone: #ff5a5f; }
 .notes-move-list { display: flex; flex-direction: column; gap: 6px; }
 .notes-move-row { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--text) 5%, transparent); color: var(--text); font: inherit; text-align: left; }
 .notes-move-row.on { border-color: color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 14%, transparent); }

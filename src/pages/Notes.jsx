@@ -181,13 +181,14 @@ const folderLook = (f) => {
   }
   return { color, icon: typeof o.icon === 'string' && o.icon ? o.icon.slice(0, 8) : '🗂' }
 }
-const SWIPE_BTN = 76
+const SWIPE_BTN = 52 // a round glass button and its gap (Alex, 28 Oct: the coloured blocks looked odd)
 const FOLDER_ICON = <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>
 function SwipeRow({ open, onOpen, actions, onTap, children, tint }) {
   const front = useRef(null)
   const drag = useRef(null)
-  const width = actions.length * SWIPE_BTN
-  const set = (x, anim) => { const el = front.current; if (!el) return; el.style.transition = anim ? 'transform .22s ease' : 'none'; el.style.transform = x ? `translateX(${x}px)` : '' }
+  const width = actions.length * SWIPE_BTN + 6
+  // the note narrows instead of sliding out, so its title stays in sight beside the buttons
+  const set = (x, anim) => { const el = front.current; if (!el) return; el.style.transition = anim ? 'margin-right .22s ease' : 'none'; el.style.marginRight = x ? `${-x}px` : '' }
   useEffect(() => { set(open ? -width : 0, true) }, [open, width])
   const start = (e) => { const t = e.touches[0]; drag.current = { x0: t.clientX, y0: t.clientY, base: open ? -width : 0, dx: 0, dir: '' } }
   const move = (e) => {
@@ -213,7 +214,7 @@ function SwipeRow({ open, onOpen, actions, onTap, children, tint }) {
   return (
     <li className="notes-swipe" onTouchStart={start} onTouchMove={move} onTouchEnd={end} onTouchCancel={end}>
       <div className="notes-swipe-acts" style={{ width }}>
-        {actions.map((a) => <button key={a.label} type="button" className={`notes-swipe-btn ${a.tone}`} onClick={() => { onOpen(false); a.onClick() }}>{a.icon}<span>{a.label}</span></button>)}
+        {actions.map((a) => <button key={a.label} type="button" className={`notes-swipe-btn ${a.tone}`} title={a.label} aria-label={a.label} onClick={() => { onOpen(false); a.onClick() }}>{a.icon}</button>)}
       </div>
       <div ref={front} className={`notes-card notes-swipe-front${tint ? ' tinted' : ''}`} style={tint} onClick={() => { if (open) { onOpen(false); return } onTap() }}>{children}</div>
     </li>
