@@ -266,8 +266,9 @@ export default function Music() {
           <strong>{track ? track.name : 'No track yet'}</strong>
           <span className="muted">{track ? `${fmtTime(track.duration)} · ${TRACK_KINDS.find(([v]) => v === track.kind)?.[1] || ''}${music.tracks.length > 1 ? ` · ${music.tracks.length} versions` : ''}` : 'Upload the song to start the song map'}{sections.length ? ` · ${sections.length} sections` : ''}</span>
         </div>
-        {/* few buttons, always in the same place (Alex, 28 Oct: "the buttons are mixed up, do it as on the project"):
-            Edit, and ⋯ for Download, Add version and Export song map; Upload song alone when there is no song yet */}
+        {/* few buttons, one row, always in the same place, as on the project's Overview (Alex, 28 Oct: "the buttons
+            are mixed up", then "put them in one row"): + Add for the song map (a section, the lyrics pasted or heard
+            from the vocal), Edit, and ⋯ for Download, Add version and Export song map; Upload song when there is none */}
         <div className="toolbar-actions ov-acts">
           {music.tracks.length > 1 && (
             <Select className="compact" value={track?.id || ''} onChange={(e) => setMusic((m) => (m.activeTrackId = e.target.value))} options={music.tracks.map((t) => [t.id, `${t.name} (${TRACK_KINDS.find(([v]) => v === t.kind)?.[1]})`])} />
@@ -275,6 +276,22 @@ export default function Music() {
           {track && loop && <button type="button" className="add-pill" onClick={() => setLoop(null)}>{MI.stop}<span>Stop loop</span></button>}
           {editable && <input ref={fileRef} type="file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac" hidden onChange={(e) => onFile(e.target.files?.[0])} />}
           {!track && editable && <button type="button" className="add-pill ov-add" onClick={() => fileRef.current?.click()} disabled={!!busy}>{MI.upload}<span>{busy || 'Upload song'}</span></button>}
+          {editable && (
+            <span className="ov-menu-wrap">
+              <button type="button" className={`add-pill ov-add${menu === 'map' ? ' on' : ''}`} onClick={() => setMenu(menu === 'map' ? '' : 'map')} disabled={!!trBusy}>{MI.plus}<span>{trBusy || 'Add'}</span></button>
+              {menu === 'map' && (
+                <>
+                  <span className="ab-export-shade" onClick={() => setMenu('')} />
+                  <div className="ov-menu ov-menu-more">
+                    <span className="ov-menu-head">Song map</span>
+                    <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); addSection() }}>{MI.section}<span><b>Add section</b><small>Intro, verse, chorus, with its time and lyrics</small></span></button>
+                    {!sections.length && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); setPaste({ text: '' }) }}>{MI.lyrics}<span><b>Paste full lyrics</b><small>Split into sections by their blank lines</small></span></button>}
+                    {track && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); setTr({ mode: sections.length ? 'align' : 'new', language: '' }) }}>{MI.mic}<span><b>{sections.length ? 'Time sections from vocal' : 'Lyrics from audio'}</b><small>{sections.length ? 'Find where each section starts by listening' : 'Write the lyrics by listening to the vocal'}</small></span></button>}
+                  </div>
+                </>
+              )}
+            </span>
+          )}
           {track && editable && <button type="button" className={`add-pill ov-edit${trackEdit ? ' on' : ''}`} onClick={() => setTrackEdit((v) => !v)}>{MI.edit}<span>{trackEdit ? 'Done' : 'Edit'}</span></button>}
           {track && (
             <span className="ov-menu-wrap">
@@ -318,27 +335,8 @@ export default function Music() {
         <Empty title="Upload the song">MP3, M4A or WAV. A WAV is converted to MP3 on this device first, so only the small file is stored. The waveform is drawn here, then you mark the sections (intro, verses, choruses) with their times and lyrics, and tie each one to the setups that will cover it.</Empty>
       )}
 
-      <div className="toolbar">
-        <div className="toolbar-info"><strong>Song map</strong>{sections.length > 0 && <span className="muted">{sections.length} section{sections.length === 1 ? '' : 's'}</span>}</div>
-        {/* one + Add for the song map: a section, or the lyrics pasted or heard from the vocal */}
-        {editable && (
-          <div className="toolbar-actions ov-acts">
-            <span className="ov-menu-wrap">
-              <button type="button" className={`add-pill ov-add${menu === 'map' ? ' on' : ''}`} onClick={() => setMenu(menu === 'map' ? '' : 'map')} disabled={!!trBusy}>{MI.plus}<span>{trBusy || 'Add'}</span></button>
-              {menu === 'map' && (
-                <>
-                  <span className="ab-export-shade" onClick={() => setMenu('')} />
-                  <div className="ov-menu ov-menu-more">
-                    <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); addSection() }}>{MI.section}<span><b>Add section</b><small>Intro, verse, chorus, with its time and lyrics</small></span></button>
-                    {!sections.length && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); setPaste({ text: '' }) }}>{MI.lyrics}<span><b>Paste full lyrics</b><small>Split into sections by their blank lines</small></span></button>}
-                    {track && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); setTr({ mode: sections.length ? 'align' : 'new', language: '' }) }}>{MI.mic}<span><b>{sections.length ? 'Time sections from vocal' : 'Lyrics from audio'}</b><small>{sections.length ? 'Find where each section starts by listening' : 'Write the lyrics by listening to the vocal'}</small></span></button>}
-                  </div>
-                </>
-              )}
-            </span>
-          </div>
-        )}
-      </div>
+      {/* the song map's own heading, only once it has sections; its + Add is in the row above */}
+      {sections.length > 0 && <div className="toolbar"><div className="toolbar-info"><strong>Song map</strong></div></div>}
 
       {/* no sections yet: nothing here, the box stays short; Add section, Paste full lyrics or Lyrics from audio open it
           (Alex, 27 Oct: "delete the No sections yet text, fold the box, open it when something is added") */}
