@@ -8992,3 +8992,4 @@ html[data-theme] body ul.inv-tiles > li.inv-tile { display: flex; flex-direction
 /* the one button whose work is under way breathes, the others stay as they are (Alex, 28 Oct) */
 .act.act-wait { animation: act-wait 1s ease-in-out infinite; pointer-events: none; }
 @keyframes act-wait { 50% { opacity: .45; } }
+.mail-copyme { grid-column: auto; align-self: end; display: flex; align-items: center; gap: 8px; min-height: 42px; font-size: 14px; color: var(--muted); cursor: pointer; }
