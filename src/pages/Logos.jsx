@@ -161,7 +161,8 @@ export default function Logos({ slot }) {
             <button className={view === 'brands' ? 'on' : ''} onClick={() => pickView('brands')}>Brands</button>
             <button className={view === 'logos' ? 'on' : ''} onClick={() => pickView('logos')}>Logos</button>
           </span>
-          <button type="button" className={`logo-bg-flip${dark ? ' on' : ''}`} onClick={flip} title={dark ? 'Light backdrop' : 'Dark backdrop'} aria-label={dark ? 'Light backdrop' : 'Dark backdrop'}><i /></button>
+          {/* on a computer the row is full with the Database's tabs: the backdrop switch is in a brand's card there */}
+          {mobile && <button type="button" className={`logo-bg-flip${dark ? ' on' : ''}`} onClick={flip} title={dark ? 'Light backdrop' : 'Dark backdrop'} aria-label={dark ? 'Light backdrop' : 'Dark backdrop'}><i /></button>}
         </div>
       </DbBar>
 
