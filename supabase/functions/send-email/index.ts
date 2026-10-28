@@ -5,7 +5,8 @@
 //
 // Secrets (Supabase > Edge Functions > Secrets), set by Alex, never in the repo:
 //   RESEND_API_KEY   the API key from resend.com > API Keys
-//   RESEND_FROM      who it comes from, e.g.  THE MAD LIONS <hello@themadlions.com>  (a domain verified in Resend)
+//   RESEND_FROM      optional, who it comes from; without it THE MAD LIONS <noreply@themadlions.com> (themadlions.com is
+//                    verified in the same Resend account RoarTransfer sends from)
 //
 // Only a signed-in team member may send: an administrator, or someone with the Share permission. At most 10
 // recipients a message and 40 messages an hour a person, so a lost session cannot be turned into a spam cannon.
@@ -38,8 +39,8 @@ Deno.serve(async (req) => {
   if (!adm && perm !== 'edit' && perm !== 'view') return json({ error: 'Sending emails needs the Share permission.' }, 403)
 
   const key = Deno.env.get('RESEND_API_KEY') || ''
-  const from = Deno.env.get('RESEND_FROM') || ''
-  if (!key || !from) return json({ error: 'Sending is not set up yet: RESEND_API_KEY and RESEND_FROM are missing in Supabase > Edge Functions > Secrets.' }, 501)
+  const from = Deno.env.get('RESEND_FROM') || 'THE MAD LIONS <noreply@themadlions.com>'
+  if (!key) return json({ error: 'Sending is not set up yet: RESEND_API_KEY is missing in Supabase > Edge Functions > Secrets.' }, 501)
 
   let body: any = {}
   try { body = await req.json() } catch { return json({ error: 'bad request' }, 400) }
