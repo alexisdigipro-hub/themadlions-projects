@@ -32,6 +32,14 @@ const FILL = ['phone', 'phone2', 'email', 'company', 'title']
 const filled = (c) => FILL.filter((k) => c[k]).length + (c.notes ? 1 : 0)
 /* Duplicates: the same mobile (last 9 digits), the same email or the same name (case and accents aside) puts two
    contacts in one group; a group is everyone linked that way */
+const mi = (d) => <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
+const MENU_ICO = {
+  in: mi(<><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5" /><path d="M5 20h14" /></>),
+  out: mi(<><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5" /><path d="M5 20h14" /></>),
+  dup: mi(<><rect x="8" y="8" width="12" height="12" rx="2.5" /><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8" /></>),
+  gap: mi(<><circle cx="12" cy="8" r="3.5" /><path d="M5 20c0-3.6 3.1-6.5 7-6.5" /><path d="M17 14v3.5M17 20.5v.01" /></>),
+  tag: mi(<><path d="M3 12V4h8l10 10-8 8z" /><circle cx="7.5" cy="8.5" r="1.3" /></>),
+}
 function findDuplicates(list) {
   const parent = new Map(list.map((c) => [c.id, c.id]))
   const find = (x) => { while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x) } return x }
@@ -400,13 +408,14 @@ export default function AddressBook({ slot }) {
   // call, WhatsApp, Viber, email: round icons, only for what the contact has (Alex, 27 Oct)
   const quick = (c) => {
     const n = intl(c.phone || c.phone2)
-    if (!n && !c.email) return null
+    // always the four places, an empty one where there is no number or email, so the buttons line up row under row
+    const off = <span className="ab-q off" aria-hidden="true" />
     return (
       <span className="ab-quick" onClick={(e) => e.stopPropagation()}>
-        {n && <a className="ab-q" href={`tel:+${n}`} title={`Call ${c.phone || c.phone2}`} aria-label="Call">{QUICK.call}</a>}
-        {n && <a className="ab-q" href={`https://wa.me/${n}`} target="_blank" rel="noreferrer" title="WhatsApp" aria-label="WhatsApp">{QUICK.wa}</a>}
-        {n && <a className="ab-q" href={`viber://chat?number=%2B${n}`} title="Viber" aria-label="Viber">{QUICK.viber}</a>}
-        {c.email && <a className="ab-q" href={`mailto:${c.email}`} title={`Email ${c.email}`} aria-label="Email">{QUICK.mail}</a>}
+        {n ? <a className="ab-q" href={`tel:+${n}`} title={`Call ${c.phone || c.phone2}`} aria-label="Call">{QUICK.call}</a> : off}
+        {n ? <a className="ab-q" href={`https://wa.me/${n}`} target="_blank" rel="noreferrer" title="WhatsApp" aria-label="WhatsApp">{QUICK.wa}</a> : off}
+        {n ? <a className="ab-q" href={`viber://chat?number=%2B${n}`} title="Viber" aria-label="Viber">{QUICK.viber}</a> : off}
+        {c.email ? <a className="ab-q" href={`mailto:${c.email}`} title={`Email ${c.email}`} aria-label="Email">{QUICK.mail}</a> : off}
       </span>
     )
   }
@@ -445,24 +454,29 @@ export default function AddressBook({ slot }) {
             {exportOpen && (
               <>
                 <span className="ab-export-shade" onClick={() => setExportOpen(false)} />
-                <span className="ab-export-menu" role="menu">
-                  <button type="button" role="menuitem" disabled={busy} onClick={() => { setExportOpen(false); fileRef.current?.click() }}><b>Import file</b><small>.vcf or .csv · iPhone, Mac, Google, Outlook</small></button>
+                {/* three clear groups (Alex, 28 Oct: "fix the menu's structure so we do not get lost"): bring in and take
+                    out, then tidying, each line a round icon, its name and one line of what it does */}
+                <span className="ab-export-menu ab-menu" role="menu">
+                  <span className="ab-export-head">Import</span>
+                  <button type="button" role="menuitem" disabled={busy} onClick={() => { setExportOpen(false); fileRef.current?.click() }}><i className="ab-mi">{MENU_ICO.in}</i><span><b>Import file</b><small>.vcf or .csv from iPhone, Mac, Google, Outlook</small></span></button>
                   {found.length > 0 && <>
                     <span className="ab-export-head">Export {picked.size ? `the ${picked.size} selected` : q.trim() || spec ? `the ${found.length} found` : `all ${found.length}`}</span>
-                    <button type="button" role="menuitem" onClick={() => exportAs('vcf')}><b>vCard</b><small>.vcf · iPhone, Mac, Google Contacts</small></button>
-                    <button type="button" role="menuitem" onClick={() => exportAs('csv')}><b>CSV</b><small>.csv · Google Contacts, Outlook</small></button>
-                    <button type="button" role="menuitem" onClick={() => exportAs('xlsx')}><b>Excel</b><small>.xlsx · Excel, Numbers</small></button>
+                    <span className="ab-menu-pills">
+                      <button type="button" role="menuitem" onClick={() => exportAs('vcf')} title="iPhone, Mac, Google Contacts"><i className="ab-mi">{MENU_ICO.out}</i>vCard</button>
+                      <button type="button" role="menuitem" onClick={() => exportAs('csv')} title="Google Contacts, Outlook"><i className="ab-mi">{MENU_ICO.out}</i>CSV</button>
+                      <button type="button" role="menuitem" onClick={() => exportAs('xlsx')} title="Excel, Numbers"><i className="ab-mi">{MENU_ICO.out}</i>Excel</button>
+                    </span>
                   </>}
                   <span className="ab-export-head">Tidy up</span>
-                  <button type="button" role="menuitem" disabled={!list?.length} onClick={() => { setExportOpen(false); openDups() }}><b>Duplicates</b><small>The same person twice, joined into one</small></button>
-                  <button type="button" role="menuitem" disabled={!chips.length} onClick={() => { setExportOpen(false); openSpecs() }}><b>Specialties</b><small>Rename or join specialties</small></button>
-                  <button type="button" role="menuitem" disabled={!list?.length} onClick={() => { setExportOpen(false); setGaps('nameonly') }}><b>Incomplete</b><small>Only a name, only a number, or details missing</small></button>
+                  <button type="button" role="menuitem" disabled={!list?.length} onClick={() => { setExportOpen(false); openDups() }}><i className="ab-mi">{MENU_ICO.dup}</i><span><b>Duplicates</b><small>The same person twice, joined into one</small></span></button>
+                  <button type="button" role="menuitem" disabled={!list?.length} onClick={() => { setExportOpen(false); setGaps('nameonly') }}><i className="ab-mi">{MENU_ICO.gap}</i><span><b>Incomplete</b><small>Only a name, only a number, details missing</small></span></button>
+                  <button type="button" role="menuitem" disabled={!chips.length} onClick={() => { setExportOpen(false); openSpecs() }}><i className="ab-mi">{MENU_ICO.tag}</i><span><b>Specialties</b><small>Rename or join specialties</small></span></button>
                 </span>
               </>
             )}
           </span>
           {/* how many (Alex, 27 Oct: "with a search, show how many it found"), right of ⋯ */}
-          {list && <span className="ab-count">{q.trim() ? `${found.length} of ${list.length}` : `${list.length} contact${list.length === 1 ? '' : 's'}`}</span>}
+          {list && q.trim() && <span className="ab-count">{`${found.length} of ${list.length}`}</span>}
           <DbAdd label="Add contact" onClick={() => setDraft({ ...emptyContact(), addedAt: new Date().toISOString() })} />
         </div>
       </DbBar>

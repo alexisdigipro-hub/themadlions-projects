@@ -9052,3 +9052,29 @@ html[data-theme] body ul.inv-tiles > li.inv-tile { display: flex; flex-direction
 .ab-gap-main .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ab-gap-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 @media (max-width: 820px) { .ab-gap-row { flex-direction: column; align-items: stretch; } }
+
+/* Contacts tidied (Alex, 28 Oct: "the menu's structure, and what is set up oddly") */
+/* the ⋯ menu: three groups, each line a round icon with its name and one line under it; Export as three pills */
+html[data-theme] body .ab-export-menu.ab-menu { width: 320px; gap: 2px; padding: 8px; border-radius: 20px; background: color-mix(in srgb, var(--panel) 94%, transparent); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); }
+.ab-menu .ab-export-head { padding: 10px 10px 4px; font-size: 11px; letter-spacing: .1em; }
+.ab-menu .ab-export-head:not(:first-child) { margin-top: 4px; border-top: 1px solid var(--line-soft); padding-top: 12px; }
+.ab-menu > button { flex-direction: row; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 14px; }
+.ab-menu > button > span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ab-menu > button b { font-size: 14px; }
+.ab-menu > button small { font-size: 12px; line-height: 1.35; }
+.ab-mi { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text); font-style: normal; }
+.ab-menu > button:hover .ab-mi { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line-soft)); }
+.ab-menu > button:disabled { opacity: .45; cursor: default; }
+.ab-menu-pills { display: flex; gap: 6px; padding: 4px 6px 6px; }
+.ab-menu-pills button { flex: 1; flex-direction: row !important; align-items: center !important; justify-content: center; gap: 6px !important; height: 38px; padding: 0 10px !important; border-radius: 999px !important; border: 1px solid var(--line) !important; background: var(--raised) !important; font-size: 13px; font-weight: 700; }
+.ab-menu-pills .ab-mi { width: auto; height: auto; border: 0; background: none; }
+.ab-menu-pills button:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)) !important; }
+/* the row's quick buttons keep their places when a contact has no number or email */
+.ab-q.off { visibility: hidden; }
+@media (min-width: 821px) {
+  /* the Database's tabs stay on one line and slide sideways when the window is narrow, instead of a second line */
+  html[data-theme] body .db-top .db-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  html[data-theme] body .db-top .db-tabs::-webkit-scrollbar { display: none; }
+  html[data-theme] body .db-tabs a { padding: 9px 15px; }
+  .ab-bar .ab-search { flex: 1 1 160px; min-width: 140px; }
+}
