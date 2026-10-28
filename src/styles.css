@@ -1051,6 +1051,37 @@ code {
   .project-tools .pt-btn.busy, .project-tools .pt-btn.btn-danger { width: auto; padding: 0 20px; border-radius: 999px; }
   .project-tools .pt-btn.btn-danger { background: var(--danger); border-color: var(--danger); }
 }
+/* The card polished (Alex, 28 Oct: "size and shape are fine, they want a freshen-up, a polish"), computer only, same
+   size and square: softer corners; a glass edge, brighter along the top, and a sheen from the top left over the cover;
+   frosted glass under the name (the cover blurred and darkened toward the foot, so a white cover still reads); a glossy
+   progress line; on hover a light that crosses the card once and a glow in the project's colour. */
+@media (min-width: 821px) {
+  html[data-theme] body .project-grid .project-card { border-radius: 22px; border-color: rgba(255, 255, 255, .1); box-shadow: 0 16px 38px rgba(0, 0, 0, .34); }
+  html[data-theme] body .project-grid .project-card:hover { box-shadow: 0 28px 60px rgba(0, 0, 0, .46), 0 18px 70px -18px color-mix(in srgb, var(--pc) 55%, transparent); }
+  .project-grid .project-card::after {
+    content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1), inset 0 1.5px 0 rgba(255, 255, 255, .3);
+    background: linear-gradient(140deg, rgba(255, 255, 255, .17) 0%, rgba(255, 255, 255, .05) 22%, transparent 44%);
+  }
+  .project-grid .project-card::before {
+    content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, .26) 50%, transparent 60%) no-repeat;
+    background-size: 250% 100%; background-position: 100% 0;
+  }
+  .project-grid .project-card:hover::before { background-position: 0 0; transition: background-position .95s cubic-bezier(.2, .7, .2, 1); }
+  .project-grid .project-body { padding: 110px 24px 40px; background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, .3) 42%, rgba(0, 0, 0, .7) 100%); }
+  .project-grid .project-body::before {
+    content: ''; position: absolute; inset: 0; z-index: -1;
+    -webkit-backdrop-filter: blur(16px) saturate(150%); backdrop-filter: blur(16px) saturate(150%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 58%); mask-image: linear-gradient(180deg, transparent 0%, #000 58%);
+  }
+  .project-grid .project-body h3 { letter-spacing: -.01em; }
+  .project-grid .project-card .project-progress { height: 7px; background: rgba(255, 255, 255, .16); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .35); }
+  .project-grid .project-card .project-progress span { background: linear-gradient(180deg, color-mix(in srgb, var(--pc) 55%, #fff), var(--pc) 70%); box-shadow: 0 0 14px color-mix(in srgb, var(--pc) 75%, transparent); }
+}
+@media (min-width: 821px) and (prefers-reduced-motion: reduce) {
+  .project-grid .project-card:hover::before { background-position: 100% 0; transition: none; }
+}
 
 /* ---------- project workspace ---------- */
 .crumb {
