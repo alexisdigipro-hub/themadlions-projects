@@ -4,7 +4,7 @@ import { useCurrentUser, useStore } from '../lib/store.jsx'
 import { INVOICE_STATUS, amountInWords, defaultInvoiceProfile, emptyClient, emptyInvoice, emptyService, invoiceNumberText, invoiceTotals, money, moneyBgn } from '../lib/invoice.js'
 import { downloadInvoicePdf, invoiceFilename, previewInvoicePdf } from '../lib/invoicePdf.js'
 import { invoiceUrl, publishShare, tokenOf } from '../lib/shares.js'
-import { INVOICE_MESSAGE, invoiceEmail } from '../lib/deliveryEmail.js'
+import { invoiceEmail, invoiceEmailStart } from '../lib/deliveryEmail.js'
 import EmailWindow from './EmailWindow.jsx'
 import { addDays, fmtDate } from '../lib/dates.js'
 
@@ -31,7 +31,6 @@ export function InvoicesTab() {
   const [draft, setDraft] = useState(null)
   const [isNew, setIsNew] = useState(false)
   const [panel, setPanel] = useState('') // '' | 'profile' | 'clients' | 'services'
-  const [sharePanel, setSharePanel] = useState(null) // null or { inv, url }
   const [shareBusy, setShareBusy] = useState(false)
   const mobile = useIsMobile()
   const [emailing, setEmailing] = useState(null) // { inv, url }: the invoice as an email (Alex, 28 Oct)
@@ -75,15 +74,13 @@ export function InvoicesTab() {
   }
   // A public link with a live preview and a Download PDF button, the same one every time this
   // invoice is shared again (publishShare reuses the token for the same ref).
-  const shareInvoice = async (inv, asEmail = false) => {
+  const shareInvoice = async (inv) => {
     setShareBusy(true)
     try {
       const url = await publishShare({ workspaceId: state.workspace.id, kind: 'invoice', ref: `invoice:${inv.id}`, data: withCompany(inv), userId: user?.id })
       const link = invoiceUrl(tokenOf(url))
-      if (asEmail) { setEmailing({ inv, url: link }); return }
-      await navigator.clipboard.writeText(link).catch(() => {})
-      setSharePanel({ inv, url: link })
-      toast('Link ready, copied to clipboard', 'ok')
+      // the link and the email are one window now (Alex, 28 Oct): Copy link is in it
+      setEmailing({ inv, url: link })
     } catch (e) {
       toast(e.message || 'Could not create the link.', 'error')
     } finally {
@@ -140,8 +137,7 @@ export function InvoicesTab() {
                   <span className={`inv-tile-sub small ${over ? 'over' : ''}`}>{inv.date}{inv.dueDate ? ` · ${over ? 'overdue since' : 'due'} ${fmtDate(inv.dueDate)}` : ''}</span>
                 </button>
                 <div className="inv-tile-acts">
-                  <Act icon="mail" label="Email" main onClick={() => shareInvoice(inv, true)} disabled={shareBusy} />
-                  <Act icon="link" label="Share link" onClick={() => shareInvoice(inv)} disabled={shareBusy} />
+                  <Act icon="mail" label="Email" main onClick={() => shareInvoice(inv)} disabled={shareBusy} />
                   <Act icon="eye" label="Preview" onClick={() => preview(inv)} />
                   <Act icon="download" label="PDF" onClick={() => download(inv)} />
                   <Act icon="copy" label="Duplicate" onClick={() => duplicate(inv)} />
@@ -171,8 +167,7 @@ export function InvoicesTab() {
                     <button onClick={() => edit(inv)}>Edit</button>
                     <button onClick={() => preview(inv)}>Preview</button>
                     <button onClick={() => download(inv)}>PDF</button>
-                    <button onClick={() => shareInvoice(inv)} disabled={shareBusy}>Share link</button>
-                    <button onClick={() => shareInvoice(inv, true)} disabled={shareBusy}>Email</button>
+                    <button onClick={() => shareInvoice(inv)} disabled={shareBusy}>Email</button>
                     <button onClick={() => duplicate(inv)}>Duplicate</button>
                     <Confirm onConfirm={() => remove(inv.id)} label="Delete">×</Confirm>
                   </td>
@@ -194,23 +189,35 @@ export function InvoicesTab() {
       <Modal open={panel === 'services'} title="Services" wide onClose={() => setPanel('')}>
         <ServicesManager />
       </Modal>
-      <Modal open={!!sharePanel} title={`Share Invoice #${sharePanel?.inv?.number || ''}`} onClose={() => setSharePanel(null)}>
-        <p className="muted small">Send this link to the client. It opens a page with a preview of the invoice and a Download PDF button, no login needed. Sharing again gives the same link, refreshed with the invoice's current details.</p>
-        <Field label="Link"><Input value={sharePanel?.url || ''} readOnly onFocus={(e) => e.target.select()} /></Field>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <Button variant="ghost" onClick={() => setSharePanel(null)}>Close</Button>
-          <Button variant="primary" onClick={() => navigator.clipboard.writeText(sharePanel.url).then(() => toast('Link copied', 'ok')).catch(() => toast('Could not copy.', 'error'))}>Copy link</Button>
-          <Button variant="primary" onClick={() => { setEmailing(sharePanel); setSharePanel(null) }}>Email</Button>
-        </div>
-      </Modal>
       {emailing && (() => {
         const inv = withCompany(emailing.inv)
         const total = money(invoiceTotals(inv).total, inv.currency)
-        return <EmailWindow message={INVOICE_MESSAGE(inv.projectTitle)} build={(m) => invoiceEmail(inv, emailing.url, { message: m, total, company: state.workspace.name })} fileName={`Invoice ${inv.number || ''}`} onClose={() => setEmailing(null)} />
+        return <EmailWindow title={`Email · Invoice #${inv.number || ''}`} start={invoiceEmailStart(inv, total)} fields={INVOICE_FIELDS} link={emailing.url} build={(v) => invoiceEmail(inv, emailing.url, { ...v, company: state.workspace.name })} fileName={`Invoice ${inv.number || ''}`} onClose={() => setEmailing(null)} />
       })()}
     </>
   )
 }
+
+/* what can be changed in an invoice's email before it goes (Alex, 28 Oct: "all of it is on that email") */
+const INVOICE_FIELDS = [
+  { k: 'subject', label: 'Subject' },
+  { k: 'kicker', label: 'Above the title', half: true },
+  { k: 'title', label: 'Title', half: true },
+  { k: 'client', label: 'Client' },
+  { k: 'message', label: 'Message', rows: 5 },
+  { k: 'button', label: 'Button' },
+  { group: 'Invoice' },
+  { k: 'number', label: 'Number', half: true },
+  { k: 'amount', label: 'Amount', half: true },
+  { k: 'due', label: 'Due' },
+  { group: 'Bank account' },
+  { k: 'accountName', label: 'Account name' },
+  { k: 'bank', label: 'Bank' },
+  { k: 'iban', label: 'IBAN', half: true },
+  { k: 'bic', label: 'BIC / SWIFT', half: true },
+  { group: 'Closing' },
+  { k: 'closing', label: 'Closing line', rows: 2 },
+]
 
 /* Delete as a round red icon that asks once more (as the Drives' and ID sheets') */
 function DelAct({ onConfirm }) {

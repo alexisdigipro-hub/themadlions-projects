@@ -586,7 +586,7 @@ export default function Deliveries() {
 
   return (
     <div className={`deliveries${look === 'list' ? ' share-list' : ''}${inRoardino ? ' in-roardino' : ''}`}>
-      {emailing && <EmailWindow build={() => deliveryEmail(emailing.data || {}, emailing.url, state.workspace.name, { stageLabel, stageAction })} fileName={emailing.data?.title || 'Delivery'} onClose={() => setEmailing(null)} />}
+      {emailing && <EmailWindow link={emailing.url} build={() => deliveryEmail(emailing.data || {}, emailing.url, state.workspace.name, { stageLabel, stageAction })} fileName={emailing.data?.title || 'Delivery'} onClose={() => setEmailing(null)} />}
       {/* on a phone (Alex, 15 Oct): no title, the filters as a glass capsule and a round + on one line;
           the + offers New delivery and, for administrators, New cost estimation */}
       {mobile && (
