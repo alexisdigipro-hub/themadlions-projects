@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react'
-import { HashRouter, Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
+import { HashRouter, Navigate, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import Layout from './components/Layout.jsx'
 import { ToastProvider } from './components/ui.jsx'
 import { StoreProvider, can, useCurrentUser, useStore } from './lib/store.jsx'
@@ -123,11 +123,31 @@ function OnlyWith({ k, children }) {
   return can(user, k) ? children : <Navigate to="/" replace />
 }
 
+/* A client's page (invoice, delivery, estimate, note, presentation) opened by someone of the team from inside the
+   hub, or in the hub's own home-screen app where there is no browser Back (Alex, 28 Oct: "I can't get out of
+   here"): a round glass ‹ in the corner back to where they were, or to Home. A client without a hub sign-in never
+   sees it. */
+const PUBLIC = /^\/(d|ps|e|inv|pr|n)\//
+function PublicBack() {
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  if (!PUBLIC.test(pathname)) return null
+  let team = false
+  try { team = Object.keys(localStorage).some((k) => /^sb-.*-auth-token$/.test(k) || k === 'tml_session') } catch { /* blocked */ }
+  if (!team) return null
+  return (
+    <button type="button" className="pub-back" aria-label="Back to the hub" title="Back to the hub" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}>
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+    </button>
+  )
+}
+
 export default function App() {
   return (
     <StoreProvider>
       <ToastProvider>
         <HashRouter>
+          <PublicBack />
           <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/login" element={<LoginGate />} />
