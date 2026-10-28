@@ -202,10 +202,12 @@ export default function Overview() {
   const [menu, setMenu] = useState('') // 'add' or 'more': the two small menus of the project's top row (Alex, 28 Oct)
   // a choice in + Add closes it; a DOM listener, because the Project Database's pills come in through a portal
   useEffect(() => {
-    if (menu !== 'add') return
+    if (!menu) return
     const on = (e) => { if (e.target.closest?.('.ov-menu-add button')) setTimeout(() => setMenu(''), 0) }
+    const key = (e) => { if (e.key === 'Escape') setMenu('') }
     document.addEventListener('click', on)
-    return () => document.removeEventListener('click', on)
+    document.addEventListener('keydown', key)
+    return () => { document.removeEventListener('click', on); document.removeEventListener('keydown', key) }
   }, [menu])
   const [start, setStart] = useState({ task: 0, song: 0, link: 0, notes: 0, script: 0, paste: 0 })
   const begin = (k) => setStart((s0) => ({ ...s0, [k]: s0[k] + 1 }))
