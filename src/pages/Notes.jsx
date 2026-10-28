@@ -27,16 +27,6 @@ const SAVE_AFTER = 800
 const now = () => new Date().toISOString()
 
 const startOfDay = (d = new Date()) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x.getTime() }
-function bucket(iso) {
-  const t = new Date(iso).getTime()
-  const today = startOfDay()
-  if (t >= today) return 'Today'
-  if (t >= today - DAY) return 'Yesterday'
-  if (t >= today - 7 * DAY) return 'Previous 7 Days'
-  if (t >= today - 30 * DAY) return 'Previous 30 Days'
-  const d = new Date(iso)
-  return d.getFullYear() === new Date().getFullYear() ? d.toLocaleDateString('en-GB', { month: 'long' }) : String(d.getFullYear())
-}
 function when(iso) {
   const d = new Date(iso)
   if (d.getTime() >= startOfDay()) return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
@@ -331,7 +321,8 @@ export default function Notes({ slot = null }) {
     const out = []
     const add = (label, n) => { let g = out.find((x) => x.label === label); if (!g) out.push(g = { label, list: [] }); g.list.push(n) }
     shown.filter((n) => n.pinned && folder !== TRASH).forEach((n) => add('Pinned', n))
-    shown.filter((n) => !n.pinned || folder === TRASH).forEach((n) => add(bucket(n.updatedAt), n))
+    // one list, newest first, no Today / Previous 30 Days headings (Alex, 28 Oct); pinned notes stay on top
+    shown.filter((n) => !n.pinned || folder === TRASH).forEach((n) => add('', n))
     return out
   }, [shown, folder])
 
@@ -517,7 +508,7 @@ export default function Notes({ slot = null }) {
         {!shown.length && <p className="rem-empty">{q ? 'No note matches.' : folder === TRASH ? 'Nothing deleted.' : folder === SHARED ? 'Nobody has shared a note with you.' : 'No notes yet. Press + to write one.'}</p>}
         {groups.map((g) => (
           <div key={g.label} className="rem-section">
-            <div className="notes-group-label">{g.label === 'Pinned' ? '📌 Pinned' : g.label}</div>
+            {g.label && <div className="notes-group-label">{g.label === 'Pinned' ? '📌 Pinned' : g.label}</div>}
             <ul className="rem-tasks">{g.list.map(card)}</ul>
           </div>
         ))}
