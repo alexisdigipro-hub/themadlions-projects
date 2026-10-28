@@ -8954,3 +8954,9 @@ html[data-theme] body .notes-swipe-front.tinted { background: radial-gradient(12
   .vault-item { min-height: 56px; }
   .vault-gate-card { padding: 22px 18px; }
 }
+
+/* Share: a delivery as an email (Alex, 28 Oct) */
+.deliv-email { display: flex; flex-direction: column; gap: 10px; }
+.deliv-email p { margin: 0; }
+.deliv-email-frame { width: 100%; height: min(62vh, 640px); border: 1px solid var(--line-soft); border-radius: 16px; background: #0b0b0c; }
+@media (max-width: 820px) { .deliv-email-frame { height: 58vh; } }
