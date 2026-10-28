@@ -246,6 +246,41 @@ export function Modal({ open, title, onClose, children, footer, wide, className 
       if (!document.querySelector('.modal-backdrop')) document.body.style.overflow = ''
     }
   }, [open, onClose])
+  // On a phone a window goes away with a swipe down (Alex, 28 Oct), as an iPhone's sheet: only when what is under the
+  // finger is scrolled to its top, never from a field or something that is dragged itself; past a third of the way or
+  // a quick flick it closes, else it springs back.
+  const card = useRef(null)
+  useEffect(() => {
+    const el = card.current
+    if (!open || !el || !window.matchMedia?.('(max-width: 820px)').matches) return
+    let y0 = 0, dy = 0, t0 = 0, on = false
+    const atTop = (n) => { for (; n && n !== el.parentNode; n = n.parentNode) if (n.scrollTop > 0) return false; return true }
+    const start = (e) => {
+      const t = e.target
+      if (e.touches.length !== 1 || t.closest('input, textarea, select, [contenteditable="true"], .cover-adj-frame, .wb-canvas, .grip-btn, .sort-grip, .rem-grip, [data-no-swipe]') || !atTop(t)) { on = false; return }
+      on = true; y0 = e.touches[0].clientY; dy = 0; t0 = Date.now()
+    }
+    const move = (e) => {
+      if (!on) return
+      dy = e.touches[0].clientY - y0
+      if (dy <= 0) { el.style.transform = ''; return }
+      e.preventDefault()
+      el.style.transition = 'none'
+      el.style.transform = `translateY(${dy}px)`
+    }
+    const end = () => {
+      if (!on) return
+      on = false
+      const quick = dy > 60 && Date.now() - t0 < 250
+      el.style.transition = 'transform .22s ease'
+      if (dy > el.offsetHeight / 3 || quick) { el.style.transform = 'translateY(110%)'; setTimeout(() => onClose?.(), 180) } else el.style.transform = ''
+    }
+    el.addEventListener('touchstart', start, { passive: true })
+    el.addEventListener('touchmove', move, { passive: false })
+    el.addEventListener('touchend', end)
+    el.addEventListener('touchcancel', end)
+    return () => { el.removeEventListener('touchstart', start); el.removeEventListener('touchmove', move); el.removeEventListener('touchend', end); el.removeEventListener('touchcancel', end) }
+  }, [open, onClose])
   if (!open) return null
   // drawn straight into <body> (Alex, 10 Oct): inside the phone app's scrolling page iOS kept a window
   // under the top bar and the tab bar, so its × and its Save could not be reached
@@ -253,7 +288,7 @@ export function Modal({ open, title, onClose, children, footer, wide, className 
     <div ref={self} className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
       {/* sheet-card: on a phone every window is the popping card that fills the room there is, scrolls
           inside and keeps its × and its buttons in reach (Alex, 15 Oct: "all that had the old frame") */}
-      <div className={`modal sheet-card ${wide ? 'modal-wide' : ''} ${className}`} role="dialog" aria-modal="true" aria-label={title}>
+      <div ref={card} className={`modal sheet-card ${wide ? 'modal-wide' : ''} ${className}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-head">
           <h2>{title}</h2>
           <button className="icon-btn" onClick={onClose} aria-label="Close">
