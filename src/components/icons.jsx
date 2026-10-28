@@ -51,6 +51,7 @@ const CLASSIC = {
   idcard: () => (<svg {...base}><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="9" cy="11" r="2.2" /><path d="M5.8 16c.6-1.5 1.8-2.3 3.2-2.3s2.6.8 3.2 2.3M14.5 10h4M14.5 13.5h3" /></svg>),
   post: () => (<svg {...base}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M7 4v5M11 4v5M15 4v5M19 4v5M10 13l5 2.5-5 2.5z" /></svg>),
   notes: () => (<svg {...base}><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>),
+  vault: () => (<svg {...base}><rect x="3" y="4" width="18" height="16" rx="2.5" /><circle cx="12" cy="12" r="3.5" /><path d="M12 8.5V7M12 17v-1.5M15.5 12H17M7 12h1.5M7 20v1.5M17 20v1.5" /></svg>),
   deck: () => (<svg {...base}><rect x="3" y="4" width="18" height="12" rx="1.5" /><path d="M12 16v4M8 20h8M7 8h5M7 11h3M14 8h3v4h-3z" /></svg>),
 }
 
@@ -83,6 +84,7 @@ const ROUNDED = {
   idcard: () => (<svg {...soft}><rect className="duo" x="2.5" y="4.5" width="19" height="15" rx="3.5" /><circle cx="8.8" cy="10.8" r="2.3" /><path d="M5.5 16.2c.6-1.6 1.9-2.4 3.3-2.4s2.7.8 3.3 2.4M14.5 10h4M14.5 13.8h3" /></svg>),
   post: () => (<svg {...soft}><rect className="duo" x="2" y="3" width="20" height="18" rx="3" /><path d="M7 3v18M17 3v18M2 8h5M2 16h5M17 8h5M17 16h5" /></svg>),
   notes: () => (<svg {...soft}><path className="duo" d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5z" /><path d="M15 3v4a2 2 0 0 0 2 2h4M7 13h7M7 17h4" /></svg>),
+  vault: () => (<svg {...soft}><rect className="duo" x="2.5" y="3.5" width="19" height="16" rx="3.5" /><circle cx="12" cy="11.5" r="3.5" /><path d="M12 8v-.5M12 15.5V15M7 19.5V21M17 19.5V21" /></svg>),
   deck: () => (<svg {...soft}><path d="M2 3h20" /><path className="duo" d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3" /><path d="m7 21 5-5 5 5" /></svg>),
 }
 

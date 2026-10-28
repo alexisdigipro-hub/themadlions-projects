@@ -44,6 +44,7 @@ const Office = lazyPage(() => import('./pages/Office.jsx'))
 // Office and Notes share one page with tabs (Alex, 10 Oct)
 const OfficeHub = lazyPage(() => import('./pages/OfficeHub.jsx'))
 const RoarListPage = lazyPage(() => import('./pages/RoarListPage.jsx'))
+const Vault = lazyPage(() => import('./pages/Vault.jsx'))
 const RoardinoRoute = lazyPage(() => import('./pages/RoardinoPage.jsx').then((m) => ({ default: m.RoardinoRoute })))
 const PublicDelivery = lazyPage(() => import('./pages/PublicDelivery.jsx'))
 const Deliveries = lazyPage(() => import('./pages/Deliveries.jsx'))
@@ -161,6 +162,7 @@ export default function App() {
                 <Route path="roardino" element={<OnlyWith k="roardino"><RoardinoRoute /></OnlyWith>} />
                 <Route path="roarlist" element={<OnlyWith k="roarlist"><RoarListPage /></OnlyWith>} />
                 <Route path="mywork" element={<MyWork />} />
+                <Route path="vault" element={<Vault />} />
                 <Route path="me" element={<Navigate to="/settings" replace />} />
                 <Route path="u/:id" element={<Profile />} />
                 <Route path="drives" element={<Navigate to="/database/drives" replace />} />
