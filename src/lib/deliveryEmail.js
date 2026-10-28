@@ -14,14 +14,14 @@ const sizeOf = (n) => (n > 1e9 ? `${(n / 1e9).toFixed(1)} GB` : n > 0 ? `${Math.
 /* The hub's look (Alex, 28 Oct: "the colours and the feel of the hub as it is now", everything centred): graphite with
    a warm glow, one glassy card, soft rounded tiles, the coral accent as a pill. Gradients where the mail program draws
    them (Apple Mail, iOS, Outlook.com), the plain colour under them everywhere else. */
-const C = { bg: '#1c1e22', card: '#2a2d33', tile: '#33363d', line: '#40444c', text: '#f4f4f5', muted: '#a3a8b0', accent: '#ff6b57' }
+const C = { bg: '#1c1e22', card: '#2a2d33', tile: '#33363d', line: '#40444c', text: '#f4f4f5', muted: '#a3a8b0', accent: '#ffffff' } // white where coral was (Alex, 28 Oct)
 const FONT = "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Helvetica, Arial, sans-serif"
-const BG = `background-color:${C.bg};background-image:radial-gradient(120% 60% at 50% 110%, rgba(255,107,87,.22), rgba(255,107,87,0) 60%),linear-gradient(180deg,#2b2e34 0%,#1c1e22 55%,#16171a 100%);`
+const BG = `background-color:${C.bg};background-image:radial-gradient(120% 60% at 50% 110%, rgba(255,255,255,.07), rgba(255,255,255,0) 60%),linear-gradient(180deg,#2b2e34 0%,#1c1e22 55%,#16171a 100%);`
 const CARD = `background-color:${C.card};background-image:linear-gradient(160deg,#363a41 0%,#2a2d33 45%,#212328 100%);border:1px solid ${C.line};border-radius:28px;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 24px 60px rgba(0,0,0,.35);`
 const TILE = `background-color:${C.tile};background-image:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid ${C.line};border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);`
 const td = (style, inner) => `<tr><td align="center" style="font-family:${FONT};text-align:center;${style}">${inner}</td></tr>`
 
-const btnOf = (href, label, big = true) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td align="center" bgcolor="${C.accent}" style="border-radius:999px;background-color:${C.accent};background-image:linear-gradient(180deg,#ff8572 0%,#ff6b57 55%,#f25a46 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 10px 26px rgba(255,107,87,.38);"><a href="${esc(href)}" target="_blank" style="display:inline-block;padding:${big ? '16px 40px' : '10px 24px'};font-family:${FONT};font-size:${big ? 16 : 13}px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:999px;">${esc(label)}</a></td></tr></table>`
+const btnOf = (href, label, big = true) => `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td align="center" bgcolor="#ffffff" style="border-radius:999px;background-color:#ffffff;background-image:linear-gradient(180deg,#ffffff 0%,#eceef1 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 10px 26px rgba(255,255,255,.16);"><a href="${esc(href)}" target="_blank" style="display:inline-block;padding:${big ? '16px 40px' : '10px 24px'};font-family:${FONT};font-size:${big ? 16 : 13}px;font-weight:700;color:#17181c;text-decoration:none;border-radius:999px;">${esc(label)}</a></td></tr></table>`
 const glassBtn = (href, label) => `<a href="${esc(href)}" target="_blank" style="display:inline-block;font-family:${FONT};font-size:13px;font-weight:700;color:${C.text};text-decoration:none;background-color:#3a3e45;border:1px solid #4a4f57;border-radius:999px;padding:9px 20px;">${esc(label)}</a>`
 const tileOf = (inner, pad = '18px 20px') => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.tile}" style="${TILE}"><tr><td align="center" style="padding:${pad};text-align:center;">${inner}</td></tr></table>`
 
@@ -31,7 +31,7 @@ function wrap(subject, rows, company) {
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><meta name="supported-color-schemes" content="dark"><title>${esc(subject)}</title></head>
 <body style="margin:0;padding:0;background-color:${C.bg};">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.bg}" style="${BG}">
-<tr><td align="center" style="padding:32px 12px;">
+<tr><td align="center" style="padding:64px 12px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.card}" style="max-width:600px;width:100%;${CARD}">
 <tr><td align="center" style="padding:34px 26px 30px;text-align:center;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -40,7 +40,7 @@ ${rows}
 </table>
 </td></tr>
 </table>
-<p style="margin:22px 0 0;font-family:${FONT};font-size:11px;letter-spacing:1.5px;color:${C.muted};text-align:center;">${esc(caps(company))} · <a href="https://themadlions.com/" target="_blank" style="color:${C.muted};text-decoration:none;">themadlions.com</a></p>
+<p style="margin:44px 0 0;font-family:${FONT};font-size:11px;letter-spacing:1.5px;color:${C.muted};text-align:center;">${esc(caps(company))} · <a href="https://themadlions.com/" target="_blank" style="color:${C.muted};text-decoration:none;">themadlions.com</a></p>
 </td></tr>
 </table>
 </body></html>`
