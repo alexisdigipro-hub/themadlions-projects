@@ -9075,7 +9075,7 @@ html[data-theme] body .ab-export-menu.ab-menu { width: 320px; max-width: calc(10
   /* the Database's tabs stay on one line and slide sideways when the window is narrow, instead of a second line */
   html[data-theme] body .db-top .db-tabs { flex: 0 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   html[data-theme] body .db-top { flex-wrap: nowrap; }
-  html[data-theme] body .db-top .db-slot { flex: 1 0 auto; min-width: 250px; }
+  html[data-theme] body .db-page .db-top .db-slot { flex: 1 0 auto; min-width: 250px; }
   html[data-theme] body .db-top .db-tabs::-webkit-scrollbar { display: none; }
   html[data-theme] body .db-tabs a { padding: 9px 15px; }
   .ab-bar .ab-search { flex: 1 1 160px; min-width: 140px; }
