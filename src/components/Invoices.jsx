@@ -4,6 +4,8 @@ import { useCurrentUser, useStore } from '../lib/store.jsx'
 import { INVOICE_STATUS, amountInWords, defaultInvoiceProfile, emptyClient, emptyInvoice, emptyService, invoiceNumberText, invoiceTotals, money, moneyBgn } from '../lib/invoice.js'
 import { downloadInvoicePdf, invoiceFilename, previewInvoicePdf } from '../lib/invoicePdf.js'
 import { invoiceUrl, publishShare, tokenOf } from '../lib/shares.js'
+import { INVOICE_MESSAGE, invoiceEmail } from '../lib/deliveryEmail.js'
+import EmailWindow from './EmailWindow.jsx'
 import { addDays, fmtDate } from '../lib/dates.js'
 
 const profileOf = (state) => ({ ...defaultInvoiceProfile(), ...(state.finance.settings.invoiceProfile || {}) })
@@ -31,6 +33,7 @@ export function InvoicesTab() {
   const [panel, setPanel] = useState('') // '' | 'profile' | 'clients' | 'services'
   const [sharePanel, setSharePanel] = useState(null) // null or { inv, url }
   const [shareBusy, setShareBusy] = useState(false)
+  const [emailing, setEmailing] = useState(null) // { inv, url }: the invoice as an email (Alex, 28 Oct)
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
 
   const logo = state.settings.logo || ''
@@ -71,11 +74,12 @@ export function InvoicesTab() {
   }
   // A public link with a live preview and a Download PDF button, the same one every time this
   // invoice is shared again (publishShare reuses the token for the same ref).
-  const shareInvoice = async (inv) => {
+  const shareInvoice = async (inv, asEmail = false) => {
     setShareBusy(true)
     try {
       const url = await publishShare({ workspaceId: state.workspace.id, kind: 'invoice', ref: `invoice:${inv.id}`, data: withCompany(inv), userId: user?.id })
       const link = invoiceUrl(tokenOf(url))
+      if (asEmail) { setEmailing({ inv, url: link }); return }
       await navigator.clipboard.writeText(link).catch(() => {})
       setSharePanel({ inv, url: link })
       toast('Link ready, copied to clipboard', 'ok')
@@ -140,6 +144,7 @@ export function InvoicesTab() {
                     <button onClick={() => preview(inv)}>Preview</button>
                     <button onClick={() => download(inv)}>PDF</button>
                     <button onClick={() => shareInvoice(inv)} disabled={shareBusy}>Share link</button>
+                    <button onClick={() => shareInvoice(inv, true)} disabled={shareBusy}>Email</button>
                     <button onClick={() => duplicate(inv)}>Duplicate</button>
                     <Confirm onConfirm={() => remove(inv.id)} label="Delete">×</Confirm>
                   </td>
@@ -167,8 +172,14 @@ export function InvoicesTab() {
         <div style={{ display: 'flex', gap: '10px' }}>
           <Button variant="ghost" onClick={() => setSharePanel(null)}>Close</Button>
           <Button variant="primary" onClick={() => navigator.clipboard.writeText(sharePanel.url).then(() => toast('Link copied', 'ok')).catch(() => toast('Could not copy.', 'error'))}>Copy link</Button>
+          <Button variant="primary" onClick={() => { setEmailing(sharePanel); setSharePanel(null) }}>Email</Button>
         </div>
       </Modal>
+      {emailing && (() => {
+        const inv = withCompany(emailing.inv)
+        const total = money(invoiceTotals(inv).total, inv.currency)
+        return <EmailWindow message={INVOICE_MESSAGE(inv.projectTitle)} build={(m) => invoiceEmail(inv, emailing.url, { message: m, total, company: state.workspace.name })} fileName={`Invoice ${inv.number || ''}`} onClose={() => setEmailing(null)} />
+      })()}
     </>
   )
 }
