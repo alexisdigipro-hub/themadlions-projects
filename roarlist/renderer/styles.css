@@ -64,6 +64,7 @@ button, input, select, label, textarea, .no-drag { -webkit-app-region: no-drag; 
 .app { position: relative; display: flex; gap: 16px; height: 100%; padding: var(--top) 18px 18px; }
 [data-platform='web'] .app { padding-top: 18px; }
 .side, .main { position: relative; border-radius: calc(var(--r) * 1.6); background: var(--panel); border: 1px solid var(--edge); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: var(--shadow); }
+.tool.back-lists { display: none; }
 .side { flex: none; width: 270px; display: flex; flex-direction: column; padding: 18px 10px 10px; background: var(--side); }
 .brand { font-size: 19px; letter-spacing: .14em; padding: 0 10px 16px; }
 .new { justify-content: center; margin: 0 4px 18px; }
@@ -276,7 +277,11 @@ input[type='range'] { accent-color: var(--accent); width: 160px; }
   .side { position: fixed; z-index: 20; left: 10px; top: 10px; bottom: 10px; transform: translateX(calc(-100% - 20px)); transition: transform .25s cubic-bezier(.16, 1, .3, 1); background: var(--float); }
   .side-open .side { transform: none; }
   .side-shade { position: fixed; inset: 0; z-index: 19; background: rgba(0, 0, 0, .35); }
-  .tool.side-toggle { display: grid; }
+  .tool.side-toggle { display: none; }
+  .tool.back-lists { display: grid; }
+  /* no shot list open: the lists themselves are the page, not a drawer (Alex, 28 Oct) */
+  .app.no-list .side { position: static; transform: none; flex: 1; width: auto; background: transparent; }
+  .app.no-list .main.empty, .app.no-list .side-grip { display: none; }
   .bar { padding: 10px 12px 4px; gap: 8px; }
   .totals { display: none; }
   .seg button { padding: 0 10px; }
