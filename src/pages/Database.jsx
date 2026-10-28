@@ -9,6 +9,7 @@ import LocationsAll from './LocationsAll.jsx'
 import EquipmentAll from './EquipmentAll.jsx'
 import Drives from './Drives.jsx'
 import IdSheets from './IdSheets.jsx'
+import Logos from './Logos.jsx'
 import AddressBook from './AddressBook.jsx'
 import { useArrowTabs } from '../lib/arrowTabs.js'
 
@@ -25,6 +26,8 @@ const TABS = [
   { key: 'equipment', label: 'Equipment', icon: 'gear', perm: 'gear' },
   // photos of people's ID sheets, a folder per person, the pictures in pCloud (Alex, 25 Oct)
   { key: 'ids', label: 'ID sheets', short: 'IDs', icon: 'idcard', perm: 'idsheets' },
+  // clients' and brands' logos, a folder a brand, the files in pCloud (Alex, 28 Oct)
+  { key: 'logos', label: 'Logos', icon: 'logos', perm: 'logos' },
 ]
 
 export default function Database() {
@@ -63,6 +66,7 @@ export default function Database() {
           {tab === 'drives' && <Drives slot={mobile ? null : slot} />}
           {tab === 'equipment' && <EquipmentAll slot={mobile ? null : slot} />}
           {tab === 'ids' && <IdSheets slot={mobile ? null : slot} />}
+          {tab === 'logos' && <Logos slot={mobile ? null : slot} />}
           {tab === 'contacts' && <AddressBook slot={mobile ? null : slot} />}
         </div>
       </div>
