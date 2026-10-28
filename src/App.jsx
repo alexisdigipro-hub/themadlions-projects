@@ -133,7 +133,7 @@ function PublicBack() {
   const navigate = useNavigate()
   if (!PUBLIC.test(pathname)) return null
   let team = false
-  try { team = Object.keys(localStorage).some((k) => /^sb-.*-auth-token$/.test(k) || k === 'tml_session') } catch { /* blocked */ }
+  try { team = Object.keys(localStorage).some((k) => /^sb-.*-auth-token$/.test(k) || k === 'tml_session_v1') } catch { /* blocked */ }
   if (!team) return null
   return (
     <button type="button" className="pub-back" aria-label="Back to the hub" title="Back to the hub" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}>
