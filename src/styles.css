@@ -9055,7 +9055,7 @@ html[data-theme] body ul.inv-tiles > li.inv-tile { display: flex; flex-direction
 
 /* Contacts tidied (Alex, 28 Oct: "the menu's structure, and what is set up oddly") */
 /* the ⋯ menu: three groups, each line a round icon with its name and one line under it; Export as three pills */
-html[data-theme] body .ab-export-menu.ab-menu { width: 320px; gap: 2px; padding: 8px; border-radius: 20px; background: color-mix(in srgb, var(--panel) 94%, transparent); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); }
+html[data-theme] body .ab-export-menu.ab-menu { width: 320px; max-width: calc(100vw - 24px); gap: 2px; padding: 8px; border-radius: 20px; background: var(--panel); -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%); }
 .ab-menu .ab-export-head { padding: 10px 10px 4px; font-size: 11px; letter-spacing: .1em; }
 .ab-menu .ab-export-head:not(:first-child) { margin-top: 4px; border-top: 1px solid var(--line-soft); padding-top: 12px; }
 .ab-menu > button { flex-direction: row; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 14px; }
@@ -9073,7 +9073,9 @@ html[data-theme] body .ab-export-menu.ab-menu { width: 320px; gap: 2px; padding:
 .ab-q.off { visibility: hidden; }
 @media (min-width: 821px) {
   /* the Database's tabs stay on one line and slide sideways when the window is narrow, instead of a second line */
-  html[data-theme] body .db-top .db-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  html[data-theme] body .db-top .db-tabs { flex: 0 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  html[data-theme] body .db-top { flex-wrap: nowrap; }
+  html[data-theme] body .db-top .db-slot { flex: 1 0 auto; min-width: 250px; }
   html[data-theme] body .db-top .db-tabs::-webkit-scrollbar { display: none; }
   html[data-theme] body .db-tabs a { padding: 9px 15px; }
   .ab-bar .ab-search { flex: 1 1 160px; min-width: 140px; }
