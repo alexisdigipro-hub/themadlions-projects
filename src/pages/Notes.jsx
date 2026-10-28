@@ -161,9 +161,19 @@ function Editor({ note, onChange }) {
 /* On a phone a note is swiped to the left from its edge to show Share, Move and Delete behind it, as in Apple's Notes
    (Alex, 28 Oct). A short swipe springs back; past half the buttons it stays open until a tap elsewhere or another
    note is swiped. A tap on the note itself opens it as before. */
+/* Every folder has a colour (Alex, 28 Oct), and its notes wear a tenth of it. Kept in the folder's own body (a
+   folder has no text of its own); until one is picked, a colour of the palette chosen by the folder's id. */
+const FOLDER_COLORS = ['#ff6b57', '#f5a524', '#3ecf8e', '#3b82f6', '#a78bfa', '#ec4899', '#14b8a6', '#eab308']
+const folderColor = (f) => {
+  if (!f) return ''
+  if (/^#[0-9a-f]{6}$/i.test(f.body || '')) return f.body
+  let h = 0
+  for (const ch of String(f.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return FOLDER_COLORS[h % FOLDER_COLORS.length]
+}
 const SWIPE_BTN = 76
 const FOLDER_ICON = <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>
-function SwipeRow({ open, onOpen, actions, onTap, children }) {
+function SwipeRow({ open, onOpen, actions, onTap, children, tint }) {
   const front = useRef(null)
   const drag = useRef(null)
   const width = actions.length * SWIPE_BTN
@@ -195,7 +205,7 @@ function SwipeRow({ open, onOpen, actions, onTap, children }) {
       <div className="notes-swipe-acts" style={{ width }}>
         {actions.map((a) => <button key={a.label} type="button" className={`notes-swipe-btn ${a.tone}`} onClick={() => { onOpen(false); a.onClick() }}>{a.icon}<span>{a.label}</span></button>)}
       </div>
-      <div ref={front} className="notes-card notes-swipe-front" onClick={() => { if (open) { onOpen(false); return } onTap() }}>{children}</div>
+      <div ref={front} className={`notes-card notes-swipe-front${tint ? ' tinted' : ''}`} style={tint} onClick={() => { if (open) { onOpen(false); return } onTap() }}>{children}</div>
     </li>
   )
 }
@@ -419,13 +429,14 @@ export default function Notes({ slot = null }) {
         <input className="input notes-rename" autoFocus value={renaming.name} onChange={(e) => setRenaming({ id, name: e.target.value })} onBlur={renameFolder} onKeyDown={(e) => { if (e.key === 'Enter') renameFolder(); if (e.key === 'Escape') setRenaming(null) }} />
       ) : (
         <button type="button" className="rem-row-pick" onClick={() => pickFolder(id)} onDoubleClick={() => own && setRenaming({ id, name })}>
-          <span className="rem-row-emoji" aria-hidden="true">{icon}</span>
+          {own ? <span className="notes-fdot" style={{ '--fc': folderColor(own) }} aria-hidden="true" /> : <span className="rem-row-emoji" aria-hidden="true">{icon}</span>}
           <span className="grow">{name}</span>
           <span className="rem-count">{count || ''}</span>
         </button>
       )}
       {own && renaming?.id !== id && (
         <span className="notes-folder-acts">
+          <button type="button" title="Colour" className="notes-fcolor" style={{ '--fc': folderColor(own) }} onClick={() => { const c = FOLDER_COLORS; patch(own.id, { body: c[(c.indexOf(folderColor(own)) + 1) % c.length] }) }}>●</button>
           <button type="button" title="Rename" onClick={() => setRenaming({ id, name })}>✎</button>
           <button type="button" title="Delete folder" onClick={() => deleteFolder(own)}>×</button>
         </span>
@@ -467,13 +478,15 @@ export default function Notes({ slot = null }) {
     </div>
   )
 
+  // the note wears a tenth of its folder's colour
+  const tintOf = (n) => { const f = n.folderId && folders.find((x) => x.id === n.folderId); return f ? { '--nc': folderColor(f) } : undefined }
   const swipeActs = (n) => folder === TRASH
     ? [{ label: 'Restore', tone: 'move', icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>, onClick: () => restore(n) }, { label: 'Delete', tone: 'del', icon: LINE_ICON.trash, onClick: () => remove(n) }]
     : [{ label: 'Share', tone: 'share', icon: LINE_ICON.share, onClick: () => setSharing(n) },
       { label: 'Move', tone: 'move', icon: FOLDER_ICON, onClick: () => setMoving(n) },
       { label: 'Delete', tone: 'del', icon: LINE_ICON.trash, onClick: () => remove(n) }]
   const card = (n) => (mobile && mine(n) && !preview ? (
-    <SwipeRow key={n.id} open={swiped === n.id} onOpen={(on) => setSwiped(on ? n.id : '')} onTap={() => select(n.id)} actions={swipeActs(n)}>
+    <SwipeRow key={n.id} tint={tintOf(n)} open={swiped === n.id} onOpen={(on) => setSwiped(on ? n.id : '')} onTap={() => select(n.id)} actions={swipeActs(n)}>
       <div className="notes-card-main">
         <div className="notes-card-title">{n.pinned && folder !== TRASH && <span className="notes-card-pin">📌</span>}{n.lines[0] || 'New Note'}</div>
         <div className="notes-card-sub"><b>{when(n.updatedAt)}</b> {n.lines[1] || 'No additional text'}</div>
@@ -482,7 +495,7 @@ export default function Notes({ slot = null }) {
       </div>
     </SwipeRow>
   ) : (
-    <li key={n.id} className="notes-card" onClick={() => select(n.id)}>
+    <li key={n.id} className={`notes-card${tintOf(n) ? ' tinted' : ''}`} style={tintOf(n)} onClick={() => select(n.id)}>
       <div className="notes-card-main">
         <div className="notes-card-title">{n.pinned && folder !== TRASH && <span className="notes-card-pin">📌</span>}{n.lines[0] || 'New Note'}</div>
         <div className="notes-card-sub"><b>{when(n.updatedAt)}</b> {n.lines[1] || 'No additional text'}</div>
