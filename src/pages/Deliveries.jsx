@@ -16,6 +16,7 @@ import { remote } from '../lib/supabase.js'
 import { ListSearch } from '../components/DbTools.jsx'
 import { matchText } from '../lib/library.js'
 import { useArrowTabs } from '../lib/arrowTabs.js'
+import { copyEmail, deliveryEmail } from '../lib/deliveryEmail.js'
 
 /* The stages a new delivery can be (Alex, 12 Oct, written his way): RoughCut, PreFinal Cut, Final Deliverables
    (Final Cut taken out, Alex 27 Oct: "it has no meaning"). Older deliveries made as a Final Cut, final files, a
@@ -102,6 +103,7 @@ export default function Deliveries() {
   const [error, setError] = useState('')
   const [draft, setDraft] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [emailing, setEmailing] = useState(null) // the delivery shown as an email (Alex, 28 Oct)
   const tabsRow = useRef(null) // ← / → step through the tabs on a computer (Alex, 27 Oct)
   useArrowTabs(tabsRow)
   const [params] = useSearchParams()
@@ -387,10 +389,6 @@ export default function Deliveries() {
   const copy = async (text, what) => {
     try { await navigator.clipboard.writeText(text); toast(`${what} copied`, 'ok') } catch { toast('Could not copy', 'error') }
   }
-  const mailText = (r) => {
-    const d = r.data
-    return `${d.title}${d.version ? ` · ${d.version}` : ''} — ${stageLabel(d.stage)}\n\n${deliveryUrl(r.token)}\n\n${state.workspace.name}`
-  }
 
   const today = toISODate(new Date()) // local date, not UTC: a link must not look closed a day early
   // shot list links stopped with RoarList (Alex, 27 Oct), as the ordino links with Roardino
@@ -587,6 +585,7 @@ export default function Deliveries() {
 
   return (
     <div className={`deliveries${look === 'list' ? ' share-list' : ''}${inRoardino ? ' in-roardino' : ''}`}>
+      {emailing && <EmailWindow r={emailing} company={state.workspace.name} onClose={() => setEmailing(null)} />}
       {/* on a phone (Alex, 15 Oct): no title, the filters as a glass capsule and a round + on one line;
           the + offers New delivery and, for administrators, New cost estimation */}
       {mobile && (
@@ -687,7 +686,7 @@ export default function Deliveries() {
                 </div>
                 <div className="deliv-tools">
                   {one && <button className="deliv-tool" title="Copy link" aria-label="Copy link" onClick={() => copy(r.url, 'Link')}>{tool(ICO.link, 'Copy link')}</button>}
-                  {one && r.isDelivery && <button className="deliv-tool" title="Copy for email" aria-label="Copy for email" onClick={() => copy(mailText(r), 'Message')}>{tool(ICO.mail, 'Copy for email')}</button>}
+                  {one && r.isDelivery && <button className="deliv-tool" title="Email" aria-label="Email" onClick={() => setEmailing(r)}>{tool(ICO.mail, 'Email')}</button>}
                   {one && <a className="deliv-tool" href={r.url} target="_blank" rel="noreferrer" title="Open" aria-label="Open">{tool(ICO.open, 'Open')}</a>}
                   {editable && r.isDelivery && singleTarget && <button className="deliv-tool" title="Update" aria-label="Update" onClick={() => openDelivery(r)}>{tool(ICO.edit, 'Update')}</button>}
                   {editable && isAdmin && r.isEstimate && singleTarget && <button className="deliv-tool" title="Update" aria-label="Update" onClick={() => openEstimate(r)}>{tool(ICO.edit, 'Update')}</button>}
@@ -1018,5 +1017,37 @@ function RowEditor({ label, hint, rows, onChange, fields, addLabel }) {
       </div>
       {hint && <span className="field-hint">{hint}</span>}
     </div>
+  )
+}
+
+/* A delivery as an email (Alex, 28 Oct): what the client will see, then Copy email (paste it into a new email in
+   Gmail or Apple Mail, it keeps its look), Download .html, or Open in Mail with the plain text. */
+function EmailWindow({ r, company, onClose }) {
+  const toast = useToast()
+  const mail = useMemo(() => deliveryEmail(r.data || {}, r.url, company), [r, company])
+  const copyIt = async () => {
+    try { await copyEmail(mail); toast('Email copied. Paste it into a new email.', 'ok') } catch { toast('Could not copy. Use Download .html.', 'error') }
+  }
+  const download = () => {
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(new Blob([mail.html], { type: 'text/html' }))
+    a.download = `${(r.data?.title || 'Delivery').replace(/[\\/:*?"<>|]+/g, ' ').trim()}.html`
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+  }
+  return (
+    <Modal open wide title="Email" onClose={onClose} footer={
+      <>
+        <a className="btn btn-ghost btn-md" href={`mailto:?subject=${encodeURIComponent(mail.subject)}&body=${encodeURIComponent(mail.text)}`}>Open in Mail</a>
+        <Button variant="ghost" onClick={download}>Download .html</Button>
+        <span className="grow" />
+        <Button variant="primary" onClick={copyIt}>Copy email</Button>
+      </>
+    }>
+      <div className="deliv-email">
+        <p className="muted small">Copy email, then paste it into a new email in Gmail, Apple Mail or Outlook: it keeps this look. Subject: <b>{mail.subject}</b></p>
+        <iframe className="deliv-email-frame" title="The email" srcDoc={mail.html} sandbox="allow-popups allow-popups-to-escape-sandbox" />
+      </div>
+    </Modal>
   )
 }
