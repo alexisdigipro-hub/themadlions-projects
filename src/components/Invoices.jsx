@@ -31,7 +31,7 @@ export function InvoicesTab() {
   const [draft, setDraft] = useState(null)
   const [isNew, setIsNew] = useState(false)
   const [panel, setPanel] = useState('') // '' | 'profile' | 'clients' | 'services'
-  const [shareBusy, setShareBusy] = useState(false)
+  const [shareBusy, setShareBusy] = useState('') // the invoice whose link is being made; only its button waits
   const mobile = useIsMobile()
   const [emailing, setEmailing] = useState(null) // { inv, url }: the invoice as an email (Alex, 28 Oct)
   const pName = (id) => state.projects.find((p) => p.id === id)?.title || ''
@@ -75,7 +75,8 @@ export function InvoicesTab() {
   // A public link with a live preview and a Download PDF button, the same one every time this
   // invoice is shared again (publishShare reuses the token for the same ref).
   const shareInvoice = async (inv) => {
-    setShareBusy(true)
+    if (shareBusy) return
+    setShareBusy(inv.id)
     try {
       const url = await publishShare({ workspaceId: state.workspace.id, kind: 'invoice', ref: `invoice:${inv.id}`, data: withCompany(inv), userId: user?.id })
       const link = invoiceUrl(tokenOf(url))
@@ -84,7 +85,7 @@ export function InvoicesTab() {
     } catch (e) {
       toast(e.message || 'Could not create the link.', 'error')
     } finally {
-      setShareBusy(false)
+      setShareBusy('')
     }
   }
 
@@ -137,7 +138,7 @@ export function InvoicesTab() {
                   <span className={`inv-tile-sub small ${over ? 'over' : ''}`}>{inv.date}{inv.dueDate ? ` · ${over ? 'overdue since' : 'due'} ${fmtDate(inv.dueDate)}` : ''}</span>
                 </button>
                 <div className="inv-tile-acts">
-                  <Act icon="mail" label="Email" main onClick={() => shareInvoice(inv)} disabled={shareBusy} />
+                  <Act icon="mail" label={shareBusy === inv.id ? 'Making the email…' : 'Email'} className={shareBusy === inv.id ? 'act-wait' : ''} onClick={() => shareInvoice(inv)} />
                   <Act icon="eye" label="Preview" onClick={() => preview(inv)} />
                   <Act icon="download" label="PDF" onClick={() => download(inv)} />
                   <Act icon="copy" label="Duplicate" onClick={() => duplicate(inv)} />
@@ -167,7 +168,7 @@ export function InvoicesTab() {
                     <button onClick={() => edit(inv)}>Edit</button>
                     <button onClick={() => preview(inv)}>Preview</button>
                     <button onClick={() => download(inv)}>PDF</button>
-                    <button onClick={() => shareInvoice(inv)} disabled={shareBusy}>Email</button>
+                    <button onClick={() => shareInvoice(inv)} disabled={shareBusy === inv.id}>{shareBusy === inv.id ? 'Email…' : 'Email'}</button>
                     <button onClick={() => duplicate(inv)}>Duplicate</button>
                     <Confirm onConfirm={() => remove(inv.id)} label="Delete">×</Confirm>
                   </td>
