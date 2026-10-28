@@ -193,7 +193,7 @@ export function InvoicesTab() {
       {emailing && (() => {
         const inv = withCompany(emailing.inv)
         const total = money(invoiceTotals(inv).total, inv.currency)
-        return <EmailWindow title={`Email · Invoice #${inv.number || ''}`} start={invoiceEmailStart(inv, total)} fields={INVOICE_FIELDS} link={emailing.url} build={(v) => invoiceEmail(inv, emailing.url, { ...v, company: state.workspace.name })} fileName={`Invoice ${inv.number || ''}`} onClose={() => setEmailing(null)} />
+        return <EmailWindow title={`Email · Invoice #${inv.number || ''}`} start={invoiceEmailStart(inv, total)} fields={INVOICE_FIELDS} link={emailing.url} build={(v) => invoiceEmail(inv, emailing.url, { ...v, company: state.workspace.name })} to={clients.find((c) => c.id === inv.clientId)?.email || ''} onClose={() => setEmailing(null)} />
       })()}
     </>
   )

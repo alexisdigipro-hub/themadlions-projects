@@ -130,3 +130,27 @@ export async function copyEmail({ html, text }) {
   sel.removeAllRanges(); box.remove()
   if (!ok) throw new Error('Could not copy')
 }
+
+/* Sends it from the hub (supabase/functions/send-email, through Resend): it arrives exactly as it looks here. */
+export async function sendEmail({ to, cc = '', copyMe = true, mail }) {
+  const { supabase, remote } = await import('./supabase.js')
+  const { SUPABASE_URL, SUPABASE_KEY } = await import('./supabaseConfig.js')
+  if (!remote) throw new Error('Sending needs the online hub.')
+  const { data } = await supabase.auth.getSession()
+  const token = data?.session?.access_token
+  if (!token) throw new Error('Sign in again.')
+  let res
+  try {
+    res = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, cc, copyMe, subject: mail.subject, html: mail.html, text: mail.text }),
+    })
+  } catch (e) { throw new Error(`Could not reach the hub's mail (${e.message}).`) }
+  let out = null
+  try { out = await res.json() } catch { /* not JSON */ }
+  if (out?.error) throw new Error(out.error)
+  if (res.status === 404) throw new Error('The send-email function is not deployed yet.')
+  if (!res.ok) throw new Error(`The hub's mail answered ${res.status}.`)
+  return out
+}
