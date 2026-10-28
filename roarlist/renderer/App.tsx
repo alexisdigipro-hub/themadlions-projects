@@ -45,6 +45,8 @@ const focusShot = (id: string) => later(() => {
   ;(row?.querySelector<HTMLElement>('textarea') || row?.querySelector<HTMLElement>('input:not([type=checkbox])'))?.focus()
 })
 
+const phone = () => window.matchMedia?.('(max-width: 820px)').matches
+
 export default function App() {
   const [lists, setLists] = useState<ProjectSummary[] | null>(null)
   const [p, setP] = useState<Project | null>(null)
@@ -104,6 +106,15 @@ export default function App() {
     cur.current = next
     setP(next)
     if (next) localStorage.setItem('last', id)
+  }, [flush])
+
+  // a phone: back from a shot list to all of them (Alex, 28 Oct: "it does not go away, it does not close")
+  const close = useCallback(async () => {
+    await flush()
+    history.current = []
+    cur.current = null
+    setP(null)
+    setSideOpen(false)
   }, [flush])
 
   const create = useCallback(async () => {
@@ -203,6 +214,8 @@ export default function App() {
   const start = useCallback(async () => {
     const all = await api.list()
     setLists(all)
+    // on a phone it starts on the shot lists themselves (Alex, 28 Oct); on a computer the one open last time
+    if (phone()) return
     const last = localStorage.getItem('last')
     const pick = all.find((x) => x.id === last) || all[0]
     if (pick) open(pick.id)
@@ -307,7 +320,7 @@ export default function App() {
   )
 
   return (
-    <div className={`app${sideOpen ? ' side-open' : ''}${intro ? ' intro' : ''}`} style={{ '--side-w': `${sideW}px` } as React.CSSProperties}>
+    <div className={`app${sideOpen ? ' side-open' : ''}${intro ? ' intro' : ''}${p ? '' : ' no-list'}`} style={{ '--side-w': `${sideW}px` } as React.CSSProperties}>
       <div className="drag" />
       {sideOpen && <div className="side-shade" onClick={() => setSideOpen(false)} />}
       <aside className="side">
@@ -355,6 +368,7 @@ export default function App() {
       ) : (
         <main className="main">
           <div className="bar">
+            <button className="tool back-lists" title={t.shotlists} aria-label={t.shotlists} onClick={close}><Icon name="back" size={18} /></button>
             <button className="tool side-toggle" title={t.shotlists} onClick={() => setSideOpen(true)}><Icon name="menu" size={18} /></button>
             <Lens className="seg" dep={view}>
               <button className={view === 'list' ? 'on' : ''} onClick={() => setView('list')}><Icon name="list" size={16} />{t.list}</button>
