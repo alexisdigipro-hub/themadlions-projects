@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Field, Input, Modal, Textarea, useToast } from './ui.jsx'
 import { copyEmail, sendEmail } from '../lib/deliveryEmail.js'
 
@@ -6,10 +6,18 @@ import { copyEmail, sendEmail } from '../lib/deliveryEmail.js'
    Gmail, Apple Mail or Outlook), Copy link, or Send: the hub sends it itself, so it arrives exactly as it looks.
    With `fields` every part of it is edited beside the preview (the invoice's: subject, greeting, button, amount,
    bank account, closing); build(values) makes { subject, html, text }. */
-export default function EmailWindow({ build, start = {}, fields = [], link = '', to: toStart = '', cc: ccStart = '', title = 'Email', onClose, onSent }) {
+export default function EmailWindow({ build, start = {}, base, onKeep, fields = [], link = '', to: toStart = '', cc: ccStart = '', title = 'Email', onClose, onSent }) {
   const toast = useToast()
   const [v, setV] = useState(start)
   const mail = useMemo(() => build(v), [build, v])
+  // what is changed in the fields is kept for the next email, a moment after the typing stops (onKeep)
+  const first = useRef(true)
+  useEffect(() => {
+    if (first.current) { first.current = false; return }
+    if (!onKeep) return
+    const t = setTimeout(() => onKeep(v), 600)
+    return () => clearTimeout(t)
+  }, [v])
   // sent by the hub itself (Alex, 28 Oct: "like the newsletters I get"), so it arrives exactly as it looks here
   const [to, setTo] = useState(toStart)
   const [cc, setCc] = useState(ccStart)
@@ -46,7 +54,7 @@ export default function EmailWindow({ build, start = {}, fields = [], link = '',
             <label className="mail-copyme"><input type="checkbox" checked={copyMe} onChange={(e) => setCopyMe(e.target.checked)} /> Send me a copy</label>
           {fields.length > 0 && (<>
             {fields.map((f) => (f.group ? <h3 key={f.group} className="mail-group">{f.group}</h3> : field(f)))}
-            <Button variant="ghost" size="sm" onClick={() => setV(start)}>Back to the usual text</Button>
+            <Button variant="ghost" size="sm" onClick={() => setV(base || start)}>Back to the original text</Button>
           </>)}
         </div>
         <div className="mail-preview">

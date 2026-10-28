@@ -100,6 +100,29 @@ export function invoiceEmailStart(inv, total = '') {
     closing: INVOICE_CLOSING,
   }
 }
+/* What Alex changes in an invoice email stays for the next one (Alex, 28 Oct). Kept in the workspace's finance
+   settings (administrators only) as text with {project} and {number} where this invoice's own were, so the next
+   invoice gets its own; amount, due date, title and client always come from the invoice itself. */
+export const INVOICE_KEEP = ['subject', 'kicker', 'message', 'button', 'closing', 'accountName', 'bank', 'iban', 'bic']
+const swapOut = (txt, inv) => {
+  let t = String(txt ?? '')
+  if (inv.projectTitle) t = t.split(inv.projectTitle).join('{project}')
+  if (inv.number) t = t.split(String(inv.number)).join('{number}')
+  return t
+}
+const swapIn = (txt, inv) => String(txt ?? '').split('{project}').join(inv.projectTitle || '').split('{number}').join(inv.number || '')
+export function invoiceEmailSaved(inv, total, saved = {}) {
+  const base = invoiceEmailStart(inv, total)
+  const out = { ...base }
+  for (const k of INVOICE_KEEP) if (typeof saved[k] === 'string') out[k] = swapIn(saved[k], inv)
+  return out
+}
+export function invoiceEmailToSave(inv, total, v) {
+  const base = invoiceEmailStart(inv, total)
+  const keep = {}
+  for (const k of INVOICE_KEEP) if ((v[k] ?? '') !== (base[k] ?? '')) keep[k] = swapOut(v[k], inv)
+  return keep
+}
 export function invoiceEmail(inv, pageUrl, { company = 'THEMADLIONS', total = '', ...over } = {}) {
   const v = { ...invoiceEmailStart(inv, total), ...over }
   const subject = v.subject

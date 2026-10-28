@@ -4,7 +4,7 @@ import { useCurrentUser, useStore } from '../lib/store.jsx'
 import { INVOICE_STATUS, amountInWords, defaultInvoiceProfile, emptyClient, emptyInvoice, emptyService, invoiceNumberText, invoiceTotals, money, moneyBgn } from '../lib/invoice.js'
 import { downloadInvoicePdf, invoiceFilename, previewInvoicePdf } from '../lib/invoicePdf.js'
 import { invoiceUrl, publishShare, tokenOf } from '../lib/shares.js'
-import { invoiceEmail, invoiceEmailStart } from '../lib/deliveryEmail.js'
+import { invoiceEmail, invoiceEmailSaved, invoiceEmailStart, invoiceEmailToSave } from '../lib/deliveryEmail.js'
 import EmailWindow from './EmailWindow.jsx'
 import { addDays, fmtDate } from '../lib/dates.js'
 
@@ -193,7 +193,8 @@ export function InvoicesTab() {
       {emailing && (() => {
         const inv = withCompany(emailing.inv)
         const total = money(invoiceTotals(inv).total, inv.currency)
-        return <EmailWindow title={`Email · Invoice #${inv.number || ''}`} start={invoiceEmailStart(inv, total)} fields={INVOICE_FIELDS} link={emailing.url} build={(v) => invoiceEmail(inv, emailing.url, { ...v, company: state.workspace.name })} to={clients.find((c) => c.id === inv.clientId)?.email || ''} cc={profile.accountantEmail || ''} onClose={() => setEmailing(null)} />
+        const keep = (v) => update((st) => { st.finance.settings = { ...st.finance.settings, invoiceEmail: invoiceEmailToSave(inv, total, v) }; return st })
+        return <EmailWindow title={`Email · Invoice #${inv.number || ''}`} start={invoiceEmailSaved(inv, total, state.finance.settings.invoiceEmail)} base={invoiceEmailStart(inv, total)} onKeep={keep} fields={INVOICE_FIELDS} link={emailing.url} build={(v) => invoiceEmail(inv, emailing.url, { ...v, company: state.workspace.name })} to={clients.find((c) => c.id === inv.clientId)?.email || ''} cc={profile.accountantEmail || ''} onClose={() => setEmailing(null)} />
       })()}
     </>
   )
