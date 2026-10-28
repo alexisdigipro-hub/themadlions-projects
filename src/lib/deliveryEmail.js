@@ -65,25 +65,48 @@ ${d.fine ? `<tr><td style="font-family:${FONT};color:${C.muted};font-size:11px;l
    his closing line. */
 export const INVOICE_MESSAGE = (project) => `Καλησπέρα σας,\n\nστο παρακάτω link μπορείτε να δείτε και να αποθηκεύσετε το παραστατικό που αφορά το project${project ? `: ${project}` : '.'}`
 export const INVOICE_CLOSING = 'Είμαστε στη διάθεσή σας για οτιδήποτε χρειαστείτε!'
-export function invoiceEmail(inv, pageUrl, { message, closing = INVOICE_CLOSING, total = '', company = 'THEMADLIONS' } = {}) {
+/* Everything the invoice email says, as the window's fields start (all editable, Alex 28 Oct) */
+export function invoiceEmailStart(inv, total = '') {
   const co = inv.company || {}
   const project = inv.projectTitle || ''
-  const subject = `Παραστατικό #${inv.number || ''}${project ? ` | ${project}` : ''}`
   const fmt = (d) => { const x = new Date(`${d}T12:00:00`); return isNaN(x) ? d : x.toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' }) }
-  const bank = [['ACCOUNT NAME', co.providerName], ['BANK', co.bankName], ['IBAN', co.bankIban], ['BIC / SWIFT', co.bankBic]].filter((r) => r[1])
-  const facts = [['Αριθμός', inv.number ? `#${inv.number}` : ''], ['Ποσό', total], ['Λήξη', inv.dueDate ? fmt(inv.dueDate) : '']].filter((r) => r[1])
-  const msg = message ?? INVOICE_MESSAGE(project)
+  return {
+    subject: `Παραστατικό #${inv.number || ''}${project ? ` | ${project}` : ''}`,
+    kicker: 'Παραστατικό',
+    title: project,
+    client: inv.recipient?.name || '',
+    message: INVOICE_MESSAGE(project),
+    button: 'Δείτε το παραστατικό ➤',
+    number: inv.number ? `#${inv.number}` : '',
+    amount: total,
+    due: inv.dueDate ? fmt(inv.dueDate) : '',
+    accountName: co.providerName || '',
+    bank: co.bankName || '',
+    iban: co.bankIban || '',
+    bic: co.bankBic || '',
+    closing: INVOICE_CLOSING,
+  }
+}
+export function invoiceEmail(inv, pageUrl, { company = 'THEMADLIONS', total = '', ...over } = {}) {
+  const v = { ...invoiceEmailStart(inv, total), ...over }
+  const subject = v.subject
+  const project = v.title
+  const bank = [['ACCOUNT NAME', v.accountName], ['BANK', v.bank], ['IBAN', v.iban], ['BIC / SWIFT', v.bic]].filter((r) => r[1])
+  const facts = [['Αριθμός', v.number], ['Ποσό', v.amount], ['Λήξη', v.due]].filter((r) => r[1])
+  const message = v.message
+  const closing = v.closing
+  const msg = message
   const tile = (inner) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${C.card}" style="background:${C.card};border:1px solid ${C.line};border-radius:16px;"><tr><td style="padding:18px 20px;">${inner}</td></tr></table>`
-  const html = wrap(subject, `<tr><td align="center" style="font-family:${FONT};color:${C.accent};font-size:12px;font-weight:700;letter-spacing:2px;padding:0 0 10px;">ΠΑΡΑΣΤΑΤΙΚΟ</td></tr>
+  const html = wrap(subject, `<tr><td align="center" style="font-family:${FONT};color:${C.accent};font-size:12px;font-weight:700;letter-spacing:2px;padding:0 0 10px;">${esc(caps(v.kicker))}</td></tr>
 ${project ? `<tr><td align="center" style="font-family:${FONT};color:${C.text};font-size:30px;line-height:1.15;font-weight:300;padding:0 10px 8px;">${esc(project)}</td></tr>` : ''}
-${inv.recipient?.name ? `<tr><td align="center" style="font-family:${FONT};color:${C.muted};font-size:13px;letter-spacing:1.5px;padding:0 0 6px;">${esc(caps(inv.recipient.name))}</td></tr>` : ''}
+${v.client ? `<tr><td align="center" style="font-family:${FONT};color:${C.muted};font-size:13px;letter-spacing:1.5px;padding:0 0 6px;">${esc(caps(v.client))}</td></tr>` : ''}
 ${msg ? `<tr><td style="font-family:${FONT};color:${C.text};font-size:15px;line-height:1.6;padding:20px 8px 0;">${lines(msg)}</td></tr>` : ''}
-<tr><td align="center" style="padding:28px 0 6px;">${btnOf(pageUrl, 'Δείτε το παραστατικό ➤')}</td></tr>
+<tr><td align="center" style="padding:28px 0 6px;">${btnOf(pageUrl, v.button || 'Δείτε το παραστατικό ➤')}</td></tr>
 ${facts.length ? `<tr><td style="padding:24px 0 0;">${tile(`<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${facts.map(([k, v]) => `<td valign="top" style="font-family:${FONT};padding:0 6px;"><div style="color:${C.muted};font-size:11px;letter-spacing:1.5px;">${esc(caps(k))}</div><div style="color:${C.text};font-size:17px;font-weight:700;padding-top:4px;">${esc(v)}</div></td>`).join('')}</tr></table>`)}</td></tr>` : ''}
 ${bank.length ? `<tr><td style="padding:10px 0 0;">${tile(`<div style="font-family:${FONT};color:${C.accent};font-size:11px;font-weight:700;letter-spacing:2px;padding:0 0 10px;">ΣΤΟΙΧΕΙΑ ΤΡΑΠΕΖΙΚΟΥ ΛΟΓΑΡΙΑΣΜΟΥ</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${bank.map(([k, v]) => `<tr><td valign="top" style="font-family:${FONT};color:${C.muted};font-size:12px;letter-spacing:1px;padding:5px 10px 5px 0;white-space:nowrap;">${esc(k)}</td><td style="font-family:${FONT};color:${C.text};font-size:14px;font-weight:600;padding:5px 0;">${esc(v)}</td></tr>`).join('')}</table>`)}</td></tr>` : ''}
 ${closing ? `<tr><td style="font-family:${FONT};color:${C.text};font-size:15px;line-height:1.6;padding:24px 8px 0;">${lines(closing)}</td></tr>` : ''}
 `, company)
-  const text = [msg, '', `Δείτε το παραστατικό: ${pageUrl}`, '', ...facts.map(([k, v]) => `${k}: ${v}`), facts.length ? '' : null, bank.length ? 'ΣΤΟΙΧΕΙΑ ΤΡΑΠΕΖΙΚΟΥ ΛΟΓΑΡΙΑΣΜΟΥ' : null, ...bank.map(([k, v]) => `${k}: ${v}`), '', closing, '', company].filter((x) => x !== null && x !== undefined).join('\n').replace(/\n{3,}/g, '\n\n').trim()
+  const text = [msg, '', `${(v.button || 'Δείτε το παραστατικό').replace(/\s*➤\s*$/, '')}: ${pageUrl}`, '', ...facts.map(([k, v]) => `${k}: ${v}`), facts.length ? '' : null, bank.length ? 'ΣΤΟΙΧΕΙΑ ΤΡΑΠΕΖΙΚΟΥ ΛΟΓΑΡΙΑΣΜΟΥ' : null, ...bank.map(([k, v]) => `${k}: ${v}`), '', closing, '', company].filter((x) => x !== null && x !== undefined).join('\n').replace(/\n{3,}/g, '\n\n').trim()
   return { subject, html, text }
 }
 
