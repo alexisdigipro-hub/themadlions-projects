@@ -58,7 +58,7 @@ export function deliveryEmail(d, pageUrl, company = 'THEMADLIONS', { stageLabel 
 
   const html = wrap(subject, `${cover ? `<tr><td align="center" style="padding:0 0 26px;"><a href="${esc(pageUrl)}" target="_blank"><img src="${esc(cover)}" width="548" alt="" style="display:block;margin:0 auto;width:100%;max-width:548px;height:auto;border:0;border-radius:18px;"></a></td></tr>` : ''}
 ${td(`color:${C.accent};font-size:12px;font-weight:700;letter-spacing:2px;padding:0 0 10px;`, esc(caps(stage)))}
-${td(`color:${C.text};font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.4px;padding:0 6px 8px;`, esc(title))}
+${td(`color:${C.text};font-size:23px;line-height:1.2;font-weight:700;letter-spacing:-.4px;padding:0 6px 8px;`, esc(title))}
 ${d.client ? td(`color:${C.muted};font-size:13px;letter-spacing:1.5px;padding:0 0 6px;`, esc(caps(d.client))) : ''}
 ${d.recipient?.name ? td(`color:${C.muted};font-size:14px;padding:0 0 6px;`, `For ${esc(d.recipient.name)}`) : ''}
 ${d.message ? td(`color:${C.text};font-size:15px;line-height:1.65;padding:18px 6px 0;`, lines(d.message)) : ''}
@@ -110,7 +110,7 @@ export function invoiceEmail(inv, pageUrl, { company = 'THEMADLIONS', total = ''
   const closing = v.closing
   const msg = message
   const html = wrap(subject, `${td(`color:${C.accent};font-size:12px;font-weight:700;letter-spacing:2px;padding:0 0 10px;`, esc(caps(v.kicker)))}
-${project ? td(`color:${C.text};font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.4px;padding:0 6px 8px;`, esc(project)) : ''}
+${project ? td(`color:${C.text};font-size:23px;line-height:1.2;font-weight:700;letter-spacing:-.4px;padding:0 6px 8px;`, esc(project)) : ''}
 ${v.client ? td(`color:${C.muted};font-size:13px;letter-spacing:1.5px;padding:0 0 6px;`, esc(caps(v.client))) : ''}
 ${msg ? td(`color:${C.text};font-size:15px;line-height:1.65;padding:20px 6px 0;`, lines(msg)) : ''}
 <tr><td align="center" style="padding:28px 0 6px;">${btnOf(pageUrl, v.button || 'DOWNLOAD INVOICE')}</td></tr>
