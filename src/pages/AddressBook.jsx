@@ -49,6 +49,18 @@ function findDuplicates(list) {
   for (const c of list) { const r = find(c.id); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(c) }
   return [...groups.values()].filter((g) => g.length > 1).map((g) => g.sort((a, b) => filled(b) - filled(a)))
 }
+/* Incomplete (Alex, 28 Oct: "like Duplicates, the contacts with only a name, only a phone, or missing things"): the
+   kinds of gap, each a test on one contact; a contact can be in several */
+const realName = (c) => { const n = String(c.name || '').trim(); return !!n && !/^[\d\s+()./-]+$/.test(n) }
+const hasPhone = (c) => /\d{5,}/.test(String(c.phone || '').replace(/\D/g, '') + ' ' + String(c.phone2 || '').replace(/\D/g, ''))
+const GAPS = [
+  ['nameonly', 'Name only', 'a name and nothing to reach them by', (c) => realName(c) && !hasPhone(c) && !c.email],
+  ['numberonly', 'Number only', 'a phone but no real name', (c) => hasPhone(c) && !realName(c)],
+  ['nophone', 'No phone', '', (c) => !hasPhone(c)],
+  ['noemail', 'No email', '', (c) => !c.email],
+  ['nospec', 'No specialty', '', (c) => !specialtyOf(c)],
+]
+const gapsOf = (c) => GAPS.filter(([, , , t]) => t(c)).map(([k, label]) => [k, label])
 // several contacts made one: the main one keeps its fields and takes the others' where it has none; a second
 // number goes to Other phone, anything more into the notes, so nothing is lost
 function mergeInto(main, others) {
@@ -101,6 +113,7 @@ export default function AddressBook({ slot }) {
   const [spec, setSpec] = useState('') // a specialty chip ('' all, '*' favourites)
   const [dups, setDups] = useState(null) // the Duplicates window: its groups, and the main one chosen in each
   const [specs, setSpecs] = useState(null) // the Specialties window: each specialty and its new name
+  const [gaps, setGaps] = useState(null) // the Incomplete window: which kind of gap it shows
   // Export (Alex, 27 Oct): what is found (a search narrows it), as vCard, CSV or Excel
   const exportAs = async (kind) => {
     setExportOpen(false)
@@ -428,7 +441,7 @@ export default function AddressBook({ slot }) {
           <input ref={fileRef} type="file" accept=".vcf,.vcard,.csv,text/vcard,text/csv" hidden onChange={(e) => importFile(e.target.files?.[0])} />
           {/* one ⋯ menu for Import, Export, Duplicates and Specialties, so the whole bar fits on the tabs' line */}
           <span className="ab-export">
-            <button type="button" className={`btn btn-default ab-more${exportOpen ? ' on' : ''}`} onClick={() => setExportOpen((o) => !o)} aria-label="More" title="Import, Export, Duplicates, Specialties">{busy ? '…' : '⋯'}</button>
+            <button type="button" className={`btn btn-default ab-more${exportOpen ? ' on' : ''}`} onClick={() => setExportOpen((o) => !o)} aria-label="More" title="Import, Export, Duplicates, Specialties, Incomplete">{busy ? '…' : '⋯'}</button>
             {exportOpen && (
               <>
                 <span className="ab-export-shade" onClick={() => setExportOpen(false)} />
@@ -443,6 +456,7 @@ export default function AddressBook({ slot }) {
                   <span className="ab-export-head">Tidy up</span>
                   <button type="button" role="menuitem" disabled={!list?.length} onClick={() => { setExportOpen(false); openDups() }}><b>Duplicates</b><small>The same person twice, joined into one</small></button>
                   <button type="button" role="menuitem" disabled={!chips.length} onClick={() => { setExportOpen(false); openSpecs() }}><b>Specialties</b><small>Rename or join specialties</small></button>
+                  <button type="button" role="menuitem" disabled={!list?.length} onClick={() => { setExportOpen(false); setGaps('nameonly') }}><b>Incomplete</b><small>Only a name, only a number, or details missing</small></button>
                 </span>
               </>
             )}
@@ -552,6 +566,43 @@ export default function AddressBook({ slot }) {
           </div>
         )}
       </Modal>
+
+      {gaps && (() => {
+        const all = list || []
+        const counts = Object.fromEntries(GAPS.map(([k, , , t]) => [k, all.filter(t).length]))
+        const [, label, hint, test] = GAPS.find((g) => g[0] === gaps) || GAPS[0]
+        const rows = all.filter(test).sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'el'))
+        const removeAll = async () => {
+          if (!confirm(`Delete all ${rows.length} contacts in "${label}"? This cannot be undone.`)) return
+          const ids = rows.map((c) => c.id), libIds = rows.flatMap((c) => [c.lib?.crew, c.lib?.cast]).filter(Boolean)
+          try { await removeContacts(ids); const gone = new Set(ids); setList((l) => l.filter((c) => !gone.has(c.id))); dropFromLibrary(libIds); toast(`${ids.length} deleted`, 'ok') } catch (e) { toast(e.message, 'error') }
+        }
+        return (
+          <Modal open wide title={`Incomplete · ${label}`} onClose={() => setGaps(null)}
+            footer={<>{rows.length > 0 && (gaps === 'nameonly' || gaps === 'numberonly') && <Button variant="ghost" className="ab-del" onClick={removeAll}>Delete all {rows.length}</Button>}<span className="grow" /><Button variant="ghost" onClick={() => setGaps(null)}>Close</Button></>}>
+            <div className="ab-dups">
+              <div className="ab-gap-tabs">
+                {GAPS.map(([k, l]) => <button key={k} type="button" className={`pill${gaps === k ? ' on' : ''}`} onClick={() => setGaps(k)}>{l}<small>{counts[k]}</small></button>)}
+              </div>
+              <p className="muted small">{rows.length ? `${rows.length} contact${rows.length === 1 ? '' : 's'}${hint ? `: ${hint}` : ''}. Edit fills in what is missing; Delete takes one out.` : 'None. Everything here is filled in.'}</p>
+              {rows.slice(0, 200).map((c) => (
+                <div key={c.id} className="ab-dup ab-gap-row">
+                  <div className="ab-gap-main">
+                    <strong>{realName(c) ? c.name : <span className="muted">{c.name || 'No name'}</span>}</strong>
+                    <span className="muted small">{[c.phone, c.phone2, c.email, c.company].filter(Boolean).join(' · ') || 'Nothing else'}</span>
+                    <span className="ab-gap-chips">{gapsOf(c).map(([k, l]) => <span key={k} className="lchip">{l}</span>)}</span>
+                  </div>
+                  <div className="ab-dup-acts">
+                    <Button size="sm" variant="primary" onClick={() => setDraft({ ...c })}>Edit</Button>
+                    <Confirm onConfirm={() => remove(c)} label="Delete" className="ab-del">Delete</Confirm>
+                  </div>
+                </div>
+              ))}
+              {rows.length > 200 && <p className="muted small">And {rows.length - 200} more: fill these in and open it again.</p>}
+            </div>
+          </Modal>
+        )
+      })()}
 
       <Modal open={!!specs} title="Specialties" onClose={() => setSpecs(null)}
         footer={specs && <><Button variant="ghost" onClick={() => setSpecs(null)}>Cancel</Button><Button variant="primary" onClick={saveSpecs}>Save</Button></>}>
