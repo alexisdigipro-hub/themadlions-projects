@@ -9115,3 +9115,4 @@ html[data-theme] body .overview .panel.progress { overflow: visible; position: r
 html[data-theme] body .panel.music-panel { overflow: visible; position: relative; z-index: 20; }
 .music .toolbar { position: relative; z-index: 5; }
 .music .ov-acts .compact { height: 38px; }
+.music .toolbar:has(.ov-menu) { z-index: 12; }
