@@ -8981,7 +8981,16 @@ html[data-theme] body ul.inv-tiles > li.inv-tile { display: flex; flex-direction
 .mail-group { grid-column: 1 / -1; margin: 8px 0 0; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .mail-preview { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .mail-preview p { margin: 0; }
-@media (min-width: 821px) { html[data-theme] body .modal.mail-win { width: min(1180px, calc(100vw - 48px)); max-width: none; } }
+/* the email window on a computer (Alex, 28 Oct: "bigger, and it grows when dragged"): nearly the whole screen, its
+   lower right corner drags it bigger or smaller; the form and the preview fill whatever size it has */
+@media (min-width: 821px) {
+  html[data-theme] body .modal.mail-win { width: min(1500px, calc(100vw - 48px)); height: min(920px, calc(100vh - 48px)); max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); min-width: 760px; min-height: 480px; resize: both; overflow: hidden; display: flex; flex-direction: column; }
+  html[data-theme] body .modal.mail-win .modal-body { flex: 1 1 auto; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  html[data-theme] body .modal.mail-win .deliv-email.with-form { flex: 1; min-height: 0; grid-template-columns: minmax(300px, 400px) 1fr; align-items: stretch; }
+  html[data-theme] body .modal.mail-win .mail-form { max-height: none; min-height: 0; overflow: auto; align-content: start; }
+  html[data-theme] body .modal.mail-win .mail-preview { min-height: 0; }
+  html[data-theme] body .modal.mail-win .deliv-email-frame { flex: 1; height: auto; min-height: 0; }
+}
 @media (max-width: 820px) {
   .deliv-email.with-form { display: flex; flex-direction: column; }
   .mail-form { max-height: none; overflow: visible; padding: 0; }
