@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Button, Modal, useIsMobile, useToast } from '../components/ui.jsx'
+import { Button, Field, Input, Modal, useIsMobile, useToast } from '../components/ui.jsx'
 import { uid, useCurrentUser, useStore } from '../lib/store.jsx'
 import { cleanHtml, deleteNotes, loadNotes, noteText, saveNote, saveSharedNote, setNoteSharing } from '../lib/notes.js'
 import { noteUrl, publishShare, removeShare, tokenOf } from '../lib/shares.js'
@@ -161,15 +161,25 @@ function Editor({ note, onChange }) {
 /* On a phone a note is swiped to the left from its edge to show Share, Move and Delete behind it, as in Apple's Notes
    (Alex, 28 Oct). A short swipe springs back; past half the buttons it stays open until a tap elsewhere or another
    note is swiped. A tap on the note itself opens it as before. */
-/* Every folder has a colour (Alex, 28 Oct), and its notes wear a tenth of it. Kept in the folder's own body (a
-   folder has no text of its own); until one is picked, a colour of the palette chosen by the folder's id. */
-const FOLDER_COLORS = ['#ff6b57', '#f5a524', '#3ecf8e', '#3b82f6', '#a78bfa', '#ec4899', '#14b8a6', '#eab308']
-const folderColor = (f) => {
-  if (!f) return ''
-  if (/^#[0-9a-f]{6}$/i.test(f.body || '')) return f.body
-  let h = 0
-  for (const ch of String(f.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0
-  return FOLDER_COLORS[h % FOLDER_COLORS.length]
+/* Every folder has a colour and an icon, set in its settings like a Tasks list (Alex, 28 Oct): its notes wear the
+   colour as Tasks do and start with the icon. Kept in the folder's own body (a folder has no text of its own) as
+   {"color","icon"}; an older body of just "#rrggbb" is read as the colour. Until one is picked, a colour of the
+   palette chosen by the folder's id. */
+const FOLDER_COLORS = ['#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#5ac8fa', '#007aff', '#5856d6', '#af52de', '#ff2d55', '#a2845e', '#8e8e93', '#C8503F']
+const FOLDER_ICONS = ['🗂', '📌', '⭐', '🎬', '📷', '💡', '🎤', '🎨', '🚚', '📍', '💰', '📞', '🛒', '🧾', '🗓', '✈️', '🏠', '❤️']
+const folderLook = (f) => {
+  if (!f) return { color: '', icon: '' }
+  let o = {}
+  const b = String(f.body || '').trim()
+  if (/^#[0-9a-f]{6}$/i.test(b)) o = { color: b }
+  else if (b.startsWith('{')) { try { o = JSON.parse(b) || {} } catch { o = {} } }
+  let color = /^#[0-9a-f]{6}$/i.test(o.color || '') ? o.color : ''
+  if (!color) {
+    let h = 0
+    for (const ch of String(f.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+    color = FOLDER_COLORS[h % FOLDER_COLORS.length]
+  }
+  return { color, icon: typeof o.icon === 'string' && o.icon ? o.icon.slice(0, 8) : '🗂' }
 }
 const SWIPE_BTN = 76
 const FOLDER_ICON = <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>
@@ -222,6 +232,7 @@ export default function Notes({ slot = null }) {
   const [menu, setMenu] = useState(false) // phone: the folders folded open over the notes
   const [quick, setQuick] = useState('')
   const [renaming, setRenaming] = useState(null) // { id, name }
+  const [folderForm, setFolderForm] = useState(null) // { id?, name, color, icon }: a folder's settings, like a Tasks list's
   const [sharing, setSharing] = useState(null) // the note whose Share window is open
   const [swiped, setSwiped] = useState('') // phone: the note swiped open to its Share / Move / Delete
   const [moving, setMoving] = useState(null) // phone: the note whose Move window is open
@@ -394,14 +405,21 @@ export default function Notes({ slot = null }) {
     setSharing((x) => (x && x.id === id ? { ...x, ...p } : x))
   }
 
-  const newFolder = () => {
-    const name = (prompt('Name of the new folder', 'New Folder') || '').trim()
+  const newFolder = () => setFolderForm({ name: '', color: FOLDER_COLORS[5], icon: FOLDER_ICONS[0] })
+  const saveFolder = () => {
+    const form = folderForm
+    const name = form.name.trim()
     if (!name) return
-    const t = now()
-    const f = { id: uid(), kind: 'folder', folderId: '', title: name, body: '', pinned: false, createdAt: t, updatedAt: t, deletedAt: '' }
-    setItems((list) => [...list, f])
-    persist(f)
-    setFolder(f.id)
+    const body = JSON.stringify({ color: form.color, icon: form.icon })
+    if (form.id) patch(form.id, { title: name, body })
+    else {
+      const t = now()
+      const f = { id: uid(), kind: 'folder', folderId: '', title: name, body, pinned: false, createdAt: t, updatedAt: t, deletedAt: '' }
+      setItems((list) => [...list, f])
+      persist(f)
+      setFolder(f.id)
+    }
+    setFolderForm(null)
   }
   const renameFolder = () => {
     const name = renaming?.name.trim()
@@ -424,20 +442,19 @@ export default function Notes({ slot = null }) {
   const pickFolder = (f) => { leave(openId); setOpenId(''); setFolder(f); setQ(''); setMenu(false) }
   const close = () => { leave(openId); setOpenId('') }
   const folderRow = ({ id, name, count, icon = '🗂', own }) => (
-    <div key={id} className={`rem-row notes-frow ${folder === id && !open ? 'on' : folder === id ? 'here' : ''}`}>
+    <div key={id} className={`rem-row notes-frow ${folder === id && !open ? 'on' : folder === id ? 'here' : ''}`} style={own ? { '--lc': folderLook(own).color } : undefined}>
       {renaming?.id === id ? (
         <input className="input notes-rename" autoFocus value={renaming.name} onChange={(e) => setRenaming({ id, name: e.target.value })} onBlur={renameFolder} onKeyDown={(e) => { if (e.key === 'Enter') renameFolder(); if (e.key === 'Escape') setRenaming(null) }} />
       ) : (
         <button type="button" className="rem-row-pick" onClick={() => pickFolder(id)} onDoubleClick={() => own && setRenaming({ id, name })}>
-          {own ? <span className="notes-fdot" style={{ '--fc': folderColor(own) }} aria-hidden="true" /> : <span className="rem-row-emoji" aria-hidden="true">{icon}</span>}
+          <span className="rem-row-emoji" aria-hidden="true">{own ? folderLook(own).icon : icon}</span>
           <span className="grow">{name}</span>
           <span className="rem-count">{count || ''}</span>
         </button>
       )}
       {own && renaming?.id !== id && (
         <span className="notes-folder-acts">
-          <button type="button" title="Colour" className="notes-fcolor" style={{ '--fc': folderColor(own) }} onClick={() => { const c = FOLDER_COLORS; patch(own.id, { body: c[(c.indexOf(folderColor(own)) + 1) % c.length] }) }}>●</button>
-          <button type="button" title="Rename" onClick={() => setRenaming({ id, name })}>✎</button>
+          <button type="button" title="Folder settings" onClick={() => setFolderForm({ id, name, ...folderLook(own) })}>✎</button>
           <button type="button" title="Delete folder" onClick={() => deleteFolder(own)}>×</button>
         </span>
       )}
@@ -479,7 +496,9 @@ export default function Notes({ slot = null }) {
   )
 
   // the note wears a tenth of its folder's colour
-  const tintOf = (n) => { const f = n.folderId && folders.find((x) => x.id === n.folderId); return f ? { '--nc': folderColor(f) } : undefined }
+  const folderOf = (n) => (n.folderId && folders.find((x) => x.id === n.folderId)) || null
+  const tintOf = (n) => { const f = folderOf(n); return f ? { '--tint': folderLook(f).color } : undefined }
+  const iconOf = (n) => { const f = folderOf(n); return f ? <span className="notes-card-ficon" aria-hidden="true">{folderLook(f).icon}</span> : null }
   const swipeActs = (n) => folder === TRASH
     ? [{ label: 'Restore', tone: 'move', icon: <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>, onClick: () => restore(n) }, { label: 'Delete', tone: 'del', icon: LINE_ICON.trash, onClick: () => remove(n) }]
     : [{ label: 'Share', tone: 'share', icon: LINE_ICON.share, onClick: () => setSharing(n) },
@@ -488,18 +507,18 @@ export default function Notes({ slot = null }) {
   const card = (n) => (mobile && mine(n) && !preview ? (
     <SwipeRow key={n.id} tint={tintOf(n)} open={swiped === n.id} onOpen={(on) => setSwiped(on ? n.id : '')} onTap={() => select(n.id)} actions={swipeActs(n)}>
       <div className="notes-card-main">
-        <div className="notes-card-title">{n.pinned && folder !== TRASH && <span className="notes-card-pin">📌</span>}{n.lines[0] || 'New Note'}</div>
+        <div className="notes-card-title">{iconOf(n)}{n.pinned && folder !== TRASH && <span className="notes-card-pin">📌</span>}{n.lines[0] || 'New Note'}</div>
         <div className="notes-card-sub"><b>{when(n.updatedAt)}</b> {n.lines[1] || 'No additional text'}</div>
-        {folder === ALL && n.folderId && <div className="notes-card-folder">🗂 {folders.find((f) => f.id === n.folderId)?.title || ''}</div>}
+        {folder === ALL && n.folderId && <div className="notes-card-folder">{folderLook(folderOf(n)).icon} {folderOf(n)?.title || ''}</div>}
         {(n.sharedWith?.length > 0 || n.link) && <div className="notes-card-folder">👥 {[n.sharedWith?.length ? `Shared with ${n.sharedWith.length}` : '', n.link ? 'Link' : ''].filter(Boolean).join(' · ')}</div>}
       </div>
     </SwipeRow>
   ) : (
     <li key={n.id} className={`notes-card${tintOf(n) ? ' tinted' : ''}`} style={tintOf(n)} onClick={() => select(n.id)}>
       <div className="notes-card-main">
-        <div className="notes-card-title">{n.pinned && folder !== TRASH && <span className="notes-card-pin">📌</span>}{n.lines[0] || 'New Note'}</div>
+        <div className="notes-card-title">{iconOf(n)}{n.pinned && folder !== TRASH && <span className="notes-card-pin">📌</span>}{n.lines[0] || 'New Note'}</div>
         <div className="notes-card-sub"><b>{when(n.updatedAt)}</b> {n.lines[1] || 'No additional text'}</div>
-        {folder === ALL && n.folderId && <div className="notes-card-folder">🗂 {folders.find((f) => f.id === n.folderId)?.title || ''}</div>}
+        {folder === ALL && n.folderId && <div className="notes-card-folder">{folderLook(folderOf(n)).icon} {folderOf(n)?.title || ''}</div>}
         {!mine(n) && <div className="notes-card-folder">👥 From {authorOf(n)}</div>}
         {mine(n) && (n.sharedWith?.length > 0 || n.link) && <div className="notes-card-folder">👥 {[n.sharedWith?.length ? `Shared with ${n.sharedWith.length}` : '', n.link ? 'Link' : ''].filter(Boolean).join(' · ')}</div>}
       </div>
@@ -584,8 +603,25 @@ export default function Notes({ slot = null }) {
         <Modal open title="Move to" onClose={() => setMoving(null)}>
           <div className="notes-move-list">
             {[{ id: NONE, title: 'My Notes (no folder)' }, ...folders].map((f) => (
-              <button key={f.id} type="button" className={`notes-move-row ${(moving.folderId || NONE) === f.id ? 'on' : ''}`} onClick={() => { moveTo(moving, f.id); setMoving(null) }}>🗂 {f.title || 'Folder'}</button>
+              <button key={f.id} type="button" className={`notes-move-row ${(moving.folderId || NONE) === f.id ? 'on' : ''}`} onClick={() => { moveTo(moving, f.id); setMoving(null) }}>{f.id === NONE ? '📒' : folderLook(f).icon} {f.title || 'Folder'}</button>
             ))}
+          </div>
+        </Modal>
+      )}
+      {folderForm && (
+        <Modal open title={folderForm.id ? 'Folder settings' : 'New folder'} onClose={() => setFolderForm(null)} footer={
+          <>
+            {folderForm.id && <Button variant="ghost" onClick={() => { const f = folders.find((x) => x.id === folderForm.id); setFolderForm(null); if (f) deleteFolder(f) }}>Delete folder</Button>}
+            <span className="grow" />
+            <Button variant="ghost" onClick={() => setFolderForm(null)}>Cancel</Button>
+            <Button variant="primary" onClick={saveFolder} disabled={!folderForm.name.trim()}>{folderForm.id ? 'Save' : 'Add folder'}</Button>
+          </>
+        }>
+          <div className="rem-list-form" style={{ '--lc': folderForm.color }}>
+            <div className="rem-list-preview">{folderForm.icon}</div>
+            <Field label="Name"><Input autoFocus value={folderForm.name} onChange={(e) => setFolderForm({ ...folderForm, name: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && saveFolder()} placeholder="Scripts" /></Field>
+            <div className="rem-swatches">{FOLDER_COLORS.map((c) => <button key={c} type="button" className={folderForm.color === c ? 'on' : ''} style={{ background: c }} onClick={() => setFolderForm({ ...folderForm, color: c })} aria-label={c} />)}</div>
+            <div className="rem-icons">{FOLDER_ICONS.map((i) => <button key={i} type="button" className={folderForm.icon === i ? 'on' : ''} onClick={() => setFolderForm({ ...folderForm, icon: i })}>{i}</button>)}</div>
           </div>
         </Modal>
       )}
