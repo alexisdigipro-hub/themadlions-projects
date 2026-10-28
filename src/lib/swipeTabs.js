@@ -14,7 +14,8 @@ import { stillMotion } from './glide.js'
 
 export const swipeTabs = { project: null }
 
-const NO = 'input, textarea, select, [contenteditable="true"], canvas, video, iframe, [data-noswipe], .chat-swipe, .wb, .cover-adj-frame, .tabbar, .ptabs-m'
+// .rem-swipe / .notes-swipe: a task or a note slides sideways itself to show its buttons (Alex, 28 Oct)
+const NO = 'input, textarea, select, [contenteditable="true"], canvas, video, iframe, [data-noswipe], .chat-swipe, .rem-swipe, .notes-swipe, .wb, .cover-adj-frame, .tabbar, .ptabs-m'
 const SPRING = 'cubic-bezier(.3, 1.25, .5, 1)'
 const OUT = 'cubic-bezier(.4, 0, 1, 1)'
 const IN = 'cubic-bezier(.2, .8, .2, 1)'
