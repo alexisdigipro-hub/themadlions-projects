@@ -9445,7 +9445,7 @@ html[data-theme] body .panel.music-panel { overflow: visible; position: relative
    colour behind everything with two slow aurora lights drifting over it (body::before / ::after, still when the
    system asks for less motion); every surface soft relief (Soft UI): the same tone as what is under it, a light edge
    at the top left and a shadow at the bottom right, so it rises out of the page; the chosen thing and every field
-   pressed in instead; Home's projects as a bento grid (one big tile, a wide one, the rest square); the Island, a
+   pressed in instead (Home's projects stay square, one size: Alex did not want bento sizes there); the Island, a
    black pill at the top centre that grows into a card (components/Island.jsx), and the toasts drop out of it. */
 html[data-skin='soft'][data-theme][data-accent] {
   --bg: #1b1f2b; --panel: #222736; --raised: #272d3e; --line: #343b50; --line-soft: #2b3244;
@@ -9553,20 +9553,12 @@ html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .project-grid .
   html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .sidenav a.active .nav-ico { color: var(--accent); }
   html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .logo-mark { background: var(--skin-grad); border: 0; box-shadow: var(--neu-up-sm), 0 0 18px var(--gl-glow); }
 
-  /* Bento: Home's projects in tiles of three sizes, the gaps even, no hole left (dense) */
-  html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .project-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); grid-auto-rows: 300px; grid-auto-flow: dense; gap: 22px; }
-  html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .project-grid .project-card { height: 100%; }
-  html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .project-grid .project-card .project-cover { flex: 1; height: 100%; aspect-ratio: auto; }
-  html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .project-grid .project-card .project-cover img { width: 100%; height: 100%; object-fit: cover; }
-  html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .project-grid .project-card:nth-child(7n + 1) { grid-column: span 2; grid-row: span 2; }
-  html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .project-grid .project-card:nth-child(7n + 1) .project-body h3 { font-size: 34px; }
-  html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .project-grid .project-card:nth-child(7n + 5) { grid-column: span 2; }
-  /* the team's tile as one bento block over them */
+  /* Home's projects keep the usual square cards, all one size (Alex, 29 Oct: no bento sizes on the projects) */
+  /* the team's tile, rounder */
   html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .team-strip-panel { border-radius: 28px; }
 }
 @media (max-width: 820px) {
   html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .tabbar { box-shadow: var(--neu-up); border-color: var(--gl-edge); }
-  /* a phone: a two-column bento, every fifth project wide */
   html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .project-grid .project-card { box-shadow: var(--neu-up-sm); }
 }
 

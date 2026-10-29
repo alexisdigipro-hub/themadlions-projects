@@ -41,7 +41,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - **Soft aurora / Soft aurora light themes** (29 Oct, Alex: "Neumorphism (Soft UI) with a bento grid and the Dynamic Island pattern, on Mesh Gradient / Aurora backdrops"): skins `soft` (dark) and `softlight` (light) in lib/skin.js. They are built on the Glass rules: every Glass dark `:is()` list also names soft, every Glass light list softlight. The last block of styles.css adds:
   - Soft UI relief through `--neu-up` / `--neu-up-sm` / `--neu-in`.
   - A mesh gradient on html with two aurora lights as body::before / ::after (with prefers-reduced-motion they stop).
-  - Home's .project-grid as a bento on a computer: 7n+1 is 2x2, 7n+5 is 2 wide, dense.
+  - Home's projects keep the usual square cards (the bento sizes were taken off the same day at Alex's request).
   - components/Island.jsx at the top centre, mounted in Layout. On a phone it takes the top bar's name. It is not shown over RoarMe, Roardino or RoarList, and toasts drop from it.
   - Checked with Playwright: dark and light, desktop and 390px.
   - Alex picks it in Settings > Display > Theme; it applies to the whole team.
