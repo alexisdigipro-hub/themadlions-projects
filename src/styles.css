@@ -3265,6 +3265,39 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 .usage-tables { margin-top: 10px; }
 .usage-tables summary { cursor: pointer; color: var(--muted); }
 
+/* Database > pCloud (Alex, 29 Oct): the places as chips, the path, soft rows with a picture, a file big, Duplicates */
+.pcf-places { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.pcf-places .lchip, .pcf-dupe .lchip { border: 0; cursor: pointer; font: inherit; font-size: 12px; height: 28px; padding: 0 12px; border-radius: 999px; transition: background .2s, transform .2s; }
+.pcf-places .lchip:hover { transform: translateY(-1px); }
+.pcf-places .lchip i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex: none; }
+.pcf-places .lchip.on i { background: var(--accent); }
+.pcf-crumbs { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+.pcf-crumbs button { border: 0; background: none; color: inherit; font: inherit; padding: 3px 6px; border-radius: 8px; cursor: pointer; }
+.pcf-crumbs button:hover { color: var(--text); background: color-mix(in srgb, var(--text) 7%, transparent); }
+.pcf-crumbs span:last-child button { color: var(--text); font-weight: 700; }
+.pcf-crumbs i { font-style: normal; opacity: .45; }
+.pcf-crumbs .pcf-upbtn { width: 28px; height: 28px; border-radius: 50%; font-size: 18px; line-height: 1; background: color-mix(in srgb, var(--text) 7%, transparent); margin-right: 6px; }
+.pcf-thumb { position: relative; display: grid; place-items: center; width: 100%; height: 100%; overflow: hidden; border-radius: inherit; color: var(--muted); }
+.pcf-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.pcf-thumb svg { width: 22px; height: 22px; }
+.pcf-thumb.folder { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.pcf-thumb b { font-size: 10px; letter-spacing: .04em; }
+.pcf-play { position: absolute; width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #fff; filter: drop-shadow(0 1px 3px rgba(0,0,0,.6)); }
+.pcf-acts { display: inline-flex; gap: 4px; }
+.pcf-big .pcf-media { display: block; width: 100%; max-height: 70vh; border-radius: var(--radius-lg); background: #000; object-fit: contain; }
+.pcf-big .pcf-audio { width: 100%; }
+.pcf-pick { display: grid; gap: 6px; max-height: 50vh; overflow: auto; }
+.pcf-pick button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line-soft); background: var(--raised); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.pcf-pick button:hover { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.pcf-pick svg { width: 18px; height: 18px; color: var(--accent); flex: none; }
+.pcf-dupe { padding: 12px 14px; border-radius: var(--radius-lg); background: var(--raised); border: 1px solid var(--line-soft); display: grid; gap: 6px; }
+.pcf-dupe-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.pcf-dupe-f { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; cursor: pointer; }
+.pcf-dupe-f.keep { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.pcf-dupe-p { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pcf-dupe-p b { color: var(--text); font-weight: 600; }
+.pcf-dupe .lchip.warn { color: var(--danger); background: color-mix(in srgb, var(--danger) 14%, transparent); }
+.pcf-dupe .lchip.warn i { width: 7px; height: 7px; border-radius: 50%; background: var(--danger); }
 /* Upload a song: keep the original or make it an MP3 (Alex, 29 Oct); two soft tiles, the chosen look on hover */
 .audio-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .audio-choice button { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; text-align: left; padding: 16px 18px; border-radius: var(--radius-lg); border: 1px solid var(--line-soft); background: var(--raised); color: var(--text); font: inherit; cursor: pointer; transition: transform .25s cubic-bezier(.16, 1, .3, 1), border-color .2s, background .2s; }

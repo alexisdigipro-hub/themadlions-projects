@@ -17,7 +17,9 @@
 //
 // Actions (POST, JSON or multipart): ping · upload · link · links · raw · delete · backup ·
 // deliveryStart · deliveryChunk · deliveryFinish · deliveryFolderLink · deliveryRemove · deliveryLabels ·
-// uploadStart · uploadChunk · uploadFinish (a big file, e.g. a song kept as its WAV, 29 Oct). See src/lib/pcloud.js.
+// uploadStart · uploadChunk · uploadFinish (a big file, e.g. a song kept as its WAV, 29 Oct) ·
+// filesList · filesLink · filesShare · filesMkdir · filesRename · filesMove · filesTrash · filesUploadStart · filesChunk ·
+// filesUploadFinish · filesDupes (Database > pCloud, the whole pCloud with PCLOUD_FULL_TOKEN, 29 Oct). See src/lib/pcloud.js.
 // Where a delivery goes (Alex, 27 Oct): with PCLOUD_FULL_TOKEN, RoughCut and PreFinal Cut straight into
 // "/Projects - RoughCuts" (no folder of their own, so they can be emptied together), Final Deliverables into
 // "/Projects - FinalCuts/<label>/<project>" (the record label, picked from that folder's own folders: deliveryLabels).
@@ -424,6 +426,157 @@ Deno.serve(async (req) => {
       if (!(await allowed(db, uid, body.scope, fileid, true))) return json({ error: 'You cannot delete this file.' }, 403)
       await pc('deletefile', { fileid })
       return json({ ok: true })
+    }
+
+    // Database > pCloud (Alex, 29 Oct: "a section where we see and manage the pCloud's files, all the final videos"):
+    // the whole pCloud through the TML HUB Library app (PCLOUD_FULL_TOKEN), for the permission "pCloud" (view to look
+    // and play, edit to upload, make folders, rename, move, share and put files in pCloud's trash; administrators also
+    // folders and the duplicates scan). Nothing is deleted for good: pCloud keeps its trash for a while.
+    if (action.startsWith('files')) {
+      if (!FULL) return json({ ok: true, ready: false })
+      const { data: perm } = await db.rpc('my_perm', { p_module: 'pcloud' })
+      const { data: adm } = await db.rpc('is_admin')
+      if (perm !== 'view' && perm !== 'edit') return json({ error: 'You do not have the pCloud section.' }, 403)
+      const edit = perm === 'edit'
+      const P = (method: string, params: Record<string, any> = {}, b?: BodyInit) => pc(method, params, b, FULL)
+      // a path in the pCloud: from its root, no climbing up
+      const clean = (x: any) => {
+        const parts = String(x || '').split('/').map((t) => t.trim()).filter(Boolean)
+        if (parts.some((t) => t === '..' || t === '.')) return ''
+        return '/' + parts.join('/')
+      }
+      // the folders the hub itself writes into stay where they are
+      const KEPT = new Set([ROOT.toLowerCase(), ROUGH.toLowerCase(), FINAL.toLowerCase(), '/'])
+      const kept = (path: string) => KEPT.has(path.toLowerCase())
+      const item = (m: any, base: string) => {
+        const path = base === '/' ? `/${m.name}` : `${base}/${m.name}`
+        return m.isfolder
+          ? { folder: true, name: String(m.name), path, folderid: Number(m.folderid), modified: m.modified }
+          : { folder: false, name: String(m.name), path, fileid: Number(m.fileid), size: Number(m.size) || 0, modified: m.modified, created: m.created, type: String(m.contenttype || ''), category: Number(m.category) || 0, thumb: !!m.thumb, hash: String(m.hash || '') }
+      }
+      const needEdit = () => (edit ? null : json({ error: 'You can only look in the pCloud section.' }, 403))
+
+      if (action === 'filesList') {
+        const path = clean(body.path)
+        if (!path) return json({ error: 'No such folder.' }, 400)
+        const r = await P('listfolder', path === '/' ? { folderid: 0 } : { path })
+        const items = (r.metadata?.contents || []).map((m: any) => item(m, path))
+        // small pictures of the videos and photos, in one call
+        const withThumb = items.filter((i: any) => !i.folder && i.thumb).slice(0, 150)
+        const thumbs: Record<string, string> = {}
+        if (withThumb.length) {
+          try {
+            const t = await P('getthumbslinks', { fileids: withThumb.map((i: any) => i.fileid).join(','), size: '320x180', crop: 0 })
+            for (const x of t.thumbs || []) if (x.result === 0 && x.path) thumbs[x.fileid] = `https://${(x.hosts || [HOST])[0]}${x.path}`
+          } catch { /* a list without pictures is still a list */ }
+        }
+        return json({ ok: true, ready: true, path, edit, admin: !!adm, items: items.map((i: any) => (thumbs[i.fileid] ? { ...i, thumbUrl: thumbs[i.fileid] } : i)) })
+      }
+      if (action === 'filesLink') {
+        const fileid = Number(body.fileid)
+        if (!fileid) return json({ error: 'No file.' }, 400)
+        const r = await P('getfilelink', { fileid, forcedownload: body.download ? 1 : 0 })
+        return json({ ok: true, url: `https://${(r.hosts || [HOST])[0]}${r.path}` })
+      }
+      if (action === 'filesShare') {
+        const no = needEdit(); if (no) return no
+        if (Number(body.fileid)) return json({ ok: true, url: (await P('getfilepublink', { fileid: Number(body.fileid) })).link })
+        if (Number(body.folderid)) return json({ ok: true, url: (await P('getfolderpublink', { folderid: Number(body.folderid) })).link })
+        return json({ error: 'Nothing to share.' }, 400)
+      }
+      if (action === 'filesMkdir') {
+        const no = needEdit(); if (no) return no
+        const path = clean(body.path)
+        if (!path) return json({ error: 'No such folder.' }, 400)
+        const r = await P('createfolderifnotexists', { path: (path === '/' ? '' : path) + '/' + segment(body.name) })
+        return json({ ok: true, folderid: Number(r.metadata?.folderid) })
+      }
+      if (action === 'filesRename' || action === 'filesMove') {
+        const no = needEdit(); if (no) return no
+        const fileid = Number(body.fileid), folderid = Number(body.folderid)
+        const from = clean(body.from)
+        if (folderid && kept(from)) return json({ error: 'The hub writes into this folder; it stays where it is, with its name.' }, 403)
+        const to: Record<string, any> = {}
+        if (action === 'filesRename') to.toname = segment(body.name).slice(0, 200)
+        else {
+          const dest = clean(body.to)
+          if (!dest) return json({ error: 'No such folder.' }, 400)
+          if (folderid && (dest + '/').toLowerCase().startsWith((from + '/').toLowerCase())) return json({ error: 'A folder cannot go inside itself.' }, 400)
+          to.topath = dest === '/' ? '/' : dest + '/'
+        }
+        if (fileid) await P('renamefile', { fileid, ...to })
+        else if (folderid) await P('renamefolder', { folderid, ...to })
+        else return json({ error: 'Nothing to change.' }, 400)
+        return json({ ok: true })
+      }
+      if (action === 'filesTrash') {
+        const no = needEdit(); if (no) return no
+        const fileid = Number(body.fileid), folderid = Number(body.folderid)
+        if (fileid) { await P('deletefile', { fileid }); return json({ ok: true }) }
+        if (folderid) {
+          if (!adm) return json({ error: 'Only an administrator puts a whole folder in the trash.' }, 403)
+          if (kept(clean(body.from))) return json({ error: 'The hub writes into this folder; it stays.' }, 403)
+          await P('deletefolderrecursive', { folderid })
+          return json({ ok: true })
+        }
+        return json({ error: 'Nothing to put in the trash.' }, 400)
+      }
+      // an upload into any folder: a session, the pieces in order, then saved there
+      if (action === 'filesUploadStart') {
+        const no = needEdit(); if (no) return no
+        const up = await P('upload_create', {})
+        return json({ ok: true, uploadid: up.uploadid })
+      }
+      if (action === 'filesChunk') {
+        const no = needEdit(); if (no) return no
+        const uploadid = Number(body.uploadid), offset = Number(body.offset)
+        if (!uploadid || !file || !(offset >= 0)) return json({ error: 'No piece to write.' }, 400)
+        const url = new URL(`https://${HOST}/upload_write`)
+        url.searchParams.set('access_token', FULL)
+        url.searchParams.set('uploadid', String(uploadid))
+        url.searchParams.set('uploadoffset', String(offset))
+        const res = await fetch(url, { method: 'PUT', body: await file.arrayBuffer() })
+        const out = await res.json().catch(() => ({ result: -1, error: `pCloud answered ${res.status}` }))
+        if (out.result !== 0) return json({ error: out.error ? `pCloud: ${out.error}` : `pCloud error ${out.result}` }, 502)
+        return json({ ok: true })
+      }
+      if (action === 'filesUploadFinish') {
+        const no = needEdit(); if (no) return no
+        const path = clean(body.path)
+        if (!path) return json({ error: 'No such folder.' }, 400)
+        const folderid = path === '/' ? 0 : Number((await P('createfolderifnotexists', { path })).metadata?.folderid)
+        const saved = await P('upload_save', { uploadid: Number(body.uploadid), folderid, name: segment(body.name || 'file').slice(0, 200) || 'file', renameifexists: 1 })
+        const meta = saved.metadata?.[0] || saved.metadata
+        if (!meta?.fileid) return json({ error: 'pCloud did not keep the file.' }, 502)
+        return json({ ok: true, item: item(meta, path) })
+      }
+      // the same file in more than one place, by pCloud's own fingerprint of its content (hash) and size, from 1 MB up
+      if (action === 'filesDupes') {
+        if (!adm) return json({ error: 'Administrators only.' }, 403)
+        const path = clean(body.path || '/')
+        if (!path) return json({ error: 'No such folder.' }, 400)
+        const r = await P('listfolder', path === '/' ? { folderid: 0, recursive: 1 } : { path, recursive: 1 })
+        const by = new Map<string, any[]>()
+        let scanned = 0
+        const walk = (m: any, base: string) => {
+          for (const c of m.contents || []) {
+            if (c.isfolder) { walk(c, base === '/' ? `/${c.name}` : `${base}/${c.name}`); continue }
+            scanned++
+            const f = item(c, base)
+            if ((f.size || 0) < 1048576 || !f.hash) continue
+            const k = `${f.hash}|${f.size}`
+            const g = by.get(k)
+            if (g) g.push(f)
+            else by.set(k, [f])
+          }
+        }
+        walk(r.metadata, path)
+        const groups = [...by.values()].filter((g) => g.length > 1)
+          .map((g) => ({ size: g[0].size, waste: g[0].size * (g.length - 1), files: g.sort((a, b) => (Date.parse(a.created || a.modified) || 0) - (Date.parse(b.created || b.modified) || 0)) }))
+          .sort((a, b) => b.waste - a.waste)
+        return json({ ok: true, path, scanned, count: groups.length, waste: groups.reduce((n, g) => n + g.waste, 0), groups: groups.slice(0, 300) })
+      }
+      return json({ error: `Unknown action "${action}".` }, 400)
     }
 
     // deliveries: who may send cuts to clients (Share = edit), administrators always
