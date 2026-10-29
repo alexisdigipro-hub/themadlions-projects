@@ -9107,3 +9107,21 @@ html[data-theme] body .panel.music-panel { overflow: visible; position: relative
   html[data-theme] body .overview .stages .stage-pct { margin-left: 0; color: var(--ok); font-weight: 700; }
   html[data-theme] body .overview .stages li:not(.done):not(.part) .stage-pct:empty { display: none; }
 }
+/* under the stages: the project at a glance, as soft glass chips with the figure in bold, and the next stage as a link */
+.progress-facts { display: none; }
+@media (min-width: 821px) {
+  html[data-theme] body .overview .progress-shoot { display: none; }
+  html[data-theme] body .overview .progress-main { display: flex; flex-direction: column; align-self: stretch; }
+  html[data-theme] body .overview .progress-facts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: auto; padding-top: 16px; }
+  .progress-facts .pfact { display: inline-flex; align-items: baseline; gap: 6px; padding: 8px 14px; border-radius: 14px; font-size: 13px; color: var(--muted); background: color-mix(in srgb, var(--text) 4%, transparent); border: 1px solid color-mix(in srgb, var(--text) 8%, transparent); text-decoration: none; }
+  .progress-facts .pfact b { font-size: 15px; font-weight: 700; color: var(--text); }
+  .progress-facts .pfact.soon { border-color: color-mix(in srgb, var(--accent) 40%, transparent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+  .progress-facts .pfact.next { margin-left: auto; align-items: center; border-radius: 999px; padding: 8px 14px 8px 16px; color: var(--muted); transition: background .15s, border-color .15s; }
+  .progress-facts .pfact.next b { font-size: 14px; }
+  .progress-facts a.pfact.next:hover { background: color-mix(in srgb, var(--text) 9%, transparent); border-color: color-mix(in srgb, var(--text) 16%, transparent); }
+  .progress-facts .pfact.next > span { font-size: 18px; line-height: 1; color: var(--text); }
+  html[data-theme] body .overview .stages li:not(.done):not(.part) .stage-dot { border-color: color-mix(in srgb, var(--text) 35%, transparent); }
+}
+/* the line beside the percentage: its parts with a dot between them; the shoot comes last, so a computer (where it is
+   one of the facts under the stages) leaves it out with its dot */
+.progress-sub > span:not(:first-child)::before { content: ' · '; }

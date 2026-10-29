@@ -194,6 +194,20 @@ export default function Overview() {
   }
 
   const { pct, stages } = projectProgress(project, state.settings)
+  // the facts under the progress (Overview's top, a computer): the shoot and how far off it is, days, crew, cast
+  const facts = (() => {
+    const out = []
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(project.startDate || '') ? Math.round((Date.parse(project.startDate) - Date.parse(new Date().toISOString().slice(0, 10))) / 86400000) : null
+    if (d !== null) out.push({ k: 'shoot', v: fmtDate(project.startDate), l: d === 0 ? 'shoot today' : d === 1 ? 'shoot tomorrow' : d > 1 ? `shoot in ${d} days` : `shot ${-d} day${d === -1 ? '' : 's'} ago`, soon: d >= 0 && d <= 7 })
+    const n = (project.shootingDays || []).length
+    if (n) out.push({ k: 'days', v: n, l: n === 1 ? 'shoot day' : 'shoot days' })
+    const crew = (project.contacts || []).filter((c) => c.kind === 'crew' && c.dept !== 'Client').length
+    const cast = (project.contacts || []).filter((c) => c.kind === 'cast').length
+    if (crew) out.push({ k: 'crew', v: crew, l: 'crew' })
+    if (cast) out.push({ k: 'cast', v: cast, l: 'cast' })
+    return out
+  })()
+  const next = project.status === 'Delivered' ? null : stages.find((st) => st.done < 1) || null
   // Alex: an empty Tasks / Song / Links / Production notes panel is just a box saying nothing.
   // Each one keeps quiet until it has something in it, and its button lives in one row up here
   // instead. Pressing a button bumps a counter the panel watches, so it opens its own form.
@@ -234,7 +248,7 @@ export default function Overview() {
           <div className="progress-main">
             <div className="progress-top">
               <span>
-                <strong className="progress-pct">{pct}%<small> done</small></strong> <span className="muted small">{[project.status === 'Delivered' && 'Delivered', project.startDate && `shoot ${fmtDate(project.startDate)}`, project.frozen && '🔒 locked'].filter(Boolean).join(' · ')}</span>
+                <strong className="progress-pct">{pct}%<small> done</small></strong> <span className="muted small progress-sub">{[project.status === 'Delivered' && ['Delivered'], project.frozen && ['🔒 locked'], project.startDate && [`shoot ${fmtDate(project.startDate)}`, 'progress-shoot']].filter(Boolean).map(([x, c]) => <span key={x} className={c}>{x}</span>)}</span>
               </span>
               {/* the project's few actions, always in the same place (Alex, 28 Oct: "I was looking for Edit"):
                   + Add (everything that can be added, in groups), Edit, and ⋯ for Duplicate, Lock and the RoarMe group */}
@@ -311,6 +325,12 @@ export default function Overview() {
                 </li>
               ))}
             </ul>
+            {/* the project at a glance under the stages, on a computer (Alex, 29 Oct: "maybe add something"): the shoot
+                and how far off it is, its days, the people, and the next stage still to do as a link to it */}
+            <div className="progress-facts">
+              {facts.map((f) => <span key={f.k} className={`pfact${f.soon ? ' soon' : ''}`}><b>{f.v}</b>{f.l}</span>)}
+              {next && (next.manual ? <span className="pfact next">Next<b>{next.label}</b></span> : <Link className="pfact next" to={`../${next.to}`}>Next<b>{next.label}</b><span aria-hidden="true">›</span></Link>)}
+            </div>
           </div>
         </div>
       </section>
