@@ -2,6 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { can, canSeeEvent, eventTypesOf, today, useCurrentUser, useStore } from '../lib/store.jsx'
 import { addDays, fmtDate } from '../lib/dates.js'
+import { setSoftMode, softMode } from '../lib/skin.js'
+
+const SUN = <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" /></svg>
+const MOON = <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" /></svg>
+const AUTO = <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" /></svg>
 
 /* The Island of the Soft aurora looks (Alex, 29 Oct: "the Dynamic Island pattern"): a black pill at the top centre of
    the screen with the next thing in the calendar and the time; a hover or a tap grows it into a card with the next
@@ -12,6 +17,9 @@ export default function Island() {
   const { pathname } = useLocation()
   const [now, setNow] = useState(() => new Date())
   const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState(softMode)
+  const dark = document.documentElement.dataset.skin === 'soft'
+  const pick = (m) => { setSoftMode(m); setMode(m) }
   const box = useRef(null)
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 20000); return () => clearInterval(t) }, [])
   useEffect(() => { setOpen(false) }, [pathname])
@@ -54,6 +62,12 @@ export default function Island() {
       </button>
       <div className="island-card" role="dialog" aria-label="What is next" aria-hidden={!open}>
         <div className="island-head"><b>{hm}</b><span>{fmtDate(day, { weekday: 'long', day: 'numeric', month: 'long' })}</span></div>
+        {/* dark mode, this person's own (Alex, 29 Oct) */}
+        <div className="island-mode" role="group" aria-label="Dark mode">
+          {[['light', 'Light', SUN], ['dark', 'Dark', MOON], ['auto', 'Auto', AUTO]].map(([m, l, ico]) => (
+            <button key={m} type="button" className={(mode || (dark ? 'dark' : 'light')) === m ? 'on' : ''} onClick={() => pick(m)} tabIndex={open ? 0 : -1} aria-pressed={(mode || (dark ? 'dark' : 'light')) === m}>{ico}<span>{l}</span></button>
+          ))}
+        </div>
         <div className="island-list">
           {next.length ? next.map((e) => (
             <Link key={e.id} to="/calendar" className="island-row" style={{ '--c': types[e.type]?.color }} tabIndex={open ? 0 : -1}>
