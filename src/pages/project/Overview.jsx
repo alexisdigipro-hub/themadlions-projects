@@ -234,7 +234,7 @@ export default function Overview() {
           <div className="progress-main">
             <div className="progress-top">
               <span>
-                <strong>{pct}% done</strong> <span className="muted small">{[project.status === 'Delivered' && 'Delivered', project.startDate && `shoot ${fmtDate(project.startDate)}`, project.frozen && '🔒 locked'].filter(Boolean).join(' · ')}</span>
+                <strong className="progress-pct">{pct}%<small> done</small></strong> <span className="muted small">{[project.status === 'Delivered' && 'Delivered', project.startDate && `shoot ${fmtDate(project.startDate)}`, project.frozen && '🔒 locked'].filter(Boolean).join(' · ')}</span>
               </span>
               {/* the project's few actions, always in the same place (Alex, 28 Oct: "I was looking for Edit"):
                   + Add (everything that can be added, in groups), Edit, and ⋯ for Duplicate, Lock and the RoarMe group */}
@@ -283,6 +283,15 @@ export default function Overview() {
               </span>
             </div>
             <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
+            {/* on a computer the bar is made of the stages (Alex, 29 Oct: "this bar could be more refined and beautiful"):
+                one segment each, as long as its weight, lit as far as it is done, in the order of the chips under it */}
+            <div className="progress-segs" aria-hidden="true">
+              {stages.map((st) => (
+                <span key={st.key} className={`pseg${st.done >= 1 ? ' done' : st.done > 0 ? ' part' : ''}`} style={{ flexGrow: st.weight || 1 }} title={`${st.label}: ${st.done >= 1 ? 'done' : `${Math.round(st.done * 100)}%`}`}>
+                  <i style={{ width: `${Math.round(Math.min(1, st.done) * 100)}%` }} />
+                </span>
+              ))}
+            </div>
             <ul className="stages">
               {stages.map((st) => (
                 <li key={st.key} className={st.done >= 1 ? 'done' : st.done > 0 ? 'part' : ''}>

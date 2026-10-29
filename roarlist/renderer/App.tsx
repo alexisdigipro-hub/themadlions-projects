@@ -11,7 +11,7 @@ import { Board } from './components/Board'
 import { Icon } from './components/Icon'
 import { Img } from './components/Img'
 import { SettingsSheet } from './components/SettingsSheet'
-import { canEdit, hub, loadHub, projectName, ready, scope, type HubProject } from './hub'
+import { canEdit, hub, inOffice, loadHub, projectName, ready, scope, type HubProject } from './hub'
 import * as S from './settings'
 import { Lens } from './ui'
 import { ShotList } from './components/ShotList'
@@ -280,6 +280,21 @@ export default function App() {
   useEffect(() => { localStorage.setItem('view', view) }, [view])
   // RoarMe's opening: the side slides in and the page rises, only the first moment
   useEffect(() => { const id = setTimeout(() => setIntro(false), 1400); return () => clearTimeout(id) }, [])
+  // in the hub's Office the search and New list are on its tabs row: tell it what to show ('roarlist:home'), take what is
+  // typed or pressed there ('roarlist:do'), as Roardino does in Share
+  useEffect(() => {
+    if (inOffice) try { parent.postMessage({ type: 'roarlist:home', canEdit: canEdit(), search: query }, location.origin) } catch { /* not framed */ }
+  }, [query, lists])
+  useEffect(() => {
+    if (!inOffice) return undefined
+    const on = (e: MessageEvent) => {
+      if (e.origin !== location.origin || e.data?.type !== 'roarlist:do') return
+      if (typeof e.data.search === 'string') setQuery(e.data.search)
+      if (e.data.create && canEdit()) create()
+    }
+    window.addEventListener('message', on)
+    return () => window.removeEventListener('message', on)
+  }, [create])
 
   // the side panel's edge drags its width (370-720 in RoarMe; 220-480 here), a double click puts it back
   const grip = (e: React.PointerEvent) => {
