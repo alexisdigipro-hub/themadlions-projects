@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button, Modal, useToast } from '../../components/ui.jsx'
 import { ProjectForm } from '../Dashboard.jsx'
@@ -213,6 +213,28 @@ export default function Overview() {
   // instead. Pressing a button bumps a counter the panel watches, so it opens its own form.
   const [pillSlot, setPillSlot] = useState(null) // where the Project Database puts its add pills
   const [roarmeOpen, setRoarmeOpen] = useState(false)
+  // the progress stays at the top while the page scrolls under it (Alex, 29 Oct), on a computer: once its place has
+  // scrolled away it folds to the percentage, the bar, the stages and the buttons (.stuck)
+  const stickMark = useRef(null)
+  const stickPanel = useRef(null)
+  const fullH = useRef(0)
+  const [stuck, setStuck] = useState(false)
+  useEffect(() => {
+    const el = stickMark.current
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined
+    const io = new IntersectionObserver(([e]) => {
+      const now = !e.isIntersecting && e.boundingClientRect.top < 0
+      if (now && stickPanel.current && !stickPanel.current.classList.contains('stuck')) fullH.current = stickPanel.current.offsetHeight
+      setStuck(now)
+    }, { threshold: 0 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  // folded, it keeps its full height's place in the page, so what is under it does not jump up
+  useLayoutEffect(() => {
+    const el = stickPanel.current
+    if (el) el.style.marginBottom = stuck ? `${Math.max(0, fullH.current - el.offsetHeight)}px` : ''
+  }, [stuck])
   const [menu, setMenu] = useState('') // 'add' or 'more': the two small menus of the project's top row (Alex, 28 Oct)
   // a choice in + Add closes it; a DOM listener, because the Project Database's pills come in through a portal
   useEffect(() => {
@@ -239,7 +261,8 @@ export default function Overview() {
 
   return (
     <div className="overview">
-      <section className="panel progress">
+      <span ref={stickMark} className="progress-mark" aria-hidden="true" />
+      <section ref={stickPanel} className={`panel progress${stuck ? ' stuck' : ''}`}>
         <div className="progress-head">
           <div className="progress-cover">
             {/* Change / Adjust under the picture went (Alex, 11 Oct): the cover is changed in Edit details */}
