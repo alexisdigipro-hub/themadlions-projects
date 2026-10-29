@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Button, Modal, useToast } from '../../components/ui.jsx'
 import { ProjectForm } from '../Dashboard.jsx'
 import { useProject } from '../Project.jsx'
@@ -96,7 +96,7 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
   }
 
   return (
-    <section className="panel song-card">
+    <section className="panel song-card" data-stage="song">
       <div className="panel-head">
         <h2>Song</h2>
         {editable && (
@@ -208,6 +208,24 @@ export default function Overview() {
     return out
   })()
   const next = project.status === 'Delivered' ? null : stages.find((st) => st.done < 1) || null
+  /* a stage chip takes you to its place (Alex, 29 Oct: they all threw him to Home, the old tabs being gone): Budget and
+     Schedule are tabs of the project; the rest are boxes on this page (data-stage), scrolled to under the progress;
+     a stage whose box is not there yet (nothing added) does nothing */
+  const STAGE_BOXES = { doc: ['song', 'script'], brief: ['script'], breakdown: ['script'], cast: ['cast'], crew: ['crew', 'cast'], locations: ['locations'], venue: ['locations'], schedule: ['ordino'] }
+  const goStage = (st) => {
+    const to = (st.to || '').split('?')[0]
+    if (to === 'budget' || to === 'schedule') return navigate(`/p/${project.id}/${to}`)
+    for (const k of STAGE_BOXES[st.key] || []) {
+      let el = document.querySelector(`.overview [data-stage="${k}"]`)
+      if (el && el.style.display === 'contents') el = el.firstElementChild
+      if (!el) continue
+      const bar = document.querySelector('.overview .panel.progress')
+      const room = bar && getComputedStyle(bar).position === 'sticky' ? 150 : 16
+      window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - room, behavior: 'smooth' })
+      el.classList.remove('stage-flash'); void el.offsetWidth; el.classList.add('stage-flash')
+      return
+    }
+  }
   // Alex: an empty Tasks / Song / Links / Production notes panel is just a box saying nothing.
   // Each one keeps quiet until it has something in it, and its button lives in one row up here
   // instead. Pressing a button bumps a counter the panel watches, so it opens its own form.
@@ -220,15 +238,21 @@ export default function Overview() {
   const fullH = useRef(0)
   const [stuck, setStuck] = useState(false)
   useEffect(() => {
-    const el = stickMark.current
-    if (!el || typeof IntersectionObserver === 'undefined') return undefined
-    const io = new IntersectionObserver(([e]) => {
-      const now = !e.isIntersecting && e.boundingClientRect.top < 0
-      if (now && stickPanel.current && !stickPanel.current.classList.contains('stuck')) fullH.current = stickPanel.current.offsetHeight
+    // read on every scroll (of the window or any box), once a frame: steadier than an observer in Safari
+    let raf = 0
+    const look = () => {
+      raf = 0
+      const el = stickMark.current, panel = stickPanel.current
+      if (!el || !panel) return
+      const now = el.getBoundingClientRect().top < -2
+      if (now && !panel.classList.contains('stuck')) fullH.current = panel.offsetHeight
       setStuck(now)
-    }, { threshold: 0 })
-    io.observe(el)
-    return () => io.disconnect()
+    }
+    const on = () => { if (!raf) raf = requestAnimationFrame(look) }
+    window.addEventListener('scroll', on, { passive: true, capture: true })
+    window.addEventListener('resize', on)
+    look()
+    return () => { window.removeEventListener('scroll', on, { capture: true }); window.removeEventListener('resize', on); if (raf) cancelAnimationFrame(raf) }
   }, [])
   // folded, it keeps its full height's place in the page, so what is under it does not jump up
   useLayoutEffect(() => {
@@ -339,11 +363,11 @@ export default function Overview() {
                       <span className="stage-pct muted small">{st.done >= 1 ? '✓' : 'tap when done'}</span>
                     </button>
                   ) : (
-                    <Link to={`../${st.to}`}>
+                    <button type="button" className="stage-manual stage-go" onClick={() => goStage(st)}>
                       <span className="stage-dot" />
                       <span className="stage-label">{st.label}</span>
                       <span className="stage-pct muted small">{st.done >= 1 ? '✓' : st.done > 0 ? `${Math.round(st.done * 100)}%` : ''}</span>
-                    </Link>
+                    </button>
                   )}
                 </li>
               ))}
@@ -352,7 +376,7 @@ export default function Overview() {
                 and how far off it is, its days, the people, and the next stage still to do as a link to it */}
             <div className="progress-facts">
               {facts.map((f) => <span key={f.k} className={`pfact${f.soon ? ' soon' : ''}`}><b>{f.v}</b>{f.l}</span>)}
-              {next && (next.manual ? <span className="pfact next">Next<b>{next.label}</b></span> : <Link className="pfact next" to={`../${next.to}`}>Next<b>{next.label}</b><span aria-hidden="true">›</span></Link>)}
+              {next && (next.manual ? <span className="pfact next">Next<b>{next.label}</b></span> : <button type="button" className="pfact next" onClick={() => goStage(next)}>Next<b>{next.label}</b><span aria-hidden="true">›</span></button>)}
             </div>
           </div>
         </div>
@@ -362,14 +386,14 @@ export default function Overview() {
       {/* one song box (Alex, 27 Oct: "the audio is there twice"): with the Script section on and a song uploaded it is the
           full song map (waveform, sections, lyrics); otherwise the simple player, whose Upload song is a pill above */}
       {isMusicVideo && can(user, 'music') && (sections.includes('script') && hasSong
-        ? <section className="panel music-panel"><Music /></section>
+        ? <section className="panel music-panel" data-stage="song"><Music /></section>
         : <SongPlayer project={project} edit={edit} editable={canEdit('music')} hideEmpty startSignal={start.song} />)}
 
       {/* The ordino as one button that looks like the song box above it, for everyone on the project,
           administrators too (Alex, 10 Oct); it opens the finished ordino as the crew get it on a phone.
           Alex's on-set picture (public/ordino-set.webp) shows faintly across it */}
       {ordinoDays.length > 0 && (
-        <button type="button" className="panel ordino-btn" style={{ '--ordino-bg': `url("${ORDINO_BG}")` }} onClick={() => setOrdinoOpen(true)}>
+        <button type="button" className="panel ordino-btn" data-stage="ordino" style={{ '--ordino-bg': `url("${ORDINO_BG}")` }} onClick={() => setOrdinoOpen(true)}>
           <span className="ordino-btn-text">
             <strong>Ordino</strong>
             <span>{[nextOrdino.date && new Date(nextOrdino.date + 'T00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }), nextOrdino.callTime && `call ${nextOrdino.callTime}`, ordinoDays.length > 1 && `${ordinoDays.length} days`].filter(Boolean).join(' · ')}</span>
@@ -406,7 +430,7 @@ export default function Overview() {
       {/* Project Database and Script & Breakdown, once tabs, are Overview's own sections now (Alex, 27 Oct); a
           project can still switch either off in Edit details > Tabs */}
       {sections.includes('people') && <People onOverview pillSlot={pillSlot} />}
-      {sections.includes('script') && <Script hideEmpty uploadSignal={start.script} pasteSignal={start.paste} />}
+      {sections.includes('script') && <div data-stage="script" style={{ display: 'contents' }}><Script hideEmpty uploadSignal={start.script} pasteSignal={start.paste} /></div>}
 
       <Modal
         open={!!draft}
