@@ -224,3 +224,35 @@ export function clearOauth() {
 // or as index.html): pCloud refuses anything that is not exactly what its app settings hold.
 export const redirectUri = () => window.location.origin + window.location.pathname.replace(/index\.html$/, '').replace(/\/?$/, '/')
 export const authorizeUrl = (clientId) => `https://my.pcloud.com/oauth2/authorize?client_id=${encodeURIComponent(clientId)}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri())}`
+
+/* Database > pCloud (Alex, 29 Oct): the whole pCloud through the function's filesX actions (the TML HUB Library app's
+   token stays in the function). ready false until it has that token. */
+export const pcloudFiles = {
+  list: (path) => call('filesList', { path }),
+  link: (fileid, download = false) => call('filesLink', { fileid, download }).then((r) => r.url),
+  share: (it) => call('filesShare', it.folder ? { folderid: it.folderid } : { fileid: it.fileid }).then((r) => r.url),
+  mkdir: (path, name) => call('filesMkdir', { path, name }),
+  rename: (it, name) => call('filesRename', { ...(it.folder ? { folderid: it.folderid } : { fileid: it.fileid }), from: it.path, name }),
+  move: (it, to) => call('filesMove', { ...(it.folder ? { folderid: it.folderid } : { fileid: it.fileid }), from: it.path, to }),
+  trash: (it) => call('filesTrash', { ...(it.folder ? { folderid: it.folderid } : { fileid: it.fileid }), from: it.path }),
+  dupes: (path = '/') => call('filesDupes', { path }),
+  /* a file into a folder, in 8 MB pieces whatever its size; onProgress gets 0..1 */
+  async upload(path, file, onProgress) {
+    const { uploadid } = await call('filesUploadStart', {})
+    for (let offset = 0; offset < file.size || offset === 0; offset += PIECE) {
+      const fd = new FormData()
+      fd.append('file', file.slice(offset, offset + PIECE), 'piece')
+      fd.append('uploadid', String(uploadid))
+      fd.append('offset', String(offset))
+      for (let t = 1; ; t++) {
+        try { await call('filesChunk', fd); break } catch (e) {
+          if (t >= 5 || /pCloud section|signed in/i.test(e.message || '')) throw e
+          await new Promise((ok) => setTimeout(ok, 700 * t))
+        }
+      }
+      onProgress?.(Math.min(1, (offset + PIECE) / (file.size || 1)))
+      if (!file.size) break
+    }
+    return call('filesUploadFinish', { path, uploadid, name: file.name })
+  },
+}

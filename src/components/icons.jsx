@@ -53,6 +53,7 @@ const CLASSIC = {
   notes: () => (<svg {...base}><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>),
   logos: () => (<svg {...base}><circle cx="8" cy="8" r="4" /><path d="M14 4h6v6h-6z" /><path d="M8 14l4.5 7h-9z" /><circle cx="17" cy="17" r="3.5" /></svg>),
   deck: () => (<svg {...base}><rect x="3" y="4" width="18" height="12" rx="1.5" /><path d="M12 16v4M8 20h8M7 8h5M7 11h3M14 8h3v4h-3z" /></svg>),
+  cloud: () => (<svg {...base}><path d="M7 18.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.6a4.2 4.2 0 0 1-.7 8.9z" /></svg>),
 }
 
 /* Rounded: each icon drawn again, rounder and simpler. className "duo" marks the shape Duotone tints. */
@@ -86,6 +87,7 @@ const ROUNDED = {
   notes: () => (<svg {...soft}><path className="duo" d="M15.5 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.5z" /><path d="M15 3v4a2 2 0 0 0 2 2h4M7 13h7M7 17h4" /></svg>),
   logos: () => (<svg {...soft}><circle className="duo" cx="7.5" cy="7.5" r="4.5" /><rect x="13.5" y="3" width="7.5" height="7.5" rx="2" /><path d="M7.5 13.5 12 21H3z" /><circle className="duo" cx="17.25" cy="17.25" r="3.75" /></svg>),
   deck: () => (<svg {...soft}><path d="M2 3h20" /><path className="duo" d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3" /><path d="m7 21 5-5 5 5" /></svg>),
+  cloud: () => (<svg {...soft}><path className="duo" d="M7 18.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.6a4.2 4.2 0 0 1-.7 8.9z" /></svg>),
 }
 
 /* The icon looks in Settings > Display (Alex, 27 Oct: "these packs and Rounded, delete the rest"): Rounded, and the

@@ -10,6 +10,7 @@ import EquipmentAll from './EquipmentAll.jsx'
 import Drives from './Drives.jsx'
 import IdSheets from './IdSheets.jsx'
 import Logos from './Logos.jsx'
+import PcloudFiles from './PcloudFiles.jsx'
 import AddressBook from './AddressBook.jsx'
 import { useArrowTabs } from '../lib/arrowTabs.js'
 
@@ -28,6 +29,8 @@ const TABS = [
   { key: 'ids', label: 'ID sheets', short: 'IDs', icon: 'idcard', perm: 'idsheets' },
   // clients' and brands' logos, a folder a brand, the files in pCloud (Alex, 28 Oct)
   { key: 'logos', label: 'Logos', icon: 'logos', perm: 'logos' },
+  // the whole pCloud: the final videos and everything else, to see and to tidy (Alex, 29 Oct)
+  { key: 'pcloud', label: 'pCloud', icon: 'cloud', perm: 'pcloud' },
 ]
 
 export default function Database() {
@@ -67,6 +70,7 @@ export default function Database() {
           {tab === 'equipment' && <EquipmentAll slot={mobile ? null : slot} />}
           {tab === 'ids' && <IdSheets slot={mobile ? null : slot} />}
           {tab === 'logos' && <Logos slot={mobile ? null : slot} />}
+          {tab === 'pcloud' && <PcloudFiles slot={mobile ? null : slot} />}
           {tab === 'contacts' && <AddressBook slot={mobile ? null : slot} />}
         </div>
       </div>
