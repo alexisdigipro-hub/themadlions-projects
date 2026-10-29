@@ -118,7 +118,10 @@ export default function PcloudFiles({ slot }) {
     setOpen({ item: it, url: '' })
     try {
       const r = kind === 'video' ? await pcloudFiles.watch(it.fileid) : { url: await pcloudFiles.link(it.fileid) }
-      setOpen((o) => (o?.item === it ? { ...o, url: r.url || 'none', web: !!r.web, failed: !r.url } : o))
+      // a video tries what a browser plays best first: an mp4 / m4v / webm as it is, anything else (a mov master) the
+      // 720p web copy; when that does not play, the other one
+      const tries = kind === 'video' ? (/\.(mp4|m4v|webm)$/i.test(it.name) ? [r.url, r.web] : [r.web, r.url]).filter(Boolean) : [r.url]
+      setOpen((o) => (o?.item === it ? { ...o, url: tries[0] || 'none', tries, webUrl: r.web, failed: !tries[0] } : o))
     } catch (e) { toast(e.message, 'error'); setOpen(null) }
   }
   const download = async (it) => {
@@ -343,9 +346,13 @@ export default function PcloudFiles({ slot }) {
         {open && (open.none ? <Empty title="No preview for this kind of file">Download it to open it on this computer.</Empty>
           : !open.url ? <p className="muted">Loading…</p>
           : kindOf(open.item) === 'video' ? (open.failed
-            ? <Empty title="It does not play in the browser">pCloud has no web copy of this video yet (it makes one for most videos; a very big master can take a while). Download it to watch the original.</Empty>
-            : <><video className="pcf-media" src={open.url} controls autoPlay playsInline onError={() => setOpen((o) => (o ? { ...o, failed: true } : o))} />
-              {open.web && <p className="muted small">A lighter copy to watch here (720p). Download gives the original.</p>}</>)
+            ? <Empty title="It does not play in the browser">Neither the original nor pCloud's lighter web copy plays here (pCloud makes the copy for most videos; a very big master can take a while). Download it to watch it on this computer.</Empty>
+            : <><video className="pcf-media" src={open.url} controls autoPlay playsInline key={open.url} onError={() => setOpen((o) => {
+                if (!o) return o
+                const next = (o.tries || [])[(o.tries || []).indexOf(o.url) + 1]
+                return next ? { ...o, url: next } : { ...o, failed: true }
+              })} />
+              {open.url === open.webUrl && <p className="muted small">A lighter copy to watch here (720p). Download gives the original.</p>}</>)
           : kindOf(open.item) === 'audio' ? <audio className="pcf-audio" src={open.url} controls autoPlay />
           : <img className="pcf-media" src={open.url} alt={open.item.name} />)}
       </Modal>

@@ -235,7 +235,7 @@ export const pcloudFiles = {
   list: (path, folderid) => fcall('filesList', { path, ...(folderid ? { folderid } : {}) }),
   /* a file to show in the page (a photo, a song) */
   link: (fileid) => fcall('filesLink', { fileid }).then((r) => r.url),
-  /* a video to watch in the page: pCloud's web copy (H.264, 720p) when there is one */
+  /* a video to watch in the page: { url: the original, web: pCloud's web copy (H.264, 720p) } */
   watch: (fileid) => fcall('filesLink', { fileid, preview: 'video' }),
   /* to download: { url, page } (page: pCloud's own download page, for a big file) */
   download: (it) => fcall('filesLink', { fileid: it.fileid, download: true, size: it.size, name: it.name }),

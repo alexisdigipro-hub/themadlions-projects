@@ -529,7 +529,9 @@ Deno.serve(async (req) => {
         // minutes); everything else through a signed address of this function
         if (body.download && Number(body.size) > 400e6) return json({ ok: true, url: (await P('getfilepublink', { fileid })).link, page: true })
         const kind = body.download ? 'dl' : body.preview === 'video' ? 'video' : 'file'
-        return json({ ok: true, url: await signed(kind, fileid, String(body.name || '')), web: kind === 'video' })
+        // a video: the original (most mp4s play as they are) and pCloud's 720p web copy, the page tries one then the other
+        if (kind === 'video') return json({ ok: true, url: await signed('file', fileid), web: await signed('video', fileid) })
+        return json({ ok: true, url: await signed(kind, fileid, String(body.name || '')) })
       }
       if (action === 'filesShare') {
         const no = needEdit(); if (no) return no
