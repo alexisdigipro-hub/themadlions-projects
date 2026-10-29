@@ -9448,64 +9448,65 @@ html[data-theme] body .panel.music-panel { overflow: visible; position: relative
    pressed in instead (Home's projects stay square, one size: Alex did not want bento sizes there); the Island, a
    black pill at the top centre that grows into a card (components/Island.jsx), and the toasts drop out of it. */
 html[data-skin='soft'][data-theme][data-accent] {
-  --bg: #1b1f2b; --panel: #222736; --raised: #272d3e; --line: #343b50; --line-soft: #2b3244;
+  --bg: #1c1e25; --panel: #23262e; --raised: #292c35; --line: #363a45; --line-soft: #2d3039;
   --text: #eef1f8; --muted: rgba(214, 222, 240, .62); --accent: #8f9bff; --accent-ink: #0c1030;
-  --sidebar-bg: rgba(34, 39, 54, .9); --photo-bg: #1d2130; --hover-tint: rgba(255, 255, 255, .045);
+  --sidebar-bg: rgba(35, 38, 46, .9); --photo-bg: #1e2027; --hover-tint: rgba(255, 255, 255, .045);
   --radius: 14px; --radius-lg: 24px;
   --skin-grad: linear-gradient(135deg, #6ee7d8 0%, #8f9bff 45%, #f08ad7 100%);
-  --skin-card: rgba(34, 39, 54, .74);
-  --neu: rgba(34, 39, 54, .74); --neu-solid: #222736;
+  --skin-card: rgba(35, 38, 46, .76);
+  --neu: rgba(35, 38, 46, .76); --neu-solid: #23262e;
   --neu-hi: rgba(255, 255, 255, .055); --neu-lo: rgba(0, 0, 0, .5);
   --neu-up: -6px -6px 16px var(--neu-hi), 10px 12px 26px var(--neu-lo), inset 1px 1px 0 rgba(255, 255, 255, .06);
   --neu-up-sm: -3px -3px 8px var(--neu-hi), 5px 6px 14px var(--neu-lo), inset 1px 1px 0 rgba(255, 255, 255, .06);
   --neu-in: inset 4px 4px 10px rgba(0, 0, 0, .45), inset -3px -3px 8px rgba(255, 255, 255, .045);
-  --gl-fill: var(--neu); --gl-fill-2: rgba(42, 48, 66, .8); --gl-edge: rgba(255, 255, 255, .045);
+  --gl-fill: var(--neu); --gl-fill-2: rgba(44, 47, 56, .82); --gl-edge: rgba(255, 255, 255, .045);
   --gl-shine: rgba(255, 255, 255, .06); --gl-shadow: -6px -6px 16px var(--neu-hi), 10px 12px 26px var(--neu-lo);
-  --gl-blur: blur(18px) saturate(140%); --gl-bar: rgba(30, 35, 49, .82); --gl-input: rgba(20, 24, 34, .55);
-  --gl-active: rgba(30, 35, 48, .9); --gl-glow: rgba(143, 155, 255, .35);
-  --aur-a: rgba(110, 231, 216, .30); --aur-b: rgba(143, 155, 255, .32); --aur-c: rgba(240, 138, 215, .26);
+  --gl-blur: blur(18px) saturate(140%); --gl-bar: rgba(31, 33, 40, .84); --gl-input: rgba(20, 22, 28, .55);
+  --gl-active: rgba(30, 32, 39, .9); --gl-glow: rgba(143, 155, 255, .3);
+  --aur-a: rgba(110, 190, 180, .22); --aur-b: rgba(135, 145, 210, .24); --aur-c: rgba(200, 135, 185, .18);
   --island: #05060a; --island-ink: #f4f6ff;
   --shadow-lg: 0 30px 80px rgba(0, 0, 0, .55);
 }
 html[data-skin='softlight'][data-theme][data-accent] {
-  --bg: #e6eaf2; --panel: #ebeef5; --raised: #e3e8f1; --line: #d2d9e6; --line-soft: #dde3ee;
-  --text: #1e2433; --muted: #66708a; --accent: #6b5cf0; --accent-ink: #ffffff;
-  --sidebar-bg: rgba(235, 238, 245, .92); --photo-bg: #dfe4ee; --hover-tint: rgba(40, 50, 90, .045);
+  /* a darker, greyer light (Alex, 29 Oct: "the light a darker colour, and all of it a little greyer") */
+  --bg: #cdd1d8; --panel: #d4d8de; --raised: #cbd0d7; --line: #b9bfc8; --line-soft: #c4c9d1;
+  --text: #1c2029; --muted: #5a616e; --accent: #5e56c9; --accent-ink: #ffffff;
+  --sidebar-bg: rgba(212, 216, 222, .92); --photo-bg: #c6cbd3; --hover-tint: rgba(30, 36, 50, .05);
   --radius: 14px; --radius-lg: 24px;
-  --skin-grad: linear-gradient(135deg, #38d6c4 0%, #6b5cf0 50%, #ec6fcf 100%);
-  --skin-card: rgba(235, 238, 245, .78);
-  --neu: rgba(235, 238, 245, .8); --neu-solid: #ebeef5;
-  --neu-hi: rgba(255, 255, 255, .95); --neu-lo: rgba(150, 165, 192, .5);
-  --neu-up: -8px -8px 18px var(--neu-hi), 10px 12px 26px var(--neu-lo), inset 1px 1px 0 rgba(255, 255, 255, .8);
-  --neu-up-sm: -4px -4px 10px var(--neu-hi), 5px 6px 14px var(--neu-lo), inset 1px 1px 0 rgba(255, 255, 255, .8);
-  --neu-in: inset 4px 4px 10px rgba(150, 165, 192, .5), inset -4px -4px 10px rgba(255, 255, 255, .9);
-  --gl-fill: var(--neu); --gl-fill-2: rgba(238, 241, 247, .9); --gl-edge: rgba(255, 255, 255, .6);
-  --gl-shine: rgba(255, 255, 255, .85); --gl-shadow: -8px -8px 18px var(--neu-hi), 10px 12px 26px var(--neu-lo);
-  --gl-blur: blur(18px) saturate(150%); --gl-bar: rgba(235, 238, 245, .85); --gl-input: rgba(226, 231, 240, .8);
-  --gl-active: rgba(228, 233, 242, .95); --gl-glow: rgba(107, 92, 240, .25);
-  --aur-a: rgba(56, 214, 196, .30); --aur-b: rgba(107, 92, 240, .24); --aur-c: rgba(236, 111, 207, .24);
+  --skin-grad: linear-gradient(135deg, #4fa9a0 0%, #5e56c9 50%, #b8679f 100%);
+  --skin-card: rgba(212, 216, 222, .8);
+  --neu: rgba(212, 216, 222, .82); --neu-solid: #d4d8de;
+  --neu-hi: rgba(240, 242, 246, .85); --neu-lo: rgba(120, 128, 142, .55);
+  --neu-up: -7px -7px 16px var(--neu-hi), 9px 11px 24px var(--neu-lo), inset 1px 1px 0 rgba(255, 255, 255, .55);
+  --neu-up-sm: -3px -3px 9px var(--neu-hi), 5px 6px 13px var(--neu-lo), inset 1px 1px 0 rgba(255, 255, 255, .55);
+  --neu-in: inset 4px 4px 10px rgba(120, 128, 142, .55), inset -4px -4px 10px rgba(240, 242, 246, .8);
+  --gl-fill: var(--neu); --gl-fill-2: rgba(216, 220, 226, .9); --gl-edge: rgba(240, 242, 246, .45);
+  --gl-shine: rgba(245, 246, 249, .6); --gl-shadow: -7px -7px 16px var(--neu-hi), 9px 11px 24px var(--neu-lo);
+  --gl-blur: blur(18px) saturate(120%); --gl-bar: rgba(208, 212, 219, .88); --gl-input: rgba(196, 201, 209, .75);
+  --gl-active: rgba(200, 205, 213, .95); --gl-glow: rgba(94, 86, 201, .22);
+  --aur-a: rgba(110, 170, 165, .26); --aur-b: rgba(120, 115, 190, .22); --aur-c: rgba(180, 130, 165, .20);
   --island: #0b0c12; --island-ink: #f4f6ff;
-  --shadow-lg: 0 30px 70px rgba(90, 105, 140, .3);
+  --shadow-lg: 0 30px 70px rgba(60, 66, 80, .3);
 }
 
 /* the backdrop: a mesh of colour on the page, two aurora lights drifting over it */
 html[data-skin='soft'][data-theme]:not([data-public='1']) {
   background:
-    radial-gradient(60% 55% at 12% 8%, rgba(72, 98, 190, .55) 0%, transparent 70%),
-    radial-gradient(50% 50% at 88% 14%, rgba(150, 70, 170, .42) 0%, transparent 70%),
-    radial-gradient(55% 60% at 80% 92%, rgba(20, 150, 150, .42) 0%, transparent 70%),
-    radial-gradient(45% 45% at 18% 88%, rgba(210, 90, 150, .28) 0%, transparent 70%),
-    linear-gradient(160deg, #161a26 0%, #1b1f2b 50%, #171b27 100%);
-  background-attachment: fixed; background-color: #171b27;
+    radial-gradient(60% 55% at 12% 8%, rgba(80, 96, 150, .45) 0%, transparent 70%),
+    radial-gradient(50% 50% at 88% 14%, rgba(125, 85, 140, .32) 0%, transparent 70%),
+    radial-gradient(55% 60% at 80% 92%, rgba(45, 125, 125, .32) 0%, transparent 70%),
+    radial-gradient(45% 45% at 18% 88%, rgba(165, 95, 130, .2) 0%, transparent 70%),
+    linear-gradient(160deg, #181a20 0%, #1c1e25 50%, #191b21 100%);
+  background-attachment: fixed; background-color: #191b21;
 }
 html[data-skin='softlight'][data-theme]:not([data-public='1']) {
   background:
-    radial-gradient(60% 55% at 10% 8%, rgba(160, 196, 255, .75) 0%, transparent 70%),
-    radial-gradient(50% 50% at 90% 12%, rgba(240, 190, 245, .7) 0%, transparent 70%),
-    radial-gradient(55% 60% at 82% 92%, rgba(160, 240, 228, .7) 0%, transparent 70%),
-    radial-gradient(45% 45% at 15% 90%, rgba(255, 214, 196, .6) 0%, transparent 70%),
-    linear-gradient(160deg, #e9edf5 0%, #e6eaf2 50%, #e8ebf4 100%);
-  background-attachment: fixed; background-color: #e6eaf2;
+    radial-gradient(60% 55% at 10% 8%, rgba(150, 168, 200, .55) 0%, transparent 70%),
+    radial-gradient(50% 50% at 90% 12%, rgba(185, 160, 190, .45) 0%, transparent 70%),
+    radial-gradient(55% 60% at 82% 92%, rgba(145, 185, 180, .5) 0%, transparent 70%),
+    radial-gradient(45% 45% at 15% 90%, rgba(195, 175, 165, .4) 0%, transparent 70%),
+    linear-gradient(160deg, #cfd3da 0%, #cbcfd6 50%, #c8ccd4 100%);
+  background-attachment: fixed; background-color: #cbcfd6;
 }
 html:is([data-skin='soft'], [data-skin='softlight'])[data-theme]:not([data-public='1']) body { background: transparent; }
 html:is([data-skin='soft'], [data-skin='softlight'])[data-theme]:not([data-public='1']) body::before,

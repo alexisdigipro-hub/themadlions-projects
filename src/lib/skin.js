@@ -26,7 +26,7 @@ export const SKIN_ICONS = { coral: 'rounded', glass: 'rounded', glassdark: 'roun
 export const isSkin = (v) => SKINS.some(([k]) => k === v)
 /* what every device starts on (main.jsx switches each device to it once) */
 export const DEFAULT_THEME = 'glassdark'
-const COLORS = { light: '#f3f4f7', dark: '#17181c', violet: '#0a0a0c', teal: '#1f2226', ember: '#0d0d0f', coral: '#fbf1ec', glass: '#3a0aa0', glassdark: '#0b1018', glasslight: '#eef1f8', roarlist: '#1c1f24', soft: '#1b1f2b', softlight: '#e6eaf2' }
+const COLORS = { light: '#f3f4f7', dark: '#17181c', violet: '#0a0a0c', teal: '#1f2226', ember: '#0d0d0f', coral: '#fbf1ec', glass: '#3a0aa0', glassdark: '#0b1018', glasslight: '#eef1f8', roarlist: '#1c1f24', soft: '#1c1e25', softlight: '#cbcfd6' }
 
 /* Soft aurora's dark mode, each person's own (Alex, 29 Oct): '' follows the team's choice, 'light' / 'dark' fix it,
    'auto' follows the device (light by day, dark at night, as the phone or computer is set). Kept in localStorage
