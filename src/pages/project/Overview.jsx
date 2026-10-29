@@ -11,6 +11,7 @@ import { analyze, fmtTime, fmtTimeMs, uploadTrack } from '../../lib/audio.js'
 import { useTrackSource } from '../../lib/trackSource.js'
 import { pcloudTarget } from '../../lib/pcloud.js'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
+import { useAudioChoice } from '../../components/AudioChoice.jsx'
 import { remote } from '../../lib/supabase.js'
 import ProjectRoarMe from '../../components/ProjectRoarMe.jsx'
 import Tasks, { tasksFor } from './Tasks.jsx'
@@ -64,19 +65,25 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
   const seek = (t) => { if (audioRef.current) { audioRef.current.currentTime = t; setTime(t) } }
   const toggle = () => { const a = audioRef.current; if (!a) return; a.paused ? play(a) : a.pause() }
 
+  const [askAudio, audioChoice] = useAudioChoice()
   const onFile = async (file) => {
     if (!file) return
     const original = file
     try {
+      // a WAV (or AIFF, FLAC): kept as it is or made an MP3 here, as the person chooses
       if (needsEncoding(file)) {
-        setBusy('Converting to MP3… 0%')
-        file = await toMp3(file, (pct) => setBusy(`Converting to MP3… ${Math.round(pct * 100)}%`))
+        const how = await askAudio(file)
+        if (!how) return
+        if (how === 'mp3') {
+          setBusy('Converting to MP3… 0%')
+          file = await toMp3(file, (pct) => setBusy(`Converting to MP3… ${Math.round(pct * 100)}%`))
+        }
       }
       setBusy('Analysing…')
       const { peaks, duration } = await analyze(file)
       const id = uid()
       setBusy('Uploading…')
-      const { path, ext, fileid, scope } = await uploadTrack({ projectId: project.id, id, file, pcloud: pcloudTarget(state, project.id, 'Music') })
+      const { path, ext, fileid, scope } = await uploadTrack({ projectId: project.id, id, file, pcloud: pcloudTarget(state, project.id, 'Music'), onProgress: (p) => setBusy(`Uploading… ${Math.round(p * 100)}%`) })
       setMusic((m) => {
         m.tracks.push({ id, name: file.name.replace(/\.[^.]+$/, ''), path, ext, ...(fileid ? { fileid, scope } : {}), duration, peaks, bytes: file.size, kind: m.tracks.length ? 'other' : 'master', addedAt: new Date().toISOString() })
         m.activeTrackId = id
@@ -92,7 +99,7 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
 
   // No song yet: the file input still has to exist for that button to reach.
   if (hideEmpty && !track) {
-    return editable ? <input ref={fileRef} type="file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac" hidden onChange={(e) => onFile(e.target.files?.[0])} /> : null
+    return editable ? <><input ref={fileRef} type="file" accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.flac" hidden onChange={(e) => onFile(e.target.files?.[0])} />{audioChoice}</> : null
   }
 
   return (
@@ -130,6 +137,7 @@ function SongPlayer({ project, edit, editable, hideEmpty = false, startSignal = 
           {err && <p className="small" style={{ color: 'var(--danger)', margin: 0 }}>{err}</p>}
         </div>
       )}
+      {audioChoice}
     </section>
   )
 }

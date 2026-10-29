@@ -16,7 +16,8 @@
 //                  not only this app's own folder. With it the deliveries go into Alex's own folders (below).
 //
 // Actions (POST, JSON or multipart): ping · upload · link · links · raw · delete · backup ·
-// deliveryStart · deliveryChunk · deliveryFinish · deliveryFolderLink · deliveryRemove · deliveryLabels. See src/lib/pcloud.js.
+// deliveryStart · deliveryChunk · deliveryFinish · deliveryFolderLink · deliveryRemove · deliveryLabels ·
+// uploadStart · uploadChunk · uploadFinish (a big file, e.g. a song kept as its WAV, 29 Oct). See src/lib/pcloud.js.
 // Where a delivery goes (Alex, 27 Oct): with PCLOUD_FULL_TOKEN, RoughCut and PreFinal Cut straight into
 // "/Projects - RoughCuts" (no folder of their own, so they can be emptied together), Final Deliverables into
 // "/Projects - FinalCuts/<label>/<project>" (the record label, picked from that folder's own folders: deliveryLabels).
@@ -126,6 +127,26 @@ const mentions = (data: any, fileid: number) => new RegExp(`"fileid":${fileid}(?
 async function inLibrary(db: any, fileid: number) {
   const { data } = await db.from('library').select('data').in('kind', ['contact', 'location'])
   return mentions(data, fileid)
+}
+
+/* Where an upload into the app's folders goes, after the same checks for upload, uploadStart and uploadFinish;
+   null when the person may not put a file there. */
+async function uploadPlace(db: any, uid: string, body: any): Promise<string | null> {
+  if (!(await allowed(db, uid, body.scope, undefined, false, true))) return null
+  // into a project: the project must be the person's to change, or they have Files = edit (security check, 27 Oct)
+  if (body.scope?.kind === 'project') {
+    const [{ data: perm }, { data: canEdit }] = await Promise.all([db.rpc('my_perm', { p_module: 'files' }), db.rpc('can_edit_project', { pid: body.scope.id })])
+    if (perm !== 'edit' && !canEdit) return null
+  }
+  // ID sheets only ever go under ROOT/ID sheets; the folders the server keeps (Backups, Deliveries, ID sheets, and
+  // Library for anything but the library) never take an upload from here, and two levels at most
+  const parts = (Array.isArray(body.folder) ? body.folder : []).slice(0, 2)
+  const top = segment(parts[0]).toLowerCase()
+  const reserved = ['backups', 'deliveries', 'id sheets', 'logos', ...(body.scope?.kind === 'library' ? [] : ['library'])]
+  const ownFolder = body.scope?.kind === 'ids' || body.scope?.kind === 'logos'
+  if (!ownFolder && reserved.includes(top)) return null
+  // logos in a folder a brand (Alex, 28 Oct: "they have different versions for different uses")
+  return ensureFolder(body.scope?.kind === 'ids' ? ['ID sheets', ...parts.slice(-1)] : body.scope?.kind === 'logos' ? ['Logos', ...parts.slice(-1)] : parts)
 }
 
 /* What the caller may do, asked of the database with the caller's own token, so the answer is
@@ -267,26 +288,47 @@ Deno.serve(async (req) => {
 
     if (action === 'upload') {
       if (!file) return json({ error: 'No file.' }, 400)
-      if (!(await allowed(db, uid, body.scope, undefined, false, true))) return json({ error: 'You cannot upload there.' }, 403)
-      // into a project: the project must be the person's to change, or they have Files = edit (security check, 27 Oct)
-      if (body.scope?.kind === 'project') {
-        const [{ data: perm }, { data: canEdit }] = await Promise.all([db.rpc('my_perm', { p_module: 'files' }), db.rpc('can_edit_project', { pid: body.scope.id })])
-        if (perm !== 'edit' && !canEdit) return json({ error: 'You cannot upload there.' }, 403)
-      }
-      // ID sheets only ever go under ROOT/ID sheets; the folders the server keeps (Backups, Deliveries, ID sheets, and
-      // Library for anything but the library) never take an upload from here, and two levels at most
-      const parts = (Array.isArray(body.folder) ? body.folder : []).slice(0, 2)
-      const top = segment(parts[0]).toLowerCase()
-      const reserved = ['backups', 'deliveries', 'id sheets', 'logos', ...(body.scope?.kind === 'library' ? [] : ['library'])]
-      const ownFolder = body.scope?.kind === 'ids' || body.scope?.kind === 'logos'
-      if (!ownFolder && reserved.includes(top)) return json({ error: 'You cannot upload there.' }, 403)
-      // logos in a folder a brand (Alex, 28 Oct: "they have different versions for different uses")
-      const path = await ensureFolder(body.scope?.kind === 'ids' ? ['ID sheets', ...parts.slice(-1)] : body.scope?.kind === 'logos' ? ['Logos', ...parts.slice(-1)] : parts)
+      const path = await uploadPlace(db, uid, body)
+      if (!path) return json({ error: 'You cannot upload there.' }, 403)
       const fd = new FormData()
       fd.append('file', file, file.name)
       const up = await pc('uploadfile', { path, filename: file.name, nopartial: 1, renameifexists: 1 }, fd)
       const meta = up.metadata?.[0]
       if (!meta?.fileid) return json({ error: 'pCloud did not return the file.' }, 502)
+      return json({ ok: true, fileid: meta.fileid, name: meta.name, size: meta.size, folder: path })
+    }
+
+    // A big file into the same places as upload (Alex, 29 Oct: a song kept as its WAV, not made an MP3): an upload
+    // session, the pieces through uploadChunk (8 MB each, in order), then uploadFinish saves it. Both ends check
+    // the place again, so a session cannot be saved anywhere upload itself would refuse.
+    if (action === 'uploadStart') {
+      const path = await uploadPlace(db, uid, body)
+      if (!path) return json({ error: 'You cannot upload there.' }, 403)
+      const up = await pc('upload_create', {})
+      if (!up.uploadid) return json({ error: 'pCloud did not open the upload.' }, 502)
+      return json({ ok: true, uploadid: up.uploadid, path })
+    }
+    // one piece of it, in order (deliveryChunk is for people who may send deliveries; this one is for any upload)
+    if (action === 'uploadChunk') {
+      const uploadid = Number(body.uploadid)
+      const offset = Number(body.offset)
+      if (!uploadid || !file || !(offset >= 0)) return json({ error: 'No piece to write.' }, 400)
+      const url = new URL(`https://${HOST}/upload_write`)
+      url.searchParams.set('access_token', TOKEN)
+      url.searchParams.set('uploadid', String(uploadid))
+      url.searchParams.set('uploadoffset', String(offset))
+      const res = await fetch(url, { method: 'PUT', body: await file.arrayBuffer() })
+      const out = await res.json().catch(() => ({ result: -1, error: `pCloud answered ${res.status}` }))
+      if (out.result !== 0) return json({ error: out.error ? `pCloud: ${out.error}` : `pCloud error ${out.result}`, code: out.result }, 502)
+      return json({ ok: true })
+    }
+    if (action === 'uploadFinish') {
+      const path = await uploadPlace(db, uid, body)
+      if (!path) return json({ error: 'You cannot upload there.' }, 403)
+      const folderid = Number((await pc('createfolderifnotexists', { path })).metadata?.folderid)
+      const saved = await pc('upload_save', { uploadid: Number(body.uploadid), folderid, name: segment(body.name || 'file') || 'file', renameifexists: 1 })
+      const meta = saved.metadata?.[0] || saved.metadata
+      if (!meta?.fileid) return json({ error: 'pCloud did not keep the file.' }, 502)
       return json({ ok: true, fileid: meta.fileid, name: meta.name, size: meta.size, folder: path })
     }
 
