@@ -3315,7 +3315,8 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09), inset 0 1px 0 rgba(255, 255, 255, .28);
     background: linear-gradient(140deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .04) 20%, transparent 40%);
   }
-  .project-grid .project-cover .project-cat, .project-grid .project-cover.has-img .project-cat { background: rgba(14, 17, 23, .42); -webkit-backdrop-filter: blur(12px) saturate(160%); backdrop-filter: blur(12px) saturate(160%); border: 1px solid rgba(255, 255, 255, .2); color: #fff; opacity: 1; }
+  .project-grid .project-cover .project-cat, .project-grid .project-cover.has-img .project-cat { background: rgba(14, 17, 23, .42); -webkit-backdrop-filter: blur(12px) saturate(160%); backdrop-filter: blur(12px) saturate(160%); border: 1px solid rgba(255, 255, 255, .2); color: #fff; opacity: 1; border-radius: 999px; padding: 1px 7px; }
+  .project-grid .project-cover:not(.has-img) .project-cat { position: absolute; left: 6px; bottom: 5px; }
   .project-grid .project-card .project-progress { height: 3px; background: rgba(255, 255, 255, .1); }
   .project-grid .project-card .project-progress span { border-radius: 0 999px 999px 0; background: linear-gradient(180deg, color-mix(in srgb, var(--pc) 55%, #fff), var(--pc) 70%); box-shadow: 0 0 10px color-mix(in srgb, var(--pc) 75%, transparent); }
   .project-grid .project-body { background: linear-gradient(180deg, rgba(255, 255, 255, .045), transparent 70%); }
