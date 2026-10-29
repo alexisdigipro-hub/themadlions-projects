@@ -41,7 +41,7 @@ export const MODULES = [
   { key: 'tasks', label: 'Tasks', group: 'Office' },
   { key: 'files', label: 'Documents', group: 'Office', hint: 'documents and spreadsheets' },
   { key: 'calendar', label: 'Calendar', group: 'Other pages' },
-  { key: 'share', label: 'Share', group: 'Other pages', hint: 'links to clients' },
+  { key: 'share', label: 'Outbox', group: 'Other pages', hint: 'links to clients (once called Share)' },
   // the Lab apps inside the hub, only for whom the administrator opens them (Alex, 27 Oct)
   { key: 'roardino', label: 'Roardino', group: 'Other pages', hint: 'the ordino maker: the side menu and its tab in Share; a project\'s own ordino on the Overview stays with Ordino' },
   { key: 'roarlist', label: 'RoarList', group: 'Other pages', hint: 'the shot list app, a tab of Office; a project\'s Shot list tab stays with Shot list' },

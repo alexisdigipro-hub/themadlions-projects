@@ -124,9 +124,6 @@ export default function Layout() {
     // Office, once the Organizer (Alex, 10 Oct; renamed 29 Oct): Tasks, Notes, RoarList and Documents as tabs of one
     // page, opening on Tasks (or on Notes for someone without Tasks); where Tasks was, so on a phone it is among the first five
     { to: can(user, 'tasks') ? '/tasks' : '/notes', label: 'Office', show: true, icon: 'tasks', also: ['/tasks', '/notes', '/office', '/roarlist'] },
-    // the team's chat is RoarMe (Alex, 20 Oct): Hub Chat is gone, RoarMe takes its place
-    // only on a computer (Alex, 29 Oct: "take RoarMe out of the mobile version"): not in the phone's bar
-    { to: '/roarme', label: 'RoarMe', show: remote, phone: false, icon: 'chat', also: ['/chat'] },
     // Roardino, the ordino maker, in the hub (Alex, 23 Oct): for whoever has the Ordino permission, in the side menu
     // and in a phone's bar, right after RoarMe
     // since 27 Oct a tab of Share (Alex); the side menu keeps it only for someone with the Ordino permission but not Share
@@ -135,7 +132,11 @@ export default function Layout() {
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     // Drives is a tab of the Database now (Alex, 10 Oct)
-    { to: '/share', label: 'Share', show: mayShare, icon: 'post', badge: newReplies, also: ['/roardino'] },
+    // Outbox, once Share (Alex, 29 Oct): what goes out to clients; the address stays /share
+    { to: '/share', label: 'Outbox', show: mayShare, icon: 'post', badge: newReplies, also: ['/roardino'] },
+    // the team's chat is RoarMe (Alex, 20 Oct): Hub Chat is gone, RoarMe takes its place; above Finance since 29 Oct
+    // only on a computer (Alex, 29 Oct: "take RoarMe out of the mobile version"): not in the phone's bar
+    { to: '/roarme', label: 'RoarMe', show: remote, phone: false, icon: 'chat', also: ['/chat'] },
     // Invoices is a tab of Finance again (Alex, 10 Oct), so /invoices lights Finance
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance', also: ['/invoices'] },
     // My profile is now the first tab of Settings, on every platform (Alex, 10 Oct)
