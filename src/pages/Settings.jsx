@@ -22,7 +22,7 @@ import { remote, supabase } from '../lib/supabase.js'
 import { testKey } from '../lib/ai.js'
 import { checkOpenAIKey } from '../lib/transcribe.js'
 import { buildICS, download } from '../lib/dates.js'
-import { DEFAULT_THEME, SKINS, applyThemeChoice, liveTheme } from '../lib/skin.js'
+import { DEFAULT_THEME, SKINS, applyThemeChoice, isSoft, liveTheme, setSoftMode, softMode } from '../lib/skin.js'
 import { localLook } from '../lib/teamLook.js'
 import { ICON_SETS, IconPreview, applyIconSet } from '../components/icons.jsx'
 import { Grip, moveItem, useDragSort } from '../components/DragSort.jsx'
@@ -46,6 +46,7 @@ export default function Settings() {
   // there too, and everyone's app takes it when it opens
   const keepLook = () => update((s) => { s.settings = { ...s.settings, look: localLook() }; return s })
   const pickFont = (id) => { setFont(applyFont(id)); keepLook() }
+  const [dark, setDark] = useState(softMode)
   const applyTheme = (v) => {
     setTheme(v); localStorage.setItem('tml_theme', v); applyThemeChoice(v)
     keepLook()
@@ -319,8 +320,8 @@ export default function Settings() {
             <>
           <Field label="Theme">
             <div className="segmented small wrap">
-              {SKINS.map(([v, l]) => (
-                <button key={v} className={liveTheme(theme) === v ? 'on' : ''} onClick={() => applyTheme(v)}>{l}</button>
+              {SKINS.filter((k) => !k[3]).map(([v, l]) => (
+                <button key={v} className={liveTheme(theme) === v || (v === 'soft' && theme === 'softlight') ? 'on' : ''} onClick={() => applyTheme(v)}>{l}</button>
               ))}
             </div>
           </Field>
@@ -351,6 +352,16 @@ export default function Settings() {
             </>
           ) : (
             <p className="muted small">The theme, colours, typeface and icons of the hub are set by the administrator for the whole team.</p>
+          )}
+          {/* Soft aurora's dark mode, each person's own (Alex, 29 Oct) */}
+          {isSoft(liveTheme(theme)) && (
+            <Field label="Dark mode" hint="Your own, on this device: Auto turns dark when your phone or computer does.">
+              <div className="segmented small">
+                {[['', "Team's"], ['light', 'Light'], ['dark', 'Dark'], ['auto', 'Auto']].map(([v, l]) => (
+                  <button key={v || 'team'} className={dark === v ? 'on' : ''} onClick={() => { setSoftMode(v); setDark(v) }}>{l}</button>
+                ))}
+              </div>
+            </Field>
           )}
           <Field label="Text size" hint={isAdmin ? "The look above is the whole team's. Text size is saved on this device only." : "Saved on this device only."}>
             <div className="segmented small">
