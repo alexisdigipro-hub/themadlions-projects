@@ -9130,8 +9130,9 @@ html[data-theme] body .panel.music-panel { overflow: visible; position: relative
 .progress-mark { display: block; height: 0; }
 @media (min-width: 821px) {
   html[data-theme] body .overview .progress-mark { margin-bottom: -20px; }
-  html[data-theme] body .overview .panel.progress { position: sticky; top: 10px; z-index: 30; transition: padding .2s ease; }
-  html[data-theme] body .overview .panel.progress.stuck { padding-top: 12px; padding-bottom: 12px; box-shadow: 0 18px 40px rgba(0, 0, 0, .4); }
+  html[data-theme] body .overview .panel.progress { position: sticky; top: 0; z-index: 30; }
+  /* folded, it hangs from the top of the window like a bar, so nothing shows above it */
+  html[data-theme] body .overview .panel.progress.stuck { padding-top: 12px; padding-bottom: 12px; border-top-color: transparent; border-top-left-radius: 0; border-top-right-radius: 0; box-shadow: 0 18px 40px rgba(0, 0, 0, .4); }
   html[data-theme] body .overview .panel.progress.stuck .progress-head { grid-template-columns: 1fr; }
   html[data-theme] body .overview .panel.progress.stuck :is(.progress-cover, .progress-facts) { display: none; }
   html[data-theme] body .overview .panel.progress.stuck .progress-pct { font-size: 22px; }
