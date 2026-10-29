@@ -125,7 +125,7 @@ export default function People({ onOverview = false, pillSlot = null }) {
     // cards and stay mounted either way, so that button has something to open.
     if (!list.length) return null
     return (
-      <section className="panel db-card">
+      <section className="panel db-card" data-stage={kind}>
         <div className="toolbar">
           <div className="toolbar-info">
             <strong>{label}</strong> <span className="muted">{list.length}</span>
@@ -225,7 +225,7 @@ export default function People({ onOverview = false, pillSlot = null }) {
         </div>
       )}
       {can(user, 'locations') && (project.locations.length > 0
-        ? <section className="panel db-card"><Locations hideEmpty startSignal={start.location} librarySignal={start.locationLib} /></section>
+        ? <section className="panel db-card" data-stage="locations"><Locations hideEmpty startSignal={start.location} librarySignal={start.locationLib} /></section>
         : <Locations hideEmpty startSignal={start.location} librarySignal={start.locationLib} />)}
       {can(user, 'gear') && ((project.gear || []).length > 0
         ? <section className="panel db-card"><Gear hideEmpty startSignal={start.gear} /></section>

@@ -9150,3 +9150,8 @@ html[data-theme] body .panel.music-panel { overflow: visible; position: relative
   html[data-theme] body .finance .fin-head.stuck { background: color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%); box-shadow: 0 16px 36px rgba(0, 0, 0, .3); }
 }
 @media (max-width: 1000px) { html[data-theme] body .finance .fin-head.with-hero .fin-hero { grid-template-columns: repeat(2, 1fr); } }
+/* a stage chip's box, reached from the progress: a brief glow so the eye finds it */
+@keyframes stage-flash { 0% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--ok) 70%, transparent), 0 0 30px color-mix(in srgb, var(--ok) 35%, transparent); } 100% { box-shadow: 0 0 0 2px transparent, 0 0 30px transparent; } }
+.stage-flash { animation: stage-flash 1.6s ease-out 1; }
+.progress-facts button.pfact { font: inherit; font-size: 13px; cursor: pointer; }
+.stages li.done .stage-go { color: var(--text); }
