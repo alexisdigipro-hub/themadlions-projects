@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Modal, useToast } from '../../components/ui.jsx'
 import { ProjectForm } from '../Dashboard.jsx'
@@ -220,7 +220,7 @@ export default function Overview() {
       if (el && el.style.display === 'contents') el = el.firstElementChild
       if (!el) continue
       const bar = document.querySelector('.overview .panel.progress')
-      const room = bar && getComputedStyle(bar).position === 'sticky' ? 150 : 16
+      const room = bar && getComputedStyle(bar).position === 'sticky' ? (parseFloat(getComputedStyle(bar).top) || 0) + bar.offsetHeight + 16 : 16
       window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - room, behavior: 'smooth' })
       el.classList.remove('stage-flash'); void el.offsetWidth; el.classList.add('stage-flash')
       return
@@ -231,34 +231,39 @@ export default function Overview() {
   // instead. Pressing a button bumps a counter the panel watches, so it opens its own form.
   const [pillSlot, setPillSlot] = useState(null) // where the Project Database puts its add pills
   const [roarmeOpen, setRoarmeOpen] = useState(false)
-  // the progress stays at the top while the page scrolls under it (Alex, 29 Oct), on a computer: once its place has
-  // scrolled away it folds to the percentage, the bar, the stages and the buttons (.stuck)
+  // the project's title row and the whole progress stay at the top while the page scrolls under them (Alex, 29 Oct:
+  // "ALL of this fixed"), on a computer (styles.css): the progress sits right under the title row (--proj-top-h), and
+  // once the page has moved the title row gets its glass band (.ov-scrolled) and the progress a shadow (.stuck)
   const stickMark = useRef(null)
   const stickPanel = useRef(null)
-  const fullH = useRef(0)
   const [stuck, setStuck] = useState(false)
   useEffect(() => {
+    const proj = stickPanel.current?.closest('.project')
+    const top = proj?.querySelector('.proj-top')
+    let ro = null
+    if (proj && top && typeof ResizeObserver !== 'undefined') {
+      const size = () => proj.style.setProperty('--proj-top-h', `${top.offsetHeight}px`)
+      size()
+      ro = new ResizeObserver(size)
+      ro.observe(top)
+    }
     // read on every scroll (of the window or any box), once a frame: steadier than an observer in Safari
     let raf = 0
     const look = () => {
       raf = 0
-      const el = stickMark.current, panel = stickPanel.current
-      if (!el || !panel) return
-      const now = el.getBoundingClientRect().top < -2
-      if (now && !panel.classList.contains('stuck')) fullH.current = panel.offsetHeight
+      const el = stickMark.current
+      if (!el) return
+      const head = top ? top.getBoundingClientRect().bottom : 0
+      const now = el.getBoundingClientRect().top < head - 2
       setStuck(now)
+      proj?.classList.toggle('ov-scrolled', (window.scrollY || document.scrollingElement?.scrollTop || 0) > 2)
     }
     const on = () => { if (!raf) raf = requestAnimationFrame(look) }
     window.addEventListener('scroll', on, { passive: true, capture: true })
     window.addEventListener('resize', on)
     look()
-    return () => { window.removeEventListener('scroll', on, { capture: true }); window.removeEventListener('resize', on); if (raf) cancelAnimationFrame(raf) }
+    return () => { ro?.disconnect(); proj?.classList.remove('ov-scrolled'); window.removeEventListener('scroll', on, { capture: true }); window.removeEventListener('resize', on); if (raf) cancelAnimationFrame(raf) }
   }, [])
-  // folded, it keeps its full height's place in the page, so what is under it does not jump up
-  useLayoutEffect(() => {
-    const el = stickPanel.current
-    if (el) el.style.marginBottom = stuck ? `${Math.max(0, fullH.current - el.offsetHeight)}px` : ''
-  }, [stuck])
   const [menu, setMenu] = useState('') // 'add' or 'more': the two small menus of the project's top row (Alex, 28 Oct)
   // a choice in + Add closes it; a DOM listener, because the Project Database's pills come in through a portal
   useEffect(() => {
