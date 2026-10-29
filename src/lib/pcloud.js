@@ -229,6 +229,7 @@ export const authorizeUrl = (clientId) => `https://my.pcloud.com/oauth2/authoriz
 /* Database > pCloud (Alex, 29 Oct): the whole pCloud through the function's filesX actions (the TML HUB Library app's
    token stays in the function). ready false until it has that token. */
 const INDEX = new Map() // folder path -> { at, items } for the search
+const pcloudIds = (list) => ({ fileids: list.filter((i) => !i.folder).map((i) => i.fileid), folderids: list.filter((i) => i.folder).map((i) => i.folderid) })
 // without the online database (the local build) a made-up pCloud answers instead (pcloudDemo.js)
 const fcall = (action, body) => (supabase ? call(action, body) : demoCall(action, body))
 export const pcloudFiles = {
@@ -302,6 +303,36 @@ export const pcloudFiles = {
     return items
   },
   forget: () => INDEX.clear(),
+  // full management (Alex, 29 Oct: "everything pCloud can do, we do in the hub too")
+  info: () => fcall('filesInfo', {}),
+  copy: (it, to) => fcall('filesCopy', { ...(it.folder ? { folderid: it.folderid } : { fileid: it.fileid }), from: it.path, to, name: it.name }),
+  /* the chosen files and folders as one zip to download, or one public link to just them */
+  zip: (list, name) => fcall('filesZip', { ...pcloudIds(list), name }).then((r) => r.url),
+  treeLink: (list, name) => fcall('filesTreeLink', { ...pcloudIds(list), name }).then((r) => r.url),
+  makeZip: (list, to, name) => fcall('filesMakeZip', { ...pcloudIds(list), to, name }),
+  /* a zip opened into a folder; waits until pCloud has finished */
+  async extract(it, to, password) {
+    const r = await fcall('filesExtract', { fileid: it.fileid, to, password })
+    for (let t = 0; !r.finished && r.progresshash && t < 300; t++) {
+      await new Promise((ok) => setTimeout(ok, 1500))
+      const p = await fcall('filesExtractProgress', { progresshash: r.progresshash })
+      if (p.errors?.length) throw new Error(p.errors[0])
+      if (p.finished) break
+    }
+  },
+  trashList: () => fcall('filesTrashList', {}).then((r) => r.items || []),
+  restore: (it) => fcall('filesRestore', it.folder ? { folderid: it.folderid } : { fileid: it.fileid }),
+  purge: (it) => fcall('filesPurge', it ? (it.folder ? { folderid: it.folderid } : { fileid: it.fileid }) : { all: true }),
+  links: () => fcall('filesLinks', {}),
+  linkChange: (id, change) => fcall('filesLinkChange', { id, ...change }),
+  linkDelete: (l) => fcall('filesLinkDelete', { id: l.id, upload: !!l.upload }),
+  uploadLink: (folderid, opts) => fcall('filesUploadLink', { folderid, ...opts }).then((r) => r.url),
+  revisions: (fileid) => fcall('filesRevisions', { fileid }).then((r) => r.revisions || []),
+  revert: (fileid, revisionid) => fcall('filesRevert', { fileid, revisionid }),
+  fetch: (path, url, name) => fcall('filesFetch', { path, url, name }),
+  shares: () => fcall('filesShares', {}).then((r) => r.shares || []),
+  shareFolder: (it, mail, edit, message) => fcall('filesShareFolder', { folderid: it.folderid, from: it.path, name: it.name, mail, edit, message }),
+  unshare: (s) => fcall('filesUnshare', { id: s.id, pending: s.pending }),
   /* a file into a folder, in 8 MB pieces whatever its size; onProgress gets 0..1 */
   async upload(path, file, onProgress) {
     const { uploadid } = await fcall('filesUploadStart', {})

@@ -19,7 +19,10 @@
 // deliveryStart · deliveryChunk · deliveryFinish · deliveryFolderLink · deliveryRemove · deliveryLabels ·
 // uploadStart · uploadChunk · uploadFinish (a big file, e.g. a song kept as its WAV, 29 Oct) ·
 // filesList · filesLink · filesShare · filesMkdir · filesRename · filesMove · filesTrash · filesUploadStart · filesChunk ·
-// filesUploadFinish · filesDupes (Database > pCloud, the whole pCloud with PCLOUD_FULL_TOKEN, 29 Oct). See src/lib/pcloud.js.
+// filesUploadFinish · filesDupes (Database > pCloud, the whole pCloud with PCLOUD_FULL_TOKEN, 29 Oct) · filesInfo · filesCopy ·
+// filesZip · filesTreeLink · filesMakeZip · filesExtract(Progress) · filesTrashList · filesRestore · filesPurge · filesLinks ·
+// filesLinkChange · filesLinkDelete · filesUploadLink · filesRevisions · filesRevert · filesFetch · filesShares ·
+// filesShareFolder · filesUnshare (full management, 29 Oct). See src/lib/pcloud.js.
 // Where a delivery goes (Alex, 27 Oct): with PCLOUD_FULL_TOKEN, RoughCut and PreFinal Cut straight into
 // "/Projects - RoughCuts" (no folder of their own, so they can be emptied together), Final Deliverables into
 // "/Projects - FinalCuts/<label>/<project>" (the record label, picked from that folder's own folders: deliveryLabels).
@@ -241,13 +244,13 @@ async function sig(text: string) {
   return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '').slice(0, 32)
 }
 const SELF = (Deno.env.get('SUPABASE_URL') || '') + '/functions/v1/pcloud'
-async function signed(kind: string, fileid: number, name = '', hours = 6) {
+async function signed(kind: string, fileid: number | string, name = '', hours = 6) {
   const t = `${kind}.${fileid}.${Math.floor(Date.now() / 1000) + hours * 3600}`
   return `${SELF}?s=${t}.${await sig(t)}${name ? `&n=${encodeURIComponent(name)}` : ''}`
 }
 async function stream(req: Request) {
   const u = new URL(req.url)
-  const m = (u.searchParams.get('s') || '').match(/^(thumb|file|video|dl)\.(\d+)\.(\d+)\.([\w-]{32})$/)
+  const m = (u.searchParams.get('s') || '').match(/^(thumb|file|video|dl|zip)\.([0-9fd-]+)\.(\d+)\.([\w-]{32})$/)
   const plain = (t: string, status: number) => new Response(t, { status, headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8' } })
   if (!m || !FULL) return plain('Not found.', 404)
   const [, kind, id, exp, given] = m
@@ -255,7 +258,12 @@ async function stream(req: Request) {
   const fileid = Number(id)
   try {
     let link: any = null
-    if (kind === 'thumb') link = await pc('getthumblink', { fileid, size: '320x180', crop: 0 }, undefined, FULL)
+    // several files and folders as one zip (f<id>-d<id>-...), made by pCloud as it is read
+    if (kind === 'zip') {
+      const ids = id.split('-')
+      const num = (c: string) => ids.filter((x) => x[0] === c).map((x) => Number(x.slice(1))).filter(Boolean).join(',')
+      link = await pc('getziplink', { fileids: num('f') || undefined, folderids: num('d') || undefined, forcedownload: 1, filename: (u.searchParams.get('n') || 'pCloud') + '.zip' }, undefined, FULL)
+    } else if (kind === 'thumb') link = await pc('getthumblink', { fileid, size: '320x180', crop: 0 }, undefined, FULL)
     else if (kind === 'video') {
       // pCloud's own web copy (H.264, 720p) when it has one, else the original
       try { link = await pc('getvideolink', { fileid, resolution: '1280x720', vbitrate: 3000, abitrate: 192, skipfilename: 1 }, undefined, FULL) } catch { link = null }
@@ -269,7 +277,7 @@ async function stream(req: Request) {
     if (!up.ok && up.status !== 206) return plain(`pCloud answered ${up.status}.`, 502)
     const h = new Headers({ ...CORS, 'Accept-Ranges': 'bytes', 'Cache-Control': kind === 'thumb' ? 'private, max-age=21600' : 'private, max-age=3600', 'Access-Control-Expose-Headers': 'Content-Length, Content-Range' })
     for (const k of ['content-type', 'content-length', 'content-range', 'last-modified', 'etag']) { const v = up.headers.get(k); if (v) h.set(k, v) }
-    if (kind === 'dl') h.set('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(u.searchParams.get('n') || 'file')}`)
+    if (kind === 'dl' || kind === 'zip') h.set('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent((u.searchParams.get('n') || 'file') + (kind === 'zip' ? '.zip' : ''))}`)
     return new Response(req.method === 'HEAD' ? null : up.body, { status: up.status, headers: h })
   } catch (e) {
     console.error('pcloud stream', (e as Error).message)
@@ -520,7 +528,7 @@ Deno.serve(async (req) => {
         const withThumb = body.nothumbs ? [] : items.filter((i: any) => !i.folder && i.thumb).slice(0, 400)
         const thumbs: Record<string, string> = {}
         for (const i of withThumb) thumbs[i.fileid] = await signed('thumb', i.fileid)
-        return json({ ok: true, ready: true, path, edit, admin: !!adm, items: items.map((i: any) => (thumbs[i.fileid] ? { ...i, thumbUrl: thumbs[i.fileid] } : i)) })
+        return json({ ok: true, ready: true, path, folderid: Number(r.metadata?.folderid) || 0, edit, admin: !!adm, items: items.map((i: any) => (thumbs[i.fileid] ? { ...i, thumbUrl: thumbs[i.fileid] } : i)) })
       }
       if (action === 'filesLink') {
         const fileid = Number(body.fileid)
@@ -604,6 +612,177 @@ Deno.serve(async (req) => {
         const meta = saved.metadata?.[0] || saved.metadata
         if (!meta?.fileid) return json({ error: 'pCloud did not keep the file.' }, 502)
         return json({ ok: true, item: item(meta, path) })
+      }
+      // --- full management (Alex, 29 Oct: "everything pCloud can do, we do in the hub too") ---
+      const ids = (x: any) => (Array.isArray(x) ? x : []).map(Number).filter((n: number) => n > 0).slice(0, 500)
+      const stamp = (t: any) => (t ? new Date(t).toISOString() : '')
+      // the account: space used, of how much
+      if (action === 'filesInfo') {
+        const me = await P('userinfo')
+        return json({ ok: true, email: me.email, quota: Number(me.quota) || 0, used: Number(me.usedquota) || 0, premium: !!(me.premium || me.business) })
+      }
+      // a copy into another folder (a folder with all it holds); a name already there gets a number
+      if (action === 'filesCopy') {
+        const no = needEdit(); if (no) return no
+        const dest = clean(body.to)
+        if (!dest) return json({ error: 'No such folder.' }, 400)
+        const tofolderid = dest === '/' ? 0 : Number((await P('createfolderifnotexists', { path: dest })).metadata?.folderid)
+        const fileid = Number(body.fileid), folderid = Number(body.folderid)
+        if (fileid) {
+          const r = await P('copyfile', { fileid, tofolderid, noover: 1 }).catch(async (e) => {
+            if (!/exist/i.test(e.message)) throw e
+            const name = String(body.name || '').replace(/(\.[^.]+)?$/, (x) => ` copy${x}`)
+            return P('copyfile', { fileid, tofolderid, toname: name })
+          })
+          return json({ ok: true, item: item(r.metadata, dest) })
+        }
+        if (folderid) {
+          if ((dest + '/').toLowerCase().startsWith((clean(body.from) + '/').toLowerCase())) return json({ error: 'A folder cannot be copied inside itself.' }, 400)
+          await P('copyfolder', { folderid, tofolderid, skipexisting: 1 })
+          return json({ ok: true })
+        }
+        return json({ error: 'Nothing to copy.' }, 400)
+      }
+      // several things as one zip to download (signed, through this function), or one public link to just them
+      if (action === 'filesZip') {
+        const f = ids(body.fileids), d = ids(body.folderids)
+        if (!f.length && !d.length) return json({ error: 'Nothing chosen.' }, 400)
+        const key = [...f.map((n) => `f${n}`), ...d.map((n) => `d${n}`)].join('-')
+        if (key.length > 1800) return json({ error: 'Too many for one zip: choose fewer, or a folder.' }, 400)
+        return json({ ok: true, url: await signed('zip', key, segment(body.name || 'pCloud')) })
+      }
+      if (action === 'filesTreeLink') {
+        const no = needEdit(); if (no) return no
+        const f = ids(body.fileids), d = ids(body.folderids)
+        if (!f.length && !d.length) return json({ error: 'Nothing chosen.' }, 400)
+        const r = await P('gettreepublink', { name: segment(body.name || 'Files'), fileids: f.join(',') || undefined, folderids: d.join(',') || undefined })
+        return json({ ok: true, url: r.link })
+      }
+      // a zip made inside pCloud, next to the files
+      if (action === 'filesMakeZip') {
+        const no = needEdit(); if (no) return no
+        const dest = clean(body.to)
+        if (!dest) return json({ error: 'No such folder.' }, 400)
+        const tofolderid = dest === '/' ? 0 : Number((await P('createfolderifnotexists', { path: dest })).metadata?.folderid)
+        const f = ids(body.fileids), d = ids(body.folderids)
+        const r = await P('savezip', { fileids: f.join(',') || undefined, folderids: d.join(',') || undefined, tofolderid, toname: segment(body.name || 'Archive').replace(/(\.zip)?$/i, '.zip') })
+        return json({ ok: true, item: r.metadata ? item(r.metadata, dest) : null })
+      }
+      // a zip (or rar, 7z) opened into a folder; pCloud does it in the background, the page asks how far it got
+      if (action === 'filesExtract') {
+        const no = needEdit(); if (no) return no
+        const dest = clean(body.to)
+        if (!dest) return json({ error: 'No such folder.' }, 400)
+        const r = await P('extractarchive', { fileid: Number(body.fileid), topath: dest, overwrite: 'rename', ...(body.password ? { password: String(body.password) } : {}) })
+        return json({ ok: true, progresshash: r.progresshash || '', finished: !!r.finished })
+      }
+      if (action === 'filesExtractProgress') {
+        const r = await P('extractarchiveprogress', { progresshash: String(body.progresshash || ''), lines: 0 })
+        return json({ ok: true, finished: !!r.finished, errors: (r.output || []).filter((l: any) => l.error).map((l: any) => String(l.error)).slice(0, 5) })
+      }
+      // pCloud's trash: what is in it, put back, gone for good (administrators), emptied (administrators)
+      if (action === 'filesTrashList') {
+        const no = needEdit(); if (no) return no
+        const r = await P('trash_list', { folderid: 0 })
+        const list = (r.metadata?.contents || []).map((m: any) => ({ ...item(m, '/'), path: String(m.origpath || m.path || m.name), deleted: stamp(m.deletetime || m.modified), purge: stamp(m.purgetime || '') }))
+        return json({ ok: true, items: list })
+      }
+      if (action === 'filesRestore') {
+        const no = needEdit(); if (no) return no
+        const fileid = Number(body.fileid), folderid = Number(body.folderid)
+        if (!fileid && !folderid) return json({ error: 'Nothing to put back.' }, 400)
+        const r = await P('trash_restore', fileid ? { fileid } : { folderid })
+        return json({ ok: true, to: String(r.metadata?.path || r.destination?.path || '') })
+      }
+      if (action === 'filesPurge') {
+        if (!adm) return json({ error: 'Only an administrator deletes for good.' }, 403)
+        const fileid = Number(body.fileid), folderid = Number(body.folderid)
+        if (body.all) await P('trash_clear', { folderid: 0 })
+        else if (fileid) await P('trash_clear', { fileid })
+        else if (folderid) await P('trash_clear', { folderid })
+        else return json({ error: 'Nothing to delete.' }, 400)
+        return json({ ok: true })
+      }
+      // every public link and upload link of the account: who opened it, how often, until when
+      if (action === 'filesLinks') {
+        const no = needEdit(); if (no) return no
+        const [pub, upl] = await Promise.all([P('listpublinks'), P('listuploadlinks').catch(() => ({ uploadlinks: [] }))])
+        const where = (m: any) => (m ? { name: String(m.name || ''), folder: !!m.isfolder, fileid: Number(m.fileid) || 0, folderid: Number(m.folderid) || 0 } : { name: '' })
+        return json({
+          ok: true,
+          links: (pub.publinks || []).map((l: any) => ({ id: Number(l.linkid), code: String(l.code), url: String(l.link), created: stamp(l.created), expires: stamp(l.expires), downloads: Number(l.downloads) || 0, views: Number(l.views) || 0, traffic: Number(l.traffic) || 0, maxdownloads: Number(l.maxdownloads) || 0, password: !!l.haspassword, ...where(l.metadata) })),
+          uploads: (upl.uploadlinks || []).map((l: any) => ({ id: Number(l.uploadlinkid || l.id), code: String(l.code), url: String(l.link), comment: String(l.comment || ''), created: stamp(l.created), expires: stamp(l.expires), files: Number(l.files) || 0, space: Number(l.space) || 0, maxfiles: Number(l.maxfiles) || 0, ...where(l.metadata) })),
+        })
+      }
+      if (action === 'filesLinkChange') {
+        const no = needEdit(); if (no) return no
+        const linkid = Number(body.id)
+        if (!linkid) return json({ error: 'No link.' }, 400)
+        const set: Record<string, any> = { linkid }
+        if (body.expires === '') set.deleteexpire = 1
+        else if (body.expires) set.expire = new Date(body.expires).toISOString()
+        if (body.maxdownloads !== undefined) set.maxdownloads = Math.max(0, Number(body.maxdownloads) || 0)
+        if (body.password === '') set.deletepassword = 1
+        else if (body.password) set.linkpassword = String(body.password)
+        await P('changepublink', set)
+        return json({ ok: true })
+      }
+      if (action === 'filesLinkDelete') {
+        const no = needEdit(); if (no) return no
+        if (body.upload) await P('deleteuploadlink', { uploadlinkid: Number(body.id) })
+        else await P('deletepublink', { linkid: Number(body.id) })
+        return json({ ok: true })
+      }
+      // a link a client uploads into this folder with (Request files), with a note and limits
+      if (action === 'filesUploadLink') {
+        const no = needEdit(); if (no) return no
+        const folderid = Number(body.folderid)
+        if (!folderid) return json({ error: 'Open a folder first.' }, 400)
+        const r = await P('createuploadlink', { folderid, comment: String(body.comment || 'Upload your files here').slice(0, 300), ...(body.expires ? { expire: new Date(body.expires).toISOString() } : {}), ...(Number(body.maxfiles) ? { maxfiles: Number(body.maxfiles) } : {}), ...(Number(body.maxspace) ? { maxspace: Number(body.maxspace) } : {}) })
+        return json({ ok: true, url: String(r.link), code: String(r.code || '') })
+      }
+      // the earlier versions pCloud keeps of a file, and putting one back
+      if (action === 'filesRevisions') {
+        const r = await P('listrevisions', { fileid: Number(body.fileid) })
+        return json({ ok: true, revisions: (r.revisions || []).map((v: any) => ({ id: Number(v.revisionid), size: Number(v.size) || 0, created: stamp(v.created) })) })
+      }
+      if (action === 'filesRevert') {
+        const no = needEdit(); if (no) return no
+        await P('revertrevision', { fileid: Number(body.fileid), revisionid: Number(body.revisionid) })
+        return json({ ok: true })
+      }
+      // a file from a web address straight into this folder (pCloud fetches it, nothing goes through the computer)
+      if (action === 'filesFetch') {
+        const no = needEdit(); if (no) return no
+        const path = clean(body.path)
+        const url = String(body.url || '').trim()
+        if (!path || !/^https?:\/\/\S+$/i.test(url)) return json({ error: 'Paste a web address that starts with http.' }, 400)
+        const folderid = path === '/' ? 0 : Number((await P('createfolderifnotexists', { path })).metadata?.folderid)
+        const r = await P('downloadfileasync', { url, folderid, ...(body.name ? { target: segment(body.name).slice(0, 200) } : {}) }).catch(() => P('downloadfile', { url, folderid }))
+        return json({ ok: true, metadata: !!(r.metadata?.length) })
+      }
+      // a folder shared with someone's own pCloud account (administrators): who has what, add, take away
+      if (action === 'filesShares') {
+        if (!adm) return json({ error: 'Administrators only.' }, 403)
+        const r = await P('listshares')
+        const out = (r.shares?.outgoing || []).map((x: any) => ({ id: Number(x.shareid), mail: String(x.tomail || ''), name: String(x.sharename || x.foldername || ''), folderid: Number(x.folderid), edit: !!(x.canmodify || x.cancreate || x.candelete || (Number(x.permissions) & 7)), pending: false }))
+        const req2 = (r.requests?.outgoing || []).map((x: any) => ({ id: Number(x.sharerequestid), mail: String(x.tomail || ''), name: String(x.sharename || x.foldername || ''), folderid: Number(x.folderid), edit: !!(x.canmodify || x.cancreate || x.candelete || (Number(x.permissions) & 7)), pending: true }))
+        return json({ ok: true, shares: [...out, ...req2] })
+      }
+      if (action === 'filesShareFolder') {
+        if (!adm) return json({ error: 'Administrators only.' }, 403)
+        const folderid = Number(body.folderid), mail = String(body.mail || '').trim()
+        if (!folderid || !/^\S+@\S+\.\S+$/.test(mail)) return json({ error: 'Write the person\'s email.' }, 400)
+        if (kept(clean(body.from)) && body.edit) return json({ error: 'The hub writes into this folder: share it to look only.' }, 403)
+        const e = body.edit ? 1 : 0
+        await P('sharefolder', { folderid, mail, permissions: e ? 7 : 0, canread: 1, cancreate: e, canmodify: e, candelete: e, name: segment(body.name || 'Shared'), ...(body.message ? { message: String(body.message).slice(0, 500) } : {}) })
+        return json({ ok: true })
+      }
+      if (action === 'filesUnshare') {
+        if (!adm) return json({ error: 'Administrators only.' }, 403)
+        if (body.pending) await P('cancelsharerequest', { sharerequestid: Number(body.id) })
+        else await P('removeshare', { shareid: Number(body.id) })
+        return json({ ok: true })
       }
       // the same file in more than one place, by pCloud's own fingerprint of its content (hash) and size, from 1 MB up
       if (action === 'filesDupes') {

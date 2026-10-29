@@ -68,6 +68,13 @@ const out = (k, base) => {
 }
 const wait = () => new Promise((ok) => setTimeout(ok, 120))
 const uploads = new Map()
+const TRASH = []
+const LINKS = [
+  { id: 1, code: 'DEMO1', url: 'https://u.pcloud.link/publink/show?code=DEMO1', created: '2026-10-16T12:00:00Z', expires: '', downloads: 14, views: 31, traffic: 2.1e9, maxdownloads: 0, password: false, name: 'Ilie mou_Social_9x16.mp4', folder: false },
+  { id: 2, code: 'DEMO2', url: 'https://u.pcloud.link/publink/show?code=DEMO2', created: '2026-04-02T09:00:00Z', expires: '2026-12-31T00:00:00Z', downloads: 3, views: 8, traffic: 6.3e9, maxdownloads: 0, password: false, name: 'Spring campaign', folder: true },
+]
+const UPLINKS = []
+const SHARES = [{ id: 9, mail: 'editor@example.com', name: 'Projects - RoughCuts', folderid: 0, edit: false, pending: false }]
 
 export async function demoCall(action, body = {}) {
   await wait()
@@ -76,7 +83,7 @@ export async function demoCall(action, body = {}) {
     const f = body.folderid ? byId(root, 'folderid', Number(body.folderid))?.node : find(body.path || '/')
     if (!f) throw new Error('pCloud: Directory does not exist.')
     const path = body.path || pathOfFolder(f)
-    return { ok: true, ready: true, path, edit: true, admin: true, demo: true, items: f.kids.map((k) => out(k, path)) }
+    return { ok: true, ready: true, path, folderid: f.folderid, edit: true, admin: true, demo: true, items: f.kids.map((k) => out(k, path)) }
   }
   if (action === 'filesLink') {
     const t = byId(root, 'fileid', Number(body.fileid))
@@ -103,9 +110,59 @@ export async function demoCall(action, body = {}) {
         find(body.to).kids.push(t.node)
       }
       t.parent.kids = t.parent.kids.filter((k) => k !== t.node)
+      if (action === 'filesTrash') TRASH.push({ node: t.node, path: t.path, deleted: new Date().toISOString() })
     }
     return { ok: true }
   }
+  // full management, made up the same way
+  if (action === 'filesInfo') return { ok: true, email: 'demo@themadlions.com', quota: 2e12, used: 1.31e12, premium: true }
+  if (action === 'filesCopy') {
+    const t = target(body)
+    if (!t) throw new Error('pCloud: File or folder not found.')
+    const clone = (n) => (n.folder ? { ...n, folderid: id(), kids: n.kids.map(clone) } : { ...n, fileid: id() })
+    const c = clone(t.node)
+    const dest = find(body.to)
+    if (dest.kids.some((k) => k.name === c.name)) c.name = c.name.replace(/(\.[^.]+)?$/, (x) => ` copy${x}`)
+    dest.kids.push(c)
+    return { ok: true }
+  }
+  if (action === 'filesZip') return { ok: true, url: 'data:application/zip,demo' }
+  if (action === 'filesTreeLink') return { ok: true, url: 'https://u.pcloud.link/publink/show?code=DEMOTREE' }
+  if (action === 'filesMakeZip') {
+    const k = { folder: false, name: String(body.name || 'Archive').replace(/(\.zip)?$/i, '.zip'), fileid: id(), size: 50 * MB, modified: new Date().toUTCString(), created: new Date().toUTCString(), type: 'application/zip', category: 5, hash: `z${id()}` }
+    find(body.to).kids.push(k)
+    return { ok: true, item: out(k, body.to) }
+  }
+  if (action === 'filesExtract') { find(body.to).kids.push({ folder: true, name: 'Extracted', folderid: id(), kids: [] }); return { ok: true, finished: true } }
+  if (action === 'filesExtractProgress') return { ok: true, finished: true, errors: [] }
+  if (action === 'filesTrashList') return { ok: true, items: TRASH.map((t) => ({ ...out(t.node, '/'), path: t.path, deleted: t.deleted })) }
+  if (action === 'filesRestore' || action === 'filesPurge') {
+    const i = body.all ? -1 : TRASH.findIndex((t) => (body.fileid ? t.node.fileid === Number(body.fileid) : t.node.folderid === Number(body.folderid)))
+    if (body.all) TRASH.length = 0
+    else if (i >= 0) {
+      const [t] = TRASH.splice(i, 1)
+      if (action === 'filesRestore') { let at; try { at = find(t.path.replace(/\/[^/]+$/, '') || '/') } catch { at = root } at.kids.push(t.node) }
+    }
+    return { ok: true }
+  }
+  if (action === 'filesLinks') return { ok: true, links: LINKS, uploads: UPLINKS }
+  if (action === 'filesLinkChange') { const l = LINKS.find((x) => x.id === body.id); if (l) { if ('expires' in body) l.expires = body.expires; if (body.password !== undefined) l.password = !!body.password; if (body.maxdownloads !== undefined) l.maxdownloads = Number(body.maxdownloads) || 0 } return { ok: true } }
+  if (action === 'filesLinkDelete') { const list = body.upload ? UPLINKS : LINKS; const i = list.findIndex((x) => x.id === body.id); if (i >= 0) list.splice(i, 1); return { ok: true } }
+  if (action === 'filesUploadLink') {
+    const f = byId(root, 'folderid', Number(body.folderid))
+    UPLINKS.push({ id: id(), code: 'DEMOUP', url: 'https://u.pcloud.link/publink/upload?code=DEMOUP', comment: body.comment || '', created: new Date().toISOString(), expires: body.expires || '', files: 0, space: 0, maxfiles: Number(body.maxfiles) || 0, name: f?.node.name || '', folder: true })
+    return { ok: true, url: 'https://u.pcloud.link/publink/upload?code=DEMOUP' }
+  }
+  if (action === 'filesRevisions') return { ok: true, revisions: [{ id: 2, size: 410 * MB, created: '2026-10-20T10:00:00Z' }, { id: 1, size: 380 * MB, created: '2026-10-12T16:30:00Z' }] }
+  if (action === 'filesRevert') return { ok: true }
+  if (action === 'filesFetch') {
+    const name = body.name || decodeURIComponent(String(body.url).split('/').pop() || 'file').slice(0, 80)
+    find(body.path).kids.push({ folder: false, name, fileid: id(), size: 12 * MB, modified: new Date().toUTCString(), created: new Date().toUTCString(), type: kind(name)[0], category: kind(name)[1], hash: `w${id()}` })
+    return { ok: true }
+  }
+  if (action === 'filesShares') return { ok: true, shares: SHARES }
+  if (action === 'filesShareFolder') { SHARES.push({ id: id(), mail: body.mail, name: body.name, folderid: body.folderid, edit: !!body.edit, pending: true }); return { ok: true } }
+  if (action === 'filesUnshare') { const i = SHARES.findIndex((x) => x.id === body.id); if (i >= 0) SHARES.splice(i, 1); return { ok: true } }
   if (action === 'filesUploadStart') { const u = id(); uploads.set(u, 0); return { ok: true, uploadid: u } }
   if (action === 'filesChunk') { const u = Number(body.get('uploadid')); uploads.set(u, (uploads.get(u) || 0) + (body.get('file')?.size || 0)); return { ok: true } }
   if (action === 'filesUploadFinish') {
