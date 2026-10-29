@@ -108,7 +108,7 @@ export async function drawShareCard({ person, record: r, logo }) {
 
   // the photo in a gradient ring, the level's emoji on its edge
   const pcx = W / 2
-  const pcy = 420
+  const pcy = 390
   ctx.beginPath()
   ctx.arc(pcx, pcy, 196, 0, Math.PI * 2)
   ctx.fillStyle = grad(ctx, pcx - 196, pcy + 196, pcx + 196, pcy - 196)
@@ -131,7 +131,7 @@ export async function drawShareCard({ person, record: r, logo }) {
   ctx.textBaseline = 'alphabetic'
 
   // name and position
-  y = 720
+  y = 680
   ctx.fillStyle = '#fff'
   ctx.font = `800 78px ${font}`
   ctx.fillText(fitText(ctx, person.name || '', 940), W / 2, y)
@@ -142,7 +142,7 @@ export async function drawShareCard({ person, record: r, logo }) {
   }
 
   // the level as a gradient pill with the XP
-  y = 850
+  y = 790
   ctx.font = `800 44px ${font}`
   const pill = `${r.emoji} ${r.level}  ·  ${r.score} XP`
   const pw = ctx.measureText(pill).width + 80
@@ -155,7 +155,7 @@ export async function drawShareCard({ person, record: r, logo }) {
   ctx.textBaseline = 'alphabetic'
 
   // the counts, like a profile's posts / followers
-  y = 1080
+  y = 1000
   const colW = 940 / r.stats.length
   r.stats.forEach((s, i) => {
     const x = 70 + colW * i + colW / 2
@@ -168,7 +168,7 @@ export async function drawShareCard({ person, record: r, logo }) {
   })
 
   // the stickers, centred rows, a little tilted
-  y = 1210
+  y = 1100
   ctx.font = `700 34px ${font}`
   const stickers = r.badges.slice(0, 6).map((b) => ({ t: `${b.emoji}  ${b.name}`, w: ctx.measureText(`${b.emoji}  ${b.name}`).width + 56 }))
   const rows = []
@@ -197,7 +197,7 @@ export async function drawShareCard({ person, record: r, logo }) {
   })
 
   // the projects as story circles, four to a row
-  y = rows.length > 1 ? 1430 : 1390
+  y = rows.length > 1 ? 1420 : 1340
   const per = 4
   const cell = 230
   const slots = more ? [...shown, null] : shown
