@@ -3,6 +3,7 @@
 // session to the function, which checks the same permissions the database enforces.
 import { supabase } from './supabase.js'
 import { SUPABASE_KEY, SUPABASE_URL } from './supabaseConfig.js'
+import { demoCall } from './pcloudDemo.js'
 
 /* Settings > Integrations > File storage. Off means the built-in Supabase bucket, as before. */
 export const pcloudOn = (settings) => settings?.storage === 'pcloud'
@@ -227,25 +228,87 @@ export const authorizeUrl = (clientId) => `https://my.pcloud.com/oauth2/authoriz
 
 /* Database > pCloud (Alex, 29 Oct): the whole pCloud through the function's filesX actions (the TML HUB Library app's
    token stays in the function). ready false until it has that token. */
+const INDEX = new Map() // folder path -> { at, items } for the search
+// without the online database (the local build) a made-up pCloud answers instead (pcloudDemo.js)
+const fcall = (action, body) => (supabase ? call(action, body) : demoCall(action, body))
 export const pcloudFiles = {
-  list: (path) => call('filesList', { path }),
-  link: (fileid, download = false) => call('filesLink', { fileid, download }).then((r) => r.url),
-  share: (it) => call('filesShare', it.folder ? { folderid: it.folderid } : { fileid: it.fileid }).then((r) => r.url),
-  mkdir: (path, name) => call('filesMkdir', { path, name }),
-  rename: (it, name) => call('filesRename', { ...(it.folder ? { folderid: it.folderid } : { fileid: it.fileid }), from: it.path, name }),
-  move: (it, to) => call('filesMove', { ...(it.folder ? { folderid: it.folderid } : { fileid: it.fileid }), from: it.path, to }),
-  trash: (it) => call('filesTrash', { ...(it.folder ? { folderid: it.folderid } : { fileid: it.fileid }), from: it.path }),
-  dupes: (path = '/') => call('filesDupes', { path }),
+  list: (path, folderid) => fcall('filesList', { path, ...(folderid ? { folderid } : {}) }),
+  link: (fileid, download = false) => fcall('filesLink', { fileid, download }).then((r) => r.url),
+  /* a video to watch in the page: pCloud's web copy (H.264, 720p) when there is one */
+  watch: (fileid) => fcall('filesLink', { fileid, preview: 'video' }),
+  share: (it) => fcall('filesShare', it.folder ? { folderid: it.folderid } : { fileid: it.fileid }).then((r) => r.url),
+  mkdir: (path, name) => fcall('filesMkdir', { path, name }),
+  rename: (it, name) => fcall('filesRename', { ...(it.folder ? { folderid: it.folderid } : { fileid: it.fileid }), from: it.path, name }),
+  move: (it, to) => fcall('filesMove', { ...(it.folder ? { folderid: it.folderid } : { fileid: it.fileid }), from: it.path, to }),
+  trash: (it) => fcall('filesTrash', { ...(it.folder ? { folderid: it.folderid } : { fileid: it.fileid }), from: it.path }),
+  /* every folder under `path`, read one at a time (four side by side): one big listing of a whole pCloud is refused by
+     pCloud (Alex, 29 Oct: "invalid request"). onItem gets every file and folder; onProgress (folders, files). */
+  async walk(path, onItem, onProgress, signal) {
+    const queue = [{ path }]
+    let folders = 0, files = 0, active = 0
+    const lane = async () => {
+      for (;;) {
+        if (signal?.aborted) throw new Error('Stopped.')
+        if (!queue.length) { if (!active) return; await new Promise((ok) => setTimeout(ok, 120)); continue }
+        const at = queue.shift()
+        active++
+        try {
+          let r
+          for (let t = 1; ; t++) {
+            try { r = await fcall('filesList', { path: at.path, ...(at.folderid ? { folderid: at.folderid } : {}), nothumbs: true }); break } catch (e) {
+              if (t >= 3) throw new Error(`${at.path}: ${e.message}`)
+              await new Promise((ok) => setTimeout(ok, 800 * t))
+            }
+          }
+          folders++
+          for (const it of r.items || []) {
+            if (it.folder) queue.push({ path: it.path, folderid: it.folderid })
+            else files++
+            onItem(it)
+          }
+          onProgress?.(folders, files)
+        } finally { active-- }
+      }
+    }
+    await Promise.all(Array.from({ length: 4 }, lane))
+    return { folders, files }
+  },
+  /* the same content in more than one place: pCloud's hash of each file's content and its size, from 1 MB, the oldest
+     first in each group */
+  async dupes(path = '/', onProgress, signal) {
+    const by = new Map()
+    const { folders, files } = await pcloudFiles.walk(path, (it) => {
+      if (it.folder || it.size < 1048576 || !it.hash) return
+      const k = `${it.hash}|${it.size}`
+      if (by.has(k)) by.get(k).push(it)
+      else by.set(k, [it])
+    }, onProgress, signal)
+    const t = (f) => Date.parse(f.created || f.modified) || 0
+    const groups = [...by.values()].filter((g) => g.length > 1)
+      .map((g) => ({ size: g[0].size, waste: g[0].size * (g.length - 1), files: g.sort((a, b) => t(a) - t(b)) }))
+      .sort((a, b) => b.waste - a.waste)
+    return { path, scanned: files, folders, count: groups.length, waste: groups.reduce((n, g) => n + g.waste, 0), groups }
+  },
+  /* everything under `path`, for searching by name; kept ten minutes, so a second search is instant */
+  async index(path, onProgress, signal) {
+    const hit = INDEX.get(path)
+    if (hit && Date.now() - hit.at < 600000) return hit.items
+    const items = []
+    await pcloudFiles.walk(path, (it) => items.push(it), onProgress, signal)
+    INDEX.set(path, { at: Date.now(), items })
+    return items
+  },
+  forget: () => INDEX.clear(),
   /* a file into a folder, in 8 MB pieces whatever its size; onProgress gets 0..1 */
   async upload(path, file, onProgress) {
-    const { uploadid } = await call('filesUploadStart', {})
+    const { uploadid } = await fcall('filesUploadStart', {})
     for (let offset = 0; offset < file.size || offset === 0; offset += PIECE) {
       const fd = new FormData()
       fd.append('file', file.slice(offset, offset + PIECE), 'piece')
       fd.append('uploadid', String(uploadid))
       fd.append('offset', String(offset))
       for (let t = 1; ; t++) {
-        try { await call('filesChunk', fd); break } catch (e) {
+        try { await fcall('filesChunk', fd); break } catch (e) {
           if (t >= 5 || /pCloud section|signed in/i.test(e.message || '')) throw e
           await new Promise((ok) => setTimeout(ok, 700 * t))
         }
@@ -253,6 +316,6 @@ export const pcloudFiles = {
       onProgress?.(Math.min(1, (offset + PIECE) / (file.size || 1)))
       if (!file.size) break
     }
-    return call('filesUploadFinish', { path, uploadid, name: file.name })
+    return fcall('filesUploadFinish', { path, uploadid, name: file.name })
   },
 }
