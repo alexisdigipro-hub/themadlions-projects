@@ -3305,6 +3305,21 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
   .project-card .project-meta > span:not(.badge) { display: none; }
   .project-foot { display: none; }
   .project-tools { display: none; }
+  /* the card polished as on a computer (Alex, 29 Oct: "do it on the phone too"), same layout: softer corners, a glass
+     edge brighter along the top and a sheen over the cover, the category as a glass pill, a glossy progress line in the
+     project's colour, and a soft press when tapped */
+  html[data-theme] body .project-grid .project-card { border-radius: 16px; border-color: rgba(255, 255, 255, .1); box-shadow: 0 8px 22px rgba(0, 0, 0, .3); transition: transform .15s ease; -webkit-tap-highlight-color: transparent; }
+  html[data-theme] body .project-grid .project-card:active { transform: scale(.97); }
+  .project-grid .project-card::after {
+    content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; pointer-events: none;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09), inset 0 1px 0 rgba(255, 255, 255, .28);
+    background: linear-gradient(140deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .04) 20%, transparent 40%);
+  }
+  .project-grid .project-cover .project-cat, .project-grid .project-cover.has-img .project-cat { background: rgba(14, 17, 23, .42); -webkit-backdrop-filter: blur(12px) saturate(160%); backdrop-filter: blur(12px) saturate(160%); border: 1px solid rgba(255, 255, 255, .2); color: #fff; opacity: 1; }
+  .project-grid .project-card .project-progress { height: 3px; background: rgba(255, 255, 255, .1); }
+  .project-grid .project-card .project-progress span { border-radius: 0 999px 999px 0; background: linear-gradient(180deg, color-mix(in srgb, var(--pc) 55%, #fff), var(--pc) 70%); box-shadow: 0 0 10px color-mix(in srgb, var(--pc) 75%, transparent); }
+  .project-grid .project-body { background: linear-gradient(180deg, rgba(255, 255, 255, .045), transparent 70%); }
+  .project-grid .project-body h3 { font-weight: 650; letter-spacing: -.01em; }
 
   /* calendar: compact month */
   .calendar .cal-nav { display: none; }
@@ -8891,104 +8906,6 @@ html[data-skin='coral'][data-skin][data-theme][data-accent]:not([data-accent='th
 html[data-theme] body .notes-card.tinted { background: radial-gradient(120% 140% at 0% 50%, color-mix(in srgb, var(--tint) 20%, transparent), transparent 55%), var(--g-card, var(--panel)); }
 html[data-theme] body .notes-swipe-front.tinted { background: radial-gradient(120% 140% at 0% 50%, color-mix(in srgb, var(--tint) 20%, transparent), transparent 55%), linear-gradient(var(--g-card, transparent), var(--g-card, transparent)), var(--panel, #fff) !important; }
 .notes-card-ficon { display: inline-block; margin-right: 6px; font-size: .95em; }
-
-/* ---- Vault (Alex, 28 Oct): the Calendar's look, one top row, soft tiles, round glass buttons ---- */
-.vault { display: flex; flex-direction: column; gap: 16px; min-height: calc(100dvh - 120px); }
-.vault-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.vault-top h1 { margin: 0 6px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
-.vault-search { flex: 1 1 220px; max-width: 420px; height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--raised); color: var(--text); font: inherit; font-size: 14px; }
-.vault-search:focus { outline: none; border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
-.vault-acts { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
-.vault-body { flex: 1; display: grid; grid-template-columns: 250px 1fr; gap: 16px; min-height: 0; }
-.vault-side { display: flex; flex-direction: column; gap: 4px; padding: 10px; border-radius: 18px; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--panel) 88%, transparent); align-self: start; }
-.vault-frow { position: relative; display: flex; align-items: center; border-radius: 12px; }
-.vault-frow.on { background: color-mix(in srgb, var(--text) 9%, transparent); box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent); }
-.vault-fpick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 6px 10px; border: 0; background: none; color: var(--text); font: inherit; font-size: 15px; text-align: left; cursor: pointer; border-radius: 12px; }
-.vault-fpick .grow { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vault-femoji { width: 22px; display: inline-flex; justify-content: center; font-size: 17px; }
-.vault-count { color: var(--muted); font-size: 13px; }
-.vault-fedit { width: 30px; height: 30px; margin-right: 4px; border-radius: 50%; border: 1px solid var(--line-soft); background: var(--raised); color: var(--muted); cursor: pointer; opacity: 0; transition: opacity .15s; }
-.vault-frow:hover .vault-fedit, .vault-frow.on .vault-fedit { opacity: 1; }
-.vault-addf { margin-top: 6px; display: flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 12px; border: 0; background: none; color: var(--accent); font: inherit; font-size: 15px; cursor: pointer; border-radius: 12px; text-align: left; }
-.vault-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.vault-main-head { display: flex; align-items: baseline; gap: 10px; padding: 2px 4px; }
-.vault-main-head h2 { margin: 0; font-size: 18px; font-weight: 700; }
-.vault-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
-.vault-item { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 10px 12px; border-radius: 16px; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--panel) 88%, transparent); cursor: pointer; transition: background .15s, transform .12s; }
-.vault-item:hover { background: var(--raised); }
-.vault-item:active { transform: scale(.99); }
-.vault-item.tinted { background-image: radial-gradient(120% 140% at 0% 50%, color-mix(in srgb, var(--tint) 20%, transparent), transparent 55%); }
-.vault-av { flex: none; width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 18px; font-weight: 700; color: #fff; background: color-mix(in srgb, var(--av) 70%, transparent); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25); }
-.vault-item-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.vault-item-t b, .vault-item-t .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vault-item-t b { font-size: 15px; font-weight: 600; }
-.vault-item-t .muted { font-size: 13px; }
-.vault-item-acts { display: flex; gap: 6px; }
-.vault-ibtn { flex: none; width: 36px; height: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--text) 6%, var(--raised)); color: var(--text); cursor: pointer; text-decoration: none; transition: transform .12s, border-color .15s; }
-.vault-ibtn:hover { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); transform: translateY(-1px); }
-.vault-ibtn:active { transform: scale(.94); }
-.vault-ibtn.main { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line-soft)); background: color-mix(in srgb, var(--accent) 14%, var(--raised)); }
-.vault-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 40px 16px; border-radius: 18px; border: 1px dashed var(--line-soft); color: var(--muted); text-align: center; }
-/* set-up, locked, the recovery key */
-.vault-gate { min-height: calc(100dvh - 140px); display: flex; align-items: center; justify-content: center; padding: 20px 0; }
-.vault-gate-card { width: min(440px, 100%); display: flex; flex-direction: column; gap: 14px; padding: 28px; border-radius: 22px; border: 1px solid var(--line-soft); background: color-mix(in srgb, var(--panel) 90%, transparent); box-shadow: var(--shadow); text-align: center; }
-.vault-gate-card h1 { margin: 0; font-size: 24px; font-weight: 800; }
-.vault-gate-card p { margin: 0; line-height: 1.45; }
-.vault-gate-ico { align-self: center; width: 64px; height: 64px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 7%, transparent); }
-.vault-gate-ico svg { width: 30px; height: 30px; }
-.vault-gate-form { display: flex; flex-direction: column; gap: 12px; text-align: left; }
-.vault-gate-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-.vault-recovery { padding: 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--raised); font: 600 17px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; word-break: break-all; user-select: all; }
-.vault-check { display: flex; align-items: center; gap: 8px; justify-content: center; font-size: 15px; cursor: pointer; }
-.vault-form .vault-check { justify-content: flex-start; }
-.vault-err { margin: 0; color: var(--danger, #e5484d); font-size: 14px; }
-.vault-warn { margin: 0; padding: 10px 12px; border-radius: 12px; font-size: 13px; line-height: 1.45; color: var(--text); background: color-mix(in srgb, #ff9500 13%, transparent); border: 1px solid color-mix(in srgb, #ff9500 30%, transparent); }
-.vault-link { align-self: center; border: 0; background: none; color: var(--accent); font: inherit; font-size: 14px; cursor: pointer; }
-.vault-over { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, .45); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
-.vault-over .vault-gate { min-height: 0; }
-/* the forms */
-.vault-form { display: flex; flex-direction: column; gap: 12px; }
-.vault-form p { margin: 0; }
-.vault-pw { position: relative; flex: 1; min-width: 0; display: flex; }
-.vault-pw .input { flex: 1; padding-right: 44px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-.vault-pw-eye { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; background: none; color: var(--muted); cursor: pointer; }
-.vault-pw-row { display: flex; align-items: center; gap: 8px; }
-.vault-meter { display: flex; align-items: center; gap: 4px; margin-top: 6px; font-size: 12px; color: var(--muted); }
-.vault-meter i { width: 34px; height: 4px; border-radius: 4px; background: color-mix(in srgb, var(--text) 12%, transparent); }
-.vault-meter span { margin-left: 6px; }
-.vault-meter.s1 i:nth-child(-n+1) { background: #ff453a; }
-.vault-meter.s2 i:nth-child(-n+2) { background: #ff9f0a; }
-.vault-meter.s3 i:nth-child(-n+3) { background: #ffd60a; }
-.vault-meter.s4 i:nth-child(-n+4) { background: #32d74b; }
-.vault-gen { padding: 16px; border-radius: 14px; border: 1px solid var(--line); background: var(--raised); font: 600 18px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; text-align: center; user-select: all; }
-.vault-range { display: flex; align-items: center; gap: 10px; font-size: 15px; }
-.vault-range input { flex: 1; accent-color: var(--accent); }
-.vault-steps { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.4; }
-.vault-file { position: relative; align-self: flex-start; overflow: hidden; cursor: pointer; }
-.vault-file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.vault-h { margin: 6px 0 0; font-size: 15px; font-weight: 700; }
-.btn.vault-del { color: var(--danger, #e5484d); }
-@media (max-width: 820px) {
-  .vault { gap: 12px; min-height: 0; }
-  .vault-top h1 { font-size: 24px; }
-  .vault-search { order: 3; flex-basis: 100%; max-width: none; height: 44px; }
-  .vault-acts { gap: 6px; }
-  .vault-acts .act { width: 40px; padding: 0; border-radius: 50%; }
-  .vault-acts .act .act-t { display: none; }
-  .vault-body { display: flex; flex-direction: column; gap: 12px; }
-  /* the folders as one row of chips you slide through */
-  .vault-side { flex-direction: row; gap: 6px; padding: 0; border: 0; background: none; overflow-x: auto; scrollbar-width: none; align-self: stretch; }
-  .vault-side::-webkit-scrollbar { display: none; }
-  .vault-frow { flex: none; border: 1px solid var(--line-soft); border-radius: 999px; background: color-mix(in srgb, var(--panel) 88%, transparent); }
-  .vault-fpick { min-height: 36px; padding: 0 12px; gap: 6px; font-size: 14px; }
-  .vault-fpick .grow { flex: none; }
-  .vault-fedit { opacity: 1; width: 26px; height: 26px; }
-  .vault-frow:not(.on) .vault-fedit { display: none; }
-  .vault-addf { flex: none; margin: 0; min-height: 36px; border: 1px dashed var(--line-soft); border-radius: 999px; font-size: 14px; white-space: nowrap; }
-  .vault-list { grid-template-columns: 1fr; }
-  .vault-item { min-height: 56px; }
-  .vault-gate-card { padding: 22px 18px; }
-}
 
 /* Share: a delivery as an email (Alex, 28 Oct) */
 .deliv-email { display: flex; flex-direction: column; gap: 10px; }

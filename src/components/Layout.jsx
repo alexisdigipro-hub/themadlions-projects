@@ -137,8 +137,6 @@ export default function Layout() {
     { to: '/share', label: 'Share', show: mayShare, icon: 'post', badge: newReplies, also: ['/roardino'] },
     // Invoices is a tab of Finance again (Alex, 10 Oct), so /invoices lights Finance
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance', also: ['/invoices'] },
-    // Vault (Alex, 28 Oct): each person's own passwords, encrypted with a master password only they know
-    { to: '/vault', label: 'Vault', show: true, icon: 'vault' },
     // My profile is now the first tab of Settings, on every platform (Alex, 10 Oct)
     { to: '/settings', label: 'Settings', show: true, icon: 'settings' },
   ].filter((i) => i.show)
