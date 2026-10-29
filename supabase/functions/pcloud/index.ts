@@ -228,8 +228,59 @@ async function allowed(db: any, uid: string, scope: Scope, fileid?: number, forD
   return false
 }
 
+/* Database > pCloud's pictures, videos and downloads (Alex, 29 Oct: "neither videos nor photos"): a link pCloud makes
+   works only from the address that asked for it, which is this function, never the person's browser. So the page gets
+   an address of this function, signed and good for a few hours, and the function fetches the file from pCloud and
+   passes it on, with Range so a video can be played and moved through. The key is made from the full token and never
+   leaves the function. */
+const enc = new TextEncoder()
+let signKey: CryptoKey | null = null
+async function sig(text: string) {
+  signKey ||= await crypto.subtle.importKey('raw', await crypto.subtle.digest('SHA-256', enc.encode('pcloud-stream:' + FULL)), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const b = new Uint8Array(await crypto.subtle.sign('HMAC', signKey, enc.encode(text)))
+  return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '').slice(0, 32)
+}
+const SELF = (Deno.env.get('SUPABASE_URL') || '') + '/functions/v1/pcloud'
+async function signed(kind: string, fileid: number, name = '', hours = 6) {
+  const t = `${kind}.${fileid}.${Math.floor(Date.now() / 1000) + hours * 3600}`
+  return `${SELF}?s=${t}.${await sig(t)}${name ? `&n=${encodeURIComponent(name)}` : ''}`
+}
+async function stream(req: Request) {
+  const u = new URL(req.url)
+  const m = (u.searchParams.get('s') || '').match(/^(thumb|file|video|dl)\.(\d+)\.(\d+)\.([\w-]{32})$/)
+  const plain = (t: string, status: number) => new Response(t, { status, headers: { ...CORS, 'Content-Type': 'text/plain; charset=utf-8' } })
+  if (!m || !FULL) return plain('Not found.', 404)
+  const [, kind, id, exp, given] = m
+  if (Number(exp) < Date.now() / 1000 || (await sig(`${kind}.${id}.${exp}`)) !== given) return plain('This link has run out. Open the file again.', 403)
+  const fileid = Number(id)
+  try {
+    let link: any = null
+    if (kind === 'thumb') link = await pc('getthumblink', { fileid, size: '320x180', crop: 0 }, undefined, FULL)
+    else if (kind === 'video') {
+      // pCloud's own web copy (H.264, 720p) when it has one, else the original
+      try { link = await pc('getvideolink', { fileid, resolution: '1280x720', vbitrate: 3000, abitrate: 192, skipfilename: 1 }, undefined, FULL) } catch { link = null }
+      if (!link?.path) link = await pc('getfilelink', { fileid }, undefined, FULL)
+    } else link = await pc('getfilelink', { fileid, forcedownload: kind === 'dl' ? 1 : 0 }, undefined, FULL)
+    const range = req.headers.get('range')
+    const get = (l: any) => fetch(`https://${(l.hosts || [HOST])[0]}${l.path}`, { method: req.method === 'HEAD' ? 'HEAD' : 'GET', headers: range ? { Range: range } : {} })
+    let up = await get(link)
+    // the web copy not there after all: the original
+    if (kind === 'video' && !up.ok && up.status !== 206) { await up.body?.cancel(); up = await get(await pc('getfilelink', { fileid }, undefined, FULL)) }
+    if (!up.ok && up.status !== 206) return plain(`pCloud answered ${up.status}.`, 502)
+    const h = new Headers({ ...CORS, 'Accept-Ranges': 'bytes', 'Cache-Control': kind === 'thumb' ? 'private, max-age=21600' : 'private, max-age=3600', 'Access-Control-Expose-Headers': 'Content-Length, Content-Range' })
+    for (const k of ['content-type', 'content-length', 'content-range', 'last-modified', 'etag']) { const v = up.headers.get(k); if (v) h.set(k, v) }
+    if (kind === 'dl') h.set('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(u.searchParams.get('n') || 'file')}`)
+    return new Response(req.method === 'HEAD' ? null : up.body, { status: up.status, headers: h })
+  } catch (e) {
+    console.error('pcloud stream', (e as Error).message)
+    return plain((e as Error).message || 'pCloud did not give the file.', 502)
+  }
+}
+
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: { ...CORS, 'Access-Control-Allow-Headers': CORS['Access-Control-Allow-Headers'] + ', range', 'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS' } })
+  // a signed picture, video or download for Database > pCloud (no sign-in: the signature is the permission)
+  if (req.method === 'GET' || req.method === 'HEAD') return stream(req)
   if (req.method !== 'POST') return json({ error: 'POST only' }, 405)
   if (!TOKEN) return json({ error: 'PCLOUD_TOKEN is not set in the function secrets.' }, 500)
 
@@ -462,31 +513,25 @@ Deno.serve(async (req) => {
         if (!path) return json({ error: 'No such folder.' }, 400)
         // by its number when the page has it: a name pCloud reads differently cannot lose the folder
         const r = await P('listfolder', Number(body.folderid) ? { folderid: Number(body.folderid) } : path === '/' ? { folderid: 0 } : { path })
-        const items = (r.metadata?.contents || []).map((m: any) => item(m, path))
-        // small pictures of the videos and photos, in one call
-        const withThumb = body.nothumbs ? [] : items.filter((i: any) => !i.folder && i.thumb).slice(0, 150)
+        // a Mac's hidden files (.DS_Store, ._name) are not shown
+        const items = (r.metadata?.contents || []).filter((m: any) => !String(m.name).startsWith('.')).map((m: any) => item(m, path))
+        // the small pictures of the videos and photos: signed addresses of this function (pCloud's own thumbnail links
+        // work only from here)
+        const withThumb = body.nothumbs ? [] : items.filter((i: any) => !i.folder && i.thumb).slice(0, 400)
         const thumbs: Record<string, string> = {}
-        if (withThumb.length) {
-          try {
-            const t = await P('getthumbslinks', { fileids: withThumb.map((i: any) => i.fileid).join(','), size: '320x180', crop: 0 })
-            for (const x of t.thumbs || []) if (x.result === 0 && x.path) thumbs[x.fileid] = `https://${(x.hosts || [HOST])[0]}${x.path}`
-          } catch { /* a list without pictures is still a list */ }
-        }
+        for (const i of withThumb) thumbs[i.fileid] = await signed('thumb', i.fileid)
         return json({ ok: true, ready: true, path, edit, admin: !!adm, items: items.map((i: any) => (thumbs[i.fileid] ? { ...i, thumbUrl: thumbs[i.fileid] } : i)) })
       }
       if (action === 'filesLink') {
         const fileid = Number(body.fileid)
         if (!fileid) return json({ error: 'No file.' }, 400)
-        // to watch in the page (Alex, 29 Oct: a TV master did not play): pCloud's own web copy of the video, H.264 at
-        // 720p, which any browser plays; the original only to download, or when pCloud has no web copy
-        if (body.preview === 'video') {
-          try {
-            const v = await P('getvideolink', { fileid, resolution: '1280x720', vbitrate: 3000, abitrate: 192, skipfilename: 1 })
-            if (v.path) return json({ ok: true, url: `https://${(v.hosts || [HOST])[0]}${v.path}`, web: true })
-          } catch { /* the original below */ }
-        }
-        const r = await P('getfilelink', { fileid, forcedownload: body.download ? 1 : 0 })
-        return json({ ok: true, url: `https://${(r.hosts || [HOST])[0]}${r.path}` })
+        // a big file to download goes through pCloud's own page (a download through here could be cut off after a few
+        // minutes); everything else through a signed address of this function
+        if (body.download && Number(body.size) > 400e6) return json({ ok: true, url: (await P('getfilepublink', { fileid })).link, page: true })
+        const kind = body.download ? 'dl' : body.preview === 'video' ? 'video' : 'file'
+        // a video: the original (most mp4s play as they are) and pCloud's 720p web copy, the page tries one then the other
+        if (kind === 'video') return json({ ok: true, url: await signed('file', fileid), web: await signed('video', fileid) })
+        return json({ ok: true, url: await signed(kind, fileid, String(body.name || '')) })
       }
       if (action === 'filesShare') {
         const no = needEdit(); if (no) return no

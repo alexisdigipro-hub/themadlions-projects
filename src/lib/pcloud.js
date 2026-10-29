@@ -233,9 +233,12 @@ const INDEX = new Map() // folder path -> { at, items } for the search
 const fcall = (action, body) => (supabase ? call(action, body) : demoCall(action, body))
 export const pcloudFiles = {
   list: (path, folderid) => fcall('filesList', { path, ...(folderid ? { folderid } : {}) }),
-  link: (fileid, download = false) => fcall('filesLink', { fileid, download }).then((r) => r.url),
-  /* a video to watch in the page: pCloud's web copy (H.264, 720p) when there is one */
+  /* a file to show in the page (a photo, a song) */
+  link: (fileid) => fcall('filesLink', { fileid }).then((r) => r.url),
+  /* a video to watch in the page: { url: the original, web: pCloud's web copy (H.264, 720p) } */
   watch: (fileid) => fcall('filesLink', { fileid, preview: 'video' }),
+  /* to download: { url, page } (page: pCloud's own download page, for a big file) */
+  download: (it) => fcall('filesLink', { fileid: it.fileid, download: true, size: it.size, name: it.name }),
   share: (it) => fcall('filesShare', it.folder ? { folderid: it.folderid } : { fileid: it.fileid }).then((r) => r.url),
   mkdir: (path, name) => fcall('filesMkdir', { path, name }),
   rename: (it, name) => fcall('filesRename', { ...(it.folder ? { folderid: it.folderid } : { fileid: it.fileid }), from: it.path, name }),
