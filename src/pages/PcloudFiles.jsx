@@ -91,7 +91,7 @@ export default function PcloudFiles({ slot }) {
   const openItem = async (it) => {
     if (it.folder) return setPath(it.path, it.folderid)
     const kind = kindOf(it)
-    if (kind === 'file') return download(it)
+    if (kind === 'file') return setOpen({ item: it, url: 'none', none: true })
     setOpen({ item: it, url: '' })
     try {
       const r = kind === 'video' ? await pcloudFiles.watch(it.fileid) : { url: await pcloudFiles.link(it.fileid) }
@@ -275,10 +275,16 @@ export default function PcloudFiles({ slot }) {
 
       {/* a file big: a video plays, a photo shows, a song plays */}
       <Modal open={!!open} wide title={open?.item.name || ''} className="pcf-big" onClose={() => setOpen(null)}
-        footer={open ? <><span className="muted">{[extOf(open.item.name), size(open.item.size), day(open.item.modified)].filter(Boolean).join(' · ')}</span><span className="grow" />
-          {edit && <Button onClick={() => share(open.item)}>Copy link</Button>}
+        footer={open ? <><span className="muted pcf-big-meta">{[extOf(open.item.name), size(open.item.size), day(open.item.modified)].filter(Boolean).join(' · ')}</span><span className="grow" />
+          {edit && <span className="pcf-acts">
+            <Act icon="link" label="Copy link" className="act-sm" onClick={() => share(open.item)} />
+            <Act icon="edit" label="Rename" className="act-sm" onClick={() => { const it = open.item; setOpen(null); setNaming({ item: it, name: it.name }) }} />
+            <button type="button" className="act act-sm" aria-label="Move" title="Move" onClick={() => { const it = open.item; setOpen(null); moveTo(it, up(it.path)) }}>{MOVE}<span className="act-t">Move</span></button>
+            <ActDelete label="Trash" onConfirm={() => { const it = open.item; setOpen(null); trash(it) }} />
+          </span>}
           <Button variant="primary" onClick={() => download(open.item)}>Download</Button></> : null}>
-        {open && (!open.url ? <p className="muted">Loading…</p>
+        {open && (open.none ? <Empty title="No preview for this kind of file">Download it to open it on this computer.</Empty>
+          : !open.url ? <p className="muted">Loading…</p>
           : kindOf(open.item) === 'video' ? (open.failed
             ? <Empty title="It does not play in the browser">pCloud has no web copy of this video yet (it makes one for most videos; a very big master can take a while). Download it to watch the original.</Empty>
             : <><video className="pcf-media" src={open.url} controls autoPlay playsInline onError={() => setOpen((o) => (o ? { ...o, failed: true } : o))} />
