@@ -6,7 +6,6 @@ import { can, useCurrentUser } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 import { fmtDate } from '../lib/dates.js'
 import { pcloudFiles } from '../lib/pcloud.js'
-import { remote } from '../lib/supabase.js'
 
 /* Database > pCloud (Alex, 29 Oct: "a section where we see and manage the pCloud's files, where we keep all the final
    videos"): the whole pCloud through the TML HUB Library app, laid out like Logos: one top row (search, Upload, New
@@ -21,6 +20,7 @@ const extOf = (n) => (String(n).match(/\.([a-z0-9]{1,6})$/i)?.[1] || '').toUpper
 const kindOf = (it) => (it.folder ? 'folder' : it.category === 2 || /^video\//.test(it.type) ? 'video' : it.category === 1 || /^image\//.test(it.type) ? 'image' : it.category === 3 || /^audio\//.test(it.type) ? 'audio' : 'file')
 const up = (p) => (p === '/' ? '/' : p.replace(/\/[^/]+$/, '') || '/')
 const FOLDER = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2h8.5A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z" /></svg>
+const DOTS = <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="18.5" cy="12" r="1.8" /></svg>
 const MOVE = <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2h8.5A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z" /><path d="M10 13.5h6M13.5 11l2.5 2.5-2.5 2.5" /></svg>
 
 function ActDelete({ label, onConfirm }) {
@@ -41,33 +41,62 @@ export default function PcloudFiles({ slot }) {
   const [naming, setNaming] = useState(null) // { item?, name } (new folder when no item)
   const [moving, setMoving] = useState(null) // { item, at, folders }
   const [dupes, setDupes] = useState(null) // null | { loading } | result with keep/sel
+  // Tiles (pictures big, for the final videos) or a list, remembered on this device
+  const [view, setView] = useState(() => { try { return localStorage.getItem('tml_pcloud_view') === 'list' ? 'list' : 'tiles' } catch { return 'tiles' } })
+  const pickView = (v) => { setView(v); try { localStorage.setItem('tml_pcloud_view', v) } catch { /* private window */ } }
+  const [menu, setMenu] = useState(0) // the folder whose ⋯ menu is open
+  const [sure, setSure] = useState(null) // a folder about to go to the trash, asked first
+  const [deep, setDeep] = useState(null) // the search under this folder: { q, path, items | null, folders, files, error }
   const pick = useRef(null)
   const scrollRef = useFitScroll(data === null)
 
-  const setPath = (p) => { setPathRaw(p); setQ(''); try { localStorage.setItem('tml_pcloud_path', p) } catch { /* private window */ } }
+  // the folder's number goes with its path when it was opened from the list, so it opens whatever its name holds
+  const fid = useRef(0)
+  const setPath = (p, folderid = 0) => { fid.current = folderid; setPathRaw(p); setQ(''); try { localStorage.setItem('tml_pcloud_path', p) } catch { /* private window */ } }
   const load = useCallback(async (p = path) => {
-    try { const r = await pcloudFiles.list(p); setData(r); setError('') } catch (e) {
-      // a folder that is gone (moved, renamed) opens the final cuts instead
-      if (p !== START && /not found|does not exist|2005/i.test(e.message)) { setPath(START); return }
-      setError(e.message); setData({ ready: true, items: [] })
+    pcloudFiles.forget()
+    try { const r = await pcloudFiles.list(p, fid.current); setData(r); setError('') } catch (e) {
+      // stays in this folder and says why (it used to jump back to Final cuts, Alex 29 Oct)
+      setError(/does not exist|not found|2005/i.test(e.message) ? `pCloud cannot find ${p}: it may have been moved or renamed. Go up a folder.` : e.message)
+      setData({ ready: true, items: [] })
     }
   }, [path]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (remote) { setData(null); load(path) } }, [path]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setData(null); load(path) }, [path]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // a search looks in every folder under this one (Alex, 29 Oct: "the search does not work" when it only looked here)
+  useEffect(() => {
+    const term = q.trim()
+    if (!term) { setDeep(null); return }
+    const stop = new AbortController()
+    const t = setTimeout(async () => {
+      setDeep((d) => ({ q: term, path, items: d?.path === path ? d.items : null, folders: 0, files: 0 }))
+      try {
+        const all = await pcloudFiles.index(path, (folders, files) => setDeep((d) => (d && d.path === path ? { ...d, folders, files } : d)), stop.signal)
+        if (!stop.signal.aborted) setDeep({ q: term, path, items: all })
+      } catch (e) { if (!stop.signal.aborted) setDeep({ q: term, path, items: [], error: e.message }) }
+    }, 450)
+    return () => { clearTimeout(t); stop.abort() }
+  }, [q, path])
+  useEffect(() => { if (!menu) return; const off = () => setMenu(0); window.addEventListener('click', off); return () => window.removeEventListener('click', off) }, [menu])
   const items = data?.items || []
-  const shown = useMemo(() => items.filter((i) => !q.trim() || matchText(q, i.name))
-    .sort((a, b) => (a.folder !== b.folder ? (a.folder ? -1 : 1) : a.folder ? a.name.localeCompare(b.name) : ((Date.parse(b.modified) || 0) - (Date.parse(a.modified) || 0)) || a.name.localeCompare(b.name))), [items, q])
+  const searching = !!q.trim()
+  const source = searching && deep?.path === path && deep.items ? deep.items : items
+  const shown = useMemo(() => source.filter((i) => !searching || matchText(q, i.name)).slice(0, 400)
+    .sort((a, b) => (a.folder !== b.folder ? (a.folder ? -1 : 1) : a.folder ? a.name.localeCompare(b.name) : ((Date.parse(b.modified) || 0) - (Date.parse(a.modified) || 0)) || a.name.localeCompare(b.name))), [source, q])
   const edit = !!data?.edit
   const admin = !!data?.admin
 
   if (!can(user, 'pcloud')) return <Navigate to="/" replace />
 
   const openItem = async (it) => {
-    if (it.folder) return setPath(it.path)
+    if (it.folder) return setPath(it.path, it.folderid)
     const kind = kindOf(it)
-    if (kind === 'file') return download(it)
+    if (kind === 'file') return setOpen({ item: it, url: 'none', none: true })
     setOpen({ item: it, url: '' })
-    try { const url = await pcloudFiles.link(it.fileid); setOpen((o) => (o?.item === it ? { ...o, url } : o)) } catch (e) { toast(e.message, 'error'); setOpen(null) }
+    try {
+      const r = kind === 'video' ? await pcloudFiles.watch(it.fileid) : { url: await pcloudFiles.link(it.fileid) }
+      setOpen((o) => (o?.item === it ? { ...o, url: r.url || 'none', web: !!r.web, failed: !r.url } : o))
+    } catch (e) { toast(e.message, 'error'); setOpen(null) }
   }
   const download = async (it) => {
     try {
@@ -121,7 +150,7 @@ export default function PcloudFiles({ slot }) {
   const scan = async () => {
     setDupes({ loading: true })
     try {
-      const r = await pcloudFiles.dupes(path)
+      const r = await pcloudFiles.dupes(path, (folders, files) => setDupes((d) => (d?.loading ? { loading: true, folders, files } : d)))
       setDupes({ ...r, keep: Object.fromEntries(r.groups.map((g, i) => [i, g.files[0].fileid])), sel: {} })
     } catch (e) { toast(e.message, 'error'); setDupes(null) }
   }
@@ -148,35 +177,79 @@ export default function PcloudFiles({ slot }) {
     <ListRow key={it.folder ? `d${it.folderid}` : `f${it.fileid}`} className="pcf-row" onClick={() => openItem(it)}
       thumb={thumbOf(it)}
       title={it.name}
-      sub={it.folder ? 'Folder' : [extOf(it.name), size(it.size), day(it.modified)].filter(Boolean).join(' · ')}
-      aside={<span className="pcf-acts">
-        {edit && <Act icon="link" label="Copy link" className="act-sm" onClick={() => share(it)} />}
-        {!it.folder && <Act icon="download" label="Download" className="act-sm" onClick={() => download(it)} />}
-        {edit && <Act icon="edit" label="Rename" className="act-sm" onClick={() => setNaming({ item: it, name: it.name })} />}
-        {edit && <button type="button" className="act act-sm" aria-label="Move" title="Move" onClick={() => moveTo(it, up(it.path))}>{MOVE}<span className="act-t">Move</span></button>}
-        {edit && (!it.folder || admin) && <ActDelete label="Trash" onConfirm={() => trash(it)} />}
-      </span>} />
+      sub={[it.folder ? 'Folder' : [extOf(it.name), size(it.size), day(it.modified)].filter(Boolean).join(' · '), searching && up(it.path) !== path ? `in ${up(it.path)}` : ''].filter(Boolean).join(' · ')}
+      aside={acts(it)} />
   )
+
+  const acts = (it) => (
+    <span className="pcf-acts" onClick={(e) => e.stopPropagation()}>
+      {edit && <Act icon="link" label="Copy link" className="act-sm" onClick={() => share(it)} />}
+      {!it.folder && <Act icon="download" label="Download" className="act-sm" onClick={() => download(it)} />}
+      {edit && <Act icon="edit" label="Rename" className="act-sm" onClick={() => setNaming({ item: it, name: it.name })} />}
+      {edit && <button type="button" className="act act-sm" aria-label="Move" title="Move" onClick={() => moveTo(it, up(it.path))}>{MOVE}<span className="act-t">Move</span></button>}
+      {edit && (!it.folder || admin) && <ActDelete label="Trash" onConfirm={() => trash(it)} />}
+    </span>
+  )
+  const tile = (it) => (
+    <article key={it.folder ? `d${it.folderid}` : `f${it.fileid}`} className={`pcf-tile ${kindOf(it)}`} role="button" tabIndex={0}
+      onClick={() => openItem(it)} onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) openItem(it) }}>
+      <span className="pcf-tile-pic">{thumbOf(it)}</span>
+      <span className="pcf-tile-txt">
+        <strong title={it.name}>{it.name}</strong>
+        <small>{[it.folder ? 'Folder' : [extOf(it.name), size(it.size)].filter(Boolean).join(' · '), searching && up(it.path) !== path ? up(it.path).split('/').pop() : day(it.modified)].filter(Boolean).join(' · ')}</small>
+      </span>
+      {acts(it)}
+    </article>
+  )
+  const folderTile = (it) => (
+    <article key={`d${it.folderid}`} className="pcf-ftile" role="button" tabIndex={0}
+      onClick={() => openItem(it)} onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) openItem(it) }}>
+      <span className="pcf-ftile-ico">{FOLDER}</span>
+      <span className="pcf-tile-txt"><strong title={it.name}>{it.name}</strong>{searching && up(it.path) !== path && <small>{up(it.path).split('/').pop() || 'pCloud'}</small>}</span>
+      {edit && (
+        <span className="pcf-more" onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="pcf-more-btn" aria-label={`More for ${it.name}`} title="More" aria-expanded={menu === it.folderid} onClick={() => setMenu(menu === it.folderid ? 0 : it.folderid)}>{DOTS}</button>
+          {menu === it.folderid && (
+            <span className="pcf-menu" role="menu">
+              <button type="button" role="menuitem" onClick={() => { setMenu(0); share(it) }}>Copy link</button>
+              <button type="button" role="menuitem" onClick={() => { setMenu(0); setNaming({ item: it, name: it.name }) }}>Rename</button>
+              <button type="button" role="menuitem" onClick={() => { setMenu(0); moveTo(it, up(it.path)) }}>Move</button>
+              {admin && <button type="button" role="menuitem" className="danger" onClick={() => { setMenu(0); setSure(it) }}>Move to trash</button>}
+            </span>
+          )}
+        </span>
+      )}
+    </article>
+  )
+  const nFolders = shown.filter((i) => i.folder).length
+  const nFiles = shown.length - nFolders
+  const bytes = shown.reduce((n, i) => n + (i.size || 0), 0)
 
   return (
     <section className="panel db-card drives drv ids pcf">
       <DbBar slot={slot}>
         <div className="toolbar-info"><strong>pCloud</strong> <span className="muted">{data?.ready ? shown.length : ''}</span></div>
         <div className="toolbar-actions">
-          <DbSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search this folder" />
-          {edit && <Act icon="plus" label="New folder" onClick={() => setNaming({ name: '' })} />}
-          {admin && <Act icon="copy" label="Duplicates" onClick={scan} />}
+          <DbSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" />
+          <span className="segmented small ids-view pcf-view">
+            <button className={view === 'tiles' ? 'on' : ''} onClick={() => pickView('tiles')}>Tiles</button>
+            <button className={view === 'list' ? 'on' : ''} onClick={() => pickView('list')}>List</button>
+          </span>
+          {edit && <Act icon="plus" label="New folder" className="act-sm" onClick={() => setNaming({ name: '' })} />}
+          {admin && <Act icon="copy" label="Duplicates" className="act-sm" onClick={scan} />}
           {edit && <Act icon="expense" label="Upload" main onClick={() => pick.current?.click()} />}
         </div>
       </DbBar>
       <input ref={pick} type="file" multiple hidden onChange={(e) => { upload(e.target.files); e.target.value = '' }} />
 
-      {!remote ? <p className="ids-note">The pCloud section works on hub.themadlions.com, with the online database.</p> : data && data.ready === false ? (
+      {data?.demo && <p className="ids-note">Trying it out: a made-up pCloud, nothing here is real. On hub.themadlions.com this is the company pCloud.</p>}
+      {data && data.ready === false ? (
         <Empty title="pCloud is not linked yet">The function needs the token of the TML HUB Library app (PCLOUD_FULL_TOKEN in Supabase, Edge Functions, Secrets). Then this shows the whole pCloud.</Empty>
       ) : (
         <>
           <div className="pcf-places">
             {PLACES.map(([p, l]) => <button key={p} type="button" className={`lchip${path === p || (p !== '/' && path.startsWith(p + '/')) ? ' acc on' : ''}`} onClick={() => setPath(p)}><i />{l}</button>)}
+            {data?.ready && <span className="pcf-count">{[nFolders && (nFolders === 1 ? '1 folder' : `${nFolders} folders`), nFiles && (nFiles === 1 ? '1 file' : `${nFiles} files`), bytes && size(bytes)].filter(Boolean).join(' · ')}</span>}
           </div>
           <nav className="pcf-crumbs" aria-label="Folder">
             {path !== '/' && <button type="button" className="pcf-upbtn" onClick={() => setPath(up(path))} aria-label="Up one folder" title="Up one folder">‹</button>}
@@ -185,10 +258,16 @@ export default function PcloudFiles({ slot }) {
           </nav>
           {error && <p className="ids-note err">{error}</p>}
           {busy && <p className="ids-note busy"><span className="ids-spin" />{busy}</p>}
+          {searching && deep && !deep.items && <p className="ids-note busy"><span className="ids-spin" />{`Searching every folder in ${path === '/' ? 'pCloud' : path}`}{deep.folders ? ` · ${deep.folders} folders, ${deep.files} files` : '…'}</p>}
+          {searching && deep?.error && <p className="ids-note err">{deep.error}</p>}
           <div className="ab-scroll" ref={scrollRef}
             onDragOver={(e) => edit && e.preventDefault()} onDrop={(e) => { if (!edit) return; e.preventDefault(); upload(e.dataTransfer.files) }}>
             {data === null ? <p className="muted ids-wait">Loading…</p> : shown.length ? (
-              <div className="lrow-list">{shown.map(row)}</div>
+              view === 'tiles' ? <>
+                {/* folders small, above; the files with their pictures big */}
+                {shown.some((i) => i.folder) && <div className="pcf-folders">{shown.filter((i) => i.folder).map(folderTile)}</div>}
+                {shown.some((i) => !i.folder) && <div className="pcf-grid">{shown.filter((i) => !i.folder).map(tile)}</div>}
+              </> : <div className="lrow-list">{shown.map(row)}</div>
             ) : <Empty title={q ? 'Nothing found' : 'An empty folder'}>{q ? `Nothing here matches "${q}".` : edit ? 'Upload files into it, or drop them here.' : 'Nothing in this folder yet.'}</Empty>}
           </div>
         </>
@@ -196,11 +275,20 @@ export default function PcloudFiles({ slot }) {
 
       {/* a file big: a video plays, a photo shows, a song plays */}
       <Modal open={!!open} wide title={open?.item.name || ''} className="pcf-big" onClose={() => setOpen(null)}
-        footer={open ? <><span className="muted">{[extOf(open.item.name), size(open.item.size), day(open.item.modified)].filter(Boolean).join(' · ')}</span><span className="grow" />
-          {edit && <Button onClick={() => share(open.item)}>Copy link</Button>}
+        footer={open ? <><span className="muted pcf-big-meta">{[extOf(open.item.name), size(open.item.size), day(open.item.modified)].filter(Boolean).join(' · ')}</span><span className="grow" />
+          {edit && <span className="pcf-acts">
+            <Act icon="link" label="Copy link" className="act-sm" onClick={() => share(open.item)} />
+            <Act icon="edit" label="Rename" className="act-sm" onClick={() => { const it = open.item; setOpen(null); setNaming({ item: it, name: it.name }) }} />
+            <button type="button" className="act act-sm" aria-label="Move" title="Move" onClick={() => { const it = open.item; setOpen(null); moveTo(it, up(it.path)) }}>{MOVE}<span className="act-t">Move</span></button>
+            <ActDelete label="Trash" onConfirm={() => { const it = open.item; setOpen(null); trash(it) }} />
+          </span>}
           <Button variant="primary" onClick={() => download(open.item)}>Download</Button></> : null}>
-        {open && (!open.url ? <p className="muted">Loading…</p>
-          : kindOf(open.item) === 'video' ? <video className="pcf-media" src={open.url} controls autoPlay playsInline onError={() => toast('This video does not play in the browser (ProRes, for one): download it.', 'error')} />
+        {open && (open.none ? <Empty title="No preview for this kind of file">Download it to open it on this computer.</Empty>
+          : !open.url ? <p className="muted">Loading…</p>
+          : kindOf(open.item) === 'video' ? (open.failed
+            ? <Empty title="It does not play in the browser">pCloud has no web copy of this video yet (it makes one for most videos; a very big master can take a while). Download it to watch the original.</Empty>
+            : <><video className="pcf-media" src={open.url} controls autoPlay playsInline onError={() => setOpen((o) => (o ? { ...o, failed: true } : o))} />
+              {open.web && <p className="muted small">A lighter copy to watch here (720p). Download gives the original.</p>}</>)
           : kindOf(open.item) === 'audio' ? <audio className="pcf-audio" src={open.url} controls autoPlay />
           : <img className="pcf-media" src={open.url} alt={open.item.name} />)}
       </Modal>
@@ -229,13 +317,18 @@ export default function PcloudFiles({ slot }) {
         )}
       </Modal>
 
+      <Modal open={!!sure} title={sure ? `Move ${sure.name} to the trash?` : ''} onClose={() => setSure(null)}
+        footer={<><Button variant="ghost" onClick={() => setSure(null)}>Cancel</Button><Button variant="danger" onClick={() => { const it = sure; setSure(null); trash(it) }}>Move to trash</Button></>}>
+        <p className="small muted">The folder and everything in it go to pCloud's trash, where they can be put back.</p>
+      </Modal>
+
       <Modal open={!!dupes} wide title="Duplicates" onClose={() => !busy && setDupes(null)}
         footer={dupes?.groups ? <><span className="muted">{chosen.length ? `${chosen.length} chosen · ${size(freeing)}` : 'Nothing chosen'}</span><span className="grow" />
           <Button variant="ghost" onClick={() => setDupes(null)} disabled={!!busy}>Close</Button>
           <Button variant="primary" onClick={trashDupes} disabled={!chosen.length || !!busy}>{busy || `Move ${chosen.length} to pCloud's trash`}</Button></> : null}>
-        {dupes?.loading ? <p className="muted">Reading {path === '/' ? 'the whole pCloud' : path}… a big pCloud takes a minute.</p> : dupes?.groups && (
+        {dupes?.loading ? <p className="muted">{`Reading ${path === '/' ? 'the whole pCloud' : path}, folder by folder`}{dupes.folders ? ` · ${dupes.folders} folders, ${dupes.files} files so far` : '…'}</p> : dupes?.groups && (
           <div className="stack">
-            <p className="small muted">{`${dupes.scanned} files read in ${dupes.path === '/' ? 'the whole pCloud' : dupes.path}. `}{dupes.count ? `${dupes.count} files are in more than one place, the same content byte for byte whatever the name, ${size(dupes.waste)} twice. One of each stays (the oldest, or the one you pick); the others go to pCloud's trash, where they can be put back.` : 'Nothing is there twice, from 1 MB up.'}</p>
+            <p className="small muted">{`${dupes.scanned} files in ${dupes.folders} folders read in ${dupes.path === '/' ? 'the whole pCloud' : dupes.path}. `}{dupes.count ? `${dupes.count} files are in more than one place, the same content byte for byte whatever the name, ${size(dupes.waste)} twice. One of each stays (the oldest, or the one you pick); the others go to pCloud's trash, where they can be put back.` : 'Nothing is there twice, from 1 MB up.'}</p>
             {dupes.groups.map((g, i) => (
               <div key={i} className="pcf-dupe">
                 <div className="pcf-dupe-h"><b>{g.files[0].name}</b><span className="muted small">{size(g.size)} · {g.files.length} copies</span></div>

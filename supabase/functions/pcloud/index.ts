@@ -441,7 +441,8 @@ Deno.serve(async (req) => {
       const P = (method: string, params: Record<string, any> = {}, b?: BodyInit) => pc(method, params, b, FULL)
       // a path in the pCloud: from its root, no climbing up
       const clean = (x: any) => {
-        const parts = String(x || '').split('/').map((t) => t.trim()).filter(Boolean)
+        // names are kept as they are (a folder whose name ends in a space is still found, Alex 29 Oct)
+        const parts = String(x || '').split('/').filter((t) => t !== '')
         if (parts.some((t) => t === '..' || t === '.')) return ''
         return '/' + parts.join('/')
       }
@@ -459,10 +460,11 @@ Deno.serve(async (req) => {
       if (action === 'filesList') {
         const path = clean(body.path)
         if (!path) return json({ error: 'No such folder.' }, 400)
-        const r = await P('listfolder', path === '/' ? { folderid: 0 } : { path })
+        // by its number when the page has it: a name pCloud reads differently cannot lose the folder
+        const r = await P('listfolder', Number(body.folderid) ? { folderid: Number(body.folderid) } : path === '/' ? { folderid: 0 } : { path })
         const items = (r.metadata?.contents || []).map((m: any) => item(m, path))
         // small pictures of the videos and photos, in one call
-        const withThumb = items.filter((i: any) => !i.folder && i.thumb).slice(0, 150)
+        const withThumb = body.nothumbs ? [] : items.filter((i: any) => !i.folder && i.thumb).slice(0, 150)
         const thumbs: Record<string, string> = {}
         if (withThumb.length) {
           try {
@@ -475,6 +477,14 @@ Deno.serve(async (req) => {
       if (action === 'filesLink') {
         const fileid = Number(body.fileid)
         if (!fileid) return json({ error: 'No file.' }, 400)
+        // to watch in the page (Alex, 29 Oct: a TV master did not play): pCloud's own web copy of the video, H.264 at
+        // 720p, which any browser plays; the original only to download, or when pCloud has no web copy
+        if (body.preview === 'video') {
+          try {
+            const v = await P('getvideolink', { fileid, resolution: '1280x720', vbitrate: 3000, abitrate: 192, skipfilename: 1 })
+            if (v.path) return json({ ok: true, url: `https://${(v.hosts || [HOST])[0]}${v.path}`, web: true })
+          } catch { /* the original below */ }
+        }
         const r = await P('getfilelink', { fileid, forcedownload: body.download ? 1 : 0 })
         return json({ ok: true, url: `https://${(r.hosts || [HOST])[0]}${r.path}` })
       }
@@ -682,6 +692,8 @@ Deno.serve(async (req) => {
 
     return json({ error: `Unknown action "${action}".` }, 400)
   } catch (e) {
+    // in the function's logs too, so a refusal from pCloud can be read there
+    console.error('pcloud', (e as Error).message || String(e))
     return json({ error: (e as Error).message || String(e) }, 500)
   }
 })
