@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<!-- Alex's email signature (29 Oct): open it, press Copy signature, paste it into the mail app's signature settings -->
+<title>Email signature</title>
+<style>
+  body { margin: 0; padding: 40px 24px; background: #eceef1; font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; }
+  .card { max-width: 640px; margin: 0 auto; background: #fff; border-radius: 18px; padding: 32px 34px; box-shadow: 0 10px 40px rgba(0,0,0,.08); }
+  .bar { max-width: 640px; margin: 0 auto 16px; display: flex; gap: 10px; align-items: center; }
+  button { font: inherit; font-weight: 600; font-size: 14px; height: 42px; padding: 0 20px; border-radius: 999px; border: 0; background: #d40000; color: #fff; cursor: pointer; }
+  .note { color: #666; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="bar"><button id="copy" type="button">Copy signature</button><span class="note" id="note">Then paste it into your mail's signature settings.</span></div>
+<div class="card">
+<!-- the signature: tables and inline styles only, so Gmail, Apple Mail and Outlook keep it as it is -->
+<div id="sig">
+<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;color:#1c1e22;">
+  <tr><td style="padding:0 0 18px;font-size:14px;line-height:20px;color:#555b63;">Kind regards,</td></tr>
+  <tr><td style="padding:0;">
+    <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">
+      <tr>
+        <td style="padding:0 18px 0 0;border-right:2px solid #d40000;vertical-align:top;">
+          <div style="font-size:18px;line-height:22px;font-weight:700;color:#111317;letter-spacing:.2px;">Alex Konstantinidis</div>
+          <div style="font-size:12px;line-height:18px;color:#d40000;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;padding-top:4px;">Producer &amp; Film Director</div>
+        </td>
+        <td style="padding:0 0 0 18px;vertical-align:top;font-size:13px;line-height:21px;color:#33373d;">
+          <a href="mailto:alexisk@themadlions.com" style="color:#33373d;text-decoration:none;">alexisk@themadlions.com</a><br>
+          <a href="tel:+306936221010" style="color:#33373d;text-decoration:none;">+30 693 622 1010</a><br>
+          <a href="https://themadlions.com" style="color:#33373d;text-decoration:none;font-weight:700;">themadlions.com</a>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:22px 0 0;">
+    <a href="https://themadlions.com" style="text-decoration:none;"><img src="https://themadlions.com/wordmark.png" width="170" height="17" alt="THE MAD LIONS" style="display:block;border:0;width:170px;height:auto;"></a>
+    <div style="font-size:9.5px;line-height:14px;letter-spacing:3.4px;color:#8a9099;padding-top:7px;font-weight:600;">FILM PRODUCTION HOUSE</div>
+  </td></tr>
+  <tr><td style="padding:22px 0 0;">
+    <div style="max-width:560px;border-top:1px solid #e3e5e8;padding-top:12px;font-size:9.5px;line-height:14px;color:#9aa0a8;">IMPORTANT NOTICE: This e-mail and any attachments are intended only for the recipient(s) named above and may be privileged, confidential, protected by law and/or contain trade secrets. Any unauthorised use, such as review, printing, copying or distribution by others, is prohibited and may constitute a criminal offence. THE MAD LIONS cannot accept responsibility for the accuracy or completeness of this message, as it may have been transmitted over a public network.</div>
+  </td></tr>
+</table>
+</div>
+</div>
+<script>
+  document.getElementById('copy').onclick = async () => {
+    const html = document.getElementById('sig').innerHTML
+    const text = document.getElementById('sig').innerText
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })])
+    } catch {
+      const r = document.createRange(); r.selectNodeContents(document.getElementById('sig')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand('copy'); s.removeAllRanges()
+    }
+    document.getElementById('note').textContent = 'Copied. Paste it into your mail\'s signature settings.'
+  }
+</script>
+</body>
+</html>
