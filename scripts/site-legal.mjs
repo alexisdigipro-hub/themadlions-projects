@@ -2,7 +2,7 @@
 // every app, on each app's page and in the apps"). One page per app at legal/<id>/ with both texts (#privacy, #terms),
 // English and Greek with the site's switch, plus legal/ listing them all. RoarMe and RoarTransfer keep their own
 // (RoarMe ?legal=privacy, roartransfer.com/privacy); the list links to them.
-// Only what the code of each app does (RoarMail 0.15, RoarList 0.4, RoarWriter 0.5, RoarTwin 0.1, Roardino, the site).
+// Only what the code of each app does (RoarMail 0.15, RoarList 0.4, RoarWriter 0.5, RoarKit 0.4, Roardino, the site).
 //
 //   node scripts/site-legal.mjs public/site      then copy legal/ into themadlions-site with the rest
 import { writeFileSync, mkdirSync } from 'node:fs'
@@ -237,47 +237,64 @@ const APPS = [
     }, termsEnd('RoarWriter', LAB)),
   },
   {
-    id: 'roartwin', name: 'RoarTwin', page: 'lab/roartwin/', what: { en: 'the duplicate finder for Mac and Windows', el: 'η εφαρμογή για διπλά αρχεία σε Mac και Windows' },
+    // RoarTwin became RoarKit, a toolbox (Alex, 28 and 29 Oct); legal/roartwin/ redirects here (written below), since
+    // RoarTwin 0.4 and older link to it. Only what RoarKit 0.4's code does.
+    id: 'roarkit', name: 'RoarKit', page: 'lab/roarkit/', updated: { en: '29 October 2026', el: '29 Οκτωβρίου 2026' },
+    what: { en: 'the toolbox for the computer and the shoot, for Mac and Windows', el: 'η εργαλειοθήκη για τον υπολογιστή και το γύρισμα, σε Mac και Windows' },
     privacy: join2({
       en: [
-        ['In short', ['RoarTwin works only on your computer. There is no account and no server of ours: your files, their names and what it finds never leave your computer.']],
+        ['In short', ['RoarKit works only on your computer. There is no account and no server of ours: your files, their names, your passwords and what it finds never leave your computer.']],
         ['What it reads', [
-          'Only the folders and drives you choose: file names, sizes and dates, samples of their bytes and their fingerprints (SHA-256), and for videos and sound a few frames and moments, read by the ffmpeg that comes with the app.',
-          'Cloud-drive folders (iCloud, Dropbox, pCloud and the like) are skipped unless you turn that off, so it does not make them download your files.',
-          'It looks for camera cards when one is plugged in, by listing your drives every few seconds.',
+          'Only the folders, drives and files you choose: their names, sizes and dates, samples of their bytes and their fingerprints (SHA-256 and MD5), and for videos, pictures and sound their details and a few frames and moments, read by the ffmpeg that comes with the app (on a Mac also by the system\'s own mdls).',
+          'Clean up and the Overview look only inside the folders where programs keep their caches, to measure them. Cloud-drive folders (iCloud, Dropbox, pCloud and the like) are skipped unless you turn that off, so it does not make them download your files.',
+          'Computer stats and the Overview read what the system says of itself: processor, memory, drives, network, heat level, battery and the names of the programs using the most. They are shown, not kept.',
+          'It looks for camera cards when one is plugged in, by listing your drives every few seconds. Drive health asks each drive for its own health report (SMART).',
         ]],
         ['What it keeps and writes', [
-          'Your chosen folders, options, language and naming counters are kept in the app on your computer.',
-          'Make a twin writes the copies and a copy report (a CSV with every file, its size and fingerprint) on the drives you pick. Export writes a CSV where you say.',
-          'It never deletes a file: it only moves the ones you confirm to the Trash, one of each group always stays, and nothing in a Masters folder is ever touched.',
+          'Your settings, chosen folders, favourites, naming rules and the last renaming (for Undo) are kept in the app\'s folder on your computer.',
+          'The Vault is one file in that folder, sealed with AES-256-GCM under a key made from your master password (scrypt). The master password is not stored anywhere, so neither we nor anyone else can open the vault or bring a forgotten master password back. A password you copy is cleared from the clipboard after 30 seconds.',
+          'Make a twin writes the copies, a copy report and an ASC MHL on the drives you pick. Reports, contact sheets, archives and lists are written where you say. The speed test writes a test file on the drive you test and removes it.',
+          'It never deletes your files: it only moves the ones you confirm to the Trash, one of each group always stays, and nothing in a Masters folder is ever touched. Copies, moves and renames never write over a file.',
         ]],
-        ['What leaves your computer', [updates('roartwin').en, 'Nothing else. No analytics, no trackers, no AI, no account.']],
+        ['What leaves your computer', [
+          updates('roartwin').en,
+          'The internet speed test in Computer stats, only when you press it, downloads and uploads test data to Cloudflare (speed.cloudflare.com), which sees your IP address. No file of yours is sent.',
+          'Nothing else. No analytics, no trackers, no AI, no account.',
+        ]],
       ],
       el: [
-        ['Με λίγα λόγια', ['Το RoarTwin δουλεύει μόνο στον υπολογιστή σου. Δεν υπάρχει λογαριασμός ούτε δικός μας server: τα αρχεία σου, τα ονόματά τους και ό,τι βρίσκει δεν φεύγουν ποτέ από τον υπολογιστή σου.']],
+        ['Με λίγα λόγια', ['Το RoarKit δουλεύει μόνο στον υπολογιστή σου. Δεν υπάρχει λογαριασμός ούτε δικός μας server: τα αρχεία σου, τα ονόματά τους, οι κωδικοί σου και ό,τι βρίσκει δεν φεύγουν ποτέ από τον υπολογιστή σου.']],
         ['Τι διαβάζει', [
-          'Μόνο τους φακέλους και τους δίσκους που διαλέγεις: ονόματα αρχείων, μεγέθη και ημερομηνίες, δείγματα από τα bytes τους και τα αποτυπώματά τους (SHA-256), και για βίντεο και ήχο λίγα καρέ και στιγμές, που τα διαβάζει το ffmpeg που έρχεται με την εφαρμογή.',
-          'Οι φάκελοι cloud (iCloud, Dropbox, pCloud κ.λπ.) παραλείπονται εκτός αν το κλείσεις, για να μην κατεβάσουν τα αρχεία σου.',
-          'Ψάχνει για κάρτες κάμερας όταν μπαίνει μία, κοιτώντας τους δίσκους σου κάθε λίγα δευτερόλεπτα.',
+          'Μόνο τους φακέλους, τους δίσκους και τα αρχεία που διαλέγεις: ονόματα, μεγέθη και ημερομηνίες, δείγματα από τα bytes τους και τα αποτυπώματά τους (SHA-256 και MD5), και για βίντεο, εικόνες και ήχο τα στοιχεία τους και λίγα καρέ και στιγμές, που τα διαβάζει το ffmpeg που έρχεται με την εφαρμογή (σε Mac και το mdls του ίδιου του συστήματος).',
+          'Ο Καθαρισμός και η Επισκόπηση κοιτάνε μόνο μέσα στους φακέλους όπου τα προγράμματα κρατάνε τις cache τους, για να τις μετρήσουν. Οι φάκελοι cloud (iCloud, Dropbox, pCloud κ.λπ.) παραλείπονται εκτός αν το κλείσεις, για να μην κατεβάσουν τα αρχεία σου.',
+          'Τα Στατιστικά υπολογιστή και η Επισκόπηση διαβάζουν ό,τι λέει το σύστημα για τον εαυτό του: επεξεργαστή, μνήμη, δίσκους, δίκτυο, επίπεδο θερμότητας, μπαταρία και τα ονόματα των προγραμμάτων που τον ζορίζουν. Φαίνονται, δεν κρατιούνται.',
+          'Ψάχνει για κάρτες κάμερας όταν μπαίνει μία, κοιτώντας τους δίσκους σου κάθε λίγα δευτερόλεπτα. Η Υγεία δίσκων ζητάει από κάθε δίσκο τη δική του αναφορά υγείας (SMART).',
         ]],
         ['Τι κρατά και τι γράφει', [
-          'Οι φάκελοι που διάλεξες, οι επιλογές, η γλώσσα και οι μετρητές ονομάτων φυλάσσονται στην εφαρμογή στον υπολογιστή σου.',
-          'Το Make a twin γράφει τα αντίγραφα και μια αναφορά αντιγραφής (CSV με κάθε αρχείο, το μέγεθος και το αποτύπωμά του) στους δίσκους που διαλέγεις. Η εξαγωγή γράφει ένα CSV όπου πεις.',
-          'Δεν σβήνει ποτέ αρχείο: μόνο μετακινεί στον Κάδο όσα επιβεβαιώνεις, ένα από κάθε ομάδα μένει πάντα, και τίποτα σε φάκελο Masters δεν αγγίζεται ποτέ.',
+          'Οι ρυθμίσεις, οι φάκελοι που διάλεξες, τα αγαπημένα, οι κανόνες ονομάτων και η τελευταία μετονομασία (για την Αναίρεση) φυλάσσονται στον φάκελο της εφαρμογής στον υπολογιστή σου.',
+          'Το Vault είναι ένα αρχείο σε αυτόν τον φάκελο, κλειδωμένο με AES-256-GCM με κλειδί που βγαίνει από τον κύριο κωδικό σου (scrypt). Ο κύριος κωδικός δεν φυλάσσεται πουθενά, οπότε ούτε εμείς ούτε κανείς άλλος μπορεί να ανοίξει το vault ή να φέρει πίσω έναν ξεχασμένο κύριο κωδικό. Ένας κωδικός που αντιγράφεις σβήνεται από το πρόχειρο μετά από 30 δευτερόλεπτα.',
+          'Το Δίδυμο αντίγραφο γράφει τα αντίγραφα, μια αναφορά αντιγραφής και ένα ASC MHL στους δίσκους που διαλέγεις. Αναφορές, contact sheets, συμπιεσμένα και λίστες γράφονται όπου πεις. Το τεστ ταχύτητας γράφει ένα αρχείο δοκιμής στον δίσκο που ελέγχεις και το σβήνει.',
+          'Δεν σβήνει ποτέ τα αρχεία σου: μόνο μετακινεί στον Κάδο όσα επιβεβαιώνεις, ένα από κάθε ομάδα μένει πάντα, και τίποτα σε φάκελο Masters δεν αγγίζεται ποτέ. Αντιγραφές, μετακινήσεις και μετονομασίες δεν γράφουν ποτέ πάνω σε αρχείο.',
         ]],
-        ['Τι φεύγει από τον υπολογιστή σου', [updates('roartwin').el, 'Τίποτα άλλο. Κανένα analytics, κανένας tracker, κανένα AI, κανένας λογαριασμός.']],
+        ['Τι φεύγει από τον υπολογιστή σου', [
+          updates('roartwin').el,
+          'Το speedtest του internet στα Στατιστικά υπολογιστή, μόνο όταν το πατήσεις, κατεβάζει και ανεβάζει δεδομένα δοκιμής στο Cloudflare (speed.cloudflare.com), που βλέπει τη διεύθυνση IP σου. Κανένα αρχείο σου δεν στέλνεται.',
+          'Τίποτα άλλο. Κανένα analytics, κανένας tracker, κανένα AI, κανένας λογαριασμός.',
+        ]],
       ],
     }, rights(LAB)),
     terms: join2({
       en: [
-        ['Using RoarTwin', ['RoarTwin shows you which files are the same; you decide what goes. Look before you move anything to the Trash, and empty the Trash only when you are sure. A copy made by Make a twin is checked byte for byte, but keep more than one backup of anything you cannot shoot again.']],
-        ['Your files are yours', ['We never receive your files or anything about them.']],
+        ['Using RoarKit', ['RoarKit shows you what takes space, what is the same and what is wrong; you decide what goes. Look before you move anything to the Trash, and empty the Trash only when you are sure. A copy made by Make a twin is checked byte for byte, but keep more than one backup of anything you cannot shoot again.']],
+        ['Your passwords', ['Choose a master password you will remember and write it down somewhere safe: without it the Vault cannot be opened, by you or by us. Keep a backup of the vault on another drive.']],
+        ['Your files are yours', ['We never receive your files, your passwords or anything about them.']],
       ],
       el: [
-        ['Η χρήση του RoarTwin', ['Το RoarTwin σου δείχνει ποια αρχεία είναι ίδια· εσύ αποφασίζεις τι φεύγει. Κοίτα πριν μετακινήσεις κάτι στον Κάδο, και άδειασε τον Κάδο μόνο όταν είσαι σίγουρος. Ένα αντίγραφο από το Make a twin ελέγχεται byte προς byte, αλλά κράτα παραπάνω από ένα backup για ό,τι δεν ξαναγυρίζεται.']],
-        ['Τα αρχεία σου είναι δικά σου', ['Δεν παίρνουμε ποτέ τα αρχεία σου ούτε τίποτα γι’ αυτά.']],
+        ['Η χρήση του RoarKit', ['Το RoarKit σου δείχνει τι πιάνει χώρο, τι είναι ίδιο και τι δεν πάει καλά· εσύ αποφασίζεις τι φεύγει. Κοίτα πριν μετακινήσεις κάτι στον Κάδο, και άδειασε τον Κάδο μόνο όταν είσαι σίγουρος. Ένα αντίγραφο από το Δίδυμο αντίγραφο ελέγχεται byte προς byte, αλλά κράτα παραπάνω από ένα backup για ό,τι δεν ξαναγυρίζεται.']],
+        ['Οι κωδικοί σου', ['Διάλεξε έναν κύριο κωδικό που θα θυμάσαι και γράψ’ τον κάπου ασφαλές: χωρίς αυτόν το Vault δεν ανοίγει, ούτε από σένα ούτε από εμάς. Κράτα ένα backup του vault σε άλλο δίσκο.']],
+        ['Τα αρχεία σου είναι δικά σου', ['Δεν παίρνουμε ποτέ τα αρχεία σου, τους κωδικούς σου ούτε τίποτα γι’ αυτά.']],
       ],
-    }, termsEnd('RoarTwin', LAB)),
+    }, termsEnd('RoarKit', LAB)),
   },
   {
     id: 'roardino', name: 'Roardino', page: 'lab/roardino/', what: { en: 'the call sheet in one link', el: 'το πρόγραμμα γυρίσματος σε ένα link' },
@@ -468,7 +485,7 @@ for (const a of APPS) {
 <main>
   <p class="kicker">${a.page ? `<a href="${up}${a.page}" style="text-decoration:none">${esc(a.name)}</a>` : esc(a.name)} · ${both(esc(a.what.en), esc(a.what.el))}</p>
   <h1>${both('Privacy &amp; Terms', 'Απόρρητο &amp; Όροι')}</h1>
-  <p class="date">${both(`${T.en.u} ${UPDATED.en}`, `${T.el.u} ${UPDATED.el}`)}</p>
+  <p class="date">${both(`${T.en.u} ${(a.updated || UPDATED).en}`, `${T.el.u} ${(a.updated || UPDATED).el}`)}</p>
   <nav class="seg tabs"><a href="#privacy">${both(T.en.p, T.el.p)}</a><a href="#terms">${both(T.en.t, T.el.t)}</a></nav>
   <section id="privacy"><h2>${both(T.en.p, T.el.p)}</h2>
     <div class="grid" lang="en">${doc(a.privacy.en)}</div><div class="grid" lang="el">${doc(a.privacy.el)}</div>
@@ -483,6 +500,24 @@ for (const a of APPS) {
   writeFileSync(join(out, 'index.html'), shell({ path: `legal/${a.id}/`, depth: 2, title: `${a.name} · Privacy Policy and Terms · The Mad Lions`,
     desc: `What ${a.name} keeps, where it goes and the terms of use, from The Mad Lions.`, body }))
 }
+
+// RoarTwin's old address (RoarTwin 0.4 and older link to it) sends on to RoarKit's, with its #privacy or #terms
+mkdirSync(join(dir, 'legal', 'roartwin'), { recursive: true })
+writeFileSync(join(dir, 'legal', 'roartwin', 'index.html'), `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RoarKit · Privacy Policy and Terms · The Mad Lions</title>
+<link rel="canonical" href="https://themadlions.com/legal/roarkit/">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="0; url=../roarkit/">
+<script>location.replace('../roarkit/' + location.search + location.hash)</script>
+<style>html { background: #16181c; color: #eef0f3; font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; } a { color: inherit; }</style>
+</head>
+<body><p style="padding:40px">RoarTwin is now RoarKit: <a href="../roarkit/">its Privacy Policy and Terms</a>.</p></body>
+</html>
+`)
 
 const tiles = [
   ...APPS.map((a) => ({ name: a.name, what: a.what, privacy: `${a.id}/#privacy`, terms: `${a.id}/#terms` })),
