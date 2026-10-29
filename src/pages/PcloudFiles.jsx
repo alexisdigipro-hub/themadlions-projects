@@ -122,12 +122,20 @@ export default function PcloudFiles({ slot }) {
     } catch (e) { toast(e.message, 'error'); setOpen(null) }
   }
   const download = async (it) => {
+    // a window opened now, while the click still counts, so Safari lets it through; the address follows
+    const big = it.size > 400e6
+    const w = big ? window.open('', '_blank') : null
     try {
-      const url = await pcloudFiles.link(it.fileid, true)
+      const r = await pcloudFiles.download(it)
+      if (r.page || big) {
+        if (w) w.location.href = r.url; else window.open(r.url, '_blank')
+        toast('pCloud\'s download page opened in a new tab', 'ok')
+        return
+      }
       const a = document.createElement('a')
-      a.href = url; a.download = it.name; a.rel = 'noopener'
+      a.href = r.url; a.download = it.name; a.rel = 'noopener'
       document.body.append(a); a.click(); a.remove()
-    } catch (e) { toast(e.message, 'error') }
+    } catch (e) { w?.close(); toast(e.message, 'error') }
   }
   const share = async (it) => {
     try {

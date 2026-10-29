@@ -80,6 +80,7 @@ export async function demoCall(action, body = {}) {
   }
   if (action === 'filesLink') {
     const t = byId(root, 'fileid', Number(body.fileid))
+    if (body.download) return { ok: true, url: 'data:text/plain,demo', page: Number(body.size) > 400e6 }
     // a photo shows a drawn stand-in; a video has no web copy here, so the page says so
     if (t?.node.category === 1) return { ok: true, url: `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720"><rect width="1280" height="720" fill="#2b3038"/><text x="640" y="370" fill="#eef0f3" font-size="40" font-family="sans-serif" text-anchor="middle">${t.node.name}</text></svg>`)}` }
     return { ok: true, url: '' }
