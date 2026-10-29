@@ -9140,3 +9140,14 @@ html[data-theme] body .panel.music-panel { overflow: visible; position: relative
   html[data-theme] body .overview .panel.progress.stuck .stages { margin-top: 10px; }
   html[data-theme] body .overview .panel.progress.stuck .stages :is(a, .stage-manual) { padding: 5px 12px 5px 10px; font-size: 12.5px; }
 }
+/* Finance: the tabs' row and the Overview's four tiles stay at the top while the rest scrolls under them (Alex, 29 Oct),
+   a computer only; once scrolled they sit on a glass band the width of the page */
+.fin-head-mark { display: block; height: 0; }
+@media (min-width: 821px) {
+  html[data-theme] body .finance .fin-head { position: sticky; top: 0; z-index: 25; margin: 0 -16px; padding: 0 16px; border-radius: 0 0 var(--radius-lg) var(--radius-lg); transition: background .2s ease, box-shadow .2s ease; }
+  html[data-theme] body .finance .fin-head.with-hero { padding-bottom: 16px; }
+  html[data-theme] body .finance .fin-head.with-hero .fin-hero { margin-bottom: 0; grid-template-columns: repeat(4, 1fr); }
+  html[data-theme] body .finance .fin-head.stuck { background: color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%); box-shadow: 0 16px 36px rgba(0, 0, 0, .3); }
+  html[data-theme] body .finance .fin-head.stuck .fin-top { margin-top: 10px; }
+}
+@media (max-width: 1000px) { html[data-theme] body .finance .fin-head.with-hero .fin-hero { grid-template-columns: repeat(2, 1fr); } }

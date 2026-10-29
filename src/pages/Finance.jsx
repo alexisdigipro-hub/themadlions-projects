@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useArrowTabs } from '../lib/arrowTabs.js'
 import { Link, Navigate } from 'react-router-dom'
 import { Act, Button, Confirm, Empty, Field, Input, Modal, Select, Stat, Textarea, useToast } from '../components/ui.jsx'
@@ -27,6 +27,17 @@ export default function Finance({ start }) {
   const toast = useToast()
   const fin = state.finance
   const tabsRow = useRef(null) // ← / → step through the tabs on a computer (Alex, 27 Oct)
+  // the tabs' row and the Overview's four tiles stay at the top while the rest scrolls under them (Alex, 29 Oct), on a
+  // computer: once their place has scrolled away they sit on a glass band (.stuck)
+  const headMark = useRef(null)
+  const [headStuck, setHeadStuck] = useState(false)
+  useEffect(() => {
+    const el = headMark.current
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined
+    const io = new IntersectionObserver(([e]) => setHeadStuck(!e.isIntersecting && e.boundingClientRect.top < 0), { threshold: 0 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
   useArrowTabs(tabsRow)
   const [viewReceipt, setViewReceipt] = useState(null)
   // the receipt photographed for an expense: on the budget line it pays, or kept on the expense itself
@@ -307,6 +318,8 @@ export default function Finance({ start }) {
 
   return (
     <div className="finance">
+      <span ref={headMark} className="fin-head-mark" aria-hidden="true" />
+      <div className={`fin-head${headStuck ? ' stuck' : ''}${tab === 'overview' ? ' with-hero' : ''}`}>
       <div className="db-top fin-top">
         <nav className="tabs db-tabs" ref={tabsRow}>
           {FIN_TABS.map(([k, l]) => (
@@ -321,6 +334,28 @@ export default function Finance({ start }) {
             round icons beside the year and Settings on a phone */}
         <div className="fin-acts">{addActs}</div>
       </div>
+      {tab === 'overview' && (
+      <div className="fin-hero">
+        <div className="fin-card">
+          {/* Alex: "Income", and the number alone, no line underneath splitting it */}
+          <div className="fin-label">Income {yearText}</div>
+          <div className="fin-value">{money(incomeAll, cur)}</div>
+        </div>
+        <div className={`fin-card ${profitAll < 0 ? 'neg' : 'pos'}`}>
+          <div className="fin-label">Profit {yearText}</div>
+          <div className="fin-value">{money(profitAll, cur)}</div>
+        </div>
+        <div className="fin-card">
+          <div className="fin-label">We owe</div>
+          <div className="fin-value">{money(S.weOwe + committed + teamOwed, cur)}</div>
+        </div>
+        <div className="fin-card">
+          <div className="fin-label">This month</div>
+          <div className="fin-value">{money(S.monthIn - S.monthOut, cur)}</div>
+        </div>
+      </div>
+      )}
+      </div>
 
       {dueCount > 0 && tab !== 'recurring' && (
         <p className="notice fin-due">
@@ -331,25 +366,6 @@ export default function Finance({ start }) {
 
       {tab === 'overview' && (
         <div className="fin-overview">
-          <div className="fin-hero">
-            <div className="fin-card">
-              {/* Alex: "Income", and the number alone, no line underneath splitting it */}
-              <div className="fin-label">Income {yearText}</div>
-              <div className="fin-value">{money(incomeAll, cur)}</div>
-            </div>
-            <div className={`fin-card ${profitAll < 0 ? 'neg' : 'pos'}`}>
-              <div className="fin-label">Profit {yearText}</div>
-              <div className="fin-value">{money(profitAll, cur)}</div>
-            </div>
-            <div className="fin-card">
-              <div className="fin-label">We owe</div>
-              <div className="fin-value">{money(S.weOwe + committed + teamOwed, cur)}</div>
-            </div>
-            <div className="fin-card">
-              <div className="fin-label">This month</div>
-              <div className="fin-value">{money(S.monthIn - S.monthOut, cur)}</div>
-            </div>
-          </div>
 
           <section className="panel">
             <div className="panel-head"><h2>{allTime ? 'Year by year' : `Month by month ${yearText}`}</h2><span className="muted small">VAT balance {allTime ? 'over all time' : 'for the year'}: {money(S.vatBalance, cur)} ({money(S.vatIn, cur)} collected, {money(S.vatOut, cur)} paid)</span></div>
