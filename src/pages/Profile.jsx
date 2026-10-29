@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
-import { Button, Field, Input, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
+import { Act, Button, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { remote } from '../lib/supabase.js'
 import { departmentsOf, rememberViewAsFrom, useCurrentUser, useStore } from '../lib/store.jsx'
 import { compress } from '../lib/photos.js'
 import { fmtDate } from '../lib/dates.js'
 import { trackRecord } from '../lib/trackRecord.js'
+import { drawShareCard } from '../lib/shareCard.js'
 
 const BLANK = { photo: '', thumb: '', position: '', dept: '', phone: '', bio: '', birthday: '', showPhone: 'everyone' }
 
@@ -159,6 +160,33 @@ function TrackRecord({ state, person }) {
   const r = trackRecord(state, person)
   const first = (person.name || '').split(' ')[0] || 'They'
   const why = r.parts.map((x) => `${x.label} ${x.pts}/${x.max}: ${x.note}`).join('\n')
+  const [card, setCard] = useState(null) // { url, file } once drawn
+  const [making, setMaking] = useState(false)
+  const toast = useToast()
+  const fileName = `${(person.name || 'profile').replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase()}-track-record.png`
+  const makeCard = async () => {
+    setMaking(true)
+    try {
+      const blob = await drawShareCard({ person, record: r, logo: state.settings?.logo })
+      setCard({ url: URL.createObjectURL(blob), file: new File([blob], fileName, { type: 'image/png' }) })
+    } catch (e) {
+      toast(e.message || 'Could not make the card.', 'error')
+    } finally {
+      setMaking(false)
+    }
+  }
+  const closeCard = () => { if (card) URL.revokeObjectURL(card.url); setCard(null) }
+  // a phone shares the picture straight to Instagram, WhatsApp…; a computer saves it
+  const canShare = !!card && typeof navigator !== 'undefined' && !!navigator.canShare && navigator.canShare({ files: [card.file] })
+  const share = async () => {
+    try { await navigator.share({ files: [card.file] }) } catch (e) { if (e?.name !== 'AbortError') toast('Sharing did not work here. Save the picture instead.', 'error') }
+  }
+  const save = () => {
+    const a = document.createElement('a')
+    a.href = card.url
+    a.download = fileName
+    a.click()
+  }
   return (
     <section className="panel track-record">
       <div className="track-head">
@@ -178,6 +206,7 @@ function TrackRecord({ state, person }) {
         <ul className="track-stats">
           {r.stats.map((x) => <li key={x.label}><b>{x.value}</b><span>{x.label}</span></li>)}
         </ul>
+        <Act icon="share" label={making ? 'Making…' : 'Share card'} onClick={makeCard} disabled={making} className="track-share" />
       </div>
 
       {r.badges.length > 0 && (
@@ -202,6 +231,17 @@ function TrackRecord({ state, person }) {
       ) : (
         <p className="muted small track-empty">{first}'s projects show up here once they are in a crew or cast, have a task, or a budget line pays them. 🎬</p>
       )}
+
+      <Modal open={!!card} title="Share card" onClose={closeCard} className="track-card-modal"
+        footer={card && (
+          <>
+            {canShare && <Button variant="primary" onClick={share}>Share</Button>}
+            <Button variant={canShare ? 'default' : 'primary'} onClick={save}>Download</Button>
+          </>
+        )}>
+        {card && <img className="track-card-img" src={card.url} alt={`${person.name}'s track record`} />}
+        <p className="muted small">Story size (1080 × 1920), ready for Instagram, TikTok or WhatsApp.</p>
+      </Modal>
     </section>
   )
 }
