@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Act, Button, Field, Input, Modal, PageHead, Select, Textarea, useToast } from '../components/ui.jsx'
 import { remote } from '../lib/supabase.js'
-import { departmentsOf, rememberViewAsFrom, useCurrentUser, useStore } from '../lib/store.jsx'
+import { departmentsOf, rememberViewAsFrom, today, useCurrentUser, useStore } from '../lib/store.jsx'
 import { compress } from '../lib/photos.js'
 import { fmtDate } from '../lib/dates.js'
 import { trackRecord } from '../lib/trackRecord.js'
 import { drawShareCard } from '../lib/shareCard.js'
+import { KUDOS_EMOJI, SKILL_IDEAS, addKudos, availabilityOf, cleanSkills, completeness, isBirthday, loadKudos, reelEmbed, removeKudos } from '../lib/profileExtras.js'
 
-const BLANK = { photo: '', thumb: '', position: '', dept: '', phone: '', bio: '', birthday: '', showPhone: 'everyone' }
+const BLANK = { photo: '', thumb: '', position: '', dept: '', phone: '', bio: '', birthday: '', showPhone: 'everyone', skills: [], reel: '' }
 
 export const initialsOf = (name) => (name || '').split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]).join('').toUpperCase()
 
@@ -79,6 +80,12 @@ export default function Profile({ mine = false, embedded = false }) {
 
   const depts = departmentsOf(state)
   const view = person.profile || {}
+  const iso = today()
+  const bday = shown && isBirthday(view, iso)
+  const avail = availabilityOf(state, person, iso, trackRecord(state, person).list.map((x) => x.id))
+  const done = completeness(editable ? draft : view)
+  const reel = reelEmbed(editable ? draft.reel : view.reel)
+  const skills = cleanSkills(editable ? draft.skills : view.skills)
 
   return (
     <div className={`profile-page${embedded ? ' embedded' : ''}`}>
@@ -105,8 +112,10 @@ export default function Profile({ mine = false, embedded = false }) {
               <span className="profile-initials">{initialsOf(person.name)}</span>
             )}
           </div>
-          <h2>{person.name}</h2>
+          <h2>{person.name}{bday && <span className="profile-cake" title="Birthday today"> 🎂</span>}</h2>
           <p className="muted small">{person.email}</p>
+          {bday && <p className="profile-bday">Happy birthday, {(person.name || '').split(' ')[0]}! 🎉</p>}
+          <Availability a={avail} />
           {editable && (
             <div className="row-actions wrap">
               <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => pickPhoto(e.target.files?.[0])} />
@@ -114,6 +123,14 @@ export default function Profile({ mine = false, embedded = false }) {
               {draft.photo && <Button size="sm" variant="ghost" onClick={() => setDraft((d) => ({ ...d, photo: '', thumb: '' }))}>Remove</Button>}
             </div>
           )}
+          {editable && done.pct < 100 && (
+            <div className="profile-done" title={`Still missing: ${done.missing.join(', ')}`}>
+              <span className="profile-done-head"><b>Profile {done.pct}% complete</b></span>
+              <span className="track-xp"><i style={{ width: `${done.pct}%` }} /></span>
+              <span className="muted small">Add {done.missing.slice(0, 2).join(' and ')}{done.missing.length > 2 ? ` and ${done.missing.length - 2} more` : ''}</span>
+            </div>
+          )}
+          {editable && done.pct === 100 && <p className="profile-done-all">✨ Profile complete</p>}
           {editable && <p className="fineprint">Your name and email are set by an administrator in Team. Everything else on this page is yours to fill in.</p>}
         </section>
 
@@ -129,6 +146,15 @@ export default function Profile({ mine = false, embedded = false }) {
                 <Field label="Birthday"><Input type="date" value={draft.birthday} onChange={(e) => set('birthday', e.target.value)} /></Field>
               </div>
               <Field label="A few words"><Textarea rows={4} placeholder="What you have worked on, what you are good at, anything the team should know" value={draft.bio} onChange={(e) => set('bio', e.target.value)} /></Field>
+              {/* a div, not Field's label: a label would pass a click on its empty space to the first × */}
+              <div className="field">
+                <span className="field-label">Skills</span>
+                <SkillsInput value={cleanSkills(draft.skills)} onChange={(v) => set('skills', v)} />
+                <span className="field-hint">What you are good at, as tags: the team finds you by them.</span>
+              </div>
+              <Field label="Showreel" hint="A YouTube or Vimeo link. It plays on your profile.">
+                <Input value={draft.reel} onChange={(e) => set('reel', e.target.value)} placeholder="https://vimeo.com/…" inputMode="url" />
+              </Field>
               <Field label="Who can see my phone and birthday" hint="Your name, photo, position and the few words are always visible to the team.">
                 <Select value={draft.showPhone === 'admins' ? 'admins' : 'everyone'} onChange={(e) => set('showPhone', e.target.value)} options={[['everyone', 'Everyone in the team'], ['admins', 'Administrators only']]} />
               </Field>
@@ -142,12 +168,20 @@ export default function Profile({ mine = false, embedded = false }) {
               <div><dt>Phone</dt><dd>{!shown ? <span className="muted">Kept private</span> : view.phone ? <a href={`tel:${view.phone}`}>{view.phone}</a> : <span className="muted">Not set</span>}</dd></div>
               <div><dt>Birthday</dt><dd>{!shown ? <span className="muted">Kept private</span> : view.birthday ? fmtDate(view.birthday, { day: 'numeric', month: 'long' }) : <span className="muted">Not set</span>}</dd></div>
               <div className="wide"><dt>A few words</dt><dd>{view.bio || <span className="muted">Nothing yet</span>}</dd></div>
+              <div className="wide"><dt>Skills</dt><dd>{skills.length ? <span className="skill-chips">{skills.map((x) => <span key={x} className="skill-chip">{x}</span>)}</span> : <span className="muted">Nothing yet</span>}</dd></div>
             </dl>
           )}
         </section>
       </div>
 
       {!embedded && <TrackRecord state={state} person={person} />}
+      {!embedded && reel && (
+        <section className="panel profile-reel">
+          <span className="track-label">Showreel</span>
+          <div className="profile-reel-frame"><iframe src={reel} title={`${person.name}'s showreel`} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen loading="lazy" /></div>
+        </section>
+      )}
+      {!embedded && <Kudos state={state} person={person} me={me} />}
     </div>
   )
 }
@@ -242,6 +276,133 @@ function TrackRecord({ state, person }) {
         {card && <img className="track-card-img" src={card.url} alt={`${person.name}'s track record`} />}
         <p className="muted small">Story size (1080 × 1920), ready for Instagram, TikTok or WhatsApp.</p>
       </Modal>
+    </section>
+  )
+}
+
+/* Free or not (Alex, 29 Oct), read from the Calendar: their own Not available, a shoot today on one
+   of their projects, else free with the next shoot day */
+function Availability({ a }) {
+  const day = (d) => fmtDate(d, { day: 'numeric', month: 'short' })
+  if (a.kind === 'off') return <span className="avail-pill off"><i />Not available{a.until ? ` until ${day(a.until)}` : ''}</span>
+  if (a.kind === 'shoot') return <Link to={`/p/${a.projectId}`} className="avail-pill shoot"><i />🎬 On set today{a.title ? ` · ${a.title}` : ''}</Link>
+  return (
+    <span className="avail-wrap">
+      <span className="avail-pill free"><i />Available</span>
+      {a.next && <Link to={`/p/${a.next.projectId}`} className="muted small">Next shoot {day(a.next.date)}{a.next.title ? ` · ${a.next.title}` : ''}</Link>}
+    </span>
+  )
+}
+
+/* Skills as tags: type and press Enter (or a comma), × takes one off, a few ideas to tap */
+function SkillsInput({ value, onChange }) {
+  const [text, setText] = useState('')
+  const add = (s) => { const v = cleanSkills([...value, s]); onChange(v); setText('') }
+  const ideas = SKILL_IDEAS.filter((x) => !value.some((v) => v.toLowerCase() === x.toLowerCase())).slice(0, 8)
+  return (
+    <div className="skills-input">
+      <div className="skill-chips">
+        {value.map((x) => (
+          <span key={x} className="skill-chip">{x}<button type="button" aria-label={`Remove ${x}`} onClick={() => onChange(value.filter((v) => v !== x))}>×</button></span>
+        ))}
+        <input className="skills-type" value={text} placeholder={value.length ? 'Add another…' : 'Gimbal, Color grading…'} onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if ((e.key === 'Enter' || e.key === ',') && text.trim()) { e.preventDefault(); add(text) }
+            else if (e.key === 'Backspace' && !text && value.length) onChange(value.slice(0, -1))
+          }}
+          onBlur={() => text.trim() && add(text)} />
+      </div>
+      {ideas.length > 0 && (
+        <div className="skill-ideas">
+          {ideas.map((x) => <button key={x} type="button" className="skill-idea" onClick={() => add(x)}>+ {x}</button>)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* Kudos from the team (Alex, 29 Oct): a teammate leaves a short thank-you, about a project if they
+   like. Everyone reads them; nobody writes on their own profile; you delete yours, an administrator
+   any. Stored in the kudos table (supabase/kudos.sql). */
+function Kudos({ state, person, me }) {
+  const toast = useToast()
+  const [list, setList] = useState(null)
+  const [err, setErr] = useState('')
+  const [text, setText] = useState('')
+  const [emoji, setEmoji] = useState(KUDOS_EMOJI[0])
+  const [projectId, setProjectId] = useState('')
+  const [sending, setSending] = useState(false)
+  useEffect(() => {
+    let on = true
+    setList(null)
+    setErr('')
+    loadKudos(person.id).then((l) => on && setList(l)).catch((e) => on && (setErr(e.message), setList([])))
+    return () => { on = false }
+  }, [person.id])
+  const own = me?.id === person.id
+  const theirs = trackRecord(state, person).list
+  const userOf = (id) => state.users.find((u) => u.id === id)
+  const titleOf = (id) => (state.projects || []).find((p) => p.id === id)?.title
+  const send = async () => {
+    if (!text.trim()) return
+    setSending(true)
+    try {
+      const k = await addKudos({ to: person.id, from: me.id, text, emoji, projectId })
+      setList((l) => [k, ...(l || [])])
+      setText('')
+      setProjectId('')
+      toast('Kudos sent', 'ok')
+    } catch (e) {
+      toast(e.message, 'error')
+    } finally {
+      setSending(false)
+    }
+  }
+  const drop = async (id) => {
+    try { await removeKudos(id); setList((l) => l.filter((k) => k.id !== id)) } catch (e) { toast(e.message, 'error') }
+  }
+  const first = (person.name || '').split(' ')[0] || 'them'
+  return (
+    <section className="panel kudos">
+      <div className="kudos-head">
+        <span className="track-label">Kudos</span>
+        {list?.length > 0 && <span className="kudos-count">{list.length} 🙌</span>}
+      </div>
+      {!own && !err && (
+        <div className="kudos-form">
+          <div className="kudos-emoji">
+            {KUDOS_EMOJI.map((x) => <button key={x} type="button" className={x === emoji ? 'on' : ''} onClick={() => setEmoji(x)} aria-label={x}>{x}</button>)}
+          </div>
+          <Input value={text} maxLength={280} onChange={(e) => setText(e.target.value)} placeholder={`Say something nice to ${first}…`} onKeyDown={(e) => e.key === 'Enter' && send()} />
+          {theirs.length > 0 && <Select value={projectId} onChange={(e) => setProjectId(e.target.value)} options={[['', 'No project'], ...theirs.map((x) => [x.id, x.title])]} />}
+          <Button variant="primary" onClick={send} disabled={sending || !text.trim()}>Send</Button>
+        </div>
+      )}
+      {err ? <p className="muted small">{err}</p> : list === null ? <p className="muted small">Loading…</p> : list.length === 0 ? (
+        <p className="muted small">{own ? 'Nothing yet. When a teammate thanks you, it shows up here.' : `No kudos yet. Be the first to thank ${first}.`}</p>
+      ) : (
+        <div className="kudos-list">
+          {list.map((k) => {
+            const from = userOf(k.from)
+            const pic = from?.profile?.thumb || from?.profile?.photo
+            return (
+              <div key={k.id} className="kudos-card">
+                <span className="kudos-big" aria-hidden="true">{k.emoji || '🙌'}</span>
+                <p>{k.text}</p>
+                <div className="kudos-meta">
+                  <Link to={`/u/${k.from}`} className="kudos-from">
+                    <span className="kudos-pic">{pic ? <img src={pic} alt="" /> : initialsOf(from?.name)}</span>
+                    {from?.name || 'Someone'}
+                  </Link>
+                  {k.projectId && titleOf(k.projectId) && <Link to={`/p/${k.projectId}`} className="kudos-proj">{titleOf(k.projectId)}</Link>}
+                  <span className="muted small">{fmtDate((k.at || '').slice(0, 10), { day: 'numeric', month: 'short' })}</span>
+                  {(k.from === me?.id || me?.role === 'admin') && <button type="button" className="kudos-del" onClick={() => drop(k.id)} aria-label="Delete">×</button>}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </section>
   )
 }

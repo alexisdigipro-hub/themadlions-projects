@@ -6,7 +6,8 @@ import { fmtDate } from '../lib/dates.js'
 import { projectProgress } from '../lib/progress.js'
 import { useCover } from '../components/CoverCropper.jsx'
 import { hiddenAfterCategory, projectTabs, tabHidden, toggleTab } from '../lib/tabs.js'
-import { initialsOf } from './Profile.jsx'
+import { canSeeProfileDetails, initialsOf } from './Profile.jsx'
+import { isBirthday } from '../lib/profileExtras.js'
 import { joinName, nameParts } from '../lib/projectName.js'
 import { duplicateProject } from '../lib/duplicate.js'
 import { syncShootDay } from '../lib/shootDays.js'
@@ -396,18 +397,21 @@ export default function Dashboard() {
               const off = away.has(u.id)
               // who has the app open right now (Alex, 11 Oct): green = looking at it, amber = open in the background
               const live = online?.[u.id]
+              // a cake on their face on their birthday (Alex, 29 Oct), if they let this viewer see the date
+              const cake = isBirthday(u.profile, t0) && canSeeProfileDetails(user, u)
               return (
                 <Link
                   key={u.id}
                   to={u.id === user?.id ? '/settings' : `/u/${u.id}`}
                   className={`team-chip ${off ? 'off' : ''}`}
-                  title={`${u.name}${u.profile?.position ? ` · ${u.profile.position}` : ''}${live === 'online' ? ' · online now' : live === 'away' ? ' · away' : ''}${off ? ' · not available' : ''}`}
+                  title={`${u.name}${u.profile?.position ? ` · ${u.profile.position}` : ''}${live === 'online' ? ' · online now' : live === 'away' ? ' · away' : ''}${off ? ' · not available' : ''}${cake ? ' · birthday today 🎂' : ''}`}
                 >
                   <span className="team-chip-pic">
                     <span className="team-chip-photo">
                       {(u.profile?.photo || u.profile?.thumb) ? <img src={u.profile.photo || u.profile.thumb} alt="" /> : <span className="team-chip-initials">{initialsOf(u.name)}</span>}
                       {off && <span className="team-chip-off" aria-hidden="true">✕</span>}
                     </span>
+                    {cake && <span className="team-chip-cake" aria-label="Birthday today">🎂</span>}
                     {live && <span className={`team-chip-live ${live}`} aria-label={live === 'online' ? 'Online now' : 'Away'} />}
                   </span>
                   <span className="team-chip-name">{(u.name || '').split(' ')[0]}</span>
