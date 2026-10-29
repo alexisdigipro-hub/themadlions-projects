@@ -84,7 +84,7 @@ export default function People({ onOverview = false, pillSlot = null }) {
     can(user, 'contacts') && editable && !cast.length && inLib('cast') && ['castLib', project.category === 'Event' ? 'Talent from library' : 'Cast from library'],
     can(user, 'locations') && canEdit('locations') && !project.locations.length && ['location', 'Add location'],
     can(user, 'locations') && canEdit('locations') && !project.locations.length && (library?.locations || []).length > 0 && ['locationLib', 'Location from library'],
-    can(user, 'gear') && canEdit('gear') && !(project.gear || []).length && ['gear', 'Add item'],
+    // Add item (gear) taken out (Alex, 29 Oct: "I don't need it"); a project that has gear still shows its card
     // release forms were taken out (Alex, 10 Oct: "I don't need them at all")
   ].filter(Boolean)
 
