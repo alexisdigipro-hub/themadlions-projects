@@ -61,7 +61,10 @@ const out = (k, base) => {
   const path = base === '/' ? `/${k.name}` : `${base}/${k.name}`
   if (k.folder) return { folder: true, name: k.name, path, folderid: k.folderid, modified: day('2026-10-01') }
   const { kids, ...f } = k // eslint-disable-line no-unused-vars
-  return { ...f, path, thumb: false }
+  // a drawn picture for the videos and photos, as pCloud's own thumbnails would be
+  const hue = [...String(f.hash)].reduce((n, c) => n + c.charCodeAt(0), 0) * 47 % 360
+  const thumbUrl = f.category === 1 || f.category === 2 ? `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${hue},45%,38%)"/><stop offset="1" stop-color="hsl(${(hue + 60) % 360},40%,14%)"/></linearGradient></defs><rect width="320" height="180" fill="url(#g)"/><circle cx="250" cy="60" r="34" fill="rgba(255,255,255,.12)"/></svg>`)}` : undefined
+  return { ...f, path, thumb: !!thumbUrl, ...(thumbUrl ? { thumbUrl } : {}) }
 }
 const wait = () => new Promise((ok) => setTimeout(ok, 120))
 const uploads = new Map()

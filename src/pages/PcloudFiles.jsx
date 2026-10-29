@@ -40,6 +40,9 @@ export default function PcloudFiles({ slot }) {
   const [naming, setNaming] = useState(null) // { item?, name } (new folder when no item)
   const [moving, setMoving] = useState(null) // { item, at, folders }
   const [dupes, setDupes] = useState(null) // null | { loading } | result with keep/sel
+  // Tiles (pictures big, for the final videos) or a list, remembered on this device
+  const [view, setView] = useState(() => { try { return localStorage.getItem('tml_pcloud_view') === 'list' ? 'list' : 'tiles' } catch { return 'tiles' } })
+  const pickView = (v) => { setView(v); try { localStorage.setItem('tml_pcloud_view', v) } catch { /* private window */ } }
   const [deep, setDeep] = useState(null) // the search under this folder: { q, path, items | null, folders, files, error }
   const pick = useRef(null)
   const scrollRef = useFitScroll(data === null)
@@ -171,14 +174,32 @@ export default function PcloudFiles({ slot }) {
       thumb={thumbOf(it)}
       title={it.name}
       sub={[it.folder ? 'Folder' : [extOf(it.name), size(it.size), day(it.modified)].filter(Boolean).join(' · '), searching && up(it.path) !== path ? `in ${up(it.path)}` : ''].filter(Boolean).join(' · ')}
-      aside={<span className="pcf-acts">
-        {edit && <Act icon="link" label="Copy link" className="act-sm" onClick={() => share(it)} />}
-        {!it.folder && <Act icon="download" label="Download" className="act-sm" onClick={() => download(it)} />}
-        {edit && <Act icon="edit" label="Rename" className="act-sm" onClick={() => setNaming({ item: it, name: it.name })} />}
-        {edit && <button type="button" className="act act-sm" aria-label="Move" title="Move" onClick={() => moveTo(it, up(it.path))}>{MOVE}<span className="act-t">Move</span></button>}
-        {edit && (!it.folder || admin) && <ActDelete label="Trash" onConfirm={() => trash(it)} />}
-      </span>} />
+      aside={acts(it)} />
   )
+
+  const acts = (it) => (
+    <span className="pcf-acts" onClick={(e) => e.stopPropagation()}>
+      {edit && <Act icon="link" label="Copy link" className="act-sm" onClick={() => share(it)} />}
+      {!it.folder && <Act icon="download" label="Download" className="act-sm" onClick={() => download(it)} />}
+      {edit && <Act icon="edit" label="Rename" className="act-sm" onClick={() => setNaming({ item: it, name: it.name })} />}
+      {edit && <button type="button" className="act act-sm" aria-label="Move" title="Move" onClick={() => moveTo(it, up(it.path))}>{MOVE}<span className="act-t">Move</span></button>}
+      {edit && (!it.folder || admin) && <ActDelete label="Trash" onConfirm={() => trash(it)} />}
+    </span>
+  )
+  const tile = (it) => (
+    <article key={it.folder ? `d${it.folderid}` : `f${it.fileid}`} className={`pcf-tile ${kindOf(it)}`} role="button" tabIndex={0}
+      onClick={() => openItem(it)} onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) openItem(it) }}>
+      <span className="pcf-tile-pic">{thumbOf(it)}</span>
+      <span className="pcf-tile-txt">
+        <strong title={it.name}>{it.name}</strong>
+        <small>{[it.folder ? 'Folder' : [extOf(it.name), size(it.size)].filter(Boolean).join(' · '), searching && up(it.path) !== path ? up(it.path).split('/').pop() : day(it.modified)].filter(Boolean).join(' · ')}</small>
+      </span>
+      {acts(it)}
+    </article>
+  )
+  const nFolders = shown.filter((i) => i.folder).length
+  const nFiles = shown.length - nFolders
+  const bytes = shown.reduce((n, i) => n + (i.size || 0), 0)
 
   return (
     <section className="panel db-card drives drv ids pcf">
@@ -186,6 +207,10 @@ export default function PcloudFiles({ slot }) {
         <div className="toolbar-info"><strong>pCloud</strong> <span className="muted">{data?.ready ? shown.length : ''}</span></div>
         <div className="toolbar-actions">
           <DbSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" />
+          <span className="segmented small pcf-view">
+            <button className={view === 'tiles' ? 'on' : ''} onClick={() => pickView('tiles')}>Tiles</button>
+            <button className={view === 'list' ? 'on' : ''} onClick={() => pickView('list')}>List</button>
+          </span>
           {edit && <Act icon="plus" label="New folder" onClick={() => setNaming({ name: '' })} />}
           {admin && <Act icon="copy" label="Duplicates" onClick={scan} />}
           {edit && <Act icon="expense" label="Upload" main onClick={() => pick.current?.click()} />}
@@ -200,6 +225,7 @@ export default function PcloudFiles({ slot }) {
         <>
           <div className="pcf-places">
             {PLACES.map(([p, l]) => <button key={p} type="button" className={`lchip${path === p || (p !== '/' && path.startsWith(p + '/')) ? ' acc on' : ''}`} onClick={() => setPath(p)}><i />{l}</button>)}
+            {data?.ready && <span className="pcf-count">{[nFolders && (nFolders === 1 ? '1 folder' : `${nFolders} folders`), nFiles && (nFiles === 1 ? '1 file' : `${nFiles} files`), bytes && size(bytes)].filter(Boolean).join(' · ')}</span>}
           </div>
           <nav className="pcf-crumbs" aria-label="Folder">
             {path !== '/' && <button type="button" className="pcf-upbtn" onClick={() => setPath(up(path))} aria-label="Up one folder" title="Up one folder">‹</button>}
@@ -213,7 +239,7 @@ export default function PcloudFiles({ slot }) {
           <div className="ab-scroll" ref={scrollRef}
             onDragOver={(e) => edit && e.preventDefault()} onDrop={(e) => { if (!edit) return; e.preventDefault(); upload(e.dataTransfer.files) }}>
             {data === null ? <p className="muted ids-wait">Loading…</p> : shown.length ? (
-              <div className="lrow-list">{shown.map(row)}</div>
+              view === 'tiles' ? <div className="pcf-grid">{shown.map(tile)}</div> : <div className="lrow-list">{shown.map(row)}</div>
             ) : <Empty title={q ? 'Nothing found' : 'An empty folder'}>{q ? `Nothing here matches "${q}".` : edit ? 'Upload files into it, or drop them here.' : 'Nothing in this folder yet.'}</Empty>}
           </div>
         </>
