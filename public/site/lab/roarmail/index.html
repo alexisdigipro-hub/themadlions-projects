@@ -381,15 +381,24 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 @media (max-width: 1100px) { .win-body.ml { grid-template-columns: 38% minmax(0, 1fr); } .win-body.ml .pn.side { display: none; } .tag.t3 { display: none; } }
 /* the fresh layer on this page (29 Oct 2026): the icon in the title, the version chip, What's new */
 .hero h1 .f-icon-wrap { flex: none; margin-bottom: clamp(4px, 1vw, 16px); }
-.hero-top > .f-ver { justify-self: end; margin-bottom: clamp(14px, 2.4vw, 40px); }
+.hero-top .f-ver { margin-top: clamp(18px, 2.4vw, 30px); }
 .f-new { max-width: none; }
 .f-new .f-new-head h2 { font-family: Jost, var(--sans); font-size: clamp(42px, 6.2vw, 96px); font-weight: 200; line-height: .92; }
 .f-new .f-new-head h2 b { font-weight: 800; }
 .f-new .f-new-head .idx { margin-bottom: 16px; }
 .f-card .chips { margin-top: 4px; }
-.f-card .tr-card { margin-top: 6px; max-width: none; }
-.f-card .tr-card .lock { display: inline-flex; align-items: center; gap: 4px; }
-.f-card .tr-card .lock svg { width: 11px; height: 11px; }
+.rt-mail { margin-top: 6px; display: grid; gap: 7px; padding: 16px 18px; border-radius: 18px; background: rgba(255,255,255,.045); border: 1px solid var(--line-2); }
+.rt-mail .hd { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+.rt-mail .f { display: flex; align-items: center; gap: 9px; font-size: 13.5px; font-weight: 600; min-width: 0; }
+.rt-mail .f svg { width: 14px; height: 14px; flex: none; color: #ff8f86; }
+.rt-mail .f em { margin-left: auto; font-style: normal; font-family: var(--mono); font-size: 11px; font-weight: 400; color: var(--muted); }
+.rt-mail s { justify-self: start; margin-top: 4px; text-decoration: none; padding: 8px 18px; border-radius: 999px; background: var(--red); color: #fff; font-weight: 700; font-size: 13px; }
+.rt-mail .ft { font-size: 12px; color: var(--muted); }
+.rt-mail .lock { display: inline-flex; align-items: center; gap: 5px; }
+.rt-mail .lock svg { width: 12px; height: 12px; }
+.f-card p.rt-note { display: flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--text); }
+.rt-note i { width: 20px; height: 20px; flex: none; border-radius: 6px; display: grid; place-items: center; background: var(--red); color: #fff; }
+.rt-note i svg { width: 13px; height: 13px; }
 .f-card .plans { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
 .f-card .plans span { padding: 7px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: rgba(255,255,255,.06); border: 1px solid var(--line-2); }
 .f-card .plans span.on { background: linear-gradient(180deg, #ff6b5e, #d40000); border-color: transparent; color: #fff; }
@@ -404,7 +413,6 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 .cap i svg { width: 15px; height: 15px; }
 .mh .cap { flex: 1; margin: 0; padding: 3px; } .mh .cap span { font-size: 9.5px; padding: 4px 2px; } .mh .cap i { width: 20px; height: 20px; } .mh .cap i svg { width: 11px; height: 11px; }
 .ml-icon { border-radius: 22.5%; box-shadow: 0 1px 0 rgba(255,255,255,.14) inset, 0 20px 50px rgba(0,0,0,.45), 0 14px 50px -10px rgba(212,0,0,.4); }
-@media (max-width: 760px) { .hero-top > .f-ver { justify-self: start; margin: 4px 0 0; } }
 @media (max-width: 760px) {
   .win-body.ml { grid-template-columns: minmax(0, 1fr); height: 500px; }
   .win-body.ml .pn.rdp { display: none; }
@@ -446,8 +454,8 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
         <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
         <span class="rm"><span class="a">ROAR</span><span class="b">MAIL</span></span><em class="beta">beta</em>
       </h1>
+      <a class="f-ver rv" style="--d:.1s" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.15 · one link for all your files</span></a>
     </div>
-    <a class="f-ver rv" style="--d:.1s" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.15 · one link for all your files</span></a>
   </div>
   <div class="hero-sub">
     <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>Every mailbox in <b>one inbox</b>, at keyboard speed, and <b>no server of ours</b> between you and your mail. <b>Trackers blocked</b>, links checked, <b>undo</b> for everything, and big files as <b>one link</b>.</p>
@@ -517,7 +525,15 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <h3 data-t="w1.t">RoarTransfer: one link for every file</h3>
       <p data-t="w1.p">Big attachments go up to RoarTransfer and the email carries one card with one link for all of them. Choose 1 day for up to 5 GB or 3 days for up to 3 GB, add a password if you like, and get an email when they download it.</p>
       <div class="plans"><span class="on" data-t="w1.d1">1 day · up to 5 GB</span><span data-t="w1.d3">3 days · up to 3 GB</span></div>
-      <div class="tr-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h-.5a4.5 4.5 0 0 1-.9-8.9A6 6 0 0 1 17.3 8 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M8.5 15 12 11.5 15.5 15"/></svg></i><span><b>RUSHES_DAY2.MOV + 2</b><small><span data-t="w1.card">3 files · 4.1 GB · 1 day</span> · <span class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg><span data-t="w1.pw">password</span></span></small></span></div>
+      <div class="rt-mail" aria-hidden="true">
+        <small class="hd"><span data-t="w1.card">RoarTransfer · 3 files · 4.1 GB</span></small>
+        <span class="f"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 11.5-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L9.7 17a1.7 1.7 0 0 1-2.4-2.4l7.4-7.4"/></svg>RUSHES_DAY2.MOV<em>2.4 GB</em></span>
+        <span class="f"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 11.5-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L9.7 17a1.7 1.7 0 0 1-2.4-2.4l7.4-7.4"/></svg>SOUND_DAY2.WAV<em>1.2 GB</em></span>
+        <span class="f"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 11.5-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L9.7 17a1.7 1.7 0 0 1-2.4-2.4l7.4-7.4"/></svg>LOG_DAY2.PDF<em>0.5 GB</em></span>
+        <s data-t="w1.dl">Download</s>
+        <small class="ft"><span class="lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg><span data-t="w1.pw">Password needed</span></span> · <span data-t="w1.until">until Fri 30 Oct</span></small>
+      </div>
+      <p class="rt-note"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-10"/></svg></i><span data-t="w1.note">Email me when downloaded</span></p>
       <span class="f-tag">v0.15.0</span>
     </article>
     <article class="f-card wide rv" style="--d:.06s">
@@ -837,8 +853,8 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'w1.p': 'Τα μεγάλα συνημμένα ανεβαίνουν στο RoarTransfer και το email έχει μία κάρτα με ένα link για όλα. Διάλεξε 1 μέρα για έως 5 GB ή 3 μέρες για έως 3 GB, βάλε κωδικό αν θες, και πάρε email όταν το κατεβάσουν.',
     'w1.d1': '1 μέρα · έως 5 GB',
     'w1.d3': '3 μέρες · έως 3 GB',
-    'w1.card': '3 αρχεία · 4.1 GB · 1 μέρα',
-    'w1.pw': 'κωδικός',
+    'w1.card': 'RoarTransfer · 3 αρχεία · 4.1 GB', 'w1.dl': 'Λήψη', 'w1.until': 'ως Παρ 30 Οκτ', 'w1.note': 'Email όταν το κατεβάσουν',
+    'w1.pw': 'Με κωδικό',
     'w2.t': 'Παράθυρο γραφής σαν του Apple Mail',
     'w2.p': 'Μια μπάρα μορφοποίησης με στυλ, μεγέθη, χρώματα, λίστες και στοίχιση, μαζί με emoji, προτεραιότητα και την υπογραφή σου ένα κλικ μακριά. Τράβα τη γωνία για να μεγαλώσει το παράθυρο.',
     'w3.t': 'Τα φίλτρα του Airmail, σε μία κάψουλα',
