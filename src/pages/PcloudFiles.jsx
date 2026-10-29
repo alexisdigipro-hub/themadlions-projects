@@ -197,6 +197,14 @@ export default function PcloudFiles({ slot }) {
       {acts(it)}
     </article>
   )
+  const folderTile = (it) => (
+    <article key={`d${it.folderid}`} className="pcf-ftile" role="button" tabIndex={0}
+      onClick={() => openItem(it)} onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) openItem(it) }}>
+      <span className="pcf-ftile-ico">{FOLDER}</span>
+      <span className="pcf-tile-txt"><strong title={it.name}>{it.name}</strong>{searching && up(it.path) !== path && <small>{up(it.path).split('/').pop() || 'pCloud'}</small>}</span>
+      {acts(it)}
+    </article>
+  )
   const nFolders = shown.filter((i) => i.folder).length
   const nFiles = shown.length - nFolders
   const bytes = shown.reduce((n, i) => n + (i.size || 0), 0)
@@ -207,12 +215,12 @@ export default function PcloudFiles({ slot }) {
         <div className="toolbar-info"><strong>pCloud</strong> <span className="muted">{data?.ready ? shown.length : ''}</span></div>
         <div className="toolbar-actions">
           <DbSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" />
-          <span className="segmented small pcf-view">
+          <span className="segmented small ids-view pcf-view">
             <button className={view === 'tiles' ? 'on' : ''} onClick={() => pickView('tiles')}>Tiles</button>
             <button className={view === 'list' ? 'on' : ''} onClick={() => pickView('list')}>List</button>
           </span>
-          {edit && <Act icon="plus" label="New folder" onClick={() => setNaming({ name: '' })} />}
-          {admin && <Act icon="copy" label="Duplicates" onClick={scan} />}
+          {edit && <Act icon="plus" label="New folder" className="act-sm" onClick={() => setNaming({ name: '' })} />}
+          {admin && <Act icon="copy" label="Duplicates" className="act-sm" onClick={scan} />}
           {edit && <Act icon="expense" label="Upload" main onClick={() => pick.current?.click()} />}
         </div>
       </DbBar>
@@ -239,7 +247,11 @@ export default function PcloudFiles({ slot }) {
           <div className="ab-scroll" ref={scrollRef}
             onDragOver={(e) => edit && e.preventDefault()} onDrop={(e) => { if (!edit) return; e.preventDefault(); upload(e.dataTransfer.files) }}>
             {data === null ? <p className="muted ids-wait">Loading…</p> : shown.length ? (
-              view === 'tiles' ? <div className="pcf-grid">{shown.map(tile)}</div> : <div className="lrow-list">{shown.map(row)}</div>
+              view === 'tiles' ? <>
+                {/* folders small, above; the files with their pictures big */}
+                {shown.some((i) => i.folder) && <div className="pcf-folders">{shown.filter((i) => i.folder).map(folderTile)}</div>}
+                {shown.some((i) => !i.folder) && <div className="pcf-grid">{shown.filter((i) => !i.folder).map(tile)}</div>}
+              </> : <div className="lrow-list">{shown.map(row)}</div>
             ) : <Empty title={q ? 'Nothing found' : 'An empty folder'}>{q ? `Nothing here matches "${q}".` : edit ? 'Upload files into it, or drop them here.' : 'Nothing in this folder yet.'}</Empty>}
           </div>
         </>
