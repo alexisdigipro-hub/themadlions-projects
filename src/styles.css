@@ -9538,7 +9538,7 @@ html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] :is(.btn:not(.b
 }
 html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] :is(.btn:not(.btn-ghost), .act, .chip, .lchip):hover { transform: translateY(-1px); }
 html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] :is(.btn:not(.btn-ghost), .act, .chip, .lchip):active { box-shadow: var(--neu-in); transform: none; }
-html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] :is(.chip.on, .lchip.on, .act.on, .act.act-sm.on) { box-shadow: var(--neu-in); color: var(--accent); }
+html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] :is(.chip.on, .lchip.on, .act.on, .act.act-sm.on) { background: var(--gl-active); border-color: transparent; box-shadow: var(--neu-in); color: var(--accent); }
 html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .btn-primary,
 html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .act.act-main { background: var(--skin-grad); color: #fff; box-shadow: var(--neu-up-sm), 0 8px 22px var(--gl-glow); }
 html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] :is(.input, select, textarea, .db-search input) { border-color: transparent; box-shadow: var(--neu-in); }
