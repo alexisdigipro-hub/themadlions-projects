@@ -9125,20 +9125,17 @@ html[data-theme] body .panel.music-panel { overflow: visible; position: relative
 /* the line beside the percentage: its parts with a dot between them; the shoot comes last, so a computer (where it is
    one of the facts under the stages) leaves it out with its dot */
 .progress-sub > span:not(:first-child)::before { content: ' · '; }
-/* The progress stays at the top while the Overview scrolls under it (Alex, 29 Oct), a computer only: once the page has
-   scrolled past its place it folds to one slim glass bar (no cover, no facts) and the rest passes beneath it */
+/* The project's title row and the whole progress stay at the top while the Overview scrolls under them (Alex, 29 Oct:
+   "I want ALL of this to stay fixed"), a computer only, both as they are; once the page has moved the title row sits on
+   a glass band (.ov-scrolled), and the progress right under it (--proj-top-h, measured in Overview.jsx) */
 .progress-mark { display: block; height: 0; }
 @media (min-width: 821px) {
   html[data-theme] body .overview .progress-mark { margin-bottom: -20px; }
-  html[data-theme] body .overview .panel.progress { position: sticky; top: 0; z-index: 30; }
-  /* folded, it hangs from the top of the window like a bar, so nothing shows above it */
-  html[data-theme] body .overview .panel.progress.stuck { padding-top: 12px; padding-bottom: 12px; border-top-color: transparent; border-top-left-radius: 0; border-top-right-radius: 0; box-shadow: 0 18px 40px rgba(0, 0, 0, .4); }
-  html[data-theme] body .overview .panel.progress.stuck .progress-head { grid-template-columns: 1fr; }
-  html[data-theme] body .overview .panel.progress.stuck :is(.progress-cover, .progress-facts) { display: none; }
-  html[data-theme] body .overview .panel.progress.stuck .progress-pct { font-size: 22px; }
-  html[data-theme] body .overview .panel.progress.stuck .progress-segs { margin: 10px 0 2px; }
-  html[data-theme] body .overview .panel.progress.stuck .stages { margin-top: 10px; }
-  html[data-theme] body .overview .panel.progress.stuck .stages :is(a, .stage-manual) { padding: 5px 12px 5px 10px; font-size: 12.5px; }
+  html[data-theme] body .project:has(.overview) .proj-top { position: sticky; top: 0; z-index: 32; margin: 0 -16px; padding: 10px 16px 18px; }
+  html[data-theme] body .project:has(.overview) .proj-top::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: color-mix(in srgb, var(--bg) 74%, transparent); -webkit-backdrop-filter: blur(22px) saturate(140%); backdrop-filter: blur(22px) saturate(140%); opacity: 0; transition: opacity .2s ease; }
+  html[data-theme] body .project.ov-scrolled .proj-top::before { opacity: 1; }
+  html[data-theme] body .overview .panel.progress { position: sticky; top: var(--proj-top-h, 0px); z-index: 30; }
+  html[data-theme] body .overview .panel.progress.stuck { box-shadow: 0 18px 40px rgba(0, 0, 0, .4); }
 }
 /* Finance: the tabs' row and the Overview's four tiles stay at the top while the rest scrolls under them (Alex, 29 Oct),
    a computer only; once scrolled they sit on a glass band the width of the page */
