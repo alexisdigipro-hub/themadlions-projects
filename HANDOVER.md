@@ -38,6 +38,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (29 Oct 2026, Office)
+- RoarMe left the phone's bar (Alex, 29 Oct: only on a computer): Layout.jsx `phone: false` on its item; the /roarme address still opens if someone has a link. Vault removed (29 Oct): page, lib, CSS gone; **supabase/vault-remove.sql** drops the table (Alex runs it). Home's cards polished on a phone too (mobile block, `.project-grid .project-card::after`).
 - **Organizer is now Office** (Alex, 29 Oct): side menu label Office (Layout.jsx), tabs Tasks · Notes · **RoarList** · **Documents** (OfficeHub.jsx; the old Office tab is Documents, still /office; RoarList moved out of the side menu, /roarlist renders OfficeHub with RoarListPage inOffice, CSS at the end of styles.css fills the page under the tabs). Permissions: group Office, module files labelled Documents (keys unchanged). The RoarList tab needs the online database, so it was not tried in local mode: check it on hub.themadlions.com.
 
 ## Where we stopped (28 Oct 2026, Notes folders and the Vault)
