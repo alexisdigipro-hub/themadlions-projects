@@ -15,13 +15,16 @@ export const SKINS = [
   ['glasslight', 'Glass light', 'light'],
   // RoarList's own look on the whole hub (Alex, 27 Oct): graphite glass, a glowing coral-red accent
   ['roarlist', 'RoarList', 'dark'],
+  // Soft UI on an aurora, a bento Home and the Island at the top (Alex, 29 Oct), dark and light
+  ['soft', 'Soft aurora', 'dark'],
+  ['softlight', 'Soft aurora light', 'light'],
 ]
 /* the icon set each skin comes with (Settings > Display > Icons can change it afterwards) */
-export const SKIN_ICONS = { coral: 'rounded', glass: 'rounded', glassdark: 'rounded', glasslight: 'rounded', roarlist: 'rounded' }
+export const SKIN_ICONS = { coral: 'rounded', glass: 'rounded', glassdark: 'rounded', glasslight: 'rounded', roarlist: 'rounded', soft: 'rounded', softlight: 'rounded' }
 export const isSkin = (v) => SKINS.some(([k]) => k === v)
 /* what every device starts on (main.jsx switches each device to it once) */
 export const DEFAULT_THEME = 'glassdark'
-const COLORS = { light: '#f3f4f7', dark: '#17181c', violet: '#0a0a0c', teal: '#1f2226', ember: '#0d0d0f', coral: '#fbf1ec', glass: '#3a0aa0', glassdark: '#0b1018', glasslight: '#eef1f8', roarlist: '#1c1f24' }
+const COLORS = { light: '#f3f4f7', dark: '#17181c', violet: '#0a0a0c', teal: '#1f2226', ember: '#0d0d0f', coral: '#fbf1ec', glass: '#3a0aa0', glassdark: '#0b1018', glasslight: '#eef1f8', roarlist: '#1c1f24', soft: '#1b1f2b', softlight: '#e6eaf2' }
 
 const RETIRED = { light: 'glasslight', dark: 'glassdark', violet: 'glassdark', teal: 'glassdark', ember: 'glassdark' }
 export const liveTheme = (v) => RETIRED[v] || v
