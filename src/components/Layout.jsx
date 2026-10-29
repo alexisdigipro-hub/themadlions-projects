@@ -121,18 +121,16 @@ export default function Layout() {
   const items = [
     { to: '/', label: 'Home', end: true, show: can(user, 'projects'), icon: 'home' },
     { to: '/calendar', label: 'Calendar', show: can(user, 'calendar'), icon: 'calendar' },
-    // the Organizer (Alex, 10 Oct): Tasks, Notes and Office as tabs of one page, opening on Tasks (or on
-    // Notes for someone without Tasks); where Tasks was, so on a phone it is among the first five
-    { to: can(user, 'tasks') ? '/tasks' : '/notes', label: 'Organizer', show: true, icon: 'tasks', also: ['/tasks', '/notes', '/office'] },
+    // Office, once the Organizer (Alex, 10 Oct; renamed 29 Oct): Tasks, Notes, RoarList and Documents as tabs of one
+    // page, opening on Tasks (or on Notes for someone without Tasks); where Tasks was, so on a phone it is among the first five
+    { to: can(user, 'tasks') ? '/tasks' : '/notes', label: 'Office', show: true, icon: 'tasks', also: ['/tasks', '/notes', '/office', '/roarlist'] },
     // the team's chat is RoarMe (Alex, 20 Oct): Hub Chat is gone, RoarMe takes its place
     { to: '/roarme', label: 'RoarMe', show: remote, icon: 'chat', also: ['/chat'] },
     // Roardino, the ordino maker, in the hub (Alex, 23 Oct): for whoever has the Ordino permission, in the side menu
     // and in a phone's bar, right after RoarMe
     // since 27 Oct a tab of Share (Alex); the side menu keeps it only for someone with the Ordino permission but not Share
     { to: '/roardino', label: 'Roardino', show: remote && can(user, 'roardino') && !can(user, 'share'), icon: 'callsheets' },
-    // RoarList, the shot lists, in the hub (Alex, 27 Oct): for whoever has the Shot list permission; the project's
-    // Shotlist tab is gone
-    { to: '/roarlist', label: 'RoarList', show: remote && can(user, 'roarlist'), icon: 'shots' },
+    // RoarList, the shot lists (Alex, 27 Oct), is a tab of Office since 29 Oct, after Notes
     { to: '/mywork', label: 'My Finance', show: user?.role !== 'admin', icon: 'mywork' },
     { to: '/database', label: 'Database', show: seesDatabase(user), icon: 'database' },
     // Drives is a tab of the Database now (Alex, 10 Oct)

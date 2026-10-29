@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase.js'
    working on the hub's database (supabase/roarlist.sql) and its projects. It replaces the project's Shotlist tab.
    Like Roardino it runs in a frame on the hub's own address, so it is signed in as this member and needs nothing
    handed over; it fades in once it has drawn (it says so with a 'roarlist:ready' message), never half-drawn. */
-export default function RoarListPage() {
+export default function RoarListPage({ inOffice = false }) {
   const [drawn, setDrawn] = useState(false)
   const frame = useRef(null)
   useEffect(() => {
@@ -16,7 +16,7 @@ export default function RoarListPage() {
   }, [])
   if (!supabase) return <p className="muted">RoarList needs the online database.</p>
   return (
-    <div className="roarme-page roardino-page roarlist-page">
+    <div className={`roarme-page roardino-page roarlist-page${inOffice ? ' in-office' : ''}`}>
       {!drawn && <span className="roardino-wait" aria-label="Loading RoarList" />}
       <iframe ref={frame} className={`roarme-frame roardino-frame${drawn ? ' on' : ''}`} src={`${import.meta.env.BASE_URL}roarlist/?embed=hub`} title="RoarList" allow="clipboard-write; clipboard-read" />
     </div>

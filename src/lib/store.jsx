@@ -22,14 +22,14 @@ export const STATUSES = ['Development', 'Pre-production', 'Production', 'Post-pr
    Database), the Organizer, then the other pages. The keys are what the database checks, so they
    stay; only the order, the names and the groups follow the app. Notes, Chat, My Finance and Settings
    are everyone's; Finance and Invoices are administrators only. */
-export const MODULE_GROUPS = ['Project tabs', 'Database', 'Organizer', 'Other pages']
+export const MODULE_GROUPS = ['Project tabs', 'Database', 'Office', 'Other pages']
 export const MODULES = [
-  { key: 'projects', label: 'Projects', group: 'Project tabs', hint: 'Overview, project details, and Presentations (Organizer > Office)' },
+  { key: 'projects', label: 'Projects', group: 'Project tabs', hint: 'Overview, project details, and Presentations (Office > Documents)' },
   { key: 'budget', label: 'Budget', group: 'Project tabs', hint: 'without it: Add Receipt only' },
   { key: 'script', label: 'Script', group: 'Project tabs' },
   { key: 'breakdown', label: 'Breakdown', group: 'Project tabs' },
   { key: 'music', label: 'Music', group: 'Project tabs', hint: 'the song and its map' },
-  { key: 'shots', label: 'Shot list', group: 'Project tabs', hint: 'RoarList (side menu): edit makes and changes shot lists, view sees them' },
+  { key: 'shots', label: 'Shot list', group: 'Project tabs', hint: 'RoarList (Office > RoarList): edit makes and changes shot lists, view sees them' },
   { key: 'schedule', label: 'Schedule', group: 'Project tabs' },
   { key: 'callsheets', label: 'Ordino', group: 'Project tabs', hint: 'Roardino (side menu): edit makes and sends ordinos, view sees them; everyone sees their project\'s ordino on the Overview' },
   { key: 'contacts', label: 'Crew & cast', group: 'Database' },
@@ -38,13 +38,13 @@ export const MODULES = [
   { key: 'drives', label: 'Drives', group: 'Database' },
   { key: 'idsheets', label: 'ID sheets', group: 'Database', hint: 'photos of people\'s IDs, kept in pCloud; give it only to who needs it' },
   { key: 'logos', label: 'Logos', group: 'Database', hint: 'clients\' and brands\' logos, a folder a brand, kept in pCloud' },
-  { key: 'tasks', label: 'Tasks', group: 'Organizer' },
-  { key: 'files', label: 'Office', group: 'Organizer', hint: 'documents and spreadsheets' },
+  { key: 'tasks', label: 'Tasks', group: 'Office' },
+  { key: 'files', label: 'Documents', group: 'Office', hint: 'documents and spreadsheets' },
   { key: 'calendar', label: 'Calendar', group: 'Other pages' },
   { key: 'share', label: 'Share', group: 'Other pages', hint: 'links to clients' },
   // the Lab apps inside the hub, only for whom the administrator opens them (Alex, 27 Oct)
   { key: 'roardino', label: 'Roardino', group: 'Other pages', hint: 'the ordino maker: the side menu and its tab in Share; a project\'s own ordino on the Overview stays with Ordino' },
-  { key: 'roarlist', label: 'RoarList', group: 'Other pages', hint: 'the shot list app in the side menu; a project\'s Shot list tab stays with Shot list' },
+  { key: 'roarlist', label: 'RoarList', group: 'Other pages', hint: 'the shot list app, a tab of Office; a project\'s Shot list tab stays with Shot list' },
 ]
 
 /* Ready-made permission sets, so a new person is one click instead of eighteen dropdowns.
