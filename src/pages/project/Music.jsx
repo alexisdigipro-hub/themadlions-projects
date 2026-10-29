@@ -7,6 +7,7 @@ import { SECTION_NAMES, analyze, deleteTrack, fmtTime, fmtTimeMs, parseTime, son
 import { useTrackSource } from '../../lib/trackSource.js'
 import { pcloudTarget } from '../../lib/pcloud.js'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
+import { useAudioChoice } from '../../components/AudioChoice.jsx'
 import { remote } from '../../lib/supabase.js'
 import { useStore } from '../../lib/store.jsx'
 import { alignBlocks, groupSegments, transcribe } from '../../lib/transcribe.js'
@@ -126,21 +127,26 @@ export default function Music() {
   const toggle = () => { const a = audioRef.current; if (!a) return; a.paused ? play(a) : a.pause() }
   const playSection = (s) => { setLoop(null); seek(s.start); play(audioRef.current) }
 
+  const [askAudio, audioChoice] = useAudioChoice()
   const onFile = async (file) => {
     if (!file) return
     const original = file
     try {
-      // a WAV (or AIFF, FLAC) is turned into an MP3 here, on this device, so only the small file goes up
+      // a WAV (or AIFF, FLAC): the person chooses to keep it as it is or to make it an MP3 here, on this device
       if (needsEncoding(file)) {
-        setBusy('Converting to MP3… 0%')
-        file = await toMp3(file, (p) => setBusy(`Converting to MP3… ${Math.round(p * 100)}%`))
+        const how = await askAudio(file)
+        if (!how) return
+        if (how === 'mp3') {
+          setBusy('Converting to MP3… 0%')
+          file = await toMp3(file, (p) => setBusy(`Converting to MP3… ${Math.round(p * 100)}%`))
+        }
       }
       setBusy('Analysing waveform…')
       const { peaks, duration } = await analyze(file)
       const id = uid()
       lastFile.current = { file, trackId: id }
       setBusy('Uploading…')
-      const { path, ext, fileid, scope } = await uploadTrack({ projectId: project.id, id, file, pcloud: pcloudTarget(state, project.id, 'Music') })
+      const { path, ext, fileid, scope } = await uploadTrack({ projectId: project.id, id, file, pcloud: pcloudTarget(state, project.id, 'Music'), onProgress: (p) => setBusy(`Uploading… ${Math.round(p * 100)}%`) })
       setMusic((m) => {
         m.tracks.push({ id, name: file.name.replace(/\.[^.]+$/, ''), path, ext, ...(fileid ? { fileid, scope } : {}), duration, peaks, bytes: file.size, kind: m.tracks.length ? 'other' : 'master', addedAt: new Date().toISOString() })
         m.activeTrackId = id
@@ -227,7 +233,13 @@ export default function Music() {
   const runTranscribe = async () => {
     setTrBusy('Sending the song to Whisper…')
     try {
-      const file = await getAudioFile()
+      let file = await getAudioFile()
+      // a song kept as its WAV (or too big for Whisper's 25 MB): an MP3 of it is made here just for Whisper
+      if (needsEncoding(file) || file.size > 25 * 1024 * 1024) {
+        setTrBusy('Making an MP3 for Whisper… 0%')
+        file = await toMp3(file, (p) => setTrBusy(`Making an MP3 for Whisper… ${Math.round(p * 100)}%`))
+        setTrBusy('Sending the song to Whisper…')
+      }
       const prompt = sections.map((x) => x.lyrics).filter(Boolean).join('\n').slice(0, 600)
       const res = await transcribe({ apiKey: state.settings.openaiKey, file, language: tr.language, prompt })
       if (!res.segments.length) throw new Error('Whisper heard nothing usable. Is the vocal audible?')
@@ -412,7 +424,7 @@ export default function Music() {
               <Field label="Mode"><Select value={tr.mode} onChange={(e) => setTr({ ...tr, mode: e.target.value })} options={[['new', 'Write lyrics and sections'], ['align', 'Only time my existing sections']]} /></Field>
             </div>
             {tr.mode === 'new' && sections.length > 0 && <p className="notice">This replaces the {sections.length} sections you have. Choose "Only time my existing sections" to keep them.</p>}
-            <p className="fineprint">About $0.006 per minute of audio. Files over 25 MB are refused by Whisper; a WAV is converted to MP3 on upload, so this only bites on very long songs.</p>
+            <p className="fineprint">About $0.006 per minute of audio. A song kept as its WAV is sent to Whisper as an MP3 made on this device; the stored file stays as it is.</p>
           </div>
         </Modal>
       )}
@@ -426,6 +438,7 @@ export default function Music() {
           </div>
         </Modal>
       )}
+      {audioChoice}
     </div>
   )
 }

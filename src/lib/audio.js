@@ -43,14 +43,14 @@ export async function analyze(file, buckets = 700) {
 
 /* With `pcloud` (Settings > Integrations > File storage = pCloud) the song goes to Alex's pCloud,
    in the project's Music folder, and the track keeps `fileid` + `scope` instead of a path. */
-export async function uploadTrack({ projectId, id, file, pcloud }) {
+export async function uploadTrack({ projectId, id, file, pcloud, onProgress }) {
   const ext = (file.name.split('.').pop() || 'mp3').toLowerCase()
   if (!remote) {
     sessionUrls.set(id, URL.createObjectURL(file))
     return { path: '', ext }
   }
   if (pcloud) {
-    const r = await pcloudUpload({ file, folder: pcloud.folder, scope: pcloud.scope })
+    const r = await pcloudUpload({ file, folder: pcloud.folder, scope: pcloud.scope, onProgress })
     return { path: '', ext, fileid: r.fileid, scope: pcloud.scope }
   }
   const path = `${projectId}/${id}.${ext}`

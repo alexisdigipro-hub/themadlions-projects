@@ -6,6 +6,7 @@ import { SUPABASE_KEY, SUPABASE_URL } from './supabaseConfig.js'
 
 /* Settings > Integrations > File storage. Off means the built-in Supabase bucket, as before. */
 export const pcloudOn = (settings) => settings?.storage === 'pcloud'
+const PIECE = 8 * 1024 * 1024 // one piece of a big upload
 
 async function call(action, body, { raw = false } = {}) {
   if (!supabase) throw new Error('pCloud needs the online database.')
@@ -59,7 +60,10 @@ export async function pcloudBackup(state) {
 /* Once a day on its own, when an administrator has the app open (Settings > Data > Every day; on unless switched off,
    Alex 27 Oct: "are we safe, do we have backups?"). */
 export const backupDue = (settings) => settings?.pcloudAutoBackup !== false && (!settings?.pcloudBackupAt || Date.now() - new Date(settings.pcloudBackupAt).getTime() > 86400000)
-export async function pcloudUpload({ file, folder, scope }) {
+/* A big file (over 8 MB, e.g. a song kept as its WAV, Alex 29 Oct) goes up in pieces like a delivery, so the
+   function's request limit never matters; a small one in one request. onProgress gets 0..1. */
+export async function pcloudUpload({ file, folder, scope, onProgress }) {
+  if (file.size > PIECE) return pcloudUploadBig({ file, folder, scope, onProgress })
   const fd = new FormData()
   fd.append('file', file, file.name)
   fd.append('folder', JSON.stringify(folder || []))
@@ -68,13 +72,35 @@ export async function pcloudUpload({ file, folder, scope }) {
 }
 export const pcloudLink = (fileid, scope, download = false) => call('link', { fileid, scope, download })
 
+async function pcloudUploadBig({ file, folder, scope, onProgress }) {
+  const start = await call('uploadStart', { folder: folder || [], scope })
+  for (let offset = 0; offset < file.size; offset += PIECE) {
+    const send = () => {
+      const fd = new FormData()
+      fd.append('file', file.slice(offset, offset + PIECE), 'piece')
+      fd.append('uploadid', String(start.uploadid))
+      fd.append('offset', String(offset))
+      fd.append('path', start.path)
+      return call('uploadChunk', fd)
+    }
+    // a refused piece is tried again, a little later each time, as for deliveries
+    for (let t = 1; ; t++) {
+      try { await send(); break } catch (e) {
+        if (t >= 5 || /signed in|not allowed|cannot upload/i.test(e.message || '')) throw e
+        await new Promise((ok) => setTimeout(ok, 700 * t))
+      }
+    }
+    onProgress?.(Math.min(1, (offset + PIECE) / file.size))
+  }
+  return call('uploadFinish', { folder: folder || [], scope, uploadid: start.uploadid, name: file.name })
+}
+
 /* A delivery straight to pCloud (Alex, 12 Oct): the function opens an upload into the delivery's folder
    (27 Oct: RoughCut and PreFinal Cut straight into "Projects - RoughCuts", Final Deliverables into
    "Projects - FinalCuts/<label>/<project>"; see the function), the file goes up in 8 MB pieces, one after the other (each well
    within the function's limits, so a cut of several GB is fine and the pCloud key stays in the
    function), then the function saves it there and makes a public link for the client. A piece that
    fails is tried once more. onProgress gets 0..1; signal (an AbortController's) stops it. */
-const PIECE = 8 * 1024 * 1024
 /* One piece at a time again (26 Oct): pCloud now refuses a piece written while another of the same upload is still
    being written ("Error writing to upload.", 2068; checked with the function pcloud-check), so the four side by side
    of 23 Oct broke every delivery. A refused piece is still tried again, later each time. */
