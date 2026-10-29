@@ -3,6 +3,7 @@ import { Fragment, Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { can, seesDatabase, useCurrentUser, useLive, useStore, viewAsReturnPath, whenMs } from '../lib/store.jsx'
 import { Icon } from './icons.jsx'
 import { NoticePopup } from './Notices.jsx'
+import Island from './Island.jsx'
 import { useToast } from './ui.jsx'
 import { backupDue, pcloudBackup } from '../lib/pcloud.js'
 import { remote } from '../lib/supabase.js'
@@ -281,6 +282,8 @@ export default function Layout() {
         {keepRoardino && <Suspense fallback={null}><RoardinoFrame shown={onRoardino} inShare={pathname === '/share'} /></Suspense>}
       </main>
       <NoticePopup />
+      {/* the Soft aurora looks' Island at the top centre (only they show it); not over a page that is another app */}
+      {!framePage && <Island />}
 
       <nav className="tabbar" aria-label="Main" ref={tabsRef}>
         {tabItems.map((i) => (
