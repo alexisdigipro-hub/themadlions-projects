@@ -3394,11 +3394,13 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 .pcf-check { position: absolute; top: 6px; left: 6px; z-index: 3; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(0, 0, 0, .35); border: 2px solid rgba(255, 255, 255, .85); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); transition: transform .15s, background .15s; }
 .pcf-check.on { background: var(--accent); border-color: var(--accent); transform: scale(1.06); }
 .pcf-ftile-ico .pcf-check, .pcf-mini .pcf-check { top: -5px; left: -5px; width: 18px; height: 18px; }
-.pcf-tile.sel, .pcf-ftile.sel, .pcf-tr.sel { border-color: color-mix(in srgb, var(--accent) 65%, transparent); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); }
+.pcf .pcf-tile.sel, .pcf .pcf-ftile.sel, .pcf .pcf-tr.sel { border-color: color-mix(in srgb, var(--accent) 65%, transparent); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); }
 .pcf-ftile.drop, .pcf-tr.drop { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, var(--panel)); transform: scale(1.02); }
 .pcf-tile[draggable="true"], .pcf-ftile[draggable="true"] { -webkit-user-drag: element; }
 .act.act-sm.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
 .pcf-add .pcf-menu { min-width: 230px; }
+.pcf-ftile:has(.pcf-menu), .pcf-tile:has(.pcf-menu) { z-index: 30; }
+.pcf-ftile .pcf-menu { max-height: min(70vh, 420px); overflow: auto; }
 .pcf-space { display: inline-grid; gap: 3px; min-width: 120px; margin-left: 10px; }
 .pcf-space .pcf-bar { display: block; height: 5px; border-radius: 99px; overflow: hidden; background: color-mix(in srgb, var(--text) 10%, transparent); }
 .pcf-space .pcf-bar i { display: block; height: 100%; border-radius: inherit; background: var(--accent); }

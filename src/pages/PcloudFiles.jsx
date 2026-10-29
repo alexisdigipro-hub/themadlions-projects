@@ -572,7 +572,7 @@ export default function PcloudFiles({ slot }) {
       <Modal open={!!open} wide title={open?.item.name || ''} className="pcf-big" onClose={() => setOpen(null)}
         footer={open ? <><span className="muted pcf-big-meta">{[extOf(open.item.name), size(open.item.size), day(open.item.modified)].filter(Boolean).join(' · ')}</span><span className="grow" />
           <span className="pcf-acts">
-            <Act icon="back" label="Earlier versions" className="act-sm" onClick={() => (revs ? setRevs(null) : versions(open.item))} />
+            <Act icon="history" label="Earlier versions" className="act-sm" onClick={() => (revs ? setRevs(null) : versions(open.item))} />
             {edit && <>
               <Act icon="link" label="Copy link" className="act-sm" onClick={() => share(open.item)} />
               <Act icon="edit" label="Rename" className="act-sm" onClick={() => { const it = open.item; setOpen(null); setNaming({ item: it, name: it.name }) }} />
