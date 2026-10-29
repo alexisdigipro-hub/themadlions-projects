@@ -9449,10 +9449,10 @@ html[data-theme] body .panel.music-panel { overflow: visible; position: relative
    black pill at the top centre that grows into a card (components/Island.jsx), and the toasts drop out of it. */
 html[data-skin='soft'][data-theme][data-accent] {
   --bg: #1c1e25; --panel: #23262e; --raised: #292c35; --line: #363a45; --line-soft: #2d3039;
-  --text: #eef1f8; --muted: rgba(214, 222, 240, .62); --accent: #8f9bff; --accent-ink: #0c1030;
+  --text: #f3eeec; --muted: rgba(232, 222, 218, .62); --accent: #ff5a3c; --accent-ink: #ffffff;
   --sidebar-bg: rgba(35, 38, 46, .9); --photo-bg: #1e2027; --hover-tint: rgba(255, 255, 255, .045);
   --radius: 14px; --radius-lg: 24px;
-  --skin-grad: linear-gradient(135deg, #6ee7d8 0%, #8f9bff 45%, #f08ad7 100%);
+  --skin-grad: linear-gradient(135deg, #ff9a3c 0%, #ff5a3c 50%, #e0335e 100%);
   --skin-card: rgba(35, 38, 46, .76);
   --neu: rgba(35, 38, 46, .76); --neu-solid: #23262e;
   --neu-hi: rgba(255, 255, 255, .055); --neu-lo: rgba(0, 0, 0, .5);
@@ -9462,18 +9462,18 @@ html[data-skin='soft'][data-theme][data-accent] {
   --gl-fill: var(--neu); --gl-fill-2: rgba(44, 47, 56, .82); --gl-edge: rgba(255, 255, 255, .045);
   --gl-shine: rgba(255, 255, 255, .06); --gl-shadow: -6px -6px 16px var(--neu-hi), 10px 12px 26px var(--neu-lo);
   --gl-blur: blur(18px) saturate(140%); --gl-bar: rgba(31, 33, 40, .84); --gl-input: rgba(20, 22, 28, .55);
-  --gl-active: rgba(30, 32, 39, .9); --gl-glow: rgba(143, 155, 255, .3);
-  --aur-a: rgba(110, 190, 180, .22); --aur-b: rgba(135, 145, 210, .24); --aur-c: rgba(200, 135, 185, .18);
+  --gl-active: rgba(30, 32, 39, .9); --gl-glow: rgba(255, 90, 60, .32);
+  --aur-a: rgba(255, 120, 50, .22); --aur-b: rgba(230, 60, 60, .22); --aur-c: rgba(200, 50, 100, .18);
   --island: #05060a; --island-ink: #f4f6ff;
   --shadow-lg: 0 30px 80px rgba(0, 0, 0, .55);
 }
 html[data-skin='softlight'][data-theme][data-accent] {
   /* a darker, greyer light (Alex, 29 Oct: "the light a darker colour, and all of it a little greyer") */
   --bg: #cdd1d8; --panel: #d4d8de; --raised: #cbd0d7; --line: #b9bfc8; --line-soft: #c4c9d1;
-  --text: #1c2029; --muted: #5a616e; --accent: #5e56c9; --accent-ink: #ffffff;
+  --text: #221d1c; --muted: #66605e; --accent: #e8472a; --accent-ink: #ffffff;
   --sidebar-bg: rgba(212, 216, 222, .92); --photo-bg: #c6cbd3; --hover-tint: rgba(30, 36, 50, .05);
   --radius: 14px; --radius-lg: 24px;
-  --skin-grad: linear-gradient(135deg, #4fa9a0 0%, #5e56c9 50%, #b8679f 100%);
+  --skin-grad: linear-gradient(135deg, #f08a3a 0%, #e8472a 50%, #c92f55 100%);
   --skin-card: rgba(212, 216, 222, .8);
   --neu: rgba(212, 216, 222, .82); --neu-solid: #d4d8de;
   --neu-hi: rgba(240, 242, 246, .85); --neu-lo: rgba(120, 128, 142, .55);
@@ -9483,8 +9483,8 @@ html[data-skin='softlight'][data-theme][data-accent] {
   --gl-fill: var(--neu); --gl-fill-2: rgba(216, 220, 226, .9); --gl-edge: rgba(240, 242, 246, .45);
   --gl-shine: rgba(245, 246, 249, .6); --gl-shadow: -7px -7px 16px var(--neu-hi), 9px 11px 24px var(--neu-lo);
   --gl-blur: blur(18px) saturate(120%); --gl-bar: rgba(208, 212, 219, .88); --gl-input: rgba(196, 201, 209, .75);
-  --gl-active: rgba(200, 205, 213, .95); --gl-glow: rgba(94, 86, 201, .22);
-  --aur-a: rgba(110, 170, 165, .26); --aur-b: rgba(120, 115, 190, .22); --aur-c: rgba(180, 130, 165, .20);
+  --gl-active: rgba(200, 205, 213, .95); --gl-glow: rgba(232, 71, 42, .24);
+  --aur-a: rgba(240, 140, 80, .26); --aur-b: rgba(225, 80, 70, .2); --aur-c: rgba(200, 80, 120, .18);
   --island: #0b0c12; --island-ink: #f4f6ff;
   --shadow-lg: 0 30px 70px rgba(60, 66, 80, .3);
 }
@@ -9492,19 +9492,19 @@ html[data-skin='softlight'][data-theme][data-accent] {
 /* the backdrop: a mesh of colour on the page, two aurora lights drifting over it */
 html[data-skin='soft'][data-theme]:not([data-public='1']) {
   background:
-    radial-gradient(60% 55% at 12% 8%, rgba(80, 96, 150, .45) 0%, transparent 70%),
-    radial-gradient(50% 50% at 88% 14%, rgba(125, 85, 140, .32) 0%, transparent 70%),
-    radial-gradient(55% 60% at 80% 92%, rgba(45, 125, 125, .32) 0%, transparent 70%),
-    radial-gradient(45% 45% at 18% 88%, rgba(165, 95, 130, .2) 0%, transparent 70%),
+    radial-gradient(60% 55% at 12% 8%, rgba(170, 70, 45, .38) 0%, transparent 70%),
+    radial-gradient(50% 50% at 88% 14%, rgba(150, 45, 60, .32) 0%, transparent 70%),
+    radial-gradient(55% 60% at 80% 92%, rgba(185, 95, 40, .3) 0%, transparent 70%),
+    radial-gradient(45% 45% at 18% 88%, rgba(130, 40, 70, .24) 0%, transparent 70%),
     linear-gradient(160deg, #181a20 0%, #1c1e25 50%, #191b21 100%);
   background-attachment: fixed; background-color: #191b21;
 }
 html[data-skin='softlight'][data-theme]:not([data-public='1']) {
   background:
-    radial-gradient(60% 55% at 10% 8%, rgba(150, 168, 200, .55) 0%, transparent 70%),
-    radial-gradient(50% 50% at 90% 12%, rgba(185, 160, 190, .45) 0%, transparent 70%),
-    radial-gradient(55% 60% at 82% 92%, rgba(145, 185, 180, .5) 0%, transparent 70%),
-    radial-gradient(45% 45% at 15% 90%, rgba(195, 175, 165, .4) 0%, transparent 70%),
+    radial-gradient(60% 55% at 10% 8%, rgba(225, 150, 115, .5) 0%, transparent 70%),
+    radial-gradient(50% 50% at 90% 12%, rgba(215, 125, 125, .42) 0%, transparent 70%),
+    radial-gradient(55% 60% at 82% 92%, rgba(230, 170, 110, .45) 0%, transparent 70%),
+    radial-gradient(45% 45% at 15% 90%, rgba(200, 120, 140, .34) 0%, transparent 70%),
     linear-gradient(160deg, #cfd3da 0%, #cbcfd6 50%, #c8ccd4 100%);
   background-attachment: fixed; background-color: #cbcfd6;
 }
