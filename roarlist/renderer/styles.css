@@ -303,3 +303,16 @@ input[type='range'] { accent-color: var(--accent); width: 160px; }
 /* in the hub (hubTheme.ts): the hub's own backdrop behind RoarList, no RoarList glow on top of it */
 html.hub-theme body { background: var(--hub-backdrop); background-attachment: fixed; background-size: cover; }
 html.hub-theme body::before { display: none; }
+
+/* a tab of the hub's Office on a computer (Alex, 29 Oct: "RoarList laid out like the other tabs of Office"): Office's own
+   glass panel holds it (the hub's .roarlist-page.in-office), the shot lists as its side column like Tasks' lists, the
+   list beside them; the brand, the search and New list are on Office's tabs row (hub.ts inOffice) */
+@media (min-width: 821px) {
+  html.in-office, html.in-office.hub-theme body { background: transparent; }
+  html.in-office .drag { display: none; }
+  html.in-office .app { padding: 0; gap: 0; }
+  html.in-office :is(.side, .main) { border-radius: 0; border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  html.in-office .side { border-right: 1px solid var(--edge); padding-top: 14px; }
+  html.in-office .main { background: transparent; }
+  html.in-office :is(.brand, .side-search, .side .new) { display: none; }
+}

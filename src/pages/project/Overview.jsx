@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button, Modal, useToast } from '../../components/ui.jsx'
 import { ProjectForm } from '../Dashboard.jsx'
@@ -194,11 +194,47 @@ export default function Overview() {
   }
 
   const { pct, stages } = projectProgress(project, state.settings)
+  // the facts under the progress (Overview's top, a computer): the shoot and how far off it is, days, crew, cast
+  const facts = (() => {
+    const out = []
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(project.startDate || '') ? Math.round((Date.parse(project.startDate) - Date.parse(new Date().toISOString().slice(0, 10))) / 86400000) : null
+    if (d !== null) out.push({ k: 'shoot', v: fmtDate(project.startDate), l: d === 0 ? 'shoot today' : d === 1 ? 'shoot tomorrow' : d > 1 ? `shoot in ${d} days` : `shot ${-d} day${d === -1 ? '' : 's'} ago`, soon: d >= 0 && d <= 7 })
+    const n = (project.shootingDays || []).length
+    if (n) out.push({ k: 'days', v: n, l: n === 1 ? 'shoot day' : 'shoot days' })
+    const crew = (project.contacts || []).filter((c) => c.kind === 'crew' && c.dept !== 'Client').length
+    const cast = (project.contacts || []).filter((c) => c.kind === 'cast').length
+    if (crew) out.push({ k: 'crew', v: crew, l: 'crew' })
+    if (cast) out.push({ k: 'cast', v: cast, l: 'cast' })
+    return out
+  })()
+  const next = project.status === 'Delivered' ? null : stages.find((st) => st.done < 1) || null
   // Alex: an empty Tasks / Song / Links / Production notes panel is just a box saying nothing.
   // Each one keeps quiet until it has something in it, and its button lives in one row up here
   // instead. Pressing a button bumps a counter the panel watches, so it opens its own form.
   const [pillSlot, setPillSlot] = useState(null) // where the Project Database puts its add pills
   const [roarmeOpen, setRoarmeOpen] = useState(false)
+  // the progress stays at the top while the page scrolls under it (Alex, 29 Oct), on a computer: once its place has
+  // scrolled away it folds to the percentage, the bar, the stages and the buttons (.stuck)
+  const stickMark = useRef(null)
+  const stickPanel = useRef(null)
+  const fullH = useRef(0)
+  const [stuck, setStuck] = useState(false)
+  useEffect(() => {
+    const el = stickMark.current
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined
+    const io = new IntersectionObserver(([e]) => {
+      const now = !e.isIntersecting && e.boundingClientRect.top < 0
+      if (now && stickPanel.current && !stickPanel.current.classList.contains('stuck')) fullH.current = stickPanel.current.offsetHeight
+      setStuck(now)
+    }, { threshold: 0 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  // folded, it keeps its full height's place in the page, so what is under it does not jump up
+  useLayoutEffect(() => {
+    const el = stickPanel.current
+    if (el) el.style.marginBottom = stuck ? `${Math.max(0, fullH.current - el.offsetHeight)}px` : ''
+  }, [stuck])
   const [menu, setMenu] = useState('') // 'add' or 'more': the two small menus of the project's top row (Alex, 28 Oct)
   // a choice in + Add closes it; a DOM listener, because the Project Database's pills come in through a portal
   useEffect(() => {
@@ -225,7 +261,8 @@ export default function Overview() {
 
   return (
     <div className="overview">
-      <section className="panel progress">
+      <span ref={stickMark} className="progress-mark" aria-hidden="true" />
+      <section ref={stickPanel} className={`panel progress${stuck ? ' stuck' : ''}`}>
         <div className="progress-head">
           <div className="progress-cover">
             {/* Change / Adjust under the picture went (Alex, 11 Oct): the cover is changed in Edit details */}
@@ -234,7 +271,7 @@ export default function Overview() {
           <div className="progress-main">
             <div className="progress-top">
               <span>
-                <strong>{pct}% done</strong> <span className="muted small">{[project.status === 'Delivered' && 'Delivered', project.startDate && `shoot ${fmtDate(project.startDate)}`, project.frozen && '🔒 locked'].filter(Boolean).join(' · ')}</span>
+                <strong className="progress-pct">{pct}%<small> done</small></strong> <span className="muted small progress-sub">{[project.status === 'Delivered' && ['Delivered'], project.frozen && ['🔒 locked'], project.startDate && [`shoot ${fmtDate(project.startDate)}`, 'progress-shoot']].filter(Boolean).map(([x, c]) => <span key={x} className={c}>{x}</span>)}</span>
               </span>
               {/* the project's few actions, always in the same place (Alex, 28 Oct: "I was looking for Edit"):
                   + Add (everything that can be added, in groups), Edit, and ⋯ for Duplicate, Lock and the RoarMe group */}
@@ -283,6 +320,15 @@ export default function Overview() {
               </span>
             </div>
             <div className="progress-track"><div className="progress-fill" style={{ width: `${pct}%` }} /></div>
+            {/* on a computer the bar is made of the stages (Alex, 29 Oct: "this bar could be more refined and beautiful"):
+                one segment each, as long as its weight, lit as far as it is done, in the order of the chips under it */}
+            <div className="progress-segs" aria-hidden="true">
+              {stages.map((st) => (
+                <span key={st.key} className={`pseg${st.done >= 1 ? ' done' : st.done > 0 ? ' part' : ''}`} style={{ flexGrow: st.weight || 1 }} title={`${st.label}: ${st.done >= 1 ? 'done' : `${Math.round(st.done * 100)}%`}`}>
+                  <i style={{ width: `${Math.round(Math.min(1, st.done) * 100)}%` }} />
+                </span>
+              ))}
+            </div>
             <ul className="stages">
               {stages.map((st) => (
                 <li key={st.key} className={st.done >= 1 ? 'done' : st.done > 0 ? 'part' : ''}>
@@ -302,6 +348,12 @@ export default function Overview() {
                 </li>
               ))}
             </ul>
+            {/* the project at a glance under the stages, on a computer (Alex, 29 Oct: "maybe add something"): the shoot
+                and how far off it is, its days, the people, and the next stage still to do as a link to it */}
+            <div className="progress-facts">
+              {facts.map((f) => <span key={f.k} className={`pfact${f.soon ? ' soon' : ''}`}><b>{f.v}</b>{f.l}</span>)}
+              {next && (next.manual ? <span className="pfact next">Next<b>{next.label}</b></span> : <Link className="pfact next" to={`../${next.to}`}>Next<b>{next.label}</b><span aria-hidden="true">›</span></Link>)}
+            </div>
           </div>
         </div>
       </section>

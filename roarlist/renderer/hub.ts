@@ -15,6 +15,10 @@ export const hub = { uid: '', level: 'none' as Level, projects: [] as HubProject
 const Q = new URLSearchParams(location.search)
 export const scope = Q.get('project') || '' // one project's lists (the project's link to RoarList)
 export const embedded = Q.get('embed') === 'hub'
+// a tab of the hub's Office on a computer (Alex, 29 Oct: "laid out like the other tabs of Office"): the search and New
+// list are on Office's tabs row, the lists and the list in Office's own glass panel (styles.css html.in-office)
+export const inOffice = embedded && Q.get('in') === 'office'
+if (inOffice) document.documentElement.classList.add('in-office')
 
 const str = (x: unknown) => (typeof x === 'string' ? x : '')
 // a person in a project's team with a role like "Director" or "DOP"

@@ -46,7 +46,7 @@ export default function OfficeHub() {
         </nav>
         {!mobile && <div className="db-slot" ref={setSlot} />}
       </div>
-      {tab === 'roarlist' ? <RoarListPage inOffice /> : tab === 'tasks' ? <TasksAll slot={mobile ? null : slot} /> : tab === 'office' ? <Office embedded slot={mobile ? null : slot} /> : <Notes slot={mobile ? null : slot} />}
+      {tab === 'roarlist' ? <RoarListPage inOffice slot={mobile ? null : slot} /> : tab === 'tasks' ? <TasksAll slot={mobile ? null : slot} /> : tab === 'office' ? <Office embedded slot={mobile ? null : slot} /> : <Notes slot={mobile ? null : slot} />}
     </div>
   )
 }
