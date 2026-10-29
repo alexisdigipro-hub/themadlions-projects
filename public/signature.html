@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<!-- Alex's email signature (29 Oct): open it, press Copy signature, paste it into the mail app's signature settings -->
+<!-- the email signatures (29 Oct): Alex's and info@'s; press a Copy signature, paste it into the mail app's signature settings -->
 <title>Email signature</title>
 <style>
   body { margin: 0; padding: 40px 24px; background: #eceef1; font-family: -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; }
@@ -12,12 +12,14 @@
   .bar { max-width: 640px; margin: 0 auto 16px; display: flex; gap: 10px; align-items: center; }
   button { font: inherit; font-weight: 600; font-size: 14px; height: 42px; padding: 0 20px; border-radius: 999px; border: 0; background: #d40000; color: #fff; cursor: pointer; }
   .note { color: #666; font-size: 13px; }
+  .who { font-size: 15px; min-width: 52px; }
+  .gap { height: 36px; }
 </style>
 </head>
 <body>
-<div class="bar"><button id="copy" type="button">Copy signature</button><span class="note" id="note">Then paste it into your mail's signature settings.</span></div>
+<!-- the signatures: tables and inline styles only, so Gmail, Apple Mail and Outlook keep them as they are -->
+<div class="bar"><b class="who">Alex</b><button type="button" data-copy="sig">Copy signature</button><span class="note">Then paste it into your mail's signature settings.</span></div>
 <div class="card">
-<!-- the signature: tables and inline styles only, so Gmail, Apple Mail and Outlook keep it as it is -->
 <div id="sig">
 <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;background:transparent;">
   <tr><td style="background:transparent;padding:0 0 14px;font-size:13px;line-height:18px;color:#6b7078;">Kind regards,</td></tr>
@@ -33,16 +35,34 @@
 </table>
 </div>
 </div>
+<div class="gap"></div>
+<div class="bar"><b class="who">info@</b><button type="button" data-copy="sig-info">Copy signature</button><span class="note">Then paste it into your mail's signature settings.</span></div>
+<div class="card">
+<div id="sig-info">
+<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;background:transparent;">
+  <tr><td style="background:transparent;padding:0 0 14px;font-size:13px;line-height:18px;color:#6b7078;">Kind regards,</td></tr>
+  <tr><td style="background:transparent;padding:0 0 0 12px;border-left:2px solid #d40000;">
+    <div style="font-size:14px;line-height:19px;color:#111317;"><b>THE MAD LIONS</b><span style="color:#9aa0a8;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><span style="color:#6b7078;">Production Team</span></div>
+    <div style="font-size:12px;line-height:18px;color:#6b7078;padding-top:3px;"><a href="mailto:info@themadlions.com" style="color:#6b7078;text-decoration:none;">info@themadlions.com</a><span style="color:#c4c8cd;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><a href="https://www.themadlions.com" style="color:#6b7078;text-decoration:none;">www.themadlions.com</a><span style="color:#c4c8cd;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><a href="tel:+306936221010" style="color:#6b7078;text-decoration:none;">+30 693 622 1010</a></div>
+  </td></tr>
+  <tr><td style="background:transparent;padding:14px 0 0;">
+    <a href="https://www.themadlions.com" style="text-decoration:none;"><img src="https://themadlions.com/wordmark.png" width="124" height="13" alt="THEMADLIONS" style="display:block;border:0;width:124px;height:auto;"></a>
+    <div style="font-size:7.5px;line-height:11px;letter-spacing:1.3px;color:#9aa0a8;padding-top:4px;white-space:nowrap;">FILM PRODUCTION HOUS<span style="letter-spacing:0;">E</span></div>
+  </td></tr>
+  <tr><td style="background:transparent;padding:14px 0 0;font-size:8.5px;white-space:nowrap;line-height:12px;color:#b0b5bc;">Confidential: this e-mail and its attachments are only for the named recipient(s). If it reached you by mistake,<br>please delete it and let us know. THE MAD LIONS is not liable for errors in messages sent over a public network.</td></tr>
+</table>
+</div>
+</div>
 <script>
-  document.getElementById('copy').onclick = async () => {
-    const html = document.getElementById('sig').innerHTML
-    const text = document.getElementById('sig').innerText
+  // each Copy takes its own signature, as HTML (with the picture) and as plain text
+  for (const btn of document.querySelectorAll('[data-copy]')) btn.onclick = async () => {
+    const el = document.getElementById(btn.dataset.copy), note = btn.nextElementSibling
     try {
-      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })])
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([el.innerHTML], { type: 'text/html' }), 'text/plain': new Blob([el.innerText], { type: 'text/plain' }) })])
     } catch {
-      const r = document.createRange(); r.selectNodeContents(document.getElementById('sig')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand('copy'); s.removeAllRanges()
+      const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand('copy'); s.removeAllRanges()
     }
-    document.getElementById('note').textContent = 'Copied. Paste it into your mail\'s signature settings.'
+    note.textContent = 'Copied. Paste it into your mail\'s signature settings.'
   }
 </script>
 </body>
