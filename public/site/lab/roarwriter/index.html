@@ -6,16 +6,21 @@
 <!-- RoarWriter's page on the company site (Alex, 24 Oct 2026), in the same frame as RoarList's (/lab/roarlist/): one
      window of the app (a Greek scene on the page, the scenes at the side, the AI with a suggestion), the three things
      only RoarWriter does, the page and its files, everything else as an index, where your scripts live, downloads
-     (releases/latest), questions. Only what is in RoarWriter 0.1. EN and GR, the same switch as the main page. -->
+     (releases/latest), questions. EN and GR, the same switch as the main page.
+     29 Oct 2026 (Alex: "refresh the Lab pages"): the Lab's fresh layer (../fresh.css, ../fresh.js), the new icon (icon.png)
+     in the hero and as the favicon, a version chip, What's new (0.4 to 0.5.4) as a bento, and the text checked against
+     RoarWriter 0.5.4. Only what is in the app. -->
 <title>RoarWriter · Screenplays, TV, stage plays and more, in English and Greek · by The Mad Lions</title>
 <link rel="canonical" href="https://themadlions.com/lab/roarwriter/">
-<meta name="description" content="RoarWriter, the screenwriting app by The Mad Lions Lab. Nine formats (feature film, TV drama, half-hour, sitcom, stage play, musical, audio drama, AV two-column, comic) in English or Greek, with Final Draft's keys, revisions and versions, a breakdown, a beat board, a storyboard, a shooting schedule, TV series with their bible, writing together, Final Draft, Fade In and Fountain in and out, a PDF ready to send and an AI that reads the whole script when you ask. For Mac, Windows, the browser and the phone.">
+<meta name="description" content="RoarWriter, the screenwriting app by The Mad Lions Lab. Nine formats (feature film, TV drama, half-hour, sitcom, stage play, musical, audio drama, AV two-column, comic) in English or Greek, with Final Draft's keys, revisions and versions, a breakdown, a beat board, a storyboard, a shooting schedule, TV series with their bible, writing together, Final Draft, Fade In and Fountain in and out, notes, index cards, a table read and sides, a PDF ready to send and an AI that reads the whole script when you ask. For Mac, Windows, the browser and the phone.">
 <meta name="theme-color" content="#16181c">
 <meta property="og:title" content="RoarWriter · by The Mad Lions">
 <meta property="og:description" content="Screenwriting from the page to the shoot, in English or Greek: nine formats, revisions, a beat board, a storyboard, a shooting schedule, writing together and an AI that reads the whole script.">
 <meta property="og:url" content="https://themadlions.com/lab/roarwriter/">
 <meta property="og:image" content="https://themadlions.com/lab/roarwriter.jpg">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon.png" type="image/png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="stylesheet" href="../fresh.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&family=Courier+Prime&display=swap" rel="stylesheet">
@@ -438,10 +443,29 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
 .fmts span { font-family: var(--mono); font-size: 12px; padding: 8px 14px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); }
 .fmts span b { color: var(--red-hi); }
 .dls.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hero h1 .f-icon-wrap { flex: none; margin-right: clamp(4px, 1vw, 12px); }
+@media (min-width: 761px) { .hero h1 { font-size: clamp(56px, 10.2vw, 176px); } }
+.bar nav a { white-space: nowrap; padding: 8px 10px; }
+.hero .f-ver { margin-top: clamp(18px, 2.4vw, 28px); }
+.hero .f-ver b { background: linear-gradient(180deg, #ff8a4d, #e0431b); }
+.f-new { max-width: none; }
+.f-new-head h2 { font-family: Jost, var(--sans); font-weight: 200; font-size: clamp(42px, 6.2vw, 96px); line-height: .92; }
+.f-new-head h2 b { font-weight: 800; color: inherit; }
+.f-new-head p.idx { margin: 0 0 16px; color: var(--red-hi); font-size: 12px; max-width: none; line-height: 1.4; }
+.nw-lib { margin-top: auto; padding-top: 8px; display: grid; gap: 10px; }
+.nw-lib .cur { display: grid; gap: 4px; padding: 14px 16px; border-radius: 18px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); }
+.nw-lib .cur b { font-size: 16px; } .nw-lib .cur small { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.nw-lib .cur s { text-decoration: none; justify-self: start; margin-top: 6px; padding: 6px 14px; border-radius: 99px; background: var(--red); color: #fff; font-size: 12px; font-weight: 700; }
+.nw-lib .sm { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.nw-lib .sm i { aspect-ratio: 8.27 / 6; border-radius: 6px; background: #fffefb; position: relative; overflow: hidden; }
+.nw-lib .sm i::after { content: ''; position: absolute; inset: 42% 14% 12% 14%; background: repeating-linear-gradient(180deg, #c9c9c9 0 2px, transparent 2px 7px); opacity: .8; }
+.nw-lib .sm em { position: absolute; left: 14%; top: 16%; font: 9px 'Courier New', monospace; font-style: normal; color: #222; }
+.nw-lib + .f-tag { margin-top: 10px; }
+.tile.f-glass { border-radius: 26px; }
 @media (max-width: 1100px) { .win-body.rw { grid-template-columns: 26% minmax(0, 1fr); } .win-body.rw .pn.ai { display: none; } .dls.three { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 760px) { .win-body.rw { grid-template-columns: minmax(0, 1fr); } .win-body.rw .side { display: none; } .rw .page { padding: 20px 16px 0 26px; font-size: 9.5px; } }
 </style>
-<!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"RoarWriter","url":"https://themadlions.com/lab/roarwriter/","description":"RoarWriter, the screenwriting app by The Mad Lions Lab. Nine formats (feature film, TV drama, half-hour, sitcom, stage play, musical, audio drama, AV two-column, comic) in English or Greek, with Final Draft's keys, revisions and versions, a breakdown, a beat board, a storyboard, a shooting schedule, TV series with their bible, writing together, Final Draft, Fade In and Fountain in and out, a PDF ready to send and an AI that reads the whole script when you ask. For Mac, Windows, the browser and the phone.","applicationCategory":"DesignApplication","operatingSystem":"macOS, Windows, Web","image":"https://themadlions.com/lab/roarwriter.jpg","screenshot":"https://themadlions.com/lab/roarwriter.jpg","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"isAccessibleForFree":true,"inLanguage":["en","el"],"author":{"@id":"https://themadlions.com/#org"},"publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"}}</script><!--/seo:app-->
+<!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"RoarWriter","url":"https://themadlions.com/lab/roarwriter/","description":"RoarWriter, the screenwriting app by The Mad Lions Lab. Nine formats (feature film, TV drama, half-hour, sitcom, stage play, musical, audio drama, AV two-column, comic) in English or Greek, with Final Draft's keys, revisions and versions, a breakdown, a beat board, a storyboard, a shooting schedule, TV series with their bible, writing together, Final Draft, Fade In and Fountain in and out, notes, index cards, a table read and sides, a PDF ready to send and an AI that reads the whole script when you ask. For Mac, Windows, the browser and the phone.","applicationCategory":"DesignApplication","operatingSystem":"macOS, Windows, Web","image":"https://themadlions.com/lab/roarwriter.jpg","screenshot":"https://themadlions.com/lab/roarwriter.jpg","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"isAccessibleForFree":true,"inLanguage":["en","el"],"author":{"@id":"https://themadlions.com/#org"},"publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"}}</script><!--/seo:app-->
 </head>
 <body>
 <header class="bar" id="bar">
@@ -451,6 +475,7 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     <span class="rm" aria-label="RoarWriter"><span class="a">ROAR</span><span class="b">WRITER</span></span>
   </a>
   <nav aria-label="Sections">
+    <a href="#new" data-t="nav.new">What’s new</a>
     <a href="#only" data-t="nav.only">Only here</a>
     <a href="#page" data-t="nav.page">The page</a>
     <a href="#studio" data-t="nav.studio">The studio</a>
@@ -474,13 +499,14 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     <div>
       <p class="kicker rv"><i></i><span data-t="hero.kicker">Screenwriting · The Mad Lions Lab · Experiment 06</span></p>
       <h1 class="rv" style="--d:.06s">
-        <img class="app-icon" src="icon.png" alt="" width="150" height="150" style="border-radius:22%">
+        <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
         <span class="rm"><span class="a">ROAR</span><span class="b">WRITER</span></span><em class="beta">beta</em>
       </h1>
+      <a class="f-ver rv" style="--d:.1s" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.5.4 · see what came</span></a>
     </div>
   </div>
   <div class="hero-sub">
-    <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>Write the film, the series or the play <b>in the format it is made from</b>. Nine formats, from the feature to the stage and the comic, <b>in English or Greek</b>, with a breakdown, writing together, and <b>a PDF ready to send</b>.</p>
+    <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>Write the film, the series or the play <b>in the format it is made from</b>, and take it all the way to the shoot. Nine formats <b>in English or Greek</b>, with revisions, a storyboard and a shooting schedule, writing together, and <b>a PDF ready to send</b>.</p>
     <div class="cta rv" style="--d:.22s">
       <a class="pill main" id="dl-main" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span>Download</span></a>
       <a class="pill web-link" href="https://alexisdigipro-hub.github.io/roarwriter/"><span data-t="cta.browser">Write in the browser</span></a>
@@ -525,7 +551,7 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     </div>
     <div class="tag t1"><i>01</i><span data-t="tag.keys">Enter and Tab, as in Final Draft</span></div>
     <div class="tag t2"><i>02</i><span data-t="tag.ai">An AI that waits to be asked</span></div>
-    <div class="tag t3"><i>03</i><span data-t="tag.gr">Film, TV, theatre and seven more</span></div>
+    <div class="tag t3"><i>03</i><span data-t="tag.gr">Nine formats, from film to comic</span></div>
   </div>
 </div>
 
@@ -533,6 +559,65 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
   <span data-t="tk.1">Nine formats</span><span data-t="tk.2">English and Greek</span><span data-t="tk.3">Final Draft · Fade In</span><span data-t="tk.4">Breakdown</span><span data-t="tk.5">PDF ready to send</span><span data-t="tk.6">Write together</span><span data-t="tk.7">Works offline</span><span data-t="tk.8">AI on request</span>
   <span data-t="tk.1">Nine formats</span><span data-t="tk.2">English and Greek</span><span data-t="tk.3">Final Draft · Fade In</span><span data-t="tk.4">Breakdown</span><span data-t="tk.5">PDF ready to send</span><span data-t="tk.6">Write together</span><span data-t="tk.7">Works offline</span><span data-t="tk.8">AI on request</span>
 </div></div>
+
+<section class="f-new" id="new">
+  <div class="f-new-head rv">
+    <div><p class="idx" data-t="new.idx">New · 0.4 to 0.5.4</p><h2 data-t="new.title" data-html>What’s <b>new</b>.</h2></div>
+    <p data-t="new.sub">What came into RoarWriter this October, besides the studio further down the page.</p>
+  </div>
+  <div class="f-bento rv">
+    <article class="f-card wide tall">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="11" height="15" rx="2"/><path d="M8 8h3M8 12h3"/><path d="M9 21h9a2 2 0 0 0 2-2V7"/></svg></span>
+      <h3 data-t="n1.t">A library that starts where you stopped</h3>
+      <p data-t="n1.p">The script you are writing comes first and big: Continue writing, its pages, scenes, minutes and words. A new feature, TV drama or stage play is one click away, and every other script shows as a small page of how it begins, with All, Mine or Shared and a search.</p>
+      <div class="nw-lib" aria-hidden="true"><div class="cur"><b>Η Νύχτα του Σταθμού</b><small>12 pages · 24 scenes · 13 min</small><s>Continue writing</s></div><div class="sm"><i><em>FADE IN:</em></i><i><em>ΕΣΩΤ.</em></i><i><em>ACT ONE</em></i></div></div>
+      <span class="f-tag">v0.4.2</span>
+    </article>
+    <article class="f-card wide">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l5 4V6L7 10z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg></span>
+      <h3 data-t="n2.t">A table read</h3>
+      <p data-t="n2.p">Read aloud gives every character a voice of their own from your device, lights the line being read and can leave out the action. Its timings make the running time truer.</p>
+      <span class="f-tag">v0.4.0</span>
+    </article>
+    <article class="f-card wide">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="8" height="6" rx="1.5"/><rect x="13" y="5" width="8" height="6" rx="1.5"/><rect x="3" y="13" width="8" height="6" rx="1.5"/><rect x="13" y="13" width="8" height="6" rx="1.5"/></svg></span>
+      <h3 data-t="n3.t">Index cards</h3>
+      <p data-t="n3.p">Every scene as a card with what happens, a colour and its length in eighths. Drag a card and the scene moves in the script.</p>
+      <span class="f-tag">v0.4.0</span>
+    </article>
+    <article class="f-card">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M8 9h8M8 13h5"/></svg></span>
+      <h3 data-t="n4.t">Notes on lines</h3>
+      <p data-t="n4.p">Select, right-click, write. A yellow mark in the margin and the Notes tab to resolve them, shared with whoever writes with you.</p>
+      <span class="f-tag">v0.4.0</span>
+    </article>
+    <article class="f-card">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></span>
+      <h3 data-t="n5.t">Sides for the cast</h3>
+      <p data-t="n5.p">The scenes you choose, or every scene of one character, as their own PDF, numbered as in the script.</p>
+      <span class="f-tag">v0.4.0</span>
+    </article>
+    <article class="f-card">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14M5 15h14M10 4 8 20M16 4l-2 16"/></svg></span>
+      <h3 data-t="n6.t">Scene numbers and (CONT’D)</h3>
+      <p data-t="n6.p">On the left, the right or both, on the page and in the PDF; a sitcom’s scenes lettered A, B, C.</p>
+      <span class="f-tag">v0.4.0</span>
+    </article>
+    <article class="f-card wide">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></span>
+      <h3 data-t="n7.t">Settings in the list of scripts</h3>
+      <p data-t="n7.p">Set once what every new script starts with: format, page size, Written by, credit, contact and scene numbers, right next to your account.</p>
+      <span class="f-tag">v0.5.2</span>
+    </article>
+    <article class="f-card wide">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2.5"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></span>
+      <h3 data-t="n8.t">Greek that types right</h3>
+      <p data-t="n8.p">Accents no longer jump to the line above, Option or Alt and a number picks the kind in a browser too, and the side and the AI widen when you drag their edge.</p>
+      <span class="f-tag">v0.4.2</span>
+    </article>
+  </div>
+</section>
+<div class="f-sep"></div>
 
 <section id="only">
   <div class="sec-h">
@@ -542,8 +627,8 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
   <div class="three">
     <div class="big rv">
       <span class="no">01</span>
-      <div><h3 data-t="f1.t" data-html>The keys of <b>Final Draft</b>.</h3><p data-t="f1.p">Enter goes on to what usually comes next: after a scene heading the action, after a name the dialogue, after the dialogue the next name. Tab turns a line into another kind, Cmd or Ctrl and a number picks one. The format takes care of itself while you write.</p>
-        <div class="chips"><span data-t="f1.c1">Enter · Tab · ⌘1–7</span><span data-t="f1.c2">Seven kinds of element</span><span data-t="f1.c3">Undo ⌘Z</span></div></div>
+      <div><h3 data-t="f1.t" data-html>The keys of <b>Final Draft</b>.</h3><p data-t="f1.p">Enter goes on to what usually comes next: after a scene heading the action, after a name the dialogue, after the dialogue the next name. Tab turns a line into another kind, Option or Alt and a number picks one, in the browser too. The format takes care of itself while you write.</p>
+        <div class="chips"><span data-t="f1.c1">Enter · Tab · ⌥1–9</span><span data-t="f1.c2">Seven kinds of element</span><span data-t="f1.c3">Undo ⌘Z</span></div></div>
       <div class="viz"><div class="v-keys">
         <div class="k-r"><kbd>Enter</kbd><span data-t="f1.k1">Scene heading</span><em>→ <b data-t="f1.k1b">Action</b></em></div>
         <div class="k-r"><kbd>Tab</kbd><span data-t="f1.k2">Action</span><em>→ <b data-t="f1.k2b">Character</b></em></div>
@@ -553,7 +638,7 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     </div>
     <div class="big rv">
       <span class="no">02</span>
-      <div><h3 data-t="f2.t" data-html><b>Greek</b>, as well as English.</h3><p data-t="f2.p">Type ΕΣΩΤ. or ΕΞΩΤ. and the line becomes a scene heading, as INT. and EXT. do. Names, places and the time of day are suggested as you type, ΜΕΡΑ and ΝΥΧΤΑ included, and the PDF prints Greek in the same Courier as the rest.</p>
+      <div><h3 data-t="f2.t" data-html><b>Greek</b>, as well as English.</h3><p data-t="f2.p">Type ΕΣΩΤ. or ΕΞΩΤ. and the line becomes a scene heading, as INT. and EXT. do. Names, places and the time of day are suggested as you type, ΜΕΡΑ and ΝΥΧΤΑ included, and the PDF prints Greek in the same typewriter letters, and the same weight, as English.</p>
         <div class="chips"><span data-t="f2.c1">ΕΣΩΤ. · ΕΞΩΤ.</span><span data-t="f2.c2">Names and places suggested</span><span data-t="f2.c3">Greek and English spelling</span></div></div>
       <div class="viz"><div class="v-gr">
         <p>ΕΣΩΤ. ΚΟΥΖΙΝΑ - ΝΥ<span style="border-right:1.5px solid #e0431b">&nbsp;</span></p>
@@ -581,25 +666,25 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     <p class="sub rv" data-t="page.sub">The page as producers, actors and the crew expect it, and the files the rest of the industry uses.</p>
   </div>
   <div class="board">
-    <div class="tile t-tasks rv">
+    <div class="tile f-glass t-tasks rv">
       <span class="k" data-t="s1.k">The PDF</span>
       <h3 data-t="s1.t" data-html>Ready <b>to send</b>.</h3>
       <p data-t="s1.p">Courier 12 with the standard margins, the title page as Final Draft lays it out, page numbers from page two, A4 or US Letter. The pages are laid out for real, and you see them as you write: a scene heading never ends a page and a name stays with its lines.</p>
       <div class="pdfs"><i class="tp"></i><i></i><i><b>2.</b></i><i><b>3.</b></i></div>
     </div>
-    <div class="tile t-ord rv">
+    <div class="tile f-glass t-ord rv">
       <span class="k" data-t="s2.k">The files</span>
       <h3 data-t="s2.t" data-html>Final Draft, Fade In and <b>Fountain</b>.</h3>
       <p data-t="s2.p">Open a script from Final Draft, Fade In or Fountain, save it back as any of them. Paste a screenplay as plain text and it turns into elements.</p>
-      <div class="fmts"><span><b>.fdx</b> in · out</span><span><b>.fountain</b> in · out</span><span><b>.pdf</b> out</span></div>
+      <div class="fmts"><span><b>.fdx</b> in · out</span><span><b>.fadein</b> in · out</span><span><b>.fountain</b> in · out</span><span><b>.pdf</b> out</span></div>
     </div>
-    <div class="tile t-upd rv">
+    <div class="tile f-glass t-upd rv">
       <span class="k" data-t="s3.k">At the side</span>
       <h3 data-t="s3.t" data-html>Scenes and <b>characters</b>.</h3>
-      <p data-t="s3.p">Every scene numbered, the one you are in lit; one click takes you there. Every character with how many times they speak and in how many scenes.</p>
+      <p data-t="s3.p">Every scene numbered, the one you are in lit; one click takes you there. Every character with how many times they speak and in how many scenes, renamed everywhere in one go. And the Notes tab, and the Series tab in an episode.</p>
     </div>
-    <div class="tile t-icon rv">
-      <span class="k" data-t="s4.k" data-html>Updates itself <em>0.3</em></span>
+    <div class="tile f-glass t-icon rv">
+      <span class="k" data-t="s4.k" data-html>Updates itself <em>0.5</em></span>
       <h3 data-t="s4.t" data-html>Writes <b>offline</b>, too.</h3>
       <p data-t="s4.p">The Mac and Windows apps carry the whole program inside them: on a plane or on set with no signal, you go on writing, and the script is sent to your account when the connection is back. New versions download by themselves.</p>
     </div>
@@ -612,22 +697,22 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     <p class="sub rv" data-t="st.sub">Version 0.5: what a production asks of a script, in the same app it is written in.</p>
   </div>
   <div class="board">
-    <div class="tile t-tasks rv">
+    <div class="tile f-glass t-tasks rv">
       <span class="k" data-t="t1.k" data-html>The AI on the whole script <em>new</em></span>
       <h3 data-t="t1.t" data-html>The whole script, <b>read</b>.</h3>
       <p data-t="t1.p">Coverage with a verdict, continuity (who knows what before they learn it, the prop that comes back), a budget pass that finds what is expensive and a cheaper way to the same story value, a pitch package for a fund or a market, a translated copy in Greek or English. Ask the script anything: the scenes it names take you there.</p>
     </div>
-    <div class="tile t-ord rv">
+    <div class="tile f-glass t-ord rv">
       <span class="k" data-t="t2.k" data-html>Revisions and versions <em>new</em></span>
       <h3 data-t="t2.t" data-html>The way <b>a production</b> works.</h3>
       <p data-t="t2.p">Revision colours in the industry order, an asterisk on every changed line, scene numbers locked (a new one after 12 is 12A), the revised pages alone as a PDF. Versions of the script, one a day by itself, compared word by word with now.</p>
     </div>
-    <div class="tile t-upd rv">
+    <div class="tile f-glass t-upd rv">
       <span class="k" data-t="t3.k" data-html>Planning the film <em>new</em></span>
       <h3 data-t="t3.t" data-html>Beats, frames, <b>days</b>.</h3>
       <p data-t="t3.p">A beat board (Save the Cat, three acts, Hero’s Journey) that shows where each beat should fall and where it does. A storyboard with a picture for every shot, the AI breaking a scene into shots, a shot list for the crew. A stripboard schedule with Day out of Days.</p>
     </div>
-    <div class="tile t-icon rv">
+    <div class="tile f-glass t-icon rv">
       <div class="txt">
       <span class="k" data-t="t4.k" data-html>TV <em>new</em></span>
       <h3 data-t="t4.t" data-html>A series, <b>with its bible</b>.</h3>
@@ -662,7 +747,9 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     <div class="ix rv"><span class="no">17</span><b data-t="ix17.t">Research desk</b><p data-t="ix17.p">Facts for the scene from the web, with their sources, kept as a note on it.</p></div>
     <div class="ix rv"><span class="no">18</span><b data-t="ix18.t">Write by speaking</b><p data-t="ix18.p">Dictate in Greek or English; insert it as it is, or let the AI lay it out as script.</p></div>
     <div class="ix rv"><span class="no">19</span><b data-t="ix19.t">Writers in the room</b><p data-t="ix19.p">See who is in which scene right now, and give scenes to writers.</p></div>
-    <div class="ix rv"><span class="no">20</span><b data-t="ix20.t">Settings for new scripts</b><p data-t="ix20.p">The format, the page, the author and the contact a new script starts with.</p></div>
+    <div class="ix rv"><span class="no">20</span><b data-t="ix20.t">Find and replace</b><p data-t="ix20.p">⌘F and ⌘⌥F, with case and whole words; Greek accents are ignored, so a word is found however it was typed.</p></div>
+    <div class="ix rv"><span class="no">21</span><b data-t="ix21.t">The report</b><p data-t="ix21.p">Pages, minutes, scenes, INT and EXT, day and night, locations, and who speaks how much.</p></div>
+    <div class="ix rv"><span class="no">22</span><b data-t="ix22.t">Your page, your PDF</b><p data-t="ix22.p">A white, sepia or midnight page to write on; in the PDF a header and a faint watermark, such as CONFIDENTIAL or the reader’s name.</p></div>
   </div>
 </section>
 
@@ -676,9 +763,9 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     </div>
     <div class="prs">
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></i><b data-t="p1.t">On your computer first</b><p data-t="p1.p">Every change is kept here at once: writing never waits for the internet, and works without it.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></i><b data-t="p2.t">Only yours in the cloud</b><p data-t="p2.p">In your account, your scripts can be opened only by you.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></i><b data-t="p2.t">Only yours, and whom you share with</b><p data-t="p2.p">In your account, a script opens only for you and the people you share it with.</p></div>
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></i><b data-t="p3.t">One account</b><p data-t="p3.p">The same account as RoarMe, Roardino and RoarList.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg></i><b data-t="p4.t">The AI sees only what you send</b><p data-t="p4.p">The scene you are on, and only when you press an AI button. It never writes on your page by itself.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg></i><b data-t="p4.t">The AI sees only what you send</b><p data-t="p4.p">The scene you are on, or the whole script when you ask for coverage or a question about it, and only when you press an AI button. It never writes on your page by itself.</p></div>
     </div>
   </div>
 </section>
@@ -723,11 +810,11 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
       <details class="rv"><summary data-t="q2">Do I need an account?</summary><p data-t="a2">Yes, a RoarMe account: the same one as RoarMe, Roardino and RoarList. It is what keeps your scripts safe and the same on every device.</p></details>
       <details class="rv"><summary data-t="q3">Can I open my Final Draft or Fade In scripts?</summary><p data-t="a3">Yes: import the .fdx or the .fadein and go on writing; save it back as either whenever you need it there. Fountain works both ways too.</p></details>
       <details class="rv"><summary data-t="q4">Does it write Greek scripts properly?</summary><p data-t="a4">Yes. Scene headings with ΕΣΩΤ. and ΕΞΩΤ., names in capitals, suggestions in Greek, spelling in Greek in the apps, and a PDF in the same format as an English script.</p></details>
-      <details class="rv"><summary data-t="q5">What does the AI see?</summary><p data-t="a5">Only the scene you are on and a little of what comes before it, and only when you press one of its buttons. Its answer appears beside the page; nothing changes until you press Insert or Replace.</p></details>
+      <details class="rv"><summary data-t="q5">What does the AI see?</summary><p data-t="a5">Only what you ask about: the scene you are on and a little of what comes before it, or the whole script when you choose Whole script (coverage, continuity, a question), and only when you press one of its buttons. Its answer appears beside the page; nothing changes until you press Insert or Replace.</p></details>
       <details class="rv"><summary data-t="q6">Does it work without internet?</summary><p data-t="a6">The Mac and Windows apps do: you write as usual and the script is sent to your account when the connection is back. The AI needs a connection.</p></details>
       <details class="rv"><summary data-t="q8">Does it write stage plays and TV?</summary><p data-t="a8">Yes. When you start a script you choose its format: feature film, TV drama in acts, TV half-hour, multi-camera sitcom, stage play, musical, audio drama, AV two-column or comic. You can change it later on its title page.</p></details>
       <details class="rv"><summary data-t="q9">Can two of us write the same script?</summary><p data-t="a9">Yes. Press Share, type their email (their RoarMe account) and choose Can edit or Can view. Only the owner shares or removes someone; anyone can leave.</p></details>
-      <details class="rv"><summary data-t="q7">A4 or US Letter?</summary><p data-t="a7">Either, chosen per script on its title page. The margins and the font stay those of the standard screenplay format.</p></details>
+      <details class="rv"><summary data-t="q7">A4 or US Letter?</summary><p data-t="a7">Either, chosen per script on its title page or in Settings; what new scripts start with is set in the Settings of the list of scripts. The margins and the font stay those of the standard screenplay format.</p></details>
     </div>
   </div>
 </section>
@@ -754,25 +841,51 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
 (function () {
   var APP = 'RoarWriter', REPO = 'alexisdigipro-hub/roarwriter', WEB = 'https://alexisdigipro-hub.github.io/roarwriter/'
   var EL = {
+    "nav.new": "Νέα",
+    "ver.b": "Νέα",
+    "ver.t": "στην 0.5.4 · δες τι ήρθε",
+    "new.idx": "Νέα · από την 0.4 ως την 0.5.4",
+    "new.title": "Τι <b>νέο</b> έχει.",
+    "new.sub": "Ό,τι μπήκε στο RoarWriter αυτόν τον Οκτώβριο, πέρα από το studio πιο κάτω στη σελίδα.",
+    "n1.t": "Μια βιβλιοθήκη που ξεκινά εκεί που σταμάτησες",
+    "n1.p": "Το σενάριο που γράφεις έρχεται πρώτο και μεγάλο: Continue writing, οι σελίδες, οι σκηνές, τα λεπτά και οι λέξεις του. Μια νέα ταινία, ένα τηλεοπτικό δράμα ή ένα θεατρικό είναι ένα κλικ μακριά, και κάθε άλλο σενάριο φαίνεται σαν μια μικρή σελίδα με το πώς αρχίζει, με All, Mine ή Shared και αναζήτηση.",
+    "n2.t": "Ανάγνωση στο τραπέζι",
+    "n2.p": "Το Read aloud δίνει σε κάθε χαρακτήρα δική του φωνή από τις φωνές της συσκευής σου, φωτίζει τη γραμμή που διαβάζεται και μπορεί να αφήνει έξω τη δράση. Οι χρόνοι του κάνουν τη διάρκεια πιο σωστή.",
+    "n3.t": "Κάρτες σκηνών",
+    "n3.p": "Κάθε σκηνή σαν κάρτα, με ό,τι συμβαίνει, ένα χρώμα και τη διάρκειά της σε όγδοα. Σύρε μια κάρτα και η σκηνή μετακινείται στο σενάριο.",
+    "n4.t": "Σημειώσεις σε γραμμές",
+    "n4.p": "Επίλεξε, δεξί κλικ, γράψε. Ένα κίτρινο σημάδι στο περιθώριο και η καρτέλα Notes για να τις κλείνεις, κοινές με όποιον γράφει μαζί σου.",
+    "n5.t": "Sides για τους ηθοποιούς",
+    "n5.p": "Όποιες σκηνές διαλέξεις, ή όλες τις σκηνές ενός χαρακτήρα, σε δικό τους PDF, με την αρίθμηση του σεναρίου.",
+    "n6.t": "Αριθμοί σκηνών και (CONT’D)",
+    "n6.p": "Αριστερά, δεξιά ή και στις δύο μεριές, στη σελίδα και στο PDF· οι σκηνές ενός sitcom με γράμματα A, B, C.",
+    "n7.t": "Ρυθμίσεις από τη λίστα των σεναρίων",
+    "n7.p": "Όρισε μία φορά με τι ξεκινά κάθε νέο σενάριο: format, μέγεθος σελίδας, Written by, credit, επαφή και αριθμοί σκηνών, ακριβώς δίπλα στον λογαριασμό σου.",
+    "n8.t": "Ελληνικά που γράφονται σωστά",
+    "n8.p": "Οι τόνοι δεν πηδούν πια στην πάνω γραμμή, το Option ή Alt με έναν αριθμό διαλέγει είδος γραμμής και στον browser, και το πλάι και το AI φαρδαίνουν όταν σέρνεις την άκρη τους.",
+    "ix21.t": "Η αναφορά",
+    "ix21.p": "Σελίδες, λεπτά, σκηνές, ΕΣΩΤ. και ΕΞΩΤ., μέρα και νύχτα, locations, και ποιος μιλά πόσο.",
+    "ix22.t": "Η σελίδα σου, το PDF σου",
+    "ix22.p": "Λευκή, σέπια ή σκοτεινή σελίδα για να γράφεις· στο PDF μια κεφαλίδα και ένα αχνό υδατογράφημα, όπως CONFIDENTIAL ή το όνομα του αναγνώστη.",
     'nav.only': 'Μόνο εδώ', 'nav.page': 'Η σελίδα', 'nav.all': 'Όλα', 'nav.yours': 'Δικά σου', 'nav.download': 'Λήψη', 'nav.faq': 'Ερωτήσεις',
     'cta.open': 'Άνοιξε το RoarWriter', 'cta.browser': 'Γράψε στον browser', 'cta.note': 'Δωρεάν · Mac, Windows, browser · ο λογαριασμός σου στο RoarMe · ενημερώνεται μόνο του',
     'hero.kicker': 'Σενάριο · The Mad Lions Lab · Πείραμα 06',
-    'hero.lead': 'Γράψε την ταινία, τη σειρά ή το θεατρικό <b>στο format που φτιάχνεται</b>. Εννιά format, από το κινηματογραφικό ως το θέατρο και το comic, <b>στα ελληνικά ή στα αγγλικά</b>, με breakdown, γράψιμο μαζί και <b>ένα PDF έτοιμο να σταλεί</b>.',
-    'tag.keys': 'Enter και Tab, όπως στο Final Draft', 'tag.ai': 'Ένα AI που περιμένει να το ρωτήσεις', 'tag.gr': 'Ταινία, TV, θέατρο και άλλα επτά',
+    'hero.lead': 'Γράψε την ταινία, τη σειρά ή το θεατρικό <b>στο format που φτιάχνεται</b>, και πήγαινέ το ως το γύρισμα. Εννιά format <b>στα ελληνικά ή στα αγγλικά</b>, με revisions, storyboard και πρόγραμμα γυρισμάτων, γράψιμο μαζί και <b>ένα PDF έτοιμο να σταλεί</b>.',
+    'tag.keys': 'Enter και Tab, όπως στο Final Draft', 'tag.ai': 'Ένα AI που περιμένει να το ρωτήσεις', 'tag.gr': 'Εννιά format, από την ταινία ως το comic',
     'tk.1': 'Εννιά format', 'tk.2': 'Ελληνικά και αγγλικά', 'tk.3': 'Final Draft · Fade In', 'tk.4': 'Breakdown', 'tk.5': 'PDF έτοιμο να σταλεί', 'tk.6': 'Γράψιμο μαζί', 'tk.7': 'Δουλεύει χωρίς σύνδεση', 'tk.8': 'AI όταν το ζητήσεις',
     'only.idx': '01 · Μόνο εδώ', 'only.title': 'Τρία πράγματα που κάνει <b>μόνο το RoarWriter</b>.', 'only.sub': 'Γιατί ένας σκηνοθέτης γράφει το επόμενο σενάριο εδώ, και όχι σε έναν επεξεργαστή κειμένου.',
-    'f1.t': 'Τα πλήκτρα του <b>Final Draft</b>.', 'f1.p': 'Το Enter πάει σε ό,τι έρχεται συνήθως μετά: μετά την επικεφαλίδα η δράση, μετά το όνομα ο διάλογος, μετά τον διάλογο το επόμενο όνομα. Το Tab αλλάζει το είδος της γραμμής, το Cmd ή Ctrl με έναν αριθμό διαλέγει ένα. Το format φροντίζεται μόνο του όσο γράφεις.',
-    'f1.c1': 'Enter · Tab · ⌘1–7', 'f1.c2': 'Επτά είδη γραμμής', 'f1.c3': 'Αναίρεση ⌘Z',
+    'f1.t': 'Τα πλήκτρα του <b>Final Draft</b>.', 'f1.p': 'Το Enter πάει σε ό,τι έρχεται συνήθως μετά: μετά την επικεφαλίδα η δράση, μετά το όνομα ο διάλογος, μετά τον διάλογο το επόμενο όνομα. Το Tab αλλάζει το είδος της γραμμής, το Option ή Alt με έναν αριθμό διαλέγει ένα, και στον browser. Το format φροντίζεται μόνο του όσο γράφεις.',
+    'f1.c1': 'Enter · Tab · ⌥1–9', 'f1.c2': 'Επτά είδη γραμμής', 'f1.c3': 'Αναίρεση ⌘Z',
     'f1.k1': 'Επικεφαλίδα', 'f1.k1b': 'Δράση', 'f1.k2': 'Δράση', 'f1.k2b': 'Χαρακτήρας', 'f1.k3': 'Χαρακτήρας', 'f1.k3b': 'Διάλογος', 'f1.k4': 'Διάλογος', 'f1.k4b': '(παρένθεση)',
-    'f2.t': '<b>Ελληνικά</b>, όπως και αγγλικά.', 'f2.p': 'Γράψε ΕΣΩΤ. ή ΕΞΩΤ. και η γραμμή γίνεται επικεφαλίδα σκηνής, όπως με το INT. και το EXT. Ονόματα, τόποι και ώρα της μέρας προτείνονται καθώς γράφεις, μαζί και τα ΜΕΡΑ και ΝΥΧΤΑ, και το PDF τυπώνει τα ελληνικά στην ίδια Courier με τα υπόλοιπα.',
+    'f2.t': '<b>Ελληνικά</b>, όπως και αγγλικά.', 'f2.p': 'Γράψε ΕΣΩΤ. ή ΕΞΩΤ. και η γραμμή γίνεται επικεφαλίδα σκηνής, όπως με το INT. και το EXT. Ονόματα, τόποι και ώρα της μέρας προτείνονται καθώς γράφεις, μαζί και τα ΜΕΡΑ και ΝΥΧΤΑ, και το PDF τυπώνει τα ελληνικά με τα ίδια γράμματα γραφομηχανής, και το ίδιο βάρος, με τα αγγλικά.',
     'f2.c1': 'ΕΣΩΤ. · ΕΞΩΤ.', 'f2.c2': 'Προτάσεις για ονόματα και τόπους', 'f2.c3': 'Ορθογραφία σε ελληνικά και αγγλικά',
     'f3.t': 'Ένα AI που <b>περιμένει να το ρωτήσεις</b>.', 'f3.p': 'Πάνω στη σκηνή που είσαι: πρότεινε διάλογο, ξαναγράψε τη σκηνή, γράψε τη συνέχεια ή δώσε σημειώσεις, στη γλώσσα του σεναρίου και με τη φωνή των χαρακτήρων του. Η απάντηση φαίνεται πρώτα, ως σενάριο· τίποτα στη σελίδα δεν αλλάζει μέχρι να πατήσεις Insert ή Replace.',
     'f3.c1': 'Πρότεινε διάλογο', 'f3.c2': 'Ξαναγράψε τη σκηνή', 'f3.c3': 'Η συνέχεια', 'f3.c4': 'Ιδέες και σημειώσεις', 'f3.ask': 'Κάνε τον Νίκο πιο φοβισμένο.',
     'page.idx': '02 · Η σελίδα', 'page.title': 'Ένα σενάριο <b>που διαβάζεται σαν σενάριο</b>.', 'page.sub': 'Η σελίδα όπως την περιμένουν παραγωγοί, ηθοποιοί και συνεργείο, και τα αρχεία που χρησιμοποιεί όλη η βιομηχανία.',
     's1.k': 'Το PDF', 's1.t': 'Έτοιμο <b>να σταλεί</b>.', 's1.p': 'Courier 12 με τα κανονικά περιθώρια, η σελίδα τίτλου όπως τη στήνει το Final Draft, αριθμοί σελίδας από τη δεύτερη, A4 ή US Letter. Οι σελίδες στήνονται στ’ αλήθεια και τις βλέπεις όσο γράφεις: μια επικεφαλίδα δεν κλείνει ποτέ σελίδα και ένα όνομα μένει με τις ατάκες του.',
     's2.k': 'Τα αρχεία', 's2.t': 'Final Draft, Fade In και <b>Fountain</b>.', 's2.p': 'Άνοιξε ένα σενάριο από Final Draft, Fade In ή Fountain, αποθήκευσέ το πίσω σε όποιο από αυτά θες. Επικόλλησε ένα σενάριο ως απλό κείμενο και γίνεται γραμμές του format.',
-    's3.k': 'Στο πλάι', 's3.t': 'Σκηνές και <b>χαρακτήρες</b>.', 's3.p': 'Κάθε σκηνή αριθμημένη, αυτή που είσαι φωτισμένη· ένα κλικ σε πάει εκεί. Κάθε χαρακτήρας με πόσες φορές μιλά και σε πόσες σκηνές.',
-    's4.k': 'Ενημερώνεται μόνο του <em>0.3</em>', 's4.t': 'Γράφει και <b>χωρίς σύνδεση</b>.', 's4.p': 'Οι εφαρμογές για Mac και Windows έχουν όλο το πρόγραμμα μέσα τους: στο αεροπλάνο ή στο γύρισμα χωρίς σήμα συνεχίζεις να γράφεις, και το σενάριο πάει στον λογαριασμό σου όταν γυρίσει η σύνδεση. Οι νέες εκδόσεις κατεβαίνουν μόνες τους.',
+    's3.k': 'Στο πλάι', 's3.t': 'Σκηνές και <b>χαρακτήρες</b>.', 's3.p': 'Κάθε σκηνή αριθμημένη, αυτή που είσαι φωτισμένη· ένα κλικ σε πάει εκεί. Κάθε χαρακτήρας με πόσες φορές μιλά και σε πόσες σκηνές, με αλλαγή ονόματος παντού με μιας. Και η καρτέλα Notes, και σε επεισόδιο η καρτέλα Series.',
+    's4.k': 'Ενημερώνεται μόνο του <em>0.5</em>', 's4.t': 'Γράφει και <b>χωρίς σύνδεση</b>.', 's4.p': 'Οι εφαρμογές για Mac και Windows έχουν όλο το πρόγραμμα μέσα τους: στο αεροπλάνο ή στο γύρισμα χωρίς σήμα συνεχίζεις να γράφεις, και το σενάριο πάει στον λογαριασμό σου όταν γυρίσει η σύνδεση. Οι νέες εκδόσεις κατεβαίνουν μόνες τους.',
     'all.idx': '04 · Όλα', 'all.title': 'Και όλα όσα <b>θέλει ένα draft</b>.', 'all.sub': 'Ό,τι ήρθε στις τελευταίες εκδόσεις, και τα υπόλοιπα, με λίγα λόγια.',
     'ix1.t': 'Εννιά format', 'ix1.p': 'Ταινία, τηλεοπτικό δράμα, ημίωρη σειρά, sitcom πολλών καμερών, θεατρικό, μιούζικαλ, audio drama, AV δύο στηλών και comic. Το καθένα με τη δική του σελίδα, είδη γραμμής, πλήκτρα και PDF.',
     'ix2.t': 'Καταλαβαίνει τι εννοείς', 'ix2.p': 'Το INT. ή ΕΣΩΤ. στην αρχή της γραμμής κάνει επικεφαλίδα· το CUT TO: κάνει μετάβαση. Η παρένθεση ανοίγει μόνη της τις παρενθέσεις της.',
@@ -816,13 +929,13 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     'ix18.p': 'Υπαγόρευσε σε ελληνικά ή αγγλικά· βάλ’ το όπως είναι, ή άσε το AI να το στήσει σε σενάριο.',
     'ix19.t': 'Οι σεναριογράφοι μαζί',
     'ix19.p': 'Δες ποιος είναι σε ποια σκηνή τώρα, και δώσε σκηνές σε σεναριογράφους.',
-    'ix20.t': 'Ρυθμίσεις για νέα σενάρια',
-    'ix20.p': 'Το format, η σελίδα, ο συγγραφέας και η επαφή με τα οποία ξεκινά ένα νέο σενάριο.',
+    'ix20.t': 'Εύρεση και αντικατάσταση',
+    'ix20.p': '⌘F και ⌘⌥F, με πεζά-κεφαλαία και ολόκληρες λέξεις· οι τόνοι αγνοούνται, οπότε μια λέξη βρίσκεται όπως κι αν γράφτηκε.',
     'pv.idx': '05 · Δικά σου', 'pv.title': 'Το σενάριό σου, <b>ο λογαριασμός σου</b>.', 'pv.sub': 'Κρατιέται στον υπολογιστή σου τη στιγμή που γράφεις και στον λογαριασμό σου ένα δευτερόλεπτο μετά, οπότε σε ακολουθεί σε κάθε συσκευή.',
     'p1.t': 'Πρώτα στον υπολογιστή σου', 'p1.p': 'Κάθε αλλαγή κρατιέται εδώ αμέσως: το γράψιμο δεν περιμένει ποτέ το internet, και δουλεύει και χωρίς αυτό.',
-    'p2.t': 'Μόνο δικά σου στο cloud', 'p2.p': 'Στον λογαριασμό σου, τα σενάριά σου τα ανοίγεις μόνο εσύ.',
+    'p2.t': 'Μόνο δικά σου, και όσων τα μοιράζεσαι', 'p2.p': 'Στον λογαριασμό σου, ένα σενάριο ανοίγει μόνο για σένα και για όσους το μοιράζεσαι.',
     'p3.t': 'Ένας λογαριασμός', 'p3.p': 'Ο ίδιος λογαριασμός με RoarMe, Roardino και RoarList.',
-    'p4.t': 'Το AI βλέπει μόνο ό,τι στέλνεις', 'p4.p': 'Τη σκηνή που είσαι, και μόνο όταν πατήσεις ένα κουμπί AI. Δεν γράφει ποτέ μόνο του στη σελίδα σου.',
+    'p4.t': 'Το AI βλέπει μόνο ό,τι στέλνεις', 'p4.p': 'Τη σκηνή που είσαι, ή όλο το σενάριο όταν ζητάς coverage ή κάνεις μια ερώτηση γι’ αυτό, και μόνο όταν πατήσεις ένα κουμπί AI. Δεν γράφει ποτέ μόνο του στη σελίδα σου.',
     'dl.idx': '06 · Λήψη', 'dl.title': 'Πάρε το <b>RoarWriter</b>.', 'dl.sub': 'Δωρεάν, και σε beta: ένα πείραμα του Mad Lions Lab με το οποίο γράφουμε τις δικές μας ταινίες.',
     'dl.mac': 'Για Mac με chip της Apple (M1 και νεότερα).', 'dl.get': 'Λήψη', 'dl.intel': 'Παλιότερο Mac με Intel;', 'dl.intelbtn': 'Αυτό', 'dl.win': 'Windows 10 και 11.', 'dl.webt': 'Browser', 'dl.web': 'Σε κάθε υπολογιστή, με τον λογαριασμό σου στο RoarMe. Τίποτα για εγκατάσταση.',
     'dl.upd': '<b>Ενημερώνεται μόνο του.</b> Οι εφαρμογές για Mac και Windows κατεβάζουν τις νέες εκδόσεις μόνες τους και ζητούν μια γρήγορη επανεκκίνηση.',
@@ -832,13 +945,13 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     'q2': 'Χρειάζομαι λογαριασμό;', 'a2': 'Ναι, έναν λογαριασμό RoarMe: τον ίδιο με RoarMe, Roardino και RoarList. Αυτός κρατά τα σενάριά σου ασφαλή και ίδια σε κάθε συσκευή.',
     'q3': 'Ανοίγει τα σενάριά μου από Final Draft ή Fade In;', 'a3': 'Ναι: κάνε εισαγωγή το .fdx ή το .fadein και συνέχισε να γράφεις· αποθήκευσέ το πίσω όποτε το χρειαστείς εκεί. Και το Fountain δουλεύει και προς τις δύο μεριές.',
     'q4': 'Γράφει σωστά ελληνικά σενάρια;', 'a4': 'Ναι. Επικεφαλίδες με ΕΣΩΤ. και ΕΞΩΤ., ονόματα με κεφαλαία, προτάσεις στα ελληνικά, ορθογραφία στα ελληνικά στις εφαρμογές, και PDF στο ίδιο format με ένα αγγλικό σενάριο.',
-    'q5': 'Τι βλέπει το AI;', 'a5': 'Μόνο τη σκηνή που είσαι και λίγο από ό,τι προηγείται, και μόνο όταν πατήσεις ένα από τα κουμπιά του. Η απάντηση φαίνεται δίπλα στη σελίδα· τίποτα δεν αλλάζει μέχρι να πατήσεις Insert ή Replace.',
+    'q5': 'Τι βλέπει το AI;', 'a5': 'Μόνο ό,τι ρωτάς: τη σκηνή που είσαι και λίγο από ό,τι προηγείται, ή όλο το σενάριο όταν διαλέγεις Whole script (coverage, continuity, μια ερώτηση), και μόνο όταν πατήσεις ένα από τα κουμπιά του. Η απάντηση φαίνεται δίπλα στη σελίδα· τίποτα δεν αλλάζει μέχρι να πατήσεις Insert ή Replace.',
     'q6': 'Δουλεύει χωρίς internet;', 'a6': 'Οι εφαρμογές για Mac και Windows ναι: γράφεις κανονικά και το σενάριο πάει στον λογαριασμό σου όταν γυρίσει η σύνδεση. Το AI θέλει σύνδεση.',
     'q8': 'Γράφει θεατρικά και τηλεόραση;',
     'a8': 'Ναι. Όταν ξεκινάς ένα σενάριο διαλέγεις το format του: ταινία, τηλεοπτικό δράμα σε πράξεις, ημίωρη σειρά, sitcom πολλών καμερών, θεατρικό, μιούζικαλ, audio drama, AV δύο στηλών ή comic. Το αλλάζεις και αργότερα, από τη σελίδα τίτλου.',
     'q9': 'Μπορούμε να γράφουμε δύο το ίδιο σενάριο;',
     'a9': 'Ναι. Πάτα Share, γράψε το email τους (τον λογαριασμό τους στο RoarMe) και διάλεξε Can edit ή Can view. Μόνο ο ιδιοκτήτης μοιράζει ή αφαιρεί κάποιον· ο καθένας μπορεί να αποχωρήσει.',
-    'q7': 'A4 ή US Letter;', 'a7': 'Όποιο θες, για κάθε σενάριο από τη σελίδα τίτλου του. Τα περιθώρια και η γραμματοσειρά μένουν αυτά του κανονικού format σεναρίου.',
+    'q7': 'A4 ή US Letter;', 'a7': 'Όποιο θες, για κάθε σενάριο από τη σελίδα τίτλου του ή τις Ρυθμίσεις· με τι ξεκινούν τα νέα σενάρια ορίζεται στις Ρυθμίσεις της λίστας των σεναρίων. Τα περιθώρια και η γραμματοσειρά μένουν αυτά του κανονικού format σεναρίου.',
     'ct.idx': 'Επαφή', 'ct.title': 'Ιδέες για <b>την επόμενη έκδοση</b>;', 'ft.lab': 'The Mad Lions Lab', 'ft.legal': 'Απόρρητο & Όροι', 'lg.p': 'Πολιτική απορρήτου', 'lg.t': 'Όροι χρήσης', 'footer': '© 2026 The Mad Lions · RoarWriter'
   }
   var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
@@ -917,5 +1030,6 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
   }
 })()
 </script>
+<script src="../fresh.js" defer></script>
 </body>
 </html>

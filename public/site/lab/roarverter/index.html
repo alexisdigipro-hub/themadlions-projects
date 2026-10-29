@@ -8,16 +8,18 @@
      alexisdigipro-hub/roarverter), questions. EN and GR. -->
 <title>Roarverter · Convert and compress pictures, videos and sound, for Mac and Windows · by The Mad Lions</title>
 <link rel="canonical" href="https://themadlions.com/lab/roarverter/">
-<meta name="description" content="Roarverter, the converter by The Mad Lions Lab. Pictures, videos and sound in every format, made smaller on your own computer: JPG, WebP, AVIF, HEIC, RAW, PSD, MP4, H.265, AV1, ProRes, DNxHR, MXF, GIF, WAV, MP3. A target size in MB, nothing uploaded. Free for Mac and Windows.">
+<meta name="description" content="Roarverter, the converter by The Mad Lions Lab. Pictures, videos and sound in every format, made smaller on your own computer: JPG, WebP, AVIF, HEIC, RAW, PSD, MP4, H.265, AV1, ProRes, DNxHR, MXF, GIF, WAV, MP3. A target size in MB with two passes, HDR to Rec.709, a LUT, the frame for social, GIF to video, nothing uploaded. Free for Mac and Windows.">
 <meta name="theme-color" content="#16181c">
 <meta property="og:title" content="Roarverter · by The Mad Lions">
 <meta property="og:description" content="Every format, a smaller file: pictures, videos and sound, on your own computer.">
 <meta property="og:url" content="https://themadlions.com/lab/roarverter/">
 <meta property="og:image" content="https://themadlions.com/lab/roarverter.jpg">
 <link rel="icon" href="icon.png" type="image/png">
+<link rel="apple-touch-icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../fresh.css">
 <style>
 :root {
   --bg: #16181c; --bg-2: #1d2025; --bg-3: #24282f; --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.16);
@@ -405,8 +407,26 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 .mc .aim .unit { font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .mc .bar3 { height: 6px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; } .mc .bar3 i { display: block; height: 100%; width: 92%; background: linear-gradient(90deg, #ff6b5e, #d40000); border-radius: inherit; animation: fill 3.2s var(--ease) infinite alternate; }
 @media (prefers-reduced-motion: reduce) { .mc .bar3 i { animation: none; } }
+
+/* the Lab's fresh layer on this page (Alex, 29 Oct): the new icon in the hero, the version chip, What's new */
+.hero h1 .f-icon-wrap { align-self: center; flex: none; margin-right: clamp(4px, 1vw, 14px); }
+.hero-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: clamp(20px, 2.6vw, 30px); }
+.f-new .f-new-head h2 { font-family: Jost, var(--sans); font-size: clamp(42px, 6.2vw, 96px); font-weight: 200; line-height: .92; letter-spacing: -.01em; }
+.f-new .f-new-head h2 b { font-weight: 800; }
+.f-new .f-new-head, .f-new .f-bento { max-width: none; }
+.f-new .f-new-head .idx { margin: 0 0 16px; color: var(--red-hi); font-size: 12px; }
+.f-card .chips { margin-top: 2px; }
+.f-card p + p { margin-top: -2px; }
+.f-card.nv-icon { flex-direction: row; align-items: center; gap: clamp(18px, 3vw, 36px); min-height: 0; }
+.f-card.nv-icon > img { flex: none; width: clamp(84px, 9vw, 120px); height: auto; border-radius: 22.5%; box-shadow: 0 18px 40px rgba(0,0,0,.45), 0 12px 50px -10px rgba(212,0,0,.4); }
+.f-card.nv-icon > div { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.f-card.nv-icon .f-tag { margin-top: 4px; }
+.t-icon .icons .f-icon { width: clamp(90px, 10vw, 140px); }
+.dl-icon { width: 64px; height: auto; border-radius: 22.5%; margin-bottom: 18px; box-shadow: 0 14px 34px rgba(0,0,0,.45), 0 10px 40px -10px rgba(212,0,0,.45); }
+.dl.mine.f-glass { border-color: rgba(255,90,80,.55) !important; background: linear-gradient(170deg, rgba(212,0,0,.14), rgba(255,255,255,.03)) !important; }
+@media (max-width: 720px) { .hero h1 .f-icon { width: 64px; } .f-card.nv-icon { flex-direction: column; align-items: flex-start; } }
 </style>
-<!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Roarverter","url":"https://themadlions.com/lab/roarverter/","description":"Roarverter, the converter by The Mad Lions Lab. Pictures, videos and sound in every format, made smaller on your own computer: JPG, WebP, AVIF, HEIC, RAW, PSD, MP4, H.265, AV1, ProRes, DNxHR, MXF, GIF, WAV, MP3. A target size in MB, nothing uploaded. Free for Mac and Windows.","applicationCategory":"MultimediaApplication","operatingSystem":"macOS, Windows","image":"https://themadlions.com/lab/roarverter.jpg","screenshot":"https://themadlions.com/lab/roarverter.jpg","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"isAccessibleForFree":true,"inLanguage":["en","el"],"author":{"@id":"https://themadlions.com/#org"},"publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"}}</script><!--/seo:app-->
+<!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Roarverter","url":"https://themadlions.com/lab/roarverter/","description":"Roarverter, the converter by The Mad Lions Lab. Pictures, videos and sound in every format, made smaller on your own computer: JPG, WebP, AVIF, HEIC, RAW, PSD, MP4, H.265, AV1, ProRes, DNxHR, MXF, GIF, WAV, MP3. A target size in MB with two passes, HDR to Rec.709, a LUT, the frame for social, GIF to video, nothing uploaded. Free for Mac and Windows.","applicationCategory":"MultimediaApplication","operatingSystem":"macOS, Windows","image":"https://themadlions.com/lab/roarverter.jpg","screenshot":"https://themadlions.com/lab/roarverter.jpg","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"isAccessibleForFree":true,"inLanguage":["en","el"],"author":{"@id":"https://themadlions.com/#org"},"publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"}}</script><!--/seo:app-->
 </head>
 <body>
 <header class="bar" id="bar">
@@ -416,6 +436,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <span class="rm" aria-label="Roarverter"><span class="a">ROAR</span><span class="b">VERTER</span></span>
   </a>
   <nav aria-label="Sections">
+    <a href="#new" data-t="nav.new">New</a>
     <a href="#only" data-t="nav.only">Only here</a>
     <a href="#set" data-t="nav.set">For the shoot</a>
     <a href="#all" data-t="nav.all">Everything</a>
@@ -438,9 +459,10 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <div>
       <p class="kicker rv"><i></i><span data-t="hero.kicker">Convert and compress · The Mad Lions Lab · Experiment 08</span></p>
       <h1 class="rv" style="--d:.06s">
-        <img class="app-icon-img" src="icon.png" alt="" width="128" height="128">
+        <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
         <span class="rm"><span class="a">ROAR</span><span class="b">VERTER</span></span><em class="beta">beta</em>
       </h1>
+      <div class="hero-meta rv" style="--d:.1s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.3.2 · GIF to video, HDR, two passes</span></a></div>
     </div>
   </div>
   <div class="hero-sub">
@@ -459,8 +481,66 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   </div>
 </div>
 
+<section class="f-new" id="new">
+  <div class="f-new-head">
+    <div><p class="idx rv" data-t="nw.idx">New</p><h2 class="rv" data-t="nw.title" data-html>What’s <b>new</b>.</h2></div>
+    <p class="rv" data-t="nw.sub">Since 0.1 in October: the formats for the edit, the look and the frame, the sound, sizes that land, and a GIF into a video.</p>
+  </div>
+  <div class="f-bento">
+    <article class="f-card wide">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l4.6-2.8z"/></svg></span>
+      <h3 data-t="n1.t">A GIF becomes a video</h3>
+      <p data-t="n1.p">Drop a GIF and save it as MP4, MOV, ProRes or WebM, to post it anywhere or cut it in the edit. An odd size like 481×271 is made even, so H.264 takes it.</p>
+      <span class="f-tag">v0.3.1</span>
+    </article>
+    <article class="f-card wide">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.6"/><path d="M12 12 19 5M16 5h3v3"/></svg></span>
+      <h3 data-t="n2.t">Two passes land on the size</h3>
+      <p data-t="n2.p">Ask for 25 MB, or a bitrate in Mb/s as Resolve’s Restrict to, and turn on Two passes: in our tests a 1 MB target came out at 0.96 MB.</p>
+      <div class="chips"><span>25 MB</span><span>8 Mb/s</span><span>1 MB → 0.96 MB</span></div>
+      <span class="f-tag">v0.3.0</span>
+    </article>
+    <article class="f-card">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M12 7.5h4.8M12 12h6.5M12 16.5h4.8"/></svg></span>
+      <h3 data-t="n3.t">HDR that is not grey</h3>
+      <p data-t="n3.p">iPhone HLG and HDR10 clips are brought to Rec.709, only when the source is HDR. Add a LUT (.cube, .3dl, .dat, .csp) and every clip gets the look.</p>
+      <span class="f-tag">v0.3.0</span>
+    </article>
+    <article class="f-card tall">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M4 12h16M4 18h7"/><path d="M17 4v4M9 10v4M14 16v4"/></svg></span>
+      <h3 data-t="n4.t">Ready for the timeline</h3>
+      <p data-t="n4.p">ProRes from Proxy to 4444 with alpha, DNxHR from LB to 444 in MOV or in MXF for Avid, XDCAM HD422 at 50 Mbit/s for broadcast, and FFV1 in MKV, lossless, for the archive.</p>
+      <p data-t="n4.p2">On a Mac, H.264 and H.265 can use the Mac’s own encoder, several times faster; if it says no, the software one makes the same file.</p>
+      <div class="chips"><span>ProRes</span><span>DNxHR</span><span>MXF</span><span>XDCAM</span><span>FFV1</span></div>
+      <span class="f-tag">v0.2.0</span>
+    </article>
+    <article class="f-card">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6.5" width="19" height="11" rx="2.5"/><rect x="9" y="3" width="6" height="18" rx="1.8"/></svg></span>
+      <h3 data-t="n5.t">The frame for social</h3>
+      <p data-t="n5.p">16:9, 9:16, 1:1, 4:5 or 2.39:1, cropped or whole over its own blurred copy. Anamorphic is desqueezed on the way, 1.33× to 2×.</p>
+      <span class="f-tag">v0.3.0</span>
+    </article>
+    <article class="f-card">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 10.5v3"/></svg></span>
+      <h3 data-t="n6.t">Sound at the right level</h3>
+      <p data-t="n6.p">Loudness to −14 LUFS for the web, −16 for a podcast or −23 for TV (EBU R128), mono or stereo, 44.1 or 48 kHz.</p>
+      <span class="f-tag">v0.3.0</span>
+    </article>
+    <article class="f-card">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.8l1.4-2h4.6l1.4 2h1.8A2.5 2.5 0 0 1 20 8.5v8a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.5"/></svg></span>
+      <h3 data-t="n7.t">RAW, PSD and EXR in</h3>
+      <p data-t="n7.p">Camera RAW, JPEG XL and a PDF’s first page open on a Mac through its own tools; PSD, EXR and DPX everywhere. HEIC can be saved on a Mac too.</p>
+      <span class="f-tag">v0.2.0</span>
+    </article>
+    <article class="f-card full nv-icon">
+      <img src="icon.png" alt="Roarverter’s new icon" width="120" height="120" loading="lazy">
+      <div><h3 data-t="n8.t">A new icon, and the version in sight</h3><p data-t="n8.p">Roarverter wears the Roar family’s new icon: graphite glass, thin red lines. The version shows next to the app’s name, so you always know which one you have.</p><span class="f-tag">v0.3.1 · v0.3.2</span></div>
+    </article>
+  </div>
+</section>
+
 <div class="ticker" aria-hidden="true"><div class="ticker-in">
-<span data-t="tk.1">JPG · PNG · WebP · AVIF</span><span data-t="tk.2">RAW · PSD · HEIC</span><span data-t="tk.3">MP4 · H.265 · AV1</span><span data-t="tk.4">ProRes · DNxHR · MXF</span><span data-t="tk.5">GIF from a clip</span><span data-t="tk.6">A target size</span><span data-t="tk.7">MP3 · WAV · FLAC</span><span data-t="tk.8">Nothing uploaded</span><span data-t="tk.9">Mac · Windows</span><span data-t="tk.1">JPG · PNG · WebP · AVIF</span><span data-t="tk.2">RAW · PSD · HEIC</span><span data-t="tk.3">MP4 · H.265 · AV1</span><span data-t="tk.4">ProRes · DNxHR · MXF</span><span data-t="tk.5">GIF from a clip</span><span data-t="tk.6">A target size</span><span data-t="tk.7">MP3 · WAV · FLAC</span><span data-t="tk.8">Nothing uploaded</span><span data-t="tk.9">Mac · Windows</span>
+<span data-t="tk.1">JPG · PNG · WebP · AVIF</span><span data-t="tk.2">RAW · PSD · HEIC</span><span data-t="tk.3">MP4 · H.265 · AV1</span><span data-t="tk.4">ProRes · DNxHR · MXF</span><span data-t="tk.5">GIF from a clip</span><span data-t="tk.6">A target size</span><span data-t="tk.7">MP3 · WAV · FLAC</span><span data-t="tk.8">Nothing uploaded</span><span data-t="tk.10">GIF to video</span><span data-t="tk.11">HDR to Rec.709 · LUT</span><span data-t="tk.9">Mac · Windows</span><span data-t="tk.1">JPG · PNG · WebP · AVIF</span><span data-t="tk.2">RAW · PSD · HEIC</span><span data-t="tk.3">MP4 · H.265 · AV1</span><span data-t="tk.4">ProRes · DNxHR · MXF</span><span data-t="tk.5">GIF from a clip</span><span data-t="tk.6">A target size</span><span data-t="tk.7">MP3 · WAV · FLAC</span><span data-t="tk.8">Nothing uploaded</span><span data-t="tk.10">GIF to video</span><span data-t="tk.11">HDR to Rec.709 · LUT</span><span data-t="tk.9">Mac · Windows</span>
 </div></div>
 
 <section id="only">
@@ -471,21 +551,21 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   <div class="three">
     <article class="big rv">
       <span class="no">01</span>
-      <div><h3 data-t="f1.t" data-html>A size, <b>not a guess</b>.</h3><p data-t="f1.p">Type 25 MB, for an email, a festival form or Discord, and Roarverter works out the bitrate from the video's length and leaves room for the sound. No trying three times to get under the limit.</p>
-        <div class="chips"><span data-t="f1.c1">Target in MB</span><span>H.264 · H.265 · AV1</span><span data-t="f1.c3">Two passes</span></div></div>
-      <div class="viz"><div class="mc"><div class="big"><small data-t="f1.v1">TARGET SIZE</small><div class="aim"><b>25</b><span class="unit">MB</span></div></div><div class="bar3"><i></i></div><div class="r"><span class="th"></span><b>Teaser_60s.mov</b><small>2.4 GB → 24.6 MB</small></div></div></div>
+      <div><h3 data-t="f1.t" data-html>A size, <b>not a guess</b>.</h3><p data-t="f1.p">Type 25 MB, for an email, a festival form or Discord, and Roarverter works out the bitrate from the video's length and leaves room for the sound; or give a bitrate in Mb/s. No trying three times to get under the limit.</p>
+        <div class="chips"><span data-t="f1.c1">Target in MB</span><span data-t="f1.c2">Or Mb/s</span><span>H.264 · H.265 · AV1</span><span data-t="f1.c3">Two passes</span></div></div>
+      <div class="viz f-glass"><div class="mc"><div class="big"><small data-t="f1.v1">TARGET SIZE</small><div class="aim"><b>25</b><span class="unit">MB</span></div></div><div class="bar3"><i></i></div><div class="r"><span class="th"></span><b>Teaser_60s.mov</b><small>2.4 GB → 24.6 MB</small></div></div></div>
     </article>
     <article class="big rv">
       <span class="no">02</span>
-      <div><h3 data-t="f2.t" data-html>Every format, <b>one window</b>.</h3><p data-t="f2.p">Photos from the phone or the camera's RAW, the poster's PSD, the master, the BTS, the interview's sound: drop them all at once. Pictures, video for sharing or for the edit, sound only, a GIF from a clip, or a single still at any moment.</p>
+      <div><h3 data-t="f2.t" data-html>Every format, <b>one window</b>.</h3><p data-t="f2.p">Photos from the phone or the camera's RAW, the poster's PSD, the master, the BTS, the interview's sound: drop them all at once. Pictures, video for sharing or for the edit, sound only, a GIF from a clip or a clip from a GIF, or a single still at any moment.</p>
         <div class="chips"><span data-t="f2.c1">Pictures</span><span data-t="f2.c2">Video</span><span data-t="f2.c3">Sound</span><span data-t="f2.c4">GIF and stills</span></div></div>
-      <div class="viz"><div class="mc"><div class="fmt"><b>HEIC</b><span class="to">→</span><b>JPG</b><span class="sv">−41%</span></div><div class="fmt"><b>PNG</b><span class="to">→</span><b>WebP</b><span class="sv">−94%</span></div><div class="fmt"><b>ProRes</b><span class="to">→</span><b>H.265</b><span class="sv">−96%</span></div><div class="fmt"><b>WAV</b><span class="to">→</span><b>MP3</b><span class="sv">−89%</span></div></div></div>
+      <div class="viz f-glass"><div class="mc"><div class="fmt"><b>HEIC</b><span class="to">→</span><b>JPG</b><span class="sv">−41%</span></div><div class="fmt"><b>PNG</b><span class="to">→</span><b>WebP</b><span class="sv">−94%</span></div><div class="fmt"><b>ProRes</b><span class="to">→</span><b>H.265</b><span class="sv">−96%</span></div><div class="fmt"><b>WAV</b><span class="to">→</span><b>MP3</b><span class="sv">−89%</span></div></div></div>
     </article>
     <article class="big rv">
       <span class="no">03</span>
       <div><h3 data-t="f3.t" data-html><b>Nothing</b> leaves the computer.</h3><p data-t="f3.p">No upload, no account, no queue on a server: unreleased footage stays with you. The original is never touched; the new file is saved next to it, or in a folder you choose.</p>
         <div class="chips"><span data-t="f3.c1">No upload</span><span data-t="f3.c2">The original stays</span><span data-t="f3.c3">Works offline</span></div></div>
-      <div class="viz"><div class="mc"><div class="r"><i></i><b>A001_C003.mov</b><small data-t="f3.v1">original</small></div><div class="r on"><i style="background:var(--ok)"></i><b>A001_C003_converted.mp4</b><small>742 MB</small></div><div class="pills"><span data-t="f3.v2">Same folder</span><span class="m" data-t="f3.v3">Convert</span></div></div></div>
+      <div class="viz f-glass"><div class="mc"><div class="r"><i></i><b>A001_C003.mov</b><small data-t="f3.v1">original</small></div><div class="r on"><i style="background:var(--ok)"></i><b>A001_C003_converted.mp4</b><small>742 MB</small></div><div class="pills"><span data-t="f3.v2">Same folder</span><span class="m" data-t="f3.v3">Convert</span></div></div></div>
     </article>
   </div>
 </section>
@@ -496,28 +576,28 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <p class="sub rv" data-t="set.sub">The card, the stills, the edit, the deliveries: all at once.</p>
   </div>
   <div class="board">
-    <article class="tile t-tasks rv">
+    <article class="tile t-tasks f-glass rv">
       <span class="k" data-t="s1.k">Where from</span>
       <h3 data-t="s1.t" data-html>Drop <b>whole folders</b>.</h3>
       <p data-t="s1.p">One file, a few, or a folder with everything inside: Roarverter finds the pictures, videos and sound in it. Pictures go three at a time, videos one by one, with the progress of each.</p>
     </article>
-    <article class="tile t-ord rv" style="--d:.08s">
+    <article class="tile t-ord f-glass rv" style="--d:.08s">
       <span class="k" data-t="s2.k">Reframe</span>
-      <h3 data-t="s2.t" data-html>9:16, square, <b>or 4:5</b>.</h3>
-      <p data-t="s2.p">Turn a 16:9 shot into a Reel, a post or a story: cropped, or whole with its own blurred copy behind. Anamorphic footage is desqueezed on the way, 1.33× to 2×.</p>
+      <h3 data-t="s2.t" data-html>9:16, square, 4:5 <b>or 2.39:1</b>.</h3>
+      <p data-t="s2.p">Turn a 16:9 shot into a Reel, a post, a story or a scope frame: cropped, or whole with its own blurred copy behind. Or a size of your own, with bars where the shape differs. Anamorphic footage is desqueezed on the way, 1.33× to 2×.</p>
     </article>
-    <article class="tile t-upd rv">
+    <article class="tile t-upd f-glass rv">
       <span class="k" data-t="s3.k">Three presets</span>
       <h3 data-t="s3.t" data-html>Small, balanced, <b>or quality</b>.</h3>
       <p data-t="s3.p">One tap sets everything; or set the quality, the size, the frame rate, the codec and the speed yourself. Roarverter remembers what you chose.</p>
     </article>
-    <article class="tile t-icon rv" style="--d:.08s">
+    <article class="tile t-icon f-glass rv" style="--d:.08s">
       <div class="txt">
         <span class="k" data-t="s4.k">For the edit</span>
         <h3 data-t="s4.t" data-html>ProRes <b>when it has to be</b>.</h3>
-        <p data-t="s4.p">The phone's HEVC or a web download into ProRes (Proxy to 4444) or DNxHR (LB to 444) for the timeline, MXF for Avid, XDCAM for broadcast, a still for the poster, the interview as 24-bit WAV for the mix.</p>
+        <p data-t="s4.p">The phone's HEVC or a web download into ProRes (Proxy to 4444) or DNxHR (LB to 444) for the timeline, MXF for Avid, XDCAM for broadcast, FFV1 for a lossless archive, a still for the poster, the interview as 24-bit WAV for the mix.</p>
       </div>
-      <div class="icons"><img src="icon.png" alt="Roarverter icon" width="120" height="120" style="border-radius:22%"></div>
+      <div class="icons"><span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="Roarverter icon" width="140" height="140" loading="lazy"></span></div>
     </article>
   </div>
 </section>
@@ -534,12 +614,14 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">A start and an end</b><p data-t="ix4.p">Keep only a part of the clip: from 0:12 to 0:45, say.</p></div>
     <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">A still</b><p data-t="ix5.p">One frame as JPG or PNG, at the moment you say.</p></div>
     <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">The sound only</b><p data-t="ix6.p">MP3, M4A, WAV 16 or 24-bit, AIFF, ALAC, FLAC or OGG out of any video.</p></div>
-    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Faster on a Mac</b><p data-t="ix7.p">H.264 and H.265 with the Mac's own video engine, several times faster.</p></div>
-    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">LUT and HDR</b><p data-t="ix8.p">A .cube LUT on every clip, and HDR from the iPhone brought to Rec.709, so it does not look grey.</p></div>
-    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">Loudness</b><p data-t="ix9.p">−14 LUFS for the web, −23 for TV; mono or stereo; 44.1 or 48 kHz.</p></div>
+    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Faster on a Mac</b><p data-t="ix7.p">H.264 and H.265 with the Mac's own video engine, several times faster; if it says no, the software one makes the same file.</p></div>
+    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">LUT and HDR</b><p data-t="ix8.p">A LUT (.cube, .3dl, .dat, .csp) on every clip, and HDR from the iPhone (HLG) or HDR10 brought to Rec.709, so it does not look grey.</p></div>
+    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">Loudness</b><p data-t="ix9.p">−14 LUFS for the web, −16 for a podcast, −23 for TV; mono or stereo; 44.1 or 48 kHz.</p></div>
     <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Updates itself</b><p data-t="ix10.p">A new version downloads in the background; one tap to restart.</p></div>
     <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">English and Greek</b><p data-t="ix11.p">The app speaks both; choose at the top.</p></div>
-    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Free</b><p data-t="ix12.p">No subscription, no ads, no watermark.</p></div>
+    <div class="ix rv"><span class="no">12</span><b data-t="ix13.t">GIF both ways</b><p data-t="ix13.p">A clip into a GIF or an animated WebP with its own palette, and a GIF into MP4, MOV, ProRes or WebM.</p></div>
+    <div class="ix rv"><span class="no">13</span><b data-t="ix14.t">A size of your own</b><p data-t="ix14.p">Width × height, with bars where the shape differs, and a keyframe every N frames.</p></div>
+    <div class="ix rv"><span class="no">14</span><b data-t="ix12.t">Free</b><p data-t="ix12.p">No subscription, no ads, no watermark.</p></div>
   </div>
 </section>
 
@@ -562,18 +644,18 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 
 <section id="download">
   <div class="sec-h">
-    <div><p class="idx rv" data-t="dl.idx">05 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>Roarverter</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
+    <div><img class="dl-icon rv" src="icon.png" alt="" width="64" height="64" loading="lazy"><p class="idx rv" data-t="dl.idx">05 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>Roarverter</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
     <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab that we use for our own deliveries.</p>
   </div>
   <div class="dls">
-    <div class="dl rv" id="dl-mac" data-mine="Your computer">
+    <div class="dl f-glass rv" id="dl-mac" data-mine="Your computer">
       <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.7zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.6-1.3z"/></svg></i>
       <h3>Mac</h3>
       <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
       <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roarverter/releases/latest/download/Roarverter-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
       <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roarverter/releases/latest/download/Roarverter-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
     </div>
-    <div class="dl rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
+    <div class="dl f-glass rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
       <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
       <h3>Windows</h3>
       <small data-t="dl.win">Windows 10 and 11.</small>
@@ -592,9 +674,11 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <div class="qa">
       <details class="rv"><summary data-t="q1">Is Roarverter free?</summary><p data-t="a1">Yes. No subscription, no ads, no watermark.</p></details>
       <details class="rv"><summary data-t="q2">How much smaller does a file get?</summary><p data-t="a2">It depends on the file. A ProRes master to H.265 is often 90 to 97% smaller; a PNG to WebP 70 to 95%; a phone photo to JPG about 40%. Each file in the list shows how much it saved.</p></details>
-      <details class="rv"><summary data-t="q3">Does the target size land exactly?</summary><p data-t="a3">With Two passes, almost: a 25 MB target comes out at about 24 MB. One pass is faster and lands close. A bitrate in Mb/s works the same way, as Resolve’s “Restrict to”.</p></details>
+      <details class="rv"><summary data-t="q3">Does the target size land exactly?</summary><p data-t="a3">With Two passes, yes, just under it: in our tests a 1 MB target came out at 0.96 MB. One pass is faster and lands close. A bitrate in Mb/s works the same way, as Resolve’s “Restrict to”.</p></details>
       <details class="rv"><summary data-t="q4">Which format for Instagram, email or the web?</summary><p data-t="a4">MP4 with H.264 plays everywhere; H.265 is about half the size and plays on every phone and recent computer. For pictures on a website, WebP or AVIF.</p></details>
       <details class="rv"><summary data-t="q5">Does it open RAW and HEIC photos?</summary><p data-t="a5">Yes on a Mac: HEIC from the iPhone and camera RAW (DNG, CR3, NEF, ARW, RAF and more) open through the Mac's own tools, and HEIC can be saved too. On Windows HEIC may not open and RAW not yet; convert those on a Mac.</p></details>
+      <details class="rv"><summary data-t="q7">Can it turn a GIF into a video?</summary><p data-t="a7">Yes, since 0.3.1: a GIF counts as a moving picture, so it can become MP4, MOV, ProRes or WebM. An odd size like 481×271 is made even for H.264.</p></details>
+      <details class="rv"><summary data-t="q8">Why does my iPhone video look grey on other screens?</summary><p data-t="a8">Because it is HDR (HLG). HDR to Rec.709 is on by default and works only when the source is HDR, so the new file looks right everywhere.</p></details>
       <details class="rv"><summary data-t="q6">Do I need the internet?</summary><p data-t="a6">No. Only to download the app and its updates; every conversion runs on your computer.</p></details>
     </div>
   </div>
@@ -621,7 +705,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 <script>
 (function () {
   var APP = 'Roarverter', REPO = 'alexisdigipro-hub/roarverter', WEB = '#download'
-  var EL = {"nav.only": "Μόνο εδώ", "nav.set": "Για το γύρισμα", "nav.all": "Όλα", "nav.safe": "Ιδιωτικό", "nav.download": "Λήψη", "nav.faq": "Ερωτήσεις", "cta.get": "Πάρε το Roarverter", "hero.kicker": "Μετατροπή και συμπίεση · The Mad Lions Lab · Πείραμα 08", "hero.lead": "Κάθε μορφή, <b>μικρότερο αρχείο</b>. Εικόνες, βίντεο και ήχος, μετατροπή και συμπίεση <b>στον υπολογιστή σου</b>: τα ρίχνεις μέσα, διαλέγεις πόσο μικρά, και είναι έτοιμα δίπλα στα αρχικά.", "cta.how": "Τι κάνει", "cta.note": "Δωρεάν · Mac και Windows · τίποτα δεν ανεβαίνει, τα αρχικά μένουν όπως είναι", "tag.size": "Μέγεθος σε MB, όχι στα τυφλά", "tag.fmt": "Κάθε μορφή, ένα παράθυρο", "tag.local": "Δεν φεύγει από τον υπολογιστή σου", "tk.1": "JPG · PNG · WebP · AVIF", "tk.2": "RAW · PSD · HEIC", "tk.3": "MP4 · H.265 · AV1", "tk.4": "ProRes · DNxHR · MXF", "tk.5": "GIF από ένα clip", "tk.6": "Στόχος μεγέθους", "tk.7": "MP3 · WAV · FLAC", "tk.8": "Τίποτα δεν ανεβαίνει", "tk.9": "Mac · Windows", "only.idx": "01 · Μόνο εδώ", "only.title": "Τρία πράγματα που κάνει <b>μόνο το Roarverter</b>.", "only.sub": "Γιατί ένα site που μικραίνει ένα αρχείο τη φορά δεν φτάνει για ένα γύρισμα.", "f1.t": "Ένα μέγεθος, <b>όχι στα τυφλά</b>.", "f1.p": "Γράψε 25 MB, για ένα email, μια φόρμα φεστιβάλ ή το Discord, και το Roarverter υπολογίζει το bitrate από τη διάρκεια του βίντεο και αφήνει χώρο για τον ήχο. Χωρίς τρεις δοκιμές για να χωρέσει στο όριο.", "f1.c1": "Στόχος σε MB", "f1.c3": "Δύο περάσματα", "f1.v1": "ΣΤΟΧΟΣ ΜΕΓΕΘΟΥΣ", "f2.t": "Κάθε μορφή, <b>ένα παράθυρο</b>.", "f2.p": "Οι φωτογραφίες από το κινητό ή τα RAW της κάμερας, το PSD της αφίσας, το master, τα BTS, ο ήχος της συνέντευξης: τα ρίχνεις όλα μαζί. Εικόνες, βίντεο για κοινοποίηση ή για μοντάζ, μόνο ήχος, GIF από ένα clip, ή ένα στιγμιότυπο όποια στιγμή θες.", "f2.c1": "Εικόνες", "f2.c2": "Βίντεο", "f2.c3": "Ήχος", "f2.c4": "GIF και στιγμιότυπα", "f3.t": "<b>Τίποτα</b> δεν φεύγει από τον υπολογιστή.", "f3.p": "Χωρίς upload, χωρίς λογαριασμό, χωρίς ουρά σε server: το υλικό που δεν έχει βγει μένει σε σένα. Το αρχικό δεν το αγγίζει ποτέ· το νέο αρχείο σώζεται δίπλα του, ή σε φάκελο που διαλέγεις.", "f3.c1": "Χωρίς upload", "f3.c2": "Το αρχικό μένει", "f3.c3": "Δουλεύει offline", "f3.v1": "αρχικό", "f3.v2": "Ίδιο φάκελο", "f3.v3": "Μετατροπή", "set.idx": "02 · Για το γύρισμα", "set.title": "Φτιαγμένο για <b>τα αρχεία ενός γυρίσματος</b>.", "set.sub": "Η κάρτα, οι φωτογραφίες, το μοντάζ, τα παραδοτέα: όλα μαζί.", "s1.k": "Από πού", "s1.t": "Ρίξε <b>ολόκληρους φακέλους</b>.", "s1.p": "Ένα αρχείο, μερικά, ή έναν φάκελο με τα πάντα μέσα: το Roarverter βρίσκει τις εικόνες, τα βίντεο και τον ήχο. Οι εικόνες πάνε τρεις μαζί, τα βίντεο ένα ένα, με την πρόοδο του καθενός.", "s2.k": "Κάδρο", "s2.t": "9:16, τετράγωνο <b>ή 4:5</b>.", "s2.p": "Κάνε ένα πλάνο 16:9 Reel, post ή story: κομμένο, ή ολόκληρο με ένα θολό αντίγραφό του από πίσω. Το anamorphic υλικό ξεζουλώνεται στη διαδρομή, από 1.33× ως 2×.", "s3.k": "Τρεις έτοιμες ρυθμίσεις", "s3.t": "Μικρό, ισορροπία, <b>ή ποιότητα</b>.", "s3.p": "Ένα πάτημα τα ρυθμίζει όλα· ή ρύθμισε μόνος σου την ποιότητα, το μέγεθος, τα fps, το codec και την ταχύτητα. Το Roarverter θυμάται τι διάλεξες.", "s4.k": "Για το μοντάζ", "s4.t": "ProRes <b>όταν χρειάζεται</b>.", "s4.p": "Το HEVC του κινητού ή ένα βίντεο από το web σε ProRes (Proxy ως 4444) ή DNxHR (LB ως 444) για το timeline, MXF για το Avid, XDCAM για την τηλεόραση, ένα στιγμιότυπο για την αφίσα, η συνέντευξη σε WAV 24-bit για τη μίξη.", "all.idx": "03 · Όλα", "all.title": "Και <b>τα υπόλοιπα</b>.", "all.sub": "Το Roarverter, με λίγα λόγια.", "ix1.t": "Εικόνες που διαβάζει", "ix1.p": "JPG, PNG, WebP, AVIF, HEIC, TIFF, GIF, BMP, SVG, PSD, EXR, DPX και άλλες· σε Mac και RAW κάμερας, JPEG XL και PDF.", "ix2.t": "Εικόνες που φτιάχνει", "ix2.p": "JPG, PNG, WebP, AVIF, TIFF, GIF, BMP, ICO για εικονίδιο, και HEIC σε Mac.", "ix3.t": "Βίντεο που φτιάχνει", "ix3.p": "MP4 με H.264, H.265 ή AV1, WebM, MOV, MKV, AVI, MPG· για το μοντάζ ProRes, DNxHR, MXF, XDCAM και FFV1 χωρίς απώλειες.", "ix4.t": "Αρχή και τέλος", "ix4.p": "Κράτα μόνο ένα κομμάτι του clip: από 0:12 ως 0:45, ας πούμε.", "ix5.t": "Στιγμιότυπο", "ix5.p": "Ένα καρέ σε JPG ή PNG, τη στιγμή που λες.", "ix6.t": "Μόνο ο ήχος", "ix6.p": "MP3, M4A, WAV 16 ή 24-bit, AIFF, ALAC, FLAC ή OGG από οποιοδήποτε βίντεο.", "ix7.t": "Πιο γρήγορα σε Mac", "ix7.p": "H.264 και H.265 με τη μηχανή βίντεο του ίδιου του Mac, πολλές φορές πιο γρήγορα.", "ix8.t": "LUT και HDR", "ix8.p": "Ένα LUT .cube σε κάθε clip, και το HDR του iPhone σε Rec.709, για να μη φαίνεται γκρίζο.", "ix9.t": "Ένταση ήχου", "ix9.p": "−14 LUFS για το web, −23 για την τηλεόραση· μονό ή στέρεο· 44.1 ή 48 kHz.", "ix10.t": "Ενημερώνεται μόνο του", "ix10.p": "Μια νέα έκδοση κατεβαίνει στο παρασκήνιο· ένα πάτημα για επανεκκίνηση.", "ix11.t": "Αγγλικά και Ελληνικά", "ix11.p": "Η εφαρμογή μιλάει και τα δύο· διαλέγεις πάνω δεξιά.", "ix12.t": "Δωρεάν", "ix12.p": "Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς υδατογράφημα.", "pv.idx": "04 · Ιδιωτικό", "pv.title": "Τα αρχεία σου, <b>ανέγγιχτα</b>.", "pv.sub": "Το Roarverter γράφει μόνο νέα αρχεία. Διαβάζει τα αρχικά και τα αφήνει εκεί που είναι.", "p1.t": "Στον υπολογιστή σου", "p1.p": "Κάθε μετατροπή γίνεται στον υπολογιστή σου. Χωρίς λογαριασμό, χωρίς server, χωρίς upload, χωρίς internet.", "p2.t": "Το αρχικό μένει", "p2.p": "Το νέο αρχείο παίρνει δικό του όνομα, _converted από προεπιλογή, και έναν αριθμό αν το όνομα υπάρχει ήδη. Τίποτα δεν γράφεται από πάνω.", "p3.t": "Σταμάτα όποτε θες", "p3.p": "Σταμάτα ένα αρχείο ή όλα· ό,τι είχε φτιαχτεί μισό μένει έξω.", "p4.t": "Τα μεταδεδομένα σου, η απόφασή σου", "p4.p": "Τα στοιχεία της κάμερας και η τοποθεσία μένουν έξω από προεπιλογή· ένας διακόπτης τα κρατάει.", "dl.idx": "05 · Λήψη", "dl.title": "Πάρε το <b>Roarverter</b>.", "dl.sub": "Δωρεάν, και σε beta: ένα πείραμα του Mad Lions Lab που χρησιμοποιούμε για τα δικά μας παραδοτέα.", "dl.mac": "Για Mac με chip της Apple (M1 και νεότερα).", "dl.get": "Λήψη", "dl.intel": "Παλιότερο Mac με Intel;", "dl.intelbtn": "Αυτό", "dl.win": "Windows 10 και 11.", "dl.upd": "<b>Ενημερώνεται μόνο του.</b> Οι εφαρμογές για Mac και Windows κατεβάζουν τις νέες εκδόσεις μόνες τους και ζητούν μια γρήγορη επανεκκίνηση.", "dl.help": "<b>Πρώτη φορά σε Mac;</b> Η εφαρμογή δεν είναι ακόμα υπογεγραμμένη από την Apple: κάνε δεξί κλικ στο Roarverter στις Εφαρμογές και διάλεξε Άνοιγμα, ή πάτα Άνοιγμα παρόλα αυτά στις Ρυθμίσεις συστήματος › Απόρρητο και ασφάλεια. Σε Windows: Περισσότερες πληροφορίες › Εκτέλεση παρόλα αυτά.", "faq.idx": "06 · Ερωτήσεις", "faq.title": "Καλό να <b>ξέρεις</b>.", "q1": "Είναι δωρεάν το Roarverter;", "a1": "Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς υδατογράφημα.", "q2": "Πόσο μικραίνει ένα αρχείο;", "a2": "Εξαρτάται από το αρχείο. Ένα master σε ProRes προς H.265 βγαίνει συχνά 90 με 97% μικρότερο· ένα PNG προς WebP 70 με 95%· μια φωτογραφία κινητού σε JPG περίπου 40%. Κάθε αρχείο στη λίστα δείχνει πόσο κέρδισε.", "q3": "Πέφτει ακριβώς στο μέγεθος που ζητάω;", "a3": "Με τα Δύο περάσματα, σχεδόν: ένας στόχος 25 MB βγαίνει περίπου 24 MB. Το ένα πέρασμα είναι πιο γρήγορο και πέφτει κοντά. Ένα bitrate σε Mb/s δουλεύει το ίδιο, όπως το «Restrict to» του Resolve.", "q4": "Ποια μορφή για Instagram, email ή web;", "a4": "Το MP4 με H.264 παίζει παντού· το H.265 είναι περίπου το μισό και παίζει σε κάθε κινητό και σε κάθε πρόσφατο υπολογιστή. Για εικόνες σε site, WebP ή AVIF.", "q5": "Ανοίγει φωτογραφίες RAW και HEIC;", "a5": "Ναι σε Mac: τα HEIC του iPhone και τα RAW των καμερών (DNG, CR3, NEF, ARW, RAF και άλλα) ανοίγουν με τα εργαλεία του ίδιου του Mac, και σώζεται και HEIC. Στα Windows τα HEIC μπορεί να μην ανοίγουν και τα RAW όχι ακόμα· μετάτρεψέ τα σε Mac.", "q6": "Χρειάζομαι internet;", "a6": "Όχι. Μόνο για να κατεβάσεις την εφαρμογή και τις ενημερώσεις της· κάθε μετατροπή γίνεται στον υπολογιστή σου.", "ct.idx": "Επαφή", "ct.title": "Ιδέες για <b>την επόμενη έκδοση</b>;", "ft.lab": "The Mad Lions Lab", "ft.legal": "Απόρρητο & Όροι", "lg.p": "Πολιτική απορρήτου", "lg.t": "Όροι χρήσης", "footer": "© 2026 The Mad Lions · Roarverter"}
+  var EL = {"nav.only": "Μόνο εδώ", "nav.set": "Για το γύρισμα", "nav.all": "Όλα", "nav.safe": "Ιδιωτικό", "nav.download": "Λήψη", "nav.faq": "Ερωτήσεις", "cta.get": "Πάρε το Roarverter", "hero.kicker": "Μετατροπή και συμπίεση · The Mad Lions Lab · Πείραμα 08", "hero.lead": "Κάθε μορφή, <b>μικρότερο αρχείο</b>. Εικόνες, βίντεο και ήχος, μετατροπή και συμπίεση <b>στον υπολογιστή σου</b>: τα ρίχνεις μέσα, διαλέγεις πόσο μικρά, και είναι έτοιμα δίπλα στα αρχικά.", "cta.how": "Τι κάνει", "cta.note": "Δωρεάν · Mac και Windows · τίποτα δεν ανεβαίνει, τα αρχικά μένουν όπως είναι", "tag.size": "Μέγεθος σε MB, όχι στα τυφλά", "tag.fmt": "Κάθε μορφή, ένα παράθυρο", "tag.local": "Δεν φεύγει από τον υπολογιστή σου", "tk.1": "JPG · PNG · WebP · AVIF", "tk.2": "RAW · PSD · HEIC", "tk.3": "MP4 · H.265 · AV1", "tk.4": "ProRes · DNxHR · MXF", "tk.5": "GIF από ένα clip", "tk.6": "Στόχος μεγέθους", "tk.7": "MP3 · WAV · FLAC", "tk.8": "Τίποτα δεν ανεβαίνει", "tk.9": "Mac · Windows", "only.idx": "01 · Μόνο εδώ", "only.title": "Τρία πράγματα που κάνει <b>μόνο το Roarverter</b>.", "only.sub": "Γιατί ένα site που μικραίνει ένα αρχείο τη φορά δεν φτάνει για ένα γύρισμα.", "f1.t": "Ένα μέγεθος, <b>όχι στα τυφλά</b>.", "f1.p": "Γράψε 25 MB, για ένα email, μια φόρμα φεστιβάλ ή το Discord, και το Roarverter υπολογίζει το bitrate από τη διάρκεια του βίντεο και αφήνει χώρο για τον ήχο· ή δώσε ένα bitrate σε Mb/s. Χωρίς τρεις δοκιμές για να χωρέσει στο όριο.", "f1.c1": "Στόχος σε MB", "f1.c3": "Δύο περάσματα", "f1.v1": "ΣΤΟΧΟΣ ΜΕΓΕΘΟΥΣ", "f2.t": "Κάθε μορφή, <b>ένα παράθυρο</b>.", "f2.p": "Οι φωτογραφίες από το κινητό ή τα RAW της κάμερας, το PSD της αφίσας, το master, τα BTS, ο ήχος της συνέντευξης: τα ρίχνεις όλα μαζί. Εικόνες, βίντεο για κοινοποίηση ή για μοντάζ, μόνο ήχος, GIF από ένα clip ή clip από ένα GIF, ή ένα στιγμιότυπο όποια στιγμή θες.", "f2.c1": "Εικόνες", "f2.c2": "Βίντεο", "f2.c3": "Ήχος", "f2.c4": "GIF και στιγμιότυπα", "f3.t": "<b>Τίποτα</b> δεν φεύγει από τον υπολογιστή.", "f3.p": "Χωρίς upload, χωρίς λογαριασμό, χωρίς ουρά σε server: το υλικό που δεν έχει βγει μένει σε σένα. Το αρχικό δεν το αγγίζει ποτέ· το νέο αρχείο σώζεται δίπλα του, ή σε φάκελο που διαλέγεις.", "f3.c1": "Χωρίς upload", "f3.c2": "Το αρχικό μένει", "f3.c3": "Δουλεύει offline", "f3.v1": "αρχικό", "f3.v2": "Ίδιο φάκελο", "f3.v3": "Μετατροπή", "set.idx": "02 · Για το γύρισμα", "set.title": "Φτιαγμένο για <b>τα αρχεία ενός γυρίσματος</b>.", "set.sub": "Η κάρτα, οι φωτογραφίες, το μοντάζ, τα παραδοτέα: όλα μαζί.", "s1.k": "Από πού", "s1.t": "Ρίξε <b>ολόκληρους φακέλους</b>.", "s1.p": "Ένα αρχείο, μερικά, ή έναν φάκελο με τα πάντα μέσα: το Roarverter βρίσκει τις εικόνες, τα βίντεο και τον ήχο. Οι εικόνες πάνε τρεις μαζί, τα βίντεο ένα ένα, με την πρόοδο του καθενός.", "s2.k": "Κάδρο", "s2.t": "9:16, τετράγωνο, 4:5 <b>ή 2.39:1</b>.", "s2.p": "Κάνε ένα πλάνο 16:9 Reel, post, story ή κάδρο σινεμασκόπ: κομμένο, ή ολόκληρο με ένα θολό αντίγραφό του από πίσω. Ή ένα δικό σου μέγεθος, με μαύρες μπάρες όπου αλλάζει το σχήμα. Το anamorphic υλικό ανοίγει στη σωστή αναλογία στη διαδρομή, από 1.33× ως 2×.", "s3.k": "Τρεις έτοιμες ρυθμίσεις", "s3.t": "Μικρό, ισορροπία, <b>ή ποιότητα</b>.", "s3.p": "Ένα πάτημα τα ρυθμίζει όλα· ή ρύθμισε μόνος σου την ποιότητα, το μέγεθος, τα fps, το codec και την ταχύτητα. Το Roarverter θυμάται τι διάλεξες.", "s4.k": "Για το μοντάζ", "s4.t": "ProRes <b>όταν χρειάζεται</b>.", "s4.p": "Το HEVC του κινητού ή ένα βίντεο από το web σε ProRes (Proxy ως 4444) ή DNxHR (LB ως 444) για το timeline, MXF για το Avid, XDCAM για την τηλεόραση, FFV1 για αρχείο χωρίς απώλειες, ένα στιγμιότυπο για την αφίσα, η συνέντευξη σε WAV 24-bit για τη μίξη.", "all.idx": "03 · Όλα", "all.title": "Και <b>τα υπόλοιπα</b>.", "all.sub": "Το Roarverter, με λίγα λόγια.", "ix1.t": "Εικόνες που διαβάζει", "ix1.p": "JPG, PNG, WebP, AVIF, HEIC, TIFF, GIF, BMP, SVG, PSD, EXR, DPX και άλλες· σε Mac και RAW κάμερας, JPEG XL και PDF.", "ix2.t": "Εικόνες που φτιάχνει", "ix2.p": "JPG, PNG, WebP, AVIF, TIFF, GIF, BMP, ICO για εικονίδιο, και HEIC σε Mac.", "ix3.t": "Βίντεο που φτιάχνει", "ix3.p": "MP4 με H.264, H.265 ή AV1, WebM, MOV, MKV, AVI, MPG· για το μοντάζ ProRes, DNxHR, MXF, XDCAM και FFV1 χωρίς απώλειες.", "ix4.t": "Αρχή και τέλος", "ix4.p": "Κράτα μόνο ένα κομμάτι του clip: από 0:12 ως 0:45, ας πούμε.", "ix5.t": "Στιγμιότυπο", "ix5.p": "Ένα καρέ σε JPG ή PNG, τη στιγμή που λες.", "ix6.t": "Μόνο ο ήχος", "ix6.p": "MP3, M4A, WAV 16 ή 24-bit, AIFF, ALAC, FLAC ή OGG από οποιοδήποτε βίντεο.", "ix7.t": "Πιο γρήγορα σε Mac", "ix7.p": "H.264 και H.265 με τη μηχανή βίντεο του ίδιου του Mac, πολλές φορές πιο γρήγορα· αν εκείνη αρνηθεί, το ίδιο αρχείο φτιάχνεται με τον κανονικό encoder.", "ix8.t": "LUT και HDR", "ix8.p": "Ένα LUT (.cube, .3dl, .dat, .csp) σε κάθε clip, και το HDR του iPhone (HLG) ή το HDR10 σε Rec.709, για να μη φαίνεται γκρίζο.", "ix9.t": "Ένταση ήχου", "ix9.p": "−14 LUFS για το web, −16 για podcast, −23 για την τηλεόραση· μονό ή στέρεο· 44.1 ή 48 kHz.", "ix10.t": "Ενημερώνεται μόνο του", "ix10.p": "Μια νέα έκδοση κατεβαίνει στο παρασκήνιο· ένα πάτημα για επανεκκίνηση.", "ix11.t": "Αγγλικά και Ελληνικά", "ix11.p": "Η εφαρμογή μιλάει και τα δύο· διαλέγεις πάνω δεξιά.", "ix12.t": "Δωρεάν", "ix12.p": "Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς υδατογράφημα.", "pv.idx": "04 · Ιδιωτικό", "pv.title": "Τα αρχεία σου, <b>ανέγγιχτα</b>.", "pv.sub": "Το Roarverter γράφει μόνο νέα αρχεία. Διαβάζει τα αρχικά και τα αφήνει εκεί που είναι.", "p1.t": "Στον υπολογιστή σου", "p1.p": "Κάθε μετατροπή γίνεται στον υπολογιστή σου. Χωρίς λογαριασμό, χωρίς server, χωρίς upload, χωρίς internet.", "p2.t": "Το αρχικό μένει", "p2.p": "Το νέο αρχείο παίρνει δικό του όνομα, _converted από προεπιλογή, και έναν αριθμό αν το όνομα υπάρχει ήδη. Τίποτα δεν γράφεται από πάνω.", "p3.t": "Σταμάτα όποτε θες", "p3.p": "Σταμάτα ένα αρχείο ή όλα· ό,τι είχε φτιαχτεί μισό μένει έξω.", "p4.t": "Τα μεταδεδομένα σου, η απόφασή σου", "p4.p": "Τα στοιχεία της κάμερας και η τοποθεσία μένουν έξω από προεπιλογή· ένας διακόπτης τα κρατάει.", "dl.idx": "05 · Λήψη", "dl.title": "Πάρε το <b>Roarverter</b>.", "dl.sub": "Δωρεάν, και σε beta: ένα πείραμα του Mad Lions Lab που χρησιμοποιούμε για τα δικά μας παραδοτέα.", "dl.mac": "Για Mac με chip της Apple (M1 και νεότερα).", "dl.get": "Λήψη", "dl.intel": "Παλιότερο Mac με Intel;", "dl.intelbtn": "Αυτό", "dl.win": "Windows 10 και 11.", "dl.upd": "<b>Ενημερώνεται μόνο του.</b> Οι εφαρμογές για Mac και Windows κατεβάζουν τις νέες εκδόσεις μόνες τους και ζητούν μια γρήγορη επανεκκίνηση.", "dl.help": "<b>Πρώτη φορά σε Mac;</b> Η εφαρμογή δεν είναι ακόμα υπογεγραμμένη από την Apple: κάνε δεξί κλικ στο Roarverter στις Εφαρμογές και διάλεξε Άνοιγμα, ή πάτα Άνοιγμα παρόλα αυτά στις Ρυθμίσεις συστήματος › Απόρρητο και ασφάλεια. Σε Windows: Περισσότερες πληροφορίες › Εκτέλεση παρόλα αυτά.", "faq.idx": "06 · Ερωτήσεις", "faq.title": "Καλό να <b>ξέρεις</b>.", "q1": "Είναι δωρεάν το Roarverter;", "a1": "Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς υδατογράφημα.", "q2": "Πόσο μικραίνει ένα αρχείο;", "a2": "Εξαρτάται από το αρχείο. Ένα master σε ProRes προς H.265 βγαίνει συχνά 90 με 97% μικρότερο· ένα PNG προς WebP 70 με 95%· μια φωτογραφία κινητού σε JPG περίπου 40%. Κάθε αρχείο στη λίστα δείχνει πόσο κέρδισε.", "q3": "Πέφτει ακριβώς στο μέγεθος που ζητάω;", "a3": "Με τα Δύο περάσματα, ναι, λίγο κάτω από αυτό: στις δοκιμές μας ένας στόχος 1 MB βγήκε 0,96 MB. Το ένα πέρασμα είναι πιο γρήγορο και πέφτει κοντά. Ένα bitrate σε Mb/s δουλεύει το ίδιο, όπως το «Restrict to» του Resolve.", "q4": "Ποια μορφή για Instagram, email ή web;", "a4": "Το MP4 με H.264 παίζει παντού· το H.265 είναι περίπου το μισό και παίζει σε κάθε κινητό και σε κάθε πρόσφατο υπολογιστή. Για εικόνες σε site, WebP ή AVIF.", "q5": "Ανοίγει φωτογραφίες RAW και HEIC;", "a5": "Ναι σε Mac: τα HEIC του iPhone και τα RAW των καμερών (DNG, CR3, NEF, ARW, RAF και άλλα) ανοίγουν με τα εργαλεία του ίδιου του Mac, και σώζεται και HEIC. Στα Windows τα HEIC μπορεί να μην ανοίγουν και τα RAW όχι ακόμα· μετάτρεψέ τα σε Mac.", "q6": "Χρειάζομαι internet;", "a6": "Όχι. Μόνο για να κατεβάσεις την εφαρμογή και τις ενημερώσεις της· κάθε μετατροπή γίνεται στον υπολογιστή σου.", "ct.idx": "Επαφή", "ct.title": "Ιδέες για <b>την επόμενη έκδοση</b>;", "ft.lab": "The Mad Lions Lab", "ft.legal": "Απόρρητο & Όροι", "lg.p": "Πολιτική απορρήτου", "lg.t": "Όροι χρήσης", "footer": "© 2026 The Mad Lions · Roarverter", "nav.new": "Νέα", "ver.b": "Νέο", "ver.t": "στην 0.3.2 · GIF σε βίντεο, HDR, δύο περάσματα", "nw.idx": "Νέα", "nw.title": "Τι <b>νέο</b> υπάρχει.", "nw.sub": "Από την 0.1 τον Οκτώβριο: οι μορφές για το μοντάζ, η εικόνα και το κάδρο, ο ήχος, μεγέθη που πέφτουν ακριβώς, και ένα GIF που γίνεται βίντεο.", "n1.t": "Ένα GIF γίνεται βίντεο", "n1.p": "Ρίξε ένα GIF και σώσ’ το ως MP4, MOV, ProRes ή WebM, για να το ανεβάσεις οπουδήποτε ή να το βάλεις στο μοντάζ. Ένα μονό μέγεθος όπως 481×271 γίνεται ζυγό, για να το δέχεται το H.264.", "n2.t": "Δύο περάσματα, ακριβώς στο μέγεθος", "n2.p": "Ζήτα 25 MB, ή ένα bitrate σε Mb/s όπως το «Restrict to» του Resolve, και άναψε τα Δύο περάσματα: στις δοκιμές μας ένας στόχος 1 MB βγήκε 0,96 MB.", "n3.t": "HDR που δεν βγαίνει γκρίζο", "n3.p": "Τα clip HLG του iPhone και τα HDR10 περνούν σε Rec.709, μόνο όταν η πηγή είναι HDR. Βάλε ένα LUT (.cube, .3dl, .dat, .csp) και το παίρνει κάθε clip.", "n4.t": "Έτοιμο για το timeline", "n4.p": "ProRes από Proxy ως 4444 με alpha, DNxHR από LB ως 444 σε MOV ή σε MXF για το Avid, XDCAM HD422 στα 50 Mbit/s για την τηλεόραση, και FFV1 σε MKV, χωρίς απώλειες, για το αρχείο.", "n4.p2": "Σε Mac, τα H.264 και H.265 μπορούν να γίνουν με τον encoder του ίδιου του Mac, πολλές φορές πιο γρήγορα· αν εκείνος αρνηθεί, το ίδιο αρχείο φτιάχνεται με τον κανονικό.", "n5.t": "Το κάδρο για τα social", "n5.p": "16:9, 9:16, 1:1, 4:5 ή 2.39:1, κομμένο ή ολόκληρο πάνω σε ένα θολό αντίγραφό του. Το anamorphic υλικό ανοίγει στη σωστή αναλογία στη διαδρομή, από 1.33× ως 2×.", "n6.t": "Ο ήχος στη σωστή ένταση", "n6.p": "Ένταση στα −14 LUFS για το web, −16 για podcast ή −23 για την τηλεόραση (EBU R128), μονό ή στέρεο, 44.1 ή 48 kHz.", "n7.t": "Ανοίγει RAW, PSD και EXR", "n7.p": "Τα RAW της κάμερας, το JPEG XL και η πρώτη σελίδα ενός PDF ανοίγουν σε Mac με τα δικά του εργαλεία· τα PSD, EXR και DPX παντού. Σε Mac σώζεται και HEIC.", "n8.t": "Νέο εικονίδιο, και η έκδοση σε κοινή θέα", "n8.p": "Το Roarverter φοράει το νέο εικονίδιο της οικογένειας Roar: γραφίτης σαν γυαλί, λεπτές κόκκινες γραμμές. Η έκδοση φαίνεται δίπλα στο όνομα της εφαρμογής, για να ξέρεις πάντα ποια έχεις.", "tk.10": "GIF σε βίντεο", "tk.11": "HDR σε Rec.709 · LUT", "f1.c2": "Ή Mb/s", "ix13.t": "GIF και προς τις δύο μεριές", "ix13.p": "Ένα clip σε GIF ή σε κινούμενο WebP με τη δική του παλέτα, και ένα GIF σε MP4, MOV, ProRes ή WebM.", "ix14.t": "Ένα δικό σου μέγεθος", "ix14.p": "Πλάτος × ύψος, με μπάρες όπου αλλάζει το σχήμα, και ένα keyframe κάθε N καρέ.", "q7": "Μπορεί να κάνει ένα GIF βίντεο;", "a7": "Ναι, από την 0.3.1: ένα GIF μετράει ως κινούμενη εικόνα, οπότε γίνεται MP4, MOV, ProRes ή WebM. Ένα μονό μέγεθος όπως 481×271 γίνεται ζυγό για το H.264.", "q8": "Γιατί το βίντεο του iPhone μου φαίνεται γκρίζο σε άλλες οθόνες;", "a8": "Γιατί είναι HDR (HLG). Το HDR σε Rec.709 είναι ανοιχτό από προεπιλογή και δουλεύει μόνο όταν η πηγή είναι HDR, οπότε το νέο αρχείο φαίνεται σωστά παντού."}
 
   var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
   var EN = {}
@@ -699,5 +783,6 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   }
 })()
 </script>
+<script src="../fresh.js" defer></script>
 </body>
 </html>

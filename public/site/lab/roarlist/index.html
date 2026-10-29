@@ -6,7 +6,8 @@
 <!-- RoarList's page on the company site, in the same frame as /roarme/ (its CSS is RoarMe's page's, then this page's
      own below). One frame of the app (a storyboard of a night shoot), the three things only RoarList does, what was
      made for the set, everything else as an index, where your lists live, downloads (releases/latest), questions.
-     Only what is in the code of RoarList 0.4.1. EN and GR, the same switch as the main page. -->
+     Only what is in the code of RoarList 0.4.3 (and the hub's copy). 29 Oct 2026: the Lab's fresh layer (../fresh.css,
+     ../fresh.js), the new icon (icon.png) and What's new. EN and GR, the same switch as the main page. -->
 <title>RoarList · Shot lists and storyboards for shoots, with a frame for every shot · by The Mad Lions</title>
 <link rel="canonical" href="https://themadlions.com/lab/roarlist/">
 <meta name="description" content="RoarList, the shot list by The Mad Lions Lab. Scenes and shots with size, angle, movement and lens, a picture for every shot, shot numbers that read on set, and a PDF list or storyboard for the crew. For Mac, Windows and the browser, and it updates itself.">
@@ -15,10 +16,12 @@
 <meta property="og:description" content="The shot list, frame by frame. A picture for every shot and one PDF for the crew.">
 <meta property="og:url" content="https://themadlions.com/lab/roarlist/">
 <meta property="og:image" content="https://themadlions.com/og-image.png">
-<link rel="icon" href="../../roarlist/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icon.png" type="image/png">
+<link rel="apple-touch-icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../fresh.css">
 <style>
 :root {
   --bg: #16181c; --bg-2: #1d2025; --bg-3: #24282f; --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.16);
@@ -76,7 +79,6 @@ img, svg { display: block; }
 .kicker i { display: inline-block; width: 7px; height: 7px; margin-right: 10px; vertical-align: 1px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px rgba(47,211,107,.8); }
 .hero h1 { margin: 22px 0 0; font-size: clamp(72px, 15.5vw, 250px); line-height: .8; display: flex; align-items: flex-end; gap: clamp(10px, 2vw, 28px); flex-wrap: nowrap; }
 .hero h1 .beta { font-size: clamp(10px, 1vw, 13px); margin-bottom: clamp(10px, 2.4vw, 40px); }
-.app-icon { width: clamp(76px, 10vw, 150px); height: auto; filter: drop-shadow(0 24px 50px rgba(212,0,0,.32)); }
 .hero-sub { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: end; margin-top: clamp(28px, 4vw, 52px); }
 .lead { margin: 0; font-size: clamp(22px, 2.5vw, 34px); font-weight: 300; line-height: 1.25; letter-spacing: -.01em; text-wrap: balance; color: color-mix(in srgb, var(--text) 82%, transparent); }
 .lead b { font-weight: 700; color: var(--text); }
@@ -295,7 +297,6 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 }
 
 /* ---- RoarList's own ---- */
-.app-icon.png { filter: drop-shadow(0 24px 50px rgba(212,0,0,.32)); }
 .tag.t3 { top: 66%; } .tag.t2 { top: 24%; }
 /* the frame: a storyboard as it looks today */
 .win-body.rl { grid-template-columns: 23% minmax(0, 1fr); }
@@ -375,13 +376,35 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   .mrow { grid-template-columns: 30px 66px minmax(0, 1fr); } .mrow kbd { display: none; }
 }
 @media (max-width: 420px) { .sb { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 7px; padding: 0 9px 9px; } .shot .ds { -webkit-line-clamp: 1; } }
+/* ---- fresh (29 Oct): the new icon in the hero, What's new ---- */
+.hero h1 .f-icon-wrap { align-self: center; margin-right: clamp(4px, 1vw, 14px); }
+.hero-ver { align-self: end; padding-bottom: 6px; }
+.f-new { max-width: 1480px; margin: 0 auto; }
+.f-card h3 { font-family: inherit; }
+.f-card p a { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
+.f-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.f-themes span { display: flex; align-items: flex-end; height: 92px; padding: 10px 12px; border-radius: 16px; border: 1px solid var(--f-edge); font-size: 13px; font-weight: 600; color: #eef0f3; }
+.f-themes .simba { background: radial-gradient(120% 90% at 85% 100%, rgba(255,107,87,.35), transparent 60%), linear-gradient(180deg, #3a4049, #1b1e23); }
+.f-themes .pumba { background: radial-gradient(120% 90% at 85% 100%, rgba(255,93,74,.3), transparent 60%), linear-gradient(180deg, #555963, #2c2e34); }
+.f-card .looks { margin-top: 2px; }
+.f-card .looks .dots { flex-wrap: wrap; }
+.t-icon .icons img { border-radius: 22.5%; box-shadow: 0 1px 0 rgba(255,255,255,.14) inset, 0 22px 50px rgba(0,0,0,.45), 0 16px 60px -10px rgba(212,0,0,.4); }
+.dls .dl.f-glass { border-radius: 24px; }
+.dls .dl.mine.f-glass { border-color: rgba(255,90,80,.55) !important; background: linear-gradient(170deg, rgba(212,0,0,.16), rgba(255,255,255,.03)) !important; }
+.hero h1 .f-br { display: none; }
+.hero h1:has(.f-icon) { font-size: clamp(64px, 12.6vw, 212px); }
+@media (max-width: 760px) {
+  .hero-ver { padding-bottom: 0; }
+  .hero h1:has(.f-icon) { font-size: clamp(50px, 17.6vw, 110px); }
+  .hero h1 .f-br { display: block; flex-basis: 100%; height: 0; }
+  .hero h1 .f-icon-wrap { margin-bottom: 12px; }
+}
 </style>
 <!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"RoarList","url":"https://themadlions.com/lab/roarlist/","description":"RoarList, the shot list by The Mad Lions Lab. Scenes and shots with size, angle, movement and lens, a picture for every shot, shot numbers that read on set, and a PDF list or storyboard for the crew. For Mac, Windows and the browser, and it updates itself.","applicationCategory":"MultimediaApplication","operatingSystem":"macOS, Windows, Web","image":"https://themadlions.com/og-image.png","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"isAccessibleForFree":true,"inLanguage":["en","el"],"author":{"@id":"https://themadlions.com/#org"},"publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"}}</script><!--/seo:app-->
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <linearGradient id="rlg" x1="0.1" y1="0.95" x2="0.95" y2="0.05"><stop offset="0" stop-color="#0d0d0e"/><stop offset="0.45" stop-color="#2a1416"/><stop offset="1" stop-color="#741416"/></linearGradient>
-  <symbol id="rlicon" viewBox="100 100 824 824"><image href="icon.png" x="100" y="100" width="824" height="824"/></symbol>
   <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0e16"/><stop offset=".7" stop-color="#1a1f2c"/><stop offset="1" stop-color="#2a1416"/></linearGradient>
   <radialGradient id="lamp" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".9"/><stop offset="1" stop-color="#ffd9a0" stop-opacity="0"/></radialGradient>
   <!-- six frames of the night shoot, drawn simply -->
@@ -400,6 +423,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <span class="rm" aria-label="RoarList"><span class="a">ROAR</span><span class="b">LIST</span></span>
   </a>
   <nav aria-label="Sections">
+    <a href="#new" data-t="nav.new">What's new</a>
     <a href="#only" data-t="nav.only">Only here</a>
     <a href="#set" data-t="nav.set">For the set</a>
     <a href="#all" data-t="nav.all">Everything</a>
@@ -422,10 +446,11 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <div>
       <p class="kicker rv"><i></i><span data-t="hero.kicker">Shot lists &amp; storyboards · The Mad Lions Lab · Experiment 04</span></p>
       <h1 class="rv" style="--d:.06s">
-        <svg class="app-icon" viewBox="100 100 824 824" aria-hidden="true"><use href="#rlicon"/></svg>
+        <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span><i class="f-br" aria-hidden="true"></i>
         <span class="rm"><span class="a">ROAR</span><span class="b">LIST</span></span><em class="beta">beta</em>
       </h1>
     </div>
+    <div class="hero-ver rv" style="--d:.1s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.4.3</span></a></div>
   </div>
   <div class="hero-sub">
     <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>The shot list, frame by frame. Scenes and shots with <b>size, angle, movement and lens</b>, <b>a picture for every shot</b>, and <b>a PDF</b> the crew can read on set.</p>
@@ -469,9 +494,63 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 </div>
 
 <div class="ticker" aria-hidden="true"><div class="ticker-in">
-  <span data-t="tk.1">A frame for every shot</span><span data-t="tk.2">PDF list &amp; storyboard</span><span data-t="tk.3">Size · Angle · Move · Lens</span><span data-t="tk.4">Running time</span><span data-t="tk.5">Drag to reorder</span><span data-t="tk.6">.roarlist files</span><span data-t="tk.7">Greek &amp; English</span><span data-t="tk.8">Updates itself</span><span data-t="tk.9">Mac · Windows · Browser</span>
-  <span data-t="tk.1">A frame for every shot</span><span data-t="tk.2">PDF list &amp; storyboard</span><span data-t="tk.3">Size · Angle · Move · Lens</span><span data-t="tk.4">Running time</span><span data-t="tk.5">Drag to reorder</span><span data-t="tk.6">.roarlist files</span><span data-t="tk.7">Greek &amp; English</span><span data-t="tk.8">Updates itself</span><span data-t="tk.9">Mac · Windows · Browser</span>
+  <span data-t="tk.1">A frame for every shot</span><span data-t="tk.2">PDF list &amp; storyboard</span><span data-t="tk.3">Size · Angle · Move · Lens</span><span data-t="tk.4">Running time</span><span data-t="tk.5">Drag to reorder</span><span data-t="tk.6">.roarlist files</span><span data-t="tk.7">Greek &amp; English</span><span data-t="tk.8">Updates itself</span><span data-t="tk.9">Mac · Windows · Browser</span><span data-t="tk.10">One RoarMe account</span>
+  <span data-t="tk.1">A frame for every shot</span><span data-t="tk.2">PDF list &amp; storyboard</span><span data-t="tk.3">Size · Angle · Move · Lens</span><span data-t="tk.4">Running time</span><span data-t="tk.5">Drag to reorder</span><span data-t="tk.6">.roarlist files</span><span data-t="tk.7">Greek &amp; English</span><span data-t="tk.8">Updates itself</span><span data-t="tk.9">Mac · Windows · Browser</span><span data-t="tk.10">One RoarMe account</span>
 </div></div>
+
+<section class="f-new" id="new">
+  <div class="f-new-head">
+    <h2 class="rv" data-t="new.title" data-html>What's <b>new</b>.</h2>
+    <p class="rv" data-t="new.sub">What RoarList has learned since the first list: your account in the browser, RoarMe's design, a list you can try with no account, and a place in our own studio hub.</p>
+  </div>
+  <div class="f-bento">
+    <article class="f-card tall rv">
+      <span class="f-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></span>
+      <h3 data-t="n1.t">RoarMe's design, all of it</h3>
+      <p data-t="n1.p">The Simba and Pumba themes, day and night with a circle wipe, ten accent colours, eight fonts, corners, spacing and text size, glass buttons and smooth motion. Power Saving turns blur and motion off.</p>
+      <div class="f-themes" aria-hidden="true"><span class="simba">Simba</span><span class="pumba">Pumba</span></div>
+      <div class="looks" aria-hidden="true"><span class="dots"><i style="background:#d40000"></i><i style="background:#ff6b57"></i><i style="background:#f97316"></i><i style="background:#facc15"></i><i style="background:#22c55e"></i><i style="background:#22d3ee"></i><i style="background:#3b82f6"></i><i style="background:#8b5cf6"></i><i style="background:#d946ef"></i><i style="background:#ffffff"></i></span></div>
+      <span class="f-tag">v0.4.0</span>
+    </article>
+    <article class="f-card rv" style="--d:.05s">
+      <span class="f-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 18.5h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.2 9.6 4.5 4.5 0 0 0 7 18.5z"/><path d="M12 15.5v-5M9.8 12.7 12 10.5l2.2 2.2"/></svg></span>
+      <h3 data-t="n2.t">Your lists, on every device</h3>
+      <p data-t="n2.p">In the browser you sign in with your RoarMe account: lists, frames and settings live in it. Lists made before you signed in move in.</p>
+      <span class="f-tag">v0.3.0</span>
+    </article>
+    <article class="f-card rv" style="--d:.1s">
+      <span class="f-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></svg></span>
+      <h3 data-t="n3.t">⌘K, ⌘/ and a right-click</h3>
+      <p data-t="n3.p">⌘K finds any list, ⌘/ shows every shortcut, a right-click opens, duplicates, exports or deletes. Drag the side panel's edge to make it wider.</p>
+      <span class="f-tag">v0.4.0</span>
+    </article>
+    <article class="f-card rv">
+      <span class="f-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9.5 4.5 2.5-4.5 2.5z"/></svg></span>
+      <h3 data-t="n4.t">Try it, no account</h3>
+      <p data-t="n4.p" data-html>A sample night shoot with drawn frames opens in the browser, <a href="../../roarlist/#demo">right here</a>. Change anything; nothing is saved.</p>
+      <span class="f-tag">v0.4.1</span>
+    </article>
+    <article class="f-card rv" style="--d:.05s">
+      <span class="f-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5"/><path d="M8.5 15.5 12 8.5l3.5 7M9.8 13h4.4"/></svg></span>
+      <h3 data-t="n5.t">A new icon</h3>
+      <p data-t="n5.p">RoarList wears the Lab's new look: a graphite glass tile with thin red lines, on the Dock, the taskbar and the browser tab.</p>
+      <span class="f-tag">v0.4.3</span>
+    </article>
+    <article class="f-card wide rv">
+      <span class="f-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5 3.5 8 12 12.5 20.5 8z"/><path d="m3.5 12 8.5 4.5 8.5-4.5M3.5 16l8.5 4.5 8.5-4.5"/></svg></span>
+      <h3 data-t="n6.t">Inside our studio's hub</h3>
+      <p data-t="n6.p">At The Mad Lions, RoarList is also a tab in the Office of our own hub. Every list belongs to a project: pick it and the title, client, director, DoP and date fill in, a script breakdown can draft the first shot list, and RoarList takes on the hub's colours.</p>
+      <span class="f-tag" data-t="n6.tag">THEMADLIONS hub · Oct 2026</span>
+    </article>
+    <article class="f-card wide rv" style="--d:.05s">
+      <span class="f-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5 19 6.5v5c0 4.4-2.9 7.6-7 9-4.1-1.4-7-4.6-7-9v-5z"/><path d="m9 12 2.2 2.2L15.5 10"/></svg></span>
+      <h3 data-t="n7.t">Plain about your data</h3>
+      <p data-t="n7.p">The Privacy Policy and the Terms are a tap away in Settings and on sign-up, and deleting a list in the browser says plainly that it goes for good, frames and all.</p>
+      <span class="f-tag">v0.4.2</span>
+    </article>
+  </div>
+</section>
+<div class="f-sep" aria-hidden="true"></div>
 
 <section id="only">
   <div class="sec-h">
@@ -506,7 +585,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <p class="sub rv" data-t="set.sub">Fast to fill in, true to the format, and always the newest version.</p>
   </div>
   <div class="board">
-    <article class="tile t-tasks rv">
+    <article class="tile t-tasks f-glass rv">
       <span class="k" data-t="s1.k">The next shot</span>
       <h3 data-t="s1.t" data-html>⌘↵, <b>keep writing</b>.</h3>
       <p data-t="s1.p">A new shot comes in right below the one you are on, with the same lens, and the cursor is already in its description. A new scene is ⌘⇧↵. You set up a whole scene without touching the mouse.</p>
@@ -515,7 +594,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
         <div class="mrow new"><span class="n">2B</span><span class="l">MCU · 24</span><em data-t="s1.r2">She reads the letter</em></div>
       </div>
     </article>
-    <article class="tile t-ord rv" style="--d:.08s">
+    <article class="tile t-ord f-glass rv" style="--d:.08s">
       <span class="k" data-t="s2.k">The format</span>
       <h3 data-t="s2.t" data-html>Seven formats, <b>one look</b>.</h3>
       <p data-t="s2.p">Pick the aspect of the shoot and the frames, the storyboard and the PDF follow it. Vertical formats print five frames across instead of three.</p>
@@ -523,20 +602,20 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
         <span class="on"><i style="aspect-ratio:16/9"></i>16:9</span><span><i style="aspect-ratio:2.39/1"></i>2.39:1</span><span><i style="aspect-ratio:1.85/1"></i>1.85:1</span><span><i style="aspect-ratio:4/3"></i>4:3</span><span><i style="aspect-ratio:1/1"></i>1:1</span><span><i style="aspect-ratio:4/5"></i>4:5</span><span><i style="aspect-ratio:9/16"></i>9:16</span>
       </div>
     </article>
-    <article class="tile t-upd rv">
-      <span class="k" data-t="s3.k" data-html>Updates itself <em>0.4.1</em></span>
+    <article class="tile t-upd f-glass rv">
+      <span class="k" data-t="s3.k" data-html>Updates itself <em>0.4.3</em></span>
       <h3 data-t="s3.t" data-html>One tap, <b>newest version</b>.</h3>
       <p data-t="s3.p">The Mac and Windows apps look for a new version in the background and tell you when it is ready. Press Restart; if you quit instead, it installs on the way out.</p>
       <div class="upd-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg></i><span><b data-t="s3.c">New version ready</b><small>RoarList</small></span><s data-t="s3.btn">Restart</s></div>
     </article>
-    <article class="tile t-icon rv" style="--d:.08s">
+    <article class="tile t-icon f-glass rv" style="--d:.08s">
       <div class="txt">
         <span class="k" data-t="s4.k">The look</span>
         <h3 data-t="s4.t" data-html>RoarMe's look, <b>your colours</b>.</h3>
-        <p data-t="s4.p">The same design as RoarMe: the Simba and Pumba themes, day or night or as the system, ten accent colours, eight fonts, text size, spacing and corners, with a live preview. Power Saving turns off blur and motion.</p>
-        <div class="looks"><span class="dots" aria-hidden="true"><i style="background:#d40000"></i><i style="background:#ff6b5e"></i><i style="background:#ff9a2e"></i><i style="background:#ffd23f"></i><i style="background:#2fd36b"></i><i style="background:#2ec8e0"></i><i style="background:#3b6ff5"></i><i style="background:#8b5cf6"></i><i style="background:#e040a0"></i><i style="background:#eef0f3"></i></span></div>
+        <p data-t="s4.p">The same design as RoarMe: the Simba and Pumba themes, day or night or as the system, ten accent colours, eight fonts, text size, spacing and corners, with a live preview. Power Saving turns off blur and motion. In our hub it takes on the hub's own theme.</p>
+        <div class="looks"><span class="dots" aria-hidden="true"><i style="background:#d40000"></i><i style="background:#ff6b57"></i><i style="background:#f97316"></i><i style="background:#facc15"></i><i style="background:#22c55e"></i><i style="background:#22d3ee"></i><i style="background:#3b82f6"></i><i style="background:#8b5cf6"></i><i style="background:#d946ef"></i><i style="background:#ffffff"></i></span></div>
       </div>
-      <div class="icons"><svg viewBox="100 100 824 824" aria-label="RoarList icon"><use href="#rlicon"/></svg></div>
+      <div class="icons"><img src="icon.png" alt="The RoarList icon" width="140" height="140" loading="lazy"></div>
     </article>
   </div>
 </section>
@@ -554,7 +633,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">Undo, and nothing to save</b><p data-t="ix5.p">Every change saves itself as you type. ⌘Z brings back deletes, moves and pictures, up to 50 steps.</p></div>
     <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Only the columns you use</b><p data-t="ix6.p">Hide frame, size, angle, movement, lens, cast, length or notes from the list and the PDF. The details stay, ready to come back.</p></div>
     <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Hand it over</b><p data-t="ix7.p">Send a .roarlist file with the frames inside; on a computer with RoarList it opens with a double-click. Or save one web page that opens in any browser.</p></div>
-    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">All your lists at hand</b><p data-t="ix8.p">A sidebar with a cover for each list, search with ⌘K, and a right-click to rename, duplicate, print or delete. The last list you had open opens again.</p></div>
+    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">All your lists at hand</b><p data-t="ix8.p">A sidebar with a cover for each list that you can make wider with a drag, search with ⌘K, and a right-click to rename, duplicate, export or delete. The last list you had open opens again.</p></div>
     <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">From the keyboard</b><p data-t="ix9.p">New shot, new scene, search, PDFs, undo and settings all have a shortcut, with a page that lists them (⌘/).</p></div>
     <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Greek and English</b><p data-t="ix10.p">The whole app, and the PDF, in either language, or as your system. Your scenes and notes are never touched.</p></div>
     <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">On the phone too</b><p data-t="ix11.p">The browser version fits a phone screen or a narrow window: the lists slide in from the side.</p></div>
@@ -573,8 +652,8 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <div class="prom">
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></i><b data-t="p1.t">On your computer</b><p data-t="p1.p">The Mac and Windows apps keep every list on your computer. No account, no server, and it works with no connection.</p></div>
       <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg></i><b data-t="p2.t">Only yours in the cloud</b><p data-t="p2.p">In the browser, your lists and frames are kept in your account, in private storage only your account can open.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.4 3.6-5.2 7-5.2s6.2 1.8 7 5.2"/></svg></i><b data-t="p3.t">One account</b><p data-t="p3.p">The same account as RoarMe, Roardino and RoarMail. Lists you made in the browser before signing in move into it.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12.5A2 2 0 0 0 8 21h8a2 2 0 0 0 2-1.5L19 7M9 7V4h6v3"/></svg></i><b data-t="p4.t">Deleted means the Trash</b><p data-t="p4.p">On the computer a deleted list goes to the system Trash. Ask before deleting a shot, if you like, in Settings.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.4 3.6-5.2 7-5.2s6.2 1.8 7 5.2"/></svg></i><b data-t="p3.t">One account</b><p data-t="p3.p">The same account as RoarMe, Roardino and RoarMail, and your settings come with it. Lists you made in the browser before signing in move into it.</p></div>
+      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12.5A2 2 0 0 0 8 21h8a2 2 0 0 0 2-1.5L19 7M9 7V4h6v3"/></svg></i><b data-t="p4.t">Deleting, said plainly</b><p data-t="p4.p">On the computer a deleted list goes to the system Trash. In the browser RoarList asks first, then deletes the list and its frames for good. Ask before deleting a shot too, if you like, in Settings.</p></div>
     </div>
   </div>
 </section>
@@ -585,26 +664,26 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab that we use on our own shoots.</p>
   </div>
   <div class="dls">
-    <div class="dl rv" id="dl-mac" data-mine="Your computer">
+    <div class="dl f-glass rv" id="dl-mac" data-mine="Your computer">
       <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.7zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.6-1.3z"/></svg></i>
       <h3>Mac</h3>
       <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
       <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roarlist/releases/latest/download/RoarList-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
       <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roarlist/releases/latest/download/RoarList-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
     </div>
-    <div class="dl rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
+    <div class="dl f-glass rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
       <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
       <h3>Windows</h3>
       <small data-t="dl.win">Windows 10 and 11.</small>
       <a class="pill main" data-f="win" href="https://github.com/alexisdigipro-hub/roarlist/releases/latest/download/RoarList-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
     </div>
-    <div class="dl rv" id="dl-web" style="--d:.12s" data-mine="Here">
+    <div class="dl f-glass rv" id="dl-web" style="--d:.12s" data-mine="Here">
       <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.4 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.4-3.5-8.5s1-5.9 3.5-8.5z"/></svg></i>
       <h3 data-t="dl.webt">Browser</h3>
       <small data-t="dl.web">On a computer or a phone, with your RoarMe account. Nothing to install.</small>
       <a class="pill" href="../../roarlist/" data-t="cta.open">Open RoarList</a>
     </div>
-    <div class="dl rv" id="dl-demo" style="--d:.18s">
+    <div class="dl f-glass rv" id="dl-demo" style="--d:.18s">
       <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m10 9.5 4.5 2.5-4.5 2.5z"/></svg></i>
       <h3 data-t="dl.demot">An example</h3>
       <small data-t="dl.demo">A night shoot with drawn frames. No account, nothing saved.</small>
@@ -654,6 +733,15 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 (function () {
   var APP = 'RoarList', REPO = 'alexisdigipro-hub/roarlist', WEB = '../../roarlist/'
   var EL = {
+    'nav.new': 'Τι νέο', 'ver.b': 'Νέα', 'ver.t': 'στην 0.4.3', 'tk.10': 'Ένας λογαριασμός RoarMe',
+    'new.title': 'Τι <b>νέο</b> έχει.', 'new.sub': 'Τι έμαθε το RoarList από την πρώτη λίστα ως σήμερα: τον λογαριασμό σου στον browser, το design του RoarMe, μια λίστα που δοκιμάζεις χωρίς λογαριασμό, και μια θέση στο δικό μας hub.',
+    'n1.t': 'Το design του RoarMe, ολόκληρο', 'n1.p': 'Τα θέματα Simba και Pumba, μέρα και νύχτα με ένα κυκλικό σβήσιμο, δέκα χρώματα, οκτώ γραμματοσειρές, γωνίες, αποστάσεις και μέγεθος κειμένου, γυάλινα κουμπιά και ομαλή κίνηση. Η Εξοικονόμηση ενέργειας κλείνει το blur και την κίνηση.',
+    'n2.t': 'Οι λίστες σου, σε κάθε συσκευή', 'n2.p': 'Στον browser συνδέεσαι με τον λογαριασμό σου στο RoarMe: λίστες, κάδρα και ρυθμίσεις μένουν εκεί. Ό,τι έφτιαξες πριν συνδεθείς μπαίνει μέσα.',
+    'n3.t': '⌘K, ⌘/ και δεξί κλικ', 'n3.p': 'Το ⌘K βρίσκει κάθε λίστα, το ⌘/ δείχνει όλες τις συντομεύσεις, το δεξί κλικ ανοίγει, κάνει αντίγραφο, εξάγει ή σβήνει. Σύρε την άκρη της πλαϊνής στήλης για να τη φαρδύνεις.',
+    'n4.t': 'Δοκίμασέ το, χωρίς λογαριασμό', 'n4.p': 'Ένα δείγμα νυχτερινού γυρίσματος με ζωγραφισμένα κάδρα ανοίγει στον browser, <a href="../../roarlist/#demo">εδώ</a>. Άλλαξε ό,τι θες· τίποτα δεν αποθηκεύεται.',
+    'n5.t': 'Νέο εικονίδιο', 'n5.p': 'Το RoarList φορά το νέο look του Lab: ένα γραφιτί γυάλινο πλακίδιο με λεπτές κόκκινες γραμμές, στο Dock, στη γραμμή εργασιών και στην καρτέλα του browser.',
+    'n6.t': 'Μέσα στο hub του στούντιο', 'n6.p': 'Στους Mad Lions, το RoarList είναι και καρτέλα στο Office του δικού μας hub. Κάθε λίστα ανήκει σε ένα project: το διαλέγεις και συμπληρώνονται τίτλος, πελάτης, σκηνοθέτης, DoP και ημερομηνία, το breakdown ενός σεναρίου μπορεί να φτιάξει το πρώτο shot list, και το RoarList παίρνει τα χρώματα του hub.', 'n6.tag': 'THEMADLIONS hub · Οκτ 2026',
+    'n7.t': 'Καθαρά για τα δεδομένα σου', 'n7.p': 'Η Πολιτική απορρήτου και οι Όροι χρήσης είναι ένα πάτημα μακριά, στις Ρυθμίσεις και στην εγγραφή, και όταν σβήνεις μια λίστα στον browser σου λέει καθαρά ότι φεύγει οριστικά, μαζί με τα κάδρα της.',
     'nav.only': 'Μόνο εδώ', 'nav.set': 'Για το γύρισμα', 'nav.all': 'Όλα', 'nav.yours': 'Δικά σου', 'nav.download': 'Λήψη', 'nav.faq': 'Ερωτήσεις',
     'cta.open': 'Άνοιξε το RoarList', 'cta.browser': 'Φτιάξ’ το στον browser', 'cta.note': 'Δωρεάν · Mac, Windows, browser · ενημερώνεται μόνο του ·', 'cta.demo': 'δες ένα παράδειγμα',
     'hero.kicker': 'Shot lists και storyboards · The Mad Lions Lab · Πείραμα 04',
@@ -671,9 +759,9 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     's1.k': 'Το επόμενο πλάνο', 's1.t': '⌘↵, <b>και συνεχίζεις</b>.', 's1.p': 'Ένα νέο πλάνο μπαίνει ακριβώς κάτω από εκείνο που είσαι, με τον ίδιο φακό, και ο κέρσορας είναι ήδη στην περιγραφή του. Νέα σκηνή με ⌘⇧↵. Στήνεις ολόκληρη σκηνή χωρίς να αγγίξεις το ποντίκι.',
     's1.r1': 'Η κουζίνα, πρωινό φως', 's1.r2': 'Διαβάζει το γράμμα',
     's2.k': 'Το format', 's2.t': 'Επτά formats, <b>ένα look</b>.', 's2.p': 'Διάλεξε το format του γυρίσματος και τα κάδρα, το storyboard και το PDF το ακολουθούν. Στα κάθετα formats το PDF βάζει πέντε κάδρα στη σειρά αντί για τρία.',
-    's3.k': 'Ενημερώνεται μόνο του <em>0.4.1</em>', 's3.t': 'Ένα πάτημα, <b>νέα έκδοση</b>.', 's3.p': 'Οι εφαρμογές για Mac και Windows ψάχνουν νέα έκδοση στο παρασκήνιο και σου λένε όταν είναι έτοιμη. Πατάς Επανεκκίνηση· κι αν κλείσεις την εφαρμογή, εγκαθίσταται φεύγοντας.',
+    's3.k': 'Ενημερώνεται μόνο του <em>0.4.3</em>', 's3.t': 'Ένα πάτημα, <b>νέα έκδοση</b>.', 's3.p': 'Οι εφαρμογές για Mac και Windows ψάχνουν νέα έκδοση στο παρασκήνιο και σου λένε όταν είναι έτοιμη. Πατάς Επανεκκίνηση· κι αν κλείσεις την εφαρμογή, εγκαθίσταται φεύγοντας.',
     's3.c': 'Νέα έκδοση έτοιμη', 's3.btn': 'Επανεκκίνηση',
-    's4.k': 'Η εμφάνιση', 's4.t': 'Το look του RoarMe, <b>τα δικά σου χρώματα</b>.', 's4.p': 'Το ίδιο design με το RoarMe: τα θέματα Simba και Pumba, μέρα ή νύχτα ή όπως το σύστημα, δέκα χρώματα, οκτώ γραμματοσειρές, μέγεθος κειμένου, αποστάσεις και γωνίες, με ζωντανή προεπισκόπηση. Η Εξοικονόμηση ενέργειας κλείνει το blur και την κίνηση.',
+    's4.k': 'Η εμφάνιση', 's4.t': 'Το look του RoarMe, <b>τα δικά σου χρώματα</b>.', 's4.p': 'Το ίδιο design με το RoarMe: τα θέματα Simba και Pumba, μέρα ή νύχτα ή όπως το σύστημα, δέκα χρώματα, οκτώ γραμματοσειρές, μέγεθος κειμένου, αποστάσεις και γωνίες, με ζωντανή προεπισκόπηση. Η Εξοικονόμηση ενέργειας κλείνει το blur και την κίνηση. Στο hub μας παίρνει το θέμα του ίδιου του hub.',
     'all.idx': '03 · Όλα', 'all.title': 'Και όλα όσα <b>θέλει ένα γύρισμα</b>.', 'all.sub': 'Τα υπόλοιπα του RoarList, με λίγα λόγια.',
     'ix1.t': 'Σκηνές και πλάνα', 'ix1.p': 'Αριθμός σκηνής όπως 12A και τίτλος όπως ΕΣΩΤ. ΚΟΥΖΙΝΑ - ΝΥΧΤΑ. Για κάθε πλάνο: μέγεθος, γωνία, κίνηση, φακός, τι βλέπουμε, ηθοποιοί, διάρκεια και σημειώσεις, με τις συνηθισμένες τιμές ένα πάτημα μακριά.',
     'ix2.t': 'Το project στην κορυφή', 'ix2.p': 'Τίτλος, πελάτης, σκηνοθέτης, DoP, μέρα γυρίσματος, format και γενικές σημειώσεις, στην οθόνη και σε κάθε PDF.',
@@ -682,7 +770,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'ix5.t': 'Αναίρεση, και τίποτα για αποθήκευση', 'ix5.p': 'Κάθε αλλαγή αποθηκεύεται μόνη της καθώς γράφεις. Το ⌘Z φέρνει πίσω διαγραφές, μετακινήσεις και εικόνες, ως 50 βήματα.',
     'ix6.t': 'Μόνο οι στήλες που χρησιμοποιείς', 'ix6.p': 'Κρύψε κάδρο, μέγεθος, γωνία, κίνηση, φακό, ηθοποιούς, διάρκεια ή σημειώσεις από τη λίστα και το PDF. Τα στοιχεία μένουν, έτοιμα να ξαναφανούν.',
     'ix7.t': 'Δώσ’ το παρακάτω', 'ix7.p': 'Στείλε ένα αρχείο .roarlist με τα κάδρα μέσα· σε υπολογιστή με RoarList ανοίγει με διπλό κλικ. Ή αποθήκευσε μία ιστοσελίδα που ανοίγει σε κάθε browser.',
-    'ix8.t': 'Όλες οι λίστες σου στο χέρι', 'ix8.p': 'Πλαϊνή στήλη με εξώφυλλο για κάθε λίστα, αναζήτηση με ⌘K, και δεξί κλικ για μετονομασία, αντίγραφο, εκτύπωση ή διαγραφή. Η τελευταία λίστα που είχες ανοιχτή ξανανοίγει.',
+    'ix8.t': 'Όλες οι λίστες σου στο χέρι', 'ix8.p': 'Πλαϊνή στήλη με εξώφυλλο για κάθε λίστα, που φαρδαίνει όσο τη σύρεις, αναζήτηση με ⌘K, και δεξί κλικ για μετονομασία, αντίγραφο, εξαγωγή ή διαγραφή. Η τελευταία λίστα που είχες ανοιχτή ξανανοίγει.',
     'ix9.t': 'Από το πληκτρολόγιο', 'ix9.p': 'Νέο πλάνο, νέα σκηνή, αναζήτηση, PDF, αναίρεση και ρυθμίσεις έχουν όλα συντόμευση, με μια σελίδα που τις δείχνει (⌘/).',
     'ix10.t': 'Ελληνικά και αγγλικά', 'ix10.p': 'Όλη η εφαρμογή, και το PDF, σε όποια γλώσσα θέλεις ή όπως το σύστημά σου. Οι σκηνές και οι σημειώσεις σου δεν αγγίζονται ποτέ.',
     'ix11.t': 'Και στο κινητό', 'ix11.p': 'Η έκδοση για browser χωράει σε οθόνη κινητού ή σε στενό παράθυρο: οι λίστες βγαίνουν από το πλάι.',
@@ -690,8 +778,8 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'pv.idx': '04 · Δικά σου', 'pv.title': 'Τα πλάνα σου, <b>στο δικό σου μέρος</b>.', 'pv.sub': 'Στον υπολογιστή, ένα shot list είναι ένας φάκελος στον δίσκο σου. Στον browser, ζει στον δικό σου λογαριασμό. Κανείς άλλος δεν το βλέπει αν δεν του το στείλεις.',
     'p1.t': 'Στον υπολογιστή σου', 'p1.p': 'Οι εφαρμογές για Mac και Windows κρατούν κάθε λίστα στον υπολογιστή σου. Χωρίς λογαριασμό, χωρίς server, και δουλεύουν χωρίς σύνδεση.',
     'p2.t': 'Μόνο δικά σου στο cloud', 'p2.p': 'Στον browser, οι λίστες και τα κάδρα σου μένουν στον λογαριασμό σου, σε ιδιωτικό χώρο που ανοίγει μόνο ο δικός σου λογαριασμός.',
-    'p3.t': 'Ένας λογαριασμός', 'p3.p': 'Ο ίδιος λογαριασμός με RoarMe, Roardino και RoarMail. Ό,τι έφτιαξες στον browser πριν συνδεθείς μπαίνει μέσα του.',
-    'p4.t': 'Διαγραφή σημαίνει Κάδος', 'p4.p': 'Στον υπολογιστή μια λίστα που σβήνεις πάει στον Κάδο του συστήματος. Αν θες, ζήτα επιβεβαίωση πριν σβήσεις ένα πλάνο, από τις Ρυθμίσεις.',
+    'p3.t': 'Ένας λογαριασμός', 'p3.p': 'Ο ίδιος λογαριασμός με RoarMe, Roardino και RoarMail, και οι ρυθμίσεις σου έρχονται μαζί. Ό,τι έφτιαξες στον browser πριν συνδεθείς μπαίνει μέσα του.',
+    'p4.t': 'Η διαγραφή, ξεκάθαρα', 'p4.p': 'Στον υπολογιστή μια λίστα που σβήνεις πάει στον Κάδο του συστήματος. Στον browser το RoarList ρωτά πρώτα και μετά σβήνει οριστικά τη λίστα και τα κάδρα της. Αν θες, ζήτα επιβεβαίωση και πριν σβήσεις ένα πλάνο, από τις Ρυθμίσεις.',
     'dl.idx': '05 · Λήψη', 'dl.title': 'Πάρε το <b>RoarList</b>.', 'dl.sub': 'Δωρεάν, και σε beta: ένα πείραμα του Mad Lions Lab που χρησιμοποιούμε στα δικά μας γυρίσματα.',
     'dl.mac': 'Για Mac με chip της Apple (M1 και νεότερα).', 'dl.get': 'Λήψη', 'dl.intel': 'Παλιότερο Mac με Intel;', 'dl.intelbtn': 'Αυτό', 'dl.win': 'Windows 10 και 11.', 'dl.webt': 'Browser', 'dl.web': 'Σε υπολογιστή ή κινητό, με τον λογαριασμό σου στο RoarMe. Τίποτα για εγκατάσταση.',
     'dl.demot': 'Ένα παράδειγμα', 'dl.demo': 'Ένα νυχτερινό γύρισμα με ζωγραφισμένα κάδρα. Χωρίς λογαριασμό, τίποτα δεν αποθηκεύεται.', 'cta.demo2': 'Δες το παράδειγμα',
@@ -783,5 +871,6 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   }
 })()
 </script>
+<script src="../fresh.js" defer></script>
 </body>
 </html>
