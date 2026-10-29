@@ -3444,6 +3444,32 @@ html[data-theme='light'] .tw-card { border-color: transparent; }
 .profile-read .wide { grid-column: 1 / -1; }
 .profile-read dt { font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
 .profile-read dd { margin: 0; font-size: 15px; white-space: pre-wrap; }
+/* a profile's track record (Alex, 29 Oct): the score as a ring, its four parts as thin bars, the projects as tinted chips */
+.track-record { margin-top: 16px; padding: 22px 24px; border-radius: 22px; display: flex; flex-direction: column; gap: 20px; }
+.track-score { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 22px; align-items: center; }
+.track-ring { width: 108px; height: 108px; border-radius: 50%; display: grid; place-content: center; text-align: center; background: radial-gradient(closest-side, var(--panel) 80%, transparent 81%), conic-gradient(var(--accent) var(--pct), color-mix(in srgb, var(--text) 10%, transparent) 0); box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 22%, transparent); }
+.track-ring b { font-size: 32px; line-height: 1; font-weight: 800; }
+.track-ring small { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.track-level { display: flex; flex-direction: column; gap: 3px; min-width: 130px; }
+.track-level strong { font-size: 22px; }
+.track-label { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.track-parts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.track-parts li { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); min-width: 0; }
+.track-part-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; font-weight: 600; }
+.track-part-head b { font-size: 16px; }
+.track-part-head small { color: var(--muted); font-weight: 500; }
+.track-bar { height: 5px; border-radius: 999px; background: color-mix(in srgb, var(--text) 10%, transparent); overflow: hidden; }
+.track-bar i { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+.track-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.track-badge { display: inline-flex; align-items: center; gap: 9px; max-width: 280px; padding: 8px 12px 8px 11px; border-radius: 12px; color: var(--text); text-decoration: none; background: color-mix(in srgb, var(--pc, var(--accent)) 18%, transparent); border: 1px solid color-mix(in srgb, var(--pc, var(--accent)) 30%, transparent); transition: transform .15s, box-shadow .15s, border-color .15s; }
+.track-badge:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--pc, var(--accent)) 60%, transparent); box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
+.track-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--pc, var(--accent)); }
+.track-badge-text { display: flex; flex-direction: column; min-width: 0; }
+.track-badge-text b, .track-badge-text small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track-badge-text b { font-size: 14px; }
+.track-badge-text small { font-size: 12px; color: var(--muted); }
+.track-tick { flex: none; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; background: color-mix(in srgb, #3fb950 80%, transparent); }
+.track-empty { margin: 0; }
 .team-name { display: inline-flex; align-items: center; gap: 8px; color: var(--text); }
 .team-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; background: var(--raised); }
 .team-avatar.initials { display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--muted); }
@@ -3834,6 +3860,12 @@ html:-webkit-full-screen body .modal.modal-wide.est-modal { width: 100vw; height
   .profile-photo { width: 116px; height: 116px; }
   .profile-initials { font-size: 34px; }
   .profile-read { grid-template-columns: 1fr; gap: 12px; }
+  .track-record { padding: 18px 16px; }
+  .track-score { grid-template-columns: auto minmax(0, 1fr); gap: 16px; }
+  .track-ring { width: 92px; height: 92px; }
+  .track-ring b { font-size: 26px; }
+  .track-parts { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .track-badge { max-width: 100%; }
 }
 
 /* Small editable list of rows in Settings (emergency numbers, production contacts) */

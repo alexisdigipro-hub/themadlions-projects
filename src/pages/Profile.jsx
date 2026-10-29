@@ -5,6 +5,7 @@ import { remote } from '../lib/supabase.js'
 import { departmentsOf, rememberViewAsFrom, useCurrentUser, useStore } from '../lib/store.jsx'
 import { compress } from '../lib/photos.js'
 import { fmtDate } from '../lib/dates.js'
+import { trackRecord } from '../lib/trackRecord.js'
 
 const BLANK = { photo: '', thumb: '', position: '', dept: '', phone: '', bio: '', birthday: '', showPhone: 'everyone' }
 
@@ -144,6 +145,52 @@ export default function Profile({ mine = false, embedded = false }) {
           )}
         </section>
       </div>
+
+      {!embedded && <TrackRecord state={state} person={person} />}
     </div>
+  )
+}
+
+/* Under the details (Alex, 29 Oct): the projects this person took part in as badges, and a score
+   out of 100 with a level, worked out from the projects (lib/trackRecord.js). */
+function TrackRecord({ state, person }) {
+  const r = trackRecord(state, person)
+  const first = (person.name || '').split(' ')[0] || 'They'
+  return (
+    <section className="panel track-record">
+      <div className="track-score" style={{ '--pct': `${r.score}%` }}>
+        <div className="track-ring"><b>{r.score}</b><small>of 100</small></div>
+        <div className="track-level">
+          <span className="track-label">Track record</span>
+          <strong>{r.level}</strong>
+          <span className="muted small">{r.list.length ? `${r.list.length} project${r.list.length === 1 ? '' : 's'} with the team` : 'No projects yet'}</span>
+        </div>
+        <ul className="track-parts">
+          {r.parts.map((x) => (
+            <li key={x.key} title={x.note}>
+              <span className="track-part-head"><span>{x.label}</span><b>{x.pts}<small>/{x.max}</small></b></span>
+              <span className="track-bar"><i style={{ width: `${(x.pts / x.max) * 100}%` }} /></span>
+              <span className="muted small">{x.note}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {r.list.length ? (
+        <div className="track-badges">
+          {r.list.map((x) => (
+            <Link key={x.id} to={`/p/${x.id}`} className={`track-badge${x.delivered ? ' done' : ''}`} style={{ '--pc': x.color }} title={[x.artist, x.title].filter(Boolean).join(' - ')}>
+              <span className="track-dot" />
+              <span className="track-badge-text">
+                <b>{x.title}</b>
+                <small>{[x.role, x.category, (x.when || '').slice(0, 4)].filter(Boolean).join(' · ')}</small>
+              </span>
+              {x.delivered && <span className="track-tick" aria-label="Delivered">✓</span>}
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <p className="muted small track-empty">{first} shows up here once they are in a project's crew or cast, have a task in one, or a budget line pays them.</p>
+      )}
+    </section>
   )
 }
