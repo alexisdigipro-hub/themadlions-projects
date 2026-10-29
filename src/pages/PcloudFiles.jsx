@@ -20,6 +20,7 @@ const extOf = (n) => (String(n).match(/\.([a-z0-9]{1,6})$/i)?.[1] || '').toUpper
 const kindOf = (it) => (it.folder ? 'folder' : it.category === 2 || /^video\//.test(it.type) ? 'video' : it.category === 1 || /^image\//.test(it.type) ? 'image' : it.category === 3 || /^audio\//.test(it.type) ? 'audio' : 'file')
 const up = (p) => (p === '/' ? '/' : p.replace(/\/[^/]+$/, '') || '/')
 const FOLDER = <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2h8.5A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z" /></svg>
+const DOTS = <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="18.5" cy="12" r="1.8" /></svg>
 const MOVE = <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2h8.5A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z" /><path d="M10 13.5h6M13.5 11l2.5 2.5-2.5 2.5" /></svg>
 
 function ActDelete({ label, onConfirm }) {
@@ -43,6 +44,8 @@ export default function PcloudFiles({ slot }) {
   // Tiles (pictures big, for the final videos) or a list, remembered on this device
   const [view, setView] = useState(() => { try { return localStorage.getItem('tml_pcloud_view') === 'list' ? 'list' : 'tiles' } catch { return 'tiles' } })
   const pickView = (v) => { setView(v); try { localStorage.setItem('tml_pcloud_view', v) } catch { /* private window */ } }
+  const [menu, setMenu] = useState(0) // the folder whose ⋯ menu is open
+  const [sure, setSure] = useState(null) // a folder about to go to the trash, asked first
   const [deep, setDeep] = useState(null) // the search under this folder: { q, path, items | null, folders, files, error }
   const pick = useRef(null)
   const scrollRef = useFitScroll(data === null)
@@ -74,6 +77,7 @@ export default function PcloudFiles({ slot }) {
     }, 450)
     return () => { clearTimeout(t); stop.abort() }
   }, [q, path])
+  useEffect(() => { if (!menu) return; const off = () => setMenu(0); window.addEventListener('click', off); return () => window.removeEventListener('click', off) }, [menu])
   const items = data?.items || []
   const searching = !!q.trim()
   const source = searching && deep?.path === path && deep.items ? deep.items : items
@@ -202,7 +206,19 @@ export default function PcloudFiles({ slot }) {
       onClick={() => openItem(it)} onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) openItem(it) }}>
       <span className="pcf-ftile-ico">{FOLDER}</span>
       <span className="pcf-tile-txt"><strong title={it.name}>{it.name}</strong>{searching && up(it.path) !== path && <small>{up(it.path).split('/').pop() || 'pCloud'}</small>}</span>
-      {acts(it)}
+      {edit && (
+        <span className="pcf-more" onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="pcf-more-btn" aria-label={`More for ${it.name}`} title="More" aria-expanded={menu === it.folderid} onClick={() => setMenu(menu === it.folderid ? 0 : it.folderid)}>{DOTS}</button>
+          {menu === it.folderid && (
+            <span className="pcf-menu" role="menu">
+              <button type="button" role="menuitem" onClick={() => { setMenu(0); share(it) }}>Copy link</button>
+              <button type="button" role="menuitem" onClick={() => { setMenu(0); setNaming({ item: it, name: it.name }) }}>Rename</button>
+              <button type="button" role="menuitem" onClick={() => { setMenu(0); moveTo(it, up(it.path)) }}>Move</button>
+              {admin && <button type="button" role="menuitem" className="danger" onClick={() => { setMenu(0); setSure(it) }}>Move to trash</button>}
+            </span>
+          )}
+        </span>
+      )}
     </article>
   )
   const nFolders = shown.filter((i) => i.folder).length
@@ -293,6 +309,11 @@ export default function PcloudFiles({ slot }) {
             ) : <p className="muted small">No folders in here.</p>}
           </div>
         )}
+      </Modal>
+
+      <Modal open={!!sure} title={sure ? `Move ${sure.name} to the trash?` : ''} onClose={() => setSure(null)}
+        footer={<><Button variant="ghost" onClick={() => setSure(null)}>Cancel</Button><Button variant="danger" onClick={() => { const it = sure; setSure(null); trash(it) }}>Move to trash</Button></>}>
+        <p className="small muted">The folder and everything in it go to pCloud's trash, where they can be put back.</p>
       </Modal>
 
       <Modal open={!!dupes} wide title="Duplicates" onClose={() => !busy && setDupes(null)}
