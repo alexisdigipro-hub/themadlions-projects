@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Act, Button, Empty, Field, Input, Modal, useToast } from '../components/ui.jsx'
-import { DbBar, DbSearch, ListRow, useFitScroll } from '../components/DbTools.jsx'
+import { DbBar, DbSearch, useFitScroll } from '../components/DbTools.jsx'
 import { can, useCurrentUser } from '../lib/store.jsx'
 import { matchText } from '../lib/library.js'
 import { fmtDate } from '../lib/dates.js'
@@ -14,6 +14,9 @@ import { pcloudFiles } from '../lib/pcloud.js'
    Move, Trash. Nothing is deleted for good: pCloud keeps its trash. The permission "pCloud" decides who sees it. */
 const PLACES = [['/Projects - FinalCuts', 'Final cuts'], ['/Projects - RoughCuts', 'Rough cuts'], ['/TML HUB', 'TML HUB'], ['/', 'All']]
 const START = '/Projects - FinalCuts'
+const VIEWS = [['large', 'Large', 'M3 4h8v7H3zM13 4h8v7h-8zM3 13h8v7H3zM13 13h8v7h-8z'], ['tiles', 'Tiles', 'M3 4h5v5H3zM10 4h5v5h-5zM17 4h4v5h-4zM3 11h5v5H3zM10 11h5v5h-5zM17 11h4v5h-4zM3 18h5v2H3zM10 18h5v2h-5z'], ['small', 'Small', 'M3 4h3v3H3zM8 4h3v3H8zM13 4h3v3h-3zM18 4h3v3h-3zM3 10h3v3H3zM8 10h3v3H8zM13 10h3v3h-3zM18 10h3v3h-3zM3 16h3v3H3zM8 16h3v3H8zM13 16h3v3h-3zM18 16h3v3h-3z'], ['list', 'List', 'M3 5h3M9 5h12M3 12h3M9 12h12M3 19h3M9 19h12']]
+const SORTS = [['new', 'Newest first'], ['old', 'Oldest first'], ['az', 'Name A to Z'], ['za', 'Name Z to A'], ['big', 'Biggest first'], ['small', 'Smallest first'], ['kind', 'By type']]
+const KINDS = [['all', 'Everything'], ['video', 'Videos'], ['image', 'Photos'], ['audio', 'Sound'], ['file', 'Other files']]
 const size = (n) => (n >= 1e9 ? `${(n / 1e9).toFixed(2)} GB` : n >= 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round((n || 0) / 1e3))} KB`)
 const day = (d) => { const t = d ? new Date(d) : null; return t && !isNaN(t) ? fmtDate(t.toISOString().slice(0, 10), { day: 'numeric', month: 'short', year: 'numeric' }) : '' }
 const extOf = (n) => (String(n).match(/\.([a-z0-9]{1,6})$/i)?.[1] || '').toUpperCase()
@@ -42,8 +45,16 @@ export default function PcloudFiles({ slot }) {
   const [moving, setMoving] = useState(null) // { item, at, folders }
   const [dupes, setDupes] = useState(null) // null | { loading } | result with keep/sel
   // Tiles (pictures big, for the final videos) or a list, remembered on this device
-  const [view, setView] = useState(() => { try { return localStorage.getItem('tml_pcloud_view') === 'list' ? 'list' : 'tiles' } catch { return 'tiles' } })
-  const pickView = (v) => { setView(v); try { localStorage.setItem('tml_pcloud_view', v) } catch { /* private window */ } }
+  // how the folder is shown, sorted and filtered (Alex, 29 Oct: "more view modes, and what I can change while I look"),
+  // each remembered on this device
+  const remembered = (k, ok, d) => { try { const v = localStorage.getItem(k); return ok.includes(v) ? v : d } catch { return d } }
+  const [view, setView] = useState(() => remembered('tml_pcloud_view', VIEWS.map((v) => v[0]), 'tiles'))
+  const [sort, setSort] = useState(() => remembered('tml_pcloud_sort', SORTS.map((v) => v[0]), 'new'))
+  const [only, setOnly] = useState(() => remembered('tml_pcloud_only', KINDS.map((v) => v[0]), 'all'))
+  const keep = (k, v) => { try { localStorage.setItem(k, v) } catch { /* private window */ } }
+  const pickView = (v) => { setView(v); keep('tml_pcloud_view', v) }
+  const pickSort = (v) => { setSort(v); keep('tml_pcloud_sort', v) }
+  const pickOnly = (v) => { setOnly(v); keep('tml_pcloud_only', v) }
   const [menu, setMenu] = useState(0) // the folder whose ⋯ menu is open
   const [sure, setSure] = useState(null) // a folder about to go to the trash, asked first
   const [deep, setDeep] = useState(null) // the search under this folder: { q, path, items | null, folders, files, error }
@@ -81,8 +92,20 @@ export default function PcloudFiles({ slot }) {
   const items = data?.items || []
   const searching = !!q.trim()
   const source = searching && deep?.path === path && deep.items ? deep.items : items
-  const shown = useMemo(() => source.filter((i) => !searching || matchText(q, i.name)).slice(0, 400)
-    .sort((a, b) => (a.folder !== b.folder ? (a.folder ? -1 : 1) : a.folder ? a.name.localeCompare(b.name) : ((Date.parse(b.modified) || 0) - (Date.parse(a.modified) || 0)) || a.name.localeCompare(b.name))), [source, q])
+  const shown = useMemo(() => {
+    const t = (i) => Date.parse(i.modified) || 0
+    const by = {
+      new: (a, b) => t(b) - t(a), old: (a, b) => t(a) - t(b),
+      az: (a, b) => a.name.localeCompare(b.name, 'el', { numeric: true }), za: (a, b) => b.name.localeCompare(a.name, 'el', { numeric: true }),
+      big: (a, b) => (b.size || 0) - (a.size || 0), small: (a, b) => (a.size || 0) - (b.size || 0),
+      kind: (a, b) => extOf(a.name).localeCompare(extOf(b.name)) || a.name.localeCompare(b.name, 'el', { numeric: true }),
+    }[sort] || (() => 0)
+    return source
+      .filter((i) => (!searching || matchText(q, i.name)) && (only === 'all' || (i.folder ? !searching : kindOf(i) === only)))
+      // folders first, by name unless a name order is chosen; then the files in the chosen order
+      .sort((a, b) => (a.folder !== b.folder ? (a.folder ? -1 : 1) : a.folder && !['az', 'za'].includes(sort) ? a.name.localeCompare(b.name, 'el', { numeric: true }) : by(a, b) || a.name.localeCompare(b.name)))
+      .slice(0, 600)
+  }, [source, q, sort, only]) // eslint-disable-line react-hooks/exhaustive-deps
   const edit = !!data?.edit
   const admin = !!data?.admin
 
@@ -173,13 +196,6 @@ export default function PcloudFiles({ slot }) {
     if (it.thumbUrl) return <span className={`pcf-thumb ${k}`}><img src={it.thumbUrl} alt="" loading="lazy" />{k === 'video' && <i className="pcf-play" />}</span>
     return <span className={`pcf-thumb ${k}`}>{it.folder ? FOLDER : <b>{extOf(it.name) || '?'}</b>}</span>
   }
-  const row = (it) => (
-    <ListRow key={it.folder ? `d${it.folderid}` : `f${it.fileid}`} className="pcf-row" onClick={() => openItem(it)}
-      thumb={thumbOf(it)}
-      title={it.name}
-      sub={[it.folder ? 'Folder' : [extOf(it.name), size(it.size), day(it.modified)].filter(Boolean).join(' · '), searching && up(it.path) !== path ? `in ${up(it.path)}` : ''].filter(Boolean).join(' · ')}
-      aside={acts(it)} />
-  )
 
   const acts = (it) => (
     <span className="pcf-acts" onClick={(e) => e.stopPropagation()}>
@@ -221,6 +237,19 @@ export default function PcloudFiles({ slot }) {
       )}
     </article>
   )
+  const line = (it) => (
+    <div key={it.folder ? `d${it.folderid}` : `f${it.fileid}`} className="pcf-tr" role="row" tabIndex={0}
+      onClick={() => openItem(it)} onKeyDown={(e) => { if (e.key === 'Enter' && e.target === e.currentTarget) openItem(it) }}>
+      <span className="pcf-col name">
+        <span className="pcf-mini">{thumbOf(it)}</span>
+        <span className="pcf-nm"><b title={it.name}>{it.name}</b>{searching && up(it.path) !== path && <small>{up(it.path)}</small>}</span>
+      </span>
+      <span className="pcf-col kind">{it.folder ? 'Folder' : extOf(it.name) || '—'}</span>
+      <span className="pcf-col size">{it.folder ? '' : size(it.size)}</span>
+      <span className="pcf-col date">{day(it.modified)}</span>
+      <span className="pcf-col acts">{it.folder ? (edit && <Act icon="edit" label="Rename" className="act-sm" onClick={(e) => { e.stopPropagation(); setNaming({ item: it, name: it.name }) }} />) : acts(it)}</span>
+    </div>
+  )
   const nFolders = shown.filter((i) => i.folder).length
   const nFiles = shown.length - nFolders
   const bytes = shown.reduce((n, i) => n + (i.size || 0), 0)
@@ -231,9 +260,12 @@ export default function PcloudFiles({ slot }) {
         <div className="toolbar-info"><strong>pCloud</strong> <span className="muted">{data?.ready ? shown.length : ''}</span></div>
         <div className="toolbar-actions">
           <DbSearch value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" />
-          <span className="segmented small ids-view pcf-view">
-            <button className={view === 'tiles' ? 'on' : ''} onClick={() => pickView('tiles')}>Tiles</button>
-            <button className={view === 'list' ? 'on' : ''} onClick={() => pickView('list')}>List</button>
+          <span className="segmented small ids-view pcf-view" role="group" aria-label="View">
+            {VIEWS.map(([v, l, d]) => (
+              <button key={v} className={view === v ? 'on' : ''} onClick={() => pickView(v)} title={l} aria-label={l} aria-pressed={view === v}>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill={v === 'list' ? 'none' : 'currentColor'} stroke={v === 'list' ? 'currentColor' : 'none'} strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d={d} /></svg>
+              </button>
+            ))}
           </span>
           {edit && <Act icon="plus" label="New folder" className="act-sm" onClick={() => setNaming({ name: '' })} />}
           {admin && <Act icon="copy" label="Duplicates" className="act-sm" onClick={scan} />}
@@ -249,6 +281,10 @@ export default function PcloudFiles({ slot }) {
         <>
           <div className="pcf-places">
             {PLACES.map(([p, l]) => <button key={p} type="button" className={`lchip${path === p || (p !== '/' && path.startsWith(p + '/')) ? ' acc on' : ''}`} onClick={() => setPath(p)}><i />{l}</button>)}
+            {data?.ready && <span className="pcf-tools">
+              <label className="pcf-pick-sel" title="Show"><select value={only} onChange={(e) => pickOnly(e.target.value)} aria-label="Show">{KINDS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+              <label className="pcf-pick-sel" title="Order"><select value={sort} onChange={(e) => pickSort(e.target.value)} aria-label="Order">{SORTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+            </span>}
             {data?.ready && <span className="pcf-count">{[nFolders && (nFolders === 1 ? '1 folder' : `${nFolders} folders`), nFiles && (nFiles === 1 ? '1 file' : `${nFiles} files`), bytes && size(bytes)].filter(Boolean).join(' · ')}</span>}
           </div>
           <nav className="pcf-crumbs" aria-label="Folder">
@@ -263,11 +299,24 @@ export default function PcloudFiles({ slot }) {
           <div className="ab-scroll" ref={scrollRef}
             onDragOver={(e) => edit && e.preventDefault()} onDrop={(e) => { if (!edit) return; e.preventDefault(); upload(e.dataTransfer.files) }}>
             {data === null ? <p className="muted ids-wait">Loading…</p> : shown.length ? (
-              view === 'tiles' ? <>
-                {/* folders small, above; the files with their pictures big */}
+              view !== 'list' ? <>
+                {/* folders small, above; the files with their pictures, large, as tiles or small */}
                 {shown.some((i) => i.folder) && <div className="pcf-folders">{shown.filter((i) => i.folder).map(folderTile)}</div>}
-                {shown.some((i) => !i.folder) && <div className="pcf-grid">{shown.filter((i) => !i.folder).map(tile)}</div>}
-              </> : <div className="lrow-list">{shown.map(row)}</div>
+                {shown.some((i) => !i.folder) && <div className={`pcf-grid ${view}`}>{shown.filter((i) => !i.folder).map(tile)}</div>}
+              </> : (
+                <div className="pcf-table" role="table">
+                  {/* the list as a file manager's: the column titles sort it, again turns the order round */}
+                  <div className="pcf-th" role="row">
+                    {[['name', 'Name', 'az', 'za'], ['kind', 'Type', 'kind', 'kind'], ['size', 'Size', 'big', 'small'], ['date', 'Modified', 'new', 'old']].map(([k, l, a1, a2]) => (
+                      <button key={k} type="button" className={`pcf-col ${k}${sort === a1 || sort === a2 ? ' on' : ''}`} onClick={() => pickSort(sort === a1 ? a2 : a1)}>
+                        {l}{(sort === a1 || sort === a2) && k !== 'kind' && <i aria-hidden="true">{['az', 'small', 'old'].includes(sort) ? '↑' : '↓'}</i>}
+                      </button>
+                    ))}
+                    <span className="pcf-col acts" />
+                  </div>
+                  {shown.map(line)}
+                </div>
+              )
             ) : <Empty title={q ? 'Nothing found' : 'An empty folder'}>{q ? `Nothing here matches "${q}".` : edit ? 'Upload files into it, or drop them here.' : 'Nothing in this folder yet.'}</Empty>}
           </div>
         </>
