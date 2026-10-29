@@ -3444,31 +3444,41 @@ html[data-theme='light'] .tw-card { border-color: transparent; }
 .profile-read .wide { grid-column: 1 / -1; }
 .profile-read dt { font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
 .profile-read dd { margin: 0; font-size: 15px; white-space: pre-wrap; }
-/* a profile's track record (Alex, 29 Oct): the score as a ring, its four parts as thin bars, the projects as tinted chips */
-.track-record { margin-top: 16px; padding: 22px 24px; border-radius: 22px; display: flex; flex-direction: column; gap: 20px; }
-.track-score { display: grid; grid-template-columns: auto auto minmax(0, 1fr); gap: 22px; align-items: center; }
-.track-ring { width: 108px; height: 108px; border-radius: 50%; display: grid; place-content: center; text-align: center; background: radial-gradient(closest-side, var(--panel) 80%, transparent 81%), conic-gradient(var(--accent) var(--pct), color-mix(in srgb, var(--text) 10%, transparent) 0); box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 22%, transparent); }
-.track-ring b { font-size: 32px; line-height: 1; font-weight: 800; }
-.track-ring small { font-size: 11px; color: var(--muted); margin-top: 3px; }
-.track-level { display: flex; flex-direction: column; gap: 3px; min-width: 130px; }
-.track-level strong { font-size: 22px; }
-.track-label { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.track-parts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.track-parts li { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--panel) 88%, transparent); border: 1px solid var(--line-soft); min-width: 0; }
-.track-part-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; font-weight: 600; }
-.track-part-head b { font-size: 16px; }
-.track-part-head small { color: var(--muted); font-weight: 500; }
-.track-bar { height: 5px; border-radius: 999px; background: color-mix(in srgb, var(--text) 10%, transparent); overflow: hidden; }
-.track-bar i { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
-.track-badges { display: flex; flex-wrap: wrap; gap: 8px; }
-.track-badge { display: inline-flex; align-items: center; gap: 9px; max-width: 280px; padding: 8px 12px 8px 11px; border-radius: 12px; color: var(--text); text-decoration: none; background: color-mix(in srgb, var(--pc, var(--accent)) 18%, transparent); border: 1px solid color-mix(in srgb, var(--pc, var(--accent)) 30%, transparent); transition: transform .15s, box-shadow .15s, border-color .15s; }
-.track-badge:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--pc, var(--accent)) 60%, transparent); box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
-.track-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--pc, var(--accent)); }
-.track-badge-text { display: flex; flex-direction: column; min-width: 0; }
-.track-badge-text b, .track-badge-text small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.track-badge-text b { font-size: 14px; }
-.track-badge-text small { font-size: 12px; color: var(--muted); }
-.track-tick { flex: none; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; background: color-mix(in srgb, #3fb950 80%, transparent); }
+/* a profile's track record (Alex, 29 Oct, then "more social media friendly"): an Instagram-like head
+   (gradient score ring, big counts), stickers, and the projects as story circles with their covers */
+.track-record { margin-top: 16px; padding: 22px 24px; border-radius: 22px; display: flex; flex-direction: column; gap: 18px; background: radial-gradient(90% 120% at 0% 0%, color-mix(in srgb, #f58529 10%, transparent), transparent 55%), radial-gradient(80% 120% at 100% 100%, color-mix(in srgb, #8a3ab9 12%, transparent), transparent 60%), color-mix(in srgb, var(--panel) 88%, transparent); }
+.track-head { display: grid; grid-template-columns: auto minmax(180px, 260px) minmax(0, 1fr); gap: 24px; align-items: center; }
+.track-ring { position: relative; width: 104px; height: 104px; border-radius: 50%; padding: 5px; background: conic-gradient(#feda75 0%, #fa7e1e calc(var(--pct) * .35), #d62976 calc(var(--pct) * .7), #962fbf var(--pct), color-mix(in srgb, var(--text) 10%, transparent) 0); box-shadow: 0 8px 30px color-mix(in srgb, #d62976 25%, transparent); }
+.track-ring-in { width: 100%; height: 100%; border-radius: 50%; background: var(--panel); display: grid; place-content: center; text-align: center; }
+.track-ring-in b { font-size: 30px; line-height: 1; font-weight: 800; }
+.track-ring-in small { font-size: 11px; font-weight: 800; letter-spacing: .12em; color: var(--muted); margin-top: 2px; }
+.track-ring-emoji { position: absolute; right: -4px; bottom: -2px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 18px; background: var(--raised); border: 3px solid var(--panel); }
+.track-who { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.track-level-pill { align-self: flex-start; padding: 6px 14px; border-radius: 999px; font-size: 17px; font-weight: 800; color: #fff; background: linear-gradient(90deg, #fa7e1e, #d62976 60%, #962fbf); box-shadow: 0 6px 18px color-mix(in srgb, #d62976 30%, transparent); }
+.track-xp { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--text) 10%, transparent); overflow: hidden; }
+.track-xp i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #feda75, #fa7e1e, #d62976); }
+.track-stats { list-style: none; margin: 0; padding: 0; display: flex; justify-content: space-around; gap: 12px; }
+.track-stats li { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.track-stats b { font-size: 28px; font-weight: 800; line-height: 1.1; }
+.track-stats span { font-size: 13px; color: var(--muted); }
+.track-stickers { display: flex; flex-wrap: wrap; gap: 8px; }
+.track-sticker { display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px 7px 10px; border-radius: 999px; font-size: 13.5px; font-weight: 700; background: var(--raised); border: 1px solid var(--line-soft); transition: transform .2s; }
+.track-sticker > span { font-size: 17px; }
+.track-sticker:nth-child(odd) { transform: rotate(-1.5deg); }
+.track-sticker:nth-child(even) { transform: rotate(1.5deg); }
+.track-sticker:hover { transform: rotate(0) scale(1.06); }
+.track-stories { display: flex; gap: 18px; overflow-x: auto; padding: 4px 2px 6px; scrollbar-width: none; }
+.track-stories::-webkit-scrollbar { display: none; }
+.track-story { flex: none; width: 92px; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; color: var(--text); text-decoration: none; }
+.track-story-ring { position: relative; width: 84px; height: 84px; border-radius: 50%; padding: 3px; background: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf); transition: transform .2s; }
+.track-story.done .track-story-ring { background: color-mix(in srgb, var(--text) 22%, transparent); }
+.track-story:hover .track-story-ring { transform: scale(1.06); }
+.track-story-pic { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; display: grid; place-items: center; border: 3px solid var(--panel); background: color-mix(in srgb, var(--pc, var(--accent)) 40%, var(--panel)); font-weight: 800; font-size: 20px; }
+.track-story-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.track-story-tag { position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); padding: 1px 7px; border-radius: 6px; font-size: 10px; font-weight: 800; color: #fff; background: #2ea043; border: 2px solid var(--panel); }
+.track-story-tag.live { background: linear-gradient(90deg, #d62976, #962fbf); letter-spacing: .06em; }
+.track-story b { margin-top: 6px; font-size: 13px; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.track-story small { font-size: 11.5px; color: var(--muted); width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .track-empty { margin: 0; }
 .team-name { display: inline-flex; align-items: center; gap: 8px; color: var(--text); }
 .team-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; background: var(--raised); }
@@ -3861,11 +3871,15 @@ html:-webkit-full-screen body .modal.modal-wide.est-modal { width: 100vw; height
   .profile-initials { font-size: 34px; }
   .profile-read { grid-template-columns: 1fr; gap: 12px; }
   .track-record { padding: 18px 16px; }
-  .track-score { grid-template-columns: auto minmax(0, 1fr); gap: 16px; }
-  .track-ring { width: 92px; height: 92px; }
-  .track-ring b { font-size: 26px; }
-  .track-parts { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .track-badge { max-width: 100%; }
+  .track-head { grid-template-columns: auto minmax(0, 1fr); gap: 16px; }
+  .track-ring { width: 88px; height: 88px; }
+  .track-ring-in b { font-size: 25px; }
+  .track-stats { grid-column: 1 / -1; padding-top: 4px; }
+  .track-stats b { font-size: 22px; }
+  .track-stats span { font-size: 12px; }
+  .track-stories { gap: 12px; margin: 0 -16px; padding: 4px 16px 6px; }
+  .track-story { width: 78px; }
+  .track-story-ring { width: 72px; height: 72px; }
 }
 
 /* Small editable list of rows in Settings (emergency numbers, production contacts) */

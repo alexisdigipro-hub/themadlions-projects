@@ -151,45 +151,56 @@ export default function Profile({ mine = false, embedded = false }) {
   )
 }
 
-/* Under the details (Alex, 29 Oct): the projects this person took part in as badges, and a score
-   out of 100 with a level, worked out from the projects (lib/trackRecord.js). */
+/* Under the details (Alex, 29 Oct): the projects this person took part in and a score out of 100
+   with a level, worked out from the projects (lib/trackRecord.js). Then "more social media friendly,
+   not so serious": a profile head like Instagram's (the score ring, big counts), stickers for what
+   they earned, XP to the next level, and the projects as story circles with their covers. */
 function TrackRecord({ state, person }) {
   const r = trackRecord(state, person)
   const first = (person.name || '').split(' ')[0] || 'They'
+  const why = r.parts.map((x) => `${x.label} ${x.pts}/${x.max}: ${x.note}`).join('\n')
   return (
     <section className="panel track-record">
-      <div className="track-score" style={{ '--pct': `${r.score}%` }}>
-        <div className="track-ring"><b>{r.score}</b><small>of 100</small></div>
-        <div className="track-level">
-          <span className="track-label">Track record</span>
-          <strong>{r.level}</strong>
-          <span className="muted small">{r.list.length ? `${r.list.length} project${r.list.length === 1 ? '' : 's'} with the team` : 'No projects yet'}</span>
+      <div className="track-head">
+        <div className="track-ring" style={{ '--pct': `${r.score}%` }} title={why}>
+          <span className="track-ring-in"><b>{r.score}</b><small>XP</small></span>
+          <span className="track-ring-emoji" aria-hidden="true">{r.emoji}</span>
         </div>
-        <ul className="track-parts">
-          {r.parts.map((x) => (
-            <li key={x.key} title={x.note}>
-              <span className="track-part-head"><span>{x.label}</span><b>{x.pts}<small>/{x.max}</small></b></span>
-              <span className="track-bar"><i style={{ width: `${(x.pts / x.max) * 100}%` }} /></span>
-              <span className="muted small">{x.note}</span>
-            </li>
-          ))}
+        <div className="track-who">
+          <span className="track-level-pill">{r.emoji} {r.level}</span>
+          {r.next ? (
+            <>
+              <span className="track-xp"><i style={{ width: `${r.next.pct}%` }} /></span>
+              <span className="muted small"><b>{r.next.need} XP</b> to {r.next.name} {r.next.emoji}</span>
+            </>
+          ) : <span className="muted small">Top of the pride. Nothing above this 👑</span>}
+        </div>
+        <ul className="track-stats">
+          {r.stats.map((x) => <li key={x.label}><b>{x.value}</b><span>{x.label}</span></li>)}
         </ul>
       </div>
+
+      {r.badges.length > 0 && (
+        <div className="track-stickers">
+          {r.badges.map((b) => <span key={b.name} className="track-sticker" title={b.note}><span aria-hidden="true">{b.emoji}</span>{b.name}</span>)}
+        </div>
+      )}
+
       {r.list.length ? (
-        <div className="track-badges">
+        <div className="track-stories">
           {r.list.map((x) => (
-            <Link key={x.id} to={`/p/${x.id}`} className={`track-badge${x.delivered ? ' done' : ''}`} style={{ '--pc': x.color }} title={[x.artist, x.title].filter(Boolean).join(' - ')}>
-              <span className="track-dot" />
-              <span className="track-badge-text">
-                <b>{x.title}</b>
-                <small>{[x.role, x.category, (x.when || '').slice(0, 4)].filter(Boolean).join(' · ')}</small>
+            <Link key={x.id} to={`/p/${x.id}`} className={`track-story${x.delivered ? ' done' : ''}`} style={{ '--pc': x.color }} title={[[x.artist, x.title].filter(Boolean).join(' - '), x.role, x.category, (x.when || '').slice(0, 4)].filter(Boolean).join(' · ')}>
+              <span className="track-story-ring">
+                <span className="track-story-pic">{x.cover ? <img src={x.cover} alt="" loading="lazy" /> : <span>{initialsOf(x.title)}</span>}</span>
+                {x.delivered ? <span className="track-story-tag">✓</span> : <span className="track-story-tag live">LIVE</span>}
               </span>
-              {x.delivered && <span className="track-tick" aria-label="Delivered">✓</span>}
+              <b>{x.title}</b>
+              <small>{x.role || x.category}</small>
             </Link>
           ))}
         </div>
       ) : (
-        <p className="muted small track-empty">{first} shows up here once they are in a project's crew or cast, have a task in one, or a budget line pays them.</p>
+        <p className="muted small track-empty">{first}'s projects show up here once they are in a crew or cast, have a task, or a budget line pays them. 🎬</p>
       )}
     </section>
   )

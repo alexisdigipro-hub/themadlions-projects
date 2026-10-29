@@ -9,10 +9,10 @@ const norm = (x) => (x || '').trim().toLowerCase()
 const DAY = 86400000
 
 export const LEVELS = [
-  { min: 75, name: 'Pride leader' },
-  { min: 50, name: 'Lion' },
-  { min: 25, name: 'Young lion' },
-  { min: 0, name: 'Cub' },
+  { min: 75, name: 'Pride leader', emoji: '👑' },
+  { min: 50, name: 'Lion', emoji: '🦁' },
+  { min: 25, name: 'Young lion', emoji: '🐾' },
+  { min: 0, name: 'Cub', emoji: '🐣' },
 ]
 
 const whenOf = (p) => p.endDate || p.startDate || (p.shootingDays || []).map((d) => d.date).filter(Boolean).sort().pop() || (p.updatedAt || p.createdAt || '').slice(0, 10)
@@ -46,6 +46,7 @@ export function trackRecord(state, person) {
       title: shortTitle || p.title || 'Untitled',
       artist,
       color: p.color,
+      cover: p.coverThumb || '',
       category: p.category || '',
       role: [...new Set(roles)][0] || '',
       delivered: p.status === 'Delivered',
@@ -68,11 +69,33 @@ export function trackRecord(state, person) {
   const ago = last ? (Date.now() - new Date(last).getTime()) / DAY : Infinity
   const active = ago <= 90 ? 15 : ago <= 365 ? 8 : 0
   const score = projects + taskPts + range + active
-  const level = LEVELS.find((l) => score >= l.min)
+  const li = LEVELS.findIndex((l) => score >= l.min)
+  const level = LEVELS[li]
+  const next = LEVELS[li - 1] || null
+  // the stickers on the profile (Alex, 29 Oct: "more social media friendly"), each earned from the same numbers
+  const cats = list.map((x) => x.category)
+  const badges = [
+    list.length >= 1 && { emoji: '🎬', name: 'First take', note: 'On a first project' },
+    list.length >= 5 && { emoji: '🎞️', name: `${list.length} projects`, note: 'Five or more projects' },
+    delivered >= 3 && { emoji: '🏆', name: `${delivered}× wrapped`, note: 'Three or more delivered' },
+    kinds >= 3 && { emoji: '🎨', name: 'All-rounder', note: 'Three or more kinds of project' },
+    cats.filter((c) => c === 'Music Video').length >= 2 && { emoji: '🎵', name: 'Music video pro', note: 'Two or more music videos' },
+    tasks >= 3 && tasksDone / tasks >= 0.8 && { emoji: '✅', name: 'Gets it done', note: '80% of their tasks done' },
+    ago <= 90 && { emoji: '🔥', name: 'On fire', note: 'On a project in the last 90 days' },
+  ].filter(Boolean)
   return {
     list,
     score,
     level: level.name,
+    emoji: level.emoji,
+    next: next && { name: next.name, emoji: next.emoji, need: next.min - score, pct: Math.round(((score - level.min) / (next.min - level.min)) * 100) },
+    stats: [
+      { label: 'Projects', value: list.length },
+      { label: 'Wrapped', value: delivered },
+      { label: 'Genres', value: kinds },
+      { label: 'Tasks done', value: tasksDone },
+    ],
+    badges,
     parts: [
       { key: 'projects', label: 'Projects', pts: projects, max: 40, note: `${list.length} in all, ${delivered} delivered` },
       { key: 'tasks', label: 'Tasks', pts: taskPts, max: 25, note: tasks ? `${tasksDone} of ${tasks} done` : 'None assigned yet' },
