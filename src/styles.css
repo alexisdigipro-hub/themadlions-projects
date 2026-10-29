@@ -9151,3 +9151,14 @@ html[data-theme] body .panel.music-panel { overflow: visible; position: relative
 .music .toolbar { position: relative; z-index: 5; }
 .music .ov-acts .compact { height: 38px; }
 .music .toolbar:has(.ov-menu) { z-index: 12; }
+
+/* Office > RoarList (Alex, 29 Oct: RoarList moved from the side menu into Office, after Notes): the frame fills the page
+   under Office's tabs row, on a computer to the foot of the window, on a phone between the tabs and the bottom bar */
+@media (min-width: 821px) {
+  html[data-theme] body .content:has(> .office-hub .roarlist-page.in-office) { box-sizing: border-box; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; padding-bottom: 24px; }
+  html[data-theme] body .content > .office-hub:has(.roarlist-page.in-office) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  html[data-theme] body .office-hub .roarme-page.roarlist-page.in-office { flex: 1 1 auto; height: auto; min-height: 0; }
+}
+@media (max-width: 820px) {
+  html[data-theme] body .office-hub .roarme-page.roarlist-page.in-office { position: relative; top: auto; bottom: auto; left: auto; right: auto; z-index: auto; border-radius: 16px; height: calc(100dvh - var(--topbar-h, 44px) - var(--tabbar-top, 84px) - 84px); min-height: 420px; }
+}

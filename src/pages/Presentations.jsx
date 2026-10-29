@@ -28,7 +28,7 @@ export default function Presentations() {
   return (
     <div className="decks-page">
       <div className="decks-top">
-        <Link to="/office" className="decks-back" aria-label="Back to Office" title="Office">‹</Link>
+        <Link to="/office" className="decks-back" aria-label="Back to Documents" title="Documents">‹</Link>
         <h1>Presentations</h1>
         <span className="decks-count">{decks.length}</span>
         <label className="decks-search"><input type="search" placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} /></label>

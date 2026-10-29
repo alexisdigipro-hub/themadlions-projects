@@ -107,7 +107,7 @@ function Library({ embedded, slot }) {
   const pickFile = (f) => {
     if (!f) return
     const type = extType(f.name)
-    if (!type) return toast('Office opens .docx (Word) and .xlsx (Excel) files.', 'error')
+    if (!type) return toast('Documents opens .docx (Word) and .xlsx (Excel) files.', 'error')
     if (f.size > 40 * 1024 * 1024) return toast('That file is over 40 MB.', 'error')
     setDraft({ type, projectId: firstProject, name: baseName(f.name), file: f })
   }
@@ -123,7 +123,7 @@ function Library({ embedded, slot }) {
      round project filter and a round search */
   return (
     <div className={`office${embedded ? ' office-frame' : ''}`}>
-      {!embedded && <PageHead title="Office" sub={mobile ? undefined : 'Documents and spreadsheets for each project, opened and saved right here as Word and Excel files.'} />}
+      {!embedded && <PageHead title="Documents" sub={mobile ? undefined : 'Documents and spreadsheets for each project, opened and saved right here as Word and Excel files.'} />}
       {mayEdit && editable.length > 0 && (
         <div className="office-new">
           {TYPES.map((t) => (
@@ -312,12 +312,12 @@ function Editor({ pid, docId }) {
   }
 
   if (!project || !rec) {
-    return <div className="office"><Empty title="This document is not here">It may have been deleted, or it belongs to a project you cannot see. <Link to="/office">Back to Office</Link></Empty></div>
+    return <div className="office"><Empty title="This document is not here">It may have been deleted, or it belongs to a project you cannot see. <Link to="/office">Back to Documents</Link></Empty></div>
   }
   return (
     <div className="office-editor">
       <div className="office-editor-head">
-        <Link className="btn btn-ghost btn-sm" to={`/office?p=${encodeURIComponent(pid)}`}>← Office</Link>
+        <Link className="btn btn-ghost btn-sm" to={`/office?p=${encodeURIComponent(pid)}`}>← Documents</Link>
         <DocIcon type={rec.type} size={32} />
         <span className="office-editor-title"><strong>{rec.name}</strong><small>{project.title || ''} · {status}</small></span>
         <Button size="sm" variant="ghost" onClick={downloadIt}>Download</Button>
