@@ -3294,8 +3294,8 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 .pcf-ftile-ico svg { width: 20px; height: 20px; }
 .pcf-ftile .pcf-tile-txt { flex: 1; padding: 0; }
 .pcf-ftile .pcf-tile-txt strong { -webkit-line-clamp: 1; }
-.pcf-ftile .pcf-acts { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); padding: 3px; border-radius: 999px; background: color-mix(in srgb, var(--panel) 92%, transparent); opacity: 0; transition: opacity .2s; }
-.pcf-ftile:hover .pcf-acts, .pcf-ftile:focus-within .pcf-acts { opacity: 1; }
+.pcf-ftile .pcf-acts { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); padding: 3px; border-radius: 999px; background: color-mix(in srgb, var(--panel) 96%, transparent); opacity: 0; pointer-events: none; transition: opacity .2s; }
+.pcf-ftile:hover .pcf-acts, .pcf-ftile:focus-within .pcf-acts { opacity: 1; pointer-events: auto; }
 .pcf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; padding-bottom: 12px; }
 .pcf-tile { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 8px 8px 10px; border-radius: 20px; cursor: pointer; background: color-mix(in srgb, var(--panel) 70%, transparent); border: 1px solid color-mix(in srgb, var(--text) 9%, transparent); transition: transform .3s cubic-bezier(.16, 1, .3, 1), border-color .2s, background .2s; outline: none; }
 .pcf-tile:hover, .pcf-tile:focus-visible { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
@@ -3309,8 +3309,8 @@ html[data-theme='light'] .chat-list { border-color: transparent; }
 .pcf-tile-txt strong { font-size: 13.5px; font-weight: 650; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
 .pcf-tile-txt small { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* the round actions float over the picture, shown on hover; always there on a touch screen */
-.pcf-tile .pcf-acts { position: absolute; top: 14px; right: 14px; padding: 3px; border-radius: 999px; background: rgba(12, 14, 18, .55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); opacity: 0; transform: translateY(-3px); transition: opacity .2s, transform .25s; }
-.pcf-tile:hover .pcf-acts, .pcf-tile:focus-within .pcf-acts { opacity: 1; transform: none; }
+.pcf-tile .pcf-acts { position: absolute; top: 14px; right: 14px; padding: 3px; border-radius: 999px; background: rgba(12, 14, 18, .55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); opacity: 0; pointer-events: none; transform: translateY(-3px); transition: opacity .2s, transform .25s; }
+.pcf-tile:hover .pcf-acts, .pcf-tile:focus-within .pcf-acts { opacity: 1; pointer-events: auto; transform: none; }
 .pcf-tile .pcf-acts .act.act-sm { width: 30px; height: 30px; color: #fff; }
 @media (max-width: 820px) {
   .pcf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
