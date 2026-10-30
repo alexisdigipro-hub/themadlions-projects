@@ -37,6 +37,11 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (30 Oct 2026, Lab: RoarKit's new look, Roarverter is RoarMorph)
+- **RoarKit 0.6.0** (repo roartwin): a new look, "the instrument" (Alex: "more sober and technological, without many colours"): app/theme.css, graphite and hairlines, monochrome icons, figures in a monospace, the accent only as a signal. Released through the Actions tab (desktop.yml, Run workflow); a tag push from the cloud session hangs.
+- **Roarverter is RoarMorph** (Alex, 30 Oct): the app 0.4.0 (repo roarverter keeps its name, bundle id and settings folder; the Mac app carries Contents/MacOS/Roarverter for the 0.3.x updater, as RoarTwin -> RoarKit). Site: lab/roarmorph/ and legal/roarmorph/ (pages, pictures with the new wordmark, icons/roarmorph.png); lab/roarverter/ and legal/roarverter/ are redirects, roarverter.jpg / icons/roarverter.png stay for old links. The Lab's own id stays `roarverter` (#roarverter, the admin's Lab order). RoarGrab's "Send to RoarMorph" opens RoarMorph.app or the old Roarverter.app.
+- Alex has nothing to do: the apps update themselves.
+
 ## Where we stopped (29 Oct 2026, Office)
 - **Soft aurora / Soft aurora light themes** (29 Oct, Alex: "Neumorphism (Soft UI) with a bento grid and the Dynamic Island pattern, on Mesh Gradient / Aurora backdrops"): skins `soft` (dark) and `softlight` (light) in lib/skin.js. They are built on the Glass rules: every Glass dark `:is()` list also names soft, every Glass light list softlight. The last block of styles.css adds:
   - Soft UI relief through `--neu-up` / `--neu-up-sm` / `--neu-in`.

@@ -30,7 +30,7 @@
     ['roartransfer', 'RoarTransfer', 'https://roartransfer.com/about/', 'Big files, one link', 'Μεγάλα αρχεία, ένα link'],
     ['roarwriter', 'RoarWriter', 'lab/roarwriter/', 'Screenwriting', 'Γράψιμο σεναρίου'],
     ['roarkit', 'RoarKit', 'lab/roarkit/', 'Sixteen tools', 'Δεκαέξι εργαλεία'],
-    ['roarverter', 'Roarverter', 'lab/roarverter/', 'Convert and compress', 'Μετατροπή και συμπίεση'],
+    ['roarmorph', 'RoarMorph', 'lab/roarmorph/', 'Convert and compress', 'Μετατροπή και συμπίεση'],
   ]
   const here = (APPS.find(([k]) => location.pathname.includes('/' + k + '/') || (k === 'roartransfer' && location.hostname === 'roartransfer.com')) || [])[0]
   const bar = document.querySelector('header.bar, .bar')
