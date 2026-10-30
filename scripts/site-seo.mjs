@@ -243,7 +243,7 @@ ${full ? `\n## Ερωτήσεις (Greek)\n${faqEl}\n` : ''}
 - [RoarList](${BASE}lab/roarlist/): the shot list with a frame for every shot
 - [RoarWriter](${BASE}lab/roarwriter/): screenwriting from the page to the shoot: nine formats (film, TV, sitcom, stage play, musical, audio drama, AV two-column, comic) in English and Greek, revisions and versions, a breakdown, a beat board, a storyboard and shot list, a stripboard shooting schedule, TV series with their bible, writing together, an AI that reads the whole script (coverage, continuity, budget pass, pitch package, translation), PDF, Final Draft, Fade In and Fountain, on Mac, Windows, the web and the phone
 - [RoarKit](${BASE}lab/roarkit/): one app, sixteen tools for the computer and the shoot (RoarTwin until October 2026): a score for the computer and what needs care first; a space map, clean up of program caches and of finished projects' render and proxy media; duplicate files and the same video or sound in another file; card copies to several drives at once, read back byte for byte, with an ASC MHL; backup checks; media reports, clip check and contact sheets as PDF; clip renaming with Undo; a two-pane file manager with media info; ZIP, RAR, 7z and TAR archives; drive health and disk speed with the codecs a drive can take; computer stats with an internet speed test; a password vault with 2FA, sealed on the computer; only to the Trash; Mac and Windows
-- [Roarverter](${BASE}lab/roarverter/): converts and compresses pictures, videos and sound on your own computer: JPG, PNG, WebP, AVIF, HEIC, TIFF, GIF, PSD, EXR, camera RAW on a Mac; MP4 in H.264, H.265 or AV1, WebM, MOV, MKV, MPG; for the edit ProRes (Proxy to 4444), DNxHR (LB to 444), MXF, XDCAM, FFV1; MP3, WAV 24-bit, AIFF, ALAC, FLAC; a LUT, HDR to Rec.709, reframing to 9:16, 1:1, 4:5 or 2.39:1, anamorphic desqueeze, loudness to −14, −16 or −23 LUFS; a target file size or bitrate with two passes, trims, stills, GIFs and a GIF to video; nothing is uploaded; Mac and Windows
+- [RoarMorph](${BASE}lab/roarmorph/) (Roarverter until October 2026): converts and compresses pictures, videos and sound on your own computer: JPG, PNG, WebP, AVIF, HEIC, TIFF, GIF, PSD, EXR, camera RAW on a Mac; MP4 in H.264, H.265 or AV1, WebM, MOV, MKV, MPG; for the edit ProRes (Proxy to 4444), DNxHR (LB to 444), MXF, XDCAM, FFV1; MP3, WAV 24-bit, AIFF, ALAC, FLAC; a LUT, HDR to Rec.709, reframing to 9:16, 1:1, 4:5 or 2.39:1, anamorphic desqueeze, loudness to −14, −16 or −23 LUFS; a target file size or bitrate with two passes, trims, stills, GIFs and a GIF to video; nothing is uploaded; Mac and Windows
 - [RoarTransfer](https://roartransfer.com/about/): send large files free and secure at roartransfer.com, up to 5 GB with one short link, by email or link, with a password
 `
 }
@@ -258,7 +258,7 @@ const APPS = [
   { path: 'lab/roarlist/', name: 'RoarList', cat: 'MultimediaApplication', os: 'macOS, Windows, Web' },
   { path: 'lab/roarwriter/', name: 'RoarWriter', cat: 'DesignApplication', os: 'macOS, Windows, Web', shot: 'lab/roarwriter.jpg' },
   { path: 'lab/roarkit/', name: 'RoarKit', cat: 'UtilitiesApplication', os: 'macOS, Windows', shot: 'lab/roarkit.jpg' },
-  { path: 'lab/roarverter/', name: 'Roarverter', cat: 'MultimediaApplication', os: 'macOS, Windows', shot: 'lab/roarverter.jpg' },
+  { path: 'lab/roarmorph/', name: 'RoarMorph', cat: 'MultimediaApplication', os: 'macOS, Windows', shot: 'lab/roarmorph.jpg' },
 ]
 const attr = (html, re) => { const m = html.match(re); return m ? m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'") : '' }
 const putBlock = (html, body) => /<!--seo:app-->/.test(html) ? fill(html, 'app', body) : html.replace('</head>', `<!--seo:app-->${body}<!--/seo:app-->\n</head>`)
@@ -308,7 +308,7 @@ if (live) {
     <xhtml:link rel="alternate" hreflang="x-default" href="${BASE}"/>` : ''}</url>`
   writeFileSync(join(dir, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${[u('', '1.0', 'weekly', true), u('el/', '1.0', 'weekly', true), u('aibsent/', '0.8', 'monthly'), u('lab/', '0.6', 'monthly'), u('roarme/', '0.6', 'monthly'), u('roardino/', '0.6', 'monthly'), u('lab/roardino/', '0.6', 'monthly'), u('lab/roarmail/', '0.6', 'monthly'), u('lab/roarlist/', '0.6', 'monthly'), u('lab/roarwriter/', '0.6', 'monthly'), u('lab/roarkit/', '0.6', 'monthly'), u('lab/roarverter/', '0.6', 'monthly'), ...['', 'roarmail/', 'roarlist/', 'roarwriter/', 'roarkit/', 'roarverter/', 'roardino/', 'site/'].map((p) => u(`legal/${p}`, '0.3', 'yearly'))].join('\n')}
+${[u('', '1.0', 'weekly', true), u('el/', '1.0', 'weekly', true), u('aibsent/', '0.8', 'monthly'), u('lab/', '0.6', 'monthly'), u('roarme/', '0.6', 'monthly'), u('roardino/', '0.6', 'monthly'), u('lab/roardino/', '0.6', 'monthly'), u('lab/roarmail/', '0.6', 'monthly'), u('lab/roarlist/', '0.6', 'monthly'), u('lab/roarwriter/', '0.6', 'monthly'), u('lab/roarkit/', '0.6', 'monthly'), u('lab/roarmorph/', '0.6', 'monthly'), ...['', 'roarmail/', 'roarlist/', 'roarwriter/', 'roarkit/', 'roarmorph/', 'roardino/', 'site/'].map((p) => u(`legal/${p}`, '0.3', 'yearly'))].join('\n')}
 </urlset>
 `)
   console.log('wrote llms.txt, llms-full.txt, sitemap.xml')
