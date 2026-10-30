@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- RoarMorph's page on the company site (Alex, 25 Oct; Roarverter until 30 Oct), built like lab/roartwin/: the app's own screen, the three
+<!-- RoarMorph's page on the company site (Alex, 25 Oct; Roarverter until 30 Oct). Since 30 Oct a product page after Apple, Google Store, Samsung and Airmail:
+     a claim with a number, a photo of people at work with the app over it, the numbers, on set, the three
      things only RoarMorph does, what was made for a shoot's files, everything else, downloads (releases/latest of
      alexisdigipro-hub/roarverter), questions. EN and GR. -->
 <title>RoarMorph · Convert and compress pictures, videos and sound, for Mac and Windows · by The Mad Lions</title>
@@ -425,6 +426,96 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 .dl-icon { width: 64px; height: auto; border-radius: 22.5%; margin-bottom: 18px; box-shadow: 0 14px 34px rgba(0,0,0,.45), 0 10px 40px -10px rgba(212,0,0,.45); }
 .dl.mine.f-glass { border-color: rgba(255,90,80,.55) !important; background: linear-gradient(170deg, rgba(212,0,0,.14), rgba(255,255,255,.03)) !important; }
 @media (max-width: 720px) { .hero h1 .f-icon { width: 64px; } .f-card.nv-icon { flex-direction: column; align-items: flex-start; } }
+
+/* the product page (Alex, 30 Oct: "like Apple, Google Store, Samsung, Airmail, in our own terms"): a short claim with a
+   number, people at work in photos, the numbers, before and after, why a Roar app, What's new at the end.
+   The photos are stand-ins until Alex's own shoot: photo-night, photo-set, photo-van, photo-studio, still (same names). */
+.hero-head { max-width: 1100px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.hero h1.brand { margin: 22px 0 0; font-size: clamp(30px, 3.6vw, 52px); align-items: center; gap: 14px; justify-content: center; }
+.hero h1.brand .f-icon { width: clamp(52px, 5vw, 76px); }
+.hero h1.brand .beta { margin-bottom: 0; align-self: center; }
+.claim { margin: clamp(18px, 2.4vw, 30px) 0 0; font-family: Jost, var(--sans); font-weight: 200; font-size: clamp(54px, 9.6vw, 156px); line-height: .9; letter-spacing: -.02em; text-wrap: balance; }
+.claim b { font-weight: 800; background: linear-gradient(180deg, #fff 30%, #ff8a7f); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-head .lead { margin-top: clamp(20px, 2.4vw, 30px); max-width: 760px; }
+.hero-head .cta { justify-content: center; margin-top: clamp(24px, 3vw, 34px); }
+.hero-head .cta-note { text-align: center; margin: 14px 0 0; }
+.hero-head .hero-meta { justify-content: center; }
+.scene { position: relative; max-width: 1480px; margin: clamp(44px, 6vw, 80px) auto 0; padding-bottom: clamp(120px, 16vw, 260px); }
+.scene-photo { margin: 0; position: relative; border-radius: 30px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 16 / 8; }
+.scene-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; }
+.scene-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(18,20,23,.75)); pointer-events: none; }
+.scene-photo figcaption { position: absolute; left: clamp(18px, 2.4vw, 32px); bottom: clamp(16px, 2.2vw, 28px); z-index: 1; max-width: 42%; font-family: var(--mono); font-size: 12px; letter-spacing: .06em; color: rgba(238,240,243,.82); line-height: 1.5; }
+.scene .frame { position: absolute; right: clamp(-10px, 1vw, 24px); bottom: 0; width: 58%; margin: 0; max-width: none; }
+.ticker { margin-top: clamp(56px, 7vw, 96px); }
+/* the numbers */
+.nums-sec { padding-top: clamp(64px, 8vw, 120px); }
+.nums { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.num { display: flex; flex-direction: column; gap: 12px; padding: clamp(22px, 2.4vw, 32px); min-height: 200px; }
+.num b { font-family: Jost, var(--sans); font-weight: 300; font-size: clamp(48px, 5.6vw, 84px); line-height: .9; letter-spacing: -.02em; }
+.num b small { font-size: .42em; font-weight: 400; margin-left: 4px; color: var(--muted); letter-spacing: 0; }
+.num:first-child b { color: var(--red-hi); text-shadow: 0 0 40px rgba(255,59,47,.35); }
+.num span { margin-top: auto; font-size: 15px; line-height: 1.5; color: var(--muted); }
+/* people at work */
+.people { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.person { position: relative; margin: 0; border-radius: 26px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 4 / 5; isolation: isolate; }
+.person img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); }
+.person:hover img { transform: scale(1.04); }
+.person::after { content: ''; position: absolute; inset: 0; z-index: 0; background: linear-gradient(180deg, transparent 42%, rgba(12,13,16,.88)); pointer-events: none; }
+.person figcaption { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: clamp(18px, 2vw, 26px); display: grid; gap: 6px; }
+.person .who { justify-self: start; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: rgba(22,24,28,.6); border: 1px solid var(--line-2); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: #ffb3ab; }
+.person b { font-family: Jost, var(--sans); font-size: clamp(22px, 2vw, 30px); font-weight: 700; line-height: 1.05; }
+.person figcaption > span:last-child { font-size: 14.5px; line-height: 1.5; color: rgba(238,240,243,.78); }
+/* before and after */
+.ba { position: relative; border-radius: 28px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 16 / 9; user-select: none; -webkit-user-select: none; touch-action: pan-y; box-shadow: 0 40px 120px rgba(0,0,0,.5); }
+.ba img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ba img.after { clip-path: inset(0 0 0 var(--x)); }
+.ba-line { position: absolute; top: 0; bottom: 0; left: var(--x); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 18px rgba(0,0,0,.5); pointer-events: none; }
+.ba-line i { position: absolute; top: 50%; left: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; display: grid; place-items: center; background: rgba(22,24,28,.55); border: 1px solid rgba(255,255,255,.5); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); color: #fff; }
+.ba-line i svg { width: 22px; height: 22px; }
+.ba-tag { position: absolute; top: clamp(12px, 2vw, 22px); z-index: 1; display: grid; gap: 2px; padding: 8px 14px; border-radius: 16px; background: rgba(22,24,28,.62); border: 1px solid var(--line-2); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); pointer-events: none; }
+.ba-tag b { font-size: 13.5px; } .ba-tag small { font-family: var(--mono); font-size: 10.5px; color: var(--muted); letter-spacing: .04em; }
+.ba-tag.l { left: clamp(12px, 2vw, 22px); } .ba-tag.r { right: clamp(12px, 2vw, 22px); text-align: right; border-color: rgba(255,90,80,.5); }
+.ba-tag.r b { color: #ff8f86; }
+.ba input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }
+.ba input:focus-visible + * , .ba:focus-within .ba-line i { outline: 2px solid var(--red-hi); outline-offset: 3px; }
+.ba-bars { margin-top: 18px; display: grid; gap: 10px; max-width: 760px; }
+.ba-bars div { display: grid; grid-template-columns: 110px minmax(0, 1fr) 80px; gap: 14px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.ba-bars i { display: block; height: 10px; border-radius: 99px; background: rgba(255,255,255,.18); width: 0; transition: width 1.6s var(--ease); }
+.ba-bars.in i { width: var(--w); }
+.ba-bars .me i { background: linear-gradient(90deg, #ff6b5e, #d40000); box-shadow: 0 0 16px rgba(255,59,47,.5); min-width: 10px; }
+.ba-bars b { color: var(--text); font-weight: 500; text-align: right; }
+.ba-bars .me b { color: #ff8f86; }
+/* why a Roar app */
+.why-end { justify-self: end; display: grid; gap: 18px; justify-items: end; }
+.why-end .sub { justify-self: end; }
+.why-end .legal { display: flex; gap: 8px; flex-wrap: wrap; margin: 0; }
+.why { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.wy { display: flex; flex-direction: column; gap: 12px; padding: clamp(22px, 2.4vw, 30px); min-height: 250px; }
+.wy h3 { margin: 6px 0 0; font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+.wy p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .person img, .ba-bars i { transition: none; } }
+@media (max-width: 1100px) {
+  .nums, .why { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scene .frame { width: 70%; }
+}
+@media (max-width: 760px) {
+  .hero h1.brand { font-size: 30px; flex-wrap: nowrap; } .hero h1.brand .f-icon { width: 48px; }
+  .claim { font-size: clamp(50px, 15vw, 80px); }
+  .scene { padding-bottom: 0; }
+  .scene-photo { aspect-ratio: 4 / 5; border-radius: 24px; }
+  .scene-photo img { object-position: 58% 50%; }
+  .scene-photo figcaption { max-width: none; right: 18px; top: 16px; bottom: auto; }
+  .scene-photo::after { background: linear-gradient(180deg, rgba(18,20,23,.7), transparent 30%, transparent 70%, rgba(18,20,23,.6)); }
+  .scene .frame { position: relative; right: auto; width: auto; margin: -64px 12px 0; }
+  .people { grid-template-columns: minmax(0, 1fr); }
+  .person { aspect-ratio: 4 / 4.6; }
+  .ba { aspect-ratio: 4 / 3.4; border-radius: 22px; }
+  .ba-tag small { display: none; }
+  .ba-bars div { grid-template-columns: 82px minmax(0, 1fr) 66px; gap: 10px; }
+  .why-end, .why-end .sub { justify-self: start; justify-items: start; }
+  .nums, .why { grid-template-columns: minmax(0, 1fr); }
+  .num { min-height: 0; } .wy { min-height: 0; }
+}
 </style>
 <!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"RoarMorph","url":"https://themadlions.com/lab/roarmorph/","description":"RoarMorph, the converter by The Mad Lions Lab. Pictures, videos and sound in every format, made smaller on your own computer: JPG, WebP, AVIF, HEIC, RAW, PSD, MP4, H.265, AV1, ProRes, DNxHR, MXF, GIF, WAV, MP3. A target size in MB with two passes, HDR to Rec.709, a LUT, the frame for social, GIF to video, nothing uploaded. Free for Mac and Windows.","applicationCategory":"MultimediaApplication","operatingSystem":"macOS, Windows","image":"https://themadlions.com/lab/roarmorph.jpg","screenshot":"https://themadlions.com/lab/roarmorph.jpg","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"isAccessibleForFree":true,"inLanguage":["en","el"],"author":{"@id":"https://themadlions.com/#org"},"publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"}}</script><!--/seo:app-->
 </head>
@@ -436,13 +527,13 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <span class="rm" aria-label="RoarMorph"><span class="a">ROAR</span><span class="b">MORPH</span></span>
   </a>
   <nav aria-label="Sections">
-    <a href="#new" data-t="nav.new">New</a>
+    <a href="#onset" data-t="nav.onset">On set</a>
     <a href="#only" data-t="nav.only">Only here</a>
-    <a href="#set" data-t="nav.set">For the shoot</a>
+    <a href="#compare" data-t="nav.compare">Compare</a>
     <a href="#all" data-t="nav.all">Everything</a>
-    <a href="#safe" data-t="nav.safe">Private</a>
     <a href="#download" data-t="nav.download">Download</a>
     <a href="#faq" data-t="nav.faq">Questions</a>
+    <a href="#new" data-t="nav.new">New</a>
   </nav>
   <div class="end">
     <div class="lang" role="group" aria-label="Language">
@@ -455,35 +546,218 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 
 <main>
 <div class="hero" id="top">
-  <div class="hero-top">
-    <div>
-      <p class="kicker rv"><i></i><span data-t="hero.kicker">Convert and compress · The Mad Lions Lab · Experiment 08</span></p>
-      <h1 class="rv" style="--d:.06s">
-        <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
-        <span class="rm"><span class="a">ROAR</span><span class="b">MORPH</span></span><em class="beta">beta</em>
-      </h1>
-      <div class="hero-meta rv" style="--d:.1s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.5 · PSD layers, your own bitrate, Settings</span></a></div>
-    </div>
-  </div>
-  <div class="hero-sub">
-    <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>Every format, <b>a smaller file</b>. Pictures, videos and sound, converted and compressed <b>on your own computer</b>: drop them in, choose how small, and they are ready next to the originals.</p>
+  <div class="hero-head">
+    <p class="kicker rv"><i></i><span data-t="hero.kicker">Convert and compress · The Mad Lions Lab · Experiment 08</span></p>
+    <h1 class="brand rv" style="--d:.04s">
+      <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
+      <span class="rm"><span class="a">ROAR</span><span class="b">MORPH</span></span><em class="beta">beta</em>
+    </h1>
+    <p class="claim rv" style="--d:.1s" data-t="hero.claim" data-html>2.4 GB in.<br><b>25 MB out.</b></p>
+    <p class="lead rv" style="--d:.16s" data-t="hero.lead2" data-html>Pictures, videos and sound in every format, made as small as you say, <b>on your own computer</b>. The look stays. The original stays.</p>
     <div class="cta rv" style="--d:.22s">
       <a class="pill main" id="dl-main" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span>Download</span></a>
-      <a class="pill" href="#only"><span data-t="cta.how">What it does</span></a>
+      <a class="pill" href="#compare"><span data-t="cta.see">See the difference</span></a>
     </div>
-    <p class="cta-note rv" style="--d:.3s"><span data-t="cta.note">Free · Mac and Windows · nothing is uploaded, the originals stay as they are</span></p>
+    <p class="cta-note rv" style="--d:.28s"><span data-t="cta.note">Free · Mac and Windows · nothing is uploaded, the originals stay as they are</span></p>
+    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.5 · PSD layers, your own bitrate, Settings</span></a></div>
   </div>
-  <div class="frame rv" style="--d:.2s" aria-hidden="true">
-    <img class="shotimg" id="win" src="results.jpg" alt="" width="1600" height="1000">
-    <div class="tag t1"><i>01</i><span data-t="tag.size">A size in MB, not a guess</span></div>
-    <div class="tag t2"><i>02</i><span data-t="tag.fmt">Every format, one window</span></div>
-    <div class="tag t3"><i>03</i><span data-t="tag.local">Never leaves your computer</span></div>
+  <div class="scene rv" style="--d:.18s">
+    <figure class="scene-photo"><img src="photo-night.jpg" alt="" width="1344" height="752" fetchpriority="high"><figcaption data-t="sc.cap">01:40, the night before the delivery. Eighteen files, one drop.</figcaption></figure>
+    <div class="frame" aria-hidden="true">
+      <img class="shotimg" id="win" src="results.jpg" alt="" width="1600" height="1000">
+      <div class="tag t1"><i>01</i><span data-t="tag.size">A size in MB, not a guess</span></div>
+      <div class="tag t3"><i>02</i><span data-t="tag.local">Never leaves your computer</span></div>
+    </div>
   </div>
 </div>
 
+<section id="numbers" class="nums-sec">
+  <div class="nums">
+    <div class="num f-glass rv"><b>−96<small>%</small></b><span data-t="nm1">A ProRes master as H.265, the look kept.</span></div>
+    <div class="num f-glass rv" style="--d:.06s"><b>0.96<small>MB</small></b><span data-t="nm2">Asked for 1 MB. Two passes land just under it.</span></div>
+    <div class="num f-glass rv" style="--d:.12s"><b>1<small data-t="nm3u">drop</small></b><span data-t="nm3">Pictures, videos and sound together, whole folders too.</span></div>
+    <div class="num f-glass rv" style="--d:.18s"><b>€0</b><span data-t="nm4">No subscription, no ads, no watermark.</span></div>
+  </div>
+</section>
+
+
+
+<div class="ticker" aria-hidden="true"><div class="ticker-in">
+<span data-t="tk.1">JPG · PNG · WebP · AVIF</span><span data-t="tk.2">RAW · PSD · HEIC</span><span data-t="tk.3">MP4 · H.265 · AV1</span><span data-t="tk.4">ProRes · DNxHR · MXF</span><span data-t="tk.5">GIF from a clip</span><span data-t="tk.6">A target size</span><span data-t="tk.7">MP3 · WAV · FLAC</span><span data-t="tk.8">Nothing uploaded</span><span data-t="tk.10">GIF to video</span><span data-t="tk.11">HDR to Rec.709 · LUT</span><span data-t="tk.9">Mac · Windows</span><span data-t="tk.1">JPG · PNG · WebP · AVIF</span><span data-t="tk.2">RAW · PSD · HEIC</span><span data-t="tk.3">MP4 · H.265 · AV1</span><span data-t="tk.4">ProRes · DNxHR · MXF</span><span data-t="tk.5">GIF from a clip</span><span data-t="tk.6">A target size</span><span data-t="tk.7">MP3 · WAV · FLAC</span><span data-t="tk.8">Nothing uploaded</span><span data-t="tk.10">GIF to video</span><span data-t="tk.11">HDR to Rec.709 · LUT</span><span data-t="tk.9">Mac · Windows</span>
+</div></div>
+
+<section id="onset">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="on.idx">01 · On set</p><h2 class="rv" data-t="on.title" data-html>Made by people <b>who make films</b>.</h2></div>
+    <p class="sub rv" data-t="on.sub">We built RoarMorph for our own shoots at The Mad Lions. This is where it gets used.</p>
+  </div>
+  <div class="people">
+    <figure class="person rv"><img src="photo-set.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on1.k">On set · The DIT</span><b data-t="on1.t">Dailies out before wrap.</b><span data-t="on1.p">The day's clips and BTS, small enough to send from the cart while the light is still going.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.08s"><img src="photo-van.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on2.k">On the road · The producer</span><b data-t="on2.t">25 MB for the client.</b><span data-t="on2.p">A cut that fits the email, the festival form or WhatsApp, made from the van, without a laptop full of uploads.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.16s"><img src="photo-studio.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on3.k">In the studio · The edit</span><b data-t="on3.t">Phone footage, timeline ready.</b><span data-t="on3.p">The iPhone's HDR into ProRes that looks right, the poster's PSD into its layers, the interview as WAV for the mix.</span></figcaption></figure>
+  </div>
+</section>
+
+<section id="only">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="only.idx">02 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only RoarMorph</b> does.</h2></div>
+    <p class="sub rv" data-t="only.sub">Why a website that shrinks one file at a time is not enough for a shoot.</p>
+  </div>
+  <div class="three">
+    <article class="big rv">
+      <span class="no">01</span>
+      <div><h3 data-t="f1.t" data-html>A size, <b>not a guess</b>.</h3><p data-t="f1.p">Type 25 MB, for an email, a festival form or Discord, and RoarMorph works out the bitrate from the video's length and leaves room for the sound; or give a bitrate in Mb/s. No trying three times to get under the limit.</p>
+        <div class="chips"><span data-t="f1.c1">Target in MB</span><span data-t="f1.c2">Or Mb/s</span><span>H.264 · H.265 · AV1</span><span data-t="f1.c3">Two passes</span></div></div>
+      <div class="viz f-glass"><div class="mc"><div class="big"><small data-t="f1.v1">TARGET SIZE</small><div class="aim"><b>25</b><span class="unit">MB</span></div></div><div class="bar3"><i></i></div><div class="r"><span class="th"></span><b>Teaser_60s.mov</b><small>2.4 GB → 24.6 MB</small></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">02</span>
+      <div><h3 data-t="f2.t" data-html>Every format, <b>one window</b>.</h3><p data-t="f2.p">Photos from the phone or the camera's RAW, the poster's PSD, the master, the BTS, the interview's sound: drop them all at once. Pictures, video for sharing or for the edit, sound only, a GIF from a clip or a clip from a GIF, or a single still at any moment.</p>
+        <div class="chips"><span data-t="f2.c1">Pictures</span><span data-t="f2.c2">Video</span><span data-t="f2.c3">Sound</span><span data-t="f2.c4">GIF and stills</span></div></div>
+      <div class="viz f-glass"><div class="mc"><div class="fmt"><b>HEIC</b><span class="to">→</span><b>JPG</b><span class="sv">−41%</span></div><div class="fmt"><b>PNG</b><span class="to">→</span><b>WebP</b><span class="sv">−94%</span></div><div class="fmt"><b>ProRes</b><span class="to">→</span><b>H.265</b><span class="sv">−96%</span></div><div class="fmt"><b>WAV</b><span class="to">→</span><b>MP3</b><span class="sv">−89%</span></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">03</span>
+      <div><h3 data-t="f3.t" data-html><b>Nothing</b> leaves the computer.</h3><p data-t="f3.p">No upload, no account, no queue on a server: unreleased footage stays with you. The original is never touched; the new file is saved next to it, or in a folder you choose.</p>
+        <div class="chips"><span data-t="f3.c1">No upload</span><span data-t="f3.c2">The original stays</span><span data-t="f3.c3">Works offline</span></div></div>
+      <div class="viz f-glass"><div class="mc"><div class="r"><i></i><b>A001_C003.mov</b><small data-t="f3.v1">original</small></div><div class="r on"><i style="background:var(--ok)"></i><b>A001_C003_converted.mp4</b><small>742 MB</small></div><div class="pills"><span data-t="f3.v2">Same folder</span><span class="m" data-t="f3.v3">Convert</span></div></div></div>
+    </article>
+  </div>
+</section>
+
+<section id="compare">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="cp.idx">03 · Same picture</p><h2 class="rv" data-t="cp.title" data-html>Same picture. <b>A twenty-fifth of the size.</b></h2></div>
+    <p class="sub rv" data-t="cp.sub">Drag the line. On the left the 4K ProRes original, on the right what RoarMorph made of it with Share › MP4 H.265 › Balanced.</p>
+  </div>
+  <div class="ba rv" id="ba" style="--x:50%">
+    <img src="still.jpg" alt="" width="1344" height="752" loading="lazy">
+    <img class="after" src="still.jpg" alt="" width="1344" height="752" loading="lazy">
+    <span class="ba-line" aria-hidden="true"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6-6 6 6 6M15 6l6 6-6 6"/></svg></i></span>
+    <span class="ba-tag l"><b data-t="cp.l">Original</b><small>ProRes 422 HQ · 4K · 18.4 GB</small></span>
+    <span class="ba-tag r"><b>RoarMorph</b><small>H.265 · 4K · 742 MB · −96%</small></span>
+    <input type="range" min="0" max="100" value="50" aria-label="Compare">
+  </div>
+  <div class="ba-bars rv">
+    <div><span data-t="cp.l">Original</span><i style="--w:100%"></i><b>18.4 GB</b></div>
+    <div class="me"><span>RoarMorph</span><i style="--w:4%"></i><b>742 MB</b></div>
+  </div>
+</section>
+
+<section id="set">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="set.idx">04 · For the shoot</p><h2 class="rv" data-t="set.title" data-html>Made for <b>a shoot's files</b>.</h2></div>
+    <p class="sub rv" data-t="set.sub">The card, the stills, the edit, the deliveries: all at once.</p>
+  </div>
+  <div class="board">
+    <article class="tile t-tasks f-glass rv">
+      <span class="k" data-t="s1.k">Where from</span>
+      <h3 data-t="s1.t" data-html>Drop <b>whole folders</b>.</h3>
+      <p data-t="s1.p">One file, a few, or a folder with everything inside: RoarMorph finds the pictures, videos and sound in it. Pictures go three at a time, videos one by one, with the progress of each.</p>
+    </article>
+    <article class="tile t-ord f-glass rv" style="--d:.08s">
+      <span class="k" data-t="s2.k">Reframe</span>
+      <h3 data-t="s2.t" data-html>9:16, square, 4:5 <b>or 2.39:1</b>.</h3>
+      <p data-t="s2.p">Turn a 16:9 shot into a Reel, a post, a story or a scope frame: cropped, or whole with its own blurred copy behind. Or a size of your own, with bars where the shape differs. Anamorphic footage is desqueezed on the way, 1.33× to 2×.</p>
+    </article>
+    <article class="tile t-upd f-glass rv">
+      <span class="k" data-t="s3.k">Three presets</span>
+      <h3 data-t="s3.t" data-html>Small, balanced, <b>or quality</b>.</h3>
+      <p data-t="s3.p">One tap sets everything; or set the quality, the size, the frame rate, the codec and the speed yourself. RoarMorph remembers what you chose.</p>
+    </article>
+    <article class="tile t-icon f-glass rv" style="--d:.08s">
+      <div class="txt">
+        <span class="k" data-t="s4.k">For the edit</span>
+        <h3 data-t="s4.t" data-html>ProRes <b>when it has to be</b>.</h3>
+        <p data-t="s4.p">The phone's HEVC or a web download into ProRes (Proxy to 4444) or DNxHR (LB to 444) for the timeline, MXF for Avid, XDCAM for broadcast, FFV1 for a lossless archive, a still for the poster, the interview as 24-bit WAV for the mix.</p>
+      </div>
+      <div class="icons"><span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="RoarMorph icon" width="140" height="140" loading="lazy"></span></div>
+    </article>
+  </div>
+</section>
+
+<section id="all">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="all.idx">05 · Everything</p><h2 class="rv" data-t="all.title" data-html>And the <b>rest</b>.</h2></div>
+    <p class="sub rv" data-t="all.sub">RoarMorph, briefly.</p>
+  </div>
+  <div class="index">
+    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">Pictures in</b><p data-t="ix1.p">JPG, PNG, WebP, AVIF, HEIC, TIFF, GIF, BMP, SVG, PSD, EXR, DPX and more; on a Mac also camera RAW, JPEG XL and PDF.</p></div>
+    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">Pictures out</b><p data-t="ix2.p">JPG, PNG, WebP, AVIF, TIFF, GIF, BMP, ICO for an icon, and HEIC on a Mac.</p></div>
+    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Video out</b><p data-t="ix3.p">MP4 in H.264, H.265 or AV1, WebM, MOV, MKV, AVI, MPG; for the edit ProRes, DNxHR, MXF, XDCAM and lossless FFV1.</p></div>
+    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">A start and an end</b><p data-t="ix4.p">Keep only a part of the clip: from 0:12 to 0:45, say.</p></div>
+    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">A still</b><p data-t="ix5.p">One frame as JPG or PNG, at the moment you say.</p></div>
+    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">The sound only</b><p data-t="ix6.p">MP3, M4A, WAV 16 or 24-bit, AIFF, ALAC, FLAC or OGG out of any video.</p></div>
+    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Faster on a Mac</b><p data-t="ix7.p">H.264 and H.265 with the Mac's own video engine, several times faster; if it says no, the software one makes the same file.</p></div>
+    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">LUT and HDR</b><p data-t="ix8.p">A LUT (.cube, .3dl, .dat, .csp) on every clip, and HDR from the iPhone (HLG) or HDR10 brought to Rec.709, so it does not look grey.</p></div>
+    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">Loudness</b><p data-t="ix9.p">−14 LUFS for the web, −16 for a podcast, −23 for TV; mono or stereo; 44.1 or 48 kHz.</p></div>
+    <div class="ix rv"><span class="no">10</span><b data-t="ix11.t">English and Greek</b><p data-t="ix11.p">The app speaks both; choose at the top.</p></div>
+    <div class="ix rv"><span class="no">11</span><b data-t="ix13.t">GIF both ways</b><p data-t="ix13.p">A clip into a GIF or an animated WebP with its own palette, and a GIF into MP4, MOV, ProRes or WebM.</p></div>
+    <div class="ix rv"><span class="no">12</span><b data-t="ix14.t">A size of your own</b><p data-t="ix14.p">Width × height, with bars where the shape differs, and a keyframe every N frames.</p></div>
+    <div class="ix rv"><span class="no">13</span><b data-t="p4.t">Your metadata, your call</b><p data-t="p4.p">Camera data and location are left out by default; one switch keeps them.</p></div>
+    <div class="ix rv"><span class="no">14</span><b data-t="p3.t">Stop any time</b><p data-t="p3.p">Stop one file or all of them; what was half made is left out.</p></div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="why.idx">06 · Why Roar</p><h2 class="rv" data-t="why.title" data-html>Why <b>a Roar app</b>.</h2></div>
+    <div class="why-end"><p class="sub rv" data-t="why.sub">What every app of The Mad Lions Lab promises, RoarMorph included.</p>
+      <div class="legal rv"><a class="pill sm" href="../../legal/roarmorph/#privacy" data-t="lg.p">Privacy Policy</a><a class="pill sm" href="../../legal/roarmorph/#terms" data-t="lg.t">Terms</a></div></div>
+  </div>
+  <div class="why">
+    <article class="wy f-glass rv"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></span><h3 data-t="w1.t">On your computer</h3><p data-t="w1.p">No account, no server, no upload. Unreleased footage stays with you, and no internet is needed.</p></article>
+    <article class="wy f-glass rv" style="--d:.06s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.2 4.2L19 7"/></svg></span><h3 data-t="w2.t">The original stays</h3><p data-t="w2.p">A new file beside it, _converted by default, a number if the name is taken. Nothing is written over.</p></article>
+    <article class="wy f-glass rv" style="--d:.12s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></span><h3 data-t="w3.t">Updates itself</h3><p data-t="w3.p">New versions come in the background and go in when you close it. Mac and Windows.</p></article>
+    <article class="wy f-glass rv" style="--d:.18s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10.5 5-3v9l-5-3"/></svg></span><h3 data-t="w4.t">Made by filmmakers</h3><p data-t="w4.p">The Mad Lions, a film company in Athens, use it for their own deliveries. Ideas go straight to the people who make it.</p></article>
+  </div>
+</section>
+
+<section id="download">
+  <div class="sec-h">
+    <div><img class="dl-icon rv" src="icon.png" alt="" width="64" height="64" loading="lazy"><p class="idx rv" data-t="dl.idx">07 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarMorph</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
+    <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab that we use for our own deliveries.</p>
+  </div>
+  <div class="dls">
+    <div class="dl f-glass rv" id="dl-mac" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.7zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.6-1.3z"/></svg></i>
+      <h3>Mac</h3>
+      <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
+      <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roarverter/releases/latest/download/RoarMorph-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+      <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roarverter/releases/latest/download/RoarMorph-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
+    </div>
+    <div class="dl f-glass rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
+      <h3>Windows</h3>
+      <small data-t="dl.win">Windows 10 and 11.</small>
+      <a class="pill main" data-f="win" href="https://github.com/alexisdigipro-hub/roarverter/releases/latest/download/RoarMorph-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+    </div>
+  </div>
+  <div class="dl-note">
+    <p class="rv" data-t="dl.upd" data-html><b>It updates itself.</b> The Mac and Windows apps fetch new versions on their own and ask for a quick restart.</p>
+    <p class="rv" data-t="dl.help" data-html><b>First time on a Mac?</b> The app is not signed by Apple yet: right-click RoarMorph in Applications and choose Open, or press Open Anyway in System Settings › Privacy &amp; Security. On Windows: More info › Run anyway.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="faq">
+    <div><p class="idx rv" data-t="faq.idx">08 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
+    <div class="qa">
+      <details class="rv"><summary data-t="q1">Is RoarMorph free?</summary><p data-t="a1">Yes. No subscription, no ads, no watermark.</p></details>
+      <details class="rv"><summary data-t="q2">How much smaller does a file get?</summary><p data-t="a2">It depends on the file. A ProRes master to H.265 is often 90 to 97% smaller; a PNG to WebP 70 to 95%; a phone photo to JPG about 40%. Each file in the list shows how much it saved.</p></details>
+      <details class="rv"><summary data-t="q3">Does the target size land exactly?</summary><p data-t="a3">With Two passes, yes, just under it: in our tests a 1 MB target came out at 0.96 MB. One pass is faster and lands close. A bitrate in Mb/s works the same way, as Resolve’s “Restrict to”.</p></details>
+      <details class="rv"><summary data-t="q4">Which format for Instagram, email or the web?</summary><p data-t="a4">MP4 with H.264 plays everywhere; H.265 is about half the size and plays on every phone and recent computer. For pictures on a website, WebP or AVIF.</p></details>
+      <details class="rv"><summary data-t="q5">Does it open RAW and HEIC photos?</summary><p data-t="a5">Yes on a Mac: HEIC from the iPhone and camera RAW (DNG, CR3, NEF, ARW, RAF and more) open through the Mac's own tools, and HEIC can be saved too. On Windows HEIC may not open and RAW not yet; convert those on a Mac.</p></details>
+      <details class="rv"><summary data-t="q7">Can it turn a GIF into a video?</summary><p data-t="a7">Yes, since 0.3.1: a GIF counts as a moving picture, so it can become MP4, MOV, ProRes or WebM. An odd size like 481×271 is made even for H.264.</p></details>
+      <details class="rv"><summary data-t="q8">Why does my iPhone video look grey on other screens?</summary><p data-t="a8">Because it is HDR (HLG). HDR to Rec.709 is on by default and works only when the source is HDR, so the new file looks right everywhere.</p></details>
+      <details class="rv"><summary data-t="q6">Do I need the internet?</summary><p data-t="a6">No. Only to download the app and its updates; every conversion runs on your computer.</p></details>
+    </div>
+  </div>
+</section>
+
 <section class="f-new" id="new">
   <div class="f-new-head">
-    <div><p class="idx rv" data-t="nw.idx">New</p><h2 class="rv" data-t="nw.title" data-html>What’s <b>new</b>.</h2></div>
+    <div><p class="idx rv" data-t="nw.idx">09 · New</p><h2 class="rv" data-t="nw.title" data-html>What’s <b>new</b>.</h2></div>
     <p class="rv" data-t="nw.sub">Since 0.4: a new name and the Roar family’s look, Settings with updates you can see, a bitrate you set yourself, what every file is made of, and Photoshop files with their layers.</p>
   </div>
   <div class="f-bento">
@@ -541,151 +815,6 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   </div>
 </section>
 
-<div class="ticker" aria-hidden="true"><div class="ticker-in">
-<span data-t="tk.1">JPG · PNG · WebP · AVIF</span><span data-t="tk.2">RAW · PSD · HEIC</span><span data-t="tk.3">MP4 · H.265 · AV1</span><span data-t="tk.4">ProRes · DNxHR · MXF</span><span data-t="tk.5">GIF from a clip</span><span data-t="tk.6">A target size</span><span data-t="tk.7">MP3 · WAV · FLAC</span><span data-t="tk.8">Nothing uploaded</span><span data-t="tk.10">GIF to video</span><span data-t="tk.11">HDR to Rec.709 · LUT</span><span data-t="tk.9">Mac · Windows</span><span data-t="tk.1">JPG · PNG · WebP · AVIF</span><span data-t="tk.2">RAW · PSD · HEIC</span><span data-t="tk.3">MP4 · H.265 · AV1</span><span data-t="tk.4">ProRes · DNxHR · MXF</span><span data-t="tk.5">GIF from a clip</span><span data-t="tk.6">A target size</span><span data-t="tk.7">MP3 · WAV · FLAC</span><span data-t="tk.8">Nothing uploaded</span><span data-t="tk.10">GIF to video</span><span data-t="tk.11">HDR to Rec.709 · LUT</span><span data-t="tk.9">Mac · Windows</span>
-</div></div>
-
-<section id="only">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="only.idx">01 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only RoarMorph</b> does.</h2></div>
-    <p class="sub rv" data-t="only.sub">Why a website that shrinks one file at a time is not enough for a shoot.</p>
-  </div>
-  <div class="three">
-    <article class="big rv">
-      <span class="no">01</span>
-      <div><h3 data-t="f1.t" data-html>A size, <b>not a guess</b>.</h3><p data-t="f1.p">Type 25 MB, for an email, a festival form or Discord, and RoarMorph works out the bitrate from the video's length and leaves room for the sound; or give a bitrate in Mb/s. No trying three times to get under the limit.</p>
-        <div class="chips"><span data-t="f1.c1">Target in MB</span><span data-t="f1.c2">Or Mb/s</span><span>H.264 · H.265 · AV1</span><span data-t="f1.c3">Two passes</span></div></div>
-      <div class="viz f-glass"><div class="mc"><div class="big"><small data-t="f1.v1">TARGET SIZE</small><div class="aim"><b>25</b><span class="unit">MB</span></div></div><div class="bar3"><i></i></div><div class="r"><span class="th"></span><b>Teaser_60s.mov</b><small>2.4 GB → 24.6 MB</small></div></div></div>
-    </article>
-    <article class="big rv">
-      <span class="no">02</span>
-      <div><h3 data-t="f2.t" data-html>Every format, <b>one window</b>.</h3><p data-t="f2.p">Photos from the phone or the camera's RAW, the poster's PSD, the master, the BTS, the interview's sound: drop them all at once. Pictures, video for sharing or for the edit, sound only, a GIF from a clip or a clip from a GIF, or a single still at any moment.</p>
-        <div class="chips"><span data-t="f2.c1">Pictures</span><span data-t="f2.c2">Video</span><span data-t="f2.c3">Sound</span><span data-t="f2.c4">GIF and stills</span></div></div>
-      <div class="viz f-glass"><div class="mc"><div class="fmt"><b>HEIC</b><span class="to">→</span><b>JPG</b><span class="sv">−41%</span></div><div class="fmt"><b>PNG</b><span class="to">→</span><b>WebP</b><span class="sv">−94%</span></div><div class="fmt"><b>ProRes</b><span class="to">→</span><b>H.265</b><span class="sv">−96%</span></div><div class="fmt"><b>WAV</b><span class="to">→</span><b>MP3</b><span class="sv">−89%</span></div></div></div>
-    </article>
-    <article class="big rv">
-      <span class="no">03</span>
-      <div><h3 data-t="f3.t" data-html><b>Nothing</b> leaves the computer.</h3><p data-t="f3.p">No upload, no account, no queue on a server: unreleased footage stays with you. The original is never touched; the new file is saved next to it, or in a folder you choose.</p>
-        <div class="chips"><span data-t="f3.c1">No upload</span><span data-t="f3.c2">The original stays</span><span data-t="f3.c3">Works offline</span></div></div>
-      <div class="viz f-glass"><div class="mc"><div class="r"><i></i><b>A001_C003.mov</b><small data-t="f3.v1">original</small></div><div class="r on"><i style="background:var(--ok)"></i><b>A001_C003_converted.mp4</b><small>742 MB</small></div><div class="pills"><span data-t="f3.v2">Same folder</span><span class="m" data-t="f3.v3">Convert</span></div></div></div>
-    </article>
-  </div>
-</section>
-
-<section id="set">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="set.idx">02 · For the shoot</p><h2 class="rv" data-t="set.title" data-html>Made for <b>a shoot's files</b>.</h2></div>
-    <p class="sub rv" data-t="set.sub">The card, the stills, the edit, the deliveries: all at once.</p>
-  </div>
-  <div class="board">
-    <article class="tile t-tasks f-glass rv">
-      <span class="k" data-t="s1.k">Where from</span>
-      <h3 data-t="s1.t" data-html>Drop <b>whole folders</b>.</h3>
-      <p data-t="s1.p">One file, a few, or a folder with everything inside: RoarMorph finds the pictures, videos and sound in it. Pictures go three at a time, videos one by one, with the progress of each.</p>
-    </article>
-    <article class="tile t-ord f-glass rv" style="--d:.08s">
-      <span class="k" data-t="s2.k">Reframe</span>
-      <h3 data-t="s2.t" data-html>9:16, square, 4:5 <b>or 2.39:1</b>.</h3>
-      <p data-t="s2.p">Turn a 16:9 shot into a Reel, a post, a story or a scope frame: cropped, or whole with its own blurred copy behind. Or a size of your own, with bars where the shape differs. Anamorphic footage is desqueezed on the way, 1.33× to 2×.</p>
-    </article>
-    <article class="tile t-upd f-glass rv">
-      <span class="k" data-t="s3.k">Three presets</span>
-      <h3 data-t="s3.t" data-html>Small, balanced, <b>or quality</b>.</h3>
-      <p data-t="s3.p">One tap sets everything; or set the quality, the size, the frame rate, the codec and the speed yourself. RoarMorph remembers what you chose.</p>
-    </article>
-    <article class="tile t-icon f-glass rv" style="--d:.08s">
-      <div class="txt">
-        <span class="k" data-t="s4.k">For the edit</span>
-        <h3 data-t="s4.t" data-html>ProRes <b>when it has to be</b>.</h3>
-        <p data-t="s4.p">The phone's HEVC or a web download into ProRes (Proxy to 4444) or DNxHR (LB to 444) for the timeline, MXF for Avid, XDCAM for broadcast, FFV1 for a lossless archive, a still for the poster, the interview as 24-bit WAV for the mix.</p>
-      </div>
-      <div class="icons"><span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="RoarMorph icon" width="140" height="140" loading="lazy"></span></div>
-    </article>
-  </div>
-</section>
-
-<section id="all">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="all.idx">03 · Everything</p><h2 class="rv" data-t="all.title" data-html>And the <b>rest</b>.</h2></div>
-    <p class="sub rv" data-t="all.sub">RoarMorph, briefly.</p>
-  </div>
-  <div class="index">
-    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">Pictures in</b><p data-t="ix1.p">JPG, PNG, WebP, AVIF, HEIC, TIFF, GIF, BMP, SVG, PSD, EXR, DPX and more; on a Mac also camera RAW, JPEG XL and PDF.</p></div>
-    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">Pictures out</b><p data-t="ix2.p">JPG, PNG, WebP, AVIF, TIFF, GIF, BMP, ICO for an icon, and HEIC on a Mac.</p></div>
-    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Video out</b><p data-t="ix3.p">MP4 in H.264, H.265 or AV1, WebM, MOV, MKV, AVI, MPG; for the edit ProRes, DNxHR, MXF, XDCAM and lossless FFV1.</p></div>
-    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">A start and an end</b><p data-t="ix4.p">Keep only a part of the clip: from 0:12 to 0:45, say.</p></div>
-    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">A still</b><p data-t="ix5.p">One frame as JPG or PNG, at the moment you say.</p></div>
-    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">The sound only</b><p data-t="ix6.p">MP3, M4A, WAV 16 or 24-bit, AIFF, ALAC, FLAC or OGG out of any video.</p></div>
-    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Faster on a Mac</b><p data-t="ix7.p">H.264 and H.265 with the Mac's own video engine, several times faster; if it says no, the software one makes the same file.</p></div>
-    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">LUT and HDR</b><p data-t="ix8.p">A LUT (.cube, .3dl, .dat, .csp) on every clip, and HDR from the iPhone (HLG) or HDR10 brought to Rec.709, so it does not look grey.</p></div>
-    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">Loudness</b><p data-t="ix9.p">−14 LUFS for the web, −16 for a podcast, −23 for TV; mono or stereo; 44.1 or 48 kHz.</p></div>
-    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Updates itself</b><p data-t="ix10.p">A new version downloads in the background; one tap to restart.</p></div>
-    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">English and Greek</b><p data-t="ix11.p">The app speaks both; choose at the top.</p></div>
-    <div class="ix rv"><span class="no">12</span><b data-t="ix13.t">GIF both ways</b><p data-t="ix13.p">A clip into a GIF or an animated WebP with its own palette, and a GIF into MP4, MOV, ProRes or WebM.</p></div>
-    <div class="ix rv"><span class="no">13</span><b data-t="ix14.t">A size of your own</b><p data-t="ix14.p">Width × height, with bars where the shape differs, and a keyframe every N frames.</p></div>
-    <div class="ix rv"><span class="no">14</span><b data-t="ix12.t">Free</b><p data-t="ix12.p">No subscription, no ads, no watermark.</p></div>
-  </div>
-</section>
-
-<section id="safe">
-  <div class="priv">
-    <div>
-      <p class="idx rv" data-t="pv.idx">04 · Private</p>
-      <h2 class="rv" data-t="pv.title" data-html>Your files, <b>untouched</b>.</h2>
-      <p class="sub rv" style="margin-top:22px;color:var(--muted);font-size:17px;line-height:1.6" data-t="pv.sub">RoarMorph only ever writes new files. It reads the originals and leaves them where they are.</p>
-      <div class="legal rv"><a class="pill sm" href="../../legal/roarmorph/#privacy" data-t="lg.p">Privacy Policy</a><a class="pill sm" href="../../legal/roarmorph/#terms" data-t="lg.t">Terms</a></div>
-    </div>
-    <div class="prom">
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></i><b data-t="p1.t">On your computer</b><p data-t="p1.p">Every conversion runs on your computer. No account, no server, nothing uploaded, no internet needed.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.2 4.2L19 7"/></svg></i><b data-t="p2.t">The original stays</b><p data-t="p2.p">The new file gets its own name, _converted by default, and a number if that name is taken. Nothing is written over.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></i><b data-t="p3.t">Stop any time</b><p data-t="p3.p">Stop one file or all of them; what was half made is left out.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg></i><b data-t="p4.t">Your metadata, your call</b><p data-t="p4.p">Camera data and location are left out by default; one switch keeps them.</p></div>
-    </div>
-  </div>
-</section>
-
-<section id="download">
-  <div class="sec-h">
-    <div><img class="dl-icon rv" src="icon.png" alt="" width="64" height="64" loading="lazy"><p class="idx rv" data-t="dl.idx">05 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarMorph</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
-    <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab that we use for our own deliveries.</p>
-  </div>
-  <div class="dls">
-    <div class="dl f-glass rv" id="dl-mac" data-mine="Your computer">
-      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.7zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.6-1.3z"/></svg></i>
-      <h3>Mac</h3>
-      <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
-      <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roarverter/releases/latest/download/RoarMorph-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
-      <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roarverter/releases/latest/download/RoarMorph-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
-    </div>
-    <div class="dl f-glass rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
-      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
-      <h3>Windows</h3>
-      <small data-t="dl.win">Windows 10 and 11.</small>
-      <a class="pill main" data-f="win" href="https://github.com/alexisdigipro-hub/roarverter/releases/latest/download/RoarMorph-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
-    </div>
-  </div>
-  <div class="dl-note">
-    <p class="rv" data-t="dl.upd" data-html><b>It updates itself.</b> The Mac and Windows apps fetch new versions on their own and ask for a quick restart.</p>
-    <p class="rv" data-t="dl.help" data-html><b>First time on a Mac?</b> The app is not signed by Apple yet: right-click RoarMorph in Applications and choose Open, or press Open Anyway in System Settings › Privacy &amp; Security. On Windows: More info › Run anyway.</p>
-  </div>
-</section>
-
-<section id="faq">
-  <div class="faq">
-    <div><p class="idx rv" data-t="faq.idx">06 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
-    <div class="qa">
-      <details class="rv"><summary data-t="q1">Is RoarMorph free?</summary><p data-t="a1">Yes. No subscription, no ads, no watermark.</p></details>
-      <details class="rv"><summary data-t="q2">How much smaller does a file get?</summary><p data-t="a2">It depends on the file. A ProRes master to H.265 is often 90 to 97% smaller; a PNG to WebP 70 to 95%; a phone photo to JPG about 40%. Each file in the list shows how much it saved.</p></details>
-      <details class="rv"><summary data-t="q3">Does the target size land exactly?</summary><p data-t="a3">With Two passes, yes, just under it: in our tests a 1 MB target came out at 0.96 MB. One pass is faster and lands close. A bitrate in Mb/s works the same way, as Resolve’s “Restrict to”.</p></details>
-      <details class="rv"><summary data-t="q4">Which format for Instagram, email or the web?</summary><p data-t="a4">MP4 with H.264 plays everywhere; H.265 is about half the size and plays on every phone and recent computer. For pictures on a website, WebP or AVIF.</p></details>
-      <details class="rv"><summary data-t="q5">Does it open RAW and HEIC photos?</summary><p data-t="a5">Yes on a Mac: HEIC from the iPhone and camera RAW (DNG, CR3, NEF, ARW, RAF and more) open through the Mac's own tools, and HEIC can be saved too. On Windows HEIC may not open and RAW not yet; convert those on a Mac.</p></details>
-      <details class="rv"><summary data-t="q7">Can it turn a GIF into a video?</summary><p data-t="a7">Yes, since 0.3.1: a GIF counts as a moving picture, so it can become MP4, MOV, ProRes or WebM. An odd size like 481×271 is made even for H.264.</p></details>
-      <details class="rv"><summary data-t="q8">Why does my iPhone video look grey on other screens?</summary><p data-t="a8">Because it is HDR (HLG). HDR to Rec.709 is on by default and works only when the source is HDR, so the new file looks right everywhere.</p></details>
-      <details class="rv"><summary data-t="q6">Do I need the internet?</summary><p data-t="a6">No. Only to download the app and its updates; every conversion runs on your computer.</p></details>
-    </div>
-  </div>
-</section>
-
 <section class="contact" id="contact">
   <p class="idx rv" data-t="ct.idx">Contact</p>
   <h2 class="rv" data-t="ct.title" data-html>Ideas for <b>the next version</b>?</h2>
@@ -707,10 +836,10 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 <script>
 (function () {
   var APP = 'RoarMorph', REPO = 'alexisdigipro-hub/roarverter', WEB = '#download'
-  var EL = {"nav.only": "Μόνο εδώ", "nav.set": "Για το γύρισμα", "nav.all": "Όλα", "nav.safe": "Ιδιωτικό", "nav.download": "Λήψη", "nav.faq": "Ερωτήσεις", "cta.get": "Πάρε το RoarMorph", "hero.kicker": "Μετατροπή και συμπίεση · The Mad Lions Lab · Πείραμα 08", "hero.lead": "Κάθε μορφή, <b>μικρότερο αρχείο</b>. Εικόνες, βίντεο και ήχος, μετατροπή και συμπίεση <b>στον υπολογιστή σου</b>: τα ρίχνεις μέσα, διαλέγεις πόσο μικρά, και είναι έτοιμα δίπλα στα αρχικά.", "cta.how": "Τι κάνει", "cta.note": "Δωρεάν · Mac και Windows · τίποτα δεν ανεβαίνει, τα αρχικά μένουν όπως είναι", "tag.size": "Μέγεθος σε MB, όχι στα τυφλά", "tag.fmt": "Κάθε μορφή, ένα παράθυρο", "tag.local": "Δεν φεύγει από τον υπολογιστή σου", "tk.1": "JPG · PNG · WebP · AVIF", "tk.2": "RAW · PSD · HEIC", "tk.3": "MP4 · H.265 · AV1", "tk.4": "ProRes · DNxHR · MXF", "tk.5": "GIF από ένα clip", "tk.6": "Στόχος μεγέθους", "tk.7": "MP3 · WAV · FLAC", "tk.8": "Τίποτα δεν ανεβαίνει", "tk.9": "Mac · Windows", "only.idx": "01 · Μόνο εδώ", "only.title": "Τρία πράγματα που κάνει <b>μόνο το RoarMorph</b>.", "only.sub": "Γιατί ένα site που μικραίνει ένα αρχείο τη φορά δεν φτάνει για ένα γύρισμα.", "f1.t": "Ένα μέγεθος, <b>όχι στα τυφλά</b>.", "f1.p": "Γράψε 25 MB, για ένα email, μια φόρμα φεστιβάλ ή το Discord, και το RoarMorph υπολογίζει το bitrate από τη διάρκεια του βίντεο και αφήνει χώρο για τον ήχο· ή δώσε ένα bitrate σε Mb/s. Χωρίς τρεις δοκιμές για να χωρέσει στο όριο.", "f1.c1": "Στόχος σε MB", "f1.c3": "Δύο περάσματα", "f1.v1": "ΣΤΟΧΟΣ ΜΕΓΕΘΟΥΣ", "f2.t": "Κάθε μορφή, <b>ένα παράθυρο</b>.", "f2.p": "Οι φωτογραφίες από το κινητό ή τα RAW της κάμερας, το PSD της αφίσας, το master, τα BTS, ο ήχος της συνέντευξης: τα ρίχνεις όλα μαζί. Εικόνες, βίντεο για κοινοποίηση ή για μοντάζ, μόνο ήχος, GIF από ένα clip ή clip από ένα GIF, ή ένα στιγμιότυπο όποια στιγμή θες.", "f2.c1": "Εικόνες", "f2.c2": "Βίντεο", "f2.c3": "Ήχος", "f2.c4": "GIF και στιγμιότυπα", "f3.t": "<b>Τίποτα</b> δεν φεύγει από τον υπολογιστή.", "f3.p": "Χωρίς upload, χωρίς λογαριασμό, χωρίς ουρά σε server: το υλικό που δεν έχει βγει μένει σε σένα. Το αρχικό δεν το αγγίζει ποτέ· το νέο αρχείο σώζεται δίπλα του, ή σε φάκελο που διαλέγεις.", "f3.c1": "Χωρίς upload", "f3.c2": "Το αρχικό μένει", "f3.c3": "Δουλεύει offline", "f3.v1": "αρχικό", "f3.v2": "Ίδιο φάκελο", "f3.v3": "Μετατροπή", "set.idx": "02 · Για το γύρισμα", "set.title": "Φτιαγμένο για <b>τα αρχεία ενός γυρίσματος</b>.", "set.sub": "Η κάρτα, οι φωτογραφίες, το μοντάζ, τα παραδοτέα: όλα μαζί.", "s1.k": "Από πού", "s1.t": "Ρίξε <b>ολόκληρους φακέλους</b>.", "s1.p": "Ένα αρχείο, μερικά, ή έναν φάκελο με τα πάντα μέσα: το RoarMorph βρίσκει τις εικόνες, τα βίντεο και τον ήχο. Οι εικόνες πάνε τρεις μαζί, τα βίντεο ένα ένα, με την πρόοδο του καθενός.", "s2.k": "Κάδρο", "s2.t": "9:16, τετράγωνο, 4:5 <b>ή 2.39:1</b>.", "s2.p": "Κάνε ένα πλάνο 16:9 Reel, post, story ή κάδρο σινεμασκόπ: κομμένο, ή ολόκληρο με ένα θολό αντίγραφό του από πίσω. Ή ένα δικό σου μέγεθος, με μαύρες μπάρες όπου αλλάζει το σχήμα. Το anamorphic υλικό ανοίγει στη σωστή αναλογία στη διαδρομή, από 1.33× ως 2×.", "s3.k": "Τρεις έτοιμες ρυθμίσεις", "s3.t": "Μικρό, ισορροπία, <b>ή ποιότητα</b>.", "s3.p": "Ένα πάτημα τα ρυθμίζει όλα· ή ρύθμισε μόνος σου την ποιότητα, το μέγεθος, τα fps, το codec και την ταχύτητα. Το RoarMorph θυμάται τι διάλεξες.", "s4.k": "Για το μοντάζ", "s4.t": "ProRes <b>όταν χρειάζεται</b>.", "s4.p": "Το HEVC του κινητού ή ένα βίντεο από το web σε ProRes (Proxy ως 4444) ή DNxHR (LB ως 444) για το timeline, MXF για το Avid, XDCAM για την τηλεόραση, FFV1 για αρχείο χωρίς απώλειες, ένα στιγμιότυπο για την αφίσα, η συνέντευξη σε WAV 24-bit για τη μίξη.", "all.idx": "03 · Όλα", "all.title": "Και <b>τα υπόλοιπα</b>.", "all.sub": "Το RoarMorph, με λίγα λόγια.", "ix1.t": "Εικόνες που διαβάζει", "ix1.p": "JPG, PNG, WebP, AVIF, HEIC, TIFF, GIF, BMP, SVG, PSD, EXR, DPX και άλλες· σε Mac και RAW κάμερας, JPEG XL και PDF.", "ix2.t": "Εικόνες που φτιάχνει", "ix2.p": "JPG, PNG, WebP, AVIF, TIFF, GIF, BMP, ICO για εικονίδιο, και HEIC σε Mac.", "ix3.t": "Βίντεο που φτιάχνει", "ix3.p": "MP4 με H.264, H.265 ή AV1, WebM, MOV, MKV, AVI, MPG· για το μοντάζ ProRes, DNxHR, MXF, XDCAM και FFV1 χωρίς απώλειες.", "ix4.t": "Αρχή και τέλος", "ix4.p": "Κράτα μόνο ένα κομμάτι του clip: από 0:12 ως 0:45, ας πούμε.", "ix5.t": "Στιγμιότυπο", "ix5.p": "Ένα καρέ σε JPG ή PNG, τη στιγμή που λες.", "ix6.t": "Μόνο ο ήχος", "ix6.p": "MP3, M4A, WAV 16 ή 24-bit, AIFF, ALAC, FLAC ή OGG από οποιοδήποτε βίντεο.", "ix7.t": "Πιο γρήγορα σε Mac", "ix7.p": "H.264 και H.265 με τη μηχανή βίντεο του ίδιου του Mac, πολλές φορές πιο γρήγορα· αν εκείνη αρνηθεί, το ίδιο αρχείο φτιάχνεται με τον κανονικό encoder.", "ix8.t": "LUT και HDR", "ix8.p": "Ένα LUT (.cube, .3dl, .dat, .csp) σε κάθε clip, και το HDR του iPhone (HLG) ή το HDR10 σε Rec.709, για να μη φαίνεται γκρίζο.", "ix9.t": "Ένταση ήχου", "ix9.p": "−14 LUFS για το web, −16 για podcast, −23 για την τηλεόραση· μονό ή στέρεο· 44.1 ή 48 kHz.", "ix10.t": "Ενημερώνεται μόνο του", "ix10.p": "Μια νέα έκδοση κατεβαίνει στο παρασκήνιο· ένα πάτημα για επανεκκίνηση.", "ix11.t": "Αγγλικά και Ελληνικά", "ix11.p": "Η εφαρμογή μιλάει και τα δύο· διαλέγεις πάνω δεξιά.", "ix12.t": "Δωρεάν", "ix12.p": "Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς υδατογράφημα.", "pv.idx": "04 · Ιδιωτικό", "pv.title": "Τα αρχεία σου, <b>ανέγγιχτα</b>.", "pv.sub": "Το RoarMorph γράφει μόνο νέα αρχεία. Διαβάζει τα αρχικά και τα αφήνει εκεί που είναι.", "p1.t": "Στον υπολογιστή σου", "p1.p": "Κάθε μετατροπή γίνεται στον υπολογιστή σου. Χωρίς λογαριασμό, χωρίς server, χωρίς upload, χωρίς internet.", "p2.t": "Το αρχικό μένει", "p2.p": "Το νέο αρχείο παίρνει δικό του όνομα, _converted από προεπιλογή, και έναν αριθμό αν το όνομα υπάρχει ήδη. Τίποτα δεν γράφεται από πάνω.", "p3.t": "Σταμάτα όποτε θες", "p3.p": "Σταμάτα ένα αρχείο ή όλα· ό,τι είχε φτιαχτεί μισό μένει έξω.", "p4.t": "Τα μεταδεδομένα σου, η απόφασή σου", "p4.p": "Τα στοιχεία της κάμερας και η τοποθεσία μένουν έξω από προεπιλογή· ένας διακόπτης τα κρατάει.", "dl.idx": "05 · Λήψη", "dl.title": "Πάρε το <b>RoarMorph</b>.", "dl.sub": "Δωρεάν, και σε beta: ένα πείραμα του Mad Lions Lab που χρησιμοποιούμε για τα δικά μας παραδοτέα.", "dl.mac": "Για Mac με chip της Apple (M1 και νεότερα).", "dl.get": "Λήψη", "dl.intel": "Παλιότερο Mac με Intel;", "dl.intelbtn": "Αυτό", "dl.win": "Windows 10 και 11.", "dl.upd": "<b>Ενημερώνεται μόνο του.</b> Οι εφαρμογές για Mac και Windows κατεβάζουν τις νέες εκδόσεις μόνες τους και ζητούν μια γρήγορη επανεκκίνηση.", "dl.help": "<b>Πρώτη φορά σε Mac;</b> Η εφαρμογή δεν είναι ακόμα υπογεγραμμένη από την Apple: κάνε δεξί κλικ στο RoarMorph στις Εφαρμογές και διάλεξε Άνοιγμα, ή πάτα Άνοιγμα παρόλα αυτά στις Ρυθμίσεις συστήματος › Απόρρητο και ασφάλεια. Σε Windows: Περισσότερες πληροφορίες › Εκτέλεση παρόλα αυτά.", "faq.idx": "06 · Ερωτήσεις", "faq.title": "Καλό να <b>ξέρεις</b>.", "q1": "Είναι δωρεάν το RoarMorph;", "a1": "Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς υδατογράφημα.", "q2": "Πόσο μικραίνει ένα αρχείο;", "a2": "Εξαρτάται από το αρχείο. Ένα master σε ProRes προς H.265 βγαίνει συχνά 90 με 97% μικρότερο· ένα PNG προς WebP 70 με 95%· μια φωτογραφία κινητού σε JPG περίπου 40%. Κάθε αρχείο στη λίστα δείχνει πόσο κέρδισε.", "q3": "Πέφτει ακριβώς στο μέγεθος που ζητάω;", "a3": "Με τα Δύο περάσματα, ναι, λίγο κάτω από αυτό: στις δοκιμές μας ένας στόχος 1 MB βγήκε 0,96 MB. Το ένα πέρασμα είναι πιο γρήγορο και πέφτει κοντά. Ένα bitrate σε Mb/s δουλεύει το ίδιο, όπως το «Restrict to» του Resolve.", "q4": "Ποια μορφή για Instagram, email ή web;", "a4": "Το MP4 με H.264 παίζει παντού· το H.265 είναι περίπου το μισό και παίζει σε κάθε κινητό και σε κάθε πρόσφατο υπολογιστή. Για εικόνες σε site, WebP ή AVIF.", "q5": "Ανοίγει φωτογραφίες RAW και HEIC;", "a5": "Ναι σε Mac: τα HEIC του iPhone και τα RAW των καμερών (DNG, CR3, NEF, ARW, RAF και άλλα) ανοίγουν με τα εργαλεία του ίδιου του Mac, και σώζεται και HEIC. Στα Windows τα HEIC μπορεί να μην ανοίγουν και τα RAW όχι ακόμα· μετάτρεψέ τα σε Mac.", "q6": "Χρειάζομαι internet;", "a6": "Όχι. Μόνο για να κατεβάσεις την εφαρμογή και τις ενημερώσεις της· κάθε μετατροπή γίνεται στον υπολογιστή σου.", "ct.idx": "Επαφή", "ct.title": "Ιδέες για <b>την επόμενη έκδοση</b>;", "ft.lab": "The Mad Lions Lab", "ft.legal": "Απόρρητο & Όροι", "lg.p": "Πολιτική απορρήτου", "lg.t": "Όροι χρήσης", "footer": "© 2026 The Mad Lions · RoarMorph", "nav.new": "Νέα", "ver.b": "Νέο", "ver.t": "στην 0.5 · στρώσεις PSD, δικό σου bitrate, Ρυθμίσεις", "nw.idx": "Νέα", "nw.title": "Τι <b>νέο</b> υπάρχει.", "nw.sub": "Από την 0.4: νέο όνομα και η όψη της οικογένειας Roar, Ρυθμίσεις με ενημερώσεις που βλέπεις, ένα bitrate που ορίζεις εσύ, από τι είναι φτιαγμένο κάθε αρχείο, και αρχεία Photoshop με τις στρώσεις τους.", "n1.t": "Ένα GIF γίνεται βίντεο", "n1.p": "Ρίξε ένα GIF και σώσ’ το ως MP4, MOV, ProRes ή WebM, για να το ανεβάσεις οπουδήποτε ή να το βάλεις στο μοντάζ. Ένα μονό μέγεθος όπως 481×271 γίνεται ζυγό, για να το δέχεται το H.264.", "n8.t": "Το Roarverter είναι πια RoarMorph", "n8.p": "Ίδια εφαρμογή, νέο όνομα, με το εικονίδιο της οικογένειας Roar. Ένα Roarverter που έχεις εγκαταστήσει ενημερώνεται μόνο του σε RoarMorph, με τις επιλογές σου όπως ήταν, και τα παλιά links λήψης δουλεύουν ακόμα.", "tk.10": "GIF σε βίντεο", "tk.11": "HDR σε Rec.709 · LUT", "f1.c2": "Ή Mb/s", "ix13.t": "GIF και προς τις δύο μεριές", "ix13.p": "Ένα clip σε GIF ή σε κινούμενο WebP με τη δική του παλέτα, και ένα GIF σε MP4, MOV, ProRes ή WebM.", "ix14.t": "Ένα δικό σου μέγεθος", "ix14.p": "Πλάτος × ύψος, με μπάρες όπου αλλάζει το σχήμα, και ένα keyframe κάθε N καρέ.", "q7": "Μπορεί να κάνει ένα GIF βίντεο;", "a7": "Ναι, από την 0.3.1: ένα GIF μετράει ως κινούμενη εικόνα, οπότε γίνεται MP4, MOV, ProRes ή WebM. Ένα μονό μέγεθος όπως 481×271 γίνεται ζυγό για το H.264.", "q8": "Γιατί το βίντεο του iPhone μου φαίνεται γκρίζο σε άλλες οθόνες;", "a8": "Γιατί είναι HDR (HLG). Το HDR σε Rec.709 είναι ανοιχτό από προεπιλογή και δουλεύει μόνο όταν η πηγή είναι HDR, οπότε το νέο αρχείο φαίνεται σωστά παντού.", "n9.t": "Ένα PSD μέσα, κάθε στρώση έξω", "n9.p": "Ρίξε ένα αρχείο Photoshop και γίνεται όποια μορφή εικόνας θες, το ίδιο σε Mac και σε Windows: RGB, ασπρόμαυρο ή CMYK, 8, 16 ή 32-bit. Αν έχει στρώσεις, το RoarMorph ρωτάει: μόνο την εικόνα, ή και κάθε στρώση ως δικό της PNG, στο μέγεθος του εγγράφου, στη θέση της, σε έναν φάκελο δίπλα.", "n9.p2": "Κάθε γραμμή δείχνει πια και το βάθος χρώματος: 8-bit, 10-bit, 16-bit.", "n10.t": "Όρισε το bitrate ενός βίντεο", "n10.p": "Στη Συμπίεση, διάλεξε Με ποιότητα ή Με bitrate: ένας ολισθητής από 0,5 ως 150 Mb/s, γρήγορες επιλογές από 2 ως 100, και περίπου πόσο θα βγουν τα βίντεο της λίστας, μαζί με τον ήχο. Άναψε τα Δύο περάσματα και το αρχείο πέφτει ακριβώς εκεί.", "n11.t": "Από τι είναι φτιαγμένο κάθε αρχείο", "n11.p": "Μια γραμμή κάτω από κάθε αρχείο: το codec και το profile ενός βίντεο (H.264 High, ProRes HQ), το bitrate, τα fps, το βάθος χρώματος, το chroma και ο ήχος· η ποιότητα ενός JPEG· πόσο συμπιεσμένη είναι ήδη μια εικόνα.", "n12.t": "Ρυθμίσεις, και ενημερώσεις που βλέπεις", "n12.p": "Το γρανάζι πάνω δεξιά, ή Cmd/Ctrl+,: η γλώσσα, μια ειδοποίηση όταν τελειώνει μια παρτίδα ενώ είσαι σε άλλη εφαρμογή, με ή χωρίς ήχο, και επαναφορά των επιλογών.", "n12.p2": "Οι Ενημερώσεις δείχνουν την έκδοση, Έλεγχος τώρα και Επανεκκίνηση για ενημέρωση. Η αυτόματη ενημέρωση κοιτάει κάθε δύο ώρες, φέρνει τη νέα έκδοση στο παρασκήνιο και τη βάζει όταν κλείνει το RoarMorph· αν την κλείσεις, κοιτάει μόνο όταν το ζητάς.", "n13.t": "Ξανά, με νέες επιλογές", "n13.p": "Ένα έτοιμο αρχείο έχει κουμπί Ξανά, και η λίστα Ξανά για όλα: άλλαξε τις επιλογές, πάτα Μετατροπή, και ένα νέο αρχείο φτιάχνεται δίπλα στο πρώτο, ποτέ από πάνω του.", "n14.t": "Η όψη της οικογένειας Roar", "n14.p": "Στήλες από γραφίτη σαν γυαλί, ένα κόκκινο που λάμπει, ό,τι έχεις διαλέξει φωτισμένο από μέσα: το RoarMorph μοιάζει πια με το RoarMail, το RoarKit και το RoarWriter. Το παράθυρο ανοίγει στη μέση της οθόνης, στο ίδιο μέγεθος για όλους."}
+  var EL = {"nav.only": "Μόνο εδώ", "nav.all": "Όλα", "nav.download": "Λήψη", "nav.faq": "Ερωτήσεις", "cta.get": "Πάρε το RoarMorph", "hero.kicker": "Μετατροπή και συμπίεση · The Mad Lions Lab · Πείραμα 08", "cta.note": "Δωρεάν · Mac και Windows · τίποτα δεν ανεβαίνει, τα αρχικά μένουν όπως είναι", "tag.size": "Μέγεθος σε MB, όχι στα τυφλά", "tag.local": "Δεν φεύγει από τον υπολογιστή σου", "tk.1": "JPG · PNG · WebP · AVIF", "tk.2": "RAW · PSD · HEIC", "tk.3": "MP4 · H.265 · AV1", "tk.4": "ProRes · DNxHR · MXF", "tk.5": "GIF από ένα clip", "tk.6": "Στόχος μεγέθους", "tk.7": "MP3 · WAV · FLAC", "tk.8": "Τίποτα δεν ανεβαίνει", "tk.9": "Mac · Windows", "only.idx": "02 · Μόνο εδώ", "only.title": "Τρία πράγματα που κάνει <b>μόνο το RoarMorph</b>.", "only.sub": "Γιατί ένα site που μικραίνει ένα αρχείο τη φορά δεν φτάνει για ένα γύρισμα.", "f1.t": "Ένα μέγεθος, <b>όχι στα τυφλά</b>.", "f1.p": "Γράψε 25 MB, για ένα email, μια φόρμα φεστιβάλ ή το Discord, και το RoarMorph υπολογίζει το bitrate από τη διάρκεια του βίντεο και αφήνει χώρο για τον ήχο· ή δώσε ένα bitrate σε Mb/s. Χωρίς τρεις δοκιμές για να χωρέσει στο όριο.", "f1.c1": "Στόχος σε MB", "f1.c3": "Δύο περάσματα", "f1.v1": "ΣΤΟΧΟΣ ΜΕΓΕΘΟΥΣ", "f2.t": "Κάθε μορφή, <b>ένα παράθυρο</b>.", "f2.p": "Οι φωτογραφίες από το κινητό ή τα RAW της κάμερας, το PSD της αφίσας, το master, τα BTS, ο ήχος της συνέντευξης: τα ρίχνεις όλα μαζί. Εικόνες, βίντεο για κοινοποίηση ή για μοντάζ, μόνο ήχος, GIF από ένα clip ή clip από ένα GIF, ή ένα στιγμιότυπο όποια στιγμή θες.", "f2.c1": "Εικόνες", "f2.c2": "Βίντεο", "f2.c3": "Ήχος", "f2.c4": "GIF και στιγμιότυπα", "f3.t": "<b>Τίποτα</b> δεν φεύγει από τον υπολογιστή.", "f3.p": "Χωρίς upload, χωρίς λογαριασμό, χωρίς ουρά σε server: το υλικό που δεν έχει βγει μένει σε σένα. Το αρχικό δεν το αγγίζει ποτέ· το νέο αρχείο σώζεται δίπλα του, ή σε φάκελο που διαλέγεις.", "f3.c1": "Χωρίς upload", "f3.c2": "Το αρχικό μένει", "f3.c3": "Δουλεύει offline", "f3.v1": "αρχικό", "f3.v2": "Ίδιο φάκελο", "f3.v3": "Μετατροπή", "set.idx": "04 · Για το γύρισμα", "set.title": "Φτιαγμένο για <b>τα αρχεία ενός γυρίσματος</b>.", "set.sub": "Η κάρτα, οι φωτογραφίες, το μοντάζ, τα παραδοτέα: όλα μαζί.", "s1.k": "Από πού", "s1.t": "Ρίξε <b>ολόκληρους φακέλους</b>.", "s1.p": "Ένα αρχείο, μερικά, ή έναν φάκελο με τα πάντα μέσα: το RoarMorph βρίσκει τις εικόνες, τα βίντεο και τον ήχο. Οι εικόνες πάνε τρεις μαζί, τα βίντεο ένα ένα, με την πρόοδο του καθενός.", "s2.k": "Κάδρο", "s2.t": "9:16, τετράγωνο, 4:5 <b>ή 2.39:1</b>.", "s2.p": "Κάνε ένα πλάνο 16:9 Reel, post, story ή κάδρο σινεμασκόπ: κομμένο, ή ολόκληρο με ένα θολό αντίγραφό του από πίσω. Ή ένα δικό σου μέγεθος, με μαύρες μπάρες όπου αλλάζει το σχήμα. Το anamorphic υλικό ανοίγει στη σωστή αναλογία στη διαδρομή, από 1.33× ως 2×.", "s3.k": "Τρεις έτοιμες ρυθμίσεις", "s3.t": "Μικρό, ισορροπία, <b>ή ποιότητα</b>.", "s3.p": "Ένα πάτημα τα ρυθμίζει όλα· ή ρύθμισε μόνος σου την ποιότητα, το μέγεθος, τα fps, το codec και την ταχύτητα. Το RoarMorph θυμάται τι διάλεξες.", "s4.k": "Για το μοντάζ", "s4.t": "ProRes <b>όταν χρειάζεται</b>.", "s4.p": "Το HEVC του κινητού ή ένα βίντεο από το web σε ProRes (Proxy ως 4444) ή DNxHR (LB ως 444) για το timeline, MXF για το Avid, XDCAM για την τηλεόραση, FFV1 για αρχείο χωρίς απώλειες, ένα στιγμιότυπο για την αφίσα, η συνέντευξη σε WAV 24-bit για τη μίξη.", "all.idx": "05 · Όλα", "all.title": "Και <b>τα υπόλοιπα</b>.", "all.sub": "Το RoarMorph, με λίγα λόγια.", "ix1.t": "Εικόνες που διαβάζει", "ix1.p": "JPG, PNG, WebP, AVIF, HEIC, TIFF, GIF, BMP, SVG, PSD, EXR, DPX και άλλες· σε Mac και RAW κάμερας, JPEG XL και PDF.", "ix2.t": "Εικόνες που φτιάχνει", "ix2.p": "JPG, PNG, WebP, AVIF, TIFF, GIF, BMP, ICO για εικονίδιο, και HEIC σε Mac.", "ix3.t": "Βίντεο που φτιάχνει", "ix3.p": "MP4 με H.264, H.265 ή AV1, WebM, MOV, MKV, AVI, MPG· για το μοντάζ ProRes, DNxHR, MXF, XDCAM και FFV1 χωρίς απώλειες.", "ix4.t": "Αρχή και τέλος", "ix4.p": "Κράτα μόνο ένα κομμάτι του clip: από 0:12 ως 0:45, ας πούμε.", "ix5.t": "Στιγμιότυπο", "ix5.p": "Ένα καρέ σε JPG ή PNG, τη στιγμή που λες.", "ix6.t": "Μόνο ο ήχος", "ix6.p": "MP3, M4A, WAV 16 ή 24-bit, AIFF, ALAC, FLAC ή OGG από οποιοδήποτε βίντεο.", "ix7.t": "Πιο γρήγορα σε Mac", "ix7.p": "H.264 και H.265 με τη μηχανή βίντεο του ίδιου του Mac, πολλές φορές πιο γρήγορα· αν εκείνη αρνηθεί, το ίδιο αρχείο φτιάχνεται με τον κανονικό encoder.", "ix8.t": "LUT και HDR", "ix8.p": "Ένα LUT (.cube, .3dl, .dat, .csp) σε κάθε clip, και το HDR του iPhone (HLG) ή το HDR10 σε Rec.709, για να μη φαίνεται γκρίζο.", "ix9.t": "Ένταση ήχου", "ix9.p": "−14 LUFS για το web, −16 για podcast, −23 για την τηλεόραση· μονό ή στέρεο· 44.1 ή 48 kHz.", "ix11.t": "Αγγλικά και Ελληνικά", "ix11.p": "Η εφαρμογή μιλάει και τα δύο· διαλέγεις πάνω δεξιά.", "p3.t": "Σταμάτα όποτε θες", "p3.p": "Σταμάτα ένα αρχείο ή όλα· ό,τι είχε φτιαχτεί μισό μένει έξω.", "p4.t": "Τα μεταδεδομένα σου, η απόφασή σου", "p4.p": "Τα στοιχεία της κάμερας και η τοποθεσία μένουν έξω από προεπιλογή· ένας διακόπτης τα κρατάει.", "dl.idx": "07 · Λήψη", "dl.title": "Πάρε το <b>RoarMorph</b>.", "dl.sub": "Δωρεάν, και σε beta: ένα πείραμα του Mad Lions Lab που χρησιμοποιούμε για τα δικά μας παραδοτέα.", "dl.mac": "Για Mac με chip της Apple (M1 και νεότερα).", "dl.get": "Λήψη", "dl.intel": "Παλιότερο Mac με Intel;", "dl.intelbtn": "Αυτό", "dl.win": "Windows 10 και 11.", "dl.upd": "<b>Ενημερώνεται μόνο του.</b> Οι εφαρμογές για Mac και Windows κατεβάζουν τις νέες εκδόσεις μόνες τους και ζητούν μια γρήγορη επανεκκίνηση.", "dl.help": "<b>Πρώτη φορά σε Mac;</b> Η εφαρμογή δεν είναι ακόμα υπογεγραμμένη από την Apple: κάνε δεξί κλικ στο RoarMorph στις Εφαρμογές και διάλεξε Άνοιγμα, ή πάτα Άνοιγμα παρόλα αυτά στις Ρυθμίσεις συστήματος › Απόρρητο και ασφάλεια. Σε Windows: Περισσότερες πληροφορίες › Εκτέλεση παρόλα αυτά.", "faq.idx": "08 · Ερωτήσεις", "faq.title": "Καλό να <b>ξέρεις</b>.", "q1": "Είναι δωρεάν το RoarMorph;", "a1": "Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς υδατογράφημα.", "q2": "Πόσο μικραίνει ένα αρχείο;", "a2": "Εξαρτάται από το αρχείο. Ένα master σε ProRes προς H.265 βγαίνει συχνά 90 με 97% μικρότερο· ένα PNG προς WebP 70 με 95%· μια φωτογραφία κινητού σε JPG περίπου 40%. Κάθε αρχείο στη λίστα δείχνει πόσο κέρδισε.", "q3": "Πέφτει ακριβώς στο μέγεθος που ζητάω;", "a3": "Με τα Δύο περάσματα, ναι, λίγο κάτω από αυτό: στις δοκιμές μας ένας στόχος 1 MB βγήκε 0,96 MB. Το ένα πέρασμα είναι πιο γρήγορο και πέφτει κοντά. Ένα bitrate σε Mb/s δουλεύει το ίδιο, όπως το «Restrict to» του Resolve.", "q4": "Ποια μορφή για Instagram, email ή web;", "a4": "Το MP4 με H.264 παίζει παντού· το H.265 είναι περίπου το μισό και παίζει σε κάθε κινητό και σε κάθε πρόσφατο υπολογιστή. Για εικόνες σε site, WebP ή AVIF.", "q5": "Ανοίγει φωτογραφίες RAW και HEIC;", "a5": "Ναι σε Mac: τα HEIC του iPhone και τα RAW των καμερών (DNG, CR3, NEF, ARW, RAF και άλλα) ανοίγουν με τα εργαλεία του ίδιου του Mac, και σώζεται και HEIC. Στα Windows τα HEIC μπορεί να μην ανοίγουν και τα RAW όχι ακόμα· μετάτρεψέ τα σε Mac.", "q6": "Χρειάζομαι internet;", "a6": "Όχι. Μόνο για να κατεβάσεις την εφαρμογή και τις ενημερώσεις της· κάθε μετατροπή γίνεται στον υπολογιστή σου.", "ct.idx": "Επαφή", "ct.title": "Ιδέες για <b>την επόμενη έκδοση</b>;", "ft.lab": "The Mad Lions Lab", "ft.legal": "Απόρρητο & Όροι", "lg.p": "Πολιτική απορρήτου", "lg.t": "Όροι χρήσης", "footer": "© 2026 The Mad Lions · RoarMorph", "nav.new": "Νέα", "ver.b": "Νέο", "ver.t": "στην 0.5 · στρώσεις PSD, δικό σου bitrate, Ρυθμίσεις", "nw.idx": "09 · Νέα", "nw.title": "Τι <b>νέο</b> υπάρχει.", "nw.sub": "Από την 0.4: νέο όνομα και η όψη της οικογένειας Roar, Ρυθμίσεις με ενημερώσεις που βλέπεις, ένα bitrate που ορίζεις εσύ, από τι είναι φτιαγμένο κάθε αρχείο, και αρχεία Photoshop με τις στρώσεις τους.", "n1.t": "Ένα GIF γίνεται βίντεο", "n1.p": "Ρίξε ένα GIF και σώσ’ το ως MP4, MOV, ProRes ή WebM, για να το ανεβάσεις οπουδήποτε ή να το βάλεις στο μοντάζ. Ένα μονό μέγεθος όπως 481×271 γίνεται ζυγό, για να το δέχεται το H.264.", "n8.t": "Το Roarverter είναι πια RoarMorph", "n8.p": "Ίδια εφαρμογή, νέο όνομα, με το εικονίδιο της οικογένειας Roar. Ένα Roarverter που έχεις εγκαταστήσει ενημερώνεται μόνο του σε RoarMorph, με τις επιλογές σου όπως ήταν, και τα παλιά links λήψης δουλεύουν ακόμα.", "tk.10": "GIF σε βίντεο", "tk.11": "HDR σε Rec.709 · LUT", "f1.c2": "Ή Mb/s", "ix13.t": "GIF και προς τις δύο μεριές", "ix13.p": "Ένα clip σε GIF ή σε κινούμενο WebP με τη δική του παλέτα, και ένα GIF σε MP4, MOV, ProRes ή WebM.", "ix14.t": "Ένα δικό σου μέγεθος", "ix14.p": "Πλάτος × ύψος, με μπάρες όπου αλλάζει το σχήμα, και ένα keyframe κάθε N καρέ.", "q7": "Μπορεί να κάνει ένα GIF βίντεο;", "a7": "Ναι, από την 0.3.1: ένα GIF μετράει ως κινούμενη εικόνα, οπότε γίνεται MP4, MOV, ProRes ή WebM. Ένα μονό μέγεθος όπως 481×271 γίνεται ζυγό για το H.264.", "q8": "Γιατί το βίντεο του iPhone μου φαίνεται γκρίζο σε άλλες οθόνες;", "a8": "Γιατί είναι HDR (HLG). Το HDR σε Rec.709 είναι ανοιχτό από προεπιλογή και δουλεύει μόνο όταν η πηγή είναι HDR, οπότε το νέο αρχείο φαίνεται σωστά παντού.", "n9.t": "Ένα PSD μέσα, κάθε στρώση έξω", "n9.p": "Ρίξε ένα αρχείο Photoshop και γίνεται όποια μορφή εικόνας θες, το ίδιο σε Mac και σε Windows: RGB, ασπρόμαυρο ή CMYK, 8, 16 ή 32-bit. Αν έχει στρώσεις, το RoarMorph ρωτάει: μόνο την εικόνα, ή και κάθε στρώση ως δικό της PNG, στο μέγεθος του εγγράφου, στη θέση της, σε έναν φάκελο δίπλα.", "n9.p2": "Κάθε γραμμή δείχνει πια και το βάθος χρώματος: 8-bit, 10-bit, 16-bit.", "n10.t": "Όρισε το bitrate ενός βίντεο", "n10.p": "Στη Συμπίεση, διάλεξε Με ποιότητα ή Με bitrate: ένας ολισθητής από 0,5 ως 150 Mb/s, γρήγορες επιλογές από 2 ως 100, και περίπου πόσο θα βγουν τα βίντεο της λίστας, μαζί με τον ήχο. Άναψε τα Δύο περάσματα και το αρχείο πέφτει ακριβώς εκεί.", "n11.t": "Από τι είναι φτιαγμένο κάθε αρχείο", "n11.p": "Μια γραμμή κάτω από κάθε αρχείο: το codec και το profile ενός βίντεο (H.264 High, ProRes HQ), το bitrate, τα fps, το βάθος χρώματος, το chroma και ο ήχος· η ποιότητα ενός JPEG· πόσο συμπιεσμένη είναι ήδη μια εικόνα.", "n12.t": "Ρυθμίσεις, και ενημερώσεις που βλέπεις", "n12.p": "Το γρανάζι πάνω δεξιά, ή Cmd/Ctrl+,: η γλώσσα, μια ειδοποίηση όταν τελειώνει μια παρτίδα ενώ είσαι σε άλλη εφαρμογή, με ή χωρίς ήχο, και επαναφορά των επιλογών.", "n12.p2": "Οι Ενημερώσεις δείχνουν την έκδοση, Έλεγχος τώρα και Επανεκκίνηση για ενημέρωση. Η αυτόματη ενημέρωση κοιτάει κάθε δύο ώρες, φέρνει τη νέα έκδοση στο παρασκήνιο και τη βάζει όταν κλείνει το RoarMorph· αν την κλείσεις, κοιτάει μόνο όταν το ζητάς.", "n13.t": "Ξανά, με νέες επιλογές", "n13.p": "Ένα έτοιμο αρχείο έχει κουμπί Ξανά, και η λίστα Ξανά για όλα: άλλαξε τις επιλογές, πάτα Μετατροπή, και ένα νέο αρχείο φτιάχνεται δίπλα στο πρώτο, ποτέ από πάνω του.", "n14.t": "Η όψη της οικογένειας Roar", "n14.p": "Στήλες από γραφίτη σαν γυαλί, ένα κόκκινο που λάμπει, ό,τι έχεις διαλέξει φωτισμένο από μέσα: το RoarMorph μοιάζει πια με το RoarMail, το RoarKit και το RoarWriter. Το παράθυρο ανοίγει στη μέση της οθόνης, στο ίδιο μέγεθος για όλους.", "nav.onset": "Στο γύρισμα", "nav.compare": "Σύγκριση", "hero.claim": "2,4 GB μέσα.<br><b>25 MB έξω.</b>", "hero.lead2": "Εικόνες, βίντεο και ήχος σε κάθε μορφή, όσο μικρά θες, <b>στον υπολογιστή σου</b>. Η εικόνα μένει ίδια. Το αρχικό μένει ανέγγιχτο.", "cta.see": "Δες τη διαφορά", "sc.cap": "01:40, το βράδυ πριν την παράδοση. Δεκαοχτώ αρχεία, μία κίνηση.", "nm1": "Ένα master σε ProRes ως H.265, με την ίδια εικόνα.", "nm2": "Ζήτησες 1 MB. Με δύο περάσματα πέφτει λίγο κάτω.", "nm3": "Εικόνες, βίντεο και ήχος μαζί, και ολόκληροι φάκελοι.", "nm4": "Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς υδατογράφημα.", "on.idx": "01 · Στο γύρισμα", "on.title": "Φτιαγμένο από ανθρώπους <b>που κάνουν ταινίες</b>.", "on.sub": "Φτιάξαμε το RoarMorph για τα δικά μας γυρίσματα στο The Mad Lions. Εδώ το χρησιμοποιούμε.", "on1.k": "Στο γύρισμα · Ο DIT", "on1.t": "Τα dailies φεύγουν πριν το wrap.", "on1.p": "Τα clips και τα BTS της μέρας, αρκετά μικρά για να σταλούν από το καρότσι όσο υπάρχει ακόμα φως.", "on2.k": "Στον δρόμο · Η παραγωγός", "on2.t": "25 MB για τον πελάτη.", "on2.p": "Ένα κομμάτι που χωράει στο email, στη φόρμα του φεστιβάλ ή στο WhatsApp, από το βανάκι, χωρίς ώρες upload.", "on3.k": "Στο στούντιο · Το μοντάζ", "on3.t": "Υλικό κινητού, έτοιμο για timeline.", "on3.p": "Το HDR του iPhone σε ProRes που φαίνεται σωστά, το PSD της αφίσας στις στρώσεις του, η συνέντευξη σε WAV για τη μίξη.", "cp.idx": "03 · Ίδια εικόνα", "cp.title": "Ίδια εικόνα. <b>Στο ένα εικοστό πέμπτο του μεγέθους.</b>", "cp.sub": "Σύρε τη γραμμή. Αριστερά το αρχικό σε 4K ProRes, δεξιά αυτό που έφτιαξε το RoarMorph με Share › MP4 H.265 › Balanced.", "cp.l": "Αρχικό", "cp.drag": "Σύγκριση", "why.idx": "06 · Γιατί Roar", "why.title": "Γιατί <b>μια εφαρμογή Roar</b>.", "why.sub": "Τι υπόσχεται κάθε εφαρμογή του The Mad Lions Lab, και το RoarMorph.", "w1.t": "Στον υπολογιστή σου", "w1.p": "Χωρίς λογαριασμό, χωρίς server, χωρίς upload. Το υλικό που δεν έχει βγει μένει σε σένα, και δεν χρειάζεται internet.", "w2.t": "Το αρχικό μένει", "w2.p": "Ένα νέο αρχείο δίπλα του, _converted από προεπιλογή, με αριθμό αν το όνομα υπάρχει. Τίποτα δεν γράφεται από πάνω.", "w3.t": "Ενημερώνεται μόνο του", "w3.p": "Οι νέες εκδόσεις έρχονται στο παρασκήνιο και μπαίνουν όταν το κλείνεις. Mac και Windows.", "w4.t": "Φτιαγμένο από κινηματογραφιστές", "w4.p": "Το The Mad Lions, εταιρεία παραγωγής στην Αθήνα, το χρησιμοποιεί για τα δικά του παραδοτέα. Οι ιδέες σου πάνε κατευθείαν σε όσους το φτιάχνουν.", "nm3u": "κίνηση"}
 
   var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
-  var EN = {}
+  var EN = { 'cp.drag': 'Compare' }
   nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })
   var mineLabel = { en: { mac: 'Your computer', win: 'Your computer' }, el: { mac: 'Ο υπολογιστής σου', win: 'Ο υπολογιστής σου' } }
   function setLang(l) {
@@ -719,6 +848,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     document.documentElement.lang = l === 'el' ? 'el' : 'en'
     document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) })
     ;['mac', 'win'].forEach(function (k) { var e = document.getElementById('dl-' + k); if (e) e.dataset.mine = mineLabel[l === 'el' ? 'el' : 'en'][k] })
+    var r = document.querySelector('#ba input'); if (r) r.setAttribute('aria-label', d['cp.drag'] || EN['cp.drag'] || 'Compare')
     setMain(l); showVer(l)
     try { localStorage.setItem('tml_site_lang', l) } catch (e) {}
   }
@@ -775,6 +905,14 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   else {
     var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }) }, { rootMargin: '0px 0px -8% 0px', threshold: .06 })
     rv.forEach(function (e) { io.observe(e) })
+  }
+  // before and after: the line follows the slider; the size bars fill when they come in
+  var ba = document.getElementById('ba')
+  if (ba) {
+    var rng = ba.querySelector('input')
+    rng.addEventListener('input', function () { ba.style.setProperty('--x', rng.value + '%') })
+    var bars = document.querySelector('.ba-bars')
+    if (bars) { if (still || !('IntersectionObserver' in window)) bars.classList.add('in'); else { var bio = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { bars.classList.add('in'); bio.disconnect() } }, { threshold: .4 }); bio.observe(bars) } }
   }
   // the frame leans a little toward the pointer (computers only)
   var win = document.getElementById('win')
