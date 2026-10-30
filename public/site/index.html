@@ -464,78 +464,124 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
 .lab-big b { font-weight: 800; }
 .lab-sub { margin: 18px 0 0; text-align: center; font-size: clamp(18px, 2vw, 24px); font-weight: 300; color: color-mix(in srgb, var(--text) 75%, transparent); }
 .lab-sub b { font-weight: 500; color: var(--text); }
-/* the experiments as posters (Alex, 20 Oct): five tall panels side by side, each its own colour, the name standing
-   up; the one you point at (or focus) opens wide with what it is and a way in. On a phone: five cards, all open. */
-.lab-list { max-width: 1300px; margin: 52px auto 0; height: clamp(470px, 44vw, 560px); display: flex; gap: 10px; }
-.lab-x { position: relative; flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: 24px; border-radius: 20px; border: 1px solid color-mix(in srgb, var(--text) 14%, transparent); background: linear-gradient(170deg, color-mix(in srgb, var(--text) 7%, transparent), color-mix(in srgb, var(--text) 2%, transparent)); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 10%, transparent); color: var(--text); text-decoration: none; transition: flex .8s cubic-bezier(.16,1,.3,1), border-color .4s; }
-/* glassy, the colour only a soft glow (Alex, 20 Oct: less loud); a little stronger on the open one */
-.lab-x::before { content: ''; position: absolute; inset: 0; background: var(--g); opacity: .22; transition: opacity .6s; pointer-events: none; }
-.lab-x.on::before, .lab-list:hover .lab-x:hover::before, .lab-x:focus-visible::before { opacity: .38; }
-.lab-list:hover .lab-x.on:not(:hover)::before { opacity: .22; }
-.lab-x::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, color-mix(in srgb, var(--bg) 55%, transparent)); pointer-events: none; }
+/* the apps as posters (Alex, 20 Oct; refreshed 30 Oct: "the apps have changed a lot, something fresher"): eight tall
+   glass panels side by side, each with its app's icon at the top and the name standing up; the open one is wide, with a
+   window of the app as it is now (drawn here, not a picture), where it runs, what it is and a way in. The open one takes
+   turns by itself every few seconds while nobody points at the row, a thin line at its foot counting down; a soft light
+   follows the pointer. On a phone: one card at a time, side by side, swiped. */
+.lab-list { --ease: cubic-bezier(.16, 1, .3, 1); max-width: 1320px; margin: 52px auto 0; height: clamp(500px, 46vw, 600px); display: flex; gap: 10px; }
+.lab-x { position: relative; flex: 1; min-width: 0; overflow: hidden; isolation: isolate; display: flex; flex-direction: column; justify-content: flex-end; padding: 22px; border-radius: 24px;
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, -20%), rgba(255, 90, 75, .13), transparent 62%), linear-gradient(170deg, color-mix(in srgb, var(--text) 7%, transparent), color-mix(in srgb, var(--text) 2%, transparent));
+  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 12%, transparent), 0 24px 60px -30px rgba(0, 0, 0, .6);
+  color: var(--text); text-decoration: none; transition: flex .9s var(--ease), border-color .4s, transform .4s var(--ease); }
+.lab-x::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--g); opacity: .24; transition: opacity .6s; pointer-events: none; }
+.lab-x::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, transparent 40%, color-mix(in srgb, var(--bg) 62%, transparent)); pointer-events: none; }
+.lab-x:hover { border-color: color-mix(in srgb, #ff5a4b 34%, transparent); }
+.lab-x.on::before, .lab-list:hover .lab-x:hover::before, .lab-x:focus-visible::before { opacity: .44; }
+.lab-list:hover .lab-x.on:not(:hover)::before { opacity: .24; }
 .lab-x > * { position: relative; z-index: 1; }
-.lab-x .no { position: absolute; top: 22px; left: 24px; font-size: 13px; letter-spacing: .2em; color: var(--muted); }
+/* the icon at the top, the number beside it */
+.lab-x .top { position: absolute; top: 18px; left: 18px; right: 18px; display: flex; align-items: center; gap: 10px; }
+.lab-x .ico { width: 46px; height: 46px; border-radius: 22.5%; flex: none; box-shadow: 0 1px 0 rgba(255, 255, 255, .14) inset, 0 10px 24px rgba(0, 0, 0, .45), 0 8px 30px -8px rgba(212, 0, 0, .5); transition: transform .6s var(--ease); }
+.lab-x:hover .ico, .lab-x.on .ico { transform: translateY(-2px) scale(1.04); }
+.lab-x .no { font-size: 12px; letter-spacing: .22em; color: var(--muted); opacity: 0; transition: opacity .4s; }
+.lab-x.on .no, .lab-list:hover .lab-x:hover .no { opacity: 1; }
+.lab-list:hover .lab-x.on:not(:hover) .no { opacity: 0; }
 .lab-x .wm { font-weight: 800; letter-spacing: .04em; line-height: 1; white-space: nowrap; }
 .lab-x .wm span { font-weight: 250; }
 .lab-x > .wm { font-size: clamp(22px, 2.2vw, 34px); writing-mode: vertical-rl; transform: rotate(180deg); align-self: flex-start; transition: opacity .3s; }
-.lab-x .open { position: absolute; left: 24px; right: 24px; bottom: 24px; display: grid; gap: 10px; max-width: 380px; opacity: 0; transform: translateY(12px); transition: opacity .4s .15s, transform .6s .15s cubic-bezier(.16,1,.3,1); }
-.lab-x .open .wm { font-size: clamp(30px, 3.2vw, 46px); }
-.lab-x .open .d { font-size: 15.5px; font-weight: 300; color: color-mix(in srgb, var(--text) 80%, transparent); }
-.lab-x .open em { font-style: normal; justify-self: start; padding: 9px 16px; border-radius: 99px; background: var(--accent); color: var(--on-accent); font-size: 13.5px; font-weight: 600; }
-.lab-list .lab-x.on, .lab-list:hover .lab-x:hover, .lab-list .lab-x:focus-visible { flex: 4; }
+.lab-x .open { position: absolute; left: 24px; right: 24px; bottom: 26px; display: grid; gap: 10px; max-width: 420px; opacity: 0; transform: translateY(14px); transition: opacity .4s .15s, transform .7s .15s var(--ease); }
+.lab-x .open .wm { font-size: clamp(32px, 3.4vw, 50px); }
+.lab-x .open .d { font-size: 15.5px; font-weight: 300; color: color-mix(in srgb, var(--text) 82%, transparent); }
+.lab-x .open .tag { justify-self: start; padding: 5px 11px; border-radius: 99px; font-size: 11.5px; font-weight: 600; letter-spacing: .02em; color: color-mix(in srgb, var(--text) 86%, transparent); background: color-mix(in srgb, var(--text) 8%, transparent); border: 1px solid color-mix(in srgb, var(--text) 13%, transparent); }
+.lab-x .open em { font-style: normal; justify-self: start; display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 99px; background: linear-gradient(180deg, #ff4a3d, #d40000); color: #fff; font-size: 13.5px; font-weight: 600; box-shadow: 0 10px 26px -8px rgba(212, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .25); transition: transform .3s var(--ease); }
+.lab-x .open em::after { content: '→'; transition: transform .3s var(--ease); }
+.lab-x:hover .open em::after { transform: translateX(3px); }
+.lab-list .lab-x.on, .lab-list:hover .lab-x:hover, .lab-list .lab-x:focus-visible { flex: 4.2; }
 .lab-list:hover .lab-x.on:not(:hover), .lab-list:focus-within .lab-x.on:not(:focus-visible) { flex: 1; }
 .lab-x.on .open, .lab-list:hover .lab-x:hover .open, .lab-x:focus-visible .open { opacity: 1; transform: none; }
 .lab-x.on > .wm, .lab-list:hover .lab-x:hover > .wm, .lab-x:focus-visible > .wm { opacity: 0; }
 .lab-list:hover .lab-x.on:not(:hover) .open, .lab-list:focus-within .lab-x.on:not(:focus-visible) .open { opacity: 0; }
 .lab-list:hover .lab-x.on:not(:hover) > .wm, .lab-list:focus-within .lab-x.on:not(:focus-visible) > .wm { opacity: 1; }
-@media (prefers-reduced-motion: reduce) { .lab-x, .lab-x .open, .lab-x > .wm { transition: none; } }
-/* inside each poster a small glass piece of the app itself (Alex, 20 Oct), drawn here, not a picture; a sliver of it
-   shows on the closed posters, all of it on the open one */
-.lab-x .ui { position: absolute; z-index: 1; top: 52px; left: 20px; bottom: 190px; width: calc(100% - 40px); min-width: 340px; display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; overflow: hidden; border-radius: 18px; background: color-mix(in srgb, var(--text) 6%, transparent); border: 1px solid color-mix(in srgb, var(--text) 13%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 20px 50px rgba(0,0,0,.28), inset 0 1px 0 color-mix(in srgb, var(--hi) 10%, transparent); font-size: 13.5px; line-height: 1.3; color: var(--text); opacity: .4; transform: translateY(6px) scale(.98); transform-origin: top left; transition: opacity .6s, transform .8s cubic-bezier(.16,1,.3,1); pointer-events: none; }
-.lab-x.on .ui, .lab-list:hover .lab-x:hover .ui, .lab-x:focus-visible .ui { opacity: 1; transform: none; }
-.lab-list:hover .lab-x.on:not(:hover) .ui { opacity: .4; transform: translateY(6px) scale(.98); }
-.ui .h { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 12.5px; }
-.ui .h small { margin-left: auto; font-weight: 400; color: var(--muted); font-size: 10.5px; }
-.ui .av { width: 22px; height: 22px; border-radius: 50%; flex: none; background: linear-gradient(135deg, #ff8a6b, #e0483a); }
-.ui .b { justify-self: start; max-width: 78%; padding: 7px 10px; border-radius: 12px 12px 12px 4px; background: color-mix(in srgb, var(--text) 9%, transparent); }
-.ui .b.me { justify-self: end; border-radius: 12px 12px 4px 12px; background: linear-gradient(180deg, #e2231a, #b50000); color: #fff; }
-.ui .f { display: flex; align-items: center; gap: 8px; padding: 7px 9px; border-radius: 10px; background: color-mix(in srgb, var(--text) 6%, transparent); }
+/* the turn's countdown: a thin red line at the foot of the open one */
+.lab-x .tick { position: absolute; left: 24px; right: 24px; bottom: 12px; height: 2px; border-radius: 2px; background: color-mix(in srgb, var(--text) 10%, transparent); overflow: hidden; opacity: 0; transition: opacity .3s; }
+.lab-x .tick::after { content: ''; position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, #ff6b5e, #d40000); }
+.lab-list.turning .lab-x.on .tick { opacity: 1; }
+.lab-list.turning .lab-x.on .tick::after { animation: lab-tick var(--turn, 6s) linear forwards; }
+.lab-list:hover .tick { opacity: 0 !important; }
+@keyframes lab-tick { to { transform: scaleX(1); } }
+
+/* inside each poster a window of the app itself: a title bar with its three dots, then the app */
+.lab-x .ui { position: absolute; z-index: 1; top: 80px; left: 20px; bottom: 218px; width: calc(100% - 40px); min-width: 300px; display: flex; flex-direction: column; gap: 8px; padding: 0 16px 14px; overflow: hidden; border-radius: 18px;
+  background: color-mix(in srgb, var(--bg) 52%, transparent); border: 1px solid color-mix(in srgb, var(--text) 13%, transparent); -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 26px 60px rgba(0, 0, 0, .38), inset 0 1px 0 color-mix(in srgb, var(--hi) 12%, transparent); font-size: 13.5px; line-height: 1.3; color: var(--text);
+  opacity: .3; transform: translateY(10px) scale(.97); transform-origin: top left; transition: opacity .6s, transform .9s var(--ease); pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 35%, transparent 78%); mask-image: linear-gradient(180deg, #000 35%, transparent 78%); }
+.lab-x.on .ui, .lab-list:hover .lab-x:hover .ui, .lab-x:focus-visible .ui { opacity: 1; transform: none; -webkit-mask-image: none; mask-image: none; }
+.lab-list:hover .lab-x.on:not(:hover) .ui { opacity: .3; transform: translateY(10px) scale(.97); -webkit-mask-image: linear-gradient(180deg, #000 35%, transparent 78%); mask-image: linear-gradient(180deg, #000 35%, transparent 78%); }
+.ui .win { display: flex; align-items: center; gap: 6px; margin: 0 -16px 4px; padding: 10px 14px; border-bottom: 1px solid color-mix(in srgb, var(--text) 9%, transparent); background: color-mix(in srgb, var(--text) 4%, transparent); }
+.ui .win i { width: 9px; height: 9px; border-radius: 50%; background: #ff5f57; flex: none; } .ui .win i + i { background: #febc2e; } .ui .win i + i + i { background: #28c840; }
+.ui .win b { margin-left: 8px; font-size: 11.5px; font-weight: 600; color: var(--muted); letter-spacing: .02em; }
+.ui .h { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14.5px; }
+.ui .h small { margin-left: auto; font-weight: 400; color: var(--muted); font-size: 12px; }
+.ui .av { width: 28px; height: 28px; border-radius: 50%; flex: none; background: linear-gradient(135deg, #ff8a6b, #e0483a); }
+.ui .b { align-self: flex-start; max-width: 78%; padding: 9px 13px; border-radius: 14px 14px 14px 4px; background: color-mix(in srgb, var(--text) 9%, transparent); }
+.ui .h + .b { margin-top: auto; }
+.ui .b u { text-decoration: none; color: #ff8f86; font-weight: 700; }
+.ui .b.me { align-self: flex-end; border-radius: 14px 14px 4px 14px; background: linear-gradient(180deg, #e2231a, #b50000); color: #fff; }
+.ui .b.file { display: grid; grid-template-columns: auto 1fr; column-gap: 9px; align-items: center; font-weight: 600; }
+.ui .b.file i { grid-row: span 2; width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #ff6b5e, #b80000); }
+.ui .b.file small { font-weight: 400; font-size: 11px; color: var(--muted); }
+.ui .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.ui .chip { padding: 5px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 600; white-space: nowrap; background: color-mix(in srgb, var(--text) 8%, transparent); border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); }
+.ui .chip.red { background: rgba(255, 59, 47, .16); border-color: rgba(255, 90, 75, .35); color: #ff9c93; }
+.ui .chip.ok { background: rgba(47, 211, 107, .13); border-color: rgba(47, 211, 107, .3); color: #4fd07f; }
+.ui .f { flex: 1 1 0; max-height: 58px; min-height: 30px; display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 12px; background: color-mix(in srgb, var(--text) 6%, transparent); }
 .ui .f b { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ui .f small { color: var(--muted); font-size: 10px; white-space: nowrap; }
+.ui .f small { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+.ui .f small.yes { color: #fff; background: #2fa760; padding: 3px 9px; border-radius: 99px; font-weight: 600; }
+.ui .f.inv { background: rgba(255, 178, 36, .1); }
 .ui .f i { width: 3px; align-self: stretch; border-radius: 3px; flex: none; }
-.ui .t { font-variant-numeric: tabular-nums; color: #ff8f86; font-weight: 600; width: 38px; flex: none; }
-.ui .ok { justify-self: start; padding: 4px 9px; border-radius: 99px; background: rgba(47,211,107,.14); color: #3fb96b; font-size: 10px; font-weight: 600; }
-.ui .fr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.ui .fr span { display: grid; gap: 4px; font-size: 9.5px; color: var(--muted); }
-.ui .fr span i { aspect-ratio: 16 / 9; border-radius: 6px; background: linear-gradient(135deg, #3a2a2a, #14161a); border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); }
-.ui .fr span:nth-child(2) i { background: linear-gradient(135deg, #1d2c52, #0b0e16); } .ui .fr span:nth-child(3) i { background: linear-gradient(135deg, #5a3a12, #140d06); }
-.ui .fr span:nth-child(4) i { background: linear-gradient(135deg, #1d4a35, #06110c); } .ui .fr span:nth-child(5) i { background: linear-gradient(135deg, #4a1d3a, #12060e); } .ui .fr span:nth-child(6) i { background: linear-gradient(135deg, #2f2f36, #0e0e12); }
-.ui .ring { justify-self: center; position: relative; width: 84px; height: 84px; }
+.ui .t { font-variant-numeric: tabular-nums; color: #ff8f86; font-weight: 600; width: 48px; flex: none; }
+.ui .fr { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ui .fr span { display: flex; flex-direction: column; gap: 4px; min-height: 0; font-size: 11px; color: var(--muted); }
+.ui .fr span i { flex: 1; min-height: 0; border-radius: 7px; background: linear-gradient(135deg, #3a2a2a, #14161a); border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); }
+.ui .fr span:nth-child(2) i { background: linear-gradient(135deg, #4a1d1d, #120808); } .ui .fr span:nth-child(3) i { background: linear-gradient(135deg, #5a3a12, #140d06); }
+.ui .fr span:nth-child(4) i { background: linear-gradient(135deg, #2b2b33, #0e0e12); } .ui .fr span:nth-child(5) i { background: linear-gradient(135deg, #4a1d3a, #12060e); } .ui .fr span:nth-child(6) i { background: linear-gradient(135deg, #6a2a0a, #140803); }
+.ui .fr span:nth-child(7) i { background: linear-gradient(135deg, #3a1416, #0d0d0e); } .ui .fr span:nth-child(8) i { background: linear-gradient(135deg, #5a1a12, #120605); } .ui .fr span:nth-child(9) i { background: linear-gradient(135deg, #2f2f36, #0e0e12); }
+.ui .ring { align-self: center; position: relative; flex: 0 0 auto; width: 112px; height: 112px; margin: auto 0; }
 .ui .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .ui .ring circle { fill: none; stroke-width: 7; } .ui .ring .a { stroke: color-mix(in srgb, var(--text) 12%, transparent); } .ui .ring .c { stroke: #ff3b2f; stroke-linecap: round; stroke-dasharray: 352; stroke-dashoffset: 127; }
-.ui .ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 20px; font-weight: 300; }
+.ui .ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 28px; font-weight: 300; }
 .ui .bar { display: block; margin-top: 5px; height: 4px; border-radius: 99px; background: color-mix(in srgb, var(--text) 12%, transparent); overflow: hidden; } .ui .bar i { display: block; height: 100%; width: 44%; background: linear-gradient(90deg, #ff6b5e, #d40000); }
-/* filling it: rows share the height, the chat sits at the bottom, frames and ring grow */
-.ui .h { font-size: 14.5px; } .ui .h small { font-size: 12px; } .ui .av { width: 28px; height: 28px; }
-.ui .b { align-self: flex-start; padding: 9px 13px; } .ui .b.me { align-self: flex-end; } .ui .h + .b { margin-top: auto; }
-.ui .f { flex: 1 1 0; max-height: 60px; min-height: 30px; padding: 10px 12px; } .ui .f small { font-size: 11.5px; } .ui .t { width: 48px; }
-.ui .ok { align-self: flex-start; font-size: 11.5px; padding: 5px 11px; }
-.ui .fr { flex: 1; min-height: 0; grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.ui .fr span { display: flex; flex-direction: column; min-height: 0; font-size: 11px; } .ui .fr span i { flex: 1; min-height: 0; aspect-ratio: auto; }
-.ui .ring { align-self: center; flex: 0 0 auto; width: 118px; height: 118px; margin: auto 0; } .ui .ring b { font-size: 28px; }
-/* RoarWriter's card: a script page, white, in Courier */
+/* RoarWriter's window: a script page, white, in Courier */
 .ui .pg { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px; padding: 14px 16px; border-radius: 8px; background: #fbfaf7; color: #1b1b1b; font-family: 'Courier Prime', 'Courier New', Courier, monospace; font-size: 11.5px; line-height: 1.3; overflow: hidden; }
 .ui .pg .sh { font-weight: 700; } .ui .pg .ch { margin: 3px 0 -6px 38%; } .ui .pg .dg { margin: 0 12% 0 22%; } .ui .pg .pn { margin: 0 0 -6px 30%; color: #555; }
-@media (prefers-reduced-motion: reduce) { .lab-x .ui { transition: none; } }
-@media (max-width: 760px) {
-  .lab-x .ui { position: static; opacity: 1 !important; transform: none !important; width: auto; min-width: 0; height: 300px; margin: 30px 0 4px; }
-  .lab-x .open { margin-top: 18px; }
+/* the open window moves a little while it is open, as if the app were running */
+@media (prefers-reduced-motion: no-preference) {
+  .lab-x.on .ui .ring .c, .lab-list:hover .lab-x:hover .ui .ring .c { animation: lab-ring 3.6s var(--ease) infinite alternate; }
+  .lab-x.on .ui .bar i, .lab-list:hover .lab-x:hover .ui .bar i { animation: lab-bar 3.6s var(--ease) infinite alternate; }
+  .lab-x.on .ui .b, .lab-x.on .ui .f, .lab-x.on .ui .chips { animation: lab-in .7s var(--ease) both; }
+  .lab-x.on .ui > :nth-child(3) { animation-delay: .05s; } .lab-x.on .ui > :nth-child(4) { animation-delay: .1s; } .lab-x.on .ui > :nth-child(5) { animation-delay: .15s; }
+  .lab-x.on .ui > :nth-child(6) { animation-delay: .2s; } .lab-x.on .ui > :nth-child(7) { animation-delay: .25s; } .lab-x.on .ui > :nth-child(8) { animation-delay: .3s; }
 }
+@keyframes lab-ring { from { stroke-dashoffset: 210; } to { stroke-dashoffset: 60; } }
+@keyframes lab-bar { from { width: 18%; } to { width: 86%; } }
+@keyframes lab-in { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .lab-x, .lab-x .open, .lab-x > .wm, .lab-x .ui, .lab-x .ico { transition: none; } }
+
+/* a phone: the cards side by side, one in view, swiped; every one open */
 @media (max-width: 760px) {
-  .lab-list { height: auto; flex-direction: column; }
-  .lab-x { flex: none !important; min-height: 160px; }
-  .lab-x > .wm { display: none; }
-  .lab-x .open { position: static; opacity: 1 !important; transform: none; margin-top: 34px; }
+  .lab-list { height: auto; margin: 36px calc(-1 * var(--pad, 20px)) 0; padding: 4px var(--pad, 20px) 12px; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .lab-list::-webkit-scrollbar { display: none; }
+  .lab-x { flex: 0 0 84% !important; scroll-snap-align: center; min-height: 0; padding: 18px; }
+  .lab-x::before { opacity: .4 !important; }
+  .lab-x > .wm, .lab-x .tick { display: none; }
+  .lab-x .top { position: static; margin-bottom: 14px; } .lab-x .no { opacity: 1 !important; }
+  .lab-x .ui { position: static; opacity: 1 !important; transform: none !important; width: auto; min-width: 0; height: 330px; -webkit-mask-image: none !important; mask-image: none !important; }
+  .lab-x .open { position: static; opacity: 1 !important; transform: none; margin-top: 18px; }
+  .lab-x .open .wm { font-size: 32px; }
 }
 /* Services, How we work, About and Clients: the titles and their texts centred (Alex, 18 Oct); the cards keep their own layout */
 .services > .label, .services > h2, .clients > .label, .clients > h2 { text-align: center; }
@@ -693,14 +739,14 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
     <h2 class="lab-big reveal">THE<b>MAD</b>LIONS<b>LAB</b></h2>
     <p class="lab-sub reveal" data-t="lab.title" data-html>What we build <b>between films.</b></p>
     <div class="lab-list reveal">
-      <a class="lab-x on" href="roarme/" style="--g: radial-gradient(120% 80% at 30% 10%, #7a1010, #160606)"><span class="no">01</span><span class="ui" aria-hidden="true"><span class="h"><i class="av"></i>Night Shoot · crew<small>8 online</small></span><span class="b">Call moved to 18:30</span><span class="b me">On my way</span><span class="b">Bring the 24-70, please</span><span class="b me">Packed it</span><span class="b">Parking is behind the station</span></span><b aria-hidden="true" class="wm"><span>ROAR</span>ME</b><span class="open"><b class="wm"><span>ROAR</span>ME</b><span class="d" data-t="lab.rm">The messenger for teams.</span><em data-t="lab.disc">Discover</em></span></a>
-      <a class="lab-x" href="lab/roardino/" style="--g: radial-gradient(120% 80% at 70% 10%, #5a3a12, #140d06)"><span class="no">02</span><span class="ui" aria-hidden="true"><span class="h">Day 2 · Railway station<small>Fri 23 Oct</small></span><span class="f"><span class="t">06:30</span><b>Crew call</b><small>Platform 1</small></span><span class="f"><span class="t">08:00</span><b>First shot</b><small>Sc. 12</small></span><span class="f"><span class="t">13:00</span><b>Lunch</b><small>45 min</small></span><span class="f"><span class="t">16:30</span><b>Night set-up</b><small>Sc. 14</small></span><span class="f"><span class="t">19:12</span><b>Sunset</b><small>18°C, clear</small></span><span class="f"><span class="t">23:00</span><b>Wrap</b><small>Railway station</small></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>DINO</b><span class="open"><b class="wm"><span>ROAR</span>DINO</b><span class="d" data-t="lab.rd">The call sheet, in one link.</span><em data-t="lab.disc">Discover</em></span></a>
-      <a class="lab-x" href="lab/roarmail/" style="--g: radial-gradient(120% 80% at 30% 10%, #1d2c52, #080b14)"><span class="no">03</span><span class="ui" aria-hidden="true"><span class="h">All Inboxes<small>12 unread</small></span><span class="f"><i style="background:#ff5a4f"></i><b>Maria P. · Night Shoot schedule</b><small>19:46</small></span><span class="f"><i style="background:#3b82f6"></i><b>Rental House · lens order</b><small>18:12</small></span><span class="f"><i style="background:#2fd36b"></i><b>Gallery newsletter</b><small>Mon</small></span><span class="f"><i style="background:#3b82f6"></i><b>Elena · colour grade notes</b><small>Sun</small></span><span class="f"><i style="background:#ff5a4f"></i><b>Location scout · railway permits</b><small>Sat</small></span><span class="ok">3 trackers blocked</span></span><b aria-hidden="true" class="wm"><span>ROAR</span>MAIL</b><span class="open"><b class="wm"><span>ROAR</span>MAIL</b><span class="d" data-t="lab.ml">The mail app, private by design.</span><em data-t="lab.disc">Discover</em></span></a>
-      <a class="lab-x" href="lab/roarlist/" style="--g: radial-gradient(120% 80% at 70% 10%, #1d4a35, #06110c)"><span class="no">04</span><span class="ui" aria-hidden="true"><span class="h">Scene 12 · Platform<small>6 shots</small></span><span class="fr"><span><i></i>1 · Wide</span><span><i></i>2 · Medium</span><span><i></i>3 · Close-up</span><span><i></i>4 · Insert</span><span><i></i>5 · OTS</span><span><i></i>6 · Wide</span><span><i></i>7 · Two shot</span><span><i></i>8 · Close-up</span><span><i></i>9 · Wide</span></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>LIST</b><span class="open"><b class="wm"><span>ROAR</span>LIST</b><span class="d" data-t="lab.rl">The shot list, frame by frame.</span><em data-t="lab.disc">Discover</em></span></a>
-      <a class="lab-x" href="https://roartransfer.com/about/" style="--g: radial-gradient(120% 80% at 50% 10%, #4a0d0d, #0e0505)"><span class="no">05</span><span class="ui" aria-hidden="true"><span class="h">RoarTransfer<small>5 GB</small></span><span class="ring"><svg viewBox="0 0 128 128"><circle class="a" cx="64" cy="64" r="56"/><circle class="c" cx="64" cy="64" r="56"/></svg><b>64%</b></span><span class="f"><b>A001_C003_NIGHT.MOV</b><small>1.2 GB</small></span><span class="f"><b>A001_C004_NIGHT.MOV<span class="bar"><i></i></span></b><small>1.6 GB</small></span><span class="f"><b>Sound_Day2.wav</b><small>210 MB</small></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>TRANSFER</b><span class="open"><b class="wm"><span>ROAR</span>TRANSFER</b><span class="d" data-t="lab.rt">Big files, one link.</span><em data-t="lab.disc">Discover</em></span></a>
-      <a class="lab-x" href="lab/roarwriter/" style="--g: radial-gradient(120% 80% at 70% 10%, #6a2a0a, #140803)"><span class="no">06</span><span class="ui" aria-hidden="true"><span class="h">The Last Train<small>92 pages</small></span><span class="pg"><span class="sh">EXT. RAILWAY STATION - NIGHT</span><span>The last train pulls out. NIKOS (40) stays alone on the platform.</span><span class="ch">NIKOS</span><span class="pn">(quietly)</span><span class="dg">You said you would come.</span><span class="sh">INT. TRAIN - CONTINUOUS</span><span>Through the glass, MARIA watches him disappear.</span></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>WRITER</b><span class="open"><b class="wm"><span>ROAR</span>WRITER</b><span class="d" data-t="lab.rw">Screenwriting, from the page to the shoot.</span><em data-t="lab.disc">Discover</em></span></a>
-      <a class="lab-x" href="lab/roarkit/" style="--g: radial-gradient(120% 80% at 30% 10%, #3a1416, #0d0d0e)"><span class="no">07</span><span class="ui" aria-hidden="true"><span class="h">Overview<small>4 things to look at</small></span><span class="f"><i style="background:#bf5af2"></i><b>Start-up disk · 160 GB free</b><small>Space map</small></span><span class="f"><i style="background:#30b0c7"></i><b>Caches · 64.2 GB to clear</b><small>Clean up</small></span><span class="f"><i style="background:#34c759"></i><b>Card A001 · 3 copies checked</b><small>MHL</small></span><span class="f"><i style="background:#636366"></i><b>Vault · 8 passwords</b><small>Locked</small></span><span class="ok">Only to the Trash</span></span><b aria-hidden="true" class="wm"><span>ROAR</span>KIT</b><span class="open"><b class="wm"><span>ROAR</span>KIT</b><span class="d" data-t="lab.tw">Sixteen tools for the computer and the shoot.</span><em data-t="lab.disc">Discover</em></span></a>
-      <a class="lab-x" href="lab/roarmorph/" style="--g: radial-gradient(120% 80% at 30% 10%, #2b1a12, #0d0d0e)"><span class="no">08</span><span class="ui" aria-hidden="true"><span class="h">Converted<small>6 files · 24.3 GB → 1.2 GB</small></span><span class="f"><i style="background:#32d74b"></i><b>A001_C003.mov → H.265</b><small>−96%</small></span><span class="f"><i style="background:#32d74b"></i><b>Poster_Night_Shoot.png → WebP</b><small>−94%</small></span><span class="f"><i style="background:#ffb224"></i><b>Spot_30s_FINAL.mov</b><small>64%</small></span><span class="f"><i style="background:#ff453a"></i><b>Target · 25 MB</b><small>✓</small></span><span class="ok">Nothing uploaded</span></span><b aria-hidden="true" class="wm"><span>ROAR</span>MORPH</b><span class="open"><b class="wm"><span>ROAR</span>MORPH</b><span class="d" data-t="lab.rv">Every format, a smaller file.</span><em data-t="lab.disc">Discover</em></span></a>
+      <a class="lab-x on" href="roarme/" style="--g: radial-gradient(120% 80% at 30% 10%, #7a1010, #160606)"><span class="top"><img class="ico" src="lab/icons/roarme.png" alt="" width="46" height="46" loading="lazy" decoding="async"><span class="no">01</span></span><span class="ui" aria-hidden="true"><span class="win"><i></i><i></i><i></i><b>RoarMe</b></span><span class="h"><i class="av"></i># night-shoot<small>8 online</small></span><span class="b"><u>@here</u> call moved to 18:30</span><span class="b me">On my way</span><span class="b file"><i></i>A001_C003.MOV<small>1.2 GB · RoarTransfer</small></span><span class="b">Bring the 24-70, please</span><span class="chips"><span class="chip">⏰ Remind me · 17:30</span><span class="chip red">@all · 3 tasks</span></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>ME</b><span class="open"><span class="tag">Web · phone · desktop</span><b class="wm"><span>ROAR</span>ME</b><span class="d" data-t="lab.rm">The messenger for crews.</span><em data-t="lab.disc">Discover</em></span><i class="tick" aria-hidden="true"></i></a>
+      <a class="lab-x" href="lab/roardino/" style="--g: radial-gradient(120% 80% at 70% 10%, #5a3a12, #140d06)"><span class="top"><img class="ico" src="lab/icons/roardino.png" alt="" width="46" height="46" loading="lazy" decoding="async"><span class="no">02</span></span><span class="ui" aria-hidden="true"><span class="win"><i></i><i></i><i></i><b>Roardino</b></span><span class="h">Day 2 · Railway station<small>Fri 23 Oct</small></span><span class="f"><span class="t">06:30</span><b>Crew call</b><small>Platform 1</small></span><span class="f"><span class="t">08:00</span><b>First shot</b><small>Sc. 12</small></span><span class="f"><span class="t">13:00</span><b>Lunch</b><small>45 min</small></span><span class="f"><span class="t">16:30</span><b>Night set-up</b><small>Sc. 14</small></span><span class="f"><span class="t">23:00</span><b>Wrap</b><small>Railway station</small></span><span class="chips"><span class="chip">📍 Open in Maps · 12 min</span><span class="chip">☀ Sunset 19:12 · 18°C</span></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>DINO</b><span class="open"><span class="tag">Web · one link</span><b class="wm"><span>ROAR</span>DINO</b><span class="d" data-t="lab.rd">The call sheet, in one link.</span><em data-t="lab.disc">Discover</em></span><i class="tick" aria-hidden="true"></i></a>
+      <a class="lab-x" href="lab/roarmail/" style="--g: radial-gradient(120% 80% at 30% 10%, #4a1414, #0e0606)"><span class="top"><img class="ico" src="lab/icons/roarmail.png" alt="" width="46" height="46" loading="lazy" decoding="async"><span class="no">03</span></span><span class="ui" aria-hidden="true"><span class="win"><i></i><i></i><i></i><b>RoarMail</b></span><span class="h">All Inboxes<small>12 unread</small></span><span class="f"><i style="background:#ff5a4f"></i><b>Maria P. · Night Shoot schedule</b><small>19:46</small></span><span class="f inv"><i style="background:#ffb224"></i><b>Invite · Tech scout, Fri 10:00</b><small class="yes">Accept</small></span><span class="f"><i style="background:#3b82f6"></i><b>Rental House · lens order</b><small>18:12</small></span><span class="f"><i style="background:#2fd36b"></i><b>Elena · colour grade notes</b><small>Sun</small></span><span class="chips"><span class="chip">Rule · Rental House → Gear</span><span class="chip ok">3 trackers blocked</span></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>MAIL</b><span class="open"><span class="tag">Mac · Windows · 0.23</span><b class="wm"><span>ROAR</span>MAIL</b><span class="d" data-t="lab.ml">Every mailbox, one private inbox.</span><em data-t="lab.disc">Discover</em></span><i class="tick" aria-hidden="true"></i></a>
+      <a class="lab-x" href="lab/roarlist/" style="--g: radial-gradient(120% 80% at 70% 10%, #3a2412, #0f0905)"><span class="top"><img class="ico" src="lab/icons/roarlist.png" alt="" width="46" height="46" loading="lazy" decoding="async"><span class="no">04</span></span><span class="ui" aria-hidden="true"><span class="win"><i></i><i></i><i></i><b>RoarList</b></span><span class="h">Scene 12 · Platform<small>9 shots</small></span><span class="fr"><span><i></i>1 · Wide</span><span><i></i>2 · Medium</span><span><i></i>3 · Close-up</span><span><i></i>4 · Insert</span><span><i></i>5 · OTS</span><span><i></i>6 · Wide</span><span><i></i>7 · Two shot</span><span><i></i>8 · Close-up</span><span><i></i>9 · Wide</span></span><span class="chips"><span class="chip">⌘K · find anything</span><span class="chip red">PDF storyboard</span></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>LIST</b><span class="open"><span class="tag">Web · Mac · Windows</span><b class="wm"><span>ROAR</span>LIST</b><span class="d" data-t="lab.rl">The shot list, frame by frame.</span><em data-t="lab.disc">Discover</em></span><i class="tick" aria-hidden="true"></i></a>
+      <a class="lab-x" href="https://roartransfer.com/about/" style="--g: radial-gradient(120% 80% at 50% 10%, #4a0d0d, #0e0505)"><span class="top"><img class="ico" src="lab/icons/roartransfer.png" alt="" width="46" height="46" loading="lazy" decoding="async"><span class="no">05</span></span><span class="ui" aria-hidden="true"><span class="win"><i></i><i></i><i></i><b>RoarTransfer</b></span><span class="h">Sending<small>3 files · 3 GB</small></span><span class="ring"><svg viewBox="0 0 128 128"><circle class="a" cx="64" cy="64" r="56"/><circle class="c" cx="64" cy="64" r="56"/></svg><b>64%</b></span><span class="f"><b>A001_C003_NIGHT.MOV</b><small>1.2 GB</small></span><span class="f"><b>A001_C004_NIGHT.MOV<span class="bar"><i></i></span></b><small>1.6 GB</small></span><span class="chips"><span class="chip">🔗 roar.to/n8Kq · with a picture</span><span class="chip">Gone in 3 days</span></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>TRANSFER</b><span class="open"><span class="tag">Web · free · 5 GB</span><b class="wm"><span>ROAR</span>TRANSFER</b><span class="d" data-t="lab.rt">Big files, one short link, free.</span><em data-t="lab.disc">Discover</em></span><i class="tick" aria-hidden="true"></i></a>
+      <a class="lab-x" href="lab/roarwriter/" style="--g: radial-gradient(120% 80% at 70% 10%, #6a2a0a, #140803)"><span class="top"><img class="ico" src="lab/icons/roarwriter.png" alt="" width="46" height="46" loading="lazy" decoding="async"><span class="no">06</span></span><span class="ui" aria-hidden="true"><span class="win"><i></i><i></i><i></i><b>RoarWriter</b></span><span class="h">The Last Train<small>92 pages · v3</small></span><span class="pg"><span class="sh">EXT. RAILWAY STATION - NIGHT</span><span>The last train pulls out. NIKOS (40) stays alone on the platform.</span><span class="ch">NIKOS</span><span class="pn">(quietly)</span><span class="dg">You said you would come.</span><span class="sh">INT. TRAIN - CONTINUOUS</span><span>Through the glass, MARIA watches him disappear.</span></span><span class="chips"><span class="chip">▶ Table read</span><span class="chip red">AI coverage</span><span class="chip">Index cards</span></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>WRITER</b><span class="open"><span class="tag">Web · Mac · Windows · 0.6</span><b class="wm"><span>ROAR</span>WRITER</b><span class="d" data-t="lab.rw">Screenwriting, from page to shoot.</span><em data-t="lab.disc">Discover</em></span><i class="tick" aria-hidden="true"></i></a>
+      <a class="lab-x" href="lab/roarkit/" style="--g: radial-gradient(120% 80% at 30% 10%, #3a1416, #0d0d0e)"><span class="top"><img class="ico" src="lab/icons/roarkit.png" alt="" width="46" height="46" loading="lazy" decoding="async"><span class="no">07</span></span><span class="ui" aria-hidden="true"><span class="win"><i></i><i></i><i></i><b>RoarKit</b></span><span class="h">Overview<small>18 tools</small></span><span class="f"><i style="background:#ff453a"></i><b>Uninstall apps · 3 leave files behind</b><small>2.4 GB</small></span><span class="f"><i style="background:#ff9f0a"></i><b>Startup items · 2 switched off</b><small>Switch</small></span><span class="f"><i style="background:#bf5af2"></i><b>Similar photos · 41 groups</b><small>412 MB</small></span><span class="f"><i style="background:#30b0c7"></i><b>Caches · 64.2 GB to clear</b><small>Clean up</small></span><span class="f"><i style="background:#34c759"></i><b>Card A001 · 3 copies checked</b><small>MHL</small></span><span class="chips"><span class="chip ok">Only to the Trash</span><span class="chip">In the menu bar</span></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>KIT</b><span class="open"><span class="tag">Mac · Windows · 0.7</span><b class="wm"><span>ROAR</span>KIT</b><span class="d" data-t="lab.tw">Eighteen tools for the computer and the shoot.</span><em data-t="lab.disc">Discover</em></span><i class="tick" aria-hidden="true"></i></a>
+      <a class="lab-x" href="lab/roarmorph/" style="--g: radial-gradient(120% 80% at 30% 10%, #2b1a12, #0d0d0e)"><span class="top"><img class="ico" src="lab/icons/roarmorph.png" alt="" width="46" height="46" loading="lazy" decoding="async"><span class="no">08</span></span><span class="ui" aria-hidden="true"><span class="win"><i></i><i></i><i></i><b>RoarMorph</b></span><span class="h">Converted<small>6 files · 24.3 GB → 1.2 GB</small></span><span class="f"><i style="background:#32d74b"></i><b>A001_C003.mov → H.265 · 8 Mb/s</b><small>−96%</small></span><span class="f"><i style="background:#bf5af2"></i><b>Key_Art.psd → 12 layers, PNG</b><small>✓</small></span><span class="f"><i style="background:#32d74b"></i><b>Loop.gif → MP4</b><small>−91%</small></span><span class="f"><i style="background:#ffb224"></i><b>Spot_30s_FINAL.mov</b><small>64%</small></span><span class="chips"><span class="chip">Target · 25 MB</span><span class="chip ok">Nothing uploaded</span></span></span><b aria-hidden="true" class="wm"><span>ROAR</span>MORPH</b><span class="open"><span class="tag">Mac · Windows · 0.5</span><b class="wm"><span>ROAR</span>MORPH</b><span class="d" data-t="lab.rv">Every format, a smaller file.</span><em data-t="lab.disc">Discover</em></span><i class="tick" aria-hidden="true"></i></a>
     </div>
     <div class="more"><a class="pill" href="lab/" data-t="lab.go">Visit the Lab</a></div>
   </section>
@@ -808,7 +854,7 @@ const T = {
     'clients.label': 'Clients', 'clients.title': "Brands <b>we've filmed for.</b>",
     'bts.label': 'Behind the scenes', 'bts.title': 'On set <b>with us.</b>', 'bts.all': 'See everything',
     'sh.btn': 'Share', 'sh.label': 'Share this film', 'sh.framed': 'Framed', 'sh.full': 'Full picture', 'sh.story': 'Story picture', 'sh.reel': 'Reel video', 'sh.link': 'Copy the link', 'sh.copied': 'Link copied', 'sh.rec': 'Recording…', 'sh.watch': 'WATCH ON THEMADLIONS.COM', 'sh.hint': 'For Instagram and TikTok stories. On a phone it opens your apps; on a computer it downloads.',
-    'lab.label': 'Lab', 'lab.title': 'What we build <b>between films.</b>', 'lab.rm': 'The messenger for teams.', 'lab.rd': 'The call sheet, in one link.', 'lab.ml': 'The mail app, private by design.', 'lab.rl': 'The shot list, frame by frame.', 'lab.rt': 'Big files, one link.', 'lab.rw': 'Screenwriting, from the page to the shoot.', 'lab.tw': 'Sixteen tools for the computer and the shoot.', 'lab.rv': 'Every format, a smaller file.', 'lab.disc': 'Discover', 'lab.go': 'Visit the Lab',
+    'lab.label': 'Lab', 'lab.title': 'What we build <b>between films.</b>', 'lab.rm': 'The messenger for crews.', 'lab.rd': 'The call sheet, in one link.', 'lab.ml': 'Every mailbox, one private inbox.', 'lab.rl': 'The shot list, frame by frame.', 'lab.rt': 'Big files, one short link, free.', 'lab.rw': 'Screenwriting, from page to shoot.', 'lab.tw': 'Eighteen tools for the computer and the shoot.', 'lab.rv': 'Every format, a smaller file.', 'lab.disc': 'Discover', 'lab.go': 'Visit the Lab',
     'contact.label': 'Contact', 'contact.title': 'Tell us about <b>your project.</b>', 'contact.sub': 'A few lines are enough. We answer within a working day.',
     'f.kind': 'What are you making?', 'f.budget': 'Budget', 'f.name': 'Name', 'f.email': 'Email', 'f.company': 'Company or artist',
     'f.when': 'When do you need it?', 'f.whenPh': 'e.g. end of November', 'f.msg': 'Tell us more', 'f.msgPh': 'The idea, the format, where it will be seen…',
@@ -833,7 +879,7 @@ const T = {
     'clients.label': 'Πελάτες', 'clients.title': 'Brands <b>που δουλέψαμε μαζί.</b>',
     'sh.btn': 'Κοινοποίηση', 'sh.label': 'Μοιράσου την ταινία', 'sh.framed': 'Σε κάδρο', 'sh.full': 'Ολόκληρη εικόνα', 'sh.story': 'Εικόνα για story', 'sh.reel': 'Βίντεο για reel', 'sh.link': 'Αντιγραφή link', 'sh.copied': 'Το link αντιγράφηκε', 'sh.rec': 'Εγγραφή…', 'sh.watch': 'ΔΕΣ ΤΟ ΣΤΟ THEMADLIONS.COM', 'sh.hint': 'Για stories σε Instagram και TikTok. Στο κινητό ανοίγει τις εφαρμογές σου, στον υπολογιστή κατεβαίνει.',
     'bts.label': 'Πίσω από τις κάμερες', 'bts.title': 'Στο <b>γύρισμα.</b>', 'bts.all': 'Δες τα όλα',
-    'lab.label': 'Lab', 'lab.title': 'Ό,τι φτιάχνουμε <b>ανάμεσα στις ταινίες.</b>', 'lab.rm': 'Το messenger για ομάδες.', 'lab.rd': 'Το ordino, σε ένα link.', 'lab.ml': 'Το email, ιδιωτικά.', 'lab.rl': 'Το shot list, κάδρο κάδρο.', 'lab.rt': 'Μεγάλα αρχεία, ένα link.', 'lab.tw': 'Δεκαέξι εργαλεία για τον υπολογιστή και το γύρισμα.', 'lab.rv': 'Κάθε μορφή, μικρότερο αρχείο.', 'lab.rw': 'Το σενάριο, από τη σελίδα ως το γύρισμα.', 'lab.disc': 'Γνώρισέ το', 'lab.go': 'Δες το Lab',
+    'lab.label': 'Lab', 'lab.title': 'Ό,τι φτιάχνουμε <b>ανάμεσα στις ταινίες.</b>', 'lab.rm': 'Το chat για συνεργεία.', 'lab.rd': 'Το ordino, σε ένα link.', 'lab.ml': 'Όλα τα mail, ένα ιδιωτικό inbox.', 'lab.rl': 'Το shot list, κάδρο κάδρο.', 'lab.rt': 'Μεγάλα αρχεία, ένα σύντομο link, δωρεάν.', 'lab.tw': 'Δεκαοκτώ εργαλεία για τον υπολογιστή και το γύρισμα.', 'lab.rv': 'Κάθε μορφή, μικρότερο αρχείο.', 'lab.rw': 'Το σενάριο, από τη σελίδα ως το γύρισμα.', 'lab.disc': 'Γνώρισέ το', 'lab.go': 'Δες το Lab',
     'contact.label': 'Επαφή', 'contact.title': 'Πείτε μας για <b>το project σας.</b>', 'contact.sub': 'Λίγες γραμμές αρκούν. Απαντάμε μέσα σε μία εργάσιμη.',
     'f.kind': 'Τι θέλετε να φτιάξετε;', 'f.budget': 'Budget', 'f.name': 'Όνομα', 'f.email': 'Email', 'f.company': 'Εταιρεία ή καλλιτέχνης',
     'f.when': 'Πότε το χρειάζεστε;', 'f.whenPh': 'π.χ. τέλη Νοεμβρίου', 'f.msg': 'Πείτε μας περισσότερα', 'f.msgPh': 'Η ιδέα, το format, πού θα προβληθεί…',
@@ -1650,6 +1696,43 @@ function openFilmFromLink() {
 
 startReel(); renderClients(); applyLang(); onScroll()
 loadTheme(); loadWorks(); loadShop(); loadPeople(); track('view')
+</script>
+<script>
+// the Lab's posters (Alex, 30 Oct): the open one takes turns by itself while the row is in view and nobody points at it
+// (not on a phone, not for someone who asks for less motion), and a soft light follows the pointer
+(() => {
+  const list = document.querySelector('.lab-list')
+  if (!list) return
+  const cards = [...list.querySelectorAll('.lab-x')]
+  list.addEventListener('pointermove', (e) => {
+    const c = e.target.closest('.lab-x'); if (!c) return
+    const r = c.getBoundingClientRect()
+    c.style.setProperty('--mx', `${e.clientX - r.left}px`); c.style.setProperty('--my', `${e.clientY - r.top}px`)
+  }, { passive: true })
+  const TURN = 6000
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !cards.length) return
+  list.style.setProperty('--turn', `${TURN}ms`)
+  let seen = false, held = false, t = 0
+  const wide = () => matchMedia('(min-width: 761px)').matches
+  const step = () => {
+    clearTimeout(t)
+    if (!seen || held || !wide() || document.hidden) { list.classList.remove('turning'); return }
+    list.classList.remove('turning'); void list.offsetWidth; list.classList.add('turning')
+    t = setTimeout(() => {
+      const i = cards.findIndex((c) => c.classList.contains('on'))
+      cards[i]?.classList.remove('on'); cards[(i + 1) % cards.length].classList.add('on')
+      step()
+    }, TURN)
+  }
+  // pointing at one makes it the open one, so the turns go on from there
+  cards.forEach((c) => c.addEventListener('pointerenter', () => { cards.forEach((x) => x.classList.toggle('on', x === c)) }))
+  list.addEventListener('pointerenter', () => { held = true; step() })
+  list.addEventListener('pointerleave', () => { held = false; step() })
+  list.addEventListener('focusin', () => { held = true; step() })
+  list.addEventListener('focusout', () => { held = false; step() })
+  document.addEventListener('visibilitychange', step)
+  new IntersectionObserver(([e]) => { seen = e.isIntersecting; step() }, { threshold: .35 }).observe(list)
+})()
 </script>
 </body>
 </html>
