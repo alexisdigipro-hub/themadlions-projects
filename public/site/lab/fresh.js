@@ -29,7 +29,7 @@
     ['roarlist', 'RoarList', 'lab/roarlist/', 'The shot list', 'Η λίστα πλάνων'],
     ['roartransfer', 'RoarTransfer', 'https://roartransfer.com/about/', 'Big files, one link', 'Μεγάλα αρχεία, ένα link'],
     ['roarwriter', 'RoarWriter', 'lab/roarwriter/', 'Screenwriting', 'Γράψιμο σεναρίου'],
-    ['roarkit', 'RoarKit', 'lab/roarkit/', 'Sixteen tools', 'Δεκαέξι εργαλεία'],
+    ['roarkit', 'RoarKit', 'lab/roarkit/', 'Eighteen tools', 'Δεκαοκτώ εργαλεία'],
     ['roarmorph', 'RoarMorph', 'lab/roarmorph/', 'Convert and compress', 'Μετατροπή και συμπίεση'],
   ]
   const here = (APPS.find(([k]) => location.pathname.includes('/' + k + '/') || (k === 'roartransfer' && location.hostname === 'roartransfer.com')) || [])[0]
