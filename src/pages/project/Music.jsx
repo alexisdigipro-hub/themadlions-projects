@@ -16,6 +16,7 @@ const ico = (d) => <svg viewBox="0 0 24 24" aria-hidden="true">{d}</svg>
 const MI = {
   plus: ico(<path d="M12 5v14M5 12h14" />),
   edit: ico(<><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z" /><path d="m13.5 6.5 4 4" /></>),
+  trash: <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" /></svg>,
   more: <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="12" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="18.5" cy="12" r="1.4" /></svg>,
   download: ico(<><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5" /><path d="M5 20h14" /></>),
   upload: ico(<><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5" /><path d="M5 20h14" /></>),
@@ -83,6 +84,7 @@ export default function Music() {
   const lastFile = useRef(null) // the file just uploaded, reused for transcription without re-downloading
   const [tr, setTr] = useState(null) // { mode: 'new' | 'align', language }
   const [trackEdit, setTrackEdit] = useState(false) // the track's name, kind and Remove, folded away
+  const [delArmed, setDelArmed] = useState(false) // Delete audio in ⋯ asks once more before it goes (Alex, 30 Oct)
   const [menu, setMenu] = useState('') // 'track' (⋯) or 'map' (+ Add), the two small menus (Alex, 28 Oct)
   useEffect(() => {
     if (!menu) return
@@ -307,7 +309,7 @@ export default function Music() {
           {track && editable && <button type="button" className={`add-pill ov-edit${trackEdit ? ' on' : ''}`} onClick={() => setTrackEdit((v) => !v)}>{MI.edit}<span>{trackEdit ? 'Done' : 'Edit'}</span></button>}
           {track && (
             <span className="ov-menu-wrap">
-              <button type="button" className={`ov-round${menu === 'track' ? ' on' : ''}`} onClick={() => setMenu(menu === 'track' ? '' : 'track')} aria-label="More" title="Download, Add version, Export song map">{MI.more}</button>
+              <button type="button" className={`ov-round${menu === 'track' ? ' on' : ''}`} onClick={() => { setDelArmed(false); setMenu(menu === 'track' ? '' : 'track') }} aria-label="More" title="Download, Add version, Export song map, Delete audio">{MI.more}</button>
               {menu === 'track' && (
                 <>
                   <span className="ab-export-shade" onClick={() => setMenu('')} />
@@ -315,6 +317,7 @@ export default function Music() {
                     <button type="button" className="ov-menu-row" disabled={saving || !url} onClick={() => { setMenu(''); downloadAudio() }}>{MI.download}<span><b>{saving ? 'Preparing…' : 'Download'}</b><small>The audio file to this device</small></span></button>
                     {editable && <button type="button" className="ov-menu-row" disabled={!!busy} onClick={() => { setMenu(''); fileRef.current?.click() }}>{MI.upload}<span><b>{busy || 'Add version'}</b><small>Another mix: master, playback, demo</small></span></button>}
                     {sections.length > 0 && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); exportMap() }}>{MI.map}<span><b>Export song map</b><small>The sections, times and lyrics as text</small></span></button>}
+                    {editable && <button type="button" className={`ov-menu-row ov-menu-del${delArmed ? ' armed' : ''}`} onClick={() => { if (!delArmed) return setDelArmed(true); setDelArmed(false); setMenu(''); removeTrack(track) }}>{MI.trash}<span><b>{delArmed ? 'Click again to delete' : 'Delete audio'}</b><small>{delArmed ? 'The song map and lyrics stay' : `Removes ${track.name || 'this version'} from the project`}</small></span></button>}
                   </div>
                 </>
               )}
