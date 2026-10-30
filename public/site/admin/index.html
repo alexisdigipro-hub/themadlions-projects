@@ -10,7 +10,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Jost:wght@300;500;600;700;800&display=swap" rel="stylesheet">
-<!-- The company site's own admin, "Studio" (Alex, 13 Oct 2026): overview with statistics, the work (films
+<!-- the typefaces Look offers for the site, so each choice shows in its own letters -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&family=Manrope:wght@600&family=Space+Grotesk:wght@600&family=DM+Sans:wght@600&family=Outfit:wght@600&family=Sora:wght@600&family=Syne:wght@600&family=Bricolage+Grotesque:wght@600&display=swap" rel="stylesheet">
+<!-- The company site's own admin, "Studio" (Alex, 13 Oct 2026; since 30 Oct the menu is a bar across the top and Look
+     has groups, a live preview and the design settings, site_settings.design): overview with statistics, the work (films
      Alex adds, hides and reorders), enquiries from the form, the merch shop, and the site's look.
      Sign in with a THEMADLIONS Hub account; only hub administrators get in, and the database checks the
      same thing (is_admin) on every read and write. Plain fetch to Supabase, no libraries. -->
@@ -357,6 +360,82 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 .frm-row input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 4px rgba(212,0,0,.35); cursor: pointer; }
 .frm-row input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border: 0; border-radius: 50%; background: #fff; cursor: pointer; }
 .frm-row .zv { min-width: 44px; text-align: right; font-size: 12.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+/* ===== the frame since 30 Oct (Alex: "centre the whole admin, with the menu at the top"): on a computer the menu is one
+   glass bar across the top, centred, and the pages sit in a centred column under it; a phone keeps its bar at the foot */
+@media (min-width: 761px) {
+  .shell { display: block; }
+  .side { position: sticky; top: 0; z-index: 40; height: auto; padding: 14px var(--pad) 0; }
+  .side .in { max-width: 1280px; margin: 0 auto; height: auto; flex-direction: row; align-items: center; gap: 10px; padding: 7px 8px 7px 22px; border-radius: 999px; box-shadow: 0 18px 50px rgba(0, 0, 0, .35); }
+  .side .wordmark { width: 112px; margin: 0; }
+  .side .studio { margin: 0 6px 0 0; font-size: 10.5px; }
+  .nav { display: flex; gap: 2px; margin: 0 auto; }
+  .nav button { position: relative; height: 40px; padding: 0 14px; gap: 8px; border-radius: 999px; font-size: 13.5px; white-space: nowrap; }
+  .nav button.on::before { left: 32%; right: 32%; top: auto; bottom: -7px; width: auto; height: 3px; border-radius: 3px 3px 0 0; }
+  .nav .count { margin-left: 2px; }
+  .side .foot { margin: 0; padding: 0; border: 0; display: flex; align-items: center; gap: 6px; }
+  .side .foot > a.btn { padding: 0 12px; }
+  .side .foot .me { display: flex; align-items: center; gap: 6px; }
+  .side .foot .me > div { display: none; }
+  main { max-width: 1280px; margin: 0 auto; padding-top: 34px; }
+}
+@media (min-width: 761px) and (max-width: 1180px) {
+  .nav button span { display: none; } .nav button { padding: 0 12px; }
+  .side .foot > a.btn { font-size: 0; gap: 0; } .side .foot > a.btn svg { margin: 0; }
+}
+
+/* Look: its groups as pills, the settings on the left, the live preview on the right */
+.lk-nav { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 20px; }
+.lk-nav button { height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--edge); background: rgba(255,255,255,.035); color: var(--muted); font-size: 13.5px; font-weight: 500; cursor: pointer; transition: color .18s, background .18s, border-color .18s, transform .18s; }
+.lk-nav button:hover { color: var(--text); transform: translateY(-1px); }
+.lk-nav button.on { color: #fff; background: linear-gradient(180deg, rgba(212,0,0,.9), rgba(160,0,0,.9)); border-color: transparent; box-shadow: 0 8px 24px rgba(212,0,0,.32), inset 0 1px 0 rgba(255,255,255,.2); }
+.lk { display: grid; grid-template-columns: minmax(0, 1fr) 460px; gap: 18px; align-items: start; }
+.lk-main { display: grid; gap: 14px; min-width: 0; }
+.lk-cat { display: grid; gap: 14px; animation: lkIn .35s ease both; }
+@keyframes lkIn { from { opacity: 0; transform: translateY(8px); } }
+.lk-prev { position: sticky; top: 92px; }
+.pv-box { position: relative; width: 100%; height: 260px; border-radius: 14px; overflow: hidden; background: #000; border: 1px solid var(--edge); transition: height .4s; }
+.pv-box iframe { position: absolute; top: 0; left: 0; width: 1440px; height: 900px; border: 0; transform-origin: 0 0; background: #0b0b0c; }
+.pv-box.phone { width: 252px; margin: 0 auto; border-radius: 30px; border: 6px solid #1c1c20; box-shadow: 0 0 0 1px var(--edge); }
+.pv-box.phone iframe { width: 390px; height: 844px; }
+.seg.sm button { height: 26px; padding: 0 10px; font-size: 12px; }
+@media (max-width: 1180px) { .lk { grid-template-columns: 1fr; } .lk-prev { position: static; order: -1; } }
+@media (max-width: 760px) { .lk-prev { display: none; } .lk-nav { flex-wrap: nowrap; overflow-x: auto; margin: 0 -14px 16px; padding: 0 14px 2px; scrollbar-width: none; } .lk-nav button { flex: none; } }
+.themes { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+
+/* a design setting: its name and a line on the left, the control on the right */
+.dz { display: grid; gap: 0; padding-top: 8px; padding-bottom: 8px; }
+.dz > h3 { margin: 6px 0 6px; }
+.dr { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 18px; padding: 14px 0; border-top: 1px solid var(--edge); }
+.dr:first-of-type { border-top: 0; }
+.dr .t strong { display: block; font-size: 14.5px; font-weight: 500; }
+.dr .t small { display: block; margin-top: 3px; color: var(--dim); font-size: 12.5px; line-height: 1.45; }
+.dr .c { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; align-items: center; }
+.dr.full { grid-template-columns: 1fr; } .dr.full .c { justify-content: flex-start; }
+.dr .seg { flex-wrap: wrap; border-radius: 16px; }
+.sw { display: flex; gap: 7px; flex-wrap: wrap; }
+.sw button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; background: var(--c); cursor: pointer; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); transition: transform .15s; }
+.sw button:hover { transform: scale(1.1); }
+.sw button.on { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.14), 0 0 18px var(--c); }
+.sw input[type=color] { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 0; overflow: hidden; cursor: pointer; background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); }
+.sw input[type=color]::-webkit-color-swatch-wrapper { padding: 0; } .sw input[type=color]::-webkit-color-swatch { border: 0; border-radius: 50%; opacity: 0; }
+.fonts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; width: 100%; }
+.fonts button { display: grid; gap: 2px; padding: 12px 14px; text-align: left; border-radius: 14px; border: 1px solid var(--edge); background: rgba(255,255,255,.03); cursor: pointer; transition: border-color .18s, background .18s; }
+.fonts button b { font-size: 22px; font-weight: 600; line-height: 1.1; } .fonts button small { color: var(--dim); font-size: 11.5px; }
+.fonts button.on { border-color: rgba(212,0,0,.7); background: rgba(212,0,0,.1); }
+.rng { display: flex; align-items: center; gap: 12px; min-width: 240px; }
+.rng input { height: 6px; padding: 0; border: 0; accent-color: var(--red); background: transparent; }
+.rng b { min-width: 42px; text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.two.three { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 560px) { .dr { grid-template-columns: 1fr; } .dr .c { justify-content: flex-start; } .two, .two.three { grid-template-columns: 1fr; } }
+.dz-foot { display: flex; justify-content: flex-end; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--edge); }
+.ordrow .eye { margin-left: 8px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.ordrow .eye:hover { color: var(--text); background: rgba(255,255,255,.06); }
+.ordrow.off { opacity: .5; } .ordrow.off span:not(.grip) { text-decoration: line-through; }
+.ordrow small + .eye, .ordrow span + .eye { margin-left: auto; }
+.ordrow small { margin-left: auto; }
+.ordrow small + .eye { margin-left: 8px; }
 </style>
 </head>
 <body>
@@ -491,24 +570,28 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
     </section>
 
     <section data-pane="look" hidden>
-      <div class="head"><div><h1>Look</h1><p>The site's theme. A click changes it for every visitor; Preview opens it without changing anything.</p></div></div>
-      <div class="themes" id="themes"></div>
-      <div class="card glass" style="margin-top:14px">
-        <h3>Page order</h3>
-        <p class="hint" style="margin:-4px 0 14px">The sections of the home page from top to bottom, under the opening. Drag one by its ⋮⋮ to move it; the menu at the top of the site follows the same order. Saved on the site as you let go.</p>
-        <div class="ordrows" id="ordRows"></div>
+      <div class="head"><div><h1>Look</h1><p>Everything about how the site looks, in groups. Each change is saved and on the site at once; the preview on the right shows it as you go.</p></div>
+        <span class="grow"></span>
+        <a class="btn sm" href="../" target="_blank" rel="noopener"><svg class="i"><use href="#i-ext"/></svg>Open the site</a>
       </div>
-      <div class="card glass" style="margin-top:14px">
-        <h3>Lab order</h3>
-        <p class="hint" style="margin:-4px 0 14px">The apps on the Lab page, from top to bottom: the tiles at the top and each app's section below follow this order. Drag one by its ⋮⋮ to move it. Saved on the site as you let go.</p>
-        <div class="ordrows" id="labRows"></div>
-      </div>
-      <div class="card glass" style="margin-top:14px">
-        <h3>Services</h3>
-        <p class="hint" style="margin:-4px 0 14px">The picture behind each service card on the site, and the film its Watch button plays. With no picture the card stays clean, without a film it has no Watch button. Every change is on the site at once.</p>
-        <div class="svcrows" id="svcRows"></div>
-      </div>
-      <div class="card glass" style="margin-top:14px">
+      <nav class="lk-nav" id="lkNav" aria-label="Look">
+        <button type="button" data-cat="theme" class="on">Theme</button>
+        <button type="button" data-cat="colour">Colour &amp; type</button>
+        <button type="button" data-cat="opening">Opening</button>
+        <button type="button" data-cat="home">Home page</button>
+        <button type="button" data-cat="work">Work tiles</button>
+        <button type="button" data-cat="lab">Lab</button>
+        <button type="button" data-cat="notice">Announcement</button>
+      </nav>
+      <div class="lk">
+        <div class="lk-main">
+          <div class="lk-cat" data-cat="theme">
+            <div class="themes" id="themes"></div>
+          </div>
+          <div class="lk-cat" data-cat="colour" hidden><div class="card glass dz" data-group="colour"></div></div>
+          <div class="lk-cat" data-cat="opening" hidden>
+            <div class="card glass dz" data-group="opening"></div>
+            <div class="card glass">
         <h3>Opening video</h3>
         <div class="hero-pick">
           <div><div class="hv-prev" id="hvPrev"></div><p class="hint" id="hvNone" style="margin:8px 0 0">No video: the site opens on the picture below.</p></div>
@@ -518,13 +601,44 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
             <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn red" type="button" id="hvSave">Save</button><button class="btn danger" type="button" id="hvRm">Remove</button></div></div>
         </div>
       </div>
-      <div class="card glass" style="margin-top:14px">
+            <div class="card glass">
         <h3>Opening picture</h3>
         <div class="hero-pick">
           <div><div id="heroFramer"></div><p class="hint" id="heroNone" style="margin:8px 0 0">No picture yet: the site shows a still from the first film until the video plays.</p></div>
           <div class="hero-txt"><p class="hint" style="margin:0 0 12px">Shows behind the logo while the opening video loads, and instead of it when there is none. It stays still and shows in black and white, whatever its colours. A wide photo works best (a crew shot, a set, a frame), at least 2000 px across.</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn red" type="button" id="heroUp"><svg class="i"><use href="#i-plus"/></svg>Upload a picture</button><button class="btn" type="button" id="heroSaveFrame" hidden>Save framing</button><button class="btn danger" type="button" id="heroRm" hidden>Remove</button></div></div>
         </div>
+      </div>
+          </div>
+          <div class="lk-cat" data-cat="home" hidden>
+            <div class="card glass dz" data-group="home"></div>
+            <div class="card glass">
+        <h3>Page order</h3>
+        <p class="hint" style="margin:-4px 0 14px">The sections of the home page from top to bottom, under the opening. Drag one by its ⋮⋮ to move it, the eye takes a section off the site (and out of the menu); the menu at the top of the site follows the same order. Saved on the site as you let go.</p>
+        <div class="ordrows" id="ordRows"></div>
+      </div>
+            <div class="card glass">
+        <h3>Services</h3>
+        <p class="hint" style="margin:-4px 0 14px">The picture behind each service card on the site, and the film its Watch button plays. With no picture the card stays clean, without a film it has no Watch button. Every change is on the site at once.</p>
+        <div class="svcrows" id="svcRows"></div>
+      </div>
+          </div>
+          <div class="lk-cat" data-cat="work" hidden><div class="card glass dz" data-group="work"></div></div>
+          <div class="lk-cat" data-cat="lab" hidden>
+            <div class="card glass dz" data-group="lab"></div>
+            <div class="card glass">
+        <h3>Lab order</h3>
+        <p class="hint" style="margin:-4px 0 14px">The apps on the Lab page, from top to bottom: the tiles at the top and each app's section below follow this order. Drag one by its ⋮⋮ to move it. Saved on the site as you let go.</p>
+        <div class="ordrows" id="labRows"></div>
+      </div>
+          </div>
+          <div class="lk-cat" data-cat="notice" hidden><div class="card glass dz" data-group="notice"></div></div>
+        </div>
+        <aside class="lk-prev card glass" aria-label="Preview">
+          <h3>Preview <span class="grow"></span><span class="seg sm" id="pvDev"><button type="button" data-d="pc" class="on">Computer</button><button type="button" data-d="phone">Phone</button></span></h3>
+          <div class="pv-box" id="pvBox"><iframe id="pvFrame" title="The site, as it will look" src="about:blank" loading="lazy"></iframe></div>
+          <p class="hint" style="margin:10px 0 0">The real site, with your changes. Scroll in it; links open inside it.</p>
+        </aside>
       </div>
     </section>
   </main>
@@ -1566,7 +1680,9 @@ async function loadLook() {
     svcMedia = get('services') || {}
     secOrder = Array.isArray(get('section_order')) ? get('section_order') : []
     labOrder = Array.isArray(get('lab_order')) ? get('lab_order') : []
+    design = get('design') && typeof get('design') === 'object' ? get('design') : {}
   } catch (e) { toast(e.message) }
+  renderDesign(); pvOpen()
   try { svcFilms = (await rest('site_works?visible=eq.true&select=title&order=position.asc,created_at.desc')).map((w) => w.title) } catch (e) { svcFilms = [] }
   renderSvcRows(); renderOrd(); renderLab()
   showHero()
@@ -1586,8 +1702,16 @@ const SECTIONS = [['work', 'Work'], ['services', 'Services', 'with How we work']
 let secOrder = []
 const ordList = () => { const known = SECTIONS.map((x) => x[0]); return [...secOrder.filter((id) => known.includes(id)), ...known.filter((id) => !secOrder.includes(id))] }
 function renderOrd() {
-  $('ordRows').innerHTML = ordList().map((id, i) => { const x = SECTIONS.find((y) => y[0] === id); return `<div class="ordrow" data-id="${id}"><span class="grip" data-grip title="Drag to move" aria-label="Drag to move">⋮⋮</span><b>${i + 1}</b><span>${esc(x[1])}</span>${x[2] ? `<small>${esc(x[2])}</small>` : ''}</div>` }).join('')
+  const off = Array.isArray(design.hidden) ? design.hidden : []
+  $('ordRows').innerHTML = ordList().map((id, i) => { const x = SECTIONS.find((y) => y[0] === id), h = off.includes(id); return `<div class="ordrow${h ? ' off' : ''}" data-id="${id}"><span class="grip" data-grip title="Drag to move" aria-label="Drag to move">⋮⋮</span><b>${i + 1}</b><span>${esc(x[1])}</span>${x[2] ? `<small>${esc(x[2])}</small>` : ''}<button type="button" class="eye" data-eye-sec="${id}" title="${h ? 'Show it on the site' : 'Take it off the site'}" aria-label="${h ? 'Show it on the site' : 'Take it off the site'}"><svg class="i"><use href="#${h ? 'i-eyeoff' : 'i-eye'}"/></svg></button></div>` }).join('')
 }
+$('ordRows').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-eye-sec]'); if (!b) return
+  const id = b.dataset.eyeSec, off = new Set(Array.isArray(design.hidden) ? design.hidden : [])
+  if (off.has(id)) off.delete(id); else off.add(id)
+  dset('hidden', off.size ? [...off] : ''); renderOrd()
+  toast(off.has(id) ? 'Off the home page and the menu' : 'Back on the home page')
+})
 /* Look > Lab order (Alex, 25 Oct): the Lab page's apps dragged into order, kept in site_settings.lab_order */
 const LAB_APPS = [['roarme', 'RoarMe'], ['roardino', 'Roardino'], ['roarmail', 'RoarMail'], ['roarlist', 'RoarList'], ['roartransfer', 'RoarTransfer'], ['roarwriter', 'RoarWriter'], ['roartwin', 'RoarKit'], ['roarverter', 'RoarMorph']]
 let labOrder = []
@@ -1667,9 +1791,128 @@ $('themes').onclick = async (e) => {
   const b = e.target.closest('[data-theme]'); if (!b || b.dataset.theme === theme) return
   try {
     await setSetting('theme', b.dataset.theme)
+    theme = b.dataset.theme; pvSend()
     toast(`The site is now ${THEMES.find((t) => t.key === b.dataset.theme).name}`); loadLook()
   } catch (err) { toast(err.message) }
 }
+
+/* ---------- Look > the design (Alex, 30 Oct: "group the settings with categories, and put many more settings so I can
+   manage the look of the page myself"): site_settings.design, one object; a key left out is the site as it always was.
+   Each control saves a moment after it is touched; the preview on the right shows it at once (a message to the site in
+   the frame, which applies it without saving). ---------- */
+let design = {}
+const ACCENTS = [['#d40000', 'Rosso Corsa'], ['#ff3b2f', 'Lion red'], ['#ff6b57', 'Coral'], ['#ff8a00', 'Orange'], ['#ffb224', 'Amber'], ['#c9a45c', 'Champagne'], ['#f2f0ec', 'Ivory'], ['#3b82f6', 'Electric blue'], ['#8b5cf6', 'Violet'], ['#10b981', 'Emerald']]
+const FONT_LIST = [['Jost', 'Geometric, the usual'], ['Inter', 'Neutral, very clear'], ['Manrope', 'Soft and modern'], ['Space Grotesk', 'Technical, with character'], ['DM Sans', 'Friendly, low contrast'], ['Outfit', 'Round, geometric'], ['Sora', 'Wide, futuristic'], ['Syne', 'Arty, bold'], ['Bricolage Grotesque', 'Editorial, quirky']]
+// each setting: [group, key, kind, name, line, options]
+const DESIGN = [
+  ['colour', 'accent', 'accent', 'Accent colour', 'The red of the buttons, the numbers, the line under the logo and the highlights. Rosso Corsa is The Mad Lions\' own.'],
+  ['colour', 'font', 'font', 'Typeface', 'The letters of the whole site.'],
+  ['colour', 'labels', 'seg', 'Menu and small titles', 'In capitals with wide spacing, or in ordinary letters.', [['', 'CAPITALS'], ['normal', 'Normal']]],
+  ['colour', 'buttons', 'seg', 'Buttons', 'Round pills, or soft squares.', [['', 'Pills'], ['square', 'Soft squares']]],
+  ['colour', 'glow', 'seg', 'Glow behind the page', 'A soft light in the accent colour at the top and the foot of the page.', [['', 'Off'], ['soft', 'Soft'], ['strong', 'Strong']]],
+  ['colour', 'grain', 'seg', 'Film grain', 'A fine grain over everything, like film.', [['', 'Off'], ['light', 'Light'], ['strong', 'Strong']]],
+  ['colour', 'motion', 'seg', 'Animations', 'Things gliding in as you scroll, the hovers, the counters.', [['', 'Full'], ['gentle', 'Gentle'], ['off', 'Off']]],
+  ['opening', 'dim', 'range', 'Darkness over the opening', 'How dark the veil over the video and the picture is, so the logo reads. 100 is as it always was.'],
+  ['opening', 'heroColor', 'toggle', 'Opening in colour', 'Off: the picture and the video show in black and white.'],
+  ['opening', 'logo', 'seg', 'Size of the logo', 'The big THEMADLIONS on the opening.', [['s', 'Small'], ['', 'Medium'], ['l', 'Large']]],
+  ['opening', 'kicker', 'kicker', 'The line under the logo', 'Empty is "Film production house" in each language.'],
+  ['opening', 'cueOff', 'toggle-not', 'Scroll hint', 'The thin line that moves at the foot of the opening.'],
+  ['opening', 'stats', 'stats', 'The numbers', 'Years, productions and brands under the opening. Empty counts them by itself.'],
+  ['home', 'hidden-note', 'note', 'Sections on and off', 'In Page order below, the eye takes a whole section off the home page and out of the menu, and brings it back.'],
+  ['work', 'cols', 'seg', 'Films in a row', 'On a computer. A phone keeps two, a tablet three.', [['3', '3'], ['', '4'], ['5', '5'], ['6', '6']]],
+  ['work', 'shape', 'seg', 'Shape of the tiles', 'Wide is the cinema frame the site has had.', [['', 'Wide'], ['16-9', '16:9'], ['square', 'Square'], ['portrait', 'Portrait']]],
+  ['work', 'corners', 'seg', 'Corners', 'Of the tiles and the cards across the site.', [['sharp', 'Sharp'], ['', 'Soft'], ['round', 'Round']]],
+  ['work', 'gap', 'seg', 'Space between the tiles', '', [['tight', 'Tight'], ['', 'Normal'], ['airy', 'Airy']]],
+  ['work', 'titles', 'seg', 'Titles on the tiles', 'The film\'s name and kind over its picture.', [['', 'Always'], ['hover', 'On hover'], ['never', 'Never']]],
+  ['lab', 'labTurn', 'seg', 'The posters take turns', 'On the home page, the open app moves on by itself while nobody points at it.', [['off', 'Off'], ['4', 'Every 4 s'], ['', 'Every 6 s'], ['8', 'Every 8 s'], ['12', 'Every 12 s']]],
+  ['notice', 'notice', 'notice', 'Announcement at the top', 'A strip across the very top of the home page: news, a new film, an offer. A visitor can close it.'],
+]
+const dget = (k) => design[k]
+function drow(r) {
+  const [, key, kind, name, line, opts] = r
+  const t = `<div class="t"><strong>${esc(name)}</strong>${line ? `<small>${esc(line)}</small>` : ''}</div>`
+  const v = dget(key)
+  let c = ''
+  if (kind === 'seg') c = `<div class="seg" data-k="${key}">${opts.map(([o, l]) => `<button type="button" data-v="${esc(o)}" class="${(v || '') === o ? 'on' : ''}">${esc(l)}</button>`).join('')}</div>`
+  if (kind === 'toggle' || kind === 'toggle-not') c = `<label class="switch"><input type="checkbox" data-k="${key}" data-kind="${kind}" ${(kind === 'toggle' ? !!v : !v) ? 'checked' : ''}></label>`
+  if (kind === 'range') { const n = v == null || v === '' ? 100 : Number(v); c = `<div class="rng"><input type="range" min="0" max="100" step="5" value="${n}" data-k="${key}"><b>${n}</b></div>` }
+  if (kind === 'accent') c = `<div class="sw" data-k="accent">${ACCENTS.map(([h, l]) => `<button type="button" title="${esc(l)}" aria-label="${esc(l)}" data-v="${h}" style="--c:${h}" class="${(v || '#d40000') === h ? 'on' : ''}"></button>`).join('')}<input type="color" title="Your own colour" aria-label="Your own colour" value="${esc(v || '#d40000')}" data-k="accent-own"></div>`
+  if (kind === 'font') return `<div class="dr full">${t}<div class="c"><div class="fonts" data-k="font">${FONT_LIST.map(([f, l]) => `<button type="button" data-v="${esc(f)}" class="${(v || 'Jost') === f ? 'on' : ''}"><b style="font-family:'${esc(f)}'">Aa · Films</b><small>${esc(f)} · ${esc(l)}</small></button>`).join('')}</div></div></div>`
+  if (kind === 'kicker') { const k = v || {}; c = `<div class="two"><label class="f"><span>English</span><input data-k="kicker.en" value="${esc(k.en || '')}" placeholder="Film production house"></label><label class="f"><span>Ελληνικά</span><input data-k="kicker.el" value="${esc(k.el || '')}" placeholder="Εταιρεία κινηματογραφικής παραγωγής"></label></div><label class="switch"><input type="checkbox" data-k="kickerOff" data-kind="toggle-not" ${dget('kickerOff') ? '' : 'checked'}> Show it</label>`; return `<div class="dr full">${t}<div class="c" style="display:grid;gap:12px;width:100%">${c}</div></div>` }
+  if (kind === 'stats') { const k = v || {}; c = `<div class="two three"><label class="f"><span>Years</span><input type="number" min="0" data-k="stats.years" value="${esc(k.years || '')}" placeholder="counted"></label><label class="f"><span>Productions</span><input type="number" min="0" data-k="stats.prod" value="${esc(k.prod || '')}" placeholder="counted"></label><label class="f"><span>Brands &amp; artists</span><input type="number" min="0" data-k="stats.brands" value="${esc(k.brands || '')}" placeholder="counted"></label></div><label class="switch"><input type="checkbox" data-k="statsOff" data-kind="toggle-not" ${dget('statsOff') ? '' : 'checked'}> Show the numbers</label>`; return `<div class="dr full">${t}<div class="c" style="display:grid;gap:12px;width:100%">${c}</div></div>` }
+  if (kind === 'notice') {
+    const n = v || {}
+    c = `<label class="switch"><input type="checkbox" data-k="notice.on" data-kind="toggle" ${n.on ? 'checked' : ''}> Show it on the site</label>
+      <div class="two"><label class="f"><span>Text, English</span><input data-k="notice.en" value="${esc(n.en || '')}" placeholder="New: our film for … is out"></label><label class="f"><span>Text, Ελληνικά</span><input data-k="notice.el" value="${esc(n.el || '')}" placeholder="Νέο: η ταινία μας για … βγήκε"></label></div>
+      <div class="two three"><label class="f"><span>Link (optional)</span><input data-k="notice.link" value="${esc(n.link || '')}" placeholder="https://… or #work"></label><label class="f"><span>Link's word, English</span><input data-k="notice.cta" value="${esc(n.cta || '')}" placeholder="Watch"></label><label class="f"><span>Link's word, Ελληνικά</span><input data-k="notice.cta_el" value="${esc(n.cta_el || '')}" placeholder="Δες το"></label></div>
+      <div class="seg" data-k="notice.style"><button type="button" data-v="" class="${n.style === 'glass' ? '' : 'on'}">Red strip</button><button type="button" data-v="glass" class="${n.style === 'glass' ? 'on' : ''}">Glass strip</button></div>`
+    return `<div class="dr full">${t}<div class="c" style="display:grid;gap:12px;width:100%">${c}</div></div>`
+  }
+  if (kind === 'note') return `<div class="dr full">${t}</div>`
+  return `<div class="dr">${t}<div class="c">${c}</div></div>`
+}
+const GROUP_TITLES = { colour: 'Colour, type and motion', opening: 'The opening', home: 'Home page', work: 'The work\'s tiles', lab: 'The Lab', notice: 'Announcement' }
+function renderDesign() {
+  document.querySelectorAll('.dz[data-group]').forEach((box) => {
+    const g = box.dataset.group, rows = DESIGN.filter((r) => r[0] === g)
+    const keys = rows.map((r) => r[1]).concat(g === 'opening' ? ['kickerOff', 'statsOff'] : [], g === 'home' ? ['hidden'] : [])
+    const changed = keys.some((k) => design[k] != null && design[k] !== '' && !(Array.isArray(design[k]) && !design[k].length))
+    box.innerHTML = `<h3>${esc(GROUP_TITLES[g])}</h3>${rows.map(drow).join('')}${g !== 'home' ? `<div class="dz-foot"><button class="btn sm ghost" type="button" data-reset="${g}" ${changed ? '' : 'disabled'}>Back to how it was</button></div>` : ''}`
+  })
+}
+// the preview: the site in a frame, scaled to fit, told about every change
+let pvDev = 'pc'
+const pvFrame = $('pvFrame'), pvBox = $('pvBox')
+function pvFit() {
+  const w = pvBox.clientWidth || 420
+  const [fw, fh, s] = pvDev === 'phone' ? [390, 844, 240 / 390] : [1440, 900, w / 1440]
+  pvFrame.style.width = `${fw}px`; pvFrame.style.height = `${fh}px`; pvFrame.style.transform = `scale(${s})`
+  pvBox.style.height = `${Math.round(fh * s)}px`
+}
+const SCROLL_TO = { theme: '', colour: '', opening: 'top', home: '', work: 'work', lab: 'lab', notice: 'top' }
+let pvScroll = ''
+function pvSend() { try { pvFrame.contentWindow?.postMessage({ type: 'tml-studio-preview', design, theme, scroll: pvScroll }, location.origin) } catch (e) {} pvScroll = '' }
+pvFrame.addEventListener('load', () => { pvFit(); setTimeout(pvSend, 300) })
+function pvOpen() { if (pvFrame.src === 'about:blank' || !pvFrame.src.includes('nostats')) pvFrame.src = '../?nostats=1'; pvFit() }
+$('pvDev').onclick = (e) => { const b = e.target.closest('[data-d]'); if (!b) return; pvDev = b.dataset.d; $('pvDev').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); pvBox.classList.toggle('phone', pvDev === 'phone'); pvFit() }
+addEventListener('resize', pvFit)
+// the groups
+$('lkNav').onclick = (e) => {
+  const b = e.target.closest('[data-cat]'); if (!b) return
+  $('lkNav').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b))
+  document.querySelectorAll('.lk-cat').forEach((c) => { c.hidden = c.dataset.cat !== b.dataset.cat })
+  if (SCROLL_TO[b.dataset.cat]) { pvScroll = SCROLL_TO[b.dataset.cat]; pvSend() }
+}
+// a change: kept, shown in the preview, saved a moment later
+let dzTimer = 0
+function dset(path, value) {
+  const [a, b] = path.split('.')
+  if (b) { const o = { ...(design[a] || {}) }; if (value === '' || value == null || value === false) delete o[b]; else o[b] = value; if (Object.keys(o).length) design[a] = o; else delete design[a] }
+  else if (value === '' || value == null || value === false) delete design[a]; else design[a] = value
+  pvSend()
+  clearTimeout(dzTimer)
+  dzTimer = setTimeout(async () => { try { await setSetting('design', design); toast('Saved · on the site') } catch (err) { toast(err.message) } }, 650)
+}
+document.querySelector('[data-pane="look"]').addEventListener('click', (e) => {
+  const r = e.target.closest('[data-reset]')
+  if (r) { DESIGN.filter((x) => x[0] === r.dataset.reset).forEach((x) => delete design[x[1]]); if (r.dataset.reset === 'opening') { delete design.kickerOff; delete design.statsOff } renderDesign(); dset('_', ''); return }
+  const b = e.target.closest('.seg[data-k] button, .sw[data-k] button, .fonts button'); if (!b) return
+  const box = b.closest('[data-k]')
+  box.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b))
+  dset(box.dataset.k, box.dataset.k === 'font' && b.dataset.v === 'Jost' ? '' : box.dataset.k === 'accent' && b.dataset.v === '#d40000' ? '' : b.dataset.v)
+  if (box.dataset.k === 'accent') { const own = box.querySelector('input[type=color]'); if (own) own.value = b.dataset.v }
+  const reset = box.closest('.dz')?.querySelector('[data-reset]'); if (reset) reset.disabled = false
+})
+document.querySelector('[data-pane="look"]').addEventListener('input', (e) => {
+  const el = e.target.closest('input[data-k]'); if (!el || !el.closest('.dz')) return
+  const k = el.dataset.k
+  if (el.type === 'checkbox') dset(k, el.dataset.kind === 'toggle-not' ? !el.checked : el.checked)
+  else if (el.type === 'range') { el.nextElementSibling.textContent = el.value; dset(k, el.value === '100' ? '' : Number(el.value)) }
+  else if (k === 'accent-own') { el.closest('.sw').querySelectorAll('button').forEach((x) => x.classList.remove('on')); dset('accent', el.value) }
+  else if (el.type === 'number') dset(k, el.value ? Math.max(0, Math.round(Number(el.value))) : '')
+  else dset(k, el.value.trim())
+  const reset = el.closest('.dz')?.querySelector('[data-reset]'); if (reset) reset.disabled = false
+})
 
 /* ---------- people: the team and the clients (Alex, 14 Oct) ----------
    site_team { name, role, role_el, photo, frame, position, visible } and site_clients { name, logo, mono,
