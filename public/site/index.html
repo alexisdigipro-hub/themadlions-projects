@@ -45,6 +45,19 @@
     try { t = q || localStorage.getItem('tml_site_theme') } catch (e) {}
     if (t && t !== 'dark') document.documentElement.dataset.theme = t
   })()
+  // the design from Studio > Look (Alex, 30 Oct), remembered too, so the colours, type and shapes are right from the
+  // first frame; the rest of it (texts, the bar, hidden sections) follows in applyDesign below
+  ;(function () {
+    var d = null
+    try { d = JSON.parse(localStorage.getItem('tml_site_design') || 'null') } catch (e) {}
+    window.TML_DESIGN = d || {}
+    if (!d) return
+    var h = document.documentElement, set = function (k, v) { if (v) h.style.setProperty(k, v) }
+    set('--accent', d.accent); if (d.motion) h.dataset.motion = d.motion; if (d.grain) h.dataset.grain = d.grain; if (d.glow) h.dataset.glow = d.glow
+    if (d.buttons) h.dataset.buttons = d.buttons; if (d.tiles) h.dataset.tiles = d.tiles; if (d.shape) h.dataset.shape = d.shape; if (d.corners) h.dataset.corners = d.corners
+    if (d.caps) h.dataset.caps = d.caps; if (d.cols) h.dataset.cols = d.cols; if (d.gap) h.dataset.gap = d.gap; if (d.titles) h.dataset.titles = d.titles; if (d.logo) h.dataset.logo = d.logo
+    if (d.heroColor) h.dataset.herocolor = '1'; if (d.dim != null) h.style.setProperty('--hero-dim', String(d.dim / 100)); if (d.labels) h.dataset.labels = d.labels
+  })()
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -631,6 +644,53 @@ html[data-theme='light'] .logo:hover img { opacity: 1; }
 .about > .reveal:last-child > .label { text-align: center; }
 .about .quote { border-left: 0; padding: 0; margin-top: 48px; text-align: center; } /* under the team row (Alex, 18 Oct) */
 .about .quote::before { content: ''; display: block; width: 28px; height: 2px; margin: 0 auto 14px; background: var(--accent); }
+
+/* ===== Studio > Look > design (Alex, 30 Oct: "more settings so I manage the look of the page myself") =====
+   Every choice is an attribute on <html> or a variable, so it applies at once, also in the admin's live preview. */
+html[data-motion='off'] .reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+html[data-motion='off'] *, html[data-motion='off'] *::before, html[data-motion='off'] *::after { animation-duration: 0s !important; transition-duration: 0s !important; }
+html[data-motion='gentle'] .reveal { transform: translateY(10px); transition-duration: 1.4s; }
+/* film grain over the whole page */
+html[data-grain] body::after { content: ''; position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: .05; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+html[data-grain='strong'] body::after { opacity: .11; }
+/* a soft glow of the accent behind the page */
+html[data-glow] body { background-image: radial-gradient(60% 40% at 15% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%), radial-gradient(50% 40% at 90% 100%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%); background-attachment: fixed; }
+html[data-glow='strong'] body { background-image: radial-gradient(60% 45% at 15% 0%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 70%), radial-gradient(55% 45% at 90% 100%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 70%); }
+/* buttons: pills (as always) or soft squares */
+html[data-buttons='square'] :is(.pill, .lang, .lang button, .bar nav a, .filters button, .chip) { border-radius: 10px; }
+/* the opening: how dark the veil over the picture is, the picture in colour, the logo's size */
+.hero::after { opacity: var(--hero-dim, 1); }
+html[data-herocolor] .hero .reel img, html[data-herocolor] .hero .reel .bgv.gray { filter: none; }
+html[data-logo='s'] .hero-in .wordmark { width: min(520px, 70vw); }
+html[data-logo='l'] .hero-in .wordmark { width: min(980px, 92vw); }
+/* the menu's and the labels' letters */
+html[data-labels='normal'] :is(.label, .bar nav a, .hero-in .kicker) { text-transform: none; letter-spacing: .04em; }
+/* the work's tiles: how many in a row, their shape and corners, the gap, when the titles show */
+@media (min-width: 1101px) {
+  html[data-cols='3'] .grid { grid-template-columns: repeat(3, 1fr); }
+  html[data-cols='4'] .grid { grid-template-columns: repeat(4, 1fr); }
+  html[data-cols='5'] .grid { grid-template-columns: repeat(5, 1fr); }
+  html[data-cols='6'] .grid { grid-template-columns: repeat(6, 1fr); }
+}
+html[data-shape='16-9'] .tile { aspect-ratio: 16 / 9; }
+html[data-shape='square'] .tile { aspect-ratio: 1; }
+html[data-shape='portrait'] .tile { aspect-ratio: 4 / 5; }
+html[data-corners='sharp'] :is(.tile, .svc, .stat, .lab-x, .faq details, .product) { border-radius: 2px; }
+html[data-corners='round'] :is(.tile, .svc, .stat, .product) { border-radius: 24px; }
+html[data-gap='tight'] .grid { gap: 2px; }
+html[data-gap='airy'] .grid { gap: 18px; }
+html[data-titles='never'] .tile .cap { display: none; }
+html[data-titles='hover'] .tile .cap { opacity: 0; transform: translateY(6px); transition: opacity .3s, transform .3s; }
+html[data-titles='hover'] .tile:hover .cap, html[data-titles='hover'] .tile:focus-visible .cap { opacity: 1; transform: none; }
+/* a section switched off in Studio, and its place in the menu */
+.studio-off { display: none !important; }
+/* the announcement at the very top */
+.notice-bar { position: fixed; inset: 0 0 auto; z-index: 25; display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 38px; padding: 8px 44px calc(8px) 16px; padding-top: calc(8px + env(safe-area-inset-top)); font-size: 13.5px; font-weight: 500; text-align: center; color: #fff; background: var(--accent); }
+.notice-bar.glass { color: var(--text); background: color-mix(in srgb, var(--bg) 70%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border-bottom: 1px solid var(--line); }
+.notice-bar a { text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+.notice-bar button { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .18); color: inherit; cursor: pointer; font-size: 15px; line-height: 1; }
+html.has-notice .bar { top: var(--notice-h, 38px); }
 </style>
 </head>
 <body>
@@ -1308,7 +1368,7 @@ function applyLang() {
   document.querySelectorAll('.lang button').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang))
   renderFilters(); renderGrid(); renderBts(); renderServices(); renderAibsent(); renderSteps(); renderFaq(); renderAbout(); renderChoices(); if (typeof renderShop === 'function' && products) renderShop(); observe()
 }
-document.querySelectorAll('.lang button').forEach((b) => { b.onclick = () => { lang = b.dataset.lang; try { localStorage.setItem('tml_site_lang', lang) } catch (e) {} applyLang() } })
+document.querySelectorAll('.lang button').forEach((b) => { b.onclick = () => { lang = b.dataset.lang; try { localStorage.setItem('tml_site_lang', lang) } catch (e) {} applyLang(); if (window.TML_DESIGN && window.TML_DESIGN.notice) applyDesign(window.TML_DESIGN) } })
 
 /* things fade up as they come into view; the numbers count up once; the bar turns to glass past the opening */
 const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => {
@@ -1378,6 +1438,65 @@ function setHeroVideo(v) {
   reel.appendChild(box)
 }
 
+/* the design from Studio > Look (Alex, 30 Oct): colours, type, shapes, the opening, the work's tiles, sections switched
+   off, the numbers, an announcement at the top. site_settings.design; {} is the site as it always was. Studio's live
+   preview sends a design that is not saved yet as a message (only from this same site). */
+const FONTS = { Jost: 'Jost:wght@200;300;400;500;700;800', Inter: 'Inter:wght@300;400;500;700;800', Manrope: 'Manrope:wght@300;400;500;700;800', 'Space Grotesk': 'Space+Grotesk:wght@300;400;500;700', 'DM Sans': 'DM+Sans:wght@300;400;500;700;800', Outfit: 'Outfit:wght@200;300;400;500;700;800', Sora: 'Sora:wght@200;300;400;600;800', Syne: 'Syne:wght@400;500;700;800', 'Bricolage Grotesque': 'Bricolage+Grotesque:wght@300;400;500;700;800' }
+const KICK = { en: T.en['hero.kicker'], el: T.el['hero.kicker'] }
+function applyDesign(d, preview) {
+  d = d && typeof d === 'object' ? d : {}
+  window.TML_DESIGN = d
+  if (!preview) { try { localStorage.setItem('tml_site_design', JSON.stringify(d)) } catch (e) {} }
+  const h = document.documentElement
+  const attr = (k, v) => { if (v) h.dataset[k] = v; else delete h.dataset[k] }
+  if (d.accent) h.style.setProperty('--accent', d.accent); else h.style.removeProperty('--accent')
+  attr('motion', d.motion); attr('grain', d.grain); attr('glow', d.glow); attr('buttons', d.buttons); attr('shape', d.shape); attr('corners', d.corners)
+  attr('cols', d.cols); attr('gap', d.gap); attr('titles', d.titles); attr('logo', d.logo); attr('labels', d.labels); attr('herocolor', d.heroColor ? '1' : '')
+  if (d.dim != null && d.dim !== '') h.style.setProperty('--hero-dim', String(Number(d.dim) / 100)); else h.style.removeProperty('--hero-dim')
+  // the typeface
+  const f = FONTS[d.font] ? d.font : 'Jost'
+  if (f !== 'Jost' && !document.getElementById('design-font')) { const l = document.createElement('link'); l.id = 'design-font'; l.rel = 'stylesheet'; document.head.appendChild(l) }
+  const fl = document.getElementById('design-font'); if (fl && f !== 'Jost') fl.href = `https://fonts.googleapis.com/css2?family=${FONTS[f]}&display=swap`
+  document.body.style.fontFamily = f === 'Jost' ? '' : `'${f}', Jost, system-ui, sans-serif`
+  // the line under the logo, the scroll hint
+  T.en['hero.kicker'] = (d.kicker && d.kicker.en) || KICK.en; T.el['hero.kicker'] = (d.kicker && d.kicker.el) || KICK.el
+  const k = document.querySelector('.hero-in .kicker'); if (k) { k.textContent = t('hero.kicker'); k.hidden = d.kickerOff === true }
+  const cue = document.querySelector('.scroll-cue'); if (cue) cue.hidden = d.cueOff === true
+  // the numbers under the opening: shown or not, and a figure of Alex's own instead of the counted one
+  const st = document.querySelector('.stats'); if (st) st.classList.toggle('studio-off', d.statsOff === true)
+  ;['years', 'prod', 'brands'].forEach((key) => {
+    const el = document.querySelector(`[data-stat="${key}"]`); if (!el) return
+    const n = Number(d.stats && d.stats[key])
+    if (n > 0) { el.dataset.fixed = '1'; el.dataset.count = n; el.textContent = n } else if (el.dataset.fixed) { delete el.dataset.fixed; if (key === 'years') renderYears(); else if (typeof renderStats === 'function') renderStats() }
+  })
+  // sections switched off, with their place in the menu
+  const off = Array.isArray(d.hidden) ? d.hidden : []
+  SECTION_IDS.forEach((id) => {
+    const el = document.getElementById(id); if (el) el.classList.toggle('studio-off', off.includes(id))
+    document.querySelectorAll(`.bar nav a[href="#${id}"], .bar nav a[data-sec="${id}"]${id === 'lab' ? ', .bar .lab-m' : ''}`).forEach((a) => a.classList.toggle('studio-off', off.includes(id)))
+  })
+  // the announcement at the very top
+  let nb = document.getElementById('noticeBar')
+  const n = d.notice || {}, text = (lang === 'el' && n.el) || n.en || n.el || ''
+  let closed = ''; try { closed = sessionStorage.getItem('tml_notice_closed') || '' } catch (e) {}
+  if (n.on && text && (preview || closed !== text)) {
+    if (!nb) { nb = document.createElement('div'); nb.id = 'noticeBar'; nb.setAttribute('role', 'note'); document.body.prepend(nb) }
+    nb.className = `notice-bar${n.style === 'glass' ? ' glass' : ''}`
+    nb.innerHTML = '<span></span><button type="button" aria-label="Close">×</button>'
+    nb.querySelector('span').textContent = text
+    if (n.link && /^https?:\/\/|^#|^\//.test(n.link)) { const a = document.createElement('a'); a.href = n.link; a.textContent = (lang === 'el' && n.cta_el) || n.cta || (lang === 'el' ? 'Δες' : 'See'); if (/^https?:/.test(n.link)) { a.target = '_blank'; a.rel = 'noopener' } nb.querySelector('span').append(' ', a) }
+    nb.querySelector('button').onclick = () => { try { sessionStorage.setItem('tml_notice_closed', text) } catch (e) {} nb.remove(); h.classList.remove('has-notice') }
+    h.classList.add('has-notice'); h.style.setProperty('--notice-h', `${nb.offsetHeight}px`)
+  } else if (nb) { nb.remove(); h.classList.remove('has-notice') }
+}
+addEventListener('message', (e) => {
+  if (e.origin !== location.origin || !e.data || e.data.type !== 'tml-studio-preview') return
+  if (e.data.theme) { if (e.data.theme === 'dark') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = e.data.theme }
+  applyDesign(e.data.design || {}, true)
+  if (e.data.scroll) document.getElementById(e.data.scroll)?.scrollIntoView({ block: 'start' })
+})
+if (window.TML_DESIGN && Object.keys(window.TML_DESIGN).length) applyDesign(window.TML_DESIGN)
+
 /* the look chosen in the admin */
 async function loadTheme() {
   if (new URLSearchParams(location.search).get('theme')) return
@@ -1407,6 +1526,7 @@ async function loadTheme() {
     // the categories from Studio > Work > Categories: their order and Greek names
     const cl = get('categories')
     if (Array.isArray(cl) && cl.length) { Object.keys(CATS).forEach((k) => delete CATS[k]); cl.forEach((c) => { if (c && c.en) CATS[c.en] = c.el || c.en }); renderFilters(); renderGrid() }
+    applyDesign(get('design') || {})
     const th = get('theme')
     if (!th) return
     if (th === 'dark') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = th
@@ -1457,7 +1577,7 @@ const GR = { α: 'a', β: 'v', γ: 'g', δ: 'd', ε: 'e', ζ: 'z', η: 'i', θ: 
 const FOUNDED = new Date(2016, 1, 1)
 function renderYears() {
   const el = document.querySelector('[data-stat="years"]'), n = Math.floor((Date.now() - FOUNDED) / (365.25 * 864e5))
-  if (el && n > 0) { el.dataset.count = n; el.textContent = n }
+  if (el && n > 0 && !el.dataset.fixed) { el.dataset.count = n; el.textContent = n }
 }
 renderYears()
 function renderStats() {
@@ -1468,7 +1588,7 @@ function renderStats() {
       .replace(/[α-ως]/g, (ch) => GR[ch] || ch).replace(/^#/, '').replace(/ (live|wave|ig stories)$/, '').trim()
     return n.split(/\s+/).pop()
   }))
-  const put = (key, n) => { const el = document.querySelector(`[data-stat="${key}"]`); if (el && n >= 5) { el.dataset.count = n; el.textContent = n } }
+  const put = (key, n) => { const el = document.querySelector(`[data-stat="${key}"]`); if (el && n >= 5 && !el.dataset.fixed) { el.dataset.count = n; el.textContent = n } }
   put('prod', Math.floor(made.length / 5) * 5)
   put('brands', Math.floor(names.size / 5) * 5)
 }
@@ -1709,8 +1829,9 @@ loadTheme(); loadWorks(); loadShop(); loadPeople(); track('view')
     const r = c.getBoundingClientRect()
     c.style.setProperty('--mx', `${e.clientX - r.left}px`); c.style.setProperty('--my', `${e.clientY - r.top}px`)
   }, { passive: true })
-  const TURN = 6000
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !cards.length) return
+  const D = window.TML_DESIGN || {}
+  const TURN = (Number(D.labTurn) || 6) * 1000
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !cards.length || D.labTurn === 'off' || D.motion === 'off') return
   list.style.setProperty('--turn', `${TURN}ms`)
   let seen = false, held = false, t = 0
   const wide = () => matchMedia('(min-width: 761px)').matches

@@ -38,6 +38,13 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
 ## Where we stopped (30 Oct 2026, Lab: RoarKit's new look, Roarverter is RoarMorph)
+- **Company site's Studio (admin), 30 Oct** (Alex: "group the settings with categories, centre the admin with the menu at the top, and give me many settings for the look"):
+  - **Layout:** public/site/admin has the menu as a centred glass bar on a computer; a phone keeps its bar at the foot.
+  - **Look groups:** Look is split into Theme / Colour & type / Opening / Home page / Work tiles / Lab / Announcement, with a live preview of the site in a frame (Computer or Phone). It sends `tml-studio-preview` messages; the site accepts them only from its own origin.
+  - **Storage:** the new settings are one row, site_settings.design. No SQL; the existing policy allows any key.
+  - **What design holds:** accent, font (9 Google fonts), labels, buttons, glow, grain, motion, dim, heroColor, logo, kicker {en, el} / kickerOff, cueOff, stats {years, prod, brands} / statsOff, hidden (sections, by the eye in Page order), cols, shape, corners, gap, titles, labTurn, notice {on, en, el, link, cta, cta_el, style}.
+  - **On the site:** index.html applies it with applyDesign(). It is cached in localStorage tml_site_design and applied in the head, so the first frame is right.
+  - **Not covered:** the Lab pages do not take the design.
 - **RoarKit 0.6.0** (repo roartwin): a new look, "the instrument" (Alex: "more sober and technological, without many colours"): app/theme.css, graphite and hairlines, monochrome icons, figures in a monospace, the accent only as a signal. Released through the Actions tab (desktop.yml, Run workflow); a tag push from the cloud session hangs.
 - **Roarverter is RoarMorph** (Alex, 30 Oct): the app 0.4.0 (repo roarverter keeps its name, bundle id and settings folder; the Mac app carries Contents/MacOS/Roarverter for the 0.3.x updater, as RoarTwin -> RoarKit). Site: lab/roarmorph/ and legal/roarmorph/ (pages, pictures with the new wordmark, icons/roarmorph.png); lab/roarverter/ and legal/roarverter/ are redirects, roarverter.jpg / icons/roarverter.png stay for old links. The Lab's own id stays `roarverter` (#roarverter, the admin's Lab order). RoarGrab's "Send to RoarMorph" opens RoarMorph.app or the old Roarverter.app.
 - Alex has nothing to do: the apps update themselves.
