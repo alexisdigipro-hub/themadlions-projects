@@ -22,6 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../fresh.css">
+<link rel="stylesheet" href="../product.css">
 <style>
 :root {
   --bg: #16181c; --bg-2: #1d2025; --bg-3: #24282f; --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.16);
@@ -423,13 +424,13 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <span class="rm" aria-label="RoarList"><span class="a">ROAR</span><span class="b">LIST</span></span>
   </a>
   <nav aria-label="Sections">
-    <a href="#new" data-t="nav.new">What's new</a>
+    <a href="#onset" data-t="nav.onset">On set</a>
     <a href="#only" data-t="nav.only">Only here</a>
     <a href="#set" data-t="nav.set">For the set</a>
     <a href="#all" data-t="nav.all">Everything</a>
-    <a href="#yours" data-t="nav.yours">Yours</a>
     <a href="#download" data-t="nav.download">Download</a>
     <a href="#faq" data-t="nav.faq">Questions</a>
+    <a href="#new" data-t="nav.new">What's new</a>
   </nav>
   <div class="end">
     <div class="lang" role="group" aria-label="Language">
@@ -442,26 +443,24 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 
 <main>
 <div class="hero" id="top">
-  <div class="hero-top">
-    <div>
-      <p class="kicker rv"><i></i><span data-t="hero.kicker">Shot lists &amp; storyboards · The Mad Lions Lab · Experiment 04</span></p>
-      <h1 class="rv" style="--d:.06s">
-        <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span><i class="f-br" aria-hidden="true"></i>
-        <span class="rm"><span class="a">ROAR</span><span class="b">LIST</span></span><em class="beta">beta</em>
-      </h1>
-    </div>
-    <div class="hero-ver rv" style="--d:.1s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.4.3</span></a></div>
-  </div>
-  <div class="hero-sub">
-    <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>The shot list, frame by frame. Scenes and shots with <b>size, angle, movement and lens</b>, <b>a picture for every shot</b>, and <b>a PDF</b> the crew can read on set.</p>
+  <div class="hero-head">
+    <p class="kicker rv"><i></i><span data-t="hero.kicker">Shot lists &amp; storyboards · The Mad Lions Lab · Experiment 04</span></p>
+    <h1 class="brand rv" style="--d:.04s">
+      <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
+      <span class="rm"><span class="a">ROAR</span><span class="b">LIST</span></span><em class="beta">beta</em>
+    </h1>
+    <p class="claim rv" style="--d:.1s" data-t="hero.claim" data-html>Every shot.<br><b>A frame.</b></p>
+    <p class="lead rv" style="--d:.16s" data-t="hero.lead2" data-html>Scenes and shots with size, angle, movement and lens, a picture for every shot, and <b>one PDF the crew reads on set</b>. Web, Mac and Windows.</p>
     <div class="cta rv" style="--d:.22s">
       <a class="pill main" id="dl-main" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span>Download</span></a>
       <a class="pill" href="../../roarlist/"><span data-t="cta.browser">Make one in the browser</span></a>
     </div>
     <p class="cta-note rv" style="--d:.3s"><span data-t="cta.note">Free · Mac, Windows, browser · updates itself ·</span> <a href="../../roarlist/#demo" data-t="cta.demo">see an example</a></p>
+    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.4.3</span></a></div>
   </div>
-
-  <div class="frame rv" style="--d:.2s" aria-hidden="true">
+  <div class="scene stack rv" style="--d:.18s">
+    <figure class="scene-photo"><img src="photo-hero.jpg" alt="" width="1600" height="900" fetchpriority="high"><figcaption data-t="sc.cap">Location scout, Sounio, 18:50. Shot 4C found.</figcaption></figure>
+    <div class="frame" style="--d:.2s" aria-hidden="true">
     <div class="win" id="win">
       <div class="win-top"><i></i><i></i><i></i></div>
       <div class="win-body rl">
@@ -491,12 +490,192 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <div class="tag t2"><i>02</i><span data-t="tag.tot">Shots done, running time</span></div>
     <div class="tag t3"><i>03</i><span data-t="tag.no">1A, 1B, 1C: no I, no O</span></div>
   </div>
+  </div>
 </div>
+
+<section id="numbers" class="nums-sec">
+  <div class="nums">
+    <div class="num f-glass rv"><b>1A</b><span data-t="nm1">Every shot numbered by itself, and never I or O.</span></div>
+    <div class="num f-glass rv" style="--d:.06s"><b>1</b><span data-t="nm2">PDF for the crew, read on set, no app needed.</span></div>
+    <div class="num f-glass rv" style="--d:.12s"><b>0</b><span data-t="nm3">accounts on Mac and Windows: lists stay on your computer.</span></div>
+    <div class="num f-glass rv" style="--d:.18s"><b>€0</b><span data-t="nm4">No subscription, no ads.</span></div>
+  </div>
+</section>
 
 <div class="ticker" aria-hidden="true"><div class="ticker-in">
   <span data-t="tk.1">A frame for every shot</span><span data-t="tk.2">PDF list &amp; storyboard</span><span data-t="tk.3">Size · Angle · Move · Lens</span><span data-t="tk.4">Running time</span><span data-t="tk.5">Drag to reorder</span><span data-t="tk.6">.roarlist files</span><span data-t="tk.7">Greek &amp; English</span><span data-t="tk.8">Updates itself</span><span data-t="tk.9">Mac · Windows · Browser</span><span data-t="tk.10">One RoarMe account</span>
   <span data-t="tk.1">A frame for every shot</span><span data-t="tk.2">PDF list &amp; storyboard</span><span data-t="tk.3">Size · Angle · Move · Lens</span><span data-t="tk.4">Running time</span><span data-t="tk.5">Drag to reorder</span><span data-t="tk.6">.roarlist files</span><span data-t="tk.7">Greek &amp; English</span><span data-t="tk.8">Updates itself</span><span data-t="tk.9">Mac · Windows · Browser</span><span data-t="tk.10">One RoarMe account</span>
 </div></div>
+
+<div class="f-sep" aria-hidden="true"></div>
+
+<section id="onset">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="on.idx">01 · On set</p><h2 class="rv" data-t="on.title" data-html>Made by people <b>who make films</b>.</h2></div>
+    <p class="sub rv" data-t="on.sub">We built RoarList for our own work at The Mad Lions. This is where it gets used.</p>
+  </div>
+  <div class="people">
+    <figure class="person rv"><img src="photo-set.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on1.k">Prep · The director</span><b data-t="on1.t">The list becomes a board.</b><span data-t="on1.p">Drop a picture on a shot or paste it, switch to Storyboard, and every frame keeps its size, angle, lens and length.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.08s"><img src="photo-office.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on2.k">On set · The DoP</span><b data-t="on2.t">The next shot, at a glance.</b><span data-t="on2.p">A landscape PDF, A4 or Letter, with the title, DoP and shoot day on top and a small frame beside every shot.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.16s"><img src="photo-home.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on3.k">On set · The 1st AD</span><b data-t="on3.t">The running time, always in view.</b><span data-t="on3.p">Shots numbered by themselves, a length typed any way you like, the total counted for you.</span></figcaption></figure>
+  </div>
+</section>
+
+<section id="only">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="only.idx">02 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only RoarList</b> does.</h2></div>
+    <p class="sub rv" data-t="only.sub">Why a director stops keeping the shot list in a spreadsheet.</p>
+  </div>
+  <div class="three">
+    <article class="big rv">
+      <span class="no">01</span>
+      <div><h3 data-t="f1.t" data-html>A <b>frame</b> for every shot.</h3><p data-t="f1.p">Drop a picture on a shot, paste it with ⌘V, or choose one. Switch to Storyboard and the list becomes a board of frames, each with its number, size, angle, movement, lens and length. Frames follow the format you shoot in.</p>
+        <div class="chips"><span data-t="f1.c1">Drop · paste · choose</span><span data-t="f1.c2">PNG · JPG · WebP · GIF</span><span data-t="f1.c3">List or Storyboard</span></div></div>
+      <div class="viz"><div class="v-drop"><div class="zone"><em data-t="f1.drop">Drop, paste or choose an image</em><svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice"><use href="#fr2"/></svg></div><div class="row2"><b>1B</b><span>MS · LOW · PUSH IN · 35MM</span></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">02</span>
+      <div><h3 data-t="f2.t" data-html>One <b>PDF</b> for the crew.</h3><p data-t="f2.p">Print the list, or the storyboard, in one go: landscape, A4 or Letter, with the title, client, director, DoP, shoot day and notes on top and the page number at the bottom. The crew reads it on set, nobody needs an app.</p>
+        <div class="chips"><span data-t="f2.c1">PDF list</span><span data-t="f2.c2">PDF storyboard</span><span data-t="f2.c3">A4 or Letter</span><span data-t="f2.c4">⌘P</span></div></div>
+      <div class="viz"><div class="v-pdf"><div class="ph"><span class="rm"><span class="a">ROAR</span><span class="b">LIST</span></span><small>NIGHT SHOOT · MUSIC VIDEO</small></div><div class="pm">DIRECTOR ALEX K. · DOP NIKOS · 16:9 · FRI 24 OCT</div><div class="pg"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">03</span>
+      <div><h3 data-t="f3.t" data-html>Numbers that <b>read on set</b>.</h3><p data-t="f3.p">Every shot gets its number by itself: the scene, then a letter. 1A, 1B, 1C, and never I or O, because on set they read as 1 and 0. Type a length any way you like and the total running time is always in view.</p>
+        <div class="chips"><span data-t="f3.c1">Automatic numbers</span><span data-t="f3.c2">No I, no O</span><span data-t="f3.c3">1:30 · 90 · 1m30</span><span data-t="f3.c4">Done and total</span></div></div>
+      <div class="viz"><div class="v-no"><div class="nos"><span>1F</span><span>1G</span><span>1H</span><span class="x">1I</span><span>1J</span><span>1K</span><span>1L</span><span>1M</span><span>1N</span><span class="x">1O</span><span>1P</span></div><div class="dur"><span>1m30</span>→<b>1:30</b></div></div></div>
+    </article>
+  </div>
+</section>
+
+<section id="set">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="set.idx">03 · For the set</p><h2 class="rv" data-t="set.title" data-html>Made the way <b>a shot list is written</b>.</h2></div>
+    <p class="sub rv" data-t="set.sub">Fast to fill in, true to the format, and always the newest version.</p>
+  </div>
+  <div class="board">
+    <article class="tile t-tasks f-glass rv">
+      <span class="k" data-t="s1.k">The next shot</span>
+      <h3 data-t="s1.t" data-html>⌘↵, <b>keep writing</b>.</h3>
+      <p data-t="s1.p">A new shot comes in right below the one you are on, with the same lens, and the cursor is already in its description. A new scene is ⌘⇧↵. You set up a whole scene without touching the mouse.</p>
+      <div class="mini-rows">
+        <div class="mrow"><span class="n">2A</span><span class="l">WS · 24</span><em data-t="s1.r1">The kitchen, morning light</em><kbd>⌘↵</kbd></div>
+        <div class="mrow new"><span class="n">2B</span><span class="l">MCU · 24</span><em data-t="s1.r2">She reads the letter</em></div>
+      </div>
+    </article>
+    <article class="tile t-ord f-glass rv" style="--d:.08s">
+      <span class="k" data-t="s2.k">The format</span>
+      <h3 data-t="s2.t" data-html>Seven formats, <b>one look</b>.</h3>
+      <p data-t="s2.p">Pick the aspect of the shoot and the frames, the storyboard and the PDF follow it. Vertical formats print five frames across instead of three.</p>
+      <div class="asp">
+        <span class="on"><i style="aspect-ratio:16/9"></i>16:9</span><span><i style="aspect-ratio:2.39/1"></i>2.39:1</span><span><i style="aspect-ratio:1.85/1"></i>1.85:1</span><span><i style="aspect-ratio:4/3"></i>4:3</span><span><i style="aspect-ratio:1/1"></i>1:1</span><span><i style="aspect-ratio:4/5"></i>4:5</span><span><i style="aspect-ratio:9/16"></i>9:16</span>
+      </div>
+    </article>
+    <article class="tile t-upd f-glass rv">
+      <span class="k" data-t="s3.k" data-html>Updates itself <em>0.4.3</em></span>
+      <h3 data-t="s3.t" data-html>One tap, <b>newest version</b>.</h3>
+      <p data-t="s3.p">The Mac and Windows apps look for a new version in the background and tell you when it is ready. Press Restart; if you quit instead, it installs on the way out.</p>
+      <div class="upd-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg></i><span><b data-t="s3.c">New version ready</b><small>RoarList</small></span><s data-t="s3.btn">Restart</s></div>
+    </article>
+    <article class="tile t-icon f-glass rv" style="--d:.08s">
+      <div class="txt">
+        <span class="k" data-t="s4.k">The look</span>
+        <h3 data-t="s4.t" data-html>RoarMe's look, <b>your colours</b>.</h3>
+        <p data-t="s4.p">The same design as RoarMe: the Simba and Pumba themes, day or night or as the system, ten accent colours, eight fonts, text size, spacing and corners, with a live preview. Power Saving turns off blur and motion. In our hub it takes on the hub's own theme.</p>
+        <div class="looks"><span class="dots" aria-hidden="true"><i style="background:#d40000"></i><i style="background:#ff6b57"></i><i style="background:#f97316"></i><i style="background:#facc15"></i><i style="background:#22c55e"></i><i style="background:#22d3ee"></i><i style="background:#3b82f6"></i><i style="background:#8b5cf6"></i><i style="background:#d946ef"></i><i style="background:#ffffff"></i></span></div>
+      </div>
+      <div class="icons"><img src="icon.png" alt="The RoarList icon" width="140" height="140" loading="lazy"></div>
+    </article>
+  </div>
+</section>
+
+<section id="all">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="all.idx">04 · Everything</p><h2 class="rv" data-t="all.title" data-html>And all <b>a shoot needs</b>.</h2></div>
+    <p class="sub rv" data-t="all.sub">The rest of RoarList, briefly.</p>
+  </div>
+  <div class="index">
+    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">Scenes and shots</b><p data-t="ix1.p">A scene number like 12A and a heading like INT. KITCHEN - NIGHT. For each shot: size, angle, movement, lens, what we see, cast, length and notes, with the usual values a tap away.</p></div>
+    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">The project on top</b><p data-t="ix2.p">Title, client, director, DoP, shoot day, format and general notes for the shoot, on screen and on every PDF.</p></div>
+    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Ticked off on the day</b><p data-t="ix3.p">Tick a shot when it is in the can. Shots done out of total and the running time show on top and beside every list.</p></div>
+    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">Drag to reorder</b><p data-t="ix4.p">Drag a shot by its handle, inside its scene or into another one. Scenes move up and down with a button.</p></div>
+    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">Undo, and nothing to save</b><p data-t="ix5.p">Every change saves itself as you type. ⌘Z brings back deletes, moves and pictures, up to 50 steps.</p></div>
+    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Only the columns you use</b><p data-t="ix6.p">Hide frame, size, angle, movement, lens, cast, length or notes from the list and the PDF. The details stay, ready to come back.</p></div>
+    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Hand it over</b><p data-t="ix7.p">Send a .roarlist file with the frames inside; on a computer with RoarList it opens with a double-click. Or save one web page that opens in any browser.</p></div>
+    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">All your lists at hand</b><p data-t="ix8.p">A sidebar with a cover for each list that you can make wider with a drag, search with ⌘K, and a right-click to rename, duplicate, export or delete. The last list you had open opens again.</p></div>
+    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">From the keyboard</b><p data-t="ix9.p">New shot, new scene, search, PDFs, undo and settings all have a shortcut, with a page that lists them (⌘/).</p></div>
+    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Greek and English</b><p data-t="ix10.p">The whole app, and the PDF, in either language, or as your system. Your scenes and notes are never touched.</p></div>
+    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">On the phone too</b><p data-t="ix11.p">The browser version fits a phone screen or a narrow window: the lists slide in from the side.</p></div>
+    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Try it first</b><p data-t="ix12.p">A sample shot list for a night shoot, with drawn frames, opens with no account. Change anything; it resets when you leave.</p></div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="why.idx">05 · Why Roar</p><h2 class="rv" data-t="why.title" data-html>Why <b>a Roar app</b>.</h2></div>
+    <div class="why-end"><p class="sub rv" data-t="why.sub">What every app of The Mad Lions Lab promises, RoarList included.</p>
+      <div class="legal rv"><a class="pill sm" href="../../legal/roarlist/#privacy" data-t="lg.p">Privacy Policy</a><a class="pill sm" href="../../legal/roarlist/#terms" data-t="lg.t">Terms</a></div></div>
+  </div>
+  <div class="why">
+    <article class="wy f-glass rv"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></span><h3 data-t="w1.t">On your computer</h3><p data-t="w1.p">The Mac and Windows apps keep every list on your disk, with no account; in the browser it lives in your own account.</p></article>
+    <article class="wy f-glass rv" style="--d:.06s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.2 4.2L19 7"/></svg></span><h3 data-t="w2.t">Deleting, said plainly</h3><p data-t="w2.p">On the computer a deleted list goes to the system Trash.</p></article>
+    <article class="wy f-glass rv" style="--d:.12s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></span><h3 data-t="w3.t">Always the newest</h3><p data-t="w3.p">The web version is always current; the Mac and Windows apps update themselves.</p></article>
+    <article class="wy f-glass rv" style="--d:.18s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10.5 5-3v9l-5-3"/></svg></span><h3 data-t="w4.t">Made by filmmakers</h3><p data-t="w4.p">The Mad Lions, a film company in Athens, use it on their own work. Ideas go straight to the people who make it.</p></article>
+  </div>
+</section>
+
+<section id="download">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="dl.idx">06 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarList</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
+    <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab that we use on our own shoots.</p>
+  </div>
+  <div class="dls">
+    <div class="dl f-glass rv" id="dl-mac" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.7zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.6-1.3z"/></svg></i>
+      <h3>Mac</h3>
+      <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
+      <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roarlist/releases/latest/download/RoarList-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+      <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roarlist/releases/latest/download/RoarList-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
+    </div>
+    <div class="dl f-glass rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
+      <h3>Windows</h3>
+      <small data-t="dl.win">Windows 10 and 11.</small>
+      <a class="pill main" data-f="win" href="https://github.com/alexisdigipro-hub/roarlist/releases/latest/download/RoarList-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+    </div>
+    <div class="dl f-glass rv" id="dl-web" style="--d:.12s" data-mine="Here">
+      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.4 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.4-3.5-8.5s1-5.9 3.5-8.5z"/></svg></i>
+      <h3 data-t="dl.webt">Browser</h3>
+      <small data-t="dl.web">On a computer or a phone, with your RoarMe account. Nothing to install.</small>
+      <a class="pill" href="../../roarlist/" data-t="cta.open">Open RoarList</a>
+    </div>
+    <div class="dl f-glass rv" id="dl-demo" style="--d:.18s">
+      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m10 9.5 4.5 2.5-4.5 2.5z"/></svg></i>
+      <h3 data-t="dl.demot">An example</h3>
+      <small data-t="dl.demo">A night shoot with drawn frames. No account, nothing saved.</small>
+      <a class="pill" href="../../roarlist/#demo" data-t="cta.demo2">See the example</a>
+    </div>
+  </div>
+  <div class="dl-note">
+    <p class="rv" data-t="dl.upd" data-html><b>It updates itself.</b> The Mac and Windows apps fetch new versions on their own and ask for a quick restart.</p>
+    <p class="rv" data-t="dl.help" data-html><b>First time on a Mac?</b> The app is not signed by Apple yet: right-click RoarList in Applications and choose Open, or press Open Anyway in System Settings › Privacy &amp; Security. On Windows: More info › Run anyway.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="faq">
+    <div><p class="idx rv" data-t="faq.idx">07 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
+    <div class="qa">
+      <details class="rv"><summary data-t="q1">Is RoarList free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
+      <details class="rv"><summary data-t="q2">Do I need an account?</summary><p data-t="a2">Not on Mac and Windows: everything stays on your computer. In the browser you sign in with your RoarMe account, the same one as RoarMe, Roardino and RoarMail. The example needs nothing.</p></details>
+      <details class="rv"><summary data-t="q3">Are my lists the same on the computer and in the browser?</summary><p data-t="a3">Not yet. The apps keep lists on the computer and the browser keeps them in your account. To move one, save it as a .roarlist file and open it on the other side. The RoarMe account is coming to the desktop apps too.</p></details>
+      <details class="rv"><summary data-t="q4">How do I give it to the crew?</summary><p data-t="a4">As a PDF, the list or the storyboard. As a single web page that opens in any browser. Or as a .roarlist file, for someone who has RoarList, with all the frames inside.</p></details>
+      <details class="rv"><summary data-t="q5">Where do the frames come from?</summary><p data-t="a5">From you: a still, a reference, a photo from the recce, a sketch you scanned. Drop it on the shot, paste it with ⌘V or choose it. PNG, JPG, WebP and GIF; big photos are made lighter so the list stays fast.</p></details>
+      <details class="rv"><summary data-t="q6">How are the shots numbered?</summary><p data-t="a6">By the scene number and a letter: 1A, 1B, 1C. The letters I and O are skipped, because on a slate they read as 1 and 0. Move a shot and the numbers follow.</p></details>
+      <details class="rv"><summary data-t="q7">Which formats can I shoot in?</summary><p data-t="a7">16:9, 2.39:1, 1.85:1, 4:3, 1:1, 4:5 and 9:16. You can set the one new lists start with, and the lens a new list starts on, in Settings.</p></details>
+    </div>
+  </div>
+</section>
 
 <section class="f-new" id="new">
   <div class="f-new-head">
@@ -548,166 +727,6 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <p data-t="n7.p">The Privacy Policy and the Terms are a tap away in Settings and on sign-up, and deleting a list in the browser says plainly that it goes for good, frames and all.</p>
       <span class="f-tag">v0.4.2</span>
     </article>
-  </div>
-</section>
-<div class="f-sep" aria-hidden="true"></div>
-
-<section id="only">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="only.idx">01 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only RoarList</b> does.</h2></div>
-    <p class="sub rv" data-t="only.sub">Why a director stops keeping the shot list in a spreadsheet.</p>
-  </div>
-  <div class="three">
-    <article class="big rv">
-      <span class="no">01</span>
-      <div><h3 data-t="f1.t" data-html>A <b>frame</b> for every shot.</h3><p data-t="f1.p">Drop a picture on a shot, paste it with ⌘V, or choose one. Switch to Storyboard and the list becomes a board of frames, each with its number, size, angle, movement, lens and length. Frames follow the format you shoot in.</p>
-        <div class="chips"><span data-t="f1.c1">Drop · paste · choose</span><span data-t="f1.c2">PNG · JPG · WebP · GIF</span><span data-t="f1.c3">List or Storyboard</span></div></div>
-      <div class="viz"><div class="v-drop"><div class="zone"><em data-t="f1.drop">Drop, paste or choose an image</em><svg viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice"><use href="#fr2"/></svg></div><div class="row2"><b>1B</b><span>MS · LOW · PUSH IN · 35MM</span></div></div></div>
-    </article>
-    <article class="big rv">
-      <span class="no">02</span>
-      <div><h3 data-t="f2.t" data-html>One <b>PDF</b> for the crew.</h3><p data-t="f2.p">Print the list, or the storyboard, in one go: landscape, A4 or Letter, with the title, client, director, DoP, shoot day and notes on top and the page number at the bottom. The crew reads it on set, nobody needs an app.</p>
-        <div class="chips"><span data-t="f2.c1">PDF list</span><span data-t="f2.c2">PDF storyboard</span><span data-t="f2.c3">A4 or Letter</span><span data-t="f2.c4">⌘P</span></div></div>
-      <div class="viz"><div class="v-pdf"><div class="ph"><span class="rm"><span class="a">ROAR</span><span class="b">LIST</span></span><small>NIGHT SHOOT · MUSIC VIDEO</small></div><div class="pm">DIRECTOR ALEX K. · DOP NIKOS · 16:9 · FRI 24 OCT</div><div class="pg"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
-    </article>
-    <article class="big rv">
-      <span class="no">03</span>
-      <div><h3 data-t="f3.t" data-html>Numbers that <b>read on set</b>.</h3><p data-t="f3.p">Every shot gets its number by itself: the scene, then a letter. 1A, 1B, 1C, and never I or O, because on set they read as 1 and 0. Type a length any way you like and the total running time is always in view.</p>
-        <div class="chips"><span data-t="f3.c1">Automatic numbers</span><span data-t="f3.c2">No I, no O</span><span data-t="f3.c3">1:30 · 90 · 1m30</span><span data-t="f3.c4">Done and total</span></div></div>
-      <div class="viz"><div class="v-no"><div class="nos"><span>1F</span><span>1G</span><span>1H</span><span class="x">1I</span><span>1J</span><span>1K</span><span>1L</span><span>1M</span><span>1N</span><span class="x">1O</span><span>1P</span></div><div class="dur"><span>1m30</span>→<b>1:30</b></div></div></div>
-    </article>
-  </div>
-</section>
-
-<section id="set">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="set.idx">02 · For the set</p><h2 class="rv" data-t="set.title" data-html>Made the way <b>a shot list is written</b>.</h2></div>
-    <p class="sub rv" data-t="set.sub">Fast to fill in, true to the format, and always the newest version.</p>
-  </div>
-  <div class="board">
-    <article class="tile t-tasks f-glass rv">
-      <span class="k" data-t="s1.k">The next shot</span>
-      <h3 data-t="s1.t" data-html>⌘↵, <b>keep writing</b>.</h3>
-      <p data-t="s1.p">A new shot comes in right below the one you are on, with the same lens, and the cursor is already in its description. A new scene is ⌘⇧↵. You set up a whole scene without touching the mouse.</p>
-      <div class="mini-rows">
-        <div class="mrow"><span class="n">2A</span><span class="l">WS · 24</span><em data-t="s1.r1">The kitchen, morning light</em><kbd>⌘↵</kbd></div>
-        <div class="mrow new"><span class="n">2B</span><span class="l">MCU · 24</span><em data-t="s1.r2">She reads the letter</em></div>
-      </div>
-    </article>
-    <article class="tile t-ord f-glass rv" style="--d:.08s">
-      <span class="k" data-t="s2.k">The format</span>
-      <h3 data-t="s2.t" data-html>Seven formats, <b>one look</b>.</h3>
-      <p data-t="s2.p">Pick the aspect of the shoot and the frames, the storyboard and the PDF follow it. Vertical formats print five frames across instead of three.</p>
-      <div class="asp">
-        <span class="on"><i style="aspect-ratio:16/9"></i>16:9</span><span><i style="aspect-ratio:2.39/1"></i>2.39:1</span><span><i style="aspect-ratio:1.85/1"></i>1.85:1</span><span><i style="aspect-ratio:4/3"></i>4:3</span><span><i style="aspect-ratio:1/1"></i>1:1</span><span><i style="aspect-ratio:4/5"></i>4:5</span><span><i style="aspect-ratio:9/16"></i>9:16</span>
-      </div>
-    </article>
-    <article class="tile t-upd f-glass rv">
-      <span class="k" data-t="s3.k" data-html>Updates itself <em>0.4.3</em></span>
-      <h3 data-t="s3.t" data-html>One tap, <b>newest version</b>.</h3>
-      <p data-t="s3.p">The Mac and Windows apps look for a new version in the background and tell you when it is ready. Press Restart; if you quit instead, it installs on the way out.</p>
-      <div class="upd-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg></i><span><b data-t="s3.c">New version ready</b><small>RoarList</small></span><s data-t="s3.btn">Restart</s></div>
-    </article>
-    <article class="tile t-icon f-glass rv" style="--d:.08s">
-      <div class="txt">
-        <span class="k" data-t="s4.k">The look</span>
-        <h3 data-t="s4.t" data-html>RoarMe's look, <b>your colours</b>.</h3>
-        <p data-t="s4.p">The same design as RoarMe: the Simba and Pumba themes, day or night or as the system, ten accent colours, eight fonts, text size, spacing and corners, with a live preview. Power Saving turns off blur and motion. In our hub it takes on the hub's own theme.</p>
-        <div class="looks"><span class="dots" aria-hidden="true"><i style="background:#d40000"></i><i style="background:#ff6b57"></i><i style="background:#f97316"></i><i style="background:#facc15"></i><i style="background:#22c55e"></i><i style="background:#22d3ee"></i><i style="background:#3b82f6"></i><i style="background:#8b5cf6"></i><i style="background:#d946ef"></i><i style="background:#ffffff"></i></span></div>
-      </div>
-      <div class="icons"><img src="icon.png" alt="The RoarList icon" width="140" height="140" loading="lazy"></div>
-    </article>
-  </div>
-</section>
-
-<section id="all">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="all.idx">03 · Everything</p><h2 class="rv" data-t="all.title" data-html>And all <b>a shoot needs</b>.</h2></div>
-    <p class="sub rv" data-t="all.sub">The rest of RoarList, briefly.</p>
-  </div>
-  <div class="index">
-    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">Scenes and shots</b><p data-t="ix1.p">A scene number like 12A and a heading like INT. KITCHEN - NIGHT. For each shot: size, angle, movement, lens, what we see, cast, length and notes, with the usual values a tap away.</p></div>
-    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">The project on top</b><p data-t="ix2.p">Title, client, director, DoP, shoot day, format and general notes for the shoot, on screen and on every PDF.</p></div>
-    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Ticked off on the day</b><p data-t="ix3.p">Tick a shot when it is in the can. Shots done out of total and the running time show on top and beside every list.</p></div>
-    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">Drag to reorder</b><p data-t="ix4.p">Drag a shot by its handle, inside its scene or into another one. Scenes move up and down with a button.</p></div>
-    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">Undo, and nothing to save</b><p data-t="ix5.p">Every change saves itself as you type. ⌘Z brings back deletes, moves and pictures, up to 50 steps.</p></div>
-    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Only the columns you use</b><p data-t="ix6.p">Hide frame, size, angle, movement, lens, cast, length or notes from the list and the PDF. The details stay, ready to come back.</p></div>
-    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Hand it over</b><p data-t="ix7.p">Send a .roarlist file with the frames inside; on a computer with RoarList it opens with a double-click. Or save one web page that opens in any browser.</p></div>
-    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">All your lists at hand</b><p data-t="ix8.p">A sidebar with a cover for each list that you can make wider with a drag, search with ⌘K, and a right-click to rename, duplicate, export or delete. The last list you had open opens again.</p></div>
-    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">From the keyboard</b><p data-t="ix9.p">New shot, new scene, search, PDFs, undo and settings all have a shortcut, with a page that lists them (⌘/).</p></div>
-    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Greek and English</b><p data-t="ix10.p">The whole app, and the PDF, in either language, or as your system. Your scenes and notes are never touched.</p></div>
-    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">On the phone too</b><p data-t="ix11.p">The browser version fits a phone screen or a narrow window: the lists slide in from the side.</p></div>
-    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Try it first</b><p data-t="ix12.p">A sample shot list for a night shoot, with drawn frames, opens with no account. Change anything; it resets when you leave.</p></div>
-  </div>
-</section>
-
-<section id="yours">
-  <div class="priv">
-    <div>
-      <p class="idx rv" data-t="pv.idx">04 · Yours</p>
-      <h2 class="rv" data-t="pv.title" data-html>Your shots, <b>your place</b>.</h2>
-      <p class="sub rv" style="margin-top:22px;color:var(--muted);font-size:17px;line-height:1.6" data-t="pv.sub">On the computer, a shot list is a folder on your disk. In the browser, it lives in your own account. Nobody else sees it unless you send it.</p>
-      <div class="legal rv"><a class="pill sm" href="../../legal/roarlist/#privacy" data-t="lg.p">Privacy Policy</a><a class="pill sm" href="../../legal/roarlist/#terms" data-t="lg.t">Terms</a></div>
-    </div>
-    <div class="prom">
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></i><b data-t="p1.t">On your computer</b><p data-t="p1.p">The Mac and Windows apps keep every list on your computer. No account, no server, and it works with no connection.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg></i><b data-t="p2.t">Only yours in the cloud</b><p data-t="p2.p">In the browser, your lists and frames are kept in your account, in private storage only your account can open.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.4 3.6-5.2 7-5.2s6.2 1.8 7 5.2"/></svg></i><b data-t="p3.t">One account</b><p data-t="p3.p">The same account as RoarMe, Roardino and RoarMail, and your settings come with it. Lists you made in the browser before signing in move into it.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12.5A2 2 0 0 0 8 21h8a2 2 0 0 0 2-1.5L19 7M9 7V4h6v3"/></svg></i><b data-t="p4.t">Deleting, said plainly</b><p data-t="p4.p">On the computer a deleted list goes to the system Trash. In the browser RoarList asks first, then deletes the list and its frames for good. Ask before deleting a shot too, if you like, in Settings.</p></div>
-    </div>
-  </div>
-</section>
-
-<section id="download">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="dl.idx">05 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarList</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
-    <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab that we use on our own shoots.</p>
-  </div>
-  <div class="dls">
-    <div class="dl f-glass rv" id="dl-mac" data-mine="Your computer">
-      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.7zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.6-1.3z"/></svg></i>
-      <h3>Mac</h3>
-      <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
-      <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roarlist/releases/latest/download/RoarList-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
-      <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roarlist/releases/latest/download/RoarList-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
-    </div>
-    <div class="dl f-glass rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
-      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
-      <h3>Windows</h3>
-      <small data-t="dl.win">Windows 10 and 11.</small>
-      <a class="pill main" data-f="win" href="https://github.com/alexisdigipro-hub/roarlist/releases/latest/download/RoarList-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
-    </div>
-    <div class="dl f-glass rv" id="dl-web" style="--d:.12s" data-mine="Here">
-      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.4 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.4-3.5-8.5s1-5.9 3.5-8.5z"/></svg></i>
-      <h3 data-t="dl.webt">Browser</h3>
-      <small data-t="dl.web">On a computer or a phone, with your RoarMe account. Nothing to install.</small>
-      <a class="pill" href="../../roarlist/" data-t="cta.open">Open RoarList</a>
-    </div>
-    <div class="dl f-glass rv" id="dl-demo" style="--d:.18s">
-      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m10 9.5 4.5 2.5-4.5 2.5z"/></svg></i>
-      <h3 data-t="dl.demot">An example</h3>
-      <small data-t="dl.demo">A night shoot with drawn frames. No account, nothing saved.</small>
-      <a class="pill" href="../../roarlist/#demo" data-t="cta.demo2">See the example</a>
-    </div>
-  </div>
-  <div class="dl-note">
-    <p class="rv" data-t="dl.upd" data-html><b>It updates itself.</b> The Mac and Windows apps fetch new versions on their own and ask for a quick restart.</p>
-    <p class="rv" data-t="dl.help" data-html><b>First time on a Mac?</b> The app is not signed by Apple yet: right-click RoarList in Applications and choose Open, or press Open Anyway in System Settings › Privacy &amp; Security. On Windows: More info › Run anyway.</p>
-  </div>
-</section>
-
-<section id="faq">
-  <div class="faq">
-    <div><p class="idx rv" data-t="faq.idx">06 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
-    <div class="qa">
-      <details class="rv"><summary data-t="q1">Is RoarList free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
-      <details class="rv"><summary data-t="q2">Do I need an account?</summary><p data-t="a2">Not on Mac and Windows: everything stays on your computer. In the browser you sign in with your RoarMe account, the same one as RoarMe, Roardino and RoarMail. The example needs nothing.</p></details>
-      <details class="rv"><summary data-t="q3">Are my lists the same on the computer and in the browser?</summary><p data-t="a3">Not yet. The apps keep lists on the computer and the browser keeps them in your account. To move one, save it as a .roarlist file and open it on the other side. The RoarMe account is coming to the desktop apps too.</p></details>
-      <details class="rv"><summary data-t="q4">How do I give it to the crew?</summary><p data-t="a4">As a PDF, the list or the storyboard. As a single web page that opens in any browser. Or as a .roarlist file, for someone who has RoarList, with all the frames inside.</p></details>
-      <details class="rv"><summary data-t="q5">Where do the frames come from?</summary><p data-t="a5">From you: a still, a reference, a photo from the recce, a sketch you scanned. Drop it on the shot, paste it with ⌘V or choose it. PNG, JPG, WebP and GIF; big photos are made lighter so the list stays fast.</p></details>
-      <details class="rv"><summary data-t="q6">How are the shots numbered?</summary><p data-t="a6">By the scene number and a letter: 1A, 1B, 1C. The letters I and O are skipped, because on a slate they read as 1 and 0. Move a shot and the numbers follow.</p></details>
-      <details class="rv"><summary data-t="q7">Which formats can I shoot in?</summary><p data-t="a7">16:9, 2.39:1, 1.85:1, 4:3, 1:1, 4:5 and 9:16. You can set the one new lists start with, and the lens a new list starts on, in Settings.</p></details>
-    </div>
   </div>
 </section>
 
@@ -795,6 +814,8 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'q7': 'Σε ποια formats μπορώ να γυρίσω;', 'a7': '16:9, 2.39:1, 1.85:1, 4:3, 1:1, 4:5 και 9:16. Από τις Ρυθμίσεις ορίζεις με ποιο format και ποιον φακό ξεκινά κάθε νέα λίστα.',
     'ct.idx': 'Επαφή', 'ct.title': 'Ιδέες για <b>την επόμενη έκδοση</b>;', 'ft.lab': 'The Mad Lions Lab', 'ft.legal': 'Απόρρητο & Όροι', 'lg.p': 'Πολιτική απορρήτου', 'lg.t': 'Όροι χρήσης', 'footer': '© 2026 The Mad Lions · RoarList'
   }
+  // the product page (31 Oct): its own Greek
+  Object.assign(EL, {"only.idx": "02 · Μόνο εδώ", "set.idx": "03 · Για το γύρισμα", "all.idx": "04 · Όλα", "dl.idx": "06 · Λήψη", "faq.idx": "07 · Ερωτήσεις", "hero.claim": "Κάθε πλάνο.<br><b>Ένα καρέ.</b>", "hero.lead2": "Σκηνές και πλάνα με μέγεθος, γωνία, κίνηση και φακό, μια εικόνα για κάθε πλάνο, και <b>ένα PDF που διαβάζει το συνεργείο στο γύρισμα</b>. Web, Mac και Windows.", "sc.cap": "Αναζήτηση τοποθεσίας, Σούνιο, 18:50. Το πλάνο 4C βρέθηκε.", "nav.onset": "Στο γύρισμα", "on.idx": "01 · Στο γύρισμα", "on.title": "Φτιαγμένο από ανθρώπους <b>που κάνουν ταινίες</b>.", "on.sub": "Φτιάξαμε το RoarList για τη δική μας δουλειά στο The Mad Lions. Εδώ το χρησιμοποιούμε.", "why.idx": "05 · Γιατί Roar", "why.title": "Γιατί <b>μια εφαρμογή Roar</b>.", "why.sub": "Τι υπόσχεται κάθε εφαρμογή του The Mad Lions Lab, και το RoarList.", "nm1": "Κάθε πλάνο αριθμείται μόνο του, και ποτέ I ή O.", "nm2": "PDF για το συνεργείο, διαβάζεται στο γύρισμα, χωρίς εφαρμογή.", "nm3": "λογαριασμοί σε Mac και Windows: οι λίστες μένουν στον υπολογιστή σου.", "nm4": "Χωρίς συνδρομή, χωρίς διαφημίσεις.", "on1.k": "Προετοιμασία · Ο σκηνοθέτης", "on1.t": "Η λίστα γίνεται storyboard.", "on1.p": "Ρίξε μια εικόνα σε ένα πλάνο ή κάνε επικόλληση, γύρνα σε Storyboard, και κάθε καρέ κρατάει μέγεθος, γωνία, φακό και διάρκεια.", "on2.k": "Στο γύρισμα · Η διευθύντρια φωτογραφίας", "on2.t": "Το επόμενο πλάνο, με μια ματιά.", "on2.p": "Ένα οριζόντιο PDF, A4 ή Letter, με τίτλο, DoP και μέρα γυρίσματος πάνω και ένα μικρό καρέ δίπλα σε κάθε πλάνο.", "on3.k": "Στο γύρισμα · Ο 1ος βοηθός", "on3.t": "Η συνολική διάρκεια, πάντα μπροστά σου.", "on3.p": "Τα πλάνα αριθμούνται μόνα τους, η διάρκεια γράφεται όπως θες, το σύνολο μετριέται για σένα.", "w1.t": "Στον υπολογιστή σου", "w1.p": "Οι εφαρμογές για Mac και Windows κρατούν κάθε λίστα στον δίσκο σου, χωρίς λογαριασμό· στον browser μένει στον δικό σου λογαριασμό.", "w2.t": "Διαγραφή, καθαρά", "w2.p": "Στον υπολογιστή μια λίστα που σβήνεις πάει στον Κάδο του συστήματος.", "w3.t": "Πάντα η νεότερη", "w3.p": "Η έκδοση web είναι πάντα η τελευταία· οι εφαρμογές για Mac και Windows ενημερώνονται μόνες τους.", "w4.t": "Φτιαγμένο από κινηματογραφιστές", "w4.p": "Το The Mad Lions, εταιρεία παραγωγής στην Αθήνα, το χρησιμοποιεί στη δουλειά του. Οι ιδέες σου πάνε κατευθείαν σε όσους το φτιάχνουν."})
   var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
   var EN = {}
   nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })

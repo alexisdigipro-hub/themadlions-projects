@@ -21,6 +21,7 @@
 <link rel="icon" href="icon.png" type="image/png">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="stylesheet" href="../fresh.css">
+<link rel="stylesheet" href="../product.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&family=Courier+Prime&display=swap" rel="stylesheet">
@@ -475,14 +476,14 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     <span class="rm" aria-label="RoarWriter"><span class="a">ROAR</span><span class="b">WRITER</span></span>
   </a>
   <nav aria-label="Sections">
-    <a href="#new" data-t="nav.new">What’s new</a>
+    <a href="#onset" data-t="nav.onset">On set</a>
     <a href="#only" data-t="nav.only">Only here</a>
     <a href="#page" data-t="nav.page">The page</a>
     <a href="#studio" data-t="nav.studio">The studio</a>
     <a href="#all" data-t="nav.all">Everything</a>
-    <a href="#yours" data-t="nav.yours">Yours</a>
     <a href="#download" data-t="nav.download">Download</a>
     <a href="#faq" data-t="nav.faq">Questions</a>
+    <a href="#new" data-t="nav.new">What’s new</a>
   </nav>
   <div class="end">
     <div class="lang" role="group" aria-label="Language">
@@ -495,26 +496,24 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
 
 <main>
 <div class="hero" id="top">
-  <div class="hero-top">
-    <div>
-      <p class="kicker rv"><i></i><span data-t="hero.kicker">Screenwriting · The Mad Lions Lab · Experiment 06</span></p>
-      <h1 class="rv" style="--d:.06s">
-        <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
-        <span class="rm"><span class="a">ROAR</span><span class="b">WRITER</span></span><em class="beta">beta</em>
-      </h1>
-      <a class="f-ver rv" style="--d:.1s" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.6 · RoarMail’s glass look</span></a>
-    </div>
-  </div>
-  <div class="hero-sub">
-    <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>Write the film, the series or the play <b>in the format it is made from</b>, and take it all the way to the shoot. Nine formats <b>in English or Greek</b>, with revisions, a storyboard and a shooting schedule, writing together, and <b>a PDF ready to send</b>.</p>
+  <div class="hero-head">
+    <p class="kicker rv"><i></i><span data-t="hero.kicker">Screenwriting · The Mad Lions Lab · Experiment 06</span></p>
+    <h1 class="brand rv" style="--d:.04s">
+      <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
+      <span class="rm"><span class="a">ROAR</span><span class="b">WRITER</span></span><em class="beta">beta</em>
+    </h1>
+    <p class="claim rv" style="--d:.1s" data-t="hero.claim" data-html>From the first page.<br><b>To the shoot.</b></p>
+    <p class="lead rv" style="--d:.16s" data-t="hero.lead2" data-html>Write in the format films are made from, in English or Greek, with the keys of Final Draft, and take it all the way to the storyboard and the schedule. <b>Web, Mac and Windows.</b></p>
     <div class="cta rv" style="--d:.22s">
       <a class="pill main" id="dl-main" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span>Download</span></a>
       <a class="pill web-link" href="https://alexisdigipro-hub.github.io/roarwriter/"><span data-t="cta.browser">Write in the browser</span></a>
     </div>
     <p class="cta-note rv" style="--d:.3s"><span data-t="cta.note">Free · Mac, Windows, browser · your RoarMe account · updates itself</span></p>
+    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.6 · RoarMail’s glass look</span></a></div>
   </div>
-
-  <div class="frame rv" style="--d:.2s" aria-hidden="true">
+  <div class="scene stack rv" style="--d:.18s">
+    <figure class="scene-photo"><img src="photo-hero.jpg" alt="" width="1600" height="900" fetchpriority="high"><figcaption data-t="sc.cap">A café in Psyrri, 19:10. Scene 42, finally right.</figcaption></figure>
+    <div class="frame" style="--d:.2s" aria-hidden="true">
     <div class="win" id="win">
       <div class="win-top"><i></i><i></i><i></i></div>
       <div class="win-body rw">
@@ -553,12 +552,233 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     <div class="tag t2"><i>02</i><span data-t="tag.ai">An AI that waits to be asked</span></div>
     <div class="tag t3"><i>03</i><span data-t="tag.gr">Nine formats, from film to comic</span></div>
   </div>
+  </div>
 </div>
+
+<section id="numbers" class="nums-sec">
+  <div class="nums">
+    <div class="num f-glass rv"><b>9</b><span data-t="nm1">formats: film, series, play and more.</span></div>
+    <div class="num f-glass rv" style="--d:.06s"><b>2</b><span data-t="nm2">languages, English and Greek, in the same typewriter letters.</span></div>
+    <div class="num f-glass rv" style="--d:.12s"><b>1<small>s</small></b><span data-t="nm3">and every change is in your account, on every device.</span></div>
+    <div class="num f-glass rv" style="--d:.18s"><b>€0</b><span data-t="nm4">No subscription, no ads.</span></div>
+  </div>
+</section>
 
 <div class="ticker" aria-hidden="true"><div class="ticker-in">
   <span data-t="tk.1">Nine formats</span><span data-t="tk.2">English and Greek</span><span data-t="tk.3">Final Draft · Fade In</span><span data-t="tk.4">Breakdown</span><span data-t="tk.5">PDF ready to send</span><span data-t="tk.6">Write together</span><span data-t="tk.7">Works offline</span><span data-t="tk.8">AI on request</span>
   <span data-t="tk.1">Nine formats</span><span data-t="tk.2">English and Greek</span><span data-t="tk.3">Final Draft · Fade In</span><span data-t="tk.4">Breakdown</span><span data-t="tk.5">PDF ready to send</span><span data-t="tk.6">Write together</span><span data-t="tk.7">Works offline</span><span data-t="tk.8">AI on request</span>
 </div></div>
+
+<div class="f-sep"></div>
+
+<section id="onset">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="on.idx">01 · On set</p><h2 class="rv" data-t="on.title" data-html>Made by people <b>who make films</b>.</h2></div>
+    <p class="sub rv" data-t="on.sub">We built RoarWriter for our own work at The Mad Lions. This is where it gets used.</p>
+  </div>
+  <div class="people">
+    <figure class="person rv"><img src="photo-set.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on1.k">At home · The writer</span><b data-t="on1.t">The format takes care of itself.</b><span data-t="on1.p">Enter and Tab as in Final Draft, ΕΣΩΤ. and ΕΞΩΤ. as well as INT. and EXT., names and places suggested as you type.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.08s"><img src="photo-office.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on2.k">Table read · The cast</span><b data-t="on2.t">Sides for everyone.</b><span data-t="on2.p">Sides for each actor, the script read aloud, notes on lines, and a PDF ready to send.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.16s"><img src="photo-home.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on3.k">On set · The director</span><b data-t="on3.t">From the page to the day.</b><span data-t="on3.p">A storyboard, a shot list and a shooting schedule from the same script, with revisions in colour.</span></figcaption></figure>
+  </div>
+</section>
+
+<section id="only">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="only.idx">02 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only RoarWriter</b> does.</h2></div>
+    <p class="sub rv" data-t="only.sub">Why a director writes the next script here, and not in a word processor.</p>
+  </div>
+  <div class="three">
+    <div class="big rv">
+      <span class="no">01</span>
+      <div><h3 data-t="f1.t" data-html>The keys of <b>Final Draft</b>.</h3><p data-t="f1.p">Enter goes on to what usually comes next: after a scene heading the action, after a name the dialogue, after the dialogue the next name. Tab turns a line into another kind, Option or Alt and a number picks one, in the browser too. The format takes care of itself while you write.</p>
+        <div class="chips"><span data-t="f1.c1">Enter · Tab · ⌥1–9</span><span data-t="f1.c2">Seven kinds of element</span><span data-t="f1.c3">Undo ⌘Z</span></div></div>
+      <div class="viz"><div class="v-keys">
+        <div class="k-r"><kbd>Enter</kbd><span data-t="f1.k1">Scene heading</span><em>→ <b data-t="f1.k1b">Action</b></em></div>
+        <div class="k-r"><kbd>Tab</kbd><span data-t="f1.k2">Action</span><em>→ <b data-t="f1.k2b">Character</b></em></div>
+        <div class="k-r"><kbd>Enter</kbd><span data-t="f1.k3">Character</span><em>→ <b data-t="f1.k3b">Dialogue</b></em></div>
+        <div class="k-r"><kbd>Tab</kbd><span data-t="f1.k4">Dialogue</span><em>→ <b data-t="f1.k4b">(parenthetical)</b></em></div>
+      </div></div>
+    </div>
+    <div class="big rv">
+      <span class="no">02</span>
+      <div><h3 data-t="f2.t" data-html><b>Greek</b>, as well as English.</h3><p data-t="f2.p">Type ΕΣΩΤ. or ΕΞΩΤ. and the line becomes a scene heading, as INT. and EXT. do. Names, places and the time of day are suggested as you type, ΜΕΡΑ and ΝΥΧΤΑ included, and the PDF prints Greek in the same typewriter letters, and the same weight, as English.</p>
+        <div class="chips"><span data-t="f2.c1">ΕΣΩΤ. · ΕΞΩΤ.</span><span data-t="f2.c2">Names and places suggested</span><span data-t="f2.c3">Greek and English spelling</span></div></div>
+      <div class="viz"><div class="v-gr">
+        <p>ΕΣΩΤ. ΚΟΥΖΙΝΑ - ΝΥ<span style="border-right:1.5px solid #e0431b">&nbsp;</span></p>
+        <span class="sugg"><span>ΕΣΩΤ. ΚΟΥΖΙΝΑ - ΝΥΧΤΑ</span><span>ΕΣΩΤ. ΚΟΥΖΙΝΑ - ΝΥΧΤΑ (ΣΥΝΕΧΕΙΑ)</span></span>
+        <p class="ch">ΜΑΡΙΑ</p>
+        <p class="di">Άναψε το φως.</p>
+      </div></div>
+    </div>
+    <div class="big rv">
+      <span class="no">03</span>
+      <div><h3 data-t="f3.t" data-html>An AI that <b>waits to be asked</b>.</h3><p data-t="f3.p">On the scene you are in: suggest dialogue, rewrite the scene, write what comes next, or give notes, in the language of the script and the voice of its characters. The answer is shown first, as script; nothing on the page changes until you press Insert or Replace.</p>
+        <div class="chips"><span data-t="f3.c1">Suggest dialogue</span><span data-t="f3.c2">Rewrite scene</span><span data-t="f3.c3">What comes next</span><span data-t="f3.c4">Ideas &amp; notes</span></div></div>
+      <div class="viz"><div class="v-ai">
+        <span class="bub" data-t="f3.ask">Make Nikos more afraid.</span>
+        <div class="pv"><p class="ch">ΝΙΚΟΣ</p><p class="di">Πάμε. Τώρα. Πριν μας δουν.</p></div>
+        <div class="act"><span class="main">Insert</span><span>Replace scene</span></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="page">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="page.idx">03 · The page</p><h2 class="rv" data-t="page.title" data-html>A script <b>that reads like a script</b>.</h2></div>
+    <p class="sub rv" data-t="page.sub">The page as producers, actors and the crew expect it, and the files the rest of the industry uses.</p>
+  </div>
+  <div class="board">
+    <div class="tile f-glass t-tasks rv">
+      <span class="k" data-t="s1.k">The PDF</span>
+      <h3 data-t="s1.t" data-html>Ready <b>to send</b>.</h3>
+      <p data-t="s1.p">Courier 12 with the standard margins, the title page as Final Draft lays it out, page numbers from page two, A4 or US Letter. The pages are laid out for real, and you see them as you write: a scene heading never ends a page and a name stays with its lines.</p>
+      <div class="pdfs"><i class="tp"></i><i></i><i><b>2.</b></i><i><b>3.</b></i></div>
+    </div>
+    <div class="tile f-glass t-ord rv">
+      <span class="k" data-t="s2.k">The files</span>
+      <h3 data-t="s2.t" data-html>Final Draft, Fade In and <b>Fountain</b>.</h3>
+      <p data-t="s2.p">Open a script from Final Draft, Fade In or Fountain, save it back as any of them. Paste a screenplay as plain text and it turns into elements.</p>
+      <div class="fmts"><span><b>.fdx</b> in · out</span><span><b>.fadein</b> in · out</span><span><b>.fountain</b> in · out</span><span><b>.pdf</b> out</span></div>
+    </div>
+    <div class="tile f-glass t-upd rv">
+      <span class="k" data-t="s3.k">At the side</span>
+      <h3 data-t="s3.t" data-html>Scenes and <b>characters</b>.</h3>
+      <p data-t="s3.p">Every scene numbered, the one you are in lit; one click takes you there. Every character with how many times they speak and in how many scenes, renamed everywhere in one go. And the Notes tab, and the Series tab in an episode.</p>
+    </div>
+    <div class="tile f-glass t-icon rv">
+      <span class="k" data-t="s4.k" data-html>Updates itself <em>0.5</em></span>
+      <h3 data-t="s4.t" data-html>Writes <b>offline</b>, too.</h3>
+      <p data-t="s4.p">The Mac and Windows apps carry the whole program inside them: on a plane or on set with no signal, you go on writing, and the script is sent to your account when the connection is back. New versions download by themselves.</p>
+    </div>
+  </div>
+</section>
+
+<section id="studio">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="st.idx">04 · The studio</p><h2 class="rv" data-t="st.title" data-html>From the page <b>to the shoot</b>.</h2></div>
+    <p class="sub rv" data-t="st.sub">Version 0.5: what a production asks of a script, in the same app it is written in.</p>
+  </div>
+  <div class="board">
+    <div class="tile f-glass t-tasks rv">
+      <span class="k" data-t="t1.k" data-html>The AI on the whole script <em>new</em></span>
+      <h3 data-t="t1.t" data-html>The whole script, <b>read</b>.</h3>
+      <p data-t="t1.p">Coverage with a verdict, continuity (who knows what before they learn it, the prop that comes back), a budget pass that finds what is expensive and a cheaper way to the same story value, a pitch package for a fund or a market, a translated copy in Greek or English. Ask the script anything: the scenes it names take you there.</p>
+    </div>
+    <div class="tile f-glass t-ord rv">
+      <span class="k" data-t="t2.k" data-html>Revisions and versions <em>new</em></span>
+      <h3 data-t="t2.t" data-html>The way <b>a production</b> works.</h3>
+      <p data-t="t2.p">Revision colours in the industry order, an asterisk on every changed line, scene numbers locked (a new one after 12 is 12A), the revised pages alone as a PDF. Versions of the script, one a day by itself, compared word by word with now.</p>
+    </div>
+    <div class="tile f-glass t-upd rv">
+      <span class="k" data-t="t3.k" data-html>Planning the film <em>new</em></span>
+      <h3 data-t="t3.t" data-html>Beats, frames, <b>days</b>.</h3>
+      <p data-t="t3.p">A beat board (Save the Cat, three acts, Hero’s Journey) that shows where each beat should fall and where it does. A storyboard with a picture for every shot, the AI breaking a scene into shots, a shot list for the crew. A stripboard schedule with Day out of Days.</p>
+    </div>
+    <div class="tile f-glass t-icon rv">
+      <div class="txt">
+      <span class="k" data-t="t4.k" data-html>TV <em>new</em></span>
+      <h3 data-t="t4.t" data-html>A series, <b>with its bible</b>.</h3>
+      <p data-t="t4.p">The episodes of a show in one place, with its logline, its world, the characters and places of every episode, and what is known since which episode, at the side of every episode you write.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="all">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="all.idx">05 · Everything</p><h2 class="rv" data-t="all.title" data-html>And all <b>a draft needs</b>.</h2></div>
+    <p class="sub rv" data-t="all.sub">What came in the latest versions, and the rest, briefly.</p>
+  </div>
+  <div class="index">
+    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">Nine formats</b><p data-t="ix1.p">Feature film, TV drama, TV half-hour, multi-camera sitcom, stage play, musical, audio drama, AV two-column and comic. Each with its own page, kinds of line, keys and PDF.</p></div>
+    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">It knows what you mean</b><p data-t="ix2.p">INT. or ΕΣΩΤ. at the start of a line makes a scene heading; CUT TO: makes a transition. A parenthetical opens its own brackets.</p></div>
+    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Breakdown</b><p data-t="ix3.p">Select a word, right-click it and tag it: cast, props, locations, wardrobe and eight more, lit in colour wherever it appears. By scene or by element, and as a spreadsheet.</p></div>
+    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">Write together</b><p data-t="ix4.p">Share a script by email, to edit or only to read. What the others write comes in within seconds, and changes to different lines never overwrite each other.</p></div>
+    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">Undo, and nothing to save</b><p data-t="ix5.p">Every change keeps itself. ⌘Z and ⇧⌘Z go back and forth through what you did.</p></div>
+    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Title page on the page</b><p data-t="ix6.p">Title and episode, credit and author, copyright, draft and contact, typed where they go, as Final Draft lays them out.</p></div>
+    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Final Draft and Fade In</b><p data-t="ix7.p">Bring in a .fdx, a .fadein or a .fountain, title page included, go on writing, and save it back as any of them.</p></div>
+    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">Zoom</b><p data-t="ix8.p">− 100% + in the bar, ⌘+ and ⌘−, or a pinch on the trackpad; on a phone, two fingers on the page.</p></div>
+    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">Spelling in two languages</b><p data-t="ix9.p">The apps check Greek and English as you type, with suggestions on a right click.</p></div>
+    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">On a phone</b><p data-t="ix10.p">The page in letters to write in, the kinds of line over the keyboard, scenes and the AI over the screen, and an icon on the home screen.</p></div>
+    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">In the browser too</b><p data-t="ix11.p">The same app on the web, nothing to install, with your scripts in your account.</p></div>
+    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">AI only when you ask</b><p data-t="ix12.p">Nothing is sent to the AI until you press one of its buttons: the scene you are on, or the whole script when you ask for coverage or a question about it. It writes in the script’s format.</p></div>
+    <div class="ix rv"><span class="no">13</span><b data-t="ix13.t">Bold, italic, underline</b><p data-t="ix13.p">Inside a line, kept in the PDF, Final Draft and Fountain.</p></div>
+    <div class="ix rv"><span class="no">14</span><b data-t="ix14.t">Dual dialogue</b><p data-t="ix14.p">Two characters speaking at once, side by side, with ⌘D.</p></div>
+    <div class="ix rv"><span class="no">15</span><b data-t="ix15.t">Scene alternates</b><p data-t="ix15.p">Keep another way a scene could go, or let the AI write one; compare and use it.</p></div>
+    <div class="ix rv"><span class="no">16</span><b data-t="ix16.t">Runtime and tension</b><p data-t="ix16.p">The running time from the words, truer with every table read, and the tension of every scene along the minutes.</p></div>
+    <div class="ix rv"><span class="no">17</span><b data-t="ix17.t">Research desk</b><p data-t="ix17.p">Facts for the scene from the web, with their sources, kept as a note on it.</p></div>
+    <div class="ix rv"><span class="no">18</span><b data-t="ix18.t">Write by speaking</b><p data-t="ix18.p">Dictate in Greek or English; insert it as it is, or let the AI lay it out as script.</p></div>
+    <div class="ix rv"><span class="no">19</span><b data-t="ix19.t">Writers in the room</b><p data-t="ix19.p">See who is in which scene right now, and give scenes to writers.</p></div>
+    <div class="ix rv"><span class="no">20</span><b data-t="ix20.t">Find and replace</b><p data-t="ix20.p">⌘F and ⌘⌥F, with case and whole words; Greek accents are ignored, so a word is found however it was typed.</p></div>
+    <div class="ix rv"><span class="no">21</span><b data-t="ix21.t">The report</b><p data-t="ix21.p">Pages, minutes, scenes, INT and EXT, day and night, locations, and who speaks how much.</p></div>
+    <div class="ix rv"><span class="no">22</span><b data-t="ix22.t">Your page, your PDF</b><p data-t="ix22.p">A white, sepia or midnight page to write on; in the PDF a header and a faint watermark, such as CONFIDENTIAL or the reader’s name.</p></div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="why.idx">06 · Why Roar</p><h2 class="rv" data-t="why.title" data-html>Why <b>a Roar app</b>.</h2></div>
+    <div class="why-end"><p class="sub rv" data-t="why.sub">What every app of The Mad Lions Lab promises, RoarWriter included.</p>
+      <div class="legal rv"><a class="pill sm" href="../../legal/roarwriter/#privacy" data-t="lg.p">Privacy Policy</a><a class="pill sm" href="../../legal/roarwriter/#terms" data-t="lg.t">Terms</a></div></div>
+  </div>
+  <div class="why">
+    <article class="wy f-glass rv"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></span><h3 data-t="w1.t">Yours, and whom you share with</h3><p data-t="w1.p">Kept on your computer as you type and in your account a second later; a script opens only for you and the people you share it with.</p></article>
+    <article class="wy f-glass rv" style="--d:.06s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.2 4.2L19 7"/></svg></span><h3 data-t="w2.t">An AI that waits</h3><p data-t="w2.p">The AI sees only what you send it, and nothing on the page changes until you press Insert or Replace.</p></article>
+    <article class="wy f-glass rv" style="--d:.12s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></span><h3 data-t="w3.t">Always the newest</h3><p data-t="w3.p">The web version is always current; the Mac and Windows apps update themselves.</p></article>
+    <article class="wy f-glass rv" style="--d:.18s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10.5 5-3v9l-5-3"/></svg></span><h3 data-t="w4.t">Made by filmmakers</h3><p data-t="w4.p">The Mad Lions, a film company in Athens, use it on their own work. Ideas go straight to the people who make it.</p></article>
+  </div>
+</section>
+
+<section id="download">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="dl.idx">07 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarWriter</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
+    <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab that we write our own films with.</p>
+  </div>
+  <div class="dls three">
+    <div class="dl rv" id="dl-mac">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.5 1.3-.1 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.5.9-1.4 1.3-2.7 1.3-2.8 0 0-2.3-.9-2.3-4.2zM14 5.3c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1.1.1 2.1-.6 2.8-1.4z"/></svg></i>
+      <h3>Mac</h3>
+      <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
+      <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roarwriter/releases/latest/download/RoarWriter-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+      <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roarwriter/releases/latest/download/RoarWriter-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
+    </div>
+    <div class="dl rv" id="dl-win">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
+      <h3>Windows</h3>
+      <small data-t="dl.win">Windows 10 and 11.</small>
+      <a class="pill main" data-f="win" href="https://github.com/alexisdigipro-hub/roarwriter/releases/latest/download/RoarWriter-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+    </div>
+    <div class="dl rv" id="dl-web">
+      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.5-3.8-9S9.5 5.5 12 3z"/></svg></i>
+      <h3 data-t="dl.webt">Browser</h3>
+      <small data-t="dl.web">On any computer, with your RoarMe account. Nothing to install.</small>
+      <a class="pill web-link" href="https://alexisdigipro-hub.github.io/roarwriter/" data-t="cta.open">Open RoarWriter</a>
+    </div>
+  </div>
+  <div class="dl-note">
+    <p class="rv" data-t="dl.upd" data-html><b>It updates itself.</b> The Mac and Windows apps fetch new versions on their own and ask for a quick restart.</p>
+    <p class="rv" data-t="dl.help" data-html><b>First time on a Mac?</b> The app is not signed by Apple yet: right-click RoarWriter in Applications and choose Open, or go to System Settings &gt; Privacy &amp; Security &gt; Open Anyway. Once.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="faq">
+    <div><p class="idx rv" data-t="faq.idx">08 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
+    <div class="qa">
+      <details class="rv"><summary data-t="q1">Is RoarWriter free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
+      <details class="rv"><summary data-t="q2">Do I need an account?</summary><p data-t="a2">Yes, a RoarMe account: the same one as RoarMe, Roardino and RoarList. It is what keeps your scripts safe and the same on every device.</p></details>
+      <details class="rv"><summary data-t="q3">Can I open my Final Draft or Fade In scripts?</summary><p data-t="a3">Yes: import the .fdx or the .fadein and go on writing; save it back as either whenever you need it there. Fountain works both ways too.</p></details>
+      <details class="rv"><summary data-t="q4">Does it write Greek scripts properly?</summary><p data-t="a4">Yes. Scene headings with ΕΣΩΤ. and ΕΞΩΤ., names in capitals, suggestions in Greek, spelling in Greek in the apps, and a PDF in the same format as an English script.</p></details>
+      <details class="rv"><summary data-t="q5">What does the AI see?</summary><p data-t="a5">Only what you ask about: the scene you are on and a little of what comes before it, or the whole script when you choose Whole script (coverage, continuity, a question), and only when you press one of its buttons. Its answer appears beside the page; nothing changes until you press Insert or Replace.</p></details>
+      <details class="rv"><summary data-t="q6">Does it work without internet?</summary><p data-t="a6">The Mac and Windows apps do: you write as usual and the script is sent to your account when the connection is back. The AI needs a connection.</p></details>
+      <details class="rv"><summary data-t="q8">Does it write stage plays and TV?</summary><p data-t="a8">Yes. When you start a script you choose its format: feature film, TV drama in acts, TV half-hour, multi-camera sitcom, stage play, musical, audio drama, AV two-column or comic. You can change it later on its title page.</p></details>
+      <details class="rv"><summary data-t="q9">Can two of us write the same script?</summary><p data-t="a9">Yes. Press Share, type their email (their RoarMe account) and choose Can edit or Can view. Only the owner shares or removes someone; anyone can leave.</p></details>
+      <details class="rv"><summary data-t="q7">A4 or US Letter?</summary><p data-t="a7">Either, chosen per script on its title page or in Settings; what new scripts start with is set in the Settings of the list of scripts. The margins and the font stay those of the standard screenplay format.</p></details>
+    </div>
+  </div>
+</section>
 
 <section class="f-new" id="new">
   <div class="f-new-head rv">
@@ -621,207 +841,6 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
       <p data-t="n8.p">Accents no longer jump to the line above, Option or Alt and a number picks the kind in a browser too, and the side and the AI widen when you drag their edge.</p>
       <span class="f-tag">v0.4.2</span>
     </article>
-  </div>
-</section>
-<div class="f-sep"></div>
-
-<section id="only">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="only.idx">01 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only RoarWriter</b> does.</h2></div>
-    <p class="sub rv" data-t="only.sub">Why a director writes the next script here, and not in a word processor.</p>
-  </div>
-  <div class="three">
-    <div class="big rv">
-      <span class="no">01</span>
-      <div><h3 data-t="f1.t" data-html>The keys of <b>Final Draft</b>.</h3><p data-t="f1.p">Enter goes on to what usually comes next: after a scene heading the action, after a name the dialogue, after the dialogue the next name. Tab turns a line into another kind, Option or Alt and a number picks one, in the browser too. The format takes care of itself while you write.</p>
-        <div class="chips"><span data-t="f1.c1">Enter · Tab · ⌥1–9</span><span data-t="f1.c2">Seven kinds of element</span><span data-t="f1.c3">Undo ⌘Z</span></div></div>
-      <div class="viz"><div class="v-keys">
-        <div class="k-r"><kbd>Enter</kbd><span data-t="f1.k1">Scene heading</span><em>→ <b data-t="f1.k1b">Action</b></em></div>
-        <div class="k-r"><kbd>Tab</kbd><span data-t="f1.k2">Action</span><em>→ <b data-t="f1.k2b">Character</b></em></div>
-        <div class="k-r"><kbd>Enter</kbd><span data-t="f1.k3">Character</span><em>→ <b data-t="f1.k3b">Dialogue</b></em></div>
-        <div class="k-r"><kbd>Tab</kbd><span data-t="f1.k4">Dialogue</span><em>→ <b data-t="f1.k4b">(parenthetical)</b></em></div>
-      </div></div>
-    </div>
-    <div class="big rv">
-      <span class="no">02</span>
-      <div><h3 data-t="f2.t" data-html><b>Greek</b>, as well as English.</h3><p data-t="f2.p">Type ΕΣΩΤ. or ΕΞΩΤ. and the line becomes a scene heading, as INT. and EXT. do. Names, places and the time of day are suggested as you type, ΜΕΡΑ and ΝΥΧΤΑ included, and the PDF prints Greek in the same typewriter letters, and the same weight, as English.</p>
-        <div class="chips"><span data-t="f2.c1">ΕΣΩΤ. · ΕΞΩΤ.</span><span data-t="f2.c2">Names and places suggested</span><span data-t="f2.c3">Greek and English spelling</span></div></div>
-      <div class="viz"><div class="v-gr">
-        <p>ΕΣΩΤ. ΚΟΥΖΙΝΑ - ΝΥ<span style="border-right:1.5px solid #e0431b">&nbsp;</span></p>
-        <span class="sugg"><span>ΕΣΩΤ. ΚΟΥΖΙΝΑ - ΝΥΧΤΑ</span><span>ΕΣΩΤ. ΚΟΥΖΙΝΑ - ΝΥΧΤΑ (ΣΥΝΕΧΕΙΑ)</span></span>
-        <p class="ch">ΜΑΡΙΑ</p>
-        <p class="di">Άναψε το φως.</p>
-      </div></div>
-    </div>
-    <div class="big rv">
-      <span class="no">03</span>
-      <div><h3 data-t="f3.t" data-html>An AI that <b>waits to be asked</b>.</h3><p data-t="f3.p">On the scene you are in: suggest dialogue, rewrite the scene, write what comes next, or give notes, in the language of the script and the voice of its characters. The answer is shown first, as script; nothing on the page changes until you press Insert or Replace.</p>
-        <div class="chips"><span data-t="f3.c1">Suggest dialogue</span><span data-t="f3.c2">Rewrite scene</span><span data-t="f3.c3">What comes next</span><span data-t="f3.c4">Ideas &amp; notes</span></div></div>
-      <div class="viz"><div class="v-ai">
-        <span class="bub" data-t="f3.ask">Make Nikos more afraid.</span>
-        <div class="pv"><p class="ch">ΝΙΚΟΣ</p><p class="di">Πάμε. Τώρα. Πριν μας δουν.</p></div>
-        <div class="act"><span class="main">Insert</span><span>Replace scene</span></div>
-      </div></div>
-    </div>
-  </div>
-</section>
-
-<section id="page">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="page.idx">02 · The page</p><h2 class="rv" data-t="page.title" data-html>A script <b>that reads like a script</b>.</h2></div>
-    <p class="sub rv" data-t="page.sub">The page as producers, actors and the crew expect it, and the files the rest of the industry uses.</p>
-  </div>
-  <div class="board">
-    <div class="tile f-glass t-tasks rv">
-      <span class="k" data-t="s1.k">The PDF</span>
-      <h3 data-t="s1.t" data-html>Ready <b>to send</b>.</h3>
-      <p data-t="s1.p">Courier 12 with the standard margins, the title page as Final Draft lays it out, page numbers from page two, A4 or US Letter. The pages are laid out for real, and you see them as you write: a scene heading never ends a page and a name stays with its lines.</p>
-      <div class="pdfs"><i class="tp"></i><i></i><i><b>2.</b></i><i><b>3.</b></i></div>
-    </div>
-    <div class="tile f-glass t-ord rv">
-      <span class="k" data-t="s2.k">The files</span>
-      <h3 data-t="s2.t" data-html>Final Draft, Fade In and <b>Fountain</b>.</h3>
-      <p data-t="s2.p">Open a script from Final Draft, Fade In or Fountain, save it back as any of them. Paste a screenplay as plain text and it turns into elements.</p>
-      <div class="fmts"><span><b>.fdx</b> in · out</span><span><b>.fadein</b> in · out</span><span><b>.fountain</b> in · out</span><span><b>.pdf</b> out</span></div>
-    </div>
-    <div class="tile f-glass t-upd rv">
-      <span class="k" data-t="s3.k">At the side</span>
-      <h3 data-t="s3.t" data-html>Scenes and <b>characters</b>.</h3>
-      <p data-t="s3.p">Every scene numbered, the one you are in lit; one click takes you there. Every character with how many times they speak and in how many scenes, renamed everywhere in one go. And the Notes tab, and the Series tab in an episode.</p>
-    </div>
-    <div class="tile f-glass t-icon rv">
-      <span class="k" data-t="s4.k" data-html>Updates itself <em>0.5</em></span>
-      <h3 data-t="s4.t" data-html>Writes <b>offline</b>, too.</h3>
-      <p data-t="s4.p">The Mac and Windows apps carry the whole program inside them: on a plane or on set with no signal, you go on writing, and the script is sent to your account when the connection is back. New versions download by themselves.</p>
-    </div>
-  </div>
-</section>
-
-<section id="studio">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="st.idx">03 · The studio</p><h2 class="rv" data-t="st.title" data-html>From the page <b>to the shoot</b>.</h2></div>
-    <p class="sub rv" data-t="st.sub">Version 0.5: what a production asks of a script, in the same app it is written in.</p>
-  </div>
-  <div class="board">
-    <div class="tile f-glass t-tasks rv">
-      <span class="k" data-t="t1.k" data-html>The AI on the whole script <em>new</em></span>
-      <h3 data-t="t1.t" data-html>The whole script, <b>read</b>.</h3>
-      <p data-t="t1.p">Coverage with a verdict, continuity (who knows what before they learn it, the prop that comes back), a budget pass that finds what is expensive and a cheaper way to the same story value, a pitch package for a fund or a market, a translated copy in Greek or English. Ask the script anything: the scenes it names take you there.</p>
-    </div>
-    <div class="tile f-glass t-ord rv">
-      <span class="k" data-t="t2.k" data-html>Revisions and versions <em>new</em></span>
-      <h3 data-t="t2.t" data-html>The way <b>a production</b> works.</h3>
-      <p data-t="t2.p">Revision colours in the industry order, an asterisk on every changed line, scene numbers locked (a new one after 12 is 12A), the revised pages alone as a PDF. Versions of the script, one a day by itself, compared word by word with now.</p>
-    </div>
-    <div class="tile f-glass t-upd rv">
-      <span class="k" data-t="t3.k" data-html>Planning the film <em>new</em></span>
-      <h3 data-t="t3.t" data-html>Beats, frames, <b>days</b>.</h3>
-      <p data-t="t3.p">A beat board (Save the Cat, three acts, Hero’s Journey) that shows where each beat should fall and where it does. A storyboard with a picture for every shot, the AI breaking a scene into shots, a shot list for the crew. A stripboard schedule with Day out of Days.</p>
-    </div>
-    <div class="tile f-glass t-icon rv">
-      <div class="txt">
-      <span class="k" data-t="t4.k" data-html>TV <em>new</em></span>
-      <h3 data-t="t4.t" data-html>A series, <b>with its bible</b>.</h3>
-      <p data-t="t4.p">The episodes of a show in one place, with its logline, its world, the characters and places of every episode, and what is known since which episode, at the side of every episode you write.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="all">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="all.idx">04 · Everything</p><h2 class="rv" data-t="all.title" data-html>And all <b>a draft needs</b>.</h2></div>
-    <p class="sub rv" data-t="all.sub">What came in the latest versions, and the rest, briefly.</p>
-  </div>
-  <div class="index">
-    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">Nine formats</b><p data-t="ix1.p">Feature film, TV drama, TV half-hour, multi-camera sitcom, stage play, musical, audio drama, AV two-column and comic. Each with its own page, kinds of line, keys and PDF.</p></div>
-    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">It knows what you mean</b><p data-t="ix2.p">INT. or ΕΣΩΤ. at the start of a line makes a scene heading; CUT TO: makes a transition. A parenthetical opens its own brackets.</p></div>
-    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Breakdown</b><p data-t="ix3.p">Select a word, right-click it and tag it: cast, props, locations, wardrobe and eight more, lit in colour wherever it appears. By scene or by element, and as a spreadsheet.</p></div>
-    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">Write together</b><p data-t="ix4.p">Share a script by email, to edit or only to read. What the others write comes in within seconds, and changes to different lines never overwrite each other.</p></div>
-    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">Undo, and nothing to save</b><p data-t="ix5.p">Every change keeps itself. ⌘Z and ⇧⌘Z go back and forth through what you did.</p></div>
-    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Title page on the page</b><p data-t="ix6.p">Title and episode, credit and author, copyright, draft and contact, typed where they go, as Final Draft lays them out.</p></div>
-    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Final Draft and Fade In</b><p data-t="ix7.p">Bring in a .fdx, a .fadein or a .fountain, title page included, go on writing, and save it back as any of them.</p></div>
-    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">Zoom</b><p data-t="ix8.p">− 100% + in the bar, ⌘+ and ⌘−, or a pinch on the trackpad; on a phone, two fingers on the page.</p></div>
-    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">Spelling in two languages</b><p data-t="ix9.p">The apps check Greek and English as you type, with suggestions on a right click.</p></div>
-    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">On a phone</b><p data-t="ix10.p">The page in letters to write in, the kinds of line over the keyboard, scenes and the AI over the screen, and an icon on the home screen.</p></div>
-    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">In the browser too</b><p data-t="ix11.p">The same app on the web, nothing to install, with your scripts in your account.</p></div>
-    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">AI only when you ask</b><p data-t="ix12.p">Nothing is sent to the AI until you press one of its buttons: the scene you are on, or the whole script when you ask for coverage or a question about it. It writes in the script’s format.</p></div>
-    <div class="ix rv"><span class="no">13</span><b data-t="ix13.t">Bold, italic, underline</b><p data-t="ix13.p">Inside a line, kept in the PDF, Final Draft and Fountain.</p></div>
-    <div class="ix rv"><span class="no">14</span><b data-t="ix14.t">Dual dialogue</b><p data-t="ix14.p">Two characters speaking at once, side by side, with ⌘D.</p></div>
-    <div class="ix rv"><span class="no">15</span><b data-t="ix15.t">Scene alternates</b><p data-t="ix15.p">Keep another way a scene could go, or let the AI write one; compare and use it.</p></div>
-    <div class="ix rv"><span class="no">16</span><b data-t="ix16.t">Runtime and tension</b><p data-t="ix16.p">The running time from the words, truer with every table read, and the tension of every scene along the minutes.</p></div>
-    <div class="ix rv"><span class="no">17</span><b data-t="ix17.t">Research desk</b><p data-t="ix17.p">Facts for the scene from the web, with their sources, kept as a note on it.</p></div>
-    <div class="ix rv"><span class="no">18</span><b data-t="ix18.t">Write by speaking</b><p data-t="ix18.p">Dictate in Greek or English; insert it as it is, or let the AI lay it out as script.</p></div>
-    <div class="ix rv"><span class="no">19</span><b data-t="ix19.t">Writers in the room</b><p data-t="ix19.p">See who is in which scene right now, and give scenes to writers.</p></div>
-    <div class="ix rv"><span class="no">20</span><b data-t="ix20.t">Find and replace</b><p data-t="ix20.p">⌘F and ⌘⌥F, with case and whole words; Greek accents are ignored, so a word is found however it was typed.</p></div>
-    <div class="ix rv"><span class="no">21</span><b data-t="ix21.t">The report</b><p data-t="ix21.p">Pages, minutes, scenes, INT and EXT, day and night, locations, and who speaks how much.</p></div>
-    <div class="ix rv"><span class="no">22</span><b data-t="ix22.t">Your page, your PDF</b><p data-t="ix22.p">A white, sepia or midnight page to write on; in the PDF a header and a faint watermark, such as CONFIDENTIAL or the reader’s name.</p></div>
-  </div>
-</section>
-
-<section id="yours">
-  <div class="priv">
-    <div>
-      <p class="idx rv" data-t="pv.idx">05 · Yours</p>
-      <h2 class="rv" data-t="pv.title" data-html>Your script, <b>your account</b>.</h2>
-      <p class="sub rv" style="margin-top:22px;color:var(--muted);font-size:17px;line-height:1.6" data-t="pv.sub">Kept on your computer the moment you type, and in your account a second later, so it follows you to every device.</p>
-      <div class="legal rv"><a class="pill sm" href="../../legal/roarwriter/#privacy" data-t="lg.p">Privacy Policy</a><a class="pill sm" href="../../legal/roarwriter/#terms" data-t="lg.t">Terms</a></div>
-    </div>
-    <div class="prs">
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></i><b data-t="p1.t">On your computer first</b><p data-t="p1.p">Every change is kept here at once: writing never waits for the internet, and works without it.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></i><b data-t="p2.t">Only yours, and whom you share with</b><p data-t="p2.p">In your account, a script opens only for you and the people you share it with.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></i><b data-t="p3.t">One account</b><p data-t="p3.p">The same account as RoarMe, Roardino and RoarList.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg></i><b data-t="p4.t">The AI sees only what you send</b><p data-t="p4.p">The scene you are on, or the whole script when you ask for coverage or a question about it, and only when you press an AI button. It never writes on your page by itself.</p></div>
-    </div>
-  </div>
-</section>
-
-<section id="download">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="dl.idx">06 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarWriter</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
-    <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab that we write our own films with.</p>
-  </div>
-  <div class="dls three">
-    <div class="dl rv" id="dl-mac">
-      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.8 1.2 1.8 2.6 3.1 2.5 1.3-.1 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.5.9-1.4 1.3-2.7 1.3-2.8 0 0-2.3-.9-2.3-4.2zM14 5.3c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1.1.1 2.1-.6 2.8-1.4z"/></svg></i>
-      <h3>Mac</h3>
-      <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
-      <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roarwriter/releases/latest/download/RoarWriter-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
-      <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roarwriter/releases/latest/download/RoarWriter-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
-    </div>
-    <div class="dl rv" id="dl-win">
-      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
-      <h3>Windows</h3>
-      <small data-t="dl.win">Windows 10 and 11.</small>
-      <a class="pill main" data-f="win" href="https://github.com/alexisdigipro-hub/roarwriter/releases/latest/download/RoarWriter-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
-    </div>
-    <div class="dl rv" id="dl-web">
-      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.5-3.8-9S9.5 5.5 12 3z"/></svg></i>
-      <h3 data-t="dl.webt">Browser</h3>
-      <small data-t="dl.web">On any computer, with your RoarMe account. Nothing to install.</small>
-      <a class="pill web-link" href="https://alexisdigipro-hub.github.io/roarwriter/" data-t="cta.open">Open RoarWriter</a>
-    </div>
-  </div>
-  <div class="dl-note">
-    <p class="rv" data-t="dl.upd" data-html><b>It updates itself.</b> The Mac and Windows apps fetch new versions on their own and ask for a quick restart.</p>
-    <p class="rv" data-t="dl.help" data-html><b>First time on a Mac?</b> The app is not signed by Apple yet: right-click RoarWriter in Applications and choose Open, or go to System Settings &gt; Privacy &amp; Security &gt; Open Anyway. Once.</p>
-  </div>
-</section>
-
-<section id="faq">
-  <div class="faq">
-    <div><p class="idx rv" data-t="faq.idx">07 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
-    <div class="qa">
-      <details class="rv"><summary data-t="q1">Is RoarWriter free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
-      <details class="rv"><summary data-t="q2">Do I need an account?</summary><p data-t="a2">Yes, a RoarMe account: the same one as RoarMe, Roardino and RoarList. It is what keeps your scripts safe and the same on every device.</p></details>
-      <details class="rv"><summary data-t="q3">Can I open my Final Draft or Fade In scripts?</summary><p data-t="a3">Yes: import the .fdx or the .fadein and go on writing; save it back as either whenever you need it there. Fountain works both ways too.</p></details>
-      <details class="rv"><summary data-t="q4">Does it write Greek scripts properly?</summary><p data-t="a4">Yes. Scene headings with ΕΣΩΤ. and ΕΞΩΤ., names in capitals, suggestions in Greek, spelling in Greek in the apps, and a PDF in the same format as an English script.</p></details>
-      <details class="rv"><summary data-t="q5">What does the AI see?</summary><p data-t="a5">Only what you ask about: the scene you are on and a little of what comes before it, or the whole script when you choose Whole script (coverage, continuity, a question), and only when you press one of its buttons. Its answer appears beside the page; nothing changes until you press Insert or Replace.</p></details>
-      <details class="rv"><summary data-t="q6">Does it work without internet?</summary><p data-t="a6">The Mac and Windows apps do: you write as usual and the script is sent to your account when the connection is back. The AI needs a connection.</p></details>
-      <details class="rv"><summary data-t="q8">Does it write stage plays and TV?</summary><p data-t="a8">Yes. When you start a script you choose its format: feature film, TV drama in acts, TV half-hour, multi-camera sitcom, stage play, musical, audio drama, AV two-column or comic. You can change it later on its title page.</p></details>
-      <details class="rv"><summary data-t="q9">Can two of us write the same script?</summary><p data-t="a9">Yes. Press Share, type their email (their RoarMe account) and choose Can edit or Can view. Only the owner shares or removes someone; anyone can leave.</p></details>
-      <details class="rv"><summary data-t="q7">A4 or US Letter?</summary><p data-t="a7">Either, chosen per script on its title page or in Settings; what new scripts start with is set in the Settings of the list of scripts. The margins and the font stay those of the standard screenplay format.</p></details>
-    </div>
   </div>
 </section>
 
@@ -962,6 +981,8 @@ body::before { background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%,
     'q7': 'A4 ή US Letter;', 'a7': 'Όποιο θες, για κάθε σενάριο από τη σελίδα τίτλου του ή τις Ρυθμίσεις· με τι ξεκινούν τα νέα σενάρια ορίζεται στις Ρυθμίσεις της λίστας των σεναρίων. Τα περιθώρια και η γραμματοσειρά μένουν αυτά του κανονικού format σεναρίου.',
     'ct.idx': 'Επαφή', 'ct.title': 'Ιδέες για <b>την επόμενη έκδοση</b>;', 'ft.lab': 'The Mad Lions Lab', 'ft.legal': 'Απόρρητο & Όροι', 'lg.p': 'Πολιτική απορρήτου', 'lg.t': 'Όροι χρήσης', 'footer': '© 2026 The Mad Lions · RoarWriter'
   }
+  // the product page (31 Oct): its own Greek
+  Object.assign(EL, {"only.idx": "02 · Μόνο εδώ", "page.idx": "03 · Η σελίδα", "st.idx": "04 · Το studio", "all.idx": "05 · Όλα", "dl.idx": "07 · Λήψη", "faq.idx": "08 · Ερωτήσεις", "hero.claim": "Από την πρώτη σελίδα.<br><b>Ως το γύρισμα.</b>", "hero.lead2": "Γράψε στη μορφή που φτιάχνονται οι ταινίες, στα ελληνικά ή στα αγγλικά, με τα πλήκτρα του Final Draft, και πήγαινέ το ως το storyboard και το πρόγραμμα γυρισμάτων. <b>Web, Mac και Windows.</b>", "sc.cap": "Ένα καφέ στου Ψυρρή, 19:10. Η σκηνή 42, επιτέλους σωστή.", "nav.onset": "Στο γύρισμα", "on.idx": "01 · Στο γύρισμα", "on.title": "Φτιαγμένο από ανθρώπους <b>που κάνουν ταινίες</b>.", "on.sub": "Φτιάξαμε το RoarWriter για τη δική μας δουλειά στο The Mad Lions. Εδώ το χρησιμοποιούμε.", "why.idx": "06 · Γιατί Roar", "why.title": "Γιατί <b>μια εφαρμογή Roar</b>.", "why.sub": "Τι υπόσχεται κάθε εφαρμογή του The Mad Lions Lab, και το RoarWriter.", "nm1": "μορφές: ταινία, σειρά, θέατρο και άλλες.", "nm2": "γλώσσες, ελληνικά και αγγλικά, με τα ίδια γράμματα γραφομηχανής.", "nm3": "και κάθε αλλαγή είναι στον λογαριασμό σου, σε κάθε συσκευή.", "nm4": "Χωρίς συνδρομή, χωρίς διαφημίσεις.", "on1.k": "Στο σπίτι · Η σεναριογράφος", "on1.t": "Η μορφή φροντίζει τον εαυτό της.", "on1.p": "Enter και Tab όπως στο Final Draft, ΕΣΩΤ. και ΕΞΩΤ. όπως INT. και EXT., ονόματα και τόποι προτείνονται καθώς γράφεις.", "on2.k": "Ανάγνωση · Οι ηθοποιοί", "on2.t": "Sides για όλους.", "on2.p": "Sides για κάθε ηθοποιό, το σενάριο διαβασμένο φωναχτά, σημειώσεις σε γραμμές, και ένα PDF έτοιμο να σταλεί.", "on3.k": "Στο γύρισμα · Η σκηνοθέτις", "on3.t": "Από τη σελίδα στη μέρα του γυρίσματος.", "on3.p": "Storyboard, λίστα πλάνων και πρόγραμμα γυρισμάτων από το ίδιο σενάριο, με τις αναθεωρήσεις σε χρώμα.", "w1.t": "Δικό σου, και όποιου το μοιράζεσαι", "w1.p": "Κρατιέται στον υπολογιστή σου καθώς γράφεις και στον λογαριασμό σου ένα δευτερόλεπτο μετά· ένα σενάριο ανοίγει μόνο για σένα και όσους το μοιράζεσαι.", "w2.t": "Ένα AI που περιμένει", "w2.p": "Το AI βλέπει μόνο ό,τι του στέλνεις, και τίποτα στη σελίδα δεν αλλάζει μέχρι να πατήσεις Insert ή Replace.", "w3.t": "Πάντα η νεότερη", "w3.p": "Η έκδοση web είναι πάντα η τελευταία· οι εφαρμογές για Mac και Windows ενημερώνονται μόνες τους.", "w4.t": "Φτιαγμένο από κινηματογραφιστές", "w4.p": "Το The Mad Lions, εταιρεία παραγωγής στην Αθήνα, το χρησιμοποιεί στη δουλειά του. Οι ιδέες σου πάνε κατευθείαν σε όσους το φτιάχνουν."})
   var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
   var EN = {}
   nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })
