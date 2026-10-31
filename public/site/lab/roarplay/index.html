@@ -1,0 +1,864 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- RoarPlay's page on the company site (Alex, 31 Oct): a product page on the pattern of RoarPlay's: a claim, the app's
+     own screen, the numbers, the three things only RoarPlay does, what was made for the director, everything else,
+     downloads (releases/latest of alexisdigipro-hub/roarplay), questions. EN and GR. -->
+<title>RoarPlay · Plays every video and sound file, for Mac and Windows · by The Mad Lions</title>
+<link rel="canonical" href="https://themadlions.com/lab/roarplay/">
+<meta name="description" content="RoarPlay, the player by The Mad Lions Lab. Every video and every sound file on your own computer: ProRes, DNxHR, MXF, MKV, AVI, MPEG-2, H.264, HEVC, WAV, FLAC, AC3, AIFF, MP3. Timecode from the file, J K L, frame steps, in and out, a frame as PNG, nothing uploaded. Free for Mac and Windows.">
+<meta name="theme-color" content="#16181c">
+<meta property="og:title" content="RoarPlay · by The Mad Lions">
+<meta property="og:description" content="Plays everything: every video and every sound file, with a director’s transport, on your own computer.">
+<meta property="og:url" content="https://themadlions.com/lab/roarplay/">
+<meta property="og:image" content="https://themadlions.com/lab/roarplay.jpg">
+<link rel="icon" href="icon.png" type="image/png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../fresh.css">
+<style>
+:root {
+  --bg: #16181c; --bg-2: #1d2025; --bg-3: #24282f; --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.16);
+  --text: #eef0f3; --muted: rgba(214,220,228,.6); --dim: rgba(214,220,228,.38);
+  --red: #d40000; --red-hi: #ff3b2f; --ok: #2fd36b;
+  --glass: rgba(255,255,255,.055); --glass-edge: rgba(255,255,255,.12);
+  --pad: clamp(18px, 4.5vw, 72px);
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); scroll-behavior: smooth; }
+body { margin: 0; color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%, transparent 62%), radial-gradient(800px 600px at 100% 100%, rgba(212,0,0,.10), transparent 70%), linear-gradient(180deg, #23272e 0%, #17191d 50%, #121417 100%); }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+img, svg { display: block; }
+:focus-visible { outline: 2px solid var(--red-hi); outline-offset: 3px; border-radius: 8px; }
+.wordmark { filter: invert(1); height: auto; }
+.rm { font-family: Jost, var(--sans); display: inline-flex; align-items: baseline; letter-spacing: .02em; line-height: .86; }
+.rm .a { font-weight: 200; } .rm .b { font-weight: 800; }
+.mono { font-family: var(--mono); }
+.beta { font-family: var(--mono); font-style: normal; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; border: 1px solid rgba(212,0,0,.6); color: #ff8f86; background: rgba(212,0,0,.14); }
+
+/* pills */
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 48px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 600; letter-spacing: .01em; border: 1px solid var(--glass-edge); background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); cursor: pointer; transition: transform .3s var(--ease), background .2s, border-color .2s, filter .2s; white-space: nowrap; }
+.pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.28); }
+.pill:active { transform: scale(.97); }
+.pill.main { background: var(--red); border-color: transparent; color: #fff; box-shadow: 0 12px 34px rgba(212,0,0,.32); }
+.pill.main:hover { filter: brightness(1.1); }
+.pill.sm { height: 38px; padding: 0 16px; font-size: 13.5px; }
+.pill svg { width: 18px; height: 18px; flex: none; }
+
+/* bar */
+.bar { position: fixed; inset: 0 0 auto; z-index: 30; display: flex; align-items: center; gap: 18px; padding: calc(12px + env(safe-area-inset-top)) var(--pad) 12px; transition: background .4s, border-color .4s; border-bottom: 1px solid transparent; }
+.bar.solid { background: rgba(22,24,28,.72); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); border-color: var(--line); }
+.bar .home { display: flex; align-items: center; gap: 14px; }
+.bar .home .wordmark { width: 128px; }
+.bar .home .sep { width: 1px; height: 22px; background: var(--line-2); }
+.bar .home .rm { font-size: 19px; }
+.bar nav { margin-left: auto; display: flex; gap: 2px; }
+.bar nav a { padding: 8px 13px; border-radius: 999px; font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); transition: color .2s, background .2s; }
+.bar nav a:hover { color: var(--text); background: var(--glass); }
+.bar .end { display: flex; align-items: center; gap: 10px; }
+.lang { display: flex; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); }
+.lang button { border: 0; background: transparent; cursor: pointer; padding: 5px 11px; border-radius: 999px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--muted); }
+.lang button.on { background: rgba(255,255,255,.14); color: var(--text); }
+
+/* hero */
+.hero { position: relative; padding: calc(132px + env(safe-area-inset-top)) var(--pad) 0; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px; align-items: end; }
+.kicker { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); line-height: 1.6; }
+.kicker i { display: inline-block; width: 7px; height: 7px; margin-right: 10px; vertical-align: 1px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px rgba(47,211,107,.8); }
+.hero h1 { margin: 22px 0 0; font-size: clamp(72px, 15.5vw, 250px); line-height: .8; display: flex; align-items: flex-end; gap: clamp(10px, 2vw, 28px); flex-wrap: nowrap; }
+.hero h1 .beta { font-size: clamp(10px, 1vw, 13px); margin-bottom: clamp(10px, 2.4vw, 40px); }
+.app-icon { width: clamp(76px, 10vw, 150px); height: auto; filter: drop-shadow(0 24px 50px rgba(212,0,0,.32)); }
+.hero-sub { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: end; margin-top: clamp(28px, 4vw, 52px); }
+.lead { margin: 0; font-size: clamp(22px, 2.5vw, 34px); font-weight: 300; line-height: 1.25; letter-spacing: -.01em; text-wrap: balance; color: color-mix(in srgb, var(--text) 82%, transparent); }
+.lead b { font-weight: 700; color: var(--text); }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.cta-note { grid-column: 1 / -1; margin: -6px 0 0; text-align: right; font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; color: var(--dim); }
+.cta-note a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+
+/* the frame: RoarMe as it is today */
+.frame { position: relative; margin: clamp(44px, 6vw, 84px) auto 0; max-width: 1380px; perspective: 1800px; }
+.frame::before { content: ''; position: absolute; left: 10%; right: 10%; top: 12%; bottom: -6%; background: radial-gradient(closest-side, rgba(212,0,0,.32), transparent); filter: blur(60px); z-index: -1; }
+.win { border-radius: 22px; background: #1b1e23; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 60px 140px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06); overflow: hidden; transform: rotateX(calc(var(--ry, 0) * 1deg)) rotateY(calc(var(--rx, 0) * 1deg)); transition: transform .5s var(--ease); font-size: 13px; color: #eef0f3; }
+.win-top { display: flex; gap: 7px; padding: 12px 14px 8px; }
+.win-top i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; } .win-top i:nth-child(2) { background: #febc2e; } .win-top i:nth-child(3) { background: #28c840; }
+.win-body { display: grid; grid-template-columns: 27% minmax(0, 1fr) 26%; gap: 10px; padding: 0 12px 12px; height: clamp(420px, 42vw, 600px); }
+.pn { min-width: 0; border-radius: 16px; background: linear-gradient(180deg, #2b3038, #1f2329); border: 1px solid rgba(255,255,255,.08); display: flex; flex-direction: column; overflow: hidden; }
+.pn-h { display: flex; align-items: center; gap: 8px; padding: 12px 12px 8px; }
+.pn-h .rm { font-size: 15px; flex: 1; text-align: center; justify-content: center; }
+.rnd { width: 28px; height: 28px; border-radius: 10px; flex: none; display: grid; place-items: center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); color: #dfe3e8; position: relative; }
+.rnd svg { width: 15px; height: 15px; }
+.rnd b { position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 99px; background: var(--red-hi); font-size: 9px; line-height: 15px; text-align: center; color: #fff; }
+.tabs { display: flex; gap: 2px; margin: 4px 10px 8px; padding: 3px; border-radius: 99px; background: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.06); }
+.tabs span { flex: 1; text-align: center; padding: 5px 0; border-radius: 99px; font-size: 10.5px; color: #9aa0aa; }
+.tabs span.on { background: linear-gradient(180deg, #ff6b5e, #d40000); color: #fff; font-weight: 700; }
+.row { display: flex; align-items: center; gap: 9px; margin: 1px 8px; padding: 8px; border-radius: 12px; }
+.row.on { background: rgba(255,255,255,.06); }
+.av { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 10.5px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #5b6472, #3a4049); }
+.av.c1 { background: linear-gradient(135deg, #ff8a6b, #e0483a); } .av.c2 { background: linear-gradient(135deg, #7aa7ff, #3b6ff5); } .av.c3 { background: linear-gradient(135deg, #f8d29a, #e79a3d); color: #2a1c08; } .av.c4 { background: linear-gradient(135deg, #8fe3b4, #2fa36b); color: #082a18; }
+.row b { flex: 1; min-width: 0; font-weight: 500; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row small { font-size: 10px; color: #9aa0aa; }
+.row .n { min-width: 17px; height: 17px; padding: 0 5px; border-radius: 99px; background: var(--red); font-size: 9.5px; font-weight: 700; display: grid; place-items: center; }
+.foot { margin: auto 8px 8px; display: flex; justify-content: space-around; padding: 8px 4px; border-radius: 14px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); }
+.foot i { width: 20px; height: 20px; border-radius: 7px; background: rgba(255,255,255,.1); } .foot i.on { background: rgba(212,0,0,.6); }
+.room-h { display: flex; align-items: center; gap: 9px; margin: 10px; padding: 7px 9px; border-radius: 13px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); }
+.room-h b { display: block; font-size: 12.5px; font-weight: 600; } .room-h small { font-size: 10px; color: #9aa0aa; }
+.room-h .ic { margin-left: auto; display: flex; gap: 5px; } .room-h .ic i { width: 26px; height: 26px; border-radius: 9px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); }
+.msgs { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px; padding: 4px 12px 10px; justify-content: flex-end; overflow: hidden; }
+.bb { align-self: flex-start; max-width: 74%; padding: 8px 11px; border-radius: 15px 15px 15px 5px; background: rgba(255,255,255,.07); line-height: 1.35; }
+.bb.me { align-self: flex-end; border-radius: 15px 15px 5px 15px; background: linear-gradient(180deg, #e2231a, #b50000); }
+.bb small { margin-left: 6px; font-size: 9.5px; opacity: .6; }
+.card { align-self: flex-end; width: min(270px, 78%); border-radius: 16px; padding: 10px; background: linear-gradient(180deg, #e2231a, #b50000); display: grid; gap: 8px; }
+.card .ch { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 13px; }
+.card .ch i { width: 26px; height: 26px; border-radius: 50%; background: #fff; color: var(--red); display: grid; place-items: center; }
+.card .ch i svg { width: 15px; height: 15px; }
+.card .cb { padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,.2); display: grid; gap: 3px; position: relative; overflow: hidden; }
+.card .cb::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: #fff; }
+.card .cb s { text-decoration: none; justify-self: start; font-family: var(--mono); font-size: 8.5px; letter-spacing: .14em; padding: 2px 7px; border-radius: 99px; background: #fff; color: var(--red); }
+.card .cb b { font-size: 15px; font-weight: 800; } .card .cb em { font-style: normal; font-size: 11px; opacity: .85; }
+.card .go { text-align: center; padding: 7px; border-radius: 99px; background: #fff; color: #b50000; font-weight: 700; font-size: 11.5px; }
+.compose { display: flex; align-items: center; gap: 7px; margin: 0 10px 10px; }
+.compose .rnd { width: 32px; height: 32px; border-radius: 50%; }
+.compose .rnd.cam { color: #fff; border-color: rgba(255,90,80,.6); box-shadow: 0 0 0 3px rgba(212,0,0,.18); }
+.compose .box { flex: 1; height: 32px; border-radius: 99px; padding: 0 14px; display: flex; align-items: center; color: #8e949e; background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.07); }
+.tasks-h { display: flex; align-items: center; gap: 6px; padding: 12px 12px 6px; } .tasks-h b { flex: 1; font-size: 15px; font-weight: 800; }
+.tk { margin: 3px 8px; padding: 9px 10px; border-radius: 13px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); display: grid; grid-template-columns: auto 1fr; gap: 3px 9px; align-items: start; }
+.tk.ask { border-color: rgba(255,90,80,.45); background: rgba(212,0,0,.1); }
+.tk > i { width: 15px; height: 15px; margin-top: 1px; border-radius: 50%; border: 1.6px solid rgba(255,255,255,.35); }
+.tk.done > i { border-color: transparent; background: #ff5a4f; }
+.tk b { font-size: 11.5px; font-weight: 600; } .tk.done b { text-decoration: line-through; opacity: .5; }
+.tk small { grid-column: 2; font-size: 9.5px; color: #9aa0aa; }
+.tk .ans { grid-column: 2; display: flex; gap: 5px; margin-top: 3px; } .tk .ans span { padding: 4px 9px; border-radius: 99px; font-size: 9.5px; font-weight: 700; background: rgba(255,255,255,.08); } .tk .ans span:first-child { background: var(--red); }
+.tk .st { grid-column: 2; justify-self: start; padding: 1px 7px; border-radius: 99px; font-size: 9px; font-weight: 700; background: rgba(255,196,0,.16); color: #ffd666; }
+.lbl { margin: 8px 12px 2px; font-family: var(--mono); font-size: 8.5px; letter-spacing: .16em; text-transform: uppercase; color: #8e949e; }
+.tag { position: absolute; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; border-radius: 999px; background: rgba(27,30,35,.86); border: 1px solid var(--line-2); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 16px 40px rgba(0,0,0,.4); font-family: var(--mono); font-size: 11px; letter-spacing: .04em; white-space: nowrap; }
+.tag i { width: 22px; height: 22px; border-radius: 50%; background: var(--red); display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; color: #fff; }
+.tag.t1 { left: 51%; bottom: 11%; } .tag.t2 { right: 3%; top: 18%; } .tag.t3 { left: 3%; top: 26%; }
+
+/* ticker */
+.ticker { margin-top: clamp(64px, 9vw, 120px); border-block: 1px solid var(--line); overflow: hidden; padding: 18px 0; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.ticker-in { display: flex; gap: 40px; width: max-content; animation: tick 46s linear infinite; font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.ticker-in span { display: inline-flex; align-items: center; gap: 40px; }
+.ticker-in span::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
+@keyframes tick { to { transform: translateX(-50%); } }
+
+/* sections */
+section { padding: clamp(84px, 11vw, 160px) var(--pad) 0; max-width: 1480px; margin: 0 auto; }
+.sec-h { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 48px; align-items: end; margin-bottom: clamp(36px, 5vw, 64px); }
+.idx { font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--red-hi); margin: 0 0 16px; }
+h2 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(42px, 6.2vw, 96px); font-weight: 200; line-height: .92; letter-spacing: -.01em; text-wrap: balance; }
+h2 b { font-weight: 800; }
+.sec-h p.sub { margin: 0; font-size: 17px; line-height: 1.6; color: var(--muted); max-width: 520px; justify-self: end; }
+
+/* the three things only RoarMe does: numbered rows */
+.three { border-top: 1px solid var(--line); }
+.big { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: center; padding: clamp(34px, 4.5vw, 60px) 0; border-bottom: 1px solid var(--line); }
+.big .no { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; color: var(--dim); align-self: start; padding-top: 12px; }
+.big h3 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(32px, 4vw, 58px); font-weight: 300; line-height: 1; letter-spacing: -.01em; }
+.big h3 b { font-weight: 800; }
+.big p { margin: 16px 0 0; font-size: 16.5px; line-height: 1.6; color: var(--muted); max-width: 520px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+.chips span { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); }
+.viz { justify-self: end; width: min(440px, 100%); aspect-ratio: 4 / 3; border-radius: 22px; background: linear-gradient(160deg, #262a31, #1a1d22); border: 1px solid var(--line); display: grid; place-items: center; position: relative; overflow: hidden; }
+.viz::after { content: ''; position: absolute; inset: 0; background: radial-gradient(60% 60% at 50% 110%, rgba(212,0,0,.22), transparent 70%); pointer-events: none; }
+.v-name { display: grid; gap: 12px; justify-items: center; z-index: 1; }
+.v-name .at { font-family: Jost, var(--sans); font-size: clamp(34px, 4vw, 52px); font-weight: 300; } .v-name .at b { font-weight: 800; color: var(--red-hi); }
+.v-name .qr { width: 86px; height: 86px; border-radius: 14px; background: conic-gradient(from 90deg, #eef0f3 25%, transparent 0 50%, #eef0f3 0 75%, transparent 0) 0 0 / 14px 14px; border: 8px solid #eef0f3; opacity: .9; }
+.v-name small { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .1em; }
+.v-tr { width: 76%; z-index: 1; padding: 16px; border-radius: 18px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); display: grid; gap: 12px; }
+.v-tr .h { display: flex; align-items: center; gap: 12px; } .v-tr .h i { width: 40px; height: 40px; border-radius: 12px; background: var(--red); display: grid; place-items: center; } .v-tr .h i svg { width: 20px; height: 20px; }
+.v-tr .h b { display: block; font-size: 22px; font-weight: 800; } .v-tr .h small { font-family: var(--mono); font-size: 10.5px; color: var(--dim); letter-spacing: .1em; }
+.v-tr .bar2 { height: 6px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; } .v-tr .bar2 i { display: block; height: 100%; width: 72%; background: linear-gradient(90deg, #ff6b5e, #d40000); border-radius: inherit; animation: fill 3.2s var(--ease) infinite alternate; }
+@keyframes fill { from { width: 18%; } }
+.v-tr .ft { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.v-sec { width: 80%; z-index: 1; display: grid; gap: 8px; }
+.v-sec .ln { justify-self: center; font-family: var(--mono); font-size: 10px; color: #7ee2a0; letter-spacing: .08em; padding: 4px 10px; border-radius: 99px; background: rgba(47,211,107,.12); }
+.v-sec .bb { font-size: 13px; max-width: 86%; } .v-sec .enc { justify-self: end; font-family: var(--mono); font-size: 10.5px; color: var(--dim); word-break: break-all; max-width: 86%; text-align: right; }
+
+/* new: an uneven board */
+.board { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; }
+.tile { position: relative; border-radius: 26px; padding: clamp(22px, 2.6vw, 34px); background: linear-gradient(170deg, rgba(43,48,56,.7), rgba(27,30,35,.7)); border: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: 12px; min-height: 300px; }
+.tile .k { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--red-hi); display: flex; align-items: center; gap: 8px; }
+.tile .k em { font-style: normal; color: #7ee2a0; border: 1px solid rgba(47,211,107,.4); border-radius: 99px; padding: 2px 8px; letter-spacing: .1em; }
+.tile h3 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(28px, 3vw, 44px); font-weight: 300; line-height: 1; } .tile h3 b { font-weight: 800; }
+.tile p { margin: 0; font-size: 15.5px; line-height: 1.6; color: var(--muted); max-width: 520px; }
+.tile .more { margin-top: auto; align-self: flex-start; font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--text); display: inline-flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line-2); padding-bottom: 3px; }
+.tile .more svg { width: 14px; height: 14px; transition: transform .3s var(--ease); }
+.tile .more:hover svg { transform: translateX(3px); }
+.t-tasks { grid-column: span 7; } .t-ord { grid-column: span 5; } .t-upd { grid-column: span 5; } .t-icon { grid-column: span 7; }
+.mini { margin-top: 8px; display: grid; gap: 6px; max-width: 420px; }
+.mini .tk { margin: 0; } .mini .tk b { font-size: 13px; } .mini .tk small { font-size: 11px; } .mini .tk .ans span { font-size: 11px; padding: 5px 12px; }
+.ord-flow { margin-top: 8px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.ord-flow .rnd { width: 52px; height: 52px; border-radius: 50%; color: #fff; border-color: rgba(255,90,80,.6); box-shadow: 0 0 0 5px rgba(212,0,0,.16); } .ord-flow .rnd svg { width: 24px; height: 24px; }
+.ord-flow .arrow { font-family: var(--mono); color: var(--dim); }
+.ord-flow .card { align-self: auto; width: 230px; }
+.upd-card { margin-top: 8px; display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 18px; background: rgba(255,255,255,.05); border: 1px solid var(--line-2); max-width: 440px; }
+.upd-card i { width: 40px; height: 40px; flex: none; border-radius: 12px; background: rgba(212,0,0,.2); color: #ff8f86; display: grid; place-items: center; } .upd-card i svg { width: 20px; height: 20px; }
+.upd-card span { flex: 1; min-width: 0; } .upd-card b { display: block; font-size: 14.5px; } .upd-card small { font-size: 12px; color: var(--muted); }
+.upd-card s { text-decoration: none; padding: 9px 14px; border-radius: 99px; background: var(--red); color: #fff; font-weight: 700; font-size: 12.5px; white-space: nowrap; }
+.t-icon { flex-direction: row; align-items: center; gap: clamp(20px, 4vw, 56px); }
+.t-icon .txt { display: flex; flex-direction: column; gap: 12px; }
+.t-icon .icons { display: flex; align-items: center; gap: 18px; flex: none; }
+.t-icon .icons img, .t-icon .icons svg { width: clamp(90px, 10vw, 140px); height: auto; }
+.t-icon .icons .old { width: clamp(56px, 6vw, 84px); opacity: .45; filter: grayscale(.3); }
+.t-icon .icons .to { font-family: var(--mono); color: var(--dim); }
+
+/* everything else: an index */
+.index { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(28px, 5vw, 80px); border-top: 1px solid var(--line); }
+.ix { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 4px 14px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+.ix .no { grid-row: span 2; font-family: var(--mono); font-size: 12px; color: var(--dim); padding-top: 4px; }
+.ix b { font-size: 18px; font-weight: 650; letter-spacing: -.005em; }
+.ix p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+
+/* privacy */
+.priv { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 80px); align-items: start; }
+.priv .legal { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 26px; }
+.prom { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.pr { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 2px 14px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.pr i { grid-row: span 2; width: 34px; height: 34px; border-radius: 11px; background: var(--glass); border: 1px solid var(--glass-edge); display: grid; place-items: center; } .pr i svg { width: 17px; height: 17px; }
+.pr b { font-size: 16px; } .pr p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+
+/* download */
+.dls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.dl { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 26px 22px 22px; border-radius: 24px; background: rgba(255,255,255,.04); border: 1px solid var(--line); }
+.dl.mine { border-color: rgba(255,90,80,.55); background: linear-gradient(170deg, rgba(212,0,0,.14), rgba(255,255,255,.03)); }
+.dl.mine::before { content: attr(data-mine); position: absolute; top: -10px; left: 20px; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; background: var(--red); color: #fff; }
+.dl > i { width: 40px; height: 40px; } .dl > i svg { width: 30px; height: 30px; }
+.dl h3 { margin: 6px 0 0; font-size: 22px; font-weight: 700; }
+.dl small { font-size: 14px; line-height: 1.5; color: var(--muted); min-height: 42px; }
+.dl .pill { margin-top: auto; order: 2; }
+.dl .alt { order: 1; }
+.dl .alt { font-size: 12.5px; color: var(--dim); } .dl .alt a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.dl-note { margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.dl-note p { margin: 0; padding: 16px 18px; border-radius: 18px; border: 1px dashed var(--line-2); font-size: 14px; line-height: 1.55; color: var(--muted); }
+.dl-note p b { color: var(--text); }
+.ver { font-family: var(--mono); font-size: 12px; color: #7ee2a0; letter-spacing: .06em; margin: 14px 0 0; }
+
+/* questions */
+.faq { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(28px, 5vw, 80px); }
+.qa { border-top: 1px solid var(--line); }
+.qa details { border-bottom: 1px solid var(--line); }
+.qa summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; font-size: 17px; font-weight: 600; }
+.qa summary::-webkit-details-marker { display: none; }
+.qa summary::after { content: '+'; font-family: var(--mono); font-weight: 400; font-size: 20px; color: var(--muted); transition: transform .3s var(--ease); }
+.qa details[open] summary::after { transform: rotate(45deg); color: var(--red-hi); }
+.qa p { margin: 0 0 20px; font-size: 15.5px; line-height: 1.6; color: var(--muted); max-width: 640px; }
+
+/* contact + footer */
+.contact { text-align: center; padding-bottom: clamp(80px, 10vw, 140px); }
+.contact .mail { display: inline-block; margin-top: 26px; font-family: Jost, var(--sans); font-size: clamp(26px, 4vw, 54px); font-weight: 300; border-bottom: 1px solid var(--line-2); padding-bottom: 6px; transition: color .2s, border-color .2s; }
+.contact .mail:hover { color: var(--red-hi); border-color: var(--red-hi); }
+footer { padding: 26px var(--pad) calc(26px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; color: var(--dim); }
+footer .wordmark { width: 120px; opacity: .6; }
+footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { color: var(--text); }
+
+/* coming in */
+.rv { opacity: 0; transform: translateY(22px); transition: opacity .9s var(--ease), transform .9s var(--ease); transition-delay: var(--d, 0s); }
+.rv.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; transition: none; } .ticker-in, .v-tr .bar2 i { animation: none; } html { scroll-behavior: auto; } .win { transform: none !important; } }
+
+@media (max-width: 1100px) {
+  .bar nav { display: none; }
+  .win-body { grid-template-columns: 34% minmax(0, 1fr); }
+  .win-body .pn.tasks { display: none; }
+  .tag.t2 { display: none; }
+  .t-tasks, .t-ord, .t-upd, .t-icon { grid-column: span 12; }
+  .dls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .bar .home .wordmark { width: 96px; } .bar .home .sep, .bar .end .pill { display: none; }
+  .bar .end { margin-left: auto; }
+  .hero { padding-top: calc(104px + env(safe-area-inset-top)); }
+  .hero-top, .hero-sub, .sec-h, .big, .priv, .faq, .index, .dl-note { grid-template-columns: minmax(0, 1fr); }
+  .hero h1 { font-size: clamp(54px, 19.5vw, 110px); flex-wrap: wrap; }
+  .ord-flow .arrow { display: none; }
+  .cta { justify-content: stretch; } .cta .pill { flex: 1 1 100%; }
+  .cta-note { text-align: left; }
+  .sec-h p.sub { justify-self: start; }
+  .win-body { grid-template-columns: minmax(0, 1fr); height: 470px; }
+  .win-body .pn.side { display: none; }
+  .tag { display: none; }
+  .big .no { padding-top: 0; }
+  .viz { justify-self: stretch; width: 100%; }
+  .t-icon { flex-direction: column; align-items: flex-start; }
+  .dls { grid-template-columns: minmax(0, 1fr); }
+  .dl small { min-height: 0; }
+  .ord-flow .card { width: 100%; }
+}
+
+/* ---- RoarList's own ---- */
+.app-icon.png { filter: drop-shadow(0 24px 50px rgba(212,0,0,.32)); }
+.tag.t3 { top: 66%; } .tag.t2 { top: 24%; }
+/* the frame: a storyboard as it looks today */
+.win-body.rl { grid-template-columns: 23% minmax(0, 1fr); }
+.side .srch { margin: 2px 10px 8px; height: 28px; border-radius: 99px; padding: 0 12px; display: flex; align-items: center; gap: 7px; color: #8e949e; font-size: 11px; background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.07); }
+.side .srch kbd { margin-left: auto; font-family: var(--mono); font-size: 9px; opacity: .7; }
+.ls { display: flex; align-items: center; gap: 9px; margin: 1px 8px; padding: 7px; border-radius: 12px; }
+.ls.on { background: rgba(255,255,255,.07); }
+.ls .cv { flex: none; width: 46px; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; background: #0e1014; }
+.ls .cv svg { width: 100%; height: 100%; }
+.ls span { min-width: 0; flex: 1; } .ls b { display: block; font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .ls small { font-size: 9.5px; color: #9aa0aa; font-family: var(--mono); }
+.pj { display: flex; align-items: center; gap: 10px; margin: 10px 10px 4px; padding: 8px 10px; border-radius: 13px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); }
+.pj > span { flex: none; } .pj > span:first-child { min-width: 0; flex: 1; } .pj b { display: block; font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .pj small { font-size: 10px; color: #9aa0aa; }
+.seg { display: flex; gap: 2px; padding: 3px; border-radius: 99px; background: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.06); }
+.seg span { padding: 4px 10px; border-radius: 99px; font-size: 10px; color: #9aa0aa; }
+.seg span.on { background: linear-gradient(180deg, #ff6b5e, #d40000); color: #fff; font-weight: 700; }
+.tot { font-family: var(--mono); font-size: 10px; color: #cfd3d9; padding: 4px 9px; border-radius: 99px; background: rgba(255,255,255,.06); white-space: nowrap; }
+.tot i { font-style: normal; color: #7ee2a0; }
+.pdfb { font-size: 10px; font-weight: 700; padding: 5px 10px; border-radius: 99px; background: var(--red); color: #fff; }
+.scn { margin: 8px 12px 6px; display: flex; align-items: baseline; gap: 9px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: #cfd3d9; }
+.scn b { color: var(--red-hi); font-size: 12px; }
+.sb { flex: 1; min-height: 0; overflow: hidden; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; padding: 0 12px 12px; align-content: start; }
+.shot { border-radius: 12px; overflow: hidden; background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.07); }
+.shot .fr { position: relative; aspect-ratio: 16 / 9; background: #0e1014; }
+.shot .fr svg { width: 100%; height: 100%; }
+.shot .fr .no { position: absolute; left: 7px; top: 6px; font-family: var(--mono); font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,.55); color: #fff; }
+.shot .fr .ok { position: absolute; right: 7px; top: 6px; width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.55); }
+.shot.done .fr .ok { border-color: transparent; background: #ff5a4f; }
+.shot .meta { padding: 7px 9px 9px; display: grid; gap: 3px; }
+.shot .spec { font-family: var(--mono); font-size: 8.5px; letter-spacing: .04em; color: #ff8f86; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shot .ds { font-size: 10.5px; line-height: 1.3; color: #dfe3e8; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.shot .du { font-family: var(--mono); font-size: 9px; color: #9aa0aa; }
+.shot.add { display: grid; place-items: center; border-style: dashed; border-color: rgba(255,255,255,.16); background: transparent; color: #9aa0aa; font-size: 11px; aspect-ratio: auto; min-height: 90px; }
+/* viz: a frame dropped in */
+.v-drop { width: 78%; z-index: 1; display: grid; gap: 10px; }
+.v-drop .zone { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; border: 1.5px dashed rgba(255,255,255,.25); display: grid; place-items: center; overflow: hidden; }
+.v-drop .zone em { font-style: normal; font-family: var(--mono); font-size: 10.5px; color: var(--dim); letter-spacing: .06em; }
+.v-drop .zone svg { position: absolute; inset: 0; width: 100%; height: 100%; animation: drop 4.2s var(--ease) infinite; }
+@keyframes drop { 0%, 18% { opacity: 0; transform: translate(14%, -18%) scale(.7) rotate(4deg); } 38%, 82% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+.v-drop .row2 { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.v-drop .row2 b { color: var(--red-hi); font-weight: 500; }
+/* viz: the PDF */
+.v-pdf { width: 80%; z-index: 1; aspect-ratio: 297 / 210; border-radius: 6px; background: #f1efeb; color: #1b1e23; padding: 5% 5.5%; display: grid; grid-template-rows: auto auto 1fr; gap: 6%; box-shadow: 0 30px 60px rgba(0,0,0,.45); transform: rotate(-2deg); }
+.v-pdf .ph { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid rgba(0,0,0,.15); padding-bottom: 4%; }
+.v-pdf .ph .rm { font-size: clamp(13px, 1.5vw, 18px); } .v-pdf .ph .rm .b { color: #d40000; }
+.v-pdf .ph small { font-family: var(--mono); font-size: 8px; color: #6b6f76; }
+.v-pdf .pm { font-family: var(--mono); font-size: 7.5px; color: #6b6f76; letter-spacing: .04em; }
+.v-pdf .pg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; align-content: start; }
+.v-pdf .pg i { aspect-ratio: 16 / 9; border-radius: 2px; background: #22262c; position: relative; overflow: hidden; }
+.v-pdf .pg i::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 40%; background: linear-gradient(180deg, transparent, rgba(212,0,0,.45)); }
+/* viz: numbers that read on set */
+.v-no { width: 82%; z-index: 1; display: grid; gap: 14px; justify-items: center; }
+.v-no .nos { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.v-no .nos span { font-family: var(--mono); font-size: 15px; padding: 7px 11px; border-radius: 10px; background: rgba(255,255,255,.06); border: 1px solid var(--line-2); }
+.v-no .nos span.x { color: var(--dim); text-decoration: line-through; text-decoration-color: var(--red-hi); border-style: dashed; background: transparent; }
+.v-no .dur { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.v-no .dur b { color: var(--text); font-weight: 500; padding: 5px 10px; border-radius: 99px; background: rgba(212,0,0,.2); border: 1px solid rgba(255,90,80,.4); }
+/* tiles */
+.mini-rows { margin-top: 8px; display: grid; gap: 6px; max-width: 460px; }
+.mrow { display: grid; grid-template-columns: 40px 58px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 12px; border-radius: 13px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); font-size: 13px; }
+.mrow .n { font-family: var(--mono); color: var(--red-hi); } .mrow .l { font-family: var(--mono); font-size: 11.5px; color: var(--muted); } .mrow em { font-style: normal; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mrow.new { border-color: rgba(255,90,80,.5); background: rgba(212,0,0,.1); } .mrow.new em { color: var(--text); }
+.mrow.new em::after { content: ''; display: inline-block; width: 1.5px; height: 14px; margin-left: 2px; vertical-align: -2px; background: var(--red-hi); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.mrow kbd { font-family: var(--mono); font-size: 10.5px; padding: 3px 7px; border-radius: 6px; border: 1px solid var(--line-2); color: var(--muted); }
+.asp { margin-top: 10px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px 12px; }
+.asp span { display: grid; gap: 7px; justify-items: center; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.asp span i { display: block; height: 36px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,.5); background: rgba(255,255,255,.04); }
+.asp span.on i { border-color: var(--red-hi); background: rgba(212,0,0,.16); } .asp span.on { color: var(--text); }
+.looks { display: flex; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+.looks .dots { display: flex; gap: 6px; align-items: center; }
+.looks .dots i { width: 16px; height: 16px; border-radius: 50%; }
+@media (prefers-reduced-motion: reduce) { .v-drop .zone svg, .mrow.new em::after { animation: none; } }
+@media (max-width: 1100px) { .win-body.rl { grid-template-columns: 30% minmax(0, 1fr); } .sb { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .win-body.rl { grid-template-columns: minmax(0, 1fr); height: 520px; }
+  .pj .seg, .pj .pdfb { display: none; }
+  .mrow { grid-template-columns: 30px 66px minmax(0, 1fr); } .mrow kbd { display: none; }
+}
+@media (max-width: 420px) { .sb { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 7px; padding: 0 9px 9px; } .shot .ds { -webkit-line-clamp: 1; } }
+
+/* as RoarTwin's: the app's screen as the hero, small drawings for the big tiles */
+.shotimg { display: block; width: 100%; height: auto; border-radius: 22px; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 60px 140px rgba(0,0,0,.6); transform: rotateX(calc(var(--ry, 0) * 1deg)) rotateY(calc(var(--rx, 0) * 1deg)); transition: transform .5s var(--ease); }
+.app-icon-img { width: clamp(64px, 9vw, 140px); height: auto; border-radius: 22%; align-self: center; }
+.mc { width: 100%; max-width: 340px; margin: 0 auto; display: grid; gap: 8px; }
+.mc .r { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 14px; background: var(--glass); border: 1px solid var(--glass-edge); font-size: 13px; }
+.mc .r b { font-weight: 500; } .mc .r small { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.mc .r i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+.mc .r.on { border-color: color-mix(in srgb, var(--red) 55%, transparent); }
+.mc .big { padding: 16px; border-radius: 18px; background: linear-gradient(160deg, #2a1416, #16181c); border: 1px solid var(--line-2); }
+.mc .big b { display: block; font-size: 30px; font-weight: 300; letter-spacing: .02em; } .mc .big small { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em; }
+.mc .pills { display: flex; gap: 8px; flex-wrap: wrap; } .mc .pills span { padding: 8px 13px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); font-size: 12px; }
+.mc .pills span.m { background: var(--red); border-color: transparent; color: #fff; }
+
+.mc .r .th { width: 46px; height: 26px; border-radius: 6px; background: linear-gradient(135deg, #12161f, #3a1416); flex: none; }
+.mc .r .th.b { background: linear-gradient(135deg, #1d4a35, #06110c); }
+.mc .r .x { flex: none; width: 18px; height: 18px; border-radius: 6px; border: 1.5px solid rgba(255,255,255,.3); }
+.mc .r .x.on { background: var(--red); border-color: var(--red); }
+.mc .k { color: #32d74b; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; }
+/* ROARTWIN and its icon in one line */
+.hero h1 { font-size: clamp(48px, 9.5vw, 160px); }
+@media (max-width: 720px) { .frame .tag { display: none; } .hero h1 { font-size: clamp(36px, 11.5vw, 80px); } .app-icon-img { width: 52px; } }
+
+/* RoarPlay's own: the size it aims at, the formats in and out */
+.mc .fmt { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 14px; background: var(--glass); border: 1px solid var(--glass-edge); font-size: 13px; }
+.mc .fmt b { font-family: var(--mono); font-weight: 500; font-size: 12px; } .mc .fmt .to { color: var(--dim); font-family: var(--mono); }
+.mc .fmt .sv { margin-left: auto; font-family: var(--mono); font-size: 11px; color: #7ee2a0; padding: 3px 9px; border-radius: 99px; background: rgba(47,211,107,.12); }
+.mc .aim { display: flex; align-items: baseline; gap: 10px; }
+.mc .aim .unit { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.mc .bar3 { height: 6px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; } .mc .bar3 i { display: block; height: 100%; width: 92%; background: linear-gradient(90deg, #ff6b5e, #d40000); border-radius: inherit; animation: fill 3.2s var(--ease) infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .mc .bar3 i { animation: none; } }
+
+/* the Lab's fresh layer on this page (Alex, 29 Oct): the new icon in the hero, the version chip, What's new */
+.hero h1 .f-icon-wrap { align-self: center; flex: none; margin-right: clamp(4px, 1vw, 14px); }
+.hero-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: clamp(20px, 2.6vw, 30px); }
+.f-new .f-new-head h2 { font-family: Jost, var(--sans); font-size: clamp(42px, 6.2vw, 96px); font-weight: 200; line-height: .92; letter-spacing: -.01em; }
+.f-new .f-new-head h2 b { font-weight: 800; }
+.f-new .f-new-head, .f-new .f-bento { max-width: none; }
+.f-new .f-new-head .idx { margin: 0 0 16px; color: var(--red-hi); font-size: 12px; }
+.f-card .chips { margin-top: 2px; }
+.f-card p + p { margin-top: -2px; }
+.f-card.nv-icon { flex-direction: row; align-items: center; gap: clamp(18px, 3vw, 36px); min-height: 0; }
+.f-card.nv-icon > img { flex: none; width: clamp(84px, 9vw, 120px); height: auto; border-radius: 22.5%; box-shadow: 0 18px 40px rgba(0,0,0,.45), 0 12px 50px -10px rgba(212,0,0,.4); }
+.f-card.nv-icon > div { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.f-card.nv-icon .f-tag { margin-top: 4px; }
+.t-icon .icons .f-icon { width: clamp(90px, 10vw, 140px); }
+.dl-icon { width: 64px; height: auto; border-radius: 22.5%; margin-bottom: 18px; box-shadow: 0 14px 34px rgba(0,0,0,.45), 0 10px 40px -10px rgba(212,0,0,.45); }
+.dl.mine.f-glass { border-color: rgba(255,90,80,.55) !important; background: linear-gradient(170deg, rgba(212,0,0,.14), rgba(255,255,255,.03)) !important; }
+@media (max-width: 720px) { .hero h1 .f-icon { width: 64px; } .f-card.nv-icon { flex-direction: column; align-items: flex-start; } }
+
+/* the product page (Alex, 30 Oct: "like Apple, Google Store, Samsung, Airmail, in our own terms"): a short claim with a
+   number, people at work in photos, the numbers, before and after, why a Roar app, What's new at the end.
+   The photos are stand-ins until Alex's own shoot: photo-night, photo-set, photo-van, photo-studio, still (same names). */
+.hero-head { max-width: 1100px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; }
+.hero h1.brand { margin: 22px 0 0; font-size: clamp(30px, 3.6vw, 52px); align-items: center; gap: 14px; justify-content: center; }
+.hero h1.brand .f-icon { width: clamp(52px, 5vw, 76px); }
+.hero h1.brand .beta { margin-bottom: 0; align-self: center; }
+.claim { margin: clamp(18px, 2.4vw, 30px) 0 0; font-family: Jost, var(--sans); font-weight: 200; font-size: clamp(54px, 9.6vw, 156px); line-height: .9; letter-spacing: -.02em; text-wrap: balance; }
+.claim b { font-weight: 800; background: linear-gradient(180deg, #fff 30%, #ff8a7f); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-head .lead { margin-top: clamp(20px, 2.4vw, 30px); max-width: 760px; }
+.hero-head .cta { justify-content: center; margin-top: clamp(24px, 3vw, 34px); }
+.hero-head .cta-note { text-align: center; margin: 14px 0 0; }
+.hero-head .hero-meta { justify-content: center; }
+.scene { position: relative; max-width: 1480px; margin: clamp(44px, 6vw, 80px) auto 0; padding-bottom: clamp(120px, 16vw, 260px); }
+.scene-photo { margin: 0; position: relative; border-radius: 30px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 16 / 8; }
+.scene-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; }
+.scene-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(18,20,23,.75)); pointer-events: none; }
+.scene-photo figcaption { position: absolute; right: clamp(18px, 2.4vw, 32px); text-align: right; bottom: clamp(16px, 2.2vw, 28px); z-index: 1; max-width: 42%; font-family: var(--mono); font-size: 12px; letter-spacing: .06em; color: rgba(238,240,243,.82); line-height: 1.5; }
+.scene .frame { position: absolute; left: clamp(-10px, 1vw, 24px); bottom: 0; width: 54%; margin: 0; max-width: none; }
+.ticker { margin-top: clamp(56px, 7vw, 96px); }
+/* the numbers */
+.nums-sec { padding-top: clamp(64px, 8vw, 120px); }
+.nums { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.num { display: flex; flex-direction: column; gap: 12px; padding: clamp(22px, 2.4vw, 32px); min-height: 200px; }
+.num b { font-family: Jost, var(--sans); font-weight: 300; font-size: clamp(48px, 5.6vw, 84px); line-height: .9; letter-spacing: -.02em; }
+.num b small { font-size: .42em; font-weight: 400; margin-left: 4px; color: var(--muted); letter-spacing: 0; }
+.num:first-child b { color: var(--red-hi); text-shadow: 0 0 40px rgba(255,59,47,.35); }
+.num span { margin-top: auto; font-size: 15px; line-height: 1.5; color: var(--muted); }
+/* people at work */
+.people { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.person { position: relative; margin: 0; border-radius: 26px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 4 / 5; isolation: isolate; }
+.person img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); }
+.person:hover img { transform: scale(1.04); }
+.person::after { content: ''; position: absolute; inset: 0; z-index: 0; background: linear-gradient(180deg, transparent 42%, rgba(12,13,16,.88)); pointer-events: none; }
+.person figcaption { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; padding: clamp(18px, 2vw, 26px); display: grid; gap: 6px; }
+.person .who { justify-self: start; font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: rgba(22,24,28,.6); border: 1px solid var(--line-2); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: #ffb3ab; }
+.person b { font-family: Jost, var(--sans); font-size: clamp(22px, 2vw, 30px); font-weight: 700; line-height: 1.05; }
+.person figcaption > span:last-child { font-size: 14.5px; line-height: 1.5; color: rgba(238,240,243,.78); }
+/* before and after */
+.ba { position: relative; border-radius: 28px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 1600 / 717; user-select: none; -webkit-user-select: none; touch-action: pan-y; box-shadow: 0 40px 120px rgba(0,0,0,.5); }
+.ba img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ba img.after { clip-path: inset(0 0 0 var(--x)); }
+.ba-line { position: absolute; top: 0; bottom: 0; left: var(--x); width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 18px rgba(0,0,0,.5); pointer-events: none; }
+.ba-line i { position: absolute; top: 50%; left: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; display: grid; place-items: center; background: rgba(22,24,28,.55); border: 1px solid rgba(255,255,255,.5); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); color: #fff; }
+.ba-line i svg { width: 22px; height: 22px; }
+.ba-tag { position: absolute; top: clamp(12px, 2vw, 22px); z-index: 1; display: grid; gap: 2px; padding: 8px 14px; border-radius: 16px; background: rgba(22,24,28,.62); border: 1px solid var(--line-2); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); pointer-events: none; }
+.ba-tag b { font-size: 13.5px; } .ba-tag small { font-family: var(--mono); font-size: 10.5px; color: var(--muted); letter-spacing: .04em; }
+.ba-tag.l { left: clamp(12px, 2vw, 22px); } .ba-tag.r { right: clamp(12px, 2vw, 22px); text-align: right; border-color: rgba(255,90,80,.5); }
+.ba-tag.r b { color: #ff8f86; }
+.ba input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; }
+.ba input:focus-visible + * , .ba:focus-within .ba-line i { outline: 2px solid var(--red-hi); outline-offset: 3px; }
+.ba-bars { margin-top: 18px; display: grid; gap: 10px; max-width: 760px; }
+.ba-bars div { display: grid; grid-template-columns: 110px minmax(0, 1fr) 80px; gap: 14px; align-items: center; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.ba-bars i { display: block; height: 10px; border-radius: 99px; background: rgba(255,255,255,.18); width: 0; transition: width 1.6s var(--ease); }
+.ba-bars.in i { width: var(--w); }
+.ba-bars .me i { background: linear-gradient(90deg, #ff6b5e, #d40000); box-shadow: 0 0 16px rgba(255,59,47,.5); min-width: 10px; }
+.ba-bars b { color: var(--text); font-weight: 500; text-align: right; }
+.ba-bars .me b { color: #ff8f86; }
+/* why a Roar app */
+.why-end { justify-self: end; display: grid; gap: 18px; justify-items: end; }
+.why-end .sub { justify-self: end; }
+.why-end .legal { display: flex; gap: 8px; flex-wrap: wrap; margin: 0; }
+.why { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.wy { display: flex; flex-direction: column; gap: 12px; padding: clamp(22px, 2.4vw, 30px); min-height: 250px; }
+.wy h3 { margin: 6px 0 0; font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+.wy p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .person img, .ba-bars i { transition: none; } }
+@media (max-width: 1100px) {
+  .nums, .why { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scene .frame { width: 70%; }
+}
+@media (max-width: 760px) {
+  .hero h1.brand { font-size: 30px; flex-wrap: nowrap; } .hero h1.brand .f-icon { width: 48px; }
+  .claim { font-size: clamp(50px, 15vw, 80px); }
+  .scene { padding-bottom: 0; }
+  .scene-photo { aspect-ratio: 4 / 5; border-radius: 24px; }
+  .scene-photo img { object-position: 62% 50%; }
+  .scene-photo figcaption { max-width: none; left: 18px; right: 18px; text-align: left; top: 16px; bottom: auto; }
+  .scene-photo::after { background: linear-gradient(180deg, rgba(18,20,23,.7), transparent 30%, transparent 70%, rgba(18,20,23,.6)); }
+  .scene .frame { position: relative; right: auto; width: auto; margin: -64px 12px 0; }
+  .people { grid-template-columns: minmax(0, 1fr); }
+  .person { aspect-ratio: 4 / 4.6; }
+  .ba { aspect-ratio: 4 / 3.4; border-radius: 22px; }
+  .ba-tag small { display: none; }
+  .ba-bars div { grid-template-columns: 82px minmax(0, 1fr) 66px; gap: 10px; }
+  .why-end, .why-end .sub { justify-self: start; justify-items: start; }
+  .nums, .why { grid-template-columns: minmax(0, 1fr); }
+  .num { min-height: 0; } .wy { min-height: 0; }
+}
+
+/* RoarPlay's own: the transport keys and the file's facts as the visuals of the three things */
+.mc .keys { display: flex; gap: 6px; flex-wrap: wrap; }
+.mc .keys kbd { font-family: var(--mono); font-size: 12px; padding: 7px 11px; border-radius: 9px; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.12); color: #eef0f3; }
+.mc .keys kbd.on { background: var(--red); border-color: transparent; box-shadow: 0 0 18px rgba(212,0,0,.5); }
+.mc .tc { font-family: var(--mono); font-size: clamp(26px, 3vw, 38px); font-weight: 600; letter-spacing: .02em; }
+.mc .tc small { display: block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 400; margin-bottom: 6px; }
+.mc .how { display: grid; gap: 7px; }
+.mc .how div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 12px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); font-size: 12.5px; }
+.mc .how b { font-weight: 600; } .mc .how small { color: var(--muted); display: block; font-size: 11px; }
+.mc .how i { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--ok)); box-shadow: 0 0 10px var(--c, var(--ok)); }
+.mc .facts { display: grid; gap: 4px; font-size: 12.5px; }
+.mc .facts div { display: flex; justify-content: space-between; gap: 10px; } .mc .facts span { color: var(--muted); } .mc .facts b { font-weight: 500; }
+.shot2 { margin: clamp(28px, 4vw, 48px) auto 0; max-width: 1380px; }
+</style>
+<!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"RoarPlay","url":"https://themadlions.com/lab/roarplay/","description":"RoarPlay, the player by The Mad Lions Lab. Every video and every sound file on your own computer: ProRes, DNxHR, MXF, MKV, AVI, MPEG-2, H.264, HEVC, WAV, FLAC, AC3, AIFF, MP3. Timecode from the file, J K L, frame steps, in and out, a frame as PNG, nothing uploaded. Free for Mac and Windows.","applicationCategory":"MultimediaApplication","operatingSystem":"macOS, Windows","image":"https://themadlions.com/lab/roarplay.jpg","screenshot":"https://themadlions.com/lab/roarplay.jpg","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"isAccessibleForFree":true,"inLanguage":["en","el"],"author":{"@id":"https://themadlions.com/#org"},"publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"}}</script><!--/seo:app-->
+</head>
+<body>
+<header class="bar" id="bar">
+  <a class="home" href="../../" aria-label="The Mad Lions">
+    <img class="wordmark" src="../../wordmark.png" alt="The Mad Lions">
+    <span class="sep"></span>
+    <span class="rm" aria-label="RoarPlay"><span class="a">ROAR</span><span class="b">PLAY</span></span>
+  </a>
+  <nav aria-label="Sections">
+    <a href="#only" data-t="nav.only">Only here</a>
+    <a href="#set" data-t="nav.set">For the director</a>
+    <a href="#all" data-t="nav.all">Everything</a>
+    <a href="#download" data-t="nav.download">Download</a>
+    <a href="#faq" data-t="nav.faq">Questions</a>
+    <a href="#new" data-t="nav.new">New</a>
+  </nav>
+  <div class="end">
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" class="on">EN</button>
+      <button type="button" data-lang="el">GR</button>
+    </div>
+    <a class="pill sm main" href="#download" data-t="cta.get">Get RoarPlay</a>
+  </div>
+</header>
+
+<main>
+<div class="hero" id="top">
+  <div class="hero-head">
+    <p class="kicker rv"><i></i><span data-t="hero.kicker">The player · The Mad Lions Lab · Experiment 09</span></p>
+    <h1 class="brand rv" style="--d:.04s">
+      <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
+      <span class="rm"><span class="a">ROAR</span><span class="b">PLAY</span></span><em class="beta">beta</em>
+    </h1>
+    <p class="claim rv" style="--d:.1s" data-t="hero.claim" data-html>Every file.<br><b>It just plays.</b></p>
+    <p class="lead rv" style="--d:.16s" data-t="hero.lead2" data-html>ProRes, DNxHR, MXF, MKV, AVI, WAV, FLAC, AC3 and the rest, <b>on your own computer</b>, with the clock and the keys of the edit suite. Nothing is uploaded.</p>
+    <div class="cta rv" style="--d:.22s">
+      <a class="pill main" id="dl-main" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span>Download</span></a>
+      <a class="pill" href="#only"><span data-t="cta.see">See what it does</span></a>
+    </div>
+    <p class="cta-note rv" style="--d:.28s"><span data-t="cta.note">Free · Mac and Windows · nothing is uploaded, nothing is written to disk</span></p>
+    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">0.1 · the first version</span></a></div>
+  </div>
+  <div class="frame rv" style="--d:.18s" aria-hidden="true">
+    <img class="shotimg" id="win" src="../roarplay.jpg" alt="" width="1600" height="1000" fetchpriority="high">
+    <div class="tag t1"><i>01</i><span data-t="tag.tc">The file’s own timecode</span></div>
+    <div class="tag t3"><i>02</i><span data-t="tag.local">Never leaves your computer</span></div>
+  </div>
+</div>
+
+<section id="numbers" class="nums-sec">
+  <div class="nums">
+    <div class="num f-glass rv"><b>0<small data-t="nm1u">converted</small></b><span data-t="nm1">A ProRes master plays as it is. Nothing is written to disk first.</span></div>
+    <div class="num f-glass rv" style="--d:.06s"><b>1<small data-t="nm2u">frame</small></b><span data-t="nm2">Left and right arrows step one frame; the clock shows exactly the frame on screen.</span></div>
+    <div class="num f-glass rv" style="--d:.12s"><b>8<small>×</small></b><span data-t="nm3">J and L, faster with each press, back and forward. K stops.</span></div>
+    <div class="num f-glass rv" style="--d:.18s"><b>€0</b><span data-t="nm4">No subscription, no ads, no account.</span></div>
+  </div>
+</section>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-in">
+<span>ProRes · DNxHR · MXF</span><span>MKV · AVI · MPEG-2</span><span>H.264 · HEVC · AV1</span><span>WAV · FLAC · AIFF · AC3</span><span data-t="tk.5">Timecode from the file</span><span>J · K · L</span><span data-t="tk.7">In and out</span><span data-t="tk.8">A frame as PNG</span><span data-t="tk.9">Nothing uploaded</span><span>Mac · Windows</span><span>ProRes · DNxHR · MXF</span><span>MKV · AVI · MPEG-2</span><span>H.264 · HEVC · AV1</span><span>WAV · FLAC · AIFF · AC3</span><span data-t="tk.5">Timecode from the file</span><span>J · K · L</span><span data-t="tk.7">In and out</span><span data-t="tk.8">A frame as PNG</span><span data-t="tk.9">Nothing uploaded</span><span>Mac · Windows</span>
+</div></div>
+
+<section id="only">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="only.idx">01 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only RoarPlay</b> does.</h2></div>
+    <p class="sub rv" data-t="only.sub">Why the player that came with the computer is not enough when the file came from a camera.</p>
+  </div>
+  <div class="three">
+    <article class="big rv">
+      <span class="no">01</span>
+      <div><h3 data-t="f1.t" data-html>Plays <b>everything</b>.</h3><p data-t="f1.p">What the computer decodes itself plays as it is. Everything else is made playable while it plays, on your own computer, with nothing written to disk: a picture the computer knows in a wrapper it does not (H.264 in MKV, AVI, TS) is only re-wrapped; ProRes, DNxHR, MPEG-2 and the rest are made H.264 on the fly, with the Mac’s own encoder; sound the computer cannot play comes as FLAC, lossless. The Info tab says which.</p>
+        <div class="chips"><span data-t="f1.c1">As it is</span><span data-t="f1.c2">Re-wrapped</span><span data-t="f1.c3">H.264 on the fly</span><span data-t="f1.c4">Sound as FLAC</span></div></div>
+      <div class="viz f-glass"><div class="mc"><div class="how"><div><span><b>A001_C014.mov</b><small>ProRes 422 HQ · 1080p25</small></span><i style="--c:#ffb224"></i></div><div><span><b>Teaser_cut.mkv</b><small>H.264 · AC3</small></span><i style="--c:#8fb4ff"></i></div><div><span><b>Mix_v3_master.wav</b><small>24-bit · 48 kHz</small></span><i></i></div><div><span><b>Dialogue_51.ac3</b><small>5.1</small></span><i style="--c:#ffb224"></i></div></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">02</span>
+      <div><h3 data-t="f2.t" data-html>The <b>edit suite’s</b> clock and keys.</h3><p data-t="f2.p">The timecode comes from the file itself, 01:00:00:00, drop-frame as 01:00:00;00, or time or frames. J, K and L as in Premiere, Resolve and Avid, faster with each press. The arrows step one frame, from the frame that is on screen, not from where the clock thinks it is. I and O mark in and out, / plays between them, Cmd+L loops.</p>
+        <div class="chips"><span data-t="f2.c1">Timecode</span><span>J K L</span><span data-t="f2.c2">Frame by frame</span><span data-t="f2.c3">In and out</span></div></div>
+      <div class="viz f-glass"><div class="mc"><div class="tc"><small data-t="f2.v1">Timecode</small>01:00:05:18</div><div class="keys"><kbd>J</kbd><kbd class="on">K</kbd><kbd>L</kbd><kbd>←</kbd><kbd>→</kbd><kbd>I</kbd><kbd>O</kbd><kbd>/</kbd></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">03</span>
+      <div><h3 data-t="f3.t" data-html>The frame, <b>as a PNG</b>.</h3><p data-t="f3.p">Cmd+Shift+S saves the frame on screen at the file’s full size, next to the file, named with its timecode: a reference for the colourist, a still for the deck, a frame for the client, in one press. From the original, not from the screen.</p>
+        <div class="chips"><span data-t="f3.c1">Full size</span><span data-t="f3.c2">Named by timecode</span><span data-t="f3.c3">Beside the file</span></div></div>
+      <div class="viz f-glass"><div class="mc"><div class="r"><i style="background:var(--ok)"></i><b>A001_C014 01-00-05-18.png</b><small>1920 × 1080</small></div><div class="r"><i style="background:var(--ok)"></i><b>A001_C014 01-00-07-02.png</b><small>1920 × 1080</small></div><div class="pills"><span data-t="f3.v2">Cmd+Shift+S</span><span class="m" data-t="f3.v3">Show in Finder</span></div></div></div>
+    </article>
+  </div>
+</section>
+
+<section id="set">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="set.idx">02 · For the director</p><h2 class="rv" data-t="set.title" data-html>Made for <b>watching work</b>.</h2></div>
+    <p class="sub rv" data-t="set.sub">Dailies, a cut, a mix, an old archive: it opens and it tells you what it is.</p>
+  </div>
+  <div class="board">
+    <article class="tile t-tasks f-glass rv">
+      <span class="k" data-t="s1.k">Info</span>
+      <h3 data-t="s1.t" data-html>What the file <b>is made of</b>.</h3>
+      <p data-t="s1.p">Wrapper, length, bitrate, timecode; the picture’s codec and profile (ProRes HQ, H.264 High), frame size, frame rate, colour, interlacing; the sound’s codec, sample rate, bit depth and channels; subtitles. And how RoarPlay is playing it.</p>
+    </article>
+    <article class="tile t-ord f-glass rv" style="--d:.08s">
+      <span class="k" data-t="s2.k">Sound</span>
+      <h3 data-t="s2.t" data-html>Cover, waveform, <b>every track</b>.</h3>
+      <p data-t="s2.p">A sound file shows its cover, its title and artist, and a waveform you scrub. A film with several sound tracks, the Greek and the English, the mix and the M&amp;E: choose one in Info and it switches where you are.</p>
+    </article>
+    <article class="tile t-upd f-glass rv">
+      <span class="k" data-t="s3.k">Queue</span>
+      <h3 data-t="s3.t" data-html>A folder <b>in order</b>.</h3>
+      <p data-t="s3.p">Drop files or whole folders; they line up in name order, with length, size and frame. One ends, the next plays, or stops, or repeats. Cmd+← → jump between them.</p>
+    </article>
+    <article class="tile t-icon f-glass rv" style="--d:.08s">
+      <div class="txt">
+        <span class="k" data-t="s4.k">Honest</span>
+        <h3 data-t="s4.t" data-html>Camera RAW: <b>it tells you</b>.</h3>
+        <p data-t="s4.p">Blackmagic RAW, REDCODE, ARRIRAW, Canon RAW and N-RAW need their makers’ own tools. RoarPlay does not pretend: it names the file’s format and the app that opens it, so you are not left with a black window.</p>
+      </div>
+      <div class="icons"><span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="RoarPlay icon" width="140" height="140" loading="lazy"></span></div>
+    </article>
+  </div>
+  <div class="shot2 rv"><img class="shotimg" src="song.jpg" alt="RoarPlay playing a song: the cover, the waveform and the file's facts" width="1600" height="1000"></div>
+</section>
+
+<section id="all">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="all.idx">03 · Everything</p><h2 class="rv" data-t="all.title" data-html>And the <b>rest</b>.</h2></div>
+    <p class="sub rv" data-t="all.sub">RoarPlay, briefly.</p>
+  </div>
+  <div class="index">
+    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">Video in</b><p data-t="ix1.p">MP4, MOV, M4V, MKV, WebM, AVI, WMV, FLV, MPG, VOB, TS, MTS, M2TS, 3GP, OGV, MXF, DV, GIF and everything else ffmpeg reads.</p></div>
+    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">Codecs</b><p data-t="ix2.p">H.264, HEVC, VP8, VP9, AV1, ProRes in every flavour, DNxHD and DNxHR, XDCAM, MPEG-1 and 2, MPEG-4, DV, MJPEG, Cinepak and the rest.</p></div>
+    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Sound in</b><p data-t="ix3.p">MP3, WAV and BWF, AIFF, FLAC, ALAC, AAC and M4A, Ogg, Opus, WMA, AC3, E-AC3, DTS, APE, WavPack, AMR, CAF and more.</p></div>
+    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">Nothing on disk</b><p data-t="ix4.p">What is made playable on the fly goes straight to the window, piece by piece. No temporary files, no cache folder to empty.</p></div>
+    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">Seek anywhere</b><p data-t="ix5.p">Jump on the bar and a ProRes or MXF starts again from there in a moment; a jump inside what has already come is instant.</p></div>
+    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Full screen</b><p data-t="ix6.p">F or a double click; the controls hide when the mouse rests, and come back when it moves.</p></div>
+    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Open with</b><p data-t="ix7.p">Double-click a video or a sound file in the Finder or the Explorer, or drop it on the app, and RoarPlay opens it.</p></div>
+    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">Interlaced, 10-bit, 4:2:2</b><p data-t="ix8.p">Old TV material is deinterlaced on the way; 10-bit and 4:2:2 pictures the computer cannot decode are made 8-bit 4:2:0 for the screen.</p></div>
+    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">The clock, three ways</b><p data-t="ix9.p">Timecode, time to the millisecond, or a frame count; click the clock to switch, or set it in Settings.</p></div>
+    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">English and Greek</b><p data-t="ix10.p">The app speaks both; choose in Settings.</p></div>
+    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">Updates itself</b><p data-t="ix11.p">Looks every two hours, brings the new version in the background and puts it in when you close it; Check now and Restart to update in Settings.</p></div>
+    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Every key, listed</b><p data-t="ix12.p">Settings has the whole list: Space, J K L, the arrows, Home and End, I and O, /, M, F, Cmd+Shift+S.</p></div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="why.idx">04 · Why Roar</p><h2 class="rv" data-t="why.title" data-html>Why <b>a Roar app</b>.</h2></div>
+    <div class="why-end"><p class="sub rv" data-t="why.sub">What every app of The Mad Lions Lab promises, RoarPlay included.</p>
+      <div class="legal rv"><a class="pill sm" href="../../legal/roarplay/#privacy" data-t="lg.p">Privacy Policy</a><a class="pill sm" href="../../legal/roarplay/#terms" data-t="lg.t">Terms</a></div></div>
+  </div>
+  <div class="why">
+    <article class="wy f-glass rv"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></span><h3 data-t="w1.t">On your computer</h3><p data-t="w1.p">No account, no server, no upload. Unreleased footage stays with you, and no internet is needed.</p></article>
+    <article class="wy f-glass rv" style="--d:.06s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.2 4.2L19 7"/></svg></span><h3 data-t="w2.t">The file stays</h3><p data-t="w2.p">RoarPlay only reads. It writes nothing but the PNG you ask for, beside the file, never over it.</p></article>
+    <article class="wy f-glass rv" style="--d:.12s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></span><h3 data-t="w3.t">Updates itself</h3><p data-t="w3.p">New versions come in the background and go in when you close it. Mac and Windows.</p></article>
+    <article class="wy f-glass rv" style="--d:.18s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10.5 5-3v9l-5-3"/></svg></span><h3 data-t="w4.t">Made by filmmakers</h3><p data-t="w4.p">The Mad Lions, a film company in Athens, watch their own dailies with it. Ideas go straight to the people who make it.</p></article>
+  </div>
+</section>
+
+<section id="download">
+  <div class="sec-h">
+    <div><img class="dl-icon rv" src="icon.png" alt="" width="64" height="64" loading="lazy"><p class="idx rv" data-t="dl.idx">05 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarPlay</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
+    <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab that we use for our own dailies.</p>
+  </div>
+  <div class="dls">
+    <div class="dl f-glass rv" id="dl-mac" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.7zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.6-1.3z"/></svg></i>
+      <h3>Mac</h3>
+      <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
+      <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roarplay/releases/latest/download/RoarPlay-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+      <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roarplay/releases/latest/download/RoarPlay-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
+    </div>
+    <div class="dl f-glass rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
+      <h3>Windows</h3>
+      <small data-t="dl.win">Windows 10 and 11.</small>
+      <a class="pill main" data-f="win" href="https://github.com/alexisdigipro-hub/roarplay/releases/latest/download/RoarPlay-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+    </div>
+  </div>
+  <div class="dl-note">
+    <p class="rv" data-t="dl.upd" data-html><b>It updates itself.</b> The Mac and Windows apps fetch new versions on their own and ask for a quick restart.</p>
+    <p class="rv" data-t="dl.help" data-html><b>First time on a Mac?</b> The app is not signed by Apple yet: right-click RoarPlay in Applications and choose Open, or press Open Anyway in System Settings › Privacy &amp; Security. On Windows: More info › Run anyway.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="faq">
+    <div><p class="idx rv" data-t="faq.idx">06 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
+    <div class="qa">
+      <details class="rv"><summary data-t="q1">Is RoarPlay free?</summary><p data-t="a1">Yes. No subscription, no ads, no account.</p></details>
+      <details class="rv"><summary data-t="q2">Does it really play ProRes and MXF on Windows?</summary><p data-t="a2">Yes. What the computer cannot decode is made H.264 on the fly by the ffmpeg that comes with the app, on your computer, as it plays. On a Mac the Mac’s own video engine does it; on Windows the software encoder, which keeps up with 1080p and most 4K on a recent machine.</p></details>
+      <details class="rv"><summary data-t="q3">Is the picture I see the original?</summary><p data-t="a3">H.264, HEVC, VP9 and AV1 in MP4, MOV, MKV or WebM play as they are. ProRes, DNxHR, MPEG-2 and the other edit codecs are re-encoded for the screen at a high quality, so judge colour and sharpness on the original in your grading tool; a frame saved with Cmd+Shift+S is taken from the original file.</p></details>
+      <details class="rv"><summary data-t="q4">Where does the timecode come from?</summary><p data-t="a4">From the file: the timecode track of a MOV or MXF, or the timecode in its metadata. A file without one counts from 00:00:00:00. Drop-frame is shown with a semicolon, as the camera wrote it.</p></details>
+      <details class="rv"><summary data-t="q5">Does it play Blackmagic RAW or RED?</summary><p data-t="a5">Not yet. Camera RAW needs the makers’ own tools; RoarPlay tells you which one opens the file. Transcode it to ProRes with RoarMorph or Resolve to play it here.</p></details>
+      <details class="rv"><summary data-t="q6">Do I need the internet?</summary><p data-t="a6">No. Only to download the app and its updates; everything else runs on your computer.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="f-new" id="new">
+  <div class="f-new-head">
+    <div><p class="idx rv" data-t="nw.idx">07 · New</p><h2 class="rv" data-t="nw.title" data-html>What’s <b>new</b>.</h2></div>
+    <p class="rv" data-t="nw.sub">0.1 is the first version: every video and sound file, the director’s transport, the queue, the facts, in English and Greek, with updates that come by themselves.</p>
+  </div>
+  <div class="f-bento">
+    <article class="f-card wide">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.2v5.6l4.6-2.8z"/></svg></span>
+      <h3 data-t="n1.t">Plays everything</h3>
+      <p data-t="n1.p">What the computer knows plays as it is; what it does not is re-wrapped or made H.264 on the fly, sound as FLAC, on your computer, with nothing written to disk. ProRes, DNxHR, MXF, MKV, AVI, MPEG-2, WAV, FLAC, AC3, AIFF and the rest.</p>
+      <span class="f-tag">v0.1.0</span>
+    </article>
+    <article class="f-card">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>
+      <h3 data-t="n2.t">Timecode, J K L, frames</h3>
+      <p data-t="n2.p">The file’s own timecode, drop-frame too; J K L up to 8×; one frame with the arrows; in and out, loop, play between them.</p>
+      <span class="f-tag">v0.1.0</span>
+    </article>
+    <article class="f-card">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/></svg></span>
+      <h3 data-t="n3.t">A frame as PNG</h3>
+      <p data-t="n3.p">Cmd+Shift+S: the frame on screen, full size, from the original, beside the file, named by its timecode.</p>
+      <span class="f-tag">v0.1.0</span>
+    </article>
+    <article class="f-card">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg></span>
+      <h3 data-t="n4.t">Sound, with its waveform</h3>
+      <p data-t="n4.p">Cover, title and artist, a waveform to scrub, and every sound track of a film to choose from.</p>
+      <span class="f-tag">v0.1.0</span>
+    </article>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <p class="idx rv" data-t="ct.idx">Contact</p>
+  <h2 class="rv" data-t="ct.title" data-html>Ideas for <b>the next version</b>?</h2>
+  <a class="mail rv" href="mailto:lab@themadlions.com?subject=RoarPlay">lab@themadlions.com</a>
+</section>
+</main>
+<footer>
+  <a href="../../"><img class="wordmark" src="../../wordmark.png" alt="The Mad Lions"></a>
+  <nav>
+    <a href="../" data-t="ft.lab">The Mad Lions Lab</a>
+    <a href="../../legal/roarplay/" data-t="ft.legal">Privacy &amp; Terms</a>
+    <a href="../roarmorph/">RoarMorph</a>
+    <a href="../roarkit/">RoarKit</a>
+    <a href="../roarwriter/">RoarWriter</a>
+  </nav>
+  <span data-t="footer">© 2026 The Mad Lions · RoarPlay</span>
+</footer>
+
+<script>
+(function () {
+  var APP = 'RoarPlay', REPO = 'alexisdigipro-hub/roarplay', WEB = '#download'
+  var EL = {"nav.only": "Μόνο εδώ", "nav.set": "Για τον σκηνοθέτη", "nav.all": "Όλα", "nav.download": "Λήψη", "nav.faq": "Ερωτήσεις", "nav.new": "Νέα", "cta.get": "Πάρε το RoarPlay", "hero.kicker": "Το player · The Mad Lions Lab · Πείραμα 09", "hero.claim": "Κάθε αρχείο.<br><b>Απλώς παίζει.</b>", "hero.lead2": "ProRes, DNxHR, MXF, MKV, AVI, WAV, FLAC, AC3 και όλα τα υπόλοιπα, <b>στον υπολογιστή σου</b>, με το ρολόι και τα πλήκτρα του μοντάζ. Τίποτα δεν ανεβαίνει.", "cta.see": "Δες τι κάνει", "cta.note": "Δωρεάν · Mac και Windows · τίποτα δεν ανεβαίνει, τίποτα δεν γράφεται στον δίσκο", "ver.b": "Νέο", "ver.t": "0.1 · η πρώτη έκδοση", "tag.tc": "Το timecode του ίδιου του αρχείου", "tag.local": "Δεν φεύγει από τον υπολογιστή σου", "nm1u": "μετατροπές", "nm1": "Ένα master σε ProRes παίζει όπως είναι. Τίποτα δεν γράφεται πρώτα στον δίσκο.", "nm2u": "καρέ", "nm2": "Τα βελάκια πάνε ένα καρέ· το ρολόι δείχνει ακριβώς το καρέ που βλέπεις.", "nm3": "J και L, πιο γρήγορα σε κάθε πάτημα, πίσω και μπροστά. Το K σταματά.", "nm4": "Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς λογαριασμό.", "tk.5": "Timecode από το αρχείο", "tk.7": "In και Out", "tk.8": "Ένα καρέ σε PNG", "tk.9": "Τίποτα δεν ανεβαίνει", "only.idx": "01 · Μόνο εδώ", "only.title": "Τρία πράγματα που κάνει <b>μόνο το RoarPlay</b>.", "only.sub": "Γιατί το player που ήρθε με τον υπολογιστή δεν φτάνει όταν το αρχείο ήρθε από κάμερα.", "f1.t": "Παίζει <b>τα πάντα</b>.", "f1.p": "Ό,τι αποκωδικοποιεί μόνος του ο υπολογιστής παίζει όπως είναι. Όλα τα άλλα γίνονται αναπαραγώγιμα την ώρα που παίζουν, στον υπολογιστή σου, χωρίς να γραφτεί τίποτα στον δίσκο: μια εικόνα που ο υπολογιστής ξέρει σε περιτύλιγμα που δεν ξέρει (H.264 σε MKV, AVI, TS) απλώς ξανατυλίγεται· ProRes, DNxHR, MPEG-2 και τα υπόλοιπα γίνονται H.264 επί τόπου, με τον encoder του ίδιου του Mac· ο ήχος που ο υπολογιστής δεν παίζει έρχεται ως FLAC, χωρίς απώλειες. Η καρτέλα Info λέει ποιο από τα τρία.", "f1.c1": "Όπως είναι", "f1.c2": "Ξανατυλιγμένο", "f1.c3": "H.264 επί τόπου", "f1.c4": "Ήχος ως FLAC", "f2.t": "Το ρολόι και τα πλήκτρα <b>του μοντάζ</b>.", "f2.p": "Το timecode έρχεται από το ίδιο το αρχείο, 01:00:00:00, drop-frame ως 01:00:00;00, ή χρόνος ή καρέ. J, K και L όπως στο Premiere, στο Resolve και στο Avid, πιο γρήγορα σε κάθε πάτημα. Τα βελάκια πάνε ένα καρέ, από το καρέ που είναι στην οθόνη, όχι από εκεί που νομίζει το ρολόι. I και O βάζουν In και Out, το / παίζει ανάμεσά τους, Cmd+L κάνει loop.", "f2.c1": "Timecode", "f2.c2": "Καρέ καρέ", "f2.c3": "In και Out", "f2.v1": "Timecode", "f3.t": "Το καρέ, <b>σε PNG</b>.", "f3.p": "Cmd+Shift+S σώζει το καρέ της οθόνης στο πλήρες μέγεθος του αρχείου, δίπλα στο αρχείο, με όνομα το timecode του: αναφορά για τον colourist, εικόνα για το deck, καρέ για τον πελάτη, με ένα πάτημα. Από το πρωτότυπο, όχι από την οθόνη.", "f3.c1": "Πλήρες μέγεθος", "f3.c2": "Όνομα το timecode", "f3.c3": "Δίπλα στο αρχείο", "f3.v2": "Cmd+Shift+S", "f3.v3": "Δείξε στο Finder", "set.idx": "02 · Για τον σκηνοθέτη", "set.title": "Φτιαγμένο για <b>να βλέπεις δουλειά</b>.", "set.sub": "Dailies, ένα cut, μια μίξη, ένα παλιό αρχείο: ανοίγει και σου λέει τι είναι.", "s1.k": "Info", "s1.t": "Από τι είναι φτιαγμένο <b>το αρχείο</b>.", "s1.p": "Περιτύλιγμα, διάρκεια, bitrate, timecode· το codec και το profile της εικόνας (ProRes HQ, H.264 High), κάδρο, ρυθμός καρέ, χρώμα, πεπλεγμένο· το codec, η συχνότητα, τα bit και τα κανάλια του ήχου· υπότιτλοι. Και πώς το παίζει το RoarPlay.", "s2.k": "Ήχος", "s2.t": "Εξώφυλλο, κυματομορφή, <b>κάθε κανάλι</b>.", "s2.p": "Ένα αρχείο ήχου δείχνει το εξώφυλλό του, τον τίτλο και τον καλλιτέχνη, και μια κυματομορφή που σέρνεις. Μια ταινία με πολλά κανάλια ήχου, τα ελληνικά και τα αγγλικά, η μίξη και το M&amp;E: διαλέγεις ένα στο Info και αλλάζει εκεί που είσαι.", "s3.k": "Λίστα", "s3.t": "Ένας φάκελος <b>με τη σειρά</b>.", "s3.p": "Ρίξε αρχεία ή ολόκληρους φακέλους· μπαίνουν στη σειρά κατά όνομα, με διάρκεια, μέγεθος και κάδρο. Τελειώνει το ένα, παίζει το επόμενο, ή σταματά, ή ξαναπαίζει. Cmd+← → πηδούν ανάμεσά τους.", "s4.k": "Ειλικρινά", "s4.t": "RAW κάμερας: <b>σου το λέει</b>.", "s4.p": "Blackmagic RAW, REDCODE, ARRIRAW, Canon RAW και N-RAW θέλουν τα εργαλεία των κατασκευαστών τους. Το RoarPlay δεν προσποιείται: ονομάζει τη μορφή του αρχείου και την εφαρμογή που το ανοίγει, ώστε να μη μείνεις με ένα μαύρο παράθυρο.", "all.idx": "03 · Όλα", "all.title": "Και <b>τα υπόλοιπα</b>.", "all.sub": "Το RoarPlay, με λίγα λόγια.", "ix1.t": "Βίντεο που παίζει", "ix1.p": "MP4, MOV, M4V, MKV, WebM, AVI, WMV, FLV, MPG, VOB, TS, MTS, M2TS, 3GP, OGV, MXF, DV, GIF και ό,τι άλλο διαβάζει το ffmpeg.", "ix2.t": "Codecs", "ix2.p": "H.264, HEVC, VP8, VP9, AV1, ProRes σε κάθε εκδοχή, DNxHD και DNxHR, XDCAM, MPEG-1 και 2, MPEG-4, DV, MJPEG, Cinepak και τα υπόλοιπα.", "ix3.t": "Ήχος που παίζει", "ix3.p": "MP3, WAV και BWF, AIFF, FLAC, ALAC, AAC και M4A, Ogg, Opus, WMA, AC3, E-AC3, DTS, APE, WavPack, AMR, CAF και άλλα.", "ix4.t": "Τίποτα στον δίσκο", "ix4.p": "Ό,τι γίνεται αναπαραγώγιμο επί τόπου πάει κατευθείαν στο παράθυρο, κομμάτι κομμάτι. Χωρίς προσωρινά αρχεία, χωρίς cache να αδειάζεις.", "ix5.t": "Πήγαινε οπουδήποτε", "ix5.p": "Πήδα στην μπάρα και ένα ProRes ή MXF ξαναρχίζει από εκεί σε μια στιγμή· ένα άλμα μέσα σε ό,τι έχει ήδη έρθει είναι ακαριαίο.", "ix6.t": "Πλήρης οθόνη", "ix6.p": "F ή διπλό κλικ· τα χειριστήρια κρύβονται όταν ακουμπήσει το ποντίκι, και γυρνούν όταν κινηθεί.", "ix7.t": "Άνοιγμα με", "ix7.p": "Διπλό κλικ σε ένα βίντεο ή αρχείο ήχου στο Finder ή στον Explorer, ή ρίξ’ το πάνω στην εφαρμογή, και το RoarPlay το ανοίγει.", "ix8.t": "Πεπλεγμένο, 10-bit, 4:2:2", "ix8.p": "Το παλιό τηλεοπτικό υλικό ξεπλέκεται στη διαδρομή· εικόνες 10-bit και 4:2:2 που ο υπολογιστής δεν αποκωδικοποιεί γίνονται 8-bit 4:2:0 για την οθόνη.", "ix9.t": "Το ρολόι, με τρεις τρόπους", "ix9.p": "Timecode, χρόνος με χιλιοστά, ή μέτρημα καρέ· κλικ στο ρολόι για να αλλάξεις, ή από τις Ρυθμίσεις.", "ix10.t": "Αγγλικά και Ελληνικά", "ix10.p": "Η εφαρμογή μιλάει και τα δύο· διαλέγεις στις Ρυθμίσεις.", "ix11.t": "Ενημερώνεται μόνο του", "ix11.p": "Κοιτάει κάθε δύο ώρες, φέρνει τη νέα έκδοση στο παρασκήνιο και τη βάζει όταν το κλείσεις· Έλεγχος τώρα και Επανεκκίνηση για ενημέρωση στις Ρυθμίσεις.", "ix12.t": "Κάθε πλήκτρο, σε λίστα", "ix12.p": "Οι Ρυθμίσεις έχουν όλη τη λίστα: Space, J K L, τα βελάκια, Home και End, I και O, /, M, F, Cmd+Shift+S.", "why.idx": "04 · Γιατί Roar", "why.title": "Γιατί <b>μια εφαρμογή Roar</b>.", "why.sub": "Τι υπόσχεται κάθε εφαρμογή του The Mad Lions Lab, και το RoarPlay.", "w1.t": "Στον υπολογιστή σου", "w1.p": "Χωρίς λογαριασμό, χωρίς server, χωρίς upload. Το υλικό που δεν έχει βγει μένει σε σένα, και δεν χρειάζεται internet.", "w2.t": "Το αρχείο μένει", "w2.p": "Το RoarPlay μόνο διαβάζει. Δεν γράφει τίποτα εκτός από το PNG που ζητάς, δίπλα στο αρχείο, ποτέ από πάνω του.", "w3.t": "Ενημερώνεται μόνο του", "w3.p": "Οι νέες εκδόσεις έρχονται στο παρασκήνιο και μπαίνουν όταν το κλείνεις. Mac και Windows.", "w4.t": "Φτιαγμένο από κινηματογραφιστές", "w4.p": "Το The Mad Lions, εταιρεία παραγωγής στην Αθήνα, βλέπει τα δικά του dailies με αυτό. Οι ιδέες σου πάνε κατευθείαν σε όσους το φτιάχνουν.", "lg.p": "Πολιτική απορρήτου", "lg.t": "Όροι χρήσης", "dl.idx": "05 · Λήψη", "dl.title": "Πάρε το <b>RoarPlay</b>.", "dl.sub": "Δωρεάν, και σε beta: ένα πείραμα του Mad Lions Lab που χρησιμοποιούμε για τα δικά μας dailies.", "dl.mac": "Για Mac με chip της Apple (M1 και νεότερα).", "dl.get": "Λήψη", "dl.intel": "Παλιότερο Mac με Intel;", "dl.intelbtn": "Αυτό", "dl.win": "Windows 10 και 11.", "dl.upd": "<b>Ενημερώνεται μόνο του.</b> Οι εφαρμογές για Mac και Windows κατεβάζουν τις νέες εκδόσεις μόνες τους και ζητούν μια γρήγορη επανεκκίνηση.", "dl.help": "<b>Πρώτη φορά σε Mac;</b> Η εφαρμογή δεν είναι ακόμα υπογεγραμμένη από την Apple: κάνε δεξί κλικ στο RoarPlay στις Εφαρμογές και διάλεξε Άνοιγμα, ή πάτα Άνοιγμα παρόλα αυτά στις Ρυθμίσεις συστήματος › Απόρρητο και ασφάλεια. Σε Windows: Περισσότερες πληροφορίες › Εκτέλεση παρόλα αυτά.", "faq.idx": "06 · Ερωτήσεις", "faq.title": "Καλό να <b>ξέρεις</b>.", "q1": "Είναι δωρεάν το RoarPlay;", "a1": "Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς λογαριασμό.", "q2": "Παίζει αλήθεια ProRes και MXF σε Windows;", "a2": "Ναι. Ό,τι δεν αποκωδικοποιεί ο υπολογιστής γίνεται H.264 επί τόπου από το ffmpeg που έρχεται με την εφαρμογή, στον υπολογιστή σου, την ώρα που παίζει. Σε Mac το κάνει η μηχανή βίντεο του ίδιου του Mac· σε Windows ο encoder λογισμικού, που προλαβαίνει 1080p και τα περισσότερα 4K σε ένα πρόσφατο μηχάνημα.", "q3": "Η εικόνα που βλέπω είναι το πρωτότυπο;", "a3": "H.264, HEVC, VP9 και AV1 σε MP4, MOV, MKV ή WebM παίζουν όπως είναι. ProRes, DNxHR, MPEG-2 και τα άλλα codec μοντάζ ξανακωδικοποιούνται για την οθόνη σε υψηλή ποιότητα, οπότε κρίνε χρώμα και ευκρίνεια στο πρωτότυπο μέσα στο εργαλείο grading· ένα καρέ που σώζεις με Cmd+Shift+S παίρνεται από το πρωτότυπο αρχείο.", "q4": "Από πού έρχεται το timecode;", "a4": "Από το αρχείο: το timecode track ενός MOV ή MXF, ή το timecode στα μεταδεδομένα του. Ένα αρχείο χωρίς timecode μετράει από 00:00:00:00. Το drop-frame φαίνεται με ερωτηματικό, όπως το έγραψε η κάμερα.", "q5": "Παίζει Blackmagic RAW ή RED;", "a5": "Όχι ακόμα. Τα RAW κάμερας θέλουν τα εργαλεία των κατασκευαστών· το RoarPlay σου λέει ποιο ανοίγει το αρχείο. Κάν’ το ProRes με το RoarMorph ή το Resolve για να παίξει εδώ.", "q6": "Χρειάζομαι internet;", "a6": "Όχι. Μόνο για να κατεβάσεις την εφαρμογή και τις ενημερώσεις της· όλα τα άλλα τρέχουν στον υπολογιστή σου.", "nw.idx": "07 · Νέα", "nw.title": "Τι <b>νέο</b> υπάρχει.", "nw.sub": "Η 0.1 είναι η πρώτη έκδοση: κάθε αρχείο βίντεο και ήχου, τα χειριστήρια του σκηνοθέτη, η λίστα, τα στοιχεία, στα αγγλικά και στα ελληνικά, με ενημερώσεις που έρχονται μόνες τους.", "n1.t": "Παίζει τα πάντα", "n1.p": "Ό,τι ξέρει ο υπολογιστής παίζει όπως είναι· ό,τι δεν ξέρει ξανατυλίγεται ή γίνεται H.264 επί τόπου, ο ήχος FLAC, στον υπολογιστή σου, χωρίς να γραφτεί τίποτα στον δίσκο. ProRes, DNxHR, MXF, MKV, AVI, MPEG-2, WAV, FLAC, AC3, AIFF και τα υπόλοιπα.", "n2.t": "Timecode, J K L, καρέ", "n2.p": "Το timecode του ίδιου του αρχείου, και drop-frame· J K L ως 8×· ένα καρέ με τα βελάκια· In και Out, loop, αναπαραγωγή ανάμεσά τους.", "n3.t": "Ένα καρέ σε PNG", "n3.p": "Cmd+Shift+S: το καρέ της οθόνης, πλήρες μέγεθος, από το πρωτότυπο, δίπλα στο αρχείο, με όνομα το timecode του.", "n4.t": "Ήχος, με την κυματομορφή του", "n4.p": "Εξώφυλλο, τίτλος και καλλιτέχνης, κυματομορφή που σέρνεις, και κάθε κανάλι ήχου μιας ταινίας για να διαλέξεις.", "ct.idx": "Επαφή", "ct.title": "Ιδέες για <b>την επόμενη έκδοση</b>;", "ft.lab": "The Mad Lions Lab", "ft.legal": "Απόρρητο & Όροι", "footer": "© 2026 The Mad Lions · RoarPlay"}
+  var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
+  var EN = {}
+  nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })
+  var mineLabel = { en: { mac: 'Your computer', win: 'Your computer' }, el: { mac: 'Ο υπολογιστής σου', win: 'Ο υπολογιστής σου' } }
+  function setLang(l) {
+    var d = l === 'el' ? EL : EN
+    nodes.forEach(function (n) { var v = d[n.dataset.t]; if (v == null) v = EN[n.dataset.t]; if (n.hasAttribute('data-html')) n.innerHTML = v; else n.textContent = v })
+    document.documentElement.lang = l === 'el' ? 'el' : 'en'
+    document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) })
+    ;['mac', 'win'].forEach(function (k) { var e = document.getElementById('dl-' + k); if (e) e.dataset.mine = mineLabel[l === 'el' ? 'el' : 'en'][k] })
+    setMain(l); showVer(l)
+    try { localStorage.setItem('tml_site_lang', l) } catch (e) {}
+  }
+  // the first button downloads for the device you are on; on a phone it opens the browser version
+  var ua = navigator.userAgent || ''
+  var phone = /iPhone|iPad|iPod|Android/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  var os = phone ? 'web' : /Windows/i.test(ua) ? 'win' : /Mac/i.test(ua) ? 'mac' : 'web'
+  var mine = document.getElementById('dl-' + os)
+  if (mine) mine.classList.add('mine')
+  // the installers carry their version in the name: the links come from the newest release's own files
+  var REL = 'https://github.com/' + REPO + '/releases/latest/download/' + APP
+  var FILES = { mac: REL + '-Mac-arm64.dmg', intel: REL + '-Mac-x64.dmg', win: REL + '-Windows-Setup.exe' }
+  var VER = ''
+  fetch('https://api.github.com/repos/' + REPO + '/releases/latest', { headers: { Accept: 'application/vnd.github+json' } })
+    .then(function (r) { return r.ok ? r.json() : null })
+    .then(function (d) {
+      if (!d) return
+      VER = (String(d.name || '').match(/(\d+\.\d+\.\d+)/) || [])[1] || ''
+      var re = { mac: /Mac-arm64\.dmg$/, intel: /Mac-x64\.dmg$/, win: /Windows-Setup\.exe$/ }
+      Object.keys(re).forEach(function (k) {
+        var list = (d.assets || []).filter(function (a) { return re[k].test(a.name) })
+        var pick = list.filter(function (a) { return /\d+\.\d+\.\d+/.test(a.name) })[0] || list[0]
+        if (!pick) return
+        document.querySelectorAll('a[data-f="' + k + '"]').forEach(function (a) { a.href = pick.browser_download_url })
+        FILES[k] = pick.browser_download_url
+      })
+      setMain(document.documentElement.lang); showVer(document.documentElement.lang)
+    }).catch(function () {})
+  function showVer(l) {
+    var e = document.getElementById('dl-ver')
+    if (!e || !VER) return
+    e.textContent = (l === 'el' ? '● Τελευταία έκδοση: ' : '● Latest: ') + APP + ' ' + VER + ' beta'
+    e.hidden = false
+  }
+  function setMain(l) {
+    var a = document.getElementById('dl-main')
+    var s = a.querySelector('span')
+    var el = l === 'el'
+    if (os === 'mac') { a.href = FILES.mac; s.textContent = el ? 'Λήψη για Mac' : 'Download for Mac' }
+    else if (os === 'win') { a.href = FILES.win; s.textContent = el ? 'Λήψη για Windows' : 'Download for Windows' }
+    else if (phone) { a.href = WEB; s.textContent = el ? 'Για Mac και Windows' : 'For Mac and Windows' }
+    else { a.href = '#download'; s.textContent = el ? 'Λήψη' : 'Download' }
+  }
+  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang) }) })
+  var saved = 'en'
+  try { saved = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
+  setLang(saved)
+  var bar = document.getElementById('bar')
+  var onScroll = function () { bar.classList.toggle('solid', window.scrollY > 30) }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll()
+  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  var rv = [].slice.call(document.querySelectorAll('.rv'))
+  if (still || !('IntersectionObserver' in window)) rv.forEach(function (e) { e.classList.add('in') })
+  else {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }) }, { rootMargin: '0px 0px -8% 0px', threshold: .06 })
+    rv.forEach(function (e) { io.observe(e) })
+  }
+  // the frame leans a little toward the pointer (computers only)
+  var win = document.getElementById('win')
+  if (win && !still && window.matchMedia('(pointer: fine)').matches) {
+    var tx = 0, ty = 0, x = 0, y = 0, raf = 0
+    var loop = function () { x += (tx - x) * .08; y += (ty - y) * .08; win.style.setProperty('--rx', x.toFixed(2)); win.style.setProperty('--ry', y.toFixed(2)); raf = Math.abs(tx - x) + Math.abs(ty - y) > .01 ? requestAnimationFrame(loop) : 0 }
+    window.addEventListener('pointermove', function (e) { var r = win.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return; tx = ((e.clientX / innerWidth) - .5) * 4; ty = -((e.clientY / innerHeight) - .5) * 3; if (!raf) raf = requestAnimationFrame(loop) }, { passive: true })
+  }
+})()
+</script>
+<script src="../fresh.js" defer></script>
+</body>
+</html>
