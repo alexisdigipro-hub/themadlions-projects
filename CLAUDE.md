@@ -42,6 +42,7 @@ Pushing to `main` deploys to GitHub Pages in about 40 s through .github/workflow
 - Permissions: per user, per module (none / view / edit) plus project access, enforced by RLS in Supabase and mirrored in the app. Finance is administrators only.
 - Every database change is a new file in supabase/*.sql that is safe to re-run. Alex runs SQL by hand in the Supabase SQL Editor, so after adding one tell him exactly which file to run, and list it in HANDOVER.md and README.md.
 - Migrate old data on load instead of breaking it (see how old category names are migrated).
+- Pictures made with AI for the site and the apps (people, scenes, stand-in photos): always Higgsfield **Soul 2** (model soul_2), never GPT Image (Alex, 31 Oct: "always better in Soul 2"). Ask for no signs, writing or logos in the prompt, and look at every picture before it goes on a page.
 
 ## End of every session
 Update "Where we stopped" in HANDOVER.md (date, what changed, what Alex still has to do, open questions), update README.md if a feature changed, commit with a message that says what the user gets, push.
