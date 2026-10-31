@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- The Mad Lions Lab (Alex, 18 Oct 2026): the tools and apps the studio builds between films, as numbered
+     experiments. Experiment 01 is RoarMe, Experiment 02 is Roardino (the ordino on its own, no tie to the hub), Experiment 03 is RoarMail (desktop mail app; its page is /lab/roarmail), Experiment 04 is RoarList (shot lists; web app at /roarlist, its live example at /roarlist/#demo), Experiment 05 is RoarTransfer (big files with a 3-day link; its page is /lab/roartransfer, the tool itself is RoarMe's /roarme/transfer/), Experiment 06 is RoarWriter (screenwriting app; its page is /lab/roarwriter, the web app at alexisdigipro-hub.github.io/roarwriter).
+     Same look and language switch as the main page. -->
+<title>Lab · The Mad Lions</title>
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search).get('theme'), t = null
+    try { t = q || localStorage.getItem('tml_site_theme') } catch (e) {}
+    if (t && t !== 'dark') document.documentElement.dataset.theme = t
+  })()
+</script>
+<link rel="canonical" href="https://themadlions.com/lab/">
+<meta name="description" content="The Mad Lions Lab: the tools and apps we build between films. RoarMe, the messenger for teams, Roardino, the call sheet in one link, RoarMail, the private mail app, RoarList, the shot list with a frame for every shot, RoarWriter, screenwriting in the industry format, and RoarPlay, the player for every video and sound file.">
+<meta name="theme-color" content="#0b0b0c">
+<meta property="og:title" content="The Mad Lions Lab">
+<meta property="og:description" content="The tools and apps we build between films.">
+<meta property="og:url" content="https://themadlions.com/lab/">
+<meta property="og:image" content="https://themadlions.com/og-image.png">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0b0c; --bg-2: #121214; --bg-3: #18181b; --text: #f2f0ec; --muted: #9a978f; --line: rgba(255,255,255,.1);
+  --accent: #d40000; --on-accent: #ffffff; --hi: #ffffff; --glass: rgba(255,255,255,.07); --glass-edge: rgba(255,255,255,.14);
+  --wm: invert(1);
+  --pad: clamp(16px, 4vw, 56px);
+}
+html[data-theme='light'] {
+  --bg: #f3f0e8; --bg-2: #ffffff; --bg-3: #ebe7dd; --text: #151412; --muted: #6f6a60; --line: rgba(0,0,0,.1);
+  --hi: #000000; --glass: rgba(0,0,0,.04); --glass-edge: rgba(0,0,0,.12); --wm: none;
+}
+html[data-theme='blue'] {
+  --bg: #08101f; --bg-2: #0f1a31; --bg-3: #15233f; --text: #eef3ff; --muted: #8e9cbc; --line: rgba(160,190,255,.13);
+  --glass: rgba(140,180,255,.09); --glass-edge: rgba(160,200,255,.2);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: Jost, system-ui, sans-serif; font-weight: 400; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+img { display: block; max-width: 100%; }
+.wordmark { filter: var(--wm); height: auto; }
+
+/* the top bar, as on the main page; Lab is the page you are on */
+.bar { position: fixed; inset: 0 0 auto 0; z-index: 20; display: flex; align-items: center; gap: 18px; padding: calc(14px + env(safe-area-inset-top)) var(--pad) 14px; transition: background .4s; }
+.bar.solid { background: color-mix(in srgb, var(--bg) 72%, transparent); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); border-bottom: 1px solid var(--line); }
+.bar .wordmark { width: 168px; }
+.bar nav { margin-left: auto; display: flex; gap: 2px; }
+.bar nav a { padding: 8px 13px; border-radius: 999px; font-size: 13.5px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in srgb, var(--text) 80%, transparent); transition: background .2s, color .2s; }
+.bar nav a { white-space: nowrap; } /* one line, Aibsent Studios too */
+.bar nav a:hover { background: var(--glass); color: var(--text); }
+.bar nav a.on { color: var(--text); background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 20%, transparent), color-mix(in srgb, var(--hi) 7%, transparent)); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 35%, transparent); }
+.lang { display: flex; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); }
+.lang button { border: 0; background: transparent; cursor: pointer; padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 500; letter-spacing: .08em; color: color-mix(in srgb, var(--text) 75%, transparent); }
+.lang button.on { background: linear-gradient(180deg, color-mix(in srgb, var(--hi) 24%, transparent), color-mix(in srgb, var(--hi) 8%, transparent)); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--hi) 45%, transparent); color: var(--text); }
+
+/* the opening */
+.hero { position: relative; padding: calc(150px + env(safe-area-inset-top)) var(--pad) clamp(50px, 7vw, 90px); overflow: hidden; }
+.hero::before { content: ''; position: absolute; inset: -20% -10% auto auto; width: 70vw; height: 70vw; max-width: 900px; max-height: 900px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--accent) 22%, transparent), transparent 65%); pointer-events: none; }
+.kicker { position: relative; margin: 0; font-size: clamp(13px, 1.4vw, 15px); font-weight: 500; letter-spacing: .34em; text-transform: uppercase; color: var(--accent); }
+h1 { position: relative; margin: 22px 0 0; font-size: clamp(48px, 9vw, 128px); font-weight: 200; line-height: .95; letter-spacing: -.02em; }
+h1 b { font-weight: 800; }
+.sub { position: relative; margin: 26px 0 0; max-width: 640px; font-size: clamp(17px, 1.7vw, 20px); font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 75%, transparent); }
+
+section { padding: 0 var(--pad) clamp(80px, 10vw, 130px); }
+.label { font-size: 12.5px; font-weight: 500; letter-spacing: .28em; text-transform: uppercase; color: var(--muted); margin: 0 0 18px; }
+
+/* an experiment: what it is on one side, a look at it on the other */
+.exp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: clamp(24px, 4vw, 56px); align-items: center; padding: clamp(22px, 3vw, 40px); border-radius: 26px; background: var(--bg-2); border: 1px solid var(--line); }
+.exp-n { display: inline-flex; align-items: center; gap: 10px; font-size: 12.5px; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
+.exp-n i { display: inline-flex; align-items: center; gap: 7px; height: 26px; padding: 0 11px; border-radius: 999px; font-style: normal; font-size: 11px; letter-spacing: .14em; color: var(--text); background: var(--glass); border: 1px solid var(--glass-edge); }
+.exp-n i::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #2fd36b; box-shadow: 0 0 8px rgba(47, 211, 107, .8); }
+.exp h2 { margin: 18px 0 0; font-size: clamp(44px, 6vw, 84px); font-weight: 400; line-height: .9; letter-spacing: .02em; }
+.exp h2 .a { font-weight: 200; } .exp h2 .b { font-weight: 800; }
+.exp h2.long { font-size: clamp(36px, 4.8vw, 72px); }
+.exp > div { min-width: 0; }
+.exp .what { margin: 18px 0 0; font-size: clamp(17px, 1.6vw, 19px); font-weight: 300; line-height: 1.55; color: color-mix(in srgb, var(--text) 78%, transparent); }
+.usp { margin: 22px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.usp li { display: flex; align-items: baseline; gap: 12px; font-size: 16px; line-height: 1.45; }
+.usp li b { font-weight: 600; }
+.usp li span { color: var(--muted); }
+.usp li::before { content: ''; flex: none; width: 7px; height: 7px; margin-top: 2px; border-radius: 50%; background: var(--accent); transform: translateY(-2px); }
+.acts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 46px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 500; letter-spacing: .04em; border: 1px solid var(--glass-edge); background: var(--glass); transition: transform .15s, background .2s, border-color .2s; }
+.pill:hover { transform: translateY(-1px); background: color-mix(in srgb, var(--hi) 12%, transparent); border-color: color-mix(in srgb, var(--hi) 30%, transparent); }
+.pill:active { transform: scale(.97); }
+.pill.main { background: var(--accent); color: var(--on-accent); border-color: transparent; box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 25%, transparent); }
+.pill.main:hover { background: var(--accent); filter: brightness(1.08); }
+.pill svg { width: 17px; height: 17px; }
+.shot { display: block; position: relative; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.45), 0 0 80px color-mix(in srgb, var(--accent) 16%, transparent); }
+.shot img { width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; }
+/* Roardino: the ordino itself, live, in a phone on a graphite stage */
+.stage { position: relative; display: grid; place-items: center; padding: clamp(24px, 4vw, 44px) 16px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line);
+  background: radial-gradient(600px 380px at 50% -10%, #4b525d 0%, transparent 65%), radial-gradient(420px 320px at 80% 100%, rgba(212,0,0,.18), transparent 70%), linear-gradient(180deg, #2b3038, #15171b);
+  box-shadow: 0 30px 80px rgba(0,0,0,.45), 0 0 80px color-mix(in srgb, var(--accent) 16%, transparent); }
+.handset { width: min(300px, 78vw); aspect-ratio: 9 / 19; border-radius: 40px; border: 9px solid #050506; background: #1b1e23; overflow: hidden; box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.08); }
+.handset iframe { display: block; width: 100%; height: 100%; border: 0; }
+.exp.flip { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+.exp.flip .stage { order: -1; }
+.next.one { grid-template-columns: 1fr; }
+/* RoarMail: the web demo itself, a desktop window scaled into the stage */
+.desk { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; background: #1b1e23; box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.08); }
+.desk iframe { position: absolute; left: 0; top: 0; width: 1360px; height: 850px; border: 0; transform-origin: 0 0; }
+.stage.wide { padding: clamp(18px, 3vw, 34px); }
+/* RoarTransfer: its sending card, drawn in the stage */
+.rw-mini { width: min(340px, 100%); aspect-ratio: 8.5 / 10; padding: 26px 26px 22px; border-radius: 6px; background: #fbfaf7; color: #1b1b1b; box-shadow: 0 30px 70px rgba(0,0,0,.55); font-family: 'Courier Prime', 'Courier New', Courier, monospace; font-size: 11.5px; line-height: 1.35; display: flex; flex-direction: column; gap: 9px; transform: rotate(-1.5deg); }
+.rw-mini .sh { font-weight: 700; } .rw-mini .ch { margin: 4px 0 -8px 38%; } .rw-mini .dg { margin: 0 14% 0 22%; } .rw-mini .pn { margin: 0 0 -8px 30%; color: #555; }
+.rw-mini .ai { margin-top: auto; align-self: flex-end; font-family: Jost, system-ui, sans-serif; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 99px; background: rgba(242,87,29,.14); color: #c2410c; }
+.rt-mini { width: min(360px, 100%); padding: 22px; border-radius: 26px; background: linear-gradient(170deg, rgba(43,48,56,.9), rgba(27,30,35,.9)); border: 1px solid rgba(255,255,255,.14); box-shadow: 0 30px 70px rgba(0,0,0,.55); display: grid; gap: 12px; color: #eef0f3; }
+.rt-mini .h { display: flex; align-items: center; gap: 9px; font-weight: 800; font-size: 17px; }
+.rt-mini .h i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(180deg, #ff4a3d, #b50000); }
+.rt-mini .h i svg { width: 16px; height: 16px; } .rt-mini .h b span { color: #ff3b2f; }
+.rt-mini .ring { position: relative; justify-self: center; width: 128px; height: 128px; }
+.rt-mini .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.rt-mini .ring circle { fill: none; stroke-width: 7; } .rt-mini .ring .t { stroke: rgba(255,255,255,.08); } .rt-mini .ring .f { stroke: #ff3b2f; stroke-linecap: round; stroke-dasharray: 352; stroke-dashoffset: 127; }
+.rt-mini .ring b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 30px; font-weight: 300; }
+.rt-mini .f-r { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); font-size: 13px; }
+.rt-mini .f-r b { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rt-mini .f-r small { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: rgba(214,220,228,.6); }
+.rt-mini .f-r em { font-style: normal; padding: 4px 10px; border-radius: 99px; background: rgba(47,211,107,.16); color: #a6efc0; font-size: 11px; font-weight: 700; }
+
+/* what comes next */
+.next { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.card { padding: clamp(22px, 3vw, 34px); border-radius: 22px; border: 1px dashed color-mix(in srgb, var(--text) 22%, transparent); background: transparent; }
+.card .exp-n i::before { background: #f5b83d; box-shadow: 0 0 8px rgba(245, 184, 61, .8); }
+.card h3 { margin: 16px 0 0; font-size: clamp(24px, 2.6vw, 32px); font-weight: 300; line-height: 1.15; }
+.card h3 b { font-weight: 700; }
+.card p { margin: 12px 0 0; font-size: 16px; line-height: 1.55; color: var(--muted); }
+.card .pill { margin-top: 22px; }
+
+footer { padding: 28px var(--pad) calc(28px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); }
+footer .wordmark { width: 130px; opacity: .6; }
+
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .9s ease, transform .9s cubic-bezier(.2,.7,.2,1); }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+
+@media (max-width: 900px) {
+  .bar nav { display: none; }
+  .lang { margin-left: auto; }
+  .exp, .exp.flip { grid-template-columns: 1fr; }
+  .exp .shot, .exp .stage { order: -1; }
+  .next { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .exp h2.long { font-size: 10vw; }
+  .bar .wordmark { width: 140px; }
+  .exp { border-radius: 20px; }
+  .acts .pill { flex: 1 1 auto; }
+}
+
+/* every app centred (Alex, 25 Oct: the order of the apps is set in admin now, so no more left / right
+   zigzag): the words in the middle, the picture under them across the card. Phones keep their layout. */
+@media (min-width: 901px) {
+  .exp, .exp.flip { grid-template-columns: minmax(0, 1fr); justify-items: center; text-align: center; gap: clamp(30px, 4vw, 48px); padding: clamp(36px, 5vw, 64px) clamp(22px, 4vw, 56px); }
+  .exp > div:not(.stage) { order: 0; max-width: 760px; }
+  .exp .shot, .exp .stage, .exp.flip .stage { order: 1; width: 100%; max-width: 1080px; }
+  .exp .what { margin-left: auto; margin-right: auto; max-width: 640px; }
+  .exp .usp { align-items: center; }
+  .exp .usp li { text-align: left; }
+  .exp .acts { justify-content: center; }
+}
+
+/* every app at a glance, at the top */
+.apps-sec { padding-bottom: clamp(50px, 7vw, 90px); }
+.apps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 22px; overflow: hidden; }
+.app { position: relative; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto 1fr auto; gap: 6px 16px; min-height: 168px; padding: 24px 26px 22px; background: var(--bg); color: var(--text); text-decoration: none; transition: background .35s; }
+.app::before { content: ''; position: absolute; inset: 0; background: radial-gradient(90% 120% at 0% 0%, color-mix(in srgb, var(--c) 14%, transparent), transparent 60%); opacity: 0; transition: opacity .4s; pointer-events: none; }
+.app:hover::before, .app:focus-visible::before { opacity: 1; }
+.app-n { grid-column: 1; display: flex; align-items: center; gap: 10px; font-size: 11px; letter-spacing: .24em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.app-n::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+.app-w { grid-column: 1; align-self: end; font-size: clamp(22px, 2vw, 28px); font-weight: 600; line-height: 1; letter-spacing: .06em; }
+.app-w span { font-weight: 200; }
+.app-d { grid-column: 1; font-size: 14px; font-weight: 300; line-height: 1.45; color: var(--muted); }
+.app-p { position: absolute; top: 24px; right: 26px; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); opacity: .8; }
+.app-go { grid-column: 2; grid-row: 3; align-self: end; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--glass-edge); color: var(--muted); transition: color .3s, border-color .3s, transform .35s cubic-bezier(.2,.7,.2,1); }
+.app-go svg { width: 16px; height: 16px; }
+.app:hover .app-go { color: var(--text); border-color: color-mix(in srgb, var(--c) 70%, transparent); transform: translateY(3px); }
+.exp { scroll-margin-top: 90px; }
+/* four smaller tiles a row on a computer (Alex, 25 Oct); the lines between them are each tile's own edge,
+   so a short last row ends cleanly instead of in a grey block */
+@media (min-width: 901px) {
+  .apps { grid-template-columns: repeat(4, minmax(0, 1fr)); background: transparent; border: 0; border-radius: 22px; }
+  .app { min-height: 132px; padding: 20px 22px 18px; box-shadow: 0 0 0 1px var(--line); }
+  .app:nth-child(1) { border-top-left-radius: 22px; }
+  .app:nth-child(4) { border-top-right-radius: 22px; }
+  .app:nth-last-child(-n+4):nth-child(4n+1) { border-bottom-left-radius: 22px; }
+  .app:last-child { border-bottom-right-radius: 22px; }
+  .app-p { top: 20px; right: 22px; font-size: 9.5px; letter-spacing: .12em; }
+  .app-w { font-size: clamp(19px, 1.6vw, 23px); }
+  .app-d { font-size: 13px; }
+  .app-go { width: 30px; height: 30px; }
+}
+/* a narrower computer: three a row, so the platforms never run into the number */
+@media (min-width: 901px) and (max-width: 1239px) {
+  .apps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .app:nth-child(4) { border-top-right-radius: 0; }
+  .app:nth-child(3) { border-top-right-radius: 22px; }
+  .app:nth-last-child(-n+4):nth-child(4n+1) { border-bottom-left-radius: 0; }
+  .app:nth-last-child(-n+3):nth-child(3n+1) { border-bottom-left-radius: 22px; }
+}
+@media (max-width: 900px) { .apps { grid-template-columns: repeat(2, minmax(0, 1fr)); } .app:last-child:nth-child(2n+1) { grid-column: 1 / -1; } }
+@media (max-width: 560px) { .apps { grid-template-columns: 1fr; } .apps .app:last-child { grid-column: auto; } .app { min-height: 0; padding: 20px 20px 18px; } .app-p { top: 20px; right: 20px; } }
+
+/* the apps as glass tiles with their icons (Alex, 29 Oct: the new icons, a fresher look) */
+.apps { gap: 12px; background: none; border: 0; overflow: visible; }
+.app { min-height: 196px; border-radius: 22px; background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.018)); border: 1px solid rgba(255,255,255,.09); box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 16px 40px rgba(0,0,0,.28); overflow: hidden; transition: transform .45s cubic-bezier(.16,1,.3,1), border-color .3s, box-shadow .45s cubic-bezier(.16,1,.3,1); }
+.app:hover, .app:focus-visible { transform: translateY(-4px); border-color: color-mix(in srgb, var(--c) 45%, transparent); box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 26px 60px rgba(0,0,0,.4), 0 14px 50px -16px color-mix(in srgb, var(--c) 55%, transparent); }
+.app-n { display: none; }
+.app-i { grid-column: 1; grid-row: 1; width: 56px; height: 56px; border-radius: 22.5%; box-shadow: 0 1px 0 rgba(255,255,255,.14) inset, 0 12px 28px rgba(0,0,0,.45); transition: transform .45s cubic-bezier(.16,1,.3,1); }
+.app:hover .app-i { transform: scale(1.06) rotate(-3deg); }
+@media (max-width: 720px) {
+  .app { min-height: 136px; padding-left: 92px; }
+  .app-p { top: auto; bottom: 30px; left: 92px; right: auto; }
+  .app-d { margin-bottom: 26px; }
+  .app-i { position: absolute; grid-column: auto; grid-row: auto; left: 22px; top: 50%; width: 54px; height: 54px; margin-top: -27px; }
+  .app:hover .app-i { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .app, .app:hover, .app:hover .app-i { transition: none; transform: none; } }
+</style>
+<!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"The Mad Lions Lab","url":"https://themadlions.com/lab/","description":"The Mad Lions Lab: the tools and apps we build between films. RoarMe, the messenger for teams, Roardino, the call sheet in one link, RoarMail, the private mail app, RoarList, the shot list with a frame for every shot, RoarWriter, screenwriting in the industry format, and RoarPlay, the player for every video and sound file.","publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"},"mainEntity":{"@type":"ItemList","itemListElement":[{"@type":"ListItem","position":1,"item":{"@type":"SoftwareApplication","name":"RoarMe","url":"https://themadlions.com/roarme/","applicationCategory":"CommunicationApplication","operatingSystem":"macOS, Windows, Web, iOS, Android"}},{"@type":"ListItem","position":2,"item":{"@type":"SoftwareApplication","name":"Roardino","url":"https://themadlions.com/lab/roardino/","applicationCategory":"BusinessApplication","operatingSystem":"Web"}},{"@type":"ListItem","position":3,"item":{"@type":"SoftwareApplication","name":"RoarMail","url":"https://themadlions.com/lab/roarmail/","applicationCategory":"CommunicationApplication","operatingSystem":"macOS, Windows"}},{"@type":"ListItem","position":4,"item":{"@type":"SoftwareApplication","name":"RoarList","url":"https://themadlions.com/lab/roarlist/","applicationCategory":"MultimediaApplication","operatingSystem":"macOS, Windows, Web"}},{"@type":"ListItem","position":5,"item":{"@type":"SoftwareApplication","name":"RoarWriter","url":"https://themadlions.com/lab/roarwriter/","applicationCategory":"DesignApplication","operatingSystem":"macOS, Windows, Web"}},{"@type":"ListItem","position":6,"item":{"@type":"SoftwareApplication","name":"RoarKit","url":"https://themadlions.com/lab/roarkit/","applicationCategory":"UtilitiesApplication","operatingSystem":"macOS, Windows"}},{"@type":"ListItem","position":7,"item":{"@type":"SoftwareApplication","name":"RoarMorph","url":"https://themadlions.com/lab/roarmorph/","applicationCategory":"MultimediaApplication","operatingSystem":"macOS, Windows"}},{"@type":"ListItem","position":8,"item":{"@type":"SoftwareApplication","name":"RoarPlay","url":"https://themadlions.com/lab/roarplay/","applicationCategory":"MultimediaApplication","operatingSystem":"macOS, Windows"}},{"@type":"ListItem","position":9,"item":{"@type":"SoftwareApplication","name":"RoarTransfer","url":"https://roartransfer.com/about/","applicationCategory":"UtilitiesApplication","operatingSystem":"Web"}}]}}</script><!--/seo:app-->
+<link rel="stylesheet" href="fresh.css">
+</head>
+<body>
+
+<header class="bar" id="bar">
+  <a href="../" aria-label="The Mad Lions"><img class="wordmark" src="../wordmark.png" alt="The Mad Lions"></a>
+  <nav>
+    <a href="../#work" data-t="nav.work">Work</a>
+    <a href="../#services" data-t="nav.services">Services</a>
+    <a href="../aibsent/">Aibsent Studios</a>
+    <a href="../#about" data-t="nav.about">About</a>
+    <a href="../#clients" data-t="nav.clients">Clients</a>
+    <a href="./" class="on" aria-current="page">Lab</a>
+    <a href="../#contact" data-t="nav.contact">Contact</a>
+  </nav>
+  <div class="lang" role="group" aria-label="Language">
+    <button type="button" data-lang="en" class="on">EN</button>
+    <button type="button" data-lang="el">GR</button>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <p class="kicker reveal">The Mad Lions Lab</p>
+    <h1 class="reveal" data-t="hero.title" data-html>Things we <b>build</b><br>between films.</h1>
+    <p class="sub reveal" data-t="hero.sub">We make films, and the tools we wish we had while making them. Apps for teams, crews and anyone who works fast. Some are ready, some are still taking shape. All of them are open to try.</p>
+  </div>
+
+  <!-- every app at a glance first (Alex, 25 Oct), then each one as you scroll -->
+  <section class="apps-sec">
+    <p class="label reveal" data-t="apps.label">Eight apps, one family</p>
+    <div class="apps"><a class="app reveal" href="#roarme" style="--c:#ff5a4f;--g:radial-gradient(120% 90% at 20% 0%, #4a4d55, #151619)"><img class="app-i" src="icons/roarme.png" alt="" width="56" height="56" loading="lazy"><span class="app-n">01</span><b class="app-w"><span>ROAR</span>ME</b><span class="app-d" data-t="rm.one">The messenger for crews.</span><span class="app-p">Web · Mac · Windows · Phone</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roardino" style="--c:#ffb224;--g:radial-gradient(120% 90% at 80% 0%, #5a3a12, #140c04)"><img class="app-i" src="icons/roardino.png" alt="" width="56" height="56" loading="lazy"><span class="app-n">02</span><b class="app-w"><span>ROAR</span>DINO</b><span class="app-d" data-t="rd.one">The call sheet, in one link.</span><span class="app-p">Web · Phone</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarmail" style="--c:#3b82f6;--g:radial-gradient(120% 90% at 20% 0%, #1d2c52, #080b14)"><img class="app-i" src="icons/roarmail.png" alt="" width="56" height="56" loading="lazy"><span class="app-n">03</span><b class="app-w"><span>ROAR</span>MAIL</b><span class="app-d" data-t="ml.one">Every mailbox, one private inbox.</span><span class="app-p">Mac · Windows</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarlist" style="--c:#2fd36b;--g:radial-gradient(120% 90% at 80% 0%, #1d4a35, #06110c)"><img class="app-i" src="icons/roarlist.png" alt="" width="56" height="56" loading="lazy"><span class="app-n">04</span><b class="app-w"><span>ROAR</span>LIST</b><span class="app-d" data-t="rl.one">The shot list, frame by frame.</span><span class="app-p">Web · Mac · Windows</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roartransfer" style="--c:#7c5cff;--g:radial-gradient(120% 90% at 20% 0%, #2c2357, #0b0916)"><img class="app-i" src="icons/roartransfer.png" alt="" width="56" height="56" loading="lazy"><span class="app-n">05</span><b class="app-w long"><span>ROAR</span>TRANSFER</b><span class="app-d" data-t="rt.one">Big files, one short link, free.</span><span class="app-p">Web</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarwriter" style="--c:#ff6b2c;--g:radial-gradient(120% 90% at 80% 0%, #6a2a0a, #140803)"><img class="app-i" src="icons/roarwriter.png" alt="" width="56" height="56" loading="lazy"><span class="app-n">06</span><b class="app-w long"><span>ROAR</span>WRITER</b><span class="app-d" data-t="rw.one">Screenwriting, from page to shoot.</span><span class="app-p">Web · Mac · Windows · Phone</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roartwin" style="--c:#ff453a;--g:radial-gradient(120% 90% at 20% 0%, #3a1416, #0d0d0e)"><img class="app-i" src="icons/roarkit.png" alt="" width="56" height="56" loading="lazy"><span class="app-n">07</span><b class="app-w"><span>ROAR</span>KIT</b><span class="app-d" data-t="tw.one">Eighteen tools for the computer and the shoot.</span><span class="app-p">Mac · Windows</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarverter" style="--c:#ff453a;--g:radial-gradient(120% 90% at 20% 0%, #2b1a12, #0d0d0e)"><img class="app-i" src="icons/roarmorph.png" alt="" width="56" height="56" loading="lazy"><span class="app-n">08</span><b class="app-w"><span>ROAR</span>MORPH</b><span class="app-d" data-t="rv.one">Every format, a smaller file: pictures, videos and sound.</span><span class="app-p">Mac · Windows</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a><a class="app reveal" href="#roarplay" style="--c:#ff3b30;--g:radial-gradient(120% 90% at 80% 0%, #3a1010, #0d0d0e)"><img class="app-i" src="icons/roarplay.png" alt="" width="56" height="56" loading="lazy"><span class="app-n">09</span><b class="app-w"><span>ROAR</span>PLAY</b><span class="app-d" data-t="rp.one">Plays every video and every sound file.</span><span class="app-p">Mac · Windows</span><span class="app-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span></a></div>
+  </section>
+
+  <section>
+    <p class="label reveal" data-t="exp.label">Experiments</p>
+    <article id="roarme" class="exp reveal">
+      <div>
+        <span class="exp-n">Experiment 01 <i data-t="exp.live">Live · beta</i></span>
+        <h2><span class="a">ROAR</span><span class="b">ME</span></h2>
+        <p class="what" data-t="rm.what">The messenger for teams. Built for the way a crew really talks: fast, with big files, and sometimes in private.</p>
+        <ul class="usp">
+          <li><span><b data-t="rm.u1">No phone number.</b> <span data-t="rm.u1s">Just your @username.</span></span></li>
+          <li><span><b data-t="rm.u2">RoarTransfer.</b> <span data-t="rm.u2s">Files up to 5 GB, with one short link.</span></span></li>
+          <li><span><b data-t="rm.u3">Encrypted secret chats.</b> <span data-t="rm.u3s">On when it matters, with one tap.</span></span></li>
+        </ul>
+        <div class="acts">
+          <a class="pill main" href="../roarme/"><span data-t="rm.more">Discover RoarMe</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="https://alexisdigipro-hub.github.io/roarme/" target="_blank" rel="noopener" data-t="rm.open">Open the app</a>
+        </div>
+      </div>
+      <a class="shot" href="../roarme/" aria-label="RoarMe"><img src="roarme.jpg" alt="RoarMe on a computer in the Stone theme: the crew chat of a night shoot" loading="lazy" width="1600" height="1000"></a>
+    </article>
+
+    <article id="roardino" class="exp flip reveal" style="margin-top:10px">
+      <div class="stage"><div class="handset"><iframe src="../roardino/#demo" title="A Roardino ordino on a phone" loading="lazy"></iframe></div></div>
+      <div>
+        <span class="exp-n">Experiment 02 <i data-t="exp.live">Live · beta</i></span>
+        <h2><span class="a">ROAR</span><span class="b">DINO</span></h2>
+        <p class="what" data-t="rd.what">The call sheet, in one link. Write the call, the location and the day's plan, pick a picture and a colour, and send the crew a page that opens beautifully on any phone.</p>
+        <ul class="usp">
+          <li><span><b data-t="rd.u1">Your own account.</b> <span data-t="rd.u1s">Every ordino you make, in one place, from any device.</span></span></li>
+          <li><span><b data-t="rd.u2">One link for the crew.</b> <span data-t="rd.u2s">Directions, a tap to call and the day in their calendar.</span></span></li>
+          <li><span><b data-t="rd.u3">Weather and sunset.</b> <span data-t="rd.u3s">Filled in by themselves for the place and the day.</span></span></li>
+        </ul>
+        <div class="acts">
+          <a class="pill main" href="roardino/"><span data-t="rd.more">Discover Roardino</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="../roardino/" data-t="rd.open">Make your ordino</a>
+        </div>
+      </div>
+    </article>
+
+    <article id="roarmail" class="exp reveal" style="margin-top:10px">
+      <div>
+        <span class="exp-n">Experiment 03 <i data-t="exp.live">Live · beta</i></span>
+        <h2><span class="a">ROAR</span><span class="b">MAIL</span></h2>
+        <p class="what" data-t="ml.what">The mail app for Mac and Windows. Every mailbox in one inbox, your contacts and every attachment in one place, a right-click menu everywhere, and no server of ours between you and your mail.</p>
+        <ul class="usp">
+          <li><span><b data-t="ml.u1">All your mail, one inbox.</b> <span data-t="ml.u1s">Gmail, Outlook, iCloud or your own domain, side by side.</span></span></li>
+          <li><span><b data-t="ml.u2">Private by design.</b> <span data-t="ml.u2s">Tracking pixels blocked, links checked, passwords in your computer's keychain.</span></span></li>
+          <li><span><b data-t="ml.u3">Contacts and Files.</b> <span data-t="ml.u3s">Everyone you write to, grouped by company, and every attachment you ever got, found in a second.</span></span></li>
+        </ul>
+        <div class="acts">
+          <a class="pill main" href="roarmail/"><span data-t="ml.more">Discover RoarMail</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="https://github.com/alexisdigipro-hub/roarmail/releases/latest" target="_blank" rel="noopener"><span data-t="ml.dl">Download for Mac / Windows</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15l5-4.5M5 19h14"/></svg></a>
+        </div>
+      </div>
+      <a class="shot" href="roarmail/" aria-label="RoarMail"><img src="roarmail.jpg" alt="RoarMail on a computer: All Inboxes, a message with its trackers blocked" loading="lazy" width="1600" height="782" style="aspect-ratio:auto"></a>
+    </article>
+
+    <article id="roarlist" class="exp flip reveal" style="margin-top:10px">
+      <div class="stage wide"><div class="desk"><iframe src="../roarlist/#demo" title="A RoarList shot list" loading="lazy" tabindex="-1"></iframe></div></div>
+      <div>
+        <span class="exp-n">Experiment 04 <i data-t="exp.live">Live · beta</i></span>
+        <h2><span class="a">ROAR</span><span class="b">LIST</span></h2>
+        <p class="what" data-t="rl.what">The shot list, frame by frame. Scenes and shots with size, angle, movement and lens, a picture for every shot, and a PDF the crew can read on set.</p>
+        <ul class="usp">
+          <li><span><b data-t="rl.u1">A frame for every shot.</b> <span data-t="rl.u1s">Drop, paste or choose it, and the list turns into a storyboard.</span></span></li>
+          <li><span><b data-t="rl.u2">One PDF for the crew.</b> <span data-t="rl.u2s">As a list or as a storyboard, ready for the set.</span></span></li>
+          <li><span><b data-t="rl.u3">Your RoarMe account.</b> <span data-t="rl.u3s">Every shot list in your cloud, on the web and on Mac and Windows.</span></span></li>
+        </ul>
+        <div class="acts">
+          <a class="pill main" href="roarlist/"><span data-t="rl.more">Discover RoarList</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="../roarlist/" data-t="rl.open">Make your shot list</a>
+          <a class="pill" href="../roarlist/#demo" target="_blank" rel="noopener" data-t="rl.demo">See an example</a>
+          <a class="pill" href="https://github.com/alexisdigipro-hub/roarlist/releases/latest" target="_blank" rel="noopener" data-t="rl.dl">Mac / Windows</a>
+        </div>
+      </div>
+    </article>
+
+    <article id="roartransfer" class="exp reveal" style="margin-top:10px">
+      <div>
+        <span class="exp-n">Experiment 05 <i data-t="exp.on">Live</i></span>
+        <h2 class="long"><span class="a">ROAR</span><span class="b">TRANSFER</span></h2>
+        <p class="what" data-t="rt.what">Send large files, free and secure. Up to 5 GB with one short link, by email or as a link, with a password and an email when it is downloaded. At roartransfer.com, in every RoarMe chat and in RoarMail.</p>
+        <ul class="usp">
+          <li><span><b data-t="rt.u1">5 GB, as it is.</b> <span data-t="rt.u1s">Original quality, real names, several files under one short link.</span></span></li>
+          <li><span><b data-t="rt.u2">Picks up where it stopped.</b> <span data-t="rt.u2s">If the connection drops, it carries on instead of starting again.</span></span></li>
+          <li><span><b data-t="rt.u3">Gone by itself.</b> <span data-t="rt.u3s">After 1 or 3 days the files are erased. No account needed to download, or even to send with FastTransfer.</span></span></li>
+        </ul>
+        <div class="acts">
+          <a class="pill main" href="https://roartransfer.com/about/"><span data-t="rt.more">Discover RoarTransfer</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="https://roartransfer.com/" data-t="rt.open">Send files free</a>
+        </div>
+      </div>
+      <a class="shot" href="https://roartransfer.com/about/" aria-label="RoarTransfer"><img src="roartransfer.jpg" alt="RoarTransfer: big files, one link, sign in or send with FastTransfer" loading="lazy" width="1600" height="1000"></a>
+    </article>
+
+    <article id="roarwriter" class="exp flip reveal" style="margin-top:10px">
+      <a class="shot" href="roarwriter/" aria-label="RoarWriter"><img src="roarwriter.jpg" alt="RoarWriter on a computer: a feature script on the page, the scenes at the side" loading="lazy" width="1600" height="1000"></a>
+      <div>
+        <span class="exp-n">Experiment 06 <i data-t="exp.live">Live · beta</i></span>
+        <h2 class="long"><span class="a">ROAR</span><span class="b">WRITER</span></h2>
+        <p class="what" data-t="rw.what">Screenwriting from the first page to the shoot: nine formats in English or Greek, revisions and versions, a beat board, a storyboard and a shooting schedule, an AI that reads the whole script, and a PDF ready to send.</p>
+        <ul class="usp">
+          <li><span><b data-t="rw.u1">The keys of Final Draft.</b> <span data-t="rw.u1s">Enter and Tab lay out the page while you write, ΕΣΩΤ. and ΕΞΩΤ. included.</span></span></li>
+          <li><span><b data-t="rw.u2">From the page to the shoot.</b> <span data-t="rw.u2s">Breakdown, beats, storyboard, shot list and a stripboard schedule, all from the same script.</span></span></li>
+          <li><span><b data-t="rw.u3">An AI that reads the whole script.</b> <span data-t="rw.u3s">Coverage, continuity, a budget pass, a pitch package and a translation, only when you ask.</span></span></li>
+        </ul>
+        <div class="acts">
+          <a class="pill main" href="roarwriter/"><span data-t="rw.more">Discover RoarWriter</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="https://alexisdigipro-hub.github.io/roarwriter/" data-t="rw.open">Write in the browser</a>
+          <a class="pill" href="https://github.com/alexisdigipro-hub/roarwriter/releases/latest" target="_blank" rel="noopener" data-t="rl.dl">Mac / Windows</a>
+        </div>
+      </div>
+    </article>
+    <article id="roartwin" class="exp reveal" style="margin-top:10px">
+      <div>
+        <span class="exp-n">Experiment 07 <i data-t="exp.new">New · beta</i></span>
+        <h2><span class="a">ROAR</span><span class="b">KIT</span></h2>
+        <p class="what" data-t="tw.what">One app, eighteen tools: it sees what your computer needs, makes room, copies and checks a shoot's cards, reports every clip, finds the twins, keeps your files tidy and your passwords locked.</p>
+        <ul class="usp">
+          <li><span><b data-t="tw.u1">What the computer needs, first.</b> <span data-t="tw.u1s">A score for the disks, memory, heat, battery and caches, each with the tool that sorts it out.</span></span></li>
+          <li><span><b data-t="tw.u2">Made for the shoot.</b> <span data-t="tw.u2s">Card copies checked byte for byte with an ASC MHL, media reports, clip check, contact sheets, renaming.</span></span></li>
+          <li><span><b data-t="tw.u3">Nothing is lost.</b> <span data-t="tw.u3s">Only to the Trash, never written over, and the passwords sealed on your computer.</span></span></li>
+        </ul>
+        <div class="acts">
+          <a class="pill main" href="roarkit/"><span data-t="tw.more">Discover RoarKit</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="roarkit/#download" data-t="rl.dl">Mac / Windows</a>
+        </div>
+      </div>
+      <a class="shot" href="roarkit/" aria-label="RoarKit"><img src="roarkit.jpg" alt="RoarKit on a computer: the Overview, a score for the computer and what needs care first" loading="lazy" width="1600" height="1000"></a>
+    </article>
+    <article id="roarverter" class="exp reveal" style="margin-top:10px">
+      <div>
+        <span class="exp-n">Experiment 08 <i data-t="exp.new">New · beta</i></span>
+        <h2><span class="a">ROAR</span><span class="b">MORPH</span></h2>
+        <p class="what" data-t="rv.what">Converts and compresses pictures, videos and sound on your own computer: every format, a smaller file, and a target size in MB when it has to fit. Nothing is uploaded.</p>
+        <ul class="usp">
+          <li><span><b data-t="rv.u1">A size, not a guess.</b> <span data-t="rv.u1s">Type 25 MB and it works out the bitrate from the length, for an email, a festival form or Discord.</span></span></li>
+          <li><span><b data-t="rv.u2">Every format, one window.</b> <span data-t="rv.u2s">HEIC, PNG, ProRes, WAV in; JPG, WebP, H.265, AV1, MP3, GIF and stills out.</span></span></li>
+          <li><span><b data-t="rv.u3">Nothing leaves the computer.</b> <span data-t="rv.u3s">No upload, no account; the originals stay as they are.</span></span></li>
+        </ul>
+        <div class="acts">
+          <a class="pill main" href="roarmorph/"><span data-t="rv.more">Discover RoarMorph</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="roarmorph/#download" data-t="rl.dl">Mac / Windows</a>
+        </div>
+      </div>
+      <a class="shot" href="roarmorph/" aria-label="RoarMorph"><img src="roarmorph.jpg" alt="RoarMorph on a computer: a shoot's files converted, each with how much smaller it got" loading="lazy" width="1600" height="1000"></a>
+    </article>
+
+    <article id="roarplay" class="exp reveal" style="margin-top:10px">
+      <div>
+        <span class="exp-n">Experiment 09 <i data-t="exp.new">New · beta</i></span>
+        <h2><span class="a">ROAR</span><span class="b">PLAY</span></h2>
+        <p class="what" data-t="rp.what">Plays every video and every sound file on your own computer, ProRes, DNxHR, MXF, MKV, AVI, WAV, FLAC, AC3 and the rest, with the clock and the keys of the edit suite. Nothing is uploaded.</p>
+        <ul class="usp">
+          <li><span><b data-t="rp.u1">Plays everything.</b> <span data-t="rp.u1s">What the computer knows plays as it is; the rest is made playable on the fly, with nothing written to disk.</span></span></li>
+          <li><span><b data-t="rp.u2">The edit suite’s clock and keys.</b> <span data-t="rp.u2s">The file’s own timecode, J K L, one frame with the arrows, in and out, loop.</span></span></li>
+          <li><span><b data-t="rp.u3">The frame as a PNG.</b> <span data-t="rp.u3s">Full size, from the original, named by its timecode, beside the file.</span></span></li>
+        </ul>
+        <div class="acts">
+          <a class="pill main" href="roarplay/"><span data-t="rp.more">Discover RoarPlay</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="pill" href="roarplay/#download" data-t="rl.dl">Mac / Windows</a>
+        </div>
+      </div>
+      <a class="shot" href="roarplay/" aria-label="RoarPlay"><img src="roarplay.jpg" alt="RoarPlay on a computer: a ProRes clip playing with its timecode, in and out marked, the queue beside it" loading="lazy" width="1600" height="1000"></a>
+    </article>
+
+    <div class="next one">
+      <div class="card reveal">
+        <span class="exp-n" data-t="idea.n">Your idea</span>
+        <h3 data-t="idea.t" data-html>A tool you <b>wish</b> existed?</h3>
+        <p data-t="idea.p">Tell us what slows your team down. The best ideas become the next experiment.</p>
+        <a class="pill" href="mailto:lab@themadlions.com?subject=Lab%20idea">lab@themadlions.com</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <a href="../"><img class="wordmark" src="../wordmark.png" alt="The Mad Lions"></a>
+  <a href="../legal/" data-t="ft.legal">Privacy &amp; Terms</a>
+  <span data-t="footer">© 2026 The Mad Lions · Lab</span>
+</footer>
+
+<script>
+(function () {
+  var EL = {
+    'nav.work': 'Δουλειά', 'nav.services': 'Υπηρεσίες', 'nav.process': 'Διαδικασία', 'nav.clients': 'Πελάτες', 'nav.about': 'Εμείς', 'nav.contact': 'Επαφή',
+    'hero.title': 'Όσα <b>φτιάχνουμε</b><br>ανάμεσα στις ταινίες.',
+    'hero.sub': 'Φτιάχνουμε ταινίες, και τα εργαλεία που θα θέλαμε να έχουμε όσο τις φτιάχνουμε. Εφαρμογές για ομάδες, συνεργεία και όποιον δουλεύει γρήγορα. Κάποιες είναι έτοιμες, κάποιες παίρνουν ακόμα μορφή. Όλες είναι ανοιχτές να τις δοκιμάσεις.',
+    'apps.label': 'Οκτώ εφαρμογές, μία οικογένεια',
+    'rm.one': 'Το messenger για συνεργεία.', 'rd.one': 'Το ordino, σε ένα link.', 'ml.one': 'Όλα τα email, ένα ιδιωτικό inbox.',
+    'rl.one': 'Το shot list, κάδρο κάδρο.', 'rt.one': 'Μεγάλα αρχεία, ένας κοντός σύνδεσμος, δωρεάν.', 'rw.one': 'Το σενάριο, από τη σελίδα ως το γύρισμα.',
+    'exp.label': 'Πειράματα', 'exp.live': 'Live · beta', 'exp.on': 'Live', 'exp.soon': 'Ετοιμάζεται',
+    'rm.what': 'Το messenger για ομάδες. Φτιαγμένο για τον τρόπο που μιλάει πραγματικά ένα συνεργείο: γρήγορα, με μεγάλα αρχεία, και καμιά φορά ιδιωτικά.',
+    'rm.u1': 'Χωρίς αριθμό τηλεφώνου.', 'rm.u1s': 'Μόνο το @username σου.',
+    'rm.u2': 'RoarTransfer.', 'rm.u2s': 'Αρχεία ως 5 GB, με έναν κοντό σύνδεσμο.',
+    'rm.u3': 'Κρυπτογραφημένες κρυφές συνομιλίες.', 'rm.u3s': 'Ανοίγουν όταν μετράει, με ένα πάτημα.',
+    'rm.more': 'Γνώρισε το RoarMe', 'rm.open': 'Άνοιξε την εφαρμογή',
+    'rd.what': 'Το ordino, σε ένα link. Γράψε το call, την τοποθεσία και το πρόγραμμα της ημέρας, διάλεξε φωτογραφία και χρώμα, και στείλε στο συνεργείο μια σελίδα που ανοίγει όμορφα σε κάθε κινητό.',
+    'rd.u1': 'Δικός σου λογαριασμός.', 'rd.u1s': 'Όλα τα ordino σου σε ένα μέρος, από κάθε συσκευή.',
+    'rd.u2': 'Ένα link για το συνεργείο.', 'rd.u2s': 'Οδηγίες, κλήση με ένα πάτημα και η μέρα στο ημερολόγιο.',
+    'rd.u3': 'Καιρός και δύση.', 'rd.u3s': 'Συμπληρώνονται μόνα τους για το μέρος και τη μέρα.',
+    'rd.open': 'Φτιάξε το ordino σου', 'rd.more': 'Γνώρισε το Roardino', 'rd.demo': 'Δες ένα παράδειγμα',
+    'ml.what': 'Η εφαρμογή email για Mac και Windows. Όλα τα γραμματοκιβώτια σε ένα inbox, οι επαφές σου και κάθε συνημμένο σε ένα σημείο, μενού με δεξί κλικ παντού, και κανένας δικός μας server ανάμεσα σε σένα και τα μηνύματά σου.',
+    'ml.u1': 'Όλα σου τα email, ένα inbox.', 'ml.u1s': 'Gmail, Outlook, iCloud ή το δικό σου domain, δίπλα δίπλα.',
+    'ml.u2': 'Ιδιωτικό από τη φύση του.', 'ml.u2s': 'Μπλοκάρει τα tracking pixels, ελέγχει τους συνδέσμους, κρατά τους κωδικούς στο keychain του υπολογιστή σου.',
+    'ml.u3': 'Επαφές και Αρχεία.', 'ml.u3s': 'Όσοι σου γράφουν, ομαδοποιημένοι ανά εταιρεία, και κάθε συνημμένο που πήρες ποτέ, σε ένα δευτερόλεπτο.',
+    'ml.more': 'Γνώρισε το RoarMail', 'ml.dl': 'Κατέβασε για Mac / Windows',
+    'rl.what': 'Το shot list, κάδρο κάδρο. Σκηνές και πλάνα με μέγεθος, γωνία, κίνηση και φακό, μια εικόνα για κάθε πλάνο, και ένα PDF που διαβάζει το συνεργείο στο γύρισμα.',
+    'rl.u1': 'Ένα κάδρο για κάθε πλάνο.', 'rl.u1s': 'Σύρε, επικόλλησε ή διάλεξέ το, και η λίστα γίνεται storyboard.',
+    'rl.u2': 'Ένα PDF για το συνεργείο.', 'rl.u2s': 'Σαν λίστα ή σαν storyboard, έτοιμο για το γύρισμα.',
+    'rl.u3': 'Ο λογαριασμός σου στο RoarMe.', 'rl.u3s': 'Όλα σου τα shot lists στο cloud, στο web και σε Mac και Windows.',
+    'rw.what': 'Το σενάριο από την πρώτη σελίδα ως το γύρισμα: εννιά φορμά σε ελληνικά ή αγγλικά, revisions και εκδόσεις, beat board, storyboard και πρόγραμμα γυρισμάτων, ένα AI που διαβάζει όλο το σενάριο, και ένα PDF έτοιμο να σταλεί.',
+    'rw.u1': 'Τα πλήκτρα του Final Draft.', 'rw.u1s': 'Το Enter και το Tab στήνουν τη σελίδα όσο γράφεις, μαζί με ΕΣΩΤ. και ΕΞΩΤ.',
+    'rw.u2': 'Από τη σελίδα ως το γύρισμα.', 'rw.u2s': 'Breakdown, beats, storyboard, shot list και πρόγραμμα γυρισμάτων σε stripboard, όλα από το ίδιο σενάριο.',
+    'rw.u3': 'Ένα AI που διαβάζει όλο το σενάριο.', 'rw.u3s': 'Coverage, continuity, πέρασμα προϋπολογισμού, φάκελος παρουσίασης και μετάφραση, μόνο όταν το ζητήσεις.',
+    'rw.more': 'Γνώρισε το RoarWriter', 'tw.one': 'Δεκαοκτώ εργαλεία για τον υπολογιστή και το γύρισμα.', 'tw.what': 'Μία εφαρμογή, δεκαοκτώ εργαλεία: βλέπει τι χρειάζεται ο υπολογιστής σου, κάνει χώρο, αντιγράφει και ελέγχει τις κάρτες ενός γυρίσματος, κάνει αναφορά για κάθε clip, βρίσκει τα δίδυμα, κρατάει τα αρχεία σου τακτοποιημένα και τους κωδικούς σου κλειδωμένους.', 'tw.u1': 'Τι χρειάζεται ο υπολογιστής, πρώτα.', 'tw.u1s': 'Ένας βαθμός για δίσκους, μνήμη, θερμότητα, μπαταρία και cache, το καθένα με το εργαλείο που το λύνει.', 'tw.u2': 'Φτιαγμένο για το γύρισμα.', 'tw.u2s': 'Αντίγραφα καρτών ελεγμένα byte προς byte με ASC MHL, αναφορές υλικού, έλεγχος clips, contact sheets, μετονομασία.', 'tw.u3': 'Τίποτα δεν χάνεται.', 'tw.u3s': 'Μόνο στον Κάδο, ποτέ αντικατάσταση, και οι κωδικοί κλειδωμένοι στον υπολογιστή σου.', 'tw.more': 'Γνώρισε το RoarKit', 'rv.one': 'Κάθε μορφή, μικρότερο αρχείο: εικόνες, βίντεο και ήχος.', 'rv.what': 'Μετατρέπει και συμπιέζει εικόνες, βίντεο και ήχο στον υπολογιστή σου: κάθε μορφή, μικρότερο αρχείο, και στόχος μεγέθους σε MB όταν πρέπει να χωρέσει. Τίποτα δεν ανεβαίνει.', 'rv.u1': 'Ένα μέγεθος, όχι στα τυφλά.', 'rv.u1s': 'Γράψε 25 MB και υπολογίζει το bitrate από τη διάρκεια, για ένα email, μια φόρμα φεστιβάλ ή το Discord.', 'rv.u2': 'Κάθε μορφή, ένα παράθυρο.', 'rv.u2s': 'HEIC, PNG, ProRes, WAV μέσα· JPG, WebP, H.265, AV1, MP3, GIF και στιγμιότυπα έξω.', 'rv.u3': 'Τίποτα δεν φεύγει από τον υπολογιστή.', 'rv.u3s': 'Χωρίς upload, χωρίς λογαριασμό· τα αρχικά μένουν όπως είναι.', 'rv.more': 'Γνώρισε το RoarMorph', 'rp.one': 'Παίζει κάθε αρχείο βίντεο και ήχου.', 'rp.what': 'Παίζει κάθε αρχείο βίντεο και ήχου στον υπολογιστή σου, ProRes, DNxHR, MXF, MKV, AVI, WAV, FLAC, AC3 και τα υπόλοιπα, με το ρολόι και τα πλήκτρα του μοντάζ. Τίποτα δεν ανεβαίνει.', 'rp.u1': 'Παίζει τα πάντα.', 'rp.u1s': 'Ό,τι ξέρει ο υπολογιστής παίζει όπως είναι· τα υπόλοιπα γίνονται αναπαραγώγιμα επί τόπου, χωρίς να γραφτεί τίποτα στον δίσκο.', 'rp.u2': 'Το ρολόι και τα πλήκτρα του μοντάζ.', 'rp.u2s': 'Το timecode του ίδιου του αρχείου, J K L, ένα καρέ με τα βελάκια, In και Out, loop.', 'rp.u3': 'Το καρέ σε PNG.', 'rp.u3s': 'Πλήρες μέγεθος, από το πρωτότυπο, με όνομα το timecode του, δίπλα στο αρχείο.', 'rp.more': 'Γνώρισε το RoarPlay', 'exp.new': 'Νέο · beta', 'rw.open': 'Γράψε στον browser',
+    'rt.what': 'Στείλε μεγάλα αρχεία, δωρεάν και με ασφάλεια. Ως 5 GB με έναν κοντό σύνδεσμο, με email ή σαν σύνδεσμο, με κωδικό και email όταν κατέβει. Στο roartransfer.com, σε κάθε συνομιλία του RoarMe και στο RoarMail.',
+    'rt.u1': '5 GB, όπως είναι.', 'rt.u1s': 'Αυθεντική ποιότητα, αληθινά ονόματα, πολλά αρχεία κάτω από έναν κοντό σύνδεσμο.',
+    'rt.u2': 'Συνεχίζει από εκεί που σταμάτησε.', 'rt.u2s': 'Αν πέσει η σύνδεση, συνεχίζει αντί να ξεκινήσει από την αρχή.',
+    'rt.u3': 'Σβήνεται μόνο του.', 'rt.u3s': 'Μετά από 1 ή 3 μέρες τα αρχεία σβήνονται. Χωρίς λογαριασμό για τη λήψη, ακόμα και για την αποστολή με το FastTransfer.',
+    'rt.more': 'Γνώρισε το RoarTransfer', 'rt.open': 'Στείλε αρχεία δωρεάν',
+    'rl.more': 'Γνώρισε το RoarList', 'rl.open': 'Φτιάξε το shot list σου', 'rl.demo': 'Δες ένα παράδειγμα', 'rl.dl': 'Mac / Windows',
+    'idea.n': 'Η ιδέα σου', 'idea.t': 'Ένα εργαλείο που <b>θα ήθελες</b> να υπάρχει;', 'idea.p': 'Πες μας τι καθυστερεί την ομάδα σου. Οι καλύτερες ιδέες γίνονται το επόμενο πείραμα.',
+    'ft.legal': 'Απόρρητο & Όροι',
+    'footer': '© 2026 The Mad Lions · Lab'
+  }
+  var nodes = [].slice.call(document.querySelectorAll('[data-t]')), EN = {}
+  nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })
+  function setLang(l) {
+    var d = l === 'el' ? EL : EN
+    nodes.forEach(function (n) { var v = d[n.dataset.t]; if (v == null) v = EN[n.dataset.t]; if (n.hasAttribute('data-html')) n.innerHTML = v; else n.textContent = v })
+    document.documentElement.lang = l === 'el' ? 'el' : 'en'
+    document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) })
+    try { localStorage.setItem('tml_site_lang', l) } catch (e) {}
+  }
+  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang) }) })
+  var saved = 'en'
+  try { saved = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
+  setLang(saved)
+
+
+  /* the apps' order, from Studio > Look > Lab order (site_settings.lab_order, Alex 25 Oct): the tiles at the top and the
+     apps' sections below move to match, numbered and alternating left and right in their new order */
+  var APPS = ['roarme', 'roardino', 'roarmail', 'roarlist', 'roartransfer', 'roarwriter', 'roartwin', 'roarverter'], labOrder = null
+  function orderApps(order) {
+    if (!Array.isArray(order) || !order.length) return
+    var ids = order.filter(function (id) { return APPS.indexOf(id) >= 0 }).concat(APPS.filter(function (id) { return order.indexOf(id) < 0 }))
+    var grid = document.querySelector('.apps'), arts = ids.map(function (id) { return document.getElementById(id) }).filter(Boolean)
+    if (arts.length) {
+      var parent = arts[0].parentNode, all = [].slice.call(parent.children).filter(function (e) { return APPS.indexOf(e.id) >= 0 })
+      var anchor = all[all.length - 1].nextSibling
+      arts.forEach(function (a, i) { parent.insertBefore(a, anchor); a.classList.toggle('flip', i % 2 === 1); a.style.marginTop = i ? '10px' : '' })
+    }
+    ids.forEach(function (id, i) { var t = grid && grid.querySelector('.app[href="#' + id + '"]'); if (t) { grid.appendChild(t); var n = t.querySelector('.app-n'); if (n) n.textContent = (i < 9 ? '0' : '') + (i + 1) } })
+    labOrder = order
+  }
+  try { orderApps(JSON.parse(localStorage.getItem('tml_site_lab') || 'null')) } catch (e) {}
+  fetch('https://naibamqexcqnqhbbqafa.supabase.co/rest/v1/site_settings?key=eq.lab_order&select=value', { headers: { apikey: 'sb_publishable_o1OB_ohozPq1Xr2jg2ZSHA_3GsusXFL' } })
+    .then(function (r) { return r.ok ? r.json() : null })
+    .then(function (r) {
+      var o = r && r[0] && r[0].value
+      if (!Array.isArray(o) || JSON.stringify(o) === JSON.stringify(labOrder)) return
+      orderApps(o); try { localStorage.setItem('tml_site_lab', JSON.stringify(o)) } catch (e) {}
+    }).catch(function () {})
+
+  // the RoarMail demo window keeps its desktop size, scaled to the stage
+  ;[].slice.call(document.querySelectorAll('.desk')).forEach(function (d) {
+    var f = d.querySelector('iframe'), fit = function () { f.style.transform = 'scale(' + d.clientWidth / 1360 + ')' }
+    fit(); if ('ResizeObserver' in window) new ResizeObserver(fit).observe(d); else window.addEventListener('resize', fit)
+  })
+
+  var bar = document.getElementById('bar')
+  var onScroll = function () { bar.classList.toggle('solid', window.scrollY > 30) }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll()
+
+  var rv = [].slice.call(document.querySelectorAll('.reveal'))
+  if (!('IntersectionObserver' in window) || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) rv.forEach(function (e) { e.classList.add('in') })
+  else {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }) }, { rootMargin: '0px 0px -6% 0px', threshold: .06 })
+    rv.forEach(function (e) { io.observe(e) })
+  }
+})()
+</script>
+<script src="fresh.js" defer></script>
+</body>
+</html>

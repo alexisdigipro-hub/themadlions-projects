@@ -1,0 +1,1 @@
+import"./main-eUKFJJhR.js";const n=new Map,c=e=>e>1048576?`${(e/1048576).toFixed(1)} MB`:`${Math.round(e/1024)} KB`;async function i({projectId:e,id:t,file:o,onProgress:s,pcloud:r}){return n.set(t,URL.createObjectURL(o)),{path:""}}async function u(e){}async function d(e,t=!1){return e&&n.get(e.id)||""}export{d as a,u as d,c as f,i as u};

@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- RoarKit's page on the company site (Alex, 29 Oct: RoarTwin became RoarKit, a toolbox of sixteen tools, eighteen since 0.5.0). Built on
+     the RoarTwin page (lab/roartwin/ now redirects here): the Overview as the hero, the screens to click through, the
+     tools by group, what was made for a shoot, the rest, safe, downloads (releases/latest of alexisdigipro-hub/roartwin,
+     whose files still carry the name RoarTwin), questions. EN and GR. Refreshed 29 Oct with the Lab's fresh layer
+     (../fresh.css, ../fresh.js): the toolbox icon in the hero, a version chip, What's new (0.4.0 and 0.4.1) as a bento.
+     Refreshed 30 Oct for 0.5.0 to 0.7.2: Uninstall apps, Startup items, the menu bar icon, jobs it does by itself,
+     Similar photos, the Roar family's glass. -->
+<title>RoarKit · Eighteen tools for the computer and the shoot, for Mac and Windows · by The Mad Lions</title>
+<link rel="canonical" href="https://themadlions.com/lab/roarkit/">
+<meta name="description" content="RoarKit, the toolbox of The Mad Lions Lab: a score for your computer, space map and clean up, duplicate finder for files and videos, verified card copies with ASC MHL, media reports, clip check, contact sheets, clip renaming, similar photos, a two-pane file manager with media info, archives with password-locked ZIPs, drive health and speed, computer stats, startup items, an uninstaller that finds what apps leave behind, a password vault with 2FA. Dark or light. Free for Mac and Windows.">
+<meta name="theme-color" content="#16181c">
+<meta property="og:title" content="RoarKit · by The Mad Lions">
+<meta property="og:description" content="One app, eighteen tools: what the computer needs, the space, the shoot's drives, your files, your passwords.">
+<meta property="og:url" content="https://themadlions.com/lab/roarkit/">
+<meta property="og:image" content="https://themadlions.com/lab/roarkit.jpg">
+<link rel="icon" href="icon.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../fresh.css">
+<link rel="stylesheet" href="../product.css">
+<style>
+:root {
+  --bg: #16181c; --bg-2: #1d2025; --bg-3: #24282f; --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.16);
+  --text: #eef0f3; --muted: rgba(214,220,228,.6); --dim: rgba(214,220,228,.38);
+  --red: #d40000; --red-hi: #ff3b2f; --ok: #2fd36b;
+  --glass: rgba(255,255,255,.055); --glass-edge: rgba(255,255,255,.12);
+  --pad: clamp(18px, 4.5vw, 72px);
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); scroll-behavior: smooth; }
+body { margin: 0; color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(1100px 620px at 50% -10%, #3c424c 0%, transparent 62%), radial-gradient(800px 600px at 100% 100%, rgba(212,0,0,.10), transparent 70%), linear-gradient(180deg, #23272e 0%, #17191d 50%, #121417 100%); }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+img, svg { display: block; }
+:focus-visible { outline: 2px solid var(--red-hi); outline-offset: 3px; border-radius: 8px; }
+.wordmark { filter: invert(1); height: auto; }
+.rm { font-family: Jost, var(--sans); display: inline-flex; align-items: baseline; letter-spacing: .02em; line-height: .86; }
+.rm .a { font-weight: 200; } .rm .b { font-weight: 800; }
+.mono { font-family: var(--mono); }
+.beta { font-family: var(--mono); font-style: normal; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; padding: 3px 7px; border-radius: 999px; border: 1px solid rgba(212,0,0,.6); color: #ff8f86; background: rgba(212,0,0,.14); }
+
+/* pills */
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 48px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 600; letter-spacing: .01em; border: 1px solid var(--glass-edge); background: var(--glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); cursor: pointer; transition: transform .3s var(--ease), background .2s, border-color .2s, filter .2s; white-space: nowrap; }
+.pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.28); }
+.pill:active { transform: scale(.97); }
+.pill.main { background: var(--red); border-color: transparent; color: #fff; box-shadow: 0 12px 34px rgba(212,0,0,.32); }
+.pill.main:hover { filter: brightness(1.1); }
+.pill.sm { height: 38px; padding: 0 16px; font-size: 13.5px; }
+.pill svg { width: 18px; height: 18px; flex: none; }
+
+/* bar */
+.bar { position: fixed; inset: 0 0 auto; z-index: 30; display: flex; align-items: center; gap: 18px; padding: calc(12px + env(safe-area-inset-top)) var(--pad) 12px; transition: background .4s, border-color .4s; border-bottom: 1px solid transparent; }
+.bar.solid { background: rgba(22,24,28,.72); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); border-color: var(--line); }
+.bar .home { display: flex; align-items: center; gap: 14px; }
+.bar .home .wordmark { width: 128px; }
+.bar .home .sep { width: 1px; height: 22px; background: var(--line-2); }
+.bar .home .rm { font-size: 19px; }
+.bar nav { margin-left: auto; display: flex; gap: 2px; }
+.bar nav a { padding: 8px 13px; border-radius: 999px; font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); transition: color .2s, background .2s; }
+.bar nav a:hover { color: var(--text); background: var(--glass); }
+.bar .end { display: flex; align-items: center; gap: 10px; }
+.lang { display: flex; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); }
+.lang button { border: 0; background: transparent; cursor: pointer; padding: 5px 11px; border-radius: 999px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--muted); }
+.lang button.on { background: rgba(255,255,255,.14); color: var(--text); }
+
+/* hero */
+.hero { position: relative; padding: calc(132px + env(safe-area-inset-top)) var(--pad) 0; }
+.hero-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 28px; align-items: end; }
+.kicker { margin: 0; font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); line-height: 1.6; }
+.kicker i { display: inline-block; width: 7px; height: 7px; margin-right: 10px; vertical-align: 1px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px rgba(47,211,107,.8); }
+.hero h1 { margin: 22px 0 0; font-size: clamp(72px, 15.5vw, 250px); line-height: .8; display: flex; align-items: flex-end; gap: clamp(10px, 2vw, 28px); flex-wrap: nowrap; }
+.hero h1 .beta { font-size: clamp(10px, 1vw, 13px); margin-bottom: clamp(10px, 2.4vw, 40px); }
+.app-icon { width: clamp(76px, 10vw, 150px); height: auto; filter: drop-shadow(0 24px 50px rgba(212,0,0,.32)); }
+.hero-sub { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: end; margin-top: clamp(28px, 4vw, 52px); }
+.lead { margin: 0; font-size: clamp(22px, 2.5vw, 34px); font-weight: 300; line-height: 1.25; letter-spacing: -.01em; text-wrap: balance; color: color-mix(in srgb, var(--text) 82%, transparent); }
+.lead b { font-weight: 700; color: var(--text); }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+.cta-note { grid-column: 1 / -1; margin: -6px 0 0; text-align: right; font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; color: var(--dim); }
+.cta-note a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+
+/* the frame: the app as it is today */
+.frame { position: relative; margin: clamp(44px, 6vw, 84px) auto 0; max-width: 1380px; perspective: 1800px; }
+.frame::before { content: ''; position: absolute; left: 10%; right: 10%; top: 12%; bottom: -6%; background: radial-gradient(closest-side, rgba(212,0,0,.32), transparent); filter: blur(60px); z-index: -1; }
+.tag { position: absolute; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 8px 12px 8px 8px; border-radius: 999px; background: rgba(27,30,35,.86); border: 1px solid var(--line-2); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 16px 40px rgba(0,0,0,.4); font-family: var(--mono); font-size: 11px; letter-spacing: .04em; white-space: nowrap; }
+.tag i { width: 22px; height: 22px; border-radius: 50%; background: var(--red); display: grid; place-items: center; font-style: normal; font-size: 10px; font-weight: 700; color: #fff; }
+.tag.t1 { left: 51%; bottom: 11%; } .tag.t2 { right: 3%; top: 18%; } .tag.t3 { left: 3%; top: 26%; }
+
+/* ticker */
+.ticker { margin-top: clamp(64px, 9vw, 120px); border-block: 1px solid var(--line); overflow: hidden; padding: 18px 0; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.ticker-in { display: flex; gap: 40px; width: max-content; animation: tick 46s linear infinite; font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.ticker-in span { display: inline-flex; align-items: center; gap: 40px; }
+.ticker-in span::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
+@keyframes tick { to { transform: translateX(-50%); } }
+
+/* sections */
+section { padding: clamp(84px, 11vw, 160px) var(--pad) 0; max-width: 1480px; margin: 0 auto; }
+.sec-h { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 48px; align-items: end; margin-bottom: clamp(36px, 5vw, 64px); }
+.idx { font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--red-hi); margin: 0 0 16px; }
+h2 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(42px, 6.2vw, 96px); font-weight: 200; line-height: .92; letter-spacing: -.01em; text-wrap: balance; }
+h2 b { font-weight: 800; }
+.sec-h p.sub { margin: 0; font-size: 17px; line-height: 1.6; color: var(--muted); max-width: 520px; justify-self: end; }
+
+/* the big rows */
+.three { border-top: 1px solid var(--line); }
+.big { display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1fr); gap: clamp(20px, 4vw, 64px); align-items: center; padding: clamp(34px, 4.5vw, 60px) 0; border-bottom: 1px solid var(--line); }
+.big .no { font-family: var(--mono); font-size: 13px; letter-spacing: .14em; color: var(--dim); align-self: start; padding-top: 12px; }
+.big h3 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(32px, 4vw, 58px); font-weight: 300; line-height: 1; letter-spacing: -.01em; }
+.big h3 b { font-weight: 800; }
+.big p { margin: 16px 0 0; font-size: 16.5px; line-height: 1.6; color: var(--muted); max-width: 520px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+.chips span { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; padding: 6px 11px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); }
+.viz { justify-self: end; width: min(440px, 100%); aspect-ratio: 4 / 3; border-radius: 22px; background: linear-gradient(160deg, #262a31, #1a1d22); border: 1px solid var(--line); display: grid; place-items: center; position: relative; overflow: hidden; }
+.viz::after { content: ''; position: absolute; inset: 0; background: radial-gradient(60% 60% at 50% 110%, rgba(212,0,0,.22), transparent 70%); pointer-events: none; }
+/* new: an uneven board */
+.board { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; }
+.tile { position: relative; border-radius: 26px; padding: clamp(22px, 2.6vw, 34px); background: linear-gradient(170deg, rgba(43,48,56,.7), rgba(27,30,35,.7)); border: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: 12px; min-height: 300px; }
+.tile .k { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--red-hi); display: flex; align-items: center; gap: 8px; }
+.tile .k em { font-style: normal; color: #7ee2a0; border: 1px solid rgba(47,211,107,.4); border-radius: 99px; padding: 2px 8px; letter-spacing: .1em; }
+.tile h3 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(28px, 3vw, 44px); font-weight: 300; line-height: 1; } .tile h3 b { font-weight: 800; }
+.tile p { margin: 0; font-size: 15.5px; line-height: 1.6; color: var(--muted); max-width: 520px; }
+.tile .more { margin-top: auto; align-self: flex-start; font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: var(--text); display: inline-flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line-2); padding-bottom: 3px; }
+.tile .more svg { width: 14px; height: 14px; transition: transform .3s var(--ease); }
+.tile .more:hover svg { transform: translateX(3px); }
+
+.t-icon { flex-direction: row; align-items: center; gap: clamp(20px, 4vw, 56px); }
+.t-icon .txt { display: flex; flex-direction: column; gap: 12px; }
+.t-icon .icons { display: flex; align-items: center; gap: 18px; flex: none; }
+.t-icon .icons img, .t-icon .icons svg { width: clamp(90px, 10vw, 140px); height: auto; }
+.t-icon .icons .old { width: clamp(56px, 6vw, 84px); opacity: .45; filter: grayscale(.3); }
+.t-icon .icons .to { font-family: var(--mono); color: var(--dim); }
+
+/* everything else: an index */
+.index { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(28px, 5vw, 80px); border-top: 1px solid var(--line); }
+.ix { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 4px 14px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+.ix .no { grid-row: span 2; font-family: var(--mono); font-size: 12px; color: var(--dim); padding-top: 4px; }
+.ix b { font-size: 18px; font-weight: 650; letter-spacing: -.005em; }
+.ix p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted); }
+
+/* privacy */
+.priv { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: clamp(28px, 5vw, 80px); align-items: start; }
+.priv .legal { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 26px; }
+.prom { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.pr { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 2px 14px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+.pr i { grid-row: span 2; width: 34px; height: 34px; border-radius: 11px; background: var(--glass); border: 1px solid var(--glass-edge); display: grid; place-items: center; } .pr i svg { width: 17px; height: 17px; }
+.pr b { font-size: 16px; } .pr p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+
+/* download */
+.dls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.dl { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 26px 22px 22px; border-radius: 24px; background: rgba(255,255,255,.04); border: 1px solid var(--line); }
+.dl.mine { border-color: rgba(255,90,80,.55); background: linear-gradient(170deg, rgba(212,0,0,.14), rgba(255,255,255,.03)); }
+.dl.mine::before { content: attr(data-mine); position: absolute; top: -10px; left: 20px; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 3px 9px; border-radius: 99px; background: var(--red); color: #fff; }
+.dl > i { width: 40px; height: 40px; } .dl > i svg { width: 30px; height: 30px; }
+.dl h3 { margin: 6px 0 0; font-size: 22px; font-weight: 700; }
+.dl small { font-size: 14px; line-height: 1.5; color: var(--muted); min-height: 42px; }
+.dl .pill { margin-top: auto; order: 2; }
+.dl .alt { order: 1; }
+.dl .alt { font-size: 12.5px; color: var(--dim); } .dl .alt a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.dl-note { margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.dl-note p { margin: 0; padding: 16px 18px; border-radius: 18px; border: 1px dashed var(--line-2); font-size: 14px; line-height: 1.55; color: var(--muted); }
+.dl-note p b { color: var(--text); }
+.ver { font-family: var(--mono); font-size: 12px; color: #7ee2a0; letter-spacing: .06em; margin: 14px 0 0; }
+
+/* questions */
+.faq { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(28px, 5vw, 80px); }
+.qa { border-top: 1px solid var(--line); }
+.qa details { border-bottom: 1px solid var(--line); }
+.qa summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 0; font-size: 17px; font-weight: 600; }
+.qa summary::-webkit-details-marker { display: none; }
+.qa summary::after { content: '+'; font-family: var(--mono); font-weight: 400; font-size: 20px; color: var(--muted); transition: transform .3s var(--ease); }
+.qa details[open] summary::after { transform: rotate(45deg); color: var(--red-hi); }
+.qa p { margin: 0 0 20px; font-size: 15.5px; line-height: 1.6; color: var(--muted); max-width: 640px; }
+
+/* contact + footer */
+.contact { text-align: center; padding-bottom: clamp(80px, 10vw, 140px); }
+.contact .mail { display: inline-block; margin-top: 26px; font-family: Jost, var(--sans); font-size: clamp(26px, 4vw, 54px); font-weight: 300; border-bottom: 1px solid var(--line-2); padding-bottom: 6px; transition: color .2s, border-color .2s; }
+.contact .mail:hover { color: var(--red-hi); border-color: var(--red-hi); }
+footer { padding: 26px var(--pad) calc(26px + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; color: var(--dim); }
+footer .wordmark { width: 120px; opacity: .6; }
+footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { color: var(--text); }
+
+/* coming in */
+.rv { opacity: 0; transform: translateY(22px); transition: opacity .9s var(--ease), transform .9s var(--ease); transition-delay: var(--d, 0s); }
+.rv.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; transition: none; } .ticker-in, .v-tr .bar2 i { animation: none; } html { scroll-behavior: auto; } .win { transform: none !important; } }
+
+@media (max-width: 1100px) {
+  .bar nav { display: none; }
+  .tag.t2 { display: none; }
+  .s7, .s5, .s6 { grid-column: span 12; }
+  .dls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .bar .home .wordmark { width: 96px; } .bar .home .sep, .bar .end .pill { display: none; }
+  .bar .end { margin-left: auto; }
+  .hero { padding-top: calc(104px + env(safe-area-inset-top)); }
+  .hero-top, .hero-sub, .sec-h, .big, .priv, .faq, .index, .dl-note { grid-template-columns: minmax(0, 1fr); }
+  .hero h1 { font-size: clamp(54px, 19.5vw, 110px); flex-wrap: wrap; }
+  .cta { justify-content: stretch; } .cta .pill { flex: 1 1 100%; }
+  .cta-note { text-align: left; }
+  .sec-h p.sub { justify-self: start; }
+  .tag { display: none; }
+  .big .no { padding-top: 0; }
+  .viz { justify-self: stretch; width: 100%; }
+  .t-icon { flex-direction: column; align-items: flex-start; }
+  .dls { grid-template-columns: minmax(0, 1fr); }
+  .dl small { min-height: 0; }
+}
+
+/* RoarTwin's own: the app's screen as the hero, small drawings for the big tiles */
+.shotimg { display: block; width: 100%; height: auto; border-radius: 22px; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 60px 140px rgba(0,0,0,.6); transform: rotateX(calc(var(--ry, 0) * 1deg)) rotateY(calc(var(--rx, 0) * 1deg)); transition: transform .5s var(--ease); }
+.app-icon-img { width: clamp(64px, 9vw, 140px); height: auto; border-radius: 22%; align-self: center; }
+.mc { width: 100%; max-width: 340px; margin: 0 auto; display: grid; gap: 8px; }
+.mc .r { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 14px; background: var(--glass); border: 1px solid var(--glass-edge); font-size: 13px; }
+.mc .r b { font-weight: 500; } .mc .r small { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.mc .r i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+.mc .r.on { border-color: color-mix(in srgb, var(--red) 55%, transparent); }
+.mc .big { padding: 16px; border-radius: 18px; background: linear-gradient(160deg, #2a1416, #16181c); border: 1px solid var(--line-2); }
+.mc .big b { display: block; font-size: 30px; font-weight: 300; letter-spacing: .02em; } .mc .big small { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em; }
+.mc .pills { display: flex; gap: 8px; flex-wrap: wrap; } .mc .pills span { padding: 8px 13px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); font-size: 12px; }
+.mc .pills span.m { background: var(--red); border-color: transparent; color: #fff; }
+
+.mc .r .th { width: 46px; height: 26px; border-radius: 6px; background: linear-gradient(135deg, #12161f, #3a1416); flex: none; }
+.mc .r .th.b { background: linear-gradient(135deg, #1d4a35, #06110c); }
+.mc .r .x { flex: none; width: 18px; height: 18px; border-radius: 6px; border: 1.5px solid rgba(255,255,255,.3); }
+.mc .r .x.on { background: var(--red); border-color: var(--red); }
+.mc .k { color: #32d74b; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; }
+/* RoarKit's own */
+.hero h1 { font-size: clamp(48px, 9.5vw, 160px); }
+.tag.t1 { left: 44%; bottom: -18px; } .tag.t2 { right: -14px; top: 9%; } .tag.t3 { left: -14px; top: 85%; }
+.s7 { grid-column: span 7; } .s5 { grid-column: span 5; } .s6 { grid-column: span 6; }
+.tile { min-height: 0; }
+.tile .k i { width: 9px; height: 9px; border-radius: 50%; background: var(--red-hi); }
+.tl { display: grid; gap: 8px; margin-top: 6px; }
+.tl a { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 2px 14px; align-items: center; padding: 12px 14px; border-radius: 18px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.06); transition: background .25s, border-color .25s, transform .35s var(--ease); }
+.tl a:hover { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.14); transform: translateY(-1px); }
+.tl .ic { grid-row: span 2; width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; color: #fff; background: linear-gradient(160deg, color-mix(in srgb, var(--t) 92%, #fff), color-mix(in srgb, var(--t) 78%, #000)); box-shadow: 0 6px 18px color-mix(in srgb, var(--t) 30%, transparent), inset 0 1px 0 rgba(255,255,255,.3); }
+.tl .ic svg { width: 19px; height: 19px; }
+.tl b { font-size: 16px; font-weight: 650; }
+.tl small { font-size: 14px; line-height: 1.5; color: var(--muted); }
+/* a look: the screens */
+.tour-tabs { position: relative; display: flex; gap: 2px; padding: 4px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-edge); overflow-x: auto; scrollbar-width: none; max-width: 100%; width: max-content; margin: 0 auto; }
+.tour-tabs::-webkit-scrollbar { display: none; }
+.tour-tabs button { position: relative; z-index: 1; flex: none; border: 0; background: transparent; cursor: pointer; padding: 9px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600; color: var(--muted); transition: color .25s; white-space: nowrap; }
+.tour-tabs button.on { color: var(--text); }
+.tour-tabs .lens { position: absolute; z-index: 0; top: 4px; bottom: 4px; left: 0; width: 0; border-radius: 999px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.14); transition: transform .5s var(--ease), width .5s var(--ease); }
+.tour-stage { position: relative; margin: 26px auto 0; max-width: 1240px; }
+.tour-stage::before { content: ''; position: absolute; left: 12%; right: 12%; top: 14%; bottom: -4%; background: radial-gradient(closest-side, rgba(212,0,0,.26), transparent); filter: blur(60px); z-index: -1; }
+.tour-stage .shots { position: relative; aspect-ratio: 1440 / 900; border-radius: 22px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); box-shadow: 0 50px 120px rgba(0,0,0,.55); background: #16181c; }
+.tour-stage .shots img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; opacity: 0; transform: scale(1.012); transition: opacity .55s var(--ease), transform .8s var(--ease); }
+.tour-stage .shots img.on { opacity: 1; transform: none; }
+.tour-cap { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 10px 40px; align-items: baseline; margin: 26px auto 0; max-width: 1240px; }
+.tour-cap h3 { margin: 0; font-family: Jost, var(--sans); font-size: clamp(26px, 2.8vw, 40px); font-weight: 300; line-height: 1.05; } .tour-cap h3 b { font-weight: 800; }
+.tour-cap p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--muted); }
+.tour-cap > div { display: none; grid-column: 1 / -1; grid-template-columns: inherit; gap: inherit; align-items: baseline; }
+.tour-cap > div.on { display: grid; animation: capin .6s var(--ease); }
+@keyframes capin { from { opacity: 0; transform: translateY(8px); } }
+/* small drawings */
+.mc .r .ok { margin-left: auto; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; color: #32d74b; }
+.mc .r .bad { margin-left: auto; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; color: #ff6b5e; }
+.mc .r .dr { flex: none; width: 18px; height: 18px; color: var(--muted); } .mc .r .dr svg { width: 18px; height: 18px; }
+.mc .bar3 { height: 5px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; }
+.mc .bar3 i { display: block; height: 100%; width: 100%; border-radius: inherit; background: linear-gradient(90deg, #34c759, #7ee2a0); animation: fill 3.4s var(--ease) infinite alternate; }
+@keyframes fill { from { width: 22%; } }
+.mc .lock { margin-left: auto; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; padding: 3px 8px; border-radius: 99px; color: #ffd666; background: rgba(255,196,0,.14); }
+.sheet { width: 82%; z-index: 1; aspect-ratio: 297 / 210; border-radius: 6px; background: #f1efeb; color: #1b1e23; padding: 5% 5.5%; display: grid; grid-template-rows: auto auto 1fr; gap: 6%; box-shadow: 0 30px 60px rgba(0,0,0,.45); transform: rotate(-2deg); }
+.sheet .ph { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid rgba(0,0,0,.15); padding-bottom: 4%; }
+.sheet .ph .rm { font-size: clamp(13px, 1.5vw, 18px); } .sheet .ph .rm .b { color: #d40000; }
+.sheet .ph small, .sheet .pm { font-family: var(--mono); font-size: 8px; color: #6b6f76; letter-spacing: .04em; }
+.sheet .pg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; align-content: start; }
+.sheet .pg i { aspect-ratio: 16 / 9; border-radius: 2px; background: #22262c; position: relative; overflow: hidden; }
+.sheet .pg i:nth-child(3n) { background: #3a1416; } .sheet .pg i:nth-child(4n+1) { background: #1d3a4a; }
+.sheet .pg i.x { outline: 2px solid #ff3b2f; outline-offset: 1px; }
+.score { width: 80%; z-index: 1; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; }
+.score .ring { width: 92px; height: 92px; } .score .ring circle { fill: none; stroke-width: 8; } .score .ring .t { stroke: rgba(255,255,255,.1); } .score .ring .p { stroke: var(--red-hi); stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; }
+.score .ring text { font-family: var(--sans); font-size: 28px; font-weight: 300; fill: #eef0f3; }
+.score b { display: block; font-size: 19px; font-weight: 300; } .score b strong { font-weight: 800; }
+.score small { font-family: var(--mono); font-size: 10.5px; color: var(--muted); letter-spacing: .06em; }
+.score .rows { grid-column: 1 / -1; display: grid; gap: 6px; }
+.score .rows span { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px; background: var(--glass); border: 1px solid var(--glass-edge); font-size: 12.5px; }
+.score .rows span::before { content: ''; width: 3px; align-self: stretch; border-radius: 3px; background: #ff6b5e; } .score .rows span.w::before { background: #ffcc00; }
+.score .rows em { margin-left: auto; font-style: normal; font-size: 11px; padding: 4px 10px; border-radius: 99px; background: var(--red); color: #fff; } .score .rows span.w em { background: rgba(255,255,255,.1); }
+.mc .sum { padding: 16px; border-radius: 18px; background: linear-gradient(160deg, #2a1416, #16181c); border: 1px solid var(--line-2); }
+.mc .sum b { display: block; font-size: 30px; font-weight: 300; letter-spacing: .02em; } .mc .sum small { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em; }
+@media (min-width: 761px) { .dls { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 920px; } }
+@media (max-width: 1100px) { .s7, .s5, .s6 { grid-column: span 12; } }
+.legal-note { margin: 12px 0 0; font-size: 13.5px; color: var(--dim); line-height: 1.55; }
+@media (max-width: 760px) {
+  .tour-cap, .tour-cap > div.on { grid-template-columns: minmax(0, 1fr); }
+  .tour-tabs { width: 100%; }
+  .tl a { padding: 11px 12px; }
+}
+@media (max-width: 720px) { .frame .tag { display: none; } .hero h1 { font-size: clamp(36px, 11.5vw, 80px); } .app-icon-img { width: 52px; } }
+
+/* the fresh layer on this page (29 Oct): the new icon in the hero, the version chip, What's new */
+.hero h1 .f-icon-wrap { align-self: center; margin-right: clamp(4px, 1vw, 14px); }
+.hero-top > .f-ver { margin-bottom: 8px; }
+.f-new { padding-left: var(--pad); padding-right: var(--pad); }
+.f-new-head h2 { font-family: Jost, var(--sans); font-weight: 300; } .f-new-head h2 b { font-weight: 800; }
+.f-new-head .idx { margin-bottom: 14px; }
+.f-card.tall img.f-shot { margin-top: 14px; }
+.f-card .f-k { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+@media (max-width: 760px) { .hero-top > .f-ver { justify-self: start; margin: 4px 0 0; } }
+@media (max-width: 720px) { .hero h1 .f-icon { width: 76px; } }
+</style>
+<!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"RoarKit","url":"https://themadlions.com/lab/roarkit/","description":"RoarKit, the toolbox of The Mad Lions Lab: a score for your computer, space map and clean up, duplicate finder for files and videos, verified card copies with ASC MHL, media reports, clip check, contact sheets, clip renaming, similar photos, a two-pane file manager with media info, archives with password-locked ZIPs, drive health and speed, computer stats, startup items, an uninstaller that finds what apps leave behind, a password vault with 2FA. Dark or light. Free for Mac and Windows.","applicationCategory":"UtilitiesApplication","operatingSystem":"macOS, Windows","image":"https://themadlions.com/lab/roarkit.jpg","screenshot":"https://themadlions.com/lab/roarkit.jpg","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"isAccessibleForFree":true,"inLanguage":["en","el"],"author":{"@id":"https://themadlions.com/#org"},"publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"}}</script><!--/seo:app-->
+</head>
+<body>
+<header class="bar" id="bar">
+  <a class="home" href="../../" aria-label="The Mad Lions">
+    <img class="wordmark" src="../../wordmark.png" alt="The Mad Lions">
+    <span class="sep"></span>
+    <span class="rm" aria-label="RoarKit"><span class="a">ROAR</span><span class="b">KIT</span></span>
+  </a>
+  <nav aria-label="Sections">
+    <a href="#onset" data-t="nav.onset">On set</a>
+    <a href="#tour" data-t="nav.tour">A look</a>
+    <a href="#tools" data-t="nav.tools">Tools</a>
+    <a href="#shoot" data-t="nav.shoot">For the shoot</a>
+    <a href="#download" data-t="nav.download">Download</a>
+    <a href="#faq" data-t="nav.faq">Questions</a>
+    <a href="#new" data-t="nav.new">New</a>
+  </nav>
+  <div class="end">
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" class="on">EN</button>
+      <button type="button" data-lang="el">GR</button>
+    </div>
+    <a class="pill sm main" href="#download" data-t="cta.get">Get RoarKit</a>
+  </div>
+</header>
+
+<main>
+<div class="hero" id="top">
+  <div class="hero-head">
+    <p class="kicker rv"><i></i><span data-t="hero.kicker">Toolbox · The Mad Lions Lab · Experiment 07</span></p>
+    <h1 class="brand rv" style="--d:.04s">
+      <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
+      <span class="rm"><span class="a">ROAR</span><span class="b">KIT</span></span><em class="beta">beta</em>
+    </h1>
+    <p class="claim rv" style="--d:.1s" data-t="hero.claim" data-html>Eighteen tools.<br><b>One app.</b></p>
+    <p class="lead rv" style="--d:.16s" data-t="hero.lead2" data-html>Room on the disk, cards copied and checked, every clip reported, files tidy and passwords locked, <b>on your own computer</b>. Mac and Windows.</p>
+    <div class="cta rv" style="--d:.22s">
+      <a class="pill main" id="dl-main" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span>Download</span></a>
+      <a class="pill" href="#tour"><span data-t="cta.how">Take a look</span></a>
+    </div>
+    <p class="cta-note rv" style="--d:.3s"><span data-t="cta.note">Free · Mac and Windows · nothing is deleted, only moved to the Trash</span></p>
+    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.new">New</b><span><span data-t="ver.head">Two new tools, a new look</span> · <span class="f-vn">0.7.2</span></span></a></div>
+  </div>
+  <div class="scene stack rv" style="--d:.18s">
+    <figure class="scene-photo"><img src="photo-hero.jpg" alt="" width="1600" height="900" fetchpriority="high"><figcaption data-t="sc.cap">17:30, day three. Every card copied, checked twice, reported.</figcaption></figure>
+    <div class="frame" style="--d:.2s" aria-hidden="true">
+    <img class="shotimg" id="win" src="overview.jpg" alt="" width="1800" height="1125">
+    <div class="tag t1"><i>01</i><span data-t="tag.1">What needs care, first</span></div>
+    <div class="tag t2"><i>02</i><span data-t="tag.2">A score for the computer</span></div>
+    <div class="tag t3"><i>03</i><span data-t="tag.3">Eighteen tools, one menu</span></div>
+  </div>
+  </div>
+</div>
+
+<section id="numbers" class="nums-sec">
+  <div class="nums">
+    <div class="num f-glass rv"><b>18</b><span data-t="nm1">tools in one app, in one menu.</span></div>
+    <div class="num f-glass rv" style="--d:.06s"><b>0</b><span data-t="nm2">files deleted. What you choose goes to the Trash.</span></div>
+    <div class="num f-glass rv" style="--d:.12s"><b>256<small>-bit</small></b><span data-t="nm3">AES for the passwords in your vault.</span></div>
+    <div class="num f-glass rv" style="--d:.18s"><b>€0</b><span data-t="nm4">No subscription, no ads, no account.</span></div>
+  </div>
+</section>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-in">
+<span data-t="tk.1">What the computer needs</span><span data-t="tk.2">Space map</span><span data-t="tk.3">Clean up</span><span data-t="tk.4">Find twins</span><span data-t="tk.5">Card copies with MHL</span><span data-t="tk.6">Media report</span><span data-t="tk.7">Clip check</span><span data-t="tk.8">Contact sheet</span><span data-t="tk.9">Rename clips</span><span data-t="tk.10">File manager</span><span data-t="tk.11">ZIP · RAR · 7z</span><span data-t="tk.12">Drive health</span><span data-t="tk.13">Disk speed</span><span data-t="tk.14">Internet speed</span><span data-t="tk.15">Password vault</span><span data-t="tk.17">Uninstall apps</span><span data-t="tk.18">Startup items</span><span data-t="tk.19">Similar photos</span><span data-t="tk.16">Mac · Windows</span><span data-t="tk.1">What the computer needs</span><span data-t="tk.2">Space map</span><span data-t="tk.3">Clean up</span><span data-t="tk.4">Find twins</span><span data-t="tk.5">Card copies with MHL</span><span data-t="tk.6">Media report</span><span data-t="tk.7">Clip check</span><span data-t="tk.8">Contact sheet</span><span data-t="tk.9">Rename clips</span><span data-t="tk.10">File manager</span><span data-t="tk.11">ZIP · RAR · 7z</span><span data-t="tk.12">Drive health</span><span data-t="tk.13">Disk speed</span><span data-t="tk.14">Internet speed</span><span data-t="tk.15">Password vault</span><span data-t="tk.17">Uninstall apps</span><span data-t="tk.18">Startup items</span><span data-t="tk.19">Similar photos</span><span data-t="tk.16">Mac · Windows</span>
+</div></div>
+
+<div class="f-sep" aria-hidden="true"></div>
+
+<section id="onset">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="on.idx">01 · On set</p><h2 class="rv" data-t="on.title" data-html>Made by people <b>who make films</b>.</h2></div>
+    <p class="sub rv" data-t="on.sub">We built RoarKit for our own work at The Mad Lions. This is where it gets used.</p>
+  </div>
+  <div class="people">
+    <figure class="person rv"><img src="photo-set.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on1.k">On set · The DIT</span><b data-t="on1.t">Cards copied, checked twice.</b><span data-t="on1.p">Copies with checksums and an MHL, and a report of every clip, before the card goes back in the camera.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.08s"><img src="photo-office.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on2.k">In the office · The producer</span><b data-t="on2.t">Room on the disk again.</b><span data-t="on2.p">A map of what fills the computer, caches cleared to the Trash, the twins found, the startup items calmed.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.16s"><img src="photo-home.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on3.k">At home · The editor</span><b data-t="on3.t">Every drive in order.</b><span data-t="on3.p">What is on every drive, files renamed and tidied, passwords in a vault only you open.</span></figcaption></figure>
+  </div>
+</section>
+
+<section id="tour">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="tour.idx">02 · A look</p><h2 class="rv" data-t="tour.title" data-html>See it <b>for yourself</b>.</h2></div>
+    <p class="sub rv" data-t="tour.sub">The real app, with the demo's sample drives. Choose a screen.</p>
+  </div>
+  <div class="tour-tabs rv" role="tablist" aria-label="Screens"><i class="lens" aria-hidden="true"></i>
+    <button type="button" role="tab" data-shot="overview" class="on" aria-selected="true" data-t="tt.overview">Overview</button>
+    <button type="button" role="tab" data-shot="space" aria-selected="false" data-t="tt.space">Space map</button>
+    <button type="button" role="tab" data-shot="twins" aria-selected="false" data-t="tt.twins">Find twins</button>
+    <button type="button" role="tab" data-shot="report" aria-selected="false" data-t="tt.report">Media report</button>
+    <button type="button" role="tab" data-shot="files" aria-selected="false" data-t="tt.files">File manager</button>
+    <button type="button" role="tab" data-shot="stats" aria-selected="false" data-t="tt.stats">Computer stats</button>
+    <button type="button" role="tab" data-shot="speed" aria-selected="false" data-t="tt.speed">Disk speed</button>
+    <button type="button" role="tab" data-shot="vault" aria-selected="false" data-t="tt.vault">Vault</button>
+    <button type="button" role="tab" data-shot="drives" aria-selected="false" data-t="tt.drives">Drive health</button>
+    <button type="button" role="tab" data-shot="overview-light" aria-selected="false" data-t="tt.overview-light">Light</button>
+  </div>
+  <div class="tour-stage rv"><div class="shots">
+    <img src="overview.jpg" alt="" width="1800" height="1125" class="on" data-shot="overview">
+    <img src="space.jpg" alt="" width="1800" height="1125" loading="lazy" data-shot="space">
+    <img src="twins.jpg" alt="" width="1800" height="1125" loading="lazy" data-shot="twins">
+    <img src="report.jpg" alt="" width="1800" height="1125" loading="lazy" data-shot="report">
+    <img src="files.jpg" alt="" width="1800" height="1125" loading="lazy" data-shot="files">
+    <img src="stats.jpg" alt="" width="1800" height="1125" loading="lazy" data-shot="stats">
+    <img src="speed.jpg" alt="" width="1800" height="1125" loading="lazy" data-shot="speed">
+    <img src="vault.jpg" alt="" width="1800" height="1125" loading="lazy" data-shot="vault">
+    <img src="drives.jpg" alt="" width="1800" height="1125" loading="lazy" data-shot="drives">
+    <img src="overview-light.jpg" alt="" width="1800" height="1125" loading="lazy" data-shot="overview-light">
+  </div></div>
+  <div class="tour-cap">
+    <div data-shot="overview" class="on"><h3 data-t="tc.overview.t" data-html>What the computer <b>needs</b>, first.</h3><p data-t="tc.overview.p">RoarKit opens on a score for the computer: the start-up disk, the drives, the caches, memory, heat and battery, in a few seconds. Each thing to sort out comes with the button to the tool that does it.</p></div>
+    <div data-shot="space"><h3 data-t="tc.space.t" data-html>Where did the <b>space</b> go?</h3><p data-t="tc.space.p">A drive, your home folder, a shoot: every folder by its size, the biggest files, the space each kind of file takes, and the big files nobody has touched for months. On a Mac, the local Time Machine snapshots too.</p></div>
+    <div data-shot="twins"><h3 data-t="tc.twins.t" data-html>Find the <b>twins</b>.</h3><p data-t="tc.twins.p">The same file twice whatever its name, the same video in another size, codec or format, the same sound in a WAV and its MP3, a trim cut out of a longer video. Previews side by side, the one to keep suggested.</p></div>
+    <div data-shot="report"><h3 data-t="tc.report.t" data-html>A <b>report</b> of the clips.</h3><p data-t="tc.report.p">Every clip of a card or a folder with a frame, its length, codec and profile, picture, frame rate, timecode and sound. Save it as a PDF for the post house or as a list for Excel.</p></div>
+    <div data-shot="files"><h3 data-t="tc.files.t" data-html>Two panes, <b>every detail</b>.</h3><p data-t="tc.files.p">Copy and move between two folders without ever writing over, compare them, make a project's folders from a template. Choose a file to see everything inside it: every stream, its colour, bit depth, timecode and camera.</p></div>
+    <div data-shot="stats"><h3 data-t="tc.stats.t" data-html>The computer, <b>live</b>.</h3><p data-t="tc.stats.p">Every core of the processor, the graphics, memory and its pressure, swap, the drives, the network, heat and battery, and the programs that work it hardest. One button measures the internet: how long a 10 GB delivery takes to go up and come down.</p></div>
+    <div data-shot="speed"><h3 data-t="tc.speed.t" data-html>How <b>fast</b> is this drive?</h3><p data-t="tc.speed.p">A test file is written, read back and removed; then you see which ProRes, BRAW, H.264 and H.265 rates the drive can record and play. A long write shows where an SSD slows down once its cache is full, as on a long take, and each drive keeps its last results to compare.</p></div>
+    <div data-shot="vault"><h3 data-t="tc.vault.t" data-html>Your passwords, <b>locked</b>.</h3><p data-t="tc.vault.p">One master password opens them; they are sealed with AES-256 on this computer and never leave it. 2FA codes, a generator, weak, reused and old passwords marked, and an import from Chrome, Safari, Firefox, 1Password or Bitwarden.</p></div>
+    <div data-shot="drives"><h3 data-t="tc.drives.t" data-html>Every drive, <b>checked</b>.</h3><p data-t="tc.drives.p">What each drive reports of its own health, its free space and how it is connected, with Eject in the list. A drive that warns it may fail moves to the top of the Overview.</p></div>
+    <div data-shot="overview-light"><h3 data-t="tc.overview-light.t" data-html>Dark, light, <b>your colour</b>.</h3><p data-t="tc.overview-light.p">Dark, Light or Automatic with the computer, six accent colours, the text size, less movement. On a Mac the side menu is the system's own frosted glass.</p></div>
+  </div>
+</section>
+
+<section id="tools">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="tools.idx">03 · The tools</p><h2 class="rv" data-t="tools.title" data-html>Eighteen tools, <b>one app</b>.</h2></div>
+    <p class="sub rv" data-t="tools.sub">In the side menu by what they are for. Each one does its one job, and does it carefully.</p>
+  </div>
+  <div class="board">
+    <article class="tile f-glass s7 rv">
+      <span class="k"><i></i><span data-t="g.shoot">Shoot</span></span>
+      <h3 data-t="g.shoot.t" data-html>For the <b>shoot</b>.</h3>
+      <div class="tl">
+        <a href="#tour" data-tool="copy" style="--t:#34c759"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 5 6v5.5c0 4.3 3 7.7 7 9 4-1.3 7-4.7 7-9V6z"/><path d="m9 12 2.2 2.2L15.5 10"/></svg></span><b data-t="tl.shoot.0.n">Make a twin</b><small data-t="tl.shoot.0.p">A card to one or more drives at once, every copy read back and checked byte for byte, an ASC MHL in each.</small></a>
+        <a href="#tour" data-tool="backup" style="--t:#0a84ff"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h7.5L18 7v12.5a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z"/><path d="M9.5 3.5v3M12 3.5v3M14.5 3.5v3"/></svg></span><b data-t="tl.shoot.1.n">Check a backup</b><small data-t="tl.shoot.1.p">Is all of the card on the backup, file by file? Or, months later, has the drive kept it all, against the report of the day it was copied.</small></a>
+        <a href="#tour" data-tool="report" style="--t:#5e5ce6"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.8" cy="6.5" r="1"/><circle cx="4.8" cy="12" r="1"/><circle cx="4.8" cy="17.5" r="1"/></svg></span><b data-t="tl.shoot.2.n">Media report</b><small data-t="tl.shoot.2.p">Every clip: length, codec, picture, frame rate, timecode and sound, with a frame of each, and the totals per codec. PDF or CSV.</small></a>
+        <a href="#tour" data-tool="clipcheck" style="--t:#ff375f"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 5 12 2.5-6h4"/></svg></span><b data-t="tl.shoot.3.n">Clip check</b><small data-t="tl.shoot.3.p">Plays every clip through, picture and sound, or quickly only its start and end, and names the ones cut short or damaged, before the card is formatted.</small></a>
+        <a href="#tour" data-tool="contact" style="--t:#ff6b2c"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="7" height="6" rx="1.5"/><rect x="13.5" y="4.5" width="7" height="6" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="6" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="6" rx="1.5"/></svg></span><b data-t="tl.shoot.4.n">Contact sheet</b><small data-t="tl.shoot.4.p">A frame of every clip on one page, with its name, length and timecode, as a PDF for the client or the editor.</small></a>
+        <a href="#tour" data-tool="rename" style="--t:#64d2ff"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M4 12h6M4 17h5"/><path d="m14 18.5 1-3.5 5-5a1.4 1.4 0 0 1 2 2l-5 5z"/></svg></span><b data-t="tl.shoot.5.n">Rename clips</b><small data-t="tl.shoot.5.p">C0001.MP4 becomes 2026-10-28_Ilie mou_A_001.MP4: your own rule, kept for the next card, a preview first, and Undo.</small></a>
+      </div>
+    </article>
+    <article class="tile f-glass s5 rv" style="--d:.08s">
+      <span class="k"><i></i><span data-t="g.space">Space</span></span>
+      <h3 data-t="g.space.t" data-html>Make <b>room</b>.</h3>
+      <div class="tl">
+        <a href="#tour" data-tool="space" style="--t:#bf5af2"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12z"/><path d="M15 3.9A8.5 8.5 0 0 1 20.1 9H15z"/></svg></span><b data-t="tl.space.0.n">Space map</b><small data-t="tl.space.0.p">Every folder by size, the biggest files, space by kind, the big files nobody touched for months.</small></a>
+        <a href="#tour" data-tool="clean" style="--t:#30b0c7"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3.5 10 11M6 12.5h9l1.5 8h-12z"/><path d="M9 20.5v-3M12.5 20.5v-3"/></svg></span><b data-t="tl.space.1.n">Clean up</b><small data-t="tl.space.1.p">The caches programs make again by themselves: Resolve, Premiere, After Effects, browsers and the rest.</small></a>
+        <a href="#tour" data-tool="leftovers" style="--t:#ac8e68"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 4l8 3.5v9L12 20l-8-3.5z"/><path d="M4 7.5 12 11l8-3.5M12 11v9"/></svg></span><b data-t="tl.space.2.n">Project leftovers</b><small data-t="tl.space.2.p">Old optimized and proxy media, render files and previews of finished projects, by project, program and age.</small></a>
+        <a href="#tour" data-tool="twins" style="--t:#ff9f0a"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="6" width="11" height="13" rx="2"/><path d="M9.5 3.5h9a2 2 0 0 1 2 2v11"/></svg></span><b data-t="tl.space.3.n">Find twins</b><small data-t="tl.space.3.p">The same file twice, whatever its name, the same video or sound in another file, and similar photos: bursts, RAW and HEIC too.</small></a>
+      </div>
+    </article>
+    <article class="tile f-glass s6 rv">
+      <span class="k"><i></i><span data-t="g.files">Files</span></span>
+      <h3 data-t="g.files.t" data-html>Your <b>files</b>.</h3>
+      <div class="tl">
+        <a href="#tour" data-tool="files" style="--t:#1e90ff"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg></span><b data-t="tl.files.0.n">File manager</b><small data-t="tl.files.0.p">Two panes, copy and move without writing over, compare folders, project folder templates. Media info: every stream, codec, colour, timecode and camera of a file.</small></a>
+        <a href="#tour" data-tool="archive" style="--t:#a2845e"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M12 3.5v2M12 7.5v2M12 11.5v2"/><rect x="10.3" y="14.5" width="3.4" height="3.5" rx=".8"/></svg></span><b data-t="tl.files.1.n">Archives</b><small data-t="tl.files.1.p">Open ZIP, RAR, 7z, TAR, ISO and more into a new folder, or test them first; make ZIP (locked with a password if you like), 7z, TAR.GZ or TAR.XZ.</small></a>
+      </div>
+    </article>
+    <article class="tile f-glass s6 rv" style="--d:.08s">
+      <span class="k"><i></i><span data-t="g.drives">Drives</span></span>
+      <h3 data-t="g.drives.t" data-html>Your <b>drives</b>.</h3>
+      <div class="tl">
+        <a href="#tour" data-tool="drives" style="--t:#8e8e93"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="13" width="17" height="6.5" rx="2"/><path d="M5.5 13 8 5.5h8l2.5 7.5"/><path d="M16.5 16.3h.01"/></svg></span><b data-t="tl.drives.0.n">Drive health</b><small data-t="tl.drives.0.p">What each drive says of itself (SMART), its free space and how it is connected; a drive put in shows at once, and ejects safely from the list.</small></a>
+        <a href="#tour" data-tool="speed" style="--t:#ffcc00"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 17.5a8.5 8.5 0 1 1 15 0"/><path d="m12 14 4-5"/><circle cx="12" cy="14" r="1.2"/></svg></span><b data-t="tl.drives.1.n">Disk speed test</b><small data-t="tl.drives.1.p">Write and read speed, a long write for SSDs, then which ProRes, BRAW, H.264 and H.265 rates the drive can record and play. Every drive keeps its last results.</small></a>
+      </div>
+    </article>
+    <article class="tile f-glass s6 rv">
+      <span class="k"><i></i><span data-t="g.computer">Computer</span></span>
+      <h3 data-t="g.computer.t" data-html>The <b>computer</b>.</h3>
+      <div class="tl">
+        <a href="#tour" data-tool="home" style="--t:#ff453a"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.2 12 4.5l8 6.7V19a1.5 1.5 0 0 1-1.5 1.5h-3.8v-5.3H9.3v5.3H5.5A1.5 1.5 0 0 1 4 19z"/></svg></span><b data-t="tl.computer.0.n">Overview</b><small data-t="tl.computer.0.p">A score for the computer and what needs care first, each with the tool that sorts it out.</small></a>
+        <a href="#tour" data-tool="stats" style="--t:#32d74b"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9.5 9.5h5v5h-5zM9 3.5v2.5M15 3.5v2.5M9 18v2.5M15 18v2.5M3.5 9H6M3.5 15H6M18 9h2.5M18 15h2.5"/></svg></span><b data-t="tl.computer.1.n">Computer stats</b><small data-t="tl.computer.1.p">Processor per core, the graphics, memory and its pressure, heat, battery, network, the heaviest programs, and an internet speed test.</small></a>
+        <a href="#tour" data-tool="startup" style="--t:#ff9f0a"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v8"/><path d="M7.2 6.5a7 7 0 1 0 9.6 0"/></svg></span><b data-t="tl.computer.2.n">Startup items</b><small data-t="tl.computer.2.p">What starts by itself with the computer, each with a switch to turn it off and on again. Nothing deleted.</small></a>
+        <a href="#tour" data-tool="uninstall" style="--t:#5e9bff"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M9 15.5 12 8l3 7.5M10 13.5h4"/></svg></span><b data-t="tl.computer.3.n">Uninstall apps</b><small data-t="tl.computer.3.p">Every app with its size and when it was last opened; on a Mac, it and what it left in your Library to the Trash together.</small></a>
+      </div>
+    </article>
+    <article class="tile f-glass s6 rv" style="--d:.08s">
+      <span class="k"><i></i><span data-t="g.private">Private</span></span>
+      <h3 data-t="g.private.t" data-html>Kept <b>private</b>.</h3>
+      <div class="tl">
+        <a href="#tour" data-tool="vault" style="--t:#636366"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span><b data-t="tl.private.0.n">Vault</b><small data-t="tl.private.0.p">Passwords and 2FA codes behind one master password, sealed with AES-256 on this computer only. Import from your browser.</small></a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="shoot">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="sh.idx">04 · For the shoot</p><h2 class="rv" data-t="sh.title" data-html>Made on <b>our own sets</b>.</h2></div>
+    <p class="sub rv" data-t="sh.sub">From the card that comes out of the camera to the drive that goes on the shelf.</p>
+  </div>
+  <div class="three">
+    <article class="big rv">
+      <span class="no">01</span>
+      <div><h3 data-t="b1.t" data-html>A twin of the card, <b>checked</b>.</h3><p data-t="b1.p">Put a card in and RoarKit offers to copy it to your drives, all of them at once. Then it reads every copy back and checks it against the card, byte for byte, writes an ASC MHL next to each, and tells you when the card is safe to eject. Nothing is written over; the clips keep their dates.</p>
+        <div class="chips"><span data-t="b1.c1">Several drives at once</span><span data-t="b1.c2">SHA-256 and MD5</span><span data-t="b1.c3">ASC MHL</span><span data-t="b1.c4">Eject when safe</span></div></div>
+      <div class="viz f-glass"><div class="mc"><div class="r on"><span class="dr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="13" width="17" height="6.5" rx="2"/><path d="M5.5 13 8 5.5h8l2.5 7.5"/><path d="M16.5 16.3h.01"/></svg></span><b>A001 · RED card</b><small>512 GB</small></div><div class="bar3"><i></i></div><div class="r"><span class="dr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="13" width="17" height="6.5" rx="2"/><path d="M5.5 13 8 5.5h8l2.5 7.5"/><path d="M16.5 16.3h.01"/></svg></span><b>SHUTTLE 1</b><span class="ok">✓ CHECKED</span></div><div class="r"><span class="dr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="13" width="17" height="6.5" rx="2"/><path d="M5.5 13 8 5.5h8l2.5 7.5"/><path d="M16.5 16.3h.01"/></svg></span><b>RAID MASTERS</b><span class="ok">✓ CHECKED</span></div><div class="r"><span class="dr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="13" width="17" height="6.5" rx="2"/><path d="M5.5 13 8 5.5h8l2.5 7.5"/><path d="M16.5 16.3h.01"/></svg></span><b>LTO BACKUP</b><span class="ok">✓ MHL</span></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">02</span>
+      <div><h3 data-t="b2.t" data-html>Every clip, <b>on paper</b>.</h3><p data-t="b2.p">Media report lists every clip with a frame, its codec and profile, frame rate, timecode and sound, as a PDF for the post house or a CSV for Excel. Contact sheet puts a frame of each clip on one page. Clip check plays them all through and names any that is cut short or damaged, before the card is formatted.</p>
+        <div class="chips"><span data-t="b2.c1">PDF and CSV</span><span data-t="b2.c2">Timecode</span><span data-t="b2.c3">Every frame read</span><span data-t="b2.c4">Your company on it</span></div></div>
+      <div class="viz f-glass"><div class="sheet"><div class="ph"><span class="rm"><span class="a">ROAR</span><span class="b">KIT</span></span><small>MEDIA REPORT</small></div><div class="pm">ILIE MOU · CARD A001 · 48 CLIPS · 2:14:06</div><div class="pg"><i></i><i></i><i></i><i></i><i></i><i class="x"></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">03</span>
+      <div><h3 data-t="b3.t" data-html>The same video, <b>another file</b>.</h3><p data-t="b3.p">Find twins compares what is inside, never the name: the same file twice, the master and its web export, a WAV and its MP3, a teaser cut out of the film. A folder copied twice shows as one. Lock your Masters folders and nothing in them is ever offered for the Trash.</p>
+        <div class="chips"><span data-t="b3.c1">Any name</span><span data-t="b3.c2">Picture and sound</span><span data-t="b3.c3">Trims and teasers</span><span data-t="b3.c4">Masters stay</span></div></div>
+      <div class="viz f-glass"><div class="mc"><div class="r"><span class="th"></span><b>Spot_30s_FINAL.mov</b><span class="lock">MASTERS</span></div><div class="r on"><span class="x on"></span><b>Spot_30s_web.mp4</b><small>1920×1080</small></div><div class="r on"><span class="x on"></span><b>spot copy 2.mov</b><small>3840×2160</small></div><div class="sum"><small><span data-t="b3.v1">TO THE TRASH</span></small><b>21.6 GB</b></div></div></div>
+    </article>
+  </div>
+</section>
+
+<section id="all">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="all.idx">05 · Everything</p><h2 class="rv" data-t="all.title" data-html>And the <b>rest</b>.</h2></div>
+    <p class="sub rv" data-t="all.sub">RoarKit, briefly.</p>
+  </div>
+  <div class="index">
+    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">A first page that looks for you</b><p data-t="ix1.p">The Overview checks the disks, memory, heat, battery and caches each time it opens, and puts what matters first.</p></div>
+    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">Back and forward</b><p data-t="ix2.p">Like a browser: ← → in the top row, ⌘[ and ⌘], a swipe on the trackpad, the mouse's side buttons.</p></div>
+    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Dark or light</b><p data-t="ix3.p">Dark, Light or Automatic with the computer, six accent colours, three text sizes, less movement.</p></div>
+    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">A note when it is done</b><p data-t="ix4.p">A long copy, check or report tells you when it ends while you are in another app, with a sound if you like.</p></div>
+    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">English and Greek</b><p data-t="ix5.p">The whole app in either language, chosen in Settings.</p></div>
+    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Every video format</b><p data-t="ix6.p">MOV, MP4, MXF, MKV, AVI, MTS, WebM and more: ffmpeg comes inside the app. Camera RAW it cannot open (BRAW, R3D, ARRIRAW) is named, with the app that opens it.</p></div>
+    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Your company on the PDFs</b><p data-t="ix7.p">Reports and contact sheets carry the name you set, for the client or the post house.</p></div>
+    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">Where you left off</b><p data-t="ix8.p">It can open on the tool you used last, and each tool remembers its folders.</p></div>
+    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">Stop any time</b><p data-t="ix9.p">Every long job can be stopped; the computer does not fall asleep in the middle of one.</p></div>
+    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Updates itself</b><p data-t="ix10.p">A new version downloads in the background; one tap to restart.</p></div>
+    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">No account</b><p data-t="ix11.p">Nothing to sign up for, nothing uploaded: it all runs on your computer.</p></div>
+    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Free</b><p data-t="ix12.p">No subscription, no ads.</p></div>
+    <div class="ix rv"><span class="no">13</span><b data-t="ix13.t">In the menu bar</b><p data-t="ix13.p">The start-up disk's free space at a glance, and a note when a disk fills up, a drive starts to fail or the computer runs hot.</p></div>
+    <div class="ix rv"><span class="no">14</span><b data-t="ix14.t">Jobs by itself</b><p data-t="ix14.p">If you turn them on: a weekly Clean up of the safe caches, a monthly check of your backups against their copy reports.</p></div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="why.idx">06 · Why Roar</p><h2 class="rv" data-t="why.title" data-html>Why <b>a Roar app</b>.</h2></div>
+    <div class="why-end"><p class="sub rv" data-t="why.sub">What every app of The Mad Lions Lab promises, RoarKit included.</p>
+      <div class="legal rv"><a class="pill sm" href="../../legal/roarkit/#privacy" data-t="lg.p">Privacy Policy</a><a class="pill sm" href="../../legal/roarkit/#terms" data-t="lg.t">Terms</a></div></div>
+  </div>
+  <div class="why">
+    <article class="wy f-glass rv"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></span><h3 data-t="w1.t">Only the Trash</h3><p data-t="w1.p">RoarKit never deletes: what you choose goes to the Trash, and one of every group of twins always stays.</p></article>
+    <article class="wy f-glass rv" style="--d:.06s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.2 4.2L19 7"/></svg></span><h3 data-t="w2.t">On your computer</h3><p data-t="w2.p">Everything runs on your computer. It goes online only to look for an update.</p></article>
+    <article class="wy f-glass rv" style="--d:.12s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></span><h3 data-t="w3.t">Updates itself</h3><p data-t="w3.p">New versions come in the background; one tap to restart. Mac and Windows.</p></article>
+    <article class="wy f-glass rv" style="--d:.18s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10.5 5-3v9l-5-3"/></svg></span><h3 data-t="w4.t">Made by filmmakers</h3><p data-t="w4.p">The Mad Lions, a film company in Athens, use it on their own work. Ideas go straight to the people who make it.</p></article>
+  </div>
+</section>
+
+<section id="download">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="dl.idx">07 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarKit</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
+    <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab that we use on our own shoots.</p>
+  </div>
+  <div class="dls">
+    <div class="dl rv" id="dl-mac" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.7zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.6-1.3z"/></svg></i>
+      <h3>Mac</h3>
+      <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
+      <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roartwin/releases/latest/download/RoarKit-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+      <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roartwin/releases/latest/download/RoarKit-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
+    </div>
+    <div class="dl rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
+      <h3>Windows</h3>
+      <small data-t="dl.win">Windows 10 and 11.</small>
+      <a class="pill main" data-f="win" href="https://github.com/alexisdigipro-hub/roartwin/releases/latest/download/RoarKit-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+    </div>
+  </div>
+  <div class="dl-note">
+    <p class="rv" data-t="dl.upd" data-html><b>It updates itself.</b> RoarKit fetches new versions on its own and asks for a quick restart. If you have RoarTwin, it becomes RoarKit with its next update.</p>
+    <p class="rv" data-t="dl.help" data-html><b>First time on a Mac?</b> The app is not signed by Apple yet: right-click it in Applications and choose Open, or press Open Anyway in System Settings › Privacy &amp; Security. On Windows: More info › Run anyway.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="faq">
+    <div><p class="idx rv" data-t="faq.idx">08 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
+    <div class="qa">
+      <details class="rv"><summary data-t="q1">Is RoarKit free?</summary><p data-t="a1">Yes. No subscription, no ads, no account.</p></details>
+      <details class="rv"><summary data-t="q2">What happened to RoarTwin?</summary><p data-t="a2">It grew. RoarTwin found duplicates; RoarKit still does, as Find twins, next to seventeen other tools. If RoarTwin is on your computer, it updates itself into RoarKit and keeps your settings.</p></details>
+      <details class="rv"><summary data-t="q3">Can it delete something by mistake?</summary><p data-t="a3">It does not delete your files at all. What you choose goes to the Trash, one of each group of twins always stays, and Masters folders are never touched. Empty the Trash only when you are sure.</p></details>
+      <details class="rv"><summary data-t="q4">Is Clean up safe?</summary><p data-t="a4">It looks only in the folders where programs keep their caches, the render cache of Resolve, the media cache of Premiere, the browsers' and the like, and moves only what is inside them. The programs make them again when they need them. Your projects, media and renders are never touched.</p></details>
+      <details class="rv"><summary data-t="q5">How sure is a card copy?</summary><p data-t="a5">Every copy is read back from the drive after it is written and compared with the card, file by file, with SHA-256. Each copy gets a report and an ASC MHL with MD5, which DITs and post houses read. Months later, Check a backup reads the drive again against that report.</p></details>
+      <details class="rv"><summary data-t="q6">Where are my passwords kept?</summary><p data-t="a6">In one file on your computer, sealed with AES-256 under a key made from your master password. They are not sent anywhere and there is no cloud. You can save an encrypted backup for another drive. If the master password is forgotten, no one can open the vault, we neither.</p></details>
+      <details class="rv"><summary data-t="q7">Why can't it read the temperatures?</summary><p data-t="a7">Computers do not let an app read their heat sensors without special rights. RoarKit shows what the system itself says, the heat level and whether it is slowing down to cool off, which is what you need to act on.</p></details>
+      <details class="rv"><summary data-t="q8">Does it work on external drives and servers?</summary><p data-t="a8">Yes: any folder your computer can open, a card, a USB or Thunderbolt drive, a network share. Drive health needs the drive to pass its SMART on, which many USB cases and card readers do not.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="f-new" id="new">
+  <div class="f-new-head">
+    <div><p class="idx rv" data-t="new.idx">09 · New · 0.5 to 0.7</p><h2 class="rv" data-t="new.title" data-html>What's <b>new</b>.</h2></div>
+    <p class="rv" data-t="new.sub">Out on 29 and 30 October: two new tools for the computer, an icon in the menu bar, jobs RoarKit does by itself, similar photos in Find twins, and the glass look of the Roar family.</p>
+  </div>
+  <div class="f-bento">
+    <article class="f-card wide rv">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M9 15.5 12 8l3 7.5M10 13.5h4"/></svg></span>
+      <h3 data-t="nw.1.t">Uninstall apps, and what they leave</h3>
+      <p data-t="nw.1.p">Every app with its version, its size and the last time it was opened. On a Mac, choose one and RoarKit finds what it left in your Library: settings, caches, containers, saved state, logs, login agents, each with its size and a tick box. The app and what you tick go to the Trash together. Apple's own apps, RoarKit and an app that is open are left alone. On Windows, the program's own uninstaller runs.</p>
+      <span class="f-tag">v0.5.0</span>
+    </article>
+    <article class="f-card wide rv" style="--d:.05s">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v8"/><path d="M7.2 6.5a7 7 0 1 0 9.6 0"/></svg></span>
+      <h3 data-t="nw.2.t">Startup items, with a switch</h3>
+      <p data-t="nw.2.p">What starts by itself with the computer: login items, launch agents and background services on a Mac, the Run keys and the Startup folders on Windows. A switch turns one off, and on again: nothing is deleted, RoarKit keeps what it took away. What is set for every user is shown, not changed.</p>
+      <span class="f-tag">v0.5.0</span>
+    </article>
+    <article class="f-card rv">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 8.5h17"/><path d="M14.5 6.5h3"/></svg></span>
+      <h3 data-t="nw.3.t">In the menu bar</h3>
+      <p data-t="nw.3.p">A toolbox icon with the start-up disk's free space beside it; its menu shows memory pressure and heat and opens Clean up. A note when the start-up disk drops under 10% free, a drive starts to fail or the computer runs seriously hot. On Windows it sits by the clock, if you turn it on.</p>
+      <span class="f-tag">v0.5.0</span>
+    </article>
+    <article class="f-card rv" style="--d:.05s">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4"/><path d="m9.5 14.5 2 2 3.5-4"/></svg></span>
+      <h3 data-t="nw.4.t">Jobs it does by itself</h3>
+      <p data-t="nw.4.p">Each off until you turn it on in Settings: a weekly Clean up of the safe caches, on the day and hour you choose, and a monthly check of your backup drives against their copy reports. A job missed runs at the next start; Settings lists the last runs, with Run now.</p>
+      <span class="f-tag">v0.5.0</span>
+    </article>
+    <article class="f-card rv" style="--d:.1s">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7" width="12" height="12" rx="2"/><path d="M8 4h10.5a2 2 0 0 1 2 2v10.5"/><path d="m5.5 17 3-3.5 2.5 2.5 1.5-1.5 2 2.5"/></svg></span>
+      <h3 data-t="nw.5.t">Similar photos</h3>
+      <p data-t="nw.5.p">Find twins now finds the shots of a burst and the same photo saved again or made smaller, in JPG, PNG, TIFF, HEIC and camera RAW. It keeps the one with the most pixels, then the sharpest, and marks a clearly softer shot.</p>
+      <span class="f-tag">v0.5.0</span>
+    </article>
+    <article class="f-card wide tall rv">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="6" height="15" rx="2"/><rect x="11.5" y="4.5" width="9" height="15" rx="2"/><path d="M5.5 8.5h2"/></svg></span>
+      <h3 data-t="nw.6.t">The Roar family's glass</h3>
+      <p data-t="nw.6.p">RoarKit now looks like RoarMail, RoarWriter and RoarMorph: graphite glass columns that float with a gap between them, one red accent that glows, the chosen tool lit from inside, a choice as a pale glowing pill. In light and in dark.</p>
+      <img class="f-shot" src="overview.jpg" alt="RoarKit's Overview: a score for the computer and the things to sort out first" width="1800" height="1125" loading="lazy">
+      <span class="f-tag">v0.7.0</span>
+    </article>
+    <article class="f-card wide rv" style="--d:.05s">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="7" cy="8" r=".9"/><circle cx="10" cy="8" r=".9"/><circle cx="13" cy="8" r=".9"/></svg></span>
+      <h3 data-t="nw.7.t">A bigger window</h3>
+      <p data-t="nw.7.p">The window opens big, up to 1600 × 1060, and its buttons sit in their own strip above the columns, as in RoarMail. The side menu stays as you know it, with every tool in it.</p>
+      <span class="f-tag">v0.7.1 · v0.7.2</span>
+    </article>
+    <article class="f-card wide rv" style="--d:.1s">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg></span>
+      <h3 data-t="nw.8.t">On the way there</h3>
+      <p data-t="nw.8.p">0.6.0 tried a new look, the instrument, and 0.6.1 gave the side menu bigger line icons in one colour. Both led to 0.7's glass. What each tool does did not change.</p>
+      <span class="f-tag">v0.6.0 · v0.6.1</span>
+    </article>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <p class="idx rv" data-t="ct.idx">Contact</p>
+  <h2 class="rv" data-t="ct.title" data-html>A tool <b>you are missing</b>?</h2>
+  <a class="mail rv" href="mailto:lab@themadlions.com?subject=RoarKit">lab@themadlions.com</a>
+</section>
+</main>
+<footer>
+  <a href="../../"><img class="wordmark" src="../../wordmark.png" alt="The Mad Lions"></a>
+  <nav>
+    <a href="../" data-t="ft.lab">The Mad Lions Lab</a>
+    <a href="../../legal/roarkit/" data-t="ft.legal">Privacy &amp; Terms</a>
+    <a href="../roarmorph/">RoarMorph</a>
+    <a href="../roarwriter/">RoarWriter</a>
+    <a href="../../roarme/">RoarMe</a>
+  </nav>
+  <span data-t="footer">© 2026 The Mad Lions · RoarKit</span>
+</footer>
+
+<script>
+(function () {
+  var APP = 'RoarTwin', NAME = 'RoarKit', REPO = 'alexisdigipro-hub/roartwin', WEB = '#download'
+  var EL = {"nav.tour": "Μια ματιά", "nav.tools": "Εργαλεία", "nav.shoot": "Για το γύρισμα", "nav.safe": "Ασφαλές", "nav.download": "Λήψη", "nav.faq": "Ερωτήσεις", "cta.get": "Πάρε το RoarKit", "hero.kicker": "Εργαλειοθήκη · The Mad Lions Lab · Πείραμα 07", "hero.lead": "Μία εφαρμογή, <b>δεκαοχτώ εργαλεία</b>. Βλέπει τι χρειάζεται ο υπολογιστής σου, κάνει χώρο, αντιγράφει και ελέγχει τις κάρτες ενός γυρίσματος, κάνει αναφορά για κάθε clip, κρατάει τα αρχεία σου τακτοποιημένα και τους κωδικούς σου κλειδωμένους.", "cta.how": "Ρίξε μια ματιά", "cta.note": "Δωρεάν · Mac και Windows · δεν σβήνει τίποτα, μόνο τα πάει στον Κάδο", "tag.1": "Τι θέλει φροντίδα, πρώτα", "tag.2": "Ένας βαθμός για τον υπολογιστή", "tag.3": "Δεκαοχτώ εργαλεία, ένα μενού", "tk.1": "Τι χρειάζεται ο υπολογιστής", "tk.2": "Χάρτης χώρου", "tk.3": "Καθαρισμός", "tk.4": "Δίδυμα", "tk.5": "Αντίγραφα καρτών με MHL", "tk.6": "Αναφορά υλικού", "tk.7": "Έλεγχος clips", "tk.8": "Contact sheet", "tk.9": "Μετονομασία clips", "tk.10": "Διαχείριση αρχείων", "tk.11": "ZIP · RAR · 7z", "tk.12": "Υγεία δίσκων", "tk.13": "Ταχύτητα δίσκου", "tk.14": "Ταχύτητα internet", "tk.15": "Vault κωδικών", "tk.16": "Mac · Windows", "tour.idx": "01 · Μια ματιά", "tour.title": "Δες το <b>με τα μάτια σου</b>.", "tour.sub": "Η πραγματική εφαρμογή, με τους δίσκους-δείγμα του demo. Διάλεξε μια οθόνη.", "tt.overview": "Επισκόπηση", "tt.space": "Χάρτης χώρου", "tt.twins": "Δίδυμα", "tt.report": "Αναφορά", "tt.files": "Αρχεία", "tt.stats": "Στατιστικά", "tt.speed": "Ταχύτητα δίσκου", "tt.vault": "Vault", "tt.drives": "Δίσκοι", "tt.overview-light": "Φωτεινό", "tc.overview.t": "Τι <b>χρειάζεται</b> ο υπολογιστής, πρώτα.", "tc.overview.p": "Το RoarKit ανοίγει με έναν βαθμό για τον υπολογιστή: ο δίσκος εκκίνησης, οι δίσκοι, οι cache, η μνήμη, η θερμότητα και η μπαταρία, σε λίγα δευτερόλεπτα. Ό,τι θέλει τακτοποίηση έρχεται με το κουμπί για το εργαλείο που το κάνει.", "tc.space.t": "Πού πήγε ο <b>χώρος</b>;", "tc.space.p": "Ένας δίσκος, ο φάκελος χρήστη, ένα γύρισμα: κάθε φάκελος με το μέγεθός του, τα μεγαλύτερα αρχεία, ο χώρος ανά είδος αρχείου, και τα μεγάλα αρχεία που κανείς δεν άγγιξε για μήνες. Σε Mac, και τα τοπικά snapshots του Time Machine.", "tc.twins.t": "Βρες τα <b>δίδυμα</b>.", "tc.twins.p": "Το ίδιο αρχείο δύο φορές με όποιο όνομα, το ίδιο βίντεο σε άλλο μέγεθος, codec ή format, ο ίδιος ήχος σε WAV και στο MP3 του, ένα κομμάτι κομμένο από μεγαλύτερο βίντεο. Προεπισκόπηση δίπλα δίπλα, και πρόταση για το ποιο να κρατήσεις.", "tc.report.t": "Μια <b>αναφορά</b> των clips.", "tc.report.p": "Κάθε clip μιας κάρτας ή ενός φακέλου με ένα καρέ, τη διάρκεια, το codec και το profile, την εικόνα, τα fps, το timecode και τον ήχο. Σώσ’ την σε PDF για το post house ή σε λίστα για Excel.", "tc.files.t": "Δύο πάνελ, <b>κάθε λεπτομέρεια</b>.", "tc.files.p": "Αντιγραφή και μετακίνηση ανάμεσα σε δύο φακέλους χωρίς ποτέ αντικατάσταση, σύγκριση, οι φάκελοι ενός project από πρότυπο. Διάλεξε ένα αρχείο και δες τα πάντα μέσα του: κάθε stream, το χρώμα, το bit depth, το timecode και την κάμερα.", "tc.stats.t": "Ο υπολογιστής, <b>ζωντανά</b>.", "tc.stats.p": "Κάθε πυρήνας του επεξεργαστή, η κάρτα γραφικών, η μνήμη και η πίεσή της, το swap, οι δίσκοι, το δίκτυο, η θερμότητα και η μπαταρία, και τα προγράμματα που τον ζορίζουν περισσότερο. Ένα κουμπί μετράει το internet: πόσο θέλει ένα delivery 10 GB να ανέβει και να κατέβει.", "tc.speed.t": "Πόσο <b>γρήγορος</b> είναι ο δίσκος;", "tc.speed.p": "Ένα αρχείο δοκιμής γράφεται, ξαναδιαβάζεται και σβήνεται· μετά βλέπεις ποια ProRes, BRAW, H.264 και H.265 μπορεί να γράψει και να παίξει ο δίσκος. Η μεγάλη εγγραφή δείχνει πού πέφτει ένας SSD όταν γεμίσει η cache του, όπως σε ένα μεγάλο πλάνο, και κάθε δίσκος κρατάει τα τελευταία του αποτελέσματα για σύγκριση.", "tc.vault.t": "Οι κωδικοί σου, <b>κλειδωμένοι</b>.", "tc.vault.p": "Ένας κύριος κωδικός τους ανοίγει· είναι κλειδωμένοι με AES-256 σε αυτόν τον υπολογιστή και δεν φεύγουν ποτέ από αυτόν. Κωδικοί 2FA, γεννήτρια, σημάδι για αδύναμους, ίδιους και παλιούς κωδικούς, και εισαγωγή από Chrome, Safari, Firefox, 1Password ή Bitwarden.", "tc.drives.t": "Κάθε δίσκος, <b>ελεγμένος</b>.", "tc.drives.p": "Τι αναφέρει κάθε δίσκος για την υγεία του, ο ελεύθερος χώρος και πώς είναι συνδεδεμένος, με Eject μέσα στη λίστα. Ένας δίσκος που προειδοποιεί ότι μπορεί να χαλάσει ανεβαίνει πρώτος στην Επισκόπηση.", "tc.overview-light.t": "Σκούρο, φωτεινό, <b>το χρώμα σου</b>.", "tc.overview-light.p": "Σκούρο, Φωτεινό ή Αυτόματο με τον υπολογιστή, έξι χρώματα, το μέγεθος του κειμένου, λιγότερη κίνηση. Σε Mac το πλάι μενού είναι το ίδιο το θαμπό γυαλί του συστήματος.", "tools.idx": "02 · Τα εργαλεία", "tools.title": "Δεκαοχτώ εργαλεία, <b>μία εφαρμογή</b>.", "tools.sub": "Στο πλάι μενού ανάλογα με το τι κάνουν. Το καθένα κάνει τη μία του δουλειά, και την κάνει προσεκτικά.", "g.shoot": "Γύρισμα", "g.shoot.t": "Για το <b>γύρισμα</b>.", "tl.shoot.0.n": "Δίδυμο αντίγραφο", "tl.shoot.0.p": "Μια κάρτα σε έναν ή περισσότερους δίσκους μαζί, κάθε αντίγραφο ξαναδιαβάζεται και ελέγχεται byte προς byte, με ASC MHL στο καθένα.", "tl.shoot.1.n": "Έλεγχος backup", "tl.shoot.1.p": "Είναι όλη η κάρτα στο backup, αρχείο αρχείο; Ή, μήνες μετά, τα κράτησε όλα ο δίσκος, με βάση την αναφορά της μέρας που αντιγράφηκε.", "tl.shoot.2.n": "Αναφορά υλικού", "tl.shoot.2.p": "Κάθε clip: διάρκεια, codec, εικόνα, fps, timecode και ήχος, με ένα καρέ από το καθένα, και τα σύνολα ανά codec. PDF ή CSV.", "tl.shoot.3.n": "Έλεγχος clips", "tl.shoot.3.p": "Παίζει κάθε clip ολόκληρο, εικόνα και ήχο, ή γρήγορα μόνο την αρχή και το τέλος του, και λέει ποια είναι κομμένα ή χαλασμένα, πριν φορμαριστεί η κάρτα.", "tl.shoot.4.n": "Contact sheet", "tl.shoot.4.p": "Ένα καρέ από κάθε clip σε μία σελίδα, με όνομα, διάρκεια και timecode, σε PDF για τον πελάτη ή τον μοντέρ.", "tl.shoot.5.n": "Μετονομασία clips", "tl.shoot.5.p": "Το C0001.MP4 γίνεται 2026-10-28_Ilie mou_A_001.MP4: ο δικός σου κανόνας, που μένει για την επόμενη κάρτα, πρώτα προεπισκόπηση, και Αναίρεση.", "g.space": "Χώρος", "g.space.t": "Κάνε <b>χώρο</b>.", "tl.space.0.n": "Χάρτης χώρου", "tl.space.0.p": "Κάθε φάκελος με το μέγεθός του, τα μεγαλύτερα αρχεία, ο χώρος ανά είδος, τα μεγάλα αρχεία που κανείς δεν άγγιξε για μήνες.", "tl.space.1.n": "Καθαρισμός", "tl.space.1.p": "Οι cache που τα προγράμματα ξαναφτιάχνουν μόνα τους: Resolve, Premiere, After Effects, browsers και τα υπόλοιπα.", "tl.space.2.n": "Υπόλοιπα projects", "tl.space.2.p": "Παλιά optimized και proxy media, render files και previews από projects που τελείωσαν, ανά project, πρόγραμμα και ηλικία.", "tl.space.3.n": "Βρες τα δίδυμα", "tl.space.3.p": "Το ίδιο αρχείο δύο φορές, όποιο κι αν είναι το όνομά του, το ίδιο βίντεο ή ήχος σε άλλο αρχείο, και παρόμοιες φωτογραφίες: bursts, και RAW και HEIC.", "g.files": "Αρχεία", "g.files.t": "Τα <b>αρχεία</b> σου.", "tl.files.0.n": "Διαχείριση αρχείων", "tl.files.0.p": "Δύο πάνελ, αντιγραφή και μετακίνηση χωρίς αντικατάσταση, σύγκριση φακέλων, πρότυπα φακέλων project. Media info: κάθε stream, codec, χρώμα, timecode και κάμερα ενός αρχείου.", "tl.files.1.n": "Συμπιεσμένα", "tl.files.1.p": "Άνοιξε ZIP, RAR, 7z, TAR, ISO και άλλα σε νέο φάκελο, ή δοκίμασέ τα πρώτα· φτιάξε ZIP (κλειδωμένο με κωδικό αν θες), 7z, TAR.GZ ή TAR.XZ.", "g.drives": "Δίσκοι", "g.drives.t": "Οι <b>δίσκοι</b> σου.", "tl.drives.0.n": "Υγεία δίσκων", "tl.drives.0.p": "Τι λέει κάθε δίσκος για τον εαυτό του (SMART), ο ελεύθερος χώρος και πώς είναι συνδεδεμένος· ένας δίσκος που μπαίνει φαίνεται αμέσως, και εξάγεται με ασφάλεια από τη λίστα.", "tl.drives.1.n": "Τεστ ταχύτητας δίσκου", "tl.drives.1.p": "Ταχύτητα εγγραφής και ανάγνωσης, μεγάλη εγγραφή για SSD, και μετά ποια ProRes, BRAW, H.264 και H.265 μπορεί να γράψει και να παίξει ο δίσκος. Κάθε δίσκος κρατάει τα τελευταία του αποτελέσματα.", "g.computer": "Υπολογιστής", "g.computer.t": "Ο <b>υπολογιστής</b>.", "tl.computer.0.n": "Επισκόπηση", "tl.computer.0.p": "Ένας βαθμός για τον υπολογιστή και τι θέλει φροντίδα πρώτα, το καθένα με το εργαλείο που το λύνει.", "tl.computer.1.n": "Στατιστικά υπολογιστή", "tl.computer.1.p": "Επεξεργαστής ανά πυρήνα, κάρτα γραφικών, μνήμη και πίεση, θερμότητα, μπαταρία, δίκτυο, τα πιο βαριά προγράμματα και speedtest για το internet.", "g.private": "Ιδιωτικό", "g.private.t": "Μένει <b>ιδιωτικό</b>.", "tl.private.0.n": "Vault", "tl.private.0.p": "Κωδικοί και κωδικοί 2FA πίσω από έναν κύριο κωδικό, κλειδωμένοι με AES-256 μόνο σε αυτόν τον υπολογιστή. Εισαγωγή από τον browser σου.", "sh.idx": "03 · Για το γύρισμα", "sh.title": "Φτιαγμένο στα <b>δικά μας γυρίσματα</b>.", "sh.sub": "Από την κάρτα που βγαίνει από την κάμερα ως τον δίσκο που μπαίνει στο ράφι.", "b3.v1": "ΣΤΟΝ ΚΑΔΟ", "b1.t": "Ένα δίδυμο της κάρτας, <b>ελεγμένο</b>.", "b1.p": "Βάζεις μια κάρτα και το RoarKit προτείνει να την αντιγράψει στους δίσκους σου, σε όλους μαζί. Μετά ξαναδιαβάζει κάθε αντίγραφο και το ελέγχει με την κάρτα, byte προς byte, γράφει ένα ASC MHL δίπλα στο καθένα, και σου λέει πότε η κάρτα μπορεί να βγει με ασφάλεια. Τίποτα δεν αντικαθίσταται· τα clips κρατάνε τις ημερομηνίες τους.", "b1.c1": "Πολλοί δίσκοι μαζί", "b1.c2": "SHA-256 και MD5", "b1.c3": "ASC MHL", "b1.c4": "Eject με ασφάλεια", "b2.t": "Κάθε clip, <b>στο χαρτί</b>.", "b2.p": "Η Αναφορά υλικού δείχνει κάθε clip με ένα καρέ, το codec και το profile, τα fps, το timecode και τον ήχο, σε PDF για το post house ή σε CSV για το Excel. Το Contact sheet βάζει ένα καρέ από κάθε clip σε μία σελίδα. Ο Έλεγχος clips τα παίζει όλα ολόκληρα και λέει ποιο είναι κομμένο ή χαλασμένο, πριν φορμαριστεί η κάρτα.", "b2.c1": "PDF και CSV", "b2.c2": "Timecode", "b2.c3": "Διαβάζει κάθε καρέ", "b2.c4": "Η εταιρεία σου πάνω", "b3.t": "Το ίδιο βίντεο, <b>άλλο αρχείο</b>.", "b3.p": "Τα Δίδυμα συγκρίνουν το περιεχόμενο, ποτέ το όνομα: το ίδιο αρχείο δύο φορές, το master και το export του για web, ένα WAV και το MP3 του, ένα teaser κομμένο από την ταινία. Ένας φάκελος αντιγραμμένος δύο φορές φαίνεται ως ένας. Κλείδωσε τους φακέλους Masters και τίποτα μέσα τους δεν προτείνεται ποτέ για τον Κάδο.", "b3.c1": "Όποιο όνομα", "b3.c2": "Εικόνα και ήχος", "b3.c3": "Κομμάτια και teasers", "b3.c4": "Τα Masters μένουν", "all.idx": "04 · Όλα", "all.title": "Και <b>τα υπόλοιπα</b>.", "all.sub": "Το RoarKit, με λίγα λόγια.", "ix1.t": "Μια πρώτη σελίδα που κοιτάει για σένα", "ix1.p": "Η Επισκόπηση ελέγχει δίσκους, μνήμη, θερμότητα, μπαταρία και cache κάθε φορά που ανοίγει, και βάζει πρώτα ό,τι μετράει.", "ix2.t": "Πίσω και μπροστά", "ix2.p": "Όπως σε browser: ← → στην πάνω σειρά, ⌘[ και ⌘], ένα swipe στο trackpad, τα πλαϊνά κουμπιά του ποντικιού.", "ix3.t": "Σκούρο ή φωτεινό", "ix3.p": "Σκούρο, Φωτεινό ή Αυτόματο με τον υπολογιστή, έξι χρώματα, τρία μεγέθη κειμένου, λιγότερη κίνηση.", "ix4.t": "Ειδοποίηση όταν τελειώσει", "ix4.p": "Μια μεγάλη αντιγραφή, ένας έλεγχος ή μια αναφορά σε ειδοποιεί όταν τελειώσει ενώ είσαι σε άλλη εφαρμογή, και με ήχο αν θες.", "ix5.t": "Αγγλικά και Ελληνικά", "ix5.p": "Όλη η εφαρμογή σε όποια από τις δύο γλώσσες, από τις Ρυθμίσεις.", "ix6.t": "Κάθε format βίντεο", "ix6.p": "MOV, MP4, MXF, MKV, AVI, MTS, WebM και άλλα: το ffmpeg είναι μέσα στην εφαρμογή. Τα RAW καμερών που δεν ανοίγει (BRAW, R3D, ARRIRAW) λέγονται με το όνομά τους, μαζί με την εφαρμογή που τα ανοίγει.", "ix7.t": "Η εταιρεία σου στα PDF", "ix7.p": "Οι αναφορές και τα contact sheets γράφουν το όνομα που βάζεις, για τον πελάτη ή το post house.", "ix8.t": "Εκεί που το άφησες", "ix8.p": "Μπορεί να ανοίγει στο εργαλείο που χρησιμοποίησες τελευταίο, και κάθε εργαλείο θυμάται τους φακέλους του.", "ix9.t": "Σταμάτα όποτε θες", "ix9.p": "Κάθε μεγάλη δουλειά σταματάει όποτε θες· ο υπολογιστής δεν κοιμάται στη μέση της.", "ix10.t": "Ενημερώνεται μόνο του", "ix10.p": "Μια νέα έκδοση κατεβαίνει στο παρασκήνιο· ένα πάτημα για επανεκκίνηση.", "ix11.t": "Χωρίς λογαριασμό", "ix11.p": "Τίποτα για εγγραφή, τίποτα δεν ανεβαίνει: όλα γίνονται στον υπολογιστή σου.", "ix12.t": "Δωρεάν", "ix12.p": "Χωρίς συνδρομή, χωρίς διαφημίσεις.", "pv.idx": "05 · Ασφαλές", "pv.title": "Τα αρχεία σου, <b>η απόφασή σου</b>.", "pv.sub": "Το RoarKit μόνο διαβάζει μέχρι να διαλέξεις. Μετά μετακινεί, δεν σβήνει ποτέ.", "lg.p": "Πολιτική απορρήτου", "lg.t": "Όροι χρήσης", "pr.trash.t": "Μόνο ο Κάδος", "pr.trash.p": "Το RoarKit δεν σβήνει ποτέ τα αρχεία σου: ό,τι διαλέξεις πάει στον Κάδο του υπολογιστή και περιμένει εκεί μέχρι να τον αδειάσεις.", "pr.check.t": "Ένα μένει πάντα", "pr.check.p": "Από κάθε ομάδα διδύμων ένα αρχείο μένει, με διπλό έλεγχο, στη σελίδα και στην εφαρμογή. Τίποτα σε φάκελο Masters δεν προτείνεται ποτέ.", "pr.look.t": "Καμία αντικατάσταση", "pr.look.p": "Αντιγραφές, μετακινήσεις, συμπιεσμένα και μετονομασίες δεν γράφουν ποτέ πάνω σε αρχείο: ένα όνομα που υπάρχει παίρνει αριθμό, και η μετονομασία αναιρείται.", "pr.screen.t": "Στον υπολογιστή σου", "pr.screen.p": "Όλα γίνονται στον υπολογιστή σου. Βγαίνει στο internet μόνο για να δει αν υπάρχει ενημέρωση και, όταν το πατήσεις, για το speedtest.", "pr.key.t": "Ένα vault που ανοίγεις μόνο εσύ", "pr.key.p": "Οι κωδικοί κλειδώνουν με AES-256 κάτω από τον κύριο κωδικό σου και δεν φεύγουν ποτέ από τον υπολογιστή. Εμείς δεν μπορούμε να τους ανοίξουμε, και κανείς δεν μπορεί να φέρει πίσω έναν ξεχασμένο κύριο κωδικό.", "dl.idx": "06 · Λήψη", "dl.title": "Πάρε το <b>RoarKit</b>.", "dl.sub": "Δωρεάν, και σε beta: ένα πείραμα του Mad Lions Lab που χρησιμοποιούμε στα δικά μας γυρίσματα.", "dl.mac": "Για Mac με chip της Apple (M1 και νεότερα).", "dl.get": "Λήψη", "dl.intel": "Παλιότερο Mac με Intel;", "dl.intelbtn": "Αυτό", "dl.win": "Windows 10 και 11.", "dl.upd": "<b>Ενημερώνεται μόνο του.</b> Το RoarKit κατεβάζει τις νέες εκδόσεις μόνο του και ζητάει μια γρήγορη επανεκκίνηση. Αν έχεις το RoarTwin, γίνεται RoarKit με την επόμενη ενημέρωση.", "dl.help": "<b>Πρώτη φορά σε Mac;</b> Η εφαρμογή δεν είναι ακόμα υπογεγραμμένη από την Apple: κάνε δεξί κλικ πάνω της στις Εφαρμογές και διάλεξε Άνοιγμα, ή πάτα Άνοιγμα παρόλα αυτά στις Ρυθμίσεις συστήματος › Απόρρητο και ασφάλεια. Σε Windows: Περισσότερες πληροφορίες › Εκτέλεση παρόλα αυτά.", "faq.idx": "07 · Ερωτήσεις", "faq.title": "Καλό να <b>ξέρεις</b>.", "q1": "Είναι δωρεάν το RoarKit;", "a1": "Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς λογαριασμό.", "q2": "Τι έγινε το RoarTwin;", "a2": "Μεγάλωσε. Το RoarTwin έβρισκε διπλότυπα· το RoarKit το κάνει ακόμα, ως Δίδυμα, δίπλα σε άλλα δεκαεπτά εργαλεία. Αν έχεις το RoarTwin, ενημερώνεται μόνο του σε RoarKit και κρατάει τις ρυθμίσεις σου.", "q3": "Μπορεί να σβήσει κάτι κατά λάθος;", "a3": "Δεν σβήνει καθόλου τα αρχεία σου. Ό,τι διαλέγεις πάει στον Κάδο, ένα από κάθε ομάδα διδύμων μένει πάντα, και οι φάκελοι Masters δεν αγγίζονται ποτέ. Άδειασε τον Κάδο μόνο όταν είσαι σίγουρος.", "q4": "Είναι ασφαλής ο Καθαρισμός;", "a4": "Κοιτάει μόνο στους φακέλους όπου τα προγράμματα κρατάνε τις cache τους, το render cache του Resolve, το media cache του Premiere, των browsers και παρόμοια, και μετακινεί μόνο ό,τι είναι μέσα τους. Τα προγράμματα τις ξαναφτιάχνουν όταν τις χρειαστούν. Τα projects, το υλικό και τα renders σου δεν αγγίζονται ποτέ.", "q5": "Πόσο σίγουρο είναι ένα αντίγραφο κάρτας;", "a5": "Κάθε αντίγραφο ξαναδιαβάζεται από τον δίσκο αφού γραφτεί και συγκρίνεται με την κάρτα, αρχείο αρχείο, με SHA-256. Κάθε αντίγραφο παίρνει μια αναφορά και ένα ASC MHL με MD5, που διαβάζουν οι DIT και τα post houses. Μήνες μετά, ο Έλεγχος backup ξαναδιαβάζει τον δίσκο με βάση εκείνη την αναφορά.", "q6": "Πού φυλάγονται οι κωδικοί μου;", "a6": "Σε ένα αρχείο στον υπολογιστή σου, κλειδωμένο με AES-256 με κλειδί που βγαίνει από τον κύριο κωδικό σου. Δεν στέλνονται πουθενά και δεν υπάρχει cloud. Μπορείς να σώσεις ένα κρυπτογραφημένο backup σε άλλο δίσκο. Αν ξεχαστεί ο κύριος κωδικός, κανείς δεν μπορεί να ανοίξει το vault, ούτε εμείς.", "q7": "Γιατί δεν δείχνει θερμοκρασίες;", "a7": "Οι υπολογιστές δεν αφήνουν μια εφαρμογή να διαβάσει τους αισθητήρες θερμότητας χωρίς ειδικά δικαιώματα. Το RoarKit δείχνει ό,τι λέει το ίδιο το σύστημα, το επίπεδο θερμότητας και αν κόβει ταχύτητα για να κρυώσει, που είναι αυτό που χρειάζεσαι για να κάνεις κάτι.", "q8": "Δουλεύει σε εξωτερικούς δίσκους και servers;", "a8": "Ναι: σε κάθε φάκελο που ανοίγει ο υπολογιστής σου, κάρτα, δίσκο USB ή Thunderbolt, κοινόχρηστο φάκελο δικτύου. Η Υγεία δίσκων θέλει ο δίσκος να δίνει το SMART του, που πολλά κουτιά USB και card readers δεν το κάνουν.", "ct.idx": "Επαφή", "ct.title": "Σου λείπει <b>ένα εργαλείο</b>;", "ft.lab": "The Mad Lions Lab", "ft.legal": "Απόρρητο & Όροι", "footer": "© 2026 The Mad Lions · RoarKit", "nav.new": "Νέα", "ver.new": "Νέο", "new.idx": "Νέα · 0.5 έως 0.7", "new.title": "Τι <b>νέο</b> υπάρχει.", "new.sub": "Βγήκαν στις 29 και 30 Οκτωβρίου: δύο νέα εργαλεία για τον υπολογιστή, ένα εικονίδιο στη γραμμή μενού, δουλειές που κάνει το RoarKit μόνο του, παρόμοιες φωτογραφίες στα Δίδυμα, και το γυάλινο στυλ της οικογένειας Roar.", "nw.1.t": "Απεγκατάσταση εφαρμογών, και ό,τι αφήνουν", "nw.1.p": "Κάθε εφαρμογή με την έκδοσή της, το μέγεθός της και πότε άνοιξε τελευταία φορά. Σε Mac, διάλεξε μία και το RoarKit βρίσκει ό,τι άφησε στη Library σου: ρυθμίσεις, cache, containers, αποθηκευμένη κατάσταση, logs, login agents, το καθένα με το μέγεθός του και ένα κουτάκι. Η εφαρμογή και ό,τι τσεκάρεις πάνε μαζί στον Κάδο. Οι εφαρμογές της Apple, το ίδιο το RoarKit και μια εφαρμογή που είναι ανοιχτή μένουν ως έχουν. Σε Windows τρέχει το πρόγραμμα απεγκατάστασης της ίδιας της εφαρμογής.", "nw.2.t": "Εκκίνηση, με διακόπτη", "nw.2.p": "Ό,τι ξεκινάει μόνο του με τον υπολογιστή: login items, launch agents και υπηρεσίες παρασκηνίου σε Mac, τα κλειδιά Run και οι φάκελοι Startup σε Windows. Ένας διακόπτης το κλείνει, και το ξανανοίγει: τίποτα δεν σβήνεται, το RoarKit κρατάει ό,τι αφαίρεσε. Ό,τι ισχύει για όλους τους χρήστες φαίνεται, δεν αλλάζει.", "nw.3.t": "Στη γραμμή μενού", "nw.3.p": "Ένα εικονίδιο εργαλειοθήκης με τον ελεύθερο χώρο του δίσκου εκκίνησης δίπλα του· το μενού του δείχνει την πίεση μνήμης και τη θερμότητα και ανοίγει τον Καθαρισμό. Ειδοποίηση όταν ο δίσκος εκκίνησης πέσει κάτω από 10% ελεύθερο, όταν ένας δίσκος αρχίσει να χαλάει ή όταν ο υπολογιστής ζεσταθεί πολύ. Σε Windows κάθεται δίπλα στο ρολόι, αν το ανοίξεις.", "nw.4.t": "Δουλειές που κάνει μόνο του", "nw.4.p": "Η καθεμία κλειστή μέχρι να την ανοίξεις στις Ρυθμίσεις: ένας εβδομαδιαίος Καθαρισμός των ασφαλών cache, τη μέρα και ώρα που διαλέγεις, και ένας μηνιαίος έλεγχος των δίσκων backup με βάση τις αναφορές αντιγραφής τους. Μια δουλειά που χάθηκε τρέχει στο επόμενο άνοιγμα· οι Ρυθμίσεις δείχνουν τις τελευταίες, με το Τρέξε τώρα.", "nw.5.t": "Παρόμοιες φωτογραφίες", "nw.5.p": "Τα Δίδυμα βρίσκουν πλέον τις λήψεις ενός burst και την ίδια φωτογραφία σωσμένη ξανά ή μικρότερη, σε JPG, PNG, TIFF, HEIC και RAW καμερών. Κρατάει αυτή με τα περισσότερα pixels, μετά την πιο καθαρή, και σημειώνει μια λήψη που είναι φανερά πιο θολή.", "nw.6.t": "Το γυαλί της οικογένειας Roar", "nw.6.p": "Το RoarKit μοιάζει πλέον με το RoarMail, το RoarWriter και το RoarMorph: γραφίτινες γυάλινες στήλες που αιωρούνται με κενό ανάμεσά τους, ένα κόκκινο χρώμα που λάμπει, το εργαλείο που διάλεξες φωτισμένο από μέσα, μια επιλογή σαν ανοιχτόχρωμο φωτεινό pill. Σε φωτεινό και σε σκούρο.", "nw.7.t": "Μεγαλύτερο παράθυρο", "nw.7.p": "Το παράθυρο ανοίγει μεγάλο, έως 1600 × 1060, και τα κουμπιά του κάθονται σε δική τους λωρίδα πάνω από τις στήλες, όπως στο RoarMail. Το πλαϊνό μενού μένει όπως το ξέρεις, με όλα τα εργαλεία μέσα.", "nw.8.t": "Στον δρόμο ως εκεί", "nw.8.p": "Η 0.6.0 δοκίμασε μια νέα όψη, το «όργανο», και η 0.6.1 έδωσε στο πλαϊνό μενού μεγαλύτερα εικονίδια με γραμμές, σε ένα χρώμα. Και οι δύο οδήγησαν στο γυαλί της 0.7. Ό,τι κάνει κάθε εργαλείο δεν άλλαξε.", "ver.head": "Δύο νέα εργαλεία, νέα όψη", "tk.17": "Απεγκατάσταση εφαρμογών", "tk.18": "Εκκίνηση", "tk.19": "Παρόμοιες φωτογραφίες", "tl.computer.2.n": "Εκκίνηση", "tl.computer.2.p": "Ό,τι ξεκινάει μόνο του με τον υπολογιστή, το καθένα με διακόπτη για να το κλείσεις και να το ξανανοίξεις. Τίποτα δεν σβήνεται.", "tl.computer.3.n": "Απεγκατάσταση", "tl.computer.3.p": "Κάθε εφαρμογή με το μέγεθός της και πότε άνοιξε τελευταία· σε Mac, η ίδια και ό,τι άφησε στη Library σου πάνε μαζί στον Κάδο.", "ix13.t": "Στη γραμμή μενού", "ix13.p": "Ο ελεύθερος χώρος του δίσκου εκκίνησης με μια ματιά, και ειδοποίηση όταν γεμίζει ένας δίσκος, όταν ένας δίσκος αρχίζει να χαλάει ή όταν ο υπολογιστής ζεσταίνεται.", "ix14.t": "Δουλειές μόνο του", "ix14.p": "Αν τις ανοίξεις: ένας εβδομαδιαίος Καθαρισμός των ασφαλών cache, ένας μηνιαίος έλεγχος των backup σου με βάση τις αναφορές αντιγραφής τους."}
+  // the product page (31 Oct): its own Greek
+  Object.assign(EL, {"tour.idx": "02 · Μια ματιά", "tools.idx": "03 · Τα εργαλεία", "sh.idx": "04 · Για το γύρισμα", "all.idx": "05 · Όλα", "dl.idx": "07 · Λήψη", "faq.idx": "08 · Ερωτήσεις", "new.idx": "09 · Νέα · 0.5 έως 0.7", "hero.claim": "Δεκαοχτώ εργαλεία.<br><b>Μία εφαρμογή.</b>", "hero.lead2": "Χώρος στον δίσκο, κάρτες αντιγραμμένες και ελεγμένες, αναφορά για κάθε clip, αρχεία τακτοποιημένα και κωδικοί κλειδωμένοι, <b>στον υπολογιστή σου</b>. Mac και Windows.", "sc.cap": "17:30, τρίτη μέρα. Κάθε κάρτα αντιγραμμένη, ελεγμένη δύο φορές, με αναφορά.", "nav.onset": "Στο γύρισμα", "on.idx": "01 · Στο γύρισμα", "on.title": "Φτιαγμένο από ανθρώπους <b>που κάνουν ταινίες</b>.", "on.sub": "Φτιάξαμε το RoarKit για τη δική μας δουλειά στο The Mad Lions. Εδώ το χρησιμοποιούμε.", "why.idx": "06 · Γιατί Roar", "why.title": "Γιατί <b>μια εφαρμογή Roar</b>.", "why.sub": "Τι υπόσχεται κάθε εφαρμογή του The Mad Lions Lab, και το RoarKit.", "nm1": "εργαλεία σε μία εφαρμογή, σε ένα μενού.", "nm2": "αρχεία σβησμένα. Ό,τι διαλέγεις πάει στον Κάδο.", "nm3": "AES για τους κωδικούς στο θησαυροφυλάκιό σου.", "nm4": "Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς λογαριασμό.", "on1.k": "Στο γύρισμα · Ο DIT", "on1.t": "Κάρτες αντιγραμμένες, ελεγμένες δύο φορές.", "on1.p": "Αντίγραφα με checksums και MHL, και αναφορά για κάθε clip, πριν η κάρτα γυρίσει στην κάμερα.", "on2.k": "Στο γραφείο · Ο παραγωγός", "on2.t": "Ξανά χώρος στον δίσκο.", "on2.p": "Ένας χάρτης για το τι γεμίζει τον υπολογιστή, cache στον Κάδο, τα διπλά αρχεία βρεμένα, τα προγράμματα εκκίνησης ήσυχα.", "on3.k": "Στο σπίτι · Η μοντέρ", "on3.t": "Κάθε δίσκος σε τάξη.", "on3.p": "Τι έχει κάθε δίσκος, αρχεία μετονομασμένα και τακτοποιημένα, κωδικοί σε θησαυροφυλάκιο που ανοίγεις μόνο εσύ.", "w1.t": "Μόνο ο Κάδος", "w1.p": "Το RoarKit δεν σβήνει ποτέ: ό,τι διαλέγεις πάει στον Κάδο, και από κάθε ομάδα διπλών ένα αρχείο μένει πάντα.", "w2.t": "Στον υπολογιστή σου", "w2.p": "Όλα γίνονται στον υπολογιστή σου. Βγαίνει στο internet μόνο για να δει αν υπάρχει ενημέρωση.", "w3.t": "Ενημερώνεται μόνο του", "w3.p": "Οι νέες εκδόσεις έρχονται στο παρασκήνιο· ένα πάτημα για επανεκκίνηση. Mac και Windows.", "w4.t": "Φτιαγμένο από κινηματογραφιστές", "w4.p": "Το The Mad Lions, εταιρεία παραγωγής στην Αθήνα, το χρησιμοποιεί στη δουλειά του. Οι ιδέες σου πάνε κατευθείαν σε όσους το φτιάχνουν."})
+
+  var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
+  var EN = {}
+  nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })
+  var mineLabel = { en: { mac: 'Your computer', win: 'Your computer' }, el: { mac: 'Ο υπολογιστής σου', win: 'Ο υπολογιστής σου' } }
+  function setLang(l) {
+    var d = l === 'el' ? EL : EN
+    nodes.forEach(function (n) { var v = d[n.dataset.t]; if (v == null) v = EN[n.dataset.t]; if (n.hasAttribute('data-html')) n.innerHTML = v; else n.textContent = v })
+    document.documentElement.lang = l === 'el' ? 'el' : 'en'
+    document.querySelectorAll('.lang button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === l) })
+    ;['mac', 'win'].forEach(function (k) { var e = document.getElementById('dl-' + k); if (e) e.dataset.mine = mineLabel[l === 'el' ? 'el' : 'en'][k] })
+    setMain(l); showVer(l)
+    try { localStorage.setItem('tml_site_lang', l) } catch (e) {}
+  }
+  // the first button downloads for the device you are on; on a phone it opens the browser version
+  var ua = navigator.userAgent || ''
+  var phone = /iPhone|iPad|iPod|Android/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  var os = phone ? 'web' : /Windows/i.test(ua) ? 'win' : /Mac/i.test(ua) ? 'mac' : 'web'
+  var mine = document.getElementById('dl-' + os)
+  if (mine) mine.classList.add('mine')
+  // the installers carry their version in the name, and still the name RoarTwin (the app file is renamed in a later release): the links come from the newest release's own files
+  var REL = 'https://github.com/' + REPO + '/releases/latest/download/' + APP
+  var FILES = { mac: REL + '-Mac-arm64.dmg', intel: REL + '-Mac-x64.dmg', win: REL + '-Windows-Setup.exe' }
+  var VER = ''
+  fetch('https://api.github.com/repos/' + REPO + '/releases/latest', { headers: { Accept: 'application/vnd.github+json' } })
+    .then(function (r) { return r.ok ? r.json() : null })
+    .then(function (d) {
+      if (!d) return
+      VER = (String(d.name || '').match(/(\d+\.\d+\.\d+)/) || [])[1] || ''
+      var re = { mac: /Mac-arm64\.dmg$/, intel: /Mac-x64\.dmg$/, win: /Windows-Setup\.exe$/ }
+      Object.keys(re).forEach(function (k) {
+        var list = (d.assets || []).filter(function (a) { return re[k].test(a.name) })
+        var pick = list.filter(function (a) { return /\d+\.\d+\.\d+/.test(a.name) })[0] || list[0]
+        if (!pick) return
+        document.querySelectorAll('a[data-f="' + k + '"]').forEach(function (a) { a.href = pick.browser_download_url })
+        FILES[k] = pick.browser_download_url
+      })
+      setMain(document.documentElement.lang); showVer(document.documentElement.lang)
+    }).catch(function () {})
+  function showVer(l) {
+    var e = document.getElementById('dl-ver')
+    if (!e || !VER) return
+    e.textContent = (l === 'el' ? '● Τελευταία έκδοση: ' : '● Latest: ') + NAME + ' ' + VER + ' beta'
+    document.querySelectorAll('.f-vn').forEach(function (v) { v.textContent = VER })
+    e.hidden = false
+  }
+  function setMain(l) {
+    var a = document.getElementById('dl-main')
+    var s = a.querySelector('span')
+    var el = l === 'el'
+    if (os === 'mac') { a.href = FILES.mac; s.textContent = el ? 'Λήψη για Mac' : 'Download for Mac' }
+    else if (os === 'win') { a.href = FILES.win; s.textContent = el ? 'Λήψη για Windows' : 'Download for Windows' }
+    else if (phone) { a.href = WEB; s.textContent = el ? 'Για Mac και Windows' : 'For Mac and Windows' }
+    else { a.href = '#download'; s.textContent = el ? 'Λήψη' : 'Download' }
+  }
+  document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setLang(b.dataset.lang) }) })
+  var saved = 'en'
+  try { saved = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
+  setLang(saved)
+  var bar = document.getElementById('bar')
+  var onScroll = function () { bar.classList.toggle('solid', window.scrollY > 30) }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll()
+  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  var rv = [].slice.call(document.querySelectorAll('.rv'))
+  if (still || !('IntersectionObserver' in window)) rv.forEach(function (e) { e.classList.add('in') })
+  else {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }) }, { rootMargin: '0px 0px -8% 0px', threshold: .06 })
+    rv.forEach(function (e) { io.observe(e) })
+  }
+
+  // A look: the tabs change the screen and its caption; the lens glides to the chosen tab
+  var tabs = document.querySelector('.tour-tabs')
+  if (tabs) {
+    var lens = tabs.querySelector('.lens')
+    var place = function () { var b = tabs.querySelector('button.on'); if (!b) return; lens.style.width = b.offsetWidth + 'px'; lens.style.transform = 'translateX(' + (b.offsetLeft - 4) + 'px)' }
+    var pick = function (id) {
+      tabs.querySelectorAll('button').forEach(function (b) { var on = b.dataset.shot === id; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); if (on && b.scrollIntoView && tabs.scrollWidth > tabs.clientWidth) tabs.scrollTo({ left: b.offsetLeft - (tabs.clientWidth - b.offsetWidth) / 2, behavior: still ? 'auto' : 'smooth' }) })
+      document.querySelectorAll('.shots img, .tour-cap > div').forEach(function (e) { e.classList.toggle('on', e.dataset.shot === id) })
+      place()
+    }
+    tabs.querySelectorAll('button').forEach(function (b) { b.addEventListener('click', function () { pick(b.dataset.shot) }) })
+    tabs.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
+      var all = [].slice.call(tabs.querySelectorAll('button')), i = all.indexOf(tabs.querySelector('button.on'))
+      var n = all[(i + (e.key === 'ArrowRight' ? 1 : all.length - 1)) % all.length]; pick(n.dataset.shot); n.focus(); e.preventDefault()
+    })
+    // a tool in the list opens its screen when there is one
+    var MAP = { space: 'space', clean: 'overview', leftovers: 'space', twins: 'twins', copy: 'drives', backup: 'drives', report: 'report', clipcheck: 'report', contact: 'report', rename: 'files', files: 'files', archive: 'files', drives: 'drives', speed: 'speed', home: 'overview', stats: 'stats', startup: 'stats', uninstall: 'stats', vault: 'vault' }
+    document.querySelectorAll('.tl a[data-tool]').forEach(function (a) { a.addEventListener('click', function () { var s = MAP[a.dataset.tool]; if (s) pick(s) }) })
+    window.addEventListener('resize', place); if (document.fonts && document.fonts.ready) document.fonts.ready.then(place); place()
+    document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListener('click', function () { setTimeout(place, 0) }) })
+  }
+  // the frame leans a little toward the pointer (computers only)
+  var win = document.getElementById('win')
+  if (win && !still && window.matchMedia('(pointer: fine)').matches) {
+    var tx = 0, ty = 0, x = 0, y = 0, raf = 0
+    var loop = function () { x += (tx - x) * .08; y += (ty - y) * .08; win.style.setProperty('--rx', x.toFixed(2)); win.style.setProperty('--ry', y.toFixed(2)); raf = Math.abs(tx - x) + Math.abs(ty - y) > .01 ? requestAnimationFrame(loop) : 0 }
+    window.addEventListener('pointermove', function (e) { var r = win.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return; tx = ((e.clientX / innerWidth) - .5) * 4; ty = -((e.clientY / innerHeight) - .5) * 3; if (!raf) raf = requestAnimationFrame(loop) }, { passive: true })
+  }
+})()
+</script>
+<script src="../fresh.js" defer></script>
+</body>
+</html>
