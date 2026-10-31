@@ -31,6 +31,7 @@
     ['roarwriter', 'RoarWriter', 'lab/roarwriter/', 'Screenwriting', 'Γράψιμο σεναρίου'],
     ['roarkit', 'RoarKit', 'lab/roarkit/', 'Eighteen tools', 'Δεκαοκτώ εργαλεία'],
     ['roarmorph', 'RoarMorph', 'lab/roarmorph/', 'Convert and compress', 'Μετατροπή και συμπίεση'],
+    ['roarplay', 'RoarPlay', 'lab/roarplay/', 'Plays everything', 'Παίζει τα πάντα'],
   ]
   const here = (APPS.find(([k]) => location.pathname.includes('/' + k + '/') || (k === 'roartransfer' && location.hostname === 'roartransfer.com')) || [])[0]
   const bar = document.querySelector('header.bar, .bar')
