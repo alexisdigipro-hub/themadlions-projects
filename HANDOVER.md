@@ -39,7 +39,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 ## Where we stopped (30 Oct 2026, evening: RoarMorph's page as a product page)
 - Alex asked for the Lab's app pages to read like Apple, Google Store, Samsung and Airmail, with real photos of young people. Pilot: **lab/roarmorph/**. New order: a claim with a number ("2.4 GB in. 25 MB out."), a photo of an editor at night with the app's window over it, four numbers (−96%, 0.96 MB, 1 drop, €0), the formats ticker, On set (three photos: DIT, producer, edit, each with what RoarMorph does for them), Only here, Same picture (a before/after slider and size bars), For the shoot, Everything, Why Roar (four promises every Lab app makes, with Privacy and Terms), Download, Questions, and What's new moved to the end. EN and GR.
-- The photos (photo-night.jpg, photo-set.jpg, photo-van.jpg, photo-studio.jpg, still.jpg) are AI stand-ins from Higgsfield Soul 2 (Alex chose Soul 2 over GPT Image on 31 Oct; still.jpg is 2.23:1, the slider follows its shape) until Alex shoots real ones: same names and shapes (16:9 for photo-night and still, 4:5 for the three on set), and they drop in.
+- The photos (photo-hero.jpg, photo-set.jpg, photo-van.jpg, photo-studio.jpg, still.jpg) are AI stand-ins from Higgsfield Soul 2 (Alex chose Soul 2 over GPT Image on 31 Oct; still.jpg is 2.23:1, the slider follows its shape) until Alex shoots real ones: same names and shapes (16:9 for photo-hero and still, 4:5 for the three on set), and they drop in.
 - Next: if Alex likes it, the same structure for RoarKit, RoarWriter, RoarMail, RoarList.
 
 ## Where we stopped (30 Oct 2026, alexisk.gr's admin)
