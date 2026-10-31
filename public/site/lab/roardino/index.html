@@ -20,6 +20,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../fresh.css">
+<link rel="stylesheet" href="../product.css">
 <style>
 :root {
   --bg: #16181c; --bg-2: #1d2025; --bg-3: #24282f; --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.16);
@@ -422,12 +423,13 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <span class="rm" aria-label="Roardino"><span class="a">ROAR</span><span class="b">DINO</span></span>
   </a>
   <nav aria-label="Sections">
-    <a href="#new" data-t="nav.new">New</a>
+    <a href="#onset" data-t="nav.onset">On set</a>
     <a href="#only" data-t="nav.only">Only here</a>
     <a href="#set" data-t="nav.set">For the set</a>
     <a href="#all" data-t="nav.all">Everything</a>
     <a href="#start" data-t="nav.start">Start</a>
     <a href="#faq" data-t="nav.faq">Questions</a>
+    <a href="#new" data-t="nav.new">New</a>
   </nav>
   <div class="end">
     <div class="lang" role="group" aria-label="Language">
@@ -440,36 +442,191 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 
 <main>
 <div class="hero" id="top">
-  <div class="hero-top">
-    <div>
-      <p class="kicker rv"><i></i><span data-t="hero.kicker">Call sheets · The Mad Lions Lab · Experiment 02</span></p>
-      <h1 class="rv" style="--d:.06s"><span class="rm"><span class="a">ROAR</span><span class="b">DINO</span></span><em class="beta">beta</em></h1>
-    </div>
-    <div class="hero-mark rv" style="--d:.1s">
+  <div class="hero-head">
+    <p class="kicker rv"><i></i><span data-t="hero.kicker">Call sheets · The Mad Lions Lab · Experiment 02</span></p>
+    <h1 class="brand rv" style="--d:.04s">
       <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
-      <a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">October 2026</span></a>
-    </div>
-  </div>
-  <div class="hero-sub">
-    <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>The call sheet, in one link. Write <b>the call, the place and the day's plan</b>, pick a picture and a colour, and send the crew <b>one page that opens on any phone</b>, with directions, weather and sunset.</p>
+      <span class="rm"><span class="a">ROAR</span><span class="b">DINO</span></span><em class="beta">beta</em>
+    </h1>
+    <p class="claim rv" style="--d:.1s" data-t="hero.claim" data-html>The call sheet.<br><b>One link.</b></p>
+    <p class="lead rv" style="--d:.16s" data-t="hero.lead2" data-html>Write the call, the place and the day's plan, and send the crew <b>one page that opens on any phone</b>, with directions, weather and sunset.</p>
     <div class="cta rv" style="--d:.22s">
       <a class="pill main" href="../../roardino/"><span data-t="cta.make">Make your ordino</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       <a class="pill" href="../../roardino/#demo" data-t="cta.demo2">See an example</a>
     </div>
     <p class="cta-note rv" style="--d:.3s"><span data-t="cta.note">Free · in the browser, on a computer or a phone · nothing for the crew to install</span></p>
+    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">October 2026</span></a></div>
   </div>
-
-  <div class="frame ph rv" style="--d:.2s">
+  <div class="scene stack rv" style="--d:.18s">
+    <figure class="scene-photo"><img src="photo-hero.jpg" alt="" width="1600" height="900" fetchpriority="high"><figcaption data-t="sc.cap">05:52, call time. Everyone already knows where.</figcaption></figure>
+    <div class="frame ph" style="--d:.2s">
     <div class="phone"><iframe src="../../roardino/#demo" title="A Roardino ordino on a phone" loading="lazy"></iframe></div>
     <div class="tag t1" aria-hidden="true"><i>01</i><span data-t="tag.link">One link for the whole crew</span></div>
     <div class="tag t2" aria-hidden="true"><i>02</i><span data-t="tag.sky">Weather · sunrise · sunset</span></div>
     <div class="tag t3" aria-hidden="true"><i>03</i><span data-t="tag.cal">The day in their calendar</span></div>
   </div>
+  </div>
 </div>
+
+<section id="numbers" class="nums-sec">
+  <div class="nums">
+    <div class="num f-glass rv"><b>1</b><span data-t="nm1">link for the whole crew, the same one all week.</span></div>
+    <div class="num f-glass rv" style="--d:.06s"><b>0</b><span data-t="nm2">apps for the crew to install.</span></div>
+    <div class="num f-glass rv" style="--d:.12s"><b>2<small>wk</small></b><span data-t="nm3">of weather ahead, with sunrise and sunset.</span></div>
+    <div class="num f-glass rv" style="--d:.18s"><b>€0</b><span data-t="nm4">No subscription, no ads.</span></div>
+  </div>
+</section>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-in">
+<span data-t="tk.1">One link</span><span data-t="tk.2">Calls by department</span><span data-t="tk.3">Directions · Open in Maps</span><span data-t="tk.4">Weather and sunset</span><span data-t="tk.5">Schedule · Scenes</span><span data-t="tk.6">Cast · Crew · Contacts</span><span data-t="tk.7">Add to calendar</span><span data-t="tk.8">Dark · Glass · Light</span><span data-t="tk.9">WhatsApp · Viber · SMS</span><span data-t="tk.10">Duplicate for day two</span><span data-t="tk.1">One link</span><span data-t="tk.2">Calls by department</span><span data-t="tk.3">Directions · Open in Maps</span><span data-t="tk.4">Weather and sunset</span><span data-t="tk.5">Schedule · Scenes</span><span data-t="tk.6">Cast · Crew · Contacts</span><span data-t="tk.7">Add to calendar</span><span data-t="tk.8">Dark · Glass · Light</span><span data-t="tk.9">WhatsApp · Viber · SMS</span><span data-t="tk.10">Duplicate for day two</span>
+</div></div>
+
+<section id="onset">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="on.idx">01 · On set</p><h2 class="rv" data-t="on.title" data-html>Made by people <b>who make films</b>.</h2></div>
+    <p class="sub rv" data-t="on.sub">We built Roardino for our own work at The Mad Lions. This is where it gets used.</p>
+  </div>
+  <div class="people">
+    <figure class="person rv"><img src="photo-set.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on1.k">The night before · The AD</span><b data-t="on1.t">Change the call at 23:00.</b><span data-t="on1.p">The same link shows the new call in the morning; nobody needs a new file.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.08s"><img src="photo-office.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on2.k">Sunrise · The gaffer</span><b data-t="on2.t">His call, his department.</b><span data-t="on2.p">One general call, then a call for each group: camera, lights, make-up, cast.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.16s"><img src="photo-home.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on3.k">In make-up · The cast</span><b data-t="on3.t">Directions with a tap.</b><span data-t="on3.p">The place in Maps, the location contact a tap away, the weather for that place and day.</span></figcaption></figure>
+  </div>
+</section>
+
+<section id="only">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="only.idx">02 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only Roardino</b> does.</h2></div>
+    <p class="sub rv" data-t="only.sub">Why a production stops sending the call sheet as a PDF in the group chat.</p>
+  </div>
+  <div class="three">
+    <article class="big rv">
+      <span class="no">01</span>
+      <div><h3 data-t="f1.t" data-html><b>One link</b>, every phone.</h3><p data-t="f1.p">The ordino is a page, not a file: it opens at once on any phone, with no app and no zooming. Change the call at night and the same link shows the new one in the morning.</p>
+        <div class="chips"><span data-t="f1.c1">No app for the crew</span><span data-t="f1.c2">Always the latest</span><span data-t="f1.c3">WhatsApp · Viber · SMS</span></div></div>
+      <div class="viz"><div class="mc"><div class="big"><small>GENERAL CALL · FRI 24 OCT</small><b>06:30</b></div><div class="pills"><span class="m" data-t="f1.v1">Share the link</span><span>WhatsApp</span><span>Viber</span></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">02</span>
+      <div><h3 data-t="f2.t" data-html>The place, <b>and the sky</b>.</h3><p data-t="f2.p">Type the address and Roardino finds the spot; paste a Google Maps link and the crew also get Directions and Open in Maps. They call the location contact with a tap, and the weather (about two weeks ahead, with the chance of rain), sunrise and sunset for that place and day fill in by themselves.</p>
+        <div class="chips"><span data-t="f2.c1">Directions</span><span data-t="f2.c2">Extra locations</span><span data-t="f2.c3">Weather</span><span data-t="f2.c4">Sunrise · sunset</span></div></div>
+      <div class="viz"><div class="mc"><div class="r on"><i></i><b>Piraeus Railway Station</b><small>MAPS</small></div><div class="r"><i style="background:#ffb224"></i><b data-t="f2.v1">Clear · 18°</b><small>WEATHER</small></div><div class="r"><i style="background:#ff6b2c"></i><b data-t="f2.v2">Sunrise 07:38 · Sunset 18:41</b></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">03</span>
+      <div><h3 data-t="f3.t" data-html>Every <b>department's call</b>.</h3><p data-t="f3.p">One general call, then a call for each group: camera, lights, make-up, cast. Under it the day's schedule, the scenes, cast, crew and contacts. Whatever you fill in shows; whatever you leave empty stays out.</p>
+        <div class="chips"><span data-t="f3.c1">Calls by group</span><span data-t="f3.c2">Schedule</span><span data-t="f3.c3">Scenes · Cast · Crew</span><span data-t="f3.c4">Empty stays out</span></div></div>
+      <div class="viz"><div class="mc"><div class="r"><b data-t="f3.v1">Camera &amp; lights</b><small>05:45</small></div><div class="r"><b data-t="f3.v2">Make-up &amp; wardrobe</b><small>06:00</small></div><div class="r on"><b data-t="f3.v3">Cast</b><small>07:15</small></div><div class="r"><b data-t="f3.v4">Wrap</b><small>19:00</small></div></div></div>
+    </article>
+  </div>
+</section>
+
+<section id="set">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="set.idx">03 · For the set</p><h2 class="rv" data-t="set.title" data-html>Made the way <b>a call sheet is read</b>.</h2></div>
+    <p class="sub rv" data-t="set.sub">At five in the morning, on a phone, in a hurry.</p>
+  </div>
+  <div class="board">
+    <article class="tile t-tasks f-glass rv">
+      <span class="k" data-t="s1.k">The calendar</span>
+      <h3 data-t="s1.t" data-html>The day, <b>in their calendar</b>.</h3>
+      <p data-t="s1.p">One tap on the ordino puts the shoot day in the phone's calendar, with the call time and the place.</p>
+    </article>
+    <article class="tile t-ord f-glass rv" style="--d:.08s">
+      <span class="k" data-t="s2.k">The look</span>
+      <h3 data-t="s2.t" data-html>Dark, Glass or Light, <b>your colour</b>.</h3>
+      <p data-t="s2.p">Pick a look, an accent colour and a cover picture with the production's logo. The ordino looks like your project, not like a form. Put the sections in the order you want, with your own titles.</p>
+      <div class="looks3"><span style="background:#101114;color:#eef0f3">Dark</span><span style="background:linear-gradient(160deg,#3a2a2c,#1b1e23);color:#eef0f3">Glass</span><span style="background:#f3f0e8;color:#151412">Light</span></div>
+    </article>
+    <article class="tile t-upd f-glass rv">
+      <span class="k" data-t="s3.k">The next day</span>
+      <h3 data-t="s3.t" data-html>Duplicate, <b>change the date</b>.</h3>
+      <p data-t="s3.p">Day two is day one with a few changes: Duplicate, on the list or in the editor, makes a new ordino with everything in it, ready for the new date and not sent until you send it.</p>
+    </article>
+    <article class="tile t-icon f-glass rv" style="--d:.08s">
+      <div class="txt">
+        <span class="k" data-t="s4.k">The family</span>
+        <h3 data-t="s4.t" data-html>Straight into <b>the crew's chat</b>.</h3>
+        <p data-t="s4.p">Send the ordino into a RoarMe chat, or by WhatsApp, Viber or SMS. It is the same RoarMe account, so every ordino you make is in one place, on any device. In the THEMADLIONS hub, the team&rsquo;s ordinos live with its projects instead.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section id="all">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="all.idx">04 · Everything</p><h2 class="rv" data-t="all.title" data-html>And all <b>a shoot day needs</b>.</h2></div>
+    <p class="sub rv" data-t="all.sub">The rest of Roardino, briefly.</p>
+  </div>
+  <div class="index">
+    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">The project on top</b><p data-t="ix1.p">Client, title and the production company on the cover, with its picture.</p></div>
+    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">The day</b><p data-t="ix2.p">Heading, date, day X of Y and the unit, on top of the ordino.</p></div>
+    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">The hours</b><p data-t="ix3.p">General call, wrap, the break, and one line under the call for whatever matters most today.</p></div>
+    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">More places</b><p data-t="ix4.p">Parking and the nearest hospital under the main place, and extra locations for the same day, each with its own Directions.</p></div>
+    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">The schedule</b><p data-t="ix5.p">The day hour by hour, in the order you shoot it.</p></div>
+    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Scenes</b><p data-t="ix6.p">The scenes of the day with their numbers and what happens.</p></div>
+    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Cast and crew</b><p data-t="ix7.p">Who is called, in which role, with a tap to call.</p></div>
+    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">Contacts</b><p data-t="ix8.p">Production, location manager, the AD: everyone the crew may need to reach.</p></div>
+    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">A note</b><p data-t="ix9.p">Parking, the dress code, the password for the wifi: one note at the end.</p></div>
+    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Drafts</b><p data-t="ix10.p">Keep an ordino as a draft and send it when it is ready; the link opens only then.</p></div>
+    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">All your ordinos</b><p data-t="ix11.p">Every ordino you made, in your account on any device. In the hub: in time order, with filters and a search.</p></div>
+    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Try it first</b><p data-t="ix12.p">A sample ordino for a night shoot opens with no account.</p></div>
+    <div class="ix rv"><span class="no">13</span><b data-t="ix13.t">No signal, still a link</b><p data-t="ix13.p">If the server cannot be reached, Send link makes a link that carries the whole ordino inside it. It works; it just does not update.</p></div>
+    <div class="ix rv"><span class="no">14</span><b data-t="ix14.t">Beyond the forecast</b><p data-t="ix14.p">Further out than about two weeks, sunrise and sunset are still worked out for the place and the date.</p></div>
+  </div>
+</section>
+
+<section id="start">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="st.idx">05 · Start</p><h2 class="rv" data-t="st.title" data-html>Make <b>your first ordino</b>.</h2></div>
+    <p class="sub rv" data-t="st.sub">Free, and in beta: an experiment of The Mad Lions Lab that we use on our own shoots.</p>
+  </div>
+  <div class="dls">
+    <div class="dl f-glass rv">
+      <i><img src="icon.png" alt="" width="40" height="40"></i>
+      <h3 data-t="st.webt">In the browser</h3>
+      <small data-t="st.web">On a computer or a phone, with your RoarMe account. Nothing to install.</small>
+      <a class="pill main" href="../../roardino/" data-t="cta.open">Open Roardino</a>
+    </div>
+    <div class="dl f-glass rv" style="--d:.06s">
+      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m10 9.5 4.5 2.5-4.5 2.5z"/></svg></i>
+      <h3 data-t="st.demot">An example</h3>
+      <small data-t="st.demo">A night shoot, as the crew gets it. No account.</small>
+      <a class="pill" href="../../roardino/#demo" data-t="cta.demo2">See an example</a>
+    </div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="why.idx">06 · Why Roar</p><h2 class="rv" data-t="why.title" data-html>Why <b>a Roar app</b>.</h2></div>
+    <div class="why-end"><p class="sub rv" data-t="why.sub">What every app of The Mad Lions Lab promises, Roardino included.</p>
+      <div class="legal rv"><a class="pill sm" href="../../legal/roardino/#privacy" data-t="lg.p">Privacy Policy</a><a class="pill sm" href="../../legal/roardino/#terms" data-t="lg.t">Terms</a></div></div>
+  </div>
+  <div class="why">
+    <article class="wy f-glass rv"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></span><h3 data-t="w1.t">Nothing to install</h3><p data-t="w1.p">The crew opens a link in the phone's browser; only you, who make the ordino, sign in.</p></article>
+    <article class="wy f-glass rv" style="--d:.06s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.2 4.2L19 7"/></svg></span><h3 data-t="w2.t">Only what you fill in</h3><p data-t="w2.p">Whatever you fill in shows; whatever you leave empty stays out.</p></article>
+    <article class="wy f-glass rv" style="--d:.12s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></span><h3 data-t="w3.t">Always the newest</h3><p data-t="w3.p">Roardino lives in the browser, so it is always the latest version.</p></article>
+    <article class="wy f-glass rv" style="--d:.18s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10.5 5-3v9l-5-3"/></svg></span><h3 data-t="w4.t">Made by filmmakers</h3><p data-t="w4.p">The Mad Lions, a film company in Athens, use it on their own work. Ideas go straight to the people who make it.</p></article>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="faq">
+    <div><p class="idx rv" data-t="faq.idx">07 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
+    <div class="qa">
+      <details class="rv"><summary data-t="q1">Is Roardino free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
+      <details class="rv"><summary data-t="q2">Does the crew need an account or an app?</summary><p data-t="a2">No. They open the link in the phone's browser. Only you, who make the ordino, sign in, with your RoarMe account.</p></details>
+      <details class="rv"><summary data-t="q3">What if the call changes?</summary><p data-t="a3">Change it in Roardino and press Send link again. The link stays the same, so whoever opens it sees the new call.</p></details>
+      <details class="rv"><summary data-t="q4">Where do the weather and the sunset come from?</summary><p data-t="a4">From the place and the date of the ordino: Roardino finds the spot from the address or from a Google Maps link. The forecast reaches about two weeks ahead, with the chance of rain; further out, you still get sunrise and sunset.</p></details>
+      <details class="rv"><summary data-t="q5">How do I send it?</summary><p data-t="a5">Press Send link: copy the link, or share it from the phone to WhatsApp, Viber, SMS or anywhere. Inside RoarMe, it goes straight into the chat as a card.</p></details>
+      <details class="rv"><summary data-t="q6">Is Roardino in the THEMADLIONS hub?</summary><p data-t="a6">Yes, for the team: it is in the hub&rsquo;s Outbox, on the hub&rsquo;s own projects and accounts, and each project&rsquo;s Overview opens its ordino.</p></details>
+    </div>
+  </div>
+</section>
 
 <section class="f-new" id="new">
   <div class="f-new-head">
-    <div><p class="idx rv" data-t="new.idx">New · October 2026</p><h2 class="rv" data-t="new.title" data-html>What&rsquo;s <b>new</b> in Roardino.</h2></div>
+    <div><p class="idx rv" data-t="new.idx">08 · New · October 2026</p><h2 class="rv" data-t="new.title" data-html>What&rsquo;s <b>new</b> in Roardino.</h2></div>
     <p class="rv" data-t="new.sub">Since mid-October: the hub&rsquo;s own ordino, a cleaner editor, and the place with the way there.</p>
   </div>
   <div class="f-bento">
@@ -533,127 +690,6 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   </div>
 </section>
 
-<div class="ticker" aria-hidden="true"><div class="ticker-in">
-<span data-t="tk.1">One link</span><span data-t="tk.2">Calls by department</span><span data-t="tk.3">Directions · Open in Maps</span><span data-t="tk.4">Weather and sunset</span><span data-t="tk.5">Schedule · Scenes</span><span data-t="tk.6">Cast · Crew · Contacts</span><span data-t="tk.7">Add to calendar</span><span data-t="tk.8">Dark · Glass · Light</span><span data-t="tk.9">WhatsApp · Viber · SMS</span><span data-t="tk.10">Duplicate for day two</span><span data-t="tk.1">One link</span><span data-t="tk.2">Calls by department</span><span data-t="tk.3">Directions · Open in Maps</span><span data-t="tk.4">Weather and sunset</span><span data-t="tk.5">Schedule · Scenes</span><span data-t="tk.6">Cast · Crew · Contacts</span><span data-t="tk.7">Add to calendar</span><span data-t="tk.8">Dark · Glass · Light</span><span data-t="tk.9">WhatsApp · Viber · SMS</span><span data-t="tk.10">Duplicate for day two</span>
-</div></div>
-
-<section id="only">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="only.idx">01 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only Roardino</b> does.</h2></div>
-    <p class="sub rv" data-t="only.sub">Why a production stops sending the call sheet as a PDF in the group chat.</p>
-  </div>
-  <div class="three">
-    <article class="big rv">
-      <span class="no">01</span>
-      <div><h3 data-t="f1.t" data-html><b>One link</b>, every phone.</h3><p data-t="f1.p">The ordino is a page, not a file: it opens at once on any phone, with no app and no zooming. Change the call at night and the same link shows the new one in the morning.</p>
-        <div class="chips"><span data-t="f1.c1">No app for the crew</span><span data-t="f1.c2">Always the latest</span><span data-t="f1.c3">WhatsApp · Viber · SMS</span></div></div>
-      <div class="viz"><div class="mc"><div class="big"><small>GENERAL CALL · FRI 24 OCT</small><b>06:30</b></div><div class="pills"><span class="m" data-t="f1.v1">Share the link</span><span>WhatsApp</span><span>Viber</span></div></div></div>
-    </article>
-    <article class="big rv">
-      <span class="no">02</span>
-      <div><h3 data-t="f2.t" data-html>The place, <b>and the sky</b>.</h3><p data-t="f2.p">Type the address and Roardino finds the spot; paste a Google Maps link and the crew also get Directions and Open in Maps. They call the location contact with a tap, and the weather (about two weeks ahead, with the chance of rain), sunrise and sunset for that place and day fill in by themselves.</p>
-        <div class="chips"><span data-t="f2.c1">Directions</span><span data-t="f2.c2">Extra locations</span><span data-t="f2.c3">Weather</span><span data-t="f2.c4">Sunrise · sunset</span></div></div>
-      <div class="viz"><div class="mc"><div class="r on"><i></i><b>Piraeus Railway Station</b><small>MAPS</small></div><div class="r"><i style="background:#ffb224"></i><b data-t="f2.v1">Clear · 18°</b><small>WEATHER</small></div><div class="r"><i style="background:#ff6b2c"></i><b data-t="f2.v2">Sunrise 07:38 · Sunset 18:41</b></div></div></div>
-    </article>
-    <article class="big rv">
-      <span class="no">03</span>
-      <div><h3 data-t="f3.t" data-html>Every <b>department's call</b>.</h3><p data-t="f3.p">One general call, then a call for each group: camera, lights, make-up, cast. Under it the day's schedule, the scenes, cast, crew and contacts. Whatever you fill in shows; whatever you leave empty stays out.</p>
-        <div class="chips"><span data-t="f3.c1">Calls by group</span><span data-t="f3.c2">Schedule</span><span data-t="f3.c3">Scenes · Cast · Crew</span><span data-t="f3.c4">Empty stays out</span></div></div>
-      <div class="viz"><div class="mc"><div class="r"><b data-t="f3.v1">Camera &amp; lights</b><small>05:45</small></div><div class="r"><b data-t="f3.v2">Make-up &amp; wardrobe</b><small>06:00</small></div><div class="r on"><b data-t="f3.v3">Cast</b><small>07:15</small></div><div class="r"><b data-t="f3.v4">Wrap</b><small>19:00</small></div></div></div>
-    </article>
-  </div>
-</section>
-
-<section id="set">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="set.idx">02 · For the set</p><h2 class="rv" data-t="set.title" data-html>Made the way <b>a call sheet is read</b>.</h2></div>
-    <p class="sub rv" data-t="set.sub">At five in the morning, on a phone, in a hurry.</p>
-  </div>
-  <div class="board">
-    <article class="tile t-tasks f-glass rv">
-      <span class="k" data-t="s1.k">The calendar</span>
-      <h3 data-t="s1.t" data-html>The day, <b>in their calendar</b>.</h3>
-      <p data-t="s1.p">One tap on the ordino puts the shoot day in the phone's calendar, with the call time and the place.</p>
-    </article>
-    <article class="tile t-ord f-glass rv" style="--d:.08s">
-      <span class="k" data-t="s2.k">The look</span>
-      <h3 data-t="s2.t" data-html>Dark, Glass or Light, <b>your colour</b>.</h3>
-      <p data-t="s2.p">Pick a look, an accent colour and a cover picture with the production's logo. The ordino looks like your project, not like a form. Put the sections in the order you want, with your own titles.</p>
-      <div class="looks3"><span style="background:#101114;color:#eef0f3">Dark</span><span style="background:linear-gradient(160deg,#3a2a2c,#1b1e23);color:#eef0f3">Glass</span><span style="background:#f3f0e8;color:#151412">Light</span></div>
-    </article>
-    <article class="tile t-upd f-glass rv">
-      <span class="k" data-t="s3.k">The next day</span>
-      <h3 data-t="s3.t" data-html>Duplicate, <b>change the date</b>.</h3>
-      <p data-t="s3.p">Day two is day one with a few changes: Duplicate, on the list or in the editor, makes a new ordino with everything in it, ready for the new date and not sent until you send it.</p>
-    </article>
-    <article class="tile t-icon f-glass rv" style="--d:.08s">
-      <div class="txt">
-        <span class="k" data-t="s4.k">The family</span>
-        <h3 data-t="s4.t" data-html>Straight into <b>the crew's chat</b>.</h3>
-        <p data-t="s4.p">Send the ordino into a RoarMe chat, or by WhatsApp, Viber or SMS. It is the same RoarMe account, so every ordino you make is in one place, on any device. In the THEMADLIONS hub, the team&rsquo;s ordinos live with its projects instead.</p>
-      </div>
-    </article>
-  </div>
-</section>
-
-<section id="all">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="all.idx">03 · Everything</p><h2 class="rv" data-t="all.title" data-html>And all <b>a shoot day needs</b>.</h2></div>
-    <p class="sub rv" data-t="all.sub">The rest of Roardino, briefly.</p>
-  </div>
-  <div class="index">
-    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">The project on top</b><p data-t="ix1.p">Client, title and the production company on the cover, with its picture.</p></div>
-    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">The day</b><p data-t="ix2.p">Heading, date, day X of Y and the unit, on top of the ordino.</p></div>
-    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">The hours</b><p data-t="ix3.p">General call, wrap, the break, and one line under the call for whatever matters most today.</p></div>
-    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">More places</b><p data-t="ix4.p">Parking and the nearest hospital under the main place, and extra locations for the same day, each with its own Directions.</p></div>
-    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">The schedule</b><p data-t="ix5.p">The day hour by hour, in the order you shoot it.</p></div>
-    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Scenes</b><p data-t="ix6.p">The scenes of the day with their numbers and what happens.</p></div>
-    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Cast and crew</b><p data-t="ix7.p">Who is called, in which role, with a tap to call.</p></div>
-    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">Contacts</b><p data-t="ix8.p">Production, location manager, the AD: everyone the crew may need to reach.</p></div>
-    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">A note</b><p data-t="ix9.p">Parking, the dress code, the password for the wifi: one note at the end.</p></div>
-    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Drafts</b><p data-t="ix10.p">Keep an ordino as a draft and send it when it is ready; the link opens only then.</p></div>
-    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">All your ordinos</b><p data-t="ix11.p">Every ordino you made, in your account on any device. In the hub: in time order, with filters and a search.</p></div>
-    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Try it first</b><p data-t="ix12.p">A sample ordino for a night shoot opens with no account.</p></div>
-    <div class="ix rv"><span class="no">13</span><b data-t="ix13.t">No signal, still a link</b><p data-t="ix13.p">If the server cannot be reached, Send link makes a link that carries the whole ordino inside it. It works; it just does not update.</p></div>
-    <div class="ix rv"><span class="no">14</span><b data-t="ix14.t">Beyond the forecast</b><p data-t="ix14.p">Further out than about two weeks, sunrise and sunset are still worked out for the place and the date.</p></div>
-  </div>
-</section>
-
-<section id="start">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="st.idx">04 · Start</p><h2 class="rv" data-t="st.title" data-html>Make <b>your first ordino</b>.</h2></div>
-    <p class="sub rv" data-t="st.sub">Free, and in beta: an experiment of The Mad Lions Lab that we use on our own shoots.</p>
-  </div>
-  <div class="dls">
-    <div class="dl f-glass rv">
-      <i><img src="icon.png" alt="" width="40" height="40"></i>
-      <h3 data-t="st.webt">In the browser</h3>
-      <small data-t="st.web">On a computer or a phone, with your RoarMe account. Nothing to install.</small>
-      <a class="pill main" href="../../roardino/" data-t="cta.open">Open Roardino</a>
-    </div>
-    <div class="dl f-glass rv" style="--d:.06s">
-      <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m10 9.5 4.5 2.5-4.5 2.5z"/></svg></i>
-      <h3 data-t="st.demot">An example</h3>
-      <small data-t="st.demo">A night shoot, as the crew gets it. No account.</small>
-      <a class="pill" href="../../roardino/#demo" data-t="cta.demo2">See an example</a>
-    </div>
-  </div>
-</section>
-
-<section id="faq">
-  <div class="faq">
-    <div><p class="idx rv" data-t="faq.idx">05 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
-    <div class="qa">
-      <details class="rv"><summary data-t="q1">Is Roardino free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
-      <details class="rv"><summary data-t="q2">Does the crew need an account or an app?</summary><p data-t="a2">No. They open the link in the phone's browser. Only you, who make the ordino, sign in, with your RoarMe account.</p></details>
-      <details class="rv"><summary data-t="q3">What if the call changes?</summary><p data-t="a3">Change it in Roardino and press Send link again. The link stays the same, so whoever opens it sees the new call.</p></details>
-      <details class="rv"><summary data-t="q4">Where do the weather and the sunset come from?</summary><p data-t="a4">From the place and the date of the ordino: Roardino finds the spot from the address or from a Google Maps link. The forecast reaches about two weeks ahead, with the chance of rain; further out, you still get sunrise and sunset.</p></details>
-      <details class="rv"><summary data-t="q5">How do I send it?</summary><p data-t="a5">Press Send link: copy the link, or share it from the phone to WhatsApp, Viber, SMS or anywhere. Inside RoarMe, it goes straight into the chat as a card.</p></details>
-      <details class="rv"><summary data-t="q6">Is Roardino in the THEMADLIONS hub?</summary><p data-t="a6">Yes, for the team: it is in the hub&rsquo;s Outbox, on the hub&rsquo;s own projects and accounts, and each project&rsquo;s Overview opens its ordino.</p></details>
-    </div>
-  </div>
-</section>
-
 <section class="contact" id="contact">
   <p class="idx rv" data-t="ct.idx">Contact</p>
   <h2 class="rv" data-t="ct.title" data-html>Ideas for <b>the next version</b>?</h2>
@@ -674,6 +710,8 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 <script>
 (function () {
   var EL = {"nav.only": "Μόνο εδώ", "nav.set": "Για το γύρισμα", "nav.all": "Όλα", "nav.start": "Ξεκίνα", "nav.faq": "Ερωτήσεις", "cta.open": "Άνοιξε το Roardino", "cta.make": "Φτιάξε το ordino σου", "cta.demo2": "Δες ένα παράδειγμα", "cta.note": "Δωρεάν · στον browser, σε υπολογιστή ή κινητό · το συνεργείο δεν εγκαθιστά τίποτα", "hero.kicker": "Ordino γυρισμάτων · The Mad Lions Lab · Πείραμα 02", "hero.lead": "Το ordino, σε ένα link. Γράψε <b>το call, το μέρος και το πρόγραμμα της ημέρας</b>, διάλεξε φωτογραφία και χρώμα, και στείλε στο συνεργείο <b>μία σελίδα που ανοίγει σε κάθε κινητό</b>, με οδηγίες, καιρό και δύση.", "tag.link": "Ένα link για όλο το συνεργείο", "tag.sky": "Καιρός · ανατολή · δύση", "tag.cal": "Η μέρα στο ημερολόγιό τους", "tk.1": "Ένα link", "tk.2": "Calls ανά ομάδα", "tk.3": "Οδηγίες · Άνοιγμα στους Χάρτες", "tk.4": "Καιρός και δύση", "tk.5": "Πρόγραμμα · Σκηνές", "tk.6": "Cast · Crew · Επαφές", "tk.7": "Στο ημερολόγιο", "tk.8": "Dark · Glass · Light", "tk.9": "WhatsApp · Viber · SMS", "only.idx": "01 · Μόνο εδώ", "only.title": "Τρία πράγματα που κάνει <b>μόνο το Roardino</b>.", "only.sub": "Γιατί μια παραγωγή σταματά να στέλνει το ordino σαν PDF στο group.", "f1.t": "<b>Ένα link</b>, κάθε κινητό.", "f1.p": "Το ordino είναι σελίδα, όχι αρχείο: ανοίγει αμέσως σε κάθε κινητό, χωρίς εφαρμογή και χωρίς zoom. Άλλαξε το call το βράδυ και το ίδιο link δείχνει το καινούργιο το πρωί.", "f1.c1": "Χωρίς app για το συνεργείο", "f1.c2": "Πάντα το πιο νέο", "f1.c3": "WhatsApp · Viber · SMS", "f1.v1": "Στείλε το link", "f2.t": "Το μέρος, <b>και ο ουρανός</b>.", "f2.p": "Γράψε τη διεύθυνση και το Roardino βρίσκει το σημείο· επικόλλησε ένα link από το Google Maps και το συνεργείο παίρνει επιπλέον Οδηγίες και Άνοιγμα στους Χάρτες. Καλούν την επαφή του location με ένα πάτημα, και ο καιρός (περίπου δύο εβδομάδες μπροστά, με την πιθανότητα βροχής), η ανατολή και η δύση για εκείνο το μέρος και εκείνη τη μέρα συμπληρώνονται μόνα τους.", "f2.c1": "Οδηγίες", "f2.c2": "Extra locations", "f2.c3": "Καιρός", "f2.c4": "Ανατολή · δύση", "f2.v1": "Αίθριος · 18°", "f2.v2": "Ανατολή 07:38 · Δύση 18:41", "f3.t": "Το <b>call κάθε ομάδας</b>.", "f3.p": "Ένα general call, και μετά ένα call για κάθε ομάδα: κάμερα, φώτα, μακιγιάζ, ηθοποιοί. Από κάτω το πρόγραμμα της ημέρας, οι σκηνές, το cast, το crew και οι επαφές. Ό,τι συμπληρώνεις φαίνεται· ό,τι μένει κενό δεν εμφανίζεται.", "f3.c1": "Calls ανά ομάδα", "f3.c2": "Πρόγραμμα", "f3.c3": "Σκηνές · Cast · Crew", "f3.c4": "Το κενό δεν φαίνεται", "f3.v1": "Κάμερα και φώτα", "f3.v2": "Μακιγιάζ και κοστούμια", "f3.v3": "Ηθοποιοί", "f3.v4": "Wrap", "set.idx": "02 · Για το γύρισμα", "set.title": "Φτιαγμένο όπως <b>διαβάζεται ένα ordino</b>.", "set.sub": "Στις πέντε το πρωί, στο κινητό, βιαστικά.", "s1.k": "Το ημερολόγιο", "s1.t": "Η μέρα, <b>στο ημερολόγιό τους</b>.", "s1.p": "Ένα πάτημα στο ordino βάζει τη μέρα του γυρίσματος στο ημερολόγιο του κινητού, με την ώρα του call και το μέρος.", "s2.k": "Η εμφάνιση", "s2.t": "Dark, Glass ή Light, <b>το χρώμα σου</b>.", "s2.p": "Διάλεξε look, χρώμα και φωτογραφία εξωφύλλου με το λογότυπο της παραγωγής. Το ordino μοιάζει με το project σου, όχι με φόρμα. Βάλε τις ενότητες με τη σειρά που θες, με δικούς σου τίτλους.", "s3.k": "Η επόμενη μέρα", "s3.t": "Αντίγραφο, <b>άλλαξε την ημερομηνία</b>.", "s3.p": "Η δεύτερη μέρα είναι η πρώτη με λίγες αλλαγές: το Duplicate, στη λίστα ή μέσα στον editor, φτιάχνει νέο ordino με όλα μέσα, έτοιμο για τη νέα ημερομηνία, που δεν φεύγει μέχρι να το στείλεις.", "s4.k": "Η οικογένεια", "s4.t": "Κατευθείαν <b>στο chat του συνεργείου</b>.", "s4.p": "Στείλε το ordino σε ένα chat του RoarMe, ή με WhatsApp, Viber ή SMS. Είναι ο ίδιος λογαριασμός RoarMe, οπότε όλα τα ordino σου είναι σε ένα μέρος, από κάθε συσκευή. Στο hub της THEMADLIONS, τα ordino της ομάδας ζουν μαζί με τα projects της.", "all.idx": "03 · Όλα", "all.title": "Και όλα όσα <b>θέλει μια μέρα γυρίσματος</b>.", "all.sub": "Τα υπόλοιπα του Roardino, με λίγα λόγια.", "ix1.t": "Το project στην κορυφή", "ix1.p": "Πελάτης, τίτλος και η εταιρεία παραγωγής στο εξώφυλλο, με τη φωτογραφία του.", "ix2.t": "Η μέρα", "ix2.p": "Τίτλος, ημερομηνία, μέρα Χ από Υ και το unit, στην κορυφή του ordino.", "ix3.t": "Οι ώρες", "ix3.p": "General call, wrap, το διάλειμμα, και μία γραμμή κάτω από το call για ό,τι μετράει περισσότερο σήμερα.", "ix4.t": "Κι άλλα μέρη", "ix4.p": "Parking και το πλησιέστερο νοσοκομείο κάτω από την κύρια τοποθεσία, και extra locations για την ίδια μέρα, το καθένα με τις δικές του Οδηγίες.", "ix5.t": "Το πρόγραμμα", "ix5.p": "Η μέρα ώρα με την ώρα, με τη σειρά που γυρίζεις.", "ix6.t": "Σκηνές", "ix6.p": "Οι σκηνές της ημέρας με τους αριθμούς τους και τι γίνεται.", "ix7.t": "Cast και crew", "ix7.p": "Ποιος καλείται, σε ποιο ρόλο, με κλήση με ένα πάτημα.", "ix8.t": "Επαφές", "ix8.p": "Παραγωγή, location manager, ο βοηθός σκηνοθέτη: όλοι όσοι μπορεί να χρειαστεί το συνεργείο.", "ix9.t": "Μια σημείωση", "ix9.p": "Πάρκινγκ, τι να φορέσουν, ο κωδικός του wifi: μία σημείωση στο τέλος.", "ix10.t": "Πρόχειρα", "ix10.p": "Κράτα ένα ordino ως πρόχειρο και στείλ’ το όταν είναι έτοιμο· το link ανοίγει μόνο τότε.", "ix11.t": "Όλα τα ordino σου", "ix11.p": "Όλα τα ordino που έφτιαξες, στον λογαριασμό σου, από κάθε συσκευή. Στο hub: στη σειρά του χρόνου, με φίλτρα και αναζήτηση.", "ix12.t": "Δοκίμασέ το πρώτα", "ix12.p": "Ένα δείγμα ordino για νυχτερινό γύρισμα ανοίγει χωρίς λογαριασμό.", "st.idx": "04 · Ξεκίνα", "st.title": "Φτιάξε <b>το πρώτο σου ordino</b>.", "st.sub": "Δωρεάν, και σε beta: ένα πείραμα του Mad Lions Lab που χρησιμοποιούμε στα δικά μας γυρίσματα.", "st.webt": "Στον browser", "st.web": "Σε υπολογιστή ή κινητό, με τον λογαριασμό σου στο RoarMe. Τίποτα για εγκατάσταση.", "st.demot": "Ένα παράδειγμα", "st.demo": "Ένα νυχτερινό γύρισμα, όπως το παίρνει το συνεργείο. Χωρίς λογαριασμό.", "faq.idx": "05 · Ερωτήσεις", "faq.title": "Καλό να <b>ξέρεις</b>.", "q1": "Είναι δωρεάν το Roardino;", "a1": "Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις.", "q2": "Χρειάζεται το συνεργείο λογαριασμό ή εφαρμογή;", "a2": "Όχι. Ανοίγουν το link στον browser του κινητού. Συνδέεσαι μόνο εσύ που φτιάχνεις το ordino, με τον λογαριασμό σου στο RoarMe.", "q3": "Κι αν αλλάξει το call;", "a3": "Άλλαξέ το στο Roardino και πάτα ξανά «Αποστολή link». Το link μένει το ίδιο, οπότε όποιος το ανοίγει βλέπει το νέο call.", "q4": "Από πού έρχονται ο καιρός και η δύση;", "a4": "Από το μέρος και την ημερομηνία του ordino: το Roardino βρίσκει το σημείο από τη διεύθυνση ή από ένα link του Google Maps. Η πρόγνωση φτάνει περίπου δύο εβδομάδες μπροστά, με την πιθανότητα βροχής· πιο μακριά, έχεις πάλι ανατολή και δύση.", "q5": "Πώς το στέλνω;", "a5": "Πάτα «Αποστολή link»: αντέγραψε το link, ή μοιράσου το από το κινητό σε WhatsApp, Viber, SMS ή όπου θες. Μέσα στο RoarMe, μπαίνει κατευθείαν στη συνομιλία ως κάρτα.", "ct.idx": "Επαφή", "ct.title": "Ιδέες για <b>την επόμενη έκδοση</b>;", "ft.lab": "The Mad Lions Lab", "ft.legal": "Απόρρητο & Όροι", "lg.p": "Πολιτική απορρήτου", "lg.t": "Όροι χρήσης", "footer": "© 2026 The Mad Lions · Roardino", "nav.new": "Νέα", "ver.b": "Νέα", "ver.t": "Οκτώβριος 2026", "new.idx": "Νέα · Οκτώβριος 2026", "new.title": "Τι <b>νέο</b> έχει το Roardino.", "new.sub": "Από τα μέσα Οκτωβρίου: το ordino του hub, πιο καθαρός editor, και το μέρος μαζί με τον δρόμο ως εκεί.", "n1.t": "Μέσα στο hub της THEMADLIONS", "n1.p": "Το Roardino είναι πια το ordino του hub, πάνω στα projects της ομάδας. Το Νέο ordino ζητά ένα project και συμπληρώνει το ordino από αυτό.", "n1.lb": "Από το project", "n1.r1": "Όνομα και εξώφυλλο", "n1.r2": "Η επόμενη μέρα γυρίσματος, από το Ημερολόγιο", "n1.r3": "Η τοποθεσία της", "n1.r4": "Cast και crew, με τις ώρες call τους", "n1.r5": "Οι επαφές", "n1.p2": "Βρίσκεται στο Outbox, δίπλα στα deliveries και τις προσφορές, και το Overview ενός project ανοίγει το ordino του όπως το βλέπει το συνεργείο.", "n1.tag": "23 Οκτ · Hub", "n2.t": "Ένα link του Maps, και ο δρόμος ως εκεί", "n2.p": "Επικόλλησε ένα link από το Google Maps και το συνεργείο παίρνει Οδηγίες και Άνοιγμα στους Χάρτες ακριβώς για εκείνο το σημείο, με τον καιρό και τη δύση του. Τα extra locations, όπως η βάση ή το parking, έχουν το καθένα τις δικές του Οδηγίες.", "n2.tag": "19 Οκτ", "n3.t": "Ό,τι γράφεις φαίνεται, το κενό μένει έξω", "n3.p": "Ο editor ακολουθεί τη σειρά του ίδιου του ordino, από το project και τη μέρα ως την εμφάνιση. Κάθε ενότητα έχει τον διακόπτη στην κεφαλίδα της, και ορίζεις εσύ τη σειρά και τους τίτλους τους.", "n3.tag": "23 Οκτ", "n4.t": "Αντίγραφο για τη δεύτερη μέρα", "n4.p": "Από τη λίστα ή από την πάνω μπάρα του editor: ένα αντίγραφο με όλα μέσα, που δεν έχει σταλεί ακόμα, ώστε η νέα μέρα να πάρει δικό της link.", "n4.tag": "23 Οκτ", "n5.t": "Όλα τα ordino, στη σειρά του χρόνου", "n5.p": "Φίλτρα για Επόμενα, Σε link, Πρόχειρα και Περασμένα, με το πλήθος τους, και αναζήτηση. Το επόμενο γύρισμα ξεχωρίζει με περίγραμμα, όσα πέρασαν είναι πιο σβηστά.", "n5.tag": "24 Οκτ · Hub", "n6.t": "Ανοίγει αμέσως, στα χρώματα του hub", "n6.p": "Μετά την πρώτη φορά, το Roardino στο hub ανοίγει αμέσως, φοράει το θέμα, τα χρώματα και τη γραμματοσειρά του hub και ακολουθεί κάθε αλλαγή ζωντανά.", "n6.tag": "25 Οκτ · Hub", "n7.t": "Φτιαγμένο και για κινητό", "n7.p": "Στο κινητό, οι γραμμές των λιστών σπάνε σε δύο και τα πεδία ημερομηνίας και ώρας μένουν στη στήλη τους, ακόμα και σε iPhone. Στο hub, το Roardino είναι στην κάτω μπάρα του κινητού.", "n7.tag": "23 Οκτ", "n8.t": "Απόρρητο και Όροι, καθαρά", "n8.p": "Πολιτική απορρήτου και Όροι χρήσης, στα αγγλικά και στα ελληνικά, που λένε μόνο όσα κάνει πραγματικά το Roardino, με link στην εγγραφή, στον λογαριασμό σου και κάτω από κάθε ordino που στέλνεις.", "n8.tag": "25 Οκτ", "tk.10": "Αντίγραφο για τη δεύτερη μέρα", "ix13.t": "Χωρίς σύνδεση, πάλι link", "ix13.p": "Αν ο server δεν απαντά, η «Αποστολή link» φτιάχνει link που κουβαλάει όλο το ordino μέσα του. Δουλεύει, απλώς δεν ενημερώνεται.", "ix14.t": "Πέρα από την πρόγνωση", "ix14.p": "Για μέρες πιο μακριά από περίπου δύο εβδομάδες, η ανατολή και η δύση υπολογίζονται πάλι για το μέρος και την ημερομηνία.", "q6": "Υπάρχει το Roardino στο hub της THEMADLIONS;", "a6": "Ναι, για την ομάδα: είναι στο Outbox του hub, πάνω στα projects και τους λογαριασμούς του hub, και το Overview κάθε project ανοίγει το ordino του."}
+  // the product page (31 Oct): its own Greek
+  Object.assign(EL, {"only.idx": "02 · Μόνο εδώ", "set.idx": "03 · Για το γύρισμα", "all.idx": "04 · Όλα", "st.idx": "05 · Ξεκίνα", "faq.idx": "07 · Ερωτήσεις", "new.idx": "08 · Νέα · Οκτώβριος 2026", "hero.claim": "Το πρόγραμμα της μέρας.<br><b>Ένα link.</b>", "hero.lead2": "Γράψε την ώρα, τον τόπο και το πρόγραμμα της μέρας, και στείλε στο συνεργείο <b>μία σελίδα που ανοίγει σε κάθε κινητό</b>, με οδηγίες, καιρό και δύση.", "sc.cap": "05:52, ώρα προσέλευσης. Όλοι ξέρουν ήδη πού.", "nav.onset": "Στο γύρισμα", "on.idx": "01 · Στο γύρισμα", "on.title": "Φτιαγμένο από ανθρώπους <b>που κάνουν ταινίες</b>.", "on.sub": "Φτιάξαμε το Roardino για τη δική μας δουλειά στο The Mad Lions. Εδώ το χρησιμοποιούμε.", "why.idx": "06 · Γιατί Roar", "why.title": "Γιατί <b>μια εφαρμογή Roar</b>.", "why.sub": "Τι υπόσχεται κάθε εφαρμογή του The Mad Lions Lab, και το Roardino.", "nm1": "link για όλο το συνεργείο, το ίδιο όλη την εβδομάδα.", "nm2": "εφαρμογές για να εγκαταστήσει το συνεργείο.", "nm3": "καιρός μπροστά, με ανατολή και δύση.", "nm4": "Χωρίς συνδρομή, χωρίς διαφημίσεις.", "on1.k": "Το προηγούμενο βράδυ · Η βοηθός σκηνοθέτη", "on1.t": "Άλλαξε την ώρα στις 23:00.", "on1.p": "Το ίδιο link δείχνει τη νέα ώρα το πρωί· κανείς δεν χρειάζεται νέο αρχείο.", "on2.k": "Ανατολή · Ο gaffer", "on2.t": "Η ώρα του, το τμήμα του.", "on2.p": "Μία γενική ώρα, και μετά μία για κάθε ομάδα: κάμερα, φώτα, μακιγιάζ, ηθοποιοί.", "on3.k": "Στο μακιγιάζ · Οι ηθοποιοί", "on3.t": "Οδηγίες με ένα πάτημα.", "on3.p": "Ο τόπος στους Χάρτες, η επαφή της τοποθεσίας ένα πάτημα μακριά, ο καιρός για εκείνο το μέρος και τη μέρα.", "w1.t": "Τίποτα για εγκατάσταση", "w1.p": "Το συνεργείο ανοίγει ένα link στον browser του κινητού· μόνο εσύ που φτιάχνεις το ορντίνο κάνεις είσοδο.", "w2.t": "Μόνο ό,τι συμπληρώνεις", "w2.p": "Ό,τι συμπληρώνεις φαίνεται· ό,τι αφήνεις κενό μένει έξω.", "w3.t": "Πάντα η νεότερη", "w3.p": "Το Roardino ζει στον browser, οπότε είναι πάντα η τελευταία έκδοση.", "w4.t": "Φτιαγμένο από κινηματογραφιστές", "w4.p": "Το The Mad Lions, εταιρεία παραγωγής στην Αθήνα, το χρησιμοποιεί στη δουλειά του. Οι ιδέες σου πάνε κατευθείαν σε όσους το φτιάχνουν."})
   var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
   var EN = {}
   nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })

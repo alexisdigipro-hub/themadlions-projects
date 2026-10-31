@@ -22,6 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../fresh.css">
+<link rel="stylesheet" href="../product.css">
 <style>
 :root {
   --bg: #16181c; --bg-2: #1d2025; --bg-3: #24282f; --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.16);
@@ -442,12 +443,12 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <span class="rm" aria-label="RoarMail"><span class="a">ROAR</span><span class="b">MAIL</span></span>
   </a>
   <nav aria-label="Sections">
+    <a href="#onset" data-t="nav.onset">On set</a>
     <a href="#only" data-t="nav.only">Only here</a>
-    <a href="#new" data-t="nav.new">What's new</a>
     <a href="#all" data-t="nav.all">Everything</a>
-    <a href="#privacy" data-t="nav.privacy">Privacy</a>
     <a href="#download" data-t="nav.download">Download</a>
     <a href="#faq" data-t="nav.faq">Questions</a>
+    <a href="#new" data-t="nav.new">What's new</a>
   </nav>
   <div class="end">
     <div class="lang" role="group" aria-label="Language">
@@ -460,26 +461,24 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 
 <main>
 <div class="hero" id="top">
-  <div class="hero-top">
-    <div>
-      <p class="kicker rv"><i></i><span data-t="hero.kicker">Mail for Mac and Windows · The Mad Lions Lab · Experiment 03</span></p>
-      <h1 class="rv" style="--d:.06s">
-        <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
-        <span class="rm"><span class="a">ROAR</span><span class="b">MAIL</span></span><em class="beta">beta</em>
-      </h1>
-      <a class="f-ver rv" style="--d:.1s" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.23 · Contacts, Files and menus everywhere</span></a>
-    </div>
-  </div>
-  <div class="hero-sub">
-    <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>Every mailbox in <b>one inbox</b>, at keyboard speed, and <b>no server of ours</b> between you and your mail. <b>Trackers blocked</b>, links checked, <b>undo</b> for everything, and big files as <b>one link</b>.</p>
+  <div class="hero-head">
+    <p class="kicker rv"><i></i><span data-t="hero.kicker">Mail for Mac and Windows · The Mad Lions Lab · Experiment 03</span></p>
+    <h1 class="brand rv" style="--d:.04s">
+      <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
+      <span class="rm"><span class="a">ROAR</span><span class="b">MAIL</span></span><em class="beta">beta</em>
+    </h1>
+    <p class="claim rv" style="--d:.1s" data-t="hero.claim" data-html>Every mailbox.<br><b>One private inbox.</b></p>
+    <p class="lead rv" style="--d:.16s" data-t="hero.lead2" data-html>Gmail, iCloud, Outlook and your own domain side by side, at keyboard speed, with trackers blocked and <b>no server of ours between you and your mail</b>.</p>
     <div class="cta rv" style="--d:.22s">
       <a class="pill main" id="dl-main" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span>Download</span></a>
       <a class="pill" href="#only"><span data-t="cta.what">See what it does</span></a>
     </div>
     <p class="cta-note rv" style="--d:.3s"><span data-t="cta.note">Free · Mac and Windows · updates itself ·</span> <a href="#download" data-t="cta.all">all downloads</a></p>
+    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.b">New</b><span data-t="ver.t">in 0.23 · Contacts, Files and menus everywhere</span></a></div>
   </div>
-
-  <div class="frame rv" style="--d:.2s" aria-hidden="true">
+  <div class="scene stack rv" style="--d:.18s">
+    <figure class="scene-photo"><img src="photo-hero.jpg" alt="" width="1600" height="900" fetchpriority="high"><figcaption data-t="sc.cap">Kolonaki, 20:05. Inbox zero, and nobody knew when she read a thing.</figcaption></figure>
+    <div class="frame" style="--d:.2s" aria-hidden="true">
     <div class="win" id="win">
       <div class="win-top"><i></i><i></i><i></i></div>
       <div class="win-body ml">
@@ -520,16 +519,198 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <div class="tag t2"><i>02</i><span data-t="tag.priv">Trackers blocked, even with images on</span></div>
     <div class="tag t3"><i>03</i><span data-t="tag.one">Every account, one inbox</span></div>
   </div>
+  </div>
 </div>
+
+<section id="numbers" class="nums-sec">
+  <div class="nums">
+    <div class="num f-glass rv"><b>0</b><span data-t="nm1">servers of ours between you and your mail.</span></div>
+    <div class="num f-glass rv" style="--d:.06s"><b>5<small>s</small></b><span data-t="nm2">to undo an archive, a delete or a move.</span></div>
+    <div class="num f-glass rv" style="--d:.12s"><b>30<small>s</small></b><span data-t="nm3">to take a sent message back, if you choose.</span></div>
+    <div class="num f-glass rv" style="--d:.18s"><b>€0</b><span data-t="nm4">No subscription, no ads.</span></div>
+  </div>
+</section>
 
 <div class="ticker" aria-hidden="true"><div class="ticker-in">
   <span data-t="tk.1">All Inboxes</span><span data-t="tk.2">Trackers blocked</span><span data-t="tk.3">Undo send</span><span data-t="tk.4">Snooze</span><span data-t="tk.5">Send later</span><span data-t="tk.6">Single-key shortcuts</span><span data-t="tk.7">Big files as one link</span><span data-t="tk.10">Format bar</span><span data-t="tk.8">Touch ID lock</span><span data-t="tk.11">Folders in colours</span><span data-t="tk.9">Mac · Windows</span>
   <span data-t="tk.1">All Inboxes</span><span data-t="tk.2">Trackers blocked</span><span data-t="tk.3">Undo send</span><span data-t="tk.4">Snooze</span><span data-t="tk.5">Send later</span><span data-t="tk.6">Single-key shortcuts</span><span data-t="tk.7">Big files as one link</span><span data-t="tk.10">Format bar</span><span data-t="tk.8">Touch ID lock</span><span data-t="tk.11">Folders in colours</span><span data-t="tk.9">Mac · Windows</span>
 </div></div>
 
+<div class="f-sep"></div>
+
+<section id="onset">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="on.idx">01 · On set</p><h2 class="rv" data-t="on.title" data-html>Made by people <b>who make films</b>.</h2></div>
+    <p class="sub rv" data-t="on.sub">We built RoarMail for our own work at The Mad Lions. This is where it gets used.</p>
+  </div>
+  <div class="people">
+    <figure class="person rv"><img src="photo-set.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on1.k">On the move · The location manager</span><b data-t="on1.t">Every account, one inbox.</b><span data-t="on1.p">Gmail, iCloud, Yahoo, Outlook or a company domain, each in its colour, set up by typing the address.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.08s"><img src="photo-office.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on2.k">In the office · The coordinator</span><b data-t="on2.t">Undo the mistake.</b><span data-t="on2.p">Archive, delete and move wait five seconds; sending waits up to thirty, and Undo brings it back as a draft.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.16s"><img src="photo-home.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on3.k">After wrap · The director</span><b data-t="on3.t">Nobody sees when you read.</b><span data-t="on3.p">Images wait until you allow them, tracking pixels are blocked, and a link that lies gets a warning.</span></figcaption></figure>
+  </div>
+</section>
+
+<section id="only">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="only.idx">02 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only RoarMail</b> does.</h2></div>
+    <p class="sub rv" data-t="only.sub">Why your mail feels lighter here, and safer.</p>
+  </div>
+  <div class="three">
+    <article class="big rv">
+      <span class="no">01</span>
+      <div><h3 data-t="f1.t" data-html>All your mail, <b>one inbox</b>.</h3><p data-t="f1.p">Gmail, iCloud, Yahoo, Outlook or your own domain, side by side in All Inboxes, each with its own colour. Type your address and the server settings are found by themselves, even for a company domain on Google Workspace or Microsoft 365.</p>
+        <div class="chips"><span data-t="f1.c1">All Inboxes</span><span data-t="f1.c2">Any IMAP account</span><span data-t="f1.c3">Settings found for you</span><span data-t="f1.c4">A colour per account</span></div></div>
+      <div class="viz"><div class="v-acc"><div class="a all"><i style="background:var(--red-hi)"></i><span data-t="f1.all">All Inboxes</span><small>12</small></div><div class="a"><i style="background:#ff5a4f"></i>studio@themadlions.com<small>7</small></div><div class="a"><i style="background:#3b82f6"></i>alex@gmail.com<small>4</small></div><div class="a"><i style="background:#2fd36b"></i>me@icloud.com<small>1</small></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">02</span>
+      <div><h3 data-t="f2.t" data-html>Private <b>by design</b>.</h3><p data-t="f2.p">RoarMail talks to your mail servers straight from your computer: no server of ours sees your mail. Images stay hidden until you say so, tracking pixels are blocked even when they show, tracking tags come off links, and a link that pretends to be somewhere else gets a warning before it opens.</p>
+        <div class="chips"><span data-t="f2.c1">No middleman</span><span data-t="f2.c2">Trackers blocked</span><span data-t="f2.c3">Clean links</span><span data-t="f2.c4">Fake-link warning</span></div></div>
+      <div class="viz"><div class="v-priv"><div class="shield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6z"/><path d="m9 12 2 2 4-4"/></svg><span data-t="f2.blocked">3 trackers blocked</span></div><div class="warn"><b data-t="f2.warn">This link goes somewhere else</b><span>paypal.com → <del>paypa1-secure.xyz</del></span><div class="bt"><i data-t="f2.copy">Copy</i><i data-t="f2.anyway">Open anyway</i></div></div></div></div>
+    </article>
+    <article class="big rv">
+      <span class="no">03</span>
+      <div><h3 data-t="f3.t" data-html><b>Undo</b> everything.</h3><p data-t="f3.p">Archive, delete, move: each waits five seconds, and Z takes it back. Sending waits too, as long as you choose, up to 30 seconds, and Undo brings the message back as a draft. Mistakes stop being final.</p>
+        <div class="chips"><span data-t="f3.c1">Undo archive, delete, move</span><span data-t="f3.c2">Undo send, up to 30 s</span><span data-t="f3.c3">Z</span></div></div>
+      <div class="viz"><div class="v-undo"><div class="toast"><span data-t="f3.sent">Sent</span><s data-t="f3.undo">Undo</s><kbd>Z</kbd></div><div class="cd"><i></i></div><div class="keys"><span><b>E</b><span data-t="f3.k1">archive</span></span><span><b>#</b><span data-t="f3.k2">delete</span></span><span><b>M</b><span data-t="f3.k3">move</span></span></div></div></div>
+    </article>
+  </div>
+</section>
+
+<section id="time">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="new.idx">03 · On your time</p><h2 class="rv" data-t="new.title" data-html>Mail <b>on your time</b>.</h2></div>
+    <p class="sub rv" data-t="new.sub">Put mail away until you need it, send it when they will read it, hand it to the crew in RoarMe, and send the big files as a link.</p>
+  </div>
+  <div class="board">
+    <article class="tile t-tasks f-glass rv">
+      <span class="k" data-t="n1.k">Snooze · Send later</span>
+      <h3 data-t="n1.t" data-html>Not now. <b>Later.</b></h3>
+      <p data-t="n1.p">Snooze a message with B and it leaves the inbox until the time you pick, then comes back unread with a notification. Write now and send later, the same way. Want an answer? Ask RoarMail to remind you if nobody replies in 1, 2, 3 or 7 days.</p>
+      <div class="when">
+        <span data-t="n1.w1" data-html>Later today <small>18:00</small></span>
+        <span class="on" data-t="n1.w2" data-html>Tomorrow morning <small>08:00</small></span>
+        <span data-t="n1.w3" data-html>This weekend <small>Sat 09:00</small></span>
+        <span data-t="n1.w4" data-html>Pick a day and time <small>…</small></span>
+      </div>
+    </article>
+    <article class="tile t-ord f-glass rv" style="--d:.08s">
+      <span class="k" data-t="n2.k" data-html>RoarMe <em>0.7</em></span>
+      <h3 data-t="n2.t" data-html>From the inbox <b>to the crew</b>.</h3>
+      <p data-t="n2.p">Sign in with your RoarMe account, if you like. Send an email into a chat or a group, with its attachments, or make it a task with a date and a link back to the email. Your RoarMe tasks and upcoming calls sit beside your mail.</p>
+      <div class="rm-acts"><span><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 16-8-6 16-2.5-6.5z"/></svg></i><span data-t="n2.a1">Send to RoarMe</span></span><span><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-10"/></svg></i><span data-t="n2.a2">Make it a task</span></span></div>
+      <a class="more" href="../../roarme/"><span data-t="n2.more">Meet RoarMe</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </article>
+    <article class="tile t-upd f-glass rv">
+      <span class="k" data-t="n3.k" data-html>Big files <em>0.15</em></span>
+      <h3 data-t="n3.t" data-html>Up to 5&nbsp;GB, <b>one link</b>.</h3>
+      <p data-t="n3.p">Most mail servers refuse more than 20 to 25 MB. Signed in to RoarMe, bigger files go up to RoarTransfer instead: up to 5 GB for 1 day or 3 GB for 3 days, with a password if you want one. The email carries one card with every file, its size and the expiry date.</p>
+      <div class="tr-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h-.5a4.5 4.5 0 0 1-.9-8.9A6 6 0 0 1 17.3 8 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M8.5 15 12 11.5 15.5 15"/></svg></i><span><b>RUSHES_DAY2.MOV</b><small data-t="n3.card">2.4 GB · 3 days · until Sun 1 Nov</small></span></div>
+    </article>
+    <article class="tile t-icon f-glass rv" style="--d:.08s">
+      <div class="txt">
+        <span class="k" data-t="n4.k">The look</span>
+        <h3 data-t="n4.t" data-html>RoarMe's look, <b>your colours</b>.</h3>
+        <p data-t="n4.p">The Simba and Pumba themes, dark, light or as the system, ten accent colours, seven fonts, reading size, spacing and corners, glass or solid panels, colour lines and counters per account, with a live preview. The same family as RoarMe, and now an icon in its look.</p>
+      </div>
+      <div class="icons"><img class="ml-icon" src="icon.png" alt="RoarMail icon" width="140" height="140" loading="lazy"></div>
+    </article>
+    <article class="tile t-half f-glass rv">
+      <span class="k" data-t="n5.k" data-html>Find it <em>0.14</em></span>
+      <h3 data-t="n5.t" data-html>The mail you want, <b>nothing else</b>.</h3>
+      <p data-t="n5.p">The capsule above the list shows only unread, starred, with attachments or today's mail, one day, one person or only conversations, sorted as you like. Its magnifier opens the search: it ignores Greek accents too, so «γυρισμα» finds «Γύρισμα», and it can look on your servers for old mail that never came down.</p>
+      <div class="chips"><span data-t="n5.c1">Unread only</span><span data-t="n5.c2">Starred only</span><span data-t="n5.c3">With attachments</span><span data-t="n5.c4">Today only</span></div>
+    </article>
+    <article class="tile t-half f-glass rv" style="--d:.08s">
+      <span class="k" data-t="n6.k" data-html>Settings <em>0.14</em></span>
+      <h3 data-t="n6.t" data-html>Set up <b>like a pro's mail</b>.</h3>
+      <p data-t="n6.p">Settings in the manner of Apple Mail and Airmail, in five groups: how often to check, a new-mail sound of your choice, which mail may notify you, more addresses to send from on each account, separate fonts for the list and for reading, and when a version updates.</p>
+      <div class="chips"><span data-t="n6.c1">Send-as addresses</span><span data-t="n6.c2">New-mail sounds</span><span data-t="n6.c3">Fonts page</span><span data-t="n6.c5">Updates page</span><span data-t="n6.c4">Per-account settings</span></div>
+    </article>
+  </div>
+</section>
+
+<section id="all">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="all.idx">04 · Everything</p><h2 class="rv" data-t="all.title" data-html>And all <b>mail should do</b>.</h2></div>
+    <p class="sub rv" data-t="all.sub">The rest of RoarMail, briefly.</p>
+  </div>
+  <div class="index">
+    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">Conversations</b><p data-t="ix1.p">Replies gather into one conversation, your own included. The newest and the unread open; the rest fold to one line.</p></div>
+    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">Search as you type</b><p data-t="ix2.p">Subject, sender and text, across every account, instantly. It ignores accents, so «καλημερα» finds «καλημέρα»; include Junk and Trash, or the servers, when you need to.</p></div>
+    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Mail the moment it lands</b><p data-t="ix3.p">New mail arrives at once, not every few minutes, and the connection comes back by itself after sleep.</p></div>
+    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">One key for each thing</b><p data-t="ix4.p">C to write, R to reply, E to archive, B to snooze, J and K to move, / to search. All on one page in Settings.</p></div>
+    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">Swipes and quick buttons</b><p data-t="ix5.p">Swipe a message left or right on the trackpad, each side doing what you choose. Hover a row for read, star, snooze, archive and delete.</p></div>
+    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Many at once</b><p data-t="ix6.p">⌘-click, Shift-click or ⌘A, then archive, delete, move, snooze, star or mark them read together.</p></div>
+    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Write it properly</b><p data-t="ix7.p">Reply, reply all and forward, Cc and Bcc, recipients suggested as you type, the system spellchecker, a format bar, emoji, priority, and several signatures per account.</p></div>
+    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">Nothing gets lost</b><p data-t="ix8.p">Drafts save themselves every few seconds. A message that fails to send waits in the Outbox with Retry and Edit.</p></div>
+    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">Less of what you don't want</b><p data-t="ix9.p">Unsubscribe in one tap where the list allows it. Block a sender and their new mail goes straight to the Trash.</p></div>
+    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Always on time</b><p data-t="ix10.p">RoarMail can open with the computer and wait in the Dock, the menu bar or both, so snoozes, scheduled sends and reminders happen on time. You choose which count the icon shows.</p></div>
+    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">Reads without a connection</b><p data-t="ix11.p">Mail is kept on your computer, so you can read on a plane. What you do offline is sent when you are back.</p></div>
+    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Your default mail app</b><p data-t="ix12.p">Make RoarMail the default in Settings and email links open a new message in it. The app speaks Greek or English, as your system or as you choose.</p></div>
+    <div class="ix rv"><span class="no">13</span><b data-t="ix13.t">Reply from the notification</b><p data-t="ix13.p">On a Mac, type the answer right in the new-mail notification; it goes out through the Outbox like any reply.</p></div>
+    <div class="ix rv"><span class="no">14</span><b data-t="ix14.t">Read on your terms</b><p data-t="ix14.p">Mark mail read when it opens, after a few seconds or only when you say so. Links, addresses and phone numbers in plain text become clickable.</p></div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="why.idx">05 · Why Roar</p><h2 class="rv" data-t="why.title" data-html>Why <b>a Roar app</b>.</h2></div>
+    <div class="why-end"><p class="sub rv" data-t="why.sub">What every app of The Mad Lions Lab promises, RoarMail included.</p>
+      <div class="legal rv"><a class="pill sm" href="../../legal/roarmail/#privacy" data-t="lg.p">Privacy Policy</a><a class="pill sm" href="../../legal/roarmail/#terms" data-t="lg.t">Terms</a></div></div>
+  </div>
+  <div class="why">
+    <article class="wy f-glass rv"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></span><h3 data-t="w1.t">No server in between</h3><p data-t="w1.p">Your computer talks to your mail servers directly; passwords live in the system's own keychain.</p></article>
+    <article class="wy f-glass rv" style="--d:.06s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.2 4.2L19 7"/></svg></span><h3 data-t="w2.t">Locked when you are away</h3><p data-t="w2.p">On a Mac, lock RoarMail with Touch ID at start, after sleep or when idle.</p></article>
+    <article class="wy f-glass rv" style="--d:.12s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></span><h3 data-t="w3.t">Updates itself</h3><p data-t="w3.p">New versions come in the background and go in with one tap. Mac and Windows.</p></article>
+    <article class="wy f-glass rv" style="--d:.18s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10.5 5-3v9l-5-3"/></svg></span><h3 data-t="w4.t">Made by filmmakers</h3><p data-t="w4.p">The Mad Lions, a film company in Athens, use it on their own work. Ideas go straight to the people who make it.</p></article>
+  </div>
+</section>
+
+<section id="download">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="dl.idx">06 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarMail</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
+    <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab, our own mail every day.</p>
+  </div>
+  <div class="dls two">
+    <div class="dl f-glass rv" id="dl-mac" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.7zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.6-1.3z"/></svg></i>
+      <h3>Mac</h3>
+      <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
+      <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roarmail/releases/latest/download/RoarMail-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+      <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roarmail/releases/latest/download/RoarMail-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
+    </div>
+    <div class="dl f-glass rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
+      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
+      <h3>Windows</h3>
+      <small data-t="dl.win">Windows 10 and 11.</small>
+      <a class="pill main" data-f="win" href="https://github.com/alexisdigipro-hub/roarmail/releases/latest/download/RoarMail-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
+    </div>
+  </div>
+  <div class="dl-note">
+    <p class="rv" data-t="dl.upd" data-html><b>It updates itself.</b> Every two hours RoarMail looks for a new version and downloads it in the background. Restart from Settings › Updates, quit and it installs on the way out, or turn on Update by itself.</p>
+    <p class="rv" data-t="dl.help" data-html><b>First time on a Mac?</b> The app is not signed by Apple yet: right-click RoarMail in Applications and choose Open, or press Open Anyway in System Settings › Privacy &amp; Security. On Windows: More info › Run anyway.</p>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="faq">
+    <div><p class="idx rv" data-t="faq.idx">07 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
+    <div class="qa">
+      <details class="rv"><summary data-t="q1">Is RoarMail free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
+      <details class="rv"><summary data-t="q2">Which accounts can I add?</summary><p data-t="a2">Any account with IMAP and SMTP: Gmail, iCloud, Yahoo, Outlook, Google Workspace, Microsoft 365, or your own domain. Gmail, iCloud and Yahoo ask for an app password, and RoarMail tells you where to make one. Outlook.com and Microsoft 365 can also sign in through Microsoft's own sign-in.</p></details>
+      <details class="rv"><summary data-t="q3">Does my mail go through your servers?</summary><p data-t="a3">No. RoarMail connects from your computer straight to your mail servers. Your password stays in your computer's keychain.</p></details>
+      <details class="rv"><summary data-t="q4">Do I need RoarMe?</summary><p data-t="a4">No. RoarMail works on its own. Sign in with RoarMe only if you want to send emails into chats, make them tasks, see your tasks and calls, or send big files as a link. Your mail passwords never go to RoarMe.</p></details>
+      <details class="rv"><summary data-t="q5">How big can an attachment be?</summary><p data-t="a5">As big as your mail server accepts; many refuse more than 20 to 25 MB. Signed in to RoarMe, big files go as one RoarTransfer link instead: up to 5 GB kept for 1 day, or up to 3 GB kept for 3 days, with an optional password.</p></details>
+      <details class="rv"><summary data-t="q6">Does search find old mail?</summary><p data-t="a6">Search looks through the mail kept on your computer, which makes it instant; the first time, RoarMail brings the last 90 days of each folder. For older mail, turn on Search the servers too in Settings.</p></details>
+      <details class="rv"><summary data-t="q7">Is there a phone version?</summary><p data-t="a7">Not yet: RoarMail is for Mac and Windows. Snoozed, archived and moved mail moves on your server too, so the mail app on your phone sees the same inbox.</p></details>
+    </div>
+  </div>
+</section>
+
 <section class="f-new" id="new">
   <div class="f-new-head">
-    <div><p class="idx rv" data-t="wn.idx">What's new · 0.23</p><h2 class="rv" data-t="wn.title" data-html>Lately in <b>RoarMail</b>.</h2></div>
+    <div><p class="idx rv" data-t="wn.idx">08 · What's new · 0.23</p><h2 class="rv" data-t="wn.title" data-html>Lately in <b>RoarMail</b>.</h2></div>
     <p class="rv" data-t="wn.sub">What came in the latest versions, from Contacts and Files to a menu wherever you click.</p>
   </div>
   <div class="f-bento">
@@ -602,172 +783,6 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <p data-t="w10.p">Pull down to refresh, drag your accounts into order, show or hide folders, and a + for new folders.</p>
       <span class="f-tag">v0.18.0</span>
     </article>
-  </div>
-</section>
-
-<div class="f-sep"></div>
-
-<section id="only">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="only.idx">01 · Only here</p><h2 class="rv" data-t="only.title" data-html>Three things <b>only RoarMail</b> does.</h2></div>
-    <p class="sub rv" data-t="only.sub">Why your mail feels lighter here, and safer.</p>
-  </div>
-  <div class="three">
-    <article class="big rv">
-      <span class="no">01</span>
-      <div><h3 data-t="f1.t" data-html>All your mail, <b>one inbox</b>.</h3><p data-t="f1.p">Gmail, iCloud, Yahoo, Outlook or your own domain, side by side in All Inboxes, each with its own colour. Type your address and the server settings are found by themselves, even for a company domain on Google Workspace or Microsoft 365.</p>
-        <div class="chips"><span data-t="f1.c1">All Inboxes</span><span data-t="f1.c2">Any IMAP account</span><span data-t="f1.c3">Settings found for you</span><span data-t="f1.c4">A colour per account</span></div></div>
-      <div class="viz"><div class="v-acc"><div class="a all"><i style="background:var(--red-hi)"></i><span data-t="f1.all">All Inboxes</span><small>12</small></div><div class="a"><i style="background:#ff5a4f"></i>studio@themadlions.com<small>7</small></div><div class="a"><i style="background:#3b82f6"></i>alex@gmail.com<small>4</small></div><div class="a"><i style="background:#2fd36b"></i>me@icloud.com<small>1</small></div></div></div>
-    </article>
-    <article class="big rv">
-      <span class="no">02</span>
-      <div><h3 data-t="f2.t" data-html>Private <b>by design</b>.</h3><p data-t="f2.p">RoarMail talks to your mail servers straight from your computer: no server of ours sees your mail. Images stay hidden until you say so, tracking pixels are blocked even when they show, tracking tags come off links, and a link that pretends to be somewhere else gets a warning before it opens.</p>
-        <div class="chips"><span data-t="f2.c1">No middleman</span><span data-t="f2.c2">Trackers blocked</span><span data-t="f2.c3">Clean links</span><span data-t="f2.c4">Fake-link warning</span></div></div>
-      <div class="viz"><div class="v-priv"><div class="shield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6z"/><path d="m9 12 2 2 4-4"/></svg><span data-t="f2.blocked">3 trackers blocked</span></div><div class="warn"><b data-t="f2.warn">This link goes somewhere else</b><span>paypal.com → <del>paypa1-secure.xyz</del></span><div class="bt"><i data-t="f2.copy">Copy</i><i data-t="f2.anyway">Open anyway</i></div></div></div></div>
-    </article>
-    <article class="big rv">
-      <span class="no">03</span>
-      <div><h3 data-t="f3.t" data-html><b>Undo</b> everything.</h3><p data-t="f3.p">Archive, delete, move: each waits five seconds, and Z takes it back. Sending waits too, as long as you choose, up to 30 seconds, and Undo brings the message back as a draft. Mistakes stop being final.</p>
-        <div class="chips"><span data-t="f3.c1">Undo archive, delete, move</span><span data-t="f3.c2">Undo send, up to 30 s</span><span data-t="f3.c3">Z</span></div></div>
-      <div class="viz"><div class="v-undo"><div class="toast"><span data-t="f3.sent">Sent</span><s data-t="f3.undo">Undo</s><kbd>Z</kbd></div><div class="cd"><i></i></div><div class="keys"><span><b>E</b><span data-t="f3.k1">archive</span></span><span><b>#</b><span data-t="f3.k2">delete</span></span><span><b>M</b><span data-t="f3.k3">move</span></span></div></div></div>
-    </article>
-  </div>
-</section>
-
-<section id="time">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="new.idx">02 · On your time</p><h2 class="rv" data-t="new.title" data-html>Mail <b>on your time</b>.</h2></div>
-    <p class="sub rv" data-t="new.sub">Put mail away until you need it, send it when they will read it, hand it to the crew in RoarMe, and send the big files as a link.</p>
-  </div>
-  <div class="board">
-    <article class="tile t-tasks f-glass rv">
-      <span class="k" data-t="n1.k">Snooze · Send later</span>
-      <h3 data-t="n1.t" data-html>Not now. <b>Later.</b></h3>
-      <p data-t="n1.p">Snooze a message with B and it leaves the inbox until the time you pick, then comes back unread with a notification. Write now and send later, the same way. Want an answer? Ask RoarMail to remind you if nobody replies in 1, 2, 3 or 7 days.</p>
-      <div class="when">
-        <span data-t="n1.w1" data-html>Later today <small>18:00</small></span>
-        <span class="on" data-t="n1.w2" data-html>Tomorrow morning <small>08:00</small></span>
-        <span data-t="n1.w3" data-html>This weekend <small>Sat 09:00</small></span>
-        <span data-t="n1.w4" data-html>Pick a day and time <small>…</small></span>
-      </div>
-    </article>
-    <article class="tile t-ord f-glass rv" style="--d:.08s">
-      <span class="k" data-t="n2.k" data-html>RoarMe <em>0.7</em></span>
-      <h3 data-t="n2.t" data-html>From the inbox <b>to the crew</b>.</h3>
-      <p data-t="n2.p">Sign in with your RoarMe account, if you like. Send an email into a chat or a group, with its attachments, or make it a task with a date and a link back to the email. Your RoarMe tasks and upcoming calls sit beside your mail.</p>
-      <div class="rm-acts"><span><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12 16-8-6 16-2.5-6.5z"/></svg></i><span data-t="n2.a1">Send to RoarMe</span></span><span><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-10"/></svg></i><span data-t="n2.a2">Make it a task</span></span></div>
-      <a class="more" href="../../roarme/"><span data-t="n2.more">Meet RoarMe</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-    </article>
-    <article class="tile t-upd f-glass rv">
-      <span class="k" data-t="n3.k" data-html>Big files <em>0.15</em></span>
-      <h3 data-t="n3.t" data-html>Up to 5&nbsp;GB, <b>one link</b>.</h3>
-      <p data-t="n3.p">Most mail servers refuse more than 20 to 25 MB. Signed in to RoarMe, bigger files go up to RoarTransfer instead: up to 5 GB for 1 day or 3 GB for 3 days, with a password if you want one. The email carries one card with every file, its size and the expiry date.</p>
-      <div class="tr-card"><i><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18h-.5a4.5 4.5 0 0 1-.9-8.9A6 6 0 0 1 17.3 8 4.5 4.5 0 0 1 17.5 18H17"/><path d="M12 20v-8M8.5 15 12 11.5 15.5 15"/></svg></i><span><b>RUSHES_DAY2.MOV</b><small data-t="n3.card">2.4 GB · 3 days · until Sun 1 Nov</small></span></div>
-    </article>
-    <article class="tile t-icon f-glass rv" style="--d:.08s">
-      <div class="txt">
-        <span class="k" data-t="n4.k">The look</span>
-        <h3 data-t="n4.t" data-html>RoarMe's look, <b>your colours</b>.</h3>
-        <p data-t="n4.p">The Simba and Pumba themes, dark, light or as the system, ten accent colours, seven fonts, reading size, spacing and corners, glass or solid panels, colour lines and counters per account, with a live preview. The same family as RoarMe, and now an icon in its look.</p>
-      </div>
-      <div class="icons"><img class="ml-icon" src="icon.png" alt="RoarMail icon" width="140" height="140" loading="lazy"></div>
-    </article>
-    <article class="tile t-half f-glass rv">
-      <span class="k" data-t="n5.k" data-html>Find it <em>0.14</em></span>
-      <h3 data-t="n5.t" data-html>The mail you want, <b>nothing else</b>.</h3>
-      <p data-t="n5.p">The capsule above the list shows only unread, starred, with attachments or today's mail, one day, one person or only conversations, sorted as you like. Its magnifier opens the search: it ignores Greek accents too, so «γυρισμα» finds «Γύρισμα», and it can look on your servers for old mail that never came down.</p>
-      <div class="chips"><span data-t="n5.c1">Unread only</span><span data-t="n5.c2">Starred only</span><span data-t="n5.c3">With attachments</span><span data-t="n5.c4">Today only</span></div>
-    </article>
-    <article class="tile t-half f-glass rv" style="--d:.08s">
-      <span class="k" data-t="n6.k" data-html>Settings <em>0.14</em></span>
-      <h3 data-t="n6.t" data-html>Set up <b>like a pro's mail</b>.</h3>
-      <p data-t="n6.p">Settings in the manner of Apple Mail and Airmail, in five groups: how often to check, a new-mail sound of your choice, which mail may notify you, more addresses to send from on each account, separate fonts for the list and for reading, and when a version updates.</p>
-      <div class="chips"><span data-t="n6.c1">Send-as addresses</span><span data-t="n6.c2">New-mail sounds</span><span data-t="n6.c3">Fonts page</span><span data-t="n6.c5">Updates page</span><span data-t="n6.c4">Per-account settings</span></div>
-    </article>
-  </div>
-</section>
-
-<section id="all">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="all.idx">03 · Everything</p><h2 class="rv" data-t="all.title" data-html>And all <b>mail should do</b>.</h2></div>
-    <p class="sub rv" data-t="all.sub">The rest of RoarMail, briefly.</p>
-  </div>
-  <div class="index">
-    <div class="ix rv"><span class="no">01</span><b data-t="ix1.t">Conversations</b><p data-t="ix1.p">Replies gather into one conversation, your own included. The newest and the unread open; the rest fold to one line.</p></div>
-    <div class="ix rv"><span class="no">02</span><b data-t="ix2.t">Search as you type</b><p data-t="ix2.p">Subject, sender and text, across every account, instantly. It ignores accents, so «καλημερα» finds «καλημέρα»; include Junk and Trash, or the servers, when you need to.</p></div>
-    <div class="ix rv"><span class="no">03</span><b data-t="ix3.t">Mail the moment it lands</b><p data-t="ix3.p">New mail arrives at once, not every few minutes, and the connection comes back by itself after sleep.</p></div>
-    <div class="ix rv"><span class="no">04</span><b data-t="ix4.t">One key for each thing</b><p data-t="ix4.p">C to write, R to reply, E to archive, B to snooze, J and K to move, / to search. All on one page in Settings.</p></div>
-    <div class="ix rv"><span class="no">05</span><b data-t="ix5.t">Swipes and quick buttons</b><p data-t="ix5.p">Swipe a message left or right on the trackpad, each side doing what you choose. Hover a row for read, star, snooze, archive and delete.</p></div>
-    <div class="ix rv"><span class="no">06</span><b data-t="ix6.t">Many at once</b><p data-t="ix6.p">⌘-click, Shift-click or ⌘A, then archive, delete, move, snooze, star or mark them read together.</p></div>
-    <div class="ix rv"><span class="no">07</span><b data-t="ix7.t">Write it properly</b><p data-t="ix7.p">Reply, reply all and forward, Cc and Bcc, recipients suggested as you type, the system spellchecker, a format bar, emoji, priority, and several signatures per account.</p></div>
-    <div class="ix rv"><span class="no">08</span><b data-t="ix8.t">Nothing gets lost</b><p data-t="ix8.p">Drafts save themselves every few seconds. A message that fails to send waits in the Outbox with Retry and Edit.</p></div>
-    <div class="ix rv"><span class="no">09</span><b data-t="ix9.t">Less of what you don't want</b><p data-t="ix9.p">Unsubscribe in one tap where the list allows it. Block a sender and their new mail goes straight to the Trash.</p></div>
-    <div class="ix rv"><span class="no">10</span><b data-t="ix10.t">Always on time</b><p data-t="ix10.p">RoarMail can open with the computer and wait in the Dock, the menu bar or both, so snoozes, scheduled sends and reminders happen on time. You choose which count the icon shows.</p></div>
-    <div class="ix rv"><span class="no">11</span><b data-t="ix11.t">Reads without a connection</b><p data-t="ix11.p">Mail is kept on your computer, so you can read on a plane. What you do offline is sent when you are back.</p></div>
-    <div class="ix rv"><span class="no">12</span><b data-t="ix12.t">Your default mail app</b><p data-t="ix12.p">Make RoarMail the default in Settings and email links open a new message in it. The app speaks Greek or English, as your system or as you choose.</p></div>
-    <div class="ix rv"><span class="no">13</span><b data-t="ix13.t">Reply from the notification</b><p data-t="ix13.p">On a Mac, type the answer right in the new-mail notification; it goes out through the Outbox like any reply.</p></div>
-    <div class="ix rv"><span class="no">14</span><b data-t="ix14.t">Read on your terms</b><p data-t="ix14.p">Mark mail read when it opens, after a few seconds or only when you say so. Links, addresses and phone numbers in plain text become clickable.</p></div>
-  </div>
-</section>
-
-<section id="privacy">
-  <div class="priv">
-    <div>
-      <p class="idx rv" data-t="pv.idx">04 · Privacy</p>
-      <h2 class="rv" data-t="pv.title" data-html>Just you and <b>your server</b>.</h2>
-      <p class="sub rv" style="margin-top:22px;color:var(--muted);font-size:17px;line-height:1.6" data-t="pv.sub">We built RoarMail to protect you from the mail itself: from people who track when you open it, and from mail that is not what it says.</p>
-      <div class="legal rv"><a class="pill sm" href="../../legal/roarmail/#privacy" data-t="lg.p">Privacy Policy</a><a class="pill sm" href="../../legal/roarmail/#terms" data-t="lg.t">Terms</a></div>
-    </div>
-    <div class="prom">
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></i><b data-t="p1.t">No server in between</b><p data-t="p1.p">Your computer talks to your mail servers directly. What RoarMail keeps stays on your computer, apart from what you choose to send to RoarMe.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l2 2M15 8l2 2"/></svg></i><b data-t="p2.t">Passwords in the keychain</b><p data-t="p2.p">Locked by your computer's own key store, Keychain on Mac and DPAPI on Windows, and never sent to us.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg></i><b data-t="p3.t">Nobody sees when you read</b><p data-t="p3.p">Images are hidden until you allow them, per message or per sender. Tracking pixels stay blocked either way.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></i><b data-t="p4.t">Links you can trust</b><p data-t="p4.p">Hover a link to see where it really goes. Tracking tags are removed, and look-alike addresses get a warning.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6z"/><path d="M12 8v5M12 16h.01"/></svg></i><b data-t="p5.t">Fake senders caught</b><p data-t="p5.p">A warning when a message fails its sender checks, when the name hides another address, or when replies would go elsewhere.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></svg></i><b data-t="p6.t">Locked with Touch ID</b><p data-t="p6.p">On a Mac, lock RoarMail at start, after sleep or when idle; notifications hide what they say while it is locked.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.5 3 8.3 7 10 4-1.7 7-5.5 7-10V6z"/><path d="M9 12h6"/></svg></i><b data-t="p7.t">Privacy mode</b><p data-t="p7.p">One switch, and images from the web never load in any message, sender pictures stay off, trackers stay blocked and links come clean.</p></div>
-    </div>
-  </div>
-</section>
-
-<section id="download">
-  <div class="sec-h">
-    <div><p class="idx rv" data-t="dl.idx">05 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarMail</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
-    <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab, our own mail every day.</p>
-  </div>
-  <div class="dls two">
-    <div class="dl f-glass rv" id="dl-mac" data-mine="Your computer">
-      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.7-.1 0-2.5-1-2.5-3.7zM14.2 5.8c.6-.8 1.1-1.8 1-2.8-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.7-1 2.7 1 .1 2-.5 2.6-1.3z"/></svg></i>
-      <h3>Mac</h3>
-      <small data-t="dl.mac">For Macs with Apple chips (M1 and newer).</small>
-      <a class="pill main" data-f="mac" href="https://github.com/alexisdigipro-hub/roarmail/releases/latest/download/RoarMail-Mac-arm64.dmg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
-      <span class="alt"><span data-t="dl.intel">Older Mac with Intel?</span> <a data-f="intel" href="https://github.com/alexisdigipro-hub/roarmail/releases/latest/download/RoarMail-Mac-x64.dmg" data-t="dl.intelbtn">This one</a></span>
-    </div>
-    <div class="dl f-glass rv" id="dl-win" style="--d:.06s" data-mine="Your computer">
-      <i><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM11.5 4.3 21 3v8.5h-9.5zM3 12.5h7.5v7.1L3 18.5zM11.5 12.5H21V21l-9.5-1.3z"/></svg></i>
-      <h3>Windows</h3>
-      <small data-t="dl.win">Windows 10 and 11.</small>
-      <a class="pill main" data-f="win" href="https://github.com/alexisdigipro-hub/roarmail/releases/latest/download/RoarMail-Windows-Setup.exe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span data-t="dl.get">Download</span></a>
-    </div>
-  </div>
-  <div class="dl-note">
-    <p class="rv" data-t="dl.upd" data-html><b>It updates itself.</b> Every two hours RoarMail looks for a new version and downloads it in the background. Restart from Settings › Updates, quit and it installs on the way out, or turn on Update by itself.</p>
-    <p class="rv" data-t="dl.help" data-html><b>First time on a Mac?</b> The app is not signed by Apple yet: right-click RoarMail in Applications and choose Open, or press Open Anyway in System Settings › Privacy &amp; Security. On Windows: More info › Run anyway.</p>
-  </div>
-</section>
-
-<section id="faq">
-  <div class="faq">
-    <div><p class="idx rv" data-t="faq.idx">06 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
-    <div class="qa">
-      <details class="rv"><summary data-t="q1">Is RoarMail free?</summary><p data-t="a1">Yes. No subscription, no ads.</p></details>
-      <details class="rv"><summary data-t="q2">Which accounts can I add?</summary><p data-t="a2">Any account with IMAP and SMTP: Gmail, iCloud, Yahoo, Outlook, Google Workspace, Microsoft 365, or your own domain. Gmail, iCloud and Yahoo ask for an app password, and RoarMail tells you where to make one. Outlook.com and Microsoft 365 can also sign in through Microsoft's own sign-in.</p></details>
-      <details class="rv"><summary data-t="q3">Does my mail go through your servers?</summary><p data-t="a3">No. RoarMail connects from your computer straight to your mail servers. Your password stays in your computer's keychain.</p></details>
-      <details class="rv"><summary data-t="q4">Do I need RoarMe?</summary><p data-t="a4">No. RoarMail works on its own. Sign in with RoarMe only if you want to send emails into chats, make them tasks, see your tasks and calls, or send big files as a link. Your mail passwords never go to RoarMe.</p></details>
-      <details class="rv"><summary data-t="q5">How big can an attachment be?</summary><p data-t="a5">As big as your mail server accepts; many refuse more than 20 to 25 MB. Signed in to RoarMe, big files go as one RoarTransfer link instead: up to 5 GB kept for 1 day, or up to 3 GB kept for 3 days, with an optional password.</p></details>
-      <details class="rv"><summary data-t="q6">Does search find old mail?</summary><p data-t="a6">Search looks through the mail kept on your computer, which makes it instant; the first time, RoarMail brings the last 90 days of each folder. For older mail, turn on Search the servers too in Settings.</p></details>
-      <details class="rv"><summary data-t="q7">Is there a phone version?</summary><p data-t="a7">Not yet: RoarMail is for Mac and Windows. Snoozed, archived and moved mail moves on your server too, so the mail app on your phone sees the same inbox.</p></details>
-    </div>
   </div>
 </section>
 
@@ -912,6 +927,8 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     'ix14.p': 'Ένα μήνυμα γίνεται διαβασμένο όταν ανοίγει, μετά από λίγα δευτερόλεπτα ή μόνο όταν το πεις εσύ. Σύνδεσμοι, διευθύνσεις και τηλέφωνα μέσα στο απλό κείμενο ανοίγουν με ένα κλικ.',
     'ct.idx': 'Επαφή', 'ct.title': 'Ιδέες για <b>την επόμενη έκδοση</b>;', 'ft.lab': 'The Mad Lions Lab', 'ft.legal': 'Απόρρητο & Όροι', 'lg.p': 'Πολιτική απορρήτου', 'lg.t': 'Όροι χρήσης', 'footer': '© 2026 The Mad Lions · RoarMail'
   }
+  // the product page (31 Oct): its own Greek
+  Object.assign(EL, {"only.idx": "02 · Μόνο εδώ", "new.idx": "03 · Στον χρόνο σου", "all.idx": "04 · Όλα", "dl.idx": "06 · Λήψη", "faq.idx": "07 · Ερωτήσεις", "wn.idx": "08 · Τι νέο · 0.23", "hero.claim": "Κάθε mailbox.<br><b>Ένα ιδιωτικό inbox.</b>", "hero.lead2": "Gmail, iCloud, Outlook και το δικό σου domain δίπλα δίπλα, με την ταχύτητα του πληκτρολογίου, με τους trackers μπλοκαρισμένους και <b>κανέναν δικό μας server ανάμεσα σε σένα και στο mail σου</b>.", "sc.cap": "Κολωνάκι, 20:05. Άδειο inbox, και κανείς δεν έμαθε πότε διάβασε τι.", "nav.onset": "Στο γύρισμα", "on.idx": "01 · Στο γύρισμα", "on.title": "Φτιαγμένο από ανθρώπους <b>που κάνουν ταινίες</b>.", "on.sub": "Φτιάξαμε το RoarMail για τη δική μας δουλειά στο The Mad Lions. Εδώ το χρησιμοποιούμε.", "why.idx": "05 · Γιατί Roar", "why.title": "Γιατί <b>μια εφαρμογή Roar</b>.", "why.sub": "Τι υπόσχεται κάθε εφαρμογή του The Mad Lions Lab, και το RoarMail.", "nm1": "δικοί μας servers ανάμεσα σε σένα και στο mail σου.", "nm2": "για να αναιρέσεις μια αρχειοθέτηση, μια διαγραφή ή μια μετακίνηση.", "nm3": "για να πάρεις πίσω ένα σταλμένο μήνυμα, αν το διαλέξεις.", "nm4": "Χωρίς συνδρομή, χωρίς διαφημίσεις.", "on1.k": "Στον δρόμο · Ο location manager", "on1.t": "Κάθε λογαριασμός, ένα inbox.", "on1.p": "Gmail, iCloud, Yahoo, Outlook ή εταιρικό domain, το καθένα με το χρώμα του, στήνεται γράφοντας μόνο τη διεύθυνση.", "on2.k": "Στο γραφείο · Η συντονίστρια", "on2.t": "Αναίρεσε το λάθος.", "on2.p": "Αρχειοθέτηση, διαγραφή και μετακίνηση περιμένουν πέντε δευτερόλεπτα· η αποστολή ως τριάντα, και το Undo τη φέρνει πίσω ως πρόχειρο.", "on3.k": "Μετά το wrap · Ο σκηνοθέτης", "on3.t": "Κανείς δεν βλέπει πότε διαβάζεις.", "on3.p": "Οι εικόνες περιμένουν την άδειά σου, τα tracking pixels μπλοκάρονται, και ένα link που λέει ψέματα παίρνει προειδοποίηση.", "w1.t": "Κανένας server ενδιάμεσα", "w1.p": "Ο υπολογιστής σου μιλάει απευθείας με τους servers του mail σου· οι κωδικοί μένουν στο keychain του ίδιου του συστήματος.", "w2.t": "Κλειδωμένο όταν λείπεις", "w2.p": "Σε Mac, κλείδωσε το RoarMail με Touch ID στην εκκίνηση, μετά τον ύπνο ή όταν μένει αδρανές.", "w3.t": "Ενημερώνεται μόνο του", "w3.p": "Οι νέες εκδόσεις έρχονται στο παρασκήνιο και μπαίνουν με ένα πάτημα. Mac και Windows.", "w4.t": "Φτιαγμένο από κινηματογραφιστές", "w4.p": "Το The Mad Lions, εταιρεία παραγωγής στην Αθήνα, το χρησιμοποιεί στη δουλειά του. Οι ιδέες σου πάνε κατευθείαν σε όσους το φτιάχνουν."})
   var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
   var EN = {}
   nodes.forEach(function (n) { var k = n.dataset.t; if (!(k in EN)) EN[k] = n.hasAttribute('data-html') ? n.innerHTML : n.textContent })

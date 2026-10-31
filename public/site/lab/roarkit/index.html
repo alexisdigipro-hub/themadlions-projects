@@ -23,6 +23,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../fresh.css">
+<link rel="stylesheet" href="../product.css">
 <style>
 :root {
   --bg: #16181c; --bg-2: #1d2025; --bg-3: #24282f; --line: rgba(255,255,255,.09); --line-2: rgba(255,255,255,.16);
@@ -322,13 +323,13 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
     <span class="rm" aria-label="RoarKit"><span class="a">ROAR</span><span class="b">KIT</span></span>
   </a>
   <nav aria-label="Sections">
-    <a href="#new" data-t="nav.new">New</a>
+    <a href="#onset" data-t="nav.onset">On set</a>
     <a href="#tour" data-t="nav.tour">A look</a>
     <a href="#tools" data-t="nav.tools">Tools</a>
     <a href="#shoot" data-t="nav.shoot">For the shoot</a>
-    <a href="#safe" data-t="nav.safe">Safe</a>
     <a href="#download" data-t="nav.download">Download</a>
     <a href="#faq" data-t="nav.faq">Questions</a>
+    <a href="#new" data-t="nav.new">New</a>
   </nav>
   <div class="end">
     <div class="lang" role="group" aria-label="Language">
@@ -341,99 +342,62 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 
 <main>
 <div class="hero" id="top">
-  <div class="hero-top">
-    <div>
-      <p class="kicker rv"><i></i><span data-t="hero.kicker">Toolbox · The Mad Lions Lab · Experiment 07</span></p>
-      <h1 class="rv" style="--d:.06s">
-        <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="RoarKit icon: a toolbox" width="164" height="164"></span>
-        <span class="rm"><span class="a">ROAR</span><span class="b">KIT</span></span><em class="beta">beta</em>
-      </h1>
-    </div>
-    <a class="f-ver rv" style="--d:.1s" href="#new"><b data-t="ver.new">New</b><span><span data-t="ver.head">Two new tools, a new look</span> · <span class="f-vn">0.7.2</span></span></a>
-  </div>
-  <div class="hero-sub">
-    <p class="lead rv" style="--d:.14s" data-t="hero.lead" data-html>One app, <b>eighteen tools</b>. It sees what your computer needs, makes room, copies and checks a shoot's cards, reports every clip, keeps your files tidy and your passwords locked.</p>
+  <div class="hero-head">
+    <p class="kicker rv"><i></i><span data-t="hero.kicker">Toolbox · The Mad Lions Lab · Experiment 07</span></p>
+    <h1 class="brand rv" style="--d:.04s">
+      <span class="f-icon-wrap"><img class="f-icon" src="icon.png" alt="" width="164" height="164"></span>
+      <span class="rm"><span class="a">ROAR</span><span class="b">KIT</span></span><em class="beta">beta</em>
+    </h1>
+    <p class="claim rv" style="--d:.1s" data-t="hero.claim" data-html>Eighteen tools.<br><b>One app.</b></p>
+    <p class="lead rv" style="--d:.16s" data-t="hero.lead2" data-html>Room on the disk, cards copied and checked, every clip reported, files tidy and passwords locked, <b>on your own computer</b>. Mac and Windows.</p>
     <div class="cta rv" style="--d:.22s">
       <a class="pill main" id="dl-main" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5 12 15.5 17 10.5M5 20h14"/></svg><span>Download</span></a>
       <a class="pill" href="#tour"><span data-t="cta.how">Take a look</span></a>
     </div>
     <p class="cta-note rv" style="--d:.3s"><span data-t="cta.note">Free · Mac and Windows · nothing is deleted, only moved to the Trash</span></p>
+    <div class="hero-meta rv" style="--d:.32s"><a class="f-ver" href="#new"><b data-t="ver.new">New</b><span><span data-t="ver.head">Two new tools, a new look</span> · <span class="f-vn">0.7.2</span></span></a></div>
   </div>
-  <div class="frame rv" style="--d:.2s" aria-hidden="true">
+  <div class="scene stack rv" style="--d:.18s">
+    <figure class="scene-photo"><img src="photo-hero.jpg" alt="" width="1600" height="900" fetchpriority="high"><figcaption data-t="sc.cap">17:30, day three. Every card copied, checked twice, reported.</figcaption></figure>
+    <div class="frame" style="--d:.2s" aria-hidden="true">
     <img class="shotimg" id="win" src="overview.jpg" alt="" width="1800" height="1125">
     <div class="tag t1"><i>01</i><span data-t="tag.1">What needs care, first</span></div>
     <div class="tag t2"><i>02</i><span data-t="tag.2">A score for the computer</span></div>
     <div class="tag t3"><i>03</i><span data-t="tag.3">Eighteen tools, one menu</span></div>
   </div>
+  </div>
 </div>
+
+<section id="numbers" class="nums-sec">
+  <div class="nums">
+    <div class="num f-glass rv"><b>18</b><span data-t="nm1">tools in one app, in one menu.</span></div>
+    <div class="num f-glass rv" style="--d:.06s"><b>0</b><span data-t="nm2">files deleted. What you choose goes to the Trash.</span></div>
+    <div class="num f-glass rv" style="--d:.12s"><b>256<small>-bit</small></b><span data-t="nm3">AES for the passwords in your vault.</span></div>
+    <div class="num f-glass rv" style="--d:.18s"><b>€0</b><span data-t="nm4">No subscription, no ads, no account.</span></div>
+  </div>
+</section>
 
 <div class="ticker" aria-hidden="true"><div class="ticker-in">
 <span data-t="tk.1">What the computer needs</span><span data-t="tk.2">Space map</span><span data-t="tk.3">Clean up</span><span data-t="tk.4">Find twins</span><span data-t="tk.5">Card copies with MHL</span><span data-t="tk.6">Media report</span><span data-t="tk.7">Clip check</span><span data-t="tk.8">Contact sheet</span><span data-t="tk.9">Rename clips</span><span data-t="tk.10">File manager</span><span data-t="tk.11">ZIP · RAR · 7z</span><span data-t="tk.12">Drive health</span><span data-t="tk.13">Disk speed</span><span data-t="tk.14">Internet speed</span><span data-t="tk.15">Password vault</span><span data-t="tk.17">Uninstall apps</span><span data-t="tk.18">Startup items</span><span data-t="tk.19">Similar photos</span><span data-t="tk.16">Mac · Windows</span><span data-t="tk.1">What the computer needs</span><span data-t="tk.2">Space map</span><span data-t="tk.3">Clean up</span><span data-t="tk.4">Find twins</span><span data-t="tk.5">Card copies with MHL</span><span data-t="tk.6">Media report</span><span data-t="tk.7">Clip check</span><span data-t="tk.8">Contact sheet</span><span data-t="tk.9">Rename clips</span><span data-t="tk.10">File manager</span><span data-t="tk.11">ZIP · RAR · 7z</span><span data-t="tk.12">Drive health</span><span data-t="tk.13">Disk speed</span><span data-t="tk.14">Internet speed</span><span data-t="tk.15">Password vault</span><span data-t="tk.17">Uninstall apps</span><span data-t="tk.18">Startup items</span><span data-t="tk.19">Similar photos</span><span data-t="tk.16">Mac · Windows</span>
 </div></div>
 
-<section class="f-new" id="new">
-  <div class="f-new-head">
-    <div><p class="idx rv" data-t="new.idx">New · 0.5 to 0.7</p><h2 class="rv" data-t="new.title" data-html>What's <b>new</b>.</h2></div>
-    <p class="rv" data-t="new.sub">Out on 29 and 30 October: two new tools for the computer, an icon in the menu bar, jobs RoarKit does by itself, similar photos in Find twins, and the glass look of the Roar family.</p>
+<div class="f-sep" aria-hidden="true"></div>
+
+<section id="onset">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="on.idx">01 · On set</p><h2 class="rv" data-t="on.title" data-html>Made by people <b>who make films</b>.</h2></div>
+    <p class="sub rv" data-t="on.sub">We built RoarKit for our own work at The Mad Lions. This is where it gets used.</p>
   </div>
-  <div class="f-bento">
-    <article class="f-card wide rv">
-      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M9 15.5 12 8l3 7.5M10 13.5h4"/></svg></span>
-      <h3 data-t="nw.1.t">Uninstall apps, and what they leave</h3>
-      <p data-t="nw.1.p">Every app with its version, its size and the last time it was opened. On a Mac, choose one and RoarKit finds what it left in your Library: settings, caches, containers, saved state, logs, login agents, each with its size and a tick box. The app and what you tick go to the Trash together. Apple's own apps, RoarKit and an app that is open are left alone. On Windows, the program's own uninstaller runs.</p>
-      <span class="f-tag">v0.5.0</span>
-    </article>
-    <article class="f-card wide rv" style="--d:.05s">
-      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v8"/><path d="M7.2 6.5a7 7 0 1 0 9.6 0"/></svg></span>
-      <h3 data-t="nw.2.t">Startup items, with a switch</h3>
-      <p data-t="nw.2.p">What starts by itself with the computer: login items, launch agents and background services on a Mac, the Run keys and the Startup folders on Windows. A switch turns one off, and on again: nothing is deleted, RoarKit keeps what it took away. What is set for every user is shown, not changed.</p>
-      <span class="f-tag">v0.5.0</span>
-    </article>
-    <article class="f-card rv">
-      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 8.5h17"/><path d="M14.5 6.5h3"/></svg></span>
-      <h3 data-t="nw.3.t">In the menu bar</h3>
-      <p data-t="nw.3.p">A toolbox icon with the start-up disk's free space beside it; its menu shows memory pressure and heat and opens Clean up. A note when the start-up disk drops under 10% free, a drive starts to fail or the computer runs seriously hot. On Windows it sits by the clock, if you turn it on.</p>
-      <span class="f-tag">v0.5.0</span>
-    </article>
-    <article class="f-card rv" style="--d:.05s">
-      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4"/><path d="m9.5 14.5 2 2 3.5-4"/></svg></span>
-      <h3 data-t="nw.4.t">Jobs it does by itself</h3>
-      <p data-t="nw.4.p">Each off until you turn it on in Settings: a weekly Clean up of the safe caches, on the day and hour you choose, and a monthly check of your backup drives against their copy reports. A job missed runs at the next start; Settings lists the last runs, with Run now.</p>
-      <span class="f-tag">v0.5.0</span>
-    </article>
-    <article class="f-card rv" style="--d:.1s">
-      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7" width="12" height="12" rx="2"/><path d="M8 4h10.5a2 2 0 0 1 2 2v10.5"/><path d="m5.5 17 3-3.5 2.5 2.5 1.5-1.5 2 2.5"/></svg></span>
-      <h3 data-t="nw.5.t">Similar photos</h3>
-      <p data-t="nw.5.p">Find twins now finds the shots of a burst and the same photo saved again or made smaller, in JPG, PNG, TIFF, HEIC and camera RAW. It keeps the one with the most pixels, then the sharpest, and marks a clearly softer shot.</p>
-      <span class="f-tag">v0.5.0</span>
-    </article>
-    <article class="f-card wide tall rv">
-      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="6" height="15" rx="2"/><rect x="11.5" y="4.5" width="9" height="15" rx="2"/><path d="M5.5 8.5h2"/></svg></span>
-      <h3 data-t="nw.6.t">The Roar family's glass</h3>
-      <p data-t="nw.6.p">RoarKit now looks like RoarMail, RoarWriter and RoarMorph: graphite glass columns that float with a gap between them, one red accent that glows, the chosen tool lit from inside, a choice as a pale glowing pill. In light and in dark.</p>
-      <img class="f-shot" src="overview.jpg" alt="RoarKit's Overview: a score for the computer and the things to sort out first" width="1800" height="1125" loading="lazy">
-      <span class="f-tag">v0.7.0</span>
-    </article>
-    <article class="f-card wide rv" style="--d:.05s">
-      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="7" cy="8" r=".9"/><circle cx="10" cy="8" r=".9"/><circle cx="13" cy="8" r=".9"/></svg></span>
-      <h3 data-t="nw.7.t">A bigger window</h3>
-      <p data-t="nw.7.p">The window opens big, up to 1600 × 1060, and its buttons sit in their own strip above the columns, as in RoarMail. The side menu stays as you know it, with every tool in it.</p>
-      <span class="f-tag">v0.7.1 · v0.7.2</span>
-    </article>
-    <article class="f-card wide rv" style="--d:.1s">
-      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg></span>
-      <h3 data-t="nw.8.t">On the way there</h3>
-      <p data-t="nw.8.p">0.6.0 tried a new look, the instrument, and 0.6.1 gave the side menu bigger line icons in one colour. Both led to 0.7's glass. What each tool does did not change.</p>
-      <span class="f-tag">v0.6.0 · v0.6.1</span>
-    </article>
+  <div class="people">
+    <figure class="person rv"><img src="photo-set.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on1.k">On set · The DIT</span><b data-t="on1.t">Cards copied, checked twice.</b><span data-t="on1.p">Copies with checksums and an MHL, and a report of every clip, before the card goes back in the camera.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.08s"><img src="photo-office.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on2.k">In the office · The producer</span><b data-t="on2.t">Room on the disk again.</b><span data-t="on2.p">A map of what fills the computer, caches cleared to the Trash, the twins found, the startup items calmed.</span></figcaption></figure>
+    <figure class="person rv" style="--d:.16s"><img src="photo-home.jpg" alt="" width="800" height="1000" loading="lazy"><figcaption><span class="who" data-t="on3.k">At home · The editor</span><b data-t="on3.t">Every drive in order.</b><span data-t="on3.p">What is on every drive, files renamed and tidied, passwords in a vault only you open.</span></figcaption></figure>
   </div>
 </section>
 
-<div class="f-sep" aria-hidden="true"></div>
-
 <section id="tour">
   <div class="sec-h">
-    <div><p class="idx rv" data-t="tour.idx">01 · A look</p><h2 class="rv" data-t="tour.title" data-html>See it <b>for yourself</b>.</h2></div>
+    <div><p class="idx rv" data-t="tour.idx">02 · A look</p><h2 class="rv" data-t="tour.title" data-html>See it <b>for yourself</b>.</h2></div>
     <p class="sub rv" data-t="tour.sub">The real app, with the demo's sample drives. Choose a screen.</p>
   </div>
   <div class="tour-tabs rv" role="tablist" aria-label="Screens"><i class="lens" aria-hidden="true"></i>
@@ -476,7 +440,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 
 <section id="tools">
   <div class="sec-h">
-    <div><p class="idx rv" data-t="tools.idx">02 · The tools</p><h2 class="rv" data-t="tools.title" data-html>Eighteen tools, <b>one app</b>.</h2></div>
+    <div><p class="idx rv" data-t="tools.idx">03 · The tools</p><h2 class="rv" data-t="tools.title" data-html>Eighteen tools, <b>one app</b>.</h2></div>
     <p class="sub rv" data-t="tools.sub">In the side menu by what they are for. Each one does its one job, and does it carefully.</p>
   </div>
   <div class="board">
@@ -540,7 +504,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 
 <section id="shoot">
   <div class="sec-h">
-    <div><p class="idx rv" data-t="sh.idx">03 · For the shoot</p><h2 class="rv" data-t="sh.title" data-html>Made on <b>our own sets</b>.</h2></div>
+    <div><p class="idx rv" data-t="sh.idx">04 · For the shoot</p><h2 class="rv" data-t="sh.title" data-html>Made on <b>our own sets</b>.</h2></div>
     <p class="sub rv" data-t="sh.sub">From the card that comes out of the camera to the drive that goes on the shelf.</p>
   </div>
   <div class="three">
@@ -567,7 +531,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 
 <section id="all">
   <div class="sec-h">
-    <div><p class="idx rv" data-t="all.idx">04 · Everything</p><h2 class="rv" data-t="all.title" data-html>And the <b>rest</b>.</h2></div>
+    <div><p class="idx rv" data-t="all.idx">05 · Everything</p><h2 class="rv" data-t="all.title" data-html>And the <b>rest</b>.</h2></div>
     <p class="sub rv" data-t="all.sub">RoarKit, briefly.</p>
   </div>
   <div class="index">
@@ -588,27 +552,23 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
   </div>
 </section>
 
-<section id="safe">
-  <div class="priv">
-    <div>
-      <p class="idx rv" data-t="pv.idx">05 · Safe</p>
-      <h2 class="rv" data-t="pv.title" data-html>Your files, <b>your call</b>.</h2>
-      <p class="sub rv" style="margin-top:22px;color:var(--muted);font-size:17px;line-height:1.6" data-t="pv.sub">RoarKit only reads until you choose. Then it moves, never deletes.</p>
-      <div class="legal rv"><a class="pill sm" href="../../legal/roarkit/#privacy" data-t="lg.p">Privacy Policy</a><a class="pill sm" href="../../legal/roarkit/#terms" data-t="lg.t">Terms</a></div>
-    </div>
-    <div class="prom">
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12.5A2 2 0 0 0 8 21h8a2 2 0 0 0 2-1.5L19 7M9 7V4h6v3"/></svg></i><b data-t="pr.trash.t">Only the Trash</b><p data-t="pr.trash.p">RoarKit never deletes your files: what you choose goes to the computer's Trash and waits there until you empty it.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.2 4.2L19 7"/></svg></i><b data-t="pr.check.t">One always stays</b><p data-t="pr.check.p">Of every group of twins one file stays, checked twice, on the page and in the app. Nothing in a Masters folder is ever offered.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg></i><b data-t="pr.look.t">Nothing written over</b><p data-t="pr.look.p">Copies, moves, archives and renames never write over a file: a name already taken gets a number, and a rename can be undone.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></i><b data-t="pr.screen.t">On your computer</b><p data-t="pr.screen.p">Everything runs on your computer. It goes online only to look for an update and, when you press it, for the internet speed test.</p></div>
-      <div class="pr rv"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m11 12 8.5-8.5M16 7l2.5 2.5M14 9l2 2"/></svg></i><b data-t="pr.key.t">A vault only you open</b><p data-t="pr.key.p">The passwords are sealed with AES-256 under your master password and never leave the computer. We cannot open them, and no one can bring a forgotten master password back.</p></div>
-    </div>
+<section id="why">
+  <div class="sec-h">
+    <div><p class="idx rv" data-t="why.idx">06 · Why Roar</p><h2 class="rv" data-t="why.title" data-html>Why <b>a Roar app</b>.</h2></div>
+    <div class="why-end"><p class="sub rv" data-t="why.sub">What every app of The Mad Lions Lab promises, RoarKit included.</p>
+      <div class="legal rv"><a class="pill sm" href="../../legal/roarkit/#privacy" data-t="lg.p">Privacy Policy</a><a class="pill sm" href="../../legal/roarkit/#terms" data-t="lg.t">Terms</a></div></div>
+  </div>
+  <div class="why">
+    <article class="wy f-glass rv"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8 20h8M12 16.5V20"/></svg></span><h3 data-t="w1.t">Only the Trash</h3><p data-t="w1.p">RoarKit never deletes: what you choose goes to the Trash, and one of every group of twins always stays.</p></article>
+    <article class="wy f-glass rv" style="--d:.06s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.2 4.2L19 7"/></svg></span><h3 data-t="w2.t">On your computer</h3><p data-t="w2.p">Everything runs on your computer. It goes online only to look for an update.</p></article>
+    <article class="wy f-glass rv" style="--d:.12s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></span><h3 data-t="w3.t">Updates itself</h3><p data-t="w3.p">New versions come in the background; one tap to restart. Mac and Windows.</p></article>
+    <article class="wy f-glass rv" style="--d:.18s"><span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10.5 5-3v9l-5-3"/></svg></span><h3 data-t="w4.t">Made by filmmakers</h3><p data-t="w4.p">The Mad Lions, a film company in Athens, use it on their own work. Ideas go straight to the people who make it.</p></article>
   </div>
 </section>
 
 <section id="download">
   <div class="sec-h">
-    <div><p class="idx rv" data-t="dl.idx">06 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarKit</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
+    <div><p class="idx rv" data-t="dl.idx">07 · Download</p><h2 class="rv" data-t="dl.title" data-html>Get <b>RoarKit</b>.</h2><p class="ver rv" id="dl-ver" hidden></p></div>
     <p class="sub rv" data-t="dl.sub">Free, and in beta: an experiment of The Mad Lions Lab that we use on our own shoots.</p>
   </div>
   <div class="dls">
@@ -634,7 +594,7 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 
 <section id="faq">
   <div class="faq">
-    <div><p class="idx rv" data-t="faq.idx">07 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
+    <div><p class="idx rv" data-t="faq.idx">08 · Questions</p><h2 class="rv" data-t="faq.title" data-html>Good to <b>know</b>.</h2></div>
     <div class="qa">
       <details class="rv"><summary data-t="q1">Is RoarKit free?</summary><p data-t="a1">Yes. No subscription, no ads, no account.</p></details>
       <details class="rv"><summary data-t="q2">What happened to RoarTwin?</summary><p data-t="a2">It grew. RoarTwin found duplicates; RoarKit still does, as Find twins, next to seventeen other tools. If RoarTwin is on your computer, it updates itself into RoarKit and keeps your settings.</p></details>
@@ -645,6 +605,64 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
       <details class="rv"><summary data-t="q7">Why can't it read the temperatures?</summary><p data-t="a7">Computers do not let an app read their heat sensors without special rights. RoarKit shows what the system itself says, the heat level and whether it is slowing down to cool off, which is what you need to act on.</p></details>
       <details class="rv"><summary data-t="q8">Does it work on external drives and servers?</summary><p data-t="a8">Yes: any folder your computer can open, a card, a USB or Thunderbolt drive, a network share. Drive health needs the drive to pass its SMART on, which many USB cases and card readers do not.</p></details>
     </div>
+  </div>
+</section>
+
+<section class="f-new" id="new">
+  <div class="f-new-head">
+    <div><p class="idx rv" data-t="new.idx">09 · New · 0.5 to 0.7</p><h2 class="rv" data-t="new.title" data-html>What's <b>new</b>.</h2></div>
+    <p class="rv" data-t="new.sub">Out on 29 and 30 October: two new tools for the computer, an icon in the menu bar, jobs RoarKit does by itself, similar photos in Find twins, and the glass look of the Roar family.</p>
+  </div>
+  <div class="f-bento">
+    <article class="f-card wide rv">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4.5"/><path d="M9 15.5 12 8l3 7.5M10 13.5h4"/></svg></span>
+      <h3 data-t="nw.1.t">Uninstall apps, and what they leave</h3>
+      <p data-t="nw.1.p">Every app with its version, its size and the last time it was opened. On a Mac, choose one and RoarKit finds what it left in your Library: settings, caches, containers, saved state, logs, login agents, each with its size and a tick box. The app and what you tick go to the Trash together. Apple's own apps, RoarKit and an app that is open are left alone. On Windows, the program's own uninstaller runs.</p>
+      <span class="f-tag">v0.5.0</span>
+    </article>
+    <article class="f-card wide rv" style="--d:.05s">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v8"/><path d="M7.2 6.5a7 7 0 1 0 9.6 0"/></svg></span>
+      <h3 data-t="nw.2.t">Startup items, with a switch</h3>
+      <p data-t="nw.2.p">What starts by itself with the computer: login items, launch agents and background services on a Mac, the Run keys and the Startup folders on Windows. A switch turns one off, and on again: nothing is deleted, RoarKit keeps what it took away. What is set for every user is shown, not changed.</p>
+      <span class="f-tag">v0.5.0</span>
+    </article>
+    <article class="f-card rv">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 8.5h17"/><path d="M14.5 6.5h3"/></svg></span>
+      <h3 data-t="nw.3.t">In the menu bar</h3>
+      <p data-t="nw.3.p">A toolbox icon with the start-up disk's free space beside it; its menu shows memory pressure and heat and opens Clean up. A note when the start-up disk drops under 10% free, a drive starts to fail or the computer runs seriously hot. On Windows it sits by the clock, if you turn it on.</p>
+      <span class="f-tag">v0.5.0</span>
+    </article>
+    <article class="f-card rv" style="--d:.05s">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4"/><path d="m9.5 14.5 2 2 3.5-4"/></svg></span>
+      <h3 data-t="nw.4.t">Jobs it does by itself</h3>
+      <p data-t="nw.4.p">Each off until you turn it on in Settings: a weekly Clean up of the safe caches, on the day and hour you choose, and a monthly check of your backup drives against their copy reports. A job missed runs at the next start; Settings lists the last runs, with Run now.</p>
+      <span class="f-tag">v0.5.0</span>
+    </article>
+    <article class="f-card rv" style="--d:.1s">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="7" width="12" height="12" rx="2"/><path d="M8 4h10.5a2 2 0 0 1 2 2v10.5"/><path d="m5.5 17 3-3.5 2.5 2.5 1.5-1.5 2 2.5"/></svg></span>
+      <h3 data-t="nw.5.t">Similar photos</h3>
+      <p data-t="nw.5.p">Find twins now finds the shots of a burst and the same photo saved again or made smaller, in JPG, PNG, TIFF, HEIC and camera RAW. It keeps the one with the most pixels, then the sharpest, and marks a clearly softer shot.</p>
+      <span class="f-tag">v0.5.0</span>
+    </article>
+    <article class="f-card wide tall rv">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="6" height="15" rx="2"/><rect x="11.5" y="4.5" width="9" height="15" rx="2"/><path d="M5.5 8.5h2"/></svg></span>
+      <h3 data-t="nw.6.t">The Roar family's glass</h3>
+      <p data-t="nw.6.p">RoarKit now looks like RoarMail, RoarWriter and RoarMorph: graphite glass columns that float with a gap between them, one red accent that glows, the chosen tool lit from inside, a choice as a pale glowing pill. In light and in dark.</p>
+      <img class="f-shot" src="overview.jpg" alt="RoarKit's Overview: a score for the computer and the things to sort out first" width="1800" height="1125" loading="lazy">
+      <span class="f-tag">v0.7.0</span>
+    </article>
+    <article class="f-card wide rv" style="--d:.05s">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="7" cy="8" r=".9"/><circle cx="10" cy="8" r=".9"/><circle cx="13" cy="8" r=".9"/></svg></span>
+      <h3 data-t="nw.7.t">A bigger window</h3>
+      <p data-t="nw.7.p">The window opens big, up to 1600 × 1060, and its buttons sit in their own strip above the columns, as in RoarMail. The side menu stays as you know it, with every tool in it.</p>
+      <span class="f-tag">v0.7.1 · v0.7.2</span>
+    </article>
+    <article class="f-card wide rv" style="--d:.1s">
+      <span class="f-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg></span>
+      <h3 data-t="nw.8.t">On the way there</h3>
+      <p data-t="nw.8.p">0.6.0 tried a new look, the instrument, and 0.6.1 gave the side menu bigger line icons in one colour. Both led to 0.7's glass. What each tool does did not change.</p>
+      <span class="f-tag">v0.6.0 · v0.6.1</span>
+    </article>
   </div>
 </section>
 
@@ -670,6 +688,8 @@ footer nav { display: flex; gap: 18px; flex-wrap: wrap; } footer nav a:hover { c
 (function () {
   var APP = 'RoarTwin', NAME = 'RoarKit', REPO = 'alexisdigipro-hub/roartwin', WEB = '#download'
   var EL = {"nav.tour": "Μια ματιά", "nav.tools": "Εργαλεία", "nav.shoot": "Για το γύρισμα", "nav.safe": "Ασφαλές", "nav.download": "Λήψη", "nav.faq": "Ερωτήσεις", "cta.get": "Πάρε το RoarKit", "hero.kicker": "Εργαλειοθήκη · The Mad Lions Lab · Πείραμα 07", "hero.lead": "Μία εφαρμογή, <b>δεκαοχτώ εργαλεία</b>. Βλέπει τι χρειάζεται ο υπολογιστής σου, κάνει χώρο, αντιγράφει και ελέγχει τις κάρτες ενός γυρίσματος, κάνει αναφορά για κάθε clip, κρατάει τα αρχεία σου τακτοποιημένα και τους κωδικούς σου κλειδωμένους.", "cta.how": "Ρίξε μια ματιά", "cta.note": "Δωρεάν · Mac και Windows · δεν σβήνει τίποτα, μόνο τα πάει στον Κάδο", "tag.1": "Τι θέλει φροντίδα, πρώτα", "tag.2": "Ένας βαθμός για τον υπολογιστή", "tag.3": "Δεκαοχτώ εργαλεία, ένα μενού", "tk.1": "Τι χρειάζεται ο υπολογιστής", "tk.2": "Χάρτης χώρου", "tk.3": "Καθαρισμός", "tk.4": "Δίδυμα", "tk.5": "Αντίγραφα καρτών με MHL", "tk.6": "Αναφορά υλικού", "tk.7": "Έλεγχος clips", "tk.8": "Contact sheet", "tk.9": "Μετονομασία clips", "tk.10": "Διαχείριση αρχείων", "tk.11": "ZIP · RAR · 7z", "tk.12": "Υγεία δίσκων", "tk.13": "Ταχύτητα δίσκου", "tk.14": "Ταχύτητα internet", "tk.15": "Vault κωδικών", "tk.16": "Mac · Windows", "tour.idx": "01 · Μια ματιά", "tour.title": "Δες το <b>με τα μάτια σου</b>.", "tour.sub": "Η πραγματική εφαρμογή, με τους δίσκους-δείγμα του demo. Διάλεξε μια οθόνη.", "tt.overview": "Επισκόπηση", "tt.space": "Χάρτης χώρου", "tt.twins": "Δίδυμα", "tt.report": "Αναφορά", "tt.files": "Αρχεία", "tt.stats": "Στατιστικά", "tt.speed": "Ταχύτητα δίσκου", "tt.vault": "Vault", "tt.drives": "Δίσκοι", "tt.overview-light": "Φωτεινό", "tc.overview.t": "Τι <b>χρειάζεται</b> ο υπολογιστής, πρώτα.", "tc.overview.p": "Το RoarKit ανοίγει με έναν βαθμό για τον υπολογιστή: ο δίσκος εκκίνησης, οι δίσκοι, οι cache, η μνήμη, η θερμότητα και η μπαταρία, σε λίγα δευτερόλεπτα. Ό,τι θέλει τακτοποίηση έρχεται με το κουμπί για το εργαλείο που το κάνει.", "tc.space.t": "Πού πήγε ο <b>χώρος</b>;", "tc.space.p": "Ένας δίσκος, ο φάκελος χρήστη, ένα γύρισμα: κάθε φάκελος με το μέγεθός του, τα μεγαλύτερα αρχεία, ο χώρος ανά είδος αρχείου, και τα μεγάλα αρχεία που κανείς δεν άγγιξε για μήνες. Σε Mac, και τα τοπικά snapshots του Time Machine.", "tc.twins.t": "Βρες τα <b>δίδυμα</b>.", "tc.twins.p": "Το ίδιο αρχείο δύο φορές με όποιο όνομα, το ίδιο βίντεο σε άλλο μέγεθος, codec ή format, ο ίδιος ήχος σε WAV και στο MP3 του, ένα κομμάτι κομμένο από μεγαλύτερο βίντεο. Προεπισκόπηση δίπλα δίπλα, και πρόταση για το ποιο να κρατήσεις.", "tc.report.t": "Μια <b>αναφορά</b> των clips.", "tc.report.p": "Κάθε clip μιας κάρτας ή ενός φακέλου με ένα καρέ, τη διάρκεια, το codec και το profile, την εικόνα, τα fps, το timecode και τον ήχο. Σώσ’ την σε PDF για το post house ή σε λίστα για Excel.", "tc.files.t": "Δύο πάνελ, <b>κάθε λεπτομέρεια</b>.", "tc.files.p": "Αντιγραφή και μετακίνηση ανάμεσα σε δύο φακέλους χωρίς ποτέ αντικατάσταση, σύγκριση, οι φάκελοι ενός project από πρότυπο. Διάλεξε ένα αρχείο και δες τα πάντα μέσα του: κάθε stream, το χρώμα, το bit depth, το timecode και την κάμερα.", "tc.stats.t": "Ο υπολογιστής, <b>ζωντανά</b>.", "tc.stats.p": "Κάθε πυρήνας του επεξεργαστή, η κάρτα γραφικών, η μνήμη και η πίεσή της, το swap, οι δίσκοι, το δίκτυο, η θερμότητα και η μπαταρία, και τα προγράμματα που τον ζορίζουν περισσότερο. Ένα κουμπί μετράει το internet: πόσο θέλει ένα delivery 10 GB να ανέβει και να κατέβει.", "tc.speed.t": "Πόσο <b>γρήγορος</b> είναι ο δίσκος;", "tc.speed.p": "Ένα αρχείο δοκιμής γράφεται, ξαναδιαβάζεται και σβήνεται· μετά βλέπεις ποια ProRes, BRAW, H.264 και H.265 μπορεί να γράψει και να παίξει ο δίσκος. Η μεγάλη εγγραφή δείχνει πού πέφτει ένας SSD όταν γεμίσει η cache του, όπως σε ένα μεγάλο πλάνο, και κάθε δίσκος κρατάει τα τελευταία του αποτελέσματα για σύγκριση.", "tc.vault.t": "Οι κωδικοί σου, <b>κλειδωμένοι</b>.", "tc.vault.p": "Ένας κύριος κωδικός τους ανοίγει· είναι κλειδωμένοι με AES-256 σε αυτόν τον υπολογιστή και δεν φεύγουν ποτέ από αυτόν. Κωδικοί 2FA, γεννήτρια, σημάδι για αδύναμους, ίδιους και παλιούς κωδικούς, και εισαγωγή από Chrome, Safari, Firefox, 1Password ή Bitwarden.", "tc.drives.t": "Κάθε δίσκος, <b>ελεγμένος</b>.", "tc.drives.p": "Τι αναφέρει κάθε δίσκος για την υγεία του, ο ελεύθερος χώρος και πώς είναι συνδεδεμένος, με Eject μέσα στη λίστα. Ένας δίσκος που προειδοποιεί ότι μπορεί να χαλάσει ανεβαίνει πρώτος στην Επισκόπηση.", "tc.overview-light.t": "Σκούρο, φωτεινό, <b>το χρώμα σου</b>.", "tc.overview-light.p": "Σκούρο, Φωτεινό ή Αυτόματο με τον υπολογιστή, έξι χρώματα, το μέγεθος του κειμένου, λιγότερη κίνηση. Σε Mac το πλάι μενού είναι το ίδιο το θαμπό γυαλί του συστήματος.", "tools.idx": "02 · Τα εργαλεία", "tools.title": "Δεκαοχτώ εργαλεία, <b>μία εφαρμογή</b>.", "tools.sub": "Στο πλάι μενού ανάλογα με το τι κάνουν. Το καθένα κάνει τη μία του δουλειά, και την κάνει προσεκτικά.", "g.shoot": "Γύρισμα", "g.shoot.t": "Για το <b>γύρισμα</b>.", "tl.shoot.0.n": "Δίδυμο αντίγραφο", "tl.shoot.0.p": "Μια κάρτα σε έναν ή περισσότερους δίσκους μαζί, κάθε αντίγραφο ξαναδιαβάζεται και ελέγχεται byte προς byte, με ASC MHL στο καθένα.", "tl.shoot.1.n": "Έλεγχος backup", "tl.shoot.1.p": "Είναι όλη η κάρτα στο backup, αρχείο αρχείο; Ή, μήνες μετά, τα κράτησε όλα ο δίσκος, με βάση την αναφορά της μέρας που αντιγράφηκε.", "tl.shoot.2.n": "Αναφορά υλικού", "tl.shoot.2.p": "Κάθε clip: διάρκεια, codec, εικόνα, fps, timecode και ήχος, με ένα καρέ από το καθένα, και τα σύνολα ανά codec. PDF ή CSV.", "tl.shoot.3.n": "Έλεγχος clips", "tl.shoot.3.p": "Παίζει κάθε clip ολόκληρο, εικόνα και ήχο, ή γρήγορα μόνο την αρχή και το τέλος του, και λέει ποια είναι κομμένα ή χαλασμένα, πριν φορμαριστεί η κάρτα.", "tl.shoot.4.n": "Contact sheet", "tl.shoot.4.p": "Ένα καρέ από κάθε clip σε μία σελίδα, με όνομα, διάρκεια και timecode, σε PDF για τον πελάτη ή τον μοντέρ.", "tl.shoot.5.n": "Μετονομασία clips", "tl.shoot.5.p": "Το C0001.MP4 γίνεται 2026-10-28_Ilie mou_A_001.MP4: ο δικός σου κανόνας, που μένει για την επόμενη κάρτα, πρώτα προεπισκόπηση, και Αναίρεση.", "g.space": "Χώρος", "g.space.t": "Κάνε <b>χώρο</b>.", "tl.space.0.n": "Χάρτης χώρου", "tl.space.0.p": "Κάθε φάκελος με το μέγεθός του, τα μεγαλύτερα αρχεία, ο χώρος ανά είδος, τα μεγάλα αρχεία που κανείς δεν άγγιξε για μήνες.", "tl.space.1.n": "Καθαρισμός", "tl.space.1.p": "Οι cache που τα προγράμματα ξαναφτιάχνουν μόνα τους: Resolve, Premiere, After Effects, browsers και τα υπόλοιπα.", "tl.space.2.n": "Υπόλοιπα projects", "tl.space.2.p": "Παλιά optimized και proxy media, render files και previews από projects που τελείωσαν, ανά project, πρόγραμμα και ηλικία.", "tl.space.3.n": "Βρες τα δίδυμα", "tl.space.3.p": "Το ίδιο αρχείο δύο φορές, όποιο κι αν είναι το όνομά του, το ίδιο βίντεο ή ήχος σε άλλο αρχείο, και παρόμοιες φωτογραφίες: bursts, και RAW και HEIC.", "g.files": "Αρχεία", "g.files.t": "Τα <b>αρχεία</b> σου.", "tl.files.0.n": "Διαχείριση αρχείων", "tl.files.0.p": "Δύο πάνελ, αντιγραφή και μετακίνηση χωρίς αντικατάσταση, σύγκριση φακέλων, πρότυπα φακέλων project. Media info: κάθε stream, codec, χρώμα, timecode και κάμερα ενός αρχείου.", "tl.files.1.n": "Συμπιεσμένα", "tl.files.1.p": "Άνοιξε ZIP, RAR, 7z, TAR, ISO και άλλα σε νέο φάκελο, ή δοκίμασέ τα πρώτα· φτιάξε ZIP (κλειδωμένο με κωδικό αν θες), 7z, TAR.GZ ή TAR.XZ.", "g.drives": "Δίσκοι", "g.drives.t": "Οι <b>δίσκοι</b> σου.", "tl.drives.0.n": "Υγεία δίσκων", "tl.drives.0.p": "Τι λέει κάθε δίσκος για τον εαυτό του (SMART), ο ελεύθερος χώρος και πώς είναι συνδεδεμένος· ένας δίσκος που μπαίνει φαίνεται αμέσως, και εξάγεται με ασφάλεια από τη λίστα.", "tl.drives.1.n": "Τεστ ταχύτητας δίσκου", "tl.drives.1.p": "Ταχύτητα εγγραφής και ανάγνωσης, μεγάλη εγγραφή για SSD, και μετά ποια ProRes, BRAW, H.264 και H.265 μπορεί να γράψει και να παίξει ο δίσκος. Κάθε δίσκος κρατάει τα τελευταία του αποτελέσματα.", "g.computer": "Υπολογιστής", "g.computer.t": "Ο <b>υπολογιστής</b>.", "tl.computer.0.n": "Επισκόπηση", "tl.computer.0.p": "Ένας βαθμός για τον υπολογιστή και τι θέλει φροντίδα πρώτα, το καθένα με το εργαλείο που το λύνει.", "tl.computer.1.n": "Στατιστικά υπολογιστή", "tl.computer.1.p": "Επεξεργαστής ανά πυρήνα, κάρτα γραφικών, μνήμη και πίεση, θερμότητα, μπαταρία, δίκτυο, τα πιο βαριά προγράμματα και speedtest για το internet.", "g.private": "Ιδιωτικό", "g.private.t": "Μένει <b>ιδιωτικό</b>.", "tl.private.0.n": "Vault", "tl.private.0.p": "Κωδικοί και κωδικοί 2FA πίσω από έναν κύριο κωδικό, κλειδωμένοι με AES-256 μόνο σε αυτόν τον υπολογιστή. Εισαγωγή από τον browser σου.", "sh.idx": "03 · Για το γύρισμα", "sh.title": "Φτιαγμένο στα <b>δικά μας γυρίσματα</b>.", "sh.sub": "Από την κάρτα που βγαίνει από την κάμερα ως τον δίσκο που μπαίνει στο ράφι.", "b3.v1": "ΣΤΟΝ ΚΑΔΟ", "b1.t": "Ένα δίδυμο της κάρτας, <b>ελεγμένο</b>.", "b1.p": "Βάζεις μια κάρτα και το RoarKit προτείνει να την αντιγράψει στους δίσκους σου, σε όλους μαζί. Μετά ξαναδιαβάζει κάθε αντίγραφο και το ελέγχει με την κάρτα, byte προς byte, γράφει ένα ASC MHL δίπλα στο καθένα, και σου λέει πότε η κάρτα μπορεί να βγει με ασφάλεια. Τίποτα δεν αντικαθίσταται· τα clips κρατάνε τις ημερομηνίες τους.", "b1.c1": "Πολλοί δίσκοι μαζί", "b1.c2": "SHA-256 και MD5", "b1.c3": "ASC MHL", "b1.c4": "Eject με ασφάλεια", "b2.t": "Κάθε clip, <b>στο χαρτί</b>.", "b2.p": "Η Αναφορά υλικού δείχνει κάθε clip με ένα καρέ, το codec και το profile, τα fps, το timecode και τον ήχο, σε PDF για το post house ή σε CSV για το Excel. Το Contact sheet βάζει ένα καρέ από κάθε clip σε μία σελίδα. Ο Έλεγχος clips τα παίζει όλα ολόκληρα και λέει ποιο είναι κομμένο ή χαλασμένο, πριν φορμαριστεί η κάρτα.", "b2.c1": "PDF και CSV", "b2.c2": "Timecode", "b2.c3": "Διαβάζει κάθε καρέ", "b2.c4": "Η εταιρεία σου πάνω", "b3.t": "Το ίδιο βίντεο, <b>άλλο αρχείο</b>.", "b3.p": "Τα Δίδυμα συγκρίνουν το περιεχόμενο, ποτέ το όνομα: το ίδιο αρχείο δύο φορές, το master και το export του για web, ένα WAV και το MP3 του, ένα teaser κομμένο από την ταινία. Ένας φάκελος αντιγραμμένος δύο φορές φαίνεται ως ένας. Κλείδωσε τους φακέλους Masters και τίποτα μέσα τους δεν προτείνεται ποτέ για τον Κάδο.", "b3.c1": "Όποιο όνομα", "b3.c2": "Εικόνα και ήχος", "b3.c3": "Κομμάτια και teasers", "b3.c4": "Τα Masters μένουν", "all.idx": "04 · Όλα", "all.title": "Και <b>τα υπόλοιπα</b>.", "all.sub": "Το RoarKit, με λίγα λόγια.", "ix1.t": "Μια πρώτη σελίδα που κοιτάει για σένα", "ix1.p": "Η Επισκόπηση ελέγχει δίσκους, μνήμη, θερμότητα, μπαταρία και cache κάθε φορά που ανοίγει, και βάζει πρώτα ό,τι μετράει.", "ix2.t": "Πίσω και μπροστά", "ix2.p": "Όπως σε browser: ← → στην πάνω σειρά, ⌘[ και ⌘], ένα swipe στο trackpad, τα πλαϊνά κουμπιά του ποντικιού.", "ix3.t": "Σκούρο ή φωτεινό", "ix3.p": "Σκούρο, Φωτεινό ή Αυτόματο με τον υπολογιστή, έξι χρώματα, τρία μεγέθη κειμένου, λιγότερη κίνηση.", "ix4.t": "Ειδοποίηση όταν τελειώσει", "ix4.p": "Μια μεγάλη αντιγραφή, ένας έλεγχος ή μια αναφορά σε ειδοποιεί όταν τελειώσει ενώ είσαι σε άλλη εφαρμογή, και με ήχο αν θες.", "ix5.t": "Αγγλικά και Ελληνικά", "ix5.p": "Όλη η εφαρμογή σε όποια από τις δύο γλώσσες, από τις Ρυθμίσεις.", "ix6.t": "Κάθε format βίντεο", "ix6.p": "MOV, MP4, MXF, MKV, AVI, MTS, WebM και άλλα: το ffmpeg είναι μέσα στην εφαρμογή. Τα RAW καμερών που δεν ανοίγει (BRAW, R3D, ARRIRAW) λέγονται με το όνομά τους, μαζί με την εφαρμογή που τα ανοίγει.", "ix7.t": "Η εταιρεία σου στα PDF", "ix7.p": "Οι αναφορές και τα contact sheets γράφουν το όνομα που βάζεις, για τον πελάτη ή το post house.", "ix8.t": "Εκεί που το άφησες", "ix8.p": "Μπορεί να ανοίγει στο εργαλείο που χρησιμοποίησες τελευταίο, και κάθε εργαλείο θυμάται τους φακέλους του.", "ix9.t": "Σταμάτα όποτε θες", "ix9.p": "Κάθε μεγάλη δουλειά σταματάει όποτε θες· ο υπολογιστής δεν κοιμάται στη μέση της.", "ix10.t": "Ενημερώνεται μόνο του", "ix10.p": "Μια νέα έκδοση κατεβαίνει στο παρασκήνιο· ένα πάτημα για επανεκκίνηση.", "ix11.t": "Χωρίς λογαριασμό", "ix11.p": "Τίποτα για εγγραφή, τίποτα δεν ανεβαίνει: όλα γίνονται στον υπολογιστή σου.", "ix12.t": "Δωρεάν", "ix12.p": "Χωρίς συνδρομή, χωρίς διαφημίσεις.", "pv.idx": "05 · Ασφαλές", "pv.title": "Τα αρχεία σου, <b>η απόφασή σου</b>.", "pv.sub": "Το RoarKit μόνο διαβάζει μέχρι να διαλέξεις. Μετά μετακινεί, δεν σβήνει ποτέ.", "lg.p": "Πολιτική απορρήτου", "lg.t": "Όροι χρήσης", "pr.trash.t": "Μόνο ο Κάδος", "pr.trash.p": "Το RoarKit δεν σβήνει ποτέ τα αρχεία σου: ό,τι διαλέξεις πάει στον Κάδο του υπολογιστή και περιμένει εκεί μέχρι να τον αδειάσεις.", "pr.check.t": "Ένα μένει πάντα", "pr.check.p": "Από κάθε ομάδα διδύμων ένα αρχείο μένει, με διπλό έλεγχο, στη σελίδα και στην εφαρμογή. Τίποτα σε φάκελο Masters δεν προτείνεται ποτέ.", "pr.look.t": "Καμία αντικατάσταση", "pr.look.p": "Αντιγραφές, μετακινήσεις, συμπιεσμένα και μετονομασίες δεν γράφουν ποτέ πάνω σε αρχείο: ένα όνομα που υπάρχει παίρνει αριθμό, και η μετονομασία αναιρείται.", "pr.screen.t": "Στον υπολογιστή σου", "pr.screen.p": "Όλα γίνονται στον υπολογιστή σου. Βγαίνει στο internet μόνο για να δει αν υπάρχει ενημέρωση και, όταν το πατήσεις, για το speedtest.", "pr.key.t": "Ένα vault που ανοίγεις μόνο εσύ", "pr.key.p": "Οι κωδικοί κλειδώνουν με AES-256 κάτω από τον κύριο κωδικό σου και δεν φεύγουν ποτέ από τον υπολογιστή. Εμείς δεν μπορούμε να τους ανοίξουμε, και κανείς δεν μπορεί να φέρει πίσω έναν ξεχασμένο κύριο κωδικό.", "dl.idx": "06 · Λήψη", "dl.title": "Πάρε το <b>RoarKit</b>.", "dl.sub": "Δωρεάν, και σε beta: ένα πείραμα του Mad Lions Lab που χρησιμοποιούμε στα δικά μας γυρίσματα.", "dl.mac": "Για Mac με chip της Apple (M1 και νεότερα).", "dl.get": "Λήψη", "dl.intel": "Παλιότερο Mac με Intel;", "dl.intelbtn": "Αυτό", "dl.win": "Windows 10 και 11.", "dl.upd": "<b>Ενημερώνεται μόνο του.</b> Το RoarKit κατεβάζει τις νέες εκδόσεις μόνο του και ζητάει μια γρήγορη επανεκκίνηση. Αν έχεις το RoarTwin, γίνεται RoarKit με την επόμενη ενημέρωση.", "dl.help": "<b>Πρώτη φορά σε Mac;</b> Η εφαρμογή δεν είναι ακόμα υπογεγραμμένη από την Apple: κάνε δεξί κλικ πάνω της στις Εφαρμογές και διάλεξε Άνοιγμα, ή πάτα Άνοιγμα παρόλα αυτά στις Ρυθμίσεις συστήματος › Απόρρητο και ασφάλεια. Σε Windows: Περισσότερες πληροφορίες › Εκτέλεση παρόλα αυτά.", "faq.idx": "07 · Ερωτήσεις", "faq.title": "Καλό να <b>ξέρεις</b>.", "q1": "Είναι δωρεάν το RoarKit;", "a1": "Ναι. Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς λογαριασμό.", "q2": "Τι έγινε το RoarTwin;", "a2": "Μεγάλωσε. Το RoarTwin έβρισκε διπλότυπα· το RoarKit το κάνει ακόμα, ως Δίδυμα, δίπλα σε άλλα δεκαεπτά εργαλεία. Αν έχεις το RoarTwin, ενημερώνεται μόνο του σε RoarKit και κρατάει τις ρυθμίσεις σου.", "q3": "Μπορεί να σβήσει κάτι κατά λάθος;", "a3": "Δεν σβήνει καθόλου τα αρχεία σου. Ό,τι διαλέγεις πάει στον Κάδο, ένα από κάθε ομάδα διδύμων μένει πάντα, και οι φάκελοι Masters δεν αγγίζονται ποτέ. Άδειασε τον Κάδο μόνο όταν είσαι σίγουρος.", "q4": "Είναι ασφαλής ο Καθαρισμός;", "a4": "Κοιτάει μόνο στους φακέλους όπου τα προγράμματα κρατάνε τις cache τους, το render cache του Resolve, το media cache του Premiere, των browsers και παρόμοια, και μετακινεί μόνο ό,τι είναι μέσα τους. Τα προγράμματα τις ξαναφτιάχνουν όταν τις χρειαστούν. Τα projects, το υλικό και τα renders σου δεν αγγίζονται ποτέ.", "q5": "Πόσο σίγουρο είναι ένα αντίγραφο κάρτας;", "a5": "Κάθε αντίγραφο ξαναδιαβάζεται από τον δίσκο αφού γραφτεί και συγκρίνεται με την κάρτα, αρχείο αρχείο, με SHA-256. Κάθε αντίγραφο παίρνει μια αναφορά και ένα ASC MHL με MD5, που διαβάζουν οι DIT και τα post houses. Μήνες μετά, ο Έλεγχος backup ξαναδιαβάζει τον δίσκο με βάση εκείνη την αναφορά.", "q6": "Πού φυλάγονται οι κωδικοί μου;", "a6": "Σε ένα αρχείο στον υπολογιστή σου, κλειδωμένο με AES-256 με κλειδί που βγαίνει από τον κύριο κωδικό σου. Δεν στέλνονται πουθενά και δεν υπάρχει cloud. Μπορείς να σώσεις ένα κρυπτογραφημένο backup σε άλλο δίσκο. Αν ξεχαστεί ο κύριος κωδικός, κανείς δεν μπορεί να ανοίξει το vault, ούτε εμείς.", "q7": "Γιατί δεν δείχνει θερμοκρασίες;", "a7": "Οι υπολογιστές δεν αφήνουν μια εφαρμογή να διαβάσει τους αισθητήρες θερμότητας χωρίς ειδικά δικαιώματα. Το RoarKit δείχνει ό,τι λέει το ίδιο το σύστημα, το επίπεδο θερμότητας και αν κόβει ταχύτητα για να κρυώσει, που είναι αυτό που χρειάζεσαι για να κάνεις κάτι.", "q8": "Δουλεύει σε εξωτερικούς δίσκους και servers;", "a8": "Ναι: σε κάθε φάκελο που ανοίγει ο υπολογιστής σου, κάρτα, δίσκο USB ή Thunderbolt, κοινόχρηστο φάκελο δικτύου. Η Υγεία δίσκων θέλει ο δίσκος να δίνει το SMART του, που πολλά κουτιά USB και card readers δεν το κάνουν.", "ct.idx": "Επαφή", "ct.title": "Σου λείπει <b>ένα εργαλείο</b>;", "ft.lab": "The Mad Lions Lab", "ft.legal": "Απόρρητο & Όροι", "footer": "© 2026 The Mad Lions · RoarKit", "nav.new": "Νέα", "ver.new": "Νέο", "new.idx": "Νέα · 0.5 έως 0.7", "new.title": "Τι <b>νέο</b> υπάρχει.", "new.sub": "Βγήκαν στις 29 και 30 Οκτωβρίου: δύο νέα εργαλεία για τον υπολογιστή, ένα εικονίδιο στη γραμμή μενού, δουλειές που κάνει το RoarKit μόνο του, παρόμοιες φωτογραφίες στα Δίδυμα, και το γυάλινο στυλ της οικογένειας Roar.", "nw.1.t": "Απεγκατάσταση εφαρμογών, και ό,τι αφήνουν", "nw.1.p": "Κάθε εφαρμογή με την έκδοσή της, το μέγεθός της και πότε άνοιξε τελευταία φορά. Σε Mac, διάλεξε μία και το RoarKit βρίσκει ό,τι άφησε στη Library σου: ρυθμίσεις, cache, containers, αποθηκευμένη κατάσταση, logs, login agents, το καθένα με το μέγεθός του και ένα κουτάκι. Η εφαρμογή και ό,τι τσεκάρεις πάνε μαζί στον Κάδο. Οι εφαρμογές της Apple, το ίδιο το RoarKit και μια εφαρμογή που είναι ανοιχτή μένουν ως έχουν. Σε Windows τρέχει το πρόγραμμα απεγκατάστασης της ίδιας της εφαρμογής.", "nw.2.t": "Εκκίνηση, με διακόπτη", "nw.2.p": "Ό,τι ξεκινάει μόνο του με τον υπολογιστή: login items, launch agents και υπηρεσίες παρασκηνίου σε Mac, τα κλειδιά Run και οι φάκελοι Startup σε Windows. Ένας διακόπτης το κλείνει, και το ξανανοίγει: τίποτα δεν σβήνεται, το RoarKit κρατάει ό,τι αφαίρεσε. Ό,τι ισχύει για όλους τους χρήστες φαίνεται, δεν αλλάζει.", "nw.3.t": "Στη γραμμή μενού", "nw.3.p": "Ένα εικονίδιο εργαλειοθήκης με τον ελεύθερο χώρο του δίσκου εκκίνησης δίπλα του· το μενού του δείχνει την πίεση μνήμης και τη θερμότητα και ανοίγει τον Καθαρισμό. Ειδοποίηση όταν ο δίσκος εκκίνησης πέσει κάτω από 10% ελεύθερο, όταν ένας δίσκος αρχίσει να χαλάει ή όταν ο υπολογιστής ζεσταθεί πολύ. Σε Windows κάθεται δίπλα στο ρολόι, αν το ανοίξεις.", "nw.4.t": "Δουλειές που κάνει μόνο του", "nw.4.p": "Η καθεμία κλειστή μέχρι να την ανοίξεις στις Ρυθμίσεις: ένας εβδομαδιαίος Καθαρισμός των ασφαλών cache, τη μέρα και ώρα που διαλέγεις, και ένας μηνιαίος έλεγχος των δίσκων backup με βάση τις αναφορές αντιγραφής τους. Μια δουλειά που χάθηκε τρέχει στο επόμενο άνοιγμα· οι Ρυθμίσεις δείχνουν τις τελευταίες, με το Τρέξε τώρα.", "nw.5.t": "Παρόμοιες φωτογραφίες", "nw.5.p": "Τα Δίδυμα βρίσκουν πλέον τις λήψεις ενός burst και την ίδια φωτογραφία σωσμένη ξανά ή μικρότερη, σε JPG, PNG, TIFF, HEIC και RAW καμερών. Κρατάει αυτή με τα περισσότερα pixels, μετά την πιο καθαρή, και σημειώνει μια λήψη που είναι φανερά πιο θολή.", "nw.6.t": "Το γυαλί της οικογένειας Roar", "nw.6.p": "Το RoarKit μοιάζει πλέον με το RoarMail, το RoarWriter και το RoarMorph: γραφίτινες γυάλινες στήλες που αιωρούνται με κενό ανάμεσά τους, ένα κόκκινο χρώμα που λάμπει, το εργαλείο που διάλεξες φωτισμένο από μέσα, μια επιλογή σαν ανοιχτόχρωμο φωτεινό pill. Σε φωτεινό και σε σκούρο.", "nw.7.t": "Μεγαλύτερο παράθυρο", "nw.7.p": "Το παράθυρο ανοίγει μεγάλο, έως 1600 × 1060, και τα κουμπιά του κάθονται σε δική τους λωρίδα πάνω από τις στήλες, όπως στο RoarMail. Το πλαϊνό μενού μένει όπως το ξέρεις, με όλα τα εργαλεία μέσα.", "nw.8.t": "Στον δρόμο ως εκεί", "nw.8.p": "Η 0.6.0 δοκίμασε μια νέα όψη, το «όργανο», και η 0.6.1 έδωσε στο πλαϊνό μενού μεγαλύτερα εικονίδια με γραμμές, σε ένα χρώμα. Και οι δύο οδήγησαν στο γυαλί της 0.7. Ό,τι κάνει κάθε εργαλείο δεν άλλαξε.", "ver.head": "Δύο νέα εργαλεία, νέα όψη", "tk.17": "Απεγκατάσταση εφαρμογών", "tk.18": "Εκκίνηση", "tk.19": "Παρόμοιες φωτογραφίες", "tl.computer.2.n": "Εκκίνηση", "tl.computer.2.p": "Ό,τι ξεκινάει μόνο του με τον υπολογιστή, το καθένα με διακόπτη για να το κλείσεις και να το ξανανοίξεις. Τίποτα δεν σβήνεται.", "tl.computer.3.n": "Απεγκατάσταση", "tl.computer.3.p": "Κάθε εφαρμογή με το μέγεθός της και πότε άνοιξε τελευταία· σε Mac, η ίδια και ό,τι άφησε στη Library σου πάνε μαζί στον Κάδο.", "ix13.t": "Στη γραμμή μενού", "ix13.p": "Ο ελεύθερος χώρος του δίσκου εκκίνησης με μια ματιά, και ειδοποίηση όταν γεμίζει ένας δίσκος, όταν ένας δίσκος αρχίζει να χαλάει ή όταν ο υπολογιστής ζεσταίνεται.", "ix14.t": "Δουλειές μόνο του", "ix14.p": "Αν τις ανοίξεις: ένας εβδομαδιαίος Καθαρισμός των ασφαλών cache, ένας μηνιαίος έλεγχος των backup σου με βάση τις αναφορές αντιγραφής τους."}
+  // the product page (31 Oct): its own Greek
+  Object.assign(EL, {"tour.idx": "02 · Μια ματιά", "tools.idx": "03 · Τα εργαλεία", "sh.idx": "04 · Για το γύρισμα", "all.idx": "05 · Όλα", "dl.idx": "07 · Λήψη", "faq.idx": "08 · Ερωτήσεις", "new.idx": "09 · Νέα · 0.5 έως 0.7", "hero.claim": "Δεκαοχτώ εργαλεία.<br><b>Μία εφαρμογή.</b>", "hero.lead2": "Χώρος στον δίσκο, κάρτες αντιγραμμένες και ελεγμένες, αναφορά για κάθε clip, αρχεία τακτοποιημένα και κωδικοί κλειδωμένοι, <b>στον υπολογιστή σου</b>. Mac και Windows.", "sc.cap": "17:30, τρίτη μέρα. Κάθε κάρτα αντιγραμμένη, ελεγμένη δύο φορές, με αναφορά.", "nav.onset": "Στο γύρισμα", "on.idx": "01 · Στο γύρισμα", "on.title": "Φτιαγμένο από ανθρώπους <b>που κάνουν ταινίες</b>.", "on.sub": "Φτιάξαμε το RoarKit για τη δική μας δουλειά στο The Mad Lions. Εδώ το χρησιμοποιούμε.", "why.idx": "06 · Γιατί Roar", "why.title": "Γιατί <b>μια εφαρμογή Roar</b>.", "why.sub": "Τι υπόσχεται κάθε εφαρμογή του The Mad Lions Lab, και το RoarKit.", "nm1": "εργαλεία σε μία εφαρμογή, σε ένα μενού.", "nm2": "αρχεία σβησμένα. Ό,τι διαλέγεις πάει στον Κάδο.", "nm3": "AES για τους κωδικούς στο θησαυροφυλάκιό σου.", "nm4": "Χωρίς συνδρομή, χωρίς διαφημίσεις, χωρίς λογαριασμό.", "on1.k": "Στο γύρισμα · Ο DIT", "on1.t": "Κάρτες αντιγραμμένες, ελεγμένες δύο φορές.", "on1.p": "Αντίγραφα με checksums και MHL, και αναφορά για κάθε clip, πριν η κάρτα γυρίσει στην κάμερα.", "on2.k": "Στο γραφείο · Ο παραγωγός", "on2.t": "Ξανά χώρος στον δίσκο.", "on2.p": "Ένας χάρτης για το τι γεμίζει τον υπολογιστή, cache στον Κάδο, τα διπλά αρχεία βρεμένα, τα προγράμματα εκκίνησης ήσυχα.", "on3.k": "Στο σπίτι · Η μοντέρ", "on3.t": "Κάθε δίσκος σε τάξη.", "on3.p": "Τι έχει κάθε δίσκος, αρχεία μετονομασμένα και τακτοποιημένα, κωδικοί σε θησαυροφυλάκιο που ανοίγεις μόνο εσύ.", "w1.t": "Μόνο ο Κάδος", "w1.p": "Το RoarKit δεν σβήνει ποτέ: ό,τι διαλέγεις πάει στον Κάδο, και από κάθε ομάδα διπλών ένα αρχείο μένει πάντα.", "w2.t": "Στον υπολογιστή σου", "w2.p": "Όλα γίνονται στον υπολογιστή σου. Βγαίνει στο internet μόνο για να δει αν υπάρχει ενημέρωση.", "w3.t": "Ενημερώνεται μόνο του", "w3.p": "Οι νέες εκδόσεις έρχονται στο παρασκήνιο· ένα πάτημα για επανεκκίνηση. Mac και Windows.", "w4.t": "Φτιαγμένο από κινηματογραφιστές", "w4.p": "Το The Mad Lions, εταιρεία παραγωγής στην Αθήνα, το χρησιμοποιεί στη δουλειά του. Οι ιδέες σου πάνε κατευθείαν σε όσους το φτιάχνουν."})
 
   var nodes = [].slice.call(document.querySelectorAll('[data-t]'))
   var EN = {}
