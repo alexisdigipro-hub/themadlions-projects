@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
+    "livekit-client": "^2.9.0",
     "mammoth": "^1.8.0",
     "pdfjs-dist": "^4.10.38",
     "react": "^18.3.1",

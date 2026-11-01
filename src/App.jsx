@@ -37,6 +37,8 @@ const Whiteboard = lazyPage(() => import('./pages/project/Whiteboard.jsx'))
 const Database = lazyPage(() => import('./pages/Database.jsx'))
 const RoarMePage = lazyPage(() => import('./pages/RoarMePage.jsx'))
 const RoarMeApp = lazyPage(() => import('./pages/RoarMeApp.jsx'))
+// the hub's own chat (Alex, 1 Nov 2026): RoarMe's chat copied into the hub (hubchat/), shown in a frame
+const HubChatPage = lazyPage(() => import('./pages/HubChatPage.jsx'))
 // the chat alone in a window of its own (the ⧉ button on the chat list), no side menu
 const MyWork = lazyPage(() => import('./pages/MyWork.jsx'))
 const Profile = lazyPage(() => import('./pages/Profile.jsx'))
@@ -172,9 +174,9 @@ export default function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="calendar" element={<CalendarAll />} />
                 <Route path="tasks" element={<OfficeHub />} />
-                {/* Hub Chat is gone (Alex, 20 Oct): an old link opens RoarMe */}
-                <Route path="chat" element={<Navigate to="/roarme" replace />} />
-                <Route path="chat/:room" element={<Navigate to="/roarme" replace />} />
+                {/* the hub's own chat again (Alex, 1 Nov 2026): RoarMe's chat copied into the hub, on the hub's database */}
+                <Route path="chat" element={<HubChatPage />} />
+                <Route path="chat/:room" element={<HubChatPage />} />
                 <Route path="roarme" element={<RoarMePage />} />
                 {/* only for whom the administrator opens them (Alex, 27 Oct) */}
                 <Route path="roardino" element={<OnlyWith k="roardino"><RoardinoRoute /></OnlyWith>} />

@@ -137,7 +137,9 @@ export default function Layout() {
     { to: '/share', label: 'Outbox', show: mayShare, icon: 'post', badge: newReplies, also: ['/roardino'] },
     // the team's chat is RoarMe (Alex, 20 Oct): Hub Chat is gone, RoarMe takes its place; above Finance since 29 Oct
     // only on a computer (Alex, 29 Oct: "take RoarMe out of the mobile version"): not in the phone's bar
-    { to: '/roarme', label: 'RoarMe', show: remote, phone: false, icon: 'chat', also: ['/chat'] },
+    { to: '/roarme', label: 'RoarMe', show: remote, phone: false, icon: 'chat' },
+    // the hub's own chat (Alex, 1 Nov 2026): RoarMe's chat copied into the hub; beside RoarMe until RoarMe leaves the hub
+    { to: '/chat', label: 'Chat', show: remote, phone: false, icon: 'chat' },
     // Invoices is a tab of Finance again (Alex, 10 Oct), so /invoices lights Finance
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance', also: ['/invoices'] },
     // My profile is now the first tab of Settings, on every platform (Alex, 10 Oct)
@@ -209,7 +211,7 @@ export default function Layout() {
   const [keepRoardino, setKeepRoardino] = useState(false)
   useEffect(() => { if (onRoardino) setKeepRoardino(true) }, [onRoardino])
   // not for the pages that are a frame (Roardino, RoarList, RoarMe): the slide moved their fixed frame and it jumped
-  const framePage = pathname === '/roardino' || pathname === '/roarlist' || pathname.startsWith('/roarme')
+  const framePage = pathname === '/roardino' || pathname === '/roarlist' || pathname.startsWith('/roarme') || pathname === '/chat' || pathname.startsWith('/chat/')
   useEffect(() => {
     const el = document.querySelector('.content')
     if (!el || framePage || !window.matchMedia?.('(max-width: 820px)').matches || el.dataset.magnet) return undefined
