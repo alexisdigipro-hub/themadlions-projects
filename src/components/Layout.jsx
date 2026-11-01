@@ -8,7 +8,6 @@ import { useToast } from './ui.jsx'
 import { backupDue, pcloudBackup } from '../lib/pcloud.js'
 import { remote } from '../lib/supabase.js'
 import { listenSwipes, swipeTabs } from '../lib/swipeTabs.js'
-import { isStandalone, roarmeAppUrl, roarmeInstalled } from '../lib/roarmeApp.js'
 import { applyTeamLook, localLook } from '../lib/teamLook.js'
 import { useArrowPages } from '../lib/arrowTabs.js'
 
@@ -126,7 +125,7 @@ export default function Layout() {
     // page, opening on Tasks (or on Notes for someone without Tasks); where Tasks was, so on a phone it is among the first five
     { to: can(user, 'tasks') ? '/tasks' : '/notes', label: 'Office', show: true, icon: 'tasks', also: ['/tasks', '/notes', '/office', '/roarlist'] },
     // Roardino, the ordino maker, in the hub (Alex, 23 Oct): for whoever has the Ordino permission, in the side menu
-    // and in a phone's bar, right after RoarMe
+    // and in a phone's bar
     // since 27 Oct a tab of Share (Alex); the side menu keeps it only for someone with the Ordino permission but not Share
     { to: '/roardino', label: 'Roardino', show: remote && can(user, 'roardino') && !can(user, 'share'), icon: 'callsheets' },
     // RoarList, the shot lists (Alex, 27 Oct), is a tab of Office since 29 Oct, after Notes
@@ -135,37 +134,15 @@ export default function Layout() {
     // Drives is a tab of the Database now (Alex, 10 Oct)
     // Outbox, once Share (Alex, 29 Oct): what goes out to clients; the address stays /share
     { to: '/share', label: 'Outbox', show: mayShare, icon: 'post', badge: newReplies, also: ['/roardino'] },
-    // the team's chat is RoarMe (Alex, 20 Oct): Hub Chat is gone, RoarMe takes its place; above Finance since 29 Oct
-    // only on a computer (Alex, 29 Oct: "take RoarMe out of the mobile version"): not in the phone's bar
-    { to: '/roarme', label: 'RoarMe', show: remote, phone: false, icon: 'chat' },
-    // the hub's own chat (Alex, 1 Nov 2026): RoarMe's chat copied into the hub; beside RoarMe until RoarMe leaves the hub
-    { to: '/chat', label: 'Chat', show: remote, phone: false, icon: 'chat' },
+    // the hub's own chat (Alex, 1 Nov 2026): RoarMe's chat copied into the hub, in the side menu and the phone's bar;
+    // RoarMe itself left the hub the same day and stays an app of its own
+    { to: '/chat', label: 'Chat', show: remote, icon: 'chat' },
     // Invoices is a tab of Finance again (Alex, 10 Oct), so /invoices lights Finance
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance', also: ['/invoices'] },
     // My profile is now the first tab of Settings, on every platform (Alex, 10 Oct)
     { to: '/settings', label: 'Settings', show: true, icon: 'settings' },
   ].filter((i) => i.show)
   const tabItems = items.filter((i) => i.phone !== false) // the phone's bar and its swipe
-
-  /* The RoarMe tab on a phone opens RoarMe as its own app (Alex, 20 Oct; lib/roarmeApp.js). In a browser: /roarme/
-     in the same tab, where Chrome hands it to RoarMe if it is installed and otherwise RoarMe offers to install itself
-     (on an iPhone, how to Add to Home Screen). In the hub's own home-screen app: the installed RoarMe if Android
-     reports it, else the hub's RoarMe page as before (no app can install another from inside itself). A computer,
-     and the swipe between tabs (not a real tap), keep the hub's own RoarMe page. */
-  const roarmeApp = useRef(false)
-  useEffect(() => {
-    if (!remote || !window.matchMedia?.('(max-width: 820px)').matches) return
-    roarmeInstalled().then((yes) => { roarmeApp.current = yes })
-  }, [])
-  const roarmeTap = (e) => {
-    if (!e.isTrusted || !window.matchMedia?.('(max-width: 820px)').matches) return
-    if (isStandalone()) {
-      if (roarmeApp.current) { e.preventDefault(); window.open(roarmeAppUrl(), '_blank', 'noopener') }
-      return
-    }
-    e.preventDefault()
-    window.location.assign(roarmeAppUrl())
-  }
 
   /* On a phone there is no side menu any more (Alex, 10 Oct): every page is in the bar at the foot,
      which slides sideways when they do not fit; the page you are on is brought into view. */
@@ -210,8 +187,8 @@ export default function Layout() {
   const onRoardino = pathname === '/roardino' || (pathname === '/share' && new URLSearchParams(search).get('tab') === 'roardino')
   const [keepRoardino, setKeepRoardino] = useState(false)
   useEffect(() => { if (onRoardino) setKeepRoardino(true) }, [onRoardino])
-  // not for the pages that are a frame (Roardino, RoarList, RoarMe): the slide moved their fixed frame and it jumped
-  const framePage = pathname === '/roardino' || pathname === '/roarlist' || pathname.startsWith('/roarme') || pathname === '/chat' || pathname.startsWith('/chat/')
+  // not for the pages that are a frame (Roardino, RoarList, Chat): the slide moved their fixed frame and it jumped
+  const framePage = pathname === '/roardino' || pathname === '/roarlist' || pathname === '/chat' || pathname.startsWith('/chat/')
   useEffect(() => {
     const el = document.querySelector('.content')
     if (!el || framePage || !window.matchMedia?.('(max-width: 820px)').matches || el.dataset.magnet) return undefined
@@ -289,7 +266,7 @@ export default function Layout() {
 
       <nav className="tabbar" aria-label="Main" ref={tabsRef}>
         {tabItems.map((i) => (
-          <NavLink key={i.to} to={i.to} end={i.end} onClick={i.to === '/roarme' ? roarmeTap : undefined} className={({ isActive }) => (isActive || i.also?.some((p) => pathname.startsWith(p)) ? 'active' : '')}>
+          <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => (isActive || i.also?.some((p) => pathname.startsWith(p)) ? 'active' : '')}>
             <span className="tab-ico-wrap">{Icon[i.icon]?.()}{i.badge > 0 && <span className="nav-badge">{i.badge}</span>}</span>
             {i.label}
           </NavLink>

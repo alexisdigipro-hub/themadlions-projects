@@ -276,13 +276,13 @@ function Notify({ p, toast }) {
     <>
       <Box title="Message notifications">
         <div className="set-row">
-          <span className="set-text">{onPhone() ? 'Notifications' : 'Desktop Notifications'}<small>{perm === 'granted' ? 'On for this browser' : perm === 'denied' ? 'Blocked. Allow them in the browser settings for this site.' : perm === 'none' ? 'This browser has no notifications' : 'Allow RoarMe to show new messages'}</small></span>
+          <span className="set-text">{onPhone() ? 'Notifications' : 'Desktop Notifications'}<small>{perm === 'granted' ? 'On for this browser' : perm === 'denied' ? 'Blocked. Allow them in the browser settings for this site.' : perm === 'none' ? 'This browser has no notifications' : 'Allow the chat to show new messages'}</small></span>
           {perm === 'default' && <button type="button" className="btn btn-main btn-sm" onClick={ask}>Allow</button>}
           {perm === 'granted' && <i className="set-tick">{I.check}</i>}
         </div>
         <Switch on={p.notifyPreview} set={(v) => setPrefs({ notifyPreview: v })} hint="Off: only the name, never the text">Message Preview</Switch>
         {desk.on
-          ? <Switch on={desk.s.keepRunning} set={(v) => desk.set('keepRunning', v)} hint="Closing the window keeps RoarMe on, so messages and calls still reach you">Notifications With the App Closed</Switch>
+          ? <Switch on={desk.s.keepRunning} set={(v) => desk.set('keepRunning', v)} hint="Closing the window keeps the chat on, so messages and calls still reach you">Notifications With the App Closed</Switch>
           : <PushSwitch p={p} toast={toast} />}
       </Box>
       <Box title="Sounds">
