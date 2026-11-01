@@ -7,15 +7,11 @@ Alex Konstantinidis, film director, owner of The Mad Lions (Athens). He is not a
 - **Anything he has to paste somewhere himself goes in the reply, as a ready code block.** SQL, an Edge Function, a config value, a command: write it out in the chat, complete, nothing left to look up. Never send him to a file in the repo, a GitHub link or an attachment to copy it from, and never make him piece it together from two messages.
 - One answer, one thing to do. He is not a developer and does not hold a procedure in his head: say where to click, what to type, what to press, in that order, and leave out everything he does not need to act on.
 
-## Names for the chat (agreed with Alex, 15 Oct; since 20 Oct Hub Chat is gone and these all open RoarMe, see RoarMe below)
-- **Hub Chat, computer**: the Chat page of hub.themadlions.com from the side menu on a computer.
-- **Hub Chat, phone**: the Chat tab in the hub's bottom bar on a phone (`html:not(.chat-window)`, not `.windowed`).
-- **TML Chat**: the chat's own app on the phone's home screen (chat.html / `html.chat-window`), its own foot Chats · Calls · Notices · Settings.
-- **Chat window**: the chat opened in its own window on a computer (the + menu's pop-out), laid out like TML Chat.
-- **Chat colours**: Settings > Chat (Glass dark, Coral, Neo red…), separate from the hub's own skin.
+## Chat
+- **Hub Chat** (since 1 Nov 2026): the hub's own chat, an exact copy of RoarMe's chat. hubchat.html + hubchat/ shown at /chat by src/pages/HubChatPage.jsx (same-origin frame, hub session, hub look). Database: supabase/hub_chat.sql (roar_* tables in the hub's own database, buckets roar-files / roar-avatars / roar-walls); triggers on members/projects make the profiles, the THEMADLIONS group and one locked group per project. Calls: livekit-client + supabase/functions/roar-livekit. chat.html (TML Chat) opens it full screen; /roarme and /roarme-app redirect to /chat.
 
 ## RoarMe
-RoarMe (repository alexisdigipro-hub/roarme, Supabase project bzmjhbnwhdwmncxkqkdl) is a separate chat app. Its old copy in this database (`roar_*`, buckets `roar-files` / `roar-avatars`) was removed on 20 Oct 2026 at Alex's request. Since 20 Oct the hub is being linked to RoarMe step by step (HANDOVER.md, "Where we stopped"): members link their own RoarMe account (roarme_links, Edge Function roarme-link). Rules agreed with Alex: no RoarMe service key in the hub, only the narrow signed bridge; leaving a project must take a person out of its RoarMe chat; project tasks and calendar stay in the hub.
+RoarMe (repository alexisdigipro-hub/roarme, Supabase project bzmjhbnwhdwmncxkqkdl) is a separate public chat app with no tie to the hub since 1 Nov 2026 (roarme_drop.sql here, hub-unlink.sql there). Never link them again unless Alex asks.
 
 ## Commands
 - `npm ci` then `npm run build` must pass before every commit.
