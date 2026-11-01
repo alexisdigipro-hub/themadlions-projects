@@ -84,7 +84,7 @@ const ics = (ev, who) => {
   const z = (iso) => new Date(iso).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
   const esc = (s) => String(s || '').replace(/[\\;,]/g, (c) => `\\${c}`).replace(/\n/g, '\\n')
   const end = ev.end || new Date(new Date(ev.start).getTime() + 30 * 60e3).toISOString()
-  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//THE MAD LIONS//RoarMe//EN', 'BEGIN:VEVENT',
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//THE MAD LIONS//Hub Chat//EN', 'BEGIN:VEVENT',
     `UID:${z(ev.start)}-${Math.random().toString(36).slice(2)}@roarme`, `DTSTAMP:${z(new Date().toISOString())}`,
     `DTSTART:${z(ev.start)}`, `DTEND:${z(end)}`, `SUMMARY:${esc(ev.title)}`,
     `DESCRIPTION:${esc(`${ev.video ? 'Video' : 'Voice'} call on THEMADLIONS Chat with ${who}${ev.note ? `\n\n${ev.note}` : ''}`)}`,
