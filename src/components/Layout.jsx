@@ -136,7 +136,7 @@ export default function Layout() {
     { to: '/share', label: 'Outbox', show: mayShare, icon: 'post', badge: newReplies, also: ['/roardino'] },
     // the hub's own chat (Alex, 1 Nov 2026): RoarMe's chat copied into the hub, in the side menu and the phone's bar;
     // RoarMe itself left the hub the same day and stays an app of its own
-    { to: '/chat', label: 'Chat', show: remote, icon: 'chat' },
+    { to: '/chat', label: 'TmlChat', tabLabel: 'Chat', show: remote, icon: 'chat' }, // TmlChat in the side menu (Alex, 1 Nov); the phone's bar keeps the short Chat
     // Invoices is a tab of Finance again (Alex, 10 Oct), so /invoices lights Finance
     { to: '/finance', label: 'Finance', show: user?.role === 'admin', icon: 'finance', also: ['/invoices'] },
     // My profile is now the first tab of Settings, on every platform (Alex, 10 Oct)
@@ -227,9 +227,9 @@ export default function Layout() {
             <Fragment key={i.to}>
               {/* the app skins split the menu like their designs: the work above, you below */}
               {i.to === '/settings' && <span className="nav-section">Account</span>}
-              <NavLink to={i.to} end={i.end} className={({ isActive }) => (isActive || i.also?.some((p) => pathname.startsWith(p)) ? 'active' : '')}>
+              <NavLink to={i.to} end={i.end} title={i.label} className={({ isActive }) => (isActive || i.also?.some((p) => pathname.startsWith(p)) ? 'active' : '')}>
                 <span className="nav-ico">{Icon[i.icon]?.()}</span>
-                {i.label}
+                <span className="nav-label">{i.label}</span>
                 {i.badge > 0 && <span className="nav-badge">{i.badge}</span>}
               </NavLink>
             </Fragment>
@@ -243,7 +243,7 @@ export default function Layout() {
             </small>
           </div>
           <button
-            className="btn btn-ghost btn-sm"
+            className="btn btn-ghost btn-sm sign-out"
             onClick={() => {
               logout()
               nav('/login')
@@ -268,7 +268,7 @@ export default function Layout() {
         {tabItems.map((i) => (
           <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => (isActive || i.also?.some((p) => pathname.startsWith(p)) ? 'active' : '')}>
             <span className="tab-ico-wrap">{Icon[i.icon]?.()}{i.badge > 0 && <span className="nav-badge">{i.badge}</span>}</span>
-            {i.label}
+            {i.tabLabel || i.label}
           </NavLink>
         ))}
       </nav>

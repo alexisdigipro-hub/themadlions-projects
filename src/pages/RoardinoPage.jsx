@@ -84,6 +84,15 @@ export default function RoardinoPage({ project = '', see = false, className = ''
   // the frame waits for the move, so the old ordinos are there when it opens
   const [ready, setReady] = useState(!admin || !!state.settings?.roardinoMoved)
   const [note, setNote] = useState('')
+  // hidden until Roardino has drawn itself in the hub's look, as the Outbox frame above: no flash on the way in (Alex, 1 Nov)
+  const frame = useRef(null)
+  const [drawn, setDrawn] = useState(false)
+  useEffect(() => {
+    const on = (e) => { if (e.origin === window.location.origin && e.source === frame.current?.contentWindow && e.data?.type === 'roardino:ready') setDrawn(true) }
+    window.addEventListener('message', on)
+    const t = setTimeout(() => setDrawn(true), 4000)
+    return () => { window.removeEventListener('message', on); clearTimeout(t) }
+  }, [])
 
   useEffect(() => {
     if (ready) return
@@ -99,7 +108,7 @@ export default function RoardinoPage({ project = '', see = false, className = ''
     <>
       {note && <p className="small muted">{note}</p>}
       <div className={`roarme-page roardino-page ${className}`}>
-        {ready && <iframe className="roarme-frame" src={roardinoSrc({ project, see })} title="Roardino" allow="clipboard-write; web-share" />}
+        {ready && <iframe ref={frame} className={`roarme-frame roardino-frame${drawn ? ' on' : ''}`} src={roardinoSrc({ project, see })} title="Roardino" allow="clipboard-write; web-share" />}
       </div>
     </>
   )

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 
@@ -35,6 +35,9 @@ const ID = /^[0-9a-f-]{36}$/
 
 export default function HubChatPage({ full = false }) {
   const frame = useRef(null)
+  // the frame stays hidden until the chat wears the hub's look, then fades in: no white flash on the way in (Alex, 1 Nov)
+  const [shown, setShown] = useState(false)
+  const show = () => requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)))
   const { room: roomParam } = useParams()
   const [params] = useSearchParams()
   const c = params.get('c') || roomParam || ''
@@ -55,7 +58,7 @@ export default function HubChatPage({ full = false }) {
     const send = (msg) => frame.current?.contentWindow?.postMessage(msg, HERE)
     const onMsg = (e) => {
       if (e.origin !== HERE || !frame.current || e.source !== frame.current.contentWindow) return
-      if (e.data?.type === 'roarme:want-look') send({ type: 'roarme:hub-look', look: hubLook() })
+      if (e.data?.type === 'roarme:want-look') { send({ type: 'roarme:hub-look', look: hubLook() }); show() }
     }
     window.addEventListener('message', onMsg)
     // a tapped chat notification (public/hubchat/sw.js) while the hub is open: that chat opens in the frame
@@ -90,10 +93,10 @@ export default function HubChatPage({ full = false }) {
     <div className={`roarme-page hubchat-page${full ? ' full' : ''}`}>
       <iframe
         ref={frame}
-        className="roarme-frame"
+        className={`roarme-frame rm-chat${shown ? ' shown' : ''}`}
         src={src}
         title="Chat"
-        onLoad={() => frame.current?.contentWindow?.postMessage({ type: 'roarme:hub-look', look: hubLook() }, HERE)}
+        onLoad={() => { frame.current?.contentWindow?.postMessage({ type: 'roarme:hub-look', look: hubLook() }, HERE); setTimeout(() => setShown(true), 1200) }}
         allow="camera; microphone; display-capture; clipboard-read; clipboard-write; fullscreen; autoplay"
       />
     </div>

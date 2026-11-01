@@ -18,6 +18,12 @@
       html, body { margin: 0; height: 100%; background: transparent; }
       .splash { position: fixed; inset: 0; display: grid; place-items: center; }
     </style>
+    <script>
+      /* dark or light from the first frame, as the look kept from last time: a frame whose colour scheme differs from
+         the hub's is painted opaque (white) by the browser until the look arrives (Alex, 1 Nov: no white flash).
+         hubLook.js writeLook takes this off once the look's own sheet is on. */
+      try { var l = JSON.parse(localStorage.getItem('hubchat-hub-look') || 'null'); document.documentElement.style.colorScheme = l && l.light ? 'light' : 'dark' } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"><div class="splash"></div></div>
