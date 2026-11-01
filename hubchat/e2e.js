@@ -48,7 +48,7 @@ const idbDo = async (mode, fn) => {
 
 const deviceLabel = () => {
   const ua = navigator.userAgent
-  const where = /Electron\//.test(ua) ? 'RoarMe app' : /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser'
+  const where = /Electron\//.test(ua) ? 'Desktop app' : /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser'
   const os = /iPhone|iPad/.test(ua) ? 'iPhone' : /Android/.test(ua) ? 'Android' : /Mac/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : ''
   return [where, os].filter(Boolean).join(' on ')
 }

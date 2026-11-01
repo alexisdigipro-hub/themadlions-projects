@@ -99,7 +99,7 @@ export default function Profile({ mine = false, embedded = false }) {
             See what {(person.name || '').split(' ')[0] || 'they'} sees
           </Button>
         )}
-        {/* Message / Call / Video call went with Hub Chat (Alex, 20 Oct): the team talks in RoarMe */}
+        {/* Message / Call / Video call went with the old Hub Chat (Alex, 20 Oct); the team's chat is the side menu's Chat */}
         {editable && <Button variant="primary" onClick={save} disabled={busy}>Save profile</Button>}
       </PageHead>}
 

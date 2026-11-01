@@ -13,7 +13,6 @@ import { pcloudTarget } from '../../lib/pcloud.js'
 import { needsEncoding, toMp3 } from '../../lib/mp3.js'
 import { useAudioChoice } from '../../components/AudioChoice.jsx'
 import { remote } from '../../lib/supabase.js'
-import ProjectRoarMe from '../../components/ProjectRoarMe.jsx'
 import Tasks, { tasksFor } from './Tasks.jsx'
 import Notes from './Notes.jsx'
 import Script from './Script.jsx'
@@ -238,7 +237,6 @@ export default function Overview() {
   // Each one keeps quiet until it has something in it, and its button lives in one row up here
   // instead. Pressing a button bumps a counter the panel watches, so it opens its own form.
   const [pillSlot, setPillSlot] = useState(null) // where the Project Database puts its add pills
-  const [roarmeOpen, setRoarmeOpen] = useState(false)
   // the project's title row and the whole progress stay at the top while the page scrolls under them (Alex, 29 Oct:
   // "ALL of this fixed"), on a computer (styles.css): the progress sits right under the title row (--proj-top-h), and
   // once the page has moved the title row gets its glass band (.ov-scrolled) and the progress a shadow (.stuck)
@@ -311,7 +309,7 @@ export default function Overview() {
                 <strong className="progress-pct">{pct}%<small> done</small></strong> <span className="muted small progress-sub">{[project.status === 'Delivered' && ['Delivered'], project.frozen && ['🔒 locked'], project.startDate && [`shoot ${fmtDate(project.startDate)}`, 'progress-shoot']].filter(Boolean).map(([x, c]) => <span key={x} className={c}>{x}</span>)}</span>
               </span>
               {/* the project's few actions, always in the same place (Alex, 28 Oct: "I was looking for Edit"):
-                  + Add (everything that can be added, in groups), Edit, and ⋯ for Duplicate, Lock and the RoarMe group */}
+                  + Add (everything that can be added, in groups), Edit, and ⋯ for Duplicate and Lock */}
               <span className="ov-acts">
                 {(adds.length > 0 || sections.includes('people')) && (
                   <span className="ov-menu-wrap">
@@ -341,14 +339,13 @@ export default function Overview() {
                 {canEdit('projects') && <button type="button" className="add-pill ov-edit" onClick={() => setDraft({ ...project })}>{ADD_ICONS.edit}<span>Edit</span></button>}
                 {(can(user, 'projects', 'edit') || user?.role === 'admin') && (
                   <span className="ov-menu-wrap">
-                    <button type="button" className={`ov-round${menu === 'more' ? ' on' : ''}`} onClick={() => setMenu(menu === 'more' ? '' : 'more')} aria-label="More" title="Duplicate, Lock, RoarMe group">{ADD_ICONS.more}</button>
+                    <button type="button" className={`ov-round${menu === 'more' ? ' on' : ''}`} onClick={() => setMenu(menu === 'more' ? '' : 'more')} aria-label="More" title="Duplicate, Lock">{ADD_ICONS.more}</button>
                     {menu === 'more' && (
                       <>
                         <span className="ab-export-shade" onClick={() => setMenu('')} />
                         <div className="ov-menu ov-menu-more">
                           {can(user, 'projects', 'edit') && <button type="button" className="ov-menu-row" disabled={duping} onClick={() => { setMenu(''); duplicate() }}>{ADD_ICONS.duplicate}<span><b>{duping ? 'Copying…' : 'Duplicate'}</b><small>A copy of this project to start from</small></span></button>}
                           {user?.role === 'admin' && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); edit((p) => { p.frozen = !p.frozen }); toast(project.frozen ? 'Project unlocked, the team can edit again' : 'Project locked: only administrators can change it now', 'ok') }}>{project.frozen ? ADD_ICONS.unlock : ADD_ICONS.lock}<span><b>{project.frozen ? 'Unlock project' : 'Lock project'}</b><small>{project.frozen ? 'The team can edit it again' : 'Only administrators can change it'}</small></span></button>}
-                          {remote && user?.role === 'admin' && <button type="button" className="ov-menu-row" onClick={() => { setMenu(''); setRoarmeOpen(true) }}>{ADD_ICONS.chat}<span><b>RoarMe group</b><small>The project's chat in RoarMe</small></span></button>}
                         </div>
                       </>
                     )}
@@ -414,9 +411,6 @@ export default function Overview() {
           <span className="ordino-btn-go" aria-hidden="true">›</span>
         </button>
       )}
-      <Modal open={roarmeOpen} title="RoarMe group" onClose={() => setRoarmeOpen(false)}>
-        {roarmeOpen && <ProjectRoarMe projectId={project.id} />}
-      </Modal>
       <Modal open={ordinoOpen} title="Ordino" onClose={() => setOrdinoOpen(false)}>
         {ordinoOpen && <RoardinoPage project={project.id} see className="in-modal" />}
       </Modal>

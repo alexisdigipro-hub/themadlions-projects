@@ -4,8 +4,6 @@ import Layout from './components/Layout.jsx'
 import { ToastProvider } from './components/ui.jsx'
 import { StoreProvider, can, useCurrentUser, useStore } from './lib/store.jsx'
 import Login from './pages/Login.jsx'
-import RoarMeSignin, { pendingRoarMeSignin } from './pages/RoarMeSignin.jsx'
-import { isRoarMeApp } from './lib/roarmeApp.js'
 import Project, { useProject } from './pages/Project.jsx'
 
 // Each page is its own file, fetched the first time it is opened, so opening the app downloads
@@ -35,8 +33,6 @@ const Overview = lazyPage(() => import('./pages/project/Overview.jsx'))
 const Schedule = lazyPage(() => import('./pages/project/Schedule.jsx'))
 const Whiteboard = lazyPage(() => import('./pages/project/Whiteboard.jsx'))
 const Database = lazyPage(() => import('./pages/Database.jsx'))
-const RoarMePage = lazyPage(() => import('./pages/RoarMePage.jsx'))
-const RoarMeApp = lazyPage(() => import('./pages/RoarMeApp.jsx'))
 // the hub's own chat (Alex, 1 Nov 2026): RoarMe's chat copied into the hub (hubchat/), shown in a frame
 const HubChatPage = lazyPage(() => import('./pages/HubChatPage.jsx'))
 // the chat alone in a window of its own (the ⧉ button on the chat list), no side menu
@@ -73,17 +69,13 @@ function RequireUser() {
   const user = useCurrentUser()
   const { ready } = useStore()
   if (!ready) return <Loading />
-  // signed in on the way to RoarMe ("Sign in with THEMADLIONS Hub"): carry on there (pages/RoarMeSignin.jsx)
-  if (user && pendingRoarMeSignin()) return <Navigate to="/roarme-signin" replace />
   return user ? <Outlet /> : <Navigate to="/login" replace />
 }
 
 // The project's own Chat tab is gone (its room already lives in the sidebar's Chat), but an old
 // link should still land on that same room rather than a dead page.
 function ProjectChatRedirect() {
-  const { project } = useProject()
-  // Hub Chat is gone (Alex, 20 Oct): the project's chat is its RoarMe group
-  return <Navigate to="/roarme" replace />
+  return <Navigate to="/chat" replace />
 }
 
 function LoginGate() {
@@ -91,8 +83,7 @@ function LoginGate() {
   const { ready } = useStore()
   if (!ready) return <Loading />
   // TML Chat (chat.html) signs in on its own on an iPhone, and must land back on the chat, not on Home
-  // so does RoarMe on its own (roarme/index.html, Alex 20 Oct): back to RoarMe once signed in
-  const home = /chat\.html$/.test(window.location.pathname) ? '/chat-window' : isRoarMeApp() ? '/roarme-app' : '/'
+  const home = /chat\.html$/.test(window.location.pathname) ? '/chat-window' : '/'
   return user ? <Navigate to={home} replace /> : <Login />
 }
 
@@ -151,7 +142,8 @@ export default function App() {
           <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/login" element={<LoginGate />} />
-            <Route path="/roarme-signin" element={<RoarMeSignin />} />
+            {/* RoarMe left the hub (Alex, 1 Nov 2026): its old sign-in address lands on Home, /roarme and /roarme-app on Chat */}
+            <Route path="/roarme-signin" element={<Navigate to="/" replace />} />
             {/* the old ordino links stopped when Roardino took the ordino over (Alex, 23 Oct); Roardino's own crew
                 links come as go.themadlions.com/?o/<token> and open its page */}
             <Route path="/s/:token" element={<OldOrdinoLink />} />
@@ -165,11 +157,10 @@ export default function App() {
             {/* a note opened from its link (Alex, 10 Oct) */}
             <Route path="/n/:token" element={<PublicNote />} />
             <Route element={<RequireUser />}>
-              {/* TML Chat and the chat window (Alex, 20 Oct): RoarMe on the whole screen */}
-              <Route path="chat-window" element={<RoarMePage full />} />
-              <Route path="chat-window/:room" element={<RoarMePage full />} />
-              {/* RoarMe as its own app (roarme/index.html, Alex 20 Oct): RoarMe on the whole screen, no hub bar */}
-              <Route path="roarme-app" element={<RoarMeApp />} />
+              {/* TML Chat (chat.html) and the chat window: the hub's chat on the whole screen */}
+              <Route path="chat-window" element={<HubChatPage full />} />
+              <Route path="chat-window/:room" element={<HubChatPage full />} />
+              <Route path="roarme-app" element={<Navigate to="/chat" replace />} />
               <Route element={<Layout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="calendar" element={<CalendarAll />} />
@@ -177,7 +168,8 @@ export default function App() {
                 {/* the hub's own chat again (Alex, 1 Nov 2026): RoarMe's chat copied into the hub, on the hub's database */}
                 <Route path="chat" element={<HubChatPage />} />
                 <Route path="chat/:room" element={<HubChatPage />} />
-                <Route path="roarme" element={<RoarMePage />} />
+                <Route path="roarme" element={<Navigate to="/chat" replace />} />
+                <Route path="roarme/*" element={<Navigate to="/chat" replace />} />
                 {/* only for whom the administrator opens them (Alex, 27 Oct) */}
                 <Route path="roardino" element={<OnlyWith k="roardino"><RoardinoRoute /></OnlyWith>} />
                 <Route path="roarlist" element={<OnlyWith k="roarlist"><OfficeHub /></OnlyWith>} />

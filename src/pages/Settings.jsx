@@ -11,7 +11,6 @@ import { authorizeUrl as gcalAuthorizeUrl, clearOauthCode, gcalCalendars, gcalCo
 import { FEED_COLOR, feedsAreOff, feedsOf, fetchFeedText, parseIcs } from '../lib/ical.js'
 import Team from './Team.jsx'
 import Profile from './Profile.jsx'
-import RoarMeLink from '../components/RoarMeLink.jsx'
 import { useNavigate } from 'react-router-dom'
 import { applyFont, currentFont } from '../lib/fonts.js'
 import FontPicker from '../components/FontPicker.jsx'
@@ -562,8 +561,6 @@ export default function Settings() {
       {tab === 'profile' && (
         <>
           <Profile mine embedded />
-          {/* each member links their own RoarMe account (Alex, 20 Oct: the chat moves onto RoarMe, step by step) */}
-          <RoarMeLink />
           {/* on a phone there is no side menu any more, so signing out lives here too */}
           <div className="row-actions settings-signout"><Button variant="ghost" onClick={() => { logout(); nav('/login') }}>Sign out</Button></div>
         </>

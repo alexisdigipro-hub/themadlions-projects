@@ -7,8 +7,8 @@ import { supabase } from '../lib/supabase.js'
    sign-in and is signed in with no click; nothing is handed over but the hub's look. Its styles stay in its own page,
    apart from the hub's.
 
-   The look: the hub's colours, light or dark, backdrop and typeface, read off this page and sent to the frame as
-   RoarMePage.jsx sends them to RoarMe (the same 'roarme:hub-look' message), again whenever they change. Only the frame
+   The look: the hub's colours, light or dark, backdrop and typeface, read off this page and sent to the frame
+   (the 'roarme:hub-look' message, a name kept from the copied code), again whenever they change. Only the frame
    on this same address hears them, and only messages from it are answered. A chat to open (#/chat?c=<chat>, or a
    message link #/chat?m=<chat>/<message>) goes to the frame in its address. */
 

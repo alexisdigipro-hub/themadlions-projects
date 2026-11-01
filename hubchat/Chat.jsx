@@ -1444,7 +1444,7 @@ const FAV_STAR = svg(<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.
 const EDGE = 64 // px from either side of the screen where a slide on a chat opens its buttons
 const ROW_W = 156 // how far a chat slides open to show its two buttons
 const REORDER = svg(<><rect x="3" y="4" width="18" height="6" rx="2" /><path d="M5 15v4M12 15v4M19 15v4M3.5 15h17" /></>, 16)
-const OFFICIAL = <i className="official" title="Official RoarMe account" aria-label="Official">{svg(<><path d="M12 2.5l2.4 1.8 3-.1.9 2.8 2.4 1.8-.9 2.8.9 2.8-2.4 1.8-.9 2.8-3-.1L12 21.5l-2.4-1.8-3 .1-.9-2.8L3.3 15.2l.9-2.8-.9-2.8 2.4-1.8.9-2.8 3 .1z" fill="currentColor" stroke="none" /><path d="M8.5 12.2l2.3 2.3 4.7-4.8" stroke="#fff" strokeWidth="2.2" /></>, 15)}</i>
+const OFFICIAL = <i className="official" title="Official account" aria-label="Official">{svg(<><path d="M12 2.5l2.4 1.8 3-.1.9 2.8 2.4 1.8-.9 2.8.9 2.8-2.4 1.8-.9 2.8-3-.1L12 21.5l-2.4-1.8-3 .1-.9-2.8L3.3 15.2l.9-2.8-.9-2.8 2.4-1.8.9-2.8 3 .1z" fill="currentColor" stroke="none" /><path d="M8.5 12.2l2.3 2.3 4.7-4.8" stroke="#fff" strokeWidth="2.2" /></>, 15)}</i>
 
 const Room = memo(function Room({ room, me, people, title, other, official = false, listen, onRead, onInfo, onBack, rooms, titleOf, toast, jump, onJumped, prefs, clearedAt, onAct, onNewGroup, blocked, onUnblock, onCall, onTasks, tasksCount = 0, roles = [] }) {
   const [rawMsgs, setMsgs] = useState([])
@@ -2140,7 +2140,7 @@ const Room = memo(function Room({ room, me, people, title, other, official = fal
       if (wait <= 0 || wait > 864e5) return null
       return setTimeout(() => {
         toast(`Starting now: ${m.file.event.title}`)
-        try { if (typeof Notification !== 'undefined' && Notification.permission === 'granted') new Notification('RoarMe', { body: `Starting now: ${m.file.event.title}` }) } catch { /* not allowed here */ }
+        try { if (typeof Notification !== 'undefined' && Notification.permission === 'granted') new Notification('Chat', { body: `Starting now: ${m.file.event.title}` }) } catch { /* not allowed here */ }
       }, wait)
     }).filter(Boolean)
     return () => timers.forEach(clearTimeout)
@@ -2648,7 +2648,7 @@ const Room = memo(function Room({ room, me, people, title, other, official = fal
         <Modal title="Encrypted Chat" onClose={() => setSealAsk(null)}
           foot={<><button type="button" className="btn" onClick={() => setSealAsk(null)}>Cancel</button><button type="button" className="btn btn-main" disabled={!!sealAsk.busy || sealAsk.missing === null} onClick={turnOn}>{I.lock}<span>{sealAsk.busy ? 'Turning on…' : 'Turn on'}</span></button></>}>
           <div className="inst">
-            <p className="inst-lead">End-to-end encryption for this chat. While it is on, what is written is locked on the device before it is sent, and only the devices of the people in this chat can open it. Not even RoarMe's server can read it.</p>
+            <p className="inst-lead">End-to-end encryption for this chat. While it is on, what is written is locked on the device before it is sent, and only the devices of the people in this chat can open it. Not even the server can read it.</p>
             <ul className="inst-steps">
               <li><i>{I.unlock}</i><span><b>On for a while</b><small>Turn it off whenever you like and the chat goes back to normal. What was sent while it was on stays locked.</small></span></li>
               <li><i>{I.devices}</i><span><b>These devices only</b><small>The computers, phones and browsers each of you uses now. A device added later cannot read these messages.</small></span></li>
