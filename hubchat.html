@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en" data-theme="hub">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1f2328" />
+    <meta name="robots" content="noindex" />
+    <!-- The hub's chat (Alex, 1 Nov 2026): RoarMe's chat copied into the hub, on the hub's database and sign-in.
+         A page of its own so its styles never meet the hub's; the hub's Chat page (src/pages/HubChatPage.jsx) shows it
+         in a frame on the same address, where it reads the hub's saved sign-in. Code in hubchat/. -->
+    <title>Chat · THEMADLIONS</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- the themes' fonts and Jost for the wordmark, without holding up the first paint -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Jost:wght@100..900&family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <style>
+      html, body { margin: 0; height: 100%; background: transparent; }
+      .splash { position: fixed; inset: 0; display: grid; place-items: center; }
+    </style>
+  </head>
+  <body>
+    <div id="root"><div class="splash"></div></div>
+    <script type="module" src="/hubchat/main.jsx"></script>
+  </body>
+</html>
