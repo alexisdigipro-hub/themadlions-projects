@@ -47,6 +47,7 @@ function writeLook(l) {
   let tag = document.getElementById('roar-hub-look')
   if (!tag) { tag = document.createElement('style'); tag.id = 'roar-hub-look'; document.head.append(tag) }
   tag.textContent = css
+  document.documentElement.style.removeProperty('color-scheme') // hubchat.html's first-frame guess; the sheet decides now
   ;(Array.isArray(l.fonts) ? l.fonts : []).slice(0, 4).forEach((href) => {
     if (!FONT_CSS.test(String(href)) || document.querySelector(`link[href="${CSS.escape(href)}"]`)) return
     document.head.append(Object.assign(document.createElement('link'), { rel: 'stylesheet', href }))

@@ -8058,6 +8058,8 @@ html[data-theme] body .rem-tasks > .rem-task.tinted, .rem-task.tinted { backgrou
 /* A page that is a whole app in a frame (since 20 Oct; now the hub's Chat, Roardino and RoarList), filling the page in a soft rounded frame */
 .roarme-page { height: calc(100dvh - 48px); min-height: 480px; border-radius: 18px; overflow: hidden; background: transparent; } /* RoarMe wears the hub's look (RoarMePage.jsx hubLook) and is see-through, so the hub's backdrop shows behind it (Alex, 27 Oct) */
 .roarme-frame { display: block; width: 100%; height: 100%; border: 0; }
+.roarme-frame.rm-chat { opacity: 0; transition: opacity .22s ease; }
+.roarme-frame.rm-chat.shown { opacity: 1; } /* HubChatPage.jsx shows it once the chat wears the hub's look: no white flash (Alex, 1 Nov) */
 /* on a computer the page around RoarMe never scrolls (Alex, 23 Oct: "no scroll, it must not move"): the content column is
    exactly the window's height and RoarMe fills what its padding leaves, whatever padding the skin gives it */
 @media (min-width: 821px) {
@@ -9596,3 +9598,28 @@ html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .toast { backgr
 .island-mode button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; border: 0; border-radius: 999px; background: none; color: inherit; font: inherit; font-size: 12.5px; font-weight: 600; opacity: .62; cursor: pointer; transition: background .2s, opacity .2s; }
 .island-mode button:hover { opacity: 1; }
 .island-mode button.on { opacity: 1; background: rgba(255, 255, 255, .16); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12); }
+
+
+/* ---------- Tablet held upright (Alex, 1 Nov: "on tablets only, the side menu a thin column of icons so the pages show
+   whole; turned sideways it can be the normal one") ----------
+   A touch screen between a phone and a computer, held upright: the side menu is a slim column of icons (the name shows
+   on a long press as the link's title), the page takes the rest. Sideways, and on every computer, nothing changes; a
+   phone (820px and under) keeps its own layout. */
+@media (min-width: 821px) and (max-width: 1199px) and (orientation: portrait) and (hover: none) and (pointer: coarse) {
+  html[data-theme][data-theme] body .shell { grid-template-columns: 88px minmax(0, 1fr); }
+  html[data-theme][data-theme] body .shell .sidebar { min-width: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; }
+  html[data-theme][data-theme] body .shell .sidebar::-webkit-scrollbar { display: none; }
+  html[data-theme][data-theme] body .shell .sidebar-logo { padding: 18px 0 10px; display: flex; justify-content: center; }
+  html[data-theme][data-theme] body .shell .sidebar-logo .logo { justify-content: center; }
+  html[data-theme][data-theme] body .shell .sidebar-logo .logo-text { display: none; }
+  html[data-theme][data-theme] body .shell .sidenav { padding: 8px; gap: 6px; align-items: stretch; }
+  html[data-theme][data-theme] body .shell .nav-section { display: none; }
+  html[data-theme][data-theme] body .shell .sidenav a { position: relative; justify-content: center; gap: 0; padding: 0; height: 52px; border-radius: 16px; }
+  html[data-theme][data-theme] body .shell .sidenav a .nav-ico { width: 22px; height: 22px; }
+  html[data-theme][data-theme] body .shell .sidenav a .nav-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  html[data-theme][data-theme] body .shell .sidenav a .nav-badge { position: absolute; top: 6px; right: 6px; margin: 0; min-width: 18px; height: 18px; padding: 0 5px; font-size: 11px; }
+  html[data-theme][data-theme] body .shell .sidebar-foot { padding: 10px 6px 14px; align-items: center; }
+  html[data-theme][data-theme] body .shell .sidebar-foot .user-chip { display: none; }
+  html[data-theme][data-theme] body .shell .sidebar-foot .sign-out { padding: 6px 8px; font-size: 11.5px; line-height: 1.15; white-space: normal; text-align: center; }
+  html[data-theme][data-theme] body .shell .content { padding: 24px 22px 60px; }
+}

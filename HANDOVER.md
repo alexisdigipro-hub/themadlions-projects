@@ -37,6 +37,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (1 Nov 2026, late: Chat opens with no white flash; TmlChat; tablets upright)
+- Alex: "when I'm on Home and press Chat, a white light fills the page, then it opens". Hub Chat's frame showed before it wore the hub's look (a browser paints a frame opaque while its colour scheme differs from the page's). Now src/pages/HubChatPage.jsx keeps the frame hidden (.rm-chat) until the chat asks for the look, then fades it in (1.2 s after load at the latest), and hubchat.html sets dark or light from the kept look (hubchat-hub-look) on the first frame; hubchat/hubLook.js writeLook takes that guess off. Roardino inside a project (RoardinoPage.jsx) got the fade the Outbox one already had.
+- The side menu's Chat is called **TmlChat** (Alex, 1 Nov); the phone's bar keeps "Chat" (Layout.jsx tabLabel).
+- **Tablet held upright** (Alex, 1 Nov): the side menu is a slim column of icons (88px; names in .nav-label, hidden, shown as the link's title; Account heading and user chip hidden; Sign out small), so the page has the width. Block at the end of styles.css: 821 to 1199px wide, portrait, touch only (hover: none, pointer: coarse). Sideways and on computers nothing changes; iPads under 821px upright (iPad mini, iPad 10th gen at 820) keep the phone layout.
+- Nothing for Alex to run.
+
 ## Where we stopped (1 Nov 2026, evening: RoarMe and the hub fully apart, everything cleaned)
 - **Hub database:** Alex ran supabase/roarme_drop.sql: no roarme_* table, trigger or function is left. Hub Chat (supabase/hub_chat.sql) is untouched and working.
 - **RoarMe database:** Alex ran roarme/supabase/hub-unlink.sql: no roar_hub_* function or table is left, former project groups are plain groups with admins. RoarMe accounts and chats stay.
