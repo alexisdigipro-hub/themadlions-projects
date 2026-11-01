@@ -15,11 +15,9 @@ const ICE = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.
 const RING_FOR = 45000
 
 // a pass into this call's LiveKit room, or null when LiveKit is not set up (then the call goes straight).
-// TODO: LiveKit needs Alex's OK to add livekit-client and the roar-livekit Edge Function in the hub's Supabase.
-// Until then the hub's chat never asks for a pass: every call goes the direct way (WebRTC, ringing over Realtime).
-const LIVEKIT = false
+// LiveKit in the hub (Alex, 1 Nov): livekit-client and the Edge Function roar-livekit (supabase/functions/roar-livekit);
+// until its LIVEKIT_* secrets are set it answers 503 and the call goes the direct way (WebRTC, ringing over Realtime).
 async function livekitPass(callId) {
-  if (!LIVEKIT) return null
   const { data, error } = await supabase.functions.invoke('roar-livekit', { body: { callId } })
   if (!error && data?.token) return data
   if (error?.context?.status === 503 || error?.context?.status === 404) return null
@@ -125,7 +123,7 @@ export function useCalls({ me, people, loadPeople, toast }) {
   }
   // through LiveKit: into the call's room, my microphone (and camera) out, the other person's sound and picture in
   const joinRoom = async (pass, s) => {
-    const { Room, RoomEvent, Track } = await import('./livekit.js').then((m) => m.loadLiveKit())
+    const { Room, RoomEvent, Track } = await import('livekit-client')
     const r = new Room({ adaptiveStream: false, dynacast: true })
     room.current = r
     const tracks = new Map()
