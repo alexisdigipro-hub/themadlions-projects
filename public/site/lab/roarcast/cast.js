@@ -1,4 +1,4 @@
-// RoarJingle (Alex, 1 Nov 2026): jingle player and show planner in the browser.
+// RoarCast (Alex, 1 Nov 2026; RoarJingle for its first day, renamed 2 Nov): jingle player and show planner in the browser.
 // Banks of 5 columns x 60 pads (300 a bank), up to 8 sounds at once, second touch (stop, fade, restart, pause, again),
 // fade in/out, start modes (overlap, column, solo, crossfade), loops with in/out points (a tap plays the outro), trims,
 // ducking, five column faders + master + mic + voice tracks, the microphone with talk-over, voice tracks recorded into
@@ -55,7 +55,7 @@ const stamp = () => { const d = new Date(), p = n => String(n).padStart(2, '0');
 let dbp
 function db() {
   return dbp ||= new Promise((res, rej) => {
-    const r = indexedDB.open('roarjingle', 1)
+    const r = indexedDB.open('roarjingle', 1) // the name it was born with (RoarJingle until 2 Nov), kept so nothing saved is lost
     r.onupgradeneeded = () => { r.result.createObjectStore('kv'); r.result.createObjectStore('files') }
     r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error)
   })
@@ -295,7 +295,7 @@ function toggleRec() {
   mr.onstop = () => {
     const type = mr.mimeType || mime || 'audio/webm'
     const blob = new Blob(chunks, { type })
-    download(blob, `${S.show.title || 'RoarJingle'} ${stamp()}.${extOf(type)}`)
+    download(blob, `${S.show.title || 'RoarCast'} ${stamp()}.${extOf(type)}`)
     rec = null; renderTop(); toast('Recording saved to your downloads')
   }
   mr.start(1000)
@@ -818,7 +818,7 @@ function logPanel() {
 function exportLog() {
   const rows = [['Date', 'Time', 'Title', 'Where', 'Played (s)']]
   for (const r of S.log) { const d = new Date(r.t); rows.push([d.toLocaleDateString(), clockOf(r.t), r.name, r.where, r.played ?? '']) }
-  download(new Blob([csv(rows)], { type: 'text/csv' }), `RoarJingle log ${stamp()}.csv`)
+  download(new Blob([csv(rows)], { type: 'text/csv' }), `RoarCast log ${stamp()}.csv`)
 }
 
 /* pad panel */
@@ -997,7 +997,7 @@ function jinglePicker() {
 function settingsWindow() {
   const theme = document.documentElement.dataset.theme || 'dark'
   const body = h('div', { class: 'sec' },
-    box(row('Look', seg([['dark', 'Dark'], ['light', 'Light']], theme, v => { document.documentElement.dataset.theme = v; try { localStorage.setItem('rj_theme', v) } catch (e) {} })),
+    box(row('Look', seg([['dark', 'Dark'], ['light', 'Light']], theme, v => { document.documentElement.dataset.theme = v; try { localStorage.setItem('rc_theme', v) } catch (e) {} })),
       row('At once', seg([[4, '4'], [6, '6'], [8, '8'], [12, '12'], [16, '16']].map(([a, b]) => [a, b]), S.set.maxVoices, v => { S.set.maxVoices = v; save() })),
       row('Crossfade', ...slider(0.2, 8, 0.1, S.set.xfade, v => { S.set.xfade = v; save() }, fmt1)),
       row('Fade all', ...slider(0.2, 10, 0.1, S.set.fadeAll, v => { S.set.fadeAll = v; save() }, fmt1)),
@@ -1023,12 +1023,12 @@ async function exportBackup() {
   toast('Packing your board…')
   const files = {}
   for (const k of await dbKeys('files')) { const blob = await dbGet('files', k); if (blob) files[k] = await b64(blob) }
-  download(new Blob([JSON.stringify({ app: 'roarjingle', v: 1, state: S, files })], { type: 'application/json' }), `RoarJingle backup ${stamp()}.roarjingle`)
+  download(new Blob([JSON.stringify({ app: 'roarcast', v: 1, state: S, files })], { type: 'application/json' }), `RoarCast backup ${stamp()}.roarcast`)
 }
 async function importBackup(f) {
   try {
     const j = JSON.parse(await f.text())
-    if (j.app !== 'roarjingle') throw new Error('This is not a RoarJingle backup')
+    if (j.app !== 'roarcast' && j.app !== 'roarjingle') throw new Error('This is not a RoarCast backup')
     if (!confirm('Restore this backup? It replaces the board, the shows and the log on this device.')) return
     stopAll()
     for (const k of await dbKeys('files')) await dbDel('files', k)
@@ -1119,7 +1119,7 @@ async function boot() {
   renderAll()
   requestAnimationFrame(tick)
   // browsers start sound only after a touch: one tap to begin
-  const st = h('div', { class: 'start' }, h('div', { class: 'sheet-card' }, h('div', { class: 'wm' }, h('span', null, 'ROAR'), h('b', null, 'JINGLE')),
+  const st = h('div', { class: 'start' }, h('div', { class: 'sheet-card' }, h('div', { class: 'wm' }, h('span', null, 'ROAR'), h('b', null, 'CAST')),
     h('div', { class: 'hint', style: 'font-size:14px' }, 'Jingles, beds and effects on pads, the show planned to the second, your voice on air and the whole show recorded.'),
     h('button', { class: 'pill main', style: 'height:44px;padding:0 26px;font-size:15px', onclick: async () => {
       ensureCtx(); st.remove()
