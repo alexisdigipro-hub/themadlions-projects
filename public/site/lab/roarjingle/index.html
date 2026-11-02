@@ -1,51 +1,7 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<!-- RoarJingle (Alex, 1 Nov 2026): a jingle player and show planner for radio, podcasts and live sound, in the browser.
-     Pads in banks, up to 8 at once, second touch, fades, crossfade, loops with in/out points, ducking, five faders,
-     a microphone with talk-over, voice tracks, the show arranger, the played log, recording the whole show to a file,
-     keys and MIDI. Plain HTML, CSS and one ES module; everything stays in this browser (IndexedDB). -->
-<title>RoarJingle · The Mad Lions Lab</title>
-<meta name="description" content="RoarJingle: a jingle player and show planner for radio, podcasts and live sound. Banks of pads, fades, loops, ducking, five faders, a microphone, voice tracks, the show arranger and recording, in your browser.">
-<meta name="theme-color" content="#1b1e23">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="RoarJingle">
-<link rel="canonical" href="https://themadlions.com/lab/roarjingle/">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="jingle.css">
-<script>try { var t = localStorage.getItem('rj_theme'); if (t) document.documentElement.dataset.theme = t } catch (e) {}</script>
-</head>
-<body>
-<div id="app">
-  <header class="top">
-    <div class="wm" title="RoarJingle"><span>ROAR</span><b>JINGLE</b></div>
-    <nav class="banks" id="banks"></nav>
-    <div class="top-mid">
-      <div class="transport" id="transport"></div>
-    </div>
-    <div class="top-right" id="topRight"></div>
-  </header>
-  <main class="body">
-    <section class="board col" id="board">
-      <div class="cols" id="cols"></div>
-      <div class="playing" id="playing"></div>
-    </section>
-    <aside class="panel col" id="panel">
-      <div class="tabs" id="tabs"></div>
-      <div class="panel-body" id="panelBody"></div>
-    </aside>
-  </main>
-</div>
-<div id="overlay"></div>
-<div id="toast"></div>
-<input type="file" id="filePick" accept="audio/*,.mp3,.m4a,.aac,.wav,.aif,.aiff,.ogg,.flac,.webm,.mp4" multiple hidden>
-<input type="file" id="backupPick" accept=".roarjingle,.json,application/json" hidden>
-<script type="module" src="jingle.js"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="UTF-8"><title>RoarCast</title>
+<!-- RoarJingle is RoarCast since 2 Nov 2026 (Alex): the old link goes on to the new one. -->
+<link rel="canonical" href="https://themadlions.com/lab/roarcast/">
+<meta http-equiv="refresh" content="0; url=../roarcast/">
+<script>location.replace('../roarcast/' + location.search + location.hash)</script>
+</head><body><a href="../roarcast/">RoarCast</a></body></html>
