@@ -81,6 +81,7 @@ const APPS = [
           'Setting up an account: only the domain of your address (for example example.com) is looked up in Thunderbird\'s public server list (autoconfig.thunderbird.net) and at your domain.',
           'Sender pictures (on unless you turn them off in Settings > Appearance, and off in Privacy mode): for a person, a scrambled code of their address (MD5) goes to Gravatar; for a company, its domain goes to Google\'s and DuckDuckGo\'s icon services. The pictures are kept on your computer.',
           'Pictures inside messages load only when you allow them, per message or per sender; tracking pixels stay blocked either way. Unsubscribe in one click contacts the sender only after you confirm.',
+          'The shared spam list (on unless you turn it off in Settings > Privacy): when you block a sender, a name or a domain, only a one-way fingerprint of it (SHA-256) goes to our RoarMe project, with a fingerprint of a random id of your copy of RoarMail; never the address itself, your mail or your account. A fingerprint counts for everyone only when at least 3 different copies blocked it (a name: 5). RoarMail downloads the list every few hours and moves matching new mail to Junk, never mail from people you have written to. Unblock takes your fingerprint back; reports older than a year stop counting.',
           updates('roarmail').en,
         ]],
         ['With your RoarMe account (only if you sign in)', [
@@ -88,7 +89,7 @@ const APPS = [
           'A large attachment sent as a link goes to RoarTransfer (Cloudflare R2) for the days shown, and is deleted after.',
           'These follow the RoarMe and RoarTransfer privacy policies.',
         ]],
-        ['What we do not do', ['No analytics, no trackers, no ads, no AI on your mail. Nothing is sold or shared.']],
+        ['What we do not do', ['No analytics, no trackers, no ads, no AI on your mail. Nothing is sold, and nothing is shared beyond the fingerprints above.']],
       ],
       el: [
         ['Με λίγα λόγια', ['Το RoarMail μιλά με τους mail servers σου κατευθείαν από τον υπολογιστή σου. Δεν υπάρχει δικός μας server ανάμεσα: δεν βλέπουμε ποτέ τα email, τις επαφές ή τους κωδικούς σου.']],
@@ -102,6 +103,7 @@ const APPS = [
           'Στη ρύθμιση λογαριασμού: μόνο το domain της διεύθυνσής σου (π.χ. example.com) ψάχνεται στη δημόσια λίστα servers του Thunderbird (autoconfig.thunderbird.net) και στο ίδιο το domain.',
           'Εικόνες αποστολέων (ανοιχτό, εκτός αν το κλείσεις στις Ρυθμίσεις > Εμφάνιση, και κλειστό στη Λειτουργία απορρήτου): για ένα πρόσωπο, ένας κρυπτογραφημένος κωδικός της διεύθυνσης (MD5) πάει στο Gravatar· για μια εταιρεία, το domain της πάει στις υπηρεσίες εικονιδίων της Google και του DuckDuckGo. Οι εικόνες φυλάσσονται στον υπολογιστή σου.',
           'Οι εικόνες μέσα στα μηνύματα φορτώνουν μόνο όταν το επιτρέψεις, ανά μήνυμα ή ανά αποστολέα· τα tracking pixels μένουν πάντα μπλοκαρισμένα. Η διαγραφή από λίστα με ένα κλικ επικοινωνεί με τον αποστολέα μόνο αφού επιβεβαιώσεις.',
+          'Η κοινή λίστα spam (ανοιχτή, εκτός αν την κλείσεις στις Ρυθμίσεις > Απόρρητο): όταν μπλοκάρεις έναν αποστολέα, ένα όνομα ή ένα domain, στέλνεται στο έργο μας του RoarMe μόνο ένα μη αναστρέψιμο αποτύπωμά του (SHA-256), μαζί με αποτύπωμα ενός τυχαίου αναγνωριστικού του δικού σου RoarMail· ποτέ η ίδια η διεύθυνση, τα email ή ο λογαριασμός σου. Ένα αποτύπωμα μετρά για όλους μόνο όταν το έχουν μπλοκάρει τουλάχιστον 3 διαφορετικά RoarMail (ένα όνομα: 5). Το RoarMail κατεβάζει τη λίστα κάθε λίγες ώρες και πηγαίνει τα νέα email που ταιριάζουν στα Ανεπιθύμητα, ποτέ από ανθρώπους στους οποίους έχεις γράψει. Το Ξεμπλοκάρισμα παίρνει πίσω το αποτύπωμά σου· αναφορές παλαιότερες του ενός έτους παύουν να μετρούν.',
           updates('roarmail').el,
         ]],
         ['Με τον λογαριασμό RoarMe (μόνο αν συνδεθείς)', [
@@ -109,7 +111,7 @@ const APPS = [
           'Ένα μεγάλο συνημμένο που στέλνεται ως link πάει στο RoarTransfer (Cloudflare R2) για τις μέρες που φαίνονται, και μετά σβήνεται.',
           'Αυτά ακολουθούν τις πολιτικές απορρήτου του RoarMe και του RoarTransfer.',
         ]],
-        ['Τι δεν κάνουμε', ['Κανένα analytics, κανένας tracker, καμία διαφήμιση, κανένα AI στα email σου. Τίποτα δεν πουλιέται ούτε μοιράζεται.']],
+        ['Τι δεν κάνουμε', ['Κανένα analytics, κανένας tracker, καμία διαφήμιση, κανένα AI στα email σου. Τίποτα δεν πουλιέται, και τίποτα δεν μοιράζεται πέρα από τα αποτυπώματα παραπάνω.']],
       ],
     }, rights(LAB)),
     terms: join2({
