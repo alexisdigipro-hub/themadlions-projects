@@ -70,7 +70,7 @@ const APPS = [
     id: 'roarmail', name: 'RoarMail', page: 'lab/roarmail/', what: { en: 'the mail app for Mac and Windows', el: 'η εφαρμογή email για Mac και Windows' },
     privacy: join2({
       en: [
-        ['In short', ['RoarMail talks to your mail servers straight from your computer. There is no server of ours in between: we never see your mail, your contacts or your passwords.']],
+        ['In short', ['RoarMail talks to your mail servers straight from your computer. There is no server of ours in between: we never see your mail, your contacts or your passwords, except the text you yourself send to RoarMail AI with the ✦ button.']],
         ['What stays on your computer', [
           'Your messages, folders, drafts and attachments are kept on your computer (a local database and the message files in the app\'s folder), so they open fast and offline.',
           'Mail passwords are locked with your computer\'s own key store (Keychain on Mac, DPAPI on Windows) and are only sent to your own mail servers.',
@@ -84,15 +84,18 @@ const APPS = [
           'The shared spam list (on unless you turn it off in Settings > Privacy): when you block a sender, a name or a domain, only a one-way fingerprint of it (SHA-256) goes to our RoarMe project, with a fingerprint of a random id of your copy of RoarMail; never the address itself, your mail or your account. A fingerprint counts for everyone only when at least 3 different copies blocked it (a name: 5). RoarMail downloads the list every few hours and moves matching new mail to Junk, never mail from people you have written to. Unblock takes your fingerprint back; reports older than a year stop counting.',
           updates('roarmail').en,
         ]],
-        ['With your RoarMe account (only if you sign in)', [
+        ['With your Roar Account (only if you sign in)', [
+          'Your Roar Account is the same sign-in as RoarMe, for every Roar app. You manage it at themadlions.com/account.',
+          'Sync (on unless you turn it off in Settings > Roar Account): RoarMail\'s setup is kept in your account so your other computers get it: settings, signatures, templates, rules, blocked senders, your mail accounts\' addresses, servers and folder settings, and the contacts you marked (VIP, blocked, pictures allowed), with the name of each computer that synced. Never your mail, never your mail passwords or sign-in tokens. Only you can read it; deleting your Roar Account deletes it.',
+          'RoarMail AI (the ✦ button in a new message): only when you press it, what you asked for, the text you wrote or selected, the message you are answering and the recipients go through our RoarMe project to Anthropic (Claude) to write the text, and are not kept; the number of requests a day is counted. With your own Claude or ChatGPT key instead, the same goes straight from your computer to Anthropic or OpenAI under their policy; the key stays locked on your computer.',
           'Signing in to RoarMe in RoarMail is optional. When you send an email to a RoarMe chat, the chat gets its subject, sender, date, a short extract (up to 600 characters) and the attachments you keep (up to 50 MB each). A task made from an email is saved in RoarMe with a link back to it.',
           'A large attachment sent as a link goes to RoarTransfer (Cloudflare R2) for the days shown, and is deleted after.',
           'These follow the RoarMe and RoarTransfer privacy policies.',
         ]],
-        ['What we do not do', ['No analytics, no trackers, no ads, no AI on your mail. Nothing is sold, and nothing is shared beyond the fingerprints above.']],
+        ['What we do not do', ['No analytics, no trackers, no ads, and no AI on your mail unless you press the ✦ button. Nothing is sold, and nothing is shared beyond what is described above.']],
       ],
       el: [
-        ['Με λίγα λόγια', ['Το RoarMail μιλά με τους mail servers σου κατευθείαν από τον υπολογιστή σου. Δεν υπάρχει δικός μας server ανάμεσα: δεν βλέπουμε ποτέ τα email, τις επαφές ή τους κωδικούς σου.']],
+        ['Με λίγα λόγια', ['Το RoarMail μιλά με τους mail servers σου κατευθείαν από τον υπολογιστή σου. Δεν υπάρχει δικός μας server ανάμεσα: δεν βλέπουμε ποτέ τα email, τις επαφές ή τους κωδικούς σου, εκτός από το κείμενο που στέλνεις εσύ στο RoarMail AI με το κουμπί ✦.']],
         ['Τι μένει στον υπολογιστή σου', [
           'Τα μηνύματα, οι φάκελοι, τα πρόχειρα και τα συνημμένα σου φυλάσσονται στον υπολογιστή σου (τοπική βάση δεδομένων και τα αρχεία των μηνυμάτων στον φάκελο της εφαρμογής), για να ανοίγουν γρήγορα και χωρίς σύνδεση.',
           'Οι κωδικοί των email κλειδώνονται με το σύστημα κλειδιών του υπολογιστή σου (Keychain στο Mac, DPAPI στα Windows) και στέλνονται μόνο στους δικούς σου mail servers.',
@@ -106,12 +109,15 @@ const APPS = [
           'Η κοινή λίστα spam (ανοιχτή, εκτός αν την κλείσεις στις Ρυθμίσεις > Απόρρητο): όταν μπλοκάρεις έναν αποστολέα, ένα όνομα ή ένα domain, στέλνεται στο έργο μας του RoarMe μόνο ένα μη αναστρέψιμο αποτύπωμά του (SHA-256), μαζί με αποτύπωμα ενός τυχαίου αναγνωριστικού του δικού σου RoarMail· ποτέ η ίδια η διεύθυνση, τα email ή ο λογαριασμός σου. Ένα αποτύπωμα μετρά για όλους μόνο όταν το έχουν μπλοκάρει τουλάχιστον 3 διαφορετικά RoarMail (ένα όνομα: 5). Το RoarMail κατεβάζει τη λίστα κάθε λίγες ώρες και πηγαίνει τα νέα email που ταιριάζουν στα Ανεπιθύμητα, ποτέ από ανθρώπους στους οποίους έχεις γράψει. Το Ξεμπλοκάρισμα παίρνει πίσω το αποτύπωμά σου· αναφορές παλαιότερες του ενός έτους παύουν να μετρούν.',
           updates('roarmail').el,
         ]],
-        ['Με τον λογαριασμό RoarMe (μόνο αν συνδεθείς)', [
+        ['Με το Roar Account (μόνο αν συνδεθείς)', [
+          'Το Roar Account είναι η ίδια σύνδεση με το RoarMe, για όλα τα Roar apps. Το διαχειρίζεσαι στο themadlions.com/account.',
+          'Συγχρονισμός (ανοιχτός, εκτός αν τον κλείσεις στις Ρυθμίσεις > Roar Account): οι ρυθμίσεις του RoarMail κρατιούνται στον λογαριασμό σου για να τις πάρουν οι άλλοι σου υπολογιστές: ρυθμίσεις, υπογραφές, πρότυπα, κανόνες, μπλοκαρισμένοι, οι διευθύνσεις, οι servers και οι ρυθμίσεις φακέλων των λογαριασμών σου, και οι επαφές που σημείωσες (VIP, μπλοκαρισμένες, εικόνες επιτρέπονται), με το όνομα κάθε υπολογιστή που συγχρονίστηκε. Ποτέ τα email σου, ποτέ οι κωδικοί ή τα tokens των email. Μόνο εσύ τα διαβάζεις· η διαγραφή του Roar Account τα σβήνει.',
+          'RoarMail AI (το κουμπί ✦ στο νέο μήνυμα): μόνο όταν το πατάς, ό,τι ζήτησες, το κείμενο που έγραψες ή επέλεξες, το μήνυμα που απαντάς και οι παραλήπτες περνούν από το έργο μας του RoarMe στην Anthropic (Claude) για να γραφτεί το κείμενο, και δεν κρατιούνται· μετράμε πόσα αιτήματα κάνεις τη μέρα. Με δικό σου κλειδί Claude ή ChatGPT, τα ίδια πάνε απευθείας από τον υπολογιστή σου στην Anthropic ή στην OpenAI, με τη δική τους πολιτική· το κλειδί μένει κλειδωμένο στον υπολογιστή σου.',
           'Η σύνδεση στο RoarMe μέσα από το RoarMail είναι προαιρετική. Όταν στέλνεις ένα email σε συνομιλία του RoarMe, η συνομιλία παίρνει το θέμα, τον αποστολέα, την ημερομηνία, ένα μικρό απόσπασμα (ως 600 χαρακτήρες) και τα συνημμένα που κρατάς (ως 50 MB το καθένα). Ένα task από email αποθηκεύεται στο RoarMe με σύνδεσμο πίσω σε αυτό.',
           'Ένα μεγάλο συνημμένο που στέλνεται ως link πάει στο RoarTransfer (Cloudflare R2) για τις μέρες που φαίνονται, και μετά σβήνεται.',
           'Αυτά ακολουθούν τις πολιτικές απορρήτου του RoarMe και του RoarTransfer.',
         ]],
-        ['Τι δεν κάνουμε', ['Κανένα analytics, κανένας tracker, καμία διαφήμιση, κανένα AI στα email σου. Τίποτα δεν πουλιέται, και τίποτα δεν μοιράζεται πέρα από τα αποτυπώματα παραπάνω.']],
+        ['Τι δεν κάνουμε', ['Κανένα analytics, κανένας tracker, καμία διαφήμιση, και κανένα AI στα email σου αν δεν πατήσεις το κουμπί ✦. Τίποτα δεν πουλιέται, και τίποτα δεν μοιράζεται πέρα από όσα γράφονται παραπάνω.']],
       ],
     }, rights(LAB)),
     terms: join2({
