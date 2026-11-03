@@ -78,6 +78,11 @@ input.i:focus { box-shadow:inset 0 0 0 1.5px var(--red-hi); }
 .tile .stat { font-size:30px; font-weight:800; margin:4px 0 4px; color:var(--text); }
 .muted { color:var(--muted); }
 .hide { display:none !important; }
+.mfa-how, .mfa-steps { margin:10px 0; padding-left:20px; display:grid; gap:6px; font-size:14px; }
+.mfa-how { list-style:none; padding:0; }
+.mfa-how li { padding:10px 14px; border-radius:14px; background:var(--glass-2); }
+.mfa-how b { display:block; margin-bottom:2px; } .mfa-how a { color:#ff6b62; }
+.mfa-key summary { cursor:pointer; font-size:12.5px; opacity:.75; }
 .spin { width:28px; height:28px; margin:80px auto; border-radius:50%; border:3px solid var(--edge); border-top-color:var(--red-hi); animation:s 1s linear infinite; }
 @keyframes s { to { transform:rotate(360deg); } }
 /* tabs and the calendar (3 Nov 2026) */
@@ -262,10 +267,22 @@ footer a { color:var(--dim); }
     <div class="tile">
       <p id="mfaState"></p>
       <div id="mfaSetup" class="hide" style="margin-top:12px">
-        <p data-t="mfaScan">Scan this with your authenticator app (Google Authenticator, 1Password, Authy), then type the 6-digit code it shows.</p>
+        <p data-t="mfaWhat">From now on, signing in asks for your password and a 6-digit code your phone makes. No app to buy or install:</p>
+        <ul class="mfa-how">
+          <li><b>iPhone, iPad, Mac</b> <span data-t="mfaApple">The Passwords app that is already there.</span></li>
+          <li><b>Android</b> <span data-t="mfaDroid">Google Authenticator, free from Google Play.</span> <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" rel="noopener" data-t="mfaGet">Get it</a></li>
+        </ul>
+        <ol class="mfa-steps">
+          <li data-t="mfaStep1">Point your phone's camera at this square and tap what appears (on this phone: press the button).</li>
+          <li data-t="mfaStep2">Save it. From then on it shows a new 6-digit code every 30 seconds.</li>
+          <li data-t="mfaStep3">Type the code it shows now, below.</li>
+        </ol>
         <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:12px 0">
           <img id="mfaQr" alt="" style="width:170px;height:170px;background:#fff;border-radius:12px;padding:8px">
-          <div style="min-width:0"><p class="muted" style="margin:0 0 6px;font-size:12.5px" data-t="mfaKey">Or type this key:</p><code id="mfaSecret" style="word-break:break-all;font-size:13px"></code></div>
+          <div style="min-width:0;display:grid;gap:10px;justify-items:start">
+            <a class="btn small" id="mfaLink" href="#" data-t="mfaOpen">Add it on this phone</a>
+            <details class="mfa-key"><summary data-t="mfaKey">Can't scan? Type a key instead</summary><code id="mfaSecret" style="word-break:break-all;font-size:13px;display:block;margin-top:6px"></code></details>
+          </div>
         </div>
         <input class="i" id="mfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123 456" style="max-width:220px">
       </div>
@@ -297,7 +314,7 @@ footer a { color:var(--dim); }
 
   // ---------- words, English and Greek ----------
   const W = {
-    en: { unameRule: '3 to 24 characters: small Latin letters, numbers and _ (as in RoarMe).', unameBad: 'The username needs 3 to 24 small Latin letters, numbers or _, e.g. alex_k.', unameNeed: 'Choose a username first.', mfa: 'Two-step verification', mfaScan: 'Scan this with your authenticator app (Google Authenticator, 1Password, Authy), then type the 6-digit code it shows.', mfaKey: 'Or type this key:', mfaTurnOn: 'Turn on', mfaVerify: 'Verify and turn on', mfaTurnOff: 'Turn off', mfaIsOn: 'On: signing in asks for the 6-digit code from your authenticator app, in every Roar app.', mfaIsOff: 'Off. Turn it on so that a stolen password is not enough to get into your account.', mfaDone: 'Two-step verification is on.', mfaOffQ: 'Turn off two-step verification?', mfaOffDone: 'Two-step verification is off.', tHome: 'Overview', tCal: 'Calendar', tTasks: 'Tasks', tPeople: 'Contacts', tMe: 'Settings', today: 'Today', newEvent: '+ New event', editEvent: 'Event',
+    en: { unameRule: '3 to 24 characters: small Latin letters, numbers and _ (as in RoarMe).', unameBad: 'The username needs 3 to 24 small Latin letters, numbers or _, e.g. alex_k.', unameNeed: 'Choose a username first.', mfa: 'Two-step verification', mfaWhat: 'From now on, signing in asks for your password and a 6-digit code your phone makes. No app to buy or install:', mfaApple: 'The Passwords app that is already there.', mfaDroid: 'Google Authenticator, free from Google Play.', mfaGet: 'Get it', mfaStep1: 'Point your phone\'s camera at this square and tap what appears (on this phone: press the button).', mfaStep2: 'Save it. From then on it shows a new 6-digit code every 30 seconds.', mfaStep3: 'Type the code it shows now, below.', mfaOpen: 'Add it on this phone', mfaKey: 'Can\'t scan? Type a key instead', mfaTurnOn: 'Turn on', mfaVerify: 'Verify and turn on', mfaTurnOff: 'Turn off', mfaIsOn: 'On: signing in asks for the 6-digit code from your phone (Passwords or Google Authenticator), in every Roar app.', mfaIsOff: 'Off. Turn it on so that a stolen password is not enough to get into your account.', mfaDone: 'Two-step verification is on.', mfaOffQ: 'Turn off two-step verification?', mfaOffDone: 'Two-step verification is off.', tHome: 'Overview', tCal: 'Calendar', tTasks: 'Tasks', tPeople: 'Contacts', tMe: 'Settings', today: 'Today', newEvent: '+ New event', editEvent: 'Event',
       evTitle: 'Title', evDate: 'Date', evFrom: 'From', evTo: 'To', evWhere: 'Where', evNotes: 'Notes', allDay: 'All day', delete2: 'Delete', cancel: 'Cancel',
       onPhone: 'On your iPhone, Google or Outlook', subNote: 'Your Roar calendar appears next to your other calendars and updates by itself. Changes are made here or in the Roar apps.',
       subApple: 'Add to iPhone / Mac', subGoogle: 'Add to Google Calendar', subCopy: 'Copy the link', subNew: 'New link', subTasks: 'Show my tasks with a date in it too',
@@ -318,7 +335,7 @@ footer a { color:var(--dim); }
       delete: 'Delete my Roar Account', delAsk: 'This cannot be undone. Type DELETE to delete your Roar Account.', remove: 'Remove', lastSeen: 'last seen', noDevices: 'No computer has synced yet. In RoarMail: Settings > Roar Account.',
       noSetup: 'Nothing synced yet. In RoarMail: Settings > Roar Account > My settings on every computer.', setupLine: (n) => `${n.accounts} mail accounts · ${n.sigs} signatures · ${n.rules} rules · ${n.tpls} templates · updated ${n.when}`,
       blocked: (n) => `${n} blocked`, contacts: 'Contacts', cSearch: 'Name, email or company', cNote: 'From RoarMail on your computers: the people you write to and the ones you marked. Every Roar app will use this list.', cNone: 'No contacts yet. They come from RoarMail when its sync is on.', cMore: (n) => `and ${n} more: search to find them`, open: 'Open', download: 'Download', scripts: (n) => `${n} scripts`, projects: (n) => `${n} projects`, onWeb: 'on the web', userTaken: 'That username is taken.' },
-    el: { unameRule: '3 έως 24 χαρακτήρες: μικρά λατινικά γράμματα, αριθμοί και _ (όπως στο RoarMe).', unameBad: 'Το username θέλει 3 έως 24 μικρά λατινικά γράμματα, αριθμούς ή _, π.χ. alex_k.', unameNeed: 'Διάλεξε πρώτα username.', mfa: 'Επαλήθευση δύο βημάτων', mfaScan: 'Σκάναρέ το με την εφαρμογή επαλήθευσης (Google Authenticator, 1Password, Authy) και γράψε τον 6ψήφιο κωδικό που δείχνει.', mfaKey: 'Ή γράψε αυτό το κλειδί:', mfaTurnOn: 'Ενεργοποίηση', mfaVerify: 'Επιβεβαίωση και ενεργοποίηση', mfaTurnOff: 'Απενεργοποίηση', mfaIsOn: 'Ενεργή: η σύνδεση ζητά και τον 6ψήφιο κωδικό από την εφαρμογή επαλήθευσης, σε όλα τα Roar apps.', mfaIsOff: 'Ανενεργή. Ενεργοποίησέ την, ώστε ένας κλεμμένος κωδικός να μη φτάνει για να μπει κάποιος στον λογαριασμό σου.', mfaDone: 'Η επαλήθευση δύο βημάτων είναι ενεργή.', mfaOffQ: 'Να απενεργοποιηθεί η επαλήθευση δύο βημάτων;', mfaOffDone: 'Η επαλήθευση δύο βημάτων απενεργοποιήθηκε.', tHome: 'Επισκόπηση', tCal: 'Ημερολόγιο', tTasks: 'Tasks', tPeople: 'Επαφές', tMe: 'Ρυθμίσεις', today: 'Σήμερα', newEvent: '+ Νέο γεγονός', editEvent: 'Γεγονός',
+    el: { unameRule: '3 έως 24 χαρακτήρες: μικρά λατινικά γράμματα, αριθμοί και _ (όπως στο RoarMe).', unameBad: 'Το username θέλει 3 έως 24 μικρά λατινικά γράμματα, αριθμούς ή _, π.χ. alex_k.', unameNeed: 'Διάλεξε πρώτα username.', mfa: 'Επαλήθευση δύο βημάτων', mfaWhat: 'Από εδώ και πέρα, η σύνδεση ζητά τον κωδικό σου και έναν 6ψήφιο αριθμό που φτιάχνει το κινητό σου. Δεν χρειάζεται να αγοράσεις ή να κατεβάσεις κάτι:', mfaApple: 'Η εφαρμογή Συνθηματικά (Passwords) που υπάρχει ήδη.', mfaDroid: 'Το Google Authenticator, δωρεάν από το Google Play.', mfaGet: 'Κατέβασέ το', mfaStep1: 'Στρέψε την κάμερα του κινητού σου σε αυτό το τετράγωνο και πάτα αυτό που εμφανίζεται (από αυτό το κινητό: πάτα το κουμπί).', mfaStep2: 'Αποθήκευσέ το. Από εκεί και πέρα δείχνει νέο 6ψήφιο αριθμό κάθε 30 δευτερόλεπτα.', mfaStep3: 'Γράψε από κάτω τον αριθμό που δείχνει τώρα.', mfaOpen: 'Πρόσθεσέ το σε αυτό το κινητό', mfaKey: 'Δεν σκανάρεται; Γράψε ένα κλειδί', mfaTurnOn: 'Ενεργοποίηση', mfaVerify: 'Επιβεβαίωση και ενεργοποίηση', mfaTurnOff: 'Απενεργοποίηση', mfaIsOn: 'Ενεργή: η σύνδεση ζητά και τον 6ψήφιο αριθμό από το κινητό σου (Συνθηματικά ή Google Authenticator), σε όλα τα Roar apps.', mfaIsOff: 'Ανενεργή. Ενεργοποίησέ την, ώστε ένας κλεμμένος κωδικός να μη φτάνει για να μπει κάποιος στον λογαριασμό σου.', mfaDone: 'Η επαλήθευση δύο βημάτων είναι ενεργή.', mfaOffQ: 'Να απενεργοποιηθεί η επαλήθευση δύο βημάτων;', mfaOffDone: 'Η επαλήθευση δύο βημάτων απενεργοποιήθηκε.', tHome: 'Επισκόπηση', tCal: 'Ημερολόγιο', tTasks: 'Tasks', tPeople: 'Επαφές', tMe: 'Ρυθμίσεις', today: 'Σήμερα', newEvent: '+ Νέο γεγονός', editEvent: 'Γεγονός',
       evTitle: 'Τίτλος', evDate: 'Ημερομηνία', evFrom: 'Από', evTo: 'Έως', evWhere: 'Πού', evNotes: 'Σημειώσεις', allDay: 'Όλη μέρα', delete2: 'Διαγραφή', cancel: 'Άκυρο',
       onPhone: 'Στο iPhone, στο Google ή στο Outlook', subNote: 'Το ημερολόγιο Roar εμφανίζεται δίπλα στα άλλα σου ημερολόγια και ενημερώνεται μόνο του. Οι αλλαγές γίνονται εδώ ή στα Roar apps.',
       subApple: 'Πρόσθεσε στο iPhone / Mac', subGoogle: 'Πρόσθεσε στο Google Calendar', subCopy: 'Αντιγραφή συνδέσμου', subNew: 'Νέος σύνδεσμος', subTasks: 'Να φαίνονται και τα tasks μου με ημερομηνία',
@@ -641,6 +658,7 @@ footer a { color:var(--dim); }
     mfaPending = data
     $('mfaQr').src = data.totp.qr_code
     $('mfaSecret').textContent = data.totp.secret
+    $('mfaLink').href = data.totp.uri; show($('mfaLink'), matchMedia('(pointer: coarse)').matches)
     $('mfaCode').value = ''
     loadMfa(); setTimeout(() => $('mfaCode').focus(), 50)
   }
