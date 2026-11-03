@@ -37,6 +37,16 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (3 Nov 2026, night: the Roar Account grows, one sign-in for every app)
+
+- Alex: "1, 2, 3, 4, 5 yes, do them" (one sign-in, the calendar filling itself, projects across the apps, notifications, devices). Backend in the roarmail repo, **supabase/roar-account.sql** (already applied in RoarMe's project, nothing to run): roar_connect, roar_projects / roar_project_members / roar_project_items (roar_project_role(), roar_project_add_member()), project_id on roar_calendar_events and roar_tasks, roar_notifications (+ triggers on roar_tasks, roar_calendar_shares, roar_project_members, roarwriter_shares, roar_transfer_inbox), calendar triggers on roardino_ordinos (call to wrap), roarlist_projects (shoot day), roarwriter_scripts (schedule days; roar_cal_writer_sync), roar_end_other_sessions(). roar_my_sessions / roar_end_session are RoarMe's.
+- **Edge Function roar-connect** (roarmail/supabase/functions, verify_jwt off, deployed): start / look / allow / poll / deny. An app shows a code, themadlions.com/account/?connect=CODE asks Allow, the app trades the one-time token for its own session (verifyOtp magiclink). Roardino (same site) allows itself at once when the account page is signed in.
+- **Account page** (public/site/account): Projects tab, Notifications tab with a badge, Settings as RoarMail's (side list Profile / Security / Signed in on / Delete account), the connect card, event and task Project pickers; two-step verification in three plain steps (Passwords app / Google Authenticator).
+- **RoarMail 0.34.0**: Sign in with Roar Account, projects with senders in the All accounts side list (scope.project), answered invitations into the Roar Calendar.
+- RoarWriter, RoarList, RoarTransfer: Sign in with Roar Account, done by helper sessions on their own repos (see each repo). RoarPlay: remembers its layout, sidebar closed the first time, Settings as RoarMail's.
+- Lab page: every "Mac / Windows" goes to the app's own Download part, never GitHub.
+- Open: Apple Developer ID (Alex enrols, $99/yr; then signing and notarizing in each desktop.yml).
+
 ## Where we stopped (3 Nov 2026: TmlChat without its bar at the foot; its settings in the hub's Settings > Chat)
 - Alex (screenshot of TmlChat on the phone): "take out the menu with Calls etc., the Calls button and Contacts; the chat's settings into the general Settings as a Chat tab; All / Unread etc. at the top".
 - **hubchat/Chat.jsx:** no bar at the foot any more (Contacts, Calls, Messages, Settings gone; the Edit bar for picked chats stays), the swipe has no other screens to go to, New call is out of the + menu. Calls inside a chat (the phone and camera in a chat's top row) are still there.
