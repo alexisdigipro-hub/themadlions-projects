@@ -133,6 +133,13 @@ footer a { color:var(--dim); }
     <h2 style="font-size:17px;margin-top:22px" data-t="computers">Computers with RoarMail</h2>
     <div class="rows" id="devices"></div>
 
+    <h2><span data-t="contacts">Contacts</span> <small id="cCount"></small></h2>
+    <div class="tile">
+      <input class="i" id="cQ" data-ph="cSearch" placeholder="Name, email or company" style="margin:0 0 12px">
+      <div class="rows" id="cList"></div>
+      <p class="muted" style="margin:10px 0 0;font-size:13px" data-t="cNote">From RoarMail on your computers: the people you write to and the ones you marked. Every Roar app will use this list.</p>
+    </div>
+
     <h2 data-t="profile">Profile</h2>
     <div class="tile">
       <label class="f" style="margin:0"><span data-t="dname">Name</span><input class="i" id="dname" maxlength="60"></label>
@@ -183,7 +190,7 @@ footer a { color:var(--dim); }
       danger: 'Delete account', delNote: "Deletes your Roar Account and what every Roar app keeps for it (chats, scripts, lists, RoarMail's synced setup). The mail in your mailboxes is not touched.",
       delete: 'Delete my Roar Account', delAsk: 'This cannot be undone. Type DELETE to delete your Roar Account.', remove: 'Remove', lastSeen: 'last seen', noDevices: 'No computer has synced yet. In RoarMail: Settings > Roar Account.',
       noSetup: 'Nothing synced yet. In RoarMail: Settings > Roar Account > My settings on every computer.', setupLine: (n) => `${n.accounts} mail accounts · ${n.sigs} signatures · ${n.rules} rules · ${n.tpls} templates · updated ${n.when}`,
-      blocked: (n) => `${n} blocked`, open: 'Open', download: 'Download', scripts: (n) => `${n} scripts`, projects: (n) => `${n} projects`, onWeb: 'on the web', userTaken: 'That username is taken.' },
+      blocked: (n) => `${n} blocked`, contacts: 'Contacts', cSearch: 'Name, email or company', cNote: 'From RoarMail on your computers: the people you write to and the ones you marked. Every Roar app will use this list.', cNone: 'No contacts yet. They come from RoarMail when its sync is on.', cMore: (n) => `and ${n} more: search to find them`, open: 'Open', download: 'Download', scripts: (n) => `${n} scripts`, projects: (n) => `${n} projects`, onWeb: 'on the web', userTaken: 'That username is taken.' },
     el: { signIn: 'Σύνδεση', signUp: 'Δημιούργησε Roar Account', forgot: 'Ξέχασες τον κωδικό;', send: 'Στείλε τον σύνδεσμο', verify: 'Επιβεβαίωση', setPass: 'Ορισμός νέου κωδικού',
       inTitle: 'Καλώς ήρθες', upTitle: 'Δημιούργησε το Roar Account σου', fgTitle: 'Ξέχασες τον κωδικό σου;', mfaTitle: 'Ένα βήμα ακόμα', newTitle: 'Νέος κωδικός',
       inSub: 'Ένας λογαριασμός για RoarMail, RoarMe, RoarWriter, RoarList και κάθε Roar app.', upSub: 'Μία σύνδεση για όλα τα Roar apps. Δωρεάν.', fgSub: 'Γράψε το email σου και θα σου στείλουμε σύνδεσμο.',
@@ -197,7 +204,7 @@ footer a { color:var(--dim); }
       danger: 'Διαγραφή λογαριασμού', delNote: 'Σβήνει το Roar Account σου και ό,τι κρατά γι’ αυτό κάθε Roar app (συνομιλίες, σενάρια, λίστες, τις ρυθμίσεις του RoarMail). Τα mail στα γραμματοκιβώτιά σου δεν αγγίζονται.',
       delete: 'Διαγραφή του Roar Account μου', delAsk: 'Δεν αναιρείται. Γράψε DELETE για να διαγραφεί το Roar Account σου.', remove: 'Αφαίρεση', lastSeen: 'τελευταία φορά', noDevices: 'Κανένας υπολογιστής δεν έχει συγχρονιστεί ακόμα. Στο RoarMail: Ρυθμίσεις > Roar Account.',
       noSetup: 'Τίποτα συγχρονισμένο ακόμα. Στο RoarMail: Ρυθμίσεις > Roar Account > Οι ρυθμίσεις μου σε κάθε υπολογιστή.', setupLine: (n) => `${n.accounts} λογαριασμοί mail · ${n.sigs} υπογραφές · ${n.rules} κανόνες · ${n.tpls} πρότυπα · ενημέρωση ${n.when}`,
-      blocked: (n) => `${n} μπλοκαρισμένα`, open: 'Άνοιγμα', download: 'Λήψη', scripts: (n) => `${n} σενάρια`, projects: (n) => `${n} projects`, onWeb: 'στο web', userTaken: 'Αυτό το username το έχει άλλος.' },
+      blocked: (n) => `${n} μπλοκαρισμένα`, contacts: 'Επαφές', cSearch: 'Όνομα, email ή εταιρεία', cNote: 'Από το RoarMail στους υπολογιστές σου: όσους γράφεις και όσους σημείωσες. Όλα τα Roar apps θα χρησιμοποιούν αυτή τη λίστα.', cNone: 'Καμία επαφή ακόμα. Έρχονται από το RoarMail όταν είναι ανοιχτός ο συγχρονισμός.', cMore: (n) => `και ${n} ακόμα: ψάξε για να τους βρεις`, open: 'Άνοιγμα', download: 'Λήψη', scripts: (n) => `${n} σενάρια`, projects: (n) => `${n} projects`, onWeb: 'στο web', userTaken: 'Αυτό το username το έχει άλλος.' },
   }
   let lang = (new URLSearchParams(location.search).get('lang') || (navigator.language || '').slice(0, 2)) === 'el' ? 'el' : 'en'
   try { const v = localStorage.getItem('roar-account-lang'); if (v === 'el' || v === 'en') lang = v } catch (e) {}
@@ -212,6 +219,7 @@ footer a { color:var(--dim); }
     document.documentElement.lang = lang
     document.querySelectorAll('[data-t]').forEach((el) => { const v = T()[el.dataset.t]; if (typeof v === 'string') el.textContent = v })
     document.querySelectorAll('.seg button').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang))
+    document.querySelectorAll('[data-ph]').forEach((el) => { const v = T()[el.dataset.ph]; if (typeof v === 'string') el.placeholder = v })
   }
   document.querySelectorAll('.seg button').forEach((b) => b.onclick = () => { lang = b.dataset.lang; try { localStorage.setItem('roar-account-lang', lang) } catch (e) {} words(); renderAuth(); if (state.user) loadHome() })
 
@@ -310,6 +318,11 @@ footer a { color:var(--dim); }
       const blocked = (T2.contacts || []).filter((c) => c.blocked).length + n('block_rules')
       $('mChips').innerHTML = (T2.accounts || []).map((a) => `<span class="chip"><i style="background:${esc(a.color || '#d40000')}"></i>${esc(a.email)}</span>`).join('') + (blocked ? `<span class="chip">${esc(t.blocked(blocked))}</span>` : '')
     } else { $('mSetup').textContent = t.noSetup; $('mChips').innerHTML = '' }
+    // the contacts RoarMail carries in the account (3 Nov 2026: one list for every Roar app)
+    state.contacts = ((sync && sync.data && sync.data.tables && sync.data.tables.contacts) || []).filter((c) => !c.blocked)
+      .sort((a, b) => (b.vip - a.vip) || ((b.use_count || 0) - (a.use_count || 0)) || String(a.name || a.email).localeCompare(String(b.name || b.email)))
+    $('cCount').textContent = state.contacts.length ? String(state.contacts.length) : ''
+    showContacts()
     const today = new Date().toISOString().slice(0, 10)
     const { data: use } = await sb.from('roarmail_ai_usage').select('n').eq('user_id', u.id).eq('day', today).maybeSingle()
     $('mAi').textContent = `${use ? use.n : 0} / 30`
@@ -319,6 +332,19 @@ footer a { color:var(--dim); }
       : `<p class="muted" style="margin:0">${esc(t.noDevices)}</p>`
     $('devices').querySelectorAll('[data-rm]').forEach((b) => b.onclick = async () => { b.disabled = true; await sb.from('roarmail_devices').delete().eq('user_id', u.id).eq('install', b.dataset.rm); loadHome() })
   }
+
+  function showContacts() {
+    const t = T(), q = ($('cQ').value || '').trim().toLowerCase()
+    const all = state.contacts || []
+    const hit = q ? all.filter((c) => [c.name, c.email, c.company, c.title].some((v) => String(v || '').toLowerCase().includes(q))) : all
+    const shown = hit.slice(0, 60)
+    $('cList').innerHTML = !all.length ? `<p class="muted" style="margin:0">${esc(t.cNone)}</p>` : shown.map((c) => {
+      const name = c.name || c.email
+      const sub = [c.title, c.company].filter(Boolean).join(' · ')
+      return `<div class="row"><div class="av" style="width:36px;height:36px;font-size:14px">${esc(name.trim().charAt(0).toUpperCase())}</div><div class="g"><b>${esc(name)}${c.vip ? ' ★' : ''}</b><span>${esc(c.email)}${sub ? ' · ' + esc(sub) : ''}${c.phone ? ' · ' + esc(c.phone) : ''}</span></div><a class="btn small" href="mailto:${esc(c.email)}">✉</a></div>`
+    }).join('') + (hit.length > shown.length ? `<p class="muted" style="margin:6px 0 0;font-size:13px">${esc(t.cMore(hit.length - shown.length))}</p>` : '')
+  }
+  $('cQ').oninput = () => showContacts()
 
   $('pSave').onclick = async () => {
     const t = T(); say('pErr'); say('pNote')
