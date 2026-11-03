@@ -216,7 +216,6 @@ function Chats({ p }) {
       <Box title="Chat list">
         <Switch on={p.listPreview} set={(v) => setPrefs({ listPreview: v })} hint="The last message under each chat's name">Show Last Message</Switch>
         <Switch on={p.peekBadge} set={(v) => setPrefs({ peekBadge: v })} hint={onPhone() ? 'Tap the unread count to read a chat without marking it as read' : 'Click the unread count to read a chat without marking it as read'}>Preview Chats</Switch>
-        <Switch on={p.callsTab} set={(v) => setPrefs({ callsTab: v })} hint="Calls next to Contacts, Chats and Settings at the foot">Show Calls Tab</Switch>
       </Box>
     </>
   )
@@ -833,7 +832,7 @@ function Folders({ p, folders, onFolders, onFolderMenu }) {
       )}
       <Box><Switch on={!!p.folderAlone} set={(v) => setPrefs({ folderAlone: v })} hint="An unread chat shows only in Unread, a chat you put in a folder only there, a group only in Groups; All keeps the rest">Each Chat in One Folder</Switch></Box>
       <Box><Switch on={p.folderTags} set={(v) => setPrefs({ folderTags: v })} hint="The folder names of each chat, in the chat list">Show Folder Tags</Switch></Box>
-      <Box title="Tabs view" note="At the bottom, the folders sit right above Contacts, Chats and Settings.">
+      <Box title="Tabs view" note="Where All, Unread, Groups and Archived sit in the chat list.">
         <div className="set-row tabs-view">
           {[['top', 'Tabs at the top'], ['bottom', 'Tabs at the bottom']].map(([k, l]) => (
             <button key={k} type="button" className={`tv-tile${p.folderTabs === k ? ' on' : ''}`} onClick={() => setPrefs({ folderTabs: k })}>

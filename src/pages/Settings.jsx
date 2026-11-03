@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import ScreenInfo from '../components/ScreenInfo.jsx'
 import { Button, Confirm, Field, Input, Select, Textarea, useIsMobile, useToast } from '../components/ui.jsx'
 import { CATEGORIES, DEFAULT_DEPARTMENTS, DEFAULT_GEAR_CATS, STORAGE_KEY, departmentsOf, emptyProject, eventTypesOf, FIXED_EVENT_TYPES, gearCategoriesOf, sampleProject, today, uid, useCurrentUser, useLive, useStore, visibleProjects } from '../lib/store.jsx'
@@ -11,7 +11,9 @@ import { authorizeUrl as gcalAuthorizeUrl, clearOauthCode, gcalCalendars, gcalCo
 import { FEED_COLOR, feedsAreOff, feedsOf, fetchFeedText, parseIcs } from '../lib/ical.js'
 import Team from './Team.jsx'
 import Profile from './Profile.jsx'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+// the chat's own settings, in its frame (Alex, 3 Nov: the chat's Settings moved here as a Chat tab)
+const HubChatPage = lazy(() => import('./HubChatPage.jsx'))
 import { applyFont, currentFont } from '../lib/fonts.js'
 import FontPicker from '../components/FontPicker.jsx'
 import Usage from '../components/Usage.jsx'
@@ -66,9 +68,14 @@ export default function Settings() {
   const TABS = [
     ['profile', 'My profile', false],
     ['company', 'Company', true], ['team', 'Team', true], ['calendar', 'Calendar & projects', true], ['budget', 'Budget', true],
-    ['display', 'Display', false], ['integrations', 'Integrations', true], ['data', 'Data', false], ['usage', 'Usage', true],
+    ['display', 'Display', false], ...(remote ? [['chat', 'Chat', false]] : []), ['integrations', 'Integrations', true], ['data', 'Data', false], ['usage', 'Usage', true],
   ].filter(([, , admin]) => !admin || isAdmin)
-  const [tab, setTab] = useState('profile')
+  // ?tab=chat&page=folders: the chat asks for its settings at a page (HubChatPage.jsx 'hubchat:settings')
+  const [params] = useSearchParams()
+  const askedTab = params.get('tab') || ''
+  const chatPage = /^[\w:-]{1,40}$/.test(params.get('page') || '') ? params.get('page') : ''
+  const [tab, setTab] = useState(() => (askedTab && TABS.some(([k]) => k === askedTab) ? askedTab : 'profile'))
+  useEffect(() => { if (askedTab && TABS.some(([k]) => k === askedTab)) setTab(askedTab) }, [askedTab, chatPage]) // eslint-disable-line react-hooks/exhaustive-deps
   const { boxRef, slideTo, inClass } = useSlide()
   const logoRef = useRef()
   const [depts, setDepts] = useState(() => departmentsOf(state).join('\n'))
@@ -312,6 +319,11 @@ export default function Settings() {
           </section>
         )}
 
+        {remote && (
+          <section className="panel wide set-chat" data-tab="chat" data-k="chat">
+            {tab === 'chat' && <Suspense fallback={null}><HubChatPage settings page={chatPage} key={chatPage} /></Suspense>}
+          </section>
+        )}
         <section className="panel wide" data-tab="display" data-k="display">
           <h2>Display</h2>
           {/* only the administrator picks the look, for everyone (Alex, 22 Oct) */}
