@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>if (window.top !== window) document.documentElement.classList.add('embed')</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- The Roar Account's admin page (Alex, 3 Nov 2026: every account, statistics, what goes on). Only a Roar Account in
      roar_admins gets data back (Edge Function roar-admin in RoarMe's project, read only). The hub is a separate system:
@@ -102,6 +103,9 @@ footer a { color:var(--dim); }
 .tools input { flex:1; min-width:200px; margin:0; }
 select.i { width:auto; border-radius:999px; padding:0 16px; height:46px; -webkit-appearance:none; appearance:none; cursor:pointer; }
 @media (max-width:640px) { .acc { grid-template-columns:1fr; } .acc .when { text-align:left; } }
+/* inside Studio (themadlions.com/admin/ > Accounts, Alex 3 Nov: every admin in one link): no own bar, Studio's backdrop */
+html.embed body { background:transparent; } html.embed body::before { display:none; } html.embed .bar { display:none; }
+html.embed main { max-width:none; padding:4px 4px 30px; }
 </style>
 </head>
 <body>
@@ -112,7 +116,7 @@ select.i { width:auto; border-radius:999px; padding:0 16px; height:46px; -webkit
 </header>
 <main>
   <div class="spin" id="loading"></div>
-  <div class="card hide" id="gate"><p class="kicker">Roar Admin</p><h1 style="font-size:28px">Admins only</h1><p class="lead" id="gateMsg" style="font-size:14.5px"></p><a class="btn main wide" href="../">Sign in to your Roar Account</a></div>
+  <div class="card hide" id="gate"><p class="kicker">Roar Admin</p><h1 style="font-size:28px">Admins only</h1><p class="lead" id="gateMsg" style="font-size:14.5px"></p><a class="btn main wide" href="../" id="gateGo">Sign in to your Roar Account</a></div>
   <div class="hide" id="home">
     <p class="kicker">Roar Admin</p>
     <h1>Every <span class="r">account</span></h1>
@@ -152,6 +156,7 @@ select.i { width:auto; border-radius:999px; padding:0 16px; height:46px; -webkit
   const day = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
   let data = null
 
+  if (window.top !== window) { $('gateGo').target = '_blank'; $('gateGo').rel = 'noopener'; $('gateGo').textContent = 'Sign in to your Roar Account (opens a tab), then press Reload' }
   async function start() {
     const { data: s } = await sb.auth.getSession()
     show($('loading'), false)
