@@ -125,6 +125,41 @@ input.i:focus { box-shadow:inset 0 0 0 1.5px var(--red-hi); }
 .task .g b { display:block; font-size:14.5px; }
 .task .g span { font-size:12.5px; color:var(--muted); }
 @media (max-width:640px) { .cal .d { min-height:58px; padding:4px; } .cal .ev { font-size:10px; padding:1px 4px; } .atabs { top:56px; } }
+/* projects, notifications, devices, connect (3 Nov 2026) */
+select.i { display:block; width:100%; margin-top:6px; padding:11px 14px; border-radius:999px; border:0; background:rgba(255,255,255,.07); box-shadow:inset 0 0 0 1px var(--edge); color:var(--text); font:inherit; font-size:14.5px; outline:0; -webkit-appearance:none; appearance:none; }
+select.i option { background:#22252b; }
+.badge { min-width:18px; height:18px; padding:0 5px; border-radius:999px; background:var(--red); color:#fff; font-size:11px; font-weight:700; display:inline-grid; place-items:center; margin-left:4px; }
+.pgrid { display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); margin-top:14px; }
+.pcard { text-align:left; cursor:pointer; font:inherit; color:inherit; display:flex; flex-direction:column; gap:8px; transition:background .2s, transform .2s; }
+.pcard:hover { background:var(--glass-2); transform:translateY(-1px); }
+.pcard b { font-size:16px; display:flex; align-items:center; gap:8px; }
+.dot { width:10px; height:10px; border-radius:50%; flex:none; background:var(--red-hi); }
+.phead { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:18px 0 6px; }
+.phead input { flex:1; min-width:180px; margin:0; font-size:20px; font-weight:700; }
+.colors { display:flex; gap:6px; }
+.colors button { width:22px; height:22px; border-radius:50%; border:2px solid transparent; cursor:pointer; }
+.colors button.on { border-color:#fff; }
+.appic { width:28px; height:28px; border-radius:8px; flex:none; }
+.nrow { display:flex; gap:12px; align-items:flex-start; padding:12px 16px; border-radius:16px; background:var(--glass); border:1px solid var(--edge); text-decoration:none; }
+.nrow + .nrow { margin-top:6px; }
+.nrow.new { border-color:rgba(255,59,47,.45); background:rgba(212,0,0,.08); }
+.nrow .g { flex:1; min-width:0; }
+.nrow .g b { display:block; font-size:14.5px; }
+.nrow .g span { display:block; color:var(--muted); font-size:13px; margin-top:2px; }
+.nrow time { font-size:12px; color:var(--dim); white-space:nowrap; }
+.here { font-size:11px; padding:2px 8px; border-radius:999px; background:rgba(142,217,154,.16); color:#8ed99a; margin-left:6px; }
+.inline { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+.inline .i { margin:0; flex:1; min-width:160px; }
+.inline select.i { flex:0 0 auto; width:auto; }
+/* Settings laid out as RoarMail's: a side list and grouped cards */
+.setw { display:grid; grid-template-columns:200px minmax(0,1fr); gap:22px; margin-top:18px; align-items:start; }
+.setnav { display:flex; flex-direction:column; gap:4px; padding:8px; border-radius:20px; background:var(--glass); border:1px solid var(--edge); position:sticky; top:130px; }
+.setnav button { text-align:left; border:1px solid transparent; background:transparent; color:var(--muted); font:inherit; font-size:14px; padding:9px 12px; border-radius:12px; cursor:pointer; }
+.setnav button:hover { color:var(--text); background:rgba(255,255,255,.05); }
+.setnav button.on { color:var(--text); background:rgba(212,0,0,.22); border-color:rgba(255,59,47,.55); box-shadow:inset 0 0 18px rgba(212,0,0,.25); }
+.shead { margin:0 0 10px 4px; font-family:var(--mono); font-size:11.5px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+.sgrp .tile + .shead { margin-top:24px; }
+@media (max-width:720px) { .setw { grid-template-columns:1fr; gap:14px; } .setnav { flex-direction:row; overflow-x:auto; position:static; border-radius:999px; padding:4px; scrollbar-width:none; } .setnav button { white-space:nowrap; border-radius:999px; padding:7px 14px; } }
 footer { max-width:980px; margin:0 auto; padding:24px var(--pad) 50px; color:var(--dim); font-size:12.5px; display:flex; gap:14px; flex-wrap:wrap; }
 footer a { color:var(--dim); }
 @media (max-width:560px) { .bar .crumb { display:none; } .row { flex-wrap:wrap; } }
@@ -158,6 +193,17 @@ footer a { color:var(--dim); }
     <p class="muted" style="font-size:12px;margin:16px 0 0" id="authLegal"></p>
   </form>
 
+  <!-- an app asks to sign in with this account (roar-connect) -->
+  <div class="card hide" id="connect">
+    <p class="kicker">Roar Account</p>
+    <h1 id="cnTitle"></h1>
+    <p class="lead" style="margin:0 0 6px;font-size:14.5px" id="cnSub"></p>
+    <p class="muted" style="font-size:13px;margin:10px 0 0">Code <b id="cnCode" style="font-family:var(--mono);color:var(--text)"></b></p>
+    <p class="err hide" id="cnErr"></p><p class="note hide" id="cnNote"></p>
+    <button class="btn main wide" id="cnAllow" data-t="cnAllow">Allow</button>
+    <div class="links"><button type="button" id="cnDeny" data-t="cnDeny">It was not me</button><button type="button" id="cnSkip" data-t="cnSkip">Go to my account</button></div>
+  </div>
+
   <!-- signed in -->
   <div class="hide" id="home">
     <p class="kicker">Roar Account</p>
@@ -168,6 +214,7 @@ footer a { color:var(--dim); }
     <p class="lead" data-t="lead">One account for every Roar app. What each app keeps for you is here.</p>
     <div class="atabs" id="atabs">
       <button data-tab="home" data-t="tHome">Overview</button><button data-tab="cal" data-t="tCal">Calendar</button><button data-tab="tasks" data-t="tTasks">Tasks</button>
+      <button data-tab="projects" data-t="tProjects">Projects</button><button data-tab="news"><span data-t="tNews">Notifications</span><span class="badge hide" id="nBadge"></span></button>
       <button data-tab="people" data-t="tPeople">Contacts</button><button data-tab="me" data-t="tMe">Settings</button>
     </div>
 
@@ -186,6 +233,7 @@ footer a { color:var(--dim); }
           <label><span data-t="evTo">To</span><input class="i" type="time" id="evE"></label>
           <label class="wide2"><span data-t="evWhere">Where</span><input class="i" id="evL" maxlength="300"></label>
           <label class="wide2"><span data-t="evNotes">Notes</span><input class="i" id="evN" maxlength="2000"></label>
+          <label class="wide2"><span data-t="project">Project</span><select class="i" id="evP"></select></label>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px">
           <label class="chk"><input type="checkbox" id="evAll"> <span data-t="allDay">All day</span></label><span style="flex:1"></span>
@@ -212,6 +260,7 @@ footer a { color:var(--dim); }
         <div class="form2" style="margin:0">
           <label class="wide2"><span data-t="newTask">New task</span><input class="i" id="tkT" maxlength="300" data-ph="taskPh" placeholder="e.g. Send the edit"></label>
           <label><span data-t="due">Due</span><input class="i" type="date" id="tkD"></label>
+          <label><span data-t="project">Project</span><select class="i" id="tkP"></select></label>
         </div>
         <button class="btn small main" style="margin-top:12px" id="tkAdd" data-t="add">Add</button>
         <p class="err hide" id="tkErr"></p>
@@ -234,6 +283,41 @@ footer a { color:var(--dim); }
     <div class="rows" id="devices"></div>
 
     </section>
+    <section data-sec="projects" class="hide">
+      <div id="pList">
+        <div class="inline" style="margin-top:16px"><input class="i" id="pNew" maxlength="120" data-ph="pNewPh" placeholder="A new project, e.g. Vodafone spot"><button class="btn small main" id="pAdd" data-t="pCreate">Create</button></div>
+        <p class="err hide" id="pAddErr"></p>
+        <p class="muted" style="font-size:13.5px;margin:12px 0 0" data-t="pWhat">A project keeps one shoot together: the script, the shot list, the ordino, the mail from its people, its dates and tasks, and the people working on it.</p>
+        <div class="pgrid" id="pGrid"></div>
+      </div>
+      <div id="pOne" class="hide">
+        <div class="phead"><button class="btn small" id="pBack">‹</button><input class="i" id="pName" maxlength="120"><div class="colors" id="pColors"></div></div>
+        <p class="err hide" id="pErr"></p>
+        <h2 style="font-size:17px" data-t="pItems">In this project</h2>
+        <div class="rows" id="pItems"></div>
+        <div class="tile" id="pAddBox" style="margin-top:10px">
+          <div class="inline" style="margin:0">
+            <select class="i" id="pKind"></select>
+            <select class="i" id="pPick" style="flex:1"></select>
+            <input class="i hide" id="pText" maxlength="300">
+            <button class="btn small main" id="pPut" data-t="add">Add</button>
+          </div>
+          <p class="muted" style="font-size:12.5px;margin:8px 0 0" id="pHint"></p>
+        </div>
+        <h2 style="font-size:17px" data-t="pDates">Dates and tasks</h2>
+        <div id="pDays"></div>
+        <h2 style="font-size:17px" data-t="pPeople">People</h2>
+        <div class="rows" id="pMembers"></div>
+        <div class="inline" id="pInvite"><input class="i" id="pWho" data-ph="pWhoPh" placeholder="@username or email"><select class="i" id="pRole"><option value="edit"></option><option value="view"></option></select><button class="btn small" id="pAddWho" data-t="add">Add</button></div>
+        <div class="inline"><span style="flex:1"></span><button class="btn small danger" id="pLeave"></button></div>
+      </div>
+    </section>
+
+    <section data-sec="news" class="hide">
+      <div class="cal-head"><b data-t="tNews">Notifications</b><button class="btn small" id="nAll" data-t="nAll">Mark all as read</button></div>
+      <div id="nList"></div>
+    </section>
+
     <section data-sec="people" class="hide">
     <h2><span data-t="contacts">Contacts</span> <small id="cCount"></small></h2>
     <div class="tile">
@@ -244,7 +328,11 @@ footer a { color:var(--dim); }
 
     </section>
     <section data-sec="me" class="hide">
-    <h2 data-t="profile">Profile</h2>
+    <div class="setw"><nav class="setnav" id="setNav">
+      <button data-g="profile" data-t="profile">Profile</button><button data-g="security" data-t="security">Security</button><button data-g="devices" data-t="devs">Signed in on</button><button data-g="danger" data-t="danger">Delete account</button>
+    </nav><div class="setbody">
+    <div class="sgrp" data-grp="profile">
+    <h4 class="shead" data-t="profile">Profile</h4>
     <div class="tile">
       <label class="f" style="margin:0"><span data-t="dname">Name</span><input class="i" id="dname" maxlength="60"></label>
       <label class="f"><span data-t="uname">Username</span><input class="i" id="uname" maxlength="24" placeholder="alex_k" autocapitalize="off" spellcheck="false"></label>
@@ -253,17 +341,18 @@ footer a { color:var(--dim); }
       <button class="btn small" style="margin-top:14px" id="pSave" data-t="save">Save</button>
     </div>
 
-    <h2 data-t="security">Security</h2>
+    </div>
+    <div class="sgrp" data-grp="security">
+    <h4 class="shead" data-t="password">Password</h4>
     <div class="tile">
       <label class="f" style="margin:0"><span data-t="newPass">New password</span><input class="i" type="password" id="np" autocomplete="new-password" placeholder="8+"></label>
       <p class="err hide" id="sErr"></p><p class="note hide" id="sNote"></p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
         <button class="btn small" id="npSave" data-t="changePass">Change password</button>
-        <button class="btn small" id="outAll" data-t="outAll">Sign out everywhere</button>
       </div>
     </div>
 
-    <h2 data-t="mfa">Two-step verification</h2>
+    <h4 class="shead" data-t="mfa">Two-step verification</h4>
     <div class="tile">
       <p id="mfaState"></p>
       <div id="mfaSetup" class="hide" style="margin-top:12px">
@@ -294,11 +383,23 @@ footer a { color:var(--dim); }
       </div>
     </div>
 
-    <h2 data-t="danger">Delete account</h2>
+    </div>
+    <div class="sgrp" data-grp="devices">
+    <h4 class="shead" data-t="devs">Signed in on</h4>
+    <p class="muted" style="margin:0 0 10px;font-size:13px" data-t="devsSub">every device and app with your Roar Account</p>
+    <div class="rows" id="sessions"></div>
+    <div class="inline"><button class="btn small" id="sesOut" data-t="sesOut">Sign out everywhere else</button></div>
+    <p class="err hide" id="sesErr"></p><p class="note hide" id="sesNote"></p>
+
+    </div>
+    <div class="sgrp" data-grp="danger">
+    <h4 class="shead" data-t="danger">Delete account</h4>
     <div class="tile">
       <p data-t="delNote">Deletes your Roar Account and what every Roar app keeps for it (chats, scripts, lists, RoarMail's synced setup). The mail in your mailboxes is not touched.</p>
       <button class="btn small danger" style="margin-top:14px" id="del" data-t="delete">Delete my Roar Account</button>
     </div>
+    </div>
+    </div></div>
     </section>
   </div>
 </main>
@@ -314,7 +415,11 @@ footer a { color:var(--dim); }
 
   // ---------- words, English and Greek ----------
   const W = {
-    en: { unameRule: '3 to 24 characters: small Latin letters, numbers and _ (as in RoarMe).', unameBad: 'The username needs 3 to 24 small Latin letters, numbers or _, e.g. alex_k.', unameNeed: 'Choose a username first.', mfa: 'Two-step verification', mfaWhat: 'From now on, signing in asks for your password and a 6-digit code your phone makes. No app to buy or install:', mfaApple: 'The Passwords app that is already there.', mfaDroid: 'Google Authenticator, free from Google Play.', mfaGet: 'Get it', mfaStep1: 'Point your phone\'s camera at this square and tap what appears (on this phone: press the button).', mfaStep2: 'Save it. From then on it shows a new 6-digit code every 30 seconds.', mfaStep3: 'Type the code it shows now, below.', mfaOpen: 'Add it on this phone', mfaKey: 'Can\'t scan? Type a key instead', mfaTurnOn: 'Turn on', mfaVerify: 'Verify and turn on', mfaTurnOff: 'Turn off', mfaIsOn: 'On: signing in asks for the 6-digit code from your phone (Passwords or Google Authenticator), in every Roar app.', mfaIsOff: 'Off. Turn it on so that a stolen password is not enough to get into your account.', mfaDone: 'Two-step verification is on.', mfaOffQ: 'Turn off two-step verification?', mfaOffDone: 'Two-step verification is off.', tHome: 'Overview', tCal: 'Calendar', tTasks: 'Tasks', tPeople: 'Contacts', tMe: 'Settings', today: 'Today', newEvent: '+ New event', editEvent: 'Event',
+    en: { password: 'Password', tProjects: 'Projects', tNews: 'Notifications', project: 'Project', noProject: 'No project', pNewPh: 'A new project, e.g. Vodafone spot', pCreate: 'Create', pWhat: 'A project keeps one shoot together: the script, the shot list, the ordino, the mail from its people, its dates and tasks, and the people working on it.', pNone: 'No projects yet. Make the first one above.', pItems: 'In this project', pDates: 'Dates and tasks', pPeople: 'People', pWhoPh: '@username or email', pEdit: 'can change', pView: 'can see', pOwner: 'owner', pYou: 'you', pDelete: 'Delete the project', pLeaveIt: 'Leave the project', pDelQ: 'Delete this project? What is in it stays in each app.', pLeaveQ: 'Leave this project?', pNoItems: 'Nothing yet. Add a script, a shot list, an ordino, a sender for RoarMail or a link.', pNoDays: 'No dates yet. Give an event or a task this project and it shows here.', pCount: (i, m) => `${i} in it · ${m} ${m === 1 ? 'person' : 'people'}`,
+      kinds: { roarwriter: 'Script (RoarWriter)', roarlist: 'Shot list (RoarList)', roardino: 'Ordino (Roardino)', sender: 'Mail from (RoarMail)', link: 'Link' }, pickNone: 'Nothing to choose: make one in the app first.', hintSender: 'An address (maria@studio.gr) or a whole company (@studio.gr): RoarMail puts their mail in this project.', hintLink: 'Any link: a folder, a drive, a moodboard.', senderLbl: 'Mail from',
+      nAll: 'Mark all as read', nNone: 'Nothing new. Tasks given to you, shared events, scripts and projects, and files sent to you show up here.',
+      devs: 'Signed in on', devsSub: 'every device and app with your Roar Account', thisDev: 'this one', sesOut: 'Sign out everywhere else', sesOutQ: 'Sign out every other device and app? They will ask for the password again.', sesDone: (n) => `Signed out of ${n} ${n === 1 ? 'place' : 'places'}.`, signOutOne: 'Sign out', since: 'since', active: 'active',
+      cnTitle: (a) => `Sign in to ${a}?`, cnSub: (a, e) => `${a} asks to use your Roar Account (${e}). Allow it only if you just pressed "Sign in with Roar Account" in ${a}.`, cnAllow: 'Allow', cnDeny: 'It was not me', cnSkip: 'Go to my account', cnDone: (a) => `Done. Go back to ${a}: it is signed in.`, cnGone: 'This code has expired or was used. Ask the app for a new one.', cnSignFirst: (a) => `Sign in to connect ${a}.`, unameRule: '3 to 24 characters: small Latin letters, numbers and _ (as in RoarMe).', unameBad: 'The username needs 3 to 24 small Latin letters, numbers or _, e.g. alex_k.', unameNeed: 'Choose a username first.', mfa: 'Two-step verification', mfaWhat: 'From now on, signing in asks for your password and a 6-digit code your phone makes. No app to buy or install:', mfaApple: 'The Passwords app that is already there.', mfaDroid: 'Google Authenticator, free from Google Play.', mfaGet: 'Get it', mfaStep1: 'Point your phone\'s camera at this square and tap what appears (on this phone: press the button).', mfaStep2: 'Save it. From then on it shows a new 6-digit code every 30 seconds.', mfaStep3: 'Type the code it shows now, below.', mfaOpen: 'Add it on this phone', mfaKey: 'Can\'t scan? Type a key instead', mfaTurnOn: 'Turn on', mfaVerify: 'Verify and turn on', mfaTurnOff: 'Turn off', mfaIsOn: 'On: signing in asks for the 6-digit code from your phone (Passwords or Google Authenticator), in every Roar app.', mfaIsOff: 'Off. Turn it on so that a stolen password is not enough to get into your account.', mfaDone: 'Two-step verification is on.', mfaOffQ: 'Turn off two-step verification?', mfaOffDone: 'Two-step verification is off.', tHome: 'Overview', tCal: 'Calendar', tTasks: 'Tasks', tPeople: 'Contacts', tMe: 'Settings', today: 'Today', newEvent: '+ New event', editEvent: 'Event',
       evTitle: 'Title', evDate: 'Date', evFrom: 'From', evTo: 'To', evWhere: 'Where', evNotes: 'Notes', allDay: 'All day', delete2: 'Delete', cancel: 'Cancel',
       onPhone: 'On your iPhone, Google or Outlook', subNote: 'Your Roar calendar appears next to your other calendars and updates by itself. Changes are made here or in the Roar apps.',
       subApple: 'Add to iPhone / Mac', subGoogle: 'Add to Google Calendar', subCopy: 'Copy the link', subNew: 'New link', subTasks: 'Show my tasks with a date in it too',
@@ -335,7 +440,11 @@ footer a { color:var(--dim); }
       delete: 'Delete my Roar Account', delAsk: 'This cannot be undone. Type DELETE to delete your Roar Account.', remove: 'Remove', lastSeen: 'last seen', noDevices: 'No computer has synced yet. In RoarMail: Settings > Roar Account.',
       noSetup: 'Nothing synced yet. In RoarMail: Settings > Roar Account > My settings on every computer.', setupLine: (n) => `${n.accounts} mail accounts · ${n.sigs} signatures · ${n.rules} rules · ${n.tpls} templates · updated ${n.when}`,
       blocked: (n) => `${n} blocked`, contacts: 'Contacts', cSearch: 'Name, email or company', cNote: 'From RoarMail on your computers: the people you write to and the ones you marked. Every Roar app will use this list.', cNone: 'No contacts yet. They come from RoarMail when its sync is on.', cMore: (n) => `and ${n} more: search to find them`, open: 'Open', download: 'Download', scripts: (n) => `${n} scripts`, projects: (n) => `${n} projects`, onWeb: 'on the web', userTaken: 'That username is taken.' },
-    el: { unameRule: '3 έως 24 χαρακτήρες: μικρά λατινικά γράμματα, αριθμοί και _ (όπως στο RoarMe).', unameBad: 'Το username θέλει 3 έως 24 μικρά λατινικά γράμματα, αριθμούς ή _, π.χ. alex_k.', unameNeed: 'Διάλεξε πρώτα username.', mfa: 'Επαλήθευση δύο βημάτων', mfaWhat: 'Από εδώ και πέρα, η σύνδεση ζητά τον κωδικό σου και έναν 6ψήφιο αριθμό που φτιάχνει το κινητό σου. Δεν χρειάζεται να αγοράσεις ή να κατεβάσεις κάτι:', mfaApple: 'Η εφαρμογή Συνθηματικά (Passwords) που υπάρχει ήδη.', mfaDroid: 'Το Google Authenticator, δωρεάν από το Google Play.', mfaGet: 'Κατέβασέ το', mfaStep1: 'Στρέψε την κάμερα του κινητού σου σε αυτό το τετράγωνο και πάτα αυτό που εμφανίζεται (από αυτό το κινητό: πάτα το κουμπί).', mfaStep2: 'Αποθήκευσέ το. Από εκεί και πέρα δείχνει νέο 6ψήφιο αριθμό κάθε 30 δευτερόλεπτα.', mfaStep3: 'Γράψε από κάτω τον αριθμό που δείχνει τώρα.', mfaOpen: 'Πρόσθεσέ το σε αυτό το κινητό', mfaKey: 'Δεν σκανάρεται; Γράψε ένα κλειδί', mfaTurnOn: 'Ενεργοποίηση', mfaVerify: 'Επιβεβαίωση και ενεργοποίηση', mfaTurnOff: 'Απενεργοποίηση', mfaIsOn: 'Ενεργή: η σύνδεση ζητά και τον 6ψήφιο αριθμό από το κινητό σου (Συνθηματικά ή Google Authenticator), σε όλα τα Roar apps.', mfaIsOff: 'Ανενεργή. Ενεργοποίησέ την, ώστε ένας κλεμμένος κωδικός να μη φτάνει για να μπει κάποιος στον λογαριασμό σου.', mfaDone: 'Η επαλήθευση δύο βημάτων είναι ενεργή.', mfaOffQ: 'Να απενεργοποιηθεί η επαλήθευση δύο βημάτων;', mfaOffDone: 'Η επαλήθευση δύο βημάτων απενεργοποιήθηκε.', tHome: 'Επισκόπηση', tCal: 'Ημερολόγιο', tTasks: 'Tasks', tPeople: 'Επαφές', tMe: 'Ρυθμίσεις', today: 'Σήμερα', newEvent: '+ Νέο γεγονός', editEvent: 'Γεγονός',
+    el: { password: 'Κωδικός', tProjects: 'Projects', tNews: 'Ειδοποιήσεις', project: 'Project', noProject: 'Χωρίς project', pNewPh: 'Νέο project, π.χ. Σποτ Vodafone', pCreate: 'Δημιουργία', pWhat: 'Ένα project κρατά μαζί ένα γύρισμα: το σενάριο, το shot list, το ordino, τα mail από τους ανθρώπους του, τις ημερομηνίες και τα tasks, και όσους δουλεύουν σε αυτό.', pNone: 'Κανένα project ακόμα. Φτιάξε το πρώτο από πάνω.', pItems: 'Σε αυτό το project', pDates: 'Ημερομηνίες και tasks', pPeople: 'Άνθρωποι', pWhoPh: '@username ή email', pEdit: 'αλλάζει', pView: 'βλέπει', pOwner: 'κάτοχος', pYou: 'εσύ', pDelete: 'Διαγραφή του project', pLeaveIt: 'Αποχώρηση από το project', pDelQ: 'Να διαγραφεί αυτό το project; Ό,τι έχει μέσα μένει στο κάθε app.', pLeaveQ: 'Να αποχωρήσεις από αυτό το project;', pNoItems: 'Τίποτα ακόμα. Πρόσθεσε σενάριο, shot list, ordino, αποστολέα για το RoarMail ή σύνδεσμο.', pNoDays: 'Καμία ημερομηνία ακόμα. Δώσε σε ένα γεγονός ή σε ένα task αυτό το project και θα εμφανιστεί εδώ.', pCount: (i, m) => `${i} μέσα · ${m} ${m === 1 ? 'άνθρωπος' : 'άνθρωποι'}`,
+      kinds: { roarwriter: 'Σενάριο (RoarWriter)', roarlist: 'Shot list (RoarList)', roardino: 'Ordino (Roardino)', sender: 'Mail από (RoarMail)', link: 'Σύνδεσμος' }, pickNone: 'Δεν υπάρχει κάτι να διαλέξεις: φτιάξ’ το πρώτα στο app.', hintSender: 'Μια διεύθυνση (maria@studio.gr) ή μια ολόκληρη εταιρεία (@studio.gr): το RoarMail βάζει τα mail τους σε αυτό το project.', hintLink: 'Οποιοσδήποτε σύνδεσμος: φάκελος, drive, moodboard.', senderLbl: 'Mail από',
+      nAll: 'Όλα διαβασμένα', nNone: 'Τίποτα καινούριο. Εδώ εμφανίζονται tasks που σου δίνουν, γεγονότα, σενάρια και projects που μοιράζονται μαζί σου, και αρχεία που σου στέλνουν.',
+      devs: 'Συνδεδεμένο σε', devsSub: 'κάθε συσκευή και app με το Roar Account σου', thisDev: 'αυτή εδώ', sesOut: 'Αποσύνδεση από όλα τα άλλα', sesOutQ: 'Να αποσυνδεθούν όλες οι άλλες συσκευές και apps; Θα ζητήσουν ξανά τον κωδικό.', sesDone: (n) => `Αποσυνδέθηκαν ${n} ${n === 1 ? 'σημείο' : 'σημεία'}.`, signOutOne: 'Αποσύνδεση', since: 'από', active: 'ενεργό',
+      cnTitle: (a) => `Σύνδεση στο ${a};`, cnSub: (a, e) => `Το ${a} ζητά να χρησιμοποιήσει το Roar Account σου (${e}). Επίτρεψέ το μόνο αν μόλις πάτησες «Sign in with Roar Account» στο ${a}.`, cnAllow: 'Επιτρέπω', cnDeny: 'Δεν ήμουν εγώ', cnSkip: 'Στον λογαριασμό μου', cnDone: (a) => `Έγινε. Γύρνα στο ${a}: είναι συνδεδεμένο.`, cnGone: 'Ο κωδικός έληξε ή χρησιμοποιήθηκε. Ζήτα νέο από το app.', cnSignFirst: (a) => `Συνδέσου για να συνδέσεις το ${a}.`, unameRule: '3 έως 24 χαρακτήρες: μικρά λατινικά γράμματα, αριθμοί και _ (όπως στο RoarMe).', unameBad: 'Το username θέλει 3 έως 24 μικρά λατινικά γράμματα, αριθμούς ή _, π.χ. alex_k.', unameNeed: 'Διάλεξε πρώτα username.', mfa: 'Επαλήθευση δύο βημάτων', mfaWhat: 'Από εδώ και πέρα, η σύνδεση ζητά τον κωδικό σου και έναν 6ψήφιο αριθμό που φτιάχνει το κινητό σου. Δεν χρειάζεται να αγοράσεις ή να κατεβάσεις κάτι:', mfaApple: 'Η εφαρμογή Συνθηματικά (Passwords) που υπάρχει ήδη.', mfaDroid: 'Το Google Authenticator, δωρεάν από το Google Play.', mfaGet: 'Κατέβασέ το', mfaStep1: 'Στρέψε την κάμερα του κινητού σου σε αυτό το τετράγωνο και πάτα αυτό που εμφανίζεται (από αυτό το κινητό: πάτα το κουμπί).', mfaStep2: 'Αποθήκευσέ το. Από εκεί και πέρα δείχνει νέο 6ψήφιο αριθμό κάθε 30 δευτερόλεπτα.', mfaStep3: 'Γράψε από κάτω τον αριθμό που δείχνει τώρα.', mfaOpen: 'Πρόσθεσέ το σε αυτό το κινητό', mfaKey: 'Δεν σκανάρεται; Γράψε ένα κλειδί', mfaTurnOn: 'Ενεργοποίηση', mfaVerify: 'Επιβεβαίωση και ενεργοποίηση', mfaTurnOff: 'Απενεργοποίηση', mfaIsOn: 'Ενεργή: η σύνδεση ζητά και τον 6ψήφιο αριθμό από το κινητό σου (Συνθηματικά ή Google Authenticator), σε όλα τα Roar apps.', mfaIsOff: 'Ανενεργή. Ενεργοποίησέ την, ώστε ένας κλεμμένος κωδικός να μη φτάνει για να μπει κάποιος στον λογαριασμό σου.', mfaDone: 'Η επαλήθευση δύο βημάτων είναι ενεργή.', mfaOffQ: 'Να απενεργοποιηθεί η επαλήθευση δύο βημάτων;', mfaOffDone: 'Η επαλήθευση δύο βημάτων απενεργοποιήθηκε.', tHome: 'Επισκόπηση', tCal: 'Ημερολόγιο', tTasks: 'Tasks', tPeople: 'Επαφές', tMe: 'Ρυθμίσεις', today: 'Σήμερα', newEvent: '+ Νέο γεγονός', editEvent: 'Γεγονός',
       evTitle: 'Τίτλος', evDate: 'Ημερομηνία', evFrom: 'Από', evTo: 'Έως', evWhere: 'Πού', evNotes: 'Σημειώσεις', allDay: 'Όλη μέρα', delete2: 'Διαγραφή', cancel: 'Άκυρο',
       onPhone: 'Στο iPhone, στο Google ή στο Outlook', subNote: 'Το ημερολόγιο Roar εμφανίζεται δίπλα στα άλλα σου ημερολόγια και ενημερώνεται μόνο του. Οι αλλαγές γίνονται εδώ ή στα Roar apps.',
       subApple: 'Πρόσθεσε στο iPhone / Mac', subGoogle: 'Πρόσθεσε στο Google Calendar', subCopy: 'Αντιγραφή συνδέσμου', subNew: 'Νέος σύνδεσμος', subTasks: 'Να φαίνονται και τα tasks μου με ημερομηνία',
@@ -429,11 +538,13 @@ footer a { color:var(--dim); }
     const { data } = await sb.auth.getSession()
     const s = data.session
     show($('loading'), false)
-    if (!s) { state.user = null; show($('auth'), true); show($('home'), false); show($('signout'), false); renderAuth(); return }
+    if (!s) { state.user = null; show($('auth'), true); show($('home'), false); show($('connect'), false); show($('signout'), false); renderAuth(); if (CONNECT) $('authSub').textContent = T().cnSignFirst('your app'); return }
     const aal = await sb.auth.mfa.getAuthenticatorAssuranceLevel()
     if (aal.data && aal.data.nextLevel === 'aal2' && aal.data.currentLevel !== 'aal2') { mode = 'mfa'; show($('auth'), true); show($('home'), false); renderAuth(); return }
     state.user = s.user
-    show($('auth'), false); show($('home'), true); show($('signout'), true)
+    show($('auth'), false); show($('signout'), true)
+    if (CONNECT && !state.connected) return showConnect(s)
+    show($('home'), true)
     loadHome()
   }
 
@@ -475,7 +586,7 @@ footer a { color:var(--dim); }
       .sort((a, b) => (b.vip - a.vip) || ((b.use_count || 0) - (a.use_count || 0)) || String(a.name || a.email).localeCompare(String(b.name || b.email)))
     $('cCount').textContent = state.contacts.length ? String(state.contacts.length) : ''
     showContacts()
-    loadCal(); loadTasks(); loadFeed(); loadMfa()
+    loadProjects().then(() => { loadCal(); loadTasks() }); loadFeed(); loadMfa(); loadNews(); loadSessions()
     const today = new Date().toISOString().slice(0, 10)
     const { data: use } = await sb.from('roarmail_ai_usage').select('n').eq('user_id', u.id).eq('day', today).maybeSingle()
     $('mAi').textContent = `${use ? use.n : 0} / 30`
@@ -502,12 +613,14 @@ footer a { color:var(--dim); }
 
   // ---------- tabs (3 Nov 2026: Overview, Calendar, Tasks, Contacts, Settings) ----------
   const showTab = (k) => {
+    if (k === 'news') setTimeout(readNews, 1500)
     document.querySelectorAll('#atabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === k))
     document.querySelectorAll('[data-sec]').forEach((x) => x.classList.toggle('hide', x.dataset.sec !== k))
     try { history.replaceState(null, '', k === 'home' ? location.pathname + location.search : '#' + k) } catch (e) {}
   }
   document.querySelectorAll('#atabs button').forEach((b) => b.onclick = () => showTab(b.dataset.tab))
-  showTab(['cal', 'tasks', 'people', 'me'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'home')
+  const HASH = { calendar: 'cal', cal: 'cal', tasks: 'tasks', projects: 'projects', news: 'news', people: 'people', me: 'me' }
+  showTab(HASH[location.hash.slice(1)] || 'home')
 
   // ---------- the Roar Calendar ----------
   const pad = (n) => String(n).padStart(2, '0')
@@ -567,6 +680,7 @@ footer a { color:var(--dim); }
     $('evE').value = e && !e.all_day && e.ends_at ? new Date(e.ends_at).toTimeString().slice(0, 5) : '11:00'
     $('evL').value = e ? e.location || '' : ''
     $('evN').value = e ? e.notes || '' : ''
+    fillProjects($('evP'), e ? e.project_id : (proj.open || ''))
     show($('evDel'), !!e && e.owner === state.user.id); say('evErr')
     show($('evForm'), true); $('evT').focus()
   }
@@ -577,7 +691,7 @@ footer a { color:var(--dim); }
     const all = $('evAll').checked
     const at = (hm) => new Date(`${d}T${hm || '00:00'}:00`).toISOString()
     const row = { title, all_day: all, starts_at: all ? `${d}T00:00:00Z` : at($('evS').value), ends_at: all ? null : at($('evE').value || $('evS').value),
-      location: $('evL').value.trim() || null, notes: $('evN').value.trim() || null }
+      location: $('evL').value.trim() || null, notes: $('evN').value.trim() || null, project_id: $('evP').value || null }
     const q = cal.edit ? sb.from('roar_calendar_events').update(row).eq('id', cal.edit.id) : sb.from('roar_calendar_events').insert({ ...row, source: 'manual' })
     const { error } = await q
     if (error) return say('evErr', error.message)
@@ -606,7 +720,7 @@ footer a { color:var(--dim); }
 
   // ---------- tasks (RoarMe's, the same in every Roar app) ----------
   async function loadTasks() {
-    const { data } = await sb.from('roar_tasks').select('id, created_by, assignee, title, notes, due, status, priority, created_at, done_at').order('created_at', { ascending: false }).limit(500)
+    const { data } = await sb.from('roar_tasks').select('id, created_by, assignee, title, notes, due, status, priority, created_at, done_at, project_id').order('created_at', { ascending: false }).limit(500)
     cal.tasks = data || []
     drawTasks(); if (cal.events) drawCal()
   }
@@ -631,7 +745,7 @@ footer a { color:var(--dim); }
   $('tkAdd').onclick = async () => {
     const t = T(), title = $('tkT').value.trim()
     if (!title) return say('tkErr', t.needTitle)
-    const { error } = await sb.from('roar_tasks').insert({ title, assignee: state.user.id, due: $('tkD').value || null })
+    const { error } = await sb.from('roar_tasks').insert({ title, assignee: state.user.id, due: $('tkD').value || null, project_id: $('tkP').value || null })
     if (error) return say('tkErr', error.message)
     say('tkErr'); $('tkT').value = ''; $('tkD').value = ''; loadTasks()
   }
@@ -701,7 +815,14 @@ footer a { color:var(--dim); }
     if (error) return say('sErr', error.message)
     $('np').value = ''; say('sNote', t.passChanged)
   }
-  $('outAll').onclick = async () => { await sb.auth.signOut({ scope: 'global' }); enter() }
+  // Settings as RoarMail's: the groups on the left, one at a time on the right (Alex, 3 Nov 2026)
+  const showGroup = (g) => {
+    document.querySelectorAll('#setNav button').forEach((b) => b.classList.toggle('on', b.dataset.g === g))
+    document.querySelectorAll('.sgrp').forEach((x) => x.classList.toggle('hide', x.dataset.grp !== g))
+    if (g === 'devices' && state.user) loadSessions()
+  }
+  document.querySelectorAll('#setNav button').forEach((b) => b.onclick = () => showGroup(b.dataset.g))
+  showGroup('profile')
   $('signout').onclick = async () => { await sb.auth.signOut(); enter() }
   $('del').onclick = async () => {
     const t = T()
@@ -709,6 +830,211 @@ footer a { color:var(--dim); }
     const { error } = await sb.rpc('roar_delete_me')
     if (error) return alert(error.message)
     await sb.auth.signOut(); enter()
+  }
+
+
+  // ---------- an app asks to sign in (roar-connect, 3 Nov 2026) ----------
+  const FN = URL + '/functions/v1/'
+  const CONNECT = new URLSearchParams(location.search).get('connect')
+  async function connectCall(body, s) {
+    const r = await fetch(FN + 'roar-connect', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: KEY, Authorization: 'Bearer ' + s.access_token }, body: JSON.stringify(body) })
+    const j = await r.json().catch(() => ({}))
+    if (!r.ok || j.error) throw new Error(j.error || 'HTTP ' + r.status)
+    return j
+  }
+  async function showConnect(s) {
+    const t = T()
+    show($('home'), false); show($('connect'), true); say('cnErr'); say('cnNote')
+    $('cnCode').textContent = CONNECT
+    try {
+      const j = await connectCall({ do: 'look', code: CONNECT }, s)
+      state.cnName = j.name
+      $('cnTitle').textContent = t.cnTitle(j.name); $('cnSub').textContent = t.cnSub(j.name, s.user.email)
+      show($('cnAllow'), true); show($('cnDeny'), true)
+    } catch (x) { $('cnTitle').textContent = 'Roar Account'; $('cnSub').textContent = ''; show($('cnAllow'), false); show($('cnDeny'), false); say('cnErr', /expired|used/i.test(x.message) ? t.cnGone : x.message) }
+  }
+  const leaveConnect = () => { state.connected = true; history.replaceState(null, '', location.pathname); show($('connect'), false); show($('home'), true); loadHome() }
+  $('cnAllow').onclick = async () => {
+    const t = T(), { data } = await sb.auth.getSession(); say('cnErr')
+    $('cnAllow').disabled = true
+    try { const j = await connectCall({ do: 'allow', code: CONNECT }, data.session); say('cnNote', t.cnDone(j.name)); show($('cnAllow'), false); show($('cnDeny'), false) }
+    catch (x) { say('cnErr', /expired|used/i.test(x.message) ? t.cnGone : x.message) }
+    finally { $('cnAllow').disabled = false }
+  }
+  $('cnDeny').onclick = async () => { const { data } = await sb.auth.getSession(); try { await connectCall({ do: 'deny', code: CONNECT }, data.session) } catch (e) {} leaveConnect() }
+  $('cnSkip').onclick = leaveConnect
+
+  // ---------- notifications (roar_notifications, written by the database) ----------
+  const APPICON = { roarwriter: 'roarwriter', roarlist: 'roarlist', roardino: 'roardino', roarmail: 'roarmail', roartransfer: 'roartransfer', roarme: 'roarme' }
+  async function loadNews() {
+    const t = T()
+    const { data } = await sb.from('roar_notifications').select('*').order('created_at', { ascending: false }).limit(100)
+    const all = data || []; state.news = all
+    const unread = all.filter((n) => !n.read_at).length
+    $('nBadge').textContent = unread > 99 ? '99+' : String(unread); show($('nBadge'), unread > 0)
+    $('nList').innerHTML = all.length ? all.map((n) => {
+      const ic = APPICON[n.app] ? `<img class="appic" src="../lab/icons/${APPICON[n.app]}.png" alt="">` : `<span class="appic" style="display:grid;place-items:center;background:var(--glass-2)">●</span>`
+      const inner = `${ic}<div class="g"><b>${esc(n.title)}</b>${n.body ? `<span>${esc(n.body)}</span>` : ''}</div><time>${esc(when(n.created_at))}</time>`
+      return n.url ? `<a class="nrow ${n.read_at ? '' : 'new'}" href="${esc(n.url)}" ${/^https?:\/\/themadlions\.com\/account/.test(n.url) ? '' : 'target="_blank" rel="noopener"'}>${inner}</a>` : `<div class="nrow ${n.read_at ? '' : 'new'}">${inner}</div>`
+    }).join('') : `<p class="muted" style="margin:0">${esc(t.nNone)}</p>`
+    $('nList').querySelectorAll('a.nrow').forEach((a) => a.addEventListener('click', () => { const h = a.getAttribute('href').split('#')[1]; if (/themadlions\.com\/account/.test(a.href) && HASH[h]) { setTimeout(() => showTab(HASH[h]), 0) } }))
+  }
+  async function readNews() {
+    if (!state.user || !(state.news || []).some((n) => !n.read_at)) return
+    await sb.from('roar_notifications').update({ read_at: new Date().toISOString() }).is('read_at', null)
+    show($('nBadge'), false)
+  }
+  $('nAll').onclick = async () => { await readNews(); loadNews() }
+  setInterval(() => { if (state.user && !document.hidden) loadNews() }, 60000)
+
+  // ---------- devices (RoarMe's roar_my_sessions) ----------
+  function nameUA(ua) {
+    ua = ua || ''
+    const app = (ua.match(/\b(RoarMail|RoarWriter|RoarList|RoarKit|RoarTwin|RoarMorph|Roarverter|RoarMind|RoarPlay|RoarGrab|RoarMe)\/[\d.]+/) || [])[0]
+    const os = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Mac OS X|Macintosh/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : /Linux/.test(ua) ? 'Linux' : ''
+    const br = app ? '' : /Edg\//.test(ua) ? 'Edge' : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : /node|undici|Deno|Go-http|python/i.test(ua) ? 'App' : ''
+    return [app ? app.replace('/', ' ') : br, os].filter(Boolean).join(' · ') || 'Device'
+  }
+  async function loadSessions() {
+    const t = T()
+    const { data, error } = await sb.rpc('roar_my_sessions')
+    if (error) { $('sessions').innerHTML = `<p class="muted" style="margin:0">${esc(error.message)}</p>`; return }
+    $('sessions').innerHTML = (data || []).map((x) => `<div class="row"><div class="g"><b>${esc(nameUA(x.user_agent))}${x.current ? `<span class="here">${esc(t.thisDev)}</span>` : ''}</b><span>${esc(t.active)} ${esc(when(x.last_active))} · ${esc(t.since)} ${esc(when(x.created_at))}${x.ip ? ' · ' + esc(x.ip) : ''}</span></div>${x.current ? '' : `<button class="btn small" data-end="${x.id}">${esc(t.signOutOne)}</button>`}</div>`).join('')
+    $('sessions').querySelectorAll('[data-end]').forEach((b) => b.onclick = async () => { b.disabled = true; const { error: e } = await sb.rpc('roar_end_session', { sid: b.dataset.end }); if (e) say('sesErr', e.message); loadSessions() })
+  }
+  $('sesOut').onclick = async () => {
+    const t = T(); say('sesErr'); say('sesNote')
+    if (!confirm(t.sesOutQ)) return
+    const { data, error } = await sb.rpc('roar_end_other_sessions')
+    if (error) return say('sesErr', error.message)
+    say('sesNote', t.sesDone(data || 0)); loadSessions()
+  }
+
+  // ---------- projects across the apps (roar_projects) ----------
+  const COLORS = ['#ff3b2f', '#ff9f0a', '#ffd60a', '#30d158', '#64d2ff', '#0a84ff', '#bf5af2', '#ff375f', '#a2845e', '#8e8e93']
+  const proj = { list: [], open: null, mine: null }
+  async function loadProjects() {
+    const [{ data: ps }, { data: ms }, { data: its }] = await Promise.all([
+      sb.from('roar_projects').select('*').order('updated_at', { ascending: false }),
+      sb.from('roar_project_members').select('*'),
+      sb.from('roar_project_items').select('*').order('created_at'),
+    ])
+    proj.list = (ps || []).map((p) => ({ ...p, members: (ms || []).filter((m) => m.project_id === p.id), items: (its || []).filter((i) => i.project_id === p.id) }))
+    drawProjects(); fillProjects($('tkP'), $('tkP').value)
+    if (proj.open) openProject(proj.open)
+  }
+  function fillProjects(sel, v) {
+    const t = T()
+    sel.innerHTML = `<option value="">${esc(t.noProject)}</option>` + proj.list.filter((p) => !p.archived).map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join('')
+    sel.value = v && proj.list.some((p) => p.id === v) ? v : ''
+  }
+  function drawProjects() {
+    const t = T()
+    $('pGrid').innerHTML = proj.list.length ? proj.list.map((p) => `<button class="tile pcard" data-p="${p.id}"><b><i class="dot" style="background:${esc(p.color || COLORS[0])}"></i>${esc(p.name)}</b><span class="muted" style="font-size:13px">${esc(t.pCount(p.items.length, p.members.length + 1))}</span></button>`).join('')
+      : `<p class="muted" style="margin:0">${esc(t.pNone)}</p>`
+    $('pGrid').querySelectorAll('[data-p]').forEach((b) => b.onclick = () => openProject(b.dataset.p))
+  }
+  $('pAdd').onclick = async () => {
+    const name = $('pNew').value.trim(); say('pAddErr')
+    if (!name) return say('pAddErr', T().needTitle)
+    const { data, error } = await sb.from('roar_projects').insert({ name, color: COLORS[proj.list.length % COLORS.length] }).select().single()
+    if (error) return say('pAddErr', error.message)
+    $('pNew').value = ''; proj.open = data.id; await loadProjects()
+  }
+  $('pNew').onkeydown = (e) => { if (e.key === 'Enter') $('pAdd').click() }
+  $('pBack').onclick = () => { proj.open = null; show($('pOne'), false); show($('pList'), true); try { history.replaceState(null, '', '#projects') } catch (e) {} }
+  const itemUrl = (i) => i.url || (i.app === 'roarwriter' ? 'https://alexisdigipro-hub.github.io/roarwriter/' : i.app === 'roarlist' ? '../roarlist/' : i.app === 'roardino' ? '../roardino/' : '')
+  async function openProject(id) {
+    const t = T(), p = proj.list.find((x) => x.id === id)
+    if (!p) { proj.open = null; return }
+    proj.open = id
+    const mine = p.owner === state.user.id, role = mine ? 'owner' : (p.members.find((m) => m.user_id === state.user.id) || {}).role, can = role === 'owner' || role === 'edit'
+    show($('pList'), false); show($('pOne'), true); say('pErr')
+    $('pName').value = p.name; $('pName').readOnly = !can
+    $('pColors').innerHTML = can ? COLORS.map((c) => `<button style="background:${c}" class="${c === p.color ? 'on' : ''}" data-c="${c}" aria-label="${c}"></button>`).join('') : ''
+    $('pColors').querySelectorAll('[data-c]').forEach((b) => b.onclick = async () => { await sb.from('roar_projects').update({ color: b.dataset.c }).eq('id', id); loadProjects() })
+    // what is in it
+    const label = (i) => i.kind === 'sender' ? `${t.senderLbl} ${i.item_id}` : (i.title || i.item_id)
+    const icon = (i) => APPICON[i.app] ? `<img class="appic" src="../lab/icons/${APPICON[i.app]}.png" alt="">` : `<span class="appic" style="display:grid;place-items:center;background:var(--glass-2)">↗</span>`
+    $('pItems').innerHTML = p.items.length ? p.items.map((i) => { const u = itemUrl(i); return `<div class="row">${icon(i)}<div class="g"><b>${esc(label(i))}</b><span>${esc((t.kinds[i.kind === 'sender' ? 'sender' : i.app] || i.app))}</span></div>${u ? `<a class="btn small" href="${esc(u)}" target="_blank" rel="noopener">${esc(t.open)}</a>` : ''}${can ? `<button class="btn small" data-rmi="${i.id}">✕</button>` : ''}</div>` }).join('')
+      : `<p class="muted" style="margin:0">${esc(t.pNoItems)}</p>`
+    $('pItems').querySelectorAll('[data-rmi]').forEach((b) => b.onclick = async () => { await sb.from('roar_project_items').delete().eq('id', b.dataset.rmi); loadProjects() })
+    show($('pAddBox'), can)
+    if (can) {
+      $('pKind').innerHTML = ['roarwriter', 'roarlist', 'roardino', 'sender', 'link'].map((k) => `<option value="${k}">${esc(t.kinds[k])}</option>`).join('')
+      $('pKind').value = proj.kind || 'roarwriter'; pickKind()
+    }
+    // its dates and tasks
+    const [{ data: evs }, { data: tks }] = await Promise.all([
+      sb.from('roar_calendar_events').select('id, title, starts_at, ends_at, all_day, location, source').eq('project_id', id).is('deleted_at', null).order('starts_at'),
+      sb.from('roar_tasks').select('id, title, due, status').eq('project_id', id).order('due', { ascending: true, nullsFirst: false }),
+    ])
+    const dfmt = (iso) => new Date(iso).toLocaleDateString(loc(), { weekday: 'short', day: 'numeric', month: 'short' })
+    const rows = (evs || []).map((e) => `<div class="evrow"><span class="t">${esc(dfmt(e.starts_at))}</span><div class="g"><b>${esc(e.title)}</b><span>${esc(timeOf(e))}${e.location ? ' · ' + esc(e.location) : ''}</span></div>${t.srcName[e.source] ? `<span class="src">${esc(t.srcName[e.source])}</span>` : ''}</div>`)
+      .concat((tks || []).map((x) => `<div class="evrow"><span class="t">${x.due ? esc(dfmt(x.due + 'T12:00:00')) : '—'}</span><div class="g"><b>${x.status === 'done' ? '✓ ' : '☐ '}${esc(x.title)}</b></div></div>`))
+    $('pDays').innerHTML = rows.join('') || `<p class="muted" style="margin:0">${esc(t.pNoDays)}</p>`
+    // the people
+    const ids = [p.owner, ...p.members.map((m) => m.user_id)]
+    const { data: ppl } = await sb.from('roar_people').select('id, username, display_name').in('id', ids)
+    const nm = (u) => { const x = (ppl || []).find((k) => k.id === u); return x ? (x.display_name || '@' + x.username) : '…' }
+    $('pMembers').innerHTML = [{ user_id: p.owner, role: 'owner' }, ...p.members].map((m) => `<div class="row"><div class="g"><b>${esc(nm(m.user_id))}${m.user_id === state.user.id ? ` <span class="here">${esc(t.pYou)}</span>` : ''}</b><span>${esc(m.role === 'owner' ? t.pOwner : m.role === 'view' ? t.pView : t.pEdit)}</span></div>${mine && m.role !== 'owner' ? `<button class="btn small" data-rmm="${m.user_id}">✕</button>` : ''}</div>`).join('')
+    $('pMembers').querySelectorAll('[data-rmm]').forEach((b) => b.onclick = async () => { await sb.from('roar_project_members').delete().eq('project_id', id).eq('user_id', b.dataset.rmm); loadProjects() })
+    show($('pInvite'), mine)
+    $('pRole').options[0].textContent = t.pEdit; $('pRole').options[1].textContent = t.pView
+    $('pLeave').textContent = mine ? t.pDelete : t.pLeaveIt
+    try { history.replaceState(null, '', '#projects') } catch (e) {}
+  }
+  async function pickKind() {
+    const t = T(), k = $('pKind').value; proj.kind = k
+    const text = k === 'sender' || k === 'link'
+    show($('pPick'), !text); show($('pText'), text)
+    $('pText').value = ''; $('pText').placeholder = k === 'sender' ? 'maria@studio.gr  ·  @studio.gr' : 'https://'
+    $('pHint').textContent = k === 'sender' ? t.hintSender : k === 'link' ? t.hintLink : ''
+    if (text) return
+    let opts = []
+    if (k === 'roarwriter') { const { data } = await sb.from('roarwriter_scripts').select('id, title').eq('owner', state.user.id).order('updated_at', { ascending: false }); opts = (data || []).map((x) => [x.id, x.title || 'Untitled']) }
+    if (k === 'roarlist') { const { data } = await sb.from('roarlist_projects').select('id, title:data->>title').eq('owner', state.user.id).order('updated_at', { ascending: false }); opts = (data || []).map((x) => [x.id, x.title || 'Shot list']) }
+    if (k === 'roardino') { const { data } = await sb.from('roardino_ordinos').select('id, token, ptitle:data->project->>title, label:data->day->>label, date:data->day->>date').eq('owner', state.user.id).order('updated_at', { ascending: false }); opts = (data || []).map((x) => [x.id, [x.ptitle || x.label || 'Ordino', x.date].filter(Boolean).join(' · '), x.token ? 'https://go.themadlions.com/?dino/' + x.token : '']) }
+    proj.opts = opts
+    $('pPick').innerHTML = opts.length ? opts.map((o, n) => `<option value="${n}">${esc(o[1])}</option>`).join('') : `<option value="">${esc(t.pickNone)}</option>`
+  }
+  $('pKind').onchange = pickKind
+  $('pPut').onclick = async () => {
+    const t = T(), k = $('pKind').value, id = proj.open; say('pErr')
+    let row
+    if (k === 'sender') {
+      let v = $('pText').value.trim().toLowerCase()
+      if (/^[^@\s]+\.[a-z]{2,}$/.test(v)) v = '@' + v
+      if (!/^([^@\s]+)?@[^@\s]+\.[a-z]{2,}$/.test(v)) return say('pErr', t.hintSender)
+      row = { app: 'roarmail', kind: 'sender', item_id: v, title: v }
+    } else if (k === 'link') {
+      let v = $('pText').value.trim(); if (!v) return
+      if (!/^https?:\/\//i.test(v)) v = 'https://' + v
+      row = { app: 'link', item_id: v, title: v.replace(/^https?:\/\//, '').slice(0, 120), url: v }
+    } else {
+      const o = (proj.opts || [])[+$('pPick').value]; if (!o) return
+      row = { app: k, item_id: o[0], title: o[1], url: o[2] || null }
+    }
+    const { error } = await sb.from('roar_project_items').insert({ project_id: id, ...row })
+    if (error && !/duplicate/i.test(error.message)) return say('pErr', error.message)
+    loadProjects()
+  }
+  $('pText').onkeydown = (e) => { if (e.key === 'Enter') $('pPut').click() }
+  $('pName').onchange = async () => { const v = $('pName').value.trim(); if (v) { await sb.from('roar_projects').update({ name: v }).eq('id', proj.open); loadProjects() } }
+  $('pAddWho').onclick = async () => {
+    say('pErr')
+    const { error } = await sb.rpc('roar_project_add_member', { p: proj.open, who: $('pWho').value, r: $('pRole').value })
+    if (error) return say('pErr', error.message)
+    $('pWho').value = ''; loadProjects()
+  }
+  $('pWho').onkeydown = (e) => { if (e.key === 'Enter') $('pAddWho').click() }
+  $('pLeave').onclick = async () => {
+    const t = T(), p = proj.list.find((x) => x.id === proj.open); if (!p) return
+    const mine = p.owner === state.user.id
+    if (!confirm(mine ? t.pDelQ : t.pLeaveQ)) return
+    if (mine) await sb.from('roar_projects').delete().eq('id', p.id)
+    else await sb.from('roar_project_members').delete().eq('project_id', p.id).eq('user_id', state.user.id)
+    $('pBack').click(); loadProjects()
   }
 
   // a password link from the email lands here: choose the new one
