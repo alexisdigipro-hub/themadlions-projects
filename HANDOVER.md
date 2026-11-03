@@ -49,6 +49,13 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - **Settings > Chat on a phone** (Alex, 3 Nov: "gaps here too"): the same edge-to-edge rule covers it (it is the chat's page too); its frame has no corners and runs to the screen's sides (styles.css section.set-chat), and on a phone no row of the settings menu shows as chosen (General was lit red while only the list showed).
 - Nothing for Alex to run.
 
+## Where we stopped (3 Nov 2026: Roar Account, RoarMail 0.26.1 to 0.29.0)
+
+- **Roar Account** (Alex: "one account in every app, like iCloud", parts 1 and 2 only; RoarMail Web, part 3, waits for his decision: it needs our own mail server in the middle). It is RoarMe's sign-in (Supabase bzmjhbnwhdwmncxkqkdl). Online page: **themadlions.com/account/** (public/site/account/index.html, static, supabase-js 2.45.4 from jsDelivr): sign in / up / forgot / 6-digit code / new password, profile (roar_profiles), apps with their counts, RoarMail's synced setup, AI used today, computers (remove one), change password, sign out everywhere, delete (roar_delete_me). noindex. Sign-up and reset links ask Supabase to return to themadlions.com/account/: if that address is not in RoarMe's Auth > URL Configuration > Redirect URLs, the link lands on RoarMe's own site instead (still works).
+- **RoarMail 0.29.0**: Settings > Roar Account (sign-in moved there from Accounts), sync of RoarMail's setup (src/main/account.ts; roarmail_sync, roarmail_devices; never mail, never mail passwords: on a new computer the passwords are typed again), the ✦ AI in a new message (RoarMail AI = Edge Function roarmail-ai, Claude, 30 a day per person via roarmail_ai_take; or the person's own Claude / ChatGPT key in safeStorage). SQL in the roarmail repo: supabase/roarmail-account.sql, **applied**; the Edge Function **deployed**. RoarMail's privacy policy updated for sync and AI.
+- 0.26.1 Shift selects a range; 0.27.0 a new message opens in its own window (Alex: works, "super"); 0.28.0 fonts that arrive as written (safe fonts first, this computer's fonts, Settings > Fonts > New messages).
+- Open: Alex to try 0.29.0 (sign in, sync between two computers, ✦). RoarMail Web (part 3) not started.
+
 ## Where we stopped (2 Nov 2026: RoarMail 0.24.1 to 0.26.0, blank window, Block, shared spam list)
 
 Work in alexisdigipro-hub/roarmail (desktop releases out from Actions, desktop.yml workflow_dispatch):

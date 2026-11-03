@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- The Roar Account (Alex, 3 Nov 2026): one account for every Roar app, "like iCloud". It is RoarMe's sign-in
+     (Supabase project bzmjhbnwhdwmncxkqkdl, the publishable key is public by design). Everything here goes through the
+     person's own session and the tables' own rules: profile, apps, RoarMail's synced setup and computers, security. -->
+<title>Roar Account · The Mad Lions</title>
+<link rel="canonical" href="https://themadlions.com/account/">
+<meta name="description" content="Your Roar Account: one sign-in for RoarMail, RoarMe, RoarWriter, RoarList and every Roar app.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#16181c">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<style>
+:root { --bg:#16181c; --text:#eef0f3; --muted:rgba(214,220,228,.66); --dim:rgba(214,220,228,.42); --red:#d40000; --red-hi:#ff3b2f;
+  --glass:rgba(255,255,255,.055); --glass-2:rgba(255,255,255,.09); --edge:rgba(255,255,255,.12); --pad:clamp(16px,4.5vw,64px);
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,'Helvetica Neue',sans-serif; --mono:ui-monospace,'SF Mono',Menlo,monospace; color-scheme:dark; }
+* { box-sizing:border-box; }
+html, body { margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; background:radial-gradient(1100px 620px at 50% -10%,#3c424c 0%,transparent 62%),radial-gradient(800px 600px at 100% 100%,rgba(212,0,0,.16),transparent 60%); }
+a { color:inherit; }
+:focus-visible { outline:2px solid var(--red-hi); outline-offset:3px; border-radius:8px; }
+.bar { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:14px; padding:calc(12px + env(safe-area-inset-top)) var(--pad) 12px; background:rgba(22,24,28,.72); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); border-bottom:1px solid rgba(255,255,255,.06); }
+.bar .home img { width:118px; height:auto; filter:invert(1); display:block; }
+.bar .crumb { font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+.bar .end { margin-left:auto; display:flex; gap:8px; align-items:center; }
+.seg { display:flex; padding:3px; border-radius:999px; background:var(--glass); border:1px solid var(--edge); }
+.seg button { border:0; background:transparent; cursor:pointer; padding:6px 12px; border-radius:999px; font:inherit; font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--muted); }
+.seg .on { background:rgba(255,255,255,.14); color:var(--text); }
+main { max-width:980px; margin:0 auto; padding:clamp(28px,6vw,64px) var(--pad) 60px; }
+.kicker { margin:0; font-family:var(--mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
+h1 { margin:12px 0 8px; font-size:clamp(34px,6vw,58px); line-height:1.02; font-weight:800; letter-spacing:-.01em; }
+h1 .r { color:var(--red-hi); }
+.lead { color:var(--muted); font-size:16px; line-height:1.55; margin:0 0 28px; max-width:620px; }
+h2 { font-size:22px; margin:38px 0 14px; font-weight:700; display:flex; align-items:center; gap:10px; }
+h2 small { font-size:13px; font-weight:500; color:var(--dim); }
+.grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+.tile { padding:18px 20px; border-radius:22px; background:var(--glass); border:1px solid var(--edge); min-width:0; }
+.tile h3 { margin:0 0 6px; font-size:16px; }
+.tile p { margin:0; color:var(--muted); font-size:14px; line-height:1.5; }
+.app { display:flex; gap:14px; align-items:center; text-decoration:none; transition:background .2s, transform .2s; }
+.app:hover { background:var(--glass-2); transform:translateY(-1px); }
+.app img { width:48px; height:48px; border-radius:12px; flex:none; }
+.app .t { min-width:0; }
+.app .t b { display:block; font-size:15.5px; }
+.app .t span { display:block; color:var(--muted); font-size:13px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card { max-width:420px; margin:clamp(20px,6vh,70px) auto 0; padding:28px; border-radius:26px; background:var(--glass); border:1px solid var(--edge); }
+.card h1 { font-size:32px; margin:6px 0 6px; }
+label.f { display:block; margin:12px 0 0; font-size:13px; color:var(--muted); }
+input.i { display:block; width:100%; margin-top:6px; padding:12px 16px; border-radius:999px; border:0; background:rgba(255,255,255,.07); box-shadow:inset 0 0 0 1px var(--edge); color:var(--text); font:inherit; font-size:15px; outline:0; }
+input.i:focus { box-shadow:inset 0 0 0 1.5px var(--red-hi); }
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; border:0; cursor:pointer; padding:11px 20px; border-radius:999px; font:inherit; font-size:14px; font-weight:600; color:var(--text); background:var(--glass-2); box-shadow:inset 0 0 0 1px var(--edge); text-decoration:none; transition:filter .2s, transform .15s; }
+.btn:hover { filter:brightness(1.15); } .btn:active { transform:scale(.97); }
+.btn.main { background:var(--red); box-shadow:0 0 22px rgba(212,0,0,.35); color:#fff; }
+.btn.small { padding:7px 14px; font-size:13px; font-weight:500; }
+.btn.danger { color:#ff6b62; }
+.btn[disabled] { opacity:.5; pointer-events:none; }
+.wide { width:100%; margin-top:18px; }
+.links { display:flex; justify-content:space-between; gap:10px; margin-top:14px; flex-wrap:wrap; }
+.links button { border:0; background:none; color:var(--muted); cursor:pointer; font:inherit; font-size:13.5px; padding:4px 0; }
+.links button:hover { color:var(--text); }
+.err { color:#ff6b62; font-size:14px; margin:12px 0 0; }
+.note { color:#8ed99a; font-size:14px; margin:12px 0 0; }
+.me { display:flex; align-items:center; gap:16px; margin:6px 0 4px; }
+.av { width:64px; height:64px; border-radius:50%; background:linear-gradient(140deg,#5b6170,#2b2f37); display:grid; place-items:center; font-size:24px; font-weight:700; overflow:hidden; flex:none; box-shadow:inset 0 0 0 1px var(--edge); }
+.av img { width:100%; height:100%; object-fit:cover; }
+.me .who b { font-size:22px; display:block; }
+.me .who span { color:var(--muted); font-size:14px; }
+.rows { display:flex; flex-direction:column; gap:8px; }
+.row { display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:16px; background:var(--glass); border:1px solid var(--edge); }
+.row .g { flex:1; min-width:0; }
+.row .g b { display:block; font-size:14.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.row .g span { color:var(--muted); font-size:13px; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.chip { display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; font-size:12.5px; background:var(--glass-2); color:var(--muted); }
+.chip i { width:7px; height:7px; border-radius:50%; background:var(--red-hi); }
+.tile .stat { font-size:30px; font-weight:800; margin:4px 0 4px; color:var(--text); }
+.muted { color:var(--muted); }
+.hide { display:none !important; }
+.spin { width:28px; height:28px; margin:80px auto; border-radius:50%; border:3px solid var(--edge); border-top-color:var(--red-hi); animation:s 1s linear infinite; }
+@keyframes s { to { transform:rotate(360deg); } }
+footer { max-width:980px; margin:0 auto; padding:24px var(--pad) 50px; color:var(--dim); font-size:12.5px; display:flex; gap:14px; flex-wrap:wrap; }
+footer a { color:var(--dim); }
+@media (max-width:560px) { .bar .crumb { display:none; } .row { flex-wrap:wrap; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="home" href="../" aria-label="The Mad Lions"><img src="../wordmark.png" alt="The Mad Lions"></a>
+  <span class="crumb">Roar Account</span>
+  <div class="end">
+    <div class="seg" role="group" aria-label="Language"><button data-lang="en">EN</button><button data-lang="el">ΕΛ</button></div>
+    <button class="btn small hide" id="signout" data-t="signOut">Sign out</button>
+  </div>
+</header>
+
+<main>
+  <div class="spin" id="loading"></div>
+
+  <!-- signed out: sign in, sign up, forgot, the 6-digit code, a new password -->
+  <form class="card hide" id="auth">
+    <p class="kicker">Roar Account</p>
+    <h1 id="authTitle"></h1>
+    <p class="lead" id="authSub" style="margin:0 0 6px;font-size:14.5px"></p>
+    <div id="fEmail"><label class="f"><span data-t="email">Email</span><input class="i" type="email" id="email" autocomplete="email"></label></div>
+    <div id="fPass"><label class="f"><span data-t="password">Password</span><input class="i" type="password" id="pass"></label></div>
+    <div id="fCode" class="hide"><label class="f"><span data-t="code">The 6-digit code from your authenticator app</span><input class="i" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123 456"></label></div>
+    <p class="err hide" id="authErr"></p>
+    <p class="note hide" id="authNote"></p>
+    <button class="btn main wide" id="authGo"></button>
+    <div class="links" id="authLinks"></div>
+    <p class="muted" style="font-size:12px;margin:16px 0 0" id="authLegal"></p>
+  </form>
+
+  <!-- signed in -->
+  <div class="hide" id="home">
+    <p class="kicker">Roar Account</p>
+    <div class="me">
+      <div class="av" id="av"></div>
+      <div class="who"><b id="name"></b><span id="handle"></span></div>
+    </div>
+    <p class="lead" data-t="lead">One account for every Roar app. What each app keeps for you is here.</p>
+
+    <h2 data-t="apps">Your apps</h2>
+    <div class="grid" id="apps"></div>
+
+    <h2><span>RoarMail</span> <small data-t="mailSub">settings on every computer</small></h2>
+    <div class="grid">
+      <div class="tile"><h3 data-t="synced">Synced setup</h3><p id="mSetup"></p><div class="chips" id="mChips"></div></div>
+      <div class="tile"><h3 data-t="ai">RoarMail AI today</h3><p class="stat" id="mAi">–</p><p data-t="aiNote">30 a day with your Roar Account.</p></div>
+    </div>
+    <h2 style="font-size:17px;margin-top:22px" data-t="computers">Computers with RoarMail</h2>
+    <div class="rows" id="devices"></div>
+
+    <h2 data-t="profile">Profile</h2>
+    <div class="tile">
+      <label class="f" style="margin:0"><span data-t="dname">Name</span><input class="i" id="dname" maxlength="60"></label>
+      <label class="f"><span data-t="uname">Username</span><input class="i" id="uname" maxlength="30" placeholder="yourname"></label>
+      <p class="err hide" id="pErr"></p><p class="note hide" id="pNote"></p>
+      <button class="btn small" style="margin-top:14px" id="pSave" data-t="save">Save</button>
+    </div>
+
+    <h2 data-t="security">Security</h2>
+    <div class="tile">
+      <label class="f" style="margin:0"><span data-t="newPass">New password</span><input class="i" type="password" id="np" autocomplete="new-password" placeholder="8+"></label>
+      <p class="err hide" id="sErr"></p><p class="note hide" id="sNote"></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn small" id="npSave" data-t="changePass">Change password</button>
+        <button class="btn small" id="outAll" data-t="outAll">Sign out everywhere</button>
+      </div>
+    </div>
+
+    <h2 data-t="danger">Delete account</h2>
+    <div class="tile">
+      <p data-t="delNote">Deletes your Roar Account and what every Roar app keeps for it (chats, scripts, lists, RoarMail's synced setup). The mail in your mailboxes is not touched.</p>
+      <button class="btn small danger" style="margin-top:14px" id="del" data-t="delete">Delete my Roar Account</button>
+    </div>
+  </div>
+</main>
+<footer><span>© The Mad Lions</span><a href="../legal/">Privacy and Terms</a><a href="../lab/">The Lab</a></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function () {
+  const URL = 'https://bzmjhbnwhdwmncxkqkdl.supabase.co'
+  const KEY = 'sb_publishable_7mQ3e0NH5lCmdoIKx2-FUA_EgCoXx9X'
+  const HERE = 'https://themadlions.com/account/'
+  const sb = window.supabase.createClient(URL, KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'roar-account' } })
+
+  // ---------- words, English and Greek ----------
+  const W = {
+    en: { signIn: 'Sign in', signUp: 'Create your Roar Account', forgot: 'Forgot password?', send: 'Send the link', verify: 'Verify', setPass: 'Set the new password',
+      inTitle: 'Welcome back', upTitle: 'Create your Roar Account', fgTitle: 'Forgot your password?', mfaTitle: 'One more step', newTitle: 'A new password',
+      inSub: 'One account for RoarMail, RoarMe, RoarWriter, RoarList and every Roar app.', upSub: 'One sign-in for every Roar app. Free.', fgSub: 'Type your email and we will send you a link.',
+      mfaSub: 'Your account has two-step verification.', newSub: 'Choose a password with at least 8 characters.',
+      toUp: 'Create an account', toIn: 'I have an account', email: 'Email', password: 'Password', code: 'The 6-digit code from your authenticator app',
+      checkMail: 'Almost there: open the link we sent to your email, then sign in here.', linkSent: 'If there is an account with that email, a link is on its way.',
+      short: 'The password needs at least 8 characters.', wrong: 'Wrong email or password.', badCode: 'Wrong code. Try the next one.', legal: 'By signing up you accept the <a href="../legal/">Terms and the Privacy Policy</a>.',
+      signOut: 'Sign out', lead: 'One account for every Roar app. What each app keeps for you is here.', apps: 'Your apps', mailSub: 'settings on every computer',
+      synced: 'Synced setup', ai: 'RoarMail AI today', aiNote: '30 a day with your Roar Account.', computers: 'Computers with RoarMail', profile: 'Profile', dname: 'Name', uname: 'Username',
+      save: 'Save', saved: 'Saved.', security: 'Security', newPass: 'New password', changePass: 'Change password', outAll: 'Sign out everywhere', passChanged: 'The password is changed.',
+      danger: 'Delete account', delNote: "Deletes your Roar Account and what every Roar app keeps for it (chats, scripts, lists, RoarMail's synced setup). The mail in your mailboxes is not touched.",
+      delete: 'Delete my Roar Account', delAsk: 'This cannot be undone. Type DELETE to delete your Roar Account.', remove: 'Remove', lastSeen: 'last seen', noDevices: 'No computer has synced yet. In RoarMail: Settings > Roar Account.',
+      noSetup: 'Nothing synced yet. In RoarMail: Settings > Roar Account > My settings on every computer.', setupLine: (n) => `${n.accounts} mail accounts · ${n.sigs} signatures · ${n.rules} rules · ${n.tpls} templates · updated ${n.when}`,
+      blocked: (n) => `${n} blocked`, open: 'Open', download: 'Download', scripts: (n) => `${n} scripts`, projects: (n) => `${n} projects`, onWeb: 'on the web', userTaken: 'That username is taken.' },
+    el: { signIn: 'Σύνδεση', signUp: 'Δημιούργησε Roar Account', forgot: 'Ξέχασες τον κωδικό;', send: 'Στείλε τον σύνδεσμο', verify: 'Επιβεβαίωση', setPass: 'Ορισμός νέου κωδικού',
+      inTitle: 'Καλώς ήρθες', upTitle: 'Δημιούργησε το Roar Account σου', fgTitle: 'Ξέχασες τον κωδικό σου;', mfaTitle: 'Ένα βήμα ακόμα', newTitle: 'Νέος κωδικός',
+      inSub: 'Ένας λογαριασμός για RoarMail, RoarMe, RoarWriter, RoarList και κάθε Roar app.', upSub: 'Μία σύνδεση για όλα τα Roar apps. Δωρεάν.', fgSub: 'Γράψε το email σου και θα σου στείλουμε σύνδεσμο.',
+      mfaSub: 'Ο λογαριασμός σου έχει επαλήθευση δύο βημάτων.', newSub: 'Διάλεξε κωδικό με τουλάχιστον 8 χαρακτήρες.',
+      toUp: 'Νέος λογαριασμός', toIn: 'Έχω λογαριασμό', email: 'Email', password: 'Κωδικός', code: 'Ο 6ψήφιος κωδικός από την εφαρμογή επαλήθευσης',
+      checkMail: 'Σχεδόν έτοιμο: άνοιξε τον σύνδεσμο που σου στείλαμε στο email και μετά συνδέσου εδώ.', linkSent: 'Αν υπάρχει λογαριασμός με αυτό το email, ο σύνδεσμος έρχεται.',
+      short: 'Ο κωδικός θέλει τουλάχιστον 8 χαρακτήρες.', wrong: 'Λάθος email ή κωδικός.', badCode: 'Λάθος κωδικός. Δοκίμασε τον επόμενο.', legal: 'Με την εγγραφή αποδέχεσαι τους <a href="../legal/">Όρους και την Πολιτική Απορρήτου</a>.',
+      signOut: 'Αποσύνδεση', lead: 'Ένας λογαριασμός για όλα τα Roar apps. Εδώ είναι ό,τι κρατά το κάθε app για σένα.', apps: 'Τα apps σου', mailSub: 'ρυθμίσεις σε κάθε υπολογιστή',
+      synced: 'Συγχρονισμένες ρυθμίσεις', ai: 'RoarMail AI σήμερα', aiNote: '30 τη μέρα με το Roar Account σου.', computers: 'Υπολογιστές με RoarMail', profile: 'Προφίλ', dname: 'Όνομα', uname: 'Username',
+      save: 'Αποθήκευση', saved: 'Αποθηκεύτηκε.', security: 'Ασφάλεια', newPass: 'Νέος κωδικός', changePass: 'Αλλαγή κωδικού', outAll: 'Αποσύνδεση από παντού', passChanged: 'Ο κωδικός άλλαξε.',
+      danger: 'Διαγραφή λογαριασμού', delNote: 'Σβήνει το Roar Account σου και ό,τι κρατά γι’ αυτό κάθε Roar app (συνομιλίες, σενάρια, λίστες, τις ρυθμίσεις του RoarMail). Τα mail στα γραμματοκιβώτιά σου δεν αγγίζονται.',
+      delete: 'Διαγραφή του Roar Account μου', delAsk: 'Δεν αναιρείται. Γράψε DELETE για να διαγραφεί το Roar Account σου.', remove: 'Αφαίρεση', lastSeen: 'τελευταία φορά', noDevices: 'Κανένας υπολογιστής δεν έχει συγχρονιστεί ακόμα. Στο RoarMail: Ρυθμίσεις > Roar Account.',
+      noSetup: 'Τίποτα συγχρονισμένο ακόμα. Στο RoarMail: Ρυθμίσεις > Roar Account > Οι ρυθμίσεις μου σε κάθε υπολογιστή.', setupLine: (n) => `${n.accounts} λογαριασμοί mail · ${n.sigs} υπογραφές · ${n.rules} κανόνες · ${n.tpls} πρότυπα · ενημέρωση ${n.when}`,
+      blocked: (n) => `${n} μπλοκαρισμένα`, open: 'Άνοιγμα', download: 'Λήψη', scripts: (n) => `${n} σενάρια`, projects: (n) => `${n} projects`, onWeb: 'στο web', userTaken: 'Αυτό το username το έχει άλλος.' },
+  }
+  let lang = (new URLSearchParams(location.search).get('lang') || (navigator.language || '').slice(0, 2)) === 'el' ? 'el' : 'en'
+  try { const v = localStorage.getItem('roar-account-lang'); if (v === 'el' || v === 'en') lang = v } catch (e) {}
+  const T = () => W[lang]
+  const $ = (id) => document.getElementById(id)
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+  const show = (el, on) => el.classList.toggle('hide', !on)
+  const say = (id, text) => { const el = $(id); el.textContent = text || ''; show(el, !!text) }
+  const when = (iso) => { try { return new Date(iso).toLocaleString(lang === 'el' ? 'el-GR' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) } catch (e) { return '' } }
+
+  function words() {
+    document.documentElement.lang = lang
+    document.querySelectorAll('[data-t]').forEach((el) => { const v = T()[el.dataset.t]; if (typeof v === 'string') el.textContent = v })
+    document.querySelectorAll('.seg button').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang))
+  }
+  document.querySelectorAll('.seg button').forEach((b) => b.onclick = () => { lang = b.dataset.lang; try { localStorage.setItem('roar-account-lang', lang) } catch (e) {} words(); renderAuth(); if (state.user) loadHome() })
+
+  // ---------- signed out ----------
+  let mode = new URLSearchParams(location.search).has('signup') ? 'up' : 'in'
+  const state = { user: null, profile: null }
+  function renderAuth() {
+    const t = T()
+    const m = { in: [t.inTitle, t.inSub, t.signIn], up: [t.upTitle, t.upSub, t.signUp], fg: [t.fgTitle, t.fgSub, t.send], mfa: [t.mfaTitle, t.mfaSub, t.verify], new: [t.newTitle, t.newSub, t.setPass] }[mode]
+    $('authTitle').textContent = m[0]; $('authSub').textContent = m[1]; $('authGo').textContent = m[2]
+    show($('fEmail'), mode === 'in' || mode === 'up' || mode === 'fg')
+    show($('fPass'), mode === 'in' || mode === 'up' || mode === 'new')
+    show($('fCode'), mode === 'mfa')
+    $('pass').autocomplete = mode === 'in' ? 'current-password' : 'new-password'
+    $('authLegal').innerHTML = mode === 'up' ? t.legal : ''
+    const links = $('authLinks'); links.innerHTML = ''
+    const link = (text, to) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = text; b.onclick = () => { mode = to; say('authErr'); say('authNote'); renderAuth() }; links.appendChild(b) }
+    if (mode === 'in') { link(t.toUp, 'up'); link(t.forgot, 'fg') } else if (mode === 'up' || mode === 'fg') link(t.toIn, 'in')
+  }
+  $('auth').onsubmit = async (e) => {
+    e.preventDefault()
+    const t = T(); say('authErr'); say('authNote')
+    const go = $('authGo'); go.disabled = true
+    try {
+      const email = $('email').value.trim(), pass = $('pass').value
+      if (mode === 'in') {
+        const { error } = await sb.auth.signInWithPassword({ email, password: pass })
+        if (error) throw new Error(/invalid/i.test(error.message) ? t.wrong : error.message)
+        await enter()
+      } else if (mode === 'up') {
+        if (pass.length < 8) throw new Error(t.short)
+        const { data, error } = await sb.auth.signUp({ email, password: pass, options: { emailRedirectTo: HERE } })
+        if (error) throw error
+        if (data.session) await enter(); else say('authNote', t.checkMail)
+      } else if (mode === 'fg') {
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: HERE })
+        if (error) throw error
+        say('authNote', t.linkSent)
+      } else if (mode === 'mfa') {
+        const { data } = await sb.auth.mfa.listFactors()
+        const f = (data && data.totp || []).find((x) => x.status === 'verified')
+        const { error } = await sb.auth.mfa.challengeAndVerify({ factorId: f.id, code: $('code').value.replace(/\s/g, '') })
+        if (error) throw new Error(t.badCode)
+        await enter()
+      } else if (mode === 'new') {
+        if (pass.length < 8) throw new Error(t.short)
+        const { error } = await sb.auth.updateUser({ password: pass })
+        if (error) throw error
+        history.replaceState(null, '', location.pathname)
+        await enter()
+      }
+    } catch (x) { say('authErr', x.message || String(x)) } finally { go.disabled = false }
+  }
+
+  async function enter() {
+    const { data } = await sb.auth.getSession()
+    const s = data.session
+    show($('loading'), false)
+    if (!s) { state.user = null; show($('auth'), true); show($('home'), false); show($('signout'), false); renderAuth(); return }
+    const aal = await sb.auth.mfa.getAuthenticatorAssuranceLevel()
+    if (aal.data && aal.data.nextLevel === 'aal2' && aal.data.currentLevel !== 'aal2') { mode = 'mfa'; show($('auth'), true); show($('home'), false); renderAuth(); return }
+    state.user = s.user
+    show($('auth'), false); show($('home'), true); show($('signout'), true)
+    loadHome()
+  }
+
+  // ---------- signed in ----------
+  const count = async (table, col) => { try { const { count: n, error } = await sb.from(table).select('*', { count: 'exact', head: true }).eq(col, state.user.id); return error ? null : n } catch (e) { return null } }
+  async function loadHome() {
+    const t = T(), u = state.user
+    const { data: p } = await sb.from('roar_profiles').select('username, display_name, avatar_url').eq('id', u.id).maybeSingle()
+    state.profile = p
+    const name = (p && (p.display_name || p.username)) || u.email
+    $('name').textContent = name
+    $('handle').textContent = (p && p.username ? '@' + p.username + ' · ' : '') + u.email
+    $('av').innerHTML = p && p.avatar_url ? `<img src="${esc(p.avatar_url)}" alt="">` : esc((name || '?').trim().charAt(0).toUpperCase())
+    $('dname').value = (p && p.display_name) || ''; $('uname').value = (p && p.username) || ''
+
+    // the apps, with what each keeps
+    const [scripts, lists] = await Promise.all([count('roarwriter_scripts', 'owner'), count('roarlist_projects', 'owner')])
+    const APPS = [
+      ['roarmail', 'RoarMail', t.download, '../lab/roarmail/'],
+      ['roarme', 'RoarMe', t.open + ' ' + t.onWeb, 'https://alexisdigipro-hub.github.io/roarme/'],
+      ['roarwriter', 'RoarWriter', scripts != null ? t.scripts(scripts) : t.open, 'https://alexisdigipro-hub.github.io/roarwriter/'],
+      ['roarlist', 'RoarList', lists != null ? t.projects(lists) : t.open, '../roarlist/'],
+      ['roartransfer', 'RoarTransfer', t.open + ' ' + t.onWeb, 'https://roartransfer.com/'],
+      ['roardino', 'Roardino', t.open + ' ' + t.onWeb, '../roardino/'],
+    ]
+    $('apps').innerHTML = APPS.map(([k, n, line, href]) => `<a class="tile app" href="${href}" ${href.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}><img src="../lab/icons/${k}.png" alt=""><span class="t"><b>${n}</b><span>${esc(line)}</span></span></a>`).join('')
+
+    // RoarMail: the synced setup, today's AI, the computers
+    const { data: sync } = await sb.from('roarmail_sync').select('data, updated_at').eq('user_id', u.id).maybeSingle()
+    if (sync && sync.data && sync.data.tables) {
+      const T2 = sync.data.tables, n = (k) => (T2[k] || []).length
+      $('mSetup').textContent = t.setupLine({ accounts: n('accounts'), sigs: n('signatures'), rules: n('rules'), tpls: n('templates'), when: when(sync.updated_at) })
+      const blocked = (T2.contacts || []).filter((c) => c.blocked).length + n('block_rules')
+      $('mChips').innerHTML = (T2.accounts || []).map((a) => `<span class="chip"><i style="background:${esc(a.color || '#d40000')}"></i>${esc(a.email)}</span>`).join('') + (blocked ? `<span class="chip">${esc(t.blocked(blocked))}</span>` : '')
+    } else { $('mSetup').textContent = t.noSetup; $('mChips').innerHTML = '' }
+    const today = new Date().toISOString().slice(0, 10)
+    const { data: use } = await sb.from('roarmail_ai_usage').select('n').eq('user_id', u.id).eq('day', today).maybeSingle()
+    $('mAi').textContent = `${use ? use.n : 0} / 30`
+    const { data: devs } = await sb.from('roarmail_devices').select('install, name, platform, version, last_seen').eq('user_id', u.id).order('last_seen', { ascending: false })
+    const plat = (p) => p === 'darwin' ? 'Mac' : p === 'win32' ? 'Windows' : (p || '')
+    $('devices').innerHTML = devs && devs.length ? devs.map((d) => `<div class="row"><div class="g"><b>${esc(d.name || plat(d.platform))}</b><span>${esc(plat(d.platform))} · RoarMail ${esc(d.version || '')} · ${esc(t.lastSeen)} ${esc(when(d.last_seen))}</span></div><button class="btn small" data-rm="${esc(d.install)}">${esc(t.remove)}</button></div>`).join('')
+      : `<p class="muted" style="margin:0">${esc(t.noDevices)}</p>`
+    $('devices').querySelectorAll('[data-rm]').forEach((b) => b.onclick = async () => { b.disabled = true; await sb.from('roarmail_devices').delete().eq('user_id', u.id).eq('install', b.dataset.rm); loadHome() })
+  }
+
+  $('pSave').onclick = async () => {
+    const t = T(); say('pErr'); say('pNote')
+    const display_name = $('dname').value.trim().slice(0, 60)
+    const username = $('uname').value.trim().toLowerCase().replace(/[^a-z0-9_.]/g, '').slice(0, 30)
+    try {
+      const q = state.profile ? sb.from('roar_profiles').update({ display_name, ...(username ? { username } : {}) }).eq('id', state.user.id)
+        : sb.from('roar_profiles').insert({ id: state.user.id, display_name, username: username || null })
+      const { error } = await q
+      if (error) throw new Error(/duplicate|unique/i.test(error.message) ? t.userTaken : error.message)
+      say('pNote', t.saved); loadHome()
+    } catch (x) { say('pErr', x.message) }
+  }
+  $('npSave').onclick = async () => {
+    const t = T(); say('sErr'); say('sNote')
+    const p = $('np').value
+    if (p.length < 8) return say('sErr', t.short)
+    const { error } = await sb.auth.updateUser({ password: p })
+    if (error) return say('sErr', error.message)
+    $('np').value = ''; say('sNote', t.passChanged)
+  }
+  $('outAll').onclick = async () => { await sb.auth.signOut({ scope: 'global' }); enter() }
+  $('signout').onclick = async () => { await sb.auth.signOut(); enter() }
+  $('del').onclick = async () => {
+    const t = T()
+    if (prompt(t.delAsk) !== 'DELETE') return
+    const { error } = await sb.rpc('roar_delete_me')
+    if (error) return alert(error.message)
+    await sb.auth.signOut(); enter()
+  }
+
+  // a password link from the email lands here: choose the new one
+  sb.auth.onAuthStateChange((ev) => { if (ev === 'PASSWORD_RECOVERY') { mode = 'new'; show($('loading'), false); show($('home'), false); show($('auth'), true); renderAuth() } })
+  words()
+  enter()
+})()
+</script>
+</body>
+</html>
