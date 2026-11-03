@@ -258,6 +258,25 @@ footer a { color:var(--dim); }
       </div>
     </div>
 
+    <h2 data-t="mfa">Two-step verification</h2>
+    <div class="tile">
+      <p id="mfaState"></p>
+      <div id="mfaSetup" class="hide" style="margin-top:12px">
+        <p data-t="mfaScan">Scan this with your authenticator app (Google Authenticator, 1Password, Authy), then type the 6-digit code it shows.</p>
+        <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:12px 0">
+          <img id="mfaQr" alt="" style="width:170px;height:170px;background:#fff;border-radius:12px;padding:8px">
+          <div style="min-width:0"><p class="muted" style="margin:0 0 6px;font-size:12.5px" data-t="mfaKey">Or type this key:</p><code id="mfaSecret" style="word-break:break-all;font-size:13px"></code></div>
+        </div>
+        <input class="i" id="mfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123 456" style="max-width:220px">
+      </div>
+      <p class="err hide" id="mfaErr"></p><p class="note hide" id="mfaNote"></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn small main" id="mfaOn" data-t="mfaTurnOn">Turn on</button>
+        <button class="btn small main hide" id="mfaVerify" data-t="mfaVerify">Verify and turn on</button>
+        <button class="btn small danger hide" id="mfaOff" data-t="mfaTurnOff">Turn off</button>
+      </div>
+    </div>
+
     <h2 data-t="danger">Delete account</h2>
     <div class="tile">
       <p data-t="delNote">Deletes your Roar Account and what every Roar app keeps for it (chats, scripts, lists, RoarMail's synced setup). The mail in your mailboxes is not touched.</p>
@@ -278,7 +297,7 @@ footer a { color:var(--dim); }
 
   // ---------- words, English and Greek ----------
   const W = {
-    en: { unameRule: '3 to 24 characters: small Latin letters, numbers and _ (as in RoarMe).', unameBad: 'The username needs 3 to 24 small Latin letters, numbers or _, e.g. alex_k.', unameNeed: 'Choose a username first.', tHome: 'Overview', tCal: 'Calendar', tTasks: 'Tasks', tPeople: 'Contacts', tMe: 'Settings', today: 'Today', newEvent: '+ New event', editEvent: 'Event',
+    en: { unameRule: '3 to 24 characters: small Latin letters, numbers and _ (as in RoarMe).', unameBad: 'The username needs 3 to 24 small Latin letters, numbers or _, e.g. alex_k.', unameNeed: 'Choose a username first.', mfa: 'Two-step verification', mfaScan: 'Scan this with your authenticator app (Google Authenticator, 1Password, Authy), then type the 6-digit code it shows.', mfaKey: 'Or type this key:', mfaTurnOn: 'Turn on', mfaVerify: 'Verify and turn on', mfaTurnOff: 'Turn off', mfaIsOn: 'On: signing in asks for the 6-digit code from your authenticator app, in every Roar app.', mfaIsOff: 'Off. Turn it on so that a stolen password is not enough to get into your account.', mfaDone: 'Two-step verification is on.', mfaOffQ: 'Turn off two-step verification?', mfaOffDone: 'Two-step verification is off.', tHome: 'Overview', tCal: 'Calendar', tTasks: 'Tasks', tPeople: 'Contacts', tMe: 'Settings', today: 'Today', newEvent: '+ New event', editEvent: 'Event',
       evTitle: 'Title', evDate: 'Date', evFrom: 'From', evTo: 'To', evWhere: 'Where', evNotes: 'Notes', allDay: 'All day', delete2: 'Delete', cancel: 'Cancel',
       onPhone: 'On your iPhone, Google or Outlook', subNote: 'Your Roar calendar appears next to your other calendars and updates by itself. Changes are made here or in the Roar apps.',
       subApple: 'Add to iPhone / Mac', subGoogle: 'Add to Google Calendar', subCopy: 'Copy the link', subNew: 'New link', subTasks: 'Show my tasks with a date in it too',
@@ -299,7 +318,7 @@ footer a { color:var(--dim); }
       delete: 'Delete my Roar Account', delAsk: 'This cannot be undone. Type DELETE to delete your Roar Account.', remove: 'Remove', lastSeen: 'last seen', noDevices: 'No computer has synced yet. In RoarMail: Settings > Roar Account.',
       noSetup: 'Nothing synced yet. In RoarMail: Settings > Roar Account > My settings on every computer.', setupLine: (n) => `${n.accounts} mail accounts · ${n.sigs} signatures · ${n.rules} rules · ${n.tpls} templates · updated ${n.when}`,
       blocked: (n) => `${n} blocked`, contacts: 'Contacts', cSearch: 'Name, email or company', cNote: 'From RoarMail on your computers: the people you write to and the ones you marked. Every Roar app will use this list.', cNone: 'No contacts yet. They come from RoarMail when its sync is on.', cMore: (n) => `and ${n} more: search to find them`, open: 'Open', download: 'Download', scripts: (n) => `${n} scripts`, projects: (n) => `${n} projects`, onWeb: 'on the web', userTaken: 'That username is taken.' },
-    el: { unameRule: '3 έως 24 χαρακτήρες: μικρά λατινικά γράμματα, αριθμοί και _ (όπως στο RoarMe).', unameBad: 'Το username θέλει 3 έως 24 μικρά λατινικά γράμματα, αριθμούς ή _, π.χ. alex_k.', unameNeed: 'Διάλεξε πρώτα username.', tHome: 'Επισκόπηση', tCal: 'Ημερολόγιο', tTasks: 'Tasks', tPeople: 'Επαφές', tMe: 'Ρυθμίσεις', today: 'Σήμερα', newEvent: '+ Νέο γεγονός', editEvent: 'Γεγονός',
+    el: { unameRule: '3 έως 24 χαρακτήρες: μικρά λατινικά γράμματα, αριθμοί και _ (όπως στο RoarMe).', unameBad: 'Το username θέλει 3 έως 24 μικρά λατινικά γράμματα, αριθμούς ή _, π.χ. alex_k.', unameNeed: 'Διάλεξε πρώτα username.', mfa: 'Επαλήθευση δύο βημάτων', mfaScan: 'Σκάναρέ το με την εφαρμογή επαλήθευσης (Google Authenticator, 1Password, Authy) και γράψε τον 6ψήφιο κωδικό που δείχνει.', mfaKey: 'Ή γράψε αυτό το κλειδί:', mfaTurnOn: 'Ενεργοποίηση', mfaVerify: 'Επιβεβαίωση και ενεργοποίηση', mfaTurnOff: 'Απενεργοποίηση', mfaIsOn: 'Ενεργή: η σύνδεση ζητά και τον 6ψήφιο κωδικό από την εφαρμογή επαλήθευσης, σε όλα τα Roar apps.', mfaIsOff: 'Ανενεργή. Ενεργοποίησέ την, ώστε ένας κλεμμένος κωδικός να μη φτάνει για να μπει κάποιος στον λογαριασμό σου.', mfaDone: 'Η επαλήθευση δύο βημάτων είναι ενεργή.', mfaOffQ: 'Να απενεργοποιηθεί η επαλήθευση δύο βημάτων;', mfaOffDone: 'Η επαλήθευση δύο βημάτων απενεργοποιήθηκε.', tHome: 'Επισκόπηση', tCal: 'Ημερολόγιο', tTasks: 'Tasks', tPeople: 'Επαφές', tMe: 'Ρυθμίσεις', today: 'Σήμερα', newEvent: '+ Νέο γεγονός', editEvent: 'Γεγονός',
       evTitle: 'Τίτλος', evDate: 'Ημερομηνία', evFrom: 'Από', evTo: 'Έως', evWhere: 'Πού', evNotes: 'Σημειώσεις', allDay: 'Όλη μέρα', delete2: 'Διαγραφή', cancel: 'Άκυρο',
       onPhone: 'Στο iPhone, στο Google ή στο Outlook', subNote: 'Το ημερολόγιο Roar εμφανίζεται δίπλα στα άλλα σου ημερολόγια και ενημερώνεται μόνο του. Οι αλλαγές γίνονται εδώ ή στα Roar apps.',
       subApple: 'Πρόσθεσε στο iPhone / Mac', subGoogle: 'Πρόσθεσε στο Google Calendar', subCopy: 'Αντιγραφή συνδέσμου', subNew: 'Νέος σύνδεσμος', subTasks: 'Να φαίνονται και τα tasks μου με ημερομηνία',
@@ -439,7 +458,7 @@ footer a { color:var(--dim); }
       .sort((a, b) => (b.vip - a.vip) || ((b.use_count || 0) - (a.use_count || 0)) || String(a.name || a.email).localeCompare(String(b.name || b.email)))
     $('cCount').textContent = state.contacts.length ? String(state.contacts.length) : ''
     showContacts()
-    loadCal(); loadTasks(); loadFeed()
+    loadCal(); loadTasks(); loadFeed(); loadMfa()
     const today = new Date().toISOString().slice(0, 10)
     const { data: use } = await sb.from('roarmail_ai_usage').select('n').eq('user_id', u.id).eq('day', today).maybeSingle()
     $('mAi').textContent = `${use ? use.n : 0} / 30`
@@ -600,6 +619,45 @@ footer a { color:var(--dim); }
     say('tkErr'); $('tkT').value = ''; $('tkD').value = ''; loadTasks()
   }
   $('tkT').onkeydown = (e) => { if (e.key === 'Enter') $('tkAdd').click() }
+
+
+  // ---------- two-step verification (4 Nov 2026), the same as RoarMe's: an authenticator app's 6-digit code ----------
+  let mfaPending = null
+  async function loadMfa() {
+    const t = T()
+    const { data } = await sb.auth.mfa.listFactors()
+    const on = (data && data.totp || []).find((f) => f.status === 'verified')
+    state.mfa = on || null
+    $('mfaState').textContent = on ? t.mfaIsOn : t.mfaIsOff
+    show($('mfaOn'), !on && !mfaPending); show($('mfaOff'), !!on); show($('mfaVerify'), !!mfaPending); show($('mfaSetup'), !!mfaPending)
+  }
+  $('mfaOn').onclick = async () => {
+    say('mfaErr'); say('mfaNote')
+    // a half-finished one from before is cleared first
+    const { data: list } = await sb.auth.mfa.listFactors()
+    for (const f of (list && list.all || []).filter((f) => f.status !== 'verified')) await sb.auth.mfa.unenroll({ factorId: f.id })
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Roar Account ' + new Date().toISOString().slice(0, 10) })
+    if (error) return say('mfaErr', error.message)
+    mfaPending = data
+    $('mfaQr').src = data.totp.qr_code
+    $('mfaSecret').textContent = data.totp.secret
+    $('mfaCode').value = ''
+    loadMfa(); setTimeout(() => $('mfaCode').focus(), 50)
+  }
+  $('mfaVerify').onclick = async () => {
+    const t = T(); say('mfaErr')
+    const { error } = await sb.auth.mfa.challengeAndVerify({ factorId: mfaPending.id, code: $('mfaCode').value.replace(/\s/g, '') })
+    if (error) return say('mfaErr', t.badCode)
+    mfaPending = null; say('mfaNote', t.mfaDone); loadMfa()
+  }
+  $('mfaCode').onkeydown = (e) => { if (e.key === 'Enter') $('mfaVerify').click() }
+  $('mfaOff').onclick = async () => {
+    const t = T(); say('mfaErr')
+    if (!state.mfa || !confirm(t.mfaOffQ)) return
+    const { error } = await sb.auth.mfa.unenroll({ factorId: state.mfa.id })
+    if (error) return say('mfaErr', error.message)
+    say('mfaNote', t.mfaOffDone); loadMfa()
+  }
 
   $('pSave').onclick = async () => {
     const t = T(); say('pErr'); say('pNote')
