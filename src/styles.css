@@ -9648,3 +9648,10 @@ html[data-theme][data-theme] body .settings-cols > section.set-chat > .roarme-pa
   html[data-theme] body .bcat-head .bcat-x { width: 34px; height: 34px; border-radius: 999px; }
   html[data-theme] body .bcat-group { padding: 10px 12px; }
 }
+
+/* TmlChat on a phone runs down to the screen's foot, behind the hub's bar (Alex, 3 Nov: "that piece of the backdrop,
+   can it go all the way down"); HubChatPage.jsx tells the chat the bar's room (hubchat:inset), so its list and its
+   writing box stay above the bar. Settings > Chat and the full-screen chat are not this frame. */
+@media (max-width: 820px) {
+  html[data-theme] body .roarme-page.hubchat-page:not(.full):not(.hubchat-settings) { bottom: calc(0px - var(--ios-gap, 0px)); } /* under the bar too, to the real foot (Alex, 3 Nov: "below the menu"); --ios-gap: the band an iPhone's home-screen app can leave (main.jsx) */
+}

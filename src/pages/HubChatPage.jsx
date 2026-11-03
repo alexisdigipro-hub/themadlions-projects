@@ -73,6 +73,26 @@ export default function HubChatPage({ full = false, settings = false, page = '' 
     return () => { window.removeEventListener('message', onMsg); sw?.removeEventListener('message', onSw) }
   }, [])
 
+  // on a phone the frame runs down behind the hub's bar at the foot (Alex, 3 Nov: "that piece of the backdrop, can it go
+  // all the way down"), so the chat is told how much room the bar takes and keeps its list and writing box above it
+  useEffect(() => {
+    if (full || settings) return
+    const tell = () => {
+      const bar = document.querySelector('.shell > .tabbar')
+      const phone = window.matchMedia('(max-width: 820px)').matches
+      const frameBox = frame.current?.getBoundingClientRect()
+      const bottom = phone && bar && frameBox && getComputedStyle(bar).display !== 'none' ? Math.max(0, frameBox.bottom - bar.getBoundingClientRect().top + 8) : 0
+      frame.current?.contentWindow?.postMessage({ type: 'hubchat:inset', bottom }, HERE)
+    }
+    const onMsg = (e) => { if (e.origin === HERE && e.source === frame.current?.contentWindow && e.data?.type === 'roarme:want-look') setTimeout(tell, 0) }
+    window.addEventListener('message', onMsg)
+    window.addEventListener('resize', tell)
+    window.visualViewport?.addEventListener('resize', tell)
+    const t = setInterval(tell, 2000) // the bar's size settles after fonts and the phone's bars
+    tell()
+    return () => { window.removeEventListener('message', onMsg); window.removeEventListener('resize', tell); window.visualViewport?.removeEventListener('resize', tell); clearInterval(t) }
+  }, [full, settings])
+
   // Settings > Display changed (theme, skin, accent, typeface): send the new look, at most once a frame and only when
   // the look itself changed (the hub writes a few sizes on its root while it scrolls)
   useEffect(() => {
