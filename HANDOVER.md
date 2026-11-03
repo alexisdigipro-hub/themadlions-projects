@@ -45,6 +45,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
   - **alexisk.gr**: the editor of alexisk.gr/admin/ moved in (loads alexisk.gr/tml.js and admin/films.json, saves alexisk_site with the Studio session). alexisk.gr/admin/ still works.
   - **Accounts**: account/admin/ in a frame; in a frame it hides its own bar (html.embed) and its sign-in button opens a tab (Roar Accounts are RoarMe's sign-in, not the hub's).
   - boulevart.gr (PHP, its own server and sign-in), qubi.gr (its own Supabase and sign-in) and roartransfer.com (Admin tab, Roar Account) open their own admins; they cannot share Studio's sign-in.
+- **RoarJingle out of Apps > In the browser** (Alex: it is RoarCast; lab/roarjingle/ only forwards there). RoarCast (lab/roarcast/) and Roardino (roardino/) now count visits through **stats.js** (public/site/stats.js, the same tracker as fresh.js's). RoarList's web app (build output of the roarlist repo) does not count, so its tile shows its line instead of a number.
 - **Lab pages count visits**: lab/fresh.js (on every Lab page and roarme/) sends a view to site_events like the home page (same anonymous id tml_site_vid; not in a frame, not with ?nostats=). No SQL needed.
 - Nothing for Alex to run.
 
