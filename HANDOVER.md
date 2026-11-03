@@ -42,7 +42,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - **hubchat/Chat.jsx:** no bar at the foot any more (Contacts, Calls, Messages, Settings gone; the Edit bar for picked chats stays), the swipe has no other screens to go to, New call is out of the + menu. Calls inside a chat (the phone and camera in a chat's top row) are still there.
 - **Folder tabs at the top:** prefs.js default folderTabs 'top', and once for everyone (tabsTop3Nov) top and callsTab off; Settings > Chat > Folders still offers bottom. The Show Calls Tab switch is gone.
 - **Settings > Chat** (src/pages/Settings.jsx, online only): HubChatPage with `settings` shows hubchat.html?set=1 (Chat.jsx SET_ONLY: the settings menu and pages alone, no top row; #set=<page> opens a page). From the chats, Edit folders and Cmd+/ post 'hubchat:settings' and the hub opens /settings?tab=chat&page=<page>. CSS: section.set-chat near the end of styles.css.
-- Nothing for Alex to run. Open: whether the call buttons inside a chat should go too.
+- Alex: the call buttons inside a chat **stay** (3 Nov).
+- **Phone, later the same night** (Alex: "lines below, gaps above; move the buttons and the chats up"): on a phone inside the hub the chat had a card with a 6px gap around it, so the hub's backdrop showed as a band under the top bar and the card's edge as a line above the bar at the foot. hubchat/styles.css (after the embed block): under 760px in the hub, .app has no padding and .side / .main are see-through with no border or corners, the chats on the hub's own backdrop edge to edge; the side's top padding 2px, so Edit, the wordmark and + sit right under the hub's bar.
+- Nothing for Alex to run.
 
 ## Where we stopped (2 Nov 2026: RoarMail 0.24.1 to 0.26.0, blank window, Block, shared spam list)
 
