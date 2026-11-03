@@ -30,14 +30,14 @@ export const DEFAULTS = {
   dlGroups: true, // and in groups
   autoplayVideos: false,
   autoplayGifs: true,
-  callsTab: true,
+  callsTab: false, // no Calls tab: the hub's chat has no bar at the foot (Alex, 3 Nov)
   lite: false, // power saving: no animations, no glass blur
   peekBadge: false, // a click on the unread badge previews the chat
   peerIds: false,
   notifyPreview: true,
   translateTo: 'auto', // auto = Greek to English and back
   // top | bottom (left until 16 Oct, now bottom); on a phone they start at the bottom, by the thumb (Alex, 19 Oct)
-  folderTabs: 'bottom', // the folder tabs at the bottom from the start, on every device (Alex, 21 Oct)
+  folderTabs: 'top', // All · Unread · Groups · Archived at the top (Alex, 3 Nov; at the bottom since 21 Oct)
   folderOrder: [], // folder ids in the order dragged in Settings > Folders
   folderNames: {}, // the ready-made folders renamed: { unread: 'New' }
   hiddenFolders: [], // ready-made folders deleted (Unread, Groups, Archived; All stays)
@@ -61,6 +61,8 @@ export function getPrefs() {
     const p = { ...DEFAULTS, ...(JSON.parse(localStorage.getItem(KEY)) || {}) }
     // the folder tabs on the left became tabs at the bottom (Alex, 16 Oct)
     if (p.folderTabs === 'left') p.folderTabs = 'bottom'
+    // the folder tabs move to the top for everyone once, and the Calls tab goes (Alex, 3 Nov)
+    if (!p.tabsTop3Nov) { p.folderTabs = 'top'; p.callsTab = false; p.tabsTop3Nov = true; try { localStorage.setItem(KEY, JSON.stringify(p)) } catch { /* private window */ } }
     // the double click reacts with the red heart, no longer the camera (Alex, 16 Oct); a later pick of the camera stays
     if (!p.quickHeart) { if (p.quick === '🎥') p.quick = '❤️'; p.quickHeart = true }
     return p

@@ -37,6 +37,13 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (3 Nov 2026: TmlChat without its bar at the foot; its settings in the hub's Settings > Chat)
+- Alex (screenshot of TmlChat on the phone): "take out the menu with Calls etc., the Calls button and Contacts; the chat's settings into the general Settings as a Chat tab; All / Unread etc. at the top".
+- **hubchat/Chat.jsx:** no bar at the foot any more (Contacts, Calls, Messages, Settings gone; the Edit bar for picked chats stays), the swipe has no other screens to go to, New call is out of the + menu. Calls inside a chat (the phone and camera in a chat's top row) are still there.
+- **Folder tabs at the top:** prefs.js default folderTabs 'top', and once for everyone (tabsTop3Nov) top and callsTab off; Settings > Chat > Folders still offers bottom. The Show Calls Tab switch is gone.
+- **Settings > Chat** (src/pages/Settings.jsx, online only): HubChatPage with `settings` shows hubchat.html?set=1 (Chat.jsx SET_ONLY: the settings menu and pages alone, no top row; #set=<page> opens a page). From the chats, Edit folders and Cmd+/ post 'hubchat:settings' and the hub opens /settings?tab=chat&page=<page>. CSS: section.set-chat near the end of styles.css.
+- Nothing for Alex to run. Open: whether the call buttons inside a chat should go too.
+
 ## Where we stopped (2 Nov 2026: RoarMail 0.24.1 to 0.26.0, blank window, Block, shared spam list)
 
 Work in alexisdigipro-hub/roarmail (desktop releases out from Actions, desktop.yml workflow_dispatch):

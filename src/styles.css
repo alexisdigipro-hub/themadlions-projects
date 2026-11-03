@@ -9623,3 +9623,12 @@ html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .toast { backgr
   html[data-theme][data-theme] body .shell .sidebar-foot .sign-out { padding: 6px 8px; font-size: 11.5px; line-height: 1.15; white-space: normal; text-align: center; }
   html[data-theme][data-theme] body .shell .content { padding: 24px 22px 60px; }
 }
+
+/* ---------- Settings > Chat (Alex, 3 Nov: the chat's settings moved from the chat's own bar into the hub's Settings) ----------
+   The chat's settings page in its frame (HubChatPage.jsx settings, hubchat.html?set=1): its own glass cards, so the
+   section around it is bare, and it fills the screen under the Settings tabs. */
+html[data-theme][data-theme] body .settings-cols > section.set-chat { padding: 0; border: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; overflow: visible; }
+html[data-theme][data-theme] body .settings-cols > section.set-chat > .roarme-page.hubchat-settings { position: relative; inset: auto; z-index: auto; margin: 0; height: calc(100dvh - 140px); min-height: 480px; border-radius: 18px; }
+@media (max-width: 820px) {
+  html[data-theme][data-theme] body .settings-cols > section.set-chat > .roarme-page.hubchat-settings { height: calc(100dvh - var(--topbar-h, 44px) - var(--tabbar-top, 84px) - 72px); min-height: 420px; border-radius: 16px; }
+}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 
 /* The hub's own chat (Alex, 1 Nov 2026): RoarMe's chat copied into the hub (hubchat/, its page hubchat.html), on the
@@ -33,7 +33,8 @@ function hubLook() {
 
 const ID = /^[0-9a-f-]{36}$/
 
-export default function HubChatPage({ full = false }) {
+export default function HubChatPage({ full = false, settings = false, page = '' }) {
+  const navigate = useNavigate()
   const frame = useRef(null)
   // the frame stays hidden until the chat wears the hub's look, then fades in: no white flash on the way in (Alex, 1 Nov)
   const [shown, setShown] = useState(false)
@@ -46,6 +47,8 @@ export default function HubChatPage({ full = false }) {
   const src = useMemo(() => {
     const [mr, mm] = m.split('/')
     const hash = ID.test(mr || '') && ID.test(mm || '') ? `#m=${mr}/${mm}` : ID.test(c) ? `#c=${c}` : ''
+    // Settings > Chat: the chat's settings alone (hubchat/Chat.jsx SET_ONLY), opened at a page if one was asked for
+    if (settings) return `./hubchat.html?set=1${/^[\w:-]{1,40}$/.test(page) ? `#set=${page}` : ''}`
     return `./hubchat.html${hash}`
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
   const first = useRef(true)
@@ -59,6 +62,8 @@ export default function HubChatPage({ full = false }) {
     const onMsg = (e) => {
       if (e.origin !== HERE || !frame.current || e.source !== frame.current.contentWindow) return
       if (e.data?.type === 'roarme:want-look') { send({ type: 'roarme:hub-look', look: hubLook() }); show() }
+      // the chat's settings are the hub's Settings > Chat (Alex, 3 Nov): Edit folders, ⌘/ and the like open them there
+      if (e.data?.type === 'hubchat:settings') { const pg = String(e.data.page || ''); navigate(`/settings?tab=chat${/^[\w:-]{1,40}$/.test(pg) ? `&page=${pg}` : ''}`) }
     }
     window.addEventListener('message', onMsg)
     // a tapped chat notification (public/hubchat/sw.js) while the hub is open: that chat opens in the frame
@@ -90,7 +95,7 @@ export default function HubChatPage({ full = false }) {
 
   if (!supabase) return <p className="muted">The chat needs the online database.</p>
   return (
-    <div className={`roarme-page hubchat-page${full ? ' full' : ''}`}>
+    <div className={`roarme-page hubchat-page${full ? ' full' : ''}${settings ? ' hubchat-settings' : ''}`}>
       <iframe
         ref={frame}
         className={`roarme-frame rm-chat${shown ? ' shown' : ''}`}

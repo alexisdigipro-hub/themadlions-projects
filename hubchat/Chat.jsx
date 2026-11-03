@@ -48,6 +48,14 @@ function usePeopleSearch(meId) {
 }
 
 /* ---------- the app ---------- */
+/* Inside the hub (Alex, 3 Nov): no bar at the foot (Contacts, Calls, Messages, Settings are gone; the chats are the
+   whole screen) and the chat's settings live in the hub's own Settings > Chat, which shows this page as
+   hubchat.html?set=1 (SET_ONLY: the settings alone, opened at #set=<page>). From the chats, what used to open
+   Settings asks the hub to open Settings > Chat at that page. */
+const SET_ONLY = new URLSearchParams(window.location.search).get('set') === '1'
+const SET_FIRST = (window.location.hash.match(/^#set=([\w:-]+)$/) || [])[1] || ''
+const hubSettings = (page = '') => { try { window.parent.postMessage({ type: 'hubchat:settings', page }, window.location.origin) } catch { /* no hub around us */ } }
+
 export default function Chat({ me, setMe }) {
   const prefs = usePrefs()
   const [rooms, setRooms] = useState([])
@@ -65,7 +73,7 @@ export default function Chat({ me, setMe }) {
   const [q, setQ] = useState('')
   const [modal, setModal] = useState('') // '' | newchat | newgroup | info | folders | newfolder | pickfolder
   const [plus, setPlus] = useState(false)
-  const [tab, setTab] = useState('chats') // the bar at the foot: contacts | calls | chats | settings
+  const [tab, setTab] = useState(SET_ONLY ? 'settings' : 'chats') // chats | settings (the hub's Settings > Chat) | media
   const [cq, setCq] = useState('') // search in Contacts
   const [picking, setPicking] = useState(false)
   const [tabsEdit, setTabsEdit] = useState(false) // the folder tabs being reordered in place, like Telegram (Alex, 21 Oct)
@@ -88,10 +96,10 @@ export default function Chat({ me, setMe }) {
   // the way RoarMe opens (Alex, 16 Oct): the chats slide in from the left, the conversation rises after them
   const [intro, setIntro] = useState(true)
   useEffect(() => { const t = setTimeout(() => setIntro(false), 1400); return () => clearTimeout(t) }, [])
-  const [setPage, setSetPage] = useState('')
+  const [setPage, setSetPage] = useState(SET_ONLY ? SET_FIRST : '')
   const [folderSeed, setFolderSeed] = useState([]) // chats a new folder starts with
   // a folder is edited on a page of its own in Settings, like Telegram's (Alex, 16 Oct)
-  const openFolders = () => { setModal(''); setTab('settings'); setSetPage('folders') }
+  const openFolders = () => { setModal(''); if (!SET_ONLY) { hubSettings('folders'); return } setTab('settings'); setSetPage('folders') }
   const folderBack = useRef('') // the screen a folder was opened for editing from: its tick goes back there
   const editFolder = (id, seed = []) => { folderBack.current = tab === 'settings' ? '' : tab; setModal(''); setFolderSeed(seed); setTab('settings'); setSetPage(`folder:${id}`) }
   const doneFolder = () => { document.activeElement?.blur?.(); const back = folderBack.current; folderBack.current = ''; if (back) { setSetPage(''); setTab(back) } else setSetPage('folders') }
@@ -109,7 +117,6 @@ export default function Chat({ me, setMe }) {
   }, [tab, prefs.folderTabs, myFolders.length, !q.trim()]) // eslint-disable-line react-hooks/exhaustive-deps
   // RoarMe's Tasks panel is not in the hub's chat: the hub has its own Tasks (Alex, 1 Nov 2026)
   const tasksOpen = false
-  const footLens = useLens(`${tab}|${prefs.callsTab}|${picking}|${tasksOpen}`) // the Settings page open on the right
   const [groupWith, setGroupWith] = useState(null) // Create Group from a chat starts with that person in it
   const searchRef = useRef(null)
   // the search box hides and comes out when the list is pulled down at its top (Alex, 17 Oct), as on the iPhone
@@ -178,7 +185,7 @@ export default function Chat({ me, setMe }) {
   useEffect(() => {
     const k = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setTab('chats'); setSearchOpen(true); requestAnimationFrame(() => searchRef.current?.focus()) }
-      if ((e.metaKey || e.ctrlKey) && e.key === '/') { e.preventDefault(); setTab('settings'); setSetPage('keys') }
+      if ((e.metaKey || e.ctrlKey) && e.key === '/') { e.preventDefault(); if (!SET_ONLY) { hubSettings('keys'); return } setTab('settings'); setSetPage('keys') }
     }
     document.addEventListener('keydown', k)
     return () => document.removeEventListener('keydown', k)
@@ -944,7 +951,7 @@ export default function Chat({ me, setMe }) {
   // on a phone the swipe runs on through the bar at the foot (Alex, 19 Oct): Contacts · Calls · Messages and its folders ·
   // Tasks and its tabs · Settings. Coming into Messages or Tasks from the right lands on its last folder or tab.
   const goStop = (dir) => {
-    const stops = ['contacts', ...(prefs.callsTab ? ['calls'] : []), 'chats', 'settings']
+    const stops = ['chats'] // no Contacts, Calls or Settings to swipe on to (Alex, 3 Nov)
     const next = stops[stops.indexOf(tasksOpen ? 'tasks' : tab === 'media' ? 'settings' : tab) + dir]
     if (!next) return
     if (tasksOpen) showTasks(false)
@@ -1040,11 +1047,11 @@ export default function Chat({ me, setMe }) {
   if (JSON.stringify(nowRoles) !== JSON.stringify(activeRoles.current)) activeRoles.current = nowRoles
 
   return (
-    <div className={`app${intro ? ' intro' : ''}${tasksOpen ? ' tasks-open' : ''}`} style={{ '--side-w': `${sideW}px` }}>
+    <div className={`app${intro ? ' intro' : ''}${tasksOpen ? ' tasks-open' : ''}${SET_ONLY ? ' set-only' : ''}`} style={{ '--side-w': `${sideW}px` }}>
       <span className="side-grip" onPointerDown={drag} onDoubleClick={() => { setSideW(370); try { localStorage.setItem('hubchat-side', '370') } catch { /* private window */ } }} title="Drag to widen, double-click to reset" />
       <aside className="side">
         <div className="side-col" {...onStopTouch}>
-        <div className="side-head">
+        {!SET_ONLY && <div className="side-head">
           <button type="button" className="pill-btn" onClick={() => { setPlus(false); if (picking || tabsEdit) { endPick(); setTabsEdit(false) } else { setTab('chats'); setPicking(true) } }}>{picking || tabsEdit ? 'Done' : 'Edit'}</button>
           <span className="side-brand">{picking ? (picked.length ? `${picked.length} selected` : 'Select chats') : <Wordmark />}</span>
           {picking ? (
@@ -1059,7 +1066,6 @@ export default function Chat({ me, setMe }) {
                   <div className="menu">
                     <button type="button" onClick={() => { setPlus(false); setModal('newchat') }}>{I.person}<span>New chat</span></button>
                     <button type="button" onClick={() => { setPlus(false); setModal('newgroup') }}>{I.people}<span>New group</span></button>
-                    <button type="button" onClick={() => { setPlus(false); setModal('newcall') }}>{I.phone}<span>New call</span></button>
                     <button type="button" onClick={() => { setPlus(false); editFolder('new') }}>{I.folder}<span>New folder</span></button>
                     {myFolders.length > 0 && <button type="button" onClick={() => { setPlus(false); openFolders() }}>{I.edit}<span>Edit folders</span></button>}
                   </div>
@@ -1068,9 +1074,9 @@ export default function Chat({ me, setMe }) {
             </span>
             </span>
           )}
-        </div>
+        </div>}
         {/* on a phone the list and a chat are separate screens: the bar shows on the list too */}
-        <NowPlaying className="in-side" onOpen={(id) => { setTab('chats'); setActiveId(id) }} />
+        {!SET_ONLY && <NowPlaying className="in-side" onOpen={(id) => { setTab('chats'); setActiveId(id) }} />}
         {tab === 'chats' && (
           <>
             <div className={`search-wrap${searchOpen || q.trim() ? ' open' : ''}`}><div>
@@ -1191,13 +1197,7 @@ export default function Chat({ me, setMe }) {
             <button type="button" className="danger" disabled={!picked.length} onClick={bulkDelete}>{I.trash}<span>Delete</span></button>
           </nav>
         ) : (
-          <nav ref={footLens} className="foot lens" onClickCapture={(e) => { if (tasksOpen && !e.target.closest('.foot-tasks') && window.matchMedia('(max-width: 760px)').matches) showTasks(false) }}>
-            {/* Contacts · Calls · Messages in the middle, a little bigger · Tasks · Settings (Alex, 19 Oct); AllMedia lives in Settings */}
-            <button type="button" className={tab === 'contacts' && !tasksOpen ? 'on' : ''} onClick={() => setTab('contacts')}>{FOOT_I.contacts}<span>Contacts</span></button>
-            {prefs.callsTab && <button type="button" className={tab === 'calls' && !tasksOpen ? 'on' : ''} onClick={() => setTab('calls')}>{FOOT_I.calls}<span>Calls</span></button>}
-            <button type="button" className={`foot-main${tab === 'chats' && !tasksOpen ? ' on' : ''}`} onClick={() => setTab('chats')}><span className="foot-ico">{FOOT_I.messages}{unreadAll > 0 && <i>{unreadAll > 99 ? '99+' : unreadAll}</i>}</span><span>Messages</span></button>
-            <button type="button" className={(tab === 'settings' || tab === 'media') && !tasksOpen ? 'on' : ''} onClick={() => setTab('settings')}>{FOOT_I.settings}<span>Settings</span></button>
-          </nav>
+          null /* no bar at the foot inside the hub (Alex, 3 Nov): the chats are the whole screen, settings are the hub's Settings > Chat */
         )}
       </aside>
 
