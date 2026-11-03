@@ -37,6 +37,17 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (3 Nov 2026, night: one admin for everything)
+- Alex: "one admin page for all my sites and apps, statistics, every download link, the whole picture, in one link" (named themadlions.com, alexisk.gr, boulevart.gr, qubi.gr, roartransfer.com; the hub left out for now, his call).
+- **Studio (themadlions.com/admin/, public/site/admin/index.html) is that page.** The bar: Overview, Apps, themadlions.com (Work, Enquiries, Shop, BTS, People, Look now a second row of pills, #siteNav), alexisk.gr, Accounts. The tab you were on comes back on reload (sessionStorage tml_studio_tab).
+  - **Overview**: the old KPIs and chart, plus *Your sites and apps* (tiles with Manage / Admin / Site; qubi.gr shows published videos and their views read from its own Supabase vzboewhdsmqvubzycirc with its public key), *Most visited pages* (site_events.path, named by pageName) and *Apps* (newest releases).
+  - **Apps**: APPS in the page (repo, file name, Lab page); releases read in the browser from api.github.com (60 asks an hour per browser, kept 15 min in localStorage tml_studio_gh_<repo>, Refresh asks again). Downloads = every .dmg/.exe of every release; per platform = the newest release's files; the Copy link is the versionless releases/latest/download link (always the newest). RoarGrab from the public roargrab-releases. *In the browser*: Roardino, RoarList, RoarCast, RoarJingle (opens in 30 days from site_events), RoarWriter, RoarMe, RoarTransfer.
+  - **alexisk.gr**: the editor of alexisk.gr/admin/ moved in (loads alexisk.gr/tml.js and admin/films.json, saves alexisk_site with the Studio session). alexisk.gr/admin/ still works.
+  - **Accounts**: account/admin/ in a frame; in a frame it hides its own bar (html.embed) and its sign-in button opens a tab (Roar Accounts are RoarMe's sign-in, not the hub's).
+  - boulevart.gr (PHP, its own server and sign-in), qubi.gr (its own Supabase and sign-in) and roartransfer.com (Admin tab, Roar Account) open their own admins; they cannot share Studio's sign-in.
+- **Lab pages count visits**: lab/fresh.js (on every Lab page and roarme/) sends a view to site_events like the home page (same anonymous id tml_site_vid; not in a frame, not with ?nostats=). No SQL needed.
+- Nothing for Alex to run.
+
 ## Where we stopped (3 Nov 2026, night: the Roar Account grows, one sign-in for every app)
 
 - Alex: "1, 2, 3, 4, 5 yes, do them" (one sign-in, the calendar filling itself, projects across the apps, notifications, devices). Backend in the roarmail repo, **supabase/roar-account.sql** (already applied in RoarMe's project, nothing to run): roar_connect, roar_projects / roar_project_members / roar_project_items (roar_project_role(), roar_project_add_member()), project_id on roar_calendar_events and roar_tasks, roar_notifications (+ triggers on roar_tasks, roar_calendar_shares, roar_project_members, roarwriter_shares, roar_transfer_inbox), calendar triggers on roardino_ordinos (call to wrap), roarlist_projects (shoot day), roarwriter_scripts (schedule days; roar_cal_writer_sync), roar_end_other_sessions(). roar_my_sessions / roar_end_session are RoarMe's.
