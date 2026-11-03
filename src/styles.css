@@ -9630,5 +9630,21 @@ html:is([data-skin='soft'], [data-skin='softlight'])[data-theme] .toast { backgr
 html[data-theme][data-theme] body .settings-cols > section.set-chat { padding: 0; border: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; overflow: visible; }
 html[data-theme][data-theme] body .settings-cols > section.set-chat > .roarme-page.hubchat-settings { position: relative; inset: auto; z-index: auto; margin: 0; height: calc(100dvh - 140px); min-height: 480px; border-radius: 18px; }
 @media (max-width: 820px) {
-  html[data-theme][data-theme] body .settings-cols > section.set-chat > .roarme-page.hubchat-settings { height: calc(100dvh - var(--topbar-h, 44px) - var(--tabbar-top, 84px) - 72px); min-height: 420px; border-radius: 16px; }
+  html[data-theme][data-theme] body .settings-cols > section.set-chat > .roarme-page.hubchat-settings { height: calc(100dvh - var(--topbar-h, 44px) - var(--tabbar-top, 84px) - 64px); min-height: 420px; border-radius: 0; margin: 0 -10px; } /* edge to edge, the chat's own rows on the hub's backdrop (Alex, 3 Nov: gaps) */
+}
+
+/* Settings > Budget on a phone (Alex, 3 Nov: "the fields are a mess"): each category is one tile, the grip, its name
+   and × on the first line, the Finance column under the name at full width. The computer's four columns (22px, name,
+   Finance, ×) had met the older phone rule that put the name on a line of its own, so the Finance box and × were
+   squeezed into the grip's 22px. */
+@media (max-width: 820px) {
+  html[data-theme] body .bcat-row { grid-template-columns: 22px minmax(0, 1fr) 34px; row-gap: 6px; column-gap: 8px; padding: 8px 0; }
+  html[data-theme] body .bcat-row > .sort-grip { grid-column: 1; grid-row: 1; }
+  html[data-theme] body .bcat-row > input.input { grid-column: 2; grid-row: 1; }
+  html[data-theme] body .bcat-row > .bcat-x { grid-column: 3; grid-row: 1; width: 34px; height: 34px; border-radius: 999px; }
+  html[data-theme] body .bcat-row > select.select { grid-column: 2 / 4; grid-row: 2; width: 100%; }
+  html[data-theme] body .bcat-row > .bcat-move { grid-column: 1 / -1; grid-row: 3; }
+  html[data-theme] body .bcat-head { grid-template-columns: 22px minmax(0, 1fr) 34px; }
+  html[data-theme] body .bcat-head .bcat-x { width: 34px; height: 34px; border-radius: 999px; }
+  html[data-theme] body .bcat-group { padding: 10px 12px; }
 }

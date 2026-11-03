@@ -4034,3 +4034,11 @@ html[data-embed='hub'] .app > .main { padding-top: 0 !important; padding-bottom:
 html[data-embed='hub'] .tasks-panel { padding-top: 12px !important; padding-bottom: 12px !important; }
 html[data-embed='hub'] :is(.modal-back, .ctx) { padding-top: 12px !important; padding-bottom: 12px !important; }
 html[data-embed='hub'] .modal, html[data-embed='hub'] .modal:has(.cc), html[data-embed='hub'] .modal:has(.pf) { max-height: calc(100dvh - 24px) !important; }
+/* On a phone inside the hub (Alex, 3 Nov: "lines below, gaps above; move the buttons and the chats up"): no card around
+   the chats and the open chat, edge to edge on the hub's own backdrop, so nothing shows between the hub's top bar and
+   the chat or above the hub's bar at the foot, and the top row sits right under the hub's bar. */
+@media (max-width: 760px) {
+  html[data-embed='hub'] .app, html[data-embed='hub'][data-theme] .app { padding: 0 !important; }
+  html[data-embed='hub'][data-theme] .app > :is(.side, .main) { background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  html[data-embed='hub'][data-theme] .app > .side { padding: 2px 10px 0 !important; }
+}
