@@ -49,6 +49,12 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - **Settings > Chat on a phone** (Alex, 3 Nov: "gaps here too"): the same edge-to-edge rule covers it (it is the chat's page too); its frame has no corners and runs to the screen's sides (styles.css section.set-chat), and on a phone no row of the settings menu shows as chosen (General was lit red while only the list showed).
 - Nothing for Alex to run.
 
+## Where we stopped (3 Nov 2026, evening: Roar Admin, RoarMail up to 0.32.5)
+
+- **Roar Admin** at themadlions.com/account/admin/ (public/site/account/admin/index.html, noindex): every Roar Account with what each app keeps for it, totals, sign-ups per day; data from the Edge Function **roar-admin** (RoarMe's project, deployed; source in the roarmail repo, supabase/functions/roar-admin), answering only accounts in roar_admins (one today). A Hub tab signs in to the hub with the hub's own login and lists its members through the hub's rules (the hub stays a separate system).
+- RoarMail 0.30 to 0.32.5: panels in their own windows, ✦ AI as a card with a preview (prompt "!!" for cannot), Accounts as a list, Contacts tidied (People, Groups ▾, Company ▾, bulk Block), signature fill fixed, Files open/delete the mail, contacts in the Roar Account (sync + the account page), search placeholder, icons in the native menus.
+- **Roar Calendar**: researched (one roar_calendar_events table every app upserts into + a view with roar_tasks + a per-person ICS feed for Apple/Google/Outlook); waiting for Alex's decisions.
+
 ## Where we stopped (3 Nov 2026: Roar Account, RoarMail 0.26.1 to 0.29.0)
 
 - **Roar Account** (Alex: "one account in every app, like iCloud", parts 1 and 2 only; RoarMail Web, part 3, waits for his decision: it needs our own mail server in the middle). It is RoarMe's sign-in (Supabase bzmjhbnwhdwmncxkqkdl). Online page: **themadlions.com/account/** (public/site/account/index.html, static, supabase-js 2.45.4 from jsDelivr): sign in / up / forgot / 6-digit code / new password, profile (roar_profiles), apps with their counts, RoarMail's synced setup, AI used today, computers (remove one), change password, sign out everywhere, delete (roar_delete_me). noindex. Sign-up and reset links ask Supabase to return to themadlions.com/account/: if that address is not in RoarMe's Auth > URL Configuration > Redirect URLs, the link lands on RoarMe's own site instead (still works).
