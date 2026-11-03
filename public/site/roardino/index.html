@@ -1010,6 +1010,47 @@ const AUTH_ERR = [
 const authErr = e => { const m = (e && e.message) || ''; for (const [re, t] of AUTH_ERR) if (re.test(m)) return t; return 'Κάτι δεν πήγε καλά. Δοκίμασε ξανά.'; };
 const appUrl = () => location.origin + location.pathname;
 
+// Sign in with Roar Account (3 Nov 2026): the account page lives on this same site, so when it is signed in here the
+// app allows itself at once with that session; otherwise the account page opens in a new tab and asks Allow.
+// roar-connect makes a one-time sign-in token that becomes Roardino's own session (verifyOtp).
+async function roarAccountSignIn(say){
+  const FN = SB_URL + '/functions/v1/roar-connect';
+  const call = async (body, token) => {
+    const r = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SB_KEY, ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || j.error) throw new Error(j.error || 'HTTP ' + r.status);
+    return j;
+  };
+  // signed in on the account page of this site? Then no tab at all; else one opened now, from the click (not blocked)
+  let acct = null;
+  try { acct = JSON.parse(localStorage.getItem('roar-account') || 'null'); } catch (e) {}
+  if (!(acct && acct.access_token && (acct.expires_at || 0) * 1000 > Date.now() + 30e3)) acct = null;
+  const tab = acct ? null : window.open('', '_blank');
+  try {
+    say('Σύνδεση…');
+    const start = await call({ do: 'start', app: 'roardino' });
+    let allowed = false;
+    if (acct) { try { await call({ do: 'allow', code: start.code }, acct.access_token); allowed = true; } catch (e) {} }
+    if (!allowed) {
+      if (tab) tab.location.href = start.url; else window.open(start.url, '_blank');
+      say(`Πάτα «Επιτρέπω» στη σελίδα που άνοιξε. Κωδικός ${start.code}`);
+    }
+    const until = Date.now() + 10 * 60e3;
+    while (Date.now() < until) {
+      const a = await call({ do: 'poll', code: start.code, secret: start.secret });
+      if (a.expired) break;
+      if (a.token_hash) {
+        const { error } = await sb.auth.verifyOtp({ type: 'magiclink', token_hash: a.token_hash });
+        if (error) throw error;
+        say('');
+        return;
+      }
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+    say('Ο κωδικός έληξε. Πάτα ξανά «Σύνδεση με Roar Account».', 'err');
+  } catch (e) { try { if (tab && !tab.closed && tab.location.href === 'about:blank') tab.close(); } catch (x) {} say(authErr(e), 'err'); }
+}
+
 function viewAuth(mode = 'in'){
   document.title = 'Roardino · Σύνδεση';
   const f = { name: '', company: '', email: '', password: '' };
@@ -1026,6 +1067,8 @@ function viewAuth(mode = 'in'){
         h('button', { type: 'button', class: up ? 'on' : '', onclick: () => { mode = 'up'; say(''); draw(); } }, 'Νέος λογαριασμός')),
       up ? inp('name', 'Ονοματεπώνυμο', 'text', { autocomplete: 'name', required: true }) : null,
       up ? inp('company', 'Εταιρεία / παραγωγή (προαιρετικό)', 'text', { autocomplete: 'organization' }) : null,
+      up ? null : h('button', { class: 'btn primary', type: 'button', onclick: () => roarAccountSignIn(say) }, 'Σύνδεση με Roar Account'),
+      up ? null : h('p', { class: 'hint', style: 'text-align:center;margin:-4px 0 -6px' }, 'ή με email και κωδικό'),
       inp('email', 'Email', 'email', { autocomplete: 'email', inputmode: 'email', required: true }),
       inp('password', up ? 'Κωδικός (τουλάχιστον 6 χαρακτήρες)' : 'Κωδικός', 'password', { autocomplete: up ? 'new-password' : 'current-password', required: true }),
       h('button', { class: 'btn primary', type: 'submit' }, up ? 'Δημιουργία λογαριασμού' : 'Σύνδεση'),
