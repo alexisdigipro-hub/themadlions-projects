@@ -81,6 +81,9 @@ export function followHubLook() {
   window.addEventListener('message', (e) => {
     if (!fromHub(e)) return
     const m = e.data
+    // on a phone the hub's frame runs down behind its bar at the foot (Alex, 3 Nov: no band above the bar); the hub
+    // says how tall that bar's room is, and the chat keeps its list and its writing box above it
+    if (m && m.type === 'hubchat:inset') { const b = Math.max(0, Math.min(240, Math.round(Number(m.bottom) || 0))); document.documentElement.style.setProperty('--hub-inset-b', `${b}px`); return }
     if (!m || m.type !== 'roarme:hub-look' || !m.look) return
     lastLook = m.look
     writeLook(m.look)
