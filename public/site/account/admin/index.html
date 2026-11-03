@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- The Roar Account's admin page (Alex, 3 Nov 2026: every account, statistics, what goes on). Only a Roar Account in
+     roar_admins gets data back (Edge Function roar-admin in RoarMe's project, read only). The hub is a separate system:
+     its members show after signing in to the hub here, through the hub's own rules. -->
+<title>Roar Admin · The Mad Lions</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#16181c">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<style>
+:root { --bg:#16181c; --text:#eef0f3; --muted:rgba(214,220,228,.66); --dim:rgba(214,220,228,.42); --red:#d40000; --red-hi:#ff3b2f;
+  --glass:rgba(255,255,255,.055); --glass-2:rgba(255,255,255,.09); --edge:rgba(255,255,255,.12); --pad:clamp(16px,4.5vw,64px);
+  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,'Helvetica Neue',sans-serif; --mono:ui-monospace,'SF Mono',Menlo,monospace; color-scheme:dark; }
+* { box-sizing:border-box; }
+html, body { margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+body::before { content:''; position:fixed; inset:0; z-index:-1; pointer-events:none; background:radial-gradient(1100px 620px at 50% -10%,#3c424c 0%,transparent 62%),radial-gradient(800px 600px at 100% 100%,rgba(212,0,0,.16),transparent 60%); }
+a { color:inherit; }
+:focus-visible { outline:2px solid var(--red-hi); outline-offset:3px; border-radius:8px; }
+.bar { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:14px; padding:calc(12px + env(safe-area-inset-top)) var(--pad) 12px; background:rgba(22,24,28,.72); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); border-bottom:1px solid rgba(255,255,255,.06); }
+.bar .home img { width:118px; height:auto; filter:invert(1); display:block; }
+.bar .crumb { font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+.bar .end { margin-left:auto; display:flex; gap:8px; align-items:center; }
+.seg { display:flex; padding:3px; border-radius:999px; background:var(--glass); border:1px solid var(--edge); }
+.seg button { border:0; background:transparent; cursor:pointer; padding:6px 12px; border-radius:999px; font:inherit; font-family:var(--mono); font-size:11px; letter-spacing:.08em; color:var(--muted); }
+.seg .on { background:rgba(255,255,255,.14); color:var(--text); }
+main { max-width:980px; margin:0 auto; padding:clamp(28px,6vw,64px) var(--pad) 60px; }
+.kicker { margin:0; font-family:var(--mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
+h1 { margin:12px 0 8px; font-size:clamp(34px,6vw,58px); line-height:1.02; font-weight:800; letter-spacing:-.01em; }
+h1 .r { color:var(--red-hi); }
+.lead { color:var(--muted); font-size:16px; line-height:1.55; margin:0 0 28px; max-width:620px; }
+h2 { font-size:22px; margin:38px 0 14px; font-weight:700; display:flex; align-items:center; gap:10px; }
+h2 small { font-size:13px; font-weight:500; color:var(--dim); }
+.grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+.tile { padding:18px 20px; border-radius:22px; background:var(--glass); border:1px solid var(--edge); min-width:0; }
+.tile h3 { margin:0 0 6px; font-size:16px; }
+.tile p { margin:0; color:var(--muted); font-size:14px; line-height:1.5; }
+.app { display:flex; gap:14px; align-items:center; text-decoration:none; transition:background .2s, transform .2s; }
+.app:hover { background:var(--glass-2); transform:translateY(-1px); }
+.app img { width:48px; height:48px; border-radius:12px; flex:none; }
+.app .t { min-width:0; }
+.app .t b { display:block; font-size:15.5px; }
+.app .t span { display:block; color:var(--muted); font-size:13px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card { max-width:420px; margin:clamp(20px,6vh,70px) auto 0; padding:28px; border-radius:26px; background:var(--glass); border:1px solid var(--edge); }
+.card h1 { font-size:32px; margin:6px 0 6px; }
+label.f { display:block; margin:12px 0 0; font-size:13px; color:var(--muted); }
+input.i { display:block; width:100%; margin-top:6px; padding:12px 16px; border-radius:999px; border:0; background:rgba(255,255,255,.07); box-shadow:inset 0 0 0 1px var(--edge); color:var(--text); font:inherit; font-size:15px; outline:0; }
+input.i:focus { box-shadow:inset 0 0 0 1.5px var(--red-hi); }
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; border:0; cursor:pointer; padding:11px 20px; border-radius:999px; font:inherit; font-size:14px; font-weight:600; color:var(--text); background:var(--glass-2); box-shadow:inset 0 0 0 1px var(--edge); text-decoration:none; transition:filter .2s, transform .15s; }
+.btn:hover { filter:brightness(1.15); } .btn:active { transform:scale(.97); }
+.btn.main { background:var(--red); box-shadow:0 0 22px rgba(212,0,0,.35); color:#fff; }
+.btn.small { padding:7px 14px; font-size:13px; font-weight:500; }
+.btn.danger { color:#ff6b62; }
+.btn[disabled] { opacity:.5; pointer-events:none; }
+.wide { width:100%; margin-top:18px; }
+.links { display:flex; justify-content:space-between; gap:10px; margin-top:14px; flex-wrap:wrap; }
+.links button { border:0; background:none; color:var(--muted); cursor:pointer; font:inherit; font-size:13.5px; padding:4px 0; }
+.links button:hover { color:var(--text); }
+.err { color:#ff6b62; font-size:14px; margin:12px 0 0; }
+.note { color:#8ed99a; font-size:14px; margin:12px 0 0; }
+.me { display:flex; align-items:center; gap:16px; margin:6px 0 4px; }
+.av { width:64px; height:64px; border-radius:50%; background:linear-gradient(140deg,#5b6170,#2b2f37); display:grid; place-items:center; font-size:24px; font-weight:700; overflow:hidden; flex:none; box-shadow:inset 0 0 0 1px var(--edge); }
+.av img { width:100%; height:100%; object-fit:cover; }
+.me .who b { font-size:22px; display:block; }
+.me .who span { color:var(--muted); font-size:14px; }
+.rows { display:flex; flex-direction:column; gap:8px; }
+.row { display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:16px; background:var(--glass); border:1px solid var(--edge); }
+.row .g { flex:1; min-width:0; }
+.row .g b { display:block; font-size:14.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.row .g span { color:var(--muted); font-size:13px; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.chip { display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:999px; font-size:12.5px; background:var(--glass-2); color:var(--muted); }
+.chip i { width:7px; height:7px; border-radius:50%; background:var(--red-hi); }
+.tile .stat { font-size:30px; font-weight:800; margin:4px 0 4px; color:var(--text); }
+.muted { color:var(--muted); }
+.hide { display:none !important; }
+.spin { width:28px; height:28px; margin:80px auto; border-radius:50%; border:3px solid var(--edge); border-top-color:var(--red-hi); animation:s 1s linear infinite; }
+@keyframes s { to { transform:rotate(360deg); } }
+footer { max-width:980px; margin:0 auto; padding:24px var(--pad) 50px; color:var(--dim); font-size:12.5px; display:flex; gap:14px; flex-wrap:wrap; }
+footer a { color:var(--dim); }
+@media (max-width:560px) { .bar .crumb { display:none; } .row { flex-wrap:wrap; } }
+
+.kpis { display:grid; gap:10px; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); }
+.kpi { padding:14px 16px; border-radius:18px; background:var(--glass); border:1px solid var(--edge); }
+.kpi b { display:block; font-size:28px; font-weight:800; }
+.kpi span { color:var(--muted); font-size:12.5px; }
+.bars { display:flex; align-items:flex-end; gap:3px; height:90px; padding:12px 14px; border-radius:18px; background:var(--glass); border:1px solid var(--edge); }
+.bars i { flex:1; min-height:2px; border-radius:3px 3px 0 0; background:var(--red-hi); opacity:.85; }
+.tabsx { display:flex; gap:6px; margin:26px 0 12px; }
+.tabsx button { border:0; cursor:pointer; padding:8px 16px; border-radius:999px; font:inherit; font-size:13.5px; color:var(--muted); background:var(--glass); box-shadow:inset 0 0 0 1px var(--edge); }
+.tabsx button.on { color:var(--text); background:rgba(255,255,255,.14); }
+.acc { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) auto; gap:12px; align-items:center; padding:12px 16px; border-radius:16px; background:var(--glass); border:1px solid var(--edge); }
+.acc b { display:block; font-size:14.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.acc span { color:var(--muted); font-size:12.5px; }
+.acc .when { text-align:right; font-size:12.5px; color:var(--muted); white-space:nowrap; }
+.tags { display:flex; flex-wrap:wrap; gap:5px; }
+.tag { padding:3px 9px; border-radius:999px; font-size:11.5px; background:var(--glass-2); color:var(--muted); white-space:nowrap; }
+.tag.on { color:var(--text); }
+.tools { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.tools input { flex:1; min-width:200px; margin:0; }
+select.i { width:auto; border-radius:999px; padding:0 16px; height:46px; -webkit-appearance:none; appearance:none; cursor:pointer; }
+@media (max-width:640px) { .acc { grid-template-columns:1fr; } .acc .when { text-align:left; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <a class="home" href="../../" aria-label="The Mad Lions"><img src="../../wordmark.png" alt="The Mad Lions"></a>
+  <span class="crumb">Roar Admin</span>
+  <div class="end"><a class="btn small" href="../">Roar Account</a></div>
+</header>
+<main>
+  <div class="spin" id="loading"></div>
+  <div class="card hide" id="gate"><p class="kicker">Roar Admin</p><h1 style="font-size:28px">Admins only</h1><p class="lead" id="gateMsg" style="font-size:14.5px"></p><a class="btn main wide" href="../">Sign in to your Roar Account</a></div>
+  <div class="hide" id="home">
+    <p class="kicker">Roar Admin</p>
+    <h1>Every <span class="r">account</span></h1>
+    <p class="lead" id="lead"></p>
+    <div class="kpis" id="kpis"></div>
+    <h2 style="font-size:17px">Sign-ups, last 30 days</h2>
+    <div class="bars" id="bars"></div>
+    <div class="tabsx"><button class="on" data-tab="roar">Roar Account</button><button data-tab="hub">Hub</button></div>
+    <section id="tab-roar">
+      <div class="tools"><input class="i" id="q" placeholder="Search email, name or @username"><select class="i" id="sort"><option value="created">Newest</option><option value="seen">Last active</option><option value="apps">Most apps</option></select></div>
+      <div class="rows" id="list"></div>
+    </section>
+    <section id="tab-hub" class="hide">
+      <form class="tile" id="hubForm" style="max-width:420px">
+        <p style="margin:0 0 6px">The hub (hub.themadlions.com) has its own sign-in. Sign in with your hub admin account to see its members.</p>
+        <label class="f">Email<input class="i" type="email" id="hEmail" autocomplete="email"></label>
+        <label class="f">Password<input class="i" type="password" id="hPass" autocomplete="current-password"></label>
+        <p class="err hide" id="hErr"></p>
+        <button class="btn main wide">Sign in to the hub</button>
+      </form>
+      <div class="hide" id="hubHome"><div class="kpis" id="hubKpis" style="margin-bottom:12px"></div><div class="rows" id="hubList"></div>
+        <button class="btn small" id="hubOut" style="margin-top:12px">Sign out of the hub here</button></div>
+    </section>
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function () {
+  const sb = window.supabase.createClient('https://bzmjhbnwhdwmncxkqkdl.supabase.co', 'sb_publishable_7mQ3e0NH5lCmdoIKx2-FUA_EgCoXx9X',
+    { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'roar-account' } })
+  const hub = window.supabase.createClient('https://naibamqexcqnqhbbqafa.supabase.co', 'sb_publishable_o1OB_ohozPq1Xr2jg2ZSHA_3GsusXFL',
+    { auth: { persistSession: true, autoRefreshToken: true, storageKey: 'roar-admin-hub' } })
+  const $ = (id) => document.getElementById(id)
+  const show = (el, on) => el.classList.toggle('hide', !on)
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+  const ago = (d) => { if (!d) return 'never'; const m = (Date.now() - Date.parse(d)) / 6e4; return m < 60 ? Math.round(m) + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' days ago' }
+  const day = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
+  let data = null
+
+  async function start() {
+    const { data: s } = await sb.auth.getSession()
+    show($('loading'), false)
+    if (!s.session) { $('gateMsg').textContent = 'Sign in to your Roar Account first, with an admin account.'; show($('gate'), true); return }
+    const { data: d, error } = await sb.functions.invoke('roar-admin', { body: {} })
+    if (error || !d || d.error) { $('gateMsg').textContent = 'This Roar Account is not an admin.'; show($('gate'), true); return }
+    data = d; show($('home'), true); render()
+  }
+  function render() {
+    const T = data.totals
+    $('lead').textContent = `${T.accounts} Roar Accounts: RoarMe, RoarTransfer, RoarWriter, RoarList, Roardino and RoarMail share one sign-in.`
+    const k = [['Accounts', T.accounts], ['New, 7 days', T.new7], ['New, 30 days', T.new30], ['Active, 7 days', T.active7], ['RoarMe', T.roarme], ['RoarMail', T.roarmail], ['RoarWriter', T.roarwriter], ['RoarList', T.roarlist], ['Roardino', T.roardino], ['RoarTransfer', T.roartransfer], ['AI today', T.aiToday]]
+    $('kpis').innerHTML = k.map(([l, v]) => `<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join('')
+    const days = Object.entries(data.signups), max = Math.max(1, ...days.map(([, n]) => n))
+    $('bars').innerHTML = days.map(([d, n]) => `<i title="${d}: ${n}" style="height:${Math.max(2, n / max * 100)}%"></i>`).join('')
+    list()
+  }
+  function list() {
+    const q = $('q').value.trim().toLowerCase(), sort = $('sort').value
+    const nApps = (a) => ['roarme', 'roarwriter', 'roarlist', 'roardino', 'roartransfer', 'roarmail'].filter((x) => a.apps[x]).length
+    let rows = data.accounts.filter((a) => !q || [a.email, a.name, a.username].some((v) => String(v || '').toLowerCase().includes(q)))
+    rows = rows.slice().sort((a, b) => sort === 'apps' ? nApps(b) - nApps(a) : sort === 'seen' ? String(b.lastSignIn || b.lastSeen || '').localeCompare(String(a.lastSignIn || a.lastSeen || '')) : String(b.created).localeCompare(String(a.created)))
+    const tag = (on, label) => `<span class="tag ${on ? 'on' : ''}">${label}</span>`
+    $('list').innerHTML = rows.map((a) => {
+      const x = a.apps
+      const tags = [x.roarme && tag(1, 'RoarMe' + (x.roarmeChats ? ' · ' + x.roarmeChats + ' chats' : '')), x.roarmail && tag(1, 'RoarMail · ' + x.roarmail + ' computer' + (x.roarmail > 1 ? 's' : '')),
+        x.roarwriter && tag(1, 'RoarWriter · ' + x.roarwriter), x.roarlist && tag(1, 'RoarList · ' + x.roarlist), x.roardino && tag(1, 'Roardino · ' + x.roardino),
+        x.roartransfer && tag(1, 'RoarTransfer · ' + x.roartransfer), x.tasks && tag(1, x.tasks + ' tasks'), x.ai && tag(1, 'AI · ' + x.ai)].filter(Boolean).join('')
+      return `<div class="acc"><div><b>${esc(a.name || a.email)}</b><span>${esc(a.email)}${a.username ? ' · @' + esc(a.username) : ''}${a.confirmed ? '' : ' · not confirmed'}</span></div>
+        <div class="tags">${tags || '<span class="tag">no app yet</span>'}</div>
+        <div class="when">joined ${esc(day(a.created))}<br>signed in ${esc(ago(a.lastSignIn))}</div></div>`
+    }).join('') || '<p class="muted">Nobody matches.</p>'
+  }
+  $('q').oninput = list; $('sort').onchange = list
+  document.querySelectorAll('.tabsx button').forEach((b) => b.onclick = () => {
+    document.querySelectorAll('.tabsx button').forEach((x) => x.classList.toggle('on', x === b))
+    show($('tab-roar'), b.dataset.tab === 'roar'); show($('tab-hub'), b.dataset.tab === 'hub')
+    if (b.dataset.tab === 'hub') hubLoad()
+  })
+
+  // the hub: its own sign-in and its own rules (members of the workspace an admin can see)
+  async function hubLoad() {
+    const { data: s } = await hub.auth.getSession()
+    show($('hubForm'), !s.session); show($('hubHome'), !!s.session)
+    if (!s.session) return
+    const { data: m, error } = await hub.from('members').select('name, email, role, active, created_at, permissions').order('created_at', { ascending: false })
+    if (error) { $('hubList').innerHTML = `<p class="err">${esc(error.message)}</p>`; return }
+    const rows = m || []
+    $('hubKpis').innerHTML = [['Hub members', rows.length], ['Active', rows.filter((r) => r.active).length], ['Admins', rows.filter((r) => r.role === 'admin').length]].map(([l, v]) => `<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join('')
+    $('hubList').innerHTML = rows.map((r) => `<div class="acc"><div><b>${esc(r.name || r.email)}</b><span>${esc(r.email || '')}</span></div><div class="tags"><span class="tag on">${esc(r.role)}</span>${r.active ? '' : '<span class="tag">inactive</span>'}</div><div class="when">since ${esc(day(r.created_at))}</div></div>`).join('')
+  }
+  $('hubForm').onsubmit = async (e) => {
+    e.preventDefault(); show($('hErr'), false)
+    const { error } = await hub.auth.signInWithPassword({ email: $('hEmail').value.trim(), password: $('hPass').value })
+    if (error) { $('hErr').textContent = error.message; show($('hErr'), true); return }
+    hubLoad()
+  }
+  $('hubOut').onclick = async () => { await hub.auth.signOut(); hubLoad() }
+  start()
+})()
+</script>
+</body>
+</html>
