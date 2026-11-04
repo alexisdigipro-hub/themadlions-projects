@@ -18,7 +18,7 @@ const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { storageKey: 'r
 // what people do: in front (on camera, on stage) or behind
 const KINDS = [
   ['actor', 'Ηθοποιός', 'front'], ['model', 'Μοντέλο', 'front'], ['dancer', 'Χορευτής', 'front'], ['extra', 'Κομπάρσος', 'front'],
-  ['singer', 'Τραγούδι / Μουσική', 'front'], ['theatre', 'Θέατρο', 'front'],
+  ['singer', 'Τραγούδι / Μουσική', 'front'],
   ['director', 'Σκηνοθέτης', 'back'], ['dop', 'Διευθ. φωτογραφίας', 'back'], ['camera', 'Κάμερα', 'back'], ['gaffer', 'Φώτα / Gaffer', 'back'],
   ['sound', 'Ήχος', 'back'], ['editor', 'Μοντάζ', 'back'], ['colorist', 'Colorist', 'back'], ['vfx', 'VFX / Motion', 'back'],
   ['art', 'Σκηνογραφία', 'back'], ['styling', 'Styling / Κοστούμια', 'back'], ['makeup', 'Μακιγιάζ / Μαλλιά', 'back'],
@@ -26,10 +26,14 @@ const KINDS = [
   ['writer', 'Σενάριο', 'back'], ['photo', 'Φωτογράφος', 'photo'],
 ];
 const KIND = Object.fromEntries(KINDS.map((k) => [k[0], k[1]]));
+KIND.theatre = 'Ηθοποιός'; // "Theatre" was a kind for a few hours on 4 Nov; Alex: whoever plays theatre is an actor
 const SIDE = Object.fromEntries(KINDS.map((k) => [k[0], k[2]]));
 const HUE = { front: '#d40000', back: '#4f9dff', photo: '#f2c94c' };
-const PERFORMER = (kinds) => (kinds || []).some((k) => SIDE[k] === 'front');
-const FILTERS = [['all', 'Όλοι'], ['actor', 'Ηθοποιοί'], ['model', 'Μοντέλα'], ['dancer', 'Χορευτές'], ['theatre', 'Θέατρο'], ['back', 'Πίσω από την κάμερα'], ['photo', 'Φωτογράφοι']];
+// looks and an actor's skills belong only to these (Alex, 4 Nov: not to the crew); everything else gets equipment and tools
+const PERFORMERS = ['actor', 'model', 'dancer', 'extra'];
+const PERFORMER = (kinds) => (kinds || []).some((k) => PERFORMERS.includes(k) || k === 'theatre');
+const CREW = (kinds) => (kinds || []).some((k) => !PERFORMERS.includes(k) && k !== 'theatre');
+const FILTERS = [['all', 'Όλοι'], ['actor', 'Ηθοποιοί'], ['model', 'Μοντέλα'], ['dancer', 'Χορευτές'], ['extra', 'Κομπάρσοι'], ['back', 'Πίσω από την κάμερα'], ['photo', 'Φωτογράφοι']];
 const GENDERS = [['', '—'], ['f', 'Γυναίκα'], ['m', 'Άνδρας'], ['x', 'Άλλο']];
 
 /* ---------- helpers ---------- */
@@ -484,7 +488,7 @@ async function viewPerson(id) {
   const gal = photos.length > 1 ? h('div', { class: 'gallery' }, photos.slice(0, 8).map((ph, i) => h('button', { type: 'button', class: i ? '' : 'on', style: bg(ph), 'aria-label': 'Φωτογραφία ' + (i + 1), onclick: (e) => { Object.assign(main.style, bg(ph)); gal.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b === e.currentTarget)); } }))) : null;
   const fact = (k, v) => (v ? h('div', { class: 'fact' }, h('small', {}, k), h('span', {}, v)) : null);
   const facts = [fact('Ηλικία', a != null ? `${a}` : ''), fact('Πόλη', p.city), fact('Ύψος', L.height ? `${L.height} cm` : ''), fact('Ρούχα', L.size), fact('Παπούτσι', L.shoe), fact('Μαλλιά', L.hair), fact('Μάτια', L.eyes), fact('Γλώσσες', S.languages), fact('Ατζέντης', d.agent)].filter(Boolean);
-  const skillRows = [['Προφορές / διάλεκτοι', S.accents], ['Χορός', S.dance], ['Μουσική / τραγούδι', S.music], ['Σπορ', S.sports], ['Δίπλωμα', S.driving], ['Εξοπλισμός', d.gear], ['Άλλα', S.other]].filter(([, v]) => v);
+  const skillRows = [['Προφορές / διάλεκτοι', S.accents], ['Χορός', S.dance], ['Μουσική / τραγούδι', S.music], ['Σπορ', S.sports], ['Δίπλωμα', S.driving], ['Εξοπλισμός', d.gear], ['Προγράμματα', S.software], ['Άλλα', S.other]].filter(([, v]) => v);
   const followBtn = own ? null : h('button', { type: 'button', class: follows.has(id) ? 'btn' : 'btn main', onclick: async (e) => {
     const on = follows.has(id);
     const { error: er } = on ? await sb.from('roardino_follows').delete().eq('user_id', session.user.id).eq('person_id', id) : await sb.from('roardino_follows').insert({ person_id: id });
@@ -584,6 +588,7 @@ async function viewEdit(which) {
   const p = structuredClone(old || { id, name: kid ? '' : (session.user.user_metadata?.name || ''), kinds: [], data: {}, photos: [], visible: true, guardian: kid ? {} : null });
   const d = p.data || (p.data = {});
   d.looks ||= {}; d.skills ||= {}; d.contact ||= {}; d.credits ||= [];
+  p.kinds = [...new Set((p.kinds || []).map((k) => (k === 'theatre' ? 'actor' : k)))];
   const { data: ctRow } = old ? await sb.from('roardino_contacts').select('*').eq('person_id', id).maybeSingle() : { data: null };
   const ct = { email: ctRow?.email ?? (kid ? '' : session.user.email), phone: ctRow?.phone || '', show: !!ctRow?.show };
   delete d.contact.email; delete d.contact.phone; delete d.contact.show; // they live in roardino_contacts
@@ -598,9 +603,9 @@ async function viewEdit(which) {
   const looks = h('div');
   const kindsBox = h('div', { class: 'pills' });
   const drawKinds = () => {
-    kindsBox.replaceChildren(...KINDS.map(([k, t]) => h('button', { type: 'button', class: 'pill' + (p.kinds.includes(k) ? ' on' : ''), onclick: () => { p.kinds = p.kinds.includes(k) ? p.kinds.filter((x) => x !== k) : [...p.kinds, k]; drawKinds(); drawLooks(); } }, t)));
+    kindsBox.replaceChildren(...KINDS.map(([k, t]) => h('button', { type: 'button', class: 'pill' + (p.kinds.includes(k) ? ' on' : ''), onclick: () => { p.kinds = p.kinds.includes(k) ? p.kinds.filter((x) => x !== k) : [...p.kinds, k]; drawKinds(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); } }, t)));
   };
-  const sec = (no, title, ...kids) => h('section', { class: 'sec' }, h('h2', {}, h('span', { class: 'no' }, no), title), ...kids);
+  const sec = (no, title, ...kids) => h('section', { class: 'sec' }, h('h2', {}, title), ...kids); // no numbers: which sections show depends on what you do
   const drawGuard = () => {
     if (!isMinor()) { guard.replaceChildren(); return; }
     const g = p.guardian || (p.guardian = {});
@@ -613,13 +618,36 @@ async function viewEdit(which) {
         h('span', {}, 'Είμαι ο γονέας ή ο νόμιμος κηδεμόνας και συναινώ να δημιουργηθεί το προφίλ και να το βλέπουν επαληθευμένες παραγωγές για castings.'))));
     if (!g.email) g.email = session.user.email;
   };
+  const S = d.skills;
+  // in front of the camera (actor, model, dancer, extra): looks and the skills a casting asks for
   const drawLooks = () => {
     if (!PERFORMER(p.kinds) && !kid) { looks.replaceChildren(); return; }
     const L = d.looks;
-    looks.replaceChildren(sec('03', 'Εμφάνιση',
-      h('div', { class: 'row' }, field('Ύψος (cm)', bind(L, 'height', input(L.height, { inputmode: 'numeric' }))), field('Μέγεθος ρούχων', bind(L, 'size', input(L.size, { placeholder: 'π.χ. M, 38' }))), field('Παπούτσι', bind(L, 'shoe', input(L.shoe, { inputmode: 'numeric' })))),
-      h('div', { class: 'row' }, field('Μαλλιά', bind(L, 'hair', input(L.hair, { placeholder: 'π.χ. καστανά, μακριά' }))), field('Μάτια', bind(L, 'eyes', input(L.eyes))), field('Τατουάζ / piercing', bind(L, 'marks', input(L.marks, { placeholder: 'όχι / πού' }))))));
+    looks.replaceChildren(
+      sec('03', 'Εμφάνιση',
+        h('div', { class: 'row' }, field('Ύψος (cm)', bind(L, 'height', input(L.height, { inputmode: 'numeric' }))), field('Μέγεθος ρούχων', bind(L, 'size', input(L.size, { placeholder: 'π.χ. M, 38' }))), field('Παπούτσι', bind(L, 'shoe', input(L.shoe, { inputmode: 'numeric' })))),
+        h('div', { class: 'row' }, field('Μαλλιά', bind(L, 'hair', input(L.hair, { placeholder: 'π.χ. καστανά, μακριά' }))), field('Μάτια', bind(L, 'eyes', input(L.eyes))), field('Τατουάζ / piercing', bind(L, 'marks', input(L.marks, { placeholder: 'όχι / πού' }))))),
+      sec('04', 'Δεξιότητες',
+        h('div', { class: 'row' }, field('Γλώσσες', bind(S, 'languages', input(S.languages, { placeholder: 'Ελληνικά, Αγγλικά' }))), field('Προφορές / διάλεκτοι', bind(S, 'accents', input(S.accents, { placeholder: 'κρητικά, κυπριακά' })))),
+        h('div', { class: 'row' }, field('Χορός', bind(S, 'dance', input(S.dance, { placeholder: 'hip hop, σύγχρονο, παραδοσιακοί' }))), field('Μουσική / τραγούδι', bind(S, 'music', input(S.music)))),
+        h('div', { class: 'row' }, field('Σπορ', bind(S, 'sports', input(S.sports))), field('Δίπλωμα', bind(S, 'driving', input(S.driving, { placeholder: 'αυτοκίνητο, μηχανή' })))),
+        field('Άλλα', bind(S, 'other', input(S.other, { placeholder: 'ό,τι άλλο ξέρεις να κάνεις' })))));
   };
+  // behind the camera (and music): what they work with
+  const tools = h('div');
+  const drawTools = () => {
+    if (!CREW(p.kinds)) { tools.replaceChildren(); return; }
+    tools.replaceChildren(sec(PERFORMER(p.kinds) || kid ? '05' : '03', 'Εξοπλισμός και εργαλεία',
+      field('Εξοπλισμός που έχεις', bind(d, 'gear', input(d.gear, { placeholder: 'π.χ. Sony FX6, φώτα Aputure, drone' }))),
+      field('Προγράμματα', bind(S, 'software', input(S.software, { placeholder: 'π.χ. DaVinci Resolve, After Effects, Premiere' })))));
+  };
+  // pay and travel for everyone; swimwear only for whoever is in front of the camera
+  const L2 = d.limits || (d.limits = {});
+  const limits = h('div', { class: 'pills' });
+  const drawLimits = () => limits.replaceChildren(...[['unpaid', 'Δέχομαι και δουλειές χωρίς αμοιβή'], ['travel', 'Ταξιδεύω'], ...(PERFORMER(p.kinds) || kid ? [['swim', 'Μαγιό / εσώρουχα: ναι']] : [])]
+    .map(([k, t]) => h('button', { type: 'button', class: 'pill' + (L2[k] ? ' on' : ''), onclick: (e) => { L2[k] = !L2[k]; e.currentTarget.classList.toggle('on', !!L2[k]); } }, t)));
+  const picHint = h('p', { class: 'hint' });
+  const drawPicHint = () => { picHint.textContent = PERFORMER(p.kinds) || kid ? 'Βάλε ένα κοντινό στο πρόσωπο, μία ολόσωμη, ένα προφίλ και μία ελεύθερη, χωρίς φίλτρα. Η πρώτη είναι η κύρια.' : 'Η πρώτη είναι η φωτογραφία του προφίλ σου. Τις δουλειές σου τις ανεβάζεις από το Feed.'; };
 
   // pictures: the first one is the main one and the avatar
   const thumbs = h('div', { class: 'thumbs' });
@@ -633,8 +661,7 @@ async function viewEdit(which) {
   const reelName = h('span', { class: 'hint' }, p.reel ? 'Υπάρχει self-tape.' : '');
   const cvName = h('span', { class: 'hint' }, p.cv ? 'Υπάρχει βιογραφικό.' : '');
   const credits = area((d.credits || []).join('\n'), { rows: 4, placeholder: 'Μία δουλειά ανά γραμμή, π.χ.\nΚλιπ «Χ» του Υ, 2026, πρωταγωνίστρια\nΔιαφήμιση για Ζ, 2025' });
-  const S = d.skills, C = d.contact;
-  const L2 = d.limits || (d.limits = {});
+  const C = d.contact;
   const consent = !!p.consent_at;
   const consentBox = h('input', { type: 'checkbox', checked: consent });
   const msg = h('p', { class: 'msg' });
@@ -690,7 +717,7 @@ async function viewEdit(which) {
     await loadMine(); toast('Σβήστηκε'); location.hash = '#/me';
   }
 
-  drawKinds(); drawGuard(); drawLooks(); drawThumbs();
+  drawKinds(); drawGuard(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); drawThumbs();
   frame('', h('div', { class: 'form' },
     h('div', { class: 'head' }, h('h1', {}, old ? 'Το προφίλ' : kid ? 'Προφίλ για το παιδί μου' : 'Νέο προφίλ')),
     sec('01', kid ? 'Το παιδί' : 'Ποιος είσαι',
@@ -702,7 +729,7 @@ async function viewEdit(which) {
       field('Τι κάνεις', kindsBox, 'Διάλεξε όσα ισχύουν.')),
     guard,
     sec('02', 'Φωτογραφίες και βίντεο',
-      h('p', { class: 'hint' }, PERFORMER(p.kinds) || kid ? 'Βάλε ένα κοντινό στο πρόσωπο, μία ολόσωμη, ένα προφίλ και μία ελεύθερη, χωρίς φίλτρα. Η πρώτη είναι η κύρια.' : 'Η πρώτη είναι η φωτογραφία του προφίλ σου. Τις δουλειές σου τις ανεβάζεις από το Feed.'),
+      picHint,
       thumbs, pickPics,
       h('div', { class: 'row' },
         field('Self-tape ή showreel (βίντεο έως 200 MB)', h('div', { class: 'acts', style: { marginTop: 0 } },
@@ -710,27 +737,21 @@ async function viewEdit(which) {
           h('input', { id: 'reelIn', type: 'file', accept: 'video/*', hidden: true, onchange: (e) => { reelFile = e.target.files[0] || null; reelName.textContent = reelFile ? reelFile.name : ''; } }))),
         field('ή link (YouTube, Vimeo)', bind(p, 'reel_url', input(p.reel_url, { type: 'url', placeholder: 'https://' }))))),
     looks,
-    sec('04', 'Δεξιότητες',
-      h('div', { class: 'row' }, field('Γλώσσες', bind(S, 'languages', input(S.languages, { placeholder: 'Ελληνικά, Αγγλικά' }))), field('Προφορές / διάλεκτοι', bind(S, 'accents', input(S.accents, { placeholder: 'κρητικά, κυπριακά' })))),
-      h('div', { class: 'row' }, field('Χορός', bind(S, 'dance', input(S.dance, { placeholder: 'hip hop, σύγχρονο, παραδοσιακοί' }))), field('Μουσική / τραγούδι', bind(S, 'music', input(S.music)))),
-      h('div', { class: 'row' }, field('Σπορ', bind(S, 'sports', input(S.sports))), field('Δίπλωμα', bind(S, 'driving', input(S.driving, { placeholder: 'αυτοκίνητο, μηχανή' })))),
-      field('Εξοπλισμός που έχεις', bind(d, 'gear', input(d.gear, { placeholder: 'π.χ. Sony FX6, φώτα Aputure, drone' }))),
-      field('Άλλα', bind(S, 'other', input(S.other, { placeholder: 'ό,τι άλλο ξέρεις να κάνεις' })))),
-    sec('05', 'Εμπειρία',
+    tools,
+    sec('·', 'Εμπειρία',
       field('Λίγα λόγια', bind(p, 'bio', area(p.bio, { rows: 4 }))),
       field('Δουλειές', credits),
-      h('div', { class: 'row' }, field('Σπουδές', bind(d, 'studies', input(d.studies, { placeholder: 'δραματική σχολή, σχολή χορού…' }))), field('Ατζέντης', bind(d, 'agent', input(d.agent, { placeholder: 'αν έχεις' })))),
+      h('div', { class: 'row' }, field('Σπουδές', bind(d, 'studies', input(d.studies, { placeholder: 'σχολή κινηματογράφου, δραματική, χορού…' }))), field('Ατζέντης', bind(d, 'agent', input(d.agent, { placeholder: 'αν έχεις' })))),
       field('Βιογραφικό (PDF)', h('div', { class: 'acts', style: { marginTop: 0 } },
         h('button', { type: 'button', class: 'btn', onclick: () => $('#cvIn').click() }, p.cv ? 'Άλλαξε PDF' : 'Ανέβασε PDF'), cvName,
         h('input', { id: 'cvIn', type: 'file', accept: 'application/pdf', hidden: true, onchange: (e) => { cvFile = e.target.files[0] || null; cvName.textContent = cvFile ? cvFile.name : ''; } })))),
-    sec('06', 'Επαφή και όρια',
+    sec('·', 'Επαφή και όρια',
       isMinor() ? h('p', { class: 'hint' }, 'Για ανήλικο, η επαφή γίνεται μόνο με τον γονέα.') : h('div', {},
         h('div', { class: 'row' }, field('Email', bind(ct, 'email', input(ct.email, { type: 'email' }))), field('Τηλέφωνο', bind(ct, 'phone', input(ct.phone, { type: 'tel' })))),
         h('div', { class: 'row', style: { marginTop: '10px' } }, field('Instagram', bind(C, 'instagram', input(C.instagram, { placeholder: '@' }))), field('Site', bind(C, 'site', input(C.site)))),
         h('label', { class: 'check', style: { marginTop: '10px' } }, h('input', { type: 'checkbox', checked: ct.show, onchange: (e) => { ct.show = e.target.checked; } }), h('span', {}, 'Να φαίνονται το email και το τηλέφωνό μου στο προφίλ. Αλλιώς τα βλέπει μόνο όποιος ανοίγει call στο οποίο κάνεις αίτηση.'))),
-      h('div', { class: 'pills' },
-        [['unpaid', 'Δέχομαι και δουλειές χωρίς αμοιβή'], ['travel', 'Ταξιδεύω'], ['swim', 'Μαγιό / εσώρουχα: ναι']].map(([k, t]) => h('button', { type: 'button', class: 'pill' + (L2[k] ? ' on' : ''), onclick: (e) => { L2[k] = !L2[k]; e.currentTarget.classList.toggle('on', !!L2[k]); } }, t)))),
-    sec('07', 'Ρυθμίσεις',
+      limits),
+    sec('·', 'Ρυθμίσεις',
       h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.visible !== false, onchange: (e) => { p.visible = e.target.checked; } }), h('span', {}, 'Το προφίλ φαίνεται στους Ανθρώπους.')),
       h('label', { class: 'check' }, consentBox, h('span', {}, 'Συναινώ να κρατηθούν τα στοιχεία αυτά στο Roardino και να τα βλέπουν τα μέλη του, όπως ορίζεται παραπάνω. Μπορώ να τα σβήσω όλα όποτε θέλω.'))),
     h('div', { class: 'form-foot' }, old ? h('button', { type: 'button', class: 'btn red', onclick: remove }, 'Σβήσε το προφίλ') : null, msg, h('span', { class: 'grow' }),
