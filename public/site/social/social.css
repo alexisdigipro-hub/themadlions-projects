@@ -86,8 +86,9 @@ img{display:block;max-width:100%}
 .pills{display:flex;flex-wrap:wrap;gap:6px}
 .pill{border:1px solid transparent;background:rgba(255,255,255,.35);padding:7px 12px;border-radius:10px;font-size:13.5px;font-weight:550;color:var(--ink2);box-shadow:0 0 0 1px var(--rim-out);transition:background .15s,box-shadow .15s}
 .pill:hover{background:rgba(255,255,255,.65)}
-.pill.on{background-color:rgba(255,255,255,.8);background-image:var(--letters),var(--sheen);-webkit-background-clip:text,padding-box;background-clip:text,padding-box;-webkit-text-fill-color:transparent;
-  border-color:var(--rim);box-shadow:var(--top),0 0 0 1px rgba(28,35,51,.12),0 4px 12px rgba(28,35,51,.08);font-weight:700}
+.pill.on{background:linear-gradient(135deg,#2b3a5c,#4a6390);color:#fff;-webkit-text-fill-color:#fff;border-color:rgba(255,255,255,.35);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 4px 14px rgba(43,58,92,.3);font-weight:650}
+.pill.on::before{content:'✓';margin-right:6px;font-weight:800}
 .seg{display:inline-flex;gap:2px;padding:4px;border-radius:15px;background:rgba(255,255,255,.4);border:1px solid var(--rim);box-shadow:var(--top),0 0 0 1px var(--rim-out)}
 .seg button,.seg a{border:1px solid transparent;background:transparent;padding:8px 15px;border-radius:11px;font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
   background-image:var(--letters-dim);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--muted)}

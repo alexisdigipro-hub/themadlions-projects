@@ -28,7 +28,7 @@ const LOCALE = () => (LANG === 'el' ? 'el-GR' : 'en-GB');
 const KINDS = [
   ['actor', 'Actor', 'front'], ['model', 'Model', 'front'], ['dancer', 'Dancer', 'front'], ['extra', 'Extra', 'front'],
   ['singer', 'Singer / Musician', 'front'],
-  ['director', 'Director', 'back'], ['dop', 'Director of photography', 'back'], ['camera', 'Camera', 'back'], ['gaffer', 'Lighting / Gaffer', 'back'],
+  ['director', 'Film director', 'back'], ['dop', 'Director of photography (DoP)', 'back'], ['camera', 'Camera', 'back'], ['gaffer', 'Lighting / Gaffer', 'back'],
   ['sound', 'Sound', 'back'], ['editor', 'Editor', 'back'], ['colorist', 'Colorist', 'back'], ['vfx', 'VFX / Motion', 'back'],
   ['art', 'Art department', 'back'], ['styling', 'Styling / Wardrobe', 'back'], ['makeup', 'Make-up / Hair', 'back'],
   ['producer', 'Producer', 'back'], ['ad', 'Assistant director', 'back'], ['casting', 'Casting', 'back'], ['choreo', 'Choreographer', 'back'],
@@ -62,6 +62,8 @@ function h(tag, attrs = {}, ...kids) {
   for (const kid of kids.flat(Infinity)) { if (kid == null || kid === false) continue; el.append(kid.nodeType ? kid : document.createTextNode(kid)); }
   return el;
 }
+// replaceChildren that leaves out what is not there (a bare null used to show as the word "null", Alex 4 Nov)
+const put = (el, ...kids) => el.replaceChildren(...kids.flat(Infinity).filter((k) => k != null && k !== false));
 // the wordmark: R O A R D I N O with O, R and DINO heavy, so the heavy letters read ORDINO (Alex, 4 Nov)
 const mark = () => h('span', { class: 'rm', 'aria-label': 'Roardino' }, h('span', { class: 'a' }, 'R'), h('span', { class: 'b' }, 'O'), h('span', { class: 'a' }, 'A'), h('span', { class: 'b' }, 'RDINO'), h('i'));
 function toast(msg) { const x = $('#toast'); x.textContent = msg; x.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => x.classList.remove('on'), 2200); }
@@ -205,7 +207,7 @@ const NAV = [['feed', 'Feed', 'home'], ['people', 'People', 'people'], ['calls',
 function topBar(on) {
   const m = me();
   const menu = h('div', { class: 'menu hidden' });
-  const fill = () => menu.replaceChildren(
+  const fill = () => put(menu, 
     h('small', {}, session.user.email),
     m ? h('a', { href: `#/p/${m.id}` }, icon('user'), t('My profile')) : h('a', { href: '#/edit/new' }, icon('plus'), t('Create your profile')),
     m ? h('a', { href: `#/edit/${m.id}` }, icon('edit'), t('Edit my profile')) : null,
@@ -230,7 +232,7 @@ function tabBar(on) {
   return h('nav', { class: 'tabbar' }, NAV.map(([k, s, ic]) => h('a', { href: `#/${k}`, class: on === k ? 'on' : '' }, icon(ic), t(s))),
     h('a', { href: m ? `#/p/${m.id}` : '#/edit/new', class: on === 'me' ? 'on' : '' }, icon('user'), t('Me')));
 }
-function frame(on, ...content) { app.replaceChildren(topBar(on), h('main', { class: 'page' }, ...content), tabBar(on)); window.scrollTo(0, 0); }
+function frame(on, ...content) { put(app, topBar(on), h('main', { class: 'page' }, ...content), tabBar(on)); window.scrollTo(0, 0); }
 
 async function route() {
   document.querySelectorAll('.veil').forEach((v) => v.remove()); // a window never outlives its page
@@ -261,7 +263,7 @@ async function viewFront() {
   const card = h('form', { class: 'auth', novalidate: true });
   const draw = () => {
     const up = mode === 'up';
-    card.replaceChildren(...[
+    put(card, ...[
       seg([['in', t('Sign in')], ['up', t('New account')]], mode, (k) => { mode = k; say(''); draw(); }),
       up ? null : h('button', { type: 'button', class: 'btn main', onclick: () => roarAccount(say) }, t('Sign in with Roar Account')),
       up ? null : h('p', { class: 'hint', style: { textAlign: 'center' } }, t('or with email and password')),
@@ -298,16 +300,16 @@ async function viewFront() {
   const counts = h('div', { class: 'counts' });
   sb.rpc('roardino_counts').then(({ data }) => {
     if (!data) return;
-    counts.replaceChildren(...[[data.people, t('profiles')], [data.calls, t('open calls')], [data.seminars, t('seminars')]].filter(([n]) => n > 0).map(([n, s]) => h('div', {}, h('b', {}, String(n)), h('small', {}, s))));
+    put(counts, ...[[data.people, t('profiles')], [data.calls, t('open calls')], [data.seminars, t('seminars')]].filter(([n]) => n > 0).map(([n, s]) => h('div', {}, h('b', {}, String(n)), h('small', {}, s))));
   });
-  app.replaceChildren(
+  put(app, 
     h('header', { class: 'bar' }, h('div', { class: 'bar-in' }, mark())),
     h('main', { class: 'front' },
       h('div', {},
         h('p', { class: 'kicker' }, t('The crew, online')),
         h('h1', { class: 'hero', html: t('Together we make <b>the work.</b>') }),
         h('p', { class: 'lede' }, t('Actors, models, dancers, directors, crews, photographers. Show your work, find your next role, find the person your shoot is missing.')),
-        h('div', { class: 'chips' }, ['Actors', 'Models', 'Dancers', 'Directors', 'DoP', 'Crews', 'Photographers', 'Casting'].map((s) => h('span', { class: 'tag' }, t(s)))),
+        h('div', { class: 'chips' }, ['Actors', 'Models', 'Dancers', 'Film directors', 'DoP', 'Crews', 'Photographers', 'Casting'].map((s) => h('span', { class: 'tag' }, t(s)))),
         counts),
       card),
     h('section', { class: 'why' },
@@ -364,7 +366,7 @@ async function viewFeed() {
   const left = h('aside', { class: 'side left' }, meCard());
   const mid = h('div', { class: 'mid' }, h('p', { class: 'wait' }, t('Loading…')));
   const right = h('aside', { class: 'side right' });
-  app.replaceChildren(topBar('feed'), h('main', { class: 'page' }, h('div', { class: 'three' }, left, mid, right)), tabBar('feed'));
+  put(app, topBar('feed'), h('main', { class: 'page' }, h('div', { class: 'three' }, left, mid, right)), tabBar('feed'));
   window.scrollTo(0, 0);
   const [people, calls, seminars] = await Promise.all([
     sb.from('roardino_people').select('id,name,avatar,kinds').eq('visible', true).order('updated_at', { ascending: false }).limit(30),
@@ -372,7 +374,7 @@ async function viewFeed() {
     sb.from('roardino_seminars').select('*').order('starts_at', { ascending: true, nullsFirst: false }).limit(30)]);
   const others = (people.data || []).filter((p) => !mine.some((m) => m.id === p.id) && !follows.has(p.id)).slice(0, 14);
   await sign(others.map((p) => p.avatar));
-  right.replaceChildren(weekCard(calls.data || [], seminars.data || []), callsForMe(calls.data || []));
+  put(right, weekCard(calls.data || [], seminars.data || []), callsForMe(calls.data || []));
 
   let q = sb.from('roardino_posts').select('*, person:roardino_people(id,name,avatar,kinds,headline)').order('created_at', { ascending: false }).limit(40);
   if (feedOnly === 'follow') q = q.in('person_id', [...follows, ...mine.map((m) => m.id), '00000000-0000-0000-0000-000000000000']);
@@ -384,7 +386,7 @@ async function viewFeed() {
   const stream = [];
   cards.forEach((c, i) => { stream.push(c); if (i % 3 === 2 && openCalls.length) stream.push(callTile(openCalls.shift())); });
   if (stream.length < 4) openCalls.slice(0, 2).forEach((c) => stream.push(callTile(c)));
-  mid.replaceChildren(
+  put(mid, 
     others.length ? h('section', { class: 'card' }, h('h3', {}, t('Just for you'), h('a', { href: '#/people' }, t('See all'))),
       h('div', { class: 'ring-row' }, others.map((p) => h('a', { class: 'ring', href: `#/p/${p.id}` }, h('span', { class: 'r' }, h('i', { style: bg(p.avatar) }, urlOf(p.avatar) ? '' : initials(p.name))), h('em', {}, p.name.split(' ')[0]))))) : null,
     mine.length ? composer(() => viewFeed()) : null,
@@ -414,7 +416,7 @@ function meCard() {
     if (st) { stats.children[0].firstChild.textContent = String(st.followers); stats.children[2].firstChild.textContent = String(st.posts); }
     const pics = (ps || []).map((p) => (p.media || []).find((x) => x.type === 'image')).filter(Boolean);
     await sign(pics.map((x) => x.path));
-    work.replaceChildren(...pics.map((x) => h('a', { href: `#/p/${m.id}`, style: bg(x.path) })));
+    put(work, ...pics.map((x) => h('a', { href: `#/p/${m.id}`, style: bg(x.path) })));
     if (!pics.length) work.replaceWith(h('p', { class: 'hint' }, t('Post a photo of your work and it shows here.')));
   })();
   return h('section', { class: 'card me-card' },
@@ -469,7 +471,7 @@ function composer(done) {
   const text = area('', { placeholder: t('What did you shoot, what are you preparing, what are you looking for?'), rows: 2 });
   const prev = h('div', { class: 'thumbs' });
   const pick = h('input', { type: 'file', accept: 'image/*,video/*', multiple: true, hidden: true, onchange: (e) => { for (const f of e.target.files) if (files.length < 6) files.push(f); e.target.value = ''; draw(); } });
-  const draw = () => prev.replaceChildren(...files.map((f, i) => h('div', { class: 'thumb', style: /^image/.test(f.type) ? { backgroundImage: `url("${URL.createObjectURL(f)}")` } : {} },
+  const draw = () => put(prev, ...files.map((f, i) => h('div', { class: 'thumb', style: /^image/.test(f.type) ? { backgroundImage: `url("${URL.createObjectURL(f)}")` } : {} },
     /^video/.test(f.type) ? h('span', { class: 'star' }, t('Video')) : null,
     h('button', { type: 'button', class: 'x', html: ICON.x, 'aria-label': t('Remove'), onclick: () => { files.splice(i, 1); draw(); } }))));
   const btn = h('button', { type: 'button', class: 'btn main', onclick: send }, t('Post'));
@@ -514,10 +516,10 @@ function postCard(r, st, refresh) {
     const { error } = st.mine ? await sb.from('roardino_bravos').insert({ post_id: r.id }) : await sb.from('roardino_bravos').delete().eq('post_id', r.id).eq('user_id', session.user.id);
     if (error) fail(error);
   } });
-  const drawBravo = () => { bravoBtn.replaceChildren(icon('clap'), st.bravos ? `Bravo · ${st.bravos}` : 'Bravo'); bravoBtn.classList.toggle('on', st.mine); };
+  const drawBravo = () => { put(bravoBtn, icon('clap'), st.bravos ? `Bravo · ${st.bravos}` : 'Bravo'); bravoBtn.classList.toggle('on', st.mine); };
   drawBravo();
   const talkLabel = () => (st.comments ? t('Comments · {n}', { n: st.comments }) : t('Comment'));
-  const talkBtn = h('button', { type: 'button', class: 'react', onclick: () => { talk.classList.toggle('hidden'); if (!talk.dataset.on) { talk.dataset.on = '1'; drawTalk(talk, r, st, () => { talkBtn.replaceChildren(icon('talk'), talkLabel()); }); } } }, icon('talk'), talkLabel());
+  const talkBtn = h('button', { type: 'button', class: 'react', onclick: () => { talk.classList.toggle('hidden'); if (!talk.dataset.on) { talk.dataset.on = '1'; drawTalk(talk, r, st, () => { put(talkBtn, icon('talk'), talkLabel()); }); } } }, icon('talk'), talkLabel());
   const media = r.media || [];
   const own = r.owner === session.user.id;
   return h('article', { class: 'post' },
@@ -539,7 +541,7 @@ function postCard(r, st, refresh) {
     talk);
 }
 async function drawTalk(box, r, st, recount) {
-  box.replaceChildren(h('p', { class: 'hint' }, t('Loading…')));
+  put(box, h('p', { class: 'hint' }, t('Loading…')));
   const { data } = await sb.from('roardino_comments').select('*, person:roardino_people(id,name,avatar)').eq('post_id', r.id).order('created_at');
   await sign((data || []).map((c) => c.person?.avatar));
   const text = input('', { placeholder: t('Write a comment…'), onkeydown: (e) => { if (e.key === 'Enter') send(); } });
@@ -550,7 +552,7 @@ async function drawTalk(box, r, st, recount) {
     if (error) return fail(error);
     st.comments++; recount(); drawTalk(box, r, st, recount);
   }
-  box.replaceChildren(
+  put(box, 
     ...(data || []).map((c) => h('div', { class: 'cmt' },
       h('a', { href: c.person ? `#/p/${c.person.id}` : '#/feed' }, avatar(c.person || {}, 'sm')),
       h('div', {}, h('b', {}, c.person?.name || t('Member')), ' ', c.body, h('small', {}, ago(c.created_at))),
@@ -574,7 +576,7 @@ async function viewPeople() {
   if (error) throw error;
   await sign(data.map((p) => p.avatar));
   function draw() {
-    pills.replaceChildren(...FILTERS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (peopleFilter === k ? ' on' : ''), onclick: () => { peopleFilter = k; draw(); } }, t(s))));
+    put(pills, ...FILTERS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (peopleFilter === k ? ' on' : ''), onclick: () => { peopleFilter = k; draw(); } }, t(s))));
     const q = peopleQ.trim().toLowerCase();
     const shown = data.filter((p) => {
       if (peopleFilter === 'back' && !(p.kinds || []).some((k) => SIDE[k] === 'back')) return false;
@@ -582,7 +584,7 @@ async function viewPeople() {
       if (!q) return true;
       return [p.name, p.city, p.headline, ...(p.kinds || []).map(kindName)].join(' ').toLowerCase().includes(q);
     });
-    grid.replaceChildren(...(shown.length ? shown.map(faceTile) : [h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nobody here yet')), q ? t('Nothing for "{q}".', { q: peopleQ }) : t('We have just started. Invite your people.'))]));
+    put(grid, ...(shown.length ? shown.map(faceTile) : [h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nobody here yet')), q ? t('Nothing for "{q}".', { q: peopleQ }) : t('We have just started. Invite your people.'))]));
   }
   draw();
 }
@@ -666,8 +668,8 @@ function gridBlock(p, rows, own) {
   }
   function draw() {
     box.classList.toggle('editing', editing);
-    if (!rows.length) { box.replaceChildren(h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, own ? t('Post your first work from the Feed.') : t('No work posted yet.'))); return; }
-    box.replaceChildren(...rows.map((r, i) => {
+    if (!rows.length) { put(box, h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, own ? t('Post your first work from the Feed.') : t('No work posted yet.'))); return; }
+    put(box, ...rows.map((r, i) => {
       const m = (r.media || [])[0];
       return h(editing ? 'div' : 'button', { type: editing ? null : 'button', class: 'cell', draggable: editing ? 'true' : null, style: m && m.type === 'image' ? bg(m.path) : {},
         onclick: editing ? null : () => openPost(r, p),
@@ -733,13 +735,13 @@ async function viewEdit(which) {
   const looks = h('div');
   const kindsBox = h('div', { class: 'pills' });
   const drawKinds = () => {
-    kindsBox.replaceChildren(...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (p.kinds.includes(k) ? ' on' : ''), onclick: () => { p.kinds = p.kinds.includes(k) ? p.kinds.filter((x) => x !== k) : [...p.kinds, k]; drawKinds(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); } }, t(s))));
+    put(kindsBox, ...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (p.kinds.includes(k) ? ' on' : ''), onclick: () => { p.kinds = p.kinds.includes(k) ? p.kinds.filter((x) => x !== k) : [...p.kinds, k]; drawKinds(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); } }, t(s))));
   };
   const drawGuard = () => {
-    if (!isMinor()) { guard.replaceChildren(); return; }
+    if (!isMinor()) { put(guard, ); return; }
     const g = p.guardian || (p.guardian = {});
     if (!g.email) g.email = session.user.email;
-    guard.replaceChildren(h('section', { class: 'sec guardian' },
+    put(guard, h('section', { class: 'sec guardian' },
       h('h2', {}, t('The parent or guardian')),
       h('p', { class: 'hint' }, t('This profile is under 18. You manage it from your own account, and it is seen only by trusted productions and casting directors. Anyone interested talks only to you.')),
       h('div', { class: 'row' }, field(t('Parent\'s full name'), bind(g, 'name', input(g.name))), field(t('Relation'), select([['', '—'], ['Mother', t('Mother')], ['Father', t('Father')], ['Guardian', t('Guardian')]], g.relation, { onchange: (e) => { g.relation = e.target.value; } }))),
@@ -750,9 +752,9 @@ async function viewEdit(which) {
   const S = d.skills;
   // in front of the camera (actor, model, dancer, extra): looks and the skills a casting asks for
   const drawLooks = () => {
-    if (!PERFORMER(p.kinds) && !kid) { looks.replaceChildren(); return; }
+    if (!PERFORMER(p.kinds) && !kid) { put(looks, ); return; }
     const L = d.looks;
-    looks.replaceChildren(
+    put(looks, 
       sec(t('Looks'),
         h('div', { class: 'row' }, field(t('Height (cm)'), bind(L, 'height', input(L.height, { inputmode: 'numeric' }))), field(t('Clothes size'), bind(L, 'size', input(L.size, { placeholder: t('e.g. M, 38') }))), field(t('Shoe size'), bind(L, 'shoe', input(L.shoe, { inputmode: 'numeric' })))),
         h('div', { class: 'row' }, field(t('Hair'), bind(L, 'hair', input(L.hair, { placeholder: t('e.g. brown, long') }))), field(t('Eyes'), bind(L, 'eyes', input(L.eyes))), field(t('Tattoos / piercings'), bind(L, 'marks', input(L.marks, { placeholder: t('none / where') }))))),
@@ -765,15 +767,15 @@ async function viewEdit(which) {
   // behind the camera (and music): what they work with
   const tools = h('div');
   const drawTools = () => {
-    if (!CREW(p.kinds)) { tools.replaceChildren(); return; }
-    tools.replaceChildren(sec(t('Equipment and tools'),
+    if (!CREW(p.kinds)) { put(tools, ); return; }
+    put(tools, sec(t('Equipment and tools'),
       field(t('Equipment you own'), bind(d, 'gear', input(d.gear, { placeholder: t('e.g. Sony FX6, Aputure lights, drone') }))),
       field(t('Software'), bind(S, 'software', input(S.software, { placeholder: t('e.g. DaVinci Resolve, After Effects, Premiere') })))));
   };
   // pay and travel for everyone; swimwear only for whoever is in front of the camera
   const L2 = d.limits || (d.limits = {});
   const limits = h('div', { class: 'pills' });
-  const drawLimits = () => limits.replaceChildren(...[['unpaid', 'I also take unpaid work'], ['travel', 'I travel'], ...(PERFORMER(p.kinds) || kid ? [['swim', 'Swimwear / underwear: yes']] : [])]
+  const drawLimits = () => put(limits, ...[['unpaid', 'I also take unpaid work'], ['travel', 'I travel'], ...(PERFORMER(p.kinds) || kid ? [['swim', 'Swimwear / underwear: yes']] : [])]
     .map(([k, s]) => h('button', { type: 'button', class: 'pill' + (L2[k] ? ' on' : ''), onclick: (e) => { L2[k] = !L2[k]; e.currentTarget.classList.toggle('on', !!L2[k]); } }, t(s))));
   const picHint = h('p', { class: 'hint' });
   const drawPicHint = () => { picHint.textContent = PERFORMER(p.kinds) || kid ? t('Add a close-up of the face, a full-length, a profile and a free one, no filters. The first is the main one.') : t('The first is your profile picture. Your work goes up from the Feed.'); };
@@ -782,7 +784,7 @@ async function viewEdit(which) {
   const thumbs = h('div', { class: 'thumbs' });
   const pickPics = h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true, onchange: (e) => { for (const f of e.target.files) if (pics.length < 10) pics.push({ file: f, u: URL.createObjectURL(f) }); e.target.value = ''; drawThumbs(); } });
   const drawThumbs = () => {
-    thumbs.replaceChildren(...pics.map((it, i) => h('div', { class: 'thumb', style: { backgroundImage: `url("${it.u || urlOf(it.path)}")` }, title: i ? t('Make it the main one') : t('The main one'), onclick: () => { pics.splice(i, 1); pics.unshift(it); drawThumbs(); } },
+    put(thumbs, ...pics.map((it, i) => h('div', { class: 'thumb', style: { backgroundImage: `url("${it.u || urlOf(it.path)}")` }, title: i ? t('Make it the main one') : t('The main one'), onclick: () => { pics.splice(i, 1); pics.unshift(it); drawThumbs(); } },
       i === 0 ? h('span', { class: 'star' }, t('Main')) : null,
       h('button', { type: 'button', class: 'x', html: ICON.x, 'aria-label': t('Remove'), onclick: (e) => { e.stopPropagation(); pics.splice(i, 1); drawThumbs(); } }))),
     pics.length < 10 ? h('button', { type: 'button', class: 'add-pic', onclick: () => pickPics.click() }, t('+ Photos')) : null);
@@ -899,7 +901,7 @@ async function viewCalls() {
   if (['casting', 'crew'].includes(callsFilter)) q = q.eq('kind', callsFilter);
   const { data, error } = await q;
   if (error) throw error;
-  box.replaceChildren(...(data.length ? data.map(callTile) : [h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('No calls yet')), t('Looking for an actor, a dancer or a gaffer? Post the first one.'))]));
+  put(box, ...(data.length ? data.map(callTile) : [h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('No calls yet')), t('Looking for an actor, a dancer or a gaffer? Post the first one.'))]));
 }
 const callWho = (c) => [(c.wanted || []).map(kindName).join(', '), c.age_from || c.age_to ? t('{a}-{b} years', { a: c.age_from || '', b: c.age_to || '' }) : '', { f: t('woman'), m: t('man') }[c.gender] || ''].filter(Boolean).join(' · ');
 function callTile(c) {
@@ -913,11 +915,11 @@ function callTile(c) {
 function editCall(old) {
   const c = structuredClone(old || { kind: 'casting', wanted: [], open: true });
   const wanted = h('div', { class: 'pills' });
-  const drawW = () => wanted.replaceChildren(...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (c.wanted.includes(k) ? ' on' : ''), onclick: () => { c.wanted = c.wanted.includes(k) ? c.wanted.filter((x) => x !== k) : [...c.wanted, k]; drawW(); } }, t(s))));
+  const drawW = () => put(wanted, ...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (c.wanted.includes(k) ? ' on' : ''), onclick: () => { c.wanted = c.wanted.includes(k) ? c.wanted.filter((x) => x !== k) : [...c.wanted, k]; drawW(); } }, t(s))));
   drawW();
   const bind = (key, el) => { el.addEventListener('input', () => { c[key] = el.value; }); return el; };
   const kindSeg = h('div');
-  const drawK = () => kindSeg.replaceChildren(seg([['casting', t('Casting')], ['crew', t('Crew')], ['other', t('Other')]], c.kind, (k) => { c.kind = k; drawK(); }));
+  const drawK = () => put(kindSeg, seg([['casting', t('Casting')], ['crew', t('Crew')], ['other', t('Other')]], c.kind, (k) => { c.kind = k; drawK(); }));
   drawK();
   openWin(old ? t('The call') : t('New call'), h('div', { style: { display: 'flex', flexDirection: 'column', gap: '12px' } },
     kindSeg,
@@ -959,7 +961,7 @@ async function viewCall(id) {
   const labels = { new: 'New', shortlist: 'Shortlist', no: 'No' };
   const drawWho = () => {
     const list = (applies || []).filter((a) => shown === 'all' || a.status === shown);
-    who.replaceChildren(...(list.length ? list.map((a) => {
+    put(who, ...(list.length ? list.map((a) => {
       const tile = faceTile(a.person || {});
       tile.append(h('span', { class: 'state ' + a.status }, t(labels[a.status])));
       // the one who opened the call reaches the applicant: their own contact, or a minor's parent
@@ -975,7 +977,7 @@ async function viewCall(id) {
     }) : [h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No applications here yet.'))]));
   };
   const segBox = h('div');
-  const drawSeg = () => segBox.replaceChildren(seg([['all', t('All')], ['shortlist', t('Shortlist')], ['new', t('New')]], shown, (k) => { shown = k; drawSeg(); drawWho(); }));
+  const drawSeg = () => put(segBox, seg([['all', t('All')], ['shortlist', t('Shortlist')], ['new', t('New')]], shown, (k) => { shown = k; drawSeg(); drawWho(); }));
   if (own) { drawWho(); drawSeg(); }
   frame('calls',
     h('div', { style: { maxWidth: '820px' } },
@@ -1029,7 +1031,7 @@ async function viewSeminars() {
   const link = Object.fromEntries((links || []).map((x) => [x.seminar_id, x.url]));
   const now = Date.now() - 86400e3;
   const list = data.filter((s) => isAdmin || !s.starts_at || new Date(s.starts_at).getTime() > now || mineS.has(s.id));
-  box.replaceChildren(...(list.length ? list.map((s) => {
+  put(box, ...(list.length ? list.map((s) => {
     const left = s.seats ? s.seats - (taken[s.id] || 0) : null;
     return h('div', { class: 'tile' },
       h('div', { class: 't-top' }, h('span', { class: 't-ico', html: ICON.cal }),
@@ -1061,10 +1063,10 @@ function editSeminar(old, oldLink = '') {
   let url = oldLink || '';
   const bind = (key, el) => { el.addEventListener('input', () => { s[key] = el.value; }); return el; };
   const forK = h('div', { class: 'pills' });
-  const drawF = () => forK.replaceChildren(...FILTERS.slice(1).map(([k, x]) => h('button', { type: 'button', class: 'pill' + (s.for_kinds.includes(k) ? ' on' : ''), onclick: () => { s.for_kinds = s.for_kinds.includes(k) ? s.for_kinds.filter((y) => y !== k) : [...s.for_kinds, k]; drawF(); } }, t(x))));
+  const drawF = () => put(forK, ...FILTERS.slice(1).map(([k, x]) => h('button', { type: 'button', class: 'pill' + (s.for_kinds.includes(k) ? ' on' : ''), onclick: () => { s.for_kinds = s.for_kinds.includes(k) ? s.for_kinds.filter((y) => y !== k) : [...s.for_kinds, k]; drawF(); } }, t(x))));
   drawF();
   const kindSeg = h('div');
-  const drawK = () => kindSeg.replaceChildren(seg([['online', t('Online')], ['live', t('In person')]], s.kind, (k) => { s.kind = k; drawK(); }));
+  const drawK = () => put(kindSeg, seg([['online', t('Online')], ['live', t('In person')]], s.kind, (k) => { s.kind = k; drawK(); }));
   drawK();
   openWin(old ? t('Seminar') : t('New seminar'), h('div', { style: { display: 'flex', flexDirection: 'column', gap: '12px' } },
     kindSeg,
