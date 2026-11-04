@@ -43,7 +43,7 @@ const HUE = { front: '#d40000', back: '#6f8fbf', photo: '#e0a33a' };
 const PERFORMERS = ['actor', 'model', 'dancer', 'extra'];
 const PERFORMER = (kinds) => (kinds || []).some((k) => PERFORMERS.includes(k) || k === 'theatre');
 const CREW = (kinds) => (kinds || []).some((k) => !PERFORMERS.includes(k) && k !== 'theatre');
-const FILTERS = [['all', 'Everyone'], ['actor', 'Actors'], ['model', 'Models'], ['dancer', 'Dancers'], ['extra', 'Extras'], ['back', 'Behind the camera'], ['photo', 'Photographers']];
+const FILTERS = [['all', 'Everyone'], ['actor', 'Actors'], ['model', 'Models'], ['dancer', 'Dancers'], ['extra', 'Extras'], ['back', 'Crew'], ['photo', 'Photographers']]; // for whom a seminar is
 const GENDERS = [['', '—'], ['f', 'Woman'], ['m', 'Man'], ['x', 'Other']];
 
 /* ---------- helpers ---------- */
@@ -135,14 +135,15 @@ function ytEmbed(url) {
 /* ---------- pictures and files: private bucket, signed links ---------- */
 const signed = new Map(); // path -> { url, until }
 async function sign(paths) {
-  const need = [...new Set(paths.filter(Boolean))].filter((p) => !(signed.get(p)?.until > Date.now()));
+  const need = [...new Set(paths.filter(Boolean))].filter((p) => !/^https?:/.test(p) && !(signed.get(p)?.until > Date.now()));
   for (let i = 0; i < need.length; i += 100) {
     const part = need.slice(i, i + 100);
     const { data } = await sb.storage.from(BUCKET).createSignedUrls(part, 3600);
     (data || []).forEach((d) => { if (d.signedUrl) signed.set(d.path, { url: d.signedUrl, until: Date.now() + 3300e3 }); });
   }
 }
-const urlOf = (p) => (p ? signed.get(p)?.url || '' : '');
+// a full address is used as it is (the sample profiles' pictures); a path in the bucket gets a signed link
+const urlOf = (p) => (!p ? '' : /^https?:/.test(p) ? p : signed.get(p)?.url || '');
 const bg = (p) => (urlOf(p) ? { backgroundImage: `url("${urlOf(p)}")` } : {});
 const avatar = (p, cls = '') => h('span', { class: 'av ' + cls, style: bg(p?.avatar) }, urlOf(p?.avatar) ? '' : initials(p?.name));
 // a picture made lighter in the browser (long side 1800px, JPEG); anything it cannot read goes as it is
@@ -203,7 +204,7 @@ const select = (options, value, extra = {}) => h('select', { class: 'select', ..
 const seg = (items, on, pick) => h('div', { class: 'seg' }, items.map(([k, s]) => h('button', { type: 'button', class: on === k ? 'on' : '', onclick: () => pick(k) }, s)));
 
 /* ---------- the frame: top bar, bottom bar on a phone ---------- */
-const NAV = [['feed', 'Feed', 'home'], ['people', 'People', 'people'], ['calls', 'Calls', 'calls'], ['seminars', 'Seminars', 'cal']];
+const NAV = [['feed', 'Feed', 'home'], ['people', 'Cast & Crew', 'people'], ['calls', 'Calls', 'calls'], ['seminars', 'Seminars', 'cal']];
 function topBar(on) {
   const m = me();
   const menu = h('div', { class: 'menu hidden' });
@@ -217,7 +218,7 @@ function topBar(on) {
     h('hr'),
     h('button', { type: 'button', onclick: () => sb.auth.signOut() }, icon('out'), t('Sign out')));
   const toggle = (e) => { e.stopPropagation(); fill(); menu.classList.toggle('hidden'); if (!menu.classList.contains('hidden')) setTimeout(() => document.addEventListener('click', () => menu.classList.add('hidden'), { once: true })); };
-  const find = h('input', { type: 'search', placeholder: t('Search people'), 'aria-label': t('Search people'), value: on === 'people' ? peopleQ : '', onkeydown: (e) => { if (e.key === 'Enter') { peopleQ = e.target.value; if (location.hash === '#/people') viewPeople(); else location.hash = '#/people'; } } });
+  const find = h('input', { type: 'search', placeholder: t('Search cast & crew'), 'aria-label': t('Search cast & crew'), value: on === 'people' ? peopleQ : '', onkeydown: (e) => { if (e.key === 'Enter') { peopleQ = e.target.value; if (location.hash === '#/people') viewPeople(); else location.hash = '#/people'; } } });
   return h('header', { class: 'bar' }, h('div', { class: 'bar-in' },
     h('a', { href: '#/feed', 'aria-label': 'Roardino' }, mark()),
     h('label', { class: 'find' }, icon('search'), find),
@@ -309,7 +310,7 @@ async function viewFront() {
         h('p', { class: 'kicker' }, t('The crew, online')),
         h('h1', { class: 'hero', html: t('Together we make <b>the work.</b>') }),
         h('p', { class: 'lede' }, t('Actors, models, dancers, directors, crews, photographers. Show your work, find your next role, find the person your shoot is missing.')),
-        h('div', { class: 'chips' }, ['Actors', 'Models', 'Dancers', 'Film directors', 'DoP', 'Crews', 'Photographers', 'Casting'].map((s) => h('span', { class: 'tag' }, t(s)))),
+        h('div', { class: 'chips' }, ['Actors', 'Models', 'Dancers', 'Film directors', 'DoP', 'Crew', 'Photographers', 'Casting'].map((s) => h('span', { class: 'tag' }, t(s)))),
         counts),
       card),
     h('section', { class: 'why' },
@@ -565,26 +566,34 @@ async function drawTalk(box, r, st, recount) {
 /* =====================================================================================================================
    People
    ===================================================================================================================== */
-let peopleFilter = 'all', peopleQ = '';
+// Cast & Crew (Alex, 4 Nov: "People" becomes the industry's own word): Cast is whoever is in front of the camera or on
+// stage, Crew everyone else; under the pick, the kinds of that side
+let peopleSide = 'all', peopleKind = '', peopleQ = '';
+const isCast = (k) => SIDE[k] === 'front' || k === 'theatre';
 async function viewPeople() {
-  document.title = 'Roardino · ' + t('People');
+  document.title = 'Roardino · ' + t('Cast & Crew');
   const grid = h('div', { class: 'faces' }, h('p', { class: 'wait' }, t('Loading…')));
+  const sideBox = h('div');
   const pills = h('div', { class: 'pills' });
-  const search = input(peopleQ, { type: 'search', class: 'input search', placeholder: t('Name, city, what they do'), 'aria-label': t('Search people'), oninput: (e) => { peopleQ = e.target.value; draw(); } });
-  frame('people', h('div', { class: 'head' }, h('h1', {}, t('People')), search, h('span', { class: 'grow' })), h('div', { style: { marginBottom: '16px' } }, pills), grid);
+  const search = input(peopleQ, { type: 'search', class: 'input search', placeholder: t('Name, city, what they do'), 'aria-label': t('Search cast & crew'), oninput: (e) => { peopleQ = e.target.value; draw(); } });
+  frame('people', h('div', { class: 'head' }, h('h1', {}, t('Cast & Crew')), sideBox, search, h('span', { class: 'grow' })), h('div', { style: { marginBottom: '16px' } }, pills), grid);
   const { data, error } = await sb.from('roardino_people').select('id,name,kinds,city,birth,avatar,headline,minor,data').eq('visible', true).order('updated_at', { ascending: false }).limit(500);
   if (error) throw error;
   await sign(data.map((p) => p.avatar));
   function draw() {
-    put(pills, ...FILTERS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (peopleFilter === k ? ' on' : ''), onclick: () => { peopleFilter = k; draw(); } }, t(s))));
+    put(sideBox, seg([['all', t('All')], ['cast', t('Cast')], ['crew', t('Crew')]], peopleSide, (k) => { peopleSide = k; peopleKind = ''; draw(); }));
+    const kinds = KINDS.filter(([k]) => peopleSide === 'all' || (peopleSide === 'cast') === isCast(k));
+    put(pills, kinds.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (peopleKind === k ? ' on' : ''), onclick: () => { peopleKind = peopleKind === k ? '' : k; draw(); } }, t(s))));
     const q = peopleQ.trim().toLowerCase();
     const shown = data.filter((p) => {
-      if (peopleFilter === 'back' && !(p.kinds || []).some((k) => SIDE[k] === 'back')) return false;
-      if (!['all', 'back'].includes(peopleFilter) && !(p.kinds || []).includes(peopleFilter)) return false;
+      const ks = p.kinds || [];
+      if (peopleSide === 'cast' && !ks.some(isCast)) return false;
+      if (peopleSide === 'crew' && !ks.some((k) => !isCast(k))) return false;
+      if (peopleKind && !ks.includes(peopleKind)) return false;
       if (!q) return true;
-      return [p.name, p.city, p.headline, ...(p.kinds || []).map(kindName)].join(' ').toLowerCase().includes(q);
+      return [p.name, p.city, p.headline, ...ks.map(kindName)].join(' ').toLowerCase().includes(q);
     });
-    put(grid, ...(shown.length ? shown.map(faceTile) : [h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nobody here yet')), q ? t('Nothing for "{q}".', { q: peopleQ }) : t('We have just started. Invite your people.'))]));
+    put(grid, shown.length ? shown.map(faceTile) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nobody here yet')), q ? t('Nothing for "{q}".', { q: peopleQ }) : t('We have just started. Invite your people.')));
   }
   draw();
 }
