@@ -133,8 +133,9 @@ img{display:block;max-width:100%}
 
 /* ---------- pages ---------- */
 .page{max-width:1320px;margin:0 auto;padding:20px 16px 90px}
-.three{display:grid;grid-template-columns:280px minmax(0,1fr) 310px;gap:20px;align-items:start}
-.side{position:sticky;top:98px;display:flex;flex-direction:column;gap:16px}
+.two{display:grid;grid-template-columns:330px minmax(0,1fr);gap:22px;align-items:start}
+.two>.mid{max-width:780px}
+.side{display:flex;flex-direction:column;gap:16px}
 .mid{display:flex;flex-direction:column;gap:16px;min-width:0}
 .head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
 .head h1{font-size:26px;font-weight:700;margin:0 6px 0 0;letter-spacing:-.01em}
@@ -200,6 +201,56 @@ img{display:block;max-width:100%}
 .compose .textarea{min-height:48px;border-radius:12px}
 .compose .acts{margin-top:0;align-items:center}
 .in-win .post{box-shadow:none;border:0;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none}
+
+/* Instagram's post (Alex, 4 Nov: "more Instagram") */
+.post.ig{padding-bottom:12px}
+.post.ig .post-head{padding:12px 14px}
+.ring-sm{display:inline-grid;padding:2px;border-radius:50%;background:conic-gradient(from 200deg,#d40000,#f2a25c,#6f8fbf,#2b3a5c,#d40000)}
+.ring-sm .av{width:36px;height:36px;box-shadow:0 0 0 2px #f4f5f7}
+.ig-media{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;background:#e6e8ec}
+.ig-media::-webkit-scrollbar{display:none}
+.ig-media>*{flex:0 0 100%;width:100%;aspect-ratio:4/5;object-fit:cover;scroll-snap-align:center;display:block;background:#000}
+.ig-dots{display:flex;justify-content:center;gap:4px;margin-top:10px}
+.ig-dots i{width:6px;height:6px;border-radius:50%;background:rgba(28,35,51,.2)}
+.ig-dots i.on{background:#2b3a5c}
+.ig-bar{display:flex;align-items:center;gap:2px;padding:6px 8px 0}
+.ig-bar .grow{flex:1}
+.ig-ico{width:42px;height:42px;border:0;background:transparent;border-radius:10px;display:grid;place-items:center;color:var(--ink);padding:0}
+.ig-ico svg{width:25px;height:25px}
+.ig-ico:hover{color:var(--muted)}
+.ig-ico.sm{width:34px;height:34px}.ig-ico.sm svg{width:19px;height:19px}
+.ig-ico.on{color:var(--brand)}
+.ig-ico.on svg{fill:rgba(212,0,0,.15)}
+.ig-ico.pop{animation:popb .35s var(--ease)}
+@keyframes popb{40%{transform:scale(1.25)}}
+.ig-count{margin:4px 16px 0;font-size:14.5px;font-weight:700}
+.ig-cap{margin:6px 16px 0;font-size:14.5px;line-height:1.5;color:var(--ink2);white-space:pre-wrap}
+.ig-cap b{color:var(--ink);font-weight:700}
+.ig-more{display:block;border:0;background:transparent;padding:0;margin:6px 16px 0;color:var(--muted);font-size:14px}
+.ig-time{margin:6px 16px 0;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.post-body.big{font-size:18px;line-height:1.5;padding:4px 18px 8px;color:var(--ink)}
+.post.ig .talk{margin-top:10px}
+
+/* Instagram's profile */
+.ig-head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(20px,5vw,70px);align-items:center;max-width:935px;margin:10px auto 0;padding:10px 10px 30px}
+.ig-av .r{display:block;padding:4px;border-radius:50%;background:conic-gradient(from 200deg,#d40000,#f2a25c,#6f8fbf,#2b3a5c,#d40000)}
+.ig-av .r i{display:grid;place-items:center;width:clamp(96px,14vw,160px);height:clamp(96px,14vw,160px);border-radius:50%;border:4px solid #eef0f3;background:#dfe2e8 center/cover no-repeat;font-style:normal;font-family:Jost,var(--font);font-size:44px;font-weight:200;color:#8b93a3}
+.ig-info{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ig-name{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ig-name h1{margin:0 8px 0 0;font-size:24px;font-weight:600;letter-spacing:-.005em}
+.ig-stats{display:flex;gap:28px;font-size:15.5px;color:var(--ink2)}
+.ig-stats b{color:var(--ink);font-weight:700}
+.ig-line{margin:0;font-weight:650;font-size:15px}
+.ig-bio{margin:-6px 0 0;font-size:15px;line-height:1.55;color:var(--ink2);white-space:pre-wrap;max-width:620px}
+.ig-meta{margin:-6px 0 0;font-size:13.5px;color:var(--muted)}
+.ig-tabs{display:flex;justify-content:center;gap:clamp(20px,6vw,60px);max-width:935px;margin:0 auto 14px;border-top:1px solid var(--line)}
+.ig-tabs button{display:flex;align-items:center;gap:7px;border:0;background:transparent;padding:16px 2px 12px;margin-top:-1px;border-top:1.5px solid transparent;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.ig-tabs button svg{width:15px;height:15px}
+.ig-tabs button.on{color:var(--ink);border-top-color:var(--ink)}
+.page .grid,.ig-details{max-width:935px;margin-left:auto;margin-right:auto}
+.ig-details .facts{margin-top:0}
+.grid{gap:4px}
+.cell{aspect-ratio:1/1.1;border-radius:6px}
 
 /* a call as a card, in the feed and in Calls */
 .tile{display:flex;flex-direction:column;gap:8px;padding:18px 20px;border-radius:18px;text-align:left;transition:transform .25s var(--ease),box-shadow .25s}
@@ -334,8 +385,7 @@ button.cell:hover{filter:brightness(1.05)}
 
 /* ---------- narrower: no right column, then no left ---------- */
 @media (max-width:1200px){
-  .three{grid-template-columns:260px minmax(0,1fr)}
-  .three>.right{display:none}
+  .two{grid-template-columns:290px minmax(0,1fr)}
   .find{width:200px}
 }
 @media (max-width:860px){
@@ -343,8 +393,9 @@ button.cell:hover{filter:brightness(1.05)}
   .bar-in{height:56px;padding:0 8px 0 16px;border-radius:16px}
   .bar .find,.bar .icons,.bar .sep,.who-me .nm,.who-me>svg{display:none}
   .menu{top:62px}
-  .three{grid-template-columns:1fr}
-  .three>.left{display:none}
+  .two{grid-template-columns:1fr}
+  .two>.left{order:2}
+  .two>.left>.me-card{display:none}
   .page{padding:14px 12px 110px}
   .head h1{font-size:23px}
   .faces{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -355,8 +406,12 @@ button.cell:hover{filter:brightness(1.05)}
   .front{grid-template-columns:1fr}
   .why{grid-template-columns:1fr}
   .who{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .grid{gap:3px}
-  .cell{border-radius:6px}
+  .grid{gap:2px}
+  .cell{border-radius:0}
+  .ig-head{grid-template-columns:auto minmax(0,1fr);gap:18px;padding:4px 4px 20px;align-items:start}
+  .ig-name h1{font-size:20px;width:100%}
+  .ig-stats{gap:16px;font-size:14px}
+  .post.ig{border-radius:0;margin:0 -12px;border-left:0;border-right:0}
   .form-foot{border-radius:16px;bottom:max(92px,calc(env(safe-area-inset-bottom) + 84px))}
   .post-media{margin:0;border-radius:0}
   .tabbar{display:flex;position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:30;padding:6px;border-radius:18px;justify-content:space-around;

@@ -100,6 +100,8 @@ const ICON = {
   star: SVG('<path d="m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>'),
   edit: SVG('<path d="M4 20h4L19 9l-4-4L4 16z"/>'),
   out: SVG('<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l5-5-5-5M15 12H3"/>'),
+  send: SVG('<path d="M22 3 11 14"/><path d="M22 3 15 21l-4-7-7-4z"/>'),
+  grid: SVG('<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'),
   child: SVG('<circle cx="12" cy="7" r="3"/><path d="M7 21v-5a5 5 0 0 1 10 0v5"/>'),
 };
 const icon = (n) => h('span', { html: ICON[n], style: { display: 'inline-flex' } });
@@ -366,8 +368,8 @@ async function viewFeed() {
   document.title = 'Roardino';
   const left = h('aside', { class: 'side left' }, meCard());
   const mid = h('div', { class: 'mid' }, h('p', { class: 'wait' }, t('Loading…')));
-  const right = h('aside', { class: 'side right' });
-  put(app, topBar('feed'), h('main', { class: 'page' }, h('div', { class: 'three' }, left, mid, right)), tabBar('feed'));
+  // two columns (Alex, 4 Nov): my card with the week and the calls under it on the left, the work wide on the right
+  put(app, topBar('feed'), h('main', { class: 'page' }, h('div', { class: 'two' }, left, mid)), tabBar('feed'));
   window.scrollTo(0, 0);
   const [people, calls, seminars] = await Promise.all([
     sb.from('roardino_people').select('id,name,avatar,kinds').eq('visible', true).order('updated_at', { ascending: false }).limit(30),
@@ -375,7 +377,7 @@ async function viewFeed() {
     sb.from('roardino_seminars').select('*').order('starts_at', { ascending: true, nullsFirst: false }).limit(30)]);
   const others = (people.data || []).filter((p) => !mine.some((m) => m.id === p.id) && !follows.has(p.id)).slice(0, 14);
   await sign(others.map((p) => p.avatar));
-  put(right, weekCard(calls.data || [], seminars.data || []), callsForMe(calls.data || []));
+  left.append(weekCard(calls.data || [], seminars.data || []), callsForMe(calls.data || []));
 
   let q = sb.from('roardino_posts').select('*, person:roardino_people(id,name,avatar,kinds,headline)').order('created_at', { ascending: false }).limit(40);
   if (feedOnly === 'follow') q = q.in('person_id', [...follows, ...mine.map((m) => m.id), '00000000-0000-0000-0000-000000000000']);
@@ -509,36 +511,55 @@ async function posts(rows, refresh) {
   await sign(rows.flatMap((r) => [r.person?.avatar, ...(r.media || []).map((m) => m.path)]));
   return rows.map((r) => postCard(r, { bravos: bravos[r.id] || 0, mine: mineB.has(r.id), comments: comments[r.id] || 0 }, refresh));
 }
+// a post as Instagram shows one (Alex, 4 Nov: "more Instagram"): who, the picture edge to edge (swipe when there are
+// several), icons, the bravos, the caption under the name, the comments behind a line, the time
 function postCard(r, st, refresh) {
   const p = r.person || {};
+  const media = r.media || [];
+  const own = r.owner === session.user.id;
   const talk = h('div', { class: 'talk hidden' });
-  const bravoBtn = h('button', { type: 'button', class: 'react', title: 'Bravo', onclick: async () => {
-    st.mine = !st.mine; st.bravos += st.mine ? 1 : -1; drawBravo();
+  const count = h('p', { class: 'ig-count' });
+  const drawCount = () => { count.textContent = st.bravos ? (st.bravos === 1 ? t('1 bravo') : t('{n} bravo', { n: st.bravos })) : ''; count.classList.toggle('hidden', !st.bravos); };
+  drawCount();
+  const bravoBtn = h('button', { type: 'button', class: 'ig-ico' + (st.mine ? ' on' : ''), title: 'Bravo', 'aria-label': 'Bravo', html: ICON.clap, onclick: async () => {
+    st.mine = !st.mine; st.bravos += st.mine ? 1 : -1; bravoBtn.classList.toggle('on', st.mine); bravoBtn.classList.remove('pop'); void bravoBtn.offsetWidth; if (st.mine) bravoBtn.classList.add('pop'); drawCount();
     const { error } = st.mine ? await sb.from('roardino_bravos').insert({ post_id: r.id }) : await sb.from('roardino_bravos').delete().eq('post_id', r.id).eq('user_id', session.user.id);
     if (error) fail(error);
   } });
-  const drawBravo = () => { put(bravoBtn, icon('clap'), st.bravos ? `Bravo · ${st.bravos}` : 'Bravo'); bravoBtn.classList.toggle('on', st.mine); };
-  drawBravo();
-  const talkLabel = () => (st.comments ? t('Comments · {n}', { n: st.comments }) : t('Comment'));
-  const talkBtn = h('button', { type: 'button', class: 'react', onclick: () => { talk.classList.toggle('hidden'); if (!talk.dataset.on) { talk.dataset.on = '1'; drawTalk(talk, r, st, () => { put(talkBtn, icon('talk'), talkLabel()); }); } } }, icon('talk'), talkLabel());
-  const media = r.media || [];
-  const own = r.owner === session.user.id;
-  return h('article', { class: 'post' },
+  const openTalk = () => { talk.classList.remove('hidden'); if (!talk.dataset.on) { talk.dataset.on = '1'; drawTalk(talk, r, st, drawMore); } talk.querySelector('input')?.focus(); };
+  const more = h('button', { type: 'button', class: 'ig-more', onclick: () => { if (talk.classList.contains('hidden')) openTalk(); else talk.classList.add('hidden'); } });
+  const drawMore = () => put(more, st.comments ? (st.comments === 1 ? t('View 1 comment') : t('View all {n} comments', { n: st.comments })) : t('Add a comment…'));
+  drawMore();
+  const share = async () => {
+    const url = `${location.origin}${location.pathname}#/p/${p.id}`;
+    try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ }
+  };
+  const slides = media.length ? h('div', { class: 'ig-media' + (media.length > 1 ? ' many' : '') }, media.map((m) => (m.type === 'video'
+    ? h('video', { src: urlOf(m.path), controls: true, playsInline: true, preload: 'metadata' })
+    : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', ondblclick: () => { if (!st.mine) bravoBtn.click(); } })))) : null;
+  const dots = media.length > 1 ? h('div', { class: 'ig-dots' }, media.map((_, i) => h('i', { class: i ? '' : 'on' }))) : null;
+  if (slides && dots) slides.addEventListener('scroll', () => { const i = Math.round(slides.scrollLeft / slides.clientWidth); dots.querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i)); });
+  return h('article', { class: 'post ig' },
     h('div', { class: 'post-head' },
-      h('a', { href: `#/p/${p.id}` }, avatar(p)),
-      h('div', { class: 'who-line' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name || '')), h('small', {}, [p.headline || (p.kinds || []).map(kindName).slice(0, 2).join(' · '), ago(r.created_at)].filter(Boolean).join(' · '))),
-      own ? h('button', { type: 'button', class: 'btn sm round', title: t('Delete'), 'aria-label': t('Delete'), html: ICON.trash, onclick: async () => {
+      h('a', { href: `#/p/${p.id}`, class: 'ring-sm' }, avatar(p)),
+      h('div', { class: 'who-line' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name || '')), h('small', {}, p.headline || (p.kinds || []).map(kindName).slice(0, 2).join(' · '))),
+      own ? h('button', { type: 'button', class: 'ig-ico sm', title: t('Delete'), 'aria-label': t('Delete'), html: ICON.trash, onclick: async () => {
         if (!confirm(t('Delete this post?'))) return;
         const { error } = await sb.from('roardino_posts').delete().eq('id', r.id);
         if (error) return fail(error);
         removeFiles(media.map((m) => m.path)); refresh();
       } }) : null),
-    r.body ? h('p', { class: 'post-body' }, r.body) : null,
-    media.length ? h('div', { class: 'post-media n' + Math.min(media.length, 4) }, media.slice(0, 4).map((m) => (m.type === 'video'
-      ? h('video', { src: urlOf(m.path), controls: true, playsInline: true, preload: 'metadata' })
-      : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy' })))) : null,
-    h('div', { class: 'post-acts' }, bravoBtn, talkBtn, h('span', { class: 'grow' }),
+    slides, dots,
+    !media.length && r.body ? h('p', { class: 'post-body big' }, r.body) : null,
+    h('div', { class: 'ig-bar' }, bravoBtn,
+      h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: openTalk }),
+      h('button', { type: 'button', class: 'ig-ico', title: t('Share'), 'aria-label': t('Share'), html: ICON.send, onclick: share }),
+      h('span', { class: 'grow' }),
       own ? null : h('a', { class: 'btn sm main', href: `#/p/${p.id}` }, t('Work with me'))),
+    count,
+    media.length && r.body ? h('p', { class: 'ig-cap' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name)), ' ', r.body) : null,
+    more,
+    h('p', { class: 'ig-time' }, ago(r.created_at)),
     talk);
 }
 async function drawTalk(box, r, st, recount) {
@@ -625,8 +646,6 @@ async function viewPerson(id) {
   const d = p.data || {};
   const L = d.looks || {}, S = d.skills || {}, C = d.contact || {};
   const a = age(p.birth);
-  const main = h('div', { class: 'main-pic', style: bg(photos[0] || p.avatar) });
-  const gal = photos.length > 1 ? h('div', { class: 'gallery' }, photos.slice(0, 8).map((ph, i) => h('button', { type: 'button', class: i ? '' : 'on', style: bg(ph), 'aria-label': t('Photo {n}', { n: i + 1 }), onclick: (e) => { Object.assign(main.style, bg(ph)); gal.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b === e.currentTarget)); } }))) : null;
   const fact = (k, v) => (v ? h('div', { class: 'fact' }, h('small', {}, t(k)), h('span', {}, v)) : null);
   const facts = [fact('Age', a != null && PERFORMER(p.kinds) ? `${a}` : ''), fact('City', p.city), fact('Height', L.height ? `${L.height} cm` : ''), fact('Clothes', L.size), fact('Shoe', L.shoe), fact('Hair', L.hair), fact('Eyes', L.eyes), fact('Languages', S.languages), fact('Agent', d.agent)].filter(Boolean);
   const skillRows = [['Accents / dialects', S.accents], ['Dance', S.dance], ['Music / singing', S.music], ['Sports', S.sports], ['Driving licence', S.driving], ['Equipment', d.gear], ['Software', S.software], ['Other', S.other]].filter(([, v]) => v);
@@ -643,31 +662,46 @@ async function viewPerson(id) {
     ? [p.guardian?.email && h('a', { class: 'btn', href: `mailto:${p.guardian.email}` }, t('Email the parent')), p.guardian?.phone && h('a', { class: 'btn', href: `tel:${p.guardian.phone}` }, t('Call the parent'))]
     : [K.email && h('a', { class: 'btn', href: `mailto:${K.email}` }, t('Email')), K.phone && h('a', { class: 'btn', href: `tel:${K.phone}` }, t('Phone')), C.instagram && h('a', { class: 'btn', href: `https://instagram.com/${C.instagram.replace(/^@/, '')}`, target: '_blank', rel: 'noopener' }, 'Instagram'), C.site && h('a', { class: 'btn', href: /^https?:/.test(C.site) ? C.site : `https://${C.site}`, target: '_blank', rel: 'noopener' }, t('Website'))];
   const reel = p.reel ? h('video', { class: 'reel', src: urlOf(p.reel), controls: true, playsInline: true, preload: 'metadata' }) : ytEmbed(p.reel_url) ? h('iframe', { class: 'reel', src: ytEmbed(p.reel_url), allow: 'autoplay; fullscreen; picture-in-picture', allowFullscreen: true, title: 'Showreel' }) : null;
+  // Instagram's profile (Alex, 4 Nov): the round picture, the name with the buttons, the numbers, the bio; then Work,
+  // Photos and Details as tabs under one line
+  const details = h('div', { class: 'ig-details' },
+    facts.length ? h('div', { class: 'facts' }, facts) : null,
+    reel ? h('div', { class: 'block' }, h('h2', {}, p.reel ? t('Self-tape') : 'Showreel'), reel) : null,
+    skillRows.length ? h('div', { class: 'block' }, h('h2', {}, t('Skills and tools')), h('div', { class: 'facts', style: { marginTop: 0 } }, skillRows.map(([k, v]) => fact(k, v)))) : null,
+    (d.credits || []).length ? h('div', { class: 'block' }, h('h2', {}, t('Credits')), h('div', { class: 'credits' }, d.credits.map((c) => h('div', {}, c)))) : null,
+    d.studies ? h('div', { class: 'block' }, h('h2', {}, t('Studies')), h('p', {}, d.studies)) : null,
+    p.cv ? h('div', { class: 'acts' }, h('a', { class: 'btn', href: urlOf(p.cv), target: '_blank', rel: 'noopener' }, t('Open the CV'))) : null,
+    !facts.length && !reel && !skillRows.length && !(d.credits || []).length && !d.studies ? h('div', { class: 'empty' }, t('No details yet.')) : null);
+  const pics = h('div', { class: 'grid' }, photos.length ? photos.map((ph) => h('button', { type: 'button', class: 'cell', style: bg(ph), 'aria-label': t('Photo'), onclick: () => openWin(p.name, h('img', { src: urlOf(ph), alt: '', style: { width: '100%', borderRadius: '12px' } }), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) })) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No photos yet.')));
+  const work = gridBlock(p, grid || [], own);
+  const body = h('div');
+  const tabRow = h('div', { class: 'ig-tabs' });
+  let tab = 'work';
+  const drawTab = () => {
+    put(tabRow, [['work', t('Work'), 'grid'], ['photos', t('Photos'), 'pic'], ['details', t('Details'), 'user']].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
+    put(body, tab === 'work' ? work : tab === 'photos' ? pics : details);
+  };
+  drawTab();
   frame(mineTab,
-    h('div', { class: 'prof' },
-      h('div', {}, main, gal),
-      h('div', {},
+    h('section', { class: 'ig-head' },
+      h('div', { class: 'ig-av' }, h('span', { class: 'r big' }, h('i', { style: bg(photos[0] || p.avatar) }, urlOf(photos[0] || p.avatar) ? '' : initials(p.name)))),
+      h('div', { class: 'ig-info' },
+        h('div', { class: 'ig-name' }, h('h1', {}, p.name),
+          own ? h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')) : followBtn),
+        stats ? h('div', { class: 'ig-stats' }, [[stats.posts, t('works')], [stats.followers, t('followers')], [stats.bravos, 'bravo']].map(([n, s2]) => h('span', {}, h('b', {}, String(n)), ' ', s2))) : null,
         h('div', { class: 'chips' }, (p.kinds || []).map(kindChip), p.minor ? h('span', { class: 'chip', style: { '--c': '#e0a33a' } }, h('i'), t('Under 18 · with a parent')) : null),
-        h('h1', {}, p.name),
-        p.headline ? h('p', { class: 'line' }, p.headline) : null,
-        stats ? h('div', { class: 'stats' }, [[stats.posts, t('works')], [stats.followers, t('followers')], [stats.bravos, 'bravo']].map(([n, s]) => h('span', {}, h('b', {}, String(n)), ' ', s))) : null,
-        h('div', { class: 'acts' }, followBtn, ...contact.filter(Boolean),
-          own ? h('a', { class: 'btn main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')) : null,
-          p.cv ? h('a', { class: 'btn', href: urlOf(p.cv), target: '_blank', rel: 'noopener' }, 'CV') : null),
-        facts.length ? h('div', { class: 'facts' }, facts) : null,
-        p.bio ? h('div', { class: 'block' }, h('h2', {}, t('About')), h('p', {}, p.bio)) : null,
-        reel ? h('div', { class: 'block' }, h('h2', {}, p.reel ? t('Self-tape') : 'Showreel'), reel) : null,
-        skillRows.length ? h('div', { class: 'block' }, h('h2', {}, t('Skills and tools')), h('div', { class: 'facts', style: { marginTop: 0 } }, skillRows.map(([k, v]) => fact(k, v)))) : null,
-        (d.credits || []).length ? h('div', { class: 'block' }, h('h2', {}, t('Credits')), h('div', { class: 'credits' }, d.credits.map((c) => h('div', {}, c)))) : null,
-        d.studies ? h('div', { class: 'block' }, h('h2', {}, t('Studies')), h('p', {}, d.studies)) : null)),
-    gridBlock(p, grid || [], own));
+        p.headline ? h('p', { class: 'ig-line' }, p.headline) : null,
+        p.bio ? h('p', { class: 'ig-bio' }, p.bio) : null,
+        h('p', { class: 'ig-meta' }, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} years', { n: a }) : '', L.height ? `${L.height} cm` : ''].filter(Boolean).join(' · ')),
+        contact.filter(Boolean).length ? h('div', { class: 'acts', style: { marginTop: 0 } }, contact.filter(Boolean).map((b2) => { b2.classList.add('sm'); return b2; })) : null)),
+    tabRow, body);
 }
 
 // the profile's posts as Instagram's grid; its owner can put them in any order
 function gridBlock(p, rows, own) {
   let editing = false;
   const box = h('div', { class: 'grid' });
-  const head = h('div', { class: 'head', style: { marginTop: '34px' } }, h('h1', { style: { fontSize: '22px' } }, t('Work')), h('span', { class: 'grow' }));
+  const head = h('div', { class: 'head', style: { margin: '0 0 10px', justifyContent: 'flex-end' } });
   if (own && rows.length > 1) head.append(h('button', { type: 'button', class: 'btn sm', onclick: (e) => { editing = !editing; e.currentTarget.textContent = editing ? t('Done') : t('Reorder'); if (!editing) save(); draw(); } }, t('Reorder')));
   let drag = null;
   const move = (from, to) => { if (to < 0 || to >= rows.length) return; const [x] = rows.splice(from, 1); rows.splice(to, 0, x); draw(); };
