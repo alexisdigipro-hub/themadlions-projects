@@ -539,7 +539,21 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
 .place:active { transform: scale(.985); }
 .place .lg { box-shadow: 0 6px 18px rgba(212,0,0,.25); }
 .place .lg:has(img) { background: #1c1c20; box-shadow: none; }
-.apps { grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px; }
+.apps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 1100px) and (min-width: 761px) { .apps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.place.svc .lg { background: rgba(255,255,255,.08); box-shadow: inset 0 0 0 1px var(--edge-2); color: var(--text); }
+.place.svc { min-height: 0; }
+/* the app tiles in a 3 by 3 grid: every line on one line, the rows of each tile level with its neighbours' */
+.app { grid-template-rows: auto auto 1fr auto; grid-template-columns: minmax(0, 1fr); }
+.app-top > div { min-width: 0; flex: 1 1 0; overflow: hidden; }
+.app-top b, .app-top small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.app-top small { display: flex; align-items: center; gap: 7px; }
+.app-top .chip { flex: none; }
+.app-top small span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+i.fresh { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); flex: none; }
+.app-n small { white-space: nowrap; }
+.dls { align-content: start; }
+.app-foot { flex-wrap: nowrap; }
 .app { padding: 22px 24px; gap: 16px; }
 .app-top img { box-shadow: 0 8px 22px rgba(0,0,0,.4); }
 .app-n .n { font-size: 40px; }
@@ -653,6 +667,7 @@ button.chip.on { color: var(--text); background: var(--red-soft); border-color: 
         <div class="card glass half"><h3>Apps <span class="grow"></span><button class="btn sm ghost" type="button" data-go="apps">All</button></h3><div class="rows" id="ovApps"></div></div>
         <div class="card glass half"><h3>Most watched</h3><div class="rows" id="topFilms"></div></div>
         <div class="card glass half"><h3>Latest enquiries <span class="grow"></span><button class="btn sm ghost" type="button" data-go="leads">All</button></h3><div class="rows" id="latestLeads"></div></div>
+        <div class="card glass full"><h3>Behind the scenes <span class="grow"></span><span class="hint">what everything runs on</span></h3><div class="places" id="services"></div></div>
       </div>
     </section>
 
@@ -1117,6 +1132,7 @@ async function loadOverview() {
   renderPages(cur)
   renderPlaces(vis(cur))
   renderOvApps()
+  renderServices()
   const films = tally(cur.filter((e) => e.kind === 'play'), (e) => e.ref).slice(0, 6)
   if (!works.length) { try { works = await rest('site_works?select=*&order=position.asc') } catch (e) {} }
   const max = Math.max(1, ...films.map((f) => f[1]))
@@ -2442,13 +2458,13 @@ async function loadApps(fresh) {
   $('apps').innerHTML = list.map((x) => {
     const max = Math.max(1, ...x.spark), fresh7 = x.latest && Date.now() - Date.parse(x.latest.at) < 7 * 864e5
     return `<div class="card glass app">
-      <div class="app-top"><img src="${iconOf(x.app)}" alt=""><div><b>${esc(x.app.name)}</b><small>${verLine(x)}${x.app.note ? ` · ${esc(x.app.note)}` : ''}</small></div>${fresh7 ? '<span class="chip new"><i></i>New this week</span>' : ''}</div>
-      <div class="app-n"><div><span class="n">${num(x.total)}</span><small>downloads in all${x.latest ? ` · ${num(x.thisOne)} of this version` : ''}</small></div>
+      <div class="app-top"><img src="${iconOf(x.app)}" alt=""><div><b>${esc(x.app.name)}</b><small>${fresh7 ? '<i class="fresh" title="New this week"></i>' : ''}<span>${verLine(x)}</span></small></div>${x.app.note ? `<span class="chip">${esc(x.app.note)}</span>` : ''}</div>
+      <div class="app-n"><div><span class="n">${num(x.total)}</span><small>downloads in all</small></div>
         <div class="spark" title="Downloads per version, the newest in red">${x.spark.map((v) => `<i style="height:${Math.max(5, v / max * 100)}%"></i>`).join('')}</div></div>
       <div class="dls">${x.plats.map((p) => `<div class="dl"><span><svg class="i os"><use href="#i-${p.os}"/></svg>${p.label}</span><b title="Downloads of this version">${num(p.count)}</b>
         <button class="ib" type="button" data-copy="${esc(p.link)}" title="Copy the link" aria-label="Copy the link"><svg class="i"><use href="#i-copy"/></svg></button>
         <a class="ib" href="${esc(p.link)}" title="Download" aria-label="Download"><svg class="i"><use href="#i-dl"/></svg></a></div>`).join('') || `<div class="hint">${x.failed ? 'The links show once GitHub answers.' : 'No installers in the newest release.'}</div>`}</div>
-      <div class="app-foot">${x.app.page ? `<a class="btn sm" href="${x.app.page}" target="_blank" rel="noopener">Its page</a>` : ''}${x.app.web ? `<a class="btn sm" href="${x.app.web}" target="_blank" rel="noopener">Web version</a>` : ''}${x.latest ? `<a class="btn sm ghost" href="${esc(x.latest.url)}" target="_blank" rel="noopener"><svg class="i"><use href="#i-ext"/></svg>What's new</a>` : ''}</div>
+      <div class="app-foot">${x.app.page ? `<a class="btn sm" href="${x.app.page}" target="_blank" rel="noopener">Page</a>` : ''}${x.app.web ? `<a class="btn sm" href="${x.app.web}" target="_blank" rel="noopener">Web</a>` : ''}${x.latest ? `<a class="btn sm" href="${esc(x.latest.url)}" target="_blank" rel="noopener">What's new</a>` : ''}</div>
     </div>`
   }).join('')
 }
@@ -2534,6 +2550,24 @@ function renderPlaces(visitors) {
     <div class="pa">${p.go ? `<button class="btn sm red" type="button" data-go="${p.go}">${p.label}</button>` : ''}${p.admin ? `<a class="btn sm red" href="${p.admin}" target="_blank" rel="noopener"><svg class="i"><use href="#i-ext"/></svg>Admin</a>` : ''}${p.open ? `<a class="btn sm" href="${p.open}" target="_blank" rel="noopener">Site</a>` : ''}</div></div>`).join('')
   if (!qubi) qubiNumbers().then((q) => { qubi = q; renderPlaces(visitors) }).catch(() => {})
   if (appData && appData.some((x) => x.failed)) appData = null
+}
+
+// the services every site and app runs on, three to a row (Alex, 4 Nov: "whatever else you can reach, put it in Studio")
+const SERVICES = [
+  { lg: 'GH', name: 'GitHub', line: 'The code of every site and app, and the apps’ releases', url: 'https://github.com/alexisdigipro-hub?tab=repositories' },
+  { lg: 'SB', name: 'Supabase · Hub', line: 'The hub, themadlions.com and alexisk.gr: data and sign-in', url: 'https://supabase.com/dashboard/project/naibamqexcqnqhbbqafa' },
+  { lg: 'SB', name: 'Supabase · Roar', line: 'Roar Accounts: RoarMe, RoarMail, RoarWriter, RoarList, Roardino, RoarTransfer', url: 'https://supabase.com/dashboard/project/bzmjhbnwhdwmncxkqkdl' },
+  { lg: 'SB', name: 'Supabase · qubi', line: 'qubi.gr: videos, artists, people, sign-in', url: 'https://supabase.com/dashboard/project/vzboewhdsmqvubzycirc' },
+  { lg: 'CF', name: 'Cloudflare', line: 'RoarTransfer’s files (R2) and its link previews', url: 'https://dash.cloudflare.com/' },
+  { lg: 'pC', name: 'pCloud', line: 'Deliveries, logos and the films kept there', url: 'https://my.pcloud.com/' },
+  { lg: 'P', name: 'Papaki', line: 'The domains, their DNS and the company email', url: 'https://www.papaki.com/' },
+  { lg: 'R', name: 'Resend', line: 'The emails the hub sends (invoices, deliveries)', url: 'https://resend.com/emails' },
+  { lg: 'G', name: 'Search Console', line: 'How Google finds and shows your sites', url: 'https://search.google.com/search-console' },
+]
+function renderServices() {
+  $('services').innerHTML = SERVICES.map((v) => `<div class="place svc" data-href="${v.url}"><div class="pt"><span class="lg">${esc(v.lg)}</span><b>${esc(v.name)}</b></div>
+    <div class="pn"><small>${esc(v.line)}</small></div>
+    <div class="pa"><a class="btn sm" href="${v.url}" target="_blank" rel="noopener"><svg class="i"><use href="#i-ext"/></svg>Open</a></div></div>`).join('')
 }
 
 /* ---------- Accounts: Roar Admin (its own sign-in, the Roar Account) inside this page ---------- */
