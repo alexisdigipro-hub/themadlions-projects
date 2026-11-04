@@ -29,21 +29,21 @@ const KINDS = [
   ['actor', 'Actor', 'front'], ['model', 'Model', 'front'], ['dancer', 'Dancer', 'front'], ['extra', 'Extra', 'front'],
   ['singer', 'Singer / Musician', 'front'],
   ['director', 'Film director', 'back'], ['dop', 'Director of photography (DoP)', 'back'], ['camera', 'Camera', 'back'], ['gaffer', 'Lighting / Gaffer', 'back'],
-  ['sound', 'Sound', 'back'], ['editor', 'Editor', 'back'], ['colorist', 'Colorist', 'back'], ['vfx', 'VFX / Motion', 'back'],
-  ['art', 'Art department', 'back'], ['styling', 'Styling / Wardrobe', 'back'], ['makeup', 'Make-up / Hair', 'back'],
-  ['producer', 'Producer', 'back'], ['ad', 'Assistant director', 'back'], ['casting', 'Casting', 'back'], ['choreo', 'Choreographer', 'back'],
-  ['writer', 'Writer', 'back'], ['photo', 'Photographer', 'photo'],
+  ['sound', 'Sound', 'back'], ['editor', 'Editor', 'back'], ['colorist', 'Colorist', 'back'], ['producer', 'Producer', 'back'],
+  ['ad', 'Assistant director', 'back'], ['casting', 'Casting', 'back'],
+  ['photo', 'Photographer', 'creative'], ['styling', 'Styling / Wardrobe', 'creative'], ['makeup', 'Make-up / Hair', 'creative'],
+  ['art', 'Art department', 'creative'], ['vfx', 'VFX / Motion', 'creative'], ['writer', 'Writer', 'creative'], ['choreo', 'Choreographer', 'creative'],
 ];
 const KIND = Object.fromEntries(KINDS.map((k) => [k[0], k[1]]));
 KIND.theatre = 'Actor'; // "Theatre" was a kind for a few hours on 4 Nov; Alex: whoever plays theatre is an actor
 const kindName = (k) => t(KIND[k] || k);
 const SIDE = Object.fromEntries(KINDS.map((k) => [k[0], k[2]]));
-const HUE = { front: '#d40000', back: '#6f8fbf', photo: '#e0a33a' };
+const HUE = { front: '#d40000', back: '#6f8fbf', creative: '#e0a33a' }; // Cast, Crew, Creatives
 // looks and an actor's skills belong only to these (Alex, 4 Nov: not to the crew); everything else gets equipment and tools
 const PERFORMERS = ['actor', 'model', 'dancer', 'extra'];
 const PERFORMER = (kinds) => (kinds || []).some((k) => PERFORMERS.includes(k) || k === 'theatre');
 const CREW = (kinds) => (kinds || []).some((k) => !PERFORMERS.includes(k) && k !== 'theatre');
-const FILTERS = [['all', 'Everyone'], ['actor', 'Actors'], ['model', 'Models'], ['dancer', 'Dancers'], ['extra', 'Extras'], ['back', 'Crew'], ['photo', 'Photographers']]; // for whom a seminar is
+const FILTERS = [['all', 'Everyone'], ['actor', 'Actors'], ['model', 'Models'], ['dancer', 'Dancers'], ['extra', 'Extras'], ['back', 'Crew'], ['creative', 'Creatives']]; // for whom a seminar is
 const GENDERS = [['', '—'], ['f', 'Woman'], ['m', 'Man'], ['x', 'Other']];
 
 /* ---------- helpers ---------- */
@@ -218,7 +218,7 @@ function topBar(on) {
     h('hr'),
     h('button', { type: 'button', onclick: () => sb.auth.signOut() }, icon('out'), t('Sign out')));
   const toggle = (e) => { e.stopPropagation(); fill(); menu.classList.toggle('hidden'); if (!menu.classList.contains('hidden')) setTimeout(() => document.addEventListener('click', () => menu.classList.add('hidden'), { once: true })); };
-  const find = h('input', { type: 'search', placeholder: t('Search cast & crew'), 'aria-label': t('Search cast & crew'), value: on === 'people' ? peopleQ : '', onkeydown: (e) => { if (e.key === 'Enter') { peopleQ = e.target.value; if (location.hash === '#/people') viewPeople(); else location.hash = '#/people'; } } });
+  const find = h('input', { type: 'search', placeholder: t('Search cast, crew & creatives'), 'aria-label': t('Search cast, crew & creatives'), value: on === 'people' ? peopleQ : '', onkeydown: (e) => { if (e.key === 'Enter') { peopleQ = e.target.value; if (location.hash === '#/people') viewPeople(); else location.hash = '#/people'; } } });
   return h('header', { class: 'bar' }, h('div', { class: 'bar-in' },
     h('a', { href: '#/feed', 'aria-label': 'Roardino' }, mark()),
     h('label', { class: 'find' }, icon('search'), find),
@@ -566,29 +566,30 @@ async function drawTalk(box, r, st, recount) {
 /* =====================================================================================================================
    People
    ===================================================================================================================== */
-// Cast & Crew (Alex, 4 Nov: "People" becomes the industry's own word): Cast is whoever is in front of the camera or on
-// stage, Crew everyone else; under the pick, the kinds of that side
+// Cast, Crew & Creatives (Alex, 4 Nov: "People" becomes the industry's own words): Cast in front of the camera or on
+// stage, Crew who makes the film, Creatives around it (photo, styling, make-up, art, VFX, writing, choreography);
+// under the pick, the kinds of that side
 let peopleSide = 'all', peopleKind = '', peopleQ = '';
-const isCast = (k) => SIDE[k] === 'front' || k === 'theatre';
+const sideOf = (k) => (k === 'theatre' ? 'front' : SIDE[k]);
+const SIDES = { cast: 'front', crew: 'back', creatives: 'creative' };
 async function viewPeople() {
-  document.title = 'Roardino · ' + t('Cast & Crew');
+  document.title = 'Roardino · ' + t('Cast, Crew & Creatives');
   const grid = h('div', { class: 'faces' }, h('p', { class: 'wait' }, t('Loading…')));
   const sideBox = h('div');
   const pills = h('div', { class: 'pills' });
   const search = input(peopleQ, { type: 'search', class: 'input search', placeholder: t('Name, city, what they do'), 'aria-label': t('Search cast & crew'), oninput: (e) => { peopleQ = e.target.value; draw(); } });
-  frame('people', h('div', { class: 'head' }, h('h1', {}, t('Cast & Crew')), sideBox, search, h('span', { class: 'grow' })), h('div', { style: { marginBottom: '16px' } }, pills), grid);
+  frame('people', h('div', { class: 'head' }, h('h1', {}, t('Cast, Crew & Creatives')), sideBox, search, h('span', { class: 'grow' })), h('div', { style: { marginBottom: '16px' } }, pills), grid);
   const { data, error } = await sb.from('roardino_people').select('id,name,kinds,city,birth,avatar,headline,minor,data').eq('visible', true).order('updated_at', { ascending: false }).limit(500);
   if (error) throw error;
   await sign(data.map((p) => p.avatar));
   function draw() {
-    put(sideBox, seg([['all', t('All')], ['cast', t('Cast')], ['crew', t('Crew')]], peopleSide, (k) => { peopleSide = k; peopleKind = ''; draw(); }));
-    const kinds = KINDS.filter(([k]) => peopleSide === 'all' || (peopleSide === 'cast') === isCast(k));
+    put(sideBox, seg([['all', t('All')], ['cast', t('Cast')], ['crew', t('Crew')], ['creatives', t('Creatives')]], peopleSide, (k) => { peopleSide = k; peopleKind = ''; draw(); }));
+    const kinds = KINDS.filter(([k]) => peopleSide === 'all' || SIDE[k] === SIDES[peopleSide]);
     put(pills, kinds.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (peopleKind === k ? ' on' : ''), onclick: () => { peopleKind = peopleKind === k ? '' : k; draw(); } }, t(s))));
     const q = peopleQ.trim().toLowerCase();
     const shown = data.filter((p) => {
       const ks = p.kinds || [];
-      if (peopleSide === 'cast' && !ks.some(isCast)) return false;
-      if (peopleSide === 'crew' && !ks.some((k) => !isCast(k))) return false;
+      if (peopleSide !== 'all' && !ks.some((k) => sideOf(k) === SIDES[peopleSide])) return false;
       if (peopleKind && !ks.includes(peopleKind)) return false;
       if (!q) return true;
       return [p.name, p.city, p.headline, ...ks.map(kindName)].join(' ').toLowerCase().includes(q);
