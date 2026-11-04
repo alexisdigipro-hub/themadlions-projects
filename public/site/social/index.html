@@ -7,6 +7,7 @@
      only tie to the rest is the Roar Account sign-in (RoarMe's Supabase project). Here at themadlions.com/social/ until it
      gets its own domain; not linked from anywhere yet, so not for search engines either. -->
 <meta name="robots" content="noindex">
+<!-- social.css and app.js carry ?v=: raise it on every change, or browsers and the CDN keep showing the old ones for a while -->
 <meta name="theme-color" content="#eceef1">
 <meta name="description" content="Roardino: actors, models, dancers, directors, crews and photographers, the whole crew in one place.">
 <title>Roardino · The whole crew in one place</title>
@@ -14,12 +15,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="social.css">
+<link rel="stylesheet" href="social.css?v=20261104c">
 </head>
 <body>
 <div id="app"><p class="wait">Loading…</p></div>
 <div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=20261104c"></script>
 </body>
 </html>
