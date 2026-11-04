@@ -275,3 +275,119 @@ create policy rd_files_edit on storage.objects for update to authenticated using
 drop policy if exists rd_files_delete on storage.objects;
 create policy rd_files_delete on storage.objects for delete to authenticated using (
   bucket_id = 'roardino-people' and ((storage.foldername(name))[1] = auth.uid()::text or roar_is_admin()));
+
+-- ---------- the feed (Alex, 4 Nov: "Facebook with Instagram") ----------
+-- a post belongs to a profile; it is seen by whoever may see that profile (a minor's only by scouts)
+create table if not exists roardino_posts (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  owner uuid not null default auth.uid() references auth.users on delete cascade,
+  person_id uuid not null references roardino_people on delete cascade,
+  body text check (char_length(coalesce(body, '')) <= 4000),
+  media jsonb not null default '[]'          -- [{ path, type: 'image' | 'video' }], in roardino-people under the profile
+);
+create index if not exists roardino_posts_time on roardino_posts (created_at desc);
+create index if not exists roardino_posts_person on roardino_posts (person_id, created_at desc);
+
+create table if not exists roardino_bravos (
+  post_id uuid not null references roardino_posts on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (post_id, user_id)
+);
+create table if not exists roardino_comments (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  post_id uuid not null references roardino_posts on delete cascade,
+  owner uuid not null default auth.uid() references auth.users on delete cascade,
+  person_id uuid references roardino_people on delete set null,   -- which of the account's profiles speaks
+  body text not null check (char_length(body) between 1 and 1500)
+);
+create index if not exists roardino_comments_post on roardino_comments (post_id, created_at);
+create table if not exists roardino_follows (
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  person_id uuid not null references roardino_people on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, person_id)
+);
+
+alter table roardino_posts enable row level security;
+alter table roardino_bravos enable row level security;
+alter table roardino_comments enable row level security;
+alter table roardino_follows enable row level security;
+grant select, insert, update, delete on roardino_posts, roardino_bravos, roardino_comments, roardino_follows to authenticated;
+
+drop policy if exists rd_posts_read on roardino_posts;
+create policy rd_posts_read on roardino_posts for select to authenticated using (roardino_can_see(person_id::text));
+drop policy if exists rd_posts_add on roardino_posts;
+create policy rd_posts_add on roardino_posts for insert to authenticated with check (
+  owner = auth.uid() and exists (select 1 from roardino_people p where p.id = person_id and p.owner = auth.uid()));
+drop policy if exists rd_posts_edit on roardino_posts;
+create policy rd_posts_edit on roardino_posts for update to authenticated using (owner = auth.uid()) with check (owner = auth.uid());
+drop policy if exists rd_posts_delete on roardino_posts;
+create policy rd_posts_delete on roardino_posts for delete to authenticated using (owner = auth.uid() or roar_is_admin());
+
+drop policy if exists rd_bravos_read on roardino_bravos;
+create policy rd_bravos_read on roardino_bravos for select to authenticated using (
+  exists (select 1 from roardino_posts p where p.id = post_id));
+drop policy if exists rd_bravos_add on roardino_bravos;
+create policy rd_bravos_add on roardino_bravos for insert to authenticated with check (
+  user_id = auth.uid() and exists (select 1 from roardino_posts p where p.id = post_id));
+drop policy if exists rd_bravos_delete on roardino_bravos;
+create policy rd_bravos_delete on roardino_bravos for delete to authenticated using (user_id = auth.uid());
+
+drop policy if exists rd_comments_read on roardino_comments;
+create policy rd_comments_read on roardino_comments for select to authenticated using (
+  exists (select 1 from roardino_posts p where p.id = post_id));
+drop policy if exists rd_comments_add on roardino_comments;
+create policy rd_comments_add on roardino_comments for insert to authenticated with check (
+  owner = auth.uid() and exists (select 1 from roardino_posts p where p.id = post_id)
+  and (person_id is null or exists (select 1 from roardino_people x where x.id = person_id and x.owner = auth.uid())));
+drop policy if exists rd_comments_delete on roardino_comments;
+create policy rd_comments_delete on roardino_comments for delete to authenticated using (
+  owner = auth.uid() or roar_is_admin()
+  or exists (select 1 from roardino_posts p where p.id = post_id and p.owner = auth.uid()));
+
+drop policy if exists rd_follows_read on roardino_follows;
+create policy rd_follows_read on roardino_follows for select to authenticated using (
+  user_id = auth.uid() or exists (select 1 from roardino_people x where x.id = person_id and x.owner = auth.uid()));
+drop policy if exists rd_follows_add on roardino_follows;
+create policy rd_follows_add on roardino_follows for insert to authenticated with check (
+  user_id = auth.uid() and roardino_can_see(person_id::text));
+drop policy if exists rd_follows_delete on roardino_follows;
+create policy rd_follows_delete on roardino_follows for delete to authenticated using (user_id = auth.uid());
+
+-- followers of a profile, and its posts, for its page
+create or replace function roardino_person_stats(p uuid) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select case when roardino_can_see(p::text) then jsonb_build_object(
+    'followers', (select count(*) from roardino_follows where person_id = p),
+    'posts', (select count(*) from roardino_posts where person_id = p),
+    'bravos', (select count(*) from roardino_bravos b join roardino_posts x on x.id = b.post_id where x.person_id = p)) end
+$$;
+revoke all on function roardino_person_stats(uuid) from public, anon;
+grant execute on function roardino_person_stats(uuid) to authenticated;
+
+-- the profile's grid in the order its owner sets (Alex, 4 Nov: like Instagram's reorder); null = newest first after the placed ones
+alter table roardino_posts add column if not exists pos double precision;
+create index if not exists roardino_posts_grid on roardino_posts (person_id, pos);
+
+-- email and phone apart from the profile (Alex's rule for privacy): its owner; everyone who sees the profile when the
+-- owner shows them; and whoever opened a call the profile answered
+create table if not exists roardino_contacts (
+  person_id uuid primary key references roardino_people on delete cascade,
+  owner uuid not null default auth.uid() references auth.users on delete cascade,
+  email text check (char_length(coalesce(email, '')) <= 200),
+  phone text check (char_length(coalesce(phone, '')) <= 40),
+  show boolean not null default false
+);
+alter table roardino_contacts enable row level security;
+grant select, insert, update, delete on roardino_contacts to authenticated;
+drop policy if exists rd_contacts_read on roardino_contacts;
+create policy rd_contacts_read on roardino_contacts for select to authenticated using (
+  owner = auth.uid()
+  or (show and roardino_can_see(person_id::text))
+  or exists (select 1 from roardino_applies a join roardino_calls c on c.id = a.call_id where a.person_id = roardino_contacts.person_id and c.owner = auth.uid()));
+drop policy if exists rd_contacts_write on roardino_contacts;
+create policy rd_contacts_write on roardino_contacts for all to authenticated using (owner = auth.uid())
+  with check (owner = auth.uid() and exists (select 1 from roardino_people p where p.id = person_id and p.owner = auth.uid()));
