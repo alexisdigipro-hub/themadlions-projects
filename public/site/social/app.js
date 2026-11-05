@@ -199,7 +199,9 @@ function openWin(title, body, foot) {
   document.body.append(veil);
   return close;
 }
-const field = (label, el, hint) => h('label', { class: 'field' }, h('span', {}, label), el, hint ? h('p', { class: 'hint' }, hint) : null);
+// a <label> only around a real field: around a row of pills a browser (Safari above all) passes every tap on to the
+// first pill too, which kept turning "Actor" on (Alex, 5 Nov)
+const field = (label, el, hint) => h(/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) ? 'label' : 'div', { class: 'field' }, h('span', {}, label), el, hint ? h('p', { class: 'hint' }, hint) : null);
 const input = (value, extra = {}) => h('input', { class: 'input', value: value ?? '', ...extra });
 const area = (value, extra = {}) => h('textarea', { class: 'textarea', ...extra }, value ?? '');
 const select = (options, value, extra = {}) => h('select', { class: 'select', ...extra }, options.map(([v, s]) => h('option', { value: v, selected: v === (value ?? '') }, s)));
@@ -374,10 +376,11 @@ async function viewFeed() {
   // two columns (Alex, 4 Nov): my card with the week and the calls under it on the left, the work wide on the right
   put(app, topBar('feed'), h('main', { class: 'page' }, h('div', { class: 'two' }, left, mid)), tabBar('feed'));
   window.scrollTo(0, 0);
-  const [people, calls, seminars] = await Promise.all([
+  const [people, calls, seminars, stories] = await Promise.all([
     sb.from('roardino_people').select('id,name,avatar,kinds').eq('visible', true).order('updated_at', { ascending: false }).limit(30),
     sb.from('roardino_calls').select('*').eq('open', true).order('created_at', { ascending: false }).limit(30),
-    sb.from('roardino_seminars').select('*').order('starts_at', { ascending: true, nullsFirst: false }).limit(30)]);
+    sb.from('roardino_seminars').select('*').order('starts_at', { ascending: true, nullsFirst: false }).limit(30),
+    loadStories()]);
   const others = (people.data || []).filter((p) => !mine.some((m) => m.id === p.id) && !follows.has(p.id)).slice(0, 14);
   await sign(others.map((p) => p.avatar));
   left.append(weekCard(calls.data || [], seminars.data || []), callsForMe(calls.data || []));
@@ -393,8 +396,7 @@ async function viewFeed() {
   cards.forEach((c, i) => { stream.push(c); if (i % 3 === 2 && openCalls.length) stream.push(callTile(openCalls.shift())); });
   if (stream.length < 4) openCalls.slice(0, 2).forEach((c) => stream.push(callTile(c)));
   put(mid, 
-    others.length ? h('section', { class: 'card' }, h('h3', {}, t('Just for you'), h('a', { href: '#/people' }, t('See all'))),
-      h('div', { class: 'ring-row' }, others.map((p) => h('a', { class: 'ring', href: `#/p/${p.id}` }, h('span', { class: 'r' }, h('i', { style: bg(p.avatar) }, urlOf(p.avatar) ? '' : initials(p.name))), h('em', {}, p.name.split(' ')[0]))))) : null,
+    storiesCard(stories, others),
     mine.length ? composer(() => viewFeed()) : null,
     h('div', { class: 'head', style: { margin: '2px 0 -4px' } }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { feedOnly = k; viewFeed(); })),
     ...stream);
@@ -418,7 +420,7 @@ function meCard() {
   (async () => {
     const [{ data: st }, { data: ps }] = await Promise.all([
       sb.rpc('roardino_person_stats', { p: m.id }),
-      sb.from('roardino_posts').select('*').eq('person_id', m.id).order('pos', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false }).limit(4)]);
+      sb.from('roardino_posts').select('*').eq('person_id', m.id).neq('kind', 'photo').order('pos', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false }).limit(4)]);
     if (st) { stats.children[0].firstChild.textContent = String(st.followers); stats.children[2].firstChild.textContent = String(st.posts); }
     const pics = (ps || []).map((p) => (p.media || []).find((x) => x.type === 'image')).filter(Boolean);
     await sign(pics.map((x) => x.path));
@@ -473,6 +475,10 @@ function callsForMe(calls) {
 // write a post: words and up to 6 pictures or videos, as one of my profiles
 function composer(done) {
   let as = me().id;
+  let kind = 'work'; // Alex, 5 Nov: every upload says what it is, Work (My Work) or My photo (My Photos)
+  const kindBox = h('div');
+  const drawKind = () => put(kindBox, seg([['work', t('Work')], ['photo', t('My photo')]], kind, (k) => { kind = k; drawKind(); }));
+  drawKind();
   const files = [];
   const text = area('', { placeholder: t('What did you shoot, what are you preparing, what are you looking for?'), rows: 2 });
   const prev = h('div', { class: 'thumbs' });
@@ -487,7 +493,7 @@ function composer(done) {
     try {
       const media = [];
       for (const f of files) media.push({ path: await upload(as, f, 'posts/'), type: /^video/.test(f.type) ? 'video' : 'image' });
-      const { error } = await sb.from('roardino_posts').insert({ person_id: as, body: text.value.trim() || null, media });
+      const { error } = await sb.from('roardino_posts').insert({ person_id: as, body: text.value.trim() || null, media, kind });
       if (error) throw error;
       toast(t('Posted'));
       done();
@@ -497,7 +503,7 @@ function composer(done) {
     h('div', { class: 'c-top' }, avatar(me()), text),
     prev,
     h('div', { class: 'acts' },
-      h('button', { type: 'button', class: 'btn sm', onclick: () => pick.click() }, icon('pic'), t('Photo / video')), pick,
+      h('button', { type: 'button', class: 'btn sm', onclick: () => pick.click() }, icon('pic'), t('Photo / video')), pick, kindBox,
       mine.length > 1 ? select(mine.map((m) => [m.id, t('as {name}', { name: m.name })]), as, { style: { width: 'auto', height: '34px', padding: '0 14px' }, onchange: (e) => { as = e.target.value; } }) : null,
       h('span', { style: { flex: 1 } }), btn));
 }
@@ -588,6 +594,116 @@ async function drawTalk(box, r, st, recount) {
 }
 
 /* =====================================================================================================================
+   Stories (Alex, 5 Nov: "like Instagram's"): a picture or a video for 24 hours. The row on top of the feed: my story
+   with its +, then whoever has stories (seen ones grey, kept on this device), then people to discover. Full screen,
+   bars on top, tap right for the next, left for the one before, hold to pause.
+   ===================================================================================================================== */
+let seenStories = new Set();
+try { seenStories = new Set(JSON.parse(localStorage.getItem('roardino-seen') || '[]')); } catch { /* none */ }
+const markSeen = (id) => { seenStories.add(id); try { localStorage.setItem('roardino-seen', JSON.stringify([...seenStories].slice(-500))); } catch { /* full */ } };
+// stories grouped by profile: [{ person, items: [story…] }], mine first, then the unseen, then the seen
+async function loadStories(personId) {
+  let q = sb.from('roardino_stories').select('*, person:roardino_people(id,name,avatar,kinds)').gt('expires_at', new Date().toISOString()).order('created_at');
+  if (personId) q = q.eq('person_id', personId);
+  const { data } = await q;
+  const by = new Map();
+  for (const st of data || []) { if (!st.person) continue; if (!by.has(st.person_id)) by.set(st.person_id, { person: st.person, items: [] }); by.get(st.person_id).items.push(st); }
+  const groups = [...by.values()];
+  await sign(groups.flatMap((g) => [g.person.avatar, ...g.items.map((x) => x.media?.path)]));
+  const isMine = (g) => mine.some((m) => m.id === g.person.id);
+  const unseen = (g) => g.items.some((x) => !seenStories.has(x.id));
+  return groups.sort((a, b) => (isMine(b) - isMine(a)) || (unseen(b) - unseen(a)) || (new Date(b.items.at(-1).created_at) - new Date(a.items.at(-1).created_at)));
+}
+function storiesCard(groups, others) {
+  const m = me();
+  const myGroup = m && groups.find((g) => g.person.id === m.id);
+  const rest = groups.filter((g) => g !== myGroup);
+  const pick = h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, onchange: async (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) await addStory(f); } });
+  const ringOf = (g) => (g.items.some((x) => !seenStories.has(x.id)) ? 'r' : 'r seen');
+  const face = (p, cls) => h('span', { class: cls }, h('i', { style: bg(p.avatar) }, urlOf(p.avatar) ? '' : initials(p.name)));
+  return h('section', { class: 'card stories' },
+    h('div', { class: 'ring-row' },
+      m ? h('div', { class: 'ring me', role: 'button', tabIndex: 0, onclick: () => (myGroup ? openStories([myGroup, ...rest], 0) : pick.click()) },
+        face(m, myGroup ? ringOf(myGroup) : 'r plain'),
+        h('button', { type: 'button', class: 'add', 'aria-label': t('Add to your story'), html: ICON.plus, onclick: (e) => { e.stopPropagation(); pick.click(); } }),
+        h('em', {}, t('Your story')), pick) : null,
+      rest.map((g, i) => h('button', { type: 'button', class: 'ring', onclick: () => openStories(rest, i) }, face(g.person, ringOf(g)), h('em', {}, g.person.name.split(' ')[0]))),
+      others.filter((p) => !groups.some((g) => g.person.id === p.id)).map((p) => h('a', { class: 'ring', href: `#/p/${p.id}`, title: t('Just for you') }, face(p, 'r plain'), h('em', {}, p.name.split(' ')[0])))));
+}
+async function addStory(file) {
+  const m = me();
+  if (!m) return;
+  toast(t('Uploading…'));
+  try {
+    const path = await upload(m.id, file, 'stories/');
+    const { error } = await sb.from('roardino_stories').insert({ person_id: m.id, media: { path, type: /^video/.test(file.type) ? 'video' : 'image' } });
+    if (error) throw error;
+    toast(t('Added to your story'));
+    viewFeed();
+  } catch (e) { fail(e); }
+}
+function openStories(groups, gi) {
+  if (!groups.length) return;
+  let g = gi, i = Math.max(0, groups[gi].items.findIndex((x) => !seenStories.has(x.id)));
+  let timer = null, started = 0, left = 0, paused = false;
+  const bars = h('div', { class: 'st-bars' });
+  const head = h('div', { class: 'st-head' });
+  const stage = h('div', { class: 'st-stage' });
+  const cap = h('p', { class: 'st-cap' });
+  const card = h('div', { class: 'st-card' }, stage, bars, head, cap,
+    h('button', { type: 'button', class: 'st-tap prev', 'aria-label': t('Previous'), onclick: () => step(-1) }),
+    h('button', { type: 'button', class: 'st-tap next', 'aria-label': t('Next'), onclick: () => step(1) }));
+  const veil = h('div', { class: 'st-veil', onclick: (e) => { if (e.target === veil) close(); } }, card,
+    h('button', { type: 'button', class: 'st-x', 'aria-label': t('Close'), html: ICON.x, onclick: () => close() }));
+  const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'ArrowRight') step(1); if (e.key === 'ArrowLeft') step(-1); };
+  document.addEventListener('keydown', onKey);
+  // hold to pause, as on a phone
+  card.addEventListener('pointerdown', () => { paused = true; clearTimeout(timer); left -= Date.now() - started; stage.querySelector('video')?.pause(); bars.classList.add('paused'); });
+  const resume = () => { if (!paused) return; paused = false; bars.classList.remove('paused'); stage.querySelector('video')?.play().catch(() => {}); run(Math.max(300, left)); };
+  card.addEventListener('pointerup', resume); card.addEventListener('pointerleave', resume);
+  function close() { clearTimeout(timer); veil.remove(); document.removeEventListener('keydown', onKey); if (location.hash === '#/feed' || location.hash === '') viewFeed(); }
+  function run(ms) { started = Date.now(); left = ms; clearTimeout(timer); timer = setTimeout(() => step(1), ms); }
+  function step(d) {
+    i += d;
+    if (i < 0) { if (g > 0) { g--; i = groups[g].items.length - 1; } else i = 0; }
+    if (i >= groups[g].items.length) { g++; i = 0; if (g >= groups.length) return close(); }
+    show();
+  }
+  function show() {
+    const grp = groups[g], st = grp.items[i];
+    markSeen(st.id);
+    put(bars, grp.items.map((x, k) => h('i', { class: k < i ? 'done' : k === i ? 'now' : '' }, h('b'))));
+    const own = st.owner === session.user.id;
+    put(head, h('a', { href: `#/p/${grp.person.id}`, onclick: () => close() }, avatar(grp.person, 'sm')), h('b', {}, grp.person.name), h('small', {}, ago(st.created_at)),
+      own ? h('button', { type: 'button', class: 'st-del', 'aria-label': t('Delete'), html: ICON.trash, onclick: async (e) => {
+        e.stopPropagation();
+        if (!confirm(t('Delete this story?'))) return;
+        const { error } = await sb.from('roardino_stories').delete().eq('id', st.id);
+        if (error) return fail(error);
+        if (!/^https?:/.test(st.media?.path || '')) removeFiles([st.media?.path]);
+        grp.items.splice(i, 1);
+        if (!grp.items.length) { groups.splice(g, 1); if (!groups.length) return close(); if (g >= groups.length) return close(); i = 0; } else if (i >= grp.items.length) i = grp.items.length - 1;
+        show();
+      } }) : null);
+    cap.textContent = st.caption || '';
+    cap.classList.toggle('hidden', !st.caption);
+    const m = st.media || {};
+    if (m.type === 'video') {
+      const v = h('video', { src: urlOf(m.path), autoplay: true, muted: true, playsInline: true });
+      v.addEventListener('loadedmetadata', () => { bars.style.setProperty('--d', `${Math.min(30, v.duration || 15)}s`); run(Math.min(30, v.duration || 15) * 1000); });
+      v.addEventListener('click', () => { v.muted = !v.muted; });
+      put(stage, v);
+      bars.style.setProperty('--d', '15s'); run(15000);
+    } else {
+      put(stage, h('img', { src: urlOf(m.path), alt: '' }));
+      bars.style.setProperty('--d', '5s'); run(5000);
+    }
+  }
+  document.body.append(veil);
+  show();
+}
+
+/* =====================================================================================================================
    People
    ===================================================================================================================== */
 // Cast, Crew & Creatives (Alex, 4 Nov: "People" becomes the industry's own words): Cast in front of the camera or on
@@ -609,7 +725,7 @@ async function viewPeople() {
   function draw() {
     put(sideBox, seg([['all', t('All')], ['cast', t('Cast')], ['crew', t('Crew')], ['creatives', t('Creatives')]], peopleSide, (k) => { peopleSide = k; peopleKind = ''; draw(); }));
     const kinds = KINDS.filter(([k]) => peopleSide === 'all' || SIDE[k] === SIDES[peopleSide]);
-    put(pills, kinds.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (peopleKind === k ? ' on' : ''), onclick: () => { peopleKind = peopleKind === k ? '' : k; draw(); } }, t(s))));
+    put(pills, kinds.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (peopleKind === k ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); peopleKind = peopleKind === k ? '' : k; draw(); } }, t(s))));
     const q = peopleQ.trim().toLowerCase();
     const shown = data.filter((p) => {
       const ks = p.kinds || [];
@@ -641,10 +757,11 @@ async function viewPerson(id) {
   document.title = `${p.name} · Roardino`;
   const own = p.owner === session.user.id;
   const photos = (p.photos || []).map((x) => x.path);
-  const [{ data: stats }, { data: grid }, { data: ctRow }] = await Promise.all([
+  const [{ data: stats }, { data: grid }, { data: ctRow }, theirStories] = await Promise.all([
     sb.rpc('roardino_person_stats', { p: id }),
     sb.from('roardino_posts').select('*').eq('person_id', id).order('pos', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false }).limit(120),
-    sb.from('roardino_contacts').select('email,phone').eq('person_id', id).maybeSingle()]);
+    sb.from('roardino_contacts').select('email,phone').eq('person_id', id).maybeSingle(),
+    loadStories(id)]);
   await sign([p.avatar, ...photos, p.reel, p.cv, ...(grid || []).flatMap((g) => (g.media || []).slice(0, 1).map((m) => m.path))]);
   const d = p.data || {};
   const L = d.looks || {}, S = d.skills || {}, C = d.contact || {};
@@ -668,26 +785,30 @@ async function viewPerson(id) {
   // Instagram's profile (Alex, 4 Nov): the round picture, the name with the buttons, the numbers, the bio; then Work,
   // Photos and Details as tabs under one line
   const details = h('div', { class: 'ig-details' },
+    p.bio ? h('div', { class: 'block', style: { marginTop: 0, marginBottom: '18px' } }, h('h2', {}, t('About')), h('p', {}, p.bio)) : null,
     facts.length ? h('div', { class: 'facts' }, facts) : null,
     reel ? h('div', { class: 'block' }, h('h2', {}, p.reel ? t('Self-tape') : 'Showreel'), reel) : null,
     skillRows.length ? h('div', { class: 'block' }, h('h2', {}, t('Skills and tools')), h('div', { class: 'facts', style: { marginTop: 0 } }, skillRows.map(([k, v]) => fact(k, v)))) : null,
     (d.credits || []).length ? h('div', { class: 'block' }, h('h2', {}, t('Credits')), h('div', { class: 'credits' }, d.credits.map((c) => h('div', {}, c)))) : null,
     d.studies ? h('div', { class: 'block' }, h('h2', {}, t('Studies')), h('p', {}, d.studies)) : null,
     p.cv ? h('div', { class: 'acts' }, h('a', { class: 'btn', href: urlOf(p.cv), target: '_blank', rel: 'noopener' }, t('Open the CV'))) : null,
-    !facts.length && !reel && !skillRows.length && !(d.credits || []).length && !d.studies ? h('div', { class: 'empty' }, t('No details yet.')) : null);
-  const pics = h('div', { class: 'grid' }, photos.length ? photos.map((ph) => h('button', { type: 'button', class: 'cell', style: bg(ph), 'aria-label': t('Photo'), onclick: () => openWin(p.name, h('img', { src: urlOf(ph), alt: '', style: { width: '100%', borderRadius: '12px' } }), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) })) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No photos yet.')));
-  const work = gridBlock(p, grid || [], own);
+    !p.bio && !facts.length && !reel && !skillRows.length && !(d.credits || []).length && !d.studies ? h('div', { class: 'empty' }, t('No details yet.')) : null);
+  const photoPosts = (grid || []).filter((g) => g.kind === 'photo');
+  const pics = h('div', { class: 'grid' }, photos.length || photoPosts.length ? [...photoPosts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Photo'), onclick: () => openPost(g, p) }, m0?.type === 'video' ? h('video', { src: urlOf(m0.path) + '#t=0.5', muted: true, playsInline: true, preload: 'metadata' }) : null); }), ...photos.map((ph) => h('button', { type: 'button', class: 'cell', style: bg(ph), 'aria-label': t('Photo'), onclick: () => openWin(p.name, h('img', { src: urlOf(ph), alt: '', style: { width: '100%', borderRadius: '12px' } }), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) }))] : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No photos yet.')));
+  const work = gridBlock(p, (grid || []).filter((g) => g.kind !== 'photo'), own);
   const body = h('div');
   const tabRow = h('div', { class: 'ig-tabs' });
   let tab = 'work';
   const drawTab = () => {
-    put(tabRow, [['work', t('Work'), 'grid'], ['photos', t('Photos'), 'pic'], ['details', t('Details'), 'user']].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
+    // My Work, My Photos, My Bio on my own profile; Work, Photos, Bio on someone else's (Alex, 5 Nov)
+    put(tabRow, [['work', own ? t('My Work') : t('Work'), 'grid'], ['photos', own ? t('My Photos') : t('Photos'), 'pic'], ['details', own ? t('My Bio') : t('Bio'), 'user']].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
     put(body, tab === 'work' ? work : tab === 'photos' ? pics : details);
   };
   drawTab();
   frame(mineTab,
     h('section', { class: 'ig-head' },
-      h('div', { class: 'ig-av' }, h('span', { class: 'r big' }, h('i', { style: bg(photos[0] || p.avatar) }, urlOf(photos[0] || p.avatar) ? '' : initials(p.name)))),
+      h('div', { class: 'ig-av' + (theirStories.length ? ' has' : ''), role: theirStories.length ? 'button' : null, title: theirStories.length ? t('Stories') : null, onclick: theirStories.length ? () => openStories(theirStories, 0) : null },
+        h('span', { class: 'r big' + (theirStories.length ? '' : ' plain') }, h('i', { style: bg(photos[0] || p.avatar) }, urlOf(photos[0] || p.avatar) ? '' : initials(p.name)))),
       h('div', { class: 'ig-info' },
         h('div', { class: 'ig-name' }, h('h1', {}, p.name),
           own ? h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')) : followBtn),
@@ -782,7 +903,7 @@ async function viewEdit(which) {
   const looks = h('div');
   const kindsBox = h('div', { class: 'pills' });
   const drawKinds = () => {
-    put(kindsBox, ...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (p.kinds.includes(k) ? ' on' : ''), onclick: () => { p.kinds = p.kinds.includes(k) ? p.kinds.filter((x) => x !== k) : [...p.kinds, k]; drawKinds(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); } }, t(s))));
+    put(kindsBox, ...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (p.kinds.includes(k) ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); p.kinds = p.kinds.includes(k) ? p.kinds.filter((x) => x !== k) : [...p.kinds, k]; drawKinds(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); } }, t(s))));
   };
   const drawGuard = () => {
     if (!isMinor()) { put(guard, ); return; }
@@ -823,7 +944,7 @@ async function viewEdit(which) {
   const L2 = d.limits || (d.limits = {});
   const limits = h('div', { class: 'pills' });
   const drawLimits = () => put(limits, ...[['unpaid', 'I also take unpaid work'], ['travel', 'I travel'], ...(PERFORMER(p.kinds) || kid ? [['swim', 'Swimwear / underwear: yes']] : [])]
-    .map(([k, s]) => h('button', { type: 'button', class: 'pill' + (L2[k] ? ' on' : ''), onclick: (e) => { L2[k] = !L2[k]; e.currentTarget.classList.toggle('on', !!L2[k]); } }, t(s))));
+    .map(([k, s]) => h('button', { type: 'button', class: 'pill' + (L2[k] ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); L2[k] = !L2[k]; e.currentTarget.classList.toggle('on', !!L2[k]); } }, t(s))));
   const picHint = h('p', { class: 'hint' });
   const drawPicHint = () => { picHint.textContent = PERFORMER(p.kinds) || kid ? t('Add a close-up of the face, a full-length, a profile and a free one, no filters. The first is the main one.') : t('The first is your profile picture. Your work goes up from the Feed.'); };
 
@@ -962,7 +1083,7 @@ function callTile(c) {
 function editCall(old) {
   const c = structuredClone(old || { kind: 'casting', wanted: [], open: true });
   const wanted = h('div', { class: 'pills' });
-  const drawW = () => put(wanted, ...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (c.wanted.includes(k) ? ' on' : ''), onclick: () => { c.wanted = c.wanted.includes(k) ? c.wanted.filter((x) => x !== k) : [...c.wanted, k]; drawW(); } }, t(s))));
+  const drawW = () => put(wanted, ...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (c.wanted.includes(k) ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); c.wanted = c.wanted.includes(k) ? c.wanted.filter((x) => x !== k) : [...c.wanted, k]; drawW(); } }, t(s))));
   drawW();
   const bind = (key, el) => { el.addEventListener('input', () => { c[key] = el.value; }); return el; };
   const kindSeg = h('div');
@@ -1121,7 +1242,7 @@ function editSeminar(old, oldLink = '') {
   let url = oldLink || '';
   const bind = (key, el) => { el.addEventListener('input', () => { s[key] = el.value; }); return el; };
   const forK = h('div', { class: 'pills' });
-  const drawF = () => put(forK, ...FILTERS.slice(1).map(([k, x]) => h('button', { type: 'button', class: 'pill' + (s.for_kinds.includes(k) ? ' on' : ''), onclick: () => { s.for_kinds = s.for_kinds.includes(k) ? s.for_kinds.filter((y) => y !== k) : [...s.for_kinds, k]; drawF(); } }, t(x))));
+  const drawF = () => put(forK, ...FILTERS.slice(1).map(([k, x]) => h('button', { type: 'button', class: 'pill' + (s.for_kinds.includes(k) ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); s.for_kinds = s.for_kinds.includes(k) ? s.for_kinds.filter((y) => y !== k) : [...s.for_kinds, k]; drawF(); } }, t(x))));
   drawF();
   const kindSeg = h('div');
   const drawK = () => put(kindSeg, seg([['online', t('Online')], ['live', t('In person')]], s.kind, (k) => { s.kind = k; drawK(); }));
