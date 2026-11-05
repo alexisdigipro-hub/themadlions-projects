@@ -26,11 +26,12 @@ const LOCALE = () => (LANG === 'el' ? 'el-GR' : 'en-GB');
 
 /* ---------- settings kept on this device (Alex, 5 Nov) ---------- */
 const PREFS_KEY = 'roardino-prefs';
-const PREF_DEFAULTS = { theme: 'auto', text: 'normal', feedCalls: true, mutedVideos: true };
+const PREF_DEFAULTS = { theme: 'auto', text: 'normal', feedCalls: true, mutedVideos: true, showStories: true };
 let prefs = { ...PREF_DEFAULTS };
 try { prefs = { ...PREF_DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; } catch { /* private window */ }
 const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 function wearPrefs() {
+  setTimeout(() => typeof chatLook === 'function' && chatLook());
   const dark = prefs.theme === 'dark' || (prefs.theme === 'auto' && darkQuery.matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   document.documentElement.dataset.text = prefs.text;
@@ -128,6 +129,7 @@ const ICON = {
   cam: SVG('<path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/>'),
   flip: SVG('<path d="M20 7h-9a5 5 0 0 0 0 10h4"/><path d="m16 3 4 4-4 4"/><path d="M4 17h1"/>'),
   bell: SVG('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>'),
+  eyeoff: SVG('<path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.3 4.2M6.2 6.2A17.4 17.4 0 0 0 2 12s4 7 10 7a9.7 9.7 0 0 0 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>'),
   child: SVG('<circle cx="12" cy="7" r="3"/><path d="M7 21v-5a5 5 0 0 1 10 0v5"/>'),
 };
 const icon = (n) => h('span', { html: ICON[n], style: { display: 'inline-flex' } });
@@ -434,7 +436,14 @@ async function roarAccount(say) {
 /* =====================================================================================================================
    Home: my card, the feed, what is coming
    ===================================================================================================================== */
-let feedOnly = 'all';
+// Everyone or Following, remembered by the account (Alex, 5 Nov): kept in the Roar Account's own data, so every
+// device opens the feed the way it was left; this device's copy answers at once
+let feedOnly = (() => { try { return localStorage.getItem('roardino-feed') || 'all'; } catch { return 'all'; } })();
+function setFeedOnly(k) {
+  feedOnly = k;
+  try { localStorage.setItem('roardino-feed', k); } catch { /* private window */ }
+  if (session?.user?.user_metadata?.roardino_feed !== k) sb.auth.updateUser?.({ data: { roardino_feed: k } }).then(({ data }) => { if (data?.user) session.user = data.user; }).catch(() => {});
+}
 async function viewFeed() {
   document.title = 'Roardino';
   const left = h('aside', { class: 'side left' }, meCard(), me() ? null : meTiles());
@@ -466,8 +475,8 @@ async function viewFeed() {
   put(mid, 
     storiesCard(stories, others),
     // the composer waits behind New post, on the line of Everyone / Following (Alex, 5 Nov), and opens as a glass window
-    h('div', { class: 'head feed-head' }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { feedOnly = k; viewFeed(); }), h('span', { class: 'grow' }),
-      mine.length ? h('button', { type: 'button', class: 'btn main new-post', onclick: () => { let close = null; const c = composer(() => { close?.(); viewFeed(); }); close = openWin(t('New post'), c); c.querySelector('textarea')?.focus(); } }, icon('plus'), t('New post')) : null),
+    h('div', { class: 'head feed-head' }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { setFeedOnly(k); viewFeed(); }), h('span', { class: 'grow' }),
+      mine.length ? h('button', { type: 'button', class: 'btn main new-post', onclick: () => composeWin('work') }, icon('plus'), t('New post')) : null),
     ...stream);
 }
 
@@ -545,9 +554,9 @@ function callsForMe(calls) {
 }
 
 // write a post: words and up to 6 pictures or videos, as one of my profiles
-function composer(done) {
-  let as = me().id;
-  let kind = 'work'; // Alex, 5 Nov: every upload says what it is, Work (My Work) or My photo (My Photos)
+function composer(done, kind0 = 'work', asId = null) {
+  let as = asId || me().id;
+  let kind = kind0; // Alex, 5 Nov: every upload says what it is, Work (My Work) or My photo (My Photos)
   const kindBox = h('div');
   const drawKind = () => put(kindBox, seg([['work', t('Work')], ['photo', t('My photo')]], kind, (k) => { kind = k; drawKind(); }));
   drawKind();
@@ -580,6 +589,13 @@ function composer(done) {
       h('span', { style: { flex: 1 } }), btn));
 }
 
+// the composer in a glass window (New post on the feed, Add work / Add photo on my profile)
+function composeWin(kind = 'work', asId = null, after = () => viewFeed()) {
+  let close = null;
+  const c = composer(() => { close?.(); after(); }, kind, asId);
+  close = openWin(kind === 'photo' ? t('Add a photo') : t('New post'), c);
+  c.querySelector('textarea')?.focus();
+}
 // posts as cards: who, words, pictures, Bravo and comments
 async function posts(rows, refresh) {
   const ids = rows.map((r) => r.id);
@@ -686,7 +702,13 @@ async function loadStories(personId) {
   const unseen = (g) => g.items.some((x) => !seenStories.has(x.id));
   return groups.sort((a, b) => (isMine(b) - isMine(a)) || (unseen(b) - unseen(a)) || (new Date(b.items.at(-1).created_at) - new Date(a.items.at(-1).created_at)));
 }
+// stories can be hidden (Alex, 5 Nov), kept by the account like the feed's choice
+function setShowStories(v) {
+  setPref('showStories', v);
+  if (session?.user?.user_metadata?.roardino_stories !== v) sb.auth.updateUser?.({ data: { roardino_stories: v } }).then(({ data }) => { if (data?.user) session.user = data.user; }).catch(() => {});
+}
 function storiesCard(groups, others) {
+  if (!prefs.showStories) return null;
   const m = me();
   const myGroup = m && groups.find((g) => g.person.id === m.id);
   const rest = groups.filter((g) => g !== myGroup);
@@ -694,6 +716,7 @@ function storiesCard(groups, others) {
   const ringOf = (g) => (g.items.some((x) => !seenStories.has(x.id)) ? 'r' : 'r seen');
   const face = (p, cls) => h('span', { class: cls }, h('i', { style: bg(p.avatar) }, urlOf(p.avatar) ? '' : initials(p.name)));
   return h('section', { class: 'card stories' },
+    h('button', { type: 'button', class: 'st-hide', title: t('Hide stories'), 'aria-label': t('Hide stories'), html: ICON.eyeoff, onclick: () => { setShowStories(false); toast(t('Stories hidden. Turn them on again in Settings.')); viewFeed(); } }),
     h('div', { class: 'ring-row' },
       m ? h('div', { class: 'ring me', role: 'button', tabIndex: 0, onclick: () => (myGroup ? openStories([myGroup, ...rest], 0) : storySource(pick)) },
         face(m, myGroup ? ringOf(myGroup) : 'r plain'),
@@ -946,7 +969,12 @@ async function viewPerson(id) {
   const drawTab = () => {
     // My Work, My Photos, My Bio on my own profile; Work, Photos, Bio on someone else's (Alex, 5 Nov)
     put(tabRow, [['work', own ? t('My Work') : t('Work'), 'grid'], ['photos', own ? t('My Photos') : t('Photos'), 'pic'], ['details', own ? t('My Bio') : t('Bio'), 'user']].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
-    put(body, tab === 'work' ? work : tab === 'photos' ? pics : details);
+    // on my own profile each tab adds or edits in place (Alex, 5 Nov)
+    const act = !own ? null
+      : tab === 'work' ? h('button', { type: 'button', class: 'btn sm main', onclick: () => composeWin('work', p.id, () => route()) }, icon('plus'), t('Add work'))
+        : tab === 'photos' ? h('button', { type: 'button', class: 'btn sm main', onclick: () => composeWin('photo', p.id, () => route()) }, icon('plus'), t('Add photo'))
+          : h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit bio'));
+    put(body, act ? h('div', { class: 'tab-act' }, act) : null, tab === 'work' ? work : tab === 'photos' ? pics : details);
   };
   drawTab();
   frame(mineTab,
@@ -1426,6 +1454,7 @@ function viewSettings() {
     h('section', { class: 'sec' }, h('h2', {}, t('Feed')),
       row(t('Calls in the feed'), t('Open calls show between the posts.'), toggle('feedCalls')),
       row(t('Videos start muted'), null, toggle('mutedVideos')),
+      row(t('Stories'), t('Show the stories row on top of the feed.'), h('input', { type: 'checkbox', class: 'switch', checked: !!prefs.showStories, onchange: (e) => setShowStories(e.target.checked) })),
       row(t('Stories you have seen'), t('Seen stories turn grey on this device.'), h('button', { type: 'button', class: 'btn sm', onclick: () => { seenStories = new Set(); try { localStorage.removeItem('roardino-seen'); } catch { /* none */ } toast(t('All stories show as new again')); } }, t('Reset')))),
     h('section', { class: 'sec' }, h('h2', {}, t('Privacy')),
       row(t('Who sees my profile, email and phone'), t('Set it in your profile, under Contact and Settings.'), me() ? h('a', { class: 'btn sm', href: `#/edit/${me().id}` }, t('Edit profile')) : h('a', { class: 'btn sm', href: '#/edit/new' }, t('Create your profile'))),
@@ -1442,12 +1471,49 @@ function viewSettings() {
    Chat: RoarMe in a frame, the same account (signed in once inside it, then remembered)
    ===================================================================================================================== */
 let chatFrame = null;
+const ROARME_ORIGIN = new URL(ROARME).origin;
 function viewChat() {
   document.title = 'Roardino · ' + t('Chat');
-  // one frame kept for the whole visit, so going back to the chat is instant and keeps the conversation open
-  chatFrame ||= h('iframe', { class: 'chat-frame', src: ROARME, title: 'RoarMe', allow: 'camera; microphone; clipboard-write; autoplay; fullscreen; display-capture' });
+  // one frame kept for the whole visit, so going back to the chat is instant and keeps the conversation open;
+  // ?embed=roardino: RoarMe wears Roardino's look, hides its own brand, and asks Roardino to sign it in (Alex, 5 Nov)
+  chatFrame ||= h('iframe', { class: 'chat-frame', src: ROARME + '?embed=roardino', title: 'RoarMe', allow: 'camera; microphone; clipboard-write; autoplay; fullscreen; display-capture' });
   frame('chat', h('div', { class: 'chat-wrap' }, chatFrame));
 }
+// what Roardino says to the framed RoarMe: its look, and a one-time sign-in token for the same Roar Account
+const toChat = (msg) => { try { chatFrame?.contentWindow?.postMessage(msg, ROARME_ORIGIN); } catch { /* not there */ } };
+const chatLook = () => toChat({ type: 'roardino:look', theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light' });
+let handingOver = false;
+// the same handover the Roar Account gives every Roar app (roar-connect): a code started here, allowed with this
+// session, then traded for a one-time token_hash that RoarMe turns into its own session; no password, no refresh token
+async function handOverToChat() {
+  if (handingOver || !session) return;
+  handingOver = true;
+  try {
+    const FN = SB_URL + '/functions/v1/roar-connect';
+    const call = async (body, token) => {
+      const r = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SB_KEY, ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: JSON.stringify(body) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || j.error) throw new Error(j.error || 'HTTP ' + r.status);
+      return j;
+    };
+    const { data: cur } = await sb.auth.getSession();
+    const token = cur.session?.access_token;
+    if (!token) return;
+    const start = await call({ do: 'start', app: 'roardino' });
+    await call({ do: 'allow', code: start.code }, token);
+    for (let i = 0; i < 10; i++) {
+      const a = await call({ do: 'poll', code: start.code, secret: start.secret });
+      if (a.token_hash) { toChat({ type: 'roardino:signin', token_hash: a.token_hash }); return; }
+      if (a.expired) return;
+      await new Promise((r) => setTimeout(r, 800));
+    }
+  } catch (e) { console.warn('chat handover', e); } finally { handingOver = false; }
+}
+window.addEventListener('message', (e) => {
+  if (e.origin !== ROARME_ORIGIN || !chatFrame || e.source !== chatFrame.contentWindow) return;
+  const d = e.data || {};
+  if (d.type === 'roarme:ready') { chatLook(); if (d.signedIn === false) handOverToChat(); }
+});
 
 /* =====================================================================================================================
    Seminars
@@ -1536,6 +1602,10 @@ let started = false;
 async function enter(s) {
   session = s;
   if (!s) { mine = []; isAdmin = false; stopNotes(); return route(); }
+  const savedStories = s.user?.user_metadata?.roardino_stories;
+  if (typeof savedStories === 'boolean' && savedStories !== prefs.showStories) setPref('showStories', savedStories);
+  const savedFeed = s.user?.user_metadata?.roardino_feed;
+  if (savedFeed === 'all' || savedFeed === 'follow') { feedOnly = savedFeed; try { localStorage.setItem('roardino-feed', savedFeed); } catch { /* private */ } }
   try {
     await loadMine();
     const { data } = await sb.rpc('roar_is_admin');
