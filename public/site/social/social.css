@@ -1237,3 +1237,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 }
 .cr-tile b{font-size:14px;font-weight:var(--w-strong)}
 .cr-tile small{font-size:12px;color:var(--muted);margin-top:-4px}
+/* windows sit in what the keyboard leaves of the screen (Alex, 5 Nov) */
+.veil{top:var(--vvt,0);bottom:auto;height:var(--vvh,100%)}
+.veil .win{max-height:calc(var(--vvh,100dvh) - 24px)}
+html.kb-open .veil{padding-top:10px;padding-bottom:10px}
+html.kb-open .veil .win{max-height:calc(var(--vvh,100dvh) - 20px)}

@@ -575,6 +575,21 @@ async function route() {
   } catch (e) { fail(e); }
 }
 window.addEventListener('hashchange', route);
+// windows fit what the keyboard leaves of the screen (Alex, 5 Nov: "the keyboard must not cover it"): the visible part of
+// the page (visualViewport) goes into --vvh / --vvt, and the window's veil sits exactly there
+(() => {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const fit = () => {
+    const r = document.documentElement.style;
+    r.setProperty('--vvh', `${Math.round(vv.height)}px`);
+    r.setProperty('--vvt', `${Math.round(vv.offsetTop)}px`);
+    document.documentElement.classList.toggle('kb-open', vv.height < window.innerHeight * 0.8);
+  };
+  vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); fit();
+  // a field that gets the focus inside a window stays in sight once the keyboard is up
+  document.addEventListener('focusin', (e) => { if (e.target.closest?.('.win')) setTimeout(() => e.target.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 350); });
+})();
 // pull down from the top to refresh, as in an app (Alex, 5 Nov): the installed web app on a phone has no pull-to-refresh of its own
 (() => {
   if (!('ontouchstart' in window)) return;
