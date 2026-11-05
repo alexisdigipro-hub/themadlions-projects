@@ -248,6 +248,12 @@ const ICON = {
   clap: SVG('<path d="M8 13l-2.5-2.5a1.8 1.8 0 012.5-2.5l5 5"/><path d="M10 9.5L8.5 8a1.8 1.8 0 012.5-2.5l5.5 5.5c2 2 2 5 0 7s-5 2-7 0L5 13.5a1.8 1.8 0 012.5-2.5"/><path d="M16 3l.5 2M20 6l-2 .5M19 2l-1.2 1.6"/>'),
   talk: SVG('<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/>'),
   pic: SVG('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>'),
+  pin: SVG('<path d="M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>'),
+  bookmark: SVG('<path d="M6 3h12v18l-6-4.5L6 21z"/>'),
+  dots: SVG('<circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/>'),
+  flag: SVG('<path d="M5 21V4h11l-1.5 4L16 12H5"/>'),
+  unfollow: SVG('<circle cx="10" cy="8" r="4"/><path d="M3 20a7 7 0 0 1 14 0M16 11h6"/>'),
+  follow: SVG('<circle cx="10" cy="8" r="4"/><path d="M3 20a7 7 0 0 1 14 0M19 8v6M16 11h6"/>'),
   check: SVG('<path d="M5 12.5 10 17.5 19 7"/>', 'stroke-width="2.4"'),
   link: SVG('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),
   trash: SVG('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
@@ -425,6 +431,7 @@ let session = null;
 let mine = [];          // my profiles
 let isAdmin = false;
 let follows = new Set();
+let saved = new Set(); // posts I saved (Alex, 5 Nov)
 const app = $('#app');
 const me = () => mine.find((m) => !m.minor) || mine[0] || null; // the profile that is me (a parent's own, not a child's)
 
@@ -434,6 +441,8 @@ async function loadMine() {
   mine = data || [];
   const f = await sb.from('roardino_follows').select('person_id').eq('user_id', session.user.id);
   follows = new Set((f.data || []).map((x) => x.person_id));
+  const sv = await sb.from('roardino_saves').select('post_id').eq('user_id', session.user.id);
+  saved = new Set((sv.data || []).map((x) => x.post_id));
   await sign(mine.flatMap((p) => [p.avatar, p.data?.cover]));
 }
 
@@ -912,6 +921,81 @@ async function posts(rows, refresh) {
 }
 // a post as Instagram shows one (Alex, 4 Nov: "more Instagram"): who, the picture edge to edge (swipe when there are
 // several), icons, the bravos, the caption under the name, the comments behind a line, the time
+async function toggleFollow(id) {
+  const on = follows.has(id);
+  const { error } = on ? await sb.from('roardino_follows').delete().eq('user_id', session.user.id).eq('person_id', id) : await sb.from('roardino_follows').insert({ person_id: id });
+  if (error) { fail(error); return false; }
+  if (on) follows.delete(id); else follows.add(id);
+  toast(on ? t('Unfollowed') : t('Following'));
+  return true;
+}
+async function toggleSave(postId, btn) {
+  const on = saved.has(postId);
+  const { error } = on ? await sb.from('roardino_saves').delete().eq('user_id', session.user.id).eq('post_id', postId) : await sb.from('roardino_saves').insert({ post_id: postId });
+  if (error) return fail(error);
+  if (on) saved.delete(postId); else saved.add(postId);
+  btn?.classList.toggle('on', !on);
+  toast(on ? t('Removed from Saved') : t('Saved. Find it on your profile, under Saved.'));
+}
+// the ⋯ menu of a post: Save on top; Follow or Unfollow, About this account; Report account at the bottom, in red
+function postMenu(r, p, { own, media, refresh, saveBtn }) {
+  let close;
+  const row = (ic, label, fn, cls = '') => h('button', { type: 'button', class: 'pm-row ' + cls, onclick: () => { close(); fn(); } }, h('span', { class: 'pm-ic', html: ICON[ic] }), label);
+  const isSaved = saved.has(r.id);
+  const body = h('div', { class: 'pm' },
+    h('div', { class: 'pm-tiles' },
+      h('button', { type: 'button', class: 'pm-tile', onclick: () => { close(); toggleSave(r.id, saveBtn); } }, h('span', { class: 'pm-ic', html: ICON.bookmark }), isSaved ? t('Saved') : t('Save')),
+      h('button', { type: 'button', class: 'pm-tile', onclick: async () => { close(); const url = `${location.origin}${location.pathname}#/p/${p.id}`; try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ } } }, h('span', { class: 'pm-ic', html: ICON.send }), t('Share'))),
+    own ? h('div', { class: 'pm-group' },
+      row('edit', t('Edit profile'), () => { location.hash = `#/edit/${p.id}`; }),
+      row('trash', t('Delete post'), async () => {
+        if (!(await ask(t('Delete this post?')))) return;
+        const { error } = await sb.from('roardino_posts').delete().eq('id', r.id);
+        if (error) return fail(error);
+        removeFiles(media.map((m) => m.path)); refresh();
+      }, 'red'))
+      : [h('div', { class: 'pm-group' },
+        follows.has(p.id) ? row('unfollow', t('Unfollow'), () => toggleFollow(p.id).then((ok) => ok && refresh?.())) : row('follow', t('Follow'), () => toggleFollow(p.id).then((ok) => ok && refresh?.()))),
+      h('div', { class: 'pm-group' },
+        row('user', t('About this account'), () => aboutAccount(p.id)),
+        row('flag', t('Report account'), () => reportAccount(p, r), 'red'))]);
+  close = openWin(p.name || t('Post'), body, null);
+  document.querySelector('.veil:last-of-type')?.classList.add('pm-veil');
+}
+async function aboutAccount(id) {
+  const [{ data: q }, { data: stats }] = await Promise.all([sb.from('roardino_people').select('id,name,handle,avatar,kinds,city,created_at,minor').eq('id', id).maybeSingle(), sb.rpc('roardino_person_stats', { p: id })]);
+  if (!q) return;
+  await sign([q.avatar]);
+  const since = new Date(q.created_at).toLocaleDateString(LOCALE(), { month: 'long', year: 'numeric' });
+  const line = (ic, k, v) => (v ? h('div', { class: 'pm-row static' }, h('span', { class: 'pm-ic', html: ICON[ic] }), h('span', {}, h('small', {}, k), h('b', {}, v))) : null);
+  openWin(t('About this account'), h('div', { class: 'pm about' },
+    h('div', { class: 'about-top' }, avatar(q, 'big'), h('b', {}, q.name), q.handle ? h('small', {}, '@' + q.handle) : null),
+    h('div', { class: 'pm-group' },
+      line('cal', t('On Roardino since'), since),
+      line('pin', t('Based in'), q.city),
+      line('star', t('What they do'), (q.kinds || []).map(kindName).join(', ')),
+      line('grid', t('Works shared'), stats ? String(stats.posts) : ''),
+      line('user', t('Followers'), stats ? String(stats.followers) : '')),
+    h('a', { class: 'btn main', href: `#/p/${q.id}` }, t('View profile'))), null);
+}
+function reportAccount(p, r) {
+  const reasons = [['spam', 'Spam or scam'], ['fake', 'Fake account, pretending to be someone'], ['nude', 'Nudity or sexual content'], ['harass', 'Harassment or hate'], ['child', 'A child may be at risk'], ['other', 'Something else']];
+  let pick = '';
+  const note = h('textarea', { class: 'textarea', rows: 3, placeholder: t('Anything we should know (optional)') });
+  const list = h('div', { class: 'pm-group' });
+  const draw = () => put(list, reasons.map(([k, label]) => h('button', { type: 'button', class: 'pm-row' + (pick === k ? ' on' : ''), onclick: () => { pick = k; draw(); } }, h('span', { class: 'pm-radio' }), t(label))));
+  draw();
+  openWin(t('Report {name}', { name: p.name }), h('div', { class: 'pm' }, h('p', { class: 'hint' }, t('Your report is private. The person will not know who sent it.')), list, note), (c) => [
+    h('button', { type: 'button', class: 'btn', onclick: c }, t('Cancel')),
+    h('button', { type: 'button', class: 'btn main red', onclick: async () => {
+      if (!pick) { toast(t('Pick a reason')); return; }
+      const label = reasons.find((x) => x[0] === pick)[1];
+      const { error } = await sb.from('roardino_messages').insert({ topic: pick === 'child' ? 'child' : 'report', email: session.user.email, user_id: session.user.id, name: me()?.name || null,
+        body: `Report account: ${p.name}${p.handle ? ' (@' + p.handle + ')' : ''} [${p.id}]\nReason: ${label}${r?.id ? '\nPost: ' + r.id : ''}${note.value.trim() ? '\n\n' + note.value.trim() : ''}`, page: location.href.slice(0, 500) });
+      if (error) return fail(error);
+      c(); toast(t('Thank you. We will look at it.'));
+    } }, t('Report'))]);
+}
 function postCard(r, st, refresh) {
   const p = r.person || {};
   const media = r.media || [];
@@ -929,6 +1013,7 @@ function postCard(r, st, refresh) {
   const more = h('button', { type: 'button', class: 'ig-more', onclick: () => { if (talk.classList.contains('hidden')) openTalk(); else talk.classList.add('hidden'); } });
   const drawMore = () => put(more, st.comments ? (st.comments === 1 ? t('View 1 comment') : t('View all {n} comments', { n: st.comments })) : t('Add a comment…'));
   drawMore();
+  const saveBtn = h('button', { type: 'button', class: 'ig-ico save' + (saved.has(r.id) ? ' on' : ''), title: t('Save'), 'aria-label': t('Save'), html: ICON.bookmark, onclick: () => toggleSave(r.id, saveBtn) });
   const share = async () => {
     const url = `${location.origin}${location.pathname}#/p/${p.id}`;
     try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ }
@@ -942,19 +1027,16 @@ function postCard(r, st, refresh) {
     h('div', { class: 'post-head' },
       h('a', { href: `#/p/${p.id}`, class: 'ring-sm' }, avatar(p)),
       h('div', { class: 'who-line' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name || '')), h('small', {}, p.headline || (p.kinds || []).map(kindName).slice(0, 2).join(' · '))),
-      own ? h('button', { type: 'button', class: 'ig-ico sm', title: t('Delete'), 'aria-label': t('Delete'), html: ICON.trash, onclick: async () => {
-        if (!(await ask(t('Delete this post?')))) return;
-        const { error } = await sb.from('roardino_posts').delete().eq('id', r.id);
-        if (error) return fail(error);
-        removeFiles(media.map((m) => m.path)); refresh();
-      } }) : null),
+      // Follow when I don't follow them yet, and the ⋯ menu (Alex, 5 Nov, as Instagram's)
+      !own && p.id && !follows.has(p.id) ? h('button', { type: 'button', class: 'btn sm post-follow', onclick: async (e) => { const b = e.currentTarget; const ok = await toggleFollow(p.id); if (ok) b.remove(); } }, t('Follow')) : null,
+      h('button', { type: 'button', class: 'ig-ico sm', title: t('More'), 'aria-label': t('More'), html: ICON.dots, onclick: () => postMenu(r, p, { own, media, refresh, saveBtn }) })),
     slides, dots,
     !media.length && r.body ? h('p', { class: 'post-body big' }, ...tagText(r.body)) : null,
     h('div', { class: 'ig-bar' }, bravoBtn,
       h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: openTalk }),
       h('button', { type: 'button', class: 'ig-ico', title: t('Share'), 'aria-label': t('Share'), html: ICON.send, onclick: share }),
       h('span', { class: 'grow' }),
-      own ? null : h('a', { class: 'btn sm main', href: `#/p/${p.id}` }, t('Work with me'))),
+      own ? null : h('a', { class: 'btn sm main', href: `#/p/${p.id}` }, t('Work with me')), saveBtn),
     count,
     media.length && r.body ? h('p', { class: 'ig-cap' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name)), ' ', ...tagText(r.body)) : null,
     more,
@@ -1373,6 +1455,18 @@ function faceTile(p) {
 /* =====================================================================================================================
    A profile: a portfolio
    ===================================================================================================================== */
+// what I saved, newest first, as a grid like the works
+function savedGrid() {
+  const box = h('div', { class: 'grid' }, h('p', { class: 'wait', style: { gridColumn: '1/-1' } }, t('Loading…')));
+  (async () => {
+    const { data } = await sb.from('roardino_saves').select('created_at, post:roardino_posts(*, person:roardino_people(id,name,avatar,kinds,headline))').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(120);
+    const posts = (data || []).map((x) => x.post).filter(Boolean);
+    await sign(posts.flatMap((g) => [(g.media || [])[0]?.path, g.person?.avatar]));
+    put(box, posts.length ? posts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Post'), onclick: () => openPost(g, g.person) }, m0?.type === 'video' ? h('video', { src: urlOf(m0.path) + '#t=0.5', muted: true, playsInline: true, preload: 'metadata' }) : !m0 ? h('span', { class: 'cell-text' }, (g.body || '').slice(0, 90)) : null); })
+      : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nothing saved yet')), t('Tap the bookmark under a post to keep it here. Only you see it.')));
+  })();
+  return box;
+}
 async function viewPerson(id) {
   const { data: p, error } = await sb.from('roardino_people').select('*').eq('id', id).maybeSingle();
   if (error) throw error;
@@ -1425,16 +1519,16 @@ async function viewPerson(id) {
   let tab = 'work';
   const drawTab = () => {
     // My Work, My Photos, My Bio on my own profile; Work, Photos, Bio on someone else's (Alex, 5 Nov)
-    put(tabRow, [['work', own ? t('My Work') : t('Work'), 'grid'], ['photos', own ? t('My Photos') : t('Photos'), 'pic'], ['details', own ? t('My Bio') : t('Bio'), 'user']].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
+    put(tabRow, [['work', own ? t('My Work') : t('Work'), 'grid'], ['photos', own ? t('My Photos') : t('Photos'), 'pic'], ['details', own ? t('My Bio') : t('Bio'), 'user'], ...(own ? [['saved', t('Saved'), 'bookmark']] : [])].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
     // on my own profile each tab adds or edits in place (Alex, 5 Nov)
     // as a round glass plus at the left of the tabs, its words only on hover (Alex, 5 Nov: "a plus on the left, the plus alone says Add work")
     const plus = (label, ic, extra) => h(extra.href ? 'a' : 'button', { type: extra.href ? null : 'button', class: 'btn main tab-plus', title: label, 'aria-label': label, ...extra }, icon(ic), h('span', { class: 'lbl' }, label));
     const act = !own ? null
       : tab === 'work' ? plus(t('Add work'), 'plus', { onclick: () => composeWin('work', p.id, () => route()) })
         : tab === 'photos' ? plus(t('Add photo'), 'plus', { onclick: () => composeWin('photo', p.id, () => route()) })
-          : plus(t('Edit bio'), 'edit', { href: `#/edit/${p.id}` });
+          : tab === 'saved' ? null : plus(t('Edit bio'), 'edit', { href: `#/edit/${p.id}` });
     if (act) tabRow.append(act);
-    put(body, tab === 'work' ? work : tab === 'photos' ? pics : details);
+    put(body, tab === 'work' ? work : tab === 'photos' ? pics : tab === 'saved' ? savedGrid() : details);
   };
   drawTab();
   frame(mineTab,
