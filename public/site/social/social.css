@@ -1606,3 +1606,12 @@ html[data-theme=dark] .sk-pic{background:linear-gradient(100deg,rgba(255,255,255
   .post.ig.has-media.vid .mwrap .post-head>*,.post.ig.has-media.vid .mwrap .ig-bar>*{opacity:1;transform:none}
   .post.ig.has-media.vid .ig-media>*{transform:none!important;filter:none!important}
 }
+/* choosing a video's cover (Alex, 5 Nov) */
+.cv{display:flex;flex-direction:column;gap:10px}
+.cv-stage{display:grid;place-items:center;background:#0d0f12;border-radius:14px;overflow:hidden;max-height:min(56vh,520px)}
+.cv-stage video,.cv-stage img{display:block;max-width:100%;max-height:min(56vh,520px);object-fit:contain}
+.cv-stage .hidden{display:none}
+.cv-bar{width:100%}
+.cv-acts{display:flex;justify-content:center}
+.thumb.vthumb{cursor:pointer;background-size:cover;background-position:center;background-color:#0d0f12}
+.cell .cell-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
