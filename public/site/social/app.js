@@ -1172,7 +1172,7 @@ function composer(done, kind0 = 'work', asId = null) {
   let as = asId || me().id;
   let kind = kind0; // Alex, 5 Nov: every upload says what it is, Work (My Work) or My photo (My Photos)
   const kindBox = h('div');
-  const drawKind = () => put(kindBox, seg([['work', t('Work')], ['photo', t('My photo')]], kind, (k) => { kind = k; drawKind(); }));
+  const drawKind = () => put(kindBox, seg([['work', t('Portfolio')], ['photo', t('Personal')]], kind, (k) => { kind = k; drawKind(); }));
   drawKind();
   const files = [];
   const text = area('', { placeholder: t('What did you shoot, what are you preparing, what are you looking for? Tag people with @'), rows: 2 });
@@ -1219,8 +1219,8 @@ function createMenu() {
   const pick = h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, onchange: async (e) => { const f0 = e.target.files[0]; e.target.value = ''; const f = f0 && (/^video/.test(f0.type) ? f0 : await cropImage(f0, SHAPES.story)); const ed = f && await storyEditor(f); if (ed) await addStory(ed.file, ed.overlays); } });
   const tile = (ic, label, sub, fn) => h('button', { type: 'button', class: 'pm-tile cr-tile', onclick: () => { close(); fn(); } }, h('span', { class: 'pm-ic', html: ICON[ic] }), h('b', {}, label), h('small', {}, sub));
   close = openWin(t('Create'), h('div', { class: 'pm' }, h('div', { class: 'pm-tiles' },
-    tile('grid', t('Work'), t('A post of your work'), () => composeWin('work', m.id, () => route())),
-    tile('pic', t('My photo'), t('A photo of you'), () => composeWin('photo', m.id, () => route())),
+    tile('grid', t('Portfolio'), t('A post of your work'), () => composeWin('work', m.id, () => route())),
+    tile('pic', t('Personal'), t('A photo of you'), () => composeWin('photo', m.id, () => route())),
     tile('rings', t('Story'), t('For 24 hours'), () => storySource(pick)),
     tile('calls', t('Call'), t('Casting or crew'), () => { location.hash = '#/calls'; setTimeout(() => editCall(), 400); })), pick), null);
 }
@@ -1923,7 +1923,7 @@ async function viewSearch() {
     await sign(rows.flatMap(({ r }) => [(r.media || [])[0]?.path, (r.media || [])[0]?.poster, r.person?.avatar]));
     let kind = '';
     draw = () => {
-      put(chips, h('div', { class: 'fbody' }, [['', t('All')], ['work', t('Work')], ['photo', t('Photos')], ['video', t('Videos')]].map(([k, l]) => h('button', { type: 'button', class: 'fchip' + (kind === k ? ' on' : ''), onclick: () => { kind = k; draw(); } }, l))));
+      put(chips, h('div', { class: 'fbody' }, [['', t('All')], ['work', t('Portfolio')], ['photo', t('Personal')], ['video', t('Videos')]].map(([k, l]) => h('button', { type: 'button', class: 'fchip' + (kind === k ? ' on' : ''), onclick: () => { kind = k; draw(); } }, l))));
       const q = peopleQ.trim();
       const shown = rows.filter(({ r, k }) => (!q || matches(k, q)) && (!kind || (kind === 'video' ? (r.media || []).some((m) => m.type === 'video') : (r.kind || 'work') === kind))).map(({ r }) => r);
       count.textContent = shown.length === 1 ? t('1 post') : t('{n} posts', { n: shown.length });
