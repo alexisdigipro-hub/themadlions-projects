@@ -1501,3 +1501,11 @@ html[data-theme=dark] .seg .lens{background:rgba(255,255,255,.09)!important;bord
 .pill.on{box-shadow:none!important}
 .win-x,.tab-plus,.igm-btn{box-shadow:none!important}
 .post.ig.has-media .mwrap .btn{background-color:rgba(255,255,255,.14)!important;background-image:none!important;-webkit-text-fill-color:#fff!important;color:#fff!important;border-color:rgba(255,255,255,.35)!important}
+/* opening without a flash (Alex, 5 Nov): the page colour from the first frame, the wordmark quietly while it starts, and no
+   entrance motion on the first screen */
+html.booting *,html.booting *::before,html.booting *::after{animation:none!important;transition:none!important}
+.boot{min-height:100vh;min-height:100dvh;display:grid;place-items:center}
+.boot-mark{font-family:Jost,var(--font);font-size:30px;font-weight:300;letter-spacing:.02em;color:var(--ink);opacity:.85}
+.boot-mark b{font-weight:800}
+html[data-theme=dark] body{background-color:#0b0b0c}
+html.booting .wait{visibility:hidden}

@@ -2624,7 +2624,9 @@ async function enter(s) {
     const { data } = await sb.rpc('roar_is_admin');
     isAdmin = data === true;
   } catch (e) { fail(e); }
-  route();
+  await route();
+  // the first screen comes in at once; motion only from now on (Alex, 5 Nov: "it flashes and blinks when it opens")
+  setTimeout(() => document.documentElement.classList.remove('booting'), 450);
   startNotes();
 }
 sb.auth.onAuthStateChange((ev, s) => {
