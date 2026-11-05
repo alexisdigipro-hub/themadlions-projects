@@ -1422,8 +1422,40 @@ async function viewPerson(id) {
         p.bio ? h('p', { class: 'ig-bio' }, p.bio) : null,
         h('p', { class: 'ig-meta' }, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} years', { n: a }) : '', L.height ? `${L.height} cm` : ''].filter(Boolean).join(' · ')),
         contact.filter(Boolean).length ? h('div', { class: 'acts', style: { marginTop: 0 } }, contact.filter(Boolean).map((b2) => { b2.classList.add('sm'); return b2; })) : null)),
-    own ? h('div', { class: 'phone-tiles' }, meTiles()) : null,
+    phoneHead(p, { own, stats, theirStories, photos, followBtn, contact, a, L }),
     tabRow, body);
+}
+// a profile on a phone, as Instagram's (Alex, 5 Nov): the picture with the numbers beside it, the name, the lines about them,
+// then two equal buttons (mine: Edit profile and Settings; someone else's: Follow and Contact); no cover there
+function phoneHead(p, { own, stats, theirStories, photos, followBtn, contact, a, L }) {
+  const pic = photos[0] || p.avatar;
+  const pick = own ? h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, onchange: async (e) => { const f0 = e.target.files[0]; e.target.value = ''; const f = f0 && (/^video/.test(f0.type) ? f0 : await cropImage(f0, SHAPES.story)); const ed = f && await storyEditor(f); if (ed) await addStory(ed.file, ed.overlays); } }) : null;
+  const av = h('div', { class: 'igm-av' + (theirStories.length ? ' has' : ''), onclick: theirStories.length ? () => openStories(theirStories, 0) : null },
+    h('span', { class: 'r' + (theirStories.length ? '' : ' plain') }, h('i', { style: bg(pic) }, urlOf(pic) ? '' : initials(p.name))),
+    own ? h('button', { type: 'button', class: 'igm-add', 'aria-label': t('Add to your story'), html: ICON.plus, onclick: (e) => { e.stopPropagation(); storySource(pick); } }) : null, pick);
+  const num = (n, label) => h('div', { class: 'igm-n' }, h('b', {}, String(n ?? 0)), h('small', {}, label));
+  const site = p.data?.contact?.site;
+  const cBtns = contact.filter(Boolean);
+  const second = own ? h('a', { class: 'btn igm-btn', href: '#/settings' }, t('Settings'))
+    : cBtns.length ? h('button', { type: 'button', class: 'btn igm-btn', onclick: () => openWin(t('Contact {name}', { name: p.name }), h('div', { class: 'acts', style: { marginTop: 0 } }, cBtns.map((b) => b.cloneNode(true))), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) }, t('Contact'))
+      : h('button', { type: 'button', class: 'btn igm-btn', onclick: async () => { const url = `${location.origin}${location.pathname}#/p/${p.id}`; try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ } } }, t('Share profile'));
+  const first = own ? h('a', { class: 'btn igm-btn', href: `#/edit/${p.id}` }, t('Edit profile')) : followBtn ? followBtn.cloneNode(true) : null;
+  if (first && !own) {
+    // the phone's Follow works through the page's own Follow button and shows what it shows
+    first.classList.add('igm-btn');
+    first.addEventListener('click', () => followBtn.click());
+    new MutationObserver(() => { first.className = followBtn.className + ' igm-btn'; first.textContent = followBtn.textContent; }).observe(followBtn, { childList: true, attributes: true });
+  }
+  return h('section', { class: 'igm' },
+    h('div', { class: 'igm-top' }, av, h('div', { class: 'igm-right' }, h('b', { class: 'igm-name' }, p.name),
+      h('div', { class: 'igm-nums' }, num(stats?.posts, t('works')), num(stats?.followers, t('followers')), num(stats?.bravos, 'bravo')))),
+    p.handle ? h('p', { class: 'igm-handle' }, '@' + p.handle) : null,
+    p.headline ? h('p', { class: 'igm-line' }, p.headline) : null,
+    p.bio ? h('p', { class: 'igm-bio' }, p.bio) : null,
+    (p.kinds || []).length || p.minor ? h('div', { class: 'chips' }, (p.kinds || []).map(kindChip), p.minor ? h('span', { class: 'chip', style: { '--c': '#e0a33a' } }, h('i'), t('Under 18 · with a parent')) : null) : null,
+    h('p', { class: 'igm-meta' }, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} years', { n: a }) : '', L.height ? `${L.height} cm` : ''].filter(Boolean).join(' · ')),
+    site ? h('a', { class: 'igm-link', href: /^https?:/.test(site) ? site : `https://${site}`, target: '_blank', rel: 'noopener' }, h('span', { html: ICON.link }), site.replace(/^https?:\/\//, '').replace(/\/$/, '')) : null,
+    h('div', { class: 'igm-btns' }, first, second));
 }
 
 // the profile's posts as Instagram's grid; its owner can put them in any order
@@ -2002,6 +2034,7 @@ function viewSettings() {
   const msg = h('p', { class: 'msg' });
   frame('me', h('div', { class: 'form' },
     h('div', { class: 'head' }, h('h1', {}, t('Settings'))),
+    h('div', { class: 'phone-tiles on-settings' }, meTiles()),
     h('section', { class: 'sec' }, h('h2', {}, t('Appearance')),
       row(t('Theme'), t('Auto follows your phone or computer.'), choice('theme', [['light', t('Light')], ['dark', t('Dark')], ['auto', t('Auto')]])),
       row(t('Accent colour'), t('The colour of buttons, the chosen tab and the glow, in light and dark.'), (() => { const box = h('div', { class: 'swatches', role: 'radiogroup' }); const draw = () => put(box, ACCENTS.map(([k, name, g]) => h('button', { type: 'button', class: 'swatch' + (prefs.accent === k ? ' on' : ''), role: 'radio', 'aria-checked': String(prefs.accent === k), 'aria-label': t(name), title: t(name), style: { '--sw': `linear-gradient(135deg,${g})` }, onclick: () => { setPref('accent', k); draw(); } }))); draw(); return box; })()),
