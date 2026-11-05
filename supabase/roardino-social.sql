@@ -613,3 +613,15 @@ begin
 end $$;
 drop trigger if exists rd_story_tags on roardino_stories;
 create trigger rd_story_tags after insert on roardino_stories for each row execute function roardino_notify_story_tags();
+
+-- ---------- saved posts (5 Nov): Save in a post's menu, seen only by whoever saved ----------
+create table if not exists roardino_saves (
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  post_id uuid not null references roardino_posts on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, post_id)
+);
+alter table roardino_saves enable row level security;
+grant select, insert, delete on roardino_saves to authenticated;
+drop policy if exists rd_saves_mine on roardino_saves;
+create policy rd_saves_mine on roardino_saves for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());

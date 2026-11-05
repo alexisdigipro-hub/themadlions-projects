@@ -1130,3 +1130,31 @@ html[data-theme=dark] .ptr{background:rgba(40,40,46,.95)}
   .feed-head .st-toggle,.feed-head .new-post{width:34px;padding:0}
   .feed-head .seg button{padding:6px 12px}
 }
+/* a post: Follow next to the name, the ⋯ menu as Instagram's (Alex, 5 Nov), Save under the post */
+.post-follow{height:30px;padding:0 12px;font-size:10.5px;margin-right:2px}
+.ig-ico.save.on svg{fill:var(--a-solid);color:var(--a-solid)}
+.pm{display:flex;flex-direction:column;gap:10px}
+.pm-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pm-tile{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 8px;border-radius:14px;border:1px solid var(--rim);background:rgba(255,255,255,.55);font-size:13.5px;color:var(--ink);cursor:pointer;transition:transform .2s var(--spring),background .2s}
+.pm-tile:active{transform:scale(.96)}
+.pm-group{display:flex;flex-direction:column;border-radius:14px;overflow:hidden;border:1px solid var(--rim);background:rgba(255,255,255,.55)}
+.pm-row{display:flex;align-items:center;gap:14px;padding:13px 16px;border:0;border-top:1px solid var(--line);background:transparent;text-align:left;font-size:15px;color:var(--ink);cursor:pointer}
+.pm-row:first-child{border-top:0}
+.pm-row:hover{background:rgba(255,255,255,.5)}
+.pm-row.red{color:#d40000}
+.pm-row.static{cursor:default}
+.pm-row.static span:last-child{display:flex;flex-direction:column}
+.pm-row.static small{font-size:12px;color:var(--muted)}
+.pm-row.static b{font-weight:var(--w-mid)}
+.pm-ic{display:grid;place-items:center;width:24px;height:24px;flex:none}
+.pm-ic svg{width:22px;height:22px}
+.pm-row.on{background:rgba(var(--a),.08)}
+.pm-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--muted);flex:none}
+.pm-row.on .pm-radio{border:6px solid var(--a-solid)}
+.about-top{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0 4px}
+.about-top .av.big{width:84px;height:84px;font-size:26px}
+.about-top b{font-size:17px}
+.about-top small{color:var(--muted)}
+.cell-text{display:block;padding:10px;font-size:12px;color:var(--ink2);text-align:left}
+html[data-theme=dark] .pm-tile,html[data-theme=dark] .pm-group{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)}
+html[data-theme=dark] .pm-row.red{color:#ff5a4f}
