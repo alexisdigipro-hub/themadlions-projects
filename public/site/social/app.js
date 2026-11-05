@@ -1177,6 +1177,10 @@ function postCard(r, st, refresh) {
     clearTimeout(tapT); tapT = setTimeout(() => setOpen(!art.classList.contains('open')), 260);
   });
   wrap.addEventListener('dblclick', () => clearTimeout(tapT));
+  // scrolled away, an open post folds itself back to the picture (Alex, 5 Nov)
+  if ('IntersectionObserver' in window) new IntersectionObserver((list) => list.forEach((en) => {
+    if (art.classList.contains('open') && en.intersectionRatio < 0.25 && !art.contains(document.activeElement)) setOpen(false);
+  }), { threshold: [0, 0.25] }).observe(wrap);
   put(art, wrap, cap, time, talk);
   return art;
 }
