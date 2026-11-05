@@ -131,6 +131,7 @@ const ICON = {
   flip: SVG('<path d="M20 7h-9a5 5 0 0 0 0 10h4"/><path d="m16 3 4 4-4 4"/><path d="M4 17h1"/>'),
   bell: SVG('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>'),
   eyeoff: SVG('<path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.3 4.2M6.2 6.2A17.4 17.4 0 0 0 2 12s4 7 10 7a9.7 9.7 0 0 0 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>'),
+  rings: SVG('<circle cx="12" cy="12" r="9" stroke-dasharray="4 2.2"/><circle cx="12" cy="12" r="4.5"/>'),
   child: SVG('<circle cx="12" cy="7" r="3"/><path d="M7 21v-5a5 5 0 0 1 10 0v5"/>'),
 };
 const icon = (n) => h('span', { html: ICON[n], style: { display: 'inline-flex' } });
@@ -493,6 +494,8 @@ async function viewFeed() {
     storiesCard(stories, others),
     // the composer waits behind New post, on the line of Everyone / Following (Alex, 5 Nov), and opens as a glass window
     h('div', { class: 'head feed-head' }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { setFeedOnly(k); viewFeed(); }), h('span', { class: 'grow' }),
+      // stories on or off, a small square next to New post (Alex, 5 Nov)
+      h('button', { type: 'button', class: 'btn round st-toggle' + (prefs.showStories ? ' on' : ''), title: prefs.showStories ? t('Hide stories') : t('Show stories'), 'aria-label': prefs.showStories ? t('Hide stories') : t('Show stories'), html: ICON.rings, onclick: () => { setShowStories(!prefs.showStories); toast(prefs.showStories ? t('Stories on') : t('Stories hidden')); viewFeed(); } }),
       mine.length ? h('button', { type: 'button', class: 'btn main new-post', onclick: () => composeWin('work') }, icon('plus'), t('New post')) : null),
     ...stream);
 }
@@ -758,7 +761,7 @@ function storiesCard(groups, others) {
   const ringOf = (g) => (g.items.some((x) => !seenStories.has(x.id)) ? 'r' : 'r seen');
   const face = (p, cls) => h('span', { class: cls }, h('i', { style: bg(p.avatar) }, urlOf(p.avatar) ? '' : initials(p.name)));
   return h('section', { class: 'card stories' },
-    h('button', { type: 'button', class: 'st-hide', title: t('Hide stories'), 'aria-label': t('Hide stories'), html: ICON.eyeoff, onclick: () => { setShowStories(false); toast(t('Stories hidden. Turn them on again in Settings.')); viewFeed(); } }),
+    h('button', { type: 'button', class: 'st-hide', title: t('Hide stories'), 'aria-label': t('Hide stories'), html: ICON.eyeoff, onclick: () => { setShowStories(false); toast(t('Stories hidden. The round button next to New post brings them back.')); viewFeed(); } }),
     h('div', { class: 'ring-row' },
       m ? h('div', { class: 'ring me', role: 'button', tabIndex: 0, onclick: () => (myGroup ? openStories([myGroup, ...rest], 0) : storySource(pick)) },
         face(m, myGroup ? ringOf(myGroup) : 'r plain'),

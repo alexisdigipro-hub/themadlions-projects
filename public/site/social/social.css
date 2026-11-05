@@ -812,3 +812,10 @@ html[data-theme=dark] .st-hide:hover{background:rgba(255,255,255,.06)}
 .legal section h2{font-size:15px;font-weight:700;margin:18px 0 6px}
 .legal section p{margin:0 0 8px;font-size:15px;line-height:1.65;color:var(--ink2)}
 .legal a{color:var(--accent);text-decoration:underline}
+
+/* the stories switch next to New post */
+.st-toggle{width:40px;height:40px;opacity:.6}
+.st-toggle svg{width:20px;height:20px;color:var(--muted)}
+.st-toggle.on{opacity:1}
+.st-toggle.on svg{color:var(--accent)}
+.feed-head{gap:8px}
