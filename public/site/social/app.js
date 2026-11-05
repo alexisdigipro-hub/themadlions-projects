@@ -338,7 +338,8 @@ function openWin(title, body, foot) {
   const close = () => { veil.remove(); document.removeEventListener('keydown', onKey); };
   const onKey = (e) => { if (e.key === 'Escape') close(); };
   document.addEventListener('keydown', onKey);
-  veil.append(h('div', { class: 'win', role: 'dialog', 'aria-label': title }, h('h2', {}, title), body, foot ? h('div', { class: 'foot' }, foot(close)) : null));
+  // every window has its X too (Alex, 5 Nov), even though a tap outside or Esc also closes it
+  veil.append(h('div', { class: 'win', role: 'dialog', 'aria-label': title }, h('div', { class: 'win-head' }, h('h2', {}, title), h('button', { type: 'button', class: 'win-x', 'aria-label': t('Close'), title: t('Close'), html: ICON.x, onclick: () => close() })), body, foot ? h('div', { class: 'foot' }, foot(close)) : null));
   document.body.append(veil);
   return close;
 }
@@ -666,16 +667,16 @@ async function setCover(p, file) {
 function meTiles() {
   const m = me();
   const dark = () => document.documentElement.dataset.theme === 'dark';
-  const themeTile = h('button', { type: 'button', class: 'mt' }, h('span', { html: dark() ? ICON.sun : ICON.moon }), dark() ? t('Light') : t('Dark'));
+  const themeTile = h('button', { type: 'button', class: 'btn main mt' }, h('span', { html: dark() ? ICON.sun : ICON.moon }), dark() ? t('Light') : t('Dark'));
   themeTile.onclick = () => { setPref('theme', dark() ? 'light' : 'dark'); put(themeTile, h('span', { html: dark() ? ICON.sun : ICON.moon }), dark() ? t('Light') : t('Dark')); };
-  const tile = (href, ic, label) => h('a', { class: 'mt', href }, h('span', { html: ICON[ic] }), label);
+  const tile = (href, ic, label) => h('a', { class: 'btn main mt', href }, h('span', { html: ICON[ic] }), label);
   return h('section', { class: 'card me-tiles' },
     m ? tile(`#/edit/${m.id}`, 'edit', t('Edit')) : tile('#/edit/new', 'plus', t('Profile')),
     themeTile,
     tile('#/settings', 'gear', t('Settings')),
     tile('#/me', 'star', t('Applications')),
     tile('#/edit/kid', 'child', t('My child')),
-    h('button', { type: 'button', class: 'mt', onclick: () => sb.auth.signOut() }, h('span', { html: ICON.out }), t('Sign out')));
+    h('button', { type: 'button', class: 'btn main mt out', onclick: () => sb.auth.signOut() }, h('span', { html: ICON.out }), t('Sign out')));
 }
 
 // the week, with dots for seminars and calls that close, and what comes next
@@ -1593,7 +1594,7 @@ async function openNotes(anchor) {
     }, !n.read_at);
   });
   put(panel,
-    h('div', { class: 'notes-head' }, h('b', {}, t('Notifications')), h('span', { class: 'grow' }), notes.length ? h('button', { type: 'button', class: 'linkish', onclick: async () => { await sb.from('roardino_notifications').delete().eq('user_id', session.user.id); notes = []; drawBadges(); closeAll(); toast(t('Cleared')); } }, t('Clear all')) : null),
+    h('div', { class: 'notes-head' }, h('b', {}, t('Notifications')), h('span', { class: 'grow' }), notes.length ? h('button', { type: 'button', class: 'linkish', onclick: async () => { await sb.from('roardino_notifications').delete().eq('user_id', session.user.id); notes = []; drawBadges(); closeAll(); toast(t('Cleared')); } }, t('Clear all')) : null, h('button', { type: 'button', class: 'win-x', 'aria-label': t('Close'), title: t('Close'), html: ICON.x, onclick: () => closeAll() })),
     msgs.length ? [h('p', { class: 'notes-sec' }, t('Messages')), ...msgs] : null,
     rows.length ? [h('p', { class: 'notes-sec' }, t('Activity')), ...rows] : null,
     !msgs.length && !rows.length ? h('div', { class: 'notes-empty' }, h('span', { html: ICON.bell }), t('Nothing new. Bravos, comments, follows, calls and messages show here.')) : null);
