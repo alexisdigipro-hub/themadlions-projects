@@ -420,7 +420,7 @@ function meCard() {
   (async () => {
     const [{ data: st }, { data: ps }] = await Promise.all([
       sb.rpc('roardino_person_stats', { p: m.id }),
-      sb.from('roardino_posts').select('*').eq('person_id', m.id).order('pos', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false }).limit(4)]);
+      sb.from('roardino_posts').select('*').eq('person_id', m.id).neq('kind', 'photo').order('pos', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false }).limit(4)]);
     if (st) { stats.children[0].firstChild.textContent = String(st.followers); stats.children[2].firstChild.textContent = String(st.posts); }
     const pics = (ps || []).map((p) => (p.media || []).find((x) => x.type === 'image')).filter(Boolean);
     await sign(pics.map((x) => x.path));
@@ -475,6 +475,10 @@ function callsForMe(calls) {
 // write a post: words and up to 6 pictures or videos, as one of my profiles
 function composer(done) {
   let as = me().id;
+  let kind = 'work'; // Alex, 5 Nov: every upload says what it is, Work (My Work) or My photo (My Photos)
+  const kindBox = h('div');
+  const drawKind = () => put(kindBox, seg([['work', t('Work')], ['photo', t('My photo')]], kind, (k) => { kind = k; drawKind(); }));
+  drawKind();
   const files = [];
   const text = area('', { placeholder: t('What did you shoot, what are you preparing, what are you looking for?'), rows: 2 });
   const prev = h('div', { class: 'thumbs' });
@@ -489,7 +493,7 @@ function composer(done) {
     try {
       const media = [];
       for (const f of files) media.push({ path: await upload(as, f, 'posts/'), type: /^video/.test(f.type) ? 'video' : 'image' });
-      const { error } = await sb.from('roardino_posts').insert({ person_id: as, body: text.value.trim() || null, media });
+      const { error } = await sb.from('roardino_posts').insert({ person_id: as, body: text.value.trim() || null, media, kind });
       if (error) throw error;
       toast(t('Posted'));
       done();
@@ -499,7 +503,7 @@ function composer(done) {
     h('div', { class: 'c-top' }, avatar(me()), text),
     prev,
     h('div', { class: 'acts' },
-      h('button', { type: 'button', class: 'btn sm', onclick: () => pick.click() }, icon('pic'), t('Photo / video')), pick,
+      h('button', { type: 'button', class: 'btn sm', onclick: () => pick.click() }, icon('pic'), t('Photo / video')), pick, kindBox,
       mine.length > 1 ? select(mine.map((m) => [m.id, t('as {name}', { name: m.name })]), as, { style: { width: 'auto', height: '34px', padding: '0 14px' }, onchange: (e) => { as = e.target.value; } }) : null,
       h('span', { style: { flex: 1 } }), btn));
 }
@@ -721,7 +725,7 @@ async function viewPeople() {
   function draw() {
     put(sideBox, seg([['all', t('All')], ['cast', t('Cast')], ['crew', t('Crew')], ['creatives', t('Creatives')]], peopleSide, (k) => { peopleSide = k; peopleKind = ''; draw(); }));
     const kinds = KINDS.filter(([k]) => peopleSide === 'all' || SIDE[k] === SIDES[peopleSide]);
-    put(pills, kinds.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (peopleKind === k ? ' on' : ''), onclick: () => { peopleKind = peopleKind === k ? '' : k; draw(); } }, t(s))));
+    put(pills, kinds.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (peopleKind === k ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); peopleKind = peopleKind === k ? '' : k; draw(); } }, t(s))));
     const q = peopleQ.trim().toLowerCase();
     const shown = data.filter((p) => {
       const ks = p.kinds || [];
@@ -781,20 +785,23 @@ async function viewPerson(id) {
   // Instagram's profile (Alex, 4 Nov): the round picture, the name with the buttons, the numbers, the bio; then Work,
   // Photos and Details as tabs under one line
   const details = h('div', { class: 'ig-details' },
+    p.bio ? h('div', { class: 'block', style: { marginTop: 0, marginBottom: '18px' } }, h('h2', {}, t('About')), h('p', {}, p.bio)) : null,
     facts.length ? h('div', { class: 'facts' }, facts) : null,
     reel ? h('div', { class: 'block' }, h('h2', {}, p.reel ? t('Self-tape') : 'Showreel'), reel) : null,
     skillRows.length ? h('div', { class: 'block' }, h('h2', {}, t('Skills and tools')), h('div', { class: 'facts', style: { marginTop: 0 } }, skillRows.map(([k, v]) => fact(k, v)))) : null,
     (d.credits || []).length ? h('div', { class: 'block' }, h('h2', {}, t('Credits')), h('div', { class: 'credits' }, d.credits.map((c) => h('div', {}, c)))) : null,
     d.studies ? h('div', { class: 'block' }, h('h2', {}, t('Studies')), h('p', {}, d.studies)) : null,
     p.cv ? h('div', { class: 'acts' }, h('a', { class: 'btn', href: urlOf(p.cv), target: '_blank', rel: 'noopener' }, t('Open the CV'))) : null,
-    !facts.length && !reel && !skillRows.length && !(d.credits || []).length && !d.studies ? h('div', { class: 'empty' }, t('No details yet.')) : null);
-  const pics = h('div', { class: 'grid' }, photos.length ? photos.map((ph) => h('button', { type: 'button', class: 'cell', style: bg(ph), 'aria-label': t('Photo'), onclick: () => openWin(p.name, h('img', { src: urlOf(ph), alt: '', style: { width: '100%', borderRadius: '12px' } }), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) })) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No photos yet.')));
-  const work = gridBlock(p, grid || [], own);
+    !p.bio && !facts.length && !reel && !skillRows.length && !(d.credits || []).length && !d.studies ? h('div', { class: 'empty' }, t('No details yet.')) : null);
+  const photoPosts = (grid || []).filter((g) => g.kind === 'photo');
+  const pics = h('div', { class: 'grid' }, photos.length || photoPosts.length ? [...photoPosts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Photo'), onclick: () => openPost(g, p) }, m0?.type === 'video' ? h('video', { src: urlOf(m0.path) + '#t=0.5', muted: true, playsInline: true, preload: 'metadata' }) : null); }), ...photos.map((ph) => h('button', { type: 'button', class: 'cell', style: bg(ph), 'aria-label': t('Photo'), onclick: () => openWin(p.name, h('img', { src: urlOf(ph), alt: '', style: { width: '100%', borderRadius: '12px' } }), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) }))] : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No photos yet.')));
+  const work = gridBlock(p, (grid || []).filter((g) => g.kind !== 'photo'), own);
   const body = h('div');
   const tabRow = h('div', { class: 'ig-tabs' });
   let tab = 'work';
   const drawTab = () => {
-    put(tabRow, [['work', t('Work'), 'grid'], ['photos', t('Photos'), 'pic'], ['details', t('Details'), 'user']].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
+    // My Work, My Photos, My Bio on my own profile; Work, Photos, Bio on someone else's (Alex, 5 Nov)
+    put(tabRow, [['work', own ? t('My Work') : t('Work'), 'grid'], ['photos', own ? t('My Photos') : t('Photos'), 'pic'], ['details', own ? t('My Bio') : t('Bio'), 'user']].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
     put(body, tab === 'work' ? work : tab === 'photos' ? pics : details);
   };
   drawTab();
@@ -896,7 +903,7 @@ async function viewEdit(which) {
   const looks = h('div');
   const kindsBox = h('div', { class: 'pills' });
   const drawKinds = () => {
-    put(kindsBox, ...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (p.kinds.includes(k) ? ' on' : ''), onclick: () => { p.kinds = p.kinds.includes(k) ? p.kinds.filter((x) => x !== k) : [...p.kinds, k]; drawKinds(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); } }, t(s))));
+    put(kindsBox, ...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (p.kinds.includes(k) ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); p.kinds = p.kinds.includes(k) ? p.kinds.filter((x) => x !== k) : [...p.kinds, k]; drawKinds(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); } }, t(s))));
   };
   const drawGuard = () => {
     if (!isMinor()) { put(guard, ); return; }
@@ -937,7 +944,7 @@ async function viewEdit(which) {
   const L2 = d.limits || (d.limits = {});
   const limits = h('div', { class: 'pills' });
   const drawLimits = () => put(limits, ...[['unpaid', 'I also take unpaid work'], ['travel', 'I travel'], ...(PERFORMER(p.kinds) || kid ? [['swim', 'Swimwear / underwear: yes']] : [])]
-    .map(([k, s]) => h('button', { type: 'button', class: 'pill' + (L2[k] ? ' on' : ''), onclick: (e) => { L2[k] = !L2[k]; e.currentTarget.classList.toggle('on', !!L2[k]); } }, t(s))));
+    .map(([k, s]) => h('button', { type: 'button', class: 'pill' + (L2[k] ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); L2[k] = !L2[k]; e.currentTarget.classList.toggle('on', !!L2[k]); } }, t(s))));
   const picHint = h('p', { class: 'hint' });
   const drawPicHint = () => { picHint.textContent = PERFORMER(p.kinds) || kid ? t('Add a close-up of the face, a full-length, a profile and a free one, no filters. The first is the main one.') : t('The first is your profile picture. Your work goes up from the Feed.'); };
 
@@ -1076,7 +1083,7 @@ function callTile(c) {
 function editCall(old) {
   const c = structuredClone(old || { kind: 'casting', wanted: [], open: true });
   const wanted = h('div', { class: 'pills' });
-  const drawW = () => put(wanted, ...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (c.wanted.includes(k) ? ' on' : ''), onclick: () => { c.wanted = c.wanted.includes(k) ? c.wanted.filter((x) => x !== k) : [...c.wanted, k]; drawW(); } }, t(s))));
+  const drawW = () => put(wanted, ...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (c.wanted.includes(k) ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); c.wanted = c.wanted.includes(k) ? c.wanted.filter((x) => x !== k) : [...c.wanted, k]; drawW(); } }, t(s))));
   drawW();
   const bind = (key, el) => { el.addEventListener('input', () => { c[key] = el.value; }); return el; };
   const kindSeg = h('div');
@@ -1235,7 +1242,7 @@ function editSeminar(old, oldLink = '') {
   let url = oldLink || '';
   const bind = (key, el) => { el.addEventListener('input', () => { s[key] = el.value; }); return el; };
   const forK = h('div', { class: 'pills' });
-  const drawF = () => put(forK, ...FILTERS.slice(1).map(([k, x]) => h('button', { type: 'button', class: 'pill' + (s.for_kinds.includes(k) ? ' on' : ''), onclick: () => { s.for_kinds = s.for_kinds.includes(k) ? s.for_kinds.filter((y) => y !== k) : [...s.for_kinds, k]; drawF(); } }, t(x))));
+  const drawF = () => put(forK, ...FILTERS.slice(1).map(([k, x]) => h('button', { type: 'button', class: 'pill' + (s.for_kinds.includes(k) ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); s.for_kinds = s.for_kinds.includes(k) ? s.for_kinds.filter((y) => y !== k) : [...s.for_kinds, k]; drawF(); } }, t(x))));
   drawF();
   const kindSeg = h('div');
   const drawK = () => put(kindSeg, seg([['online', t('Online')], ['live', t('In person')]], s.kind, (k) => { s.kind = k; drawK(); }));

@@ -231,6 +231,7 @@ img{display:block;max-width:100%}
 .compose .c-top{display:flex;gap:11px;align-items:flex-start}
 .compose .textarea{min-height:48px;border-radius:12px}
 .compose .acts{margin-top:0;align-items:center}
+.compose .seg button{padding:6px 12px;font-size:11px}
 .in-win .post{box-shadow:none;border:0;background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none}
 
 /* Instagram's post (Alex, 4 Nov: "more Instagram") */

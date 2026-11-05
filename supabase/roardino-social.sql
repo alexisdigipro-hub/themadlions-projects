@@ -414,3 +414,9 @@ create policy rd_stories_add on roardino_stories for insert to authenticated wit
   and exists (select 1 from roardino_people p where p.id = person_id and p.owner = auth.uid()));
 drop policy if exists rd_stories_delete on roardino_stories;
 create policy rd_stories_delete on roardino_stories for delete to authenticated using (owner = auth.uid() or roar_is_admin());
+
+-- what a post is (Alex, 5 Nov: "My Work, My Photos, My Bio"): work goes to My Work, a personal photo to My Photos
+alter table roardino_posts add column if not exists kind text not null default 'work';
+do $$ begin
+  alter table roardino_posts add constraint roardino_posts_kind check (kind in ('work', 'photo'));
+exception when duplicate_object then null; end $$;
