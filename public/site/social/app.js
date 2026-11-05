@@ -342,12 +342,15 @@ const vidPlay = 'IntersectionObserver' in window ? new IntersectionObserver((lis
   if (en.intersectionRatio >= 0.6 && !v.dataset.held) { document.querySelectorAll('video.fv').forEach((o) => { if (o !== v && !o.paused) o.pause(); }); v.play().catch(() => {}); }
   else if (!v.paused) v.pause();
 }), { threshold: [0, 0.6] }) : null;
-function feedVideo(src) {
-  const v = h('video', { class: 'fv', playsInline: true, preload: 'none', muted: prefs.mutedVideos, loop: true });
+function feedVideo(src, poster) {
+  const v = h('video', { class: 'fv', playsInline: true, preload: 'none', muted: prefs.mutedVideos, loop: true, poster: poster || null });
   if (vidNear && vidPlay) { v.dataset.src = src; vidNear.observe(v); vidPlay.observe(v); } else v.src = src;
   return v;
 }
-function cellVideo(src) {
+function cellVideo(m) {
+  // the cover chosen at upload (Alex, 5 Nov) shows as the cell; without one, a frame of the video
+  if (m?.poster && urlOf(m.poster)) return h('img', { class: 'cell-poster', src: urlOf(m.poster), alt: '', loading: 'lazy', decoding: 'async' });
+  const src = urlOf(m?.path);
   const v = h('video', { muted: true, playsInline: true, preload: 'none' });
   if (vidNear) { v.dataset.src = src + '#t=0.5'; vidNear.observe(v); } else { v.src = src + '#t=0.5'; v.preload = 'metadata'; }
   return v;
@@ -498,6 +501,54 @@ function cropImage(file, shapes = SHAPES.post) {
       requestAnimationFrame(fit);
     };
     img.src = url;
+  });
+}
+/* the cover of a video (Alex, 5 Nov: "when we upload a video, we choose its thumbnail, and it shows on our profile"):
+   the video in a glass window, a slider to find the frame, Use this frame; or a picture of one's own. Gives back a JPEG
+   File, or null when cancelled. Works on a file being uploaded and on a video already up (its signed link) */
+function coverPicker(src, start = 0) {
+  return new Promise((done) => {
+    let answered = false, own = null;
+    const local = src instanceof Blob;
+    const url = local ? URL.createObjectURL(src) : src;
+    const v = h('video', { class: 'cv-video', muted: true, playsInline: true, preload: 'auto', crossOrigin: local ? null : 'anonymous' });
+    const ownPic = h('img', { class: 'cv-own hidden', alt: '' });
+    const bar = h('input', { type: 'range', class: 'crop-zoom cv-bar', min: '0', max: '1', step: '0.01', value: '0', 'aria-label': t('Frame') });
+    const finish = (f) => { if (answered) return; answered = true; if (local) URL.revokeObjectURL(url); done(f); };
+    v.addEventListener('loadedmetadata', () => {
+      bar.max = String(v.duration || 1); bar.step = String(Math.max(0.03, (v.duration || 1) / 300));
+      const at = Math.min(start || Math.min(1, (v.duration || 1) / 3), v.duration || 0); v.currentTime = at; bar.value = String(at);
+    });
+    // an iPhone shows frames only after a play: a short silent play and pause wakes it
+    v.addEventListener('loadeddata', () => { v.play().then(() => v.pause()).catch(() => {}); }, { once: true });
+    bar.oninput = () => { own = null; ownPic.classList.add('hidden'); v.classList.remove('hidden'); v.currentTime = +bar.value; };
+    // a picture of one's own goes through the picture editor first: zoom, move, scale, in the video's own shape
+    // (Alex, 5 Nov: "change it or upload a photo, with scale, reposition and zoom")
+    const pick = h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async (e) => {
+      const f0 = e.target.files[0]; e.target.value = ''; if (!f0) return;
+      const r0 = v.videoWidth && v.videoHeight ? v.videoWidth / v.videoHeight : 9 / 16;
+      const f = await cropImage(f0, [[t('Video'), r0], ['4:5', 4 / 5], ['1:1', 1]]);
+      if (!f) return;
+      own = f; ownPic.src = URL.createObjectURL(f); ownPic.classList.remove('hidden'); v.classList.add('hidden');
+    } });
+    const grab = () => new Promise((res) => {
+      if (own) return res(own);
+      const k = Math.min(1, 1080 / Math.max(v.videoWidth || 1, v.videoHeight || 1));
+      const c = document.createElement('canvas'); c.width = Math.round((v.videoWidth || 720) * k); c.height = Math.round((v.videoHeight || 1280) * k);
+      try { c.getContext('2d').drawImage(v, 0, 0, c.width, c.height); c.toBlob((b) => res(b ? new File([b], 'cover.jpg', { type: 'image/jpeg' }) : null), 'image/jpeg', 0.85); } catch { res(null); }
+    });
+    const close = openWin(t('Choose the cover'), h('div', { class: 'cv' },
+      h('div', { class: 'cv-stage' }, v, ownPic),
+      bar,
+      h('p', { class: 'hint', style: { textAlign: 'center' } }, t('Slide to the frame you want, or use a picture of your own.')),
+      h('div', { class: 'cv-acts' }, h('button', { type: 'button', class: 'btn sm', onclick: () => pick.click() }, icon('pic'), t('Use a picture')), pick)),
+    (c) => [h('button', { type: 'button', class: 'btn', onclick: () => { c(); finish(null); } }, t('Cancel')),
+      h('button', { type: 'button', class: 'btn main', onclick: async () => { const f = await grab(); if (!f) { toast(t('This frame could not be taken. Try a picture of your own.')); return; } c(); finish(f); } }, t('Use this cover'))]);
+    const veil = document.querySelector('.veil:last-of-type');
+    veil?.classList.add('cover-veil');
+    new MutationObserver((_, o) => { if (veil && !veil.isConnected) { o.disconnect(); finish(null); } }).observe(document.body, { childList: true });
+    v.src = url;
+    void close;
   });
 }
 // several pictures one after the other through the editor; videos and what cannot be drawn pass as they are
@@ -1126,9 +1177,15 @@ function composer(done, kind0 = 'work', asId = null) {
   const files = [];
   const text = area('', { placeholder: t('What did you shoot, what are you preparing, what are you looking for? Tag people with @'), rows: 2 });
   const prev = h('div', { class: 'thumbs' });
-  const pick = h('input', { type: 'file', accept: 'image/*,video/*', multiple: true, hidden: true, onchange: async (e) => { const list = [...e.target.files].slice(0, 6 - files.length); e.target.value = ''; for (const f of await cropAll(list, SHAPES.post)) files.push(f); draw(); } });
-  const draw = () => put(prev, ...files.map((f, i) => h('div', { class: 'thumb', style: /^image/.test(f.type) ? { backgroundImage: `url("${URL.createObjectURL(f)}")` } : {} },
-    /^video/.test(f.type) ? h('span', { class: 'star' }, t('Video')) : null,
+  const pick = h('input', { type: 'file', accept: 'image/*,video/*', multiple: true, hidden: true, onchange: async (e) => {
+    const list = [...e.target.files].slice(0, 6 - files.length); e.target.value = '';
+    for (const f of await cropAll(list, SHAPES.post)) { if (/^video\//.test(f.type)) f._cover = await coverPicker(f); files.push(f); }
+    draw();
+  } });
+  // a video shows its cover; a tap on it chooses again (Alex, 5 Nov)
+  const draw = () => put(prev, ...files.map((f, i) => h('div', { class: 'thumb' + (/^video/.test(f.type) ? ' vthumb' : ''), style: /^image/.test(f.type) ? { backgroundImage: `url("${URL.createObjectURL(f)}")` } : f._cover ? { backgroundImage: `url("${URL.createObjectURL(f._cover)}")` } : {},
+    onclick: /^video/.test(f.type) ? async (e) => { if (e.target.closest('.x')) return; const c2 = await coverPicker(f); if (c2) { f._cover = c2; draw(); } } : null },
+    /^video/.test(f.type) ? h('span', { class: 'star' }, f._cover ? t('Cover') : t('Choose cover')) : null,
     h('button', { type: 'button', class: 'x', html: ICON.x, 'aria-label': t('Remove'), onclick: () => { files.splice(i, 1); draw(); } }))));
   const postFace = () => [icon('send'), h('span', { class: 'lbl' }, t('Post'))];
   const btn = h('button', { type: 'button', class: 'btn main c-post', title: t('Post'), 'aria-label': t('Post'), onclick: send }, ...postFace());
@@ -1137,7 +1194,7 @@ function composer(done, kind0 = 'work', asId = null) {
     btn.disabled = true; btn.classList.add('busy'); btn.textContent = t('Uploading…');
     try {
       const media = [];
-      for (const f of files) media.push({ path: await upload(as, f, 'posts/'), type: /^video/.test(f.type) ? 'video' : 'image', ...(await dimsOf(f)) });
+      for (const f of files) media.push({ path: await upload(as, f, 'posts/'), type: /^video/.test(f.type) ? 'video' : 'image', ...(await dimsOf(f)), ...(f._cover ? { poster: await upload(as, f._cover, 'posts/') } : {}) });
       const { error } = await sb.from('roardino_posts').insert({ person_id: as, body: text.value.trim() || null, media, kind });
       if (error) throw error;
       toast(t('Posted'));
@@ -1182,7 +1239,7 @@ async function posts(rows, refresh) {
   const bravos = {}, mineB = new Set(), comments = {};
   (b.data || []).forEach((x) => { bravos[x.post_id] = (bravos[x.post_id] || 0) + 1; if (x.user_id === session.user.id) mineB.add(x.post_id); });
   (c.data || []).forEach((x) => { comments[x.post_id] = (comments[x.post_id] || 0) + 1; });
-  await sign(rows.flatMap((r) => [r.person?.avatar, ...(r.media || []).map((m) => m.path)]));
+  await sign(rows.flatMap((r) => [r.person?.avatar, ...(r.media || []).flatMap((m) => [m.path, m.poster])]));
   return rows.map((r) => postCard(r, { bravos: bravos[r.id] || 0, mine: mineB.has(r.id), comments: comments[r.id] || 0 }, refresh));
 }
 // a post as Instagram shows one (Alex, 4 Nov: "more Instagram"): who, the picture edge to edge (swipe when there are
@@ -1290,7 +1347,7 @@ function lightbox(media, start = 0) {
   const count = h('span', { class: 'lb-count' });
   const show = () => {
     const m = media[i];
-    put(stage, m.type === 'video' ? h('video', { src: urlOf(m.path), controls: true, autoplay: true, playsInline: true }) : h('img', { src: urlOf(m.path), alt: '' }));
+    put(stage, m.type === 'video' ? h('video', { src: urlOf(m.path), poster: urlOf(m.poster) || null, controls: true, autoplay: true, playsInline: true }) : h('img', { src: urlOf(m.path), alt: '' }));
     count.textContent = media.length > 1 ? `${i + 1} / ${media.length}` : '';
   };
   const go = (d) => { i = (i + d + media.length) % media.length; show(); };
@@ -1329,12 +1386,25 @@ function postMenu(r, p, { own, media, refresh, saveBtn }) {
       h('button', { type: 'button', class: 'pm-tile', onclick: () => { close(); toggleSave(r.id, saveBtn); } }, h('span', { class: 'pm-ic', html: ICON.bookmark }), isSaved ? t('Saved') : t('Save')),
       h('button', { type: 'button', class: 'pm-tile', onclick: async () => { close(); const url = `${location.origin}${location.pathname}#/p/${p.id}`; try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ } } }, h('span', { class: 'pm-ic', html: ICON.send }), t('Share'))),
     own ? h('div', { class: 'pm-group' },
+      media[0]?.type === 'video' ? row('pic', t('Change cover'), async () => {
+        const f = await coverPicker(urlOf(media[0].path));
+        if (!f) return;
+        try {
+          const poster = await upload(r.person_id || p.id, f, 'posts/');
+          const old = media[0].poster;
+          const next = (r.media || media).map((x, k) => (k ? x : { ...x, poster }));
+          const { error } = await sb.from('roardino_posts').update({ media: next }).eq('id', r.id);
+          if (error) throw error;
+          if (old) removeFiles([old]);
+          toast(t('Cover changed')); refresh?.();
+        } catch (e) { fail(e); }
+      }) : null,
       row('edit', t('Edit profile'), () => { location.hash = `#/edit/${p.id}`; }),
       row('trash', t('Delete post'), async () => {
         if (!(await ask(t('Delete this post?')))) return;
         const { error } = await sb.from('roardino_posts').delete().eq('id', r.id);
         if (error) return fail(error);
-        removeFiles(media.map((m) => m.path)); refresh();
+        removeFiles(media.flatMap((m) => [m.path, m.poster])); refresh();
       }, 'red'))
       : [h('div', { class: 'pm-group' },
         follows.has(p.id) ? row('unfollow', t('Unfollow'), () => toggleFollow(p.id).then((ok) => ok && refresh?.())) : row('follow', t('Follow'), () => toggleFollow(p.id).then((ok) => ok && refresh?.()))),
@@ -1404,7 +1474,7 @@ function postCard(r, st, refresh) {
     try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ }
   };
   const slides = media.length ? h('div', { class: 'ig-media' + (media.length > 1 ? ' many' : '') }, media.map((m) => (m.type === 'video'
-    ? (isPhone() ? feedVideo(urlOf(m.path)) : h('video', { src: urlOf(m.path), playsInline: true, preload: 'metadata', muted: prefs.mutedVideos, loop: true }))
+    ? (isPhone() ? feedVideo(urlOf(m.path), urlOf(m.poster)) : h('video', { src: urlOf(m.path), poster: urlOf(m.poster) || null, playsInline: true, preload: 'metadata', muted: prefs.mutedVideos, loop: true }))
     : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', decoding: 'async', ondblclick: (e) => { if (!st.mine) bravoBtn.click(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); e.target.parentElement.parentElement.append(hh); setTimeout(() => hh.remove(), 900); } })))) : null;
   // a video in its own shape, the width fixed and the height its own (Alex, 5 Nov: "the pictures were fine, only the
   // videos keep their aspect ratio"): the size kept at upload, else the video's own once it loads; pictures stay 4:5
@@ -1850,7 +1920,7 @@ async function viewSearch() {
   if (searchScope === 'posts') {
     const { data } = await sb.from('roardino_posts').select('*, person:roardino_people(id,name,handle,avatar,kinds,headline,city)').order('created_at', { ascending: false }).limit(300);
     const rows = (data || []).map((r) => ({ r, k: ' ' + fold([r.body, r.person?.name, r.person?.handle, r.person?.city, ...(r.person?.kinds || []).flatMap((k) => [KIND[k], KIND_EL[k]])].join(' ')) + ' ' }));
-    await sign(rows.flatMap(({ r }) => [(r.media || [])[0]?.path, r.person?.avatar]));
+    await sign(rows.flatMap(({ r }) => [(r.media || [])[0]?.path, (r.media || [])[0]?.poster, r.person?.avatar]));
     let kind = '';
     draw = () => {
       put(chips, h('div', { class: 'fbody' }, [['', t('All')], ['work', t('Work')], ['photo', t('Photos')], ['video', t('Videos')]].map(([k, l]) => h('button', { type: 'button', class: 'fchip' + (kind === k ? ' on' : ''), onclick: () => { kind = k; draw(); } }, l))));
@@ -1858,7 +1928,7 @@ async function viewSearch() {
       const shown = rows.filter(({ r, k }) => (!q || matches(k, q)) && (!kind || (kind === 'video' ? (r.media || []).some((m) => m.type === 'video') : (r.kind || 'work') === kind))).map(({ r }) => r);
       count.textContent = shown.length === 1 ? t('1 post') : t('{n} posts', { n: shown.length });
       put(box, shown.length ? shown.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Post'), onclick: () => openPost(g, g.person) },
-        m0?.type === 'video' ? [cellVideo(urlOf(m0.path)), h('span', { class: 'play', html: ICON.play })] : !m0 ? h('span', { class: 'cell-text' }, (g.body || '').slice(0, 90)) : null); })
+        m0?.type === 'video' ? [cellVideo(m0), h('span', { class: 'play', html: ICON.play })] : !m0 ? h('span', { class: 'cell-text' }, (g.body || '').slice(0, 90)) : null); })
         : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nothing found')), t('Try other words, in Greek or English.')));
     };
   } else {
@@ -1968,8 +2038,8 @@ function savedGrid() {
   (async () => {
     const { data } = await sb.from('roardino_saves').select('created_at, post:roardino_posts(*, person:roardino_people(id,name,avatar,kinds,headline))').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(120);
     const posts = (data || []).map((x) => x.post).filter(Boolean);
-    await sign(posts.flatMap((g) => [(g.media || [])[0]?.path, g.person?.avatar]));
-    put(box, posts.length ? posts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Post'), onclick: () => openPost(g, g.person) }, m0?.type === 'video' ? cellVideo(urlOf(m0.path)) : !m0 ? h('span', { class: 'cell-text' }, (g.body || '').slice(0, 90)) : null); })
+    await sign(posts.flatMap((g) => [(g.media || [])[0]?.path, (g.media || [])[0]?.poster, g.person?.avatar]));
+    put(box, posts.length ? posts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Post'), onclick: () => openPost(g, g.person) }, m0?.type === 'video' ? cellVideo(m0) : !m0 ? h('span', { class: 'cell-text' }, (g.body || '').slice(0, 90)) : null); })
       : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nothing saved yet')), t('Tap the bookmark under a post to keep it here. Only you see it.')));
   })();
   return box;
@@ -1987,7 +2057,7 @@ async function viewPerson(id) {
     sb.from('roardino_posts').select('*').eq('person_id', id).order('pos', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false }).limit(120),
     sb.from('roardino_contacts').select('email,phone').eq('person_id', id).maybeSingle(),
     loadStories(id)]);
-  await sign([p.avatar, p.data?.cover, ...photos, p.reel, p.cv, ...(grid || []).flatMap((g) => (g.media || []).slice(0, 1).map((m) => m.path))]);
+  await sign([p.avatar, p.data?.cover, ...photos, p.reel, p.cv, ...(grid || []).flatMap((g) => (g.media || []).slice(0, 1).flatMap((m) => [m.path, m.poster]))]);
   const d = p.data || {};
   const L = d.looks || {}, S = d.skills || {}, C = d.contact || {};
   const a = age(p.birth);
@@ -2022,7 +2092,7 @@ async function viewPerson(id) {
     p.cv ? h('div', { class: 'acts' }, h('a', { class: 'btn', href: urlOf(p.cv), target: '_blank', rel: 'noopener' }, t('Open the CV'))) : null,
     !p.bio && !facts.length && !reel && !skillRows.length && !(d.credits || []).length && !d.studies ? h('div', { class: 'empty' }, t('No details yet.')) : null);
   const photoPosts = (grid || []).filter((g) => g.kind === 'photo');
-  const pics = h('div', { class: 'grid' }, photos.length || photoPosts.length ? [...photoPosts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Photo'), onclick: () => openPost(g, p) }, m0?.type === 'video' ? cellVideo(urlOf(m0.path)) : null); }), ...photos.map((ph) => h('button', { type: 'button', class: 'cell', style: bg(ph), 'aria-label': t('Photo'), onclick: () => openWin(p.name, h('img', { src: urlOf(ph), alt: '', style: { width: '100%', borderRadius: '12px' } }), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) }))] : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No photos yet.')));
+  const pics = h('div', { class: 'grid' }, photos.length || photoPosts.length ? [...photoPosts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Photo'), onclick: () => openPost(g, p) }, m0?.type === 'video' ? cellVideo(m0) : null); }), ...photos.map((ph) => h('button', { type: 'button', class: 'cell', style: bg(ph), 'aria-label': t('Photo'), onclick: () => openWin(p.name, h('img', { src: urlOf(ph), alt: '', style: { width: '100%', borderRadius: '12px' } }), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) }))] : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No photos yet.')));
   const work = gridBlock(p, (grid || []).filter((g) => g.kind !== 'photo'), own);
   const body = h('div');
   const tabRow = h('div', { class: 'ig-tabs' });
@@ -2114,7 +2184,7 @@ function gridBlock(p, rows, own) {
       return h(editing ? 'div' : 'button', { type: editing ? null : 'button', class: 'cell', draggable: editing ? 'true' : null, style: m && m.type === 'image' ? bg(m.path) : {},
         onclick: editing ? null : () => openPost(r, p),
         ondragstart: () => { drag = i; }, ondragover: (e) => e.preventDefault(), ondrop: (e) => { e.preventDefault(); if (drag != null) move(drag, i); drag = null; } },
-        m?.type === 'video' ? cellVideo(urlOf(m.path)) : null,
+        m?.type === 'video' ? cellVideo(m) : null,
         m?.type === 'video' ? h('span', { class: 'play', html: ICON.play }) : null,
         !m ? h('p', {}, (r.body || '').slice(0, 140)) : null,
         editing ? h('span', { class: 'cell-move' },
@@ -2495,7 +2565,7 @@ async function loadNotes() {
     sb.rpc('roardino_chat_unread')]);
   notes = ns || [];
   chatUnread = cu || [];
-  await sign([...notes.flatMap((n) => [n.who?.avatar, (n.post?.media || [])[0]?.path]), ...chatUnread.map((c) => c.avatar)]);
+  await sign([...notes.flatMap((n) => [n.who?.avatar, (n.post?.media || [])[0]?.path, (n.post?.media || [])[0]?.poster]), ...chatUnread.map((c) => c.avatar)]);
   drawBadges();
 }
 function startNotes() {
