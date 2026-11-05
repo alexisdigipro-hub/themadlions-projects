@@ -764,3 +764,10 @@ html[data-theme=dark] .note:hover{background:rgba(255,255,255,.05)}
 
 /* my profile: each tab's own action (Add work, Add photo, Edit bio) */
 .tab-act{display:flex;justify-content:center;margin:-2px 0 14px}
+
+/* hide the stories row */
+.stories{position:relative}
+.st-hide{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:9px;border:0;background:transparent;color:var(--muted);display:grid;place-items:center;opacity:.55;transition:opacity .2s,background .2s;z-index:2}
+.st-hide svg{width:17px;height:17px}
+.st-hide:hover{opacity:1;background:rgba(28,35,51,.06)}
+html[data-theme=dark] .st-hide:hover{background:rgba(255,255,255,.06)}

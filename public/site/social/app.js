@@ -26,7 +26,7 @@ const LOCALE = () => (LANG === 'el' ? 'el-GR' : 'en-GB');
 
 /* ---------- settings kept on this device (Alex, 5 Nov) ---------- */
 const PREFS_KEY = 'roardino-prefs';
-const PREF_DEFAULTS = { theme: 'auto', text: 'normal', feedCalls: true, mutedVideos: true };
+const PREF_DEFAULTS = { theme: 'auto', text: 'normal', feedCalls: true, mutedVideos: true, showStories: true };
 let prefs = { ...PREF_DEFAULTS };
 try { prefs = { ...PREF_DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; } catch { /* private window */ }
 const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -129,6 +129,7 @@ const ICON = {
   cam: SVG('<path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/>'),
   flip: SVG('<path d="M20 7h-9a5 5 0 0 0 0 10h4"/><path d="m16 3 4 4-4 4"/><path d="M4 17h1"/>'),
   bell: SVG('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>'),
+  eyeoff: SVG('<path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.3 4.2M6.2 6.2A17.4 17.4 0 0 0 2 12s4 7 10 7a9.7 9.7 0 0 0 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>'),
   child: SVG('<circle cx="12" cy="7" r="3"/><path d="M7 21v-5a5 5 0 0 1 10 0v5"/>'),
 };
 const icon = (n) => h('span', { html: ICON[n], style: { display: 'inline-flex' } });
@@ -435,7 +436,14 @@ async function roarAccount(say) {
 /* =====================================================================================================================
    Home: my card, the feed, what is coming
    ===================================================================================================================== */
-let feedOnly = 'all';
+// Everyone or Following, remembered by the account (Alex, 5 Nov): kept in the Roar Account's own data, so every
+// device opens the feed the way it was left; this device's copy answers at once
+let feedOnly = (() => { try { return localStorage.getItem('roardino-feed') || 'all'; } catch { return 'all'; } })();
+function setFeedOnly(k) {
+  feedOnly = k;
+  try { localStorage.setItem('roardino-feed', k); } catch { /* private window */ }
+  if (session?.user?.user_metadata?.roardino_feed !== k) sb.auth.updateUser?.({ data: { roardino_feed: k } }).then(({ data }) => { if (data?.user) session.user = data.user; }).catch(() => {});
+}
 async function viewFeed() {
   document.title = 'Roardino';
   const left = h('aside', { class: 'side left' }, meCard(), me() ? null : meTiles());
@@ -467,7 +475,7 @@ async function viewFeed() {
   put(mid, 
     storiesCard(stories, others),
     // the composer waits behind New post, on the line of Everyone / Following (Alex, 5 Nov), and opens as a glass window
-    h('div', { class: 'head feed-head' }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { feedOnly = k; viewFeed(); }), h('span', { class: 'grow' }),
+    h('div', { class: 'head feed-head' }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { setFeedOnly(k); viewFeed(); }), h('span', { class: 'grow' }),
       mine.length ? h('button', { type: 'button', class: 'btn main new-post', onclick: () => composeWin('work') }, icon('plus'), t('New post')) : null),
     ...stream);
 }
@@ -694,7 +702,13 @@ async function loadStories(personId) {
   const unseen = (g) => g.items.some((x) => !seenStories.has(x.id));
   return groups.sort((a, b) => (isMine(b) - isMine(a)) || (unseen(b) - unseen(a)) || (new Date(b.items.at(-1).created_at) - new Date(a.items.at(-1).created_at)));
 }
+// stories can be hidden (Alex, 5 Nov), kept by the account like the feed's choice
+function setShowStories(v) {
+  setPref('showStories', v);
+  if (session?.user?.user_metadata?.roardino_stories !== v) sb.auth.updateUser?.({ data: { roardino_stories: v } }).then(({ data }) => { if (data?.user) session.user = data.user; }).catch(() => {});
+}
 function storiesCard(groups, others) {
+  if (!prefs.showStories) return null;
   const m = me();
   const myGroup = m && groups.find((g) => g.person.id === m.id);
   const rest = groups.filter((g) => g !== myGroup);
@@ -702,6 +716,7 @@ function storiesCard(groups, others) {
   const ringOf = (g) => (g.items.some((x) => !seenStories.has(x.id)) ? 'r' : 'r seen');
   const face = (p, cls) => h('span', { class: cls }, h('i', { style: bg(p.avatar) }, urlOf(p.avatar) ? '' : initials(p.name)));
   return h('section', { class: 'card stories' },
+    h('button', { type: 'button', class: 'st-hide', title: t('Hide stories'), 'aria-label': t('Hide stories'), html: ICON.eyeoff, onclick: () => { setShowStories(false); toast(t('Stories hidden. Turn them on again in Settings.')); viewFeed(); } }),
     h('div', { class: 'ring-row' },
       m ? h('div', { class: 'ring me', role: 'button', tabIndex: 0, onclick: () => (myGroup ? openStories([myGroup, ...rest], 0) : storySource(pick)) },
         face(m, myGroup ? ringOf(myGroup) : 'r plain'),
@@ -1439,6 +1454,7 @@ function viewSettings() {
     h('section', { class: 'sec' }, h('h2', {}, t('Feed')),
       row(t('Calls in the feed'), t('Open calls show between the posts.'), toggle('feedCalls')),
       row(t('Videos start muted'), null, toggle('mutedVideos')),
+      row(t('Stories'), t('Show the stories row on top of the feed.'), h('input', { type: 'checkbox', class: 'switch', checked: !!prefs.showStories, onchange: (e) => setShowStories(e.target.checked) })),
       row(t('Stories you have seen'), t('Seen stories turn grey on this device.'), h('button', { type: 'button', class: 'btn sm', onclick: () => { seenStories = new Set(); try { localStorage.removeItem('roardino-seen'); } catch { /* none */ } toast(t('All stories show as new again')); } }, t('Reset')))),
     h('section', { class: 'sec' }, h('h2', {}, t('Privacy')),
       row(t('Who sees my profile, email and phone'), t('Set it in your profile, under Contact and Settings.'), me() ? h('a', { class: 'btn sm', href: `#/edit/${me().id}` }, t('Edit profile')) : h('a', { class: 'btn sm', href: '#/edit/new' }, t('Create your profile'))),
@@ -1586,6 +1602,10 @@ let started = false;
 async function enter(s) {
   session = s;
   if (!s) { mine = []; isAdmin = false; stopNotes(); return route(); }
+  const savedStories = s.user?.user_metadata?.roardino_stories;
+  if (typeof savedStories === 'boolean' && savedStories !== prefs.showStories) setPref('showStories', savedStories);
+  const savedFeed = s.user?.user_metadata?.roardino_feed;
+  if (savedFeed === 'all' || savedFeed === 'follow') { feedOnly = savedFeed; try { localStorage.setItem('roardino-feed', savedFeed); } catch { /* private */ } }
   try {
     await loadMine();
     const { data } = await sb.rpc('roar_is_admin');
