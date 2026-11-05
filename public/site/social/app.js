@@ -158,6 +158,12 @@ const ICON = {
   star: SVG('<path d="m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>'),
   edit: SVG('<path d="M4 20h4L19 9l-4-4L4 16z"/>'),
   out: SVG('<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l5-5-5-5M15 12H3"/>'),
+  sliders: SVG('<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>'),
+  mail: SVG('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/>'),
+  phone: SVG('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>'),
+  insta: SVG('<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor"/>'),
+  globe: SVG('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),
+  ticket: SVG('<path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4z"/><path d="M14 6v12" stroke-dasharray="2 2"/>'),
   send: SVG('<path d="M22 3 11 14"/><path d="M22 3 15 21l-4-7-7-4z"/>'),
   grid: SVG('<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'),
   gear: SVG('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
@@ -406,7 +412,7 @@ function topBar(on) {
     h('hr'),
     h('button', { type: 'button', onclick: () => sb.auth.signOut() }, icon('out'), t('Sign out')));
   const toggle = (e) => { e.stopPropagation(); fill(); menu.classList.toggle('hidden'); if (!menu.classList.contains('hidden')) setTimeout(() => document.addEventListener('click', () => menu.classList.add('hidden'), { once: true })); };
-  const find = h('input', { type: 'search', placeholder: t('Search cast, crew & creatives'), 'aria-label': t('Search cast, crew & creatives'), value: on === 'people' ? peopleQ : '', onkeydown: (e) => { if (e.key === 'Enter') { peopleQ = e.target.value; if (location.hash === '#/people') viewPeople(); else location.hash = '#/people'; } } });
+  const find = h('input', { type: 'search', placeholder: t('Search cast, crew & creatives'), 'aria-label': t('Search cast, crew & creatives'), value: on === 'people' ? peopleQ : '', oninput: (e) => { if (location.hash === '#/people') { peopleQ = e.target.value; peopleRedraw?.(); } }, onkeydown: (e) => { if (e.key === 'Enter') { peopleQ = e.target.value; if (location.hash === '#/people') peopleRedraw?.(); else location.hash = '#/people'; } } });
   return h('header', { class: 'bar' }, h('div', { class: 'bar-in' },
     h('a', { href: '#/feed', class: 'brand', 'aria-label': 'Roardino' }, mark()),
     // the menu in words, a glass capsule with the gliding lens, as Qubi's (Alex, 5 Nov); the search takes the rest
@@ -665,18 +671,22 @@ async function setCover(p, file) {
 }
 // my things as small glass tiles under my card (Alex, 5 Nov: the name menu and light / dark move here from the top bar)
 function meTiles() {
+  // one row of round glass icons; the word shows in a small glass label on hover (Alex, 5 Nov: "only the icons, one row")
   const m = me();
   const dark = () => document.documentElement.dataset.theme === 'dark';
-  const themeTile = h('button', { type: 'button', class: 'btn main mt' }, h('span', { html: dark() ? ICON.sun : ICON.moon }), dark() ? t('Light') : t('Dark'));
-  themeTile.onclick = () => { setPref('theme', dark() ? 'light' : 'dark'); put(themeTile, h('span', { html: dark() ? ICON.sun : ICON.moon }), dark() ? t('Light') : t('Dark')); };
-  const tile = (href, ic, label) => h('a', { class: 'btn main mt', href }, h('span', { html: ICON[ic] }), label);
+  const inner = (ic, label) => [h('span', { class: 'ic', html: ICON[ic] }), h('span', { class: 'tip' }, label)];
+  const themeTile = h('button', { type: 'button', class: 'btn main mt' });
+  const drawTheme = () => { const l = dark() ? t('Light') : t('Dark'); themeTile.setAttribute('aria-label', l); put(themeTile, ...inner(dark() ? 'sun' : 'moon', l)); };
+  themeTile.onclick = () => { setPref('theme', dark() ? 'light' : 'dark'); drawTheme(); };
+  drawTheme();
+  const tile = (href, ic, label) => h('a', { class: 'btn main mt', href, 'aria-label': label }, ...inner(ic, label));
   return h('section', { class: 'card me-tiles' },
-    m ? tile(`#/edit/${m.id}`, 'edit', t('Edit')) : tile('#/edit/new', 'plus', t('Profile')),
+    m ? tile(`#/edit/${m.id}`, 'edit', t('Edit profile')) : tile('#/edit/new', 'plus', t('Create profile')),
     themeTile,
     tile('#/settings', 'gear', t('Settings')),
     tile('#/me', 'star', t('Applications')),
     tile('#/edit/kid', 'child', t('My child')),
-    h('button', { type: 'button', class: 'btn main mt out', onclick: () => sb.auth.signOut() }, h('span', { html: ICON.out }), t('Sign out')));
+    h('button', { type: 'button', class: 'btn main mt out', 'aria-label': t('Sign out'), onclick: () => sb.auth.signOut() }, ...inner('out', t('Sign out'))));
 }
 
 // the week, with dots for seminars and calls that close, and what comes next
@@ -1035,32 +1045,91 @@ function openStories(groups, gi) {
 // stage, Crew who makes the film, Creatives around it (photo, styling, make-up, art, VFX, writing, choreography);
 // under the pick, the kinds of that side
 let peopleSide = 'all', peopleKind = '', peopleQ = '';
+let peopleKinds = new Set(); // the specialties picked, more than one at a time
+let castF = { from: '', to: '', hFrom: '', hTo: '', gender: '', cities: new Set(), hair: new Set(), eyes: new Set() };
+let castOpen = !matchMedia('(max-width:820px)').matches; // the cast filters start folded on a phone
+let peopleRedraw = null; // the top bar's search filters the Industry page as you type
 const sideOf = (k) => (k === 'theatre' ? 'front' : SIDE[k]);
 const SIDES = { cast: 'front', crew: 'back', creatives: 'creative' };
+const SIDE_NAME = { front: 'Cast', back: 'Crew', creative: 'Creatives' };
+// whoever stands in front (actor, model, dancer, extra, singer) gets the cast filters (Alex, 5 Nov)
+const CAST_KINDS = KINDS.filter((k) => k[2] === 'front').map((k) => k[0]);
+// hair and eyes are written freely, so each choice is a set of words in English and Greek
+const HAIRS = [['blonde', 'Blonde', 'blond blonde ξανθ'], ['brown', 'Brown', 'brown καστ chestnut'], ['black', 'Black', 'black μαυρ dark σκουρ'], ['red', 'Red', 'red ginger κοκκιν πυρρ'], ['grey', 'Grey', 'grey gray γκρι ασπρ white silver']];
+const EYES = [['brown', 'Brown', 'brown καστ'], ['blue', 'Blue', 'blue γαλαν μπλε'], ['green', 'Green', 'green πρασ'], ['hazel', 'Hazel', 'hazel μελ honey'], ['black', 'Black', 'black μαυρ dark']];
+const hasWord = (text, words) => { const f = ' ' + fold(text) + ' '; return words.split(' ').some((w) => f.includes(' ' + fold(w))); };
+const cityKey = (c) => { const f = fold(c); return f === 'athens' ? 'athina' : f === 'salonika' ? 'thessaloniki' : f === 'patras' ? 'patra' : f; };
 async function viewPeople() {
   document.title = 'Roardino · ' + t('Industry');
   const grid = h('div', { class: 'faces' }, h('p', { class: 'wait' }, t('Loading…')));
-  const sideBox = h('div');
-  const pills = h('div', { class: 'pills' });
-  const search = input(peopleQ, { type: 'search', class: 'input search', placeholder: t('Name, city, what they do (Greek or English)'), 'aria-label': t('Search cast & crew'), oninput: (e) => { peopleQ = e.target.value; draw(); } });
-  frame('people', h('div', { class: 'head' }, h('h1', {}, t('Industry')), sideBox, search, h('span', { class: 'grow' })), h('div', { style: { marginBottom: '16px' } }, pills), grid);
-  const { data, error } = await sb.from('roardino_people').select('id,name,kinds,city,birth,avatar,headline,minor,data').eq('visible', true).order('updated_at', { ascending: false }).limit(500);
+  const sideBox = h('div'), countBox = h('span', { class: 'hint people-count' }), kindsBox = h('div', { class: 'kind-rows' }), filterBox = h('div');
+  // the top bar has the search on a computer; a phone has no search in its bar, so it gets one here
+  const search = input(peopleQ, { type: 'search', class: 'input search only-phone', placeholder: t('Name, city, what they do'), 'aria-label': t('Search cast & crew'), oninput: (e) => { peopleQ = e.target.value; draw(); } });
+  frame('people', h('div', { class: 'head' }, h('h1', {}, t('Industry')), sideBox, h('span', { class: 'grow' }), countBox), search, kindsBox, filterBox, grid);
+  const { data, error } = await sb.from('roardino_people').select('id,name,kinds,city,birth,gender,avatar,headline,minor,data').eq('visible', true).order('updated_at', { ascending: false }).limit(500);
   if (error) throw error;
   await sign(data.map((p) => p.avatar));
-  function draw() {
-    put(sideBox, seg([['all', t('All')], ['cast', t('Cast')], ['crew', t('Crew')], ['creatives', t('Creatives')]], peopleSide, (k) => { peopleSide = k; peopleKind = ''; draw(); }));
-    const kinds = KINDS.filter(([k]) => peopleSide === 'all' || SIDE[k] === SIDES[peopleSide]);
-    put(pills, kinds.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (peopleKind === k ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); peopleKind = peopleKind === k ? '' : k; draw(); } }, t(s))));
-    const q = peopleQ.trim().toLowerCase();
-    const shown = data.filter((p) => {
-      const ks = p.kinds || [];
-      if (peopleSide !== 'all' && !ks.some((k) => sideOf(k) === SIDES[peopleSide])) return false;
-      if (peopleKind && !ks.includes(peopleKind)) return false;
-      if (!q) return true;
-      return matches(p._keys ??= personKeys(p), q);
-    });
-    put(grid, shown.length ? shown.map(faceTile) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nobody here yet')), q ? t('Nothing for "{q}".', { q: peopleQ }) : t('We have just started. Invite your people.')));
+  // the cities people are in, the most common first; Athens and Αθήνα are one
+  const cityCount = new Map();
+  data.forEach((p) => { if (!p.city) return; const k = cityKey(p.city); const e = cityCount.get(k) || { name: p.city, n: 0 }; e.n++; cityCount.set(k, e); });
+  const cities = [...cityCount.entries()].sort((a, b) => b[1].n - a[1].n).slice(0, 10);
+  const castOn = () => peopleSide === 'cast' || [...peopleKinds].some((k) => CAST_KINDS.includes(k));
+  const filtersUsed = () => !!(castF.from || castF.to || castF.hFrom || castF.hTo || castF.gender || castF.cities.size || castF.hair.size || castF.eyes.size);
+  const toggle = (set, k) => { if (set.has(k)) set.delete(k); else set.add(k); draw(); };
+  const chip = (on, label, onclick, hue) => h('button', { type: 'button', class: 'fchip' + (on ? ' on' : ''), style: hue ? { '--c': hue } : null, onclick: (e) => { e.preventDefault(); e.stopPropagation(); onclick(); } }, hue ? h('i') : null, label);
+  const num = (k, ph) => h('input', { class: 'input num', type: 'number', inputmode: 'numeric', min: '0', placeholder: ph, value: castF[k], 'aria-label': ph, oninput: (e) => { castF[k] = e.target.value; drawGrid(); } });
+  function drawFilters() {
+    if (!castOn()) { put(filterBox); return; }
+    const row = (label, ...kids) => h('div', { class: 'frow' }, h('span', { class: 'flabel' }, label), h('div', { class: 'fbody' }, ...kids));
+    const used = [castF.from || castF.to, castF.hFrom || castF.hTo, castF.gender, castF.cities.size, castF.hair.size, castF.eyes.size].filter(Boolean).length;
+    const opener = h('button', { type: 'button', class: 'btn sm filters-btn' + (castOpen ? ' on' : ''), onclick: () => { castOpen = !castOpen; drawFilters(); } }, icon('sliders'), t('Filters'), used ? h('b', { class: 'fcount' }, String(used)) : null);
+    if (!castOpen) { put(filterBox, h('div', { class: 'filters-line' }, opener)); return; }
+    put(filterBox, h('div', { class: 'filters-line only-phone' }, opener), h('section', { class: 'card cast-filters' },
+      row(t('Age'), num('from', t('from')), h('span', { class: 'dash' }, '–'), num('to', t('to'))),
+      row(t('Height'), num('hFrom', t('cm from')), h('span', { class: 'dash' }, '–'), num('hTo', t('cm to'))),
+      row(t('Gender'), ...[['', t('Any')], ['f', t('Woman')], ['m', t('Man')]].map(([v, l]) => chip(castF.gender === v, l, () => { castF.gender = v; draw(); }))),
+      cities.length ? row(t('Location'), ...cities.map(([k, e]) => chip(castF.cities.has(k), e.name, () => toggle(castF.cities, k)))) : null,
+      row(t('Hair'), ...HAIRS.map(([k, l]) => chip(castF.hair.has(k), t(l), () => toggle(castF.hair, k)))),
+      row(t('Eyes'), ...EYES.map(([k, l]) => chip(castF.eyes.has(k), t(l), () => toggle(castF.eyes, k)))),
+      filtersUsed() ? h('div', { class: 'fclear' }, h('button', { type: 'button', class: 'btn sm', onclick: () => { castF = { from: '', to: '', hFrom: '', hTo: '', gender: '', cities: new Set(), hair: new Set(), eyes: new Set() }; draw(); } }, icon('x'), t('Clear filters'))) : null));
   }
+  function passCast(p) {
+    if (!castOn()) return true;
+    const L = p.data?.looks || {}, a = age(p.birth), ht = parseInt(L.height, 10);
+    if ((castF.from || castF.to) && a == null) return false;
+    if (castF.from && a < +castF.from) return false;
+    if (castF.to && a > +castF.to) return false;
+    if ((castF.hFrom || castF.hTo) && !ht) return false;
+    if (castF.hFrom && ht < +castF.hFrom) return false;
+    if (castF.hTo && ht > +castF.hTo) return false;
+    if (castF.gender && p.gender !== castF.gender) return false;
+    if (castF.cities.size && !castF.cities.has(cityKey(p.city))) return false;
+    if (castF.hair.size && !HAIRS.some(([k, , w]) => castF.hair.has(k) && hasWord(L.hair, w))) return false;
+    if (castF.eyes.size && !EYES.some(([k, , w]) => castF.eyes.has(k) && hasWord(L.eyes, w))) return false;
+    return true;
+  }
+  function drawGrid() {
+    const q = peopleQ.trim();
+    const shown = data.filter((p) => {
+      const ks = (p.kinds || []).map((k) => (k === 'theatre' ? 'actor' : k));
+      if (peopleSide !== 'all' && !ks.some((k) => sideOf(k) === SIDES[peopleSide])) return false;
+      if (peopleKinds.size && !ks.some((k) => peopleKinds.has(k))) return false;
+      if (castOn() && peopleSide === 'cast' && !peopleKinds.size && !PERFORMER(ks) && !ks.includes('singer')) return false;
+      if (!passCast(p)) return false;
+      return !q || matches(p._keys ??= personKeys(p), q);
+    });
+    countBox.textContent = shown.length === 1 ? t('1 person') : t('{n} people', { n: shown.length });
+    put(grid, shown.length ? shown.map(faceTile) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nobody here yet')), q || filtersUsed() || peopleKinds.size ? t('Nobody matches all of these. Take a filter away.') : t('We have just started. Invite your people.')));
+  }
+  function draw() {
+    put(sideBox, seg([['all', t('All')], ['cast', t('Cast')], ['crew', t('Crew')], ['creatives', t('Creatives')]], peopleSide, (k) => { peopleSide = k; peopleKinds = new Set(); draw(); }));
+    // the specialties as small tinted chips, one tidy line per side (Alex, 5 Nov: "more tidy, no need for glass")
+    const sides = peopleSide === 'all' ? ['front', 'back', 'creative'] : [SIDES[peopleSide]];
+    put(kindsBox, sides.map((sd) => h('div', { class: 'kind-row' }, peopleSide === 'all' ? h('span', { class: 'flabel' }, t(SIDE_NAME[sd])) : null,
+      h('div', { class: 'fbody' }, KINDS.filter((k) => k[2] === sd).map(([k, name]) => chip(peopleKinds.has(k), t(name), () => toggle(peopleKinds, k), HUE[sd]))))));
+    drawFilters(); drawGrid();
+  }
+  peopleRedraw = () => { if (search.isConnected) { search.value = peopleQ; draw(); } };
   draw();
 }
 function faceTile(p) {
@@ -1105,7 +1174,7 @@ async function viewPerson(id) {
   const K = ctRow || {}; // email and phone, only when this account may see them
   const contact = p.minor
     ? [p.guardian?.email && h('a', { class: 'btn', href: `mailto:${p.guardian.email}` }, t('Email the parent')), p.guardian?.phone && h('a', { class: 'btn', href: `tel:${p.guardian.phone}` }, t('Call the parent'))]
-    : [K.email && h('a', { class: 'btn', href: `mailto:${K.email}` }, t('Email')), K.phone && h('a', { class: 'btn', href: `tel:${K.phone}` }, t('Phone')), C.instagram && h('a', { class: 'btn', href: `https://instagram.com/${C.instagram.replace(/^@/, '')}`, target: '_blank', rel: 'noopener' }, 'Instagram'), C.site && h('a', { class: 'btn', href: /^https?:/.test(C.site) ? C.site : `https://${C.site}`, target: '_blank', rel: 'noopener' }, t('Website'))];
+    : [K.email && h('a', { class: 'btn sm', href: `mailto:${K.email}` }, icon('mail'), t('Email')), K.phone && h('a', { class: 'btn sm', href: `tel:${K.phone}` }, icon('phone'), t('Phone')), C.instagram && h('a', { class: 'btn sm', href: `https://instagram.com/${C.instagram.replace(/^@/, '')}`, target: '_blank', rel: 'noopener' }, icon('insta'), 'Instagram'), C.site && h('a', { class: 'btn sm', href: /^https?:/.test(C.site) ? C.site : `https://${C.site}`, target: '_blank', rel: 'noopener' }, icon('globe'), t('Website'))];
   const reel = p.reel ? h('video', { class: 'reel', src: urlOf(p.reel), controls: true, playsInline: true, preload: 'metadata' }) : ytEmbed(p.reel_url) ? h('iframe', { class: 'reel', src: ytEmbed(p.reel_url), allow: 'autoplay; fullscreen; picture-in-picture', allowFullscreen: true, title: 'Showreel' }) : null;
   // Instagram's profile (Alex, 4 Nov): the round picture, the name with the buttons, the numbers, the bio; then Work,
   // Photos and Details as tabs under one line
@@ -1128,11 +1197,14 @@ async function viewPerson(id) {
     // My Work, My Photos, My Bio on my own profile; Work, Photos, Bio on someone else's (Alex, 5 Nov)
     put(tabRow, [['work', own ? t('My Work') : t('Work'), 'grid'], ['photos', own ? t('My Photos') : t('Photos'), 'pic'], ['details', own ? t('My Bio') : t('Bio'), 'user']].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
     // on my own profile each tab adds or edits in place (Alex, 5 Nov)
+    // as a round glass plus at the left of the tabs, its words only on hover (Alex, 5 Nov: "a plus on the left, the plus alone says Add work")
+    const plus = (label, ic, extra) => h(extra.href ? 'a' : 'button', { type: extra.href ? null : 'button', class: 'btn main tab-plus', title: label, 'aria-label': label, ...extra }, icon(ic), h('span', { class: 'lbl' }, label));
     const act = !own ? null
-      : tab === 'work' ? h('button', { type: 'button', class: 'btn sm main', onclick: () => composeWin('work', p.id, () => route()) }, icon('plus'), t('Add work'))
-        : tab === 'photos' ? h('button', { type: 'button', class: 'btn sm main', onclick: () => composeWin('photo', p.id, () => route()) }, icon('plus'), t('Add photo'))
-          : h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit bio'));
-    put(body, act ? h('div', { class: 'tab-act' }, act) : null, tab === 'work' ? work : tab === 'photos' ? pics : details);
+      : tab === 'work' ? plus(t('Add work'), 'plus', { onclick: () => composeWin('work', p.id, () => route()) })
+        : tab === 'photos' ? plus(t('Add photo'), 'plus', { onclick: () => composeWin('photo', p.id, () => route()) })
+          : plus(t('Edit bio'), 'edit', { href: `#/edit/${p.id}` });
+    if (act) tabRow.append(act);
+    put(body, tab === 'work' ? work : tab === 'photos' ? pics : details);
   };
   drawTab();
   frame(mineTab,
@@ -1202,8 +1274,8 @@ async function viewMe() {
     h('button', { type: 'button', class: 'btn', onclick: () => sb.auth.signOut() }, icon('out'), t('Sign out'))),
   h('div', { class: 'block' }, h('h2', {}, t('My profiles'))),
   h('div', { class: 'faces' }, mine.map(faceTile),
-    h('a', { class: 'add-pic', href: '#/edit/new' }, t('+ New profile')),
-    h('a', { class: 'add-pic', href: '#/edit/kid' }, t('+ My child\'s profile'))),
+    h('a', { class: 'add-pic', href: '#/edit/new' }, h('span', { class: 'add-ic', html: ICON.plus }), t('New profile')),
+    h('a', { class: 'add-pic', href: '#/edit/kid' }, h('span', { class: 'add-ic', html: ICON.child }), t('My child\'s profile'))),
   h('p', { class: 'hint', style: { marginTop: '10px' } }, t('One account can hold several profiles: your own, and your children\'s as their parent.')),
   (applies || []).length ? h('div', { class: 'block' }, h('h2', {}, t('My applications')), h('div', { class: 'credits' }, applies.map((x) => h('a', { href: `#/c/${x.call?.id}` }, `${x.call?.title || ''} · ${t('as {name}', { name: x.person?.name || '' })} · ${t(state[x.status])}`)))) : null,
   (seats || []).length ? h('div', { class: 'block' }, h('h2', {}, t('My seats')), h('div', { class: 'credits' }, seats.map((x) => h('a', { href: '#/seminars' }, `${x.sem?.title || ''}${x.sem?.starts_at ? ' · ' + when(x.sem.starts_at) : ''}`)))) : null);
@@ -1402,7 +1474,7 @@ const CALL_KIND = { casting: 'Casting', crew: 'Crew', other: 'Call' };
 async function viewCalls() {
   document.title = 'Roardino · ' + t('Calls');
   const box = h('div', { class: 'tiles' }, h('p', { class: 'wait' }, t('Loading…')));
-  frame('calls', h('div', { class: 'head' }, h('h1', {}, t('Calls')), seg([['all', t('All')], ['casting', t('Casting')], ['crew', t('Crew')], ['mine', t('Mine')]], callsFilter, (k) => { callsFilter = k; viewCalls(); }), h('span', { class: 'grow' }), h('button', { type: 'button', class: 'btn main', onclick: () => editCall() }, icon('plus'), t('New call'))), box);
+  frame('calls', h('div', { class: 'head' }, h('h1', {}, t('Calls')), seg([['all', t('All')], ['casting', t('Casting')], ['crew', t('Crew')], ['mine', t('Mine')]], callsFilter, (k) => { callsFilter = k; viewCalls(); }), h('span', { class: 'grow' }), h('button', { type: 'button', class: 'btn main head-new', title: t('New call'), 'aria-label': t('New call'), onclick: () => editCall() }, icon('plus'), h('span', { class: 'lbl' }, t('New call')))), box);
   let q = sb.from('roardino_calls').select('*').order('created_at', { ascending: false }).limit(200);
   if (callsFilter === 'mine') q = q.eq('owner', session.user.id); else q = q.eq('open', true);
   if (['casting', 'crew'].includes(callsFilter)) q = q.eq('kind', callsFilter);
@@ -1498,7 +1570,7 @@ async function viewCall(id) {
           own ? [h('button', { type: 'button', class: 'btn', onclick: () => editCall(c) }, icon('edit'), t('Edit')),
             h('button', { type: 'button', class: 'btn', onclick: async () => { const { error: er } = await sb.from('roardino_calls').update({ open: !c.open }).eq('id', c.id); if (er) return fail(er); route(); } }, c.open ? t('Close the call') : t('Open it again'))]
             : mineApplied.length ? h('span', { class: 'chip', style: { '--c': '#35c98b' } }, h('i'), t('You applied as {names}', { names: mineApplied.map((a) => a.person?.name).join(', ') }))
-              : c.open ? h('button', { type: 'button', class: 'btn main', onclick: () => apply(c) }, t('Apply')) : null))),
+              : c.open ? h('button', { type: 'button', class: 'btn main', onclick: () => apply(c) }, icon('send'), t('Apply')) : null))),
     own ? h('div', {},
       h('div', { class: 'head', style: { marginTop: '28px' } }, h('h1', { style: { fontSize: '22px' } }, t('Applications · {n}', { n: (applies || []).length })), segBox),
       who) : null);
@@ -1782,7 +1854,7 @@ window.addEventListener('message', (e) => {
 async function viewSeminars() {
   document.title = 'Roardino · ' + t('Seminars');
   const box = h('div', { class: 'tiles' }, h('p', { class: 'wait' }, t('Loading…')));
-  frame('seminars', h('div', { class: 'head' }, h('h1', {}, t('Seminars')), h('span', { class: 'grow' }), isAdmin ? h('button', { type: 'button', class: 'btn main', onclick: () => editSeminar() }, icon('plus'), t('New seminar')) : null), box);
+  frame('seminars', h('div', { class: 'head' }, h('h1', {}, t('Seminars')), h('span', { class: 'grow' }), isAdmin ? h('button', { type: 'button', class: 'btn main head-new', title: t('New seminar'), 'aria-label': t('New seminar'), onclick: () => editSeminar() }, icon('plus'), h('span', { class: 'lbl' }, t('New seminar'))) : null), box);
   const [{ data, error }, { data: counts }, { data: seats }, { data: links }] = await Promise.all([
     sb.from('roardino_seminars').select('*').order('starts_at', { ascending: true, nullsFirst: false }),
     sb.rpc('roardino_seat_counts'),
@@ -1805,8 +1877,10 @@ async function viewSeminars() {
       h('div', { class: 'acts' },
         mineS.has(s.id)
           ? [h('span', { class: 'chip', style: { '--c': '#35c98b' } }, h('i'), t('You have a seat')), link[s.id] ? h('a', { class: 'btn main', href: link[s.id], target: '_blank', rel: 'noopener' }, s.kind === 'online' ? t('Join the webinar') : t('Details')) : h('span', { class: 'hint' }, t('We will send you the details.'))]
-          : left === 0 ? h('span', { class: 'hint' }, t('Full.')) : h('button', { type: 'button', class: 'btn main', onclick: () => takeSeat(s) }, t('Keep a seat')),
-        isAdmin ? h('button', { type: 'button', class: 'btn', onclick: () => editSeminar(s, link[s.id]) }, icon('edit'), t('Edit · {n} seats taken', { n: taken[s.id] || 0 })) : null));
+          : left === 0 ? h('span', { class: 'hint' }, t('Full.')) : h('button', { type: 'button', class: 'btn main', onclick: () => takeSeat(s) }, icon('ticket'), t('Keep a seat')),
+        isAdmin ? h('span', { class: 'grow' }) : null,
+        isAdmin ? h('span', { class: 'hint' }, t('{n} seats taken', { n: taken[s.id] || 0 })) : null,
+        isAdmin ? h('button', { type: 'button', class: 'btn round', title: t('Edit'), 'aria-label': t('Edit'), onclick: () => editSeminar(s, link[s.id]) }, icon('edit')) : null));
   }) : [h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Soon')), t('The first seminars and webinars are on the way.'))]));
 }
 function takeSeat(s) {

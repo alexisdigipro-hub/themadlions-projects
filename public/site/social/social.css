@@ -648,7 +648,7 @@ html[data-theme=dark] .mt span{color:#9fbbe6}
 
 /* the same width as the top bar (Alex, 5 Nov): the content lines up with the bar's edges */
 .page{max-width:1352px}
-.two{grid-template-columns:330px minmax(0,1fr)}
+@media (min-width:821px){.two{grid-template-columns:330px minmax(0,1fr)}}
 .two>.mid{max-width:none}
 .page .grid,.ig-details,.ig-head,.ig-tabs{max-width:none}
 @media (min-width:1100px){ .page .grid{grid-template-columns:repeat(4,minmax(0,1fr))} }
@@ -873,13 +873,18 @@ html[data-theme=dark] .swatch.on{border-color:#0b0b0c}
 @media (max-width:820px){.swatches{justify-content:flex-start}}
 /* on a phone the line of Everyone / Following keeps Stories and New post beside it, as round icons (5 Nov) */
 @media (max-width:820px){.feed-head{flex-wrap:nowrap}.new-post{width:40px;padding:0}.new-post span{display:none}}
-/* the tiles under my card are the same polished glass buttons as View my profile, only stacked (Alex, 5 Nov: "make them
-   like the buttons"): glass, sheen, the accent gradient in the letters, a thin line icon in the accent */
-.me-tiles{gap:8px;padding:12px}
-.me-tiles .mt.btn{height:auto;min-height:0;flex-direction:column;justify-content:center;gap:8px;padding:14px 4px 12px;border-radius:12px;font-size:10.5px;letter-spacing:.1em;white-space:normal;text-align:center;line-height:1.2}
-.me-tiles .mt.btn span{width:20px;height:20px;color:var(--accent)}
-.me-tiles .mt.btn span svg{width:20px;height:20px;color:var(--accent)}
+/* the tiles under my card: one row of round polished glass icons, as View my profile's glass; the word in a glass label on hover */
+.me-tiles{display:flex;justify-content:space-between;gap:6px;padding:10px 12px;overflow:visible}
+.me-tiles .mt.btn{position:relative;width:40px;height:40px;min-height:0;padding:0;border-radius:12px;flex:none;overflow:visible}
+.me-tiles .mt.btn .ic{display:grid;place-items:center;width:18px;height:18px;color:var(--accent)}
+.me-tiles .mt.btn .ic svg{width:18px;height:18px;color:var(--accent)}
 .me-tiles .mt.btn:hover{transform:translateY(-2px)}
+.me-tiles .tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translate(-50%,4px);opacity:0;pointer-events:none;white-space:nowrap;z-index:5;
+  padding:6px 10px;border-radius:9px;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  background:rgba(255,255,255,.85);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--rim);box-shadow:0 6px 16px rgba(28,35,51,.14);
+  -webkit-text-fill-color:var(--accent);color:var(--accent);transition:opacity .18s,transform .25s var(--spring)}
+.me-tiles .mt.btn:hover .tip,.me-tiles .mt.btn:focus-visible .tip{opacity:1;transform:translate(-50%,0)}
+html[data-theme=dark] .me-tiles .tip{background:rgba(30,30,34,.9);border-color:rgba(255,255,255,.14);box-shadow:0 6px 16px rgba(0,0,0,.5)}
 /* the X of every window (Alex, 5 Nov): a small round glass button at the right of the title */
 .win-head{display:flex;align-items:flex-start;gap:12px}
 .win-head h2{flex:1;min-width:0}
@@ -891,3 +896,62 @@ html[data-theme=dark] .swatch.on{border-color:#0b0b0c}
 .win-x:active{transform:scale(.9)}
 .notes-head .win-x{margin:0 0 0 6px}
 html[data-theme=dark] .win-x{background-color:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 4px 10px rgba(0,0,0,.35)}
+/* the plus at the left of my profile's tabs (5 Nov): a round glass button; on a computer it opens out to its words on hover */
+.ig-tabs{position:relative}
+.tab-plus{position:absolute;left:0;top:50%;transform:translateY(-50%);width:40px;padding:0;gap:0;overflow:hidden;justify-content:flex-start;padding-left:11px;
+  transition:width .35s var(--spring),gap .25s,box-shadow .25s}
+.tab-plus svg{width:17px;height:17px}
+.tab-plus .lbl{opacity:0;transition:opacity .2s}
+.tab-plus:hover{width:var(--open,132px);gap:8px;transform:translateY(-50%)}
+.tab-plus:hover .lbl{opacity:1}
+.tab-plus:active{transform:translateY(-50%) scale(.94)}
+@media (max-width:820px){.tab-plus,.tab-plus:hover{width:38px;height:38px;padding:0;gap:0;justify-content:center}.tab-plus .lbl{display:none}
+  .ig-tabs{padding-left:46px;gap:clamp(10px,4vw,24px);justify-content:space-around}.ig-tabs button{white-space:nowrap;letter-spacing:.06em;font-size:11px;gap:5px}}
+/* ---------- Industry (Alex, 5 Nov): the specialties as tidy tinted chips, a line per side; the cast filters in one card ---------- */
+.only-phone{display:none}
+.people-count{font-size:13px}
+.kind-rows{display:flex;flex-direction:column;gap:8px;margin:0 0 14px}
+.kind-row,.frow{display:flex;align-items:flex-start;gap:12px}
+.flabel{flex:none;width:86px;padding-top:6px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.fbody{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+.fchip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:9px;border:0;cursor:pointer;font:inherit;font-size:12.5px;font-weight:600;color:var(--ink2);
+  background:color-mix(in srgb,var(--c,var(--a-solid)) 9%,rgba(255,255,255,.45));box-shadow:0 0 0 1px var(--rim-out);transition:background .15s,box-shadow .2s,transform .2s var(--spring)}
+.fchip i{width:7px;height:7px;border-radius:50%;background:var(--c,var(--a-solid))}
+.fchip:hover{background:color-mix(in srgb,var(--c,var(--a-solid)) 16%,rgba(255,255,255,.6))}
+.fchip:active{transform:scale(.95)}
+.fchip.on{background:color-mix(in srgb,var(--c,var(--a-solid)) 22%,rgba(255,255,255,.7));color:var(--ink);box-shadow:0 0 0 1.5px var(--c,var(--a-solid)),0 3px 10px color-mix(in srgb,var(--c,var(--a-solid)) 25%,transparent)}
+.fchip:not([style]).on{box-shadow:0 0 0 1.5px var(--accent),0 3px 10px rgba(var(--a),.2)}
+html[data-theme=dark] .fchip{background:color-mix(in srgb,var(--c,var(--a-solid)) 12%,rgba(255,255,255,.04));color:#d9dce2;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+html[data-theme=dark] .fchip.on{background:color-mix(in srgb,var(--c,var(--a-solid)) 30%,rgba(255,255,255,.06));color:#fff}
+.cast-filters{display:flex;flex-direction:column;gap:10px;padding:16px 18px;margin:0 0 16px;animation:r-pop .35s var(--spring) both}
+.input.num{width:92px;height:32px;padding:0 10px;font-size:13px}
+.dash{color:var(--muted)}
+.fclear{display:flex;justify-content:flex-end}
+@media (max-width:820px){
+  .only-phone{display:block}.input.search.only-phone{width:100%;margin:0 0 12px}
+  .kind-row,.frow{flex-direction:column;gap:6px}.flabel{width:auto;padding-top:0}
+  .kind-row .fbody{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;width:100%;padding:2px 2px 4px}.kind-row .fbody::-webkit-scrollbar{display:none}
+  .fchip{flex:none}
+}
+/* New call / New seminar: a pill on a computer, a round plus on a phone, in the title line */
+@media (max-width:820px){.head{position:relative}.head-new{position:absolute;right:0;top:0;width:40px;padding:0}.head-new .lbl{display:none}}
+/* the tiles under my card are buttons without the letters' gradient (it would paint the hidden words too) */
+.me-tiles .mt.btn,.me-tiles .mt.btn:hover{background-image:var(--sheen),var(--tint);-webkit-background-clip:padding-box;background-clip:padding-box;-webkit-text-fill-color:currentColor}
+.me-tiles .tip{width:auto;height:auto;display:block}
+/* Me: the empty tiles as soft glass with the accent's icon */
+.add-pic{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border:1px solid var(--rim);background:rgba(255,255,255,.35);background-image:var(--sheen),var(--tint);
+  font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);box-shadow:var(--top),0 0 0 1px var(--rim-out);transition:transform .25s var(--spring),box-shadow .25s}
+.add-pic:hover{transform:translateY(-2px);box-shadow:var(--top),0 0 0 1px rgba(var(--a),.2),0 10px 24px rgba(var(--a),.12)}
+.add-ic{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;border:1px solid var(--rim);background:rgba(255,255,255,.5);background-image:var(--sheen);color:var(--accent);box-shadow:var(--top)}
+.add-ic svg{width:20px;height:20px}
+html[data-theme=dark] .add-pic{background-color:rgba(255,255,255,.03);border-color:rgba(255,255,255,.1)}
+html[data-theme=dark] .add-ic{background-color:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+/* a seminar's buttons on one line: Keep a seat, then the seats taken and a round Edit at the end */
+.acts{align-items:center}
+@media (min-width:821px){
+  .cast-filters{display:grid;grid-template-columns:1fr 1fr;column-gap:28px;row-gap:10px}
+  .cast-filters .fclear{grid-column:1/-1}
+  .filters-line:not(.only-phone){margin:0 0 14px}
+}
+.filters-line{margin:0 0 12px}
+.filters-btn .fcount{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--a-solid);color:#fff;-webkit-text-fill-color:#fff;font-size:10.5px}
