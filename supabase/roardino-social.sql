@@ -658,3 +658,15 @@ create policy rd_posts_read on public.roardino_posts for select using (
   roardino_can_see((person_id)::text)
   and (owner = auth.uid() or coalesce(kind, 'work') <> 'photo' or not roardino_personal_hidden(person_id))
 );
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Saved can be shown on the profile (Alex, 5 Nov, privacy in Edit profile): when a grown-up profile of the account has
+-- data.saved_public = true, anyone who may see posts may read which posts that account saved. Safe to run again.
+create or replace function public.roardino_saved_public(uid uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from roardino_people where owner = uid and coalesce(minor, false) = false
+                 and coalesce((data->>'saved_public')::boolean, false))
+$$;
+grant execute on function public.roardino_saved_public(uuid) to anon, authenticated;
+drop policy if exists rd_saves_public on public.roardino_saves;
+create policy rd_saves_public on public.roardino_saves for select using (roardino_saved_public(user_id));
