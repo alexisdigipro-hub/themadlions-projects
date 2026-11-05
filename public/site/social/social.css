@@ -806,10 +806,11 @@ html[data-theme=dark] .st-hide:hover{background:rgba(255,255,255,.06)}
 .legal a{color:var(--accent);text-decoration:underline}
 
 /* the stories switch next to New post */
-.st-toggle{width:40px;height:40px;opacity:.6}
-.st-toggle svg{width:20px;height:20px;color:var(--muted)}
-.st-toggle.on{opacity:1}
-.st-toggle.on svg{color:var(--accent)}
+.st-toggle{height:40px;gap:7px}
+.st-toggle svg{width:18px;height:18px;color:var(--accent)}
+.st-toggle:not(.on) svg{opacity:.45}
+.st-toggle:not(.on){background-image:var(--letters-dim),var(--sheen),var(--tint)}
+@media (max-width:820px){.st-toggle{width:40px;padding:0}.st-toggle span{display:none}}
 .feed-head{gap:8px}
 
 /* the picture editor */
@@ -870,3 +871,5 @@ html[data-theme=dark] .swatch.on{border-color:#0b0b0c}
 #app>.foot{flex-shrink:0}
 @media (min-width:821px){.swatches{flex-wrap:nowrap;gap:6px;flex:0 0 auto}.swatch{width:28px;height:28px}}
 @media (max-width:820px){.swatches{justify-content:flex-start}}
+/* on a phone the line of Everyone / Following keeps Stories and New post beside it, as round icons (5 Nov) */
+@media (max-width:820px){.feed-head{flex-wrap:nowrap}.new-post{width:40px;padding:0}.new-post span{display:none}}
