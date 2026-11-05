@@ -62,7 +62,7 @@ const LOCALE = () => (LANG === 'el' ? 'el-GR' : 'en-GB');
 
 /* ---------- settings kept on this device (Alex, 5 Nov) ---------- */
 const PREFS_KEY = 'roardino-prefs';
-const PREF_DEFAULTS = { theme: 'auto', text: 'normal', feedCalls: true, mutedVideos: true, showStories: true, accent: 'red' };
+const PREF_DEFAULTS = { theme: 'auto', text: 'normal', feedCalls: true, mutedVideos: true, showStories: true, accent: 'red', showSeen: false };
 // the accent colours (Alex, 5 Nov: "10 nice colours with the same gradient"); their light and dark shades live in social.css
 const ACCENTS = [['red', 'Red', '#e2766d,#d40000 55%,#8f0000'], ['orange', 'Orange', '#f0a070,#e05a00 55%,#9a3a00'], ['gold', 'Gold', '#d9b45a,#b88400 55%,#7a5500'],
   ['emerald', 'Emerald', '#6fcf97,#0f9d58 55%,#06623a'], ['teal', 'Teal', '#6cd4d0,#00a3a3 55%,#006466'], ['ocean', 'Ocean', '#7fb2f0,#1a6fe0 55%,#0b3f8f'],
@@ -782,7 +782,7 @@ async function viewFeed() {
   const { data: all, error } = await q;
   if (error) throw error;
   if (feedFresh) { feedKeep = new Set(); feedFresh = false; showOlder = false; }
-  const isNew = (r) => !seenPosts.has(r.id) || feedKeep.has(r.id);
+  const isNew = (r) => prefs.showSeen || !seenPosts.has(r.id) || feedKeep.has(r.id);
   const fresh = all.filter(isNew), older = all.filter((r) => !isNew(r));
   const data = showOlder ? [...fresh, ...older] : fresh;
   feedKeep = new Set(data.map((r) => r.id));
@@ -2311,6 +2311,9 @@ function viewSettings() {
     h('section', { class: 'sec' }, h('h2', {}, t('Feed')),
       row(t('Calls in the feed'), t('Open calls show between the posts.'), toggle('feedCalls')),
       row(t('Videos start muted'), null, toggle('mutedVideos')),
+      // for testing (Alex, 5 Nov): the feed with every post, also the ones already seen; and a clean start
+      row(t('Show posts I\'ve seen'), t('On: the feed always shows every post. Off: a refresh shows only what is new.'), h('input', { type: 'checkbox', class: 'switch', checked: !!prefs.showSeen, onchange: (e) => { setPref('showSeen', e.target.checked); feedFresh = true; } })),
+      row(t('Posts I\'ve seen'), t('Forget them on this device, so every post shows as new again.'), h('button', { type: 'button', class: 'btn sm', onclick: () => { seenPosts = new Set(); keepSeen(); feedFresh = true; toast(t('Every post shows as new again')); } }, t('Reset'))),
       row(t('Stories'), t('Show the stories row on top of the feed.'), h('input', { type: 'checkbox', class: 'switch', checked: !!prefs.showStories, onchange: (e) => setShowStories(e.target.checked) })),
       row(t('Stories you have seen'), t('Seen stories turn grey on this device.'), h('button', { type: 'button', class: 'btn sm', onclick: () => { seenStories = new Set(); try { localStorage.removeItem('roardino-seen'); } catch { /* none */ } toast(t('All stories show as new again')); } }, t('Reset')))),
     h('section', { class: 'sec' }, h('h2', {}, t('Privacy')),
