@@ -1269,3 +1269,10 @@ html.kb-open .veil .win{max-height:calc(var(--vvh,100dvh) - 20px)}
   .bar .ico svg{width:26px;height:26px}
   .feed-head .st-toggle svg,.compose .c-pic svg,.compose .c-post svg{width:20px;height:20px}
 }
+/* a post's head lower, less space above and under the name (Alex, 5 Nov) */
+.post.ig .post-head{padding:7px 12px;gap:10px}
+.post.ig .post-head .av{width:34px;height:34px}
+.post.ig .who-line b{font-size:14.5px}
+.post.ig .who-line small{font-size:12.5px;line-height:1.25}
+.post.ig .post-follow{height:28px}
+.ig-cap.hidden{display:none}

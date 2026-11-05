@@ -96,6 +96,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - 5 Nov, night: **Contact on a profile is Message, Email, Call** (no Instagram anywhere: the field left the form, the button the profile; old data stays unused). Message (messageOnRoarMe) opens the direct chat on RoarMe with the profile's account (a child's: the parent's) through roar_open_direct and shows it in the Chat tab (roardino:open {page: room, room}, RoarMe PR). "{name} is not on RoarMe yet" when that fails.
 - 5 Nov, night: windows no longer go under the phone's keyboard. visualViewport feeds --vvh / --vvt (and html.kb-open); the veil sits exactly in the visible part, the window's max-height follows it, and a focused field scrolls into sight.
 - 5 Nov, night: every icon 15-20% bigger (one block at the end of social.css: post bar 28 px, tab bar 28 px on a phone, buttons 19 px, menus 25 px…).
+- 5 Nov, night: a post's head is lower (52 px: 7 px padding, 34 px picture). The caption under a picture is hidden and shows with the comments when the comment icon is tapped (a text-only post still shows its text).
 - **Next** (Alex): the TikTok-like vertical feed of self-tapes and showreels; AI search ("dancer 20-25, hip hop, Athens"); Roar Sheet rename; its own domain (roardino.gr: Alex to check at papaki.gr, this session cannot reach registries); who becomes a scout (insert into roardino_scouts by hand for now).
 
 ## Where we stopped (3 Nov 2026, night: one admin for everything)
