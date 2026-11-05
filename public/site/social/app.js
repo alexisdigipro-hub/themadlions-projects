@@ -1041,6 +1041,7 @@ async function sendToRoarMe(r, p) {
   } catch (e) { console.warn('RoarMe chats', e); }
   draw();
 }
+const isPhone = () => window.matchMedia('(max-width:820px)').matches;
 async function toggleFollow(id) {
   const on = follows.has(id);
   const { error } = on ? await sb.from('roardino_follows').delete().eq('user_id', session.user.id).eq('person_id', id) : await sb.from('roardino_follows').insert({ person_id: id });
@@ -1142,27 +1143,42 @@ function postCard(r, st, refresh) {
     try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ }
   };
   const slides = media.length ? h('div', { class: 'ig-media' + (media.length > 1 ? ' many' : '') }, media.map((m) => (m.type === 'video'
-    ? h('video', { src: urlOf(m.path), controls: true, playsInline: true, preload: 'metadata', muted: prefs.mutedVideos })
+    ? h('video', { src: urlOf(m.path), controls: !isPhone(), playsInline: true, preload: 'metadata', muted: prefs.mutedVideos, loop: isPhone(), autoplay: isPhone() })
     : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', ondblclick: (e) => { if (!st.mine) bravoBtn.click(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); e.target.parentElement.parentElement.append(hh); setTimeout(() => hh.remove(), 900); } })))) : null;
   const dots = media.length > 1 ? h('div', { class: 'ig-dots' }, media.map((_, i) => h('i', { class: i ? '' : 'on' }))) : null;
   if (slides && dots) slides.addEventListener('scroll', () => { const i = Math.round(slides.scrollLeft / slides.clientWidth); dots.querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i)); });
-  return h('article', { class: 'post ig', 'data-post': r.id },
+  const head =
     h('div', { class: 'post-head' },
       h('a', { href: `#/p/${p.id}`, class: 'ring-sm' }, avatar(p)),
       h('div', { class: 'who-line' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name || '')), h('small', {}, p.headline || (p.kinds || []).map(kindName).slice(0, 2).join(' · '))),
       // Follow when I don't follow them yet, and the ⋯ menu (Alex, 5 Nov, as Instagram's)
       !own && p.id && !follows.has(p.id) ? h('button', { type: 'button', class: 'btn sm post-follow', onclick: async (e) => { const b = e.currentTarget; const ok = await toggleFollow(p.id); if (ok) b.remove(); } }, t('Follow')) : null,
-      h('button', { type: 'button', class: 'ig-ico sm', title: t('More'), 'aria-label': t('More'), html: ICON.dots, onclick: () => postMenu(r, p, { own, media, refresh, saveBtn }) })),
-    slides, dots,
-    !media.length && r.body ? h('p', { class: 'post-body big' }, ...tagText(r.body)) : null,
+      h('button', { type: 'button', class: 'ig-ico sm', title: t('More'), 'aria-label': t('More'), html: ICON.dots, onclick: () => postMenu(r, p, { own, media, refresh, saveBtn }) }));
+  const bar =
     h('div', { class: 'ig-bar' }, h('span', { class: 'ig-pair' }, bravoBtn, likeN),
       h('span', { class: 'ig-pair' }, h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: () => { if (talk.classList.contains('hidden')) { openTalk(); cap?.classList.remove('hidden'); } else { talk.classList.add('hidden'); cap?.classList.add('hidden'); } } }), talkN),
       h('button', { type: 'button', class: 'ig-ico', title: t('Send on RoarMe'), 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: () => sendToRoarMe(r, p) }),
       h('span', { class: 'grow' }),
-      own ? null : h('a', { class: 'btn sm main', href: `#/p/${p.id}` }, t('Work with me')), saveBtn),
-    cap,
-    h('p', { class: 'ig-time' }, ago(r.created_at)),
-    talk);
+      own ? null : h('a', { class: 'btn sm main', href: `#/p/${p.id}` }, t('Work with me')), saveBtn);
+  const time = h('p', { class: 'ig-time' }, ago(r.created_at));
+  if (!media.length) return h('article', { class: 'post ig', 'data-post': r.id }, head, r.body ? h('p', { class: 'post-body big' }, ...tagText(r.body)) : null, bar, cap, time, talk);
+  // a picture or a video only, on a phone (Alex, 5 Nov): one tap slides in who it is (top) and the icons (bottom) over it,
+  // with the caption and the comments under it; another tap puts them away; a double tap is still a like
+  const art = h('article', { class: 'post ig has-media', 'data-post': r.id });
+  const wrap = h('div', { class: 'mwrap' }, head, slides, dots, bar);
+  let tapT = null;
+  const setOpen = (on) => {
+    art.classList.toggle('open', on);
+    slides.querySelectorAll('video').forEach((v) => { v.controls = on || !isPhone(); });
+    if (on) { openTalk(); cap?.classList.remove('hidden'); } else { talk.classList.add('hidden'); cap?.classList.add('hidden'); }
+  };
+  wrap.addEventListener('click', (e) => {
+    if (!isPhone() || e.target.closest('.post-head, .ig-bar, a, button')) return;
+    clearTimeout(tapT); tapT = setTimeout(() => setOpen(!art.classList.contains('open')), 260);
+  });
+  wrap.addEventListener('dblclick', () => clearTimeout(tapT));
+  put(art, wrap, cap, time, talk);
+  return art;
 }
 async function drawTalk(box, r, st, recount) {
   put(box, h('p', { class: 'hint' }, t('Loading…')));
