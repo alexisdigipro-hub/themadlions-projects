@@ -2087,7 +2087,13 @@ function gridBlock(p, rows, own) {
 }
 async function openPost(r, p) {
   const cards = await posts([{ ...r, person: p }], () => route());
-  openWin(p.name, h('div', { class: 'in-win' }, cards), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]);
+  // a post opened from a grid pops up as a card in the middle of the screen, sized to the post, with its name, icons and
+  // caption showing (Alex, 5 Nov: "in the middle of the screen, not at the bottom"); the X closes it
+  openWin(p.name, h('div', { class: 'in-win' }, cards), null);
+  const veil = document.querySelector('.veil:last-of-type');
+  veil?.classList.add('post-win');
+  const art = veil?.querySelector('.post.ig.has-media');
+  if (art && isPhone()) art.querySelector('.ig-media')?.click();
 }
 
 /* =====================================================================================================================

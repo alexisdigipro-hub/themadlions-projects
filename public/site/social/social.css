@@ -1580,3 +1580,11 @@ html[data-theme=dark] .sk-av,html[data-theme=dark] .sk-line{background:rgba(255,
 html[data-theme=dark] .sk-pic{background:linear-gradient(100deg,rgba(255,255,255,.03) 30%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.03) 70%) 0 0/300% 100%}
 @media (max-width:820px){.two:has(.feed-skel)>.left{display:none}}
 @media (min-width:821px){.sk-post{max-width:620px}}
+/* a post opened from a grid (Alex, 5 Nov: "a pop up in the middle of the screen, not at the bottom"): a card sized to the
+   post, centred, the X in its corner; it pops in place instead of rising from below */
+.veil.post-win{place-items:center}
+.veil.post-win .win{padding:12px 12px 14px;gap:8px;width:min(520px,100%);height:auto;animation:r-pop .35s var(--soft) both}
+.veil.post-win .win-head{padding:2px 4px 0}
+.veil.post-win .win-head h2{font-size:16px}
+.veil.post-win .in-win .post{margin:0}
+@media (max-width:820px){.veil.post-win{padding:12px}.veil.post-win .win{max-height:calc(var(--vvh,100dvh) - 24px);margin:auto 0}}
