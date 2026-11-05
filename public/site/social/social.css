@@ -1242,3 +1242,30 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .veil .win{max-height:calc(var(--vvh,100dvh) - 24px)}
 html.kb-open .veil{padding-top:10px;padding-bottom:10px}
 html.kb-open .veil .win{max-height:calc(var(--vvh,100dvh) - 20px)}
+/* the icons a little bigger everywhere (Alex, 5 Nov) */
+.ig-ico{width:44px;height:44px}
+.ig-ico svg{width:28px;height:28px}
+.ig-ico.sm svg{width:22px;height:22px}
+.ico svg{width:25px;height:25px}
+.btn svg{width:19px;height:19px}
+.feed-head .btn svg{width:18px;height:18px}
+.feed-head .st-toggle svg{width:19px;height:19px}
+.ig-tabs button svg{width:18px;height:18px}
+.pm-ic,.pm-ic svg{width:25px;height:25px}
+.find svg{width:18px;height:18px}
+.me-tiles .mt.btn .ic,.me-tiles .mt.btn .ic svg{width:20px;height:20px}
+.win-x svg{width:16px;height:16px}
+.st-hide svg,.st-del svg,.cov-btn svg{width:19px;height:19px}
+.st-x svg{width:23px;height:23px}
+.cam-btn svg{width:25px;height:25px}
+.igm-link span,.igm-link svg{width:18px;height:18px}
+.stk-link span,.stk-link span svg{width:18px;height:18px}
+.add-ic svg{width:23px;height:23px}
+.cell .play{width:25px;height:25px}
+@media (max-width:820px){
+  .tabbar a svg{width:28px;height:28px}
+  .tab-me .tab-av{width:30px;height:30px}
+  .ig-tabs button svg{width:25px;height:25px}
+  .bar .ico svg{width:26px;height:26px}
+  .feed-head .st-toggle svg,.compose .c-pic svg,.compose .c-post svg{width:20px;height:20px}
+}
