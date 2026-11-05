@@ -1477,3 +1477,27 @@ html[data-theme=dark] .tab-plus .lbl{color:#e8e9ec;-webkit-text-fill-color:#e8e9
 html[data-theme=dark] .two>.left .me-tiles .mt.btn{background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(255,255,255,.03))!important;border-color:rgba(255,255,255,.14)!important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 6px 16px rgba(0,0,0,.4)!important}
 html[data-theme=dark] .two>.left .me-tiles .tip{background:rgba(30,30,34,.95);border-color:rgba(255,255,255,.12);color:#eee;-webkit-text-fill-color:#eee}
+/* ---------- buttons flat, matte glass (Alex, 5 Nov: "buttons that do not stick out, glassy, matte") ----------
+   no drop shadows, no lift, no shine: a frosted see-through fill with a thin edge; the accent stays in the letters and icons */
+.btn,.btn.main,.btn.sm,.btn.round,.btn.red{
+  box-shadow:none!important;border:1px solid var(--rim)!important;
+  background-color:rgba(255,255,255,.34)!important;
+  background-image:var(--letters),linear-gradient(rgba(255,255,255,0),rgba(255,255,255,0))!important;
+  -webkit-background-clip:text,padding-box!important;background-clip:text,padding-box!important;
+  -webkit-backdrop-filter:blur(16px) saturate(1.15);backdrop-filter:blur(16px) saturate(1.15);
+  transition:background-color .35s var(--soft),border-color .35s var(--soft)!important}
+.btn.red{background-image:linear-gradient(100deg,#e2766d,#b3261e),linear-gradient(rgba(255,255,255,0),rgba(255,255,255,0))!important}
+.btn:hover,.btn.main:hover{transform:none!important;background-color:rgba(255,255,255,.52)!important;border-color:rgba(var(--a),.28)!important}
+.btn:active{transform:scale(.98)!important}
+html[data-theme=dark] .btn,html[data-theme=dark] .btn.main{background-color:rgba(255,255,255,.05)!important;border-color:rgba(255,255,255,.12)!important}
+html[data-theme=dark] .btn:hover,html[data-theme=dark] .btn.main:hover{background-color:rgba(255,255,255,.09)!important;border-color:rgba(var(--a-rim),.35)!important}
+/* the tiles under my card, the + of the bar, the segmented controls and their lens: the same flat matte glass */
+.two>.left .me-tiles .mt.btn,.me-tiles .mt.btn{background:rgba(255,255,255,.34)!important;box-shadow:none!important;border:1px solid var(--rim)!important}
+.two>.left .me-tiles .mt.btn:hover{transform:none;background:rgba(255,255,255,.52)!important;box-shadow:none!important}
+html[data-theme=dark] .two>.left .me-tiles .mt.btn,html[data-theme=dark] .me-tiles .mt.btn{background:rgba(255,255,255,.05)!important;border-color:rgba(255,255,255,.12)!important;box-shadow:none!important}
+.seg{box-shadow:none!important}
+.seg .lens{box-shadow:none!important;background-image:none!important;background-color:rgba(255,255,255,.62)!important;border:1px solid var(--rim)!important}
+html[data-theme=dark] .seg .lens{background:rgba(255,255,255,.09)!important;border-color:rgba(255,255,255,.14)!important}
+.pill.on{box-shadow:none!important}
+.win-x,.tab-plus,.igm-btn{box-shadow:none!important}
+.post.ig.has-media .mwrap .btn{background-color:rgba(255,255,255,.14)!important;background-image:none!important;-webkit-text-fill-color:#fff!important;color:#fff!important;border-color:rgba(255,255,255,.35)!important}
