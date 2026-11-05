@@ -361,8 +361,8 @@ const avatar = (p, cls = '') => h('span', { class: 'av ' + cls, style: bg(p?.ava
 // A picture: long side 1440px, JPEG 0.82 (a few hundred KB; a phone's 5 MB photo looks the same in the feed).
 // Anything it cannot read goes as it is.
 const PIC_SIDE = 1440, PIC_Q = 0.82;
-async function shrink(file) {
-  if (/^video\//.test(file.type)) return shrinkVideo(file);
+async function shrink(file, onProg) {
+  if (/^video\//.test(file.type)) return shrinkVideo(file, onProg);
   if (!/^image\//.test(file.type) || /gif|svg/.test(file.type)) return file;
   try {
     const img = await createImageBitmap(file);
@@ -381,7 +381,7 @@ async function shrink(file) {
 // the progress in a small note. A video already light (under ~3.5 Mbit/s and 1080px) or one the browser cannot
 // play or record goes as it is, so nothing is ever lost.
 const VID_SIDE = 1080, VID_BPS = 2500000;
-function shrinkVideo(file) {
+function shrinkVideo(file, onProg) {
   return new Promise((done) => {
     const keep = () => { clean(); done(file); };
     if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) return done(file);
@@ -420,10 +420,10 @@ function shrinkVideo(file) {
         const ext = /mp4/.test(out.type) ? 'mp4' : 'webm';
         done(out.size > 10000 && out.size < file.size ? new File([out], file.name.replace(/\.\w+$/, '') + '.' + ext, { type: out.type.split(';')[0] }) : file);
       };
-      document.body.append(note);
+      if (!onProg) document.body.append(note); // with onProg the progress shows on the thing itself (Alex, 5 Nov)
       const bar = note.querySelector('i');
       const paint = () => { g.drawImage(v, 0, 0, c.width, c.height); if (!v.ended) raf = requestAnimationFrame(paint); };
-      timer = setInterval(() => { bar.style.width = `${Math.min(100, (v.currentTime / dur) * 100)}%`; }, 250);
+      timer = setInterval(() => { const k = Math.min(1, v.currentTime / dur); bar.style.width = `${k * 100}%`; onProg?.(k); }, 250);
       v.onended = () => { g.drawImage(v, 0, 0, c.width, c.height); setTimeout(() => rec.state !== 'inactive' && rec.stop(), 120); };
       try { await ac?.resume(); await v.play(); } catch { return keep(); }
       rec.start(1000); paint();
@@ -563,13 +563,38 @@ function dimsOf(file) {
     else { const im = new Image(); im.onload = () => fin(im.naturalWidth, im.naturalHeight); im.onerror = () => fin(); im.src = url; }
   });
 }
-async function upload(personId, file, sub = '') {
-  const f = await shrink(file);
+// sending with the progress known (Alex, 5 Nov: "the loading progress on the thing that goes up"): the storage API by
+// hand, so the bytes sent can be counted; supabase-js's own upload says nothing until it ends
+function putWithProgress(path, f, onProg) {
+  return new Promise((ok, bad) => {
+    const x = new XMLHttpRequest();
+    x.open('POST', `${SB_URL}/storage/v1/object/${BUCKET}/${path.split('/').map(encodeURIComponent).join('/')}`);
+    x.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+    x.setRequestHeader('apikey', SB_KEY);
+    x.setRequestHeader('x-upsert', 'false');
+    if (f.type) x.setRequestHeader('Content-Type', f.type);
+    x.upload.onprogress = (e) => { if (e.lengthComputable) onProg(e.loaded / e.total); };
+    x.onload = () => (x.status < 300 ? ok() : bad(new Error((() => { try { return JSON.parse(x.responseText).message; } catch { return x.statusText || 'Upload failed'; } })())));
+    x.onerror = () => bad(new Error(t('The upload stopped. Check the connection and try again.')));
+    x.send(f);
+  });
+}
+// onProg(0..1), when given: a video spends the first half being made lighter, the rest going up; a picture just goes up
+async function upload(personId, file, sub = '', onProg) {
+  const vid = /^video\//.test(file.type);
+  const f = await shrink(file, onProg && vid ? (k) => onProg(k * 0.5) : undefined);
   if (/^video\//.test(f.type) && f.size > MAX_VIDEO) throw new Error(t('The video is over 200 MB. Keep it to a minute or two.'));
   const ext = (f.name.match(/\.(\w+)$/) || [, 'bin'])[1].toLowerCase();
   const path = `${session.user.id}/${personId}/${sub}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}.${ext}`;
+  if (onProg && session?.access_token && window.XMLHttpRequest && !window.__LOCAL_UPLOADS) {
+    const base = vid ? 0.5 : 0;
+    await putWithProgress(path, f, (k) => onProg(base + k * (1 - base)));
+    onProg(1);
+    return path;
+  }
   const { error } = await sb.storage.from(BUCKET).upload(path, f, { contentType: f.type || undefined, upsert: false });
   if (error) throw error;
+  onProg?.(1);
   return path;
 }
 const removeFiles = (paths) => { const p = paths.filter(Boolean); return p.length ? sb.storage.from(BUCKET).remove(p) : null; };
@@ -1183,7 +1208,7 @@ function composer(done, kind0 = 'work', asId = null) {
     draw();
   } });
   // a video shows its cover; a tap on it chooses again (Alex, 5 Nov)
-  const draw = () => put(prev, ...files.map((f, i) => h('div', { class: 'thumb' + (/^video/.test(f.type) ? ' vthumb' : ''), style: /^image/.test(f.type) ? { backgroundImage: `url("${URL.createObjectURL(f)}")` } : f._cover ? { backgroundImage: `url("${URL.createObjectURL(f._cover)}")` } : {},
+  const draw = () => put(prev, ...files.map((f, i) => h('div', { class: 'thumb' + (/^video/.test(f.type) ? ' vthumb' : ''), 'data-i': i, style: /^image/.test(f.type) ? { backgroundImage: `url("${URL.createObjectURL(f)}")` } : f._cover ? { backgroundImage: `url("${URL.createObjectURL(f._cover)}")` } : {},
     onclick: /^video/.test(f.type) ? async (e) => { if (e.target.closest('.x')) return; const c2 = await coverPicker(f); if (c2) { f._cover = c2; draw(); } } : null },
     /^video/.test(f.type) ? h('span', { class: 'star' }, f._cover ? t('Cover') : t('Choose cover')) : null,
     h('button', { type: 'button', class: 'x', html: ICON.x, 'aria-label': t('Remove'), onclick: () => { files.splice(i, 1); draw(); } }))));
@@ -1191,15 +1216,31 @@ function composer(done, kind0 = 'work', asId = null) {
   const btn = h('button', { type: 'button', class: 'btn main c-post', title: t('Post'), 'aria-label': t('Post'), onclick: send }, ...postFace());
   async function send() {
     if (!text.value.trim() && !files.length) return toast(t('Write something or add a photo.'));
-    btn.disabled = true; btn.classList.add('busy'); btn.textContent = t('Uploading…');
+    btn.disabled = true; btn.classList.add('busy');
+    // each picture or video shows its own progress on itself: a ring that fills, the percent, a tick when it is up
+    prev.classList.add('sending');
+    const ring = (i) => {
+      const th = prev.querySelector(`.thumb[data-i="${i}"]`); if (!th) return () => {};
+      th.querySelector('.up-ring')?.remove();
+      const pct = h('b', {}, '0%');
+      const r = h('span', { class: 'up-ring', style: { '--p': 0 } }, pct);
+      th.append(r);
+      return (k) => { const v = Math.round(Math.min(1, k) * 100); r.style.setProperty('--p', v / 100); pct.textContent = v >= 100 ? '' : `${v}%`; r.classList.toggle('done', v >= 100); };
+    };
     try {
       const media = [];
-      for (const f of files) media.push({ path: await upload(as, f, 'posts/'), type: /^video/.test(f.type) ? 'video' : 'image', ...(await dimsOf(f)), ...(f._cover ? { poster: await upload(as, f._cover, 'posts/') } : {}) });
+      for (const [i, f] of files.entries()) {
+        const set = ring(i);
+        const path = await upload(as, f, 'posts/', f._cover ? (k) => set(k * 0.95) : set);
+        const poster = f._cover ? await upload(as, f._cover, 'posts/') : null;
+        set(1);
+        media.push({ path, type: /^video/.test(f.type) ? 'video' : 'image', ...(await dimsOf(f)), ...(poster ? { poster } : {}) });
+      }
       const { error } = await sb.from('roardino_posts').insert({ person_id: as, body: text.value.trim() || null, media, kind });
       if (error) throw error;
       toast(t('Posted'));
       done();
-    } catch (e) { fail(e); btn.disabled = false; btn.classList.remove('busy'); put(btn, ...postFace()); }
+    } catch (e) { fail(e); btn.disabled = false; btn.classList.remove('busy'); prev.classList.remove('sending'); prev.querySelectorAll('.up-ring').forEach((x) => x.remove()); put(btn, ...postFace()); }
   }
   return h('div', { class: 'compose' },
     h('div', { class: 'c-top' }, avatar(me()), withMentions(text)),
