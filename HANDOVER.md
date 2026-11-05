@@ -79,6 +79,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - 5 Nov, night: on the phone the bottom menu is icons only (my picture for Me), and the story rings are 70 px and close together, five across.
 - 5 Nov, night: the notifications panel is matte (nearly solid, 0.985) on phone and computer; it sits inside the top bar, whose backdrop-filter stops its own blur from reaching the page, so only its opacity hides what is behind.
 - 5 Nov, night: the phone and the installed web app. The page never slides sideways (html/body overflow-x:clip, overscroll-behavior-x:none). Pulling down from the top refreshes the page in place (the .ptr spinner, route()); a sideways swipe on photos or stories is not taken as a pull. No footer under 820px. The bottom menu sits at max(10px, safe area - 4px), so it no longer gets cut in the installed app.
+- 5 Nov, night: the line of Everyone / Following, Stories and New post is lower (36 px) with 11 px letters, on the phone and the computer (.feed-head rules at the end of social.css).
 - **Next** (Alex): the TikTok-like vertical feed of self-tapes and showreels; AI search ("dancer 20-25, hip hop, Athens"); Roar Sheet rename; its own domain (roardino.gr: Alex to check at papaki.gr, this session cannot reach registries); who becomes a scout (insert into roardino_scouts by hand for now).
 
 ## Where we stopped (3 Nov 2026, night: one admin for everything)
