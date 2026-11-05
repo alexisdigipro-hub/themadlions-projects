@@ -1553,3 +1553,12 @@ html[data-theme=dark] .linkish{background:rgba(255,255,255,.05);border-color:rgb
 .vid-note-bar i{display:block;height:100%;width:0;border-radius:inherit;background:var(--accent);transition:width .25s linear}
 html[data-theme=dark] .vid-note{background:rgba(30,30,34,.9);border-color:rgba(255,255,255,.12)}
 html[data-theme=dark] .vid-note b{color:#eee}
+/* a phone again (Alex, 5 Nov, still "A problem repeatedly occurred"): the page and every picture came in out of a blur;
+   a blur on the whole tall feed makes an iPhone hold a huge picture of it in memory, and Safari gives up. On a phone
+   things come in with fade and slide only, no blur; a computer keeps the blur */
+@keyframes r-page-in-m{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes r-pic-in-m{from{opacity:0}to{opacity:1}}
+@media (max-width:820px){
+  .page>*,.front>*,.why{animation-name:r-page-in-m!important}
+  .ig-media img,.post-media img,.face .pic,.cell,.main-pic,.me-top .av,.ig-av .r i,.st-stage img{animation-name:r-pic-in-m!important}
+}
