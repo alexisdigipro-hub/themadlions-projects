@@ -1434,3 +1434,11 @@ html[data-theme=dark] .me-tiles .tip{color:#d9dce2;-webkit-text-fill-color:#d9dc
 .pl-who b{font-size:14.5px;font-weight:var(--w-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pl-who small{font-size:12.5px;color:var(--muted)}
 .pl-row .btn{flex:none}
+/* the + on my profile's tabs (Alex, 5 Nov: "what happened to this button?"): centred, the accent's icon, and a visible glass edge in the dark */
+.tab-plus{padding-left:10px;border-radius:12px}
+.tab-plus svg{width:19px;height:19px;color:var(--accent)!important}
+html[data-theme=dark] .tab-plus{background:rgba(255,255,255,.07)!important;background-image:none!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 4px 14px rgba(0,0,0,.4)!important}
+html[data-theme=dark] .tab-plus:hover{background:rgba(255,255,255,.12)!important}
+html[data-theme=dark] .tab-plus .lbl{color:#e8e9ec;-webkit-text-fill-color:#e8e9ec}
+.tab-plus:not(:hover){justify-content:center;padding:0}
+.tab-plus:not(:hover) .lbl{display:none}
