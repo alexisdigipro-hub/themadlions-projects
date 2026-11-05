@@ -1132,6 +1132,8 @@ function postCard(r, st, refresh) {
     if (error) fail(error);
   } });
   const openTalk = () => { talk.classList.remove('hidden'); if (!talk.dataset.on) { talk.dataset.on = '1'; drawTalk(talk, r, st, drawMore); } talk.querySelector('input')?.focus(); };
+  // the caption under a picture shows with the comments, when the comment icon is tapped (Alex, 5 Nov)
+  const cap = media.length && r.body ? h('p', { class: 'ig-cap hidden' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name)), ' ', ...tagText(r.body)) : null;
   const drawMore = () => { talkN.textContent = st.comments ? short(st.comments) : ''; };
   drawMore();
   const saveBtn = h('button', { type: 'button', class: 'ig-ico save' + (saved.has(r.id) ? ' on' : ''), title: t('Save'), 'aria-label': t('Save'), html: ICON.bookmark, onclick: () => toggleSave(r.id, saveBtn) });
@@ -1154,11 +1156,11 @@ function postCard(r, st, refresh) {
     slides, dots,
     !media.length && r.body ? h('p', { class: 'post-body big' }, ...tagText(r.body)) : null,
     h('div', { class: 'ig-bar' }, h('span', { class: 'ig-pair' }, bravoBtn, likeN),
-      h('span', { class: 'ig-pair' }, h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: () => { if (talk.classList.contains('hidden')) openTalk(); else talk.classList.add('hidden'); } }), talkN),
+      h('span', { class: 'ig-pair' }, h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: () => { if (talk.classList.contains('hidden')) { openTalk(); cap?.classList.remove('hidden'); } else { talk.classList.add('hidden'); cap?.classList.add('hidden'); } } }), talkN),
       h('button', { type: 'button', class: 'ig-ico', title: t('Send on RoarMe'), 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: () => sendToRoarMe(r, p) }),
       h('span', { class: 'grow' }),
       own ? null : h('a', { class: 'btn sm main', href: `#/p/${p.id}` }, t('Work with me')), saveBtn),
-    media.length && r.body ? h('p', { class: 'ig-cap' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name)), ' ', ...tagText(r.body)) : null,
+    cap,
     h('p', { class: 'ig-time' }, ago(r.created_at)),
     talk);
 }
