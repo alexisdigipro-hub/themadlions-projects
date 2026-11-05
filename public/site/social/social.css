@@ -1190,3 +1190,13 @@ html,body{max-width:100%}
 .stm-tick svg{width:14px;height:14px}
 .stm-row.on .stm-tick{background:var(--a-solid);border-color:var(--a-solid);color:#fff;transform:scale(1.08)}
 html[data-theme=dark] .stm-row:hover{background:rgba(255,255,255,.06)}
+/* the numbers next to the heart and the comment (Alex, 5 Nov), and a bar that always fits the phone */
+.ig-pair{display:inline-flex;align-items:center;gap:0}
+.ig-n{font-size:14px;font-weight:var(--w-mid);color:var(--ink);margin:0 6px 0 -4px;min-width:0}
+.ig-n:empty{display:none}
+.ig-bar{flex-wrap:nowrap;min-width:0}
+.ig-bar .btn{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:820px){
+  .ig-bar{gap:2px}
+  .ig-bar .btn.sm{height:32px;padding:0 12px;font-size:10px;letter-spacing:.07em}
+}

@@ -1061,8 +1061,10 @@ function postCard(r, st, refresh) {
   const media = r.media || [];
   const own = r.owner === session.user.id;
   const talk = h('div', { class: 'talk hidden' });
-  const count = h('p', { class: 'ig-count' });
-  const drawCount = () => { count.textContent = st.bravos ? (st.bravos === 1 ? t('1 like') : t('{n} likes', { n: st.bravos })) : ''; count.classList.toggle('hidden', !st.bravos); };
+  // the numbers sit next to their icons, no lines of likes and comments under the post (Alex, 5 Nov)
+  const likeN = h('span', { class: 'ig-n' }), talkN = h('span', { class: 'ig-n' });
+  const short = (n) => (n >= 10000 ? Math.round(n / 1000) + 'K' : n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : String(n));
+  const drawCount = () => { likeN.textContent = st.bravos ? short(st.bravos) : ''; };
   drawCount();
   const bravoBtn = h('button', { type: 'button', class: 'ig-ico like' + (st.mine ? ' on' : ''), title: t('Like'), 'aria-label': t('Like'), html: ICON.heart, onclick: async () => {
     st.mine = !st.mine; st.bravos += st.mine ? 1 : -1; bravoBtn.classList.toggle('on', st.mine); bravoBtn.classList.remove('pop'); void bravoBtn.offsetWidth; if (st.mine) bravoBtn.classList.add('pop'); drawCount();
@@ -1070,8 +1072,7 @@ function postCard(r, st, refresh) {
     if (error) fail(error);
   } });
   const openTalk = () => { talk.classList.remove('hidden'); if (!talk.dataset.on) { talk.dataset.on = '1'; drawTalk(talk, r, st, drawMore); } talk.querySelector('input')?.focus(); };
-  const more = h('button', { type: 'button', class: 'ig-more', onclick: () => { if (talk.classList.contains('hidden')) openTalk(); else talk.classList.add('hidden'); } });
-  const drawMore = () => put(more, st.comments ? (st.comments === 1 ? t('View 1 comment') : t('View all {n} comments', { n: st.comments })) : t('Add a comment…'));
+  const drawMore = () => { talkN.textContent = st.comments ? short(st.comments) : ''; };
   drawMore();
   const saveBtn = h('button', { type: 'button', class: 'ig-ico save' + (saved.has(r.id) ? ' on' : ''), title: t('Save'), 'aria-label': t('Save'), html: ICON.bookmark, onclick: () => toggleSave(r.id, saveBtn) });
   const share = async () => {
@@ -1092,14 +1093,12 @@ function postCard(r, st, refresh) {
       h('button', { type: 'button', class: 'ig-ico sm', title: t('More'), 'aria-label': t('More'), html: ICON.dots, onclick: () => postMenu(r, p, { own, media, refresh, saveBtn }) })),
     slides, dots,
     !media.length && r.body ? h('p', { class: 'post-body big' }, ...tagText(r.body)) : null,
-    h('div', { class: 'ig-bar' }, bravoBtn,
-      h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: openTalk }),
+    h('div', { class: 'ig-bar' }, h('span', { class: 'ig-pair' }, bravoBtn, likeN),
+      h('span', { class: 'ig-pair' }, h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: () => { if (talk.classList.contains('hidden')) openTalk(); else talk.classList.add('hidden'); } }), talkN),
       h('button', { type: 'button', class: 'ig-ico', title: t('Send on RoarMe'), 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: () => sendToRoarMe(r, p) }),
       h('span', { class: 'grow' }),
       own ? null : h('a', { class: 'btn sm main', href: `#/p/${p.id}` }, t('Work with me')), saveBtn),
-    count,
     media.length && r.body ? h('p', { class: 'ig-cap' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name)), ' ', ...tagText(r.body)) : null,
-    more,
     h('p', { class: 'ig-time' }, ago(r.created_at)),
     talk);
 }
