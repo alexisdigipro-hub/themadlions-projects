@@ -1406,17 +1406,13 @@ function postCard(r, st, refresh) {
   const slides = media.length ? h('div', { class: 'ig-media' + (media.length > 1 ? ' many' : '') }, media.map((m) => (m.type === 'video'
     ? (isPhone() ? feedVideo(urlOf(m.path)) : h('video', { src: urlOf(m.path), controls: true, playsInline: true, preload: 'metadata', muted: prefs.mutedVideos }))
     : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', decoding: 'async', ondblclick: (e) => { if (!st.mine) bravoBtn.click(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); e.target.parentElement.parentElement.append(hh); setTimeout(() => hh.remove(), 900); } })))) : null;
-  // each post in its own shape: the size kept at upload, else the picture's own once it loads; several pictures all take
-  // the first one's shape, as Instagram does
-  if (slides) {
+  // a video in its own shape, the width fixed and the height its own (Alex, 5 Nov: "the pictures were fine, only the
+  // videos keep their aspect ratio"): the size kept at upload, else the video's own once it loads; pictures stay 4:5
+  if (slides && media[0].type === 'video') {
     const shape = (w, hh) => { if (w && hh) slides.style.setProperty('--ar', `${w} / ${hh}`); };
     const m0 = media[0];
     if (m0.w && m0.h) shape(m0.w, m0.h);
-    else {
-      const el0 = slides.firstElementChild;
-      if (el0?.tagName === 'IMG') el0.addEventListener('load', () => shape(el0.naturalWidth, el0.naturalHeight), { once: true });
-      else el0?.addEventListener('loadedmetadata', () => shape(el0.videoWidth, el0.videoHeight), { once: true });
-    }
+    else slides.firstElementChild?.addEventListener('loadedmetadata', (e) => shape(e.target.videoWidth, e.target.videoHeight), { once: true });
   }
   const dots = media.length > 1 ? h('div', { class: 'ig-dots' }, media.map((_, i) => h('i', { class: i ? '' : 'on' }))) : null;
   if (slides && dots) slides.addEventListener('scroll', () => { const i = Math.round(slides.scrollLeft / slides.clientWidth); dots.querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i)); });
