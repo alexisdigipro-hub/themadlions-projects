@@ -405,7 +405,9 @@ async function viewFeed() {
     loadStories()]);
   const others = (people.data || []).filter((p) => !mine.some((m) => m.id === p.id) && !follows.has(p.id)).slice(0, 14);
   await sign(others.map((p) => p.avatar));
-  left.append(weekCard(calls.data || [], seminars.data || []), callsForMe(calls.data || []));
+  // the week and the calls under my card are out for now (Alex, 5 Nov: "not yet, take them out"); weekCard and
+  // callsForMe stay here for when they come back
+  void weekCard; void callsForMe;
 
   let q = sb.from('roardino_posts').select('*, person:roardino_people(id,name,avatar,kinds,headline)').order('created_at', { ascending: false }).limit(40);
   if (feedOnly === 'follow') q = q.in('person_id', [...follows, ...mine.map((m) => m.id), '00000000-0000-0000-0000-000000000000']);
