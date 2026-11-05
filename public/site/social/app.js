@@ -352,18 +352,78 @@ function cellVideo(src) {
 }
 const bg = (p) => (urlOf(p) ? { backgroundImage: `url("${urlOf(p)}")` } : {});
 const avatar = (p, cls = '') => h('span', { class: 'av ' + cls, style: bg(p?.avatar) }, urlOf(p?.avatar) ? '' : initials(p?.name));
-// a picture made lighter in the browser (long side 1800px, JPEG); anything it cannot read goes as it is
+// everything that goes up is made light first (Alex, 5 Nov: "whatever people upload, photos and videos, compress it").
+// A picture: long side 1440px, JPEG 0.82 (a few hundred KB; a phone's 5 MB photo looks the same in the feed).
+// Anything it cannot read goes as it is.
+const PIC_SIDE = 1440, PIC_Q = 0.82;
 async function shrink(file) {
-  if (!/^image\//.test(file.type) || /gif/.test(file.type)) return file;
+  if (/^video\//.test(file.type)) return shrinkVideo(file);
+  if (!/^image\//.test(file.type) || /gif|svg/.test(file.type)) return file;
   try {
     const img = await createImageBitmap(file);
-    const k = Math.min(1, 1800 / Math.max(img.width, img.height));
+    const k = Math.min(1, PIC_SIDE / Math.max(img.width, img.height));
     const c = document.createElement('canvas');
     c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
     c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-    const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.86));
-    return blob ? new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file;
+    img.close?.();
+    const blob = await new Promise((r) => c.toBlob(r, 'image/jpeg', PIC_Q));
+    c.width = c.height = 0;
+    return blob && blob.size < file.size ? new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file;
   } catch { return file; }
+}
+// A video: played once, out of sight, onto a canvas of at most 1080px on its long side and recorded again at about
+// 2.5 Mbit/s with its sound (H.264 MP4 on iPhones and Macs, WebM elsewhere). It takes as long as the video lasts, with
+// the progress in a small note. A video already light (under ~3.5 Mbit/s and 1080px) or one the browser cannot
+// play or record goes as it is, so nothing is ever lost.
+const VID_SIDE = 1080, VID_BPS = 2500000;
+function shrinkVideo(file) {
+  return new Promise((done) => {
+    const keep = () => { clean(); done(file); };
+    if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) return done(file);
+    const url = URL.createObjectURL(file);
+    const v = document.createElement('video');
+    v.src = url; v.muted = false; v.playsInline = true; v.preload = 'auto';
+    v.style.cssText = 'position:fixed;left:-9999px;top:0;width:2px;height:2px;opacity:0;pointer-events:none';
+    document.body.append(v);
+    let ac = null, rec = null, timer = 0, raf = 0;
+    const note = h('div', { class: 'vid-note' }, h('span', { class: 'vid-note-bar' }, h('i')), h('b', {}, t('Making the video lighter…')));
+    const clean = () => { cancelAnimationFrame(raf); clearInterval(timer); try { ac?.close(); } catch { /* gone */ } v.pause(); v.remove(); note.remove(); URL.revokeObjectURL(url); };
+    v.onerror = keep;
+    v.onloadedmetadata = async () => {
+      const W = v.videoWidth, H = v.videoHeight, dur = v.duration;
+      if (!W || !H || !isFinite(dur) || !dur) return keep();
+      const bps = (file.size * 8) / dur;
+      if (bps < VID_BPS * 1.4 && Math.max(W, H) <= VID_SIDE) return keep();
+      const k = Math.min(1, VID_SIDE / Math.max(W, H));
+      const c = document.createElement('canvas');
+      c.width = Math.round(W * k / 2) * 2; c.height = Math.round(H * k / 2) * 2;
+      const g = c.getContext('2d');
+      const stream = c.captureStream(30);
+      try {
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        const src = ac.createMediaElementSource(v), dest = ac.createMediaStreamDestination();
+        src.connect(dest);
+        dest.stream.getAudioTracks().forEach((tr) => stream.addTrack(tr));
+      } catch { v.muted = true; }
+      const type = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find((x) => MediaRecorder.isTypeSupported?.(x)) || '';
+      try { rec = new MediaRecorder(stream, { ...(type ? { mimeType: type } : {}), videoBitsPerSecond: VID_BPS, audioBitsPerSecond: 128000 }); } catch { return keep(); }
+      const parts = [];
+      rec.ondataavailable = (e) => { if (e.data?.size) parts.push(e.data); };
+      rec.onstop = () => {
+        const out = new Blob(parts, { type: rec.mimeType || type || 'video/mp4' });
+        clean();
+        const ext = /mp4/.test(out.type) ? 'mp4' : 'webm';
+        done(out.size > 10000 && out.size < file.size ? new File([out], file.name.replace(/\.\w+$/, '') + '.' + ext, { type: out.type.split(';')[0] }) : file);
+      };
+      document.body.append(note);
+      const bar = note.querySelector('i');
+      const paint = () => { g.drawImage(v, 0, 0, c.width, c.height); if (!v.ended) raf = requestAnimationFrame(paint); };
+      timer = setInterval(() => { bar.style.width = `${Math.min(100, (v.currentTime / dur) * 100)}%`; }, 250);
+      v.onended = () => { g.drawImage(v, 0, 0, c.width, c.height); setTimeout(() => rec.state !== 'inactive' && rec.stop(), 120); };
+      try { await ac?.resume(); await v.play(); } catch { return keep(); }
+      rec.start(1000); paint();
+    };
+  });
 }
 /* the picture editor (Alex, 5 Nov: "every photo needs scale, resize, zoom"): before a picture goes up it opens in a
    glass window with the frame it will have; drag to move it, zoom with the slider, the wheel or two fingers, pick a
@@ -441,8 +501,8 @@ function cropImage(file, shapes = SHAPES.post) {
 // several pictures one after the other through the editor; videos and what cannot be drawn pass as they are
 async function cropAll(list, shapes) { const out = []; for (const f of list) { const c = await cropImage(f, shapes); if (c) out.push(c); } return out; }
 async function upload(personId, file, sub = '') {
-  if (/^video\//.test(file.type) && file.size > MAX_VIDEO) throw new Error(t('The video is over 200 MB. Keep it to a minute or two.'));
   const f = await shrink(file);
+  if (/^video\//.test(f.type) && f.size > MAX_VIDEO) throw new Error(t('The video is over 200 MB. Keep it to a minute or two.'));
   const ext = (f.name.match(/\.(\w+)$/) || [, 'bin'])[1].toLowerCase();
   const path = `${session.user.id}/${personId}/${sub}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}.${ext}`;
   const { error } = await sb.storage.from(BUCKET).upload(path, f, { contentType: f.type || undefined, upsert: false });
