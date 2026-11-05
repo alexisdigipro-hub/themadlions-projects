@@ -655,10 +655,16 @@ function crumb(step) {
   try { localStorage.setItem(CRUMB_KEY, JSON.stringify(run)); } catch { /* full or private */ }
 }
 crumb(crashedBefore ? 'start (safe mode)' : 'start');
+// a heartbeat for the first minute, so the box shows how long the page lived and what happened in between
+{ let beats = 0; const hb = setInterval(() => { beats += 1; crumb(`alive ${beats * 5}s, scrolled ${Math.round(window.scrollY)}px`); if (beats >= 12) clearInterval(hb); }, 5000); }
 let homeOkT = 0;
+// a page that is closed, reloaded or left on purpose says goodbye (pagehide); a crash does not. Leaving counts as fine
+const byeOk = () => { if (!run.home || run.ok) return; run.ok = true; crumb('left normally'); };
+window.addEventListener('pagehide', byeOk);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') byeOk(); });
 function homeStanding() { clearTimeout(homeOkT); homeOkT = setTimeout(() => { run.ok = true; crumb('home stood 6s'); }, 6000); }
 function safeCard() {
-  if (!crashedBefore) return null;
+  if (!crashedBefore || !isPhone()) return null; // only phones crash this way; a computer never shows the card
   const steps = (lastRun.steps || []).slice(-6);
   return h('div', { class: 'card safe-card' },
     h('b', {}, t('Roardino restarted after a problem on this phone')),
@@ -944,7 +950,7 @@ async function viewFeed() {
   }
   mid.querySelectorAll('img').forEach((im) => { im.src = 'data:,'; });
   put(mid, safeCard(),
-    crashedBefore ? null : storiesCard(stories, others),
+    crashedBefore ? null : (crumb(`home: stories ${stories.length} + ${others.length} faces`), storiesCard(stories, others)),
     // the composer waits behind New post, on the line of Everyone / Following (Alex, 5 Nov), and opens as a glass window
     h('div', { class: 'head feed-head' }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { setFeedOnly(k); viewFeed(); }), h('span', { class: 'grow' }),
       // stories on or off, a small square next to New post (Alex, 5 Nov)
