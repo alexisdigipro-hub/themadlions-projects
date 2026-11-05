@@ -1535,3 +1535,12 @@ html[data-theme=dark] .linkish{background:rgba(255,255,255,.05);border-color:rgb
 .stm-sec{margin:8px 8px 2px;font-size:11px;font-weight:var(--w-strong);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .rm-badge{display:inline-block;margin-left:7px;padding:1px 7px;border-radius:999px;font-style:normal;font-size:10px;font-weight:var(--w-strong);letter-spacing:.04em;
   color:#ff7a1a;background:rgba(255,122,26,.12);border:1px solid rgba(255,122,26,.3);vertical-align:2px}
+/* ---------- a phone keeps up (Alex, 5 Nov: "it gets stuck on the phone and keeps refreshing") ----------
+   an iPhone's Safari runs out of graphics memory and reloads the page when every post, button and tile in a long feed has
+   its own frosted blur. On a phone the blur stays only on what floats over other things (the bars, windows, menus and the
+   buttons over a picture); the rest sits on the plain page background, where the blur showed nothing anyway */
+@media (max-width:820px){
+  .card,.post,.tile,.sec,.face,.compose,.empty,.auth,.why>div,.pill,.foot-in,.s-field,.cmt-del,.linkish,
+  .btn,.btn.main,.btn.sm,.btn.round,.btn.red,.cov-btn{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  .post.ig.has-media.open .mwrap .btn{-webkit-backdrop-filter:blur(10px)!important;backdrop-filter:blur(10px)!important}
+}
