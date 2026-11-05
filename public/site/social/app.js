@@ -523,9 +523,9 @@ function topBar(on) {
   const toggle = (e) => { e.stopPropagation(); fill(); menu.classList.toggle('hidden'); if (!menu.classList.contains('hidden')) setTimeout(() => document.addEventListener('click', () => menu.classList.add('hidden'), { once: true })); };
   const find = h('input', { type: 'search', placeholder: t('Search cast, crew & creatives'), 'aria-label': t('Search cast, crew & creatives'), value: on === 'people' ? peopleQ : '', oninput: (e) => { if (location.hash === '#/people') { peopleQ = e.target.value; peopleRedraw?.(); } }, onkeydown: (e) => { if (e.key === 'Enter') { peopleQ = e.target.value; if (location.hash === '#/people') peopleRedraw?.(); else location.hash = '#/people'; } } });
   return h('header', { class: 'bar' }, h('div', { class: 'bar-in' },
-    h('a', { href: '#/feed', class: 'brand', 'aria-label': 'Roardino' }, mark()),
+    h('a', { href: '#/feed', class: 'brand', 'aria-label': 'Roardino', onclick: goHome }, mark()),
     // the menu in words, a glass capsule with the gliding lens, as Qubi's (Alex, 5 Nov); the search takes the rest
-    h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { location.hash = `#/${k}`; })),
+    h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { if (k === 'feed') goHome(); else location.hash = `#/${k}`; })),
     h('label', { class: 'find' }, icon('search'), find),
     bellButton(),
     h('button', { type: 'button', class: 'who-me', onclick: toggle, 'aria-label': t('Me') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }), h('span', { class: 'nm' }, m?.name || session.user.user_metadata?.name || t('Me')), icon('down')),
@@ -535,7 +535,7 @@ function topBar(on) {
 function tabBar(on) {
   const m = me();
   // on a phone (Alex, 5 Nov): Feed, Industry, Chat and me with my own picture; Calls and Seminars live on my profile's tiles
-  return h('nav', { class: 'tabbar' }, NAV.filter(([k]) => k !== 'calls' && k !== 'seminars').map(([k, s, ic]) => h('a', { href: `#/${k}`, class: on === k ? 'on' : '' }, icon(ic), t(s))),
+  return h('nav', { class: 'tabbar' }, NAV.filter(([k]) => k !== 'calls' && k !== 'seminars').map(([k, s, ic]) => h('a', { href: `#/${k}`, class: on === k ? 'on' : '', onclick: k === 'feed' ? goHome : null }, icon(ic), t(s))),
     h('a', { href: m ? `#/p/${m.id}` : '#/edit/new', class: 'tab-me' + (on === 'me' ? ' on' : '') }, m ? avatar(m, 'tab-av') : icon('user'), t('Me')));
 }
 // the footer (Alex, 5 Nov): Roardino by THE MAD LIONS, themadlions.com and its places
@@ -598,6 +598,7 @@ window.addEventListener('hashchange', route);
     y0 = null;
     if (pull > 130 && atTop()) {
       busy = true; tip.classList.add('spin'); tip.style.transform = 'translate(-50%, 70px)'; tip.style.opacity = '1';
+      feedFresh = true;
       try { await route(); } finally { setTimeout(() => { busy = false; tip.classList.remove('spin', 'ready'); tip.style.cssText = ''; }, 350); }
     } else tip.style.cssText = '';
     pull = 0;
@@ -722,6 +723,26 @@ function setFeedOnly(k) {
   try { localStorage.setItem('roardino-feed', k); } catch { /* private window */ }
   if (session?.user?.user_metadata?.roardino_feed !== k) sb.auth.updateUser?.({ data: { roardino_feed: k } }).then(({ data }) => { if (data?.user) session.user = data.user; }).catch(() => {});
 }
+/* ---------- posts I have seen (Alex, 5 Nov: "on refresh, the posts you have seen do not show again") ----------
+   A post counts as seen once half of it has been on screen for 0.8 s; kept on this device. A fresh feed (opening the app,
+   pulling down, Home) leaves the seen ones out and offers them after "You're all caught up"; a feed drawn again for a like or
+   a follow keeps what it showed, so nothing jumps away under the finger. */
+let seenPosts = new Set();
+try { seenPosts = new Set(JSON.parse(localStorage.getItem('roardino-seen-posts') || '[]')); } catch { /* none */ }
+let feedFresh = true, feedKeep = new Set(), showOlder = false;
+const keepSeen = () => { try { localStorage.setItem('roardino-seen-posts', JSON.stringify([...seenPosts].slice(-3000))); } catch { /* full */ } };
+const seenWatch = 'IntersectionObserver' in window ? new IntersectionObserver((list) => list.forEach((en) => {
+  const el = en.target;
+  if (en.isIntersecting) el._seenT ||= setTimeout(() => { seenPosts.add(el.dataset.post); keepSeen(); seenWatch.unobserve(el); }, 800);
+  else { clearTimeout(el._seenT); el._seenT = null; }
+}), { threshold: 0.5 }) : null;
+// Home: to the top of a fresh feed, from anywhere
+function goHome(e) {
+  e?.preventDefault?.();
+  feedFresh = true; showOlder = false;
+  if (location.hash === '#/feed' || location.hash === '' || location.hash === '#/') { window.scrollTo({ top: 0, behavior: 'smooth' }); viewFeed(); }
+  else location.hash = '#/feed';
+}
 async function viewFeed() {
   document.title = 'Roardino';
   const left = h('aside', { class: 'side left' }, meCard(), me() ? null : meTiles());
@@ -742,9 +763,17 @@ async function viewFeed() {
 
   let q = sb.from('roardino_posts').select('*, person:roardino_people(id,name,avatar,kinds,headline)').order('created_at', { ascending: false }).limit(40);
   if (feedOnly === 'follow') q = q.in('person_id', [...follows, ...mine.map((m) => m.id), '00000000-0000-0000-0000-000000000000']);
-  const { data, error } = await q;
+  const { data: all, error } = await q;
   if (error) throw error;
-  const cards = data.length ? await posts(data, () => viewFeed()) : [h('div', { class: 'empty' }, h('b', {}, feedOnly === 'follow' ? t('Nobody to show yet') : t('Nothing here yet')), feedOnly === 'follow' ? t('Follow people from People and their work shows here.') : t('Post your first work.'))];
+  if (feedFresh) { feedKeep = new Set(); feedFresh = false; showOlder = false; }
+  const isNew = (r) => !seenPosts.has(r.id) || feedKeep.has(r.id);
+  const fresh = all.filter(isNew), older = all.filter((r) => !isNew(r));
+  const data = showOlder ? [...fresh, ...older] : fresh;
+  feedKeep = new Set(data.map((r) => r.id));
+  const caught = older.length && !showOlder ? h('div', { class: 'caught card' }, h('span', { class: 'caught-ic', html: ICON.check }), h('b', {}, t('You\'re all caught up')),
+    h('p', { class: 'hint' }, fresh.length ? t('You have seen the posts of the last days.') : t('Nothing new since you last looked.')),
+    h('button', { type: 'button', class: 'btn sm', onclick: () => { showOlder = true; viewFeed(); } }, t('Show older posts'))) : null;
+  const cards = data.length ? await posts(data, () => viewFeed()) : older.length ? [] : [h('div', { class: 'empty' }, h('b', {}, feedOnly === 'follow' ? t('Nobody to show yet') : t('Nothing here yet')), feedOnly === 'follow' ? t('Follow people from People and their work shows here.') : t('Post your first work.'))];
   // calls ride in the feed, one after every three posts, as Alex's reference shows a job among the posts
   const openCalls = (calls.data || []).slice(0, 6);
   const stream = [];
@@ -757,7 +786,8 @@ async function viewFeed() {
       // stories on or off, a small square next to New post (Alex, 5 Nov)
       h('button', { type: 'button', class: 'btn st-toggle' + (prefs.showStories ? ' on' : ''), title: prefs.showStories ? t('Hide stories') : t('Show stories'), 'aria-label': prefs.showStories ? t('Hide stories') : t('Show stories'), html: ICON.rings + `<span>${esc(t('Stories'))}</span>`, onclick: () => { setShowStories(!prefs.showStories); toast(prefs.showStories ? t('Stories on') : t('Stories hidden')); viewFeed(); } }),
       mine.length ? h('button', { type: 'button', class: 'btn main new-post', title: t('New post'), 'aria-label': t('New post'), onclick: () => composeWin('work') }, icon('plus'), h('span', {}, t('New post'))) : null),
-    ...stream);
+    ...stream, caught);
+  if (seenWatch) mid.querySelectorAll('.post[data-post]').forEach((el) => { if (!seenPosts.has(el.dataset.post)) seenWatch.observe(el); });
 }
 
 // my card, left: who I am, my numbers, my skills, my latest work
@@ -1084,7 +1114,7 @@ function postCard(r, st, refresh) {
     : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', ondblclick: (e) => { if (!st.mine) bravoBtn.click(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); e.target.parentElement.parentElement.append(hh); setTimeout(() => hh.remove(), 900); } })))) : null;
   const dots = media.length > 1 ? h('div', { class: 'ig-dots' }, media.map((_, i) => h('i', { class: i ? '' : 'on' }))) : null;
   if (slides && dots) slides.addEventListener('scroll', () => { const i = Math.round(slides.scrollLeft / slides.clientWidth); dots.querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i)); });
-  return h('article', { class: 'post ig' },
+  return h('article', { class: 'post ig', 'data-post': r.id },
     h('div', { class: 'post-head' },
       h('a', { href: `#/p/${p.id}`, class: 'ring-sm' }, avatar(p)),
       h('div', { class: 'who-line' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name || '')), h('small', {}, p.headline || (p.kinds || []).map(kindName).slice(0, 2).join(' · '))),
