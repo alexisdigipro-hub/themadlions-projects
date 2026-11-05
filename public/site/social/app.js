@@ -17,6 +17,42 @@ const BUCKET = 'roardino-people';
 const MAX_VIDEO = 200 * 1024 * 1024;
 const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { storageKey: 'roardino-social-auth', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
 
+/* ---------- the look of the letters for everyone (Alex, 5 Nov: "fonts from Google Fonts, the boldness and the thickness", only he
+   changes it): roardino_settings 'look' = { font, text, strong }, kept on the device too so the next start paints it at once ---------- */
+const FONTS = [['', 'System (San Francisco / Segoe)'], ['Inter', 'Inter'], ['Manrope', 'Manrope'], ['Roboto', 'Roboto'], ['Open Sans', 'Open Sans'], ['Noto Sans', 'Noto Sans'],
+  ['Commissioner', 'Commissioner'], ['Ubuntu', 'Ubuntu'], ['Fira Sans', 'Fira Sans'], ['Source Sans 3', 'Source Sans 3'], ['Comfortaa', 'Comfortaa'], ['Advent Pro', 'Advent Pro'],
+  ['Literata', 'Literata (serif)'], ['Noto Serif', 'Noto Serif (serif)'], ['GFS Didot', 'GFS Didot (serif)']]; // all of them write Greek too
+const LOOK_DEFAULT = { font: '', text: 400, strong: 600 };
+let look = { ...LOOK_DEFAULT };
+try { look = { ...LOOK_DEFAULT, ...JSON.parse(localStorage.getItem('roardino-look') || '{}') }; } catch { /* private window */ }
+function wearLook() {
+  const r = document.documentElement.style;
+  r.setProperty('--w-text', String(look.text)); r.setProperty('--w-strong', String(look.strong));
+  r.setProperty('--w-mid', String(Math.round((+look.text + +look.strong) / 2 / 50) * 50));
+  let link = document.getElementById('look-font');
+  if (look.font) {
+    const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(look.font).replace(/%20/g, '+')}:wght@300;400;500;600;700;800&display=swap`;
+    if (!link) { link = document.createElement('link'); link.id = 'look-font'; link.rel = 'stylesheet'; document.head.append(link); }
+    if (link.href !== href) link.href = href;
+    r.setProperty('--font', `'${look.font}',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif`);
+  } else { link?.remove(); r.removeProperty('--font'); }
+}
+wearLook();
+async function loadLook() {
+  const { data } = await sb.from('roardino_settings').select('value').eq('key', 'look').maybeSingle();
+  look = { ...LOOK_DEFAULT, ...(data?.value || {}) };
+  try { localStorage.setItem('roardino-look', JSON.stringify(look)); } catch { /* full */ }
+  wearLook();
+}
+loadLook().catch(() => { /* keep what the device had */ });
+let lookTimer = null;
+function setLook(k, v) {
+  look[k] = v; wearLook();
+  try { localStorage.setItem('roardino-look', JSON.stringify(look)); } catch { /* full */ }
+  clearTimeout(lookTimer);
+  lookTimer = setTimeout(async () => { const { error } = await sb.from('roardino_settings').upsert({ key: 'look', value: look, updated_at: new Date().toISOString() }); if (error) toast(errText(error)); }, 500);
+}
+
 /* ---------- words: English is the key, Greek comes later in EL ---------- */
 let LANG = 'en';
 try { LANG = localStorage.getItem('roardino-lang') || 'en'; } catch { /* private window */ }
@@ -91,6 +127,67 @@ function personKeys(p) {
 }
 // every word typed must be found at the start of a word of the profile (Ελ finds Ελένη, not Μιχαέλα)
 const matches = (keys, q) => fold(q).split(' ').filter(Boolean).every((w) => keys.includes(' ' + w));
+
+/* ---------- @usernames and tags (Alex, 5 Nov: "tag a profile with @ in a new post") ---------- */
+const HANDLE_RE = /^[a-z0-9._]{3,30}$/;
+const GRH = { α: 'a', β: 'v', γ: 'g', δ: 'd', ε: 'e', ζ: 'z', η: 'i', θ: 'th', ι: 'i', κ: 'k', λ: 'l', μ: 'm', ν: 'n', ξ: 'x', ο: 'o', π: 'p', ρ: 'r', σ: 's', ς: 's', τ: 't', υ: 'y', φ: 'f', χ: 'ch', ψ: 'ps', ω: 'o' };
+const slugOf = (name) => String(name || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ου/g, 'ou').replace(/μπ/g, 'b')
+  .replace(/[α-ω]/g, (c) => GRH[c] ?? c).replace(/[^a-z0-9]+/g, '.').replace(/^[._]+|[._]+$/g, '').slice(0, 30);
+// text with @handles made into links to the profile
+function tagText(text) {
+  const out = []; let last = 0; const re = /@([A-Za-z0-9._]{3,30})/g; let m;
+  const str = String(text || '');
+  while ((m = re.exec(str))) {
+    const hd = m[1].toLowerCase().replace(/[._]+$/, '');
+    if (m.index > last) out.push(str.slice(last, m.index));
+    out.push(h('a', { class: 'tag', href: `#/u/${hd}`, onclick: (e) => e.stopPropagation() }, '@' + hd));
+    last = m.index + 1 + hd.length;
+  }
+  if (last < str.length) out.push(str.slice(last));
+  return out;
+}
+// everyone who can be tagged, read once
+let tagPeople = null;
+async function loadTagPeople() {
+  if (tagPeople) return tagPeople;
+  const { data } = await sb.from('roardino_people').select('id,name,handle,avatar,kinds,minor').eq('visible', true).eq('minor', false).not('handle', 'is', null).order('updated_at', { ascending: false }).limit(1000);
+  tagPeople = data || []; await sign(tagPeople.map((p) => p.avatar)); return tagPeople;
+}
+// typing @ in a field opens a list of people; a click or Enter puts their @username in
+function withMentions(field) {
+  const list = h('div', { class: 'mention-list hidden', role: 'listbox' });
+  const wrap = h('div', { class: 'mention-wrap' });
+  let items = [], at = -1, sel = 0;
+  const close = () => { list.classList.add('hidden'); items = []; at = -1; };
+  const pick = (p) => {
+    const v = field.value, pos = field.selectionStart;
+    field.value = v.slice(0, at) + '@' + p.handle + ' ' + v.slice(pos);
+    const c = at + p.handle.length + 2; field.setSelectionRange(c, c); field.focus(); close();
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  const draw = () => put(list, items.map((p, i) => h('button', { type: 'button', class: 'mention' + (i === sel ? ' on' : ''), onmousedown: (e) => { e.preventDefault(); pick(p); } },
+    avatar(p, 'sm'), h('span', {}, h('b', {}, p.name), h('small', {}, '@' + p.handle + (p.kinds?.length ? ' · ' + kindName(p.kinds[0]) : ''))))));
+  field.addEventListener('input', async () => {
+    const pos = field.selectionStart, before = field.value.slice(0, pos), m = before.match(/(^|\s)@([^\s@]{0,30})$/);
+    if (!m) return close();
+    at = pos - m[2].length - 1;
+    const q = m[2], ppl = await loadTagPeople(), fq = fold(q);
+    items = ppl.filter((p) => !q || p.handle.startsWith(q.toLowerCase()) || matches(p._keys ??= ' ' + fold(p.name) + ' ', q) || fold(p.handle).includes(fq)).slice(0, 6);
+    sel = 0;
+    if (!items.length) return close();
+    list.classList.remove('hidden'); draw();
+  });
+  field.addEventListener('keydown', (e) => {
+    if (list.classList.contains('hidden') || !items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); e.stopImmediatePropagation(); sel = (sel + 1) % items.length; draw(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopImmediatePropagation(); sel = (sel - 1 + items.length) % items.length; draw(); }
+    else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); e.stopImmediatePropagation(); pick(items[sel]); }
+    else if (e.key === 'Escape') { e.stopImmediatePropagation(); close(); }
+  }, true);
+  field.addEventListener('blur', () => setTimeout(close, 150));
+  wrap.append(field, list);
+  return wrap;
+}
 const HUE = { front: '#d40000', back: '#6f8fbf', creative: '#e0a33a' }; // Cast, Crew, Creatives
 // looks and an actor's skills belong only to these (Alex, 4 Nov: not to the crew); everything else gets equipment and tools
 const PERFORMERS = ['actor', 'model', 'dancer', 'extra'];
@@ -151,6 +248,8 @@ const ICON = {
   clap: SVG('<path d="M8 13l-2.5-2.5a1.8 1.8 0 012.5-2.5l5 5"/><path d="M10 9.5L8.5 8a1.8 1.8 0 012.5-2.5l5.5 5.5c2 2 2 5 0 7s-5 2-7 0L5 13.5a1.8 1.8 0 012.5-2.5"/><path d="M16 3l.5 2M20 6l-2 .5M19 2l-1.2 1.6"/>'),
   talk: SVG('<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/>'),
   pic: SVG('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>'),
+  check: SVG('<path d="M5 12.5 10 17.5 19 7"/>', 'stroke-width="2.4"'),
+  link: SVG('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),
   trash: SVG('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
   left: SVG('<path d="M15 18l-6-6 6-6"/>', 'stroke-width="2.2"'),
   right: SVG('<path d="M9 6l6 6-6 6"/>', 'stroke-width="2.2"'),
@@ -451,6 +550,7 @@ async function route() {
   try {
     if (a === 'people') return await viewPeople();
     if (a === 'p' && b) return await viewPerson(b);
+    if (a === 'u' && b) { const { data: u } = await sb.from('roardino_people').select('id').eq('handle', decodeURIComponent(b).toLowerCase()).maybeSingle(); return await viewPerson(u?.id || '00000000-0000-0000-0000-000000000000'); }
     if (a === 'calls') return await viewCalls();
     if (a === 'c' && b) return await viewCall(b);
     if (a === 'seminars') return await viewSeminars();
@@ -729,7 +829,7 @@ function composer(done, kind0 = 'work', asId = null) {
   const drawKind = () => put(kindBox, seg([['work', t('Work')], ['photo', t('My photo')]], kind, (k) => { kind = k; drawKind(); }));
   drawKind();
   const files = [];
-  const text = area('', { placeholder: t('What did you shoot, what are you preparing, what are you looking for?'), rows: 2 });
+  const text = area('', { placeholder: t('What did you shoot, what are you preparing, what are you looking for? Tag people with @'), rows: 2 });
   const prev = h('div', { class: 'thumbs' });
   const pick = h('input', { type: 'file', accept: 'image/*,video/*', multiple: true, hidden: true, onchange: async (e) => { const list = [...e.target.files].slice(0, 6 - files.length); e.target.value = ''; for (const f of await cropAll(list, SHAPES.post)) files.push(f); draw(); } });
   const draw = () => put(prev, ...files.map((f, i) => h('div', { class: 'thumb', style: /^image/.test(f.type) ? { backgroundImage: `url("${URL.createObjectURL(f)}")` } : {} },
@@ -749,7 +849,7 @@ function composer(done, kind0 = 'work', asId = null) {
     } catch (e) { fail(e); btn.disabled = false; btn.textContent = t('Post'); }
   }
   return h('div', { class: 'compose' },
-    h('div', { class: 'c-top' }, avatar(me()), text),
+    h('div', { class: 'c-top' }, avatar(me()), withMentions(text)),
     prev,
     h('div', { class: 'acts' },
       h('button', { type: 'button', class: 'btn sm', onclick: () => pick.click() }, icon('pic'), t('Photo / video')), pick, kindBox,
@@ -815,14 +915,14 @@ function postCard(r, st, refresh) {
         removeFiles(media.map((m) => m.path)); refresh();
       } }) : null),
     slides, dots,
-    !media.length && r.body ? h('p', { class: 'post-body big' }, r.body) : null,
+    !media.length && r.body ? h('p', { class: 'post-body big' }, ...tagText(r.body)) : null,
     h('div', { class: 'ig-bar' }, bravoBtn,
       h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: openTalk }),
       h('button', { type: 'button', class: 'ig-ico', title: t('Share'), 'aria-label': t('Share'), html: ICON.send, onclick: share }),
       h('span', { class: 'grow' }),
       own ? null : h('a', { class: 'btn sm main', href: `#/p/${p.id}` }, t('Work with me'))),
     count,
-    media.length && r.body ? h('p', { class: 'ig-cap' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name)), ' ', r.body) : null,
+    media.length && r.body ? h('p', { class: 'ig-cap' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name)), ' ', ...tagText(r.body)) : null,
     more,
     h('p', { class: 'ig-time' }, ago(r.created_at)),
     talk);
@@ -842,11 +942,11 @@ async function drawTalk(box, r, st, recount) {
   put(box, 
     ...(data || []).map((c) => h('div', { class: 'cmt' },
       h('a', { href: c.person ? `#/p/${c.person.id}` : '#/feed' }, avatar(c.person || {}, 'sm')),
-      h('div', {}, h('b', {}, c.person?.name || t('Member')), ' ', c.body, h('small', {}, ago(c.created_at))),
+      h('div', {}, h('b', {}, c.person?.name || t('Member')), ' ', ...tagText(c.body), h('small', {}, ago(c.created_at))),
       c.owner === session.user.id || r.owner === session.user.id ? h('button', { type: 'button', class: 'linkish', onclick: async () => {
         await sb.from('roardino_comments').delete().eq('id', c.id); st.comments--; recount(); drawTalk(box, r, st, recount);
       } }, t('delete')) : null)),
-    h('div', { class: 'cmt-new' }, avatar(me() || { name: '?' }, 'sm'), text, h('button', { type: 'button', class: 'btn sm', onclick: send }, t('Send'))));
+    h('div', { class: 'cmt-new' }, avatar(me() || { name: '?' }, 'sm'), withMentions(text), h('button', { type: 'button', class: 'btn sm', onclick: send }, t('Send'))));
 }
 
 /* =====================================================================================================================
@@ -880,7 +980,7 @@ function storiesCard(groups, others) {
   const m = me();
   const myGroup = m && groups.find((g) => g.person.id === m.id);
   const rest = groups.filter((g) => g !== myGroup);
-  const pick = h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, onchange: async (e) => { const f0 = e.target.files[0]; e.target.value = ''; const f = f0 && await cropImage(f0, SHAPES.story); if (f) await addStory(f); } });
+  const pick = h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, onchange: async (e) => { const f0 = e.target.files[0]; e.target.value = ''; const f = f0 && (/^video/.test(f0.type) ? f0 : await cropImage(f0, SHAPES.story)); const ed = f && await storyEditor(f); if (ed) await addStory(ed.file, ed.overlays); } });
   const ringOf = (g) => (g.items.some((x) => !seenStories.has(x.id)) ? 'r' : 'r seen');
   const face = (p, cls) => h('span', { class: cls }, h('i', { style: bg(p.avatar) }, urlOf(p.avatar) ? '' : initials(p.name)));
   return h('section', { class: 'card stories' },
@@ -961,21 +1061,114 @@ async function storyCamera() {
     hint.classList.add('hidden');
     put(controls,
       h('button', { type: 'button', class: 'btn', onclick: () => { put(stage, video); hint.classList.remove('hidden'); put(controls, h('span', { style: { width: '46px' } }), shutter, flip); start(); } }, t('Retake')),
-      h('button', { type: 'button', class: 'btn main', onclick: async () => { close(); await addStory(shot); } }, t('Share to my story')));
+      h('button', { type: 'button', class: 'btn main', onclick: async () => { close(); const ed = await storyEditor(shot); if (ed) await addStory(ed.file, ed.overlays); } }, t('Next')));
   }
   start();
 }
-async function addStory(file) {
+async function addStory(file, overlays = []) {
   const m = me();
   if (!m) return;
-  toast(t('Uploading…'));
+  // the upload shows in the middle of the screen, with the picture (Alex, 5 Nov)
+  const url = URL.createObjectURL(file);
+  const card = h('div', { class: 'up-card' },
+    h('div', { class: 'up-thumb' }, /^video/.test(file.type) ? h('video', { src: url, muted: true, autoplay: true, loop: true, playsInline: true }) : h('img', { src: url, alt: '' }), h('span', { class: 'up-spin' })),
+    h('b', {}, t('Uploading your story…')), h('small', {}, t('Keep this page open for a moment.')));
+  const veil = h('div', { class: 'up-veil' }, card);
+  document.body.append(veil);
   try {
     const path = await upload(m.id, file, 'stories/');
-    const { error } = await sb.from('roardino_stories').insert({ person_id: m.id, media: { path, type: /^video/.test(file.type) ? 'video' : 'image' } });
+    const { error } = await sb.from('roardino_stories').insert({ person_id: m.id, media: { path, type: /^video/.test(file.type) ? 'video' : 'image' }, overlays });
     if (error) throw error;
-    toast(t('Added to your story'));
+    put(card, h('div', { class: 'up-done', html: ICON.check || ICON.send }), h('b', {}, t('Added to your story')));
+    await new Promise((r) => setTimeout(r, 900));
     viewFeed();
-  } catch (e) { fail(e); }
+  } catch (e) { fail(e); } finally { veil.remove(); URL.revokeObjectURL(url); }
+}
+// before a story goes out: text, a @tag and a link on it, as on Instagram (Alex, 5 Nov); each is dragged where it should sit and
+// kept as { type, x, y (in % of the picture), text, color, box | handle, id | url } so it works on videos too
+const ST_COLORS = ['#ffffff', '#111111', '#d40000', '#f2c94c', '#35c98b', '#4a90e2', '#c06bf0'];
+function storyEditor(file) {
+  return new Promise((done) => {
+    const url = URL.createObjectURL(file);
+    const overlays = [];
+    const media = /^video/.test(file.type) ? h('video', { src: url, autoplay: true, loop: true, muted: true, playsInline: true }) : h('img', { src: url, alt: '' });
+    const layer = h('div', { class: 'st-layer' });
+    const stage = h('div', { class: 'st-stage ed' }, media, layer);
+    const panel = h('div', { class: 'ed-panel hidden' });
+    const tool = (label, ic, onclick) => h('button', { type: 'button', class: 'cam-btn ed-tool', title: label, 'aria-label': label, onclick }, ic.length < 3 ? h('b', {}, ic) : h('span', { html: ICON[ic] }));
+    const tools = h('div', { class: 'ed-tools' }, tool(t('Text'), 'Aa', () => editText()), tool(t('Tag someone'), '@', () => editTag()), tool(t('Link'), 'link', () => editLink()));
+    const finish = (v) => { veil.remove(); URL.revokeObjectURL(url); done(v); };
+    const controls = h('div', { class: 'cam-controls' },
+      h('button', { type: 'button', class: 'btn', onclick: () => finish(null) }, t('Cancel')),
+      h('button', { type: 'button', class: 'btn main', onclick: () => finish({ file, overlays: overlays.map(({ el, ...o }) => o) }) }, t('Share to my story')));
+    const card = h('div', { class: 'st-card cam editor' }, stage, tools, controls, panel);
+    const veil = h('div', { class: 'st-veil' }, card, h('button', { type: 'button', class: 'st-x', 'aria-label': t('Close'), html: ICON.x, onclick: () => finish(null) }));
+    document.body.append(veil);
+    function place(o) {
+      o.el?.remove();
+      const el = stickerEl(o, true);
+      el.style.left = o.x + '%'; el.style.top = o.y + '%';
+      // drag to move; a tap without moving edits it
+      let sx, sy, moved = false;
+      el.addEventListener('pointerdown', (e) => { e.preventDefault(); el.setPointerCapture(e.pointerId); sx = e.clientX; sy = e.clientY; moved = false; el.classList.add('drag'); });
+      el.addEventListener('pointermove', (e) => {
+        if (!el.hasPointerCapture(e.pointerId)) return;
+        if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > 4) moved = true;
+        const r = layer.getBoundingClientRect();
+        o.x = Math.max(4, Math.min(96, ((e.clientX - r.left) / r.width) * 100)); o.y = Math.max(4, Math.min(96, ((e.clientY - r.top) / r.height) * 100));
+        el.style.left = o.x + '%'; el.style.top = o.y + '%';
+      });
+      el.addEventListener('pointerup', () => { el.classList.remove('drag'); if (!moved) (o.type === 'text' ? editText : o.type === 'tag' ? editTag : editLink)(o); });
+      o.el = el; layer.append(el);
+    }
+    function openPanel(...kids) { put(panel, ...kids); panel.classList.remove('hidden'); panel.querySelector('input')?.focus(); }
+    const closePanel = () => panel.classList.add('hidden');
+    const remove = (o) => { o.el?.remove(); const k = overlays.indexOf(o); if (k >= 0) overlays.splice(k, 1); closePanel(); };
+    const panelFoot = (o, ok) => h('div', { class: 'ed-foot' }, o ? h('button', { type: 'button', class: 'btn red', onclick: () => remove(o) }, icon('trash'), t('Remove')) : h('button', { type: 'button', class: 'btn', onclick: closePanel }, t('Cancel')), h('button', { type: 'button', class: 'btn main', onclick: ok }, t('Done')));
+    function editText(o) {
+      const cur = o || { type: 'text', x: 50, y: 40, text: '', color: '#ffffff', box: false };
+      const inp = h('input', { class: 'input', maxlength: 120, value: cur.text, placeholder: t('Write something') });
+      const sw = h('div', { class: 'ed-swatches' });
+      const drawSw = () => put(sw, ST_COLORS.map((c) => h('button', { type: 'button', class: 'swatch' + (cur.color === c ? ' on' : ''), style: { '--sw': c }, 'aria-label': c, onclick: () => { cur.color = c; drawSw(); } })),
+        h('button', { type: 'button', class: 'btn sm' + (cur.box ? ' main' : ''), onclick: () => { cur.box = !cur.box; drawSw(); } }, t('Box')));
+      drawSw();
+      const ok = () => { cur.text = inp.value.trim(); if (!cur.text) return remove(cur); if (!o) overlays.push(cur); place(cur); closePanel(); };
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') ok(); });
+      openPanel(h('b', {}, t('Text')), inp, sw, panelFoot(o, ok));
+    }
+    function editTag(o) {
+      const cur = o || { type: 'tag', x: 50, y: 60, handle: '', id: '' };
+      const inp = h('input', { class: 'input', value: cur.handle ? '@' + cur.handle : '@', placeholder: '@username', autocapitalize: 'off' });
+      const ok = async () => {
+        const hd = inp.value.replace(/^@/, '').trim().toLowerCase();
+        const p = (await loadTagPeople()).find((x) => x.handle === hd);
+        if (!p) { toast(t('No profile with that username.')); return; }
+        cur.handle = p.handle; cur.id = p.id; if (!o) overlays.push(cur); place(cur); closePanel();
+      };
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !document.querySelector('.ed-panel .mention-list:not(.hidden)')) ok(); });
+      openPanel(h('b', {}, t('Tag someone')), withMentions(inp), panelFoot(o, ok));
+      inp.setSelectionRange(inp.value.length, inp.value.length); inp.dispatchEvent(new Event('input'));
+    }
+    function editLink(o) {
+      const cur = o || { type: 'link', x: 50, y: 75, url: '', text: '' };
+      const u = h('input', { class: 'input', type: 'url', value: cur.url, placeholder: 'https://', autocapitalize: 'off' });
+      const lbl = h('input', { class: 'input', value: cur.text, maxlength: 40, placeholder: t('What it says (optional)') });
+      const ok = () => {
+        let v = u.value.trim(); if (!v) return remove(cur);
+        if (!/^https?:\/\//i.test(v)) v = 'https://' + v;
+        try { new URL(v); } catch { toast(t('That link does not look right.')); return; }
+        cur.url = v; cur.text = lbl.value.trim(); if (!o) overlays.push(cur); place(cur); closePanel();
+      };
+      openPanel(h('b', {}, t('Link')), u, lbl, panelFoot(o, ok));
+    }
+  });
+}
+// one sticker on a story: text, @tag (opens the profile) or a link (opens in a new tab)
+function stickerEl(o, editing) {
+  if (o.type === 'tag') return h(editing ? 'div' : 'a', { class: 'stk stk-tag', href: editing ? null : `#/p/${o.id}` }, '@' + o.handle);
+  if (o.type === 'link') { let host = ''; try { host = new URL(o.url).hostname.replace(/^www\./, ''); } catch { /* bad */ } return h(editing ? 'div' : 'a', { class: 'stk stk-link', href: editing ? null : o.url, target: '_blank', rel: 'noopener nofollow' }, h('span', { html: ICON.link }), o.text || host); }
+  const light = ['#ffffff', '#f2c94c'].includes(o.color);
+  return h('div', { class: 'stk stk-text' + (o.box ? ' box' : ''), style: o.box ? { background: o.color, color: light ? '#111' : '#fff' } : { color: o.color } }, o.text);
 }
 function openStories(groups, gi) {
   if (!groups.length) return;
@@ -985,9 +1178,10 @@ function openStories(groups, gi) {
   const head = h('div', { class: 'st-head' });
   const stage = h('div', { class: 'st-stage' });
   const cap = h('p', { class: 'st-cap' });
+  const stickers = h('div', { class: 'st-layer view' });
   const card = h('div', { class: 'st-card' }, stage, bars, head, cap,
     h('button', { type: 'button', class: 'st-tap prev', 'aria-label': t('Previous'), onclick: () => step(-1) }),
-    h('button', { type: 'button', class: 'st-tap next', 'aria-label': t('Next'), onclick: () => step(1) }));
+    h('button', { type: 'button', class: 'st-tap next', 'aria-label': t('Next'), onclick: () => step(1) }), stickers);
   const veil = h('div', { class: 'st-veil', onclick: (e) => { if (e.target === veil) close(); } }, card,
     h('button', { type: 'button', class: 'st-x', 'aria-label': t('Close'), html: ICON.x, onclick: () => close() }));
   const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'ArrowRight') step(1); if (e.key === 'ArrowLeft') step(-1); };
@@ -1012,7 +1206,8 @@ function openStories(groups, gi) {
     put(head, h('a', { href: `#/p/${grp.person.id}`, onclick: () => close() }, avatar(grp.person, 'sm')), h('b', {}, grp.person.name), h('small', {}, ago(st.created_at)),
       own ? h('button', { type: 'button', class: 'st-del', 'aria-label': t('Delete'), html: ICON.trash, onclick: async (e) => {
         e.stopPropagation();
-        if (!(await ask(t('Delete this story?')))) return;
+        clearTimeout(timer); stage.querySelector('video')?.pause();
+        if (!(await ask(t('Delete this story?')))) { stage.querySelector('video')?.play().catch(() => {}); run(Math.max(800, left - (Date.now() - started))); return; }
         const { error } = await sb.from('roardino_stories').delete().eq('id', st.id);
         if (error) return fail(error);
         if (!/^https?:/.test(st.media?.path || '')) removeFiles([st.media?.path]);
@@ -1020,6 +1215,7 @@ function openStories(groups, gi) {
         if (!grp.items.length) { groups.splice(g, 1); if (!groups.length) return close(); if (g >= groups.length) return close(); i = 0; } else if (i >= grp.items.length) i = grp.items.length - 1;
         show();
       } }) : null);
+    put(stickers, (st.overlays || []).map((o) => { const el = stickerEl(o, false); el.style.left = o.x + '%'; el.style.top = o.y + '%'; if (el.tagName === 'A') el.addEventListener('click', (e) => { e.stopPropagation(); if (o.type === 'tag') close(); }); el.addEventListener('pointerdown', (e) => e.stopPropagation()); return el; }));
     cap.textContent = st.caption || '';
     cap.classList.toggle('hidden', !st.caption);
     const m = st.media || {};
@@ -1213,7 +1409,7 @@ async function viewPerson(id) {
       h('div', { class: 'ig-av' + (theirStories.length ? ' has' : ''), role: theirStories.length ? 'button' : null, title: theirStories.length ? t('Stories') : null, onclick: theirStories.length ? () => openStories(theirStories, 0) : null },
         h('span', { class: 'r big' + (theirStories.length ? '' : ' plain') }, h('i', { style: bg(photos[0] || p.avatar) }, urlOf(photos[0] || p.avatar) ? '' : initials(p.name)))),
       h('div', { class: 'ig-info' },
-        h('div', { class: 'ig-name' }, h('h1', {}, p.name),
+        h('div', { class: 'ig-name' }, h('h1', {}, p.name), p.handle ? h('span', { class: 'ig-handle' }, '@' + p.handle) : null,
           own ? h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')) : followBtn),
         stats ? h('div', { class: 'ig-stats' }, [[stats.posts, t('works')], [stats.followers, t('followers')], [stats.bravos, 'bravo']].map(([n, s2]) => h('span', {}, h('b', {}, String(n)), ' ', s2))) : null,
         h('div', { class: 'chips' }, (p.kinds || []).map(kindChip), p.minor ? h('span', { class: 'chip', style: { '--c': '#e0a33a' } }, h('i'), t('Under 18 · with a parent')) : null),
@@ -1294,6 +1490,11 @@ async function viewEdit(which) {
   const { data: ctRow } = old ? await sb.from('roardino_contacts').select('*').eq('person_id', id).maybeSingle() : { data: null };
   const ct = { email: ctRow?.email ?? (kid ? '' : session.user.email), phone: ctRow?.phone || '', show: !!ctRow?.show };
   delete d.contact.email; delete d.contact.phone; delete d.contact.show; // they live in roardino_contacts
+  let handleTouched = !!p.handle;
+  const handleIn = h('div', { class: 'handle-in' }, h('span', {}, '@'), input(p.handle || slugOf(p.name), { autocapitalize: 'off', autocomplete: 'off', spellcheck: false, maxlength: 30,
+    oninput: (e) => { handleTouched = true; e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, ''); p.handle = e.target.value; } }));
+  if (!p.handle) p.handle = slugOf(p.name);
+  const followName = () => { if (!handleTouched) { p.handle = slugOf(p.name); const f = handleIn.querySelector('input'); if (f) f.value = p.handle; } };
   // pictures in their order, the first the main one: { path } already uploaded or { file } picked now (uploaded on Save)
   const pics = (p.photos || []).map((x) => ({ path: x.path }));
   let reelFile = null, cvFile = null, coverFile = null, coverGone = false;
@@ -1394,12 +1595,15 @@ async function viewEdit(which) {
       d.credits = credits.value.split('\n').map((x) => x.trim()).filter(Boolean);
       const row = {
         id, name: p.name.trim(), kinds: p.kinds, city: p.city || null, birth: p.birth || null, gender: p.gender || null,
-        headline: p.headline || null, bio: p.bio || null, guardian: p.guardian, data: d,
+        handle: p.handle || null, headline: p.headline || null, bio: p.bio || null, guardian: p.guardian, data: d,
         photos: allPics, avatar: allPics[0]?.path || null, reel, reel_url: p.reel_url || null, cv,
         visible: p.visible !== false, consent_at: p.consent_at || new Date().toISOString(),
       };
+      if (row.handle && !HANDLE_RE.test(row.handle)) { const e2 = new Error(t('The username needs 3 to 30 letters a-z, numbers, dots or underscores.')); throw e2; }
       const { error } = old ? await sb.from('roardino_people').update(row).eq('id', id) : await sb.from('roardino_people').insert(row);
+      if (error?.code === '23505' && /handle/.test(error.message || '')) throw new Error(t('@{h} is taken. Try another username.', { h: row.handle }));
       if (error) throw error;
+      tagPeople = null;
       const minor = isMinor();
       const c2 = await sb.from('roardino_contacts').upsert({ person_id: id, email: minor ? null : ct.email?.trim() || null, phone: minor ? null : ct.phone?.trim() || null, show: !minor && ct.show });
       if (c2.error) throw c2.error;
@@ -1426,10 +1630,11 @@ async function viewEdit(which) {
   frame('me', h('div', { class: 'form' },
     h('div', { class: 'head' }, h('h1', {}, old ? t('Your profile') : kid ? t('My child\'s profile') : t('New profile'))),
     sec(kid ? t('The child') : t('Who you are'),
-      h('div', { class: 'row' }, field(kid ? t('Child\'s full name') : t('Full name or stage name'), bind(p, 'name', input(p.name))), field(t('City'), bind(p, 'city', input(p.city, { placeholder: t('e.g. Athens') })))),
+      h('div', { class: 'row' }, field(kid ? t('Child\'s full name') : t('Full name or stage name'), bind(p, 'name', input(p.name, { oninput: () => setTimeout(followName) }))), field(t('City'), bind(p, 'city', input(p.city, { placeholder: t('e.g. Athens') })))),
       h('div', { class: 'row' },
         field(t('Date of birth'), input(p.birth, { type: 'date', oninput: (e) => { p.birth = e.target.value; drawGuard(); } }), kid ? null : t('Not shown; only the age shows, and only for people in front of the camera.')),
         field(t('Gender'), select(GENDERS.map(([v, s]) => [v, t(s)]), p.gender, { onchange: (e) => { p.gender = e.target.value; } }))),
+      field(t('Username'), handleIn, t('People tag you with it: @{h}. Letters a-z, numbers, dots.', { h: p.handle || 'your.name' })),
       field(t('One line about you'), bind(p, 'headline', input(p.headline, { maxlength: 120, placeholder: t('e.g. Stage and screen actor, dances contemporary') }))),
       field(t('What you do'), kindsBox, t('Pick all that apply.'))),
     guard,
@@ -1562,7 +1767,7 @@ async function viewCall(id) {
     h('div', { style: { maxWidth: '820px' } },
       h('div', { class: 'tile' },
         h('div', { class: 't-top' }, h('span', { class: 't-ico', html: c.kind === 'casting' ? ICON.star : ICON.calls }), h('span', { class: 'when' }, t(CALL_KIND[c.kind]) + (c.open ? '' : ' · ' + t('closed')))),
-        h('h1', { style: { fontSize: '30px', margin: '4px 0', fontWeight: 650 } }, c.title),
+        h('h1', { style: { fontSize: '30px', margin: '4px 0', fontWeight: 'var(--w-strong)' } }, c.title),
         callWho(c) ? h('p', { style: { color: 'var(--ink2)' } }, callWho(c)) : null,
         h('div', { class: 'facts', style: { margin: '6px 0' } }, [['City', c.city], ['When', c.dates], ['Pay', c.pay], ['Production', c.company], ['Applications until', c.closes && new Date(c.closes).toLocaleDateString(LOCALE())]].filter(([, v]) => v).map(([k, v]) => h('div', { class: 'fact' }, h('small', {}, t(k)), h('span', {}, v)))),
         c.about ? h('p', { style: { whiteSpace: 'pre-wrap', color: 'var(--ink2)' } }, c.about) : null,
@@ -1636,6 +1841,7 @@ function noteText(n) {
     follow: t('{who} started following you', { who }),
     apply: t('{who} applied to your call "{text}"', { who, text: n.text || '' }),
     shortlist: t('You are on the shortlist for "{text}"', { text: n.text || '' }),
+    tag: t('{who} tagged you: {text}', { who, text: n.text || '' }),
   }[n.kind] || who;
 }
 function bellButton() {
@@ -1771,6 +1977,17 @@ function viewLegal(which) {
 /* =====================================================================================================================
    Settings (Alex, 5 Nov: "light and dark, and some settings it may need")
    ===================================================================================================================== */
+// Design: only for the people who run Roardino; what is set here is how everyone sees it
+function designSection(row) {
+  const range = (k, min, max, step) => { const out = h('output', {}, String(look[k])); return h('div', { class: 'design-range' }, h('input', { type: 'range', min, max, step, value: look[k], oninput: (e) => { out.textContent = e.target.value; setLook(k, +e.target.value); } }), out); };
+  const fontSel = select(FONTS, look.font, { class: 'select design-font', onchange: (e) => setLook('font', e.target.value) });
+  return h('section', { class: 'sec' }, h('h2', {}, t('Design')), h('p', { class: 'hint', style: { margin: '-4px 0 4px' } }, t('Only you see this. What you set here is how everyone sees Roardino.')),
+    row(t('Font'), t('From Google Fonts; every one writes Greek too.'), fontSel),
+    row(t('Text thickness'), t('The weight of ordinary text.'), range('text', 300, 500, 50)),
+    row(t('Bold'), t('The weight of titles, names and buttons. The menu stays bold.'), range('strong', 500, 800, 50)),
+    h('div', { class: 'design-sample' }, h('b', {}, 'Ελένη Σταματοπούλου · Actor'), h('span', {}, t('Αθήνα · 27 · Looking for a short film this winter. The quick brown fox jumps over the lazy dog.'))),
+    row(t('Back to the default'), null, h('button', { type: 'button', class: 'btn sm', onclick: () => { look = { ...LOOK_DEFAULT }; setLook('font', ''); viewSettings(); } }, t('Reset'))));
+}
 function viewSettings() {
   document.title = 'Roardino · ' + t('Settings');
   const row = (title, hint, control) => h('div', { class: 'set-row' }, h('div', {}, h('b', {}, title), hint ? h('small', {}, hint) : null), control);
@@ -1784,6 +2001,7 @@ function viewSettings() {
       row(t('Accent colour'), t('The colour of buttons, the chosen tab and the glow, in light and dark.'), (() => { const box = h('div', { class: 'swatches', role: 'radiogroup' }); const draw = () => put(box, ACCENTS.map(([k, name, g]) => h('button', { type: 'button', class: 'swatch' + (prefs.accent === k ? ' on' : ''), role: 'radio', 'aria-checked': String(prefs.accent === k), 'aria-label': t(name), title: t(name), style: { '--sw': `linear-gradient(135deg,${g})` }, onclick: () => { setPref('accent', k); draw(); } }))); draw(); return box; })()),
       row(t('Text size'), null, choice('text', [['normal', t('Normal')], ['large', t('Large')]])),
       row(t('Language'), t('Greek is on the way.'), h('div', { class: 'seg' }, h('button', { type: 'button', class: 'on' }, 'English'), h('button', { type: 'button', disabled: true, title: t('Soon') }, 'Ελληνικά')))),
+    isAdmin ? designSection(row) : null,
     h('section', { class: 'sec' }, h('h2', {}, t('Feed')),
       row(t('Calls in the feed'), t('Open calls show between the posts.'), toggle('feedCalls')),
       row(t('Videos start muted'), null, toggle('mutedVideos')),

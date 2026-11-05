@@ -534,3 +534,82 @@ drop policy if exists roardino_messages_send on public.roardino_messages;
 create policy roardino_messages_send on public.roardino_messages for insert to anon, authenticated
   with check (done = false and (user_id is null or user_id = auth.uid()));
 grant insert on public.roardino_messages to anon, authenticated;
+
+-- ---------- Design (5 Nov): how Roardino looks for everyone (the font and its weights); everyone reads, admins write ----------
+create table if not exists public.roardino_settings (
+  key text primary key,
+  value jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+alter table public.roardino_settings enable row level security;
+drop policy if exists roardino_settings_read on public.roardino_settings;
+create policy roardino_settings_read on public.roardino_settings for select to anon, authenticated using (true);
+drop policy if exists roardino_settings_write on public.roardino_settings;
+create policy roardino_settings_write on public.roardino_settings for all to authenticated using (public.roar_is_admin()) with check (public.roar_is_admin());
+grant select on public.roardino_settings to anon, authenticated;
+grant insert, update on public.roardino_settings to authenticated;
+
+-- ---------- @usernames and tags (5 Nov, Alex: "tag a profile with @ in a new post") ----------
+-- every profile has a handle: a-z, 0-9, dot and underscore, 3 to 30 long, unique; the old ones get one made from the name
+alter table roardino_people add column if not exists handle text;
+create or replace function roardino_slug(x text) returns text
+language sql immutable set search_path = public as $$
+  select trim(both '._' from regexp_replace(
+    translate(
+      replace(replace(replace(replace(replace(replace(lower(coalesce(x, '')), 'ου', 'ou'), 'θ', 'th'), 'χ', 'ch'), 'ψ', 'ps'), 'ξ', 'x'), 'μπ', 'b'),
+      'αάβγδεέζηήιίϊΐκλμνοόπρσςτυύϋΰφωώàáâäãèéêëìíîïòóôöõùúûüçñ',
+      'aavgdeeziiiiiiklmnooprsstyyyyfooaaaaaeeeeiiiiooooouuuucn'),
+    '[^a-z0-9]+', '.', 'g'))
+$$;
+do $$
+declare r record; base text; h text; n int;
+begin
+  for r in select id, name from roardino_people where handle is null order by created_at loop
+    base := left(roardino_slug(r.name), 26);
+    if char_length(base) < 3 then base := 'roar.' || left(replace(r.id::text, '-', ''), 6); end if;
+    h := base; n := 1;
+    while exists (select 1 from roardino_people where handle = h) loop n := n + 1; h := base || n; end loop;
+    update roardino_people set handle = h where id = r.id;
+  end loop;
+end $$;
+create unique index if not exists roardino_people_handle on roardino_people (handle);
+do $$ begin
+  alter table roardino_people add constraint roardino_handle_ok check (handle is null or handle ~ '^[a-z0-9._]{3,30}$');
+exception when duplicate_object then null; end $$;
+
+-- a tag in a post or a comment tells the profile's owner
+alter table roardino_notifications drop constraint if exists roardino_notifications_kind_check;
+alter table roardino_notifications add constraint roardino_notifications_kind_check check (kind in ('bravo', 'comment', 'follow', 'apply', 'shortlist', 'tag'));
+create or replace function roardino_notify_tags() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare pid uuid; actor uuid; post uuid;
+begin
+  if tg_table_name = 'roardino_posts' then actor := new.owner; post := new.id;
+  else actor := new.owner; post := new.post_id; end if;
+  insert into roardino_notifications (user_id, actor, actor_person, kind, post_id, person_id, text)
+  select distinct on (p.owner) p.owner, actor, coalesce(new.person_id, roardino_face_of(actor)), 'tag', post, p.id, left(new.body, 140)
+  from roardino_people p
+  where p.handle in (select lower(m[1]) from regexp_matches(coalesce(new.body, ''), '@([A-Za-z0-9._]{3,30})', 'g') as m)
+    and p.owner is distinct from actor;
+  return new;
+end $$;
+drop trigger if exists rd_tags on roardino_posts;
+create trigger rd_tags after insert on roardino_posts for each row execute function roardino_notify_tags();
+drop trigger if exists rd_tags on roardino_comments;
+create trigger rd_tags after insert on roardino_comments for each row execute function roardino_notify_tags();
+
+-- ---------- story stickers (5 Nov): text, @tags and links on a story, placed in % of the picture ----------
+alter table roardino_stories add column if not exists overlays jsonb not null default '[]'::jsonb;
+-- a @tag on a story tells that profile's owner too
+create or replace function roardino_notify_story_tags() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into roardino_notifications (user_id, actor, actor_person, kind, person_id, text)
+  select distinct on (p.owner) p.owner, new.owner, new.person_id, 'tag', p.id, 'in a story'
+  from roardino_people p
+  where p.id in (select (o->>'id')::uuid from jsonb_array_elements(coalesce(new.overlays, '[]'::jsonb)) o where o->>'type' = 'tag' and (o->>'id') ~ '^[0-9a-f-]{36}$')
+    and p.owner is distinct from new.owner;
+  return new;
+end $$;
+drop trigger if exists rd_story_tags on roardino_stories;
+create trigger rd_story_tags after insert on roardino_stories for each row execute function roardino_notify_story_tags();
