@@ -250,9 +250,9 @@ function topBar(on) {
     h('label', { class: 'find' }, icon('search'), find),
     h('span', { class: 'grow' }),
     h('nav', { class: 'icons' }, NAV.map(([k, s, ic]) => h('a', { class: 'ico' + (on === k ? ' on' : ''), href: `#/${k}`, title: t(s), 'aria-label': t(s), html: ICON[ic] }))),
-    h('button', { type: 'button', class: 'ico', title: t('Light or dark'), 'aria-label': t('Light or dark'), html: document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon, onclick: (e) => { setPref('theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); e.currentTarget.innerHTML = document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon; } }),
     h('span', { class: 'sep' }),
     h('button', { type: 'button', class: 'who-me', onclick: toggle, 'aria-label': t('Me') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }), h('span', { class: 'nm' }, m?.name || session.user.user_metadata?.name || t('Me')), icon('down')),
+    h('button', { type: 'button', class: 'ico theme', title: t('Light or dark'), 'aria-label': t('Light or dark'), html: document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon, onclick: (e) => { setPref('theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); e.currentTarget.innerHTML = document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon; } }),
     menu));
 }
 function tabBar(on) {
