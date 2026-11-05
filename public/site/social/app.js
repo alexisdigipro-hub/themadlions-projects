@@ -328,6 +328,28 @@ async function sign(paths) {
 }
 // a full address is used as it is (the sample profiles' pictures); a path in the bucket gets a signed link
 const urlOf = (p) => (!p ? '' : /^https?:/.test(p) ? p : signed.get(p)?.url || '');
+// videos on a phone (Alex, 5 Nov: "the site gets stuck on the phone and keeps refreshing"): an iPhone's Safari gives up and
+// reloads the page when many videos play or load at once, so in the feed only the one mostly on screen plays (it loads
+// nothing before it comes near), and a video in a grid gets its source only when its cell comes into sight
+const vidNear = 'IntersectionObserver' in window ? new IntersectionObserver((list) => list.forEach((en) => {
+  const v = en.target;
+  if (en.isIntersecting && !v.src && v.dataset.src) { v.src = v.dataset.src; v.preload = 'metadata'; }
+}), { rootMargin: '400px 0px' }) : null;
+const vidPlay = 'IntersectionObserver' in window ? new IntersectionObserver((list) => list.forEach((en) => {
+  const v = en.target;
+  if (en.intersectionRatio >= 0.6) { document.querySelectorAll('video.fv').forEach((o) => { if (o !== v && !o.paused) o.pause(); }); v.play().catch(() => {}); }
+  else if (!v.paused) v.pause();
+}), { threshold: [0, 0.6] }) : null;
+function feedVideo(src) {
+  const v = h('video', { class: 'fv', playsInline: true, preload: 'none', muted: prefs.mutedVideos, loop: true });
+  if (vidNear && vidPlay) { v.dataset.src = src; vidNear.observe(v); vidPlay.observe(v); } else v.src = src;
+  return v;
+}
+function cellVideo(src) {
+  const v = h('video', { muted: true, playsInline: true, preload: 'none' });
+  if (vidNear) { v.dataset.src = src + '#t=0.5'; vidNear.observe(v); } else { v.src = src + '#t=0.5'; v.preload = 'metadata'; }
+  return v;
+}
 const bg = (p) => (urlOf(p) ? { backgroundImage: `url("${urlOf(p)}")` } : {});
 const avatar = (p, cls = '') => h('span', { class: 'av ' + cls, style: bg(p?.avatar) }, urlOf(p?.avatar) ? '' : initials(p?.name));
 // a picture made lighter in the browser (long side 1800px, JPEG); anything it cannot read goes as it is
@@ -583,11 +605,15 @@ window.addEventListener('hashchange', route);
 (() => {
   const vv = window.visualViewport;
   if (!vv) return;
+  let last = '';
   const fit = () => {
+    // only when it changed: a write on every scroll restyles the whole page, and iPhones gave up under it (Alex, 5 Nov)
+    const hgt = Math.round(vv.height), top = Math.round(vv.offsetTop), kb = vv.height < window.innerHeight * 0.8, key = `${hgt}/${top}/${kb}`;
+    if (key === last) return; last = key;
     const r = document.documentElement.style;
-    r.setProperty('--vvh', `${Math.round(vv.height)}px`);
-    r.setProperty('--vvt', `${Math.round(vv.offsetTop)}px`);
-    document.documentElement.classList.toggle('kb-open', vv.height < window.innerHeight * 0.8);
+    r.setProperty('--vvh', `${hgt}px`);
+    r.setProperty('--vvt', `${top}px`);
+    document.documentElement.classList.toggle('kb-open', kb);
   };
   vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); fit();
   // a field that gets the focus inside a window stays in sight once the keyboard is up
@@ -1237,7 +1263,7 @@ function postCard(r, st, refresh) {
     try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ }
   };
   const slides = media.length ? h('div', { class: 'ig-media' + (media.length > 1 ? ' many' : '') }, media.map((m) => (m.type === 'video'
-    ? h('video', { src: urlOf(m.path), controls: !isPhone(), playsInline: true, preload: 'metadata', muted: prefs.mutedVideos, loop: isPhone(), autoplay: isPhone() })
+    ? (isPhone() ? feedVideo(urlOf(m.path)) : h('video', { src: urlOf(m.path), controls: true, playsInline: true, preload: 'metadata', muted: prefs.mutedVideos }))
     : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', ondblclick: (e) => { if (!st.mine) bravoBtn.click(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); e.target.parentElement.parentElement.append(hh); setTimeout(() => hh.remove(), 900); } })))) : null;
   const dots = media.length > 1 ? h('div', { class: 'ig-dots' }, media.map((_, i) => h('i', { class: i ? '' : 'on' }))) : null;
   if (slides && dots) slides.addEventListener('scroll', () => { const i = Math.round(slides.scrollLeft / slides.clientWidth); dots.querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i)); });
@@ -1659,7 +1685,7 @@ async function viewSearch() {
       const shown = rows.filter(({ r, k }) => (!q || matches(k, q)) && (!kind || (kind === 'video' ? (r.media || []).some((m) => m.type === 'video') : (r.kind || 'work') === kind))).map(({ r }) => r);
       count.textContent = shown.length === 1 ? t('1 post') : t('{n} posts', { n: shown.length });
       put(box, shown.length ? shown.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Post'), onclick: () => openPost(g, g.person) },
-        m0?.type === 'video' ? [h('video', { src: urlOf(m0.path) + '#t=0.5', muted: true, playsInline: true, preload: 'metadata' }), h('span', { class: 'play', html: ICON.play })] : !m0 ? h('span', { class: 'cell-text' }, (g.body || '').slice(0, 90)) : null); })
+        m0?.type === 'video' ? [cellVideo(urlOf(m0.path)), h('span', { class: 'play', html: ICON.play })] : !m0 ? h('span', { class: 'cell-text' }, (g.body || '').slice(0, 90)) : null); })
         : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nothing found')), t('Try other words, in Greek or English.')));
     };
   } else {
@@ -1770,7 +1796,7 @@ function savedGrid() {
     const { data } = await sb.from('roardino_saves').select('created_at, post:roardino_posts(*, person:roardino_people(id,name,avatar,kinds,headline))').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(120);
     const posts = (data || []).map((x) => x.post).filter(Boolean);
     await sign(posts.flatMap((g) => [(g.media || [])[0]?.path, g.person?.avatar]));
-    put(box, posts.length ? posts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Post'), onclick: () => openPost(g, g.person) }, m0?.type === 'video' ? h('video', { src: urlOf(m0.path) + '#t=0.5', muted: true, playsInline: true, preload: 'metadata' }) : !m0 ? h('span', { class: 'cell-text' }, (g.body || '').slice(0, 90)) : null); })
+    put(box, posts.length ? posts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Post'), onclick: () => openPost(g, g.person) }, m0?.type === 'video' ? cellVideo(urlOf(m0.path)) : !m0 ? h('span', { class: 'cell-text' }, (g.body || '').slice(0, 90)) : null); })
       : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nothing saved yet')), t('Tap the bookmark under a post to keep it here. Only you see it.')));
   })();
   return box;
@@ -1823,7 +1849,7 @@ async function viewPerson(id) {
     p.cv ? h('div', { class: 'acts' }, h('a', { class: 'btn', href: urlOf(p.cv), target: '_blank', rel: 'noopener' }, t('Open the CV'))) : null,
     !p.bio && !facts.length && !reel && !skillRows.length && !(d.credits || []).length && !d.studies ? h('div', { class: 'empty' }, t('No details yet.')) : null);
   const photoPosts = (grid || []).filter((g) => g.kind === 'photo');
-  const pics = h('div', { class: 'grid' }, photos.length || photoPosts.length ? [...photoPosts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Photo'), onclick: () => openPost(g, p) }, m0?.type === 'video' ? h('video', { src: urlOf(m0.path) + '#t=0.5', muted: true, playsInline: true, preload: 'metadata' }) : null); }), ...photos.map((ph) => h('button', { type: 'button', class: 'cell', style: bg(ph), 'aria-label': t('Photo'), onclick: () => openWin(p.name, h('img', { src: urlOf(ph), alt: '', style: { width: '100%', borderRadius: '12px' } }), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) }))] : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No photos yet.')));
+  const pics = h('div', { class: 'grid' }, photos.length || photoPosts.length ? [...photoPosts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Photo'), onclick: () => openPost(g, p) }, m0?.type === 'video' ? cellVideo(urlOf(m0.path)) : null); }), ...photos.map((ph) => h('button', { type: 'button', class: 'cell', style: bg(ph), 'aria-label': t('Photo'), onclick: () => openWin(p.name, h('img', { src: urlOf(ph), alt: '', style: { width: '100%', borderRadius: '12px' } }), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) }))] : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No photos yet.')));
   const work = gridBlock(p, (grid || []).filter((g) => g.kind !== 'photo'), own);
   const body = h('div');
   const tabRow = h('div', { class: 'ig-tabs' });
@@ -1915,7 +1941,7 @@ function gridBlock(p, rows, own) {
       return h(editing ? 'div' : 'button', { type: editing ? null : 'button', class: 'cell', draggable: editing ? 'true' : null, style: m && m.type === 'image' ? bg(m.path) : {},
         onclick: editing ? null : () => openPost(r, p),
         ondragstart: () => { drag = i; }, ondragover: (e) => e.preventDefault(), ondrop: (e) => { e.preventDefault(); if (drag != null) move(drag, i); drag = null; } },
-        m?.type === 'video' ? h('video', { src: urlOf(m.path) + '#t=0.5', muted: true, playsInline: true, preload: 'metadata' }) : null,
+        m?.type === 'video' ? cellVideo(urlOf(m.path)) : null,
         m?.type === 'video' ? h('span', { class: 'play', html: ICON.play }) : null,
         !m ? h('p', {}, (r.body || '').slice(0, 140)) : null,
         editing ? h('span', { class: 'cell-move' },
