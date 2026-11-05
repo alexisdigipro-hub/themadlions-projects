@@ -85,6 +85,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - 5 Nov, night: the icons redrawn in one hand after a sheet of simple outline icons Alex sent (thin 1.75 stroke, rounded joins): heart, comment, send, bookmark, camera, grid, home, picture, user, search, bell, compass, play. Phone and computer. The Instagram and Threads logos on that sheet are brands and were not used.
 - 5 Nov, night: every other icon (the menus, Settings tiles, the ⋯ menu, edit, trash, gear, calendar, briefcase, flag, follow/unfollow, mail, phone, link, sun/moon and the rest) redrawn in the same thin outline hand.
 - 5 Nov, night: on a phone the space between posts is 6 px (was 16) and a post has less padding under it.
+- 5 Nov, night: **Chat in Settings.** Roardino Settings has a Chat section (Chat settings, Contacts, Calls) that opens the chat on that page: openChat(page) sets chatPending and, when the framed RoarMe says roarme:ready (it loads afresh each time it is put on the page), Roardino posts roardino:open {page} (RoarMe PR #148). On a phone inside Roardino RoarMe's own bottom bar is hidden (RoarMe PR #147). Alex ran the roardino_saves SQL.
 - **Next** (Alex): the TikTok-like vertical feed of self-tapes and showreels; AI search ("dancer 20-25, hip hop, Athens"); Roar Sheet rename; its own domain (roardino.gr: Alex to check at papaki.gr, this session cannot reach registries); who becomes a scout (insert into roardino_scouts by hand for now).
 
 ## Where we stopped (3 Nov 2026, night: one admin for everything)

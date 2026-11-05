@@ -2165,6 +2165,10 @@ function viewSettings() {
       row(t('Text size'), null, choice('text', [['normal', t('Normal')], ['large', t('Large')]])),
       row(t('Language'), t('Greek is on the way.'), h('div', { class: 'seg' }, h('button', { type: 'button', class: 'on' }, 'English'), h('button', { type: 'button', disabled: true, title: t('Soon') }, 'Ελληνικά')))),
     isAdmin ? designSection(row) : null,
+    h('section', { class: 'sec' }, h('h2', {}, t('Chat')),
+      row(t('Chat settings'), t('Notifications, privacy, chats and folders, blocked people, the look of the chat.'), h('button', { type: 'button', class: 'btn sm', onclick: () => openChat('settings') }, icon('gear'), t('Open'))),
+      row(t('Contacts'), t('Everyone you talk to.'), h('button', { type: 'button', class: 'btn sm', onclick: () => openChat('contacts') }, icon('user'), t('Open'))),
+      row(t('Calls'), t('Voice and video calls you made and missed.'), h('button', { type: 'button', class: 'btn sm', onclick: () => openChat('calls') }, icon('phone'), t('Open')))),
     h('section', { class: 'sec' }, h('h2', {}, t('Feed')),
       row(t('Calls in the feed'), t('Open calls show between the posts.'), toggle('feedCalls')),
       row(t('Videos start muted'), null, toggle('mutedVideos')),
@@ -2191,10 +2195,17 @@ function viewChat() {
   // one frame kept for the whole visit, so going back to the chat is instant and keeps the conversation open;
   // ?embed=roardino: RoarMe wears Roardino's look, hides its own brand, and asks Roardino to sign it in (Alex, 5 Nov)
   chatFrame ||= h('iframe', { class: 'chat-frame', src: ROARME + '?embed=roardino', title: 'RoarMe', allow: 'camera; microphone; clipboard-write; autoplay; fullscreen; display-capture' });
+  // put on the page the frame loads afresh and says roarme:ready; the page asked for (chatPending) is sent then
   frame('chat', h('div', { class: 'chat-wrap' }, chatFrame));
 }
 // what Roardino says to the framed RoarMe: its look, and a one-time sign-in token for the same Roar Account
 const toChat = (msg) => { try { chatFrame?.contentWindow?.postMessage(msg, ROARME_ORIGIN); } catch { /* not there */ } };
+// which page of the chat to show (Alex, 5 Nov: the chat's settings live in Roardino's Settings; on a phone RoarMe's own bar is hidden)
+let chatReady = false, chatPending = null;
+function openChat(page) {
+  chatPending = page;
+  if (location.hash !== '#/chat') location.hash = '#/chat'; else viewChat();
+}
 const chatLook = () => toChat({ type: 'roardino:look', theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light' });
 let handingOver = false;
 // the same handover the Roar Account gives every Roar app (roar-connect): a code started here, allowed with this
@@ -2226,7 +2237,7 @@ async function handOverToChat() {
 window.addEventListener('message', (e) => {
   if (e.origin !== ROARME_ORIGIN || !chatFrame || e.source !== chatFrame.contentWindow) return;
   const d = e.data || {};
-  if (d.type === 'roarme:ready') { chatLook(); if (d.signedIn === false) handOverToChat(); }
+  if (d.type === 'roarme:ready') { chatReady = !!d.signedIn; chatLook(); if (d.signedIn === false) handOverToChat(); else if (chatPending) { toChat({ type: 'roardino:open', page: chatPending }); chatPending = null; } }
 });
 
 /* =====================================================================================================================
