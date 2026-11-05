@@ -79,7 +79,11 @@ function h(tag, attrs = {}, ...kids) {
   return el;
 }
 // replaceChildren that leaves out what is not there (a bare null used to show as the word "null", Alex 4 Nov)
-const put = (el, ...kids) => el.replaceChildren(...kids.flat(Infinity).filter((k) => k != null && k !== false));
+// a list drawn again in place (a tap on a pill, a letter typed in a search) does not play its entrance again
+const put = (el, ...kids) => {
+  if (el.childElementCount && !el.firstElementChild.classList.contains('wait')) el.classList.add('still');
+  el.replaceChildren(...kids.flat(Infinity).filter((k) => k != null && k !== false));
+};
 // the wordmark: R O A R D I N O with O, R and DINO heavy, so the heavy letters read ORDINO (Alex, 4 Nov)
 const mark = () => h('span', { class: 'rm', 'aria-label': 'Roardino' }, h('span', { class: 'a' }, 'R'), h('span', { class: 'b' }, 'O'), h('span', { class: 'a' }, 'A'), h('span', { class: 'b' }, 'RDINO'), h('i'));
 function toast(msg) { const x = $('#toast'); x.textContent = msg; x.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => x.classList.remove('on'), 2200); }
@@ -220,11 +224,48 @@ function openWin(title, body, foot) {
 }
 // a <label> only around a real field: around a row of pills a browser (Safari above all) passes every tap on to the
 // first pill too, which kept turning "Actor" on (Alex, 5 Nov)
+// a question in our own glass window, not the browser's white box (Alex, 5 Nov); resolves true for yes
+function ask(question, yes = t('Delete'), danger = true) {
+  return new Promise((done) => {
+    let answered = false;
+    const close = openWin(question, h('p', { class: 'hint', style: { fontSize: '14.5px' } }, t('This cannot be undone.')), (c) => [
+      h('button', { type: 'button', class: 'btn', onclick: () => { answered = true; c(); done(false); } }, t('Cancel')),
+      h('button', { type: 'button', class: 'btn main' + (danger ? ' red' : ''), onclick: () => { answered = true; c(); done(true); } }, yes)]);
+    const veil = document.querySelector('.veil:last-of-type');
+    veil?.classList.add('ask');
+    new MutationObserver((_, o) => { if (!veil.isConnected) { o.disconnect(); if (!answered) done(false); } }).observe(document.body, { childList: true });
+    void close;
+  });
+}
 const field = (label, el, hint) => h(/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) ? 'label' : 'div', { class: 'field' }, h('span', {}, label), el, hint ? h('p', { class: 'hint' }, hint) : null);
 const input = (value, extra = {}) => h('input', { class: 'input', value: value ?? '', ...extra });
 const area = (value, extra = {}) => h('textarea', { class: 'textarea', ...extra }, value ?? '');
 const select = (options, value, extra = {}) => h('select', { class: 'select', ...extra }, options.map(([v, s]) => h('option', { value: v, selected: v === (value ?? '') }, s)));
-const seg = (items, on, pick) => h('div', { class: 'seg' }, items.map(([k, s]) => h('button', { type: 'button', class: on === k ? 'on' : '', onclick: () => pick(k) }, s)));
+// a switch with the hub's glass lens (Alex, 5 Nov: "animation everywhere"): the lens remembers where it last stood for
+// the same set of choices and glides from there to the chosen one, even when the page around it is drawn anew
+const lensAt = new Map();
+function seg(items, on, pick) {
+  const key = items.map((x) => x[0]).join('|');
+  const lens = h('span', { class: 'lens', 'aria-hidden': 'true' });
+  const box = h('div', { class: 'seg has-lens' }, lens, items.map(([k, s]) => h('button', { type: 'button', class: on === k ? 'on' : '', onclick: (e) => {
+    const b = e.currentTarget;
+    lens.style.transform = `translateX(${b.offsetLeft}px)`; lens.style.width = `${b.offsetWidth}px`;
+    box.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+    pick(k); // at once: the redrawn switch glides from where the lens last stood
+  } }, s)));
+  requestAnimationFrame(() => {
+    const b = box.querySelector('button.on');
+    if (!b) { lens.style.opacity = '0'; return; }
+    const prev = lensAt.get(key), now = { x: b.offsetLeft, w: b.offsetWidth };
+    if (prev && (prev.x !== now.x || prev.w !== now.w)) {
+      lens.style.transition = 'none'; lens.style.transform = `translateX(${prev.x}px)`; lens.style.width = `${prev.w}px`;
+      void lens.offsetWidth; lens.style.transition = '';
+    }
+    lens.style.transform = `translateX(${now.x}px)`; lens.style.width = `${now.w}px`;
+    lensAt.set(key, now);
+  });
+  return box;
+}
 
 /* ---------- the frame: top bar, bottom bar on a phone ---------- */
 const NAV = [['feed', 'Feed', 'home'], ['people', 'Cast & Crew', 'people'], ['calls', 'Calls', 'calls'], ['seminars', 'Seminars', 'cal'], ['chat', 'Chat', 'talk']];
@@ -421,8 +462,9 @@ async function viewFeed() {
   if (prefs.feedCalls && stream.length < 4) openCalls.slice(0, 2).forEach((c) => stream.push(callTile(c)));
   put(mid, 
     storiesCard(stories, others),
-    mine.length ? composer(() => viewFeed()) : null,
-    h('div', { class: 'head', style: { margin: '2px 0 -4px' } }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { feedOnly = k; viewFeed(); })),
+    // the composer waits behind New post, on the line of Everyone / Following (Alex, 5 Nov), and opens as a glass window
+    h('div', { class: 'head feed-head' }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { feedOnly = k; viewFeed(); }), h('span', { class: 'grow' }),
+      mine.length ? h('button', { type: 'button', class: 'btn main new-post', onclick: () => { let close = null; const c = composer(() => { close?.(); viewFeed(); }); close = openWin(t('New post'), c); c.querySelector('textarea')?.focus(); } }, icon('plus'), t('New post')) : null),
     ...stream);
 }
 
@@ -577,7 +619,7 @@ function postCard(r, st, refresh) {
       h('a', { href: `#/p/${p.id}`, class: 'ring-sm' }, avatar(p)),
       h('div', { class: 'who-line' }, h('a', { href: `#/p/${p.id}` }, h('b', {}, p.name || '')), h('small', {}, p.headline || (p.kinds || []).map(kindName).slice(0, 2).join(' · '))),
       own ? h('button', { type: 'button', class: 'ig-ico sm', title: t('Delete'), 'aria-label': t('Delete'), html: ICON.trash, onclick: async () => {
-        if (!confirm(t('Delete this post?'))) return;
+        if (!(await ask(t('Delete this post?')))) return;
         const { error } = await sb.from('roardino_posts').delete().eq('id', r.id);
         if (error) return fail(error);
         removeFiles(media.map((m) => m.path)); refresh();
@@ -701,7 +743,7 @@ function openStories(groups, gi) {
     put(head, h('a', { href: `#/p/${grp.person.id}`, onclick: () => close() }, avatar(grp.person, 'sm')), h('b', {}, grp.person.name), h('small', {}, ago(st.created_at)),
       own ? h('button', { type: 'button', class: 'st-del', 'aria-label': t('Delete'), html: ICON.trash, onclick: async (e) => {
         e.stopPropagation();
-        if (!confirm(t('Delete this story?'))) return;
+        if (!(await ask(t('Delete this story?')))) return;
         const { error } = await sb.from('roardino_stories').delete().eq('id', st.id);
         if (error) return fail(error);
         if (!/^https?:/.test(st.media?.path || '')) removeFiles([st.media?.path]);
@@ -1031,7 +1073,7 @@ async function viewEdit(which) {
     } catch (e) { msg.textContent = errText(e); msg.className = 'msg err'; saveBtn.disabled = false; }
   }
   async function remove() {
-    if (!confirm(t('Delete the profile "{name}" for good, with its photos and posts?', { name: old.name }))) return;
+    if (!(await ask(t('Delete the profile "{name}" for good, with its photos and posts?', { name: old.name })))) return;
     const { data: ps } = await sb.from('roardino_posts').select('media').eq('person_id', id);
     const { error } = await sb.from('roardino_people').delete().eq('id', id);
     if (error) return fail(error);
@@ -1123,7 +1165,7 @@ function editCall(old) {
     field(t('Description'), bind('about', area(c.about, { rows: 5, placeholder: t('What the job is, what they need to know, what to send.') }))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!c.minors_ok, onchange: (e) => { c.minors_ok = e.target.checked; } }), h('span', {}, t('Children under 18 welcome too (through a parent). You will see the profiles of those who apply.')))),
   (close) => [
-    old ? h('button', { type: 'button', class: 'btn red', onclick: async () => { if (!confirm(t('Delete the call?'))) return; const { error } = await sb.from('roardino_calls').delete().eq('id', old.id); if (error) return fail(error); close(); location.hash = '#/calls'; } }, t('Delete')) : null,
+    old ? h('button', { type: 'button', class: 'btn red', onclick: async () => { if (!(await ask(t('Delete the call?')))) return; const { error } = await sb.from('roardino_calls').delete().eq('id', old.id); if (error) return fail(error); close(); location.hash = '#/calls'; } }, t('Delete')) : null,
     h('button', { type: 'button', class: 'btn', onclick: close }, t('Cancel')),
     h('button', { type: 'button', class: 'btn main', onclick: async () => {
       if (!c.title?.trim()) return toast(t('Write a title.'));
@@ -1313,7 +1355,7 @@ function editSeminar(old, oldLink = '') {
     field(t('Description'), bind('about', area(s.about, { rows: 4 }))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!s.published, onchange: (e) => { s.published = e.target.checked; } }), h('span', {}, t('Published (everyone sees it)')))),
   (close) => [
-    old ? h('button', { type: 'button', class: 'btn red', onclick: async () => { if (!confirm(t('Delete it?'))) return; const { error } = await sb.from('roardino_seminars').delete().eq('id', old.id); if (error) return fail(error); close(); route(); } }, t('Delete')) : null,
+    old ? h('button', { type: 'button', class: 'btn red', onclick: async () => { if (!(await ask(t('Delete it?')))) return; const { error } = await sb.from('roardino_seminars').delete().eq('id', old.id); if (error) return fail(error); close(); route(); } }, t('Delete')) : null,
     h('button', { type: 'button', class: 'btn', onclick: close }, t('Cancel')),
     h('button', { type: 'button', class: 'btn main', onclick: async () => {
       if (!s.title?.trim()) return toast(t('Write a title.'));
