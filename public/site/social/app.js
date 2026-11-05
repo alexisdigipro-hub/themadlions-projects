@@ -431,7 +431,7 @@ function shrinkVideo(file) {
    glass window with the frame it will have; drag to move it, zoom with the slider, the wheel or two fingers, pick a
    shape where there is a choice; Use photo gives back the framed picture, Cancel nothing */
 const SHAPES = {
-  post: [['4:5', 4 / 5], ['1:1', 1], ['16:9', 16 / 9], ['Original', 0]],
+  post: [['Original', 0], ['4:5', 4 / 5], ['1:1', 1], ['16:9', 16 / 9]], // as it was taken first (Alex, 5 Nov)
   portrait: [['3:4', 3 / 4]],
   cover: [['3:1', 3]],
   story: [['9:16', 9 / 16]],
@@ -502,6 +502,16 @@ function cropImage(file, shapes = SHAPES.post) {
 }
 // several pictures one after the other through the editor; videos and what cannot be drawn pass as they are
 async function cropAll(list, shapes) { const out = []; for (const f of list) { const c = await cropImage(f, shapes); if (c) out.push(c); } return out; }
+// a picture's or video's own width and height, kept with the post so the feed shows it in its own shape (Alex, 5 Nov:
+// "whatever aspect you upload, it shows in that") and the page does not jump while it loads
+function dimsOf(file) {
+  return new Promise((done) => {
+    const url = URL.createObjectURL(file);
+    const fin = (w, h) => { URL.revokeObjectURL(url); done(w && h ? { w, h } : {}); };
+    if (/^video\//.test(file.type)) { const v = document.createElement('video'); v.preload = 'metadata'; v.onloadedmetadata = () => fin(v.videoWidth, v.videoHeight); v.onerror = () => fin(); v.src = url; }
+    else { const im = new Image(); im.onload = () => fin(im.naturalWidth, im.naturalHeight); im.onerror = () => fin(); im.src = url; }
+  });
+}
 async function upload(personId, file, sub = '') {
   const f = await shrink(file);
   if (/^video\//.test(f.type) && f.size > MAX_VIDEO) throw new Error(t('The video is over 200 MB. Keep it to a minute or two.'));
@@ -1127,7 +1137,7 @@ function composer(done, kind0 = 'work', asId = null) {
     btn.disabled = true; btn.classList.add('busy'); btn.textContent = t('Uploading…');
     try {
       const media = [];
-      for (const f of files) media.push({ path: await upload(as, f, 'posts/'), type: /^video/.test(f.type) ? 'video' : 'image' });
+      for (const f of files) media.push({ path: await upload(as, f, 'posts/'), type: /^video/.test(f.type) ? 'video' : 'image', ...(await dimsOf(f)) });
       const { error } = await sb.from('roardino_posts').insert({ person_id: as, body: text.value.trim() || null, media, kind });
       if (error) throw error;
       toast(t('Posted'));
@@ -1396,6 +1406,18 @@ function postCard(r, st, refresh) {
   const slides = media.length ? h('div', { class: 'ig-media' + (media.length > 1 ? ' many' : '') }, media.map((m) => (m.type === 'video'
     ? (isPhone() ? feedVideo(urlOf(m.path)) : h('video', { src: urlOf(m.path), controls: true, playsInline: true, preload: 'metadata', muted: prefs.mutedVideos }))
     : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', decoding: 'async', ondblclick: (e) => { if (!st.mine) bravoBtn.click(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); e.target.parentElement.parentElement.append(hh); setTimeout(() => hh.remove(), 900); } })))) : null;
+  // each post in its own shape: the size kept at upload, else the picture's own once it loads; several pictures all take
+  // the first one's shape, as Instagram does
+  if (slides) {
+    const shape = (w, hh) => { if (w && hh) slides.style.setProperty('--ar', `${w} / ${hh}`); };
+    const m0 = media[0];
+    if (m0.w && m0.h) shape(m0.w, m0.h);
+    else {
+      const el0 = slides.firstElementChild;
+      if (el0?.tagName === 'IMG') el0.addEventListener('load', () => shape(el0.naturalWidth, el0.naturalHeight), { once: true });
+      else el0?.addEventListener('loadedmetadata', () => shape(el0.videoWidth, el0.videoHeight), { once: true });
+    }
+  }
   const dots = media.length > 1 ? h('div', { class: 'ig-dots' }, media.map((_, i) => h('i', { class: i ? '' : 'on' }))) : null;
   if (slides && dots) slides.addEventListener('scroll', () => { const i = Math.round(slides.scrollLeft / slides.clientWidth); dots.querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i)); });
   const head =
@@ -2087,7 +2109,13 @@ function gridBlock(p, rows, own) {
 }
 async function openPost(r, p) {
   const cards = await posts([{ ...r, person: p }], () => route());
-  openWin(p.name, h('div', { class: 'in-win' }, cards), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]);
+  // a post opened from a grid pops up as a card in the middle of the screen, sized to the post, with its name, icons and
+  // caption showing (Alex, 5 Nov: "in the middle of the screen, not at the bottom"); the X closes it
+  openWin(p.name, h('div', { class: 'in-win' }, cards), null);
+  const veil = document.querySelector('.veil:last-of-type');
+  veil?.classList.add('post-win');
+  const art = veil?.querySelector('.post.ig.has-media');
+  if (art && isPhone()) art.querySelector('.ig-media')?.click();
 }
 
 /* =====================================================================================================================
