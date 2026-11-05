@@ -24,6 +24,22 @@ const EL = {};
 const t = (s, vars) => { let x = (LANG === 'el' && EL[s]) || s; if (vars) for (const [k, v] of Object.entries(vars)) x = x.replaceAll(`{${k}}`, v); return x; };
 const LOCALE = () => (LANG === 'el' ? 'el-GR' : 'en-GB');
 
+/* ---------- settings kept on this device (Alex, 5 Nov) ---------- */
+const PREFS_KEY = 'roardino-prefs';
+const PREF_DEFAULTS = { theme: 'auto', text: 'normal', feedCalls: true, mutedVideos: true };
+let prefs = { ...PREF_DEFAULTS };
+try { prefs = { ...PREF_DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; } catch { /* private window */ }
+const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+function wearPrefs() {
+  const dark = prefs.theme === 'dark' || (prefs.theme === 'auto' && darkQuery.matches);
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  document.documentElement.dataset.text = prefs.text;
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', dark ? '#15171b' : '#eceef1');
+}
+function setPref(k, v) { prefs[k] = v; try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* full */ } wearPrefs(); }
+darkQuery.addEventListener?.('change', wearPrefs);
+wearPrefs();
+
 // what people do: in front (on camera, on stage) or behind
 const KINDS = [
   ['actor', 'Actor', 'front'], ['model', 'Model', 'front'], ['dancer', 'Dancer', 'front'], ['extra', 'Extra', 'front'],
@@ -102,6 +118,9 @@ const ICON = {
   out: SVG('<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l5-5-5-5M15 12H3"/>'),
   send: SVG('<path d="M22 3 11 14"/><path d="M22 3 15 21l-4-7-7-4z"/>'),
   grid: SVG('<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'),
+  gear: SVG('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
+  sun: SVG('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+  moon: SVG('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
   child: SVG('<circle cx="12" cy="7" r="3"/><path d="M7 21v-5a5 5 0 0 1 10 0v5"/>'),
 };
 const icon = (n) => h('span', { html: ICON[n], style: { display: 'inline-flex' } });
@@ -221,6 +240,7 @@ function topBar(on) {
     ...mine.filter((x) => x !== m).map((x) => h('a', { href: `#/p/${x.id}` }, avatar(x, 'sm'), x.name)),
     h('a', { href: '#/edit/kid' }, icon('child'), t('Add my child\'s profile')),
     h('a', { href: '#/me' }, icon('star'), t('My applications and seats')),
+    h('a', { href: '#/settings' }, icon('gear'), t('Settings')),
     h('hr'),
     h('button', { type: 'button', onclick: () => sb.auth.signOut() }, icon('out'), t('Sign out')));
   const toggle = (e) => { e.stopPropagation(); fill(); menu.classList.toggle('hidden'); if (!menu.classList.contains('hidden')) setTimeout(() => document.addEventListener('click', () => menu.classList.add('hidden'), { once: true })); };
@@ -230,6 +250,7 @@ function topBar(on) {
     h('label', { class: 'find' }, icon('search'), find),
     h('span', { class: 'grow' }),
     h('nav', { class: 'icons' }, NAV.map(([k, s, ic]) => h('a', { class: 'ico' + (on === k ? ' on' : ''), href: `#/${k}`, title: t(s), 'aria-label': t(s), html: ICON[ic] }))),
+    h('button', { type: 'button', class: 'ico', title: t('Light or dark'), 'aria-label': t('Light or dark'), html: document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon, onclick: (e) => { setPref('theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); e.currentTarget.innerHTML = document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon; } }),
     h('span', { class: 'sep' }),
     h('button', { type: 'button', class: 'who-me', onclick: toggle, 'aria-label': t('Me') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }), h('span', { class: 'nm' }, m?.name || session.user.user_metadata?.name || t('Me')), icon('down')),
     menu));
@@ -253,6 +274,7 @@ async function route() {
     if (a === 'seminars') return await viewSeminars();
     if (a === 'me') return await viewMe();
     if (a === 'chat') return viewChat();
+    if (a === 'settings') return viewSettings();
     if (a === 'edit') return await viewEdit(b || 'new');
     return await viewFeed();
   } catch (e) { fail(e); }
@@ -393,8 +415,8 @@ async function viewFeed() {
   // calls ride in the feed, one after every three posts, as Alex's reference shows a job among the posts
   const openCalls = (calls.data || []).slice(0, 6);
   const stream = [];
-  cards.forEach((c, i) => { stream.push(c); if (i % 3 === 2 && openCalls.length) stream.push(callTile(openCalls.shift())); });
-  if (stream.length < 4) openCalls.slice(0, 2).forEach((c) => stream.push(callTile(c)));
+  cards.forEach((c, i) => { stream.push(c); if (prefs.feedCalls && i % 3 === 2 && openCalls.length) stream.push(callTile(openCalls.shift())); });
+  if (prefs.feedCalls && stream.length < 4) openCalls.slice(0, 2).forEach((c) => stream.push(callTile(c)));
   put(mid, 
     storiesCard(stories, others),
     mine.length ? composer(() => viewFeed()) : null,
@@ -544,7 +566,7 @@ function postCard(r, st, refresh) {
     try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ }
   };
   const slides = media.length ? h('div', { class: 'ig-media' + (media.length > 1 ? ' many' : '') }, media.map((m) => (m.type === 'video'
-    ? h('video', { src: urlOf(m.path), controls: true, playsInline: true, preload: 'metadata' })
+    ? h('video', { src: urlOf(m.path), controls: true, playsInline: true, preload: 'metadata', muted: prefs.mutedVideos })
     : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', ondblclick: () => { if (!st.mine) bravoBtn.click(); } })))) : null;
   const dots = media.length > 1 ? h('div', { class: 'ig-dots' }, media.map((_, i) => h('i', { class: i ? '' : 'on' }))) : null;
   if (slides && dots) slides.addEventListener('scroll', () => { const i = Math.round(slides.scrollLeft / slides.clientWidth); dots.querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i)); });
@@ -1179,6 +1201,36 @@ function apply(c) {
     if (error) return fail(error);
     close(); toast(t('Application sent')); route();
   } }, t('Send'))]);
+}
+
+/* =====================================================================================================================
+   Settings (Alex, 5 Nov: "light and dark, and some settings it may need")
+   ===================================================================================================================== */
+function viewSettings() {
+  document.title = 'Roardino · ' + t('Settings');
+  const row = (title, hint, control) => h('div', { class: 'set-row' }, h('div', {}, h('b', {}, title), hint ? h('small', {}, hint) : null), control);
+  const choice = (k, items) => { const box = h('div'); const draw = () => put(box, seg(items, prefs[k], (v) => { setPref(k, v); draw(); })); draw(); return box; };
+  const toggle = (k) => h('input', { type: 'checkbox', class: 'switch', checked: !!prefs[k], onchange: (e) => setPref(k, e.target.checked) });
+  const msg = h('p', { class: 'msg' });
+  frame('me', h('div', { class: 'form' },
+    h('div', { class: 'head' }, h('h1', {}, t('Settings'))),
+    h('section', { class: 'sec' }, h('h2', {}, t('Appearance')),
+      row(t('Theme'), t('Auto follows your phone or computer.'), choice('theme', [['light', t('Light')], ['dark', t('Dark')], ['auto', t('Auto')]])),
+      row(t('Text size'), null, choice('text', [['normal', t('Normal')], ['large', t('Large')]])),
+      row(t('Language'), t('Greek is on the way.'), h('div', { class: 'seg' }, h('button', { type: 'button', class: 'on' }, 'English'), h('button', { type: 'button', disabled: true, title: t('Soon') }, 'Ελληνικά')))),
+    h('section', { class: 'sec' }, h('h2', {}, t('Feed')),
+      row(t('Calls in the feed'), t('Open calls show between the posts.'), toggle('feedCalls')),
+      row(t('Videos start muted'), null, toggle('mutedVideos')),
+      row(t('Stories you have seen'), t('Seen stories turn grey on this device.'), h('button', { type: 'button', class: 'btn sm', onclick: () => { seenStories = new Set(); try { localStorage.removeItem('roardino-seen'); } catch { /* none */ } toast(t('All stories show as new again')); } }, t('Reset')))),
+    h('section', { class: 'sec' }, h('h2', {}, t('Privacy')),
+      row(t('Who sees my profile, email and phone'), t('Set it in your profile, under Contact and Settings.'), me() ? h('a', { class: 'btn sm', href: `#/edit/${me().id}` }, t('Edit profile')) : h('a', { class: 'btn sm', href: '#/edit/new' }, t('Create your profile'))),
+      row(t('Children\'s profiles'), t('Seen only by trusted productions and by whoever runs a call they apply to.'), h('a', { class: 'btn sm', href: '#/me' }, t('My profiles')))),
+    h('section', { class: 'sec' }, h('h2', {}, t('Account')),
+      row(t('Signed in as'), session.user.email, null),
+      row(t('Password'), t('We email you a link to set a new one.'), h('button', { type: 'button', class: 'btn sm', onclick: async () => { const { error } = await sb.auth.resetPasswordForEmail(session.user.email, { redirectTo: location.origin + location.pathname }); msg.textContent = error ? errText(error) : t('Check your email for the link.'); msg.className = 'msg ' + (error ? 'err' : 'ok'); } }, t('Change password'))),
+      row(t('Other devices'), t('Sign out everywhere else; this device stays signed in.'), h('button', { type: 'button', class: 'btn sm', onclick: async () => { const { error } = await sb.auth.signOut({ scope: 'others' }); toast(error ? errText(error) : t('Signed out on other devices')); } }, t('Sign out others'))),
+      row(t('This device'), null, h('button', { type: 'button', class: 'btn sm red', onclick: () => sb.auth.signOut() }, icon('out'), t('Sign out'))),
+      msg)));
 }
 
 /* =====================================================================================================================
