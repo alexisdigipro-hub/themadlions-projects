@@ -105,6 +105,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - 5 Nov, night: tighter post on a phone: the time is a float at the end of the caption (.cap-time: right aligned on its last line if it fits, else the next), less space round the caption, icons on the picture 25 px and closer.
 - 5 Nov, night: all motion softer and slower (Alex): --spring no longer overshoots, one --soft curve (cubic-bezier(.25,.46,.25,1)) for the post reveal, comments and windows, times about 1.5x, smaller distances in the keyframes.
 - 5 Nov, night: **Search** in the phone's bottom bar (#/search, viewSearch; not in the computer's menu, which has its search field). A big field, then People (viewPeople({search:true}): every Industry filter, side chips, cast filters), Posts (caption, name, @handle, city, what they do; All / Work / Photos / Videos; a grid that opens the post) or Calls (title, about, company, city, kinds; All / Casting / Crew, Open only). matches() now also tries Greeklish x as χ (xoreftria finds χορεύτρια).
+- **Rule (Alex, 5 Nov): Roardino requests are for the phone, always**, unless he says computer / desktop. Change the computer only when he names it.
 - **Next** (Alex): the TikTok-like vertical feed of self-tapes and showreels; AI search ("dancer 20-25, hip hop, Athens"); Roar Sheet rename; its own domain (roardino.gr: Alex to check at papaki.gr, this session cannot reach registries); who becomes a scout (insert into roardino_scouts by hand for now).
 
 ## Where we stopped (3 Nov 2026, night: one admin for everything)
