@@ -1099,6 +1099,27 @@ async function peopleList(p, what) {
   }
   draw();
 }
+// the picture large, over everything (Alex, 5 Nov): arrows or keys for the others, a click outside, the X or Esc closes
+function lightbox(media, start = 0) {
+  if (!media.length) return;
+  let i = Math.max(0, Math.min(media.length - 1, start));
+  const stage = h('div', { class: 'lb-stage' });
+  const count = h('span', { class: 'lb-count' });
+  const show = () => {
+    const m = media[i];
+    put(stage, m.type === 'video' ? h('video', { src: urlOf(m.path), controls: true, autoplay: true, playsInline: true }) : h('img', { src: urlOf(m.path), alt: '' }));
+    count.textContent = media.length > 1 ? `${i + 1} / ${media.length}` : '';
+  };
+  const go = (d) => { i = (i + d + media.length) % media.length; show(); };
+  const close = () => { veil.classList.add('out'); setTimeout(() => veil.remove(), 280); document.removeEventListener('keydown', onKey); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1); };
+  const veil = h('div', { class: 'lb', onclick: (e) => { if (e.target === veil || e.target === stage) close(); } }, stage, count,
+    h('button', { type: 'button', class: 'lb-x', 'aria-label': t('Close'), html: ICON.x, onclick: close }),
+    media.length > 1 ? h('button', { type: 'button', class: 'lb-nav prev', 'aria-label': t('Previous'), html: ICON.left, onclick: () => go(-1) }) : null,
+    media.length > 1 ? h('button', { type: 'button', class: 'lb-nav next', 'aria-label': t('Next'), html: ICON.right, onclick: () => go(1) }) : null);
+  document.addEventListener('keydown', onKey);
+  document.body.append(veil); show();
+}
 async function toggleFollow(id) {
   const on = follows.has(id);
   const { error } = on ? await sb.from('roardino_follows').delete().eq('user_id', session.user.id).eq('person_id', id) : await sb.from('roardino_follows').insert({ person_id: id });
@@ -1230,7 +1251,9 @@ function postCard(r, st, refresh) {
     if (on) { openTalk(); cap?.classList.remove('hidden'); } else { talk.classList.add('hidden'); cap?.classList.add('hidden'); }
   };
   wrap.addEventListener('click', (e) => {
-    if (!isPhone() || e.target.closest('.post-head, .ig-bar, a, button')) return;
+    if (e.target.closest('.post-head, .ig-bar, a, button')) return;
+    // on a computer a click on the picture opens it large (Alex, 5 Nov)
+    if (!isPhone()) { clearTimeout(tapT); tapT = setTimeout(() => lightbox(media, Math.round((slides.scrollLeft || 0) / (slides.clientWidth || 1))), 260); return; }
     clearTimeout(tapT); tapT = setTimeout(() => setOpen(!art.classList.contains('open')), 260);
   });
   wrap.addEventListener('dblclick', () => clearTimeout(tapT));
