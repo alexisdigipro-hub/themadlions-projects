@@ -524,8 +524,9 @@ function topBar(on) {
 }
 function tabBar(on) {
   const m = me();
-  return h('nav', { class: 'tabbar' }, NAV.map(([k, s, ic]) => h('a', { href: `#/${k}`, class: on === k ? 'on' : '' }, icon(ic), t(s))),
-    h('a', { href: m ? `#/p/${m.id}` : '#/edit/new', class: on === 'me' ? 'on' : '' }, icon('user'), t('Me')));
+  // on a phone (Alex, 5 Nov): Feed, Industry, Chat and me with my own picture; Calls and Seminars live on my profile's tiles
+  return h('nav', { class: 'tabbar' }, NAV.filter(([k]) => k !== 'calls' && k !== 'seminars').map(([k, s, ic]) => h('a', { href: `#/${k}`, class: on === k ? 'on' : '' }, icon(ic), t(s))),
+    h('a', { href: m ? `#/p/${m.id}` : '#/edit/new', class: 'tab-me' + (on === 'me' ? ' on' : '') }, m ? avatar(m, 'tab-av') : icon('user'), t('Me')));
 }
 // the footer (Alex, 5 Nov): Roardino by THE MAD LIONS, themadlions.com and its places
 function footBar() {
@@ -775,16 +776,20 @@ function meTiles() {
   const m = me();
   const dark = () => document.documentElement.dataset.theme === 'dark';
   const inner = (ic, label) => [h('span', { class: 'ic', html: ICON[ic] }), h('span', { class: 'tip' }, label)];
-  const themeTile = h('button', { type: 'button', class: 'btn main mt' });
+  const themeTile = h('button', { type: 'button', class: 'btn main mt no-phone' });
   const drawTheme = () => { const l = dark() ? t('Light') : t('Dark'); themeTile.setAttribute('aria-label', l); put(themeTile, ...inner(dark() ? 'sun' : 'moon', l)); };
   themeTile.onclick = () => { setPref('theme', dark() ? 'light' : 'dark'); drawTheme(); };
   drawTheme();
   const tile = (href, ic, label) => h('a', { class: 'btn main mt', href, 'aria-label': label }, ...inner(ic, label));
+  const noPhone = (el) => { el.classList.add('no-phone'); return el; };
+  const phoneTile = (href, ic, label) => h('a', { class: 'btn main mt phone-only', href, 'aria-label': label }, ...inner(ic, label));
   return h('section', { class: 'card me-tiles' },
-    m ? tile(`#/edit/${m.id}`, 'edit', t('Edit profile')) : tile('#/edit/new', 'plus', t('Create profile')),
+    m ? noPhone(tile(`#/edit/${m.id}`, 'edit', t('Edit profile'))) : tile('#/edit/new', 'plus', t('Create profile')),
     themeTile,
     tile('#/settings', 'gear', t('Settings')),
-    tile('#/me', 'star', t('Applications')),
+    phoneTile('#/calls', 'calls', t('Calls')),
+    phoneTile('#/seminars', 'cal', t('Seminars')),
+    tile('#/me', 'star', t('Applied')),
     tile('#/edit/kid', 'child', t('My child')),
     h('button', { type: 'button', class: 'btn main mt out', 'aria-label': t('Sign out'), onclick: () => sb.auth.signOut() }, ...inner('out', t('Sign out'))));
 }
@@ -1417,6 +1422,7 @@ async function viewPerson(id) {
         p.bio ? h('p', { class: 'ig-bio' }, p.bio) : null,
         h('p', { class: 'ig-meta' }, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} years', { n: a }) : '', L.height ? `${L.height} cm` : ''].filter(Boolean).join(' · ')),
         contact.filter(Boolean).length ? h('div', { class: 'acts', style: { marginTop: 0 } }, contact.filter(Boolean).map((b2) => { b2.classList.add('sm'); return b2; })) : null)),
+    own ? h('div', { class: 'phone-tiles' }, meTiles()) : null,
     tabRow, body);
 }
 
