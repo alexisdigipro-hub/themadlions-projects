@@ -1180,26 +1180,42 @@ function postCard(r, st, refresh) {
   put(art, wrap, cap, time, talk);
   return art;
 }
+// the comments, with motion (Alex, 5 Nov): they rise in one after another when opened, a new one slides in lit up and the
+// field clears without a reload, a deleted one folds away
 async function drawTalk(box, r, st, recount) {
-  put(box, h('p', { class: 'hint' }, t('Loading…')));
+  put(box, h('p', { class: 'hint cmt-wait' }, h('span', { class: 'dots3' }, h('i'), h('i'), h('i'))));
   const { data } = await sb.from('roardino_comments').select('*, person:roardino_people(id,name,avatar)').eq('post_id', r.id).order('created_at');
   await sign((data || []).map((c) => c.person?.avatar));
-  const text = input('', { placeholder: t('Add a comment…'), onkeydown: (e) => { if (e.key === 'Enter') send(); } });
-  async function send() {
-    const body = text.value.trim();
-    if (!body) return;
-    const { error } = await sb.from('roardino_comments').insert({ post_id: r.id, body, person_id: me()?.id || null });
-    if (error) return fail(error);
-    st.comments++; recount(); drawTalk(box, r, st, recount);
-  }
-  put(box, 
-    ...(data || []).map((c) => h('div', { class: 'cmt' },
+  const list = h('div', { class: 'cmt-list' });
+  const row = (c, i, fresh) => {
+    const el = h('div', { class: 'cmt' + (fresh ? ' cmt-fresh' : ''), style: fresh ? null : { animationDelay: `${Math.min(i, 8) * 55}ms` } },
       h('a', { href: c.person ? `#/p/${c.person.id}` : '#/feed' }, avatar(c.person || {}, 'sm')),
       h('div', {}, h('b', {}, c.person?.name || t('Member')), ' ', ...tagText(c.body), h('small', {}, ago(c.created_at))),
       c.owner === session.user.id || r.owner === session.user.id ? h('button', { type: 'button', class: 'linkish', onclick: async () => {
-        await sb.from('roardino_comments').delete().eq('id', c.id); st.comments--; recount(); drawTalk(box, r, st, recount);
-      } }, t('delete')) : null)),
-    h('div', { class: 'cmt-new' }, avatar(me() || { name: '?' }, 'sm'), withMentions(text), h('button', { type: 'button', class: 'btn sm', onclick: send }, t('Send'))));
+        const { error } = await sb.from('roardino_comments').delete().eq('id', c.id);
+        if (error) return fail(error);
+        st.comments--; recount();
+        el.style.height = el.offsetHeight + 'px'; void el.offsetHeight; el.classList.add('cmt-gone');
+        setTimeout(() => el.remove(), 420);
+      } }, t('delete')) : null);
+    return el;
+  };
+  put(list, ...(data || []).map((c, i) => row(c, i, false)));
+  const text = input('', { placeholder: t('Add a comment…'), onkeydown: (e) => { if (e.key === 'Enter') send(); } });
+  const sendBtn = h('button', { type: 'button', class: 'btn sm', onclick: send }, t('Send'));
+  async function send() {
+    const body = text.value.trim();
+    if (!body) { text.parentElement?.classList.remove('shake'); void text.offsetWidth; text.parentElement?.classList.add('shake'); return; }
+    sendBtn.disabled = true;
+    const { data: made, error } = await sb.from('roardino_comments').insert({ post_id: r.id, body, person_id: me()?.id || null }).select('*').maybeSingle();
+    sendBtn.disabled = false;
+    if (error) return fail(error);
+    st.comments++; recount();
+    const m = me();
+    list.append(row({ ...(made || {}), body, owner: session.user.id, created_at: made?.created_at || new Date().toISOString(), person: m ? { id: m.id, name: m.name, avatar: m.avatar } : null }, 0, true));
+    text.value = '';
+  }
+  put(box, list, h('div', { class: 'cmt-new' }, avatar(me() || { name: '?' }, 'sm'), withMentions(text), sendBtn));
 }
 
 /* =====================================================================================================================
