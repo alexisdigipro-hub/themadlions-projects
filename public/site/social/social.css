@@ -111,7 +111,7 @@ img{display:block;max-width:100%}
 .find input{border:0;background:transparent;outline:none;width:100%;font-size:14.5px;color:var(--ink)}
 .find input::placeholder{color:var(--faint)}
 .icons{display:flex;gap:6px}
-.ico{position:relative;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;color:var(--muted);transition:background .2s,color .2s}
+.ico{position:relative;width:46px;height:46px;border-radius:12px;border:0;background:transparent;padding:0;cursor:pointer;display:grid;place-items:center;color:var(--muted);transition:background .2s,color .2s}
 .ico svg{width:22px;height:22px}
 .ico:hover{background:rgba(255,255,255,.7);color:var(--ink)}
 .ico.on{color:#2b3a5c;background:rgba(255,255,255,.88);box-shadow:var(--top),0 0 0 1px var(--rim-out),0 4px 12px rgba(28,35,51,.08)}
@@ -459,3 +459,82 @@ button.cell:hover{filter:brightness(1.05)}
   .chat-wrap{margin:0 -4px}
   .toast{bottom:max(96px,calc(env(safe-area-inset-bottom) + 86px))}
 }
+
+/* ---------- Settings rows, the switch, bigger text ---------- */
+.set-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0 2px;border-top:1px solid var(--line)}
+.sec>h2+.set-row{border-top:0;padding-top:0}
+.set-row>div:first-child{min-width:0}
+.set-row b{display:block;font-size:15px;font-weight:600}
+.set-row small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;line-height:1.45}
+.set-row .seg button[disabled]{opacity:.45;cursor:default}
+.switch{appearance:none;-webkit-appearance:none;width:46px;height:28px;border-radius:999px;background:rgba(28,35,51,.16);position:relative;cursor:pointer;flex:none;transition:background .2s;box-shadow:inset 0 1px 2px rgba(0,0,0,.12)}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:transform .25s var(--ease)}
+.switch:checked{background:linear-gradient(135deg,#2b3a5c,#4a6390)}
+.switch:checked::after{transform:translateX(18px)}
+html[data-text=large] body{zoom:1.1}
+@media (max-width:860px){ .set-row{flex-wrap:wrap} }
+
+/* ---------- Dark (Alex, 5 Nov): the same glass in graphite, the lettering in silver and pale blue ---------- */
+html[data-theme=dark]{
+  --bg1:#15171b; --bg2:#1c1f24;
+  --ink:#eef0f3; --ink2:#c5cad3; --muted:#8c93a0; --faint:#5f6672;
+  --line:rgba(255,255,255,.08);
+  --glass:rgba(40,44,52,.55);
+  --rim:rgba(255,255,255,.09); --rim-out:rgba(0,0,0,.35);
+  --top:inset 0 1px 0 rgba(255,255,255,.07);
+  --shadow:0 10px 30px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.25);
+  --sheen:linear-gradient(115deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,.02) 30%,rgba(255,255,255,.11) 46%,rgba(255,255,255,.02) 60%,rgba(255,255,255,.08) 100%);
+  --letters:linear-gradient(100deg,#c9d2e3 0%,#9fbbe6 38%,#e8eef9 70%,#ffffff 100%);
+  --letters-dim:linear-gradient(100deg,#8a93a6 0%,#8fa6c8 45%,#a9b1bf 100%);
+  color-scheme:dark;
+}
+html[data-theme=dark] body{background:radial-gradient(1000px 650px at 12% -10%,#2c3139 0%,transparent 60%),radial-gradient(800px 600px at 100% 30%,rgba(111,143,191,.12),transparent 60%),linear-gradient(180deg,var(--bg1),var(--bg2)) fixed}
+html[data-theme=dark] .btn{background-color:rgba(255,255,255,.06)}
+html[data-theme=dark] .btn:hover{background-color:rgba(255,255,255,.1)}
+html[data-theme=dark] .btn.main{background-color:rgba(255,255,255,.12);background-image:var(--letters),linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.02));box-shadow:var(--top),0 0 0 1px rgba(255,255,255,.08),0 10px 26px rgba(0,0,0,.35)}
+html[data-theme=dark] .btn.main svg{color:#dfe7f5}
+html[data-theme=dark] .input,html[data-theme=dark] .select,html[data-theme=dark] .textarea{background:rgba(0,0,0,.25)}
+html[data-theme=dark] .input:focus,html[data-theme=dark] .select:focus,html[data-theme=dark] .textarea:focus{background:rgba(0,0,0,.35)}
+html[data-theme=dark] .check{background:rgba(255,255,255,.04)}
+html[data-theme=dark] .pill{background:rgba(255,255,255,.05)}
+html[data-theme=dark] .pill:hover{background:rgba(255,255,255,.1)}
+html[data-theme=dark] .pill.on{background:linear-gradient(135deg,#3d5180,#5b78ad)}
+html[data-theme=dark] .seg{background:rgba(255,255,255,.05)}
+html[data-theme=dark] .seg .on{background-color:rgba(255,255,255,.12)}
+html[data-theme=dark] .chip{background:color-mix(in srgb,var(--c,#6f8fbf) 22%,rgba(255,255,255,.04))}
+html[data-theme=dark] .tag{background:rgba(255,255,255,.07)}
+html[data-theme=dark] .bar-in{background:rgba(30,33,39,.72)}
+html[data-theme=dark] .find{background:rgba(255,255,255,.06)}
+html[data-theme=dark] .ico:hover,html[data-theme=dark] .who-me:hover{background:rgba(255,255,255,.08)}
+html[data-theme=dark] .ico.on{background:rgba(255,255,255,.12);color:#dfe7f5}
+html[data-theme=dark] .menu{background:rgba(30,33,39,.95)}
+html[data-theme=dark] .menu a:hover,html[data-theme=dark] .menu button:hover{background:rgba(255,255,255,.06)}
+html[data-theme=dark] .av{background-color:#2a2f37;color:#9aa2b0;box-shadow:0 0 0 2px rgba(255,255,255,.1),0 2px 8px rgba(0,0,0,.3)}
+html[data-theme=dark] .me-cover{background:linear-gradient(120deg,#262a31,#30353e 45%,#22262c)}
+html[data-theme=dark] .me-cover::after{background:repeating-radial-gradient(circle at 110% 130%,transparent 0 22px,rgba(255,255,255,.07) 23px 24px)}
+html[data-theme=dark] .mini-grid a,html[data-theme=dark] .face .pic,html[data-theme=dark] .cell,html[data-theme=dark] .thumb,html[data-theme=dark] .prof .main-pic{background-color:#2a2f37}
+html[data-theme=dark] .ring .r i,html[data-theme=dark] .ig-av .r i{background-color:#2a2f37;border-color:#1c1f24}
+html[data-theme=dark] .ring-sm .av{box-shadow:0 0 0 2px #1c1f24}
+html[data-theme=dark] .ring .r.seen{background:#3a404a}
+html[data-theme=dark] .ring .r.plain,html[data-theme=dark] .ig-av .r.plain{background:linear-gradient(#3a404a,#3a404a)}
+html[data-theme=dark] .ring.me .add{border-color:#1c1f24;background:#5b78ad}
+html[data-theme=dark] .ig-media{background:#0d0f12}
+html[data-theme=dark] .ig-dots i{background:rgba(255,255,255,.25)}
+html[data-theme=dark] .ig-dots i.on{background:#fff}
+html[data-theme=dark] .react:hover{background:rgba(255,255,255,.06)}
+html[data-theme=dark] .t-ico{background:rgba(255,255,255,.08);color:#dfe7f5}
+html[data-theme=dark] .week div.today{background:rgba(255,255,255,.1)}
+html[data-theme=dark] .up .e,html[data-theme=dark] .fact,html[data-theme=dark] .credits>*{background:rgba(255,255,255,.05)}
+html[data-theme=dark] .list-mini .sq{background:linear-gradient(135deg,#2c3446,#3a2f3d 50%,#2f2c46);color:#dfe7f5}
+html[data-theme=dark] .face .flag,html[data-theme=dark] .face .state,html[data-theme=dark] .thumb .star{background:rgba(0,0,0,.6);color:#fff}
+html[data-theme=dark] .face .state.shortlist{background:#5b78ad}
+html[data-theme=dark] .thumb .x{background:rgba(0,0,0,.6);color:#fff}
+html[data-theme=dark] .add-pic{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.03)}
+html[data-theme=dark] .form-foot{background:rgba(30,33,39,.85)}
+html[data-theme=dark] .veil{background:rgba(0,0,0,.55)}
+html[data-theme=dark] .win{background:rgba(30,33,39,.96)}
+html[data-theme=dark] .toast{background:rgba(255,255,255,.92);color:#1c2333}
+html[data-theme=dark] .switch{background:rgba(255,255,255,.14)}
+html[data-theme=dark] .switch:checked{background:linear-gradient(135deg,#3d5180,#5b78ad)}
+html[data-theme=dark] .tabbar{background:rgba(30,33,39,.82)}
+html[data-theme=dark] .tabbar a.on{background:rgba(255,255,255,.1);color:#dfe7f5}
