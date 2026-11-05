@@ -2265,36 +2265,106 @@ function phoneHead(p, { own, stats, theirStories, photos, followBtn, contactList
 }
 
 // the profile's posts as Instagram's grid; its owner can put them in any order
+// the work grid; on my own profile a long press lifts a post and it can be dragged to a new place (Alex, 5 Nov: "reorder
+// when you hold a post; drag it properly, professionally; no arrows, no Reorder button"): the others make room with a
+// soft glide, the grid scrolls near the edges, the new order is kept when the finger lets go
 function gridBlock(p, rows, own) {
-  let editing = false;
-  const box = h('div', { class: 'grid' });
-  const head = h('div', { class: 'head', style: { margin: '0 0 10px', justifyContent: 'flex-end' } });
-  if (own && rows.length > 1) head.append(h('button', { type: 'button', class: 'btn sm', onclick: (e) => { editing = !editing; e.currentTarget.textContent = editing ? t('Done') : t('Reorder'); if (!editing) save(); draw(); } }, t('Reorder')));
-  let drag = null;
-  const move = (from, to) => { if (to < 0 || to >= rows.length) return; const [x] = rows.splice(from, 1); rows.splice(to, 0, x); draw(); };
+  const box = h('div', { class: 'grid' + (own ? ' can-sort' : '') });
   async function save() {
     const res = await Promise.all(rows.map((r, i) => (r.pos === i ? null : sb.from('roardino_posts').update({ pos: i }).eq('id', r.id))));
     const bad = res.find((x) => x?.error);
     if (bad) fail(bad.error); else { rows.forEach((r, i) => { r.pos = i; }); toast(t('Order kept')); }
   }
-  function draw() {
-    box.classList.toggle('editing', editing);
-    if (!rows.length) { put(box, h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, own ? t('Add your first work.') : t('No work posted yet.'))); return; }
-    put(box, ...rows.map((r, i) => {
-      const m = (r.media || [])[0];
-      return h(editing ? 'div' : 'button', { type: editing ? null : 'button', class: 'cell', draggable: editing ? 'true' : null, style: m && m.type === 'image' ? bg(m.path) : {},
-        onclick: editing ? null : () => openPost(r, p),
-        ondragstart: () => { drag = i; }, ondragover: (e) => e.preventDefault(), ondrop: (e) => { e.preventDefault(); if (drag != null) move(drag, i); drag = null; } },
-        m?.type === 'video' ? cellVideo(m) : null,
-        m?.type === 'video' ? h('span', { class: 'play', html: ICON.play }) : null,
-        !m ? h('p', {}, (r.body || '').slice(0, 140)) : null,
-        editing ? h('span', { class: 'cell-move' },
-          h('button', { type: 'button', class: 'btn sm round', html: ICON.left, 'aria-label': t('Earlier'), onclick: () => move(i, i - 1) }),
-          h('button', { type: 'button', class: 'btn sm round', html: ICON.right, 'aria-label': t('Later'), onclick: () => move(i, i + 1) })) : null);
-    }));
-  }
-  draw();
-  return h('div', {}, head, box);
+  const cellOf = (r) => {
+    const m = (r.media || [])[0];
+    const c = h('button', { type: 'button', class: 'cell', style: m && m.type === 'image' ? bg(m.path) : {}, onclick: () => { if (!c._dragged) openPost(r, p); c._dragged = false; } },
+      m?.type === 'video' ? cellVideo(m) : null,
+      m?.type === 'video' ? h('span', { class: 'play', html: ICON.play }) : null,
+      !m ? h('p', {}, (r.body || '').slice(0, 140)) : null);
+    c._row = r;
+    return c;
+  };
+  if (!rows.length) put(box, h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, own ? t('Add your first work.') : t('No work posted yet.')));
+  else put(box, ...rows.map(cellOf));
+  if (own && rows.length > 1) sortable(box, () => { rows.splice(0, rows.length, ...[...box.children].map((c) => c._row).filter(Boolean)); save(); });
+  return h('div', {}, box);
+}
+// long press to lift, drag to move, let go to drop; FLIP glides for the cells that make room
+function sortable(box, done) {
+  let timer = null, start = null, cell = null, ghost = null, off = null, last = null, raf = 0, lifted = false;
+  const flip = (fn) => {
+    const cells = [...box.children].filter((c) => c !== cell);
+    const before = new Map(cells.map((c) => [c, c.getBoundingClientRect()]));
+    fn();
+    cells.forEach((c) => {
+      const a = before.get(c), b = c.getBoundingClientRect();
+      const dx = a.left - b.left, dy = a.top - b.top;
+      if (!dx && !dy) return;
+      c.style.transition = 'none'; c.style.transform = `translate(${dx}px, ${dy}px)`;
+      requestAnimationFrame(() => { c.style.transition = 'transform .32s cubic-bezier(.2,.7,.2,1)'; c.style.transform = ''; });
+    });
+  };
+  const edge = () => {
+    if (!lifted || !last) return;
+    const y = last.clientY, H = window.innerHeight, band = 90;
+    if (y < band) window.scrollBy(0, -Math.ceil((band - y) / 6));
+    else if (y > H - band) window.scrollBy(0, Math.ceil((y - (H - band)) / 6));
+    over(); raf = requestAnimationFrame(edge);
+  };
+  const over = () => {
+    if (!last) return;
+    ghost.style.transform = `translate(${last.clientX - off.x}px, ${last.clientY - off.y}px) scale(1.06)`;
+    ghost.style.visibility = 'hidden';
+    const under = document.elementFromPoint(last.clientX, last.clientY)?.closest('.cell');
+    ghost.style.visibility = '';
+    if (!under || under === cell || under.parentElement !== box) return;
+    const kids = [...box.children], from = kids.indexOf(cell), to = kids.indexOf(under);
+    flip(() => box.insertBefore(cell, from < to ? under.nextSibling : under));
+  };
+  const lift = () => {
+    lifted = true;
+    navigator.vibrate?.(12);
+    const r = cell.getBoundingClientRect();
+    off = { x: start.x - r.left, y: start.y - r.top };
+    ghost = cell.cloneNode(true);
+    ghost.classList.add('sort-ghost');
+    Object.assign(ghost.style, { width: `${r.width}px`, height: `${r.height}px`, left: '0px', top: '0px', transform: `translate(${r.left}px, ${r.top}px) scale(1)` });
+    document.body.append(ghost);
+    requestAnimationFrame(() => { ghost.style.transform = `translate(${r.left}px, ${r.top}px) scale(1.06)`; });
+    setTimeout(() => { if (ghost) ghost.style.transition = 'none'; }, 190); // then it follows the finger without lag
+    cell.classList.add('sort-hole');
+    box.classList.add('sorting');
+    raf = requestAnimationFrame(edge);
+  };
+  const end = () => {
+    clearTimeout(timer); timer = null;
+    if (!lifted) { cell = null; return; }
+    cancelAnimationFrame(raf);
+    const r = cell.getBoundingClientRect();
+    ghost.style.transition = 'transform .28s cubic-bezier(.2,.7,.2,1)';
+    ghost.style.transform = `translate(${r.left}px, ${r.top}px) scale(1)`;
+    const g = ghost, c = cell;
+    setTimeout(() => { g.remove(); c.classList.remove('sort-hole'); box.classList.remove('sorting'); }, 280);
+    c._dragged = true; setTimeout(() => { c._dragged = false; }, 400);
+    lifted = false; ghost = null; cell = null; last = null;
+    done();
+  };
+  box.addEventListener('pointerdown', (e) => {
+    const c = e.target.closest('.cell'); if (!c || c.parentElement !== box || e.button > 0) return;
+    cell = c; start = { x: e.clientX, y: e.clientY }; last = e;
+    timer = setTimeout(() => { timer = null; lift(); }, 420);
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!cell) return;
+    last = e;
+    if (!lifted) { if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) { clearTimeout(timer); timer = null; cell = null; } return; }
+    over();
+  });
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', () => { if (lifted) end(); else { clearTimeout(timer); cell = null; } });
+  // while lifted the page does not scroll under the finger, and the phone's own long-press menu stays away
+  box.addEventListener('touchmove', (e) => { if (lifted) e.preventDefault(); }, { passive: false });
+  box.addEventListener('contextmenu', (e) => { if (cell || lifted) e.preventDefault(); });
 }
 async function openPost(r, p) {
   if ((r.media || []).length) {
