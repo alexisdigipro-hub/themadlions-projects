@@ -761,3 +761,6 @@ html[data-theme=dark] .note:hover{background:rgba(255,255,255,.05)}
 .notes-empty span{width:34px;height:34px;color:var(--accent)}
 .notes-empty span svg{width:34px;height:34px}
 @media (max-width:860px){ .notes-panel{position:fixed;left:12px;right:12px;width:auto;top:70px} .bar .bell{display:grid} }
+
+/* my profile: each tab's own action (Add work, Add photo, Edit bio) */
+.tab-act{display:flex;justify-content:center;margin:-2px 0 14px}

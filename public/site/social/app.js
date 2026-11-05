@@ -31,6 +31,7 @@ let prefs = { ...PREF_DEFAULTS };
 try { prefs = { ...PREF_DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; } catch { /* private window */ }
 const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 function wearPrefs() {
+  setTimeout(() => typeof chatLook === 'function' && chatLook());
   const dark = prefs.theme === 'dark' || (prefs.theme === 'auto' && darkQuery.matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   document.documentElement.dataset.text = prefs.text;
@@ -467,7 +468,7 @@ async function viewFeed() {
     storiesCard(stories, others),
     // the composer waits behind New post, on the line of Everyone / Following (Alex, 5 Nov), and opens as a glass window
     h('div', { class: 'head feed-head' }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { feedOnly = k; viewFeed(); }), h('span', { class: 'grow' }),
-      mine.length ? h('button', { type: 'button', class: 'btn main new-post', onclick: () => { let close = null; const c = composer(() => { close?.(); viewFeed(); }); close = openWin(t('New post'), c); c.querySelector('textarea')?.focus(); } }, icon('plus'), t('New post')) : null),
+      mine.length ? h('button', { type: 'button', class: 'btn main new-post', onclick: () => composeWin('work') }, icon('plus'), t('New post')) : null),
     ...stream);
 }
 
@@ -545,9 +546,9 @@ function callsForMe(calls) {
 }
 
 // write a post: words and up to 6 pictures or videos, as one of my profiles
-function composer(done) {
-  let as = me().id;
-  let kind = 'work'; // Alex, 5 Nov: every upload says what it is, Work (My Work) or My photo (My Photos)
+function composer(done, kind0 = 'work', asId = null) {
+  let as = asId || me().id;
+  let kind = kind0; // Alex, 5 Nov: every upload says what it is, Work (My Work) or My photo (My Photos)
   const kindBox = h('div');
   const drawKind = () => put(kindBox, seg([['work', t('Work')], ['photo', t('My photo')]], kind, (k) => { kind = k; drawKind(); }));
   drawKind();
@@ -580,6 +581,13 @@ function composer(done) {
       h('span', { style: { flex: 1 } }), btn));
 }
 
+// the composer in a glass window (New post on the feed, Add work / Add photo on my profile)
+function composeWin(kind = 'work', asId = null, after = () => viewFeed()) {
+  let close = null;
+  const c = composer(() => { close?.(); after(); }, kind, asId);
+  close = openWin(kind === 'photo' ? t('Add a photo') : t('New post'), c);
+  c.querySelector('textarea')?.focus();
+}
 // posts as cards: who, words, pictures, Bravo and comments
 async function posts(rows, refresh) {
   const ids = rows.map((r) => r.id);
@@ -946,7 +954,12 @@ async function viewPerson(id) {
   const drawTab = () => {
     // My Work, My Photos, My Bio on my own profile; Work, Photos, Bio on someone else's (Alex, 5 Nov)
     put(tabRow, [['work', own ? t('My Work') : t('Work'), 'grid'], ['photos', own ? t('My Photos') : t('Photos'), 'pic'], ['details', own ? t('My Bio') : t('Bio'), 'user']].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
-    put(body, tab === 'work' ? work : tab === 'photos' ? pics : details);
+    // on my own profile each tab adds or edits in place (Alex, 5 Nov)
+    const act = !own ? null
+      : tab === 'work' ? h('button', { type: 'button', class: 'btn sm main', onclick: () => composeWin('work', p.id, () => route()) }, icon('plus'), t('Add work'))
+        : tab === 'photos' ? h('button', { type: 'button', class: 'btn sm main', onclick: () => composeWin('photo', p.id, () => route()) }, icon('plus'), t('Add photo'))
+          : h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit bio'));
+    put(body, act ? h('div', { class: 'tab-act' }, act) : null, tab === 'work' ? work : tab === 'photos' ? pics : details);
   };
   drawTab();
   frame(mineTab,
@@ -1442,12 +1455,49 @@ function viewSettings() {
    Chat: RoarMe in a frame, the same account (signed in once inside it, then remembered)
    ===================================================================================================================== */
 let chatFrame = null;
+const ROARME_ORIGIN = new URL(ROARME).origin;
 function viewChat() {
   document.title = 'Roardino · ' + t('Chat');
-  // one frame kept for the whole visit, so going back to the chat is instant and keeps the conversation open
-  chatFrame ||= h('iframe', { class: 'chat-frame', src: ROARME, title: 'RoarMe', allow: 'camera; microphone; clipboard-write; autoplay; fullscreen; display-capture' });
+  // one frame kept for the whole visit, so going back to the chat is instant and keeps the conversation open;
+  // ?embed=roardino: RoarMe wears Roardino's look, hides its own brand, and asks Roardino to sign it in (Alex, 5 Nov)
+  chatFrame ||= h('iframe', { class: 'chat-frame', src: ROARME + '?embed=roardino', title: 'RoarMe', allow: 'camera; microphone; clipboard-write; autoplay; fullscreen; display-capture' });
   frame('chat', h('div', { class: 'chat-wrap' }, chatFrame));
 }
+// what Roardino says to the framed RoarMe: its look, and a one-time sign-in token for the same Roar Account
+const toChat = (msg) => { try { chatFrame?.contentWindow?.postMessage(msg, ROARME_ORIGIN); } catch { /* not there */ } };
+const chatLook = () => toChat({ type: 'roardino:look', theme: document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light' });
+let handingOver = false;
+// the same handover the Roar Account gives every Roar app (roar-connect): a code started here, allowed with this
+// session, then traded for a one-time token_hash that RoarMe turns into its own session; no password, no refresh token
+async function handOverToChat() {
+  if (handingOver || !session) return;
+  handingOver = true;
+  try {
+    const FN = SB_URL + '/functions/v1/roar-connect';
+    const call = async (body, token) => {
+      const r = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SB_KEY, ...(token ? { Authorization: 'Bearer ' + token } : {}) }, body: JSON.stringify(body) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || j.error) throw new Error(j.error || 'HTTP ' + r.status);
+      return j;
+    };
+    const { data: cur } = await sb.auth.getSession();
+    const token = cur.session?.access_token;
+    if (!token) return;
+    const start = await call({ do: 'start', app: 'roardino' });
+    await call({ do: 'allow', code: start.code }, token);
+    for (let i = 0; i < 10; i++) {
+      const a = await call({ do: 'poll', code: start.code, secret: start.secret });
+      if (a.token_hash) { toChat({ type: 'roardino:signin', token_hash: a.token_hash }); return; }
+      if (a.expired) return;
+      await new Promise((r) => setTimeout(r, 800));
+    }
+  } catch (e) { console.warn('chat handover', e); } finally { handingOver = false; }
+}
+window.addEventListener('message', (e) => {
+  if (e.origin !== ROARME_ORIGIN || !chatFrame || e.source !== chatFrame.contentWindow) return;
+  const d = e.data || {};
+  if (d.type === 'roarme:ready') { chatLook(); if (d.signedIn === false) handOverToChat(); }
+});
 
 /* =====================================================================================================================
    Seminars
