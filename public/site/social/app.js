@@ -240,6 +240,9 @@ function errText(e) {
 }
 const SVG = (d, extra = '') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" ${extra}>${d}</svg>`;
 const ICON = {
+  lock: SVG('<rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7"/>'),
+  unlock: SVG('<rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 6.8-1.2"/>'),
+  move: SVG('<path d="M4 12h14M13 6.5 18.5 12 13 17.5"/>'),
   home: SVG('<path d="M3.6 10.2 12 3.6l8.4 6.6v9.6a.7.7 0 0 1-.7.7H15v-5.6a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5.6H4.3a.7.7 0 0 1-.7-.7z"/>'),
   people: SVG('<circle cx="12" cy="12" r="8.6"/><path d="m15.6 8.4-2.1 5.1-5.1 2.1 2.1-5.1z"/>'),
   calls: SVG('<rect x="3" y="7.2" width="18" height="13" rx="2.2"/><path d="M8.6 7.2V5.4a1.6 1.6 0 0 1 1.6-1.6h3.6a1.6 1.6 0 0 1 1.6 1.6v1.8M3 12.6h18"/>'),
@@ -1460,6 +1463,13 @@ function postMenu(r, p, { own, media, refresh, saveBtn }) {
           toast(t('Cover changed')); refresh?.();
         } catch (e) { fail(e); }
       }) : null,
+      // move a post between Portfolio and Personal (Alex, 5 Nov)
+      row('move', r.kind === 'photo' ? t('Move to Portfolio') : t('Move to Personal'), async () => {
+        const kind = r.kind === 'photo' ? 'work' : 'photo';
+        const { error } = await sb.from('roardino_posts').update({ kind }).eq('id', r.id);
+        if (error) return fail(error);
+        r.kind = kind; toast(kind === 'photo' ? t('Moved to Personal') : t('Moved to Portfolio')); refresh?.();
+      }),
       row('edit', t('Edit profile'), () => { location.hash = `#/edit/${p.id}`; }),
       row('trash', t('Delete post'), async () => {
         if (!(await ask(t('Delete this post?')))) return;
@@ -2160,7 +2170,9 @@ async function viewPerson(id) {
   let tab = 'work';
   const drawTab = () => {
     // My Work, My Photos, My Bio on my own profile; Work, Photos, Bio on someone else's (Alex, 5 Nov)
-    put(tabRow, [['work', t('Portfolio'), 'grid'], ['photos', own ? t('My Photos') : t('Photos'), 'pic'], ['details', own ? t('My Bio') : t('Bio'), 'user'], ...(own ? [['saved', t('Saved'), 'bookmark']] : [])].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
+    // Portfolio, Personal, Bio, Saved (Alex, 5 Nov); a Personal kept private does not show on someone else's profile
+    const hidePersonal = !own && !!p.data?.personal_private;
+    put(tabRow, [['work', t('Portfolio'), 'grid'], ...(hidePersonal ? [] : [['photos', t('Personal'), 'pic']]), ['details', t('Bio'), 'user'], ...(own ? [['saved', t('Saved'), 'bookmark']] : [])].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
     // on my own profile each tab adds or edits in place (Alex, 5 Nov)
     // as a round glass plus at the left of the tabs, its words only on hover (Alex, 5 Nov: "a plus on the left, the plus alone says Add work")
     const plus = (label, ic, extra) => h(extra.href ? 'a' : 'button', { type: extra.href ? null : 'button', class: 'btn main tab-plus', title: label, 'aria-label': label, ...extra }, icon(ic), h('span', { class: 'lbl' }, label));
@@ -2169,7 +2181,19 @@ async function viewPerson(id) {
         : tab === 'photos' ? plus(t('Add photo'), 'plus', { onclick: () => composeWin('photo', p.id, () => route()) })
           : tab === 'saved' ? null : plus(t('Edit bio'), 'edit', { href: `#/edit/${p.id}` });
     if (act) tabRow.append(act);
-    put(body, tab === 'work' ? work : tab === 'photos' ? pics : tab === 'saved' ? savedGrid() : details);
+    // Personal can be closed to the public (Alex, 5 Nov): a lock beside its plus; Saved is only ever mine
+    const priv = !!p.data?.personal_private;
+    const lockBtn = own && tab === 'photos' ? h('button', { type: 'button', class: 'btn sm tab-lock' + (priv ? ' on' : ''), title: priv ? t('Only you see Personal. Tap to show it to everyone.') : t('Everyone sees Personal. Tap to keep it to yourself.'), onclick: async () => {
+      const data = { ...(p.data || {}), personal_private: !priv };
+      const { error } = await sb.from('roardino_people').update({ data }).eq('id', p.id);
+      if (error) return fail(error);
+      p.data = data; const m0 = mine.find((x) => x.id === p.id); if (m0) m0.data = data;
+      toast(!priv ? t('Personal is private now') : t('Personal is public now')); drawTab();
+    } }, icon(priv ? 'lock' : 'unlock'), h('span', { class: 'lbl' }, priv ? t('Private') : t('Public'))) : null;
+    if (lockBtn) tabRow.append(lockBtn);
+    const note = own && tab === 'saved' ? h('p', { class: 'tab-note' }, icon('lock'), t('Only you see what you saved.'))
+      : own && tab === 'photos' && priv ? h('p', { class: 'tab-note' }, icon('lock'), t('Personal is private: only you see these.')) : null;
+    put(body, note, tab === 'work' ? work : tab === 'photos' ? pics : tab === 'saved' ? savedGrid() : details);
   };
   drawTab();
   frame(mineTab,

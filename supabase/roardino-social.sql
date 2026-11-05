@@ -644,3 +644,17 @@ language sql stable security definer set search_path = public as $$
 $$;
 revoke all on function roardino_people_of(uuid, text) from public, anon;
 grant execute on function roardino_people_of(uuid, text) to authenticated;
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- Personal kept private (Alex, 5 Nov: "the Personal tab can be closed to the public"): a profile with
+-- data.personal_private = true shows its Personal posts (kind 'photo') only to its owner. Safe to run again.
+create or replace function public.roardino_personal_hidden(pid uuid) returns boolean
+language sql stable security definer set search_path = public as $$
+  select coalesce((select (data->>'personal_private')::boolean from roardino_people where id = pid), false)
+$$;
+grant execute on function public.roardino_personal_hidden(uuid) to anon, authenticated;
+drop policy if exists rd_posts_read on public.roardino_posts;
+create policy rd_posts_read on public.roardino_posts for select using (
+  roardino_can_see((person_id)::text)
+  and (owner = auth.uid() or coalesce(kind, 'work') <> 'photo' or not roardino_personal_hidden(person_id))
+);
