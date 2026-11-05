@@ -527,6 +527,7 @@ function topBar(on) {
     // the menu in words, a glass capsule with the gliding lens, as Qubi's (Alex, 5 Nov); the search takes the rest
     h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { if (k === 'feed') goHome(); else location.hash = `#/${k}`; })),
     h('label', { class: 'find' }, icon('search'), find),
+    h('button', { type: 'button', class: 'ico create-btn', title: t('Create'), 'aria-label': t('Create'), html: ICON.plus, onclick: createMenu }),
     bellButton(),
     h('button', { type: 'button', class: 'who-me', onclick: toggle, 'aria-label': t('Me') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }), h('span', { class: 'nm' }, m?.name || session.user.user_metadata?.name || t('Me')), icon('down')),
     h('button', { type: 'button', class: 'ico theme', title: t('Light or dark'), 'aria-label': t('Light or dark'), html: document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon, onclick: (e) => { setPref('theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); e.currentTarget.innerHTML = document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon; } }),
@@ -934,6 +935,19 @@ function composer(done, kind0 = 'work', asId = null) {
 }
 
 // the composer in a glass window (New post on the feed, Add work / Add photo on my profile)
+// the + on top of a phone, left (Alex, 5 Nov, as Instagram's): one place to make anything
+function createMenu() {
+  const m = me();
+  if (!m) { location.hash = '#/edit/new'; return; }
+  let close;
+  const pick = h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, onchange: async (e) => { const f0 = e.target.files[0]; e.target.value = ''; const f = f0 && (/^video/.test(f0.type) ? f0 : await cropImage(f0, SHAPES.story)); const ed = f && await storyEditor(f); if (ed) await addStory(ed.file, ed.overlays); } });
+  const tile = (ic, label, sub, fn) => h('button', { type: 'button', class: 'pm-tile cr-tile', onclick: () => { close(); fn(); } }, h('span', { class: 'pm-ic', html: ICON[ic] }), h('b', {}, label), h('small', {}, sub));
+  close = openWin(t('Create'), h('div', { class: 'pm' }, h('div', { class: 'pm-tiles' },
+    tile('grid', t('Work'), t('A post of your work'), () => composeWin('work', m.id, () => route())),
+    tile('pic', t('My photo'), t('A photo of you'), () => composeWin('photo', m.id, () => route())),
+    tile('rings', t('Story'), t('For 24 hours'), () => storySource(pick)),
+    tile('calls', t('Call'), t('Casting or crew'), () => { location.hash = '#/calls'; setTimeout(() => editCall(), 400); })), pick), null);
+}
 function composeWin(kind = 'work', asId = null, after = () => viewFeed()) {
   let close = null;
   const c = composer(() => { close?.(); after(); }, kind, asId);

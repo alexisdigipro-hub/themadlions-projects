@@ -1228,3 +1228,12 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .compose .seg{flex:0 1 auto;min-width:0}
   .compose .seg button{padding:7px 11px;font-size:10.5px;letter-spacing:.06em;white-space:nowrap}
 }
+/* the + of the phone's top bar, on the left (Alex, 5 Nov); the other + buttons give way to it there */
+.create-btn{display:none}
+@media (max-width:820px){
+  .bar .create-btn{display:grid;position:absolute;left:6px;top:50%;transform:translateY(-50%);color:var(--muted)}
+  .page .tab-plus,.feed-head .new-post{display:none!important}
+  .ig-tabs{padding-left:0}
+}
+.cr-tile b{font-size:14px;font-weight:var(--w-strong)}
+.cr-tile small{font-size:12px;color:var(--muted);margin-top:-4px}
