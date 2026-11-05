@@ -1412,7 +1412,13 @@ function postCard(r, st, refresh) {
     const shape = (w, hh) => { if (w && hh) slides.style.setProperty('--ar', `${w} / ${hh}`); };
     const m0 = media[0];
     if (m0.w && m0.h) shape(m0.w, m0.h);
-    else slides.firstElementChild?.addEventListener('loadedmetadata', (e) => shape(e.target.videoWidth, e.target.videoHeight), { once: true });
+    else slides.firstElementChild?.addEventListener('loadedmetadata', (e) => {
+      const w = e.target.videoWidth, hh = e.target.videoHeight;
+      shape(w, hh);
+      // a video put up before its size was kept: the owner's first look writes it down, so from then on it opens in its
+      // own shape at once, for everyone (Alex, 5 Nov: "it shows the wrong aspect while loading, then fixes itself")
+      if (own && r.id && w && hh) { r.media = (r.media || []).map((x, k) => (k ? x : { ...x, w, h: hh })); sb.from('roardino_posts').update({ media: r.media }).eq('id', r.id).then(() => {}, () => {}); }
+    }, { once: true });
   }
   if (media[0]?.type === 'video') queueMicrotask(() => slides?.closest('.post')?.classList.add('vid'));
   const dots = media.length > 1 ? h('div', { class: 'ig-dots' }, media.map((_, i) => h('i', { class: i ? '' : 'on' }))) : null;
