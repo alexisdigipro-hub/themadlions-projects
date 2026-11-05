@@ -1032,17 +1032,25 @@ async function sendToRoarMe(r, p) {
   const avOf = (x) => (x.avatar && /^https?:/.test(x.avatar) ? { name: x.name, avatar: x.avatar } : { name: x.name });
   let recent = [], everyone = null;
   const row = (x) => h('button', { type: 'button', class: 'stm-row' + (picked.has(x.key) ? ' on' : ''), onclick: () => { if (picked.has(x.key)) picked.delete(x.key); else picked.set(x.key, x); sendBtn.disabled = !picked.size; draw(found); } },
-    avatar(avOf(x)), h('span', { class: 'stm-who' }, h('b', {}, x.name), x.sub ? h('small', {}, x.sub) : null), h('span', { class: 'stm-tick', html: ICON.check }));
+    avatar(avOf(x)), h('span', { class: 'stm-who' }, h('b', {}, x.name, x.rm ? h('em', { class: 'rm-badge' }, 'RoarMe') : null), x.sub ? h('small', {}, x.sub) : null), h('span', { class: 'stm-tick', html: ICON.check }));
   let found = null;
-  const draw = (res) => put(list, ...(res || recent).map(row), !(res || recent).length ? h('p', { class: 'hint' }, res ? t('Nobody by that name on RoarMe.') : t('No chats yet. Search for someone above.')) : null);
-  const search = h('input', { class: 'input', type: 'search', placeholder: t('Search RoarMe'), oninput: async (e) => {
+  // Roardino's people first, then whoever is only on RoarMe, marked so (Alex, 5 Nov)
+  let rdPeople = [], rdFollow = [];
+  const sec = (label, rows) => (rows.length ? [h('p', { class: 'stm-sec' }, label), ...rows.map(row)] : []);
+  const draw = (res) => {
+    const a = res ? res.rd : rdFollow, b = res ? res.rm : recent;
+    put(list, ...sec(t('On Roardino'), a), ...sec(t('On RoarMe'), b), !a.length && !b.length ? h('p', { class: 'hint' }, res ? t('Nobody by that name.') : t('Search for someone above.')) : null);
+  };
+  const search = h('input', { class: 'input', type: 'search', placeholder: t('Search people'), oninput: async (e) => {
     const q = e.target.value.trim();
     if (!q) { found = null; return draw(); }
+    const rd = rdPeople.filter((x) => matches(x._k, q)).slice(0, 15);
     // RoarMe's people read once, then found the Roardino way: Greek, Greeklish, with or without accents
     everyone ||= ((await sb.from('roar_profiles').select('id,username,display_name,avatar_url').neq('id', meId).limit(2000)).data || []).map((u) => ({ ...u, _k: ' ' + fold(`${u.display_name} ${u.username.replace(/_/g, ' ')} ${u.username}`) + ' ' }));
     if (e.target.value.trim() !== q) return;
-    const data = everyone.filter((u) => matches(u._k, q)).slice(0, 20);
-    found = data.map((u) => ({ key: 'u:' + u.id, kind: 'user', id: u.id, name: u.display_name || u.username, sub: '@' + u.username, avatar: u.avatar_url }));
+    const onRd = new Set(rdPeople.map((x) => x.id));
+    const data = everyone.filter((u) => !onRd.has(u.id) && matches(u._k, q)).slice(0, 15);
+    found = { rd, rm: data.map((u) => ({ key: 'u:' + u.id, kind: 'user', id: u.id, name: u.display_name || u.username, sub: '@' + u.username, avatar: u.avatar_url, rm: true })) };
     draw(found);
   } });
   const close = openWin(t('Send'), h('div', { class: 'stm' }, search, list, note), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Cancel')), sendBtn]);
@@ -1062,6 +1070,14 @@ async function sendToRoarMe(r, p) {
     close();
     toast(ok ? (ok === 1 ? t('Sent on RoarMe') : t('Sent to {n} chats on RoarMe', { n: ok })) : t('Could not send. Try again.'));
   };
+  // Roardino's people (one row per account, its adult profile), the ones I follow shown before any search
+  try {
+    const { data: ppl } = await sb.from('roardino_people').select('id,name,handle,avatar,kinds,owner,minor').eq('visible', true).eq('minor', false).neq('owner', meId).order('created_at').limit(1500);
+    const seen = new Set();
+    await sign((ppl || []).map((x) => x.avatar));
+    rdPeople = (ppl || []).filter((x) => !seen.has(x.owner) && seen.add(x.owner)).map((x) => ({ key: 'u:' + x.owner, kind: 'user', id: x.owner, pid: x.id, name: x.name, sub: x.handle ? '@' + x.handle : (x.kinds || []).map(kindName).slice(0, 2).join(' · '), avatar: urlOf(x.avatar) || '', _k: ' ' + fold(`${x.name} ${x.handle || ''}`) + ' ' }));
+    rdFollow = rdPeople.filter((x) => follows.has(x.pid)).slice(0, 20);
+  } catch (e) { console.warn('Roardino people', e); }
   // my chats, newest first: a direct chat shows the other person, a group its name
   try {
     const { data: mem } = await sb.from('roar_members').select('room_id, archived, room:roar_rooms(id,kind,title,avatar_url,last_message_at)').eq('user_id', meId).limit(200);
@@ -1073,7 +1089,7 @@ async function sendToRoarMe(r, p) {
     recent = rooms.map((m) => {
       if (m.room.kind === 'group') return { key: 'r:' + m.room_id, kind: 'room', id: m.room_id, name: m.room.title || t('Group'), sub: t('Group'), avatar: m.room.avatar_url };
       const o = others.find((x) => x.room_id === m.room_id); const pr = profs.find((x) => x.id === o?.user_id);
-      return pr ? { key: 'r:' + m.room_id, kind: 'room', id: m.room_id, name: pr.display_name || pr.username, sub: '@' + pr.username, avatar: pr.avatar_url } : null;
+      return pr && !rdPeople.some((x) => x.id === pr.id) ? { key: 'r:' + m.room_id, kind: 'room', id: m.room_id, name: pr.display_name || pr.username, sub: '@' + pr.username, avatar: pr.avatar_url, rm: true } : null;
     }).filter(Boolean);
   } catch (e) { console.warn('RoarMe chats', e); }
   draw();
