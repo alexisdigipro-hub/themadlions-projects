@@ -60,6 +60,37 @@ const KIND = Object.fromEntries(KINDS.map((k) => [k[0], k[1]]));
 KIND.theatre = 'Actor'; // "Theatre" was a kind for a few hours on 4 Nov; Alex: whoever plays theatre is an actor
 const kindName = (k) => t(KIND[k] || k);
 const SIDE = Object.fromEntries(KINDS.map((k) => [k[0], k[2]]));
+
+/* ---------- search in Greek and in Greeklish (Alex, 5 Nov: "Eleni finds Ελένη, without accents too") ----------
+   fold() brings Greek, Greeklish and English spellings of a word to one Latin skeleton: no accents, Greek letters to
+   Latin, and the usual ways of writing a sound made one (ει/οι/η/υ/y = i, αι = e, ου = u, μπ = b = v, ντ = d, χ/ch/kh = h,
+   φ/ph = f, ξ/x = ks, γι/yi/gi before a vowel = i, double letters single). Both the profile and the words typed go
+   through it, so Ελένη, Ελενη, Eleni and Elenh all meet. */
+const GR = { α: 'a', β: 'v', γ: 'g', δ: 'd', ε: 'e', ζ: 'z', η: 'i', θ: 'th', ι: 'i', κ: 'k', λ: 'l', μ: 'm', ν: 'n', ξ: 'ks', ο: 'o', π: 'p', ρ: 'r', σ: 's', ς: 's', τ: 't', υ: 'i', φ: 'f', χ: 'h', ψ: 'ps', ω: 'o' };
+function fold(x) {
+  let s = String(x || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  s = s.replace(/ου/g, 'u').replace(/αυ(?=[θκξπσςτφχψ]|$|\s)/g, 'af').replace(/ευ(?=[θκξπσςτφχψ]|$|\s)/g, 'ef').replace(/αυ/g, 'av').replace(/ευ/g, 'ev')
+    .replace(/μπ/g, 'b').replace(/ντ/g, 'd').replace(/γ[γκ]/g, 'g').replace(/τσ/g, 'ts').replace(/τζ/g, 'dz')
+    .replace(/γι(?=[αεοουω])/g, 'i').replace(/[α-ω]/g, (c) => GR[c] ?? c);
+  return s.replace(/ou/g, 'u').replace(/ph/g, 'f').replace(/[ck]h|kh/g, 'h').replace(/x/g, 'ks').replace(/[cq]/g, 'k').replace(/w/g, 'o')
+    .replace(/\b[gy]i(?=[aeou])/g, 'i').replace(/\by(?=[aeou])/g, 'i').replace(/ai/g, 'e').replace(/(ei|oi|ee|y)/g, 'i')
+    .replace(/h\b/g, 'i').replace(/n(?=[gk])/g, '').replace(/mp/g, 'b').replace(/nt/g, 'd').replace(/b/g, 'v').replace(/(gg|gk)/g, 'g').replace(/j/g, 'dz').replace(/([a-z])\1+/g, '$1')
+    .replace(/[^a-z0-9]+/g, ' ').trim();
+}
+// the words in Greek for what people do and for the big cities, so ηθοποιος finds actors and Αθήνα finds Athens
+const KIND_EL = { actor: 'ηθοποιός ηθοποιοί', model: 'μοντέλο', dancer: 'χορευτής χορεύτρια χορός', extra: 'κομπάρσος', singer: 'τραγουδιστής τραγουδίστρια μουσικός',
+  director: 'σκηνοθέτης σκηνοθέτρια', dop: 'διευθυντής φωτογραφίας', camera: 'κάμερα κάμεραμαν οπερατέρ', gaffer: 'φωτισμός ηλεκτρολόγος', sound: 'ήχος ηχολήπτης',
+  editor: 'μοντέρ μοντάζ', colorist: 'χρώμα', producer: 'παραγωγός παραγωγή', ad: 'βοηθός σκηνοθέτη', casting: 'κάστινγκ', photo: 'φωτογράφος φωτογραφία',
+  styling: 'στυλίστας ενδυματολόγος κοστούμια', makeup: 'μακιγιάζ κομμώσεις', art: 'σκηνογράφος σκηνογραφία', vfx: 'εφέ', writer: 'σεναριογράφος σενάριο συγγραφέας', choreo: 'χορογράφος χορογραφία' };
+const CITY_ALSO = { athens: 'athina', athina: 'athens', thessaloniki: 'salonika', patra: 'patras', patras: 'patra', heraklion: 'iraklio', iraklio: 'heraklion', larisa: 'larissa', chania: 'hania', crete: 'kriti', kriti: 'crete' };
+const words = (v) => (v == null ? '' : typeof v === 'string' ? v : Array.isArray(v) ? v.map(words).join(' ') : typeof v === 'object' ? Object.values(v).map(words).join(' ') : String(v));
+function personKeys(p) {
+  const ks = (p.kinds || []).map((k) => (k === 'theatre' ? 'actor' : k));
+  const city = fold(p.city);
+  return ' ' + fold([p.name, p.city, CITY_ALSO[city] || '', p.headline, ...ks.map((k) => KIND[k] || k), ...ks.map((k) => KIND_EL[k] || ''), words(p.data?.skills), words(p.data?.languages), words(p.data?.tools)].join(' ')) + ' ';
+}
+// every word typed must be found at the start of a word of the profile (Ελ finds Ελένη, not Μιχαέλα)
+const matches = (keys, q) => fold(q).split(' ').filter(Boolean).every((w) => keys.includes(' ' + w));
 const HUE = { front: '#d40000', back: '#6f8fbf', creative: '#e0a33a' }; // Cast, Crew, Creatives
 // looks and an actor's skills belong only to these (Alex, 4 Nov: not to the crew); everything else gets equipment and tools
 const PERFORMERS = ['actor', 'model', 'dancer', 'extra'];
@@ -576,8 +607,8 @@ async function viewFeed() {
     // the composer waits behind New post, on the line of Everyone / Following (Alex, 5 Nov), and opens as a glass window
     h('div', { class: 'head feed-head' }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { setFeedOnly(k); viewFeed(); }), h('span', { class: 'grow' }),
       // stories on or off, a small square next to New post (Alex, 5 Nov)
-      h('button', { type: 'button', class: 'btn round st-toggle' + (prefs.showStories ? ' on' : ''), title: prefs.showStories ? t('Hide stories') : t('Show stories'), 'aria-label': prefs.showStories ? t('Hide stories') : t('Show stories'), html: ICON.rings, onclick: () => { setShowStories(!prefs.showStories); toast(prefs.showStories ? t('Stories on') : t('Stories hidden')); viewFeed(); } }),
-      mine.length ? h('button', { type: 'button', class: 'btn main new-post', onclick: () => composeWin('work') }, icon('plus'), t('New post')) : null),
+      h('button', { type: 'button', class: 'btn st-toggle' + (prefs.showStories ? ' on' : ''), title: prefs.showStories ? t('Hide stories') : t('Show stories'), 'aria-label': prefs.showStories ? t('Hide stories') : t('Show stories'), html: ICON.rings + `<span>${esc(t('Stories'))}</span>`, onclick: () => { setShowStories(!prefs.showStories); toast(prefs.showStories ? t('Stories on') : t('Stories hidden')); viewFeed(); } }),
+      mine.length ? h('button', { type: 'button', class: 'btn main new-post', title: t('New post'), 'aria-label': t('New post'), onclick: () => composeWin('work') }, icon('plus'), h('span', {}, t('New post'))) : null),
     ...stream);
 }
 
@@ -1010,7 +1041,7 @@ async function viewPeople() {
   const grid = h('div', { class: 'faces' }, h('p', { class: 'wait' }, t('Loading…')));
   const sideBox = h('div');
   const pills = h('div', { class: 'pills' });
-  const search = input(peopleQ, { type: 'search', class: 'input search', placeholder: t('Name, city, what they do'), 'aria-label': t('Search cast & crew'), oninput: (e) => { peopleQ = e.target.value; draw(); } });
+  const search = input(peopleQ, { type: 'search', class: 'input search', placeholder: t('Name, city, what they do (Greek or English)'), 'aria-label': t('Search cast & crew'), oninput: (e) => { peopleQ = e.target.value; draw(); } });
   frame('people', h('div', { class: 'head' }, h('h1', {}, t('Industry')), sideBox, search, h('span', { class: 'grow' })), h('div', { style: { marginBottom: '16px' } }, pills), grid);
   const { data, error } = await sb.from('roardino_people').select('id,name,kinds,city,birth,avatar,headline,minor,data').eq('visible', true).order('updated_at', { ascending: false }).limit(500);
   if (error) throw error;
@@ -1025,7 +1056,7 @@ async function viewPeople() {
       if (peopleSide !== 'all' && !ks.some((k) => sideOf(k) === SIDES[peopleSide])) return false;
       if (peopleKind && !ks.includes(peopleKind)) return false;
       if (!q) return true;
-      return [p.name, p.city, p.headline, ...ks.map(kindName)].join(' ').toLowerCase().includes(q);
+      return matches(p._keys ??= personKeys(p), q);
     });
     put(grid, shown.length ? shown.map(faceTile) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nobody here yet')), q ? t('Nothing for "{q}".', { q: peopleQ }) : t('We have just started. Invite your people.')));
   }
