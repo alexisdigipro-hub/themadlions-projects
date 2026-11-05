@@ -1277,13 +1277,13 @@ async function drawTalk(box, r, st, recount) {
     const el = h('div', { class: 'cmt' + (fresh ? ' cmt-fresh' : ''), style: fresh ? null : { animationDelay: `${Math.min(i, 8) * 90}ms` } },
       h('a', { href: c.person ? `#/p/${c.person.id}` : '#/feed' }, avatar(c.person || {}, 'sm')),
       h('div', {}, h('b', {}, c.person?.name || t('Member')), ' ', ...tagText(c.body), h('small', {}, ago(c.created_at))),
-      c.owner === session.user.id || r.owner === session.user.id ? h('button', { type: 'button', class: 'linkish', onclick: async () => {
+      c.owner === session.user.id || r.owner === session.user.id ? h('button', { type: 'button', class: 'cmt-del', title: t('Delete'), 'aria-label': t('Delete'), html: ICON.trash, onclick: async () => {
         const { error } = await sb.from('roardino_comments').delete().eq('id', c.id);
         if (error) return fail(error);
         st.comments--; recount();
         el.style.height = el.offsetHeight + 'px'; void el.offsetHeight; el.classList.add('cmt-gone');
         setTimeout(() => el.remove(), 750);
-      } }, t('delete')) : null);
+      } }) : null);
     return el;
   };
   put(list, ...(data || []).map((c, i) => row(c, i, false)));

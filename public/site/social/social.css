@@ -1520,3 +1520,14 @@ html.booting .wait{visibility:hidden}
 .lb-nav{top:50%;transform:translateY(-50%)}.lb-nav.prev{left:14px}.lb-nav.next{right:14px}
 .lb-count{position:absolute;top:24px;left:0;right:0;text-align:center;color:rgba(255,255,255,.8);font-size:13px;pointer-events:none}
 @media (min-width:821px){.post.ig.has-media .ig-media{cursor:zoom-in}}
+/* no underlined words as buttons, anywhere (Alex, 5 Nov): delete in a comment is a small round glass trash; every other small
+   action is a flat matte glass pill */
+.cmt-del{flex:none;width:30px;height:30px;border-radius:50%;border:1px solid var(--rim);background:rgba(255,255,255,.3);color:var(--muted);display:grid;place-items:center;padding:0;cursor:pointer;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);opacity:.75;transition:opacity .3s,color .3s,background .3s}
+.cmt-del svg{width:15px;height:15px}
+.cmt-del:hover{opacity:1;color:#d40000;background:rgba(212,0,0,.08)}
+html[data-theme=dark] .cmt-del{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.12)}
+.linkish{text-decoration:none!important;border:1px solid var(--rim);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:var(--w-mid);color:var(--ink2);
+  background:rgba(255,255,255,.3);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);cursor:pointer;transition:background .3s,border-color .3s}
+.linkish:hover{background:rgba(255,255,255,.5);border-color:rgba(var(--a),.25)}
+html[data-theme=dark] .linkish{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.12);color:#d9dce2}
