@@ -1390,7 +1390,8 @@ function lightbox(media, start = 0, opts = {}) {
   const show = () => {
     const m = media[i];
     const el = m.type === 'video' ? h('video', { src: urlOf(m.path), poster: urlOf(m.poster) || null, controls: !bare, autoplay: true, playsInline: true, loop: bare }) : h('img', { src: urlOf(m.path), alt: '' });
-    put(stage, el);
+    // bare: the X sits in the picture's own top right corner, not on the window (Alex, 5 Nov)
+    put(stage, bare ? h('div', { class: 'lb-frame' }, el, h('button', { type: 'button', class: 'lb-x lb-x-in', 'aria-label': t('Close'), html: ICON.x, onclick: (e) => { e.stopPropagation(); close(); } })) : el);
     if (bare) {
       // one click plays or pauses a video, two like the post with the big heart; a picture likes on two
       let tT = null, last = 0;
@@ -1410,7 +1411,7 @@ function lightbox(media, start = 0, opts = {}) {
   const close = () => { veil.classList.add('out'); setTimeout(() => veil.remove(), 280); document.removeEventListener('keydown', onKey); };
   const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1); };
   const veil = h('div', { class: 'lb' + (bare ? ' bare' : ''), onclick: (e) => { if (e.target === veil || e.target === stage) close(); } }, stage, count,
-    h('button', { type: 'button', class: 'lb-x', 'aria-label': t('Close'), html: ICON.x, onclick: close }),
+    bare ? null : h('button', { type: 'button', class: 'lb-x', 'aria-label': t('Close'), html: ICON.x, onclick: close }),
     media.length > 1 && !bare ? h('button', { type: 'button', class: 'lb-nav prev', 'aria-label': t('Previous'), html: ICON.left, onclick: () => go(-1) }) : null,
     media.length > 1 && !bare ? h('button', { type: 'button', class: 'lb-nav next', 'aria-label': t('Next'), html: ICON.right, onclick: () => go(1) }) : null);
   document.addEventListener('keydown', onKey);
