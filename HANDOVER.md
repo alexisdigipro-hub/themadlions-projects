@@ -98,7 +98,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - 5 Nov, night: every icon 15-20% bigger (one block at the end of social.css: post bar 28 px, tab bar 28 px on a phone, buttons 19 px, menus 25 px…).
 - 5 Nov, night: a post's head is lower (52 px: 7 px padding, 34 px picture). The caption under a picture is hidden and shows with the comments when the comment icon is tapped (a text-only post still shows its text).
 - 5 Nov, night: **the feed on a phone shows the picture alone** (postCard .has-media .mwrap). One tap (260 ms, so a double tap stays a like) slides who it is in from the top (name, Follow, ⋯) and the icons from the bottom over the picture, on dark gradients, and opens the caption and the comments under it; another tap puts all away. Videos have no controls on a phone until opened (muted loop). Text posts and the computer are as before.
-- 5 Nov, night: for testing, Settings > Feed has "Show posts I've seen" (prefs.showSeen, on the device: the feed shows every post) and "Posts I've seen" Reset (forgets them on the device).
+- 5 Nov, night: Settings > Feed has "Show posts I've seen" for everyone (Alex: "not only for tests"; prefs.showSeen, kept on the account as user_metadata.roardino_show_seen: the feed shows every post) and "Posts I've seen" Reset (forgets them on the device).
 - **Next** (Alex): the TikTok-like vertical feed of self-tapes and showreels; AI search ("dancer 20-25, hip hop, Athens"); Roar Sheet rename; its own domain (roardino.gr: Alex to check at papaki.gr, this session cannot reach registries); who becomes a scout (insert into roardino_scouts by hand for now).
 
 ## Where we stopped (3 Nov 2026, night: one admin for everything)

@@ -2311,8 +2311,8 @@ function viewSettings() {
     h('section', { class: 'sec' }, h('h2', {}, t('Feed')),
       row(t('Calls in the feed'), t('Open calls show between the posts.'), toggle('feedCalls')),
       row(t('Videos start muted'), null, toggle('mutedVideos')),
-      // for testing (Alex, 5 Nov): the feed with every post, also the ones already seen; and a clean start
-      row(t('Show posts I\'ve seen'), t('On: the feed always shows every post. Off: a refresh shows only what is new.'), h('input', { type: 'checkbox', class: 'switch', checked: !!prefs.showSeen, onchange: (e) => { setPref('showSeen', e.target.checked); feedFresh = true; } })),
+      // a setting for everyone (Alex, 5 Nov): the feed with every post, also the ones already seen, kept on the account; and a clean start
+      row(t('Show posts I\'ve seen'), t('On: the feed always shows every post. Off: a refresh shows only what is new.'), h('input', { type: 'checkbox', class: 'switch', checked: !!prefs.showSeen, onchange: (e) => { setPref('showSeen', e.target.checked); feedFresh = true; sb.auth.updateUser?.({ data: { roardino_show_seen: e.target.checked } }).then(({ data }) => { if (data?.user) session.user = data.user; }).catch(() => {}); } })),
       row(t('Posts I\'ve seen'), t('Forget them on this device, so every post shows as new again.'), h('button', { type: 'button', class: 'btn sm', onclick: () => { seenPosts = new Set(); keepSeen(); feedFresh = true; toast(t('Every post shows as new again')); } }, t('Reset'))),
       row(t('Stories'), t('Show the stories row on top of the feed.'), h('input', { type: 'checkbox', class: 'switch', checked: !!prefs.showStories, onchange: (e) => setShowStories(e.target.checked) })),
       row(t('Stories you have seen'), t('Seen stories turn grey on this device.'), h('button', { type: 'button', class: 'btn sm', onclick: () => { seenStories = new Set(); try { localStorage.removeItem('roardino-seen'); } catch { /* none */ } toast(t('All stories show as new again')); } }, t('Reset')))),
@@ -2479,6 +2479,8 @@ let started = false;
 async function enter(s) {
   session = s;
   if (!s) { mine = []; isAdmin = false; stopNotes(); return route(); }
+  const savedSeen = s.user?.user_metadata?.roardino_show_seen;
+  if (typeof savedSeen === 'boolean' && savedSeen !== prefs.showSeen) setPref('showSeen', savedSeen);
   const savedStories = s.user?.user_metadata?.roardino_stories;
   if (typeof savedStories === 'boolean' && savedStories !== prefs.showStories) setPref('showStories', savedStories);
   const savedFeed = s.user?.user_metadata?.roardino_feed;
