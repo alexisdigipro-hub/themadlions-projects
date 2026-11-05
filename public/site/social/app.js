@@ -218,6 +218,8 @@ function h(tag, attrs = {}, ...kids) {
 // replaceChildren that leaves out what is not there (a bare null used to show as the word "null", Alex 4 Nov)
 // a list drawn again in place (a tap on a pill, a letter typed in a search) does not play its entrance again
 const put = (el, ...kids) => {
+  // a whole new page: let go of the old one's pictures at once (an iPhone keeps a removed picture decoded for a while)
+  if (el.id === 'app') el.querySelectorAll('img').forEach((im) => { im.removeAttribute('srcset'); im.src = 'data:,'; });
   if (el.childElementCount && !el.firstElementChild.classList.contains('wait')) el.classList.add('still');
   el.replaceChildren(...kids.flat(Infinity).filter((k) => k != null && k !== false));
 };
@@ -685,7 +687,7 @@ async function route() {
     return await viewFeed();
   } catch (e) { fail(e); }
 }
-window.addEventListener('hashchange', route);
+window.addEventListener('hashchange', () => { crumb('go ' + location.hash); route(); });
 // windows fit what the keyboard leaves of the screen (Alex, 5 Nov: "the keyboard must not cover it"): the visible part of
 // the page (visualViewport) goes into --vvh / --vvt, and the window's veil sits exactly there
 (() => {
@@ -730,6 +732,7 @@ window.addEventListener('hashchange', route);
     if (pull > 130 && atTop()) {
       busy = true; tip.classList.add('spin'); tip.style.transform = 'translate(-50%, 70px)'; tip.style.opacity = '1';
       feedFresh = true;
+      crumb('pull to refresh');
       try { await route(); } finally { setTimeout(() => { busy = false; tip.classList.remove('spin', 'ready'); tip.style.cssText = ''; }, 350); }
     } else tip.style.cssText = '';
     pull = 0;
@@ -870,6 +873,7 @@ const seenWatch = 'IntersectionObserver' in window ? new IntersectionObserver((l
 // Home: to the top of a fresh feed, from anywhere
 function goHome(e) {
   e?.preventDefault?.();
+  crumb('home tapped');
   feedFresh = true; showOlder = false;
   if (location.hash === '#/feed' || location.hash === '' || location.hash === '#/') { window.scrollTo({ top: 0, behavior: 'smooth' }); viewFeed(); }
   else location.hash = '#/feed';
@@ -877,11 +881,16 @@ function goHome(e) {
 async function viewFeed() {
   document.title = 'Roardino';
   run.home = true; run.ok = false; crumb('home: draw shell');
-  const left = h('aside', { class: 'side left' }, meCard(), me() ? null : meTiles());
-  const mid = h('div', { class: 'mid' }, h('p', { class: 'wait' }, t('Loading…')));
-  // two columns (Alex, 4 Nov): my card with the week and the calls under it on the left, the work wide on the right
-  put(app, topBar('feed'), h('main', { class: 'page' }, h('div', { class: 'two' }, left, mid)), footBar(), tabBar('feed'));
-  window.scrollTo(0, 0);
+  // Home already on screen (a refresh, Show older, Everyone / Following): the new posts replace the old ones in place,
+  // the bars stay; only a first visit draws the page (Alex, 5 Nov: the iPhone died redrawing it all)
+  let mid = app.querySelector('main.page .mid.feed-mid');
+  if (!mid) {
+    const left = h('aside', { class: 'side left' }, meCard(), me() ? null : meTiles());
+    mid = h('div', { class: 'mid feed-mid' }, h('p', { class: 'wait' }, t('Loading…')));
+    // two columns (Alex, 4 Nov): my card with the week and the calls under it on the left, the work wide on the right
+    put(app, topBar('feed'), h('main', { class: 'page' }, h('div', { class: 'two' }, left, mid)), footBar(), tabBar('feed'));
+    window.scrollTo(0, 0);
+  } else crumb('home: refresh in place');
   const [people, calls, seminars, stories] = await Promise.all([
     sb.from('roardino_people').select('id,name,avatar,kinds').eq('visible', true).order('updated_at', { ascending: false }).limit(30),
     sb.from('roardino_calls').select('*').eq('open', true).order('created_at', { ascending: false }).limit(30),
@@ -932,6 +941,7 @@ async function viewFeed() {
     }, { rootMargin: crashedBefore ? '0px' : '700px 0px' }) : null;
     if (io) requestAnimationFrame(() => io.observe(more)); else { stream.push(...later); later.length = 0; }
   }
+  mid.querySelectorAll('img').forEach((im) => { im.src = 'data:,'; });
   put(mid, safeCard(),
     crashedBefore ? null : storiesCard(stories, others),
     // the composer waits behind New post, on the line of Everyone / Following (Alex, 5 Nov), and opens as a glass window
@@ -1493,15 +1503,15 @@ function storiesCard(groups, others) {
   const rest = groups.filter((g) => g !== myGroup);
   const pick = h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, onchange: async (e) => { const f0 = e.target.files[0]; e.target.value = ''; const f = f0 && (/^video/.test(f0.type) ? f0 : await cropImage(f0, SHAPES.story)); const ed = f && await storyEditor(f); if (ed) await addStory(ed.file, ed.overlays); } });
   const ringOf = (g) => (g.items.some((x) => !seenStories.has(x.id)) ? 'r' : 'r seen');
-  const face = (p, cls) => h('span', { class: cls }, h('i', { style: bg(p.avatar) }, urlOf(p.avatar) ? '' : initials(p.name)));
+  const face = (p, cls, g) => h('span', { class: cls, 'data-st': g ? g.items.map((x) => x.id).join(',') : null }, h('i', { style: bg(p.avatar) }, urlOf(p.avatar) ? '' : initials(p.name)));
   return h('section', { class: 'card stories' },
     h('button', { type: 'button', class: 'st-hide', title: t('Hide stories'), 'aria-label': t('Hide stories'), html: ICON.eyeoff, onclick: () => { setShowStories(false); toast(t('Stories hidden. The round button next to New post brings them back.')); viewFeed(); } }),
     h('div', { class: 'ring-row' },
       m ? h('div', { class: 'ring me', role: 'button', tabIndex: 0, onclick: () => (myGroup ? openStories([myGroup, ...rest], 0) : storySource(pick)) },
-        face(m, myGroup ? ringOf(myGroup) : 'r plain'),
+        face(m, myGroup ? ringOf(myGroup) : 'r plain', myGroup),
         h('button', { type: 'button', class: 'add', 'aria-label': t('Add to your story'), html: ICON.plus, onclick: (e) => { e.stopPropagation(); storySource(pick); } }),
         h('em', {}, t('Your story')), pick) : null,
-      rest.map((g, i) => h('button', { type: 'button', class: 'ring', onclick: () => openStories(rest, i) }, face(g.person, ringOf(g)), h('em', {}, g.person.name.split(' ')[0]))),
+      rest.map((g, i) => h('button', { type: 'button', class: 'ring', onclick: () => openStories(rest, i) }, face(g.person, ringOf(g), g), h('em', {}, g.person.name.split(' ')[0]))),
       others.filter((p) => !groups.some((g) => g.person.id === p.id)).map((p) => h('a', { class: 'ring', href: `#/p/${p.id}`, title: t('Just for you') }, face(p, 'r plain'), h('em', {}, p.name.split(' ')[0])))));
 }
 // where a story comes from (Alex, 5 Nov): the camera, live, on a laptop or a phone, or the gallery
@@ -1701,7 +1711,9 @@ function openStories(groups, gi) {
   card.addEventListener('pointerdown', () => { paused = true; clearTimeout(timer); left -= Date.now() - started; stage.querySelector('video')?.pause(); bars.classList.add('paused'); });
   const resume = () => { if (!paused) return; paused = false; bars.classList.remove('paused'); stage.querySelector('video')?.play().catch(() => {}); run(Math.max(300, left)); };
   card.addEventListener('pointerup', resume); card.addEventListener('pointerleave', resume);
-  function close() { clearTimeout(timer); veil.remove(); document.removeEventListener('keydown', onKey); if (location.hash === '#/feed' || location.hash === '') viewFeed(); }
+  // closing marks the rings seen where they are; no redraw of the whole feed (Alex, 5 Nov: the iPhone died on that redraw)
+  function close() { clearTimeout(timer); veil.remove(); document.removeEventListener('keydown', onKey); crumb('story closed');
+    document.querySelectorAll('.stories [data-st]').forEach((el) => { if (el.dataset.st.split(',').every((id) => seenStories.has(id))) el.className = 'r seen'; }); }
   function run(ms) { started = Date.now(); left = ms; clearTimeout(timer); timer = setTimeout(() => step(1), ms); }
   function step(d) {
     i += d;
@@ -2810,6 +2822,7 @@ async function enter(s) {
   startNotes();
 }
 sb.auth.onAuthStateChange((ev, s) => {
+  crumb('auth ' + ev);
   if (ev === 'INITIAL_SESSION') { started = true; enter(s); return; }
   if (!started) return;
   if (ev === 'SIGNED_IN' && session?.user?.id === s?.user?.id) { session = s; return; } // a token refresh on focus
