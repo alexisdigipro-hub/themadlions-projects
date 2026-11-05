@@ -1218,3 +1218,13 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .caught-ic svg{width:26px;height:26px}
 .caught b{font-size:16px}
 .caught .hint{margin:0 0 6px}
+/* the composer's buttons in one line (Alex, 5 Nov): on a phone Photo / video and Post are round icons, Work / My photo in between */
+.compose .acts{flex-wrap:nowrap}
+@media (max-width:820px){
+  .compose .acts{gap:6px}
+  .compose .c-pic,.compose .c-post{width:38px;height:38px;padding:0;flex:none}
+  .compose .c-pic .lbl,.compose .c-post .lbl{display:none}
+  .compose .c-post.busy{width:auto;padding:0 12px;font-size:10px}
+  .compose .seg{flex:0 1 auto;min-width:0}
+  .compose .seg button{padding:7px 11px;font-size:10.5px;letter-spacing:.06em;white-space:nowrap}
+}
