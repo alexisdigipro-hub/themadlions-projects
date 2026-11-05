@@ -1212,3 +1212,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
   .tabbar{left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));width:auto;max-width:calc(100vw - 20px);box-sizing:border-box;transform:translateZ(0)}
   .bar,.page{max-width:100vw;box-sizing:border-box}
 }
+/* "You're all caught up" after the new posts (Alex, 5 Nov) */
+.caught{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:26px 16px}
+.caught-ic{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;border:2px solid var(--a-solid);color:var(--a-solid)}
+.caught-ic svg{width:26px;height:26px}
+.caught b{font-size:16px}
+.caught .hint{margin:0 0 6px}
