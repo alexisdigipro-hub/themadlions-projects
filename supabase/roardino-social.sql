@@ -625,3 +625,22 @@ alter table roardino_saves enable row level security;
 grant select, insert, delete on roardino_saves to authenticated;
 drop policy if exists rd_saves_mine on roardino_saves;
 create policy rd_saves_mine on roardino_saves for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ---------- who follows, whom they follow, who liked (5 Nov, Alex: "tap followers / following to see who they are") ----------
+-- the lists behind the numbers on a profile; only profiles the asker may see, an account shown as its adult profile
+create or replace function roardino_people_of(p uuid, what text)
+returns table (id uuid, name text, handle text, avatar text, kinds text[], headline text)
+language sql stable security definer set search_path = public as $$
+  with src as (
+    select f.user_id as u from roardino_follows f where what = 'followers' and f.person_id = p
+    union all select distinct b.user_id from roardino_bravos b join roardino_posts po on po.id = b.post_id where what = 'likes' and po.person_id = p
+  ), faces as (select distinct roardino_face_of(u) as pid from src where u is not null)
+  select q.id, q.name, q.handle, q.avatar, q.kinds, q.headline from roardino_people q
+  where roardino_can_see(p::text) and q.visible and roardino_can_see(q.id::text)
+    and (q.id in (select pid from faces)
+      or (what = 'following' and q.id in (select f.person_id from roardino_follows f where f.user_id = (select owner from roardino_people where id = p))))
+  order by q.name
+  limit 500
+$$;
+revoke all on function roardino_people_of(uuid, text) from public, anon;
+grant execute on function roardino_people_of(uuid, text) to authenticated;

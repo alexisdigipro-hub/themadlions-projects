@@ -821,7 +821,7 @@ function meCard() {
           h('a', { class: 'btn main', href: '#/edit/new' }, icon('plus'), t('Create your profile')),
           h('a', { class: 'btn', href: '#/edit/kid' }, icon('child'), t('My child\'s profile')))));
   }
-  const stats = h('div', { class: 'me-stats' }, h('div', {}, h('b', {}, '·'), h('small', {}, t('Followers'))), h('div', {}, h('b', {}, String(follows.size)), h('small', {}, t('Following'))), h('div', {}, h('b', {}, '·'), h('small', {}, t('Works'))));
+  const stats = h('div', { class: 'me-stats' }, h('button', { type: 'button', class: 'stat-btn', onclick: () => peopleList(m, 'followers') }, h('b', {}, '·'), h('small', {}, t('Followers'))), h('button', { type: 'button', class: 'stat-btn', onclick: () => peopleList(m, 'following') }, h('b', {}, String(follows.size)), h('small', {}, t('Following'))), h('a', { class: 'stat-btn', href: `#/p/${m.id}` }, h('b', {}, '·'), h('small', {}, t('Works'))));
   // the card stays small (Alex, 5 Nov): who I am, my numbers, View my profile; skills and work live on the profile
   (async () => {
     const { data: st } = await sb.rpc('roardino_person_stats', { p: m.id });
@@ -873,13 +873,13 @@ function meTiles() {
   const noPhone = (el) => { el.classList.add('no-phone'); return el; };
   const phoneTile = (href, ic, label) => h('a', { class: 'btn main mt phone-only', href, 'aria-label': label }, ...inner(ic, label));
   return h('section', { class: 'card me-tiles' },
-    m ? noPhone(tile(`#/edit/${m.id}`, 'edit', t('Edit profile'))) : tile('#/edit/new', 'plus', t('Create profile')),
+    m ? noPhone(tile(`#/edit/${m.id}`, 'edit', t('Edit'))) : tile('#/edit/new', 'plus', t('Profile')),
     themeTile,
     tile('#/settings', 'gear', t('Settings')),
     phoneTile('#/calls', 'calls', t('Calls')),
     phoneTile('#/seminars', 'cal', t('Seminars')),
     tile('#/me', 'star', t('Applied')),
-    tile('#/edit/kid', 'child', t('My child')),
+    tile('#/edit/kid', 'child', t('Child')),
     h('button', { type: 'button', class: 'btn main mt out', 'aria-label': t('Sign out'), onclick: () => sb.auth.signOut() }, ...inner('out', t('Sign out'))));
 }
 
@@ -1045,6 +1045,26 @@ async function sendToRoarMe(r, p) {
   draw();
 }
 const isPhone = () => window.matchMedia('(max-width:820px)').matches;
+// who is behind a number (Alex, 5 Nov: "tap followers / following to see who they are"): followers, following, likes
+async function peopleList(p, what) {
+  const title = { followers: t('Followers'), following: t('Following'), likes: t('Liked by') }[what];
+  const list = h('div', { class: 'pl-list' }, h('p', { class: 'hint cmt-wait' }, h('span', { class: 'dots3' }, h('i'), h('i'), h('i'))));
+  const find = h('input', { class: 'input', type: 'search', placeholder: t('Search'), oninput: () => draw() });
+  openWin(`${title} · ${p.name}`, h('div', { class: 'pm' }, find, list), null);
+  const { data, error } = await sb.rpc('roardino_people_of', { p: p.id, what });
+  if (error) { put(list, h('p', { class: 'hint' }, errText(error))); return; }
+  const rows = (data || []).map((x) => ({ x, k: ' ' + fold(`${x.name} ${x.handle || ''}`) + ' ' }));
+  await sign(rows.map(({ x }) => x.avatar));
+  function draw() {
+    const q = find.value.trim();
+    const shown = rows.filter(({ k }) => !q || matches(k, q)).map(({ x }) => x);
+    put(list, shown.length ? shown.map((x, i) => h('div', { class: 'pl-row', style: { animationDelay: `${Math.min(i, 10) * 50}ms` } },
+      h('a', { href: `#/p/${x.id}`, class: 'pl-who', onclick: () => document.querySelectorAll('.veil').forEach((v) => v.remove()) }, avatar(x), h('span', {}, h('b', {}, x.name), h('small', {}, x.handle ? '@' + x.handle : (x.kinds || []).map(kindName).slice(0, 2).join(' · ')))),
+      mine.some((m) => m.id === x.id) ? null : h('button', { type: 'button', class: 'btn sm' + (follows.has(x.id) ? '' : ' main'), onclick: async (e) => { const b = e.currentTarget; if (await toggleFollow(x.id)) { b.className = 'btn sm' + (follows.has(x.id) ? '' : ' main'); b.textContent = follows.has(x.id) ? t('Following') : t('Follow'); } } }, follows.has(x.id) ? t('Following') : t('Follow'))))
+      : h('p', { class: 'hint', style: { textAlign: 'center', padding: '18px 0' } }, q ? t('Nobody by that name.') : { followers: t('No followers yet.'), following: t('Not following anyone yet.'), likes: t('No likes yet.') }[what]));
+  }
+  draw();
+}
 async function toggleFollow(id) {
   const on = follows.has(id);
   const { error } = on ? await sb.from('roardino_follows').delete().eq('user_id', session.user.id).eq('person_id', id) : await sb.from('roardino_follows').insert({ person_id: id });
@@ -1757,7 +1777,7 @@ async function viewPerson(id) {
       h('div', { class: 'ig-info' },
         h('div', { class: 'ig-name' }, h('h1', {}, p.name), p.handle ? h('span', { class: 'ig-handle' }, '@' + p.handle) : null,
           own ? h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')) : followBtn),
-        stats ? h('div', { class: 'ig-stats' }, [[stats.posts, t('works')], [stats.followers, t('followers')], [stats.bravos, t('likes')]].map(([n, s2]) => h('span', {}, h('b', {}, String(n)), ' ', s2))) : null,
+        stats ? h('div', { class: 'ig-stats' }, [[stats.posts, t('works'), null], [stats.followers, t('followers'), 'followers'], [stats.bravos, t('likes'), 'likes']].map(([n, s2, w]) => h(w ? 'button' : 'span', { type: w ? 'button' : null, class: w ? 'stat-btn' : null, onclick: w ? () => peopleList(p, w) : null }, h('b', {}, String(n)), ' ', s2))) : null,
         h('div', { class: 'chips' }, (p.kinds || []).map(kindChip), p.minor ? h('span', { class: 'chip', style: { '--c': '#e0a33a' } }, h('i'), t('Under 18 · with a parent')) : null),
         p.headline ? h('p', { class: 'ig-line' }, p.headline) : null,
         p.bio ? h('p', { class: 'ig-bio' }, p.bio) : null,
@@ -1774,7 +1794,7 @@ function phoneHead(p, { own, stats, theirStories, photos, followBtn, contactList
   const av = h('div', { class: 'igm-av' + (theirStories.length ? ' has' : ''), onclick: theirStories.length ? () => openStories(theirStories, 0) : null },
     h('span', { class: 'r' + (theirStories.length ? '' : ' plain') }, h('i', { style: bg(pic) }, urlOf(pic) ? '' : initials(p.name))),
     own ? h('button', { type: 'button', class: 'igm-add', 'aria-label': t('Add to your story'), html: ICON.plus, onclick: (e) => { e.stopPropagation(); storySource(pick); } }) : null, pick);
-  const num = (n, label) => h('div', { class: 'igm-n' }, h('b', {}, String(n ?? 0)), h('small', {}, label));
+  const num = (n, label, w) => h(w ? 'button' : 'div', { type: w ? 'button' : null, class: 'igm-n' + (w ? ' stat-btn' : ''), onclick: w ? () => peopleList(p, w) : null }, h('b', {}, String(n ?? 0)), h('small', {}, label));
   const site = p.data?.contact?.site;
   const cBtns = contactList();
   const second = own ? h('a', { class: 'btn igm-btn', href: '#/settings' }, t('Settings'))
@@ -1789,7 +1809,7 @@ function phoneHead(p, { own, stats, theirStories, photos, followBtn, contactList
   }
   return h('section', { class: 'igm' },
     h('div', { class: 'igm-top' }, av, h('div', { class: 'igm-right' }, h('b', { class: 'igm-name' }, p.name),
-      h('div', { class: 'igm-nums' }, num(stats?.posts, t('works')), num(stats?.followers, t('followers')), num(stats?.bravos, t('likes'))))),
+      h('div', { class: 'igm-nums' }, num(stats?.posts, t('works')), num(stats?.followers, t('followers'), 'followers'), num(stats?.bravos, t('likes'), 'likes')))),
     p.handle ? h('p', { class: 'igm-handle' }, '@' + p.handle) : null,
     p.headline ? h('p', { class: 'igm-line' }, p.headline) : null,
     p.bio ? h('p', { class: 'igm-bio' }, p.bio) : null,
