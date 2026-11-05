@@ -126,7 +126,9 @@ function personKeys(p) {
   return ' ' + fold([p.name, p.city, CITY_ALSO[city] || '', p.headline, ...ks.map((k) => KIND[k] || k), ...ks.map((k) => KIND_EL[k] || ''), words(p.data?.skills), words(p.data?.languages), words(p.data?.tools)].join(' ')) + ' ';
 }
 // every word typed must be found at the start of a word of the profile (Ελ finds Ελένη, not Μιχαέλα)
-const matches = (keys, q) => fold(q).split(' ').filter(Boolean).every((w) => keys.includes(' ' + w));
+const matchesOne = (keys, q) => fold(q).split(' ').filter(Boolean).every((w) => keys.includes(' ' + w));
+// in Greeklish x is χ as often as ξ (xoreftria, xristos): both are tried
+const matches = (keys, q) => matchesOne(keys, q) || (/x/i.test(q) && matchesOne(keys, q.replace(/x/gi, 'h')));
 
 /* ---------- @usernames and tags (Alex, 5 Nov: "tag a profile with @ in a new post") ---------- */
 const HANDLE_RE = /^[a-z0-9._]{3,30}$/;
@@ -504,7 +506,7 @@ function seg(items, on, pick) {
 }
 
 /* ---------- the frame: top bar, bottom bar on a phone ---------- */
-const NAV = [['feed', 'Feed', 'home'], ['people', 'Industry', 'people'], ['calls', 'Calls', 'calls'], ['seminars', 'Seminars', 'cal'], ['chat', 'Chat', 'talk']];
+const NAV = [['feed', 'Feed', 'home'], ['people', 'Industry', 'people'], ['search', 'Search', 'search'], ['calls', 'Calls', 'calls'], ['seminars', 'Seminars', 'cal'], ['chat', 'Chat', 'talk']];
 // the chat is RoarMe (Alex, 4 Nov): the same Roar Accounts, so it lives here in a frame
 const ROARME = 'https://alexisdigipro-hub.github.io/roarme/';
 function topBar(on) {
@@ -525,7 +527,7 @@ function topBar(on) {
   return h('header', { class: 'bar' }, h('div', { class: 'bar-in' },
     h('a', { href: '#/feed', class: 'brand', 'aria-label': 'Roardino', onclick: goHome }, mark()),
     // the menu in words, a glass capsule with the gliding lens, as Qubi's (Alex, 5 Nov); the search takes the rest
-    h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { if (k === 'feed') goHome(); else location.hash = `#/${k}`; })),
+    h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.filter(([k]) => k !== 'search').map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { if (k === 'feed') goHome(); else location.hash = `#/${k}`; })),
     h('label', { class: 'find' }, icon('search'), find),
     h('button', { type: 'button', class: 'ico create-btn', title: t('Create'), 'aria-label': t('Create'), html: ICON.plus, onclick: createMenu }),
     bellButton(),
@@ -561,6 +563,7 @@ async function route() {
   const [, a = 'feed', b] = (location.hash || '#/feed').split('/');
   try {
     if (a === 'people') return await viewPeople();
+    if (a === 'search') return await viewSearch();
     if (a === 'p' && b) return await viewPerson(b);
     if (a === 'post' && b) { const { data: one } = await sb.from('roardino_posts').select('*, person:roardino_people(id,name,avatar,kinds,headline)').eq('id', b).maybeSingle(); if (!one) return await viewFeed(); await viewPerson(one.person_id); await sign([one.person?.avatar, ...(one.media || []).map((m) => m.path)]); return openPost(one, one.person); }
     if (a === 'u' && b) { const { data: u } = await sb.from('roardino_people').select('id').eq('handle', decodeURIComponent(b).toLowerCase()).maybeSingle(); return await viewPerson(u?.id || '00000000-0000-0000-0000-000000000000'); }
@@ -1530,13 +1533,66 @@ const HAIRS = [['blonde', 'Blonde', 'blond blonde ξανθ'], ['brown', 'Brown',
 const EYES = [['brown', 'Brown', 'brown καστ'], ['blue', 'Blue', 'blue γαλαν μπλε'], ['green', 'Green', 'green πρασ'], ['hazel', 'Hazel', 'hazel μελ honey'], ['black', 'Black', 'black μαυρ dark']];
 const hasWord = (text, words) => { const f = ' ' + fold(text) + ' '; return words.split(' ').some((w) => f.includes(' ' + fold(w))); };
 const cityKey = (c) => { const f = fold(c); return f === 'athens' ? 'athina' : f === 'salonika' ? 'thessaloniki' : f === 'patras' ? 'patra' : f; };
-async function viewPeople() {
-  document.title = 'Roardino · ' + t('Industry');
+/* =====================================================================================================================
+   Search (Alex, 5 Nov: "a search in the bottom bar, a machine that searches with filters, dedicated to it"): one big field,
+   then People (with every Industry filter), Posts or Calls; Greek, Greeklish, with or without accents
+   ===================================================================================================================== */
+let searchScope = 'people';
+function searchHead(onType) {
+  const inp = h('input', { type: 'search', class: 'input s-input', placeholder: t('Search Roardino'), 'aria-label': t('Search'), value: peopleQ, enterkeyhint: 'search',
+    oninput: (e) => onType(e.target.value) });
+  const clear = h('button', { type: 'button', class: 's-clear', 'aria-label': t('Clear'), html: ICON.x, onclick: () => { inp.value = ''; onType(''); inp.focus(); } });
+  setTimeout(() => { if (!peopleQ) inp.focus({ preventScroll: true }); }, 350);
+  return h('div', { class: 's-top' },
+    h('label', { class: 's-field' }, h('span', { class: 's-ic', html: ICON.search }), inp, clear),
+    seg([['people', t('People')], ['posts', t('Posts')], ['calls', t('Calls')]], searchScope, (k) => { searchScope = k; viewSearch(); }));
+}
+async function viewSearch() {
+  if (searchScope === 'people') return viewPeople({ search: true });
+  document.title = 'Roardino · ' + t('Search');
+  const box = h('div', { class: searchScope === 'posts' ? 'grid s-grid' : 's-calls' }, h('p', { class: 'wait' }, t('Loading…')));
+  const count = h('span', { class: 'hint people-count' });
+  const chips = h('div', { class: 'kind-rows' });
+  let draw = () => {};
+  frame('search', searchHead((q) => { peopleQ = q; draw(); }), h('div', { class: 'head s-side' }, chips, h('span', { class: 'grow' }), count), box);
+  if (searchScope === 'posts') {
+    const { data } = await sb.from('roardino_posts').select('*, person:roardino_people(id,name,handle,avatar,kinds,headline,city)').order('created_at', { ascending: false }).limit(300);
+    const rows = (data || []).map((r) => ({ r, k: ' ' + fold([r.body, r.person?.name, r.person?.handle, r.person?.city, ...(r.person?.kinds || []).flatMap((k) => [KIND[k], KIND_EL[k]])].join(' ')) + ' ' }));
+    await sign(rows.flatMap(({ r }) => [(r.media || [])[0]?.path, r.person?.avatar]));
+    let kind = '';
+    draw = () => {
+      put(chips, h('div', { class: 'fbody' }, [['', t('All')], ['work', t('Work')], ['photo', t('Photos')], ['video', t('Videos')]].map(([k, l]) => h('button', { type: 'button', class: 'fchip' + (kind === k ? ' on' : ''), onclick: () => { kind = k; draw(); } }, l))));
+      const q = peopleQ.trim();
+      const shown = rows.filter(({ r, k }) => (!q || matches(k, q)) && (!kind || (kind === 'video' ? (r.media || []).some((m) => m.type === 'video') : (r.kind || 'work') === kind))).map(({ r }) => r);
+      count.textContent = shown.length === 1 ? t('1 post') : t('{n} posts', { n: shown.length });
+      put(box, shown.length ? shown.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Post'), onclick: () => openPost(g, g.person) },
+        m0?.type === 'video' ? [h('video', { src: urlOf(m0.path) + '#t=0.5', muted: true, playsInline: true, preload: 'metadata' }), h('span', { class: 'play', html: ICON.play })] : !m0 ? h('span', { class: 'cell-text' }, (g.body || '').slice(0, 90)) : null); })
+        : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nothing found')), t('Try other words, in Greek or English.')));
+    };
+  } else {
+    const { data } = await sb.from('roardino_calls').select('*').order('created_at', { ascending: false }).limit(200);
+    const rows = (data || []).map((c) => ({ c, k: ' ' + fold([c.title, c.about, c.company, c.city, c.pay, ...(c.wanted || []).flatMap((k) => [KIND[k], KIND_EL[k]])].join(' ')) + ' ' }));
+    let kind = '', openOnly = true;
+    draw = () => {
+      put(chips, h('div', { class: 'fbody' },
+        [['', t('All')], ['casting', t('Casting')], ['crew', t('Crew')]].map(([k, l]) => h('button', { type: 'button', class: 'fchip' + (kind === k ? ' on' : ''), onclick: () => { kind = k; draw(); } }, l)),
+        h('button', { type: 'button', class: 'fchip' + (openOnly ? ' on' : ''), onclick: () => { openOnly = !openOnly; draw(); } }, t('Open only'))));
+      const q = peopleQ.trim();
+      const shown = rows.filter(({ c, k }) => (!q || matches(k, q)) && (!kind || c.kind === kind) && (!openOnly || (c.open !== false && (!c.closes || new Date(c.closes) >= new Date(new Date().toDateString()))))).map(({ c }) => c);
+      count.textContent = shown.length === 1 ? t('1 call') : t('{n} calls', { n: shown.length });
+      put(box, shown.length ? shown.map(callTile) : h('div', { class: 'empty' }, h('b', {}, t('Nothing found')), t('Try other words, or show the closed calls too.')));
+    };
+  }
+  draw();
+}
+async function viewPeople(opts = {}) {
+  document.title = 'Roardino · ' + (opts.search ? t('Search') : t('Industry'));
   const grid = h('div', { class: 'faces' }, h('p', { class: 'wait' }, t('Loading…')));
   const sideBox = h('div'), countBox = h('span', { class: 'hint people-count' }), kindsBox = h('div', { class: 'kind-rows' }), filterBox = h('div');
   // the top bar has the search on a computer; a phone has no search in its bar, so it gets one here
   const search = input(peopleQ, { type: 'search', class: 'input search only-phone', placeholder: t('Name, city, what they do'), 'aria-label': t('Search cast & crew'), oninput: (e) => { peopleQ = e.target.value; draw(); } });
-  frame('people', h('div', { class: 'head' }, h('h1', {}, t('Industry')), sideBox, h('span', { class: 'grow' }), countBox), search, kindsBox, filterBox, grid);
+  if (opts.search) frame('search', searchHead((q) => { peopleQ = q; draw(); }), h('div', { class: 'head s-side' }, sideBox, h('span', { class: 'grow' }), countBox), kindsBox, filterBox, grid);
+  else frame('people', h('div', { class: 'head' }, h('h1', {}, t('Industry')), sideBox, h('span', { class: 'grow' }), countBox), search, kindsBox, filterBox, grid);
   const { data, error } = await sb.from('roardino_people').select('id,name,kinds,city,birth,gender,avatar,headline,minor,data').eq('visible', true).order('updated_at', { ascending: false }).limit(500);
   if (error) throw error;
   await sign(data.map((p) => p.avatar));
@@ -1600,7 +1656,7 @@ async function viewPeople() {
       h('div', { class: 'fbody' }, KINDS.filter((k) => k[2] === sd).map(([k, name]) => chip(peopleKinds.has(k), t(name), () => toggle(peopleKinds, k), HUE[sd]))))));
     drawFilters(); drawGrid();
   }
-  peopleRedraw = () => { if (search.isConnected) { search.value = peopleQ; draw(); } };
+  peopleRedraw = () => { if (search.isConnected || opts.search) { search.value = peopleQ; draw(); } };
   draw();
 }
 function faceTile(p) {
