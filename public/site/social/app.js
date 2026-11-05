@@ -127,6 +127,7 @@ const ICON = {
   moon: SVG('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
   cam: SVG('<path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/>'),
   flip: SVG('<path d="M20 7h-9a5 5 0 0 0 0 10h4"/><path d="m16 3 4 4-4 4"/><path d="M4 17h1"/>'),
+  bell: SVG('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>'),
   child: SVG('<circle cx="12" cy="7" r="3"/><path d="M7 21v-5a5 5 0 0 1 10 0v5"/>'),
 };
 const icon = (n) => h('span', { html: ICON[n], style: { display: 'inline-flex' } });
@@ -293,6 +294,7 @@ function topBar(on) {
     // the menu in words, a glass capsule with the gliding lens, as Qubi's (Alex, 5 Nov); the search takes the rest
     h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { location.hash = `#/${k}`; })),
     h('label', { class: 'find' }, icon('search'), find),
+    bellButton(),
     h('button', { type: 'button', class: 'who-me', onclick: toggle, 'aria-label': t('Me') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }), h('span', { class: 'nm' }, m?.name || session.user.user_metadata?.name || t('Me')), icon('down')),
     h('button', { type: 'button', class: 'ico theme', title: t('Light or dark'), 'aria-label': t('Light or dark'), html: document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon, onclick: (e) => { setPref('theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); e.currentTarget.innerHTML = document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon; } }),
     menu));
@@ -855,12 +857,12 @@ let peopleSide = 'all', peopleKind = '', peopleQ = '';
 const sideOf = (k) => (k === 'theatre' ? 'front' : SIDE[k]);
 const SIDES = { cast: 'front', crew: 'back', creatives: 'creative' };
 async function viewPeople() {
-  document.title = 'Roardino · ' + t('Cast, Crew & Creatives');
+  document.title = 'Roardino · ' + t('Industry');
   const grid = h('div', { class: 'faces' }, h('p', { class: 'wait' }, t('Loading…')));
   const sideBox = h('div');
   const pills = h('div', { class: 'pills' });
   const search = input(peopleQ, { type: 'search', class: 'input search', placeholder: t('Name, city, what they do'), 'aria-label': t('Search cast & crew'), oninput: (e) => { peopleQ = e.target.value; draw(); } });
-  frame('people', h('div', { class: 'head' }, h('h1', {}, t('Cast, Crew & Creatives')), sideBox, search, h('span', { class: 'grow' })), h('div', { style: { marginBottom: '16px' } }, pills), grid);
+  frame('people', h('div', { class: 'head' }, h('h1', {}, t('Industry')), sideBox, search, h('span', { class: 'grow' })), h('div', { style: { marginBottom: '16px' } }, pills), grid);
   const { data, error } = await sb.from('roardino_people').select('id,name,kinds,city,birth,avatar,headline,minor,data').eq('visible', true).order('updated_at', { ascending: false }).limit(500);
   if (error) throw error;
   await sign(data.map((p) => p.avatar));
@@ -1324,6 +1326,89 @@ function apply(c) {
 }
 
 /* =====================================================================================================================
+   Notifications (Alex, 5 Nov: "who gave me a bravo, who did what, who sent me a message"): a bell in the top bar with a
+   red count; its glass list shows the chat's unread messages (RoarMe) and what happened here (roardino_notifications,
+   made by triggers), live through Realtime; opening it marks everything read
+   ===================================================================================================================== */
+let notes = [], chatUnread = [], notesChannel = null, chatTimer = null;
+const unreadCount = () => notes.filter((n) => !n.read_at).length + chatUnread.reduce((a, c) => a + (c.n || 0), 0);
+function drawBadges() {
+  const n = unreadCount();
+  document.querySelectorAll('.bell b').forEach((b) => { b.textContent = n > 99 ? '99+' : String(n); b.classList.toggle('hidden', !n); });
+  document.title = document.title.replace(/^\(\d+\+?\) /, '');
+  if (n) document.title = `(${n > 99 ? '99+' : n}) ${document.title}`;
+}
+async function loadNotes() {
+  const [{ data: ns }, { data: cu }] = await Promise.all([
+    sb.from('roardino_notifications').select('*, who:roardino_people!roardino_notifications_actor_person_fkey(id,name,avatar), post:roardino_posts(id,media,person_id), call:roardino_calls(id,title)').order('created_at', { ascending: false }).limit(60),
+    sb.rpc('roardino_chat_unread')]);
+  notes = ns || [];
+  chatUnread = cu || [];
+  await sign([...notes.flatMap((n) => [n.who?.avatar, (n.post?.media || [])[0]?.path]), ...chatUnread.map((c) => c.avatar)]);
+  drawBadges();
+}
+function startNotes() {
+  stopNotes();
+  loadNotes().catch(() => {});
+  chatTimer = setInterval(() => sb.rpc('roardino_chat_unread').then(({ data }) => { chatUnread = data || []; drawBadges(); }), 60000);
+  try {
+    notesChannel = sb.channel('rd-notes-' + session.user.id)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'roardino_notifications', filter: `user_id=eq.${session.user.id}` }, async () => {
+        await loadNotes();
+        const n = notes[0];
+        if (n && !n.read_at) toast(noteText(n));
+      }).subscribe();
+  } catch { /* no live updates: the bell still fills on every page load */ }
+}
+function stopNotes() { clearInterval(chatTimer); try { notesChannel && sb.removeChannel(notesChannel); } catch { /* gone */ } notesChannel = null; }
+function noteText(n) {
+  const who = n.who?.name || t('Someone');
+  return {
+    bravo: t('{who} gave Bravo to your work', { who }),
+    comment: t('{who} commented: {text}', { who, text: n.text || '' }),
+    follow: t('{who} started following you', { who }),
+    apply: t('{who} applied to your call "{text}"', { who, text: n.text || '' }),
+    shortlist: t('You are on the shortlist for "{text}"', { text: n.text || '' }),
+  }[n.kind] || who;
+}
+function bellButton() {
+  const btn = h('button', { type: 'button', class: 'ico bell', title: t('Notifications'), 'aria-label': t('Notifications'), onclick: (e) => { e.stopPropagation(); openNotes(btn); } },
+    h('span', { html: ICON.bell, style: { display: 'inline-flex' } }), h('b', { class: 'hidden' }));
+  setTimeout(drawBadges);
+  return btn;
+}
+async function openNotes(anchor) {
+  document.querySelectorAll('.notes-panel').forEach((x) => x.remove());
+  const panel = h('div', { class: 'notes-panel', onclick: (e) => e.stopPropagation() });
+  const bar = anchor.closest('.bar-in');
+  bar.append(panel);
+  const closeAll = () => { panel.remove(); document.removeEventListener('click', closeAll); };
+  setTimeout(() => document.addEventListener('click', closeAll));
+  put(panel, h('p', { class: 'wait' }, t('Loading…')));
+  await loadNotes().catch(fail);
+  const go = (href) => { closeAll(); location.hash = href; };
+  const row = (av, text, sub, when, thumb, onclick, unread) => h('button', { type: 'button', class: 'note' + (unread ? ' new' : ''), onclick },
+    av, h('span', { class: 'note-t' }, h('span', {}, text), h('small', {}, [sub, when].filter(Boolean).join(' · '))), thumb ? h('span', { class: 'note-pic', style: bg(thumb) }) : null);
+  const msgs = chatUnread.map((c) => row(avatar({ name: c.sender, avatar: c.avatar }), h('b', {}, c.sender), (c.n > 1 ? t('{n} new messages', { n: c.n }) + ' · ' : '') + (c.body || ''), ago(c.at), null, () => go('#/chat'), true));
+  const rows = notes.map((n) => {
+    const thumb = (n.post?.media || [])[0];
+    const target = n.kind === 'follow' ? `#/p/${n.who?.id || ''}` : n.post_id ? `#/p/${n.post?.person_id || n.person_id}` : n.call_id ? `#/c/${n.call_id}` : '#/feed';
+    return row(avatar(n.who || {}), noteText(n), null, ago(n.created_at), thumb?.type === 'image' ? thumb.path : null, () => {
+      if (n.post_id && n.post) { closeAll(); sb.from('roardino_posts').select('*, person:roardino_people(id,name,avatar,kinds,headline)').eq('id', n.post_id).maybeSingle().then(({ data }) => data && openPost(data, data.person)); }
+      else go(target);
+    }, !n.read_at);
+  });
+  put(panel,
+    h('div', { class: 'notes-head' }, h('b', {}, t('Notifications')), h('span', { class: 'grow' }), notes.length ? h('button', { type: 'button', class: 'linkish', onclick: async () => { await sb.from('roardino_notifications').delete().eq('user_id', session.user.id); notes = []; drawBadges(); closeAll(); toast(t('Cleared')); } }, t('Clear all')) : null),
+    msgs.length ? [h('p', { class: 'notes-sec' }, t('Messages')), ...msgs] : null,
+    rows.length ? [h('p', { class: 'notes-sec' }, t('Activity')), ...rows] : null,
+    !msgs.length && !rows.length ? h('div', { class: 'notes-empty' }, h('span', { html: ICON.bell }), t('Nothing new. Bravos, comments, follows, calls and messages show here.')) : null);
+  // seen now: everything read, the count gone (the chat's own messages are read in the chat)
+  const unread = notes.filter((n) => !n.read_at).map((n) => n.id);
+  if (unread.length) { await sb.from('roardino_notifications').update({ read_at: new Date().toISOString() }).in('id', unread); notes.forEach((n) => { n.read_at ||= new Date().toISOString(); }); drawBadges(); }
+}
+
+/* =====================================================================================================================
    Settings (Alex, 5 Nov: "light and dark, and some settings it may need")
    ===================================================================================================================== */
 function viewSettings() {
@@ -1450,13 +1535,14 @@ function editSeminar(old, oldLink = '') {
 let started = false;
 async function enter(s) {
   session = s;
-  if (!s) { mine = []; isAdmin = false; return route(); }
+  if (!s) { mine = []; isAdmin = false; stopNotes(); return route(); }
   try {
     await loadMine();
     const { data } = await sb.rpc('roar_is_admin');
     isAdmin = data === true;
   } catch (e) { fail(e); }
   route();
+  startNotes();
 }
 sb.auth.onAuthStateChange((ev, s) => {
   if (ev === 'INITIAL_SESSION') { started = true; enter(s); return; }

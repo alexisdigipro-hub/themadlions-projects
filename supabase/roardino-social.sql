@@ -420,3 +420,98 @@ alter table roardino_posts add column if not exists kind text not null default '
 do $$ begin
   alter table roardino_posts add constraint roardino_posts_kind check (kind in ('work', 'photo'));
 exception when duplicate_object then null; end $$;
+
+-- notifications (Alex, 5 Nov: "who gave me a bravo, who commented, who wrote to me"): made by triggers, read by their
+-- own account only; the chat's unread messages come from RoarMe's own tables through roardino_chat_unread()
+create table if not exists roardino_notifications (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  user_id uuid not null references auth.users on delete cascade,      -- who it is for
+  actor uuid references auth.users on delete cascade,                  -- who did it
+  actor_person uuid references roardino_people on delete set null,    -- as which profile
+  kind text not null check (kind in ('bravo', 'comment', 'follow', 'apply', 'shortlist')),
+  post_id uuid references roardino_posts on delete cascade,
+  call_id uuid references roardino_calls on delete cascade,
+  person_id uuid references roardino_people on delete cascade,        -- my profile it concerns
+  text text,
+  read_at timestamptz
+);
+create index if not exists roardino_notifications_me on roardino_notifications (user_id, created_at desc);
+alter table roardino_notifications enable row level security;
+grant select, update, delete on roardino_notifications to authenticated;
+drop policy if exists rd_notes_read on roardino_notifications;
+create policy rd_notes_read on roardino_notifications for select to authenticated using (user_id = auth.uid());
+drop policy if exists rd_notes_edit on roardino_notifications;
+create policy rd_notes_edit on roardino_notifications for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists rd_notes_delete on roardino_notifications;
+create policy rd_notes_delete on roardino_notifications for delete to authenticated using (user_id = auth.uid());
+
+-- the profile that is someone (an adult's own before a child's)
+create or replace function roardino_face_of(u uuid) returns uuid
+language sql stable security definer set search_path = public as $$
+  select id from roardino_people where owner = u order by minor, created_at limit 1
+$$;
+
+create or replace function roardino_notify() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare to_user uuid; p roardino_posts; c roardino_calls; who uuid;
+begin
+  if tg_table_name = 'roardino_bravos' then
+    select * into p from roardino_posts where id = new.post_id;
+    if p.owner is distinct from new.user_id then
+      insert into roardino_notifications (user_id, actor, actor_person, kind, post_id, person_id)
+      values (p.owner, new.user_id, roardino_face_of(new.user_id), 'bravo', p.id, p.person_id);
+    end if;
+  elsif tg_table_name = 'roardino_comments' then
+    select * into p from roardino_posts where id = new.post_id;
+    if p.owner is distinct from new.owner then
+      insert into roardino_notifications (user_id, actor, actor_person, kind, post_id, person_id, text)
+      values (p.owner, new.owner, coalesce(new.person_id, roardino_face_of(new.owner)), 'comment', p.id, p.person_id, left(new.body, 140));
+    end if;
+  elsif tg_table_name = 'roardino_follows' then
+    select owner into to_user from roardino_people where id = new.person_id;
+    if to_user is distinct from new.user_id then
+      insert into roardino_notifications (user_id, actor, actor_person, kind, person_id)
+      values (to_user, new.user_id, roardino_face_of(new.user_id), 'follow', new.person_id);
+    end if;
+  elsif tg_table_name = 'roardino_applies' and tg_op = 'INSERT' then
+    select * into c from roardino_calls where id = new.call_id;
+    insert into roardino_notifications (user_id, actor, actor_person, kind, call_id, text)
+    values (c.owner, new.owner, new.person_id, 'apply', c.id, left(c.title, 140));
+  elsif tg_table_name = 'roardino_applies' and tg_op = 'UPDATE' and new.status = 'shortlist' and old.status is distinct from 'shortlist' then
+    select * into c from roardino_calls where id = new.call_id;
+    insert into roardino_notifications (user_id, actor, actor_person, kind, call_id, person_id, text)
+    values (new.owner, c.owner, roardino_face_of(c.owner), 'shortlist', c.id, new.person_id, left(c.title, 140));
+  end if;
+  return new;
+end $$;
+drop trigger if exists rd_notify on roardino_bravos;
+create trigger rd_notify after insert on roardino_bravos for each row execute function roardino_notify();
+drop trigger if exists rd_notify on roardino_comments;
+create trigger rd_notify after insert on roardino_comments for each row execute function roardino_notify();
+drop trigger if exists rd_notify on roardino_follows;
+create trigger rd_notify after insert on roardino_follows for each row execute function roardino_notify();
+drop trigger if exists rd_notify on roardino_applies;
+create trigger rd_notify after insert or update on roardino_applies for each row execute function roardino_notify();
+
+-- unread chat messages from RoarMe: per conversation, who wrote last, a few words, how many
+create or replace function roardino_chat_unread() returns table (room_id uuid, sender text, avatar text, body text, at timestamptz, n int)
+language sql stable security definer set search_path = public as $$
+  select m.room_id,
+         coalesce(nullif(pr.display_name, ''), '@' || pr.username) as sender,
+         pr.avatar_url,
+         left(coalesce(nullif(last.body, ''), case when last.file is not null then '📎' else '' end), 120),
+         last.created_at,
+         (select count(*)::int from roar_messages x where x.room_id = m.room_id and x.user_id <> auth.uid() and x.deleted_at is null
+            and x.created_at > coalesce(m.last_read_at, m.joined_at, '-infinity'))
+  from roar_members m
+  cross join lateral (select * from roar_messages x where x.room_id = m.room_id and x.user_id <> auth.uid() and x.deleted_at is null
+                        and x.created_at > coalesce(m.last_read_at, m.joined_at, '-infinity') order by x.created_at desc limit 1) last
+  left join roar_profiles pr on pr.id = last.user_id
+  where m.user_id = auth.uid() and not coalesce(m.muted, false) and not coalesce(m.archived, false)
+  order by last.created_at desc limit 20
+$$;
+revoke all on function roardino_chat_unread() from public, anon;
+grant execute on function roardino_chat_unread() to authenticated;
+
+do $$ begin alter publication supabase_realtime add table roardino_notifications; exception when others then null; end $$;
