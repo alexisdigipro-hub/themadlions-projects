@@ -103,6 +103,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - 5 Nov, night: comments with motion (drawTalk): three bouncing dots while loading, rows rise in one after another, a sent comment slides in lit with the accent without reloading the list (the field clears), a deleted one folds away, an empty Send shakes the field.
 - 5 Nov, night: an open post folds back to the picture by itself once less than a quarter of it is on screen (IntersectionObserver in postCard), unless you are typing in it.
 - 5 Nov, night: tighter post on a phone: the time is a float at the end of the caption (.cap-time: right aligned on its last line if it fits, else the next), less space round the caption, icons on the picture 25 px and closer.
+- 5 Nov, night: all motion softer and slower (Alex): --spring no longer overshoots, one --soft curve (cubic-bezier(.25,.46,.25,1)) for the post reveal, comments and windows, times about 1.5x, smaller distances in the keyframes.
 - **Next** (Alex): the TikTok-like vertical feed of self-tapes and showreels; AI search ("dancer 20-25, hip hop, Athens"); Roar Sheet rename; its own domain (roardino.gr: Alex to check at papaki.gr, this session cannot reach registries); who becomes a scout (insert into roardino_scouts by hand for now).
 
 ## Where we stopped (3 Nov 2026, night: one admin for everything)
