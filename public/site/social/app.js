@@ -431,7 +431,7 @@ function shrinkVideo(file) {
    glass window with the frame it will have; drag to move it, zoom with the slider, the wheel or two fingers, pick a
    shape where there is a choice; Use photo gives back the framed picture, Cancel nothing */
 const SHAPES = {
-  post: [['4:5', 4 / 5], ['1:1', 1], ['16:9', 16 / 9], ['Original', 0]],
+  post: [['Original', 0], ['4:5', 4 / 5], ['1:1', 1], ['16:9', 16 / 9]], // as it was taken first (Alex, 5 Nov)
   portrait: [['3:4', 3 / 4]],
   cover: [['3:1', 3]],
   story: [['9:16', 9 / 16]],
