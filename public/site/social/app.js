@@ -1381,24 +1381,43 @@ async function peopleList(p, what) {
   draw();
 }
 // the picture large, over everything (Alex, 5 Nov): arrows or keys for the others, a click outside, the X or Esc closes
-function lightbox(media, start = 0) {
+function lightbox(media, start = 0, opts = {}) {
   if (!media.length) return;
+  const bare = !!opts.bare; // a post opened from a grid: the picture big, only the X, a double click likes (Alex, 5 Nov)
   let i = Math.max(0, Math.min(media.length - 1, start));
   const stage = h('div', { class: 'lb-stage' });
   const count = h('span', { class: 'lb-count' });
   const show = () => {
     const m = media[i];
-    put(stage, m.type === 'video' ? h('video', { src: urlOf(m.path), poster: urlOf(m.poster) || null, controls: true, autoplay: true, playsInline: true }) : h('img', { src: urlOf(m.path), alt: '' }));
+    const el = m.type === 'video' ? h('video', { src: urlOf(m.path), poster: urlOf(m.poster) || null, controls: !bare, autoplay: true, playsInline: true, loop: bare }) : h('img', { src: urlOf(m.path), alt: '' });
+    put(stage, el);
+    if (bare) {
+      // one click plays or pauses a video, two like the post with the big heart; a picture likes on two
+      let tT = null, last = 0;
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const now = Date.now();
+        clearTimeout(tT);
+        if (now - last < 320) { last = 0; const hh = h('span', { class: 'big-heart', html: ICON.heart }); stage.append(hh); setTimeout(() => hh.remove(), 900); opts.onLike?.(); return; }
+        last = now;
+        if (el.tagName === 'VIDEO') tT = setTimeout(() => (el.paused ? el.play().catch(() => {}) : el.pause()), 300);
+      });
+      el.addEventListener('dblclick', (e) => e.preventDefault());
+    }
     count.textContent = media.length > 1 ? `${i + 1} / ${media.length}` : '';
   };
   const go = (d) => { i = (i + d + media.length) % media.length; show(); };
   const close = () => { veil.classList.add('out'); setTimeout(() => veil.remove(), 280); document.removeEventListener('keydown', onKey); };
   const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1); };
-  const veil = h('div', { class: 'lb', onclick: (e) => { if (e.target === veil || e.target === stage) close(); } }, stage, count,
+  const veil = h('div', { class: 'lb' + (bare ? ' bare' : ''), onclick: (e) => { if (e.target === veil || e.target === stage) close(); } }, stage, count,
     h('button', { type: 'button', class: 'lb-x', 'aria-label': t('Close'), html: ICON.x, onclick: close }),
-    media.length > 1 ? h('button', { type: 'button', class: 'lb-nav prev', 'aria-label': t('Previous'), html: ICON.left, onclick: () => go(-1) }) : null,
-    media.length > 1 ? h('button', { type: 'button', class: 'lb-nav next', 'aria-label': t('Next'), html: ICON.right, onclick: () => go(1) }) : null);
+    media.length > 1 && !bare ? h('button', { type: 'button', class: 'lb-nav prev', 'aria-label': t('Previous'), html: ICON.left, onclick: () => go(-1) }) : null,
+    media.length > 1 && !bare ? h('button', { type: 'button', class: 'lb-nav next', 'aria-label': t('Next'), html: ICON.right, onclick: () => go(1) }) : null);
   document.addEventListener('keydown', onKey);
+  // several pictures: swipe sideways (or the arrow keys)
+  let sx = null;
+  stage.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
+  stage.addEventListener('touchend', (e) => { if (sx == null || media.length < 2) return; const dx = e.changedTouches[0].clientX - sx; sx = null; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); });
   document.body.append(veil); show();
 }
 async function toggleFollow(id) {
@@ -2237,6 +2256,17 @@ function gridBlock(p, rows, own) {
   return h('div', {}, head, box);
 }
 async function openPost(r, p) {
+  if ((r.media || []).length) {
+    await sign(r.media.flatMap((m) => [m.path, m.poster]));
+    let liked = null;
+    lightbox(r.media, 0, { bare: true, onLike: async () => {
+      if (liked == null) { const { data } = await sb.from('roardino_bravos').select('post_id').eq('post_id', r.id).eq('user_id', session.user.id).maybeSingle(); liked = !!data; }
+      if (liked || r.owner === session.user.id) return;
+      const { error } = await sb.from('roardino_bravos').insert({ post_id: r.id });
+      if (!error) liked = true;
+    } });
+    return;
+  }
   const cards = await posts([{ ...r, person: p }], () => route());
   // a post opened from a grid pops up as a card in the middle of the screen, sized to the post, with its name, icons and
   // caption showing (Alex, 5 Nov: "in the middle of the screen, not at the bottom"); the X closes it
