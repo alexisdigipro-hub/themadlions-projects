@@ -206,7 +206,9 @@ const select = (options, value, extra = {}) => h('select', { class: 'select', ..
 const seg = (items, on, pick) => h('div', { class: 'seg' }, items.map(([k, s]) => h('button', { type: 'button', class: on === k ? 'on' : '', onclick: () => pick(k) }, s)));
 
 /* ---------- the frame: top bar, bottom bar on a phone ---------- */
-const NAV = [['feed', 'Feed', 'home'], ['people', 'Cast & Crew', 'people'], ['calls', 'Calls', 'calls'], ['seminars', 'Seminars', 'cal']];
+const NAV = [['feed', 'Feed', 'home'], ['people', 'Cast & Crew', 'people'], ['calls', 'Calls', 'calls'], ['seminars', 'Seminars', 'cal'], ['chat', 'Chat', 'talk']];
+// the chat is RoarMe (Alex, 4 Nov): the same Roar Accounts, so it lives here in a frame
+const ROARME = 'https://alexisdigipro-hub.github.io/roarme/';
 function topBar(on) {
   const m = me();
   const menu = h('div', { class: 'menu hidden' });
@@ -248,6 +250,7 @@ async function route() {
     if (a === 'c' && b) return await viewCall(b);
     if (a === 'seminars') return await viewSeminars();
     if (a === 'me') return await viewMe();
+    if (a === 'chat') return viewChat();
     if (a === 'edit') return await viewEdit(b || 'new');
     return await viewFeed();
   } catch (e) { fail(e); }
@@ -1055,6 +1058,17 @@ function apply(c) {
     if (error) return fail(error);
     close(); toast(t('Application sent')); route();
   } }, t('Send'))]);
+}
+
+/* =====================================================================================================================
+   Chat: RoarMe in a frame, the same account (signed in once inside it, then remembered)
+   ===================================================================================================================== */
+let chatFrame = null;
+function viewChat() {
+  document.title = 'Roardino · ' + t('Chat');
+  // one frame kept for the whole visit, so going back to the chat is instant and keeps the conversation open
+  chatFrame ||= h('iframe', { class: 'chat-frame', src: ROARME, title: 'RoarMe', allow: 'camera; microphone; clipboard-write; autoplay; fullscreen; display-capture' });
+  frame('chat', h('div', { class: 'chat-wrap' }, chatFrame));
 }
 
 /* =====================================================================================================================
