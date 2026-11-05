@@ -1600,9 +1600,12 @@ async function viewPerson(id) {
     btn.className = 'btn' + (follows.has(id) ? '' : ' main'); btn.textContent = follows.has(id) ? t('Following') : t('Follow');
   } }, follows.has(id) ? t('Following') : t('Follow'));
   const K = ctRow || {}; // email and phone, only when this account may see them
-  const contact = p.minor
-    ? [p.guardian?.email && h('a', { class: 'btn', href: `mailto:${p.guardian.email}` }, t('Email the parent')), p.guardian?.phone && h('a', { class: 'btn', href: `tel:${p.guardian.phone}` }, t('Call the parent'))]
-    : [K.email && h('a', { class: 'btn sm', href: `mailto:${K.email}` }, icon('mail'), t('Email')), K.phone && h('a', { class: 'btn sm', href: `tel:${K.phone}` }, icon('phone'), t('Phone')), C.instagram && h('a', { class: 'btn sm', href: `https://instagram.com/${C.instagram.replace(/^@/, '')}`, target: '_blank', rel: 'noopener' }, icon('insta'), 'Instagram'), C.site && h('a', { class: 'btn sm', href: /^https?:/.test(C.site) ? C.site : `https://${C.site}`, target: '_blank', rel: 'noopener' }, icon('globe'), t('Website'))];
+  // Contact (Alex, 5 Nov): Message through RoarMe first, then Email, then Call; no Instagram. Made afresh each time it is
+  // shown, so the phone's Contact window gets working buttons too
+  const contactList = () => (own ? [] : p.minor
+    ? [h('button', { type: 'button', class: 'btn sm', onclick: () => messageOnRoarMe(p) }, icon('talk'), t('Message the parent')), p.guardian?.email && h('a', { class: 'btn sm', href: `mailto:${p.guardian.email}` }, icon('mail'), t('Email the parent')), p.guardian?.phone && h('a', { class: 'btn sm', href: `tel:${p.guardian.phone}` }, icon('phone'), t('Call the parent'))]
+    : [h('button', { type: 'button', class: 'btn sm main', onclick: () => messageOnRoarMe(p) }, icon('talk'), t('Message')), K.email && h('a', { class: 'btn sm', href: `mailto:${K.email}` }, icon('mail'), t('Email')), K.phone && h('a', { class: 'btn sm', href: `tel:${K.phone}` }, icon('phone'), t('Call')), C.site && h('a', { class: 'btn sm', href: /^https?:/.test(C.site) ? C.site : `https://${C.site}`, target: '_blank', rel: 'noopener' }, icon('globe'), t('Website'))]).filter(Boolean);
+  const contact = contactList();
   const reel = p.reel ? h('video', { class: 'reel', src: urlOf(p.reel), controls: true, playsInline: true, preload: 'metadata' }) : ytEmbed(p.reel_url) ? h('iframe', { class: 'reel', src: ytEmbed(p.reel_url), allow: 'autoplay; fullscreen; picture-in-picture', allowFullscreen: true, title: 'Showreel' }) : null;
   // Instagram's profile (Alex, 4 Nov): the round picture, the name with the buttons, the numbers, the bio; then Work,
   // Photos and Details as tabs under one line
@@ -1649,12 +1652,12 @@ async function viewPerson(id) {
         p.bio ? h('p', { class: 'ig-bio' }, p.bio) : null,
         h('p', { class: 'ig-meta' }, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} years', { n: a }) : '', L.height ? `${L.height} cm` : ''].filter(Boolean).join(' · ')),
         contact.filter(Boolean).length ? h('div', { class: 'acts', style: { marginTop: 0 } }, contact.filter(Boolean).map((b2) => { b2.classList.add('sm'); return b2; })) : null)),
-    phoneHead(p, { own, stats, theirStories, photos, followBtn, contact, a, L }),
+    phoneHead(p, { own, stats, theirStories, photos, followBtn, contactList, a, L }),
     tabRow, body);
 }
 // a profile on a phone, as Instagram's (Alex, 5 Nov): the picture with the numbers beside it, the name, the lines about them,
 // then two equal buttons (mine: Edit profile and Settings; someone else's: Follow and Contact); no cover there
-function phoneHead(p, { own, stats, theirStories, photos, followBtn, contact, a, L }) {
+function phoneHead(p, { own, stats, theirStories, photos, followBtn, contactList, a, L }) {
   const pic = photos[0] || p.avatar;
   const pick = own ? h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, onchange: async (e) => { const f0 = e.target.files[0]; e.target.value = ''; const f = f0 && (/^video/.test(f0.type) ? f0 : await cropImage(f0, SHAPES.story)); const ed = f && await storyEditor(f); if (ed) await addStory(ed.file, ed.overlays); } }) : null;
   const av = h('div', { class: 'igm-av' + (theirStories.length ? ' has' : ''), onclick: theirStories.length ? () => openStories(theirStories, 0) : null },
@@ -1662,9 +1665,9 @@ function phoneHead(p, { own, stats, theirStories, photos, followBtn, contact, a,
     own ? h('button', { type: 'button', class: 'igm-add', 'aria-label': t('Add to your story'), html: ICON.plus, onclick: (e) => { e.stopPropagation(); storySource(pick); } }) : null, pick);
   const num = (n, label) => h('div', { class: 'igm-n' }, h('b', {}, String(n ?? 0)), h('small', {}, label));
   const site = p.data?.contact?.site;
-  const cBtns = contact.filter(Boolean);
+  const cBtns = contactList();
   const second = own ? h('a', { class: 'btn igm-btn', href: '#/settings' }, t('Settings'))
-    : cBtns.length ? h('button', { type: 'button', class: 'btn igm-btn', onclick: () => openWin(t('Contact {name}', { name: p.name }), h('div', { class: 'acts', style: { marginTop: 0 } }, cBtns.map((b) => b.cloneNode(true))), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) }, t('Contact'))
+    : cBtns.length ? h('button', { type: 'button', class: 'btn igm-btn', onclick: () => openWin(t('Contact {name}', { name: p.name }), h('div', { class: 'acts contact-acts', style: { marginTop: 0 } }, contactList()), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Close'))]) }, t('Contact'))
       : h('button', { type: 'button', class: 'btn igm-btn', onclick: async () => { const url = `${location.origin}${location.pathname}#/p/${p.id}`; try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ } } }, t('Share profile'));
   const first = own ? h('a', { class: 'btn igm-btn', href: `#/edit/${p.id}` }, t('Edit profile')) : followBtn ? followBtn.cloneNode(true) : null;
   if (first && !own) {
@@ -1926,7 +1929,7 @@ async function viewEdit(which) {
     sec(t('Contact and limits'),
       isMinor() ? h('p', { class: 'hint' }, t('For a minor, contact goes only through the parent.')) : h('div', {},
         h('div', { class: 'row' }, field(t('Email'), bind(ct, 'email', input(ct.email, { type: 'email' }))), field(t('Phone'), bind(ct, 'phone', input(ct.phone, { type: 'tel' })))),
-        h('div', { class: 'row', style: { marginTop: '10px' } }, field('Instagram', bind(C, 'instagram', input(C.instagram, { placeholder: '@' }))), field(t('Website'), bind(C, 'site', input(C.site)))),
+        h('div', { class: 'row', style: { marginTop: '10px' } }, field(t('Website'), bind(C, 'site', input(C.site, { placeholder: 'www…' })))),
         h('label', { class: 'check', style: { marginTop: '10px' } }, h('input', { type: 'checkbox', checked: ct.show, onchange: (e) => { ct.show = e.target.checked; } }), h('span', {}, t('Show my email and phone on my profile. Otherwise only whoever runs a call you apply to sees them.')))),
       limits),
     sec(t('Settings'),
@@ -2157,7 +2160,7 @@ const PRIVACY = [
   ['Who we are', [`The Mad Lions, a film production house in Athens, Greece, is responsible for your data on Roardino. Write to ${INFO_MAIL}.`]],
   ['What we keep', [
     'Your account: your name, your email and your password as a secure hash. It is your Roar Account, the same one that signs you in to the other Roar apps.',
-    'Your profiles: name, what you do, city, date of birth, gender, a line about you, a text about you, and, as you choose, your looks, skills, languages, equipment, software, credits, studies, agent, Instagram and website.',
+    'Your profiles: name, what you do, city, date of birth, gender, a line about you, a text about you, and, as you choose, your looks, skills, languages, equipment, software, credits, studies, agent and website.',
     'Your pictures, your self-tape or showreel, your cover picture and your CV.',
     'Your email and phone for contact, kept apart from the profile.',
     'What you do on Roardino: posts with their pictures and videos, stories, comments, likes, who you follow, the calls you post and the applications you send or receive, the seats you keep at seminars (with the name and phone you give), and the notifications made from all of these.',
@@ -2303,6 +2306,14 @@ function viewChat() {
 }
 // what Roardino says to the framed RoarMe: its look, and a one-time sign-in token for the same Roar Account
 const toChat = (msg) => { try { chatFrame?.contentWindow?.postMessage(msg, ROARME_ORIGIN); } catch { /* not there */ } };
+// Message on a profile (Alex, 5 Nov): the direct chat on RoarMe with the profile's account (a child's: the parent's)
+async function messageOnRoarMe(p) {
+  if (!p.owner || p.owner === session.user.id) return;
+  const { data: room, error } = await sb.rpc('roar_open_direct', { other: p.owner });
+  if (error || !room) { toast(t('{name} is not on RoarMe yet.', { name: p.name })); return; }
+  document.querySelectorAll('.veil').forEach((v) => v.remove());
+  openChat({ page: 'room', room: typeof room === 'string' ? room : room.id || room });
+}
 // which page of the chat to show (Alex, 5 Nov: the chat's settings live in Roardino's Settings; on a phone RoarMe's own bar is hidden)
 let chatReady = false, chatPending = null;
 function openChat(page) {
@@ -2340,7 +2351,7 @@ async function handOverToChat() {
 window.addEventListener('message', (e) => {
   if (e.origin !== ROARME_ORIGIN || !chatFrame || e.source !== chatFrame.contentWindow) return;
   const d = e.data || {};
-  if (d.type === 'roarme:ready') { chatReady = !!d.signedIn; chatLook(); if (d.signedIn === false) handOverToChat(); else if (chatPending) { toChat({ type: 'roardino:open', page: chatPending }); chatPending = null; } }
+  if (d.type === 'roarme:ready') { chatReady = !!d.signedIn; chatLook(); if (d.signedIn === false) handOverToChat(); else if (chatPending) { toChat(typeof chatPending === 'object' ? { type: 'roardino:open', ...chatPending } : { type: 'roardino:open', page: chatPending }); chatPending = null; } }
 });
 
 /* =====================================================================================================================
