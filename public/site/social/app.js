@@ -638,6 +638,32 @@ function footBar() {
 }
 function frame(on, ...content) { put(app, topBar(on), h('main', { class: 'page' }, ...content), footBar(), tabBar(on)); window.scrollTo(0, 0); }
 
+/* ---------- the black box (Alex, 5 Nov: the iPhone keeps reloading Home, "check it in detail") ----------
+   Each step of drawing Home is written on this device as it happens. If the page dies before Home has stood for 6 s, the
+   next opening knows: Home is drawn light (no stories, three posts) and a small card says where it stopped, so Alex can
+   send a screenshot. The steps are kept only here, nothing is sent anywhere. */
+const CRUMB_KEY = 'roardino-crumbs';
+let lastRun = null;
+try { lastRun = JSON.parse(localStorage.getItem(CRUMB_KEY) || 'null'); } catch { /* none */ }
+const crashedBefore = !!(lastRun && lastRun.home && !lastRun.ok);
+const run = { at: Date.now(), home: false, ok: false, steps: [] };
+function crumb(step) {
+  run.steps.push(`${((Date.now() - run.at) / 1000).toFixed(1)}s ${step}`);
+  if (run.steps.length > 40) run.steps.splice(0, run.steps.length - 40);
+  try { localStorage.setItem(CRUMB_KEY, JSON.stringify(run)); } catch { /* full or private */ }
+}
+crumb(crashedBefore ? 'start (safe mode)' : 'start');
+let homeOkT = 0;
+function homeStanding() { clearTimeout(homeOkT); homeOkT = setTimeout(() => { run.ok = true; crumb('home stood 6s'); }, 6000); }
+function safeCard() {
+  if (!crashedBefore) return null;
+  const steps = (lastRun.steps || []).slice(-6);
+  return h('div', { class: 'card safe-card' },
+    h('b', {}, t('Roardino restarted after a problem on this phone')),
+    h('p', { class: 'hint' }, t('Home is shown light for now. Last steps before it stopped:')),
+    h('pre', {}, steps.join('\n')));
+}
+
 async function route() {
   document.querySelectorAll('.veil').forEach((v) => v.remove()); // a window never outlives its page
   if (location.hash.startsWith('#/legal')) return viewLegal(['terms', 'contact'].includes(location.hash.split('/')[2]) ? location.hash.split('/')[2] : 'privacy');
@@ -850,6 +876,7 @@ function goHome(e) {
 }
 async function viewFeed() {
   document.title = 'Roardino';
+  run.home = true; run.ok = false; crumb('home: draw shell');
   const left = h('aside', { class: 'side left' }, meCard(), me() ? null : meTiles());
   const mid = h('div', { class: 'mid' }, h('p', { class: 'wait' }, t('Loading…')));
   // two columns (Alex, 4 Nov): my card with the week and the calls under it on the left, the work wide on the right
@@ -860,6 +887,7 @@ async function viewFeed() {
     sb.from('roardino_calls').select('*').eq('open', true).order('created_at', { ascending: false }).limit(30),
     sb.from('roardino_seminars').select('*').order('starts_at', { ascending: true, nullsFirst: false }).limit(30),
     loadStories()]);
+  crumb('home: data');
   const others = (people.data || []).filter((p) => !mine.some((m) => m.id === p.id) && !follows.has(p.id)).slice(0, 14);
   await sign(others.map((p) => p.avatar));
   // the week and the calls under my card are out for now (Alex, 5 Nov: "not yet, take them out"); weekCard and
@@ -878,21 +906,47 @@ async function viewFeed() {
   const caught = older.length && !showOlder ? h('div', { class: 'caught card' }, h('span', { class: 'caught-ic', html: ICON.check }), h('b', {}, t('You\'re all caught up')),
     h('p', { class: 'hint' }, fresh.length ? t('You have seen the posts of the last days.') : t('Nothing new since you last looked.')),
     h('button', { type: 'button', class: 'btn sm', onclick: () => { showOlder = true; viewFeed(); } }, t('Show older posts'))) : null;
+  crumb(`home: ${data.length} posts to draw`);
   const cards = data.length ? await posts(data, () => viewFeed()) : older.length ? [] : [h('div', { class: 'empty' }, h('b', {}, feedOnly === 'follow' ? t('Nobody to show yet') : t('Nothing here yet')), feedOnly === 'follow' ? t('Follow people from People and their work shows here.') : t('Post your first work.'))];
   // calls ride in the feed, one after every three posts, as Alex's reference shows a job among the posts
   const openCalls = (calls.data || []).slice(0, 6);
   const stream = [];
   cards.forEach((c, i) => { stream.push(c); if (prefs.feedCalls && i % 3 === 2 && openCalls.length) stream.push(callTile(openCalls.shift())); });
   if (prefs.feedCalls && stream.length < 4) openCalls.slice(0, 2).forEach((c) => stream.push(callTile(c)));
-  put(mid, 
-    storiesCard(stories, others),
+  crumb('home: cards built');
+  // on a phone the posts come a few at a time, the next ones as the end comes near (Alex, 5 Nov: the iPhone reloaded
+  // Home); after a crash, light: no stories and three posts
+  const phone = isPhone();
+  const firstN = crashedBefore ? 3 : phone ? 5 : stream.length;
+  const later = stream.splice(firstN);
+  const more = later.length ? h('div', { class: 'feed-more' }) : null;
+  if (more) {
+    const io = 'IntersectionObserver' in window ? new IntersectionObserver((en) => {
+      if (!en.some((e) => e.isIntersecting)) return;
+      const next = later.splice(0, crashedBefore ? 3 : 5);
+      crumb(`home: +${next.length} posts`);
+      more.before(...next);
+      next.forEach((el) => { if (seenWatch && el.dataset?.post && !seenPosts.has(el.dataset.post)) seenWatch.observe(el); });
+      if (!later.length) { io.disconnect(); more.remove(); return; }
+      io.unobserve(more); requestAnimationFrame(() => io.observe(more)); // still near the end: look again
+    }, { rootMargin: crashedBefore ? '0px' : '700px 0px' }) : null;
+    if (io) requestAnimationFrame(() => io.observe(more)); else { stream.push(...later); later.length = 0; }
+  }
+  put(mid, safeCard(),
+    crashedBefore ? null : storiesCard(stories, others),
     // the composer waits behind New post, on the line of Everyone / Following (Alex, 5 Nov), and opens as a glass window
     h('div', { class: 'head feed-head' }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { setFeedOnly(k); viewFeed(); }), h('span', { class: 'grow' }),
       // stories on or off, a small square next to New post (Alex, 5 Nov)
       h('button', { type: 'button', class: 'btn st-toggle' + (prefs.showStories ? ' on' : ''), title: prefs.showStories ? t('Hide stories') : t('Show stories'), 'aria-label': prefs.showStories ? t('Hide stories') : t('Show stories'), html: ICON.rings + `<span>${esc(t('Stories'))}</span>`, onclick: () => { setShowStories(!prefs.showStories); toast(prefs.showStories ? t('Stories on') : t('Stories hidden')); viewFeed(); } }),
       mine.length ? h('button', { type: 'button', class: 'btn main new-post', title: t('New post'), 'aria-label': t('New post'), onclick: () => composeWin('work') }, icon('plus'), h('span', {}, t('New post'))) : null),
-    ...stream, caught);
+    ...stream, more, later.length ? null : caught);
+  if (more && caught) more.after(caught);
+  crumb('home: on screen');
   if (seenWatch) mid.querySelectorAll('.post[data-post]').forEach((el) => { if (!seenPosts.has(el.dataset.post)) seenWatch.observe(el); });
+  // how the pictures arrive
+  const imgs = [...mid.querySelectorAll('img')]; let loaded = 0;
+  imgs.forEach((im) => im.addEventListener('load', () => { loaded += 1; if (loaded === imgs.length || loaded % 3 === 0) crumb(`home: pictures ${loaded}/${imgs.length}`); }, { once: true }));
+  homeStanding();
 }
 
 // my card, left: who I am, my numbers, my skills, my latest work
@@ -1324,7 +1378,7 @@ function postCard(r, st, refresh) {
   };
   const slides = media.length ? h('div', { class: 'ig-media' + (media.length > 1 ? ' many' : '') }, media.map((m) => (m.type === 'video'
     ? (isPhone() ? feedVideo(urlOf(m.path)) : h('video', { src: urlOf(m.path), controls: true, playsInline: true, preload: 'metadata', muted: prefs.mutedVideos }))
-    : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', ondblclick: (e) => { if (!st.mine) bravoBtn.click(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); e.target.parentElement.parentElement.append(hh); setTimeout(() => hh.remove(), 900); } })))) : null;
+    : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', decoding: 'async', ondblclick: (e) => { if (!st.mine) bravoBtn.click(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); e.target.parentElement.parentElement.append(hh); setTimeout(() => hh.remove(), 900); } })))) : null;
   const dots = media.length > 1 ? h('div', { class: 'ig-dots' }, media.map((_, i) => h('i', { class: i ? '' : 'on' }))) : null;
   if (slides && dots) slides.addEventListener('scroll', () => { const i = Math.round(slides.scrollLeft / slides.clientWidth); dots.querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i)); });
   const head =
@@ -2749,6 +2803,7 @@ async function enter(s) {
     const { data } = await sb.rpc('roar_is_admin');
     isAdmin = data === true;
   } catch (e) { fail(e); }
+  crumb('signed in, drawing');
   await route();
   // the first screen comes in at once; motion only from now on (Alex, 5 Nov: "it flashes and blinks when it opens")
   setTimeout(() => document.documentElement.classList.remove('booting'), 450);
