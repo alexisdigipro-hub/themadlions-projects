@@ -482,29 +482,17 @@ function meCard() {
           h('a', { class: 'btn', href: '#/edit/kid' }, icon('child'), t('My child\'s profile')))));
   }
   const stats = h('div', { class: 'me-stats' }, h('div', {}, h('b', {}, '·'), h('small', {}, t('Followers'))), h('div', {}, h('b', {}, String(follows.size)), h('small', {}, t('Following'))), h('div', {}, h('b', {}, '·'), h('small', {}, t('Works'))));
-  const work = h('div', { class: 'mini-grid' });
-  const skills = [...(m.kinds || []).map(kindName), ...tags(m.data?.skills?.dance), ...tags(m.data?.skills?.languages), ...tags(m.data?.skills?.software), ...tags(m.data?.gear)].slice(0, 10);
+  // the card stays small (Alex, 5 Nov): who I am, my numbers, View my profile; skills and work live on the profile
   (async () => {
-    const [{ data: st }, { data: ps }] = await Promise.all([
-      sb.rpc('roardino_person_stats', { p: m.id }),
-      sb.from('roardino_posts').select('*').eq('person_id', m.id).neq('kind', 'photo').order('pos', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false }).limit(4)]);
+    const { data: st } = await sb.rpc('roardino_person_stats', { p: m.id });
     if (st) { stats.children[0].firstChild.textContent = String(st.followers); stats.children[2].firstChild.textContent = String(st.posts); }
-    const pics = (ps || []).map((p) => (p.media || []).find((x) => x.type === 'image')).filter(Boolean);
-    await sign(pics.map((x) => x.path));
-    put(work, ...pics.map((x) => h('a', { href: `#/p/${m.id}`, style: bg(x.path) })));
-    if (!pics.length) work.replaceWith(h('p', { class: 'hint' }, t('Post a photo of your work and it shows here.')));
   })();
-  return [h('section', { class: 'card me-card' },
+  return [h('section', { class: 'card me-card small' },
     h('div', { class: 'me-cover' }),
     h('a', { class: 'me-top', href: `#/p/${m.id}` }, avatar(m, 'lg'), h('div', {}, h('b', {}, m.name), h('small', {}, m.headline || (m.kinds || []).map(kindName).slice(0, 2).join(' · ')))),
     stats,
-    h('div', { class: 'me-in' },
-      h('hr'),
-      skills.length ? [h('h3', {}, t('Skills'), h('a', { href: `#/edit/${m.id}` }, t('Edit'))), h('div', { class: 'chips' }, skills.map((s) => h('span', { class: 'tag' }, s))), h('hr')] : null,
-      h('h3', {}, t('Your work'), h('a', { href: `#/p/${m.id}` }, t('All'))),
-      work,
-      h('div', { style: { marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' } },
-        h('a', { class: 'btn main', href: `#/p/${m.id}` }, icon('user'), t('View my profile'))))), meTiles()];
+    h('div', { class: 'me-in', style: { marginTop: '16px' } },
+      h('a', { class: 'btn main', href: `#/p/${m.id}` }, icon('user'), t('View my profile')))), meTiles()];
 }
 // my things as small glass tiles under my card (Alex, 5 Nov: the name menu and light / dark move here from the top bar)
 function meTiles() {

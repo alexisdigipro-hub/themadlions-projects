@@ -674,3 +674,7 @@ html[data-theme=dark] .mt span{color:#9fbbe6}
 .cam .st-stage img,.cam .st-stage video:not(.cam-live){object-fit:cover}
 .cam-controls .btn{background-color:rgba(0,0,0,.4);background-image:none;-webkit-text-fill-color:#fff;color:#fff;border-color:rgba(255,255,255,.3)}
 .cam-controls .btn.main{background-color:#fff;-webkit-text-fill-color:#1c2333;color:#1c2333}
+
+/* my card, small (Alex, 5 Nov) */
+.me-card.small .me-cover{height:72px}
+.me-card.small .me-stats{margin-top:14px}
