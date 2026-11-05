@@ -65,6 +65,7 @@ const GENDERS = [['', '—'], ['f', 'Woman'], ['m', 'Man'], ['x', 'Other']];
 
 /* ---------- helpers ---------- */
 const $ = (s, r = document) => r.querySelector(s);
+const esc = (x) => String(x ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 function h(tag, attrs = {}, ...kids) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs || {})) {
@@ -292,7 +293,7 @@ function topBar(on) {
   const toggle = (e) => { e.stopPropagation(); fill(); menu.classList.toggle('hidden'); if (!menu.classList.contains('hidden')) setTimeout(() => document.addEventListener('click', () => menu.classList.add('hidden'), { once: true })); };
   const find = h('input', { type: 'search', placeholder: t('Search cast, crew & creatives'), 'aria-label': t('Search cast, crew & creatives'), value: on === 'people' ? peopleQ : '', onkeydown: (e) => { if (e.key === 'Enter') { peopleQ = e.target.value; if (location.hash === '#/people') viewPeople(); else location.hash = '#/people'; } } });
   return h('header', { class: 'bar' }, h('div', { class: 'bar-in' },
-    h('a', { href: '#/feed', 'aria-label': 'Roardino' }, mark()),
+    h('a', { href: '#/feed', class: 'brand', 'aria-label': 'Roardino by The Mad Lions' }, mark(), byLine()),
     // the menu in words, a glass capsule with the gliding lens, as Qubi's (Alex, 5 Nov); the search takes the rest
     h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { location.hash = `#/${k}`; })),
     h('label', { class: 'find' }, icon('search'), find),
@@ -306,10 +307,25 @@ function tabBar(on) {
   return h('nav', { class: 'tabbar' }, NAV.map(([k, s, ic]) => h('a', { href: `#/${k}`, class: on === k ? 'on' : '' }, icon(ic), t(s))),
     h('a', { href: m ? `#/p/${m.id}` : '#/edit/new', class: on === 'me' ? 'on' : '' }, icon('user'), t('Me')));
 }
-function frame(on, ...content) { put(app, topBar(on), h('main', { class: 'page' }, ...content), tabBar(on)); window.scrollTo(0, 0); }
+const byLine = () => h('small', { class: 'by' }, 'by ', h('b', {}, 'THE ', h('strong', {}, 'MAD'), ' LIONS'));
+// the footer (Alex, 5 Nov): Roardino by THE MAD LIONS, themadlions.com and its places
+function footBar() {
+  return h('footer', { class: 'foot' }, h('div', { class: 'foot-in' },
+    h('span', { class: 'foot-mark' }, mark(), h('small', {}, 'by ', h('b', {}, 'THE ', h('strong', {}, 'MAD'), ' LIONS'))),
+    h('span', { class: 'grow' }),
+    h('nav', {},
+      h('a', { href: 'https://themadlions.com/', target: '_blank', rel: 'noopener' }, 'themadlions.com'),
+      h('a', { href: 'https://themadlions.com/lab/', target: '_blank', rel: 'noopener' }, t('Lab')),
+      h('a', { href: 'https://themadlions.com/#contact', target: '_blank', rel: 'noopener' }, t('Contact')),
+      h('a', { href: '#/legal/privacy' }, t('Privacy')),
+      h('a', { href: '#/legal/terms' }, t('Terms'))),
+    h('small', { class: 'foot-c' }, `© ${new Date().getFullYear()} The Mad Lions`)));
+}
+function frame(on, ...content) { put(app, topBar(on), h('main', { class: 'page' }, ...content), footBar(), tabBar(on)); window.scrollTo(0, 0); }
 
 async function route() {
   document.querySelectorAll('.veil').forEach((v) => v.remove()); // a window never outlives its page
+  if (location.hash.startsWith('#/legal')) return viewLegal(location.hash.split('/')[2] === 'terms' ? 'terms' : 'privacy');
   if (!session) return viewFront();
   const [, a = 'feed', b] = (location.hash || '#/feed').split('/');
   try {
@@ -379,7 +395,7 @@ async function viewFront() {
     put(counts, ...[[data.people, t('profiles')], [data.calls, t('open calls')], [data.seminars, t('seminars')]].filter(([n]) => n > 0).map(([n, s]) => h('div', {}, h('b', {}, String(n)), h('small', {}, s))));
   });
   put(app, 
-    h('header', { class: 'bar' }, h('div', { class: 'bar-in' }, mark())),
+    h('header', { class: 'bar' }, h('div', { class: 'bar-in' }, h('span', { class: 'brand' }, mark(), byLine()))),
     h('main', { class: 'front' },
       h('div', {},
         h('p', { class: 'kicker' }, t('The crew, online')),
@@ -392,7 +408,8 @@ async function viewFront() {
       [['Your profile, a portfolio', 'Photos, showreel, self-tape, CV. Your work as a grid, in the order you choose.'],
         ['Calls', 'Castings and crews wanted right now. Apply with one tap and they see your profile straight away.'],
         ['For children too, with a parent', 'Under 18 only from a parent\'s account, and their profiles are seen only by trusted productions.']]
-        .map(([a, b], i) => h('div', {}, h('span', { class: 'no' }, '0' + (i + 1)), h('b', {}, t(a)), h('p', {}, t(b))))));
+        .map(([a, b], i) => h('div', {}, h('span', { class: 'no' }, '0' + (i + 1)), h('b', {}, t(a)), h('p', {}, t(b))))),
+    footBar());
 }
 
 // one sign-in for every Roar app: a code, Allow on themadlions.com/account/, then this page's own session
@@ -449,7 +466,7 @@ async function viewFeed() {
   const left = h('aside', { class: 'side left' }, meCard(), me() ? null : meTiles());
   const mid = h('div', { class: 'mid' }, h('p', { class: 'wait' }, t('Loading…')));
   // two columns (Alex, 4 Nov): my card with the week and the calls under it on the left, the work wide on the right
-  put(app, topBar('feed'), h('main', { class: 'page' }, h('div', { class: 'two' }, left, mid)), tabBar('feed'));
+  put(app, topBar('feed'), h('main', { class: 'page' }, h('div', { class: 'two' }, left, mid)), footBar(), tabBar('feed'));
   window.scrollTo(0, 0);
   const [people, calls, seminars, stories] = await Promise.all([
     sb.from('roardino_people').select('id,name,avatar,kinds').eq('visible', true).order('updated_at', { ascending: false }).limit(30),
@@ -1468,6 +1485,74 @@ async function openNotes(anchor) {
   // seen now: everything read, the count gone (the chat's own messages are read in the chat)
   const unread = notes.filter((n) => !n.read_at).map((n) => n.id);
   if (unread.length) { await sb.from('roardino_notifications').update({ read_at: new Date().toISOString() }).in('id', unread); notes.forEach((n) => { n.read_at ||= new Date().toISOString(); }); drawBadges(); }
+}
+
+/* =====================================================================================================================
+   Privacy Policy and Terms (Alex, 5 Nov: "what else is needed"). Only what Roardino's code does; readable without an
+   account, from the footer. English first, through t() like the rest.
+   ===================================================================================================================== */
+const LEGAL_DATE = '5 November 2026';
+const INFO_MAIL = 'info@themadlions.com';
+const PRIVACY = [
+  ['In short', ['Roardino is a place to show your work and to find people for film, theatre, dance and photography. What you put on a profile is seen by the members of Roardino, as you choose. Children under 18 join only through a parent, and their profiles are seen only by trusted productions. We do not sell data and we show no ads.']],
+  ['Who we are', [`The Mad Lions, a film production house in Athens, Greece, is responsible for your data on Roardino. Write to ${INFO_MAIL}.`]],
+  ['What we keep', [
+    'Your account: your name, your email and your password as a secure hash. It is your Roar Account, the same one that signs you in to the other Roar apps.',
+    'Your profiles: name, what you do, city, date of birth, gender, a line about you, a text about you, and, as you choose, your looks, skills, languages, equipment, software, credits, studies, agent, Instagram and website.',
+    'Your pictures, your self-tape or showreel, your cover picture and your CV.',
+    'Your email and phone for contact, kept apart from the profile.',
+    'What you do on Roardino: posts with their pictures and videos, stories, comments, bravos, who you follow, the calls you post and the applications you send or receive, the seats you keep at seminars (with the name and phone you give), and the notifications made from all of these.',
+    'Choices remembered with your account (Everyone or Following, stories shown or hidden) and on your device only (light or dark, text size, the stories you have seen).',
+  ]],
+  ['Who sees what', [
+    'Profiles and posts are seen only by signed-in members. A profile you turn off in Settings does not show in Industry.',
+    'Your date of birth is never shown; only your age, and only on profiles in front of the camera.',
+    'Your email and phone show on your profile only if you choose so. Whoever runs a call you apply to sees them, so they can reach you.',
+    'A child\'s profile is seen only by productions and casting directors we trust, and by whoever runs a call the child applied to. The only contact shown is the parent\'s.',
+    'Applications are seen by you and by whoever runs the call. Seats at a seminar are seen by you and by its organisers.',
+  ]],
+  ['Children', ['A profile under 18 can be made only from the account of a parent or legal guardian, with their name, phone, email and consent. The parent manages the profile and is the only contact. The parent can delete it at any time.']],
+  ['Pictures and files', ['Pictures, videos and CVs are kept in private storage and shown through links that expire within an hour. Pictures are made lighter in your browser before they go up.']],
+  ['The camera', ['The camera is used only when you choose Camera for a story, and nothing is recorded until you press the button. Nothing goes up until you press Share.']],
+  ['The chat', ['The chat inside Roardino is RoarMe, with the same account. Its own privacy policy applies to your messages: alexisdigipro-hub.github.io/roarme/?legal=privacy.']],
+  ['Other services', [
+    'Accounts, data and files are stored with Supabase, our database and storage provider, in London, United Kingdom (covered by the EU\'s adequacy decision for the UK). It acts on our behalf and keeps short technical logs.',
+    'Fonts load from Google Fonts and code from jsDelivr, so they see your IP address. A showreel from YouTube or Vimeo plays in their player, under their own rules.',
+  ]],
+  ['No ads, no selling', ['We do not sell your data, show ads, or use what you post to train AI.']],
+  ['How to delete', [
+    'Delete a post, a story, a comment, a call or an application whenever you like. Deleting a profile deletes its pictures, videos, CV and posts too.',
+    'To delete everything, delete your Roar Account at themadlions.com/account (Settings, Delete account): your profiles and everything in them go with it.',
+  ]],
+  ['Your rights', [`Under the GDPR you can ask to see, correct, export or delete your data, and you can object to its use. Write to ${INFO_MAIL} and we answer within one month. You can also complain to the Hellenic Data Protection Authority (www.dpa.gr).`]],
+  ['Changes', ['If this policy changes, the date at the top changes too, and anything important is shown on Roardino before it applies.']],
+];
+const TERMS = [
+  ['Roardino', ['Roardino is a place for people who make film, theatre, dance and photography: to show their work, to find work, and to find each other. It is run by The Mad Lions, Athens, Greece.']],
+  ['Your account', ['You must be 15 or older to have an account. Children under 18 join only through the account of a parent or legal guardian. Keep your password to yourself; what happens through your account is your responsibility.']],
+  ['Be real', ['A profile is you, or your child if you are their parent or guardian. Do not make profiles for other people, do not pretend to be someone else, and keep what you say about your work true.']],
+  ['What you post is yours', ['Your pictures, videos and words stay yours. You let us keep them and show them to members as you set, only to run Roardino. Post only what you have the right to post, and only pictures of people who agree to be shown.']],
+  ['Not allowed', ['Nudity or sexual content; harassment, threats or hate; spam, scams or fake calls; asking a child for anything except through their parent; sharing someone else\'s contact details without their consent; anything against the law.']],
+  ['Calls', ['A call is between the person who posts it and the people who apply. We are not part of the deal. Check a call before you go, and never pay to apply. A production that works with children follows the law on children at work, with the parent present.']],
+  ['Seminars', ['Each seminar shows who gives it, when, where and its price. A paid seminar is settled with its organiser.']],
+  ['When things go wrong', ['We may remove content or close an account that breaks these terms, and we will tell you why where we can. Tell us about anything wrong at ' + INFO_MAIL + '.']],
+  ['Free, and in beta', ['Roardino is free and still in beta. It may change, gain or lose features, or stop, and we will try to tell you in good time.']],
+  ['No guarantee', ['Roardino is given as it is. We work hard for it to be right and safe, but we cannot promise it will always work. Keep your own copies of anything that matters to you.']],
+  ['Liability', ['As far as the law allows, we are not liable for indirect losses, lost data, lost profit or lost work from using Roardino. Nothing here limits rights you have as a consumer that cannot be limited.']],
+  ['Law', ['These terms follow Greek law, and the courts of Athens decide any dispute, unless the law where you live as a consumer says otherwise.']],
+  ['Contact', [`The Mad Lions, Athens, Greece · ${INFO_MAIL}`]],
+];
+function viewLegal(which) {
+  const text = which === 'terms' ? TERMS : PRIVACY;
+  document.title = 'Roardino · ' + (which === 'terms' ? t('Terms') : t('Privacy Policy'));
+  const body = h('article', { class: 'legal sec' },
+    h('div', { class: 'head', style: { marginBottom: 0 } }, seg([['privacy', t('Privacy Policy')], ['terms', t('Terms')]], which, (k) => { location.hash = `#/legal/${k}`; })),
+    h('h1', {}, which === 'terms' ? t('Terms of use') : t('Privacy Policy')),
+    h('p', { class: 'hint' }, t('Updated {d}', { d: LEGAL_DATE })),
+    text.map(([title, paras]) => h('section', {}, h('h2', {}, t(title)), paras.map((x) => h('p', { html: esc(t(x)).replace(/info@themadlions\.com/g, '<a href="mailto:info@themadlions.com">info@themadlions.com</a>').replace(/www\.dpa\.gr/g, '<a href="https://www.dpa.gr/" target="_blank" rel="noopener">www.dpa.gr</a>') })))));
+  if (session) frame('', h('div', { class: 'form' }, body));
+  else put(app, h('header', { class: 'bar' }, h('div', { class: 'bar-in' }, h('a', { href: '#/', class: 'brand' }, mark(), byLine()))), h('main', { class: 'page' }, h('div', { class: 'form' }, body)), footBar());
+  window.scrollTo(0, 0);
 }
 
 /* =====================================================================================================================

@@ -784,3 +784,31 @@ html[data-theme=dark] .st-hide:hover{background:rgba(255,255,255,.06)}
 .ig-head.under-cover .ig-info{padding-top:16px}
 .ig-head.under-cover .ig-av .r i{border-color:var(--bg1)}
 @media (max-width:860px){ .ig-cover .me-cover{height:140px;border-radius:14px} .ig-head.under-cover .ig-av{margin-top:-46px} }
+
+/* the footer */
+.foot{padding:0 16px 24px}
+.foot-in{max-width:1320px;margin:0 auto;display:flex;align-items:center;flex-wrap:wrap;gap:12px 22px;padding:16px 20px;border-radius:18px;
+  background:var(--glass);border:1px solid var(--rim);box-shadow:var(--top),0 0 0 1px var(--rim-out);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.foot-in .grow{flex:1}
+.foot-mark{display:flex;align-items:baseline;gap:10px}
+.foot-mark .rm{font-size:17px}
+.foot-mark .rm i{display:none}
+.foot-mark small{font-family:Jost,var(--font);font-size:10.5px;letter-spacing:.2em;color:var(--muted)}
+.foot-mark small b{font-weight:300;letter-spacing:.14em;color:var(--ink2)}
+.foot-mark small strong{font-weight:800}
+.foot nav{display:flex;gap:18px;flex-wrap:wrap}
+.foot nav a{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;background-image:var(--letters);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;transition:opacity .2s}
+.foot nav a:hover{opacity:.75}
+.foot-c{color:var(--faint);font-size:12px}
+@media (max-width:860px){ .foot{padding:0 12px 100px} .foot-in{justify-content:center;text-align:center} .foot-in .grow{display:none} }
+
+/* the wordmark's by-line (Alex, 5 Nov) */
+.brand{display:flex;flex-direction:column;align-items:flex-start;gap:4px;line-height:1}
+.by{font-family:Jost,var(--font);font-size:8.5px;font-weight:400;letter-spacing:.22em;text-transform:lowercase;color:var(--muted);padding-left:1px}
+.by b{font-weight:300;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2)}
+.by b strong{font-weight:800}
+/* privacy and terms */
+.legal h1{font-family:Jost,var(--font);font-size:clamp(30px,4vw,44px);font-weight:300;margin:8px 0 0}
+.legal section h2{font-size:15px;font-weight:700;margin:18px 0 6px}
+.legal section p{margin:0 0 8px;font-size:15px;line-height:1.65;color:var(--ink2)}
+.legal a{color:var(--accent);text-decoration:underline}
