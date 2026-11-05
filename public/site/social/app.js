@@ -1106,7 +1106,7 @@ async function drawTalk(box, r, st, recount) {
   put(box, h('p', { class: 'hint' }, t('Loading…')));
   const { data } = await sb.from('roardino_comments').select('*, person:roardino_people(id,name,avatar)').eq('post_id', r.id).order('created_at');
   await sign((data || []).map((c) => c.person?.avatar));
-  const text = input('', { placeholder: t('Write a comment…'), onkeydown: (e) => { if (e.key === 'Enter') send(); } });
+  const text = input('', { placeholder: t('Add a comment…'), onkeydown: (e) => { if (e.key === 'Enter') send(); } });
   async function send() {
     const body = text.value.trim();
     if (!body) return;
