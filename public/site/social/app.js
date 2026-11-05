@@ -563,6 +563,35 @@ async function route() {
   } catch (e) { fail(e); }
 }
 window.addEventListener('hashchange', route);
+// pull down from the top to refresh, as in an app (Alex, 5 Nov): the installed web app on a phone has no pull-to-refresh of its own
+(() => {
+  if (!('ontouchstart' in window)) return;
+  const tip = h('div', { class: 'ptr', 'aria-hidden': 'true' }, h('span', { class: 'ptr-spin' }));
+  document.body.append(tip);
+  let y0 = null, x0 = 0, pull = 0, busy = false;
+  const atTop = () => (window.scrollY || document.documentElement.scrollTop) <= 0;
+  const blocked = (el) => el.closest?.('.veil, .st-veil, .up-veil, .notes-panel, .menu, textarea, input');
+  window.addEventListener('touchstart', (e) => { y0 = !busy && atTop() && e.touches.length === 1 && !blocked(e.target) ? e.touches[0].clientY : null; x0 = e.touches[0]?.clientX || 0; pull = 0; }, { passive: true });
+  window.addEventListener('touchmove', (e) => {
+    if (y0 == null) return;
+    const dx = Math.abs(e.touches[0].clientX - x0), dy = e.touches[0].clientY - y0;
+    if (pull < 10 && dx > Math.abs(dy)) { y0 = null; tip.style.cssText = ''; return; } // a swipe sideways (photos, stories) is not a pull
+    pull = Math.max(0, dy);
+    if (pull <= 0 || !atTop()) { tip.style.cssText = ''; return; }
+    const d = Math.min(90, pull * 0.5);
+    tip.style.transform = `translate(-50%, ${d}px) rotate(${pull * 2}deg)`; tip.style.opacity = String(Math.min(1, pull / 120));
+    tip.classList.toggle('ready', pull > 130);
+  }, { passive: true });
+  window.addEventListener('touchend', async () => {
+    if (y0 == null) return;
+    y0 = null;
+    if (pull > 130 && atTop()) {
+      busy = true; tip.classList.add('spin'); tip.style.transform = 'translate(-50%, 70px)'; tip.style.opacity = '1';
+      try { await route(); } finally { setTimeout(() => { busy = false; tip.classList.remove('spin', 'ready'); tip.style.cssText = ''; }, 350); }
+    } else tip.style.cssText = '';
+    pull = 0;
+  });
+})();
 
 /* =====================================================================================================================
    Before sign-in
