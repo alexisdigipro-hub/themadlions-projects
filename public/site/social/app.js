@@ -744,6 +744,19 @@ function crumb(step) {
   try { localStorage.setItem(CRUMB_KEY, JSON.stringify(run)); } catch { /* full or private */ }
 }
 crumb(crashedBefore ? 'start (safe mode)' : 'start');
+// a newer Roardino while the page stays open (Alex, 5 Nov: a tab left open kept the old version): when the page comes
+// back to the front, and every 10 minutes, version.json is asked; a newer one reloads the page, only while no window is
+// open and nothing is being sent
+async function newerOut() {
+  if (!window.RD_V || document.visibilityState !== 'visible') return;
+  if (document.querySelector('.veil, .lb, .st-veil, .up-veil, .thumbs.sending')) return;
+  try {
+    const j = await (await fetch('version.json?' + Date.now(), { cache: 'no-store' })).json();
+    if (j?.v && j.v !== window.RD_V) location.reload();
+  } catch { /* offline */ }
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') newerOut(); });
+setInterval(newerOut, 10 * 60e3);
 // a heartbeat for the first minute, so the box shows how long the page lived and what happened in between
 { let beats = 0; const hb = setInterval(() => { beats += 1; crumb(`alive ${beats * 5}s, scrolled ${Math.round(window.scrollY)}px`); if (beats >= 12) clearInterval(hb); }, 5000); }
 let homeOkT = 0;
