@@ -270,7 +270,7 @@ function seg(items, on, pick) {
 }
 
 /* ---------- the frame: top bar, bottom bar on a phone ---------- */
-const NAV = [['feed', 'Feed', 'home'], ['people', 'Cast & Crew', 'people'], ['calls', 'Calls', 'calls'], ['seminars', 'Seminars', 'cal'], ['chat', 'Chat', 'talk']];
+const NAV = [['feed', 'Feed', 'home'], ['people', 'Industry', 'people'], ['calls', 'Calls', 'calls'], ['seminars', 'Seminars', 'cal'], ['chat', 'Chat', 'talk']];
 // the chat is RoarMe (Alex, 4 Nov): the same Roar Accounts, so it lives here in a frame
 const ROARME = 'https://alexisdigipro-hub.github.io/roarme/';
 function topBar(on) {
