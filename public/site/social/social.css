@@ -1411,3 +1411,52 @@ html.kb-open .veil .win{max-height:calc(var(--vvh,100dvh) - 20px)}
 .s-grid .cell{position:relative}
 html[data-theme=dark] .s-field{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.1)}
 @media (max-width:820px){.s-top .seg{align-self:stretch;display:flex}.s-top .seg button{flex:1}}
+/* the tiles under my card (Alex, 5 Nov: "I can't tell what anything is here"): each icon with its word under it, always, and in
+   the dark theme dark glass with the accent's icon instead of pale tiles */
+.two>.left .me-tiles{display:flex;gap:6px;padding:10px}
+.two>.left .me-tiles .mt.btn{flex:1 1 0;min-width:0;width:auto;height:auto;padding:10px 2px 8px;border-radius:12px;flex-direction:column;gap:5px}
+.two>.left .me-tiles .tip{position:static;opacity:1;transform:none;padding:0;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;
+  font-size:10px;letter-spacing:0;text-transform:none;font-weight:var(--w-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;color:var(--ink2);-webkit-text-fill-color:var(--ink2)}
+html[data-theme=dark] .me-tiles .mt.btn{background:rgba(255,255,255,.06)!important;background-image:none!important;border-color:rgba(255,255,255,.12)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important}
+html[data-theme=dark] .me-tiles .mt.btn:hover{background:rgba(255,255,255,.11)!important}
+html[data-theme=dark] .me-tiles .mt.btn .ic,html[data-theme=dark] .me-tiles .mt.btn .ic svg{color:var(--accent)}
+html[data-theme=dark] .me-tiles .tip{color:#d9dce2;-webkit-text-fill-color:#d9dce2}
+/* the numbers open who is behind them (Alex, 5 Nov) */
+.stat-btn{border:0;background:transparent;padding:4px 6px;margin:-4px -6px;border-radius:10px;font:inherit;color:inherit;cursor:pointer;text-align:inherit;transition:background .25s}
+.stat-btn:hover{background:rgba(var(--a),.08)}
+.me-stats .stat-btn{display:block;text-align:center;margin:0;width:100%}
+.ig-stats .stat-btn{margin:0;padding:2px 4px}
+.igm-n.stat-btn{display:flex;flex-direction:column;align-items:flex-start;margin:0;padding:0}
+.pl-list{display:flex;flex-direction:column;gap:2px;max-height:min(60vh,520px);overflow:auto;margin:0 -6px}
+.pl-row{display:flex;align-items:center;gap:10px;padding:6px;border-radius:12px;animation:cmt-in .6s var(--soft) both}
+.pl-who{flex:1;min-width:0;display:flex;align-items:center;gap:12px;color:inherit;text-decoration:none}
+.pl-who span{display:flex;flex-direction:column;min-width:0}
+.pl-who b{font-size:14.5px;font-weight:var(--w-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-who small{font-size:12.5px;color:var(--muted)}
+.pl-row .btn{flex:none}
+/* the + on my profile's tabs (Alex, 5 Nov: "what happened to this button?"): centred, the accent's icon, and a visible glass edge in the dark */
+.tab-plus{padding-left:10px;border-radius:12px}
+.tab-plus svg{width:19px;height:19px;color:var(--accent)!important}
+html[data-theme=dark] .tab-plus{background:rgba(255,255,255,.07)!important;background-image:none!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 4px 14px rgba(0,0,0,.4)!important}
+html[data-theme=dark] .tab-plus:hover{background:rgba(255,255,255,.12)!important}
+html[data-theme=dark] .tab-plus .lbl{color:#e8e9ec;-webkit-text-fill-color:#e8e9ec}
+.tab-plus:not(:hover){justify-content:center;padding:0}
+.tab-plus:not(:hover) .lbl{display:none}
+/* the profile head, tidier (Alex, 5 Nov): Edit profile and + side by side on the right; numbers, what they do and city on one line;
+   on a computer the + of the tabs gives way to the one up here */
+.ig-name .grow{flex:1}
+.ig-acts{display:flex;gap:8px;align-items:center}
+.ig-acts .btn.round{width:34px;height:34px;padding:0}
+.ig-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 22px}
+.ig-row .chips{margin:0}
+.ig-row .ig-meta{margin:0}
+.ig-info{gap:10px}
+.ig-head{padding-bottom:18px}
+@media (min-width:821px){.page .tab-plus{display:none!important}.ig-tabs{padding-left:0}}
+/* moving the cover up or down (Alex, 5 Nov) */
+.me-cover.repos{cursor:ns-resize;touch-action:none;outline:2px solid var(--a-solid);outline-offset:-2px}
+.me-cover.repos .cov-btn{display:none}
+.repos-hint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;
+  background:rgba(0,0,0,.5);color:#fff;font-size:13px;pointer-events:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.repos-hint span{display:grid;width:18px;height:18px}.repos-hint svg{width:18px;height:18px}
+.repos-bar{position:absolute;right:10px;bottom:10px;display:flex;gap:8px;z-index:3}
