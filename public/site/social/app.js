@@ -2181,16 +2181,8 @@ async function viewPerson(id) {
         : tab === 'photos' ? plus(t('Add photo'), 'plus', { onclick: () => composeWin('photo', p.id, () => route()) })
           : tab === 'saved' ? null : plus(t('Edit bio'), 'edit', { href: `#/edit/${p.id}` });
     if (act) tabRow.append(act);
-    // Personal can be closed to the public (Alex, 5 Nov): a lock beside its plus; Saved is only ever mine
+    // Personal can be closed to the public (its lock sits left of Edit profile); Saved is only ever mine
     const priv = !!p.data?.personal_private;
-    const lockBtn = own && tab === 'photos' ? h('button', { type: 'button', class: 'btn sm tab-lock' + (priv ? ' on' : ''), title: priv ? t('Only you see Personal. Tap to show it to everyone.') : t('Everyone sees Personal. Tap to keep it to yourself.'), onclick: async () => {
-      const data = { ...(p.data || {}), personal_private: !priv };
-      const { error } = await sb.from('roardino_people').update({ data }).eq('id', p.id);
-      if (error) return fail(error);
-      p.data = data; const m0 = mine.find((x) => x.id === p.id); if (m0) m0.data = data;
-      toast(!priv ? t('Personal is private now') : t('Personal is public now')); drawTab();
-    } }, icon(priv ? 'lock' : 'unlock'), h('span', { class: 'lbl' }, priv ? t('Private') : t('Public'))) : null;
-    if (lockBtn) tabRow.append(lockBtn);
     const note = own && tab === 'saved' ? h('p', { class: 'tab-note' }, icon('lock'), t('Only you see what you saved.'))
       : own && tab === 'photos' && priv ? h('p', { class: 'tab-note' }, icon('lock'), t('Personal is private: only you see these.')) : null;
     put(body, note, tab === 'work' ? work : tab === 'photos' ? pics : tab === 'saved' ? savedGrid() : details);
@@ -2204,7 +2196,7 @@ async function viewPerson(id) {
       // a tidier head (Alex, 5 Nov): the name with Edit profile and + on the right; the numbers, what they do and the city on one line
       h('div', { class: 'ig-info' },
         h('div', { class: 'ig-name' }, h('h1', {}, p.name), p.handle ? h('span', { class: 'ig-handle' }, '@' + p.handle) : null, h('span', { class: 'grow' }),
-          own ? h('div', { class: 'ig-acts' }, h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')), h('button', { type: 'button', class: 'btn sm main round', title: t('Create'), 'aria-label': t('Create'), onclick: createMenu }, icon('plus'))) : followBtn),
+          own ? h('div', { class: 'ig-acts' }, personalLock(p), h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')), h('button', { type: 'button', class: 'btn sm main round', title: t('Create'), 'aria-label': t('Create'), onclick: createMenu }, icon('plus'))) : followBtn),
         h('div', { class: 'ig-row' },
           stats ? h('div', { class: 'ig-stats' }, [[stats.posts, t('works'), null], [stats.followers, t('followers'), 'followers'], [stats.bravos, t('likes'), 'likes']].map(([n, s2, w]) => h(w ? 'button' : 'span', { type: w ? 'button' : null, class: w ? 'stat-btn' : null, onclick: w ? () => peopleList(p, w) : null }, h('b', {}, String(n)), ' ', s2))) : null,
           h('div', { class: 'chips' }, (p.kinds || []).map(kindChip), p.minor ? h('span', { class: 'chip', style: { '--c': '#e0a33a' } }, h('i'), t('Under 18 · with a parent')) : null),
@@ -2217,6 +2209,17 @@ async function viewPerson(id) {
 }
 // a profile on a phone, as Instagram's (Alex, 5 Nov): the picture with the numbers beside it, the name, the lines about them,
 // then two equal buttons (mine: Edit profile and Settings; someone else's: Follow and Contact); no cover there
+// Personal public / private, left of Edit profile (Alex, 5 Nov)
+function personalLock(p, cls = 'btn sm') {
+  const priv = !!p.data?.personal_private;
+  return h('button', { type: 'button', class: cls + ' p-lock' + (priv ? ' on' : ''), title: priv ? t('Only you see Personal. Tap to show it to everyone.') : t('Everyone sees Personal. Tap to keep it to yourself.'), onclick: async () => {
+    const data = { ...(p.data || {}), personal_private: !priv };
+    const { error } = await sb.from('roardino_people').update({ data }).eq('id', p.id);
+    if (error) return fail(error);
+    p.data = data; const m0 = mine.find((x) => x.id === p.id); if (m0) m0.data = data;
+    toast(!priv ? t('Personal is private now') : t('Personal is public now')); route();
+  } }, icon(priv ? 'lock' : 'unlock'), h('span', { class: 'lbl' }, priv ? t('Private') : t('Public')));
+}
 function phoneHead(p, { own, stats, theirStories, photos, followBtn, contactList, a, L }) {
   const pic = photos[0] || p.avatar;
   const pick = own ? h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, onchange: async (e) => { const f0 = e.target.files[0]; e.target.value = ''; const f = f0 && (/^video/.test(f0.type) ? f0 : await cropImage(f0, SHAPES.story)); const ed = f && await storyEditor(f); if (ed) await addStory(ed.file, ed.overlays); } }) : null;
@@ -2245,7 +2248,7 @@ function phoneHead(p, { own, stats, theirStories, photos, followBtn, contactList
     (p.kinds || []).length || p.minor ? h('div', { class: 'chips' }, (p.kinds || []).map(kindChip), p.minor ? h('span', { class: 'chip', style: { '--c': '#e0a33a' } }, h('i'), t('Under 18 · with a parent')) : null) : null,
     h('p', { class: 'igm-meta' }, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} years', { n: a }) : '', L.height ? `${L.height} cm` : ''].filter(Boolean).join(' · ')),
     site ? h('a', { class: 'igm-link', href: /^https?:/.test(site) ? site : `https://${site}`, target: '_blank', rel: 'noopener' }, h('span', { html: ICON.link }), site.replace(/^https?:\/\//, '').replace(/\/$/, '')) : null,
-    h('div', { class: 'igm-btns' }, first, second));
+    h('div', { class: 'igm-btns' }, own ? personalLock(p, 'btn igm-btn igm-lock') : null, first, second));
 }
 
 // the profile's posts as Instagram's grid; its owner can put them in any order
