@@ -910,10 +910,11 @@ function composer(done, kind0 = 'work', asId = null) {
   const draw = () => put(prev, ...files.map((f, i) => h('div', { class: 'thumb', style: /^image/.test(f.type) ? { backgroundImage: `url("${URL.createObjectURL(f)}")` } : {} },
     /^video/.test(f.type) ? h('span', { class: 'star' }, t('Video')) : null,
     h('button', { type: 'button', class: 'x', html: ICON.x, 'aria-label': t('Remove'), onclick: () => { files.splice(i, 1); draw(); } }))));
-  const btn = h('button', { type: 'button', class: 'btn main', onclick: send }, t('Post'));
+  const postFace = () => [icon('send'), h('span', { class: 'lbl' }, t('Post'))];
+  const btn = h('button', { type: 'button', class: 'btn main c-post', title: t('Post'), 'aria-label': t('Post'), onclick: send }, ...postFace());
   async function send() {
     if (!text.value.trim() && !files.length) return toast(t('Write something or add a photo.'));
-    btn.disabled = true; btn.textContent = t('Uploading…');
+    btn.disabled = true; btn.classList.add('busy'); btn.textContent = t('Uploading…');
     try {
       const media = [];
       for (const f of files) media.push({ path: await upload(as, f, 'posts/'), type: /^video/.test(f.type) ? 'video' : 'image' });
@@ -921,13 +922,13 @@ function composer(done, kind0 = 'work', asId = null) {
       if (error) throw error;
       toast(t('Posted'));
       done();
-    } catch (e) { fail(e); btn.disabled = false; btn.textContent = t('Post'); }
+    } catch (e) { fail(e); btn.disabled = false; btn.classList.remove('busy'); put(btn, ...postFace()); }
   }
   return h('div', { class: 'compose' },
     h('div', { class: 'c-top' }, avatar(me()), withMentions(text)),
     prev,
     h('div', { class: 'acts' },
-      h('button', { type: 'button', class: 'btn sm', onclick: () => pick.click() }, icon('pic'), t('Photo / video')), pick, kindBox,
+      h('button', { type: 'button', class: 'btn sm c-pic', title: t('Photo / video'), 'aria-label': t('Photo / video'), onclick: () => pick.click() }, icon('pic'), h('span', { class: 'lbl' }, t('Photo / video'))), pick, kindBox,
       mine.length > 1 ? select(mine.map((m) => [m.id, t('as {name}', { name: m.name })]), as, { style: { width: 'auto', height: '34px', padding: '0 14px' }, onchange: (e) => { as = e.target.value; } }) : null,
       h('span', { style: { flex: 1 } }), btn));
 }
