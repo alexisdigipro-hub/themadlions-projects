@@ -1120,3 +1120,13 @@ html,body{overflow-x:clip;overscroll-behavior-x:none}
 .ptr.spin{transition:transform .25s var(--spring),opacity .2s}
 .ptr.spin .ptr-spin{animation:up-spin .7s linear infinite;border-color:rgba(var(--a),.25);border-top-color:var(--a-solid)}
 html[data-theme=dark] .ptr{background:rgba(40,40,46,.95)}
+/* the line of Everyone / Following, Stories and New post: lower, with smaller letters (Alex, 5 Nov) */
+.feed-head .seg{padding:3px}
+.feed-head .seg button{padding:6px 13px;font-size:11px;letter-spacing:.08em}
+.feed-head .btn{height:34px;font-size:11px;padding:0 14px;border-radius:11px}
+.feed-head .btn svg{width:15px;height:15px}
+.feed-head .st-toggle svg{width:16px;height:16px}
+@media (max-width:820px){
+  .feed-head .st-toggle,.feed-head .new-post{width:34px;padding:0}
+  .feed-head .seg button{padding:6px 12px}
+}
