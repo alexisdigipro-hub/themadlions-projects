@@ -391,3 +391,26 @@ create policy rd_contacts_read on roardino_contacts for select to authenticated 
 drop policy if exists rd_contacts_write on roardino_contacts;
 create policy rd_contacts_write on roardino_contacts for all to authenticated using (owner = auth.uid())
   with check (owner = auth.uid() and exists (select 1 from roardino_people p where p.id = person_id and p.owner = auth.uid()));
+
+-- stories (Alex, 5 Nov: "like Instagram's"): a picture or a video for 24 hours, seen by whoever may see the profile
+create table if not exists roardino_stories (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null default now() + interval '24 hours',
+  owner uuid not null default auth.uid() references auth.users on delete cascade,
+  person_id uuid not null references roardino_people on delete cascade,
+  media jsonb not null,                       -- { path, type: 'image' | 'video' }
+  caption text check (char_length(coalesce(caption, '')) <= 300)
+);
+create index if not exists roardino_stories_live on roardino_stories (expires_at desc);
+alter table roardino_stories enable row level security;
+grant select, insert, delete on roardino_stories to authenticated;
+drop policy if exists rd_stories_read on roardino_stories;
+create policy rd_stories_read on roardino_stories for select to authenticated using (
+  (expires_at > now() and roardino_can_see(person_id::text)) or owner = auth.uid());
+drop policy if exists rd_stories_add on roardino_stories;
+create policy rd_stories_add on roardino_stories for insert to authenticated with check (
+  owner = auth.uid() and expires_at <= now() + interval '25 hours'
+  and exists (select 1 from roardino_people p where p.id = person_id and p.owner = auth.uid()));
+drop policy if exists rd_stories_delete on roardino_stories;
+create policy rd_stories_delete on roardino_stories for delete to authenticated using (owner = auth.uid() or roar_is_admin());
