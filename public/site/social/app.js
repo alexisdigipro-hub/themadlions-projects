@@ -886,7 +886,8 @@ async function viewFeed() {
   let mid = app.querySelector('main.page .mid.feed-mid');
   if (!mid) {
     const left = h('aside', { class: 'side left' }, meCard(), me() ? null : meTiles());
-    mid = h('div', { class: 'mid feed-mid' }, h('p', { class: 'wait' }, t('Loading…')));
+    // while the posts come: soft grey shapes of a post, not an empty page (Alex, 5 Nov: "the menu sits in the middle at the start")
+    mid = h('div', { class: 'mid feed-mid' }, h('div', { class: 'wait feed-skel', 'aria-label': t('Loading…') }, [0, 1].map(() => h('div', { class: 'sk-post' }, h('div', { class: 'sk-head' }, h('i', { class: 'sk-av' }), h('i', { class: 'sk-line' })), h('div', { class: 'sk-pic' })))));
     // two columns (Alex, 4 Nov): my card with the week and the calls under it on the left, the work wide on the right
     put(app, topBar('feed'), h('main', { class: 'page' }, h('div', { class: 'two' }, left, mid)), footBar(), tabBar('feed'));
     window.scrollTo(0, 0);
