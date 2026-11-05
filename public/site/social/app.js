@@ -2104,10 +2104,10 @@ function faceTile(p) {
    A profile: a portfolio
    ===================================================================================================================== */
 // what I saved, newest first, as a grid like the works
-function savedGrid() {
+function savedGrid(uid = session.user.id) {
   const box = h('div', { class: 'grid' }, h('p', { class: 'wait', style: { gridColumn: '1/-1' } }, t('Loading…')));
   (async () => {
-    const { data } = await sb.from('roardino_saves').select('created_at, post:roardino_posts(*, person:roardino_people(id,name,avatar,kinds,headline))').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(120);
+    const { data } = await sb.from('roardino_saves').select('created_at, post:roardino_posts(*, person:roardino_people(id,name,avatar,kinds,headline))').eq('user_id', uid).order('created_at', { ascending: false }).limit(120);
     const posts = (data || []).map((x) => x.post).filter(Boolean);
     await sign(posts.flatMap((g) => [(g.media || [])[0]?.path, (g.media || [])[0]?.poster, g.person?.avatar]));
     put(box, posts.length ? posts.map((g) => { const m0 = (g.media || [])[0]; return h('button', { type: 'button', class: 'cell', style: m0?.type === 'image' ? bg(m0.path) : {}, 'aria-label': t('Post'), onclick: () => openPost(g, g.person) }, m0?.type === 'video' ? cellVideo(m0) : !m0 ? h('span', { class: 'cell-text' }, (g.body || '').slice(0, 90)) : null); })
@@ -2172,7 +2172,7 @@ async function viewPerson(id) {
     // My Work, My Photos, My Bio on my own profile; Work, Photos, Bio on someone else's (Alex, 5 Nov)
     // Portfolio, Personal, Bio, Saved (Alex, 5 Nov); a Personal kept private does not show on someone else's profile
     const hidePersonal = !own && !!p.data?.personal_private;
-    put(tabRow, [['work', t('Portfolio'), 'grid'], ...(hidePersonal ? [] : [['photos', t('Personal'), 'pic']]), ['details', t('Bio'), 'user'], ...(own ? [['saved', t('Saved'), 'bookmark']] : [])].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
+    put(tabRow, [['work', t('Portfolio'), 'grid'], ...(hidePersonal ? [] : [['photos', t('Personal'), 'pic']]), ['details', t('Bio'), 'user'], ...(own || (p.data?.saved_public && !p.minor) ? [['saved', t('Saved'), 'bookmark']] : [])].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
     // on my own profile each tab adds or edits in place (Alex, 5 Nov)
     // as a round glass plus at the left of the tabs, its words only on hover (Alex, 5 Nov: "a plus on the left, the plus alone says Add work")
     const plus = (label, ic, extra) => h(extra.href ? 'a' : 'button', { type: extra.href ? null : 'button', class: 'btn main tab-plus', title: label, 'aria-label': label, ...extra }, icon(ic), h('span', { class: 'lbl' }, label));
@@ -2183,9 +2183,9 @@ async function viewPerson(id) {
     if (act) tabRow.append(act);
     // Personal can be closed to the public (its lock sits left of Edit profile); Saved is only ever mine
     const priv = !!p.data?.personal_private;
-    const note = own && tab === 'saved' ? h('p', { class: 'tab-note' }, icon('lock'), t('Only you see what you saved.'))
+    const note = own && tab === 'saved' ? h('p', { class: 'tab-note' }, icon(p.data?.saved_public ? 'unlock' : 'lock'), p.data?.saved_public ? t('Everyone sees what you saved. Change it in Edit profile, Privacy.') : t('Only you see what you saved.'))
       : own && tab === 'photos' && priv ? h('p', { class: 'tab-note' }, icon('lock'), t('Personal is private: only you see these.')) : null;
-    put(body, note, tab === 'work' ? work : tab === 'photos' ? pics : tab === 'saved' ? savedGrid() : details);
+    put(body, note, tab === 'work' ? work : tab === 'photos' ? pics : tab === 'saved' ? savedGrid(own ? session.user.id : p.owner) : details);
   };
   drawTab();
   frame(mineTab,
@@ -2196,7 +2196,7 @@ async function viewPerson(id) {
       // a tidier head (Alex, 5 Nov): the name with Edit profile and + on the right; the numbers, what they do and the city on one line
       h('div', { class: 'ig-info' },
         h('div', { class: 'ig-name' }, h('h1', {}, p.name), p.handle ? h('span', { class: 'ig-handle' }, '@' + p.handle) : null, h('span', { class: 'grow' }),
-          own ? h('div', { class: 'ig-acts' }, personalLock(p), h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')), h('button', { type: 'button', class: 'btn sm main round', title: t('Create'), 'aria-label': t('Create'), onclick: createMenu }, icon('plus'))) : followBtn),
+          own ? h('div', { class: 'ig-acts' }, h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')), h('button', { type: 'button', class: 'btn sm main round', title: t('Create'), 'aria-label': t('Create'), onclick: createMenu }, icon('plus'))) : followBtn),
         h('div', { class: 'ig-row' },
           stats ? h('div', { class: 'ig-stats' }, [[stats.posts, t('works'), null], [stats.followers, t('followers'), 'followers'], [stats.bravos, t('likes'), 'likes']].map(([n, s2, w]) => h(w ? 'button' : 'span', { type: w ? 'button' : null, class: w ? 'stat-btn' : null, onclick: w ? () => peopleList(p, w) : null }, h('b', {}, String(n)), ' ', s2))) : null,
           h('div', { class: 'chips' }, (p.kinds || []).map(kindChip), p.minor ? h('span', { class: 'chip', style: { '--c': '#e0a33a' } }, h('i'), t('Under 18 · with a parent')) : null),
@@ -2248,7 +2248,7 @@ function phoneHead(p, { own, stats, theirStories, photos, followBtn, contactList
     (p.kinds || []).length || p.minor ? h('div', { class: 'chips' }, (p.kinds || []).map(kindChip), p.minor ? h('span', { class: 'chip', style: { '--c': '#e0a33a' } }, h('i'), t('Under 18 · with a parent')) : null) : null,
     h('p', { class: 'igm-meta' }, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} years', { n: a }) : '', L.height ? `${L.height} cm` : ''].filter(Boolean).join(' · ')),
     site ? h('a', { class: 'igm-link', href: /^https?:/.test(site) ? site : `https://${site}`, target: '_blank', rel: 'noopener' }, h('span', { html: ICON.link }), site.replace(/^https?:\/\//, '').replace(/\/$/, '')) : null,
-    h('div', { class: 'igm-btns' }, own ? personalLock(p, 'btn igm-btn igm-lock') : null, first, second));
+    h('div', { class: 'igm-btns' }, first, second));
 }
 
 // the profile's posts as Instagram's grid; its owner can put them in any order
@@ -2351,6 +2351,13 @@ async function viewEdit(which) {
   const bind = (obj, key, el) => { el.addEventListener('input', () => { obj[key] = el.value; }); return el; };
   const isMinor = () => { const a = age(p.birth); return kid || (a != null && a < 18); };
   const sec = (title, ...kids) => h('section', { class: 'sec' }, h('h2', {}, title), ...kids);
+  // the profile's settings in clear groups (Alex, 5 Nov: "privacy of Personal and Saved inside Edit profile, nicely
+  // grouped"): each group has an id for the jump row on top; a setting is a row with a switch
+  const group = (id, title, sub, ...kids) => h('section', { class: 'sec', id: 'ed-' + id }, h('h2', {}, title), sub ? h('p', { class: 'hint sec-sub' }, sub) : null, ...kids);
+  const toggleRow = (ic, title, sub, on, set) => {
+    const box = h('input', { type: 'checkbox', class: 'switch', checked: !!on, onchange: (e) => set(e.target.checked) }); // the same switch as Settings
+    return h('label', { class: 'set-row' }, h('span', { class: 'set-ic', html: ICON[ic] }), h('span', { class: 'set-txt' }, h('b', {}, title), sub ? h('small', {}, sub) : null), box);
+  };
   const guard = h('div');
   const looks = h('div');
   const kindsBox = h('div', { class: 'pills' });
@@ -2475,9 +2482,13 @@ async function viewEdit(which) {
   }
 
   drawKinds(); drawGuard(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); drawThumbs();
+  // a row on top that jumps to each group
+  const jumpRow = old ? h('nav', { class: 'ed-jump' }, [['who', t('Profile')], ['media', t('Photos')], ['work', t('Experience')], ['contact', t('Contact')], ['privacy', t('Privacy')]].map(([k, l]) =>
+    h('button', { type: 'button', class: 'btn sm', onclick: () => document.getElementById('ed-' + k)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }, l))) : null;
   frame('me', h('div', { class: 'form' },
     h('div', { class: 'head' }, h('h1', {}, old ? t('Your profile') : kid ? t('My child\'s profile') : t('New profile'))),
-    sec(kid ? t('The child') : t('Who you are'),
+    jumpRow,
+    group('who', kid ? t('The child') : t('Who you are'), null,
       h('div', { class: 'row' }, field(kid ? t('Child\'s full name') : t('Full name or stage name'), bind(p, 'name', input(p.name, { oninput: () => setTimeout(followName) }))), field(t('City'), bind(p, 'city', input(p.city, { placeholder: t('e.g. Athens') })))),
       h('div', { class: 'row' },
         field(t('Date of birth'), input(p.birth, { type: 'date', oninput: (e) => { p.birth = e.target.value; drawGuard(); } }), kid ? null : t('Not shown; only the age shows, and only for people in front of the camera.')),
@@ -2486,7 +2497,7 @@ async function viewEdit(which) {
       field(t('One line about you'), bind(p, 'headline', input(p.headline, { maxlength: 120, placeholder: t('e.g. Stage and screen actor, dances contemporary') }))),
       field(t('What you do'), kindsBox, t('Pick all that apply.'))),
     guard,
-    sec(t('Photos and video'),
+    group('media', t('Photos and video'), null,
       picHint, thumbs, pickPics,
       field(t('Cover picture'), h('div', { class: 'acts', style: { marginTop: 0 } },
         h('button', { type: 'button', class: 'btn sm', onclick: () => $('#coverIn').click() }, icon('pic'), d.cover ? t('Change cover') : t('Upload cover')), coverName,
@@ -2499,21 +2510,24 @@ async function viewEdit(which) {
         field(t('or a link (YouTube, Vimeo)'), bind(p, 'reel_url', input(p.reel_url, { type: 'url', placeholder: 'https://' }))))),
     looks,
     tools,
-    sec(t('Experience'),
+    group('work', t('Experience'), null,
       field(t('About you'), bind(p, 'bio', area(p.bio, { rows: 4 }))),
       field(t('Credits'), credits),
       h('div', { class: 'row' }, field(t('Studies'), bind(d, 'studies', input(d.studies, { placeholder: t('film school, drama, dance…') }))), field(t('Agent'), bind(d, 'agent', input(d.agent, { placeholder: t('if you have one') })))),
       field(t('CV (PDF)'), h('div', { class: 'acts', style: { marginTop: 0 } },
         h('button', { type: 'button', class: 'btn sm', onclick: () => $('#cvIn').click() }, p.cv ? t('Change PDF') : t('Upload PDF')), cvName,
         h('input', { id: 'cvIn', type: 'file', accept: 'application/pdf', hidden: true, onchange: (e) => { cvFile = e.target.files[0] || null; cvName.textContent = cvFile ? cvFile.name : ''; } })))),
-    sec(t('Contact and limits'),
+    group('contact', t('Contact and limits'), null,
       isMinor() ? h('p', { class: 'hint' }, t('For a minor, contact goes only through the parent.')) : h('div', {},
         h('div', { class: 'row' }, field(t('Email'), bind(ct, 'email', input(ct.email, { type: 'email' }))), field(t('Phone'), bind(ct, 'phone', input(ct.phone, { type: 'tel' })))),
         h('div', { class: 'row', style: { marginTop: '10px' } }, field(t('Website'), bind(C, 'site', input(C.site, { placeholder: 'www…' })))),
         h('label', { class: 'check', style: { marginTop: '10px' } }, h('input', { type: 'checkbox', checked: ct.show, onchange: (e) => { ct.show = e.target.checked; } }), h('span', {}, t('Show my email and phone on my profile. Otherwise only whoever runs a call you apply to sees them.')))),
       limits),
-    sec(t('Settings'),
-      h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: p.visible !== false, onchange: (e) => { p.visible = e.target.checked; } }), h('span', {}, t('My profile shows in People.'))),
+    group('privacy', t('Privacy'), t('Who sees what on your profile.'),
+      toggleRow('user', t('Show me in Cast & Crew'), t('Your profile can be found in Industry and Search.'), p.visible !== false, (v) => { p.visible = v; }),
+      toggleRow('pic', t('Personal is public'), t('Off: only you see your Personal posts, anywhere on Roardino.'), !d.personal_private, (v) => { d.personal_private = !v; }),
+      isMinor() ? null : toggleRow('bookmark', t('Saved is public'), t('On: a Saved tab on your profile shows what you saved.'), !!d.saved_public, (v) => { d.saved_public = v; })),
+    sec(t('Agreement'),
       h('label', { class: 'check' }, consentBox, h('span', {}, t('I agree that these details are kept on Roardino and seen by its members as set above. I can delete them all whenever I want.')))),
     h('div', { class: 'form-foot' }, old ? h('button', { type: 'button', class: 'btn red', onclick: remove }, t('Delete profile')) : null, msg, h('span', { class: 'grow' }),
       h('a', { class: 'btn', href: old ? `#/p/${id}` : '#/feed' }, t('Cancel')), saveBtn)));
