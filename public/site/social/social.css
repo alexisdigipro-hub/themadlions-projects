@@ -1297,3 +1297,39 @@ html.kb-open .veil .win{max-height:calc(var(--vvh,100dvh) - 20px)}
   .post.ig.has-media.open > .ig-time{padding-bottom:4px}
   .post.ig.has-media .ig-media{cursor:pointer}
 }
+/* ---------- the reveal on a phone, with motion (Alex, 5 Nov): the picture dims and leans in, the strips spring in, what is on
+   them follows one after another, and the caption and comments unfold under the picture ---------- */
+@media (max-width:820px){
+  .post.ig.has-media .ig-media>*{transition:transform .6s cubic-bezier(.2,.8,.2,1),filter .45s}
+  .post.ig.has-media.open .ig-media>*{transform:scale(1.035);filter:brightness(.88) saturate(1.05)}
+  .post.ig.has-media .mwrap{overflow:hidden}
+  .post.ig.has-media .mwrap .post-head,.post.ig.has-media .mwrap .ig-bar{transition:transform .55s cubic-bezier(.18,1.25,.4,1),opacity .3s ease}
+  /* what is on the strips, one after another */
+  .post.ig.has-media .mwrap .post-head>*,.post.ig.has-media .mwrap .ig-bar>*{opacity:0;transition:opacity .25s ease,transform .45s cubic-bezier(.18,1.35,.4,1)}
+  .post.ig.has-media .mwrap .post-head>*{transform:translateX(-14px)}
+  .post.ig.has-media .mwrap .ig-bar>*{transform:translateY(14px) scale(.7)}
+  .post.ig.has-media.open .mwrap .post-head>*,.post.ig.has-media.open .mwrap .ig-bar>*{opacity:1;transform:none}
+  .post.ig.has-media.open .mwrap .post-head>:nth-child(1){transition-delay:.08s}
+  .post.ig.has-media.open .mwrap .post-head>:nth-child(2){transition-delay:.13s}
+  .post.ig.has-media.open .mwrap .post-head>:nth-child(3){transition-delay:.18s}
+  .post.ig.has-media.open .mwrap .post-head>:nth-child(4){transition-delay:.23s}
+  .post.ig.has-media.open .mwrap .ig-bar>:nth-child(1){transition-delay:.12s}
+  .post.ig.has-media.open .mwrap .ig-bar>:nth-child(2){transition-delay:.17s}
+  .post.ig.has-media.open .mwrap .ig-bar>:nth-child(3){transition-delay:.22s}
+  .post.ig.has-media.open .mwrap .ig-bar>:nth-child(4){transition-delay:.25s}
+  .post.ig.has-media.open .mwrap .ig-bar>:nth-child(5){transition-delay:.28s}
+  .post.ig.has-media.open .mwrap .ig-bar>:nth-child(6){transition-delay:.32s}
+  /* the dots step up with the bar */
+  .post.ig.has-media .ig-dots{transition:bottom .5s cubic-bezier(.18,1.25,.4,1)}
+  /* under the picture: the caption, the time and the comments unfold */
+  .post.ig.has-media.open > .ig-cap,.post.ig.has-media.open > .ig-time,.post.ig.has-media.open > .talk:not(.hidden){animation:rd-unfold .5s cubic-bezier(.2,.9,.3,1) both}
+  .post.ig.has-media.open > .ig-time{animation-delay:.06s}
+  .post.ig.has-media.open > .talk:not(.hidden){animation-delay:.1s}
+  .post.ig.has-media.open > .talk .cmt{animation:rd-rise .45s cubic-bezier(.2,.9,.3,1) both}
+  .post.ig.has-media.open > .talk .cmt:nth-child(2){animation-delay:.16s}
+  .post.ig.has-media.open > .talk .cmt:nth-child(3){animation-delay:.22s}
+  .post.ig.has-media.open > .talk .cmt:nth-child(n+4){animation-delay:.28s}
+}
+@keyframes rd-unfold{from{opacity:0;transform:translateY(-10px);clip-path:inset(0 0 100% 0)}to{opacity:1;transform:none;clip-path:inset(0 0 0 0)}}
+@keyframes rd-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.post.ig.has-media *{transition:none!important;animation:none!important}}
