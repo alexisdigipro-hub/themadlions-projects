@@ -214,7 +214,7 @@ async function loadMine() {
   mine = data || [];
   const f = await sb.from('roardino_follows').select('person_id').eq('user_id', session.user.id);
   follows = new Set((f.data || []).map((x) => x.person_id));
-  await sign(mine.map((p) => p.avatar));
+  await sign(mine.flatMap((p) => [p.avatar, p.data?.cover]));
 }
 
 /* ---------- the window ---------- */
@@ -499,11 +499,36 @@ function meCard() {
     if (st) { stats.children[0].firstChild.textContent = String(st.followers); stats.children[2].firstChild.textContent = String(st.posts); }
   })();
   return [h('section', { class: 'card me-card small' },
-    h('div', { class: 'me-cover' }),
+    coverOf(m, true),
     h('a', { class: 'me-top', href: `#/p/${m.id}` }, avatar(m, 'lg'), h('div', {}, h('b', {}, m.name), h('small', {}, m.headline || (m.kinds || []).map(kindName).slice(0, 2).join(' · ')))),
     stats,
     h('div', { class: 'me-in', style: { marginTop: '16px' } },
       h('a', { class: 'btn main', href: `#/p/${m.id}` }, icon('user'), t('View my profile')))), meTiles()];
+}
+// the cover over a profile (Alex, 5 Nov: "can I put something of my own?"): a picture of the person's choosing, else
+// the standard lines; on my own card a camera button changes it there and then
+function coverOf(p, editable = false) {
+  const cov = p?.data?.cover;
+  const box = h('div', { class: 'me-cover' + (cov && urlOf(cov) ? ' pic' : ''), style: cov ? bg(cov) : {} });
+  if (editable && p) {
+    const pick = h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) await setCover(p, f); } });
+    box.append(pick, h('button', { type: 'button', class: 'cov-btn', title: t('Change the cover'), 'aria-label': t('Change the cover'), html: ICON.cam, onclick: (e) => { e.preventDefault(); e.stopPropagation(); pick.click(); } }));
+  }
+  return box;
+}
+async function setCover(p, file) {
+  try {
+    toast(t('Uploading…'));
+    const path = file ? await upload(p.id, file, 'cover/') : null;
+    const old = p.data?.cover;
+    const data = { ...(p.data || {}), cover: path };
+    const { error } = await sb.from('roardino_people').update({ data }).eq('id', p.id);
+    if (error) throw error;
+    if (old && !/^https?:/.test(old)) removeFiles([old]);
+    await loadMine();
+    toast(path ? t('Cover changed') : t('Cover removed'));
+    route();
+  } catch (e) { fail(e); }
 }
 // my things as small glass tiles under my card (Alex, 5 Nov: the name menu and light / dark move here from the top bar)
 function meTiles() {
@@ -929,7 +954,7 @@ async function viewPerson(id) {
     sb.from('roardino_posts').select('*').eq('person_id', id).order('pos', { ascending: true, nullsFirst: false }).order('created_at', { ascending: false }).limit(120),
     sb.from('roardino_contacts').select('email,phone').eq('person_id', id).maybeSingle(),
     loadStories(id)]);
-  await sign([p.avatar, ...photos, p.reel, p.cv, ...(grid || []).flatMap((g) => (g.media || []).slice(0, 1).map((m) => m.path))]);
+  await sign([p.avatar, p.data?.cover, ...photos, p.reel, p.cv, ...(grid || []).flatMap((g) => (g.media || []).slice(0, 1).map((m) => m.path))]);
   const d = p.data || {};
   const L = d.looks || {}, S = d.skills || {}, C = d.contact || {};
   const a = age(p.birth);
@@ -978,7 +1003,8 @@ async function viewPerson(id) {
   };
   drawTab();
   frame(mineTab,
-    h('section', { class: 'ig-head' },
+    (p.data?.cover || own) ? h('div', { class: 'ig-cover' }, coverOf(p, own)) : null,
+    h('section', { class: 'ig-head' + (p.data?.cover || own ? ' under-cover' : '') },
       h('div', { class: 'ig-av' + (theirStories.length ? ' has' : ''), role: theirStories.length ? 'button' : null, title: theirStories.length ? t('Stories') : null, onclick: theirStories.length ? () => openStories(theirStories, 0) : null },
         h('span', { class: 'r big' + (theirStories.length ? '' : ' plain') }, h('i', { style: bg(photos[0] || p.avatar) }, urlOf(photos[0] || p.avatar) ? '' : initials(p.name)))),
       h('div', { class: 'ig-info' },
@@ -1008,7 +1034,7 @@ function gridBlock(p, rows, own) {
   }
   function draw() {
     box.classList.toggle('editing', editing);
-    if (!rows.length) { put(box, h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, own ? t('Post your first work from the Feed.') : t('No work posted yet.'))); return; }
+    if (!rows.length) { put(box, h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, own ? t('Add your first work.') : t('No work posted yet.'))); return; }
     put(box, ...rows.map((r, i) => {
       const m = (r.media || [])[0];
       return h(editing ? 'div' : 'button', { type: editing ? null : 'button', class: 'cell', draggable: editing ? 'true' : null, style: m && m.type === 'image' ? bg(m.path) : {},
@@ -1065,7 +1091,7 @@ async function viewEdit(which) {
   delete d.contact.email; delete d.contact.phone; delete d.contact.show; // they live in roardino_contacts
   // pictures in their order, the first the main one: { path } already uploaded or { file } picked now (uploaded on Save)
   const pics = (p.photos || []).map((x) => ({ path: x.path }));
-  let reelFile = null, cvFile = null;
+  let reelFile = null, cvFile = null, coverFile = null, coverGone = false;
   await sign(pics.map((x) => x.path));
 
   const bind = (obj, key, el) => { el.addEventListener('input', () => { obj[key] = el.value; }); return el; };
@@ -1131,6 +1157,7 @@ async function viewEdit(which) {
   };
   const reelName = h('span', { class: 'hint' }, p.reel ? t('A self-tape is up.') : '');
   const cvName = h('span', { class: 'hint' }, p.cv ? t('A CV is up.') : '');
+  const coverName = h('span', { class: 'hint' }, d.cover ? t('A cover is up.') : '');
   const credits = area((d.credits || []).join('\n'), { rows: 4, placeholder: t('One per line, e.g.\nMusic video "X" by Y, 2026, lead\nCommercial for Z, 2025') });
   const C = d.contact;
   const consentBox = h('input', { type: 'checkbox', checked: !!p.consent_at });
@@ -1153,6 +1180,9 @@ async function viewEdit(which) {
       let n = 0;
       for (const it of pics) if (it.file) { msg.textContent = t('Uploading photo {n} of {all}…', { n: ++n, all: todo }); it.path = await upload(id, it.file, 'pics/'); delete it.file; }
       const allPics = pics.map((x) => ({ path: x.path }));
+      const oldCover = d.cover;
+      if (coverFile) { msg.textContent = t('Uploading cover…'); d.cover = await upload(id, coverFile, 'cover/'); } else if (coverGone) d.cover = null;
+      if (oldCover && oldCover !== d.cover && !/^https?:/.test(oldCover)) removeFiles([oldCover]);
       let reel = p.reel, cv = p.cv;
       if (reelFile) { msg.textContent = t('Uploading video…'); reel = await upload(id, reelFile, 'tape/'); }
       if (cvFile) cv = await upload(id, cvFile, 'cv/');
@@ -1200,6 +1230,10 @@ async function viewEdit(which) {
     guard,
     sec(t('Photos and video'),
       picHint, thumbs, pickPics,
+      field(t('Cover picture'), h('div', { class: 'acts', style: { marginTop: 0 } },
+        h('button', { type: 'button', class: 'btn sm', onclick: () => $('#coverIn').click() }, icon('pic'), d.cover ? t('Change cover') : t('Upload cover')), coverName,
+        d.cover ? h('button', { type: 'button', class: 'btn sm red', onclick: (e) => { coverGone = true; coverFile = null; coverName.textContent = t('The cover goes on Save.'); e.currentTarget.remove(); } }, t('Remove')) : null,
+        h('input', { id: 'coverIn', type: 'file', accept: 'image/*', hidden: true, onchange: (e) => { coverFile = e.target.files[0] || null; coverGone = false; coverName.textContent = coverFile ? coverFile.name : ''; } })), t('The wide picture over your card and your profile.')),
       h('div', { class: 'row' },
         field(t('Self-tape or showreel (video up to 200 MB)'), h('div', { class: 'acts', style: { marginTop: 0 } },
           h('button', { type: 'button', class: 'btn sm', onclick: () => $('#reelIn').click() }, p.reel ? t('Change video') : t('Upload video')), reelName,

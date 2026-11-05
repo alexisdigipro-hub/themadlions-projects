@@ -771,3 +771,16 @@ html[data-theme=dark] .note:hover{background:rgba(255,255,255,.05)}
 .st-hide svg{width:17px;height:17px}
 .st-hide:hover{opacity:1;background:rgba(28,35,51,.06)}
 html[data-theme=dark] .st-hide:hover{background:rgba(255,255,255,.06)}
+
+/* the cover: a picture of my choosing (Alex, 5 Nov), or the standard lines */
+.me-cover{background-size:cover;background-position:center}
+.me-cover.pic::after{display:none}
+.cov-btn{position:absolute;right:8px;bottom:8px;z-index:2;width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.35);color:#fff;display:grid;place-items:center;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);opacity:.85;transition:transform .25s var(--spring),opacity .2s}
+.cov-btn svg{width:17px;height:17px}
+.cov-btn:hover{opacity:1;transform:scale(1.08)}
+.ig-cover .me-cover{height:clamp(140px,22vw,260px);border-radius:18px}
+.ig-head.under-cover{align-items:start;padding-top:0}
+.ig-head.under-cover .ig-av{margin-top:-64px;position:relative;z-index:1}
+.ig-head.under-cover .ig-info{padding-top:16px}
+.ig-head.under-cover .ig-av .r i{border-color:var(--bg1)}
+@media (max-width:860px){ .ig-cover .me-cover{height:140px;border-radius:14px} .ig-head.under-cover .ig-av{margin-top:-46px} }
