@@ -1553,12 +1553,16 @@ html[data-theme=dark] .linkish{background:rgba(255,255,255,.05);border-color:rgb
 .vid-note-bar i{display:block;height:100%;width:0;border-radius:inherit;background:var(--accent);transition:width .25s linear}
 html[data-theme=dark] .vid-note{background:rgba(30,30,34,.9);border-color:rgba(255,255,255,.12)}
 html[data-theme=dark] .vid-note b{color:#eee}
-/* a phone again (Alex, 5 Nov, still "A problem repeatedly occurred"): the page and every picture came in out of a blur;
-   a blur on the whole tall feed makes an iPhone hold a huge picture of it in memory, and Safari gives up. On a phone
-   things come in with fade and slide only, no blur; a computer keeps the blur */
-@keyframes r-page-in-m{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-@keyframes r-pic-in-m{from{opacity:0}to{opacity:1}}
+/* a phone again (Alex, 5 Nov, still "A problem repeatedly occurred", only on Home): on a phone nothing enters with an
+   animation any more (the page, the lists, the pictures), so no tall layer has to be painted twice; a computer keeps
+   the motion. A post with one picture is not a sideways scroller (each scroller is a layer of its own on an iPhone) */
 @media (max-width:820px){
-  .page>*,.front>*,.why{animation-name:r-page-in-m!important}
-  .ig-media img,.post-media img,.face .pic,.cell,.main-pic,.me-top .av,.ig-av .r i,.st-stage img{animation-name:r-pic-in-m!important}
+  .page>*,.front>*,.why,
+  :is(.faces,.tiles,.mid,.grid,.ring-row,.facts,.credits,.side,.form,.who,.list-mini,.up,.pills,.thumbs)>*,
+  .ig-media img,.post-media img,.face .pic,.cell,.main-pic,.me-top .av,.ig-av .r i,.st-stage img{animation:none!important}
 }
+.ig-media:not(.many){overflow:hidden}
+.feed-more{height:1px}
+.safe-card{padding:14px 16px;margin-bottom:12px}
+.safe-card b{display:block;font-size:14px;margin-bottom:4px}
+.safe-card pre{margin:8px 0 0;font:11.5px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;color:var(--muted)}
