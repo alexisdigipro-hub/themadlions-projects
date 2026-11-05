@@ -26,7 +26,11 @@ const LOCALE = () => (LANG === 'el' ? 'el-GR' : 'en-GB');
 
 /* ---------- settings kept on this device (Alex, 5 Nov) ---------- */
 const PREFS_KEY = 'roardino-prefs';
-const PREF_DEFAULTS = { theme: 'auto', text: 'normal', feedCalls: true, mutedVideos: true, showStories: true };
+const PREF_DEFAULTS = { theme: 'auto', text: 'normal', feedCalls: true, mutedVideos: true, showStories: true, accent: 'red' };
+// the accent colours (Alex, 5 Nov: "10 nice colours with the same gradient"); their light and dark shades live in social.css
+const ACCENTS = [['red', 'Red', '#e2766d,#d40000 55%,#8f0000'], ['orange', 'Orange', '#f0a070,#e05a00 55%,#9a3a00'], ['gold', 'Gold', '#d9b45a,#b88400 55%,#7a5500'],
+  ['emerald', 'Emerald', '#6fcf97,#0f9d58 55%,#06623a'], ['teal', 'Teal', '#6cd4d0,#00a3a3 55%,#006466'], ['ocean', 'Ocean', '#7fb2f0,#1a6fe0 55%,#0b3f8f'],
+  ['indigo', 'Indigo', '#9a9cf0,#4b4fd9 55%,#2a2c8f'], ['violet', 'Violet', '#c18cf0,#8a2be2 55%,#541a8f'], ['pink', 'Pink', '#f08cc4,#e0157a 55%,#8f0a4c'], ['steel', 'Steel', '#7d8fb0,#4a6390 55%,#2b3a5c']];
 let prefs = { ...PREF_DEFAULTS };
 try { prefs = { ...PREF_DEFAULTS, ...JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }; } catch { /* private window */ }
 const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -35,6 +39,7 @@ function wearPrefs() {
   const dark = prefs.theme === 'dark' || (prefs.theme === 'auto' && darkQuery.matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   document.documentElement.dataset.text = prefs.text;
+  if (ACCENTS.some(([k]) => k === prefs.accent) && prefs.accent !== 'red') document.documentElement.dataset.accent = prefs.accent; else delete document.documentElement.dataset.accent;
   document.querySelector('meta[name=theme-color]')?.setAttribute('content', dark ? '#15171b' : '#eceef1');
 }
 function setPref(k, v) { prefs[k] = v; try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* full */ } wearPrefs(); }
@@ -132,6 +137,8 @@ const ICON = {
   bell: SVG('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>'),
   eyeoff: SVG('<path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.3 4.2M6.2 6.2A17.4 17.4 0 0 0 2 12s4 7 10 7a9.7 9.7 0 0 0 4.3-1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>'),
   rings: SVG('<circle cx="12" cy="12" r="9" stroke-dasharray="4 2.2"/><circle cx="12" cy="12" r="4.5"/>'),
+  zoomin: SVG('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M11 8v6M8 11h6"/>'),
+  zoomout: SVG('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M8 11h6"/>'),
   child: SVG('<circle cx="12" cy="7" r="3"/><path d="M7 21v-5a5 5 0 0 1 10 0v5"/>'),
 };
 const icon = (n) => h('span', { html: ICON[n], style: { display: 'inline-flex' } });
@@ -191,6 +198,81 @@ async function shrink(file) {
     return blob ? new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file;
   } catch { return file; }
 }
+/* the picture editor (Alex, 5 Nov: "every photo needs scale, resize, zoom"): before a picture goes up it opens in a
+   glass window with the frame it will have; drag to move it, zoom with the slider, the wheel or two fingers, pick a
+   shape where there is a choice; Use photo gives back the framed picture, Cancel nothing */
+const SHAPES = {
+  post: [['4:5', 4 / 5], ['1:1', 1], ['16:9', 16 / 9], ['Original', 0]],
+  portrait: [['3:4', 3 / 4]],
+  cover: [['3:1', 3]],
+  story: [['9:16', 9 / 16]],
+};
+function cropImage(file, shapes = SHAPES.post) {
+  return new Promise((done) => {
+    if (!/^image\//.test(file.type) || /gif/.test(file.type)) return done(file);
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onerror = () => done(file); // a format this browser cannot draw (HEIC outside Safari): it goes as it is
+    img.onload = () => {
+      const W = img.naturalWidth, H = img.naturalHeight;
+      let shape = shapes[0], ratio = shape[1] || W / H;
+      let scale = 1, min = 1, x = 0, y = 0; // the picture's scale and its top-left inside the frame, in frame pixels
+      const pic = h('img', { src: url, alt: '', draggable: false });
+      const frameBox = h('div', { class: 'crop-frame' }, pic, h('span', { class: 'crop-grid' }));
+      const zoom = h('input', { type: 'range', class: 'crop-zoom', min: '1', max: '4', step: '0.01', value: '1', 'aria-label': t('Zoom') });
+      const fw = () => frameBox.clientWidth, fh = () => frameBox.clientHeight;
+      const clamp = () => { const w = W * scale, hh = H * scale; x = Math.min(0, Math.max(fw() - w, x)); y = Math.min(0, Math.max(fh() - hh, y)); };
+      const draw = () => { clamp(); pic.style.width = `${W * scale}px`; pic.style.height = `${H * scale}px`; pic.style.transform = `translate(${x}px, ${y}px)`; };
+      const fit = () => {
+        const maxW = Math.min(560, window.innerWidth - 80), maxH = Math.min(window.innerHeight * 0.55, 560);
+        let w = maxW, hh = w / ratio; if (hh > maxH) { hh = maxH; w = hh * ratio; }
+        frameBox.style.width = `${Math.round(w)}px`; frameBox.style.height = `${Math.round(hh)}px`;
+        min = Math.max(w / W, hh / H); scale = min; zoom.value = '1';
+        x = (w - W * scale) / 2; y = (hh - H * scale) / 2; draw();
+      };
+      const zoomTo = (k, cx = fw() / 2, cy = fh() / 2) => {
+        const next = Math.max(min, Math.min(min * 4, k));
+        x = cx - (cx - x) * (next / scale); y = cy - (cy - y) * (next / scale); scale = next; zoom.value = String(scale / min); draw();
+      };
+      zoom.oninput = () => zoomTo(min * +zoom.value);
+      frameBox.addEventListener('wheel', (e) => { e.preventDefault(); const r = frameBox.getBoundingClientRect(); zoomTo(scale * (e.deltaY < 0 ? 1.08 : 1 / 1.08), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+      // drag with one pointer, pinch with two
+      const pts = new Map(); let last = null, pinch = null;
+      frameBox.addEventListener('pointerdown', (e) => { frameBox.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); last = { x: e.clientX, y: e.clientY }; if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s: scale }; } });
+      frameBox.addEventListener('pointermove', (e) => {
+        if (!pts.has(e.pointerId)) return;
+        pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (pts.size === 2 && pinch) { const [a, b] = [...pts.values()]; const r = frameBox.getBoundingClientRect(); zoomTo(pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top); return; }
+        x += e.clientX - last.x; y += e.clientY - last.y; last = { x: e.clientX, y: e.clientY }; draw();
+      });
+      const up = (e) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; const rest = [...pts.values()][0]; last = rest || null; };
+      frameBox.addEventListener('pointerup', up); frameBox.addEventListener('pointercancel', up);
+      const shapeBox = h('div');
+      const drawShapes = () => put(shapeBox, shapes.length > 1 ? seg(shapes.map(([k]) => [k, t(k)]), shape[0], (k) => { shape = shapes.find((z) => z[0] === k); ratio = shape[1] || W / H; drawShapes(); fit(); }) : null);
+      drawShapes();
+      let answered = false;
+      const close = openWin(t('Frame your picture'), h('div', { class: 'crop' }, shapeBox, h('div', { class: 'crop-stage' }, frameBox),
+        h('div', { class: 'crop-tools' }, h('span', { html: ICON.zoomout }), zoom, h('span', { html: ICON.zoomin }), h('button', { type: 'button', class: 'btn sm', onclick: fit }, t('Reset'))),
+        h('p', { class: 'hint', style: { textAlign: 'center' } }, t('Drag to move it, zoom with the slider, the wheel or two fingers.'))),
+      (c) => [h('button', { type: 'button', class: 'btn', onclick: () => { answered = true; c(); URL.revokeObjectURL(url); done(null); } }, t('Cancel')),
+        h('button', { type: 'button', class: 'btn main', onclick: () => {
+          // the part inside the frame, at up to 2000 pixels on its long side
+          const sx = -x / scale, sy = -y / scale, sw = fw() / scale, sh = fh() / scale;
+          const k = Math.min(1, 2000 / Math.max(sw, sh));
+          const c2 = document.createElement('canvas'); c2.width = Math.round(sw * k); c2.height = Math.round(sh * k);
+          c2.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, c2.width, c2.height);
+          c2.toBlob((b) => { answered = true; c(); URL.revokeObjectURL(url); done(b ? new File([b], (file.name || 'photo').replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file); }, 'image/jpeg', 0.9);
+        } }, t('Use photo'))]);
+      const veil = document.querySelector('.veil:last-of-type');
+      veil?.classList.add('cropper');
+      new MutationObserver((_, o) => { if (veil && !veil.isConnected) { o.disconnect(); if (!answered) { URL.revokeObjectURL(url); done(null); } } }).observe(document.body, { childList: true });
+      requestAnimationFrame(fit);
+    };
+    img.src = url;
+  });
+}
+// several pictures one after the other through the editor; videos and what cannot be drawn pass as they are
+async function cropAll(list, shapes) { const out = []; for (const f of list) { const c = await cropImage(f, shapes); if (c) out.push(c); } return out; }
 async function upload(personId, file, sub = '') {
   if (/^video\//.test(file.type) && file.size > MAX_VIDEO) throw new Error(t('The video is over 200 MB. Keep it to a minute or two.'));
   const f = await shrink(file);
@@ -294,7 +376,7 @@ function topBar(on) {
   const toggle = (e) => { e.stopPropagation(); fill(); menu.classList.toggle('hidden'); if (!menu.classList.contains('hidden')) setTimeout(() => document.addEventListener('click', () => menu.classList.add('hidden'), { once: true })); };
   const find = h('input', { type: 'search', placeholder: t('Search cast, crew & creatives'), 'aria-label': t('Search cast, crew & creatives'), value: on === 'people' ? peopleQ : '', onkeydown: (e) => { if (e.key === 'Enter') { peopleQ = e.target.value; if (location.hash === '#/people') viewPeople(); else location.hash = '#/people'; } } });
   return h('header', { class: 'bar' }, h('div', { class: 'bar-in' },
-    h('a', { href: '#/feed', class: 'brand', 'aria-label': 'Roardino by The Mad Lions' }, mark(), byLine()),
+    h('a', { href: '#/feed', class: 'brand', 'aria-label': 'Roardino' }, mark()),
     // the menu in words, a glass capsule with the gliding lens, as Qubi's (Alex, 5 Nov); the search takes the rest
     h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { location.hash = `#/${k}`; })),
     h('label', { class: 'find' }, icon('search'), find),
@@ -308,7 +390,6 @@ function tabBar(on) {
   return h('nav', { class: 'tabbar' }, NAV.map(([k, s, ic]) => h('a', { href: `#/${k}`, class: on === k ? 'on' : '' }, icon(ic), t(s))),
     h('a', { href: m ? `#/p/${m.id}` : '#/edit/new', class: on === 'me' ? 'on' : '' }, icon('user'), t('Me')));
 }
-const byLine = () => h('small', { class: 'by' }, 'by ', h('b', {}, 'THE ', h('strong', {}, 'MAD'), ' LIONS'));
 // the footer (Alex, 5 Nov): Roardino by THE MAD LIONS, themadlions.com and its places
 function footBar() {
   return h('footer', { class: 'foot' }, h('div', { class: 'foot-in' },
@@ -317,7 +398,7 @@ function footBar() {
     h('nav', {},
       h('a', { href: 'https://themadlions.com/', target: '_blank', rel: 'noopener' }, 'themadlions.com'),
       h('a', { href: 'https://themadlions.com/lab/', target: '_blank', rel: 'noopener' }, t('Lab')),
-      h('a', { href: 'https://themadlions.com/#contact', target: '_blank', rel: 'noopener' }, t('Contact')),
+      h('a', { href: '#/legal/contact' }, t('Contact')),
       h('a', { href: '#/legal/privacy' }, t('Privacy')),
       h('a', { href: '#/legal/terms' }, t('Terms'))),
     h('small', { class: 'foot-c' }, `© ${new Date().getFullYear()} The Mad Lions`)));
@@ -326,7 +407,7 @@ function frame(on, ...content) { put(app, topBar(on), h('main', { class: 'page' 
 
 async function route() {
   document.querySelectorAll('.veil').forEach((v) => v.remove()); // a window never outlives its page
-  if (location.hash.startsWith('#/legal')) return viewLegal(location.hash.split('/')[2] === 'terms' ? 'terms' : 'privacy');
+  if (location.hash.startsWith('#/legal')) return viewLegal(['terms', 'contact'].includes(location.hash.split('/')[2]) ? location.hash.split('/')[2] : 'privacy');
   if (!session) return viewFront();
   const [, a = 'feed', b] = (location.hash || '#/feed').split('/');
   try {
@@ -396,7 +477,7 @@ async function viewFront() {
     put(counts, ...[[data.people, t('profiles')], [data.calls, t('open calls')], [data.seminars, t('seminars')]].filter(([n]) => n > 0).map(([n, s]) => h('div', {}, h('b', {}, String(n)), h('small', {}, s))));
   });
   put(app, 
-    h('header', { class: 'bar' }, h('div', { class: 'bar-in' }, h('span', { class: 'brand' }, mark(), byLine()))),
+    h('header', { class: 'bar' }, h('div', { class: 'bar-in' }, h('span', { class: 'brand' }, mark()))),
     h('main', { class: 'front' },
       h('div', {},
         h('p', { class: 'kicker' }, t('The crew, online')),
@@ -531,7 +612,7 @@ function coverOf(p, editable = false) {
   const cov = p?.data?.cover;
   const box = h('div', { class: 'me-cover' + (cov && urlOf(cov) ? ' pic' : ''), style: cov ? bg(cov) : {} });
   if (editable && p) {
-    const pick = h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) await setCover(p, f); } });
+    const pick = h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async (e) => { const f = e.target.files[0]; e.target.value = ''; const c = f && await cropImage(f, SHAPES.cover); if (c) await setCover(p, c); } });
     box.append(pick, h('button', { type: 'button', class: 'cov-btn', title: t('Change the cover'), 'aria-label': t('Change the cover'), html: ICON.cam, onclick: (e) => { e.preventDefault(); e.stopPropagation(); pick.click(); } }));
   }
   return box;
@@ -608,7 +689,7 @@ function composer(done, kind0 = 'work', asId = null) {
   const files = [];
   const text = area('', { placeholder: t('What did you shoot, what are you preparing, what are you looking for?'), rows: 2 });
   const prev = h('div', { class: 'thumbs' });
-  const pick = h('input', { type: 'file', accept: 'image/*,video/*', multiple: true, hidden: true, onchange: (e) => { for (const f of e.target.files) if (files.length < 6) files.push(f); e.target.value = ''; draw(); } });
+  const pick = h('input', { type: 'file', accept: 'image/*,video/*', multiple: true, hidden: true, onchange: async (e) => { const list = [...e.target.files].slice(0, 6 - files.length); e.target.value = ''; for (const f of await cropAll(list, SHAPES.post)) files.push(f); draw(); } });
   const draw = () => put(prev, ...files.map((f, i) => h('div', { class: 'thumb', style: /^image/.test(f.type) ? { backgroundImage: `url("${URL.createObjectURL(f)}")` } : {} },
     /^video/.test(f.type) ? h('span', { class: 'star' }, t('Video')) : null,
     h('button', { type: 'button', class: 'x', html: ICON.x, 'aria-label': t('Remove'), onclick: () => { files.splice(i, 1); draw(); } }))));
@@ -757,7 +838,7 @@ function storiesCard(groups, others) {
   const m = me();
   const myGroup = m && groups.find((g) => g.person.id === m.id);
   const rest = groups.filter((g) => g !== myGroup);
-  const pick = h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, onchange: async (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) await addStory(f); } });
+  const pick = h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, onchange: async (e) => { const f0 = e.target.files[0]; e.target.value = ''; const f = f0 && await cropImage(f0, SHAPES.story); if (f) await addStory(f); } });
   const ringOf = (g) => (g.items.some((x) => !seenStories.has(x.id)) ? 'r' : 'r seen');
   const face = (p, cls) => h('span', { class: cls }, h('i', { style: bg(p.avatar) }, urlOf(p.avatar) ? '' : initials(p.name)));
   return h('section', { class: 'card stories' },
@@ -1168,7 +1249,7 @@ async function viewEdit(which) {
 
   // pictures: the first one is the main one and the avatar
   const thumbs = h('div', { class: 'thumbs' });
-  const pickPics = h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true, onchange: (e) => { for (const f of e.target.files) if (pics.length < 10) pics.push({ file: f, u: URL.createObjectURL(f) }); e.target.value = ''; drawThumbs(); } });
+  const pickPics = h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true, onchange: async (e) => { const list = [...e.target.files].slice(0, 10 - pics.length); e.target.value = ''; for (const f of await cropAll(list, SHAPES.portrait)) pics.push({ file: f, u: URL.createObjectURL(f) }); drawThumbs(); } });
   const drawThumbs = () => {
     put(thumbs, ...pics.map((it, i) => h('div', { class: 'thumb', style: { backgroundImage: `url("${it.u || urlOf(it.path)}")` }, title: i ? t('Make it the main one') : t('The main one'), onclick: () => { pics.splice(i, 1); pics.unshift(it); drawThumbs(); } },
       i === 0 ? h('span', { class: 'star' }, t('Main')) : null,
@@ -1253,7 +1334,7 @@ async function viewEdit(which) {
       field(t('Cover picture'), h('div', { class: 'acts', style: { marginTop: 0 } },
         h('button', { type: 'button', class: 'btn sm', onclick: () => $('#coverIn').click() }, icon('pic'), d.cover ? t('Change cover') : t('Upload cover')), coverName,
         d.cover ? h('button', { type: 'button', class: 'btn sm red', onclick: (e) => { coverGone = true; coverFile = null; coverName.textContent = t('The cover goes on Save.'); e.currentTarget.remove(); } }, t('Remove')) : null,
-        h('input', { id: 'coverIn', type: 'file', accept: 'image/*', hidden: true, onchange: (e) => { coverFile = e.target.files[0] || null; coverGone = false; coverName.textContent = coverFile ? coverFile.name : ''; } })), t('The wide picture over your card and your profile.')),
+        h('input', { id: 'coverIn', type: 'file', accept: 'image/*', hidden: true, onchange: async (e) => { const f = e.target.files[0]; e.target.value = ''; coverFile = f ? await cropImage(f, SHAPES.cover) : null; coverGone = false; coverName.textContent = coverFile ? t('A new cover, ready to save.') : ''; } })), t('The wide picture over your card and your profile.')),
       h('div', { class: 'row' },
         field(t('Self-tape or showreel (video up to 200 MB)'), h('div', { class: 'acts', style: { marginTop: 0 } },
           h('button', { type: 'button', class: 'btn sm', onclick: () => $('#reelIn').click() }, p.reel ? t('Change video') : t('Upload video')), reelName,
@@ -1545,16 +1626,41 @@ const TERMS = [
   ['Law', ['These terms follow Greek law, and the courts of Athens decide any dispute, unless the law where you live as a consumer says otherwise.']],
   ['Contact', [`The Mad Lions, Athens, Greece · ${INFO_MAIL}`]],
 ];
+const CONTACT_TOPICS = [['general', 'A question'], ['report', 'Report a profile or post'], ['child', 'A child\'s safety'], ['privacy', 'My data'], ['account', 'My account'], ['partner', 'Press and partners']];
+// Roardino's own Contact page (Alex, 5 Nov: "a page of Roardino, not of The Mad Lions"): the message goes to roardino_messages
+function contactBody() {
+  const topic = { v: 'general' }; const email = h('input', { class: 'input', type: 'email', required: true, value: session?.user?.email || '', placeholder: 'you@example.com' });
+  const name = h('input', { class: 'input', value: me()?.name || '', placeholder: t('Your name') });
+  const text = h('textarea', { class: 'textarea', rows: 6, required: true, placeholder: t('Tell us what happened, with a link to the profile or post if there is one.') });
+  const msg = h('p', { class: 'msg' }); const topics = h('div');
+  const drawTopics = () => put(topics, h('div', { class: 'pills' }, CONTACT_TOPICS.map(([k, label]) => h('button', { type: 'button', class: 'pill' + (topic.v === k ? ' on' : ''), onclick: (e) => { e.preventDefault(); topic.v = k; drawTopics(); } }, t(label)))));
+  drawTopics();
+  const form = h('form', { class: 'contact-form', onsubmit: async (e) => {
+    e.preventDefault(); const btn = form.querySelector('button[type=submit]');
+    if (!text.value.trim() || !email.value.trim()) { msg.textContent = t('Write your email and your message.'); msg.className = 'msg err'; return; }
+    btn.disabled = true;
+    const { error } = await sb.from('roardino_messages').insert({ topic: topic.v, name: name.value.trim() || null, email: email.value.trim(), body: text.value.trim(), page: document.referrer || null, user_id: session?.user?.id || null });
+    btn.disabled = false;
+    if (error) { msg.textContent = errText(error); msg.className = 'msg err'; return; }
+    put(form, h('div', { class: 'contact-done' }, h('span', { html: ICON.send }), h('h2', {}, t('Thank you, we got it')), h('p', {}, t('We answer at {e}, usually within two working days. Anything about a child\'s safety is read first.', { e: email.value.trim() }))));
+  } },
+    field(t('What is it about'), topics),
+    h('div', { class: 'duo' }, field(t('Name'), name), field(t('Email for our answer'), email)),
+    field(t('Message'), text), msg,
+    h('div', { class: 'actions' }, h('button', { type: 'submit', class: 'btn main' }, icon('send'), t('Send'))));
+  return [h('h1', {}, t('Contact Roardino')), h('p', { class: 'hint' }, t('Questions, a profile or post to report, a child\'s safety, your data: write to us here and a person from the Roardino team answers.')), form];
+}
 function viewLegal(which) {
-  const text = which === 'terms' ? TERMS : PRIVACY;
-  document.title = 'Roardino · ' + (which === 'terms' ? t('Terms') : t('Privacy Policy'));
-  const body = h('article', { class: 'legal sec' },
-    h('div', { class: 'head', style: { marginBottom: 0 } }, seg([['privacy', t('Privacy Policy')], ['terms', t('Terms')]], which, (k) => { location.hash = `#/legal/${k}`; })),
+  const text = which === 'terms' ? TERMS : which === 'privacy' ? PRIVACY : null;
+  document.title = 'Roardino · ' + ({ terms: t('Terms'), privacy: t('Privacy Policy'), contact: t('Contact') })[which];
+  const tabs = h('div', { class: 'head', style: { marginBottom: 0 } }, seg([['privacy', t('Privacy Policy')], ['terms', t('Terms')], ['contact', t('Contact')]], which, (k) => { location.hash = `#/legal/${k}`; }));
+  const body = !text ? h('article', { class: 'legal sec' }, tabs, ...contactBody()) : h('article', { class: 'legal sec' },
+    tabs,
     h('h1', {}, which === 'terms' ? t('Terms of use') : t('Privacy Policy')),
     h('p', { class: 'hint' }, t('Updated {d}', { d: LEGAL_DATE })),
     text.map(([title, paras]) => h('section', {}, h('h2', {}, t(title)), paras.map((x) => h('p', { html: esc(t(x)).replace(/info@themadlions\.com/g, '<a href="mailto:info@themadlions.com">info@themadlions.com</a>').replace(/www\.dpa\.gr/g, '<a href="https://www.dpa.gr/" target="_blank" rel="noopener">www.dpa.gr</a>') })))));
   if (session) frame('', h('div', { class: 'form' }, body));
-  else put(app, h('header', { class: 'bar' }, h('div', { class: 'bar-in' }, h('a', { href: '#/', class: 'brand' }, mark(), byLine()))), h('main', { class: 'page' }, h('div', { class: 'form' }, body)), footBar());
+  else put(app, h('header', { class: 'bar' }, h('div', { class: 'bar-in' }, h('a', { href: '#/', class: 'brand' }, mark()))), h('main', { class: 'page' }, h('div', { class: 'form' }, body)), footBar());
   window.scrollTo(0, 0);
 }
 
@@ -1571,6 +1677,7 @@ function viewSettings() {
     h('div', { class: 'head' }, h('h1', {}, t('Settings'))),
     h('section', { class: 'sec' }, h('h2', {}, t('Appearance')),
       row(t('Theme'), t('Auto follows your phone or computer.'), choice('theme', [['light', t('Light')], ['dark', t('Dark')], ['auto', t('Auto')]])),
+      row(t('Accent colour'), t('The colour of buttons, the chosen tab and the glow, in light and dark.'), (() => { const box = h('div', { class: 'swatches', role: 'radiogroup' }); const draw = () => put(box, ACCENTS.map(([k, name, g]) => h('button', { type: 'button', class: 'swatch' + (prefs.accent === k ? ' on' : ''), role: 'radio', 'aria-checked': String(prefs.accent === k), 'aria-label': t(name), title: t(name), style: { '--sw': `linear-gradient(135deg,${g})` }, onclick: () => { setPref('accent', k); draw(); } }))); draw(); return box; })()),
       row(t('Text size'), null, choice('text', [['normal', t('Normal')], ['large', t('Large')]])),
       row(t('Language'), t('Greek is on the way.'), h('div', { class: 'seg' }, h('button', { type: 'button', class: 'on' }, 'English'), h('button', { type: 'button', disabled: true, title: t('Soon') }, 'Ελληνικά')))),
     h('section', { class: 'sec' }, h('h2', {}, t('Feed')),

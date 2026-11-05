@@ -515,3 +515,22 @@ revoke all on function roardino_chat_unread() from public, anon;
 grant execute on function roardino_chat_unread() to authenticated;
 
 do $$ begin alter publication supabase_realtime add table roardino_notifications; exception when others then null; end $$;
+
+-- ---------- Contact Roardino (5 Nov): messages from the Contact page; anyone may send, nobody reads them through the API
+-- (the team reads them in the Supabase Table Editor until Roardino has its own inbox) ----------
+create table if not exists public.roardino_messages (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  topic text not null default 'general' check (topic in ('general','report','child','privacy','account','partner')),
+  name text check (char_length(name) <= 120),
+  email text not null check (char_length(email) between 3 and 200),
+  body text not null check (char_length(body) between 1 and 5000),
+  page text check (char_length(page) <= 500),
+  user_id uuid references auth.users(id) on delete set null,
+  done boolean not null default false
+);
+alter table public.roardino_messages enable row level security;
+drop policy if exists roardino_messages_send on public.roardino_messages;
+create policy roardino_messages_send on public.roardino_messages for insert to anon, authenticated
+  with check (done = false and (user_id is null or user_id = auth.uid()));
+grant insert on public.roardino_messages to anon, authenticated;
