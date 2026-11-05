@@ -1170,3 +1170,11 @@ html[data-theme=dark] .pm-row.red{color:#ff5a4f}
   .mid>.post+.post,.mid>.post+.tile,.mid>.tile+.post{margin-top:-10px}
   .post.ig{padding-bottom:6px}
 }
+/* the phone (Alex, 5 Nov: "no page may spill over"): an iPhone zooms in by itself, and stays zoomed, when a field with
+   letters under 16px is tapped; every field is 16px there. Long words with no space (a name, a link) break instead of
+   pushing the page wider. */
+@media (max-width:820px){
+  input,select,textarea,.input,.select,.textarea,.find input{font-size:16px!important}
+}
+p,h1,h2,h3,b,small,a,span,.who-line,.igm-name,.igm-line,.igm-bio,.ig-cap,.post-body{overflow-wrap:anywhere}
+html,body{max-width:100%}
