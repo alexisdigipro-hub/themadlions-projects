@@ -1442,3 +1442,21 @@ html[data-theme=dark] .tab-plus:hover{background:rgba(255,255,255,.12)!important
 html[data-theme=dark] .tab-plus .lbl{color:#e8e9ec;-webkit-text-fill-color:#e8e9ec}
 .tab-plus:not(:hover){justify-content:center;padding:0}
 .tab-plus:not(:hover) .lbl{display:none}
+/* the profile head, tidier (Alex, 5 Nov): Edit profile and + side by side on the right; numbers, what they do and city on one line;
+   on a computer the + of the tabs gives way to the one up here */
+.ig-name .grow{flex:1}
+.ig-acts{display:flex;gap:8px;align-items:center}
+.ig-acts .btn.round{width:34px;height:34px;padding:0}
+.ig-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px 22px}
+.ig-row .chips{margin:0}
+.ig-row .ig-meta{margin:0}
+.ig-info{gap:10px}
+.ig-head{padding-bottom:18px}
+@media (min-width:821px){.page .tab-plus{display:none!important}.ig-tabs{padding-left:0}}
+/* moving the cover up or down (Alex, 5 Nov) */
+.me-cover.repos{cursor:ns-resize;touch-action:none;outline:2px solid var(--a-solid);outline-offset:-2px}
+.me-cover.repos .cov-btn{display:none}
+.repos-hint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;
+  background:rgba(0,0,0,.5);color:#fff;font-size:13px;pointer-events:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.repos-hint span{display:grid;width:18px;height:18px}.repos-hint svg{width:18px;height:18px}
+.repos-bar{position:absolute;right:10px;bottom:10px;display:flex;gap:8px;z-index:3}

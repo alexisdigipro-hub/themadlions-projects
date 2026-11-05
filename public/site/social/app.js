@@ -838,10 +838,44 @@ function meCard() {
 // the standard lines; on my own card a camera button changes it there and then
 function coverOf(p, editable = false) {
   const cov = p?.data?.cover;
-  const box = h('div', { class: 'me-cover' + (cov && urlOf(cov) ? ' pic' : ''), style: cov ? bg(cov) : {} });
+  const y = p?.data?.coverY ?? 50; // where the picture sits up or down in the banner, kept with the profile
+  const box = h('div', { class: 'me-cover' + (cov && urlOf(cov) ? ' pic' : ''), style: cov ? { ...bg(cov), backgroundPosition: `center ${y}%` } : {} });
   if (editable && p) {
     const pick = h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async (e) => { const f = e.target.files[0]; e.target.value = ''; const c = f && await cropImage(f, SHAPES.cover); if (c) await setCover(p, c); } });
-    box.append(pick, h('button', { type: 'button', class: 'cov-btn', title: t('Change the cover'), 'aria-label': t('Change the cover'), html: ICON.cam, onclick: (e) => { e.preventDefault(); e.stopPropagation(); pick.click(); } }));
+    // the camera asks first (Alex, 5 Nov): move the picture up or down, or put another one, or take it away
+    const menu = () => {
+      if (!cov) return pick.click();
+      let close;
+      const row = (ic, label, fn, cls = '') => h('button', { type: 'button', class: 'pm-row ' + cls, onclick: () => { close(); fn(); } }, h('span', { class: 'pm-ic', html: ICON[ic] }), label);
+      close = openWin(t('Cover'), h('div', { class: 'pm' }, h('div', { class: 'pm-group' },
+        row('sliders', t('Reposition'), () => reposition()),
+        row('pic', t('Change photo'), () => pick.click()),
+        row('trash', t('Remove'), async () => { if (await ask(t('Remove the cover?'), t('Remove'))) setCover(p, null); }, 'red'))), null);
+    };
+    // drag the picture up or down inside the banner, then Save
+    const reposition = () => {
+      let cur = y, startY = 0, startPos = 0, dragging = false;
+      box.classList.add('repos');
+      const hint = h('div', { class: 'repos-hint' }, h('span', { html: ICON.sliders }), t('Drag to move the picture'));
+      const bar = h('div', { class: 'repos-bar' },
+        h('button', { type: 'button', class: 'btn sm', onclick: (e) => { e.stopPropagation(); done(false); } }, t('Cancel')),
+        h('button', { type: 'button', class: 'btn sm main', onclick: (e) => { e.stopPropagation(); done(true); } }, t('Save')));
+      box.append(hint, bar);
+      const down = (e) => { if (e.target.closest('.repos-bar')) return; dragging = true; startY = e.clientY; startPos = cur; box.setPointerCapture?.(e.pointerId); e.preventDefault(); };
+      const move = (e) => { if (!dragging) return; const hgt = box.clientHeight || 1; cur = Math.max(0, Math.min(100, startPos - ((e.clientY - startY) / hgt) * 100)); box.style.backgroundPosition = `center ${cur}%`; };
+      const up = () => { dragging = false; };
+      box.addEventListener('pointerdown', down); box.addEventListener('pointermove', move); box.addEventListener('pointerup', up); box.addEventListener('pointercancel', up);
+      async function done(save) {
+        box.removeEventListener('pointerdown', down); box.removeEventListener('pointermove', move); box.removeEventListener('pointerup', up); box.removeEventListener('pointercancel', up);
+        hint.remove(); bar.remove(); box.classList.remove('repos');
+        if (!save) { box.style.backgroundPosition = `center ${y}%`; return; }
+        const data = { ...(p.data || {}), coverY: Math.round(cur) };
+        const { error } = await sb.from('roardino_people').update({ data }).eq('id', p.id);
+        if (error) return fail(error);
+        p.data = data; await loadMine(); toast(t('Cover moved'));
+      }
+    };
+    box.append(pick, h('button', { type: 'button', class: 'cov-btn', title: t('Change the cover'), 'aria-label': t('Change the cover'), html: ICON.cam, onclick: (e) => { e.preventDefault(); e.stopPropagation(); menu(); } }));
   }
   return box;
 }
@@ -850,7 +884,7 @@ async function setCover(p, file) {
     toast(t('Uploading…'));
     const path = file ? await upload(p.id, file, 'cover/') : null;
     const old = p.data?.cover;
-    const data = { ...(p.data || {}), cover: path };
+    const data = { ...(p.data || {}), cover: path, coverY: 50 };
     const { error } = await sb.from('roardino_people').update({ data }).eq('id', p.id);
     if (error) throw error;
     if (old && !/^https?:/.test(old)) removeFiles([old]);
@@ -1757,7 +1791,7 @@ async function viewPerson(id) {
   let tab = 'work';
   const drawTab = () => {
     // My Work, My Photos, My Bio on my own profile; Work, Photos, Bio on someone else's (Alex, 5 Nov)
-    put(tabRow, [['work', own ? t('My Work') : t('Work'), 'grid'], ['photos', own ? t('My Photos') : t('Photos'), 'pic'], ['details', own ? t('My Bio') : t('Bio'), 'user'], ...(own ? [['saved', t('Saved'), 'bookmark']] : [])].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
+    put(tabRow, [['work', t('Portfolio'), 'grid'], ['photos', own ? t('My Photos') : t('Photos'), 'pic'], ['details', own ? t('My Bio') : t('Bio'), 'user'], ...(own ? [['saved', t('Saved'), 'bookmark']] : [])].map(([k, s2, ic]) => h('button', { type: 'button', class: tab === k ? 'on' : '', onclick: () => { tab = k; drawTab(); } }, icon(ic), s2)));
     // on my own profile each tab adds or edits in place (Alex, 5 Nov)
     // as a round glass plus at the left of the tabs, its words only on hover (Alex, 5 Nov: "a plus on the left, the plus alone says Add work")
     const plus = (label, ic, extra) => h(extra.href ? 'a' : 'button', { type: extra.href ? null : 'button', class: 'btn main tab-plus', title: label, 'aria-label': label, ...extra }, icon(ic), h('span', { class: 'lbl' }, label));
@@ -1774,14 +1808,16 @@ async function viewPerson(id) {
     h('section', { class: 'ig-head' + (p.data?.cover || own ? ' under-cover' : '') },
       h('div', { class: 'ig-av' + (theirStories.length ? ' has' : ''), role: theirStories.length ? 'button' : null, title: theirStories.length ? t('Stories') : null, onclick: theirStories.length ? () => openStories(theirStories, 0) : null },
         h('span', { class: 'r big' + (theirStories.length ? '' : ' plain') }, h('i', { style: bg(photos[0] || p.avatar) }, urlOf(photos[0] || p.avatar) ? '' : initials(p.name)))),
+      // a tidier head (Alex, 5 Nov): the name with Edit profile and + on the right; the numbers, what they do and the city on one line
       h('div', { class: 'ig-info' },
-        h('div', { class: 'ig-name' }, h('h1', {}, p.name), p.handle ? h('span', { class: 'ig-handle' }, '@' + p.handle) : null,
-          own ? h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')) : followBtn),
-        stats ? h('div', { class: 'ig-stats' }, [[stats.posts, t('works'), null], [stats.followers, t('followers'), 'followers'], [stats.bravos, t('likes'), 'likes']].map(([n, s2, w]) => h(w ? 'button' : 'span', { type: w ? 'button' : null, class: w ? 'stat-btn' : null, onclick: w ? () => peopleList(p, w) : null }, h('b', {}, String(n)), ' ', s2))) : null,
-        h('div', { class: 'chips' }, (p.kinds || []).map(kindChip), p.minor ? h('span', { class: 'chip', style: { '--c': '#e0a33a' } }, h('i'), t('Under 18 · with a parent')) : null),
+        h('div', { class: 'ig-name' }, h('h1', {}, p.name), p.handle ? h('span', { class: 'ig-handle' }, '@' + p.handle) : null, h('span', { class: 'grow' }),
+          own ? h('div', { class: 'ig-acts' }, h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')), h('button', { type: 'button', class: 'btn sm main round', title: t('Create'), 'aria-label': t('Create'), onclick: createMenu }, icon('plus'))) : followBtn),
+        h('div', { class: 'ig-row' },
+          stats ? h('div', { class: 'ig-stats' }, [[stats.posts, t('works'), null], [stats.followers, t('followers'), 'followers'], [stats.bravos, t('likes'), 'likes']].map(([n, s2, w]) => h(w ? 'button' : 'span', { type: w ? 'button' : null, class: w ? 'stat-btn' : null, onclick: w ? () => peopleList(p, w) : null }, h('b', {}, String(n)), ' ', s2))) : null,
+          h('div', { class: 'chips' }, (p.kinds || []).map(kindChip), p.minor ? h('span', { class: 'chip', style: { '--c': '#e0a33a' } }, h('i'), t('Under 18 · with a parent')) : null),
+          h('span', { class: 'ig-meta' }, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} years', { n: a }) : '', L.height ? `${L.height} cm` : ''].filter(Boolean).join(' · '))),
         p.headline ? h('p', { class: 'ig-line' }, p.headline) : null,
         p.bio ? h('p', { class: 'ig-bio' }, p.bio) : null,
-        h('p', { class: 'ig-meta' }, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} years', { n: a }) : '', L.height ? `${L.height} cm` : ''].filter(Boolean).join(' · ')),
         contact.filter(Boolean).length ? h('div', { class: 'acts', style: { marginTop: 0 } }, contact.filter(Boolean).map((b2) => { b2.classList.add('sm'); return b2; })) : null)),
     phoneHead(p, { own, stats, theirStories, photos, followBtn, contactList, a, L }),
     tabRow, body);
