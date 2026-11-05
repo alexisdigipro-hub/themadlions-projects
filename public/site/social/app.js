@@ -1099,6 +1099,27 @@ async function peopleList(p, what) {
   }
   draw();
 }
+// the picture large, over everything (Alex, 5 Nov): arrows or keys for the others, a click outside, the X or Esc closes
+function lightbox(media, start = 0) {
+  if (!media.length) return;
+  let i = Math.max(0, Math.min(media.length - 1, start));
+  const stage = h('div', { class: 'lb-stage' });
+  const count = h('span', { class: 'lb-count' });
+  const show = () => {
+    const m = media[i];
+    put(stage, m.type === 'video' ? h('video', { src: urlOf(m.path), controls: true, autoplay: true, playsInline: true }) : h('img', { src: urlOf(m.path), alt: '' }));
+    count.textContent = media.length > 1 ? `${i + 1} / ${media.length}` : '';
+  };
+  const go = (d) => { i = (i + d + media.length) % media.length; show(); };
+  const close = () => { veil.classList.add('out'); setTimeout(() => veil.remove(), 280); document.removeEventListener('keydown', onKey); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); if (e.key === 'ArrowRight') go(1); if (e.key === 'ArrowLeft') go(-1); };
+  const veil = h('div', { class: 'lb', onclick: (e) => { if (e.target === veil || e.target === stage) close(); } }, stage, count,
+    h('button', { type: 'button', class: 'lb-x', 'aria-label': t('Close'), html: ICON.x, onclick: close }),
+    media.length > 1 ? h('button', { type: 'button', class: 'lb-nav prev', 'aria-label': t('Previous'), html: ICON.left, onclick: () => go(-1) }) : null,
+    media.length > 1 ? h('button', { type: 'button', class: 'lb-nav next', 'aria-label': t('Next'), html: ICON.right, onclick: () => go(1) }) : null);
+  document.addEventListener('keydown', onKey);
+  document.body.append(veil); show();
+}
 async function toggleFollow(id) {
   const on = follows.has(id);
   const { error } = on ? await sb.from('roardino_follows').delete().eq('user_id', session.user.id).eq('person_id', id) : await sb.from('roardino_follows').insert({ person_id: id });
@@ -1230,7 +1251,9 @@ function postCard(r, st, refresh) {
     if (on) { openTalk(); cap?.classList.remove('hidden'); } else { talk.classList.add('hidden'); cap?.classList.add('hidden'); }
   };
   wrap.addEventListener('click', (e) => {
-    if (!isPhone() || e.target.closest('.post-head, .ig-bar, a, button')) return;
+    if (e.target.closest('.post-head, .ig-bar, a, button')) return;
+    // on a computer a click on the picture opens it large (Alex, 5 Nov)
+    if (!isPhone()) { clearTimeout(tapT); tapT = setTimeout(() => lightbox(media, Math.round((slides.scrollLeft || 0) / (slides.clientWidth || 1))), 260); return; }
     clearTimeout(tapT); tapT = setTimeout(() => setOpen(!art.classList.contains('open')), 260);
   });
   wrap.addEventListener('dblclick', () => clearTimeout(tapT));
@@ -1254,13 +1277,13 @@ async function drawTalk(box, r, st, recount) {
     const el = h('div', { class: 'cmt' + (fresh ? ' cmt-fresh' : ''), style: fresh ? null : { animationDelay: `${Math.min(i, 8) * 90}ms` } },
       h('a', { href: c.person ? `#/p/${c.person.id}` : '#/feed' }, avatar(c.person || {}, 'sm')),
       h('div', {}, h('b', {}, c.person?.name || t('Member')), ' ', ...tagText(c.body), h('small', {}, ago(c.created_at))),
-      c.owner === session.user.id || r.owner === session.user.id ? h('button', { type: 'button', class: 'linkish', onclick: async () => {
+      c.owner === session.user.id || r.owner === session.user.id ? h('button', { type: 'button', class: 'cmt-del', title: t('Delete'), 'aria-label': t('Delete'), html: ICON.trash, onclick: async () => {
         const { error } = await sb.from('roardino_comments').delete().eq('id', c.id);
         if (error) return fail(error);
         st.comments--; recount();
         el.style.height = el.offsetHeight + 'px'; void el.offsetHeight; el.classList.add('cmt-gone');
         setTimeout(() => el.remove(), 750);
-      } }, t('delete')) : null);
+      } }) : null);
     return el;
   };
   put(list, ...(data || []).map((c, i) => row(c, i, false)));
@@ -2624,7 +2647,9 @@ async function enter(s) {
     const { data } = await sb.rpc('roar_is_admin');
     isAdmin = data === true;
   } catch (e) { fail(e); }
-  route();
+  await route();
+  // the first screen comes in at once; motion only from now on (Alex, 5 Nov: "it flashes and blinks when it opens")
+  setTimeout(() => document.documentElement.classList.remove('booting'), 450);
   startNotes();
 }
 sb.auth.onAuthStateChange((ev, s) => {

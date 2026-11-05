@@ -28,6 +28,7 @@ Pushing to `main` deploys to GitHub Pages in about 40 s through .github/workflow
 - Never ask Alex for a GitHub token, never paste, store or commit credentials of any kind. The Supabase publishable key in src/lib/supabaseConfig.js is public by design; service-role keys never go in the repo.
 
 ## Code rules
+- **Never a word with an underline as a button** (Alex, 5 Nov: "I never want to see buttons like these again, on any page or site we make"). Every action is a real button: a flat matte glass pill or a round glass icon (a trash for delete). This holds for the hub, Roardino, the company site and every Roar app.
 - Every app made for Alex that he installs (the Lab's desktop apps: RoarTwin, RoarMind and the ones to come) updates itself (Alex, 26 Oct: "ό,τι κάνουμε θα το κάνεις auto update"): the updater RoarTwin and RoarMind carry (electron/updater.js, from the newest GitHub release, Restart to update) and the offer to move itself to Applications, from the first release.
 - React + Vite, plain CSS. All styles live in src/styles.css; themes through html[data-theme] and html[data-accent]. No UI framework, no new dependencies without asking Alex.
 - State lives in src/lib/store.jsx. Pages mutate a draft through `update(fn)` / `updateProject(id, fn)`. Every project is one JSON document (projects.data).
