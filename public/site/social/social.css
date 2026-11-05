@@ -678,3 +678,63 @@ html[data-theme=dark] .mt span{color:#9fbbe6}
 /* my card, small (Alex, 5 Nov) */
 .me-card.small .me-cover{height:72px}
 .me-card.small .me-stats{margin-top:14px}
+
+/* ---------- Red glass (Alex, 5 Nov, with Qubi's menu as the picture): the accent is red in shades of red; buttons are
+   polished glass even at rest (a diagonal sheen, a hint of red inside, a bright rim, lettering in a red gradient); the
+   chosen one lit; the dark theme the near-black grey of Qubi ---------- */
+:root{
+  --letters:linear-gradient(100deg,#e2766d 0%,#d40000 38%,#8f0000 72%,#c2271c 100%);
+  --letters-dim:linear-gradient(100deg,rgba(226,118,109,.85) 0%,rgba(212,0,0,.7) 45%,rgba(143,0,0,.75) 100%);
+  --tint:linear-gradient(rgba(212,0,0,.05),rgba(212,0,0,.05));
+  --accent:#d40000;
+}
+html[data-theme=dark]{
+  --bg1:#0b0b0c; --bg2:#121214;
+  --glass:rgba(255,255,255,.035);
+  --rim:rgba(255,255,255,.13); --rim-out:rgba(0,0,0,.5);
+  --top:inset 0 1px 0 rgba(255,255,255,.1);
+  --letters:linear-gradient(100deg,#ffc2b8 0%,#ff6a5c 32%,#e0241a 62%,#ff9c8f 100%);
+  --letters-dim:linear-gradient(100deg,rgba(255,194,184,.62) 0%,rgba(255,106,92,.62) 40%,rgba(224,36,26,.62) 70%,rgba(255,156,143,.62) 100%);
+  --tint:linear-gradient(rgba(212,0,0,.07),rgba(212,0,0,.07));
+  --accent:#ff5a4f;
+}
+html[data-theme=dark] body{background:radial-gradient(1000px 650px at 12% -10%,#1d1d21 0%,transparent 60%),radial-gradient(800px 600px at 100% 30%,rgba(212,0,0,.06),transparent 60%),linear-gradient(180deg,var(--bg1),var(--bg2)) fixed}
+/* every button: polished glass with red lettering */
+.btn,.btn.main{background-image:var(--letters),var(--sheen),var(--tint);-webkit-background-clip:text,padding-box,padding-box;background-clip:text,padding-box,padding-box;-webkit-text-fill-color:transparent}
+.btn{background-color:rgba(255,255,255,.42);border-color:rgba(255,255,255,.95)}
+.btn.main{background-color:rgba(255,255,255,.62);box-shadow:var(--top),0 0 0 1px rgba(212,0,0,.14),0 10px 26px rgba(212,0,0,.12)}
+.btn:hover,.btn.main:hover{background-image:var(--letters),var(--sheen),var(--tint);border-color:rgba(212,0,0,.3)}
+.btn svg,.btn.main svg{color:var(--accent)}
+.btn.red{background-image:linear-gradient(100deg,#e2766d,#b3261e),var(--sheen),var(--tint)}
+html[data-theme=dark] .btn{background-color:rgba(255,255,255,.035);border-color:rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(255,255,255,.05),0 6px 18px rgba(0,0,0,.4)}
+html[data-theme=dark] .btn:hover{background-color:rgba(255,255,255,.07);border-color:rgba(255,190,180,.4)}
+html[data-theme=dark] .btn.main{background-color:rgba(255,255,255,.06);border-color:rgba(255,180,170,.38);box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 6px 18px rgba(0,0,0,.4),0 0 18px rgba(212,0,0,.14)}
+/* switches: the letters dim, the chosen one lit with the lens */
+.seg button,.seg a{background-image:var(--letters-dim)}
+.seg.has-lens .on{background-image:var(--letters)}
+.seg .lens{background-image:var(--sheen),var(--tint);border-color:rgba(212,0,0,.22);box-shadow:var(--top),0 0 0 1px rgba(212,0,0,.1),0 4px 14px rgba(212,0,0,.12)}
+html[data-theme=dark] .seg{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.13)}
+html[data-theme=dark] .seg .lens{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.06));background-image:var(--sheen),linear-gradient(rgba(212,0,0,.1),rgba(212,0,0,.1));border:1px solid rgba(255,190,180,.36);box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 4px 14px rgba(0,0,0,.45),0 0 18px rgba(212,0,0,.16)}
+/* chosen pills */
+.pill.on{background:linear-gradient(135deg,#b3261e,#e2453a);border-color:rgba(255,255,255,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 4px 14px rgba(212,0,0,.25)}
+html[data-theme=dark] .pill{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.1)}
+html[data-theme=dark] .pill.on{background-color:rgba(255,255,255,.06);background-image:var(--letters),var(--sheen),var(--tint);-webkit-background-clip:text,padding-box,padding-box;background-clip:text,padding-box,padding-box;-webkit-text-fill-color:transparent;border-color:rgba(255,190,180,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 0 14px rgba(212,0,0,.18)}
+html[data-theme=dark] .pill.on::before{-webkit-text-fill-color:#ff6a5c}
+/* the red in everything that was blue */
+.kicker,.tile .when,.three .no,.why .no{color:var(--accent)}
+.ico.on{color:var(--accent)}
+.mt span,.t-ico,.list-mini .sq{color:var(--accent)}
+.switch:checked,html[data-theme=dark] .switch:checked{background:linear-gradient(135deg,#b3261e,#e2453a)}
+.ring.me .add,html[data-theme=dark] .ring.me .add{background:#d40000}
+.chip{--c:#d40000}
+:focus-visible{outline-color:#e2453a}
+.input:focus,.select:focus,.textarea:focus{box-shadow:inset 0 1px 2px rgba(28,35,51,.04),0 0 0 2px rgba(212,0,0,.25)}
+html[data-theme=dark] .input,html[data-theme=dark] .select,html[data-theme=dark] .textarea{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.1)}
+/* the bars and cards in the near-black glass */
+html[data-theme=dark] .bar-in,html[data-theme=dark] .tabbar,html[data-theme=dark] .form-foot{background:rgba(18,18,20,.72);border-color:rgba(255,255,255,.1)}
+html[data-theme=dark] .mt{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.1)}
+html[data-theme=dark] .mt span{color:#ff6a5c}
+html[data-theme=dark] .win,html[data-theme=dark] .menu{background:rgba(22,22,26,.6)}
+html[data-theme=dark] .me-cover{background:linear-gradient(120deg,#17171a,#1f1f23 45%,#141416)}
+html[data-theme=dark] .ring .r i,html[data-theme=dark] .ig-av .r i{border-color:#121214}
+html[data-theme=dark] .ring-sm .av{box-shadow:0 0 0 2px #121214}
