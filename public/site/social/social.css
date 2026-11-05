@@ -431,7 +431,7 @@ button.cell:hover{filter:brightness(1.05)}
   .menu{top:62px}
   .two{grid-template-columns:1fr}
   .two>.left{order:2}
-  .two>.left>.me-card{display:none}
+  .two>.left>.me-card,.two>.left>.me-tiles{display:none}
   .page{padding:14px 12px 110px}
   .head h1{font-size:23px}
   .faces{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -625,3 +625,52 @@ html[data-theme=dark] .win{background:rgba(32,36,43,.55);border-color:rgba(255,2
 .veil.ask .win .foot .btn{flex:1}
 .menu{background:rgba(255,255,255,.62);-webkit-backdrop-filter:blur(28px) saturate(1.5);backdrop-filter:blur(28px) saturate(1.5)}
 html[data-theme=dark] .menu{background:rgba(32,36,43,.6)}
+
+/* the top bar in words (Alex, 5 Nov): logo, the menu capsule with its lens, the search wide; my things moved to the left */
+.bar .words .seg{padding:4px}
+.bar .words .seg button{padding:9px 15px;font-size:12px}
+.bar .find{flex:1;width:auto;max-width:none;margin-left:8px}
+@media (min-width:861px){ .bar .who-me,.bar .ico.theme,.bar .sep{display:none} }
+@media (max-width:1100px){ .bar .words .seg button{padding:9px 10px;font-size:11px;letter-spacing:.06em} }
+@media (max-width:860px){ .bar .words{display:none} }
+/* my little glass tiles under my card */
+.me-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px}
+.mt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px 4px;border-radius:12px;border:1px solid var(--rim);
+  background:rgba(255,255,255,.4);box-shadow:var(--top),0 0 0 1px var(--rim-out);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);cursor:pointer;
+  transition:transform .25s var(--spring),background .2s,box-shadow .25s}
+.mt span{display:grid;place-items:center;width:20px;height:20px;color:#6f8fbf}
+.mt span svg{width:20px;height:20px}
+.mt:hover{background:rgba(255,255,255,.75);transform:translateY(-2px);box-shadow:var(--top),0 0 0 1px var(--rim-out),0 8px 20px rgba(28,35,51,.1)}
+.mt:active{transform:scale(.94)}
+html[data-theme=dark] .mt{background:rgba(255,255,255,.05);color:var(--ink2)}
+html[data-theme=dark] .mt:hover{background:rgba(255,255,255,.1)}
+html[data-theme=dark] .mt span{color:#9fbbe6}
+
+/* the same width as the top bar (Alex, 5 Nov): the content lines up with the bar's edges */
+.page{max-width:1352px}
+.two{grid-template-columns:330px minmax(0,1fr)}
+.two>.mid{max-width:none}
+.page .grid,.ig-details,.ig-head,.ig-tabs{max-width:none}
+@media (min-width:1100px){ .page .grid{grid-template-columns:repeat(4,minmax(0,1fr))} }
+
+/* stories from the camera */
+.src-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.mt.big{padding:22px 8px;font-size:12.5px}
+.mt.big span,.mt.big span svg{width:28px;height:28px}
+.cam-live{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+.cam-live.mirror{transform:scaleX(-1)}
+.cam-hint{position:absolute;left:0;right:0;bottom:118px;margin:0;text-align:center;color:#fff;font-size:13px;opacity:.85;text-shadow:0 1px 4px rgba(0,0,0,.6);z-index:3}
+.cam-controls{position:absolute;left:0;right:0;bottom:26px;display:flex;align-items:center;justify-content:space-evenly;gap:12px;z-index:4;padding:0 16px}
+.cam-controls .btn{flex:1;max-width:200px}
+.cam-btn{width:46px;height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.15);color:#fff;display:grid;place-items:center;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:transform .25s var(--spring)}
+.cam-btn svg{width:22px;height:22px}
+.cam-btn:active{transform:scale(.9) rotate(-20deg)}
+.cam-shutter{width:76px;height:76px;border-radius:50%;border:0;padding:0;background:transparent;display:grid;place-items:center;touch-action:none;-webkit-user-select:none;user-select:none}
+.cam-ring{--p:0;width:76px;height:76px;border-radius:50%;display:block;position:relative;
+  background:conic-gradient(#d40000 calc(var(--p)*360deg),rgba(255,255,255,.85) 0);transition:transform .3s var(--spring)}
+.cam-ring::after{content:'';position:absolute;inset:6px;border-radius:50%;background:rgba(255,255,255,.95);transition:inset .3s var(--spring),background .2s}
+.cam.rec .cam-ring{transform:scale(1.15)}
+.cam.rec .cam-ring::after{inset:22px;background:#d40000;border-radius:8px}
+.cam .st-stage img,.cam .st-stage video:not(.cam-live){object-fit:cover}
+.cam-controls .btn{background-color:rgba(0,0,0,.4);background-image:none;-webkit-text-fill-color:#fff;color:#fff;border-color:rgba(255,255,255,.3)}
+.cam-controls .btn.main{background-color:#fff;-webkit-text-fill-color:#1c2333;color:#1c2333}

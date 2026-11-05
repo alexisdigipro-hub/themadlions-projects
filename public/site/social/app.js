@@ -125,6 +125,8 @@ const ICON = {
   gear: SVG('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'),
   sun: SVG('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
   moon: SVG('<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'),
+  cam: SVG('<path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/>'),
+  flip: SVG('<path d="M20 7h-9a5 5 0 0 0 0 10h4"/><path d="m16 3 4 4-4 4"/><path d="M4 17h1"/>'),
   child: SVG('<circle cx="12" cy="7" r="3"/><path d="M7 21v-5a5 5 0 0 1 10 0v5"/>'),
 };
 const icon = (n) => h('span', { html: ICON[n], style: { display: 'inline-flex' } });
@@ -288,10 +290,9 @@ function topBar(on) {
   const find = h('input', { type: 'search', placeholder: t('Search cast, crew & creatives'), 'aria-label': t('Search cast, crew & creatives'), value: on === 'people' ? peopleQ : '', onkeydown: (e) => { if (e.key === 'Enter') { peopleQ = e.target.value; if (location.hash === '#/people') viewPeople(); else location.hash = '#/people'; } } });
   return h('header', { class: 'bar' }, h('div', { class: 'bar-in' },
     h('a', { href: '#/feed', 'aria-label': 'Roardino' }, mark()),
+    // the menu in words, a glass capsule with the gliding lens, as Qubi's (Alex, 5 Nov); the search takes the rest
+    h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { location.hash = `#/${k}`; })),
     h('label', { class: 'find' }, icon('search'), find),
-    h('span', { class: 'grow' }),
-    h('nav', { class: 'icons' }, NAV.map(([k, s, ic]) => h('a', { class: 'ico' + (on === k ? ' on' : ''), href: `#/${k}`, title: t(s), 'aria-label': t(s), html: ICON[ic] }))),
-    h('span', { class: 'sep' }),
     h('button', { type: 'button', class: 'who-me', onclick: toggle, 'aria-label': t('Me') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }), h('span', { class: 'nm' }, m?.name || session.user.user_metadata?.name || t('Me')), icon('down')),
     h('button', { type: 'button', class: 'ico theme', title: t('Light or dark'), 'aria-label': t('Light or dark'), html: document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon, onclick: (e) => { setPref('theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); e.currentTarget.innerHTML = document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon; } }),
     menu));
@@ -434,7 +435,7 @@ async function roarAccount(say) {
 let feedOnly = 'all';
 async function viewFeed() {
   document.title = 'Roardino';
-  const left = h('aside', { class: 'side left' }, meCard());
+  const left = h('aside', { class: 'side left' }, meCard(), me() ? null : meTiles());
   const mid = h('div', { class: 'mid' }, h('p', { class: 'wait' }, t('Loading…')));
   // two columns (Alex, 4 Nov): my card with the week and the calls under it on the left, the work wide on the right
   put(app, topBar('feed'), h('main', { class: 'page' }, h('div', { class: 'two' }, left, mid)), tabBar('feed'));
@@ -493,7 +494,7 @@ function meCard() {
     put(work, ...pics.map((x) => h('a', { href: `#/p/${m.id}`, style: bg(x.path) })));
     if (!pics.length) work.replaceWith(h('p', { class: 'hint' }, t('Post a photo of your work and it shows here.')));
   })();
-  return h('section', { class: 'card me-card' },
+  return [h('section', { class: 'card me-card' },
     h('div', { class: 'me-cover' }),
     h('a', { class: 'me-top', href: `#/p/${m.id}` }, avatar(m, 'lg'), h('div', {}, h('b', {}, m.name), h('small', {}, m.headline || (m.kinds || []).map(kindName).slice(0, 2).join(' · ')))),
     stats,
@@ -503,7 +504,22 @@ function meCard() {
       h('h3', {}, t('Your work'), h('a', { href: `#/p/${m.id}` }, t('All'))),
       work,
       h('div', { style: { marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' } },
-        h('a', { class: 'btn main', href: `#/p/${m.id}` }, icon('user'), t('View my profile')))));
+        h('a', { class: 'btn main', href: `#/p/${m.id}` }, icon('user'), t('View my profile'))))), meTiles()];
+}
+// my things as small glass tiles under my card (Alex, 5 Nov: the name menu and light / dark move here from the top bar)
+function meTiles() {
+  const m = me();
+  const dark = () => document.documentElement.dataset.theme === 'dark';
+  const themeTile = h('button', { type: 'button', class: 'mt' }, h('span', { html: dark() ? ICON.sun : ICON.moon }), dark() ? t('Light') : t('Dark'));
+  themeTile.onclick = () => { setPref('theme', dark() ? 'light' : 'dark'); put(themeTile, h('span', { html: dark() ? ICON.sun : ICON.moon }), dark() ? t('Light') : t('Dark')); };
+  const tile = (href, ic, label) => h('a', { class: 'mt', href }, h('span', { html: ICON[ic] }), label);
+  return h('section', { class: 'card me-tiles' },
+    m ? tile(`#/edit/${m.id}`, 'edit', t('Edit')) : tile('#/edit/new', 'plus', t('Profile')),
+    themeTile,
+    tile('#/settings', 'gear', t('Settings')),
+    tile('#/me', 'star', t('Applications')),
+    tile('#/edit/kid', 'child', t('My child')),
+    h('button', { type: 'button', class: 'mt', onclick: () => sb.auth.signOut() }, h('span', { html: ICON.out }), t('Sign out')));
 }
 
 // the week, with dots for seminars and calls that close, and what comes next
@@ -689,12 +705,84 @@ function storiesCard(groups, others) {
   const face = (p, cls) => h('span', { class: cls }, h('i', { style: bg(p.avatar) }, urlOf(p.avatar) ? '' : initials(p.name)));
   return h('section', { class: 'card stories' },
     h('div', { class: 'ring-row' },
-      m ? h('div', { class: 'ring me', role: 'button', tabIndex: 0, onclick: () => (myGroup ? openStories([myGroup, ...rest], 0) : pick.click()) },
+      m ? h('div', { class: 'ring me', role: 'button', tabIndex: 0, onclick: () => (myGroup ? openStories([myGroup, ...rest], 0) : storySource(pick)) },
         face(m, myGroup ? ringOf(myGroup) : 'r plain'),
-        h('button', { type: 'button', class: 'add', 'aria-label': t('Add to your story'), html: ICON.plus, onclick: (e) => { e.stopPropagation(); pick.click(); } }),
+        h('button', { type: 'button', class: 'add', 'aria-label': t('Add to your story'), html: ICON.plus, onclick: (e) => { e.stopPropagation(); storySource(pick); } }),
         h('em', {}, t('Your story')), pick) : null,
       rest.map((g, i) => h('button', { type: 'button', class: 'ring', onclick: () => openStories(rest, i) }, face(g.person, ringOf(g)), h('em', {}, g.person.name.split(' ')[0]))),
       others.filter((p) => !groups.some((g) => g.person.id === p.id)).map((p) => h('a', { class: 'ring', href: `#/p/${p.id}`, title: t('Just for you') }, face(p, 'r plain'), h('em', {}, p.name.split(' ')[0])))));
+}
+// where a story comes from (Alex, 5 Nov): the camera, live, on a laptop or a phone, or the gallery
+function storySource(pick) {
+  const close = openWin(t('Add to your story'), h('div', { class: 'src-two' },
+    navigator.mediaDevices?.getUserMedia ? h('button', { type: 'button', class: 'mt big', onclick: () => { close(); storyCamera(); } }, h('span', { html: ICON.cam }), t('Camera')) : null,
+    h('button', { type: 'button', class: 'mt big', onclick: () => { close(); pick.click(); } }, h('span', { html: ICON.pic }), t('Gallery'))), null);
+}
+// the camera: tap for a photo, hold for a video up to 15 seconds, flip front / back, then Share or Retake
+async function storyCamera() {
+  let facing = 'user', stream = null, rec = null, chunks = [], holdTimer = null, stopTimer = null, startedAt = 0, ticker = null, shot = null;
+  const video = h('video', { class: 'cam-live', autoplay: true, muted: true, playsInline: true });
+  const ring = h('span', { class: 'cam-ring' });
+  const shutter = h('button', { type: 'button', class: 'cam-shutter', 'aria-label': t('Tap for a photo, hold for a video') }, ring);
+  const flip = h('button', { type: 'button', class: 'cam-btn', 'aria-label': t('Flip camera'), html: ICON.flip, onclick: () => { facing = facing === 'user' ? 'environment' : 'user'; start(); } });
+  const hint = h('p', { class: 'cam-hint' }, t('Tap for a photo, hold for a video'));
+  const stage = h('div', { class: 'st-stage' }, video);
+  const controls = h('div', { class: 'cam-controls' }, h('span', { style: { width: '46px' } }), shutter, flip);
+  const card = h('div', { class: 'st-card cam' }, stage, hint, controls);
+  const veil = h('div', { class: 'st-veil' }, card, h('button', { type: 'button', class: 'st-x', 'aria-label': t('Close'), html: ICON.x, onclick: () => close() }));
+  document.body.append(veil);
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  function stopStream() { stream?.getTracks().forEach((tr) => tr.stop()); stream = null; }
+  function close() { clearTimeout(holdTimer); clearTimeout(stopTimer); clearInterval(ticker); try { rec?.state === 'recording' && rec.stop(); } catch { /* done */ } stopStream(); veil.remove(); document.removeEventListener('keydown', onKey); }
+  async function start() {
+    stopStream();
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 1080 }, height: { ideal: 1920 } }, audio: true })
+        .catch(() => navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: false }));
+      video.srcObject = stream;
+      video.classList.toggle('mirror', facing === 'user');
+    } catch (e) { put(stage, h('p', { class: 'cam-hint', style: { position: 'static', marginTop: '45%' } }, t('The camera is not allowed. Allow it in the browser and try again.'))); }
+  }
+  function takePhoto() {
+    if (!video.videoWidth) return;
+    // the frame as 9:16, cut from the middle of what the camera sees
+    const vw = video.videoWidth, vh = video.videoHeight, want = 9 / 16;
+    let sw = vw, sh = vh; if (vw / vh > want) sw = vh * want; else sh = vw / want;
+    const c = h('canvas'); c.width = Math.round(Math.min(1080, sw)); c.height = Math.round(c.width / want);
+    const g = c.getContext('2d');
+    if (facing === 'user') { g.translate(c.width, 0); g.scale(-1, 1); }
+    g.drawImage(video, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, c.width, c.height);
+    c.toBlob((b) => review(new File([b], 'story.jpg', { type: 'image/jpeg' })), 'image/jpeg', 0.9);
+  }
+  function startVideo() {
+    if (!stream || !window.MediaRecorder) return;
+    const type = ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find((x) => MediaRecorder.isTypeSupported?.(x)) || '';
+    rec = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
+    chunks = [];
+    rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    rec.onstop = () => { const tp = rec.mimeType || 'video/webm'; review(new File([new Blob(chunks, { type: tp })], /mp4/.test(tp) ? 'story.mp4' : 'story.webm', { type: tp.split(';')[0] })); };
+    rec.start();
+    startedAt = Date.now();
+    card.classList.add('rec');
+    ticker = setInterval(() => ring.style.setProperty('--p', Math.min(1, (Date.now() - startedAt) / 15000)), 100);
+    stopTimer = setTimeout(stopVideo, 15000);
+  }
+  function stopVideo() { clearTimeout(stopTimer); clearInterval(ticker); card.classList.remove('rec'); if (rec?.state === 'recording') rec.stop(); }
+  shutter.addEventListener('pointerdown', (e) => { e.preventDefault(); holdTimer = setTimeout(() => { holdTimer = null; startVideo(); }, 350); });
+  shutter.addEventListener('pointerup', () => { if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; takePhoto(); } else stopVideo(); });
+  shutter.addEventListener('pointerleave', () => { if (!holdTimer && rec?.state === 'recording') stopVideo(); });
+  function review(file) {
+    shot = file;
+    stopStream();
+    const url = URL.createObjectURL(file);
+    put(stage, /^video/.test(file.type) ? h('video', { src: url, autoplay: true, loop: true, playsInline: true }) : h('img', { src: url, alt: '' }));
+    hint.classList.add('hidden');
+    put(controls,
+      h('button', { type: 'button', class: 'btn', onclick: () => { put(stage, video); hint.classList.remove('hidden'); put(controls, h('span', { style: { width: '46px' } }), shutter, flip); start(); } }, t('Retake')),
+      h('button', { type: 'button', class: 'btn main', onclick: async () => { close(); await addStory(shot); } }, t('Share to my story')));
+  }
+  start();
 }
 async function addStory(file) {
   const m = me();
