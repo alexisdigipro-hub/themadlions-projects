@@ -245,6 +245,7 @@ const ICON = {
   down: SVG('<path d="m6 9 6 6 6-6"/>'),
   plus: SVG('<path d="M12 5v14M5 12h14"/>', 'stroke-width="2.2"'),
   x: SVG('<path d="M6 6l12 12M18 6 6 18"/>', 'stroke-width="2.2"'),
+  heart: SVG('<path d="M12 20.5s-7.5-4.6-9.2-9.4C1.6 7.6 4 4.5 7.3 4.5c2 0 3.6 1.1 4.7 2.8 1.1-1.7 2.7-2.8 4.7-2.8 3.3 0 5.7 3.1 4.5 6.6-1.7 4.8-9.2 9.4-9.2 9.4z"/>'),
   clap: SVG('<path d="M8 13l-2.5-2.5a1.8 1.8 0 012.5-2.5l5 5"/><path d="M10 9.5L8.5 8a1.8 1.8 0 012.5-2.5l5.5 5.5c2 2 2 5 0 7s-5 2-7 0L5 13.5a1.8 1.8 0 012.5-2.5"/><path d="M16 3l.5 2M20 6l-2 .5M19 2l-1.2 1.6"/>'),
   talk: SVG('<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/>'),
   pic: SVG('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>'),
@@ -1002,9 +1003,9 @@ function postCard(r, st, refresh) {
   const own = r.owner === session.user.id;
   const talk = h('div', { class: 'talk hidden' });
   const count = h('p', { class: 'ig-count' });
-  const drawCount = () => { count.textContent = st.bravos ? (st.bravos === 1 ? t('1 bravo') : t('{n} bravo', { n: st.bravos })) : ''; count.classList.toggle('hidden', !st.bravos); };
+  const drawCount = () => { count.textContent = st.bravos ? (st.bravos === 1 ? t('1 like') : t('{n} likes', { n: st.bravos })) : ''; count.classList.toggle('hidden', !st.bravos); };
   drawCount();
-  const bravoBtn = h('button', { type: 'button', class: 'ig-ico' + (st.mine ? ' on' : ''), title: 'Bravo', 'aria-label': 'Bravo', html: ICON.clap, onclick: async () => {
+  const bravoBtn = h('button', { type: 'button', class: 'ig-ico like' + (st.mine ? ' on' : ''), title: t('Like'), 'aria-label': t('Like'), html: ICON.heart, onclick: async () => {
     st.mine = !st.mine; st.bravos += st.mine ? 1 : -1; bravoBtn.classList.toggle('on', st.mine); bravoBtn.classList.remove('pop'); void bravoBtn.offsetWidth; if (st.mine) bravoBtn.classList.add('pop'); drawCount();
     const { error } = st.mine ? await sb.from('roardino_bravos').insert({ post_id: r.id }) : await sb.from('roardino_bravos').delete().eq('post_id', r.id).eq('user_id', session.user.id);
     if (error) fail(error);
@@ -1020,7 +1021,7 @@ function postCard(r, st, refresh) {
   };
   const slides = media.length ? h('div', { class: 'ig-media' + (media.length > 1 ? ' many' : '') }, media.map((m) => (m.type === 'video'
     ? h('video', { src: urlOf(m.path), controls: true, playsInline: true, preload: 'metadata', muted: prefs.mutedVideos })
-    : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', ondblclick: () => { if (!st.mine) bravoBtn.click(); } })))) : null;
+    : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', ondblclick: (e) => { if (!st.mine) bravoBtn.click(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); e.target.parentElement.parentElement.append(hh); setTimeout(() => hh.remove(), 900); } })))) : null;
   const dots = media.length > 1 ? h('div', { class: 'ig-dots' }, media.map((_, i) => h('i', { class: i ? '' : 'on' }))) : null;
   if (slides && dots) slides.addEventListener('scroll', () => { const i = Math.round(slides.scrollLeft / slides.clientWidth); dots.querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i)); });
   return h('article', { class: 'post ig' },
@@ -1539,7 +1540,7 @@ async function viewPerson(id) {
       h('div', { class: 'ig-info' },
         h('div', { class: 'ig-name' }, h('h1', {}, p.name), p.handle ? h('span', { class: 'ig-handle' }, '@' + p.handle) : null,
           own ? h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')) : followBtn),
-        stats ? h('div', { class: 'ig-stats' }, [[stats.posts, t('works')], [stats.followers, t('followers')], [stats.bravos, 'bravo']].map(([n, s2]) => h('span', {}, h('b', {}, String(n)), ' ', s2))) : null,
+        stats ? h('div', { class: 'ig-stats' }, [[stats.posts, t('works')], [stats.followers, t('followers')], [stats.bravos, t('likes')]].map(([n, s2]) => h('span', {}, h('b', {}, String(n)), ' ', s2))) : null,
         h('div', { class: 'chips' }, (p.kinds || []).map(kindChip), p.minor ? h('span', { class: 'chip', style: { '--c': '#e0a33a' } }, h('i'), t('Under 18 · with a parent')) : null),
         p.headline ? h('p', { class: 'ig-line' }, p.headline) : null,
         p.bio ? h('p', { class: 'ig-bio' }, p.bio) : null,
@@ -1571,7 +1572,7 @@ function phoneHead(p, { own, stats, theirStories, photos, followBtn, contact, a,
   }
   return h('section', { class: 'igm' },
     h('div', { class: 'igm-top' }, av, h('div', { class: 'igm-right' }, h('b', { class: 'igm-name' }, p.name),
-      h('div', { class: 'igm-nums' }, num(stats?.posts, t('works')), num(stats?.followers, t('followers')), num(stats?.bravos, 'bravo')))),
+      h('div', { class: 'igm-nums' }, num(stats?.posts, t('works')), num(stats?.followers, t('followers')), num(stats?.bravos, t('likes'))))),
     p.handle ? h('p', { class: 'igm-handle' }, '@' + p.handle) : null,
     p.headline ? h('p', { class: 'igm-line' }, p.headline) : null,
     p.bio ? h('p', { class: 'igm-bio' }, p.bio) : null,
@@ -1997,7 +1998,7 @@ function stopNotes() { clearInterval(chatTimer); try { notesChannel && sb.remove
 function noteText(n) {
   const who = n.who?.name || t('Someone');
   return {
-    bravo: t('{who} gave Bravo to your work', { who }),
+    bravo: t('{who} liked your work', { who }),
     comment: t('{who} commented: {text}', { who, text: n.text || '' }),
     follow: t('{who} started following you', { who }),
     apply: t('{who} applied to your call "{text}"', { who, text: n.text || '' }),
@@ -2036,7 +2037,7 @@ async function openNotes(anchor) {
     h('div', { class: 'notes-head' }, h('b', {}, t('Notifications')), h('span', { class: 'grow' }), notes.length ? h('button', { type: 'button', class: 'linkish', onclick: async () => { await sb.from('roardino_notifications').delete().eq('user_id', session.user.id); notes = []; drawBadges(); closeAll(); toast(t('Cleared')); } }, t('Clear all')) : null, h('button', { type: 'button', class: 'win-x', 'aria-label': t('Close'), title: t('Close'), html: ICON.x, onclick: () => closeAll() })),
     msgs.length ? [h('p', { class: 'notes-sec' }, t('Messages')), ...msgs] : null,
     rows.length ? [h('p', { class: 'notes-sec' }, t('Activity')), ...rows] : null,
-    !msgs.length && !rows.length ? h('div', { class: 'notes-empty' }, h('span', { html: ICON.bell }), t('Nothing new. Bravos, comments, follows, calls and messages show here.')) : null);
+    !msgs.length && !rows.length ? h('div', { class: 'notes-empty' }, h('span', { html: ICON.bell }), t('Nothing new. Likes, comments, follows, calls and messages show here.')) : null);
   // seen now: everything read, the count gone (the chat's own messages are read in the chat)
   const unread = notes.filter((n) => !n.read_at).map((n) => n.id);
   if (unread.length) { await sb.from('roardino_notifications').update({ read_at: new Date().toISOString() }).in('id', unread); notes.forEach((n) => { n.read_at ||= new Date().toISOString(); }); drawBadges(); }
@@ -2056,7 +2057,7 @@ const PRIVACY = [
     'Your profiles: name, what you do, city, date of birth, gender, a line about you, a text about you, and, as you choose, your looks, skills, languages, equipment, software, credits, studies, agent, Instagram and website.',
     'Your pictures, your self-tape or showreel, your cover picture and your CV.',
     'Your email and phone for contact, kept apart from the profile.',
-    'What you do on Roardino: posts with their pictures and videos, stories, comments, bravos, who you follow, the calls you post and the applications you send or receive, the seats you keep at seminars (with the name and phone you give), and the notifications made from all of these.',
+    'What you do on Roardino: posts with their pictures and videos, stories, comments, likes, who you follow, the calls you post and the applications you send or receive, the seats you keep at seminars (with the name and phone you give), and the notifications made from all of these.',
     'Choices remembered with your account (Everyone or Following, stories shown or hidden) and on your device only (light or dark, text size, the stories you have seen).',
   ]],
   ['Who sees what', [
