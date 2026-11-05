@@ -1178,3 +1178,15 @@ html[data-theme=dark] .pm-row.red{color:#ff5a4f}
 }
 p,h1,h2,h3,b,small,a,span,.who-line,.igm-name,.igm-line,.igm-bio,.ig-cap,.post-body{overflow-wrap:anywhere}
 html,body{max-width:100%}
+/* send a post on RoarMe (Alex, 5 Nov) */
+.stm{display:flex;flex-direction:column;gap:10px}
+.stm-list{display:flex;flex-direction:column;gap:2px;max-height:min(46vh,380px);overflow:auto;margin:0 -6px}
+.stm-row{display:flex;align-items:center;gap:12px;padding:8px 8px;border:0;border-radius:12px;background:transparent;text-align:left;cursor:pointer}
+.stm-row:hover{background:rgba(255,255,255,.5)}
+.stm-who{flex:1;min-width:0;display:flex;flex-direction:column}
+.stm-who b{font-size:14.5px;font-weight:var(--w-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stm-who small{font-size:12.5px;color:var(--muted)}
+.stm-tick{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1.75px solid var(--muted);color:transparent;flex:none;transition:all .2s var(--spring)}
+.stm-tick svg{width:14px;height:14px}
+.stm-row.on .stm-tick{background:var(--a-solid);border-color:var(--a-solid);color:#fff;transform:scale(1.08)}
+html[data-theme=dark] .stm-row:hover{background:rgba(255,255,255,.06)}

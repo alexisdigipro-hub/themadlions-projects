@@ -561,6 +561,7 @@ async function route() {
   try {
     if (a === 'people') return await viewPeople();
     if (a === 'p' && b) return await viewPerson(b);
+    if (a === 'post' && b) { const { data: one } = await sb.from('roardino_posts').select('*, person:roardino_people(id,name,avatar,kinds,headline)').eq('id', b).maybeSingle(); if (!one) return await viewFeed(); await viewPerson(one.person_id); await sign([one.person?.avatar, ...(one.media || []).map((m) => m.path)]); return openPost(one, one.person); }
     if (a === 'u' && b) { const { data: u } = await sb.from('roardino_people').select('id').eq('handle', decodeURIComponent(b).toLowerCase()).maybeSingle(); return await viewPerson(u?.id || '00000000-0000-0000-0000-000000000000'); }
     if (a === 'calls') return await viewCalls();
     if (a === 'c' && b) return await viewCall(b);
@@ -922,6 +923,64 @@ async function posts(rows, refresh) {
 }
 // a post as Instagram shows one (Alex, 4 Nov: "more Instagram"): who, the picture edge to edge (swipe when there are
 // several), icons, the bravos, the caption under the name, the comments behind a line, the time
+// the arrow under a post: send it to people on RoarMe (Alex, 5 Nov). Same Roar Account, same database: my recent chats
+// first, then anyone found by name or @username; each gets a message with a link that opens this post
+async function sendToRoarMe(r, p) {
+  const meId = session.user.id;
+  const url = `${location.origin}${location.pathname}#/post/${r.id}`;
+  const picked = new Map(); // key -> { kind: 'room' | 'user', id, name, avatar }
+  const list = h('div', { class: 'stm-list' }, h('p', { class: 'wait' }, t('Loading…')));
+  const note = h('input', { class: 'input', placeholder: t('Write a message…'), maxlength: 500 });
+  const sendBtn = h('button', { type: 'button', class: 'btn main', disabled: true }, icon('send'), t('Send'));
+  const avOf = (x) => (x.avatar && /^https?:/.test(x.avatar) ? { name: x.name, avatar: x.avatar } : { name: x.name });
+  let recent = [], everyone = null;
+  const row = (x) => h('button', { type: 'button', class: 'stm-row' + (picked.has(x.key) ? ' on' : ''), onclick: () => { if (picked.has(x.key)) picked.delete(x.key); else picked.set(x.key, x); sendBtn.disabled = !picked.size; draw(found); } },
+    avatar(avOf(x)), h('span', { class: 'stm-who' }, h('b', {}, x.name), x.sub ? h('small', {}, x.sub) : null), h('span', { class: 'stm-tick', html: ICON.check }));
+  let found = null;
+  const draw = (res) => put(list, ...(res || recent).map(row), !(res || recent).length ? h('p', { class: 'hint' }, res ? t('Nobody by that name on RoarMe.') : t('No chats yet. Search for someone above.')) : null);
+  const search = h('input', { class: 'input', type: 'search', placeholder: t('Search RoarMe'), oninput: async (e) => {
+    const q = e.target.value.trim();
+    if (!q) { found = null; return draw(); }
+    // RoarMe's people read once, then found the Roardino way: Greek, Greeklish, with or without accents
+    everyone ||= ((await sb.from('roar_profiles').select('id,username,display_name,avatar_url').neq('id', meId).limit(2000)).data || []).map((u) => ({ ...u, _k: ' ' + fold(`${u.display_name} ${u.username.replace(/_/g, ' ')} ${u.username}`) + ' ' }));
+    if (e.target.value.trim() !== q) return;
+    const data = everyone.filter((u) => matches(u._k, q)).slice(0, 20);
+    found = data.map((u) => ({ key: 'u:' + u.id, kind: 'user', id: u.id, name: u.display_name || u.username, sub: '@' + u.username, avatar: u.avatar_url }));
+    draw(found);
+  } });
+  const close = openWin(t('Send'), h('div', { class: 'stm' }, search, list, note), (c) => [h('button', { type: 'button', class: 'btn', onclick: c }, t('Cancel')), sendBtn]);
+  sendBtn.onclick = async () => {
+    sendBtn.disabled = true;
+    const text = (note.value.trim() ? note.value.trim() + '\n' : '') + `${p.name || 'Roardino'} · ${url}`;
+    let ok = 0;
+    for (const x of picked.values()) {
+      try {
+        let room = x.kind === 'room' ? x.id : null;
+        if (!room) { const { data, error } = await sb.rpc('roar_open_direct', { other: x.id }); if (error) throw error; room = typeof data === 'string' ? data : data?.id || data; }
+        const { error } = await sb.from('roar_messages').insert({ room_id: room, user_id: meId, body: text });
+        if (error) throw error;
+        ok++;
+      } catch (e) { console.warn('send to RoarMe', e); }
+    }
+    close();
+    toast(ok ? (ok === 1 ? t('Sent on RoarMe') : t('Sent to {n} chats on RoarMe', { n: ok })) : t('Could not send. Try again.'));
+  };
+  // my chats, newest first: a direct chat shows the other person, a group its name
+  try {
+    const { data: mem } = await sb.from('roar_members').select('room_id, archived, room:roar_rooms(id,kind,title,avatar_url,last_message_at)').eq('user_id', meId).limit(200);
+    const rooms = (mem || []).filter((m) => m.room && !m.archived).sort((a, b) => String(b.room.last_message_at).localeCompare(String(a.room.last_message_at))).slice(0, 30);
+    const directIds = rooms.filter((m) => m.room.kind === 'direct').map((m) => m.room_id);
+    const others = directIds.length ? (await sb.from('roar_members').select('room_id,user_id').in('room_id', directIds).neq('user_id', meId)).data || [] : [];
+    const profIds = [...new Set(others.map((o) => o.user_id))];
+    const profs = profIds.length ? (await sb.from('roar_profiles').select('id,username,display_name,avatar_url').in('id', profIds)).data || [] : [];
+    recent = rooms.map((m) => {
+      if (m.room.kind === 'group') return { key: 'r:' + m.room_id, kind: 'room', id: m.room_id, name: m.room.title || t('Group'), sub: t('Group'), avatar: m.room.avatar_url };
+      const o = others.find((x) => x.room_id === m.room_id); const pr = profs.find((x) => x.id === o?.user_id);
+      return pr ? { key: 'r:' + m.room_id, kind: 'room', id: m.room_id, name: pr.display_name || pr.username, sub: '@' + pr.username, avatar: pr.avatar_url } : null;
+    }).filter(Boolean);
+  } catch (e) { console.warn('RoarMe chats', e); }
+  draw();
+}
 async function toggleFollow(id) {
   const on = follows.has(id);
   const { error } = on ? await sb.from('roardino_follows').delete().eq('user_id', session.user.id).eq('person_id', id) : await sb.from('roardino_follows').insert({ person_id: id });
@@ -1035,7 +1094,7 @@ function postCard(r, st, refresh) {
     !media.length && r.body ? h('p', { class: 'post-body big' }, ...tagText(r.body)) : null,
     h('div', { class: 'ig-bar' }, bravoBtn,
       h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: openTalk }),
-      h('button', { type: 'button', class: 'ig-ico', title: t('Share'), 'aria-label': t('Share'), html: ICON.send, onclick: share }),
+      h('button', { type: 'button', class: 'ig-ico', title: t('Send on RoarMe'), 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: () => sendToRoarMe(r, p) }),
       h('span', { class: 'grow' }),
       own ? null : h('a', { class: 'btn sm main', href: `#/p/${p.id}` }, t('Work with me')), saveBtn),
     count,
