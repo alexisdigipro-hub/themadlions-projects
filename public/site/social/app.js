@@ -1181,7 +1181,9 @@ function postCard(r, st, refresh) {
   if ('IntersectionObserver' in window) new IntersectionObserver((list) => list.forEach((en) => {
     if (art.classList.contains('open') && en.intersectionRatio < 0.25 && !art.contains(document.activeElement)) setOpen(false);
   }), { threshold: [0, 0.25] }).observe(wrap);
-  put(art, wrap, cap, time, talk);
+  // the time rides at the end of the caption, right aligned, on its last line if it fits, else on the next (Alex, 5 Nov)
+  if (cap) cap.append(h('span', { class: 'cap-time' }, ago(r.created_at)));
+  put(art, wrap, cap, cap ? null : time, talk);
   return art;
 }
 // the comments, with motion (Alex, 5 Nov): they rise in one after another when opened, a new one slides in lit up and the
