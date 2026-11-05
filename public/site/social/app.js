@@ -339,7 +339,7 @@ const vidNear = 'IntersectionObserver' in window ? new IntersectionObserver((lis
 }), { rootMargin: '400px 0px' }) : null;
 const vidPlay = 'IntersectionObserver' in window ? new IntersectionObserver((list) => list.forEach((en) => {
   const v = en.target;
-  if (en.intersectionRatio >= 0.6) { document.querySelectorAll('video.fv').forEach((o) => { if (o !== v && !o.paused) o.pause(); }); v.play().catch(() => {}); }
+  if (en.intersectionRatio >= 0.6 && !v.dataset.held) { document.querySelectorAll('video.fv').forEach((o) => { if (o !== v && !o.paused) o.pause(); }); v.play().catch(() => {}); }
   else if (!v.paused) v.pause();
 }), { threshold: [0, 0.6] }) : null;
 function feedVideo(src) {
@@ -1404,7 +1404,7 @@ function postCard(r, st, refresh) {
     try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ }
   };
   const slides = media.length ? h('div', { class: 'ig-media' + (media.length > 1 ? ' many' : '') }, media.map((m) => (m.type === 'video'
-    ? (isPhone() ? feedVideo(urlOf(m.path)) : h('video', { src: urlOf(m.path), controls: true, playsInline: true, preload: 'metadata', muted: prefs.mutedVideos }))
+    ? (isPhone() ? feedVideo(urlOf(m.path)) : h('video', { src: urlOf(m.path), playsInline: true, preload: 'metadata', muted: prefs.mutedVideos, loop: true }))
     : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', decoding: 'async', ondblclick: (e) => { if (!st.mine) bravoBtn.click(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); e.target.parentElement.parentElement.append(hh); setTimeout(() => hh.remove(), 900); } })))) : null;
   // a video in its own shape, the width fixed and the height its own (Alex, 5 Nov: "the pictures were fine, only the
   // videos keep their aspect ratio"): the size kept at upload, else the video's own once it loads; pictures stay 4:5
@@ -1414,6 +1414,7 @@ function postCard(r, st, refresh) {
     if (m0.w && m0.h) shape(m0.w, m0.h);
     else slides.firstElementChild?.addEventListener('loadedmetadata', (e) => shape(e.target.videoWidth, e.target.videoHeight), { once: true });
   }
+  if (media[0]?.type === 'video') queueMicrotask(() => slides?.closest('.post')?.classList.add('vid'));
   const dots = media.length > 1 ? h('div', { class: 'ig-dots' }, media.map((_, i) => h('i', { class: i ? '' : 'on' }))) : null;
   if (slides && dots) slides.addEventListener('scroll', () => { const i = Math.round(slides.scrollLeft / slides.clientWidth); dots.querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i)); });
   const head =
@@ -1438,11 +1439,26 @@ function postCard(r, st, refresh) {
   let tapT = null;
   const setOpen = (on) => {
     art.classList.toggle('open', on);
-    slides.querySelectorAll('video').forEach((v) => { v.controls = on || !isPhone(); });
     if (on) { openTalk(); cap?.classList.remove('hidden'); } else { talk.classList.add('hidden'); cap?.classList.add('hidden'); }
   };
+  // a video (Alex, 5 Nov): one tap plays or pauses it, two taps open it large; a picture keeps its own taps
+  let lastTap = 0;
+  const slideAt = () => Math.round((slides.scrollLeft || 0) / (slides.clientWidth || 1));
+  slides?.querySelectorAll('video').forEach((v) => {
+    const mark = () => slides.classList.toggle('vpaused', v.paused);
+    v.addEventListener('play', mark); v.addEventListener('pause', mark); mark();
+  });
   wrap.addEventListener('click', (e) => {
     if (e.target.closest('.post-head, .ig-bar, a, button')) return;
+    const v = slides?.children[slideAt()];
+    if (v?.tagName === 'VIDEO') {
+      clearTimeout(tapT);
+      const now = Date.now();
+      if (now - lastTap < 320) { lastTap = 0; v.pause(); v.dataset.held = '1'; lightbox(media, slideAt()); return; }
+      lastTap = now;
+      tapT = setTimeout(() => { if (v.paused) { delete v.dataset.held; if (!v.src && v.dataset.src) v.src = v.dataset.src; v.play().catch(() => {}); } else { v.pause(); v.dataset.held = '1'; } }, 300);
+      return;
+    }
     // on a computer a click on the picture opens it large (Alex, 5 Nov)
     if (!isPhone()) { clearTimeout(tapT); tapT = setTimeout(() => lightbox(media, Math.round((slides.scrollLeft || 0) / (slides.clientWidth || 1))), 260); return; }
     clearTimeout(tapT); tapT = setTimeout(() => setOpen(!art.classList.contains('open')), 260);
