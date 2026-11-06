@@ -1674,3 +1674,5 @@ html[data-theme=dark] .set-row{border-color:rgba(255,255,255,.07)}
 .cell.sort-hole{opacity:.25;transform:scale(.94);transition:opacity .2s,transform .25s}
 .sort-ghost{position:fixed;z-index:120;margin:0;pointer-events:none;border-radius:12px;box-shadow:0 22px 50px rgba(0,0,0,.35),0 0 0 2px rgba(255,255,255,.7);
   transition:transform .18s cubic-bezier(.2,.7,.2,1);will-change:transform}
+/* the top bar is one frame (Alex, 6 Nov): the menu sits in it with no capsule of its own; the chosen word keeps its lens */
+.bar .words .seg,html[data-theme=dark] .bar .words .seg{background:none!important;border:0!important;box-shadow:none!important;padding:0}
