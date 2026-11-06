@@ -75,6 +75,14 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .frame.over::after,.frame.sel::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none}
 .frame.sel::after{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 18px var(--accent-glow)}
 .frame.over::after{box-shadow:inset 0 0 0 3px var(--accent);background:rgba(212,0,0,.12)}
+.split{position:absolute;z-index:4;touch-action:none}
+.split.v{width:18px;margin-left:-9px;cursor:col-resize}
+.split.h{height:18px;margin-top:-9px;cursor:row-resize}
+.split::after{content:"";position:absolute;border-radius:99px;background:rgba(255,255,255,.92);box-shadow:0 0 0 1px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.3);opacity:0;transition:opacity .2s}
+.split.v::after{left:7px;width:4px;top:50%;height:46px;margin-top:-23px}
+.split.h::after{top:7px;height:4px;left:50%;width:46px;margin-left:-23px}
+.stage:hover .split::after{opacity:.55}
+.split:hover::after,.split.on::after{opacity:1;background:var(--accent);box-shadow:0 0 14px var(--accent-glow)}
 .label{position:absolute;left:calc(var(--k)*14px);bottom:calc(var(--k)*12px);font:600 calc(var(--k)*13px)/1 var(--body);letter-spacing:.14em;
   text-transform:uppercase;pointer-events:none}
 .tools{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:flex;gap:4px;padding:4px;border-radius:999px;
@@ -156,7 +164,7 @@ const LAYOUTS = [
 const SHEET_COLORS = ['#ffffff','#8b8b88','#000000'];
 const FILL_COLORS = ['#ededeb','#ffffff','#2a2a2a'];
 
-let S = {layout:'t3', gap:14, rad:0, sheet:'#ffffff', fill:'#ededeb', labels:false};
+let S = {layout:'t3', gap:14, rad:0, sheet:'#ffffff', fill:'#ededeb', labels:false, sizes:{}};
 let photos = [];   // index -> {url, blob, w, h, s, ox, oy, flip}
 let sel = -1;
 
@@ -164,10 +172,13 @@ const $ = id => document.getElementById(id);
 const stage = $('stage'), wrap = $('wrap');
 const lay = () => LAYOUTS.find(l => l.id === S.layout) || LAYOUTS[0];
 
+// the windows' widths and heights: the layout's own, or what was dragged on the lines between them (S.sizes[layout])
+const sizesOf = L => { const z = (S.sizes||{})[L.id] || {}; return {
+  cols: z.cols && z.cols.length===L.cols.length ? z.cols : L.cols, rows: z.rows && z.rows.length===L.rows.length ? z.rows : L.rows }; };
 function rects(L, gap, pad){
-  const sum = a => a.reduce((x,y)=>x+y,0);
+  const sum = a => a.reduce((x,y)=>x+y,0), Z = sizesOf(L);
   const iw = BW - 2*pad - (L.cols.length-1)*gap, ih = BH - 2*pad - (L.rows.length-1)*gap;
-  const cw = L.cols.map(f => f/sum(L.cols)*iw), rh = L.rows.map(f => f/sum(L.rows)*ih);
+  const cw = Z.cols.map(f => f/sum(Z.cols)*iw), rh = Z.rows.map(f => f/sum(Z.rows)*ih);
   return L.cells.map(([c,r,cs,rs,label]) => ({
     x: pad + sum(cw.slice(0,c)) + c*gap, y: pad + sum(rh.slice(0,r)) + r*gap,
     w: sum(cw.slice(c,c+cs)) + (cs-1)*gap, h: sum(rh.slice(r,r+rs)) + (rs-1)*gap, label }));
@@ -263,6 +274,7 @@ function render(){
     if(i === sel){ f.classList.add('sel'); if(p) f.appendChild(toolbar(i)); }
     stage.appendChild(f);
   });
+  splitters(L, R);
   fit();
 }
 function frameEl(i){ return stage.querySelector(`.frame[data-i="${i}"]`); }
@@ -272,6 +284,52 @@ function place(i){ // move only the picture, no full redraw while dragging
   Object.assign(im.style, {left:pct(b.x,r.w), top:pct(b.y,r.h), width:pct(b.w,r.w), height:pct(b.h,r.h), transform:p.flip?'scaleX(-1)':''});
 }
 
+/* the lines between the windows: drag one and the window on one side grows as the other shrinks */
+function splitters(L, R){
+  const Z = sizesOf(L), P = pad(), cuts = [];
+  const sum = a => a.reduce((x,y)=>x+y,0);
+  const iw = BW - 2*P - (L.cols.length-1)*S.gap, ih = BH - 2*P - (L.rows.length-1)*S.gap;
+  let x = P; for(let k=0;k<Z.cols.length-1;k++){ x += Z.cols[k]/sum(Z.cols)*iw; cuts.push({axis:'cols', k, at:x + S.gap/2, inner:iw}); x += S.gap; }
+  let y = P; for(let k=0;k<Z.rows.length-1;k++){ y += Z.rows[k]/sum(Z.rows)*ih; cuts.push({axis:'rows', k, at:y + S.gap/2, inner:ih}); y += S.gap; }
+  cuts.forEach(c => {
+    // a row line only spans the columns that are really split there
+    let from = P, to = c.axis==='cols' ? BH-P : BW-P;
+    if(c.axis==='rows'){
+      const split = R.filter(r => Math.abs(r.y + r.h + S.gap/2 - c.at) < 1);
+      if(!split.length) return;
+      from = Math.min(...split.map(r=>r.x)); to = Math.max(...split.map(r=>r.x+r.w));
+    }
+    const d = document.createElement('div'); d.className = 'split ' + (c.axis==='cols' ? 'v' : 'h');
+    d.title = 'Drag to resize · double-click to even out';
+    if(c.axis==='cols') Object.assign(d.style, {left:pct(c.at,BW), top:pct(from,BH), height:pct(to-from,BH)});
+    else Object.assign(d.style, {top:pct(c.at,BH), left:pct(from,BW), width:pct(to-from,BW)});
+    d.onpointerdown = e => {
+      e.stopPropagation(); e.preventDefault(); d.setPointerCapture(e.pointerId); d.classList.add('on');
+      const start = c.axis==='cols' ? e.clientX : e.clientY, arr = sizesOf(L)[c.axis].slice(), tot = sum(arr), a0 = arr[c.k], b0 = arr[c.k+1];
+      const min = tot*0.06;
+      const move = ev => {
+        const dpx = ((c.axis==='cols' ? ev.clientX : ev.clientY) - start) * unit();
+        let df = dpx / c.inner * tot; df = Math.max(min - a0, Math.min(b0 - min, df));
+        arr[c.k] = a0 + df; arr[c.k+1] = b0 - df;
+        S.sizes = S.sizes || {}; S.sizes[L.id] = Object.assign({}, S.sizes[L.id], {[c.axis]: arr.slice()});
+        relayout(d, c);
+      };
+      const up = () => { d.removeEventListener('pointermove', move); d.removeEventListener('pointerup', up); d.removeEventListener('pointercancel', up); render(); save(); };
+      d.addEventListener('pointermove', move); d.addEventListener('pointerup', up); d.addEventListener('pointercancel', up);
+    };
+    d.ondblclick = e => { e.stopPropagation(); if(S.sizes && S.sizes[L.id]){ delete S.sizes[L.id][c.axis]; render(); save(); } };
+    stage.appendChild(d);
+  });
+}
+function relayout(d, c){ // move the windows, their photos and the held line while it is dragged, without rebuilding them
+  const L = lay(), R = rects(L, S.gap, pad());
+  R.forEach((r,i) => { const f = frameEl(i); if(!f) return;
+    Object.assign(f.style, {left:pct(r.x,BW), top:pct(r.y,BH), width:pct(r.w,BW), height:pct(r.h,BH)}); if(photos[i]) place(i); });
+  const Z = sizesOf(L)[c.axis], tot = Z.reduce((x,y)=>x+y,0), P = pad();
+  let at = P; for(let k=0;k<=c.k;k++) at += Z[k]/tot*c.inner + (k<c.k ? S.gap : 0);
+  at += S.gap/2;
+  if(c.axis==='cols') d.style.left = pct(at,BW); else d.style.top = pct(at,BH);
+}
 const IC = {
   minus:'<path d="M5 12h14"/>', plus:'<path d="M12 5v14M5 12h14"/>',
   fill:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
