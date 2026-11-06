@@ -1399,7 +1399,8 @@ async function peopleList(p, what) {
 // the picture large, over everything (Alex, 5 Nov): arrows or keys for the others, a click outside, the X or Esc closes
 function lightbox(media, start = 0, opts = {}) {
   if (!media.length) return;
-  const bare = !!opts.bare; // a post opened from a grid: the picture big, only the X, a double click likes (Alex, 5 Nov)
+  // the picture or video big, only the X in its own corner, a double click likes (Alex, 5 Nov; 6 Nov: the feed's too)
+  const bare = opts.bare !== false;
   let i = Math.max(0, Math.min(media.length - 1, start));
   const stage = h('div', { class: 'lb-stage' });
   const count = h('span', { class: 'lb-count' });
@@ -1407,6 +1408,17 @@ function lightbox(media, start = 0, opts = {}) {
     const m = media[i];
     const el = m.type === 'video' ? h('video', { src: urlOf(m.path), poster: urlOf(m.poster) || null, controls: !bare, autoplay: true, playsInline: true, loop: bare }) : h('img', { src: urlOf(m.path), alt: '' });
     // bare: the X sits in the picture's own top right corner, not on the window (Alex, 5 Nov)
+    // as big as the screen allows, in its own shape (Alex, 6 Nov: "show the video much bigger"): a small file is drawn larger too
+    const fit = (w, hh) => {
+      if (!w || !hh) return;
+      const pw = isPhone() ? 28 : 144, ph = isPhone() ? 28 : 48;
+      el.style.aspectRatio = `${w} / ${hh}`;
+      el.style.width = `min(calc(100vw - ${pw}px), calc((100dvh - ${ph}px) * ${w / hh}))`;
+      el.style.height = 'auto';
+    };
+    if (m.w && m.h) fit(m.w, m.h);
+    else if (el.tagName === 'VIDEO') el.addEventListener('loadedmetadata', () => fit(el.videoWidth, el.videoHeight), { once: true });
+    else el.addEventListener('load', () => fit(el.naturalWidth, el.naturalHeight), { once: true });
     put(stage, bare ? h('div', { class: 'lb-frame' }, el, h('button', { type: 'button', class: 'lb-x lb-x-in', 'aria-label': t('Close'), html: ICON.x, onclick: (e) => { e.stopPropagation(); close(); } })) : el);
     if (bare) {
       // one click plays or pauses a video, two like the post with the big heart; a picture likes on two
@@ -1614,13 +1626,13 @@ function postCard(r, st, refresh) {
     if (v?.tagName === 'VIDEO') {
       clearTimeout(tapT);
       const now = Date.now();
-      if (now - lastTap < 320) { lastTap = 0; v.pause(); v.dataset.held = '1'; lightbox(media, slideAt()); return; }
+      if (now - lastTap < 320) { lastTap = 0; v.pause(); v.dataset.held = '1'; lightbox(media, slideAt(), { onLike: () => { if (!own && !bravoBtn.classList.contains('on')) bravoBtn.click(); } }); return; }
       lastTap = now;
       tapT = setTimeout(() => { if (v.paused) { delete v.dataset.held; if (!v.src && v.dataset.src) v.src = v.dataset.src; v.play().catch(() => {}); } else { v.pause(); v.dataset.held = '1'; } }, 300);
       return;
     }
     // on a computer a click on the picture opens it large (Alex, 5 Nov)
-    if (!isPhone()) { clearTimeout(tapT); tapT = setTimeout(() => lightbox(media, Math.round((slides.scrollLeft || 0) / (slides.clientWidth || 1))), 260); return; }
+    if (!isPhone()) { clearTimeout(tapT); tapT = setTimeout(() => lightbox(media, Math.round((slides.scrollLeft || 0) / (slides.clientWidth || 1)), { onLike: () => { if (!own && !bravoBtn.classList.contains('on')) bravoBtn.click(); } }), 260); return; }
     clearTimeout(tapT); tapT = setTimeout(() => setOpen(!art.classList.contains('open')), 260);
   });
   wrap.addEventListener('dblclick', () => clearTimeout(tapT));
