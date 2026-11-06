@@ -3147,6 +3147,13 @@ function editSeminar(old, oldLink = '') {
    Start
    ===================================================================================================================== */
 let started = false;
+// the opening wordmark leaves once the first page is fully drawn (or after 8 s whatever happens)
+function hideSplash() {
+  const sp = document.getElementById('splash');
+  if (!sp || sp.classList.contains('out')) return;
+  requestAnimationFrame(() => { sp.classList.add('out'); setTimeout(() => sp.remove(), 600); });
+}
+setTimeout(hideSplash, 8000);
 async function enter(s) {
   session = s;
   if (!s) { mine = []; isAdmin = false; stopNotes(); return route(); }
@@ -3169,7 +3176,7 @@ async function enter(s) {
 }
 sb.auth.onAuthStateChange((ev, s) => {
   crumb('auth ' + ev);
-  if (ev === 'INITIAL_SESSION') { started = true; enter(s); return; }
+  if (ev === 'INITIAL_SESSION') { started = true; Promise.resolve(enter(s)).catch(() => {}).finally(hideSplash); return; }
   if (!started) return;
   if (ev === 'SIGNED_IN' && session?.user?.id === s?.user?.id) { session = s; return; } // a token refresh on focus
   if (ev === 'SIGNED_IN' || ev === 'SIGNED_OUT') enter(s);
