@@ -37,6 +37,14 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (6 Nov 2026: RoarRef, character sheets for AI, in the Lab)
+- Alex: "a template for a character sheet for AI, 16:9, windows that stay put, the photos inside them move where I want; 3 windows is only an example, it can be 4, 5, 6"; then "put it in the Lab, a small page with the basics, and from there you open the web version".
+- **The app: public/site/lab/roarref/app/** (themadlions.com/lab/roarref/app/), one plain HTML file, nothing to install. Nine layouts (LAYOUTS: 2, 3, 4, 5, 6 in a row, 3 bodies + 2 faces, 2 bodies + 6 faces, hero + 4, 6 expressions) in sheet units 1600x900; photos dropped / pasted / picked, dragged, zoomed (wheel, pinch, + -), mirrored, fill / fit, replace, trash; gap, corners, sheet and fill colours, labels (off by default, for clean AI input); Export = 3840x2160 PNG (download, the share sheet on a phone). The last sheet is kept in the browser (IndexedDB 'roarref'). Counts visits through stats.js.
+- **The small page: lab/roarref/** (claim, Open in the browser, the screen lab/roarref.jpg, three steps, EN/GR). Lab: tile 10 and Experiment 10 (EN/GR keys rf.*), lab APPS now also lists roarplay and roarref for the Studio order; Studio: LAB_APPS and Apps > In the browser (with its visit count); scripts/site-seo.mjs: APPS, sitemap, llms.txt.
+- Named **RoarRef**, not RoarSheet, because "Roar Sheet" is kept for the ordino maker (see 4 Nov below).
+- lab/roarref.jpg is the app with drawn stand-in figures; swap it for a screenshot with real photos when there is one. The home page's Lab row (index.html .lab-list) has no RoarRef card yet, and the Lab grid now has 10 tiles (one alone in the last row of 3).
+- Nothing for Alex to run.
+
 ## Where we stopped (4 Nov 2026, night: Roardino becomes the social place of the Greek film world)
 - Alex: a social place for everyone in film, theatre, dance, photo (actors, models, dancers, directors, DoP, crew, photographers), "Facebook with Instagram", with casting, children only through a parent, seminars and webinars. Name after a long search: **Roardino** (has "ordino" in it, which the whole field knows). Its own thing, later on its own domain; the only tie to the rest is the **Roar Account**. Don't mix in the other Roar apps (Alex).
 - **The ordino maker becomes "Roar Sheet"** (Alex), as a separate step after he has seen the social place, so no crew link breaks on the way. Not done yet: themadlions.com/roardino/ and the hub's Roardino are still the ordino maker.
