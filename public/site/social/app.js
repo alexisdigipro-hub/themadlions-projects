@@ -2236,7 +2236,7 @@ async function viewPerson(id) {
         h('div', { class: 'ig-name' }, h('h1', {}, p.name), p.handle ? h('span', { class: 'ig-handle' }, '@' + p.handle) : null, h('span', { class: 'grow' }),
           own ? h('div', { class: 'ig-acts' }, h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')), h('button', { type: 'button', class: 'btn sm main round', title: t('Create'), 'aria-label': t('Create'), onclick: createMenu }, icon('plus'))) : followBtn),
         h('div', { class: 'ig-row' },
-          stats ? h('div', { class: 'ig-stats' }, [[stats.posts, t('works'), null], [stats.followers, t('followers'), 'followers'], [stats.bravos, t('likes'), 'likes']].map(([n, s2, w]) => h(w ? 'button' : 'span', { type: w ? 'button' : null, class: w ? 'stat-btn' : null, onclick: w ? () => peopleList(p, w) : null }, h('b', {}, String(n)), ' ', s2))) : null,
+          stats ? h('div', { class: 'ig-stats' }, [[stats.posts, t('posts'), null], [stats.followers, t('followers'), 'followers'], [stats.following, t('following'), 'following']].map(([n, s2, w]) => h(w ? 'button' : 'span', { type: w ? 'button' : null, class: w ? 'stat-btn' : null, onclick: w ? () => peopleList(p, w) : null }, h('b', {}, String(n)), ' ', s2))) : null,
           h('div', { class: 'chips' }, (p.kinds || []).map(kindChip), p.minor ? h('span', { class: 'chip', style: { '--c': '#e0a33a' } }, h('i'), t('Under 18 · with a parent')) : null),
           h('span', { class: 'ig-meta' }, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} years', { n: a }) : '', L.height ? `${L.height} cm` : ''].filter(Boolean).join(' · '))),
         p.headline ? h('p', { class: 'ig-line' }, p.headline) : null,
@@ -2279,7 +2279,7 @@ function phoneHead(p, { own, stats, theirStories, photos, followBtn, contactList
   }
   return h('section', { class: 'igm' },
     h('div', { class: 'igm-top' }, av, h('div', { class: 'igm-right' }, h('b', { class: 'igm-name' }, p.name),
-      h('div', { class: 'igm-nums' }, num(stats?.posts, t('works')), num(stats?.followers, t('followers'), 'followers'), num(stats?.bravos, t('likes'), 'likes')))),
+      h('div', { class: 'igm-nums' }, num(stats?.posts, t('posts')), num(stats?.followers, t('followers'), 'followers'), num(stats?.following, t('following'), 'following')))),
     p.handle ? h('p', { class: 'igm-handle' }, '@' + p.handle) : null,
     p.headline ? h('p', { class: 'igm-line' }, p.headline) : null,
     p.bio ? h('p', { class: 'igm-bio' }, p.bio) : null,

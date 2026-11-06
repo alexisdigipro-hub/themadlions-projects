@@ -670,3 +670,14 @@ $$;
 grant execute on function public.roardino_saved_public(uuid) to anon, authenticated;
 drop policy if exists rd_saves_public on public.roardino_saves;
 create policy rd_saves_public on public.roardino_saves for select using (roardino_saved_public(user_id));
+
+-- ---------------------------------------------------------------------------------------------------------------------
+-- The profile's numbers as Instagram's (Alex, 6 Nov): posts, followers, following. Safe to run again.
+create or replace function public.roardino_person_stats(p uuid) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select case when roardino_can_see(p::text) then jsonb_build_object(
+    'followers', (select count(*) from roardino_follows where person_id = p),
+    'following', (select count(*) from roardino_follows where user_id = (select owner from roardino_people where id = p)),
+    'posts', (select count(*) from roardino_posts where person_id = p),
+    'bravos', (select count(*) from roardino_bravos b join roardino_posts x on x.id = b.post_id where x.person_id = p)) end
+$$;
