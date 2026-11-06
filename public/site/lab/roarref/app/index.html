@@ -60,7 +60,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 .stagewrap{flex:1;min-height:0;display:grid;place-items:center;position:relative}
-.stage{position:relative;aspect-ratio:16/9;max-width:100%;border-radius:6px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px var(--line);overflow:hidden;
+.stage{position:relative;max-width:100%;border-radius:6px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px var(--line);overflow:hidden;
   touch-action:none;user-select:none;-webkit-user-select:none}
 .frame{position:absolute;overflow:hidden;cursor:pointer;outline:0}
 .frame.has{cursor:grab}
@@ -83,6 +83,12 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .split.h::after{top:7px;height:4px;left:50%;width:46px;margin-left:-23px}
 .stage:hover .split::after{opacity:.55}
 .split:hover::after,.split.on::after{opacity:1;background:var(--accent);box-shadow:0 0 14px var(--accent-glow)}
+.cover{position:absolute;z-index:6;cursor:move;touch-action:none;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+.cover.sel{outline:2px solid var(--accent);outline-offset:3px}
+.cover .rs{position:absolute;right:-9px;bottom:-9px;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--accent);cursor:nwse-resize}
+.cover .tools{bottom:auto;top:-52px;white-space:nowrap}
+.cover .tools .ico[aria-pressed="true"]{background:rgba(255,255,255,.22)}
+.cover .tools .sw{width:24px;height:24px;flex:none;align-self:center;margin:0 2px}
 .label{position:absolute;left:calc(var(--k)*14px);bottom:calc(var(--k)*12px);font:600 calc(var(--k)*13px)/1 var(--body);letter-spacing:.14em;
   text-transform:uppercase;pointer-events:none}
 .tools{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:flex;gap:4px;padding:4px;border-radius:999px;
@@ -93,6 +99,18 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .ico:active{transform:scale(.92)}
 .ico.del{color:#ff6b6b}
 .ico.del:hover{background:rgba(212,0,0,.3);color:#fff}
+.panel{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;min-height:40px}
+.panel .ctl input[type=range]{width:80px}
+.panel .ctl.big input[type=range]{width:96px}
+.panel .ctl{gap:6px;padding:0 10px}
+.panel .ctl output{min-width:36px}
+.lay.rt{width:auto;padding:0 10px;font:600 12px var(--body);letter-spacing:.02em}
+.panel .ctl output{min-width:42px;text-align:right;font-variant-numeric:tabular-nums;color:var(--fg);letter-spacing:0;text-transform:none}
+.panel .off{opacity:.4;pointer-events:none}
+.panel .sep{width:1px;height:24px;background:var(--line);margin:0 4px}
+.tools .ico{width:34px;height:34px}
+.frame .tools{max-width:calc(100% - 8px);flex-wrap:wrap;justify-content:center;border-radius:20px}
+.card .pill[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 16px var(--accent-glow)}
 .hint{position:absolute;bottom:-2px;left:0;right:0;text-align:center;font-size:12px;color:var(--muted);pointer-events:none}
 
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:grid;place-items:center;z-index:50;padding:16px;animation:fade .2s}
@@ -129,27 +147,32 @@ img{max-width:100%}
   <div class="bar">
     <a class="mark" href="../" title="About RoarRef" style="color:inherit;text-decoration:none">Roar<b>Ref</b></a>
     <div class="group" id="layouts" role="group" aria-label="Layout"><span class="lens" id="lens"></span></div>
-    <div class="ctl" title="Space between windows">Gap <input id="gap" type="range" min="0" max="60" value="14"></div>
-    <div class="ctl" title="Round corners">Round <input id="rad" type="range" min="0" max="40" value="0"></div>
+    <div class="group" id="ratios" role="group" aria-label="Shape of the sheet"><span class="lens" id="rlens"></span></div>
     <div class="ctl" id="sheetSw" title="Sheet colour">Sheet</div>
     <div class="ctl" id="fillSw" title="Colour behind the photos">Fill</div>
+    <button class="pill round" id="cover" title="Add a shape to cover a face">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="5" fill="currentColor"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span class="w">Cover</span></button>
     <button class="pill round" id="labels" aria-pressed="false" title="Show the view names on the sheet">
       <svg viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg><span class="w">Labels</span></button>
     <button class="pill round" id="add" style="margin-left:auto" title="Add photos to the empty windows">
       <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="w">Add photos</span></button>
     <button class="pill round" id="clear" title="Empty every window">
       <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg><span class="w">Clear</span></button>
-    <button class="pill main" id="export" title="Save the sheet as a PNG">
+    <button class="pill main" id="export" title="Save the sheet as PNG or JPEG, 4K to 8K">
       <svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="w">Export</span></button>
   </div>
   <div class="stagewrap" id="wrap">
     <div class="stage" id="stage"></div>
   </div>
+  <div class="panel" id="panel"></div>
 </div>
 <input type="file" id="file" accept="image/*" multiple hidden>
 
 <script>
-const BW = 1600, BH = 900;
+// the sheet in its own units: 1600 on its long side, the other as the shape asks (16:9, 1:1, 2:1, 9:16)
+const RATIOS = [['16:9',16/9],['1:1',1],['2:1',2],['9:16',9/16]];
+let BW = 1600, BH = 900;
+function setShape(){ const r = (RATIOS.find(x => x[0]===S.ratio) || RATIOS[0])[1]; if(r >= 1){ BW = 1600; BH = Math.round(1600/r); } else { BH = 1600; BW = Math.round(1600*r); } }
 const LAYOUTS = [
   {id:'t3', name:'Front, back, face', cols:[1,1,1], rows:[1], cells:[[0,0,1,1,'Front'],[1,0,1,1,'Back'],[2,0,1,1,'Face']]},
   {id:'t4', name:'Front, side, back, face', cols:[1,1,1,1], rows:[1], cells:[[0,0,1,1,'Front'],[1,0,1,1,'Side'],[2,0,1,1,'Back'],[3,0,1,1,'Face']]},
@@ -164,7 +187,7 @@ const LAYOUTS = [
 const SHEET_COLORS = ['#ffffff','#8b8b88','#000000'];
 const FILL_COLORS = ['#ededeb','#ffffff','#2a2a2a'];
 
-let S = {layout:'t3', gap:14, rad:0, sheet:'#ffffff', fill:'#ededeb', labels:false, sizes:{}};
+let S = {layout:'t3', ratio:'16:9', gap:14, rad:0, sheet:'#ffffff', fill:'#ededeb', labels:false, sizes:{}, covers:[]};
 let photos = [];   // index -> {url, blob, w, h, s, ox, oy, flip}
 let sel = -1;
 
@@ -190,7 +213,7 @@ function lum(hex){ const n=parseInt(hex.slice(1),16); return (0.299*(n>>16)+0.58
 /* ---------- top bar ---------- */
 function miniSvg(L){
   const R = rects(L, 60, 0);
-  return `<svg viewBox="0 0 1600 900">${R.map(r=>`<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="70" fill="currentColor"/>`).join('')}</svg>`;
+  return `<svg viewBox="0 0 ${BW} ${BH}">${R.map(r=>`<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="70" fill="currentColor"/>`).join('')}</svg>`;
 }
 LAYOUTS.forEach(L => {
   const b = document.createElement('button');
@@ -218,8 +241,16 @@ function swatches(el, colors, key){
   p.querySelector('input').oninput = e => { S[key]=e.target.value; render(); save(); };
   el.appendChild(p);
 }
-$('gap').oninput = e => { S.gap=+e.target.value; render(); save(); };
-$('rad').oninput = e => { S.rad=+e.target.value; render(); save(); };
+RATIOS.forEach(([name]) => {
+  const b = document.createElement('button'); b.type='button'; b.className='lay rt'; b.dataset.r = name; b.textContent = name;
+  b.title = 'Sheet ' + name; b.onclick = () => { S.ratio = name; render(); save(); };
+  $('ratios').appendChild(b);
+});
+function moveRatioLens(){
+  const b = $('ratios').querySelector(`[data-r="${S.ratio}"]`); if(!b) return;
+  $('rlens').style.left = b.offsetLeft + 'px'; $('rlens').style.width = b.offsetWidth + 'px';
+  $('ratios').querySelectorAll('.rt').forEach(x => x.setAttribute('aria-pressed', x === b));
+}
 $('labels').onclick = () => { S.labels=!S.labels; render(); save(); };
 $('add').onclick = () => { pickTarget = -1; $('file').click(); };
 $('clear').onclick = () => { if(!photos.some(Boolean)) return; askClear(); };
@@ -228,8 +259,8 @@ $('export').onclick = exportPng;
 /* ---------- sheet ---------- */
 function fit(){
   const W = wrap.clientWidth, H = wrap.clientHeight;
-  const w = Math.min(W, H*16/9);
-  stage.style.width = w+'px'; stage.style.height = (w*9/16)+'px';
+  const w = Math.min(W, H*BW/BH);
+  stage.style.width = w+'px'; stage.style.height = (w*BH/BW)+'px';
   stage.style.setProperty('--k', w/BW);
 }
 new ResizeObserver(fit).observe(wrap);
@@ -242,10 +273,13 @@ function imgBox(p, r){
 const pct = (v, of) => (v/of*100)+'%';
 
 function render(){
+  setShape();
+  $('layouts').querySelectorAll('.lay').forEach(b => { const L = LAYOUTS.find(x => x.id===b.dataset.id); if(L) b.innerHTML = miniSvg(L); });
+  moveRatioLens();
   const L = lay(), R = rects(L, S.gap, pad());
   stage.style.background = S.sheet;
   stage.classList.toggle('dark', lum(S.fill) < .5);
-  $('gap').value = S.gap; $('rad').value = S.rad; $('labels').setAttribute('aria-pressed', S.labels);
+  $('labels').setAttribute('aria-pressed', S.labels);
   swatches($('sheetSw'), SHEET_COLORS, 'sheet'); swatches($('fillSw'), FILL_COLORS, 'fill');
   moveLens();
   stage.innerHTML = '';
@@ -260,7 +294,7 @@ function render(){
       const b = imgBox(p, r), im = document.createElement('img');
       im.src = p.url; im.alt = r.label; im.draggable = false;
       Object.assign(im.style, {left:pct(b.x,r.w), top:pct(b.y,r.h), width:pct(b.w,r.w), height:pct(b.h,r.h),
-        transform: p.flip ? 'scaleX(-1)' : ''});
+        transform: tf(p)});
       f.appendChild(im);
     } else {
       f.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 8"/></svg>${r.label}<small>Drop a photo or click</small></div>`;
@@ -275,13 +309,17 @@ function render(){
     stage.appendChild(f);
   });
   splitters(L, R);
+  drawCovers();
+  syncPanel();
   fit();
 }
 function frameEl(i){ return stage.querySelector(`.frame[data-i="${i}"]`); }
+const tf = p => `rotate(${p.rot||0}deg)` + (p.flip ? ' scaleX(-1)' : '');
 function place(i){ // move only the picture, no full redraw while dragging
   const p = photos[i], f = frameEl(i); if(!p||!f) return;
   const r = rects(lay(), S.gap, pad())[i], b = imgBox(p, r), im = f.querySelector('img');
-  Object.assign(im.style, {left:pct(b.x,r.w), top:pct(b.y,r.h), width:pct(b.w,r.w), height:pct(b.h,r.h), transform:p.flip?'scaleX(-1)':''});
+  Object.assign(im.style, {left:pct(b.x,r.w), top:pct(b.y,r.h), width:pct(b.w,r.w), height:pct(b.h,r.h), transform:tf(p)});
+  if(i === sel) syncPanel();
 }
 
 /* the lines between the windows: drag one and the window on one side grows as the other shrinks */
@@ -336,21 +374,117 @@ const IC = {
   fit:'<rect x="5" y="7" width="14" height="10" rx="2"/><path d="M2 4h20M2 20h20"/>',
   flip:'<path d="M12 3v18M8 7l-5 5 5 5V7zM16 7l5 5-5 5V7z"/>',
   swap:'<path d="M7 4v13M3 13l4 4 4-4M17 20V7M13 11l4-4 4 4"/>',
+  blur:'<circle cx="12" cy="12" r="8" stroke-dasharray="2 2.6"/><circle cx="12" cy="12" r="3.5"/>',
+  circle:'<circle cx="12" cy="12" r="7"/>',
+  square:'<rect x="5" y="5" width="14" height="14" rx="1.5"/>',
   trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
 };
+/* the bar under the sheet: the windows' reset, and sliders and buttons for the photo that is picked */
+const panelEl = $('panel');
+const reset = p => Object.assign(p, {s:1, ox:0, oy:0, rot:0});
+function slider(id, label, min, max, step, onIn){
+  const w = document.createElement('label'); w.className='ctl'; w.dataset.k = id;
+  w.innerHTML = `${label} <input type="range" id="ps-${id}" min="${min}" max="${max}" step="${step}"><output></output>`;
+  const inp = w.querySelector('input');
+  inp.oninput = () => { if(sel>=0 && photos[sel]) { onIn(+inp.value, photos[sel]); place(sel); saveSoon(); } };
+  inp.ondblclick = () => { if(sel>=0 && photos[sel]){ const p=photos[sel]; if(id==='zoom'){p.s=1;} else if(id==='x'){p.ox=0;} else if(id==='y'){p.oy=0;} else p.rot=0; place(sel); save(); } };
+  return w;
+}
+function pbtn(ic, title, fn, cls=''){
+  const b=document.createElement('button'); b.type='button'; b.className='ico '+cls; b.title=title; b.setAttribute('aria-label',title);
+  b.innerHTML=`<svg viewBox="0 0 24 24">${IC[ic]}</svg>`; b.onclick=()=>fn(); return b;
+}
+function buildPanel(){
+  const even = document.createElement('button'); even.type='button'; even.className='pill round'; even.id='even';
+  even.title='Put every window back to its first size';
+  even.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/></svg>';
+  even.onclick = () => { if(S.sizes) delete S.sizes[S.layout]; render(); save(); };
+  const sep = () => { const d=document.createElement('span'); d.className='sep'; return d; };
+  const photo = document.createElement('div'); photo.id='photoCtl'; photo.style.cssText='display:contents';
+  photo.append(
+    slider('zoom','Zoom', -190, 230, 1, (v,p)=>{ p.s = Math.exp(v/100); }),
+    slider('x','X', -800, 800, 1, (v,p)=>{ p.ox = v; }),
+    slider('y','Y', -450, 450, 1, (v,p)=>{ p.oy = v; }),
+    slider('rot','Rotate', -180, 180, 1, (v,p)=>{ p.rot = v; }),
+    );
+  const fine = (id, label, max, key, title) => { const w = document.createElement('label'); w.className='ctl big'; w.title=title;
+    w.innerHTML = `${label} <input type="range" id="${id}" min="0" max="${max}" step="0.5"><output></output>`;
+    const i = w.querySelector('input'); i.oninput = () => { S[key] = +i.value; render(); saveSoon(); };
+    i.ondblclick = () => { S[key] = key==='gap' ? 14 : 0; render(); save(); }; return w; };
+  panelEl.append(fine('gap','Gap',80,'gap','Space between windows · double-click for 14'), fine('rad','Round',80,'rad','Round corners · double-click for none'), even, photo);
+}
+/* covers: solid circles or squares laid over the sheet, to hide a face (Alex, 6 Nov) */
+let selCover = -1;
+const COVER_COLORS = ['#000000','#ffffff','#8b8b88','#d40000'];
+const blurOf = c => Math.max(6, Math.min(c.w, c.h) * 0.14); // blur radius in sheet units, grows with the cover
+$('cover').onclick = () => {
+  S.covers = S.covers || [];
+  let cx = BW/2, cy = BH/2;
+  if(sel >= 0){ const r = rects(lay(), S.gap, pad())[sel]; if(r){ cx = r.x + r.w/2; cy = r.y + r.h*0.25; } }
+  const d = Math.round(Math.min(BW,BH)*0.12);
+  S.covers.push({x:cx, y:cy, w:d, h:d, shape:'circle', color:'#000000'});
+  selCover = S.covers.length-1; sel = -1; render(); save();
+};
+function drawCovers(){
+  (S.covers||[]).forEach((c, i) => {
+    const d = document.createElement('div'); d.className = 'cover' + (i===selCover ? ' sel' : '');
+    const blur = c.color === 'blur', br = `blur(calc(var(--k)*${blurOf(c)}px))`;
+    Object.assign(d.style, {left:pct(c.x-c.w/2,BW), top:pct(c.y-c.h/2,BH), width:pct(c.w,BW), height:pct(c.h,BH),
+      background: blur ? 'rgba(128,128,128,.04)' : c.color, borderRadius: c.shape==='circle' ? '50%' : `calc(var(--k)*${S.rad}px)`,
+      backdropFilter: blur ? br : '', webkitBackdropFilter: blur ? br : ''});
+    d.onpointerdown = e => {
+      e.stopPropagation(); e.preventDefault();
+      if(selCover !== i || sel >= 0){ selCover = i; sel = -1; render(); }
+      const el = stage.querySelectorAll('.cover')[i]; el.setPointerCapture(e.pointerId);
+      const sx = e.clientX, sy = e.clientY, x0 = c.x, y0 = c.y, w0 = c.w, h0 = c.h, k = unit();
+      const resize = e.target.classList.contains('rs');
+      const move = ev => {
+        const dx = (ev.clientX-sx)*k, dy = (ev.clientY-sy)*k;
+        if(resize){ let w = Math.max(12, w0 + dx*2), h = Math.max(12, h0 + dy*2);
+          if(c.shape==='circle' && !ev.altKey){ const m = Math.max(w,h); w = h = m; } c.w = w; c.h = h; }
+        else { c.x = x0 + dx; c.y = y0 + dy; }
+        Object.assign(el.style, {left:pct(c.x-c.w/2,BW), top:pct(c.y-c.h/2,BH), width:pct(c.w,BW), height:pct(c.h,BH)});
+      };
+      const up = () => { el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); save(); };
+      el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    };
+    if(i === selCover){
+      const h = document.createElement('div'); h.className='rs'; h.title='Drag to resize'; d.appendChild(h);
+      const t = document.createElement('div'); t.className='tools'; t.onpointerdown = e => e.stopPropagation();
+      t.append(pbtn(c.shape==='circle' ? 'square' : 'circle', c.shape==='circle' ? 'Make it a square' : 'Make it a circle', () => { c.shape = c.shape==='circle' ? 'square' : 'circle'; render(); save(); }));
+      COVER_COLORS.forEach(col => { const b = document.createElement('button'); b.type='button'; b.className='sw'; b.style.background=col; b.title=col;
+        b.setAttribute('aria-pressed', c.color===col); b.onclick = () => { c.color = col; render(); save(); }; t.appendChild(b); });
+      const bl = pbtn('blur', 'Blur instead of a colour', () => { c.color = 'blur'; render(); save(); }); bl.setAttribute('aria-pressed', c.color==='blur'); t.appendChild(bl);
+      t.append(pbtn('trash','Remove the cover', () => { S.covers.splice(i,1); selCover=-1; render(); save(); }, 'del'));
+      d.appendChild(t);
+    }
+    stage.appendChild(d);
+  });
+}
 function toolbar(i){
-  const t = document.createElement('div'); t.className='tools';
-  const btn = (ic, title, fn, cls='') => { const b=document.createElement('button'); b.className='ico '+cls; b.title=title; b.setAttribute('aria-label',title);
-    b.innerHTML=`<svg viewBox="0 0 24 24">${IC[ic]}</svg>`; b.onclick=e=>{e.stopPropagation(); fn();}; b.onpointerdown=e=>e.stopPropagation(); t.appendChild(b); };
-  btn('minus','Zoom out',()=>zoomBy(i,1/1.15));
-  btn('plus','Zoom in',()=>zoomBy(i,1.15));
-  btn('fill','Fill the window',()=>{ Object.assign(photos[i],{s:1,ox:0,oy:0}); place(i); save(); });
-  btn('fit','Show the whole photo',()=>{ const p=photos[i], r=rects(lay(),S.gap,pad())[i];
-    p.s = Math.min(r.w/p.w, r.h/p.h)/Math.max(r.w/p.w, r.h/p.h); p.ox=0; p.oy=0; place(i); save(); });
-  btn('flip','Mirror',()=>{ photos[i].flip=!photos[i].flip; place(i); save(); });
-  btn('swap','Replace photo',()=>{ pickTarget=i; $('file').click(); });
-  btn('trash','Remove photo',()=>{ photos[i]=null; render(); save(); },'del');
+  const t = document.createElement('div'); t.className='tools'; t.onpointerdown = e => e.stopPropagation();
+  t.append(
+    pbtn('fill','Fill the window (reset the photo)', ()=>{ reset(photos[i]); place(i); save(); }),
+    pbtn('fit','Show the whole photo', ()=>{ const p=photos[i], r=rects(lay(),S.gap,pad())[i];
+      p.s = Math.min(r.w/p.w, r.h/p.h)/Math.max(r.w/p.w, r.h/p.h); p.ox=0; p.oy=0; place(i); save(); }),
+    pbtn('flip','Mirror', ()=>{ photos[i].flip=!photos[i].flip; place(i); save(); }),
+    pbtn('swap','Replace photo', ()=>{ pickTarget=i; $('file').click(); }),
+    pbtn('trash','Remove photo', ()=>{ photos[i]=null; render(); save(); }, 'del'));
   return t;
+}
+function syncPanel(){
+  const p = sel>=0 ? photos[sel] : null, on = !!p;
+  const g = $('gap'), rd = $('rad');
+  if(g){ g.value = S.gap; g.nextElementSibling.textContent = S.gap; rd.value = S.rad; rd.nextElementSibling.textContent = S.rad; }
+  $('even').classList.toggle('off', !(S.sizes && S.sizes[S.layout]));
+  panelEl.querySelectorAll('#photoCtl > *').forEach(x => x.classList.toggle('off', !on));
+  const r = on ? rects(lay(), S.gap, pad())[sel] : {w:800,h:450};
+  const set = (k, v, min, max, txt) => { const w = panelEl.querySelector(`[data-k="${k}"]`), i = w.querySelector('input');
+    if(min!=null){ i.min = min; i.max = max; } i.value = v; w.querySelector('output').textContent = txt; };
+  set('zoom', on ? Math.round(Math.log(p.s)*100) : 0, null, null, on ? Math.round(p.s*100)+'%' : '');
+  set('x', on ? Math.round(p.ox) : 0, -Math.round(r.w), Math.round(r.w), on ? Math.round(p.ox/r.w*100)+'%' : '');
+  set('y', on ? Math.round(p.oy) : 0, -Math.round(r.h), Math.round(r.h), on ? Math.round(p.oy/r.h*100)+'%' : '');
+  set('rot', on ? Math.round(p.rot||0) : 0, null, null, on ? Math.round(p.rot||0)+'°' : '');
 }
 function zoomBy(i, f, cx=0, cy=0){
   const p = photos[i]; if(!p) return;
@@ -368,7 +502,7 @@ function localPt(i, e){ // pointer relative to the window centre, in sheet units
 }
 stage.addEventListener('pointerdown', e => {
   const f = e.target.closest('.frame'); if(!f) return;
-  const i = +f.dataset.i;
+  const i = +f.dataset.i; selCover = -1;
   if(!photos[i]){ sel=i; render(); pickTarget=i; $('file').click(); return; }
   if(sel !== i){ sel = i; render(); }
   ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
@@ -408,12 +542,13 @@ stage.addEventListener('wheel', e => {
 }, {passive:false});
 stage.addEventListener('dblclick', e => {
   const f = e.target.closest('.frame'); if(!f) return; const i=+f.dataset.i;
-  if(photos[i]){ Object.assign(photos[i],{s:1,ox:0,oy:0}); place(i); save(); }
+  if(photos[i]){ reset(photos[i]); place(i); save(); }
 });
 document.addEventListener('pointerdown', e => { if(!e.target.closest('.stage') && !e.target.closest('.modal') && sel>=0 && !e.target.closest('.bar')){ sel=-1; render(); } });
 document.addEventListener('keydown', e => {
   if(e.target.closest && e.target.closest('input')) return;
-  if(e.key==='Escape' && sel>=0){ sel=-1; render(); return; }
+  if(e.key==='Escape' && (sel>=0 || selCover>=0)){ sel=-1; selCover=-1; render(); return; }
+  if(selCover>=0 && (e.key==='Delete'||e.key==='Backspace')){ e.preventDefault(); S.covers.splice(selCover,1); selCover=-1; render(); save(); return; }
   if(sel<0 || !photos[sel]) return;
   const p = photos[sel], st = e.shiftKey ? 20 : 4;
   const moves = {ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]};
@@ -459,8 +594,8 @@ window.addEventListener('paste', e => {
 });
 
 /* ---------- export ---------- */
-async function drawSheet(W){
-  const k = W/BW, c = document.createElement('canvas'); c.width=W; c.height=Math.round(W*9/16);
+async function drawSheet(W, type='image/png'){
+  const k = W/BW, c = document.createElement('canvas'); c.width=W; c.height=Math.round(W*BH/BW);
   const g = c.getContext('2d'); g.imageSmoothingQuality='high';
   g.fillStyle=S.sheet; g.fillRect(0,0,c.width,c.height);
   const R = rects(lay(), S.gap, pad());
@@ -473,6 +608,7 @@ async function drawSheet(W){
       const im = new Image(); im.src = p.url; await im.decode();
       const b = imgBox(p, r);
       g.translate((r.x+b.x+b.w/2)*k, (r.y+b.y+b.h/2)*k);
+      if(p.rot) g.rotate(p.rot*Math.PI/180);
       if(p.flip) g.scale(-1,1);
       g.drawImage(im, -b.w*k/2, -b.h*k/2, b.w*k, b.h*k);
       g.setTransform(1,0,0,1,0,0);
@@ -487,14 +623,62 @@ async function drawSheet(W){
     }
     g.restore();
   }
-  return new Promise(res => c.toBlob(res, 'image/png'));
+  (S.covers||[]).forEach(cv => {
+    const shape = () => { g.beginPath();
+      if(cv.shape==='circle') g.ellipse(cv.x*k, cv.y*k, cv.w*k/2, cv.h*k/2, 0, 0, Math.PI*2);
+      else if(g.roundRect) g.roundRect((cv.x-cv.w/2)*k, (cv.y-cv.h/2)*k, cv.w*k, cv.h*k, S.rad*k); else g.rect((cv.x-cv.w/2)*k, (cv.y-cv.h/2)*k, cv.w*k, cv.h*k); };
+    if(cv.color === 'blur'){
+      // blur what is under the cover: a copy of the sheet, blurred, drawn inside the shape
+      const rad = blurOf(cv)*k, m = rad*3, x0 = Math.max(0,(cv.x-cv.w/2)*k-m), y0 = Math.max(0,(cv.y-cv.h/2)*k-m);
+      const w0 = Math.min(c.width-x0, cv.w*k+2*m), h0 = Math.min(c.height-y0, cv.h*k+2*m);
+      const t = document.createElement('canvas'); t.width = Math.ceil(w0); t.height = Math.ceil(h0); const tg = t.getContext('2d');
+      if('filter' in tg){ tg.filter = `blur(${rad}px)`; tg.drawImage(c, x0, y0, w0, h0, 0, 0, w0, h0); }
+      else { const sm = document.createElement('canvas'), f = Math.max(1, rad/2); sm.width = Math.max(1, Math.round(w0/f)); sm.height = Math.max(1, Math.round(h0/f));
+        sm.getContext('2d').drawImage(c, x0, y0, w0, h0, 0, 0, sm.width, sm.height); tg.imageSmoothingQuality='high'; tg.drawImage(sm, 0, 0, w0, h0); }
+      g.save(); shape(); g.clip(); g.drawImage(t, x0, y0); g.restore();
+      return;
+    }
+    g.save(); g.fillStyle = cv.color; g.beginPath();
+    if(cv.shape==='circle') g.ellipse(cv.x*k, cv.y*k, cv.w*k/2, cv.h*k/2, 0, 0, Math.PI*2);
+    else if(g.roundRect) g.roundRect((cv.x-cv.w/2)*k, (cv.y-cv.h/2)*k, cv.w*k, cv.h*k, S.rad*k); else g.rect((cv.x-cv.w/2)*k, (cv.y-cv.h/2)*k, cv.w*k, cv.h*k);
+    g.fill(); g.restore();
+  });
+  if(type==='image/jpeg'){ // JPEG has no transparency: put the sheet colour under everything once more
+    const o = document.createElement('canvas'); o.width=c.width; o.height=c.height; const og=o.getContext('2d');
+    og.fillStyle=S.sheet; og.fillRect(0,0,o.width,o.height); og.drawImage(c,0,0);
+    return new Promise((res,rej) => o.toBlob(b => b ? res(b) : rej(), type, 0.95));
+  }
+  return new Promise((res,rej) => c.toBlob(b => b ? res(b) : rej(), type));
 }
-async function exportPng(){
-  const btn = $('export'); btn.disabled = true;
+/* Export: a small window to pick PNG or JPEG and 4K, 6K or 8K (the long side 3840, 5760 or 7680) */
+const SIZES = [['4K',3840],['6K',5760],['8K',7680]];
+function exportPng(){
+  const ex = Object.assign({fmt:'png', size:'4K'}, S.export||{});
+  const dims = long => BW >= BH ? [long, Math.round(long*BH/BW)] : [Math.round(long*BW/BH), long];
+  const m = document.createElement('div'); m.className='modal';
+  const draw = () => {
+    m.innerHTML = `<div class="card" style="max-width:460px"><h2>Export the sheet</h2>
+      <p>Format</p><div class="row">${['png','jpg'].map(f=>`<button type="button" class="pill" data-f="${f}" aria-pressed="${ex.fmt===f}">${f==='png'?'PNG · lossless':'JPEG · smaller file'}</button>`).join('')}</div>
+      <p>Size</p><div class="row">${SIZES.map(([n,l])=>{const [w,h]=dims(l);return `<button type="button" class="pill" data-s="${n}" aria-pressed="${ex.size===n}">${n} <span style="opacity:.6">${w} × ${h}</span></button>`}).join('')}</div>
+      <div class="row"><span class="spacer" style="flex:1"></span><button type="button" class="pill" id="xNo">Cancel</button><button type="button" class="pill main" id="xGo"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export</button></div></div>`;
+  };
+  draw();
+  m.onclick = e => {
+    const t = e.target.closest('button');
+    if(e.target===m || t?.id==='xNo'){ m.remove(); return; }
+    if(t?.dataset.f){ ex.fmt=t.dataset.f; draw(); }
+    else if(t?.dataset.s){ ex.size=t.dataset.s; draw(); }
+    else if(t?.id==='xGo'){ S.export = ex; save(); m.remove(); runExport(dims(SIZES.find(x=>x[0]===ex.size)[1])[0], ex.fmt); }
+  };
+  document.body.appendChild(m);
+}
+async function runExport(W, fmt){
+  const btn = $('export'); btn.disabled = true; toast('Making the sheet…');
   try{
-    const blob = await drawSheet(3840);
-    const name = `character-sheet-${new Date().toISOString().slice(0,10)}.png`;
-    const file = new File([blob], name, {type:'image/png'});
+    const type = fmt==='jpg' ? 'image/jpeg' : 'image/png';
+    const blob = await drawSheet(W, type);
+    const name = `character-sheet-${new Date().toISOString().slice(0,10)}.${fmt}`;
+    const file = new File([blob], name, {type});
     if(matchMedia('(pointer:coarse)').matches && navigator.canShare?.({files:[file]})){
       try{ await navigator.share({files:[file]}); return; }catch(e){ if(e.name==='AbortError') return; }
     }
@@ -502,7 +686,7 @@ async function exportPng(){
     a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
     toast('Saved to your Downloads');
-  } catch(e){ toast('The sheet could not be made. Try again with fewer or smaller photos.'); }
+  } catch(e){ toast('This size is too big for this browser. Try 6K or 4K.'); }
   finally { btn.disabled = false; }
 }
 function askClear(){
@@ -530,7 +714,7 @@ async function restore(){
   }catch{}
   render();
 }
-render(); restore();
+buildPanel(); render(); restore();
 </script>
 <script src="../../../stats.js" defer></script>
 </body>
