@@ -140,6 +140,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - 6 Nov: the computer's top bar is one frame (Alex): the menu (Home, Industry, Calls, Seminars, Chat) has no capsule of its own inside it, the chosen word keeps its glass lens; the search stays.
 - 6 Nov: the big viewer (lightbox) is the bare one everywhere, from the feed too: the X in the media's own top right corner, no native controls (one click plays / pauses, two like the post); the picture or video is drawn as big as the screen allows in its own shape (width min(100vw - 144px, (100dvh - 48px) * w/h), 28px margins on a phone), so a small file is shown larger (Alex: "show the video much bigger").
 - 6 Nov: Home on a computer has no left column any more (Alex): the feed is one centred column (max 640px, .two.feed-two); the top bar holds, right of the search, light / dark, Settings, Sign out (asks first) and my picture (to my profile), then the bell (.bar-acts, computer only). Edit, Applications and the rest of the tiles are gone from Home on a computer; the phone is unchanged.
+- 6 Nov: the light / dark button left the top bar (Alex); it lives in Settings (Theme Light / Dark / Auto).
 - **Next** (Alex): the TikTok-like vertical feed of self-tapes and showreels; AI search ("dancer 20-25, hip hop, Athens"); Roar Sheet rename; its own domain (roardino.gr: Alex to check at papaki.gr, this session cannot reach registries); who becomes a scout (insert into roardino_scouts by hand for now).
 
 ## Where we stopped (3 Nov 2026, night: one admin for everything)
