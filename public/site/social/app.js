@@ -701,11 +701,13 @@ function topBar(on) {
     h('a', { href: '#/feed', class: 'brand', 'aria-label': 'Roardino', onclick: goHome }, mark()),
     // the menu in words, a glass capsule with the gliding lens, as Qubi's (Alex, 5 Nov); the search takes the rest
     h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.filter(([k]) => k !== 'search').map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { if (k === 'feed') goHome(); else location.hash = `#/${k}`; })),
-    h('label', { class: 'find' }, icon('search'), find),
+    // the search field became an icon that opens Industry, where the search lives (Alex, 6 Nov); a spacer keeps the icons right
+    h('span', { class: 'bar-grow' }),
     h('button', { type: 'button', class: 'ico create-btn', title: t('Create'), 'aria-label': t('Create'), html: ICON.plus, onclick: createMenu }),
     // on a computer, right of the search (Alex, 6 Nov: the column on the left goes): Settings, Sign out (light / dark lives in Settings),
     // my picture (to my profile), then the bell
     h('div', { class: 'bar-acts' },
+      h('button', { type: 'button', class: 'ico', title: t('Search'), 'aria-label': t('Search'), html: ICON.search, onclick: () => { location.hash = '#/people'; setTimeout(() => document.querySelector('.page input[type=search]')?.focus(), 500); } }),
       h('a', { class: 'ico', href: '#/settings', title: t('Settings'), 'aria-label': t('Settings'), html: ICON.gear }),
       h('button', { type: 'button', class: 'ico', title: t('Sign out'), 'aria-label': t('Sign out'), html: ICON.out, onclick: async () => { if (await ask(t('Sign out of Roardino?'), t('Sign out'), false)) sb.auth.signOut(); } }),
       h('a', { class: 'bar-me', href: m ? `#/p/${m.id}` : '#/edit/new', title: m ? t('My profile') : t('Create your profile'), 'aria-label': t('My profile') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }))),
@@ -2053,8 +2055,8 @@ async function viewPeople(opts = {}) {
   document.title = 'Roardino · ' + (opts.search ? t('Search') : t('Industry'));
   const grid = h('div', { class: 'faces' }, h('p', { class: 'wait' }, t('Loading…')));
   const sideBox = h('div'), countBox = h('span', { class: 'hint people-count' }), kindsBox = h('div', { class: 'kind-rows' }), filterBox = h('div');
-  // the top bar has the search on a computer; a phone has no search in its bar, so it gets one here
-  const search = input(peopleQ, { type: 'search', class: 'input search only-phone', placeholder: t('Name, city, what they do'), 'aria-label': t('Search cast & crew'), oninput: (e) => { peopleQ = e.target.value; draw(); } });
+  // Industry's own search, on a phone and a computer (Alex, 6 Nov: the bar's search field became an icon that comes here)
+  const search = input(peopleQ, { type: 'search', class: 'input search ind-search', placeholder: t('Name, city, what they do'), 'aria-label': t('Search cast & crew'), oninput: (e) => { peopleQ = e.target.value; draw(); } });
   if (opts.search) frame('search', searchHead((q) => { peopleQ = q; draw(); }), h('div', { class: 'head s-side' }, sideBox, h('span', { class: 'grow' }), countBox), kindsBox, filterBox, grid);
   else frame('people', h('div', { class: 'head' }, h('h1', {}, t('Industry')), sideBox, h('span', { class: 'grow' }), countBox), search, kindsBox, filterBox, grid);
   const { data, error } = await sb.from('roardino_people').select('id,name,kinds,city,birth,gender,avatar,headline,minor,data').eq('visible', true).order('updated_at', { ascending: false }).limit(500);
