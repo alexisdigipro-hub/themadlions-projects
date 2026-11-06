@@ -1806,3 +1806,18 @@ html[data-theme=dark] .bar .menu{background:rgba(44,49,57,.97)!important}
 html[data-theme=dark] .ring .r i,html[data-theme=dark] .ig-av .r i,html[data-theme=dark] .igm-av .r i{border-color:#262a30}
 html[data-theme=dark] .ring-sm .av{box-shadow:0 0 0 2px #262a30}
 html[data-theme=dark] .ig-media{background:#16181c}
+/* one width for every page on a computer (Alex, 6 Nov: 1280): the bar, the content and the footer; the bar keeps Home's
+   spacing everywhere (menu words, search, bell, ≡, picture), it only gets wider */
+@media (min-width:821px){
+  .bar .bar-in,.bar.bar-feed .bar-in{max-width:1280px;gap:8px;padding:0 12px 0 18px}
+  .bar .words .seg button{padding:9px 11px;letter-spacing:.06em}
+  .bar .bar-acts{gap:0}
+  .page{max-width:1312px}
+  .two.feed-two>.mid{max-width:1280px}
+  .foot-in{max-width:1280px}
+}
+/* while the page asks whether a newer Roardino is out, only the wordmark shows (Alex, 6 Nov: "on refresh the old width shows first") */
+html.vcheck .bar,html.vcheck .page,html.vcheck .tabbar,html.vcheck .foot{visibility:hidden}
+/* every page as wide as the rest on a computer (Alex, 6 Nov: "all pages the same width, 1280"): forms (Edit profile,
+   Settings) and a call too */
+@media (min-width:821px){ .form,.call-page{max-width:1280px;margin-left:auto;margin-right:auto} }
