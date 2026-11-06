@@ -67,11 +67,11 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .frame.drag{cursor:grabbing}
 .frame img{position:absolute;max-width:none;pointer-events:none;-webkit-user-drag:none}
 .frame .empty{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:6px;text-align:center;
-  color:rgba(0,0,0,.42);font-size:calc(var(--k)*13px);letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+  color:rgba(0,0,0,.42);font-size:max(10px,calc(var(--k)*13px));letter-spacing:.08em;text-transform:uppercase;font-weight:600;
   border:calc(var(--k)*2px) dashed rgba(0,0,0,.16);border-radius:inherit;box-sizing:border-box}
 .dark .frame .empty{color:rgba(255,255,255,.45);border-color:rgba(255,255,255,.18)}
-.frame .empty svg{width:calc(var(--k)*30px);height:calc(var(--k)*30px);stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.frame .empty small{font-weight:400;text-transform:none;letter-spacing:0;opacity:.8;font-size:calc(var(--k)*12px)}
+.frame .empty svg{width:max(20px,calc(var(--k)*30px));height:max(20px,calc(var(--k)*30px));stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.frame .empty small{font-weight:400;text-transform:none;letter-spacing:0;opacity:.8;font-size:max(9px,calc(var(--k)*12px))}
 .frame.over::after,.frame.sel::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none}
 .frame.sel::after{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 18px var(--accent-glow)}
 .frame.over::after{box-shadow:inset 0 0 0 3px var(--accent);background:rgba(212,0,0,.12)}
@@ -148,6 +148,8 @@ img{max-width:100%}
     <a class="mark" href="../" title="About RoarRef" style="color:inherit;text-decoration:none">Roar<b>Ref</b></a>
     <div class="group" id="layouts" role="group" aria-label="Layout"><span class="lens" id="lens"></span></div>
     <div class="group" id="ratios" role="group" aria-label="Shape of the sheet"><span class="lens" id="rlens"></span></div>
+    <button class="pill round" id="stack" aria-pressed="false" title="Windows side by side or stacked one under the other">
+      <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="7" rx="1.5"/><rect x="4" y="13" width="16" height="7" rx="1.5"/></svg></button>
     <div class="ctl" id="sheetSw" title="Sheet colour">Sheet</div>
     <div class="ctl" id="fillSw" title="Colour behind the photos">Fill</div>
     <button class="pill round" id="cover" title="Add a shape to cover a face">
@@ -193,7 +195,10 @@ let sel = -1;
 
 const $ = id => document.getElementById(id);
 const stage = $('stage'), wrap = $('wrap');
-const lay = () => LAYOUTS.find(l => l.id === S.layout) || LAYOUTS[0];
+// stacked (Alex, 6 Nov: "in 9:16 put them horizontal too"): the same layout turned, its columns become rows
+const turn = L => ({id: L.id+'~t', name: L.name, cols: L.rows, rows: L.cols, cells: L.cells.map(([c,r,cs,rs,label]) => [r,c,rs,cs,label])});
+const shaped = L => S.stack ? turn(L) : L;
+const lay = () => shaped(LAYOUTS.find(l => l.id === S.layout) || LAYOUTS[0]);
 
 // the windows' widths and heights: the layout's own, or what was dragged on the lines between them (S.sizes[layout])
 const sizesOf = L => { const z = (S.sizes||{})[L.id] || {}; return {
@@ -243,7 +248,7 @@ function swatches(el, colors, key){
 }
 RATIOS.forEach(([name]) => {
   const b = document.createElement('button'); b.type='button'; b.className='lay rt'; b.dataset.r = name; b.textContent = name;
-  b.title = 'Sheet ' + name; b.onclick = () => { S.ratio = name; render(); save(); };
+  b.title = 'Sheet ' + name; b.onclick = () => { if(S.ratio !== name) S.stack = name === '9:16'; S.ratio = name; render(); save(); };
   $('ratios').appendChild(b);
 });
 function moveRatioLens(){
@@ -274,7 +279,8 @@ const pct = (v, of) => (v/of*100)+'%';
 
 function render(){
   setShape();
-  $('layouts').querySelectorAll('.lay').forEach(b => { const L = LAYOUTS.find(x => x.id===b.dataset.id); if(L) b.innerHTML = miniSvg(L); });
+  $('layouts').querySelectorAll('.lay').forEach(b => { const L = LAYOUTS.find(x => x.id===b.dataset.id); if(L) b.innerHTML = miniSvg(shaped(L)); });
+  $('stack').setAttribute('aria-pressed', !!S.stack);
   moveRatioLens();
   const L = lay(), R = rects(L, S.gap, pad());
   stage.style.background = S.sheet;
@@ -398,7 +404,7 @@ function buildPanel(){
   const even = document.createElement('button'); even.type='button'; even.className='pill round'; even.id='even';
   even.title='Put every window back to its first size';
   even.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/></svg>';
-  even.onclick = () => { if(S.sizes) delete S.sizes[S.layout]; render(); save(); };
+  even.onclick = () => { if(S.sizes) delete S.sizes[lay().id]; render(); save(); };
   const sep = () => { const d=document.createElement('span'); d.className='sep'; return d; };
   const photo = document.createElement('div'); photo.id='photoCtl'; photo.style.cssText='display:contents';
   photo.append(
@@ -417,6 +423,7 @@ function buildPanel(){
 let selCover = -1;
 const COVER_COLORS = ['#000000','#ffffff','#8b8b88','#d40000'];
 const blurOf = c => Math.max(6, Math.min(c.w, c.h) * 0.14); // blur radius in sheet units, grows with the cover
+$('stack').onclick = () => { S.stack = !S.stack; render(); save(); };
 $('cover').onclick = () => {
   S.covers = S.covers || [];
   let cx = BW/2, cy = BH/2;
@@ -476,7 +483,7 @@ function syncPanel(){
   const p = sel>=0 ? photos[sel] : null, on = !!p;
   const g = $('gap'), rd = $('rad');
   if(g){ g.value = S.gap; g.nextElementSibling.textContent = S.gap; rd.value = S.rad; rd.nextElementSibling.textContent = S.rad; }
-  $('even').classList.toggle('off', !(S.sizes && S.sizes[S.layout]));
+  $('even').classList.toggle('off', !(S.sizes && S.sizes[lay().id]));
   panelEl.querySelectorAll('#photoCtl > *').forEach(x => x.classList.toggle('off', !on));
   const r = on ? rects(lay(), S.gap, pad())[sel] : {w:800,h:450};
   const set = (k, v, min, max, txt) => { const w = panelEl.querySelector(`[data-k="${k}"]`), i = w.querySelector('input');
@@ -548,6 +555,7 @@ document.addEventListener('pointerdown', e => { if(!e.target.closest('.stage') &
 document.addEventListener('keydown', e => {
   if(e.target.closest && e.target.closest('input')) return;
   if(e.key==='Escape' && (sel>=0 || selCover>=0)){ sel=-1; selCover=-1; render(); return; }
+
   if(selCover>=0 && (e.key==='Delete'||e.key==='Backspace')){ e.preventDefault(); S.covers.splice(selCover,1); selCover=-1; render(); save(); return; }
   if(sel<0 || !photos[sel]) return;
   const p = photos[sel], st = e.shiftKey ? 20 : 4;
