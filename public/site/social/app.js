@@ -240,6 +240,7 @@ function errText(e) {
 }
 const SVG = (d, extra = '') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" ${extra}>${d}</svg>`;
 const ICON = {
+  menu: SVG('<path d="M4 7h16M4 12h16M4 17h16"/>'),
   lock: SVG('<rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7"/>'),
   unlock: SVG('<rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 6.8-1.2"/>'),
   move: SVG('<path d="M4 12h14M13 6.5 18.5 12 13 17.5"/>'),
@@ -682,22 +683,27 @@ function seg(items, on, pick) {
 const NAV = [['feed', 'Feed', 'home'], ['people', 'Industry', 'people'], ['search', 'Search', 'search'], ['calls', 'Calls', 'calls'], ['seminars', 'Seminars', 'cal'], ['chat', 'Chat', 'talk']];
 // the chat is RoarMe (Alex, 4 Nov): the same Roar Accounts, so it lives here in a frame
 const ROARME = 'https://alexisdigipro-hub.github.io/roarme/';
+let openTabNext = null;
 function topBar(on) {
   const m = me();
   const menu = h('div', { class: 'menu hidden' });
-  const fill = () => put(menu, 
-    h('small', {}, session.user.email),
-    m ? h('a', { href: `#/p/${m.id}` }, icon('user'), t('My profile')) : h('a', { href: '#/edit/new' }, icon('plus'), t('Create your profile')),
-    m ? h('a', { href: `#/edit/${m.id}` }, icon('edit'), t('Edit my profile')) : null,
+  // the ≡ menu at the far right (Alex, 6 Nov, as Instagram's More): Settings, Saved, Applications, Switch appearance,
+  // my other profiles, Log out
+  const dark = () => document.documentElement.dataset.theme === 'dark';
+  const fill = () => put(menu,
+    h('a', { href: '#/settings' }, icon('gear'), t('Settings')),
+    m ? h('a', { href: `#/p/${m.id}`, onclick: () => { openTabNext = 'saved'; if (location.hash === `#/p/${m.id}`) route(); } }, icon('bookmark'), t('Saved')) : null,
+    h('a', { href: '#/me' }, icon('star'), t('Applications and seats')),
+    h('button', { type: 'button', onclick: (e) => { e.stopPropagation(); setPref('theme', dark() ? 'light' : 'dark'); fill(); } }, icon(dark() ? 'sun' : 'moon'), dark() ? t('Switch to light') : t('Switch to dark')),
+    h('hr'),
     ...mine.filter((x) => x !== m).map((x) => h('a', { href: `#/p/${x.id}` }, avatar(x, 'sm'), x.name)),
     h('a', { href: '#/edit/kid' }, icon('child'), t('Add my child\'s profile')),
-    h('a', { href: '#/me' }, icon('star'), t('My applications and seats')),
-    h('a', { href: '#/settings' }, icon('gear'), t('Settings')),
     h('hr'),
-    h('button', { type: 'button', onclick: () => sb.auth.signOut() }, icon('out'), t('Sign out')));
+    h('small', {}, session.user.email),
+    h('button', { type: 'button', onclick: async () => { if (await ask(t('Sign out of Roardino?'), t('Sign out'), false)) sb.auth.signOut(); } }, icon('out'), t('Log out')));
   const toggle = (e) => { e.stopPropagation(); fill(); menu.classList.toggle('hidden'); if (!menu.classList.contains('hidden')) setTimeout(() => document.addEventListener('click', () => menu.classList.add('hidden'), { once: true })); };
   const find = h('input', { type: 'search', placeholder: t('Search cast, crew & creatives'), 'aria-label': t('Search cast, crew & creatives'), value: on === 'people' ? peopleQ : '', oninput: (e) => { if (location.hash === '#/people') { peopleQ = e.target.value; peopleRedraw?.(); } }, onkeydown: (e) => { if (e.key === 'Enter') { peopleQ = e.target.value; if (location.hash === '#/people') peopleRedraw?.(); else location.hash = '#/people'; } } });
-  return h('header', { class: 'bar' }, h('div', { class: 'bar-in' },
+  return h('header', { class: 'bar' + (on === 'feed' ? ' bar-feed' : '') }, h('div', { class: 'bar-in' },
     h('a', { href: '#/feed', class: 'brand', 'aria-label': 'Roardino', onclick: goHome }, mark()),
     // the menu in words, a glass capsule with the gliding lens, as Qubi's (Alex, 5 Nov); the search takes the rest
     h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.filter(([k]) => k !== 'search').map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { if (k === 'feed') goHome(); else location.hash = `#/${k}`; })),
@@ -708,10 +714,9 @@ function topBar(on) {
     // my picture (to my profile), then the bell
     h('div', { class: 'bar-acts' },
       h('button', { type: 'button', class: 'ico', title: t('Search'), 'aria-label': t('Search'), html: ICON.search, onclick: () => { location.hash = '#/people'; setTimeout(() => document.querySelector('.page input[type=search]')?.focus(), 500); } }),
-      h('a', { class: 'ico', href: '#/settings', title: t('Settings'), 'aria-label': t('Settings'), html: ICON.gear }),
-      h('button', { type: 'button', class: 'ico', title: t('Sign out'), 'aria-label': t('Sign out'), html: ICON.out, onclick: async () => { if (await ask(t('Sign out of Roardino?'), t('Sign out'), false)) sb.auth.signOut(); } }),
       h('a', { class: 'bar-me', href: m ? `#/p/${m.id}` : '#/edit/new', title: m ? t('My profile') : t('Create your profile'), 'aria-label': t('My profile') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }))),
     bellButton(),
+    h('button', { type: 'button', class: 'ico more-btn', title: t('More'), 'aria-label': t('More'), html: ICON.menu || ICON.dots, onclick: toggle }),
     h('button', { type: 'button', class: 'who-me', onclick: toggle, 'aria-label': t('Me') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }), h('span', { class: 'nm' }, m?.name || session.user.user_metadata?.name || t('Me')), icon('down')),
     h('button', { type: 'button', class: 'ico theme', title: t('Light or dark'), 'aria-label': t('Light or dark'), html: document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon, onclick: (e) => { setPref('theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); e.currentTarget.innerHTML = document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon; } }),
     menu));
@@ -2200,7 +2205,7 @@ async function viewPerson(id) {
   const work = gridBlock(p, (grid || []).filter((g) => g.kind !== 'photo'), own);
   const body = h('div');
   const tabRow = h('div', { class: 'ig-tabs' });
-  let tab = 'work';
+  let tab = (own && openTabNext) || 'work'; openTabNext = null; // the ≡ menu's Saved opens straight on Saved
   const drawTab = () => {
     // My Work, My Photos, My Bio on my own profile; Work, Photos, Bio on someone else's (Alex, 5 Nov)
     // Portfolio, Personal, Bio, Saved (Alex, 5 Nov); a Personal kept private does not show on someone else's profile

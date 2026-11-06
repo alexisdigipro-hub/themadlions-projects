@@ -1688,7 +1688,34 @@ html[data-theme=dark] .set-row{border-color:rgba(255,255,255,.07)}
   .bar-me:hover .av{box-shadow:0 0 0 2px var(--a-solid)}
   .two.feed-two{grid-template-columns:minmax(0,1fr);justify-items:center}
   .two.feed-two>.left{display:none}
-  .two.feed-two>.mid{width:100%;max-width:640px}
+  .two.feed-two>.mid{width:100%;max-width:780px}
+}
+/* the bar without its search field (Alex, 6 Nov): the icons keep to the right */
+.bar .bar-grow{display:none}
+@media (min-width:821px){.bar .bar-grow{display:block;flex:1}}
+@media (min-width:821px){.page .ind-search{width:100%;max-width:none;height:46px;margin:2px 0 8px}}
+
+/* Home on a computer (Alex, 6 Nov): the feed 780 wide and the top bar exactly as wide; at the far right the ≡ menu */
+.bar .more-btn{display:none}
+@media (min-width:821px){
+  .bar.bar-feed .bar-in{max-width:780px}
+  .bar .more-btn{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;color:var(--ink2);flex:none}
+  .bar .more-btn svg{width:22px;height:22px}
+  .bar .menu{top:calc(100% + 8px);right:0;min-width:250px}
+  .bar .menu a,.bar .menu button{min-height:44px}
+}
+@media (min-width:821px){
+  .bar .brand{flex:none;white-space:nowrap}
+  .bar .menu{background:rgba(250,251,253,.94)!important;-webkit-backdrop-filter:blur(24px) saturate(1.4);backdrop-filter:blur(24px) saturate(1.4)}
+  html[data-theme=dark] .bar .menu{background:rgba(24,24,28,.95)!important;border-color:rgba(255,255,255,.1)}
+  .bar .menu a>span:first-child,.bar .menu button>span:first-child{display:inline-grid!important;place-items:center;width:22px;height:22px;flex:none;color:var(--ink2)}
+  .bar .menu a>span:first-child svg,.bar .menu button>span:first-child svg{display:block;width:20px;height:20px}
+  .bar .menu small{display:block;padding:6px 12px 2px;font-size:12px;color:var(--muted)}
+}
+@media (min-width:821px){
+  .bar.bar-feed .bar-in{gap:8px;padding:0 12px 0 18px}
+  .bar.bar-feed .words .seg button{padding:9px 11px;letter-spacing:.06em}
+  .bar.bar-feed .bar-acts{gap:0}
 }
 /* the bar without its search field (Alex, 6 Nov): the icons keep to the right */
 .bar .bar-grow{display:none}
