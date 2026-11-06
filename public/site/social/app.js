@@ -703,6 +703,13 @@ function topBar(on) {
     h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.filter(([k]) => k !== 'search').map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { if (k === 'feed') goHome(); else location.hash = `#/${k}`; })),
     h('label', { class: 'find' }, icon('search'), find),
     h('button', { type: 'button', class: 'ico create-btn', title: t('Create'), 'aria-label': t('Create'), html: ICON.plus, onclick: createMenu }),
+    // on a computer, right of the search (Alex, 6 Nov: the column on the left goes): light / dark, Settings, Sign out,
+    // my picture (to my profile), then the bell
+    h('div', { class: 'bar-acts' },
+      h('button', { type: 'button', class: 'ico', title: t('Light or dark'), 'aria-label': t('Light or dark'), html: document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon, onclick: (e) => { const d = document.documentElement.dataset.theme === 'dark'; setPref('theme', d ? 'light' : 'dark'); e.currentTarget.innerHTML = d ? ICON.moon : ICON.sun; } }),
+      h('a', { class: 'ico', href: '#/settings', title: t('Settings'), 'aria-label': t('Settings'), html: ICON.gear }),
+      h('button', { type: 'button', class: 'ico', title: t('Sign out'), 'aria-label': t('Sign out'), html: ICON.out, onclick: async () => { if (await ask(t('Sign out of Roardino?'), t('Sign out'), false)) sb.auth.signOut(); } }),
+      h('a', { class: 'bar-me', href: m ? `#/p/${m.id}` : '#/edit/new', title: m ? t('My profile') : t('Create your profile'), 'aria-label': t('My profile') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }))),
     bellButton(),
     h('button', { type: 'button', class: 'who-me', onclick: toggle, 'aria-label': t('Me') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }), h('span', { class: 'nm' }, m?.name || session.user.user_metadata?.name || t('Me')), icon('down')),
     h('button', { type: 'button', class: 'ico theme', title: t('Light or dark'), 'aria-label': t('Light or dark'), html: document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon, onclick: (e) => { setPref('theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); e.currentTarget.innerHTML = document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon; } }),
@@ -997,7 +1004,7 @@ async function viewFeed() {
     // while the posts come: soft grey shapes of a post, not an empty page (Alex, 5 Nov: "the menu sits in the middle at the start")
     mid = h('div', { class: 'mid feed-mid' }, h('div', { class: 'wait feed-skel', 'aria-label': t('Loading…') }, [0, 1].map(() => h('div', { class: 'sk-post' }, h('div', { class: 'sk-head' }, h('i', { class: 'sk-av' }), h('i', { class: 'sk-line' })), h('div', { class: 'sk-pic' })))));
     // two columns (Alex, 4 Nov): my card with the week and the calls under it on the left, the work wide on the right
-    put(app, topBar('feed'), h('main', { class: 'page' }, h('div', { class: 'two' }, left, mid)), footBar(), tabBar('feed'));
+    put(app, topBar('feed'), h('main', { class: 'page' }, h('div', { class: 'two feed-two' }, left, mid)), footBar(), tabBar('feed'));
     window.scrollTo(0, 0);
   } else crumb('home: refresh in place');
   const [people, calls, seminars, stories] = await Promise.all([

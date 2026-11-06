@@ -1676,3 +1676,17 @@ html[data-theme=dark] .set-row{border-color:rgba(255,255,255,.07)}
   transition:transform .18s cubic-bezier(.2,.7,.2,1);will-change:transform}
 /* the top bar is one frame (Alex, 6 Nov): the menu sits in it with no capsule of its own; the chosen word keeps its lens */
 .bar .words .seg,html[data-theme=dark] .bar .words .seg{background:none!important;border:0!important;box-shadow:none!important;padding:0}
+/* a computer (Alex, 6 Nov): no column on the left of Home; light / dark, Settings, Sign out and my picture sit in the bar
+   beside the bell; the feed is one centred column */
+.bar-acts{display:none}
+@media (min-width:821px){
+  .bar-acts{display:flex;align-items:center;gap:2px;flex:none}
+  .bar-acts .ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--muted)}
+  .bar-acts .ico svg{width:20px;height:20px}
+  .bar-me{display:grid;place-items:center;width:40px;height:40px;margin-left:6px;border-radius:50%}
+  .bar-me .av{width:34px;height:34px;font-size:13px;box-shadow:0 0 0 2px var(--rim)}
+  .bar-me:hover .av{box-shadow:0 0 0 2px var(--a-solid)}
+  .two.feed-two{grid-template-columns:minmax(0,1fr);justify-items:center}
+  .two.feed-two>.left{display:none}
+  .two.feed-two>.mid{width:100%;max-width:640px}
+}
