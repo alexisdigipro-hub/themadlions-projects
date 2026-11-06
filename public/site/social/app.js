@@ -703,10 +703,9 @@ function topBar(on) {
     h('nav', { class: 'words', 'aria-label': t('Menu') }, seg(NAV.filter(([k]) => k !== 'search').map(([k, s2]) => [k, k === 'feed' ? t('Home') : t(s2)]), on, (k) => { if (k === 'feed') goHome(); else location.hash = `#/${k}`; })),
     h('label', { class: 'find' }, icon('search'), find),
     h('button', { type: 'button', class: 'ico create-btn', title: t('Create'), 'aria-label': t('Create'), html: ICON.plus, onclick: createMenu }),
-    // on a computer, right of the search (Alex, 6 Nov: the column on the left goes): light / dark, Settings, Sign out,
+    // on a computer, right of the search (Alex, 6 Nov: the column on the left goes): Settings, Sign out (light / dark lives in Settings),
     // my picture (to my profile), then the bell
     h('div', { class: 'bar-acts' },
-      h('button', { type: 'button', class: 'ico', title: t('Light or dark'), 'aria-label': t('Light or dark'), html: document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon, onclick: (e) => { const d = document.documentElement.dataset.theme === 'dark'; setPref('theme', d ? 'light' : 'dark'); e.currentTarget.innerHTML = d ? ICON.moon : ICON.sun; } }),
       h('a', { class: 'ico', href: '#/settings', title: t('Settings'), 'aria-label': t('Settings'), html: ICON.gear }),
       h('button', { type: 'button', class: 'ico', title: t('Sign out'), 'aria-label': t('Sign out'), html: ICON.out, onclick: async () => { if (await ask(t('Sign out of Roardino?'), t('Sign out'), false)) sb.auth.signOut(); } }),
       h('a', { class: 'bar-me', href: m ? `#/p/${m.id}` : '#/edit/new', title: m ? t('My profile') : t('Create your profile'), 'aria-label': t('My profile') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }))),
