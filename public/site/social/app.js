@@ -2238,7 +2238,7 @@ async function viewPerson(id) {
         h('div', { class: 'ig-name' }, h('h1', {}, p.name), p.handle ? h('span', { class: 'ig-handle' }, '@' + p.handle) : null, h('span', { class: 'grow' }),
           own ? h('div', { class: 'ig-acts' }, h('a', { class: 'btn sm main', href: `#/edit/${p.id}` }, icon('edit'), t('Edit profile')), h('button', { type: 'button', class: 'btn sm main round', title: t('Create'), 'aria-label': t('Create'), onclick: createMenu }, icon('plus'))) : followBtn),
         h('div', { class: 'ig-row' },
-          stats ? h('div', { class: 'ig-stats' }, [[stats.posts, t('posts'), null], [stats.followers, t('followers'), 'followers'], [stats.following, t('following'), 'following']].map(([n, s2, w]) => h(w ? 'button' : 'span', { type: w ? 'button' : null, class: w ? 'stat-btn' : null, onclick: w ? () => peopleList(p, w) : null }, h('b', {}, String(n)), ' ', s2))) : null,
+          stats ? h('div', { class: 'ig-stats' }, [[stats.posts ?? 0, t('posts'), null], [stats.followers ?? 0, t('followers'), 'followers'], [stats.following ?? 0, t('following'), 'following']].map(([n, s2, w]) => h(w ? 'button' : 'span', { type: w ? 'button' : null, class: w ? 'stat-btn' : null, onclick: w ? () => peopleList(p, w) : null }, h('b', {}, String(n)), ' ', s2))) : null,
           h('div', { class: 'chips' }, (p.kinds || []).map(kindChip), p.minor ? h('span', { class: 'chip', style: { '--c': '#e0a33a' } }, h('i'), t('Under 18 · with a parent')) : null),
           h('span', { class: 'ig-meta' }, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} years', { n: a }) : '', L.height ? `${L.height} cm` : ''].filter(Boolean).join(' · '))),
         p.headline ? h('p', { class: 'ig-line' }, p.headline) : null,
@@ -2736,7 +2736,7 @@ async function viewCall(id) {
   const drawSeg = () => put(segBox, seg([['all', t('All')], ['shortlist', t('Shortlist')], ['new', t('New')]], shown, (k) => { shown = k; drawSeg(); drawWho(); }));
   if (own) { drawWho(); drawSeg(); }
   frame('calls',
-    h('div', { style: { maxWidth: '820px' } },
+    h('div', { class: 'call-page' },
       h('div', { class: 'tile' },
         h('div', { class: 't-top' }, h('span', { class: 't-ico', html: c.kind === 'casting' ? ICON.star : ICON.calls }), h('span', { class: 'when' }, t(CALL_KIND[c.kind]) + (c.open ? '' : ' · ' + t('closed')))),
         h('h1', { style: { fontSize: '30px', margin: '4px 0', fontWeight: 'var(--w-strong)' } }, c.title),
