@@ -1821,3 +1821,24 @@ html.vcheck .bar,html.vcheck .page,html.vcheck .tabbar,html.vcheck .foot{visibil
 /* every page as wide as the rest on a computer (Alex, 6 Nov: "all pages the same width, 1280"): forms (Edit profile,
    Settings) and a call too */
 @media (min-width:821px){ .form,.call-page{max-width:1280px;margin-left:auto;margin-right:auto} }
+/* the opening (Alex, 6 Nov: "the Roardino logo alone in the middle with a small animation, then the whole site"):
+   a screen of the page's own colour over everything, the wordmark breathing softly, a thin red line gliding under it;
+   it fades away when the first page is drawn */
+#splash{position:fixed;inset:0;z-index:300;display:grid;place-items:center;align-content:center;gap:18px;background:#eceef1;transition:opacity .5s var(--soft),visibility .5s}
+html[data-theme=dark] #splash{background:radial-gradient(1200px 700px at 50% -12%,#4b525d 0%,transparent 62%),linear-gradient(180deg,#2b3038 0%,#1f2328 55%,#1a1d21 100%)}
+#splash.out{opacity:0;visibility:hidden}
+#splash .boot-mark{position:relative;font-size:34px;opacity:0;animation:sp-in .9s var(--soft) .1s forwards,sp-breathe 2.4s ease-in-out 1s infinite}
+#splash .sp-dot{position:absolute;top:2px;right:-13px;width:9px;height:9px;border-radius:50%;background:#d40000;box-shadow:0 0 12px rgba(212,0,0,.6);animation:sp-dot 1.6s ease-in-out infinite}
+#splash .sp-line{width:120px;height:2px;border-radius:2px;background:rgba(128,128,140,.18);overflow:hidden;opacity:0;animation:sp-in .6s .5s forwards}
+#splash .sp-line i{display:block;width:40%;height:100%;border-radius:inherit;background:#d40000;animation:sp-glide 1.2s ease-in-out infinite}
+@keyframes sp-in{from{opacity:0;transform:translateY(6px)}to{opacity:.9;transform:none}}
+@keyframes sp-breathe{50%{opacity:.6}}
+@keyframes sp-dot{50%{transform:scale(1.35);box-shadow:0 0 18px rgba(212,0,0,.8)}}
+@keyframes sp-glide{from{transform:translateX(-110%)}to{transform:translateX(260%)}}
+@media (prefers-reduced-motion:reduce){#splash *{animation:none!important;opacity:.9}}
+/* behind the opening the old boot wordmark is not needed */
+#app>.boot{visibility:hidden}
+html.booting #splash .boot-mark{animation:sp-in .9s var(--soft) .1s forwards,sp-breathe 2.4s ease-in-out 1s infinite!important}
+html.booting #splash .sp-dot{animation:sp-dot 1.6s ease-in-out infinite!important}
+html.booting #splash .sp-line{animation:sp-in .6s .5s forwards!important}
+html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!important}
