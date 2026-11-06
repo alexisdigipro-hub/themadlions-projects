@@ -701,7 +701,7 @@ function topBar(on) {
     h('hr'),
     h('small', {}, session.user.email),
     h('button', { type: 'button', onclick: async () => { if (await ask(t('Sign out of Roardino?'), t('Sign out'), false)) sb.auth.signOut(); } }, icon('out'), t('Log out')));
-  const toggle = (e) => { e.stopPropagation(); fill(); menu.classList.toggle('hidden'); if (!menu.classList.contains('hidden')) setTimeout(() => document.addEventListener('click', () => menu.classList.add('hidden'), { once: true })); };
+  const toggle = (e) => { e.stopPropagation(); closeBarPops(menu); fill(); menu.classList.toggle('hidden'); if (!menu.classList.contains('hidden')) setTimeout(() => document.addEventListener('click', () => menu.classList.add('hidden'), { once: true })); };
   const find = h('input', { type: 'search', placeholder: t('Search cast, crew & creatives'), 'aria-label': t('Search cast, crew & creatives'), value: on === 'people' ? peopleQ : '', oninput: (e) => { if (location.hash === '#/people') { peopleQ = e.target.value; peopleRedraw?.(); } }, onkeydown: (e) => { if (e.key === 'Enter') { peopleQ = e.target.value; if (location.hash === '#/people') peopleRedraw?.(); else location.hash = '#/people'; } } });
   return h('header', { class: 'bar' + (on === 'feed' ? ' bar-feed' : '') }, h('div', { class: 'bar-in' },
     h('a', { href: '#/feed', class: 'brand', 'aria-label': 'Roardino', onclick: goHome }, mark()),
@@ -713,7 +713,7 @@ function topBar(on) {
     // on a computer, right of the search (Alex, 6 Nov: the column on the left goes): Settings, Sign out (light / dark lives in Settings),
     // my picture (to my profile), then the bell
     h('div', { class: 'bar-acts' },
-      h('button', { type: 'button', class: 'ico', title: t('Search'), 'aria-label': t('Search'), html: ICON.search, onclick: () => { location.hash = '#/people'; setTimeout(() => document.querySelector('.page input[type=search]')?.focus(), 500); } }),
+      h('button', { type: 'button', class: 'ico', title: t('Search'), 'aria-label': t('Search'), html: ICON.search, onclick: () => { closeBarPops(); location.hash = '#/people'; setTimeout(() => document.querySelector('.page input[type=search]')?.focus(), 500); } }),
     ),
     // then the bell, the ≡ menu and, at the very right, my picture (Alex, 6 Nov)
     bellButton(),
@@ -2816,6 +2816,11 @@ function noteText(n) {
     tag: t('{who} tagged you: {text}', { who, text: n.text || '' }),
   }[n.kind] || who;
 }
+// one little window of the bar at a time (Alex, 6 Nov): opening the bell, the ≡ menu or the search closes the others
+function closeBarPops(except) {
+  document.querySelectorAll('.notes-panel').forEach((x) => { if (x !== except) x.remove(); });
+  document.querySelectorAll('.bar .menu').forEach((x) => { if (x !== except) x.classList.add('hidden'); });
+}
 function bellButton() {
   const btn = h('button', { type: 'button', class: 'ico bell', title: t('Notifications'), 'aria-label': t('Notifications'), onclick: (e) => { e.stopPropagation(); openNotes(btn); } },
     h('span', { html: ICON.bell, style: { display: 'inline-flex' } }), h('b', { class: 'hidden' }));
@@ -2823,7 +2828,9 @@ function bellButton() {
   return btn;
 }
 async function openNotes(anchor) {
-  document.querySelectorAll('.notes-panel').forEach((x) => x.remove());
+  const wasOpen = !!document.querySelector('.notes-panel');
+  closeBarPops();
+  if (wasOpen) return; // a second tap on the bell closes it
   const panel = h('div', { class: 'notes-panel', onclick: (e) => e.stopPropagation() });
   const bar = anchor.closest('.bar-in');
   bar.append(panel);
