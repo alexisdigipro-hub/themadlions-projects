@@ -1690,3 +1690,7 @@ html[data-theme=dark] .set-row{border-color:rgba(255,255,255,.07)}
   .two.feed-two>.left{display:none}
   .two.feed-two>.mid{width:100%;max-width:640px}
 }
+/* the bar without its search field (Alex, 6 Nov): the icons keep to the right */
+.bar .bar-grow{display:none}
+@media (min-width:821px){.bar .bar-grow{display:block;flex:1}}
+@media (min-width:821px){.page .ind-search{width:100%;max-width:none;height:46px;margin:2px 0 8px}}
