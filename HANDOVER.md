@@ -148,6 +148,7 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 - 6 Nov: Home on a computer 30% wider again: feed and bar 1010px. The bar's right side reads search, bell, ≡ menu, my picture at the very right (Alex); the bell is drawn at the size of the other icons (20px in a 40px button).
 - 6 Nov: dark is graphite as RoarMe and the Roar apps (Alex): backdrop #2b3038 to #1a1d21 with a light from above (RoarMail's Simba), panels rgba(58,64,74,.55), bars rgba(52,57,66,.72); index.html paints #1f2328 before load. Last dark block of social.css.
 - 6 Nov: **every page 1280 wide on a computer** (Alex): the bar, the content, forms (Edit profile, Settings), a call page and the footer (.page max 1312 with 16px sides; .form and .call-page 1280); the bar keeps Home's spacing everywhere. On refresh the page stays hidden behind the wordmark while it asks version.json (html.vcheck, at most 0.9 s), so an old cached layout never shows first.
+- 6 Nov: Home's loading shapes (.sk-post) take the feed's full width on a computer (they were left at 620 and jumped wider when the posts came).
 - **Next** (Alex): the TikTok-like vertical feed of self-tapes and showreels; AI search ("dancer 20-25, hip hop, Athens"); Roar Sheet rename; its own domain (roardino.gr: Alex to check at papaki.gr, this session cannot reach registries); who becomes a scout (insert into roardino_scouts by hand for now).
 
 ## Where we stopped (3 Nov 2026, night: one admin for everything)
