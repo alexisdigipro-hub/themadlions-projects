@@ -34,7 +34,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
   border:1px solid var(--line);backdrop-filter:blur(14px);position:relative}
 .lens{position:absolute;top:4px;height:calc(100% - 8px);border-radius:999px;background:var(--panel-2);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 2px 10px rgba(0,0,0,.35);transition:left .28s cubic-bezier(.3,.8,.3,1),width .28s;pointer-events:none}
-.lay{position:relative;z-index:1;border:0;background:transparent;width:36px;flex:none;height:32px;border-radius:999px;cursor:pointer;
+.lay{position:relative;z-index:1;border:0;background:transparent;width:32px;flex:none;height:32px;border-radius:999px;cursor:pointer;
   display:grid;place-items:center;color:var(--muted);transition:color .2s}
 .lay:hover,.lay[aria-pressed="true"]{color:var(--fg)}
 .lay svg{width:26px;height:15px}
@@ -67,11 +67,11 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .frame.drag{cursor:grabbing}
 .frame img{position:absolute;max-width:none;pointer-events:none;-webkit-user-drag:none}
 .frame .empty{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:6px;text-align:center;
-  color:rgba(0,0,0,.42);font-size:calc(var(--k)*13px);letter-spacing:.08em;text-transform:uppercase;font-weight:600;
+  color:rgba(0,0,0,.42);font-size:max(10px,calc(var(--k)*13px));letter-spacing:.08em;text-transform:uppercase;font-weight:600;
   border:calc(var(--k)*2px) dashed rgba(0,0,0,.16);border-radius:inherit;box-sizing:border-box}
 .dark .frame .empty{color:rgba(255,255,255,.45);border-color:rgba(255,255,255,.18)}
-.frame .empty svg{width:calc(var(--k)*30px);height:calc(var(--k)*30px);stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.frame .empty small{font-weight:400;text-transform:none;letter-spacing:0;opacity:.8;font-size:calc(var(--k)*12px)}
+.frame .empty svg{width:max(20px,calc(var(--k)*30px));height:max(20px,calc(var(--k)*30px));stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.frame .empty small{font-weight:400;text-transform:none;letter-spacing:0;opacity:.8;font-size:max(9px,calc(var(--k)*12px))}
 .frame.over::after,.frame.sel::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none}
 .frame.sel::after{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 18px var(--accent-glow)}
 .frame.over::after{box-shadow:inset 0 0 0 3px var(--accent);background:rgba(212,0,0,.12)}
@@ -104,7 +104,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 .panel .ctl.big input[type=range]{width:96px}
 .panel .ctl{gap:6px;padding:0 10px}
 .panel .ctl output{min-width:36px}
-.lay.rt{width:auto;padding:0 10px;font:600 12px var(--body);letter-spacing:.02em}
+.lay.rt{width:auto;padding:0 8px;font:600 12px var(--body);letter-spacing:.02em}
 .panel .ctl output{min-width:42px;text-align:right;font-variant-numeric:tabular-nums;color:var(--fg);letter-spacing:0;text-transform:none}
 .panel .off{opacity:.4;pointer-events:none}
 .panel .sep{width:1px;height:24px;background:var(--line);margin:0 4px}
@@ -148,6 +148,8 @@ img{max-width:100%}
     <a class="mark" href="../" title="About RoarRef" style="color:inherit;text-decoration:none">Roar<b>Ref</b></a>
     <div class="group" id="layouts" role="group" aria-label="Layout"><span class="lens" id="lens"></span></div>
     <div class="group" id="ratios" role="group" aria-label="Shape of the sheet"><span class="lens" id="rlens"></span></div>
+    <button class="pill round" id="stack" aria-pressed="false" title="Windows side by side or stacked one under the other">
+      <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="7" rx="1.5"/><rect x="4" y="13" width="16" height="7" rx="1.5"/></svg></button>
     <div class="ctl" id="sheetSw" title="Sheet colour">Sheet</div>
     <div class="ctl" id="fillSw" title="Colour behind the photos">Fill</div>
     <button class="pill round" id="cover" title="Add a shape to cover a face">
@@ -193,12 +195,67 @@ let sel = -1;
 
 const $ = id => document.getElementById(id);
 const stage = $('stage'), wrap = $('wrap');
-const lay = () => LAYOUTS.find(l => l.id === S.layout) || LAYOUTS[0];
+// stacked (Alex, 6 Nov: "in 9:16 put them horizontal too"): the same layout turned, its columns become rows
+const turn = L => ({id: L.id+'~t', name: L.name, cols: L.rows, rows: L.cols, cells: L.cells.map(([c,r,cs,rs,label]) => [r,c,rs,cs,label])});
+const shaped = L => S.stack ? turn(L) : L;
+const lay = () => S.layout==='custom' && S.custom ? {id:'custom', name:'Your layout', tree:S.custom} : shaped(LAYOUTS.find(l => l.id === S.layout) || LAYOUTS[0]);
+
+/* your own layout (Alex, 6 Nov: "or let me add"): a tree of windows. A box {d:'x'|'y', k:[...], f:[...]} lays its children
+   side by side (x) or one under the other (y), f their shares; a leaf {label} is one window. Windows are numbered in reading
+   order of the tree, which is the order of photos[]. */
+function toTree(L){ // a preset as a tree: its columns, each one its rows (or the turned way round)
+  const byCol = {}; L.cells.forEach(([c,r,cs,rs,label]) => { (byCol[c] = byCol[c] || []).push({r, rs, label}); });
+  const cols = Object.keys(byCol).map(Number).sort((a,b)=>a-b), Z = sizesOf(L);
+  const kid = c => { const cells = byCol[c].sort((a,b)=>a.r-b.r);
+    if(cells.length===1) return {label:cells[0].label};
+    return {d:'y', k:cells.map(x=>({label:x.label})), f:cells.map(x=>Z.rows.slice(x.r,x.r+x.rs).reduce((a,b)=>a+b,0))}; };
+  return {d:'x', k:cols.map(kid), f:cols.map(c=>Z.cols[c])};
+}
+function leaves(n, out=[]){ if(n.k) n.k.forEach(c=>leaves(c,out)); else out.push(n); return out; }
+function treeRects(n, x, y, w, h, out=[], gap=S.gap){
+  if(!n.k){ out.push({x, y, w, h, label:n.label||'View'}); return out; }
+  const tot = n.f.reduce((a,b)=>a+b,0), inner = (n.d==='x' ? w : h) - (n.k.length-1)*gap; let at = n.d==='x' ? x : y;
+  n.k.forEach((c,j) => { const len = n.f[j]/tot*inner;
+    if(n.d==='x') treeRects(c, at, y, len, h, out, gap); else treeRects(c, x, at, w, len, out, gap); at += len + gap; });
+  return out;
+}
+function treeCuts(n, x, y, w, h, out=[]){ // every line inside the tree, with what it moves
+  if(!n.k) return out;
+  const tot = n.f.reduce((a,b)=>a+b,0), inner = (n.d==='x' ? w : h) - (n.k.length-1)*S.gap; let at = n.d==='x' ? x : y;
+  n.k.forEach((c,j) => { const len = n.f[j]/tot*inner;
+    if(n.d==='x') treeCuts(c, at, y, len, h, out); else treeCuts(c, x, at, w, len, out);
+    at += len;
+    if(j < n.k.length-1) out.push({node:n, j, axis: n.d==='x' ? 'cols' : 'rows', at: at + S.gap/2, inner, from: n.d==='x' ? y : x, to: n.d==='x' ? y+h : x+w});
+    at += S.gap; });
+  return out;
+}
+function parentOf(n, target){ if(!n.k) return null; for(const c of n.k){ if(c===target) return n; const p = parentOf(c, target); if(p) return p; } return null; }
+function makeCustom(){ if(S.layout!=='custom' || !S.custom){ S.custom = toTree(lay()); S.layout = 'custom'; } }
+function splitWindow(i, d){ // d 'x' side by side, 'y' one under the other
+  makeCustom();
+  const n0 = leaves(S.custom).length; while(photos.length < n0) photos.push(null);
+  const leaf = leaves(S.custom)[i], par = parentOf(S.custom, leaf), fresh = {label:'View'};
+  if(par && par.d===d){ const j = par.k.indexOf(leaf), half = par.f[j]/2; par.k.splice(j+1,0,fresh); par.f.splice(j,1,half,half); }
+  else { const box = {d, k:[leaf, fresh], f:[1,1]};
+    if(!par) S.custom = box; else { const j = par.k.indexOf(leaf); par.k[j] = box; } }
+  photos.splice(i+1, 0, null); sel = i; render(); save();
+}
+function removeWindow(i){
+  makeCustom();
+  const all = leaves(S.custom); if(all.length < 2) return;
+  while(photos.length < all.length) photos.push(null);
+  const leaf = all[i], par = parentOf(S.custom, leaf), j = par.k.indexOf(leaf);
+  par.k.splice(j,1); par.f.splice(j,1);
+  if(par.k.length===1){ const only = par.k[0], gp = parentOf(S.custom, par);
+    if(!gp) S.custom = only.k ? only : {d:'x', k:[only], f:[1]}; else gp.k[gp.k.indexOf(par)] = only; }
+  photos.splice(i,1); sel = -1; render(); save();
+}
 
 // the windows' widths and heights: the layout's own, or what was dragged on the lines between them (S.sizes[layout])
 const sizesOf = L => { const z = (S.sizes||{})[L.id] || {}; return {
   cols: z.cols && z.cols.length===L.cols.length ? z.cols : L.cols, rows: z.rows && z.rows.length===L.rows.length ? z.rows : L.rows }; };
 function rects(L, gap, pad){
+  if(L.tree) return treeRects(L.tree, pad, pad, BW-2*pad, BH-2*pad, [], gap);
   const sum = a => a.reduce((x,y)=>x+y,0), Z = sizesOf(L);
   const iw = BW - 2*pad - (L.cols.length-1)*gap, ih = BH - 2*pad - (L.rows.length-1)*gap;
   const cw = Z.cols.map(f => f/sum(Z.cols)*iw), rh = Z.rows.map(f => f/sum(Z.rows)*ih);
@@ -222,6 +279,8 @@ LAYOUTS.forEach(L => {
   b.onclick = () => { S.layout = L.id; sel = -1; render(); save(); };
   $('layouts').appendChild(b);
 });
+{ const b = document.createElement('button'); b.className='lay'; b.dataset.id='custom'; b.title='Your layout'; b.setAttribute('aria-label','Your layout');
+  b.onclick = () => { if(S.custom){ S.layout='custom'; sel=-1; render(); save(); } }; $('layouts').appendChild(b); }
 function moveLens(){
   const b = $('layouts').querySelector(`[data-id="${S.layout}"]`); if(!b) return;
   $('lens').style.left = b.offsetLeft + 'px'; $('lens').style.width = b.offsetWidth + 'px';
@@ -243,7 +302,7 @@ function swatches(el, colors, key){
 }
 RATIOS.forEach(([name]) => {
   const b = document.createElement('button'); b.type='button'; b.className='lay rt'; b.dataset.r = name; b.textContent = name;
-  b.title = 'Sheet ' + name; b.onclick = () => { S.ratio = name; render(); save(); };
+  b.title = 'Sheet ' + name; b.onclick = () => { if(S.ratio !== name) S.stack = name === '9:16'; S.ratio = name; render(); save(); };
   $('ratios').appendChild(b);
 });
 function moveRatioLens(){
@@ -274,7 +333,9 @@ const pct = (v, of) => (v/of*100)+'%';
 
 function render(){
   setShape();
-  $('layouts').querySelectorAll('.lay').forEach(b => { const L = LAYOUTS.find(x => x.id===b.dataset.id); if(L) b.innerHTML = miniSvg(L); });
+  $('layouts').querySelectorAll('.lay').forEach(b => { const L = LAYOUTS.find(x => x.id===b.dataset.id); if(L) b.innerHTML = miniSvg(shaped(L)); });
+  { const cb = $('layouts').querySelector('[data-id="custom"]'); cb.hidden = !S.custom; if(S.custom) cb.innerHTML = miniSvg({tree:S.custom}); }
+  $('stack').setAttribute('aria-pressed', !!S.stack);
   moveRatioLens();
   const L = lay(), R = rects(L, S.gap, pad());
   stage.style.background = S.sheet;
@@ -297,7 +358,7 @@ function render(){
         transform: tf(p)});
       f.appendChild(im);
     } else {
-      f.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 8"/></svg>${r.label}<small>Drop a photo or click</small></div>`;
+      f.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 8"/></svg>${r.label}<small>Drop a photo, or click twice</small></div>`;
     }
     if(S.labels){
       const lb = document.createElement('div'); lb.className='label'; lb.textContent = r.label;
@@ -305,7 +366,7 @@ function render(){
       if(p) lb.style.textShadow = '0 1px 6px rgba(0,0,0,.5)';
       f.appendChild(lb);
     }
-    if(i === sel){ f.classList.add('sel'); if(p) f.appendChild(toolbar(i)); }
+    if(i === sel){ f.classList.add('sel'); f.appendChild(toolbar(i)); }
     stage.appendChild(f);
   });
   splitters(L, R);
@@ -324,6 +385,7 @@ function place(i){ // move only the picture, no full redraw while dragging
 
 /* the lines between the windows: drag one and the window on one side grows as the other shrinks */
 function splitters(L, R){
+  if(L.tree) return treeSplitters(L);
   const Z = sizesOf(L), P = pad(), cuts = [];
   const sum = a => a.reduce((x,y)=>x+y,0);
   const iw = BW - 2*P - (L.cols.length-1)*S.gap, ih = BH - 2*P - (L.rows.length-1)*S.gap;
@@ -359,6 +421,32 @@ function splitters(L, R){
     stage.appendChild(d);
   });
 }
+function treeSplitters(L){
+  const P = pad();
+  treeCuts(L.tree, P, P, BW-2*P, BH-2*P).forEach(c => {
+    const d = document.createElement('div'); d.className = 'split ' + (c.axis==='cols' ? 'v' : 'h');
+    d.title = 'Drag to resize · double-click to even out';
+    if(c.axis==='cols') Object.assign(d.style, {left:pct(c.at,BW), top:pct(c.from,BH), height:pct(c.to-c.from,BH)});
+    else Object.assign(d.style, {top:pct(c.at,BH), left:pct(c.from,BW), width:pct(c.to-c.from,BW)});
+    d.onpointerdown = e => {
+      e.stopPropagation(); e.preventDefault(); d.setPointerCapture(e.pointerId); d.classList.add('on');
+      const start = c.axis==='cols' ? e.clientX : e.clientY, f = c.node.f, tot = f.reduce((a,b)=>a+b,0), a0 = f[c.j], b0 = f[c.j+1], min = tot*0.04;
+      const move = ev => {
+        let df = ((c.axis==='cols' ? ev.clientX : ev.clientY) - start) * unit() / c.inner * tot;
+        df = Math.max(min - a0, Math.min(b0 - min, df)); f[c.j] = a0 + df; f[c.j+1] = b0 - df;
+        const R = rects(lay(), S.gap, pad());
+        R.forEach((r,i) => { const fr = frameEl(i); if(!fr) return;
+          Object.assign(fr.style, {left:pct(r.x,BW), top:pct(r.y,BH), width:pct(r.w,BW), height:pct(r.h,BH)}); if(photos[i]) place(i); });
+        const at = c.at + (f[c.j]-a0)/tot*c.inner;
+        if(c.axis==='cols') d.style.left = pct(at,BW); else d.style.top = pct(at,BH);
+      };
+      const up = () => { d.removeEventListener('pointermove', move); d.removeEventListener('pointerup', up); d.removeEventListener('pointercancel', up); render(); save(); };
+      d.addEventListener('pointermove', move); d.addEventListener('pointerup', up); d.addEventListener('pointercancel', up);
+    };
+    d.ondblclick = e => { e.stopPropagation(); c.node.f = c.node.f.map(()=>1); render(); save(); };
+    stage.appendChild(d);
+  });
+}
 function relayout(d, c){ // move the windows, their photos and the held line while it is dragged, without rebuilding them
   const L = lay(), R = rects(L, S.gap, pad());
   R.forEach((r,i) => { const f = frameEl(i); if(!f) return;
@@ -375,6 +463,9 @@ const IC = {
   flip:'<path d="M12 3v18M8 7l-5 5 5 5V7zM16 7l5 5-5 5V7z"/>',
   swap:'<path d="M7 4v13M3 13l4 4 4-4M17 20V7M13 11l4-4 4 4"/>',
   blur:'<circle cx="12" cy="12" r="8" stroke-dasharray="2 2.6"/><circle cx="12" cy="12" r="3.5"/>',
+  splitx:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 5v14"/>',
+  splity:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 12h18"/>',
+  minusw:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 12h6"/>',
   circle:'<circle cx="12" cy="12" r="7"/>',
   square:'<rect x="5" y="5" width="14" height="14" rx="1.5"/>',
   trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
@@ -398,7 +489,7 @@ function buildPanel(){
   const even = document.createElement('button'); even.type='button'; even.className='pill round'; even.id='even';
   even.title='Put every window back to its first size';
   even.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/></svg>';
-  even.onclick = () => { if(S.sizes) delete S.sizes[S.layout]; render(); save(); };
+  even.onclick = () => { if(S.layout==='custom' && S.custom){ const ev = n => { if(n.k){ n.f = n.f.map(()=>1); n.k.forEach(ev); } }; ev(S.custom); } else if(S.sizes) delete S.sizes[lay().id]; render(); save(); };
   const sep = () => { const d=document.createElement('span'); d.className='sep'; return d; };
   const photo = document.createElement('div'); photo.id='photoCtl'; photo.style.cssText='display:contents';
   photo.append(
@@ -417,6 +508,9 @@ function buildPanel(){
 let selCover = -1;
 const COVER_COLORS = ['#000000','#ffffff','#8b8b88','#d40000'];
 const blurOf = c => Math.max(6, Math.min(c.w, c.h) * 0.14); // blur radius in sheet units, grows with the cover
+$('stack').onclick = () => { S.stack = !S.stack;
+  if(S.layout==='custom' && S.custom){ const tr = n => { if(n.k){ n.d = n.d==='x' ? 'y' : 'x'; n.k.forEach(tr); } }; tr(S.custom); }
+  render(); save(); };
 $('cover').onclick = () => {
   S.covers = S.covers || [];
   let cx = BW/2, cy = BH/2;
@@ -463,6 +557,12 @@ function drawCovers(){
 }
 function toolbar(i){
   const t = document.createElement('div'); t.className='tools'; t.onpointerdown = e => e.stopPropagation();
+  const many = rects(lay(), S.gap, pad()).length > 1;
+  t.append(pbtn('splitx','Split this window side by side', ()=>splitWindow(i,'x')),
+    pbtn('splity','Split this window top and bottom', ()=>splitWindow(i,'y')));
+  if(many) t.append(pbtn('minusw','Remove this window', ()=>removeWindow(i)));
+  if(!photos[i]){ t.append(pbtn('plus','Add a photo', ()=>{ pickTarget=i; $('file').click(); })); return t; }
+  const sp = document.createElement('span'); sp.style.cssText='width:1px;background:rgba(255,255,255,.18);margin:4px 2px'; t.append(sp);
   t.append(
     pbtn('fill','Fill the window (reset the photo)', ()=>{ reset(photos[i]); place(i); save(); }),
     pbtn('fit','Show the whole photo', ()=>{ const p=photos[i], r=rects(lay(),S.gap,pad())[i];
@@ -476,7 +576,7 @@ function syncPanel(){
   const p = sel>=0 ? photos[sel] : null, on = !!p;
   const g = $('gap'), rd = $('rad');
   if(g){ g.value = S.gap; g.nextElementSibling.textContent = S.gap; rd.value = S.rad; rd.nextElementSibling.textContent = S.rad; }
-  $('even').classList.toggle('off', !(S.sizes && S.sizes[S.layout]));
+  $('even').classList.toggle('off', !(S.layout==='custom' || (S.sizes && S.sizes[lay().id])));
   panelEl.querySelectorAll('#photoCtl > *').forEach(x => x.classList.toggle('off', !on));
   const r = on ? rects(lay(), S.gap, pad())[sel] : {w:800,h:450};
   const set = (k, v, min, max, txt) => { const w = panelEl.querySelector(`[data-k="${k}"]`), i = w.querySelector('input');
@@ -503,7 +603,7 @@ function localPt(i, e){ // pointer relative to the window centre, in sheet units
 stage.addEventListener('pointerdown', e => {
   const f = e.target.closest('.frame'); if(!f) return;
   const i = +f.dataset.i; selCover = -1;
-  if(!photos[i]){ sel=i; render(); pickTarget=i; $('file').click(); return; }
+  if(!photos[i]){ if(sel===i){ pickTarget=i; $('file').click(); } else { sel=i; render(); } return; }
   if(sel !== i){ sel = i; render(); }
   ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
   stage.setPointerCapture(e.pointerId);
@@ -544,10 +644,11 @@ stage.addEventListener('dblclick', e => {
   const f = e.target.closest('.frame'); if(!f) return; const i=+f.dataset.i;
   if(photos[i]){ reset(photos[i]); place(i); save(); }
 });
-document.addEventListener('pointerdown', e => { if(!e.target.closest('.stage') && !e.target.closest('.modal') && sel>=0 && !e.target.closest('.bar')){ sel=-1; render(); } });
+document.addEventListener('pointerdown', e => { if(!e.target.isConnected) return; if(!e.target.closest('.stage') && !e.target.closest('.modal') && sel>=0 && !e.target.closest('.bar')){ sel=-1; render(); } });
 document.addEventListener('keydown', e => {
   if(e.target.closest && e.target.closest('input')) return;
   if(e.key==='Escape' && (sel>=0 || selCover>=0)){ sel=-1; selCover=-1; render(); return; }
+
   if(selCover>=0 && (e.key==='Delete'||e.key==='Backspace')){ e.preventDefault(); S.covers.splice(selCover,1); selCover=-1; render(); save(); return; }
   if(sel<0 || !photos[sel]) return;
   const p = photos[sel], st = e.shiftKey ? 20 : 4;
