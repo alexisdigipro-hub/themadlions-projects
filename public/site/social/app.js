@@ -714,9 +714,11 @@ function topBar(on) {
     // my picture (to my profile), then the bell
     h('div', { class: 'bar-acts' },
       h('button', { type: 'button', class: 'ico', title: t('Search'), 'aria-label': t('Search'), html: ICON.search, onclick: () => { location.hash = '#/people'; setTimeout(() => document.querySelector('.page input[type=search]')?.focus(), 500); } }),
-      h('a', { class: 'bar-me', href: m ? `#/p/${m.id}` : '#/edit/new', title: m ? t('My profile') : t('Create your profile'), 'aria-label': t('My profile') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }))),
+    ),
+    // then the bell, the ≡ menu and, at the very right, my picture (Alex, 6 Nov)
     bellButton(),
     h('button', { type: 'button', class: 'ico more-btn', title: t('More'), 'aria-label': t('More'), html: ICON.menu || ICON.dots, onclick: toggle }),
+    h('a', { class: 'bar-me', href: m ? `#/p/${m.id}` : '#/edit/new', title: m ? t('My profile') : t('Create your profile'), 'aria-label': t('My profile') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email })),
     h('button', { type: 'button', class: 'who-me', onclick: toggle, 'aria-label': t('Me') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }), h('span', { class: 'nm' }, m?.name || session.user.user_metadata?.name || t('Me')), icon('down')),
     h('button', { type: 'button', class: 'ico theme', title: t('Light or dark'), 'aria-label': t('Light or dark'), html: document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon, onclick: (e) => { setPref('theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); e.currentTarget.innerHTML = document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon; } }),
     menu));
