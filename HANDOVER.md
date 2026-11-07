@@ -37,6 +37,9 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (7 Nov 2026: the home page's Lab shows every app)
+- Alex: "on themadlions.com's home page, update the Lab's projects so all of them show". public/site/index.html #lab: two posters added after RoarPlay, **RoarRef** (10, lab/roarref/) and **RoarTransfer Studio** (11, lab/roarstudio/), each with its window drawn like the others (lab.rf / lab.rs in both languages); the open poster is wider (flex 5.6, was 4.2) so eleven fit; the version numbers came off the tags (Mac · Windows), so they never go stale. Copied to themadlions-site. Nothing for Alex to run.
+
 ## Where we stopped (7 Nov 2026, night: RoarStudio in the Lab)
 - Renamed the same night (Alex): **RoarTransfer Studio**. Page, Lab tile and article, apps menu, Studio, llms.txt and the app itself say RoarTransfer Studio; the address stays lab/roarstudio/ and studio.roartransfer.com.
 - Alex: "a page on The Mad Lions Lab for RoarStudio that leads to studio.roartransfer.com, with all the USPs, what it does and how, nicely, with pictures".
