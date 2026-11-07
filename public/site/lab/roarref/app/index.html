@@ -869,14 +869,14 @@ async function drawSheet(W, type='image/png'){
   }
   return new Promise((res,rej) => c.toBlob(b => b ? res(b) : rej(), type));
 }
-/* Export: a small window to pick PNG or JPEG and 4K, 6K or 8K (the long side 3840, 5760 or 7680) */
-const SIZES = [['4K',3840],['6K',5760],['8K',7680]];
+/* Export: a small window to pick PNG or JPEG and HD, 2K, 4K, 6K or 8K (the long side) */
+const SIZES = [['HD',1920],['2K',2048],['4K',3840],['6K',5760],['8K',7680]]; // long side; 2K is the cinema 2K (2048)
 function exportPng(){
   const ex = Object.assign({fmt:'png', size:'4K'}, S.export||{});
   const dims = long => BW >= BH ? [long, Math.round(long*BH/BW)] : [Math.round(long*BW/BH), long];
   const m = document.createElement('div'); m.className='modal';
   const draw = () => {
-    m.innerHTML = `<div class="card" style="max-width:460px"><h2>Export the sheet</h2>
+    m.innerHTML = `<div class="card" style="max-width:720px"><h2>Export the sheet</h2>
       <p>Format</p><div class="row">${['png','jpg'].map(f=>`<button type="button" class="pill" data-f="${f}" aria-pressed="${ex.fmt===f}">${f==='png'?'PNG · lossless':'JPEG · smaller file'}</button>`).join('')}</div>
       <p>Size</p><div class="row">${SIZES.map(([n,l])=>{const [w,h]=dims(l);return `<button type="button" class="pill" data-s="${n}" aria-pressed="${ex.size===n}">${n} <span style="opacity:.6">${w} × ${h}</span></button>`}).join('')}</div>
       <div class="row"><span class="spacer" style="flex:1"></span><button type="button" class="pill" id="xNo">Cancel</button><button type="button" class="pill main" id="xGo"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export</button></div></div>`;
