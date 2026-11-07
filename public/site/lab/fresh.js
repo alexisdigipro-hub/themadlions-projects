@@ -28,7 +28,7 @@
     ['roarmail', 'RoarMail', 'lab/roarmail/', 'Every mailbox, one inbox', 'Όλα τα mail, ένα inbox'],
     ['roarlist', 'RoarList', 'lab/roarlist/', 'The shot list', 'Η λίστα πλάνων'],
     ['roartransfer', 'RoarTransfer', 'https://roartransfer.com/about/', 'Big files, one link', 'Μεγάλα αρχεία, ένα link'],
-    ['roarstudio', 'RoarStudio', 'lab/roarstudio/', 'Review and delivery', 'Έγκριση και παράδοση'],
+    ['roarstudio', 'RoarTransfer Studio', 'lab/roarstudio/', 'Review and delivery', 'Έγκριση και παράδοση'],
     ['roarwriter', 'RoarWriter', 'lab/roarwriter/', 'Screenwriting', 'Γράψιμο σεναρίου'],
     ['roarkit', 'RoarKit', 'lab/roarkit/', 'Eighteen tools', 'Δεκαοκτώ εργαλεία'],
     ['roarmorph', 'RoarMorph', 'lab/roarmorph/', 'Convert and compress', 'Μετατροπή και συμπίεση'],
