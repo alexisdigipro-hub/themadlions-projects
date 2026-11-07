@@ -37,6 +37,10 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (7 Nov 2026: Office > Tasks level with the side menu)
+- Alex (screenshot of Office > Tasks on a computer): "bring the frame level with the side menu". The panel had a guessed height (100dvh - 210px) and ended about 100px above the side menu's foot. New block at the end of styles.css: on a computer, when Office shows Tasks or Office, .content is the window's height (flex column, 12px at the foot, the floating side menu's margin) and the panel fills what the tabs leave. Notes and RoarList keep their own layout.
+- Nothing for Alex to run.
+
 ## Where we stopped (6 Nov 2026: RoarRef, character sheets for AI, in the Lab)
 - Alex: "a template for a character sheet for AI, 16:9, windows that stay put, the photos inside them move where I want; 3 windows is only an example, it can be 4, 5, 6"; then "put it in the Lab, a small page with the basics, and from there you open the web version".
 - **The app: public/site/lab/roarref/app/** (themadlions.com/lab/roarref/app/), one plain HTML file, nothing to install. Nine layouts (LAYOUTS: 2, 3, 4, 5, 6 in a row, 3 bodies + 2 faces, 2 bodies + 6 faces, hero + 4, 6 expressions) in sheet units 1600x900; photos dropped / pasted / picked, dragged, zoomed (wheel, pinch, + -), mirrored, fill / fit, replace, trash; gap, corners, sheet and fill colours, labels (off by default, for clean AI input); Export = 3840x2160 PNG (download, the share sheet on a phone). The last sheet is kept in the browser (IndexedDB 'roarref'). Counts visits through stats.js.
