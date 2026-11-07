@@ -705,7 +705,8 @@ stage.addEventListener('pointerdown', e => {
   const f = e.target.closest('.frame'); if(!f) return;
   const i = +f.dataset.i; selCover = -1;
   if(!photos[i]){ if(sel===i){ pickTarget=i; $('file').click(); } else { sel=i; if(isPhone() && mTab !== 'photo'){ mTab = 'photo'; placeControls(); } render(); } return; }
-  if(sel !== i){ sel = i; if(isPhone() && mTab !== 'photo'){ mTab = 'photo'; placeControls(); } render(); }
+  if(isPhone() && mTab !== 'photo'){ mTab = 'photo'; sel = i; placeControls(); render(); }
+  else if(sel !== i){ sel = i; render(); }
   ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
   stage.setPointerCapture(e.pointerId);
   if(ptrs.size === 1){ const p=photos[i]; gesture = {i, sx:e.clientX, sy:e.clientY, ox:p.ox, oy:p.oy}; frameEl(i).classList.add('drag'); }
@@ -745,7 +746,7 @@ stage.addEventListener('dblclick', e => {
   const f = e.target.closest('.frame'); if(!f) return; const i=+f.dataset.i;
   if(photos[i]){ reset(photos[i]); place(i); save(); }
 });
-document.addEventListener('pointerdown', e => { if(!e.target.isConnected) return; if(!e.target.closest('.stage') && !e.target.closest('.modal') && sel>=0 && !e.target.closest('.bar')){ sel=-1; render(); } });
+document.addEventListener('pointerdown', e => { if(!e.target.isConnected) return; if(sel>=0 && !e.target.closest('.stage, .modal, .bar, .panel, .mpane, .mtabs, .tools, .ghost')){ sel=-1; render(); } });
 document.addEventListener('keydown', e => {
   if(e.target.closest && e.target.closest('input')) return;
   if(e.key==='Escape' && (sel>=0 || selCover>=0)){ sel=-1; selCover=-1; render(); return; }
