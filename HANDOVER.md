@@ -37,6 +37,13 @@ Projects (6 categories in this order: Music Video, Event, Editing, Ad, Visuals, 
 
 - Activity log: store.jsx logActivity() writes to the activity table from syncDiff (project created/updated with the changed sections merged per 4s, deleted, locked/unlocked; events; member removal). Settings > Data > Activity lists the latest 200 with a filter.
 
+## Where we stopped (7 Nov 2026, night: RoarStudio in the Lab)
+- Alex: "a page on The Mad Lions Lab for RoarStudio that leads to studio.roartransfer.com, with all the USPs, what it does and how, nicely, with pictures".
+- **lab/roarstudio/** (themadlions.com/lab/roarstudio/): the RoarRef page's frame in RoarStudio's dark purple (bg.webp is the app's Waves background at 16%): claim Review. Approve. Deliver., Open RoarStudio (https://studio.roartransfer.com/), How it works (3 steps), five picture sections (Review, Video and pictures, Delivery/Finals, What they see on a phone, Your studio), nine cards (everything in it), who it is for with three covers, five questions, EN/GR (EL dict in the page).
+- The pictures are real screens of RoarStudio (project, track, video, finals, settings, the guest Finals link on a phone) taken with a temporary demo account and demo projects; the covers and photos were made with Soul 2. icon.svg/icon.png is the app's bars on a purple square; lab/icons/roarstudio.png for the apps menu; lab/roarstudio.jpg for the Lab and link previews.
+- Lab: tile 11 and Experiment 11 (keys rs.*), APPS gets roarstudio. A saved Studio > Look > Lab order without it puts it last: drag it where you want it. Studio: LAB_APPS and Apps > In the browser (with Admin = studio.roartransfer.com/#admin and its page visits). fresh.js: RoarStudio in the apps menu, and a missing `;` fixed that stopped the Lab pages' visit counting (the stats block threw "is not a function"). scripts/site-seo.mjs: APPS, llms.txt line, sitemap.
+- Alex: nothing to run.
+
 ## Where we stopped (7 Nov 2026: Office > Tasks level with the side menu)
 - Alex (screenshot of Office > Tasks on a computer): "bring the frame level with the side menu". The panel had a guessed height (100dvh - 210px) and ended about 100px above the side menu's foot. New block at the end of styles.css: on a computer, when Office shows Tasks or Office, .content is the window's height (flex column, 12px at the foot, the floating side menu's margin) and the panel fills what the tabs leave. Notes and RoarList keep their own layout.
 - Nothing for Alex to run.
