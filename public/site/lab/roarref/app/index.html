@@ -142,13 +142,40 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
 @keyframes fade{from{opacity:0}}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(30,30,32,.95);border:1px solid var(--line);
   padding:10px 18px;border-radius:999px;font-size:13px;z-index:60;animation:fade .2s}
+/* phone (Alex, 7 Nov: "tidy and group it on mobile"): one top row, the sheet, then three tabs that show one group at a time.
+   placeControls() moves the same controls between the computer places and these; the computer layout is untouched. */
+.mtabs,.mpane{display:none}
 @media (max-width:820px){
-  #layouts{max-width:100%;overflow-x:auto;scrollbar-width:none}
-  .stagewrap{align-items:start}
-  .ctl input[type=range]{width:60px}
-  .pill .w{display:none}
-  .pill{padding:0 12px}
-  .tools{bottom:4px}
+  body{overflow:auto}
+  .app{height:auto;min-height:100%;gap:10px}
+  .bar{flex-wrap:nowrap;gap:6px}
+  .bar .mark{flex:1;font-size:21px}
+  .bar .pill.round{width:38px;height:38px}
+  .bar .pill.main{width:42px;height:42px;padding:0;justify-content:center}
+  .bar .pill .w,.bar .shn{display:none}
+  #sheetsBtn{width:38px;height:38px;padding:0;justify-content:center}
+  .stagewrap{flex:none;display:block}
+  .stage{margin:0 auto}
+  .panel{display:none}
+  .mtabs{display:flex;width:100%;box-sizing:border-box}
+  .mtabs .lay{flex:1;width:auto;height:36px;font:600 13px var(--body);letter-spacing:.02em}
+  .mpane{display:flex;flex-direction:column;gap:10px;padding-bottom:max(16px,env(safe-area-inset-bottom,0px))}
+  .mpane .mrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .mpane .group{max-width:100%;overflow-x:auto;scrollbar-width:none;align-self:flex-start}
+  .mpane #layouts{width:100%;box-sizing:border-box}
+  .mpane .ctl{flex:1 1 100%;box-sizing:border-box;height:46px}
+  .mpane .ctl input[type=range]{flex:1;width:auto!important;min-width:0}
+  .mpane #sheetSw,.mpane #fillSw{flex:1 1 calc(50% - 4px);justify-content:space-between;padding:0 10px}
+  .mpane .off{opacity:.4;pointer-events:none}
+  .mpane .hint2{color:var(--muted);font-size:13px;text-align:center;margin:0}
+  .mpane .pill.round{width:46px;height:46px}
+  .mpane .pill.wide{flex:1;justify-content:center;height:46px}
+  .lay{width:36px}
+  .frame .tools{display:none}
+  #mtools{gap:6px;justify-content:center}
+  #mtools .ico{width:42px;height:42px;background:var(--panel);border:1px solid var(--line)}
+  #mtools .ico svg{width:19px;height:19px}
+  #mtools > span{display:none}
   .ico{width:30px;height:30px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -173,7 +200,7 @@ img{max-width:100%}
     <button class="pill round" id="cover" title="Add a shape to cover a face">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="5" fill="currentColor"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span class="w">Cover</span></button>
     <button class="pill round" id="labels" aria-pressed="false" title="Show the view names on the sheet">
-      <svg viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg><span class="w">Labels</span></button>
+      <svg viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg><span class="w">Names</span></button>
     <button class="pill round" id="add" style="margin-left:auto" title="Add photos to the empty windows">
       <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="w">Add photos</span></button>
     <button class="pill round" id="clear" title="Empty every window">
@@ -185,6 +212,12 @@ img{max-width:100%}
     <div class="stage" id="stage"></div>
   </div>
   <div class="panel" id="panel"></div>
+  <div class="group mtabs" id="mtabs" role="tablist" aria-label="Settings"><span class="lens" id="mlens"></span>
+    <button type="button" class="lay" data-t="layout" role="tab">Layout</button>
+    <button type="button" class="lay" data-t="look" role="tab">Look</button>
+    <button type="button" class="lay" data-t="photo" role="tab">Window</button></div>
+  <div class="mpane" id="mpane"></div>
+  <div id="stash" hidden></div>
 </div>
 <input type="file" id="file" accept="image/*" multiple hidden>
 
@@ -339,7 +372,7 @@ $('export').onclick = exportPng;
 
 /* ---------- sheet ---------- */
 function fit(){
-  const W = wrap.clientWidth, H = wrap.clientHeight;
+  const W = wrap.clientWidth, H = isPhone() ? Math.min(W*BH/BW, innerHeight*0.56) : wrap.clientHeight;
   const w = Math.min(W, H*BW/BH);
   stage.style.width = w+'px'; stage.style.height = (w*BH/BW)+'px';
   stage.style.setProperty('--k', w/BW);
@@ -394,6 +427,7 @@ function render(){
   splitters(L, R);
   drawCovers();
   syncPanel();
+  if(isPhone() && mTab==='photo') fillMTools();
   fit();
 }
 function frameEl(i){ return stage.querySelector(`.frame[data-i="${i}"]`); }
@@ -522,7 +556,7 @@ function buildPanel(){
     slider('y','Y', -450, 450, 1, (v,p)=>{ p.oy = v; }),
     slider('rot','Rotate', -180, 180, 1, (v,p)=>{ p.rot = v; }),
     );
-  const fine = (id, label, max, key, title) => { const w = document.createElement('label'); w.className='ctl big'; w.title=title;
+  const fine = (id, label, max, key, title) => { const w = document.createElement('label'); w.className='ctl big'; w.title=title; w.id = id+'Ctl';
     w.innerHTML = `${label} <input type="range" id="${id}" min="0" max="${max}" step="0.5"><output></output>`;
     const i = w.querySelector('input'); i.oninput = () => { S[key] = +i.value; render(); saveSoon(); };
     i.ondblclick = () => { S[key] = key==='gap' ? 14 : 0; render(); save(); }; return w; };
@@ -640,13 +674,13 @@ function toolbar(i){
 }
 function syncPanel(){
   const p = sel>=0 ? photos[sel] : null, on = !!p;
-  { const c = curSheet(); const n = panelEl.querySelector('.shn'); if(n) n.textContent = c ? c.name : 'Sheets'; }
+  { const c = curSheet(); const n = document.querySelector('#sheetsBtn .shn'); if(n) n.textContent = c ? c.name : 'Sheets'; }
   const g = $('gap'), rd = $('rad');
   if(g){ g.value = S.gap; g.nextElementSibling.textContent = S.gap; rd.value = S.rad; rd.nextElementSibling.textContent = S.rad; }
   $('even').classList.toggle('off', !(S.layout==='custom' || (S.sizes && S.sizes[lay().id])));
-  panelEl.querySelectorAll('#photoCtl > *').forEach(x => x.classList.toggle('off', !on));
+  ['zoom','x','y','rot'].forEach(k => document.querySelector(`[data-k="${k}"]`).classList.toggle('off', !on));
   const r = on ? rects(lay(), S.gap, pad())[sel] : {w:800,h:450};
-  const set = (k, v, min, max, txt) => { const w = panelEl.querySelector(`[data-k="${k}"]`), i = w.querySelector('input');
+  const set = (k, v, min, max, txt) => { const w = document.querySelector(`[data-k="${k}"]`), i = w.querySelector('input');
     if(min!=null){ i.min = min; i.max = max; } i.value = v; w.querySelector('output').textContent = txt; };
   set('zoom', on ? Math.round(Math.log(p.s)*100) : 0, null, null, on ? Math.round(p.s*100)+'%' : '');
   set('x', on ? Math.round(p.ox) : 0, -Math.round(r.w), Math.round(r.w), on ? Math.round(p.ox/r.w*100)+'%' : '');
@@ -670,8 +704,8 @@ function localPt(i, e){ // pointer relative to the window centre, in sheet units
 stage.addEventListener('pointerdown', e => {
   const f = e.target.closest('.frame'); if(!f) return;
   const i = +f.dataset.i; selCover = -1;
-  if(!photos[i]){ if(sel===i){ pickTarget=i; $('file').click(); } else { sel=i; render(); } return; }
-  if(sel !== i){ sel = i; render(); }
+  if(!photos[i]){ if(sel===i){ pickTarget=i; $('file').click(); } else { sel=i; if(isPhone() && mTab !== 'photo'){ mTab = 'photo'; placeControls(); } render(); } return; }
+  if(sel !== i){ sel = i; if(isPhone() && mTab !== 'photo'){ mTab = 'photo'; placeControls(); } render(); }
   ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
   stage.setPointerCapture(e.pointerId);
   if(ptrs.size === 1){ const p=photos[i]; gesture = {i, sx:e.clientX, sy:e.clientY, ox:p.ox, oy:p.oy}; frameEl(i).classList.add('drag'); }
@@ -972,7 +1006,48 @@ async function openSheets(){
   };
   await draw(); document.body.appendChild(m);
 }
-buildPanel(); render(); restore();
+/* where each control lives: on a computer the top bar and the bar under the sheet, on a phone the top row and the tabs */
+const isPhone = () => matchMedia('(max-width:820px)').matches;
+let mTab = 'layout';
+function moveLens2(){ const b = $('mtabs').querySelector(`[data-t="${mTab}"]`); if(!b) return;
+  $('mlens').style.left = b.offsetLeft+'px'; $('mlens').style.width = b.offsetWidth+'px';
+  $('mtabs').querySelectorAll('.lay').forEach(x => x.setAttribute('aria-selected', x===b)); }
+function fillMTools(){ // the picked window's buttons, in the Window tab on a phone
+  const tr = $('mtools'); if(!tr) return; tr.innerHTML = '';
+  if(sel >= 0 && sel < rects(lay(), S.gap, pad()).length){ const t = toolbar(sel); tr.append(...t.childNodes); }
+  else { const h = document.createElement('p'); h.className='hint2'; h.style.flex='1'; h.textContent='Tap a window on the sheet to work on it.'; tr.appendChild(h); }
+}
+function toDesktop(){
+  const bar = document.querySelector('.bar'), mark = bar.querySelector('.mark');
+  ['labels','cover'].forEach(id => { const b = $(id); b.classList.remove('wide'); b.classList.add('round'); const w = b.querySelector('.w'); if(w) w.style.display=''; });
+  bar.append(mark, $('layouts'), $('ratios'), $('stack'), $('sheetSw'), $('fillSw'), $('cover'), $('labels'), $('add'), $('clear'), $('export'));
+  const pc = $('photoCtl'); ['zoom','x','y','rot'].forEach(k => { const c = document.querySelector(`[data-k="${k}"]`); if(c) pc.appendChild(c); });
+  panelEl.append($('sheetsBtn'), $('gapCtl'), $('radCtl'), $('even'), pc);
+  $('mpane').innerHTML = '';
+}
+function placeControls(){
+  toDesktop();
+  if(isPhone()){
+    const bar = document.querySelector('.bar'), mark = bar.querySelector('.mark'), pane = $('mpane');
+    const row = (...els) => { const r = document.createElement('div'); r.className='mrow'; els.filter(Boolean).forEach(e => r.appendChild(e)); pane.appendChild(r); return r; };
+    const stash = $('stash');
+    ['layouts','ratios','stack','sheetSw','fillSw','cover','labels'].forEach(id => stash.appendChild($(id)));
+    bar.append(mark, $('sheetsBtn'), $('add'), $('clear'), $('export'));
+    if(mTab==='layout'){ row($('layouts')); row($('ratios'), $('stack'), $('even')); }
+    else if(mTab==='look'){ row($('sheetSw'), $('fillSw')); row($('gapCtl')); row($('radCtl'));
+      const lb = $('labels'), cv = $('cover');
+      [lb, cv].forEach(x => { x.classList.add('wide'); x.classList.remove('round'); });
+      if(!lb.querySelector('.w')) lb.insertAdjacentHTML('beforeend','<span class="w">Names</span>');
+      row(lb, cv); pane.querySelectorAll('.pill.wide .w').forEach(w => w.style.display='inline'); }
+    else { const tr = row(); tr.id = 'mtools'; fillMTools();
+      ['zoom','x','y','rot'].forEach(k => row(document.querySelector(`[data-k="${k}"]`))); }
+    requestAnimationFrame(moveLens2);
+  }
+  moveLens(); moveRatioLens(); fit();
+}
+$('mtabs').onclick = e => { const b = e.target.closest('[data-t]'); if(!b) return; mTab = b.dataset.t; placeControls(); };
+matchMedia('(max-width:820px)').addEventListener('change', placeControls);
+buildPanel(); render(); placeControls(); restore();
 </script>
 <script src="../../../stats.js" defer></script>
 </body>
