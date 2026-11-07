@@ -115,6 +115,20 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
   box-shadow:0 14px 40px rgba(0,0,0,.55),0 0 0 2px var(--accent);opacity:.92}
 .field{height:46px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--fg);padding:0 18px;font:500 16px var(--body);outline:0}
 .field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.shn{max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.sheets-card{max-width:620px}
+.sheets{display:flex;flex-direction:column;gap:8px;max-height:min(60vh,520px);overflow:auto;padding:2px}
+.sh{display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center;padding:8px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.sh.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 18px var(--accent-glow)}
+.sh-open{padding:0;border:0;background:#2a2a2c;border-radius:9px;overflow:hidden;width:120px;aspect-ratio:16/9;cursor:pointer;display:grid;place-items:center}
+.sh-open img{width:100%;height:100%;object-fit:contain;display:block}
+.sh-empty{width:40%;height:40%;border:1.5px dashed rgba(255,255,255,.25);border-radius:6px}
+.sh-meta{display:flex;flex-direction:column;gap:3px;min-width:0}
+.sh-meta b{font:600 15px var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sh-meta small{color:var(--muted);font-size:12px}
+.sh-acts{display:flex;gap:6px;align-items:center}
+.sh-acts .pill{height:34px;padding:0 14px}
+@media (max-width:560px){.sh{grid-template-columns:84px 1fr}.sh-open{width:84px}.sh-acts{grid-column:1/-1;justify-content:flex-end}}
 .hint{position:absolute;bottom:-2px;left:0;right:0;text-align:center;font-size:12px;color:var(--muted);pointer-events:none}
 
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:grid;place-items:center;z-index:50;padding:16px;animation:fade .2s}
@@ -512,7 +526,10 @@ function buildPanel(){
     w.innerHTML = `${label} <input type="range" id="${id}" min="0" max="${max}" step="0.5"><output></output>`;
     const i = w.querySelector('input'); i.oninput = () => { S[key] = +i.value; render(); saveSoon(); };
     i.ondblclick = () => { S[key] = key==='gap' ? 14 : 0; render(); save(); }; return w; };
-  panelEl.append(fine('gap','Gap',80,'gap','Space between windows · double-click for 14'), fine('rad','Round',80,'rad','Round corners · double-click for none'), even, photo);
+  const shb = document.createElement('button'); shb.type='button'; shb.className='pill'; shb.id='sheetsBtn'; shb.title='Your sheets: one per character';
+  shb.innerHTML = '<svg viewBox="0 0 24 24"><rect x="4" y="6" width="14" height="12" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v10"/></svg><span class="shn"></span>';
+  shb.onclick = () => openSheets();
+  panelEl.append(shb, fine('gap','Gap',80,'gap','Space between windows · double-click for 14'), fine('rad','Round',80,'rad','Round corners · double-click for none'), even, photo);
 }
 /* covers: solid circles or squares laid over the sheet, to hide a face (Alex, 6 Nov) */
 let selCover = -1;
@@ -623,6 +640,7 @@ function toolbar(i){
 }
 function syncPanel(){
   const p = sel>=0 ? photos[sel] : null, on = !!p;
+  { const c = curSheet(); const n = panelEl.querySelector('.shn'); if(n) n.textContent = c ? c.name : 'Sheets'; }
   const g = $('gap'), rd = $('rad');
   if(g){ g.value = S.gap; g.nextElementSibling.textContent = S.gap; rd.value = S.rad; rd.nextElementSibling.textContent = S.rad; }
   $('even').classList.toggle('off', !(S.layout==='custom' || (S.sizes && S.sizes[lay().id])));
@@ -847,22 +865,112 @@ function askClear(){
 }
 function toast(t){ const d=document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(), 2600); }
 
-/* ---------- keep the work in this browser ---------- */
-let dbp = null;
+/* ---------- keep the work in this browser: many sheets, one per character (Alex, 7 Nov) ----------
+   IndexedDB 'roarref', store 's': 'sheets' = {cur, list:[{id, name, at}]}, 'sheet:<id>' = {S, photos, thumb}.
+   The single 'state' of before is moved into the first sheet on load. */
+const DEF = JSON.stringify(S);
+let dbp = null, sheets = {cur:null, list:[]};
 function idb(){ if(!dbp) dbp = new Promise((res,rej)=>{ try{ const r=indexedDB.open('roarref',1); r.onupgradeneeded=()=>r.result.createObjectStore('s'); r.onsuccess=()=>res(r.result); r.onerror=rej; }catch(e){ rej(e); } }); return dbp; }
-async function save(){
-  try{ const d = await idb(); const tx = d.transaction('s','readwrite');
-    tx.objectStore('s').put({S, photos: photos.map(p => p ? {blob:p.blob,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip} : null)}, 'state');
+async function dbGet(k){ const d = await idb(); return new Promise((res,rej)=>{ const r=d.transaction('s').objectStore('s').get(k); r.onsuccess=()=>res(r.result); r.onerror=rej; }); }
+async function dbPut(k, v){ const d = await idb(); return new Promise((res,rej)=>{ const tx=d.transaction('s','readwrite'); tx.objectStore('s').put(v,k); tx.oncomplete=res; tx.onerror=rej; }); }
+async function dbDel(k){ const d = await idb(); return new Promise((res,rej)=>{ const tx=d.transaction('s','readwrite'); tx.objectStore('s').delete(k); tx.oncomplete=res; tx.onerror=rej; }); }
+const packPhotos = () => photos.map(p => p ? {blob:p.blob,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip,rot:p.rot||0} : null);
+const curSheet = () => sheets.list.find(x => x.id === sheets.cur);
+async function save(thumb){
+  try{
+    if(!sheets.cur) return;
+    const old = await dbGet('sheet:'+sheets.cur).catch(()=>null);
+    const rec = {S, photos: packPhotos(), thumb: thumb || (old && old.thumb) || null};
+    await dbPut('sheet:'+sheets.cur, rec);
+    const c = curSheet(); if(c) c.at = Date.now();
+    await dbPut('sheets', sheets);
   }catch{}
 }
 let st; function saveSoon(){ clearTimeout(st); st=setTimeout(save, 400); }
+async function snapThumb(){ try{ return await drawSheet(360, 'image/jpeg'); }catch{ return null; } }
+function loadSheet(v){
+  photos.forEach(p => { if(p && p.url) URL.revokeObjectURL(p.url); });
+  S = Object.assign(JSON.parse(DEF), v ? v.S : {});
+  photos = v && v.photos ? v.photos.map(p => p ? Object.assign({rot:0}, p, {url:URL.createObjectURL(p.blob)}) : null) : [];
+  sel = -1; selCover = -1;
+}
+const newId = () => Math.random().toString(36).slice(2,10);
 async function restore(){
   try{
-    const d = await idb();
-    const v = await new Promise((res,rej)=>{ const r=d.transaction('s').objectStore('s').get('state'); r.onsuccess=()=>res(r.result); r.onerror=rej; });
-    if(v){ S = Object.assign(S, v.S); photos = (v.photos||[]).map(p => p ? Object.assign({}, p, {url:URL.createObjectURL(p.blob)}) : null); }
+    const idx = await dbGet('sheets');
+    if(idx && idx.list && idx.list.length){ sheets = idx; if(!curSheet()) sheets.cur = sheets.list[0].id; loadSheet(await dbGet('sheet:'+sheets.cur)); }
+    else {
+      const old = await dbGet('state'); const id = newId();
+      sheets = {cur:id, list:[{id, name:'Character 1', at:Date.now()}]};
+      if(old){ loadSheet(old); await dbPut('sheet:'+id, old); await dbDel('state'); }
+      await dbPut('sheets', sheets);
+    }
   }catch{}
   render();
+}
+async function switchSheet(id){
+  if(id === sheets.cur) return;
+  clearTimeout(st); await save(await snapThumb());
+  sheets.cur = id; loadSheet(await dbGet('sheet:'+id).catch(()=>null)); render(); await dbPut('sheets', sheets).catch(()=>{});
+}
+async function newSheet(copy){
+  clearTimeout(st); await save(await snapThumb());
+  const look = {layout:S.layout, ratio:S.ratio, stack:S.stack, gap:S.gap, rad:S.rad, sheet:S.sheet, fill:S.fill, custom:S.custom ? JSON.parse(JSON.stringify(S.custom)) : undefined};
+  const id = newId(), n = sheets.list.length + 1;
+  const name = copy ? (curSheet()?.name || 'Character') + ' copy' : 'Character ' + n;
+  if(copy){ const keep = packPhotos(), keepS = JSON.parse(JSON.stringify(S)); sheets.list.push({id, name, at:Date.now()}); sheets.cur = id; loadSheet({S:keepS, photos:keep}); }
+  else { if(look.custom) look.custom.k && (function wipe(n){ if(n.k) n.k.forEach(wipe); else n.label = 'View'; })(look.custom);
+    sheets.list.push({id, name, at:Date.now()}); sheets.cur = id; loadSheet({S:look, photos:[]}); }
+  render(); await save();
+}
+async function deleteSheet(id){
+  await dbDel('sheet:'+id).catch(()=>{});
+  sheets.list = sheets.list.filter(x => x.id !== id);
+  if(!sheets.list.length){ const nid = newId(); sheets.list = [{id:nid, name:'Character 1', at:Date.now()}]; sheets.cur = nid; loadSheet(null); render(); await save(); return; }
+  if(sheets.cur === id){ sheets.cur = sheets.list[0].id; loadSheet(await dbGet('sheet:'+sheets.cur).catch(()=>null)); render(); }
+  await dbPut('sheets', sheets).catch(()=>{});
+}
+/* the window with every sheet: open one, rename, duplicate, delete (asks first), new */
+async function openSheets(){
+  clearTimeout(st); await save(await snapThumb());
+  const m = document.createElement('div'); m.className='modal';
+  const urls = [];
+  const draw = async () => {
+    urls.forEach(u => URL.revokeObjectURL(u)); urls.length = 0;
+    const rows = [];
+    for(const x of sheets.list){ const rec = await dbGet('sheet:'+x.id).catch(()=>null); const u = rec && rec.thumb ? URL.createObjectURL(rec.thumb) : ''; if(u) urls.push(u); rows.push({x, u, n:rec && rec.photos ? rec.photos.filter(Boolean).length : 0}); }
+    m.innerHTML = `<div class="card sheets-card"><div class="row"><h2 style="flex:1">Your sheets</h2>
+        <button type="button" class="pill main" id="shNew"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New sheet</button></div>
+      <p>One sheet per character. Everything stays in this browser.</p>
+      <div class="sheets">${rows.map(({x,u,n}) => `<div class="sh${x.id===sheets.cur?' on':''}" data-id="${x.id}">
+        <button type="button" class="sh-open" data-open="${x.id}" title="Open ${esc(x.name)}">${u ? `<img src="${u}" alt="">` : '<span class="sh-empty"></span>'}</button>
+        <div class="sh-meta"><b>${esc(x.name)}</b><small>${n} photo${n===1?'':'s'}${x.id===sheets.cur?' · open now':''}</small></div>
+        <div class="sh-acts">
+          <button type="button" class="ico" data-ren="${x.id}" title="Rename" aria-label="Rename"><svg viewBox="0 0 24 24">${IC.pen}</svg></button>
+          <button type="button" class="ico" data-dup="${x.id}" title="Duplicate" aria-label="Duplicate"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button>
+          <button type="button" class="ico del" data-del="${x.id}" title="Delete" aria-label="Delete"><svg viewBox="0 0 24 24">${IC.trash}</svg></button>
+        </div></div>`).join('')}</div>
+      <div class="row"><span style="flex:1"></span><button type="button" class="pill" id="shClose">Done</button></div></div>`;
+  };
+  const close = () => { urls.forEach(u => URL.revokeObjectURL(u)); m.remove(); syncPanel(); };
+  m.onclick = async e => {
+    const t = e.target.closest('button');
+    if(e.target === m || t?.id === 'shClose') return close();
+    if(!t) return;
+    if(t.id === 'shNew'){ await newSheet(false); return close(); }
+    if(t.dataset.open){ await switchSheet(t.dataset.open); return close(); }
+    if(t.dataset.dup){ if(t.dataset.dup !== sheets.cur) await switchSheet(t.dataset.dup); await newSheet(true); return close(); }
+    if(t.dataset.ren){ const x = sheets.list.find(y => y.id === t.dataset.ren), row = t.closest('.sh'), b = row.querySelector('.sh-meta');
+      b.innerHTML = `<input class="field" style="height:38px;font-size:14px" maxlength="40" value="${esc(x.name)}" aria-label="Sheet name">`;
+      const inp = b.querySelector('input'); inp.focus(); inp.select();
+      const done = async () => { x.name = inp.value.trim() || x.name; await dbPut('sheets', sheets).catch(()=>{}); await draw(); syncPanel(); };
+      inp.onkeydown = ev => { if(ev.key==='Enter') done(); if(ev.key==='Escape') draw(); }; inp.onblur = done; return; }
+    if(t.dataset.del){ const x = sheets.list.find(y => y.id === t.dataset.del), row = t.closest('.sh');
+      row.querySelector('.sh-acts').innerHTML = `<button type="button" class="pill" data-keep="1">Keep</button><button type="button" class="pill main" data-sure="${x.id}">Delete</button>`; return; }
+    if(t.dataset.keep) return draw();
+    if(t.dataset.sure){ await deleteSheet(t.dataset.sure); await draw(); syncPanel(); }
+  };
+  await draw(); document.body.appendChild(m);
 }
 buildPanel(); render(); restore();
 </script>
