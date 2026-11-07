@@ -115,6 +115,19 @@ body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overf
   box-shadow:0 14px 40px rgba(0,0,0,.55),0 0 0 2px var(--accent);opacity:.92}
 .field{height:46px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--fg);padding:0 18px;font:500 16px var(--body);outline:0}
 .field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.gate{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:16px;background:radial-gradient(900px 500px at 50% 0%,rgba(212,0,0,.12),transparent 70%),var(--bg);overflow:auto}
+.card.gate-card{max-width:420px;gap:12px;padding:28px;box-sizing:border-box}
+a.pill{text-decoration:none}
+.gate-card .mark{font-size:30px}
+.gate-card h2{font-size:22px}
+.gate-card .field{width:100%;box-sizing:border-box}
+.gate-card #gGo{width:100%;justify-content:center;height:48px;font-size:15px}
+.gerr{color:#ff7a70!important}
+.gnote{color:var(--fg)!important}
+.cnt{font:500 13px var(--body);color:var(--muted);margin-left:8px}
+.modal.busy{cursor:progress}.modal.busy .card{opacity:.7;pointer-events:none}
+.who{font-size:13px;color:var(--muted)}
+.card .off{opacity:.4;pointer-events:none}
 .shn{max-width:130px;overflow:hidden;text-overflow:ellipsis}
 .sheets-card{max-width:620px}
 .sheets{display:flex;flex-direction:column;gap:8px;max-height:min(60vh,520px);overflow:auto;padding:2px}
@@ -218,9 +231,11 @@ img{max-width:100%}
     <button type="button" class="lay" data-t="photo" role="tab">Window</button></div>
   <div class="mpane" id="mpane"></div>
   <div id="stash" hidden></div>
+  <div id="gate" class="gate" hidden></div>
 </div>
 <input type="file" id="file" accept="image/*" multiple hidden>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 // the sheet in its own units: 1600 on its long side, the other as the shape asks (16:9, 1:1, 2:1, 9:16)
 const RATIOS = [['16:9',16/9],['1:1',1],['2:1',2],['9:16',9/16]];
@@ -705,7 +720,8 @@ stage.addEventListener('pointerdown', e => {
   const f = e.target.closest('.frame'); if(!f) return;
   const i = +f.dataset.i; selCover = -1;
   if(!photos[i]){ if(sel===i){ pickTarget=i; $('file').click(); } else { sel=i; if(isPhone() && mTab !== 'photo'){ mTab = 'photo'; placeControls(); } render(); } return; }
-  if(sel !== i){ sel = i; if(isPhone() && mTab !== 'photo'){ mTab = 'photo'; placeControls(); } render(); }
+  if(isPhone() && mTab !== 'photo'){ mTab = 'photo'; sel = i; placeControls(); render(); }
+  else if(sel !== i){ sel = i; render(); }
   ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
   stage.setPointerCapture(e.pointerId);
   if(ptrs.size === 1){ const p=photos[i]; gesture = {i, sx:e.clientX, sy:e.clientY, ox:p.ox, oy:p.oy}; frameEl(i).classList.add('drag'); }
@@ -745,7 +761,7 @@ stage.addEventListener('dblclick', e => {
   const f = e.target.closest('.frame'); if(!f) return; const i=+f.dataset.i;
   if(photos[i]){ reset(photos[i]); place(i); save(); }
 });
-document.addEventListener('pointerdown', e => { if(!e.target.isConnected) return; if(!e.target.closest('.stage') && !e.target.closest('.modal') && sel>=0 && !e.target.closest('.bar')){ sel=-1; render(); } });
+document.addEventListener('pointerdown', e => { if(!e.target.isConnected) return; if(sel>=0 && !e.target.closest('.stage, .modal, .bar, .panel, .mpane, .mtabs, .tools, .ghost')){ sel=-1; render(); } });
 document.addEventListener('keydown', e => {
   if(e.target.closest && e.target.closest('input')) return;
   if(e.key==='Escape' && (sel>=0 || selCover>=0)){ sel=-1; selCover=-1; render(); return; }
@@ -771,12 +787,13 @@ function loadImage(blob){
 async function addFiles(files, target){
   files = files.filter(f => f.type.startsWith('image/'));
   if(!files.length) return;
-  const n = lay().cells.length, slots = [];
+  if(!me || !sheets.cur) return;
+  const n = rects(lay(), S.gap, pad()).length, slots = [];
   if(target >= 0) slots.push(target);
   for(let i=0;i<n && slots.length<files.length;i++) if(!photos[i] && !slots.includes(i)) slots.push(i);
   let bad = 0;
   for(let k=0;k<files.length && k<slots.length;k++){
-    try{ photos[slots[k]] = await loadImage(files[k]); }catch{ bad++; }
+    try{ const p = await loadImage(await shrink(files[k])); photos[slots[k]] = p; upload(p, sheets.cur); }catch{ bad++; }
   }
   if(files.length > slots.length) toast(`${files.length-slots.length} photo(s) left out: every window is full`);
   if(bad) toast('That file could not be opened as a picture');
@@ -899,112 +916,268 @@ function askClear(){
 }
 function toast(t){ const d=document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(), 2600); }
 
-/* ---------- keep the work in this browser: many sheets, one per character (Alex, 7 Nov) ----------
-   IndexedDB 'roarref', store 's': 'sheets' = {cur, list:[{id, name, at}]}, 'sheet:<id>' = {S, photos, thumb}.
-   The single 'state' of before is moved into the first sheet on load. */
+/* ---------- your sheets in your Roar Account (Alex, 7 Nov: "up to 5 sheets each, sign in or you don't get in, any computer") ----------
+   RoarMe's Supabase project (where the Roar Accounts live), the same session as themadlions.com/account/ (storageKey 'roar-account').
+   Table roarref_sheets {id, name, data:{S, photos:[{path, w, h, s, ox, oy, flip, rot}]}, thumb}, at most 5 a person (supabase/roarref.sql);
+   photos and thumbnails in the private bucket roarref under <user id>/<sheet id>/. Pictures are kept in IndexedDB too ('blob:<path>'),
+   so a sheet opens fast the second time. Sheets made before this in the browser alone are brought into the account once. */
+const SB_URL = 'https://bzmjhbnwhdwmncxkqkdl.supabase.co', SB_KEY = 'sb_publishable_7mQ3e0NH5lCmdoIKx2-FUA_EgCoXx9X', MAX_SHEETS = 5;
+const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'roar-account' } }) : null;
+const bucket = () => sb.storage.from('roarref');
 const DEF = JSON.stringify(S);
-let dbp = null, sheets = {cur:null, list:[]};
+let me = null, dbp = null, sheets = {cur:null, list:[]}, pending = new Set(), lastClean = 0, saveErr = false;
 function idb(){ if(!dbp) dbp = new Promise((res,rej)=>{ try{ const r=indexedDB.open('roarref',1); r.onupgradeneeded=()=>r.result.createObjectStore('s'); r.onsuccess=()=>res(r.result); r.onerror=rej; }catch(e){ rej(e); } }); return dbp; }
 async function dbGet(k){ const d = await idb(); return new Promise((res,rej)=>{ const r=d.transaction('s').objectStore('s').get(k); r.onsuccess=()=>res(r.result); r.onerror=rej; }); }
 async function dbPut(k, v){ const d = await idb(); return new Promise((res,rej)=>{ const tx=d.transaction('s','readwrite'); tx.objectStore('s').put(v,k); tx.oncomplete=res; tx.onerror=rej; }); }
-async function dbDel(k){ const d = await idb(); return new Promise((res,rej)=>{ const tx=d.transaction('s','readwrite'); tx.objectStore('s').delete(k); tx.oncomplete=res; tx.onerror=rej; }); }
-const packPhotos = () => photos.map(p => p ? {blob:p.blob,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip,rot:p.rot||0} : null);
+const newId = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36);
 const curSheet = () => sheets.list.find(x => x.id === sheets.cur);
-async function save(thumb){
+
+// a photo is made a JPEG of at most 3200 px on its long side before it goes up (enough for an 8K sheet, small enough for the space)
+async function shrink(file){
   try{
-    if(!sheets.cur) return;
-    const old = await dbGet('sheet:'+sheets.cur).catch(()=>null);
-    const rec = {S, photos: packPhotos(), thumb: thumb || (old && old.thumb) || null};
-    await dbPut('sheet:'+sheets.cur, rec);
-    const c = curSheet(); if(c) c.at = Date.now();
-    await dbPut('sheets', sheets);
+    const bm = await createImageBitmap(file); const k = Math.min(1, 3200 / Math.max(bm.width, bm.height));
+    if(k === 1 && file.type === 'image/jpeg' && file.size < 4e6) return file;
+    const c = document.createElement('canvas'); c.width = Math.round(bm.width*k); c.height = Math.round(bm.height*k);
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0,0,c.width,c.height); g.imageSmoothingQuality = 'high'; g.drawImage(bm, 0, 0, c.width, c.height);
+    return await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+  }catch{ return file; }
+}
+function upload(p, sheetId){ // p gets its path once the photo is in the account
+  const path = `${me.id}/${sheetId}/${newId()}.jpg`;
+  const job = bucket().upload(path, p.blob, {contentType:'image/jpeg', upsert:false}).then(({error}) => {
+    if(error) throw error; p.path = path; dbPut('blob:'+path, p.blob).catch(()=>{});
+  }).catch(() => { toast('A photo could not be saved to your account. Check the connection and add it again.'); })
+    .finally(() => { pending.delete(job); saveSoon(); });
+  pending.add(job); return job;
+}
+async function getBlob(path){
+  const hit = await dbGet('blob:'+path).catch(()=>null); if(hit) return hit;
+  const { data, error } = await bucket().download(path); if(error) throw error;
+  dbPut('blob:'+path, data).catch(()=>{}); return data;
+}
+const packPhotos = () => photos.map(p => p && p.path ? {path:p.path,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip,rot:p.rot||0} : null);
+async function save(){
+  if(!me || !sheets.cur) return;
+  const id = sheets.cur;
+  if(pending.size) await Promise.allSettled([...pending]);
+  const { error } = await sb.from('roarref_sheets').update({ data:{S, photos:packPhotos()}, updated_at:new Date().toISOString() }).eq('id', id);
+  if(error){ if(!saveErr) toast('Not saved: check the connection. RoarRef tries again with your next change.'); saveErr = true; return; }
+  saveErr = false; const c = curSheet(); if(c) c.updated_at = new Date().toISOString();
+  if(Date.now() - lastClean > 30000){ lastClean = Date.now(); cleanFiles(id); }
+}
+let st; function saveSoon(){ clearTimeout(st); st = setTimeout(save, 700); }
+async function cleanFiles(id){ // photos taken off the sheet leave the account too
+  try{ const { data } = await bucket().list(`${me.id}/${id}`, {limit:200}); if(!data) return;
+    const keep = new Set(photos.filter(p => p && p.path).map(p => p.path.split('/').pop()).concat('thumb.jpg'));
+    const gone = data.map(f => f.name).filter(n => !keep.has(n)).map(n => `${me.id}/${id}/${n}`);
+    if(gone.length && id === sheets.cur && !pending.size) await bucket().remove(gone);
   }catch{}
 }
-let st; function saveSoon(){ clearTimeout(st); st=setTimeout(save, 400); }
-async function snapThumb(){ try{ return await drawSheet(360, 'image/jpeg'); }catch{ return null; } }
-function loadSheet(v){
+async function saveThumb(){
+  if(!me || !sheets.cur) return;
+  try{ const b = await drawSheet(360, 'image/jpeg'); const path = `${me.id}/${sheets.cur}/thumb.jpg`;
+    const { error } = await bucket().upload(path, b, {contentType:'image/jpeg', upsert:true});
+    if(!error){ await sb.from('roarref_sheets').update({thumb:path}).eq('id', sheets.cur); const c = curSheet(); if(c){ c.thumb = path; c.thumbAt = Date.now(); } }
+  }catch{}
+}
+async function loadSheet(row){
   photos.forEach(p => { if(p && p.url) URL.revokeObjectURL(p.url); });
-  S = Object.assign(JSON.parse(DEF), v ? v.S : {});
-  photos = v && v.photos ? v.photos.map(p => p ? Object.assign({rot:0}, p, {url:URL.createObjectURL(p.blob)}) : null) : [];
+  const d = row && row.data || {};
+  S = Object.assign(JSON.parse(DEF), d.S || {});
   sel = -1; selCover = -1;
-}
-const newId = () => Math.random().toString(36).slice(2,10);
-async function restore(){
-  try{
-    const idx = await dbGet('sheets');
-    if(idx && idx.list && idx.list.length){ sheets = idx; if(!curSheet()) sheets.cur = sheets.list[0].id; loadSheet(await dbGet('sheet:'+sheets.cur)); }
-    else {
-      const old = await dbGet('state'); const id = newId();
-      sheets = {cur:id, list:[{id, name:'Character 1', at:Date.now()}]};
-      if(old){ loadSheet(old); await dbPut('sheet:'+id, old); await dbDel('state'); }
-      await dbPut('sheets', sheets);
-    }
-  }catch{}
+  const list = d.photos || [];
+  photos = list.map(() => null);
   render();
+  await Promise.all(list.map(async (q, i) => { if(!q || !q.path) return;
+    try{ const blob = await getBlob(q.path); photos[i] = Object.assign({rot:0}, q, {blob, url:URL.createObjectURL(blob)}); }catch{} }));
+  render();
+}
+async function listSheets(){
+  const { data, error } = await sb.from('roarref_sheets').select('id,name,thumb,updated_at,data').order('created_at');
+  if(error) throw error;
+  return data.map(r => ({id:r.id, name:r.name, thumb:r.thumb, updated_at:r.updated_at, n:((r.data && r.data.photos) || []).filter(Boolean).length}));
+}
+async function insertSheet(name, data){
+  const { data:row, error } = await sb.from('roarref_sheets').insert({name, data}).select('id,name,thumb,updated_at,data').single();
+  if(error){ toast(/roarref_limit/.test(error.message) ? `Up to ${MAX_SHEETS} sheets: delete one to make room.` : 'The sheet could not be made. Check the connection.'); return null; }
+  return row;
+}
+async function openSheet(id){
+  const { data, error } = await sb.from('roarref_sheets').select('id,name,data').eq('id', id).single();
+  if(error){ toast('That sheet could not be opened. Check the connection.'); return; }
+  sheets.cur = id; try{ localStorage.setItem('roarref-cur', id); }catch{}
+  await loadSheet(data); placeControls();
+}
+async function bringLocal(){ // sheets made before sign-in, kept in this browser only, go into the account once
+  try{
+    if(await dbGet('moved:'+me.id)) return 0;
+    const idx = await dbGet('sheets'); let recs = [];
+    if(idx && idx.list) for(const x of idx.list){ const r = await dbGet('sheet:'+x.id); if(r) recs.push({name:x.name, r}); }
+    else { const old = await dbGet('state'); if(old) recs.push({name:'Character 1', r:old}); }
+    recs = recs.filter(x => x.r.photos && x.r.photos.some(Boolean)).slice(0, MAX_SHEETS - sheets.list.length);
+    let n = 0;
+    for(const {name, r} of recs){
+      const row = await insertSheet(name, {S:r.S, photos:[]}); if(!row) break;
+      const ph = [];
+      for(const q of r.photos){ if(!q || !q.blob){ ph.push(null); continue; }
+        const path = `${me.id}/${row.id}/${newId()}.jpg`, blob = await shrink(q.blob);
+        const { error } = await bucket().upload(path, blob, {contentType:'image/jpeg'});
+        ph.push(error ? null : {path, w:q.w, h:q.h, s:q.s, ox:q.ox, oy:q.oy, flip:q.flip, rot:q.rot||0}); }
+      await sb.from('roarref_sheets').update({data:{S:r.S, photos:ph}}).eq('id', row.id); n++;
+    }
+    await dbPut('moved:'+me.id, true); return n;
+  }catch{ return 0; }
+}
+async function start(){
+  $('gate').hidden = true;
+  try{
+    sheets.list = await listSheets();
+    const moved = await bringLocal();
+    if(moved){ sheets.list = await listSheets(); toast(`${moved} sheet${moved>1?'s':''} from this browser are now in your account.`); }
+    if(!sheets.list.length){ const row = await insertSheet('Character 1', {S:JSON.parse(DEF), photos:[]}); if(row) sheets.list = await listSheets(); }
+    let cur = null; try{ cur = localStorage.getItem('roarref-cur'); }catch{}
+    if(!sheets.list.some(x => x.id === cur)) cur = sheets.list[0] && sheets.list[0].id;
+    if(cur) await openSheet(cur);
+  }catch{ toast('Your sheets could not be loaded. Check the connection and reload.'); }
 }
 async function switchSheet(id){
   if(id === sheets.cur) return;
-  clearTimeout(st); await save(await snapThumb());
-  sheets.cur = id; loadSheet(await dbGet('sheet:'+id).catch(()=>null)); render(); await dbPut('sheets', sheets).catch(()=>{});
+  clearTimeout(st); await save(); await saveThumb(); await openSheet(id);
 }
 async function newSheet(copy){
-  clearTimeout(st); await save(await snapThumb());
-  const look = {layout:S.layout, ratio:S.ratio, stack:S.stack, gap:S.gap, rad:S.rad, sheet:S.sheet, fill:S.fill, custom:S.custom ? JSON.parse(JSON.stringify(S.custom)) : undefined};
-  const id = newId(), n = sheets.list.length + 1;
-  const name = copy ? (curSheet()?.name || 'Character') + ' copy' : 'Character ' + n;
-  if(copy){ const keep = packPhotos(), keepS = JSON.parse(JSON.stringify(S)); sheets.list.push({id, name, at:Date.now()}); sheets.cur = id; loadSheet({S:keepS, photos:keep}); }
-  else { if(look.custom) look.custom.k && (function wipe(n){ if(n.k) n.k.forEach(wipe); else n.label = 'View'; })(look.custom);
-    sheets.list.push({id, name, at:Date.now()}); sheets.cur = id; loadSheet({S:look, photos:[]}); }
-  render(); await save();
+  if(sheets.list.length >= MAX_SHEETS){ toast(`Up to ${MAX_SHEETS} sheets: delete one to make room.`); return; }
+  clearTimeout(st); await save(); await saveThumb();
+  if(copy){
+    const from = curSheet(), row = await insertSheet((from ? from.name : 'Character') + ' copy', {S, photos:[]}); if(!row) return;
+    const ph = [];
+    for(const p of photos){ if(!p || !p.path){ ph.push(null); continue; }
+      const to = `${me.id}/${row.id}/${newId()}.jpg`; const { error } = await bucket().copy(p.path, to);
+      ph.push(error ? null : {path:to, w:p.w, h:p.h, s:p.s, ox:p.ox, oy:p.oy, flip:p.flip, rot:p.rot||0}); }
+    await sb.from('roarref_sheets').update({data:{S, photos:ph}}).eq('id', row.id);
+    sheets.list = await listSheets(); await openSheet(row.id);
+  } else {
+    const look = {layout:S.layout, ratio:S.ratio, stack:S.stack, gap:S.gap, rad:S.rad, sheet:S.sheet, fill:S.fill};
+    if(S.custom){ look.custom = JSON.parse(JSON.stringify(S.custom)); (function wipe(n){ if(n.k) n.k.forEach(wipe); else n.label = 'View'; })(look.custom); }
+    const row = await insertSheet('Character ' + (sheets.list.length + 1), {S:Object.assign(JSON.parse(DEF), look), photos:[]}); if(!row) return;
+    sheets.list = await listSheets(); await openSheet(row.id);
+  }
 }
 async function deleteSheet(id){
-  await dbDel('sheet:'+id).catch(()=>{});
-  sheets.list = sheets.list.filter(x => x.id !== id);
-  if(!sheets.list.length){ const nid = newId(); sheets.list = [{id:nid, name:'Character 1', at:Date.now()}]; sheets.cur = nid; loadSheet(null); render(); await save(); return; }
-  if(sheets.cur === id){ sheets.cur = sheets.list[0].id; loadSheet(await dbGet('sheet:'+sheets.cur).catch(()=>null)); render(); }
-  await dbPut('sheets', sheets).catch(()=>{});
+  try{ const { data } = await bucket().list(`${me.id}/${id}`, {limit:200}); if(data && data.length) await bucket().remove(data.map(f => `${me.id}/${id}/${f.name}`)); }catch{}
+  await sb.from('roarref_sheets').delete().eq('id', id);
+  sheets.list = await listSheets();
+  if(!sheets.list.length){ const row = await insertSheet('Character 1', {S:JSON.parse(DEF), photos:[]}); sheets.list = await listSheets(); if(row) await openSheet(row.id); return; }
+  if(sheets.cur === id) await openSheet(sheets.list[0].id);
 }
-/* the window with every sheet: open one, rename, duplicate, delete (asks first), new */
+/* the window with every sheet: open one, rename, duplicate, delete (asks first), new; who is signed in, and Sign out */
 async function openSheets(){
-  clearTimeout(st); await save(await snapThumb());
+  clearTimeout(st); await save(); await saveThumb();
+  try{ sheets.list = await listSheets(); }catch{}
   const m = document.createElement('div'); m.className='modal';
   const urls = [];
   const draw = async () => {
     urls.forEach(u => URL.revokeObjectURL(u)); urls.length = 0;
     const rows = [];
-    for(const x of sheets.list){ const rec = await dbGet('sheet:'+x.id).catch(()=>null); const u = rec && rec.thumb ? URL.createObjectURL(rec.thumb) : ''; if(u) urls.push(u); rows.push({x, u, n:rec && rec.photos ? rec.photos.filter(Boolean).length : 0}); }
-    m.innerHTML = `<div class="card sheets-card"><div class="row"><h2 style="flex:1">Your sheets</h2>
-        <button type="button" class="pill main" id="shNew"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New sheet</button></div>
-      <p>One sheet per character. Everything stays in this browser.</p>
-      <div class="sheets">${rows.map(({x,u,n}) => `<div class="sh${x.id===sheets.cur?' on':''}" data-id="${x.id}">
+    for(const x of sheets.list){ let u = '';
+      if(x.thumb){ try{ const { data } = await bucket().download(x.thumb + '?t=' + (x.thumbAt || x.updated_at)); if(data){ u = URL.createObjectURL(data); urls.push(u); } }catch{} }
+      rows.push({x, u}); }
+    const full = sheets.list.length >= MAX_SHEETS;
+    m.innerHTML = `<div class="card sheets-card"><div class="row"><h2 style="flex:1">Your sheets <span class="cnt">${sheets.list.length} of ${MAX_SHEETS}</span></h2>
+        <button type="button" class="pill main${full?' off':''}" id="shNew"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New sheet</button></div>
+      <p>${full ? `You have ${MAX_SHEETS} sheets, the most an account keeps. Delete one to make room.` : `One sheet per character, up to ${MAX_SHEETS}. Kept in your Roar Account, on every computer.`}</p>
+      <div class="sheets">${rows.map(({x,u}) => `<div class="sh${x.id===sheets.cur?' on':''}" data-id="${x.id}">
         <button type="button" class="sh-open" data-open="${x.id}" title="Open ${esc(x.name)}">${u ? `<img src="${u}" alt="">` : '<span class="sh-empty"></span>'}</button>
-        <div class="sh-meta"><b>${esc(x.name)}</b><small>${n} photo${n===1?'':'s'}${x.id===sheets.cur?' · open now':''}</small></div>
+        <div class="sh-meta"><b>${esc(x.name)}</b><small>${x.n} photo${x.n===1?'':'s'}${x.id===sheets.cur?' · open now':''}</small></div>
         <div class="sh-acts">
           <button type="button" class="ico" data-ren="${x.id}" title="Rename" aria-label="Rename"><svg viewBox="0 0 24 24">${IC.pen}</svg></button>
-          <button type="button" class="ico" data-dup="${x.id}" title="Duplicate" aria-label="Duplicate"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button>
+          <button type="button" class="ico${full?' off':''}" data-dup="${x.id}" title="Duplicate" aria-label="Duplicate"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button>
           <button type="button" class="ico del" data-del="${x.id}" title="Delete" aria-label="Delete"><svg viewBox="0 0 24 24">${IC.trash}</svg></button>
         </div></div>`).join('')}</div>
-      <div class="row"><span style="flex:1"></span><button type="button" class="pill" id="shClose">Done</button></div></div>`;
+      <div class="row who"><span>Signed in as <b>${esc(me.email || '')}</b></span><span style="flex:1"></span>
+        <button type="button" class="pill" id="shOut">Sign out</button><button type="button" class="pill" id="shClose">Done</button></div></div>`;
   };
   const close = () => { urls.forEach(u => URL.revokeObjectURL(u)); m.remove(); syncPanel(); };
+  const busy = on => m.classList.toggle('busy', on);
   m.onclick = async e => {
     const t = e.target.closest('button');
     if(e.target === m || t?.id === 'shClose') return close();
-    if(!t) return;
-    if(t.id === 'shNew'){ await newSheet(false); return close(); }
-    if(t.dataset.open){ await switchSheet(t.dataset.open); return close(); }
-    if(t.dataset.dup){ if(t.dataset.dup !== sheets.cur) await switchSheet(t.dataset.dup); await newSheet(true); return close(); }
+    if(!t || m.classList.contains('busy')) return;
+    if(t.id === 'shOut'){ close(); await save(); await sb.auth.signOut(); return; }
+    if(t.id === 'shNew'){ busy(true); await newSheet(false); busy(false); return close(); }
+    if(t.dataset.open){ busy(true); await switchSheet(t.dataset.open); busy(false); return close(); }
+    if(t.dataset.dup){ busy(true); if(t.dataset.dup !== sheets.cur) await switchSheet(t.dataset.dup); await newSheet(true); busy(false); return close(); }
     if(t.dataset.ren){ const x = sheets.list.find(y => y.id === t.dataset.ren), row = t.closest('.sh'), b = row.querySelector('.sh-meta');
       b.innerHTML = `<input class="field" style="height:38px;font-size:14px" maxlength="40" value="${esc(x.name)}" aria-label="Sheet name">`;
-      const inp = b.querySelector('input'); inp.focus(); inp.select();
-      const done = async () => { x.name = inp.value.trim() || x.name; await dbPut('sheets', sheets).catch(()=>{}); await draw(); syncPanel(); };
-      inp.onkeydown = ev => { if(ev.key==='Enter') done(); if(ev.key==='Escape') draw(); }; inp.onblur = done; return; }
-    if(t.dataset.del){ const x = sheets.list.find(y => y.id === t.dataset.del), row = t.closest('.sh');
-      row.querySelector('.sh-acts').innerHTML = `<button type="button" class="pill" data-keep="1">Keep</button><button type="button" class="pill main" data-sure="${x.id}">Delete</button>`; return; }
+      const inp = b.querySelector('input'); inp.focus(); inp.select(); let done = false;
+      const finish = async () => { if(done) return; done = true; x.name = inp.value.trim() || x.name;
+        await sb.from('roarref_sheets').update({name:x.name}).eq('id', x.id); await draw(); syncPanel(); };
+      inp.onkeydown = ev => { if(ev.key==='Enter') finish(); if(ev.key==='Escape'){ done = true; draw(); } }; inp.onblur = finish; return; }
+    if(t.dataset.del){ const row = t.closest('.sh');
+      row.querySelector('.sh-acts').innerHTML = `<button type="button" class="pill" data-keep="1">Keep</button><button type="button" class="pill main" data-sure="${t.dataset.del}">Delete</button>`; return; }
     if(t.dataset.keep) return draw();
-    if(t.dataset.sure){ await deleteSheet(t.dataset.sure); await draw(); syncPanel(); }
+    if(t.dataset.sure){ busy(true); await deleteSheet(t.dataset.sure); await draw(); busy(false); syncPanel(); }
   };
   await draw(); document.body.appendChild(m);
+}
+
+/* the door: RoarRef opens only with a Roar Account (sign in, create one, or the 6-digit code of two-step verification) */
+let gateMode = 'in', mfaFactor = null;
+function drawGate(msg, err){
+  const g = $('gate'); g.hidden = false;
+  const keepEmail = $('gEmail') ? $('gEmail').value : '';
+  const T = {in:['Sign in to RoarRef','Use your Roar Account: the same one as RoarMe, RoarWriter and every Roar app. Your sheets, up to 5, wait for you on any computer.'],
+    up:['Create your Roar Account','Free. One account for RoarRef and every Roar app.'], mfa:['One more step','Type the 6-digit code from your authenticator app.']}[gateMode];
+  g.innerHTML = `<form class="card gate-card" id="gateForm" novalidate>
+    <div class="mark">Roar<b>Ref</b></div><h2>${T[0]}</h2><p>${T[1]}</p>
+    ${gateMode==='mfa' ? `<input class="field" id="gCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123 456" aria-label="Code">`
+      : `<input class="field" id="gEmail" type="email" autocomplete="email" placeholder="Email" aria-label="Email">
+         <input class="field" id="gPass" type="password" autocomplete="${gateMode==='up'?'new-password':'current-password'}" placeholder="Password${gateMode==='up'?' (at least 8 characters)':''}" aria-label="Password">`}
+    ${msg ? `<p class="${err?'gerr':'gnote'}">${esc(msg)}</p>` : ''}
+    <button type="submit" class="pill main" id="gGo">${gateMode==='up' ? 'Create account' : gateMode==='mfa' ? 'Verify' : 'Sign in'}</button>
+    <div class="row" style="justify-content:center">${gateMode==='in'
+      ? `<button type="button" class="pill" data-g="up">Create an account</button><a class="pill" href="../../../account/" target="_blank" rel="noopener">Forgot password?</a>`
+      : `<button type="button" class="pill" data-g="in">I have an account</button>`}</div>
+  </form>`;
+  const f = $('gateForm');
+  if($('gEmail') && keepEmail) $('gEmail').value = keepEmail;
+  f.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { gateMode = b.dataset.g; drawGate(); });
+  f.onsubmit = async e => { e.preventDefault(); const go = $('gGo'); go.disabled = true;
+    try{
+      if(gateMode==='mfa'){
+        const { error } = await sb.auth.mfa.challengeAndVerify({factorId:mfaFactor, code:($('gCode').value||'').replace(/\s/g,'')});
+        if(error) return drawGate('Wrong code. Try the next one.', true);
+        return afterSignIn();
+      }
+      const email = ($('gEmail').value||'').trim(), password = $('gPass').value||'';
+      if(!email || !password) return drawGate('Type your email and password.', true);
+      if(gateMode==='up'){
+        if(password.length < 8) return drawGate('The password needs at least 8 characters.', true);
+        const { data, error } = await sb.auth.signUp({email, password, options:{emailRedirectTo:'https://themadlions.com/lab/roarref/app/'}});
+        if(error) return drawGate(error.message, true);
+        if(data.session) return afterSignIn();
+        gateMode = 'in'; return drawGate('Almost there: open the link we sent to your email, then sign in here.');
+      }
+      const { error } = await sb.auth.signInWithPassword({email, password});
+      if(error) return drawGate('Wrong email or password.', true);
+      afterSignIn();
+    } finally { const b = $('gGo'); if(b) b.disabled = false; }
+  };
+  setTimeout(() => { const i = $('gCode') || ($('gEmail') && $('gEmail').value ? $('gPass') : $('gEmail')); if(i) i.focus(); }, 30);
+}
+async function afterSignIn(){
+  const aal = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(aal.data && aal.data.nextLevel === 'aal2' && aal.data.currentLevel !== 'aal2'){
+    const f = await sb.auth.mfa.listFactors(); const t = f.data && f.data.totp && f.data.totp.find(x => x.status === 'verified');
+    if(t){ mfaFactor = t.id; gateMode = 'mfa'; return drawGate(); }
+  }
+  const { data } = await sb.auth.getUser(); me = data.user;
+  if(me) start(); else { gateMode = 'in'; drawGate(); }
+}
+async function restore(){
+  if(!sb){ $('gate').hidden = false; $('gate').innerHTML = '<div class="card gate-card"><div class="mark">Roar<b>Ref</b></div><h2>RoarRef could not start</h2><p>The sign-in could not load. Check the connection and reload the page.</p></div>'; return; }
+  const { data } = await sb.auth.getSession();
+  if(data.session) afterSignIn(); else drawGate();
+  sb.auth.onAuthStateChange((ev) => { if(ev === 'SIGNED_OUT'){ me = null; sheets = {cur:null, list:[]}; photos = []; render(); gateMode = 'in'; drawGate(); } });
 }
 /* where each control lives: on a computer the top bar and the bar under the sheet, on a phone the top row and the tabs */
 const isPhone = () => matchMedia('(max-width:820px)').matches;

@@ -7,7 +7,7 @@
      The app itself is app/ (plain HTML, nothing to install). EN and GR. -->
 <title>RoarRef · Character sheet for AI, in your browser · by The Mad Lions</title>
 <link rel="canonical" href="https://themadlions.com/lab/roarref/">
-<meta name="description" content="RoarRef, by The Mad Lions Lab: a 16:9 character reference sheet for AI. Pick 2 to 8 windows, drop your photos in, move and zoom each one inside its window, export a 4K PNG. Free, in your browser, your photos stay on your computer.">
+<meta name="description" content="RoarRef, by The Mad Lions Lab: a 16:9 character reference sheet for AI. Pick 2 to 8 windows, drop your photos in, move and zoom each one inside its window, export up to 8K. Free with a Roar Account, in your browser, up to 5 sheets on any computer.">
 <meta name="theme-color" content="#16181c">
 <meta property="og:title" content="RoarRef · by The Mad Lions">
 <meta property="og:description" content="Your character from every side, on one 16:9 sheet, ready for AI.">
@@ -83,7 +83,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; j
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
-<!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"RoarRef","url":"https://themadlions.com/lab/roarref/","description":"RoarRef, by The Mad Lions Lab: a 16:9 character reference sheet for AI. Pick 2 to 8 windows, drop your photos in, move and zoom each one inside its window, export a 4K PNG. Free, in your browser, your photos stay on your computer.","applicationCategory":"DesignApplication","operatingSystem":"Web","image":"https://themadlions.com/lab/roarref.jpg","screenshot":"https://themadlions.com/lab/roarref.jpg","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"isAccessibleForFree":true,"inLanguage":["en","el"],"author":{"@id":"https://themadlions.com/#org"},"publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"}}</script><!--/seo:app-->
+<!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"RoarRef","url":"https://themadlions.com/lab/roarref/","description":"RoarRef, by The Mad Lions Lab: a 16:9 character reference sheet for AI. Pick 2 to 8 windows, drop your photos in, move and zoom each one inside its window, export up to 8K. Free with a Roar Account, in your browser, up to 5 sheets on any computer.","applicationCategory":"DesignApplication","operatingSystem":"Web","image":"https://themadlions.com/lab/roarref.jpg","screenshot":"https://themadlions.com/lab/roarref.jpg","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"isAccessibleForFree":true,"inLanguage":["en","el"],"author":{"@id":"https://themadlions.com/#org"},"publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"}}</script><!--/seo:app-->
 </head>
 <body>
 <header class="wrap bar">
@@ -101,7 +101,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; j
     <div class="cta">
       <a class="pill main" href="app/"><span data-t="open">Open in the browser</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
     </div>
-    <p class="note" data-t="note">Free · nothing to install · your photos stay on your computer</p>
+    <p class="note" data-t="note">Free with a Roar Account · nothing to install · up to 5 sheets, on any computer</p>
   </section>
 
   <a class="shot" href="app/" aria-label="Open RoarRef"><img src="../roarref.jpg" alt="RoarRef: one character in three windows, front, back and face, on one white 16:9 sheet" width="1600" height="1000" loading="lazy"></a>
@@ -109,7 +109,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; j
   <section class="steps">
     <div class="step"><span class="n">01</span><h3 data-t="s1">Pick the windows</h3><p data-t="s1p">From 2 to 8: front, back and face; front, side, back, face; five or six views; bodies with faces; six expressions.</p></div>
     <div class="step"><span class="n">02</span><h3 data-t="s2">Drop and frame</h3><p data-t="s2p">Drop the photos on the windows. The windows stay put; drag each photo where you want it, zoom with the wheel or two fingers, mirror it.</p></div>
-    <div class="step"><span class="n">03</span><h3 data-t="s3">Export in 4K</h3><p data-t="s3p">One PNG of 3840 × 2160, no writing on it unless you turn the labels on. Your last sheet waits in this browser.</p></div>
+    <div class="step"><span class="n">03</span><h3 data-t="s3">Export up to 8K</h3><p data-t="s3p">PNG or JPEG up to 8K, no writing on it unless you turn the names on. Your sheets wait in your Roar Account.</p></div>
   </section>
 
   <section class="end">
@@ -125,10 +125,10 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; j
   var EL = {
     lab: 'Το Lab', new: 'Νέο', claim: 'Ο χαρακτήρας σου, <b>από κάθε πλευρά</b>, σε ένα φύλλο.',
     lead: 'Ένα φύλλο αναφοράς 16:9 για AI. Διαλέγεις πόσα παράθυρα, ρίχνεις μέσα τις φωτογραφίες σου, μετακινείς και κάνεις ζουμ στην καθεμία μέσα στο παράθυρό της, και βγάζεις μια εικόνα 4K για οποιοδήποτε μοντέλο εικόνας ή βίντεο.',
-    open: 'Άνοιξέ το στον browser', note: 'Δωρεάν · τίποτα για εγκατάσταση · οι φωτογραφίες μένουν στον υπολογιστή σου',
+    open: 'Άνοιξέ το στον browser', note: 'Δωρεάν με Roar Account · τίποτα για εγκατάσταση · έως 5 φύλλα, σε κάθε υπολογιστή',
     s1: 'Διάλεξε τα παράθυρα', s1p: 'Από 2 έως 8: μπρος, πίσω και πρόσωπο· μπρος, προφίλ, πίσω, πρόσωπο· πέντε ή έξι όψεις· σώματα με πρόσωπα· έξι εκφράσεις.',
     s2: 'Ρίξε και κάδραρε', s2p: 'Ρίξε τις φωτογραφίες στα παράθυρα. Τα παράθυρα μένουν σταθερά· σέρνεις κάθε φωτογραφία όπου τη θες, ζουμ με τη ρόδα ή με δύο δάχτυλα, καθρέφτισμα.',
-    s3: 'Βγάλ’ το σε 4K', s3p: 'Ένα PNG 3840 × 2160, χωρίς γράμματα εκτός αν ανοίξεις τα ονόματα. Το τελευταίο σου φύλλο σε περιμένει σε αυτόν τον browser.',
+    s3: 'Βγάλ’ το έως 8K', s3p: 'PNG ή JPEG έως 8K, χωρίς γράμματα εκτός αν ανοίξεις τα ονόματα. Τα φύλλα σου σε περιμένουν στο Roar Account σου.',
     end: 'Έτοιμο όποτε <b>είσαι κι εσύ</b>.', foot: 'Ένα πείραμα του The Mad Lions Lab'
   }
   var EN = {}
