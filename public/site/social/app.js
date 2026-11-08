@@ -2117,7 +2117,8 @@ function openStories(groups, gi) {
 // Cast, Crew & Creatives (Alex, 4 Nov: "People" becomes the industry's own words): Cast in front of the camera or on
 // stage, Crew who makes the film, Creatives around it (photo, styling, make-up, art, VFX, writing, choreography);
 // under the pick, the kinds of that side
-let peopleSide = 'all', peopleKind = '', peopleQ = '';
+// no All (Alex, 9 Nov): Industry opens on Cast; a search typed looks through everyone
+let peopleSide = 'cast', peopleKind = '', peopleQ = '';
 let peopleKinds = new Set(); // the specialties picked, more than one at a time
 let castF = { from: '', to: '', hFrom: '', hTo: '', gender: '', cities: new Set(), hair: new Set(), eyes: new Set() };
 let castOpen = !matchMedia('(max-width:820px)').matches; // the cast filters start folded on a phone
@@ -2238,9 +2239,9 @@ async function viewPeople(opts = {}) {
     const q = peopleQ.trim();
     const shown = data.filter((p) => {
       const ks = (p.kinds || []).map((k) => (k === 'theatre' ? 'actor' : k));
-      if (peopleSide !== 'all' && !ks.some((k) => sideOf(k) === SIDES[peopleSide])) return false;
+      if (!q && peopleSide !== 'all' && !ks.some((k) => sideOf(k) === SIDES[peopleSide])) return false;
       if (peopleKinds.size && !ks.some((k) => peopleKinds.has(k))) return false;
-      if (castOn() && peopleSide === 'cast' && !peopleKinds.size && !PERFORMER(ks) && !ks.includes('voice')) return false;
+      if (!q && castOn() && peopleSide === 'cast' && !peopleKinds.size && !PERFORMER(ks) && !ks.includes('voice')) return false;
       if (!passCast(p)) return false;
       return !q || matches(p._keys ??= personKeys(p), q);
     });
@@ -2248,7 +2249,7 @@ async function viewPeople(opts = {}) {
     put(grid, shown.length ? shown.map(faceTile) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nobody here yet')), q || filtersUsed() || peopleKinds.size ? t('Nobody matches all of these. Take a filter away.') : t('We have just started. Invite your people.')));
   }
   function draw() {
-    put(sideBox, seg([['all', t('All')], ['cast', t('Cast')], ['crew', t('Crew')], ['creatives', t('Creatives')]], peopleSide, (k) => { peopleSide = k; peopleKinds = new Set(); draw(); }));
+    put(sideBox, seg([['cast', t('Cast')], ['crew', t('Crew')], ['creatives', t('Creatives')]], peopleSide, (k) => { peopleSide = k; peopleKinds = new Set(); draw(); }));
     // the specialties as small tinted chips, one tidy line per side (Alex, 5 Nov: "more tidy, no need for glass")
     const sides = peopleSide === 'all' ? ['front', 'back', 'creative'] : [SIDES[peopleSide]];
     put(kindsBox, sides.map((sd) => h('div', { class: 'kind-row' }, peopleSide === 'all' ? h('span', { class: 'flabel' }, t(SIDE_NAME[sd])) : null,
