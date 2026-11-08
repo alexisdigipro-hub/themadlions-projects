@@ -1896,3 +1896,20 @@ html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!imp
 }
 @media (min-width:821px) and (prefers-reduced-motion:reduce){.post.ig.split .mwrap,.post.ig.split .pside{opacity:1;transform:none}}
 @media (min-width:821px){html[data-theme=dark] .post.ig.split .pside::after{background:linear-gradient(180deg,rgba(26,29,34,.5),rgba(26,29,34,.68))}html[data-theme=dark] .post.ig.split .pside::before{opacity:.9}}
+/* three columns (Alex, 8 Nov): a thin glass rail with the icons, the picture, the comments */
+@media (min-width:821px){
+  .post.ig.split{grid-template-columns:64px minmax(0,1.45fr) minmax(0,1fr)}
+  .post.ig.split .prail{border-radius:18px;background:var(--glass);border:1px solid var(--rim);box-shadow:var(--top),0 0 0 1px var(--rim-out),var(--shadow);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+    display:flex;flex-direction:column;align-items:center;padding:14px 0;opacity:0;transform:translateX(-16px);transition:opacity .8s var(--soft),transform .9s var(--soft)}
+  .post.ig.split.in .prail{opacity:1;transform:none}
+  .post.ig.split .prail .ig-bar{flex-direction:column;align-items:center;gap:18px;padding:0!important;border:0!important;background:none!important}
+  .post.ig.split .prail .ig-pair{flex-direction:column;align-items:center;gap:2px;display:flex}
+  .post.ig.split .prail .ig-n{font-size:12px;font-weight:600;min-height:14px}
+  .post.ig.split .prail .ig-ico{width:44px;height:44px;border-radius:50%}
+  .post.ig.split .prail .ig-ico svg{width:24px!important;height:24px!important}
+  .post.ig.split .prail .ig-ico:hover{background:rgba(128,128,140,.14)}
+  .post.ig.split .prail .save{margin-top:auto}
+  .post.ig.split .post-head .btn.main{height:32px;padding:0 12px;font-size:11px;flex:none}
+  .post.ig.split .talk.hidden{display:flex!important}
+}
+@media (min-width:821px){.post.ig.split .post-head .who-line{min-width:0;flex:1}.post.ig.split .post-head .who-line b,.post.ig.split .post-head .who-line small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.post.ig.split .post-head{gap:8px}}
