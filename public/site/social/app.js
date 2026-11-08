@@ -1657,6 +1657,17 @@ function postCard(r, st, refresh) {
   }), { threshold: [0, 0.25] }).observe(wrap);
   // the time rides at the end of the caption, right aligned, on its last line if it fits, else on the next (Alex, 5 Nov)
   if (cap) cap.append(h('span', { class: 'cap-time' }, ago(r.created_at)));
+  // a computer (Alex, 8 Nov, to try): the picture alone on the left, and on its right, as tall as the picture, a panel
+  // with the name, the caption, the comments, the icons and the time; the comments scroll inside it
+  if (!isPhone() && media.length && !refresh?.inWin) {
+    art.classList.add('split');
+    cap?.classList.remove('hidden');
+    talk.classList.remove('hidden');
+    if (!talk.dataset.on) { talk.dataset.on = '1'; drawTalk(talk, r, st, drawMore); }
+    const side = h('div', { class: 'pside' }, h('div', { class: 'pside-in' }, head, h('div', { class: 'pscroll' }, cap, talk), bar, cap ? null : time));
+    put(art, wrap, side);
+    return art;
+  }
   put(art, wrap, cap, cap ? null : time, talk);
   return art;
 }
