@@ -92,10 +92,10 @@ const KINDS = [
   ['lookalike', 'Lookalike', 'front'],
   // the rest by when they work (Alex, 9 Nov: Cast, then Creators who lead the whole film, Pre-production, Production
   // on set, Post-production)
-  ['director', 'Film director', 'lead'], ['producer', 'Producer', 'lead'], ['writer', 'Writer', 'lead'], ['creativedir', 'Creative director', 'lead'], ['artdir', 'Art director', 'lead'],
+  ['director', 'Film director', 'lead'], ['producer', 'Producer', 'lead'], ['writer', 'Writer', 'lead'], ['creativedir', 'Creative director', 'lead'], ['artdir', 'Art director', 'lead'], ['copy', 'Copywriter', 'lead'],
   ['lineprod', 'Line producer / Production manager', 'pre'], ['coord', 'Production coordinator', 'pre'], ['casting', 'Casting', 'pre'],
   ['location', 'Location manager / Scout', 'pre'], ['proddesign', 'Production designer', 'pre'], ['costume', 'Costume designer', 'pre'],
-  ['storyboard', 'Storyboard / Illustrator', 'pre'], ['copy', 'Copywriter', 'pre'],
+  ['storyboard', 'Storyboard / Illustrator', 'pre'],
   ['ad', 'Assistant director', 'shoot'], ['script', 'Script supervisor / Continuity', 'shoot'],
   ['dop', 'Director of photography (DoP)', 'shoot'], ['camera', 'Camera', 'shoot'], ['focus', 'Focus puller (1st AC)', 'shoot'], ['dit', 'DIT / Data wrangler', 'shoot'],
   ['steadicam', 'Steadicam', 'shoot'], ['drone', 'Drone pilot', 'shoot'],
