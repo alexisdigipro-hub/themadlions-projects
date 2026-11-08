@@ -1069,13 +1069,20 @@ async function viewFeed() {
     if (io) requestAnimationFrame(() => io.observe(more)); else { stream.push(...later); later.length = 0; }
   }
   mid.querySelectorAll('img').forEach((im) => { im.src = 'data:,'; });
-  put(mid, safeCard(),
-    crashedBefore ? null : (crumb(`home: stories ${stories.length} + ${others.length} faces`), storiesCard(stories, others)),
-    // the composer waits behind New post, on the line of Everyone / Following (Alex, 5 Nov), and opens as a glass window
-    h('div', { class: 'head feed-head' }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { setFeedOnly(k); viewFeed(); }), h('span', { class: 'grow' }),
+  const storiesEl = crashedBefore ? null : (crumb(`home: stories ${stories.length} + ${others.length} faces`), storiesCard(stories, others));
+  // a computer (Alex, 8 Nov): a search field fills the gap between Everyone / Following and Stories / New post; Enter
+  // looks in Industry
+  const feedFind = sideCol ? h('label', { class: 'feed-find' }, icon('search'), h('input', { type: 'search', placeholder: t('Search'), 'aria-label': t('Search'), onkeydown: (e) => { if (e.key === 'Enter') { peopleQ = e.target.value.trim(); location.hash = '#/people'; } } })) : h('span', { class: 'grow' });
+  // the composer waits behind New post, on the line of Everyone / Following (Alex, 5 Nov), and opens as a glass window
+  const headEl = h('div', { class: 'head feed-head' }, seg([['all', t('Everyone')], ['follow', t('Following')]], feedOnly, (k) => { setFeedOnly(k); viewFeed(); }), feedFind,
       // stories on or off, a small square next to New post (Alex, 5 Nov)
       h('button', { type: 'button', class: 'btn st-toggle' + (prefs.showStories ? ' on' : ''), title: prefs.showStories ? t('Hide stories') : t('Show stories'), 'aria-label': prefs.showStories ? t('Hide stories') : t('Show stories'), html: ICON.rings + `<span>${esc(t('Stories'))}</span>`, onclick: () => { setShowStories(!prefs.showStories); toast(prefs.showStories ? t('Stories on') : t('Stories hidden')); viewFeed(); } }),
-      mine.length ? h('button', { type: 'button', class: 'btn main new-post', title: t('New post'), 'aria-label': t('New post'), onclick: () => composeWin('work') }, icon('plus'), h('span', {}, t('New post'))) : null),
+      mine.length ? h('button', { type: 'button', class: 'btn main new-post', title: t('New post'), 'aria-label': t('New post'), onclick: () => composeWin('work') }, icon('plus'), h('span', {}, t('New post'))) : null);
+  // a computer: that line and the stories in one glass frame across the whole width, above the feed and the calls
+  const two = mid.parentElement;
+  two?.querySelector('.feed-top')?.remove();
+  if (sideCol && two) two.prepend(h('section', { class: 'feed-top' }, headEl, storiesEl));
+  put(mid, safeCard(), sideCol ? null : storiesEl, sideCol ? null : headEl,
     ...stream, more, later.length ? null : caught);
   if (more && caught) more.after(caught);
   crumb('home: on screen');

@@ -1949,3 +1949,36 @@ html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!imp
   .post.ig.clean .mwrap:hover .ig-media>*{transform:scale(1.025)}
   .post.ig.clean>.ig-cap,.post.ig.clean>.talk,.post.ig.clean>.ig-time{margin:12px 6px 0}
 }
+/* Home on a computer (Alex, 8 Nov): the stories frame across the whole width again, with Everyone / Following, a search
+   field and Stories / New post on its top line; the calls column 20% wider; the top bar and this frame in glass with a
+   reflection and soft accent splashes and fine lines behind */
+@media (min-width:821px){
+  .two.feed-two{grid-template-columns:minmax(0,1fr) 410px}
+  .feed-top{grid-column:1/-1;position:relative;isolation:isolate;display:flex;flex-direction:column;gap:12px;padding:14px 18px 16px;border-radius:20px;
+    background:var(--glass);border:1px solid var(--rim);box-shadow:var(--top),0 0 0 1px var(--rim-out),var(--shadow);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+  .feed-top .feed-head{margin:0;gap:10px;flex-wrap:nowrap}
+  .feed-top .stories{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  .feed-top .stories::before,.feed-top .stories::after{display:none}
+  .feed-find{flex:1;min-width:0;display:flex;align-items:center;gap:10px;height:42px;padding:0 16px;border-radius:14px;background:rgba(255,255,255,.42);border:1px solid var(--rim);box-shadow:inset 0 1px 2px rgba(28,35,51,.06);color:var(--muted)}
+  .feed-find span,.feed-find svg{width:18px;height:18px;flex:none}
+  .feed-find input{flex:1;min-width:0;border:0;background:none;outline:0;font:inherit;font-size:14.5px;color:var(--ink)}
+  .feed-find:focus-within{border-color:rgba(var(--a),.4);box-shadow:0 0 0 3px rgba(var(--a),.12)}
+  html[data-theme=dark] .feed-find{background:rgba(0,0,0,.18);border-color:rgba(255,255,255,.1)}
+  /* glass with a reflection and accent splashes, for the bar and the stories frame */
+  .bar .bar-in,.feed-top{isolation:isolate}
+  .bar .bar-in::before,.feed-top::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;
+    background:
+      radial-gradient(320px 140px at 8% -10%,rgba(var(--a),.20),transparent 70%),
+      radial-gradient(260px 160px at 92% 120%,rgba(var(--a),.16),transparent 70%),
+      radial-gradient(220px 120px at 60% 140%,rgba(120,150,255,.14),transparent 70%),
+      repeating-linear-gradient(118deg,rgba(var(--a),.07) 0 1px,transparent 1px 26px);
+    -webkit-mask:linear-gradient(90deg,#000,rgba(0,0,0,.35) 45%,#000);mask:linear-gradient(90deg,#000,rgba(0,0,0,.35) 45%,#000)}
+  .bar .bar-in::after,.feed-top::after{content:"";position:absolute;inset:1px 1px 50% 1px;z-index:-1;border-radius:inherit;pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0))}
+  html[data-theme=dark] .bar .bar-in::after,html[data-theme=dark] .feed-top::after{background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0))}
+}
+@media (min-width:821px){
+  html[data-theme=dark] .bar .bar-in::before,html[data-theme=dark] .feed-top::before{
+    background:radial-gradient(320px 140px at 8% -10%,rgba(var(--a),.32),transparent 70%),radial-gradient(260px 160px at 92% 120%,rgba(var(--a),.26),transparent 70%),
+      radial-gradient(220px 120px at 60% 140%,rgba(120,150,255,.2),transparent 70%),repeating-linear-gradient(118deg,rgba(255,255,255,.05) 0 1px,transparent 1px 26px)}
+}
