@@ -2076,3 +2076,23 @@ html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!imp
   .fs-apps-head small{font-size:11.5px;color:var(--muted)}
   .feed-side .fs-sep{margin:6px 10px 2px}
 }
+/* Site messages, for the administrators (Alex, 9 Nov): soft glass tiles, a new one lit, Reply as a pill, a round trash */
+.inbox{display:flex;flex-direction:column;gap:12px;max-width:900px}
+.tile.im{gap:12px}
+.tile.im.new{box-shadow:var(--top),0 0 0 1px rgba(var(--a),.45)}
+.im-top{display:flex;align-items:flex-start;gap:12px}
+.im-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.im-who b{font-size:16px}
+.im-who small{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.im-new{font-size:11px;font-weight:var(--w-strong);letter-spacing:.1em;text-transform:uppercase;color:#fff;background:var(--a-solid,#d40000);border-radius:99px;padding:3px 9px}
+.im-time{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.im-chips{display:flex;flex-wrap:wrap;gap:6px}
+.im-chips:empty{display:none}
+.im-chip{font-size:12px;padding:4px 10px;border-radius:99px;background:rgba(128,128,140,.12);border:1px solid var(--rim);color:var(--ink2)}
+.im-msg{margin:0;white-space:pre-wrap;line-height:1.55;color:var(--ink2);font-size:15px}
+.im-acts{display:flex;align-items:center;gap:8px}
+.im-del{color:#e5484d}
+.menu .menu-n{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:#d40000;color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.more-btn.has-new{position:relative}
+.more-btn.has-new::after{content:"";position:absolute;top:7px;right:7px;width:8px;height:8px;border-radius:50%;background:#d40000;box-shadow:0 0 0 2px var(--bg1)}
+@media (min-width:821px){.inbox{max-width:none}}

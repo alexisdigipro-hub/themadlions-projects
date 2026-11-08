@@ -708,6 +708,8 @@ function topBar(on) {
     h('a', { href: '#/settings' }, icon('gear'), t('Settings')),
     m ? h('a', { href: `#/p/${m.id}`, onclick: () => { openTabNext = 'saved'; if (location.hash === `#/p/${m.id}`) route(); } }, icon('bookmark'), t('Saved')) : null,
     h('a', { href: '#/me' }, icon('star'), t('Applications and seats')),
+    // the company site's contact form, for the administrators (Alex, 9 Nov)
+    isAdmin ? h('a', { href: '#/inbox' }, icon('mail'), t('Site messages'), siteUnread ? h('span', { class: 'menu-n' }, String(siteUnread)) : null) : null,
     h('button', { type: 'button', onclick: (e) => { e.stopPropagation(); setPref('theme', dark() ? 'light' : 'dark'); fill(); } }, icon(dark() ? 'sun' : 'moon'), dark() ? t('Switch to light') : t('Switch to dark')),
     h('hr'),
     ...mine.filter((x) => x !== m).map((x) => h('a', { href: `#/p/${x.id}` }, avatar(x, 'sm'), x.name)),
@@ -731,7 +733,7 @@ function topBar(on) {
     ),
     // then the bell, the ≡ menu and, at the very right, my picture (Alex, 6 Nov)
     bellButton(),
-    h('button', { type: 'button', class: 'ico more-btn', title: t('More'), 'aria-label': t('More'), html: ICON.menu || ICON.dots, onclick: toggle }),
+    h('button', { type: 'button', class: 'ico more-btn' + (isAdmin && siteUnread ? ' has-new' : ''), title: t('More'), 'aria-label': t('More'), html: ICON.menu || ICON.dots, onclick: toggle }),
     h('a', { class: 'bar-me', href: m ? `#/p/${m.id}` : '#/edit/new', title: m ? t('My profile') : t('Create your profile'), 'aria-label': t('My profile') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email })),
     h('button', { type: 'button', class: 'who-me', onclick: toggle, 'aria-label': t('Me') }, avatar(m || { name: session.user.user_metadata?.name || session.user.email }), h('span', { class: 'nm' }, m?.name || session.user.user_metadata?.name || t('Me')), icon('down')),
     h('button', { type: 'button', class: 'ico theme', title: t('Light or dark'), 'aria-label': t('Light or dark'), html: document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon, onclick: (e) => { setPref('theme', document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); e.currentTarget.innerHTML = document.documentElement.dataset.theme === 'dark' ? ICON.sun : ICON.moon; } }),
@@ -818,6 +820,7 @@ async function route() {
     if (a === 'c' && b) return await viewCall(b);
     if (a === 'seminars') return await viewSeminars();
     if (a === 'me') return await viewMe();
+    if (a === 'inbox' && isAdmin) return await viewInbox();
     if (a === 'chat') return viewChat();
     if (a === 'settings') return viewSettings();
     if (a === 'edit') return await viewEdit(b || 'new');
@@ -3095,6 +3098,9 @@ function viewSettings() {
       row(t('Text size'), null, choice('text', [['normal', t('Normal')], ['large', t('Large')]])),
       row(t('Language'), t('Greek is on the way.'), h('div', { class: 'seg' }, h('button', { type: 'button', class: 'on' }, 'English'), h('button', { type: 'button', disabled: true, title: t('Soon') }, 'Ελληνικά')))),
     isAdmin ? designSection(row) : null,
+    // the company site's messages, reachable on a phone too
+    isAdmin ? h('section', { class: 'sec' }, h('h2', {}, t('Admin')),
+      row(t('Site messages'), t('What people send through the contact form on themadlions.com.'), h('a', { class: 'btn sm', href: '#/inbox' }, icon('mail'), t('Open'), siteUnread ? ` (${siteUnread})` : ''))) : null,
     h('section', { class: 'sec' }, h('h2', {}, t('Chat')),
       row(t('Chat settings'), t('Notifications, privacy, chats and folders, blocked people, the look of the chat.'), h('button', { type: 'button', class: 'btn sm', onclick: () => openChat('settings') }, icon('gear'), t('Open'))),
       row(t('Contacts'), t('Everyone you talk to.'), h('button', { type: 'button', class: 'btn sm', onclick: () => openChat('contacts') }, icon('user'), t('Open'))),
@@ -3184,6 +3190,47 @@ window.addEventListener('message', (e) => {
 /* =====================================================================================================================
    Seminars
    ===================================================================================================================== */
+// what people write through the contact form on themadlions.com (Alex, 9 Nov: "an admin page in my profile, like
+// messages"): newest first, a new one marked until seen, Reply opens a mail to them, the trash deletes
+let siteUnread = 0;
+async function countSiteMessages() {
+  if (!isAdmin) { siteUnread = 0; return; }
+  const { count } = await sb.from('roardino_site_messages').select('id', { count: 'exact', head: true }).eq('seen', false);
+  siteUnread = count || 0;
+  document.querySelector('.more-btn')?.classList.toggle('has-new', siteUnread > 0);
+}
+async function viewInbox() {
+  document.title = 'Roardino · ' + t('Site messages');
+  const box = h('div', { class: 'inbox' }, h('p', { class: 'wait' }, t('Loading…')));
+  frame('inbox', h('div', { class: 'head' }, h('h1', {}, t('Site messages')), h('span', { class: 'grow' }), h('span', { class: 'hint' }, t('From the contact form on themadlions.com'))), box);
+  const { data, error } = await sb.from('roardino_site_messages').select('*').order('created_at', { ascending: false }).limit(300);
+  if (error) throw error;
+  if (!data.length) { put(box, h('div', { class: 'empty' }, h('b', {}, t('No messages yet')), h('p', { class: 'hint' }, t('What people send through the contact form on themadlions.com shows here.')))); return; }
+  const chip = (txt) => (txt ? h('span', { class: 'im-chip' }, txt) : null);
+  put(box, ...data.map((m) => {
+    const subject = encodeURIComponent('Re: ' + (m.kind || 'your message to The Mad Lions'));
+    const el = h('article', { class: 'tile im' + (m.seen ? '' : ' new') },
+      h('div', { class: 'im-top' },
+        h('div', { class: 'im-who' }, h('b', {}, m.name || m.email), h('small', {}, [m.company, m.email].filter(Boolean).join(' · '))),
+        m.seen ? null : h('span', { class: 'im-new' }, t('New')),
+        h('span', { class: 'im-time' }, ago(m.created_at))),
+      h('div', { class: 'im-chips' }, chip(m.kind), chip(m.budget), m.needed_by ? chip(t('By {date}', { date: m.needed_by })) : null, m.lang ? chip(m.lang.toUpperCase()) : null),
+      m.message ? h('p', { class: 'im-msg' }, m.message) : null,
+      h('div', { class: 'im-acts' },
+        h('a', { class: 'btn main', href: `mailto:${m.email}?subject=${subject}` }, icon('mail'), t('Reply')),
+        h('span', { class: 'grow' }),
+        h('button', { type: 'button', class: 'btn round im-del', title: t('Delete'), 'aria-label': t('Delete'), onclick: async () => {
+          if (!(await ask(t('Delete this message?')))) return;
+          const { error: e2 } = await sb.from('roardino_site_messages').delete().eq('id', m.id);
+          if (e2) return fail(e2);
+          el.remove(); toast(t('Deleted'));
+        } }, icon('trash'))));
+    return el;
+  }));
+  // seeing them marks them seen
+  const fresh = data.filter((m) => !m.seen).map((m) => m.id);
+  if (fresh.length) { await sb.from('roardino_site_messages').update({ seen: true }).in('id', fresh); siteUnread = 0; document.querySelector('.more-btn')?.classList.remove('has-new'); }
+}
 async function viewSeminars() {
   document.title = 'Roardino · ' + t('Seminars');
   const box = h('div', { class: 'tiles' }, h('p', { class: 'wait' }, t('Loading…')));
@@ -3287,6 +3334,7 @@ async function enter(s) {
     await loadMine();
     const { data } = await sb.rpc('roar_is_admin');
     isAdmin = data === true;
+    countSiteMessages().catch(() => {});
   } catch (e) { fail(e); }
   crumb('signed in, drawing');
   await route();
