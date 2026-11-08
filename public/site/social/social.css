@@ -2057,3 +2057,15 @@ html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!imp
 @media (min-width:821px){
   .fs-card,.fs-card:hover,.fs-card.tint,.fs-card.tint:hover{box-shadow:var(--top),0 0 0 1px var(--rim-out)!important}
 }
+/* the Lab's apps under the line (Alex, 8 Nov): the calls' glass, lower, the app's icon melted behind and sharp in front */
+@media (min-width:821px){
+  .fs-card.fs-app{flex-direction:row;align-items:center;gap:14px;padding:12px 14px;min-height:0}
+  .fs-app-ic{width:44px;height:44px;border-radius:12px;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.18)}
+  .fs-app-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .fs-app-t b{font-size:15px;font-weight:600;color:var(--ink)}
+  .fs-app-t small{font-size:12.5px;color:var(--muted)}
+  .fs-app-go{display:inline-flex;width:30px;height:30px;border-radius:50%;align-items:center;justify-content:center;flex:none;color:var(--ink2);background:rgba(128,128,140,.12);border:1px solid var(--rim);transition:transform .4s var(--soft)}
+  .fs-app-go svg{width:16px;height:16px}
+  .fs-card.fs-app:hover .fs-app-go{transform:translateX(3px)}
+  .fs-card.fs-app::before{opacity:.45!important}
+}

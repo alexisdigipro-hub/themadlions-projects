@@ -1126,36 +1126,32 @@ function drawFeedSide(two, calls, seminars) {
   const card = (href, label, color, title, meta, foot, pic) => h('a', { class: 'fs-card tint', href, style: { '--c': color, '--pbg': pic } },
     h('span', { class: 'fs-kind' }, h('i'), label), h('b', { class: 'fs-title' }, title),
     meta ? h('span', { class: 'fs-meta' }, meta) : null, foot ? h('span', { class: 'fs-foot' }, foot) : null);
-  const cs = calls.filter((c) => c.open !== false).slice(0, 12).map((c) => { const [l, col] = kindOf[c.kind] || kindOf.other;
-    return card(`#/c/${c.id}`, l, col, c.title, [c.city, c.pay].filter(Boolean).join(' · '), [callWho(c), c.dates].filter(Boolean).join(' · '), picOf(c.kind, c.id)); });
-  const ss = seminars.filter((x) => !x.starts_at || new Date(x.starts_at).getTime() > now).slice(0, 10).map((x) =>
-    card('#/seminars', x.kind === 'online' ? t('Online seminar') : t('Seminar'), '#a77bff', x.title,
-      [x.starts_at ? shortDate(x.starts_at) : t('Soon'), x.price].filter(Boolean).join(' · '), x.teacher ? t('With {name}', { name: x.teacher }) : '', picOf('seminar', x.id)));
-  // no titles and no All (Alex, 8 Nov): the calls, a thin line, the seminars
-  const sep = cs.length && ss.length ? h('hr', { class: 'fs-sep' }) : null;
-  const side = h('aside', { class: 'feed-side' }, ...cs, sep, ...ss);
+  // the five newest, calls and seminars mixed (Alex, 8 Nov): always the latest five, whatever kind they are
+  const items = [
+    ...calls.filter((c) => c.open !== false).map((c) => ({ at: c.created_at, el: (() => { const [l, col] = kindOf[c.kind] || kindOf.other;
+      return card(`#/c/${c.id}`, l, col, c.title, [c.city, c.pay].filter(Boolean).join(' · '), [callWho(c), c.dates].filter(Boolean).join(' · '), picOf(c.kind, c.id)); })() })),
+    ...seminars.filter((x) => !x.starts_at || new Date(x.starts_at).getTime() > now).map((x) => ({ at: x.created_at, el:
+      card('#/seminars', x.kind === 'online' ? t('Online seminar') : t('Seminar'), '#a77bff', x.title,
+        [x.starts_at ? shortDate(x.starts_at) : t('Soon'), x.price].filter(Boolean).join(' · '), x.teacher ? t('With {name}', { name: x.teacher }) : '', picOf('seminar', x.id)) }))]
+    .sort((p, q) => String(q.at || '').localeCompare(String(p.at || ''))).slice(0, 5).map((x) => x.el);
+  // under the line, the Lab's apps for film people (Alex, 8 Nov), the same glass, lower
+  const APPS = [
+    ['roarwriter', 'RoarWriter', t('Write your script'), '/lab/roarwriter/'],
+    ['roarlist', 'RoarList', t('Your shot list'), '/lab/roarlist/'],
+    ['roartransfer', 'RoarTransfer', t('Send big files'), '/lab/roartransfer/']];
+  const apps = APPS.map(([id, name, line, href]) => h('a', { class: 'fs-card fs-app tint', href, target: '_blank', rel: 'noopener', style: { '--pbg': `url("/lab/icons/${id}.png")` } },
+    h('img', { class: 'fs-app-ic', src: `/lab/icons/${id}.png`, alt: '' }), h('span', { class: 'fs-app-t' }, h('b', {}, name), h('small', {}, line)), h('span', { class: 'fs-app-go', html: ICON.right })));
+  const sep = h('hr', { class: 'fs-sep' });
+  const side = h('aside', { class: 'feed-side' }, ...items, sep, ...apps);
   two.append(side);
-  // the column never scrolls (Alex, 8 Nov): only as many cards as the screen holds, calls and seminars taking turns
-  // (call, call, seminar, call, seminar...) so both kinds stay, the rest left out; again when the screen changes
+  // the column never scrolls: the apps always show, and as many of the five as the screen holds above them
   const fit = () => {
     if (!side.isConnected) return;
-    [...cs, ...ss].forEach((el) => { el.hidden = false; });
-    if (sep) sep.hidden = false;
-    const room = side.clientHeight, gap = 10;
-    const order = [];
-    for (let i = 0, a = 0, b = 0; a < cs.length || b < ss.length; i += 1) {
-      const wantSem = (i === 2 || (i > 2 && i % 2 === 0)) && b < ss.length;
-      if (wantSem || a >= cs.length) order.push(ss[b++]); else order.push(cs[a++]);
-    }
-    const keep = new Set(); let used = 0, semIn = false;
-    for (const el of order) {
-      const extra = (ss.includes(el) && !semIn && sep && cs.some((c) => keep.has(c)) ? sep.offsetHeight + gap : 0);
-      const need = el.offsetHeight + (keep.size ? gap : 0) + extra;
-      if (used + need > room) continue;
-      used += need; keep.add(el); if (ss.includes(el) && extra) semIn = true;
-    }
-    [...cs, ...ss].forEach((el) => { el.hidden = !keep.has(el); });
-    if (sep) sep.hidden = !(cs.some((c) => keep.has(c)) && ss.some((x) => keep.has(x)));
+    items.forEach((el) => { el.hidden = false; });
+    const gap = 10;
+    let room = side.clientHeight - apps.reduce((n, el) => n + el.offsetHeight + gap, 0) - sep.offsetHeight - gap;
+    items.forEach((el, i) => { const need = el.offsetHeight + (i ? gap : 0); if (need <= room) room -= need; else el.hidden = true; });
+    items.forEach((el, i) => { if (i && items[i - 1].hidden) el.hidden = true; });
   };
   requestAnimationFrame(fit);
   if ('ResizeObserver' in window) { let last = 0; new ResizeObserver(() => { if (Math.abs(side.clientHeight - last) > 4) { last = side.clientHeight; fit(); } }).observe(side); }
