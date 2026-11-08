@@ -1842,3 +1842,31 @@ html.booting #splash .boot-mark{animation:sp-in .9s var(--soft) .1s forwards,sp-
 html.booting #splash .sp-dot{animation:sp-dot 1.6s ease-in-out infinite!important}
 html.booting #splash .sp-line{animation:sp-in .6s .5s forwards!important}
 html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!important}
+/* the feed on a computer, to try (Alex, 8 Nov): the picture on the left (about half), a panel on its right as tall as the
+   picture with the name, the caption, the comments (they scroll inside), the icons and a field to comment */
+@media (min-width:821px){
+  .post.ig.split{display:grid;grid-template-columns:54% minmax(0,1fr);padding:0;overflow:hidden;align-items:stretch}
+  .post.ig.split .mwrap{min-width:0}
+  .post.ig.split .pside{position:relative;border-left:1px solid var(--line);min-height:0}
+  .post.ig.split .pside-in{position:absolute;inset:0;display:flex;flex-direction:column}
+  .post.ig.split .post-head{flex:none;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .post.ig.split .pscroll{flex:1;min-height:0;overflow:auto;padding:14px 16px 0;scrollbar-width:thin}
+  .post.ig.split .ig-cap{display:block;padding:0 0 14px;font-size:14px;line-height:1.5}
+  .post.ig.split .talk{display:block}
+  .post.ig.split .cmt-new{position:sticky;bottom:0;margin:6px -16px 0;padding:10px 16px 12px;background:var(--glass);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-top:1px solid var(--line)}
+  .post.ig.split .ig-bar{flex:none;border-top:1px solid var(--line);padding:8px 10px}
+  .post.ig.split>.pside .ig-time{flex:none;padding:0 16px 12px;margin:0;font-size:12px}
+}
+@media (min-width:821px){
+  .post.ig.split .pscroll{display:flex;flex-direction:column}
+  .post.ig.split .talk{flex:1;display:flex;flex-direction:column}
+  .post.ig.split .cmt-new{margin-top:auto}
+  .post.ig.split .mwrap{position:relative}
+  .post.ig.split .ig-dots{position:absolute;left:0;right:0;bottom:12px;z-index:2}
+}
+/* the picture and its panel as two cards with a small gap between them (Alex, 8 Nov) */
+@media (min-width:821px){
+  .post.ig.split{gap:12px;background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;overflow:visible}
+  .post.ig.split .mwrap{border-radius:18px;overflow:hidden;box-shadow:var(--top),0 0 0 1px var(--rim-out),var(--shadow)}
+  .post.ig.split .pside{border-left:0;border-radius:18px;overflow:hidden;background:var(--glass);border:1px solid var(--rim);box-shadow:var(--top),0 0 0 1px var(--rim-out),var(--shadow);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+}
