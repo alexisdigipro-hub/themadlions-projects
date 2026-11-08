@@ -2045,3 +2045,11 @@ html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!imp
   body,.two.feed-two::before{background:radial-gradient(900px 600px at 12% -10%,rgba(255,255,255,.9),transparent 60%),radial-gradient(800px 600px at 100% 30%,rgba(205,214,230,.55),transparent 60%),linear-gradient(180deg,var(--bg1),var(--bg2))!important;background-attachment:fixed!important}
   html[data-theme=dark] body,html[data-theme=dark] .two.feed-two::before{background:radial-gradient(1200px 700px at 50% -12%,#4b525d 0%,transparent 62%),linear-gradient(180deg,#2b3038 0%,#1f2328 55%,#1a1d21 100%)!important;background-attachment:fixed!important}
 }
+/* (Alex, 8 Nov) the fade happens behind the middle of the stories frame, not as a white glow under it; the post without
+   its big shadow, just a fine rim */
+@media (min-width:821px){
+  .two.feed-two::before{height:calc(90px + var(--fth,180px))!important;
+    -webkit-mask:linear-gradient(#000 calc(90px + var(--fth,180px) * .35),transparent calc(90px + var(--fth,180px) * .8))!important;mask:linear-gradient(#000 calc(90px + var(--fth,180px) * .35),transparent calc(90px + var(--fth,180px) * .8))!important}
+  .post.ig.clean .mwrap{box-shadow:0 0 0 1px rgba(20,24,32,.06)!important}
+  html[data-theme=dark] .post.ig.clean .mwrap{box-shadow:0 0 0 1px rgba(255,255,255,.06)!important}
+}

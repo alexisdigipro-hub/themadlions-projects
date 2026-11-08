@@ -353,8 +353,15 @@ const viewWatch = 'IntersectionObserver' in window ? new IntersectionObserver((l
   if (!en.isIntersecting) return;
   const f = viewSeen.get(en.target); if (f) f();
 }), { threshold: 0.35 }) : null;
+// one video plays at a time, anywhere on the page (Alex, 8 Nov): when one starts, every other one stops
+document.addEventListener('play', (e) => {
+  if (e.target?.tagName !== 'VIDEO') return;
+  document.querySelectorAll('video').forEach((o) => { if (o !== e.target && !o.paused) o.pause(); });
+}, true);
 function feedVideo(src, poster) {
-  const v = h('video', { class: 'fv', playsInline: true, preload: 'none', muted: prefs.mutedVideos, loop: true, poster: poster || null });
+  const v = h('video', { class: 'fv', playsInline: true, preload: 'none', muted: prefs.mutedVideos, loop: true, poster: poster || null,
+    // a computer: the mouse over a video starts it (and so stops the others)
+    onmouseenter: () => { if (isPhone()) return; delete v.dataset.held; if (!v.src && v.dataset.src) v.src = v.dataset.src; if (v.paused) v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); } });
   if (vidNear && vidPlay) { v.dataset.src = src; vidNear.observe(v); vidPlay.observe(v); } else v.src = src;
   return v;
 }
@@ -1759,8 +1766,11 @@ function postCard(r, st, refresh) {
   if (cap) cap.append(h('span', { class: 'cap-time' }, ago(r.created_at)));
   // a computer (Alex, 8 Nov): the post is the picture alone, no frame, its name on top and its icons at the bottom
   // inside it; the caption and the comments open under it with the comment icon
-  if (!isPhone() && media.length) art.classList.add('clean');
-  put(art, wrap, cap, cap ? null : time, talk);
+  const clean = !isPhone() && media.length;
+  if (clean) art.classList.add('clean');
+  // there the time is not under the post but inside it, after the name, shown with the rest on hover (Alex, 8 Nov)
+  if (clean) head.querySelector('.who-line small')?.append(h('span', { class: 'head-time' }, ' · ' + ago(r.created_at)));
+  put(art, wrap, cap, cap || clean ? null : time, talk);
   return art;
 }
 // the comments, with motion (Alex, 5 Nov): they rise in one after another when opened, a new one slides in lit up and the
