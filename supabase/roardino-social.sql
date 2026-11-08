@@ -691,3 +691,29 @@ language sql security definer set search_path = public as $$
 $$;
 revoke all on function public.roardino_add_view(uuid) from public;
 grant execute on function public.roardino_add_view(uuid) to authenticated, anon;
+
+-- Messages from the company site's contact form (Alex, 9 Nov: "send them to me inside Roardino, an admin page"): the
+-- form on themadlions.com writes here too (anyone may send one, checked); only RoarMe administrators read, mark and
+-- delete them, on Roardino's Site messages page
+create table if not exists public.roardino_site_messages (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  name text, email text not null, company text, kind text, budget text, needed_by text, message text, lang text,
+  seen boolean not null default false
+);
+alter table public.roardino_site_messages enable row level security;
+drop policy if exists rd_site_msg_send on public.roardino_site_messages;
+create policy rd_site_msg_send on public.roardino_site_messages for insert to anon, authenticated with check (
+  seen = false and email ~ '^[^@[:space:]]+@[^@[:space:]]+[.][^@[:space:]]+$' and char_length(email) <= 200
+  and char_length(coalesce(name, '')) <= 200 and char_length(coalesce(company, '')) <= 200
+  and char_length(coalesce(kind, '')) <= 100 and char_length(coalesce(budget, '')) <= 100
+  and char_length(coalesce(needed_by, '')) <= 100 and char_length(coalesce(message, '')) <= 4000
+  and char_length(coalesce(lang, '')) <= 10);
+drop policy if exists rd_site_msg_read on public.roardino_site_messages;
+create policy rd_site_msg_read on public.roardino_site_messages for select to authenticated using (public.roar_is_admin());
+drop policy if exists rd_site_msg_mark on public.roardino_site_messages;
+create policy rd_site_msg_mark on public.roardino_site_messages for update to authenticated using (public.roar_is_admin()) with check (public.roar_is_admin());
+drop policy if exists rd_site_msg_del on public.roardino_site_messages;
+create policy rd_site_msg_del on public.roardino_site_messages for delete to authenticated using (public.roar_is_admin());
+grant insert on public.roardino_site_messages to anon, authenticated;
+grant select, update, delete on public.roardino_site_messages to authenticated;
