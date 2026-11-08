@@ -2147,8 +2147,9 @@ function openStories(groups, gi) {
 // stage, Crew who makes the film, Creatives around it (photo, styling, make-up, art, VFX, writing, choreography);
 // under the pick, the kinds of that side
 // no All (Alex, 9 Nov): Industry opens on Cast; a search typed looks through everyone
-let peopleSide = 'cast', peopleKind = '', peopleQ = '';
-const sideNow = () => (SIDES[peopleSide] ? peopleSide : (peopleSide = 'cast'));
+// it opens on Creators, the first group (Alex, 9 Nov)
+let peopleSide = 'creators', peopleKind = '', peopleQ = '';
+const sideNow = () => (SIDES[peopleSide] ? peopleSide : (peopleSide = 'creators'));
 let peopleKinds = new Set(); // the specialties picked, more than one at a time
 let castF = { from: '', to: '', hFrom: '', hTo: '', gender: '', cities: new Set(), hair: new Set(), eyes: new Set() };
 let castOpen = !matchMedia('(max-width:820px)').matches; // the cast filters start folded on a phone
