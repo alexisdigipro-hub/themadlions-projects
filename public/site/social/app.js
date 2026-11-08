@@ -1559,6 +1559,10 @@ function reportAccount(p, r) {
       c(); toast(t('Thank you. We will look at it.'));
     } }, t('Report'))]);
 }
+// posts on a computer come in as they scroll into view, once
+const splitSeen = 'IntersectionObserver' in window ? new IntersectionObserver((list) => list.forEach((en) => {
+  if (en.isIntersecting) { en.target.classList.add('in'); splitSeen.unobserve(en.target); }
+}), { threshold: 0.12 }) : null;
 function postCard(r, st, refresh) {
   const p = r.person || {};
   const media = r.media || [];
@@ -1665,7 +1669,13 @@ function postCard(r, st, refresh) {
     talk.classList.remove('hidden');
     if (!talk.dataset.on) { talk.dataset.on = '1'; drawTalk(talk, r, st, drawMore); }
     const side = h('div', { class: 'pside' }, h('div', { class: 'pside-in' }, head, h('div', { class: 'pscroll' }, cap, talk), bar, cap ? null : time));
+    // the panel wears the post's own colours: a soft, blurred copy of its picture behind the glass (Alex, 8 Nov: "make it
+    // alive, not static"); the two cards come in as the post scrolls into view
+    const m0 = media[0];
+    const tint = urlOf(m0.type === 'video' ? m0.poster : m0.path);
+    if (tint) art.style.setProperty('--pbg', `url("${tint}")`);
     put(art, wrap, side);
+    splitSeen?.observe(art);
     return art;
   }
   put(art, wrap, cap, cap ? null : time, talk);
