@@ -104,9 +104,9 @@ const KINDS = [
   ['boom', 'Sound / Boom', 'shoot'],
   ['makeup', 'Make-Up Artist', 'shoot'], ['hair', 'Hair Stylist', 'shoot'], ['styling', 'Styling / Wardrobe', 'shoot'], ['art', 'Art Department', 'shoot'],
   ['photo', 'Still Photographer', 'shoot'], ['prodassist', 'Production Assist.', 'shoot'], ['runner', 'Runner', 'shoot'],
-  ['editor', 'Editor', 'post'], ['colorist', 'Colorist', 'post'], ['vfx', 'VFX / Motion', 'post'], ['animator', 'Animator / 3D', 'post'],
-  ['mixer', 'Sound Designer / Mixer', 'post'], ['composer', 'Composer / Music', 'post'], ['singer', 'Singer / Musician', 'post'],
-  ['ai', 'AI Artist / AI Filmmaker', 'post'], ['graphic', 'Graphic Designer', 'post'],
+  ['editor', 'Editor', 'post'], ['colorist', 'Colorist', 'post'], ['vfx', 'VFX Artist', 'post'], ['motion', 'Motion Graphics', 'post'], ['animator', '3D Animator', 'post'],
+  ['mixer', 'Sound Designer', 'post'], ['composer', 'Music Composer', 'post'], ['singer', 'Singer', 'post'], ['musician', 'Musician', 'post'],
+  ['ai', 'AI Artist', 'post'], ['graphic', 'Graphic Designer', 'post'],
 ];
 // the five groups of Industry: their tab, a short name for a phone, a line, a colour and a line icon
 const GROUPS = [
@@ -144,7 +144,7 @@ const KIND_EL = { actor: 'ηθοποιός ηθοποιοί', model: 'μοντέ
   voice: 'φωνή εκφωνητής εκφωνήτρια μεταγλώττιση αφήγηση voice over', presenter: 'παρουσιαστής παρουσιάστρια παρουσίαση οικοδεσπότης mc',
   stunt: 'κασκαντέρ ακροβατικά', standin: 'αντικαταστάτης ντουμπλαρισμα σωσίας σώματος stand in', faces: 'πρόσωπα πραγματικοί άνθρωποι real people τύποι',
   influencer: 'ινφλουένσερ δημιουργός περιεχομένου creator', athlete: 'αθλητής αθλήτρια γυμναστής fitness', acrobat: 'ακροβάτης ακροβάτισσα τσίρκο',
-  comedian: 'κωμικός stand up', lookalike: 'σωσίας σωσία', singer: 'τραγουδιστής τραγουδίστρια μουσικός',
+  comedian: 'κωμικός stand up', lookalike: 'σωσίας σωσία', singer: 'τραγουδιστής τραγουδίστρια',
   director: 'σκηνοθέτης σκηνοθέτρια', creativedir: 'δημιουργικός διευθυντής creative director', artdir: 'καλλιτεχνικός διευθυντής art director', proddesign: 'σκηνογράφος σκηνογραφία production designer', costume: 'ενδυματολόγος κοστούμια',
   storyboard: 'storyboard σκίτσα πλάνων', illustrator: 'εικονογράφος εικονογράφηση illustration', copy: 'κειμενογράφος copywriter', animator: 'animation κινούμενα σχέδια 3d', composer: 'συνθέτης μουσική',
   ai: 'ai τεχνητή νοημοσύνη', graphic: 'γραφίστας γραφιστική', lineprod: 'line producer', prodman: 'διευθυντής παραγωγής production manager', accountant: 'λογιστής λογίστρια παραγωγής accountant', coord: 'συντονιστής συντονίστρια παραγωγής',
@@ -152,7 +152,7 @@ const KIND_EL = { actor: 'ηθοποιός ηθοποιοί', model: 'μοντέ
   focus: 'φοκους πούλερ εστίαση', dit: 'dit δεδομένα data', steadicam: 'στεντικαμ gimbal', drone: 'ντρόουν drone χειριστής',
   spark: 'ηλεκτρολόγος ηλεκτρολογος', grip: 'μηχανικός grip', dolly: 'ντόλι γερανός crane', boom: 'μπουμ μπουμάς ήχος ηχολήπτης sound', mixer: 'ηχητικός σχεδιασμός μίξη mixer sound design', dop: 'διευθυντής φωτογραφίας cinematographer director of photography', camera: 'κάμερα κάμεραμαν οπερατέρ', gaffer: 'φωτισμός ηλεκτρολόγος', sound: 'ήχος ηχολήπτης',
   editor: 'μοντέρ μοντάζ', colorist: 'χρώμα', producer: 'παραγωγός παραγωγή', ad: 'βοηθός σκηνοθέτη', casting: 'κάστινγκ', photo: 'φωτογράφος φωτογραφία',
-  styling: 'στυλίστας ενδυματολόγος κοστούμια', makeup: 'μακιγιάζ μακιγιέζ make up', hair: 'κομμώσεις κομμωτής κομμώτρια μαλλιά hair', art: 'σκηνογράφος σκηνογραφία', vfx: 'εφέ', writer: 'σεναριογράφος σενάριο συγγραφέας', choreo: 'χορογράφος χορογραφία' };
+  styling: 'στυλίστας ενδυματολόγος κοστούμια', makeup: 'μακιγιάζ μακιγιέζ make up', hair: 'κομμώσεις κομμωτής κομμώτρια μαλλιά hair', art: 'σκηνογράφος σκηνογραφία', vfx: 'εφέ οπτικά εφέ vfx', motion: 'motion graphics κινούμενα γραφικά', musician: 'μουσικός μουσική', writer: 'σεναριογράφος σενάριο συγγραφέας', choreo: 'χορογράφος χορογραφία' };
 const CITY_ALSO = { athens: 'athina', athina: 'athens', thessaloniki: 'salonika', patra: 'patras', patras: 'patra', heraklion: 'iraklio', iraklio: 'heraklion', larisa: 'larissa', chania: 'hania', crete: 'kriti', kriti: 'crete' };
 const words = (v) => (v == null ? '' : typeof v === 'string' ? v : Array.isArray(v) ? v.map(words).join(' ') : typeof v === 'object' ? Object.values(v).map(words).join(' ') : String(v));
 function personKeys(p) {
