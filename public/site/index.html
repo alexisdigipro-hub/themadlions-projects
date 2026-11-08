@@ -262,6 +262,37 @@ textarea { min-height: 120px; resize: vertical; line-height: 1.5; }
 .sent { text-align: center; padding: 40px 10px; }
 .sent strong { display: block; font-size: 30px; font-weight: 300; }
 .sent p { color: var(--muted); }
+/* the contact as a message (Alex, 9 Nov): a chat card, who answers on top, the topics as chips, a name and an email,
+   and a message field with a round send button; after sending, the message stays as a bubble and the answer comes in */
+form.chatform { gap: 16px; padding: clamp(18px, 2.4vw, 26px); }
+.cf-head { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.cf-av { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--hi) 8%, transparent); border: 1px solid var(--line); flex: none; }
+.cf-av img { width: 22px; height: 22px; }
+.cf-head b { display: block; font-size: 16px; font-weight: 600; }
+.cf-head small { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; }
+.cf-head small i { width: 8px; height: 8px; border-radius: 50%; background: #2fd36b; box-shadow: 0 0 8px rgba(47,211,107,.6); }
+.cf-thread { display: flex; flex-direction: column; gap: 8px; }
+.cf-bub { max-width: 82%; padding: 11px 15px; border-radius: 18px; font-size: 15.5px; line-height: 1.45; white-space: pre-wrap; animation: cf-in .45s cubic-bezier(.2,.8,.2,1) both; }
+.cf-bub.them { align-self: flex-start; border-bottom-left-radius: 6px; background: color-mix(in srgb, var(--hi) 8%, transparent); border: 1px solid var(--line); }
+.cf-bub.me { align-self: flex-end; border-bottom-right-radius: 6px; color: #fff; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 92%, #fff), var(--accent)); }
+.cf-bub.me em { display: block; font-style: normal; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .85; margin-bottom: 4px; }
+.cf-bub.me small { display: block; text-align: right; font-size: 11.5px; opacity: .8; margin-top: 4px; }
+.cf-bub.typing { display: flex; gap: 4px; padding: 14px 16px; }
+.cf-bub.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: cf-dot 1s infinite ease-in-out; }
+.cf-bub.typing i:nth-child(2) { animation-delay: .15s } .cf-bub.typing i:nth-child(3) { animation-delay: .3s }
+@keyframes cf-in { from { opacity: 0; transform: translateY(8px) scale(.98) } to { opacity: 1; transform: none } }
+@keyframes cf-dot { 0%, 80%, 100% { opacity: .3; transform: translateY(0) } 40% { opacity: 1; transform: translateY(-3px) } }
+.cf-topics button { height: 34px; padding: 0 14px; font-size: 13.5px; }
+.cf-who input { padding: 12px 16px; border-radius: 999px; font-size: 15px; }
+.cf-compose { display: flex; align-items: flex-end; gap: 8px; padding: 6px 6px 6px 18px; border-radius: 26px; border: 1px solid var(--line); background: color-mix(in srgb, var(--hi) 4%, transparent); transition: border-color .2s, box-shadow .2s; }
+.cf-compose:focus-within { border-color: color-mix(in srgb, var(--accent) 70%, transparent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent); }
+.cf-compose textarea { flex: 1; min-height: 0; height: 44px; padding: 11px 0; border: 0; background: none; box-shadow: none !important; resize: none; font-size: 15.5px; line-height: 1.45; }
+.cf-send { width: 44px; height: 44px; flex: none; border-radius: 50%; border: 0; display: grid; place-items: center; color: #fff; cursor: pointer; background: var(--accent); box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 40%, transparent); transition: transform .2s, opacity .2s; }
+.cf-send svg { width: 20px; height: 20px; }
+.cf-send:hover { transform: translateY(-1px) } .cf-send:active { transform: scale(.94) }
+form.sending .cf-send { opacity: .5; pointer-events: none; }
+form.chatform .form-msg:empty { display: none; }
+@media (max-width: 640px) { .cf-who { grid-template-columns: 1fr; } .cf-bub { max-width: 92%; } }
 
 footer { padding: 28px var(--pad) calc(28px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); }
 footer .wordmark { width: 130px; opacity: .6; }
@@ -831,30 +862,26 @@ html.has-notice .bar { top: var(--notice-h, 38px); }
       <p class="label" data-t="contact.label">Contact</p>
       <h2 data-t="contact.title" data-html>Tell us about <b>your project.</b></h2>
       <p class="sub" data-t="contact.sub">A few lines are enough. We answer within a working day.</p>
-      <a class="mail" href="mailto:info@themadlions.com">info@themadlions.com</a>
       <div class="social">
         <a class="pill" href="https://www.instagram.com/themadlions/" target="_blank" rel="noopener">Instagram</a>
         <a class="pill" href="https://www.youtube.com/channel/UCoPMSQpUYXNPSCMJV-ErfiA" target="_blank" rel="noopener">YouTube</a>
         <a class="pill" href="https://www.facebook.com/themadlions/" target="_blank" rel="noopener">Facebook</a>
       </div>
     </div>
-    <form id="lead" class="reveal" novalidate>
-      <div class="field"><span data-t="f.kind">What are you making?</span><div class="choices" id="kind"></div></div>
-      <div class="field"><span data-t="f.budget">Budget</span><div class="choices" id="budget"></div></div>
-      <div class="two">
-        <label class="field"><span data-t="f.name">Name</span><input name="name" autocomplete="name" maxlength="200"></label>
-        <label class="field"><span data-t="f.email">Email</span><input name="email" type="email" autocomplete="email" maxlength="200" required></label>
+    <form id="lead" class="reveal chatform" novalidate>
+      <div class="cf-head"><span class="cf-av"><img src="/favicon.svg" alt=""></span><div><b>The Mad Lions</b><small><i></i><span data-t="f.online">Usually answers within a working day</span></small></div></div>
+      <div class="cf-thread" id="cfThread"><div class="cf-bub them" data-t="f.hello">Hi! What is it about?</div></div>
+      <div class="choices cf-topics" id="kind"></div>
+      <div class="two cf-who">
+        <input name="name" autocomplete="name" maxlength="200" data-ph="f.name" placeholder="Your name" aria-label="Name">
+        <input name="email" type="email" autocomplete="email" maxlength="200" required data-ph="f.emailPh" placeholder="Your email, so we can answer" aria-label="Email">
       </div>
-      <div class="two">
-        <label class="field"><span data-t="f.company">Company or artist</span><input name="company" autocomplete="organization" maxlength="200"></label>
-        <label class="field"><span data-t="f.when">When do you need it?</span><input name="needed_by" maxlength="100" data-ph="f.whenPh" placeholder="e.g. end of November"></label>
+      <div class="cf-compose">
+        <textarea name="message" maxlength="4000" rows="1" data-ph="f.msgPh" placeholder="Write your message…" aria-label="Message"></textarea>
+        <button class="cf-send" type="submit" id="send" aria-label="Send" title="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button>
       </div>
-      <label class="field"><span data-t="f.msg">Tell us more</span><textarea name="message" maxlength="4000" data-ph="f.msgPh" placeholder="The idea, the format, where it will be seen…"></textarea></label>
       <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <div class="form-foot">
-        <button class="pill main" type="submit" id="send" data-t="f.send">Send</button>
-        <span class="form-msg" id="formMsg"></span>
-      </div>
+      <span class="form-msg" id="formMsg"></span>
     </form>
   </section>
 </main>
@@ -919,8 +946,10 @@ const T = {
     'sh.btn': 'Share', 'sh.label': 'Share this film', 'sh.framed': 'Framed', 'sh.full': 'Full picture', 'sh.story': 'Story picture', 'sh.reel': 'Reel video', 'sh.link': 'Copy the link', 'sh.copied': 'Link copied', 'sh.rec': 'Recording…', 'sh.watch': 'WATCH ON THEMADLIONS.COM', 'sh.hint': 'For Instagram and TikTok stories. On a phone it opens your apps; on a computer it downloads.',
     'lab.label': 'Lab', 'lab.title': 'What we build <b>between films.</b>', 'lab.rm': 'The messenger for crews.', 'lab.rd': 'The call sheet, in one link.', 'lab.ml': 'Every mailbox, one private inbox.', 'lab.rl': 'The shot list, frame by frame.', 'lab.rt': 'Big files, one short link, free.', 'lab.rw': 'Screenwriting, from page to shoot.', 'lab.tw': 'Eighteen tools for the computer and the shoot.', 'lab.rv': 'Every format, a smaller file.', 'lab.rp': 'Plays every video and sound file.', 'lab.rf': 'The character sheet for AI.', 'lab.rs': 'Review and delivery, in one link.', 'lab.disc': 'Discover', 'lab.go': 'Visit the Lab',
     'contact.label': 'Contact', 'contact.title': 'Tell us about <b>your project.</b>', 'contact.sub': 'A few lines are enough. We answer within a working day.',
-    'f.kind': 'What are you making?', 'f.budget': 'Budget', 'f.name': 'Name', 'f.email': 'Email', 'f.company': 'Company or artist',
-    'f.when': 'When do you need it?', 'f.whenPh': 'e.g. end of November', 'f.msg': 'Tell us more', 'f.msgPh': 'The idea, the format, where it will be seen…',
+    'f.kind': 'What are you making?', 'f.budget': 'Budget', 'f.name': 'Your name', 'f.email': 'Email', 'f.company': 'Company or artist',
+    'f.online': 'Usually answers within a working day', 'f.hello': 'Hi! What is it about?', 'f.emailPh': 'Your email, so we can answer',
+    'f.sentTick': 'Sent', 'f.reply': 'Thank you! We have your message and will answer you by email within a working day.',
+    'f.when': 'When do you need it?', 'f.whenPh': 'e.g. end of November', 'f.msg': 'Tell us more', 'f.msgPh': 'Write your message…',
     'f.send': 'Send', 'f.sending': 'Sending…', 'f.needEmail': 'Add your email so we can answer.',
     'f.fail': 'It did not go through. Write to info@themadlions.com instead.',
     'f.thanks': 'Thank you.', 'f.thanksSub': 'We have it, and we will be in touch soon.',
@@ -944,8 +973,10 @@ const T = {
     'bts.label': 'Πίσω από τις κάμερες', 'bts.title': 'Στο <b>γύρισμα.</b>', 'bts.all': 'Δες τα όλα',
     'lab.label': 'Lab', 'lab.title': 'Ό,τι φτιάχνουμε <b>ανάμεσα στις ταινίες.</b>', 'lab.rm': 'Το chat για συνεργεία.', 'lab.rd': 'Το ordino, σε ένα link.', 'lab.ml': 'Όλα τα mail, ένα ιδιωτικό inbox.', 'lab.rl': 'Το shot list, κάδρο κάδρο.', 'lab.rt': 'Μεγάλα αρχεία, ένα σύντομο link, δωρεάν.', 'lab.tw': 'Δεκαοκτώ εργαλεία για τον υπολογιστή και το γύρισμα.', 'lab.rv': 'Κάθε μορφή, μικρότερο αρχείο.', 'lab.rp': 'Παίζει κάθε αρχείο βίντεο και ήχου.', 'lab.rf': 'Το character sheet για AI.', 'lab.rs': 'Έγκριση και παράδοση, σε ένα link.', 'lab.rw': 'Το σενάριο, από τη σελίδα ως το γύρισμα.', 'lab.disc': 'Γνώρισέ το', 'lab.go': 'Δες το Lab',
     'contact.label': 'Επαφή', 'contact.title': 'Πείτε μας για <b>το project σας.</b>', 'contact.sub': 'Λίγες γραμμές αρκούν. Απαντάμε μέσα σε μία εργάσιμη.',
-    'f.kind': 'Τι θέλετε να φτιάξετε;', 'f.budget': 'Budget', 'f.name': 'Όνομα', 'f.email': 'Email', 'f.company': 'Εταιρεία ή καλλιτέχνης',
-    'f.when': 'Πότε το χρειάζεστε;', 'f.whenPh': 'π.χ. τέλη Νοεμβρίου', 'f.msg': 'Πείτε μας περισσότερα', 'f.msgPh': 'Η ιδέα, το format, πού θα προβληθεί…',
+    'f.kind': 'Τι θέλετε να φτιάξετε;', 'f.budget': 'Budget', 'f.name': 'Το όνομά σας', 'f.email': 'Email', 'f.company': 'Εταιρεία ή καλλιτέχνης',
+    'f.online': 'Απαντάμε συνήθως μέσα σε μία εργάσιμη', 'f.hello': 'Γεια σας! Για τι πρόκειται;', 'f.emailPh': 'Το email σας, για να σας απαντήσουμε',
+    'f.sentTick': 'Στάλθηκε', 'f.reply': 'Ευχαριστούμε! Λάβαμε το μήνυμά σας και θα σας απαντήσουμε με email μέσα σε μία εργάσιμη.',
+    'f.when': 'Πότε το χρειάζεστε;', 'f.whenPh': 'π.χ. τέλη Νοεμβρίου', 'f.msg': 'Πείτε μας περισσότερα', 'f.msgPh': 'Γράψτε το μήνυμά σας…',
     'f.send': 'Αποστολή', 'f.sending': 'Αποστέλλεται…', 'f.needEmail': 'Βάλτε το email σας για να σας απαντήσουμε.',
     'f.fail': 'Δεν στάλθηκε. Γράψτε μας στο info@themadlions.com.',
     'f.thanks': 'Ευχαριστούμε.', 'f.thanksSub': 'Το λάβαμε και θα επικοινωνήσουμε σύντομα.',
@@ -1012,7 +1043,8 @@ const FAQ = [
   { en: ['How do we start a project with you?', 'Write a few lines through the form on this page or to info@themadlions.com: what you are making, when you need it and your budget. We answer within a working day.'],
     el: ['Πώς ξεκινάμε ένα project μαζί σας;', 'Γράψτε μας λίγες γραμμές από τη φόρμα αυτής της σελίδας ή στο info@themadlions.com: τι θέλετε να φτιάξετε, πότε το χρειάζεστε και το budget σας. Απαντάμε μέσα σε μία εργάσιμη.'] },
 ]
-const KINDS = [['Commercial', 'Διαφημιστικό'], ['Music video', 'Βίντεο κλιπ'], ['Feature film', 'Ταινία'], ['Documentary', 'Ντοκιμαντέρ'], ['Corporate film', 'Εταιρική ταινία'], ['Visuals', 'Visuals'], ['Social content', 'Social content'], ['Post-production', 'Post-production'], ['Something else', 'Κάτι άλλο']]
+// what the message is about (Alex, 9 Nov: the contact as a message, a name, an email and what it is about)
+const KINDS = [['A commercial', 'Διαφημιστικό'], ['A music video', 'Βίντεο κλιπ'], ['A film', 'Ταινία'], ['A documentary', 'Ντοκιμαντέρ'], ['A corporate film', 'Εταιρική ταινία'], ['Visuals', 'Visuals'], ['Social content', 'Social content'], ['Post-production', 'Post-production'], ['Working with you', 'Συνεργασία μαζί σας'], ['Roardino and our apps', 'Roardino και οι εφαρμογές μας'], ['Press', 'Τύπος'], ['Something else', 'Κάτι άλλο']]
 const BUDGETS = [['Under €5k', 'Έως €5k'], ['€5k to €15k', '€5k έως €15k'], ['€15k to €50k', '€15k έως €50k'], ['€50k+', '€50k+'], ['Not sure yet', 'Δεν ξέρω ακόμα']]
 
 let lang = 'en'
@@ -1327,7 +1359,7 @@ const pick = { kind: '', budget: '' }
 // a link can choose the kind of film, e.g. ?kind=Post-production#contact from the Aibsent Studios page
 { const k = new URLSearchParams(location.search).get('kind'); if (k && KINDS.some((c) => c[0] === k)) pick.kind = k }
 function renderChoices() {
-  for (const [id, list] of [['kind', KINDS], ['budget', BUDGETS]]) {
+  for (const [id, list] of [['kind', KINDS]]) {
     const box = document.getElementById(id)
     box.innerHTML = ''
     list.forEach(([en, el]) => {
@@ -1341,14 +1373,18 @@ function renderChoices() {
   }
 }
 const form = document.getElementById('lead'), msg = document.getElementById('formMsg'), send = document.getElementById('send')
+form.message.addEventListener('input', (e) => { e.target.style.height = 'auto'; e.target.style.height = Math.min(e.target.scrollHeight, 220) + 'px' })
+form.message.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) form.requestSubmit() })
 form.onsubmit = async (e) => {
   e.preventDefault()
   const f = new FormData(form)
   if (f.get('website')) return // a bot filled the hidden field
   const email = String(f.get('email') || '').trim()
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.className = 'form-msg err'; msg.textContent = t('f.needEmail'); form.email.focus(); return }
-  const row = { email, name: f.get('name').trim(), company: f.get('company').trim(), needed_by: f.get('needed_by').trim(), message: f.get('message').trim(), kind: pick.kind, budget: pick.budget, lang }
-  send.disabled = true; send.textContent = t('f.sending'); msg.className = 'form-msg'; msg.textContent = ''
+  const text = String(f.get('message') || '').trim()
+  if (!text && !pick.kind) { msg.className = 'form-msg err'; msg.textContent = t('f.msgPh'); form.message.focus(); return }
+  const row = { email, name: String(f.get('name') || '').trim(), message: text, kind: pick.kind || null, lang }
+  send.disabled = true; form.classList.add('sending'); msg.className = 'form-msg'; msg.textContent = ''
   try {
     // it goes to the site's admin and to Alex's Site messages in Roardino (9 Nov); either one is enough
     const post = (url, key) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: key, Prefer: 'return=minimal' }, body: JSON.stringify(row) }).then((r) => r.ok, () => false)
@@ -1357,9 +1393,16 @@ form.onsubmit = async (e) => {
       post('https://bzmjhbnwhdwmncxkqkdl.supabase.co/rest/v1/roardino_site_messages', 'sb_publishable_7mQ3e0NH5lCmdoIKx2-FUA_EgCoXx9X')])
     if (!a && !b) throw new Error('not sent')
     track('lead', row.kind)
-    form.innerHTML = `<div class="sent"><strong>${t('f.thanks')}</strong><p>${t('f.thanksSub')}</p></div>`
+    // the message stays as a sent bubble, and the answer comes in under it, as in a chat
+    const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+    const thread = document.getElementById('cfThread')
+    thread.insertAdjacentHTML('beforeend', `<div class="cf-bub me">${pick.kind ? `<em>${esc(KINDS.find((k) => k[0] === pick.kind)?.[lang === 'el' ? 1 : 0] || pick.kind)}</em>` : ''}${esc(text)}<small>${t('f.sentTick')} ✓</small></div>`)
+    form.querySelectorAll('.cf-topics, .cf-who, .cf-compose, .form-msg').forEach((el) => el.remove())
+    form.classList.remove('sending'); form.classList.add('done')
+    setTimeout(() => thread.insertAdjacentHTML('beforeend', `<div class="cf-bub them typing"><i></i><i></i><i></i></div>`), 500)
+    setTimeout(() => { thread.querySelector('.typing')?.remove(); thread.insertAdjacentHTML('beforeend', `<div class="cf-bub them">${t('f.reply')}</div>`) }, 1700)
   } catch (err) {
-    send.disabled = false; send.textContent = t('f.send')
+    send.disabled = false; form.classList.remove('sending')
     msg.className = 'form-msg err'; msg.textContent = t('f.fail')
   }
 }
