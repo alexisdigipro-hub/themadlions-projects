@@ -102,7 +102,7 @@ const KINDS = [
   ['steadicam', 'Steadicam', 'shoot'], ['drone', 'Drone Pilot', 'shoot'],
   ['gaffer', 'Lighting / Gaffer', 'shoot'], ['spark', 'Electrician / Spark', 'shoot'], ['grip', 'Key Grip / Grip', 'shoot'], ['dolly', 'Dolly / Crane Operator', 'shoot'],
   ['boom', 'Boom Operator', 'shoot'],
-  ['makeup', 'Make-Up / Hair', 'shoot'], ['styling', 'Styling / Wardrobe', 'shoot'], ['art', 'Art Department', 'shoot'],
+  ['makeup', 'Make-Up Artist', 'shoot'], ['hair', 'Hair Stylist', 'shoot'], ['styling', 'Styling / Wardrobe', 'shoot'], ['art', 'Art Department', 'shoot'],
   ['photo', 'Still Photographer', 'shoot'], ['runner', 'Runner / PA', 'shoot'],
   ['editor', 'Editor', 'post'], ['colorist', 'Colorist', 'post'], ['vfx', 'VFX / Motion', 'post'], ['animator', 'Animator / 3D', 'post'],
   ['mixer', 'Sound Designer / Mixer', 'post'], ['composer', 'Composer / Music', 'post'], ['singer', 'Singer / Musician', 'post'],
@@ -152,7 +152,7 @@ const KIND_EL = { actor: 'ηθοποιός ηθοποιοί', model: 'μοντέ
   focus: 'φοκους πούλερ εστίαση', dit: 'dit δεδομένα data', steadicam: 'στεντικαμ gimbal', drone: 'ντρόουν drone χειριστής',
   spark: 'ηλεκτρολόγος ηλεκτρολογος', grip: 'μηχανικός grip', dolly: 'ντόλι γερανός crane', boom: 'μπουμ μπουμάς', mixer: 'ηχητικός σχεδιασμός μίξη mixer sound design', dop: 'διευθυντής φωτογραφίας cinematographer director of photography', camera: 'κάμερα κάμεραμαν οπερατέρ', gaffer: 'φωτισμός ηλεκτρολόγος', sound: 'ήχος ηχολήπτης',
   editor: 'μοντέρ μοντάζ', colorist: 'χρώμα', producer: 'παραγωγός παραγωγή', ad: 'βοηθός σκηνοθέτη', casting: 'κάστινγκ', photo: 'φωτογράφος φωτογραφία',
-  styling: 'στυλίστας ενδυματολόγος κοστούμια', makeup: 'μακιγιάζ κομμώσεις', art: 'σκηνογράφος σκηνογραφία', vfx: 'εφέ', writer: 'σεναριογράφος σενάριο συγγραφέας', choreo: 'χορογράφος χορογραφία' };
+  styling: 'στυλίστας ενδυματολόγος κοστούμια', makeup: 'μακιγιάζ μακιγιέζ make up', hair: 'κομμώσεις κομμωτής κομμώτρια μαλλιά hair', art: 'σκηνογράφος σκηνογραφία', vfx: 'εφέ', writer: 'σεναριογράφος σενάριο συγγραφέας', choreo: 'χορογράφος χορογραφία' };
 const CITY_ALSO = { athens: 'athina', athina: 'athens', thessaloniki: 'salonika', patra: 'patras', patras: 'patra', heraklion: 'iraklio', iraklio: 'heraklion', larisa: 'larissa', chania: 'hania', crete: 'kriti', kriti: 'crete' };
 const words = (v) => (v == null ? '' : typeof v === 'string' ? v : Array.isArray(v) ? v.map(words).join(' ') : typeof v === 'object' ? Object.values(v).map(words).join(' ') : String(v));
 function personKeys(p) {
