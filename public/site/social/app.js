@@ -1088,7 +1088,13 @@ async function viewFeed() {
   // a computer: that line and the stories in one glass frame across the whole width, above the feed and the calls
   const two = mid.parentElement;
   two?.querySelector('.feed-top')?.remove();
-  if (sideCol && two) two.prepend(h('section', { class: 'feed-top' }, headEl, storiesEl));
+  if (sideCol && two) {
+    const top = h('section', { class: 'feed-top' }, headEl, storiesEl);
+    two.prepend(top);
+    // it stays put under the bar while the feed scrolls (Alex, 8 Nov), so the calls column starts under it
+    if ('ResizeObserver' in window) { two._ftRO?.disconnect(); two._ftRO = new ResizeObserver(() => two.style.setProperty('--fth', top.offsetHeight + 'px')); two._ftRO.observe(top); }
+    else two.style.setProperty('--fth', top.offsetHeight + 'px');
+  }
   put(mid, safeCard(), sideCol ? null : storiesEl, sideCol ? null : headEl,
     ...stream, more, later.length ? null : caught);
   if (more && caught) more.after(caught);
@@ -1106,14 +1112,18 @@ function drawFeedSide(two, calls, seminars) {
   two.querySelector('.feed-side')?.remove();
   const now = Date.now();
   const kindOf = { casting: [t('Casting'), '#ff4d5e'], crew: [t('Crew'), '#5b8cff'], other: [t('Call'), '#f2a93b'] };
-  const card = (href, label, color, title, meta, foot) => h('a', { class: 'fs-card', href, style: { '--c': color } },
+  // glass with a picture melted far behind it, as the comments panel beside a post had (Alex, 8 Nov): you see its
+  // colours, not what it is; the same call gets the same one
+  const pics = { casting: ['casting-1', 'casting-2', 'casting-3'], crew: ['crew-1', 'crew-2'], other: ['casting-1', 'crew-2'], seminar: ['seminar-1', 'seminar-2'] };
+  const picOf = (set, id) => { const l = pics[set] || pics.other; let n = 0; for (const ch of String(id || '')) n = (n * 31 + ch.charCodeAt(0)) % 997; return `url("img/${l[n % l.length]}.jpg")`; };
+  const card = (href, label, color, title, meta, foot, pic) => h('a', { class: 'fs-card tint', href, style: { '--c': color, '--pbg': pic } },
     h('span', { class: 'fs-kind' }, h('i'), label), h('b', { class: 'fs-title' }, title),
     meta ? h('span', { class: 'fs-meta' }, meta) : null, foot ? h('span', { class: 'fs-foot' }, foot) : null);
   const cs = calls.filter((c) => c.open !== false).slice(0, 6).map((c) => { const [l, col] = kindOf[c.kind] || kindOf.other;
-    return card(`#/c/${c.id}`, l, col, c.title, [c.city, c.pay].filter(Boolean).join(' · '), [callWho(c), c.dates].filter(Boolean).join(' · ')); });
+    return card(`#/c/${c.id}`, l, col, c.title, [c.city, c.pay].filter(Boolean).join(' · '), [callWho(c), c.dates].filter(Boolean).join(' · '), picOf(c.kind, c.id)); });
   const ss = seminars.filter((x) => !x.starts_at || new Date(x.starts_at).getTime() > now).slice(0, 4).map((x) =>
     card('#/seminars', x.kind === 'online' ? t('Online seminar') : t('Seminar'), '#a77bff', x.title,
-      [x.starts_at ? shortDate(x.starts_at) : t('Soon'), x.price].filter(Boolean).join(' · '), x.teacher ? t('With {name}', { name: x.teacher }) : ''));
+      [x.starts_at ? shortDate(x.starts_at) : t('Soon'), x.price].filter(Boolean).join(' · '), x.teacher ? t('With {name}', { name: x.teacher }) : '', picOf('seminar', x.id)));
   // no titles and no All (Alex, 8 Nov): the calls, a thin line, the seminars
   two.append(h('aside', { class: 'feed-side' }, ...cs, cs.length && ss.length ? h('hr', { class: 'fs-sep' }) : null, ...ss));
 }
