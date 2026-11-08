@@ -1798,3 +1798,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 9 Nov 2026: Sound taken off the Production list (KIND.sound kept for old profiles).
 - 9 Nov 2026: Make-Up Artist and Hair Stylist (hair) apart.
 - 9 Nov 2026: Production: Production Assist. (prodassist) added, Runner, Sound / Boom, Key Grip.
+- 9 Nov 2026: Electrician / Spark and Dolly / Crane Operator taken off the Production list (KIND kept for old profiles).

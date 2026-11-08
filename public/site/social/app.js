@@ -100,7 +100,7 @@ const KINDS = [
   ['ad', 'Assistant Director', 'shoot'], ['script', 'Script Supervisor', 'shoot'],
   ['dop', 'Cinematographer (DoP)', 'shoot'], ['camera', 'Camera Operator', 'shoot'], ['focus', 'Focus Puller (1st AC)', 'shoot'], ['dit', 'DIT / Data Wrangler', 'shoot'],
   ['steadicam', 'Steadicam', 'shoot'], ['drone', 'Drone Pilot', 'shoot'],
-  ['gaffer', 'Lighting / Gaffer', 'shoot'], ['spark', 'Electrician / Spark', 'shoot'], ['grip', 'Key Grip', 'shoot'], ['dolly', 'Dolly / Crane Operator', 'shoot'],
+  ['gaffer', 'Lighting / Gaffer', 'shoot'], ['grip', 'Key Grip', 'shoot'],
   ['boom', 'Sound / Boom', 'shoot'],
   ['makeup', 'Make-Up Artist', 'shoot'], ['hair', 'Hair Stylist', 'shoot'], ['styling', 'Styling / Wardrobe', 'shoot'], ['art', 'Art Department', 'shoot'],
   ['photo', 'Still Photographer', 'shoot'], ['prodassist', 'Production Assist.', 'shoot'], ['runner', 'Runner', 'shoot'],
@@ -118,7 +118,7 @@ const GROUPS = [
   ['post', 'post', 'Post-Production', 'Post', 'After the shoot', '#a77bff', 'g_post'],
 ];
 const KIND = Object.fromEntries(KINDS.map((k) => [k[0], k[1]]));
-KIND.athlete = 'Athlete'; KIND.standin = 'Stand-In / Double'; KIND.sound = 'Sound'; // taken off the list on 9 Nov (Alex); a profile that has it still reads well
+KIND.athlete = 'Athlete'; KIND.standin = 'Stand-In / Double'; KIND.sound = 'Sound'; KIND.spark = 'Electrician / Spark'; KIND.dolly = 'Dolly / Crane Operator'; // taken off the list on 9 Nov (Alex); a profile that has it still reads well
 KIND.theatre = 'Actor'; // "Theatre" was a kind for a few hours on 4 Nov; Alex: whoever plays theatre is an actor
 const kindName = (k) => t(KIND[k] || k);
 const SIDE = Object.fromEntries(KINDS.map((k) => [k[0], k[2]]));
