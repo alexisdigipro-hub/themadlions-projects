@@ -286,6 +286,7 @@ const ICON = {
   cam: SVG('<path d="M4 7.6h3.4l1.5-2.4a1 1 0 0 1 .8-.4h4.6a1 1 0 0 1 .8.4l1.5 2.4H20a1.6 1.6 0 0 1 1.6 1.6v9.3A1.6 1.6 0 0 1 20 20.1H4a1.6 1.6 0 0 1-1.6-1.6V9.2A1.6 1.6 0 0 1 4 7.6z"/><circle cx="12" cy="13.6" r="3.6"/>'),
   flip: SVG('<path d="M20 11a8 8 0 0 0-14.3-4.6M4 13a8 8 0 0 0 14.3 4.6"/><path d="M5.2 3.6v3.4h3.4M18.8 20.4V17h-3.4"/>'),
   bell: SVG('<path d="M6.2 9.4a5.8 5.8 0 0 1 11.6 0c0 5.9 2.4 7.6 2.4 7.6H3.8s2.4-1.7 2.4-7.6z"/><path d="M10 20.4a2.3 2.3 0 0 0 4 0"/>'),
+  eye: SVG('<path d="M3 12s3.4-6 9-6 9 6 9 6-3.4 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.8"/>'),
   eyeoff: SVG('<path d="M3.5 3.5l17 17"/><path d="M10.4 6.1A9.6 9.6 0 0 1 12 6c5.6 0 9 6 9 6a15 15 0 0 1-2.6 3.3M6.5 7.6A15 15 0 0 0 3 12s3.4 6 9 6a9 9 0 0 0 4.4-1.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>'),
   rings: SVG('<circle cx="12" cy="12" r="8.6" stroke-dasharray="3.6 2.2"/><circle cx="12" cy="12" r="4.2"/>'),
   zoomin: SVG('<circle cx="10.8" cy="10.8" r="7.3"/><path d="m16.2 16.2 4.6 4.6M8 10.8h5.6M10.8 8v5.6"/>'),
@@ -343,9 +344,15 @@ const vidNear = 'IntersectionObserver' in window ? new IntersectionObserver((lis
 }), { rootMargin: '400px 0px' }) : null;
 const vidPlay = 'IntersectionObserver' in window ? new IntersectionObserver((list) => list.forEach((en) => {
   const v = en.target;
-  if (en.intersectionRatio >= 0.6 && !v.dataset.held) { document.querySelectorAll('video.fv').forEach((o) => { if (o !== v && !o.paused) o.pause(); }); v.play().catch(() => {}); }
+  if (en.intersectionRatio >= 0.6 && !v.dataset.held) { document.querySelectorAll('video.fv').forEach((o) => { if (o !== v && !o.paused) o.pause(); }); v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); }
   else if (!v.paused) v.pause();
 }), { threshold: [0, 0.6] }) : null;
+// video views (Alex, 8 Nov: "every time someone passes and sees it, it counts"): each time a feed video comes into sight
+const viewSeen = new WeakMap();
+const viewWatch = 'IntersectionObserver' in window ? new IntersectionObserver((list) => list.forEach((en) => {
+  if (!en.isIntersecting) return;
+  const f = viewSeen.get(en.target); if (f) f();
+}), { threshold: 0.35 }) : null;
 function feedVideo(src, poster) {
   const v = h('video', { class: 'fv', playsInline: true, preload: 'none', muted: prefs.mutedVideos, loop: true, poster: poster || null });
   if (vidNear && vidPlay) { v.dataset.src = src; vidNear.observe(v); vidPlay.observe(v); } else v.src = src;
@@ -1099,19 +1106,20 @@ function drawFeedSide(two, calls, seminars) {
   two.querySelector('.feed-side')?.remove();
   const now = Date.now();
   const kindOf = { casting: [t('Casting'), '#ff4d5e'], crew: [t('Crew'), '#5b8cff'], other: [t('Call'), '#f2a93b'] };
-  const card = (href, label, color, title, meta, foot) => h('a', { class: 'fs-card', href, style: { '--c': color } },
+  // each card on a picture (Alex, 8 Nov: "a background like a picture, not those little colours"), the same one for the
+  // same call every time
+  const pics = { casting: ['casting-1', 'casting-2', 'casting-3'], crew: ['crew-1', 'crew-2'], other: ['casting-1', 'crew-2'], seminar: ['seminar-1', 'seminar-2'] };
+  const picOf = (set, id) => { const l = pics[set] || pics.other; let n = 0; for (const ch of String(id || '')) n = (n * 31 + ch.charCodeAt(0)) % 997; return `url("img/${l[n % l.length]}.jpg")`; };
+  const card = (href, label, color, title, meta, foot, pic) => h('a', { class: 'fs-card pic', href, style: { '--c': color, '--pic': pic } },
     h('span', { class: 'fs-kind' }, h('i'), label), h('b', { class: 'fs-title' }, title),
     meta ? h('span', { class: 'fs-meta' }, meta) : null, foot ? h('span', { class: 'fs-foot' }, foot) : null);
   const cs = calls.filter((c) => c.open !== false).slice(0, 6).map((c) => { const [l, col] = kindOf[c.kind] || kindOf.other;
-    return card(`#/c/${c.id}`, l, col, c.title, [c.city, c.pay].filter(Boolean).join(' · '), [callWho(c), c.dates].filter(Boolean).join(' · ')); });
+    return card(`#/c/${c.id}`, l, col, c.title, [c.city, c.pay].filter(Boolean).join(' · '), [callWho(c), c.dates].filter(Boolean).join(' · '), picOf(c.kind, c.id)); });
   const ss = seminars.filter((x) => !x.starts_at || new Date(x.starts_at).getTime() > now).slice(0, 4).map((x) =>
     card('#/seminars', x.kind === 'online' ? t('Online seminar') : t('Seminar'), '#a77bff', x.title,
-      [x.starts_at ? shortDate(x.starts_at) : t('Soon'), x.price].filter(Boolean).join(' · '), x.teacher ? t('With {name}', { name: x.teacher }) : ''));
-  two.append(h('aside', { class: 'feed-side' },
-    h('div', { class: 'fs-head' }, h('h3', {}, t('Casting calls')), h('a', { href: '#/calls' }, t('All'))),
-    cs.length ? cs : h('p', { class: 'hint' }, t('No open calls right now.')),
-    h('div', { class: 'fs-head' }, h('h3', {}, t('Seminars')), h('a', { href: '#/seminars' }, t('All'))),
-    ss.length ? ss : h('p', { class: 'hint' }, t('Nothing planned yet.'))));
+      [x.starts_at ? shortDate(x.starts_at) : t('Soon'), x.price].filter(Boolean).join(' · '), x.teacher ? t('With {name}', { name: x.teacher }) : '', picOf('seminar', x.id)));
+  // no titles and no All (Alex, 8 Nov): the calls, a thin line, the seminars
+  two.append(h('aside', { class: 'feed-side' }, ...cs, cs.length && ss.length ? h('hr', { class: 'fs-sep' }) : null, ...ss));
 }
 // my card, left: who I am, my numbers, my skills, my latest work
 function meCard() {
@@ -1619,10 +1627,22 @@ function postCard(r, st, refresh) {
     try { if (navigator.share) await navigator.share({ title: p.name, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ }
   };
   const slides = media.length ? h('div', { class: 'ig-media' + (media.length > 1 ? ' many' : '') }, media.map((m) => (m.type === 'video'
-    ? (isPhone() ? feedVideo(urlOf(m.path), urlOf(m.poster)) : h('video', { src: urlOf(m.path), poster: urlOf(m.poster) || null, playsInline: true, preload: 'metadata', muted: prefs.mutedVideos, loop: true }))
+    ? feedVideo(urlOf(m.path), urlOf(m.poster))
     : h('img', { src: urlOf(m.path), alt: '', loading: 'lazy', decoding: 'async', ondblclick: (e) => { if (!st.mine) bravoBtn.click(); const hh = h('span', { class: 'big-heart', html: ICON.heart }); e.target.parentElement.parentElement.append(hh); setTimeout(() => hh.remove(), 900); } })))) : null;
   // a video in its own shape, the width fixed and the height its own (Alex, 5 Nov: "the pictures were fine, only the
   // videos keep their aspect ratio"): the size kept at upload, else the video's own once it loads; pictures stay 4:5
+  // pictures too (Alex, 8 Nov): their own shape down to 4:5; a taller one sits in 4:5 and opens whole with a tap
+  if (slides && media[0].type !== 'video') {
+    const shapeImg = (w, hh) => { if (w && hh && w / hh > 4 / 5) slides.style.setProperty('--ar', `${w} / ${hh}`); };
+    const m0 = media[0];
+    if (m0.w && m0.h) shapeImg(m0.w, m0.h);
+    else slides.firstElementChild?.addEventListener('load', (e) => {
+      const w = e.target.naturalWidth, hh = e.target.naturalHeight;
+      if (!w || !hh || e.target.src.startsWith('data:')) return;
+      shapeImg(w, hh);
+      if (own && r.id) { r.media = (r.media || []).map((x, k) => (k ? x : { ...x, w, h: hh })); sb.from('roardino_posts').update({ media: r.media }).eq('id', r.id).then(() => {}, () => {}); }
+    }, { once: true });
+  }
   if (slides && media[0].type === 'video') {
     const shape = (w, hh) => { if (w && hh) slides.style.setProperty('--ar', `${w} / ${hh}`); };
     const m0 = media[0];
@@ -1645,10 +1665,22 @@ function postCard(r, st, refresh) {
       // Follow when I don't follow them yet, and the ⋯ menu (Alex, 5 Nov, as Instagram's)
       !own && p.id && !follows.has(p.id) ? h('button', { type: 'button', class: 'btn sm post-follow', onclick: async (e) => { const b = e.currentTarget; const ok = await toggleFollow(p.id); if (ok) b.remove(); } }, t('Follow')) : null,
       h('button', { type: 'button', class: 'ig-ico sm', title: t('More'), 'aria-label': t('More'), html: ICON.dots, onclick: () => postMenu(r, p, { own, media, refresh, saveBtn }) }));
+  // a video's views, inside it with the other icons
+  let viewsEl = null;
+  if (slides && media[0].type === 'video' && r.id) {
+    let n = Number(r.views) || 0;
+    const viewN = h('span', { class: 'ig-n' }, short(n));
+    viewsEl = h('span', { class: 'ig-pair ig-views', title: t('Views') }, h('span', { class: 'ig-ico still', html: ICON.eye }), viewN);
+    if (viewWatch) {
+      viewSeen.set(slides, () => { n += 1; viewN.textContent = short(n); sb.rpc('roardino_add_view', { p: r.id }).then(() => {}, () => {}); });
+      viewWatch.observe(slides);
+    }
+  }
   const bar =
     h('div', { class: 'ig-bar' }, h('span', { class: 'ig-pair' }, bravoBtn, likeN),
       h('span', { class: 'ig-pair' }, h('button', { type: 'button', class: 'ig-ico', title: t('Comment'), 'aria-label': t('Comment'), html: ICON.talk, onclick: () => { if (talk.classList.contains('hidden')) { openTalk(); cap?.classList.remove('hidden'); } else { talk.classList.add('hidden'); cap?.classList.add('hidden'); } } }), talkN),
       h('button', { type: 'button', class: 'ig-ico', title: t('Send on RoarMe'), 'aria-label': t('Send on RoarMe'), html: ICON.send, onclick: () => sendToRoarMe(r, p) }),
+      viewsEl,
       h('span', { class: 'grow' }),
       own ? null : h('a', { class: 'btn sm main', href: `#/p/${p.id}` }, t('Work with me')), saveBtn);
   const time = h('p', { class: 'ig-time' }, ago(r.created_at));

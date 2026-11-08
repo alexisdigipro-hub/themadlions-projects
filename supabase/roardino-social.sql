@@ -681,3 +681,13 @@ language sql stable security definer set search_path = public as $$
     'posts', (select count(*) from roardino_posts where person_id = p),
     'bravos', (select count(*) from roardino_bravos b join roardino_posts x on x.id = b.post_id where x.person_id = p)) end
 $$;
+
+-- Video views (Alex, 8 Nov: "every time someone passes and sees it, count a view"): a number on the post, raised by
+-- roardino_add_view each time a video comes into sight; anyone signed in may raise it, only by one
+alter table public.roardino_posts add column if not exists views bigint not null default 0;
+create or replace function public.roardino_add_view(p uuid) returns void
+language sql security definer set search_path = public as $$
+  update public.roardino_posts set views = views + 1 where id = p;
+$$;
+revoke all on function public.roardino_add_view(uuid) from public;
+grant execute on function public.roardino_add_view(uuid) to authenticated, anon;
