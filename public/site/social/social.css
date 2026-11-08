@@ -1864,3 +1864,9 @@ html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!imp
   .post.ig.split .mwrap{position:relative}
   .post.ig.split .ig-dots{position:absolute;left:0;right:0;bottom:12px;z-index:2}
 }
+/* the picture and its panel as two cards with a small gap between them (Alex, 8 Nov) */
+@media (min-width:821px){
+  .post.ig.split{gap:12px;background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;overflow:visible}
+  .post.ig.split .mwrap{border-radius:18px;overflow:hidden;box-shadow:var(--top),0 0 0 1px var(--rim-out),var(--shadow)}
+  .post.ig.split .pside{border-left:0;border-radius:18px;overflow:hidden;background:var(--glass);border:1px solid var(--rim);box-shadow:var(--top),0 0 0 1px var(--rim-out),var(--shadow);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+}
