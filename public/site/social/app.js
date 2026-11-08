@@ -1668,13 +1668,20 @@ function postCard(r, st, refresh) {
     cap?.classList.remove('hidden');
     talk.classList.remove('hidden');
     if (!talk.dataset.on) { talk.dataset.on = '1'; drawTalk(talk, r, st, drawMore); }
-    const side = h('div', { class: 'pside' }, h('div', { class: 'pside-in' }, head, h('div', { class: 'pscroll' }, cap, talk), bar, cap ? null : time));
+    // three columns (Alex, 8 Nov): a thin rail on the left with like, comment, share and save one under the other, the
+    // picture, and on the right only the comments; Work with me rides in the panel's head
+    const work = bar.querySelector('a.btn');
+    if (work) head.insertBefore(work, head.querySelector('.ig-ico.sm'));
+    bar.querySelector('.grow')?.remove();
+    bar.querySelectorAll('.ig-ico[title="' + t('Comment') + '"]').forEach((b) => b.addEventListener('click', () => setTimeout(() => talk.querySelector('input')?.focus(), 50)));
+    const rail = h('div', { class: 'prail' }, bar);
+    const side = h('div', { class: 'pside' }, h('div', { class: 'pside-in' }, head, h('div', { class: 'pscroll' }, cap, talk), cap ? null : time));
     // the panel wears the post's own colours: a soft, blurred copy of its picture behind the glass (Alex, 8 Nov: "make it
     // alive, not static"); the two cards come in as the post scrolls into view
     const m0 = media[0];
     const tint = urlOf(m0.type === 'video' ? m0.poster : m0.path);
     if (tint) art.style.setProperty('--pbg', `url("${tint}")`);
-    put(art, wrap, side);
+    put(art, rail, wrap, side);
     splitSeen?.observe(art);
     return art;
   }
