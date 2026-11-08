@@ -86,7 +86,7 @@ wearPrefs();
 const KINDS = [
   ['actor', 'Actor', 'front'], ['model', 'Model', 'front'], ['dancer', 'Dancer', 'front'], ['extra', 'Extra', 'front'],
   // more of the cast (Alex, 9 Nov, from how Spotlight, Backstage and Casting Networks split it)
-  ['voice', 'Voice Actor / Voice-Over', 'front'], ['presenter', 'Presenter / Host', 'front'], ['stunt', 'Stunt Performer', 'front'],
+  ['voice', 'Voice Actor', 'front'], ['presenter', 'Presenter / Host', 'front'], ['stunt', 'Stunt Performer', 'front'],
   ['standin', 'Stand-In / Body Double', 'front'], ['faces', 'Faces (Real People)', 'front'], ['influencer', 'Influencer / Creator', 'front'],
   ['athlete', 'Athlete / Fitness', 'front'], ['acrobat', 'Acrobat / Circus', 'front'], ['comedian', 'Comedian / Stand-Up', 'front'],
   ['lookalike', 'Lookalike', 'front'],
