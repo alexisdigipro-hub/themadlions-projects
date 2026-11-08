@@ -1982,25 +1982,15 @@ html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!imp
     background:radial-gradient(320px 140px at 8% -10%,rgba(var(--a),.32),transparent 70%),radial-gradient(260px 160px at 92% 120%,rgba(var(--a),.26),transparent 70%),
       radial-gradient(220px 120px at 60% 140%,rgba(120,150,255,.2),transparent 70%),repeating-linear-gradient(118deg,rgba(255,255,255,.05) 0 1px,transparent 1px 26px)}
 }
-/* a computer (Alex, 8 Nov: "something like a photo behind, not lines, so the glass shows"): a soft film-studio
-   photograph behind every page, the old splashes and lines gone; the calls and seminars each on a picture, no titles,
-   a thin line between them */
+/* a computer (Alex, 8 Nov, second look): no photo behind the page and no splashes or lines on the glass; the calls and
+   seminars as clear glass like the comments panel was, no titles, a thin line between them; posts closer together */
 @media (min-width:821px){
-  body{background:linear-gradient(rgba(236,238,241,.42),rgba(223,225,229,.62)),url("img/bg-light.jpg") center/cover no-repeat fixed!important}
-  html[data-theme=dark] body{background:linear-gradient(rgba(22,24,28,.38),rgba(22,24,28,.66)),url("img/bg-dark.jpg") center/cover no-repeat fixed!important}
   .bar .bar-in::before,.feed-top::before,html[data-theme=dark] .bar .bar-in::before,html[data-theme=dark] .feed-top::before{background:none!important;-webkit-mask:none!important;mask:none!important}
-  .fs-sep{border:0;height:1px;margin:8px 10px;background:linear-gradient(90deg,transparent,var(--rim-out,rgba(128,128,140,.3)) 20%,var(--rim-out,rgba(128,128,140,.3)) 80%,transparent);opacity:.9}
+  .fs-card::before{display:none}
+  .fs-card{min-height:0}
+  .fs-sep{border:0;height:1px;margin:8px 10px;background:linear-gradient(90deg,transparent,rgba(128,128,140,.3) 20%,rgba(128,128,140,.3) 80%,transparent)}
   html[data-theme=dark] .fs-sep{background:linear-gradient(90deg,transparent,rgba(255,255,255,.16) 20%,rgba(255,255,255,.16) 80%,transparent)}
-  .fs-card.pic{min-height:168px;justify-content:flex-end;padding:16px 18px 15px;color:#fff;border-color:rgba(255,255,255,.14);
-    background:linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,.25) 40%,rgba(0,0,0,.78) 100%),var(--pic) center/cover no-repeat;
-    -webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 14px 34px rgba(0,0,0,.22)}
-  .fs-card.pic::before{display:none}
-  .fs-card.pic::after{content:"";position:absolute;inset:0;z-index:-1;background:inherit;transition:transform 1.2s var(--soft)}
-  .fs-card.pic:hover{transform:translateY(-3px);box-shadow:0 22px 46px rgba(0,0,0,.3)}
-  .fs-card.pic .fs-kind{position:absolute;top:12px;left:12px;padding:5px 10px 5px 8px;border-radius:99px;color:#fff;background:rgba(20,20,24,.38);border:1px solid rgba(255,255,255,.22);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-size:10.5px}
-  .fs-card.pic .fs-title{color:#fff;font-size:16px;text-shadow:0 1px 8px rgba(0,0,0,.35)}
-  .fs-card.pic .fs-meta{color:rgba(255,255,255,.88)}
-  .fs-card.pic .fs-foot{color:rgba(255,255,255,.7)}
+  .post.ig.clean{margin-bottom:0}
 }
 /* a computer (Alex, 8 Nov): who posted it, the likes, comments and views show only while the mouse is over the post */
 @media (min-width:821px) and (hover:hover){

@@ -1106,18 +1106,14 @@ function drawFeedSide(two, calls, seminars) {
   two.querySelector('.feed-side')?.remove();
   const now = Date.now();
   const kindOf = { casting: [t('Casting'), '#ff4d5e'], crew: [t('Crew'), '#5b8cff'], other: [t('Call'), '#f2a93b'] };
-  // each card on a picture (Alex, 8 Nov: "a background like a picture, not those little colours"), the same one for the
-  // same call every time
-  const pics = { casting: ['casting-1', 'casting-2', 'casting-3'], crew: ['crew-1', 'crew-2'], other: ['casting-1', 'crew-2'], seminar: ['seminar-1', 'seminar-2'] };
-  const picOf = (set, id) => { const l = pics[set] || pics.other; let n = 0; for (const ch of String(id || '')) n = (n * 31 + ch.charCodeAt(0)) % 997; return `url("img/${l[n % l.length]}.jpg")`; };
-  const card = (href, label, color, title, meta, foot, pic) => h('a', { class: 'fs-card pic', href, style: { '--c': color, '--pic': pic } },
+  const card = (href, label, color, title, meta, foot) => h('a', { class: 'fs-card', href, style: { '--c': color } },
     h('span', { class: 'fs-kind' }, h('i'), label), h('b', { class: 'fs-title' }, title),
     meta ? h('span', { class: 'fs-meta' }, meta) : null, foot ? h('span', { class: 'fs-foot' }, foot) : null);
   const cs = calls.filter((c) => c.open !== false).slice(0, 6).map((c) => { const [l, col] = kindOf[c.kind] || kindOf.other;
-    return card(`#/c/${c.id}`, l, col, c.title, [c.city, c.pay].filter(Boolean).join(' · '), [callWho(c), c.dates].filter(Boolean).join(' · '), picOf(c.kind, c.id)); });
+    return card(`#/c/${c.id}`, l, col, c.title, [c.city, c.pay].filter(Boolean).join(' · '), [callWho(c), c.dates].filter(Boolean).join(' · ')); });
   const ss = seminars.filter((x) => !x.starts_at || new Date(x.starts_at).getTime() > now).slice(0, 4).map((x) =>
     card('#/seminars', x.kind === 'online' ? t('Online seminar') : t('Seminar'), '#a77bff', x.title,
-      [x.starts_at ? shortDate(x.starts_at) : t('Soon'), x.price].filter(Boolean).join(' · '), x.teacher ? t('With {name}', { name: x.teacher }) : '', picOf('seminar', x.id)));
+      [x.starts_at ? shortDate(x.starts_at) : t('Soon'), x.price].filter(Boolean).join(' · '), x.teacher ? t('With {name}', { name: x.teacher }) : ''));
   // no titles and no All (Alex, 8 Nov): the calls, a thin line, the seminars
   two.append(h('aside', { class: 'feed-side' }, ...cs, cs.length && ss.length ? h('hr', { class: 'fs-sep' }) : null, ...ss));
 }
