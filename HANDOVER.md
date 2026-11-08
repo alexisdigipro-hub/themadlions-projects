@@ -1768,3 +1768,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 8 Nov 2026: the calls and seminars cards have no shadow, only their glass rim.
 - 8 Nov 2026: the column right of the feed: the five newest calls and seminars mixed (by created_at), a line, then the Lab's apps RoarWriter, RoarList, RoarTransfer (.fs-app, icon from /lab/icons, opens the Lab page in a new tab). The apps always show; fit() keeps as many of the five as the screen holds.
 - 9 Nov 2026: the apps under the line open the web apps straight away (RoarWriter alexisdigipro-hub.github.io/roarwriter/, RoarList themadlions.com/roarlist/, RoarTransfer studio.roartransfer.com), ready to sign in.
+- 9 Nov 2026: Roardino in the Lab is now called Roardino App (lab card and section, its page's wordmark, title, og, buttons, footer, scripts/site-seo.mjs name and llms line); Roardino App is also first among the apps in Roardino social's right column, opening themadlions.com/roardino/.

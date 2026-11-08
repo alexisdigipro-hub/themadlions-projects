@@ -1137,6 +1137,7 @@ function drawFeedSide(two, calls, seminars) {
   // under the line, the Lab's apps for film people (Alex, 8 Nov), the same glass, lower; each opens its web app
   // straight away, ready to sign in and work
   const APPS = [
+    ['roardino', 'Roardino App', t('The call sheet in one link'), 'https://themadlions.com/roardino/'],
     ['roarwriter', 'RoarWriter', t('Write your script'), 'https://alexisdigipro-hub.github.io/roarwriter/'],
     ['roarlist', 'RoarList', t('Your shot list'), 'https://themadlions.com/roarlist/'],
     ['roartransfer', 'RoarTransfer', t('Send big files'), 'https://studio.roartransfer.com/']];
