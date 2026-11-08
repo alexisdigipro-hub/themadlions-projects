@@ -90,19 +90,31 @@ const KINDS = [
   ['standin', 'Stand-in / Body double', 'front'], ['faces', 'Faces (real people)', 'front'], ['influencer', 'Influencer / Creator', 'front'],
   ['athlete', 'Athlete / Fitness', 'front'], ['acrobat', 'Acrobat / Circus', 'front'], ['comedian', 'Comedian / Stand-up', 'front'],
   ['lookalike', 'Lookalike', 'front'],
-  // the crew by department (Alex, 9 Nov: the departments of a crew list, the ones he picked)
-  ['producer', 'Producer', 'back'], ['lineprod', 'Line producer / Production manager', 'back'], ['coord', 'Production coordinator', 'back'],
-  ['location', 'Location manager / Scout', 'back'], ['runner', 'Runner / PA', 'back'],
-  ['director', 'Film director', 'back'], ['ad', 'Assistant director', 'back'], ['script', 'Script supervisor / Continuity', 'back'], ['casting', 'Casting', 'back'],
-  ['dop', 'Director of photography (DoP)', 'back'], ['camera', 'Camera', 'back'], ['focus', 'Focus puller (1st AC)', 'back'], ['dit', 'DIT / Data wrangler', 'back'],
-  ['steadicam', 'Steadicam', 'back'], ['drone', 'Drone pilot', 'back'],
-  ['gaffer', 'Lighting / Gaffer', 'back'], ['spark', 'Electrician / Spark', 'back'], ['grip', 'Key grip / Grip', 'back'], ['dolly', 'Dolly / Crane operator', 'back'],
-  ['sound', 'Sound', 'back'], ['boom', 'Boom operator', 'back'], ['mixer', 'Sound designer / Mixer', 'back'],
-  ['editor', 'Editor', 'back'], ['colorist', 'Colorist', 'back'],
-  ['photo', 'Photographer', 'creative'], ['styling', 'Styling / Wardrobe', 'creative'], ['makeup', 'Make-up / Hair', 'creative'],
-  ['art', 'Art department', 'creative'], ['vfx', 'VFX / Motion', 'creative'], ['writer', 'Writer', 'creative'], ['choreo', 'Choreographer', 'creative'],
-  // a singer or musician is not cast (Alex, 9 Nov): with the creatives
-  ['singer', 'Singer / Musician', 'creative'],
+  // the rest by when they work (Alex, 9 Nov: Cast, then Creators who lead the whole film, Pre-production, Production
+  // on set, Post-production)
+  ['director', 'Film director', 'lead'], ['producer', 'Producer', 'lead'], ['writer', 'Writer', 'lead'], ['creativedir', 'Creative director / Art director', 'lead'],
+  ['lineprod', 'Line producer / Production manager', 'pre'], ['coord', 'Production coordinator', 'pre'], ['casting', 'Casting', 'pre'],
+  ['location', 'Location manager / Scout', 'pre'], ['proddesign', 'Production designer', 'pre'], ['costume', 'Costume designer', 'pre'],
+  ['storyboard', 'Storyboard / Illustrator', 'pre'], ['copy', 'Copywriter', 'pre'],
+  ['ad', 'Assistant director', 'shoot'], ['script', 'Script supervisor / Continuity', 'shoot'],
+  ['dop', 'Director of photography (DoP)', 'shoot'], ['camera', 'Camera', 'shoot'], ['focus', 'Focus puller (1st AC)', 'shoot'], ['dit', 'DIT / Data wrangler', 'shoot'],
+  ['steadicam', 'Steadicam', 'shoot'], ['drone', 'Drone pilot', 'shoot'],
+  ['gaffer', 'Lighting / Gaffer', 'shoot'], ['spark', 'Electrician / Spark', 'shoot'], ['grip', 'Key grip / Grip', 'shoot'], ['dolly', 'Dolly / Crane operator', 'shoot'],
+  ['sound', 'Sound', 'shoot'], ['boom', 'Boom operator', 'shoot'],
+  ['makeup', 'Make-up / Hair', 'shoot'], ['styling', 'Styling / Wardrobe', 'shoot'], ['art', 'Art department', 'shoot'],
+  ['choreo', 'Choreographer', 'shoot'], ['photo', 'Photographer', 'shoot'], ['runner', 'Runner / PA', 'shoot'],
+  ['editor', 'Editor', 'post'], ['colorist', 'Colorist', 'post'], ['vfx', 'VFX / Motion', 'post'], ['animator', 'Animator / 3D', 'post'],
+  ['mixer', 'Sound designer / Mixer', 'post'], ['composer', 'Composer / Music', 'post'], ['singer', 'Singer / Musician', 'post'],
+  ['ai', 'AI artist / AI filmmaker', 'post'], ['graphic', 'Graphic designer', 'post'],
+];
+// the five groups of Industry: their tab, a short name for a phone, a line, a colour and a line icon
+const GROUPS = [
+  // in the order a film is made (Alex, 9 Nov): who leads it, before the shoot, who is cast, the shoot, after it
+  ['creators', 'lead', 'Creators', 'Creators', 'Who leads the whole film', '#e0a33a', 'g_lead'],
+  ['pre', 'pre', 'Pre-production', 'Pre', 'Before the shoot', '#4f8cff', 'g_pre'],
+  ['cast', 'front', 'Cast', 'Cast', 'In front of the camera', '#e5484d', 'g_cast'],
+  ['shoot', 'shoot', 'Production', 'Shoot', 'On set', '#2fb67a', 'g_shoot'],
+  ['post', 'post', 'Post-production', 'Post', 'After the shoot', '#a77bff', 'g_post'],
 ];
 const KIND = Object.fromEntries(KINDS.map((k) => [k[0], k[1]]));
 KIND.theatre = 'Actor'; // "Theatre" was a kind for a few hours on 4 Nov; Alex: whoever plays theatre is an actor
@@ -131,7 +143,9 @@ const KIND_EL = { actor: 'ηθοποιός ηθοποιοί', model: 'μοντέ
   stunt: 'κασκαντέρ ακροβατικά', standin: 'αντικαταστάτης ντουμπλαρισμα σωσίας σώματος stand in', faces: 'πρόσωπα πραγματικοί άνθρωποι real people τύποι',
   influencer: 'ινφλουένσερ δημιουργός περιεχομένου creator', athlete: 'αθλητής αθλήτρια γυμναστής fitness', acrobat: 'ακροβάτης ακροβάτισσα τσίρκο',
   comedian: 'κωμικός stand up', lookalike: 'σωσίας σωσία', singer: 'τραγουδιστής τραγουδίστρια μουσικός',
-  director: 'σκηνοθέτης σκηνοθέτρια', lineprod: 'διευθυντής παραγωγής line producer', coord: 'συντονιστής συντονίστρια παραγωγής',
+  director: 'σκηνοθέτης σκηνοθέτρια', creativedir: 'δημιουργικός διευθυντής art director', proddesign: 'σκηνογράφος σκηνογραφία production designer', costume: 'ενδυματολόγος κοστούμια',
+  storyboard: 'storyboard εικονογράφος σκίτσα', copy: 'κειμενογράφος copywriter', animator: 'animation κινούμενα σχέδια 3d', composer: 'συνθέτης μουσική',
+  ai: 'ai τεχνητή νοημοσύνη', graphic: 'γραφίστας γραφιστική', lineprod: 'διευθυντής παραγωγής line producer', coord: 'συντονιστής συντονίστρια παραγωγής',
   location: 'λοκέισιον τοποθεσίες location scout', runner: 'runner βοηθός παραγωγής', script: 'σκριπτ σκριπτέρ continuity συνέχεια',
   focus: 'φοκους πούλερ εστίαση', dit: 'dit δεδομένα data', steadicam: 'στεντικαμ gimbal', drone: 'ντρόουν drone χειριστής',
   spark: 'ηλεκτρολόγος ηλεκτρολογος', grip: 'μηχανικός grip', dolly: 'ντόλι γερανός crane', boom: 'μπουμ μπουμάς', mixer: 'ηχητικός σχεδιασμός μίξη mixer sound design', dop: 'διευθυντής φωτογραφίας', camera: 'κάμερα κάμεραμαν οπερατέρ', gaffer: 'φωτισμός ηλεκτρολόγος', sound: 'ήχος ηχολήπτης',
@@ -209,7 +223,7 @@ function withMentions(field) {
   wrap.append(field, list);
   return wrap;
 }
-const HUE = { front: '#d40000', back: '#6f8fbf', creative: '#e0a33a' }; // Cast, Crew, Creatives
+const HUE = { front: '#e5484d', lead: '#e0a33a', pre: '#4f8cff', shoot: '#2fb67a', post: '#a77bff', back: '#6f8fbf', creative: '#e0a33a' }; // the Industry groups (and the old Crew, Creatives)
 // looks and an actor's skills belong only to these (Alex, 4 Nov: not to the crew); everything else gets equipment and tools
 const PERFORMERS = ['actor', 'model', 'dancer', 'extra', 'presenter', 'stunt', 'standin', 'faces', 'influencer', 'athlete', 'acrobat', 'comedian', 'lookalike'];
 const PERFORMER = (kinds) => (kinds || []).some((k) => PERFORMERS.includes(k) || k === 'theatre');
@@ -288,6 +302,11 @@ const ICON = {
   left: SVG('<path d="m14.5 5.5-6.5 6.5 6.5 6.5"/>'),
   right: SVG('<path d="m9.5 5.5 6.5 6.5-6.5 6.5"/>'),
   play: SVG('<rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><path d="M10 8.6v6.8a.6.6 0 0 0 .9.5l5.4-3.4a.6.6 0 0 0 0-1l-5.4-3.4a.6.6 0 0 0-.9.5z"/>'),
+  g_cast: SVG('<circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6"/>'),
+  g_lead: SVG('<path d="M12 3.5l1.9 4.8 5.1.4-3.9 3.3 1.2 5-4.3-2.7-4.3 2.7 1.2-5L5 8.7l5.1-.4z"/><path d="M12 20.5v-1.2"/>'),
+  g_pre: SVG('<rect x="5.5" y="4.5" width="13" height="16" rx="3"/><path d="M9 4.5V3.6h6v.9M9 10h6M9 13.5h6M9 17h3.5"/>'),
+  g_shoot: SVG('<rect x="3.5" y="7" width="12" height="10" rx="2.6"/><path d="M15.5 10.4l5-2.6v8.4l-5-2.6"/><circle cx="9.5" cy="12" r="2.2"/>'),
+  g_post: SVG('<path d="M4 6.5h16M4 12h16M4 17.5h16"/><rect x="7" y="4.5" width="4" height="4" rx="1.2"/><rect x="13" y="10" width="4" height="4" rx="1.2"/><rect x="9" y="15.5" width="4" height="4" rx="1.2"/>'),
   star: SVG('<path d="m12 3.6 2.5 5.2 5.7.8-4.1 4 1 5.7L12 16.6l-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>'),
   edit: SVG('<path d="M4 20h4.2L19.4 8.8a2.1 2.1 0 0 0 0-3L18.2 4.6a2.1 2.1 0 0 0-3 0L4 15.8z"/><path d="m13.6 6.2 4.2 4.2"/>'),
   out: SVG('<path d="M14.5 4h3.8a1.7 1.7 0 0 1 1.7 1.7v12.6a1.7 1.7 0 0 1-1.7 1.7h-3.8"/><path d="M4 12h11M10.5 7.5 15 12l-4.5 4.5"/>'),
@@ -2128,13 +2147,14 @@ function openStories(groups, gi) {
 // under the pick, the kinds of that side
 // no All (Alex, 9 Nov): Industry opens on Cast; a search typed looks through everyone
 let peopleSide = 'cast', peopleKind = '', peopleQ = '';
+const sideNow = () => (SIDES[peopleSide] ? peopleSide : (peopleSide = 'cast'));
 let peopleKinds = new Set(); // the specialties picked, more than one at a time
 let castF = { from: '', to: '', hFrom: '', hTo: '', gender: '', cities: new Set(), hair: new Set(), eyes: new Set() };
 let castOpen = !matchMedia('(max-width:820px)').matches; // the cast filters start folded on a phone
 let peopleRedraw = null; // the top bar's search filters the Industry page as you type
 const sideOf = (k) => (k === 'theatre' ? 'front' : SIDE[k]);
-const SIDES = { cast: 'front', crew: 'back', creatives: 'creative' };
-const SIDE_NAME = { front: 'Cast', back: 'Crew', creative: 'Creatives' };
+const SIDES = Object.fromEntries(GROUPS.map((g) => [g[0], g[1]]));
+const SIDE_NAME = Object.fromEntries(GROUPS.map((g) => [g[1], g[2]]));
 // whoever stands in front (actor, model, dancer, extra and the rest of the cast) gets the cast filters (Alex, 5 Nov)
 const CAST_KINDS = KINDS.filter((k) => k[2] === 'front').map((k) => k[0]);
 // hair and eyes are written freely, so each choice is a set of words in English and Greek
@@ -2258,11 +2278,21 @@ async function viewPeople(opts = {}) {
     put(grid, shown.length ? shown.map(faceTile) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Nobody here yet')), q || filtersUsed() || peopleKinds.size ? t('Nobody matches all of these. Take a filter away.') : t('We have just started. Invite your people.')));
   }
   function draw() {
-    put(sideBox, seg([['cast', t('Cast')], ['crew', t('Crew')], ['creatives', t('Creatives')]], peopleSide, (k) => { peopleSide = k; peopleKinds = new Set(); draw(); }));
+    sideNow();
+    // the five groups as glass tiles: a round icon in the group's colour, its name, a line, how many (Alex, 9 Nov)
+    const inGroup = (sd) => data.filter((p) => (p.kinds || []).some((k) => sideOf(k === 'theatre' ? 'actor' : k) === sd)).length;
+    put(sideBox, h('div', { class: 'ind-groups', role: 'tablist' }, GROUPS.map(([k, sd, name, short, line, hue, ic]) =>
+      h('button', { type: 'button', role: 'tab', 'aria-selected': String(peopleSide === k), class: 'ind-g' + (peopleSide === k ? ' on' : ''), style: { '--c': hue }, onclick: () => { peopleSide = k; peopleKinds = new Set(); draw(); } },
+        h('span', { class: 'ind-g-ic', html: ICON[ic] }),
+        h('span', { class: 'ind-g-t' }, h('b', {}, h('span', { class: 'long' }, t(name)), h('span', { class: 'short' }, t(short))), h('small', {}, t(line))),
+        h('span', { class: 'ind-g-n' }, String(inGroup(sd)))))));
     // the specialties as small tinted chips, one tidy line per side (Alex, 5 Nov: "more tidy, no need for glass")
-    const sides = peopleSide === 'all' ? ['front', 'back', 'creative'] : [SIDES[peopleSide]];
-    put(kindsBox, sides.map((sd) => h('div', { class: 'kind-row' }, peopleSide === 'all' ? h('span', { class: 'flabel' }, t(SIDE_NAME[sd])) : null,
-      h('div', { class: 'fbody' }, KINDS.filter((k) => k[2] === sd).map(([k, name]) => chip(peopleKinds.has(k), t(name), () => toggle(peopleKinds, k), HUE[sd]))))));
+    const sd = SIDES[peopleSide];
+    const nOf = (k) => data.filter((p) => (p.kinds || []).map((x) => (x === 'theatre' ? 'actor' : x)).includes(k)).length;
+    put(kindsBox, h('div', { class: 'kind-row ind-kinds' }, h('div', { class: 'fbody' }, KINDS.filter((k) => k[2] === sd).map(([k, name]) => {
+      const n = nOf(k);
+      return h('button', { type: 'button', class: 'fchip ind-k' + (peopleKinds.has(k) ? ' on' : '') + (n ? '' : ' none'), style: { '--c': HUE[sd] }, title: t(name), onclick: () => toggle(peopleKinds, k) }, h('i'), h('span', { class: 'ind-k-n' }, t(name)), h('em', {}, String(n)));
+    }))));
     drawFilters(); drawGrid();
   }
   peopleRedraw = () => { if (search.isConnected || opts.search) { search.value = peopleQ; draw(); } };
@@ -2606,9 +2636,12 @@ async function viewEdit(which) {
   };
   const guard = h('div');
   const looks = h('div');
-  const kindsBox = h('div', { class: 'pills' });
+  const kindsBox = h('div', { class: 'kind-groups' });
   const drawKinds = () => {
-    put(kindsBox, ...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (p.kinds.includes(k) ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); p.kinds = p.kinds.includes(k) ? p.kinds.filter((x) => x !== k) : [...p.kinds, k]; drawKinds(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); } }, t(s))));
+    // grouped as in Industry, each group with its icon and colour (Alex, 9 Nov)
+    put(kindsBox, ...GROUPS.map(([, sd, name, , , hue, ic]) => h('div', { class: 'kg', style: { '--c': hue } },
+      h('div', { class: 'kg-h' }, h('span', { class: 'kg-ic', html: ICON[ic] }), t(name)),
+      h('div', { class: 'pills' }, ...KINDS.filter((k) => k[2] === sd).map(([k, s]) => h('button', { type: 'button', class: 'pill' + (p.kinds.includes(k) ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); p.kinds = p.kinds.includes(k) ? p.kinds.filter((x) => x !== k) : [...p.kinds, k]; drawKinds(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); } }, t(s)))))));
   };
   const drawGuard = () => {
     if (!isMinor()) { put(guard, ); return; }
