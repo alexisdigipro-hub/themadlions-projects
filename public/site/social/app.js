@@ -90,9 +90,15 @@ const KINDS = [
   ['standin', 'Stand-in / Body double', 'front'], ['faces', 'Faces (real people)', 'front'], ['influencer', 'Influencer / Creator', 'front'],
   ['athlete', 'Athlete / Fitness', 'front'], ['acrobat', 'Acrobat / Circus', 'front'], ['comedian', 'Comedian / Stand-up', 'front'],
   ['lookalike', 'Lookalike', 'front'],
-  ['director', 'Film director', 'back'], ['dop', 'Director of photography (DoP)', 'back'], ['camera', 'Camera', 'back'], ['gaffer', 'Lighting / Gaffer', 'back'],
-  ['sound', 'Sound', 'back'], ['editor', 'Editor', 'back'], ['colorist', 'Colorist', 'back'], ['producer', 'Producer', 'back'],
-  ['ad', 'Assistant director', 'back'], ['casting', 'Casting', 'back'],
+  // the crew by department (Alex, 9 Nov: the departments of a crew list, the ones he picked)
+  ['producer', 'Producer', 'back'], ['lineprod', 'Line producer / Production manager', 'back'], ['coord', 'Production coordinator', 'back'],
+  ['location', 'Location manager / Scout', 'back'], ['runner', 'Runner / PA', 'back'],
+  ['director', 'Film director', 'back'], ['ad', 'Assistant director', 'back'], ['script', 'Script supervisor / Continuity', 'back'], ['casting', 'Casting', 'back'],
+  ['dop', 'Director of photography (DoP)', 'back'], ['camera', 'Camera', 'back'], ['focus', 'Focus puller (1st AC)', 'back'], ['dit', 'DIT / Data wrangler', 'back'],
+  ['steadicam', 'Steadicam', 'back'], ['drone', 'Drone pilot', 'back'],
+  ['gaffer', 'Lighting / Gaffer', 'back'], ['spark', 'Electrician / Spark', 'back'], ['grip', 'Key grip / Grip', 'back'], ['dolly', 'Dolly / Crane operator', 'back'],
+  ['sound', 'Sound', 'back'], ['boom', 'Boom operator', 'back'], ['mixer', 'Sound designer / Mixer', 'back'],
+  ['editor', 'Editor', 'back'], ['colorist', 'Colorist', 'back'],
   ['photo', 'Photographer', 'creative'], ['styling', 'Styling / Wardrobe', 'creative'], ['makeup', 'Make-up / Hair', 'creative'],
   ['art', 'Art department', 'creative'], ['vfx', 'VFX / Motion', 'creative'], ['writer', 'Writer', 'creative'], ['choreo', 'Choreographer', 'creative'],
   // a singer or musician is not cast (Alex, 9 Nov): with the creatives
@@ -125,7 +131,10 @@ const KIND_EL = { actor: 'ηθοποιός ηθοποιοί', model: 'μοντέ
   stunt: 'κασκαντέρ ακροβατικά', standin: 'αντικαταστάτης ντουμπλαρισμα σωσίας σώματος stand in', faces: 'πρόσωπα πραγματικοί άνθρωποι real people τύποι',
   influencer: 'ινφλουένσερ δημιουργός περιεχομένου creator', athlete: 'αθλητής αθλήτρια γυμναστής fitness', acrobat: 'ακροβάτης ακροβάτισσα τσίρκο',
   comedian: 'κωμικός stand up', lookalike: 'σωσίας σωσία', singer: 'τραγουδιστής τραγουδίστρια μουσικός',
-  director: 'σκηνοθέτης σκηνοθέτρια', dop: 'διευθυντής φωτογραφίας', camera: 'κάμερα κάμεραμαν οπερατέρ', gaffer: 'φωτισμός ηλεκτρολόγος', sound: 'ήχος ηχολήπτης',
+  director: 'σκηνοθέτης σκηνοθέτρια', lineprod: 'διευθυντής παραγωγής line producer', coord: 'συντονιστής συντονίστρια παραγωγής',
+  location: 'λοκέισιον τοποθεσίες location scout', runner: 'runner βοηθός παραγωγής', script: 'σκριπτ σκριπτέρ continuity συνέχεια',
+  focus: 'φοκους πούλερ εστίαση', dit: 'dit δεδομένα data', steadicam: 'στεντικαμ gimbal', drone: 'ντρόουν drone χειριστής',
+  spark: 'ηλεκτρολόγος ηλεκτρολογος', grip: 'μηχανικός grip', dolly: 'ντόλι γερανός crane', boom: 'μπουμ μπουμάς', mixer: 'ηχητικός σχεδιασμός μίξη mixer sound design', dop: 'διευθυντής φωτογραφίας', camera: 'κάμερα κάμεραμαν οπερατέρ', gaffer: 'φωτισμός ηλεκτρολόγος', sound: 'ήχος ηχολήπτης',
   editor: 'μοντέρ μοντάζ', colorist: 'χρώμα', producer: 'παραγωγός παραγωγή', ad: 'βοηθός σκηνοθέτη', casting: 'κάστινγκ', photo: 'φωτογράφος φωτογραφία',
   styling: 'στυλίστας ενδυματολόγος κοστούμια', makeup: 'μακιγιάζ κομμώσεις', art: 'σκηνογράφος σκηνογραφία', vfx: 'εφέ', writer: 'σεναριογράφος σενάριο συγγραφέας', choreo: 'χορογράφος χορογραφία' };
 const CITY_ALSO = { athens: 'athina', athina: 'athens', thessaloniki: 'salonika', patra: 'patras', patras: 'patra', heraklion: 'iraklio', iraklio: 'heraklion', larisa: 'larissa', chania: 'hania', crete: 'kriti', kriti: 'crete' };
