@@ -2023,3 +2023,11 @@ html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!imp
   .two.feed-two>.feed-side{height:calc(100vh - 90px - var(--fth,180px) - 30px);overflow:hidden;padding-bottom:0}
   .feed-side>[hidden]{display:none!important}
 }
+/* Home on a computer (Alex, 8 Nov): a post going up fades out just before the stories frame and nothing of it shows
+   past that frame, behind it or above it, up to the top bar */
+@media (min-width:821px){
+  .two.feed-two{animation:none!important;transform:none!important;filter:none!important}
+  .two.feed-two::before{content:"";position:fixed;left:0;right:0;top:0;height:calc(90px + var(--fth,180px) + 22px);z-index:15;pointer-events:none;
+    background:var(--bg1);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    -webkit-mask:linear-gradient(#000 calc(100% - 22px),transparent);mask:linear-gradient(#000 calc(100% - 22px),transparent)}
+}
