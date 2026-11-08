@@ -1765,3 +1765,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 8 Nov 2026: the fade above the feed used a flat colour and showed a line at its sides; now it and the page share the same background with every layer fixed (desktop).
 - 8 Nov 2026: one video plays at a time anywhere (a capture 'play' listener pauses the others); on a computer the mouse over a feed video starts it. The fade above the feed now happens behind the middle of the stories frame (no white glow under it). The time sits after the name inside the post (.head-time), shown on hover, not under it. The post's big shadow replaced by a fine 1px rim.
 - 8 Nov 2026: the stories frame and the calls column stick exactly where they already are (top 98px, --ftop; the column at frame + 24px), so nothing jumps when scrolling starts.
+- 8 Nov 2026: the calls and seminars cards have no shadow, only their glass rim.
