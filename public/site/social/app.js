@@ -95,7 +95,7 @@ const KINDS = [
   // Creators in the order the work comes to life (Alex, 9 Nov)
   ['writer', 'Writer', 'lead'], ['copy', 'Copywriter', 'lead'], ['producer', 'Producer', 'lead'], ['director', 'Film Director', 'lead'], ['creativedir', 'Creative Director', 'lead'], ['artdir', 'Art Director', 'lead'],
   ['lineprod', 'Line Producer', 'pre'], ['prodman', 'Production Manager', 'pre'], ['coord', 'Production Coordinator', 'pre'], ['casting', 'Casting Director', 'pre'],
-  ['scout', 'Location Scout', 'pre'], ['location', 'Location Manager', 'pre'], ['accountant', 'Production Accountant', 'pre'], ['proddesign', 'Production Designer', 'pre'], ['costume', 'Costume Designer', 'pre'],
+  ['scout', 'Location Scout', 'pre'], ['location', 'Location Manager', 'pre'], ['accountant', 'Prod. Accountant', 'pre'], ['proddesign', 'Production Designer', 'pre'], ['costume', 'Costume Designer', 'pre'],
   ['storyboard', 'Storyboard Artist', 'pre'], ['illustrator', 'Illustrator', 'pre'],
   ['ad', 'Assistant Director', 'shoot'], ['script', 'Script Supervisor / Continuity', 'shoot'],
   ['dop', 'Director of Photography (DoP)', 'shoot'], ['camera', 'Camera', 'shoot'], ['focus', 'Focus Puller (1st AC)', 'shoot'], ['dit', 'DIT / Data Wrangler', 'shoot'],
