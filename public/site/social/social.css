@@ -1913,3 +1913,39 @@ html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!imp
   .post.ig.split .talk.hidden{display:flex!important}
 }
 @media (min-width:821px){.post.ig.split .post-head .who-line{min-width:0;flex:1}.post.ig.split .post-head .who-line b,.post.ig.split .post-head .who-line small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.post.ig.split .post-head{gap:8px}}
+/* Home on a computer (Alex, 8 Nov): the feed on the left, a glass column of casting calls and seminars on the right */
+@media (min-width:821px){
+  .two.feed-two{grid-template-columns:minmax(0,1fr) 340px;gap:24px;justify-items:stretch;align-items:start}
+  .two.feed-two>.mid{max-width:none}
+  .feed-side{position:sticky;top:96px;max-height:calc(100vh - 112px);overflow:auto;display:flex;flex-direction:column;gap:10px;padding:2px 2px 20px;scrollbar-width:none}
+  .feed-side::-webkit-scrollbar{display:none}
+  .fs-head{display:flex;align-items:baseline;justify-content:space-between;margin:6px 4px 0}
+  .fs-head h3{font-size:12px;font-weight:var(--w-strong);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .fs-head a{font-size:12px;font-weight:600;color:var(--a-solid);text-decoration:none}
+  .fs-card{position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;gap:6px;padding:16px 16px 14px;border-radius:18px;text-decoration:none;color:var(--ink);
+    background:var(--glass);border:1px solid var(--rim);box-shadow:var(--top),0 0 0 1px var(--rim-out),var(--shadow);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+    transition:transform .5s var(--soft),box-shadow .5s var(--soft)}
+  .fs-card::before{content:"";position:absolute;z-index:-1;width:220px;height:220px;right:-70px;top:-90px;border-radius:50%;background:var(--c);opacity:.28;filter:blur(50px);transition:opacity .5s var(--soft),transform .8s var(--soft)}
+  .fs-card:hover{transform:translateY(-3px);box-shadow:var(--top),0 0 0 1px var(--rim-out),0 18px 40px rgba(0,0,0,.18)}
+  .fs-card:hover::before{opacity:.45;transform:scale(1.15)}
+  .fs-kind{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:var(--w-strong);letter-spacing:.1em;text-transform:uppercase;color:var(--c)}
+  .fs-kind i{width:7px;height:7px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c)}
+  .fs-title{font-size:15px;line-height:1.35;font-weight:600}
+  .fs-meta{font-size:13px;color:var(--ink2)}
+  .fs-foot{font-size:12px;color:var(--muted)}
+  /* the post as the picture alone: its name on top and its icons at the bottom, inside it */
+  .post.ig.clean{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;padding:0;margin-bottom:22px}
+  .post.ig.clean .mwrap{position:relative;border-radius:20px;overflow:hidden;box-shadow:0 18px 44px rgba(0,0,0,.2)}
+  .post.ig.clean .post-head{position:absolute;top:0;left:0;right:0;z-index:3;padding:16px 18px 40px!important;border:0;background:linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,0))}
+  .post.ig.clean .ig-bar{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:40px 14px 12px!important;border:0;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.6))}
+  .post.ig.clean .who-line b,.post.ig.clean .who-line a,.post.ig.clean .who-line small{color:#fff;-webkit-text-fill-color:#fff}
+  .post.ig.clean .who-line small{opacity:.8}
+  .post.ig.clean .ig-ico,.post.ig.clean .ig-n{color:#fff;filter:drop-shadow(0 1px 3px rgba(0,0,0,.35))}
+  .post.ig.clean .ig-ico svg{width:26px;height:26px}
+  .post.ig.clean .ig-ico.like.on{color:#ff3040}
+  .post.ig.clean .post-head .btn,.post.ig.clean .ig-bar .btn{background:rgba(255,255,255,.16)!important;background-image:none!important;border-color:rgba(255,255,255,.4)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  .post.ig.clean .ig-dots{position:absolute;left:0;right:0;bottom:62px;z-index:3}
+  .post.ig.clean .ig-media>*{transition:transform 1.4s var(--soft)}
+  .post.ig.clean .mwrap:hover .ig-media>*{transform:scale(1.025)}
+  .post.ig.clean>.ig-cap,.post.ig.clean>.talk,.post.ig.clean>.ig-time{margin:12px 6px 0}
+}

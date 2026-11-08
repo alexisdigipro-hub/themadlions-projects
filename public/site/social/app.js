@@ -1044,8 +1044,11 @@ async function viewFeed() {
   // calls ride in the feed, one after every three posts, as Alex's reference shows a job among the posts
   const openCalls = (calls.data || []).slice(0, 6);
   const stream = [];
-  cards.forEach((c, i) => { stream.push(c); if (prefs.feedCalls && i % 3 === 2 && openCalls.length) stream.push(callTile(openCalls.shift())); });
-  if (prefs.feedCalls && stream.length < 4) openCalls.slice(0, 2).forEach((c) => stream.push(callTile(c)));
+  // a computer (Alex, 8 Nov): the calls and the seminars sit in a glass column on the right, not among the posts
+  const sideCol = !isPhone();
+  cards.forEach((c, i) => { stream.push(c); if (!sideCol && prefs.feedCalls && i % 3 === 2 && openCalls.length) stream.push(callTile(openCalls.shift())); });
+  if (!sideCol && prefs.feedCalls && stream.length < 4) openCalls.slice(0, 2).forEach((c) => stream.push(callTile(c)));
+  if (sideCol) drawFeedSide(mid.parentElement, calls.data || [], seminars.data || []);
   crumb('home: cards built');
   // on a phone the posts come a few at a time, the next ones as the end comes near (Alex, 5 Nov: the iPhone reloaded
   // Home); after a crash, light: no stories and three posts
@@ -1083,6 +1086,26 @@ async function viewFeed() {
   homeStanding();
 }
 
+// the column right of the feed on a computer (Alex, 8 Nov: "casting calls, seminars, in glass like the comments panel")
+function drawFeedSide(two, calls, seminars) {
+  if (!two) return;
+  two.querySelector('.feed-side')?.remove();
+  const now = Date.now();
+  const kindOf = { casting: [t('Casting'), '#ff4d5e'], crew: [t('Crew'), '#5b8cff'], other: [t('Call'), '#f2a93b'] };
+  const card = (href, label, color, title, meta, foot) => h('a', { class: 'fs-card', href, style: { '--c': color } },
+    h('span', { class: 'fs-kind' }, h('i'), label), h('b', { class: 'fs-title' }, title),
+    meta ? h('span', { class: 'fs-meta' }, meta) : null, foot ? h('span', { class: 'fs-foot' }, foot) : null);
+  const cs = calls.filter((c) => c.open !== false).slice(0, 6).map((c) => { const [l, col] = kindOf[c.kind] || kindOf.other;
+    return card(`#/c/${c.id}`, l, col, c.title, [c.city, c.pay].filter(Boolean).join(' · '), [callWho(c), c.dates].filter(Boolean).join(' · ')); });
+  const ss = seminars.filter((x) => !x.starts_at || new Date(x.starts_at).getTime() > now).slice(0, 4).map((x) =>
+    card('#/seminars', x.kind === 'online' ? t('Online seminar') : t('Seminar'), '#a77bff', x.title,
+      [x.starts_at ? shortDate(x.starts_at) : t('Soon'), x.price].filter(Boolean).join(' · '), x.teacher ? t('With {name}', { name: x.teacher }) : ''));
+  two.append(h('aside', { class: 'feed-side' },
+    h('div', { class: 'fs-head' }, h('h3', {}, t('Casting calls')), h('a', { href: '#/calls' }, t('All'))),
+    cs.length ? cs : h('p', { class: 'hint' }, t('No open calls right now.')),
+    h('div', { class: 'fs-head' }, h('h3', {}, t('Seminars')), h('a', { href: '#/seminars' }, t('All'))),
+    ss.length ? ss : h('p', { class: 'hint' }, t('Nothing planned yet.'))));
+}
 // my card, left: who I am, my numbers, my skills, my latest work
 function meCard() {
   const m = me();
@@ -1661,30 +1684,9 @@ function postCard(r, st, refresh) {
   }), { threshold: [0, 0.25] }).observe(wrap);
   // the time rides at the end of the caption, right aligned, on its last line if it fits, else on the next (Alex, 5 Nov)
   if (cap) cap.append(h('span', { class: 'cap-time' }, ago(r.created_at)));
-  // a computer (Alex, 8 Nov, to try): the picture alone on the left, and on its right, as tall as the picture, a panel
-  // with the name, the caption, the comments, the icons and the time; the comments scroll inside it
-  if (!isPhone() && media.length && !refresh?.inWin) {
-    art.classList.add('split');
-    cap?.classList.remove('hidden');
-    talk.classList.remove('hidden');
-    if (!talk.dataset.on) { talk.dataset.on = '1'; drawTalk(talk, r, st, drawMore); }
-    // three columns (Alex, 8 Nov): a thin rail on the left with like, comment, share and save one under the other, the
-    // picture, and on the right only the comments; Work with me rides in the panel's head
-    const work = bar.querySelector('a.btn');
-    if (work) head.insertBefore(work, head.querySelector('.ig-ico.sm'));
-    bar.querySelector('.grow')?.remove();
-    bar.querySelectorAll('.ig-ico[title="' + t('Comment') + '"]').forEach((b) => b.addEventListener('click', () => setTimeout(() => talk.querySelector('input')?.focus(), 50)));
-    const rail = h('div', { class: 'prail' }, bar);
-    const side = h('div', { class: 'pside' }, h('div', { class: 'pside-in' }, head, h('div', { class: 'pscroll' }, cap, talk), cap ? null : time));
-    // the panel wears the post's own colours: a soft, blurred copy of its picture behind the glass (Alex, 8 Nov: "make it
-    // alive, not static"); the two cards come in as the post scrolls into view
-    const m0 = media[0];
-    const tint = urlOf(m0.type === 'video' ? m0.poster : m0.path);
-    if (tint) art.style.setProperty('--pbg', `url("${tint}")`);
-    put(art, rail, wrap, side);
-    splitSeen?.observe(art);
-    return art;
-  }
+  // a computer (Alex, 8 Nov): the post is the picture alone, no frame, its name on top and its icons at the bottom
+  // inside it; the caption and the comments open under it with the comment icon
+  if (!isPhone() && media.length) art.classList.add('clean');
   put(art, wrap, cap, cap ? null : time, talk);
   return art;
 }
