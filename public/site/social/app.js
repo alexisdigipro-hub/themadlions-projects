@@ -94,8 +94,8 @@ const KINDS = [
   // on set, Post-production)
   // Creators in the order the work comes to life (Alex, 9 Nov)
   ['writer', 'Writer', 'lead'], ['copy', 'Copywriter', 'lead'], ['producer', 'Producer', 'lead'], ['director', 'Film director', 'lead'], ['creativedir', 'Creative director', 'lead'], ['artdir', 'Art director', 'lead'],
-  ['lineprod', 'Line producer / Production manager', 'pre'], ['coord', 'Production coordinator', 'pre'], ['casting', 'Casting', 'pre'],
-  ['location', 'Location manager / Scout', 'pre'], ['proddesign', 'Production designer', 'pre'], ['costume', 'Costume designer', 'pre'],
+  ['lineprod', 'Line producer', 'pre'], ['prodman', 'Production manager', 'pre'], ['coord', 'Production coordinator', 'pre'], ['casting', 'Casting', 'pre'],
+  ['location', 'Location manager', 'pre'], ['proddesign', 'Production designer', 'pre'], ['costume', 'Costume designer', 'pre'],
   ['storyboard', 'Storyboard / Illustrator', 'pre'],
   ['ad', 'Assistant director', 'shoot'], ['script', 'Script supervisor / Continuity', 'shoot'],
   ['dop', 'Director of photography (DoP)', 'shoot'], ['camera', 'Camera', 'shoot'], ['focus', 'Focus puller (1st AC)', 'shoot'], ['dit', 'DIT / Data wrangler', 'shoot'],
@@ -112,10 +112,10 @@ const KINDS = [
 const GROUPS = [
   // in the order a film is made (Alex, 9 Nov): who leads it, before the shoot, who is cast, the shoot, after it
   ['creators', 'lead', 'Creators', 'Creators', 'Who leads the whole film', '#e0a33a', 'g_lead'],
-  ['pre', 'pre', 'Pre-production', 'Pre', 'Before the shoot', '#4f8cff', 'g_pre'],
+  ['pre', 'pre', 'Pre-Production', 'Pre', 'Before the shoot', '#4f8cff', 'g_pre'],
   ['cast', 'front', 'Cast', 'Cast', 'In front of the camera', '#e5484d', 'g_cast'],
   ['shoot', 'shoot', 'Production', 'Shoot', 'On set', '#2fb67a', 'g_shoot'],
-  ['post', 'post', 'Post-production', 'Post', 'After the shoot', '#a77bff', 'g_post'],
+  ['post', 'post', 'Post-Production', 'Post', 'After the shoot', '#a77bff', 'g_post'],
 ];
 const KIND = Object.fromEntries(KINDS.map((k) => [k[0], k[1]]));
 KIND.theatre = 'Actor'; // "Theatre" was a kind for a few hours on 4 Nov; Alex: whoever plays theatre is an actor
@@ -146,7 +146,7 @@ const KIND_EL = { actor: 'ηθοποιός ηθοποιοί', model: 'μοντέ
   comedian: 'κωμικός stand up', lookalike: 'σωσίας σωσία', singer: 'τραγουδιστής τραγουδίστρια μουσικός',
   director: 'σκηνοθέτης σκηνοθέτρια', creativedir: 'δημιουργικός διευθυντής creative director', artdir: 'καλλιτεχνικός διευθυντής art director', proddesign: 'σκηνογράφος σκηνογραφία production designer', costume: 'ενδυματολόγος κοστούμια',
   storyboard: 'storyboard εικονογράφος σκίτσα', copy: 'κειμενογράφος copywriter', animator: 'animation κινούμενα σχέδια 3d', composer: 'συνθέτης μουσική',
-  ai: 'ai τεχνητή νοημοσύνη', graphic: 'γραφίστας γραφιστική', lineprod: 'διευθυντής παραγωγής line producer', coord: 'συντονιστής συντονίστρια παραγωγής',
+  ai: 'ai τεχνητή νοημοσύνη', graphic: 'γραφίστας γραφιστική', lineprod: 'line producer', prodman: 'διευθυντής παραγωγής production manager', coord: 'συντονιστής συντονίστρια παραγωγής',
   location: 'λοκέισιον τοποθεσίες location scout', runner: 'runner βοηθός παραγωγής', script: 'σκριπτ σκριπτέρ continuity συνέχεια',
   focus: 'φοκους πούλερ εστίαση', dit: 'dit δεδομένα data', steadicam: 'στεντικαμ gimbal', drone: 'ντρόουν drone χειριστής',
   spark: 'ηλεκτρολόγος ηλεκτρολογος', grip: 'μηχανικός grip', dolly: 'ντόλι γερανός crane', boom: 'μπουμ μπουμάς', mixer: 'ηχητικός σχεδιασμός μίξη mixer sound design', dop: 'διευθυντής φωτογραφίας', camera: 'κάμερα κάμεραμαν οπερατέρ', gaffer: 'φωτισμός ηλεκτρολόγος', sound: 'ήχος ηχολήπτης',

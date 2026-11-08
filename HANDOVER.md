@@ -1782,3 +1782,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 9 Nov 2026: Copywriter moved to Creators.
 - 9 Nov 2026: Creators in the order the work comes to life: Writer, Copywriter, Producer, Film director, Creative director, Art director.
 - 9 Nov 2026: Industry opens on Creators.
+- 9 Nov 2026: Pre-Production / Post-Production written with a capital P; Line producer and Production manager (prodman) apart; Location manager without Scout.
