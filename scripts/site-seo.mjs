@@ -238,7 +238,7 @@ ${full ? `\n## Ερωτήσεις (Greek)\n${faqEl}\n` : ''}
 - [Aibsent Studios](${BASE}aibsent/): the studio's post-production and AI studio, for its films and for others'
 - [The Mad Lions Lab](${BASE}lab/): the tools and apps the studio builds between films
 - [RoarMe](${BASE}roarme/): the messenger for teams by The Mad Lions
-- [Roardino](${BASE}lab/roardino/): the shoot's call sheet in one link, with directions, weather, sunrise and sunset, calls by department and the day in the crew's calendar
+- [Roardino App](${BASE}lab/roardino/): the shoot's call sheet in one link, with directions, weather, sunrise and sunset, calls by department and the day in the crew's calendar
 - [RoarMail](${BASE}lab/roarmail/): the private mail app for Mac and Windows
 - [RoarList](${BASE}lab/roarlist/): the shot list with a frame for every shot
 - [RoarWriter](${BASE}lab/roarwriter/): screenwriting from the page to the shoot: nine formats (film, TV, sitcom, stage play, musical, audio drama, AV two-column, comic) in English and Greek, revisions and versions, a breakdown, a beat board, a storyboard and shot list, a stripboard shooting schedule, TV series with their bible, writing together, an AI that reads the whole script (coverage, continuity, budget pass, pitch package, translation), PDF, Final Draft, Fade In and Fountain, on Mac, Windows, the web and the phone
@@ -256,7 +256,7 @@ ${full ? `\n## Ερωτήσεις (Greek)\n${faqEl}\n` : ''}
 // screen as the link preview when it has one, and the Lab page an ItemList of them all. All free (each page says so).
 const APPS = [
   { path: 'roarme/', name: 'RoarMe', cat: 'CommunicationApplication', os: 'macOS, Windows, Web, iOS, Android', shot: 'lab/roarme.jpg' },
-  { path: 'lab/roardino/', name: 'Roardino', cat: 'BusinessApplication', os: 'Web' },
+  { path: 'lab/roardino/', name: 'Roardino App', cat: 'BusinessApplication', os: 'Web' },
   { path: 'lab/roarmail/', name: 'RoarMail', cat: 'CommunicationApplication', os: 'macOS, Windows', shot: 'lab/roarmail.jpg' },
   { path: 'lab/roarlist/', name: 'RoarList', cat: 'MultimediaApplication', os: 'macOS, Windows, Web' },
   { path: 'lab/roarwriter/', name: 'RoarWriter', cat: 'DesignApplication', os: 'macOS, Windows, Web', shot: 'lab/roarwriter.jpg' },
