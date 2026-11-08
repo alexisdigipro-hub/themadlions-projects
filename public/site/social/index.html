@@ -25,10 +25,10 @@
      Safari may keep an old copy of this page; it asks version.json (never cached) and, if a newer one is out, loads it once.
      While it asks (at most 0.9 s) the page stays hidden behind the wordmark, so an old layout never shows first (Alex, 6 Nov).
      A ?v= it used is taken off the address again. Raise V here and in version.json together with the ?v= below. -->
-<script>(function(){var V="20261110f";window.RD_V=V;try{if(/[?&]v=/.test(location.search))history.replaceState(null,"",location.pathname+location.hash)}catch(e){}
+<script>(function(){var V="20261110g";window.RD_V=V;try{if(/[?&]v=/.test(location.search))history.replaceState(null,"",location.pathname+location.hash)}catch(e){}
 var R=document.documentElement;R.classList.add("vcheck");var done=function(){R.classList.remove("vcheck")};setTimeout(done,900);try{fetch("version.json?"+Date.now(),{cache:"no-store"}).then(function(r){return r.json()}).then(function(j){if(j&&j.v&&j.v!==V&&!sessionStorage.getItem("rd-upd-"+j.v)){sessionStorage.setItem("rd-upd-"+j.v,"1");location.replace(location.pathname+"?v="+j.v+location.hash)}else done()}).catch(done)}catch(e){done()}})()</script>
 <script>(function(){var r=document.documentElement;r.className+=" booting";var d=false;try{var s=JSON.parse(localStorage.getItem("roardino-prefs")||"{}"),m=s.theme||"auto";d=m==="dark"||(m==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches);if(d)r.dataset.theme="dark";if(s.text)document.documentElement.dataset.text=s.text;if(s.accent&&s.accent!=="red")r.dataset.accent=s.accent}catch(e){}r.style.background=d?"#1f2328":"#eceef1";r.style.colorScheme=d?"dark":"light";var t=document.querySelector("meta[name=theme-color]");if(t)t.content=d?"#1f2328":"#eceef1"})()</script>
-<link rel="stylesheet" href="social.css?v=20261110f">
+<link rel="stylesheet" href="social.css?v=20261110g">
 </head>
 <body>
 <div id="app"><div class="boot"><span class="boot-mark">R<b>O</b>A<b>RDINO</b></span></div></div>
@@ -36,6 +36,6 @@ var R=document.documentElement;R.classList.add("vcheck");var done=function(){R.c
 <div id="splash" aria-hidden="true"><span class="boot-mark">R<b>O</b>A<b>RDINO</b><i class="sp-dot"></i></span><span class="sp-line"><i></i></span></div>
 <div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="app.js?v=20261110f"></script>
+<script src="app.js?v=20261110g"></script>
 </body>
 </html>
