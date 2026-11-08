@@ -1498,7 +1498,9 @@ function lightbox(media, start = 0, opts = {}) {
       if (!w || !hh) return;
       const pw = isPhone() ? 28 : 144, ph = isPhone() ? 28 : 48;
       el.style.aspectRatio = `${w} / ${hh}`;
-      el.style.width = `min(calc(100vw - ${pw}px), calc((100dvh - ${ph}px) * ${w / hh}))`;
+      // a quarter smaller on a computer (Alex, 8 Nov: "not so huge, 20 to 30% smaller")
+      const k = isPhone() ? 1 : 0.75;
+      el.style.width = `calc(${k} * min(calc(100vw - ${pw}px), calc((100dvh - ${ph}px) * ${w / hh})))`;
       el.style.height = 'auto';
     };
     if (m.w && m.h) fit(m.w, m.h);

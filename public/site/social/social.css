@@ -2031,3 +2031,17 @@ html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!imp
     background:var(--bg1);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
     -webkit-mask:linear-gradient(#000 calc(100% - 22px),transparent);mask:linear-gradient(#000 calc(100% - 22px),transparent)}
 }
+/* the calls and seminars cards more see-through (Alex, 8 Nov: "the opacity down another 20-25%"), the colour as it was */
+@media (min-width:821px){
+  .fs-card.tint{-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3)}
+  .fs-card.tint::before{opacity:.58}
+  .fs-card.tint::after{background:linear-gradient(180deg,rgba(255,255,255,.56),rgba(255,255,255,.45))}
+  html[data-theme=dark] .fs-card.tint::before{opacity:.7}
+  html[data-theme=dark] .fs-card.tint::after{background:linear-gradient(180deg,rgba(26,29,34,.33),rgba(26,29,34,.48))}
+}
+/* the fade above the feed takes the page's own background, every layer fixed on both, so no line shows at its edges
+   (Alex, 8 Nov) */
+@media (min-width:821px){
+  body,.two.feed-two::before{background:radial-gradient(900px 600px at 12% -10%,rgba(255,255,255,.9),transparent 60%),radial-gradient(800px 600px at 100% 30%,rgba(205,214,230,.55),transparent 60%),linear-gradient(180deg,var(--bg1),var(--bg2))!important;background-attachment:fixed!important}
+  html[data-theme=dark] body,html[data-theme=dark] .two.feed-two::before{background:radial-gradient(1200px 700px at 50% -12%,#4b525d 0%,transparent 62%),linear-gradient(180deg,#2b3038 0%,#1f2328 55%,#1a1d21 100%)!important;background-attachment:fixed!important}
+}
