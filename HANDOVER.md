@@ -1795,3 +1795,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 9 Nov 2026: Stand-In / Double.
 - 9 Nov 2026: Stand-In / Double taken off the cast list (KIND.standin kept for old profiles).
 - 9 Nov 2026: Production: Script Supervisor, Cinematographer (DoP), Camera Operator, Still Photographer.
+- 9 Nov 2026: Sound taken off the Production list (KIND.sound kept for old profiles).
