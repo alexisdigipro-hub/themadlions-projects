@@ -2053,3 +2053,7 @@ html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!imp
   .post.ig.clean .mwrap{box-shadow:0 0 0 1px rgba(20,24,32,.06)!important}
   html[data-theme=dark] .post.ig.clean .mwrap{box-shadow:0 0 0 1px rgba(255,255,255,.06)!important}
 }
+/* the calls and seminars cards without a shadow (Alex, 8 Nov), only their glass rim */
+@media (min-width:821px){
+  .fs-card,.fs-card:hover,.fs-card.tint,.fs-card.tint:hover{box-shadow:var(--top),0 0 0 1px var(--rim-out)!important}
+}
