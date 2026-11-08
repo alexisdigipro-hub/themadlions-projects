@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- RoarTransfer Studio's page in the Lab (Alex, 7 Nov 2026: "a page on The Mad Lions Lab that leads to RoarTransfer Studio, with all the USPs,
+     what it does and how, nicely, with pictures"). The app itself is https://studio.roartransfer.com/ (roartransfer repo, studio/).
+     The pictures are real screens of the app with demo projects (covers made with Soul 2). EN and GR. -->
+<title>RoarTransfer Studio · Review and delivery for audio, video and pictures · by The Mad Lions</title>
+<link rel="canonical" href="https://themadlions.com/lab/roarstudio/">
+<meta name="description" content="RoarTransfer Studio, by The Mad Lions Lab: review and delivery for music, video and pictures in the browser. Upload every version, leave notes on the exact second, match levels in LUFS, approve, then make it final and send one branded Finals link with credits, lyrics and a zip of everything. Free in beta with a Roar Account.">
+<meta name="theme-color" content="#120d1c">
+<meta property="og:title" content="RoarTransfer Studio · by The Mad Lions">
+<meta property="og:description" content="Review, approve and deliver music, video and pictures, from one link.">
+<meta property="og:url" content="https://themadlions.com/lab/roarstudio/">
+<meta property="og:image" content="https://themadlions.com/lab/roarstudio.jpg">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@200;300;400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../fresh.css">
+<style>
+:root {
+  --bg: #0f0b17; --bg-2: rgba(28,22,40,.72); --line: rgba(255,255,255,.09);
+  --text: #f1eef8; --muted: rgba(222,214,240,.66); --dim: rgba(222,214,240,.42);
+  --acc: #7c3aed; --acc-hi: #a78bfa; --acc-soft: rgba(139,92,246,.16);
+  --glass: rgba(255,255,255,.055); --glass-edge: rgba(255,255,255,.12);
+  --pad: clamp(18px, 4.5vw, 72px); --ease: cubic-bezier(.16, 1, .3, 1);
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); scroll-behavior: smooth; }
+body { margin: 0; color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background: radial-gradient(1100px 640px at 50% -12%, rgba(124,58,237,.38) 0%, transparent 62%), radial-gradient(900px 640px at 100% 100%, rgba(76,29,149,.28), transparent 70%), linear-gradient(180deg, #17112a 0%, #0f0b17 55%, #0b0811 100%); }
+body::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: url('bg.webp') center / cover no-repeat; opacity: .16; mix-blend-mode: screen; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+img, svg { display: block; }
+:focus-visible { outline: 2px solid var(--acc-hi); outline-offset: 3px; border-radius: 8px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(var(--pad), env(safe-area-inset-left, 0px)); padding-right: max(var(--pad), env(safe-area-inset-right, 0px)); }
+.bar { display: flex; align-items: center; gap: 10px; padding-block: max(18px, env(safe-area-inset-top, 0px)) 0; }
+.bar .grow { flex: 1; }
+.wordmark { filter: invert(1); width: 128px; height: auto; }
+.pill { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 48px; padding: 0 24px; border-radius: 999px; font-size: 15px; font-weight: 600; border: 1px solid var(--glass-edge); background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); cursor: pointer; transition: transform .3s var(--ease), background .2s, border-color .2s, filter .2s; white-space: nowrap; }
+.pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.28); }
+.pill:active { transform: scale(.97); }
+.pill.main { background: linear-gradient(135deg, rgba(139,92,246,.85), rgba(91,33,182,.85)); border-color: rgba(196,181,253,.45); color: #fff; box-shadow: 0 14px 38px rgba(124,58,237,.34); }
+.pill.main:hover { filter: brightness(1.12); }
+.pill.sm { height: 38px; padding: 0 16px; font-size: 13.5px; }
+.pill svg { width: 18px; height: 18px; flex: none; }
+.hero { text-align: center; padding-top: clamp(48px, 8vw, 110px); display: flex; flex-direction: column; align-items: center; }
+.brand { display: flex; align-items: center; gap: 14px; margin: 0; font-family: Jost, var(--sans); font-size: clamp(30px, 3.6vw, 48px); letter-spacing: .02em; line-height: 1; }
+.brand img { width: clamp(52px, 5vw, 70px); height: auto; border-radius: 22%; box-shadow: 0 14px 40px rgba(124,58,237,.45); }
+.brand .a { font-weight: 200; } .brand .b { font-weight: 800; }
+.beta { font-family: var(--mono); font-size: 10px; font-style: normal; letter-spacing: .14em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid rgba(167,139,250,.6); color: #d8ccff; background: var(--acc-soft); }
+.claim { margin: clamp(18px, 2.4vw, 28px) 0 0; font-family: Jost, var(--sans); font-weight: 200; font-size: clamp(44px, 7.4vw, 112px); line-height: .92; letter-spacing: -.02em; text-wrap: balance; max-width: 1050px; }
+.claim b { font-weight: 800; background: linear-gradient(180deg, #fff 25%, #b9a3ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lead { margin: clamp(18px, 2.2vw, 26px) 0 0; max-width: 720px; font-size: clamp(16px, 1.4vw, 19px); line-height: 1.55; color: var(--muted); text-wrap: balance; }
+.cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: clamp(24px, 3vw, 34px); }
+.note { margin: 14px 0 0; font-family: var(--mono); font-size: 12px; letter-spacing: .04em; color: var(--dim); }
+.chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 22px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 14px; border-radius: 999px; background: var(--glass); border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+.chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
+.shot { display: block; margin: clamp(40px, 6vw, 72px) auto 0; border-radius: 22px; overflow: hidden; border: 1px solid rgba(196,181,253,.18); box-shadow: 0 40px 120px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.4); transition: transform .5s var(--ease); background: #0b0811; }
+.shot:hover { transform: translateY(-3px); }
+.shot img { width: 100%; height: auto; }
+.k { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--acc-hi); }
+h2.sec { margin: 10px 0 0; font-family: Jost, var(--sans); font-weight: 300; font-size: clamp(32px, 4.4vw, 58px); line-height: 1; letter-spacing: -.01em; text-wrap: balance; }
+h2.sec b { font-weight: 800; }
+.sec-head { text-align: center; margin-top: clamp(72px, 10vw, 130px); display: flex; flex-direction: column; align-items: center; }
+.sec-head p { max-width: 640px; color: var(--muted); line-height: 1.55; font-size: 17px; margin: 14px 0 0; text-wrap: balance; }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: clamp(28px, 4vw, 44px); }
+.step, .card { padding: clamp(22px, 2.4vw, 30px); border-radius: 22px; background: var(--bg-2); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.step .n { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; color: var(--acc-hi); }
+.step h3, .card h3 { margin: 0; font-family: Jost, var(--sans); font-weight: 500; font-size: 22px; letter-spacing: .01em; }
+.step p, .card p { margin: 0; color: var(--muted); line-height: 1.55; font-size: 15px; }
+.feat { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(24px, 4vw, 64px); align-items: center; margin-top: clamp(72px, 9vw, 120px); }
+.feat.flip { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.feat.flip .txt { order: 2; }
+.feat .shot { margin: 0; }
+.feat h2 { margin: 10px 0 0; font-family: Jost, var(--sans); font-weight: 300; font-size: clamp(30px, 3.4vw, 46px); line-height: 1.02; letter-spacing: -.01em; text-wrap: balance; }
+.feat h2 b { font-weight: 800; }
+.feat .what { margin: 16px 0 0; color: var(--muted); line-height: 1.6; font-size: 16.5px; }
+.usp { list-style: none; margin: 20px 0 0; padding: 0; display: grid; gap: 12px; }
+.usp li { display: flex; gap: 12px; align-items: flex-start; line-height: 1.5; font-size: 15px; color: var(--muted); }
+.usp li::before { content: ''; flex: none; width: 20px; height: 20px; margin-top: 1px; border-radius: 50%; background: var(--acc-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c4b5fd' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E") center / 11px no-repeat; border: 1px solid rgba(167,139,250,.35); }
+.usp b { color: var(--text); font-weight: 600; }
+.phone { display: flex; justify-content: center; }
+.phone .shot { width: min(330px, 100%); border-radius: 34px; border: 6px solid #1e1830; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: clamp(28px, 4vw, 44px); }
+.card .ic { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; background: linear-gradient(135deg, rgba(139,92,246,.5), rgba(76,29,149,.45)); border: 1px solid rgba(196,181,253,.3); }
+.card .ic svg { width: 20px; height: 20px; }
+.covers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: clamp(28px, 4vw, 44px); }
+.covers img { width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: 18px; border: 1px solid var(--line); }
+.faq { max-width: 860px; margin: clamp(28px, 4vw, 44px) auto 0; display: grid; gap: 10px; }
+.faq details { border-radius: 18px; background: var(--bg-2); border: 1px solid var(--line); padding: 0 22px; }
+.faq summary { cursor: pointer; list-style: none; padding: 18px 0; font-weight: 600; font-size: 16px; display: flex; justify-content: space-between; gap: 16px; }
+.faq summary::after { content: '+'; color: var(--acc-hi); font-size: 20px; line-height: 1; }
+.faq details[open] summary::after { content: '−'; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq p { margin: 0 0 18px; color: var(--muted); line-height: 1.6; font-size: 15px; }
+.end { text-align: center; padding-block: clamp(72px, 9vw, 120px) clamp(40px, 6vw, 64px); display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.end h2 { margin: 0; font-family: Jost, var(--sans); font-weight: 300; font-size: clamp(32px, 4.4vw, 58px); letter-spacing: -.01em; text-wrap: balance; }
+.end h2 b { font-weight: 800; }
+.end p { margin: 0; color: var(--muted); max-width: 560px; line-height: 1.55; }
+footer { border-top: 1px solid var(--line); padding-block: 26px max(26px, env(safe-area-inset-bottom, 0px)); color: var(--dim); font-size: 13px; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.lang { display: flex; gap: 4px; padding: 4px; border-radius: 999px; border: 1px solid var(--glass-edge); background: var(--glass); }
+.lang button { border: 0; background: transparent; height: 30px; padding: 0 12px; border-radius: 999px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.lang button[aria-pressed="true"] { background: rgba(255,255,255,.14); color: var(--text); }
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+.reveal.in { opacity: 1; transform: none; }
+@media (max-width: 900px) {
+  .brand { flex-wrap: wrap; justify-content: center; font-size: 26px; }
+  .steps, .grid { grid-template-columns: 1fr; }
+  .feat, .feat.flip { grid-template-columns: 1fr; }
+  .feat.flip .txt { order: 0; }
+  .covers { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .bar .pill.sm span { display: none; }
+  .bar .pill.sm { width: 38px; padding: 0; }
+}
+@media (min-width: 901px) and (max-width: 1100px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } .reveal { opacity: 1; transform: none; } }
+</style>
+<!--seo:app--><script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"RoarTransfer Studio","url":"https://themadlions.com/lab/roarstudio/","description":"RoarTransfer Studio, by The Mad Lions Lab: review and delivery for music, video and pictures in the browser. Upload every version, leave notes on the exact second, match levels in LUFS, approve, then make it final and send one branded Finals link with credits, lyrics and a zip of everything. Free in beta with a Roar Account.","applicationCategory":"MultimediaApplication","operatingSystem":"Web","image":"https://themadlions.com/lab/roarstudio.jpg","screenshot":"https://themadlions.com/lab/roarstudio.jpg","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"isAccessibleForFree":true,"inLanguage":["en","el"],"author":{"@id":"https://themadlions.com/#org"},"publisher":{"@type":"Organization","@id":"https://themadlions.com/#org","name":"The Mad Lions","url":"https://themadlions.com/"}}</script><!--/seo:app-->
+</head>
+<body>
+<header class="wrap bar">
+  <a href="../../"><img class="wordmark" src="../../wordmark.png" alt="The Mad Lions" width="128" height="26"></a>
+  <span class="grow"></span>
+  <a class="pill sm" href="../" title="The Lab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span data-t="lab">The Lab</span></a>
+  <div class="lang" role="group" aria-label="Language"><button type="button" data-l="en">EN</button><button type="button" data-l="el">GR</button></div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1 class="brand"><img src="icon.png" alt="" width="70" height="70"><span><span class="a">ROAR</span><span class="b">TRANSFER</span><span class="a"> STUDIO</span></span><i class="beta">Beta</i></h1>
+    <p class="claim" data-t="claim" data-html>Review. Approve. <b>Deliver.</b></p>
+    <p class="lead" data-t="lead">The place where music, video and pictures get finished. Upload every version, let people leave notes on the exact second, match the levels, approve, then send the final files in one beautiful link, with your name on it.</p>
+    <div class="cta">
+      <a class="pill main" href="https://studio.roartransfer.com/"><span data-t="open">Open RoarTransfer Studio</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="pill" href="#how" data-t="how">How it works</a>
+    </div>
+    <p class="note" data-t="note">Free in beta with a Roar Account · in your browser · nothing to install</p>
+    <div class="chips">
+      <span class="chip" style="--c:#a78bfa"><i></i><span data-t="c1">Audio</span></span>
+      <span class="chip" style="--c:#38bdf8"><i></i><span data-t="c2">Video</span></span>
+      <span class="chip" style="--c:#fbbf24"><i></i><span data-t="c3">Pictures</span></span>
+      <span class="chip" style="--c:#34d399"><i></i><span data-t="c4">Up to 20 GB a file</span></span>
+    </div>
+  </section>
+
+  <a class="shot reveal" href="https://studio.roartransfer.com/" aria-label="Open RoarTransfer Studio"><img src="project.jpg" alt="RoarTransfer Studio: the Night Ferry project with its Finals bar, a song, a music video and a behind-the-scenes photo, grouped by kind" width="1800" height="1125"></a>
+
+  <section class="sec-head" id="how">
+    <span class="k" data-t="how.k">How it works</span>
+    <h2 class="sec" data-t="how.t" data-html>Three steps, <b>one link</b>.</h2>
+    <p data-t="how.p">A project is a single, an album, a film or a shoot. Everything for it lives in one place, from the first rough version to the files you hand over.</p>
+  </section>
+  <section class="steps">
+    <div class="step reveal"><span class="n">01</span><h3 data-t="s1">Drop the files in</h3><p data-t="s1p">Songs, mixes, stems, edits, trailers, stills. Each file gets its own page; a new upload of the same file becomes v2, v3, with every older version still there.</p></div>
+    <div class="step reveal"><span class="n">02</span><h3 data-t="s2">Get notes on the second</h3><p data-t="s2p">Invite your team or send a link. People click on the waveform or the picture and write: the note sits on that exact second. Reply, tick it done, approve the version.</p></div>
+    <div class="step reveal"><span class="n">03</span><h3 data-t="s3">Make it final, deliver</h3><p data-t="s3p">Press Final on what is ready. It goes into Finals: one link with the cover, the credits, the lyrics and Download all as a zip. No account needed to open it.</p></div>
+  </section>
+
+  <section class="feat reveal">
+    <div class="txt">
+      <span class="k" data-t="f1.k">Review</span>
+      <h2 data-t="f1.t" data-html>Every note <b>on the exact second</b>.</h2>
+      <p class="what" data-t="f1.p">Each file opens on its own page: a big waveform you can scrub and zoom, the notes beside it, each one a coloured pin on the timeline. Click a pin and the music jumps there.</p>
+      <ul class="usp">
+        <li><span><b data-t="f1.u1">Versions side by side.</b> <span data-t="f1.u1s">v1, v2, v3 under one title, each with its own notes, so nothing gets lost between mixes.</span></span></li>
+        <li><span><b data-t="f1.u2">Level match in LUFS.</b> <span data-t="f1.u2s">Loudness measured to EBU R128 on every upload; turn on Level match and every version plays at the same loudness, so you judge the mix, not the volume.</span></span></li>
+        <li><span><b data-t="f1.u3">The facts, at a glance.</b> <span data-t="f1.u3s">Length, sample rate, channels, peak and size on one line, plus levels meters while it plays.</span></span></li>
+        <li><span><b data-t="f1.u4">Notes you can work through.</b> <span data-t="f1.u4s">Search them, filter open, done or mine, reply in threads, tick them done. A private Notepad sits next to them for your own list.</span></span></li>
+      </ul>
+    </div>
+    <a class="shot" href="https://studio.roartransfer.com/" aria-label="RoarTransfer Studio"><img src="track.jpg" alt="A song in RoarTransfer Studio: the waveform with four coloured note pins, the player with level match on, and the notes column" width="1800" height="1125" loading="lazy"></a>
+  </section>
+
+  <section class="feat flip reveal">
+    <div class="txt">
+      <span class="k" data-t="f2.k">Video and pictures</span>
+      <h2 data-t="f2.t" data-html>Not only music. <b>Everything you make.</b></h2>
+      <p class="what" data-t="f2.p">A music video, a teaser, a commercial, a set of stills: video plays as video and pictures show as pictures, with notes on the frame and on the second, just like a song.</p>
+      <ul class="usp">
+        <li><span><b data-t="f2.u1">A real player.</b> <span data-t="f2.u1s">Speed, loop, zoom, picture in picture and full screen, with the size and bitrate shown on the frame.</span></span></li>
+        <li><span><b data-t="f2.u2">Grouped by kind.</b> <span data-t="f2.u2s">Audio, Video and Pictures, each with its colour, as tabs or groups, so a big project stays readable.</span></span></li>
+        <li><span><b data-t="f2.u3">Folders and playlists.</b> <span data-t="f2.u3s">Put files in folders, or make a playlist from any files and share it as its own link.</span></span></li>
+      </ul>
+    </div>
+    <a class="shot" href="https://studio.roartransfer.com/" aria-label="RoarTransfer Studio"><img src="video.jpg" alt="A music video playing in RoarTransfer Studio with its player controls and a note from the director" width="1800" height="1125" loading="lazy"></a>
+  </section>
+
+  <section class="feat reveal">
+    <div class="txt">
+      <span class="k" data-t="f3.k">Delivery</span>
+      <h2 data-t="f3.t" data-html>Finals, <b>like an album sleeve</b>.</h2>
+      <p class="what" data-t="f3.p">The files you mark Final leave the work in progress behind and go into Finals: a clean page with the project's cover, wide rows for every file, and the credits underneath. It is what you send to the label, the client or the festival.</p>
+      <ul class="usp">
+        <li><span><b data-t="f3.u1">Credits and lyrics.</b> <span data-t="f3.u1s">Templates for music (artist, writers, producer, mix, master, label, ISRC, release date), video (director, DOP, editor, colourist…) and photo, or your own roles. Lyrics and notes too, with Copy.</span></span></li>
+        <li><span><b data-t="f3.u2">Download all as a zip.</b> <span data-t="f3.u2s">Every final file in one zip, made in the browser, with the original quality and real names.</span></span></li>
+        <li><span><b data-t="f3.u3">One link, your rules.</b> <span data-t="f3.u3s">Share the Finals with an end date (1, 7 or 30 days, or never) and an optional password. Files you make final later show up in the same link.</span></span></li>
+      </ul>
+    </div>
+    <a class="shot" href="https://studio.roartransfer.com/" aria-label="RoarTransfer Studio"><img src="finals.jpg" alt="The Finals page of Night Ferry: the cover like an album sleeve, three final files as wide rows, Download all and the music credits" width="1800" height="1125" loading="lazy"></a>
+  </section>
+
+  <section class="feat flip reveal">
+    <div class="txt">
+      <span class="k" data-t="f4.k">What they see</span>
+      <h2 data-t="f4.t" data-html>Your client opens it <b>on the phone</b>.</h2>
+      <p class="what" data-t="f4.p">No account, no app, no password unless you set one. Your studio's name and banner sit on top, the files play right there, and they can write a note, approve or download, as you allowed.</p>
+      <ul class="usp">
+        <li><span><b data-t="f4.u1">Your brand, not ours.</b> <span data-t="f4.u1s">Logo, banner and a background of your own on every link, playlist and Finals page.</span></span></li>
+        <li><span><b data-t="f4.u2">You decide what a link can do.</b> <span data-t="f4.u2s">Comment, approve, download, and whether version numbers show at all.</span></span></li>
+        <li><span><b data-t="f4.u3">You see what happens.</b> <span data-t="f4.u3s">The bell shows who opened, played, downloaded, wrote or approved; an email gathers it every few minutes or once a day.</span></span></li>
+      </ul>
+    </div>
+    <div class="phone"><span class="shot"><img src="guest.jpg" alt="The Finals link on a phone: the cover, Download, and the final files" width="600" height="1298" loading="lazy"></span></div>
+  </section>
+
+  <section class="feat reveal">
+    <div class="txt">
+      <span class="k" data-t="f5.k">Your studio</span>
+      <h2 data-t="f5.t" data-html>Set it up once, <b>looks right always</b>.</h2>
+      <p class="what" data-t="f5.p">Settings hold your studio: the name and pictures on what you send, what new links and invitations start with, the emails you want, and the look you work in.</p>
+      <ul class="usp">
+        <li><span><b data-t="f5.u1">People and roles.</b> <span data-t="f5.u1s">Add people by their Roar Account: editors upload and approve, commenters write notes, listeners only listen.</span></span></li>
+        <li><span><b data-t="f5.u2">Dark, light and backgrounds.</b> <span data-t="f5.u2s">Dark, Light or System, with a choice of backgrounds behind the glass.</span></span></li>
+        <li><span><b data-t="f5.u3">Storage, in the open.</b> <span data-t="f5.u3s">How much every project takes, by kind, on one page.</span></span></li>
+      </ul>
+    </div>
+    <a class="shot" href="https://studio.roartransfer.com/" aria-label="RoarTransfer Studio"><img src="settings.jpg" alt="RoarTransfer Studio settings: your studio's logo, banner and name, the defaults for links and the emails" width="1800" height="1125" loading="lazy"></a>
+  </section>
+
+  <section class="sec-head">
+    <span class="k" data-t="all.k">Everything in it</span>
+    <h2 class="sec" data-t="all.t" data-html>Made by people who <b>deliver for a living</b>.</h2>
+    <p data-t="all.p">We built RoarTransfer Studio for our own films, music videos and records at The Mad Lions. This is what it does today.</p>
+  </section>
+  <section class="grid">
+    <div class="card reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg></span><h3 data-t="g1">Big files, straight to the cloud</h3><p data-t="g1p">Up to 20 GB a file, sent in parts straight to Cloudflare R2, several at once, with the progress on screen.</p></div>
+    <div class="card reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="18" cy="16" r="3"/></svg></span><h3 data-t="g2">Versions without the mess</h3><p data-t="g2p">Upload naming asks for a title or a version name if you want it; otherwise the title is the file's own name, without the ending.</p></div>
+    <div class="card reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span><h3 data-t="g3">Approve, then Final</h3><p data-t="g3p">Approve a version to say it is right; make it Final to deliver it. Take it out again any time, its notes stay.</p></div>
+    <div class="card reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span><h3 data-t="g4">Three kinds of links</h3><p data-t="g4p">A review link for the whole project, a playlist link for a chosen few, and the Finals link for delivery.</p></div>
+    <div class="card reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4"/></svg></span><h3 data-t="g5">The bell and the emails</h3><p data-t="g5p">New notes, versions, approvals and downloads in the bell, and grouped in one email instead of ten.</p></div>
+    <div class="card reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span><h3 data-t="g6">A player that follows you</h3><p data-t="g6p">Leave the song's page and it keeps playing in the bar at the bottom, while you go through the rest.</p></div>
+    <div class="card reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></span><h3 data-t="g7">Covers you can crop</h3><p data-t="g7p">A cover for every project, zoomed, moved, turned and cropped to a square; projects as big tiles, small tiles or a list.</p></div>
+    <div class="card reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><h3 data-t="g8">One Roar Account</h3><p data-t="g8p">Sign in with the same account as RoarMe, RoarWriter and the other Roar apps, with two-step verification if you use it.</p></div>
+    <div class="card reveal"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></span><h3 data-t="g9">Part of RoarTransfer</h3><p data-t="g9p">RoarTransfer Studio lives at studio.roartransfer.com: one click takes you to RoarTransfer to send any file with a short link.</p></div>
+  </section>
+
+  <section class="sec-head">
+    <span class="k" data-t="for.k">Who it is for</span>
+    <h2 class="sec" data-t="for.t" data-html>Artists, producers, <b>directors, studios</b>.</h2>
+    <p data-t="for.p">A singer sending mixes to the label, a producer collecting notes from the band, a director delivering a music video, a photographer handing over the selects. Same place, same link.</p>
+  </section>
+  <section class="covers reveal">
+    <img src="cover-1.jpg" alt="Cover of the Night Ferry demo project" width="600" height="600" loading="lazy">
+    <img src="cover-2.jpg" alt="Cover of the Studio Sessions demo project" width="600" height="600" loading="lazy">
+    <img src="cover-3.jpg" alt="Cover of the Afterglow demo project" width="600" height="600" loading="lazy">
+  </section>
+
+  <section class="sec-head">
+    <span class="k" data-t="q.k">Questions</span>
+    <h2 class="sec" data-t="q.t" data-html>Good to <b>know</b>.</h2>
+  </section>
+  <section class="faq">
+    <details class="reveal"><summary data-t="q1">Do the people I send it to need an account?</summary><p data-t="q1a">No. A link opens in any browser, on a phone or a computer. Only the people who work inside your projects, as editors or commenters, sign in with a Roar Account.</p></details>
+    <details class="reveal"><summary data-t="q2">Does it change my files?</summary><p data-t="q2a">No. What you upload is kept as it is, at full quality, with its real name. Downloads and the zip give back the original files.</p></details>
+    <details class="reveal"><summary data-t="q3">What does it cost?</summary><p data-t="q3a">RoarTransfer Studio is free while it is in beta. You need a Roar Account, the same one as the other Roar apps.</p></details>
+    <details class="reveal"><summary data-t="q4">Which files can I upload?</summary><p data-t="q4a">Audio (WAV, AIFF, FLAC, MP3, AAC and more), video (MP4, MOV and what your browser plays) and pictures (JPEG, PNG, WebP and more), up to 20 GB a file.</p></details>
+    <details class="reveal"><summary data-t="q5">Is there an app to install?</summary><p data-t="q5a">No, it works in the browser on any computer or phone. Open studio.roartransfer.com and sign in.</p></details>
+  </section>
+
+  <section class="end">
+    <h2 data-t="end" data-html>Your next release, <b>delivered right</b>.</h2>
+    <p data-t="endp">Open RoarTransfer Studio, make a project, drop the first file in. It takes a minute.</p>
+    <a class="pill main" href="https://studio.roartransfer.com/"><span data-t="open">Open RoarTransfer Studio</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  </section>
+</main>
+
+<footer><div class="wrap"><span>© The Mad Lions · Athens</span><span data-t="foot">An experiment of The Mad Lions Lab</span></div></footer>
+
+<script>
+(function () {
+  var EL = {
+    lab: 'Το Lab', claim: 'Έλεγχος. Έγκριση. <b>Παράδοση.</b>',
+    lead: 'Το μέρος όπου η μουσική, το βίντεο και οι φωτογραφίες τελειώνουν. Ανεβάζεις κάθε εκδοχή, οι άλλοι αφήνουν σημειώσεις πάνω στο ακριβές δευτερόλεπτο, εξισώνεις την ένταση, εγκρίνεις, και στέλνεις τα τελικά αρχεία σε ένα όμορφο link, με το όνομά σου πάνω του.',
+    open: 'Άνοιξε το RoarTransfer Studio', how: 'Πώς δουλεύει', note: 'Δωρεάν στη beta με Roar Account · στον browser · τίποτα για εγκατάσταση',
+    c1: 'Ήχος', c2: 'Βίντεο', c3: 'Φωτογραφίες', c4: 'Έως 20 GB το αρχείο',
+    'how.k': 'Πώς δουλεύει', 'how.t': 'Τρία βήματα, <b>ένα link</b>.',
+    'how.p': 'Ένα project είναι ένα single, ένας δίσκος, μια ταινία ή μια φωτογράφιση. Όλα του μένουν σε ένα μέρος, από την πρώτη πρόχειρη εκδοχή ως τα αρχεία που παραδίδεις.',
+    s1: 'Ρίξε μέσα τα αρχεία', s1p: 'Τραγούδια, μιξ, stems, μοντάζ, τρέιλερ, φωτογραφίες. Κάθε αρχείο έχει τη δική του σελίδα· ένα νέο ανέβασμα του ίδιου αρχείου γίνεται v2, v3, και οι παλιές εκδοχές μένουν εκεί.',
+    s2: 'Σημειώσεις στο δευτερόλεπτο', s2p: 'Καλείς την ομάδα σου ή στέλνεις ένα link. Πατάνε πάνω στην κυματομορφή ή στην εικόνα και γράφουν: η σημείωση κάθεται σε εκείνο ακριβώς το δευτερόλεπτο. Απαντάς, την κλείνεις, εγκρίνεις την εκδοχή.',
+    s3: 'Κάν’ το τελικό, παράδωσε', s3p: 'Πατάς Final σε ό,τι είναι έτοιμο. Μπαίνει στα Finals: ένα link με το εξώφυλλο, τους συντελεστές, τους στίχους και Download all σε zip. Δεν χρειάζεται λογαριασμός για να ανοίξει.',
+    'f1.k': 'Έλεγχος', 'f1.t': 'Κάθε σημείωση <b>στο ακριβές δευτερόλεπτο</b>.',
+    'f1.p': 'Κάθε αρχείο ανοίγει στη δική του σελίδα: μια μεγάλη κυματομορφή που τη σέρνεις και κάνεις ζουμ, οι σημειώσεις δίπλα, η καθεμία μια χρωματιστή πινέζα πάνω στη γραμμή του χρόνου. Πατάς την πινέζα και η μουσική πάει εκεί.',
+    'f1.u1': 'Εκδοχές δίπλα δίπλα.', 'f1.u1s': 'v1, v2, v3 κάτω από έναν τίτλο, η καθεμία με τις σημειώσεις της, για να μη χάνεται τίποτα ανάμεσα στις μίξεις.',
+    'f1.u2': 'Level match σε LUFS.', 'f1.u2s': 'Η ένταση μετριέται κατά EBU R128 σε κάθε ανέβασμα· ανοίγεις το Level match και κάθε εκδοχή παίζει στην ίδια ένταση, για να κρίνεις τη μίξη, όχι το volume.',
+    'f1.u3': 'Τα στοιχεία, με μια ματιά.', 'f1.u3s': 'Διάρκεια, sample rate, κανάλια, peak και μέγεθος σε μία γραμμή, και μετρητές στάθμης όσο παίζει.',
+    'f1.u4': 'Σημειώσεις που τις δουλεύεις.', 'f1.u4s': 'Ψάχνεις, φιλτράρεις ανοιχτές, κλεισμένες ή δικές σου, απαντάς σε νήματα, τις κλείνεις. Δίπλα τους ένα ιδιωτικό Notepad για τη δική σου λίστα.',
+    'f2.k': 'Βίντεο και φωτογραφίες', 'f2.t': 'Όχι μόνο μουσική. <b>Ό,τι φτιάχνεις.</b>',
+    'f2.p': 'Ένα βίντεο κλιπ, ένα teaser, μια διαφήμιση, ένα σετ φωτογραφίες: το βίντεο παίζει σαν βίντεο και οι φωτογραφίες φαίνονται σαν φωτογραφίες, με σημειώσεις στο καρέ και στο δευτερόλεπτο, όπως σε ένα τραγούδι.',
+    'f2.u1': 'Κανονικός player.', 'f2.u1s': 'Ταχύτητα, loop, ζουμ, picture in picture και πλήρης οθόνη, με το μέγεθος και το bitrate πάνω στο κάδρο.',
+    'f2.u2': 'Χωρισμένα ανά είδος.', 'f2.u2s': 'Ήχος, Βίντεο και Φωτογραφίες, το καθένα με το χρώμα του, σε καρτέλες ή ομάδες, για να διαβάζεται και ένα μεγάλο project.',
+    'f2.u3': 'Φάκελοι και playlists.', 'f2.u3s': 'Βάζεις αρχεία σε φακέλους ή φτιάχνεις μια playlist από όποια αρχεία θες και τη μοιράζεσαι σαν δικό της link.',
+    'f3.k': 'Παράδοση', 'f3.t': 'Finals, <b>σαν εξώφυλλο δίσκου</b>.',
+    'f3.p': 'Τα αρχεία που κάνεις Final αφήνουν πίσω τη δουλειά και μπαίνουν στα Finals: μια καθαρή σελίδα με το εξώφυλλο του project, φαρδιές γραμμές για κάθε αρχείο και από κάτω οι συντελεστές. Αυτό στέλνεις στη δισκογραφική, στον πελάτη ή στο φεστιβάλ.',
+    'f3.u1': 'Συντελεστές και στίχοι.', 'f3.u1s': 'Πρότυπα για μουσική (καλλιτέχνης, στιχουργοί, παραγωγός, μίξη, mastering, εταιρεία, ISRC, ημερομηνία κυκλοφορίας), βίντεο (σκηνοθέτης, DOP, μοντέρ, colourist…) και φωτογραφία, ή δικοί σου ρόλοι. Και στίχοι και σημειώσεις, με Copy.',
+    'f3.u2': 'Download all σε zip.', 'f3.u2s': 'Όλα τα τελικά αρχεία σε ένα zip, φτιαγμένο στον browser, στην αρχική ποιότητα και με τα αληθινά ονόματα.',
+    'f3.u3': 'Ένα link, οι δικοί σου κανόνες.', 'f3.u3s': 'Μοιράζεσαι τα Finals με ημερομηνία λήξης (1, 7 ή 30 μέρες, ή ποτέ) και κωδικό αν θες. Ό,τι κάνεις Final αργότερα εμφανίζεται στο ίδιο link.',
+    'f4.k': 'Τι βλέπουν', 'f4.t': 'Ο πελάτης σου το ανοίγει <b>στο κινητό</b>.',
+    'f4.p': 'Χωρίς λογαριασμό, χωρίς εφαρμογή, χωρίς κωδικό αν δεν βάλεις. Το όνομα και το banner του στούντιό σου πάνω, τα αρχεία παίζουν εκεί, και μπορούν να γράψουν σημείωση, να εγκρίνουν ή να κατεβάσουν, όσο τους επιτρέπεις.',
+    'f4.u1': 'Το δικό σου brand, όχι το δικό μας.', 'f4.u1s': 'Λογότυπο, banner και δικό σου φόντο σε κάθε link, playlist και σελίδα Finals.',
+    'f4.u2': 'Εσύ αποφασίζεις τι κάνει ένα link.', 'f4.u2s': 'Σχόλια, έγκριση, λήψη, και αν φαίνονται καθόλου οι αριθμοί των εκδοχών.',
+    'f4.u3': 'Βλέπεις τι γίνεται.', 'f4.u3s': 'Το καμπανάκι δείχνει ποιος άνοιξε, έπαιξε, κατέβασε, έγραψε ή ενέκρινε· ένα email τα μαζεύει κάθε λίγα λεπτά ή μία φορά τη μέρα.',
+    'f5.k': 'Το στούντιό σου', 'f5.t': 'Το στήνεις μία φορά, <b>δείχνει σωστό πάντα</b>.',
+    'f5.p': 'Οι ρυθμίσεις κρατάνε το στούντιό σου: το όνομα και τις εικόνες σε ό,τι στέλνεις, με τι ξεκινάνε τα νέα links και οι προσκλήσεις, τα email που θες και την εμφάνιση που δουλεύεις.',
+    'f5.u1': 'Άνθρωποι και ρόλοι.', 'f5.u1s': 'Προσθέτεις ανθρώπους με το Roar Account τους: οι editors ανεβάζουν και εγκρίνουν, οι commenters γράφουν σημειώσεις, οι listeners μόνο ακούν.',
+    'f5.u2': 'Σκοτεινό, φωτεινό και φόντα.', 'f5.u2s': 'Dark, Light ή System, με επιλογή από φόντα πίσω από το γυαλί.',
+    'f5.u3': 'Ο χώρος, στο φως.', 'f5.u3s': 'Πόσο πιάνει κάθε project, ανά είδος, σε μία σελίδα.',
+    'all.k': 'Όλα όσα έχει', 'all.t': 'Φτιαγμένο από ανθρώπους που <b>παραδίδουν για να ζουν</b>.',
+    'all.p': 'Φτιάξαμε το RoarTransfer Studio για τις δικές μας ταινίες, τα βίντεο κλιπ και τους δίσκους στο The Mad Lions. Αυτά κάνει σήμερα.',
+    g1: 'Μεγάλα αρχεία, κατευθείαν στο cloud', g1p: 'Έως 20 GB το αρχείο, σταλμένο σε κομμάτια κατευθείαν στο Cloudflare R2, πολλά μαζί, με την πρόοδο στην οθόνη.',
+    g2: 'Εκδοχές χωρίς μπέρδεμα', g2p: 'Το Upload naming ρωτάει τίτλο ή όνομα εκδοχής αν το θες· αλλιώς τίτλος γίνεται το ίδιο το όνομα του αρχείου, χωρίς την κατάληξη.',
+    g3: 'Έγκριση, μετά Final', g3p: 'Εγκρίνεις μια εκδοχή για να πεις ότι είναι σωστή· την κάνεις Final για να την παραδώσεις. Τη βγάζεις όποτε θες, οι σημειώσεις της μένουν.',
+    g4: 'Τρία είδη links', g4p: 'Ένα link ελέγχου για όλο το project, ένα link playlist για όσα διαλέξεις, και το link των Finals για την παράδοση.',
+    g5: 'Το καμπανάκι και τα email', g5p: 'Νέες σημειώσεις, εκδοχές, εγκρίσεις και λήψεις στο καμπανάκι, και μαζεμένα σε ένα email αντί για δέκα.',
+    g6: 'Ένας player που σε ακολουθεί', g6p: 'Φεύγεις από τη σελίδα του τραγουδιού και συνεχίζει να παίζει στη μπάρα κάτω, όσο κοιτάς τα υπόλοιπα.',
+    g7: 'Εξώφυλλα που κόβεις', g7p: 'Ένα εξώφυλλο για κάθε project, με ζουμ, μετακίνηση, περιστροφή και κόψιμο σε τετράγωνο· τα projects σε μεγάλα πλακίδια, μικρά ή λίστα.',
+    g8: 'Ένα Roar Account', g8p: 'Μπαίνεις με τον ίδιο λογαριασμό με το RoarMe, το RoarWriter και τις άλλες Roar εφαρμογές, με επαλήθευση δύο βημάτων αν τη χρησιμοποιείς.',
+    g9: 'Μέρος του RoarTransfer', g9p: 'Το RoarTransfer Studio μένει στο studio.roartransfer.com: ένα κλικ σε πάει στο RoarTransfer για να στείλεις οποιοδήποτε αρχείο με ένα κοντό link.',
+    'for.k': 'Για ποιον είναι', 'for.t': 'Καλλιτέχνες, παραγωγούς, <b>σκηνοθέτες, στούντιο</b>.',
+    'for.p': 'Μια τραγουδίστρια που στέλνει μίξεις στη δισκογραφική, ένας παραγωγός που μαζεύει σημειώσεις από το συγκρότημα, ένας σκηνοθέτης που παραδίδει ένα βίντεο κλιπ, ένας φωτογράφος που παραδίδει τις επιλογές. Ίδιο μέρος, ίδιο link.',
+    'q.k': 'Ερωτήσεις', 'q.t': 'Καλό να <b>ξέρεις</b>.',
+    q1: 'Χρειάζονται λογαριασμό όσοι παίρνουν το link;', q1a: 'Όχι. Ένα link ανοίγει σε κάθε browser, σε κινητό ή υπολογιστή. Μόνο όσοι δουλεύουν μέσα στα projects σου, ως editors ή commenters, μπαίνουν με Roar Account.',
+    q2: 'Αλλάζει τα αρχεία μου;', q2a: 'Όχι. Ό,τι ανεβάζεις μένει όπως είναι, σε πλήρη ποιότητα, με το αληθινό του όνομα. Οι λήψεις και το zip δίνουν πίσω τα αρχικά αρχεία.',
+    q3: 'Πόσο κοστίζει;', q3a: 'Το RoarTransfer Studio είναι δωρεάν όσο είναι σε beta. Χρειάζεσαι ένα Roar Account, το ίδιο με τις άλλες Roar εφαρμογές.',
+    q4: 'Τι αρχεία ανεβάζω;', q4a: 'Ήχο (WAV, AIFF, FLAC, MP3, AAC και άλλα), βίντεο (MP4, MOV και ό,τι παίζει ο browser σου) και φωτογραφίες (JPEG, PNG, WebP και άλλες), έως 20 GB το αρχείο.',
+    q5: 'Υπάρχει εφαρμογή για εγκατάσταση;', q5a: 'Όχι, δουλεύει στον browser σε κάθε υπολογιστή ή κινητό. Ανοίγεις το studio.roartransfer.com και μπαίνεις.',
+    end: 'Η επόμενη κυκλοφορία σου, <b>παραδομένη σωστά</b>.', endp: 'Άνοιξε το RoarTransfer Studio, φτιάξε ένα project, ρίξε μέσα το πρώτο αρχείο. Παίρνει ένα λεπτό.',
+    foot: 'Ένα πείραμα του The Mad Lions Lab'
+  }
+  var EN = {}
+  ;[].slice.call(document.querySelectorAll('[data-t]')).forEach(function (e) { var k = e.dataset.t; if (!(k in EN)) EN[k] = e.hasAttribute('data-html') ? e.innerHTML : e.textContent })
+  function setLang(l) {
+    document.documentElement.lang = l
+    ;[].slice.call(document.querySelectorAll('[data-t]')).forEach(function (e) { var v = (l === 'el' ? EL : EN)[e.dataset.t]; if (v == null) return; if (e.hasAttribute('data-html')) e.innerHTML = v; else e.textContent = v })
+    ;[].slice.call(document.querySelectorAll('.lang button')).forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.l === l) })
+    try { localStorage.setItem('tml_site_lang', l) } catch (e) {}
+  }
+  ;[].slice.call(document.querySelectorAll('.lang button')).forEach(function (b) { b.onclick = function () { setLang(b.dataset.l) } })
+  var saved = 'en'; try { saved = localStorage.getItem('tml_site_lang') || 'en' } catch (e) {}
+  setLang(saved)
+  var rv = [].slice.call(document.querySelectorAll('.reveal'))
+  if (!('IntersectionObserver' in window) || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) rv.forEach(function (e) { e.classList.add('in') })
+  else { var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } }) }, { rootMargin: '0px 0px -6% 0px', threshold: .06 }); rv.forEach(function (e) { io.observe(e) }) }
+})()
+</script>
+<script src="../fresh.js" defer></script>
+</body>
+</html>

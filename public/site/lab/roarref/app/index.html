@@ -1,0 +1,1273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- RoarRef (Alex, 6 Nov 2026): a 16:9 character reference sheet for AI. Fixed windows in 2 to 8 panel layouts; photos are
+     dropped in, moved and zoomed inside their window; Export writes a 3840x2160 PNG. Plain HTML, CSS and JS, everything stays
+     in this browser (IndexedDB 'roarref'). Its small page is lab/roarref/ (Lab experiment 10); also in Studio > Apps > In the browser. -->
+<title>RoarRef · Character sheet for AI</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#141415">
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@500;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap">
+<style>
+/* Layout: one top row with every control, the 16:9 sheet filling the rest of the screen. Roar graphite glass, red that glows. */
+:root{
+  --bg:#141415; --panel:rgba(255,255,255,.055); --panel-2:rgba(255,255,255,.10);
+  --line:rgba(255,255,255,.09); --fg:#ececea; --muted:#9a9a97;
+  --accent:#d40000; --accent-glow:rgba(212,0,0,.45);
+  --display:"Jost",system-ui,sans-serif; --body:"DM Sans",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);margin:0;overflow:hidden;
+  background-image:radial-gradient(1200px 600px at 50% -10%,rgba(255,255,255,.05),transparent 60%)}
+.app{height:100%;display:flex;flex-direction:column;gap:12px;box-sizing:border-box;
+  padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.mark{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.01em;white-space:nowrap}
+.mark b{color:var(--accent);text-shadow:0 0 14px var(--accent-glow);font-weight:700}
+.group{display:flex;align-items:center;gap:4px;padding:4px;border-radius:999px;background:var(--panel);
+  border:1px solid var(--line);backdrop-filter:blur(14px);position:relative}
+.lens{position:absolute;top:4px;height:calc(100% - 8px);border-radius:999px;background:var(--panel-2);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 2px 10px rgba(0,0,0,.35);transition:left .28s cubic-bezier(.3,.8,.3,1),width .28s;pointer-events:none}
+.lay{position:relative;z-index:1;border:0;background:transparent;width:32px;flex:none;height:32px;border-radius:999px;cursor:pointer;
+  display:grid;place-items:center;color:var(--muted);transition:color .2s}
+.lay:hover,.lay[aria-pressed="true"]{color:var(--fg)}
+.lay svg{width:26px;height:15px}
+.pill{border:1px solid var(--line);background:var(--panel);color:var(--fg);font:500 13px var(--body);height:40px;padding:0 16px;
+  border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;backdrop-filter:blur(14px);white-space:nowrap;
+  transition:background .2s,transform .12s,box-shadow .2s}
+.pill:hover{background:var(--panel-2)}
+.pill:active{transform:scale(.96)}
+.pill.main{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 0 22px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.25)}
+.pill.main:hover{background:#e60a0a}
+.pill[aria-pressed="true"]{background:var(--panel-2);box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+.pill svg,.ico svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.ctl{display:flex;align-items:center;gap:7px;height:40px;padding:0 11px;border-radius:999px;background:var(--panel);border:1px solid var(--line);
+  font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.ctl input[type=range]{width:56px;accent-color:var(--accent)}
+.sw{width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px}
+.sw.pick{position:relative;overflow:hidden;background:conic-gradient(#f44,#fd4,#4f6,#4cf,#64f,#f4c,#f44)}
+.sw.pick input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.spacer{flex:1;margin-left:-8px}
+.pill.round{width:40px;padding:0;justify-content:center}
+.pill.round .w{display:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.stagewrap{flex:1;min-height:0;display:grid;place-items:center;position:relative}
+.stage{position:relative;max-width:100%;border-radius:6px;box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px var(--line);overflow:hidden;
+  touch-action:none;user-select:none;-webkit-user-select:none}
+.frame{position:absolute;overflow:hidden;cursor:pointer;outline:0}
+.frame.has{cursor:grab}
+.frame.drag{cursor:grabbing}
+.frame img{position:absolute;max-width:none;pointer-events:none;-webkit-user-drag:none}
+.frame .empty{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:6px;text-align:center;
+  color:rgba(0,0,0,.42);font-size:max(10px,calc(var(--k)*13px));letter-spacing:.02em;font-weight:600;
+  border:calc(var(--k)*2px) dashed rgba(0,0,0,.16);border-radius:inherit;box-sizing:border-box}
+.dark .frame .empty{color:rgba(255,255,255,.45);border-color:rgba(255,255,255,.18)}
+.frame .empty svg{width:max(20px,calc(var(--k)*30px));height:max(20px,calc(var(--k)*30px));stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.frame .empty small{font-weight:400;text-transform:none;letter-spacing:0;opacity:.8;font-size:max(9px,calc(var(--k)*12px))}
+.frame.over::after,.frame.sel::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none}
+.frame.sel::after{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 18px var(--accent-glow)}
+.frame.over::after{box-shadow:inset 0 0 0 3px var(--accent);background:rgba(212,0,0,.12)}
+.split{position:absolute;z-index:4;touch-action:none}
+.split.v{width:18px;margin-left:-9px;cursor:col-resize}
+.split.h{height:18px;margin-top:-9px;cursor:row-resize}
+.split::after{content:"";position:absolute;border-radius:99px;background:rgba(255,255,255,.92);box-shadow:0 0 0 1px rgba(0,0,0,.18),0 2px 8px rgba(0,0,0,.3);opacity:0;transition:opacity .2s}
+.split.v::after{left:7px;width:4px;top:50%;height:46px;margin-top:-23px}
+.split.h::after{top:7px;height:4px;left:50%;width:46px;margin-left:-23px}
+.stage:hover .split::after{opacity:.55}
+.split:hover::after,.split.on::after{opacity:1;background:var(--accent);box-shadow:0 0 14px var(--accent-glow)}
+.cover{position:absolute;z-index:6;cursor:move;touch-action:none;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+.cover.sel{outline:2px solid var(--accent);outline-offset:3px}
+.cover .rs{position:absolute;right:-9px;bottom:-9px;width:18px;height:18px;border-radius:50%;background:#fff;border:2px solid var(--accent);cursor:nwse-resize}
+.cover .tools{bottom:auto;top:-52px;white-space:nowrap}
+.cover .tools .ico[aria-pressed="true"]{background:rgba(255,255,255,.22)}
+.cover .tools .sw{width:24px;height:24px;flex:none;align-self:center;margin:0 2px}
+.label{position:absolute;left:calc(var(--k)*14px);bottom:calc(var(--k)*12px);font:600 calc(var(--k)*13px)/1 var(--body);letter-spacing:.04em;
+  pointer-events:none}
+.tools{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);display:flex;gap:4px;padding:4px;border-radius:999px;
+  background:rgba(20,20,22,.72);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(16px);z-index:5;cursor:default}
+.ico{width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.06);color:#eee;cursor:pointer;display:grid;place-items:center;
+  transition:background .2s,transform .12s}
+.ico:hover{background:rgba(255,255,255,.16)}
+.ico:active{transform:scale(.92)}
+.ico.del{color:#ff6b6b}
+.ico.del:hover{background:rgba(212,0,0,.3);color:#fff}
+.panel{display:none}
+/* computer (Alex, 7 Nov: "group it like the phone, the account top right"): the sheet, and a column on the right with
+   Layout / Look / Window; the account and the sheet you are on, top right */
+.work{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px}
+.stagewrap{min-width:0}
+.side{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.sec h3{margin:0;font:600 11px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.side .group{background:rgba(255,255,255,.04)}
+.side #layouts{display:grid;grid-template-columns:repeat(5,1fr);width:100%;box-sizing:border-box;border-radius:16px;gap:2px}
+.side #layouts .lens{display:none}
+.side #layouts .lay{width:auto;height:34px;border-radius:10px}
+.side #layouts .lay[aria-pressed="true"]{background:var(--panel-2);box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+.side #ratios{flex:1}
+.side #ratios .lay.rt{flex:1;padding:0 4px}
+.side .ctl{width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);justify-content:space-between}
+.side .ctl input[type=range]{flex:1;width:auto!important;min-width:0}
+.side .pill.wide{flex:1;justify-content:center}
+.side .pill.round{width:40px;padding:0;justify-content:center}
+.side #mtools{gap:6px}
+.side #mtools .ico{width:38px;height:38px;background:rgba(255,255,255,.06);border:1px solid var(--line)}
+.side #mtools > span{display:none}
+.side .off{opacity:.4;pointer-events:none}
+.hint2{color:var(--muted);font-size:13px;margin:0}
+.bar .spacer{flex:1}
+.frame .tools{display:none}
+#sheetsBtn{gap:9px;padding:0 12px 0 5px}
+#sheetsBtn .av{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font:600 13px var(--body);box-shadow:0 0 12px var(--accent-glow)}
+#sheetsBtn .av:empty{display:none}
+#sheetsBtn .shi{display:none}
+#sheetsBtn .chev{width:16px;height:16px;opacity:.7}
+.panel .ctl input[type=range]{width:80px}
+.panel .ctl.big input[type=range]{width:96px}
+.panel .ctl{gap:6px;padding:0 10px}
+.panel .ctl output{min-width:36px}
+.lay.rt{width:auto;padding:0 8px;font:600 12px var(--body);letter-spacing:.02em}
+.panel .ctl output{min-width:42px;text-align:right;font-variant-numeric:tabular-nums;color:var(--fg);letter-spacing:0;text-transform:none}
+.panel .off{opacity:.4;pointer-events:none}
+.panel .sep{width:1px;height:24px;background:var(--line);margin:0 4px}
+.tools .ico{width:34px;height:34px}
+.frame .tools{max-width:calc(100% - 8px);flex-wrap:wrap;justify-content:center;border-radius:20px}
+.card .pill[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 16px var(--accent-glow)}
+.ghost{position:fixed;z-index:80;width:84px;height:84px;object-fit:cover;border-radius:14px;pointer-events:none;transform:translate(-50%,-50%) rotate(-4deg);
+  box-shadow:0 14px 40px rgba(0,0,0,.55),0 0 0 2px var(--accent);opacity:.92}
+.field{height:46px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--fg);padding:0 18px;font:500 16px var(--body);outline:0}
+.field:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.gate{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:16px;background:radial-gradient(900px 500px at 50% 0%,rgba(212,0,0,.12),transparent 70%),var(--bg);overflow:auto}
+.card.gate-card{max-width:420px;gap:12px;padding:28px;box-sizing:border-box}
+a.pill{text-decoration:none}
+.gate-card .mark{font-size:30px}
+.gate-card h2{font-size:22px}
+.gate-card .field{width:100%;box-sizing:border-box}
+.gate-card #gGo{width:100%;justify-content:center;height:48px;font-size:15px}
+.gerr{color:#ff7a70!important}
+.gnote{color:var(--fg)!important}
+.cnt{font:500 13px var(--body);color:var(--muted);margin-left:8px}
+.modal.busy{cursor:progress}.modal.busy .card{opacity:.7;pointer-events:none}
+.who{font-size:13px;color:var(--muted)}
+.card .off{opacity:.4;pointer-events:none}
+.shn{max-width:130px;overflow:hidden;text-overflow:ellipsis}
+.sheets-card{max-width:620px}
+.sheets{display:flex;flex-direction:column;gap:8px;max-height:min(60vh,520px);overflow:auto;padding:2px}
+.sh{display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center;padding:8px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.sh.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 0 18px var(--accent-glow)}
+.sh-open{padding:0;border:0;background:#2a2a2c;border-radius:9px;overflow:hidden;width:120px;aspect-ratio:16/9;cursor:pointer;display:grid;place-items:center}
+.sh-open img{width:100%;height:100%;object-fit:contain;display:block}
+.sh-empty{width:40%;height:40%;border:1.5px dashed rgba(255,255,255,.25);border-radius:6px}
+.sh-meta{display:flex;flex-direction:column;gap:3px;min-width:0}
+.sh-meta b{font:600 15px var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sh-meta small{color:var(--muted);font-size:12px}
+.sh-acts{display:flex;gap:6px;align-items:center}
+.sh-acts .pill{height:34px;padding:0 14px}
+@media (max-width:560px){.sh{grid-template-columns:84px 1fr}.sh-open{width:84px}.sh-acts{grid-column:1/-1;justify-content:flex-end}}
+.hint{position:absolute;bottom:-2px;left:0;right:0;text-align:center;font-size:12px;color:var(--muted);pointer-events:none}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:grid;place-items:center;z-index:50;padding:16px;animation:fade .2s}
+.card{background:rgba(32,32,34,.92);border:1px solid var(--line);border-radius:18px;padding:18px;max-width:min(980px,100%);width:100%;
+  display:flex;flex-direction:column;gap:14px;animation:pop .28s cubic-bezier(.3,1.4,.5,1);box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.card h2{margin:0;font:700 20px var(--display)}
+.card img{width:100%;border-radius:10px;display:block}
+.card p{margin:0;color:var(--muted);font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+@keyframes pop{from{transform:scale(.94);opacity:0}}
+@keyframes fade{from{opacity:0}}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(30,30,32,.95);border:1px solid var(--line);
+  padding:10px 18px;border-radius:999px;font-size:13px;z-index:60;animation:fade .2s}
+/* phone (Alex, 7 Nov: "tidy and group it on mobile"): one top row, the sheet, then three tabs that show one group at a time.
+   placeControls() moves the same controls between the computer places and these; the computer layout is untouched. */
+.mtabs,.mpane{display:none}
+@media (max-width:820px){
+  body{overflow:auto}
+  .app{height:auto;min-height:100%;gap:10px}
+  .bar{flex-wrap:nowrap;gap:6px}
+  .bar .mark{flex:1;font-size:21px}
+  .bar .pill.round{width:38px;height:38px}
+  .bar .pill.main{width:42px;height:42px;padding:0;justify-content:center}
+  .bar .pill .w,.bar .shn{display:none}
+  #sheetsBtn{width:38px;height:38px;padding:0;justify-content:center}
+  #sheetsBtn .chev{display:none}
+  #sheetsBtn .av{width:30px;height:30px}
+  #sheetsBtn .av:empty + .shi{display:block}
+  .work{display:block;flex:none}
+  .side{display:none}
+  .stagewrap{flex:none;display:block}
+  .stage{margin:0 auto}
+  .panel{display:none}
+  .mtabs{display:flex;width:100%;box-sizing:border-box}
+  .mtabs .lay{flex:1;width:auto;height:36px;font:600 13px var(--body);letter-spacing:.02em}
+  .mpane{display:flex;flex-direction:column;gap:10px;padding-bottom:max(16px,env(safe-area-inset-bottom,0px))}
+  .mpane .mrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .mpane .group{max-width:100%;overflow-x:auto;scrollbar-width:none;align-self:flex-start}
+  .mpane #layouts{width:100%;box-sizing:border-box}
+  .mpane .ctl{flex:1 1 100%;box-sizing:border-box;height:46px}
+  .mpane .ctl input[type=range]{flex:1;width:auto!important;min-width:0}
+  .mpane #sheetSw,.mpane #fillSw{flex:1 1 calc(50% - 4px);justify-content:space-between;padding:0 10px}
+  .mpane .off{opacity:.4;pointer-events:none}
+  .mpane .hint2{color:var(--muted);font-size:13px;text-align:center;margin:0}
+  .mpane .pill.round{width:46px;height:46px}
+  .mpane .pill.wide{flex:1;justify-content:center;height:46px}
+  .lay{width:36px}
+  .frame .tools{display:none}
+  #mtools{gap:6px;justify-content:center}
+  #mtools .ico{width:42px;height:42px;background:var(--panel);border:1px solid var(--line)}
+  #mtools .ico svg{width:19px;height:19px}
+  #mtools > span{display:none}
+  .ico{width:30px;height:30px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+html,body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="bar">
+    <a class="mark" href="../" title="About RoarRef" style="color:inherit;text-decoration:none">Roar<b>Ref</b></a>
+    <div class="group" id="layouts" role="group" aria-label="Layout"><span class="lens" id="lens"></span></div>
+    <div class="group" id="ratios" role="group" aria-label="Shape of the sheet"><span class="lens" id="rlens"></span></div>
+    <button class="pill round" id="stack" aria-pressed="false" title="Windows side by side or stacked one under the other">
+      <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="7" rx="1.5"/><rect x="4" y="13" width="16" height="7" rx="1.5"/></svg></button>
+    <div class="ctl" id="sheetSw" title="Sheet colour">Sheet</div>
+    <div class="ctl" id="fillSw" title="Colour behind the photos">Fill</div>
+    <button class="pill round" id="cover" title="Add a shape to cover a face">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="5" fill="currentColor"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span class="w">Cover</span></button>
+    <button class="pill round" id="labels" aria-pressed="false" title="Show the view names on the sheet">
+      <svg viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 19h6M12 5v14"/></svg><span class="w">Names</span></button>
+    <button class="pill round" id="add" style="margin-left:auto" title="Add photos to the empty windows">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="w">Add photos</span></button>
+    <button class="pill round" id="clear" title="Empty every window">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg><span class="w">Clear</span></button>
+    <button class="pill main" id="export" title="Save the sheet as PNG or JPEG, 4K to 8K">
+      <svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="w">Export</span></button>
+  </div>
+  <div class="work" id="work">
+    <div class="stagewrap" id="wrap">
+      <div class="stage" id="stage"></div>
+    </div>
+    <aside class="side" id="side" aria-label="Settings"></aside>
+  </div>
+  <div class="panel" id="panel"></div>
+  <div class="group mtabs" id="mtabs" role="tablist" aria-label="Settings"><span class="lens" id="mlens"></span>
+    <button type="button" class="lay" data-t="layout" role="tab">Layout</button>
+    <button type="button" class="lay" data-t="look" role="tab">Look</button>
+    <button type="button" class="lay" data-t="photo" role="tab">Window</button></div>
+  <div class="mpane" id="mpane"></div>
+  <div id="stash" hidden></div>
+  <div id="gate" class="gate" hidden></div>
+</div>
+<input type="file" id="file" accept="image/*" multiple hidden>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+// the sheet in its own units: 1600 on its long side, the other as the shape asks (16:9, 1:1, 2:1, 9:16)
+const RATIOS = [['16:9',16/9],['1:1',1],['2:1',2],['9:16',9/16]];
+let BW = 1600, BH = 900;
+function setShape(){ const r = (RATIOS.find(x => x[0]===S.ratio) || RATIOS[0])[1]; if(r >= 1){ BW = 1600; BH = Math.round(1600/r); } else { BH = 1600; BW = Math.round(1600*r); } }
+const LAYOUTS = [
+  {id:'t3', name:'Front, back, face', cols:[1,1,1], rows:[1], cells:[[0,0,1,1,'Front'],[1,0,1,1,'Back'],[2,0,1,1,'Face']]},
+  {id:'t4', name:'Front, side, back, face', cols:[1,1,1,1], rows:[1], cells:[[0,0,1,1,'Front'],[1,0,1,1,'Side'],[2,0,1,1,'Back'],[3,0,1,1,'Face']]},
+  {id:'t5', name:'Five views', cols:[1,1,1,1,1.25], rows:[1], cells:[[0,0,1,1,'Front'],[1,0,1,1,'3/4'],[2,0,1,1,'Side'],[3,0,1,1,'Back'],[4,0,1,1,'Face']]},
+  {id:'t6', name:'Six in a row', cols:[1,1,1,1,1,1], rows:[1], cells:[[0,0,1,1,'Front'],[1,0,1,1,'3/4 left'],[2,0,1,1,'Side'],[3,0,1,1,'Back'],[4,0,1,1,'3/4 right'],[5,0,1,1,'Face']]},
+  {id:'bf', name:'Three bodies, two faces', cols:[1,1,1,1.1], rows:[1,1], cells:[[0,0,1,2,'Front'],[1,0,1,2,'Side'],[2,0,1,2,'Back'],[3,0,1,1,'Face'],[3,1,1,1,'Profile']]},
+  {id:'b6', name:'Two bodies, six faces', cols:[1,1,1,1,1], rows:[1,1], cells:[[0,0,1,2,'Front'],[1,0,1,2,'Back'],[2,0,1,1,'Neutral'],[3,0,1,1,'Smile'],[4,0,1,1,'Angry'],[2,1,1,1,'Sad'],[3,1,1,1,'Surprised'],[4,1,1,1,'Profile']]},
+  {id:'h4', name:'Hero and four', cols:[2,1,1], rows:[1,1], cells:[[0,0,1,2,'Hero'],[1,0,1,1,'Front'],[2,0,1,1,'Back'],[1,1,1,1,'Face'],[2,1,1,1,'Detail']]},
+  {id:'e6', name:'Six expressions', cols:[1,1,1], rows:[1,1], cells:[[0,0,1,1,'Neutral'],[1,0,1,1,'Smile'],[2,0,1,1,'Angry'],[0,1,1,1,'Sad'],[1,1,1,1,'Surprised'],[2,1,1,1,'Profile']]},
+  {id:'s2', name:'Body and face', cols:[1,1], rows:[1], cells:[[0,0,1,1,'Body'],[1,0,1,1,'Face']]},
+];
+const SHEET_COLORS = ['#ffffff','#8b8b88','#000000'];
+const FILL_COLORS = ['#ededeb','#ffffff','#2a2a2a'];
+
+let S = {layout:'t3', ratio:'16:9', gap:14, rad:0, sheet:'#ffffff', fill:'#ededeb', labels:false, sizes:{}, covers:[]};
+let photos = [];   // index -> {url, blob, w, h, s, ox, oy, flip}
+let sel = -1;
+
+const $ = id => document.getElementById(id);
+const stage = $('stage'), wrap = $('wrap');
+// stacked (Alex, 6 Nov: "in 9:16 put them horizontal too"): the same layout turned, its columns become rows
+const turn = L => ({id: L.id+'~t', name: L.name, cols: L.rows, rows: L.cols, cells: L.cells.map(([c,r,cs,rs,label]) => [r,c,rs,cs,label])});
+const shaped = L => S.stack ? turn(L) : L;
+const lay = () => S.layout==='custom' && S.custom ? {id:'custom', name:'Your layout', tree:S.custom} : shaped(LAYOUTS.find(l => l.id === S.layout) || LAYOUTS[0]);
+
+/* your own layout (Alex, 6 Nov: "or let me add"): a tree of windows. A box {d:'x'|'y', k:[...], f:[...]} lays its children
+   side by side (x) or one under the other (y), f their shares; a leaf {label} is one window. Windows are numbered in reading
+   order of the tree, which is the order of photos[]. */
+function toTree(L){ // a preset as a tree: its columns, each one its rows (or the turned way round)
+  const byCol = {}; L.cells.forEach(([c,r,cs,rs,label]) => { (byCol[c] = byCol[c] || []).push({r, rs, label}); });
+  const cols = Object.keys(byCol).map(Number).sort((a,b)=>a-b), Z = sizesOf(L);
+  const kid = c => { const cells = byCol[c].sort((a,b)=>a.r-b.r);
+    if(cells.length===1) return {label:cells[0].label};
+    return {d:'y', k:cells.map(x=>({label:x.label})), f:cells.map(x=>Z.rows.slice(x.r,x.r+x.rs).reduce((a,b)=>a+b,0))}; };
+  return {d:'x', k:cols.map(kid), f:cols.map(c=>Z.cols[c])};
+}
+function leaves(n, out=[]){ if(n.k) n.k.forEach(c=>leaves(c,out)); else out.push(n); return out; }
+function treeRects(n, x, y, w, h, out=[], gap=S.gap){
+  if(!n.k){ out.push({x, y, w, h, label:n.label||'View'}); return out; }
+  const tot = n.f.reduce((a,b)=>a+b,0), inner = (n.d==='x' ? w : h) - (n.k.length-1)*gap; let at = n.d==='x' ? x : y;
+  n.k.forEach((c,j) => { const len = n.f[j]/tot*inner;
+    if(n.d==='x') treeRects(c, at, y, len, h, out, gap); else treeRects(c, x, at, w, len, out, gap); at += len + gap; });
+  return out;
+}
+function treeCuts(n, x, y, w, h, out=[]){ // every line inside the tree, with what it moves
+  if(!n.k) return out;
+  const tot = n.f.reduce((a,b)=>a+b,0), inner = (n.d==='x' ? w : h) - (n.k.length-1)*S.gap; let at = n.d==='x' ? x : y;
+  n.k.forEach((c,j) => { const len = n.f[j]/tot*inner;
+    if(n.d==='x') treeCuts(c, at, y, len, h, out); else treeCuts(c, x, at, w, len, out);
+    at += len;
+    if(j < n.k.length-1) out.push({node:n, j, axis: n.d==='x' ? 'cols' : 'rows', at: at + S.gap/2, inner, from: n.d==='x' ? y : x, to: n.d==='x' ? y+h : x+w});
+    at += S.gap; });
+  return out;
+}
+function parentOf(n, target){ if(!n.k) return null; for(const c of n.k){ if(c===target) return n; const p = parentOf(c, target); if(p) return p; } return null; }
+function makeCustom(){ if(S.layout!=='custom' || !S.custom){ S.custom = toTree(lay()); S.layout = 'custom'; } }
+function splitWindow(i, d){ // d 'x' side by side, 'y' one under the other
+  makeCustom();
+  const n0 = leaves(S.custom).length; while(photos.length < n0) photos.push(null);
+  const leaf = leaves(S.custom)[i], par = parentOf(S.custom, leaf), fresh = {label:'View'};
+  if(par && par.d===d){ const j = par.k.indexOf(leaf), half = par.f[j]/2; par.k.splice(j+1,0,fresh); par.f.splice(j,1,half,half); }
+  else { const box = {d, k:[leaf, fresh], f:[1,1]};
+    if(!par) S.custom = box; else { const j = par.k.indexOf(leaf); par.k[j] = box; } }
+  photos.splice(i+1, 0, null); sel = i; render(); save();
+}
+function removeWindow(i){
+  makeCustom();
+  const all = leaves(S.custom); if(all.length < 2) return;
+  while(photos.length < all.length) photos.push(null);
+  const leaf = all[i], par = parentOf(S.custom, leaf), j = par.k.indexOf(leaf);
+  par.k.splice(j,1); par.f.splice(j,1);
+  if(par.k.length===1){ const only = par.k[0], gp = parentOf(S.custom, par);
+    if(!gp) S.custom = only.k ? only : {d:'x', k:[only], f:[1]}; else gp.k[gp.k.indexOf(par)] = only; }
+  photos.splice(i,1); sel = -1; render(); save();
+}
+
+// the windows' widths and heights: the layout's own, or what was dragged on the lines between them (S.sizes[layout])
+const sizesOf = L => { const z = (S.sizes||{})[L.id] || {}; return {
+  cols: z.cols && z.cols.length===L.cols.length ? z.cols : L.cols, rows: z.rows && z.rows.length===L.rows.length ? z.rows : L.rows }; };
+// a window's own name (Alex, 7 Nov): presets keep theirs in S.names[layout id][i]; your own layout keeps it in its leaf
+const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nameOf = (L, i, label) => { const n = (S.names||{})[L.id]; return n && n[i] ? n[i] : label; };
+function rects(L, gap, pad){ return rawRects(L, gap, pad).map((r,i) => L.tree ? r : Object.assign(r, {label:nameOf(L, i, r.label)})); }
+function rawRects(L, gap, pad){
+  if(L.tree) return treeRects(L.tree, pad, pad, BW-2*pad, BH-2*pad, [], gap);
+  const sum = a => a.reduce((x,y)=>x+y,0), Z = sizesOf(L);
+  const iw = BW - 2*pad - (L.cols.length-1)*gap, ih = BH - 2*pad - (L.rows.length-1)*gap;
+  const cw = Z.cols.map(f => f/sum(Z.cols)*iw), rh = Z.rows.map(f => f/sum(Z.rows)*ih);
+  return L.cells.map(([c,r,cs,rs,label]) => ({
+    x: pad + sum(cw.slice(0,c)) + c*gap, y: pad + sum(rh.slice(0,r)) + r*gap,
+    w: sum(cw.slice(c,c+cs)) + (cs-1)*gap, h: sum(rh.slice(r,r+rs)) + (rs-1)*gap, label }));
+}
+const pad = () => S.gap;  // outer border matches the gap, like a contact sheet
+
+function lum(hex){ const n=parseInt(hex.slice(1),16); return (0.299*(n>>16)+0.587*((n>>8)&255)+0.114*(n&255))/255; }
+
+/* ---------- top bar ---------- */
+function miniSvg(L){
+  const R = rects(L, 60, 0);
+  return `<svg viewBox="0 0 ${BW} ${BH}">${R.map(r=>`<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="70" fill="currentColor"/>`).join('')}</svg>`;
+}
+LAYOUTS.forEach(L => {
+  const b = document.createElement('button');
+  b.className = 'lay'; b.title = L.name; b.setAttribute('aria-label', L.name); b.dataset.id = L.id;
+  b.innerHTML = miniSvg(L);
+  b.onclick = () => { S.layout = L.id; sel = -1; render(); save(); };
+  $('layouts').appendChild(b);
+});
+{ const b = document.createElement('button'); b.className='lay'; b.dataset.id='custom'; b.title='Your layout'; b.setAttribute('aria-label','Your layout');
+  b.onclick = () => { if(S.custom){ S.layout='custom'; sel=-1; render(); save(); } }; $('layouts').appendChild(b); }
+function moveLens(){
+  const b = $('layouts').querySelector(`[data-id="${S.layout}"]`); if(!b) return;
+  $('lens').style.left = b.offsetLeft + 'px'; $('lens').style.width = b.offsetWidth + 'px';
+  $('layouts').querySelectorAll('.lay').forEach(x => x.setAttribute('aria-pressed', x === b));
+}
+function swatches(el, colors, key){
+  el.querySelectorAll('.sw').forEach(x=>x.remove());
+  colors.forEach(c => {
+    const b = document.createElement('button'); b.className='sw'; b.style.background=c; b.title=c; b.setAttribute('aria-label', key+' '+c);
+    b.setAttribute('aria-pressed', S[key].toLowerCase()===c);
+    b.onclick = () => { S[key]=c; render(); save(); }; el.appendChild(b);
+  });
+  const p = document.createElement('label'); p.className='sw pick'; p.title='Any colour';
+  const custom = !colors.includes(S[key].toLowerCase());
+  p.setAttribute('aria-pressed', custom); if(custom) p.style.background = S[key];
+  p.innerHTML = `<input type="color" id="pick-${key}" value="${S[key]}" aria-label="Any ${key} colour">`;
+  p.querySelector('input').oninput = e => { S[key]=e.target.value; render(); save(); };
+  el.appendChild(p);
+}
+RATIOS.forEach(([name]) => {
+  const b = document.createElement('button'); b.type='button'; b.className='lay rt'; b.dataset.r = name; b.textContent = name;
+  b.title = 'Sheet ' + name; b.onclick = () => { if(S.ratio !== name) S.stack = name === '9:16'; S.ratio = name; render(); save(); };
+  $('ratios').appendChild(b);
+});
+function moveRatioLens(){
+  const b = $('ratios').querySelector(`[data-r="${S.ratio}"]`); if(!b) return;
+  $('rlens').style.left = b.offsetLeft + 'px'; $('rlens').style.width = b.offsetWidth + 'px';
+  $('ratios').querySelectorAll('.rt').forEach(x => x.setAttribute('aria-pressed', x === b));
+}
+$('labels').onclick = () => { S.labels=!S.labels; render(); save(); };
+$('add').onclick = () => { pickTarget = -1; $('file').click(); };
+$('clear').onclick = () => { if(!photos.some(Boolean)) return; askClear(); };
+$('export').onclick = exportPng;
+
+/* ---------- sheet ---------- */
+function fit(){
+  const W = wrap.clientWidth, H = isPhone() ? Math.min(W*BH/BW, innerHeight*0.56) : wrap.clientHeight;
+  const w = Math.min(W, H*BW/BH);
+  stage.style.width = w+'px'; stage.style.height = (w*BH/BW)+'px';
+  stage.style.setProperty('--k', w/BW);
+}
+new ResizeObserver(fit).observe(wrap);
+
+function imgBox(p, r){
+  const cover = Math.max(r.w/p.w, r.h/p.h), s = cover*p.s;
+  const dw = p.w*s, dh = p.h*s;
+  return {x:(r.w-dw)/2+p.ox, y:(r.h-dh)/2+p.oy, w:dw, h:dh};
+}
+const pct = (v, of) => (v/of*100)+'%';
+
+function render(){
+  setShape();
+  $('layouts').querySelectorAll('.lay').forEach(b => { const L = LAYOUTS.find(x => x.id===b.dataset.id); if(L) b.innerHTML = miniSvg(shaped(L)); });
+  { const cb = $('layouts').querySelector('[data-id="custom"]'); cb.hidden = !S.custom; if(S.custom) cb.innerHTML = miniSvg({tree:S.custom}); }
+  $('stack').setAttribute('aria-pressed', !!S.stack);
+  moveRatioLens();
+  const L = lay(), R = rects(L, S.gap, pad());
+  stage.style.background = S.sheet;
+  stage.classList.toggle('dark', lum(S.fill) < .5);
+  $('labels').setAttribute('aria-pressed', S.labels);
+  swatches($('sheetSw'), SHEET_COLORS, 'sheet'); swatches($('fillSw'), FILL_COLORS, 'fill');
+  moveLens();
+  stage.innerHTML = '';
+  R.forEach((r, i) => {
+    const f = document.createElement('div');
+    f.className = 'frame'; f.dataset.i = i; f.tabIndex = 0;
+    Object.assign(f.style, {left:pct(r.x,BW), top:pct(r.y,BH), width:pct(r.w,BW), height:pct(r.h,BH),
+      background:S.fill, borderRadius:`calc(var(--k)*${S.rad}px)`});
+    const p = photos[i];
+    if(p){
+      f.classList.add('has');
+      const b = imgBox(p, r), im = document.createElement('img');
+      im.src = p.url; im.alt = r.label; im.draggable = false;
+      Object.assign(im.style, {left:pct(b.x,r.w), top:pct(b.y,r.h), width:pct(b.w,r.w), height:pct(b.h,r.h),
+        transform: tf(p)});
+      f.appendChild(im);
+    } else {
+      f.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 8"/></svg>${esc(r.label)}<small>Drop a photo, or click twice</small></div>`;
+    }
+    if(S.labels){
+      const lb = document.createElement('div'); lb.className='label'; lb.textContent = r.label;
+      lb.style.color = p ? '#fff' : (lum(S.fill)<.5 ? '#fff' : '#111');
+      if(p) lb.style.textShadow = '0 1px 6px rgba(0,0,0,.5)';
+      f.appendChild(lb);
+    }
+    if(i === sel) f.classList.add('sel');
+    stage.appendChild(f);
+  });
+  splitters(L, R);
+  drawCovers();
+  syncPanel();
+  if(!isPhone() || mTab==='photo') fillMTools();
+  fit();
+}
+function frameEl(i){ return stage.querySelector(`.frame[data-i="${i}"]`); }
+const tf = p => `rotate(${p.rot||0}deg)` + (p.flip ? ' scaleX(-1)' : '');
+function place(i){ // move only the picture, no full redraw while dragging
+  const p = photos[i], f = frameEl(i); if(!p||!f) return;
+  const r = rects(lay(), S.gap, pad())[i], b = imgBox(p, r), im = f.querySelector('img');
+  Object.assign(im.style, {left:pct(b.x,r.w), top:pct(b.y,r.h), width:pct(b.w,r.w), height:pct(b.h,r.h), transform:tf(p)});
+  if(i === sel) syncPanel();
+}
+
+/* the lines between the windows: drag one and the window on one side grows as the other shrinks */
+function splitters(L, R){
+  if(L.tree) return treeSplitters(L);
+  const Z = sizesOf(L), P = pad(), cuts = [];
+  const sum = a => a.reduce((x,y)=>x+y,0);
+  const iw = BW - 2*P - (L.cols.length-1)*S.gap, ih = BH - 2*P - (L.rows.length-1)*S.gap;
+  let x = P; for(let k=0;k<Z.cols.length-1;k++){ x += Z.cols[k]/sum(Z.cols)*iw; cuts.push({axis:'cols', k, at:x + S.gap/2, inner:iw}); x += S.gap; }
+  let y = P; for(let k=0;k<Z.rows.length-1;k++){ y += Z.rows[k]/sum(Z.rows)*ih; cuts.push({axis:'rows', k, at:y + S.gap/2, inner:ih}); y += S.gap; }
+  cuts.forEach(c => {
+    // a row line only spans the columns that are really split there
+    let from = P, to = c.axis==='cols' ? BH-P : BW-P;
+    if(c.axis==='rows'){
+      const split = R.filter(r => Math.abs(r.y + r.h + S.gap/2 - c.at) < 1);
+      if(!split.length) return;
+      from = Math.min(...split.map(r=>r.x)); to = Math.max(...split.map(r=>r.x+r.w));
+    }
+    const d = document.createElement('div'); d.className = 'split ' + (c.axis==='cols' ? 'v' : 'h');
+    d.title = 'Drag to resize · double-click to even out';
+    if(c.axis==='cols') Object.assign(d.style, {left:pct(c.at,BW), top:pct(from,BH), height:pct(to-from,BH)});
+    else Object.assign(d.style, {top:pct(c.at,BH), left:pct(from,BW), width:pct(to-from,BW)});
+    d.onpointerdown = e => {
+      e.stopPropagation(); e.preventDefault(); d.setPointerCapture(e.pointerId); d.classList.add('on');
+      const start = c.axis==='cols' ? e.clientX : e.clientY, arr = sizesOf(L)[c.axis].slice(), tot = sum(arr), a0 = arr[c.k], b0 = arr[c.k+1];
+      const min = tot*0.06;
+      const move = ev => {
+        const dpx = ((c.axis==='cols' ? ev.clientX : ev.clientY) - start) * unit();
+        let df = dpx / c.inner * tot; df = Math.max(min - a0, Math.min(b0 - min, df));
+        arr[c.k] = a0 + df; arr[c.k+1] = b0 - df;
+        S.sizes = S.sizes || {}; S.sizes[L.id] = Object.assign({}, S.sizes[L.id], {[c.axis]: arr.slice()});
+        relayout(d, c);
+      };
+      const up = () => { d.removeEventListener('pointermove', move); d.removeEventListener('pointerup', up); d.removeEventListener('pointercancel', up); render(); save(); };
+      d.addEventListener('pointermove', move); d.addEventListener('pointerup', up); d.addEventListener('pointercancel', up);
+    };
+    d.ondblclick = e => { e.stopPropagation(); if(S.sizes && S.sizes[L.id]){ delete S.sizes[L.id][c.axis]; render(); save(); } };
+    stage.appendChild(d);
+  });
+}
+function treeSplitters(L){
+  const P = pad();
+  treeCuts(L.tree, P, P, BW-2*P, BH-2*P).forEach(c => {
+    const d = document.createElement('div'); d.className = 'split ' + (c.axis==='cols' ? 'v' : 'h');
+    d.title = 'Drag to resize · double-click to even out';
+    if(c.axis==='cols') Object.assign(d.style, {left:pct(c.at,BW), top:pct(c.from,BH), height:pct(c.to-c.from,BH)});
+    else Object.assign(d.style, {top:pct(c.at,BH), left:pct(c.from,BW), width:pct(c.to-c.from,BW)});
+    d.onpointerdown = e => {
+      e.stopPropagation(); e.preventDefault(); d.setPointerCapture(e.pointerId); d.classList.add('on');
+      const start = c.axis==='cols' ? e.clientX : e.clientY, f = c.node.f, tot = f.reduce((a,b)=>a+b,0), a0 = f[c.j], b0 = f[c.j+1], min = tot*0.04;
+      const move = ev => {
+        let df = ((c.axis==='cols' ? ev.clientX : ev.clientY) - start) * unit() / c.inner * tot;
+        df = Math.max(min - a0, Math.min(b0 - min, df)); f[c.j] = a0 + df; f[c.j+1] = b0 - df;
+        const R = rects(lay(), S.gap, pad());
+        R.forEach((r,i) => { const fr = frameEl(i); if(!fr) return;
+          Object.assign(fr.style, {left:pct(r.x,BW), top:pct(r.y,BH), width:pct(r.w,BW), height:pct(r.h,BH)}); if(photos[i]) place(i); });
+        const at = c.at + (f[c.j]-a0)/tot*c.inner;
+        if(c.axis==='cols') d.style.left = pct(at,BW); else d.style.top = pct(at,BH);
+      };
+      const up = () => { d.removeEventListener('pointermove', move); d.removeEventListener('pointerup', up); d.removeEventListener('pointercancel', up); render(); save(); };
+      d.addEventListener('pointermove', move); d.addEventListener('pointerup', up); d.addEventListener('pointercancel', up);
+    };
+    d.ondblclick = e => { e.stopPropagation(); c.node.f = c.node.f.map(()=>1); render(); save(); };
+    stage.appendChild(d);
+  });
+}
+function relayout(d, c){ // move the windows, their photos and the held line while it is dragged, without rebuilding them
+  const L = lay(), R = rects(L, S.gap, pad());
+  R.forEach((r,i) => { const f = frameEl(i); if(!f) return;
+    Object.assign(f.style, {left:pct(r.x,BW), top:pct(r.y,BH), width:pct(r.w,BW), height:pct(r.h,BH)}); if(photos[i]) place(i); });
+  const Z = sizesOf(L)[c.axis], tot = Z.reduce((x,y)=>x+y,0), P = pad();
+  let at = P; for(let k=0;k<=c.k;k++) at += Z[k]/tot*c.inner + (k<c.k ? S.gap : 0);
+  at += S.gap/2;
+  if(c.axis==='cols') d.style.left = pct(at,BW); else d.style.top = pct(at,BH);
+}
+const IC = {
+  minus:'<path d="M5 12h14"/>', plus:'<path d="M12 5v14M5 12h14"/>',
+  fill:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  fit:'<rect x="5" y="7" width="14" height="10" rx="2"/><path d="M2 4h20M2 20h20"/>',
+  flip:'<path d="M12 3v18M8 7l-5 5 5 5V7zM16 7l5 5-5 5V7z"/>',
+  pen:'<path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/>',
+  move:'<path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/>',
+  swap:'<path d="M7 4v13M3 13l4 4 4-4M17 20V7M13 11l4-4 4 4"/>',
+  blur:'<circle cx="12" cy="12" r="8" stroke-dasharray="2 2.6"/><circle cx="12" cy="12" r="3.5"/>',
+  splitx:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 5v14"/>',
+  splity:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 12h18"/>',
+  minusw:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M9 12h6"/>',
+  circle:'<circle cx="12" cy="12" r="7"/>',
+  square:'<rect x="5" y="5" width="14" height="14" rx="1.5"/>',
+  trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
+};
+/* the bar under the sheet: the windows' reset, and sliders and buttons for the photo that is picked */
+const panelEl = $('panel');
+const reset = p => Object.assign(p, {s:1, ox:0, oy:0, rot:0});
+function slider(id, label, min, max, step, onIn){
+  const w = document.createElement('label'); w.className='ctl'; w.dataset.k = id;
+  w.innerHTML = `${label} <input type="range" id="ps-${id}" min="${min}" max="${max}" step="${step}"><output></output>`;
+  const inp = w.querySelector('input');
+  inp.oninput = () => { if(sel>=0 && photos[sel]) { onIn(+inp.value, photos[sel]); place(sel); saveSoon(); } };
+  inp.ondblclick = () => { if(sel>=0 && photos[sel]){ const p=photos[sel]; if(id==='zoom'){p.s=1;} else if(id==='x'){p.ox=0;} else if(id==='y'){p.oy=0;} else p.rot=0; place(sel); save(); } };
+  return w;
+}
+function pbtn(ic, title, fn, cls=''){
+  const b=document.createElement('button'); b.type='button'; b.className='ico '+cls; b.title=title; b.setAttribute('aria-label',title);
+  b.innerHTML=`<svg viewBox="0 0 24 24">${IC[ic]}</svg>`; b.onclick=()=>fn(); return b;
+}
+function buildPanel(){
+  const even = document.createElement('button'); even.type='button'; even.className='pill round'; even.id='even';
+  even.title='Put every window back to its first size';
+  even.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/></svg>';
+  even.onclick = () => { if(S.layout==='custom' && S.custom){ const ev = n => { if(n.k){ n.f = n.f.map(()=>1); n.k.forEach(ev); } }; ev(S.custom); } else if(S.sizes) delete S.sizes[lay().id]; render(); save(); };
+  const sep = () => { const d=document.createElement('span'); d.className='sep'; return d; };
+  const photo = document.createElement('div'); photo.id='photoCtl'; photo.style.cssText='display:contents';
+  photo.append(
+    slider('zoom','Zoom', -190, 230, 1, (v,p)=>{ p.s = Math.exp(v/100); }),
+    slider('x','X', -800, 800, 1, (v,p)=>{ p.ox = v; }),
+    slider('y','Y', -450, 450, 1, (v,p)=>{ p.oy = v; }),
+    slider('rot','Rotate', -180, 180, 1, (v,p)=>{ p.rot = v; }),
+    );
+  const fine = (id, label, max, key, title) => { const w = document.createElement('label'); w.className='ctl big'; w.title=title; w.id = id+'Ctl';
+    w.innerHTML = `${label} <input type="range" id="${id}" min="0" max="${max}" step="0.5"><output></output>`;
+    const i = w.querySelector('input'); i.oninput = () => { S[key] = +i.value; render(); saveSoon(); };
+    i.ondblclick = () => { S[key] = key==='gap' ? 14 : 0; render(); save(); }; return w; };
+  const shb = document.createElement('button'); shb.type='button'; shb.className='pill'; shb.id='sheetsBtn'; shb.title='Your sheets: one per character';
+  shb.innerHTML = '<span class="av" aria-hidden="true"></span><svg class="shi" viewBox="0 0 24 24"><rect x="4" y="6" width="14" height="12" rx="2"/><path d="M8 3h11a2 2 0 0 1 2 2v10"/></svg><span class="shn"></span><svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5"/></svg>';
+  shb.onclick = () => openSheets();
+  panelEl.append(shb, fine('gap','Gap',80,'gap','Space between windows · double-click for 14'), fine('rad','Round',80,'rad','Round corners · double-click for none'), even, photo);
+}
+/* covers: solid circles or squares laid over the sheet, to hide a face (Alex, 6 Nov) */
+let selCover = -1;
+const COVER_COLORS = ['#000000','#ffffff','#8b8b88','#d40000'];
+const blurOf = c => Math.max(6, Math.min(c.w, c.h) * 0.14); // blur radius in sheet units, grows with the cover
+$('stack').onclick = () => { S.stack = !S.stack;
+  if(S.layout==='custom' && S.custom){ const tr = n => { if(n.k){ n.d = n.d==='x' ? 'y' : 'x'; n.k.forEach(tr); } }; tr(S.custom); }
+  render(); save(); };
+$('cover').onclick = () => {
+  S.covers = S.covers || [];
+  let cx = BW/2, cy = BH/2;
+  if(sel >= 0){ const r = rects(lay(), S.gap, pad())[sel]; if(r){ cx = r.x + r.w/2; cy = r.y + r.h*0.25; } }
+  const d = Math.round(Math.min(BW,BH)*0.12);
+  S.covers.push({x:cx, y:cy, w:d, h:d, shape:'circle', color:'#000000'});
+  selCover = S.covers.length-1; sel = -1; render(); save();
+};
+function drawCovers(){
+  (S.covers||[]).forEach((c, i) => {
+    const d = document.createElement('div'); d.className = 'cover' + (i===selCover ? ' sel' : '');
+    const blur = c.color === 'blur', br = `blur(calc(var(--k)*${blurOf(c)}px))`;
+    Object.assign(d.style, {left:pct(c.x-c.w/2,BW), top:pct(c.y-c.h/2,BH), width:pct(c.w,BW), height:pct(c.h,BH),
+      background: blur ? 'rgba(128,128,128,.04)' : c.color, borderRadius: c.shape==='circle' ? '50%' : `calc(var(--k)*${S.rad}px)`,
+      backdropFilter: blur ? br : '', webkitBackdropFilter: blur ? br : ''});
+    d.onpointerdown = e => {
+      e.stopPropagation(); e.preventDefault();
+      if(selCover !== i || sel >= 0){ selCover = i; sel = -1; render(); }
+      const el = stage.querySelectorAll('.cover')[i]; el.setPointerCapture(e.pointerId);
+      const sx = e.clientX, sy = e.clientY, x0 = c.x, y0 = c.y, w0 = c.w, h0 = c.h, k = unit();
+      const resize = e.target.classList.contains('rs');
+      const move = ev => {
+        const dx = (ev.clientX-sx)*k, dy = (ev.clientY-sy)*k;
+        if(resize){ let w = Math.max(12, w0 + dx*2), h = Math.max(12, h0 + dy*2);
+          if(c.shape==='circle' && !ev.altKey){ const m = Math.max(w,h); w = h = m; } c.w = w; c.h = h; }
+        else { c.x = x0 + dx; c.y = y0 + dy; }
+        Object.assign(el.style, {left:pct(c.x-c.w/2,BW), top:pct(c.y-c.h/2,BH), width:pct(c.w,BW), height:pct(c.h,BH)});
+      };
+      const up = () => { el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up); save(); };
+      el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    };
+    if(i === selCover){
+      const h = document.createElement('div'); h.className='rs'; h.title='Drag to resize'; d.appendChild(h);
+      const t = document.createElement('div'); t.className='tools'; t.onpointerdown = e => e.stopPropagation();
+      t.append(pbtn(c.shape==='circle' ? 'square' : 'circle', c.shape==='circle' ? 'Make it a square' : 'Make it a circle', () => { c.shape = c.shape==='circle' ? 'square' : 'circle'; render(); save(); }));
+      COVER_COLORS.forEach(col => { const b = document.createElement('button'); b.type='button'; b.className='sw'; b.style.background=col; b.title=col;
+        b.setAttribute('aria-pressed', c.color===col); b.onclick = () => { c.color = col; render(); save(); }; t.appendChild(b); });
+      const bl = pbtn('blur', 'Blur instead of a colour', () => { c.color = 'blur'; render(); save(); }); bl.setAttribute('aria-pressed', c.color==='blur'); t.appendChild(bl);
+      t.append(pbtn('trash','Remove the cover', () => { S.covers.splice(i,1); selCover=-1; render(); save(); }, 'del'));
+      d.appendChild(t);
+    }
+    stage.appendChild(d);
+  });
+}
+/* swap two windows' photos (Alex, 7 Nov): drag the arrows of the picked window onto another one */
+function startSwap(i, e){
+  const p = photos[i]; if(!p) return;
+  const ghost = document.createElement('img'); ghost.src = p.url; ghost.className = 'ghost'; document.body.appendChild(ghost);
+  let target = -1;
+  const at = ev => { ghost.style.left = ev.clientX + 'px'; ghost.style.top = ev.clientY + 'px';
+    const el = document.elementsFromPoint(ev.clientX, ev.clientY).find(x => x.classList && x.classList.contains('frame'));
+    const j = el ? +el.dataset.i : -1; target = j === i ? -1 : j; setOver(target >= 0 ? frameEl(target) : null); };
+  at(e);
+  const move = ev => at(ev);
+  const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+    ghost.remove(); setOver(null);
+    if(target >= 0){ const n = rects(lay(), S.gap, pad()).length; while(photos.length < n) photos.push(null);
+      [photos[i], photos[target]] = [photos[target], photos[i]];
+      [photos[i], photos[target]].forEach(q => { if(q){ q.ox = 0; q.oy = 0; } });
+      sel = target; render(); save(); toast(photos[i] ? 'Swapped' : 'Moved'); } };
+  window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+}
+/* name a window: the name shows in the empty window and, with T on, on the sheet and in the export */
+function renameWindow(i){
+  const L = lay(), cur = rects(L, S.gap, pad())[i].label;
+  const m = document.createElement('div'); m.className='modal';
+  m.innerHTML = `<form class="card" style="max-width:420px"><h2>Name this window</h2>
+    <input id="winName" class="field" maxlength="40" autocomplete="off" aria-label="Window name">
+    <p>The name goes on the sheet when the T (names) button is on.</p>
+    <div class="row"><span style="flex:1"></span><button type="button" class="pill" id="nNo">Cancel</button><button type="submit" class="pill main">Save</button></div></form>`;
+  const inp = m.querySelector('#winName'); inp.value = cur;
+  const close = () => m.remove();
+  m.onclick = e => { if(e.target===m || e.target.id==='nNo') close(); };
+  m.querySelector('form').onsubmit = e => { e.preventDefault();
+    const v = inp.value.trim() || cur;
+    if(L.tree){ leaves(S.custom)[i].label = v; }
+    else { S.names = S.names || {}; S.names[L.id] = Object.assign({}, S.names[L.id], {[i]: v}); }
+    S.labels = true; close(); render(); save(); };
+  document.body.appendChild(m); setTimeout(() => { inp.focus(); inp.select(); }, 30);
+}
+function toolbar(i){
+  const t = document.createElement('div'); t.className='tools'; t.onpointerdown = e => e.stopPropagation();
+  const many = rects(lay(), S.gap, pad()).length > 1;
+  t.append(pbtn('splitx','Split this window side by side', ()=>splitWindow(i,'x')),
+    pbtn('splity','Split this window top and bottom', ()=>splitWindow(i,'y')));
+  if(many) t.append(pbtn('minusw','Remove this window', ()=>removeWindow(i)));
+  t.append(pbtn('pen','Name this window', ()=>renameWindow(i)));
+  if(!photos[i]){ t.append(pbtn('plus','Add a photo', ()=>{ pickTarget=i; $('file').click(); })); return t; }
+  const mv = pbtn('move','Drag onto another window to swap the photos', ()=>{}); mv.style.cursor='grab';
+  mv.onpointerdown = e => { e.stopPropagation(); e.preventDefault(); startSwap(i, e); }; t.append(mv);
+  const sp = document.createElement('span'); sp.style.cssText='width:1px;background:rgba(255,255,255,.18);margin:4px 2px'; t.append(sp);
+  t.append(
+    pbtn('fill','Fill the window (reset the photo)', ()=>{ reset(photos[i]); place(i); save(); }),
+    pbtn('fit','Show the whole photo', ()=>{ const p=photos[i], r=rects(lay(),S.gap,pad())[i];
+      p.s = Math.min(r.w/p.w, r.h/p.h)/Math.max(r.w/p.w, r.h/p.h); p.ox=0; p.oy=0; place(i); save(); }),
+    pbtn('flip','Mirror', ()=>{ photos[i].flip=!photos[i].flip; place(i); save(); }),
+    pbtn('swap','Replace photo', ()=>{ pickTarget=i; $('file').click(); }),
+    pbtn('trash','Remove photo', ()=>{ photos[i]=null; render(); save(); }, 'del'));
+  return t;
+}
+function syncPanel(){
+  const p = sel>=0 ? photos[sel] : null, on = !!p;
+  { const c = curSheet(); const n = document.querySelector('#sheetsBtn .shn'); if(n) n.textContent = c ? c.name : 'Sheets';
+    const av = document.querySelector('#sheetsBtn .av'); if(av) av.textContent = me && me.email ? me.email[0].toUpperCase() : '';
+    const cn = document.querySelector('#sheetsBtn'); if(cn) cn.title = (me ? me.email + ' · ' : '') + 'Your sheets (' + sheets.list.length + ' of ' + MAX_SHEETS + ')'; }
+  const g = $('gap'), rd = $('rad');
+  if(g){ g.value = S.gap; g.nextElementSibling.textContent = S.gap; rd.value = S.rad; rd.nextElementSibling.textContent = S.rad; }
+  $('even').classList.toggle('off', !(S.layout==='custom' || (S.sizes && S.sizes[lay().id])));
+  ['zoom','x','y','rot'].forEach(k => document.querySelector(`[data-k="${k}"]`).classList.toggle('off', !on));
+  const r = on ? rects(lay(), S.gap, pad())[sel] : {w:800,h:450};
+  const set = (k, v, min, max, txt) => { const w = document.querySelector(`[data-k="${k}"]`), i = w.querySelector('input');
+    if(min!=null){ i.min = min; i.max = max; } i.value = v; w.querySelector('output').textContent = txt; };
+  set('zoom', on ? Math.round(Math.log(p.s)*100) : 0, null, null, on ? Math.round(p.s*100)+'%' : '');
+  set('x', on ? Math.round(p.ox) : 0, -Math.round(r.w), Math.round(r.w), on ? Math.round(p.ox/r.w*100)+'%' : '');
+  set('y', on ? Math.round(p.oy) : 0, -Math.round(r.h), Math.round(r.h), on ? Math.round(p.oy/r.h*100)+'%' : '');
+  set('rot', on ? Math.round(p.rot||0) : 0, null, null, on ? Math.round(p.rot||0)+'°' : '');
+}
+function zoomBy(i, f, cx=0, cy=0){
+  const p = photos[i]; if(!p) return;
+  const s2 = Math.min(10, Math.max(.15, p.s*f)); f = s2/p.s;
+  p.ox = cx - (cx-p.ox)*f; p.oy = cy - (cy-p.oy)*f; p.s = s2;
+  place(i); saveSoon();
+}
+
+/* ---------- moving and zooming inside a window ---------- */
+const ptrs = new Map(); let gesture = null;
+const unit = () => BW / stage.clientWidth;
+function localPt(i, e){ // pointer relative to the window centre, in sheet units
+  const b = frameEl(i).getBoundingClientRect(), k = unit();
+  return {x:(e.clientX-b.left-b.width/2)*k, y:(e.clientY-b.top-b.height/2)*k};
+}
+stage.addEventListener('pointerdown', e => {
+  const f = e.target.closest('.frame'); if(!f) return;
+  const i = +f.dataset.i; selCover = -1;
+  if(!photos[i]){ if(sel===i){ pickTarget=i; $('file').click(); } else { sel=i; if(isPhone() && mTab !== 'photo'){ mTab = 'photo'; placeControls(); } render(); } return; }
+  if(isPhone() && mTab !== 'photo'){ mTab = 'photo'; sel = i; placeControls(); render(); }
+  else if(sel !== i){ sel = i; render(); }
+  ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  stage.setPointerCapture(e.pointerId);
+  if(ptrs.size === 1){ const p=photos[i]; gesture = {i, sx:e.clientX, sy:e.clientY, ox:p.ox, oy:p.oy}; frameEl(i).classList.add('drag'); }
+  else if(ptrs.size === 2 && gesture){
+    const [a,b] = [...ptrs.values()];
+    gesture.pinch = {d:Math.hypot(a.x-b.x,a.y-b.y), s:photos[gesture.i].s};
+  }
+});
+stage.addEventListener('pointermove', e => {
+  if(!gesture || !ptrs.has(e.pointerId)) return;
+  ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  const p = photos[gesture.i]; if(!p) return;
+  if(gesture.pinch && ptrs.size >= 2){
+    const [a,b] = [...ptrs.values()];
+    const d = Math.hypot(a.x-b.x,a.y-b.y);
+    const mid = localPt(gesture.i, {clientX:(a.x+b.x)/2, clientY:(a.y+b.y)/2});
+    zoomBy(gesture.i, (gesture.pinch.s*d/gesture.pinch.d)/p.s, mid.x, mid.y);
+  } else if(!gesture.pinch){
+    const k = unit();
+    p.ox = gesture.ox + (e.clientX-gesture.sx)*k; p.oy = gesture.oy + (e.clientY-gesture.sy)*k;
+    place(gesture.i);
+  }
+});
+function endPtr(e){
+  ptrs.delete(e.pointerId);
+  if(ptrs.size === 0 && gesture){ frameEl(gesture.i)?.classList.remove('drag'); gesture=null; save(); }
+  else if(gesture && ptrs.size === 1){ const [a]=[...ptrs.values()], p=photos[gesture.i]; Object.assign(gesture,{pinch:null,sx:a.x,sy:a.y,ox:p.ox,oy:p.oy}); }
+}
+stage.addEventListener('pointerup', endPtr); stage.addEventListener('pointercancel', endPtr);
+stage.addEventListener('wheel', e => {
+  const f = e.target.closest('.frame'); if(!f) return; const i=+f.dataset.i; if(!photos[i]) return;
+  e.preventDefault();
+  const c = localPt(i, e);
+  zoomBy(i, Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0015)), c.x, c.y);
+}, {passive:false});
+stage.addEventListener('dblclick', e => {
+  const f = e.target.closest('.frame'); if(!f) return; const i=+f.dataset.i;
+  if(photos[i]){ reset(photos[i]); place(i); save(); }
+});
+document.addEventListener('pointerdown', e => { if(!e.target.isConnected) return; if(sel>=0 && !e.target.closest('.stage, .modal, .bar, .panel, .side, .mpane, .mtabs, .tools, .ghost')){ sel=-1; render(); } });
+document.addEventListener('keydown', e => {
+  if(e.target.closest && e.target.closest('input')) return;
+  if(e.key==='Escape' && (sel>=0 || selCover>=0)){ sel=-1; selCover=-1; render(); return; }
+
+  if(selCover>=0 && (e.key==='Delete'||e.key==='Backspace')){ e.preventDefault(); S.covers.splice(selCover,1); selCover=-1; render(); save(); return; }
+  if(sel<0 || !photos[sel]) return;
+  const p = photos[sel], st = e.shiftKey ? 20 : 4;
+  const moves = {ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]};
+  if(moves[e.key]){ e.preventDefault(); p.ox+=moves[e.key][0]; p.oy+=moves[e.key][1]; place(sel); saveSoon(); }
+  else if(e.key==='+'||e.key==='='){ zoomBy(sel,1.08); }
+  else if(e.key==='-'){ zoomBy(sel,1/1.08); }
+  else if(e.key==='Delete'||e.key==='Backspace'){ e.preventDefault(); photos[sel]=null; render(); save(); }
+});
+
+/* ---------- bringing photos in ---------- */
+let pickTarget = -1;
+$('file').onchange = e => { addFiles([...e.target.files], pickTarget); e.target.value=''; };
+function loadImage(blob){
+  return new Promise((res, rej) => { const url = URL.createObjectURL(blob), im = new Image();
+    im.onload = () => res({url, blob, w:im.naturalWidth, h:im.naturalHeight, s:1, ox:0, oy:0, flip:false});
+    im.onerror = () => { URL.revokeObjectURL(url); rej(); }; im.src = url; });
+}
+async function addFiles(files, target){
+  files = files.filter(f => f.type.startsWith('image/'));
+  if(!files.length) return;
+  if(!me || !sheets.cur) return;
+  const n = rects(lay(), S.gap, pad()).length, slots = [];
+  if(target >= 0) slots.push(target);
+  for(let i=0;i<n && slots.length<files.length;i++) if(!photos[i] && !slots.includes(i)) slots.push(i);
+  let bad = 0;
+  for(let k=0;k<files.length && k<slots.length;k++){
+    try{ const p = await loadImage(await shrink(files[k])); photos[slots[k]] = p; upload(p, sheets.cur); }catch{ bad++; }
+  }
+  if(files.length > slots.length) toast(`${files.length-slots.length} photo(s) left out: every window is full`);
+  if(bad) toast('That file could not be opened as a picture');
+  sel = slots[0] ?? sel; render(); save();
+}
+let overEl = null;
+function setOver(el){ if(overEl===el) return; overEl?.classList.remove('over'); overEl=el; el?.classList.add('over'); }
+window.addEventListener('dragover', e => { e.preventDefault(); setOver(e.target.closest?.('.frame') || null); });
+window.addEventListener('dragleave', e => { if(!e.relatedTarget) setOver(null); });
+window.addEventListener('drop', e => {
+  e.preventDefault(); const f = e.target.closest?.('.frame'); setOver(null);
+  addFiles([...e.dataTransfer.files], f ? +f.dataset.i : -1);
+});
+window.addEventListener('paste', e => {
+  const files = [...(e.clipboardData?.files||[])]; if(!files.length) return;
+  e.preventDefault(); addFiles(files, sel >= 0 ? sel : -1);
+});
+
+/* ---------- export ---------- */
+async function drawSheet(W, type='image/png'){
+  const k = W/BW, c = document.createElement('canvas'); c.width=W; c.height=Math.round(W*BH/BW);
+  const g = c.getContext('2d'); g.imageSmoothingQuality='high';
+  g.fillStyle=S.sheet; g.fillRect(0,0,c.width,c.height);
+  const R = rects(lay(), S.gap, pad());
+  for(let i=0;i<R.length;i++){
+    const r = R[i], p = photos[i];
+    g.save(); g.beginPath();
+    g.roundRect ? g.roundRect(r.x*k, r.y*k, r.w*k, r.h*k, S.rad*k) : g.rect(r.x*k, r.y*k, r.w*k, r.h*k);
+    g.clip(); g.fillStyle=S.fill; g.fillRect(r.x*k, r.y*k, r.w*k, r.h*k);
+    if(p){
+      const im = new Image(); im.src = p.url; await im.decode();
+      const b = imgBox(p, r);
+      g.translate((r.x+b.x+b.w/2)*k, (r.y+b.y+b.h/2)*k);
+      if(p.rot) g.rotate(p.rot*Math.PI/180);
+      if(p.flip) g.scale(-1,1);
+      g.drawImage(im, -b.w*k/2, -b.h*k/2, b.w*k, b.h*k);
+      g.setTransform(1,0,0,1,0,0);
+    }
+    if(S.labels){
+      g.font = `600 ${13*k}px "DM Sans", system-ui, sans-serif`;
+      if('letterSpacing' in g) g.letterSpacing = (13*k*.04)+'px';
+      g.fillStyle = p ? '#fff' : (lum(S.fill)<.5 ? '#fff' : '#111');
+      if(p){ g.shadowColor='rgba(0,0,0,.5)'; g.shadowBlur=6*k; }
+      g.textBaseline='alphabetic';
+      g.fillText(r.label, (r.x+14)*k, (r.y+r.h-12)*k);
+    }
+    g.restore();
+  }
+  (S.covers||[]).forEach(cv => {
+    const shape = () => { g.beginPath();
+      if(cv.shape==='circle') g.ellipse(cv.x*k, cv.y*k, cv.w*k/2, cv.h*k/2, 0, 0, Math.PI*2);
+      else if(g.roundRect) g.roundRect((cv.x-cv.w/2)*k, (cv.y-cv.h/2)*k, cv.w*k, cv.h*k, S.rad*k); else g.rect((cv.x-cv.w/2)*k, (cv.y-cv.h/2)*k, cv.w*k, cv.h*k); };
+    if(cv.color === 'blur'){
+      // blur what is under the cover: a copy of the sheet, blurred, drawn inside the shape
+      const rad = blurOf(cv)*k, m = rad*3, x0 = Math.max(0,(cv.x-cv.w/2)*k-m), y0 = Math.max(0,(cv.y-cv.h/2)*k-m);
+      const w0 = Math.min(c.width-x0, cv.w*k+2*m), h0 = Math.min(c.height-y0, cv.h*k+2*m);
+      const t = document.createElement('canvas'); t.width = Math.ceil(w0); t.height = Math.ceil(h0); const tg = t.getContext('2d');
+      if('filter' in tg){ tg.filter = `blur(${rad}px)`; tg.drawImage(c, x0, y0, w0, h0, 0, 0, w0, h0); }
+      else { const sm = document.createElement('canvas'), f = Math.max(1, rad/2); sm.width = Math.max(1, Math.round(w0/f)); sm.height = Math.max(1, Math.round(h0/f));
+        sm.getContext('2d').drawImage(c, x0, y0, w0, h0, 0, 0, sm.width, sm.height); tg.imageSmoothingQuality='high'; tg.drawImage(sm, 0, 0, w0, h0); }
+      g.save(); shape(); g.clip(); g.drawImage(t, x0, y0); g.restore();
+      return;
+    }
+    g.save(); g.fillStyle = cv.color; g.beginPath();
+    if(cv.shape==='circle') g.ellipse(cv.x*k, cv.y*k, cv.w*k/2, cv.h*k/2, 0, 0, Math.PI*2);
+    else if(g.roundRect) g.roundRect((cv.x-cv.w/2)*k, (cv.y-cv.h/2)*k, cv.w*k, cv.h*k, S.rad*k); else g.rect((cv.x-cv.w/2)*k, (cv.y-cv.h/2)*k, cv.w*k, cv.h*k);
+    g.fill(); g.restore();
+  });
+  if(type==='image/jpeg'){ // JPEG has no transparency: put the sheet colour under everything once more
+    const o = document.createElement('canvas'); o.width=c.width; o.height=c.height; const og=o.getContext('2d');
+    og.fillStyle=S.sheet; og.fillRect(0,0,o.width,o.height); og.drawImage(c,0,0);
+    return new Promise((res,rej) => o.toBlob(b => b ? res(b) : rej(), type, 0.95));
+  }
+  return new Promise((res,rej) => c.toBlob(b => b ? res(b) : rej(), type));
+}
+/* Export: a small window to pick PNG or JPEG and HD, 2K, 4K, 6K or 8K (the long side) */
+const SIZES = [['HD',1920],['2K',2048],['4K',3840],['6K',5760],['8K',7680]]; // long side; 2K is the cinema 2K (2048)
+function exportPng(){
+  const ex = Object.assign({fmt:'png', size:'4K'}, S.export||{});
+  const dims = long => BW >= BH ? [long, Math.round(long*BH/BW)] : [Math.round(long*BW/BH), long];
+  const m = document.createElement('div'); m.className='modal';
+  const draw = () => {
+    m.innerHTML = `<div class="card" style="max-width:720px"><h2>Export the sheet</h2>
+      <p>Format</p><div class="row">${['png','jpg'].map(f=>`<button type="button" class="pill" data-f="${f}" aria-pressed="${ex.fmt===f}">${f==='png'?'PNG · lossless':'JPEG · smaller file'}</button>`).join('')}</div>
+      <p>Size</p><div class="row">${SIZES.map(([n,l])=>{const [w,h]=dims(l);return `<button type="button" class="pill" data-s="${n}" aria-pressed="${ex.size===n}">${n} <span style="opacity:.6">${w} × ${h}</span></button>`}).join('')}</div>
+      <div class="row"><span class="spacer" style="flex:1"></span><button type="button" class="pill" id="xNo">Cancel</button><button type="button" class="pill main" id="xGo"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export</button></div></div>`;
+  };
+  draw();
+  m.onclick = e => {
+    const t = e.target.closest('button');
+    if(e.target===m || t?.id==='xNo'){ m.remove(); return; }
+    if(t?.dataset.f){ ex.fmt=t.dataset.f; draw(); }
+    else if(t?.dataset.s){ ex.size=t.dataset.s; draw(); }
+    else if(t?.id==='xGo'){ S.export = ex; save(); m.remove(); runExport(dims(SIZES.find(x=>x[0]===ex.size)[1])[0], ex.fmt); }
+  };
+  document.body.appendChild(m);
+}
+async function runExport(W, fmt){
+  const btn = $('export'); btn.disabled = true; toast('Making the sheet…');
+  try{
+    const type = fmt==='jpg' ? 'image/jpeg' : 'image/png';
+    const blob = await drawSheet(W, type);
+    const name = `character-sheet-${new Date().toISOString().slice(0,10)}.${fmt}`;
+    const file = new File([blob], name, {type});
+    if(matchMedia('(pointer:coarse)').matches && navigator.canShare?.({files:[file]})){
+      try{ await navigator.share({files:[file]}); return; }catch(e){ if(e.name==='AbortError') return; }
+    }
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    toast('Saved to your Downloads');
+  } catch(e){ toast('This size is too big for this browser. Try 6K or 4K.'); }
+  finally { btn.disabled = false; }
+}
+function askClear(){
+  const m = document.createElement('div'); m.className='modal';
+  m.innerHTML = `<div class="card" style="max-width:420px"><h2>Empty every window?</h2><p>The photos leave this sheet. The layout and colours stay.</p><div class="row"><span class="spacer"></span><button class="pill" id="no">Keep them</button><button class="pill main" id="yes">Empty</button></div></div>`;
+  m.onclick = e => { if(e.target.id==='yes'){ photos=[]; sel=-1; render(); save(); } if(e.target===m||e.target.id==='no'||e.target.id==='yes') m.remove(); };
+  document.body.appendChild(m);
+}
+function toast(t){ const d=document.createElement('div'); d.className='toast'; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(), 2600); }
+
+/* ---------- your sheets in your Roar Account (Alex, 7 Nov: "up to 5 sheets each, sign in or you don't get in, any computer") ----------
+   RoarMe's Supabase project (where the Roar Accounts live), the same session as themadlions.com/account/ (storageKey 'roar-account').
+   Table roarref_sheets {id, name, data:{S, photos:[{path, w, h, s, ox, oy, flip, rot}]}, thumb}, at most 5 a person (supabase/roarref.sql);
+   photos and thumbnails in the private bucket roarref under <user id>/<sheet id>/. Pictures are kept in IndexedDB too ('blob:<path>'),
+   so a sheet opens fast the second time. Sheets made before this in the browser alone are brought into the account once. */
+const SB_URL = 'https://bzmjhbnwhdwmncxkqkdl.supabase.co', SB_KEY = 'sb_publishable_7mQ3e0NH5lCmdoIKx2-FUA_EgCoXx9X', MAX_SHEETS = 5;
+const sb = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'roar-account' } }) : null;
+const bucket = () => sb.storage.from('roarref');
+const DEF = JSON.stringify(S);
+let me = null, dbp = null, sheets = {cur:null, list:[]}, pending = new Set(), lastClean = 0, saveErr = false;
+function idb(){ if(!dbp) dbp = new Promise((res,rej)=>{ try{ const r=indexedDB.open('roarref',1); r.onupgradeneeded=()=>r.result.createObjectStore('s'); r.onsuccess=()=>res(r.result); r.onerror=rej; }catch(e){ rej(e); } }); return dbp; }
+async function dbGet(k){ const d = await idb(); return new Promise((res,rej)=>{ const r=d.transaction('s').objectStore('s').get(k); r.onsuccess=()=>res(r.result); r.onerror=rej; }); }
+async function dbPut(k, v){ const d = await idb(); return new Promise((res,rej)=>{ const tx=d.transaction('s','readwrite'); tx.objectStore('s').put(v,k); tx.oncomplete=res; tx.onerror=rej; }); }
+const newId = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+const curSheet = () => sheets.list.find(x => x.id === sheets.cur);
+
+// a photo is made a JPEG of at most 3200 px on its long side before it goes up (enough for an 8K sheet, small enough for the space)
+async function shrink(file){
+  try{
+    const bm = await createImageBitmap(file); const k = Math.min(1, 3200 / Math.max(bm.width, bm.height));
+    if(k === 1 && file.type === 'image/jpeg' && file.size < 4e6) return file;
+    const c = document.createElement('canvas'); c.width = Math.round(bm.width*k); c.height = Math.round(bm.height*k);
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0,0,c.width,c.height); g.imageSmoothingQuality = 'high'; g.drawImage(bm, 0, 0, c.width, c.height);
+    return await new Promise(r => c.toBlob(r, 'image/jpeg', 0.92));
+  }catch{ return file; }
+}
+function upload(p, sheetId){ // p gets its path once the photo is in the account
+  const path = `${me.id}/${sheetId}/${newId()}.jpg`;
+  const job = bucket().upload(path, p.blob, {contentType:'image/jpeg', upsert:false}).then(({error}) => {
+    if(error) throw error; p.path = path; dbPut('blob:'+path, p.blob).catch(()=>{});
+  }).catch(() => { toast('A photo could not be saved to your account. Check the connection and add it again.'); })
+    .finally(() => { pending.delete(job); saveSoon(); });
+  pending.add(job); return job;
+}
+async function getBlob(path){
+  const hit = await dbGet('blob:'+path).catch(()=>null); if(hit) return hit;
+  const { data, error } = await bucket().download(path); if(error) throw error;
+  dbPut('blob:'+path, data).catch(()=>{}); return data;
+}
+const packPhotos = () => photos.map(p => p && p.path ? {path:p.path,w:p.w,h:p.h,s:p.s,ox:p.ox,oy:p.oy,flip:p.flip,rot:p.rot||0} : null);
+async function save(){
+  if(!me || !sheets.cur) return;
+  const id = sheets.cur;
+  if(pending.size) await Promise.allSettled([...pending]);
+  const { error } = await sb.from('roarref_sheets').update({ data:{S, photos:packPhotos()}, updated_at:new Date().toISOString() }).eq('id', id);
+  if(error){ if(!saveErr) toast('Not saved: check the connection. RoarRef tries again with your next change.'); saveErr = true; return; }
+  saveErr = false; const c = curSheet(); if(c) c.updated_at = new Date().toISOString();
+  if(Date.now() - lastClean > 30000){ lastClean = Date.now(); cleanFiles(id); }
+}
+let st; function saveSoon(){ clearTimeout(st); st = setTimeout(save, 700); }
+async function cleanFiles(id){ // photos taken off the sheet leave the account too
+  try{ const { data } = await bucket().list(`${me.id}/${id}`, {limit:200}); if(!data) return;
+    const keep = new Set(photos.filter(p => p && p.path).map(p => p.path.split('/').pop()).concat('thumb.jpg'));
+    const gone = data.map(f => f.name).filter(n => !keep.has(n)).map(n => `${me.id}/${id}/${n}`);
+    if(gone.length && id === sheets.cur && !pending.size) await bucket().remove(gone);
+  }catch{}
+}
+async function saveThumb(){
+  if(!me || !sheets.cur) return;
+  try{ const b = await drawSheet(360, 'image/jpeg'); const path = `${me.id}/${sheets.cur}/thumb.jpg`;
+    const { error } = await bucket().upload(path, b, {contentType:'image/jpeg', upsert:true});
+    if(!error){ await sb.from('roarref_sheets').update({thumb:path}).eq('id', sheets.cur); const c = curSheet(); if(c){ c.thumb = path; c.thumbAt = Date.now(); } }
+  }catch{}
+}
+async function loadSheet(row){
+  photos.forEach(p => { if(p && p.url) URL.revokeObjectURL(p.url); });
+  const d = row && row.data || {};
+  S = Object.assign(JSON.parse(DEF), d.S || {});
+  sel = -1; selCover = -1;
+  const list = d.photos || [];
+  photos = list.map(() => null);
+  render();
+  await Promise.all(list.map(async (q, i) => { if(!q || !q.path) return;
+    try{ const blob = await getBlob(q.path); photos[i] = Object.assign({rot:0}, q, {blob, url:URL.createObjectURL(blob)}); }catch{} }));
+  render();
+}
+async function listSheets(){
+  const { data, error } = await sb.from('roarref_sheets').select('id,name,thumb,updated_at,data').order('created_at');
+  if(error) throw error;
+  return data.map(r => ({id:r.id, name:r.name, thumb:r.thumb, updated_at:r.updated_at, n:((r.data && r.data.photos) || []).filter(Boolean).length}));
+}
+async function insertSheet(name, data){
+  const { data:row, error } = await sb.from('roarref_sheets').insert({name, data}).select('id,name,thumb,updated_at,data').single();
+  if(error){ toast(/roarref_limit/.test(error.message) ? `Up to ${MAX_SHEETS} sheets: delete one to make room.` : 'The sheet could not be made. Check the connection.'); return null; }
+  return row;
+}
+async function openSheet(id){
+  const { data, error } = await sb.from('roarref_sheets').select('id,name,data').eq('id', id).single();
+  if(error){ toast('That sheet could not be opened. Check the connection.'); return; }
+  sheets.cur = id; try{ localStorage.setItem('roarref-cur', id); }catch{}
+  await loadSheet(data); placeControls();
+}
+async function bringLocal(){ // sheets made before sign-in, kept in this browser only, go into the account once
+  try{
+    if(await dbGet('moved:'+me.id)) return 0;
+    const idx = await dbGet('sheets'); let recs = [];
+    if(idx && idx.list) for(const x of idx.list){ const r = await dbGet('sheet:'+x.id); if(r) recs.push({name:x.name, r}); }
+    else { const old = await dbGet('state'); if(old) recs.push({name:'Character 1', r:old}); }
+    recs = recs.filter(x => x.r.photos && x.r.photos.some(Boolean)).slice(0, MAX_SHEETS - sheets.list.length);
+    let n = 0;
+    for(const {name, r} of recs){
+      const row = await insertSheet(name, {S:r.S, photos:[]}); if(!row) break;
+      const ph = [];
+      for(const q of r.photos){ if(!q || !q.blob){ ph.push(null); continue; }
+        const path = `${me.id}/${row.id}/${newId()}.jpg`, blob = await shrink(q.blob);
+        const { error } = await bucket().upload(path, blob, {contentType:'image/jpeg'});
+        ph.push(error ? null : {path, w:q.w, h:q.h, s:q.s, ox:q.ox, oy:q.oy, flip:q.flip, rot:q.rot||0}); }
+      await sb.from('roarref_sheets').update({data:{S:r.S, photos:ph}}).eq('id', row.id); n++;
+    }
+    await dbPut('moved:'+me.id, true); return n;
+  }catch{ return 0; }
+}
+async function start(){
+  $('gate').hidden = true;
+  try{
+    sheets.list = await listSheets();
+    const moved = await bringLocal();
+    if(moved){ sheets.list = await listSheets(); toast(`${moved} sheet${moved>1?'s':''} from this browser are now in your account.`); }
+    if(!sheets.list.length){ const row = await insertSheet('Character 1', {S:JSON.parse(DEF), photos:[]}); if(row) sheets.list = await listSheets(); }
+    let cur = null; try{ cur = localStorage.getItem('roarref-cur'); }catch{}
+    if(!sheets.list.some(x => x.id === cur)) cur = sheets.list[0] && sheets.list[0].id;
+    if(cur) await openSheet(cur);
+  }catch{ toast('Your sheets could not be loaded. Check the connection and reload.'); }
+}
+async function switchSheet(id){
+  if(id === sheets.cur) return;
+  clearTimeout(st); await save(); await saveThumb(); await openSheet(id);
+}
+async function newSheet(copy){
+  if(sheets.list.length >= MAX_SHEETS){ toast(`Up to ${MAX_SHEETS} sheets: delete one to make room.`); return; }
+  clearTimeout(st); await save(); await saveThumb();
+  if(copy){
+    const from = curSheet(), row = await insertSheet((from ? from.name : 'Character') + ' copy', {S, photos:[]}); if(!row) return;
+    const ph = [];
+    for(const p of photos){ if(!p || !p.path){ ph.push(null); continue; }
+      const to = `${me.id}/${row.id}/${newId()}.jpg`; const { error } = await bucket().copy(p.path, to);
+      ph.push(error ? null : {path:to, w:p.w, h:p.h, s:p.s, ox:p.ox, oy:p.oy, flip:p.flip, rot:p.rot||0}); }
+    await sb.from('roarref_sheets').update({data:{S, photos:ph}}).eq('id', row.id);
+    sheets.list = await listSheets(); await openSheet(row.id);
+  } else {
+    const look = {layout:S.layout, ratio:S.ratio, stack:S.stack, gap:S.gap, rad:S.rad, sheet:S.sheet, fill:S.fill};
+    if(S.custom){ look.custom = JSON.parse(JSON.stringify(S.custom)); (function wipe(n){ if(n.k) n.k.forEach(wipe); else n.label = 'View'; })(look.custom); }
+    const row = await insertSheet('Character ' + (sheets.list.length + 1), {S:Object.assign(JSON.parse(DEF), look), photos:[]}); if(!row) return;
+    sheets.list = await listSheets(); await openSheet(row.id);
+  }
+}
+async function deleteSheet(id){
+  try{ const { data } = await bucket().list(`${me.id}/${id}`, {limit:200}); if(data && data.length) await bucket().remove(data.map(f => `${me.id}/${id}/${f.name}`)); }catch{}
+  await sb.from('roarref_sheets').delete().eq('id', id);
+  sheets.list = await listSheets();
+  if(!sheets.list.length){ const row = await insertSheet('Character 1', {S:JSON.parse(DEF), photos:[]}); sheets.list = await listSheets(); if(row) await openSheet(row.id); return; }
+  if(sheets.cur === id) await openSheet(sheets.list[0].id);
+}
+/* the window with every sheet: open one, rename, duplicate, delete (asks first), new; who is signed in, and Sign out */
+async function openSheets(){
+  clearTimeout(st); await save(); await saveThumb();
+  try{ sheets.list = await listSheets(); }catch{}
+  const m = document.createElement('div'); m.className='modal';
+  const urls = [];
+  const draw = async () => {
+    urls.forEach(u => URL.revokeObjectURL(u)); urls.length = 0;
+    const rows = [];
+    for(const x of sheets.list){ let u = '';
+      if(x.thumb){ try{ const { data } = await bucket().download(x.thumb + '?t=' + (x.thumbAt || x.updated_at)); if(data){ u = URL.createObjectURL(data); urls.push(u); } }catch{} }
+      rows.push({x, u}); }
+    const full = sheets.list.length >= MAX_SHEETS;
+    m.innerHTML = `<div class="card sheets-card"><div class="row"><h2 style="flex:1">Your sheets <span class="cnt">${sheets.list.length} of ${MAX_SHEETS}</span></h2>
+        <button type="button" class="pill main${full?' off':''}" id="shNew"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New sheet</button></div>
+      <p>${full ? `You have ${MAX_SHEETS} sheets, the most an account keeps. Delete one to make room.` : `One sheet per character, up to ${MAX_SHEETS}. Kept in your Roar Account, on every computer.`}</p>
+      <div class="sheets">${rows.map(({x,u}) => `<div class="sh${x.id===sheets.cur?' on':''}" data-id="${x.id}">
+        <button type="button" class="sh-open" data-open="${x.id}" title="Open ${esc(x.name)}">${u ? `<img src="${u}" alt="">` : '<span class="sh-empty"></span>'}</button>
+        <div class="sh-meta"><b>${esc(x.name)}</b><small>${x.n} photo${x.n===1?'':'s'}${x.id===sheets.cur?' · open now':''}</small></div>
+        <div class="sh-acts">
+          <button type="button" class="ico" data-ren="${x.id}" title="Rename" aria-label="Rename"><svg viewBox="0 0 24 24">${IC.pen}</svg></button>
+          <button type="button" class="ico${full?' off':''}" data-dup="${x.id}" title="Duplicate" aria-label="Duplicate"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg></button>
+          <button type="button" class="ico del" data-del="${x.id}" title="Delete" aria-label="Delete"><svg viewBox="0 0 24 24">${IC.trash}</svg></button>
+        </div></div>`).join('')}</div>
+      <div class="row who"><span>Signed in as <b>${esc(me.email || '')}</b></span><span style="flex:1"></span>
+        <button type="button" class="pill" id="shOut">Sign out</button><button type="button" class="pill" id="shClose">Done</button></div></div>`;
+  };
+  const close = () => { urls.forEach(u => URL.revokeObjectURL(u)); m.remove(); syncPanel(); };
+  const busy = on => m.classList.toggle('busy', on);
+  m.onclick = async e => {
+    const t = e.target.closest('button');
+    if(e.target === m || t?.id === 'shClose') return close();
+    if(!t || m.classList.contains('busy')) return;
+    if(t.id === 'shOut'){ close(); await save(); await sb.auth.signOut(); return; }
+    if(t.id === 'shNew'){ busy(true); await newSheet(false); busy(false); return close(); }
+    if(t.dataset.open){ busy(true); await switchSheet(t.dataset.open); busy(false); return close(); }
+    if(t.dataset.dup){ busy(true); if(t.dataset.dup !== sheets.cur) await switchSheet(t.dataset.dup); await newSheet(true); busy(false); return close(); }
+    if(t.dataset.ren){ const x = sheets.list.find(y => y.id === t.dataset.ren), row = t.closest('.sh'), b = row.querySelector('.sh-meta');
+      b.innerHTML = `<input class="field" style="height:38px;font-size:14px" maxlength="40" value="${esc(x.name)}" aria-label="Sheet name">`;
+      const inp = b.querySelector('input'); inp.focus(); inp.select(); let done = false;
+      const finish = async () => { if(done) return; done = true; x.name = inp.value.trim() || x.name;
+        await sb.from('roarref_sheets').update({name:x.name}).eq('id', x.id); await draw(); syncPanel(); };
+      inp.onkeydown = ev => { if(ev.key==='Enter') finish(); if(ev.key==='Escape'){ done = true; draw(); } }; inp.onblur = finish; return; }
+    if(t.dataset.del){ const row = t.closest('.sh');
+      row.querySelector('.sh-acts').innerHTML = `<button type="button" class="pill" data-keep="1">Keep</button><button type="button" class="pill main" data-sure="${t.dataset.del}">Delete</button>`; return; }
+    if(t.dataset.keep) return draw();
+    if(t.dataset.sure){ busy(true); await deleteSheet(t.dataset.sure); await draw(); busy(false); syncPanel(); }
+  };
+  await draw(); document.body.appendChild(m);
+}
+
+/* the door: RoarRef opens only with a Roar Account (sign in, create one, or the 6-digit code of two-step verification) */
+let gateMode = 'in', mfaFactor = null;
+function drawGate(msg, err){
+  const g = $('gate'); g.hidden = false;
+  const keepEmail = $('gEmail') ? $('gEmail').value : '';
+  const T = {in:['Sign in to RoarRef','Use your Roar Account: the same one as RoarMe, RoarWriter and every Roar app. Your sheets, up to 5, wait for you on any computer.'],
+    up:['Create your Roar Account','Free. One account for RoarRef and every Roar app.'], mfa:['One more step','Type the 6-digit code from your authenticator app.']}[gateMode];
+  g.innerHTML = `<form class="card gate-card" id="gateForm" novalidate>
+    <div class="mark">Roar<b>Ref</b></div><h2>${T[0]}</h2><p>${T[1]}</p>
+    ${gateMode==='mfa' ? `<input class="field" id="gCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123 456" aria-label="Code">`
+      : `<input class="field" id="gEmail" type="email" autocomplete="email" placeholder="Email" aria-label="Email">
+         <input class="field" id="gPass" type="password" autocomplete="${gateMode==='up'?'new-password':'current-password'}" placeholder="Password${gateMode==='up'?' (at least 8 characters)':''}" aria-label="Password">`}
+    ${msg ? `<p class="${err?'gerr':'gnote'}">${esc(msg)}</p>` : ''}
+    <button type="submit" class="pill main" id="gGo">${gateMode==='up' ? 'Create account' : gateMode==='mfa' ? 'Verify' : 'Sign in'}</button>
+    <div class="row" style="justify-content:center">${gateMode==='in'
+      ? `<button type="button" class="pill" data-g="up">Create an account</button><a class="pill" href="../../../account/" target="_blank" rel="noopener">Forgot password?</a>`
+      : `<button type="button" class="pill" data-g="in">I have an account</button>`}</div>
+  </form>`;
+  const f = $('gateForm');
+  if($('gEmail') && keepEmail) $('gEmail').value = keepEmail;
+  f.querySelectorAll('[data-g]').forEach(b => b.onclick = () => { gateMode = b.dataset.g; drawGate(); });
+  f.onsubmit = async e => { e.preventDefault(); const go = $('gGo'); go.disabled = true;
+    try{
+      if(gateMode==='mfa'){
+        const { error } = await sb.auth.mfa.challengeAndVerify({factorId:mfaFactor, code:($('gCode').value||'').replace(/\s/g,'')});
+        if(error) return drawGate('Wrong code. Try the next one.', true);
+        return afterSignIn();
+      }
+      const email = ($('gEmail').value||'').trim(), password = $('gPass').value||'';
+      if(!email || !password) return drawGate('Type your email and password.', true);
+      if(gateMode==='up'){
+        if(password.length < 8) return drawGate('The password needs at least 8 characters.', true);
+        const { data, error } = await sb.auth.signUp({email, password, options:{emailRedirectTo:'https://themadlions.com/lab/roarref/app/'}});
+        if(error) return drawGate(error.message, true);
+        if(data.session) return afterSignIn();
+        gateMode = 'in'; return drawGate('Almost there: open the link we sent to your email, then sign in here.');
+      }
+      const { error } = await sb.auth.signInWithPassword({email, password});
+      if(error) return drawGate('Wrong email or password.', true);
+      afterSignIn();
+    } finally { const b = $('gGo'); if(b) b.disabled = false; }
+  };
+  setTimeout(() => { const i = $('gCode') || ($('gEmail') && $('gEmail').value ? $('gPass') : $('gEmail')); if(i) i.focus(); }, 30);
+}
+async function afterSignIn(){
+  const aal = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(aal.data && aal.data.nextLevel === 'aal2' && aal.data.currentLevel !== 'aal2'){
+    const f = await sb.auth.mfa.listFactors(); const t = f.data && f.data.totp && f.data.totp.find(x => x.status === 'verified');
+    if(t){ mfaFactor = t.id; gateMode = 'mfa'; return drawGate(); }
+  }
+  const { data } = await sb.auth.getUser(); me = data.user;
+  if(me) start(); else { gateMode = 'in'; drawGate(); }
+}
+async function restore(){
+  if(!sb){ $('gate').hidden = false; $('gate').innerHTML = '<div class="card gate-card"><div class="mark">Roar<b>Ref</b></div><h2>RoarRef could not start</h2><p>The sign-in could not load. Check the connection and reload the page.</p></div>'; return; }
+  const { data } = await sb.auth.getSession();
+  if(data.session) afterSignIn(); else drawGate();
+  sb.auth.onAuthStateChange((ev) => { if(ev === 'SIGNED_OUT'){ me = null; sheets = {cur:null, list:[]}; photos = []; render(); gateMode = 'in'; drawGate(); } });
+}
+/* where each control lives: on a computer the top bar and the bar under the sheet, on a phone the top row and the tabs */
+const isPhone = () => matchMedia('(max-width:820px)').matches;
+let mTab = 'layout';
+function moveLens2(){ const b = $('mtabs').querySelector(`[data-t="${mTab}"]`); if(!b) return;
+  $('mlens').style.left = b.offsetLeft+'px'; $('mlens').style.width = b.offsetWidth+'px';
+  $('mtabs').querySelectorAll('.lay').forEach(x => x.setAttribute('aria-selected', x===b)); }
+function fillMTools(){ // the picked window's buttons, in the Window tab on a phone
+  const tr = $('mtools'); if(!tr) return; tr.innerHTML = '';
+  if(sel >= 0 && sel < rects(lay(), S.gap, pad()).length){ const t = toolbar(sel); tr.append(...t.childNodes); }
+  else { const h = document.createElement('p'); h.className='hint2'; h.style.flex='1'; h.textContent = isPhone() ? 'Tap a window on the sheet to work on it.' : 'Click a window on the sheet to work on it.'; tr.appendChild(h); }
+}
+function placeControls(){
+  const bar = document.querySelector('.bar'), mark = bar.querySelector('.mark'), stash = $('stash');
+  // everything back to the stash first, then out to where this screen wants it
+  ['layouts','ratios','stack','sheetSw','fillSw','cover','labels','sheetsBtn','add','clear','export','gapCtl','radCtl','even'].forEach(id => stash.appendChild($(id)));
+  ['zoom','x','y','rot'].forEach(k => stash.appendChild(document.querySelector(`[data-k="${k}"]`)));
+  $('mpane').innerHTML = ''; $('side').innerHTML = '';
+  const lb = $('labels'), cv = $('cover');
+  [lb, cv].forEach(x => { x.classList.add('wide'); x.classList.remove('round'); });
+  if(!lb.querySelector('.w')) lb.insertAdjacentHTML('beforeend','<span class="w">Names</span>');
+  const sp = document.createElement('span'); sp.className = 'spacer';
+  bar.replaceChildren(mark, sp, $('add'), $('clear'), $('export'), $('sheetsBtn'));
+  const mk = (parent, cls) => (...els) => { const r = document.createElement('div'); r.className = cls; els.filter(Boolean).forEach(e => r.appendChild(e)); parent.appendChild(r); return r; };
+  if(isPhone()){
+    const row = mk($('mpane'), 'mrow');
+    if(mTab==='layout'){ row($('layouts')); row($('ratios'), $('stack'), $('even')); }
+    else if(mTab==='look'){ row($('sheetSw'), $('fillSw')); row($('gapCtl')); row($('radCtl')); row(lb, cv); }
+    else { const tr = row(); tr.id = 'mtools'; ['zoom','x','y','rot'].forEach(k => row(document.querySelector(`[data-k="${k}"]`))); }
+    requestAnimationFrame(moveLens2);
+  } else {
+    const side = $('side');
+    const sec = (title, hint) => { const s2 = document.createElement('section'); s2.className = 'sec';
+      s2.innerHTML = `<h3>${title}</h3>` + (hint ? `<p class="sec-hint">${hint}</p>` : ''); side.appendChild(s2); return mk(s2, 'srow'); };
+    let row = sec('Layout');
+    row($('layouts')); row($('ratios'), $('stack'), $('even'));
+    row = sec('Look');
+    row($('sheetSw')); row($('fillSw')); row($('gapCtl')); row($('radCtl')); row(lb, cv);
+    row = sec('Window');
+    const tr = row(); tr.id = 'mtools';
+    ['zoom','x','y','rot'].forEach(k => row(document.querySelector(`[data-k="${k}"]`)));
+  }
+  fillMTools();
+  moveLens(); moveRatioLens(); fit();
+}
+$('mtabs').onclick = e => { const b = e.target.closest('[data-t]'); if(!b) return; mTab = b.dataset.t; placeControls(); };
+matchMedia('(max-width:820px)').addEventListener('change', placeControls);
+buildPanel(); render(); placeControls(); restore();
+</script>
+<script src="../../../stats.js" defer></script>
+</body>
+</html>

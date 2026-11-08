@@ -9655,3 +9655,12 @@ html[data-theme][data-theme] body .settings-cols > section.set-chat > .roarme-pa
 @media (max-width: 820px) {
   html[data-theme] body .roarme-page.hubchat-page:not(.full):not(.hubchat-settings) { bottom: calc(0px - var(--ios-gap, 0px)); } /* under the bar too, to the real foot (Alex, 3 Nov: "below the menu"); --ios-gap: the band an iPhone's home-screen app can leave (main.jsx) */
 }
+
+/* Office > Tasks and Office > Office on a computer (Alex, 7 Nov: "bring the frame level with the side menu"): the page
+   is exactly the window's height and the panel fills what the tabs leave, so its foot lines up with the side menu's foot
+   (12px above the window's edge, the floating side menu's margin) instead of a guessed 210px. */
+@media (min-width: 821px) {
+  html[data-theme] body .content:has(> .office-hub > :is(.rem-app, .office.office-frame)) { box-sizing: border-box; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; padding-bottom: 12px; }
+  html[data-theme] body .content > .office-hub:has(> :is(.rem-app, .office.office-frame)) { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+  html[data-theme] body .office-hub > :is(.rem-app, .office.office-frame) { flex: 1 1 auto; height: auto; min-height: 0; }
+}

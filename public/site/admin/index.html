@@ -1917,7 +1917,7 @@ $('ordRows').addEventListener('click', (e) => {
   toast(off.has(id) ? 'Off the home page and the menu' : 'Back on the home page')
 })
 /* Look > Lab order (Alex, 25 Oct): the Lab page's apps dragged into order, kept in site_settings.lab_order */
-const LAB_APPS = [['roarme', 'RoarMe'], ['roardino', 'Roardino'], ['roarmail', 'RoarMail'], ['roarlist', 'RoarList'], ['roartransfer', 'RoarTransfer'], ['roarwriter', 'RoarWriter'], ['roartwin', 'RoarKit'], ['roarverter', 'RoarMorph'], ['roarplay', 'RoarPlay']]
+const LAB_APPS = [['roarme', 'RoarMe'], ['roardino', 'Roardino'], ['roarmail', 'RoarMail'], ['roarlist', 'RoarList'], ['roartransfer', 'RoarTransfer'], ['roarwriter', 'RoarWriter'], ['roartwin', 'RoarKit'], ['roarverter', 'RoarMorph'], ['roarplay', 'RoarPlay'], ['roarref', 'RoarRef'], ['roarstudio', 'RoarTransfer Studio']]
 let labOrder = []
 const labList = () => { const known = LAB_APPS.map((x) => x[0]); return [...labOrder.filter((id) => known.includes(id)), ...known.filter((id) => !labOrder.includes(id))] }
 function renderLab() {
@@ -2475,9 +2475,11 @@ const WEB = [
   { id: 'roardino', name: 'Roardino', line: 'The call sheet in one link', open: '../roardino/', path: '/roardino/' },
   { id: 'roarlist', name: 'RoarList', line: 'Shot lists in the browser', open: '../roarlist/' },
   { id: 'roarcast', icon: '../lab/roarcast/icon.png', name: 'RoarCast', line: 'Jingle player and show planner (was RoarJingle)', open: '../lab/roarcast/', path: '/lab/roarcast/' },
+  { id: 'roarref', icon: '../lab/roarref/icon.png', name: 'RoarRef', line: 'Character sheets for AI', open: '../lab/roarref/app/', path: '/lab/roarref/' },
   { id: 'roarwriter', name: 'RoarWriter', line: 'Write in the browser', open: 'https://alexisdigipro-hub.github.io/roarwriter/' },
   { id: 'roarme', name: 'RoarMe', line: 'The messenger, in the browser', open: 'https://alexisdigipro-hub.github.io/roarme/' },
   { id: 'roartransfer', name: 'RoarTransfer', line: 'Files up to 5 GB with one link', open: 'https://roartransfer.com/', admin: 'https://roartransfer.com/#admin' },
+  { id: 'roarstudio', icon: '../lab/roarstudio/icon.png', name: 'RoarTransfer Studio', line: 'Review and delivery for audio, video and pictures', open: 'https://studio.roartransfer.com/', admin: 'https://studio.roartransfer.com/#admin', path: '/lab/roarstudio/' },
 ]
 let webViews = null
 async function renderWebApps() {
@@ -2493,7 +2495,7 @@ async function renderWebApps() {
   if (webViews) return
   try {
     const since = new Date(Date.now() - 30 * 864e5).toISOString()
-    const rows = await rest(`site_events?select=path&kind=eq.view&at=gte.${since}&or=(path.like.*roardino*,path.like.*roarcast*)`, { headers: { Range: '0-9999' } })
+    const rows = await rest(`site_events?select=path&kind=eq.view&at=gte.${since}&or=(path.like.*roardino*,path.like.*roarcast*,path.like.*roarref*,path.like.*roarstudio*)`, { headers: { Range: '0-9999' } })
     webViews = rows.map((r) => (r.path || '').replace(/^\/site/, ''))
     draw()
   } catch (e) {}
