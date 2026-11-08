@@ -1119,13 +1119,39 @@ function drawFeedSide(two, calls, seminars) {
   const card = (href, label, color, title, meta, foot, pic) => h('a', { class: 'fs-card tint', href, style: { '--c': color, '--pbg': pic } },
     h('span', { class: 'fs-kind' }, h('i'), label), h('b', { class: 'fs-title' }, title),
     meta ? h('span', { class: 'fs-meta' }, meta) : null, foot ? h('span', { class: 'fs-foot' }, foot) : null);
-  const cs = calls.filter((c) => c.open !== false).slice(0, 6).map((c) => { const [l, col] = kindOf[c.kind] || kindOf.other;
+  const cs = calls.filter((c) => c.open !== false).slice(0, 12).map((c) => { const [l, col] = kindOf[c.kind] || kindOf.other;
     return card(`#/c/${c.id}`, l, col, c.title, [c.city, c.pay].filter(Boolean).join(' · '), [callWho(c), c.dates].filter(Boolean).join(' · '), picOf(c.kind, c.id)); });
-  const ss = seminars.filter((x) => !x.starts_at || new Date(x.starts_at).getTime() > now).slice(0, 4).map((x) =>
+  const ss = seminars.filter((x) => !x.starts_at || new Date(x.starts_at).getTime() > now).slice(0, 10).map((x) =>
     card('#/seminars', x.kind === 'online' ? t('Online seminar') : t('Seminar'), '#a77bff', x.title,
       [x.starts_at ? shortDate(x.starts_at) : t('Soon'), x.price].filter(Boolean).join(' · '), x.teacher ? t('With {name}', { name: x.teacher }) : '', picOf('seminar', x.id)));
   // no titles and no All (Alex, 8 Nov): the calls, a thin line, the seminars
-  two.append(h('aside', { class: 'feed-side' }, ...cs, cs.length && ss.length ? h('hr', { class: 'fs-sep' }) : null, ...ss));
+  const sep = cs.length && ss.length ? h('hr', { class: 'fs-sep' }) : null;
+  const side = h('aside', { class: 'feed-side' }, ...cs, sep, ...ss);
+  two.append(side);
+  // the column never scrolls (Alex, 8 Nov): only as many cards as the screen holds, calls and seminars taking turns
+  // (call, call, seminar, call, seminar...) so both kinds stay, the rest left out; again when the screen changes
+  const fit = () => {
+    if (!side.isConnected) return;
+    [...cs, ...ss].forEach((el) => { el.hidden = false; });
+    if (sep) sep.hidden = false;
+    const room = side.clientHeight, gap = 10;
+    const order = [];
+    for (let i = 0, a = 0, b = 0; a < cs.length || b < ss.length; i += 1) {
+      const wantSem = (i === 2 || (i > 2 && i % 2 === 0)) && b < ss.length;
+      if (wantSem || a >= cs.length) order.push(ss[b++]); else order.push(cs[a++]);
+    }
+    const keep = new Set(); let used = 0, semIn = false;
+    for (const el of order) {
+      const extra = (ss.includes(el) && !semIn && sep && cs.some((c) => keep.has(c)) ? sep.offsetHeight + gap : 0);
+      const need = el.offsetHeight + (keep.size ? gap : 0) + extra;
+      if (used + need > room) continue;
+      used += need; keep.add(el); if (ss.includes(el) && extra) semIn = true;
+    }
+    [...cs, ...ss].forEach((el) => { el.hidden = !keep.has(el); });
+    if (sep) sep.hidden = !(cs.some((c) => keep.has(c)) && ss.some((x) => keep.has(x)));
+  };
+  requestAnimationFrame(fit);
+  if ('ResizeObserver' in window) { let last = 0; new ResizeObserver(() => { if (Math.abs(side.clientHeight - last) > 4) { last = side.clientHeight; fit(); } }).observe(side); }
 }
 // my card, left: who I am, my numbers, my skills, my latest work
 function meCard() {
