@@ -88,7 +88,7 @@ const KINDS = [
   // more of the cast (Alex, 9 Nov, from how Spotlight, Backstage and Casting Networks split it)
   ['voice', 'Voice Actor', 'front'], ['presenter', 'Presenter / Host', 'front'], ['stunt', 'Stunt Performer', 'front'],
   ['standin', 'Stand-In / Body Double', 'front'], ['faces', 'Faces (Real People)', 'front'], ['influencer', 'Influencer / Creator', 'front'],
-  ['acrobat', 'Acrobat', 'front'], ['comedian', 'Comedian / Stand-Up', 'front'],
+  ['acrobat', 'Acrobat', 'front'], ['comedian', 'Stand Up Comedian', 'front'],
   ['lookalike', 'Lookalike', 'front'],
   // the rest by when they work (Alex, 9 Nov: Cast, then Creators who lead the whole film, Pre-production, Production
   // on set, Post-production)
