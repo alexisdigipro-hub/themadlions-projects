@@ -92,7 +92,8 @@ const KINDS = [
   ['lookalike', 'Lookalike', 'front'],
   // the rest by when they work (Alex, 9 Nov: Cast, then Creators who lead the whole film, Pre-production, Production
   // on set, Post-production)
-  ['director', 'Film director', 'lead'], ['producer', 'Producer', 'lead'], ['writer', 'Writer', 'lead'], ['creativedir', 'Creative director', 'lead'], ['artdir', 'Art director', 'lead'], ['copy', 'Copywriter', 'lead'],
+  // Creators in the order the work comes to life (Alex, 9 Nov)
+  ['writer', 'Writer', 'lead'], ['copy', 'Copywriter', 'lead'], ['producer', 'Producer', 'lead'], ['director', 'Film director', 'lead'], ['creativedir', 'Creative director', 'lead'], ['artdir', 'Art director', 'lead'],
   ['lineprod', 'Line producer / Production manager', 'pre'], ['coord', 'Production coordinator', 'pre'], ['casting', 'Casting', 'pre'],
   ['location', 'Location manager / Scout', 'pre'], ['proddesign', 'Production designer', 'pre'], ['costume', 'Costume designer', 'pre'],
   ['storyboard', 'Storyboard / Illustrator', 'pre'],
