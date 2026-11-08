@@ -86,27 +86,27 @@ wearPrefs();
 const KINDS = [
   ['actor', 'Actor', 'front'], ['model', 'Model', 'front'], ['dancer', 'Dancer', 'front'], ['extra', 'Extra', 'front'],
   // more of the cast (Alex, 9 Nov, from how Spotlight, Backstage and Casting Networks split it)
-  ['voice', 'Voice actor / Voice-over', 'front'], ['presenter', 'Presenter / Host', 'front'], ['stunt', 'Stunt performer', 'front'],
-  ['standin', 'Stand-in / Body double', 'front'], ['faces', 'Faces (real people)', 'front'], ['influencer', 'Influencer / Creator', 'front'],
-  ['athlete', 'Athlete / Fitness', 'front'], ['acrobat', 'Acrobat / Circus', 'front'], ['comedian', 'Comedian / Stand-up', 'front'],
+  ['voice', 'Voice Actor / Voice-Over', 'front'], ['presenter', 'Presenter / Host', 'front'], ['stunt', 'Stunt Performer', 'front'],
+  ['standin', 'Stand-In / Body Double', 'front'], ['faces', 'Faces (Real People)', 'front'], ['influencer', 'Influencer / Creator', 'front'],
+  ['athlete', 'Athlete / Fitness', 'front'], ['acrobat', 'Acrobat / Circus', 'front'], ['comedian', 'Comedian / Stand-Up', 'front'],
   ['lookalike', 'Lookalike', 'front'],
   // the rest by when they work (Alex, 9 Nov: Cast, then Creators who lead the whole film, Pre-production, Production
   // on set, Post-production)
   // Creators in the order the work comes to life (Alex, 9 Nov)
-  ['writer', 'Writer', 'lead'], ['copy', 'Copywriter', 'lead'], ['producer', 'Producer', 'lead'], ['director', 'Film director', 'lead'], ['creativedir', 'Creative director', 'lead'], ['artdir', 'Art director', 'lead'],
-  ['lineprod', 'Line producer', 'pre'], ['prodman', 'Production manager', 'pre'], ['coord', 'Production coordinator', 'pre'], ['casting', 'Casting', 'pre'],
-  ['location', 'Location manager', 'pre'], ['proddesign', 'Production designer', 'pre'], ['costume', 'Costume designer', 'pre'],
+  ['writer', 'Writer', 'lead'], ['copy', 'Copywriter', 'lead'], ['producer', 'Producer', 'lead'], ['director', 'Film Director', 'lead'], ['creativedir', 'Creative Director', 'lead'], ['artdir', 'Art Director', 'lead'],
+  ['lineprod', 'Line Producer', 'pre'], ['prodman', 'Production Manager', 'pre'], ['coord', 'Production Coordinator', 'pre'], ['casting', 'Casting Director', 'pre'],
+  ['location', 'Location Manager', 'pre'], ['accountant', 'Production Accountant', 'pre'], ['proddesign', 'Production Designer', 'pre'], ['costume', 'Costume Designer', 'pre'],
   ['storyboard', 'Storyboard / Illustrator', 'pre'],
-  ['ad', 'Assistant director', 'shoot'], ['script', 'Script supervisor / Continuity', 'shoot'],
-  ['dop', 'Director of photography (DoP)', 'shoot'], ['camera', 'Camera', 'shoot'], ['focus', 'Focus puller (1st AC)', 'shoot'], ['dit', 'DIT / Data wrangler', 'shoot'],
-  ['steadicam', 'Steadicam', 'shoot'], ['drone', 'Drone pilot', 'shoot'],
-  ['gaffer', 'Lighting / Gaffer', 'shoot'], ['spark', 'Electrician / Spark', 'shoot'], ['grip', 'Key grip / Grip', 'shoot'], ['dolly', 'Dolly / Crane operator', 'shoot'],
-  ['sound', 'Sound', 'shoot'], ['boom', 'Boom operator', 'shoot'],
-  ['makeup', 'Make-up / Hair', 'shoot'], ['styling', 'Styling / Wardrobe', 'shoot'], ['art', 'Art department', 'shoot'],
+  ['ad', 'Assistant Director', 'shoot'], ['script', 'Script Supervisor / Continuity', 'shoot'],
+  ['dop', 'Director of Photography (DoP)', 'shoot'], ['camera', 'Camera', 'shoot'], ['focus', 'Focus Puller (1st AC)', 'shoot'], ['dit', 'DIT / Data Wrangler', 'shoot'],
+  ['steadicam', 'Steadicam', 'shoot'], ['drone', 'Drone Pilot', 'shoot'],
+  ['gaffer', 'Lighting / Gaffer', 'shoot'], ['spark', 'Electrician / Spark', 'shoot'], ['grip', 'Key Grip / Grip', 'shoot'], ['dolly', 'Dolly / Crane Operator', 'shoot'],
+  ['sound', 'Sound', 'shoot'], ['boom', 'Boom Operator', 'shoot'],
+  ['makeup', 'Make-Up / Hair', 'shoot'], ['styling', 'Styling / Wardrobe', 'shoot'], ['art', 'Art Department', 'shoot'],
   ['choreo', 'Choreographer', 'shoot'], ['photo', 'Photographer', 'shoot'], ['runner', 'Runner / PA', 'shoot'],
   ['editor', 'Editor', 'post'], ['colorist', 'Colorist', 'post'], ['vfx', 'VFX / Motion', 'post'], ['animator', 'Animator / 3D', 'post'],
-  ['mixer', 'Sound designer / Mixer', 'post'], ['composer', 'Composer / Music', 'post'], ['singer', 'Singer / Musician', 'post'],
-  ['ai', 'AI artist / AI filmmaker', 'post'], ['graphic', 'Graphic designer', 'post'],
+  ['mixer', 'Sound Designer / Mixer', 'post'], ['composer', 'Composer / Music', 'post'], ['singer', 'Singer / Musician', 'post'],
+  ['ai', 'AI Artist / AI Filmmaker', 'post'], ['graphic', 'Graphic Designer', 'post'],
 ];
 // the five groups of Industry: their tab, a short name for a phone, a line, a colour and a line icon
 const GROUPS = [
@@ -146,7 +146,7 @@ const KIND_EL = { actor: 'ηθοποιός ηθοποιοί', model: 'μοντέ
   comedian: 'κωμικός stand up', lookalike: 'σωσίας σωσία', singer: 'τραγουδιστής τραγουδίστρια μουσικός',
   director: 'σκηνοθέτης σκηνοθέτρια', creativedir: 'δημιουργικός διευθυντής creative director', artdir: 'καλλιτεχνικός διευθυντής art director', proddesign: 'σκηνογράφος σκηνογραφία production designer', costume: 'ενδυματολόγος κοστούμια',
   storyboard: 'storyboard εικονογράφος σκίτσα', copy: 'κειμενογράφος copywriter', animator: 'animation κινούμενα σχέδια 3d', composer: 'συνθέτης μουσική',
-  ai: 'ai τεχνητή νοημοσύνη', graphic: 'γραφίστας γραφιστική', lineprod: 'line producer', prodman: 'διευθυντής παραγωγής production manager', coord: 'συντονιστής συντονίστρια παραγωγής',
+  ai: 'ai τεχνητή νοημοσύνη', graphic: 'γραφίστας γραφιστική', lineprod: 'line producer', prodman: 'διευθυντής παραγωγής production manager', accountant: 'λογιστής λογίστρια παραγωγής accountant', coord: 'συντονιστής συντονίστρια παραγωγής',
   location: 'λοκέισιον τοποθεσίες location scout', runner: 'runner βοηθός παραγωγής', script: 'σκριπτ σκριπτέρ continuity συνέχεια',
   focus: 'φοκους πούλερ εστίαση', dit: 'dit δεδομένα data', steadicam: 'στεντικαμ gimbal', drone: 'ντρόουν drone χειριστής',
   spark: 'ηλεκτρολόγος ηλεκτρολογος', grip: 'μηχανικός grip', dolly: 'ντόλι γερανός crane', boom: 'μπουμ μπουμάς', mixer: 'ηχητικός σχεδιασμός μίξη mixer sound design', dop: 'διευθυντής φωτογραφίας', camera: 'κάμερα κάμεραμαν οπερατέρ', gaffer: 'φωτισμός ηλεκτρολόγος', sound: 'ήχος ηχολήπτης',
