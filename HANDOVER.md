@@ -1785,3 +1785,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 9 Nov 2026: Pre-Production / Post-Production written with a capital P; Line producer and Production manager (prodman) apart; Location manager without Scout.
 - 9 Nov 2026: every kind written in Title Case (Film Director, Casting Director, Make-Up / Hair...); Casting is now Casting Director; Production Accountant (accountant) added to Pre-Production.
 - 9 Nov 2026: Location Scout (scout) added before Location Manager in Pre-Production.
+- 9 Nov 2026: Storyboard Artist and Illustrator (illustrator) apart in Pre-Production.
