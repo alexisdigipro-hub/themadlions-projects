@@ -1870,3 +1870,29 @@ html.booting #splash .sp-line i{animation:sp-glide 1.2s ease-in-out infinite!imp
   .post.ig.split .mwrap{border-radius:18px;overflow:hidden;box-shadow:var(--top),0 0 0 1px var(--rim-out),var(--shadow)}
   .post.ig.split .pside{border-left:0;border-radius:18px;overflow:hidden;background:var(--glass);border:1px solid var(--rim);box-shadow:var(--top),0 0 0 1px var(--rim-out),var(--shadow);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
 }
+/* the two-column post, alive (Alex, 8 Nov: "too static"): the panel tinted by the post's own picture, the cards gliding in,
+   a slow zoom on the picture under the mouse */
+@media (min-width:821px){
+  .post.ig.split .pside{isolation:isolate;background:none!important}
+  .post.ig.split .pside::before{content:"";position:absolute;inset:-60px;z-index:-2;background:var(--pbg,none) center/cover no-repeat;filter:blur(46px) saturate(1.5);opacity:.75;transform:scale(1.1)}
+  .post.ig.split .pside::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.58))}
+  html[data-theme=dark] .post.ig.split .pside::after{background:linear-gradient(180deg,rgba(26,29,34,.62),rgba(26,29,34,.78))}
+  .post.ig.split .post-head,.post.ig.split .ig-bar,.post.ig.split .cmt-new{background:transparent;border-color:rgba(128,128,140,.16)}
+  .post.ig.split .cmt-new{-webkit-backdrop-filter:none;backdrop-filter:none}
+  .post.ig.split .post-head .av{width:40px!important;height:40px!important}
+  .post.ig.split .who-line b{font-size:15px}
+  .post.ig.split .ig-cap{font-size:15px;line-height:1.55}
+  .post.ig.split .ig-bar .ig-ico svg{width:26px;height:26px}
+  /* coming in */
+  .post.ig.split .mwrap,.post.ig.split .pside{opacity:0;transition:opacity .9s var(--soft),transform 1s var(--soft)}
+  .post.ig.split .mwrap{transform:scale(.97)}
+  .post.ig.split .pside{transform:translateX(26px)}
+  .post.ig.split.in .mwrap,.post.ig.split.in .pside{opacity:1;transform:none}
+  .post.ig.split.in .pside{transition-delay:.12s}
+  /* a slow zoom under the mouse */
+  .post.ig.split .ig-media>*{transition:transform 1.4s var(--soft)}
+  .post.ig.split .mwrap:hover .ig-media>*{transform:scale(1.035)}
+  .post.ig.split .mwrap:hover{box-shadow:var(--top),0 0 0 1px var(--rim-out),0 24px 60px rgba(0,0,0,.28)}
+}
+@media (min-width:821px) and (prefers-reduced-motion:reduce){.post.ig.split .mwrap,.post.ig.split .pside{opacity:1;transform:none}}
+@media (min-width:821px){html[data-theme=dark] .post.ig.split .pside::after{background:linear-gradient(180deg,rgba(26,29,34,.5),rgba(26,29,34,.68))}html[data-theme=dark] .post.ig.split .pside::before{opacity:.9}}
