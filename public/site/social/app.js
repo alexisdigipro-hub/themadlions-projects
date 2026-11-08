@@ -86,9 +86,9 @@ wearPrefs();
 const KINDS = [
   ['actor', 'Actor', 'front'], ['model', 'Model', 'front'], ['dancer', 'Dancer', 'front'], ['extra', 'Extra', 'front'],
   // more of the cast (Alex, 9 Nov, from how Spotlight, Backstage and Casting Networks split it)
-  ['voice', 'Voice Actor / Voice-Over', 'front'], ['presenter', 'Presenter / Host', 'front'], ['stunt', 'Stunt Performer', 'front'],
+  ['voice', 'Voice Actor', 'front'], ['presenter', 'Presenter / Host', 'front'], ['stunt', 'Stunt Performer', 'front'],
   ['standin', 'Stand-In / Body Double', 'front'], ['faces', 'Faces (Real People)', 'front'], ['influencer', 'Influencer / Creator', 'front'],
-  ['athlete', 'Athlete / Fitness', 'front'], ['acrobat', 'Acrobat / Circus', 'front'], ['comedian', 'Comedian / Stand-Up', 'front'],
+  ['acrobat', 'Acrobat', 'front'], ['comedian', 'Comedian / Stand-Up', 'front'],
   ['lookalike', 'Lookalike', 'front'],
   // the rest by when they work (Alex, 9 Nov: Cast, then Creators who lead the whole film, Pre-production, Production
   // on set, Post-production)
@@ -118,6 +118,7 @@ const GROUPS = [
   ['post', 'post', 'Post-Production', 'Post', 'After the shoot', '#a77bff', 'g_post'],
 ];
 const KIND = Object.fromEntries(KINDS.map((k) => [k[0], k[1]]));
+KIND.athlete = 'Athlete'; // taken off the list on 9 Nov (Alex); a profile that has it still reads well
 KIND.theatre = 'Actor'; // "Theatre" was a kind for a few hours on 4 Nov; Alex: whoever plays theatre is an actor
 const kindName = (k) => t(KIND[k] || k);
 const SIDE = Object.fromEntries(KINDS.map((k) => [k[0], k[2]]));

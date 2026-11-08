@@ -1788,3 +1788,6 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 9 Nov 2026: Storyboard Artist and Illustrator (illustrator) apart in Pre-Production.
 - 9 Nov 2026: Production Accountant shown as Prod. Accountant.
 - 9 Nov 2026: Choreographer moved to Pre-Production.
+- 9 Nov 2026: Voice Actor (no / Voice-Over).
+- 9 Nov 2026: Athlete / Fitness taken off the cast list (KIND.athlete kept so old profiles read).
+- 9 Nov 2026: Acrobat (no / Circus).
