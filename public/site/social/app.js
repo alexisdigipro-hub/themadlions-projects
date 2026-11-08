@@ -92,7 +92,7 @@ const KINDS = [
   ['lookalike', 'Lookalike', 'front'],
   // the rest by when they work (Alex, 9 Nov: Cast, then Creators who lead the whole film, Pre-production, Production
   // on set, Post-production)
-  ['director', 'Film director', 'lead'], ['producer', 'Producer', 'lead'], ['writer', 'Writer', 'lead'], ['creativedir', 'Creative director / Art director', 'lead'],
+  ['director', 'Film director', 'lead'], ['producer', 'Producer', 'lead'], ['writer', 'Writer', 'lead'], ['creativedir', 'Creative director', 'lead'], ['artdir', 'Art director', 'lead'],
   ['lineprod', 'Line producer / Production manager', 'pre'], ['coord', 'Production coordinator', 'pre'], ['casting', 'Casting', 'pre'],
   ['location', 'Location manager / Scout', 'pre'], ['proddesign', 'Production designer', 'pre'], ['costume', 'Costume designer', 'pre'],
   ['storyboard', 'Storyboard / Illustrator', 'pre'], ['copy', 'Copywriter', 'pre'],
@@ -143,7 +143,7 @@ const KIND_EL = { actor: 'ηθοποιός ηθοποιοί', model: 'μοντέ
   stunt: 'κασκαντέρ ακροβατικά', standin: 'αντικαταστάτης ντουμπλαρισμα σωσίας σώματος stand in', faces: 'πρόσωπα πραγματικοί άνθρωποι real people τύποι',
   influencer: 'ινφλουένσερ δημιουργός περιεχομένου creator', athlete: 'αθλητής αθλήτρια γυμναστής fitness', acrobat: 'ακροβάτης ακροβάτισσα τσίρκο',
   comedian: 'κωμικός stand up', lookalike: 'σωσίας σωσία', singer: 'τραγουδιστής τραγουδίστρια μουσικός',
-  director: 'σκηνοθέτης σκηνοθέτρια', creativedir: 'δημιουργικός διευθυντής art director', proddesign: 'σκηνογράφος σκηνογραφία production designer', costume: 'ενδυματολόγος κοστούμια',
+  director: 'σκηνοθέτης σκηνοθέτρια', creativedir: 'δημιουργικός διευθυντής creative director', artdir: 'καλλιτεχνικός διευθυντής art director', proddesign: 'σκηνογράφος σκηνογραφία production designer', costume: 'ενδυματολόγος κοστούμια',
   storyboard: 'storyboard εικονογράφος σκίτσα', copy: 'κειμενογράφος copywriter', animator: 'animation κινούμενα σχέδια 3d', composer: 'συνθέτης μουσική',
   ai: 'ai τεχνητή νοημοσύνη', graphic: 'γραφίστας γραφιστική', lineprod: 'διευθυντής παραγωγής line producer', coord: 'συντονιστής συντονίστρια παραγωγής',
   location: 'λοκέισιον τοποθεσίες location scout', runner: 'runner βοηθός παραγωγής', script: 'σκριπτ σκριπτέρ continuity συνέχεια',
