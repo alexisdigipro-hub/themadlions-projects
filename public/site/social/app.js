@@ -1134,11 +1134,12 @@ function drawFeedSide(two, calls, seminars) {
       card('#/seminars', x.kind === 'online' ? t('Online seminar') : t('Seminar'), '#a77bff', x.title,
         [x.starts_at ? shortDate(x.starts_at) : t('Soon'), x.price].filter(Boolean).join(' · '), x.teacher ? t('With {name}', { name: x.teacher }) : '', picOf('seminar', x.id)) }))]
     .sort((p, q) => String(q.at || '').localeCompare(String(p.at || ''))).slice(0, 5).map((x) => x.el);
-  // under the line, the Lab's apps for film people (Alex, 8 Nov), the same glass, lower
+  // under the line, the Lab's apps for film people (Alex, 8 Nov), the same glass, lower; each opens its web app
+  // straight away, ready to sign in and work
   const APPS = [
-    ['roarwriter', 'RoarWriter', t('Write your script'), '/lab/roarwriter/'],
-    ['roarlist', 'RoarList', t('Your shot list'), '/lab/roarlist/'],
-    ['roartransfer', 'RoarTransfer', t('Send big files'), '/lab/roartransfer/']];
+    ['roarwriter', 'RoarWriter', t('Write your script'), 'https://alexisdigipro-hub.github.io/roarwriter/'],
+    ['roarlist', 'RoarList', t('Your shot list'), 'https://themadlions.com/roarlist/'],
+    ['roartransfer', 'RoarTransfer', t('Send big files'), 'https://studio.roartransfer.com/']];
   const apps = APPS.map(([id, name, line, href]) => h('a', { class: 'fs-card fs-app tint', href, target: '_blank', rel: 'noopener', style: { '--pbg': `url("/lab/icons/${id}.png")` } },
     h('img', { class: 'fs-app-ic', src: `/lab/icons/${id}.png`, alt: '' }), h('span', { class: 'fs-app-t' }, h('b', {}, name), h('small', {}, line)), h('span', { class: 'fs-app-go', html: ICON.right })));
   const sep = h('hr', { class: 'fs-sep' });
