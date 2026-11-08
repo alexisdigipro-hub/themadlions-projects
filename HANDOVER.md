@@ -1770,3 +1770,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 9 Nov 2026: the apps under the line open the web apps straight away (RoarWriter alexisdigipro-hub.github.io/roarwriter/, RoarList themadlions.com/roarlist/, RoarTransfer studio.roartransfer.com), ready to sign in.
 - 9 Nov 2026: Roardino in the Lab is now called Roardino App (lab card and section, its page's wordmark, title, og, buttons, footer, scripts/site-seo.mjs name and llms line); Roardino App is also first among the apps in Roardino social's right column, opening themadlions.com/roardino/.
 - 9 Nov 2026: a small title over the apps in the right column: OUR APPS, Made by The Mad Lions Lab (.fs-apps-head; fit() counts it).
+- 9 Nov 2026: the Lab's footers (lab/ and every app page with the wordmark) show THE MAD LIONS as thin spaced text instead of the bold wordmark picture.
