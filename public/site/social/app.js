@@ -92,7 +92,8 @@ const KINDS = [
   ['lookalike', 'Lookalike', 'front'],
   // the rest by when they work (Alex, 9 Nov: Cast, then Creators who lead the whole film, Pre-production, Production
   // on set, Post-production)
-  ['director', 'Film director', 'lead'], ['producer', 'Producer', 'lead'], ['writer', 'Writer', 'lead'], ['creativedir', 'Creative director', 'lead'], ['artdir', 'Art director', 'lead'], ['copy', 'Copywriter', 'lead'],
+  // Creators in the order the work comes to life (Alex, 9 Nov)
+  ['writer', 'Writer', 'lead'], ['copy', 'Copywriter', 'lead'], ['producer', 'Producer', 'lead'], ['director', 'Film director', 'lead'], ['creativedir', 'Creative director', 'lead'], ['artdir', 'Art director', 'lead'],
   ['lineprod', 'Line producer / Production manager', 'pre'], ['coord', 'Production coordinator', 'pre'], ['casting', 'Casting', 'pre'],
   ['location', 'Location manager / Scout', 'pre'], ['proddesign', 'Production designer', 'pre'], ['costume', 'Costume designer', 'pre'],
   ['storyboard', 'Storyboard / Illustrator', 'pre'],
@@ -2146,8 +2147,9 @@ function openStories(groups, gi) {
 // stage, Crew who makes the film, Creatives around it (photo, styling, make-up, art, VFX, writing, choreography);
 // under the pick, the kinds of that side
 // no All (Alex, 9 Nov): Industry opens on Cast; a search typed looks through everyone
-let peopleSide = 'cast', peopleKind = '', peopleQ = '';
-const sideNow = () => (SIDES[peopleSide] ? peopleSide : (peopleSide = 'cast'));
+// it opens on Creators, the first group (Alex, 9 Nov)
+let peopleSide = 'creators', peopleKind = '', peopleQ = '';
+const sideNow = () => (SIDES[peopleSide] ? peopleSide : (peopleSide = 'creators'));
 let peopleKinds = new Set(); // the specialties picked, more than one at a time
 let castF = { from: '', to: '', hFrom: '', hTo: '', gender: '', cities: new Set(), hair: new Set(), eyes: new Set() };
 let castOpen = !matchMedia('(max-width:820px)').matches; // the cast filters start folded on a phone
