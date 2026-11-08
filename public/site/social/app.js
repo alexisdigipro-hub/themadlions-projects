@@ -2221,7 +2221,8 @@ async function viewPeople(opts = {}) {
   // Industry's own search, on a phone and a computer (Alex, 6 Nov: the bar's search field became an icon that comes here)
   const search = input(peopleQ, { type: 'search', class: 'input search ind-search', placeholder: t('Name, city, what they do'), 'aria-label': t('Search cast & crew'), oninput: (e) => { peopleQ = e.target.value; draw(); } });
   if (opts.search) frame('search', searchHead((q) => { peopleQ = q; draw(); }), h('div', { class: 'head s-side' }, sideBox, h('span', { class: 'grow' }), countBox), kindsBox, filterBox, grid);
-  else frame('people', h('div', { class: 'head' }, h('h1', {}, t('Industry')), sideBox, h('span', { class: 'grow' }), countBox), search, kindsBox, filterBox, grid);
+  // one top row (Alex, 9 Nov): INDUSTRY, the search filling the space, how many; the groups under it
+  else frame('people', h('div', { class: 'head ind-head' }, h('h1', { class: 'ind-title' }, t('Industry')), search, countBox), sideBox, kindsBox, filterBox, grid);
   const { data, error } = await sb.from('roardino_people').select('id,name,kinds,city,birth,gender,avatar,headline,minor,data').eq('visible', true).order('updated_at', { ascending: false }).limit(500);
   if (error) throw error;
   await sign(data.map((p) => p.avatar));
