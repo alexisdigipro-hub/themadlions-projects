@@ -1792,3 +1792,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 9 Nov 2026: Athlete / Fitness taken off the cast list (KIND.athlete kept so old profiles read).
 - 9 Nov 2026: Acrobat (no / Circus).
 - 9 Nov 2026: Stand Up Comedian.
+- 9 Nov 2026: Stand-In / Double.
