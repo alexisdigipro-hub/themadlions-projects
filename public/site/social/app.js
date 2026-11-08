@@ -1144,14 +1144,16 @@ function drawFeedSide(two, calls, seminars) {
   const apps = APPS.map(([id, name, line, href]) => h('a', { class: 'fs-card fs-app tint', href, target: '_blank', rel: 'noopener', style: { '--pbg': `url("/lab/icons/${id}.png")` } },
     h('img', { class: 'fs-app-ic', src: `/lab/icons/${id}.png`, alt: '' }), h('span', { class: 'fs-app-t' }, h('b', {}, name), h('small', {}, line)), h('span', { class: 'fs-app-go', html: ICON.right })));
   const sep = h('hr', { class: 'fs-sep' });
-  const side = h('aside', { class: 'feed-side' }, ...items, sep, ...apps);
+  // a small title over them (Alex, 9 Nov: "our projects, apps, you decide")
+  const appsHead = h('div', { class: 'fs-apps-head' }, h('b', {}, t('Our apps')), h('small', {}, t('Made by The Mad Lions Lab')));
+  const side = h('aside', { class: 'feed-side' }, ...items, sep, appsHead, ...apps);
   two.append(side);
   // the column never scrolls: the apps always show, and as many of the five as the screen holds above them
   const fit = () => {
     if (!side.isConnected) return;
     items.forEach((el) => { el.hidden = false; });
     const gap = 10;
-    let room = side.clientHeight - apps.reduce((n, el) => n + el.offsetHeight + gap, 0) - sep.offsetHeight - gap;
+    let room = side.clientHeight - apps.reduce((n, el) => n + el.offsetHeight + gap, 0) - sep.offsetHeight - gap - appsHead.offsetHeight - gap;
     items.forEach((el, i) => { const need = el.offsetHeight + (i ? gap : 0); if (need <= room) room -= need; else el.hidden = true; });
     items.forEach((el, i) => { if (i && items[i - 1].hidden) el.hidden = true; });
   };
