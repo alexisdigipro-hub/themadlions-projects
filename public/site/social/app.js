@@ -95,7 +95,7 @@ const KINDS = [
   // Creators in the order the work comes to life (Alex, 9 Nov)
   ['writer', 'Writer', 'lead'], ['copy', 'Copywriter', 'lead'], ['producer', 'Producer', 'lead'], ['director', 'Film Director', 'lead'], ['creativedir', 'Creative Director', 'lead'], ['artdir', 'Art Director', 'lead'],
   ['lineprod', 'Line Producer', 'pre'], ['prodman', 'Production Manager', 'pre'], ['coord', 'Production Coordinator', 'pre'], ['casting', 'Casting Director', 'pre'],
-  ['location', 'Location Manager', 'pre'], ['accountant', 'Production Accountant', 'pre'], ['proddesign', 'Production Designer', 'pre'], ['costume', 'Costume Designer', 'pre'],
+  ['scout', 'Location Scout', 'pre'], ['location', 'Location Manager', 'pre'], ['accountant', 'Production Accountant', 'pre'], ['proddesign', 'Production Designer', 'pre'], ['costume', 'Costume Designer', 'pre'],
   ['storyboard', 'Storyboard / Illustrator', 'pre'],
   ['ad', 'Assistant Director', 'shoot'], ['script', 'Script Supervisor / Continuity', 'shoot'],
   ['dop', 'Director of Photography (DoP)', 'shoot'], ['camera', 'Camera', 'shoot'], ['focus', 'Focus Puller (1st AC)', 'shoot'], ['dit', 'DIT / Data Wrangler', 'shoot'],
@@ -147,7 +147,7 @@ const KIND_EL = { actor: 'ηθοποιός ηθοποιοί', model: 'μοντέ
   director: 'σκηνοθέτης σκηνοθέτρια', creativedir: 'δημιουργικός διευθυντής creative director', artdir: 'καλλιτεχνικός διευθυντής art director', proddesign: 'σκηνογράφος σκηνογραφία production designer', costume: 'ενδυματολόγος κοστούμια',
   storyboard: 'storyboard εικονογράφος σκίτσα', copy: 'κειμενογράφος copywriter', animator: 'animation κινούμενα σχέδια 3d', composer: 'συνθέτης μουσική',
   ai: 'ai τεχνητή νοημοσύνη', graphic: 'γραφίστας γραφιστική', lineprod: 'line producer', prodman: 'διευθυντής παραγωγής production manager', accountant: 'λογιστής λογίστρια παραγωγής accountant', coord: 'συντονιστής συντονίστρια παραγωγής',
-  location: 'λοκέισιον τοποθεσίες location scout', runner: 'runner βοηθός παραγωγής', script: 'σκριπτ σκριπτέρ continuity συνέχεια',
+  location: 'λοκέισιον τοποθεσίες location manager', scout: 'λοκέισιον αναζήτηση τοποθεσιών location scout', runner: 'runner βοηθός παραγωγής', script: 'σκριπτ σκριπτέρ continuity συνέχεια',
   focus: 'φοκους πούλερ εστίαση', dit: 'dit δεδομένα data', steadicam: 'στεντικαμ gimbal', drone: 'ντρόουν drone χειριστής',
   spark: 'ηλεκτρολόγος ηλεκτρολογος', grip: 'μηχανικός grip', dolly: 'ντόλι γερανός crane', boom: 'μπουμ μπουμάς', mixer: 'ηχητικός σχεδιασμός μίξη mixer sound design', dop: 'διευθυντής φωτογραφίας', camera: 'κάμερα κάμεραμαν οπερατέρ', gaffer: 'φωτισμός ηλεκτρολόγος', sound: 'ήχος ηχολήπτης',
   editor: 'μοντέρ μοντάζ', colorist: 'χρώμα', producer: 'παραγωγός παραγωγή', ad: 'βοηθός σκηνοθέτη', casting: 'κάστινγκ', photo: 'φωτογράφος φωτογραφία',
