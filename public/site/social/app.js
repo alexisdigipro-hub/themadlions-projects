@@ -2278,8 +2278,7 @@ async function viewPeople(opts = {}) {
     const EYE_SW = { brown: '#6b4423', blue: '#4f86c6', green: '#4f9a5b', hazel: '#a8793a', black: '#222' };
     const clear = () => { castF = { from: '', to: '', hFrom: '', hTo: '', gender: '', cities: new Set(), hair: new Set(), eyes: new Set() }; draw(); };
     put(filterBox, h('div', { class: 'filters-line only-phone' }, opener), h('section', { class: 'card cf2' },
-      h('div', { class: 'cf-top' }, h('span', { class: 'cf-ti', html: ICON.sliders }), h('b', {}, t('Filters')), used ? h('span', { class: 'cf-n' }, String(used)) : null, h('span', { class: 'grow' }),
-        filtersUsed() ? h('button', { type: 'button', class: 'btn sm', onclick: clear }, icon('x'), t('Clear all')) : null),
+      filtersUsed() ? h('div', { class: 'cf-top' }, h('span', { class: 'grow' }), h('button', { type: 'button', class: 'btn sm', onclick: clear }, icon('x'), t('Clear all'))) : null,
       h('div', { class: 'cf-grid' },
         // gender first, then age, then height (Alex, 9 Nov)
         block(t('Gender'), h('div', { class: 'cf-seg' }, ...[['', t('Any')], ['f', t('Woman')], ['m', t('Man')]].map(([v, l]) => pick(castF.gender === v, l, () => { castF.gender = v; draw(); })))),
@@ -2336,8 +2335,8 @@ async function viewPeople(opts = {}) {
     // in a card like the filters (Alex, 9 Nov): the group's icon and name on its top line, then the specialties
     const G0 = GROUPS.find((g) => g[1] === sd);
     put(kindsBox, h('section', { class: 'card cf2 ind-kcard', style: { '--c': HUE[sd] } },
-      h('div', { class: 'cf-top' }, h('span', { class: 'cf-ti', html: ICON[G0[6]] }), h('b', {}, t('Specialties')), h('small', { class: 'hint' }, t(G0[2])), h('span', { class: 'grow' }),
-        peopleKinds.size ? h('button', { type: 'button', class: 'btn sm', onclick: () => { peopleKinds = new Set(); draw(); } }, icon('x'), t('Clear')) : null),
+      // no title (Alex, 9 Nov); Clear shows only when something is picked
+      peopleKinds.size ? h('div', { class: 'cf-top' }, h('span', { class: 'grow' }), h('button', { type: 'button', class: 'btn sm', onclick: () => { peopleKinds = new Set(); draw(); } }, icon('x'), t('Clear'))) : null,
       h('div', { class: 'kind-row ind-kinds' }, h('div', { class: 'fbody' }, [...new Set(order)].map(kchip)))));
     drawFilters(); drawGrid();
   }

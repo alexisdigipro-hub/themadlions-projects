@@ -1815,3 +1815,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 9 Nov 2026: Industry on a phone: the specialties three to a row, smaller (11px, 32px tall).
 - 9 Nov 2026: Industry: the specialties in a card like the filters (.ind-kcard): the group's icon, Specialties and the group's name on its top line, Clear when some are picked.
 - 9 Nov 2026: feed videos show their cover until they really play: the post's media box carries the cover as its background (.ig-media.has-cover, --cover) and the video stays invisible until 0.3 s have played (video.fv.live), so no black while it loads or while a clip fades in from black.
+- 9 Nov 2026: the Specialties and Filters cards have no title or icon (a Clear / Clear all line shows only when something is picked); the gap between them equals the gap above (14px).
