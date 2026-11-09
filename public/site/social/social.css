@@ -2481,3 +2481,12 @@ html body .cp-act a.btn.main{background:var(--a-solid)!important;background-imag
   .fchip.ind-k i{width:5px;height:5px}
   .fchip.ind-k em{min-width:15px;height:15px;padding:0 4px;font-size:9.5px}
 }
+/* the specialties in a card like the filters (Alex, 9 Nov) */
+.ind-kcard{margin:0 0 14px}
+.ind-kcard .cf-ti{color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.ind-kcard .cf-top small{font-size:12.5px}
+.ind-kcard .kind-row{margin:0}
+.ind-kcard .fchip.ind-k{background:rgba(255,255,255,.5)!important}
+html[data-theme=dark] .ind-kcard .fchip.ind-k{background:rgba(255,255,255,.035)!important}
+.ind-kcard .fchip.ind-k.on{background:linear-gradient(135deg,color-mix(in srgb,var(--c) 30%,transparent),color-mix(in srgb,var(--c) 12%,transparent))!important}
+@media (max-width:820px){.ind-kcard{padding:12px}.ind-kcard .cf-top small{display:none}}

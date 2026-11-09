@@ -2329,7 +2329,12 @@ async function viewPeople(opts = {}) {
     // back to one block of equal columns (Alex, 9 Nov: "too many lines"), the specialties in their departments' order
     const listed = KINDS.filter((k) => k[2] === sd).map((k) => k[0]);
     const order = [...DEPTS.filter((d) => d[0] === sd).flatMap((d) => d[2]).filter((k) => listed.includes(k)), ...listed];
-    put(kindsBox, h('div', { class: 'kind-row ind-kinds' }, h('div', { class: 'fbody' }, [...new Set(order)].map(kchip))));
+    // in a card like the filters (Alex, 9 Nov): the group's icon and name on its top line, then the specialties
+    const G0 = GROUPS.find((g) => g[1] === sd);
+    put(kindsBox, h('section', { class: 'card cf2 ind-kcard', style: { '--c': HUE[sd] } },
+      h('div', { class: 'cf-top' }, h('span', { class: 'cf-ti', html: ICON[G0[6]] }), h('b', {}, t('Specialties')), h('small', { class: 'hint' }, t(G0[2])), h('span', { class: 'grow' }),
+        peopleKinds.size ? h('button', { type: 'button', class: 'btn sm', onclick: () => { peopleKinds = new Set(); draw(); } }, icon('x'), t('Clear')) : null),
+      h('div', { class: 'kind-row ind-kinds' }, h('div', { class: 'fbody' }, [...new Set(order)].map(kchip)))));
     drawFilters(); drawGrid();
   }
   peopleRedraw = () => { if (search.isConnected || opts.search) { search.value = peopleQ; draw(); } };
