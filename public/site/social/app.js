@@ -105,7 +105,7 @@ const KINDS = [
   ['makeup', 'Make-Up Artist', 'shoot'], ['hair', 'Hair Stylist', 'shoot'], ['styling', 'Styling / Wardrobe', 'shoot'], ['art', 'Art Department', 'shoot'],
   ['photo', 'Still Photographer', 'shoot'], ['prodassist', 'Production Assist.', 'shoot'], ['runner', 'Runner', 'shoot'],
   ['editor', 'Editor', 'post'], ['colorist', 'Colorist', 'post'], ['vfx', 'VFX Artist', 'post'], ['motion', 'Motion Graphics', 'post'], ['animator', '3D Animator', 'post'],
-  ['mixer', 'Sound Designer', 'post'], ['composer', 'Music Composer', 'post'], ['singer', 'Singer', 'post'], ['musician', 'Musician', 'post'],
+  ['mixer', 'Sound Designer', 'post'], ['soundmix', 'Sound Mixer', 'post'], ['composer', 'Music Composer', 'post'], ['singer', 'Singer', 'post'], ['musician', 'Musician', 'post'],
   ['ai', 'AI Artist', 'post'], ['graphic', 'Graphic Designer', 'post'],
 ];
 // the five groups of Industry: their tab, a short name for a phone, a line, a colour and a line icon
@@ -150,7 +150,7 @@ const KIND_EL = { actor: 'ηθοποιός ηθοποιοί', model: 'μοντέ
   ai: 'ai τεχνητή νοημοσύνη', graphic: 'γραφίστας γραφιστική', lineprod: 'line producer', prodman: 'διευθυντής παραγωγής production manager', accountant: 'λογιστής λογίστρια παραγωγής accountant', coord: 'συντονιστής συντονίστρια παραγωγής',
   location: 'λοκέισιον τοποθεσίες location manager', scout: 'λοκέισιον αναζήτηση τοποθεσιών location scout', runner: 'runner', prodassist: 'βοηθός παραγωγής production assistant pa', script: 'σκριπτ σκριπτέρ continuity συνέχεια',
   focus: 'φοκους πούλερ εστίαση', dit: 'dit δεδομένα data', steadicam: 'στεντικαμ gimbal', drone: 'ντρόουν drone χειριστής',
-  spark: 'ηλεκτρολόγος ηλεκτρολογος', grip: 'μηχανικός grip', dolly: 'ντόλι γερανός crane', boom: 'μπουμ μπουμάς ήχος ηχολήπτης sound', mixer: 'ηχητικός σχεδιασμός μίξη mixer sound design', dop: 'διευθυντής φωτογραφίας cinematographer director of photography', camera: 'κάμερα κάμεραμαν οπερατέρ', gaffer: 'φωτισμός ηλεκτρολόγος', sound: 'ήχος ηχολήπτης',
+  spark: 'ηλεκτρολόγος ηλεκτρολογος', grip: 'μηχανικός grip', dolly: 'ντόλι γερανός crane', boom: 'μπουμ μπουμάς ήχος ηχολήπτης sound', mixer: 'ηχητικός σχεδιασμός sound design', soundmix: 'μίξη ήχου μιξέρ sound mixer', dop: 'διευθυντής φωτογραφίας cinematographer director of photography', camera: 'κάμερα κάμεραμαν οπερατέρ', gaffer: 'φωτισμός ηλεκτρολόγος', sound: 'ήχος ηχολήπτης',
   editor: 'μοντέρ μοντάζ', colorist: 'χρώμα', producer: 'παραγωγός παραγωγή', ad: 'βοηθός σκηνοθέτη', casting: 'κάστινγκ', photo: 'φωτογράφος φωτογραφία',
   styling: 'στυλίστας ενδυματολόγος κοστούμια', makeup: 'μακιγιάζ μακιγιέζ make up', hair: 'κομμώσεις κομμωτής κομμώτρια μαλλιά hair', art: 'σκηνογράφος σκηνογραφία', vfx: 'εφέ οπτικά εφέ vfx', motion: 'motion graphics κινούμενα γραφικά', musician: 'μουσικός μουσική', writer: 'σεναριογράφος σενάριο συγγραφέας', choreo: 'χορογράφος χορογραφία' };
 const CITY_ALSO = { athens: 'athina', athina: 'athens', thessaloniki: 'salonika', patra: 'patras', patras: 'patra', heraklion: 'iraklio', iraklio: 'heraklion', larisa: 'larissa', chania: 'hania', crete: 'kriti', kriti: 'crete' };
