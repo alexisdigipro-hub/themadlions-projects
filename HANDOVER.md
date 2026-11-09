@@ -1806,3 +1806,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 9 Nov 2026: cast filters order: Gender, Age, Height, then Location, Hair, Eyes.
 - 9 Nov 2026: the department rows were too many lines for Alex: back to one block of equal columns, the specialties in their departments' order (DEPTS still sets the order).
 - 9 Nov 2026: Cinematographer (no (DoP); DoP still finds it).
+- 9 Nov 2026: Industry fresher, same layout: group tiles with a soft tint of their colour and the count in a pill (filled when chosen), specialty chips softer with a glowing dot and no 0 counts, people cards as glass with a bigger 4:5 picture, a soft zoom, the first specialty as a chip in its group's colour (+N more) and the city with a pin.
