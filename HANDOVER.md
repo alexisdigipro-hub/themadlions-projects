@@ -1805,3 +1805,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 9 Nov 2026: Industry: the specialties of each group by department, a row each (DEPTS in app.js: e.g. Production > Direction, Camera, Light & Grip, Sound, Hair Make-Up & Wardrobe, Art & Stills, Production), the department's name on the left with a line of the group's colour, six equal columns on a computer (Camera in one line), two on a phone.
 - 9 Nov 2026: cast filters order: Gender, Age, Height, then Location, Hair, Eyes.
 - 9 Nov 2026: the department rows were too many lines for Alex: back to one block of equal columns, the specialties in their departments' order (DEPTS still sets the order).
+- 9 Nov 2026: Cinematographer (no (DoP); DoP still finds it).
