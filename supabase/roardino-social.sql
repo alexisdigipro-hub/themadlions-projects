@@ -726,3 +726,8 @@ alter table public.roardino_calls add column if not exists extra jsonb not null 
 drop policy if exists rd_call_covers_read on storage.objects;
 create policy rd_call_covers_read on storage.objects for select to authenticated using (
   bucket_id = 'roardino-people' and (storage.foldername(name))[2] = 'calls');
+
+-- Seminars with a picture and more (Alex, 9 Nov): a cover (path under <account>/calls/ in roardino-people, seen by
+-- everyone signed in through rd_call_covers_read) and extra details {level, language, learn, bring, certificate, recording}
+alter table public.roardino_seminars add column if not exists cover text;
+alter table public.roardino_seminars add column if not exists extra jsonb not null default '{}'::jsonb;
