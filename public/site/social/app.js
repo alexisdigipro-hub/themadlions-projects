@@ -872,6 +872,7 @@ async function route() {
     if (a === 'calls') return await viewCalls();
     if (a === 'c' && b) return await viewCall(b);
     if (a === 'seminars') return await viewSeminars();
+    if (a === 's' && b) return await viewSeminar(b);
     if (a === 'me') return await viewMe();
     if (a === 'inbox' && isAdmin) return await viewInbox();
     if (a === 'chat') return viewChat();
@@ -1187,7 +1188,7 @@ function drawFeedSide(two, calls, seminars) {
     ...calls.filter((c) => c.open !== false).map((c) => ({ at: c.created_at, el: (() => { const [l, col] = kindOf[c.kind] || kindOf.other;
       return card(`#/c/${c.id}`, l, col, c.title, [c.city, c.pay].filter(Boolean).join(' · '), [callWho(c), c.dates].filter(Boolean).join(' · '), picOf(c.kind, c.id)); })() })),
     ...seminars.filter((x) => !x.starts_at || new Date(x.starts_at).getTime() > now).map((x) => ({ at: x.created_at, el:
-      card('#/seminars', x.kind === 'online' ? t('Online seminar') : t('Seminar'), '#a77bff', x.title,
+      card(`#/s/${x.id}`, x.kind === 'online' ? t('Online seminar') : t('Seminar'), '#a77bff', x.title,
         [x.starts_at ? shortDate(x.starts_at) : t('Soon'), x.price].filter(Boolean).join(' · '), x.teacher ? t('With {name}', { name: x.teacher }) : '', picOf('seminar', x.id)) }))]
     .sort((p, q) => String(q.at || '').localeCompare(String(p.at || ''))).slice(0, 5).map((x) => x.el);
   // under the line, the Lab's apps for film people (Alex, 8 Nov), the same glass, lower; each opens its web app
@@ -2644,7 +2645,7 @@ async function viewMe() {
     h('a', { class: 'add-pic', href: '#/edit/kid' }, h('span', { class: 'add-ic', html: ICON.child }), t('My child\'s profile'))),
   h('p', { class: 'hint', style: { marginTop: '10px' } }, t('One account can hold several profiles: your own, and your children\'s as their parent.')),
   (applies || []).length ? h('div', { class: 'block' }, h('h2', {}, t('My applications')), h('div', { class: 'credits' }, applies.map((x) => h('a', { href: `#/c/${x.call?.id}` }, `${x.call?.title || ''} · ${t('as {name}', { name: x.person?.name || '' })} · ${t(state[x.status])}`)))) : null,
-  (seats || []).length ? h('div', { class: 'block' }, h('h2', {}, t('My seats')), h('div', { class: 'credits' }, seats.map((x) => h('a', { href: '#/seminars' }, `${x.sem?.title || ''}${x.sem?.starts_at ? ' · ' + when(x.sem.starts_at) : ''}`)))) : null);
+  (seats || []).length ? h('div', { class: 'block' }, h('h2', {}, t('My seats')), h('div', { class: 'credits' }, seats.map((x) => h('a', { href: x.sem?.id ? `#/s/${x.sem.id}` : '#/seminars' }, `${x.sem?.title || ''}${x.sem?.starts_at ? ' · ' + when(x.sem.starts_at) : ''}`)))) : null);
 }
 
 async function viewEdit(which) {
@@ -3507,37 +3508,115 @@ async function viewInbox() {
   const fresh = data.filter((m) => !m.seen).map((m) => m.id);
   if (fresh.length) { await sb.from('roardino_site_messages').update({ seen: true }).in('id', fresh); siteUnread = 0; document.querySelector('.more-btn')?.classList.remove('has-new'); }
 }
-async function viewSeminars() {
-  document.title = 'Roardino · ' + t('Seminars');
-  const box = h('div', { class: 'tiles' }, h('p', { class: 'wait' }, t('Loading…')));
-  frame('seminars', h('div', { class: 'head' }, h('h1', {}, t('Seminars')), h('span', { class: 'grow' }), isAdmin ? h('button', { type: 'button', class: 'btn main head-new', title: t('New seminar'), 'aria-label': t('New seminar'), onclick: () => editSeminar() }, icon('plus'), h('span', { class: 'lbl' }, t('New seminar'))) : null), box);
+// Seminars with pictures and more (Alex, 9 Nov: "the seminars like the calls, and extra features")
+const SEM_HUE = { online: '#4f8cff', live: '#a77bff' };
+let semFilter = 'up', semQ = '', semFree = false;
+const isFree = (s) => !s.price || /^(free|0|€?0|δωρεάν)$/i.test(String(s.price).trim());
+const semLeft = (s, taken) => (s.seats ? Math.max(0, s.seats - (taken[s.id] || 0)) : null);
+async function semData() {
   const [{ data, error }, { data: counts }, { data: seats }, { data: links }] = await Promise.all([
     sb.from('roardino_seminars').select('*').order('starts_at', { ascending: true, nullsFirst: false }),
     sb.rpc('roardino_seat_counts'),
     sb.from('roardino_seats').select('seminar_id').eq('user_id', session.user.id),
     sb.from('roardino_seminar_links').select('*')]);
   if (error) throw error;
-  const taken = Object.fromEntries((counts || []).map((x) => [x.seminar_id, x.taken]));
-  const mineS = new Set((seats || []).map((x) => x.seminar_id));
-  const link = Object.fromEntries((links || []).map((x) => [x.seminar_id, x.url]));
-  const now = Date.now() - 86400e3;
-  const list = data.filter((s) => isAdmin || !s.starts_at || new Date(s.starts_at).getTime() > now || mineS.has(s.id));
-  put(box, ...(list.length ? list.map((s) => {
-    const left = s.seats ? s.seats - (taken[s.id] || 0) : null;
-    return h('div', { class: 'tile' },
-      h('div', { class: 't-top' }, h('span', { class: 't-ico', html: ICON.cal }),
-        h('div', { style: { minWidth: 0 } }, h('span', { class: 'when' }, [s.starts_at ? when(s.starts_at) : t('Soon'), s.kind === 'online' ? t('Online') : t('In person'), s.published ? '' : t('Draft')].filter(Boolean).join(' · ')), h('h3', {}, s.title))),
-      s.teacher ? h('p', { style: { color: 'var(--ink2)' } }, t('With {name}', { name: s.teacher })) : null,
-      s.about ? h('p', {}, s.about) : null,
-      h('div', { class: 'meta' }, [s.minutes ? `${s.minutes}'` : '', s.place, s.price || '', left != null ? t('{n} seats left', { n: Math.max(0, left) }) : '', (s.for_kinds || []).map((k) => t((FILTERS.find((f) => f[0] === k) || [k, KIND[k] || k])[1])).join(', ')].filter(Boolean).map((x) => h('span', {}, x))),
-      h('div', { class: 'acts' },
-        mineS.has(s.id)
-          ? [h('span', { class: 'chip', style: { '--c': '#35c98b' } }, h('i'), t('You have a seat')), link[s.id] ? h('a', { class: 'btn main', href: link[s.id], target: '_blank', rel: 'noopener' }, s.kind === 'online' ? t('Join the webinar') : t('Details')) : h('span', { class: 'hint' }, t('We will send you the details.'))]
-          : left === 0 ? h('span', { class: 'hint' }, t('Full.')) : h('button', { type: 'button', class: 'btn main', onclick: () => takeSeat(s) }, icon('ticket'), t('Keep a seat')),
-        isAdmin ? h('span', { class: 'grow' }) : null,
-        isAdmin ? h('span', { class: 'hint' }, t('{n} seats taken', { n: taken[s.id] || 0 })) : null,
-        isAdmin ? h('button', { type: 'button', class: 'btn round', title: t('Edit'), 'aria-label': t('Edit'), onclick: () => editSeminar(s, link[s.id]) }, icon('edit')) : null));
-  }) : [h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('Soon')), t('The first seminars and webinars are on the way.'))]));
+  await sign(data.map((x) => x.cover));
+  return { data, taken: Object.fromEntries((counts || []).map((x) => [x.seminar_id, x.taken])), mineS: new Set((seats || []).map((x) => x.seminar_id)), link: Object.fromEntries((links || []).map((x) => [x.seminar_id, x.url])) };
+}
+// a calendar file for a seminar (one event), so it goes into the person's own calendar
+function icsOf(s) {
+  const st = new Date(s.starts_at), en = new Date(st.getTime() + (s.minutes || 60) * 60e3);
+  const f = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const esc = (x) => String(x || '').replace(/[,;\\]/g, (m) => '\\' + m).replace(/\n/g, '\\n');
+  const body = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Roardino//Seminars//EN', 'BEGIN:VEVENT', `UID:${s.id}@roardino`, `DTSTAMP:${f(new Date())}`, `DTSTART:${f(st)}`, `DTEND:${f(en)}`, `SUMMARY:${esc(s.title)}`, `LOCATION:${esc(s.place || (s.kind === 'online' ? 'Online' : ''))}`, `DESCRIPTION:${esc((s.teacher ? 'With ' + s.teacher + '. ' : '') + (s.about || ''))}`, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([body], { type: 'text/calendar' })); a.download = (s.title || 'seminar').replace(/[^\w\- ]+/g, '').slice(0, 40) + '.ics'; a.click();
+}
+function semTile(x, o) {
+  const hue = SEM_HUE[x.kind] || SEM_HUE.live, pic = urlOf(x.cover), d = x.starts_at ? new Date(x.starts_at) : null, left = semLeft(x, o.taken);
+  const ln = (ic, txt) => (txt ? h('span', { class: 'ct-ln' }, h('span', { html: ICON[ic] }), txt) : null);
+  return h('a', { class: 'ct', href: `#/s/${x.id}`, style: { '--c': hue } },
+    h('div', { class: 'ct-pic' + (pic ? '' : ' none'), style: pic ? { backgroundImage: `url("${pic}")` } : {} }, pic ? null : h('span', { class: 'ct-big', html: ICON.cal }),
+      h('span', { class: 'ct-kind' }, h('i'), x.kind === 'online' ? t('Online') : t('In person')),
+      d ? h('span', { class: 'sm-date' }, h('b', {}, d.getDate()), h('small', {}, d.toLocaleDateString(LOCALE(), { month: 'short' }))) : null,
+      x.published ? null : h('span', { class: 'ct-left off', style: { top: 'auto', bottom: '12px' } }, t('Draft'))),
+    h('div', { class: 'ct-body' },
+      h('h3', {}, x.title), x.teacher ? h('p', { class: 'ct-co' }, t('With {name}', { name: x.teacher })) : null,
+      h('div', { class: 'ct-lines' }, ln('cal', d ? d.toLocaleString(LOCALE(), { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : t('Soon')), ln('calls', x.minutes ? `${x.minutes}'` : ''), ln('pin', x.place)),
+      (x.extra?.level || x.extra?.language) ? h('div', { class: 'ct-who' }, x.extra.level ? h('span', { class: 'face-k', style: { '--c': hue } }, h('i'), t(x.extra.level)) : null, x.extra.language ? h('span', { class: 'face-k', style: { '--c': '#8d929c' } }, h('i'), x.extra.language) : null) : null,
+      h('div', { class: 'ct-foot' }, h('b', { class: 'sm-price' }, isFree(x) ? t('Free') : x.price), left != null ? h('small', {}, left ? t('{n} seats left', { n: left }) : t('Full')) : null, h('span', { class: 'grow' }),
+        o.mineS.has(x.id) ? h('span', { class: 'ct-badge ok' }, icon('check'), t('You have a seat')) : left === 0 ? null : h('span', { class: 'ct-go' }, t('Keep a seat'), ' →'))));
+}
+async function viewSeminars() {
+  document.title = 'Roardino · ' + t('Seminars');
+  const grid = h('div', { class: 'cgrid' }, h('p', { class: 'wait' }, t('Loading…')));
+  const tilesBox = h('div'), filterBox = h('div', { class: 'cfilters' }), countBox = h('span', { class: 'hint people-count' });
+  const search = input(semQ, { type: 'search', class: 'input search ind-search', placeholder: t('Title, teacher, topic'), 'aria-label': t('Search seminars'), oninput: (e) => { semQ = e.target.value; draw(); } });
+  frame('seminars', h('div', { class: 'head ind-head' }, h('h1', { class: 'ind-title' }, t('Seminars')), search, countBox,
+    isAdmin ? h('button', { type: 'button', class: 'btn main head-new', title: t('New seminar'), 'aria-label': t('New seminar'), onclick: () => editSeminar() }, icon('plus'), h('span', { class: 'lbl' }, t('New seminar'))) : null), tilesBox, filterBox, grid);
+  const D = await semData();
+  const now = Date.now();
+  const upcoming = (x) => !x.starts_at || new Date(x.starts_at).getTime() + (x.minutes || 60) * 60e3 > now;
+  const TYPES = [['up', 'Upcoming', '#d40000', 'cal', 'Every one to come', (x) => upcoming(x) && (x.published || isAdmin)], ['online', 'Online', SEM_HUE.online, 'globe', 'From anywhere', (x) => upcoming(x) && x.kind === 'online' && (x.published || isAdmin)],
+    ['live', 'In person', SEM_HUE.live, 'pin', 'In a room', (x) => upcoming(x) && x.kind === 'live' && (x.published || isAdmin)], ['mine', 'My seats', '#2fb67a', 'ticket', 'Where you have a seat', (x) => D.mineS.has(x.id)], ['past', 'Past', '#8d929c', 'flag', 'Already happened', (x) => !upcoming(x) && (x.published || isAdmin)]];
+  function draw() {
+    const T = TYPES.find((x) => x[0] === semFilter) || TYPES[0];
+    put(tilesBox, h('div', { class: 'ind-groups' }, TYPES.map(([k, name, hue, ic, line, test]) => h('button', { type: 'button', class: 'ind-g' + (semFilter === k ? ' on' : ''), style: { '--c': hue }, onclick: () => { semFilter = k; draw(); } },
+      h('span', { class: 'ind-g-ic', html: ICON[ic] }), h('span', { class: 'ind-g-t' }, h('b', {}, h('span', { class: 'long' }, t(name)), h('span', { class: 'short' }, t(name))), h('small', {}, t(line))), h('span', { class: 'ind-g-n' }, String(D.data.filter(test).length))))));
+    put(filterBox, h('button', { type: 'button', class: 'cf-chip sm' + (semFree ? ' on' : ''), onclick: () => { semFree = !semFree; draw(); } }, t('Free only')));
+    const q = fold(semQ.trim());
+    let list = D.data.filter(T[5]).filter((x) => !semFree || isFree(x)).filter((x) => !q || fold([x.title, x.teacher, x.about, x.place, x.extra?.learn].join(' ')).includes(q));
+    if (semFilter === 'past') list = [...list].reverse();
+    countBox.textContent = list.length === 1 ? t('1 seminar') : t('{n} seminars', { n: list.length });
+    put(grid, list.length ? list.map((x) => semTile(x, D)) : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, semFilter === 'mine' ? t('No seats yet') : t('Nothing here yet')), semFilter === 'mine' ? t('Keep a seat in a seminar and it shows here.') : t('The next seminars and webinars are on the way.')));
+  }
+  draw();
+}
+async function viewSeminar(id) {
+  const D = await semData();
+  const x = D.data.find((y) => y.id === id);
+  if (!x) return frame('seminars', h('div', { class: 'empty' }, h('b', {}, t('Not found')), t('This seminar is not open.')));
+  document.title = `${x.title} · Roardino`;
+  const hue = SEM_HUE[x.kind] || SEM_HUE.live, pic = urlOf(x.cover), d = x.starts_at ? new Date(x.starts_at) : null, left = semLeft(x, D.taken), mine = D.mineS.has(x.id), E = x.extra || {};
+  const past = d && d.getTime() + (x.minutes || 60) * 60e3 < Date.now();
+  const fact = (ic, k, v) => (v ? h('div', { class: 'cp-fact' }, h('span', { class: 'cp-fic', html: ICON[ic] }), h('div', {}, h('small', {}, t(k)), h('b', {}, v))) : null);
+  const share = async () => { const url = `${location.origin}${location.pathname}#/s/${x.id}`; try { if (navigator.share) await navigator.share({ title: x.title, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ } };
+  // the administrators see who kept a seat
+  let seatsBox = null;
+  if (isAdmin) {
+    const { data: who } = await sb.from('roardino_seats').select('*').eq('seminar_id', x.id).order('created_at');
+    seatsBox = h('section', { class: 'card cp-card' }, h('span', { class: 'wz-lbl' }, t('Seats · {n}', { n: (who || []).length })),
+      (who || []).length ? h('div', { class: 'sm-seats' }, who.map((w) => h('div', { class: 'sm-seat' }, h('b', {}, w.name || '—'), h('span', {}, w.phone || ''), h('small', {}, ago(w.created_at))))) : h('p', { class: 'hint' }, t('No seats yet.')),
+      (who || []).length ? h('button', { type: 'button', class: 'btn sm', onclick: async () => { const txt = who.map((w) => `${w.name || ''}\t${w.phone || ''}`).join('\n'); try { await navigator.clipboard.writeText(txt); toast(t('List copied')); } catch { /* no */ } } }, icon('link'), t('Copy the list')) : null);
+  }
+  frame('seminars',
+    h('div', { class: 'cp', style: { '--c': hue } },
+      h('div', { class: 'cp-hero' + (pic ? '' : ' none'), style: pic ? { backgroundImage: `url("${pic}")` } : {} }, pic ? null : h('span', { class: 'ct-big', html: ICON.cal }),
+        h('div', { class: 'cp-hero-in' }, h('span', { class: 'ct-kind' }, h('i'), x.kind === 'online' ? t('Online seminar') : t('Seminar in person')), h('h1', {}, x.title), x.teacher ? h('p', {}, t('With {name}', { name: x.teacher })) : null)),
+      h('div', { class: 'cp-lay' },
+        h('div', { class: 'cp-main' },
+          h('section', { class: 'card cp-card' }, h('div', { class: 'cp-facts' }, fact('cal', 'When', d ? d.toLocaleString(LOCALE(), { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : t('Soon')), fact('calls', 'Length', x.minutes ? t('{n} minutes', { n: x.minutes }) : ''), fact('pin', 'Where', x.place),
+            fact('star', 'Level', E.level ? t(E.level) : ''), fact('globe', 'Language', E.language), fact('ticket', 'Seats', x.seats ? t('{a} of {b} left', { a: left, b: x.seats }) : t('No limit')))),
+          x.about ? h('section', { class: 'card cp-card' }, h('span', { class: 'wz-lbl' }, t('About the seminar')), h('p', { class: 'cp-about' }, x.about)) : null,
+          E.learn ? h('section', { class: 'card cp-card' }, h('span', { class: 'wz-lbl' }, t('What you will learn')), h('ul', { class: 'sm-learn' }, E.learn.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => h('li', {}, h('span', { html: ICON.check }), l)))) : null,
+          E.bring ? h('section', { class: 'card cp-card' }, h('span', { class: 'wz-lbl' }, t('What to bring')), h('p', { class: 'cp-about' }, E.bring)) : null,
+          (x.for_kinds || []).length || E.certificate || E.recording ? h('section', { class: 'card cp-card' }, h('span', { class: 'wz-lbl' }, t('Good to know')), h('div', { class: 'wz-tagrow' },
+            (x.for_kinds || []).map((k) => h('span', { class: 'face-k big', style: { '--c': hue } }, h('i'), t((FILTERS.find((f) => f[0] === k) || [k, KIND[k] || k])[1]))),
+            E.certificate ? h('span', { class: 'face-k big', style: { '--c': '#e0a33a' } }, h('i'), t('Certificate')) : null, E.recording ? h('span', { class: 'face-k big', style: { '--c': '#2fb67a' } }, h('i'), t('Recording for those with a seat')) : null)) : null,
+          seatsBox),
+        h('aside', { class: 'cp-side' }, h('div', { class: 'card cp-act' },
+          d ? h('div', { class: 'sm-big-date' }, h('b', {}, d.getDate()), h('div', {}, h('span', {}, d.toLocaleDateString(LOCALE(), { month: 'long' })), h('small', {}, d.toLocaleTimeString(LOCALE(), { hour: '2-digit', minute: '2-digit' })))) : null,
+          h('div', { class: 'cp-pay' }, h('small', {}, t('Price')), h('b', {}, isFree(x) ? t('Free') : x.price)),
+          left != null ? h('div', { class: 'sm-meter' }, h('i', { style: { width: `${Math.round((x.seats - left) / x.seats * 100)}%` } })) : null,
+          left != null ? h('small', { class: 'hint' }, left ? t('{n} seats left', { n: left }) : t('Full')) : null,
+          mine ? [h('span', { class: 'ct-badge ok big' }, icon('check'), t('You have a seat')),
+              D.link[x.id] ? h('a', { class: 'btn main cp-apply', href: D.link[x.id], target: '_blank', rel: 'noopener' }, x.kind === 'online' ? t('Join the webinar') : t('Details')) : h('small', { class: 'hint' }, t('We will send you the details.')),
+              h('button', { type: 'button', class: 'btn', onclick: async () => { if (!(await ask(t('Give your seat back?'), t('Give it back')))) return; const { error } = await sb.from('roardino_seats').delete().eq('seminar_id', x.id).eq('user_id', session.user.id); if (error) return fail(error); toast(t('Your seat is free again')); route(); } }, t('Give my seat back'))]
+            : past ? h('span', { class: 'ct-badge' }, t('It already happened'))
+              : left === 0 ? h('span', { class: 'ct-badge' }, t('Full'))
+                : x.published ? h('button', { type: 'button', class: 'btn main cp-apply', onclick: () => takeSeat(x) }, icon('ticket'), t('Keep a seat')) : null,
+          d && !past ? h('button', { type: 'button', class: 'btn', onclick: () => icsOf(x) }, icon('cal'), t('Add to my calendar')) : null,
+          h('button', { type: 'button', class: 'btn cp-share', onclick: share }, icon('link'), t('Share')),
+          isAdmin ? h('button', { type: 'button', class: 'btn', onclick: () => editSeminar(x, D.link[x.id]) }, icon('edit'), t('Edit')) : null)))));
 }
 function takeSeat(s) {
   const name = input(me()?.name || session.user.user_metadata?.name || '');
@@ -3551,7 +3630,19 @@ function takeSeat(s) {
     } }, t('Keep a seat'))]);
 }
 function editSeminar(old, oldLink = '') {
-  const s = structuredClone(old || { kind: 'online', for_kinds: [], published: false });
+  const s = structuredClone(old || { kind: 'online', for_kinds: [], published: false, extra: {} });
+  s.extra ||= {};
+  let coverFile = null, coverGone = false;
+  const coverBox = h('div', { class: 'ce-cover' });
+  const coverIn = h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async (e) => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; coverFile = await cropImage(f, [['16:9', 16 / 9]]); if (coverFile) coverGone = false; drawCover(); } });
+  const drawCover = () => { const u = coverFile ? URL.createObjectURL(coverFile) : !coverGone && s.cover ? urlOf(s.cover) : ''; put(coverBox,
+    h('button', { type: 'button', class: 'ce-pic' + (u ? '' : ' none'), style: u ? { backgroundImage: `url("${u}")` } : {}, onclick: (e) => { e.preventDefault(); coverIn.click(); } }, u ? null : h('span', {}, icon('pic'), t('Add a picture'))),
+    u ? h('div', { class: 'acts', style: { marginTop: 0 } }, h('button', { type: 'button', class: 'btn sm', onclick: (e) => { e.preventDefault(); coverIn.click(); } }, icon('pic'), t('Change')), h('button', { type: 'button', class: 'btn sm red', onclick: (e) => { e.preventDefault(); coverFile = null; coverGone = true; drawCover(); } }, icon('trash'), t('Remove'))) : null); };
+  drawCover();
+  const xb = (key, el) => { el.addEventListener('input', () => { s.extra[key] = el.value; }); return el; };
+  const levelBox = h('div', { class: 'wz-chips' });
+  const drawLevel = () => put(levelBox, ['Beginner', 'Intermediate', 'Advanced', 'All levels'].map((l) => h('button', { type: 'button', class: 'wz-chip' + (s.extra.level === l ? ' on' : ''), onclick: (e) => { e.preventDefault(); s.extra.level = s.extra.level === l ? '' : l; drawLevel(); } }, t(l))));
+  drawLevel();
   if (s.starts_at) { const d = new Date(s.starts_at); s.local = new Date(d.getTime() - d.getTimezoneOffset() * 60e3).toISOString().slice(0, 16); }
   let url = oldLink || '';
   const bind = (key, el) => { el.addEventListener('input', () => { s[key] = el.value; }); return el; };
@@ -3561,8 +3652,9 @@ function editSeminar(old, oldLink = '') {
   const kindSeg = h('div');
   const drawK = () => put(kindSeg, seg([['online', t('Online')], ['live', t('In person')]], s.kind, (k) => { s.kind = k; drawK(); }));
   drawK();
-  openWin(old ? t('Seminar') : t('New seminar'), h('div', { style: { display: 'flex', flexDirection: 'column', gap: '12px' } },
-    kindSeg,
+  openWin(old ? t('Seminar') : t('New seminar'), h('div', { class: 'ce' },
+    kindSeg, coverIn,
+    field(t('Picture'), coverBox, t('It shows on the card and on top of the seminar.')),
     field(t('Title'), bind('title', input(s.title))),
     field(t('Who gives it'), bind('teacher', input(s.teacher))),
     h('div', { class: 'row' }, field(t('When'), bind('local', input(s.local, { type: 'datetime-local' }))), field(t('Length (minutes)'), bind('minutes', input(s.minutes, { inputmode: 'numeric' })))),
@@ -3571,13 +3663,21 @@ function editSeminar(old, oldLink = '') {
     field(t('Link for those with a seat'), input(url, { type: 'url', placeholder: 'https://', oninput: (e) => { url = e.target.value; } }), t('Only people with a seat see it. For a free seminar it shows the moment they keep a seat.')),
     field(t('For whom'), forK),
     field(t('Description'), bind('about', area(s.about, { rows: 4 }))),
+    field(t('Level'), levelBox),
+    h('div', { class: 'row' }, field(t('Language'), xb('language', input(s.extra.language, { placeholder: t('e.g. Greek') }))), field(t('What to bring'), xb('bring', input(s.extra.bring, { placeholder: t('e.g. a monologue, comfortable clothes') })))),
+    field(t('What you will learn'), xb('learn', area(s.extra.learn, { rows: 4, placeholder: t('One per line') }))),
+    h('div', { class: 'ce-checks' },
+      h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!s.extra.certificate, onchange: (e) => { s.extra.certificate = e.target.checked; } }), h('span', {}, t('Certificate'))),
+      h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!s.extra.recording, onchange: (e) => { s.extra.recording = e.target.checked; } }), h('span', {}, t('Recording for those with a seat')))),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!s.published, onchange: (e) => { s.published = e.target.checked; } }), h('span', {}, t('Published (everyone sees it)')))),
   (close) => [
-    old ? h('button', { type: 'button', class: 'btn red', onclick: async () => { if (!(await ask(t('Delete it?')))) return; const { error } = await sb.from('roardino_seminars').delete().eq('id', old.id); if (error) return fail(error); close(); route(); } }, t('Delete')) : null,
+    old ? h('button', { type: 'button', class: 'btn red', onclick: async () => { if (!(await ask(t('Delete it?')))) return; const { error } = await sb.from('roardino_seminars').delete().eq('id', old.id); if (error) return fail(error); if (old.cover) removeFiles([old.cover]); close(); location.hash = '#/seminars'; } }, t('Delete')) : null,
     h('button', { type: 'button', class: 'btn', onclick: close }, t('Cancel')),
     h('button', { type: 'button', class: 'btn main', onclick: async () => {
       if (!s.title?.trim()) return toast(t('Write a title.'));
-      const row = { title: s.title.trim(), teacher: s.teacher || null, kind: s.kind, starts_at: s.local ? new Date(s.local).toISOString() : null, minutes: +s.minutes || null, price: s.price || null, seats: +s.seats || null, place: s.place || null, about: s.about || null, for_kinds: s.for_kinds, published: !!s.published };
+      let cover = coverGone ? null : s.cover || null;
+      try { if (coverFile) cover = await upload('calls', coverFile, ''); } catch (er) { return fail(er); }
+      const row = { title: s.title.trim(), teacher: s.teacher || null, kind: s.kind, starts_at: s.local ? new Date(s.local).toISOString() : null, minutes: +s.minutes || null, price: s.price || null, seats: +s.seats || null, place: s.place || null, about: s.about || null, for_kinds: s.for_kinds, published: !!s.published, cover, extra: s.extra };
       const res = old ? await sb.from('roardino_seminars').update(row).eq('id', old.id).select().single() : await sb.from('roardino_seminars').insert(row).select().single();
       if (res.error) return fail(res.error);
       const l = await sb.from('roardino_seminar_links').upsert({ seminar_id: res.data.id, url: url.trim() || null });
