@@ -124,7 +124,7 @@ const DEPTS = [
 // the five groups of Industry: their tab, a short name for a phone, a line, a colour and a line icon
 const GROUPS = [
   // in the order a film is made (Alex, 9 Nov): who leads it, before the shoot, who is cast, the shoot, after it
-  ['creators', 'lead', 'Creators', 'Creators', 'Who leads the whole film', '#e0a33a', 'g_lead'],
+  ['creators', 'lead', 'Creators', 'Creators', 'Who leads the film', '#e0a33a', 'g_lead'],
   ['pre', 'pre', 'Pre-Production', 'Pre', 'Before the shoot', '#4f8cff', 'g_pre'],
   ['cast', 'front', 'Cast', 'Cast', 'In front of the camera', '#e5484d', 'g_cast'],
   ['shoot', 'shoot', 'Production', 'Shoot', 'On set', '#2fb67a', 'g_shoot'],
@@ -2337,7 +2337,10 @@ function faceTile(p) {
   return h('a', { class: 'face', href: `#/p/${p.id}` },
     h('div', { class: 'pic', style: bg(p.avatar) }, urlOf(p.avatar) ? '' : initials(p.name)),
     p.minor ? h('span', { class: 'flag' }, t('Under 18')) : null,
-    h('div', { class: 'txt' }, h('b', {}, p.name), h('small', {}, [(p.kinds || []).map(kindName).slice(0, 2).join(' · '), p.city, a != null && PERFORMER(p.kinds) ? `${a}` : ''].filter(Boolean).join(' · '))));
+    // fresher (Alex, 9 Nov): the name, the first specialty as a chip in its group's colour, the city with a pin and the age
+    h('div', { class: 'txt' }, h('b', {}, p.name),
+      (p.kinds || []).length ? h('span', { class: 'face-k', style: { '--c': HUE[sideOf((p.kinds[0] === 'theatre' ? 'actor' : p.kinds[0]))] || '#8d929c' } }, h('i'), kindName(p.kinds[0]), p.kinds.length > 1 ? h('em', {}, '+' + (p.kinds.length - 1)) : null) : null,
+      p.city || (a != null && PERFORMER(p.kinds)) ? h('small', { class: 'face-where' }, p.city ? h('span', { html: ICON.pin }) : null, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} yrs', { n: a }) : ''].filter(Boolean).join(' · ')) : null));
 }
 
 /* =====================================================================================================================

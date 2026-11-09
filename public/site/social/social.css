@@ -2240,3 +2240,29 @@ html[data-theme=dark] .foot nav a{color:#fff!important}
   .ind-dept .fchip.ind-k{padding:0 6px 0 10px;font-size:12.5px}
   .ind-dept .fchip.ind-k em{min-width:18px;height:18px;padding:0 5px;font-size:10.5px}
 }
+/* Industry, fresher (Alex, 9 Nov: "keep it as it is, just fresher and more beautiful") */
+.ind-g{background:linear-gradient(135deg,color-mix(in srgb,var(--c) 9%,transparent),transparent 60%),var(--glass)}
+.ind-g-ic{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 30%,transparent),0 0 18px color-mix(in srgb,var(--c) 18%,transparent)}
+.ind-g.on{background:linear-gradient(135deg,color-mix(in srgb,var(--c) 26%,transparent),color-mix(in srgb,var(--c) 8%,transparent) 70%),var(--glass)}
+.ind-g-n{min-width:26px;height:22px;padding:0 7px;border-radius:99px;display:inline-flex;align-items:center;justify-content:center;background:rgba(128,128,140,.12)}
+.ind-g.on .ind-g-n{background:var(--c);color:#fff}
+.fchip.ind-k{height:38px;border-radius:12px;background:rgba(255,255,255,.035)!important;box-shadow:inset 0 0 0 1px rgba(128,128,140,.16)!important;transition:transform .25s var(--soft),background .25s,box-shadow .25s}
+.fchip.ind-k:hover{transform:translateY(-1px);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 45%,transparent)!important}
+.fchip.ind-k i{box-shadow:0 0 8px var(--c)}
+.fchip.ind-k.none{opacity:.5}
+.fchip.ind-k.none em{display:none}
+.fchip.ind-k.on{background:linear-gradient(135deg,color-mix(in srgb,var(--c) 30%,transparent),color-mix(in srgb,var(--c) 12%,transparent))!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 60%,transparent),0 6px 18px color-mix(in srgb,var(--c) 22%,transparent)!important;color:#fff}
+html:not([data-theme=dark]) .fchip.ind-k.on{color:var(--ink)}
+/* the people as fresher cards: bigger picture, a soft zoom, a chip for what they do */
+.faces{gap:16px}
+.face{padding:0;border-radius:20px;background:var(--glass);border:1px solid var(--rim);box-shadow:var(--top),0 0 0 1px var(--rim-out);transition:transform .45s var(--soft),box-shadow .45s var(--soft)}
+.face:hover{transform:translateY(-4px);box-shadow:var(--top),0 0 0 1px var(--rim-out),0 18px 40px rgba(0,0,0,.25)}
+.face .pic{border-radius:20px 20px 0 0;aspect-ratio:4/5;transition:transform .8s var(--soft)}
+.face:hover .pic{transform:scale(1.04)}
+.face .txt{padding:12px 14px 14px;gap:6px;position:relative;background:inherit}
+.face b{font-size:15.5px;font-weight:600;letter-spacing:-.005em}
+.face-k{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;max-width:100%;height:24px;padding:0 10px;border-radius:99px;font-size:11.5px;font-weight:600;color:var(--ink);background:color-mix(in srgb,var(--c) 16%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 32%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.face-k i{width:6px;height:6px;border-radius:50%;background:var(--c);flex:none}
+.face-k em{font-style:normal;color:var(--muted);font-weight:600}
+.face-where{display:flex;align-items:center;gap:5px;font-size:12px!important;color:var(--muted)}
+.face-where span,.face-where svg{width:13px;height:13px;flex:none;display:inline-flex}
