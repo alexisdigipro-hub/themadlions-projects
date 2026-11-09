@@ -2274,9 +2274,10 @@ async function viewPeople(opts = {}) {
       h('div', { class: 'cf-top' }, h('span', { class: 'cf-ti', html: ICON.sliders }), h('b', {}, t('Filters')), used ? h('span', { class: 'cf-n' }, String(used)) : null, h('span', { class: 'grow' }),
         filtersUsed() ? h('button', { type: 'button', class: 'btn sm', onclick: clear }, icon('x'), t('Clear all')) : null),
       h('div', { class: 'cf-grid' },
+        // gender first, then age, then height (Alex, 9 Nov)
+        block(t('Gender'), h('div', { class: 'cf-seg' }, ...[['', t('Any')], ['f', t('Woman')], ['m', t('Man')]].map(([v, l]) => pick(castF.gender === v, l, () => { castF.gender = v; draw(); })))),
         block(t('Age'), h('div', { class: 'cf-pair' }, field('from', t('From'), t('yrs')), h('span', { class: 'cf-dash' }), field('to', t('To'), t('yrs'))), bandBox),
         block(t('Height'), h('div', { class: 'cf-pair' }, field('hFrom', t('From'), 'cm'), h('span', { class: 'cf-dash' }), field('hTo', t('To'), 'cm'))),
-        block(t('Gender'), h('div', { class: 'cf-seg' }, ...[['', t('Any')], ['f', t('Woman')], ['m', t('Man')]].map(([v, l]) => pick(castF.gender === v, l, () => { castF.gender = v; draw(); })))),
         cities.length ? block(t('Location'), h('div', { class: 'cf-wrap' }, ...cities.map(([k, e]) => pick(castF.cities.has(k), e.name, () => toggle(castF.cities, k))))) : null,
         block(t('Hair'), h('div', { class: 'cf-wrap' }, ...HAIRS.map(([k, l]) => pick(castF.hair.has(k), t(l), () => toggle(castF.hair, k), HAIR_SW[k])))),
         block(t('Eyes'), h('div', { class: 'cf-wrap' }, ...EYES.map(([k, l]) => pick(castF.eyes.has(k), t(l), () => toggle(castF.eyes, k), EYE_SW[k])))))));
