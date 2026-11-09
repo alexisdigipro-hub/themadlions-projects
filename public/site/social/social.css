@@ -2216,3 +2216,27 @@ html[data-theme=dark] .cf-chip.on{color:#fff;background:rgba(var(--a),.26)}
 html[data-theme=dark] .foot nav a{color:#fff!important}
 .foot nav a:hover{opacity:.7}
 .cf-top .grow{flex:1}
+/* the specialties by department, a row each (Alex, 9 Nov): the department's name on the left in small capitals with a
+   line of its group's colour, its specialties in equal columns */
+.ind-depts{display:flex;flex-direction:column;gap:8px;margin:0 0 14px}
+.ind-dept{display:grid;grid-template-columns:190px minmax(0,1fr);align-items:start;gap:12px}
+.ind-dept-n{display:flex;align-items:center;gap:8px;height:40px;font-size:11px;font-weight:var(--w-strong);letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);white-space:nowrap}
+.ind-dept-n::before{content:"";width:3px;height:16px;border-radius:3px;background:var(--c);flex:none}
+.ind-dept-k{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+@media (max-width:820px){
+  .ind-dept{grid-template-columns:1fr;gap:4px}
+  .ind-dept-n{height:auto;margin-top:4px}
+  .ind-dept-k{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+}
+@media (min-width:821px){
+  .ind-dept{grid-template-columns:200px minmax(0,1fr)}
+  .ind-dept-k{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .ind-dept-n{font-size:10.5px;letter-spacing:.1em}
+  .ind-dept .fchip.ind-k{font-size:12.5px;padding:0 8px 0 11px;gap:6px}
+}
+@media (min-width:821px){
+  .ind-dept{grid-template-columns:172px minmax(0,1fr);gap:10px}
+  .ind-dept-k{gap:6px}
+  .ind-dept .fchip.ind-k{padding:0 6px 0 10px;font-size:12.5px}
+  .ind-dept .fchip.ind-k em{min-width:18px;height:18px;padding:0 5px;font-size:10.5px}
+}

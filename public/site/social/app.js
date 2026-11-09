@@ -108,6 +108,19 @@ const KINDS = [
   ['mixer', 'Sound Designer', 'post'], ['soundmix', 'Sound Mixer', 'post'], ['composer', 'Music Composer', 'post'], ['singer', 'Singer', 'post'], ['musician', 'Musician', 'post'],
   ['ai', 'AI Artist', 'post'], ['graphic', 'Graphic Designer', 'post'],
 ];
+// the departments inside each group, a row each in Industry (Alex, 9 Nov: "the camera department on one line")
+const DEPTS = [
+  ['lead', 'Writing', ['writer', 'copy']], ['lead', 'Leading', ['producer', 'director']], ['lead', 'Creative', ['creativedir', 'artdir']],
+  ['pre', 'Production Office', ['lineprod', 'prodman', 'coord', 'accountant']], ['pre', 'Casting & Locations', ['casting', 'scout', 'location']],
+  ['pre', 'Design', ['proddesign', 'costume', 'storyboard', 'illustrator']], ['pre', 'Movement', ['choreo']],
+  ['front', 'Acting', ['actor', 'voice', 'extra', 'faces', 'lookalike']], ['front', 'Movement', ['dancer', 'stunt', 'acrobat']],
+  ['front', 'On Camera', ['model', 'presenter', 'influencer', 'comedian']],
+  ['shoot', 'Direction', ['ad', 'script']], ['shoot', 'Camera', ['dop', 'camera', 'focus', 'dit', 'steadicam', 'drone']],
+  ['shoot', 'Light & Grip', ['gaffer', 'grip']], ['shoot', 'Sound', ['boom']], ['shoot', 'Hair, Make-Up & Wardrobe', ['makeup', 'hair', 'styling']],
+  ['shoot', 'Art & Stills', ['art', 'photo']], ['shoot', 'Production', ['prodassist', 'runner']],
+  ['post', 'Picture', ['editor', 'colorist']], ['post', 'VFX & Motion', ['vfx', 'motion', 'animator', 'ai', 'graphic']],
+  ['post', 'Sound & Music', ['mixer', 'soundmix', 'composer', 'singer', 'musician']],
+];
 // the five groups of Industry: their tab, a short name for a phone, a line, a colour and a line icon
 const GROUPS = [
   // in the order a film is made (Alex, 9 Nov): who leads it, before the shoot, who is cast, the shoot, after it
@@ -2308,10 +2321,13 @@ async function viewPeople(opts = {}) {
     // the specialties as small tinted chips, one tidy line per side (Alex, 5 Nov: "more tidy, no need for glass")
     const sd = SIDES[peopleSide];
     const nOf = (k) => data.filter((p) => (p.kinds || []).map((x) => (x === 'theatre' ? 'actor' : x)).includes(k)).length;
-    put(kindsBox, h('div', { class: 'kind-row ind-kinds' }, h('div', { class: 'fbody' }, KINDS.filter((k) => k[2] === sd).map(([k, name]) => {
-      const n = nOf(k);
-      return h('button', { type: 'button', class: 'fchip ind-k' + (peopleKinds.has(k) ? ' on' : '') + (n ? '' : ' none'), style: { '--c': HUE[sd] }, title: t(name), onclick: () => toggle(peopleKinds, k) }, h('i'), h('span', { class: 'ind-k-n' }, t(name)), h('em', {}, String(n)));
-    }))));
+    const kchip = (k) => { const n = nOf(k), name = KIND[k]; return h('button', { type: 'button', class: 'fchip ind-k' + (peopleKinds.has(k) ? ' on' : '') + (n ? '' : ' none'), style: { '--c': HUE[sd] }, title: t(name), onclick: () => toggle(peopleKinds, k) }, h('i'), h('span', { class: 'ind-k-n' }, t(name)), h('em', {}, String(n))); };
+    // one row per department: its name on the left, its specialties in equal columns
+    const listed = new Set(KINDS.filter((k) => k[2] === sd).map((k) => k[0]));
+    const rows = DEPTS.filter((d) => d[0] === sd).map(([, dn, ks]) => [dn, ks.filter((k) => listed.has(k))]).filter(([, ks]) => ks.length);
+    const rest = [...listed].filter((k) => !rows.some(([, ks]) => ks.includes(k)));
+    if (rest.length) rows.push([t('Other'), rest]);
+    put(kindsBox, h('div', { class: 'ind-depts', style: { '--c': HUE[sd] } }, rows.map(([dn, ks]) => h('div', { class: 'ind-dept' }, h('span', { class: 'ind-dept-n' }, t(dn)), h('div', { class: 'ind-dept-k' }, ks.map(kchip))))));
     drawFilters(); drawGrid();
   }
   peopleRedraw = () => { if (search.isConnected || opts.search) { search.value = peopleQ; draw(); } };
