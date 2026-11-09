@@ -2355,3 +2355,20 @@ html[data-theme=dark] .wz-in{background:rgba(0,0,0,.2)}
   .fs-card{border-radius:20px}
 }
 @media (min-width:821px){.ig-stats>*{align-items:center}.ig-stats>* b{line-height:1}}
+/* Home fresher, the same look as Industry and the profile (Alex, 9 Nov), computer only */
+@media (min-width:821px){
+  .feed-top{background:radial-gradient(900px 240px at 0% 0%,rgba(var(--a),.14),transparent 70%),radial-gradient(600px 200px at 100% 100%,rgba(79,140,255,.08),transparent 70%),var(--glass)!important;border-radius:24px}
+  .feed-top .st-toggle,.feed-top .new-post{height:44px;border-radius:999px}
+  .feed-top .ring{width:84px;gap:8px}
+  .feed-top .ring .r{width:74px;height:74px;padding:3px;box-shadow:0 6px 20px rgba(var(--a),.18)}
+  .feed-top .ring:hover .r{transform:translateY(-2px) scale(1.04)}
+  .feed-top .ring{font-size:12.5px;font-weight:500}
+  /* the posts lift a little under the mouse, with a thin rim */
+  .post.ig.clean .mwrap{transition:transform .5s var(--soft),box-shadow .5s var(--soft)}
+  .post.ig.clean .mwrap:hover{transform:translateY(-3px);box-shadow:0 0 0 1px rgba(255,255,255,.08),0 22px 48px rgba(0,0,0,.32)!important}
+  .post.ig.clean .who-line b{font-size:15.5px;font-weight:700}
+  /* the calls column: Latest on top like Our apps, the cards a little brighter on hover */
+  .feed-side>.fs-apps-head:first-child{margin-top:2px}
+  .fs-card.tint{transition:transform .4s var(--soft),box-shadow .4s var(--soft)}
+  .fs-card.tint:hover{transform:translateY(-2px)}
+}
