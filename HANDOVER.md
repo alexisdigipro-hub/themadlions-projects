@@ -1801,3 +1801,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 9 Nov 2026: Electrician / Spark and Dolly / Crane Operator taken off the Production list (KIND kept for old profiles).
 - 9 Nov 2026: Post-Production: VFX Artist, Motion Graphics (motion), 3D Animator, Sound Designer, Music Composer, Singer, Musician (musician), AI Artist.
 - 9 Nov 2026: Sound Mixer (soundmix) added to Post-Production after Sound Designer.
+- 9 Nov 2026: the cast filters as one glass card (.cf2): six equal blocks (Age with pill fields and bands Under 18 / 18-25 / 26-35 / 36-50 / 50+, Height in cm, Gender, Location, Hair and Eyes with colour swatches), Clear all on the card's top line. The footer's links are white on dark (ink on light).
