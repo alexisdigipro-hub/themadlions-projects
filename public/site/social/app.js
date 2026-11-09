@@ -2439,7 +2439,8 @@ async function viewPerson(id) {
   drawTab();
   frame(mineTab,
     (p.data?.cover || own) ? h('div', { class: 'ig-cover' }, coverOf(p, own)) : null,
-    h('section', { class: 'ig-head' + (p.data?.cover || own ? ' under-cover' : '') },
+    // fresher (Alex, 9 Nov): the head as a glass card tinted with the colour of what they do first
+    h('section', { class: 'ig-head' + (p.data?.cover || own ? ' under-cover' : ''), style: { '--pc': HUE[SIDE[(p.kinds || [])[0] === 'theatre' ? 'actor' : (p.kinds || [])[0]]] || '#d40000' } },
       h('div', { class: 'ig-av' + (theirStories.length ? ' has' : ''), role: theirStories.length ? 'button' : null, title: theirStories.length ? t('Stories') : null, onclick: theirStories.length ? () => openStories(theirStories, 0) : null },
         h('span', { class: 'r big' + (theirStories.length ? '' : ' plain') }, h('i', { style: bg(photos[0] || p.avatar) }, urlOf(photos[0] || p.avatar) ? '' : initials(p.name)))),
       // a tidier head (Alex, 5 Nov): the name with Edit profile and + on the right; the numbers, what they do and the city on one line
