@@ -2323,12 +2323,10 @@ async function viewPeople(opts = {}) {
     const sd = SIDES[peopleSide];
     const nOf = (k) => data.filter((p) => (p.kinds || []).map((x) => (x === 'theatre' ? 'actor' : x)).includes(k)).length;
     const kchip = (k) => { const n = nOf(k), name = KIND[k]; return h('button', { type: 'button', class: 'fchip ind-k' + (peopleKinds.has(k) ? ' on' : '') + (n ? '' : ' none'), style: { '--c': HUE[sd] }, title: t(name), onclick: () => toggle(peopleKinds, k) }, h('i'), h('span', { class: 'ind-k-n' }, t(name)), h('em', {}, String(n))); };
-    // one row per department: its name on the left, its specialties in equal columns
-    const listed = new Set(KINDS.filter((k) => k[2] === sd).map((k) => k[0]));
-    const rows = DEPTS.filter((d) => d[0] === sd).map(([, dn, ks]) => [dn, ks.filter((k) => listed.has(k))]).filter(([, ks]) => ks.length);
-    const rest = [...listed].filter((k) => !rows.some(([, ks]) => ks.includes(k)));
-    if (rest.length) rows.push([t('Other'), rest]);
-    put(kindsBox, h('div', { class: 'ind-depts', style: { '--c': HUE[sd] } }, rows.map(([dn, ks]) => h('div', { class: 'ind-dept' }, h('span', { class: 'ind-dept-n' }, t(dn)), h('div', { class: 'ind-dept-k' }, ks.map(kchip))))));
+    // back to one block of equal columns (Alex, 9 Nov: "too many lines"), the specialties in their departments' order
+    const listed = KINDS.filter((k) => k[2] === sd).map((k) => k[0]);
+    const order = [...DEPTS.filter((d) => d[0] === sd).flatMap((d) => d[2]).filter((k) => listed.includes(k)), ...listed];
+    put(kindsBox, h('div', { class: 'kind-row ind-kinds' }, h('div', { class: 'fbody' }, [...new Set(order)].map(kchip))));
     drawFilters(); drawGrid();
   }
   peopleRedraw = () => { if (search.isConnected || opts.search) { search.value = peopleQ; draw(); } };
