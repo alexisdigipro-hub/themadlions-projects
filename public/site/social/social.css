@@ -2326,3 +2326,32 @@ html[data-theme=dark] .wz-in{background:rgba(0,0,0,.2)}
   .wz-main{padding:16px}
 }
 .wz [hidden]{display:none!important}
+/* the profile and Home, fresher (Alex, 9 Nov: "freshen the profile and Home the same way"), computer only */
+@media (min-width:821px){
+  .ig-head{max-width:1280px;padding:26px 30px;border-radius:24px;border:1px solid var(--rim);box-shadow:var(--top),0 0 0 1px var(--rim-out);
+    background:radial-gradient(700px 260px at 0% 0%,color-mix(in srgb,var(--pc) 16%,transparent),transparent 70%),linear-gradient(135deg,color-mix(in srgb,var(--pc) 6%,transparent),transparent 60%),var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+  .ig-head.under-cover{padding-top:26px}
+  .ig-av .r.plain{background:conic-gradient(from 200deg,var(--pc),color-mix(in srgb,var(--pc) 40%,#fff),var(--pc))!important}
+  .ig-name h1{font-size:28px;font-weight:700;letter-spacing:-.01em}
+  .ig-stats{gap:10px}
+  .ig-stats>*{display:inline-flex;align-items:baseline;gap:6px;height:34px;padding:0 14px;border-radius:999px;background:rgba(128,128,140,.1);border:1px solid var(--rim);font-size:13.5px}
+  .ig-stats b{font-size:15px}
+  .ig-head .chips .chip{height:28px;padding:0 11px;border-radius:999px;font-size:12px;font-weight:600;background:color-mix(in srgb,var(--c) 16%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 34%,transparent);border:0;color:var(--ink)}
+  .ig-head .ig-meta{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+  .ig-line{font-size:16px;font-weight:600}
+  .ig-head .acts .btn:first-child{background:var(--a-solid)!important;border-color:var(--a-solid)!important;color:#fff!important;-webkit-text-fill-color:#fff}
+  /* the tabs as a centred glass capsule, the chosen one lit */
+  .ig-tabs{border-top:0;max-width:max-content;margin:18px auto 16px;padding:5px;gap:4px;border-radius:999px;background:var(--glass);border:1px solid var(--rim);box-shadow:var(--top),0 0 0 1px var(--rim-out)}
+  .ig-tabs button{padding:0 18px;height:40px;margin:0;border:0!important;border-radius:999px;transition:background .25s,color .25s}
+  .ig-tabs button.on{background:rgba(var(--a),.16);color:var(--ink);box-shadow:inset 0 0 0 1px rgba(var(--a),.45)}
+  /* the works as soft tiles with a slow zoom */
+  .grid{gap:12px;max-width:1280px}
+  .cell{border-radius:18px;box-shadow:0 0 0 1px var(--rim-out);transition:transform .45s var(--soft),box-shadow .45s var(--soft)}
+  .cell:hover{transform:translateY(-3px);box-shadow:0 0 0 1px var(--rim-out),0 16px 36px rgba(0,0,0,.28)}
+  /* Home: the stories frame with a soft tint, rings in the accent, the posts rounder */
+  .feed-top{background:radial-gradient(800px 200px at 0% 0%,rgba(var(--a),.10),transparent 70%),var(--glass)!important}
+  .feed-top .seg{background:rgba(0,0,0,.12)}
+  .post.ig.clean .mwrap{border-radius:22px}
+  .fs-card{border-radius:20px}
+}
+@media (min-width:821px){.ig-stats>*{align-items:center}.ig-stats>* b{line-height:1}}
