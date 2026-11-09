@@ -2494,3 +2494,4 @@ html[data-theme=dark] .ind-kcard .fchip.ind-k{background:rgba(255,255,255,.035)!
 .ig-media.has-cover{background:#0d0f12 var(--cover) center/cover no-repeat!important}
 .ig-media.has-cover>video.fv{opacity:0;background:transparent!important;transition:opacity .35s ease}
 .ig-media.has-cover>video.fv.live{opacity:1;background:#0d0f12!important}
+@media (min-width:821px){.ind-kcard{margin:0!important}.ind-kcard+div .cf2,.ind-kcard~div .cf2{margin-top:0!important}}
