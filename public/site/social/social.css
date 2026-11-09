@@ -2490,3 +2490,7 @@ html body .cp-act a.btn.main{background:var(--a-solid)!important;background-imag
 html[data-theme=dark] .ind-kcard .fchip.ind-k{background:rgba(255,255,255,.035)!important}
 .ind-kcard .fchip.ind-k.on{background:linear-gradient(135deg,color-mix(in srgb,var(--c) 30%,transparent),color-mix(in srgb,var(--c) 12%,transparent))!important}
 @media (max-width:820px){.ind-kcard{padding:12px}.ind-kcard .cf-top small{display:none}}
+/* a feed video shows its cover until it really plays (Alex, 9 Nov: no black before it starts) */
+.ig-media.has-cover{background:#0d0f12 var(--cover) center/cover no-repeat!important}
+.ig-media.has-cover>video.fv{opacity:0;background:transparent!important;transition:opacity .35s ease}
+.ig-media.has-cover>video.fv.live{opacity:1;background:#0d0f12!important}

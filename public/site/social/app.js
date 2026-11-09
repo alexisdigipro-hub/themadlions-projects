@@ -412,7 +412,10 @@ document.addEventListener('play', (e) => {
   document.querySelectorAll('video').forEach((o) => { if (o !== e.target && !o.paused) o.pause(); });
 }, true);
 function feedVideo(src, poster) {
-  const v = h('video', { class: 'fv', playsInline: true, preload: 'none', muted: prefs.mutedVideos, loop: true, poster: poster || null,
+  // the cover stays until the video really moves (Alex, 9 Nov: "it plays black before"): the video shows only once a
+  // third of a second has played, the cover (behind it, on the post) until then
+  const v = h('video', { class: 'fv' + (poster ? '' : ' live'), playsInline: true, preload: 'none', muted: prefs.mutedVideos, loop: true, poster: poster || null,
+    ontimeupdate: (e) => { if (e.target.currentTime > 0.3) e.target.classList.add('live'); },
     // a computer: the mouse over a video starts it (and so stops the others)
     onmouseenter: () => { if (isPhone()) return; delete v.dataset.held; if (!v.src && v.dataset.src) v.src = v.dataset.src; if (v.paused) v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); } });
   if (vidNear && vidPlay) { v.dataset.src = src; vidNear.observe(v); vidPlay.observe(v); } else v.src = src;
@@ -1744,6 +1747,7 @@ function postCard(r, st, refresh) {
     }, { once: true });
   }
   if (slides && media[0].type === 'video') {
+    if (urlOf(media[0].poster)) { slides.classList.add('has-cover'); slides.style.setProperty('--cover', `url("${urlOf(media[0].poster)}")`); }
     const shape = (w, hh) => { if (w && hh) slides.style.setProperty('--ar', `${w} / ${hh}`); };
     const m0 = media[0];
     if (m0.w && m0.h) shape(m0.w, m0.h);
