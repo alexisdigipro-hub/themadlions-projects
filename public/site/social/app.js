@@ -2340,7 +2340,7 @@ function faceTile(p) {
     // fresher (Alex, 9 Nov): the name, the first specialty as a chip in its group's colour, the city with a pin and the age
     h('div', { class: 'txt' }, h('b', {}, p.name),
       (p.kinds || []).length ? h('span', { class: 'face-k', style: { '--c': HUE[sideOf((p.kinds[0] === 'theatre' ? 'actor' : p.kinds[0]))] || '#8d929c' } }, h('i'), kindName(p.kinds[0]), p.kinds.length > 1 ? h('em', {}, '+' + (p.kinds.length - 1)) : null) : null,
-      p.city || (a != null && PERFORMER(p.kinds)) ? h('small', { class: 'face-where' }, p.city ? h('span', { html: ICON.pin }) : null, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} yrs', { n: a }) : ''].filter(Boolean).join(' · ')) : null));
+      p.city || (a != null && PERFORMER(p.kinds)) ? h('small', { class: 'face-where' }, p.data?.avail === 'now' ? h('i', { class: 'avail-dot', title: t('Available now') }) : null, p.city ? h('span', { html: ICON.pin }) : null, [p.city, a != null && PERFORMER(p.kinds) ? t('{n} yrs', { n: a }) : ''].filter(Boolean).join(' · ')) : null));
 }
 
 /* =====================================================================================================================
@@ -2376,8 +2376,14 @@ async function viewPerson(id) {
   const L = d.looks || {}, S = d.skills || {}, C = d.contact || {};
   const a = age(p.birth);
   const fact = (k, v) => (v ? h('div', { class: 'fact' }, h('small', {}, t(k)), h('span', {}, v)) : null);
-  const facts = [fact('Age', a != null && PERFORMER(p.kinds) ? `${a}` : ''), fact('City', p.city), fact('Height', L.height ? `${L.height} cm` : ''), fact('Clothes', L.size), fact('Shoe', L.shoe), fact('Hair', L.hair), fact('Eyes', L.eyes), fact('Languages', S.languages), fact('Agent', d.agent)].filter(Boolean);
-  const skillRows = [['Accents / dialects', S.accents], ['Dance', S.dance], ['Music / singing', S.music], ['Sports', S.sports], ['Driving licence', S.driving], ['Equipment', d.gear], ['Software', S.software], ['Other', S.other]].filter(([, v]) => v);
+  // what the profile form in steps adds (Alex, 9 Nov): playing age, measurements, availability, where, the day rate
+  // when its owner lets this viewer see it, years, what they make, licences and stunts
+  const rateSeen = d.rate && (d.rate.from || d.rate.to) && (own || d.rate.show === 'all' || ((d.rate.show || 'pros') === 'pros' && mine.some((m) => (m.kinds || []).some((k) => ['lead', 'pre'].includes(SIDE[k])))));
+  const AV = { now: 'Available now', busy: 'Busy for a while', off: 'Not taking work' };
+  const facts = [fact('Age', a != null && PERFORMER(p.kinds) ? `${a}` : ''), fact('Playing age', L.playFrom || L.playTo ? `${L.playFrom || '?'}–${L.playTo || '?'}` : ''), fact('City', p.city), fact('Height', L.height ? `${L.height} cm` : ''), fact('Clothes', L.size), fact('Shoe', L.shoe),
+    fact('Measurements', L.chest || L.waist || L.hips ? [L.chest, L.waist, L.hips].map((x) => x || '–').join(' / ') : ''), fact('Hair', L.hair), fact('Eyes', L.eyes), fact('Languages', S.languages), fact('Agent', d.agent),
+    fact('Availability', d.avail ? t(AV[d.avail] || '') : ''), fact('Works in', (d.where || []).map((x) => t(x)).join(', ')), fact('Day rate', rateSeen ? `${d.rate.from || '?'}–${d.rate.to || '?'} €` : ''), fact('Years in the job', d.years)].filter(Boolean);
+  const skillRows = [['What I make', (d.genres || []).map((x) => t(x)).join(', ')], ['Accents / dialects', S.accents], ['Dance', S.dance], ['Music / singing', S.music], ['Sports', S.sports], ['Driving licence', S.driving], ['Stunts', (d.stunts || []).map((x) => t(x)).join(', ')], ['Equipment', d.gear], ['Licences', (d.licences || []).map((x) => t(x)).join(', ')], ['Software', S.software], ['Portfolio', d.portfolio], ['Other', S.other]].filter(([, v]) => v);
   const followBtn = own ? null : h('button', { type: 'button', class: 'btn' + (follows.has(id) ? '' : ' main'), onclick: async (e) => {
     const on = follows.has(id);
     const btn = e.currentTarget;
@@ -2673,12 +2679,22 @@ async function viewEdit(which) {
   };
   const guard = h('div');
   const looks = h('div');
-  const kindsBox = h('div', { class: 'kind-groups' });
+  // step 1 (Alex, 9 Nov: the profile in steps, as the prototype he liked): the five groups as tiles, and under each
+  // group picked its specialties; a group with a specialty picked stays open
+  const kindsBox = h('div', { class: 'wz-kinds' });
+  const openGroups = new Set(GROUPS.filter((g) => p.kinds.some((k) => SIDE[k] === g[1])).map((g) => g[1]));
+  const kindsChanged = () => { drawKinds(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); drawWork(); drawSide(); };
   const drawKinds = () => {
-    // grouped as in Industry, each group with its icon and colour (Alex, 9 Nov)
-    put(kindsBox, ...GROUPS.map(([, sd, name, , , hue, ic]) => h('div', { class: 'kg', style: { '--c': hue } },
-      h('div', { class: 'kg-h' }, h('span', { class: 'kg-ic', html: ICON[ic] }), t(name)),
-      h('div', { class: 'pills' }, ...KINDS.filter((k) => k[2] === sd).map(([k, s]) => h('button', { type: 'button', class: 'pill' + (p.kinds.includes(k) ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); p.kinds = p.kinds.includes(k) ? p.kinds.filter((x) => x !== k) : [...p.kinds, k]; drawKinds(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); } }, t(s)))))));
+    put(kindsBox,
+      h('div', { class: 'wz-groups' }, GROUPS.map(([, sd, name, , line, hue, ic]) => h('button', { type: 'button', class: 'wz-g' + (openGroups.has(sd) ? ' on' : ''), style: { '--c': hue }, onclick: (e) => {
+        e.preventDefault();
+        if (openGroups.has(sd)) { openGroups.delete(sd); p.kinds = p.kinds.filter((k) => SIDE[k] !== sd); } else openGroups.add(sd);
+        kindsChanged();
+      } }, h('span', { class: 'wz-g-ic', html: ICON[ic] }), h('b', {}, t(name)), h('small', {}, t(line))))),
+      openGroups.size ? GROUPS.filter((g) => openGroups.has(g[1])).map(([, sd, name, , , hue, ic]) => h('div', { class: 'wz-box', style: { '--c': hue } },
+        h('div', { class: 'wz-box-h' }, h('span', { class: 'kg-ic', html: ICON[ic] }), t(name)),
+        h('div', { class: 'wz-chips' }, KINDS.filter((k) => k[2] === sd).map(([k, nm]) => h('button', { type: 'button', class: 'wz-chip' + (p.kinds.includes(k) ? ' on' : ''), onclick: (e) => { e.preventDefault(); p.kinds = p.kinds.includes(k) ? p.kinds.filter((x) => x !== k) : [...p.kinds, k]; kindsChanged(); } }, h('i'), t(nm))))))
+        : h('p', { class: 'hint wz-empty' }, t('Pick one or more groups above.')));
   };
   const drawGuard = () => {
     if (!isMinor()) { put(guard, ); return; }
@@ -2694,26 +2710,66 @@ async function viewEdit(which) {
   };
   const S = d.skills;
   // in front of the camera (actor, model, dancer, extra): looks and the skills a casting asks for
+  // words kept as a comma list (so old profiles and the Industry filters read them), shown as chips with a field to add
+  const tagField = (obj, key, ph, hue) => {
+    const box = h('div', { class: 'wz-tags', style: hue ? { '--c': hue } : null });
+    const list = () => String(obj[key] || '').split(',').map((x) => x.trim()).filter(Boolean);
+    const draw = () => put(box, ...list().map((x) => h('button', { type: 'button', class: 'wz-chip on', title: t('Remove'), onclick: (e) => { e.preventDefault(); obj[key] = list().filter((y) => y !== x).join(', '); draw(); drawSide(); } }, x, ' ✕')),
+      h('label', { class: 'wz-chip wz-add' }, '＋', h('input', { placeholder: ph, onkeydown: (e) => { if ((e.key === 'Enter' || e.key === ',') && e.target.value.trim()) { e.preventDefault(); obj[key] = [...list(), e.target.value.trim().replace(/,/g, '')].join(', '); draw(); drawSide(); box.querySelector('input')?.focus(); } }, onblur: (e) => { if (e.target.value.trim()) { obj[key] = [...list(), e.target.value.trim().replace(/,/g, '')].join(', '); draw(); drawSide(); } } })));
+    draw(); return box;
+  };
+  // one or several words picked from a list, written into a text field (hair "Brown, Long")
+  const pickWords = (obj, key, words, hue, one) => {
+    const box = h('div', { class: 'wz-chips', style: hue ? { '--c': hue } : null });
+    const has = (w) => String(obj[key] || '').toLowerCase().split(/[,\s]+/).includes(w.toLowerCase());
+    const draw = () => put(box, words.map((w) => h('button', { type: 'button', class: 'wz-chip' + (has(w) ? ' on' : ''), onclick: (e) => { e.preventDefault(); let l = String(obj[key] || '').split(',').map((x) => x.trim()).filter(Boolean); if (has(w)) l = l.filter((x) => x.toLowerCase() !== w.toLowerCase()); else l = one ? [...l.filter((x) => !one.includes(x)), w] : [...l, w]; obj[key] = l.join(', '); draw(); drawSide(); } }, h('i'), t(w))));
+    draw(); return box;
+  };
+  const pickSet = (arr, words, hue) => {
+    const box = h('div', { class: 'wz-chips', style: hue ? { '--c': hue } : null });
+    const draw = () => put(box, words.map((w) => h('button', { type: 'button', class: 'wz-chip' + (arr.includes(w) ? ' on' : ''), onclick: (e) => { e.preventDefault(); const i = arr.indexOf(w); if (i >= 0) arr.splice(i, 1); else arr.push(w); draw(); } }, h('i'), t(w))));
+    draw(); return box;
+  };
+  const unitIn = (obj, key, ph, unit) => h('label', { class: 'wz-in' }, bind(obj, key, h('input', { value: obj[key] || '', inputmode: 'numeric', placeholder: ph, oninput: () => setTimeout(drawSide) })), unit ? h('small', {}, unit) : null);
+  const gsec = (sd, title, ...kids) => { const g = GROUPS.find((x) => x[1] === sd); return h('section', { class: 'sec wz-sec', style: g ? { '--c': g[5] } : null }, h('h2', {}, g ? h('span', { class: 'kg-ic', html: ICON[g[6]] }) : null, title), ...kids); };
+  // in front of the camera: looks, playing age and the skills a casting asks for
   const drawLooks = () => {
     if (!PERFORMER(p.kinds) && !kid) { put(looks, ); return; }
-    const L = d.looks;
-    put(looks, 
-      sec(t('Looks'),
-        h('div', { class: 'row' }, field(t('Height (cm)'), bind(L, 'height', input(L.height, { inputmode: 'numeric' }))), field(t('Clothes size'), bind(L, 'size', input(L.size, { placeholder: t('e.g. M, 38') }))), field(t('Shoe size'), bind(L, 'shoe', input(L.shoe, { inputmode: 'numeric' })))),
-        h('div', { class: 'row' }, field(t('Hair'), bind(L, 'hair', input(L.hair, { placeholder: t('e.g. brown, long') }))), field(t('Eyes'), bind(L, 'eyes', input(L.eyes))), field(t('Tattoos / piercings'), bind(L, 'marks', input(L.marks, { placeholder: t('none / where') }))))),
-      sec(t('Skills'),
-        h('div', { class: 'row' }, field(t('Languages'), bind(S, 'languages', input(S.languages, { placeholder: t('Greek, English') }))), field(t('Accents / dialects'), bind(S, 'accents', input(S.accents, { placeholder: t('Cretan, Cypriot') })))),
-        h('div', { class: 'row' }, field(t('Dance'), bind(S, 'dance', input(S.dance, { placeholder: t('hip hop, contemporary, folk') }))), field(t('Music / singing'), bind(S, 'music', input(S.music)))),
-        h('div', { class: 'row' }, field(t('Sports'), bind(S, 'sports', input(S.sports))), field(t('Driving licence'), bind(S, 'driving', input(S.driving, { placeholder: t('car, motorbike') })))),
+    const L = d.looks, hue = HUE.front;
+    put(looks,
+      gsec('front', t('Cast · Looks'),
+        h('div', { class: 'row' }, field(t('Height'), unitIn(L, 'height', '168', 'cm')), field(t('Playing age from'), unitIn(L, 'playFrom', '24', t('yrs'))), field(t('to'), unitIn(L, 'playTo', '32', t('yrs')))),
+        h('div', { class: 'row' }, field(t('Clothes size'), bind(L, 'size', input(L.size, { placeholder: t('e.g. M, 38') }))), field(t('Shoe size'), bind(L, 'shoe', input(L.shoe, { inputmode: 'numeric' }))), field(t('Tattoos / piercings'), bind(L, 'marks', input(L.marks, { placeholder: t('none / where') })))),
+        field(t('Hair'), pickWords(L, 'hair', ['Blonde', 'Brown', 'Black', 'Red', 'Grey', 'Long', 'Medium', 'Short'], hue)),
+        field(t('Eyes'), pickWords(L, 'eyes', ['Brown', 'Blue', 'Green', 'Hazel', 'Black'], hue, ['Brown', 'Blue', 'Green', 'Hazel', 'Black']))),
+      gsec('front', t('Cast · Skills'),
+        h('div', { class: 'row' }, field(t('Languages'), tagField(S, 'languages', t('Add a language'), hue)), field(t('Accents / dialects'), tagField(S, 'accents', t('e.g. Cretan'), hue))),
+        h('div', { class: 'row' }, field(t('Dance'), tagField(S, 'dance', t('e.g. contemporary'), hue)), field(t('Music / singing'), tagField(S, 'music', t('e.g. piano, soprano'), hue))),
+        h('div', { class: 'row' }, field(t('Sports'), tagField(S, 'sports', t('e.g. swimming'), hue)), field(t('Driving licence'), tagField(S, 'driving', t('e.g. car, motorbike'), hue))),
+        p.kinds.includes('stunt') ? field(t('Stunts'), pickSet(d.stunts ||= [], ['Falls', 'Fights', 'Stunt driving', 'Horse riding', 'Wire work', 'Fire', 'Water'], hue)) : null,
+        p.kinds.includes('model') ? h('div', { class: 'row' }, field(t('Chest / bust'), unitIn(L, 'chest', '86', 'cm')), field(t('Waist'), unitIn(L, 'waist', '64', 'cm')), field(t('Hips'), unitIn(L, 'hips', '90', 'cm'))) : null,
         field(t('Other'), bind(S, 'other', input(S.other, { placeholder: t('anything else you can do') })))));
   };
   // behind the camera (and music): what they work with
   const tools = h('div');
   const drawTools = () => {
-    if (!CREW(p.kinds)) { put(tools, ); return; }
-    put(tools, sec(t('Equipment and tools'),
-      field(t('Equipment you own'), bind(d, 'gear', input(d.gear, { placeholder: t('e.g. Sony FX6, Aputure lights, drone') }))),
-      field(t('Software'), bind(S, 'software', input(S.software, { placeholder: t('e.g. DaVinci Resolve, After Effects, Premiere') })))));
+    const shoot = p.kinds.some((k) => SIDE[k] === 'shoot'), post = p.kinds.some((k) => SIDE[k] === 'post'), pre = p.kinds.some((k) => SIDE[k] === 'pre');
+    if (!shoot && !post && !pre) { put(tools, ); return; }
+    put(tools,
+      shoot ? gsec('shoot', t('Production · Gear and licences'),
+        h('div', { class: 'row' }, field(t('Gear I own'), tagField(d, 'gear', t('e.g. Sony FX6'), HUE.shoot)), field(t('Licences'), pickSet(d.licences ||= [], ['Drone licence', 'Driving licence', 'Own car', 'First aid'], HUE.shoot)))) : null,
+      pre || post ? gsec(post ? 'post' : 'pre', post ? t('Post-Production · Tools') : t('Pre-Production · Tools'),
+        field(t('Software'), tagField(S, 'software', t('e.g. DaVinci Resolve'), HUE[post ? 'post' : 'pre']))) : null);
+  };
+  // what they make and for how long, for everyone but the cast
+  const work = h('div');
+  const drawWork = () => {
+    const lead = p.kinds.some((k) => SIDE[k] !== 'front');
+    if (!lead) { put(work, ); return; }
+    const sd = ['lead', 'pre', 'shoot', 'post'].find((x) => p.kinds.some((k) => SIDE[k] === x));
+    put(work, gsec(sd, t('Your work'),
+      h('div', { class: 'row' }, field(t('Years in the job'), unitIn(d, 'years', '8', t('yrs'))), field(t('Portfolio or website'), bind(d, 'portfolio', input(d.portfolio, { type: 'url', placeholder: 'https://' })))),
+      field(t('What you make'), pickSet(d.genres ||= [], ['Commercials', 'Music videos', 'Feature films', 'Short films', 'Documentaries', 'Series', 'Branded content', 'Fashion', 'Theatre'], HUE[sd]))));
   };
   // pay and travel for everyone; swimwear only for whoever is in front of the camera
   const L2 = d.limits || (d.limits = {});
@@ -2797,56 +2853,100 @@ async function viewEdit(which) {
     await loadMine(); toast(t('Deleted')); location.hash = '#/me';
   }
 
-  drawKinds(); drawGuard(); drawLooks(); drawTools(); drawLimits(); drawPicHint(); drawThumbs();
-  // a row on top that jumps to each group
-  const jumpRow = old ? h('nav', { class: 'ed-jump' }, [['who', t('Profile')], ['media', t('Photos')], ['work', t('Experience')], ['contact', t('Contact')], ['privacy', t('Privacy')]].map(([k, l]) =>
-    h('button', { type: 'button', class: 'btn sm', onclick: () => document.getElementById('ed-' + k)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }, l))) : null;
-  frame('me', h('div', { class: 'form' },
-    h('div', { class: 'head' }, h('h1', {}, old ? t('Your profile') : kid ? t('My child\'s profile') : t('New profile'))),
-    jumpRow,
-    group('who', kid ? t('The child') : t('Who you are'), null,
-      h('div', { class: 'row' }, field(kid ? t('Child\'s full name') : t('Full name or stage name'), bind(p, 'name', input(p.name, { oninput: () => setTimeout(followName) }))), field(t('City'), bind(p, 'city', input(p.city, { placeholder: t('e.g. Athens') })))),
-      h('div', { class: 'row' },
-        field(t('Date of birth'), input(p.birth, { type: 'date', oninput: (e) => { p.birth = e.target.value; drawGuard(); } }), kid ? null : t('Not shown; only the age shows, and only for people in front of the camera.')),
-        field(t('Gender'), select(GENDERS.map(([v, s]) => [v, t(s)]), p.gender, { onchange: (e) => { p.gender = e.target.value; } }))),
-      field(t('Username'), handleIn, t('People tag you with it: @{h}. Letters a-z, numbers, dots.', { h: p.handle || 'your.name' })),
-      field(t('One line about you'), bind(p, 'headline', input(p.headline, { maxlength: 120, placeholder: t('e.g. Stage and screen actor, dances contemporary') }))),
-      field(t('What you do'), kindsBox, t('Pick all that apply.'))),
-    guard,
-    group('media', t('Photos and video'), null,
-      picHint, thumbs, pickPics,
-      field(t('Cover picture'), h('div', { class: 'acts', style: { marginTop: 0 } },
-        h('button', { type: 'button', class: 'btn sm', onclick: () => $('#coverIn').click() }, icon('pic'), d.cover ? t('Change cover') : t('Upload cover')), coverName,
-        d.cover ? h('button', { type: 'button', class: 'btn sm red', onclick: (e) => { coverGone = true; coverFile = null; coverName.textContent = t('The cover goes on Save.'); e.currentTarget.remove(); } }, t('Remove')) : null,
-        h('input', { id: 'coverIn', type: 'file', accept: 'image/*', hidden: true, onchange: async (e) => { const f = e.target.files[0]; e.target.value = ''; coverFile = f ? await cropImage(f, SHAPES.cover) : null; coverGone = false; coverName.textContent = coverFile ? t('A new cover, ready to save.') : ''; } })), t('The wide picture over your card and your profile.')),
-      h('div', { class: 'row' },
-        field(t('Self-tape or showreel (video up to 200 MB)'), h('div', { class: 'acts', style: { marginTop: 0 } },
-          h('button', { type: 'button', class: 'btn sm', onclick: () => $('#reelIn').click() }, p.reel ? t('Change video') : t('Upload video')), reelName,
-          h('input', { id: 'reelIn', type: 'file', accept: 'video/*', hidden: true, onchange: (e) => { reelFile = e.target.files[0] || null; reelName.textContent = reelFile ? reelFile.name : ''; } }))),
-        field(t('or a link (YouTube, Vimeo)'), bind(p, 'reel_url', input(p.reel_url, { type: 'url', placeholder: 'https://' }))))),
-    looks,
-    tools,
-    group('work', t('Experience'), null,
-      field(t('About you'), bind(p, 'bio', area(p.bio, { rows: 4 }))),
-      field(t('Credits'), credits),
-      h('div', { class: 'row' }, field(t('Studies'), bind(d, 'studies', input(d.studies, { placeholder: t('film school, drama, dance…') }))), field(t('Agent'), bind(d, 'agent', input(d.agent, { placeholder: t('if you have one') })))),
-      field(t('CV (PDF)'), h('div', { class: 'acts', style: { marginTop: 0 } },
-        h('button', { type: 'button', class: 'btn sm', onclick: () => $('#cvIn').click() }, p.cv ? t('Change PDF') : t('Upload PDF')), cvName,
-        h('input', { id: 'cvIn', type: 'file', accept: 'application/pdf', hidden: true, onchange: (e) => { cvFile = e.target.files[0] || null; cvName.textContent = cvFile ? cvFile.name : ''; } })))),
-    group('contact', t('Contact and limits'), null,
-      isMinor() ? h('p', { class: 'hint' }, t('For a minor, contact goes only through the parent.')) : h('div', {},
-        h('div', { class: 'row' }, field(t('Email'), bind(ct, 'email', input(ct.email, { type: 'email' }))), field(t('Phone'), bind(ct, 'phone', input(ct.phone, { type: 'tel' })))),
-        h('div', { class: 'row', style: { marginTop: '10px' } }, field(t('Website'), bind(C, 'site', input(C.site, { placeholder: 'www…' })))),
-        h('label', { class: 'check', style: { marginTop: '10px' } }, h('input', { type: 'checkbox', checked: ct.show, onchange: (e) => { ct.show = e.target.checked; } }), h('span', {}, t('Show my email and phone on my profile. Otherwise only whoever runs a call you apply to sees them.')))),
-      limits),
-    group('privacy', t('Privacy'), t('Who sees what on your profile.'),
-      toggleRow('user', t('Show me in Cast & Crew'), t('Your profile can be found in Industry and Search.'), p.visible !== false, (v) => { p.visible = v; }),
-      toggleRow('pic', t('Personal is public'), t('Off: only you see your Personal posts, anywhere on Roardino.'), !d.personal_private, (v) => { d.personal_private = !v; }),
-      isMinor() ? null : toggleRow('bookmark', t('Saved is public'), t('On: a Saved tab on your profile shows what you saved.'), !!d.saved_public, (v) => { d.saved_public = v; })),
-    sec(t('Agreement'),
-      h('label', { class: 'check' }, consentBox, h('span', {}, t('I agree that these details are kept on Roardino and seen by its members as set above. I can delete them all whenever I want.')))),
-    h('div', { class: 'form-foot' }, old ? h('button', { type: 'button', class: 'btn red', onclick: remove }, t('Delete profile')) : null, msg, h('span', { class: 'grow' }),
-      h('a', { class: 'btn', href: old ? `#/p/${id}` : '#/feed' }, t('Cancel')), saveBtn)));
+  // the side card: how the profile looks while it is being made, and how ready it is
+  const side = h('aside', { class: 'wz-side' });
+  const ready = () => { const L = d.looks || {}; const checks = [p.kinds.length, p.name, p.city, pics.length, p.headline || p.bio, d.avail, ct.email || ct.phone, PERFORMER(p.kinds) ? L.height : (d.gear || S.software || (d.genres || []).length)]; return Math.round(checks.filter(Boolean).length / checks.length * 100); };
+  function drawSide() {
+    const pic = pics[0] ? (pics[0].u || urlOf(pics[0].path)) : '';
+    const a = age(p.birth), r = ready();
+    put(side, h('div', { class: 'card wz-sidecard' }, h('span', { class: 'wz-lbl' }, t('Your profile')),
+      h('div', { class: 'face wz-face' }, h('div', { class: 'pic', style: pic ? { backgroundImage: `url("${pic}")` } : {} }, pic ? '' : initials(p.name || '?')),
+        h('div', { class: 'txt' }, h('b', {}, p.name || t('Your name')),
+          h('div', { class: 'wz-tagrow' }, p.kinds.slice(0, 4).map((k) => h('span', { class: 'face-k', style: { '--c': HUE[SIDE[k]] || '#8d929c' } }, h('i'), kindName(k))), p.kinds.length > 4 ? h('span', { class: 'face-k', style: { '--c': '#8d929c' } }, '+' + (p.kinds.length - 4)) : null),
+          h('small', { class: 'face-where' }, d.avail === 'now' ? h('i', { class: 'avail-dot' }) : null, [p.city || t('City'), a != null && PERFORMER(p.kinds) ? t('{n} yrs', { n: a }) : ''].filter(Boolean).join(' · ')))),
+      h('span', { class: 'wz-lbl', style: { marginTop: '16px' } }, t('Profile {n}% ready', { n: r })), h('div', { class: 'wz-bar' }, h('i', { style: { width: r + '%' } })),
+      h('p', { class: 'hint' }, !p.kinds.length ? t('Start by picking what you do. You can pick more than one.') : PERFORMER(p.kinds) && !d.looks.height ? t('Casting directors search by height, playing age and languages: fill them in and you show up in more searches.') : d.avail === 'now' ? t('Available now puts a green dot on your card in Industry.') : t('Every field can be changed later from your profile.'))));
+  }
+  // rate and availability (step 4)
+  d.rate ||= {}; d.where ||= [];
+  if (!d.avail) d.avail = 'now';
+  const availBox = h('div', { class: 'wz-chips', style: { '--c': HUE.shoot } });
+  const drawAvail = () => put(availBox, [['now', 'Available now'], ['busy', 'Busy for a while'], ['off', 'Not taking work']].map(([k, l]) => h('button', { type: 'button', class: 'wz-chip' + (d.avail === k ? ' on' : ''), onclick: (e) => { e.preventDefault(); d.avail = k; drawAvail(); drawSide(); } }, h('i'), t(l))));
+  const rateShowBox = h('div', { class: 'wz-chips' });
+  const drawRateShow = () => put(rateShowBox, [['pros', 'Only to productions'], ['all', 'Everyone'], ['none', 'No one']].map(([k, l]) => h('button', { type: 'button', class: 'wz-chip' + ((d.rate.show || 'pros') === k ? ' on' : ''), onclick: (e) => { e.preventDefault(); d.rate.show = k; drawRateShow(); } }, t(l))));
+  drawKinds(); drawGuard(); drawLooks(); drawTools(); drawWork(); drawLimits(); drawPicHint(); drawThumbs(); drawAvail(); drawRateShow();
+  // the five steps; a profile that exists can jump to any of them and save from each
+  const STEPS = [t('What you do'), t('The basics'), t('Your work'), t('Rate & availability'), t('Contact & privacy')];
+  let step = 0;
+  const panes = [
+    h('div', {}, h('h2', { class: 'wz-h' }, t('What do you do?')), h('p', { class: 'hint wz-sub' }, t('Pick your group and your specialties. You can pick more than one: your profile asks only what fits them.')), kindsBox),
+    h('div', {}, h('h2', { class: 'wz-h' }, kid ? t('The child') : t('The basics')), h('p', { class: 'hint wz-sub' }, t('Who you are, as people see it on your profile.')),
+      group('who', kid ? t('The child') : t('Who you are'), null,
+        h('div', { class: 'row' }, field(kid ? t('Child\'s full name') : t('Full name or stage name'), bind(p, 'name', input(p.name, { oninput: () => { setTimeout(followName); setTimeout(drawSide); } }))), field(t('City'), bind(p, 'city', input(p.city, { placeholder: t('e.g. Athens'), oninput: () => setTimeout(drawSide) })))),
+        h('div', { class: 'row' },
+          field(t('Date of birth'), input(p.birth, { type: 'date', oninput: (e) => { p.birth = e.target.value; drawGuard(); drawSide(); } }), kid ? null : t('Not shown; only the age shows, and only for people in front of the camera.')),
+          field(t('Gender'), select(GENDERS.map(([v, s2]) => [v, t(s2)]), p.gender, { onchange: (e) => { p.gender = e.target.value; } }))),
+        field(t('Username'), handleIn, t('People tag you with it: @{h}. Letters a-z, numbers, dots.', { h: p.handle || 'your.name' })),
+        field(t('One line about you'), bind(p, 'headline', input(p.headline, { maxlength: 120, placeholder: t('e.g. Stage and screen actor, dances contemporary') })))),
+      guard,
+      group('media', t('Photos'), null, picHint, thumbs, pickPics,
+        field(t('Cover picture'), h('div', { class: 'acts', style: { marginTop: 0 } },
+          h('button', { type: 'button', class: 'btn sm', onclick: () => $('#coverIn').click() }, icon('pic'), d.cover ? t('Change cover') : t('Upload cover')), coverName,
+          d.cover ? h('button', { type: 'button', class: 'btn sm red', onclick: (e) => { coverGone = true; coverFile = null; coverName.textContent = t('The cover goes on Save.'); e.currentTarget.remove(); } }, t('Remove')) : null,
+          h('input', { id: 'coverIn', type: 'file', accept: 'image/*', hidden: true, onchange: async (e) => { const f = e.target.files[0]; e.target.value = ''; coverFile = f ? await cropImage(f, SHAPES.cover) : null; coverGone = false; coverName.textContent = coverFile ? t('A new cover, ready to save.') : ''; } })), t('The wide picture over your card and your profile.')))),
+    h('div', {}, h('h2', { class: 'wz-h' }, t('Your work')), h('p', { class: 'hint wz-sub', id: 'wz-fits' }), looks, tools, work,
+      group('reel', t('Showreel and experience'), null,
+        h('div', { class: 'row' },
+          field(t('Self-tape or showreel (video up to 200 MB)'), h('div', { class: 'acts', style: { marginTop: 0 } },
+            h('button', { type: 'button', class: 'btn sm', onclick: () => $('#reelIn').click() }, p.reel ? t('Change video') : t('Upload video')), reelName,
+            h('input', { id: 'reelIn', type: 'file', accept: 'video/*', hidden: true, onchange: (e) => { reelFile = e.target.files[0] || null; reelName.textContent = reelFile ? reelFile.name : ''; } }))),
+          field(t('or a link (YouTube, Vimeo)'), bind(p, 'reel_url', input(p.reel_url, { type: 'url', placeholder: 'https://' })))),
+        field(t('About you'), bind(p, 'bio', area(p.bio, { rows: 4, placeholder: t('A few lines about you and your work'), oninput: () => setTimeout(drawSide) }))),
+        field(t('Credits'), credits),
+        h('div', { class: 'row' }, field(t('Studies'), bind(d, 'studies', input(d.studies, { placeholder: t('film school, drama, dance…') }))), field(t('Agent'), bind(d, 'agent', input(d.agent, { placeholder: t('if you have one') })))),
+        field(t('CV (PDF)'), h('div', { class: 'acts', style: { marginTop: 0 } },
+          h('button', { type: 'button', class: 'btn sm', onclick: () => $('#cvIn').click() }, p.cv ? t('Change PDF') : t('Upload PDF')), cvName,
+          h('input', { id: 'cvIn', type: 'file', accept: 'application/pdf', hidden: true, onchange: (e) => { cvFile = e.target.files[0] || null; cvName.textContent = cvFile ? cvFile.name : ''; } }))))),
+    h('div', {}, h('h2', { class: 'wz-h' }, t('Rate & availability')), h('p', { class: 'hint wz-sub' }, t('Optional. Productions see it only if you want.')),
+      group('rate', t('Day rate'), null, h('div', { class: 'row' }, field(t('From'), unitIn(d.rate, 'from', '250', t('€ / day'))), field(t('To'), unitIn(d.rate, 'to', '400', t('€ / day')))), field(t('Who sees it'), rateShowBox)),
+      group('avail', t('Availability'), null, availBox, field(t('Works in'), pickSet(d.where, ['Athens', 'Thessaloniki', 'All Greece', 'Abroad'], HUE.shoot))),
+      group('limits', t('Limits'), null, limits)),
+    h('div', {}, h('h2', { class: 'wz-h' }, t('Contact & privacy')), h('p', { class: 'hint wz-sub' }, t('How productions reach you, and what everyone sees.')),
+      group('contact', t('Contact'), null,
+        isMinor() ? h('p', { class: 'hint' }, t('For a minor, contact goes only through the parent.')) : h('div', {},
+          h('div', { class: 'row' }, field(t('Email'), bind(ct, 'email', input(ct.email, { type: 'email', oninput: () => setTimeout(drawSide) }))), field(t('Phone'), bind(ct, 'phone', input(ct.phone, { type: 'tel' })))),
+          h('div', { class: 'row', style: { marginTop: '10px' } }, field(t('Website'), bind(C, 'site', input(C.site, { placeholder: 'www…' })))),
+          h('label', { class: 'check', style: { marginTop: '10px' } }, h('input', { type: 'checkbox', checked: ct.show, onchange: (e) => { ct.show = e.target.checked; } }), h('span', {}, t('Show my email and phone on my profile. Otherwise only whoever runs a call you apply to sees them.'))))),
+      group('privacy', t('Privacy'), t('Who sees what on your profile.'),
+        toggleRow('user', t('Show me in Industry'), t('Your profile can be found in Industry and Search.'), p.visible !== false, (v) => { p.visible = v; }),
+        toggleRow('pic', t('Personal is public'), t('Off: only you see your Personal posts, anywhere on Roardino.'), !d.personal_private, (v) => { d.personal_private = !v; }),
+        isMinor() ? null : toggleRow('bookmark', t('Saved is public'), t('On: a Saved tab on your profile shows what you saved.'), !!d.saved_public, (v) => { d.saved_public = v; })),
+      sec(t('Agreement'), h('label', { class: 'check' }, consentBox, h('span', {}, t('I agree that these details are kept on Roardino and seen by its members as set above. I can delete them all whenever I want.'))))),
+  ];
+  if (old) consentBox.checked = true;
+  const stepsBar = h('div', { class: 'wz-steps' });
+  const backBtn = h('button', { type: 'button', class: 'btn', onclick: () => go(step - 1) }, '← ' + t('Back'));
+  const nextBtn = h('button', { type: 'button', class: 'btn main', onclick: () => go(step + 1) }, t('Next') + ' →');
+  const okStep = (i) => { if (i >= 1 && !p.kinds.length) { toast(t('Pick at least one thing you do.')); return false; } if (i >= 2 && !p.name?.trim()) { toast(t('Write the name.')); return false; } return true; };
+  function go(i) {
+    if (i > step && !old && !okStep(i)) return;
+    step = Math.max(0, Math.min(STEPS.length - 1, i));
+    panes.forEach((el, k) => { el.hidden = k !== step; });
+    put(stepsBar, STEPS.map((sname, k) => h('button', { type: 'button', class: 'wz-st' + (k < step ? ' done' : k === step ? ' on' : ''), onclick: () => { if (old || k <= step || okStep(k)) go(k); } }, h('b', { html: k < step ? ICON.check : String(k + 1) }), h('span', {}, sname))));
+    const fits = document.getElementById('wz-fits'); if (fits) fits.textContent = p.kinds.length ? t('Only what fits {list}.', { list: p.kinds.map(kindName).join(', ') }) : '';
+    backBtn.hidden = step === 0;
+    nextBtn.hidden = step === STEPS.length - 1;
+    saveBtn.hidden = !old && step !== STEPS.length - 1;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  frame('me', h('div', { class: 'form wz' },
+    h('div', { class: 'head wz-head' }, h('h1', { class: 'wz-title' }, old ? t('Your profile') : kid ? t('My child\'s profile') : t('New profile')), stepsBar),
+    h('div', { class: 'wz-lay' },
+      h('div', { class: 'card wz-main' }, ...panes,
+        h('div', { class: 'form-foot wz-foot' }, backBtn, old ? h('button', { type: 'button', class: 'btn red', onclick: remove }, t('Delete profile')) : null, msg, h('span', { class: 'grow' }),
+          h('a', { class: 'btn', href: old ? `#/p/${id}` : '#/feed' }, t('Cancel')), nextBtn, saveBtn)),
+      side)));
+  drawSide(); go(0);
 }
 
 /* =====================================================================================================================
