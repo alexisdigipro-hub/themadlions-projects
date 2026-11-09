@@ -717,3 +717,12 @@ drop policy if exists rd_site_msg_del on public.roardino_site_messages;
 create policy rd_site_msg_del on public.roardino_site_messages for delete to authenticated using (public.roar_is_admin());
 grant insert on public.roardino_site_messages to anon, authenticated;
 grant select, update, delete on public.roardino_site_messages to authenticated;
+
+-- Calls with a picture and more (Alex, 9 Nov: "calls with more features, more beautiful, with pictures"): a cover
+-- picture (path in roardino-people under <account>/calls/, seen by everyone signed in) and extra details in one jsonb
+-- (self-tape ok, remote, roles, how to apply)
+alter table public.roardino_calls add column if not exists cover text;
+alter table public.roardino_calls add column if not exists extra jsonb not null default '{}'::jsonb;
+drop policy if exists rd_call_covers_read on storage.objects;
+create policy rd_call_covers_read on storage.objects for select to authenticated using (
+  bucket_id = 'roardino-people' and (storage.foldername(name))[2] = 'calls');
