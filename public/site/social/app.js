@@ -2955,56 +2955,125 @@ async function viewEdit(which) {
 /* =====================================================================================================================
    Calls
    ===================================================================================================================== */
-let callsFilter = 'all';
+let callsFilter = 'all', callsQ = '', callsCity = '', callsPaid = false, callsSort = 'new';
 const CALL_KIND = { casting: 'Casting', crew: 'Crew', other: 'Call' };
+// Calls with more and a picture (Alex, 9 Nov): a colour and an icon per kind, the days left, a cover on every card
+const CALL_HUE = { casting: '#e5484d', crew: '#2fb67a', other: '#e0a33a' };
+const CALL_IC = { casting: 'star', crew: 'cam', other: 'calls' };
+const daysLeft = (d) => (d ? Math.ceil((new Date(d + 'T23:59:59') - Date.now()) / 864e5) : null);
+const leftText = (c) => { if (!c.open) return t('Closed'); const n = daysLeft(c.closes); return n == null ? '' : n < 0 ? t('Closed') : n === 0 ? t('Closes today') : n === 1 ? t('1 day left') : t('{n} days left', { n }); };
+const unpaid = (c) => !c.pay || /unpaid|free|δωρεάν|χωρίς αμοιβή|απλήρωτ/i.test(c.pay);
 async function viewCalls() {
   document.title = 'Roardino · ' + t('Calls');
-  const box = h('div', { class: 'tiles' }, h('p', { class: 'wait' }, t('Loading…')));
-  frame('calls', h('div', { class: 'head' }, h('h1', {}, t('Calls')), seg([['all', t('All')], ['casting', t('Casting')], ['crew', t('Crew')], ['mine', t('Mine')]], callsFilter, (k) => { callsFilter = k; viewCalls(); }), h('span', { class: 'grow' }), h('button', { type: 'button', class: 'btn main head-new', title: t('New call'), 'aria-label': t('New call'), onclick: () => editCall() }, icon('plus'), h('span', { class: 'lbl' }, t('New call')))), box);
-  let q = sb.from('roardino_calls').select('*').order('created_at', { ascending: false }).limit(200);
-  if (callsFilter === 'mine') q = q.eq('owner', session.user.id); else q = q.eq('open', true);
-  if (['casting', 'crew'].includes(callsFilter)) q = q.eq('kind', callsFilter);
-  const { data, error } = await q;
+  const uid = session.user.id;
+  const grid = h('div', { class: 'cgrid' }, h('p', { class: 'wait' }, t('Loading…')));
+  const tilesBox = h('div'), filterBox = h('div', { class: 'cfilters' }), countBox = h('span', { class: 'hint people-count' });
+  const search = input(callsQ, { type: 'search', class: 'input search ind-search', placeholder: t('Title, city, production, who'), 'aria-label': t('Search calls'), oninput: (e) => { callsQ = e.target.value; draw(); } });
+  frame('calls', h('div', { class: 'head ind-head' }, h('h1', { class: 'ind-title' }, t('Calls')), search, countBox,
+    h('button', { type: 'button', class: 'btn main head-new', title: t('New call'), 'aria-label': t('New call'), onclick: () => editCall() }, icon('plus'), h('span', { class: 'lbl' }, t('New call')))), tilesBox, filterBox, grid);
+  const [{ data, error }, { data: myAp }] = await Promise.all([
+    sb.from('roardino_calls').select('*').or(`open.eq.true,owner.eq.${uid}`).order('created_at', { ascending: false }).limit(300),
+    sb.from('roardino_applies').select('call_id').eq('owner', uid)]);
   if (error) throw error;
-  put(box, ...(data.length ? data.map(callTile) : [h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, t('No calls yet')), t('Looking for an actor, a dancer or a gaffer? Post the first one.'))]));
+  const applied = new Set((myAp || []).map((x) => x.call_id));
+  const ownIds = data.filter((c) => c.owner === uid).map((c) => c.id);
+  const counts = {};
+  if (ownIds.length) { const { data: ap } = await sb.from('roardino_applies').select('call_id').in('call_id', ownIds); (ap || []).forEach((x) => { counts[x.call_id] = (counts[x.call_id] || 0) + 1; }); }
+  await sign(data.map((c) => c.cover));
+  const live = (c) => c.open && (daysLeft(c.closes) == null || daysLeft(c.closes) >= 0);
+  const TYPES = [['all', 'All', '#d40000', 'calls', (c) => live(c)], ['casting', 'Casting', CALL_HUE.casting, 'star', (c) => live(c) && c.kind === 'casting'], ['crew', 'Crew', CALL_HUE.crew, 'cam', (c) => live(c) && c.kind === 'crew'],
+    ['other', 'Other', CALL_HUE.other, 'flag', (c) => live(c) && c.kind === 'other'], ['mine', 'Mine', '#4f8cff', 'user', (c) => c.owner === uid]];
+  const cityCount = new Map();
+  data.filter(live).forEach((c) => { if (!c.city) return; const k = cityKey(c.city); const e = cityCount.get(k) || { name: c.city, n: 0 }; e.n++; cityCount.set(k, e); });
+  const cities = [...cityCount.entries()].sort((x, y) => y[1].n - x[1].n).slice(0, 8);
+  function draw() {
+    const T = TYPES.find((x) => x[0] === callsFilter) || TYPES[0];
+    put(tilesBox, h('div', { class: 'ind-groups' }, TYPES.map(([k, name, hue, ic, test]) => h('button', { type: 'button', class: 'ind-g' + (callsFilter === k ? ' on' : ''), style: { '--c': hue }, onclick: () => { callsFilter = k; draw(); } },
+      h('span', { class: 'ind-g-ic', html: ICON[ic] }), h('span', { class: 'ind-g-t' }, h('b', {}, h('span', { class: 'long' }, t(name)), h('span', { class: 'short' }, t(name))), h('small', {}, k === 'mine' ? t('Calls you posted') : k === 'all' ? t('Every open call') : t('Open calls'))), h('span', { class: 'ind-g-n' }, String(data.filter(test).length))))));
+    const pill = (on, label, fn) => h('button', { type: 'button', class: 'cf-chip sm' + (on ? ' on' : ''), onclick: fn }, label);
+    put(filterBox,
+      h('div', { class: 'cf-wrap' }, pill(!callsCity, t('Everywhere'), () => { callsCity = ''; draw(); }), cities.map(([k, e]) => pill(callsCity === k, e.name, () => { callsCity = callsCity === k ? '' : k; draw(); }))),
+      h('span', { class: 'grow' }),
+      pill(callsPaid, t('Paid only'), () => { callsPaid = !callsPaid; draw(); }),
+      h('div', { class: 'cf-wrap' }, pill(callsSort === 'new', t('Newest'), () => { callsSort = 'new'; draw(); }), pill(callsSort === 'soon', t('Closing soon'), () => { callsSort = 'soon'; draw(); })));
+    const q = fold(callsQ.trim());
+    let list = data.filter(T[4]).filter((c) => !callsCity || cityKey(c.city) === callsCity).filter((c) => !callsPaid || !unpaid(c))
+      .filter((c) => !q || fold([c.title, c.company, c.city, c.about, c.pay, (c.wanted || []).map(kindName).join(' ')].join(' ')).includes(q));
+    if (callsSort === 'soon') list = [...list].sort((x, y) => (daysLeft(x.closes) ?? 9999) - (daysLeft(y.closes) ?? 9999));
+    countBox.textContent = list.length === 1 ? t('1 call') : t('{n} calls', { n: list.length });
+    put(grid, list.length ? list.map((c) => callTile(c, { applied: applied.has(c.id), count: counts[c.id], own: c.owner === uid }))
+      : h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, h('b', {}, callsFilter === 'mine' ? t('You have not posted a call') : t('No calls here')), callsFilter === 'mine' ? t('Looking for an actor, a dancer or a gaffer? Post one.') : t('Take a filter away, or post the first one.')));
+  }
+  draw();
 }
 const callWho = (c) => [(c.wanted || []).map(kindName).join(', '), c.age_from || c.age_to ? t('{a}-{b} years', { a: c.age_from || '', b: c.age_to || '' }) : '', { f: t('woman'), m: t('man') }[c.gender] || ''].filter(Boolean).join(' · ');
-function callTile(c) {
-  return h('a', { class: 'tile', href: `#/c/${c.id}` },
-    h('div', { class: 't-top' }, h('span', { class: 't-ico', html: c.kind === 'casting' ? ICON.star : ICON.calls }),
-      h('div', { style: { minWidth: 0 } }, h('span', { class: 'when' }, t(CALL_KIND[c.kind]) + (c.open ? '' : ' · ' + t('closed'))), h('h3', {}, c.title))),
-    h('div', { class: 'meta' }, [c.company, c.city, c.pay].filter(Boolean).map((x) => h('span', {}, x))),
-    callWho(c) ? h('p', {}, callWho(c)) : null,
-    h('div', { class: 'foot-line' }, [ago(c.created_at), c.dates, c.closes ? t('until {d}', { d: shortDate(c.closes) }) : ''].filter(Boolean).join(' · ')));
+// a call as a card: its picture (or its kind's colour), the kind and the days left on it, the title, where, pay, when,
+// who is wanted, and Apply / Applied / how many applied
+function callTile(c, o) {
+  o = o && typeof o === 'object' ? o : {};
+  const hue = CALL_HUE[c.kind] || CALL_HUE.other, pic = urlOf(c.cover), left = leftText(c), n = daysLeft(c.closes);
+  const ln = (ic, txt) => (txt ? h('span', { class: 'ct-ln' }, h('span', { html: ICON[ic] }), txt) : null);
+  return h('a', { class: 'ct', href: `#/c/${c.id}`, style: { '--c': hue } },
+    h('div', { class: 'ct-pic' + (pic ? '' : ' none'), style: pic ? { backgroundImage: `url("${pic}")` } : {} }, pic ? null : h('span', { class: 'ct-big', html: ICON[CALL_IC[c.kind] || 'calls'] }),
+      h('span', { class: 'ct-kind' }, h('i'), t(CALL_KIND[c.kind] || 'Call')),
+      left ? h('span', { class: 'ct-left' + (!c.open || (n != null && n < 0) ? ' off' : n != null && n <= 3 ? ' soon' : '') }, left) : null),
+    h('div', { class: 'ct-body' },
+      h('h3', {}, c.title), c.company ? h('p', { class: 'ct-co' }, c.company) : null,
+      h('div', { class: 'ct-lines' }, ln('pin', c.city), ln('ticket', c.pay), ln('cal', c.dates)),
+      (c.wanted || []).length ? h('div', { class: 'ct-who' }, c.wanted.slice(0, 3).map((k) => h('span', { class: 'face-k', style: { '--c': HUE[SIDE[k]] || hue } }, h('i'), kindName(k))), c.wanted.length > 3 ? h('span', { class: 'face-k', style: { '--c': '#8d929c' } }, '+' + (c.wanted.length - 3)) : null) : null,
+      h('div', { class: 'ct-foot' }, h('small', {}, ago(c.created_at)), h('span', { class: 'grow' }),
+        o.own ? h('span', { class: 'ct-badge' }, t('{n} applied', { n: o.count || 0 })) : o.applied ? h('span', { class: 'ct-badge ok' }, icon('check'), t('Applied')) : c.open ? h('span', { class: 'ct-go' }, t('Apply'), ' →') : null)));
 }
 function editCall(old) {
-  const c = structuredClone(old || { kind: 'casting', wanted: [], open: true });
-  const wanted = h('div', { class: 'pills' });
-  const drawW = () => put(wanted, ...KINDS.map(([k, s]) => h('button', { type: 'button', class: 'pill' + (c.wanted.includes(k) ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); c.wanted = c.wanted.includes(k) ? c.wanted.filter((x) => x !== k) : [...c.wanted, k]; drawW(); } }, t(s))));
-  drawW();
-  const bind = (key, el) => { el.addEventListener('input', () => { c[key] = el.value; }); return el; };
+  const c = structuredClone(old || { kind: 'casting', wanted: [], open: true, extra: {} });
+  c.extra ||= {};
+  let coverFile = null, coverGone = false;
+  const bind = (key, el, obj = c) => { el.addEventListener('input', () => { obj[key] = el.value; }); return el; };
   const kindSeg = h('div');
-  const drawK = () => put(kindSeg, seg([['casting', t('Casting')], ['crew', t('Crew')], ['other', t('Other')]], c.kind, (k) => { c.kind = k; drawK(); }));
+  const drawK = () => put(kindSeg, h('div', { class: 'ce-kinds' }, [['casting', 'Casting', 'Actors, models, dancers'], ['crew', 'Crew', 'Behind the camera'], ['other', 'Other', 'Anything else']].map(([k, l, s2]) =>
+    h('button', { type: 'button', class: 'ind-g' + (c.kind === k ? ' on' : ''), style: { '--c': CALL_HUE[k] }, onclick: (e) => { e.preventDefault(); c.kind = k; drawK(); } }, h('span', { class: 'ind-g-ic', html: ICON[CALL_IC[k]] }), h('span', { class: 'ind-g-t' }, h('b', {}, t(l)), h('small', {}, t(s2)))))));
   drawK();
-  openWin(old ? t('The call') : t('New call'), h('div', { style: { display: 'flex', flexDirection: 'column', gap: '12px' } },
-    kindSeg,
+  // who is wanted, picked from the Industry groups
+  const wanted = h('div', { class: 'wz-kinds' });
+  const drawW = () => put(wanted, GROUPS.map(([, sd, name, , , hue, ic]) => h('div', { class: 'wz-box', style: { '--c': hue } }, h('div', { class: 'wz-box-h' }, h('span', { class: 'kg-ic', html: ICON[ic] }), t(name)),
+    h('div', { class: 'wz-chips' }, KINDS.filter((k) => k[2] === sd).map(([k, nm]) => h('button', { type: 'button', class: 'wz-chip' + (c.wanted.includes(k) ? ' on' : ''), onclick: (e) => { e.preventDefault(); c.wanted = c.wanted.includes(k) ? c.wanted.filter((x) => x !== k) : [...c.wanted, k]; drawW(); } }, h('i'), t(nm)))))));
+  drawW();
+  // the picture on top of the call, 16:9
+  const coverBox = h('div', { class: 'ce-cover' });
+  const drawCover = () => { const u = coverFile ? URL.createObjectURL(coverFile) : !coverGone && c.cover ? urlOf(c.cover) : ''; put(coverBox,
+    h('button', { type: 'button', class: 'ce-pic' + (u ? '' : ' none'), style: u ? { backgroundImage: `url("${u}")` } : {}, onclick: (e) => { e.preventDefault(); coverIn.click(); } }, u ? null : h('span', {}, icon('pic'), t('Add a picture'))),
+    u ? h('div', { class: 'acts', style: { marginTop: 0 } }, h('button', { type: 'button', class: 'btn sm', onclick: (e) => { e.preventDefault(); coverIn.click(); } }, icon('pic'), t('Change')), h('button', { type: 'button', class: 'btn sm red', onclick: (e) => { e.preventDefault(); coverFile = null; coverGone = true; drawCover(); } }, icon('trash'), t('Remove'))) : null); };
+  const coverIn = h('input', { type: 'file', accept: 'image/*', hidden: true, onchange: async (e) => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; coverFile = await cropImage(f, [['16:9', 16 / 9]]); if (coverFile) coverGone = false; drawCover(); } });
+  drawCover();
+  const sw = (key, label) => h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!c.extra[key], onchange: (e) => { c.extra[key] = e.target.checked; } }), h('span', {}, t(label)));
+  openWin(old ? t('The call') : t('New call'), h('div', { class: 'ce' },
+    kindSeg, coverIn,
+    field(t('Picture'), coverBox, t('A still, a mood picture or the poster. It shows on the card and on top of the call.')),
     field(t('Title'), bind('title', input(c.title, { placeholder: t('e.g. Looking for a dancer for a music video') }))),
     field(t('Who you are looking for'), wanted),
     h('div', { class: 'row' }, field(t('Age from'), bind('age_from', input(c.age_from, { inputmode: 'numeric' }))), field(t('to'), bind('age_to', input(c.age_to, { inputmode: 'numeric' }))), field(t('Gender'), select([['', t('Any')], ['f', t('Woman')], ['m', t('Man')]], c.gender, { onchange: (e) => { c.gender = e.target.value; } }))),
     h('div', { class: 'row' }, field(t('City'), bind('city', input(c.city))), field(t('When'), bind('dates', input(c.dates, { placeholder: t('e.g. 12-13 Dec') }))), field(t('Pay'), bind('pay', input(c.pay, { placeholder: t('e.g. €150 a day') })))),
     h('div', { class: 'row' }, field(t('Company / production'), bind('company', input(c.company))), field(t('Applications until'), bind('closes', input(c.closes, { type: 'date' })))),
     field(t('Description'), bind('about', area(c.about, { rows: 5, placeholder: t('What the job is, what they need to know, what to send.') }))),
+    field(t('How to apply'), bind('howto', input(c.extra.howto, { placeholder: t('e.g. a self-tape of the scene, a showreel, two photos') }), c.extra)),
+    h('div', { class: 'ce-checks' }, sw('selftape', 'Self-tapes welcome'), sw('remote', 'Can be done remotely'), sw('travel', 'Travel and stay paid')),
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!c.minors_ok, onchange: (e) => { c.minors_ok = e.target.checked; } }), h('span', {}, t('Children under 18 welcome too (through a parent). You will see the profiles of those who apply.')))),
   (close) => [
-    old ? h('button', { type: 'button', class: 'btn red', onclick: async () => { if (!(await ask(t('Delete the call?')))) return; const { error } = await sb.from('roardino_calls').delete().eq('id', old.id); if (error) return fail(error); close(); location.hash = '#/calls'; } }, t('Delete')) : null,
+    old ? h('button', { type: 'button', class: 'btn red', onclick: async () => { if (!(await ask(t('Delete the call?')))) return; const { error } = await sb.from('roardino_calls').delete().eq('id', old.id); if (error) return fail(error); if (old.cover) removeFiles([old.cover]); close(); location.hash = '#/calls'; } }, t('Delete')) : null,
     h('button', { type: 'button', class: 'btn', onclick: close }, t('Cancel')),
-    h('button', { type: 'button', class: 'btn main', onclick: async () => {
+    h('button', { type: 'button', class: 'btn main', onclick: async (e) => {
       if (!c.title?.trim()) return toast(t('Write a title.'));
-      const row = { kind: c.kind, title: c.title.trim(), about: c.about || null, company: c.company || null, city: c.city || null, dates: c.dates || null, pay: c.pay || null, wanted: c.wanted, age_from: +c.age_from || null, age_to: +c.age_to || null, gender: c.gender || null, minors_ok: !!c.minors_ok, closes: c.closes || null, open: c.open !== false };
-      const res = old ? await sb.from('roardino_calls').update(row).eq('id', old.id).select().single() : await sb.from('roardino_calls').insert(row).select().single();
-      if (res.error) return fail(res.error);
-      close(); toast(t('The call is up'));
-      if (location.hash === `#/c/${res.data.id}`) route(); else location.hash = `#/c/${res.data.id}`;
+      const btn = e.currentTarget; btn.disabled = true;
+      try {
+        let cover = coverGone ? null : c.cover || null;
+        if (coverFile) cover = await upload('calls', coverFile, '');
+        const row = { kind: c.kind, title: c.title.trim(), about: c.about || null, company: c.company || null, city: c.city || null, dates: c.dates || null, pay: c.pay || null, wanted: c.wanted, age_from: +c.age_from || null, age_to: +c.age_to || null, gender: c.gender || null, minors_ok: !!c.minors_ok, closes: c.closes || null, open: c.open !== false, cover, extra: c.extra };
+        const res = old ? await sb.from('roardino_calls').update(row).eq('id', old.id).select().single() : await sb.from('roardino_calls').insert(row).select().single();
+        if (res.error) throw res.error;
+        if (old?.cover && old.cover !== cover) removeFiles([old.cover]);
+        close(); toast(t('The call is up'));
+        if (location.hash === `#/c/${res.data.id}`) route(); else location.hash = `#/c/${res.data.id}`;
+      } catch (er) { btn.disabled = false; fail(er); }
     } }, old ? t('Save') : t('Post'))]);
 }
 async function viewCall(id) {
@@ -3015,7 +3084,7 @@ async function viewCall(id) {
   const own = c.owner === session.user.id;
   const { data: applies } = await sb.from('roardino_applies').select('*, person:roardino_people(id,name,kinds,city,birth,avatar,minor,data,guardian)').eq('call_id', id).order('created_at');
   const mineApplied = (applies || []).filter((a) => a.owner === session.user.id);
-  await sign((applies || []).map((a) => a.person?.avatar));
+  await sign([c.cover, ...(applies || []).map((a) => a.person?.avatar)]);
   const cts = {};
   if (own && (applies || []).length) {
     const { data: cr } = await sb.from('roardino_contacts').select('*').in('person_id', applies.map((a) => a.person_id));
@@ -3029,37 +3098,51 @@ async function viewCall(id) {
     put(who, ...(list.length ? list.map((a) => {
       const tile = faceTile(a.person || {});
       tile.append(h('span', { class: 'state ' + a.status }, t(labels[a.status])));
-      // the one who opened the call reaches the applicant: their own contact, or a minor's parent
       const ap = a.person || {}, ct = ap.minor ? { email: ap.guardian?.email, phone: ap.guardian?.phone } : (cts[a.person_id] || {});
       return h('div', { class: 'who-cell' }, tile,
         a.note ? h('p', { class: 'hint' }, a.note) : null,
-        ct.email || ct.phone ? h('p', { class: 'hint' }, ap.minor ? t('Parent: ') : '', ct.email ? h('a', { href: `mailto:${ct.email}` }, ct.email) : null, ct.email && ct.phone ? ' · ' : '', ct.phone ? h('a', { href: `tel:${ct.phone}` }, ct.phone) : null) : null,
+        ct.email || ct.phone ? h('p', { class: 'hint' }, ap.minor ? t('Parent: ') : '', ct.email ? h('span', {}, ct.email) : null, ct.email && ct.phone ? ' · ' : '', ct.phone ? h('span', {}, ct.phone) : null) : null,
         h('div', { class: 'pills' }, ['shortlist', 'no', 'new'].map((k) => h('button', { type: 'button', class: 'pill' + (a.status === k ? ' on' : ''), onclick: async () => {
           const { error: er } = await sb.from('roardino_applies').update({ status: k }).eq('id', a.id);
           if (er) return fail(er);
-          a.status = k; drawWho();
+          a.status = k; drawWho(); drawSeg();
         } }, t(labels[k])))));
     }) : [h('div', { class: 'empty', style: { gridColumn: '1/-1' } }, t('No applications here yet.'))]));
   };
   const segBox = h('div');
-  const drawSeg = () => put(segBox, seg([['all', t('All')], ['shortlist', t('Shortlist')], ['new', t('New')]], shown, (k) => { shown = k; drawSeg(); drawWho(); }));
+  const n = (k) => (applies || []).filter((a) => k === 'all' || a.status === k).length;
+  const drawSeg = () => put(segBox, seg([['all', t('All') + ' · ' + n('all')], ['shortlist', t('Shortlist') + ' · ' + n('shortlist')], ['new', t('New') + ' · ' + n('new')], ['no', t('No') + ' · ' + n('no')]], shown, (k) => { shown = k; drawSeg(); drawWho(); }));
   if (own) { drawWho(); drawSeg(); }
+  const hue = CALL_HUE[c.kind] || CALL_HUE.other, pic = urlOf(c.cover), left = leftText(c), x = c.extra || {};
+  const share = async () => { const url = `${location.origin}${location.pathname}#/c/${c.id}`; try { if (navigator.share) await navigator.share({ title: c.title, url }); else { await navigator.clipboard.writeText(url); toast(t('Link copied')); } } catch { /* closed */ } };
+  const fact = (ic, k, v) => (v ? h('div', { class: 'cp-fact' }, h('span', { class: 'cp-fic', html: ICON[ic] }), h('div', {}, h('small', {}, t(k)), h('b', {}, v))) : null);
   frame('calls',
-    h('div', { class: 'call-page' },
-      h('div', { class: 'tile' },
-        h('div', { class: 't-top' }, h('span', { class: 't-ico', html: c.kind === 'casting' ? ICON.star : ICON.calls }), h('span', { class: 'when' }, t(CALL_KIND[c.kind]) + (c.open ? '' : ' · ' + t('closed')))),
-        h('h1', { style: { fontSize: '30px', margin: '4px 0', fontWeight: 'var(--w-strong)' } }, c.title),
-        callWho(c) ? h('p', { style: { color: 'var(--ink2)' } }, callWho(c)) : null,
-        h('div', { class: 'facts', style: { margin: '6px 0' } }, [['City', c.city], ['When', c.dates], ['Pay', c.pay], ['Production', c.company], ['Applications until', c.closes && new Date(c.closes).toLocaleDateString(LOCALE())]].filter(([, v]) => v).map(([k, v]) => h('div', { class: 'fact' }, h('small', {}, t(k)), h('span', {}, v)))),
-        c.about ? h('p', { style: { whiteSpace: 'pre-wrap', color: 'var(--ink2)' } }, c.about) : null,
-        h('div', { class: 'acts' },
-          own ? [h('button', { type: 'button', class: 'btn', onclick: () => editCall(c) }, icon('edit'), t('Edit')),
-            h('button', { type: 'button', class: 'btn', onclick: async () => { const { error: er } = await sb.from('roardino_calls').update({ open: !c.open }).eq('id', c.id); if (er) return fail(er); route(); } }, c.open ? t('Close the call') : t('Open it again'))]
-            : mineApplied.length ? h('span', { class: 'chip', style: { '--c': '#35c98b' } }, h('i'), t('You applied as {names}', { names: mineApplied.map((a) => a.person?.name).join(', ') }))
-              : c.open ? h('button', { type: 'button', class: 'btn main', onclick: () => apply(c) }, icon('send'), t('Apply')) : null))),
-    own ? h('div', {},
-      h('div', { class: 'head', style: { marginTop: '28px' } }, h('h1', { style: { fontSize: '22px' } }, t('Applications · {n}', { n: (applies || []).length })), segBox),
-      who) : null);
+    h('div', { class: 'cp', style: { '--c': hue } },
+      // the picture across the top with the kind, the title and the production on it
+      h('div', { class: 'cp-hero' + (pic ? '' : ' none'), style: pic ? { backgroundImage: `url("${pic}")` } : {} }, pic ? null : h('span', { class: 'ct-big', html: ICON[CALL_IC[c.kind] || 'calls'] }),
+        h('div', { class: 'cp-hero-in' }, h('span', { class: 'ct-kind' }, h('i'), t(CALL_KIND[c.kind] || 'Call')), h('h1', {}, c.title), c.company ? h('p', {}, c.company) : null)),
+      h('div', { class: 'cp-lay' },
+        h('div', { class: 'cp-main' },
+          h('section', { class: 'card cp-card' }, h('div', { class: 'cp-facts' }, fact('pin', 'City', c.city), fact('cal', 'When', c.dates), fact('ticket', 'Pay', c.pay), fact('user', 'Age', c.age_from || c.age_to ? `${c.age_from || '?'}–${c.age_to || '?'}` : ''), fact('people', 'Gender', { f: t('Woman'), m: t('Man') }[c.gender] || ''), fact('flag', 'Applications until', c.closes && new Date(c.closes).toLocaleDateString(LOCALE())))),
+          (c.wanted || []).length ? h('section', { class: 'card cp-card' }, h('span', { class: 'wz-lbl' }, t('Who we are looking for')), h('div', { class: 'wz-tagrow' }, c.wanted.map((k) => h('span', { class: 'face-k big', style: { '--c': HUE[SIDE[k]] || hue } }, h('i'), kindName(k))))) : null,
+          c.about ? h('section', { class: 'card cp-card' }, h('span', { class: 'wz-lbl' }, t('About the job')), h('p', { class: 'cp-about' }, c.about)) : null,
+          x.howto || x.selftape || x.remote || x.travel || c.minors_ok ? h('section', { class: 'card cp-card' }, h('span', { class: 'wz-lbl' }, t('How to apply')), x.howto ? h('p', { class: 'cp-about' }, x.howto) : null,
+            h('div', { class: 'wz-tagrow' }, x.selftape ? h('span', { class: 'face-k', style: { '--c': '#2fb67a' } }, h('i'), t('Self-tapes welcome')) : null, x.remote ? h('span', { class: 'face-k', style: { '--c': '#4f8cff' } }, h('i'), t('Can be done remotely')) : null, x.travel ? h('span', { class: 'face-k', style: { '--c': '#e0a33a' } }, h('i'), t('Travel and stay paid')) : null, c.minors_ok ? h('span', { class: 'face-k', style: { '--c': '#a77bff' } }, h('i'), t('Under 18 welcome')) : null)) : null),
+        // the card on the right that stays: the days left, the pay, Apply or the owner's tools, Share
+        h('aside', { class: 'cp-side' }, h('div', { class: 'card cp-act' },
+          left ? h('span', { class: 'ct-left big' + (!c.open || (daysLeft(c.closes) ?? 1) < 0 ? ' off' : (daysLeft(c.closes) ?? 9) <= 3 ? ' soon' : '') }, left) : null,
+          c.pay ? h('div', { class: 'cp-pay' }, h('small', {}, t('Pay')), h('b', {}, c.pay)) : null,
+          own ? h('div', { class: 'cp-btns' },
+            h('button', { type: 'button', class: 'btn main', onclick: () => editCall(c) }, icon('edit'), t('Edit')),
+            h('button', { type: 'button', class: 'btn', onclick: async () => { const { error: er } = await sb.from('roardino_calls').update({ open: !c.open }).eq('id', c.id); if (er) return fail(er); route(); } }, c.open ? t('Close the call') : t('Open it again')),
+            h('p', { class: 'hint' }, t('{n} applied', { n: (applies || []).length }) + ' · ' + t('{n} on the shortlist', { n: n('shortlist') })))
+            : mineApplied.length ? h('span', { class: 'ct-badge ok big' }, icon('check'), t('You applied as {names}', { names: mineApplied.map((a) => a.person?.name).join(', ') }))
+              : c.open ? h('button', { type: 'button', class: 'btn main cp-apply', onclick: () => apply(c) }, icon('send'), t('Apply')) : null,
+          h('button', { type: 'button', class: 'btn cp-share', onclick: share }, icon('link'), t('Share the call')),
+          h('small', { class: 'hint' }, t('Posted {when}', { when: ago(c.created_at) }))))),
+      own ? h('div', { class: 'cp-apps' },
+        h('div', { class: 'head', style: { marginTop: '6px' } }, h('h2', { class: 'ind-title', style: { fontSize: '18px' } }, t('Applications')), segBox),
+        who) : null));
 }
 function apply(c) {
   if (!mine.length) { toast(t('Make your profile first.')); location.hash = '#/edit/new'; return; }
