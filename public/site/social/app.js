@@ -2244,14 +2244,29 @@ async function viewPeople(opts = {}) {
     const used = [castF.from || castF.to, castF.hFrom || castF.hTo, castF.gender, castF.cities.size, castF.hair.size, castF.eyes.size].filter(Boolean).length;
     const opener = h('button', { type: 'button', class: 'btn sm filters-btn' + (castOpen ? ' on' : ''), onclick: () => { castOpen = !castOpen; drawFilters(); } }, icon('sliders'), t('Filters'), used ? h('b', { class: 'fcount' }, String(used)) : null);
     if (!castOpen) { put(filterBox, h('div', { class: 'filters-line' }, opener)); return; }
-    put(filterBox, h('div', { class: 'filters-line only-phone' }, opener), h('section', { class: 'card cast-filters' },
-      row(t('Age'), num('from', t('from')), h('span', { class: 'dash' }, '–'), num('to', t('to'))),
-      row(t('Height'), num('hFrom', t('cm from')), h('span', { class: 'dash' }, '–'), num('hTo', t('cm to'))),
-      row(t('Gender'), ...[['', t('Any')], ['f', t('Woman')], ['m', t('Man')]].map(([v, l]) => chip(castF.gender === v, l, () => { castF.gender = v; draw(); }))),
-      cities.length ? row(t('Location'), ...cities.map(([k, e]) => chip(castF.cities.has(k), e.name, () => toggle(castF.cities, k)))) : null,
-      row(t('Hair'), ...HAIRS.map(([k, l]) => chip(castF.hair.has(k), t(l), () => toggle(castF.hair, k)))),
-      row(t('Eyes'), ...EYES.map(([k, l]) => chip(castF.eyes.has(k), t(l), () => toggle(castF.eyes, k)))),
-      filtersUsed() ? h('div', { class: 'fclear' }, h('button', { type: 'button', class: 'btn sm', onclick: () => { castF = { from: '', to: '', hFrom: '', hTo: '', gender: '', cities: new Set(), hair: new Set(), eyes: new Set() }; draw(); } }, icon('x'), t('Clear filters'))) : null));
+    // the filters as one tidy glass card (Alex, 9 Nov: "more beautiful and more correct"): six equal blocks in a grid,
+    // each a small label and its controls; numbers as pill fields with their unit, age bands one tap away, hair and
+    // eyes with a swatch of their colour, Clear all on the card's own top line
+    const block = (label, ...kids) => h('div', { class: 'cf-b' }, h('span', { class: 'cf-l' }, label), h('div', { class: 'cf-c' }, ...kids));
+    const field = (k, ph, unit) => h('label', { class: 'cf-in' }, h('input', { type: 'text', inputmode: 'numeric', maxlength: 3, placeholder: ph, value: castF[k], 'aria-label': ph, oninput: (e) => { e.target.value = e.target.value.replace(/\D/g, ''); castF[k] = e.target.value; drawGrid(); drawBands(); } }), h('small', {}, unit));
+    const BANDS = [['', '17', t('Under 18')], ['18', '25', '18–25'], ['26', '35', '26–35'], ['36', '50', '36–50'], ['51', '', '50+']];
+    const bandBox = h('div', { class: 'cf-bands' });
+    const drawBands = () => put(bandBox, BANDS.map(([f, to, l]) => { const on = castF.from === f && castF.to === to; return h('button', { type: 'button', class: 'cf-chip sm' + (on ? ' on' : ''), onclick: () => { if (on) { castF.from = ''; castF.to = ''; } else { castF.from = f; castF.to = to; } draw(); } }, l); }));
+    drawBands();
+    const pick = (on, label, onclick, sw) => h('button', { type: 'button', class: 'cf-chip' + (on ? ' on' : ''), onclick: (e) => { e.preventDefault(); e.stopPropagation(); onclick(); } }, sw ? h('i', { style: { background: sw } }) : null, label);
+    const HAIR_SW = { blonde: '#e3c27a', brown: '#7a5232', black: '#1f1c1a', red: '#b5452a', grey: '#a9aab0' };
+    const EYE_SW = { brown: '#6b4423', blue: '#4f86c6', green: '#4f9a5b', hazel: '#a8793a', black: '#222' };
+    const clear = () => { castF = { from: '', to: '', hFrom: '', hTo: '', gender: '', cities: new Set(), hair: new Set(), eyes: new Set() }; draw(); };
+    put(filterBox, h('div', { class: 'filters-line only-phone' }, opener), h('section', { class: 'card cf2' },
+      h('div', { class: 'cf-top' }, h('span', { class: 'cf-ti', html: ICON.sliders }), h('b', {}, t('Filters')), used ? h('span', { class: 'cf-n' }, String(used)) : null, h('span', { class: 'grow' }),
+        filtersUsed() ? h('button', { type: 'button', class: 'btn sm', onclick: clear }, icon('x'), t('Clear all')) : null),
+      h('div', { class: 'cf-grid' },
+        block(t('Age'), h('div', { class: 'cf-pair' }, field('from', t('From'), t('yrs')), h('span', { class: 'cf-dash' }), field('to', t('To'), t('yrs'))), bandBox),
+        block(t('Height'), h('div', { class: 'cf-pair' }, field('hFrom', t('From'), 'cm'), h('span', { class: 'cf-dash' }), field('hTo', t('To'), 'cm'))),
+        block(t('Gender'), h('div', { class: 'cf-seg' }, ...[['', t('Any')], ['f', t('Woman')], ['m', t('Man')]].map(([v, l]) => pick(castF.gender === v, l, () => { castF.gender = v; draw(); })))),
+        cities.length ? block(t('Location'), h('div', { class: 'cf-wrap' }, ...cities.map(([k, e]) => pick(castF.cities.has(k), e.name, () => toggle(castF.cities, k))))) : null,
+        block(t('Hair'), h('div', { class: 'cf-wrap' }, ...HAIRS.map(([k, l]) => pick(castF.hair.has(k), t(l), () => toggle(castF.hair, k), HAIR_SW[k])))),
+        block(t('Eyes'), h('div', { class: 'cf-wrap' }, ...EYES.map(([k, l]) => pick(castF.eyes.has(k), t(l), () => toggle(castF.eyes, k), EYE_SW[k])))))));
   }
   function passCast(p) {
     if (!castOn()) return true;
