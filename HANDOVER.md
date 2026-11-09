@@ -1803,3 +1803,4 @@ Alex: "I like the Calendar's aesthetic as UI and layout, keep it, I will ask for
 - 9 Nov 2026: Sound Mixer (soundmix) added to Post-Production after Sound Designer.
 - 9 Nov 2026: the cast filters as one glass card (.cf2): six equal blocks (Age with pill fields and bands Under 18 / 18-25 / 26-35 / 36-50 / 50+, Height in cm, Gender, Location, Hair and Eyes with colour swatches), Clear all on the card's top line. The footer's links are white on dark (ink on light).
 - 9 Nov 2026: Industry: the specialties of each group by department, a row each (DEPTS in app.js: e.g. Production > Direction, Camera, Light & Grip, Sound, Hair Make-Up & Wardrobe, Art & Stills, Production), the department's name on the left with a line of the group's colour, six equal columns on a computer (Camera in one line), two on a phone.
+- 9 Nov 2026: cast filters order: Gender, Age, Height, then Location, Hair, Eyes.
